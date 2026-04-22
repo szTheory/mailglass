@@ -121,7 +121,7 @@ defmodule Mailglass.Outbound.ProjectorTest do
       assert after_opened.last_event_type == :opened
     end
 
-    test "earlier occurred_at does NOT move last_event_at backwards" do
+    test "earlier occurred_at does NOT move last_event_at OR last_event_type backwards" do
       {:ok, delivery} = insert_delivery()
       now = DateTime.utc_now()
 
@@ -138,8 +138,10 @@ defmodule Mailglass.Outbound.ProjectorTest do
 
       # last_event_at stays at `now` — monotonic max.
       assert after_earlier.last_event_at == now
-      # But last_event_type still updates to latest incoming event type.
-      assert after_earlier.last_event_type == :clicked
+      # last_event_type also stays — the two fields advance TOGETHER so the
+      # denormalized summary never disagrees with the event ledger about
+      # which event is "latest" (WR-02).
+      assert after_earlier.last_event_type == :opened
     end
   end
 

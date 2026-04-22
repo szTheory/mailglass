@@ -8,8 +8,11 @@ defmodule Mailglass.Outbound.Projector do
 
   ## App-level monotonic rule (D-15)
 
-  - `last_event_type` — always updated to the latest event's type.
   - `last_event_at` — `max(current, event.occurred_at)`; monotonic.
+  - `last_event_type` — advances together with `last_event_at`. The two
+    fields are a joined "latest observed event" pointer: an earlier
+    out-of-order event moves neither. This keeps the denormalized
+    summary internally consistent with the event-ledger truth (WR-02).
   - `dispatched_at` / `delivered_at` / `bounced_at` / `complained_at` /
     `suppressed_at` — set ONCE when the matching event type arrives;
     never overwritten.
@@ -55,8 +58,7 @@ defmodule Mailglass.Outbound.Projector do
       fn ->
         delivery
         |> Ecto.Changeset.change()
-        |> maybe_set_later_event_type(event)
-        |> maybe_set_later_at(event)
+        |> maybe_advance_last_event(event)
         |> maybe_set_once_timestamp(event)
         |> maybe_flip_terminal(event)
         |> Ecto.Changeset.optimistic_lock(:lock_version)
@@ -64,27 +66,28 @@ defmodule Mailglass.Outbound.Projector do
     )
   end
 
-  # `last_event_type` advances on every event with a non-nil type — it's
-  # a "latest event" pointer, not a monotonic lifecycle fact.
-  defp maybe_set_later_event_type(changeset, %Event{type: type}) when not is_nil(type),
-    do: Ecto.Changeset.put_change(changeset, :last_event_type, type)
+  # `last_event_at` + `last_event_type` advance together, only when the
+  # incoming event's `occurred_at` is strictly greater than the current
+  # stamp (monotonic max). An earlier out-of-order event moves neither —
+  # keeping the two fields internally consistent so the denormalized
+  # summary never disagrees with the event ledger about which event is
+  # "latest" (WR-02). If only a type arrives (no timestamp), neither
+  # field moves; if only a timestamp arrives (no type), neither field
+  # moves.
+  defp maybe_advance_last_event(changeset, %Event{type: type, occurred_at: occurred_at})
+       when not is_nil(type) and not is_nil(occurred_at) do
+    current_at = Ecto.Changeset.get_field(changeset, :last_event_at)
 
-  defp maybe_set_later_event_type(changeset, _), do: changeset
-
-  # `last_event_at` advances only when the incoming event's occurred_at
-  # is strictly greater than the current stamp (monotonic max).
-  defp maybe_set_later_at(changeset, %Event{occurred_at: occurred_at})
-       when not is_nil(occurred_at) do
-    current = Ecto.Changeset.get_field(changeset, :last_event_at)
-
-    if is_nil(current) or DateTime.compare(occurred_at, current) == :gt do
-      Ecto.Changeset.put_change(changeset, :last_event_at, occurred_at)
+    if is_nil(current_at) or DateTime.compare(occurred_at, current_at) == :gt do
+      changeset
+      |> Ecto.Changeset.put_change(:last_event_at, occurred_at)
+      |> Ecto.Changeset.put_change(:last_event_type, type)
     else
       changeset
     end
   end
 
-  defp maybe_set_later_at(changeset, _), do: changeset
+  defp maybe_advance_last_event(changeset, _), do: changeset
 
   # Lifecycle timestamps (`dispatched_at`, `delivered_at`, etc.) are set
   # ONCE when the matching event type arrives and never overwritten.
