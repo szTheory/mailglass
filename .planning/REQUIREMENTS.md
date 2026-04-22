@@ -253,14 +253,14 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | AUTHOR-03 | Phase 1 — Foundation | Complete (01-06) |
 | AUTHOR-04 | Phase 1 — Foundation | Complete (01-06) |
 | AUTHOR-05 | Phase 1 — Foundation | Complete (01-04) |
-| PERSIST-01 | Phase 2 — Persistence + Tenancy | Complete (02-02, 02-03) |
+| PERSIST-01 | Phase 2 — Persistence + Tenancy | Complete (02-02, 02-03, 02-06) |
 | PERSIST-02 | Phase 2 — Persistence + Tenancy | Complete (02-02) |
-| PERSIST-03 | Phase 2 — Persistence + Tenancy | Complete (02-02) |
-| PERSIST-04 | Phase 2 — Persistence + Tenancy | Complete (02-02, 02-03) |
+| PERSIST-03 | Phase 2 — Persistence + Tenancy | Complete (02-02, 02-05) |
+| PERSIST-04 | Phase 2 — Persistence + Tenancy | Complete (02-02, 02-03, 02-06) |
 | PERSIST-05 | Phase 2 — Persistence + Tenancy | Complete (02-01) |
 | PERSIST-06 | Phase 2 — Persistence + Tenancy | Complete (02-02) |
 | TENANT-01 | Phase 2 — Persistence + Tenancy | Complete (02-02, 02-03) |
-| TENANT-02 | Phase 2 — Persistence + Tenancy | Pending |
+| TENANT-02 | Phase 2 — Persistence + Tenancy | Complete (02-04, 02-06) |
 | TENANT-03 | Phase 6 — Custom Credo + Boundary | Pending |
 | TRANS-01 | Phase 3 — Transport + Send Pipeline | Pending |
 | TRANS-02 | Phase 3 — Transport + Send Pipeline | Pending |

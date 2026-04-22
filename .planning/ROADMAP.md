@@ -16,7 +16,7 @@ mailglass v0.1 ships in 7 phases tracing the 7-layer build order from `research/
 - Decimal phases (2.1, 2.2): Urgent insertions (added later via `/gsd-insert-phase`, never planned upfront).
 
 - [x] **Phase 1: Foundation** - Zero-dep modules + pure HEEx renderer pipeline ("render an email from HEEx" milestone). Complete 2026-04-22.
-- [ ] **Phase 2: Persistence + Tenancy** - Append-only event ledger with SQLSTATE 45A01 trigger + multi-tenant schemas from day one.
+- [x] **Phase 2: Persistence + Tenancy** - Append-only event ledger with SQLSTATE 45A01 trigger + multi-tenant schemas from day one. Complete 2026-04-22.
 - [ ] **Phase 3: Transport + Send Pipeline** - Fake adapter built first (D-13), then end-to-end Mailable → Outbound → Worker → Adapter → Multi(Delivery + Event) hot path.
 - [ ] **Phase 4: Webhook Ingest** - Postmark + SendGrid HMAC-verified, idempotent, Anymail-normalized event ingest.
 - [ ] **Phase 5: Dev Preview LiveView** - `mailglass_admin` sibling package with mailable sidebar, `preview_props/1` auto-discovery, device + dark toggles, HTML/Text/Raw/Headers tabs.
@@ -64,8 +64,8 @@ Plans:
 - [x] 02-02-PLAN.md — Migration module + Oban-pattern Postgres dispatcher + V01 DDL (3 tables + immutability trigger + CHECK + indexes + citext) + test_helper runs synthetic migration + immutability integration test
 - [x] 02-03-PLAN.md — Ecto schemas: `Mailglass.Outbound.Delivery` + `Mailglass.Events.Event` + `Mailglass.Suppression.Entry` with hand-written typespecs, `Ecto.Enum` fields, closed-atom-set reflectors, scope/stream coupling validation
 - [x] 02-04-PLAN.md — `Mailglass.Tenancy` behaviour + `SingleTenant` default + process-dict helpers + `Mailglass.Oban.TenancyMiddleware` (conditionally compiled) + DataCase upgrade
-- [ ] 02-05-PLAN.md — `Mailglass.Events.append/1` + `append_multi/3` (D-01..D-06: idempotency via partial-unique + id:nil replay fetch + telemetry spans) + `Mailglass.Events.Reconciler` pure-query orphan lookup + StreamData convergence property test
-- [ ] 02-06-PLAN.md — `Mailglass.Outbound.Projector` (monotonic D-15 + optimistic_lock D-18) + `Mailglass.SuppressionStore` behaviour + Ecto default impl + phase-wide integration test proving all 5 ROADMAP criteria
+- [x] 02-05-PLAN.md — `Mailglass.Events.append/1` + `append_multi/3` (D-01..D-06: idempotency via partial-unique + id:nil replay fetch + telemetry spans) + `Mailglass.Events.Reconciler` pure-query orphan lookup + StreamData convergence property test
+- [x] 02-06-PLAN.md — `Mailglass.Outbound.Projector` (monotonic D-15 + optimistic_lock D-18) + `Mailglass.SuppressionStore` behaviour + Ecto default impl + phase-wide integration test proving all 5 ROADMAP criteria
 **UI hint**: no
 
 ### Phase 3: Transport + Send Pipeline
@@ -171,7 +171,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | 2026-04-22 |
-| 2. Persistence + Tenancy | 3/6 | In progress | - |
+| 2. Persistence + Tenancy | 6/6 | Complete | 2026-04-22 |
 | 3. Transport + Send Pipeline | 0/TBD | Not started | - |
 | 4. Webhook Ingest | 0/TBD | Not started | - |
 | 5. Dev Preview LiveView | 0/TBD | Not started | - |

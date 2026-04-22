@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-status: executing
-stopped_at: Completed 02-05 plan
-last_updated: "2026-04-22T19:24:41.661Z"
+status: verifying
+stopped_at: Completed 02-06 plan (Phase 2 complete)
+last_updated: "2026-04-22T20:34:53.679Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 12
-  completed_plans: 11
-  percent: 92
+  completed_plans: 12
+  percent: 100
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 Phase: 02 (persistence-tenancy) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-22
 
-Progress: [█████████░] 92%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 92%
 | Phase 02 P03 | 6min | 2 tasks tasks | 6 files files |
 | Phase 02 P04 | 6min | 2 tasks tasks | 6 files files |
 | Phase 02 P05 | 11min | 3 tasks | 6 files |
+| Phase 02 P06 | 62min | 3 tasks tasks | 6 files files |
 
 ## Accumulated Context
 
@@ -117,6 +118,11 @@ Most load-bearing for Phase 1:
 - Plan 02-05: DB-backed property tests that TRUNCATE between iterations cannot use DataCase — transaction wrapper deadlocks after ~60s. Pattern: use ExUnit.Case, async: false + Sandbox.mode(TestRepo, :auto) in setup + :manual in on_exit. Matches Plan 02-02's migration_test pattern. Bounded to a single test; does not leak into DataCase-using siblings.
 - Plan 02-05: Mailglass.Events.current_trace_id/0 is a nil-returning stub in Phase 2. The plan's verbatim :otel_propagator_text_map probe referenced a fictitious return shape. Phase 4 webhook ingest is the first concrete trace-context call site; the stub is replaced then against a real OTel SDK harness.
 - Plan 02-05: Reconciler module (find_orphans/1 + attempt_link/2) ships as pure Ecto with zero Oban dep. Module docstrings forward-reference Phase 4's Oban worker (cron */15 * * * * per D-20) but contain no imports/aliases/calls to Oban. mix compile --no-optional-deps --warnings-as-errors stays green.
+- Plan 02-06: Mailglass.Outbound.Projector is the single writer for Delivery projection columns (D-14). update_projections/2 returns an Ecto.Changeset with D-15 monotonic rules chained (last_event_type advances always; last_event_at is monotonic max; dispatched/delivered/bounced/complained/suppressed_at set-once; terminal one-way latch) and Ecto.Changeset.optimistic_lock(:lock_version) (D-18) for the dispatch race.
+- Plan 02-06: SuppressionStore.Ecto.check/2 uses two union_predicates/4 clauses (with-stream vs stream-nil) because Ecto refuses compile-time e.stream == ^nil. Stream-less callers cannot match :address_stream-scoped rows by definition; dropping that branch is correct behaviour, not a workaround.
+- Plan 02-06: Postgrex type cache goes stale after migration_test.exs drops + recreates the citext extension (new OID). Plan 06 mitigation: config/test.exs disconnect_on_error_codes: [:internal_error] + per-test probe_until_clean/5 helper in persistence_integration_test.exs. Killing Postgrex.TypeServer processes cascaded failures; the surgical probe+disconnect approach is sufficient. Architectural fix deferred to Phase 6 (4 candidates in deferred-items.md).
+- Plan 02-06: Mailglass.SuppressionStore behaviour ships record/2 (not record/1 as originally specified) for symmetry with check/2 and adopter opts seam. The impl declares def record(attrs, opts \ []) so callers that pass a single arg still work.
+- Plan 02-06: Projector last_event_type advances UNCONDITIONALLY on every event (not monotonic) — it is a latest-observation pointer, not a lifecycle fact. D-15 monotonicity applies only to timestamps and terminal. Test non-monotonic ordering: :opened BEFORE :delivered documents the behaviour.
 
 ### Pending Todos
 
@@ -135,8 +141,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T19:24:41.651Z
-Stopped at: Completed 02-05 plan
+Last session: 2026-04-22T20:34:33.193Z
+Stopped at: Completed 02-06 plan (Phase 2 complete)
 Resume file: None
 
 **Planned Phase:** 02 (persistence-tenancy) — 6 plans — 2026-04-22T17:50:17.597Z
