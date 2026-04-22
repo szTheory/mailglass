@@ -239,11 +239,11 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | CORE-04 | Phase 1 — Foundation | Complete (01-03) |
 | CORE-05 | Phase 1 — Foundation | Complete (01-03) |
 | CORE-06 | Phase 1 — Foundation | Complete (01-04) |
-| CORE-07 | Phase 1 — Foundation | Pending |
+| CORE-07 | Phase 1 — Foundation | Complete (01-01) |
 | AUTHOR-01 | Phase 3 — Transport + Send Pipeline | Pending |
-| AUTHOR-02 | Phase 1 — Foundation | Pending |
-| AUTHOR-03 | Phase 1 — Foundation | Pending |
-| AUTHOR-04 | Phase 1 — Foundation | Pending |
+| AUTHOR-02 | Phase 1 — Foundation | Complete (01-05) |
+| AUTHOR-03 | Phase 1 — Foundation | Complete (01-06) |
+| AUTHOR-04 | Phase 1 — Foundation | Complete (01-06) |
 | AUTHOR-05 | Phase 1 — Foundation | Complete (01-04) |
 | PERSIST-01 | Phase 2 — Persistence + Tenancy | Pending |
 | PERSIST-02 | Phase 2 — Persistence + Tenancy | Pending |
@@ -273,8 +273,8 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | HOOK-05 | Phase 4 — Webhook Ingest | Pending |
 | HOOK-06 | Phase 4 — Webhook Ingest | Pending |
 | HOOK-07 | Phase 4 — Webhook Ingest | Pending |
-| COMP-01 | Phase 1 — Foundation | Pending |
-| COMP-02 | Phase 1 — Foundation | Pending |
+| COMP-01 | Phase 1 — Foundation | Complete (01-06) |
+| COMP-02 | Phase 1 — Foundation | Complete (01-06) |
 | PREV-01 | Phase 5 — Dev Preview LiveView | Pending |
 | PREV-02 | Phase 5 — Dev Preview LiveView | Pending |
 | PREV-03 | Phase 5 — Dev Preview LiveView | Pending |

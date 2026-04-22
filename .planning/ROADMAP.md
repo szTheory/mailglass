@@ -43,7 +43,7 @@ Plans:
 - [x] 01-03-PLAN.md — Config (NimbleOptions), Telemetry (span helpers), Repo (transact/1), IdempotencyKey
 - [x] 01-04-PLAN.md — Message struct + OptionalDeps gateway modules (Oban, OTel, MJML, GenSmtp, Sigra)
 - [x] 01-05-PLAN.md — Components (11 HEEx components + Layout + golden VML fixture test)
-- [ ] 01-06-PLAN.md — TemplateEngine behaviour + HEEx impl + Renderer pipeline + Compliance + Gettext
+- [x] 01-06-PLAN.md — TemplateEngine behaviour + HEEx impl + Renderer pipeline + Compliance + Gettext
 **UI hint**: no
 
 ### Phase 2: Persistence + Tenancy

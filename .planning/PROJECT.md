@@ -20,7 +20,13 @@ If everything else fails, the preview dashboard, normalized event ledger, and on
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+**Foundation (Phase 1 complete — 2026-04-22):**
+
+- [x] HEEx-native component library (`Mailglass.Components`: container, section, row, column, heading, text, button, img, link, hr, preheader) with MSO VML fallbacks for Outlook — Premailex VML preservation guarded by a golden-fixture regression test (D-14)
+- [x] Render pipeline: HEEx → Premailex CSS inlining → `data-mg-*` strip → auto-plaintext (Floki walker, preheader excluded per D-15) — 4.3ms on a 10-component template, 12× below the 50ms AUTHOR-03 target
+- [x] `Mailglass.Error` struct hierarchy (`SendError`, `TemplateError`, `SignatureError`, `SuppressedError`, `RateLimitError`, `ConfigError`) with closed `:type` atom sets locked in `docs/api_stability.md`; pattern-match by struct, `:cause` excluded from `Jason.Encoder`
+- [x] Zero-dep foundation modules: `Mailglass.Config` (NimbleOptions + `:persistent_term` theme cache), `Mailglass.Telemetry` (4-level span helpers + D-33 metadata whitelist + StreamData property test), `Mailglass.Repo` (runtime `transact/1` facade), `Mailglass.IdempotencyKey` (sanitized keys per T-IDEMP-001)
+- [x] Optional-dep gateway pattern (`Mailglass.OptionalDeps.{Oban, OpenTelemetry, Mjml, GenSmtp, Sigra}`): `@compile {:no_warn_undefined, ...}` + `available?/0` + degraded fallback; `mix compile --no-optional-deps --warnings-as-errors` is a merge gate
 
 ### Active
 
@@ -29,8 +35,8 @@ If everything else fails, the preview dashboard, normalized event ledger, and on
 **v0.1 — Core (validation release):**
 
 - [ ] `Mailglass.Mailable` behaviour with `deliver/2`, `deliver_later/2`, `deliver_many/2` (Oban optional, falls back to `Task.Supervisor` with warning)
-- [ ] HEEx-native component library (`Mailglass.Components`: container, section, row, column, heading, text, button, img, link, hr, preheader) with MSO VML fallbacks for Outlook
-- [ ] Render pipeline: HEEx → Premailex CSS inlining → minify → auto-plaintext (Floki)
+- [x] HEEx-native component library (`Mailglass.Components`: container, section, row, column, heading, text, button, img, link, hr, preheader) with MSO VML fallbacks for Outlook — Validated in Phase 1
+- [x] Render pipeline: HEEx → Premailex CSS inlining → `data-mg-*` strip → auto-plaintext (Floki walker) — Validated in Phase 1
 - [ ] Gettext-first i18n with `dgettext("emails", ...)` convention
 - [ ] `Mailglass.Adapter.Fake` — in-memory, deterministic, time-advanceable, the release-blocking test target
 - [ ] `Mailglass.TestAssertions` extending Swoosh's: `assert_mail_sent`, `last_mail/0`, `wait_for_mail/1`
@@ -38,7 +44,7 @@ If everything else fails, the preview dashboard, normalized event ledger, and on
 - [ ] Append-only `mailglass_events` Postgres table protected by trigger raising SQLSTATE 45A01 on UPDATE/DELETE
 - [ ] Idempotency keys (`provider_message_id`, `webhook_event_id`) via `UNIQUE` partial index — replay-safe webhooks
 - [ ] First-class multi-tenancy: `tenant_id` on every record, `Mailglass.Tenancy.scope/2` behaviour, scope-aware admin queries (Phoenix 1.8 `scope` aligned)
-- [ ] `Mailglass.Error` struct hierarchy (`SendError`, `TemplateError`, `SignatureError`, `SuppressedError`, `RateLimitError`, `ConfigError`) — pattern-match by struct, never by message string
+- [x] `Mailglass.Error` struct hierarchy (`SendError`, `TemplateError`, `SignatureError`, `SuppressedError`, `RateLimitError`, `ConfigError`) — pattern-match by struct, never by message string — Validated in Phase 1
 - [ ] Telemetry spans on `[:mailglass, :outbound, :send, :*]` and `[:mailglass, :preview, :render, :*]` — counts/IDs/latencies only, never PII
 - [ ] Webhook plug + event normalization for **Postmark + SendGrid** (Anymail event taxonomy verbatim: `queued/sent/rejected/failed/bounced/deferred/delivered/autoresponded/opened/clicked/complained/unsubscribed/subscribed/unknown` with `reject_reason` ∈ `:invalid | :bounced | :timed_out | :blocked | :spam | :unsubscribed | :other | nil`)
 - [ ] `mix mailglass.install` — generates context, migrations, router mounts, webhook plug, Oban worker stub, default mailable + layout, `runtime.exs` config block. Flag matrix: `--no-admin`. Idempotent reruns write `.mailglass_conflict_*` sidecars instead of clobbering. Golden-diff CI against `test/example/` Phoenix host app
@@ -190,4 +196,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-04-21 after initialization*
+*Last updated: 2026-04-22 after Phase 1 (Foundation) completion*
