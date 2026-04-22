@@ -18,10 +18,14 @@
 
 - [x] **CORE-01
 **: Library exposes a single `Mailglass.Error` exception hierarchy (`SendError`, `TemplateError`, `SignatureError`, `SuppressedError`, `RateLimitError`, `ConfigError`) with a closed `:type` atom set documented in `api_stability.md`. Pattern-matching by struct works; pattern-matching by error message string is never required. (TS-09)
-- [ ] **CORE-02**: Library exposes `Mailglass.Config` validated via NimbleOptions at boot. Reading runtime config outside this module is forbidden by Credo check `NoCompileEnvOutsideConfig`. (LIB-02 prevention)
-- [ ] **CORE-03**: Library emits telemetry events on the `[:mailglass, :domain, :resource, :action, :start | :stop | :exception]` 4-level convention. Metadata is restricted to a whitelisted key set: `:tenant_id, :mailable, :provider, :status, :message_id, :delivery_id, :event_id, :latency_ms, :recipient_count, :bytes, :retry_count`. PII keys (`:to`, `:from`, `:body`, `:html_body`, `:subject`, `:headers`, `:recipient`, `:email`) are forbidden. Telemetry handlers that raise do not break the send pipeline. (TS-10, OBS-01 prevention)
-- [ ] **CORE-04**: Library exposes `Mailglass.Repo.transact/1` wrapper for `Ecto.Multi` flows. `Ecto.Multi` insertion of an `Event` row is required for every state-changing operation.
-- [ ] **CORE-05**: Library exposes `Mailglass.IdempotencyKey` helper producing keys of form `"#{provider}:#{provider_event_id}"`. Used by webhook ingest + `deliver_many` partial-failure recovery.
+- [x] **CORE-02
+**: Library exposes `Mailglass.Config` validated via NimbleOptions at boot. Reading runtime config outside this module is forbidden by Credo check `NoCompileEnvOutsideConfig`. (LIB-02 prevention)
+- [x] **CORE-03
+**: Library emits telemetry events on the `[:mailglass, :domain, :resource, :action, :start | :stop | :exception]` 4-level convention. Metadata is restricted to a whitelisted key set: `:tenant_id, :mailable, :provider, :status, :message_id, :delivery_id, :event_id, :latency_ms, :recipient_count, :bytes, :retry_count`. PII keys (`:to`, `:from`, `:body`, `:html_body`, `:subject`, `:headers`, `:recipient`, `:email`) are forbidden. Telemetry handlers that raise do not break the send pipeline. (TS-10, OBS-01 prevention)
+- [x] **CORE-04
+**: Library exposes `Mailglass.Repo.transact/1` wrapper for `Ecto.Multi` flows. `Ecto.Multi` insertion of an `Event` row is required for every state-changing operation.
+- [x] **CORE-05
+**: Library exposes `Mailglass.IdempotencyKey` helper producing keys of form `"#{provider}:#{provider_event_id}"`. Used by webhook ingest + `deliver_many` partial-failure recovery.
 - [x] **CORE-06
 **: All optional deps (`oban`, `opentelemetry`, `mjml`, `gen_smtp`, `sigra`) are gated through `Mailglass.OptionalDeps.{Oban, OpenTelemetry, MJML, ...}` modules with `@compile {:no_warn_undefined, ...}` declared once + `available?/0` predicate + degraded fallback. CI lane `mix compile --no-optional-deps --warnings-as-errors` passes. (DIST-04 prevention)
 - [x] **CORE-07
@@ -106,7 +110,8 @@
 ### Custom Credo (Lint-Time Domain Rules)
 
 - [ ] **LINT-01**: `Mailglass.Credo.NoRawSwooshSendInLib` — every send goes via `Mailglass.Outbound.*`, never `Swoosh.Mailer.deliver/1` directly. (DF-09)
-- [ ] **LINT-02**: `Mailglass.Credo.NoPiiInTelemetryMeta` — flags any literal `:to`/`:from`/`:body`/`:html_body`/`:subject`/`:headers`/`:recipient`/`:email` keys in telemetry metadata maps. (CORE-03 enforcement, OBS-01 prevention)
+- [x] **LINT-02**: `Mailglass.Credo.NoPiiInTelemetryMeta` — flags any literal `:to`/`:from`/`:body`/`:html_body`/`:subject`/`:headers`/`:recipient`/`:email` keys in telemetry metadata maps. (CORE-03
+ enforcement, OBS-01 prevention)
 - [ ] **LINT-03**: `Mailglass.Credo.NoUnscopedTenantQueryInLib` — every Repo query on `mailglass_deliveries`/`mailglass_events`/`mailglass_suppressions` passes through `Mailglass.Tenancy.scope/2`. (TENANT-03 enforcement)
 - [x] **LINT-04**: `Mailglass.Credo.NoBareOptionalDepReference` — direct calls to `Oban.*`, `OpenTelemetry.*`, `Mjml.*` outside the `Mailglass.OptionalDeps.*` gateway modules are flagged. (CORE-06
  enforcement)
@@ -115,7 +120,8 @@
 - [ ] **LINT-07**: `Mailglass.Credo.NoDefaultModuleNameSingleton` — flags any `GenServer.start_link(..., name: __MODULE__)` in mailglass library code. (LIB-05 prevention)
 - [ ] **LINT-08**: `Mailglass.Credo.NoCompileEnvOutsideConfig` — only `Mailglass.Config` may call `Application.compile_env*`. (LIB-07 prevention)
 - [ ] **LINT-09**: `Mailglass.Credo.NoOtherAppEnvReads` — mailglass code never reads other apps' Application env. (LIB-02 prevention)
-- [ ] **LINT-10**: `Mailglass.Credo.TelemetryEventConvention` — every `:telemetry.execute/3` event matches the 4-level naming convention. (CORE-03 enforcement)
+- [x] **LINT-10**: `Mailglass.Credo.TelemetryEventConvention` — every `:telemetry.execute/3` event matches the 4-level naming convention. (CORE-03
+ enforcement)
 - [ ] **LINT-11**: `Mailglass.Credo.NoFullResponseInLogs` — `Logger.*` calls inspecting raw provider response payloads are flagged. (OBS-04 prevention)
 - [ ] **LINT-12**: `Mailglass.Credo.NoDirectDateTimeNow` — direct `DateTime.utc_now/0` is flagged outside `Mailglass.Clock`. (TEST-05 enforcement)
 
@@ -221,10 +227,10 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CORE-01 | Phase 1 — Foundation | Complete (01-02) |
-| CORE-02 | Phase 1 — Foundation | Pending |
-| CORE-03 | Phase 1 — Foundation | Pending |
-| CORE-04 | Phase 1 — Foundation | Pending |
-| CORE-05 | Phase 1 — Foundation | Pending |
+| CORE-02 | Phase 1 — Foundation | Complete (01-03) |
+| CORE-03 | Phase 1 — Foundation | Complete (01-03) |
+| CORE-04 | Phase 1 — Foundation | Complete (01-03) |
+| CORE-05 | Phase 1 — Foundation | Complete (01-03) |
 | CORE-06 | Phase 1 — Foundation | Pending |
 | CORE-07 | Phase 1 — Foundation | Pending |
 | AUTHOR-01 | Phase 3 — Transport + Send Pipeline | Pending |

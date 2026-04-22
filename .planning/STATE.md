@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-04-22T14:46:00.934Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-04-22T15:00:43.671Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 6
-  completed_plans: 2
-  percent: 33
+  completed_plans: 3
+  percent: 50
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [███░░░░░░░] 33%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [███░░░░░░░] 33%
 *Updated after each plan completion.*
 | Phase 01 P01-01 | 8min | 2 tasks | 20 files |
 | Phase 01 P02 | 5min | 2 tasks | 9 files |
+| Phase 01 P03 | 10min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,10 @@ Most load-bearing for Phase 1:
 - Struct-discrimination tests use __struct__ module comparison (err.__struct__ == Mailglass.TemplateError) instead of literal match?(%Mod{}, err) — Elixir 1.19 type checker narrows terms statically, so literal mismatch patterns trip --warnings-as-errors. Runtime struct-module comparison tests the same contract without the type-narrowing conflict.
 - RateLimitError.new/2 accepts both :retry_after_ms as a top-level option (populates the struct field) and context.retry_after_ms (for message formatting). Plan showed bind-rebind via %RateLimitError{err | retry_after_ms: ms}; direct option is cleaner for callers.
 - Mailglass.Error.root_cause/1 terminates on non-mailglass causes — when :cause is a plain Exception without its own :cause field (e.g. %RuntimeError{}), walking stops there. Third-party exceptions become leaves in the cause chain.
+- Mailglass.Config uses :persistent_term with namespaced key {Mailglass.Config, :theme} — write once at validate_at_boot!/0, read O(1) on every render; no ETS, no GenServer per D-19
+- :telemetry.span/3 auto-injects :telemetry_span_context for OTel span correlation — exempted from the D-31 metadata whitelist in tests because it is library machinery, not adopter-supplied PII (documented inline in telemetry_test.exs)
+- StreamData metadata generator for the whitelist property test uses list_of(tuple/2) + Enum.into(%{}) instead of map_of/2 — the 11-element whitelist key space is too small for map_of's uniq-key generator, which hit TooManyDuplicatesError on the 8th run
+- Mailglass.Repo.transact/1 delegates via Ecto 3.13+ transact/2 (tuple-rollback semantics), not the deprecated transaction/1 — Phase 2 events-ledger append relies on the {:ok,_}/{:error,_} rollback contract
 
 ### Pending Todos
 
@@ -90,8 +95,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T14:46:00.848Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-04-22T15:00:43.666Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 1 (Foundation) — 6 plans — 2026-04-22T14:18:01.914Z

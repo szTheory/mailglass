@@ -40,7 +40,7 @@ mailglass v0.1 ships in 7 phases tracing the 7-layer build order from `research/
 Plans:
 - [x] 01-01-PLAN.md — Project scaffold, deps, Boundary compiler, Wave 0 test stubs
 - [x] 01-02-PLAN.md — Error hierarchy (6 defexception structs + namespace behaviour + api_stability.md)
-- [ ] 01-03-PLAN.md — Config (NimbleOptions), Telemetry (span helpers), Repo (transact/1), IdempotencyKey
+- [x] 01-03-PLAN.md — Config (NimbleOptions), Telemetry (span helpers), Repo (transact/1), IdempotencyKey
 - [ ] 01-04-PLAN.md — Message struct + OptionalDeps gateway modules (Oban, OTel, MJML, GenSmtp, Sigra)
 - [ ] 01-05-PLAN.md — Components (11 HEEx components + Layout + golden VML fixture test)
 - [ ] 01-06-PLAN.md — TemplateEngine behaviour + HEEx impl + Renderer pipeline + Compliance + Gettext
