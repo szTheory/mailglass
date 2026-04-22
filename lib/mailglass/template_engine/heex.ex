@@ -22,6 +22,9 @@ defmodule Mailglass.TemplateEngine.HEEx do
 
   @behaviour Mailglass.TemplateEngine
 
+  alias Mailglass.TemplateError
+  alias Phoenix.HTML.Safe
+
   @impl Mailglass.TemplateEngine
   def compile(_source, _opts) do
     # HEEx templates are compiled at build time by the Phoenix tag engine.
@@ -34,41 +37,40 @@ defmodule Mailglass.TemplateEngine.HEEx do
   def render(component_fn, assigns, opts \\ [])
 
   def render(component_fn, assigns, _opts) when is_function(component_fn, 1) and is_map(assigns) do
-    try do
-      html =
-        component_fn
-        |> apply([assigns])
-        |> Phoenix.HTML.Safe.to_iodata()
+    html =
+      component_fn.(assigns)
+      |> Safe.to_iodata()
 
-      {:ok, html}
-    rescue
-      e in KeyError ->
-        {:error,
-         Mailglass.TemplateError.new(:missing_assign,
-           cause: e,
-           context: %{assign: e.key, assigns: Map.keys(assigns)}
-         )}
+    {:ok, html}
+  rescue
+    e in KeyError ->
+      {:error,
+       TemplateError.new(:missing_assign,
+         cause: e,
+         context: %{assign: e.key, assigns: Map.keys(assigns)}
+       )}
 
-      e in ArgumentError ->
-        {:error,
-         Mailglass.TemplateError.new(:missing_assign,
-           cause: e,
-           context: %{assigns: Map.keys(assigns)}
-         )}
+    e in ArgumentError ->
+      {:error,
+       TemplateError.new(:missing_assign,
+         cause: e,
+         context: %{assigns: Map.keys(assigns)}
+       )}
 
-      e ->
-        {:error,
-         Mailglass.TemplateError.new(:heex_compile,
-           cause: e,
-           context: %{assigns: Map.keys(assigns)}
-         )}
-    end
+    e ->
+      {:error,
+       TemplateError.new(:heex_compile,
+         cause: e,
+         context: %{assigns: Map.keys(assigns)}
+       )}
   end
 
   def render(compiled, _assigns, _opts) do
     {:error,
-     Mailglass.TemplateError.new(:heex_compile,
-       context: %{reason: "expected a function component (fn assigns -> ...), got: #{inspect(compiled)}"}
+     TemplateError.new(:heex_compile,
+       context: %{
+         reason: "expected a function component (fn assigns -> ...), got: #{inspect(compiled)}"
+       }
      )}
   end
 end

@@ -3,6 +3,9 @@ defmodule Mailglass.TemplateEngine.HEExTest do
 
   import Phoenix.Component, only: [sigil_H: 2]
 
+  alias Mailglass.TemplateEngine.HEEx
+  alias Mailglass.TemplateError
+
   setup do
     Mailglass.Config.validate_at_boot!()
     :ok
@@ -10,7 +13,7 @@ defmodule Mailglass.TemplateEngine.HEExTest do
 
   describe "compile/2" do
     test "returns {:ok, :heex_native} for any source (HEEx is compile-time)" do
-      assert {:ok, :heex_native} = Mailglass.TemplateEngine.HEEx.compile("any source", [])
+      assert {:ok, :heex_native} = HEEx.compile("any source", [])
     end
   end
 
@@ -20,8 +23,7 @@ defmodule Mailglass.TemplateEngine.HEExTest do
         ~H|<p>Hello {@name}</p>|
       end
 
-      assert {:ok, iodata} =
-               Mailglass.TemplateEngine.HEEx.render(component, %{name: "World"}, [])
+      assert {:ok, iodata} = HEEx.render(component, %{name: "World"}, [])
 
       html = IO.iodata_to_binary(iodata)
       assert String.contains?(html, "Hello World")
@@ -34,24 +36,23 @@ defmodule Mailglass.TemplateEngine.HEExTest do
         ~H|<p>unreachable</p>|
       end
 
-      assert {:error, err} = Mailglass.TemplateEngine.HEEx.render(component, %{}, [])
-      assert err.__struct__ == Mailglass.TemplateError
+      assert {:error, err} = HEEx.render(component, %{}, [])
+      assert err.__struct__ == TemplateError
       assert err.type == :missing_assign
     end
 
     test "returns {:error, %TemplateError{type: :heex_compile}} for runtime crashes" do
       component = fn _assigns -> raise "unexpected crash" end
 
-      assert {:error, err} = Mailglass.TemplateEngine.HEEx.render(component, %{}, [])
-      assert err.__struct__ == Mailglass.TemplateError
+      assert {:error, err} = HEEx.render(component, %{}, [])
+      assert err.__struct__ == TemplateError
       assert err.type == :heex_compile
     end
 
     test "returns {:error, %TemplateError{type: :heex_compile}} for non-function compiled form" do
-      assert {:error, err} =
-               Mailglass.TemplateEngine.HEEx.render(:not_a_function, %{}, [])
+      assert {:error, err} = HEEx.render(:not_a_function, %{}, [])
 
-      assert err.__struct__ == Mailglass.TemplateError
+      assert err.__struct__ == TemplateError
       assert err.type == :heex_compile
     end
   end

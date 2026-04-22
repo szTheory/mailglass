@@ -21,11 +21,22 @@ defmodule Mailglass do
   See `Mailglass.Config`, `Mailglass.Renderer`, `Mailglass.Components`.
   """
 
-  # Root boundary. In Phase 1 the boundary graph is intentionally flat: a single
-  # root that contains every module under `Mailglass.*`. Internal boundaries
-  # (Renderer, Components, Outbound, Events, ...) are declared by the plans
-  # that introduce them. This declaration exists only so the :boundary compiler
-  # (wired via `compilers: [:boundary | Mix.compilers()]`) can classify modules
-  # — it imposes no cross-module constraints yet.
-  use Boundary, deps: [], exports: []
+  # Root boundary. Phase 1 keeps the graph flat: a single root that contains
+  # most modules under `Mailglass.*`. Internal boundaries land as their owning
+  # plans introduce them. Plan 01-06 introduces the first sub-boundary
+  # (`Mailglass.Renderer`) to enforce the CORE-07 renderer-purity rule, so the
+  # root now exports the modules Renderer may legitimately call into. Future
+  # sub-boundaries (Outbound, Events, Webhook, Admin) will follow the same
+  # pattern: declare the sub-boundary with an explicit `deps:` list and
+  # export the surface it consumes from here.
+  use Boundary,
+    deps: [],
+    exports: [
+      Message,
+      Telemetry,
+      Config,
+      TemplateEngine,
+      TemplateEngine.HEEx,
+      TemplateError
+    ]
 end
