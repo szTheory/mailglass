@@ -49,7 +49,8 @@
 - [ ] **PERSIST-02**: `mailglass_events` Postgres table exists with columns: `id`, `tenant_id`, `delivery_id`, `type`, `occurred_at`, `idempotency_key`, `raw_payload` (jsonb), `normalized_payload` (jsonb), `inserted_at`. Trigger `mailglass_raise_immutability` raises SQLSTATE 45A01 on UPDATE or DELETE. Test `assert_raise EventLedgerImmutableError` passes against the live schema. (TS-06, D-15)
 - [ ] **PERSIST-03**: `mailglass_events` has UNIQUE partial index on `idempotency_key WHERE idempotency_key IS NOT NULL`. Webhook ingest uses `Ecto.Multi` with `on_conflict: :nothing` — replay of the same event is a no-op. StreamData property test asserts apply-N converges to apply-once. (TS-07, MAIL-03 prevention)
 - [ ] **PERSIST-04**: `mailglass_suppressions` Postgres table exists with columns: `id`, `tenant_id`, `address` (citext, normalized lowercase), `scope` (`:address | :domain | :tenant_address`, no default), `reason` (`:hard_bounce | :complaint | :unsubscribe | :manual | :policy | :invalid_recipient`), `source`, `expires_at`, `created_at`. UNIQUE on `(tenant_id, address, scope, COALESCE(stream, ''))`. (TS-06 partial; full v0.5 in DELIV-03)
-- [ ] **PERSIST-05**: `Mailglass.Events.append/2` is the only public API to write to `mailglass_events`. Calling outside an `Ecto.Multi` raises an `ArgumentError`.
+- [x] **PERSIST-05
+**: `Mailglass.Events.append/2` is the only public API to write to `mailglass_events`. Calling outside an `Ecto.Multi` raises an `ArgumentError`.
 - [ ] **PERSIST-06**: Migrations ship via `mix mailglass.gen.migration` (or generator embedded in `mix mailglass.install`). Adopters' `mix ecto.migrate` includes mailglass migrations.
 
 ### Multi-Tenancy

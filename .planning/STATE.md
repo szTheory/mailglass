@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-04-22T17:52:29.820Z"
-last_activity: 2026-04-22 -- Phase 02 execution started
+stopped_at: Completed 02-01 plan
+last_updated: "2026-04-22T18:04:06.463Z"
+last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 12
-  completed_plans: 6
-  percent: 50
+  completed_plans: 7
+  percent: 58
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 02 (persistence-tenancy) — EXECUTING
-Plan: 1 of 6
-Status: Executing Phase 02
-Last activity: 2026-04-22 -- Phase 02 execution started
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-04-22
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 58%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [██████████] 100%
 | Phase 01 P04 | 4min | 2 tasks tasks | 7 files files |
 | Phase 01 P05 | 8 | 3 tasks | 8 files |
 | Phase 01 P06 | 12min | 2 tasks | 8 files |
+| Phase 02 P01 | 7min | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,10 @@ Most load-bearing for Phase 1:
 - HEEx function components in test fixtures must bind 'assigns' by exact name (not '_assigns') because the ~H sigil macro-expands a reference to assigns even when the template has no interpolations. Using the prefixed name causes 'requires a variable named assigns to exist' at fixture-build time.
 - Renderer plaintext walker runs on the pre-VML HTML tree (D-15) BEFORE Premailex CSS inlining. Pipeline: render_html -> to_plaintext (pre-VML) -> inline_css (Premailex) -> strip_mg_attributes. Premailex adds VML wrappers/OfficeDocumentSettings that must never leak into text_body.
 - Compliance supports both map-shaped and list-shaped Swoosh.Email.headers via dual pattern-match clauses. Current Swoosh 1.25 uses a map, but a future schema change won't silently break the Phase 1 contract.
+- Mailglass.Repo facade grew to six functions in Plan 02-01 (transact/1, insert/2, update/2, delete/2 with SQLSTATE 45A01 translation + passthrough one/2, all/2, get/3). Single translate_postgrex_error/2 defp is the one translation point; reraises Mailglass.EventLedgerImmutableError on pg_code 45A01.
+- Plan 02-01 added :ecto, :ecto_sql, :postgrex as explicit required deps. PROJECT.md declared them required from v0.1 but Phase 1 left them transitive-only (via phoenix). The SQLSTATE translation code's %Postgrex.Error{} pattern failed at compile time — closing the gap in Plan 01 rather than Plan 02 unblocks both.
+- Mailglass.DataCase stamps Process.put(:mailglass_tenant_id, ...) directly as a forward reference. Plan 04 ships Mailglass.Tenancy.put_current/1 under the same process-dict key and updates the setup to use the public API then.
+- EventLedgerImmutableError.new/2 defaults to :update_attempt type because Postgrex error messages are not a stable API. Callers that need UPDATE vs DELETE distinction walk :cause to the raw Postgrex error or read ctx.pg_code.
 
 ### Pending Todos
 
@@ -111,8 +116,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 2 context gathered
-Resume file: --resume-file
+Last session: 2026-04-22T18:04:06.427Z
+Stopped at: Completed 02-01 plan
+Resume file: None
 
 **Planned Phase:** 02 (persistence-tenancy) — 6 plans — 2026-04-22T17:50:17.597Z
