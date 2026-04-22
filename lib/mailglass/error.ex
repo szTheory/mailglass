@@ -2,7 +2,7 @@ defmodule Mailglass.Error do
   @moduledoc """
   Namespace and behaviour for the mailglass error hierarchy.
 
-  Mailglass ships six sibling `defexception` modules, each with a closed
+  Mailglass ships eight sibling `defexception` modules, each with a closed
   `:type` atom set that acts as a sub-kind discriminator. There is no parent
   struct — "hierarchy" here means the shared behaviour contract plus the
   convention that every error struct lives directly under `Mailglass.*`.
@@ -15,6 +15,8 @@ defmodule Mailglass.Error do
   - `Mailglass.SuppressedError` — delivery blocked by suppression list
   - `Mailglass.RateLimitError` — rate limit exceeded (domain, tenant, stream)
   - `Mailglass.ConfigError` — configuration missing, invalid, conflicting, optional-dep absent
+  - `Mailglass.EventLedgerImmutableError` — SQLSTATE 45A01 translation (D-06, Phase 2)
+  - `Mailglass.TenancyError` — tenant context not stamped on the current process (Phase 2)
 
   ## Pattern Matching
 
@@ -70,7 +72,7 @@ defmodule Mailglass.Error do
   ]
 
   @doc """
-  Returns `true` when the value is one of the six mailglass error structs.
+  Returns `true` when the value is one of the eight mailglass error structs.
 
   Non-mailglass exceptions (e.g. `%RuntimeError{}`) return `false`.
   """
