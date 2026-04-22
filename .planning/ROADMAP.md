@@ -54,11 +54,18 @@ Plans:
   1. `assert_raise EventLedgerImmutableError, fn -> Repo.update(event) end` and the equivalent `Repo.delete/1` test both pass against the live `mailglass_events` schema (SQLSTATE 45A01 from `mailglass_raise_immutability` trigger).
   2. A StreamData property test generates 1000 sequences of `(webhook_event, replay_count_1..10)` and asserts that applying any sequence converges to the same final state as applying each event once (idempotency `UNIQUE` partial index on `idempotency_key WHERE idempotency_key IS NOT NULL` plus `on_conflict: :nothing`).
   3. `mailglass_deliveries`, `mailglass_events`, and `mailglass_suppressions` each have a `tenant_id` column (indexed; nullable for single-tenant mode), and `Mailglass.Tenancy.SingleTenant` is the default no-op resolver.
-  4. Calling `Mailglass.Events.append/2` outside an `Ecto.Multi` raises `ArgumentError` — there is no other public path to write the event ledger.
+  4. Calling `Mailglass.Events.append/2` outside an `Ecto.Multi` raises `ArgumentError` — there is no other public path to write the event ledger. (Revised per CONTEXT.md D-02: the runtime-raise invariant is superseded by a lint-time check landing in Phase 6 `NoRawEventInsert`; Plan 05 ships `append/1` + `append_multi/3` as the ONLY writer paths. The PERSIST-05 invariant "no raw Repo.insert(%Event{}) anywhere in mailglass code" is preserved.)
   5. An adopter runs `mix mailglass.gen.migration` (or the migration block embedded in the installer) and `mix ecto.migrate` brings the three schemas + the immutability trigger into existence.
 **Pitfalls guarded against**: MAIL-03 (idempotency), MAIL-07 (suppression `:scope` enum has no default), MAIL-09 (provider `message_id` collision — UNIQUE on `(provider, provider_message_id)`), PHX-04 (no FKs to adopter tables; polymorphic `(owner_type, owner_id)`), PHX-05 partial (tenant column lives everywhere — Credo enforcement comes in Phase 6).
 **Research flag**: yes — `/gsd-research-phase` before planning. Open questions: `metadata jsonb` projection columns shape; orphan-webhook reconciliation worker cadence; whether to adopt `:typed_struct` / `:typed_ecto_schema` given Elixir 1.18+ set-theoretic types; status state machine app-enforced vs DB check constraint (recommend app-enforced — see SUMMARY.md Q6).
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+- [ ] 02-01-PLAN.md — Wave 0 scaffolding: `:uuidv7` dep + `Mailglass.Schema` macro + `EventLedgerImmutableError` + `TenancyError` + SuppressedError pre-GA patch + Telemetry spans (events_append, persist) + Repo SQLSTATE translation + TestRepo/DataCase/Generators + `config/test.exs` wiring
+- [ ] 02-02-PLAN.md — Migration module + Oban-pattern Postgres dispatcher + V01 DDL (3 tables + immutability trigger + CHECK + indexes + citext) + test_helper runs synthetic migration + immutability integration test
+- [ ] 02-03-PLAN.md — Ecto schemas: `Mailglass.Outbound.Delivery` + `Mailglass.Events.Event` + `Mailglass.Suppression.Entry` with hand-written typespecs, `Ecto.Enum` fields, closed-atom-set reflectors, scope/stream coupling validation
+- [ ] 02-04-PLAN.md — `Mailglass.Tenancy` behaviour + `SingleTenant` default + process-dict helpers + `Mailglass.Oban.TenancyMiddleware` (conditionally compiled) + DataCase upgrade
+- [ ] 02-05-PLAN.md — `Mailglass.Events.append/1` + `append_multi/3` (D-01..D-06: idempotency via partial-unique + id:nil replay fetch + telemetry spans) + `Mailglass.Events.Reconciler` pure-query orphan lookup + StreamData convergence property test
+- [ ] 02-06-PLAN.md — `Mailglass.Outbound.Projector` (monotonic D-15 + optimistic_lock D-18) + `Mailglass.SuppressionStore` behaviour + Ecto default impl + phase-wide integration test proving all 5 ROADMAP criteria
 **UI hint**: no
 
 ### Phase 3: Transport + Send Pipeline
@@ -164,7 +171,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | 2026-04-22 |
-| 2. Persistence + Tenancy | 0/TBD | Not started | - |
+| 2. Persistence + Tenancy | 0/6 | Planned | - |
 | 3. Transport + Send Pipeline | 0/TBD | Not started | - |
 | 4. Webhook Ingest | 0/TBD | Not started | - |
 | 5. Dev Preview LiveView | 0/TBD | Not started | - |
