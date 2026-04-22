@@ -38,7 +38,7 @@ mailglass v0.1 ships in 7 phases tracing the 7-layer build order from `research/
 **Pitfalls guarded against**: LIB-02 (compile-time dep explosion via `compile_env`), LIB-07 (only `Config` may use `compile_env`), OBS-01 (PII in telemetry — whitelist enforced from day one), OBS-04 (logger PII), DIST-04 (optional dep gateway pattern locked here so later phases cannot leak), MAINT-04 (Premailex flagged as MEDIUM-confidence "watch this dep").
 **Plans**: 6 plans
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffold, deps, Boundary compiler, Wave 0 test stubs
+- [x] 01-01-PLAN.md — Project scaffold, deps, Boundary compiler, Wave 0 test stubs
 - [ ] 01-02-PLAN.md — Error hierarchy (6 defexception structs + namespace behaviour + api_stability.md)
 - [ ] 01-03-PLAN.md — Config (NimbleOptions), Telemetry (span helpers), Repo (transact/1), IdempotencyKey
 - [ ] 01-04-PLAN.md — Message struct + OptionalDeps gateway modules (Oban, OTel, MJML, GenSmtp, Sigra)
@@ -163,7 +163,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/6 | Not started | - |
+| 1. Foundation | 1/6 | In progress | - |
 | 2. Persistence + Tenancy | 0/TBD | Not started | - |
 | 3. Transport + Send Pipeline | 0/TBD | Not started | - |
 | 4. Webhook Ingest | 0/TBD | Not started | - |

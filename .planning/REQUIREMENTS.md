@@ -21,8 +21,10 @@
 - [ ] **CORE-03**: Library emits telemetry events on the `[:mailglass, :domain, :resource, :action, :start | :stop | :exception]` 4-level convention. Metadata is restricted to a whitelisted key set: `:tenant_id, :mailable, :provider, :status, :message_id, :delivery_id, :event_id, :latency_ms, :recipient_count, :bytes, :retry_count`. PII keys (`:to`, `:from`, `:body`, `:html_body`, `:subject`, `:headers`, `:recipient`, `:email`) are forbidden. Telemetry handlers that raise do not break the send pipeline. (TS-10, OBS-01 prevention)
 - [ ] **CORE-04**: Library exposes `Mailglass.Repo.transact/1` wrapper for `Ecto.Multi` flows. `Ecto.Multi` insertion of an `Event` row is required for every state-changing operation.
 - [ ] **CORE-05**: Library exposes `Mailglass.IdempotencyKey` helper producing keys of form `"#{provider}:#{provider_event_id}"`. Used by webhook ingest + `deliver_many` partial-failure recovery.
-- [ ] **CORE-06**: All optional deps (`oban`, `opentelemetry`, `mjml`, `gen_smtp`, `sigra`) are gated through `Mailglass.OptionalDeps.{Oban, OpenTelemetry, MJML, ...}` modules with `@compile {:no_warn_undefined, ...}` declared once + `available?/0` predicate + degraded fallback. CI lane `mix compile --no-optional-deps --warnings-as-errors` passes. (DIST-04 prevention)
-- [ ] **CORE-07**: Library adopts the `boundary` library from Phase 1. `Mailglass.Renderer` cannot depend on `Mailglass.Outbound`, `Mailglass.Repo`, or any process. `Mailglass.Events` cannot depend on `Mailglass.Outbound`.
+- [x] **CORE-06
+**: All optional deps (`oban`, `opentelemetry`, `mjml`, `gen_smtp`, `sigra`) are gated through `Mailglass.OptionalDeps.{Oban, OpenTelemetry, MJML, ...}` modules with `@compile {:no_warn_undefined, ...}` declared once + `available?/0` predicate + degraded fallback. CI lane `mix compile --no-optional-deps --warnings-as-errors` passes. (DIST-04 prevention)
+- [x] **CORE-07
+**: Library adopts the `boundary` library from Phase 1. `Mailglass.Renderer` cannot depend on `Mailglass.Outbound`, `Mailglass.Repo`, or any process. `Mailglass.Events` cannot depend on `Mailglass.Outbound`.
 
 ### Authoring
 
@@ -105,7 +107,8 @@
 - [ ] **LINT-01**: `Mailglass.Credo.NoRawSwooshSendInLib` — every send goes via `Mailglass.Outbound.*`, never `Swoosh.Mailer.deliver/1` directly. (DF-09)
 - [ ] **LINT-02**: `Mailglass.Credo.NoPiiInTelemetryMeta` — flags any literal `:to`/`:from`/`:body`/`:html_body`/`:subject`/`:headers`/`:recipient`/`:email` keys in telemetry metadata maps. (CORE-03 enforcement, OBS-01 prevention)
 - [ ] **LINT-03**: `Mailglass.Credo.NoUnscopedTenantQueryInLib` — every Repo query on `mailglass_deliveries`/`mailglass_events`/`mailglass_suppressions` passes through `Mailglass.Tenancy.scope/2`. (TENANT-03 enforcement)
-- [ ] **LINT-04**: `Mailglass.Credo.NoBareOptionalDepReference` — direct calls to `Oban.*`, `OpenTelemetry.*`, `Mjml.*` outside the `Mailglass.OptionalDeps.*` gateway modules are flagged. (CORE-06 enforcement)
+- [x] **LINT-04**: `Mailglass.Credo.NoBareOptionalDepReference` — direct calls to `Oban.*`, `OpenTelemetry.*`, `Mjml.*` outside the `Mailglass.OptionalDeps.*` gateway modules are flagged. (CORE-06
+ enforcement)
 - [ ] **LINT-05**: `Mailglass.Credo.NoOversizedUseInjection` — `use Mailglass.Mailable` injects ≤20 lines (counted via AST analysis). (LIB-01 prevention)
 - [ ] **LINT-06**: `Mailglass.Credo.PrefixedPubSubTopics` — every `Phoenix.PubSub.broadcast` topic in mailglass code is prefixed `mailglass:`. (SEND-05 enforcement, PHX-06 prevention)
 - [ ] **LINT-07**: `Mailglass.Credo.NoDefaultModuleNameSingleton` — flags any `GenServer.start_link(..., name: __MODULE__)` in mailglass library code. (LIB-05 prevention)

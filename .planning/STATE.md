@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: "Phase 1 context gathered (4 gray areas researched + locked: error hierarchy, MSO fallback, component API, telemetry enforcement)"
-last_updated: "2026-04-22T14:23:20.658Z"
-last_activity: 2026-04-22 -- Phase 01 execution started
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-04-22T14:35:10.934Z"
+last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 6
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 17
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 1 of 6
-Status: Executing Phase 01
-Last activity: 2026-04-22 -- Phase 01 execution started
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-04-22
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 17%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: — (no execution history yet)
 
 *Updated after each plan completion.*
+| Phase 01 P01-01 | 8min | 2 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,9 @@ Most load-bearing for Phase 1:
 - **D-06**: Bleeding-edge floor — Elixir 1.18+ / OTP 27+ / Phoenix 1.8+ / LiveView 1.0+ / Ecto 3.13+.
 - **D-17**: Custom Credo checks enforce domain rules (operationalized in Phase 6, but their forbidden patterns must be avoided from Phase 1 code).
 - **D-18**: HEEx + Phoenix.Component is the default renderer; MJML is opt-in via the `:mjml` Hex package (NOT `:mrml` — corrected in research).
+- Swoosh :api_client deferred to adopter via config :swoosh, :api_client, false — mailglass does not pin an HTTP transport
+- Flat root Boundary on Mailglass (deps: [], exports: []) — classifies Mailglass.* modules without constraining internal deps; sub-boundaries land with later plans
+- Mailglass.Config.validate_at_boot!/0 added to elixirc_options no_warn_undefined as MFA tuple forward reference until Plan 03 lands Config
 
 ### Pending Todos
 
@@ -82,8 +86,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 1 context gathered (4 gray areas researched + locked: error hierarchy, MSO fallback, component API, telemetry enforcement)
-Resume file: --resume-file
+Last session: 2026-04-22T14:35:10.929Z
+Stopped at: Completed 01-01-PLAN.md
+Resume file: None
 
 **Planned Phase:** 1 (Foundation) — 6 plans — 2026-04-22T14:18:01.914Z
