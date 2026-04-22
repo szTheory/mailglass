@@ -1,6 +1,8 @@
 defmodule Mailglass.Suppression.EntryTest do
   use Mailglass.DataCase, async: true
 
+  @moduletag :phase_02_uat
+
   alias Mailglass.Suppression.Entry
   alias Mailglass.TestRepo
 

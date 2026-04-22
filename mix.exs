@@ -91,14 +91,34 @@ defmodule Mailglass.MixProject do
     ]
   end
 
-  # INST-04: `mix verify.phase01` is the single-command gate CI runs per phase.
-  # Phase 6 expands this with custom Credo checks; the alias name stays stable.
+  # INST-04: `mix verify.phaseNN` is the single-command gate CI runs per phase.
+  # Phase 6 expands this with custom Credo checks; the alias names stay stable.
   defp aliases do
     [
       "verify.phase01": [
         "compile --no-optional-deps --warnings-as-errors",
         "test --warnings-as-errors",
         "credo --strict"
+      ],
+      # Phase 2 UAT gate — drops and rebuilds the test DB so migration/seed
+      # regressions surface named, runs the 6 success-criteria test files
+      # explicitly (equivalent to `mix test --only phase_02_uat`), then the
+      # no-optional-deps compile lane (Oban middleware conditional compile).
+      # Mailglass.TestRepo lives in test/support (not in project ecto_repos),
+      # so ecto tasks need `-r` to target it explicitly.
+      "verify.phase_02": [
+        "ecto.drop -r Mailglass.TestRepo --quiet",
+        "ecto.create -r Mailglass.TestRepo --quiet",
+        "test --warnings-as-errors --only phase_02_uat --exclude flaky",
+        "compile --no-optional-deps --warnings-as-errors"
+      ],
+      # Cold-start smoke — full suite from a fresh DB. Catches startup-order,
+      # seed, and missing-migration issues that warm-state runs can mask.
+      # Excludes `:flaky`-tagged tests (tracked in deferred-items.md).
+      "verify.cold_start": [
+        "ecto.drop -r Mailglass.TestRepo --quiet",
+        "ecto.create -r Mailglass.TestRepo --quiet",
+        "test --warnings-as-errors --exclude flaky"
       ]
     ]
   end

@@ -31,6 +31,8 @@ defmodule Mailglass.PersistenceIntegrationTest do
 
   use Mailglass.DataCase, async: false
 
+  @moduletag :phase_02_uat
+
   import Ecto.Query
 
   # `migration_test.exs` DROPs + CREATEs the citext extension to prove the

@@ -1,6 +1,8 @@
 defmodule Mailglass.Outbound.ProjectorTest do
   use Mailglass.DataCase, async: true
 
+  @moduletag :phase_02_uat
+
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
   alias Mailglass.Outbound.Projector

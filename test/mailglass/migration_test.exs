@@ -2,6 +2,8 @@ defmodule Mailglass.MigrationTest do
   # async: false — these tests inspect and mutate schema-level state.
   use ExUnit.Case, async: false
 
+  @moduletag :phase_02_uat
+
   alias Mailglass.Migration
   alias Mailglass.TestRepo
 

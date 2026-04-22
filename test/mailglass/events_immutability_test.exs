@@ -3,6 +3,8 @@ defmodule Mailglass.EventsImmutabilityTest do
   # and cannot share the sandbox with concurrent schema-aware tests.
   use Mailglass.DataCase, async: false
 
+  @moduletag :phase_02_uat
+
   alias Mailglass.EventLedgerImmutableError
   alias Mailglass.TestRepo
 
