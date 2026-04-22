@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-04 plan
-last_updated: "2026-04-22T19:07:00.328Z"
+stopped_at: Completed 02-05 plan
+last_updated: "2026-04-22T19:24:41.661Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 12
-  completed_plans: 10
-  percent: 83
+  completed_plans: 11
+  percent: 92
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 02 (persistence-tenancy) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [████████░░] 83%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [████████░░] 83%
 | Phase 02 P02 | 39min | 2 tasks tasks | 7 files files |
 | Phase 02 P03 | 6min | 2 tasks tasks | 6 files files |
 | Phase 02 P04 | 6min | 2 tasks tasks | 6 files files |
+| Phase 02 P05 | 11min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,10 @@ Most load-bearing for Phase 1:
 - Mailglass.Oban.TenancyMiddleware conditionally-compiles against Oban.Worker (not Oban.Middleware — that behaviour is Oban Pro only). Ships dual-surface: call/2 matches the Pro middleware shape for direct middleware: [...] registration; wrap_perform/2 is the OSS adopter entry point invoked from inside perform/1. Both paths converge on Mailglass.Tenancy.with_tenant/2.
 - DataCase.with_tenant/2 retained as a one-line delegate to Mailglass.Tenancy.with_tenant/2; setup block calls Mailglass.Tenancy.put_current/1. Raw Process.put(:mailglass_tenant_id, ...) from Plan 01 fully retired — the public Tenancy API is the ONLY stamping path, which is what Phase 6 LINT-03 (NoUnscopedTenantQueryInLib) will enforce.
 - tenant_id!/0 does NOT fall back to the SingleTenant default when unstamped — it raises Mailglass.TenancyError{type: :unstamped}. Unlike current/0 (permissive), tenant_id!/0 is the fail-loud accessor for Oban workers that have already run the middleware. Mirrors accrue's Actor.actor_id! vs Actor.current split.
+- Plan 02-05: replay-detection sentinel for UUIDv7 schemas is inserted_at: nil, not id: nil. Client-side autogenerate populates id before INSERT; nil sentinel shifts to any DB-defaulted column (inserted_at default now()). Documented in Mailglass.Events moduledoc so future append-only schemas follow the same convention.
+- Plan 02-05: DB-backed property tests that TRUNCATE between iterations cannot use DataCase — transaction wrapper deadlocks after ~60s. Pattern: use ExUnit.Case, async: false + Sandbox.mode(TestRepo, :auto) in setup + :manual in on_exit. Matches Plan 02-02's migration_test pattern. Bounded to a single test; does not leak into DataCase-using siblings.
+- Plan 02-05: Mailglass.Events.current_trace_id/0 is a nil-returning stub in Phase 2. The plan's verbatim :otel_propagator_text_map probe referenced a fictitious return shape. Phase 4 webhook ingest is the first concrete trace-context call site; the stub is replaced then against a real OTel SDK harness.
+- Plan 02-05: Reconciler module (find_orphans/1 + attempt_link/2) ships as pure Ecto with zero Oban dep. Module docstrings forward-reference Phase 4's Oban worker (cron */15 * * * * per D-20) but contain no imports/aliases/calls to Oban. mix compile --no-optional-deps --warnings-as-errors stays green.
 
 ### Pending Todos
 
@@ -130,8 +135,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T19:07:00.316Z
-Stopped at: Completed 02-04 plan
+Last session: 2026-04-22T19:24:41.651Z
+Stopped at: Completed 02-05 plan
 Resume file: None
 
 **Planned Phase:** 02 (persistence-tenancy) — 6 plans — 2026-04-22T17:50:17.597Z
