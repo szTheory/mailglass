@@ -34,7 +34,8 @@
 ### Authoring
 
 - [ ] **AUTHOR-01**: Adopter defines a Mailable as `defmodule MyApp.UserMailer do; use Mailglass.Mailable; def welcome(user), do: ...; end`. The `use` macro injects ≤20 lines (verified by `NoOversizedUseInjection` Credo check). Mailable returns a `%Mailglass.Message{}` struct wrapping `%Swoosh.Email{}`. (TS-01)
-- [ ] **AUTHOR-02**: Library ships `Mailglass.Components` HEEx component library with: `<.container>`, `<.section>`, `<.row>`, `<.column>`, `<.heading>`, `<.text>`, `<.button>`, `<.img>`, `<.link>`, `<.hr>`, `<.preheader>`. Every component renders with MSO Outlook VML fallback wrapper. No Node toolchain required at any point. (TS-02, DF-02)
+- [x] **AUTHOR-02
+**: Library ships `Mailglass.Components` HEEx component library with: `<.container>`, `<.section>`, `<.row>`, `<.column>`, `<.heading>`, `<.text>`, `<.button>`, `<.img>`, `<.link>`, `<.hr>`, `<.preheader>`. Every component renders with MSO Outlook VML fallback wrapper. No Node toolchain required at any point. (TS-02, DF-02)
 - [ ] **AUTHOR-03**: Render pipeline is `HEEx → Premailex CSS inlining → minify → Floki auto-plaintext`. Pure-function `Mailglass.Renderer.render(message)` produces `{html_body, text_body}` in <50ms for a typical template. (TS-03)
 - [ ] **AUTHOR-04**: Templates support `Gettext` `dgettext("emails", ...)` for i18n. `mix mailglass.gettext.extract` mix task generates `priv/gettext/emails.pot`. (TS-04)
 - [x] **AUTHOR-05

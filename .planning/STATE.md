@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-04-PLAN.md
-last_updated: "2026-04-22T15:11:06.292Z"
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-04-22T15:26:17.649Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
-  percent: 67
+  completed_plans: 5
+  percent: 83
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [███████░░░] 67%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [███████░░░] 67%
 | Phase 01 P02 | 5min | 2 tasks | 9 files |
 | Phase 01 P03 | 10min | 2 tasks | 9 files |
 | Phase 01 P04 | 4min | 2 tasks tasks | 7 files files |
+| Phase 01 P05 | 8 | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,11 @@ Most load-bearing for Phase 1:
 - Mailglass.Message.new/2 uses Keyword.get with per-option defaults — uniform builder regardless of opt count, pattern-matches %Swoosh.Email{} on input
 - Mailglass.OptionalDeps.Sigra is conditionally compiled via if Code.ensure_loaded?(Sigra) do ... end — matches accrue-sigra pattern where Sigra itself expects the module to not exist when :sigra absent; callers probe existence via Code.ensure_loaded?(Mailglass.OptionalDeps.Sigra), not available?/0
 - OpenTelemetry gateway probes :otel_tracer (stable API surface), not the package atom :opentelemetry (not a loadable module) — matches accrue/integrations and PATTERNS.md line 814
+- render_slot_to_binary/2 calls Phoenix.Component.__render_slot__/3 directly with nil for the changed tracker — the public render_slot/2 is a macro that only works inside ~H. Needed for button/1's VML branch where slot content must be a binary suitable for splicing into a raw MSO conditional block.
+- Button :variant and :tone are orthogonal. :tone picks the brand color (glass/ink/slate); :variant picks the rendering mode (primary=fill, secondary=ice-tint, ghost=transparent). Both resolve to concrete hex values before entering the VML block — classic Outlook cannot resolve brand tokens in v:roundrect fillcolor/strokecolor.
+- <.img> :alt is required at compile time via attr :alt, :string, required: true. Phoenix.Component's compile-time check emits 'missing required attribute "alt"' whenever <.img> is used without it — under --warnings-as-errors that's a hard failure. The accessibility floor cannot be bypassed by omission.
+- img_no_alt_test.exs stays @moduletag :skip. Compile-time checks can't be tested by running them at test runtime — compiling a fixture module inside the test suite would FAIL the entire suite because the compile error propagates. The stub exists as documentation of the contract.
+- HEEx does not interpolate expressions inside HTML comments. VML-bearing components (row, column, button) pre-build MSO conditional blocks as strings, wrap with Phoenix.HTML.raw/1, and embed via expression holes. The <a> HTML fallback uses normal HEEx because the if-not-mso boundary terminates the comment per HTML parser rules.
 
 ### Pending Todos
 
@@ -99,8 +105,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T15:11:06.280Z
-Stopped at: Completed 01-04-PLAN.md
+Last session: 2026-04-22T15:25:54.473Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None
 
 **Planned Phase:** 1 (Foundation) — 6 plans — 2026-04-22T14:18:01.914Z
