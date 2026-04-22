@@ -93,12 +93,16 @@ defmodule Mailglass.Error do
 
   @doc """
   Returns `true` when the error is retryable per its struct's `retryable?/1`
-  callback. Delegates to the struct module (see D-09 retry policy):
+  callback. Per-struct policy:
 
   - `Mailglass.SignatureError`, `Mailglass.ConfigError` — always `false`
   - `Mailglass.SuppressedError`, `Mailglass.TemplateError` — always `false`
+  - `Mailglass.EventLedgerImmutableError`, `Mailglass.TenancyError` — always `false`
   - `Mailglass.RateLimitError` — always `true` (caller uses `retry_after_ms`)
   - `Mailglass.SendError` — `true` only for `:adapter_failure`
+
+  The inline list is the authoritative contract. `docs/api_stability.md`
+  documents the per-struct `Retryable:` line verbatim.
   """
   @doc since: "0.1.0"
   @spec retryable?(t()) :: boolean()
