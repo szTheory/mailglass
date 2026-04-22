@@ -33,23 +33,27 @@ defmodule Mailglass.Migration do
     migrator().down(opts)
   end
 
-  @doc "Returns the currently-applied migration version (0 if none)."
+  @doc """
+  Returns the currently-applied migration version (0 if none).
+
+  This function is safe to call outside an `Ecto.Migrator` context —
+  unlike `up/1` / `down/1`, it does not rely on the migration runner
+  process (it issues a single `pg_catalog.obj_description` query against
+  the configured Repo and returns an integer).
+  """
   @doc since: "0.1.0"
   @spec migrated_version(keyword()) :: non_neg_integer()
   def migrated_version(opts \\ []) when is_list(opts) do
+    # Inject the configured Repo so the dispatcher can run the version
+    # query without needing an active `use Ecto.Migration` runner.
+    opts = Keyword.put_new(opts, :repo, resolve_repo())
     migrator().migrated_version(opts)
   end
 
   # Resolves the version dispatcher based on the configured Repo's adapter.
   # Postgres-only at v0.1 per PROJECT.md — MySQL/SQLite are out of scope.
   defp migrator do
-    repo =
-      case Application.get_env(:mailglass, :repo) do
-        nil -> raise Mailglass.ConfigError.new(:missing, context: %{key: :repo})
-        mod when is_atom(mod) -> mod
-      end
-
-    case repo.__adapter__() do
+    case resolve_repo().__adapter__() do
       Ecto.Adapters.Postgres ->
         Mailglass.Migrations.Postgres
 
@@ -57,6 +61,13 @@ defmodule Mailglass.Migration do
         raise Mailglass.ConfigError.new(:invalid,
                 context: %{key: :repo, adapter: other, reason: "Postgres only at v0.1"}
               )
+    end
+  end
+
+  defp resolve_repo do
+    case Application.get_env(:mailglass, :repo) do
+      nil -> raise Mailglass.ConfigError.new(:missing, context: %{key: :repo})
+      mod when is_atom(mod) -> mod
     end
   end
 end
