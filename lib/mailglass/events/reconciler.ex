@@ -90,31 +90,40 @@ defmodule Mailglass.Events.Reconciler do
   Pure query — does NOT mutate anything. Phase 4's Oban worker
   decides whether to emit a `:reconciled` event and/or update the
   delivery projection after this returns success.
+
+  Emits `[:mailglass, :persist, :reconcile, :link, :*]` with
+  `tenant_id` metadata (PII-free per D-31 whitelist).
   """
   @doc since: "0.1.0"
-  @spec attempt_link(Event.t(), keyword()) ::
+  @spec attempt_link(Event.t()) ::
           {:ok, {Delivery.t(), Event.t()}}
           | {:error, :delivery_not_found | :malformed_payload}
-  def attempt_link(%Event{} = event, _opts \\ []) do
-    provider = extract(event, "provider")
-    provider_message_id = extract(event, "provider_message_id")
+  def attempt_link(%Event{} = event) do
+    Mailglass.Telemetry.persist_span(
+      [:reconcile, :link],
+      %{tenant_id: event.tenant_id},
+      fn ->
+        provider = extract(event, "provider")
+        provider_message_id = extract(event, "provider_message_id")
 
-    cond do
-      is_nil(provider) or is_nil(provider_message_id) ->
-        {:error, :malformed_payload}
+        cond do
+          is_nil(provider) or is_nil(provider_message_id) ->
+            {:error, :malformed_payload}
 
-      true ->
-        query =
-          from(d in Delivery,
-            where: d.provider == ^provider and d.provider_message_id == ^provider_message_id,
-            limit: 1
-          )
+          true ->
+            query =
+              from(d in Delivery,
+                where: d.provider == ^provider and d.provider_message_id == ^provider_message_id,
+                limit: 1
+              )
 
-        case Mailglass.Repo.one(query) do
-          nil -> {:error, :delivery_not_found}
-          %Delivery{} = delivery -> {:ok, {delivery, event}}
+            case Mailglass.Repo.one(query) do
+              nil -> {:error, :delivery_not_found}
+              %Delivery{} = delivery -> {:ok, {delivery, event}}
+            end
         end
-    end
+      end
+    )
   end
 
   defp extract(%Event{raw_payload: rp, metadata: md}, key) when is_binary(key) do
