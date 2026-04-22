@@ -50,7 +50,12 @@ defmodule Mailglass.MixProject do
         :otel_span,
         Mjml,
         :gen_smtp_client,
-        Sigra
+        Sigra,
+        # Mailglass.Config lands in Plan 03. `Mailglass.Application.start/2`
+        # references `Mailglass.Config.validate_at_boot!/0` behind a
+        # `Code.ensure_loaded?/1` guard so early-phase boot doesn't crash;
+        # suppress the compile-time undefined-function warning until Plan 03.
+        {Mailglass.Config, :validate_at_boot!, 0}
       ]
     ]
   end
