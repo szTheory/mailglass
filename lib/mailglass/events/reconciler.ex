@@ -53,8 +53,14 @@ defmodule Mailglass.Events.Reconciler do
   """
   @doc since: "0.1.0"
   @spec find_orphans(keyword()) :: [Event.t()]
-  def find_orphans(opts \\ []) do
+  def find_orphans(opts \\ []) when is_list(opts) do
     tenant_id = Keyword.get(opts, :tenant_id)
+
+    unless is_nil(tenant_id) or is_binary(tenant_id) do
+      raise ArgumentError,
+            "tenant_id must be nil or a binary, got: #{inspect(tenant_id)}"
+    end
+
     limit = Keyword.get(opts, :limit, 100)
     max_age_minutes = Keyword.get(opts, :max_age_minutes, @default_max_age_minutes)
 
