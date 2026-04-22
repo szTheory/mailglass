@@ -62,7 +62,8 @@
 
 - [x] **TENANT-01
 **: Every mailglass-owned schema (`mailglass_deliveries`, `mailglass_events`, `mailglass_suppressions`) has a `tenant_id` column (nullable for single-tenant mode, indexed). (TS-08, D-09)
-- [ ] **TENANT-02**: `Mailglass.Tenancy` is a pluggable behaviour with `scope/2` callback. The default `Mailglass.Tenancy.SingleTenant` impl is a no-op. Adopters can implement custom resolvers. Phoenix 1.8 `%Scope{}` interop is documented but not auto-detected (avoids hidden coupling).
+- [x] **TENANT-02
+**: `Mailglass.Tenancy` is a pluggable behaviour with `scope/2` callback. The default `Mailglass.Tenancy.SingleTenant` impl is a no-op. Adopters can implement custom resolvers. Phoenix 1.8 `%Scope{}` interop is documented but not auto-detected (avoids hidden coupling).
 - [ ] **TENANT-03**: Custom Credo check `NoUnscopedTenantQueryInLib` flags every `Repo` query on a tenanted schema that doesn't pass through `Mailglass.Tenancy.scope/2`. Bypass requires explicit `scope: :unscoped` opt with telemetry audit emit. Multi-tenant property test spawns 2 tenants, writes 100 records each, asserts zero cross-tenant leak. (PHX-05 prevention)
 
 ### Transport

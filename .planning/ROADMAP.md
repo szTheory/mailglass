@@ -63,7 +63,7 @@ Plans:
 - [x] 02-01-PLAN.md — Wave 0 scaffolding: `:uuidv7` dep + `Mailglass.Schema` macro + `EventLedgerImmutableError` + `TenancyError` + SuppressedError pre-GA patch + Telemetry spans (events_append, persist) + Repo SQLSTATE translation + TestRepo/DataCase/Generators + `config/test.exs` wiring
 - [x] 02-02-PLAN.md — Migration module + Oban-pattern Postgres dispatcher + V01 DDL (3 tables + immutability trigger + CHECK + indexes + citext) + test_helper runs synthetic migration + immutability integration test
 - [x] 02-03-PLAN.md — Ecto schemas: `Mailglass.Outbound.Delivery` + `Mailglass.Events.Event` + `Mailglass.Suppression.Entry` with hand-written typespecs, `Ecto.Enum` fields, closed-atom-set reflectors, scope/stream coupling validation
-- [ ] 02-04-PLAN.md — `Mailglass.Tenancy` behaviour + `SingleTenant` default + process-dict helpers + `Mailglass.Oban.TenancyMiddleware` (conditionally compiled) + DataCase upgrade
+- [x] 02-04-PLAN.md — `Mailglass.Tenancy` behaviour + `SingleTenant` default + process-dict helpers + `Mailglass.Oban.TenancyMiddleware` (conditionally compiled) + DataCase upgrade
 - [ ] 02-05-PLAN.md — `Mailglass.Events.append/1` + `append_multi/3` (D-01..D-06: idempotency via partial-unique + id:nil replay fetch + telemetry spans) + `Mailglass.Events.Reconciler` pure-query orphan lookup + StreamData convergence property test
 - [ ] 02-06-PLAN.md — `Mailglass.Outbound.Projector` (monotonic D-15 + optimistic_lock D-18) + `Mailglass.SuppressionStore` behaviour + Ecto default impl + phase-wide integration test proving all 5 ROADMAP criteria
 **UI hint**: no

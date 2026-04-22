@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-03 plan
-last_updated: "2026-04-22T18:55:30.549Z"
+stopped_at: Completed 02-04 plan
+last_updated: "2026-04-22T19:07:00.328Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 12
-  completed_plans: 9
-  percent: 75
+  completed_plans: 10
+  percent: 83
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 02 (persistence-tenancy) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [████████░░] 75%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [████████░░] 75%
 | Phase 02 P01 | 7min | 3 tasks | 14 files |
 | Phase 02 P02 | 39min | 2 tasks tasks | 7 files files |
 | Phase 02 P03 | 6min | 2 tasks tasks | 6 files files |
+| Phase 02 P04 | 6min | 2 tasks tasks | 6 files files |
 
 ## Accumulated Context
 
@@ -107,6 +108,10 @@ Most load-bearing for Phase 1:
 - UNIQUE-index violations during Repo.insert surface as Ecto.ConstraintError (not Postgrex.Error) when the schema has not declared unique_constraint/3. Raw TestRepo.query! bypasses the Ecto interception layer and surfaces the raw Postgrex.Error — useful for DB CHECK constraint integration tests.
 - Mailglass.Events.Event schema exposes only changeset/1 (INSERT). No update_changeset/2 is defined; the moduledoc explicitly avoids the substring 'update_changeset' to not trip naive acceptance greps. Adopters who need to update an event row will hit the DB trigger → EventLedgerImmutableError at Repo.update/2 time.
 - Delivery changeset auto-populates :recipient_domain via put_recipient_domain/1 pipe step — lowercased SPLIT_PART of :recipient at cast time. Adopters who supply :recipient_domain explicitly (via Generators or tests) keep their override; the helper only fires when no change is present.
+- Mailglass.Tenancy.SingleTenant ships as the :tenancy default. current/0 returns literal 'default' when unstamped. Application.get_env(:mailglass, :tenancy) is read per call — not cached in :persistent_term. Tenancy is off the render hot path; caching would couple it to Config.validate_at_boot!/0 boot-order.
+- Mailglass.Oban.TenancyMiddleware conditionally-compiles against Oban.Worker (not Oban.Middleware — that behaviour is Oban Pro only). Ships dual-surface: call/2 matches the Pro middleware shape for direct middleware: [...] registration; wrap_perform/2 is the OSS adopter entry point invoked from inside perform/1. Both paths converge on Mailglass.Tenancy.with_tenant/2.
+- DataCase.with_tenant/2 retained as a one-line delegate to Mailglass.Tenancy.with_tenant/2; setup block calls Mailglass.Tenancy.put_current/1. Raw Process.put(:mailglass_tenant_id, ...) from Plan 01 fully retired — the public Tenancy API is the ONLY stamping path, which is what Phase 6 LINT-03 (NoUnscopedTenantQueryInLib) will enforce.
+- tenant_id!/0 does NOT fall back to the SingleTenant default when unstamped — it raises Mailglass.TenancyError{type: :unstamped}. Unlike current/0 (permissive), tenant_id!/0 is the fail-loud accessor for Oban workers that have already run the middleware. Mirrors accrue's Actor.actor_id! vs Actor.current split.
 
 ### Pending Todos
 
@@ -125,8 +130,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T18:55:17.870Z
-Stopped at: Completed 02-03 plan
+Last session: 2026-04-22T19:07:00.316Z
+Stopped at: Completed 02-04 plan
 Resume file: None
 
 **Planned Phase:** 02 (persistence-tenancy) — 6 plans — 2026-04-22T17:50:17.597Z
