@@ -45,17 +45,23 @@
 
 ### Persistence
 
-- [ ] **PERSIST-01**: `mailglass_deliveries` Postgres table exists with columns: `id` (uuidv7), `tenant_id`, `mailable`, `recipient`, `stream` (`:transactional | :operational | :bulk`), `provider`, `provider_message_id`, `last_event_type`, `last_event_at`, `terminal?`, `dispatched_at`, `delivered_at`, `bounced_at`, `complained_at`, `suppressed_at`, `metadata` (jsonb), `inserted_at`. UNIQUE index on `(provider, provider_message_id) WHERE provider_message_id IS NOT NULL`. (MAIL-09 prevention)
-- [ ] **PERSIST-02**: `mailglass_events` Postgres table exists with columns: `id`, `tenant_id`, `delivery_id`, `type`, `occurred_at`, `idempotency_key`, `raw_payload` (jsonb), `normalized_payload` (jsonb), `inserted_at`. Trigger `mailglass_raise_immutability` raises SQLSTATE 45A01 on UPDATE or DELETE. Test `assert_raise EventLedgerImmutableError` passes against the live schema. (TS-06, D-15)
-- [ ] **PERSIST-03**: `mailglass_events` has UNIQUE partial index on `idempotency_key WHERE idempotency_key IS NOT NULL`. Webhook ingest uses `Ecto.Multi` with `on_conflict: :nothing` — replay of the same event is a no-op. StreamData property test asserts apply-N converges to apply-once. (TS-07, MAIL-03 prevention)
-- [ ] **PERSIST-04**: `mailglass_suppressions` Postgres table exists with columns: `id`, `tenant_id`, `address` (citext, normalized lowercase), `scope` (`:address | :domain | :tenant_address`, no default), `reason` (`:hard_bounce | :complaint | :unsubscribe | :manual | :policy | :invalid_recipient`), `source`, `expires_at`, `created_at`. UNIQUE on `(tenant_id, address, scope, COALESCE(stream, ''))`. (TS-06 partial; full v0.5 in DELIV-03)
+- [x] **PERSIST-01
+**: `mailglass_deliveries` Postgres table exists with columns: `id` (uuidv7), `tenant_id`, `mailable`, `recipient`, `stream` (`:transactional | :operational | :bulk`), `provider`, `provider_message_id`, `last_event_type`, `last_event_at`, `terminal?`, `dispatched_at`, `delivered_at`, `bounced_at`, `complained_at`, `suppressed_at`, `metadata` (jsonb), `inserted_at`. UNIQUE index on `(provider, provider_message_id) WHERE provider_message_id IS NOT NULL`. (MAIL-09 prevention)
+- [x] **PERSIST-02
+**: `mailglass_events` Postgres table exists with columns: `id`, `tenant_id`, `delivery_id`, `type`, `occurred_at`, `idempotency_key`, `raw_payload` (jsonb), `normalized_payload` (jsonb), `inserted_at`. Trigger `mailglass_raise_immutability` raises SQLSTATE 45A01 on UPDATE or DELETE. Test `assert_raise EventLedgerImmutableError` passes against the live schema. (TS-06, D-15)
+- [x] **PERSIST-03
+**: `mailglass_events` has UNIQUE partial index on `idempotency_key WHERE idempotency_key IS NOT NULL`. Webhook ingest uses `Ecto.Multi` with `on_conflict: :nothing` — replay of the same event is a no-op. StreamData property test asserts apply-N converges to apply-once. (TS-07, MAIL-03 prevention)
+- [x] **PERSIST-04
+**: `mailglass_suppressions` Postgres table exists with columns: `id`, `tenant_id`, `address` (citext, normalized lowercase), `scope` (`:address | :domain | :tenant_address`, no default), `reason` (`:hard_bounce | :complaint | :unsubscribe | :manual | :policy | :invalid_recipient`), `source`, `expires_at`, `created_at`. UNIQUE on `(tenant_id, address, scope, COALESCE(stream, ''))`. (TS-06 partial; full v0.5 in DELIV-03)
 - [x] **PERSIST-05
 **: `Mailglass.Events.append/2` is the only public API to write to `mailglass_events`. Calling outside an `Ecto.Multi` raises an `ArgumentError`.
-- [ ] **PERSIST-06**: Migrations ship via `mix mailglass.gen.migration` (or generator embedded in `mix mailglass.install`). Adopters' `mix ecto.migrate` includes mailglass migrations.
+- [x] **PERSIST-06
+**: Migrations ship via `mix mailglass.gen.migration` (or generator embedded in `mix mailglass.install`). Adopters' `mix ecto.migrate` includes mailglass migrations.
 
 ### Multi-Tenancy
 
-- [ ] **TENANT-01**: Every mailglass-owned schema (`mailglass_deliveries`, `mailglass_events`, `mailglass_suppressions`) has a `tenant_id` column (nullable for single-tenant mode, indexed). (TS-08, D-09)
+- [x] **TENANT-01
+**: Every mailglass-owned schema (`mailglass_deliveries`, `mailglass_events`, `mailglass_suppressions`) has a `tenant_id` column (nullable for single-tenant mode, indexed). (TS-08, D-09)
 - [ ] **TENANT-02**: `Mailglass.Tenancy` is a pluggable behaviour with `scope/2` callback. The default `Mailglass.Tenancy.SingleTenant` impl is a no-op. Adopters can implement custom resolvers. Phoenix 1.8 `%Scope{}` interop is documented but not auto-detected (avoids hidden coupling).
 - [ ] **TENANT-03**: Custom Credo check `NoUnscopedTenantQueryInLib` flags every `Repo` query on a tenanted schema that doesn't pass through `Mailglass.Tenancy.scope/2`. Bypass requires explicit `scope: :unscoped` opt with telemetry audit emit. Multi-tenant property test spawns 2 tenants, writes 100 records each, asserts zero cross-tenant leak. (PHX-05 prevention)
 

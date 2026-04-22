@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01 plan
-last_updated: "2026-04-22T18:04:06.463Z"
+stopped_at: Completed 02-02 plan
+last_updated: "2026-04-22T18:46:32.267Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 12
-  completed_plans: 7
-  percent: 58
+  completed_plans: 8
+  percent: 67
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 02 (persistence-tenancy) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [██████░░░░] 58%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [██████░░░░] 58%
 | Phase 01 P05 | 8 | 3 tasks | 8 files |
 | Phase 01 P06 | 12min | 2 tasks | 8 files |
 | Phase 02 P01 | 7min | 3 tasks | 14 files |
+| Phase 02 P02 | 39min | 2 tasks tasks | 7 files files |
 
 ## Accumulated Context
 
@@ -98,6 +99,9 @@ Most load-bearing for Phase 1:
 - Plan 02-01 added :ecto, :ecto_sql, :postgrex as explicit required deps. PROJECT.md declared them required from v0.1 but Phase 1 left them transitive-only (via phoenix). The SQLSTATE translation code's %Postgrex.Error{} pattern failed at compile time — closing the gap in Plan 01 rather than Plan 02 unblocks both.
 - Mailglass.DataCase stamps Process.put(:mailglass_tenant_id, ...) directly as a forward reference. Plan 04 ships Mailglass.Tenancy.put_current/1 under the same process-dict key and updates the setup to use the public API then.
 - EventLedgerImmutableError.new/2 defaults to :update_attempt type because Postgrex error messages are not a stable API. Callers that need UPDATE vs DELETE distinction walk :cause to the raw Postgrex error or read ctx.pg_code.
+- Mailglass.Migration.migrated_version/0 now resolves and injects the configured Repo explicitly before dispatching to Mailglass.Migrations.Postgres.migrated_version/1. This lets the function be called outside an Ecto.Migrator runner context (needed by tests and by Phase 6 lint checks), while preserving the Oban-style signature that accepts :repo via opts for in-runner callers.
+- Migration test uses Ecto.Adapters.SQL.Sandbox.mode(:auto) in setup (reverting to :manual on_exit). DDL cannot roll back in the sandbox transactional wrapper; :auto mode disables ownership tracking so every process (including the Ecto.Migrator subprocess spawned by with_repo) checks out on demand. :manual mode (required by DataCase) is restored on exit.
+- Synthetic test migration pattern: priv/repo/migrations/00000000000001_mailglass_init.exs is the 8-line wrapper adopters will get from mix mailglass.gen.migration (Phase 7 D-36/D-37). test_helper.exs runs it via Ecto.Migrator.with_repo/2 + Ecto.Migrator.run/4, then starts the TestRepo explicitly (with_repo stops the repo after its block) and sets sandbox to :manual.
 
 ### Pending Todos
 
@@ -116,8 +120,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T18:04:06.427Z
-Stopped at: Completed 02-01 plan
+Last session: 2026-04-22T18:44:21.814Z
+Stopped at: Completed 02-02 plan
 Resume file: None
 
 **Planned Phase:** 02 (persistence-tenancy) — 6 plans — 2026-04-22T17:50:17.597Z
