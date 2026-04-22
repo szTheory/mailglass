@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-04-22T14:35:10.934Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-04-22T14:46:00.934Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 6
-  completed_plans: 1
-  percent: 17
+  completed_plans: 2
+  percent: 33
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [██░░░░░░░░] 17%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [██░░░░░░░░] 17%
 
 *Updated after each plan completion.*
 | Phase 01 P01-01 | 8min | 2 tasks | 20 files |
+| Phase 01 P02 | 5min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,9 @@ Most load-bearing for Phase 1:
 - Swoosh :api_client deferred to adopter via config :swoosh, :api_client, false — mailglass does not pin an HTTP transport
 - Flat root Boundary on Mailglass (deps: [], exports: []) — classifies Mailglass.* modules without constraining internal deps; sub-boundaries land with later plans
 - Mailglass.Config.validate_at_boot!/0 added to elixirc_options no_warn_undefined as MFA tuple forward reference until Plan 03 lands Config
+- Struct-discrimination tests use __struct__ module comparison (err.__struct__ == Mailglass.TemplateError) instead of literal match?(%Mod{}, err) — Elixir 1.19 type checker narrows terms statically, so literal mismatch patterns trip --warnings-as-errors. Runtime struct-module comparison tests the same contract without the type-narrowing conflict.
+- RateLimitError.new/2 accepts both :retry_after_ms as a top-level option (populates the struct field) and context.retry_after_ms (for message formatting). Plan showed bind-rebind via %RateLimitError{err | retry_after_ms: ms}; direct option is cleaner for callers.
+- Mailglass.Error.root_cause/1 terminates on non-mailglass causes — when :cause is a plain Exception without its own :cause field (e.g. %RuntimeError{}), walking stops there. Third-party exceptions become leaves in the cause chain.
 
 ### Pending Todos
 
@@ -86,8 +90,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T14:35:10.929Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-04-22T14:46:00.848Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 1 (Foundation) — 6 plans — 2026-04-22T14:18:01.914Z

@@ -16,7 +16,8 @@
 
 ### Foundations
 
-- [ ] **CORE-01**: Library exposes a single `Mailglass.Error` exception hierarchy (`SendError`, `TemplateError`, `SignatureError`, `SuppressedError`, `RateLimitError`, `ConfigError`) with a closed `:type` atom set documented in `api_stability.md`. Pattern-matching by struct works; pattern-matching by error message string is never required. (TS-09)
+- [x] **CORE-01
+**: Library exposes a single `Mailglass.Error` exception hierarchy (`SendError`, `TemplateError`, `SignatureError`, `SuppressedError`, `RateLimitError`, `ConfigError`) with a closed `:type` atom set documented in `api_stability.md`. Pattern-matching by struct works; pattern-matching by error message string is never required. (TS-09)
 - [ ] **CORE-02**: Library exposes `Mailglass.Config` validated via NimbleOptions at boot. Reading runtime config outside this module is forbidden by Credo check `NoCompileEnvOutsideConfig`. (LIB-02 prevention)
 - [ ] **CORE-03**: Library emits telemetry events on the `[:mailglass, :domain, :resource, :action, :start | :stop | :exception]` 4-level convention. Metadata is restricted to a whitelisted key set: `:tenant_id, :mailable, :provider, :status, :message_id, :delivery_id, :event_id, :latency_ms, :recipient_count, :bytes, :retry_count`. PII keys (`:to`, `:from`, `:body`, `:html_body`, `:subject`, `:headers`, `:recipient`, `:email`) are forbidden. Telemetry handlers that raise do not break the send pipeline. (TS-10, OBS-01 prevention)
 - [ ] **CORE-04**: Library exposes `Mailglass.Repo.transact/1` wrapper for `Ecto.Multi` flows. `Ecto.Multi` insertion of an `Event` row is required for every state-changing operation.
@@ -219,7 +220,7 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-01 | Phase 1 — Foundation | Pending |
+| CORE-01 | Phase 1 — Foundation | Complete (01-02) |
 | CORE-02 | Phase 1 — Foundation | Pending |
 | CORE-03 | Phase 1 — Foundation | Pending |
 | CORE-04 | Phase 1 — Foundation | Pending |
