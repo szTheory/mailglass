@@ -81,11 +81,16 @@ Type atom set:
 
 - `:address`
 - `:domain`
-- `:tenant_address`
+- `:address_stream`
 
 Per-kind fields: none.
 
 Retryable: `false` (permanent policy block).
+
+**Pre-0.1.0 refinement (D-09):** the atom set was refined from
+`:tenant_address` → `:address_stream` before 0.1.0 shipped to match the
+`mailglass_suppressions.scope` column. No deprecation cycle owed because
+0.1.0 has not shipped.
 
 Since: 0.1.0.
 
@@ -120,6 +125,38 @@ Type atom set:
 Per-kind fields: none.
 
 Retryable: `false` — fix config and restart.
+
+Since: 0.1.0.
+
+### `Mailglass.EventLedgerImmutableError`
+
+Raised when the `mailglass_events` immutability trigger fires
+(SQLSTATE 45A01). Translation happens inside `Mailglass.Repo.transact/1`
+— callers never see the raw `%Postgrex.Error{}`.
+
+Type atom set:
+
+- `:update_attempt`
+- `:delete_attempt`
+
+Per-kind fields: `pg_code :: String.t()` (always `"45A01"`).
+
+Retryable: `false` (append-only invariant; the calling code has a bug).
+
+Since: 0.1.0.
+
+### `Mailglass.TenancyError`
+
+Raised by `Mailglass.Tenancy.tenant_id!/0` when no tenant has been
+stamped on the current process via `Mailglass.Tenancy.put_current/1`.
+
+Type atom set:
+
+- `:unstamped`
+
+Per-kind fields: none.
+
+Retryable: `false` (the caller failed to establish tenant context).
 
 Since: 0.1.0.
 

@@ -65,7 +65,7 @@ defmodule Mailglass.ErrorTest do
   end
 
   test "__types__/0 returns the closed atom set for SuppressedError" do
-    assert Mailglass.SuppressedError.__types__() == [:address, :domain, :tenant_address]
+    assert Mailglass.SuppressedError.__types__() == [:address, :domain, :address_stream]
   end
 
   test "__types__/0 returns the closed atom set for RateLimitError" do

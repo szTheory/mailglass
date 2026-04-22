@@ -1,16 +1,18 @@
-defmodule Mailglass.SuppressedError do
+defmodule Mailglass.TenancyError do
   @moduledoc """
-  Raised when delivery is blocked by the suppression list.
+  Raised when tenant context is required but not stamped on the process.
 
-  Suppression is a permanent policy block — the recipient opted out,
-  hard-bounced, or the tenant explicitly excluded them. Never retryable.
-  The `:type` atoms mirror `Mailglass.Suppression.scope` for 1:1 match.
+  `Mailglass.Tenancy.tenant_id!/0` raises this when the calling process has
+  not been stamped via `Mailglass.Tenancy.put_current/1` (typically from an
+  `on_mount/4` callback, Plug, or test setup). Callers that already hold
+  tenant context may use `tenant_id!/0` as a fail-loud accessor; callers that
+  want the configured default instead should use `Mailglass.Tenancy.current/0`.
 
   ## Types
 
-  - `:address` — the recipient address is globally suppressed
-  - `:domain` — the recipient domain is globally suppressed
-  - `:address_stream` — the recipient is suppressed for a specific stream (e.g. `:bulk`)
+  - `:unstamped` — no tenant_id present in the process dictionary
+
+  Never retryable — the caller failed to establish tenant context.
 
   See `Mailglass.Error` for the shared contract and `docs/api_stability.md`
   for the locked `:type` atom set.
@@ -18,13 +20,13 @@ defmodule Mailglass.SuppressedError do
 
   @behaviour Mailglass.Error
 
-  @types [:address, :domain, :address_stream]
+  @types [:unstamped]
 
   @derive {Jason.Encoder, only: [:type, :message, :context]}
   defexception [:type, :message, :cause, :context]
 
   @type t :: %__MODULE__{
-          type: :address | :domain | :address_stream,
+          type: :unstamped,
           message: String.t(),
           cause: Exception.t() | nil,
           context: %{atom() => term()}
@@ -47,12 +49,12 @@ defmodule Mailglass.SuppressedError do
   end
 
   @doc """
-  Build a `Mailglass.SuppressedError` struct.
+  Build a `Mailglass.TenancyError` struct.
 
   ## Options
 
   - `:cause` — an underlying exception to wrap (kept out of JSON output).
-  - `:context` — a map of non-PII metadata about the suppression record.
+  - `:context` — a map of non-PII metadata about the call site.
   """
   @doc since: "0.1.0"
   @spec new(atom(), keyword()) :: t()
@@ -67,14 +69,8 @@ defmodule Mailglass.SuppressedError do
     }
   end
 
-  defp format_message(:address, _ctx),
-    do: "Delivery blocked: recipient is on the suppression list"
-
-  defp format_message(:domain, _ctx),
-    do: "Delivery blocked: recipient domain is on the suppression list"
-
-  defp format_message(:address_stream, ctx) do
-    stream = ctx[:stream] || "unknown"
-    "Delivery blocked: recipient is suppressed for the :#{stream} stream"
-  end
+  defp format_message(:unstamped, _ctx),
+    do:
+      "Tenant context is not stamped on this process. " <>
+        "Call Mailglass.Tenancy.put_current/1 in your on_mount/4 callback or test setup."
 end

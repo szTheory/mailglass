@@ -63,6 +63,7 @@ defmodule Mailglass.MixProject do
       {:phoenix_html, "~> 4.1"},
       {:plug, "~> 1.18"},
       {:swoosh, "~> 1.25"},
+      {:uuidv7, "~> 1.0"},
       {:nimble_options, "~> 1.1"},
       {:telemetry, "~> 1.4"},
       {:gettext, "~> 1.0"},
