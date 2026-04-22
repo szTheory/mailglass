@@ -36,8 +36,10 @@
 - [ ] **AUTHOR-01**: Adopter defines a Mailable as `defmodule MyApp.UserMailer do; use Mailglass.Mailable; def welcome(user), do: ...; end`. The `use` macro injects ≤20 lines (verified by `NoOversizedUseInjection` Credo check). Mailable returns a `%Mailglass.Message{}` struct wrapping `%Swoosh.Email{}`. (TS-01)
 - [x] **AUTHOR-02
 **: Library ships `Mailglass.Components` HEEx component library with: `<.container>`, `<.section>`, `<.row>`, `<.column>`, `<.heading>`, `<.text>`, `<.button>`, `<.img>`, `<.link>`, `<.hr>`, `<.preheader>`. Every component renders with MSO Outlook VML fallback wrapper. No Node toolchain required at any point. (TS-02, DF-02)
-- [ ] **AUTHOR-03**: Render pipeline is `HEEx → Premailex CSS inlining → minify → Floki auto-plaintext`. Pure-function `Mailglass.Renderer.render(message)` produces `{html_body, text_body}` in <50ms for a typical template. (TS-03)
-- [ ] **AUTHOR-04**: Templates support `Gettext` `dgettext("emails", ...)` for i18n. `mix mailglass.gettext.extract` mix task generates `priv/gettext/emails.pot`. (TS-04)
+- [x] **AUTHOR-03
+**: Render pipeline is `HEEx → Premailex CSS inlining → minify → Floki auto-plaintext`. Pure-function `Mailglass.Renderer.render(message)` produces `{html_body, text_body}` in <50ms for a typical template. (TS-03)
+- [x] **AUTHOR-04
+**: Templates support `Gettext` `dgettext("emails", ...)` for i18n. `mix mailglass.gettext.extract` mix task generates `priv/gettext/emails.pot`. (TS-04)
 - [x] **AUTHOR-05
 **: `Mailglass.TemplateEngine` is a pluggable behaviour. HEEx is the default impl. `Mailglass.TemplateEngine.MJML` (via the `:mjml` Hex package — Rust NIF) is documented as opt-in. (D-18, never default)
 
@@ -89,8 +91,10 @@
 
 ### Compliance (v0.1 floor)
 
-- [ ] **COMP-01**: `Mailglass.Compliance.add_rfc_required_headers/1` injects `Date`, `Message-ID`, `MIME-Version` if absent. (Full RFC 8058 List-Unsubscribe lands in v0.5 / DELIV-01.)
-- [ ] **COMP-02**: Auto-injected headers: `Mailglass-Mailable: <module>.<function>/<arity>`, `Feedback-ID: <stable_sender_id>:<mailable>:<tenant_id>` (when configured). Auth-Results parsing deferred to v2.
+- [x] **COMP-01
+**: `Mailglass.Compliance.add_rfc_required_headers/1` injects `Date`, `Message-ID`, `MIME-Version` if absent. (Full RFC 8058 List-Unsubscribe lands in v0.5 / DELIV-01.)
+- [x] **COMP-02
+**: Auto-injected headers: `Mailglass-Mailable: <module>.<function>/<arity>`, `Feedback-ID: <stable_sender_id>:<mailable>:<tenant_id>` (when configured). Auth-Results parsing deferred to v2.
 
 ### Preview LiveView (mailglass_admin v0.1)
 
@@ -105,7 +109,8 @@
 
 - [ ] **TEST-01**: `Mailglass.TestAssertions` extends Swoosh's: `assert_mail_sent/1`, `assert_no_mail_sent/0`, `last_mail/0`, `wait_for_mail/1`, `assert_mail_delivered/2`, `assert_mail_bounced/2`. (TS-14)
 - [ ] **TEST-02**: Per-domain Case templates: `Mailglass.MailerCase`, `Mailglass.WebhookCase`, `Mailglass.AdminCase`. Each sets up Ecto sandbox + Fake adapter + actor seeded.
-- [ ] **TEST-03**: StreamData property tests on: idempotency key collision (PERSIST-03), webhook signature verification (HOOK-03/HOOK-04), header construction (COMP-01), multi-tenant scope leak (TENANT-03). All four are merge-blocking in CI.
+- [x] **TEST-03**: StreamData property tests on: idempotency key collision (PERSIST-03), webhook signature verification (HOOK-03/HOOK-04), header construction (COMP-01
+), multi-tenant scope leak (TENANT-03). All four are merge-blocking in CI.
 - [ ] **TEST-04**: Real-provider sandbox tests (Postmark, SendGrid sandbox modes) tagged `@tag :provider_live`. Excluded from PR CI. Daily cron + `workflow_dispatch` only. Failures notify, never block. (TEST-02 prevention)
 - [ ] **TEST-05**: `Mailglass.Clock` injection point for time-dependent code. Tests use `Mailglass.Clock.Frozen`; production uses `Mailglass.Clock.System`. (TEST-06 prevention)
 

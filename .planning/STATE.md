@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-status: executing
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-04-22T15:26:17.649Z"
+status: verifying
+stopped_at: Completed 01-06-PLAN.md
+last_updated: "2026-04-22T15:45:48.338Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 5
-  percent: 83
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 Phase: 01 (foundation) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-22
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [████████░░] 83%
 | Phase 01 P03 | 10min | 2 tasks | 9 files |
 | Phase 01 P04 | 4min | 2 tasks tasks | 7 files files |
 | Phase 01 P05 | 8 | 3 tasks | 8 files |
+| Phase 01 P06 | 12min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,10 @@ Most load-bearing for Phase 1:
 - <.img> :alt is required at compile time via attr :alt, :string, required: true. Phoenix.Component's compile-time check emits 'missing required attribute "alt"' whenever <.img> is used without it — under --warnings-as-errors that's a hard failure. The accessibility floor cannot be bypassed by omission.
 - img_no_alt_test.exs stays @moduletag :skip. Compile-time checks can't be tested by running them at test runtime — compiling a fixture module inside the test suite would FAIL the entire suite because the compile error propagates. The stub exists as documentation of the contract.
 - HEEx does not interpolate expressions inside HTML comments. VML-bearing components (row, column, button) pre-build MSO conditional blocks as strings, wrap with Phoenix.HTML.raw/1, and embed via expression holes. The <a> HTML fallback uses normal HEEx because the if-not-mso boundary terminates the comment per HTML parser rules.
+- Renderer sub-boundary pattern: use Boundary, deps: [Mailglass] + root-level exports controls the CORE-07 call surface from a single source of truth. Future sub-boundaries (Outbound/Events/Webhook/Admin) follow the same shape; the root exports list grows monotonically.
+- HEEx function components in test fixtures must bind 'assigns' by exact name (not '_assigns') because the ~H sigil macro-expands a reference to assigns even when the template has no interpolations. Using the prefixed name causes 'requires a variable named assigns to exist' at fixture-build time.
+- Renderer plaintext walker runs on the pre-VML HTML tree (D-15) BEFORE Premailex CSS inlining. Pipeline: render_html -> to_plaintext (pre-VML) -> inline_css (Premailex) -> strip_mg_attributes. Premailex adds VML wrappers/OfficeDocumentSettings that must never leak into text_body.
+- Compliance supports both map-shaped and list-shaped Swoosh.Email.headers via dual pattern-match clauses. Current Swoosh 1.25 uses a map, but a future schema change won't silently break the Phase 1 contract.
 
 ### Pending Todos
 
@@ -105,8 +110,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T15:25:54.473Z
-Stopped at: Completed 01-05-PLAN.md
+Last session: 2026-04-22T15:45:33.711Z
+Stopped at: Completed 01-06-PLAN.md
 Resume file: None
 
 **Planned Phase:** 1 (Foundation) — 6 plans — 2026-04-22T14:18:01.914Z

@@ -15,7 +15,7 @@ mailglass v0.1 ships in 7 phases tracing the 7-layer build order from `research/
 - Integer phases (1, 2, 3): Planned milestone work.
 - Decimal phases (2.1, 2.2): Urgent insertions (added later via `/gsd-insert-phase`, never planned upfront).
 
-- [ ] **Phase 1: Foundation** - Zero-dep modules + pure HEEx renderer pipeline ("render an email from HEEx" milestone).
+- [x] **Phase 1: Foundation** - Zero-dep modules + pure HEEx renderer pipeline ("render an email from HEEx" milestone). Complete 2026-04-22.
 - [ ] **Phase 2: Persistence + Tenancy** - Append-only event ledger with SQLSTATE 45A01 trigger + multi-tenant schemas from day one.
 - [ ] **Phase 3: Transport + Send Pipeline** - Fake adapter built first (D-13), then end-to-end Mailable → Outbound → Worker → Adapter → Multi(Delivery + Event) hot path.
 - [ ] **Phase 4: Webhook Ingest** - Postmark + SendGrid HMAC-verified, idempotent, Anymail-normalized event ingest.
@@ -163,7 +163,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 4/6 | In progress | - |
+| 1. Foundation | 6/6 | Complete | 2026-04-22 |
 | 2. Persistence + Tenancy | 0/TBD | Not started | - |
 | 3. Transport + Send Pipeline | 0/TBD | Not started | - |
 | 4. Webhook Ingest | 0/TBD | Not started | - |
