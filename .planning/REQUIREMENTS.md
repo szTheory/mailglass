@@ -37,7 +37,8 @@
 - [ ] **AUTHOR-02**: Library ships `Mailglass.Components` HEEx component library with: `<.container>`, `<.section>`, `<.row>`, `<.column>`, `<.heading>`, `<.text>`, `<.button>`, `<.img>`, `<.link>`, `<.hr>`, `<.preheader>`. Every component renders with MSO Outlook VML fallback wrapper. No Node toolchain required at any point. (TS-02, DF-02)
 - [ ] **AUTHOR-03**: Render pipeline is `HEEx → Premailex CSS inlining → minify → Floki auto-plaintext`. Pure-function `Mailglass.Renderer.render(message)` produces `{html_body, text_body}` in <50ms for a typical template. (TS-03)
 - [ ] **AUTHOR-04**: Templates support `Gettext` `dgettext("emails", ...)` for i18n. `mix mailglass.gettext.extract` mix task generates `priv/gettext/emails.pot`. (TS-04)
-- [ ] **AUTHOR-05**: `Mailglass.TemplateEngine` is a pluggable behaviour. HEEx is the default impl. `Mailglass.TemplateEngine.MJML` (via the `:mjml` Hex package — Rust NIF) is documented as opt-in. (D-18, never default)
+- [x] **AUTHOR-05
+**: `Mailglass.TemplateEngine` is a pluggable behaviour. HEEx is the default impl. `Mailglass.TemplateEngine.MJML` (via the `:mjml` Hex package — Rust NIF) is documented as opt-in. (D-18, never default)
 
 ### Persistence
 
@@ -231,13 +232,13 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | CORE-03 | Phase 1 — Foundation | Complete (01-03) |
 | CORE-04 | Phase 1 — Foundation | Complete (01-03) |
 | CORE-05 | Phase 1 — Foundation | Complete (01-03) |
-| CORE-06 | Phase 1 — Foundation | Pending |
+| CORE-06 | Phase 1 — Foundation | Complete (01-04) |
 | CORE-07 | Phase 1 — Foundation | Pending |
 | AUTHOR-01 | Phase 3 — Transport + Send Pipeline | Pending |
 | AUTHOR-02 | Phase 1 — Foundation | Pending |
 | AUTHOR-03 | Phase 1 — Foundation | Pending |
 | AUTHOR-04 | Phase 1 — Foundation | Pending |
-| AUTHOR-05 | Phase 1 — Foundation | Pending |
+| AUTHOR-05 | Phase 1 — Foundation | Complete (01-04) |
 | PERSIST-01 | Phase 2 — Persistence + Tenancy | Pending |
 | PERSIST-02 | Phase 2 — Persistence + Tenancy | Pending |
 | PERSIST-03 | Phase 2 — Persistence + Tenancy | Pending |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-04-22T15:00:43.671Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-04-22T15:11:06.292Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 6
-  completed_plans: 3
-  percent: 50
+  completed_plans: 4
+  percent: 67
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [█████░░░░░] 50%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [█████░░░░░] 50%
 | Phase 01 P01-01 | 8min | 2 tasks | 20 files |
 | Phase 01 P02 | 5min | 2 tasks | 9 files |
 | Phase 01 P03 | 10min | 2 tasks | 9 files |
+| Phase 01 P04 | 4min | 2 tasks tasks | 7 files files |
 
 ## Accumulated Context
 
@@ -77,6 +78,9 @@ Most load-bearing for Phase 1:
 - :telemetry.span/3 auto-injects :telemetry_span_context for OTel span correlation — exempted from the D-31 metadata whitelist in tests because it is library machinery, not adopter-supplied PII (documented inline in telemetry_test.exs)
 - StreamData metadata generator for the whitelist property test uses list_of(tuple/2) + Enum.into(%{}) instead of map_of/2 — the 11-element whitelist key space is too small for map_of's uniq-key generator, which hit TooManyDuplicatesError on the 8th run
 - Mailglass.Repo.transact/1 delegates via Ecto 3.13+ transact/2 (tuple-rollback semantics), not the deprecated transaction/1 — Phase 2 events-ledger append relies on the {:ok,_}/{:error,_} rollback contract
+- Mailglass.Message.new/2 uses Keyword.get with per-option defaults — uniform builder regardless of opt count, pattern-matches %Swoosh.Email{} on input
+- Mailglass.OptionalDeps.Sigra is conditionally compiled via if Code.ensure_loaded?(Sigra) do ... end — matches accrue-sigra pattern where Sigra itself expects the module to not exist when :sigra absent; callers probe existence via Code.ensure_loaded?(Mailglass.OptionalDeps.Sigra), not available?/0
+- OpenTelemetry gateway probes :otel_tracer (stable API surface), not the package atom :opentelemetry (not a loadable module) — matches accrue/integrations and PATTERNS.md line 814
 
 ### Pending Todos
 
@@ -95,8 +99,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T15:00:43.666Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-04-22T15:11:06.280Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None
 
 **Planned Phase:** 1 (Foundation) — 6 plans — 2026-04-22T14:18:01.914Z
