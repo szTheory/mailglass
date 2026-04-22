@@ -153,6 +153,8 @@ defmodule Mailglass.Config do
 
     validated = NimbleOptions.validate!(opts, @schema)
 
+    validate_repo_adapter!(Keyword.get(validated, :repo))
+
     theme = Keyword.get(validated, :theme, [])
     :persistent_term.put({__MODULE__, :theme}, theme)
 
@@ -163,6 +165,41 @@ defmodule Mailglass.Config do
     end
 
     :ok
+  end
+
+  # Mailglass is Postgres-only at v0.1 per PROJECT.md (MySQL/SQLite out of
+  # scope). `Mailglass.Migration.migrator/0` already guards the migration
+  # path, but the runtime path (Events.append, Projector.update_projections,
+  # SuppressionStore.Ecto.*) does not — an adopter wiring
+  # `config :mailglass, repo: MyApp.SqliteRepo` would otherwise get
+  # confusing errors from Ecto/Postgrex layers on the first write
+  # (WR-04). Fail fast at boot with a typed ConfigError instead.
+  #
+  # `:repo` is optional at v0.1 (phases 0/1 don't need it) — skip the
+  # check when unset; the Repo facade will raise `:missing` on first
+  # use if a Phase 2+ code path needs it.
+  defp validate_repo_adapter!(nil), do: :ok
+
+  defp validate_repo_adapter!(repo) when is_atom(repo) do
+    if Code.ensure_loaded?(repo) and function_exported?(repo, :__adapter__, 0) do
+      case repo.__adapter__() do
+        Ecto.Adapters.Postgres ->
+          :ok
+
+        other ->
+          raise Mailglass.ConfigError.new(:invalid,
+                  context: %{
+                    key: :repo,
+                    adapter: other,
+                    reason: "Postgres only at v0.1"
+                  }
+                )
+      end
+    else
+      # Repo module not loaded or not an Ecto.Repo — defer to the
+      # NimbleOptions schema + runtime resolution to produce the error.
+      :ok
+    end
   end
 
   @doc """
