@@ -20,7 +20,17 @@ config :mailglass, Mailglass.TestRepo,
   hostname: System.get_env("POSTGRES_HOST", "localhost"),
   database: "mailglass_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 10,
+  # `migration_test.exs` drops and recreates the citext extension to prove
+  # the down/up round-trip. The fresh OID makes the Postgrex TypeServer's
+  # cached type info stale, surfacing as
+  # `(Postgrex.Error) XX000 cache lookup failed for type NNNNNN` on the
+  # next query that touches `mailglass_suppressions.address` (:citext)
+  # from a test file running after migration_test.exs. Auto-disconnecting
+  # on `:internal_error` forces the affected connection to reconnect
+  # (triggering a fresh type bootstrap) on its next use — test-only;
+  # production adopters tune this per their failover policy.
+  disconnect_on_error_codes: [:internal_error]
 
 # Suppress the boot-time "Oban not loaded" warning in test output.
 config :logger, level: :warning
