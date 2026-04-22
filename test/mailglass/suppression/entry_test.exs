@@ -42,7 +42,7 @@ defmodule Mailglass.Suppression.EntryTest do
       attrs = valid_attrs(%{scope: :address_stream, stream: nil})
       changeset = Entry.changeset(attrs)
       refute changeset.valid?
-      assert {"required when scope is :address_stream", _} = changeset.errors[:stream]
+      assert {"is required when scope is :address_stream", _} = changeset.errors[:stream]
     end
 
     test "scope :address REJECTS stream" do
@@ -50,7 +50,8 @@ defmodule Mailglass.Suppression.EntryTest do
       changeset = Entry.changeset(attrs)
       refute changeset.valid?
       assert {msg, _} = changeset.errors[:stream]
-      assert msg =~ "must be nil when scope is :address"
+      assert msg =~ "must be omitted when scope is :address"
+      assert msg =~ "stream is only valid for :address_stream"
     end
 
     test "scope :domain REJECTS stream" do
@@ -58,7 +59,8 @@ defmodule Mailglass.Suppression.EntryTest do
       changeset = Entry.changeset(attrs)
       refute changeset.valid?
       assert {msg, _} = changeset.errors[:stream]
-      assert msg =~ "must be nil when scope is :domain"
+      assert msg =~ "must be omitted when scope is :domain"
+      assert msg =~ "stream is only valid for :address_stream"
     end
 
     test "scope :address_stream + stream :bulk is valid" do

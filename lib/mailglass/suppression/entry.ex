@@ -93,10 +93,14 @@ defmodule Mailglass.Suppression.Entry do
 
     case {scope, stream} do
       {:address_stream, nil} ->
-        add_error(changeset, :stream, "required when scope is :address_stream")
+        add_error(changeset, :stream, "is required when scope is :address_stream")
 
       {scope, stream} when scope in [:address, :domain] and not is_nil(stream) ->
-        add_error(changeset, :stream, "must be nil when scope is #{inspect(scope)}")
+        add_error(
+          changeset,
+          :stream,
+          "must be omitted when scope is #{inspect(scope)} — stream is only valid for :address_stream"
+        )
 
       _ ->
         changeset
