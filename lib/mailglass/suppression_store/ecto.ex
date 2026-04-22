@@ -60,6 +60,13 @@ defmodule Mailglass.SuppressionStore.Ecto do
     )
   end
 
+  # Fallback clause for malformed keys (missing :tenant_id / :address, or
+  # non-binary values). Returns the behaviour's documented `{:error, term()}`
+  # shape so Phase 3's `Outbound.preflight` can log/handle instead of
+  # surfacing a FunctionClauseError stacktrace from a mis-wired adopter
+  # helper (WR-03).
+  def check(_key, _opts), do: {:error, :invalid_key}
+
   # The address_stream branch is only included when a stream was passed.
   # Ecto refuses `e.stream == ^nil` at build time ("comparing with nil is
   # forbidden"), and a stream-less caller has no basis to match stream-
@@ -96,6 +103,12 @@ defmodule Mailglass.SuppressionStore.Ecto do
       end
     )
   end
+
+  # Fallback clause for non-map attrs — mirrors the `check/2` treatment
+  # (WR-03). Map input with invalid field values still flows through the
+  # changeset and returns `{:error, %Ecto.Changeset{}}`; only non-map
+  # input takes this path.
+  def record(_attrs, _opts), do: {:error, :invalid_attrs}
 
   # UPSERT shape — admin re-adds of the same (tenant_id, address, scope,
   # stream-or-empty) update the mutable fields but keep `:id`, `:inserted_at`,
