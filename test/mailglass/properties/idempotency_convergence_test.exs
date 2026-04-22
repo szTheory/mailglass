@@ -102,14 +102,18 @@ defmodule Mailglass.Properties.IdempotencyConvergenceTest do
   defp event_attrs_gen do
     gen all(
           type <- member_of(@event_types),
-          key <- string(:alphanumeric, min_length: 8, max_length: 32),
+          key_raw <- string(:alphanumeric, min_length: 8, max_length: 32),
           occurred_offset_sec <- integer(-60..60)
         ) do
       %{
         type: type,
         tenant_id: "prop-test-tenant",
         occurred_at: DateTime.add(DateTime.utc_now(), occurred_offset_sec, :second),
-        idempotency_key: key,
+        # Disambiguate by type so the same raw key across different types
+        # produces distinct idempotency keys. Prevents spurious "replay-of-
+        # different-type" coincidence collisions from failing the
+        # convergence assertion (IN-02).
+        idempotency_key: "#{type}-#{key_raw}",
         raw_payload: %{},
         normalized_payload: %{},
         metadata: %{}
