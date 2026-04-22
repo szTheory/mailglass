@@ -15,7 +15,12 @@ defmodule Mailglass.Outbound.Projector do
     summary internally consistent with the event-ledger truth (WR-02).
   - `dispatched_at` / `delivered_at` / `bounced_at` / `complained_at` /
     `suppressed_at` — set ONCE when the matching event type arrives;
-    never overwritten.
+    never overwritten. Note that `:rejected` and `:failed` events DO
+    flip `terminal` but have no corresponding `*_at` column (D-13
+    scoped five lifecycle timestamps) — querying "when did this
+    delivery fail?" joins the event ledger on (delivery_id, type)
+    rather than reading a single column on `mailglass_deliveries`
+    (IN-07).
   - `terminal` — flips `false → true` on any of
     `:delivered | :bounced | :complained | :rejected | :failed |
     :suppressed`. Never flips back.
