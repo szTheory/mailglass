@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v0.1
+milestone_name: milestone
+status: planning
+stopped_at: "Phase 1 context gathered (4 gray areas researched + locked: error hierarchy, MSO fallback, component API, telemetry enforcement)"
+last_updated: "2026-04-22T12:16:54.797Z"
+last_activity: 2026-04-21 — ROADMAP.md created (7 phases, 84/84 v1 REQ-IDs mapped, 3 phases flagged for `/gsd-research-phase`).
+progress:
+  total_phases: 7
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
+---
+
 # Project State
 
 ## Project Reference
@@ -19,6 +35,7 @@ Progress: [░░░░░░░░░░] 0%
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0
 - Average duration: —
 - Total execution time: —
@@ -30,6 +47,7 @@ Progress: [░░░░░░░░░░] 0%
 | — | — | — | — |
 
 **Recent Trend:**
+
 - Last 5 plans: —
 - Trend: — (no execution history yet)
 
@@ -42,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table (D-01..D-20 — all locked at initialization).
 
 Most load-bearing for Phase 1:
+
 - **D-06**: Bleeding-edge floor — Elixir 1.18+ / OTP 27+ / Phoenix 1.8+ / LiveView 1.0+ / Ecto 3.13+.
 - **D-17**: Custom Credo checks enforce domain rules (operationalized in Phase 6, but their forbidden patterns must be avoided from Phase 1 code).
 - **D-18**: HEEx + Phoenix.Component is the default renderer; MJML is opt-in via the `:mjml` Hex package (NOT `:mrml` — corrected in research).
@@ -63,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-21
-Stopped at: ROADMAP.md + STATE.md written; REQUIREMENTS.md traceability table populated. Ready to plan Phase 1.
-Resume file: None
+Last session: --stopped-at
+Stopped at: Phase 1 context gathered (4 gray areas researched + locked: error hierarchy, MSO fallback, component API, telemetry enforcement)
+Resume file: --resume-file
