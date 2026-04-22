@@ -60,8 +60,15 @@ defmodule Mailglass.Telemetry do
 
   @logged_events [
     [:mailglass, :render, :message, :stop],
-    [:mailglass, :render, :message, :exception]
-    # Expanded per phase as new spans land (send, persist, webhook_ingest, ...).
+    [:mailglass, :render, :message, :exception],
+    # Phase 2: events-append + persist spans.
+    [:mailglass, :events, :append, :stop],
+    [:mailglass, :events, :append, :exception],
+    [:mailglass, :persist, :delivery, :update_projections, :stop],
+    [:mailglass, :persist, :delivery, :update_projections, :exception],
+    [:mailglass, :persist, :reconcile, :link, :stop],
+    [:mailglass, :persist, :reconcile, :link, :exception]
+    # Expanded per phase as new spans land (send, webhook_ingest, ...).
   ]
 
   @doc """
@@ -96,6 +103,35 @@ defmodule Mailglass.Telemetry do
   @spec render_span(map(), (-> result)) :: result when result: term()
   def render_span(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
     span([:mailglass, :render, :message], metadata, fun)
+  end
+
+  @doc """
+  Named span helper for the events-append write path. Phase 2 surface.
+
+  Equivalent to `span([:mailglass, :events, :append], metadata, fun)`.
+  `:stop` metadata SHOULD include `inserted?: boolean` and
+  `idempotency_key_present?: boolean` per D-04.
+  """
+  @doc since: "0.1.0"
+  @spec events_append_span(map(), (-> result)) :: result when result: term()
+  def events_append_span(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
+    span([:mailglass, :events, :append], metadata, fun)
+  end
+
+  @doc """
+  Named span helper for persist-layer write paths (projector, reconciler).
+  Phase 2 surface.
+
+  Event path: `[:mailglass, :persist | suffix]`. Examples:
+
+      Mailglass.Telemetry.persist_span([:delivery, :update_projections], meta, fn -> ... end)
+      Mailglass.Telemetry.persist_span([:reconcile, :link], meta, fn -> ... end)
+  """
+  @doc since: "0.1.0"
+  @spec persist_span([atom()], map(), (-> result)) :: result when result: term()
+  def persist_span(suffix, metadata, fun)
+      when is_list(suffix) and is_map(metadata) and is_function(fun, 0) do
+    span([:mailglass, :persist] ++ suffix, metadata, fun)
   end
 
   @doc """
