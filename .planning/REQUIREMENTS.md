@@ -212,17 +212,101 @@ Explicitly excluded with permanent reasoning. Anti-features documented to preven
 
 ## Traceability
 
-Empty initially. Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to exactly one phase.
+Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to exactly one phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| _(populated by roadmapper)_ | | |
+| CORE-01 | Phase 1 — Foundation | Pending |
+| CORE-02 | Phase 1 — Foundation | Pending |
+| CORE-03 | Phase 1 — Foundation | Pending |
+| CORE-04 | Phase 1 — Foundation | Pending |
+| CORE-05 | Phase 1 — Foundation | Pending |
+| CORE-06 | Phase 1 — Foundation | Pending |
+| CORE-07 | Phase 1 — Foundation | Pending |
+| AUTHOR-01 | Phase 3 — Transport + Send Pipeline | Pending |
+| AUTHOR-02 | Phase 1 — Foundation | Pending |
+| AUTHOR-03 | Phase 1 — Foundation | Pending |
+| AUTHOR-04 | Phase 1 — Foundation | Pending |
+| AUTHOR-05 | Phase 1 — Foundation | Pending |
+| PERSIST-01 | Phase 2 — Persistence + Tenancy | Pending |
+| PERSIST-02 | Phase 2 — Persistence + Tenancy | Pending |
+| PERSIST-03 | Phase 2 — Persistence + Tenancy | Pending |
+| PERSIST-04 | Phase 2 — Persistence + Tenancy | Pending |
+| PERSIST-05 | Phase 2 — Persistence + Tenancy | Pending |
+| PERSIST-06 | Phase 2 — Persistence + Tenancy | Pending |
+| TENANT-01 | Phase 2 — Persistence + Tenancy | Pending |
+| TENANT-02 | Phase 2 — Persistence + Tenancy | Pending |
+| TENANT-03 | Phase 6 — Custom Credo + Boundary | Pending |
+| TRANS-01 | Phase 3 — Transport + Send Pipeline | Pending |
+| TRANS-02 | Phase 3 — Transport + Send Pipeline | Pending |
+| TRANS-03 | Phase 3 — Transport + Send Pipeline | Pending |
+| TRANS-04 | Phase 3 — Transport + Send Pipeline | Pending |
+| SEND-01 | Phase 3 — Transport + Send Pipeline | Pending |
+| SEND-02 | Phase 3 — Transport + Send Pipeline | Pending |
+| SEND-03 | Phase 3 — Transport + Send Pipeline | Pending |
+| SEND-04 | Phase 3 — Transport + Send Pipeline | Pending |
+| SEND-05 | Phase 3 — Transport + Send Pipeline | Pending |
+| TRACK-01 | Phase 3 — Transport + Send Pipeline | Pending |
+| TRACK-02 | Phase 6 — Custom Credo + Boundary | Pending |
+| TRACK-03 | Phase 3 — Transport + Send Pipeline | Pending |
+| HOOK-01 | Phase 4 — Webhook Ingest | Pending |
+| HOOK-02 | Phase 4 — Webhook Ingest | Pending |
+| HOOK-03 | Phase 4 — Webhook Ingest | Pending |
+| HOOK-04 | Phase 4 — Webhook Ingest | Pending |
+| HOOK-05 | Phase 4 — Webhook Ingest | Pending |
+| HOOK-06 | Phase 4 — Webhook Ingest | Pending |
+| HOOK-07 | Phase 4 — Webhook Ingest | Pending |
+| COMP-01 | Phase 1 — Foundation | Pending |
+| COMP-02 | Phase 1 — Foundation | Pending |
+| PREV-01 | Phase 5 — Dev Preview LiveView | Pending |
+| PREV-02 | Phase 5 — Dev Preview LiveView | Pending |
+| PREV-03 | Phase 5 — Dev Preview LiveView | Pending |
+| PREV-04 | Phase 5 — Dev Preview LiveView | Pending |
+| PREV-05 | Phase 5 — Dev Preview LiveView | Pending |
+| PREV-06 | Phase 5 — Dev Preview LiveView | Pending |
+| TEST-01 | Phase 3 — Transport + Send Pipeline | Pending |
+| TEST-02 | Phase 3 — Transport + Send Pipeline | Pending |
+| TEST-03 | Phase 4 — Webhook Ingest | Pending |
+| TEST-04 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| TEST-05 | Phase 3 — Transport + Send Pipeline | Pending |
+| LINT-01 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-02 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-03 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-04 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-05 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-06 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-07 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-08 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-09 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-10 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-11 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-12 | Phase 6 — Custom Credo + Boundary | Pending |
+| INST-01 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| INST-02 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| INST-03 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| INST-04 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| CI-01 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| CI-02 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| CI-03 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| CI-04 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| CI-05 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| CI-06 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| CI-07 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| DOCS-01 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| DOCS-02 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| DOCS-03 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| DOCS-04 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| DOCS-05 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| BRAND-01 | Phase 5 — Dev Preview LiveView | Pending |
+| BRAND-02 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| BRAND-03 | Phase 7 — Installer + CI/CD + Docs | Pending |
 
 **Coverage:**
-- v1 requirements: 76 total (CORE: 7, AUTHOR: 5, PERSIST: 6, TENANT: 3, TRANS: 4, SEND: 5, TRACK: 3, HOOK: 7, COMP: 2, PREV: 6, TEST: 5, LINT: 12, INST: 4, CI: 7, DOCS: 5, BRAND: 3 — minus 2 alias counts)
-- Mapped to phases: _(pending roadmap)_
-- Unmapped: _(pending roadmap)_
+- v1 requirements: 84 total (CORE: 7, AUTHOR: 5, PERSIST: 6, TENANT: 3, TRANS: 4, SEND: 5, TRACK: 3, HOOK: 7, COMP: 2, PREV: 6, TEST: 5, LINT: 12, INST: 4, CI: 7, DOCS: 5, BRAND: 3). Earlier "76 total" count in the initial draft was off; the breakdown sums to 84 distinct REQ-IDs and all 84 are mapped.
+- Mapped to phases: 84 / 84
+- Unmapped: 0
+- Per-phase counts: Phase 1 = 13, Phase 2 = 8, Phase 3 = 15, Phase 4 = 8, Phase 5 = 7, Phase 6 = 14, Phase 7 = 19. Sum = 84.
 
 ---
 *Requirements defined: 2026-04-21*
-*Last updated: 2026-04-21 after initial definition*
+*Last updated: 2026-04-21 — Traceability populated by gsd-roadmapper.*
