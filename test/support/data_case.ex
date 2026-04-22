@@ -15,6 +15,9 @@ defmodule Mailglass.DataCase do
       end
 
   Async is opt-in. Property tests (Plan 05) run `async: false`.
+
+  Tenant stamping routes through `Mailglass.Tenancy.put_current/1` so
+  test-side tenant plumbing is indistinguishable from production.
   """
   use ExUnit.CaseTemplate
 
@@ -38,11 +41,7 @@ defmodule Mailglass.DataCase do
     tenant_id = Map.get(tags, :tenant, "test-tenant")
 
     unless tenant_id == :unset do
-      # NOTE: Mailglass.Tenancy.put_current/1 ships in Plan 04.
-      # Plan 04 updates this setup to call it. For Plan 01 we stash the
-      # value directly into the process dict under the same key the
-      # Tenancy module will use so tests written in Plans 02-03 work.
-      Process.put(:mailglass_tenant_id, tenant_id)
+      Mailglass.Tenancy.put_current(tenant_id)
     end
 
     :ok
@@ -50,19 +49,9 @@ defmodule Mailglass.DataCase do
 
   @doc """
   Runs `fun` with a scoped tenant_id override for this test.
-  Restores the prior tenant on return.
+  Delegates to `Mailglass.Tenancy.with_tenant/2`; restores the prior
+  tenant on return (or raise).
   """
   @spec with_tenant(String.t(), (-> any())) :: any()
-  def with_tenant(tenant_id, fun) when is_binary(tenant_id) and is_function(fun, 0) do
-    prior = Process.get(:mailglass_tenant_id)
-    Process.put(:mailglass_tenant_id, tenant_id)
-
-    try do
-      fun.()
-    after
-      if prior,
-        do: Process.put(:mailglass_tenant_id, prior),
-        else: Process.delete(:mailglass_tenant_id)
-    end
-  end
+  def with_tenant(tenant_id, fun), do: Mailglass.Tenancy.with_tenant(tenant_id, fun)
 end
