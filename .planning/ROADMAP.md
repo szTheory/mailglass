@@ -36,7 +36,14 @@ mailglass v0.1 ships in 7 phases tracing the 7-layer build order from `research/
   4. A `Mailglass.Error` raised by any v0.1 surface area is pattern-matchable by struct (`%SendError{}`, `%TemplateError{}`, `%SignatureError{}`, `%SuppressedError{}`, `%RateLimitError{}`, `%ConfigError{}`) without parsing the message string; the closed `:type` atom set is documented in `api_stability.md`.
   5. Every `:telemetry.execute/3` call emitted by mailglass uses the 4-level `[:mailglass, :domain, :resource, :action, :start | :stop | :exception]` convention with metadata keys drawn only from the whitelisted set; a telemetry handler that raises does not break the pipeline.
 **Pitfalls guarded against**: LIB-02 (compile-time dep explosion via `compile_env`), LIB-07 (only `Config` may use `compile_env`), OBS-01 (PII in telemetry — whitelist enforced from day one), OBS-04 (logger PII), DIST-04 (optional dep gateway pattern locked here so later phases cannot leak), MAINT-04 (Premailex flagged as MEDIUM-confidence "watch this dep").
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold, deps, Boundary compiler, Wave 0 test stubs
+- [ ] 01-02-PLAN.md — Error hierarchy (6 defexception structs + namespace behaviour + api_stability.md)
+- [ ] 01-03-PLAN.md — Config (NimbleOptions), Telemetry (span helpers), Repo (transact/1), IdempotencyKey
+- [ ] 01-04-PLAN.md — Message struct + OptionalDeps gateway modules (Oban, OTel, MJML, GenSmtp, Sigra)
+- [ ] 01-05-PLAN.md — Components (11 HEEx components + Layout + golden VML fixture test)
+- [ ] 01-06-PLAN.md — TemplateEngine behaviour + HEEx impl + Renderer pipeline + Compliance + Gettext
 **UI hint**: no
 
 ### Phase 2: Persistence + Tenancy
@@ -156,7 +163,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/6 | Not started | - |
 | 2. Persistence + Tenancy | 0/TBD | Not started | - |
 | 3. Transport + Send Pipeline | 0/TBD | Not started | - |
 | 4. Webhook Ingest | 0/TBD | Not started | - |
