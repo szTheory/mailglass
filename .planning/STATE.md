@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-02 plan
-last_updated: "2026-04-22T18:46:32.267Z"
+stopped_at: Completed 02-03 plan
+last_updated: "2026-04-22T18:55:30.549Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 12
-  completed_plans: 8
-  percent: 67
+  completed_plans: 9
+  percent: 75
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 02 (persistence-tenancy) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
-Progress: [███████░░░] 67%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [███████░░░] 67%
 | Phase 01 P06 | 12min | 2 tasks | 8 files |
 | Phase 02 P01 | 7min | 3 tasks | 14 files |
 | Phase 02 P02 | 39min | 2 tasks tasks | 7 files files |
+| Phase 02 P03 | 6min | 2 tasks tasks | 6 files files |
 
 ## Accumulated Context
 
@@ -102,6 +103,10 @@ Most load-bearing for Phase 1:
 - Mailglass.Migration.migrated_version/0 now resolves and injects the configured Repo explicitly before dispatching to Mailglass.Migrations.Postgres.migrated_version/1. This lets the function be called outside an Ecto.Migrator runner context (needed by tests and by Phase 6 lint checks), while preserving the Oban-style signature that accepts :repo via opts for in-runner callers.
 - Migration test uses Ecto.Adapters.SQL.Sandbox.mode(:auto) in setup (reverting to :manual on_exit). DDL cannot roll back in the sandbox transactional wrapper; :auto mode disables ownership tracking so every process (including the Ecto.Migrator subprocess spawned by with_repo) checks out on demand. :manual mode (required by DataCase) is restored on exit.
 - Synthetic test migration pattern: priv/repo/migrations/00000000000001_mailglass_init.exs is the 8-line wrapper adopters will get from mix mailglass.gen.migration (Phase 7 D-36/D-37). test_helper.exs runs it via Ecto.Migrator.with_repo/2 + Ecto.Migrator.run/4, then starts the TestRepo explicitly (with_repo stops the repo after its block) and sets sandbox to :manual.
+- Ecto.Enum error metadata in Ecto 3.13+ includes a :type key before :validation + :enum (parameterized enum spec). Tests must assert via keyword-list key access (opts[:validation], opts[:enum]) — literal [validation: ..., enum: ...] pattern matches fail silently.
+- UNIQUE-index violations during Repo.insert surface as Ecto.ConstraintError (not Postgrex.Error) when the schema has not declared unique_constraint/3. Raw TestRepo.query! bypasses the Ecto interception layer and surfaces the raw Postgrex.Error — useful for DB CHECK constraint integration tests.
+- Mailglass.Events.Event schema exposes only changeset/1 (INSERT). No update_changeset/2 is defined; the moduledoc explicitly avoids the substring 'update_changeset' to not trip naive acceptance greps. Adopters who need to update an event row will hit the DB trigger → EventLedgerImmutableError at Repo.update/2 time.
+- Delivery changeset auto-populates :recipient_domain via put_recipient_domain/1 pipe step — lowercased SPLIT_PART of :recipient at cast time. Adopters who supply :recipient_domain explicitly (via Generators or tests) keep their override; the helper only fires when no change is present.
 
 ### Pending Todos
 
@@ -120,8 +125,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T18:44:21.814Z
-Stopped at: Completed 02-02 plan
+Last session: 2026-04-22T18:55:17.870Z
+Stopped at: Completed 02-03 plan
 Resume file: None
 
 **Planned Phase:** 02 (persistence-tenancy) — 6 plans — 2026-04-22T17:50:17.597Z

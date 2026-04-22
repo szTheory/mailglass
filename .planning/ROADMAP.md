@@ -60,9 +60,9 @@ Plans:
 **Research flag**: yes — `/gsd-research-phase` before planning. Open questions: `metadata jsonb` projection columns shape; orphan-webhook reconciliation worker cadence; whether to adopt `:typed_struct` / `:typed_ecto_schema` given Elixir 1.18+ set-theoretic types; status state machine app-enforced vs DB check constraint (recommend app-enforced — see SUMMARY.md Q6).
 **Plans**: 6 plans
 Plans:
-- [ ] 02-01-PLAN.md — Wave 0 scaffolding: `:uuidv7` dep + `Mailglass.Schema` macro + `EventLedgerImmutableError` + `TenancyError` + SuppressedError pre-GA patch + Telemetry spans (events_append, persist) + Repo SQLSTATE translation + TestRepo/DataCase/Generators + `config/test.exs` wiring
+- [x] 02-01-PLAN.md — Wave 0 scaffolding: `:uuidv7` dep + `Mailglass.Schema` macro + `EventLedgerImmutableError` + `TenancyError` + SuppressedError pre-GA patch + Telemetry spans (events_append, persist) + Repo SQLSTATE translation + TestRepo/DataCase/Generators + `config/test.exs` wiring
 - [x] 02-02-PLAN.md — Migration module + Oban-pattern Postgres dispatcher + V01 DDL (3 tables + immutability trigger + CHECK + indexes + citext) + test_helper runs synthetic migration + immutability integration test
-- [ ] 02-03-PLAN.md — Ecto schemas: `Mailglass.Outbound.Delivery` + `Mailglass.Events.Event` + `Mailglass.Suppression.Entry` with hand-written typespecs, `Ecto.Enum` fields, closed-atom-set reflectors, scope/stream coupling validation
+- [x] 02-03-PLAN.md — Ecto schemas: `Mailglass.Outbound.Delivery` + `Mailglass.Events.Event` + `Mailglass.Suppression.Entry` with hand-written typespecs, `Ecto.Enum` fields, closed-atom-set reflectors, scope/stream coupling validation
 - [ ] 02-04-PLAN.md — `Mailglass.Tenancy` behaviour + `SingleTenant` default + process-dict helpers + `Mailglass.Oban.TenancyMiddleware` (conditionally compiled) + DataCase upgrade
 - [ ] 02-05-PLAN.md — `Mailglass.Events.append/1` + `append_multi/3` (D-01..D-06: idempotency via partial-unique + id:nil replay fetch + telemetry spans) + `Mailglass.Events.Reconciler` pure-query orphan lookup + StreamData convergence property test
 - [ ] 02-06-PLAN.md — `Mailglass.Outbound.Projector` (monotonic D-15 + optimistic_lock D-18) + `Mailglass.SuppressionStore` behaviour + Ecto default impl + phase-wide integration test proving all 5 ROADMAP criteria
@@ -171,7 +171,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | 2026-04-22 |
-| 2. Persistence + Tenancy | 0/6 | Planned | - |
+| 2. Persistence + Tenancy | 3/6 | In progress | - |
 | 3. Transport + Send Pipeline | 0/TBD | Not started | - |
 | 4. Webhook Ingest | 0/TBD | Not started | - |
 | 5. Dev Preview LiveView | 0/TBD | Not started | - |
