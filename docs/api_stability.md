@@ -143,6 +143,19 @@ Per-kind fields: `pg_code :: String.t()` (always `"45A01"`).
 
 Retryable: `false` (append-only invariant; the calling code has a bug).
 
+**Translator asymmetry (Phase 2, IN-03):** both atoms are part of the
+closed type set and stable, but the v0.1 translator in
+`Mailglass.Repo.infer_immutability_type/1` always emits
+`:update_attempt`. The Postgrex error message is not a stable public
+API, and the v0.1 trigger function is shared between UPDATE and DELETE
+rule violations. `:delete_attempt` is reserved for a future Phase 4+
+refinement that distinguishes the two actions (either via dedicated
+trigger functions per action, or by pattern-matching the constraint
+name) when webhook-path DELETE-attempt telemetry becomes valuable.
+Callers pattern-matching today should match either atom
+(`err.type in [:update_attempt, :delete_attempt]`) to stay forward-
+compatible.
+
 Since: 0.1.0.
 
 ### `Mailglass.TenancyError`
