@@ -28,6 +28,15 @@ If everything else fails, the preview dashboard, normalized event ledger, and on
 - [x] Zero-dep foundation modules: `Mailglass.Config` (NimbleOptions + `:persistent_term` theme cache), `Mailglass.Telemetry` (4-level span helpers + D-33 metadata whitelist + StreamData property test), `Mailglass.Repo` (runtime `transact/1` facade), `Mailglass.IdempotencyKey` (sanitized keys per T-IDEMP-001)
 - [x] Optional-dep gateway pattern (`Mailglass.OptionalDeps.{Oban, OpenTelemetry, Mjml, GenSmtp, Sigra}`): `@compile {:no_warn_undefined, ...}` + `available?/0` + degraded fallback; `mix compile --no-optional-deps --warnings-as-errors` is a merge gate
 
+**Persistence + Tenancy (Phase 2 complete — 2026-04-22):**
+
+- [x] Append-only `mailglass_events` Postgres table — SQLSTATE 45A01 trigger raises on UPDATE/DELETE; `Mailglass.Repo` write path translates to `%Mailglass.EventLedgerImmutableError{}` at four sites (`insert/2`, `update/2`, `delete/2`, `transact/1`)
+- [x] Idempotency via partial `UNIQUE` index on `mailglass_events(idempotency_key) WHERE idempotency_key IS NOT NULL` + `on_conflict: :nothing`; StreamData convergence property proves 1000 (event, replay 1..10) sequences converge (D-03 `inserted_at: nil` sentinel for UUIDv7 schemas)
+- [x] Three tables (`mailglass_deliveries`, `mailglass_events`, `mailglass_suppressions`) with indexed `tenant_id` columns, `citext` for case-insensitive address match, `pg_class`-comment version tracking (Oban-style)
+- [x] `Mailglass.Tenancy` behaviour + process-dict helpers (`current/0`, `put_current/1`, `with_tenant/2`, `tenant_id!/0`) + `Mailglass.Tenancy.SingleTenant` default no-op resolver + conditionally-compiled `Mailglass.Oban.TenancyMiddleware` (dual-surface `call/2` + `wrap_perform/2` for OSS/Pro)
+- [x] `Mailglass.Events.append/1` + `append_multi/3` canonical write path with telemetry spans (counts/IDs/latencies only, zero PII); `Mailglass.Events.Reconciler` find_orphans/attempt_link
+- [x] `Mailglass.Outbound.Projector` single-writer for Delivery projection columns (D-14) with D-15 monotonic rules + D-18 optimistic_lock; `Mailglass.SuppressionStore` behaviour + Ecto impl with per-stream `citext` partial unique index
+
 ### Active
 
 <!-- Current scope. Building toward these as the v0.1 → v0.5 → v1.0 trajectory. -->
@@ -41,9 +50,9 @@ If everything else fails, the preview dashboard, normalized event ledger, and on
 - [ ] `Mailglass.Adapter.Fake` — in-memory, deterministic, time-advanceable, the release-blocking test target
 - [ ] `Mailglass.TestAssertions` extending Swoosh's: `assert_mail_sent`, `last_mail/0`, `wait_for_mail/1`
 - [ ] **Dev-mode preview LiveView** (`mailglass_admin`): mailable sidebar with `preview_props/1` auto-discovery, device toggle, dark toggle, HTML/Text/Raw/Headers tabs
-- [ ] Append-only `mailglass_events` Postgres table protected by trigger raising SQLSTATE 45A01 on UPDATE/DELETE
-- [ ] Idempotency keys (`provider_message_id`, `webhook_event_id`) via `UNIQUE` partial index — replay-safe webhooks
-- [ ] First-class multi-tenancy: `tenant_id` on every record, `Mailglass.Tenancy.scope/2` behaviour, scope-aware admin queries (Phoenix 1.8 `scope` aligned)
+- [x] Append-only `mailglass_events` Postgres table protected by trigger raising SQLSTATE 45A01 on UPDATE/DELETE — Validated in Phase 2
+- [x] Idempotency keys (`provider_message_id`, `webhook_event_id`) via `UNIQUE` partial index — replay-safe webhooks — Validated in Phase 2 (1000-run StreamData convergence property)
+- [x] First-class multi-tenancy: `tenant_id` on every record, `Mailglass.Tenancy.scope/2` behaviour, scope-aware admin queries (Phoenix 1.8 `scope` aligned) — Validated in Phase 2 (SingleTenant default resolver ships as no-op)
 - [x] `Mailglass.Error` struct hierarchy (`SendError`, `TemplateError`, `SignatureError`, `SuppressedError`, `RateLimitError`, `ConfigError`) — pattern-match by struct, never by message string — Validated in Phase 1
 - [ ] Telemetry spans on `[:mailglass, :outbound, :send, :*]` and `[:mailglass, :preview, :render, :*]` — counts/IDs/latencies only, never PII
 - [ ] Webhook plug + event normalization for **Postmark + SendGrid** (Anymail event taxonomy verbatim: `queued/sent/rejected/failed/bounced/deferred/delivered/autoresponded/opened/clicked/complained/unsubscribed/subscribed/unknown` with `reject_reason` ∈ `:invalid | :bounced | :timed_out | :blocked | :spam | :unsubscribed | :other | nil`)
@@ -196,4 +205,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-04-22 after Phase 1 (Foundation) completion*
+*Last updated: 2026-04-22 after Phase 2 (Persistence + Tenancy) completion*
