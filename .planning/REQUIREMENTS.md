@@ -68,9 +68,12 @@
 
 ### Transport
 
-- [ ] **TRANS-01**: `Mailglass.Adapter` behaviour defines `deliver(message, opts) :: {:ok, %{message_id: String.t(), provider_response: term}} | {:error, %Mailglass.Error{}}`. Return shape is locked in `api_stability.md`. (TS-05, LIB-03 prevention)
-- [ ] **TRANS-02**: `Mailglass.Adapters.Fake` is a stateful, in-memory, time-advanceable adapter. Records sent messages, supports `trigger_event/2` to simulate `:bounced`/`:complained`/`:opened`/`:clicked`/`:unsubscribed` for an existing `message_id`, supports `advance_time/1`. State is JSON-compatible. **The Fake adapter is the merge-blocking release gate** — every PR must pass `mix test` against Fake. (TS-05, D-13, DF-11)
-- [ ] **TRANS-03**: `Mailglass.Adapters.Swoosh` wraps any `Swoosh.Adapter` (Postmark, SendGrid, Mailgun, SES, Resend, SMTP) and normalizes errors into `%Mailglass.Error{}`. Adopters keep their existing Swoosh adapter config; mailglass adds the normalized error mapping + telemetry instrumentation.
+- [x] **TRANS-01
+**: `Mailglass.Adapter` behaviour defines `deliver(message, opts) :: {:ok, %{message_id: String.t(), provider_response: term}} | {:error, %Mailglass.Error{}}`. Return shape is locked in `api_stability.md`. (TS-05, LIB-03 prevention)
+- [x] **TRANS-02
+**: `Mailglass.Adapters.Fake` is a stateful, in-memory, time-advanceable adapter. Records sent messages, supports `trigger_event/2` to simulate `:bounced`/`:complained`/`:opened`/`:clicked`/`:unsubscribed` for an existing `message_id`, supports `advance_time/1`. State is JSON-compatible. **The Fake adapter is the merge-blocking release gate** — every PR must pass `mix test` against Fake. (TS-05, D-13, DF-11)
+- [x] **TRANS-03
+**: `Mailglass.Adapters.Swoosh` wraps any `Swoosh.Adapter` (Postmark, SendGrid, Mailgun, SES, Resend, SMTP) and normalizes errors into `%Mailglass.Error{}`. Adopters keep their existing Swoosh adapter config; mailglass adds the normalized error mapping + telemetry instrumentation.
 - [ ] **TRANS-04**: `Mailglass.Outbound.send/2` (synchronous), `Mailglass.Outbound.deliver/2` (alias for send/2 — Swoosh familiarity), `Mailglass.Outbound.deliver_later/2` (Oban if available, else `Task.Supervisor` with `Logger.warning`), `Mailglass.Outbound.deliver_many/2` (batch with partial-failure recovery via idempotency keys). All four return `{:ok, %Delivery{}}` or `{:error, %Mailglass.Error{}}`. Bang variants `deliver!/2` etc. raise. (TS-01)
 
 ### Send Pipeline (composition)

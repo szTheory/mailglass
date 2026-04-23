@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 03-01-PLAN.md: Phase 3 foundation primitives"
-last_updated: "2026-04-23T03:19:17.661Z"
+stopped_at: "Completed 03-02-PLAN.md: Adapter layer + Fake gate + Projector broadcast"
+last_updated: "2026-04-23T03:50:22.088Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 19
-  completed_plans: 13
-  percent: 68
+  completed_plans: 14
+  percent: 74
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [███████░░░] 68%
+Progress: [███████░░░] 74%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [███████░░░] 68%
 | Phase 02 P05 | 11min | 3 tasks | 6 files |
 | Phase 02 P06 | 62min | 3 tasks tasks | 6 files files |
 | Phase 03-transport-send-pipeline P01 | 30min | 3 tasks | 30 files |
+| Phase 03 P02 | 19min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -129,6 +130,9 @@ Most load-bearing for Phase 1:
 - Events.append_multi function-form uses two Multi.run steps (not Ecto.Multi.insert/4) because Ecto 3.13.5 does not export Multi.insert/4
 - Application supervision tree consolidated in Plan 01 only (I-08); Plans 02+03 add supervisor modules without editing application.ex via Code.ensure_loaded?-gated maybe_add/3
 - Repo.multi/1 added as public wrapper over private repo/0 so Outbound (Plan 05) can compose Multis without accessing private internals (I-02)
+- broadcast_delivery_updated/3 implemented in Task 2 because Fake.trigger_event/3 calls it — Tasks 2+3 are interdependent
+- Fake.Storage uses ETS named table :mailglass_fake_mailbox with per-owner inbox isolation; checkout is idempotent; allow/2 does not require pre-checkout
+- Task.async inherits dollar-callers so spawn/1 used in Test 5 to avoid owner resolution bypassing no-owner guard
 
 ### Pending Todos
 
@@ -147,8 +151,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T03:19:17.646Z
-Stopped at: Completed 03-01-PLAN.md: Phase 3 foundation primitives
+Last session: 2026-04-23T03:50:22.080Z
+Stopped at: Completed 03-02-PLAN.md: Adapter layer + Fake gate + Projector broadcast
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z
