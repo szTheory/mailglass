@@ -134,6 +134,7 @@ defmodule Mailglass.Webhook.PlugTest do
       @impl Mailglass.Tenancy
       def scope(query, _context), do: query
 
+      @impl Mailglass.Tenancy
       def resolve_webhook_tenant(_context), do: {:error, :no_tenant_match}
     end
 

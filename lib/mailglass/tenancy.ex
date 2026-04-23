@@ -39,7 +39,7 @@ defmodule Mailglass.Tenancy do
 
   @callback scope(queryable :: Ecto.Queryable.t(), context :: term()) :: Ecto.Queryable.t()
 
-  @optional_callbacks tracking_host: 1
+  @optional_callbacks tracking_host: 1, resolve_webhook_tenant: 1
 
   @doc """
   Optional: return a per-tenant tracking host override (D-32).
@@ -50,6 +50,65 @@ defmodule Mailglass.Tenancy do
   for strict cookie/origin isolation.
   """
   @callback tracking_host(context :: term()) :: {:ok, String.t()} | :default
+
+  @doc """
+  Optional: resolve the tenant from a verified webhook context (D-12).
+
+  Called by `Mailglass.Webhook.Plug` AFTER `Provider.verify!/3` returns
+  `:ok` — D-13's "verify-first, tenant-second" ordering closes the
+  Stripe-Connect chicken-and-egg trap (a forged request cannot spoof its
+  way into a tenant's suppression list because the signature gate runs
+  on the global key material before any tenant-scoped work).
+
+  Adopters returning `{:ok, tenant_id}` stamp tenant context for the
+  rest of the ingest pipeline (normalize + persist + broadcast).
+  `{:error, reason}` causes `Mailglass.Webhook.Plug` to raise
+  `%Mailglass.TenancyError{type: :webhook_tenant_unresolved}` and
+  return HTTP 422.
+
+  ## Context map fields
+
+    * `:provider` — `:postmark | :sendgrid` (the atom the router
+      dispatched against)
+    * `:conn` — the `Plug.Conn` for header / IP / path-param
+      introspection
+    * `:raw_body` — verified raw bytes (signature passed before this
+      callback fires)
+    * `:headers` — `[{name, value}]` list as produced by the verifier
+    * `:path_params` — adopter route's path params
+      (e.g. `%{"tenant_id" => "..."}`)
+    * `:verified_payload` — `nil` at v0.1 (the plug has not yet decoded
+      the JSON payload at callback time). v0.5 may set this to
+      `Jason.decode!/1` of `:raw_body` to support Stripe-Connect-style
+      strategies that inspect the provider event's `account` field
+      post-verify.
+
+  ## Examples
+
+      # SingleTenant default — everything is "default"
+      def resolve_webhook_tenant(_), do: {:ok, "default"}
+
+      # Per-shop Shopify-style header lookup
+      def resolve_webhook_tenant(%{headers: headers}) do
+        case List.keyfind(headers, "x-shopify-shop-domain", 0) do
+          {_, shop_domain} -> {:ok, shop_domain}
+          nil -> {:error, :missing_shop_domain}
+        end
+      end
+
+  Adopters not implementing this callback get SingleTenant default
+  behaviour (`{:ok, "default"}`) via the dispatcher's
+  `function_exported?/3` fallback. `Mailglass.Tenancy.ResolveFromPath`
+  ships as opt-in sugar for URL-prefix tenant resolution.
+  """
+  @callback resolve_webhook_tenant(context :: %{
+              provider: atom(),
+              conn: Plug.Conn.t(),
+              raw_body: binary(),
+              headers: [{String.t(), String.t()}],
+              path_params: map(),
+              verified_payload: map() | nil
+            }) :: {:ok, String.t()} | {:error, term()}
 
   @process_dict_key :mailglass_tenant_id
 
@@ -111,6 +170,22 @@ defmodule Mailglass.Tenancy do
         put_current(prior)
       end
     end
+  end
+
+  @doc """
+  Clear any tenant scope set in the current process dictionary.
+
+  Returns `:ok`. Primarily used by test `on_exit` cleanup — encapsulates
+  the internal process-dict key so tests don't need to know the exact
+  atom (`:mailglass_tenant_id`). Production code should rely on
+  `with_tenant/2` block scoping (Pitfall 7), which auto-restores prior
+  scope even on raise.
+  """
+  @doc since: "0.1.0"
+  @spec clear() :: :ok
+  def clear do
+    Process.delete(@process_dict_key)
+    :ok
   end
 
   @doc """
@@ -182,12 +257,13 @@ defmodule Mailglass.Tenancy do
 
   ## Fallback behaviour
 
-  Until Plan 05 ships the `SingleTenant.resolve_webhook_tenant/1` impl,
-  callers that don't implement the function receive `{:ok, "default"}`
-  from the shipped `SingleTenant` resolver. Adopter resolvers that do
-  not implement the callback also receive `{:ok, "default"}` — Plan 05
-  will tighten this to `{:error, :resolver_incomplete}` once the
-  `@optional_callback` declaration lands.
+  `Mailglass.Tenancy.SingleTenant` ships a concrete
+  `resolve_webhook_tenant/1` impl that returns `{:ok, "default"}` — the
+  zero-config single-tenant default. Adopter tenancy modules that do
+  not implement the optional callback also fall through to
+  `{:ok, "default"}` via the dispatcher's `function_exported?/3`
+  check; multi-tenant adopters MUST implement the callback to get
+  meaningful tenant routing.
   """
   @doc since: "0.1.0"
   @spec resolve_webhook_tenant(map()) :: {:ok, String.t()} | {:error, term()}
