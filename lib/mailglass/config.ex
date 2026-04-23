@@ -178,6 +178,40 @@ defmodule Mailglass.Config do
               "Off by default per D-04 — Postmark's origin IPs can change."
         ]
       ]
+    ],
+    # Phase 4 D-03 / HOOK-04. SendGrid Event Webhook verification is
+    # ECDSA P-256 over `timestamp <> raw_body`. `:public_key` is a base64
+    # SPKI DER (NOT PEM — the SendGrid dashboard ships raw DER). Missing
+    # at request time raises `%ConfigError{type: :webhook_verification_key_missing}`.
+    # `:timestamp_tolerance_seconds` default 300 matches the Stripe /
+    # Svix / Standard Webhooks consensus.
+    sendgrid: [
+      type: :keyword_list,
+      default: [],
+      doc: "SendGrid webhook configuration (HOOK-04).",
+      keys: [
+        enabled: [
+          type: :boolean,
+          default: true,
+          doc: "Enable the SendGrid webhook route. Default: `true`."
+        ],
+        public_key: [
+          type: {:or, [:string, nil]},
+          default: nil,
+          doc:
+            "Base64-encoded SubjectPublicKeyInfo DER (NOT PEM — SendGrid's " <>
+              "dashboard ships raw DER without `-----BEGIN PUBLIC KEY-----` " <>
+              "framing). Required for signature verification; omit only if " <>
+              "the provider is disabled."
+        ],
+        timestamp_tolerance_seconds: [
+          type: :pos_integer,
+          default: 300,
+          doc:
+            "Replay tolerance window in seconds. Default: `300` (Stripe / " <>
+              "Svix / Standard Webhooks consensus)."
+        ]
+      ]
     ]
   ]
 
