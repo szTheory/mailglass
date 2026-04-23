@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-08-PLAN.md — Tracking.rewrite_if_enabled/1 wired into Outbound pipeline (TRACK-03 gap closure)
-last_updated: "2026-04-23T16:17:45.800Z"
+stopped_at: "Completed 03-12-PLAN.md — ME-01..ME-05 medium-severity gap closure (Clock.utc_now, BatchFailed simplification, to_existing_atom hardening, PubSub :exit catch, provider_tag pattern match)"
+last_updated: "2026-04-23T16:29:27.087Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 24
-  completed_plans: 23
-  percent: 96
+  completed_plans: 24
+  percent: 100
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
-Plan: 5 of 12
+Plan: 6 of 12
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [██████████] 96%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -77,6 +77,7 @@ Progress: [██████████] 96%
 | Phase 03-transport-send-pipeline P10 | 3min | 2 tasks | 3 files |
 | Phase 03-transport-send-pipeline P11 | 50min | 1 tasks | 3 files |
 | Phase 03 P08 | 15min | 2 tasks | 3 files |
+| Phase 03 P12 | 9min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -165,6 +166,8 @@ Most load-bearing for Phase 1:
 - Citext probe placement: AFTER Sandbox.start_owner! (not before via unboxed_run) — mirrors probe_until_clean/5 from Plan 02-06; DBConnection.Ownership handles mid-ownership disconnect gracefully
 - DataCase/MailerCase scope: bare mix test citext failures from migration_test.exs concurrency are architectural (Phase 6 deferred-items.md); plan scope is mix test --only phase_03_uat which exits 0
 - config :mailglass, adapter_endpoint: used for test endpoint resolution — NimbleOptions :tracking schema does not include :endpoint key; Tracking.endpoint/0 falls back to :adapter_endpoint which reaches the same token key material
+- provider_tag/1 uses two pattern-match clauses (map with :adapter key vs wildcard) rather than is_map guard — cleaner intent signal and directly documents the contract that only map-shaped responses with an :adapter key contribute a meaningful tag
+- ME-03 nested try/rescue: outer rescues ArgumentError on Elixir-prefixed atom falls through to bare mod_str path; inner rescues ArgumentError on bare atom — each returns distinct :why context key (:module_not_loaded vs :atom_not_found)
 
 ### Pending Todos
 
@@ -183,8 +186,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T16:17:45.794Z
-Stopped at: Completed 03-08-PLAN.md — Tracking.rewrite_if_enabled/1 wired into Outbound pipeline (TRACK-03 gap closure)
+Last session: 2026-04-23T16:29:27.074Z
+Stopped at: Completed 03-12-PLAN.md — ME-01..ME-05 medium-severity gap closure (Clock.utc_now, BatchFailed simplification, to_existing_atom hardening, PubSub :exit catch, provider_tag pattern match)
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z
