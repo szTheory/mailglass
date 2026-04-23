@@ -524,3 +524,99 @@ from caller processes via `:ets.update_counter/4`.
 Phase 6 `LINT-07 NoDefaultModuleNameSingleton` has an allowlist entry for this module.
 
 Since: 0.1.0.
+
+## §SuppressionStore.ETS (Phase 3 Plan 03)
+
+### `Mailglass.SuppressionStore.ETS`
+
+ETS-backed implementation of `Mailglass.SuppressionStore` (D-28). Behaviour parity with
+`Mailglass.SuppressionStore.Ecto` — same `check/2` and `record/2` contract.
+
+**Locked behaviour callbacks:**
+
+```elixir
+@callback check(lookup_key(), keyword()) ::
+            {:suppressed, Entry.t()} | :not_suppressed | {:error, term()}
+@callback record(record_attrs(), keyword()) ::
+            {:ok, Entry.t()} | {:error, term()}
+```
+
+**Lookup algorithm (3-branch OR-union, matching Ecto):**
+1. `{tenant_id, address, :address, nil}` — address scope
+2. `{tenant_id, domain, :domain, nil}` — domain scope
+3. `{tenant_id, address, :address_stream, stream}` — only when stream is provided
+
+**UPSERT behaviour:** `record/2` with same key `{tenant_id, address, scope, stream}` overwrites
+the existing entry (equivalent to Ecto's `on_conflict: {:replace, [...]}`).
+
+**Expiry filter:** expired entries (where `expires_at < Clock.utc_now()`) are silently skipped
+at read time — they are NOT returned by `check/2`.
+
+**Test override pattern:** configure via `Application.put_env/3` in test `setup`, restore in
+`on_exit`. Scope tests by unique `tenant_id` to avoid cross-test leakage. Call `reset/0` in
+`setup` for a guaranteed clean slate.
+
+**`reset/0` (test-only helper):** `@spec reset() :: :ok` — clears all entries from the ETS
+suppression table. MUST NOT be called from production code.
+
+Since: 0.1.0.
+
+### `:mailglass_suppression_store` ETS table (library-reserved)
+
+Named ETS table owned by `Mailglass.SuppressionStore.ETS.TableOwner`. Key shape:
+`{tenant_id, address, scope, stream_or_nil}`. Value shape: `{key, %Mailglass.Suppression.Entry{}}`.
+
+OTP 27 opts: `:set, :public, :named_table, read_concurrency: true, write_concurrency: :auto`.
+
+Adopters MUST NOT register a process or table under this name. Crash semantics (D-22): if
+`TableOwner` crashes, BEAM deletes the table; supervisor restarts and recreates it empty.
+
+### `Mailglass.SuppressionStore.ETS.Supervisor` (library-reserved singleton)
+
+Registered under `name: __MODULE__`. Library-internal machinery. Started unconditionally by
+`Mailglass.Application` via `Code.ensure_loaded?/1` gate (I-08).
+
+Phase 6 `LINT-07 NoDefaultModuleNameSingleton` has an allowlist entry for this module.
+
+Since: 0.1.0.
+
+### `Mailglass.SuppressionStore.ETS.TableOwner` (library-reserved singleton)
+
+Registered under `name: __MODULE__`. Init-and-idle GenServer — no `handle_call/3`,
+`handle_cast/2`, or `handle_info/2`.
+
+Phase 6 `LINT-07 NoDefaultModuleNameSingleton` has an allowlist entry for this module.
+
+Since: 0.1.0.
+
+## §Suppression (Phase 3 Plan 03)
+
+### `Mailglass.Suppression.check_before_send/1`
+
+Locked signature: `@spec check_before_send(Mailglass.Message.t()) :: :ok | {:error, Mailglass.SuppressedError.t()}`
+
+**Store-indirection pattern:** Delegates to the module configured at runtime via:
+
+```elixir
+Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.Ecto)
+```
+
+Default is `Mailglass.SuppressionStore.Ecto`. Tests override to `Mailglass.SuppressionStore.ETS`
+for in-memory speed.
+
+**Recipient extraction:** Reads `msg.swoosh_email.to` — first element (primary recipient).
+Returns `""` when the `to` list is empty (store will return `:not_suppressed`).
+
+**Return shape:**
+- `:ok` — recipient is not suppressed
+- `{:error, %SuppressedError{type: scope}}` — recipient is suppressed; `scope` is `:address | :domain | :address_stream`
+- `{:error, term()}` — store infrastructure failure (passed through)
+
+**Telemetry:** Single-emit `[:mailglass, :outbound, :suppression, :stop]`
+- Measurements: `%{duration_us: integer()}`
+- Metadata: `%{hit: boolean(), tenant_id: String.t()}` — no PII (D-31 whitelist)
+
+**`SuppressedError` context keys:** `%{tenant_id: String.t(), stream: atom()}` — no recipient
+address, no email headers. (T-3-03-02 mitigation.)
+
+Since: 0.1.0.

@@ -21,7 +21,7 @@ defmodule Mailglass.SuppressionTest do
     :ok
   end
 
-  defp build_message(attrs \\ []) do
+  defp build_message(attrs) do
     to_addr = Keyword.get(attrs, :to, "recipient@example.com")
     stream = Keyword.get(attrs, :stream, :transactional)
     tenant_id = Keyword.get(attrs, :tenant_id, "tenant-test")
