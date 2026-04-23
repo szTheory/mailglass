@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-webhook-ingest/04-04-PLAN.md (Wave 2A single-ingress Plug + TenancyError atom + Tenancy dispatcher stub)
-last_updated: "2026-04-23T21:36:41.446Z"
+stopped_at: Completed 04-webhook-ingest/04-05-PLAN.md (Wave 2B Router macro + Tenancy callback formalization + error atom-set finalization + api_stability.md lock)
+last_updated: "2026-04-23T21:52:27.385Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 33
-  completed_plans: 28
-  percent: 85
+  completed_plans: 29
+  percent: 88
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 04 (webhook-ingest) — EXECUTING
-Plan: 5 of 9 (04-01 complete; 04-02 next)
+Plan: 6 of 9 (04-01 complete; 04-02 next)
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -83,6 +83,7 @@ Progress: [█████████░] 85%
 | Phase 04 P02 | 13min | 3 tasks | 10 files |
 | Phase 04 P03 | 9min | 2 tasks | 3 files |
 | Phase 04-webhook-ingest P04 | 13min | 2 tasks tasks | 4 files files |
+| Phase 04 P05 | 9min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -190,6 +191,12 @@ Most load-bearing for Phase 1:
 - Plan 04-04: Mailglass.Tenancy.resolve_webhook_tenant/1 ships as a function_exported?/3 dispatcher stub returning {:ok, "default"} when the resolver module has no impl — keeps SingleTenant functional before Plan 05's @optional_callback landing; Plan 05 tightens fallback to {:error, :resolver_incomplete}.
 - Plan 04-04: Webhook.Plug do_call/3 returns {conn, stop_metadata} per :telemetry.span/3 contract — matches the raw tuple shape; Plug.call/2 receives conn as the span's return. All 6 response branches (200 success + 200 duplicate + 401 sig + 422 tenant + 500 config + 500 ingest) return this shape.
 - Plan 04-04: Post-commit broadcast iterates Plan 06's events_with_deliveries 3-tuples {event, delivery_or_nil, orphan?}; orphans ({_event, nil, true}) are skipped — Plan 07 Reconciler emits :reconciled when matching Delivery surfaces, so broadcasting twice would confuse LiveView subscribers.
+- Plan 04-05: Mailglass.Webhook.Router.mailglass_webhook_routes/2 macro validates :providers at compile time via Enum.each + ArgumentError inside the defmacro body (before the quote) — invalid atoms crash adopter endpoint.ex boot per CONTEXT D-07 'compile error, not runtime 404' discipline
+- Plan 04-05: Mailglass.Tenancy.resolve_webhook_tenant/1 dispatcher KEEPS function_exported?/3 fallback to {:ok, "default"} even after @optional_callback formalization — zero-friction adoption for modules written against Plan 04-04's stub shape; SingleTenant's concrete impl makes the fallback unreachable for the default :tenancy = nil case
+- Plan 04-05: Mailglass.Tenancy.ResolveFromPath.scope/2 raises RuntimeError with composition guidance (not an unmodified query pass-through) — module is SUGAR for resolve_webhook_tenant/1 only; adopters misconfiguring it as a complete Tenancy get a clear directive instead of silent cross-tenant query failures (T-04-08 fails CLOSED)
+- Plan 04-05: Mailglass.Tenancy.clear/0 encapsulates the :mailglass_tenant_id process-dict atom — Plans 06+ tests call Mailglass.Tenancy.clear() in on_exit instead of Process.delete(:mailglass_tenant_id); internal atom can be refactored without breaking test code (revision W7)
+- Plan 04-05: Mailglass.Config :webhook_ingest_mode schema entry is @doc false because :async is reserved at v0.1 — NimbleOptions {:in, [:sync, :async]} enforcement; Plan 06's ingest_multi/3 will add explicit runtime raise on :async pending v0.5 DLQ admin (revision B2)
+- Plan 04-05: SignatureError :malformed_header format_message accepts ctx[:detail] and TenancyError :webhook_tenant_unresolved accepts ctx[:reason] via inspect/1 — optional context map fields enable operator-visible hints without adding struct fields; absent keys fall through to bare sentence (backward-compatible)
 
 ### Pending Todos
 
@@ -208,8 +215,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T21:36:41.437Z
-Stopped at: Completed 04-webhook-ingest/04-04-PLAN.md (Wave 2A single-ingress Plug + TenancyError atom + Tenancy dispatcher stub)
+Last session: 2026-04-23T21:52:27.357Z
+Stopped at: Completed 04-webhook-ingest/04-05-PLAN.md (Wave 2B Router macro + Tenancy callback formalization + error atom-set finalization + api_stability.md lock)
 Resume file: None
 
 **Planned Phase:** 04 (webhook-ingest) — 9 plans — 2026-04-23T20:02:05.795Z
