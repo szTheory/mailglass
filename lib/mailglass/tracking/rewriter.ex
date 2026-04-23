@@ -42,7 +42,7 @@ defmodule Mailglass.Tracking.Rewriter do
     flags = Keyword.fetch!(opts, :flags)
     delivery_id = Keyword.fetch!(opts, :delivery_id)
     tenant_id = Keyword.fetch!(opts, :tenant_id)
-    endpoint = Keyword.get(opts, :endpoint, endpoint_fallback())
+    endpoint = Keyword.get(opts, :endpoint, Mailglass.Tracking.endpoint())
 
     case Floki.parse_document(html) do
       {:ok, doc} ->
@@ -219,9 +219,4 @@ defmodule Mailglass.Tracking.Rewriter do
     Application.get_env(:mailglass, :tracking, [])[:scheme] || "https"
   end
 
-  defp endpoint_fallback do
-    Application.get_env(:mailglass, :tracking, [])[:endpoint] ||
-      Application.get_env(:mailglass, :adapter_endpoint) ||
-      "mailglass-tracking-default-endpoint"
-  end
 end

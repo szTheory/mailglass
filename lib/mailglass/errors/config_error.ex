@@ -17,6 +17,9 @@ defmodule Mailglass.ConfigError do
     whose function name matches an auth-stream heuristic (D-38). Forbidden.
   - `:tracking_host_missing` — a mailable enables opens or clicks but no
     tracking host is configured (D-32). Required for link rewriting.
+  - `:tracking_endpoint_missing` — tracking is enabled but no Phoenix.Token
+    endpoint is configured. Set `config :mailglass, :tracking, endpoint:` or
+    `config :mailglass, :adapter_endpoint` to enable open/click tracking.
 
   See `Mailglass.Error` for the shared contract and `docs/api_stability.md`
   for the locked `:type` atom set.
@@ -24,7 +27,7 @@ defmodule Mailglass.ConfigError do
 
   @behaviour Mailglass.Error
 
-  @types [:missing, :invalid, :conflicting, :optional_dep_missing, :tracking_on_auth_stream, :tracking_host_missing]
+  @types [:missing, :invalid, :conflicting, :optional_dep_missing, :tracking_on_auth_stream, :tracking_host_missing, :tracking_endpoint_missing]
 
   @derive {Jason.Encoder, only: [:type, :message, :context]}
   defexception [:type, :message, :cause, :context]
@@ -36,7 +39,8 @@ defmodule Mailglass.ConfigError do
             | :conflicting
             | :optional_dep_missing
             | :tracking_on_auth_stream
-            | :tracking_host_missing,
+            | :tracking_host_missing
+            | :tracking_endpoint_missing,
           message: String.t(),
           cause: Exception.t() | nil,
           context: %{atom() => term()}
@@ -109,5 +113,11 @@ defmodule Mailglass.ConfigError do
   defp format_message(:tracking_host_missing, _ctx) do
     "Tracking misconfigured: tracking host is required when any mailable " <>
       "enables opens or clicks. Set `config :mailglass, :tracking, host: \"track.example.com\"`."
+  end
+
+  defp format_message(:tracking_endpoint_missing, _ctx) do
+    "Tracking endpoint not configured. " <>
+      "Set `config :mailglass, :tracking, endpoint: MyApp.Endpoint` or " <>
+      "`config :mailglass, :adapter_endpoint, MyApp.Endpoint` to enable open/click tracking."
   end
 end

@@ -51,7 +51,7 @@ defmodule Mailglass.Tracking.Plug do
     # Strip .gif suffix — URL shape is /o/<token>.gif (D-34)
     token_clean = String.replace_suffix(token, ".gif", "")
 
-    case Mailglass.Tracking.Token.verify_open(endpoint(), token_clean) do
+    case Mailglass.Tracking.Token.verify_open(Mailglass.Tracking.endpoint(), token_clean) do
       {:ok, %{delivery_id: did, tenant_id: tid}} ->
         record_open_event(did, tid)
 
@@ -71,7 +71,7 @@ defmodule Mailglass.Tracking.Plug do
   end
 
   get "/c/:token" do
-    case Mailglass.Tracking.Token.verify_click(endpoint(), token) do
+    case Mailglass.Tracking.Token.verify_click(Mailglass.Tracking.endpoint(), token) do
       {:ok, %{delivery_id: did, tenant_id: tid, target_url: url}} ->
         record_click_event(did, tid, url)
 
@@ -139,8 +139,4 @@ defmodule Mailglass.Tracking.Plug do
     _ -> :ok
   end
 
-  defp endpoint do
-    Application.get_env(:mailglass, :tracking, [])[:endpoint] ||
-      "mailglass-tracking-default-endpoint"
-  end
 end

@@ -96,6 +96,28 @@ defmodule Mailglass.Tracking do
     end
   end
 
+  @doc """
+  Resolves the Phoenix.Token endpoint used to sign and verify tracking tokens.
+
+  Resolution order (HI-02 fix — identical chain in Rewriter and Plug):
+  1. `config :mailglass, :tracking, endpoint: MyApp.Endpoint`
+  2. `config :mailglass, :adapter_endpoint, MyApp.Endpoint`
+  3. Raises `%Mailglass.ConfigError{type: :tracking_endpoint_missing}` if neither is set
+
+  Both `Mailglass.Tracking.Rewriter` and `Mailglass.Tracking.Plug` call this function
+  so that sign and verify always use the same key material.
+  """
+  @doc since: "0.1.0"
+  @spec endpoint() :: module() | binary()
+  def endpoint do
+    Application.get_env(:mailglass, :tracking, [])[:endpoint] ||
+      Application.get_env(:mailglass, :adapter_endpoint) ||
+      raise Mailglass.ConfigError.new(:tracking_endpoint_missing,
+        context: %{
+          hint: "config :mailglass, :tracking, endpoint: MyApp.Endpoint"
+        })
+  end
+
   defp fetch_from_mailable(mailable) when is_atom(mailable) do
     # Ensure the module is loaded before probing — compiled .beam files are
     # loaded lazily by the BEAM. This matters in async test contexts where a
