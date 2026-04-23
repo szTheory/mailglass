@@ -13,6 +13,10 @@ defmodule Mailglass.ConfigError do
   - `:conflicting` — two or more keys contradict each other
   - `:optional_dep_missing` — an optional dependency is required for the
     selected configuration but is not loaded
+  - `:tracking_on_auth_stream` — open/click tracking is enabled on a mailable
+    whose function name matches an auth-stream heuristic (D-38). Forbidden.
+  - `:tracking_host_missing` — a mailable enables opens or clicks but no
+    tracking host is configured (D-32). Required for link rewriting.
 
   See `Mailglass.Error` for the shared contract and `docs/api_stability.md`
   for the locked `:type` atom set.
@@ -20,13 +24,19 @@ defmodule Mailglass.ConfigError do
 
   @behaviour Mailglass.Error
 
-  @types [:missing, :invalid, :conflicting, :optional_dep_missing]
+  @types [:missing, :invalid, :conflicting, :optional_dep_missing, :tracking_on_auth_stream, :tracking_host_missing]
 
   @derive {Jason.Encoder, only: [:type, :message, :context]}
   defexception [:type, :message, :cause, :context]
 
   @type t :: %__MODULE__{
-          type: :missing | :invalid | :conflicting | :optional_dep_missing,
+          type:
+            :missing
+            | :invalid
+            | :conflicting
+            | :optional_dep_missing
+            | :tracking_on_auth_stream
+            | :tracking_host_missing,
           message: String.t(),
           cause: Exception.t() | nil,
           context: %{atom() => term()}
@@ -85,5 +95,19 @@ defmodule Mailglass.ConfigError do
   defp format_message(:optional_dep_missing, ctx) do
     dep = ctx[:dep] || "unknown"
     "Configuration error: optional dependency #{dep} is not loaded"
+  end
+
+  defp format_message(:tracking_on_auth_stream, ctx) do
+    mod = ctx[:mailable] || "(unknown mailable)"
+    fun = ctx[:function] || "(unknown function)"
+
+    "Tracking misconfigured: tracking enabled on auth-stream mailable " <>
+      "#{inspect(mod)}.#{fun} — forbidden. Remove `tracking:` opts from " <>
+      "mailables whose function name matches magic_link/password_reset/verify_email/confirm_account."
+  end
+
+  defp format_message(:tracking_host_missing, _ctx) do
+    "Tracking misconfigured: tracking host is required when any mailable " <>
+      "enables opens or clicks. Set `config :mailglass, :tracking, host: \"track.example.com\"`."
   end
 end

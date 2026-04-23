@@ -73,8 +73,10 @@ defmodule Mailglass.ErrorTest do
   end
 
   test "__types__/0 returns the closed atom set for ConfigError" do
+    # Phase 3 extended with :tracking_on_auth_stream (D-38) and :tracking_host_missing (D-32)
     assert Mailglass.ConfigError.__types__() ==
-             [:missing, :invalid, :conflicting, :optional_dep_missing]
+             [:missing, :invalid, :conflicting, :optional_dep_missing,
+              :tracking_on_auth_stream, :tracking_host_missing]
   end
 
   # --- Jason.Encoder excludes :cause (T-PII-002, D-06) ---

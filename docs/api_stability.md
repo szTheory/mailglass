@@ -184,6 +184,66 @@ adapter structs that may carry provider payloads with recipient PII (T-PII-002).
 Adopters that need the full cause chain walk it explicitly via
 `Mailglass.Error.root_cause/1`.
 
+## §PubSub (Phase 3)
+
+### `Mailglass.PubSub`
+
+Reserved name atom for the mailglass-owned `Phoenix.PubSub` child. The supervision tree starts `{Phoenix.PubSub, name: Mailglass.PubSub}`. This is the only valid name for mailglass-internal broadcasts.
+
+Since: 0.1.0.
+
+### `Mailglass.PubSub.Topics`
+
+The only public topic builders. All outputs are prefixed `mailglass:` — Phase 6 `LINT-06 PrefixedPubSubTopics` enforces this at lint time.
+
+- `events/1 :: String.t()` — `"mailglass:events:#{tenant_id}"` — tenant-wide event stream.
+- `events/2 :: String.t()` — `"mailglass:events:#{tenant_id}:#{delivery_id}"` — per-delivery stream.
+- `deliveries/1 :: String.t()` — `"mailglass:deliveries:#{tenant_id}"` — delivery-list stream.
+
+Since: 0.1.0.
+
+## §BatchFailed (Phase 3)
+
+### `Mailglass.Error.BatchFailed`
+
+Raised by `Mailglass.Outbound.deliver_many!/2` when one or more deliveries fail. Never raised by `deliver_many/2`.
+
+Type atom set (per `Mailglass.Error.BatchFailed.__types__/0`):
+
+- `:partial_failure` — at least one Delivery succeeded AND at least one failed
+- `:all_failed` — every Delivery failed
+
+Per-kind fields: `failures :: [Mailglass.Outbound.Delivery.t()]` — failed deliveries only. Excluded from JSON output (`@derive {Jason.Encoder, only: [:type, :message, :context]}`).
+
+Retryable: `true` — individual deliveries may retry.
+
+Since: 0.1.0.
+
+## §ConfigError Extensions (Phase 3)
+
+Two new atoms added to `Mailglass.ConfigError.__types__/0`:
+
+- `:tracking_on_auth_stream` — (D-38, Phase 3) tracking enabled on a mailable whose function name matches an auth-stream heuristic. Forbidden at compile time via `NoTrackingOnAuthStream` Credo check (Phase 6).
+- `:tracking_host_missing` — (D-32, Phase 3) a mailable enables opens or clicks but no tracking host is configured. Required for link rewriting.
+
+Full type atom set is now: `[:missing, :invalid, :conflicting, :optional_dep_missing, :tracking_on_auth_stream, :tracking_host_missing]`.
+
+Since: 0.1.0 (atoms added in Phase 3).
+
+## §Message Extensions (Phase 3)
+
+### `:mailable_function` field
+
+Added in Phase 3. `atom() | nil`, default `nil`. Populated by the `use Mailglass.Mailable` macro's injected builder (D-38). Used by the runtime auth-stream tracking guard.
+
+### `Mailglass.Message.put_metadata/3`
+
+Locked signature: `@spec put_metadata(Message.t(), atom(), any()) :: Message.t()`
+
+Returns a new `%Message{}` with `metadata[key] = value`. Used by the send pipeline (Plan 05) to stamp `delivery_id` after the Delivery row is inserted but before the adapter is called.
+
+Since: 0.1.0.
+
 ## §Clock
 
 ### `Mailglass.Clock`

@@ -24,6 +24,10 @@ defmodule Mailglass.Message do
   - `:mailable` — the adopter module that built this message (e.g.
     `MyApp.UserMailer`). Used for telemetry, the `Mailglass-Mailable` header,
     and preview auto-discovery.
+  - `:mailable_function` — the mailable function that built this message (e.g.
+    `:welcome`, `:password_reset`). Populated by the `use Mailglass.Mailable`
+    macro's injected builder (D-38). Used by the runtime auth-stream tracking
+    guard. Default: `nil`.
   - `:tenant_id` — multi-tenant scope. Carried on every record (CORE-03, D-09
     project-level). `nil` in single-tenant mode.
   - `:stream` — message stream: `:transactional`, `:operational`, or `:bulk`.
@@ -49,6 +53,7 @@ defmodule Mailglass.Message do
   @type t :: %__MODULE__{
           swoosh_email: Swoosh.Email.t(),
           mailable: module() | nil,
+          mailable_function: atom() | nil,
           tenant_id: String.t() | nil,
           stream: stream(),
           tags: [String.t()],
@@ -58,6 +63,7 @@ defmodule Mailglass.Message do
   defstruct [
     :swoosh_email,
     :mailable,
+    :mailable_function,
     :tenant_id,
     stream: :transactional,
     tags: [],
@@ -70,6 +76,7 @@ defmodule Mailglass.Message do
   ## Options
 
   - `:mailable` — the module that built this message
+  - `:mailable_function` — the mailable function atom (e.g. `:welcome`, `:password_reset`)
   - `:tenant_id` — tenant scope (`nil` in single-tenant mode)
   - `:stream` — `:transactional` (default), `:operational`, or `:bulk`
   - `:tags` — list of string tags
@@ -89,10 +96,26 @@ defmodule Mailglass.Message do
     %__MODULE__{
       swoosh_email: swoosh_email,
       mailable: Keyword.get(opts, :mailable),
+      mailable_function: Keyword.get(opts, :mailable_function),
       tenant_id: Keyword.get(opts, :tenant_id),
       stream: Keyword.get(opts, :stream, :transactional),
       tags: Keyword.get(opts, :tags, []),
       metadata: Keyword.get(opts, :metadata, %{})
     }
+  end
+
+  @doc """
+  Returns a new `%Message{}` with the given key put into `metadata`.
+
+  Used by the send pipeline (Plan 05) to stamp `delivery_id` into the
+  message's metadata AFTER the Delivery row is inserted but BEFORE the
+  adapter is called — so `Mailglass.Adapters.Fake` records the same
+  `delivery_id` that the DB persisted (otherwise
+  `TestAssertions.last_delivery()` de-correlates from the real row).
+  """
+  @doc since: "0.1.0"
+  @spec put_metadata(t(), atom(), any()) :: t()
+  def put_metadata(%__MODULE__{metadata: meta} = msg, key, value) when is_atom(key) do
+    %__MODULE__{msg | metadata: Map.put(meta || %{}, key, value)}
   end
 end
