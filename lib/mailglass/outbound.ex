@@ -404,15 +404,24 @@ defmodule Mailglass.Outbound do
         # Tenancy process-dict MUST be re-stamped (not inherited) — D-21.
         Task.Supervisor.start_child(Mailglass.TaskSupervisor, fn ->
           Mailglass.Tenancy.with_tenant(tenant_id, fn ->
-            case dispatch_by_id(d.id) do
-              {:ok, _} ->
-                :ok
+            try do
+              case dispatch_by_id(d.id) do
+                {:ok, _} ->
+                  :ok
 
-              {:error, err} ->
+                {:error, err} ->
+                  require Logger
+
+                  Logger.warning(
+                    "[mailglass] Task.Supervisor dispatch failed: #{Exception.message(err)}"
+                  )
+              end
+            rescue
+              err ->
                 require Logger
 
                 Logger.warning(
-                  "[mailglass] Task.Supervisor dispatch failed: #{Exception.message(err)}"
+                  "[mailglass] Task.Supervisor dispatch raised: #{Exception.message(err)}"
                 )
             end
           end)
@@ -561,15 +570,24 @@ defmodule Mailglass.Outbound do
       Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
         Task.Supervisor.start_child(Mailglass.TaskSupervisor, fn ->
           Mailglass.Tenancy.with_tenant(t, fn ->
-            case dispatch_by_id(id) do
-              {:ok, _} ->
-                :ok
+            try do
+              case dispatch_by_id(id) do
+                {:ok, _} ->
+                  :ok
 
-              {:error, err} ->
+                {:error, err} ->
+                  require Logger
+
+                  Logger.warning(
+                    "[mailglass] Task.Supervisor batch dispatch failed for #{id}: #{Exception.message(err)}"
+                  )
+              end
+            rescue
+              err ->
                 require Logger
 
                 Logger.warning(
-                  "[mailglass] Task.Supervisor batch dispatch failed for #{id}: #{Exception.message(err)}"
+                  "[mailglass] Task.Supervisor batch dispatch raised for #{id}: #{Exception.message(err)}"
                 )
             end
           end)
