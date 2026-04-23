@@ -17,7 +17,7 @@ mailglass v0.1 ships in 7 phases tracing the 7-layer build order from `research/
 
 - [x] **Phase 1: Foundation** - Zero-dep modules + pure HEEx renderer pipeline ("render an email from HEEx" milestone). Complete 2026-04-22.
 - [x] **Phase 2: Persistence + Tenancy** - Append-only event ledger with SQLSTATE 45A01 trigger + multi-tenant schemas from day one. Complete 2026-04-22.
-- [ ] **Phase 3: Transport + Send Pipeline** - Fake adapter built first (D-13), then end-to-end Mailable → Outbound → Worker → Adapter → Multi(Delivery + Event) hot path.
+- [x] **Phase 3: Transport + Send Pipeline** - Fake adapter built first (D-13), then end-to-end Mailable → Outbound → Worker → Adapter → Multi(Delivery + Event) hot path. Complete 2026-04-23.
 - [ ] **Phase 4: Webhook Ingest** - Postmark + SendGrid HMAC-verified, idempotent, Anymail-normalized event ingest.
 - [ ] **Phase 5: Dev Preview LiveView** - `mailglass_admin` sibling package with mailable sidebar, `preview_props/1` auto-discovery, device + dark toggles, HTML/Text/Raw/Headers tabs.
 - [ ] **Phase 6: Custom Credo + Boundary** - Twelve domain-rule lint checks plus `boundary` enforcement, refined against real code.
@@ -185,7 +185,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | 2026-04-22 |
 | 2. Persistence + Tenancy | 6/6 | Complete | 2026-04-22 |
-| 3. Transport + Send Pipeline | 7/12 | Gap closure | 2026-04-23 |
+| 3. Transport + Send Pipeline | 12/12 | Complete | 2026-04-23 |
 | 4. Webhook Ingest | 0/TBD | Not started | - |
 | 5. Dev Preview LiveView | 0/TBD | Not started | - |
 | 6. Custom Credo + Boundary | 0/TBD | Not started | - |
