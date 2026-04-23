@@ -109,6 +109,29 @@ defmodule Mailglass.TenancyTest do
     end
   end
 
+  describe "assert_stamped!/0" do
+    test "returns :ok when a tenant is stamped" do
+      Tenancy.put_current("tenant-a")
+      assert Tenancy.assert_stamped!() == :ok
+    end
+
+    test "raises TenancyError{type: :unstamped} when no tenant is stamped" do
+      Process.delete(:mailglass_tenant_id)
+      err = assert_raise TenancyError, fn -> Tenancy.assert_stamped!() end
+      assert err.type == :unstamped
+    end
+
+    test "raises even when resolver is SingleTenant (unlike current/0 which returns 'default')" do
+      # Ensure we're using SingleTenant resolver (test.exs default)
+      # and the process dict is clean
+      Process.delete(:mailglass_tenant_id)
+
+      # current/0 returns "default" via SingleTenant — assert_stamped!/0 must raise anyway
+      assert Tenancy.current() == "default"
+      assert_raise TenancyError, fn -> Tenancy.assert_stamped!() end
+    end
+  end
+
   describe "behaviour contract" do
     # Flaky ~1 in 3 runs: `function_exported?/3` returns false when the target
     # module is not yet loaded in the calling process's code cache. See

@@ -39,6 +39,18 @@ defmodule Mailglass.Tenancy do
 
   @callback scope(queryable :: Ecto.Queryable.t(), context :: term()) :: Ecto.Queryable.t()
 
+  @optional_callbacks tracking_host: 1
+
+  @doc """
+  Optional: return a per-tenant tracking host override (D-32).
+
+  Default adopter resolution: `:default` (use the global
+  `config :mailglass, :tracking, host:` value). Adopters returning
+  `{:ok, host}` get per-tenant subdomains (`track.tenant-a.example.com`)
+  for strict cookie/origin isolation.
+  """
+  @callback tracking_host(context :: term()) :: {:ok, String.t()} | :default
+
   @process_dict_key :mailglass_tenant_id
 
   @doc """
@@ -116,6 +128,22 @@ defmodule Mailglass.Tenancy do
       nil -> raise Mailglass.TenancyError.new(:unstamped)
       tenant_id when is_binary(tenant_id) -> tenant_id
     end
+  end
+
+  @doc """
+  Raises `%Mailglass.TenancyError{type: :unstamped}` if no tenant is
+  stamped in the current process. Returns `:ok` otherwise.
+
+  Unlike `current/0`, does NOT fall back to the `SingleTenant` default.
+  This is the SEND-01 precondition (D-18) — ensures
+  `Events.append_multi/3` auto-capture via `Tenancy.current/0` does not
+  silently default to `"default"` in a multi-tenant adopter.
+  """
+  @doc since: "0.1.0"
+  @spec assert_stamped!() :: :ok
+  def assert_stamped! do
+    _ = tenant_id!()
+    :ok
   end
 
   @doc """

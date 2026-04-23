@@ -184,6 +184,48 @@ adapter structs that may carry provider payloads with recipient PII (T-PII-002).
 Adopters that need the full cause chain walk it explicitly via
 `Mailglass.Error.root_cause/1`.
 
+## §Clock
+
+### `Mailglass.Clock`
+
+The single legitimate source of wall-clock time in mailglass (TEST-05).
+
+- `Mailglass.Clock.utc_now/0 :: DateTime.t()` — three-tier resolution: process-frozen → configured impl → `Mailglass.Clock.System`.
+
+Since: 0.1.0.
+
+### `Mailglass.Clock.System`
+
+Production impl. `utc_now/0` delegates to `DateTime.utc_now/0`.
+
+Since: 0.1.0.
+
+### `Mailglass.Clock.Frozen` (test-only)
+
+Per-process clock freeze helper. Safe for `async: true` tests — frozen state is process-local.
+
+- `freeze(DateTime.t()) :: DateTime.t()` — stamps the process dict and returns the frozen value.
+- `advance(integer()) :: DateTime.t()` — advances the frozen time by `ms` milliseconds. Seeds from wall clock if no freeze is active.
+- `unfreeze() :: :ok` — clears the process-dict freeze key.
+
+**Convention:** `Mailglass.Clock.Frozen` is test-only. Calling `freeze/1` from production code paths is a bug. Phase 6 LINT-12 (`NoDirectDateTimeNow`) enforces this at lint time.
+
+Since: 0.1.0.
+
+## §Tenancy Extensions (Phase 3)
+
+### `Mailglass.Tenancy.assert_stamped!/0`
+
+- `assert_stamped!() :: :ok` — raises `%TenancyError{type: :unstamped}` when no tenant is stamped on the current process. Returns `:ok` otherwise. Does NOT fall back to the `SingleTenant` default (unlike `current/0`). SEND-01 precondition (D-18).
+
+Since: 0.1.0.
+
+### `Mailglass.Tenancy` optional callback: `c:tracking_host/1`
+
+- `@callback tracking_host(context :: term()) :: {:ok, String.t()} | :default` — optional per-tenant tracking host override (D-32). Default resolution: `:default` (use global `config :mailglass, :tracking, host:`). Adopters returning `{:ok, host}` get per-tenant subdomains for strict cookie/origin isolation.
+
+Since: 0.1.0.
+
 ## Adapter Return Shape
 
 `Mailglass.Adapter.deliver/2` returns:
