@@ -32,4 +32,30 @@ migrations_path =
 # No-op when Oban is not in deps (Code.ensure_loaded? guard inside the helper).
 Mailglass.ObanHelpers.maybe_create_oban_jobs()
 
+# Warm the citext OID cache on a fresh connection right after migrations.
+#
+# Root cause: `mix ecto.drop && mix ecto.create` (or migration_test.exs's
+# down-then-up round-trip) causes Postgres to assign citext a new OID.
+# Postgrex workers and the shared TypeServer retain the pre-drop OID in
+# cache. The first query that touches a citext column (e.g.
+# mailglass_suppressions.address) surfaces as:
+#
+#   (Postgrex.Error) ERROR XX000 (internal_error)
+#   cache lookup failed for type NNNNNN
+#
+# `disconnect_on_error_codes: [:internal_error]` in config/test.exs converts
+# that error into a pool disconnect so the next checkout reconnects and
+# re-registers all types against the live DB. This probe fires the stale-OID
+# error proactively at suite startup, before any test runs.
+#
+# For the mid-run case (migration_test.exs drops and recreates citext during
+# the suite), DataCase.setup and MailerCase.setup each run this same probe on
+# every sandbox checkout, so the connection used by each test body is already
+# clean before the test runs.
+try do
+  Mailglass.TestRepo.query!("SELECT 'probe'::citext")
+rescue
+  Postgrex.Error -> :ok  # disconnect_on_error_codes fires; next connection is clean
+end
+
 Ecto.Adapters.SQL.Sandbox.mode(Mailglass.TestRepo, :manual)

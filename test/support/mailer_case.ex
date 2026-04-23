@@ -86,6 +86,19 @@ defmodule Mailglass.MailerCase do
     end
 
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Mailglass.TestRepo, shared: not async?)
+
+    # Probe the checked-out connection for a stale citext OID.
+    # Same rationale and pattern as DataCase.setup — see that module for the
+    # full explanation. MailerCase does not inherit DataCase, so the probe is
+    # duplicated here.
+    for _ <- 1..5 do
+      try do
+        Mailglass.TestRepo.query!("SELECT 'probe'::citext")
+      rescue
+        Postgrex.Error -> :ok  # disconnect_on_error_codes fires; ownership auto-reconnects
+      end
+    end
+
     :ok = Mailglass.Adapters.Fake.checkout()
 
     tenant_id =
