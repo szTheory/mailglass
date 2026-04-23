@@ -73,7 +73,6 @@ defmodule Mailglass.Events.Event do
           occurred_at: DateTime.t() | nil,
           idempotency_key: String.t() | nil,
           reject_reason: atom() | nil,
-          raw_payload: map() | nil,
           normalized_payload: map(),
           metadata: map(),
           trace_id: String.t() | nil,
@@ -81,6 +80,11 @@ defmodule Mailglass.Events.Event do
           inserted_at: DateTime.t() | nil
         }
 
+  # Phase 4 V02 migration drops `mailglass_events.raw_payload` — raw
+  # provider bytes now live in `mailglass_webhook_events.raw_payload`
+  # (D-15). The ledger holds the normalized projection + audit metadata
+  # only; callers that previously stashed arbitrary context in
+  # `raw_payload` move it to `:metadata`.
   schema "mailglass_events" do
     field(:tenant_id, :string)
     field(:delivery_id, :binary_id)
@@ -88,7 +92,6 @@ defmodule Mailglass.Events.Event do
     field(:occurred_at, :utc_datetime_usec)
     field(:idempotency_key, :string)
     field(:reject_reason, Ecto.Enum, values: @reject_reasons)
-    field(:raw_payload, :map)
     field(:normalized_payload, :map, default: %{})
     field(:metadata, :map, default: %{})
     field(:trace_id, :string)
@@ -98,7 +101,7 @@ defmodule Mailglass.Events.Event do
 
   @required ~w[tenant_id type occurred_at]a
   @cast @required ++
-          ~w[delivery_id idempotency_key reject_reason raw_payload
+          ~w[delivery_id idempotency_key reject_reason
              normalized_payload metadata trace_id needs_reconciliation]a
 
   @doc """

@@ -35,7 +35,6 @@ defmodule Mailglass.Generators do
         occurred_at: DateTime.add(DateTime.utc_now(), occurred_at_offset_sec, :second),
         idempotency_key: idempotency_key,
         delivery_id: delivery_id,
-        raw_payload: %{},
         normalized_payload: %{},
         metadata: %{}
       }

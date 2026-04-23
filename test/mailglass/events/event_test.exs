@@ -83,7 +83,6 @@ defmodule Mailglass.Events.EventTest do
         tenant_id: "test-tenant",
         type: :queued,
         occurred_at: DateTime.utc_now(),
-        raw_payload: %{},
         normalized_payload: %{},
         metadata: %{}
       },

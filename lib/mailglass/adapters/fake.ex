@@ -154,7 +154,8 @@ defmodule Mailglass.Adapters.Fake do
 
   - `:occurred_at` — DateTime; defaults to `Mailglass.Clock.utc_now()`
   - `:reject_reason` — atom from the reject_reason closed set
-  - `:metadata` — map stored in `Event.raw_payload`
+  - `:metadata` — map stored in `Event.metadata` (Phase 4: `raw_payload`
+    moved to `mailglass_webhook_events`; see D-15)
 
   ## Returns
 
@@ -269,7 +270,11 @@ defmodule Mailglass.Adapters.Fake do
       type: type,
       occurred_at: Keyword.get(opts, :occurred_at, Mailglass.Clock.utc_now()),
       idempotency_key: "fake:" <> delivery.id <> ":" <> Atom.to_string(type),
-      raw_payload: Keyword.get(opts, :metadata, %{}),
+      # Phase 4 V02 migration drops `mailglass_events.raw_payload` — store
+      # caller-supplied metadata in the `:metadata` column (same shape,
+      # right semantic home). Raw provider evidence lives in
+      # `mailglass_webhook_events` when a real webhook drives the event.
+      metadata: Keyword.get(opts, :metadata, %{}),
       normalized_payload: %{
         reject_reason: Keyword.get(opts, :reject_reason)
       }

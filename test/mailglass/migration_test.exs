@@ -57,8 +57,12 @@ defmodule Mailglass.MigrationTest do
       assert Enum.all?(rows, fn [name] -> name == "mailglass_events_immutable_trigger" end)
     end
 
-    test "seeds the pg_class comment version marker to 1" do
-      assert Migration.migrated_version() == 1
+    test "seeds the pg_class comment version marker to the current version" do
+      # Current version is bumped by each V-step (Phase 2 shipped V01 = 1;
+      # Phase 4 Plan 01 ships V02 = 2; the dispatcher's @current_version
+      # drives this assertion so it stays correct as new versions land).
+      assert Migration.migrated_version() ==
+               Mailglass.Migrations.Postgres.current_version()
     end
 
     test "is idempotent — rerunning the migration is a no-op" do
@@ -154,7 +158,11 @@ defmodule Mailglass.MigrationTest do
           Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
         end)
 
-      assert Migration.migrated_version() == 1
+      # Version advances through every V-step the dispatcher currently
+      # ships. Phase 4 Plan 01 bumped @current_version 1 → 2; future
+      # V03+ will keep this assertion correct without another code edit.
+      assert Migration.migrated_version() ==
+               Mailglass.Migrations.Postgres.current_version()
     end
   end
 

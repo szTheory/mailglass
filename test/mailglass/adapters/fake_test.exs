@@ -339,7 +339,9 @@ defmodule Mailglass.Adapters.FakeTest do
       # normalized_payload is a JSONB column — Postgres returns string keys and
       # atom values become strings. Access via string key.
       assert event.normalized_payload["reject_reason"] == "bounced"
-      assert event.raw_payload == %{"raw" => "bounce body"}
+      # Phase 4 V02 migration dropped `raw_payload` from the ledger —
+      # Fake.trigger_event now stores caller metadata in `:metadata`.
+      assert event.metadata == %{"raw" => "bounce body"}
     end
   end
 

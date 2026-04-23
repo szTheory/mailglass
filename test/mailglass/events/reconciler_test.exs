@@ -13,7 +13,7 @@ defmodule Mailglass.Events.ReconcilerTest do
           type: :delivered,
           tenant_id: "test-tenant",
           needs_reconciliation: true,
-          raw_payload: %{"provider" => "postmark", "provider_message_id" => "pm-1"},
+          metadata: %{"provider" => "postmark", "provider_message_id" => "pm-1"},
           idempotency_key: "idem-orphan-1"
         })
 
@@ -108,7 +108,7 @@ defmodule Mailglass.Events.ReconcilerTest do
           type: :delivered,
           tenant_id: "test-tenant",
           needs_reconciliation: true,
-          raw_payload: %{"provider" => "postmark", "provider_message_id" => "pm-abc"},
+          metadata: %{"provider" => "postmark", "provider_message_id" => "pm-abc"},
           idempotency_key: "link-test"
         })
 
@@ -124,7 +124,7 @@ defmodule Mailglass.Events.ReconcilerTest do
           type: :delivered,
           tenant_id: "test-tenant",
           needs_reconciliation: true,
-          raw_payload: %{"provider" => "sendgrid", "provider_message_id" => "sg-nonexistent"},
+          metadata: %{"provider" => "sendgrid", "provider_message_id" => "sg-nonexistent"},
           idempotency_key: "nomatch"
         })
 
@@ -137,21 +137,25 @@ defmodule Mailglass.Events.ReconcilerTest do
           type: :delivered,
           tenant_id: "test-tenant",
           needs_reconciliation: true,
-          raw_payload: %{"other" => "field"},
+          metadata: %{"other" => "field"},
           idempotency_key: "malformed"
         })
 
       assert {:error, :malformed_payload} = Reconciler.attempt_link(orphan)
     end
 
-    test "falls back to metadata when raw_payload lacks provider/message_id" do
+    test "falls back to normalized_payload when metadata lacks provider/message_id" do
+      # Phase 4 V02 migration dropped `raw_payload` from the ledger (D-15).
+      # Reconciler.extract/2 now reads :metadata first, then falls back to
+      # :normalized_payload. Raw provider bytes live in
+      # `mailglass_webhook_events` — the ledger never needs them.
       attrs = %{
         tenant_id: "test-tenant",
         mailable: "MyApp.Mailer.welcome/1",
         stream: :transactional,
         recipient: "user@example.com",
         provider: "postmark",
-        provider_message_id: "metadata-msg",
+        provider_message_id: "normalized-msg",
         last_event_type: :dispatched,
         last_event_at: DateTime.utc_now()
       }
@@ -163,9 +167,12 @@ defmodule Mailglass.Events.ReconcilerTest do
           type: :delivered,
           tenant_id: "test-tenant",
           needs_reconciliation: true,
-          raw_payload: nil,
-          metadata: %{"provider" => "postmark", "provider_message_id" => "metadata-msg"},
-          idempotency_key: "from-metadata"
+          metadata: %{},
+          normalized_payload: %{
+            "provider" => "postmark",
+            "provider_message_id" => "normalized-msg"
+          },
+          idempotency_key: "from-normalized"
         })
 
       assert {:ok, {%Delivery{id: delivery_id}, _}} = Reconciler.attempt_link(orphan)
@@ -181,7 +188,7 @@ defmodule Mailglass.Events.ReconcilerTest do
       type: :delivered,
       tenant_id: tenant_id,
       needs_reconciliation: true,
-      raw_payload: %{"provider" => "postmark", "provider_message_id" => "pm-#{key}"},
+      metadata: %{"provider" => "postmark", "provider_message_id" => "pm-#{key}"},
       idempotency_key: key
     }
   end

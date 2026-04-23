@@ -181,7 +181,10 @@ defmodule Mailglass.PersistenceIntegrationTest do
           delivery_id: delivery.id,
           occurred_at: now,
           idempotency_key: "webhook:pm:integration-k1",
-          raw_payload: %{"provider" => "postmark", "provider_message_id" => "pm-123"}
+          # Phase 4 V02 migration dropped `raw_payload` from the ledger
+          # (D-15). Webhook-source provider identifiers now live in
+          # `:metadata`; raw bytes live in `mailglass_webhook_events`.
+          metadata: %{"provider" => "postmark", "provider_message_id" => "pm-123"}
         })
         |> Ecto.Multi.run(:delivery_update, fn _repo, %{event: event} ->
           # Replay skip per Plan 05 moduledoc sentinel. On the happy path
@@ -220,10 +223,14 @@ defmodule Mailglass.PersistenceIntegrationTest do
   end
 
   describe "ROADMAP §5: migrations shipped via Mailglass.Migration" do
-    test "migrated_version/0 reports the current applied version (V01)" do
+    test "migrated_version/0 reports the current applied version" do
       # test_helper.exs runs Mailglass.Migration.up via Ecto.Migrator.with_repo
-      # at suite start, so version should be 1 when this test runs.
-      assert Mailglass.Migration.migrated_version() == 1
+      # at suite start. Phase 2 shipped V01 (version=1); Phase 4 Plan 01
+      # bumped @current_version to 2 (V02 — mailglass_webhook_events +
+      # drops mailglass_events.raw_payload). Asserting against the
+      # dispatcher's constant keeps this test correct as new versions land.
+      assert Mailglass.Migration.migrated_version() ==
+               Mailglass.Migrations.Postgres.current_version()
     end
   end
 

@@ -114,7 +114,6 @@ defmodule Mailglass.Properties.IdempotencyConvergenceTest do
         # different-type" coincidence collisions from failing the
         # convergence assertion (IN-02).
         idempotency_key: "#{type}-#{key_raw}",
-        raw_payload: %{},
         normalized_payload: %{},
         metadata: %{}
       }

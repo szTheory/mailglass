@@ -25,7 +25,8 @@ defmodule Mailglass.Events.Reconciler do
 
   - `find_orphans/1` — query events awaiting reconciliation
   - `attempt_link/2` — look up the matching delivery (by `provider`
-    + `provider_message_id` in raw_payload / metadata)
+    + `provider_message_id` in `:metadata` / `:normalized_payload`;
+    Phase 4 V02 migration dropped `raw_payload` from the ledger per D-15)
   """
 
   alias Mailglass.Events.Event
@@ -86,8 +87,11 @@ defmodule Mailglass.Events.Reconciler do
   @doc """
   Attempts to locate the matching `%Delivery{}` for an orphan event
   via `(provider, provider_message_id)`. The provider + message id are
-  extracted from the event's `raw_payload` or `metadata` (Phase 4
-  webhook handler populates both conventions; Phase 2 supports either).
+  extracted from the event's `:metadata` first, then `:normalized_payload`
+  (Phase 4 V02 migration dropped `raw_payload` from the ledger per D-15;
+  provider bytes now live in `mailglass_webhook_events.raw_payload`, and
+  Plan 06 Ingest writes identifying fields into the ledger's `:metadata`
+  at insert time).
 
   Returns `{:ok, {delivery, event}}` when matched;
   `{:error, :delivery_not_found}` when no delivery with the
@@ -132,8 +136,16 @@ defmodule Mailglass.Events.Reconciler do
     )
   end
 
-  defp extract(%Event{raw_payload: rp, metadata: md}, key) when is_binary(key) do
-    extract_from(rp, key) || extract_from(md, key)
+  defp extract(%Event{metadata: md, normalized_payload: np}, key) when is_binary(key) do
+    # Phase 4 V02 migration dropped `raw_payload` from the ledger (D-15).
+    # Orphan reconciliation now reads `:metadata` first (preserved write
+    # path for ingest-time context) and falls back to `:normalized_payload`
+    # (provider-normalized Anymail fields like `sg_message_id` or
+    # `MessageID`). Raw provider evidence lives in
+    # `mailglass_webhook_events.raw_payload` — reconcile doesn't need it
+    # because Plan 06 Ingest writes `provider_message_id` into the
+    # ledger's `:metadata` at insert time.
+    extract_from(md, key) || extract_from(np, key)
   end
 
   defp extract_from(nil, _key), do: nil

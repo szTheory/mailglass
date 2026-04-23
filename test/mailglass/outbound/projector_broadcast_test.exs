@@ -85,7 +85,6 @@ defmodule Mailglass.Outbound.ProjectorBroadcastTest do
         type: :dispatched,
         occurred_at: DateTime.utc_now(),
         idempotency_key: nil,
-        raw_payload: %{},
         normalized_payload: %{}
       }
 

@@ -72,7 +72,6 @@ defmodule Mailglass.Events do
           optional(:occurred_at) => DateTime.t(),
           optional(:idempotency_key) => String.t() | nil,
           optional(:reject_reason) => atom() | nil,
-          optional(:raw_payload) => map(),
           optional(:normalized_payload) => map(),
           optional(:metadata) => map(),
           optional(:tenant_id) => String.t(),

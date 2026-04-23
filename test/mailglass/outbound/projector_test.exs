@@ -255,7 +255,6 @@ defmodule Mailglass.Outbound.ProjectorTest do
       tenant_id: "test-tenant",
       type: type,
       occurred_at: occurred_at || DateTime.utc_now(),
-      raw_payload: %{},
       normalized_payload: %{},
       metadata: %{}
     }
