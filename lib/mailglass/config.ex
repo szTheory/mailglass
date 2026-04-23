@@ -212,6 +212,18 @@ defmodule Mailglass.Config do
               "Svix / Standard Webhooks consensus)."
         ]
       ]
+    ],
+    # Phase 4 CONTEXT D-11 / revision B2. `:sync` is the v0.1 locked
+    # ingest mode — the webhook Plug runs `Mailglass.Webhook.Ingest`
+    # inline and responds 200 only after the Multi commits. `:async` is
+    # reserved (`@doc false`) pending v0.5's Dead-Letter Queue admin
+    # surface. Plan 06's `ingest_multi/3` runtime-guards `:async` with
+    # a raise so adopters who set it receive a clear error instead of
+    # silently running the sync path.
+    webhook_ingest_mode: [
+      type: {:in, [:sync, :async]},
+      default: :sync,
+      doc: false
     ]
   ]
 
@@ -344,5 +356,17 @@ defmodule Mailglass.Config do
   @spec get_theme() :: keyword()
   def get_theme do
     :persistent_term.get({__MODULE__, :theme}, [])
+  end
+
+  # Phase 4 CONTEXT D-11 / revision B2. Exposed as `@doc false` because
+  # `:async` is reserved at v0.1 — the accessor lets Plan 06's
+  # `Mailglass.Webhook.Ingest.ingest_multi/3` branch on the value and
+  # raise an explicit error if an adopter has set `:async` before the
+  # v0.5 DLQ admin ships.
+  @doc since: "0.1.0"
+  @doc false
+  @spec webhook_ingest_mode() :: :sync | :async
+  def webhook_ingest_mode do
+    Application.get_env(:mailglass, :webhook_ingest_mode, :sync)
   end
 end

@@ -59,22 +59,28 @@ Since: 0.1.0.
 
 Raised when webhook signature verification fails.
 
-Type atom set:
+**Phase 4 extension (CONTEXT D-21): the closed atom set is seven atoms.**
 
-- `:missing`
-- `:malformed`
-- `:mismatch`
-- `:timestamp_skew`
+| Atom | When raised |
+|------|-------------|
+| `:missing_header` | Signature header (Authorization / X-Twilio-Email-Event-Webhook-Signature) absent |
+| `:malformed_header` | Header present but unparseable (bad Base64, missing prefix, malformed structure) |
+| `:bad_credentials` | Postmark Basic Auth `Plug.Crypto.secure_compare/2` returned false |
+| `:ip_disallowed` | Postmark IP allowlist (opt-in) — source IP not in configured CIDR list |
+| `:bad_signature` | ECDSA / HMAC math returned false; collapses the `:tampered_body` case per D-21 rationale (tampered body + wrong key both produce the same failure branch) |
+| `:timestamp_skew` | SendGrid timestamp outside the 300-second tolerance window (configurable via `:timestamp_tolerance_seconds`) |
+| `:malformed_key` | PEM/DER decode failure (either at boot via `validate_at_boot!/0` OR at request time during verify) |
+
+**Legacy atoms retained for backward compatibility:** `:missing`, `:malformed`,
+`:mismatch`. These predate Phase 4 and still appear in `__types__/0` so any
+existing raise sites keep compiling. New code MUST use the seven D-21 atoms
+above — the legacy three are aliases in all but name.
 
 Per-kind fields: `provider :: atom() | nil`.
 
-Retryable: `false` (the caller is misconfigured or the request is a forgery).
-
-<!-- Phase 4 extends the :type atom set to 7 values per 04-CONTEXT.md D-21:
-     :missing_header, :malformed_header, :bad_credentials, :ip_disallowed,
-     :bad_signature (collapses :tampered_body), :timestamp_skew,
-     :malformed_key. Full catalog populated by Plan 03 (Postmark + SendGrid
-     verifiers). -->
+Retryable: `false` — the caller is either misconfigured (wrong secret) or the
+request is a forgery. Pattern-match the struct + atom; NEVER the message
+string. Atom set is closed — additions are minor-version API extensions.
 
 Since: 0.1.0.
 
@@ -119,21 +125,33 @@ Since: 0.1.0.
 ### `Mailglass.ConfigError`
 
 Raised when mailglass is misconfigured. `Mailglass.Config.validate_at_boot!/0`
-(Plan 03) raises this at application startup.
+raises this at application startup (Phase 1). Webhook config surface
+extensions raise at boot or first-request time (Phase 4).
 
-Type atom set:
+**Base atom set (Phase 1):**
 
 - `:missing`
 - `:invalid`
 - `:conflicting`
 - `:optional_dep_missing`
 
-Per-kind fields: none.
+**Phase 3 additions** (documented in §ConfigError Extensions below):
 
-<!-- Phase 4 extends the :type atom set with :webhook_verification_key_missing
-     per 04-CONTEXT.md D-21 (rationale: separation from %SignatureError{} keeps
-     "forged request" vs "missing secret" distinguishable in admin triage).
-     Populated by Plan 03 verifier config validation. -->
+- `:tracking_on_auth_stream`
+- `:tracking_host_missing`
+- `:tracking_endpoint_missing`
+
+**Phase 4 additions (CONTEXT D-21):**
+
+| Atom | When raised |
+|------|-------------|
+| `:webhook_verification_key_missing` | Per-provider signing secret missing — `:postmark.basic_auth` or `:sendgrid.public_key` not configured. Rationale per D-21: separation from `%SignatureError{}` keeps "forged request" vs "missing secret" distinguishable in admin triage. |
+| `:webhook_caching_body_reader_missing` (revision B4) | `conn.private[:raw_body]` is nil — the adopter forgot to wire `Plug.Parsers` with `body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}`. Distinct atom from `:webhook_verification_key_missing` so adopter Grafana / Datadog alerts can differentiate plug-wiring gaps from missing secrets. |
+
+Surfaces at boot during `Mailglass.Config` validation (key missing) OR at
+request time when `Mailglass.Webhook.Plug` attempts the relevant lookup.
+
+Per-kind fields: none.
 
 Retryable: `false` — fix config and restart.
 
@@ -172,21 +190,20 @@ Since: 0.1.0.
 ### `Mailglass.TenancyError`
 
 Raised by `Mailglass.Tenancy.tenant_id!/0` when no tenant has been
-stamped on the current process via `Mailglass.Tenancy.put_current/1`.
+stamped on the current process, and by `Mailglass.Webhook.Plug` when
+the configured tenancy module fails to resolve a verified webhook to
+a known tenant (Phase 4).
 
-Type atom set:
+**Closed atom set:**
 
-- `:unstamped`
+| Atom | When raised |
+|------|-------------|
+| `:unstamped` | No tenant stamped on the current process (Phase 2) — typically a missing `on_mount/4` callback or test setup. `Mailglass.Tenancy.tenant_id!/0` raises; `Mailglass.Tenancy.current/0` falls back to the SingleTenant default instead. |
+| `:webhook_tenant_unresolved` (Phase 4 D-14) | `Mailglass.Tenancy.resolve_webhook_tenant/1` returned `{:error, _}` for a cryptographically verified webhook request. Rescued by `Mailglass.Webhook.Plug` to HTTP 422 (distinct from signature 401 / orphan 200). The `:context` map carries `:provider` and optionally `:reason` for Logger correlation. |
 
 Per-kind fields: none.
 
-<!-- Phase 4 extends the :type atom set with :webhook_tenant_unresolved
-     per 04-CONTEXT.md D-14 — raised by the webhook plug when
-     `c:resolve_webhook_tenant/1` returns `{:error, _}`. Rescued by the plug
-     to HTTP 422 (distinct from signature 401, distinct from orphan 200).
-     Populated by Plan 06 (Webhook.Plug). -->
-
-Retryable: `false` (the caller failed to establish tenant context).
+Retryable: `false` — the caller failed to establish tenant context.
 
 Since: 0.1.0.
 
@@ -361,11 +378,50 @@ Since: 0.1.0.
 
 - `@callback tracking_host(context :: term()) :: {:ok, String.t()} | :default` — optional per-tenant tracking host override (D-32). Default resolution: `:default` (use global `config :mailglass, :tracking, host:`). Adopters returning `{:ok, host}` get per-tenant subdomains for strict cookie/origin isolation.
 
-<!-- Phase 4 adds a second optional callback `c:resolve_webhook_tenant/1`
-     per 04-CONTEXT.md D-12 — adopters map (provider, conn, raw_body,
-     headers, path_params, verified_payload) to `{:ok, tenant_id}` or
-     `{:error, term}`. `SingleTenant` ships a default impl returning
-     `{:ok, "default"}`. Populated by Plan 06 (Webhook.Plug). -->
+### `Mailglass.Tenancy` optional callback: `c:resolve_webhook_tenant/1` (Phase 4, CONTEXT D-12)
+
+```elixir
+@optional_callbacks tracking_host: 1, resolve_webhook_tenant: 1
+
+@callback resolve_webhook_tenant(context :: %{
+            provider: atom(),
+            conn: Plug.Conn.t(),
+            raw_body: binary(),
+            headers: [{String.t(), String.t()}],
+            path_params: map(),
+            verified_payload: map() | nil
+          }) :: {:ok, String.t()} | {:error, term()}
+```
+
+Called by `Mailglass.Webhook.Plug` AFTER `Provider.verify!/3` returns
+`:ok` (D-13's verify-first ordering — closes the Stripe-Connect
+chicken-and-egg trap). `{:ok, tenant_id}` stamps tenant context for
+the rest of the ingest pipeline; `{:error, reason}` raises
+`%Mailglass.TenancyError{type: :webhook_tenant_unresolved}` and
+surfaces HTTP 422.
+
+**Default impls shipped in Phase 4 Plan 05:**
+
+- `Mailglass.Tenancy.SingleTenant.resolve_webhook_tenant/1` — returns
+  `{:ok, "default"}` (zero-config default).
+- `Mailglass.Tenancy.ResolveFromPath.resolve_webhook_tenant/1` — opt-in
+  URL-prefix sugar. Reads `context.path_params["tenant_id"]` and
+  returns `{:ok, tid}` or `{:error, :missing_path_param}`. Module
+  fails CLOSED on `scope/2` — adopters using it for the full Tenancy
+  contract MUST compose it with a real `scope/2` impl.
+
+Adopter tenancy modules that do not implement this optional callback
+fall through to `{:ok, "default"}` via the dispatcher's
+`function_exported?/3` check.
+
+**Context fields:**
+
+- `:provider` — `:postmark | :sendgrid`
+- `:conn` — the `Plug.Conn` (header / IP / path-param introspection)
+- `:raw_body` — verified raw bytes (signature passed)
+- `:headers` — `[{name, value}]` list
+- `:path_params` — adopter route's path params
+- `:verified_payload` — `nil` at v0.1; reserved for v0.5 Stripe-Connect-style strategies
 
 Since: 0.1.0.
 
@@ -1370,33 +1426,104 @@ Since: 0.1.0 (stub). Phase 5 extension.
 
 ## §Webhook (added in Phase 4)
 
-_Populated incrementally by Phase 4 plans 02–08. Wave 0 (Plan 01) reserves
-this section; plans 02+ fill in the Provider behaviour shape, the
-Webhook.Plug contract, the Router macro signature, the CachingBodyReader
-read_body/2 contract, and the Reconciler + Pruner worker contracts._
+### `Mailglass.Webhook.Provider` behaviour (sealed at v0.1)
 
-### Reserved
+Two-callback contract — see `Mailglass.Webhook.Provider` for the source
+of truth. `@moduledoc false` enforces the v0.1 sealed lock (PROJECT D-10
+defers Mailgun/SES/Resend to v0.5).
 
-- `Mailglass.Webhook.Provider` — sealed two-callback behaviour
-  (`verify!/3` + `normalize/2`). Shape locked in 04-CONTEXT.md D-01.
-- `Mailglass.Webhook.Providers.Postmark` — Basic Auth + opt-in IP
-  allowlist (D-04).
-- `Mailglass.Webhook.Providers.SendGrid` — ECDSA P-256 via
-  `:public_key.der_decode/2` + `:public_key.verify/4`. 300-second
-  timestamp tolerance (D-03).
-- `Mailglass.Webhook.CachingBodyReader` — `read_body/2` with iodata
-  accumulation across `{:more, _, _}` chunks; stores raw bytes in
-  `conn.private[:raw_body]` (D-09).
-- `Mailglass.Webhook.Plug` — end-to-end ingest (verify → resolve-tenant
-  → normalize → Multi → 200 OK). No user handler (D-10).
-- `Mailglass.Webhook.Router` — `mailglass_webhook_routes/2` macro with
-  `:providers` opt, per-provider path routing (D-06, D-07).
-- `Mailglass.Webhook.Ingest.ingest_multi/3` — single `Ecto.Multi`
-  composing webhook_events insert + events insert + projection update +
-  PubSub broadcast (HOOK-06 amended, D-15).
-- `Mailglass.Webhook.Reconciler` — Oban cron `*/5 * * * *`; appends
-  `:reconciled` events without mutating orphan rows (D-17, D-18).
-- `Mailglass.Webhook.Pruner` — Oban daily cron; deletes
+```elixir
+@callback verify!(raw_body :: binary(), headers :: [{String.t(), String.t()}], config :: map()) :: :ok
+@callback normalize(raw_body :: binary(), headers :: [{String.t(), String.t()}]) :: [Mailglass.Events.Event.t()]
+```
+
+`verify!/3` raises `%Mailglass.SignatureError{}` on failure (closed 7-atom
+set per D-21). `normalize/2` is pure — no network, no DB. Conn-free so
+v0.5 SES SQS polling and inbound testing paths can reuse the behaviour
+without adapter work.
+
+**Shipped v0.1 implementations:**
+
+- `Mailglass.Webhook.Providers.Postmark` — Basic Auth via two
+  independent `Plug.Crypto.secure_compare/2` calls (timing-safe per
+  D-04); opt-in IPv4 CIDR allowlist; exhaustive RecordType → Anymail
+  normalizer.
+- `Mailglass.Webhook.Providers.SendGrid` — ECDSA P-256 verify chain
+  (`:public_key.der_decode/2` + `:public_key.verify/4`) with 300-second
+  timestamp tolerance; batch-array normalizer (1..128 events).
+
+### `Mailglass.Webhook.CachingBodyReader.read_body/2`
+
+Plug `:body_reader` MFA. Accumulates iodata across `{:more, _, _}`
+chunks and flattens on final `{:ok, _, _}`. Stores raw bytes in
+`conn.private[:raw_body]` (library-reserved key per D-09).
+
+Adopters wire it in their endpoint:
+
+```elixir
+plug Plug.Parsers,
+  parsers: [:json],
+  pass: ["*/*"],
+  json_decoder: Jason,
+  body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []},
+  length: 10_000_000   # 10 MB cap — SendGrid batches up to 128 events
+                       # fit comfortably with 2 MB headroom
+```
+
+Missing wiring raises `%ConfigError{type: :webhook_caching_body_reader_missing}`
+at request time (distinct atom from `:webhook_verification_key_missing`
+for adopter-side alert differentiation).
+
+### `Mailglass.Webhook.Router.mailglass_webhook_routes/2` macro
+
+Generates one POST route per provider in the `:providers` opt. Mounts
+`Mailglass.Webhook.Plug` at each path.
+
+**Macro signature:**
+
+```elixir
+defmacro mailglass_webhook_routes(path :: String.t(), opts :: keyword())
+```
+
+**Opts:**
+
+- `:providers` — default `[:postmark, :sendgrid]`. Unknown atoms raise
+  `ArgumentError` at compile time (D-07 — invalid config fails at
+  router-mount, not request time).
+- `:as` — default `:mailglass_webhook` (CONTEXT D-08 — shared vocab
+  lock with Phase 5 admin). Each generated helper is
+  `:"\#{as}_\#{provider}"`.
+
+**Stability:** locked at v0.1. Adding new provider atoms to the
+validated set at v0.5 is a minor-version extension (additive) — v0.1
+adopters passing the default list are never broken.
+
+### `Mailglass.Webhook.Plug` (Phase 4 Plan 04)
+
+Single-ingress orchestrator (`@behaviour Plug`) implementing the
+response-code matrix:
+
+| Status | Raised error | Meaning |
+|--------|--------------|---------|
+| 200 | _none_ (success) | Events ingested OR duplicate replay (same `(provider, provider_event_id)`) |
+| 401 | `%SignatureError{}` | Any of the 7 D-21 failure atoms |
+| 422 | `%TenancyError{:webhook_tenant_unresolved}` | Verified request but tenant resolver returned `{:error, _}` |
+| 500 | `%ConfigError{}` or ingest failure | Plug wiring gap OR missing provider secret OR DB error |
+
+Emits two telemetry spans: outer `[:mailglass, :webhook, :ingest, _]`
+with per-request stop metadata; inner
+`[:mailglass, :webhook, :signature, :verify, _]` around the provider
+verify call. D-23 metadata whitelist enforced (no PII).
+
+### Deferred to later Phase 4 plans
+
+- `Mailglass.Webhook.Ingest.ingest_multi/3` (Plan 06) — single
+  `Ecto.Multi` composing webhook_events insert + events insert +
+  projection update + PubSub broadcast (HOOK-06 amended, D-15).
+- `Mailglass.Webhook.Reconciler` (Plan 07) — Oban cron `*/5 * * * *`;
+  appends `:reconciled` events without mutating orphan rows (D-17,
+  D-18).
+- `Mailglass.Webhook.Pruner` (Plan 08) — Oban daily cron; deletes
   `mailglass_webhook_events` rows by `status` + age (D-16).
 
 Since: 0.1.0 (Phase 4 wave 0 reservation; implementation lands Plans 02+).

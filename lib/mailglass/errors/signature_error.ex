@@ -115,12 +115,18 @@ defmodule Mailglass.SignatureError do
     }
   end
 
-  # Phase 4 D-21 messages. Brand voice: specific, composed, no "Oops!".
+  # Phase 4 D-21 messages. Brand voice per CLAUDE.md (thoughtful
+  # maintainer): specific, composed, never "Oops!" — each message names
+  # the failure mode in atom-aligned terms so operators can correlate
+  # Logger output with the typed :type field.
   defp format_message(:missing_header, _ctx),
     do: "Webhook signature failed: signature header is missing"
 
-  defp format_message(:malformed_header, _ctx),
-    do: "Webhook signature failed: signature header is malformed"
+  defp format_message(:malformed_header, ctx) do
+    detail = ctx[:detail]
+    base = "Webhook signature failed: signature header is malformed"
+    if detail, do: base <> " (#{detail})", else: base
+  end
 
   defp format_message(:bad_credentials, _ctx),
     do: "Webhook signature failed: credentials do not match the configured pair"
@@ -132,10 +138,10 @@ defmodule Mailglass.SignatureError do
     do: "Webhook signature failed: signature does not verify against the configured key"
 
   defp format_message(:timestamp_skew, _ctx),
-    do: "Webhook signature failed: timestamp is outside the acceptable window"
+    do: "Webhook signature failed: timestamp is outside the acceptable tolerance window"
 
   defp format_message(:malformed_key, _ctx),
-    do: "Webhook verification key failed to decode (DER/Base64 invalid)"
+    do: "Webhook verification key failed to decode (DER/Base64 invalid; check your provider config)"
 
   # Phase 1 legacy messages — preserved verbatim.
   defp format_message(:missing, _ctx),

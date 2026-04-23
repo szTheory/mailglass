@@ -142,7 +142,10 @@ defmodule Mailglass.ConfigError do
   end
 
   defp format_message(:webhook_verification_key_missing, ctx) do
-    hint = ctx[:hint] || "configure the per-tenant webhook verification key"
+    hint =
+      ctx[:hint] ||
+        "configure the per-provider webhook verification key in your :mailglass config"
+
     "Mailglass webhook verification key missing: #{hint}"
   end
 

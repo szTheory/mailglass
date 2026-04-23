@@ -83,7 +83,14 @@ defmodule Mailglass.TenancyError do
         "Call Mailglass.Tenancy.put_current/1 in your on_mount/4 callback or test setup."
 
   defp format_message(:webhook_tenant_unresolved, ctx) do
-    provider = ctx[:provider] || "unknown"
-    "Webhook tenant resolution failed: no tenant matches for provider=#{provider}"
+    provider = ctx[:provider] || "unknown_provider"
+
+    reason_part =
+      case ctx[:reason] do
+        nil -> ""
+        reason -> " (reason: #{inspect(reason)})"
+      end
+
+    "Webhook tenant resolution failed: no tenant matches for provider=#{provider}#{reason_part}"
   end
 end
