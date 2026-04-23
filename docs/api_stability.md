@@ -1214,3 +1214,72 @@ Extensible in future versions (new keys are semver-minor).
 the adopter's own test output — never in telemetry, log streams, or cross-tenant surfaces.
 
 Since: 0.1.0.
+
+## §MailerCase (Phase 3 Plan 06)
+
+### `Mailglass.MailerCase`
+
+Shipped in Phase 3 Plan 06 (TEST-02, D-06). ExUnit CaseTemplate for adopter tests that
+exercise Mailable + Outbound code. Lives in `test/support/` — not exported as a library
+file; adopters copy or reference it after calling `use Mailglass.TestSupport`.
+
+**`using` block injects (into adopter test module):**
+
+- `import Mailglass.TestAssertions` — all 7 assertion helpers
+- `alias Mailglass.{Adapters, Message, Outbound}` — standard test module aliases
+- `alias Mailglass.Adapters.Fake` — direct Fake access
+- `defdelegate set_mailglass_global(context), to: Mailglass.MailerCase` — enables
+  `setup :set_mailglass_global` without module-prefix (mirrors `set_swoosh_global`)
+
+**Default setup (per test):**
+
+1. `Ecto.Adapters.SQL.Sandbox.start_owner!/2` — sandbox checkout (`shared: not async?`)
+2. `Mailglass.Adapters.Fake.checkout/0` — register test process as Fake owner
+3. `Mailglass.Tenancy.put_current("test-tenant")` — stamp default tenant (overridable via `@tag tenant:`)
+4. `Mailglass.Clock.Frozen.freeze/1` — freeze clock when `@tag frozen_at:` is set
+5. `Phoenix.PubSub.subscribe/2` on `Topics.events(tenant_id)` — tenant-wide delivery broadcasts
+6. Async adapter setup (see modes below)
+7. `on_exit/1` — restores all state: `Fake.checkin`, `Fake.set_shared(nil)`, `Clock.Frozen.unfreeze`, restore `:async_adapter`, `Sandbox.stop_owner`
+
+**Async delivery modes:**
+
+| Condition | Mode | Behavior |
+|-----------|------|----------|
+| Default (no `@tag oban:`) | `:task_supervisor` | `deliver_later/2` spawns a supervised Task; `set_shared(self())` enables delivery into test bucket |
+| `@tag oban: :inline` | Oban + `:inline` engine | Job executes synchronously in same process |
+| `@tag oban: :manual` | Oban + Basic engine | Job enqueued but NOT executed; requires `assert_enqueued/1` |
+
+**Supported tags:**
+
+| Tag | Effect |
+|-----|--------|
+| `@tag tenant: "acme"` | Override default `"test-tenant"` |
+| `@tag tenant: :unset` | Disable tenant stamping (test unstamped-fail paths) |
+| `@tag frozen_at: ~U[2026-01-01 00:00:00Z]` | Freeze clock for this test |
+| `@tag oban: :manual` | Use Oban `:manual` mode (MUST be `async: false` — I-12) |
+| `@tag oban: :inline` | Use Oban `:inline` mode (MUST be `async: false` — I-12) |
+
+**I-12 guard:** Any test combining `@tag oban: ...` with `async: true` raises `RuntimeError`
+at setup time with an actionable message. Oban.Testing mode is a process-global setting;
+concurrent async tests with different `:oban` modes would stomp each other.
+
+**`set_mailglass_global/1`:** Opt-in global mode. Call via `setup :set_mailglass_global`.
+Requires `async: false`. Sets `Fake.set_shared(self())` so any process (without explicit
+`allow/2`) delivers into this test's ETS bucket. `on_exit` calls `Fake.set_shared(nil)`.
+Use sparingly — prefer `Fake.allow/2` for targeted cross-process delegation.
+
+### `Mailglass.WebhookCase`
+
+Stub shipped in Phase 3 (TEST-02). `use ExUnit.CaseTemplate` delegating to
+`use Mailglass.MailerCase, opts`. Phase 4 (HOOK-01..07) extends with Plug.Test helpers
+and HMAC signature fixtures.
+
+Since: 0.1.0 (stub). Phase 4 extension.
+
+### `Mailglass.AdminCase`
+
+Stub shipped in Phase 3 (TEST-02). `use ExUnit.CaseTemplate` delegating to
+`use Mailglass.MailerCase, opts`. Phase 5 (PREV-01..06) extends with Phoenix.LiveViewTest
+helpers, endpoint stub, session cookie fixtures, and device toggle assertion helpers.
+
+Since: 0.1.0 (stub). Phase 5 extension.
