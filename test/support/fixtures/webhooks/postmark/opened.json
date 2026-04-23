@@ -1,0 +1,9 @@
+{
+  "RecordType": "Open",
+  "ServerID": 23,
+  "MessageStream": "outbound",
+  "MessageID": "00000000-0000-0000-0000-000000000003",
+  "Recipient": "user@example.com",
+  "ReceivedAt": "2026-04-23T12:00:02Z",
+  "FirstOpen": true
+}

@@ -1,0 +1,10 @@
+{
+  "RecordType": "SpamComplaint",
+  "ServerID": 23,
+  "MessageStream": "outbound",
+  "MessageID": "00000000-0000-0000-0000-000000000005",
+  "Email": "user@example.com",
+  "BouncedAt": "2026-04-23T12:00:04Z",
+  "Type": "SpamComplaint",
+  "TypeCode": 100
+}

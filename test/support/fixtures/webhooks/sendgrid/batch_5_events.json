@@ -1,0 +1,7 @@
+[
+  {"email":"a@example.com","timestamp":1745409600,"event":"processed","sg_event_id":"evt_00000000000000000020","sg_message_id":"msg_a"},
+  {"email":"a@example.com","timestamp":1745409601,"event":"delivered","sg_event_id":"evt_00000000000000000021","sg_message_id":"msg_a"},
+  {"email":"b@example.com","timestamp":1745409602,"event":"bounce","sg_event_id":"evt_00000000000000000022","sg_message_id":"msg_b","reason":"550 user not found","type":"bounce"},
+  {"email":"c@example.com","timestamp":1745409603,"event":"open","sg_event_id":"evt_00000000000000000023","sg_message_id":"msg_c"},
+  {"email":"d@example.com","timestamp":1745409604,"event":"click","sg_event_id":"evt_00000000000000000024","sg_message_id":"msg_d","url":"https://example.com/x"}
+]

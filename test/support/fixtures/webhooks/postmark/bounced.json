@@ -1,0 +1,13 @@
+{
+  "RecordType": "Bounce",
+  "ServerID": 23,
+  "MessageStream": "outbound",
+  "ID": 4323372036854775807,
+  "Type": "HardBounce",
+  "TypeCode": 1,
+  "Name": "Hard bounce",
+  "MessageID": "00000000-0000-0000-0000-000000000002",
+  "Email": "user@example.com",
+  "BouncedAt": "2026-04-23T12:00:01Z",
+  "Details": "smtp;550 5.1.1 user not found"
+}

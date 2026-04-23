@@ -1,0 +1,10 @@
+{
+  "RecordType": "Delivery",
+  "ServerID": 23,
+  "MessageStream": "outbound",
+  "MessageID": "00000000-0000-0000-0000-000000000001",
+  "Recipient": "user@example.com",
+  "Tag": "welcome",
+  "DeliveredAt": "2026-04-23T12:00:00Z",
+  "Details": "smtp;250 ok"
+}

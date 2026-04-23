@@ -70,6 +70,12 @@ Per-kind fields: `provider :: atom() | nil`.
 
 Retryable: `false` (the caller is misconfigured or the request is a forgery).
 
+<!-- Phase 4 extends the :type atom set to 7 values per 04-CONTEXT.md D-21:
+     :missing_header, :malformed_header, :bad_credentials, :ip_disallowed,
+     :bad_signature (collapses :tampered_body), :timestamp_skew,
+     :malformed_key. Full catalog populated by Plan 03 (Postmark + SendGrid
+     verifiers). -->
+
 Since: 0.1.0.
 
 ### `Mailglass.SuppressedError`
@@ -124,6 +130,11 @@ Type atom set:
 
 Per-kind fields: none.
 
+<!-- Phase 4 extends the :type atom set with :webhook_verification_key_missing
+     per 04-CONTEXT.md D-21 (rationale: separation from %SignatureError{} keeps
+     "forged request" vs "missing secret" distinguishable in admin triage).
+     Populated by Plan 03 verifier config validation. -->
+
 Retryable: `false` — fix config and restart.
 
 Since: 0.1.0.
@@ -169,6 +180,12 @@ Type atom set:
 
 Per-kind fields: none.
 
+<!-- Phase 4 extends the :type atom set with :webhook_tenant_unresolved
+     per 04-CONTEXT.md D-14 — raised by the webhook plug when
+     `c:resolve_webhook_tenant/1` returns `{:error, _}`. Rescued by the plug
+     to HTTP 422 (distinct from signature 401, distinct from orphan 200).
+     Populated by Plan 06 (Webhook.Plug). -->
+
 Retryable: `false` (the caller failed to establish tenant context).
 
 Since: 0.1.0.
@@ -208,6 +225,19 @@ Added to `@logged_events` for the default logger handler:
 ```
 
 Metadata whitelist per D-31: `:tenant_id, :mailable, :stream, :delivery_id, :status, :provider, :latency_ms, :step_name, :allowed, :hit, :duration_us`.
+
+<!-- Phase 4 adds 5 webhook spans + 1 reconcile span per 04-CONTEXT.md D-22:
+       [:mailglass, :webhook, :ingest, :start | :stop | :exception]
+       [:mailglass, :webhook, :signature, :verify, :start | :stop | :exception]
+       [:mailglass, :webhook, :normalize, :stop]
+       [:mailglass, :webhook, :orphan, :stop]
+       [:mailglass, :webhook, :duplicate, :stop]
+       [:mailglass, :webhook, :reconcile, :start | :stop | :exception]
+     Metadata whitelist additions (D-23): :event_type, :status,
+     :failure_reason, :mapped, :duplicate, :delivery_id_matched,
+     :event_count, :age_seconds, :scanned_count, :linked_count,
+     :remaining_orphan_count. Populated by Plans 03 (verify span),
+     06 (ingest/normalize/orphan/duplicate spans), 07 (reconcile span). -->
 
 Since: 0.1.0.
 
@@ -330,6 +360,12 @@ Since: 0.1.0.
 ### `Mailglass.Tenancy` optional callback: `c:tracking_host/1`
 
 - `@callback tracking_host(context :: term()) :: {:ok, String.t()} | :default` — optional per-tenant tracking host override (D-32). Default resolution: `:default` (use global `config :mailglass, :tracking, host:`). Adopters returning `{:ok, host}` get per-tenant subdomains for strict cookie/origin isolation.
+
+<!-- Phase 4 adds a second optional callback `c:resolve_webhook_tenant/1`
+     per 04-CONTEXT.md D-12 — adopters map (provider, conn, raw_body,
+     headers, path_params, verified_payload) to `{:ok, tenant_id}` or
+     `{:error, term}`. `SingleTenant` ships a default impl returning
+     `{:ok, "default"}`. Populated by Plan 06 (Webhook.Plug). -->
 
 Since: 0.1.0.
 
@@ -1270,11 +1306,59 @@ Use sparingly — prefer `Fake.allow/2` for targeted cross-process delegation.
 
 ### `Mailglass.WebhookCase`
 
-Stub shipped in Phase 3 (TEST-02). `use ExUnit.CaseTemplate` delegating to
-`use Mailglass.MailerCase, opts`. Phase 4 (HOOK-01..07) extends with Plug.Test helpers
-and HMAC signature fixtures.
+Extended in Phase 4 Plan 01 (HOOK-01..07, TEST-03). Inherits
+`Mailglass.MailerCase` and adds webhook-specific helpers per 04-CONTEXT.md
+D-26:
 
-Since: 0.1.0 (stub). Phase 4 extension.
+- `mailglass_webhook_conn(provider, raw_body, opts \\ [])` — builds a
+  `%Plug.Conn{}` targeting `/webhooks/#{provider}` with the correct
+  signature header attached (Basic Auth for Postmark, ECDSA for SendGrid).
+  `conn.private[:raw_body]` is populated to mirror what
+  `Mailglass.Webhook.CachingBodyReader` (Plan 02) writes in production.
+- `assert_webhook_ingested(pattern \\ nil, timeout \\ 100)` — macro
+  wrapping `assert_receive` on the Phase 3 Projector broadcast
+  `{:delivery_updated, delivery_id, event_type, meta}`. Three forms:
+  bare (presence), event-type atom, or meta map pattern.
+- `stub_postmark_fixture/1` + `stub_sendgrid_fixture/1` — load payload-only
+  fixture JSON from `test/support/fixtures/webhooks/{provider}/*.json`.
+- `freeze_timestamp/1` — re-export of `Mailglass.Clock.Frozen.freeze/1`.
+
+Setup mints a fresh ECDSA P-256 keypair per test (via
+`Mailglass.WebhookFixtures.generate_sendgrid_keypair/0`) and installs
+per-test SendGrid + Postmark config in `Application.put_env/3`, restored
+on_exit. `@tag webhook_config: false` opts out of the config mutation.
+
+**Async safety:** `async: false` recommended (global Application env).
+Tests that exercise pure CachingBodyReader can use `async: true` with
+`@tag webhook_config: false`.
+
+Since: 0.1.0 (stub in Phase 3; Wave 0 helpers in Phase 4).
+
+### `Mailglass.WebhookFixtures`
+
+Shipped in Phase 4 Plan 01. Test-only helpers for webhook fixture signing
+and loading. Lives in `test/support/` — not part of the public Hex package
+surface.
+
+**Public API:**
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `generate_sendgrid_keypair/0` | `() :: {spki_der_b64 :: String.t(), priv :: binary()}` | Mints fresh P-256 keypair; first element is the base64-encoded SubjectPublicKeyInfo DER (SendGrid dashboard format) |
+| `sign_sendgrid_payload/3` | `(timestamp :: String.t(), raw_body :: binary(), priv :: binary()) :: String.t()` | Signs `timestamp <> raw_body` via `:crypto.sign(:ecdsa, :sha256, _, [priv, :secp256r1])`; returns base64 signature |
+| `decode_sendgrid_spki_der!/1` | `(b64_der :: String.t()) :: {:SubjectPublicKeyInfo, _, _}` | Round-trip helper — decodes the b64 DER via `:public_key.der_decode/2` exactly as the production verifier will |
+| `postmark_basic_auth_header/2` | `(user, pass) :: {"authorization", "Basic " <> encoded}` | Plug header tuple ready for `put_req_header/3` |
+| `load_postmark_fixture/1` | `(name :: String.t()) :: binary()` | Reads `fixtures/webhooks/postmark/#{name}.json` byte-exact |
+| `load_sendgrid_fixture/1` | `(name :: String.t()) :: binary()` | Reads `fixtures/webhooks/sendgrid/#{name}.json` byte-exact |
+| `fixture_root/0` | `() :: String.t()` | Absolute path to `test/support/fixtures/webhooks` |
+
+**Crypto choice:** Signing uses `:crypto.sign/4` directly (raw ECDSA) to
+avoid OTP 27's awkward `{:ECPrivateKey, _, _, _, _, _}` record shape.
+Verification on the server side (Plan 03) uses `:public_key.verify/4` with
+`{{:ECPoint, _}, {:namedCurve, _}}` tuples — the canonical OTP surface.
+Round-trip verified at Phase 4 Wave 0 build time.
+
+Since: 0.1.0 (test support only).
 
 ### `Mailglass.AdminCase`
 
@@ -1283,3 +1367,36 @@ Stub shipped in Phase 3 (TEST-02). `use ExUnit.CaseTemplate` delegating to
 helpers, endpoint stub, session cookie fixtures, and device toggle assertion helpers.
 
 Since: 0.1.0 (stub). Phase 5 extension.
+
+## §Webhook (added in Phase 4)
+
+_Populated incrementally by Phase 4 plans 02–08. Wave 0 (Plan 01) reserves
+this section; plans 02+ fill in the Provider behaviour shape, the
+Webhook.Plug contract, the Router macro signature, the CachingBodyReader
+read_body/2 contract, and the Reconciler + Pruner worker contracts._
+
+### Reserved
+
+- `Mailglass.Webhook.Provider` — sealed two-callback behaviour
+  (`verify!/3` + `normalize/2`). Shape locked in 04-CONTEXT.md D-01.
+- `Mailglass.Webhook.Providers.Postmark` — Basic Auth + opt-in IP
+  allowlist (D-04).
+- `Mailglass.Webhook.Providers.SendGrid` — ECDSA P-256 via
+  `:public_key.der_decode/2` + `:public_key.verify/4`. 300-second
+  timestamp tolerance (D-03).
+- `Mailglass.Webhook.CachingBodyReader` — `read_body/2` with iodata
+  accumulation across `{:more, _, _}` chunks; stores raw bytes in
+  `conn.private[:raw_body]` (D-09).
+- `Mailglass.Webhook.Plug` — end-to-end ingest (verify → resolve-tenant
+  → normalize → Multi → 200 OK). No user handler (D-10).
+- `Mailglass.Webhook.Router` — `mailglass_webhook_routes/2` macro with
+  `:providers` opt, per-provider path routing (D-06, D-07).
+- `Mailglass.Webhook.Ingest.ingest_multi/3` — single `Ecto.Multi`
+  composing webhook_events insert + events insert + projection update +
+  PubSub broadcast (HOOK-06 amended, D-15).
+- `Mailglass.Webhook.Reconciler` — Oban cron `*/5 * * * *`; appends
+  `:reconciled` events without mutating orphan rows (D-17, D-18).
+- `Mailglass.Webhook.Pruner` — Oban daily cron; deletes
+  `mailglass_webhook_events` rows by `status` + age (D-16).
+
+Since: 0.1.0 (Phase 4 wave 0 reservation; implementation lands Plans 02+).
