@@ -42,9 +42,8 @@ defmodule Mailglass.ApplicationTest do
   end
 
   describe "Code.ensure_loaded?/1 gating (I-08)" do
-    test "Fake.Supervisor is absent from children when module is not compiled" do
-      # Check the current supervision tree. Plans 02 + 03 have not shipped yet,
-      # so optional supervisors should NOT be present.
+    test "required children (PubSub + TaskSupervisor) are always present" do
+      # Check the current supervision tree.
       children = Supervisor.which_children(Mailglass.Supervisor)
       child_ids = Enum.map(children, fn {id, _, _, _} -> id end)
 
@@ -59,7 +58,18 @@ defmodule Mailglass.ApplicationTest do
              "Mailglass.TaskSupervisor child expected in supervision tree"
     end
 
-    # This test is skipped until Plans 02 + 03 merge; un-skip when all optional
+    test "Fake.Supervisor is present after Plan 02 ships (Code.ensure_loaded? gate)" do
+      # Plan 02 ships Mailglass.Adapters.Fake.Supervisor — the Code.ensure_loaded?/1
+      # gate in Application.maybe_add/3 automatically includes it in the tree.
+      children = Supervisor.which_children(Mailglass.Supervisor)
+      child_ids = Enum.map(children, fn {id, _, _, _} -> id end)
+
+      assert Mailglass.Adapters.Fake.Supervisor in child_ids,
+             "Mailglass.Adapters.Fake.Supervisor expected in supervision tree after Plan 02"
+    end
+
+    # This test is skipped until Plan 03 ships RateLimiter.Supervisor +
+    # SuppressionStore.ETS.Supervisor; un-skip when all optional
     # supervisor modules are compiled.
     @tag :skip
     test "all 5 children present after Plans 02 + 03 ship" do

@@ -389,3 +389,76 @@ Does NOT call `Swoosh.Mailer.deliver/1` — LINT-01 forbidden. Calls `Swoosh.Ada
 (the behaviour callback) directly. Pure: no DB, no PubSub, no GenServer.
 
 Since: 0.1.0.
+
+## §Fake (Phase 3)
+
+### `Mailglass.Adapters.Fake`
+
+In-memory, time-advanceable test adapter (TRANS-02, D-01..D-03). The merge-blocking release gate (D-13).
+
+**Stored record shape** (JSON-compatible per TRANS-02):
+
+```elixir
+%{
+  message: %Mailglass.Message{},
+  delivery_id: Ecto.UUID.t(),
+  provider_message_id: String.t(),
+  recorded_at: DateTime.t()
+}
+```
+
+**Locked public API:**
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `deliveries/0,1` | `(keyword()) :: [map()]` | List recorded deliveries; opts: `:owner`, `:tenant`, `:mailable`, `:recipient` |
+| `last_delivery/0,1` | `(keyword()) :: map() \| nil` | Most recently inserted delivery |
+| `clear/0,1` | `(keyword() \| :all) :: :ok` | Wipe owner bucket; `:all` flushes entire ETS table |
+| `trigger_event/3` | `(String.t(), atom(), keyword()) :: {:ok, Event.t()} \| {:error, term()}` | Simulate webhook event via real write path |
+| `advance_time/1` | `(integer()) :: DateTime.t()` | Advances process-local frozen clock (delegates to `Clock.Frozen.advance/1`) |
+| `checkout/0` | `() :: :ok` | Register current process as owner |
+| `checkin/0` | `() :: :ok` | Unregister current process as owner |
+| `allow/2` | `(pid(), pid()) :: :ok` | Allow `allowed_pid` to deliver into `owner_pid`'s bucket |
+| `set_shared/1` | `(pid() \| nil) :: :ok` | Set global shared owner (for non-async E2E tests) |
+| `get_shared/0` | `() :: pid() \| nil` | Returns current shared owner |
+
+**ETS table name:** `:mailglass_fake_mailbox` — library-reserved. Adopters must not register a
+process or table under this name.
+
+**GenServer name:** `Mailglass.Adapters.Fake.Storage` — library-reserved singleton (LINT-07
+exception: library-internal per D-02). Unconditionally started by `Mailglass.Application`.
+
+**`trigger_event/3` write-path guarantee (D-03):** Looks up the `%Delivery{}` by
+`provider_message_id`, then runs `Events.append_multi/3 + Projector.update_projections/2` inside
+`Repo.multi/1` — the SAME write path Phase 4 webhook ingest uses. The Fake proves the production
+write path in every CI run.
+
+**Ownership model:** Mirrors `Swoosh.Adapters.Sandbox`. Each test process is its own owner via
+`checkout/0`. `$callers` inheritance (Task.async) works automatically. Cross-process delegation
+(LiveView, Oban workers, Playwright) uses `allow/2`. Global mode uses `set_shared/1`.
+
+Since: 0.1.0.
+
+## §Projector.broadcast_delivery_updated (Phase 3)
+
+### `Mailglass.Outbound.Projector.broadcast_delivery_updated/3`
+
+Locked signature: `@spec broadcast_delivery_updated(Delivery.t(), atom(), map()) :: :ok`
+
+**Payload shape:** `{:delivery_updated, delivery_id :: binary, event_type :: atom, meta :: map}`
+
+**Broadcast topics (SEND-05, D-27):**
+- `Mailglass.PubSub.Topics.events(tenant_id)` — tenant-wide stream
+- `Mailglass.PubSub.Topics.events(tenant_id, delivery_id)` — per-delivery stream
+
+**Semantics:** Best-effort, fire-and-forget. Broadcast failure NEVER rolls back (broadcast runs
+AFTER `Repo.transact/1` commits). If Phoenix.PubSub is unreachable, logs a debug message and
+returns `:ok`. The event ledger is the durable source of truth; PubSub is the realtime fan-out.
+
+**Callers:**
+- `Mailglass.Outbound.send/2` (Plan 05 Multi#2 success path)
+- `Mailglass.Outbound.Worker.perform/1` (Plan 05 async Multi#2 success)
+- `Mailglass.Adapters.Fake.trigger_event/3` (after its own `Repo.multi/1` commits)
+- `Mailglass.Webhook.Plug` (Phase 4 — after webhook Multi commits)
+
+Since: 0.1.0.

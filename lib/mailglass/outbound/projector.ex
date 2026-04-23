@@ -132,4 +132,62 @@ defmodule Mailglass.Outbound.Projector do
   end
 
   defp maybe_flip_terminal(changeset, _), do: changeset
+
+  @doc """
+  Broadcasts a post-commit `{:delivery_updated, delivery_id, event_type, meta}`
+  payload to the relevant Mailglass.PubSub topics (D-04).
+
+  Called AFTER the caller's `Repo.transact/1` (or `Repo.multi/1`) returns
+  `{:ok, _}`. Broadcasting INSIDE the transaction would couple PubSub
+  availability to DB commit success — violates D-04's "broadcast runs AFTER
+  commit" rule.
+
+  Broadcasts to BOTH topics (D-27, SEND-05):
+
+  - `Mailglass.PubSub.Topics.events(tenant_id)` — tenant-wide event stream
+    (admin dashboard, tenant-wide observers)
+  - `Mailglass.PubSub.Topics.events(tenant_id, delivery_id)` — per-delivery
+    stream (single-delivery LiveView views, `assert_mail_delivered/2`)
+
+  Broadcast failure never rolls back — if Phoenix.PubSub is unreachable
+  (application stopping, node partition), the broadcast is best-effort
+  and returns `:ok`. The event ledger is the durable source of truth;
+  PubSub is the realtime fan-out.
+
+  ## Callers
+
+  - `Mailglass.Outbound.send/2` (Plan 05 Multi#2 success path)
+  - `Mailglass.Outbound.Worker.perform/1` (Plan 05 async Multi#2 success)
+  - `Mailglass.Adapters.Fake.trigger_event/3` (after its own transact)
+  - `Mailglass.Webhook.Plug` (Phase 4 — after webhook Multi commits)
+  """
+  @doc since: "0.1.0"
+  @spec broadcast_delivery_updated(Delivery.t(), atom(), map()) :: :ok
+  def broadcast_delivery_updated(
+        %Delivery{id: delivery_id, tenant_id: tenant_id},
+        event_type,
+        meta
+      )
+      when is_atom(event_type) and is_map(meta) and is_binary(delivery_id) do
+    payload = {:delivery_updated, delivery_id, event_type, meta}
+
+    _ = safe_broadcast(Mailglass.PubSub.Topics.events(tenant_id), payload)
+    _ = safe_broadcast(Mailglass.PubSub.Topics.events(tenant_id, delivery_id), payload)
+
+    :ok
+  end
+
+  defp safe_broadcast(topic, payload) do
+    Phoenix.PubSub.broadcast(Mailglass.PubSub, topic, payload)
+  rescue
+    # PubSub not started, node partition, topic registration race — all best-effort.
+    e in [ArgumentError, RuntimeError] ->
+      require Logger
+
+      Logger.debug(
+        "[mailglass] PubSub broadcast failed (non-fatal): #{Exception.message(e)}"
+      )
+
+      :ok
+  end
 end
