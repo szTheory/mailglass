@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 03-03-PLAN.md: Preflight stages (RateLimiter + Suppression + Stream)"
-last_updated: "2026-04-23T04:12:07.135Z"
+stopped_at: "Completed 03-04-PLAN.md: Mailable behaviour + Tracking Guard"
+last_updated: "2026-04-23T04:40:40.932Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 19
-  completed_plans: 15
-  percent: 79
+  completed_plans: 16
+  percent: 84
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
-Plan: 4 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [████████░░] 79%
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Progress: [████████░░] 79%
 | Phase 03-transport-send-pipeline P01 | 30min | 3 tasks | 30 files |
 | Phase 03 P02 | 19min | 3 tasks | 13 files |
 | Phase 03 P03-03 | 17min | 3 tasks | 13 files |
+| Phase 03-transport-send-pipeline P03-04 | 25min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,9 @@ Most load-bearing for Phase 1:
 - ETS compound op {2, total_add, capacity, capacity}, {3, 0, 0, now_ms}, {2, -1} for token bucket — raw decrement returns actual value (-1=over-limit, >=0=allowed); capped refill prevents exceeding capacity
 - Restore-from-negative refill: when counter is -1 post-over-limit, add abs(tokens) to restore to 0 before applying elapsed refill delta
 - Stream.policy_check test uses apply/3 to bypass Elixir 1.18 type-narrowing on intentional FunctionClauseError misuse test
+- Injection uses import Swoosh.Email, except: [new: 0] to avoid conflict with injected new/0 in using modules
+- Tracking.fetch_from_mailable/1 calls Code.ensure_loaded/1 before function_exported? — async BEAM lazy loading: compiled .beam not loaded until first reference in process
+- render/3 default injects Mailglass.Renderer.render(msg) ignoring template + assigns (I-10 option b) — template resolution is adopter-owned via defoverridable
 
 ### Pending Todos
 
@@ -155,8 +159,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T04:12:07.062Z
-Stopped at: Completed 03-03-PLAN.md: Preflight stages (RateLimiter + Suppression + Stream)
+Last session: 2026-04-23T04:40:40.921Z
+Stopped at: Completed 03-04-PLAN.md: Mailable behaviour + Tracking Guard
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z
