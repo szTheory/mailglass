@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 04-webhook-ingest/04-03-PLAN.md (Wave 1B SendGrid verifier + normalizer + :sendgrid config)"
-last_updated: "2026-04-23T21:10:01.086Z"
+stopped_at: Completed 04-webhook-ingest/04-04-PLAN.md (Wave 2A single-ingress Plug + TenancyError atom + Tenancy dispatcher stub)
+last_updated: "2026-04-23T21:36:41.446Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 33
-  completed_plans: 27
-  percent: 82
+  completed_plans: 28
+  percent: 85
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 04 (webhook-ingest) — EXECUTING
-Plan: 4 of 9 (04-01 complete; 04-02 next)
+Plan: 5 of 9 (04-01 complete; 04-02 next)
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [████████░░] 82%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -82,6 +82,7 @@ Progress: [████████░░] 82%
 | Phase 04-webhook-ingest P01 | 25min | 2 tasks | 30 files |
 | Phase 04 P02 | 13min | 3 tasks | 10 files |
 | Phase 04 P03 | 9min | 2 tasks | 3 files |
+| Phase 04-webhook-ingest P04 | 13min | 2 tasks tasks | 4 files files |
 
 ## Accumulated Context
 
@@ -184,6 +185,11 @@ Most load-bearing for Phase 1:
 - Plan 04-03: Explicit e in [SignatureError] rescue clause BEFORE the catch-all in verify_ecdsa! — the false-branch :bad_signature raise is preserved (not reclassified by the [ArgumentError, MatchError, FunctionClauseError, ErlangError] rescue). Defense-in-depth against future catch-all expansion.
 - Plan 04-03: Bad base64 on either public_key blob or signature maps to :malformed_key (not :bad_signature). Base.decode64! ArgumentError does not distinguish the source from the message; :malformed_key is the safer disclosure (never leaks 'your signature was wrong' to forgeries). Tests accept err.type in [:bad_signature, :malformed_key] for bit-flipped inputs.
 - Plan 04-03: SendGrid processed -> :queued Anymail mapping (not :sent). SendGrid 'processed' means 'accepted for later delivery' which is the literal Anymail :queued semantic; :sent implies SMTP handshake completion (Anymail's :delivered).
+- Plan 04-04: Use :telemetry.span/3 DIRECTLY in Mailglass.Webhook.Plug.call/2 (not the Mailglass.Telemetry.span/3 wrapper) — per-request stop metadata requires the raw tuple contract that the wrapper's closed-metadata surface cannot provide. CONTEXT D-22 line 161 authorizes this pattern when Plan 08 helpers are absent; Plan 08 extracts Mailglass.Webhook.Telemetry.ingest_span/2 as a mechanical rename.
+- Plan 04-04: TenancyError @types extended with :webhook_tenant_unresolved atom per D-14; format_message/2 reads context[:provider]. Plan 05 formalizes the docs/api_stability.md §Tenancy lock.
+- Plan 04-04: Mailglass.Tenancy.resolve_webhook_tenant/1 ships as a function_exported?/3 dispatcher stub returning {:ok, "default"} when the resolver module has no impl — keeps SingleTenant functional before Plan 05's @optional_callback landing; Plan 05 tightens fallback to {:error, :resolver_incomplete}.
+- Plan 04-04: Webhook.Plug do_call/3 returns {conn, stop_metadata} per :telemetry.span/3 contract — matches the raw tuple shape; Plug.call/2 receives conn as the span's return. All 6 response branches (200 success + 200 duplicate + 401 sig + 422 tenant + 500 config + 500 ingest) return this shape.
+- Plan 04-04: Post-commit broadcast iterates Plan 06's events_with_deliveries 3-tuples {event, delivery_or_nil, orphan?}; orphans ({_event, nil, true}) are skipped — Plan 07 Reconciler emits :reconciled when matching Delivery surfaces, so broadcasting twice would confuse LiveView subscribers.
 
 ### Pending Todos
 
@@ -202,8 +208,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T21:10:01.077Z
-Stopped at: Completed 04-webhook-ingest/04-03-PLAN.md (Wave 1B SendGrid verifier + normalizer + :sendgrid config)
+Last session: 2026-04-23T21:36:41.437Z
+Stopped at: Completed 04-webhook-ingest/04-04-PLAN.md (Wave 2A single-ingress Plug + TenancyError atom + Tenancy dispatcher stub)
 Resume file: None
 
 **Planned Phase:** 04 (webhook-ingest) — 9 plans — 2026-04-23T20:02:05.795Z
