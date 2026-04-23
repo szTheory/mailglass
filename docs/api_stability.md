@@ -1136,3 +1136,81 @@ opts. Modules without `use Mailglass.Mailable` are skipped.
 is a v0.5 gap-closure item.
 
 Since: 0.1.0.
+
+## §TestAssertions (Phase 3 Plan 06)
+
+### `Mailglass.TestAssertions`
+
+Shipped in Phase 3 Plan 06 (TEST-01, D-05). Adopter-facing test assertion helpers.
+Lives in `lib/` (not `test/support/`) so adopters can `import Mailglass.TestAssertions`
+in their own test helpers.
+
+**Locked function surface:**
+
+| Function / Macro | Signature | Description |
+|-----------------|-----------|-------------|
+| `assert_mail_sent/0` | macro | Asserts any `{:mail, _}` in process mailbox |
+| `assert_mail_sent/1` | macro (4 dispatch forms) | See matcher styles below |
+| `assert_no_mail_sent/0` | macro | `refute_received {:mail, _}` |
+| `last_mail/0` | `() :: Message.t() \| nil` | Most recent msg from Fake ETS bucket |
+| `wait_for_mail/1` | `(timeout()) :: Message.t()` | Blocks until mail or timeout |
+| `assert_mail_delivered/2` | `(Delivery.t() \| binary(), timeout()) :: :ok` | Consumes PubSub `:delivered` broadcast |
+| `assert_mail_bounced/2` | `(Delivery.t() \| binary(), timeout()) :: :ok` | Consumes PubSub `:bounced` broadcast |
+
+**Macro vs function dispatch rule:**
+- `assert_mail_sent/0,1` and `assert_no_mail_sent/0` are **macros** — required to
+  support struct-pattern syntax (`%{mailable: X}`) and `assert_received`/`refute_received`
+  which must be called in caller context.
+- `last_mail/0`, `wait_for_mail/1`, `assert_mail_delivered/2`, `assert_mail_bounced/2`
+  are **regular functions** — they do not require compile-time AST manipulation.
+
+**Four `assert_mail_sent/1` matcher styles:**
+
+```elixir
+# Style 1: presence (bare call)
+assert_mail_sent()
+
+# Style 2: keyword list (Swoosh familiarity)
+assert_mail_sent(subject: "Welcome", to: "user@example.com")
+assert_mail_sent(mailable: MyApp.UserMailer, stream: :transactional)
+
+# Style 3: struct pattern (macro — no explicit quoting)
+assert_mail_sent(%{mailable: MyApp.UserMailer})
+
+# Style 4: predicate fn
+assert_mail_sent(fn msg -> msg.stream == :transactional end)
+```
+
+**Supported keyword matcher keys (Style 2):**
+
+| Key | Matches against |
+|-----|----------------|
+| `:subject` | `msg.swoosh_email.subject` |
+| `:to` | any address in `msg.swoosh_email.to` |
+| `:mailable` | `msg.mailable` |
+| `:stream` | `msg.stream` |
+| `:tenant` | `msg.tenant_id` |
+
+Any unsupported key raises `ExUnit.AssertionError` with descriptive message.
+Extensible in future versions (new keys are semver-minor).
+
+**PubSub-backed assertions (assert_mail_delivered/2, assert_mail_bounced/2):**
+- Consume `{:delivery_updated, delivery_id, :delivered | :bounced, meta}` from PubSub.
+- Require the test process to be subscribed to `Mailglass.PubSub.Topics.events(tenant_id)`
+  or `Mailglass.PubSub.Topics.events(tenant_id, delivery_id)` before the assertion.
+- `Mailglass.MailerCase` handles the tenant-wide subscription in setup automatically.
+- Both functions accept either `delivery_id :: binary()` OR `%Delivery{}` struct
+  (`.id` is extracted automatically).
+- Default timeout: `100` milliseconds.
+
+**Async-safe guarantees (T-3-06-01):**
+- Process mailbox (`{:mail, msg}`) is per-process — no cross-test leakage.
+- `last_mail/0` reads the Fake ETS bucket keyed by owner pid — per-process isolation.
+- PubSub subscription is per-process and cleaned up on process exit.
+- All helpers are safe for `async: true` tests via `Mailglass.MailerCase`.
+
+**PII policy (T-3-06-01):** Failure messages embed caller-supplied values (e.g. `subject`,
+`to` address) because adopter test failures need that context. These values appear only in
+the adopter's own test output — never in telemetry, log streams, or cross-tenant surfaces.
+
+Since: 0.1.0.
