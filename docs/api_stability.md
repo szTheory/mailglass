@@ -642,3 +642,151 @@ code — the implementation contract is internal.
 Stream atom is enum-narrow (one of three known values) — not recipient-identifying.
 
 Since: 0.1.0.
+
+## §Mailable (Phase 3 Plan 04)
+
+### `Mailglass.Mailable` behaviour
+
+Shipped in Phase 3 Plan 04 (AUTHOR-01). The adopter entry point — `use Mailglass.Mailable, stream: …`
+injects the mailable boilerplate in ≤20 top-level AST forms.
+
+**Locked behaviour callbacks:**
+
+```elixir
+@callback new() :: Mailglass.Message.t()
+@callback render(Mailglass.Message.t(), atom(), map()) ::
+            {:ok, Mailglass.Message.t()} | {:error, Mailglass.TemplateError.t()}
+@callback deliver(Mailglass.Message.t(), keyword()) ::
+            {:ok, term()} | {:error, Mailglass.Error.t()}
+@callback deliver_later(Mailglass.Message.t(), keyword()) ::
+            {:ok, term()} | {:error, Mailglass.Error.t()}
+@optional_callbacks preview_props: 0
+@callback preview_props() :: [{atom(), map()}]
+```
+
+**`preview_props/0` is optional.** Adopters who want Phase 5 admin preview discovery implement it;
+omitting it produces no compiler warning.
+
+**`defoverridable` surface (stable):** `new/0`, `render/3`, `deliver/2`, `deliver_later/2` — all
+four injected functions are overridable via `defoverridable`. Adopters who override `deliver/2` to
+bypass `Mailglass.Outbound` lose telemetry + projection writes (T-3-04-04 accepted risk; documented).
+
+### `use` opts vocabulary (compile-time tier, D-11)
+
+The locked `use` opts passed to `use Mailglass.Mailable`:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `:stream` | `:transactional \| :operational \| :bulk` | `:transactional` | Compile-time stream classification. Required for Phase 6 LINT AST check. |
+| `:tracking` | `[opens: boolean, clicks: boolean]` | `[]` (all false) | Open/click tracking opt-in (TRACK-01, D-08). Off by default. Phase 6 TRACK-02 + Phase 3 Guard enforce. |
+| `:from_default` | `{name :: String.t(), address :: String.t()} \| nil` | `nil` | Default `from` header applied at `new/0` time. Per-call `Swoosh.Email.from/2` overrides. |
+| `:reply_to_default` | `{name :: String.t(), address :: String.t()} \| nil` | `nil` | Default Reply-To header applied at `new/0` time. |
+
+Adding new `use` opts is semver-minor. Removing or changing the type of an existing opt is
+semver-major.
+
+### Injection budget (LINT-05, D-09)
+
+`__using__/1` injects exactly 12 top-level AST forms (budget: ≤20 per LINT-05; target: 15 per D-09).
+Phase 6 `NoOversizedUseInjection` Credo check enforces this at lint time. A runtime AST-counting
+test in `test/mailglass/mailable_test.exs` asserts the budget on every CI run.
+
+**What is injected:**
+1. `@behaviour Mailglass.Mailable`
+2. `@before_compile Mailglass.Mailable`
+3. `@mailglass_opts opts`
+4. `@compile {:no_warn_undefined, Mailglass.Outbound}` (forward-ref guard until Plan 05)
+5. `import Swoosh.Email, except: [new: 0]`
+6. `import Mailglass.Components`
+7. `def __mailglass_opts__/0`
+8. `def new/0`
+9. `def render/3`
+10. `def deliver/2`
+11. `def deliver_later/2`
+12. `defoverridable new: 0, render: 3, deliver: 2, deliver_later: 2`
+
+**What is NOT injected:** `import Phoenix.Component` (adopters opt in per-mailable to avoid HEEx
+collision), `preview_props/0` default, module attributes `@subject` / `@from` (D-11 rationale).
+
+### `__mailglass_opts__/0` reflection contract
+
+Every module compiled with `use Mailglass.Mailable` exposes:
+
+```elixir
+@spec __mailglass_opts__() :: keyword()
+```
+
+Returns the keyword list passed to `use`. Phase 6 Credo reads this via AST introspection of the
+`@mailglass_opts` attribute. Phase 3 `Mailglass.Tracking.Guard.assert_safe!/1` reads it at runtime
+via `module.__mailglass_opts__()`.
+
+**Stability:** This function is library-internal machinery. Adopters MUST NOT define
+`def __mailglass_opts__` manually outside `use Mailglass.Mailable` — Phase 6 LINT will catch this.
+
+### `__mailglass_mailable__/0` discovery marker
+
+Every module compiled with `use Mailglass.Mailable` exposes:
+
+```elixir
+@spec __mailglass_mailable__() :: true
+```
+
+Always returns `true`. Phase 5 admin dashboard discovers mailable modules by probing
+`function_exported?(mod, :__mailglass_mailable__, 0)` across loaded modules.
+
+**Stability:** Locked. Must return `true` — Phase 5 admin uses this as a boolean gate.
+
+Since: 0.1.0.
+
+## §Message Helpers (Phase 3 Plan 04)
+
+Three new helpers added to `Mailglass.Message`:
+
+### `Mailglass.Message.new_from_use/2`
+
+```elixir
+@spec new_from_use(module(), keyword()) :: Mailglass.Message.t()
+```
+
+Creates a `%Mailglass.Message{}` from a mailable module and its `use` opts. Called by the
+injected `new/0` function. Seeds `:stream`, `:mailable`, `:tenant_id` from opts; applies
+`:from_default` to the inner `%Swoosh.Email{}` when present.
+
+Since: 0.1.0.
+
+### `Mailglass.Message.update_swoosh/2`
+
+```elixir
+@spec update_swoosh(Message.t(), (Swoosh.Email.t() -> Swoosh.Email.t())) :: Message.t()
+```
+
+Applies a transformation function to the inner `%Swoosh.Email{}`. Adopters use this to pipe
+through Swoosh builder functions while keeping the `%Message{}` wrapper intact. The canonical
+pattern for building mailable functions:
+
+```elixir
+def welcome(user) do
+  new()
+  |> Mailglass.Message.update_swoosh(fn e ->
+       e
+       |> Swoosh.Email.to(user.email)
+       |> Swoosh.Email.subject("Welcome!")
+     end)
+  |> Mailglass.Message.put_function(:welcome)
+end
+```
+
+Since: 0.1.0.
+
+### `Mailglass.Message.put_function/2`
+
+```elixir
+@spec put_function(Message.t(), atom()) :: Message.t()
+```
+
+Stamps the `:mailable_function` field. Required for the D-38 runtime tracking guard
+(`Mailglass.Tracking.Guard.assert_safe!/1`) to perform its auth-stream heuristic check.
+Adopters who omit `put_function/2` get `mailable_function: nil` — the Guard returns `:ok`
+(can't check without the function name); Phase 6 Credo TRACK-02 catches this statically.
+
+Since: 0.1.0.

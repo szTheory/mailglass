@@ -105,6 +105,88 @@ defmodule Mailglass.Message do
   end
 
   @doc """
+  Creates a new `Mailglass.Message` from `use Mailglass.Mailable` opts.
+
+  Called by the injected `new/0` function. Seeds `:stream`, `:mailable`,
+  `:tenant_id` from the compile-time `use` opts. Applies `:from_default`
+  from opts as the Swoosh.Email `from` header when present.
+
+  ## Examples
+
+      iex> msg = Mailglass.Message.new_from_use(MyMailer, stream: :transactional)
+      iex> msg.mailable
+      MyMailer
+      iex> msg.stream
+      :transactional
+
+  """
+  @doc since: "0.1.0"
+  @spec new_from_use(module(), keyword()) :: t()
+  def new_from_use(mailable, use_opts) when is_atom(mailable) and is_list(use_opts) do
+    email = Swoosh.Email.new()
+
+    email =
+      case Keyword.get(use_opts, :from_default) do
+        nil -> email
+        from -> Swoosh.Email.from(email, from)
+      end
+
+    stream = Keyword.get(use_opts, :stream, :transactional)
+
+    %__MODULE__{
+      swoosh_email: email,
+      mailable: mailable,
+      tenant_id: Mailglass.Tenancy.current(),
+      stream: stream,
+      tags: [],
+      metadata: %{}
+    }
+  end
+
+  @doc """
+  Updates the inner `%Swoosh.Email{}` via a transformation function.
+
+  Enables adopters to pipe through Swoosh builder functions while keeping
+  the outer `%Message{}` wrapper intact. Adopters building a mailable
+  function use this pattern:
+
+      new()
+      |> Mailglass.Message.update_swoosh(fn e ->
+           e
+           |> Swoosh.Email.to(user.email)
+           |> Swoosh.Email.subject("Welcome!")
+         end)
+      |> Mailglass.Message.put_function(:welcome)
+
+  """
+  @doc since: "0.1.0"
+  @spec update_swoosh(t(), (Swoosh.Email.t() -> Swoosh.Email.t())) :: t()
+  def update_swoosh(%__MODULE__{swoosh_email: email} = msg, fun) when is_function(fun, 1) do
+    %{msg | swoosh_email: fun.(email)}
+  end
+
+  @doc """
+  Stamps the `:mailable_function` field on a `%Message{}`.
+
+  Called in adopter mailable functions to record which function built the
+  message. Required by the D-38 runtime tracking guard
+  (`Mailglass.Tracking.Guard.assert_safe!/1`).
+
+  ## Examples
+
+      iex> msg = Mailglass.Message.new_from_use(MyMailer, stream: :transactional)
+      iex> msg2 = Mailglass.Message.put_function(msg, :welcome)
+      iex> msg2.mailable_function
+      :welcome
+
+  """
+  @doc since: "0.1.0"
+  @spec put_function(t(), atom()) :: t()
+  def put_function(%__MODULE__{} = msg, fun_name) when is_atom(fun_name) do
+    %{msg | mailable_function: fun_name}
+  end
+
+  @doc """
   Returns a new `%Message{}` with the given key put into `metadata`.
 
   Used by the send pipeline (Plan 05) to stamp `delivery_id` into the
