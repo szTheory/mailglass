@@ -52,6 +52,36 @@ defmodule Mailglass.IdempotencyKeyTest do
     end
   end
 
+  describe "for_webhook_event/3 (batch index form — CONTEXT line 343)" do
+    test "sanitizes the per-batch index form" do
+      # SendGrid batches: each event in the array gets a :index-qualified key
+      # so the UNIQUE partial index on `mailglass_events.idempotency_key`
+      # dedupes per-event, not per-batch.
+      assert Mailglass.IdempotencyKey.for_webhook_event(:postmark, "abc-123", 0) ==
+               "postmark:abc-123:0"
+
+      assert Mailglass.IdempotencyKey.for_webhook_event(:sendgrid, "evt_X", 5) ==
+               "sendgrid:evt_X:5"
+    end
+
+    test "is deterministic — same inputs produce same key" do
+      key1 = Mailglass.IdempotencyKey.for_webhook_event(:sendgrid, "sg_evt_9", 3)
+      key2 = Mailglass.IdempotencyKey.for_webhook_event(:sendgrid, "sg_evt_9", 3)
+      assert key1 == key2
+    end
+
+    test "index 0 and arity-2 form are distinguishable" do
+      # arity-2: "postmark:abc" ; arity-3 at idx=0: "postmark:abc:0"
+      refute Mailglass.IdempotencyKey.for_webhook_event(:postmark, "abc") ==
+               Mailglass.IdempotencyKey.for_webhook_event(:postmark, "abc", 0)
+    end
+
+    test "sanitizes control chars inside event_id while preserving index suffix" do
+      key = Mailglass.IdempotencyKey.for_webhook_event(:sendgrid, "evt\x00id", 2)
+      assert key == "sendgrid:evtid:2"
+    end
+  end
+
   describe "for_provider_message_id/2" do
     test "produces 'provider:msg:message_id' format" do
       assert Mailglass.IdempotencyKey.for_provider_message_id(:sendgrid, "SG.abc") ==

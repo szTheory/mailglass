@@ -48,6 +48,32 @@ defmodule Mailglass.IdempotencyKey do
   end
 
   @doc """
+  Builds a per-batch-event idempotency key for SendGrid batch payloads.
+
+  Each event in a batch gets `"\#{provider}:\#{provider_event_id}:\#{index}"`
+  so duplicate inserts of the same batch event collapse via the
+  `mailglass_events.idempotency_key` partial UNIQUE index (Phase 2 Plan
+  05 DDL). Single-event Postmark payloads use `for_webhook_event/2`
+  without the index suffix.
+
+  Phase 4 extension per CONTEXT line 343 (Plan 04-06).
+
+  ## Examples
+
+      iex> Mailglass.IdempotencyKey.for_webhook_event(:sendgrid, "evt_X", 0)
+      "sendgrid:evt_X:0"
+
+      iex> Mailglass.IdempotencyKey.for_webhook_event(:postmark, "abc-123", 5)
+      "postmark:abc-123:5"
+  """
+  @doc since: "0.1.0"
+  @spec for_webhook_event(atom(), String.t(), non_neg_integer()) :: String.t()
+  def for_webhook_event(provider, event_id, index)
+      when is_atom(provider) and is_binary(event_id) and is_integer(index) and index >= 0 do
+    sanitize("#{provider}:#{event_id}:#{index}")
+  end
+
+  @doc """
   Builds an idempotency key for a provider-assigned message id.
 
   ## Examples
