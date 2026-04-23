@@ -38,5 +38,17 @@ config :mailglass,
   suppression_store: Mailglass.SuppressionStore.Ecto,
   async_adapter: :oban
 
+# Phase 3 Plan 08: tracking config required so TrackingOnMailer (Criterion 4 positive case)
+# passes boot validation and Tracking.endpoint/0 resolves without raising.
+# :endpoint is read by Tracking.endpoint/0 via Application.get_env(:mailglass, :tracking)[:endpoint]
+# but the NimbleOptions schema does not yet include it as a key — use :adapter_endpoint
+# (the second resolution fallback) to stay within the validated schema.
+config :mailglass,
+  adapter_endpoint: "mailglass-test-endpoint"
+
+config :mailglass, :tracking,
+  host: "localhost:4000",
+  salts: ["test-salt"]
+
 # Suppress the boot-time "Oban not loaded" warning in test output.
 config :logger, level: :warning

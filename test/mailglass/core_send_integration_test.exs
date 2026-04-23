@@ -172,6 +172,27 @@ defmodule Mailglass.CoreSendIntegrationTest do
   # ---------------------------------------------------------------------------
 
   describe "ROADMAP §4: tracking off by default + auth-stream runtime guard" do
+    # Tracking-enabled mailable for the positive-case assertion.
+    # Defined at describe scope so it is compiled once and visible
+    # to all tests in the block.
+    defmodule TrackingOnMailer do
+      @moduledoc false
+      use Mailglass.Mailable, stream: :transactional, tracking: [opens: true, clicks: true]
+
+      def promo(email) when is_binary(email) do
+        new()
+        |> Mailglass.Message.update_swoosh(fn e ->
+             e
+             |> Swoosh.Email.from({"Promo", "promo@example.com"})
+             |> Swoosh.Email.to(email)
+             |> Swoosh.Email.subject("Promo email")
+             |> Swoosh.Email.html_body("<html><body><a href=\"https://example.com\">Click</a></body></html>")
+             |> Swoosh.Email.text_body("Promo")
+           end)
+        |> Mailglass.Message.put_function(:promo)
+      end
+    end
+
     test "plain mailable (no tracking opts) — no pixel injected in html_body" do
       assert {:ok, %Delivery{status: :sent}} =
                "uat-c4a@example.com"
@@ -184,6 +205,20 @@ defmodule Mailglass.CoreSendIntegrationTest do
       html = msg.swoosh_email.html_body || ""
       refute String.contains?(html, ~s|width="1" height="1"|)
       refute String.contains?(html, "/o/")
+    end
+
+    test "pixel injected when mailable opts in with tracking: [opens: true]" do
+      assert {:ok, %Delivery{status: :sent}} =
+               "uat-c4-tracking-on@example.com"
+               |> TrackingOnMailer.promo()
+               |> Outbound.deliver()
+
+      assert_mail_sent(fn msg ->
+        String.contains?(
+          msg.swoosh_email.html_body || "",
+          ~s(style="display:block;width:1px;height:1px;border:0;")
+        )
+      end)
     end
 
     test "mailable with tracking: [opens: true] + auth function name raises %ConfigError{:tracking_on_auth_stream}" do
