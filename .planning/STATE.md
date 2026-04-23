@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03-07-PLAN.md — Tracking infrastructure (Token+Rewriter+Plug+ConfigValidator)
-last_updated: "2026-04-23T06:20:05.707Z"
+status: verifying
+stopped_at: Completed 03-06-PLAN.md — TestAssertions + MailerCase + Phase 3 UAT gate (human-verify signed off)
+last_updated: "2026-04-23T14:22:28.113Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 19
-  completed_plans: 18
-  percent: 95
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
 Plan: 7 of 7
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-23
 
-Progress: [██████████] 95%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [██████████] 95%
 | Phase 03-transport-send-pipeline P03-04 | 25min | 2 tasks | 10 files |
 | Phase 03 P05 | 120 | 4 tasks | 14 files |
 | Phase 03 P03-07 | 13min | 3 tasks | 12 files |
+| Phase 03-transport-send-pipeline P03-06 | 45min | 4 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -150,6 +151,9 @@ Most load-bearing for Phase 1:
 - Token property tests use min_length: 5 for tenant_id/delivery_id — single-char strings can appear by chance in Base64-encoded Phoenix.Token output
 - ConfigValidator uses Code.ensure_loaded in test setup to force TrackingMailer into :code.all_loaded() — BEAM lazy-loads compiled .beam files
 - Plug swallows DB write errors with rescue — pixel/redirect ALWAYS succeed; event recording is best-effort
+- I-12 guard: tests using @tag oban: ... raise immediately when async: true — Oban.Testing mode is Application.put_env (global); concurrent async tests would stomp each other
+- set_mailglass_global/1 is the ONE path to global Fake mode — mirrors set_swoosh_global, enforces async: false
+- assert_mail_sent/1 macro dispatches on AST shape at compile time: {:%{}, _, _} = struct pattern, {:fn, _, _} = predicate, list = keyword, empty = bare presence check
 
 ### Pending Todos
 
@@ -168,8 +172,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T06:20:05.699Z
-Stopped at: Completed 03-07-PLAN.md — Tracking infrastructure (Token+Rewriter+Plug+ConfigValidator)
+Last session: 2026-04-23T14:22:28.101Z
+Stopped at: Completed 03-06-PLAN.md — TestAssertions + MailerCase + Phase 3 UAT gate (human-verify signed off)
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z

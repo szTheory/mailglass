@@ -127,11 +127,14 @@
 
 ### Test Tooling
 
-- [ ] **TEST-01**: `Mailglass.TestAssertions` extends Swoosh's: `assert_mail_sent/1`, `assert_no_mail_sent/0`, `last_mail/0`, `wait_for_mail/1`, `assert_mail_delivered/2`, `assert_mail_bounced/2`. (TS-14)
-- [ ] **TEST-02**: Per-domain Case templates: `Mailglass.MailerCase`, `Mailglass.WebhookCase`, `Mailglass.AdminCase`. Each sets up Ecto sandbox + Fake adapter + actor seeded.
+- [x] **TEST-01
+**: `Mailglass.TestAssertions` extends Swoosh's: `assert_mail_sent/1`, `assert_no_mail_sent/0`, `last_mail/0`, `wait_for_mail/1`, `assert_mail_delivered/2`, `assert_mail_bounced/2`. (TS-14)
+- [x] **TEST-02
+**: Per-domain Case templates: `Mailglass.MailerCase`, `Mailglass.WebhookCase`, `Mailglass.AdminCase`. Each sets up Ecto sandbox + Fake adapter + actor seeded.
 - [x] **TEST-03**: StreamData property tests on: idempotency key collision (PERSIST-03), webhook signature verification (HOOK-03/HOOK-04), header construction (COMP-01
 ), multi-tenant scope leak (TENANT-03). All four are merge-blocking in CI.
-- [ ] **TEST-04**: Real-provider sandbox tests (Postmark, SendGrid sandbox modes) tagged `@tag :provider_live`. Excluded from PR CI. Daily cron + `workflow_dispatch` only. Failures notify, never block. (TEST-02 prevention)
+- [x] **TEST-04**: Real-provider sandbox tests (Postmark, SendGrid sandbox modes) tagged `@tag :provider_live`. Excluded from PR CI. Daily cron + `workflow_dispatch` only. Failures notify, never block. (TEST-02
+ prevention)
 - [x] **TEST-05
 **: `Mailglass.Clock` injection point for time-dependent code. Tests use `Mailglass.Clock.Frozen`; production uses `Mailglass.Clock.System`. (TEST-06 prevention)
 
