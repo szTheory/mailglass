@@ -64,6 +64,35 @@ defmodule Mailglass.Generators do
     end
   end
 
+  @doc """
+  Inserts a `%Mailglass.Outbound.Delivery{}` fixture into the test repo and returns it.
+
+  Accepts the same keys as `Delivery.changeset/1`, plus:
+  - `:idempotency_key` — explicit key; defaults to `nil`
+  - `:tenant_id` — defaults to `"test-tenant"`
+
+  Must be called from within a `Mailglass.DataCase` sandbox checkout.
+  """
+  def delivery_fixture(opts \\ []) do
+    attrs = %{
+      tenant_id: Keyword.get(opts, :tenant_id, "test-tenant"),
+      mailable: Keyword.get(opts, :mailable, "Mailglass.FakeFixtures.TestMailer"),
+      stream: Keyword.get(opts, :stream, :transactional),
+      recipient: Keyword.get(opts, :recipient, "fixture@example.com"),
+      last_event_type: Keyword.get(opts, :last_event_type, :queued),
+      last_event_at: Keyword.get(opts, :last_event_at, Mailglass.Clock.utc_now()),
+      metadata: Keyword.get(opts, :metadata, %{}),
+      idempotency_key: Keyword.get(opts, :idempotency_key)
+    }
+
+    {:ok, delivery} =
+      attrs
+      |> Mailglass.Outbound.Delivery.changeset()
+      |> Mailglass.TestRepo.insert()
+
+    delivery
+  end
+
   @doc "Generates `Mailglass.Suppression.Entry.changeset/1`-compatible attr maps."
   def suppression_attrs(opts \\ []) do
     tenant_id = Keyword.get(opts, :tenant_id, "test-tenant")

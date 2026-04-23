@@ -858,3 +858,42 @@ inspection of the mailable module's function heads.
 the Delivery row is inserted.
 
 Since: 0.1.0.
+
+## §Delivery — idempotency_key + status + last_error (Phase 3 Plan 05)
+
+### New fields on `Mailglass.Outbound.Delivery` (I-01, Task 1)
+
+**`:idempotency_key`** — nullable text field added in Phase 3 Plan 05.
+
+- Shape: any binary. `Mailglass.Outbound.send/2` computes
+  `sha256(tenant_id | mailable | recipient | content_hash)` (D-15). Adopters may
+  supply any string; the partial UNIQUE index enforces uniqueness only when non-nil.
+- Partial UNIQUE index: `mailglass_deliveries_idempotency_key_unique_idx`
+  ON `(idempotency_key) WHERE idempotency_key IS NOT NULL`.
+  The WHERE predicate matches the `conflict_target` fragment
+  `"(idempotency_key) WHERE idempotency_key IS NOT NULL"` used by
+  `deliver_many/2` — character-for-character (Pitfall 1).
+
+**`:status`** — `Ecto.Enum` field with values `:queued | :sent | :dispatched | :failed | :suppressed`.
+Default: `:queued` (NOT NULL at the DB layer). This is the stable public snapshot adopters
+pattern-match on (ROADMAP success criterion 1: `{:ok, %Delivery{status: :sent}}`). It is
+distinct from `:last_event_type` (the most-recent ledger projection). They diverge at dispatch:
+Multi#2 sets `status: :sent` AND `last_event_type: :dispatched`.
+
+**`:last_error`** — `:map` column. Populated when `status: :failed` via `serialize_error/1`
+in `Mailglass.Outbound`. Shape at read time: `%{type: atom, message: binary, module: binary}`.
+Never a raw exception message string — adopters pattern-match on `:type`, never on `:message`.
+
+### Idempotency key computation (D-15)
+
+```
+sha256(tenant_id <> "|" <> inspect(mailable) <> "|" <> recipient <> "|" <> content_hash)
+```
+
+where `content_hash = sha256(html_body <> text_body)`. The SHA-256 output is hex-encoded
+(lowercase). Cross-tenant collision probability is ~2^-256 per batch (cryptographic-strength).
+
+Adopters using `deliver_many/2` who want deterministic replay safety should ensure the
+message content is stable across retries (no timestamp interpolation in the body).
+
+Since: 0.1.0.

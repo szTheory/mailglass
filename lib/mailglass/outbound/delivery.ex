@@ -53,6 +53,8 @@ defmodule Mailglass.Outbound.Delivery do
 
   @streams [:transactional, :operational, :bulk]
 
+  @status_values [:queued, :sent, :dispatched, :failed, :suppressed]
+
   @type t :: %__MODULE__{
           id: Ecto.UUID.t() | nil,
           tenant_id: String.t() | nil,
@@ -72,6 +74,9 @@ defmodule Mailglass.Outbound.Delivery do
           suppressed_at: DateTime.t() | nil,
           metadata: map(),
           lock_version: integer() | nil,
+          idempotency_key: String.t() | nil,
+          status: :queued | :sent | :dispatched | :failed | :suppressed | nil,
+          last_error: map() | nil,
           inserted_at: DateTime.t() | nil,
           updated_at: DateTime.t() | nil
         }
@@ -94,6 +99,25 @@ defmodule Mailglass.Outbound.Delivery do
     field(:suppressed_at, :utc_datetime_usec)
     field(:metadata, :map, default: %{})
     field(:lock_version, :integer, default: 1)
+
+    # Phase 3 Plan 05 — I-01: public-API snapshot fields.
+    # :status is the stable snapshot adopters pattern-match on
+    # (`%Delivery{status: :sent}` is ROADMAP success criterion 1).
+    # :last_event_type tracks the most recent ledger event.
+    # They diverge at dispatch: Multi#2 sets status: :sent but
+    # last_event_type: :dispatched.
+    field(:idempotency_key, :string)
+
+    field(:status, Ecto.Enum,
+      values: @status_values,
+      default: :queued
+    )
+
+    # Populated when status: :failed via serialize_error/1 in Outbound.
+    # Stored as :map — adopters receive a plain map at read time
+    # (%{type: atom, message: binary, module: binary}).
+    field(:last_error, :map)
+
     timestamps(type: :utc_datetime_usec)
   end
 
@@ -101,7 +125,7 @@ defmodule Mailglass.Outbound.Delivery do
   @cast @required ++
           ~w[recipient_domain provider provider_message_id terminal
              dispatched_at delivered_at bounced_at complained_at
-             suppressed_at metadata]a
+             suppressed_at metadata idempotency_key status last_error]a
 
   @doc """
   Builds a changeset for a new `%Delivery{}` from an attr map.
@@ -120,6 +144,7 @@ defmodule Mailglass.Outbound.Delivery do
     |> cast(attrs, @cast)
     |> validate_required(@required)
     |> put_recipient_domain()
+    |> unique_constraint(:idempotency_key, name: :mailglass_deliveries_idempotency_key_unique_idx)
   end
 
   # Denormalize the recipient domain on insert. Cheap, and saves a
