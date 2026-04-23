@@ -96,7 +96,8 @@
 - [x] **TRACK-01
 **: Open and click tracking are **off by default**. No tracking pixel injection or link rewriting unless `tracking: [opens: true, clicks: true]` is explicitly opted in per-mailable. (TS-15, D-08)
 - [ ] **TRACK-02**: Custom Credo check `NoTrackingOnAuthStream` raises at compile time when tracking is set on a mailable matching auth-context heuristics (function name contains `magic_link`, `password_reset`, `verify_email`, `confirm_account`). (MAIL-01 prevention)
-- [ ] **TRACK-03**: When tracking IS opted in, click rewriting uses `Phoenix.Token`-signed tokens with rotation support. Tracking host must be a separate subdomain. SSRF / open-redirect verified by integration test.
+- [x] **TRACK-03
+**: When tracking IS opted in, click rewriting uses `Phoenix.Token`-signed tokens with rotation support. Tracking host must be a separate subdomain. SSRF / open-redirect verified by integration test.
 
 ### Webhook Ingest
 

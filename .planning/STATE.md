@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-05-PLAN.md — Outbound facade hot path convergence
-last_updated: "2026-04-23T06:03:37.151Z"
+stopped_at: Completed 03-07-PLAN.md — Tracking infrastructure (Token+Rewriter+Plug+ConfigValidator)
+last_updated: "2026-04-23T06:20:05.707Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 19
-  completed_plans: 17
-  percent: 89
+  completed_plans: 18
+  percent: 95
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [█████████░] 89%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [█████████░] 89%
 | Phase 03 P03-03 | 17min | 3 tasks | 13 files |
 | Phase 03-transport-send-pipeline P03-04 | 25min | 2 tasks | 10 files |
 | Phase 03 P05 | 120 | 4 tasks | 14 files |
+| Phase 03 P03-07 | 13min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -145,6 +146,10 @@ Most load-bearing for Phase 1:
 - D-20 enforced: adapter call between Multi#1 and Multi#2, never inside transaction (Postgres pool starvation prevention)
 - D-21 enforced: Oban.insert composed into Ecto.Multi for atomic job+delivery; Task.Supervisor re-stamps tenancy via with_tenant
 - ASSUMED: deliver_many v0.1 is async-only; sync-batch fan-out deferred to v0.5
+- D-35 pattern a enforced: target_url in signed token payload, never as query param — open-redirect CVE class structurally unreachable
+- Token property tests use min_length: 5 for tenant_id/delivery_id — single-char strings can appear by chance in Base64-encoded Phoenix.Token output
+- ConfigValidator uses Code.ensure_loaded in test setup to force TrackingMailer into :code.all_loaded() — BEAM lazy-loads compiled .beam files
+- Plug swallows DB write errors with rescue — pixel/redirect ALWAYS succeed; event recording is best-effort
 
 ### Pending Todos
 
@@ -163,8 +168,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T06:03:37.143Z
-Stopped at: Completed 03-05-PLAN.md — Outbound facade hot path convergence
+Last session: 2026-04-23T06:20:05.699Z
+Stopped at: Completed 03-07-PLAN.md — Tracking infrastructure (Token+Rewriter+Plug+ConfigValidator)
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z
