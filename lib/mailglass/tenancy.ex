@@ -160,6 +160,47 @@ defmodule Mailglass.Tenancy do
     resolver().scope(queryable, context)
   end
 
+  @doc """
+  Dispatch to the configured tenancy module's `resolve_webhook_tenant/1`
+  callback (Phase 4 D-12 — the optional callback Plan 05 formally declares).
+
+  Returns `{:ok, tenant_id}` on success or `{:error, reason}` when the
+  adopter's tenancy module cannot map the verified webhook context to a
+  known tenant. `Mailglass.Webhook.Plug` rescues the latter as a 422 via
+  `%Mailglass.TenancyError{type: :webhook_tenant_unresolved}`.
+
+  The `context` map shape is documented in CONTEXT D-12:
+
+      %{
+        provider: :postmark | :sendgrid,
+        conn: Plug.Conn.t(),
+        raw_body: binary(),
+        headers: [{String.t(), String.t()}],
+        path_params: map(),
+        verified_payload: map() | nil
+      }
+
+  ## Fallback behaviour
+
+  Until Plan 05 ships the `SingleTenant.resolve_webhook_tenant/1` impl,
+  callers that don't implement the function receive `{:ok, "default"}`
+  from the shipped `SingleTenant` resolver. Adopter resolvers that do
+  not implement the callback also receive `{:ok, "default"}` — Plan 05
+  will tighten this to `{:error, :resolver_incomplete}` once the
+  `@optional_callback` declaration lands.
+  """
+  @doc since: "0.1.0"
+  @spec resolve_webhook_tenant(map()) :: {:ok, String.t()} | {:error, term()}
+  def resolve_webhook_tenant(context) when is_map(context) do
+    module = resolver()
+
+    if function_exported?(module, :resolve_webhook_tenant, 1) do
+      module.resolve_webhook_tenant(context)
+    else
+      {:ok, "default"}
+    end
+  end
+
   defp resolver do
     case Application.get_env(:mailglass, :tenancy) do
       nil -> Mailglass.Tenancy.SingleTenant

@@ -11,6 +11,14 @@ defmodule Mailglass.TenancyError do
   ## Types
 
   - `:unstamped` — no tenant_id present in the process dictionary
+  - `:webhook_tenant_unresolved` — the configured `Mailglass.Tenancy`
+    resolver returned `{:error, _}` from `resolve_webhook_tenant/1` for
+    an authenticated webhook request (Phase 4 D-14). Distinct from
+    `:unstamped` — the request is cryptographically verified, but the
+    adopter's tenancy module could not map it to a known tenant. Plan 05
+    formalizes the optional `@callback resolve_webhook_tenant/1` and the
+    `docs/api_stability.md §Tenancy` lock; Plan 04 Task 2 adds the atom
+    as a precondition for `Mailglass.Webhook.Plug`'s 422 rescue clause.
 
   Never retryable — the caller failed to establish tenant context.
 
@@ -20,13 +28,13 @@ defmodule Mailglass.TenancyError do
 
   @behaviour Mailglass.Error
 
-  @types [:unstamped]
+  @types [:unstamped, :webhook_tenant_unresolved]
 
   @derive {Jason.Encoder, only: [:type, :message, :context]}
   defexception [:type, :message, :cause, :context]
 
   @type t :: %__MODULE__{
-          type: :unstamped,
+          type: :unstamped | :webhook_tenant_unresolved,
           message: String.t(),
           cause: Exception.t() | nil,
           context: %{atom() => term()}
@@ -73,4 +81,9 @@ defmodule Mailglass.TenancyError do
     do:
       "Tenant context is not stamped on this process. " <>
         "Call Mailglass.Tenancy.put_current/1 in your on_mount/4 callback or test setup."
+
+  defp format_message(:webhook_tenant_unresolved, ctx) do
+    provider = ctx[:provider] || "unknown"
+    "Webhook tenant resolution failed: no tenant matches for provider=#{provider}"
+  end
 end
