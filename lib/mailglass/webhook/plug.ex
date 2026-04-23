@@ -96,7 +96,15 @@ defmodule Mailglass.Webhook.Plug do
   def call(conn, opts) do
     provider = Keyword.fetch!(opts, :provider)
 
-    Mailglass.Telemetry.span(
+    # `:telemetry.span/3` directly (per CONTEXT D-22 line 161 — "Plan 08
+    # ships the helpers; this plan calls them directly via
+    # `:telemetry.span/3` if helpers absent"). The inner function must
+    # return `{result, stop_metadata}` — the conn is the `result` and the
+    # enriched per-request metadata lands on the `:stop` event. Plan 08
+    # extracts `Mailglass.Webhook.Telemetry.ingest_span/2` wrapping the
+    # same primitive; refactor is a mechanical rename with no behavioural
+    # change.
+    :telemetry.span(
       [:mailglass, :webhook, :ingest],
       %{provider: provider, status: :pending},
       fn -> do_call(conn, provider, opts) end
@@ -104,6 +112,10 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   # ---- Internal — Plug call body ----
+  #
+  # Returns `{%Plug.Conn{}, stop_metadata}`. The `:telemetry.span/3` wrapper
+  # in `call/2` extracts the conn as the `result` and attaches the
+  # stop_metadata to the `:stop` event.
 
   defp do_call(conn, provider, _opts) do
     try do
