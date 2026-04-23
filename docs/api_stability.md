@@ -462,3 +462,65 @@ returns `:ok`. The event ledger is the durable source of truth; PubSub is the re
 - `Mailglass.Webhook.Plug` (Phase 4 — after webhook Multi commits)
 
 Since: 0.1.0.
+
+## §RateLimiter (Phase 3 Plan 03)
+
+### `Mailglass.RateLimiter.check/3`
+
+Locked signature: `@spec check(String.t(), String.t(), atom()) :: :ok | {:error, Mailglass.RateLimitError.t()}`
+
+**`:transactional` bypass invariant (D-24):** When `stream == :transactional`, `check/3` returns `:ok`
+immediately WITHOUT reading ETS. This is a reserved invariant — NOT a tunable. Password-reset,
+magic-link, and verify-email flows MUST NOT be throttled by bulk campaign saturation.
+
+**Token bucket math (D-23):** Continuous leaky-bucket refill at `per_minute / 60_000` tokens/ms.
+Default: 100 capacity @ 100/min. After an over-limit event (counter at -1), refill restores the
+bucket on the next call using `restore + elapsed_refill` delta, capped at `capacity`.
+
+**Configuration shape:**
+
+```elixir
+config :mailglass, :rate_limit,
+  default: [capacity: 100, per_minute: 100],
+  overrides: [
+    {{"tenant-id", "domain.com"}, [capacity: 500, per_minute: 500]}
+  ]
+```
+
+Missing `:rate_limit` key uses built-in defaults (`capacity: 100, per_minute: 100`).
+
+**Telemetry:** Single-emit `[:mailglass, :outbound, :rate_limit, :stop]`
+- Measurements: `%{duration_us: integer()}`
+- Metadata: `%{allowed: boolean(), tenant_id: String.t()}` — no recipient domain (D-31 PII whitelist)
+
+Since: 0.1.0.
+
+### `Mailglass.RateLimiter.Supervisor` (library-reserved singleton)
+
+Registered under `name: __MODULE__` (`Mailglass.RateLimiter.Supervisor`). Library-internal machinery.
+Started unconditionally by `Mailglass.Application` via `Code.ensure_loaded?/1` gate (I-08).
+
+Phase 6 `LINT-07 NoDefaultModuleNameSingleton` has an allowlist entry for this module.
+
+Since: 0.1.0.
+
+### `:mailglass_rate_limit` ETS table (library-reserved)
+
+Named ETS table owned by `Mailglass.RateLimiter.TableOwner`. Key shape: `{tenant_id, domain}`.
+Value shape: `{key, tokens :: integer(), last_refill_ms :: integer()}`.
+
+OTP 27 opts: `:set, :public, :named_table, read_concurrency: true, write_concurrency: :auto, decentralized_counters: true`.
+
+Adopters MUST NOT register a process or table under this name. Crash semantics (D-22): if
+`TableOwner` crashes, BEAM deletes the table; supervisor restarts and recreates it empty.
+Counter reset is acceptable — worst case is 1 minute of burst allowance.
+
+### `Mailglass.RateLimiter.TableOwner` (library-reserved singleton)
+
+Registered under `name: __MODULE__` (`Mailglass.RateLimiter.TableOwner`). Init-and-idle GenServer —
+no `handle_call/3`, `handle_cast/2`, or `handle_info/2`. All hot-path reads/writes happen directly
+from caller processes via `:ets.update_counter/4`.
+
+Phase 6 `LINT-07 NoDefaultModuleNameSingleton` has an allowlist entry for this module.
+
+Since: 0.1.0.

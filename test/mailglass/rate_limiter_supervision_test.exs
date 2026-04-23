@@ -10,7 +10,7 @@ defmodule Mailglass.RateLimiterSupervisionTest do
       sup_pid = Process.whereis(Supervisor)
       assert is_pid(sup_pid), "RateLimiter.Supervisor must be running"
 
-      children = Supervisor.which_children(sup_pid)
+      children = Elixir.Supervisor.which_children(sup_pid)
       assert length(children) == 1
 
       [{child_id, _child_pid, :worker, _modules}] = children
