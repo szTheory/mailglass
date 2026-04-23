@@ -75,14 +75,17 @@
 **: `Mailglass.Adapters.Fake` is a stateful, in-memory, time-advanceable adapter. Records sent messages, supports `trigger_event/2` to simulate `:bounced`/`:complained`/`:opened`/`:clicked`/`:unsubscribed` for an existing `message_id`, supports `advance_time/1`. State is JSON-compatible. **The Fake adapter is the merge-blocking release gate** — every PR must pass `mix test` against Fake. (TS-05, D-13, DF-11)
 - [x] **TRANS-03
 **: `Mailglass.Adapters.Swoosh` wraps any `Swoosh.Adapter` (Postmark, SendGrid, Mailgun, SES, Resend, SMTP) and normalizes errors into `%Mailglass.Error{}`. Adopters keep their existing Swoosh adapter config; mailglass adds the normalized error mapping + telemetry instrumentation.
-- [ ] **TRANS-04**: `Mailglass.Outbound.send/2` (synchronous), `Mailglass.Outbound.deliver/2` (alias for send/2 — Swoosh familiarity), `Mailglass.Outbound.deliver_later/2` (Oban if available, else `Task.Supervisor` with `Logger.warning`), `Mailglass.Outbound.deliver_many/2` (batch with partial-failure recovery via idempotency keys). All four return `{:ok, %Delivery{}}` or `{:error, %Mailglass.Error{}}`. Bang variants `deliver!/2` etc. raise. (TS-01)
+- [x] **TRANS-04
+**: `Mailglass.Outbound.send/2` (synchronous), `Mailglass.Outbound.deliver/2` (alias for send/2 — Swoosh familiarity), `Mailglass.Outbound.deliver_later/2` (Oban if available, else `Task.Supervisor` with `Logger.warning`), `Mailglass.Outbound.deliver_many/2` (batch with partial-failure recovery via idempotency keys). All four return `{:ok, %Delivery{}}` or `{:error, %Mailglass.Error{}}`. Bang variants `deliver!/2` etc. raise. (TS-01)
 
 ### Send Pipeline (composition)
 
-- [ ] **SEND-01**: Pre-send pipeline runs in order: `Tenancy.scope` → `Suppression.check_before_send` → `RateLimiter.check` → `Stream.policy_check` → render → `Multi(Delivery insert + Event(:queued) insert + Oban job enqueue)`. Each stage emits telemetry. Failures short-circuit with structured `Mailglass.Error`.
+- [x] **SEND-01
+**: Pre-send pipeline runs in order: `Tenancy.scope` → `Suppression.check_before_send` → `RateLimiter.check` → `Stream.policy_check` → render → `Multi(Delivery insert + Event(:queued) insert + Oban job enqueue)`. Each stage emits telemetry. Failures short-circuit with structured `Mailglass.Error`.
 - [x] **SEND-02
 **: `Mailglass.RateLimiter` is an ETS-backed token bucket per `(tenant_id, recipient_domain)`. Default per-domain limit is 100/min (configurable). Exceeded calls return `{:error, %RateLimitError{retry_after_ms: int}}`. ETS table is owned by a small supervisor child, NOT a serialization GenServer.
-- [ ] **SEND-03**: `Mailglass.Outbound.Worker` is the Oban worker that dispatches queued deliveries. Without Oban, `Task.Supervisor.async_nolink` is the fallback path with one `Logger.warning` emitted at boot.
+- [x] **SEND-03
+**: `Mailglass.Outbound.Worker` is the Oban worker that dispatches queued deliveries. Without Oban, `Task.Supervisor.async_nolink` is the fallback path with one `Logger.warning` emitted at boot.
 - [x] **SEND-04
 **: `Mailglass.Suppression.check_before_send/1` queries the suppression store before send. Returns `{:error, %SuppressedError{}}` if recipient is suppressed. `Mailglass.SuppressionStore` is a behaviour; default is the Ecto-backed impl.
 - [x] **SEND-05

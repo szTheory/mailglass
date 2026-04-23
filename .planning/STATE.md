@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 03-04-PLAN.md: Mailable behaviour + Tracking Guard"
-last_updated: "2026-04-23T04:40:40.932Z"
+stopped_at: Completed 03-05-PLAN.md — Outbound facade hot path convergence
+last_updated: "2026-04-23T06:03:37.151Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 19
-  completed_plans: 16
-  percent: 84
+  completed_plans: 17
+  percent: 89
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [████████░░] 84%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [████████░░] 84%
 | Phase 03 P02 | 19min | 3 tasks | 13 files |
 | Phase 03 P03-03 | 17min | 3 tasks | 13 files |
 | Phase 03-transport-send-pipeline P03-04 | 25min | 2 tasks | 10 files |
+| Phase 03 P05 | 120 | 4 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -141,6 +142,9 @@ Most load-bearing for Phase 1:
 - Injection uses import Swoosh.Email, except: [new: 0] to avoid conflict with injected new/0 in using modules
 - Tracking.fetch_from_mailable/1 calls Code.ensure_loaded/1 before function_exported? — async BEAM lazy loading: compiled .beam not loaded until first reference in process
 - render/3 default injects Mailglass.Renderer.render(msg) ignoring template + assigns (I-10 option b) — template resolution is adopter-owned via defoverridable
+- D-20 enforced: adapter call between Multi#1 and Multi#2, never inside transaction (Postgres pool starvation prevention)
+- D-21 enforced: Oban.insert composed into Ecto.Multi for atomic job+delivery; Task.Supervisor re-stamps tenancy via with_tenant
+- ASSUMED: deliver_many v0.1 is async-only; sync-batch fan-out deferred to v0.5
 
 ### Pending Todos
 
@@ -159,8 +163,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T04:40:40.921Z
-Stopped at: Completed 03-04-PLAN.md: Mailable behaviour + Tracking Guard
+Last session: 2026-04-23T06:03:37.143Z
+Stopped at: Completed 03-05-PLAN.md — Outbound facade hot path convergence
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z
