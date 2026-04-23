@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-status: planning
-stopped_at: Phase 3 context gathered
-last_updated: "2026-04-23T02:33:05.059Z"
-last_activity: 2026-04-22
+status: executing
+stopped_at: "Completed 03-01-PLAN.md: Phase 3 foundation primitives"
+last_updated: "2026-04-23T03:19:17.661Z"
+last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 19
-  completed_plans: 12
-  percent: 63
+  completed_plans: 13
+  percent: 68
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 02 — persistence-tenancy
+**Current focus:** Phase 03 — transport-send-pipeline
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-22
+Phase: 03 (transport-send-pipeline) — EXECUTING
+Plan: 2 of 7
+Status: Ready to execute
+Last activity: 2026-04-23
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 68%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [██████████] 100%
 | Phase 02 P04 | 6min | 2 tasks tasks | 6 files files |
 | Phase 02 P05 | 11min | 3 tasks | 6 files |
 | Phase 02 P06 | 62min | 3 tasks tasks | 6 files files |
+| Phase 03-transport-send-pipeline P01 | 30min | 3 tasks | 30 files |
 
 ## Accumulated Context
 
@@ -124,6 +125,10 @@ Most load-bearing for Phase 1:
 - Plan 02-06: Postgrex type cache goes stale after migration_test.exs drops + recreates the citext extension (new OID). Plan 06 mitigation: config/test.exs disconnect_on_error_codes: [:internal_error] + per-test probe_until_clean/5 helper in persistence_integration_test.exs. Killing Postgrex.TypeServer processes cascaded failures; the surgical probe+disconnect approach is sufficient. Architectural fix deferred to Phase 6 (4 candidates in deferred-items.md).
 - Plan 02-06: Mailglass.SuppressionStore behaviour ships record/2 (not record/1 as originally specified) for symmetry with check/2 and adopter opts seam. The impl declares def record(attrs, opts \ []) so callers that pass a single arg still work.
 - Plan 02-06: Projector last_event_type advances UNCONDITIONALLY on every event (not monotonic) — it is a latest-observation pointer, not a lifecycle fact. D-15 monotonicity applies only to timestamps and terminal. Test non-monotonic ordering: :opened BEFORE :delivered documents the behaviour.
+- Clock.impl/0 uses case/match on Application.get_env (not get_env/3 default) to handle explicit nil stored by test cleanup via Application.put_env
+- Events.append_multi function-form uses two Multi.run steps (not Ecto.Multi.insert/4) because Ecto 3.13.5 does not export Multi.insert/4
+- Application supervision tree consolidated in Plan 01 only (I-08); Plans 02+03 add supervisor modules without editing application.ex via Code.ensure_loaded?-gated maybe_add/3
+- Repo.multi/1 added as public wrapper over private repo/0 so Outbound (Plan 05) can compose Multis without accessing private internals (I-02)
 
 ### Pending Todos
 
@@ -142,8 +147,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 3 context gathered
-Resume file: --resume-file
+Last session: 2026-04-23T03:19:17.646Z
+Stopped at: Completed 03-01-PLAN.md: Phase 3 foundation primitives
+Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z

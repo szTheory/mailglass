@@ -79,7 +79,8 @@
 - [ ] **SEND-02**: `Mailglass.RateLimiter` is an ETS-backed token bucket per `(tenant_id, recipient_domain)`. Default per-domain limit is 100/min (configurable). Exceeded calls return `{:error, %RateLimitError{retry_after_ms: int}}`. ETS table is owned by a small supervisor child, NOT a serialization GenServer.
 - [ ] **SEND-03**: `Mailglass.Outbound.Worker` is the Oban worker that dispatches queued deliveries. Without Oban, `Task.Supervisor.async_nolink` is the fallback path with one `Logger.warning` emitted at boot.
 - [ ] **SEND-04**: `Mailglass.Suppression.check_before_send/1` queries the suppression store before send. Returns `{:error, %SuppressedError{}}` if recipient is suppressed. `Mailglass.SuppressionStore` is a behaviour; default is the Ecto-backed impl.
-- [ ] **SEND-05**: `Mailglass.PubSub.Topics` is a typed builder for topic strings (`mailglass:events:{tenant_id}`, `mailglass:events:{tenant_id}:{delivery_id}`). Custom Credo check `PrefixedPubSubTopics` enforces the `mailglass:` namespace.
+- [x] **SEND-05
+**: `Mailglass.PubSub.Topics` is a typed builder for topic strings (`mailglass:events:{tenant_id}`, `mailglass:events:{tenant_id}:{delivery_id}`). Custom Credo check `PrefixedPubSubTopics` enforces the `mailglass:` namespace.
 
 ### Tracking & Privacy
 
@@ -120,7 +121,8 @@
 - [x] **TEST-03**: StreamData property tests on: idempotency key collision (PERSIST-03), webhook signature verification (HOOK-03/HOOK-04), header construction (COMP-01
 ), multi-tenant scope leak (TENANT-03). All four are merge-blocking in CI.
 - [ ] **TEST-04**: Real-provider sandbox tests (Postmark, SendGrid sandbox modes) tagged `@tag :provider_live`. Excluded from PR CI. Daily cron + `workflow_dispatch` only. Failures notify, never block. (TEST-02 prevention)
-- [ ] **TEST-05**: `Mailglass.Clock` injection point for time-dependent code. Tests use `Mailglass.Clock.Frozen`; production uses `Mailglass.Clock.System`. (TEST-06 prevention)
+- [x] **TEST-05
+**: `Mailglass.Clock` injection point for time-dependent code. Tests use `Mailglass.Clock.Frozen`; production uses `Mailglass.Clock.System`. (TEST-06 prevention)
 
 ### Custom Credo (Lint-Time Domain Rules)
 
@@ -131,14 +133,16 @@
 - [x] **LINT-04**: `Mailglass.Credo.NoBareOptionalDepReference` — direct calls to `Oban.*`, `OpenTelemetry.*`, `Mjml.*` outside the `Mailglass.OptionalDeps.*` gateway modules are flagged. (CORE-06
  enforcement)
 - [ ] **LINT-05**: `Mailglass.Credo.NoOversizedUseInjection` — `use Mailglass.Mailable` injects ≤20 lines (counted via AST analysis). (LIB-01 prevention)
-- [ ] **LINT-06**: `Mailglass.Credo.PrefixedPubSubTopics` — every `Phoenix.PubSub.broadcast` topic in mailglass code is prefixed `mailglass:`. (SEND-05 enforcement, PHX-06 prevention)
+- [x] **LINT-06**: `Mailglass.Credo.PrefixedPubSubTopics` — every `Phoenix.PubSub.broadcast` topic in mailglass code is prefixed `mailglass:`. (SEND-05
+ enforcement, PHX-06 prevention)
 - [ ] **LINT-07**: `Mailglass.Credo.NoDefaultModuleNameSingleton` — flags any `GenServer.start_link(..., name: __MODULE__)` in mailglass library code. (LIB-05 prevention)
 - [ ] **LINT-08**: `Mailglass.Credo.NoCompileEnvOutsideConfig` — only `Mailglass.Config` may call `Application.compile_env*`. (LIB-07 prevention)
 - [ ] **LINT-09**: `Mailglass.Credo.NoOtherAppEnvReads` — mailglass code never reads other apps' Application env. (LIB-02 prevention)
 - [x] **LINT-10**: `Mailglass.Credo.TelemetryEventConvention` — every `:telemetry.execute/3` event matches the 4-level naming convention. (CORE-03
  enforcement)
 - [ ] **LINT-11**: `Mailglass.Credo.NoFullResponseInLogs` — `Logger.*` calls inspecting raw provider response payloads are flagged. (OBS-04 prevention)
-- [ ] **LINT-12**: `Mailglass.Credo.NoDirectDateTimeNow` — direct `DateTime.utc_now/0` is flagged outside `Mailglass.Clock`. (TEST-05 enforcement)
+- [x] **LINT-12**: `Mailglass.Credo.NoDirectDateTimeNow` — direct `DateTime.utc_now/0` is flagged outside `Mailglass.Clock`. (TEST-05
+ enforcement)
 
 ### Installer
 
