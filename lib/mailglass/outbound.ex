@@ -511,7 +511,7 @@ defmodule Mailglass.Outbound do
                  id: Ecto.UUID.generate(),
                  tenant_id: d.tenant_id,
                  delivery_id: d.id,
-                 type: "queued",
+                 type: :queued,
                  occurred_at: now,
                  idempotency_key: d.idempotency_key,
                  normalized_payload: %{},
@@ -555,7 +555,10 @@ defmodule Mailglass.Outbound do
   end
 
   defp enqueue_batch_jobs(deliveries) when is_list(deliveries) do
-    if Mailglass.OptionalDeps.Oban.available?() do
+    async_adapter = Application.get_env(:mailglass, :async_adapter, :oban)
+    use_oban = async_adapter != :task_supervisor and Mailglass.OptionalDeps.Oban.available?()
+
+    if use_oban do
       jobs =
         Enum.map(deliveries, fn %Delivery{id: id, tenant_id: t} ->
           Mailglass.Outbound.Worker.new(%{
