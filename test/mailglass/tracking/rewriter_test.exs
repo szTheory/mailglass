@@ -190,7 +190,46 @@ defmodule Mailglass.Tracking.RewriterTest do
     assert result.swoosh_email.html_body =~ "track.test"
   end
 
-  # Test 10: both opens + clicks together (composable)
+  # Test 10: :adapter_endpoint fallback path — Rewriter uses it when :tracking, endpoint: is nil
+  test "uses :adapter_endpoint when :tracking, endpoint: is not set (HI-02 fix)" do
+    prior_adapter = Application.get_env(:mailglass, :adapter_endpoint)
+
+    on_exit(fn ->
+      if prior_adapter do
+        Application.put_env(:mailglass, :adapter_endpoint, prior_adapter)
+      else
+        Application.delete_env(:mailglass, :adapter_endpoint)
+      end
+    end)
+
+    # Remove :endpoint from :tracking config, set :adapter_endpoint instead
+    Application.put_env(:mailglass, :tracking,
+      salts: ["rewriter-salt-1"],
+      max_age: 86_400,
+      host: @tracking_host,
+      scheme: "https"
+      # Note: no :endpoint key — resolution falls through to :adapter_endpoint
+    )
+
+    Application.put_env(:mailglass, :adapter_endpoint, "adapter-endpoint-secret")
+
+    html = "<html><body><p>Hello</p></body></html>"
+
+    # Must not raise — endpoint resolves via :adapter_endpoint
+    opts = [
+      flags: %{opens: true, clicks: false},
+      delivery_id: @delivery_id,
+      tenant_id: @tenant_id
+      # No :endpoint opt — falls back to Mailglass.Tracking.endpoint()
+    ]
+
+    result = Rewriter.rewrite(html, opts)
+
+    # Pixel must be injected — proves endpoint resolved successfully
+    assert result =~ ~r/<img[^>]+src="https:\/\/track\.test\/o\/[^"]+\.gif"/
+  end
+
+  # Test 11: both opens + clicks together (composable)
   test "rewrites both pixel and links when opens and clicks both true" do
     html = "<html><body><a href=\"https://example.com\">Link</a></body></html>"
     result = Rewriter.rewrite(html, base_opts(flags: %{opens: true, clicks: true}))
