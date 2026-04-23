@@ -27,7 +27,7 @@ defmodule Mailglass.MixProject do
 
   def application do
     [
-      extra_applications: [:logger, :crypto],
+      extra_applications: [:logger, :crypto, :public_key],
       mod: {Mailglass.Application, []}
     ]
   end
@@ -117,6 +117,16 @@ defmodule Mailglass.MixProject do
         "ecto.drop -r Mailglass.TestRepo --quiet",
         "ecto.create -r Mailglass.TestRepo --quiet",
         "test --warnings-as-errors --only phase_03_uat --exclude flaky",
+        "compile --no-optional-deps --warnings-as-errors"
+      ],
+      # Phase 4 UAT gate per INST-04. Wave 0 wires the alias; Wave 4 (Plan 09)
+      # ships the first `@tag :phase_04_uat` tests. Zero-test runs are a valid
+      # pass — the alias verifies the DB can be dropped/created and the
+      # no-optional-deps compile lane stays green.
+      "verify.phase_04": [
+        "ecto.drop -r Mailglass.TestRepo --quiet",
+        "ecto.create -r Mailglass.TestRepo --quiet",
+        "test --warnings-as-errors --only phase_04_uat --exclude flaky",
         "compile --no-optional-deps --warnings-as-errors"
       ],
       # Cold-start smoke — full suite from a fresh DB. Catches startup-order,

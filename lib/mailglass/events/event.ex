@@ -53,7 +53,14 @@ defmodule Mailglass.Events.Event do
     :unknown
   ]
 
-  @mailglass_internal_types [:dispatched, :suppressed]
+  # Per PROJECT D-14 amendment (Phase 4 CONTEXT spec_lock): `:reconciled` is
+  # the ONE mailglass-internal exception to the "Anymail taxonomy verbatim"
+  # lock. Emitted ONLY by `Mailglass.Webhook.Reconciler` when linking an
+  # orphan event (delivery_id: nil) to a late-committing Delivery row —
+  # never by provider mappers. Keeps the ledger a complete audit trail for
+  # "when did this orphan get linked?" without back-filling the original.
+  # Pitfall 8: do NOT add to `@anymail_event_types`.
+  @mailglass_internal_types [:dispatched, :suppressed, :reconciled]
   @event_types @anymail_event_types ++ @mailglass_internal_types
 
   @reject_reasons [:invalid, :bounced, :timed_out, :blocked, :spam, :unsubscribed, :other]

@@ -125,6 +125,24 @@ defmodule Mailglass.Repo do
   @spec get(Ecto.Queryable.t(), term(), keyword()) :: struct() | nil
   def get(queryable, id, opts \\ []), do: repo().get(queryable, id, opts)
 
+  @doc """
+  Delegates to the host Repo's `query!/2`. Raw passthrough — no SQLSTATE
+  translation.
+
+  Intentionally does NOT rescue `%Postgrex.Error{}`: the Phase 4 webhook
+  ingest Multi (Plan 06) calls `query!/2` from inside `Repo.transact/1`
+  to run `SET LOCAL statement_timeout = '2s'` + `SET LOCAL lock_timeout
+  = '500ms'` (D-29). Those `SET LOCAL` statements never produce SQLSTATE
+  45A01 — the immutability trigger fires only on UPDATE/DELETE against
+  `mailglass_events` rows — so translation would add latency for no gain
+  and muddle the semantics. Callers that need the trigger's translated
+  error use `insert/2`, `update/2`, `delete/2`, `transact/1`, or
+  `multi/1` instead.
+  """
+  @doc since: "0.1.0"
+  @spec query!(String.t(), [term()]) :: %Postgrex.Result{}
+  def query!(sql, params \\ []), do: repo().query!(sql, params)
+
   # Resolves the configured repo module. Raises `Mailglass.ConfigError` with
   # type `:missing` and a `%{key: :repo}` context when unset. Phase 2+
   # callers (Events.append, Suppression.record, Delivery.upsert) rely on
