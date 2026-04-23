@@ -114,6 +114,14 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
   # ECDSA verify per RESEARCH §Pattern 2 + CONTEXT D-03.
   # Uses OTP 27 `:public_key.der_decode/2` (NOT `:pem_decode/1` — the
   # SendGrid dashboard ships raw DER without PEM framing; see Pitfall 1).
+  #
+  # OTP 27 note: `:public_key.der_decode(:SubjectPublicKeyInfo, _)`
+  # already decodes the `AlgorithmIdentifier`'s params slot. For EC
+  # public keys, element 3 of the `AlgorithmIdentifier` tuple is the
+  # already-materialized `{:namedCurve, oid}` — NOT raw DER bytes that
+  # need a second `der_decode(:EcpkParameters, _)` pass. Forcing that
+  # second decode raises inside `:public_key` (observed in OTP 27 /
+  # public_key 1.20.2). We use the params tuple directly.
   defp verify_ecdsa!(raw_body, sig_b64, timestamp, public_key_b64) do
     try do
       decoded = Base.decode64!(public_key_b64)
@@ -121,8 +129,7 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
       {:SubjectPublicKeyInfo, alg_id, pk_bits} =
         :public_key.der_decode(:SubjectPublicKeyInfo, decoded)
 
-      {:AlgorithmIdentifier, _oid, ec_params_der} = alg_id
-      ecc_params = :public_key.der_decode(:EcpkParameters, ec_params_der)
+      {:AlgorithmIdentifier, _oid, ecc_params} = alg_id
       pk = {{:ECPoint, pk_bits}, ecc_params}
 
       signed_payload = timestamp <> raw_body
@@ -141,9 +148,12 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
       # (wrong-signature-for-right-shape key) or `:malformed_key` (the
       # supplied public_key blob is not a valid base64 SPKI DER).
       #
-      # The SignatureError re-raise is caught here but re-raised below;
-      # we must preserve its original atom (`:bad_signature` from the
-      # `false` branch of the case above).
+      # Re-raising a SignatureError that was raised inside the try block
+      # (e.g., the `false` branch of the case above) would otherwise be
+      # reclassified — preserve it with a guard.
+      e in [SignatureError] ->
+        reraise e, __STACKTRACE__
+
       e in [ArgumentError, MatchError, FunctionClauseError, ErlangError] ->
         type = classify_rescue(e)
         reraise SignatureError.new(type, provider: :sendgrid, cause: e), __STACKTRACE__
