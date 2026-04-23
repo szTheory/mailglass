@@ -1226,27 +1226,33 @@ Per PITFALLS.md and CONTEXT.md <decisions>.
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All five open questions were resolved by the planner during Phase 3 planning. Verdicts below cite the plan that implements each resolution.
 
 1. **`idempotency_key` column on `mailglass_deliveries`?** (Assumption A1)
    - What we know: D-15 computes `sha256(tenant_id <> mailable <> recipient <> content_hash)` for each Delivery.
    - What's unclear: Column or `metadata.idempotency_key` jsonb?
    - Recommendation: Dedicated nullable column with partial UNIQUE index. Cheaper + simpler than GIN on jsonb.
+   - **RESOLVED:** Dedicated nullable `:idempotency_key` column + partial UNIQUE index (`WHERE idempotency_key IS NOT NULL`). Implemented in **Plan 05 Task 1** (migration `00000000000002_add_idempotency_key_to_deliveries.exs` + schema field on `Mailglass.Outbound.Delivery`).
 
 2. **`deliver_many/2` v0.1 scope: async only, or sync + async?** (Assumption A6)
    - What we know: CONTEXT.md D-15 specifies batch Multi shape + idempotency replay.
    - What's unclear: Whether the sync-batch adapter-fan-out path ships at v0.1.
    - Recommendation: Ship async-only at v0.1; sync-batch is a v0.5 add. Document in `api_stability.md` §Outbound.
+   - **RESOLVED:** Async-only at v0.1; sync-batch fan-out deferred to v0.5. Implemented in **Plan 05 Task 4** (`deliver_many/2` composes `Oban.insert_all` or `Task.Supervisor` fan-out; partial-failure rows returned with `status: :failed`). Documented in `docs/api_stability.md` §Outbound.
 
 3. **`Mailglass.Error.BatchFailed` as new struct?** (Assumption A7)
    - What we know: D-16 says `deliver_many!/2` raises `%Mailglass.Error.BatchFailed{failures: [%Delivery{}]}`.
    - What's unclear: New struct module or reuse existing `SendError`?
    - Recommendation: New struct. Matches the "distinct shape → distinct struct" discipline from Phase 1 D-01..D-09.
+   - **RESOLVED:** New struct `%Mailglass.Error.BatchFailed{}` with atom types `[:partial_failure, :all_failed]` and top-level `:failures` field. Implemented in **Plan 01 Task 2** (`lib/mailglass/errors/batch_failed.ex`). Raised by `Mailglass.Outbound.deliver_many!/2` (Plan 05 Task 4).
 
 4. **Runtime auth-stream guard function-name regex (D-38) — exactly what does "function name" mean?**
    - What we know: D-38 says `recovered from Message.mailable_function` + regex `magic_link|password_reset|verify_email|confirm_account`.
    - What's unclear: Is `mailable_function` a new field on `%Message{}`, or is it extracted from `__mailable__` reflection at send time?
    - Recommendation: Add `mailable_function :: atom() | nil` to `%Message{}` struct; populated by the injected `def welcome(...)` in the mailable (the macro captures `__ENV__.function` via `@before_compile`). Documented in `api_stability.md`.
+   - **RESOLVED:** Add `:mailable_function :: atom() | nil` to `%Message{}`. The `use Mailglass.Mailable` macro injects a `@before_compile` hook that emits `__mailglass_meta__/0` (function-name reflection) AND each per-function builder populates `:mailable_function` on the `%Message{}` it constructs. Implemented in **Plan 01 Task 2** (Message struct field) + **Plan 04 Task 1** (Mailable macro + @before_compile). Guard lives in `Mailglass.Tracking.Guard.assert_safe!/1` (Plan 04).
 
 5. **RateLimiter configuration granularity — how do adopters override per `(tenant_id, recipient_domain)` limits?**
    - What we know: D-23 default is `capacity = 100, refill_per_ms = 100/60_000`.
@@ -1261,6 +1267,7 @@ Per PITFALLS.md and CONTEXT.md <decisions>.
        ]
      ```
      Planner's discretion.
+   - **RESOLVED:** Explicit `default:` keyword + `overrides:` list of `{{tenant_id, domain}, opts}` tuples. Config schema locked in **Plan 01 Task 3** (`lib/mailglass/config.ex` `@schema`); RateLimiter consumption implemented in **Plan 03 Task 1** (`lib/mailglass/rate_limiter.ex`).
 
 ---
 
