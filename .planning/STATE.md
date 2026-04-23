@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-webhook-ingest/04-01-PLAN.md (Wave 0 foundations)
-last_updated: "2026-04-23T20:36:16.504Z"
-last_activity: 2026-04-23 -- Phase --phase execution started
+stopped_at: Completed 04-webhook-ingest/04-02-PLAN.md (Wave 1A Provider + CachingBodyReader + Postmark)
+last_updated: "2026-04-23T20:56:12.692Z"
+last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 33
-  completed_plans: 25
-  percent: 76
+  completed_plans: 26
+  percent: 79
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 04 (webhook-ingest) — EXECUTING
-Plan: 2 of 9 (04-01 complete; 04-02 next)
-Status: Executing Phase 04 — Wave 0 complete, moving into Wave 1
-Last activity: 2026-04-23 — 04-01-PLAN.md complete (Wave 0 foundations)
+Plan: 3 of 9 (04-01 complete; 04-02 next)
+Status: Ready to execute
+Last activity: 2026-04-23
 
-Progress: [████████░░] 76%
+Progress: [████████░░] 79%
 
 ## Performance Metrics
 
@@ -80,6 +80,7 @@ Progress: [████████░░] 76%
 | Phase 03 P08 | 15min | 2 tasks | 3 files |
 | Phase 03 P12 | 9min | 3 tasks | 6 files |
 | Phase 04-webhook-ingest P01 | 25min | 2 tasks | 30 files |
+| Phase 04 P02 | 13min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -174,6 +175,10 @@ Most load-bearing for Phase 1:
 - :crypto.sign(:ecdsa, :sha256, _, [priv, :secp256r1]) chosen over :public_key.sign/3 for SendGrid fixture signing — the {:ECPrivateKey, _, _, _, :asn1_NOVALUE, :asn1_NOVALUE} 6-tuple record shape is OTP 27-specific and fragile. :public_key.pem_entry_encode(:SubjectPublicKeyInfo, {{:ECPoint, pub}, params}) is the canonical path for constructing the SPKI DER the production verifier decodes
 - :reconciled is in @mailglass_internal_types (NOT @anymail_event_types) per D-14 amendment; emitted only by Mailglass.Webhook.Reconciler, never by provider mappers. PROJECT D-14 verbatim-Anymail lock is amended to document this one exception
 - Fake.trigger_event/3 stores opts[:metadata] in Event.metadata (was Event.raw_payload — a naming inversion). V02 migration dropped mailglass_events.raw_payload column per D-15; raw bytes live in mailglass_webhook_events. Reconciler.extract/2 fallback is now :metadata -> :normalized_payload (was :raw_payload -> :metadata)
+- Plan 04-02: Provider identity (:provider + :provider_event_id) lives in Event.metadata with STRING keys, not as schema columns — ledger stays append-only pristine; Plan 04 Ingest reads metadata keys to populate mailglass_webhook_events UNIQUE columns
+- Plan 04-02: SignatureError @types extended to 10 atoms (7 D-21 new + 3 Phase 1 legacy retained); lib/mailglass/error.ex + error_test.exs still reference legacy names so removal deferred to Plan 05's api_stability.md formalization
+- Plan 04-02: ConfigError gets TWO new atoms (:webhook_verification_key_missing for missing provider secret + :webhook_caching_body_reader_missing for plug-wiring gap) per revision B4 — distinct atoms enable adopter-side Grafana alert differentiation
+- Plan 04-02: Postmark synthetic provider_event_id format = '\#{RecordType}:\#{ID_or_MessageID}:\#{first_timestamp}' — Postmark has no canonical single-field event ID; this construction makes (provider, provider_event_id) UNIQUE deterministic per logical event for replay safety
 
 ### Pending Todos
 
@@ -192,8 +197,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T20:36:16.485Z
-Stopped at: Completed 04-webhook-ingest/04-01-PLAN.md (Wave 0 foundations)
+Last session: 2026-04-23T20:56:12.674Z
+Stopped at: Completed 04-webhook-ingest/04-02-PLAN.md (Wave 1A Provider + CachingBodyReader + Postmark)
 Resume file: None
 
 **Planned Phase:** 04 (webhook-ingest) — 9 plans — 2026-04-23T20:02:05.795Z
