@@ -333,11 +333,59 @@ Since: 0.1.0.
 
 Since: 0.1.0.
 
-## Adapter Return Shape
+## §Adapter (Phase 3)
 
-`Mailglass.Adapter.deliver/2` returns:
+### `Mailglass.Adapter` behaviour
 
-- `{:ok, %{message_id: String.t(), provider_response: term()}}` on success
-- `{:error, Mailglass.Error.t()}` on failure (any of the six structs above)
+Shipped in Phase 3 Plan 02 (TRANS-01). Single-callback behaviour every mailglass adapter implements.
 
-Since: 0.1.0 (stub — adapter behaviour implementation lands Phase 3).
+**Locked callback signature:**
+
+```elixir
+@callback deliver(Mailglass.Message.t(), keyword()) ::
+            {:ok, %{message_id: String.t(), provider_response: term()}} | {:error, Mailglass.Error.t()}
+```
+
+**Return shape contract:**
+
+- `{:ok, %{message_id: String.t(), provider_response: term()}}` on success.
+  `:message_id` is the adapter's canonical identifier — Phase 4 webhook ingest uses it to join
+  incoming events to the `%Delivery{}` row via `provider_message_id`.
+- `{:error, Mailglass.Error.t()}` on failure. Return struct must be a subtype of `%Mailglass.Error{}`
+  — callers pattern-match by struct, never by message string. `%Mailglass.SendError{type: :adapter_failure}`
+  is the canonical wrap for downstream provider errors.
+
+Changes to the callback signature are semver-breaking. Adopters implement custom adapters by
+conforming to this behaviour.
+
+**In-repo implementations:**
+
+- `Mailglass.Adapters.Fake` (TRANS-02) — in-memory, merge-blocking release gate (D-13).
+- `Mailglass.Adapters.Swoosh` (TRANS-03) — wraps any `Swoosh.Adapter`, normalizes errors.
+
+Since: 0.1.0.
+
+### `Mailglass.Adapters.Swoosh`
+
+Bridges to any `Swoosh.Adapter` (Postmark, SendGrid, Mailgun, SES, Resend, SMTP).
+
+**Error mapping table:**
+
+| Swoosh error shape | Mapped `SendError` `:type` | Context keys |
+|--------------------|---------------------------|--------------|
+| `{:api_error, status, body}` | `:adapter_failure` | `provider_status`, `body_preview` (200 bytes), `provider_module`, `reason_class` |
+| `{:error, :timeout}` | `:adapter_failure` | `provider_module`, `reason_class: :transport` |
+| `{:error, {:tls_alert, _}}` | `:adapter_failure` | `provider_module`, `reason_class: :transport` |
+| `{:error, other}` | `:adapter_failure` | `provider_module`, `reason_class: :other` |
+
+**`reason_class` atoms:** `:server_error` (5xx), `:client_error` (4xx), `:unknown` (other status),
+`:transport` (timeout/TLS), `:other` (unclassified).
+
+**PII policy:** The 8 forbidden keys (`:to, :from, :body, :html_body, :subject, :headers, :recipient, :email`)
+NEVER appear in error context. `body_preview` is a 200-byte head of the provider response body —
+provider-emitted strings only, never user-supplied content. Phase 6 LINT-02 enforces.
+
+Does NOT call `Swoosh.Mailer.deliver/1` — LINT-01 forbidden. Calls `Swoosh.Adapter.deliver/2`
+(the behaviour callback) directly. Pure: no DB, no PubSub, no GenServer.
+
+Since: 0.1.0.
