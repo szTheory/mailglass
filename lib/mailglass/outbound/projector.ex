@@ -189,5 +189,17 @@ defmodule Mailglass.Outbound.Projector do
       )
 
       :ok
+  catch
+    # ME-04: GenServer.call/3 inside Phoenix.PubSub.broadcast/3 exits when the
+    # PubSub server is stopped (e.g. application shutdown, supervisor restart).
+    # Delivery is already committed before broadcast — exit must not kill the caller.
+    :exit, reason ->
+      require Logger
+
+      Logger.debug(
+        "[mailglass] PubSub broadcast exited (non-fatal): #{inspect(reason)}"
+      )
+
+      :ok
   end
 end

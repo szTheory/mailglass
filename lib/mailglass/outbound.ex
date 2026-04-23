@@ -278,7 +278,7 @@ defmodule Mailglass.Outbound do
       Projector.broadcast_delivery_updated(updated, :dispatched, %{
         tenant_id: updated.tenant_id,
         delivery_id: updated.id,
-        provider: inspect(Map.get(dispatch_result.provider_response, :adapter, :unknown))
+        provider: provider_tag(dispatch_result.provider_response)
       })
 
       {:ok, updated}
@@ -969,4 +969,11 @@ defmodule Mailglass.Outbound do
       idempotency_key: ik
     }
   end
+
+  # ME-05: Safe provider tag extraction from adapter dispatch result.
+  # provider_response is adapter-defined (term()) — must not assume map shape.
+  # Custom adapters may return tuples, atoms, strings, or nil in provider_response.
+  # Map.get/3 on a non-map term raises BadMapError (T-3-12-03).
+  defp provider_tag(%{adapter: a}), do: inspect(a)
+  defp provider_tag(_), do: "unknown"
 end
