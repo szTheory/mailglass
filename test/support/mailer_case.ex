@@ -22,8 +22,21 @@ defmodule Mailglass.MailerCase do
     `Application.put_env/3` setting (global); concurrent async tests would
     stomp each other (I-12). Tests WITHOUT the `:oban` tag never touch
     Oban.Testing and remain fully async-safe.
+    **Requires `oban_jobs` table:** run `mix ecto.create` or `mix verify.phase_03`
+    (which includes `ecto.drop + ecto.create`) before running `oban: :manual` tests.
   - `@tag async: false` — disable async (auto-enforced when `set_mailglass_global`
     is used OR when `@tag oban: ...` is present)
+
+  ## Async tests and deliver_later/2
+
+  `MailerCase` supports `async: true` (the default). For async tests that exercise
+  `deliver_later/2`, pass `async_adapter: :task_supervisor` as a `deliver_later/2`
+  option rather than relying on the global Application env:
+
+      Outbound.deliver_later(msg, async_adapter: :task_supervisor)
+
+  This is already supported at `outbound.ex` via `Keyword.get(opts, :async_adapter)`.
+  Global Application env mutation is reserved for `async: false` tests only (HI-01 fix).
 
   ## Global mode opt-out
 
@@ -92,6 +105,11 @@ defmodule Mailglass.MailerCase do
       )
     end
 
+    # Snapshot the pre-setup :async_adapter value for faithful restore in on_exit (HI-01 fix).
+    # If we unconditionally wrote :oban on restore, adopters who boot with :task_supervisor
+    # would have it silently overwritten after every test. Snapshot before any mutation below.
+    prior_async_adapter = Application.get_env(:mailglass, :async_adapter)
+
     # Async delivery mode (D-08, I-12).
     #
     # Default (no @tag oban:): use :task_supervisor so deliver_later/2 runs
@@ -131,7 +149,16 @@ defmodule Mailglass.MailerCase do
         # (start_owner! sets shared: not async? = shared: true). For async: true
         # tests, deliver_later is not expected to work across processes — use
         # Fake.allow/2 for cross-process cases.
-        Application.put_env(:mailglass, :async_adapter, :task_supervisor)
+        #
+        # HI-01 fix: Only mutate global Application env for async: false tests.
+        # Async tests running concurrently race on this global write. Async tests
+        # that exercise deliver_later/2 must pass `async_adapter: :task_supervisor`
+        # as a deliver_later/2 opt for per-call isolation (outbound.ex:331 already
+        # honours Keyword.get(opts, :async_adapter)).
+        unless async? do
+          Application.put_env(:mailglass, :async_adapter, :task_supervisor)
+        end
+
         Mailglass.Adapters.Fake.set_shared(self())
     end
 
@@ -139,7 +166,14 @@ defmodule Mailglass.MailerCase do
       Mailglass.Adapters.Fake.checkin()
       Mailglass.Adapters.Fake.set_shared(nil)
       Mailglass.Clock.Frozen.unfreeze()
-      Application.put_env(:mailglass, :async_adapter, :oban)
+      # HI-01 fix: restore :async_adapter to whatever it was before this test ran,
+      # not unconditionally to :oban. Adopters who boot with :task_supervisor would
+      # otherwise have it silently overwritten after every test's on_exit.
+      if prior_async_adapter != nil do
+        Application.put_env(:mailglass, :async_adapter, prior_async_adapter)
+      else
+        Application.delete_env(:mailglass, :async_adapter)
+      end
       Ecto.Adapters.SQL.Sandbox.stop_owner(pid)
     end)
 
