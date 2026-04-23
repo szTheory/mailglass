@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered (7-area deep research synthesis)
-last_updated: "2026-04-23T20:04:14.109Z"
+stopped_at: Completed 04-webhook-ingest/04-01-PLAN.md (Wave 0 foundations)
+last_updated: "2026-04-23T20:36:16.504Z"
 last_activity: 2026-04-23 -- Phase --phase execution started
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 33
-  completed_plans: 24
-  percent: 73
+  completed_plans: 25
+  percent: 76
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase --phase — 04
+**Current focus:** Phase 04 — webhook-ingest
 
 ## Current Position
 
-Phase: --phase (04) — EXECUTING
-Plan: 1 of --name
-Status: Executing Phase --phase
-Last activity: 2026-04-23 -- Phase --phase execution started
+Phase: 04 (webhook-ingest) — EXECUTING
+Plan: 2 of 9 (04-01 complete; 04-02 next)
+Status: Executing Phase 04 — Wave 0 complete, moving into Wave 1
+Last activity: 2026-04-23 — 04-01-PLAN.md complete (Wave 0 foundations)
 
-Progress: [██████████] 100%
+Progress: [████████░░] 76%
 
 ## Performance Metrics
 
@@ -79,6 +79,7 @@ Progress: [██████████] 100%
 | Phase 03-transport-send-pipeline P11 | 50min | 1 tasks | 3 files |
 | Phase 03 P08 | 15min | 2 tasks | 3 files |
 | Phase 03 P12 | 9min | 3 tasks | 6 files |
+| Phase 04-webhook-ingest P01 | 25min | 2 tasks | 30 files |
 
 ## Accumulated Context
 
@@ -169,6 +170,10 @@ Most load-bearing for Phase 1:
 - config :mailglass, adapter_endpoint: used for test endpoint resolution — NimbleOptions :tracking schema does not include :endpoint key; Tracking.endpoint/0 falls back to :adapter_endpoint which reaches the same token key material
 - provider_tag/1 uses two pattern-match clauses (map with :adapter key vs wildcard) rather than is_map guard — cleaner intent signal and directly documents the contract that only map-shaped responses with an :adapter key contribute a meaningful tag
 - ME-03 nested try/rescue: outer rescues ArgumentError on Elixir-prefixed atom falls through to bare mod_str path; inner rescues ArgumentError on bare atom — each returns distinct :why context key (:module_not_loaded vs :atom_not_found)
+- V02 migration ships as additive evolution on V01 — NOT amending V01; per-wrapper down-version scoping (Mailglass.Migration.down(version: N-1)) prevents interleaved plain-Ecto migrations from being stranded when multiple Mailglass.Migration wrappers share the adopter priv/repo/migrations dir
+- :crypto.sign(:ecdsa, :sha256, _, [priv, :secp256r1]) chosen over :public_key.sign/3 for SendGrid fixture signing — the {:ECPrivateKey, _, _, _, :asn1_NOVALUE, :asn1_NOVALUE} 6-tuple record shape is OTP 27-specific and fragile. :public_key.pem_entry_encode(:SubjectPublicKeyInfo, {{:ECPoint, pub}, params}) is the canonical path for constructing the SPKI DER the production verifier decodes
+- :reconciled is in @mailglass_internal_types (NOT @anymail_event_types) per D-14 amendment; emitted only by Mailglass.Webhook.Reconciler, never by provider mappers. PROJECT D-14 verbatim-Anymail lock is amended to document this one exception
+- Fake.trigger_event/3 stores opts[:metadata] in Event.metadata (was Event.raw_payload — a naming inversion). V02 migration dropped mailglass_events.raw_payload column per D-15; raw bytes live in mailglass_webhook_events. Reconciler.extract/2 fallback is now :metadata -> :normalized_payload (was :raw_payload -> :metadata)
 
 ### Pending Todos
 
@@ -187,8 +192,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 4 context gathered (7-area deep research synthesis)
-Resume file: --resume-file
+Last session: 2026-04-23T20:36:16.485Z
+Stopped at: Completed 04-webhook-ingest/04-01-PLAN.md (Wave 0 foundations)
+Resume file: None
 
 **Planned Phase:** 04 (webhook-ingest) — 9 plans — 2026-04-23T20:02:05.795Z

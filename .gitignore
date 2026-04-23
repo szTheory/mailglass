@@ -16,3 +16,6 @@ erl_crash.dump
 # macOS
 .DS_Store
 **/.DS_Store
+
+# Claude Code runtime (local tooling — no project artifacts)
+/.claude/

@@ -101,13 +101,20 @@
 
 ### Webhook Ingest
 
-- [ ] **HOOK-01**: `Mailglass.Webhook.CachingBodyReader` preserves the raw request bytes for HMAC verification while still allowing JSON parsing downstream. Plugged into the adopter's endpoint before any body parsing.
-- [ ] **HOOK-02**: `Mailglass.Webhook.Plug` is a single mountable plug that routes per-provider via path scope (`/webhooks/postmark`, `/webhooks/sendgrid`). Returns 200 OK on signature failure replays (idempotent). Returns 401 + raises `Mailglass.SignatureError` on actual signature mismatch (no recovery path). (HOOK-04, D-08 prevention)
-- [ ] **HOOK-03**: `Mailglass.Webhook.Providers.Postmark` verifies via Basic Auth + IP allowlist. Normalizes Postmark events to the Anymail taxonomy (TS-11).
-- [ ] **HOOK-04**: `Mailglass.Webhook.Providers.SendGrid` verifies via ECDSA signature using the `:crypto` OTP module. Normalizes SendGrid events to the Anymail taxonomy.
-- [ ] **HOOK-05**: Webhook events normalized to Anymail event taxonomy verbatim: `:queued, :sent, :rejected, :failed, :bounced, :deferred, :delivered, :autoresponded, :opened, :clicked, :complained, :unsubscribed, :subscribed, :unknown` with `reject_reason ∈ :invalid | :bounced | :timed_out | :blocked | :spam | :unsubscribed | :other | nil`. Per-provider mapper exhaustive case (no silent `_ -> :unknown` fallback without `Logger.warning`). (TS-11, D-14, MAIL-08 prevention)
-- [ ] **HOOK-06**: Webhook ingest is one `Ecto.Multi`: insert Event row (with `idempotency_key`) `on_conflict: :nothing` + update Delivery projection columns (`last_event_type`, `last_event_at`, `terminal?`, type-specific timestamps). Broadcast via `PubSub` to admin LiveView topic. Orphan webhooks (no matching `delivery_id`) insert with `delivery_id: nil` + `needs_reconciliation: true`. (TS-11, MAIL-03 prevention)
-- [ ] **HOOK-07**: StreamData property test: generate 1000 sequences of `(webhook_event, replay_count_1..10)`. Assert applying any sequence converges to the same final state as applying each event once. (TEST-03)
+- [x] **HOOK-01
+**: `Mailglass.Webhook.CachingBodyReader` preserves the raw request bytes for HMAC verification while still allowing JSON parsing downstream. Plugged into the adopter's endpoint before any body parsing.
+- [x] **HOOK-02
+**: `Mailglass.Webhook.Plug` is a single mountable plug that routes per-provider via path scope (`/webhooks/postmark`, `/webhooks/sendgrid`). Returns 200 OK on signature failure replays (idempotent). Returns 401 + raises `Mailglass.SignatureError` on actual signature mismatch (no recovery path). (HOOK-04, D-08 prevention)
+- [x] **HOOK-03
+**: `Mailglass.Webhook.Providers.Postmark` verifies via Basic Auth + IP allowlist. Normalizes Postmark events to the Anymail taxonomy (TS-11).
+- [x] **HOOK-04
+**: `Mailglass.Webhook.Providers.SendGrid` verifies via ECDSA signature using the `:crypto` OTP module. Normalizes SendGrid events to the Anymail taxonomy.
+- [x] **HOOK-05
+**: Webhook events normalized to Anymail event taxonomy verbatim: `:queued, :sent, :rejected, :failed, :bounced, :deferred, :delivered, :autoresponded, :opened, :clicked, :complained, :unsubscribed, :subscribed, :unknown` with `reject_reason ∈ :invalid | :bounced | :timed_out | :blocked | :spam | :unsubscribed | :other | nil`. Per-provider mapper exhaustive case (no silent `_ -> :unknown` fallback without `Logger.warning`). (TS-11, D-14, MAIL-08 prevention)
+- [x] **HOOK-06
+**: Webhook ingest is one `Ecto.Multi`: insert Event row (with `idempotency_key`) `on_conflict: :nothing` + update Delivery projection columns (`last_event_type`, `last_event_at`, `terminal?`, type-specific timestamps). Broadcast via `PubSub` to admin LiveView topic. Orphan webhooks (no matching `delivery_id`) insert with `delivery_id: nil` + `needs_reconciliation: true`. (TS-11, MAIL-03 prevention)
+- [x] **HOOK-07
+**: StreamData property test: generate 1000 sequences of `(webhook_event, replay_count_1..10)`. Assert applying any sequence converges to the same final state as applying each event once. (TEST-03)
 
 ### Compliance (v0.1 floor)
 
