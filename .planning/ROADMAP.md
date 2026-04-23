@@ -88,11 +88,11 @@ Plans:
 - [x] 03-05-PLAN.md — Wave 4: Mailglass.Outbound facade (send/deliver/deliver_later/deliver_many/bang variants) + Mailglass.Outbound.Worker (Oban conditional-compile) + Task.Supervisor fallback + idempotency-key migration + top-level Mailglass defdelegates
 - [x] 03-07-PLAN.md — Wave 4: Mailglass.Tracking.Token (Phoenix.Token + salts rotation), Mailglass.Tracking.Rewriter (Floki pixel injection + link rewriting), Mailglass.Tracking.Plug (GET /o/:token.gif + GET /c/:token with D-39 no-enumeration), Mailglass.Tracking.ConfigValidator (boot-time host assertion D-32)
 - [x] 03-06-PLAN.md — Wave 5: Mailglass.TestAssertions (4 matcher styles + PubSub-backed delivered/bounced) + Mailglass.MailerCase (async: true default) + WebhookCase + AdminCase stubs + phase-wide UAT gate (test/mailglass/core_send_integration_test.exs tagged :phase_03_uat) + mix verify.phase_03 sign-off
-- [ ] 03-09-PLAN.md — [GAP] Wave 5: Tracking endpoint config unification — single Tracking.endpoint/0 function shared by Rewriter and Plug; raise on missing config (HI-02 fix)
-- [ ] 03-10-PLAN.md — [GAP] Wave 5: MailerCase async_adapter env isolation — guard Application.put_env with unless async?; snapshot/restore in on_exit (HI-01 fix) + Oban :manual support
-- [ ] 03-11-PLAN.md — [GAP] Wave 5: citext OID cache fix — confirm disconnect_on_error_codes + test_helper probe (Phase 2 infrastructure flake)
-- [ ] 03-08-PLAN.md — [GAP] Wave 6: Wire Tracking.rewrite_if_enabled/1 into Outbound hot paths (do_send, do_deliver_later, preflight_single) + positive tracking UAT test (TRACK-03 closure, depends_on ["09"])
-- [ ] 03-12-PLAN.md — [GAP] Wave 6: Medium-severity cleanup — ME-01 Events Clock, ME-02 BatchFailed simplification, ME-03 to_existing_atom, ME-04 safe_broadcast exit catch, ME-05 provider_tag pattern match (depends_on ["08"])
+- [x] 03-09-PLAN.md — [GAP] Wave 5: Tracking endpoint config unification — single Tracking.endpoint/0 function shared by Rewriter and Plug; raise on missing config (HI-02 fix)
+- [x] 03-10-PLAN.md — [GAP] Wave 5: MailerCase async_adapter env isolation — guard Application.put_env with unless async?; snapshot/restore in on_exit (HI-01 fix) + Oban :manual support
+- [x] 03-11-PLAN.md — [GAP] Wave 5: citext OID cache fix — confirm disconnect_on_error_codes + test_helper probe (Phase 2 infrastructure flake)
+- [x] 03-08-PLAN.md — [GAP] Wave 6: Wire Tracking.rewrite_if_enabled/1 into Outbound hot paths (do_send, do_deliver_later, preflight_single) + positive tracking UAT test (TRACK-03 closure, depends_on ["09"])
+- [x] 03-12-PLAN.md — [GAP] Wave 6: Medium-severity cleanup — ME-01 Events Clock, ME-02 BatchFailed simplification, ME-03 to_existing_atom, ME-04 safe_broadcast exit catch, ME-05 provider_tag pattern match (depends_on ["08"])
 **UI hint**: no
 
 ### Phase 4: Webhook Ingest
