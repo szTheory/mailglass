@@ -7,6 +7,23 @@ defmodule Mailglass.EventsTest do
   alias Mailglass.Events.Event
   alias Mailglass.TestRepo
 
+  describe "append/1 — Clock integration" do
+    test "normalize/1 uses Mailglass.Clock — frozen clock produces frozen occurred_at" do
+      frozen = ~U[2026-01-01 00:00:00.000000Z]
+      Mailglass.Clock.Frozen.freeze(frozen)
+
+      on_exit(fn -> Mailglass.Clock.Frozen.unfreeze() end)
+
+      {:ok, event} =
+        Events.append(%{
+          type: :queued,
+          delivery_id: Ecto.UUID.generate()
+        })
+
+      assert event.occurred_at == frozen
+    end
+  end
+
   describe "append/1" do
     test "inserts an event and returns {:ok, %Event{}}" do
       assert {:ok, %Event{id: id, type: :queued, tenant_id: "test-tenant"}} =

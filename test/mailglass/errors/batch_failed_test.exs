@@ -80,4 +80,28 @@ defmodule Mailglass.Error.BatchFailedTest do
       assert BatchFailed.retryable?(err) == true
     end
   end
+
+  describe "format_message/2 — ME-02 regression" do
+    test "format_message :partial_failure uses failed_count from context" do
+      err = BatchFailed.new(:partial_failure, context: %{count: 5, failed_count: 2})
+      assert err.message == "Batch send partially failed: 2 of 5 deliveries failed"
+    end
+
+    test "format_message :partial_failure with failures in context does not raise FunctionClauseError" do
+      # ME-02 regression: the old code did `length(ctx[:failures] || []) |> then(fn 0 -> ... end)`.
+      # When ctx[:failures] is a non-empty list, length/1 returns 1+ and the fn 0 -> clause
+      # never matches, causing a FunctionClauseError. The fix uses ctx[:failed_count] directly.
+      err =
+        BatchFailed.new(:partial_failure,
+          context: %{count: 3, failed_count: 1, failures: [%{id: "abc"}]}
+        )
+
+      assert err.message == "Batch send partially failed: 1 of 3 deliveries failed"
+    end
+
+    test "format_message :all_failed uses count from context" do
+      err = BatchFailed.new(:all_failed, context: %{count: 4})
+      assert err.message == "Batch send failed: all 4 deliveries failed"
+    end
+  end
 end
