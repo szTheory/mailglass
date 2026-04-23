@@ -20,17 +20,19 @@ defmodule Mailglass.Tracking do
   on `deliver/2` — but they CANNOT enable it at runtime. This keeps compile-time
   AST inspection load-bearing.
 
-  ## What this module does NOT ship at v0.1
-
-  - Pixel injection + link rewriting — Plan 06 (`Mailglass.Tracking.Rewriter`)
-  - Phoenix.Token sign/verify — Plan 06 (`Mailglass.Tracking.Token`)
-  - Plug endpoint for GIF + click redirect — Plan 06 (`Mailglass.Tracking.Plug`)
-
   ## `enabled?/1` helper
 
   Returns a `%{opens: boolean, clicks: boolean}` map for a given mailable
-  module. Used by Plan 06's Rewriter to decide whether to inject pixel / rewrite
-  links, and by the Guard to decide whether the auth-stream heuristic applies.
+  module. Used by `Mailglass.Tracking.Rewriter` to decide whether to inject
+  pixel / rewrite links, and by the Guard to decide whether the auth-stream
+  heuristic applies.
+
+  ## `rewrite_if_enabled/1` post-render hook
+
+  Reads tracking flags for the message's mailable and calls
+  `Mailglass.Tracking.Rewriter.rewrite/2` when any flag is true. Returns
+  the message unchanged when tracking is disabled (D-10). Never touches
+  `text_body` (D-36).
   """
 
   @type tracking_flags :: %{opens: boolean(), clicks: boolean()}
@@ -56,6 +58,42 @@ defmodule Mailglass.Tracking do
   def enabled?(opts) when is_list(opts) do
     mailable = Keyword.fetch!(opts, :mailable)
     fetch_from_mailable(mailable)
+  end
+
+  @doc """
+  Post-render hook: calls `Mailglass.Tracking.Rewriter.rewrite/2` when the
+  mailable has any tracking flag enabled. Called by the Outbound pipeline
+  (or adopters invoking manually) after `Mailglass.Renderer.render/1`.
+
+  When no flags are set, returns the message unchanged. Never touches
+  `text_body` (D-36).
+
+  `delivery_id` is read from `message.metadata[:delivery_id]`; falls back
+  to `"pre-delivery"` when not yet stamped (render-preview mode).
+  """
+  @doc since: "0.1.0"
+  @spec rewrite_if_enabled(Mailglass.Message.t()) :: Mailglass.Message.t()
+  def rewrite_if_enabled(%Mailglass.Message{mailable: nil} = msg), do: msg
+
+  def rewrite_if_enabled(%Mailglass.Message{mailable: mod} = msg) when is_atom(mod) do
+    flags = enabled?(mailable: mod)
+
+    if flags.opens or flags.clicks do
+      delivery_id = Map.get(msg.metadata || %{}, :delivery_id, "pre-delivery")
+      tenant_id = msg.tenant_id || "default"
+
+      new_html =
+        Mailglass.Tracking.Rewriter.rewrite(
+          msg.swoosh_email.html_body || "",
+          flags: flags,
+          delivery_id: delivery_id,
+          tenant_id: tenant_id
+        )
+
+      Mailglass.Message.update_swoosh(msg, &Swoosh.Email.html_body(&1, new_html))
+    else
+      msg
+    end
   end
 
   defp fetch_from_mailable(mailable) when is_atom(mailable) do

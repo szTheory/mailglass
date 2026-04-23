@@ -950,3 +950,111 @@ or `{:error, %Error{}}`. Never `%Oban.Job{}`. Oban types never leak into the pub
 `[ASSUMED — Plan 05 Task 4 decision]`
 
 Since: 0.1.0.
+
+## §Tracking.Token (Phase 3 Plan 07)
+
+### `Mailglass.Tracking.Token`
+
+Shipped in Phase 3 Plan 07 (TRACK-03, D-33..D-35). Phoenix.Token-signed tokens for
+open-pixel and click-redirect URLs.
+
+**Token shapes:**
+
+- Open pixel: `{:open, delivery_id, tenant_id}`
+- Click redirect: `{:click, delivery_id, tenant_id, target_url}`
+
+**Locked function signatures:**
+
+```elixir
+@spec sign_open(endpoint :: atom() | binary(), delivery_id :: String.t(), tenant_id :: String.t()) :: binary()
+@spec verify_open(endpoint :: atom() | binary(), binary()) ::
+        {:ok, %{delivery_id: String.t(), tenant_id: String.t()}} | :error
+@spec sign_click(endpoint :: atom() | binary(), String.t(), String.t(), String.t()) :: binary()
+@spec verify_click(endpoint :: atom() | binary(), binary()) ::
+        {:ok, %{delivery_id: String.t(), tenant_id: String.t(), target_url: String.t()}} | :error
+```
+
+**Open-redirect prevention (D-35 pattern a):** `target_url` lives INSIDE the signed token
+payload, never as a query parameter. The CVE class is structurally unreachable — there is
+no parameter to tamper with. A tampered token fails Phoenix.Token HMAC → `:error`.
+
+**Scheme validation at sign time:** `sign_click/4` raises `%ConfigError{type: :invalid,
+context: %{rejected_url: url, reason: :scheme}}` when `target_url` scheme is not
+`http` or `https`. Defense-in-depth re-check at `verify_click/2` time (T-3-07-10).
+
+**Salts rotation (D-33):** `config :mailglass, :tracking, salts: ["q2-2026", "q1-2026"]`.
+HEAD of list signs; ALL salts in list are tried at verify (early-return iteration).
+Rotating = prepend new salt; remove old salt to invalidate tokens signed with it.
+
+**`tenant_id` in payload only (D-39):** Never exposed in URL path or query string.
+Corporate proxy logs, referrer headers, and shared-link screenshots cannot leak it.
+
+**Token max_age:** Default 2 years (`2 * 365 * 86_400` seconds). Configurable via
+`config :mailglass, :tracking, max_age: seconds`.
+
+**Sign opts:** `[key_iterations: 1000, key_length: 32, digest: :sha256]` — matches
+Phoenix.Token security recommendations.
+
+Since: 0.1.0.
+
+## §Tracking.Rewriter (Phase 3 Plan 07)
+
+### `Mailglass.Tracking.Rewriter`
+
+Shipped in Phase 3 Plan 07 (TRACK-03, D-36..D-37). Pure Floki-based HTML transform
+for open-pixel injection and click link rewriting.
+
+**Locked function signature:**
+
+```elixir
+@spec rewrite(html_body :: String.t(), opts :: keyword()) :: String.t()
+```
+
+**Options:**
+- `:flags` — `%{opens: boolean, clicks: boolean}` (required)
+- `:delivery_id` — delivery UUID for token encoding (required)
+- `:tenant_id` — tenant scope for token encoding (required)
+- `:endpoint` — Phoenix.Token endpoint or secret binary (optional, falls back to config)
+
+**Skip list (D-36):** The following hrefs are NEVER rewritten:
+- `mailto:`, `tel:`, `sms:`, `data:`, `javascript:` schemes
+- `#fragment` hrefs (same-page anchors)
+- Scheme-less relative URLs (e.g. `/signup`, `../path`)
+- `<a data-mg-notrack>` — attribute stripped from final HTML, href preserved
+- `<a>` tags inside `<head>` (prefetch, canonical)
+- List-Unsubscribe URL (v0.5 hook reserved — not yet implemented)
+
+**Pixel markup (D-37):**
+```html
+<img src="https://track.host/o/<token>.gif" width="1" height="1" alt=""
+     style="display:block;width:1px;height:1px;border:0;" />
+```
+Position: LAST child of `<body>`. Missing `<body>` → appended at document root.
+`alt=""` prevents screen-reader announcement.
+
+**Plaintext body invariant:** NEVER modified. The rewriter only operates on
+`html_body`. `text_body` is passed through untouched (D-36).
+
+**Floki parse failure:** When `Floki.parse_document/1` returns `{:error, _}`, the
+original HTML string is returned unchanged and a `Logger.debug` crumb is emitted.
+
+Since: 0.1.0.
+
+### `Mailglass.Tracking.rewrite_if_enabled/1`
+
+```elixir
+@spec rewrite_if_enabled(Mailglass.Message.t()) :: Mailglass.Message.t()
+```
+
+Facade function that dispatches on `Mailglass.Tracking.enabled?/1` flags and calls
+`Mailglass.Tracking.Rewriter.rewrite/2` when any flag is true. Returns the message
+unchanged when tracking is disabled (D-10). Never touches `text_body` (D-36).
+
+`delivery_id` is read from `message.metadata[:delivery_id]`; falls back to
+`"pre-delivery"` when not yet stamped (render-preview mode).
+
+**Gap-closure note:** `Mailglass.Outbound.send/2` (Plan 05) does not yet call
+`rewrite_if_enabled/1`. Adopters can invoke it manually between `Renderer.render/1`
+and `deliver/2`. Wiring into the Outbound pipeline is a gap-closure item for Phase 3.1.
+
+Since: 0.1.0.

@@ -30,16 +30,17 @@ defmodule Mailglass.Tracking.RewriterTest do
     :ok
   end
 
-  defp base_opts(overrides \\ []) do
-    Keyword.merge(
-      [
-        flags: %{opens: false, clicks: false},
-        delivery_id: @delivery_id,
-        tenant_id: @tenant_id,
-        endpoint: @endpoint
-      ],
-      overrides
-    )
+  defp base_opts do
+    [
+      flags: %{opens: false, clicks: false},
+      delivery_id: @delivery_id,
+      tenant_id: @tenant_id,
+      endpoint: @endpoint
+    ]
+  end
+
+  defp base_opts(overrides) do
+    Keyword.merge(base_opts(), overrides)
   end
 
   # Test 1: opens: true injects pixel as last child of <body>
