@@ -832,47 +832,20 @@ defmodule Mailglass.Outbound do
          )}
 
       mod_str when is_binary(mod_str) ->
-        mod_atom = String.to_atom("Elixir." <> mod_str)
+        # ME-03: Both resolution paths use String.to_existing_atom/1.
+        # String.to_atom/1 on a DB-sourced value is an atom-table exhaustion vector (T-3-12-01).
+        # Primary path: try "Elixir." <> mod_str (the canonical Elixir module atom form).
+        # Fallback path: try mod_str bare (for modules stored without the Elixir. prefix).
+        try do
+          mod_atom = String.to_existing_atom("Elixir." <> mod_str)
 
-        cond do
-          Code.ensure_loaded?(mod_atom) ->
-            email =
-              Swoosh.Email.new()
-              |> Swoosh.Email.to(delivery.recipient)
-              |> Swoosh.Email.subject(get_in(delivery.metadata, ["subject"]) || "")
-              |> Swoosh.Email.html_body(get_in(delivery.metadata, ["rendered_html"]))
-              |> Swoosh.Email.text_body(get_in(delivery.metadata, ["rendered_text"]))
-
-            {:ok,
-             %Message{
-               swoosh_email: email,
-               mailable: mod_atom,
-               tenant_id: delivery.tenant_id,
-               stream: delivery.stream,
-               metadata: delivery.metadata || %{}
-             }}
-
-          true ->
-            # Module stored as full qualified name (e.g. "Mailglass.FakeFixtures.TestMailer")
-            # Try without the Elixir. prefix
+          if Code.ensure_loaded?(mod_atom) do
+            {:ok, build_rehydrated_message(delivery, mod_atom)}
+          else
+            # Atom exists in atom table but module not loaded — try bare mod_str path.
             try do
               mod = String.to_existing_atom(mod_str)
-
-              email =
-                Swoosh.Email.new()
-                |> Swoosh.Email.to(delivery.recipient)
-                |> Swoosh.Email.subject(get_in(delivery.metadata, ["subject"]) || "")
-                |> Swoosh.Email.html_body(get_in(delivery.metadata, ["rendered_html"]))
-                |> Swoosh.Email.text_body(get_in(delivery.metadata, ["rendered_text"]))
-
-              {:ok,
-               %Message{
-                 swoosh_email: email,
-                 mailable: mod,
-                 tenant_id: delivery.tenant_id,
-                 stream: delivery.stream,
-                 metadata: delivery.metadata || %{}
-               }}
+              {:ok, build_rehydrated_message(delivery, mod)}
             rescue
               ArgumentError ->
                 {:error,
@@ -881,12 +854,52 @@ defmodule Mailglass.Outbound do
                      reason_class: :mailable_unresolvable,
                      delivery_id: delivery.id,
                      mailable: mod_str,
-                     why: :atom_not_loaded
+                     why: :module_not_loaded
+                   }
+                 )}
+            end
+          end
+        rescue
+          ArgumentError ->
+            # "Elixir." <> mod_str atom not in atom table — try the bare mod_str path
+            # (e.g. "Mailglass.FakeFixtures.TestMailer" stored without Elixir. prefix).
+            try do
+              mod = String.to_existing_atom(mod_str)
+              {:ok, build_rehydrated_message(delivery, mod)}
+            rescue
+              ArgumentError ->
+                {:error,
+                 Mailglass.SendError.new(:adapter_failure,
+                   context: %{
+                     reason_class: :mailable_unresolvable,
+                     delivery_id: delivery.id,
+                     mailable: mod_str,
+                     why: :atom_not_found
                    }
                  )}
             end
         end
     end
+  end
+
+  # Reconstruct a minimal %Message{} from persisted delivery metadata.
+  # Extracted to avoid duplicating Swoosh.Email assembly across both
+  # rehydration paths (ME-03 restructure).
+  defp build_rehydrated_message(%Delivery{} = delivery, mod_atom) do
+    email =
+      Swoosh.Email.new()
+      |> Swoosh.Email.to(delivery.recipient)
+      |> Swoosh.Email.subject(get_in(delivery.metadata, ["subject"]) || "")
+      |> Swoosh.Email.html_body(get_in(delivery.metadata, ["rendered_html"]))
+      |> Swoosh.Email.text_body(get_in(delivery.metadata, ["rendered_text"]))
+
+    %Message{
+      swoosh_email: email,
+      mailable: mod_atom,
+      tenant_id: delivery.tenant_id,
+      stream: delivery.stream,
+      metadata: delivery.metadata || %{}
+    }
   end
 
   defp resolve_adapter(opts) do
