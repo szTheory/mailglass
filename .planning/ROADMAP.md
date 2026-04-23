@@ -79,7 +79,15 @@ Plans:
   4. Open and click tracking are off by default — no tracking pixel injection or link rewriting unless `tracking: [opens: true, clicks: true]` is explicitly set per-mailable (the `NoTrackingOnAuthStream` Credo enforcement lands in Phase 6).
   5. `Mailglass.RateLimiter` enforces a per-`(tenant_id, recipient_domain)` ETS-backed token bucket; exceeding the configured limit returns `{:error, %RateLimitError{retry_after_ms: int}}` and the `mix verify.core_send` alias runs the full pipeline against Fake.
 **Pitfalls guarded against**: LIB-01 (≤20-line `use` macro — Credo check lands Phase 6), LIB-03 (return-type stability locked in `api_stability.md`), LIB-04 (tuple returns for adapters), LIB-05 (no `name: __MODULE__` singletons; rate limiter is small supervisor child owning ETS), LIB-06 (renderer + Swoosh bridge are pure), MAIL-01 (tracking off by default), TEST-01 (Fake first, Mox not used for transport), TEST-06 (`Mailglass.Clock` injection point).
-**Plans**: TBD
+**Plans**: 7 plans
+Plans:
+- [ ] 03-01-PLAN.md — Wave 1 foundations: Clock, PubSub.Topics, Mailglass.PubSub name, BatchFailed + ConfigError atom extensions, Message.mailable_function field, Telemetry span helpers, supervision tree (PubSub + Task.Supervisor) + Config schema + mix verify.phase_03 alias + Wave 0 fixtures
+- [ ] 03-02-PLAN.md — Wave 2: Mailglass.Adapter behaviour + Mailglass.Adapters.Fake (merge-blocking release gate per D-13) + Mailglass.Adapters.Swoosh wrapper + Projector.broadcast_delivery_updated/3
+- [ ] 03-03-PLAN.md — Wave 3: Preflight stages — RateLimiter (supervisor-owned ETS token bucket, :transactional bypass D-24), Suppression facade + SuppressionStore.ETS impl, Stream.policy_check no-op seam
+- [ ] 03-04-PLAN.md — Wave 3: Mailglass.Mailable behaviour + `use` macro (≤15-line injection), Mailglass.Tracking facade + Mailglass.Tracking.Guard runtime auth-stream enforcement (D-38)
+- [ ] 03-05-PLAN.md — Wave 4: Mailglass.Outbound facade (send/deliver/deliver_later/deliver_many/bang variants) + Mailglass.Outbound.Worker (Oban conditional-compile) + Task.Supervisor fallback + idempotency-key migration + top-level Mailglass defdelegates
+- [ ] 03-07-PLAN.md — Wave 4: Mailglass.Tracking.Token (Phoenix.Token + salts rotation), Mailglass.Tracking.Rewriter (Floki pixel injection + link rewriting), Mailglass.Tracking.Plug (GET /o/:token.gif + GET /c/:token with D-39 no-enumeration), Mailglass.Tracking.ConfigValidator (boot-time host assertion D-32)
+- [ ] 03-06-PLAN.md — Wave 5: Mailglass.TestAssertions (4 matcher styles + PubSub-backed delivered/bounced) + Mailglass.MailerCase (async: true default) + WebhookCase + AdminCase stubs + phase-wide UAT gate (test/mailglass/core_send_integration_test.exs tagged :phase_03_uat) + mix verify.phase_03 sign-off
 **UI hint**: no
 
 ### Phase 4: Webhook Ingest
@@ -172,7 +180,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | 2026-04-22 |
 | 2. Persistence + Tenancy | 6/6 | Complete | 2026-04-22 |
-| 3. Transport + Send Pipeline | 0/TBD | Not started | - |
+| 3. Transport + Send Pipeline | 0/7 | Not started | - |
 | 4. Webhook Ingest | 0/TBD | Not started | - |
 | 5. Dev Preview LiveView | 0/TBD | Not started | - |
 | 6. Custom Credo + Boundary | 0/TBD | Not started | - |
