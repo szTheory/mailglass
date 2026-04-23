@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-webhook-ingest/04-02-PLAN.md (Wave 1A Provider + CachingBodyReader + Postmark)
-last_updated: "2026-04-23T20:56:12.692Z"
+stopped_at: "Completed 04-webhook-ingest/04-03-PLAN.md (Wave 1B SendGrid verifier + normalizer + :sendgrid config)"
+last_updated: "2026-04-23T21:10:01.086Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 33
-  completed_plans: 26
-  percent: 79
+  completed_plans: 27
+  percent: 82
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 04 (webhook-ingest) — EXECUTING
-Plan: 3 of 9 (04-01 complete; 04-02 next)
+Plan: 4 of 9 (04-01 complete; 04-02 next)
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [████████░░] 79%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
@@ -81,6 +81,7 @@ Progress: [████████░░] 79%
 | Phase 03 P12 | 9min | 3 tasks | 6 files |
 | Phase 04-webhook-ingest P01 | 25min | 2 tasks | 30 files |
 | Phase 04 P02 | 13min | 3 tasks | 10 files |
+| Phase 04 P03 | 9min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -179,6 +180,10 @@ Most load-bearing for Phase 1:
 - Plan 04-02: SignatureError @types extended to 10 atoms (7 D-21 new + 3 Phase 1 legacy retained); lib/mailglass/error.ex + error_test.exs still reference legacy names so removal deferred to Plan 05's api_stability.md formalization
 - Plan 04-02: ConfigError gets TWO new atoms (:webhook_verification_key_missing for missing provider secret + :webhook_caching_body_reader_missing for plug-wiring gap) per revision B4 — distinct atoms enable adopter-side Grafana alert differentiation
 - Plan 04-02: Postmark synthetic provider_event_id format = '\#{RecordType}:\#{ID_or_MessageID}:\#{first_timestamp}' — Postmark has no canonical single-field event ID; this construction makes (provider, provider_event_id) UNIQUE deterministic per logical event for replay safety
+- Plan 04-03: OTP 27 :public_key.der_decode(:SubjectPublicKeyInfo, _) returns already-decoded {:namedCurve, oid} in the AlgorithmIdentifier params slot — NO second der_decode(:EcpkParameters, _) pass needed. CONTEXT D-03's verbatim recipe was written against an earlier OTP release; Plan 04-03 corrects this for OTP 27.3.x / public_key 1.20.2.
+- Plan 04-03: Explicit e in [SignatureError] rescue clause BEFORE the catch-all in verify_ecdsa! — the false-branch :bad_signature raise is preserved (not reclassified by the [ArgumentError, MatchError, FunctionClauseError, ErlangError] rescue). Defense-in-depth against future catch-all expansion.
+- Plan 04-03: Bad base64 on either public_key blob or signature maps to :malformed_key (not :bad_signature). Base.decode64! ArgumentError does not distinguish the source from the message; :malformed_key is the safer disclosure (never leaks 'your signature was wrong' to forgeries). Tests accept err.type in [:bad_signature, :malformed_key] for bit-flipped inputs.
+- Plan 04-03: SendGrid processed -> :queued Anymail mapping (not :sent). SendGrid 'processed' means 'accepted for later delivery' which is the literal Anymail :queued semantic; :sent implies SMTP handshake completion (Anymail's :delivered).
 
 ### Pending Todos
 
@@ -197,8 +202,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T20:56:12.674Z
-Stopped at: Completed 04-webhook-ingest/04-02-PLAN.md (Wave 1A Provider + CachingBodyReader + Postmark)
+Last session: 2026-04-23T21:10:01.077Z
+Stopped at: Completed 04-webhook-ingest/04-03-PLAN.md (Wave 1B SendGrid verifier + normalizer + :sendgrid config)
 Resume file: None
 
 **Planned Phase:** 04 (webhook-ingest) — 9 plans — 2026-04-23T20:02:05.795Z
