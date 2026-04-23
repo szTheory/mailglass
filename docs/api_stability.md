@@ -620,3 +620,25 @@ Returns `""` when the `to` list is empty (store will return `:not_suppressed`).
 address, no email headers. (T-3-03-02 mitigation.)
 
 Since: 0.1.0.
+
+## §Stream (Phase 3 Plan 03)
+
+### `Mailglass.Stream.policy_check/1`
+
+Locked signature: `@spec policy_check(Mailglass.Message.t()) :: :ok`
+
+**No-op at v0.1.** Returns `:ok` for all valid streams (`:transactional | :operational | :bulk`).
+Pattern-matches on `%Mailglass.Message{}` only — passing a raw map raises `FunctionClauseError`.
+
+**v0.5 DELIV-02 contract stability:** The v0.5 implementation swaps this no-op in place.
+The function signature, telemetry event name, and return type are stable across the swap.
+Callers in `Mailglass.Outbound.send/2` do not change. Do not extend this module from adopter
+code — the implementation contract is internal.
+
+**Telemetry:** Single-emit `[:mailglass, :outbound, :stream_policy, :stop]`
+- Measurements: `%{duration_us: integer()}`
+- Metadata: `%{tenant_id: String.t(), stream: atom()}` — no PII (D-31 whitelist)
+
+Stream atom is enum-narrow (one of three known values) — not recipient-identifying.
+
+Since: 0.1.0.

@@ -35,8 +35,12 @@ defmodule Mailglass.StreamTest do
     end
 
     test "pattern-matches only on %Mailglass.Message{} — raw map raises FunctionClauseError" do
+      # Use apply/3 to bypass Elixir 1.18+ static type-narrowing warning.
+      # The type checker correctly flags the mismatch at compile time; at runtime
+      # the function clause still raises. Same pattern as struct-discrimination
+      # tests documented in STATE.md decisions.
       assert_raise FunctionClauseError, fn ->
-        Stream.policy_check(%{stream: :bulk})
+        apply(Stream, :policy_check, [%{stream: :bulk}])
       end
     end
   end
