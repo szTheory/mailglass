@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-06-PLAN.md — TestAssertions + MailerCase + Phase 3 UAT gate (human-verify signed off)
-last_updated: "2026-04-23T14:22:28.113Z"
+status: executing
+stopped_at: Completed 03-09-PLAN.md — Tracking endpoint unification (HI-02 closed)
+last_updated: "2026-04-23T15:20:40.926Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
-  completed_phases: 3
-  total_plans: 19
-  completed_plans: 19
-  percent: 100
+  completed_phases: 2
+  total_plans: 24
+  completed_plans: 20
+  percent: 83
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
-Plan: 7 of 7
-Status: Phase complete — ready for verification
+Plan: 2 of 12
+Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [██████████] 100%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -73,6 +73,7 @@ Progress: [██████████] 100%
 | Phase 03 P05 | 120 | 4 tasks | 14 files |
 | Phase 03 P03-07 | 13min | 3 tasks | 12 files |
 | Phase 03-transport-send-pipeline P03-06 | 45min | 4 tasks | 10 files |
+| Phase 03-transport-send-pipeline P09 | 2min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -154,6 +155,8 @@ Most load-bearing for Phase 1:
 - I-12 guard: tests using @tag oban: ... raise immediately when async: true — Oban.Testing mode is Application.put_env (global); concurrent async tests would stomp each other
 - set_mailglass_global/1 is the ONE path to global Fake mode — mirrors set_swoosh_global, enforces async: false
 - assert_mail_sent/1 macro dispatches on AST shape at compile time: {:%{}, _, _} = struct pattern, {:fn, _, _} = predicate, list = keyword, empty = bare presence check
+- Tracking.endpoint/0 raises :tracking_endpoint_missing rather than falling back to a hard-coded literal — mirrors ConfigValidator pattern and eliminates silent token verification failures
+- Resolution order: :tracking endpoint: -> :adapter_endpoint -> raise — Plug previously skipped :adapter_endpoint, root cause of HI-02
 
 ### Pending Todos
 
@@ -172,8 +175,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T14:22:28.101Z
-Stopped at: Completed 03-06-PLAN.md — TestAssertions + MailerCase + Phase 3 UAT gate (human-verify signed off)
+Last session: 2026-04-23T15:20:40.914Z
+Stopped at: Completed 03-09-PLAN.md — Tracking endpoint unification (HI-02 closed)
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z
