@@ -790,3 +790,71 @@ Adopters who omit `put_function/2` get `mailable_function: nil` — the Guard re
 (can't check without the function name); Phase 6 Credo TRACK-02 catches this statically.
 
 Since: 0.1.0.
+
+## §Tracking (Phase 3 Plan 04)
+
+### `Mailglass.Tracking.enabled?/1`
+
+```elixir
+@spec enabled?(mailable: module()) :: %{opens: boolean(), clicks: boolean()}
+```
+
+Returns the compile-time tracking flags for a mailable module. Reads
+`module.__mailglass_opts__/0` to inspect the `tracking:` keyword list from `use` opts.
+
+**Off-by-default semantics (TRACK-01):** Returns `%{opens: false, clicks: false}` for:
+- Modules without `use Mailglass.Mailable` (no `__mailglass_opts__/0` exported)
+- Modules with `use Mailglass.Mailable` but no `tracking:` opt (default is all false)
+
+**Locked return shape:** Always a two-key map with `:opens` and `:clicks` boolean values.
+Used by Plan 06's `Mailglass.Tracking.Rewriter` (pixel injection + link rewriting) and by
+`Mailglass.Tracking.Guard.assert_safe!/1` (D-38 runtime enforcement).
+
+Since: 0.1.0.
+
+### `Mailglass.Tracking.Guard.assert_safe!/1`
+
+```elixir
+@spec assert_safe!(Mailglass.Message.t()) :: :ok
+```
+
+Raises `%Mailglass.ConfigError{type: :tracking_on_auth_stream}` when the mailable's
+compile-time tracking opts enable opens or clicks AND the `mailable_function` field
+matches the auth-stream regex. Returns `:ok` otherwise.
+
+**Locked contract:** Returns `:ok` or raises — no `{:error, _}` return path. This is a
+fail-loud guard, not a preflight stage.
+
+**Auth-stream regex (locked):** `^(magic_link|password_reset|verify_email|confirm_account)`
+
+Matches the four canonical auth-carrying function-name prefixes. Variant names starting
+with these prefixes (e.g. `magic_link_verify_otp`, `password_reset_confirm`) ALSO match —
+prefix matching prevents Outlook SafeLinks pre-fetch from triggering auth-stream tracking.
+
+Adding new prefix patterns to the regex is **semver-minor** (new mailables are newly
+prevented from enabling tracking). Removing patterns is **semver-major**.
+
+**`nil` mailable_function (T-3-04-01):** When `mailable_function` is `nil`, the guard
+returns `:ok` — it cannot perform the heuristic without a function name. Phase 6 Credo
+`TRACK-02 NoTrackingOnAuthStream` is the primary enforcement for this case via AST
+inspection of the mailable module's function heads.
+
+**Error context (PII-free, T-3-04-03):**
+```elixir
+%Mailglass.ConfigError{
+  type: :tracking_on_auth_stream,
+  context: %{
+    mailable: MyApp.UserMailer,   # module atom — not PII
+    function: :magic_link         # function atom — not PII
+  }
+}
+```
+
+**Dual enforcement layers:**
+1. Phase 6 `TRACK-02 NoTrackingOnAuthStream` Credo check — compile-time, catches static patterns.
+2. `Mailglass.Tracking.Guard.assert_safe!/1` — runtime, catches dynamically-named mailables.
+
+**Callers:** `Mailglass.Outbound.send/2` (Plan 05) — called as a precondition before
+the Delivery row is inserted.
+
+Since: 0.1.0.
