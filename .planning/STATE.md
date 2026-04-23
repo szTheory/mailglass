@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-11-PLAN.md — citext OID cache flake fix (TEST-01 closed for UAT gate)
-last_updated: "2026-04-23T16:11:09.933Z"
+stopped_at: Completed 03-08-PLAN.md — Tracking.rewrite_if_enabled/1 wired into Outbound pipeline (TRACK-03 gap closure)
+last_updated: "2026-04-23T16:17:45.800Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 24
-  completed_plans: 22
-  percent: 92
+  completed_plans: 23
+  percent: 96
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
-Plan: 4 of 12
+Plan: 5 of 12
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [█████████░] 92%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -76,6 +76,7 @@ Progress: [█████████░] 92%
 | Phase 03-transport-send-pipeline P09 | 2min | 2 tasks | 6 files |
 | Phase 03-transport-send-pipeline P10 | 3min | 2 tasks | 3 files |
 | Phase 03-transport-send-pipeline P11 | 50min | 1 tasks | 3 files |
+| Phase 03 P08 | 15min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -163,6 +164,7 @@ Most load-bearing for Phase 1:
 - ObanHelpers.maybe_create_oban_jobs/0 uses Code.ensure_loaded?(Oban.Migrations) + Ecto.Migrator.with_repo to create oban_jobs table at test suite start — adopter-owned Oban migrations are not in priv/repo/migrations/
 - Citext probe placement: AFTER Sandbox.start_owner! (not before via unboxed_run) — mirrors probe_until_clean/5 from Plan 02-06; DBConnection.Ownership handles mid-ownership disconnect gracefully
 - DataCase/MailerCase scope: bare mix test citext failures from migration_test.exs concurrency are architectural (Phase 6 deferred-items.md); plan scope is mix test --only phase_03_uat which exits 0
+- config :mailglass, adapter_endpoint: used for test endpoint resolution — NimbleOptions :tracking schema does not include :endpoint key; Tracking.endpoint/0 falls back to :adapter_endpoint which reaches the same token key material
 
 ### Pending Todos
 
@@ -181,8 +183,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T16:11:09.927Z
-Stopped at: Completed 03-11-PLAN.md — citext OID cache flake fix (TEST-01 closed for UAT gate)
+Last session: 2026-04-23T16:17:45.794Z
+Stopped at: Completed 03-08-PLAN.md — Tracking.rewrite_if_enabled/1 wired into Outbound pipeline (TRACK-03 gap closure)
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z
