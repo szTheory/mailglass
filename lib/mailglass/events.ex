@@ -157,7 +157,7 @@ defmodule Mailglass.Events do
     |> Map.new()
     |> Map.put_new_lazy(:tenant_id, &Tenancy.current/0)
     |> Map.put_new_lazy(:trace_id, &current_trace_id/0)
-    |> Map.put_new_lazy(:occurred_at, &DateTime.utc_now/0)
+    |> Map.put_new_lazy(:occurred_at, &Mailglass.Clock.utc_now/0)
     |> Map.put_new(:normalized_payload, %{})
     |> Map.put_new(:metadata, %{})
   end

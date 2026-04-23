@@ -75,7 +75,7 @@ defmodule Mailglass.Error.BatchFailed do
   end
 
   defp format_message(:partial_failure, ctx) do
-    failed = length(ctx[:failures] || []) |> then(fn 0 -> ctx[:failed_count] || "some" end)
+    failed = ctx[:failed_count] || "some"
     total = ctx[:count] || "the"
     "Batch send partially failed: #{failed} of #{total} deliveries failed"
   end
