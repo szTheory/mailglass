@@ -79,9 +79,11 @@
 ### Send Pipeline (composition)
 
 - [ ] **SEND-01**: Pre-send pipeline runs in order: `Tenancy.scope` → `Suppression.check_before_send` → `RateLimiter.check` → `Stream.policy_check` → render → `Multi(Delivery insert + Event(:queued) insert + Oban job enqueue)`. Each stage emits telemetry. Failures short-circuit with structured `Mailglass.Error`.
-- [ ] **SEND-02**: `Mailglass.RateLimiter` is an ETS-backed token bucket per `(tenant_id, recipient_domain)`. Default per-domain limit is 100/min (configurable). Exceeded calls return `{:error, %RateLimitError{retry_after_ms: int}}`. ETS table is owned by a small supervisor child, NOT a serialization GenServer.
+- [x] **SEND-02
+**: `Mailglass.RateLimiter` is an ETS-backed token bucket per `(tenant_id, recipient_domain)`. Default per-domain limit is 100/min (configurable). Exceeded calls return `{:error, %RateLimitError{retry_after_ms: int}}`. ETS table is owned by a small supervisor child, NOT a serialization GenServer.
 - [ ] **SEND-03**: `Mailglass.Outbound.Worker` is the Oban worker that dispatches queued deliveries. Without Oban, `Task.Supervisor.async_nolink` is the fallback path with one `Logger.warning` emitted at boot.
-- [ ] **SEND-04**: `Mailglass.Suppression.check_before_send/1` queries the suppression store before send. Returns `{:error, %SuppressedError{}}` if recipient is suppressed. `Mailglass.SuppressionStore` is a behaviour; default is the Ecto-backed impl.
+- [x] **SEND-04
+**: `Mailglass.Suppression.check_before_send/1` queries the suppression store before send. Returns `{:error, %SuppressedError{}}` if recipient is suppressed. `Mailglass.SuppressionStore` is a behaviour; default is the Ecto-backed impl.
 - [x] **SEND-05
 **: `Mailglass.PubSub.Topics` is a typed builder for topic strings (`mailglass:events:{tenant_id}`, `mailglass:events:{tenant_id}:{delivery_id}`). Custom Credo check `PrefixedPubSubTopics` enforces the `mailglass:` namespace.
 

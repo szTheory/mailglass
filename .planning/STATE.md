@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 03-02-PLAN.md: Adapter layer + Fake gate + Projector broadcast"
-last_updated: "2026-04-23T03:50:22.088Z"
+stopped_at: "Completed 03-03-PLAN.md: Preflight stages (RateLimiter + Suppression + Stream)"
+last_updated: "2026-04-23T04:12:07.135Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 19
-  completed_plans: 14
-  percent: 74
+  completed_plans: 15
+  percent: 79
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [███████░░░] 74%
+Progress: [████████░░] 79%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [███████░░░] 74%
 | Phase 02 P06 | 62min | 3 tasks tasks | 6 files files |
 | Phase 03-transport-send-pipeline P01 | 30min | 3 tasks | 30 files |
 | Phase 03 P02 | 19min | 3 tasks | 13 files |
+| Phase 03 P03-03 | 17min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -133,6 +134,9 @@ Most load-bearing for Phase 1:
 - broadcast_delivery_updated/3 implemented in Task 2 because Fake.trigger_event/3 calls it — Tasks 2+3 are interdependent
 - Fake.Storage uses ETS named table :mailglass_fake_mailbox with per-owner inbox isolation; checkout is idempotent; allow/2 does not require pre-checkout
 - Task.async inherits dollar-callers so spawn/1 used in Test 5 to avoid owner resolution bypassing no-owner guard
+- ETS compound op {2, total_add, capacity, capacity}, {3, 0, 0, now_ms}, {2, -1} for token bucket — raw decrement returns actual value (-1=over-limit, >=0=allowed); capped refill prevents exceeding capacity
+- Restore-from-negative refill: when counter is -1 post-over-limit, add abs(tokens) to restore to 0 before applying elapsed refill delta
+- Stream.policy_check test uses apply/3 to bypass Elixir 1.18 type-narrowing on intentional FunctionClauseError misuse test
 
 ### Pending Todos
 
@@ -151,8 +155,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T03:50:22.080Z
-Stopped at: Completed 03-02-PLAN.md: Adapter layer + Fake gate + Projector broadcast
+Last session: 2026-04-23T04:12:07.062Z
+Stopped at: Completed 03-03-PLAN.md: Preflight stages (RateLimiter + Suppression + Stream)
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z
