@@ -11,7 +11,10 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
     # Use task_supervisor so Oban is not required
     Application.put_env(:mailglass, :async_adapter, :task_supervisor)
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
+    # Use shared mode so Task.Supervisor background tasks can access the sandbox.
+    # This is safer than :auto — background tasks share the test process's connection
+    # rather than getting their own, avoiding stale OID cache errors in the full suite.
+    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
 
     on_exit(fn ->
       Process.sleep(50)
@@ -237,8 +240,9 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       for d <- deliveries do
         reloaded = TestRepo.get!(Delivery, d.id)
         assert reloaded.id == d.id
-        # Status is :queued right after batch insert (jobs enqueued asynchronously)
-        assert reloaded.status == :queued
+        # The background task may complete before or after this assertion;
+        # accept :queued (still pending) or :sent (dispatch completed).
+        assert reloaded.status in [:queued, :sent]
       end
     end
   end

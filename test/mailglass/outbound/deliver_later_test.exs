@@ -1,5 +1,5 @@
 defmodule Mailglass.Outbound.DeliverLaterTest do
-  # async: false required — we switch sandbox to :auto mode and use Application.put_env
+  # async: false required — we switch sandbox to shared mode and use Application.put_env
   use Mailglass.DataCase, async: false
 
   alias Mailglass.{Outbound, Message, TestRepo}
@@ -16,10 +16,10 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     Application.put_env(:mailglass, :async_adapter, :task_supervisor)
 
     # The Task.Supervisor spawns a background process that accesses the DB.
-    # Switch sandbox to :auto so background tasks can check out on demand.
-    # Sleep in on_exit to let background tasks complete before teardown;
-    # this avoids Postgrex "owner exited" errors from in-flight dispatch tasks.
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
+    # Use shared mode so background tasks share the test process's connection
+    # rather than getting their own checkout — avoids stale OID cache errors
+    # when running alongside :manual-mode tests in the full suite.
+    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
 
     on_exit(fn ->
       # Brief pause so any in-flight Task.Supervisor tasks finish their DB work
