@@ -846,7 +846,7 @@ end
 
 **Action for planner:** Items A4 + A5 are concrete Wave 0 tasks (file edits to `lib/mailglass/repo.ex` + `mix.exs`) that must NOT be skipped. Item A1 should have a smoke test in Wave 0 (a `setup_all` in `sendgrid_test.exs` that exercises the DER-decode chain on a freshly-generated keypair).
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 All three open questions flagged in ROADMAP for `/gsd-research-phase` are RESOLVED:
 
