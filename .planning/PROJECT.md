@@ -205,4 +205,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-04-22 after Phase 2 (Persistence + Tenancy) completion*
+*Last updated: 2026-04-23 after Phase 3 (Transport + Send Pipeline) completion — full hot path end-to-end against Fake adapter; tracking, preflight, and D-08 deliver_later contract in place.*
