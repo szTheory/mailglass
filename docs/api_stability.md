@@ -1058,3 +1058,81 @@ unchanged when tracking is disabled (D-10). Never touches `text_body` (D-36).
 and `deliver/2`. Wiring into the Outbound pipeline is a gap-closure item for Phase 3.1.
 
 Since: 0.1.0.
+
+## §Tracking.Plug (Phase 3 Plan 07)
+
+### `Mailglass.Tracking.Plug`
+
+Shipped in Phase 3 Plan 07 (TRACK-03, D-34..D-35..D-39). Mountable `Plug.Router`
+for open-pixel and click-redirect endpoints.
+
+**Mount pattern:**
+
+```elixir
+# In adopter's Endpoint or router:
+forward "/track", Mailglass.Tracking.Plug
+```
+
+**Locked routes:**
+
+| Route | Success | Failure |
+|-------|---------|---------|
+| `GET /o/:token.gif` | `200 image/gif` — 43-byte GIF89a body | `204` (D-39: no enumeration) |
+| `GET /c/:token` | `302 Location: <target_url>` | `404` |
+| Any other | `404` | — |
+
+**Pixel response headers (D-34):**
+- `Content-Type: image/gif`
+- `Cache-Control: no-store, private, max-age=0`
+- `Pragma: no-cache`
+- `X-Robots-Tag: noindex`
+
+**GIF89a body:** Exactly 43 bytes. First 6 bytes: `<<71, 73, 70, 56, 57, 97>>` (GIF89a magic).
+
+**No-enumeration contract (D-39):** Failed `verify_open/2` returns HTTP 204 (empty body),
+NOT 404. An attacker scanning URLs cannot distinguish a valid-but-expired token from an
+invalid one — both return 204. Failed `verify_click/2` returns 404 (users expect a redirect
+or error page for click links, so 404 is the appropriate non-redirecting response).
+
+**`target_url` never appears in URL path/query (D-39):** The redirect target lives in the
+signed token payload. There is no surface for open-redirect attacks.
+
+**Event recording:** On successful verify, calls `Mailglass.Events.append/1` with
+`type: :opened` / `type: :clicked`. DB write failures are swallowed — the pixel and
+redirect responses ALWAYS succeed. Click events store `target_url_hash` (SHA-256 hex)
+in `normalized_payload`, never the raw URL (D-31 PII whitelist).
+
+**Telemetry:**
+- `[:mailglass, :tracking, :open, :recorded]` — measurements: `%{count: 1}`, metadata: `%{delivery_id, tenant_id}`
+- `[:mailglass, :tracking, :click, :recorded]` — same shape
+
+Since: 0.1.0.
+
+## §Tracking.ConfigValidator (Phase 3 Plan 07)
+
+### `Mailglass.Tracking.ConfigValidator`
+
+Shipped in Phase 3 Plan 07 (TRACK-03, D-32). Boot-time validator for tracking host
+configuration.
+
+**Locked function:**
+
+```elixir
+@spec validate_at_boot!() :: :ok
+```
+
+Raises `%Mailglass.ConfigError{type: :tracking_host_missing}` when:
+1. Any loaded `Mailglass.Mailable` module has `tracking: [opens: true]` OR `tracking: [clicks: true]` in its `__mailglass_opts__/0`, AND
+2. `config :mailglass, :tracking, host:` is `nil` or `""`.
+
+Returns `:ok` otherwise.
+
+**Detection algorithm:** Iterates `:code.all_loaded()`, checks `__mailglass_mailable__/0`
+(discovery marker) + `__mailglass_opts__/0` (compile-time opts) presence, reads `:tracking`
+opts. Modules without `use Mailglass.Mailable` are skipped.
+
+**Adopter usage (v0.1):** Call explicitly from `Application.start/2` after
+`Mailglass.Config.validate_at_boot!/0`. Auto-wiring into `Mailglass.Config.validate_at_boot!/0`
+is a v0.5 gap-closure item.
+
+Since: 0.1.0.
