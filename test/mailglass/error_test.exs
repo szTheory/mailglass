@@ -60,8 +60,23 @@ defmodule Mailglass.ErrorTest do
   end
 
   test "__types__/0 returns the closed atom set for SignatureError" do
+    # Phase 4 D-21 extends the atom set to the seven webhook-ingest atoms
+    # while keeping the three Phase 1 atoms (`:missing`, `:malformed`,
+    # `:mismatch`) for backward compatibility. Plan 05 hardens the final
+    # naming + `api_stability.md` lock.
     assert Mailglass.SignatureError.__types__() ==
-             [:missing, :malformed, :mismatch, :timestamp_skew]
+             [
+               :missing_header,
+               :malformed_header,
+               :bad_credentials,
+               :ip_disallowed,
+               :bad_signature,
+               :timestamp_skew,
+               :malformed_key,
+               :missing,
+               :malformed,
+               :mismatch
+             ]
   end
 
   test "__types__/0 returns the closed atom set for SuppressedError" do
@@ -74,10 +89,21 @@ defmodule Mailglass.ErrorTest do
 
   test "__types__/0 returns the closed atom set for ConfigError" do
     # Phase 3 extended with :tracking_on_auth_stream (D-38), :tracking_host_missing (D-32),
-    # and :tracking_endpoint_missing (03-09 HI-02 — unified endpoint resolution)
+    # and :tracking_endpoint_missing (03-09 HI-02 — unified endpoint resolution).
+    # Phase 4 (04-02) extends with :webhook_verification_key_missing (D-21) +
+    # :webhook_caching_body_reader_missing (revision B4).
     assert Mailglass.ConfigError.__types__() ==
-             [:missing, :invalid, :conflicting, :optional_dep_missing,
-              :tracking_on_auth_stream, :tracking_host_missing, :tracking_endpoint_missing]
+             [
+               :missing,
+               :invalid,
+               :conflicting,
+               :optional_dep_missing,
+               :tracking_on_auth_stream,
+               :tracking_host_missing,
+               :tracking_endpoint_missing,
+               :webhook_verification_key_missing,
+               :webhook_caching_body_reader_missing
+             ]
   end
 
   # --- Jason.Encoder excludes :cause (T-PII-002, D-06) ---

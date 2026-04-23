@@ -20,6 +20,13 @@ defmodule Mailglass.ConfigError do
   - `:tracking_endpoint_missing` — tracking is enabled but no Phoenix.Token
     endpoint is configured. Set `config :mailglass, :tracking, endpoint:` or
     `config :mailglass, :adapter_endpoint` to enable open/click tracking.
+  - `:webhook_verification_key_missing` — a webhook provider is configured
+    but its verification credentials are not set (Postmark `basic_auth`,
+    SendGrid `public_key`). Phase 4 D-21.
+  - `:webhook_caching_body_reader_missing` — the webhook plug received a
+    request with `conn.private[:raw_body]` unset, meaning the adopter has
+    not wired `Mailglass.Webhook.CachingBodyReader` into their
+    `Plug.Parsers` `:body_reader`. Phase 4 D-21 / revision B4.
 
   See `Mailglass.Error` for the shared contract and `docs/api_stability.md`
   for the locked `:type` atom set.
@@ -27,7 +34,18 @@ defmodule Mailglass.ConfigError do
 
   @behaviour Mailglass.Error
 
-  @types [:missing, :invalid, :conflicting, :optional_dep_missing, :tracking_on_auth_stream, :tracking_host_missing, :tracking_endpoint_missing]
+  @types [
+    :missing,
+    :invalid,
+    :conflicting,
+    :optional_dep_missing,
+    :tracking_on_auth_stream,
+    :tracking_host_missing,
+    :tracking_endpoint_missing,
+    # Phase 4 D-21: webhook config surface.
+    :webhook_verification_key_missing,
+    :webhook_caching_body_reader_missing
+  ]
 
   @derive {Jason.Encoder, only: [:type, :message, :context]}
   defexception [:type, :message, :cause, :context]
@@ -40,7 +58,9 @@ defmodule Mailglass.ConfigError do
             | :optional_dep_missing
             | :tracking_on_auth_stream
             | :tracking_host_missing
-            | :tracking_endpoint_missing,
+            | :tracking_endpoint_missing
+            | :webhook_verification_key_missing
+            | :webhook_caching_body_reader_missing,
           message: String.t(),
           cause: Exception.t() | nil,
           context: %{atom() => term()}
@@ -119,5 +139,19 @@ defmodule Mailglass.ConfigError do
     "Tracking endpoint not configured. " <>
       "Set `config :mailglass, :tracking, endpoint: MyApp.Endpoint` or " <>
       "`config :mailglass, :adapter_endpoint, MyApp.Endpoint` to enable open/click tracking."
+  end
+
+  defp format_message(:webhook_verification_key_missing, ctx) do
+    hint = ctx[:hint] || "configure the per-tenant webhook verification key"
+    "Mailglass webhook verification key missing: #{hint}"
+  end
+
+  defp format_message(:webhook_caching_body_reader_missing, ctx) do
+    hint =
+      ctx[:hint] ||
+        "ensure Plug.Parsers is configured with body_reader: " <>
+          "{Mailglass.Webhook.CachingBodyReader, :read_body, []} in your endpoint.ex"
+
+    "Webhook ingest blocked: raw_body is missing from conn.private — #{hint}"
   end
 end
