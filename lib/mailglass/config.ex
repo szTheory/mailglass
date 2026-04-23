@@ -145,6 +145,39 @@ defmodule Mailglass.Config do
       doc:
         "Module implementing `utc_now/0`. Default: `Mailglass.Clock.System`. Tests use " <>
           "`Mailglass.Clock.Frozen`-backed per-process freezing without overriding this key."
+    ],
+    # Phase 4 D-04 / Claude's Discretion per plan Task 2. Per-provider
+    # sub-trees are additive; `enabled: true` is the default so the router
+    # macro wires the route without explicit opt-in. `basic_auth` is
+    # required for real-world Postmark; the webhook plug raises
+    # `%ConfigError{type: :webhook_verification_key_missing}` at request
+    # time if it is not set. `ip_allowlist` is opt-in — Postmark's own docs
+    # warn origin IPs can change (D-04).
+    postmark: [
+      type: :keyword_list,
+      default: [],
+      doc: "Postmark webhook configuration (HOOK-03).",
+      keys: [
+        enabled: [
+          type: :boolean,
+          default: true,
+          doc: "Enable the Postmark webhook route. Default: `true`."
+        ],
+        basic_auth: [
+          type: {:or, [{:tuple, [:string, :string]}, nil]},
+          default: nil,
+          doc:
+            "Basic Auth `{user, password}` tuple. Required for signature " <>
+              "verification; omit only if the provider is disabled."
+        ],
+        ip_allowlist: [
+          type: {:list, :string},
+          default: [],
+          doc:
+            "Opt-in list of CIDR strings (e.g. `[\"50.31.156.0/24\"]`). " <>
+              "Off by default per D-04 — Postmark's origin IPs can change."
+        ]
+      ]
     ]
   ]
 

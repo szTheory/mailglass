@@ -3,7 +3,7 @@ defmodule Mailglass.ConfigErrorTest do
 
   alias Mailglass.ConfigError
 
-  describe "__types__/0 includes Phase 3 atoms" do
+  describe "__types__/0 includes Phase 3 + Phase 4 atoms" do
     test "includes :tracking_on_auth_stream, :tracking_host_missing, and :tracking_endpoint_missing in addition to the 4 existing atoms" do
       types = ConfigError.__types__()
       assert :missing in types
@@ -15,8 +15,14 @@ defmodule Mailglass.ConfigErrorTest do
       assert :tracking_endpoint_missing in types
     end
 
-    test "__types__/0 returns exactly 7 atoms" do
-      assert length(ConfigError.__types__()) == 7
+    test "Phase 4 (04-02) adds :webhook_verification_key_missing + :webhook_caching_body_reader_missing" do
+      types = ConfigError.__types__()
+      assert :webhook_verification_key_missing in types
+      assert :webhook_caching_body_reader_missing in types
+    end
+
+    test "__types__/0 returns exactly 9 atoms (Phase 1: 4 + Phase 3: 3 + Phase 4: 2)" do
+      assert length(ConfigError.__types__()) == 9
     end
   end
 
