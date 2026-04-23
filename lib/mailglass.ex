@@ -37,6 +37,36 @@ defmodule Mailglass do
       Config,
       TemplateEngine,
       TemplateEngine.HEEx,
-      TemplateError
+      TemplateError,
+      Outbound,
+      Outbound.Delivery,
+      Adapter,
+      Adapters.Fake,
+      Adapters.Swoosh,
+      PubSub,
+      PubSub.Topics,
+      Mailable,
+      Tracking,
+      Clock
     ]
+
+  @doc "Synchronous delivery. See `Mailglass.Outbound.deliver/2`."
+  @doc since: "0.1.0"
+  defdelegate deliver(msg, opts \\ []), to: Mailglass.Outbound
+
+  @doc "Asynchronous delivery. See `Mailglass.Outbound.deliver_later/2`."
+  @doc since: "0.1.0"
+  defdelegate deliver_later(msg, opts \\ []), to: Mailglass.Outbound
+
+  @doc "Batch async delivery. See `Mailglass.Outbound.deliver_many/2`."
+  @doc since: "0.1.0"
+  defdelegate deliver_many(msgs, opts \\ []), to: Mailglass.Outbound
+
+  @doc "Bang variant. See `Mailglass.Outbound.deliver!/2`."
+  @doc since: "0.1.0"
+  defdelegate deliver!(msg, opts \\ []), to: Mailglass.Outbound
+
+  @doc "Bang batch variant. See `Mailglass.Outbound.deliver_many!/2`."
+  @doc since: "0.1.0"
+  defdelegate deliver_many!(msgs, opts \\ []), to: Mailglass.Outbound
 end

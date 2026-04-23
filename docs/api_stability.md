@@ -897,3 +897,56 @@ Adopters using `deliver_many/2` who want deterministic replay safety should ensu
 message content is stable across retries (no timestamp interpolation in the body).
 
 Since: 0.1.0.
+
+## §Outbound (Phase 3 Plan 05)
+
+### `Mailglass.Outbound` — public surface
+
+**Locked functions:**
+
+| Function | Return shape | Notes |
+|----------|-------------|-------|
+| `send/2` | `{:ok, %Delivery{status: :sent}}` or `{:error, %Error{}}` | Canonical internal verb |
+| `deliver/2` | same as `send/2` | `defdelegate` alias (D-13) |
+| `deliver!/2` | `%Delivery{}` or raises | Bang variant; raises the error struct directly |
+| `deliver_later/2` | `{:ok, %Delivery{status: :queued}}` or `{:error, %Error{}}` | Always returns Delivery, never `%Oban.Job{}` (D-14) |
+| `deliver_many/2` | `{:ok, [%Delivery{}]}` or `{:error, %Error{}}` | v0.1 async-only |
+| `deliver_many!/2` | `[%Delivery{}]` or raises `%BatchFailed{}` | Bang batch variant |
+| `dispatch_by_id/1` | `{:ok, %Delivery{}}` or `{:error, %Error{}}` | Called by Outbound.Worker |
+
+Top-level `Mailglass` module re-exports all five public verbs as `defdelegate`.
+
+**Preflight pipeline order (D-18, SEND-01) — locked:**
+
+0. `Mailglass.Tenancy.assert_stamped!/0` — raises `%TenancyError{:unstamped}`
+1. `Mailglass.Tracking.Guard.assert_safe!/1` — raises `%ConfigError{:tracking_on_auth_stream}`
+2. `Mailglass.Suppression.check_before_send/1` — returns `{:error, %SuppressedError{}}`
+3. `Mailglass.RateLimiter.check/3` — `:transactional` bypasses; returns `{:error, %RateLimitError{}}`
+4. `Mailglass.Stream.policy_check/1` — no-op seam (v0.1)
+5. `Mailglass.Renderer.render/1` — returns `{:error, %TemplateError{}}`
+
+**Two-Multi sync pattern invariant (D-20 — critical, T-3-05-03):**
+
+Adapter call is OUTSIDE any `Repo.transact/1` transaction. Adapter-in-transaction
+causes Postgres connection-pool starvation under provider latency. Any PR inlining
+the adapter call inside `Repo.transact` is a blocking defect.
+
+**Telemetry events (Phase 1 D-31 whitelist — no PII):**
+
+| Event | Metadata keys |
+|-------|--------------|
+| `[:mailglass, :outbound, :send, :start\|:stop]` | `tenant_id, mailable, stream` |
+| `[:mailglass, :outbound, :dispatch, :start\|:stop]` | `tenant_id, mailable, provider` |
+| `[:mailglass, :persist, :outbound, :multi, :start\|:stop]` | `step_name, tenant_id` |
+
+**PII exclusion list** (verified by property test across 100 generated sends):
+`:to, :from, :body, :html_body, :subject, :headers, :recipient, :email`
+
+**`deliver_later/2` return shape invariant (D-14):** ALWAYS `{:ok, %Delivery{status: :queued}}`
+or `{:error, %Error{}}`. Never `%Oban.Job{}`. Oban types never leak into the public API.
+
+**`deliver_many/2` v0.1 scope:** Async-only. Each message produces one Oban job (or one
+`Task.Supervisor` spawn when Oban absent). Sync-batch fan-out deferred to v0.5.
+`[ASSUMED — Plan 05 Task 4 decision]`
+
+Since: 0.1.0.
