@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-09-PLAN.md — Tracking endpoint unification (HI-02 closed)
-last_updated: "2026-04-23T15:20:40.926Z"
+stopped_at: Completed 03-10-PLAN.md — MailerCase async-adapter env race fix (HI-01 closed)
+last_updated: "2026-04-23T15:25:43.950Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 24
-  completed_plans: 20
-  percent: 83
+  completed_plans: 21
+  percent: 88
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 03 (transport-send-pipeline) — EXECUTING
-Plan: 2 of 12
+Plan: 3 of 12
 Status: Ready to execute
 Last activity: 2026-04-23
 
-Progress: [████████░░] 83%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [████████░░] 83%
 | Phase 03 P03-07 | 13min | 3 tasks | 12 files |
 | Phase 03-transport-send-pipeline P03-06 | 45min | 4 tasks | 10 files |
 | Phase 03-transport-send-pipeline P09 | 2min | 2 tasks | 6 files |
+| Phase 03-transport-send-pipeline P10 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -157,6 +158,8 @@ Most load-bearing for Phase 1:
 - assert_mail_sent/1 macro dispatches on AST shape at compile time: {:%{}, _, _} = struct pattern, {:fn, _, _} = predicate, list = keyword, empty = bare presence check
 - Tracking.endpoint/0 raises :tracking_endpoint_missing rather than falling back to a hard-coded literal — mirrors ConfigValidator pattern and eliminates silent token verification failures
 - Resolution order: :tracking endpoint: -> :adapter_endpoint -> raise — Plug previously skipped :adapter_endpoint, root cause of HI-02
+- HI-01 fix: guard Application.put_env(:mailglass, :async_adapter, :task_supervisor) with unless async? do — async: true tests never write global env; on_exit snapshots prior value and restores exact prior instead of hard-coding :oban
+- ObanHelpers.maybe_create_oban_jobs/0 uses Code.ensure_loaded?(Oban.Migrations) + Ecto.Migrator.with_repo to create oban_jobs table at test suite start — adopter-owned Oban migrations are not in priv/repo/migrations/
 
 ### Pending Todos
 
@@ -175,8 +178,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T15:20:40.914Z
-Stopped at: Completed 03-09-PLAN.md — Tracking endpoint unification (HI-02 closed)
+Last session: 2026-04-23T15:25:43.940Z
+Stopped at: Completed 03-10-PLAN.md — MailerCase async-adapter env race fix (HI-01 closed)
 Resume file: None
 
 **Planned Phase:** 03 (transport-send-pipeline) — 7 plans — 2026-04-23T02:33:05.018Z
