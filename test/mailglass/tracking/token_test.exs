@@ -128,10 +128,10 @@ defmodule Mailglass.Tracking.TokenTest do
 
     # Test 12: 100 round-trips with random valid inputs
     property "sign_click + verify_click round-trips for http/https schemes" do
-      check all delivery_id <- string(:alphanumeric, min_length: 1, max_length: 40),
-                tenant_id <- string(:alphanumeric, min_length: 1, max_length: 40),
+      check all delivery_id <- string(:alphanumeric, min_length: 5, max_length: 40),
+                tenant_id <- string(:alphanumeric, min_length: 5, max_length: 40),
                 scheme <- member_of(["http", "https"]),
-                host <- string(:alphanumeric, min_length: 1, max_length: 20),
+                host <- string(:alphanumeric, min_length: 5, max_length: 20),
                 path <- string(:alphanumeric, min_length: 0, max_length: 40) do
         url = "#{scheme}://#{host}/#{path}"
         token = Token.sign_click(@endpoint, delivery_id, tenant_id, url)
@@ -142,8 +142,12 @@ defmodule Mailglass.Tracking.TokenTest do
         assert result.tenant_id == tenant_id
         assert result.target_url == url
 
-        # No plaintext exposure in the token binary
-        refute String.contains?(token, tenant_id)
+        # Payload is opaque — tenant_id (>= 5 chars) should not appear verbatim
+        # in the Base64 token binary (Phoenix.Token uses term_to_binary encoding,
+        # not JSON serialization). Short strings can collide by chance in Base64;
+        # 5+ character minimum ensures we're testing the encoding property.
+        refute String.contains?(token, tenant_id),
+               "tenant_id #{inspect(tenant_id)} found verbatim in token (encoding should be opaque)"
       end
     end
   end
