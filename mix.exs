@@ -112,6 +112,13 @@ defmodule Mailglass.MixProject do
         "test --warnings-as-errors --only phase_02_uat --exclude flaky",
         "compile --no-optional-deps --warnings-as-errors"
       ],
+      # Phase 3 UAT gate per INST-04.
+      "verify.phase_03": [
+        "ecto.drop -r Mailglass.TestRepo --quiet",
+        "ecto.create -r Mailglass.TestRepo --quiet",
+        "test --warnings-as-errors --only phase_03_uat --exclude flaky",
+        "compile --no-optional-deps --warnings-as-errors"
+      ],
       # Cold-start smoke — full suite from a fresh DB. Catches startup-order,
       # seed, and missing-migration issues that warm-state runs can mask.
       # Excludes `:flaky`-tagged tests (tracked in deferred-items.md).

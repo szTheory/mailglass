@@ -32,5 +32,11 @@ config :mailglass, Mailglass.TestRepo,
   # production adopters tune this per their failover policy.
   disconnect_on_error_codes: [:internal_error]
 
+# Phase 3: default to the Ecto store in tests; tests that need ETS speed
+# override per-test via @tag or call Application.put_env/3 in setup.
+config :mailglass,
+  suppression_store: Mailglass.SuppressionStore.Ecto,
+  async_adapter: :oban
+
 # Suppress the boot-time "Oban not loaded" warning in test output.
 config :logger, level: :warning

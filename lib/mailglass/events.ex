@@ -105,13 +105,50 @@ defmodule Mailglass.Events do
   responsibility (add a `Multi.run` step inspecting
   `event.inserted_at == nil` — see moduledoc "The replay-detection
   sentinel" for why `inserted_at`, not `id`).
+
+  ## Function-form attrs (I-03, Phase 3)
+
+  When `attrs` is a 1-arity function, it is called inside a `Multi.run`
+  step with the prior `changes` map. This allows callers to reference a
+  prior step's result (e.g. a just-inserted `Delivery`'s `:id`) in the
+  event's `:delivery_id` field. The step producing the attrs map is named
+  `:"<name>_attrs"` and the insert step is named `name`.
+
+  ## Examples
+
+      # Map form (existing):
+      Events.append_multi(multi, :queued, %{type: :queued, delivery_id: id})
+
+      # Function form (new in Phase 3):
+      Events.append_multi(multi, :queued, fn %{delivery: d} ->
+        %{type: :queued, delivery_id: d.id}
+      end)
   """
   @doc since: "0.1.0"
-  @spec append_multi(Ecto.Multi.t(), atom(), attrs()) :: Ecto.Multi.t()
+  @spec append_multi(Ecto.Multi.t(), atom(), attrs() | (map() -> attrs())) :: Ecto.Multi.t()
   def append_multi(multi, name, attrs) when is_atom(name) and is_map(attrs) do
     normalized = normalize(attrs)
     changeset = Event.changeset(normalized)
     Ecto.Multi.insert(multi, name, changeset, insert_opts(normalized))
+  end
+
+  def append_multi(multi, name, attrs) when is_atom(name) and is_function(attrs, 1) do
+    # Function form (Phase 3): compose via a Multi.run step that produces
+    # the attrs map from prior Multi changes, then feeds it into the insert.
+    # Matches Multi.insert/4 and Oban.insert/2 function-form conventions —
+    # callers can reference a prior step's result (e.g. a just-inserted
+    # Delivery's :id) in the event's :delivery_id field.
+    attrs_name = String.to_atom(Atom.to_string(name) <> "_attrs")
+
+    multi
+    |> Ecto.Multi.run(attrs_name, fn _repo, changes -> {:ok, attrs.(changes)} end)
+    |> Ecto.Multi.run(name, fn repo, changes ->
+      raw = Map.fetch!(changes, attrs_name)
+      normalized = normalize(raw)
+      changeset = Event.changeset(normalized)
+      opts = insert_opts(normalized)
+      repo.insert(changeset, opts)
+    end)
   end
 
   # D-05: auto-capture tenant_id + trace_id + occurred_at defaults.

@@ -4,7 +4,9 @@ import Config
 # Only Mailglass.Config may use Application.compile_env* (LINT-08).
 # See Mailglass.Config for the full option schema (lands in Plan 03).
 config :mailglass,
-  adapter: {Mailglass.Adapters.Fake, []}
+  adapter: {Mailglass.Adapters.Fake, []},
+  async_adapter: :oban,
+  suppression_store: Mailglass.SuppressionStore.Ecto
 
 # Swoosh 1.25+ requires :api_client to be set at boot. Mailglass does not
 # pin a specific HTTP client — adopters choose (Finch, Hackney, Req) or use

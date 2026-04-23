@@ -77,10 +77,74 @@ defmodule Mailglass.Config do
     ],
     suppression_store: [
       type: {:or, [:atom, nil]},
+      default: Mailglass.SuppressionStore.Ecto,
+      doc:
+        "Module implementing `Mailglass.SuppressionStore`. " <>
+          "Default: `Mailglass.SuppressionStore.Ecto`."
+    ],
+    async_adapter: [
+      type: {:in, [:oban, :task_supervisor]},
+      default: :oban,
+      doc:
+        "Async delivery adapter for `deliver_later/2`. `:oban` (default, durable) or " <>
+          "`:task_supervisor` (non-durable fallback). Use `:task_supervisor` to silence " <>
+          "the boot warning when Oban is deliberately not in deps."
+    ],
+    rate_limit: [
+      type: :keyword_list,
+      default: [],
+      doc: "Rate-limiter configuration (SEND-02).",
+      keys: [
+        default: [
+          type: :keyword_list,
+          default: [capacity: 100, per_minute: 100],
+          doc: "Default per-(tenant, domain) bucket. Capacity + per-minute refill."
+        ],
+        overrides: [
+          type: {:list, :any},
+          default: [],
+          doc:
+            "Per-(tenant_id, domain) overrides as list of {{tenant_id, domain}, opts} tuples."
+        ]
+      ]
+    ],
+    tracking: [
+      type: :keyword_list,
+      default: [],
+      doc:
+        "Open/click tracking configuration (TRACK-03). When any mailable enables opens or " <>
+          "clicks, `:host` is REQUIRED or boot raises `%ConfigError{type: :tracking_host_missing}`.",
+      keys: [
+        host: [
+          type: {:or, [:string, nil]},
+          default: nil,
+          doc:
+            "Tracking subdomain (e.g. `track.example.com`). Must be separate from the " <>
+              "adopter's main app host."
+        ],
+        scheme: [
+          type: {:in, ["http", "https"]},
+          default: "https",
+          doc: "URL scheme. `http` only for dev."
+        ],
+        salts: [
+          type: {:list, :string},
+          default: [],
+          doc: "Phoenix.Token salts. Head signs; all verify (rotation support)."
+        ],
+        max_age: [
+          type: :pos_integer,
+          default: 2 * 365 * 86_400,
+          doc: "Token max age in seconds. Default: 2 years."
+        ]
+      ]
+    ],
+    clock: [
+      type: {:or, [:atom, nil]},
       default: nil,
       doc:
-        "Module implementing `Mailglass.SuppressionStore`. Default: `nil` " <>
-          "(no suppression checks in Phase 1)."
+        "Module implementing `utc_now/0`. Default: `Mailglass.Clock.System`. Tests use " <>
+          "`Mailglass.Clock.Frozen`-backed per-process freezing without overriding this key."
     ]
   ]
 

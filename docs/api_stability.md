@@ -184,6 +184,53 @@ adapter structs that may carry provider payloads with recipient PII (T-PII-002).
 Adopters that need the full cause chain walk it explicitly via
 `Mailglass.Error.root_cause/1`.
 
+## §Telemetry Extensions (Phase 3)
+
+### New named span helpers
+
+Added in Phase 3 (D-26). All delegate to `Mailglass.Telemetry.span/3`.
+
+- `send_span(map(), (-> any())) :: any()` — emits `[:mailglass, :outbound, :send, :start | :stop | :exception]`.
+- `dispatch_span(map(), (-> any())) :: any()` — emits `[:mailglass, :outbound, :dispatch, :start | :stop | :exception]`.
+- `persist_outbound_multi_span(map(), (-> any())) :: any()` — emits `[:mailglass, :persist, :outbound, :multi, :start | :stop | :exception]`.
+
+### New logged events (Phase 3)
+
+Added to `@logged_events` for the default logger handler:
+
+```
+[:mailglass, :outbound, :send, :stop | :exception]
+[:mailglass, :outbound, :dispatch, :stop | :exception]
+[:mailglass, :outbound, :suppression, :stop]
+[:mailglass, :outbound, :rate_limit, :stop]
+[:mailglass, :outbound, :stream_policy, :stop]
+[:mailglass, :persist, :outbound, :multi, :stop | :exception]
+```
+
+Metadata whitelist per D-31: `:tenant_id, :mailable, :stream, :delivery_id, :status, :provider, :latency_ms, :step_name, :allowed, :hit, :duration_us`.
+
+Since: 0.1.0.
+
+## §Repo.multi (Phase 3)
+
+### `Mailglass.Repo.multi/1,2`
+
+Added in Phase 3 (I-02). Executes an `Ecto.Multi` against the host-configured repo.
+
+Locked signature: `@spec multi(Ecto.Multi.t(), keyword()) :: {:ok, map()} | {:error, atom(), any(), map()}`
+
+Raises `%ConfigError{type: :missing}` when `:repo` is not configured. SQLSTATE 45A01 is translated via the same path as other write helpers.
+
+Since: 0.1.0.
+
+## §Events.append_multi function-form (Phase 3)
+
+### Function-form attrs (I-03)
+
+`Mailglass.Events.append_multi/3` now accepts `attrs :: map() | (map() -> map())`. When `attrs` is a 1-arity function, it is called inside a `Multi.run` step with the prior `changes` map. The intermediate step is named `:"<name>_attrs"`.
+
+Since: 0.1.0.
+
 ## §PubSub (Phase 3)
 
 ### `Mailglass.PubSub`

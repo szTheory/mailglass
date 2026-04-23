@@ -67,8 +67,17 @@ defmodule Mailglass.Telemetry do
     [:mailglass, :persist, :delivery, :update_projections, :stop],
     [:mailglass, :persist, :delivery, :update_projections, :exception],
     [:mailglass, :persist, :reconcile, :link, :stop],
-    [:mailglass, :persist, :reconcile, :link, :exception]
-    # Expanded per phase as new spans land (send, webhook_ingest, ...).
+    [:mailglass, :persist, :reconcile, :link, :exception],
+    # Phase 3: outbound hot path.
+    [:mailglass, :outbound, :send, :stop],
+    [:mailglass, :outbound, :send, :exception],
+    [:mailglass, :outbound, :dispatch, :stop],
+    [:mailglass, :outbound, :dispatch, :exception],
+    [:mailglass, :outbound, :suppression, :stop],
+    [:mailglass, :outbound, :rate_limit, :stop],
+    [:mailglass, :outbound, :stream_policy, :stop],
+    [:mailglass, :persist, :outbound, :multi, :stop],
+    [:mailglass, :persist, :outbound, :multi, :exception]
   ]
 
   @doc """
@@ -132,6 +141,42 @@ defmodule Mailglass.Telemetry do
   def persist_span(suffix, metadata, fun)
       when is_list(suffix) and is_map(metadata) and is_function(fun, 0) do
     span([:mailglass, :persist] ++ suffix, metadata, fun)
+  end
+
+  @doc """
+  Named span helper for the Outbound hot path (Phase 3, D-26).
+
+  Emits `[:mailglass, :outbound, :send, :start | :stop | :exception]`.
+  Metadata whitelist per D-31: `:tenant_id, :mailable, :stream, :delivery_id, :status, :latency_ms`.
+  """
+  @doc since: "0.1.0"
+  @spec send_span(map(), (-> any())) :: any()
+  def send_span(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
+    span([:mailglass, :outbound, :send], metadata, fun)
+  end
+
+  @doc """
+  Named span helper wrapping the adapter.deliver/2 call (Phase 3, D-26).
+
+  Emits `[:mailglass, :outbound, :dispatch, :start | :stop | :exception]`.
+  Provider latency is the fat tail — this span captures it.
+  """
+  @doc since: "0.1.0"
+  @spec dispatch_span(map(), (-> any())) :: any()
+  def dispatch_span(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
+    span([:mailglass, :outbound, :dispatch], metadata, fun)
+  end
+
+  @doc """
+  Named span helper wrapping each Multi commit in the send pipeline (Phase 3, D-26).
+
+  Emits `[:mailglass, :persist, :outbound, :multi, :start | :stop | :exception]`.
+  Metadata carries `:step_name` (`:persist_queued | :persist_dispatched | :persist_failed`).
+  """
+  @doc since: "0.1.0"
+  @spec persist_outbound_multi_span(map(), (-> any())) :: any()
+  def persist_outbound_multi_span(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
+    span([:mailglass, :persist, :outbound, :multi], metadata, fun)
   end
 
   @doc """

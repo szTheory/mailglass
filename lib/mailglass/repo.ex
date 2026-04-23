@@ -87,6 +87,29 @@ defmodule Mailglass.Repo do
       translate_postgrex_error(err, __STACKTRACE__)
   end
 
+  @doc """
+  Executes an `Ecto.Multi` against the host-configured repo and returns
+  the canonical `{:ok, changes}` / `{:error, step, reason, changes}` shape.
+
+  Added in Phase 3 Plan 01 so `Mailglass.Outbound` (Plan 05) can compose
+  two Multis (D-20) via a public function — `repo/0` is deliberately
+  private to keep the facade narrow.
+
+  Raises `Mailglass.ConfigError{type: :missing}` when `:repo` is not
+  configured (same path as `transact/2`). Event-ledger-immutability
+  errors (SQLSTATE 45A01) are translated via the same rescue as the
+  other write helpers.
+  """
+  @doc since: "0.1.0"
+  @spec multi(Ecto.Multi.t(), keyword()) ::
+          {:ok, map()} | {:error, atom(), any(), map()}
+  def multi(multi, opts \\ []) when is_list(opts) do
+    repo().transaction(multi, opts)
+  rescue
+    err in Postgrex.Error ->
+      translate_postgrex_error(err, __STACKTRACE__)
+  end
+
   @doc "Delegates to the host Repo's `one/2`."
   @doc since: "0.1.0"
   @spec one(Ecto.Queryable.t(), keyword()) :: struct() | nil
