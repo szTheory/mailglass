@@ -51,11 +51,18 @@ defmodule Mailglass.MailerCaseTest do
   end
 
   # Test 7: deliver_later + assert_mail_sent works (D-08).
-  # Default MailerCase uses :task_supervisor with shared Fake — delivery happens
-  # in a background Task; wait_for_mail/1 blocks until it arrives.
+  # async: true tests must pass `async_adapter: :task_supervisor` as a per-call
+  # opt — global Application env mutation is reserved for async: false tests
+  # (HI-01 fix, 03-10). Delivery happens in a background Task; wait_for_mail/1
+  # blocks until it arrives.
   test "deliver_later + assert_mail_sent works via shared Fake (D-08)" do
     email = "inline@example.com"
-    {:ok, %Mailglass.Outbound.Delivery{}} = email |> TestMailer.welcome() |> TestMailer.deliver_later()
+
+    {:ok, %Mailglass.Outbound.Delivery{}} =
+      email
+      |> TestMailer.welcome()
+      |> TestMailer.deliver_later(async_adapter: :task_supervisor)
+
     # Task.Supervisor runs async — wait up to 500ms for the mail to arrive.
     assert %Mailglass.Message{} = wait_for_mail(500)
   end
