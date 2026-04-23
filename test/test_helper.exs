@@ -27,4 +27,9 @@ migrations_path =
 
 {:ok, _pid} = Mailglass.TestRepo.start_link()
 
+# Phase 3 (Plan 10): ensure oban_jobs table exists for @tag oban: :manual tests.
+# Oban.Migrations.up/0 is idempotent (IF NOT EXISTS semantics) — safe on warm DB.
+# No-op when Oban is not in deps (Code.ensure_loaded? guard inside the helper).
+Mailglass.ObanHelpers.maybe_create_oban_jobs()
+
 Ecto.Adapters.SQL.Sandbox.mode(Mailglass.TestRepo, :manual)
