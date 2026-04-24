@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-webhook-ingest/04-08-PLAN.md (Wave 4A Telemetry helpers — HOOK-02 + HOOK-06 telemetry surface formalized)
-last_updated: "2026-04-24T02:17:23.043Z"
+status: verifying
+stopped_at: Completed 04-webhook-ingest/04-09-PLAN.md (Phase 4 SHIPPED — 9/9 plans)
+last_updated: "2026-04-24T02:34:44.285Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 7
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 33
-  completed_plans: 32
-  percent: 97
+  completed_plans: 33
+  percent: 100
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 Phase: 04 (webhook-ingest) — EXECUTING
 Plan: 9 of 9 (04-01 complete; 04-02 next)
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-24
 
-Progress: [██████████] 97%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -87,6 +87,7 @@ Progress: [██████████] 97%
 | Phase 04-webhook-ingest P06 | 30min | 3 tasks | 4 files |
 | Phase 04-webhook-ingest P07 | 20min | 2 tasks tasks | 9 files files |
 | Phase 04-webhook-ingest P08 | 8min | 2 tasks | 5 files |
+| Phase 04 P09 | 11min | 2 tasks tasks | 5 files files |
 
 ## Accumulated Context
 
@@ -212,6 +213,9 @@ Most load-bearing for Phase 1:
 - Plan 04-08: full-span helpers (ingest_span/2, verify_span/2, reconcile_span/2) accept fn returning bare result OR {result, stop_metadata}. Shared span_with_enrichment/3 case-matches on return shape. Matches :telemetry.span/3 native tuple contract — callers that need per-request enrichment return the tuple; simple callers return bare value.
 - Plan 04-08: Ingest.emit_per_event_signals/3 uses outer 'provider' arg, NOT event.provider. Plan 04-02 locked provider identity into Event.metadata with string keys, not as schema column — %Event{}.provider compiles (structs allow any field access) but returns nil. Using outer arg is correct AND avoids Map.get fallback chain on metadata.
 - Plan 04-08: LINT-10 whitelist locked to three single-emit event paths — [:mailglass, :webhook, :normalize | :orphan | :duplicate, :stop]. These skip the :start/:exception pair because they fire from INSIDE the larger [:mailglass, :webhook, :ingest, *] span (which IS a full span). Phase 6 LINT-10 reads this plan's SUMMARY for the whitelist spec.
+- Plan 04-09: HOOK-07 1000-replay property asserts STRUCTURAL invariant (webhook_event_count == |unique provider_event_ids|) rather than row-snapshot diff — simpler than Phase 2's idempotency_convergence pattern and correctly targets the UNIQUE(provider, provider_event_id) index on mailglass_webhook_events
+- Plan 04-09: Signature-failure property restricted to Postmark — SendGrid already exhaustively tested by sendgrid_test.exs; Postmark's Basic-Auth mutation space (5 variants × 200 runs = 1000 synthetic attackers) is where 1000-run StreamData adds marginal value
+- Plan 04-09: guides/webhooks.md ships as first adopter-facing doc in guides/ directory — Phase 7 DOCS-02 extends/consolidates but does not replace
 
 ### Pending Todos
 
@@ -230,8 +234,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-24T02:17:23.030Z
-Stopped at: Completed 04-webhook-ingest/04-08-PLAN.md (Wave 4A Telemetry helpers — HOOK-02 + HOOK-06 telemetry surface formalized)
+Last session: 2026-04-24T02:34:37.426Z
+Stopped at: Completed 04-webhook-ingest/04-09-PLAN.md (Phase 4 SHIPPED — 9/9 plans)
 Resume file: None
 
 **Planned Phase:** 04 (webhook-ingest) — 9 plans — 2026-04-23T20:02:05.795Z
