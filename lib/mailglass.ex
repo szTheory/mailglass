@@ -47,7 +47,12 @@ defmodule Mailglass do
       PubSub.Topics,
       Mailable,
       Tracking,
-      Clock
+      Clock,
+      # Renderer exposed so MailglassAdmin.PreviewLive can call the
+      # production render pipeline directly (PREV-03 "no placeholder
+      # shape divergence"). The sub-boundary still blocks the reverse
+      # direction — Renderer cannot depend on admin code.
+      Renderer
     ]
 
   @doc "Synchronous delivery. See `Mailglass.Outbound.deliver/2`."

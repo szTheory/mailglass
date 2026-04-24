@@ -134,10 +134,21 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       # Broadcast the literal LINT-06-compliant topic. PreviewLive subscribes
       # on mount and `handle_info/2` puts a flash + re-discovers mailables.
+      #
+      # Message-shape note: the broadcast payload is `{:mailglass_live_reload,
+      # path}` — NOT `{:phoenix_live_reload, topic, path}`. Phoenix.LiveView
+      # 1.1's `Phoenix.LiveView.Channel` has a hardcoded handle_info clause
+      # that intercepts every `{:phoenix_live_reload, _, _}` tuple BEFORE the
+      # view's own handle_info runs (deps/phoenix_live_view/lib/phoenix_live_view/channel.ex:346).
+      # Using a mailglass-scoped tag keeps the message in PreviewLive's
+      # mailbox where our handler can act on it. Adopters who wire
+      # phoenix_live_reload's `:notify` config to this topic must match this
+      # payload shape — documented in MailglassAdmin.PubSub.Topics and the
+      # README.
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         "mailglass:admin:reload",
-        {:phoenix_live_reload, :ignored, "lib/my_app/user_mailer.ex"}
+        {:mailglass_live_reload, "lib/my_app/user_mailer.ex"}
       )
 
       :timer.sleep(50)

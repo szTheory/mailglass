@@ -17,20 +17,28 @@ defmodule MailglassAdmin.Fixtures.HappyMailer do
 
   def welcome_default(assigns) do
     new()
-    |> from("no-reply@example.test")
-    |> to("ada@example.test")
-    |> subject("Welcome #{assigns.user_name}")
-    |> html_body("<p>Hi #{assigns.user_name}</p>")
-    |> text_body("Hi #{assigns.user_name}")
+    |> Mailglass.Message.update_swoosh(fn e ->
+      e
+      |> from("no-reply@example.test")
+      |> to("ada@example.test")
+      |> subject("Welcome #{assigns.user_name}")
+      |> html_body("<p>Hi #{assigns.user_name}</p>")
+      |> text_body("Hi #{assigns.user_name}")
+    end)
+    |> Mailglass.Message.put_function(:welcome_default)
   end
 
   def welcome_enterprise(assigns) do
     new()
-    |> from("no-reply@example.test")
-    |> to("babbage@example.test")
-    |> subject("Welcome #{assigns.user_name} (enterprise)")
-    |> html_body("<p>Hi #{assigns.user_name} — enterprise plan</p>")
-    |> text_body("Hi #{assigns.user_name} — enterprise plan")
+    |> Mailglass.Message.update_swoosh(fn e ->
+      e
+      |> from("no-reply@example.test")
+      |> to("babbage@example.test")
+      |> subject("Welcome #{assigns.user_name} (enterprise)")
+      |> html_body("<p>Hi #{assigns.user_name} — enterprise plan</p>")
+      |> text_body("Hi #{assigns.user_name} — enterprise plan")
+    end)
+    |> Mailglass.Message.put_function(:welcome_enterprise)
   end
 end
 

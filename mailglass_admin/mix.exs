@@ -52,7 +52,10 @@ defmodule MailglassAdmin.MixProject do
       # Build tooling (CONTEXT D-18). No :esbuild at v0.1 (pure LiveView, no custom JS).
       {:tailwind, "~> 0.4", only: :dev, runtime: false},
       # Optional dev dep (CONTEXT D-24). Adopter-owned LiveReload subscription.
-      {:phoenix_live_reload, "~> 1.6", optional: true, only: :dev},
+      # `:only [:dev, :test]` so preview_live_test.exs can exercise the
+      # LiveReload subscribe + broadcast path; the dep remains `optional: true`
+      # so adopters can omit it entirely in prod-admin (v0.5) configurations.
+      {:phoenix_live_reload, "~> 1.6", optional: true, only: [:dev, :test]},
       {:boundary, "~> 0.10", runtime: false},
       # floki + jason: unrestricted :only scope because the mailglass core
       # path dep uses them at runtime. Mix rejects divergent :only options
@@ -61,7 +64,10 @@ defmodule MailglassAdmin.MixProject do
       {:jason, "~> 1.4"},
       # Dev/test
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.40", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.40", only: :dev, runtime: false},
+      # Phoenix.LiveViewTest 1.1+ requires lazy_html for DOM traversal
+      # (replaces the previous floki-based implementation).
+      {:lazy_html, ">= 0.1.0", only: :test}
     ]
   end
 
