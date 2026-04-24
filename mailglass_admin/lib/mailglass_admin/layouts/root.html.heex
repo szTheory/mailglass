@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" data-theme={if assigns[:dark_chrome], do: "mailglass-dark", else: "mailglass-light"}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <.live_title suffix=" · mailglass">
+      <%= assigns[:page_title] || "Preview" %>
+    </.live_title>
+    <link rel="stylesheet" href={css_url()} />
+    <script defer src={js_url()}></script>
+  </head>
+  <body>
+    <%= @inner_content %>
+  </body>
+</html>
