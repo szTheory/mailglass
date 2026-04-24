@@ -36,6 +36,10 @@ defmodule Mix.Tasks.Mailglass.Reconcile do
 
   use Mix.Task
 
+  # Reconciler.reconcile/2 is only defined when Oban is loaded (the module
+  # is conditionally compiled at file top level). Guarded by `available?()`.
+  @compile {:no_warn_undefined, {Mailglass.Webhook.Reconciler, :reconcile, 2}}
+
   @impl Mix.Task
   def run(argv) do
     {opts, _rest, _invalid} =

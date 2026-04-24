@@ -1,71 +1,57 @@
-defmodule Mailglass.Webhook.Reconciler do
-  @moduledoc """
-  Oban cron worker that closes the orphan-webhook race window
-  (CONTEXT D-17, D-18).
+if Code.ensure_loaded?(Oban.Worker) do
+  defmodule Mailglass.Webhook.Reconciler do
+    @moduledoc """
+    Oban cron worker that closes the orphan-webhook race window
+    (CONTEXT D-17, D-18).
 
-  An orphan webhook event is one inserted by `Mailglass.Webhook.Ingest`
-  with `delivery_id: nil + needs_reconciliation: true` because the
-  matching `mailglass_deliveries` row had not yet committed when the
-  webhook arrived (a real race in production for low-latency
-  providers).
+    An orphan webhook event is one inserted by `Mailglass.Webhook.Ingest`
+    with `delivery_id: nil + needs_reconciliation: true` because the
+    matching `mailglass_deliveries` row had not yet committed when the
+    webhook arrived (a real race in production for low-latency
+    providers).
 
-  This worker runs on a `*/5 * * * *` cron schedule (adopters wire the
-  cron in their own Oban config; see `guides/webhooks.md` — lands with
-  Plan 04-09). For each orphan older than 60 seconds (grace window for
-  late commits):
+    This worker runs on a `*/5 * * * *` cron schedule (adopters wire the
+    cron in their own Oban config; see `guides/webhooks.md` — lands with
+    Plan 04-09). For each orphan older than 60 seconds (grace window for
+    late commits):
 
-    1. `Mailglass.Events.Reconciler.find_orphans/1` returns the candidate
-       batch (tenant-scoped, age-bounded, newest `max_age_minutes` only)
-    2. `Mailglass.Events.Reconciler.attempt_link/1` looks up the Delivery
-       via `(provider, provider_message_id)` from the orphan's metadata
-    3. On match: append a NEW `:reconciled` event (D-18 — append, never
-       UPDATE the orphan row; preserves the SQLSTATE 45A01 append-only
-       invariant) + call `Projector.update_projections/2` for the
-       matched Delivery + post-commit broadcast on the Projector PubSub
-       topic (Phase 3 D-04)
-    4. On no-match: leave the orphan row untouched; next tick retries
+      1. `Mailglass.Events.Reconciler.find_orphans/1` returns the candidate
+         batch (tenant-scoped, age-bounded, newest `max_age_minutes` only)
+      2. `Mailglass.Events.Reconciler.attempt_link/1` looks up the Delivery
+         via `(provider, provider_message_id)` from the orphan's metadata
+      3. On match: append a NEW `:reconciled` event (D-18 — append, never
+         UPDATE the orphan row; preserves the SQLSTATE 45A01 append-only
+         invariant) + call `Projector.update_projections/2` for the
+         matched Delivery + post-commit broadcast on the Projector PubSub
+         topic (Phase 3 D-04)
+      4. On no-match: leave the orphan row untouched; next tick retries
 
-  After 7 days (`max_age_minutes: 7 * 24 * 60`), `find_orphans/1` filters
-  the row out of the scan (admin LiveView shows it as "older than 7 days
-  — unlikely to reconcile" per D-19).
+    After 7 days (`max_age_minutes: 7 * 24 * 60`), `find_orphans/1` filters
+    the row out of the scan (admin LiveView shows it as "older than 7 days
+    — unlikely to reconcile" per D-19).
 
-  ## Optional-dep gating
+    ## Optional-dep gating
 
-  The entire module body is conditionally compiled behind
-  `if Code.ensure_loaded?(Oban.Worker) do ... end`. When Oban is absent,
-  the module still defines `available?/0` (returning `false`) so callers
-  can probe without depending on `Code.ensure_loaded?/1` at the call
-  site. `Mailglass.Application` emits a one-time `Logger.warning` (D-20)
-  at boot when Oban is missing, directing operators to either run
-  `mix mailglass.reconcile` + `mix mailglass.webhooks.prune` from their
-  own cron infrastructure or add Oban to their deps.
+    The entire module is conditionally compiled at file top level behind
+    `if Code.ensure_loaded?(Oban.Worker)`. When Oban is absent, a stub
+    module is defined that exposes `available?/0 → false`;
+    `Mailglass.Application` emits a consolidated `Logger.warning` at boot
+    (D-20) directing operators to run `mix mailglass.reconcile` and
+    `mix mailglass.webhooks.prune` from their own cron infrastructure.
 
-  ## Concurrency
+    ## Concurrency
 
-  `unique: [period: 60]` dedupes overlapping cron runs — if a previous
-  tick is still processing when the next fires, the second is a no-op
-  at the Oban layer. `concurrency: 1` is the implicit default for
-  `:mailglass_reconcile` queue; adopters who raise it accept the
-  reconciliation race (Ecto optimistic locking on the Delivery row still
-  makes the final write correct, but duplicate `:reconciled` events
-  become possible if two workers see the same orphan — the partial
-  UNIQUE index on `idempotency_key` (`"reconciled:\#{orphan.id}"`)
-  structurally prevents this anyway).
-  """
+    `unique: [period: 60]` dedupes overlapping cron runs — if a previous
+    tick is still processing when the next fires, the second is a no-op
+    at the Oban layer. `concurrency: 1` is the implicit default for
+    `:mailglass_reconcile` queue; adopters who raise it accept the
+    reconciliation race (Ecto optimistic locking on the Delivery row still
+    makes the final write correct, but duplicate `:reconciled` events
+    become possible if two workers see the same orphan — the partial
+    UNIQUE index on `idempotency_key` (`"reconciled:\#{orphan.id}"`)
+    structurally prevents this anyway).
+    """
 
-  @compile {:no_warn_undefined, [Oban, Oban.Worker, Oban.Job]}
-
-  @doc """
-  Returns `true` when the Reconciler module is fully compiled (Oban
-  available). Callers use this in `mix mailglass.reconcile` and in
-  `Mailglass.Application` to decide whether to invoke the worker or
-  emit the Oban-missing warning.
-  """
-  @doc since: "0.1.0"
-  @spec available?() :: boolean()
-  def available?, do: Code.ensure_loaded?(Oban.Worker)
-
-  if Code.ensure_loaded?(Oban.Worker) do
     use Oban.Worker, queue: :mailglass_reconcile, unique: [period: 60]
 
     require Logger
@@ -79,6 +65,16 @@ defmodule Mailglass.Webhook.Reconciler do
     @grace_seconds 60
     @max_age_minutes 7 * 24 * 60
     @batch_limit 1000
+
+    @doc """
+    Returns `true` when the Reconciler module is fully compiled (Oban
+    available). Callers use this in `mix mailglass.reconcile` and in
+    `Mailglass.Application` to decide whether to invoke the worker or
+    emit the Oban-missing warning.
+    """
+    @doc since: "0.1.0"
+    @spec available?() :: boolean()
+    def available?, do: true
 
     @impl Oban.Worker
     def perform(%Oban.Job{args: args}) do
@@ -99,10 +95,9 @@ defmodule Mailglass.Webhook.Reconciler do
 
     Returns `{:ok, %{scanned: n, linked: m}}` on success.
 
-    Exposed as a public function so `mix mailglass.reconcile` (the
-    Oban-absent fallback) can invoke the same code path; also useful in
-    tests and for ops engineers who want to run a sweep out-of-band
-    without waiting for the next cron tick.
+    Exposed as a public function so `mix mailglass.reconcile` can invoke
+    the same code path; also useful in tests and for ops engineers who
+    want to run a sweep out-of-band without waiting for the next cron tick.
     """
     @spec reconcile(String.t() | nil, pos_integer()) :: {:ok, %{scanned: non_neg_integer(), linked: non_neg_integer()}}
     def reconcile(tenant_id \\ nil, limit \\ @batch_limit)
@@ -268,5 +263,18 @@ defmodule Mailglass.Webhook.Reconciler do
         _ -> nil
       end
     end
+  end
+else
+  defmodule Mailglass.Webhook.Reconciler do
+    @moduledoc """
+    Stub module — Oban is not loaded, so the Reconciler worker is not compiled.
+
+    `available?/0` returns `false`. `mix mailglass.reconcile` reads this
+    flag and exits with a non-zero status when invoked.
+    """
+
+    @doc since: "0.1.0"
+    @spec available?() :: false
+    def available?, do: false
   end
 end

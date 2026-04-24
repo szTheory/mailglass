@@ -1,66 +1,66 @@
-defmodule Mailglass.Webhook.Pruner do
-  @moduledoc """
-  Oban cron worker that prunes `mailglass_webhook_events` rows by
-  status + age (CONTEXT D-16).
+if Code.ensure_loaded?(Oban.Worker) do
+  defmodule Mailglass.Webhook.Pruner do
+    @moduledoc """
+    Oban cron worker that prunes `mailglass_webhook_events` rows by
+    status + age (CONTEXT D-16).
 
-  Three retention knobs (per `Mailglass.Config :webhook_retention`):
+    Three retention knobs (per `Mailglass.Config :webhook_retention`):
 
-    * `:succeeded_days` (default 14) — prune `:succeeded` rows older
-      than N days
-    * `:dead_days` (default 90) — prune `:dead` (terminal-after-retries)
-      rows older than N days
-    * `:failed_days` (default `:infinity`) — `:failed` rows are
-      investigatable; never pruned by default
+      * `:succeeded_days` (default 14) — prune `:succeeded` rows older
+        than N days
+      * `:dead_days` (default 90) — prune `:dead` (terminal-after-retries)
+        rows older than N days
+      * `:failed_days` (default `:infinity`) — `:failed` rows are
+        investigatable; never pruned by default
 
-  Set any knob to `:infinity` to disable that prune class — the worker
-  returns `{:ok, 0}` for that status WITHOUT issuing the DELETE.
+    Set any knob to `:infinity` to disable that prune class — the worker
+    returns `{:ok, 0}` for that status WITHOUT issuing the DELETE.
 
-  ## Cron cadence
+    ## Cron cadence
 
-  Daily is sufficient — retention is days-scale, so running hourly adds
-  DB churn without changing outcomes. Adopters wire the cron in their
-  own Oban config (`0 3 * * *` — 3 AM UTC is the recommended default;
-  lands with Plan 04-09 guides/webhooks.md).
+    Daily is sufficient — retention is days-scale, so running hourly adds
+    DB churn without changing outcomes. Adopters wire the cron in their
+    own Oban config (`0 3 * * *` — 3 AM UTC is the recommended default;
+    lands with Plan 04-09 guides/webhooks.md).
 
-  ## Optional-dep gating
+    ## Optional-dep gating
 
-  Conditionally compiled behind `if Code.ensure_loaded?(Oban.Worker)`.
-  When Oban is absent, `Mailglass.Application` emits a consolidated
-  Logger.warning at boot (D-20) directing operators to run
-  `mix mailglass.webhooks.prune` from their own cron infrastructure.
+    The entire module is conditionally compiled at file top level behind
+    `if Code.ensure_loaded?(Oban.Worker)`. When Oban is absent, a stub
+    module is defined that exposes `available?/0 → false`;
+    `Mailglass.Application` emits a consolidated `Logger.warning` at boot
+    (D-20) directing operators to run `mix mailglass.webhooks.prune` from
+    their own cron infrastructure.
 
-  ## GDPR erasure
+    ## GDPR erasure
 
-  Targeted DELETE on `mailglass_webhook_events.raw_payload->>'to' = ?`
-  is the GDPR path (D-15) — handled by adopter ad-hoc via
-  `Mailglass.Repo.delete_all/2`, NOT this Pruner. The Pruner's
-  DELETEs are retention-policy-driven (status + age), not identity-driven.
+    Targeted DELETE on `mailglass_webhook_events.raw_payload->>'to' = ?`
+    is the GDPR path (D-15) — handled by adopter ad-hoc via
+    `Mailglass.Repo.delete_all/2`, NOT this Pruner. The Pruner's
+    DELETEs are retention-policy-driven (status + age), not identity-driven.
 
-  ## Telemetry
+    ## Telemetry
 
-  Emits `[:mailglass, :webhook, :prune, :stop]` with measurements
-  `%{succeeded_deleted: n, dead_deleted: m}` and metadata
-  `%{status: :ok}` per CONTEXT D-22 + D-23 whitelist.
-  """
+    Emits `[:mailglass, :webhook, :prune, :stop]` with measurements
+    `%{succeeded_deleted: n, dead_deleted: m}` and metadata
+    `%{status: :ok}` per CONTEXT D-22 + D-23 whitelist.
+    """
 
-  @compile {:no_warn_undefined, [Oban, Oban.Worker, Oban.Job]}
-
-  @doc """
-  Returns `true` when the Pruner module is fully compiled (Oban
-  available). Used by `mix mailglass.webhooks.prune` and the
-  Application boot-warning.
-  """
-  @doc since: "0.1.0"
-  @spec available?() :: boolean()
-  def available?, do: Code.ensure_loaded?(Oban.Worker)
-
-  if Code.ensure_loaded?(Oban.Worker) do
     use Oban.Worker, queue: :mailglass_maintenance
 
     import Ecto.Query
 
     alias Mailglass.{Clock, Repo}
     alias Mailglass.Webhook.WebhookEvent
+
+    @doc """
+    Returns `true` when the Pruner module is fully compiled (Oban
+    available). Used by `mix mailglass.webhooks.prune` and the
+    Application boot-warning.
+    """
+    @doc since: "0.1.0"
+    @spec available?() :: boolean()
+    def available?, do: true
 
     @impl Oban.Worker
     def perform(_job) do
@@ -73,9 +73,8 @@ defmodule Mailglass.Webhook.Pruner do
     Run the prune sweep. Returns `{:ok, %{succeeded: n, dead: m}}`.
 
     Exposed as a public function so `mix mailglass.webhooks.prune`
-    (the Oban-absent fallback) invokes the same code path, and so ops
-    engineers can trigger an out-of-band prune without waiting for the
-    next cron tick.
+    invokes the same code path, and so ops engineers can trigger an
+    out-of-band prune without waiting for the next cron tick.
     """
     @spec prune() :: {:ok, %{succeeded: non_neg_integer(), dead: non_neg_integer()}}
     def prune do
@@ -89,8 +88,6 @@ defmodule Mailglass.Webhook.Pruner do
       {:ok, %{succeeded: succeeded_count, dead: dead_count}}
     end
 
-    # :infinity bypass — return {:ok, 0} WITHOUT issuing the DELETE query.
-    # Adopters who set high-throughput retention to :infinity face no DB cost.
     defp prune_status(_status, :infinity), do: {:ok, 0}
 
     defp prune_status(status, days)
@@ -116,5 +113,18 @@ defmodule Mailglass.Webhook.Pruner do
 
       :ok
     end
+  end
+else
+  defmodule Mailglass.Webhook.Pruner do
+    @moduledoc """
+    Stub module — Oban is not loaded, so the Pruner worker is not compiled.
+
+    `available?/0` returns `false`. `mix mailglass.webhooks.prune` reads
+    this flag and exits with a non-zero status when invoked.
+    """
+
+    @doc since: "0.1.0"
+    @spec available?() :: false
+    def available?, do: false
   end
 end

@@ -33,6 +33,10 @@ defmodule Mix.Tasks.Mailglass.Webhooks.Prune do
 
   use Mix.Task
 
+  # Pruner.prune/0 is only defined when Oban is loaded (the module is
+  # conditionally compiled at file top level). Guarded by `available?()`.
+  @compile {:no_warn_undefined, {Mailglass.Webhook.Pruner, :prune, 0}}
+
   @impl Mix.Task
   def run(_argv) do
     Mix.Task.run("app.start")
