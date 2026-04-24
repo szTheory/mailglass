@@ -122,7 +122,14 @@ Plans:
   5. `mailglass_admin/priv/static/` is a committed compiled bundle, `git diff --exit-code` after `mix mailglass_admin.assets.build` passes in CI, and the Hex tarball stays under 2MB.
 **Pitfalls guarded against**: PHX-02 (mount path is the adopter's first arg, no default; relative routes throughout), PHX-03 (admin assets in `mailglass_admin/priv/static/` only — Hex tarball size CI gate <500KB core / <2MB admin), PHX-06 (PubSub topics namespaced `mailglass:` — `PrefixedPubSubTopics` Credo check lands Phase 6), DIST-01 (`mailglass_admin/mix.exs` declares `{:mailglass, "== <pinned_version>"}` — sibling versions never drift), DIST-02 (`git diff --exit-code` on `priv/static/` after asset build).
 **Research flag**: yes — `/gsd-research-phase` before planning. Open questions: `MailglassAdmin.Router` macro signature should be prototyped against `~/projects/sigra/lib/sigra/admin/router.ex`; LiveView session cookie collision with adopter sessions; daisyUI 5 + Tailwind v4 ergonomics without a Node toolchain in adopter builds.
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+- [ ] 05-01-PLAN.md — Wave 0 doc-fix sweep + test infrastructure (support harness + fixtures + 9 RED-by-default test files)
+- [ ] 05-02-PLAN.md — mailglass_admin Hex package skeleton (mix.exs with linked mailglass dep + config + root module with Boundary + README/CHANGELOG/LICENSE)
+- [ ] 05-03-PLAN.md — Router macro (mailglass_admin_routes/2 + __session__/2 whitelisted callback) + PubSub.Topics + Layouts
+- [ ] 05-04-PLAN.md — Preview.Discovery (runtime reflection + graceful failure) + Preview.Mount on_mount hook
+- [ ] 05-05-PLAN.md — Asset pipeline: app.css with brand palette + 3 Mix tasks + Controllers.Assets + compiled bundle
+- [ ] 05-06-PLAN.md — PreviewLive + 4 function components (Sidebar/Tabs/DeviceFrame/AssignsForm) + Components + optional-deps gateway
 **UI hint**: yes
 
 ### Phase 6: Custom Credo + Boundary
