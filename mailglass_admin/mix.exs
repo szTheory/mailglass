@@ -69,9 +69,17 @@ defmodule MailglassAdmin.MixProject do
   # mailglass core's mix.exs): local-dev uses a path dep so the sibling
   # packages evolve together; publishing to Hex pins the exact sibling
   # version via Release Please linked-versions plugin (Phase 7 D-03).
+  #
+  # The pinned-version string ("== 0.1.0") is a LITERAL, not an @version
+  # interpolation. mix_config_test.exs evaluates this function's body in
+  # isolation (via Code.string_to_quoted + Code.eval_quoted) where module
+  # attributes are unreachable — `@version` would raise
+  # `cannot invoke @/1 outside module`. Release Please's linked-versions
+  # plugin updates BOTH `@version` above AND this literal atomically per
+  # Phase 7 D-03.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== #{@version}"}
+      {:mailglass, "== 0.1.0"}
     else
       {:mailglass, path: "..", override: true}
     end

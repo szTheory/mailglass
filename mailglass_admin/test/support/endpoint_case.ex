@@ -1,30 +1,11 @@
 # Requires mailglass_admin/config/test.exs to set :mailglass_admin, MailglassAdmin.TestAdopter.Endpoint secret_key_base (Plan 02).
-defmodule MailglassAdmin.TestAdopter.Endpoint do
-  @moduledoc """
-  Synthetic adopter Phoenix.Endpoint exercised by router + LiveView tests.
-
-  Exists so the test suite can mount the real `MailglassAdmin.Router.mailglass_admin_routes/2`
-  macro output without needing a full adopter Phoenix app. The endpoint is
-  intentionally minimal: a session cookie (to assert `__session__/2`
-  isolation against), a browser pipeline, and the macro call itself inside
-  a `/dev` scope.
-
-  Plan 02 is responsible for adding the `config :mailglass_admin, MailglassAdmin.TestAdopter.Endpoint`
-  block to `mailglass_admin/config/test.exs` with a `secret_key_base` so
-  this endpoint can boot under test.
-  """
-
-  use Phoenix.Endpoint, otp_app: :mailglass_admin
-
-  plug Plug.Session,
-    store: :cookie,
-    key: "_mailglass_admin_test_session",
-    signing_salt: "test-salt-01234567",
-    same_site: "Lax"
-
-  plug MailglassAdmin.TestAdopter.Router
-end
-
+#
+# Module order is load-bearing: MailglassAdmin.TestAdopter.Router is defined
+# BEFORE MailglassAdmin.TestAdopter.Endpoint because the Endpoint pipes
+# through the Router as a compile-time `plug`, and Plug.Builder calls
+# `init/1` on each plug during its `__before_compile__` expansion — the
+# plug module MUST already exist at that point. (Plan 01 landed these in
+# the reverse order; Plan 02 corrected it so the test suite compiles.)
 defmodule MailglassAdmin.TestAdopter.Router do
   @moduledoc """
   Synthetic adopter router that imports `MailglassAdmin.Router` and invokes
@@ -52,6 +33,32 @@ defmodule MailglassAdmin.TestAdopter.Router do
     pipe_through :browser
     mailglass_admin_routes "/mail"
   end
+end
+
+defmodule MailglassAdmin.TestAdopter.Endpoint do
+  @moduledoc """
+  Synthetic adopter Phoenix.Endpoint exercised by router + LiveView tests.
+
+  Exists so the test suite can mount the real `MailglassAdmin.Router.mailglass_admin_routes/2`
+  macro output without needing a full adopter Phoenix app. The endpoint is
+  intentionally minimal: a session cookie (to assert `__session__/2`
+  isolation against), a browser pipeline, and the macro call itself inside
+  a `/dev` scope.
+
+  Plan 02 is responsible for adding the `config :mailglass_admin, MailglassAdmin.TestAdopter.Endpoint`
+  block to `mailglass_admin/config/test.exs` with a `secret_key_base` so
+  this endpoint can boot under test.
+  """
+
+  use Phoenix.Endpoint, otp_app: :mailglass_admin
+
+  plug Plug.Session,
+    store: :cookie,
+    key: "_mailglass_admin_test_session",
+    signing_salt: "test-salt-01234567",
+    same_site: "Lax"
+
+  plug MailglassAdmin.TestAdopter.Router
 end
 
 defmodule MailglassAdmin.EndpointCase do
