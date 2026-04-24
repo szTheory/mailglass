@@ -46,6 +46,42 @@ defmodule Mailglass.Credo.NoUnscopedTenantQueryInLibTest do
     assert run_check(source, "lib/mailglass/outbound/good_tenant_scope.ex") == []
   end
 
+  test "does not flag tenanted Repo query when scope is applied inline at call site" do
+    source = """
+    defmodule Mailglass.Outbound.GoodInlineTenantScope do
+      import Ecto.Query
+      alias Mailglass.Outbound.Delivery
+      alias Mailglass.Repo
+
+      def list(tenant_context) do
+        Repo.all(Mailglass.Tenancy.scope(from(d in Delivery, select: d.id), tenant_context))
+      end
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/outbound/good_inline_tenant_scope.ex") == []
+  end
+
+  test "flags unscoped tenanted query even when same function also has scoped query" do
+    source = """
+    defmodule Mailglass.Outbound.MixedTenantScope do
+      import Ecto.Query
+      alias Mailglass.Outbound.Delivery
+      alias Mailglass.Repo
+
+      def list(tenant_context) do
+        Repo.all(Mailglass.Tenancy.scope(from(d in Delivery, select: d.id), tenant_context))
+        Repo.all(from(d in Delivery, select: d.id))
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/outbound/mixed_tenant_scope.ex")
+
+    assert length(issues) == 1
+    assert String.contains?(hd(issues).message, "Mailglass.Tenancy.scope/2")
+  end
+
   test "does not flag explicit scope: :unscoped bypass" do
     source = """
     defmodule Mailglass.Events.AdminReadback do

@@ -24,6 +24,23 @@ defmodule Mailglass.Credo.NoRawSwooshSendInLibTest do
     assert String.contains?(hd(issues).message, "Mailglass.Outbound")
   end
 
+  test "flags alias-based Swoosh.Mailer deliver calls in lib/mailglass" do
+    source = """
+    defmodule Mailglass.Outbound.BadAliasSend do
+      alias Swoosh.Mailer
+
+      def run(email) do
+        Mailer.deliver(email)
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/outbound/bad_alias_send.ex")
+
+    assert length(issues) == 1
+    assert String.contains?(hd(issues).message, "Swoosh.Mailer.deliver")
+  end
+
   test "allows Swoosh bridge module" do
     source = """
     defmodule Mailglass.Adapters.Swoosh do

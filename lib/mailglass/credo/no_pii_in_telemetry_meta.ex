@@ -20,22 +20,25 @@ defmodule Mailglass.Credo.NoPiiInTelemetryMeta do
   @impl true
   def run(%SourceFile{} = source_file, params \\ []) do
     issue_meta = IssueMeta.for(source_file, params)
-    blocked_keys = params |> Params.get(:blocked_keys, __MODULE__) |> MapSet.new()
+    {blocked_atom_keys, blocked_string_keys} =
+      params
+      |> Params.get(:blocked_keys, __MODULE__)
+      |> blocked_key_sets()
 
     source_file
     |> SourceFile.ast()
     |> Macro.postwalk([], fn node, issues ->
-      {node, maybe_collect_issue(node, issues, issue_meta, blocked_keys)}
+      {node, maybe_collect_issue(node, issues, issue_meta, blocked_atom_keys, blocked_string_keys)}
     end)
     |> elem(1)
   end
 
-  defp maybe_collect_issue(node, issues, issue_meta, blocked_keys) do
+  defp maybe_collect_issue(node, issues, issue_meta, blocked_atom_keys, blocked_string_keys) do
     case telemetry_metadata(node) do
       {:ok, meta_ast, line_no, column} ->
         new_issues =
           meta_ast
-          |> blocked_literal_keys(blocked_keys)
+          |> blocked_literal_keys(blocked_atom_keys, blocked_string_keys)
           |> Enum.map(&issue_for(issue_meta, line_no, column, &1))
 
         issues ++ new_issues
@@ -57,26 +60,49 @@ defmodule Mailglass.Credo.NoPiiInTelemetryMeta do
 
   defp telemetry_metadata(_ast), do: :error
 
-  defp blocked_literal_keys({:%{}, _, pairs}, blocked_keys) when is_list(pairs) do
+  defp blocked_literal_keys({:%{}, _, pairs}, blocked_atom_keys, blocked_string_keys) when is_list(pairs) do
     pairs
     |> Enum.reduce(MapSet.new(), fn
       {key, _value}, acc when is_atom(key) ->
-        if MapSet.member?(blocked_keys, key), do: MapSet.put(acc, key), else: acc
+        if MapSet.member?(blocked_atom_keys, key), do: MapSet.put(acc, {:atom, key}), else: acc
+
+      {key, _value}, acc when is_binary(key) ->
+        if MapSet.member?(blocked_string_keys, key), do: MapSet.put(acc, {:string, key}), else: acc
 
       _pair, acc ->
         acc
     end)
     |> MapSet.to_list()
-    |> Enum.sort()
+    |> Enum.sort_by(&blocked_key_label/1)
   end
 
-  defp blocked_literal_keys(_ast, _blocked_keys), do: []
+  defp blocked_literal_keys(_ast, _blocked_atom_keys, _blocked_string_keys), do: []
+
+  defp blocked_key_sets(blocked_keys) when is_list(blocked_keys) do
+    Enum.reduce(blocked_keys, {MapSet.new(), MapSet.new()}, fn
+      key, {atom_keys, string_keys} when is_atom(key) ->
+        {MapSet.put(atom_keys, key), MapSet.put(string_keys, Atom.to_string(key))}
+
+      key, {atom_keys, string_keys} when is_binary(key) ->
+        {atom_keys, MapSet.put(string_keys, key)}
+
+      _key, sets ->
+        sets
+    end)
+  end
+
+  defp blocked_key_sets(_blocked_keys), do: {MapSet.new(), MapSet.new()}
+
+  defp blocked_key_label({:atom, key}), do: ":#{key}"
+  defp blocked_key_label({:string, key}), do: "\"#{key}\""
 
   defp issue_for(issue_meta, line_no, column, blocked_key) do
+    label = blocked_key_label(blocked_key)
+
     format_issue(
       issue_meta,
-      message: "Telemetry metadata must not include blocked key `:#{blocked_key}`.",
-      trigger: ":#{blocked_key}",
+      message: "Telemetry metadata must not include blocked key `#{label}`.",
+      trigger: label,
       line_no: line_no,
       column: column
     )

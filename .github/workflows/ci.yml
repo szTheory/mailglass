@@ -191,4 +191,4 @@ jobs:
         run: mix deps.get
 
       - name: Run custom Credo checks
-        run: mix credo --strict --enable-disabled-checks .
+        run: mix credo --strict --only Mailglass.Credo

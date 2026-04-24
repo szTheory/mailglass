@@ -65,19 +65,15 @@ defmodule Mailglass.Credo.NoUnscopedTenantQueryInLib do
   defp function_issues(nil, _issue_meta, _schema_tail_names, _repo_functions, _scope_module_tail), do: []
 
   defp function_issues(body, issue_meta, schema_tail_names, repo_functions, scope_module_tail) do
-    if function_has_scope_call?(body, scope_module_tail) do
-      []
-    else
-      body
-      |> collect_repo_calls(schema_tail_names, repo_functions)
-      |> Enum.reject(& &1.unscoped_bypass?)
-      |> Enum.map(fn call ->
-        issue_for(issue_meta, call.line, call.column, call.function_name)
-      end)
-    end
+    body
+    |> collect_repo_calls(schema_tail_names, repo_functions, scope_module_tail)
+    |> Enum.reject(&(&1.unscoped_bypass? or &1.scoped_bypass?))
+    |> Enum.map(fn call ->
+      issue_for(issue_meta, call.line, call.column, call.function_name)
+    end)
   end
 
-  defp collect_repo_calls(body, schema_tail_names, repo_functions) do
+  defp collect_repo_calls(body, schema_tail_names, repo_functions, scope_module_tail) do
     {_ast, calls} =
       Macro.prewalk(body, [], fn
         {:|>, meta, [lhs, {{:., _, [repo_module_ast, function_name]}, _, rhs_args}]} = node, calls ->
@@ -91,7 +87,8 @@ defmodule Mailglass.Credo.NoUnscopedTenantQueryInLib do
              function_name,
              args,
              schema_tail_names,
-             repo_functions
+             repo_functions,
+             scope_module_tail
            )}
 
         {{:., _, [repo_module_ast, function_name]}, meta, args} = node, calls ->
@@ -103,7 +100,8 @@ defmodule Mailglass.Credo.NoUnscopedTenantQueryInLib do
              function_name,
              args,
              schema_tail_names,
-             repo_functions
+             repo_functions,
+             scope_module_tail
            )}
 
         node, calls ->
@@ -120,7 +118,8 @@ defmodule Mailglass.Credo.NoUnscopedTenantQueryInLib do
          function_name,
          args,
          schema_tail_names,
-         repo_functions
+         repo_functions,
+         scope_module_tail
        )
        when is_atom(function_name) and is_list(args) do
     if repo_module_ast?(repo_module_ast) and MapSet.member?(repo_functions, function_name) and
@@ -130,7 +129,8 @@ defmodule Mailglass.Credo.NoUnscopedTenantQueryInLib do
           function_name: function_name,
           line: meta[:line],
           column: meta[:column],
-          unscoped_bypass?: explicit_unscoped_bypass?(args)
+          unscoped_bypass?: explicit_unscoped_bypass?(args),
+          scoped_bypass?: scoped_bypass?(args, scope_module_tail)
         }
         | calls
       ]
@@ -139,12 +139,27 @@ defmodule Mailglass.Credo.NoUnscopedTenantQueryInLib do
     end
   end
 
-  defp maybe_collect_call(calls, _meta, _repo_module_ast, _function_name, _args, _schema_tail_names, _repo_functions),
+  defp maybe_collect_call(
+         calls,
+         _meta,
+         _repo_module_ast,
+         _function_name,
+         _args,
+         _schema_tail_names,
+         _repo_functions,
+         _scope_module_tail
+       ),
     do: calls
 
-  defp function_has_scope_call?(body, scope_module_tail) do
+  defp scoped_bypass?([queryable | _rest], scope_module_tail) do
+    ast_contains_scope_call?(queryable, scope_module_tail)
+  end
+
+  defp scoped_bypass?(_args, _scope_module_tail), do: false
+
+  defp ast_contains_scope_call?(ast, scope_module_tail) do
     {_ast, found?} =
-      Macro.prewalk(body, false, fn
+      Macro.prewalk(ast, false, fn
         {{:., _, [module_ast, :scope]}, _, args} = node, false when is_list(args) ->
           if module_tail_from_ast(module_ast) == scope_module_tail and args != [] do
             {node, true}

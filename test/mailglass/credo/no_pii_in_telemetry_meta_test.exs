@@ -40,6 +40,22 @@ defmodule Mailglass.Credo.NoPiiInTelemetryMetaTest do
     assert String.contains?(hd(issues).message, ":email")
   end
 
+  test "flags blocked pii keys when telemetry metadata uses string keys" do
+    source = """
+    defmodule Demo do
+      def run do
+        :telemetry.execute([:mailglass, :outbound, :send, :stop], %{latency_ms: 1}, %{"email" => "a@example.com", "subject" => "reset"})
+      end
+    end
+    """
+
+    issues = run_check(source)
+
+    assert length(issues) == 2
+    assert Enum.any?(issues, &String.contains?(&1.message, "\"email\""))
+    assert Enum.any?(issues, &String.contains?(&1.message, "\"subject\""))
+  end
+
   test "does not flag non-pii metadata keys" do
     source = """
     defmodule Demo do
