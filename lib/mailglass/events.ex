@@ -61,6 +61,10 @@ defmodule Mailglass.Events do
   can hook without a second DB query.
   """
 
+  use Boundary,
+    deps: [Mailglass],
+    exports: [Event, Reconciler]
+
   alias Mailglass.Events.Event
   alias Mailglass.Tenancy
 

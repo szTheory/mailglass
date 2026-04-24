@@ -67,6 +67,10 @@ defmodule Mailglass.Outbound do
   mixed tenants.
   """
 
+  use Boundary,
+    deps: [Mailglass],
+    exports: [Delivery, Projector, Worker]
+
   alias Mailglass.{Clock, Events, Message, Renderer, Repo, Suppression, RateLimiter, Stream,
                    Tenancy, Telemetry}
   alias Mailglass.Outbound.{Delivery, Projector}
