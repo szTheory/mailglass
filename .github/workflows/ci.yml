@@ -158,3 +158,37 @@ jobs:
 
       - name: Compile without optional deps
         run: mix compile --no-optional-deps --warnings-as-errors
+
+  credo-custom:
+    name: Custom Credo Checks
+    runs-on: ubuntu-latest
+    needs: [no-optional-deps]
+
+    env:
+      MIX_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27.1"
+          elixir-version: "1.18.1"
+
+      - name: Restore deps + _build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-credo-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-credo-
+
+      - name: Install deps
+        run: mix deps.get
+
+      - name: Run custom Credo checks
+        run: mix credo --strict --enable-disabled-checks .
