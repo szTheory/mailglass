@@ -106,7 +106,7 @@ Every open question from the roadmap is answerable with existing prior art. The 
 | Live-assigns form | Frontend Server (LiveView `phx-change`) | — | All state on server; form replays render on every change. No client-side validation. |
 | HTML preview iframe | Browser | Frontend Server | `<iframe srcdoc={@html}>` — the rendered HTML runs in a sandboxed browser frame so email CSS doesn't leak into the admin UI. |
 | Compiled CSS / JS asset serving | Backend (compile-time embed → runtime bytes) | CDN/cache (via `cache-control: immutable`) | `MailglassAdmin.Controllers.Assets` reads files at compile time, serves at request time with year-long cache. |
-| LiveReload broadcast subscription | Backend (PubSub) | Browser (LiveView auto-push) | `PreviewLive.mount` subscribes to `:mailglass_admin_reload` topic; adopter config routes file-change events there. |
+| LiveReload broadcast subscription | Backend (PubSub) | Browser (LiveView auto-push) | `PreviewLive.mount` subscribes to the `"mailglass:admin:reload"` PubSub topic (CORRECTED — Phase 6 LINT-06 `PrefixedPubSubTopics` requires the `mailglass:` prefix; earlier references to `:mailglass_admin_reload` below are pre-correction); adopter config routes file-change events there. |
 | Session isolation (no adopter cookie leak) | Backend (Plug + `__session__/N`) | — | Whitelisted session callback is the single isolation seam. |
 | Device width simulation | Browser (CSS width on iframe container) | — | Pure CSS — no JS beyond a LiveView-pushed CSS variable update. |
 | Dark/light chrome toggle | Browser (CSS variable / data-theme attr) | Frontend Server (assign + push) | daisyUI `data-theme` attribute swap via `phx-click` event; no cookie persistence at v0.1. |
@@ -257,7 +257,7 @@ end
 │ @css_hash :crypto.md5() │      │  │  __mailglass_mailable__/0 │
 │                         │      │  │  marker                   │
 │ def css(conn, _) do     │      │  ├─ subscribe to             │
-│   conn                  │      │  │  :mailglass_admin_reload  │
+│   conn                  │      │  │  "mailglass:admin:reload" │
 │   |> put_resp_header(   │      │  │  PubSub topic             │
 │     "cache-control",    │      │  └─ assign current scenario  │
 │     "public, max-age=   │      │                              │
@@ -635,7 +635,7 @@ end
 #     ],
 #     notify: [
 #       # Adopter adds this line to route mailer file changes to us
-#       mailglass_admin_reload: [
+#       "mailglass:admin:reload": [
 #         ~r"lib/.*mailer.*(ex)$",
 #         ~r"lib/.*_mail.*(ex)$"
 #       ]
@@ -647,7 +647,7 @@ defmodule MailglassAdmin.PreviewLive do
   use Phoenix.LiveView
   alias MailglassAdmin.Preview.Discovery
 
-  @reload_topic "mailglass_admin_reload"
+  @reload_topic "mailglass:admin:reload"
 
   def mount(_params, session, socket) do
     if connected?(socket) and live_reload_available?() do
@@ -658,7 +658,7 @@ defmodule MailglassAdmin.PreviewLive do
     {:ok, assign(socket, mailables: mailables, scenario_assigns: nil)}
   end
 
-  def handle_info({:phoenix_live_reload, :mailglass_admin_reload, path}, socket) do
+  def handle_info({:phoenix_live_reload, "mailglass:admin:reload", path}, socket) do
     # File changed. BEAM already reloaded the module (Phoenix.CodeReloader).
     # Re-discover + re-render current scenario.
     mailables = Discovery.discover(session_mailables(socket))
@@ -1039,7 +1039,7 @@ end
 **Adopter-side config (documented in our README):**
 
 ```elixir
-# config/dev.exs (adopter adds mailglass_admin_reload topic)
+# config/dev.exs (adopter adds the "mailglass:admin:reload" topic)
 config :my_app, MyAppWeb.Endpoint,
   live_reload: [
     patterns: [
@@ -1603,24 +1603,26 @@ end
 
 **Total assumed claims: 7.** Most are low-risk (either verifiable in 5 minutes during planning or auto-flagged by existing CI gates).
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Raw tab — RFC 5322 envelope rendering API in Swoosh.**
+> All four were resolved during planning. Resolutions inline below.
+
+1. **Raw tab — RFC 5322 envelope rendering API in Swoosh.** _(RESOLVED in 05-06-PLAN.md Task 3: try `Swoosh.Email.Render.encode/1`; fall back to `inspect/2` on `UndefinedFunctionError`.)_
    - What we know: Swoosh 1.25's `Swoosh.Email` struct holds headers + parts. Rendering the full envelope (with MIME boundaries) is what provider adapters do internally before HTTP POST.
    - What's unclear: Is there a public `Swoosh.Email.Render.encode/1` or equivalent that returns the full RFC 5322 string? Or do we have to assemble it ourselves?
    - Recommendation: Plan 5.N spends 10 minutes checking Swoosh source. If public API exists, use it. If not, fallback to `Kernel.inspect(%Swoosh.Email{}, pretty: true, limit: :infinity)` — captures all fields, readable, just not RFC-formatted. CONTEXT.md lists this as explicit discretion.
 
-2. **Tailwind v4 + daisyUI 5 on Phoenix 1.8 — any known build issues in April 2026?**
+2. **Tailwind v4 + daisyUI 5 on Phoenix 1.8 — any known build issues in April 2026?** _(RESOLVED in 05-05-PLAN.md: build is verified at plan-verification time; escape hatch per CONTEXT D-22 if the stack breaks.)_
    - What we know: Phoenix 1.8's installer ships this stack; verified against app.css.eex source April 2026.
    - What's unclear: Has daisyUI 5.x had breaking changes mid-year that the Phoenix installer hasn't adopted yet?
    - Recommendation: Plan 5.N runs `mix mailglass_admin.assets.build` at plan-verification time and verifies the output. If something breaks, drop to the escape hatch (raw Tailwind v4 + brand palette as `@theme` CSS vars per D-22).
 
-3. **Sidebar behavior on 50+ mailables — search or grouping heuristic for v0.1?**
+3. **Sidebar behavior on 50+ mailables — search or grouping heuristic for v0.1?** _(RESOLVED: v0.1 ships namespace grouping only; search deferred to v0.5.)_
    - What we know: Mail namespaces usually group cleanly (`MyApp.UserMailer`, `MyApp.AdminMailer` → "MyApp" top-level group).
    - What's unclear: Is "namespace grouping" alone enough, or do adopters with 100+ mailables need search?
    - Recommendation: v0.1 ships namespace grouping only (§ Pitfall 6). If adopter feedback requests search, add in v0.5 when admin release has more surface area.
 
-4. **Dark toggle cookie persistence — v0.1 or v0.5?**
+4. **Dark toggle cookie persistence — v0.1 or v0.5?** _(RESOLVED: v0.1 uses `localStorage` via a colocated LiveView hook; server-side cookie deferred to v0.5.)_
    - What we know: D-16 says "chrome-only" at v0.1 — no email-client simulation.
    - What's unclear: Does the user expect the chrome dark choice to persist across page reloads (via cookie)?
    - Recommendation: v0.1 uses `localStorage` via a tiny colocated LiveView hook (10 lines of JS). Persists per-browser, no server-side cookie (keeps the "no adopter session touches our admin" boundary clean). If it has to persist server-side, defer to v0.5.
