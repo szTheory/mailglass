@@ -304,7 +304,7 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | HOOK-03 | Phase 4 — Webhook Ingest | Pending |
 | HOOK-04 | Phase 4 — Webhook Ingest | Pending |
 | HOOK-05 | Phase 4 — Webhook Ingest | Pending |
-| HOOK-06 | Phase 4 — Webhook Ingest | Pending |
+| HOOK-06 | Phase 4 — Webhook Ingest | Complete (04-06) |
 | HOOK-07 | Phase 4 — Webhook Ingest | Pending |
 | COMP-01 | Phase 1 — Foundation | Complete (01-06) |
 | COMP-02 | Phase 1 — Foundation | Complete (01-06) |

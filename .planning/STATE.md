@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-webhook-ingest/04-05-PLAN.md (Wave 2B Router macro + Tenancy callback formalization + error atom-set finalization + api_stability.md lock)
-last_updated: "2026-04-23T21:52:27.385Z"
-last_activity: 2026-04-23
+stopped_at: Completed 04-webhook-ingest/04-06-PLAN.md (Wave 3A Ingest.ingest_multi/3 heart of HOOK-06 + WebhookEvent schema + IdempotencyKey arity-3)
+last_updated: "2026-04-24T01:44:27.915Z"
+last_activity: 2026-04-24
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 33
-  completed_plans: 29
-  percent: 88
+  completed_plans: 30
+  percent: 91
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 04 (webhook-ingest) — EXECUTING
-Plan: 6 of 9 (04-01 complete; 04-02 next)
+Plan: 7 of 9 (04-01 complete; 04-02 next)
 Status: Ready to execute
-Last activity: 2026-04-23
+Last activity: 2026-04-24
 
-Progress: [█████████░] 88%
+Progress: [█████████░] 91%
 
 ## Performance Metrics
 
@@ -84,6 +84,7 @@ Progress: [█████████░] 88%
 | Phase 04 P03 | 9min | 2 tasks | 3 files |
 | Phase 04-webhook-ingest P04 | 13min | 2 tasks tasks | 4 files files |
 | Phase 04 P05 | 9min | 3 tasks | 12 files |
+| Phase 04-webhook-ingest P06 | 30min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -197,6 +198,11 @@ Most load-bearing for Phase 1:
 - Plan 04-05: Mailglass.Tenancy.clear/0 encapsulates the :mailglass_tenant_id process-dict atom — Plans 06+ tests call Mailglass.Tenancy.clear() in on_exit instead of Process.delete(:mailglass_tenant_id); internal atom can be refactored without breaking test code (revision W7)
 - Plan 04-05: Mailglass.Config :webhook_ingest_mode schema entry is @doc false because :async is reserved at v0.1 — NimbleOptions {:in, [:sync, :async]} enforcement; Plan 06's ingest_multi/3 will add explicit runtime raise on :async pending v0.5 DLQ admin (revision B2)
 - Plan 04-05: SignatureError :malformed_header format_message accepts ctx[:detail] and TenancyError :webhook_tenant_unresolved accepts ctx[:reason] via inspect/1 — optional context map fields enable operator-visible hints without adding struct fields; absent keys fall through to bare sentence (backward-compatible)
+- Plan 04-06: Events.append_multi/3 guards is_atom(name) — webhook Ingest synthesizes :"event_#{idx}" via event_step_name/1 helper; atom growth is O(128) bounded by SendGrid max batch size (not attacker-controlled). The :projector_categorize/:projector_apply steps retain tuple keys because Multi.run/3 accepts any term.
+- Plan 04-06: Duplicate-detection signal uses deterministic pre-insert Repo.exists?/1 in a :duplicate_check Multi.run step, NOT is_nil(webhook_event.id) on the inserted row. Ecto's on_conflict: :nothing, returning: true returns the conflict-target row WITH its existing id, so id-nil heuristic never triggers. Verified by duplicate replay test.
+- Plan 04-06: SendGrid batch idempotency uses SHA-256 of raw_body (32-char hex prefix) as provider_event_id — content-addressable; collision-resistant across retries. Naive 'first event id' approach would false-positive-duplicate legitimate second batches where two different batches share a first-event-id.
+- Plan 04-06: Mailglass.Tenancy.tenant_id!/0 (fail-loud accessor) used at top of ingest_multi/3 instead of Tenancy.current/0 — current/0 silently falls back to SingleTenant 'default' literal, masking missing Plug.with_tenant/2 stamping. tenant_id!/0 raises %TenancyError{:unstamped} unconditionally.
+- Plan 04-06: Flat Multi composition (:projector_categorize → :projector_apply Multi.run pair per event) replaces nested Repo.multi anti-pattern. Nested form (Repo.multi inside Multi.run) broke transaction scoping — outer transaction couldn't rollback inner writes on later failure. Flat form keeps everything in one transaction with correct rollback semantics (revision W4).
 
 ### Pending Todos
 
@@ -215,8 +221,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T21:52:27.357Z
-Stopped at: Completed 04-webhook-ingest/04-05-PLAN.md (Wave 2B Router macro + Tenancy callback formalization + error atom-set finalization + api_stability.md lock)
+Last session: 2026-04-24T01:44:27.899Z
+Stopped at: Completed 04-webhook-ingest/04-06-PLAN.md (Wave 3A Ingest.ingest_multi/3 heart of HOOK-06 + WebhookEvent schema + IdempotencyKey arity-3)
 Resume file: None
 
 **Planned Phase:** 04 (webhook-ingest) — 9 plans — 2026-04-23T20:02:05.795Z
