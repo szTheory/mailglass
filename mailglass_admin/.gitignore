@@ -1,0 +1,27 @@
+# Elixir
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+erl_crash.dump
+*.ez
+
+# Mix
+/tmp/
+
+# Logs
+*.log
+
+# ElixirLS
+/.elixir_ls/
+
+# DO NOT ignore priv/static/ — CONTEXT D-04 requires it committed.
+# The compiled CSS bundle + fonts + logo ship inside the Hex tarball's
+# package[:files] whitelist. CI (`git diff --exit-code priv/static/`) is the
+# drift gate; gitignoring this directory would silently break PREV-06.
+
+# DO NOT ignore assets/vendor/ — CONTEXT D-18 requires vendored daisyUI committed.
+# `assets/vendor/daisyui.mjs` + `daisyui-theme.mjs` are curled from upstream at
+# maintainer-dev time and committed so no-Node CI builds can resolve the
+# Tailwind v4 @plugin directives without a network dep at compile time.
