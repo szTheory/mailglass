@@ -120,6 +120,19 @@ defmodule Mailglass.Repo do
   @spec all(Ecto.Queryable.t(), keyword()) :: [struct()]
   def all(queryable, opts \\ []), do: repo().all(queryable, opts)
 
+  @doc """
+  Delegates to the host Repo's `delete_all/2`. Used by
+  `Mailglass.Webhook.Pruner` (Phase 4 D-16) for retention-policy
+  DELETEs against `mailglass_webhook_events`.
+
+  Does NOT translate SQLSTATE 45A01 — that trigger fires only on
+  `mailglass_events` UPDATE/DELETE, not `mailglass_webhook_events`
+  (which is intentionally mutable + prunable per CONTEXT D-15 split).
+  """
+  @doc since: "0.1.0"
+  @spec delete_all(Ecto.Queryable.t(), keyword()) :: {non_neg_integer(), nil | [term()]}
+  def delete_all(queryable, opts \\ []), do: repo().delete_all(queryable, opts)
+
   @doc "Delegates to the host Repo's `get/3`."
   @doc since: "0.1.0"
   @spec get(Ecto.Queryable.t(), term(), keyword()) :: struct() | nil

@@ -224,6 +224,43 @@ defmodule Mailglass.Config do
       type: {:in, [:sync, :async]},
       default: :sync,
       doc: false
+    ],
+    # Phase 4 CONTEXT D-16. Three retention knobs for
+    # `Mailglass.Webhook.Pruner`:
+    #   * `:succeeded_days` (default 14) — retain :succeeded rows N days
+    #   * `:dead_days` (default 90) — retain :dead (terminal-after-retries)
+    #     rows N days
+    #   * `:failed_days` (default :infinity) — :failed is investigatable;
+    #     never pruned by default
+    # Any knob set to `:infinity` disables that prune class — the Pruner
+    # returns `{:ok, 0}` without issuing the DELETE.
+    webhook_retention: [
+      type: :keyword_list,
+      default: [],
+      doc: "Retention policy for `mailglass_webhook_events` rows (HOOK-06).",
+      keys: [
+        succeeded_days: [
+          type: {:or, [:pos_integer, {:in, [:infinity]}]},
+          default: 14,
+          doc:
+            "Days to retain `:succeeded` webhook_events before the Pruner deletes them. " <>
+              "Set to `:infinity` to disable. Default: 14."
+        ],
+        dead_days: [
+          type: {:or, [:pos_integer, {:in, [:infinity]}]},
+          default: 90,
+          doc:
+            "Days to retain `:dead` (terminal-after-retries) webhook_events before the " <>
+              "Pruner deletes them. Set to `:infinity` to disable. Default: 90."
+        ],
+        failed_days: [
+          type: {:or, [:pos_integer, {:in, [:infinity]}]},
+          default: :infinity,
+          doc:
+            "Days to retain `:failed` (investigatable) webhook_events. Default: `:infinity` " <>
+              "(never prune)."
+        ]
+      ]
     ]
   ]
 
