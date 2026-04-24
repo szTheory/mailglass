@@ -35,15 +35,18 @@ defmodule Mailglass.Webhook.Plug do
   | %ConfigError{:webhook_verification_key_missing} | 500 | Missing provider secret |
   | Ingest {:error, reason} | 500 | Logger.error with reason atom only |
 
-  ## Telemetry (CONTEXT D-22 — Plan 08 ships full helpers)
+  ## Telemetry (CONTEXT D-22)
 
   Emits `[:mailglass, :webhook, :ingest, :start | :stop | :exception]`
-  around the entire call/2 body. Stop metadata follows D-23 whitelist:
+  around the entire call/2 body via
+  `Mailglass.Webhook.Telemetry.ingest_span/2` (Plan 08). Stop metadata
+  follows D-23 whitelist:
   `%{provider, tenant_id, status, event_count, duplicate, failure_reason}`
   — never IP, headers, or payload bytes.
 
   Also emits `[:mailglass, :webhook, :signature, :verify, :start | :stop |
-  :exception]` around `Provider.verify!/3`.
+  :exception]` around `Provider.verify!/3` via
+  `Mailglass.Webhook.Telemetry.verify_span/2`.
 
   ## Failure log discipline (CONTEXT D-24)
 
@@ -71,6 +74,7 @@ defmodule Mailglass.Webhook.Plug do
   alias Mailglass.{ConfigError, SignatureError, TenancyError}
   alias Mailglass.Outbound.Projector
   alias Mailglass.Tenancy
+  alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
 
   # Forward-reference to Plan 06's Ingest Multi. Referenced at runtime;
   # silenced at compile time so `--warnings-as-errors` stays green before
@@ -96,16 +100,11 @@ defmodule Mailglass.Webhook.Plug do
   def call(conn, opts) do
     provider = Keyword.fetch!(opts, :provider)
 
-    # `:telemetry.span/3` directly (per CONTEXT D-22 line 161 — "Plan 08
-    # ships the helpers; this plan calls them directly via
-    # `:telemetry.span/3` if helpers absent"). The inner function must
-    # return `{result, stop_metadata}` — the conn is the `result` and the
-    # enriched per-request metadata lands on the `:stop` event. Plan 08
-    # extracts `Mailglass.Webhook.Telemetry.ingest_span/2` wrapping the
-    # same primitive; refactor is a mechanical rename with no behavioural
-    # change.
-    :telemetry.span(
-      [:mailglass, :webhook, :ingest],
+    # Plan 08 named helper. `do_call/3` returns `{conn, stop_metadata}`
+    # — `ingest_span/2` recognizes the tuple shape and attaches the
+    # per-request enrichment to the `:stop` event. The conn (first
+    # tuple element) is returned to `Plug.call/2`.
+    WebhookTelemetry.ingest_span(
       %{provider: provider, status: :pending},
       fn -> do_call(conn, provider, opts) end
     )
@@ -229,12 +228,13 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   # Step 2: telemetry-wrapped Provider.verify!/3 (CONTEXT D-22 inner span).
-  # Uses Mailglass.Telemetry.span/3 (the D-27-compliant wrapper) from day
-  # one per revision B3; Plan 08 extracts a named helper wrapping the same
-  # primitive without any behavioural change.
+  # Plan 08 named helper. On success the inner fn returns `:ok`; on
+  # signature failure the `verify!/3` call raises %SignatureError{} which
+  # :telemetry.span/3 (inside `verify_span/2`) reports via the :exception
+  # event and re-raises — the outer SignatureError rescue in do_call/3
+  # catches it and classifies the 401 response.
   defp verify_with_telemetry!(provider, raw_body, headers, config) do
-    Mailglass.Telemetry.span(
-      [:mailglass, :webhook, :signature, :verify],
+    WebhookTelemetry.verify_span(
       %{provider: provider, status: :pending},
       fn ->
         module = provider_module(provider)

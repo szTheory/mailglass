@@ -74,6 +74,7 @@ defmodule Mailglass.Webhook.Reconciler do
     alias Mailglass.{Clock, Events, Repo}
     alias Mailglass.Events.Reconciler, as: EventsReconciler
     alias Mailglass.Outbound.Projector
+    alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
 
     @grace_seconds 60
     @max_age_minutes 7 * 24 * 60
@@ -106,8 +107,11 @@ defmodule Mailglass.Webhook.Reconciler do
     @spec reconcile(String.t() | nil, pos_integer()) :: {:ok, %{scanned: non_neg_integer(), linked: non_neg_integer()}}
     def reconcile(tenant_id \\ nil, limit \\ @batch_limit)
         when (is_nil(tenant_id) or is_binary(tenant_id)) and is_integer(limit) and limit > 0 do
-      :telemetry.span(
-        [:mailglass, :webhook, :reconcile],
+      # Plan 08 named helper. The inner fn returns `{result, stop_meta}` —
+      # `reconcile_span/2` recognizes the tuple shape and attaches the
+      # per-run enrichment (`scanned_count`, `linked_count`,
+      # `remaining_orphan_count`) to the `:stop` event.
+      WebhookTelemetry.reconcile_span(
         %{tenant_id: tenant_id},
         fn ->
           orphans =

@@ -93,6 +93,7 @@ defmodule Mailglass.Webhook.Ingest do
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.{Delivery, Projector}
   alias Mailglass.Tenancy
+  alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
   alias Mailglass.Webhook.WebhookEvent
 
   @doc """
@@ -137,22 +138,39 @@ defmodule Mailglass.Webhook.Ingest do
                 "v0.1 supports :sync only"
     end
 
-    Repo.transact(fn ->
-      # CONTEXT D-29: SET LOCAL inside the transaction (Pitfall 6 — outside
-      # a transaction these are no-ops).
-      _ = Repo.query!("SET LOCAL statement_timeout = '2s'", [])
-      _ = Repo.query!("SET LOCAL lock_timeout = '500ms'", [])
+    result =
+      Repo.transact(fn ->
+        # CONTEXT D-29: SET LOCAL inside the transaction (Pitfall 6 — outside
+        # a transaction these are no-ops).
+        _ = Repo.query!("SET LOCAL statement_timeout = '2s'", [])
+        _ = Repo.query!("SET LOCAL lock_timeout = '500ms'", [])
 
-      multi = build_multi(provider, raw_body, events, tenant_id)
+        multi = build_multi(provider, raw_body, events, tenant_id)
 
-      case Repo.multi(multi) do
-        {:ok, changes} ->
-          {:ok, finalize_changes(changes, events)}
+        case Repo.multi(multi) do
+          {:ok, changes} ->
+            {:ok, finalize_changes(changes, events)}
 
-        {:error, _step, reason, _changes} ->
-          {:error, reason}
-      end
-    end)
+          {:error, _step, reason, _changes} ->
+            {:error, reason}
+        end
+      end)
+
+    # Plan 08: per-event + per-ingest telemetry signals. Fires AFTER the
+    # transact returns {:ok, _} (Phase 3 D-04 post-commit invariant) so
+    # adopters observing the emits know the events are durable. Emits are
+    # best-effort with no rescue — `:telemetry.execute/3` handler
+    # isolation (D-27 via the Phase 1 wrapper) contains any handler raise
+    # from propagating into this pipeline.
+    case result do
+      {:ok, finalized} ->
+        :ok = emit_per_event_signals(provider, finalized, tenant_id)
+        :ok = emit_duplicate_signal(provider, finalized)
+        {:ok, finalized}
+
+      {:error, _reason} = err ->
+        err
+    end
   end
 
   # ---- Multi composition ----------------------------------------------
@@ -437,5 +455,57 @@ defmodule Mailglass.Webhook.Ingest do
       events_with_deliveries: events_with_deliveries,
       orphan_event_count: orphan_event_count
     }
+  end
+
+  # Plan 08 per-event telemetry emits. Walks the 3-tuple list from
+  # finalize_changes/2 (per revision B7) — no set-difference, no
+  # Event-struct equality (post-insert structs differ from input structs
+  # by :id/:inserted_at). Branches on the explicit `orphan?` flag.
+  #
+  # Metadata complies with D-23 whitelist: `provider, event_type,
+  # tenant_id, age_seconds, mapped`. No PII, no raw payloads, no IPs.
+  #
+  # `provider` is the outer ingest arg (Plan 04-02 decision: provider
+  # identity lives in Event.metadata with string keys, NOT as a schema
+  # column — cannot read `event.provider`).
+  defp emit_per_event_signals(provider, %{events_with_deliveries: tuples}, tenant_id) do
+    Enum.each(tuples, fn
+      {event, _delivery, true} ->
+        WebhookTelemetry.orphan_emit(%{
+          provider: provider,
+          event_type: event.type,
+          tenant_id: tenant_id,
+          age_seconds: 0
+        })
+
+      {event, _delivery, false} ->
+        WebhookTelemetry.normalize_emit(%{
+          provider: provider,
+          event_type: event.type,
+          mapped: event.type != :unknown
+        })
+    end)
+
+    :ok
+  end
+
+  # Plan 08 duplicate-signal emit. Fires once per ingest call (not
+  # per-event) — adopters alert on its rate to distinguish provider
+  # retry storms from real traffic (CONTEXT D-24 alternative to
+  # log-scraping). Passes through to a no-op when the ingest was not a
+  # duplicate replay.
+  defp emit_duplicate_signal(_provider, %{duplicate: false}), do: :ok
+
+  defp emit_duplicate_signal(provider, %{duplicate: true} = result) do
+    first_event_type =
+      case result.events_with_deliveries do
+        [{event, _delivery, _orphan?} | _] -> event.type
+        _ -> :unknown
+      end
+
+    WebhookTelemetry.duplicate_emit(%{
+      provider: provider,
+      event_type: first_event_type
+    })
   end
 end

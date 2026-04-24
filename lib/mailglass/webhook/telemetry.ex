@@ -20,11 +20,33 @@ defmodule Mailglass.Webhook.Telemetry do
   | `[:mailglass, :webhook, :duplicate, :stop]` | single emit | `provider, event_type` |
   | `[:mailglass, :webhook, :reconcile, :start \\| :stop \\| :exception]` | full span | `tenant_id, scanned_count, linked_count, remaining_orphan_count, status` |
 
-  All helpers DELEGATE to `Mailglass.Telemetry.span/3` and
-  `Mailglass.Telemetry.execute/3` (Phase 1). Callers MUST NOT reach
-  for `:telemetry.span/3` directly — the Phase 1 wrapper preserves
-  the D-27 invariant that a handler raising is isolated inside
-  `:telemetry.span/3` and cannot break the webhook pipeline.
+  Single-emit helpers delegate to `Mailglass.Telemetry.execute/3`
+  (Phase 1). Full-span helpers call `:telemetry.span/3` directly
+  because the Plug needs per-request stop metadata enrichment
+  (`status`, `failure_reason`, `event_count`, `duplicate`) — the
+  `Mailglass.Telemetry.span/3` wrapper closes metadata at call time,
+  which cannot express "I know the status once the inner function
+  returns." `:telemetry.span/3` itself provides D-27 handler
+  isolation: handlers that raise are auto-detached and
+  `[:telemetry, :handler, :failure]` fires — a handler crash cannot
+  propagate into the webhook pipeline. Callers MUST NOT reach for
+  `:telemetry.span/3` directly; use the helpers below so LINT-02
+  has a single module surface to lint.
+
+  ## Per-request stop metadata enrichment
+
+  The full-span helpers (`ingest_span/2`, `verify_span/2`,
+  `reconcile_span/2`) accept a zero-arity function returning either:
+
+    * `result` — bare value; stop metadata equals the `metadata`
+      argument passed at call time.
+    * `{result, stop_metadata}` — tuple; stop metadata is the
+      returned map. Used by the Plug to attach `:status`,
+      `:failure_reason`, `:event_count`, `:duplicate` onto the
+      `:stop` event after classifying the outcome.
+
+  Start metadata is always the `metadata` argument at call time
+  (before outcome is known).
 
   ## Whitelist discipline (D-23)
 
@@ -63,22 +85,27 @@ defmodule Mailglass.Webhook.Telemetry do
   Stop metadata SHOULD include `:provider`, `:tenant_id`, `:status`,
   `:event_count`, `:duplicate`, `:delivery_id_matched`. NEVER include
   PII (see the module doc whitelist).
+
+  `fun` may return a bare `result` OR `{result, stop_metadata}` — see
+  the moduledoc's "Per-request stop metadata enrichment" section.
   """
   @doc since: "0.1.0"
-  @spec ingest_span(map(), (-> result)) :: result when result: term()
+  @spec ingest_span(map(), (-> result | {result, map()})) :: result when result: term()
   def ingest_span(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
-    Telemetry.span([:mailglass, :webhook, :ingest], metadata, fun)
+    span_with_enrichment([:mailglass, :webhook, :ingest], metadata, fun)
   end
 
   @doc """
   Wrap `Provider.verify!/3` in a `[:mailglass, :webhook, :signature, :verify, *]` span.
 
   Stop metadata SHOULD include `:provider`, `:status`, `:failure_reason`.
+
+  `fun` may return a bare `result` OR `{result, stop_metadata}`.
   """
   @doc since: "0.1.0"
-  @spec verify_span(map(), (-> result)) :: result when result: term()
+  @spec verify_span(map(), (-> result | {result, map()})) :: result when result: term()
   def verify_span(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
-    Telemetry.span([:mailglass, :webhook, :signature, :verify], metadata, fun)
+    span_with_enrichment([:mailglass, :webhook, :signature, :verify], metadata, fun)
   end
 
   @doc """
@@ -129,10 +156,35 @@ defmodule Mailglass.Webhook.Telemetry do
 
   Stop metadata SHOULD include `:tenant_id`, `:scanned_count`,
   `:linked_count`, `:remaining_orphan_count`, `:status`.
+
+  `fun` may return a bare `result` OR `{result, stop_metadata}`.
   """
   @doc since: "0.1.0"
-  @spec reconcile_span(map(), (-> result)) :: result when result: term()
+  @spec reconcile_span(map(), (-> result | {result, map()})) :: result when result: term()
   def reconcile_span(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
-    Telemetry.span([:mailglass, :webhook, :reconcile], metadata, fun)
+    span_with_enrichment([:mailglass, :webhook, :reconcile], metadata, fun)
+  end
+
+  # Shared full-span implementation. Calls `:telemetry.span/3` directly
+  # (not `Mailglass.Telemetry.span/3`) because this supports per-request
+  # stop metadata enrichment — the Plug's `do_call/3` classifies outcome
+  # after the inner fn returns and needs the stop event to carry the
+  # classified `:status`, `:failure_reason`, `:event_count`, `:duplicate`
+  # values, which the fixed-at-call-time wrapper cannot express.
+  #
+  # D-27 handler isolation is still preserved: `:telemetry.span/3` wraps
+  # each attached handler in a try/catch; a handler that raises is
+  # auto-detached and emits `[:telemetry, :handler, :failure]` — a handler
+  # crash cannot propagate into the webhook pipeline.
+  defp span_with_enrichment(event_prefix, metadata, fun) do
+    :telemetry.span(event_prefix, metadata, fn ->
+      case fun.() do
+        {result, %{} = stop_metadata} ->
+          {result, stop_metadata}
+
+        result ->
+          {result, metadata}
+      end
+    end)
   end
 end
