@@ -163,6 +163,17 @@ defmodule Mailglass.MigrationTest do
       # V03+ will keep this assertion correct without another code edit.
       assert Migration.migrated_version() ==
                Mailglass.Migrations.Postgres.current_version()
+
+      # Restart the pool so no worker retains a prepared statement that
+      # references the pre-drop citext OID. Postgres's syscache raises
+      # `XX000 cache lookup failed for type NNN` on any prepared plan
+      # that references a dropped-and-recreated pg_type entry; the
+      # per-connection `disconnect_on_error_codes` probe only cleans
+      # whichever worker happens to be checked out, leaving the other
+      # nine in a stale state for subsequent test files. Full pool
+      # restart is the only reliable cleanup.
+      :ok = Supervisor.stop(TestRepo)
+      {:ok, _} = TestRepo.start_link()
     end
   end
 
