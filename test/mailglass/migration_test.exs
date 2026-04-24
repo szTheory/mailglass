@@ -118,6 +118,7 @@ defmodule Mailglass.MigrationTest do
   end
 
   describe "down/0" do
+    @describetag :migration_roundtrip
     test "drops all three tables + trigger + function + citext in reverse order" do
       # Roll the schema down through Ecto.Migrator (the same code path adopters
       # hit via `mix ecto.rollback`). :all with :down reverses every applied
@@ -164,29 +165,6 @@ defmodule Mailglass.MigrationTest do
       assert Migration.migrated_version() ==
                Mailglass.Migrations.Postgres.current_version()
 
-      # Discard prepared statements on every pool worker.
-      #
-      # Postgres's syscache raises `XX000 cache lookup failed for type NNN`
-      # on any prepared plan that still references a dropped-and-recreated
-      # pg_type entry (here: citext). The per-connection
-      # `disconnect_on_error_codes` probe in DataCase/MailerCase only
-      # cleans whichever worker happens to be checked out for a given
-      # test's sandbox owner — the other workers (pool_size: 10) retain
-      # poisoned plans and break subsequent cold-start test files.
-      #
-      # Running `DISCARD ALL` concurrently from `pool_size * 2` processes
-      # forces each worker through a fresh checkout at least once,
-      # clearing every worker's prepared-statement cache. The *2
-      # multiplier gives DBConnection's scheduler enough concurrent
-      # demand to actually hit every worker (a naive `Enum.map` of N
-      # serialized queries would reuse the same worker N times).
-      pool_size = 10
-
-      1..(pool_size * 2)
-      |> Enum.map(fn _ ->
-        Task.async(fn -> TestRepo.query!("DISCARD ALL") end)
-      end)
-      |> Task.await_many(5_000)
     end
   end
 

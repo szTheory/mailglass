@@ -132,11 +132,21 @@ defmodule Mailglass.MixProject do
       ],
       # Cold-start smoke — full suite from a fresh DB. Catches startup-order,
       # seed, and missing-migration issues that warm-state runs can mask.
-      # Excludes `:flaky`-tagged tests (tracked in deferred-items.md).
+      #
+      # Excludes:
+      #   - `:flaky` — tracked in deferred-items.md
+      #   - `:migration_roundtrip` — the down/0 test in migration_test.exs
+      #     drops and recreates the citext extension mid-suite. Postgres's
+      #     syscache raises `XX000 cache lookup failed for type NNN` on
+      #     prepared plans that referenced the pre-drop pg_type entry, and
+      #     Postgrex's pool-wide TypeServer cache has no clean invalidation
+      #     API. Phase 02 UAT lane runs the round-trip in isolation (via
+      #     `--only phase_02_uat`), so coverage is preserved without
+      #     poisoning the cold-start pool.
       "verify.cold_start": [
         "ecto.drop -r Mailglass.TestRepo --quiet",
         "ecto.create -r Mailglass.TestRepo --quiet",
-        "test --warnings-as-errors --exclude flaky"
+        "test --warnings-as-errors --exclude flaky --exclude migration_roundtrip"
       ]
     ]
   end
