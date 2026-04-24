@@ -42,19 +42,27 @@ defmodule MailglassAdmin.AccessibilityTest do
     end
   end
 
-  describe "negative assertion (documents unusable pair)" do
-    test "Glass on Paper small body text FAILS AA (documents why Glass is reserved for UI/large text)" do
-      # 4.8:1 passes AA for UI components (3:1) and large text (3:1) but
-      # FAILS the 4.5:1 threshold for small body text. 05-UI-SPEC line 99.
-      # The assertion is `< 4.5` rather than `< 5.0` to stay at the
-      # documented boundary without tightening the intent.
+  describe "borderline pair (documents typography restriction)" do
+    test "Glass on Paper is the borderline AA-body case (canonical ratio 4.63, rounded 4.8 in UI-SPEC)" do
+      # Canonical WCAG 2.1 math: contrast_ratio("#277B96", "#F8FBFD") ≈ 4.63,
+      # which narrowly clears the 4.5:1 AA-body threshold. 05-UI-SPEC line 528
+      # rounds this to 4.8 and line 534 documents it as the borderline case:
+      # passes AA for UI components (3:1) + large/bold text (3:1) and barely
+      # passes for small body text, so the UI-SPEC RESTRICTS Glass to button
+      # labels / links / large display text as a typography discipline rather
+      # than a contrast-math failure.
+      #
+      # This test pins the ratio near the UI-SPEC's documented 4.63-4.8 band
+      # to catch palette drift — raising Glass lightness or darkening Paper
+      # would push the ratio either well above 5.0 (tone drift) or below 4.5
+      # (accessibility regression).
       ratio = contrast_ratio("#277B96", "#F8FBFD")
 
-      assert ratio < 5.0,
-             "Glass on Paper ratio #{ratio} unexpectedly exceeds 5.0 — palette may have drifted"
+      assert ratio >= 4.5,
+             "Glass on Paper ratio #{ratio} must clear the AA-body floor (4.5:1); palette drift suspected"
 
-      refute ratio >= 4.6,
-             "Glass on Paper must NOT clear the 4.5:1 AA-body threshold (got #{ratio})"
+      assert ratio < 5.0,
+             "Glass on Paper ratio #{ratio} unexpectedly exceeds 5.0 — palette may have drifted lighter"
     end
   end
 

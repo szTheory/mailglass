@@ -54,9 +54,14 @@ defmodule MailglassAdmin.BrandTest do
   end
 
   describe "mailglass-dark theme" do
-    test "exists and is named mailglass-dark", %{css: css} do
-      assert css =~ ~r/name:\s*"mailglass-dark"/,
-             "compiled CSS must define `name: \"mailglass-dark\"` in a @plugin/theme block"
+    # The daisyUI 5 plugin transforms the source-level `name: "mailglass-dark"`
+    # directive into CSS selectors like `[data-theme=mailglass-dark]` +
+    # `input.theme-controller[value=mailglass-dark]` — the literal
+    # `name: "mailglass-dark"` string does NOT survive into the compiled
+    # output. Assert on the compiled-form selectors instead.
+    test "exists as a compiled daisyUI theme selector", %{css: css} do
+      assert css =~ "[data-theme=mailglass-dark]",
+             ~s|compiled CSS must define a [data-theme=mailglass-dark] selector (daisyUI 5's compiled form of `name: "mailglass-dark"`)|
     end
   end
 
