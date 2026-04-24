@@ -89,7 +89,7 @@ defmodule Mailglass.Webhook.Ingest do
   import Ecto.Query
 
   alias Ecto.Multi
-  alias Mailglass.{Clock, Config, Events, IdempotencyKey, Repo, TenancyError}
+  alias Mailglass.{Clock, Config, Events, IdempotencyKey, Repo}
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.{Delivery, Projector}
   alias Mailglass.Tenancy
@@ -117,11 +117,12 @@ defmodule Mailglass.Webhook.Ingest do
           {:ok, map()} | {:error, term()}
   def ingest_multi(provider, raw_body, events)
       when provider in [:postmark, :sendgrid] and is_binary(raw_body) and is_list(events) do
-    tenant_id =
-      Tenancy.current() ||
-        raise TenancyError.new(:unstamped,
-                context: %{operation: :webhook_ingest, provider: provider}
-              )
+    # Tenancy.tenant_id!/0 is the fail-loud accessor — raises %TenancyError{:unstamped}
+    # when the process-dict key is absent. Unlike Tenancy.current/0 (which falls back
+    # to the SingleTenant "default" literal), tenant_id!/0 never auto-defaults. The
+    # Plug's with_tenant/2 block form stamps the tenant BEFORE calling ingest_multi/3,
+    # so reaching ingest without a stamped process is a programmer error.
+    tenant_id = Tenancy.tenant_id!()
 
     # Per revision B2 + CONTEXT D-11: guard against :async at v0.1. The
     # NimbleOptions schema entry (Plan 04-05) enforces {:in, [:sync, :async]}
@@ -214,7 +215,11 @@ defmodule Mailglass.Webhook.Ingest do
     events
     |> Enum.with_index()
     |> Enum.reduce(multi, fn {event, idx}, acc ->
-      Events.append_multi(acc, {:event, idx}, fn _changes ->
+      # Events.append_multi/3 guards `is_atom(name)` — convert the tuple key
+      # to an atom via String.to_atom/1. Bounded atom creation: idx is bounded
+      # by the event count (Postmark: 1; SendGrid: ≤128 per batch), so atom
+      # table growth is O(128) across the library's lifetime — safe.
+      Events.append_multi(acc, event_step_name(idx), fn _changes ->
         delivery_id = resolve_delivery_id(provider, event)
 
         %{
@@ -249,7 +254,7 @@ defmodule Mailglass.Webhook.Ingest do
     |> Enum.reduce(multi, fn {_event, idx}, acc ->
       acc =
         Multi.run(acc, {:projector_categorize, idx}, fn _repo, changes ->
-          inserted_event = Map.get(changes, {:event, idx})
+          inserted_event = Map.get(changes, event_step_name(idx))
 
           cond do
             is_nil(inserted_event) ->
@@ -295,6 +300,17 @@ defmodule Mailglass.Webhook.Ingest do
   end
 
   # ---- Helpers --------------------------------------------------------
+
+  # Events.append_multi/3 guards `is_atom(name)` for parity with the Phase 2/3
+  # single-insert shape (and to keep change-map keys inspectable). We synthesize
+  # the step name as `:"event_#{idx}"` — atom creation is bounded by the input
+  # batch size (Postmark: 1; SendGrid: ≤128 per batch), so atom table growth
+  # is O(128) across the library's lifetime (safe; not an attacker-controlled
+  # input).
+  @spec event_step_name(non_neg_integer()) :: atom()
+  defp event_step_name(idx) when is_integer(idx) and idx >= 0 do
+    :"event_#{idx}"
+  end
 
   # Per revision B6 — SendGrid batch idempotency requires the raw_body SHA-256
   # hash discriminator. Plain "first event id" would be incorrect: SendGrid
@@ -407,7 +423,7 @@ defmodule Mailglass.Webhook.Ingest do
             # even on the orphan branch. Orphans are knowingly skipped for
             # broadcast by Plan 04-04 — Plan 07 Reconciler re-emits when
             # matching Delivery surfaces.
-            inserted_event = Map.get(changes, {:event, idx}, input_event)
+            inserted_event = Map.get(changes, event_step_name(idx), input_event)
             [{inserted_event, nil, true}]
         end
       end)
