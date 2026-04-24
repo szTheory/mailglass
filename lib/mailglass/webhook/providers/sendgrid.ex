@@ -115,13 +115,21 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
   # Uses OTP 27 `:public_key.der_decode/2` (NOT `:pem_decode/1` — the
   # SendGrid dashboard ships raw DER without PEM framing; see Pitfall 1).
   #
-  # OTP 27 note: `:public_key.der_decode(:SubjectPublicKeyInfo, _)`
-  # already decodes the `AlgorithmIdentifier`'s params slot. For EC
-  # public keys, element 3 of the `AlgorithmIdentifier` tuple is the
-  # already-materialized `{:namedCurve, oid}` — NOT raw DER bytes that
-  # need a second `der_decode(:EcpkParameters, _)` pass. Forcing that
-  # second decode raises inside `:public_key` (observed in OTP 27 /
-  # public_key 1.20.2). We use the params tuple directly.
+  # OTP / public_key version compatibility:
+  #
+  #   * `public_key` ≥ 1.17 (OTP 27.2+): `der_decode(:SubjectPublicKeyInfo, _)`
+  #     returns the `AlgorithmIdentifier`'s params slot already materialized as
+  #     `{:namedCurve, oid}` for EC keys. Pass through as-is.
+  #
+  #   * `public_key` ≤ 1.16 (OTP 27.0 / 27.1 on CI): same call leaves the
+  #     params slot as RAW DER bytes. We must run a second
+  #     `der_decode(:EcpkParameters, _)` to produce `{:namedCurve, oid}`
+  #     before `:public_key.verify/4` will accept the key. Without this,
+  #     `:public_key.ec_curve_spec/1` raises on the raw DER.
+  #
+  # Branching on the runtime shape keeps the code green across both
+  # supported matrices (local dev OTP 27.2+ and CI OTP 27.1) without
+  # pinning a specific public_key version.
   defp verify_ecdsa!(raw_body, sig_b64, timestamp, public_key_b64) do
     try do
       decoded = Base.decode64!(public_key_b64)
@@ -129,7 +137,8 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
       {:SubjectPublicKeyInfo, alg_id, pk_bits} =
         :public_key.der_decode(:SubjectPublicKeyInfo, decoded)
 
-      {:AlgorithmIdentifier, _oid, ecc_params} = alg_id
+      {:AlgorithmIdentifier, _oid, raw_params} = alg_id
+      ecc_params = normalize_ecc_params(raw_params)
       pk = {{:ECPoint, pk_bits}, ecc_params}
 
       signed_payload = timestamp <> raw_body
@@ -177,6 +186,16 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
   end
 
   defp classify_rescue(_), do: :bad_signature
+
+  # Normalize the `AlgorithmIdentifier` params slot across public_key
+  # versions — see the version-compat note on `verify_ecdsa!/4` above.
+  # Raw DER bytes (≤ 1.16) get decoded once; already-materialized
+  # `{:namedCurve, oid}` tuples (≥ 1.17) pass through.
+  defp normalize_ecc_params({:namedCurve, _oid} = params), do: params
+
+  defp normalize_ecc_params(der) when is_binary(der) do
+    :public_key.der_decode(:EcpkParameters, der)
+  end
 
   # ---- normalize/2 ---------------------------------------------------
 
