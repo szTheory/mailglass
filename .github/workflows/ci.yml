@@ -8,8 +8,16 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '.planning/**'
+      - 'prompts/**'
+      - '**/*.md'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '.planning/**'
+      - 'prompts/**'
+      - '**/*.md'
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -140,7 +148,7 @@ jobs:
         with:
           path: |
             deps
-            _build-no-opt
+            _build
           key: ${{ runner.os }}-mix-noopt-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             ${{ runner.os }}-mix-noopt-
