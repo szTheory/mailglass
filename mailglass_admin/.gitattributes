@@ -1,0 +1,12 @@
+# 05-RESEARCH.md Pitfall 3: lock LF line endings on text files so the
+# `git diff --exit-code priv/static/` CI gate (verify.phase_05 step 4)
+# does not false-positive on CRLF drift introduced by a Windows maintainer.
+#
+# Binary files are declared `binary` so Git stops heuristically diffing
+# them and neither converts line endings nor tries to merge them.
+
+priv/static/app.css text eol=lf
+priv/static/*.svg text eol=lf
+priv/static/fonts/*.woff2 binary
+assets/vendor/*.js text eol=lf
+assets/css/*.css text eol=lf

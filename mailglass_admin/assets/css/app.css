@@ -1,0 +1,136 @@
+/* mailglass_admin v0.1 - dev preview dashboard styles.
+   Brand: prompts/mailglass-brand-book.md (Ink/Glass/Ice/Mist/Paper/Slate).
+   Built by: mix mailglass_admin.assets.build  (zero Node toolchain). */
+
+@import "tailwindcss" source(none);
+
+@source "../css";
+@source "../../lib";
+
+@plugin "../vendor/daisyui" {
+  themes: false;
+}
+
+@plugin "../vendor/daisyui-theme" {
+  name: "mailglass-light";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+
+  /* Brand book §7.3 — canonical palette mapped to daisyUI semantic tokens */
+  --color-base-100: #F8FBFD;   /* Paper — surface */
+  --color-base-200: #EAF6FB;   /* Mist — elevated surface */
+  --color-base-300: #A6EAF2;   /* Ice — active/hover */
+  --color-base-content: #0D1B2A; /* Ink — primary text */
+  --color-primary: #277B96;     /* Glass — primary action */
+  --color-primary-content: #F8FBFD;
+  --color-secondary: #5C6B7A;   /* Slate — secondary text/border */
+  --color-secondary-content: #F8FBFD;
+  --color-accent: #0D1B2A;      /* Ink — accent (buttons, headers) */
+  --color-accent-content: #F8FBFD;
+  --color-neutral: #5C6B7A;
+  --color-neutral-content: #F8FBFD;
+  --color-info: #277B96;
+  --color-success: #166534;     /* Success Pine (brand book §7.3) */
+  --color-warning: #A95F10;     /* Signal Amber (brand book §7.3) */
+  --color-error: #B42318;       /* Error Crimson (brand book §7.3) */
+
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
+  --border: 1px;
+  --depth: 0;   /* brand book §7.4: NO glassmorphism / no bevels / flat */
+  --noise: 0;
+}
+
+@plugin "../vendor/daisyui-theme" {
+  name: "mailglass-dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+
+  --color-base-100: #0D1B2A;   /* Ink — surface */
+  --color-base-200: #152538;   /* Ink elevated */
+  --color-base-300: #1F3049;   /* Ink pressed */
+  --color-base-content: #EAF6FB; /* Mist — primary text */
+  --color-primary: #A6EAF2;     /* Ice — primary action on dark */
+  --color-primary-content: #0D1B2A;
+  --color-secondary: #5C6B7A;
+  --color-secondary-content: #F8FBFD;
+  --color-accent: #277B96;      /* Glass on dark */
+  --color-accent-content: #F8FBFD;
+  --color-neutral: #5C6B7A;
+  --color-neutral-content: #F8FBFD;
+  --color-info: #A6EAF2;
+  --color-success: #8BB77F;     /* Success Pine dark-surface legibility (UI-SPEC §Color) */
+  --color-warning: #E0A955;     /* Signal Amber dark-surface legibility */
+  --color-error: #D47368;       /* Error Crimson dark-surface legibility */
+
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* Self-hosted typography — brand book §8.
+   Exactly 2 weights per family per 05-UI-SPEC lines 71-79.
+   Weights 500 / 600 NOT loaded.
+   URLs are RELATIVE (./fonts/...) so the browser resolves them against
+   whatever mount path the adopter chose — e.g. /dev/mail/css-:md5.css
+   resolves ./fonts/inter-400.woff2 to /dev/mail/fonts/inter-400.woff2. */
+@font-face {
+  font-family: 'Inter';
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/inter-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/inter-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter Tight';
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/inter-tight-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter Tight';
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/inter-tight-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/ibm-plex-mono-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/ibm-plex-mono-700.woff2') format('woff2');
+}
+
+/* Typography defaults */
+:root {
+  --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter Tight', var(--font-ui);
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+h1, h2, h3 {
+  font-family: 'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.02em;
+}
+code, pre, .mono {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}

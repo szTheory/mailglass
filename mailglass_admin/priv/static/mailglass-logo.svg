@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  mailglass logo — v0.1 placeholder.
+  Sets wordmark in Inter Tight 700 at Ink (#0D1B2A).
+  Brand book §7 will supersede with the canonical glyph in a future revision.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" width="240" height="48" role="img" aria-label="mailglass">
+  <title>mailglass</title>
+  <text x="0" y="34"
+        font-family="'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif"
+        font-weight="700"
+        font-size="32"
+        letter-spacing="-0.6"
+        fill="#0D1B2A">mailglass</text>
+</svg>
