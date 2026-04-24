@@ -205,4 +205,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-04-23 after Phase 3 (Transport + Send Pipeline) completion — full hot path end-to-end against Fake adapter; tracking, preflight, and D-08 deliver_later contract in place.*
+*Last updated: 2026-04-24 after Phase 4 (Webhook Ingest) completion — Postmark + SendGrid HMAC-verified, Anymail-normalized, idempotent webhook ingest with multi-tenant routing, orphan reconciliation, and `:webhook_retention` pruner.*
