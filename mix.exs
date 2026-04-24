@@ -45,6 +45,7 @@ defmodule Mailglass.MixProject do
         Oban,
         Oban.Worker,
         Oban.Job,
+        Oban.Migrations,
         # :otel_tracer and :otel_span are erlang-atom modules, not Elixir
         :otel_tracer,
         :otel_span,
