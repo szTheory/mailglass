@@ -19,7 +19,7 @@ mailglass v0.1 ships in 7 phases tracing the 7-layer build order from `research/
 - [x] **Phase 2: Persistence + Tenancy** - Append-only event ledger with SQLSTATE 45A01 trigger + multi-tenant schemas from day one. Complete 2026-04-22.
 - [x] **Phase 3: Transport + Send Pipeline** - Fake adapter built first (D-13), then end-to-end Mailable → Outbound → Worker → Adapter → Multi(Delivery + Event) hot path. Complete 2026-04-23.
 - [x] **Phase 4: Webhook Ingest** - Postmark + SendGrid HMAC-verified, idempotent, Anymail-normalized event ingest.
-- [ ] **Phase 5: Dev Preview LiveView** - `mailglass_admin` sibling package with mailable sidebar, `preview_props/1` auto-discovery, device + dark toggles, HTML/Text/Raw/Headers tabs.
+- [ ] **Phase 5: Dev Preview LiveView** - `mailglass_admin` sibling package with mailable sidebar, `preview_props/0` auto-discovery, device + dark toggles, HTML/Text/Raw/Headers tabs.
 - [ ] **Phase 6: Custom Credo + Boundary** - Twelve domain-rule lint checks plus `boundary` enforcement, refined against real code.
 - [ ] **Phase 7: Installer + CI/CD + Docs** - `mix mailglass.install` with golden-diff CI, full GHA pipeline, ExDoc with 9 guides + doctest contracts.
 
@@ -111,12 +111,12 @@ Plans:
 **UI hint**: no
 
 ### Phase 5: Dev Preview LiveView
-**Goal**: A Phoenix 1.8 adopter mounts `mailglass_admin_routes "/dev/mail"` in their `:dev` router pipeline and sees a mailable sidebar (auto-discovered via `preview_props/1`) with a live-assigns form, device width toggle (mobile/tablet/desktop), dark/light toggle, and HTML/Text/Raw/Headers tabs — the v0.1 killer demo.
+**Goal**: A Phoenix 1.8 adopter mounts `mailglass_admin_routes "/dev/mail"` in their `:dev` router pipeline and sees a mailable sidebar (auto-discovered via `preview_props/0`) with a live-assigns form, device width toggle (mobile/tablet/desktop), dark/light toggle, and HTML/Text/Raw/Headers tabs — the v0.1 killer demo.
 **Depends on**: Phase 3
 **Requirements**: PREV-01, PREV-02, PREV-03, PREV-04, PREV-05, PREV-06, BRAND-01
 **Success Criteria** (what must be TRUE):
   1. An adopter mounts the preview LiveView in `:dev` only (per D-11), reloads the browser after editing a mailable file, and sees the rendered email refresh without a full page reload (LiveReload integration).
-  2. Every `Mailglass.Mailable` module that defines a `preview_props/1` callback appears in the sidebar with one entry per preview function and a live-editable assigns form per `preview_props/1` field.
+  2. Every `Mailglass.Mailable` module that defines a `preview_props/0` callback appears in the sidebar with one entry per preview function and a live-editable assigns form per `preview_props/0` field.
   3. The HTML / Text / Raw / Headers tabs each render the corresponding artifact of the same `Mailglass.Renderer` output the production pipeline produces — no placeholder shape divergence.
   4. The UI conforms to the brand book (Ink/Glass/Ice/Mist/Paper/Slate palette, Inter + Inter Tight + IBM Plex Mono, mobile-first responsive, no glassmorphism / lens flares / literal broken-glass visuals; WCAG AA contrast verified) and ships daisyUI 5 + Tailwind v4 with no Node toolchain required of adopters.
   5. `mailglass_admin/priv/static/` is a committed compiled bundle, `git diff --exit-code` after `mix mailglass_admin.assets.build` passes in CI, and the Hex tarball stays under 2MB.

@@ -49,7 +49,7 @@ If everything else fails, the preview dashboard, normalized event ledger, and on
 - [ ] Gettext-first i18n with `dgettext("emails", ...)` convention
 - [ ] `Mailglass.Adapter.Fake` — in-memory, deterministic, time-advanceable, the release-blocking test target
 - [ ] `Mailglass.TestAssertions` extending Swoosh's: `assert_mail_sent`, `last_mail/0`, `wait_for_mail/1`
-- [ ] **Dev-mode preview LiveView** (`mailglass_admin`): mailable sidebar with `preview_props/1` auto-discovery, device toggle, dark toggle, HTML/Text/Raw/Headers tabs
+- [ ] **Dev-mode preview LiveView** (`mailglass_admin`): mailable sidebar with `preview_props/0` auto-discovery, device toggle, dark toggle, HTML/Text/Raw/Headers tabs
 - [x] Append-only `mailglass_events` Postgres table protected by trigger raising SQLSTATE 45A01 on UPDATE/DELETE — Validated in Phase 2
 - [x] Idempotency keys (`provider_message_id`, `webhook_event_id`) via `UNIQUE` partial index — replay-safe webhooks — Validated in Phase 2 (1000-run StreamData convergence property)
 - [x] First-class multi-tenancy: `tenant_id` on every record, `Mailglass.Tenancy.scope/2` behaviour, scope-aware admin queries (Phoenix 1.8 `scope` aligned) — Validated in Phase 2 (SingleTenant default resolver ships as no-op)

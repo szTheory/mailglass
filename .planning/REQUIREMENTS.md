@@ -127,7 +127,7 @@
 
 - [ ] **PREV-01**: `mailglass_admin` is a separate Hex package. Its `mix.exs` declares `{:mailglass, "== <pinned_version>"}` — sibling versions never drift. (D-01, DIST-01 prevention)
 - [ ] **PREV-02**: `MailglassAdmin.Router` exposes a macro `mailglass_admin_routes(path, opts)` for adopter routers. Mount path is the adopter's first arg with no default. (PHX-02 prevention)
-- [ ] **PREV-03**: `MailglassAdmin.PreviewLive` (dev-only mount) renders: a sidebar listing all `Mailglass.Mailable` modules + their preview functions auto-discovered via `preview_props/1` callback; HTML/Text/Raw/Headers tabs in main pane; device width toggle (mobile/tablet/desktop); dark/light mode toggle; live-assigns form for each `preview_props/1` field. (TS-13, DF-01, DF-10)
+- [ ] **PREV-03**: `MailglassAdmin.PreviewLive` (dev-only mount) renders: a sidebar listing all `Mailglass.Mailable` modules + their preview functions auto-discovered via `preview_props/0` callback; HTML/Text/Raw/Headers tabs in main pane; device width toggle (mobile/tablet/desktop); dark/light mode toggle; live-assigns form for each `preview_props/0` field. (TS-13, DF-01, DF-10)
 - [ ] **PREV-04**: Live-reload via Phoenix LiveReload integration: editing the mailable source file refreshes the preview without page reload.
 - [ ] **PREV-05**: `MailglassAdmin.Components` ships responsive, mobile-first UI components matching the brand book palette (Ink/Glass/Ice/Mist/Paper/Slate, Inter + IBM Plex Mono). daisyUI 5 + Tailwind v4 (Phoenix 1.8 default; no Node required for adopters' build). (BRAND-01)
 - [ ] **PREV-06**: `mailglass_admin/priv/static/` is a committed compiled bundle. CI runs `git diff --exit-code` after `mix mailglass_admin.assets.build`. Hex tarball size <2MB. (PHX-03, DIST-02 prevention)
