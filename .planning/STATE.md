@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-webhook-ingest/04-07-PLAN.md (Wave 3B Reconciler + Pruner + Oban-optional fallbacks — HOOK-06 orphan-handling closed)
-last_updated: "2026-04-24T02:02:37.238Z"
+stopped_at: Completed 04-webhook-ingest/04-08-PLAN.md (Wave 4A Telemetry helpers — HOOK-02 + HOOK-06 telemetry surface formalized)
+last_updated: "2026-04-24T02:17:23.043Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 33
-  completed_plans: 31
-  percent: 94
+  completed_plans: 32
+  percent: 97
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 04 (webhook-ingest) — EXECUTING
-Plan: 8 of 9 (04-01 complete; 04-02 next)
+Plan: 9 of 9 (04-01 complete; 04-02 next)
 Status: Ready to execute
 Last activity: 2026-04-24
 
-Progress: [█████████░] 94%
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
@@ -86,6 +86,7 @@ Progress: [█████████░] 94%
 | Phase 04 P05 | 9min | 3 tasks | 12 files |
 | Phase 04-webhook-ingest P06 | 30min | 3 tasks | 4 files |
 | Phase 04-webhook-ingest P07 | 20min | 2 tasks tasks | 9 files files |
+| Phase 04-webhook-ingest P08 | 8min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -207,6 +208,10 @@ Most load-bearing for Phase 1:
 - Plan 04-07: Reconciler's Multi.update(:projection) passes the ORPHAN event (not the :reconciled event) — Delivery.last_event_type Ecto.Enum deliberately excludes :reconciled per D-14 amendment (audit-only lifecycle); passing :reconciled triggers Ecto.ChangeError. The orphan's original :delivered/:bounced/etc. type applies to the delivery projection while :reconciled in the ledger records the audit moment.
 - Plan 04-07: Mailglass.Repo.delete_all/2 added as typed facade passthrough (not via exposing private Repo.repo/0). Matches established all/2, one/2, get/3 shape; does NOT translate SQLSTATE 45A01 (trigger fires only on mailglass_events per D-15 table split).
 - Plan 04-07: available?/0 exposed OUTSIDE the Oban conditional-compile block for both Reconciler + Pruner — returns Code.ensure_loaded?(Oban.Worker). Callers (mix tasks + boot warning) probe availability without Code.ensure_loaded?(Mailglass.Webhook.Reconciler) at each call site. Matches Mailglass.OptionalDeps.Oban.available?/0 shape from Phase 1.
+- Plan 04-08: Mailglass.Webhook.Telemetry full-span helpers call :telemetry.span/3 directly (inside a private span_with_enrichment/3). The Mailglass.Telemetry.span/3 wrapper closes metadata at call time and cannot express per-request enrichment — using it would regress the Plan 04-04 deviation fix (commit 4dcb29a). D-27 handler isolation is preserved because :telemetry.span/3 itself wraps handlers in try/catch; the wrapper adds no isolation on top. Single-emit helpers (normalize/orphan/duplicate) still DELEGATE to Mailglass.Telemetry.execute/3 because they have no enrichment contract.
+- Plan 04-08: full-span helpers (ingest_span/2, verify_span/2, reconcile_span/2) accept fn returning bare result OR {result, stop_metadata}. Shared span_with_enrichment/3 case-matches on return shape. Matches :telemetry.span/3 native tuple contract — callers that need per-request enrichment return the tuple; simple callers return bare value.
+- Plan 04-08: Ingest.emit_per_event_signals/3 uses outer 'provider' arg, NOT event.provider. Plan 04-02 locked provider identity into Event.metadata with string keys, not as schema column — %Event{}.provider compiles (structs allow any field access) but returns nil. Using outer arg is correct AND avoids Map.get fallback chain on metadata.
+- Plan 04-08: LINT-10 whitelist locked to three single-emit event paths — [:mailglass, :webhook, :normalize | :orphan | :duplicate, :stop]. These skip the :start/:exception pair because they fire from INSIDE the larger [:mailglass, :webhook, :ingest, *] span (which IS a full span). Phase 6 LINT-10 reads this plan's SUMMARY for the whitelist spec.
 
 ### Pending Todos
 
@@ -225,8 +230,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-24T02:02:37.215Z
-Stopped at: Completed 04-webhook-ingest/04-07-PLAN.md (Wave 3B Reconciler + Pruner + Oban-optional fallbacks — HOOK-06 orphan-handling closed)
+Last session: 2026-04-24T02:17:23.030Z
+Stopped at: Completed 04-webhook-ingest/04-08-PLAN.md (Wave 4A Telemetry helpers — HOOK-02 + HOOK-06 telemetry surface formalized)
 Resume file: None
 
 **Planned Phase:** 04 (webhook-ingest) — 9 plans — 2026-04-23T20:02:05.795Z

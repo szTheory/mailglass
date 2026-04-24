@@ -300,11 +300,11 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | TRACK-02 | Phase 6 — Custom Credo + Boundary | Pending |
 | TRACK-03 | Phase 3 — Transport + Send Pipeline | Pending |
 | HOOK-01 | Phase 4 — Webhook Ingest | Pending |
-| HOOK-02 | Phase 4 — Webhook Ingest | Pending |
+| HOOK-02 | Phase 4 — Webhook Ingest | Complete (04-04, 04-08) |
 | HOOK-03 | Phase 4 — Webhook Ingest | Pending |
 | HOOK-04 | Phase 4 — Webhook Ingest | Pending |
 | HOOK-05 | Phase 4 — Webhook Ingest | Pending |
-| HOOK-06 | Phase 4 — Webhook Ingest | Complete (04-06) |
+| HOOK-06 | Phase 4 — Webhook Ingest | Complete (04-06, 04-07, 04-08) |
 | HOOK-07 | Phase 4 — Webhook Ingest | Pending |
 | COMP-01 | Phase 1 — Foundation | Complete (01-06) |
 | COMP-02 | Phase 1 — Foundation | Complete (01-06) |
