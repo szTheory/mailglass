@@ -11,6 +11,7 @@ defmodule Mailglass.Application do
     end
 
     maybe_warn_missing_oban()
+    maybe_warn_missing_oban_for_webhook_workers()
 
     # Phase 3: PubSub first (Projector broadcasts depend on it), then Task.Supervisor
     # (Oban-absent async fallback). The three optional supervisors are gated via
@@ -63,6 +64,41 @@ defmodule Mailglass.Application do
         """)
 
         :persistent_term.put({:mailglass, :oban_warning_emitted}, true)
+        :ok
+    end
+  end
+
+  # Phase 4 D-20: Webhook Reconciler + Pruner are both Oban-backed cron workers.
+  # Without Oban, orphan events accumulate until `mix mailglass.reconcile` runs
+  # and succeeded/dead webhook_events rows accumulate until `mix
+  # mailglass.webhooks.prune` runs. Per revision W2 option b: ONE consolidated
+  # warning covers both workers (mentions both mix tasks) — reduces log noise
+  # vs. two separate warnings that repeat the same operator action.
+  #
+  # :persistent_term gate (same pattern as maybe_warn_missing_oban/0) ensures
+  # exactly one emission per BEAM node lifetime.
+  defp maybe_warn_missing_oban_for_webhook_workers do
+    already_warned? =
+      :persistent_term.get({:mailglass, :oban_warning_webhook_workers}, false)
+
+    cond do
+      already_warned? ->
+        :ok
+
+      Code.ensure_loaded?(Oban.Worker) ->
+        :ok
+
+      true ->
+        Logger.warning("""
+        [mailglass] Webhook orphan reconciliation AND retention pruning require :oban.
+        Without Oban: orphan events will accumulate until you run
+        `mix mailglass.reconcile` (manually or via system cron), AND
+        succeeded/dead webhook_events rows will accumulate until you run
+        `mix mailglass.webhooks.prune` (also manually or via system cron).
+        To enable scheduled background workers, add {:oban, "~> 2.21"} to your deps.
+        """)
+
+        :persistent_term.put({:mailglass, :oban_warning_webhook_workers}, true)
         :ok
     end
   end
