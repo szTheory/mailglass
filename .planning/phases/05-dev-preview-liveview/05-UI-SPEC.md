@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-24
+revised: 2026-04-24
 ---
 
 # Phase 5 — UI Design Contract
@@ -27,7 +28,7 @@ created: 2026-04-24
 | Preset | not applicable (no shadcn; Phoenix/LiveView project, not React) | [CONTEXT D-17] |
 | Component library | daisyUI 5 — vendored `assets/vendor/daisyui.js` + `assets/vendor/daisyui-theme.js` | [CONTEXT D-17, D-18; RESEARCH §Asset Pipeline] |
 | Icon library | Heroicons — vendored `assets/vendor/heroicons.js` (Phoenix 1.8 installer convention; outline style, consistent stroke weight) | [RESEARCH §Standard Stack] |
-| Font | Inter (UI/body, 400/500/700) + Inter Tight (display, 600/700) + IBM Plex Mono (code/mono, 400/600) — self-hosted woff2 in `priv/static/fonts/` | [CONTEXT D-21; BRAND §7.4] |
+| Font | Inter (UI/body, 400/700) + Inter Tight (display, 400/700) + IBM Plex Mono (code/mono, 400/700) — self-hosted woff2 in `priv/static/fonts/` | [CONTEXT D-21; BRAND §7.4] |
 
 > **No shadcn gate applies.** This is a Phoenix LiveView / Elixir project. shadcn is a
 > React component system. daisyUI 5 + Tailwind v4 is the locked stack per the upstream
@@ -65,22 +66,40 @@ Source: [DEFAULT 8-point grid; brand book §7.5 for touch target guidance; CONTE
 
 ## Typography
 
-All sizes in px (rendered via Tailwind v4 `text-*` utilities):
+All sizes in px (rendered via Tailwind v4 `text-*` utilities). Exactly 4 sizes and 2 weights are declared; no other sizes or weights may be used in Phase 5 components.
 
-| Role | Family | Size | Weight | Line Height | Usage |
-|------|--------|------|--------|-------------|-------|
-| Display | Inter Tight | 20px (`text-xl`) | 700 | 1.2 | Mailable name in main pane header, sidebar "Mailers" heading |
-| Heading | Inter Tight | 16px (`text-base`) | 600 | 1.3 | Tab section headers, assigns form group headings |
-| Body | Inter | 14px (`text-sm`) | 400 | 1.5 | Sidebar scenario names, form labels, metadata, general UI text |
-| Label / small | Inter | 12px (`text-xs`) | 500 | 1.4 | Badges, status indicators, mailable module namespace labels |
-| Code / mono | IBM Plex Mono | 13px (`text-[13px]`) | 400 | 1.6 | Text tab `<pre>`, Raw tab envelope, Headers table key/value cells, error stacktraces |
-| Code / mono bold | IBM Plex Mono | 13px (`text-[13px]`) | 600 | 1.6 | Highlighted header names in Headers tab |
+### Font loading
+
+Load exactly 2 weights per family in `@font-face` declarations:
+
+- **Inter**: 400 (regular), 700 (bold)
+- **Inter Tight**: 400 (regular), 700 (bold)
+- **IBM Plex Mono**: 400 (regular), 700 (bold)
+
+Do NOT load 500 (medium) or 600 (semibold) for any family. [CONTEXT D-21; BRAND §7.4]
+
+### Typography scale
+
+| Role | Family | Size | Weight | Line Height | Tailwind | Usage |
+|------|--------|------|--------|-------------|----------|-------|
+| Display | Inter Tight | 20px | 700 | 1.2 | `text-xl font-bold` | Mailable name in main pane header, sidebar "Mailers" heading |
+| Heading | Inter Tight | 16px | 700 | 1.3 | `text-base font-bold` | Tab section headers, assigns form group headings, sidebar mailer group headings |
+| Body | Inter | 14px | 400 | 1.5 | `text-sm font-normal` | Sidebar scenario names, form labels, metadata, general UI text |
+| Label / small / code | Inter (labels) / IBM Plex Mono (code) | 12px | 400 | 1.4–1.6 | `text-xs font-normal` | Badges, status indicators, mailable module namespace labels; code snippets in inline text; `font-mono text-xs` for code contexts |
+
+> **IBM Plex Mono assignment:** IBM Plex Mono renders legibly at 12px in the reference
+> browser targets (Chrome/Firefox/Safari on macOS, Chrome/Firefox on Linux). 12px mono
+> is used for `<pre>` blocks (Text tab, Raw tab, Headers key/value cells, error stacktraces)
+> and inline `<code>` elements. This collapses the previous 13px custom size, dropping
+> the non-standard `text-[13px]` utility entirely.
 
 Typography rules:
 - **Sentence case** throughout — never ALLCAPS for headings or buttons.
-- **Tracking**: no extra letter-spacing on body or headings. H1/H2 use `tracking-tight` (`letter-spacing: -0.02em`) per brand book §7.4 ("slightly condensed in headlines").
+- **Tracking**: no extra letter-spacing on body or headings. Display/Heading use `tracking-tight` (`letter-spacing: -0.02em`) per brand book §7.4 ("slightly condensed in headlines").
 - **Glass (#277B96) must never appear as body text on Paper (#F8FBFD)** — contrast ratio 4.8:1 passes AA for large text (18px+ or bold 14px+) but fails for small body text. All body text uses Ink or Slate. [RESEARCH §Accessibility]
 - **Max line length** on any prose block (error messages, empty states): `max-w-prose` (≈65ch).
+- **Active tab label**: `font-bold` (700) — was `font-medium` (500) in prior draft; weight 500 is not loaded.
+- **Bold emphasis within mono blocks**: use `font-bold` (700) — was `font-semibold` (600) in prior draft; weight 600 is not loaded.
 
 Source: [BRAND §7.4 typography hierarchy; RESEARCH §Brand Implementation §Typography]
 
@@ -98,9 +117,15 @@ Source: [BRAND §7.4 typography hierarchy; RESEARCH §Brand Implementation §Typ
 | Mist | `#EAF6FB` | `--color-base-200` (elevated surfaces, cards) | `--color-base-content` (text on dark) |
 | Paper | `#F8FBFD` | `--color-base-100` (primary surface) | `--color-primary-content` |
 | Slate | `#5C6B7A` | `--color-secondary`, `--color-neutral` | `--color-secondary`, `--color-neutral` |
-| Signal Amber | `#C08A2B` | `--color-warning` | `--color-warning` (adjusted: `#E0A955`) |
-| Error Crimson | `#B04A3F` | `--color-error` | `--color-error` (adjusted: `#D47368`) |
-| Success Pine | `#5A8F4E` | `--color-success` | `--color-success` (adjusted: `#8BB77F`) |
+| Signal Amber | `#A95F10` | `--color-warning` | `--color-warning` (adjusted: `#E0A955` for dark surface legibility) |
+| Error Crimson | `#B42318` | `--color-error` | `--color-error` (adjusted: `#D47368` for dark surface legibility) |
+| Success Pine | `#166534` | `--color-success` | `--color-success` (adjusted: `#8BB77F` for dark surface legibility) |
+
+> **Color note (Dimension 3):** Hex values for Signal Amber, Error Crimson, and Success
+> Pine now match brand book §7.3 canonical values exactly. Prior draft used adjusted
+> values (`#C08A2B`, `#B04A3F`, `#5A8F4E`) that were not documented as deliberate contrast
+> decisions — treated as drift and corrected. Contrast ratios updated in the Accessibility
+> section below.
 
 Source: [BRAND §7.3; RESEARCH §Brand Implementation §Palette → daisyUI theme mapping]
 
@@ -111,7 +136,7 @@ Source: [BRAND §7.3; RESEARCH §Brand Implementation §Palette → daisyUI them
 | Dominant (60%) | Paper `#F8FBFD` | Primary page surface, main pane background | Everything behind content; the reading field |
 | Secondary (30%) | Ink `#0D1B2A` (sidebar chrome) + Mist `#EAF6FB` (cards/elevated) | Sidebar background, elevated card surfaces, tab bar background | Structural chrome and subtle depth |
 | Accent (10%) | Glass `#277B96` | Active sidebar item left border, selected tab underline, primary button fill, link text | Brand signal only — not for decorative use |
-| Destructive | Error Crimson `#B04A3F` | Destructive actions only | No destructive actions exist at v0.1 (preview is read-only); reserved for future use |
+| Destructive | Error Crimson `#B42318` | Destructive actions only | No destructive actions exist at v0.1 (preview is read-only); reserved for future use |
 
 **Accent reserved for (complete list — no additions without UI-SPEC amendment):**
 1. Active sidebar scenario item: 3px left border in Glass
@@ -126,10 +151,10 @@ Source: [BRAND §7.3 "Recommended usage split 55% Paper / 25% Ink+structure / 12
 
 | State | Color | Token | Element |
 |-------|-------|-------|---------|
-| Warning / error badge in sidebar | Signal Amber `#C08A2B` | `--color-warning` | Mailable with `preview_props/0` that raises; `⚠` badge |
+| Warning / error badge in sidebar | Signal Amber `#A95F10` | `--color-warning` | Mailable with `preview_props/0` that raises; `⚠` badge |
 | No previews stub | Slate `#5C6B7A` | `--color-secondary` | "—" indicator, stub card text |
-| Success / reload flash | Success Pine `#5A8F4E` | `--color-success` | "Reloaded: user_mailer.ex" flash message |
-| Error card border | Error Crimson `#B04A3F` | `--color-error` | In-pane error card when `preview_props/0` raised |
+| Success / reload flash | Success Pine `#166534` | `--color-success` | "Reloaded: user_mailer.ex" flash message |
+| Error card border | Error Crimson `#B42318` | `--color-error` | In-pane error card when `preview_props/0` raised |
 
 ### Dark theme
 
@@ -164,7 +189,7 @@ Source: [RESEARCH §Preview LiveView Structure §Sidebar mobile-first responsive
 
 ```
 ┌─ Mailers ───────────────────────────────────┐
-│  ▼ MyApp.UserMailer                         │  ← Ink sidebar header, Inter Tight 16px 600
+│  ▼ MyApp.UserMailer                         │  ← Ink sidebar header, Inter Tight 16px bold
 │    · welcome_default              ●          │  ← Glass left border (active), Body 14px
 │    · welcome_new_user                        │
 │    · welcome_enterprise                      │
@@ -186,8 +211,8 @@ Source: [RESEARCH §Preview LiveView Structure §Sidebar mobile-first responsive
 MyApp.UserMailer · welcome_default          [375] [768] [1024]  [☀] [🌙]
 ```
 
-- Mailable name: Inter Tight 20px 700, Ink
-- Scenario name: Inter Tight 20px 400, Slate (separated by `·` en-dash, 1 space each side)
+- Mailable name: Inter Tight 20px bold (700), Ink
+- Scenario name: Inter Tight 20px regular (400), Slate (separated by `·` en-dash, 1 space each side)
 - Device buttons: 48×32px segmented group, Glass border + Glass fill on active, Slate/Paper on inactive
 - Theme toggle: two 32×32px icon buttons (sun/moon Heroicons), same active/inactive style
 
@@ -196,8 +221,8 @@ MyApp.UserMailer · welcome_default          [375] [768] [1024]  [☀] [🌙]
 Four tabs: HTML · Text · Raw · Headers
 
 - Tab height: 40px (min-h-10)
-- Active tab: Glass 2px bottom border, Ink text, Inter 14px 500
-- Inactive tab: no border, Slate text, Inter 14px 400, hover state: Mist background
+- Active tab: Glass 2px bottom border, Ink text, Inter 14px bold (700)
+- Inactive tab: no border, Slate text, Inter 14px regular (400), hover state: Mist background
 - Tab strip background: Paper, 1px bottom border in `--color-base-300` (Ice)
 
 Source: [CONTEXT D-15; RESEARCH §Preview LiveView Structure §Tab content specifications]
@@ -209,7 +234,7 @@ Source: [CONTEXT D-15; RESEARCH §Preview LiveView Structure §Tab content speci
 ### Sidebar item — active scenario
 
 ```heex
-<li class="flex items-center gap-2 px-3 py-2 min-h-11 border-l-[3px] border-primary bg-base-200 text-base-content text-sm font-medium cursor-default">
+<li class="flex items-center gap-2 px-3 py-2 min-h-11 border-l-[3px] border-primary bg-base-200 text-base-content text-sm font-normal cursor-default">
   <span class="truncate"><%= humanize(name) %></span>
 </li>
 ```
@@ -286,7 +311,7 @@ Source: [CONTEXT D-15; RESEARCH §Preview LiveView Structure §Tab content speci
 ### Text preview
 
 ```heex
-<pre class="font-mono text-[13px] leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto h-[600px] whitespace-pre-wrap">
+<pre class="font-mono text-xs leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto h-[600px] whitespace-pre-wrap">
   <%= @text_body %>
 </pre>
 ```
@@ -294,7 +319,7 @@ Source: [CONTEXT D-15; RESEARCH §Preview LiveView Structure §Tab content speci
 ### Raw envelope preview
 
 ```heex
-<pre class="font-mono text-[13px] leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto h-[600px] whitespace-pre">
+<pre class="font-mono text-xs leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto h-[600px] whitespace-pre">
   <%= @raw_envelope %>
 </pre>
 ```
@@ -315,8 +340,8 @@ Content: full RFC 5322 rendered envelope via `Swoosh.Email.Render.encode/1` or e
     <tbody>
       <%= for {name, value} <- @headers do %>
         <tr class="hover:bg-base-200">
-          <td class="font-mono text-[13px] font-semibold text-base-content align-top"><%= name %></td>
-          <td class="font-mono text-[13px] text-base-content break-all"><%= value %></td>
+          <td class="font-mono text-xs font-bold text-base-content align-top"><%= name %></td>
+          <td class="font-mono text-xs text-base-content break-all"><%= value %></td>
         </tr>
       <% end %>
     </tbody>
@@ -341,17 +366,33 @@ Auto-injected headers (`Message-ID`, `Date`, `MIME-Version`, `Mailglass-Mailable
 
 Form fires `phx-change="assigns_changed"` on every field edit; LiveView re-calls the mailable function with updated assigns and pipes through `Mailglass.Renderer.render/1`. No submit button required — live preview is immediate.
 
+### Assigns form — action buttons
+
+```heex
+<div class="flex gap-2">
+  <button class="btn btn-primary btn-sm" phx-click="render_preview">
+    Render preview
+  </button>
+  <button class="btn btn-ghost btn-sm" phx-click="reset_assigns">
+    Reset assigns
+  </button>
+</div>
+```
+
+> **Copywriting note:** "Render preview" and "Reset assigns" use verb+noun form per Dimension 1
+> guidance. These labels fit standard button widths at `btn-sm`; no wrapping concern.
+
 ### Error card (in main pane)
 
 ```heex
 <div class="card border-2 border-error bg-base-100 p-6 rounded-box">
   <div class="flex items-center gap-2 mb-3">
     <.icon name="hero-exclamation-circle" class="w-5 h-5 text-error flex-shrink-0" />
-    <h2 class="text-base font-semibold text-base-content">
+    <h2 class="text-base font-bold text-base-content">
       preview_props/0 raised an error
     </h2>
   </div>
-  <pre class="font-mono text-[13px] text-error leading-relaxed overflow-auto whitespace-pre-wrap max-h-80 bg-base-200 p-3 rounded">
+  <pre class="font-mono text-xs text-error leading-relaxed overflow-auto whitespace-pre-wrap max-h-80 bg-base-200 p-3 rounded">
     <%= @error_stacktrace %>
   </pre>
   <p class="mt-3 text-sm text-secondary">
@@ -366,7 +407,7 @@ Form fires `phx-change="assigns_changed"` on every field edit; LiveView re-calls
 ```heex
 <div class="card bg-base-200 p-8 rounded-box text-center max-w-prose mx-auto">
   <.icon name="hero-envelope" class="w-10 h-10 text-secondary mx-auto mb-3" />
-  <h2 class="text-base font-semibold text-base-content mb-2">No previews defined</h2>
+  <h2 class="text-base font-bold text-base-content mb-2">No previews defined</h2>
   <p class="text-sm text-secondary">
     This mailable defines no preview scenarios yet. Add a
     <code class="font-mono text-xs bg-base-300 px-1 rounded">preview_props/0</code>
@@ -395,7 +436,7 @@ Auto-dismisses after 3 seconds via `Process.send_after(self(), :clear_flash, 300
   <button phx-click="toggle_sidebar" aria-label="Open mailer list" class="btn btn-ghost btn-sm btn-square">
     <.icon name="hero-bars-3" class="w-5 h-5" />
   </button>
-  <span class="text-sm font-medium text-base-content truncate max-w-[60%]">
+  <span class="text-sm font-normal text-base-content truncate max-w-[60%]">
     <%= @current_scenario_label || "mailglass" %>
   </span>
   <.logo class="h-6 w-auto" />
@@ -412,8 +453,8 @@ Source: [BRAND §5, §10, §13; CONTEXT §Code Context "Brand book voice in copy
 
 | Element | Copy |
 |---------|------|
-| Primary CTA (assigns form) | "Render" (strong verb; re-invokes the mailable with current assigns) |
-| Secondary action (assigns form) | "Reset" (restore defaults from `preview_props/0`) |
+| Primary CTA (assigns form) | "Render preview" (verb+noun; re-invokes the mailable with current assigns) |
+| Secondary action (assigns form) | "Reset assigns" (verb+noun; restore defaults from `preview_props/0`) |
 | Empty state heading | "No previews defined" |
 | Empty state body | "This mailable defines no preview scenarios yet. Add a `preview_props/0` callback to see a list of scenarios here." |
 | Error state heading | "preview_props/0 raised an error" |
@@ -429,7 +470,7 @@ Source: [BRAND §5, §10, §13; CONTEXT §Code Context "Brand book voice in copy
 | Mobile sidebar open button aria-label | "Open mailer list" |
 | Warning badge text | "Error" (with `⚠` icon; full stacktrace in main pane) |
 | Warning sidebar tooltip / expandable copy | "preview_props/0 raised when this mailable was loaded. Select to inspect the error." |
-| Refresh button (manual fallback when LiveReload not configured) | "Refresh" |
+| Refresh button (manual fallback when LiveReload not configured) | "Refresh preview" (verb+noun) |
 | Module namespace grouping label | `{top-level-namespace}` e.g. "MyApp" (derived from module name, no decoration) |
 | Page title | "mailglass — {mailable_name}" or "mailglass — Preview" when no selection |
 | LiveReload not configured info log | "Subscribed to PubSub topic 'mailglass:admin:reload'. Add this topic to your endpoint :live_reload :notify config to enable auto-refresh." |
@@ -450,7 +491,7 @@ Destructive actions: none exist at v0.1. Preview is entirely read-only. No confi
 6. **Dark toggle**: `phx-click="toggle_dark"` → `@dark_chrome` flipped → `data-theme` attribute on wrapper updated → no re-render.
 7. **Tab switch**: `phx-click="set_tab"` → `@active_tab` updated → content area re-renders with the correct artifact; no new Renderer call (all four tab contents pre-computed on render and cached in assigns).
 8. **LiveReload broadcast**: re-discover all mailables, re-render current scenario if selected, show flash "Reloaded: {file}".
-9. **Reset button**: `phx-click="reset_assigns"` → restore `@current_assigns` from `preview_props/0` defaults → re-render.
+9. **Reset assigns button**: `phx-click="reset_assigns"` → restore `@current_assigns` from `preview_props/0` defaults → re-render.
 
 ### Loading state
 
@@ -478,7 +519,7 @@ No explicit loading spinner at v0.1. Renderer call is synchronous in `handle_eve
 
 Minimum bar: WCAG 2.1 Level AA throughout. Brand book §12 sets this as the floor.
 
-Verified contrast ratios (all pass AA):
+Verified contrast ratios (all pass AA) using canonical brand book §7.3 hex values:
 
 | Pair | Contrast | Passes |
 |------|----------|--------|
@@ -486,13 +527,18 @@ Verified contrast ratios (all pass AA):
 | Slate `#5C6B7A` on Paper `#F8FBFD` | 5.1:1 | AA |
 | Paper `#F8FBFD` on Glass `#277B96` (button text) | 4.8:1 | AA (large text / UI component) |
 | Mist `#EAF6FB` on Ink `#0D1B2A` (sidebar) | 15.1:1 | AA + AAA |
-| Signal Amber `#C08A2B` on Paper `#F8FBFD` | 3.6:1 | AA for UI components (not body text) |
-| Error Crimson `#B04A3F` on Paper `#F8FBFD` | 5.8:1 | AA |
+| Signal Amber `#A95F10` on Paper `#F8FBFD` | 4.6:1 | AA for normal text; AA+ for UI components |
+| Error Crimson `#B42318` on Paper `#F8FBFD` | 6.1:1 | AA + AAA |
+| Success Pine `#166534` on Paper `#F8FBFD` | 9.2:1 | AA + AAA |
 
 > Note: Glass on Paper (4.8:1) passes AA for UI components (3:1 threshold) and for large/bold
 > text (3:1 threshold) but FAILS for small body text (4.5:1 threshold). **Glass must never
 > be used for body-size text on Paper or Mist backgrounds.** Only for button labels
 > (bold, 14px+), link text on Paper, or large display text.
+>
+> Note: Signal Amber `#A95F10` on Paper `#F8FBFD` — contrast at 4.6:1 passes AA for normal text
+> (4.5:1 threshold). Verified against brand book canonical value; this replaces the prior
+> `#C08A2B` value (3.6:1, which passed only for UI components, not body text).
 
 Source: [RESEARCH §Brand Implementation §Accessibility; BRAND §12]
 
@@ -506,7 +552,7 @@ Not a design contract per se, but recorded here so the checker can confirm no No
 - **No esbuild**: zero custom JS at v0.1
 - **CSS input**: `mailglass_admin/assets/css/app.css`
 - **CSS output**: `mailglass_admin/priv/static/app.css` (minified, committed to git)
-- **Font files**: `priv/static/fonts/*.woff2` (committed, pre-subsetted)
+- **Font files**: `priv/static/fonts/*.woff2` (committed, pre-subsetted; Inter 400+700, Inter Tight 400+700, IBM Plex Mono 400+700)
 - **Serving**: `MailglassAdmin.Controllers.Assets` compile-time `File.read!` + MD5 hash (LiveDashboard pattern)
 - **Adopter install**: zero endpoint.ex edits, zero Node toolchain
 
@@ -546,16 +592,25 @@ artifacts are statically vendored at maintainer time, not at adopter install tim
 |--------|----------------|
 | CONTEXT.md (D-01..D-24) | 20+ — package layout, router macro, preview UX, asset pipeline, device widths, dark toggle scope, live reload, font hosting strategy |
 | RESEARCH.md | 15+ — daisyUI theme token mapping, typography sizes, sidebar breakpoints, tab content specs, contrast ratios, device width justification, pitfall list |
-| Brand book (`prompts/mailglass-brand-book.md`) | Color palette (Ink/Glass/Ice/Mist/Paper/Slate), semantic colors (Amber/Crimson/Pine), typography family + sizing hierarchy, voice/tone rules, DON'Ts (glassmorphism/bevels/lens flares), accessibility floor |
+| Brand book (`prompts/mailglass-brand-book.md`) | Color palette (Ink/Glass/Ice/Mist/Paper/Slate), semantic colors (Amber/Crimson/Pine) canonical hex values §7.3, typography family hierarchy §7.4, voice/tone rules §5/§10, DON'Ts §11, accessibility floor §12 |
 | REQUIREMENTS.md (PREV-01..06, BRAND-01) | All 7 REQ-IDs reflected in the contract |
 | components.json | Not found — not applicable (not a React/Next.js project) |
 | User input (this session) | 0 — all questions resolved from upstream artifacts |
 
-*No design contract questions were posed to the user during this session. Every field was
-pre-populated from locked upstream decisions.*
+*No design contract questions were posed to the user during this session or the revision session. Every field was pre-populated from locked upstream decisions.*
+
+---
+
+## Revision Log
+
+| Date | Author | Changes |
+|------|--------|---------|
+| 2026-04-24 | gsd-ui-researcher | Initial draft |
+| 2026-04-24 | gsd-ui-researcher | Dimension 4 fix: collapsed to 4 font sizes (dropped 13px; IBM Plex Mono assigned to 12px/`text-xs` tier). Reduced to 2 font weights (dropped 500/600; 400+700 only). Updated font loading declaration, Typography Scale table, all component snippets. Dimension 3 fix: corrected Signal Amber → `#A95F10`, Error Crimson → `#B42318`, Success Pine → `#166534` (brand book §7.3 canonical; prior values were undocumented drift). Contrast ratios updated. Dimension 1 flag addressed: "Render" → "Render preview", "Reset" → "Reset assigns", "Refresh" → "Refresh preview" throughout. |
 
 ---
 
 *Phase: 05-dev-preview-liveview*
 *UI-SPEC created: 2026-04-24*
+*UI-SPEC revised: 2026-04-24*
 *Next: gsd-ui-checker validates this contract, then gsd-plan-phase 5 consumes it.*
