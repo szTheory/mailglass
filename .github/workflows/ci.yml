@@ -1,194 +1,360 @@
 name: CI
 
-# NOTE: Third-party actions below use tag references (@v4, @v1) for a
-# working first-run CI. CLAUDE.md mandates commit-SHA pinning (CI-04) —
-# Dependabot will bump these to SHAs on first dependency scan, OR pin
-# manually before shipping v0.1. Tracked in Phase 7 (CI/CD + Docs).
-
 on:
   push:
     branches: [main]
     paths-ignore:
-      - '.planning/**'
-      - 'prompts/**'
-      - '**/*.md'
+      - ".planning/**"
+      - "prompts/**"
   pull_request:
     branches: [main]
     paths-ignore:
-      - '.planning/**'
-      - 'prompts/**'
-      - '**/*.md'
+      - ".planning/**"
+      - "prompts/**"
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  phase-02-uat:
-    name: Phase 02 UAT (verify.phase_02)
+  format_check:
+    name: Format Check (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      MIX_ENV: test
-      POSTGRES_HOST: localhost
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
         with:
-          otp-version: "27.1"
-          elixir-version: "1.18.1"
-
-      - name: Restore deps + _build cache
-        uses: actions/cache@v4
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
         with:
-          path: |
-            deps
-            _build
+          path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             ${{ runner.os }}-mix-
-
       - name: Install deps
         run: mix deps.get
+      - name: Run formatter check
+        run: mix format --check-formatted
 
-      - name: Run Phase 02 UAT gate (verify.phase_02)
-        run: mix verify.phase_02
-
-  cold-start:
-    name: Cold Start (verify.cold_start)
+  compile_warnings:
+    name: Compile Warnings as Errors (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      MIX_ENV: test
-      POSTGRES_HOST: localhost
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
         with:
-          otp-version: "27.1"
-          elixir-version: "1.18.1"
-
-      - name: Restore deps + _build cache
-        uses: actions/cache@v4
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
         with:
-          path: |
-            deps
-            _build
+          path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             ${{ runner.os }}-mix-
-
       - name: Install deps
         run: mix deps.get
+      - name: Compile
+        run: mix compile --warnings-as-errors
 
-      - name: Run cold-start suite (verify.cold_start)
-        run: mix verify.cold_start
-
-  no-optional-deps:
-    name: Compile (no optional deps)
+  compile_no_optional_deps:
+    name: Compile No Optional Deps (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
-
-    env:
-      MIX_ENV: test
-
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
         with:
-          otp-version: "27.1"
-          elixir-version: "1.18.1"
-
-      - name: Restore deps + _build cache
-        uses: actions/cache@v4
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
         with:
-          path: |
-            deps
-            _build
-          key: ${{ runner.os }}-mix-noopt-${{ hashFiles('**/mix.lock') }}
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-noopt-
-
-      - name: Install deps (no optional)
-        run: mix deps.get --only $MIX_ENV
-
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        run: mix deps.get --only test
       - name: Compile without optional deps
         run: mix compile --no-optional-deps --warnings-as-errors
 
-  credo-custom:
-    name: Custom Credo Checks
+  tests:
+    name: Tests (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
-    needs: [no-optional-deps]
-
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       MIX_ENV: test
-
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
         with:
-          otp-version: "27.1"
-          elixir-version: "1.18.1"
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        run: mix deps.get
+      - name: Run tests
+        run: mix test --warnings-as-errors
 
-      - name: Restore deps + _build cache
-        uses: actions/cache@v4
+  credo_strict:
+    name: Credo Strict (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        run: mix deps.get
+      - name: Run Credo strict
+        run: mix credo --strict
+
+  dialyzer:
+    name: Dialyzer (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        run: mix deps.get
+      - name: Run Dialyzer
+        run: mix dialyzer --halt-exit-status
+
+  docs_warnings_as_errors:
+    name: Docs Warnings as Errors (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        run: mix deps.get
+      - name: Build docs
+        run: mix docs --warnings-as-errors
+
+  hex_audit:
+    name: Hex Audit (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        run: mix deps.get
+      - name: Run Hex audit
+        run: mix hex.audit
+
+  installer_golden_gate:
+    name: Installer Golden Gate (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        run: mix deps.get
+      - name: Run installer golden gate
+        run: mix verify.installer.golden
+
+  admin_smoke_gate:
+    name: Admin Smoke Gate (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
         with:
           path: |
             deps
-            _build
-          key: ${{ runner.os }}-mix-credo-${{ hashFiles('**/mix.lock') }}
+            mailglass_admin/deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-credo-
-
-      - name: Install deps
+            ${{ runner.os }}-mix-
+      - name: Install core deps
         run: mix deps.get
-
-      - name: Run custom Credo checks
-        run: mix credo --strict --only Mailglass.Credo
+      - name: Run admin smoke gate
+        run: cd mailglass_admin && mix test --only admin_smoke --warnings-as-errors
