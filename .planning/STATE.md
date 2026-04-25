@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1.0
 milestone_name: packages to Hex.pm
 status: executing
-stopped_at: Phase 07.1 — Wave 1 complete (5/11 plans landed); awaiting Wave 2 spawn
-last_updated: "2026-04-25T20:01:15.000Z"
-last_activity: 2026-04-25 -- Phase 07.1 Wave 1 landed (plans 01..05)
+stopped_at: Completed 07.1-08-PLAN.md
+last_updated: "2026-04-25T21:31:20.148Z"
+last_activity: 2026-04-25
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 61
-  completed_plans: 55
-  percent: 90
+  completed_plans: 51
+  percent: 84
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 07.1 (publish-v0-1-0-packages-to-hex-pm) — EXECUTING
-Plan: 6 of 11 (Wave 2 complete; Wave 3 next)
-Status: Wave 2 landed — plan 07.1-06 on main
-Last activity: 2026-04-25 -- Wave 2 of Phase 07.1 complete (6/11 plans)
+Plan: 8 of 11 (Wave 2 complete; Wave 3 next)
+Status: Ready to execute
+Last activity: 2026-04-25
 
 **Wave 1 + 2 commits on main (8c2e7f3..58264c1):**
 
@@ -51,7 +51,7 @@ Interleaved: `7cdf7b1` user-authored fix moving custom credo checks to `credo_ch
 
 **Next:** Wave 3 — spawn 07.1-07/08/09 (publish.check + publish-hex + smoke) when user confirms.
 
-Progress: [██████████] 100%
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
@@ -111,6 +111,7 @@ Progress: [██████████] 100%
 | Phase 04-webhook-ingest P07 | 20min | 2 tasks tasks | 9 files files |
 | Phase 04-webhook-ingest P08 | 8min | 2 tasks | 5 files |
 | Phase 04 P09 | 11min | 2 tasks tasks | 5 files files |
+| Phase 07.1-publish-v0-1-0-packages-to-hex-pm P08 | 1h 15m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -239,6 +240,8 @@ Most load-bearing for Phase 1:
 - Plan 04-09: HOOK-07 1000-replay property asserts STRUCTURAL invariant (webhook_event_count == |unique provider_event_ids|) rather than row-snapshot diff — simpler than Phase 2's idempotency_convergence pattern and correctly targets the UNIQUE(provider, provider_event_id) index on mailglass_webhook_events
 - Plan 04-09: Signature-failure property restricted to Postmark — SendGrid already exhaustively tested by sendgrid_test.exs; Postmark's Basic-Auth mutation space (5 variants × 200 runs = 1000 synthetic attackers) is where 1000-run StreamData adds marginal value
 - Plan 04-09: guides/webhooks.md ships as first adopter-facing doc in guides/ directory — Phase 7 DOCS-02 extends/consolidates but does not replace
+- Hardened publish-hex with workflow_dispatch, sequential jobs, and CI-gated publishing
+- Added package-aware publish-check CLI support so the new workflow inputs remain valid
 
 ### Roadmap Evolution
 
@@ -261,8 +264,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 07.1 context gathered (research-driven, fix-then-publish path)
-Resume file: --resume-file
+Last session: 2026-04-25T00:00:00Z
+Stopped at: Completed 07.1-08-PLAN.md
+Resume file: None
 
 **Planned Phase:** 07.1 (publish-v0-1-0-packages-to-hex-pm) — 11 plans — 2026-04-25T17:45:01.601Z
