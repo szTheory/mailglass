@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 07.1 (publish-v0-1-0-packages-to-hex-pm) — EXECUTING
-Plan: 5 of 11 (Wave 1 complete; Wave 2 next)
-Status: Wave 1 landed — plans 07.1-01..05 on main
-Last activity: 2026-04-25 -- Wave 1 of Phase 07.1 complete (5/11 plans)
+Plan: 6 of 11 (Wave 2 complete; Wave 3 next)
+Status: Wave 2 landed — plan 07.1-06 on main
+Last activity: 2026-04-25 -- Wave 2 of Phase 07.1 complete (6/11 plans)
 
-**Wave 1 commits on main (8c2e7f3..0362ac5):**
+**Wave 1 + 2 commits on main (8c2e7f3..58264c1):**
 
 - `dc1a0a6` 07.1-03 CHANGELOG narrative rewrite
 - `a987bf1` 07.1-02 governance sections (MAINTAINING.md)
@@ -38,12 +38,18 @@ Last activity: 2026-04-25 -- Wave 1 of Phase 07.1 complete (5/11 plans)
 - `1e6c6ef` 07.1-05 REQ traceability flips (~22 rows; INST-01/03 deferred to Plan 06 per D-06)
 - `c3b43d6` 07.1-01 tarball cleanup + source_ref_pattern (both mix.exs files)
 - `0362ac5` 07.1-04 VERIFICATION.md backfill (Phase 5 + Phase 7)
+- `b53a7b2` 07.1-06 installer fixtures through real Apply.run/2
+- `70e69f0` 07.1-06 adopter admin router mount snippet
+- `b247187` 07.1-06 installer ops + migration generator
+- `fb32b4e` 07.1-06 installer golden snapshots
+- `7c7c893` 07.1-06 admin smoke test for post-install route resolution
+- `58264c1` 07.1-06 installer REQs complete after smoke/snapshots
 
 Interleaved: `7cdf7b1` user-authored fix moving custom credo checks to `credo_checks/` (path-dep compile fix; unrelated to 07.1 plans, preserved through cherry-pick auto-merge).
 
 **Wave 1 recovery note:** Original Wave 1 spawned 5 parallel agents but credits ran out mid-wave. Recovery (this session) salvaged 07.1-02/03/05 from worktrees via cherry-pick, restarted 07.1-01 and 07.1-04 from current main HEAD because their previous worktree work was incomplete (only 1 of 2 required files done in each). All 5 plans now land as a single linear sequence on main.
 
-**Next:** Wave 2 — spawn 07.1-06 (installer blockers G-1..G-5) when user confirms.
+**Next:** Wave 3 — spawn 07.1-07/08/09 (publish.check + publish-hex + smoke) when user confirms.
 
 Progress: [██████████] 100%
 
