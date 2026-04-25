@@ -56,7 +56,9 @@ defmodule Mailglass.RateLimiterTest do
       assert ok_count == 100, "Expected 100 :ok, got #{ok_count}"
       assert err_count == 1, "Expected 1 error, got #{err_count}"
 
-      [{:error, %RateLimitError{} = err}] = Enum.filter(results, &match?({:error, %RateLimitError{}}, &1))
+      [{:error, %RateLimitError{} = err}] =
+        Enum.filter(results, &match?({:error, %RateLimitError{}}, &1))
+
       assert err.type == :per_domain
       assert err.retry_after_ms >= 1
     end
@@ -71,7 +73,9 @@ defmodule Mailglass.RateLimiterTest do
       # Drain
       assert :ok = RateLimiter.check("tenant-refill", "refill.com", :operational)
       assert :ok = RateLimiter.check("tenant-refill", "refill.com", :operational)
-      assert {:error, %RateLimitError{}} = RateLimiter.check("tenant-refill", "refill.com", :operational)
+
+      assert {:error, %RateLimitError{}} =
+               RateLimiter.check("tenant-refill", "refill.com", :operational)
 
       # Wait 600ms for at least 1 token to refill (refill rate: 1 token per 500ms)
       Process.sleep(600)
@@ -88,12 +92,16 @@ defmodule Mailglass.RateLimiterTest do
       # Drain tenant-a's bucket
       assert :ok = RateLimiter.check("tenant-a", "example.com", :operational)
       assert :ok = RateLimiter.check("tenant-a", "example.com", :operational)
-      assert {:error, %RateLimitError{}} = RateLimiter.check("tenant-a", "example.com", :operational)
+
+      assert {:error, %RateLimitError{}} =
+               RateLimiter.check("tenant-a", "example.com", :operational)
 
       # tenant-b same domain should still have a fresh bucket
       assert :ok = RateLimiter.check("tenant-b", "example.com", :operational)
       assert :ok = RateLimiter.check("tenant-b", "example.com", :operational)
-      assert {:error, %RateLimitError{}} = RateLimiter.check("tenant-b", "example.com", :operational)
+
+      assert {:error, %RateLimitError{}} =
+               RateLimiter.check("tenant-b", "example.com", :operational)
 
       # tenant-a different domain should also be fresh
       assert :ok = RateLimiter.check("tenant-a", "other.com", :operational)
@@ -139,7 +147,8 @@ defmodule Mailglass.RateLimiterTest do
       Application.put_env(:mailglass, :rate_limit, default: [capacity: 100, per_minute: 100])
       :ets.delete_all_objects(:mailglass_rate_limit)
 
-      ref = :telemetry_test.attach_event_handlers(self(), [[:mailglass, :outbound, :rate_limit, :stop]])
+      ref =
+        :telemetry_test.attach_event_handlers(self(), [[:mailglass, :outbound, :rate_limit, :stop]])
 
       RateLimiter.check("tenant-tel", "tel.com", :operational)
 

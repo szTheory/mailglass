@@ -23,10 +23,17 @@ defmodule Mailglass.Adapters.Fake.Supervisor do
   """
   use Supervisor
 
-  def start_link(opts), do: Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
+  def start_link(opts) do
+    {name, init_opts} = Keyword.pop(opts, :name, __MODULE__)
+    Supervisor.start_link(__MODULE__, init_opts, name: name)
+  end
 
   @impl Supervisor
   def init(_opts) do
-    Supervisor.init([Mailglass.Adapters.Fake.Storage], strategy: :one_for_one)
+    children = [
+      {Mailglass.Adapters.Fake.Storage, [name: Mailglass.Adapters.Fake.Storage]}
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end

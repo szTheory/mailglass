@@ -1,5 +1,5 @@
 defmodule Mailglass.Webhook.Provider do
-  @moduledoc false
+  @moduledoc "Behaviour for webhook providers (SendGrid, Postmark, etc)."
   # SEALED at v0.1 — see docs/api_stability.md §Webhook (Phase 4 Wave 0
   # scaffolding, Wave 2 lock). Adopters cannot implement at v0.1: PROJECT
   # D-10 defers Mailgun/SES/Resend to v0.5 behind this same internal

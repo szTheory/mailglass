@@ -98,14 +98,20 @@ defmodule Mailglass.OutboundTest do
       import Ecto.Query
 
       deliveries =
-        from(d in Delivery, where: d.recipient == "fail@example.com", order_by: [desc: d.inserted_at], limit: 1)
+        from(d in Delivery,
+          where: d.recipient == "fail@example.com",
+          order_by: [desc: d.inserted_at],
+          limit: 1
+        )
         |> TestRepo.all()
 
       case deliveries do
         [delivery] ->
           assert delivery.status == :failed
           assert is_map(delivery.last_error)
-          assert Map.has_key?(delivery.last_error, "module") or Map.has_key?(delivery.last_error, :module)
+
+          assert Map.has_key?(delivery.last_error, "module") or
+                   Map.has_key?(delivery.last_error, :module)
 
         [] ->
           # delivery row may not exist if adapter failed before Multi#1 — that's fine

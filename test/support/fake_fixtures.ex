@@ -22,26 +22,26 @@ defmodule Mailglass.FakeFixtures do
     def welcome(email) when is_binary(email) do
       new()
       |> Mailglass.Message.update_swoosh(fn e ->
-           e
-           |> Swoosh.Email.from({"Test", "test@example.com"})
-           |> Swoosh.Email.to(email)
-           |> Swoosh.Email.subject("Welcome")
-           |> Swoosh.Email.html_body("<p>Welcome!</p>")
-           |> Swoosh.Email.text_body("Welcome!")
-         end)
+        e
+        |> Swoosh.Email.from({"Test", "test@example.com"})
+        |> Swoosh.Email.to(email)
+        |> Swoosh.Email.subject("Welcome")
+        |> Swoosh.Email.html_body("<p>Welcome!</p>")
+        |> Swoosh.Email.text_body("Welcome!")
+      end)
       |> Mailglass.Message.put_function(:welcome)
     end
 
     def password_reset(email) when is_binary(email) do
       new()
       |> Mailglass.Message.update_swoosh(fn e ->
-           e
-           |> Swoosh.Email.from({"Test", "test@example.com"})
-           |> Swoosh.Email.to(email)
-           |> Swoosh.Email.subject("Reset your password")
-           |> Swoosh.Email.html_body("<p>Click here to reset your password.</p>")
-           |> Swoosh.Email.text_body("Click here")
-         end)
+        e
+        |> Swoosh.Email.from({"Test", "test@example.com"})
+        |> Swoosh.Email.to(email)
+        |> Swoosh.Email.subject("Reset your password")
+        |> Swoosh.Email.html_body("<p>Click here to reset your password.</p>")
+        |> Swoosh.Email.text_body("Click here")
+      end)
       |> Mailglass.Message.put_function(:password_reset)
     end
   end
@@ -54,12 +54,12 @@ defmodule Mailglass.FakeFixtures do
     def campaign(email) when is_binary(email) do
       new()
       |> Mailglass.Message.update_swoosh(fn e ->
-           e
-           |> Swoosh.Email.from({"Test", "test@example.com"})
-           |> Swoosh.Email.to(email)
-           |> Swoosh.Email.subject("Campaign")
-           |> Swoosh.Email.text_body("Campaign body")
-         end)
+        e
+        |> Swoosh.Email.from({"Test", "test@example.com"})
+        |> Swoosh.Email.to(email)
+        |> Swoosh.Email.subject("Campaign")
+        |> Swoosh.Email.text_body("Campaign body")
+      end)
       |> Mailglass.Message.put_function(:campaign)
     end
   end

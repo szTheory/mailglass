@@ -138,9 +138,7 @@ defmodule Mailglass.Webhook.Plug do
       end)
     rescue
       e in SignatureError ->
-        Logger.warning(
-          "Webhook signature failed: provider=#{provider} reason=#{e.type}"
-        )
+        Logger.warning("Webhook signature failed: provider=#{provider} reason=#{e.type}")
 
         conn = send_resp(conn, 401, "")
 
@@ -152,9 +150,7 @@ defmodule Mailglass.Webhook.Plug do
          }}
 
       e in TenancyError ->
-        Logger.warning(
-          "Webhook tenant resolution failed: provider=#{provider} reason=#{e.type}"
-        )
+        Logger.warning("Webhook tenant resolution failed: provider=#{provider} reason=#{e.type}")
 
         conn = send_resp(conn, 422, "")
 

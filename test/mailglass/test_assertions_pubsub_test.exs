@@ -19,7 +19,12 @@ defmodule Mailglass.TestAssertionsPubSubTest do
     # Subscribe to the tenant-wide topic — MailerCase does this automatically,
     # but DataCase doesn't. Subscribe explicitly for these tests.
     :ok = Phoenix.PubSub.subscribe(Mailglass.PubSub, Mailglass.PubSub.Topics.events(tenant_id))
-    :ok = Phoenix.PubSub.subscribe(Mailglass.PubSub, Mailglass.PubSub.Topics.events(tenant_id, delivery_id))
+
+    :ok =
+      Phoenix.PubSub.subscribe(
+        Mailglass.PubSub,
+        Mailglass.PubSub.Topics.events(tenant_id, delivery_id)
+      )
 
     {:ok, tenant_id: tenant_id, delivery_id: delivery_id}
   end

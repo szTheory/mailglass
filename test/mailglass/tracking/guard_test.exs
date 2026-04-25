@@ -40,8 +40,10 @@ defmodule Mailglass.Tracking.GuardTest do
     for fun_name <- [:password_reset, :verify_email, :confirm_account] do
       msg = %Message{mailable: TrackingMailer, mailable_function: fun_name, stream: :operational}
       err = catch_error(Guard.assert_safe!(msg))
+
       assert is_struct(err, Mailglass.ConfigError),
              "Expected ConfigError for #{fun_name}"
+
       assert err.type == :tracking_on_auth_stream,
              "Expected :tracking_on_auth_stream for #{fun_name}"
     end
@@ -49,7 +51,12 @@ defmodule Mailglass.Tracking.GuardTest do
 
   # Test 8: prefix match — magic_link_verify_otp also raises
   test "Test 8: assert_safe! raises for prefix-matched :magic_link_verify_otp" do
-    msg = %Message{mailable: TrackingMailer, mailable_function: :magic_link_verify_otp, stream: :operational}
+    msg = %Message{
+      mailable: TrackingMailer,
+      mailable_function: :magic_link_verify_otp,
+      stream: :operational
+    }
+
     err = catch_error(Guard.assert_safe!(msg))
     assert is_struct(err, Mailglass.ConfigError)
     assert err.type == :tracking_on_auth_stream
@@ -57,7 +64,12 @@ defmodule Mailglass.Tracking.GuardTest do
 
   # Test 9: :password_changed_notification does NOT match (different prefix)
   test "Test 9: assert_safe! returns :ok for :password_changed_notification (non-auth prefix)" do
-    msg = %Message{mailable: TrackingMailer, mailable_function: :password_changed_notification, stream: :operational}
+    msg = %Message{
+      mailable: TrackingMailer,
+      mailable_function: :password_changed_notification,
+      stream: :operational
+    }
+
     assert Guard.assert_safe!(msg) == :ok
   end
 

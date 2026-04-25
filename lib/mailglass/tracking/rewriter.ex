@@ -218,5 +218,4 @@ defmodule Mailglass.Tracking.Rewriter do
   defp tracking_scheme do
     Application.get_env(:mailglass, :tracking, [])[:scheme] || "https"
   end
-
 end

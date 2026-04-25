@@ -136,8 +136,8 @@ defmodule Mailglass.Tracking.Token do
 
       _ ->
         raise ConfigError.new(:invalid,
-          context: %{rejected_url: target_url, reason: :scheme}
-        )
+                context: %{rejected_url: target_url, reason: :scheme}
+              )
     end
   end
 
@@ -148,11 +148,11 @@ defmodule Mailglass.Tracking.Token do
 
       _ ->
         raise ConfigError.new(:missing,
-          context: %{
-            key: :tracking_salts,
-            hint: "config :mailglass, :tracking, salts: [\"salt-1\", ...]"
-          }
-        )
+                context: %{
+                  key: :tracking_salts,
+                  hint: "config :mailglass, :tracking, salts: [\"salt-1\", ...]"
+                }
+              )
     end
   end
 

@@ -57,7 +57,10 @@ defmodule Mailglass.Outbound.PreflightTest do
 
       # No Delivery row inserted
       import Ecto.Query
-      count = TestRepo.aggregate(from(d in Delivery, where: d.recipient == "blocked@example.com"), :count)
+
+      count =
+        TestRepo.aggregate(from(d in Delivery, where: d.recipient == "blocked@example.com"), :count)
+
       assert count == 0
     end
   end
@@ -65,9 +68,7 @@ defmodule Mailglass.Outbound.PreflightTest do
   describe "preflight stage 3 — RateLimiter.check" do
     test "over-capacity for :operational stream returns {:error, %RateLimitError{}}; no Delivery row" do
       # Exhaust rate limit — set capacity to 1 token for the test domain
-      Application.put_env(:mailglass, :rate_limit,
-        default: [capacity: 1, per_minute: 1]
-      )
+      Application.put_env(:mailglass, :rate_limit, default: [capacity: 1, per_minute: 1])
 
       on_exit(fn ->
         Application.delete_env(:mailglass, :rate_limit)
@@ -125,9 +126,9 @@ defmodule Mailglass.Outbound.PreflightTest do
       # Build a message with a broken HEEx template
       broken_component = fn _assigns ->
         raise Mailglass.TemplateError.new(:heex_compile,
-          context: %{template: "broken"},
-          cause: %RuntimeError{message: "intentional test failure"}
-        )
+                context: %{template: "broken"},
+                cause: %RuntimeError{message: "intentional test failure"}
+              )
       end
 
       email =
@@ -150,7 +151,13 @@ defmodule Mailglass.Outbound.PreflightTest do
       case result do
         {:error, _err} ->
           import Ecto.Query
-          count = TestRepo.aggregate(from(d in Delivery, where: d.recipient == "render-fail@example.com"), :count)
+
+          count =
+            TestRepo.aggregate(
+              from(d in Delivery, where: d.recipient == "render-fail@example.com"),
+              :count
+            )
+
           assert count == 0
 
         {:ok, _} ->

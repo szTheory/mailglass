@@ -49,8 +49,8 @@ defmodule Mailglass.TelemetryTest do
 
       assert result == :render_result
 
-      assert_receive {:telemetry_event, [:mailglass, :render, :message, :stop],
-                      measurements, metadata}
+      assert_receive {:telemetry_event, [:mailglass, :render, :message, :stop], measurements,
+                      metadata}
 
       assert metadata.tenant_id == "t1"
       assert metadata.mailable == TestMailer
@@ -73,8 +73,7 @@ defmodule Mailglass.TelemetryTest do
 
       Mailglass.Telemetry.render_span(%{tenant_id: "t1", mailable: TestMailer}, fn -> :ok end)
 
-      assert_receive {:start_event, [:mailglass, :render, :message, :start], measurements,
-                      metadata}
+      assert_receive {:start_event, [:mailglass, :render, :message, :start], measurements, metadata}
 
       assert metadata.tenant_id == "t1"
       assert is_integer(Map.fetch!(measurements, :system_time))
@@ -167,8 +166,10 @@ defmodule Mailglass.TelemetryTest do
           ])
         })
 
-      check all pairs <- StreamData.list_of(kv_gen, max_length: 15),
-                max_runs: 1000 do
+      check all(
+              pairs <- StreamData.list_of(kv_gen, max_length: 15),
+              max_runs: 1000
+            ) do
         metadata_input = Enum.into(pairs, %{})
         test_pid = self()
 

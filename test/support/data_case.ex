@@ -63,7 +63,8 @@ defmodule Mailglass.DataCase do
       try do
         Mailglass.TestRepo.query!("SELECT 'probe'::citext")
       rescue
-        Postgrex.Error -> :ok  # disconnect_on_error_codes fires; ownership auto-reconnects
+        # disconnect_on_error_codes fires; ownership auto-reconnects
+        Postgrex.Error -> :ok
       end
     end
 

@@ -1,5 +1,5 @@
 defmodule Mailglass.Migrations.Postgres do
-  @moduledoc false
+  @moduledoc "Internal migration runner for Postgres."
 
   use Ecto.Migration
 

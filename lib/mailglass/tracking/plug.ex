@@ -33,19 +33,13 @@ defmodule Mailglass.Tracking.Plug do
 
   import Plug.Conn
 
-  plug :match
-  plug :dispatch
+  plug(:match)
+  plug(:dispatch)
 
   # Minimal 1×1 transparent GIF89a — exactly 43 bytes.
   # GIF89a header + color table + graphic control + image descriptor + LZW data + trailer.
-  @gif89a_pixel <<71, 73, 70, 56, 57, 97,
-                  1, 0, 1, 0,
-                  128, 0, 0,
-                  255, 255, 255,
-                  0, 0, 0,
-                  33, 249, 4, 1, 0, 0, 0, 0,
-                  44, 0, 0, 0, 0, 1, 0, 1, 0,
-                  0, 2, 2, 68, 1, 0, 59>>
+  @gif89a_pixel <<71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 0, 0, 255, 255, 255, 0, 0, 0, 33, 249, 4,
+                  1, 0, 0, 0, 0, 44, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 68, 1, 0, 59>>
 
   get "/o/:token" do
     # Strip .gif suffix — URL shape is /o/<token>.gif (D-34)
@@ -138,5 +132,4 @@ defmodule Mailglass.Tracking.Plug do
   rescue
     _ -> :ok
   end
-
 end

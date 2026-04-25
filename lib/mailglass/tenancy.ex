@@ -101,14 +101,16 @@ defmodule Mailglass.Tenancy do
   `function_exported?/3` fallback. `Mailglass.Tenancy.ResolveFromPath`
   ships as opt-in sugar for URL-prefix tenant resolution.
   """
-  @callback resolve_webhook_tenant(context :: %{
-              provider: atom(),
-              conn: Plug.Conn.t(),
-              raw_body: binary(),
-              headers: [{String.t(), String.t()}],
-              path_params: map(),
-              verified_payload: map() | nil
-            }) :: {:ok, String.t()} | {:error, term()}
+  @callback resolve_webhook_tenant(
+              context :: %{
+                provider: atom(),
+                conn: Plug.Conn.t(),
+                raw_body: binary(),
+                headers: [{String.t(), String.t()}],
+                path_params: map(),
+                verified_payload: map() | nil
+              }
+            ) :: {:ok, String.t()} | {:error, term()}
 
   @process_dict_key :mailglass_tenant_id
 
@@ -236,6 +238,28 @@ defmodule Mailglass.Tenancy do
   end
 
   @doc """
+  Emits an audit breadcrumb when a call intentionally opts into
+  `scope: :unscoped` access.
+
+  This keeps the bypass path explicit and machine-searchable for TENANT-03
+  reviews.
+  """
+  @doc since: "0.1.0"
+  @spec audit_unscoped_bypass(keyword() | map()) :: :ok
+  def audit_unscoped_bypass(metadata \\ %{}) do
+    base_metadata =
+      metadata
+      |> normalize_unscoped_audit_metadata()
+      |> Map.put_new(:tenant_id, current())
+
+    Mailglass.Telemetry.execute(
+      [:mailglass, :tenant, :scope, :unscoped_bypass],
+      %{count: 1},
+      base_metadata
+    )
+  end
+
+  @doc """
   Dispatch to the configured tenancy module's `resolve_webhook_tenant/1`
   callback (Phase 4 D-12 — the optional callback Plan 05 formally declares).
 
@@ -283,6 +307,14 @@ defmodule Mailglass.Tenancy do
       mod when is_atom(mod) -> mod
     end
   end
+
+  defp normalize_unscoped_audit_metadata(metadata) when is_map(metadata), do: metadata
+
+  defp normalize_unscoped_audit_metadata(metadata) when is_list(metadata) do
+    if Keyword.keyword?(metadata), do: Enum.into(metadata, %{}), else: %{}
+  end
+
+  defp normalize_unscoped_audit_metadata(_metadata), do: %{}
 
   defp default_tenant do
     case resolver() do

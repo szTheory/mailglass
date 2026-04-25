@@ -28,8 +28,8 @@ defmodule Mailglass.StreamTest do
       msg = %Message{stream: :bulk, tenant_id: "t1", swoosh_email: Swoosh.Email.new()}
       Stream.policy_check(msg)
 
-      assert_receive {[:mailglass, :outbound, :stream_policy, :stop], ^ref,
-                      %{duration_us: _}, %{tenant_id: "t1", stream: :bulk}}
+      assert_receive {[:mailglass, :outbound, :stream_policy, :stop], ^ref, %{duration_us: _},
+                      %{tenant_id: "t1", stream: :bulk}}
 
       :telemetry.detach(ref)
     end

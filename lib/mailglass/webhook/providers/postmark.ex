@@ -55,8 +55,7 @@ defmodule Mailglass.Webhook.Providers.Postmark do
         raise ConfigError.new(:webhook_verification_key_missing,
                 context: %{
                   provider: :postmark,
-                  hint:
-                    "configure {:postmark, basic_auth: {user, pass}} in your :mailglass config"
+                  hint: "configure {:postmark, basic_auth: {user, pass}} in your :mailglass config"
                 }
               )
     end

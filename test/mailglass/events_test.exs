@@ -67,9 +67,7 @@ defmodule Mailglass.EventsTest do
 
       # Assert only one row exists.
       assert [_only_one] =
-               TestRepo.all(
-                 from(e in Event, where: e.idempotency_key == ^key)
-               )
+               TestRepo.all(from(e in Event, where: e.idempotency_key == ^key))
     end
 
     test "different idempotency_keys produce distinct rows" do

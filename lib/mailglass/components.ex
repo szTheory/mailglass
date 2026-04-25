@@ -42,9 +42,9 @@ defmodule Mailglass.Components do
   # preheader/1 — no VML, hidden preview text
   # ---------------------------------------------------------------------------
 
-  attr :text, :string, required: true
-  attr :class, :any, default: nil
-  attr :rest, :global, include: ~w(id)
+  attr(:text, :string, required: true)
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: ~w(id))
 
   @doc """
   Renders an email preheader — the hidden snippet that email clients show in
@@ -69,11 +69,11 @@ defmodule Mailglass.Components do
   # container/1 — 600px centered table, no VML
   # ---------------------------------------------------------------------------
 
-  attr :bg, :string, values: ~w(paper mist ink custom), default: "paper"
-  attr :bg_hex, :string, default: nil
-  attr :class, :any, default: nil
-  attr :rest, :global, include: @global_includes
-  slot :inner_block, required: true
+  attr(:bg, :string, values: ~w(paper mist ink custom), default: "paper")
+  attr(:bg_hex, :string, default: nil)
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: @global_includes)
+  slot(:inner_block, required: true)
 
   @doc "Renders a 600px-wide centered email container table (D-11)."
   @doc since: "0.1.0"
@@ -103,12 +103,12 @@ defmodule Mailglass.Components do
   # section/1 — full-width inner padding table, no VML
   # ---------------------------------------------------------------------------
 
-  attr :bg, :string, values: ~w(paper mist ink custom), default: "paper"
-  attr :bg_hex, :string, default: nil
-  attr :padding, :string, default: "20px"
-  attr :class, :any, default: nil
-  attr :rest, :global, include: @global_includes
-  slot :inner_block, required: true
+  attr(:bg, :string, values: ~w(paper mist ink custom), default: "paper")
+  attr(:bg_hex, :string, default: nil)
+  attr(:padding, :string, default: "20px")
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: @global_includes)
+  slot(:inner_block, required: true)
 
   @doc "Renders a full-width email section with padded inner cell."
   @doc since: "0.1.0"
@@ -131,10 +131,10 @@ defmodule Mailglass.Components do
   # row/1 — VML ghost-table for Outlook multi-column layout
   # ---------------------------------------------------------------------------
 
-  attr :gap, :integer, default: 0
-  attr :class, :any, default: nil
-  attr :rest, :global, include: @global_includes
-  slot :inner_block, required: true
+  attr(:gap, :integer, default: 0)
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: @global_includes)
+  slot(:inner_block, required: true)
 
   @doc """
   Renders a row that holds `column/1` children.
@@ -172,11 +172,11 @@ defmodule Mailglass.Components do
   # column/1 — VML ghost-td paired with row/1
   # ---------------------------------------------------------------------------
 
-  attr :width, :any, default: :auto
-  attr :valign, :string, values: ~w(top middle bottom), default: "top"
-  attr :class, :any, default: nil
-  attr :rest, :global, include: @global_includes
-  slot :inner_block, required: true
+  attr(:width, :any, default: :auto)
+  attr(:valign, :string, values: ~w(top middle bottom), default: "top")
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: @global_includes)
+  slot(:inner_block, required: true)
 
   @doc """
   Renders a column inside a `row/1`. Emits a `<!--[if mso]><td>` ghost-td
@@ -223,12 +223,12 @@ defmodule Mailglass.Components do
   # heading/1 — no VML; dynamic h1..h4 tag
   # ---------------------------------------------------------------------------
 
-  attr :level, :integer, values: [1, 2, 3, 4], default: 1
-  attr :align, :string, values: ~w(left center right), default: "left"
-  attr :tone, :string, values: ~w(ink glass slate), default: "ink"
-  attr :class, :any, default: nil
-  attr :rest, :global, include: @global_includes
-  slot :inner_block, required: true
+  attr(:level, :integer, values: [1, 2, 3, 4], default: 1)
+  attr(:align, :string, values: ~w(left center right), default: "left")
+  attr(:tone, :string, values: ~w(ink glass slate), default: "ink")
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: @global_includes)
+  slot(:inner_block, required: true)
 
   @doc """
   Renders an `<h1>`..`<h4>` heading with brand-tone color and email-safe
@@ -276,12 +276,12 @@ defmodule Mailglass.Components do
   # text/1 — no VML, <p>
   # ---------------------------------------------------------------------------
 
-  attr :size, :string, values: ~w(sm base lg), default: "base"
-  attr :tone, :string, values: ~w(ink slate), default: "ink"
-  attr :align, :string, values: ~w(left center right), default: "left"
-  attr :class, :any, default: nil
-  attr :rest, :global, include: @global_includes
-  slot :inner_block, required: true
+  attr(:size, :string, values: ~w(sm base lg), default: "base")
+  attr(:tone, :string, values: ~w(ink slate), default: "ink")
+  attr(:align, :string, values: ~w(left center right), default: "left")
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: @global_includes)
+  slot(:inner_block, required: true)
 
   @doc "Renders a paragraph with brand-tone color and size variant."
   @doc since: "0.1.0"
@@ -310,11 +310,11 @@ defmodule Mailglass.Components do
   # button/1 — SURGICAL VML FLAGSHIP: <v:roundrect> bulletproof button (D-10)
   # ---------------------------------------------------------------------------
 
-  attr :variant, :string, values: ~w(primary secondary ghost), default: "primary"
-  attr :tone, :string, values: ~w(glass ink slate), default: "glass"
-  attr :class, :any, default: nil
-  attr :rest, :global, include: @link_global_includes
-  slot :inner_block, required: true
+  attr(:variant, :string, values: ~w(primary secondary ghost), default: "primary")
+  attr(:tone, :string, values: ~w(glass ink slate), default: "glass")
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: @link_global_includes)
+  slot(:inner_block, required: true)
 
   @doc """
   Renders a bulletproof button with a `<v:roundrect>` VML wrapper for classic
@@ -406,12 +406,12 @@ defmodule Mailglass.Components do
   # img/1 — no VML; alt required at compile time (D-18)
   # ---------------------------------------------------------------------------
 
-  attr :src, :string, required: true
-  attr :alt, :string, required: true
-  attr :width, :integer, default: nil
-  attr :height, :integer, default: nil
-  attr :class, :any, default: nil
-  attr :rest, :global, include: ~w(id data-testid)
+  attr(:src, :string, required: true)
+  attr(:alt, :string, required: true)
+  attr(:width, :integer, default: nil)
+  attr(:height, :integer, default: nil)
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: ~w(id data-testid))
 
   @doc """
   Renders an `<img>` tag. The `:alt` attribute is required at compile time
@@ -434,10 +434,10 @@ defmodule Mailglass.Components do
   # link/1 — no VML; inline color on <a> AND wrapping <span>
   # ---------------------------------------------------------------------------
 
-  attr :tone, :string, values: ~w(glass ink), default: "glass"
-  attr :class, :any, default: nil
-  attr :rest, :global, include: @link_global_includes
-  slot :inner_block, required: true
+  attr(:tone, :string, values: ~w(glass ink), default: "glass")
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: @link_global_includes)
+  slot(:inner_block, required: true)
 
   @doc """
   Renders an inline text link. Sets the tone color both on the `<a>` and the
@@ -472,9 +472,9 @@ defmodule Mailglass.Components do
   # hr/1 — no VML; zero-height table with 1px border-top
   # ---------------------------------------------------------------------------
 
-  attr :tone, :string, values: ~w(mist slate), default: "mist"
-  attr :class, :any, default: nil
-  attr :rest, :global, include: @global_includes
+  attr(:tone, :string, values: ~w(mist slate), default: "mist")
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: @global_includes)
 
   @doc """
   Renders an email-safe horizontal rule: a zero-height `<table>` with a 1px

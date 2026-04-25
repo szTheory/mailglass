@@ -44,7 +44,13 @@ defmodule Mailglass.SuppressionTest do
     test "Test 7 (suppressed): returns {:error, %SuppressedError{type: scope}} when suppressed" do
       {:ok, _} =
         ETS.record(
-          %{tenant_id: "tenant-test", address: "blocked@example.com", scope: :address, reason: :manual, source: "test"},
+          %{
+            tenant_id: "tenant-test",
+            address: "blocked@example.com",
+            scope: :address,
+            reason: :manual,
+            source: "test"
+          },
           []
         )
 
@@ -63,7 +69,13 @@ defmodule Mailglass.SuppressionTest do
       # Record in ETS and verify the dispatch reads it
       {:ok, _} =
         ETS.record(
-          %{tenant_id: "tenant-test", address: "dispatch@example.com", scope: :address, reason: :manual, source: "test"},
+          %{
+            tenant_id: "tenant-test",
+            address: "dispatch@example.com",
+            scope: :address,
+            reason: :manual,
+            source: "test"
+          },
           []
         )
 

@@ -68,7 +68,9 @@ defmodule Mailglass.Components.ButtonTest do
 
     # Expect the label to appear twice: once inside <center> for VML, once inside <a>.
     occurrences = html |> String.split("Click me") |> length() |> Kernel.-(1)
-    assert occurrences >= 2, "Expected label 'Click me' in both VML and HTML branches (got #{occurrences})"
+
+    assert occurrences >= 2,
+           "Expected label 'Click me' in both VML and HTML branches (got #{occurrences})"
   end
 
   test "<.button> respects the :href in rest attrs" do

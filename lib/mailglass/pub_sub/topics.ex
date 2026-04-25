@@ -25,7 +25,7 @@ defmodule Mailglass.PubSub.Topics do
   @spec events(String.t(), binary()) :: String.t()
   def events(tenant_id, delivery_id)
       when is_binary(tenant_id) and is_binary(delivery_id),
-    do: "mailglass:events:" <> tenant_id <> ":" <> delivery_id
+      do: "mailglass:events:" <> tenant_id <> ":" <> delivery_id
 
   @doc "Returns the delivery-list stream topic for the given tenant."
   @doc since: "0.1.0"

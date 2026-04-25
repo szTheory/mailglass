@@ -56,22 +56,24 @@ defmodule Mailglass.Outbound.WorkerTest do
         :skip
       else
         # Create a queued delivery fixture with rendered content in metadata
-        delivery = Generators.delivery_fixture(
-          tenant_id: "test-tenant",
-          metadata: %{
-            "rendered_html" => "<p>Hello</p>",
-            "rendered_text" => "Hello",
-            "subject" => "Test"
-          }
-        )
+        delivery =
+          Generators.delivery_fixture(
+            tenant_id: "test-tenant",
+            metadata: %{
+              "rendered_html" => "<p>Hello</p>",
+              "rendered_text" => "Hello",
+              "subject" => "Test"
+            }
+          )
 
         job = %Oban.Job{
           args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "test-tenant"}
         }
 
-        result = Mailglass.Oban.TenancyMiddleware.wrap_perform(job, fn ->
-          Outbound.dispatch_by_id(delivery.id)
-        end)
+        result =
+          Mailglass.Oban.TenancyMiddleware.wrap_perform(job, fn ->
+            Outbound.dispatch_by_id(delivery.id)
+          end)
 
         assert {:ok, %Delivery{}} = result
       end
@@ -81,14 +83,15 @@ defmodule Mailglass.Outbound.WorkerTest do
       if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
         :skip
       else
-        delivery = Generators.delivery_fixture(
-          tenant_id: "middleware-tenant",
-          metadata: %{
-            "rendered_html" => "<p>Hello</p>",
-            "rendered_text" => "Hello",
-            "subject" => "Test"
-          }
-        )
+        delivery =
+          Generators.delivery_fixture(
+            tenant_id: "middleware-tenant",
+            metadata: %{
+              "rendered_html" => "<p>Hello</p>",
+              "rendered_text" => "Hello",
+              "subject" => "Test"
+            }
+          )
 
         job = %Oban.Job{
           args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "middleware-tenant"}

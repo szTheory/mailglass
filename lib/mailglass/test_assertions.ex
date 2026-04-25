@@ -223,7 +223,8 @@ defmodule Mailglass.TestAssertions do
   def assert_mail_delivered(delivery_or_id, timeout \\ 100) do
     delivery_id = to_delivery_id(delivery_or_id)
 
-    assert_receive {:delivery_updated, ^delivery_id, :delivered, _meta}, timeout,
+    assert_receive {:delivery_updated, ^delivery_id, :delivered, _meta},
+                   timeout,
                    "assert_mail_delivered timed out for delivery_id=#{delivery_id}"
 
     :ok
@@ -238,7 +239,8 @@ defmodule Mailglass.TestAssertions do
   def assert_mail_bounced(delivery_or_id, timeout \\ 100) do
     delivery_id = to_delivery_id(delivery_or_id)
 
-    assert_receive {:delivery_updated, ^delivery_id, :bounced, _meta}, timeout,
+    assert_receive {:delivery_updated, ^delivery_id, :bounced, _meta},
+                   timeout,
                    "assert_mail_bounced timed out for delivery_id=#{delivery_id}"
 
     :ok

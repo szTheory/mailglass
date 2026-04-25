@@ -35,11 +35,18 @@ defmodule Mailglass.Adapters.Fake.Storage do
   # Public API — mirrors Swoosh.Sandbox.Storage surface.
   # ──────────────────────────────────────────────────────────────
 
-  def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  def start_link(opts \\ []) when is_list(opts) do
+    {name, init_opts} = Keyword.pop(opts, :name)
+    start_opts = if is_nil(name), do: [], else: [name: name]
+    GenServer.start_link(__MODULE__, init_opts, start_opts)
+  end
 
   def checkout, do: GenServer.call(__MODULE__, {:checkout, self()})
   def checkin, do: GenServer.call(__MODULE__, {:checkin, self()})
-  def allow(owner_pid, allowed_pid), do: GenServer.call(__MODULE__, {:allow, owner_pid, allowed_pid})
+
+  def allow(owner_pid, allowed_pid),
+    do: GenServer.call(__MODULE__, {:allow, owner_pid, allowed_pid})
+
   def set_shared(pid), do: GenServer.call(__MODULE__, {:set_shared, pid})
   def get_shared, do: GenServer.call(__MODULE__, :get_shared)
   def find_owner(callers), do: GenServer.call(__MODULE__, {:find_owner, callers})

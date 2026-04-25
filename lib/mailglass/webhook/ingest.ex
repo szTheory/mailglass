@@ -186,14 +186,14 @@ defmodule Mailglass.Webhook.Ingest do
     # finalize_changes/2 so Plan 04's Plug returns 200 without resuming work.
     duplicate_check_step =
       Multi.run(Multi.new(), :duplicate_check, fn _repo, _changes ->
-        exists? =
-          Repo.one(
-            from(w in WebhookEvent,
-              where: w.provider == ^provider_str and w.provider_event_id == ^provider_event_id,
-              select: true,
-              limit: 1
-            )
-          ) == true
+        duplicate_query =
+          from(w in WebhookEvent,
+            where: w.provider == ^provider_str and w.provider_event_id == ^provider_event_id,
+            select: true,
+            limit: 1
+          )
+
+        exists? = Repo.one(Tenancy.scope(duplicate_query, tenant_id)) == true
 
         {:ok, exists?}
       end)
@@ -282,7 +282,13 @@ defmodule Mailglass.Webhook.Ingest do
               {:ok, :orphan_skipped}
 
             true ->
-              case Repo.get(Delivery, inserted_event.delivery_id) do
+              delivery_query =
+                from(d in Delivery,
+                  where: d.id == ^inserted_event.delivery_id,
+                  limit: 1
+                )
+
+              case Repo.one(Tenancy.scope(delivery_query)) do
                 nil -> {:ok, :orphan_skipped}
                 %Delivery{} = delivery -> {:ok, {:matched, delivery, inserted_event}}
               end
@@ -364,6 +370,7 @@ defmodule Mailglass.Webhook.Ingest do
     events
     |> Enum.map(fn e ->
       meta = e.metadata || %{}
+
       meta["event"] || meta["record_type"] ||
         Map.get(meta, :event) || Map.get(meta, :record_type) || "unknown"
     end)
@@ -397,12 +404,14 @@ defmodule Mailglass.Webhook.Ingest do
 
     case message_id do
       id when is_binary(id) and id != "" ->
-        from(d in Delivery,
-          where: d.provider == ^Atom.to_string(provider) and d.provider_message_id == ^id,
-          select: d.id,
-          limit: 1
-        )
-        |> Repo.one()
+        query =
+          from(d in Delivery,
+            where: d.provider == ^Atom.to_string(provider) and d.provider_message_id == ^id,
+            select: d.id,
+            limit: 1
+          )
+
+        Repo.one(Tenancy.scope(query))
 
       _ ->
         nil

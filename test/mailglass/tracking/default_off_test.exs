@@ -10,9 +10,11 @@ defmodule Mailglass.Tracking.DefaultOffTest do
 
     # Inject a plain HTML body so Renderer.render/1 can work
     html_body = "<html><body><p>Welcome!</p></body></html>"
-    msg_with_html = Mailglass.Message.update_swoosh(msg, fn e ->
-      %{e | html_body: html_body}
-    end)
+
+    msg_with_html =
+      Mailglass.Message.update_swoosh(msg, fn e ->
+        %{e | html_body: html_body}
+      end)
 
     {:ok, rendered} = Mailglass.Renderer.render(msg_with_html)
 

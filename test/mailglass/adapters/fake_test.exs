@@ -264,7 +264,9 @@ defmodule Mailglass.Adapters.FakeTest do
 
       # ETS table should no longer have the owner's bucket (cleaned up by DOWN handler)
       case :ets.lookup(:mailglass_fake_mailbox, owner_pid) do
-        [] -> :ok
+        [] ->
+          :ok
+
         [{^owner_pid, _}] ->
           # Still present — DOWN may not have fired yet or the bucket was
           # already empty. The key invariant is no cross-process leakage.

@@ -257,7 +257,7 @@ defmodule Mailglass.Adapters.Fake do
         limit: 1
       )
 
-    case Mailglass.Repo.one(q) do
+    case Mailglass.Repo.one(Mailglass.Tenancy.scope(q)) do
       nil -> {:error, :not_found}
       %Mailglass.Outbound.Delivery{} = d -> {:ok, d}
     end

@@ -24,7 +24,13 @@ defmodule Mailglass.SuppressionStore.ETSTest do
     test "Test 2: record then check returns {:suppressed, %Entry{scope: :address}}" do
       assert {:ok, %Entry{scope: :address}} =
                ETS.record(
-                 %{tenant_id: "t1", address: "a@b.c", scope: :address, reason: :manual, source: "test"},
+                 %{
+                   tenant_id: "t1",
+                   address: "a@b.c",
+                   scope: :address,
+                   reason: :manual,
+                   source: "test"
+                 },
                  []
                )
 
@@ -35,13 +41,25 @@ defmodule Mailglass.SuppressionStore.ETSTest do
     test "Test 3: re-record same (tenant_id, address, scope) updates reason (UPSERT)" do
       {:ok, _} =
         ETS.record(
-          %{tenant_id: "t1", address: "upsert@b.c", scope: :address, reason: :manual, source: "test"},
+          %{
+            tenant_id: "t1",
+            address: "upsert@b.c",
+            scope: :address,
+            reason: :manual,
+            source: "test"
+          },
           []
         )
 
       {:ok, updated} =
         ETS.record(
-          %{tenant_id: "t1", address: "upsert@b.c", scope: :address, reason: :complaint, source: "test"},
+          %{
+            tenant_id: "t1",
+            address: "upsert@b.c",
+            scope: :address,
+            reason: :complaint,
+            source: "test"
+          },
           []
         )
 
@@ -89,7 +107,9 @@ defmodule Mailglass.SuppressionStore.ETSTest do
       assert result_no_stream == :not_suppressed
 
       # With different stream: not suppressed
-      result_wrong_stream = ETS.check(%{tenant_id: "t1", address: "stream@b.c", stream: :transactional}, [])
+      result_wrong_stream =
+        ETS.check(%{tenant_id: "t1", address: "stream@b.c", stream: :transactional}, [])
+
       assert result_wrong_stream == :not_suppressed
     end
   end
@@ -121,7 +141,13 @@ defmodule Mailglass.SuppressionStore.ETSTest do
       # Record an entry to confirm state
       {:ok, _} =
         ETS.record(
-          %{tenant_id: "t1", address: "crash@b.c", scope: :address, reason: :manual, source: "test"},
+          %{
+            tenant_id: "t1",
+            address: "crash@b.c",
+            scope: :address,
+            reason: :manual,
+            source: "test"
+          },
           []
         )
 

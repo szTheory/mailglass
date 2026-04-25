@@ -44,13 +44,13 @@ defmodule Mailglass.CoreSendIntegrationTest do
       def welcome(email) when is_binary(email) do
         new()
         |> Mailglass.Message.update_swoosh(fn e ->
-             e
-             |> Swoosh.Email.from({"UAT Mailer", "uat@example.com"})
-             |> Swoosh.Email.to(email)
-             |> Swoosh.Email.subject("Welcome to UAT!")
-             |> Swoosh.Email.html_body("<p>Welcome!</p>")
-             |> Swoosh.Email.text_body("Welcome!")
-           end)
+          e
+          |> Swoosh.Email.from({"UAT Mailer", "uat@example.com"})
+          |> Swoosh.Email.to(email)
+          |> Swoosh.Email.subject("Welcome to UAT!")
+          |> Swoosh.Email.html_body("<p>Welcome!</p>")
+          |> Swoosh.Email.text_body("Welcome!")
+        end)
         |> Mailglass.Message.put_function(:welcome)
       end
     end
@@ -78,6 +78,7 @@ defmodule Mailglass.CoreSendIntegrationTest do
       # scans all mailbox messages so ordering doesn't matter.
       assert_receive {[:mailglass, :outbound, :send, :stop], ^ref, %{duration: _}, meta},
                      500
+
       assert meta[:tenant_id] == "test-tenant"
       refute Map.has_key?(meta, :to)
       refute Map.has_key?(meta, :recipient)
@@ -182,13 +183,15 @@ defmodule Mailglass.CoreSendIntegrationTest do
       def promo(email) when is_binary(email) do
         new()
         |> Mailglass.Message.update_swoosh(fn e ->
-             e
-             |> Swoosh.Email.from({"Promo", "promo@example.com"})
-             |> Swoosh.Email.to(email)
-             |> Swoosh.Email.subject("Promo email")
-             |> Swoosh.Email.html_body("<html><body><a href=\"https://example.com\">Click</a></body></html>")
-             |> Swoosh.Email.text_body("Promo")
-           end)
+          e
+          |> Swoosh.Email.from({"Promo", "promo@example.com"})
+          |> Swoosh.Email.to(email)
+          |> Swoosh.Email.subject("Promo email")
+          |> Swoosh.Email.html_body(
+            "<html><body><a href=\"https://example.com\">Click</a></body></html>"
+          )
+          |> Swoosh.Email.text_body("Promo")
+        end)
         |> Mailglass.Message.put_function(:promo)
       end
     end
@@ -231,13 +234,13 @@ defmodule Mailglass.CoreSendIntegrationTest do
         def magic_link(email) when is_binary(email) do
           new()
           |> Mailglass.Message.update_swoosh(fn e ->
-               e
-               |> Swoosh.Email.from({"UAT", "uat@example.com"})
-               |> Swoosh.Email.to(email)
-               |> Swoosh.Email.subject("Your magic link")
-               |> Swoosh.Email.html_body("<p>Click to sign in.</p>")
-               |> Swoosh.Email.text_body("Click to sign in.")
-             end)
+            e
+            |> Swoosh.Email.from({"UAT", "uat@example.com"})
+            |> Swoosh.Email.to(email)
+            |> Swoosh.Email.subject("Your magic link")
+            |> Swoosh.Email.html_body("<p>Click to sign in.</p>")
+            |> Swoosh.Email.text_body("Click to sign in.")
+          end)
           |> Mailglass.Message.put_function(:magic_link)
         end
       end

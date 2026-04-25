@@ -73,7 +73,7 @@ defmodule Mailglass.Compliance do
     if has_header?(email, "Date") do
       email
     else
-      put_header(email, "Date", format_rfc2822_date(DateTime.utc_now()))
+      put_header(email, "Date", format_rfc2822_date(Mailglass.Clock.utc_now()))
     end
   end
 

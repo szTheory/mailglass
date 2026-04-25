@@ -107,14 +107,17 @@ defmodule Mailglass.MailableTest do
     # 12. defoverridable
     # = 12 top-level forms (well within ≤20 budget)
     source = File.read!("lib/mailglass/mailable.ex")
+
     assert String.contains?(source, "defmacro __using__"),
            "Expected defmacro __using__ in mailable.ex"
+
     assert String.contains?(source, "quote bind_quoted:"),
            "Expected quote bind_quoted: in __using__"
 
     # Parse the full source and find the quote block inside __using__
     {:ok, ast} = Code.string_to_quoted(source)
     using_quote_forms = extract_using_quote_forms(ast)
+
     assert using_quote_forms <= 20,
            "Expected ≤20 top-level AST forms in __using__ quote block, got #{using_quote_forms}"
   end
@@ -161,6 +164,7 @@ defmodule Mailglass.MailableTest do
     source = File.read!("lib/mailglass/mailable.ex")
     {:ok, ast} = Code.string_to_quoted(source)
     using_body_str = extract_using_body_string(ast)
+
     refute String.contains?(using_body_str, "Phoenix.Component"),
            "use Mailglass.Mailable must not inject import Phoenix.Component"
   end

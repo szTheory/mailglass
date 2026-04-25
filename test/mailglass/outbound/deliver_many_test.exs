@@ -28,6 +28,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   describe "deliver_many/2 — basic batch (Test 1)" do
     test "returns {:ok, [%Delivery{}]} with one row per input message" do
       uid = unique_id()
+
       msgs = [
         build_message("batch1-#{uid}@example.com"),
         build_message("batch2-#{uid}@example.com"),
@@ -45,6 +46,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   describe "deliver_many/2 — idempotency keys (Test 2)" do
     test "each Delivery has a unique idempotency_key computed from message content" do
       uid = unique_id()
+
       msgs = [
         build_message("idem1-#{uid}@example.com"),
         build_message("idem2-#{uid}@example.com"),
@@ -62,6 +64,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   describe "deliver_many/2 — idempotency replay (Test 3)" do
     test "re-running same batch re-fetches existing rows (ON CONFLICT DO NOTHING replay)" do
       uid = unique_id()
+
       msgs = [
         build_message("replay1-#{uid}@example.com"),
         build_message("replay2-#{uid}@example.com")
@@ -149,6 +152,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   describe "deliver_many!/2 — all success (Test 7)" do
     test "returns [%Delivery{}] list when all succeed (no raise)" do
       uid = unique_id()
+
       msgs = [
         build_message("bang1-#{uid}@example.com"),
         build_message("bang2-#{uid}@example.com")
@@ -230,6 +234,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   describe "deliver_many/2 — DB persistence (Test 10)" do
     test "Delivery rows are persisted in the database" do
       uid = unique_id()
+
       msgs = [
         build_message("persist1-#{uid}@example.com"),
         build_message("persist2-#{uid}@example.com")

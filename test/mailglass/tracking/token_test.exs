@@ -38,6 +38,7 @@ defmodule Mailglass.Tracking.TokenTest do
     # Test 2: round-trip verify_open
     test "verify_open decodes what sign_open signed" do
       token = Token.sign_open(@endpoint, "delivery-uuid", "tenant-acme")
+
       assert {:ok, %{delivery_id: "delivery-uuid", tenant_id: "tenant-acme"}} =
                Token.verify_open(@endpoint, token)
     end
@@ -46,15 +47,23 @@ defmodule Mailglass.Tracking.TokenTest do
   describe "sign_click/4 + verify_click/2" do
     # Test 3: sign_click returns an opaque binary
     test "sign_click returns a binary token" do
-      token = Token.sign_click(@endpoint, "delivery-uuid", "tenant-acme", "https://example.com/post/123")
+      token =
+        Token.sign_click(@endpoint, "delivery-uuid", "tenant-acme", "https://example.com/post/123")
+
       assert is_binary(token)
     end
 
     # Test 4: round-trip verify_click
     test "verify_click decodes what sign_click signed" do
-      token = Token.sign_click(@endpoint, "delivery-uuid", "tenant-acme", "https://example.com/post/123")
+      token =
+        Token.sign_click(@endpoint, "delivery-uuid", "tenant-acme", "https://example.com/post/123")
 
-      assert {:ok, %{delivery_id: "delivery-uuid", tenant_id: "tenant-acme", target_url: "https://example.com/post/123"}} =
+      assert {:ok,
+              %{
+                delivery_id: "delivery-uuid",
+                tenant_id: "tenant-acme",
+                target_url: "https://example.com/post/123"
+              }} =
                Token.verify_click(@endpoint, token)
     end
 
@@ -128,11 +137,13 @@ defmodule Mailglass.Tracking.TokenTest do
 
     # Test 12: 100 round-trips with random valid inputs
     property "sign_click + verify_click round-trips for http/https schemes" do
-      check all delivery_id <- string(:alphanumeric, min_length: 5, max_length: 40),
-                tenant_id <- string(:alphanumeric, min_length: 5, max_length: 40),
-                scheme <- member_of(["http", "https"]),
-                host <- string(:alphanumeric, min_length: 5, max_length: 20),
-                path <- string(:alphanumeric, min_length: 0, max_length: 40) do
+      check all(
+              delivery_id <- string(:alphanumeric, min_length: 5, max_length: 40),
+              tenant_id <- string(:alphanumeric, min_length: 5, max_length: 40),
+              scheme <- member_of(["http", "https"]),
+              host <- string(:alphanumeric, min_length: 5, max_length: 20),
+              path <- string(:alphanumeric, min_length: 0, max_length: 40)
+            ) do
         url = "#{scheme}://#{host}/#{path}"
         token = Token.sign_click(@endpoint, delivery_id, tenant_id, url)
 

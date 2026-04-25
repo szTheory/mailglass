@@ -303,7 +303,8 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
     end
 
     test "SendGrid unmapped event → :unknown + Logger.warning" do
-      body = ~s([{"event":"someFutureEventTypeSendGridNeverSends","sg_event_id":"e1","sg_message_id":"m1"}])
+      body =
+        ~s([{"event":"someFutureEventTypeSendGridNeverSends","sg_event_id":"e1","sg_message_id":"m1"}])
 
       {events, log} =
         with_log(fn ->

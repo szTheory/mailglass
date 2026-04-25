@@ -99,7 +99,8 @@ if Code.ensure_loaded?(Oban.Worker) do
     the same code path; also useful in tests and for ops engineers who
     want to run a sweep out-of-band without waiting for the next cron tick.
     """
-    @spec reconcile(String.t() | nil, pos_integer()) :: {:ok, %{scanned: non_neg_integer(), linked: non_neg_integer()}}
+    @spec reconcile(String.t() | nil, pos_integer()) ::
+            {:ok, %{scanned: non_neg_integer(), linked: non_neg_integer()}}
     def reconcile(tenant_id \\ nil, limit \\ @batch_limit)
         when (is_nil(tenant_id) or is_binary(tenant_id)) and is_integer(limit) and limit > 0 do
       # Plan 08 named helper. The inner fn returns `{result, stop_meta}` —

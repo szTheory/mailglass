@@ -135,7 +135,8 @@ defmodule Mailglass.ErrorTest do
     ]
 
     Enum.each(errors, fn err ->
-      assert Mailglass.Error.is_error?(err), "Expected is_error? true for #{inspect(err.__struct__)}"
+      assert Mailglass.Error.is_error?(err),
+             "Expected is_error? true for #{inspect(err.__struct__)}"
     end)
   end
 

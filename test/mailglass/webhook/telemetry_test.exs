@@ -57,8 +57,7 @@ defmodule Mailglass.Webhook.TelemetryTest do
       result = WebhookTelemetry.ingest_span(meta, fn -> :the_result end)
       assert result == :the_result
 
-      assert_receive {:tel, [:mailglass, :webhook, :ingest, :start], start_measurements,
-                      start_meta}
+      assert_receive {:tel, [:mailglass, :webhook, :ingest, :start], start_measurements, start_meta}
 
       assert_receive {:tel, [:mailglass, :webhook, :ingest, :stop], stop_measurements, stop_meta}
 
@@ -317,8 +316,8 @@ defmodule Mailglass.Webhook.TelemetryTest do
         WebhookTelemetry.verify_span(meta, fn -> raise "verify boom" end)
       end
 
-      assert_receive {:tel_exception,
-                      [:mailglass, :webhook, :signature, :verify, :exception], exception_meta}
+      assert_receive {:tel_exception, [:mailglass, :webhook, :signature, :verify, :exception],
+                      exception_meta}
 
       assert Map.fetch!(exception_meta, :provider) == :sendgrid
 

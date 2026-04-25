@@ -95,7 +95,8 @@ defmodule Mailglass.MailerCase do
       try do
         Mailglass.TestRepo.query!("SELECT 'probe'::citext")
       rescue
-        Postgrex.Error -> :ok  # disconnect_on_error_codes fires; ownership auto-reconnects
+        # disconnect_on_error_codes fires; ownership auto-reconnects
+        Postgrex.Error -> :ok
       end
     end
 
@@ -187,6 +188,7 @@ defmodule Mailglass.MailerCase do
       else
         Application.delete_env(:mailglass, :async_adapter)
       end
+
       Ecto.Adapters.SQL.Sandbox.stop_owner(pid)
     end)
 

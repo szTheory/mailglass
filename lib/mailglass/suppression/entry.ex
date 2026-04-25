@@ -54,7 +54,7 @@ defmodule Mailglass.Suppression.Entry do
     # DB is citext; Ecto sees string
     field(:address, :string)
     # NO default — D-11
-    field :scope, Ecto.Enum, values: @scopes
+    field(:scope, Ecto.Enum, values: @scopes)
     # nullable — D-07
     field(:stream, Ecto.Enum, values: @streams)
     field(:reason, Ecto.Enum, values: @reasons)

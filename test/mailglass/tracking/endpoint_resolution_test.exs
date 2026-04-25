@@ -30,7 +30,12 @@ defmodule Mailglass.Tracking.EndpointResolutionTest do
   end
 
   test ":tracking, endpoint: is returned when set" do
-    Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint", host: "localhost", salts: ["s"])
+    Application.put_env(:mailglass, :tracking,
+      endpoint: "tracking-endpoint",
+      host: "localhost",
+      salts: ["s"]
+    )
+
     Application.delete_env(:mailglass, :adapter_endpoint)
     assert Tracking.endpoint() == "tracking-endpoint"
   end
@@ -42,7 +47,12 @@ defmodule Mailglass.Tracking.EndpointResolutionTest do
   end
 
   test ":tracking, endpoint: takes precedence over :adapter_endpoint" do
-    Application.put_env(:mailglass, :tracking, endpoint: "tracking-wins", host: "localhost", salts: ["s"])
+    Application.put_env(:mailglass, :tracking,
+      endpoint: "tracking-wins",
+      host: "localhost",
+      salts: ["s"]
+    )
+
     Application.put_env(:mailglass, :adapter_endpoint, "adapter-endpoint")
     assert Tracking.endpoint() == "tracking-wins"
   end

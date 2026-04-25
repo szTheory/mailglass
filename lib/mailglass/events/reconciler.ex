@@ -29,8 +29,10 @@ defmodule Mailglass.Events.Reconciler do
     Phase 4 V02 migration dropped `raw_payload` from the ledger per D-15)
   """
 
+  alias Mailglass.Clock
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
+  alias Mailglass.Tenancy
 
   import Ecto.Query
 
@@ -65,7 +67,7 @@ defmodule Mailglass.Events.Reconciler do
     limit = Keyword.get(opts, :limit, 100)
     max_age_minutes = Keyword.get(opts, :max_age_minutes, @default_max_age_minutes)
 
-    cutoff = DateTime.add(DateTime.utc_now(), -max_age_minutes * 60, :second)
+    cutoff = DateTime.add(Clock.utc_now(), -max_age_minutes * 60, :second)
 
     query =
       from(e in Event,
@@ -75,13 +77,14 @@ defmodule Mailglass.Events.Reconciler do
         limit: ^limit
       )
 
-    query =
-      case tenant_id do
-        nil -> query
-        tid when is_binary(tid) -> where(query, [e], e.tenant_id == ^tid)
-      end
+    case tenant_id do
+      nil ->
+        Tenancy.audit_unscoped_bypass(%{reason: :system_reconciliation, resource: :event})
+        Mailglass.Repo.all(query, scope: :unscoped)
 
-    Mailglass.Repo.all(query)
+      tid when is_binary(tid) ->
+        Mailglass.Repo.all(Tenancy.scope(query, tid))
+    end
   end
 
   @doc """
@@ -121,13 +124,19 @@ defmodule Mailglass.Events.Reconciler do
             {:error, :malformed_payload}
 
           true ->
+            Tenancy.audit_unscoped_bypass(%{
+              reason: :orphan_reconciliation,
+              resource: :delivery,
+              tenant_id: event.tenant_id
+            })
+
             query =
               from(d in Delivery,
                 where: d.provider == ^provider and d.provider_message_id == ^provider_message_id,
                 limit: 1
               )
 
-            case Mailglass.Repo.one(query) do
+            case Mailglass.Repo.one(query, scope: :unscoped) do
               nil -> {:error, :delivery_not_found}
               %Delivery{} = delivery -> {:ok, {delivery, event}}
             end

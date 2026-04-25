@@ -44,9 +44,7 @@ defmodule Mix.Tasks.Mailglass.Webhooks.Prune do
     if Mailglass.Webhook.Pruner.available?() do
       {:ok, %{succeeded: s, dead: d}} = Mailglass.Webhook.Pruner.prune()
 
-      Mix.shell().info(
-        "Webhook prune complete: succeeded_deleted=#{s} dead_deleted=#{d}"
-      )
+      Mix.shell().info("Webhook prune complete: succeeded_deleted=#{s} dead_deleted=#{d}")
     else
       Mix.shell().error(
         "Mailglass.Webhook.Pruner is not compiled (Oban not available). " <>

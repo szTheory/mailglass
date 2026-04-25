@@ -30,11 +30,13 @@ defmodule Mailglass.Tracking.OpenRedirectTest do
 
   # Test 13 (property): verify_click NEVER returns target_url with non-http/https scheme
   property "verify_click never returns target_url with scheme outside [http, https]" do
-    check all delivery_id <- binary(min_length: 1, max_length: 40),
-              tenant_id <- binary(min_length: 1, max_length: 40),
-              scheme <- member_of(["http", "https"]),
-              host <- binary(min_length: 1, max_length: 20),
-              path <- binary(min_length: 0, max_length: 40) do
+    check all(
+            delivery_id <- binary(min_length: 1, max_length: 40),
+            tenant_id <- binary(min_length: 1, max_length: 40),
+            scheme <- member_of(["http", "https"]),
+            host <- binary(min_length: 1, max_length: 20),
+            path <- binary(min_length: 0, max_length: 40)
+          ) do
       url = "#{scheme}://#{host}/#{path}"
       token = Token.sign_click(@endpoint, delivery_id, tenant_id, url)
       {:ok, %{target_url: decoded}} = Token.verify_click(@endpoint, token)
@@ -44,8 +46,10 @@ defmodule Mailglass.Tracking.OpenRedirectTest do
 
   # Verify that sign_click structurally prevents non-http/https schemes
   property "sign_click raises for non-http/https schemes at sign time" do
-    check all scheme <- member_of(["javascript", "ftp", "data", "file", "vbscript", "blob"]),
-              rest <- string(:printable, min_length: 1, max_length: 40) do
+    check all(
+            scheme <- member_of(["javascript", "ftp", "data", "file", "vbscript", "blob"]),
+            rest <- string(:printable, min_length: 1, max_length: 40)
+          ) do
       url = "#{scheme}:#{rest}"
 
       try do

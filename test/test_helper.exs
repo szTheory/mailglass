@@ -55,7 +55,8 @@ Mailglass.ObanHelpers.maybe_create_oban_jobs()
 try do
   Mailglass.TestRepo.query!("SELECT 'probe'::citext")
 rescue
-  Postgrex.Error -> :ok  # disconnect_on_error_codes fires; next connection is clean
+  # disconnect_on_error_codes fires; next connection is clean
+  Postgrex.Error -> :ok
 end
 
 Ecto.Adapters.SQL.Sandbox.mode(Mailglass.TestRepo, :manual)

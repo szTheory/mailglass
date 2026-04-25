@@ -192,8 +192,7 @@ defmodule Mailglass.SuppressionStore.EctoTest do
       assert 1 ==
                TestRepo.aggregate(
                  from(e in Entry,
-                   where:
-                     e.tenant_id == "test-tenant" and e.address == "repeat@example.com"
+                   where: e.tenant_id == "test-tenant" and e.address == "repeat@example.com"
                  ),
                  :count
                )

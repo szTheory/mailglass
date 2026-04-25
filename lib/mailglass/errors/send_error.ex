@@ -78,7 +78,12 @@ defmodule Mailglass.SendError do
 
   # Brand-voice-conformant messages (D-08). Never "Oops!" or "Something went wrong."
   defp format_message(:adapter_failure, _ctx), do: "Delivery failed: adapter returned an error"
-  defp format_message(:rendering_failed, _ctx), do: "Delivery failed: template could not be rendered"
+
+  defp format_message(:rendering_failed, _ctx),
+    do: "Delivery failed: template could not be rendered"
+
   defp format_message(:preflight_rejected, _ctx), do: "Delivery blocked: pre-send check failed"
-  defp format_message(:serialization_failed, _ctx), do: "Delivery failed: message could not be serialized"
+
+  defp format_message(:serialization_failed, _ctx),
+    do: "Delivery failed: message could not be serialized"
 end

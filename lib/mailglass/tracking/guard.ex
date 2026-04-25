@@ -65,8 +65,8 @@ defmodule Mailglass.Tracking.Guard do
 
     if (flags.opens or flags.clicks) and auth_function?(fun_name) do
       raise ConfigError.new(:tracking_on_auth_stream,
-        context: %{mailable: mod, function: fun_name}
-      )
+              context: %{mailable: mod, function: fun_name}
+            )
     end
 
     :ok

@@ -20,6 +20,7 @@ defmodule Mailglass.Adapters.FakeConcurrencyTest do
             Fake.checkout()
 
             tenant_id = "tenant-#{i}"
+
             messages =
               for j <- 1..@msgs_per_process do
                 email =
@@ -63,6 +64,7 @@ defmodule Mailglass.Adapters.FakeConcurrencyTest do
       end)
 
       total = Enum.sum(Enum.map(results, fn {_, count, _} -> count end))
+
       assert total == @n_processes * @msgs_per_process,
              "Expected #{@n_processes * @msgs_per_process} total deliveries, got #{total}"
     end

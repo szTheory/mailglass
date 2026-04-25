@@ -103,10 +103,12 @@ defmodule Mailglass.Webhook.Router do
 
     quote bind_quoted: [path: path, providers: providers, as: as] do
       for provider <- providers do
-        post("#{path}/#{provider}",
-             Mailglass.Webhook.Plug,
-             [provider: provider],
-             as: :"#{as}_#{provider}")
+        post(
+          "#{path}/#{provider}",
+          Mailglass.Webhook.Plug,
+          [provider: provider],
+          as: :"#{as}_#{provider}"
+        )
       end
     end
   end

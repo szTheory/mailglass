@@ -36,6 +36,7 @@ defmodule Mailglass.AdapterTest do
 
       email = Swoosh.Email.new(subject: "Test")
       msg = Mailglass.Message.new(email, mailable: StubAdapter2, tenant_id: "test")
+
       assert {:ok, %{message_id: "test-id", provider_response: %{some: :data}}} =
                StubAdapter2.deliver(msg, [])
     end

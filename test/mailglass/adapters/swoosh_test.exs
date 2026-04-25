@@ -174,16 +174,18 @@ defmodule Mailglass.Adapters.SwooshTest do
       Enum.each(api_error_shapes, fn {:api_error, status, body} ->
         # Build result directly using the same logic as the Swoosh adapter
         # We test the contract by testing the error-mapped SendError context
-        error = SendError.new(:adapter_failure,
-          context: %{
-            provider_status: status,
-            provider_module: SomeModule,
-            body_preview: String.slice(body, 0, 200),
-            reason_class: if(status >= 500, do: :server_error, else: :client_error)
-          }
-        )
+        error =
+          SendError.new(:adapter_failure,
+            context: %{
+              provider_status: status,
+              provider_module: SomeModule,
+              body_preview: String.slice(body, 0, 200),
+              reason_class: if(status >= 500, do: :server_error, else: :client_error)
+            }
+          )
 
         assert error.type == :adapter_failure
+
         refute context_has_pii?(error.context),
                "PII key found in context for status #{status}: #{inspect(Map.keys(error.context))}"
       end)
@@ -196,13 +198,14 @@ defmodule Mailglass.Adapters.SwooshTest do
       ]
 
       Enum.each(unknown_shapes, fn reason ->
-        error = SendError.new(:adapter_failure,
-          context: %{
-            provider_module: SomeModule,
-            reason_class: :other
-          },
-          cause: %RuntimeError{message: inspect(reason)}
-        )
+        error =
+          SendError.new(:adapter_failure,
+            context: %{
+              provider_module: SomeModule,
+              reason_class: :other
+            },
+            cause: %RuntimeError{message: inspect(reason)}
+          )
 
         refute context_has_pii?(error.context),
                "PII key found in context for reason #{inspect(reason)}: #{inspect(Map.keys(error.context))}"

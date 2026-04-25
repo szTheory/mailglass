@@ -184,9 +184,7 @@ defmodule Mailglass.Outbound.Projector do
     e in [ArgumentError, RuntimeError] ->
       require Logger
 
-      Logger.debug(
-        "[mailglass] PubSub broadcast failed (non-fatal): #{Exception.message(e)}"
-      )
+      Logger.debug("[mailglass] PubSub broadcast failed (non-fatal): #{Exception.message(e)}")
 
       :ok
   catch
@@ -196,9 +194,7 @@ defmodule Mailglass.Outbound.Projector do
     :exit, reason ->
       require Logger
 
-      Logger.debug(
-        "[mailglass] PubSub broadcast exited (non-fatal): #{inspect(reason)}"
-      )
+      Logger.debug("[mailglass] PubSub broadcast exited (non-fatal): #{inspect(reason)}")
 
       :ok
   end

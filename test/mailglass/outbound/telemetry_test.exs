@@ -83,14 +83,17 @@ defmodule Mailglass.Outbound.TelemetryTest do
 
       on_exit(fn -> :telemetry.detach(handler_id) end)
 
-      check all local <- StreamData.string(:alphanumeric, min_length: 3, max_length: 10),
-                domain <- StreamData.string(:alphanumeric, min_length: 3, max_length: 10),
-                max_runs: 20 do
+      check all(
+              local <- StreamData.string(:alphanumeric, min_length: 3, max_length: 10),
+              domain <- StreamData.string(:alphanumeric, min_length: 3, max_length: 10),
+              max_runs: 20
+            ) do
         to_addr = "#{local}@#{domain}.test"
         msg = build_message(to_addr)
         Outbound.send(msg)
 
         violations = :ets.lookup(pii_table, :found)
+
         assert violations == [],
                "PII keys found in telemetry metadata: #{inspect(violations)}"
       end

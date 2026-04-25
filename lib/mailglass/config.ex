@@ -103,8 +103,7 @@ defmodule Mailglass.Config do
         overrides: [
           type: {:list, :any},
           default: [],
-          doc:
-            "Per-(tenant_id, domain) overrides as list of {{tenant_id, domain}, opts} tuples."
+          doc: "Per-(tenant_id, domain) overrides as list of {{tenant_id, domain}, opts} tuples."
         ]
       ]
     ],

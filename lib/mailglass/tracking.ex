@@ -113,9 +113,10 @@ defmodule Mailglass.Tracking do
     Application.get_env(:mailglass, :tracking, [])[:endpoint] ||
       Application.get_env(:mailglass, :adapter_endpoint) ||
       raise Mailglass.ConfigError.new(:tracking_endpoint_missing,
-        context: %{
-          hint: "config :mailglass, :tracking, endpoint: MyApp.Endpoint"
-        })
+              context: %{
+                hint: "config :mailglass, :tracking, endpoint: MyApp.Endpoint"
+              }
+            )
   end
 
   defp fetch_from_mailable(mailable) when is_atom(mailable) do

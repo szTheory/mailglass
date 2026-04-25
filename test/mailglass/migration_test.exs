@@ -164,7 +164,6 @@ defmodule Mailglass.MigrationTest do
       # V03+ will keep this assertion correct without another code edit.
       assert Migration.migrated_version() ==
                Mailglass.Migrations.Postgres.current_version()
-
     end
   end
 

@@ -1,6 +1,6 @@
 defmodule Mailglass.Outbound do
-  # Worker + Oban are conditionally compiled — suppress undefined warnings.
-  @compile {:no_warn_undefined, [Mailglass.Outbound.Worker, Oban]}
+  # Worker is conditionally compiled — suppress undefined warnings.
+  @compile {:no_warn_undefined, [Mailglass.Outbound.Worker]}
 
   @moduledoc """
   Public facade for the mailglass send pipeline (TRANS-04, SEND-01).
@@ -71,10 +71,23 @@ defmodule Mailglass.Outbound do
     deps: [Mailglass],
     exports: [Delivery, Projector, Worker]
 
-  alias Mailglass.{Clock, Events, Message, Renderer, Repo, Suppression, RateLimiter, Stream,
-                   Tenancy, Telemetry}
+  alias Mailglass.{
+    Clock,
+    Events,
+    Message,
+    Renderer,
+    Repo,
+    Suppression,
+    RateLimiter,
+    Stream,
+    Tenancy,
+    Telemetry
+  }
+
   alias Mailglass.Outbound.{Delivery, Projector}
   alias Mailglass.Tracking
+
+  import Kernel, except: [send: 2]
 
   # =========================================================
   # Public API — sync path
@@ -89,11 +102,19 @@ defmodule Mailglass.Outbound do
   internal implementation verb.
   """
   @doc since: "0.1.0"
-  @spec send(Message.t(), keyword()) :: {:ok, Delivery.t()} | {:error, Mailglass.Error.t()}
-  def send(%Message{} = msg, opts \\ []) do
+  @spec send(Message.t() | Swoosh.Email.t(), keyword()) ::
+          {:ok, Delivery.t()} | {:error, Mailglass.Error.t()}
+  def send(msg, opts \\ [])
+
+  def send(%Message{} = msg, opts) do
     Telemetry.send_span(metadata_for(msg), fn ->
       do_send(msg, opts)
     end)
+  end
+
+  def send(%Swoosh.Email{} = email, opts) do
+    msg = Message.new(email, tenant_id: Tenancy.current())
+    send(msg, opts)
   end
 
   @doc """
@@ -119,8 +140,8 @@ defmodule Mailglass.Outbound do
 
       {:error, other} ->
         raise Mailglass.SendError.new(:adapter_failure,
-          context: %{wrapped: inspect(other)}
-        )
+                context: %{wrapped: inspect(other)}
+              )
     end
   end
 
@@ -200,15 +221,15 @@ defmodule Mailglass.Outbound do
 
       length(failures) == length(deliveries) ->
         raise Mailglass.Error.BatchFailed.new(:all_failed,
-          context: %{count: length(deliveries)},
-          failures: failures
-        )
+                context: %{count: length(deliveries)},
+                failures: failures
+              )
 
       true ->
         raise Mailglass.Error.BatchFailed.new(:partial_failure,
-          context: %{count: length(deliveries), failed_count: length(failures)},
-          failures: failures
-        )
+                context: %{count: length(deliveries), failed_count: length(failures)},
+                failures: failures
+              )
     end
   end
 
@@ -359,21 +380,21 @@ defmodule Mailglass.Outbound do
       Ecto.Multi.new()
       |> Ecto.Multi.insert(:delivery, Delivery.changeset(attrs))
       |> Events.append_multi(:event_queued, fn %{delivery: d} ->
-           %{
-             tenant_id: tenant_id,
-             delivery_id: d.id,
-             type: :queued,
-             occurred_at: Clock.utc_now(),
-             idempotency_key: ik,
-             normalized_payload: %{}
-           }
-         end)
-      |> Oban.insert(:job, fn %{delivery: d} ->
-           Mailglass.Outbound.Worker.new(%{
-             "delivery_id" => d.id,
-             "mailglass_tenant_id" => tenant_id
-           })
-         end)
+        %{
+          tenant_id: tenant_id,
+          delivery_id: d.id,
+          type: :queued,
+          occurred_at: Clock.utc_now(),
+          idempotency_key: ik,
+          normalized_payload: %{}
+        }
+      end)
+      |> Mailglass.OptionalDeps.Oban.insert(:job, fn %{delivery: d} ->
+        Mailglass.Outbound.Worker.new(%{
+          "delivery_id" => d.id,
+          "mailglass_tenant_id" => tenant_id
+        })
+      end)
       |> Repo.multi()
 
     case result do
@@ -394,15 +415,15 @@ defmodule Mailglass.Outbound do
       Ecto.Multi.new()
       |> Ecto.Multi.insert(:delivery, Delivery.changeset(attrs))
       |> Events.append_multi(:event_queued, fn %{delivery: d} ->
-           %{
-             tenant_id: tenant_id,
-             delivery_id: d.id,
-             type: :queued,
-             occurred_at: Clock.utc_now(),
-             idempotency_key: ik,
-             normalized_payload: %{}
-           }
-         end)
+        %{
+          tenant_id: tenant_id,
+          delivery_id: d.id,
+          type: :queued,
+          occurred_at: Clock.utc_now(),
+          idempotency_key: ik,
+          normalized_payload: %{}
+        }
+      end)
 
     case Repo.multi(multi) do
       {:ok, %{delivery: d}} ->
@@ -496,6 +517,7 @@ defmodule Mailglass.Outbound do
     rows =
       Enum.map(messages, fn %Message{} = m ->
         ik = compute_idempotency_key(m)
+
         base_delivery_attrs(m, ik)
         |> Map.put(:id, Ecto.UUID.generate())
         |> Map.put(:inserted_at, now)
@@ -505,38 +527,37 @@ defmodule Mailglass.Outbound do
     result =
       Ecto.Multi.new()
       |> Ecto.Multi.insert_all(:deliveries, Delivery, rows,
-           on_conflict: :nothing,
-           conflict_target:
-             {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-           returning: true
-         )
+        on_conflict: :nothing,
+        conflict_target: {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
+        returning: true
+      )
       |> Ecto.Multi.run(:events, fn repo, %{deliveries: {_count, inserted}} ->
-           event_rows =
-             Enum.map(inserted, fn d ->
-               %{
-                 id: Ecto.UUID.generate(),
-                 tenant_id: d.tenant_id,
-                 delivery_id: d.id,
-                 type: :queued,
-                 occurred_at: now,
-                 idempotency_key: d.idempotency_key,
-                 normalized_payload: %{},
-                 metadata: %{},
-                 needs_reconciliation: false,
-                 inserted_at: now
-               }
-             end)
+        event_rows =
+          Enum.map(inserted, fn d ->
+            %{
+              id: Ecto.UUID.generate(),
+              tenant_id: d.tenant_id,
+              delivery_id: d.id,
+              type: :queued,
+              occurred_at: now,
+              idempotency_key: d.idempotency_key,
+              normalized_payload: %{},
+              metadata: %{},
+              needs_reconciliation: false,
+              inserted_at: now
+            }
+          end)
 
-           {n, _} =
-             repo.insert_all(Mailglass.Events.Event, event_rows,
-               on_conflict: :nothing,
-               conflict_target:
-                 {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-               returning: false
-             )
+        {n, _} =
+          repo.insert_all(Mailglass.Events.Event, event_rows,
+            on_conflict: :nothing,
+            conflict_target:
+              {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
+            returning: false
+          )
 
-           {:ok, n}
-         end)
+        {:ok, n}
+      end)
       |> Repo.multi()
 
     case result do
@@ -550,7 +571,8 @@ defmodule Mailglass.Outbound do
           if idempotency_keys == [] do
             []
           else
-            Repo.all(from(d in Delivery, where: d.idempotency_key in ^idempotency_keys))
+            query = from(d in Delivery, where: d.idempotency_key in ^idempotency_keys)
+            Repo.all(Tenancy.scope(query))
           end
 
         {:ok, all_rows}
@@ -573,7 +595,7 @@ defmodule Mailglass.Outbound do
           })
         end)
 
-      _ = Oban.insert_all(jobs)
+      _ = Mailglass.OptionalDeps.Oban.insert_all(jobs)
       :ok
     else
       Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
@@ -655,15 +677,15 @@ defmodule Mailglass.Outbound do
             })
           )
           |> Events.append_multi(:event_queued, fn %{delivery: d} ->
-               %{
-                 tenant_id: tenant_id,
-                 delivery_id: d.id,
-                 type: :queued,
-                 occurred_at: Clock.utc_now(),
-                 idempotency_key: ik,
-                 normalized_payload: %{}
-               }
-             end)
+            %{
+              tenant_id: tenant_id,
+              delivery_id: d.id,
+              type: :queued,
+              occurred_at: Clock.utc_now(),
+              idempotency_key: ik,
+              normalized_payload: %{}
+            }
+          end)
         )
       end
     )
@@ -754,12 +776,12 @@ defmodule Mailglass.Outbound do
             })
           )
           |> Events.append_multi(:event_failed, %{
-               tenant_id: delivery.tenant_id,
-               delivery_id: delivery.id,
-               type: :failed,
-               occurred_at: event_occurred_at,
-               normalized_payload: %{error_type: err.__struct__}
-             })
+            tenant_id: delivery.tenant_id,
+            delivery_id: delivery.id,
+            type: :failed,
+            occurred_at: event_occurred_at,
+            normalized_payload: %{error_type: err.__struct__}
+          })
         )
 
       {:error, _} ->
@@ -796,15 +818,22 @@ defmodule Mailglass.Outbound do
       )
 
   defp to_error(other),
-    do:
-      Mailglass.SendError.new(:adapter_failure, context: %{wrapped: inspect(other)})
+    do: Mailglass.SendError.new(:adapter_failure, context: %{wrapped: inspect(other)})
 
   # =========================================================
   # Internal — message helpers
   # =========================================================
 
   defp load_delivery(id) do
-    case Repo.get(Delivery, id) do
+    import Ecto.Query
+
+    query =
+      from(d in Delivery,
+        where: d.id == ^id,
+        limit: 1
+      )
+
+    case Repo.one(Tenancy.scope(query)) do
       nil ->
         {:error,
          Mailglass.SendError.new(:adapter_failure,

@@ -26,7 +26,9 @@ defmodule Mailglass.SuppressionStore.Ecto do
 
   import Ecto.Query
 
+  alias Mailglass.Clock
   alias Mailglass.Suppression.Entry
+  alias Mailglass.Tenancy
 
   @impl Mailglass.SuppressionStore
   def check(key, opts \\ [])
@@ -41,7 +43,7 @@ defmodule Mailglass.SuppressionStore.Ecto do
       [:suppression, :check],
       %{tenant_id: tenant_id},
       fn ->
-        now = DateTime.utc_now()
+        now = Clock.utc_now()
 
         base =
           from(e in Entry,
@@ -52,7 +54,7 @@ defmodule Mailglass.SuppressionStore.Ecto do
 
         query = union_predicates(base, address, recipient_domain, stream)
 
-        case Mailglass.Repo.one(query) do
+        case Mailglass.Repo.one(Tenancy.scope(query, tenant_id)) do
           nil -> :not_suppressed
           %Entry{} = entry -> {:suppressed, entry}
         end
@@ -116,8 +118,7 @@ defmodule Mailglass.SuppressionStore.Ecto do
   defp insert_opts do
     [
       on_conflict: {:replace, [:reason, :source, :expires_at, :metadata]},
-      conflict_target:
-        {:unsafe_fragment, "(tenant_id, address, scope, COALESCE(stream, ''))"},
+      conflict_target: {:unsafe_fragment, "(tenant_id, address, scope, COALESCE(stream, ''))"},
       returning: true
     ]
   end

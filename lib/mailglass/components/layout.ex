@@ -18,9 +18,9 @@ defmodule Mailglass.Components.Layout do
 
   use Phoenix.Component
 
-  attr :lang, :string, default: "en"
-  attr :title, :string, default: nil
-  slot :inner_block, required: true
+  attr(:lang, :string, default: "en")
+  attr(:title, :string, default: nil)
+  slot(:inner_block, required: true)
 
   @doc """
   Renders a full email HTML document with MSO head and CSS reset.

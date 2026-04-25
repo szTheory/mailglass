@@ -37,6 +37,7 @@ defmodule Mailglass.IdempotencyKeyTest do
       for <<byte <- key>> do
         assert byte in 0x20..0x7E
       end
+
       assert key == "postmark:key"
     end
 

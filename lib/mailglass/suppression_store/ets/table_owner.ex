@@ -31,8 +31,12 @@ defmodule Mailglass.SuppressionStore.ETS.TableOwner do
 
   @table :mailglass_suppression_store
 
-  @spec start_link(term()) :: GenServer.on_start()
-  def start_link(_), do: GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+  @spec start_link(keyword()) :: GenServer.on_start()
+  def start_link(opts \\ []) when is_list(opts) do
+    {name, _init_opts} = Keyword.pop(opts, :name)
+    start_opts = if is_nil(name), do: [], else: [name: name]
+    GenServer.start_link(__MODULE__, :ok, start_opts)
+  end
 
   @impl GenServer
   def init(:ok) do

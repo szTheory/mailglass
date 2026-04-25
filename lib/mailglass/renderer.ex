@@ -92,8 +92,8 @@ defmodule Mailglass.Renderer do
   end
 
   defp render_html(%Message{swoosh_email: %{html_body: html}}, _opts)
-       when is_binary(html) do
-    {:ok, html}
+       when is_binary(html) or is_nil(html) do
+    {:ok, html || ""}
   end
 
   defp render_html(_message, _opts) do

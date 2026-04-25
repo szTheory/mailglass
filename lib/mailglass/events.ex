@@ -209,7 +209,7 @@ defmodule Mailglass.Events do
   defp fetch_by_idempotency_key(key) do
     query = from(e in Event, where: e.idempotency_key == ^key, limit: 1)
 
-    case Mailglass.Repo.one(query) do
+    case Mailglass.Repo.one(Tenancy.scope(query)) do
       nil -> {:error, :idempotency_lookup_failed}
       event -> {:ok, event}
     end

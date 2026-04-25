@@ -33,7 +33,7 @@ defmodule Mailglass.OptionalDeps.Oban do
   facade, which consults `available?/0` before dispatching.
   """
 
-  @compile {:no_warn_undefined, [Oban, Oban.Worker, Oban.Job]}
+  @compile {:no_warn_undefined, [Oban, Oban.Worker, Oban.Job, Oban.Migrations, Oban.Testing]}
 
   @doc """
   Returns `true` when `:oban` is loaded in the current runtime.
@@ -44,6 +44,34 @@ defmodule Mailglass.OptionalDeps.Oban do
   @doc since: "0.1.0"
   @spec available?() :: boolean()
   def available?, do: Code.ensure_loaded?(Oban)
+
+  @doc """
+  Gateway wrapper for `Oban.insert/3` used from `Ecto.Multi` pipelines.
+
+  Returns the original multi unchanged when Oban is not loaded.
+  """
+  @doc since: "0.1.0"
+  @spec insert(Ecto.Multi.t(), atom(), (map() -> term())) :: Ecto.Multi.t()
+  def insert(multi, name, job_builder) when is_atom(name) and is_function(job_builder, 1) do
+    if available?() do
+      Oban.insert(multi, name, job_builder)
+    else
+      multi
+    end
+  end
+
+  @doc """
+  Gateway wrapper for `Oban.insert_all/1`.
+  """
+  @doc since: "0.1.0"
+  @spec insert_all([term()]) :: term()
+  def insert_all(jobs) when is_list(jobs) do
+    if available?() do
+      Oban.insert_all(jobs)
+    else
+      {:error, :oban_unavailable}
+    end
+  end
 end
 
 # Conditionally-compiled middleware. The entire `defmodule` is elided when
