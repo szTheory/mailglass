@@ -10,9 +10,16 @@ We provide security updates for the latest minor version of each major release.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please do not open a public issue. Instead, report it to `security@example.com` (placeholder).
+Do not open a public GitHub issue for security reports. Use GitHub's
+Private Vulnerability Reporting on this repository:
+https://github.com/szTheory/mailglass/security/advisories/new — this routes
+the report directly to the maintainer without exposing it.
 
-We aim to respond to all reports within 24 hours and provide a fix or mitigation strategy within 7 days.
+Single-maintainer SLA, written to be kept:
+
+- Acknowledgement of report: within 72 hours.
+- Mitigation or workaround for critical issues: within 14 days.
+- Public security advisory: published alongside the fix.
 
 ## Critical Classes
 
