@@ -54,7 +54,8 @@ defmodule Mailglass.MixProject do
     ]
   end
 
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "credo_checks"]
+  defp elixirc_paths(:test), do: ["lib", "credo_checks", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   # CORE-06: suppress optional-dep compile warnings so `mix compile --no-optional-deps`

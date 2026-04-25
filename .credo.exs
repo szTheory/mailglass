@@ -66,7 +66,7 @@ extra_checks = [
         included: ["lib/", "test/"],
         excluded: []
       },
-      requires: ["./lib/mailglass/credo/*.ex"],
+      requires: ["./credo_checks/*.ex"],
       checks: extra_checks,
       extra_checks: extra_checks
     }
