@@ -5,23 +5,47 @@ on:
     workflows: ["release-please"]
     types:
       - completed
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag/ref to publish from (e.g. mailglass-sibling-group-v0.1.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Run mix hex.publish --dry-run instead of --yes"
+        required: false
+        type: boolean
+        default: false
+      package:
+        description: "Package(s) to publish"
+        required: false
+        type: choice
+        options:
+          - mailglass
+          - mailglass_admin
+          - both
+        default: both
 
 permissions:
   contents: read
 
+concurrency:
+  group: publish-hex-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  publish:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  prepublish-summary:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_branch, 'mailglass-sibling-group-v'))
     runs-on: ubuntu-latest
-    environment: hex-publish
-    strategy:
-      matrix:
-        include:
-          - package: "."
-          - package: "mailglass_admin"
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.inputs.tag || github.event.workflow_run.head_branch }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
         with:
@@ -34,11 +58,142 @@ jobs:
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
       - name: Install deps
         run: mix deps.get
-      - name: Pre-publish check
-        run: mix mailglass.publish.check
-      - name: Build and publish
+      - name: Pre-publish check for mailglass
+        if: ${{ github.event.inputs.package != 'mailglass_admin' }}
         run: |
-          cd ${{ matrix.package }}
-          mix hex.publish --yes
+          echo "## mailglass" >> "$GITHUB_STEP_SUMMARY"
+          mix mailglass.publish.check --package mailglass >> "$GITHUB_STEP_SUMMARY" 2>&1
+      - name: Pre-publish check for mailglass_admin
+        if: ${{ github.event.inputs.package != 'mailglass' }}
+        run: |
+          echo "## mailglass_admin" >> "$GITHUB_STEP_SUMMARY"
+          mix mailglass.publish.check --package mailglass_admin >> "$GITHUB_STEP_SUMMARY" 2>&1
+
+  gate-ci-green:
+    runs-on: ubuntu-latest
+    needs: [prepublish-summary]
+    steps:
+      - name: Resolve tagged SHA
+        id: resolve-sha
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const ref = context.payload.workflow_run?.head_sha || context.payload.inputs?.tag || context.sha;
+            const commit = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref
+            });
+            core.setOutput('sha', commit.data.sha);
+      - name: Verify CI is green on tagged SHA
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const sha = '${{ steps.resolve-sha.outputs.sha }}';
+            const {data} = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci.yml',
+              head_sha: sha,
+              per_page: 10
+            });
+
+            if (data.total_count === 0) {
+              core.setFailed(`Delivery blocked: no ci.yml runs found for SHA ${sha}. Push the tagged commit and let CI complete before publishing.`);
+              return;
+            }
+
+            const latest = data.workflow_runs[0];
+
+            if (latest.conclusion !== 'success') {
+              core.setFailed(`Delivery blocked: ci.yml on SHA ${sha} concluded with '${latest.conclusion}', not 'success'. Run: ${latest.html_url}`);
+            }
+
+  publish-core:
+    runs-on: ubuntu-latest
+    needs: [gate-ci-green]
+    if: ${{ github.event.inputs.package != 'mailglass_admin' }}
+    environment: hex-publish
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.inputs.tag || github.event.workflow_run.head_branch }}
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+      - name: Install deps
+        run: mix deps.get
+      - name: Read mailglass version from mix.exs
+        id: version
+        run: |
+          VERSION=$(grep -E '@version "[0-9]' mix.exs | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+      - name: Publish mailglass to Hex.pm
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            mix hex.publish --dry-run
+          else
+            mix hex.publish --yes
+          fi
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+      - name: Wait for Hex.pm to index
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          DEADLINE=$(( SECONDS + 300 ))
+          until mix hex.info mailglass "${VERSION}" 2>/dev/null; do
+            if [ "$SECONDS" -ge "$DEADLINE" ]; then
+              echo "Delivery blocked: Hex.pm did not index mailglass ${VERSION} within 5 minutes."
+              exit 1
+            fi
+            echo "Waiting for Hex.pm to index mailglass ${VERSION}..."
+            sleep 15
+          done
+          echo "Hex.pm indexed mailglass ${VERSION}."
+
+  publish-admin:
+    runs-on: ubuntu-latest
+    needs: [publish-core]
+    if: |
+      always() &&
+      (needs.publish-core.result == 'success' || needs.publish-core.result == 'skipped') &&
+      github.event.inputs.package != 'mailglass'
+    environment: hex-publish
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.inputs.tag || github.event.workflow_run.head_branch }}
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+      - name: Install deps
+        working-directory: mailglass_admin
+        run: mix deps.get
+      - name: Publish mailglass_admin to Hex.pm
+        working-directory: mailglass_admin
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            mix hex.publish --dry-run
+          else
+            mix hex.publish --yes
+          fi
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+          MIX_PUBLISH: "true"
