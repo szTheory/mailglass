@@ -1,13 +1,13 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.1
-milestone_name: milestone
-status: ready-for-milestone-complete
-stopped_at: ""
-last_updated: "2026-04-25T11:10:00.000Z"
-last_activity: 2026-04-25
+milestone: v0.1.0
+milestone_name: packages to Hex.pm
+status: Ready for milestone close-out
+stopped_at: Phase 07.1 context gathered (research-driven, fix-then-publish path)
+last_updated: "2026-04-25T15:54:21.938Z"
+last_activity: 2026-04-24
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 7
   total_plans: 50
   completed_plans: 50
@@ -219,6 +219,10 @@ Most load-bearing for Phase 1:
 - Plan 04-09: Signature-failure property restricted to Postmark — SendGrid already exhaustively tested by sendgrid_test.exs; Postmark's Basic-Auth mutation space (5 variants × 200 runs = 1000 synthetic attackers) is where 1000-run StreamData adds marginal value
 - Plan 04-09: guides/webhooks.md ships as first adopter-facing doc in guides/ directory — Phase 7 DOCS-02 extends/consolidates but does not replace
 
+### Roadmap Evolution
+
+- Phase 07.1 inserted after Phase 7: Publish v0.1.0 packages to Hex.pm (URGENT)
+
 ### Pending Todos
 
 None yet.
@@ -237,7 +241,7 @@ None yet.
 ## Session Continuity
 
 Last session: --stopped-at
-Stopped at: Phase 7 context gathered
+Stopped at: Phase 07.1 context gathered (research-driven, fix-then-publish path)
 Resume file: --resume-file
 
 **Planned Phase:** 7 (Installer + CI/CD + Docs) — 5 plans — 2026-04-24T17:53:13.187Z
