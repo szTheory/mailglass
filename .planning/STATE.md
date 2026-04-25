@@ -4,14 +4,14 @@ milestone: v0.1.0
 milestone_name: packages to Hex.pm
 status: Ready for milestone close-out
 stopped_at: Phase 07.1 context gathered (research-driven, fix-then-publish path)
-last_updated: "2026-04-25T15:54:21.938Z"
+last_updated: "2026-04-25T17:45:01.609Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 50
+  total_plans: 61
   completed_plans: 50
-  percent: 100
+  percent: 82
 ---
 
 # Project State
@@ -244,4 +244,4 @@ Last session: --stopped-at
 Stopped at: Phase 07.1 context gathered (research-driven, fix-then-publish path)
 Resume file: --resume-file
 
-**Planned Phase:** 7 (Installer + CI/CD + Docs) — 5 plans — 2026-04-24T17:53:13.187Z
+**Planned Phase:** 07.1 (publish-v0-1-0-packages-to-hex-pm) — 11 plans — 2026-04-25T17:45:01.601Z
