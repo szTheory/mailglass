@@ -167,9 +167,9 @@
 
 ### Installer
 
-- [ ] **INST-01**: `mix mailglass.install` generates: a `MyApp.Mail` context module, mailglass migrations, router mounts (preview LiveView in dev, webhook plug), Oban worker stub (if `:oban` is detected), default mailable + layout, `runtime.exs` config block. Flag matrix: `--no-admin`. (TS-16, D-12)
+- [x] **INST-01**: `mix mailglass.install` generates: a `MyApp.Mail` context module, mailglass migrations, router mounts (preview LiveView in dev, webhook plug), Oban worker stub (if `:oban` is detected), default mailable + layout, `runtime.exs` config block. Flag matrix: `--no-admin`. (TS-16, D-12)
 - [ ] **INST-02**: Installer is idempotent. Reruns on a host with prior mailglass install detect existing files and write `.mailglass_conflict_*` sidecars rather than clobbering. Second-rerun integration test asserts zero file modifications. (DIST-03 prevention)
-- [ ] **INST-03**: Golden-diff CI snapshot test: a fresh Phoenix 1.8 host app under `test/example/` runs `mix mailglass.install`, the diff is captured, and a snapshot file is committed. PRs that change installer behavior surface a snapshot diff that requires explicit review.
+- [x] **INST-03**: Golden-diff CI snapshot test: a fresh Phoenix 1.8 host app under `test/example/` runs `mix mailglass.install`, the diff is captured, and a snapshot file is committed. PRs that change installer behavior surface a snapshot diff that requires explicit review.
 - [ ] **INST-04**: `mix verify.phase<NN>` aliases per phase per the engineering DNA convention. One focused mix task per concern, never a kitchen-sink verifier.
 
 ### CI/CD
@@ -331,9 +331,9 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | LINT-10 | Phase 6 — Custom Credo + Boundary | Complete |
 | LINT-11 | Phase 6 — Custom Credo + Boundary | Complete |
 | LINT-12 | Phase 6 — Custom Credo + Boundary | Complete |
-| INST-01 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| INST-01 | Phase 7 — Installer + CI/CD + Docs | Complete (07.1-06) |
 | INST-02 | Phase 7 — Installer + CI/CD + Docs | Complete (07-01) |
-| INST-03 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| INST-03 | Phase 7 — Installer + CI/CD + Docs | Complete (07.1-06) |
 | INST-04 | Phase 7 — Installer + CI/CD + Docs | Complete (07-02) |
 | CI-01 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04) |
 | CI-02 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04) |
