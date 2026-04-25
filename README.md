@@ -7,7 +7,7 @@
 [![HexDocs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/mailglass)
 [![License](https://img.shields.io/hexpm/l/mailglass.svg)](https://github.com/szTheory/mailglass/blob/main/LICENSE)
 
-> **Pre-release.** v0.1 is in active development (Phase 4 of 7). The
+> **Pre-release.** v0.1 is in active development (Phase 7 of 7). The
 > installation and quickstart below describe the target API for v0.1 and
 > will ship as tested against published Hex tarballs when Phase 7
 > (Installer + CI/CD + Docs) completes. Track progress in
@@ -57,7 +57,7 @@ Fetch deps, run the installer, and migrate:
 
 ```bash
 mix deps.get
-mix mailglass.install   # Phase 7 — not yet shipped
+mix mailglass.install
 mix ecto.migrate
 ```
 
@@ -69,6 +69,15 @@ an Oban worker stub (when Oban is installed), and a `config/runtime.exs`
 configuration block.
 
 ## Quickstart
+
+Run the full onboarding path first:
+
+```bash
+mix deps.get
+mix mailglass.install
+mix ecto.migrate
+mix verify.phase_07
+```
 
 Define a mailable:
 
@@ -173,7 +182,7 @@ Testing, and Migration from Swoosh.
 
 Mailglass is developed in public. Contributor conventions, decision
 log, and phase-by-phase roadmap live in [`CLAUDE.md`](CLAUDE.md) and
-[`.planning/`](.planning/); a dedicated `CONTRIBUTING.md` lands in
+[`.planning/PROJECT.md`](.planning/PROJECT.md); a dedicated `CONTRIBUTING.md` lands in
 Phase 7.
 
 Reproduce the default CI gate locally:

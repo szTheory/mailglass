@@ -65,7 +65,7 @@
 **: Every mailglass-owned schema (`mailglass_deliveries`, `mailglass_events`, `mailglass_suppressions`) has a `tenant_id` column (nullable for single-tenant mode, indexed). (TS-08, D-09)
 - [x] **TENANT-02
 **: `Mailglass.Tenancy` is a pluggable behaviour with `scope/2` callback. The default `Mailglass.Tenancy.SingleTenant` impl is a no-op. Adopters can implement custom resolvers. Phoenix 1.8 `%Scope{}` interop is documented but not auto-detected (avoids hidden coupling).
-- [ ] **TENANT-03**: Custom Credo check `NoUnscopedTenantQueryInLib` flags every `Repo` query on a tenanted schema that doesn't pass through `Mailglass.Tenancy.scope/2`. Bypass requires explicit `scope: :unscoped` opt with telemetry audit emit. Multi-tenant property test spawns 2 tenants, writes 100 records each, asserts zero cross-tenant leak. (PHX-05 prevention)
+- [x] **TENANT-03**: Custom Credo check `NoUnscopedTenantQueryInLib` flags every `Repo` query on a tenanted schema that doesn't pass through `Mailglass.Tenancy.scope/2`. Bypass requires explicit `scope: :unscoped` opt with telemetry audit emit. Multi-tenant property test spawns 2 tenants, writes 100 records each, asserts zero cross-tenant leak. (PHX-05 prevention)
 
 ### Transport
 
@@ -95,7 +95,7 @@
 
 - [x] **TRACK-01
 **: Open and click tracking are **off by default**. No tracking pixel injection or link rewriting unless `tracking: [opens: true, clicks: true]` is explicitly opted in per-mailable. (TS-15, D-08)
-- [ ] **TRACK-02**: Custom Credo check `NoTrackingOnAuthStream` raises at compile time when tracking is set on a mailable matching auth-context heuristics (function name contains `magic_link`, `password_reset`, `verify_email`, `confirm_account`). (MAIL-01 prevention)
+- [x] **TRACK-02**: Custom Credo check `NoTrackingOnAuthStream` raises at compile time when tracking is set on a mailable matching auth-context heuristics (function name contains `magic_link`, `password_reset`, `verify_email`, `confirm_account`). (MAIL-01 prevention)
 - [x] **TRACK-03
 **: When tracking IS opted in, click rewriting uses `Phoenix.Token`-signed tokens with rotation support. Tracking host must be a separate subdomain. SSRF / open-redirect verified by integration test.
 
@@ -147,21 +147,21 @@
 
 ### Custom Credo (Lint-Time Domain Rules)
 
-- [ ] **LINT-01**: `Mailglass.Credo.NoRawSwooshSendInLib` — every send goes via `Mailglass.Outbound.*`, never `Swoosh.Mailer.deliver/1` directly. (DF-09)
+- [x] **LINT-01**: `Mailglass.Credo.NoRawSwooshSendInLib` — every send goes via `Mailglass.Outbound.*`, never `Swoosh.Mailer.deliver/1` directly. (DF-09)
 - [x] **LINT-02**: `Mailglass.Credo.NoPiiInTelemetryMeta` — flags any literal `:to`/`:from`/`:body`/`:html_body`/`:subject`/`:headers`/`:recipient`/`:email` keys in telemetry metadata maps. (CORE-03
  enforcement, OBS-01 prevention)
-- [ ] **LINT-03**: `Mailglass.Credo.NoUnscopedTenantQueryInLib` — every Repo query on `mailglass_deliveries`/`mailglass_events`/`mailglass_suppressions` passes through `Mailglass.Tenancy.scope/2`. (TENANT-03 enforcement)
+- [x] **LINT-03**: `Mailglass.Credo.NoUnscopedTenantQueryInLib` — every Repo query on `mailglass_deliveries`/`mailglass_events`/`mailglass_suppressions` passes through `Mailglass.Tenancy.scope/2`. (TENANT-03 enforcement)
 - [x] **LINT-04**: `Mailglass.Credo.NoBareOptionalDepReference` — direct calls to `Oban.*`, `OpenTelemetry.*`, `Mjml.*` outside the `Mailglass.OptionalDeps.*` gateway modules are flagged. (CORE-06
  enforcement)
-- [ ] **LINT-05**: `Mailglass.Credo.NoOversizedUseInjection` — `use Mailglass.Mailable` injects ≤20 lines (counted via AST analysis). (LIB-01 prevention)
+- [x] **LINT-05**: `Mailglass.Credo.NoOversizedUseInjection` — `use Mailglass.Mailable` injects ≤20 lines (counted via AST analysis). (LIB-01 prevention)
 - [x] **LINT-06**: `Mailglass.Credo.PrefixedPubSubTopics` — every `Phoenix.PubSub.broadcast` topic in mailglass code is prefixed `mailglass:`. (SEND-05
  enforcement, PHX-06 prevention)
-- [ ] **LINT-07**: `Mailglass.Credo.NoDefaultModuleNameSingleton` — flags any `GenServer.start_link(..., name: __MODULE__)` in mailglass library code. (LIB-05 prevention)
-- [ ] **LINT-08**: `Mailglass.Credo.NoCompileEnvOutsideConfig` — only `Mailglass.Config` may call `Application.compile_env*`. (LIB-07 prevention)
-- [ ] **LINT-09**: `Mailglass.Credo.NoOtherAppEnvReads` — mailglass code never reads other apps' Application env. (LIB-02 prevention)
+- [x] **LINT-07**: `Mailglass.Credo.NoDefaultModuleNameSingleton` — flags any `GenServer.start_link(..., name: __MODULE__)` in mailglass library code. (LIB-05 prevention)
+- [x] **LINT-08**: `Mailglass.Credo.NoCompileEnvOutsideConfig` — only `Mailglass.Config` may call `Application.compile_env*`. (LIB-07 prevention)
+- [x] **LINT-09**: `Mailglass.Credo.NoOtherAppEnvReads` — mailglass code never reads other apps' Application env. (LIB-02 prevention)
 - [x] **LINT-10**: `Mailglass.Credo.TelemetryEventConvention` — every `:telemetry.execute/3` event matches the 4-level naming convention. (CORE-03
  enforcement)
-- [ ] **LINT-11**: `Mailglass.Credo.NoFullResponseInLogs` — `Logger.*` calls inspecting raw provider response payloads are flagged. (OBS-04 prevention)
+- [x] **LINT-11**: `Mailglass.Credo.NoFullResponseInLogs` — `Logger.*` calls inspecting raw provider response payloads are flagged. (OBS-04 prevention)
 - [x] **LINT-12**: `Mailglass.Credo.NoDirectDateTimeNow` — direct `DateTime.utc_now/0` is flagged outside `Mailglass.Clock`. (TEST-05
  enforcement)
 
@@ -286,7 +286,7 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | PERSIST-06 | Phase 2 — Persistence + Tenancy | Complete (02-02) |
 | TENANT-01 | Phase 2 — Persistence + Tenancy | Complete (02-02, 02-03) |
 | TENANT-02 | Phase 2 — Persistence + Tenancy | Complete (02-04, 02-06) |
-| TENANT-03 | Phase 6 — Custom Credo + Boundary | Pending |
+| TENANT-03 | Phase 6 — Custom Credo + Boundary | Complete |
 | TRANS-01 | Phase 3 — Transport + Send Pipeline | Pending |
 | TRANS-02 | Phase 3 — Transport + Send Pipeline | Pending |
 | TRANS-03 | Phase 3 — Transport + Send Pipeline | Pending |
@@ -297,7 +297,7 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | SEND-04 | Phase 3 — Transport + Send Pipeline | Pending |
 | SEND-05 | Phase 3 — Transport + Send Pipeline | Pending |
 | TRACK-01 | Phase 3 — Transport + Send Pipeline | Pending |
-| TRACK-02 | Phase 6 — Custom Credo + Boundary | Pending |
+| TRACK-02 | Phase 6 — Custom Credo + Boundary | Complete |
 | TRACK-03 | Phase 3 — Transport + Send Pipeline | Pending |
 | HOOK-01 | Phase 4 — Webhook Ingest | Pending |
 | HOOK-02 | Phase 4 — Webhook Ingest | Complete (04-04, 04-08) |
@@ -319,18 +319,18 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | TEST-03 | Phase 4 — Webhook Ingest | Complete (04-09) |
 | TEST-04 | Phase 7 — Installer + CI/CD + Docs | Pending |
 | TEST-05 | Phase 3 — Transport + Send Pipeline | Pending |
-| LINT-01 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-02 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-03 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-04 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-05 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-06 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-07 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-08 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-09 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-10 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-11 | Phase 6 — Custom Credo + Boundary | Pending |
-| LINT-12 | Phase 6 — Custom Credo + Boundary | Pending |
+| LINT-01 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-02 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-03 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-04 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-05 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-06 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-07 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-08 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-09 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-10 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-11 | Phase 6 — Custom Credo + Boundary | Complete |
+| LINT-12 | Phase 6 — Custom Credo + Boundary | Complete |
 | INST-01 | Phase 7 — Installer + CI/CD + Docs | Pending |
 | INST-02 | Phase 7 — Installer + CI/CD + Docs | Pending |
 | INST-03 | Phase 7 — Installer + CI/CD + Docs | Pending |

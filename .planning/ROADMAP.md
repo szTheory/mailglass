@@ -20,7 +20,7 @@ mailglass v0.1 ships in 7 phases tracing the 7-layer build order from `research/
 - [x] **Phase 3: Transport + Send Pipeline** - Fake adapter built first (D-13), then end-to-end Mailable → Outbound → Worker → Adapter → Multi(Delivery + Event) hot path. Complete 2026-04-23.
 - [x] **Phase 4: Webhook Ingest** - Postmark + SendGrid HMAC-verified, idempotent, Anymail-normalized event ingest.
 - [ ] **Phase 5: Dev Preview LiveView** - `mailglass_admin` sibling package with mailable sidebar, `preview_props/0` auto-discovery, device + dark toggles, HTML/Text/Raw/Headers tabs.
-- [ ] **Phase 6: Custom Credo + Boundary** - Twelve domain-rule lint checks plus `boundary` enforcement, refined against real code.
+- [x] **Phase 6: Custom Credo + Boundary** - Twelve domain-rule lint checks plus `boundary` enforcement, refined against real code. (completed 2026-04-24)
 - [ ] **Phase 7: Installer + CI/CD + Docs** - `mix mailglass.install` with golden-diff CI, full GHA pipeline, ExDoc with 9 guides + doctest contracts.
 
 ## Phase Details
@@ -195,7 +195,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Transport + Send Pipeline | 12/12 | Complete | 2026-04-23 |
 | 4. Webhook Ingest | 9/9 | Complete | 2026-04-24 |
 | 5. Dev Preview LiveView | 0/TBD | Not started | - |
-| 6. Custom Credo + Boundary | 0/TBD | Not started | - |
+| 6. Custom Credo + Boundary | 6/6 | Complete    | 2026-04-24 |
 | 7. Installer + CI/CD + Docs | 0/TBD | Not started | - |
 
 ---
