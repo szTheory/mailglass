@@ -203,6 +203,7 @@ defmodule Mailglass.MixProject do
     [
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url},
+      source_ref_pattern: "mailglass-sibling-group-v%{version}",
       files:
         ~w(lib priv/gettext guides mix.exs LICENSE README.md CHANGELOG.md MAINTAINING.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md)
     ]
@@ -218,8 +219,6 @@ defmodule Mailglass.MixProject do
         "README.md",
         "CLAUDE.md",
         "CONTRIBUTING.md",
-        ".planning/ROADMAP.md",
-        ".planning/PROJECT.md",
         "guides/webhooks.md"
       ],
       # Disable auto-linking (and the matching warnings) for cross-refs to
@@ -250,9 +249,7 @@ defmodule Mailglass.MixProject do
         "CONTRIBUTING.md",
         "SECURITY.md",
         "CODE_OF_CONDUCT.md",
-        "CLAUDE.md",
-        ".planning/ROADMAP.md",
-        ".planning/PROJECT.md"
+        "CLAUDE.md"
       ],
       groups_for_extras: [
         Overview: ["README.md", "CLAUDE.md"],
@@ -272,10 +269,6 @@ defmodule Mailglass.MixProject do
           "CONTRIBUTING.md",
           "SECURITY.md",
           "CODE_OF_CONDUCT.md"
-        ],
-        Planning: [
-          ".planning/ROADMAP.md",
-          ".planning/PROJECT.md"
         ]
       ],
       groups_for_modules: [

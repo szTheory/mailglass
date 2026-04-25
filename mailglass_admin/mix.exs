@@ -114,6 +114,7 @@ defmodule MailglassAdmin.MixProject do
       name: "mailglass_admin",
       licenses: ["MIT"],
       description: @description,
+      source_ref_pattern: "mailglass-sibling-group-v%{version}",
       links: %{
         "GitHub" => @source_url,
         "HexDocs" => "https://hexdocs.pm/mailglass_admin"
