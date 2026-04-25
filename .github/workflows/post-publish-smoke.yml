@@ -1,0 +1,394 @@
+name: post-publish-smoke
+
+on:
+  workflow_run:
+    workflows: ["publish-hex"]
+    types: [completed]
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to smoke-check (e.g. 0.1.0). Default: latest published."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: post-publish-smoke-${{ github.event.inputs.version || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  cron-guard:
+    name: Cron 7-day window guard
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.guard.outputs.should_run }}
+      version: ${{ steps.guard.outputs.version }}
+    steps:
+      - name: Determine if smoke should run
+        id: guard
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const normalizeVersion = (value) => {
+              if (!value) return "";
+              const raw = String(value).trim();
+              const match = raw.match(/(?:^|[-/])v?(\d+\.\d+\.\d+(?:[-\w.+]+)?)/);
+              return match ? match[1] : raw.replace(/^v/, "");
+            };
+
+            const eventName = context.eventName;
+            const inputVersion = normalizeVersion(context.payload?.inputs?.version || "");
+
+            if (eventName === 'workflow_dispatch' && inputVersion) {
+              core.setOutput('should_run', 'true');
+              core.setOutput('version', inputVersion);
+              core.info(`Smoke triggered by workflow_dispatch; should_run=true; version='${inputVersion}'`);
+              return;
+            }
+
+            if (eventName === 'workflow_run') {
+              const headBranch = context.payload?.workflow_run?.head_branch || "";
+              const branchVersion = normalizeVersion(headBranch);
+              if (branchVersion) {
+                core.setOutput('should_run', 'true');
+                core.setOutput('version', branchVersion);
+                core.info(`Smoke triggered by workflow_run; should_run=true; version='${branchVersion}'`);
+                return;
+              }
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const {data: releases} = await github.rest.repos.listReleases({
+              owner,
+              repo,
+              per_page: 5
+            });
+
+            if (releases.length === 0) {
+              core.setOutput('should_run', 'false');
+              core.setOutput('version', '');
+              core.info('No releases found; skipping scheduled smoke.');
+              return;
+            }
+
+            const latest = releases[0];
+            const releasedAt = new Date(latest.published_at);
+            const ageDays = (Date.now() - releasedAt.getTime()) / (1000 * 60 * 60 * 24);
+            const version = normalizeVersion(latest.tag_name);
+
+            if (eventName === 'schedule' && ageDays > 7) {
+              core.setOutput('should_run', 'false');
+              core.setOutput('version', version);
+              core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; skipping scheduled smoke.`);
+              return;
+            }
+
+            core.setOutput('should_run', 'true');
+            core.setOutput('version', version);
+            core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; running smoke for v${version}.`);
+
+  wait-for-index:
+    name: Wait for Hex.pm index
+    runs-on: ubuntu-latest
+    needs: [cron-guard]
+    if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
+    timeout-minutes: 8
+    steps:
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - name: Wait for mailglass index
+        env:
+          VERSION: ${{ needs.cron-guard.outputs.version }}
+        run: |
+          if [ -z "${VERSION}" ]; then
+            echo "No version resolved; skipping."
+            exit 0
+          fi
+          DEADLINE=$(( SECONDS + 300 ))
+          until mix hex.info mailglass "${VERSION}" >/dev/null 2>&1; do
+            if [ $SECONDS -ge $DEADLINE ]; then
+              echo "Smoke aborted: Hex.pm did not index mailglass ${VERSION} within 5 minutes."
+              exit 1
+            fi
+            echo "Waiting for Hex.pm to index mailglass ${VERSION}..."
+            sleep 30
+          done
+          echo "Hex.pm indexed mailglass ${VERSION}."
+      - name: Wait for mailglass_admin index
+        env:
+          VERSION: ${{ needs.cron-guard.outputs.version }}
+        run: |
+          if [ -z "${VERSION}" ]; then
+            echo "No version resolved; skipping."
+            exit 0
+          fi
+          DEADLINE=$(( SECONDS + 300 ))
+          until mix hex.info mailglass_admin "${VERSION}" >/dev/null 2>&1; do
+            if [ $SECONDS -ge $DEADLINE ]; then
+              echo "Smoke aborted: Hex.pm did not index mailglass_admin ${VERSION} within 5 minutes."
+              exit 1
+            fi
+            echo "Waiting for Hex.pm to index mailglass_admin ${VERSION}..."
+            sleep 30
+          done
+          echo "Hex.pm indexed mailglass_admin ${VERSION}."
+
+  wait-for-hexdocs:
+    name: Wait for HexDocs build
+    runs-on: ubuntu-latest
+    needs: [wait-for-index]
+    if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
+    timeout-minutes: 12
+    steps:
+      - name: Wait for mailglass HexDocs
+        env:
+          VERSION: ${{ needs.cron-guard.outputs.version }}
+        run: |
+          if [ -z "${VERSION}" ]; then
+            echo "No version resolved; skipping."
+            exit 0
+          fi
+          DEADLINE=$(( SECONDS + 600 ))
+          until curl -fsI "https://hexdocs.pm/mailglass/${VERSION}/" >/dev/null 2>&1; do
+            if [ $SECONDS -ge $DEADLINE ]; then
+              echo "Smoke aborted: HexDocs did not build mailglass ${VERSION} within 10 minutes."
+              exit 1
+            fi
+            echo "Waiting for HexDocs to build mailglass ${VERSION}..."
+            sleep 60
+          done
+          echo "HexDocs built mailglass ${VERSION}."
+      - name: Wait for mailglass_admin HexDocs
+        env:
+          VERSION: ${{ needs.cron-guard.outputs.version }}
+        run: |
+          if [ -z "${VERSION}" ]; then
+            echo "No version resolved; skipping."
+            exit 0
+          fi
+          DEADLINE=$(( SECONDS + 600 ))
+          until curl -fsI "https://hexdocs.pm/mailglass_admin/${VERSION}/" >/dev/null 2>&1; do
+            if [ $SECONDS -ge $DEADLINE ]; then
+              echo "Smoke aborted: HexDocs did not build mailglass_admin ${VERSION} within 10 minutes."
+              exit 1
+            fi
+            echo "Waiting for HexDocs to build mailglass_admin ${VERSION}..."
+            sleep 60
+          done
+          echo "HexDocs built mailglass_admin ${VERSION}."
+
+  consumer-install:
+    name: Consumer install (Phoenix host)
+    runs-on: ubuntu-latest
+    needs: [wait-for-hexdocs]
+    if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
+    timeout-minutes: 15
+    env:
+      VERSION: ${{ needs.cron-guard.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+      - name: Install hex + rebar
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+      - name: Install phx_new archive
+        run: mix archive.install hex phx_new --force
+      - name: Generate Phoenix host project
+        working-directory: ${{ runner.temp }}
+        run: |
+          mix phx.new sandbox --module Sandbox --app sandbox --no-ecto --no-mailer --install
+      - name: Add mailglass deps
+        working-directory: ${{ runner.temp }}/sandbox
+        env:
+          VERSION: ${{ needs.cron-guard.outputs.version }}
+        run: |
+          python3 - <<'PYEOF'
+          import os, pathlib, re
+          version = os.environ["VERSION"]
+          mix_path = pathlib.Path("mix.exs")
+          content = mix_path.read_text()
+          entries = f'      {{:mailglass, "== {version}"}},\n      {{:mailglass_admin, "== {version}"}},\n'
+          content = re.sub(r"(defp deps do\n\s*\[\n)", r"\1" + entries, content, count=1)
+          mix_path.write_text(content)
+          PYEOF
+          grep -F "mailglass" mix.exs
+      - name: mix deps.get
+        working-directory: ${{ runner.temp }}/sandbox
+        run: mix deps.get
+      - name: Run mix mailglass.install --yes
+        working-directory: ${{ runner.temp }}/sandbox
+        run: mix mailglass.install --yes
+      - name: Compile, fail on warnings
+        working-directory: ${{ runner.temp }}/sandbox
+        run: |
+          set -o pipefail
+          mix compile --warnings-as-errors 2>&1 | tee compile.log
+          if grep -F "UndefinedFunctionError" compile.log; then
+            echo "Smoke failed: UndefinedFunctionError detected in compile output (literal G-1 regression on published artifact)."
+            exit 1
+          fi
+      - name: Boot endpoint and curl /dev/mail/
+        working-directory: ${{ runner.temp }}/sandbox
+        env:
+          MIX_ENV: dev
+        run: |
+          mix phx.server &
+          SERVER_PID=$!
+          trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+
+          DEADLINE=$(( SECONDS + 30 ))
+          until curl -fsI http://localhost:4000/dev/mail/ >/dev/null 2>&1; do
+            if [ $SECONDS -ge $DEADLINE ]; then
+              echo "Smoke failed: endpoint did not respond on /dev/mail/ within 30s."
+              kill $SERVER_PID 2>/dev/null || true
+              exit 1
+            fi
+            sleep 2
+          done
+
+          STATUS=$(curl -fs -o /dev/null -w "%{http_code}" http://localhost:4000/dev/mail/)
+          echo "GET /dev/mail/ → HTTP ${STATUS}"
+          if [ "${STATUS}" != "200" ]; then
+            echo "Smoke failed: /dev/mail/ returned ${STATUS}, expected 200."
+            exit 1
+          fi
+          echo "Endpoint smoke passed."
+
+  retracted-check:
+    name: Verify package not retracted
+    runs-on: ubuntu-latest
+    needs: [consumer-install]
+    if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
+    timeout-minutes: 5
+    env:
+      VERSION: ${{ needs.cron-guard.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - name: Check mailglass not retired
+        run: |
+          if [ -z "${VERSION}" ]; then
+            echo "No version resolved; skipping."
+            exit 0
+          fi
+          INFO=$(mix hex.info mailglass "${VERSION}" 2>&1)
+          echo "${INFO}"
+          if echo "${INFO}" | grep -F "Retired"; then
+            echo "Smoke failed: mailglass ${VERSION} is retired between publish and smoke."
+            exit 1
+          fi
+      - name: Check mailglass_admin not retired
+        run: |
+          if [ -z "${VERSION}" ]; then
+            echo "No version resolved; skipping."
+            exit 0
+          fi
+          INFO=$(mix hex.info mailglass_admin "${VERSION}" 2>&1)
+          echo "${INFO}"
+          if echo "${INFO}" | grep -F "Retired"; then
+            echo "Smoke failed: mailglass_admin ${VERSION} is retired between publish and smoke."
+            exit 1
+          fi
+
+  notify-on-failure:
+    name: Open issue on smoke failure
+    runs-on: ubuntu-latest
+    needs: [wait-for-index, wait-for-hexdocs, consumer-install, retracted-check]
+    if: failure() && needs.cron-guard.outputs.should_run == 'true'
+    continue-on-error: true
+    steps:
+      - name: Add post-publish-smoke failure summary
+        run: |
+          {
+            echo "## post-publish-smoke failure"
+            echo
+            echo "Post-publish smoke failed for v${{ needs.cron-guard.outputs.version }}."
+            echo "Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Open or update post-publish-smoke failure issue
+        continue-on-error: true
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const label = "publish-smoke-failed";
+            const issueTitle = "publish-smoke failure tracker";
+            const version = "${{ needs.cron-guard.outputs.version }}";
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const body = [
+              `post-publish-smoke failure detected for v${version}.`,
+              "",
+              `- Workflow run: ${runUrl}`,
+              `- Ref: \`${context.ref}\``,
+              `- SHA: \`${context.sha}\``,
+              `- Trigger: \`${context.eventName}\``
+            ].join("\n");
+
+            try {
+              await github.rest.issues.getLabel({owner, repo, name: label});
+            } catch (error) {
+              if (error.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name: label,
+                  color: "B60205",
+                  description: "Tracked failures for post-publish-smoke workflow"
+                });
+              } else {
+                throw error;
+              }
+            }
+
+            const {data: openIssues} = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: "open",
+              labels: label,
+              per_page: 100
+            });
+
+            const existing = openIssues.find((issue) => issue.title === issueTitle);
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: existing.number,
+                body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title: issueTitle,
+                body,
+                labels: [label]
+              });
+            }
