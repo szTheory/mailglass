@@ -52,6 +52,8 @@ defmodule Mailglass.Installer.Plan do
 
     base_ops
     |> maybe_add_router_mount(no_admin?, template_opts)
+    |> add_webhook_mount(template_opts)
+    |> add_webhook_endpoint_parser(template_opts)
     |> maybe_add_oban_worker(oban_available?, template_opts)
   end
 
@@ -83,4 +85,34 @@ defmodule Mailglass.Installer.Plan do
   end
 
   defp maybe_add_oban_worker(ops, false, _template_opts), do: ops
+
+  defp add_webhook_mount(ops, template_opts) do
+    ops ++
+      [
+        %Operation{
+          kind: :ensure_snippet,
+          path: "lib/my_app_web/router.ex",
+          payload: %{
+            anchor: Templates.router_anchor(),
+            snippet: Templates.webhook_mount_snippet(template_opts)
+          }
+        }
+      ]
+  end
+
+  defp add_webhook_endpoint_parser(ops, _template_opts) do
+    ops ++
+      [
+        %Operation{
+          kind: :ensure_block,
+          path: "lib/my_app_web/endpoint.ex",
+          payload: %{
+            start_marker: Templates.endpoint_webhook_block_start(),
+            end_marker: Templates.endpoint_webhook_block_end(),
+            body: Templates.endpoint_webhook_parser_body(),
+            anchor: "use Phoenix.Endpoint"
+          }
+        }
+      ]
+  end
 end

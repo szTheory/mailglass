@@ -43,6 +43,56 @@ defmodule Mailglass.Installer.Templates do
   end
 
   @doc """
+  Returns the snippet inserted into `router.ex` for the Mailglass webhook surface.
+  """
+  @spec webhook_mount_snippet(keyword()) :: String.t()
+  def webhook_mount_snippet(_opts \\ []) do
+    """
+        # Mailglass webhook routes (Postmark + SendGrid).
+        import Mailglass.Webhook.Router
+
+        pipeline :mailglass_webhooks do
+          plug :accepts, ["json"]
+          # NO :browser, :fetch_session, :protect_from_forgery — webhooks
+          # do not carry a session or participate in CSRF.
+        end
+
+        scope "/" do
+          pipe_through :mailglass_webhooks
+          mailglass_webhook_routes "/webhooks"
+        end
+    """
+  end
+
+  @doc """
+  Marker line for the start of the managed endpoint webhook-parser block.
+  """
+  @spec endpoint_webhook_block_start() :: String.t()
+  def endpoint_webhook_block_start, do: "# mailglass:start endpoint_webhook_parser"
+
+  @doc """
+  Marker line for the end of the managed endpoint webhook-parser block.
+  """
+  @spec endpoint_webhook_block_end() :: String.t()
+  def endpoint_webhook_block_end, do: "# mailglass:end endpoint_webhook_parser"
+
+  @doc """
+  Returns the verbatim Plug.Parsers body_reader config block inserted into
+  `endpoint.ex`.
+  """
+  @spec endpoint_webhook_parser_body() :: String.t()
+  def endpoint_webhook_parser_body do
+    """
+    plug Plug.Parsers,
+      parsers: [:json],
+      pass: ["*/*"],
+      json_decoder: Jason,
+      body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []},
+      length: 10_000_000
+    """
+  end
+
+  @doc """
   Anchor line used to insert router snippets.
   """
   @spec router_anchor() :: String.t()
