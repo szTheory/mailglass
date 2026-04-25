@@ -82,7 +82,7 @@ defmodule Mailglass.Credo.NoUnscopedTenantQueryInLibTest do
     assert String.contains?(hd(issues).message, "Mailglass.Tenancy.scope/2")
   end
 
-  test "does not flag explicit scope: :unscoped bypass" do
+  test "flags explicit scope: :unscoped bypass without audit helper" do
     source = """
     defmodule Mailglass.Events.AdminReadback do
       import Ecto.Query
@@ -90,6 +90,27 @@ defmodule Mailglass.Credo.NoUnscopedTenantQueryInLibTest do
       alias Mailglass.Repo
 
       def list_unscoped do
+        Repo.one(from(e in Event, select: e.id), scope: :unscoped)
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/events/admin_readback.ex")
+
+    assert length(issues) == 1
+    assert String.contains?(hd(issues).message, "tenant-bypass audit telemetry helper")
+  end
+
+  test "allows explicit scope: :unscoped bypass with tenant audit helper" do
+    source = """
+    defmodule Mailglass.Events.AdminReadback do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Repo
+      alias Mailglass.Tenancy
+
+      def list_unscoped(reason) do
+        Tenancy.audit_unscoped_bypass(reason: reason)
         Repo.one(from(e in Event, select: e.id), scope: :unscoped)
       end
     end

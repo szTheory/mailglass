@@ -23,7 +23,12 @@ defmodule Mailglass.Credo.NoOversizedUseInjection do
     ast = SourceFile.ast(source_file)
 
     {_ast, state} =
-      Macro.traverse(ast, %{issues: [], module_stack: []}, &prewalk(&1, &2, issue_meta, max_lines), &postwalk/2)
+      Macro.traverse(
+        ast,
+        %{issues: [], module_stack: []},
+        &prewalk(&1, &2, issue_meta, max_lines),
+        &postwalk/2
+      )
 
     Enum.reverse(state.issues)
   end

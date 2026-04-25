@@ -18,7 +18,7 @@ defmodule Mailglass.Credo.NoBareOptionalDepReferenceTest do
     end
     """
 
-    issues = run_check(source)
+    issues = run_check(source, "lib/mailglass/outbound/no_bare_optional_dep_reference_bad.ex")
 
     assert length(issues) == 1
     assert String.contains?(hd(issues).message, "Mailglass.OptionalDeps.Oban")
@@ -33,7 +33,7 @@ defmodule Mailglass.Credo.NoBareOptionalDepReferenceTest do
     end
     """
 
-    assert run_check(source) == []
+    assert run_check(source, "lib/mailglass/optional_deps/oban.ex") == []
   end
 
   test "does not flag non-gated module calls" do
@@ -45,12 +45,24 @@ defmodule Mailglass.Credo.NoBareOptionalDepReferenceTest do
     end
     """
 
-    assert run_check(source) == []
+    assert run_check(source, "lib/mailglass/outbound/no_bare_optional_dep_reference_good.ex") == []
   end
 
-  defp run_check(source) do
+  test "ignores files outside lib/mailglass path scope" do
+    source = """
+    defmodule Mailglass.Support.BadCall do
+      def run(job) do
+        Oban.insert(job)
+      end
+    end
+    """
+
+    assert run_check(source, "test/support/no_bare_optional_dep_reference_fixture.ex") == []
+  end
+
+  defp run_check(source, filename) do
     source
-    |> SourceFile.parse("test/mailglass/credo/no_bare_optional_dep_reference_fixture.ex")
+    |> SourceFile.parse(filename)
     |> NoBareOptionalDepReference.run([])
   end
 end

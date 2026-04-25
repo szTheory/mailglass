@@ -2,32 +2,42 @@ defmodule Mailglass.Credo.NoDirectDateTimeNow do
   use Credo.Check,
     category: :warning,
     base_priority: :high,
-    param_defaults: [allowed_modules: [Mailglass.Clock, Mailglass.Clock.System]],
+    param_defaults: [
+      allowed_modules: [Mailglass.Clock, Mailglass.Clock.System],
+      included_path_prefixes: ["lib/mailglass/"]
+    ],
     explanations: [
       check: """
       `DateTime.utc_now/0` calls must be routed through `Mailglass.Clock` so
       time-dependent code remains deterministic under test.
       """,
       params: [
-        allowed_modules: "Modules allowed to call `DateTime.utc_now/0` directly."
+        allowed_modules: "Modules allowed to call `DateTime.utc_now/0` directly.",
+        included_path_prefixes: "Only files in these path prefixes are linted."
       ]
     ]
 
   @impl true
   def run(%SourceFile{} = source_file, params \\ []) do
-    issue_meta = IssueMeta.for(source_file, params)
-    allowed_modules = Params.get(params, :allowed_modules, __MODULE__)
-    ast = SourceFile.ast(source_file)
+    included_path_prefixes = Params.get(params, :included_path_prefixes, __MODULE__)
 
-    {_ast, state} =
-      Macro.traverse(
-        ast,
-        %{issues: [], module_stack: []},
-        &prewalk(&1, &2, issue_meta, allowed_modules),
-        &postwalk/2
-      )
+    if included_path?(source_file, included_path_prefixes) do
+      issue_meta = IssueMeta.for(source_file, params)
+      allowed_modules = Params.get(params, :allowed_modules, __MODULE__)
+      ast = SourceFile.ast(source_file)
 
-    Enum.reverse(state.issues)
+      {_ast, state} =
+        Macro.traverse(
+          ast,
+          %{issues: [], module_stack: []},
+          &prewalk(&1, &2, issue_meta, allowed_modules),
+          &postwalk/2
+        )
+
+      Enum.reverse(state.issues)
+    else
+      []
+    end
   end
 
   defp prewalk({:defmodule, _, [module_ast, _]} = ast, state, _issue_meta, _allowed_modules) do
@@ -100,4 +110,10 @@ defmodule Mailglass.Credo.NoDirectDateTimeNow do
       column: column
     )
   end
+
+  defp included_path?(%SourceFile{filename: filename}, prefixes) when is_binary(filename) do
+    Enum.any?(prefixes, &String.starts_with?(filename, &1))
+  end
+
+  defp included_path?(_source_file, _prefixes), do: false
 end

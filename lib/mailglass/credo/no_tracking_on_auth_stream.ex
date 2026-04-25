@@ -29,7 +29,10 @@ defmodule Mailglass.Credo.NoTrackingOnAuthStream do
   @impl true
   def run(%SourceFile{} = source_file, params \\ []) do
     issue_meta = IssueMeta.for(source_file, params)
-    heuristics = params |> Params.get(:auth_name_heuristics, __MODULE__) |> Enum.map(&String.downcase/1)
+
+    heuristics =
+      params |> Params.get(:auth_name_heuristics, __MODULE__) |> Enum.map(&String.downcase/1)
+
     mailable_tail = params |> Params.get(:mailable_module, __MODULE__) |> module_tail_name()
     ast = SourceFile.ast(source_file)
 
@@ -44,13 +47,20 @@ defmodule Mailglass.Credo.NoTrackingOnAuthStream do
     Enum.reverse(state.issues)
   end
 
-  defp prewalk({:defmodule, _, [module_ast, body_kw]} = ast, state, _issue_meta, _heuristics, mailable_tail)
+  defp prewalk(
+         {:defmodule, _, [module_ast, body_kw]} = ast,
+         state,
+         _issue_meta,
+         _heuristics,
+         mailable_tail
+       )
        when is_list(body_kw) do
     body = Keyword.get(body_kw, :do)
     mailable? = module_uses_mailable?(body, mailable_tail)
     module_name = module_name(module_ast)
 
-    {ast, %{state | module_stack: [%{name: module_name, mailable?: mailable?} | state.module_stack]}}
+    {ast,
+     %{state | module_stack: [%{name: module_name, mailable?: mailable?} | state.module_stack]}}
   end
 
   defp prewalk({:def, meta, [head, body_kw]} = ast, state, issue_meta, heuristics, _mailable_tail)
@@ -59,7 +69,8 @@ defmodule Mailglass.Credo.NoTrackingOnAuthStream do
     current_module = List.first(state.module_stack)
 
     should_flag? =
-      is_map(current_module) and current_module.mailable? and auth_context_function?(head, heuristics) and
+      is_map(current_module) and current_module.mailable? and
+        auth_context_function?(head, heuristics) and
         function_enables_tracking?(body)
 
     if should_flag? do
@@ -101,7 +112,9 @@ defmodule Mailglass.Credo.NoTrackingOnAuthStream do
     {_ast, found?} =
       Macro.prewalk(body, false, fn
         {:use, _, [module_ast | _]} = node, false ->
-          if module_tail_from_ast(module_ast) == mailable_tail, do: {node, true}, else: {node, false}
+          if module_tail_from_ast(module_ast) == mailable_tail,
+            do: {node, true},
+            else: {node, false}
 
         node, found? ->
           {node, found?}

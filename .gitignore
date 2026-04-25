@@ -17,5 +17,10 @@ erl_crash.dump
 .DS_Store
 **/.DS_Store
 
-# Claude Code runtime (local tooling — no project artifacts)
+# Local IDE/tooling — no project artifacts
 /.claude/
+/.bg-shell/
+/.cursor/
+/.gsd/
+/.mcp.json
+

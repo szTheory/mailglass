@@ -18,7 +18,7 @@ defmodule Mailglass.Credo.NoDirectDateTimeNowTest do
     end
     """
 
-    issues = run_check(source)
+    issues = run_check(source, "lib/mailglass/outbound/no_direct_date_time_now_bad.ex")
 
     assert length(issues) == 1
     assert String.contains?(hd(issues).message, "Mailglass.Clock.utc_now/0")
@@ -33,7 +33,7 @@ defmodule Mailglass.Credo.NoDirectDateTimeNowTest do
     end
     """
 
-    issues = run_check(source)
+    issues = run_check(source, "lib/mailglass/outbound/no_direct_date_time_now_capture_bad.ex")
 
     refute Enum.empty?(issues)
   end
@@ -47,12 +47,24 @@ defmodule Mailglass.Credo.NoDirectDateTimeNowTest do
     end
     """
 
-    assert run_check(source) == []
+    assert run_check(source, "lib/mailglass/clock/no_direct_date_time_now_good.ex") == []
   end
 
-  defp run_check(source) do
+  test "ignores files outside lib/mailglass path scope" do
+    source = """
+    defmodule Mailglass.Support.BadClockUse do
+      def run do
+        DateTime.utc_now()
+      end
+    end
+    """
+
+    assert run_check(source, "test/support/no_direct_date_time_now_fixture.ex") == []
+  end
+
+  defp run_check(source, filename) do
     source
-    |> SourceFile.parse("test/mailglass/credo/no_direct_date_time_now_fixture.ex")
+    |> SourceFile.parse(filename)
     |> NoDirectDateTimeNow.run([])
   end
 end

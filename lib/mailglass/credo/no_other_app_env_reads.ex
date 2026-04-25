@@ -68,7 +68,8 @@ defmodule Mailglass.Credo.NoOtherAppEnvReads do
     end
   end
 
-  defp maybe_collect_issue(_node, issues, _issue_meta, _allowed_apps, _watched_functions), do: issues
+  defp maybe_collect_issue(_node, issues, _issue_meta, _allowed_apps, _watched_functions),
+    do: issues
 
   defp included_path?(%SourceFile{filename: filename}, prefixes) when is_binary(filename) do
     Enum.any?(prefixes, &String.starts_with?(filename, &1))

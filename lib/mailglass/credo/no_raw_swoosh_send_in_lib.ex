@@ -85,8 +85,15 @@ defmodule Mailglass.Credo.NoRawSwooshSendInLib do
     end
   end
 
-  defp prewalk(ast, state, _issue_meta, _allowed_modules, _forbidden_functions, _swoosh_mailer_aliases),
-    do: {ast, state}
+  defp prewalk(
+         ast,
+         state,
+         _issue_meta,
+         _allowed_modules,
+         _forbidden_functions,
+         _swoosh_mailer_aliases
+       ),
+       do: {ast, state}
 
   defp postwalk({:defmodule, _, _} = ast, state) do
     new_stack =

@@ -20,6 +20,7 @@ defmodule Mailglass.Credo.NoPiiInTelemetryMeta do
   @impl true
   def run(%SourceFile{} = source_file, params \\ []) do
     issue_meta = IssueMeta.for(source_file, params)
+
     {blocked_atom_keys, blocked_string_keys} =
       params
       |> Params.get(:blocked_keys, __MODULE__)
@@ -60,7 +61,8 @@ defmodule Mailglass.Credo.NoPiiInTelemetryMeta do
 
   defp telemetry_metadata(_ast), do: :error
 
-  defp blocked_literal_keys({:%{}, _, pairs}, blocked_atom_keys, blocked_string_keys) when is_list(pairs) do
+  defp blocked_literal_keys({:%{}, _, pairs}, blocked_atom_keys, blocked_string_keys)
+       when is_list(pairs) do
     pairs
     |> Enum.reduce(MapSet.new(), fn
       {key, _value}, acc when is_atom(key) ->

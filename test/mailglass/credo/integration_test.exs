@@ -19,7 +19,9 @@ defmodule Mailglass.Credo.IntegrationTest do
          Mailglass.Events.Event,
          Mailglass.Suppression.Entry,
          Mailglass.Webhook.WebhookEvent
-       ]
+       ],
+       repo_functions: [:all, :one, :get, :get!, :get_by, :get_by!],
+       unscoped_audit_helpers: [{Mailglass.Tenancy, :audit_unscoped_bypass}]
      ]},
     {Mailglass.Credo.NoBareOptionalDepReference,
      [
@@ -29,11 +31,15 @@ defmodule Mailglass.Credo.IntegrationTest do
          Mjml => Mailglass.OptionalDeps.Mjml,
          GenSmtp => Mailglass.OptionalDeps.GenSmtp,
          Sigra => Mailglass.OptionalDeps.Sigra
-       }
+       },
+       included_path_prefixes: ["lib/mailglass/"]
      ]},
     {Mailglass.Credo.NoOversizedUseInjection, [max_lines: 20]},
     {Mailglass.Credo.PrefixedPubSubTopics, [required_prefix: "mailglass:"]},
-    {Mailglass.Credo.NoDefaultModuleNameSingleton, []},
+    {Mailglass.Credo.NoDefaultModuleNameSingleton,
+     [
+       watched_modules: [GenServer, Agent, Registry, Supervisor]
+     ]},
     {Mailglass.Credo.NoCompileEnvOutsideConfig,
      [
        allowed_modules: [Mailglass.Config]
@@ -46,7 +52,8 @@ defmodule Mailglass.Credo.IntegrationTest do
      ]},
     {Mailglass.Credo.NoDirectDateTimeNow,
      [
-       allowed_modules: [Mailglass.Clock, Mailglass.Clock.System, Mailglass.Clock.Frozen]
+       allowed_modules: [Mailglass.Clock, Mailglass.Clock.System, Mailglass.Clock.Frozen],
+       included_path_prefixes: ["lib/mailglass/"]
      ]},
     {Mailglass.Credo.NoTrackingOnAuthStream,
      [

@@ -9,7 +9,8 @@ defmodule Mailglass.Credo.NoBareOptionalDepReference do
         Mjml => Mailglass.OptionalDeps.Mjml,
         GenSmtp => Mailglass.OptionalDeps.GenSmtp,
         Sigra => Mailglass.OptionalDeps.Sigra
-      }
+      },
+      included_path_prefixes: ["lib/mailglass/"]
     ],
     explanations: [
       check: """
@@ -17,25 +18,32 @@ defmodule Mailglass.Credo.NoBareOptionalDepReference do
       gateway modules, never referenced directly from application code.
       """,
       params: [
-        gated_modules: "Map of optional dependency root modules to their required gateway module."
+        gated_modules: "Map of optional dependency root modules to their required gateway module.",
+        included_path_prefixes: "Only files in these path prefixes are linted."
       ]
     ]
 
   @impl true
   def run(%SourceFile{} = source_file, params \\ []) do
-    issue_meta = IssueMeta.for(source_file, params)
-    gated_modules = Params.get(params, :gated_modules, __MODULE__)
-    ast = SourceFile.ast(source_file)
+    included_path_prefixes = Params.get(params, :included_path_prefixes, __MODULE__)
 
-    {_ast, state} =
-      Macro.traverse(
-        ast,
-        %{issues: [], module_stack: []},
-        &prewalk(&1, &2, issue_meta, gated_modules),
-        &postwalk/2
-      )
+    if included_path?(source_file, included_path_prefixes) do
+      issue_meta = IssueMeta.for(source_file, params)
+      gated_modules = Params.get(params, :gated_modules, __MODULE__)
+      ast = SourceFile.ast(source_file)
 
-    Enum.reverse(state.issues)
+      {_ast, state} =
+        Macro.traverse(
+          ast,
+          %{issues: [], module_stack: []},
+          &prewalk(&1, &2, issue_meta, gated_modules),
+          &postwalk/2
+        )
+
+      Enum.reverse(state.issues)
+    else
+      []
+    end
   end
 
   defp prewalk({:defmodule, _, [module_ast, _]} = ast, state, _issue_meta, _gated_modules) do
@@ -112,4 +120,10 @@ defmodule Mailglass.Credo.NoBareOptionalDepReference do
       column: column
     )
   end
+
+  defp included_path?(%SourceFile{filename: filename}, prefixes) when is_binary(filename) do
+    Enum.any?(prefixes, &String.starts_with?(filename, &1))
+  end
+
+  defp included_path?(_source_file, _prefixes), do: false
 end
