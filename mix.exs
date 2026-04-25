@@ -32,6 +32,28 @@ defmodule Mailglass.MixProject do
     ]
   end
 
+  # Elixir 1.18+ no longer auto-promotes :test for `mix test` invocations
+  # nested inside aliases. Every composite verify.* alias must declare its
+  # preferred env here, otherwise `mix verify.phase_07` (and friends) raise
+  # the `set MIX_ENV explicitly` error before any sub-task runs.
+  def cli do
+    [
+      preferred_envs: [
+        "verify.phase01": :test,
+        "verify.phase_02": :test,
+        "verify.phase_03": :test,
+        "verify.phase_04": :test,
+        "verify.phase_07": :test,
+        "verify.cold_start": :test,
+        "verify.installer.golden": :test,
+        "verify.installer.idempotency": :test,
+        "verify.installer.smoke": :test,
+        "verify.docs.contract": :test,
+        "verify.docs.migration": :test
+      ]
+    ]
+  end
+
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
@@ -130,6 +152,29 @@ defmodule Mailglass.MixProject do
         "test --warnings-as-errors --only phase_04_uat --exclude flaky",
         "compile --no-optional-deps --warnings-as-errors"
       ],
+      "verify.installer.golden": [
+        "test test/mailglass/install/install_golden_test.exs --warnings-as-errors"
+      ],
+      "verify.installer.idempotency": [
+        "test test/mailglass/install/install_idempotency_test.exs --warnings-as-errors"
+      ],
+      "verify.installer.smoke": [
+        "test test/mailglass/install/install_first_preview_smoke_test.exs --warnings-as-errors"
+      ],
+      "verify.docs.contract": [
+        "test test/mailglass/docs_contract_test.exs --warnings-as-errors"
+      ],
+      "verify.docs.migration": [
+        "test test/mailglass/docs_migration_smoke_test.exs --warnings-as-errors"
+      ],
+      # Phase 7 UAT gate per INST-04. Runs the installer and docs test suites
+      # in a single `mix test` invocation — chaining the individual aliases
+      # would trip Mix's task-deduplication (each `verify.installer.*` calls
+      # `mix test`, but `mix test` only runs once per invocation, so a chain
+      # would execute only the first file).
+      "verify.phase_07": [
+        "test test/mailglass/install test/mailglass/docs_contract_test.exs test/mailglass/docs_migration_smoke_test.exs --warnings-as-errors --exclude flaky"
+      ],
       # Cold-start smoke — full suite from a fresh DB. Catches startup-order,
       # seed, and missing-migration issues that warm-state runs can mask.
       #
@@ -157,15 +202,106 @@ defmodule Mailglass.MixProject do
     [
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url},
-      files: ~w(lib priv/gettext mix.exs LICENSE README.md CHANGELOG.md)
+      files:
+        ~w(lib priv/gettext guides mix.exs LICENSE README.md CHANGELOG.md MAINTAINING.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md)
     ]
   end
 
   defp docs do
     [
       main: "getting-started",
+      homepage_url: @source_url,
       source_url: @source_url,
-      source_ref: "v#{@version}"
+      source_ref: "v#{@version}",
+      skip_undefined_reference_warnings_on: [
+        "README.md",
+        "CLAUDE.md",
+        "CONTRIBUTING.md",
+        ".planning/ROADMAP.md",
+        ".planning/PROJECT.md",
+        "guides/webhooks.md"
+      ],
+      # Disable auto-linking (and the matching warnings) for cross-refs to
+      # external Swoosh/Ecto internals and to intentionally @moduledoc-false
+      # Mailglass modules — moduledoc prose still mentions them by name.
+      skip_code_autolink_to: [
+        "Swoosh.Adapter.deliver/2",
+        "Swoosh.Mailer.deliver/1",
+        "Swoosh.Adapters.Sandbox.Storage",
+        "Ecto.Repo.rollback/1",
+        "Mailglass.Application.start/2",
+        "Mailglass.Outbound.Worker.perform/1",
+        "Mailglass.TemplateEngine.HEEx.render/3",
+        "Mailglass.SuppressionStore.check/2"
+      ],
+      extras: [
+        "README.md",
+        "guides/getting-started.md",
+        "guides/authoring-mailables.md",
+        "guides/components.md",
+        "guides/preview.md",
+        "guides/webhooks.md",
+        "guides/multi-tenancy.md",
+        "guides/telemetry.md",
+        "guides/testing.md",
+        "guides/migration-from-swoosh.md",
+        "MAINTAINING.md",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "CODE_OF_CONDUCT.md",
+        "CLAUDE.md",
+        ".planning/ROADMAP.md",
+        ".planning/PROJECT.md"
+      ],
+      groups_for_extras: [
+        Overview: ["README.md", "CLAUDE.md"],
+        Guides: [
+          "guides/getting-started.md",
+          "guides/authoring-mailables.md",
+          "guides/components.md",
+          "guides/preview.md",
+          "guides/webhooks.md",
+          "guides/multi-tenancy.md",
+          "guides/telemetry.md",
+          "guides/testing.md",
+          "guides/migration-from-swoosh.md"
+        ],
+        Maintainers: [
+          "MAINTAINING.md",
+          "CONTRIBUTING.md",
+          "SECURITY.md",
+          "CODE_OF_CONDUCT.md"
+        ],
+        Planning: [
+          ".planning/ROADMAP.md",
+          ".planning/PROJECT.md"
+        ]
+      ],
+      groups_for_modules: [
+        Core: [Mailglass, Mailglass.Config, Mailglass.Message, Mailglass.Outbound, Mailglass.Events],
+        Authoring: [Mailglass.Mailable, Mailglass.Components, Mailglass.Renderer],
+        Transport: [Mailglass.Adapter, Mailglass.Adapters.Fake, Mailglass.Adapters.Swoosh],
+        Webhooks: [Mailglass.Webhook, Mailglass.Webhook.Router, Mailglass.Webhook.Plug],
+        Operations: [Mailglass.Tenancy, Mailglass.TestAssertions],
+        Internal: [
+          Mailglass.Application,
+          Mailglass.Outbound.Worker,
+          Mailglass.Outbound.Projector,
+          Mailglass.Webhook.Provider,
+          Mailglass.Webhook.Reconciler,
+          Mailglass.Webhook.Pruner,
+          Mailglass.TemplateEngine.HEEx,
+          Mailglass.Suppression,
+          Mailglass.Migration,
+          Mailglass.Migrations.Postgres,
+          Mailglass.SuppressionStore.Ecto,
+          Mailglass.SuppressionStore.ETS.Supervisor,
+          Mailglass.Adapters.Fake.Supervisor,
+          Mailglass.Adapters.Fake.Storage,
+          Mailglass.PubSub,
+          Mailglass.OptionalDeps.Oban
+        ]
+      ]
     ]
   end
 end

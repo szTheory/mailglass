@@ -1,0 +1,44 @@
+name: publish-hex
+
+on:
+  workflow_run:
+    workflows: ["release-please"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: hex-publish
+    strategy:
+      matrix:
+        include:
+          - package: "."
+          - package: "mailglass_admin"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - name: Cache deps
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+      - name: Install deps
+        run: mix deps.get
+      - name: Pre-publish check
+        run: mix mailglass.publish.check
+      - name: Build and publish
+        run: |
+          cd ${{ matrix.package }}
+          mix hex.publish --yes
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
