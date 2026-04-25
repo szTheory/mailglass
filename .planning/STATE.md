@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1.0
 milestone_name: packages to Hex.pm
 status: executing
-stopped_at: Phase 07.1 context gathered (research-driven, fix-then-publish path)
-last_updated: "2026-04-25T17:53:46.477Z"
-last_activity: 2026-04-25 -- Phase 07.1 execution started
+stopped_at: Phase 07.1 — Wave 1 complete (5/11 plans landed); awaiting Wave 2 spawn
+last_updated: "2026-04-25T20:01:15.000Z"
+last_activity: 2026-04-25 -- Phase 07.1 Wave 1 landed (plans 01..05)
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 61
-  completed_plans: 50
-  percent: 82
+  completed_plans: 55
+  percent: 90
 ---
 
 # Project State
@@ -26,9 +26,24 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 07.1 (publish-v0-1-0-packages-to-hex-pm) — EXECUTING
-Plan: 1 of 11
-Status: Executing Phase 07.1
-Last activity: 2026-04-25 -- Phase 07.1 execution started
+Plan: 5 of 11 (Wave 1 complete; Wave 2 next)
+Status: Wave 1 landed — plans 07.1-01..05 on main
+Last activity: 2026-04-25 -- Wave 1 of Phase 07.1 complete (5/11 plans)
+
+**Wave 1 commits on main (8c2e7f3..0362ac5):**
+
+- `dc1a0a6` 07.1-03 CHANGELOG narrative rewrite
+- `a987bf1` 07.1-02 governance sections (MAINTAINING.md)
+- `061170f` 07.1-02 SECURITY.md placeholder + SLA fix
+- `1e6c6ef` 07.1-05 REQ traceability flips (~22 rows; INST-01/03 deferred to Plan 06 per D-06)
+- `c3b43d6` 07.1-01 tarball cleanup + source_ref_pattern (both mix.exs files)
+- `0362ac5` 07.1-04 VERIFICATION.md backfill (Phase 5 + Phase 7)
+
+Interleaved: `7cdf7b1` user-authored fix moving custom credo checks to `credo_checks/` (path-dep compile fix; unrelated to 07.1 plans, preserved through cherry-pick auto-merge).
+
+**Wave 1 recovery note:** Original Wave 1 spawned 5 parallel agents but credits ran out mid-wave. Recovery (this session) salvaged 07.1-02/03/05 from worktrees via cherry-pick, restarted 07.1-01 and 07.1-04 from current main HEAD because their previous worktree work was incomplete (only 1 of 2 required files done in each). All 5 plans now land as a single linear sequence on main.
+
+**Next:** Wave 2 — spawn 07.1-06 (installer blockers G-1..G-5) when user confirms.
 
 Progress: [██████████] 100%
 
