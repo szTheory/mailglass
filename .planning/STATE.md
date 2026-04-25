@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v0.1.0
 milestone_name: packages to Hex.pm
-status: Ready for milestone close-out
+status: executing
 stopped_at: Phase 07.1 context gathered (research-driven, fix-then-publish path)
-last_updated: "2026-04-25T17:45:01.609Z"
-last_activity: 2026-04-24
+last_updated: "2026-04-25T17:53:46.477Z"
+last_activity: 2026-04-25 -- Phase 07.1 execution started
 progress:
   total_phases: 8
   completed_phases: 7
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** v0.1 milestone complete — ready for `/gsd-audit-milestone` → `/gsd-complete-milestone` and first Hex release.
+**Current focus:** Phase 07.1 — publish-v0-1-0-packages-to-hex-pm
 
 ## Current Position
 
-Phase: 7
-Plan: All 5 plans complete
-Status: Ready for milestone close-out
-Last activity: 2026-04-24
+Phase: 07.1 (publish-v0-1-0-packages-to-hex-pm) — EXECUTING
+Plan: 1 of 11
+Status: Executing Phase 07.1
+Last activity: 2026-04-25 -- Phase 07.1 execution started
 
 Progress: [██████████] 100%
 

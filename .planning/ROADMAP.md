@@ -201,3 +201,13 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 ---
 *Roadmap defined: 2026-04-21*
 *Coverage: 84/84 v1 REQ-IDs mapped to exactly one phase. No orphans, no duplicates.*
+
+### Phase 07.1: Publish v0.1.0 packages to Hex.pm (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 7
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 07.1 to break down)
