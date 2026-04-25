@@ -273,7 +273,7 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | CORE-05 | Phase 1 — Foundation | Complete (01-03) |
 | CORE-06 | Phase 1 — Foundation | Complete (01-04) |
 | CORE-07 | Phase 1 — Foundation | Complete (01-01) |
-| AUTHOR-01 | Phase 3 — Transport + Send Pipeline | Pending |
+| AUTHOR-01 | Phase 3 — Transport + Send Pipeline | Complete (03-04) |
 | AUTHOR-02 | Phase 1 — Foundation | Complete (01-05) |
 | AUTHOR-03 | Phase 1 — Foundation | Complete (01-06) |
 | AUTHOR-04 | Phase 1 — Foundation | Complete (01-06) |
@@ -287,38 +287,38 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | TENANT-01 | Phase 2 — Persistence + Tenancy | Complete (02-02, 02-03) |
 | TENANT-02 | Phase 2 — Persistence + Tenancy | Complete (02-04, 02-06) |
 | TENANT-03 | Phase 6 — Custom Credo + Boundary | Complete |
-| TRANS-01 | Phase 3 — Transport + Send Pipeline | Pending |
-| TRANS-02 | Phase 3 — Transport + Send Pipeline | Pending |
-| TRANS-03 | Phase 3 — Transport + Send Pipeline | Pending |
-| TRANS-04 | Phase 3 — Transport + Send Pipeline | Pending |
-| SEND-01 | Phase 3 — Transport + Send Pipeline | Pending |
-| SEND-02 | Phase 3 — Transport + Send Pipeline | Pending |
-| SEND-03 | Phase 3 — Transport + Send Pipeline | Pending |
-| SEND-04 | Phase 3 — Transport + Send Pipeline | Pending |
-| SEND-05 | Phase 3 — Transport + Send Pipeline | Pending |
-| TRACK-01 | Phase 3 — Transport + Send Pipeline | Pending |
+| TRANS-01 | Phase 3 — Transport + Send Pipeline | Complete (03-02) |
+| TRANS-02 | Phase 3 — Transport + Send Pipeline | Complete (03-02) |
+| TRANS-03 | Phase 3 — Transport + Send Pipeline | Complete (03-02) |
+| TRANS-04 | Phase 3 — Transport + Send Pipeline | Complete (03-02) |
+| SEND-01 | Phase 3 — Transport + Send Pipeline | Complete (03-01) |
+| SEND-02 | Phase 3 — Transport + Send Pipeline | Complete (03-03) |
+| SEND-03 | Phase 3 — Transport + Send Pipeline | Complete (03-05) |
+| SEND-04 | Phase 3 — Transport + Send Pipeline | Complete (03-03) |
+| SEND-05 | Phase 3 — Transport + Send Pipeline | Complete (03-01) |
+| TRACK-01 | Phase 3 — Transport + Send Pipeline | Complete (03-04) |
 | TRACK-02 | Phase 6 — Custom Credo + Boundary | Complete |
-| TRACK-03 | Phase 3 — Transport + Send Pipeline | Pending |
-| HOOK-01 | Phase 4 — Webhook Ingest | Pending |
+| TRACK-03 | Phase 3 — Transport + Send Pipeline | Complete (03-07, 03-08) |
+| HOOK-01 | Phase 4 — Webhook Ingest | Complete (04-01, 04-02) |
 | HOOK-02 | Phase 4 — Webhook Ingest | Complete (04-04, 04-08) |
-| HOOK-03 | Phase 4 — Webhook Ingest | Pending |
-| HOOK-04 | Phase 4 — Webhook Ingest | Pending |
-| HOOK-05 | Phase 4 — Webhook Ingest | Pending |
+| HOOK-03 | Phase 4 — Webhook Ingest | Complete (04-02) |
+| HOOK-04 | Phase 4 — Webhook Ingest | Complete (04-03) |
+| HOOK-05 | Phase 4 — Webhook Ingest | Complete (04-02, 04-03) |
 | HOOK-06 | Phase 4 — Webhook Ingest | Complete (04-06, 04-07, 04-08) |
 | HOOK-07 | Phase 4 — Webhook Ingest | Complete (04-09) |
 | COMP-01 | Phase 1 — Foundation | Complete (01-06) |
 | COMP-02 | Phase 1 — Foundation | Complete (01-06) |
-| PREV-01 | Phase 5 — Dev Preview LiveView | Pending |
-| PREV-02 | Phase 5 — Dev Preview LiveView | Pending |
-| PREV-03 | Phase 5 — Dev Preview LiveView | Pending |
-| PREV-04 | Phase 5 — Dev Preview LiveView | Pending |
-| PREV-05 | Phase 5 — Dev Preview LiveView | Pending |
-| PREV-06 | Phase 5 — Dev Preview LiveView | Pending |
-| TEST-01 | Phase 3 — Transport + Send Pipeline | Pending |
-| TEST-02 | Phase 3 — Transport + Send Pipeline | Pending |
+| PREV-01 | Phase 5 — Dev Preview LiveView | Complete (05-02) |
+| PREV-02 | Phase 5 — Dev Preview LiveView | Complete (05-03) |
+| PREV-03 | Phase 5 — Dev Preview LiveView | Complete (05-04, 05-06) |
+| PREV-04 | Phase 5 — Dev Preview LiveView | Complete (05-04) |
+| PREV-05 | Phase 5 — Dev Preview LiveView | Complete (05-05, 05-06) |
+| PREV-06 | Phase 5 — Dev Preview LiveView | Complete (05-05) |
+| TEST-01 | Phase 3 — Transport + Send Pipeline | Complete (03-06) |
+| TEST-02 | Phase 3 — Transport + Send Pipeline | Complete (03-06) |
 | TEST-03 | Phase 4 — Webhook Ingest | Complete (04-09) |
-| TEST-04 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| TEST-05 | Phase 3 — Transport + Send Pipeline | Pending |
+| TEST-04 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04) |
+| TEST-05 | Phase 3 — Transport + Send Pipeline | Complete (03-12) |
 | LINT-01 | Phase 6 — Custom Credo + Boundary | Complete |
 | LINT-02 | Phase 6 — Custom Credo + Boundary | Complete |
 | LINT-03 | Phase 6 — Custom Credo + Boundary | Complete |
@@ -332,24 +332,24 @@ Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to 
 | LINT-11 | Phase 6 — Custom Credo + Boundary | Complete |
 | LINT-12 | Phase 6 — Custom Credo + Boundary | Complete |
 | INST-01 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| INST-02 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| INST-02 | Phase 7 — Installer + CI/CD + Docs | Complete (07-01) |
 | INST-03 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| INST-04 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| CI-01 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| CI-02 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| CI-03 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| CI-04 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| CI-05 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| CI-06 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| CI-07 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| DOCS-01 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| DOCS-02 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| DOCS-03 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| DOCS-04 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| DOCS-05 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| BRAND-01 | Phase 5 — Dev Preview LiveView | Pending |
-| BRAND-02 | Phase 7 — Installer + CI/CD + Docs | Pending |
-| BRAND-03 | Phase 7 — Installer + CI/CD + Docs | Pending |
+| INST-04 | Phase 7 — Installer + CI/CD + Docs | Complete (07-02) |
+| CI-01 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04) |
+| CI-02 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04) |
+| CI-03 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04) |
+| CI-04 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04, 07-05) |
+| CI-05 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04) |
+| CI-06 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04) |
+| CI-07 | Phase 7 — Installer + CI/CD + Docs | Complete (07-04, 07-05) |
+| DOCS-01 | Phase 7 — Installer + CI/CD + Docs | Complete (07-03) |
+| DOCS-02 | Phase 7 — Installer + CI/CD + Docs | Complete (07-03) |
+| DOCS-03 | Phase 7 — Installer + CI/CD + Docs | Complete (07-03) |
+| DOCS-04 | Phase 7 — Installer + CI/CD + Docs | Complete (07-03) |
+| DOCS-05 | Phase 7 — Installer + CI/CD + Docs | Complete (07-03) |
+| BRAND-01 | Phase 5 — Dev Preview LiveView | Complete (05-05) |
+| BRAND-02 | Phase 7 — Installer + CI/CD + Docs | Complete (07-01, 07-03) |
+| BRAND-03 | Phase 7 — Installer + CI/CD + Docs | Complete (07-03) |
 
 **Coverage:**
 - v1 requirements: 84 total (CORE: 7, AUTHOR: 5, PERSIST: 6, TENANT: 3, TRANS: 4, SEND: 5, TRACK: 3, HOOK: 7, COMP: 2, PREV: 6, TEST: 5, LINT: 12, INST: 4, CI: 7, DOCS: 5, BRAND: 3). Earlier "76 total" count in the initial draft was off; the breakdown sums to 84 distinct REQ-IDs and all 84 are mapped.
