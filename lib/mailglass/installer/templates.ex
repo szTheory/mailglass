@@ -24,13 +24,22 @@ defmodule Mailglass.Installer.Templates do
   """
   @spec router_mount_snippet(keyword()) :: String.t()
   def router_mount_snippet(opts \\ []) do
-    app_module = Keyword.get(opts, :app_module, "MyAppWeb")
+    otp_app =
+      opts
+      |> Keyword.get(:app_module, "MyApp")
+      |> Macro.underscore()
 
     """
-        # Mailglass admin routes.
-        mailglass_admin_routes()
+        # Mailglass admin routes (dev-only; flip :dev_routes in config to expose).
+        import MailglassAdmin.Router
+
+        if Application.compile_env(:#{otp_app}, :dev_routes) do
+          scope "/dev" do
+            pipe_through :browser
+            mailglass_admin_routes "/mail"
+          end
+        end
     """
-    |> String.replace("mailglass_admin_routes()", "#{app_module}.MailglassAdmin.Router.mount()")
   end
 
   @doc """
