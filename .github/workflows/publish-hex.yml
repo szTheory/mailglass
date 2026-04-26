@@ -169,15 +169,26 @@ jobs:
   publish-admin:
     runs-on: ubuntu-latest
     needs: [publish-core]
+    # publish-admin runs only when mailglass succeeded (package='both' or
+    # workflow_run from successful release-please) OR when intentionally
+    # publishing only the admin package (package='mailglass_admin', in which
+    # case publish-core skip is expected). A skipped publish-core caused by
+    # prepublish/gate FAILURE must NOT permit publish-admin to run — that was
+    # the original bug that exposed HEX_API_KEY on a failed dispatch.
     if: |
       always() &&
-      (needs.publish-core.result == 'success' || needs.publish-core.result == 'skipped') &&
       (
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.package != 'mailglass') ||
+        (github.event_name == 'workflow_dispatch' &&
+         github.event.inputs.package == 'mailglass_admin' &&
+         needs.publish-core.result == 'skipped') ||
+        (github.event_name == 'workflow_dispatch' &&
+         github.event.inputs.package != 'mailglass' &&
+         needs.publish-core.result == 'success') ||
         (github.event_name == 'workflow_run' &&
+         needs.publish-core.result == 'success' &&
          github.event.workflow_run.conclusion == 'success' &&
          (startsWith(github.event.workflow_run.head_branch, 'mailglass-v') ||
-        startsWith(github.event.workflow_run.head_branch, 'mailglass_admin-v')))
+          startsWith(github.event.workflow_run.head_branch, 'mailglass_admin-v')))
       )
     environment: hex-publish
     steps:

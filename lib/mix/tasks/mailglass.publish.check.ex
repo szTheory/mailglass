@@ -169,7 +169,11 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       version: version,
       root_version: root_version,
       manifest: manifest,
-      manifest_version: Map.get(manifest, to_string(package)),
+      # release-please's linked-versions plugin writes the root package under
+      # the path key `.` (per release-please-config.json's `packages: {".": ...}`
+      # mapping). Older releases of mailglass.publish.check expected the
+      # package-name key (`mailglass`); accept either for forward compatibility.
+      manifest_version: manifest_version(manifest, package),
       unpack_dir: Path.join(package_dir, "_publish_check/#{package}"),
       actual_file: Path.join(package_dir, "_publish_check/#{package}-files.actual"),
       expected_file: Path.join(repo_root, ".planning/publish/#{package}-files.expected"),
@@ -181,6 +185,17 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   defp package_dir(repo_root, :mailglass), do: repo_root
   defp package_dir(repo_root, :mailglass_admin), do: Path.join(repo_root, "mailglass_admin")
+
+  # Root package (`mailglass`) uses release-please's path key `.` first, then
+  # falls back to legacy `mailglass` key. Nested package (`mailglass_admin`)
+  # uses its package name directly.
+  defp manifest_version(manifest, :mailglass) do
+    Map.get(manifest, ".") || Map.get(manifest, "mailglass")
+  end
+
+  defp manifest_version(manifest, :mailglass_admin) do
+    Map.get(manifest, "mailglass_admin")
+  end
 
   defp read_root_version(repo_root) do
     repo_root
