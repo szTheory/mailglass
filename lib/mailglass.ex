@@ -1,4 +1,6 @@
 defmodule Mailglass do
+  @compile {:no_warn_undefined, [Mailglass.Oban.TenancyMiddleware, Mailglass.Outbound.Worker]}
+
   @moduledoc """
   Transactional email framework for Phoenix.
 

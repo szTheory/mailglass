@@ -3,7 +3,7 @@ defmodule MailglassAdmin.MixProject do
 
   @version "0.1.0"
   @source_url "https://github.com/szTheory/mailglass"
-  @description "Mountable LiveView dashboard for mailglass — dev preview + admin."
+  @description "Mountable LiveView dashboard for mailglass — dev preview + admin"
 
   def project do
     [

@@ -16,7 +16,7 @@ defmodule Mailglass.MixProject do
       deps: deps(),
       aliases: aliases(),
       name: "Mailglass",
-      description: "Transactional email framework for Phoenix. Composes on Swoosh.",
+      description: "Transactional email framework for Phoenix. Composes on Swoosh",
       source_url: @source_url,
       homepage_url: @source_url,
       package: package(),
@@ -69,6 +69,8 @@ defmodule Mailglass.MixProject do
         Oban.Worker,
         Oban.Job,
         Oban.Migrations,
+        Mailglass.Oban.TenancyMiddleware,
+        Mailglass.Outbound.Worker,
         # :otel_tracer and :otel_span are erlang-atom modules, not Elixir
         :otel_tracer,
         :otel_span,
