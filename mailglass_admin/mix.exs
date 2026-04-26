@@ -91,7 +91,8 @@ defmodule MailglassAdmin.MixProject do
   # newly published `mailglass` core.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 0.1.0"} # x-release-please-version
+      # x-release-please-version
+      {:mailglass, "== 0.1.0"}
     else
       {:mailglass, path: "..", override: true}
     end
