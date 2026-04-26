@@ -93,10 +93,24 @@ defmodule Mailglass.Installer.Templates do
   end
 
   @doc """
-  Anchor line used to insert router snippets.
+  Anchor substring used to insert router snippets.
+
+  Phoenix 1.5+ routers conventionally have `use MyAppWeb, :router` as the
+  first non-`defmodule` line. The macro expands to `use Phoenix.Router` at
+  compile time, but the source file does NOT contain that literal — so an
+  earlier version of this anchor (`"use Phoenix.Router"`) silently failed
+  to match real adopters' routers and fell through to conflict-sidecar
+  behavior. Match `, :router` instead, which appears in `use FooWeb,
+  :router` and is rare elsewhere in router source.
+
+  Adopters still on Phoenix < 1.5 with the literal `use Phoenix.Router`
+  call must run `mix mailglass.install --force` (the anchor-not-found +
+  force fallback) and manually move the appended snippets inside the
+  module block. v0.1+ targets Phoenix 1.7+ per STACK.md, so this case is
+  not the default-supported path.
   """
   @spec router_anchor() :: String.t()
-  def router_anchor, do: "use Phoenix.Router"
+  def router_anchor, do: ", :router"
 
   @doc """
   Marker line for the start of the managed runtime config block.
@@ -112,6 +126,14 @@ defmodule Mailglass.Installer.Templates do
 
   @doc """
   Returns the managed block body inserted into `runtime.exs`.
+
+  Sets Swoosh's `:api_client` to `Swoosh.ApiClient.Finch` because Finch
+  ships with `mix phx.new` (it's the default HTTP client for the host
+  Phoenix app). Swoosh's own default at v1.25 is
+  `Swoosh.ApiClient.Hackney` which would require adopters to add
+  `{:hackney, "~> 1.18"}` and start a hackney supervisor manually. With
+  Finch, no extra deps or boot wiring is needed — adopters can `mix
+  mailglass.install` and immediately `mix phx.server` without surprise.
   """
   @spec runtime_config_body() :: String.t()
   def runtime_config_body do
@@ -119,6 +141,8 @@ defmodule Mailglass.Installer.Templates do
     config :mailglass,
       telemetry_prefix: [:mailglass],
       enable_preview: true
+
+    config :swoosh, :api_client, Swoosh.ApiClient.Finch
     """
   end
 
