@@ -145,7 +145,7 @@ jobs:
   wait-for-hexdocs:
     name: Wait for HexDocs build
     runs-on: ubuntu-latest
-    needs: [wait-for-index]
+    needs: [cron-guard, wait-for-index]
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
     timeout-minutes: 12
     steps:
@@ -189,7 +189,11 @@ jobs:
   consumer-install:
     name: Consumer install (Phoenix host)
     runs-on: ubuntu-latest
-    needs: [wait-for-hexdocs]
+    # cron-guard listed explicitly: GitHub Actions `needs.<job>.outputs`
+    # propagates only through DIRECT dependencies, not transitively. Without
+    # cron-guard here, VERSION resolved to empty and consumer-install ran
+    # `mix deps.get` against `{:mailglass, "== "}` (invalid).
+    needs: [cron-guard, wait-for-hexdocs]
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
     timeout-minutes: 15
     env:
@@ -277,7 +281,7 @@ jobs:
   retracted-check:
     name: Verify package not retracted
     runs-on: ubuntu-latest
-    needs: [consumer-install]
+    needs: [cron-guard, consumer-install]
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
     timeout-minutes: 5
     env:
