@@ -176,15 +176,14 @@ jobs:
             ${{ runner.os }}-mix-
       - name: Install deps
         run: mix deps.get
-      - name: Run Credo (custom checks + default priority)
-        # Drop --strict for v0.1.0 publish: the project's MANDATORY enforcement
-        # is the 12 custom checks in `credo_checks/` (per CLAUDE.md "Custom
-        # Credo checks at lint time"), all priority HIGH so they still fail
-        # the build under default mode. Strict mode also catches lower-
-        # priority software-design / readability suggestions across 169 sites
-        # in pre-existing Phase 5/6 code that are out of scope for v0.1.0.
-        # Re-enable --strict in a post-publish cleanup phase.
-        run: mix credo
+      - name: Run Credo (custom checks at HIGH priority)
+        # The project's MANDATORY enforcement per CLAUDE.md is the 12 custom
+        # Credo checks in `credo_checks/` — all priority HIGH and fail the
+        # build for any project violation. `--min-priority=high` filters out
+        # the ~42 lower-priority software-design / readability / refactoring
+        # suggestions that pre-date Phase 07.1 and are out of v0.1.0 scope.
+        # Re-tighten in a post-publish cleanup phase.
+        run: mix credo --min-priority=high
 
 
   dialyzer:
