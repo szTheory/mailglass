@@ -239,9 +239,13 @@ jobs:
       - name: mix deps.get
         working-directory: ${{ runner.temp }}/sandbox
         run: mix deps.get
-      - name: Run mix mailglass.install --yes
+      - name: Run mix mailglass.install
         working-directory: ${{ runner.temp }}/sandbox
-        run: mix mailglass.install --yes
+        # `mix mailglass.install` accepts only --dry-run, --no-admin, --force
+        # (per OptionParser strict in lib/mix/tasks/mailglass.install.ex). The
+        # install runs non-interactively by default (no prompts), so no --yes
+        # flag is needed or supported.
+        run: mix mailglass.install
       - name: Compile, fail on warnings
         working-directory: ${{ runner.temp }}/sandbox
         run: |
