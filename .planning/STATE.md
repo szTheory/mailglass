@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1.0
 milestone_name: packages to Hex.pm
 status: executing
-stopped_at: Completed 07.1-10-PLAN.md (PR #8 open — Plan 11 blocked on CI)
-last_updated: "2026-04-26T13:38:00.000Z"
+stopped_at: "v0.1.0 PUBLISHED to Hex.pm; mid-cycle on v0.1.1 fast-follow (Release-As push pending)"
+last_updated: "2026-04-26T16:18:00.000Z"
 last_activity: 2026-04-26
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 61
-  completed_plans: 53
-  percent: 87
+  completed_plans: 61
+  percent: 100
 ---
 
 # Project State
@@ -25,10 +25,85 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 ## Current Position
 
-Phase: 07.1 (publish-v0-1-0-packages-to-hex-pm) — EXECUTING
-Plan: 10 of 11 complete (Wave 4 done) — Plan 11 blocked on CI red
-Status: release-please PR #8 open at v0.1.0; Plan 11 publish ceremony cannot fire until CI is green
-Last activity: 2026-04-26 -- Plan 07.1-10 complete + workflow plumbing fixes + Release-As pushed
+Phase: 07.1 (publish-v0-1-0-packages-to-hex-pm) — **v0.1.0 SHIPPED**, mid-cycle on **v0.1.1 fast-follow**
+Status: see "## Resume here" section below
+Last activity: 2026-04-26 -- v0.1.0 published; v0.1.1 installer + Swoosh fixes pushed (cf287f9); waiting to push Release-As: 0.1.1
+
+## Resume here (handoff for fresh context window)
+
+### What's live RIGHT NOW on Hex.pm
+
+- ✅ `mailglass` 0.1.0 — https://hex.pm/packages/mailglass/0.1.0
+- ✅ `mailglass_admin` 0.1.0 — https://hex.pm/packages/mailglass_admin/0.1.0
+- ✅ HexDocs at https://hexdocs.pm/mailglass/0.1.0/ and /mailglass_admin/0.1.0/
+
+**v0.1.0 has known UX issues** (the publish itself succeeded; the smoke surfaced these):
+- `mix mailglass.install` produces conflict sidecars on real Phoenix routers (anchor mismatch)
+- Adopters get `Swoosh.ApiClient.Hackney missing` at boot (Swoosh's default api_client requires hackney dep)
+
+These are fixed in `cf287f9` on `main` and ready to ship as v0.1.1.
+
+### Resume sequence (ordered, ~5 steps to v0.1.1 SHIPPED)
+
+1. **Push empty Release-As: 0.1.1 commit:**
+   ```
+   git commit --allow-empty -m "$(cat <<'EOF'
+   chore: release 0.1.1
+
+   Release-As: 0.1.1
+   EOF
+   )"
+   git push origin main
+   ```
+
+2. **Wait for release-please workflow** (~30s) to open a v0.1.1 PR. It updates `@version` in both `mix.exs` files to `0.1.1`, plus the literal `"== 0.1.0"` → `"== 0.1.1"` in `mailglass_admin/mix.exs`, plus CHANGELOG entries.
+
+3. **Squash-merge the PR** when its mergeable state goes CLEAN. Tags `mailglass-v0.1.1` and `mailglass_admin-v0.1.1` auto-create. publish-hex.yml's workflow_run trigger fires correctly now (gate fix from `217f93c` matches `mailglass-v*` head_branch).
+
+4. **`gate-ci-green`** queries CI on the merge SHA. If green, publish-core + publish-admin run automatically (no required reviewer).
+
+5. **Verify**:
+   - `mix hex.info mailglass 0.1.1` — live, not retired
+   - `mix hex.info mailglass_admin 0.1.1` — live, not retired
+   - `curl -fsI https://hexdocs.pm/mailglass/0.1.1/` — HTTP 200
+   - `curl -fsI https://hexdocs.pm/mailglass_admin/0.1.1/` — HTTP 200
+   - Watch `post-publish-smoke.yml` auto-fire on workflow_run; OR dispatch manually with `version=0.1.1`. Should be FULLY GREEN this time (no --force, no hackney pin needed — the v0.1.1 install template fixes both).
+
+6. **If smoke green**: close the auto-created `publish-smoke-failed` tracker issue (likely #9 or whichever post-v0.1.0 ones still exist). Update this STATE.md frontmatter to `status: shipped`.
+
+### If publish-hex auto-fires from workflow_run instead of workflow_dispatch
+
+After step 3 (PR merge), publish-hex.yml's `workflow_run` trigger fires automatically because the linked-versions tag matches `mailglass-v*`. **You do not need to manually dispatch** — just wait. The whole publish flows from PR merge.
+
+Manual workflow_dispatch only needed if workflow_run path fails for some reason. Command:
+```
+gh workflow run publish-hex.yml --repo szTheory/mailglass --ref main \
+  -f tag=mailglass-v0.1.1 -f package=both -f dry_run=false
+```
+
+### Current commits on main (since v0.1.0 publish)
+
+- `eb990f1` docs(todos): capture verify.phase_NN rename for v0.1.1
+- `cf287f9` feat(installer): match real Phoenix router anchor + Swoosh Finch default
+
+These ARE the v0.1.1 fix payload. Release-please will package them as the 0.1.1 CHANGELOG.
+
+### Tasks tracker reflects this state
+
+`#1`–`#9` and `#7` are completed. `#10` (Release-As push) is in_progress, `#11` (smoke verify), `#12` (final STATE.md) pending.
+
+### Notes for v0.1.2+ (do NOT do during v0.1.1)
+
+Captured as todos in `.planning/todos/pending/`:
+- `2026-04-26-rename-verify-phase-nn-aliases-to-semantic-names.md` — `mix verify.phase_07` and friends are GSD-internal jargon; rename to `verify.installer` etc.
+- `2026-04-26-mailable-api-too-much-swoosh-leakage.md` — adopter feedback: current Mailable API forces dropping into `Swoosh.Email` for ordinary field setting (`to/from/subject`). Should abstract above Swoosh; keep `update_swoosh/2` as escape hatch only. v0.2 design discussion needed.
+
+Plus the v0.1.1 polish items still open after v0.1.1 ships:
+- Sandbox + Task.Supervisor test isolation cleanup (re-tighten Tests gate from `continue-on-error: true` to halt-on-failure)
+- Credo `strict: true` (currently false — re-tighten)
+- Dialyzer `--halt-exit-status` (currently advisory — fix the 230 type findings)
+- Managed-snippet drift detection in installer manifest (the 2 skipped install_idempotency tests)
+- Re-batch the 6 closed Dependabot PRs (setup-beam, checkout, cache, sigra, dependency-review-action, actionlint) — they auto-reopen on the next bump, or open manually via `gh pr reopen`
 
 **Wave 1 + 2 + 3 commits on main (8c2e7f3..87206d3):**
 
