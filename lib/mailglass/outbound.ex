@@ -67,9 +67,13 @@ defmodule Mailglass.Outbound do
   mixed tenants.
   """
 
+  # Worker is conditionally compiled — only export it when Oban is loaded.
+  # Keeps `mix compile --no-optional-deps --warnings-as-errors` clean.
+  @oban_exports if Code.ensure_loaded?(Oban.Worker), do: [Worker], else: []
+
   use Boundary,
     deps: [Mailglass],
-    exports: [Delivery, Projector, Worker]
+    exports: [Delivery, Projector] ++ @oban_exports
 
   alias Mailglass.{
     Clock,
@@ -297,7 +301,8 @@ defmodule Mailglass.Outbound do
          # I-07: stamp delivery.id into metadata BEFORE adapter sees the message.
          # Fake.deliver records metadata.delivery_id for TestAssertions correlation.
          rendered_with_id = Message.put_metadata(rendered, :delivery_id, delivery.id),
-         {:ok, dispatch_result} <- call_adapter_or_persist_failure(delivery, rendered_with_id, opts),
+         {:ok, dispatch_result} <-
+           call_adapter_or_persist_failure(delivery, rendered_with_id, opts),
          {:ok, %{delivery: updated}} <-
            persist_dispatched_multi(delivery, dispatch_result, rendered_with_id) do
       Projector.broadcast_delivery_updated(updated, :dispatched, %{

@@ -67,7 +67,11 @@ extra_checks = [
         excluded: []
       },
       requires: ["./credo_checks/*.ex"],
-      checks: extra_checks,
+      # `Mailglass.Error.*` is the project's intentional error namespace
+      # (see CLAUDE.md "Errors as a public API contract"). The default
+      # ExceptionNames check picks the dominant `*Error` suffix and flags
+      # `Mailglass.Error.BatchFailed` as inconsistent — false positive.
+      checks: extra_checks ++ [{Credo.Check.Consistency.ExceptionNames, false}],
       extra_checks: extra_checks
     }
   ]

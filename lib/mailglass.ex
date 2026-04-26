@@ -31,57 +31,63 @@ defmodule Mailglass do
   # sub-boundaries (Outbound, Events, Webhook, Admin) will follow the same
   # pattern: declare the sub-boundary with an explicit `deps:` list and
   # export the surface it consumes from here.
+  # Oban-dependent modules are conditionally compiled — only include them
+  # in Boundary exports when Oban is loaded. Keeps `mix compile
+  # --no-optional-deps --warnings-as-errors` clean.
+  @oban_exports if Code.ensure_loaded?(Oban.Worker),
+                  do: [Oban.TenancyMiddleware, Outbound.Worker],
+                  else: []
+
   use Boundary,
     deps: [],
-    exports: [
-      Message,
-      Telemetry,
-      Config,
-      Clock,
-      Repo,
-      Tenancy,
-      TenancyError,
-      Stream,
-      RateLimiter,
-      Suppression,
-      Tracking,
-      Tracking.Guard,
-      IdempotencyKey,
-      Schema,
-      Oban.TenancyMiddleware,
-      TemplateEngine,
-      TemplateEngine.HEEx,
-      TemplateError,
-      SendError,
-      SignatureError,
-      ConfigError,
-      Error.BatchFailed,
-      OptionalDeps.Oban,
-      Events,
-      Events.Event,
-      Events.Reconciler,
-      Webhook,
-      Webhook.CachingBodyReader,
-      Webhook.Plug,
-      Webhook.Router,
-      Outbound,
-      Outbound.Delivery,
-      Outbound.Projector,
-      Outbound.Worker,
-      Adapter,
-      Adapters.Fake,
-      Adapters.Swoosh,
-      PubSub,
-      PubSub.Topics,
-      Mailable,
-      Tracking,
-      Clock,
-      # Renderer exposed so MailglassAdmin.PreviewLive can call the
-      # production render pipeline directly (PREV-03 "no placeholder
-      # shape divergence"). The sub-boundary still blocks the reverse
-      # direction — Renderer cannot depend on admin code.
-      Renderer
-    ]
+    exports:
+      [
+        Message,
+        Telemetry,
+        Config,
+        Clock,
+        Repo,
+        Tenancy,
+        TenancyError,
+        Stream,
+        RateLimiter,
+        Suppression,
+        Tracking,
+        Tracking.Guard,
+        IdempotencyKey,
+        Schema,
+        TemplateEngine,
+        TemplateEngine.HEEx,
+        TemplateError,
+        SendError,
+        SignatureError,
+        ConfigError,
+        Error.BatchFailed,
+        OptionalDeps.Oban,
+        Events,
+        Events.Event,
+        Events.Reconciler,
+        Webhook,
+        Webhook.CachingBodyReader,
+        Webhook.Plug,
+        Webhook.Router,
+        Outbound,
+        Outbound.Delivery,
+        Outbound.Projector,
+        Adapter,
+        Adapters.Fake,
+        Adapters.Swoosh,
+        PubSub,
+        PubSub.Topics,
+        Mailable,
+        Tracking,
+        Clock,
+        # Renderer exposed so MailglassAdmin.PreviewLive can call the
+        # production render pipeline directly (PREV-03 "no placeholder
+        # shape divergence"). The sub-boundary still blocks the reverse
+        # direction — Renderer cannot depend on admin code.
+        Renderer
+      ] ++ @oban_exports
 
   @doc "Synchronous delivery. See `Mailglass.Outbound.deliver/2`."
   @doc since: "0.1.0"

@@ -66,28 +66,60 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     ctx = load_package_context(package)
 
     counts = %{create: 0, update: 0, unchanged: 0, conflict: 0}
-    {counts, ctx} = step(counts, :create, package, "build and unpack tarball", ctx, &build_tarball/1)
+
+    {counts, ctx} =
+      step(counts, :create, package, "build and unpack tarball", ctx, &build_tarball/1)
+
     {counts, ctx} = step(counts, :create, package, "capture file list", ctx, &capture_file_list/1)
     {counts, ctx} = step(counts, :unchanged, package, "compare allowlist", ctx, &verify_allowlist/1)
     {counts, ctx} = step(counts, :unchanged, package, "check denylist", ctx, &verify_denylist/1)
     {counts, ctx} = step(counts, :update, package, "check tarball size", ctx, &verify_size/1)
-    {counts, ctx} = step(counts, :unchanged, package, "check required files", ctx, &verify_required_files/1)
-    {counts, ctx} = step(counts, :unchanged, package, "check CHANGELOG section", ctx, &verify_changelog/1)
+
+    {counts, ctx} =
+      step(counts, :unchanged, package, "check required files", ctx, &verify_required_files/1)
+
+    {counts, ctx} =
+      step(counts, :unchanged, package, "check CHANGELOG section", ctx, &verify_changelog/1)
+
     {counts, ctx} = step(counts, :unchanged, package, "check mix metadata", ctx, &verify_metadata/1)
-    {counts, ctx} = step(counts, :unchanged, package, "check dependency shapes", ctx, &verify_deps/1)
 
-    {counts, ctx} = step(counts, :unchanged, package, "check linked-version constraint", ctx, &verify_linked_constraint/1)
+    {counts, ctx} =
+      step(counts, :unchanged, package, "check dependency shapes", ctx, &verify_deps/1)
 
-    {counts, ctx} = step(counts, :unchanged, package, "check prod deps resolution", ctx, &verify_prod_deps/1)
-    {counts, ctx} = step(counts, :unchanged, package, "compile tarball in isolation", ctx, &verify_compile/1)
+    {counts, ctx} =
+      step(
+        counts,
+        :unchanged,
+        package,
+        "check linked-version constraint",
+        ctx,
+        &verify_linked_constraint/1
+      )
+
+    {counts, ctx} =
+      step(counts, :unchanged, package, "check prod deps resolution", ctx, &verify_prod_deps/1)
+
+    {counts, ctx} =
+      step(counts, :unchanged, package, "compile tarball in isolation", ctx, &verify_compile/1)
+
     {counts, ctx} = step(counts, :update, package, "run hex.audit", ctx, &verify_audit/1)
-    {counts, ctx} = step(counts, :update, package, "capture hex.outdated advisory", ctx, &capture_outdated/1)
+
+    {counts, ctx} =
+      step(counts, :update, package, "capture hex.outdated advisory", ctx, &capture_outdated/1)
+
     {counts, ctx} = step(counts, :update, package, "write reviewer summary", ctx, &write_summary/1)
 
     {counts, _ctx} =
-      step(counts, if(keep?, do: :unchanged, else: :update), package, cleanup_label(keep?), ctx, fn ctx ->
-        cleanup(ctx, keep?)
-      end)
+      step(
+        counts,
+        if(keep?, do: :unchanged, else: :update),
+        package,
+        cleanup_label(keep?),
+        ctx,
+        fn ctx ->
+          cleanup(ctx, keep?)
+        end
+      )
 
     Mix.shell().info(
       "Pre-publish check result for #{ctx.package}: create=#{counts.create} update=#{counts.update} " <>
@@ -182,7 +214,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
             node
           end
 
-        node -> node
+        node ->
+          node
       end)
 
       raise "Delivery blocked: cannot find #{name}/#{arity} in mix.exs"
@@ -325,13 +358,11 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   end
 
   defp allowlist_diff(expected, actual) do
-    (
-      [
-      "--- #{Enum.join(["expected"], "/")}",
-      "+++ #{Enum.join(["actual"], "/")}",
-      "@@ allowlist diff @@"
-      ] ++ Enum.map(expected -- actual, &"- #{&1}") ++ Enum.map(actual -- expected, &"+ #{&1}")
-    )
+    ([
+       "--- #{Enum.join(["expected"], "/")}",
+       "+++ #{Enum.join(["actual"], "/")}",
+       "@@ allowlist diff @@"
+     ] ++ Enum.map(expected -- actual, &"- #{&1}") ++ Enum.map(actual -- expected, &"+ #{&1}"))
     |> Enum.join("\n")
   end
 
@@ -405,7 +436,10 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     if ctx.package == :mailglass_admin do
       missing =
         missing ++
-          Enum.reject(["priv/static/app.css", "priv/static/mailglass-logo.svg"], &MapSet.member?(paths, &1))
+          Enum.reject(
+            ["priv/static/app.css", "priv/static/mailglass-logo.svg"],
+            &MapSet.member?(paths, &1)
+          )
 
       css = Enum.find(logical_files, &(&1.path == "priv/static/app.css"))
 
@@ -418,7 +452,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
       woff2_count =
         Enum.count(logical_files, fn file ->
-          String.starts_with?(file.path, "priv/static/fonts/") and String.ends_with?(file.path, ".woff2")
+          String.starts_with?(file.path, "priv/static/fonts/") and
+            String.ends_with?(file.path, ".woff2")
         end)
 
       if woff2_count < 1 do
@@ -499,7 +534,9 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     links = eval_ast(keyword_value(package_body, :links), ctx.attrs)
 
     checks = [
-      {is_binary(description) and byte_size(description) <= 300 and String.trim_leading(description) == description and not String.ends_with?(description, "."), "description"},
+      {is_binary(description) and byte_size(description) <= 300 and
+         String.trim_leading(description) == description and not String.ends_with?(description, "."),
+       "description"},
       {licenses == ["MIT"], "licenses"},
       {is_map(links) and Map.get(links, "GitHub") == source_url, "links.GitHub"},
       {ctx.package != :mailglass_admin or Map.has_key?(links, "HexDocs"), "links.HexDocs"},
@@ -511,7 +548,13 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
     case Enum.find(checks, fn {ok, _} -> not ok end) do
       nil ->
-        Map.merge(ctx, %{description: description, source_url: source_url, homepage_url: homepage_url, licenses: licenses, links: links})
+        Map.merge(ctx, %{
+          description: description,
+          source_url: source_url,
+          homepage_url: homepage_url,
+          licenses: licenses,
+          links: links
+        })
 
       {_, "description"} ->
         fail_step(
@@ -565,6 +608,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   defp verify_deps(ctx) do
     deps_body = find_function_body(ctx.ast, :deps, 0)
+
     helper =
       if ctx.mix_publish? and ctx.helper_body,
         do: eval_mailglass_dep(ctx.helper_body),
@@ -665,7 +709,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   defp verify_prod_deps(ctx) do
     tmp_dir =
-      Path.join(System.tmp_dir!(),
+      Path.join(
+        System.tmp_dir!(),
         "mailglass-publish-check-#{ctx.package_name}-deps-#{System.unique_integer([:positive])}"
       )
 
@@ -674,7 +719,11 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     File.cp!(ctx.source_path, Path.join(tmp_dir, "mix.exs"))
 
     {output, status} =
-      System.cmd("mix", ["deps.get"], cd: tmp_dir, env: [{"MIX_ENV", "prod"}], stderr_to_stdout: true)
+      System.cmd("mix", ["deps.get"],
+        cd: tmp_dir,
+        env: [{"MIX_ENV", "prod"}],
+        stderr_to_stdout: true
+      )
 
     File.rm_rf!(tmp_dir)
 
@@ -689,7 +738,12 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   end
 
   defp verify_compile(ctx) do
-    mix_home = Path.join(System.tmp_dir!(), "mix-publish-check-#{ctx.package_name}-#{System.unique_integer([:positive])}")
+    mix_home =
+      Path.join(
+        System.tmp_dir!(),
+        "mix-publish-check-#{ctx.package_name}-#{System.unique_integer([:positive])}"
+      )
+
     compile_root = compile_root(ctx)
 
     File.rm_rf!(mix_home)
@@ -766,7 +820,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
     if ctx.package == :mailglass_admin do
       temp_dir =
-        Path.join(System.tmp_dir!(),
+        Path.join(
+          System.tmp_dir!(),
           "mailglass-publish-check-#{ctx.package_name}-compile-#{System.unique_integer([:positive])}"
         )
 
@@ -843,7 +898,10 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   defp write_summary(ctx) do
     if ctx.summary_path do
       prev = ctx.manifest_version || "none"
-      version_delta = if prev == "none", do: "none → v#{ctx.version}", else: "v#{prev} → v#{ctx.version}"
+
+      version_delta =
+        if prev == "none", do: "none → v#{ctx.version}", else: "v#{prev} → v#{ctx.version}"
+
       size_mb = Float.round(ctx.total_bytes / 1_048_576, 2)
       top_files = ctx.files |> Enum.sort_by(&{-&1.size, &1.path}) |> Enum.take(10)
 
@@ -866,7 +924,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
           "",
           "| Path | Bytes |",
           "|---|---|"
-        ] ++ Enum.map(top_files, fn file -> "| #{file.path} | #{file.size} |" end) ++
+        ] ++
+          Enum.map(top_files, fn file -> "| #{file.path} | #{file.size} |" end) ++
           [
             "",
             "<details><summary>Full file list (#{length(ctx.files)})</summary>",
@@ -941,7 +1000,12 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   defp with_disabled_otel(fun) do
     original =
-      for key <- ["OTEL_SDK_DISABLED", "OTEL_TRACES_EXPORTER", "OTEL_METRICS_EXPORTER", "OTEL_LOGS_EXPORTER"],
+      for key <- [
+            "OTEL_SDK_DISABLED",
+            "OTEL_TRACES_EXPORTER",
+            "OTEL_METRICS_EXPORTER",
+            "OTEL_LOGS_EXPORTER"
+          ],
           into: %{} do
         {key, System.get_env(key)}
       end
@@ -961,5 +1025,4 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       end)
     end
   end
-
 end
