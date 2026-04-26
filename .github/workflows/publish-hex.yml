@@ -112,7 +112,11 @@ jobs:
   publish-core:
     runs-on: ubuntu-latest
     needs: [gate-ci-green]
-    if: ${{ github.event.inputs.package != 'mailglass_admin' }}
+    if: |
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.package != 'mailglass_admin') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_branch, 'mailglass-sibling-group-v'))
     environment: hex-publish
     steps:
       - name: Checkout
@@ -166,7 +170,12 @@ jobs:
     if: |
       always() &&
       (needs.publish-core.result == 'success' || needs.publish-core.result == 'skipped') &&
-      github.event.inputs.package != 'mailglass'
+      (
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.package != 'mailglass') ||
+        (github.event_name == 'workflow_run' &&
+         github.event.workflow_run.conclusion == 'success' &&
+         startsWith(github.event.workflow_run.head_branch, 'mailglass-sibling-group-v'))
+      )
     environment: hex-publish
     steps:
       - name: Checkout
