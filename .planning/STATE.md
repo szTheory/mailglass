@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.1.0
+milestone: v0.1.1
 milestone_name: packages to Hex.pm
-status: executing
-stopped_at: "v0.1.0 PUBLISHED to Hex.pm; mid-cycle on v0.1.1 fast-follow (Release-As push pending)"
-last_updated: "2026-04-26T16:18:00.000Z"
+status: shipped
+stopped_at: "v0.1.1 SHIPPED to Hex.pm; v0.1.2 polish queue captured as TODOs"
+last_updated: "2026-04-26T18:12:00.000Z"
 last_activity: 2026-04-26
 progress:
   total_phases: 8
@@ -21,78 +21,93 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 07.1 — publish-v0-1-0-packages-to-hex-pm
+**Current focus:** Phase 07.1 — publish-v0-1-X-packages-to-hex-pm (v0.1.1 shipped; v0.1.2 polish pending)
 
 ## Current Position
 
-Phase: 07.1 (publish-v0-1-0-packages-to-hex-pm) — **v0.1.0 SHIPPED**, mid-cycle on **v0.1.1 fast-follow**
-Status: see "## Resume here" section below
-Last activity: 2026-04-26 -- v0.1.0 published; v0.1.1 installer + Swoosh fixes pushed (cf287f9); waiting to push Release-As: 0.1.1
+Phase: 07.1 — **v0.1.0 + v0.1.1 BOTH SHIPPED**
+Status: shipped (v0.1.1); v0.1.2 polish queue captured as TODOs in `.planning/todos/pending/`
+Last activity: 2026-04-26 -- v0.1.1 published end-to-end after multi-step recovery (release-please dep-pin sync via workflow sed, force-tag to CI-green SHA, manual publish-hex dispatch).
 
-## Resume here (handoff for fresh context window)
+## What's live RIGHT NOW on Hex.pm
 
-### What's live RIGHT NOW on Hex.pm
+- ✅ `mailglass` 0.1.1 — https://hex.pm/packages/mailglass/0.1.1
+- ✅ `mailglass_admin` 0.1.1 — https://hex.pm/packages/mailglass_admin/0.1.1 (declares `mailglass == 0.1.1`)
+- ✅ HexDocs at https://hexdocs.pm/mailglass/0.1.1/ and /mailglass_admin/0.1.1/
+- ✅ v0.1.0 still listed (HexDocs at /mailglass/0.1.0/ etc.)
 
-- ✅ `mailglass` 0.1.0 — https://hex.pm/packages/mailglass/0.1.0
-- ✅ `mailglass_admin` 0.1.0 — https://hex.pm/packages/mailglass_admin/0.1.0
-- ✅ HexDocs at https://hexdocs.pm/mailglass/0.1.0/ and /mailglass_admin/0.1.0/
+**v0.1.1 fixed two adopter-blocking bugs from v0.1.0:**
+- `mix mailglass.install` no longer produces conflict sidecars on real Phoenix routers (anchor matching fixed in `cf287f9`)
+- Swoosh `:api_client` defaults to Finch (no more `Swoosh.ApiClient.Hackney missing` at boot)
 
-**v0.1.0 has known UX issues** (the publish itself succeeded; the smoke surfaced these):
-- `mix mailglass.install` produces conflict sidecars on real Phoenix routers (anchor mismatch)
-- Adopters get `Swoosh.ApiClient.Hackney missing` at boot (Swoosh's default api_client requires hackney dep)
+## v0.1.1 cycle outcome — surprises captured for next time
 
-These are fixed in `cf287f9` on `main` and ready to ship as v0.1.1.
+The Release-As push to PR-merge-to-Hex-publish was NOT a clean ~5-step flow. Three latent bugs surfaced and now have v0.1.2 TODOs:
 
-### Resume sequence (ordered, ~5 steps to v0.1.1 SHIPPED)
+1. **release-please's `extra-files` generic updater silently no-ops on a mix.exs already managed by the `elixir` release-type.** The `{:mailglass, "== <ver>"}` pin in `mailglass_admin/mix.exs` did NOT auto-rewrite — verified across two annotation forms. Fix: a sed step in `.github/workflows/release-please.yml` that runs after release-please-action. Fully working as of `9fc4009`. TODO: `.planning/todos/pending/2026-04-26-release-please-extra-files-no-op-on-managed-mix-exs.md`.
 
-1. **Push empty Release-As: 0.1.1 commit:**
-   ```
-   git commit --allow-empty -m "$(cat <<'EOF'
-   chore: release 0.1.1
+2. **publish-hex.yml's `workflow_run` gate condition uses `head_branch` startsWith check** — that branch is always `main` for our trigger pattern, never matches `mailglass-v*`. Auto-publish on tag creation is dead code; we manually dispatched via `workflow_dispatch` for both v0.1.0 and v0.1.1. TODO: `.planning/todos/pending/2026-04-26-publish-hex-workflow-run-gate-cant-detect-tag-creation.md`.
 
-   Release-As: 0.1.1
-   EOF
-   )"
-   git push origin main
-   ```
+3. **post-publish-smoke.yml has the same `head_branch` bug** — VERSION resolved to literal `"main"`, so `mix hex.info mailglass main` timed out at 5 min. The package WAS published successfully; the smoke harness just couldn't see it. TODO: `.planning/todos/pending/2026-04-26-post-publish-smoke-version-resolution-bug.md`. Recommended fix consolidates with the publish-hex gate fix (switch both to `push: tags: ['mailglass-v*', 'mailglass_admin-v*']`).
 
-2. **Wait for release-please workflow** (~30s) to open a v0.1.1 PR. It updates `@version` in both `mix.exs` files to `0.1.1`, plus the literal `"== 0.1.0"` → `"== 0.1.1"` in `mailglass_admin/mix.exs`, plus CHANGELOG entries.
+4. **Installer golden snapshots embed package version literals** and were not regenerated as part of release-please's PR — CI on the v0.1.1 merge commit (`c5169d6`) failed at "Installer Golden Gate". Recovered by force-moving both v0.1.1 tags from `c5169d6` to `aaf856a` (the goldens-regen commit). TODO: `.planning/todos/pending/2026-04-26-add-installer-goldens-to-publish-check.md` adds a goldens dry-run to `mix mailglass.publish.check` so future bumps catch this in pre-publish.
 
-3. **Squash-merge the PR** when its mergeable state goes CLEAN. Tags `mailglass-v0.1.1` and `mailglass_admin-v0.1.1` auto-create. publish-hex.yml's workflow_run trigger fires correctly now (gate fix from `217f93c` matches `mailglass-v*` head_branch).
+5. **CLAUDE.md leaks into HexDocs** at https://hexdocs.pm/mailglass/claude.html (extras list in `mix.exs:262`). Cosmetic but embarrassing. TODO: `.planning/todos/pending/2026-04-26-exclude-claude-md-from-hexdocs.md`.
 
-4. **`gate-ci-green`** queries CI on the merge SHA. If green, publish-core + publish-admin run automatically (no required reviewer).
+## Commits added during v0.1.1 cycle (since v0.1.0)
 
-5. **Verify**:
-   - `mix hex.info mailglass 0.1.1` — live, not retired
-   - `mix hex.info mailglass_admin 0.1.1` — live, not retired
-   - `curl -fsI https://hexdocs.pm/mailglass/0.1.1/` — HTTP 200
-   - `curl -fsI https://hexdocs.pm/mailglass_admin/0.1.1/` — HTTP 200
-   - Watch `post-publish-smoke.yml` auto-fire on workflow_run; OR dispatch manually with `version=0.1.1`. Should be FULLY GREEN this time (no --force, no hackney pin needed — the v0.1.1 install template fixes both).
-
-6. **If smoke green**: close the auto-created `publish-smoke-failed` tracker issue (likely #9 or whichever post-v0.1.0 ones still exist). Update this STATE.md frontmatter to `status: shipped`.
-
-### If publish-hex auto-fires from workflow_run instead of workflow_dispatch
-
-After step 3 (PR merge), publish-hex.yml's `workflow_run` trigger fires automatically because the linked-versions tag matches `mailglass-v*`. **You do not need to manually dispatch** — just wait. The whole publish flows from PR merge.
-
-Manual workflow_dispatch only needed if workflow_run path fails for some reason. Command:
-```
-gh workflow run publish-hex.yml --repo szTheory/mailglass --ref main \
-  -f tag=mailglass-v0.1.1 -f package=both -f dry_run=false
-```
-
-### Current commits on main (since v0.1.0 publish)
-
-- `eb990f1` docs(todos): capture verify.phase_NN rename for v0.1.1
 - `cf287f9` feat(installer): match real Phoenix router anchor + Swoosh Finch default
+- `eb990f1` docs(todos): capture verify.phase_NN rename for v0.1.1
+- `8dd074c` docs(todos): capture CLAUDE.md leak in HexDocs for v0.1.2
+- `bfd001f` chore: release 0.1.1 (empty Release-As trigger)
+- `eb0370f` fix(release-please): bump mailglass_admin -> mailglass dep pin on every release (failed extra-files attempt #1)
+- `e0b1edb` fix(release-please): move x-release-please-version annotation onto its own line (failed attempt #2)
+- `9fc4009` fix(release-please): sync mailglass_admin -> mailglass dep pin via workflow sed (Path 2 — works)
+- `c5169d6` chore: release main (#10) [squash merge of release-please PR; CI red here]
+- `2d7c571` docs(todos): capture publish-hex workflow_run gate dead code
+- `aaf856a` fix(install): regenerate installer golden snapshots for v0.1.1 version bump [v0.1.1 tags moved here]
+- `cde6223` docs(todos): add installer golden check to mix mailglass.publish.check
+- TBD this session: post-publish-smoke version-resolution TODO commit
 
-These ARE the v0.1.1 fix payload. Release-please will package them as the 0.1.1 CHANGELOG.
+## v0.1.2 plan-of-record
 
-### Tasks tracker reflects this state
+Bundle these into the next release:
 
-`#1`–`#9` and `#7` are completed. `#10` (Release-As push) is in_progress, `#11` (smoke verify), `#12` (final STATE.md) pending.
+1. **`exclude-claude-md-from-hexdocs.md`** — drop `CLAUDE.md` from `mix.exs:262` extras + `mix.exs:265` Overview group.
+2. **`add-installer-goldens-to-publish-check.md`** — wire installer golden test into `mix mailglass.publish.check` so version bumps fail pre-publish, not at post-merge CI.
+3. **`publish-hex-workflow-run-gate-cant-detect-tag-creation.md`** — switch publish-hex.yml trigger to `on: push: tags: ['mailglass-v*', 'mailglass_admin-v*']`.
+4. **`post-publish-smoke-version-resolution-bug.md`** — fix VERSION resolution; consolidates naturally with #3.
+5. **`rename-verify-phase-nn-aliases-to-semantic-names.md`** — `verify.phase_07` → `verify.installer` etc.
+6. **`mailable-api-too-much-swoosh-leakage.md`** — adopter feedback on Mailable API Swoosh leakage. **v0.2 design discussion**, not v0.1.2.
 
-### Notes for v0.1.2+ (do NOT do during v0.1.1)
+After fixing #1–#5 the next release should flow cleanly without the recovery sequence we just did.
+
+## Resume sequence for v0.1.2 (fresh context window)
+
+1. Pick from `.planning/todos/pending/` which fixes go in v0.1.2.
+2. For each: implement the fix, run relevant tests locally, commit with `fix(scope):` or `chore:` Conventional Commit prefix.
+3. Push empty `Release-As: 0.1.2` commit (only if there are user-facing changes that warrant a numbered release; pure release-engineering fixes can ride on the next adopter-facing release).
+4. release-please opens v0.1.2 PR. The Path 2 sed step in `.github/workflows/release-please.yml` will sync the dep pin automatically.
+5. Squash-merge.
+6. **Manually dispatch publish-hex** (until TODO #3 above is fixed):
+   ```
+   gh workflow run publish-hex.yml --repo szTheory/mailglass --ref main \
+     -f tag=mailglass-v0.1.2 -f package=both -f dry_run=false
+   ```
+7. Verify Hex + HexDocs links.
+
+## Verification commands (run anytime to confirm shipped state)
+
+```sh
+mix hex.info mailglass 0.1.1
+mix hex.info mailglass_admin 0.1.1
+curl -fsI https://hexdocs.pm/mailglass/0.1.1/
+curl -fsI https://hexdocs.pm/mailglass_admin/0.1.1/
+gh release view mailglass-v0.1.1 --repo szTheory/mailglass
+gh release view mailglass_admin-v0.1.1 --repo szTheory/mailglass
+```
+
+### Notes for v0.1.2+ (still applicable from prior cycle)
 
 Captured as todos in `.planning/todos/pending/`:
 - `2026-04-26-rename-verify-phase-nn-aliases-to-semantic-names.md` — `mix verify.phase_07` and friends are GSD-internal jargon; rename to `verify.installer` etc.
