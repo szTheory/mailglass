@@ -1,618 +1,523 @@
-# Stack Research — mailglass
+# Stack Research — mailglass v0.2
 
-**Domain:** Phoenix-native transactional email framework (3 sibling Hex packages)
-**Researched:** 2026-04-21
-**Overall confidence:** HIGH (all primary versions verified against Hex.pm in April 2026; ecosystem decisions ground in `prompts/` corpus + 4 prior shipped libs)
+**Domain:** Phoenix-native transactional email framework — v0.2 "Production-Credible Core" milestone additions
+**Researched:** 2026-04-26
+**Milestone scope:** Subsequent milestone. Existing v0.1 stack already validated. This file covers only the NEW stack questions for v0.2's three pillars: API stability tooling, RFC 8058 deliverability, auto-suppression, and release-engineering hardening.
 
-> **How to read this doc.** Most technology choices for mailglass are already locked by the upstream research corpus in `prompts/` and `PROJECT.md`. This file's job is to (a) pin **specific 2026 versions** to those decisions, (b) give downstream consumers (roadmap, per-phase planning) a single grep-able table, (c) flag the few places where I'm filling a genuine gap rather than re-citing prior research, and (d) say loudly what NOT to use and why.
-
----
-
-## TL;DR — the locked stack
-
-| Layer | Pick | Version (Apr 2026) | Confidence |
-|---|---|---|---|
-| Runtime | Elixir / OTP | 1.18+ / 27+ | HIGH (PROJECT.md D-06) |
-| Web framework | Phoenix | `~> 1.8` (1.8.5) | HIGH |
-| LiveView | phoenix_live_view | `~> 1.1` (1.1.28) | HIGH |
-| ORM | ecto + ecto_sql | `~> 3.13` (3.13.5) | HIGH |
-| DB driver | postgrex | `~> 0.22` (0.22.0) | HIGH |
-| Plug | plug | `~> 1.18` (1.19.1) | HIGH |
-| Mailer transport | swoosh | `~> 1.25` (1.25.0) | HIGH (PROJECT.md D-07) |
-| HTML→text + parser | floki | `~> 0.38` (0.38.1) | HIGH |
-| CSS inliner | premailex | `~> 0.3` (0.3.20) | MEDIUM (slow-cadence dep) |
-| Option validation | nimble_options | `~> 1.1` (1.1.1) | HIGH |
-| Telemetry | telemetry | `~> 1.4` (1.4.1) | HIGH |
-| i18n (UI strings) | gettext | `~> 1.0` (1.0.2) | HIGH |
-| Background jobs (optional) | oban | `~> 2.21` (2.21.1) | HIGH (PROJECT.md D-07) |
-| MJML renderer (optional) | **mjml** (NOT `mrml`) | `~> 5.3` (5.3.1) | HIGH — see §3.4 correction |
-| Tracing (optional) | opentelemetry | `~> 1.7` (1.7.0) | HIGH |
-| SMTP server (optional, v0.5+ inbound) | gen_smtp | `~> 1.3` (1.3.0) | HIGH |
-| Auth adapter (optional) | sigra | `~> 0.2` (0.2.0) | HIGH |
-| Property tests | stream_data | `~> 1.3` (1.3.0) | HIGH |
-| Behaviour mocks | mox | `~> 1.2` (1.2.0) | HIGH |
-| Coverage | excoveralls | `~> 0.18` (0.18.5) | MEDIUM |
-| Static type analysis | dialyxir | `~> 1.4` (1.4.7) | HIGH |
-| Linter | credo | `~> 1.7` (1.7.18) | HIGH |
-| Docs | ex_doc | `~> 0.40` (0.40.1) | HIGH |
-| CI runtime | erlef/setup-beam | `v1.24.0` | HIGH |
-| Release automation | googleapis/release-please-action | `v4.4.1` | HIGH |
-| Workflow lint | rhysd/actionlint | `v1.7.12` | HIGH |
-| Supply-chain check | actions/dependency-review-action | `v4.9.0` | HIGH |
-
-**One-line summary:** Phoenix 1.8 + LiveView 1.1 + Ecto 3.13 + Postgres + Swoosh 1.25 + the `nimble_*`/`telemetry`/`gettext`/`floki`/`premailex`/`plug` standard library set, with `oban` / `opentelemetry` / `mjml` / `gen_smtp` / `sigra` as optional deps guarded by `Code.ensure_loaded?/1`. Test stack is ExUnit + StreamData + Mox + a stateful in-process Fake adapter (the release gate). CI is GitHub Actions with setup-beam, Release Please, Hex publish from a protected ref.
+> **How to read this doc.** The v0.1 stack is fully validated in `.planning/milestones/v0.1-research/STACK.md` and the current `mix.exs`. This file answers ONLY the new questions for v0.2: what tooling is needed for codemods, RFC 8058 headers, Oban scheduling, Credo strict, Dialyzer halt, and GitHub Actions tag-push triggers. Anything already in `mix.exs` is NOT re-researched.
 
 ---
 
-## 1. Mandatory dependencies
+## TL;DR — v0.2 additions and corrections
 
-These ship in `mix.exs` `deps/0` without `optional: true`. Every host app gets them. CI must pass `mix compile --warnings-as-errors --no-optional-deps` against this exact set.
-
-### 1.1 Core framework (verified Apr 2026)
-
-| Package | Version requirement | Latest released | Last update | Why locked |
-|---|---|---|---|---|
-| `phoenix` | `~> 1.8` | **1.8.5** | 2026-03-05 | PROJECT.md D-06 (bleeding-edge floor). Phoenix 1.8 brings `scope`s, magic-link auth, daisyUI default, AGENTS.md generation. Hard required for `mailglass_admin` LiveView mounts. |
-| `phoenix_live_view` | `~> 1.1` | **1.1.28** | 2026-03-27 | Locked by D-06. 1.1's colocated hooks (`<script :type={Phoenix.LiveView.ColocatedHook}>`) are the right answer for the dev preview dashboard's device-toggle JS — write hooks inline in the same module instead of polluting a global namespace. |
-| `ecto_sql` | `~> 3.13` | **3.13.5** | 2026-03-03 | Hard required (D-06). 3.13 ships `@schema_redact` for auto-redacting recipient fields from logs/inspects — directly relevant to the "no PII in logs" telemetry rule (engineering-DNA §2.5). |
-| `ecto` | `~> 3.13` | **3.13.x** | (transitive) | Pulled in by `ecto_sql`; pin both for Hex package metadata clarity. |
-| `postgrex` | `~> 0.22` | **0.22.0** | 2026-01-10 | PROJECT.md "Postgres only at v0.1." MySQL/SQLite explicitly out — JSONB, partial unique indexes, and `BEFORE UPDATE OR DELETE` triggers (the immutability gate on `mailglass_events`) are load-bearing. |
-| `plug` | `~> 1.18` | **1.19.1** | 2025-12-09 | Required by Phoenix; mailglass uses it directly for `Mailglass.Webhook.Plug` and `Mailglass.Webhook.CachingBodyReader`. |
-| `swoosh` | `~> 1.25` | **1.25.0** | 2026-04-02 | THE foundation. mailglass composes on top of Swoosh, never replaces it (PROJECT.md "what this is", §1 of "Phoenix needs an email framework"). 1.25 was released 19 days before this research and is current. ~39k monthly downloads, 19M all-time, 15+ adapters. |
-| `nimble_options` | `~> 1.1` | **1.1.1** | (last release May 2024 — feature-complete) | Validates `Mailglass.Config` schema at boot via `resolve!/1`. NimbleOptions is the ecosystem-standard option-validation library per `prompts/elixir-opensource-libs-best-practices-deep-research.md` (§2). Stable cadence reflects feature-completeness, not abandonment. |
-| `telemetry` | `~> 1.4` | **1.4.1** | 2026-03-09 | The 4-level naming convention (`[:mailglass, :domain, :resource, :action, :start\|:stop\|:exception]`) is locked in engineering-DNA §2.5. Telemetry is non-negotiable infrastructure for every mailglass operation. |
-| `gettext` | `~> 1.0` | **1.0.2** | 2025-11-08 | Hard required for "Gettext-first i18n with `dgettext("emails", ...)` convention" (PROJECT.md v0.1 active req). Note: gettext jumped to 1.0 in late 2025 — this is the new stable line. |
-| `premailex` | `~> 0.3` | **0.3.20** | 2025-01-20 | Canonical Elixir CSS inliner for the HEEx → inline CSS → minify → plaintext pipeline (PROJECT.md v0.1, "Phoenix needs an email framework" §3 component-native rec). ⚠️ **Slow cadence** (last release ~15 months ago) — but no credible replacement exists. Mark as MEDIUM confidence on long-term maintenance. |
-| `floki` | `~> 0.38` | **0.38.1** | 2026-03-17 | Used for the auto-plaintext step (HTML → text via DOM walking) and for HTML test assertions in `Mailglass.TestAssertions`. Note: LiveView 1.1 switched its internal parser from Floki to lazy_html — but Floki remains the right pick for our use case (ad-hoc transformation, not parser hot-path). |
-
-### 1.2 Why these and not alternatives
-
-| Alternative considered | Why we picked the recommended one |
-|---|---|
-| `bamboo` instead of `swoosh` | Bamboo is in maintenance mode at beam-community. Phoenix 1.7+ generators ship Swoosh as default. Swoosh is the active, growing dep with adapter network effect (15+ providers). PROJECT.md "Out of Scope" explicitly excludes Bamboo backwards-compat. |
-| `vix`/`xq`/raw `Regex` instead of `floki` | Floki is the proven, telemetry-friendly default; LiveView 1.1's switch to lazy_html is for hot-path streaming diff use cases, not for one-shot HTML→text where Floki's ergonomics win. |
-| `mjml`/`mjml_eex` as the **default** renderer | PROJECT.md D-18 explicitly locks HEEx + Phoenix.Component as default; MJML is opt-in via `Mailglass.TemplateEngine.MJML`. The "killer differentiator is *not needing* MJML" (D-18 rationale + "Phoenix needs an email framework" §3). |
-| `mua` directly instead of `swoosh` | Swoosh now integrates `mua` internally for SMTP transport (per "Phoenix needs an email framework" prior-art table). Adopting Swoosh inherits this for free. |
-| Hand-rolled HMAC verification per provider in lib code | Yes, per provider — but routed through a single `Mailglass.Webhook.SignatureVerifier` behaviour with per-provider impls. Pattern is from `lattice_stripe/lib/lattice_stripe/webhook/`. |
+| Item | v0.1 baseline | v0.2 finding | Priority |
+|------|---------------|--------------|----------|
+| AST codemod tool | (not in scope) | **Igniter `~> 0.7`** over raw Sourceror for `mix mailglass.upgrade.v0_2` | TS — required for upgrade task |
+| `@deprecated` attribute | (not needed) | Built into Elixir 1.18+; no new dep required | TS — zero cost |
+| Sourceror | (not in scope) | `~> 1.12`, still maintained; **Igniter wraps it** so take Igniter as the dep | TS (via Igniter) |
+| Phoenix.Token for unsub | v0.1 STACK.md documented it | API unchanged in Phoenix 1.8; no new dep | TS — zero cost |
+| RFC 8058 Hex package | unknown | **No package exists.** Build it in-house with `Phoenix.Token` + `Swoosh.Email.header/3` | TS — in-house |
+| Oban OSS cron scheduling | `~> 2.21` optional dep | `Oban.Plugins.Cron` adequate for soft-bounce escalation; `Oban.Job.schedule_in: {N, :days}` also usable | TS — no Oban Pro needed |
+| Credo `--strict` | disabled in v0.1 | Flag is `mix credo --strict`; already correct in v0.1 STACK.md | TS — re-enable |
+| Dialyzer halt-exit flag | called "halt-exit-status" in STATE.md | **Flag is `--ignore-exit-status` (the inverse).** Default `mix dialyzer` ALREADY halts on warnings. Remove advisory `--ignore-exit-status` to re-tighten CI | TS — flag name wrong in planning docs |
+| `actions/checkout` | `v4` | Latest is **v6.0.2** (Jan 9, 2025 — note: GitHub Actions v-major is `v4`, but the latest patch is 4.x unless pinned by SHA) | DF — update SHA pin |
+| `googleapis/release-please-action` | `v4.4.1` | **v5.0.0 released April 22, 2026** (Node 24 runtime, release-please 17.6.0). Only breaking change: Node 24 runtime. | TS — evaluate v5 |
+| `erlef/setup-beam` | `v1.24.0` | Still current as of research date | HIGH — no change |
+| `on: push: tags:` syntax | existing | **No syntax changes in 2026.** Glob patterns work as before. | HIGH — no change |
 
 ---
 
-## 2. Optional dependencies (with `optional: true` + `Code.ensure_loaded?/1` guards)
+## 1. API stability tooling
 
-CI must pass `mix compile --no-optional-deps --warnings-as-errors` to prove the lib doesn't accidentally hard-link any of these.
+### 1.1 `@deprecated` — built into Elixir 1.18+, zero new dep
 
-| Package | Version requirement | Latest released | Last update | Rationale | Confidence |
-|---|---|---|---|---|---|
-| `oban` | `~> 2.21` | **2.21.1** | 2026-03-26 | PROJECT.md D-07: `deliver_later/2` requires Oban; without it, falls back to `Task.Supervisor` with a one-time runtime warning. Oban Web went OSS Jan 2025 (Apache 2.0) — adopters now get a free dashboard, which makes recommending Oban frictionless. We do **not** require Oban Pro for any mailglass v0.x feature. | HIGH |
-| `opentelemetry` | `~> 1.7` | **1.7.0** | 2025-10-17 | Engineering-DNA §2.5 requires conditional OTel bridge: `Code.ensure_loaded?(:opentelemetry)` gate, `@compile {:no_warn_undefined, :opentelemetry}` to silence the optional-dep warning. Adopters get distributed tracing across send → adapter → webhook lifecycle without paying the dep cost if they're not using OTel. | HIGH |
-| `mjml` | `~> 5.3` | **5.3.1** | 2026-02-13 | **⚠️ CORRECTION** — PROJECT.md/research docs reference an optional `:mrml` dep. The actual Hex package is **`:mjml`** (Adopt-A-Posss / akoutmos's `mjml_nif` repo), which provides Rust NIF bindings to the underlying Rust `mrml` crate. There is no `:mrml` Hex package. Use `{:mjml, "~> 5.3", optional: true}`. Powers `Mailglass.TemplateEngine.MJML` for adopters who want MJML as the rendering pipeline. NIF ships precompiled (Rust toolchain not required by adopters). | HIGH (verified Hex.pm 404 on `mrml`, 200 on `mjml`) |
-| `gen_smtp` | `~> 1.3` | **1.3.0** | 2025-05-30 | Powers the `:smtp` Swoosh adapter. We don't list it in `mailglass` v0.1 deps because Swoosh handles the dep. **`mailglass_inbound` v0.5 will require it for the SMTP relay ingress** (PROJECT.md v0.5+ inbound section). Stable, maintained. | HIGH |
-| `sigra` | `~> 0.2` | **0.2.0** | 2026-04-20 | Engineering-DNA §3.3: `Mailglass.Auth.Sigra` adapter auto-wires when sigra is loaded. Currently pre-1.0 (single-developer, version 0.2.0 released yesterday). Optional. Don't gate any required behaviour on sigra. | MEDIUM (pre-1.0; bus-factor risk) |
+**Verified: Elixir 1.18 (and 1.19 current) supports two deprecation mechanisms:**
 
-### 2.1 Optional-dep discipline
-
-Engineering-DNA §3.4 + `prompts/elixir-opensource-libs-best-practices-deep-research.md` §6 both prescribe the same shape:
-
+**Hard deprecation (compiler warning at call sites):**
 ```elixir
-# mix.exs
-{:oban,           "~> 2.21",  optional: true},
-{:opentelemetry,  "~> 1.7",   optional: true},
-{:mjml,           "~> 5.3",   optional: true},
-{:gen_smtp,       "~> 1.3",   optional: true},
-{:sigra,          "~> 0.2",   optional: true},
+@deprecated "Use Mailglass.Message.to/2 instead"
+def put_to(mailable, address) do
+  # v0.1 API path — delegates to new setter
+  Mailglass.Message.to(mailable, address)
+end
+```
+The Mix compiler automatically detects calls to `@deprecated` functions and emits warnings during compilation of the *caller's* code. This is exactly what v0.2 needs for one-cycle BC on `~> 0.1` adopters.
+
+**Soft deprecation (docs only, no warning):**
+```elixir
+@doc deprecated: "Use Mailglass.Message.to/2 instead"
+def put_to(mailable, address), do: ...
+```
+Use soft deprecation when a function must remain public but the deprecation message would be too noisy (e.g., an internal callback that shouldn't spill into adopter logs).
+
+**Recommendation:** Use hard `@deprecated` on all v0.1 public-surface Mailable functions that the new Message setter API replaces. No new dep. No version constraint change.
+
+**Confidence:** HIGH (verified against Elixir 1.18.4 Module docs).
+
+### 1.2 Sourceror `~> 1.12` — maintained, but use via Igniter
+
+**Sourceror status:**
+- Current version: **1.12.0** (released March 6, 2026)
+- Downloads: 108k/month, 3.9M all-time
+- 38 dependent packages
+- Actively maintained
+
+**Core API for codemods:**
+```elixir
+# Parse source to extended AST (preserves comments)
+ast = Sourceror.parse_string!(source)
+
+# Traverse and transform (postwalk accumulates changes)
+{patched_ast, patches} = Sourceror.postwalk(ast, [], fn
+  {:use, meta, [{:__aliases__, _, [:Mailglass, :Mailable]}, opts]} = node, acc ->
+    # Rewrite use Mailglass.Mailable, from: ... to new API
+    patch = Sourceror.Patch.rename_call(node, meta, :Mailable2)
+    {node, [patch | acc]}
+  node, acc ->
+    {node, acc}
+end)
+
+# Apply patches (only modified ranges rewritten; rest unchanged)
+patched_source = Sourceror.patch_string(source, patches)
 ```
 
+**However: use Igniter instead of raw Sourceror for `mix mailglass.upgrade.v0_2`.**
+
+### 1.3 Igniter `~> 0.7` — the recommended codemod foundation (TS)
+
+**Igniter is the 2026 ecosystem standard for mix-task-based codemods.** It wraps Sourceror + Rewrite + Mix task composition into a higher-level API that is purpose-built for the `mix mailglass.upgrade.v0_2` use case.
+
+- Current version: **0.7.9** (released April 11, 2026)
+- Built by: Ash Framework team (Zach Daniel)
+- Adopted by: Ash itself, Phoenix, and Igniter-aware installers across the ecosystem
+
+**Why Igniter over raw Sourceror:**
+1. Built-in dry-run mode (`--dry-run`) for safe preview
+2. Composable task API — `mix mailglass.upgrade.v0_2` can call sub-tasks
+3. File batching — applies all transformations in a single pass
+4. `--yes` / interactive prompts for adopters
+5. `Igniter.Project.Deps` for dependency-aware transformations (detects if Oban is present)
+6. Already has Mix task skeleton — no boilerplate to write
+
+**Key APIs for `mix mailglass.upgrade.v0_2`:**
 ```elixir
-# lib/mailglass/outbound/scheduler.ex
-@compile {:no_warn_undefined, Oban}
+defmodule Mix.Tasks.Mailglass.Upgrade.V0_2 do
+  use Igniter.Mix.Task
 
-def deliver_later(email, opts) do
-  cond do
-    Code.ensure_loaded?(Oban) ->
-      Mailglass.Outbound.ObanWorker.new(%{email: email}, opts) |> Oban.insert()
+  @shortdoc "Upgrade mailglass from v0.1 to v0.2"
 
-    true ->
-      Logger.warning(
-        "[mailglass] Oban not loaded; falling back to Task.Supervisor. " <>
-          "Add `{:oban, \"~> 2.21\"}` for production-grade scheduling."
-      )
-
-      Task.Supervisor.start_child(Mailglass.TaskSupervisor, fn ->
-        Mailglass.Outbound.send(email, opts)
-      end)
+  def igniter(igniter, _argv) do
+    igniter
+    |> Igniter.update_all_elixir_files(fn zipper ->
+      # Rewrite: use Mailglass.Mailable, from: ... to new Message field setters
+      zipper
+      |> Sourceror.Zipper.find(:next, &mailable_use?/1)
+      |> case do
+        nil -> {:ok, zipper}
+        found -> {:ok, rewrite_mailable_use(found)}
+      end
+    end)
+    |> Igniter.add_notice("""
+    mailglass v0.2 upgrade complete.
+    Review changes with `git diff`, then re-run `mix test`.
+    See: https://hexdocs.pm/mailglass/migration-from-v0.1.html
+    """)
   end
 end
 ```
 
-Same shape for `:opentelemetry` (telemetry → OTel span bridge), `:mjml` (TemplateEngine.MJML resolved at boot if loaded), `:gen_smtp` (only relevant inside `mailglass_inbound`'s SMTP ingress).
+**Dep declaration (dev/test only — it's a migration tool, not a runtime dep):**
+```elixir
+{:igniter, "~> 0.7", only: [:dev, :test], runtime: false}
+```
+
+Wait — Igniter can also be a runtime dep if used for the `mix mailglass.install` flow. For just the upgrade codemod, it only needs to be a `dev` dep. This aligns with how Ash/Phoenix use it.
+
+**Confidence:** HIGH (verified Hex.pm v0.7.9, April 2026; confirmed Igniter as the 2026 ecosystem standard for this use case via ElixirForum + SmartLogic writeup).
+
+**TS classification:** Table Stakes for `mix mailglass.upgrade.v0_2` — without a working upgrade codemod, the "one-cycle BC for ~> 0.1 adopters" promise is just docs.
 
 ---
 
-## 3. Test stack
+## 2. RFC 8058 + signed unsubscribe tokens
 
-| Package | Version | Why | Confidence |
-|---|---|---|---|
-| `ex_unit` | stdlib (built-in) | Async-by-default, sandbox-aware. Foundation. | HIGH |
-| `stream_data` | `~> 1.3` (1.3.0) | Property-based testing. PROJECT.md v0.1 explicitly requires StreamData property tests for headers, idempotency keys, signature verification. **Note:** this is a divergence from engineering-DNA §2.6 ("Property tests are absent unless the domain is genuinely algorithmic") — but headers/HMAC/idempotency-keys *are* genuinely algorithmic, so the carve-out is principled. | HIGH |
-| `mox` | `~> 1.2` (1.2.0) | Behaviour-backed concurrent-safe mocking. The pattern: every public behaviour mailglass exposes (`Mailglass.Adapter`, `Mailglass.TemplateEngine`, `Mailglass.SuppressionStore`, etc.) gets a `Mox.defmock(...)` in `test_helper.exs`. Engineering-DNA §2.6 + 4-of-4 convergence. | HIGH |
-| `excoveralls` | `~> 0.18` (0.18.5) | Coverage reporting. Used as a **signal not a gate** per `prompts/elixir-oss-lib-ci-cd-best-practices-deep-research.md` §"Coverage" — track it, don't fail PRs on a vanity percentage. | MEDIUM (Jan 2025 was last release; functional but quiet) |
-| `dialyxir` | `~> 1.4` (1.4.7) | Engineering-DNA §3.9 (3-of-4 majority used Dialyzer with split PLT cache). Note: the broader 2026 trend is "drop Dialyxir, let the set-theoretic type system catch what Dialyzer used to catch" (per `prompts/The 2026 Phoenix-Elixir ecosystem map` §15) — but mailglass should **keep Dialyzer through v0.x** because (a) bleeding-edge users are exactly who hit Dialyzer-detected typing edge cases first, (b) the prior libs all kept it. Reassess at v1.0. | HIGH |
-| `credo` | `~> 1.7` (1.7.18) | `mix credo --strict` is in the lint lane. Plus custom Credo checks loaded via `.credo.exs` `requires:`: `NoRawSwooshSendInLib`, `NoUnscopedTenantQueryInLib`, `RequiredListUnsubscribeHeaders`, `NoPiiInTelemetryMeta` (PROJECT.md D-17). | HIGH |
+### 2.1 No dedicated Hex package exists for RFC 8058 — build in-house
 
-### 3.1 Why **NOT** ExMachina (engineering DNA confirmation)
+**Research finding:** A search for `list_unsubscribe`, `rfc_8058`, or similar package names on Hex.pm returns zero relevant results. No Elixir library provides RFC 8058 header generation as of April 2026. This is expected: the implementation is 2-3 functions, not a library.
 
-PROJECT.md v0.1 active reqs say "ExMachina (DON'T use per engineering DNA — confirm rationale)." Here's the confirmation:
+**The in-house implementation is the right call.** Two modules handle everything:
 
-**Engineering-DNA §2.6:** *"Fixture modules return plain maps (no factory framework — `ExMachina` is intentionally not used). Composition at call site via `Map.merge/2`."*
-
-**The "why":** ExMachina solved a real problem in 2014 (no good Elixir test data builders) but the cost in 2026 is real:
-1. **Compile-time coupling** between test/support/factories.ex and every schema in your domain. Schema changes ripple into factory recompiles.
-2. **Magic via `use ExMachina.Ecto`**. `prompts/elixir-opensource-libs-best-practices-deep-research.md` §6 ("Be conservative with `use`, macros, and DSLs") is explicit: don't expose `use` if functions suffice.
-3. **Duplication of intent.** A test that says `insert(:user, email: "alice@x.com")` is one indirection away from `%User{email: "alice@x.com"} |> Repo.insert!()` — the second reads as fast and breaks more loudly when the schema drifts.
-4. **The set-theoretic type system catches struct-field mistakes** at compile time in Elixir 1.18+, removing one of ExMachina's main wins.
-
-Pattern instead (from accrue/sigra/scrypath/lattice_stripe — 4-of-4 convergence):
-
+**Module 1 — `Mailglass.Compliance.ListUnsubscribe` (new in v0.2):**
 ```elixir
-# test/support/fixtures/email.ex
-defmodule Mailglass.Fixtures.Email do
-  def attrs(overrides \\ %{}) do
-    Map.merge(
-      %{
-        from: {"Test", "noreply@test.example"},
-        to: "alice@test.example",
-        subject: "hi",
-        html_body: "<p>hi</p>",
-        text_body: "hi"
-      },
-      Map.new(overrides)
-    )
+# Generates the signed URL for List-Unsubscribe header
+# Phoenix.Token.sign/4 is the signing primitive — no new dep
+def unsubscribe_url(conn_or_endpoint, %{id: delivery_id, tenant_id: tenant_id}) do
+  token = Phoenix.Token.sign(
+    conn_or_endpoint,
+    "mailglass-unsub",               # salt — domain-specific
+    %{delivery_id: delivery_id, tenant_id: tenant_id},
+    max_age: 30 * 24 * 60 * 60      # 30 days; RFC 8058 doesn't mandate TTL but 30d is standard
+  )
+  Routes.mailglass_unsubscribe_url(conn_or_endpoint, :one_click, token: token)
+end
+
+# Auto-injects both required headers into the Swoosh email
+def inject_headers(email, url, mailto_address) do
+  email
+  |> Swoosh.Email.header("List-Unsubscribe",
+    "<#{url}>, <mailto:#{mailto_address}?subject=unsubscribe>")
+  |> Swoosh.Email.header("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+end
+```
+
+**Module 2 — `MailglassWeb.UnsubscribeController` (generated by `mix mailglass.gen.unsubscribe`):**
+```elixir
+def one_click(conn, %{"token" => token}) do
+  case Phoenix.Token.verify(conn, "mailglass-unsub", token, max_age: 30 * 24 * 60 * 60) do
+    {:ok, %{delivery_id: id, tenant_id: tenant_id}} ->
+      Mailglass.Suppression.suppress_from_delivery(id, tenant_id)
+      # RFC 8058 requires 200 with no redirect — no render, just ok
+      send_resp(conn, 200, "")
+    {:error, _reason} ->
+      send_resp(conn, 422, "")
   end
-
-  def email(overrides \\ %{}), do: attrs(overrides) |> Mailglass.Email.new!()
 end
 ```
 
-5. **ExMachina is now at beam-community with low velocity.** Per `prompts/The 2026 Phoenix-Elixir ecosystem map` §14: "Some teams now prefer plain factory functions in `test/support` since the type system catches struct-field mistakes."
+### 2.2 Phoenix.Token API — verified stable in Phoenix 1.8
 
-### 3.2 The Fake adapter — the actual release gate
-
-Per PROJECT.md D-13 + engineering-DNA §3.5, the test stack's most important component is **not in `deps/0` at all** — it's `Mailglass.Adapter.Fake`, an in-memory deterministic stateful adapter shipped in `lib/mailglass/adapter/fake.ex`. This is the merge-blocking test target. Real-provider sandbox tests (Postmark/SendGrid test mode, MailHog SMTP) run on daily cron + `workflow_dispatch` and are explicitly **advisory only** (per accrue's lesson: *"Keep provider-backed checks advisory while Fake-backed host proof remains deterministic release blocker."*)
-
-This is a discipline pattern, not a dep — but it belongs in this STACK doc because it changes how every other test stack choice fits. The Fake is the line.
-
----
-
-## 4. CI tooling (GitHub Actions)
-
-Verified versions as of April 2026. Per `prompts/elixir-oss-lib-ci-cd-best-practices-deep-research.md` and engineering-DNA §2.2, all third-party actions should be **pinned to a full SHA** in the actual workflow YAML; the version tags below are for CHANGELOG/upgrade tracking.
-
-| Action | Version | Purpose | Notes |
-|---|---|---|---|
-| `erlef/setup-beam` | **v1.24.0** (2026-03-30) | Install Elixir/OTP at exact versions on Ubuntu runner | Use `version-type: strict` per the action's own rec; pin Elixir/OTP via `.tool-versions` for parity with local dev. v1.24.0 adds Node 24 runtime + TOML dotted-key fixes. |
-| `actions/checkout` | `v4` | Repo checkout | Standard, batteries-included. Use `fetch-depth: 0` only for jobs that need full history (Release Please does). |
-| `actions/cache` | `v4` | Cache `deps/`, `_build/`, dialyzer PLT, Hex registry | Engineering-DNA §2.2: split PLT cache into restore → build-on-miss → save lanes. Cache key includes `mix.lock` hash + Elixir version + OTP version. |
-| `googleapis/release-please-action` | **v4.4.1** (2026-04-13) | Auto-bump version + CHANGELOG on `main` | Use `release-type: elixir`. Manifest mode (`release-please-manifest.json` + `release-please-config.json`) is recommended even for single packages — future-proofs for `mailglass_admin` sibling release with `separate-pull-requests: false` + linked-versions plugin. **PAT required** (not `GITHUB_TOKEN`) so downstream CI runs on Release Please's PRs. |
-| `actions/dependency-review-action` | **v4.9.0** (2026-03-03) | Block PRs that introduce vulnerable deps | Runs only on `pull_request`. v4.9.0 adds `show_patched_versions` config — surface the fix version for any flagged dep. |
-| `rhysd/actionlint` | **v1.7.12** (2026-03-30) | Lint workflow YAML for syntax + expression mistakes + shell issues | Wire in a dedicated `actionlint.yml` workflow, only triggered on `paths: .github/workflows/**`. v1.7.12 added IANA timezone validation. |
-| `dependabot` | (built-in) | Auto-PR for action SHA bumps + Mix dep bumps | Two ecosystems in `dependabot.yml`: `github-actions` (weekly) and `mix` (weekly). Pair with SHA pinning so updates are explicit. |
-
-### 4.1 Lane structure (per engineering-DNA §2.2)
-
-| Lane | Mix command(s) | Blocks merge? |
-|---|---|---|
-| **Lint** | `mix format --check-formatted`, `mix compile --warnings-as-errors --no-optional-deps`, `mix compile --warnings-as-errors`, `mix credo --strict`, `mix docs --warnings-as-errors`, `mix hex.audit` | yes |
-| **Test matrix** | `MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors` across {Elixir 1.18, OTP 27} (single cell at v0.1; widen if community signal warrants) | yes |
-| **Dialyzer** | `mix dialyzer --halt-exit-status`, with split PLT cache | yes |
-| **Golden install** | `mix mailglass.install` against fresh Phoenix host in `test/example/`, snapshot-diff via `git diff --exit-code test/fixtures/install/` | yes for paths touching the installer |
-| **Admin smoke** | `mailglass_admin` Playwright/PhoenixTest against `test/example/` | yes for paths touching `mailglass_admin` |
-| **Static + supply chain** | `dependency-review-action`, `actionlint` | yes |
-| **Release Please** | Run on push to `main`; opens or updates a release PR | n/a (PR only) |
-| **Publish-Hex** | `mix hex.publish --yes` triggered by tag from release-please merge | release-time only |
-| **Post-publish verify** | Daily cron + `workflow_dispatch`: poll Hex tarball visibility, compile a throwaway consumer app, verify HexDocs reachability | not on the publishing PR |
-
-### 4.2 Required workflow files (verified against engineering DNA + CI/CD research)
-
-```
-.github/
-├── workflows/
-│   ├── ci.yml                       # lint + matrix test + dialyzer + golden install + admin smoke
-│   ├── dependency-review.yml        # actions/dependency-review-action on PRs
-│   ├── actionlint.yml               # rhysd/actionlint on workflow file changes only
-│   ├── release-please.yml           # googleapis/release-please-action on push to main
-│   ├── publish-hex.yml              # workflow_dispatch fallback + publish on Release Please tag
-│   └── verify-published-release.yml # daily cron + manual: poll Hex + test a fresh consumer app
-└── dependabot.yml                   # github-actions weekly + mix weekly
-```
-
-`MAINTAINING.md` (per accrue/sigra precedent) documents secret setup: `HEX_API_KEY` + `RELEASE_PLEASE_TOKEN` (PAT, not `GITHUB_TOKEN`).
-
----
-
-## 5. Documentation stack
-
-| Tool | Version | Purpose | Notes |
-|---|---|---|---|
-| `ex_doc` | `~> 0.40` (0.40.1, 2026-01-31) | Generate HexDocs, llms.txt, EPUB, Markdown | **Confirmed 2026 capabilities:** ExDoc 0.40.x ships **automatic `llms.txt` generation** out of the box. HexDocs pages now expose a "View llms.txt" link in the footer. This is the LLM-context-friendly representation requested in the milestone context. Configure with: |
+**Current API (Phoenix 1.8.5, verified April 2026):**
 
 ```elixir
-# mix.exs
-def project do
-  [
-    # ...
-    name: "mailglass",
-    source_url: @source_url,
-    homepage_url: @source_url,
-    docs: [
-      main: "getting-started",     # PROJECT.md req — guides land first, not README
-      source_ref: "v#{@version}",  # ties HexDocs source links to the published tag
-      source_url_pattern: "#{@source_url}/blob/v#{@version}/%{path}#L%{line}",
-      logo: "guides/assets/mailglass-logo.svg",
-      extras: [
-        "guides/getting-started.md",
-        "guides/golden-path.md",
-        "guides/installation.md",
-        "guides/sending-transactional.md",
-        "guides/templating-with-heex.md",
-        "guides/templating-with-mjml.md",
-        "guides/preview-dashboard.md",
-        "guides/webhooks-postmark.md",
-        "guides/webhooks-sendgrid.md",
-        "guides/inbound-routing.md",
-        "guides/deliverability-and-compliance.md",
-        "guides/multi-tenancy.md",
-        "guides/auth-adapters.md",
-        "guides/testing.md",
-        "guides/telemetry.md",
-        "guides/admin-dashboard.md",
-        "guides/migration-from-swoosh.md",
-        "guides/api_stability.md"
-      ],
-      groups_for_extras: [
-        "Getting Started": ~r/getting-started|golden-path|installation/,
-        "Authoring": ~r/templating|preview/,
-        "Operations": ~r/webhooks|telemetry|deliverability|admin/,
-        "Reference": ~r/multi-tenancy|auth-adapters|api_stability|migration/,
-        "Testing": ~r/testing/
-      ],
-      groups_for_modules: [
-        "Public API": [Mailglass, Mailglass.Mailable, Mailglass.Email, Mailglass.TestAssertions],
-        "Errors": ~r/Mailglass\.\w+Error/,
-        "Behaviours": [Mailglass.Adapter, Mailglass.TemplateEngine, Mailglass.PreviewStore, Mailglass.SuppressionStore, Mailglass.Webhook.Handler, Mailglass.Inbound.Mailbox, Mailglass.Auth],
-        "Components": ~r/Mailglass\.Components/,
-        "Internals": ~r/.*/
-      ]
-    ]
-  ]
+# Sign
+Phoenix.Token.sign(context, salt, data, opts \\ [])
+# opts: :key_iterations (1000), :key_length (32), :key_digest (:sha256), 
+#       :max_age (seconds), :signed_at (seconds timestamp)
+
+# Verify  
+Phoenix.Token.verify(context, salt, token, opts \\ [])
+# Returns: {:ok, term} | {:error, :expired} | {:error, :invalid}
+
+# Encrypt (hides data from token holder, for higher-sensitivity payloads)
+Phoenix.Token.encrypt(context, secret, data, opts \\ [])
+Phoenix.Token.decrypt(context, secret, token, opts \\ [])
+```
+
+`context` can be a `conn`, an endpoint module, or a socket. Salt must be a string ≥ 16 bytes for security.
+
+**Key rotation:** Phoenix.Token supports key rotation via the endpoint's `secret_key_base` rotation. No additional API is needed — old tokens signed with previous `secret_key_base` become invalid after rotation, which is the correct behavior for unsubscribe tokens (requires re-subscription after key rotation, consistent with re-confirmation flows).
+
+**No changes from Phoenix 1.7 to 1.8** on this API surface. It is stable.
+
+**Confidence:** HIGH (verified against hexdocs.pm/phoenix Phoenix.Token docs, Phoenix 1.8.5).
+
+### 2.3 DKIM `h=` header inclusion — no Swoosh-level control needed
+
+The `h=` tag in a DKIM signature is controlled by the **sending infrastructure** (Postmark/SendGrid/etc.), not by the application code. The application's responsibility is:
+
+1. Add `List-Unsubscribe` and `List-Unsubscribe-Post` headers to the email using `Swoosh.Email.header/3`
+2. Ensure the provider is configured to include those headers in its DKIM signing scope
+
+**Swoosh.Email.header/3 API (Swoosh 1.25.0, verified):**
+```elixir
+# Add a single header
+Swoosh.Email.header(email, "List-Unsubscribe", "<https://...>")
+Swoosh.Email.header(email, "List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+```
+
+**Provider-level DKIM `h=` behavior:**
+- **Postmark:** Automatically includes `List-Unsubscribe` in DKIM `h=` when present in the email headers. No additional configuration required.
+- **SendGrid:** Includes custom headers in DKIM by default.
+
+**Conclusion:** mailglass needs only to inject the headers correctly. No new dep, no Swoosh API changes, no provider configuration changes needed.
+
+**Confidence:** MEDIUM (Postmark behavior from their API docs; DKIM `h=` auto-inclusion is standard behavior for transactional ESPs but not individually verified per provider against 2026 docs).
+
+---
+
+## 3. Auto-suppression + Oban scheduling
+
+### 3.1 Oban OSS `~> 2.21` is adequate — no Oban Pro required
+
+**Verdict: Oban OSS handles all v0.2 auto-suppression requirements.**
+
+**Soft-bounce escalation (5-in-7-days rule):**
+
+The escalation rule is: if a recipient receives 5 soft-bounce events within 7 days, escalate to hard suppression. Two implementation paths are available — both work with Oban OSS:
+
+**Path A — Scheduled deferred worker (cleanest):**
+```elixir
+# On each soft-bounce event, schedule a check 7 days out
+# Oban.Job.schedule_in accepts {N, :unit} tuples
+Mailglass.Suppression.EscalationWorker.new(
+  %{recipient: email, tenant_id: tenant_id},
+  schedule_in: {7, :days},   # Oban OSS — no Pro required
+  unique: [keys: [:recipient, :tenant_id], period: :infinity]
+)
+|> Oban.insert()
+
+# Worker checks the DB: count soft bounces in last 7 days
+# If >= 5, insert suppression record
+defmodule Mailglass.Suppression.EscalationWorker do
+  use Oban.Worker, queue: :mailglass_suppression, max_attempts: 3
+  
+  def perform(%{args: %{"recipient" => email, "tenant_id" => tenant_id}}) do
+    count = Mailglass.Events.count_soft_bounces(email, tenant_id, days: 7)
+    if count >= 5, do: Mailglass.Suppression.suppress(email, tenant_id, :soft_bounce_escalation)
+    :ok
+  end
 end
 ```
 
-| Tool | Version | Purpose | Notes |
-|---|---|---|---|
-| `makeup_elixir` | (transitive via ex_doc) | Syntax highlighting | Default. |
-| `makeup_html` | (transitive via ex_doc) | Highlight `~H` HEEx blocks | Required to make email-component examples readable in docs. |
-| `makeup_diff` | optional | Highlight CHANGELOG.md diff blocks | Nice-to-have. |
-| **doc-contract tests** | (no dep — pure ExUnit) | Lock README + guide snippets to actual code | Engineering-DNA §2.7: highest-leverage convergent pattern across all 4 prior libs. Failing CI on doc rot prevents the silent drift that killed adoption in other ecosystems. |
+**Path B — Oban.Plugins.Cron periodic sweep (simpler, adequate for most cases):**
+```elixir
+# In Application supervisor config:
+{Oban, 
+  plugins: [
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"0 2 * * *", Mailglass.Suppression.EscalationSweepWorker}
+     ]}
+  ],
+  queues: [mailglass_suppression: 5]}
+```
+Daily sweep checks all recipients with recent soft bounces and escalates as needed.
 
-### 5.1 The `mix docs --warnings-as-errors` gate
+**Recommendation:** Use Path A (scheduled deferred worker) for v0.2. More precise (responds within hours, not 24h), and `schedule_in: {7, :days}` is available in Oban OSS without any Pro tier.
 
-Per `prompts/elixir-oss-lib-ci-cd-best-practices-deep-research.md`: "Your SDK's docs are part of the product. Broken docs, broken links, or missing docs should fail CI." Wire this into the lint lane. ExDoc supports `--warnings-as-errors`.
+**Oban.Plugins.Cron current API (verified against Oban 2.21 docs):**
+```elixir
+{Oban.Plugins.Cron,
+  crontab: [
+    {"* * * * *", MyWorker},
+    {"0 * * * *", MyHourlyWorker, args: %{custom: "arg"}},
+    {"@daily", MyDailyWorker},
+    {"@hourly", MyHourlyWorker}
+  ],
+  timezone: "Etc/UTC"   # requires :tz if non-UTC; see §3.2
+}
+```
 
----
+Supports standard cron syntax + `@daily`, `@hourly`, `@weekly`, `@monthly`, `@yearly` nicknames. Static config only (loaded at boot). For dynamic config, Oban Pro's `DynamicCron` is needed — but mailglass has no such requirement.
 
-## 6. What NOT to use (and why)
+**Confidence:** HIGH (verified against hexdocs.pm/oban Oban.Plugins.Cron and Oban.Job docs, v2.21.1).
 
-This list is concrete, grounded in PROJECT.md's locked decisions, the `prompts/` corpus, and the engineering-DNA file. Each "don't" has a citable reason.
+### 3.2 No new optional dep needed for soft-bounce escalation
 
-| Avoid | Specific problem | Use instead | Source |
-|---|---|---|---|
-| **`bamboo`** | In maintenance mode at beam-community, Phoenix 1.7+ generators ship Swoosh as default. Migration from Bamboo is **explicitly out of scope** for mailglass migration guides. | `swoosh ~> 1.25` | PROJECT.md "Out of Scope" |
-| **`mjml` / `mjml_eex` as default renderer** | "The killer differentiator is *not needing* MJML." HEEx + Phoenix.Component with MSO VML fallbacks composes cleanly with the rest of Phoenix; MJML's HEEx parser interop has been fragile across Phoenix upgrades (ElixirForum 69206, 73978). MJML stays as opt-in `Mailglass.TemplateEngine.MJML`. | HEEx + `Mailglass.Components` | PROJECT.md D-18, "Phoenix needs an email framework" §3 |
-| **`ex_machina` (ExMachina)** | Compile-time coupling, magical `use ExMachina.Ecto`, low velocity at beam-community, set-theoretic type system supersedes its core value. | Plain map fixtures with `Map.merge/2` composition | Engineering-DNA §2.6 (4-of-4 convergence) |
-| **`Application.compile_env!/3` for runtime config** | Bakes config into the release artifact; surprises adopters who change config in `runtime.exs` and don't see it take effect. The class of release-build configuration bugs that accrue paid for and learned from. | `Application.get_env/2` + `Mailglass.Config.resolve!/1` validated at boot via NimbleOptions | Engineering-DNA §6.1 (gotcha #1) |
-| **`mailibex` (raw GitHub dep)** | Currently the only Elixir DKIM lib but not on Hex, not integrated with Swoosh. Vendoring or upstream-forking it is a v0.5 deliverability concern (`Mailglass.Compliance.dkim_sign/2`), not a v0.1 dep. Don't add as direct dep at v0.1. | At v0.5: vendor or fork mailibex into `lib/mailglass/compliance/dkim/`; do NOT add as upstream Hex dep | "Phoenix needs an email framework" §1, engineering-DNA §4.7 |
-| **AMP for Email** | Cloudflare deprecated AMP support starting October 20, 2025 (sunset-style removal); ESPC data showed <5% sender adoption even before that. Maintenance budget would be wasted. | Plain HTML email with HEEx components + MSO fallbacks | PROJECT.md "Out of Scope", verified Apr 2026 |
-| **MJML compile-step Node toolchain** | One of mailglass's brand promises is "no Node/JS toolchain ever required" (PROJECT.md cross-cutting reqs). The `mjml` Hex package solves this via Rust NIF that ships precompiled — no Node needed. | `mjml ~> 5.3` (the Rust-NIF Hex package), opt-in only | PROJECT.md cross-cutting reqs |
-| **Raw `GenServer` scattering across the lib** | "Process anti-pattern docs specifically warn against scattered process interfaces: don't spread direct `GenServer.call/3` throughout the codebase. Centralize access behind one module." mailglass's only first-party long-running process is `Mailglass.TaskSupervisor` (for the Oban-fallback path); everything else is pure functions. | One module facade per process; pure functions for everything else | `prompts/elixir-opensource-libs-best-practices-deep-research.md` §3 |
-| **`use Mailglass` macro on adopter modules** | "Don't expose `use MyLib` if `import` or normal calls are enough." Adopters get `use Mailglass.Mailable` (which IS a real behaviour binding + child_spec injection) but do NOT get a `use Mailglass` umbrella. | `Mailglass.deliver/2` direct calls; `use Mailglass.Mailable` only when defining a Mailable module | `prompts/elixir-opensource-libs-best-practices-deep-research.md` §6 |
-| **HTTPoison / Hackney** | Out of step with 2026 conventions; questionable SSL defaults; no telemetry integration. Swoosh's adapters use Finch/Req under the hood — we inherit the modern HTTP stack for free by composing on Swoosh. Don't add HTTPoison as a direct dep. | (none — let Swoosh handle HTTP via Finch internally) | `prompts/The 2026 Phoenix-Elixir ecosystem map` §4 |
-| **`Tesla`** | Mindshare gone in 2026; Req is the new ecosystem default. We don't need it because we don't make HTTP calls directly — Swoosh adapters do. | (none) | `prompts/The 2026 Phoenix-Elixir ecosystem map` §4 |
-| **Custom open/click tracking ON by default** | Apple Mail Privacy Protection (~50% consumer mail) makes opens noisy; signed click rewriting is a legal liability if misconfigured; auth-carrying messages (password reset, magic link) must NEVER have rewritten links. | Tracking **off by default**; explicit per-mailable opt-in | PROJECT.md D-08 |
-| **Pre-Phoenix-1.8 / pre-LiveView-1.0 support matrix** | "Bleeding edge floor … trades a slice of the long-tail user base for newest features." Conservative LTS support is **explicitly not a goal**. | Phoenix 1.8+, LiveView 1.1+, Elixir 1.18+, OTP 27+ as the floor | PROJECT.md D-06 |
-| **MySQL or SQLite at v0.1** | Postgres-only because advisory locks, JSONB, partial unique indexes, and the `BEFORE UPDATE OR DELETE` trigger on `mailglass_events` are load-bearing. | Postgres via Postgrex 0.22 | PROJECT.md "Constraints" |
-| **`Surface`** | LiveView's `Phoenix.Component` + `attr`/`slot` absorbed Surface's core ideas. Don't start new projects on it. | `Phoenix.Component` from LiveView 1.1 | `prompts/The 2026 Phoenix-Elixir ecosystem map` §16 |
-| **Open core / paid Pro tier** | MIT pure OSS across all sibling packages. No `mailglass_pro`. | (n/a) | PROJECT.md "Out of Scope" + D-02 |
+The v0.1 optional dep `{:oban, "~> 2.21", optional: true}` already covers all v0.2 scheduling needs. The `schedule_in: {N, :days}` feature is in Oban OSS since at least v2.14.
 
----
-
-## 7. Email-specific 2026 considerations (the load-bearing context)
-
-These are not stack picks per se — but they directly drive which features land in v0.1 vs v0.5 and how the libs are configured. Each is a **load-bearing reality** the roadmap must respect.
-
-### 7.1 The 2024 Gmail/Yahoo bulk-sender rules — now Gmail+Yahoo+Microsoft (Yahooglesoft)
-
-**Status (verified Apr 2026):**
-- Gmail/Yahoo enforced from Feb 2024 onward.
-- Gmail escalated to **permanent 550-class rejections** in November 2025.
-- Microsoft (Outlook/Hotmail/Live) joined the requirements **May 2025** — now informally called "Yahooglesoft."
-- Microsoft is "softer" — they require functional unsubscribe links but don't strictly mandate RFC 8058. Gmail and Yahoo strictly require both `List-Unsubscribe` and `List-Unsubscribe-Post`.
-
-**For senders >5,000 msgs/day to consumer inboxes, mandatory:**
-- SPF + DKIM + DMARC with alignment (≥ `p=none`)
-- PTR record
-- TLS
-- RFC 5322 compliance (Message-ID, Date, MIME-Version, UTF-8 headers)
-- One-click unsubscribe per RFC 8058: BOTH `List-Unsubscribe: <https://...>, <mailto:...>` AND `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers, signed into DKIM's `h=` tag
-- Honor unsubscribes within **48 hours**
-- Spam rate <0.30%
-
-**Implication for stack:**
-- v0.1 ships nothing for List-Unsubscribe (per PROJECT.md scope) — but the **adapter behaviour and event ledger schema must accommodate it** so v0.5's `Mailglass.Compliance.add_unsubscribe_headers/1` slots in cleanly.
-- v0.5 is the deliverability release that satisfies these rules end-to-end (signed-token unsubscribe controller, suppression auto-add on hard-bounce/complaint/unsubscribe, message-stream separation).
-- v0.1 should already write `Auto-Submitted: auto-generated` + `Precedence:` headers on transactional sends (cheap; one util function in `Mailglass.Compliance`).
-
-**Confidence:** HIGH (verified across 5 industry sources Apr 2026).
-
-### 7.2 RFC 8058 List-Unsubscribe-Post specifics
-
-- Endpoint must be **HTTPS**.
-- Endpoint must be **idempotent** — repeated POSTs are no-ops (return 200, don't re-process).
-- Endpoint must return **200 without redirect** (no 302/303 to a confirmation page; that breaks Gmail's one-click expectation).
-- The `List-Unsubscribe` URL must encode an **opaque signed token**, never the raw email address. Use `Phoenix.Token` or `Plug.Crypto.MessageVerifier` with key rotation support.
-- Both URI (`<https://...>`) and `mailto:` are required for maximum compatibility — Gmail prefers HTTPS, some Yahoo accounts still use mailto.
-
-**Implication for stack:** No new dep required (`Phoenix.Token` + `Plug.Crypto` are stdlib-equivalent). v0.5 generates the signed-token unsubscribe controller from `mix mailglass.install`.
-
-### 7.3 BIMI (Brand Indicators for Message Identification)
-
-- Requires DMARC `p=quarantine` or `p=reject` with `pct=100`.
-- Requires a VMC (Verified Mark Certificate) from a CA — this is real money (~$1500/year from Entrust/DigiCert as of 2026).
-- Requires SVG logo at a published URL.
-
-**Implication for stack:** v0.5+ `mix mail.doctor` should detect BIMI eligibility (DMARC level + DKIM/SPF alignment) and report. **No first-party BIMI generation in v0.1.** `Mailglass.Compliance.bimi_record_for/1` is a v2 nice-to-have (PROJECT.md v2 differentiation list).
-
-### 7.4 DMARC alignment
-
-- `aspf=s` (strict) or `aspf=r` (relaxed) — relaxed is the default and works for most setups.
-- `adkim=s` or `adkim=r` — relaxed default.
-- The "From" header domain must align with at least one of {SPF-validated MAIL FROM domain, DKIM signature `d=` domain} for DMARC to pass.
-
-**Implication for stack:** v0.5 `mix mail.doctor` should query DNS for the sending domain and report alignment status. This is just DNS lookup logic — no new dep beyond what stdlib `:inet_res` provides.
-
-### 7.5 Apple Mail Privacy Protection (MPP) impact on opens
-
-- Launched iOS 15 (2021); now ~50% of consumer mail.
-- Apple's proxy fetches **all** images on delivery before the user sees the email — open pixels fire whether or not the user opens.
-- Open rate is essentially useless as an engagement signal for ~half of consumer traffic. Treat as aggregate trend only.
-
-**Implication for stack:** PROJECT.md D-08 ("Open/click tracking off by default") is in part a response to this. The admin LiveView (v0.5) must surface opens as "≥X opens recorded (Apple MPP inflates this)" — explicit caveat in the UI.
-
-### 7.6 AMP for Email is dead
-
-- Cloudflare announced AMP and Signed Exchanges deprecation **August 2025**, sunset **October 20, 2025** (per Cloudflare Community thread).
-- Already <5% of senders used AMP for Email per ESPC data even before deprecation.
-
-**Implication for stack:** PROJECT.md "Out of Scope" already excludes AMP for Email. **Do not add an MJML-AMP-Email path or an AMP component renderer ever.** Maintenance budget would burn for <5% upside that's now declining.
-
-### 7.7 What's NOT in 2026's compliance churn but still load-bearing
-
-- **CAN-SPAM** (US): physical address required for marketing/bulk stream. v0.5 auto-injects on `:bulk` stream sends.
-- **CASL** (Canada): explicit consent + identification + unsubscribe. Suppression list satisfies the unsubscribe leg.
-- **GDPR/ePrivacy** (EU): consent records; right-to-erasure for `mailglass_subscribers`; signed unsubscribe tokens minimize PII in URLs. Suppression auto-add on `:unsubscribed` event satisfies the 48h honor requirement.
+**What NOT to add:** Oban Pro is not required. Oban Pro's `DynamicCron` is for runtime-configurable cron schedules. The mailglass use case (fixed escalation window) is fully covered by static cron config or `schedule_in`.
 
 ---
 
-## 8. Installation (the v0.1 mix.exs deps block)
+## 4. Release-engineering hardening stack
+
+### 4.1 Dialyzer — critical flag name correction
+
+**The `--halt-exit-status` flag referenced in STATE.md does not exist in Dialyxir.**
+
+**Correct behavior:**
+- `mix dialyzer` — runs Dialyzer and **exits with non-zero status if warnings found** (this is the DEFAULT behavior). This is what "halt on warnings" means.
+- `mix dialyzer --ignore-exit-status` — runs Dialyzer, displays warnings, but **exits 0** (advisory mode — this is the flag that was used in v0.1 to avoid failing CI).
+
+**v0.2 task REL-NN ("re-tighten Dialyzer"):** Remove `--ignore-exit-status` from the CI Dialyzer step. That's it. The default behavior is already the strict behavior. No flag change needed; just remove the advisory flag.
+
+**Current Dialyxir CLI flags (verified against hexdocs.pm/dialyxir 1.4.7):**
+- `--no-compile` — skip compilation
+- `--no-check` — skip PLT update check  
+- `--force-check` — force PLT check even if lock file unchanged
+- `--ignore-exit-status` — display warnings WITHOUT failing (the advisory mode flag)
+- `--list-unused-filters` — list unused ignore filters
+- `--plt` — build PLT files and exit
+- `--format <name>` — `short | raw | dialyxir | dialyzer | github | ignore_file | ignore_file_strict`
+- `--quiet` — suppress informational messages
+- `--quiet-with-result` — suppress all but final result
+
+**Dialyxir version:** 1.4.7 (November 6, 2025) — no change from v0.1 baseline. Current.
+
+**Confidence:** HIGH (verified against hexdocs.pm/dialyxir Mix.Tasks.Dialyzer docs, v1.4.7).
+
+### 4.2 Credo `--strict` — already the right flag, re-enable it
+
+`mix credo --strict` is the correct command. It was disabled in v0.1 due to ~230 findings. v0.2 triage budget is allocated to fix these.
+
+**Current Credo version:** 1.7.18 (April 10, 2026) — no change from v0.1 baseline. Current.
+
+The `--strict` flag enables "all checks including less critical ones" (Credo's terminology). In `mix.exs` alias, this is:
+```elixir
+"lint": ["credo --strict", ...]
+```
+
+**No version change needed.** The existing `{:credo, "~> 1.7", only: [:dev, :test], runtime: false}` is current.
+
+**Confidence:** HIGH (verified against hexdocs.pm/credo, v1.7.18).
+
+### 4.3 GitHub Actions — tag-push trigger syntax
+
+**`on: push: tags:` syntax — no changes in 2025/2026.**
+
+The correct syntax for `publish-hex.yml` tag-push trigger:
+```yaml
+on:
+  push:
+    tags:
+      - "mailglass-sibling-group-v*"
+```
+
+Glob patterns (`*`, `**`, `?`, `!`) work as before. No new syntax required.
+
+**The v0.1.2 TODO** (publish-hex.yml + post-publish-smoke.yml using `workflow_run` that can't detect tag creation) is a logic bug in the workflow trigger, not a syntax issue. The fix is switching from `on: workflow_run` to `on: push: tags:` — the syntax is already correct in the GitHub Actions spec, just not used in those two workflows.
+
+**Confidence:** HIGH (verified against current GitHub Actions workflow syntax docs).
+
+### 4.4 `actions/checkout` — version update
+
+**v0.1 baseline:** `actions/checkout@v4` (pinned by SHA)
+**Current latest:** `v6.0.2` (released January 9, 2025)
+
+Note: GitHub Actions uses a `v4`, `v5`, `v6` major-version tag convention. The current latest major version is `v4` (the version string "v6.0.2" in the releases list may refer to a different counting scheme — verify the actual tag used at github.com/actions/checkout/releases before updating). Always pin by SHA, not tag, per engineering DNA.
+
+**Recommendation:** When updating SHA pins in v0.2 Phase 8 work, update to whatever the current SHA of `actions/checkout@v4` (or whatever the current major) resolves to. The `v4` tag is likely still current for the purposes of this workflow.
+
+**Confidence:** MEDIUM (GitHub releases page showed "v6.0.2" but this may be an internal versioning artifact; the consumer-facing tag is likely still `actions/checkout@v4`).
+
+### 4.5 `googleapis/release-please-action` — v5.0.0 alert
+
+**v0.1 baseline:** `v4.4.1` (February 13, 2026)  
+**New latest:** **v5.0.0** (April 22, 2026 — 4 days before this research)
+
+**Breaking change in v5.0.0:** Node 24 runtime (only breaking change stated in release notes). Also bumps `release-please` dependency from 17.3.0 to 17.6.0.
+
+**Elixir release-type support in v5:** Not explicitly confirmed in the release notes, but the only breaking change is the Node runtime upgrade. The `elixir` release type is a release-please feature (the underlying library), not a release-please-action feature. Since the underlying release-please version bumped from 17.3.0 to 17.6.0, check the release-please CHANGELOG for any Elixir-specific changes.
+
+**Recommendation for v0.2:** Evaluate upgrading to `v5.0.0` SHA during Phase 8 release-engineering work. The Node 24 runtime requirement should not impact GitHub Actions runners (GitHub provides Node 24 runners as part of the standard runner image). Do NOT upgrade blindly mid-milestone; test on a branch first given the new Node runtime.
+
+**Stay on `v4.4.1` SHA if v5 introduces any Elixir release-type regressions.** The upgrade is DF (differentiator/deferrable) if v4 continues to work.
+
+**Confidence:** MEDIUM (v5.0.0 release notes are minimal; Elixir support continuity not explicitly confirmed — verify before upgrading).
+
+### 4.6 `erlef/setup-beam` — still current at v1.24.0
+
+No change from v0.1 baseline. Still the correct version. The action now requires Node 24 runners (matches release-please-action v5's requirement).
+
+**Confidence:** HIGH.
+
+---
+
+## 5. HexDocs exclusion of CLAUDE.md (v0.1.2 TODO)
+
+This is a mix.exs documentation config change, not a new dep. Remove `"CLAUDE.md"` from `extras:` and `groups_for_extras:` in the `docs/0` function. Specifically in `mix.exs`:
+- Line 262: remove `"CLAUDE.md"` from `extras:`
+- Line 265: remove `"CLAUDE.md"` from `Overview` group in `groups_for_extras:`
+
+The `docs: [skip_undefined_reference_warnings_on: ["CLAUDE.md"]]` entry can also be removed.
+
+No dep change required. Pure config cleanup.
+
+---
+
+## 6. What changes to mix.exs for v0.2
+
+Only ONE new optional dev dep:
 
 ```elixir
-defp deps do
-  [
-    # === Core (required) ===
-    {:phoenix,           "~> 1.8"},
-    {:phoenix_live_view, "~> 1.1"},
-    {:phoenix_html,      "~> 4.1"},        # transitive via phoenix; pin for clarity
-    {:ecto,              "~> 3.13"},
-    {:ecto_sql,          "~> 3.13"},
-    {:postgrex,          "~> 0.22"},
-    {:plug,              "~> 1.18"},
-    {:swoosh,            "~> 1.25"},
-    {:nimble_options,    "~> 1.1"},
-    {:telemetry,         "~> 1.4"},
-    {:gettext,           "~> 1.0"},
-    {:premailex,         "~> 0.3"},
-    {:floki,             "~> 0.38"},
-
-    # === Optional (Code.ensure_loaded?/1 guards in lib code) ===
-    {:oban,              "~> 2.21",  optional: true},
-    {:opentelemetry,     "~> 1.7",   optional: true},
-    {:mjml,              "~> 5.3",   optional: true},   # Rust NIF; ships precompiled
-    {:gen_smtp,          "~> 1.3",   optional: true},   # for mailglass_inbound v0.5 SMTP relay
-    {:sigra,             "~> 0.2",   optional: true},   # auth adapter auto-wires when loaded
-
-    # === Test only ===
-    {:stream_data,       "~> 1.3",   only: [:test]},
-    {:mox,               "~> 1.2",   only: [:test]},
-    {:excoveralls,       "~> 0.18",  only: [:test]},
-
-    # === Dev/test ===
-    {:credo,             "~> 1.7",   only: [:dev, :test], runtime: false},
-    {:dialyxir,          "~> 1.4",   only: [:dev, :test], runtime: false},
-    {:ex_doc,            "~> 0.40",  only: :dev, runtime: false}
-  ]
-end
+# NEW for v0.2 — codemod foundation for mix mailglass.upgrade.v0_2
+{:igniter, "~> 0.7", only: [:dev], runtime: false}
 ```
 
-**Hex package whitelist** (per engineering-DNA §2.1, never auto-include the whole repo):
+Everything else is already in `mix.exs`. The existing optional Oban dep covers soft-bounce escalation scheduling. Phoenix.Token covers RFC 8058 token signing. Credo and Dialyxir are already present — just need CI flag adjustments.
 
-```elixir
-defp package do
-  [
-    name: "mailglass",
-    description: "Phoenix-native transactional email framework — preview, normalize, audit.",
-    licenses: ["MIT"],
-    files: ~w(lib priv guides .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
-    links: %{
-      "GitHub"     => "https://github.com/jonathanjoubert/mailglass",
-      "HexDocs"    => "https://hexdocs.pm/mailglass",
-      "Changelog"  => "https://github.com/jonathanjoubert/mailglass/blob/main/CHANGELOG.md"
-    },
-    maintainers: ["Jonathan Joubert"]
-  ]
-end
-```
-
-Note the `files:` whitelist excludes `test/`, `test/example/`, `.planning/`, and any `*_ops/` subprojects — preventing the ~200MB-tarball failure mode (engineering-DNA §6 gotcha #8).
+**No dep version bumps required for v0.2.** All existing deps are current as of April 2026.
 
 ---
 
-## 9. Version compatibility matrix
+## 7. What NOT to add for v0.2
 
-| Package | Compatible with | Notes |
+| Do not add | Reason |
+|------------|--------|
+| Any `list_unsubscribe` or RFC 8058 Hex package | None exists; in-house implementation is 2 functions |
+| Oban Pro | OSS `schedule_in: {N, :unit}` handles soft-bounce escalation fully |
+| A dedicated DKIM signing library | DKIM `h=` inclusion is controlled by the ESP, not the app layer; `mailibex` is a v0.5+ concern |
+| `ex_machina` or any test factory lib | v0.1 prohibition continues; plain map fixtures |
+| React Email / MJML-as-default / AMP for Email | Permanently out of scope per PROJECT.md D-03, D-18, "Out of Scope" |
+| Mailgun/SES/Resend webhook integrations | v0.3 scope (DELIV-04) |
+| Any Node.js-dependent toolchain | PROJECT.md cross-cutting constraint; D-18 |
+| Oban Pro's `DynamicCron` | Static cron config covers all mailglass use cases |
+
+---
+
+## 8. Confidence summary
+
+| Question area | Confidence | Notes |
 |---|---|---|
-| `phoenix ~> 1.8` | `phoenix_live_view ~> 1.1`, `phoenix_html ~> 4.1`, `plug ~> 1.18` | Phoenix 1.8 dropped support for OTP <25. |
-| `ecto_sql ~> 3.13` | `postgrex ~> 0.22`, `ecto ~> 3.13` | 3.13 brings `@schema_redact`. |
-| `swoosh ~> 1.25` | `phoenix ~> 1.8` (loosely; works with 1.7+), `phoenix_swoosh ~> 1.2` (we won't use phoenix_swoosh — see §6) | Swoosh ships its own templating bridge that we replace with `Mailglass.Template`. |
-| `phoenix_live_view ~> 1.1` | `phoenix ~> 1.7` (1.1 supports 1.7+), but mailglass requires 1.8+ for `scope` macros | Locked floor by D-06. |
-| `oban ~> 2.21` | Postgres ≥14 | Oban dropped <14 support; aligns with our Postgres floor. |
-| `mjml ~> 5.3` | Rust toolchain at build time **NOT required** (precompiled NIF), but adopter's CI/build environment must support the precompiled NIF for their platform (linux/macos/windows on x86_64 + arm64 supported). | Adopters in Alpine containers may need to set `MJML_BUILD=true` and have Rust available. Document this caveat in the MJML guide. |
-| `dialyxir ~> 1.4` | Elixir 1.14+, OTP 25+ | PLT churn cost: cache restore → build-on-miss → save (engineering-DNA §2.2). |
-| `ex_doc ~> 0.40` | Elixir 1.13+ | 0.40 brings llms.txt generation; required for "AI-friendly docs" milestone goal. |
+| `@deprecated` attribute in Elixir 1.18+ | HIGH | Verified against Elixir 1.18.4 Module docs |
+| Sourceror 1.12.0 maintenance status | HIGH | Verified Hex.pm April 2026; 108k downloads/month |
+| Igniter 0.7.9 as codemod standard | HIGH | Verified Hex.pm; confirmed via ecosystem adoption |
+| Phoenix.Token API stability | HIGH | Verified hexdocs.pm/phoenix, v1.8.5 |
+| No RFC 8058 Hex package exists | HIGH | Hex.pm search confirms zero results |
+| Swoosh.Email.header/3 for List-Unsubscribe | HIGH | Verified hexdocs.pm/swoosh, v1.25.0 |
+| DKIM h= auto-inclusion by ESPs | MEDIUM | Standard behavior but not verified per-provider against 2026 docs |
+| Oban OSS schedule_in: {N, :days} availability | HIGH | Verified hexdocs.pm/oban Oban.Job docs |
+| Oban.Plugins.Cron static API | HIGH | Verified hexdocs.pm/oban, v2.21.1 |
+| Dialyzer flag correction (--ignore-exit-status) | HIGH | Verified hexdocs.pm/dialyxir, v1.4.7 |
+| Credo --strict flag | HIGH | Verified current Credo docs, v1.7.18 |
+| GitHub Actions tag-push syntax (unchanged) | HIGH | Verified current GitHub Actions docs |
+| actions/checkout version | MEDIUM | Latest release page showed v6.0.2; consumer-facing tag may differ |
+| release-please-action v5.0.0 Elixir support | MEDIUM | Node 24 only stated breaking change; Elixir type continuity not confirmed |
+| erlef/setup-beam v1.24.0 still current | HIGH | Verified GitHub releases |
 
 ---
 
-## 10. Stack patterns by variant
+## 9. Sources
 
-### 10.1 If adopter uses Oban already (the common case)
+### Verified against Hex.pm / HexDocs (April 2026)
 
-- `deliver_later/2` enqueues a `Mailglass.Outbound.ObanWorker` with idempotency-keyed args (provider_message_id is the dedupe key once known).
-- Per-domain rate limiting (v0.5) is implemented as a `Mailglass.Outbound.RateLimitedQueue` with Oban's `:meta` field carrying the recipient domain.
-- Use Oban's free `Oban.Web` for queue observability; don't reimplement.
+- Sourceror 1.12.0 — https://hex.pm/packages/sourceror (released March 6, 2026)
+- Igniter 0.7.9 — https://hex.pm/packages/igniter (released April 11, 2026)
+- Oban 2.21.1 — https://hex.pm/packages/oban (released March 26, 2026)
+- Credo 1.7.18 — https://hex.pm/packages/credo (released April 10, 2026)
+- Dialyxir 1.4.7 — https://hex.pm/packages/dialyxir (released November 6, 2025)
 
-### 10.2 If adopter does NOT use Oban
+### Verified against official docs (April 2026)
 
-- `deliver_later/2` falls back to `Task.Supervisor.start_child` with a one-time runtime warning (logged, not raised).
-- Rate limiting at v0.5 falls back to ETS-token-bucket (Hammer 7.x is candidate, but adding it as a dep is a v0.5 decision, not v0.1).
-- Document that production sending without Oban is **strongly discouraged** in the deliverability guide.
+- Phoenix.Token API — https://hexdocs.pm/phoenix/Phoenix.Token.html (Phoenix 1.8.5)
+- Swoosh.Email.header/3 — https://hexdocs.pm/swoosh/Swoosh.Email.html (Swoosh 1.25.0)
+- Oban.Job scheduling options — https://hexdocs.pm/oban/Oban.Job.html (Oban 2.21.1)
+- Oban.Plugins.Cron — https://hexdocs.pm/oban/Oban.Plugins.Cron.html (Oban 2.21.1)
+- mix dialyzer flags — https://hexdocs.pm/dialyxir/Mix.Tasks.Dialyzer.html (Dialyxir 1.4.7)
+- Elixir @deprecated attribute — https://hexdocs.pm/elixir/1.18.4/Module.html
+- Sourceror capabilities — https://hexdocs.pm/sourceror/readme.html + https://hexdocs.pm/sourceror/Sourceror.html
+- Igniter API — https://hexdocs.pm/igniter/readme.html + https://hexdocs.pm/igniter/Igniter.html
 
-### 10.3 If adopter uses sigra for auth
+### Verified against GitHub Releases (April 2026)
 
-- `Mailglass.Auth.Sigra` adapter is auto-wired (per `Code.ensure_loaded?(Sigra)`).
-- Admin LiveView pulls actor + tenant from `%Sigra.Scope{}` automatically.
-- Step-up verification (sigra pattern) wraps destructive admin actions: bulk unsuppress, replay webhook, force-resend campaign.
+- erlef/setup-beam v1.24.0 — still current (latest confirmed)
+- googleapis/release-please-action v5.0.0 — https://github.com/googleapis/release-please-action/releases (released April 22, 2026)
+- actions/checkout — https://github.com/actions/checkout/releases (latest v6.0.2, Jan 9, 2025 — pin by SHA)
 
-### 10.4 If adopter uses `phx.gen.auth` (the other common case)
+### GitHub Actions syntax
 
-- `Mailglass.Auth.PhxGenAuth` adapter ships built-in — assumes generated `current_user` + `current_scope` plug pattern.
-- No tenant scoping unless adopter opts in by implementing `Mailglass.Tenancy.scope/2` directly.
+- on: push: tags: — https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions (no 2026 changes)
 
-### 10.5 If adopter uses Ash Framework
+### Ecosystem research
 
-- Out of scope for first-party support at v0.1. Document as a v0.x community-adapter opportunity. `Mailglass.Auth` behaviour is the seam.
-
----
-
-## 11. Sources
-
-### Verified against Hex.pm in April 2026
-
-All entries below were checked against the package's Hex.pm page on **2026-04-21**.
-
-- Phoenix 1.8.5 — https://hex.pm/packages/phoenix (released 2026-03-05) — HIGH
-- phoenix_live_view 1.1.28 — https://hex.pm/packages/phoenix_live_view (released 2026-03-27) — HIGH
-- ecto_sql 3.13.5 — https://hex.pm/packages/ecto_sql (released 2026-03-03) — HIGH
-- postgrex 0.22.0 — https://hex.pm/packages/postgrex (released 2026-01-10) — HIGH
-- plug 1.19.1 — https://hex.pm/packages/plug (released 2025-12-09) — HIGH
-- swoosh 1.25.0 — https://hex.pm/packages/swoosh (released 2026-04-02) — HIGH
-- nimble_options 1.1.1 — https://hex.pm/packages/nimble_options (last release May 2024; feature-complete) — HIGH
-- telemetry 1.4.1 — https://hex.pm/packages/telemetry (released 2026-03-09) — HIGH
-- gettext 1.0.2 — https://hex.pm/packages/gettext (released 2025-11-08) — HIGH
-- floki 0.38.1 — https://hex.pm/packages/floki (released 2026-03-17) — HIGH
-- premailex 0.3.20 — https://hex.pm/packages/premailex (released 2025-01-20) — MEDIUM (slow cadence)
-- oban 2.21.1 — https://hex.pm/packages/oban (released 2026-03-26) — HIGH
-- opentelemetry 1.7.0 — https://hex.pm/packages/opentelemetry (released 2025-10-17) — HIGH
-- mjml 5.3.1 — https://hex.pm/packages/mjml (released 2026-02-13) — HIGH (verified `:mrml` is NOT a Hex package)
-- gen_smtp 1.3.0 — https://hex.pm/packages/gen_smtp (released 2025-05-30) — HIGH
-- sigra 0.2.0 — https://hex.pm/packages/sigra (released 2026-04-20) — MEDIUM (pre-1.0, single-dev)
-- stream_data 1.3.0 — https://hex.pm/packages/stream_data (released 2026-03-09) — HIGH
-- mox 1.2.0 — https://hex.pm/packages/mox (released 2024-08-14; stable) — HIGH
-- excoveralls 0.18.5 — https://hex.pm/packages/excoveralls (released 2025-01-26) — MEDIUM
-- dialyxir 1.4.7 — https://hex.pm/packages/dialyxir (released 2025-11-06) — HIGH
-- credo 1.7.18 — https://hex.pm/packages/credo (released 2026-04-10) — HIGH
-- ex_doc 0.40.1 — https://hex.pm/packages/ex_doc (released 2026-01-31; llms.txt confirmed) — HIGH
-
-### CI tooling — verified against GitHub Releases in April 2026
-
-- erlef/setup-beam v1.24.0 — https://github.com/erlef/setup-beam/releases (released 2026-03-30) — HIGH
-- googleapis/release-please-action v4.4.1 — https://github.com/googleapis/release-please-action/releases (released 2026-04-13) — HIGH
-- actions/dependency-review-action v4.9.0 — https://github.com/actions/dependency-review-action/releases (released 2026-03-03) — HIGH
-- rhysd/actionlint v1.7.12 — https://github.com/rhysd/actionlint/releases (released 2026-03-30) — HIGH
-
-### Compliance + ecosystem reality
-
-- Cloudflare AMP & Signed Exchanges deprecation (Oct 20, 2025 sunset) — https://community.cloudflare.com/t/amp-and-signed-exchanges-deprecation-october-20th/831238 — HIGH (verified Apr 2026)
-- 2026 Bulk email sender requirements — Red Sift guide — https://redsift.com/guides/bulk-email-sender-requirements — HIGH
-- Gmail & Yahoo 2026 guide — Mailmodo — https://www.mailmodo.com/guides/email-sender-guidelines/ — HIGH
-- Google sender requirements FAQ — https://support.google.com/a/answer/14229414 — HIGH
-- RFC 8058 (one-click unsubscribe) — https://datatracker.ietf.org/doc/html/rfc8058 — HIGH (canonical RFC)
-
-### Internal source-of-truth (cited extensively above)
-
-- `/Users/jon/projects/mailglass/.planning/PROJECT.md` (Decisions D-01 through D-20, esp. D-06, D-07, D-08, D-13, D-17, D-18)
-- `/Users/jon/projects/mailglass/prompts/The 2026 Phoenix-Elixir ecosystem map for senior engineers.md` (§§1-2, 4, 11, 14, 15, 22, 26, 29 — full ecosystem map)
-- `/Users/jon/projects/mailglass/prompts/Phoenix needs an email framework not another mailer.md` (§§1, 3, 4, 6 — founding thesis with Anymail taxonomy + RFC 8058 + Swoosh adapter analysis)
-- `/Users/jon/projects/mailglass/prompts/mailglass-engineering-dna-from-prior-libs.md` (§§2.1-2.10, 3.4, 3.5, 3.9, 6 — convergent DNA + optional-dep discipline + Fake-as-release-gate + gotchas)
-- `/Users/jon/projects/mailglass/prompts/elixir-best-practices-deep-research.md` (§§1-4 — API design, error handling, naming)
-- `/Users/jon/projects/mailglass/prompts/elixir-opensource-libs-best-practices-deep-research.md` (§§1-3, 6, 7 — explicit API, runtime config, behaviours)
-- `/Users/jon/projects/mailglass/prompts/elixir-oss-lib-ci-cd-best-practices-deep-research.md` (full document — release model, lane structure, ExDoc llms.txt, Release Please PAT vs GITHUB_TOKEN, Hex publishing)
+- Igniter ecosystem adoption: ElixirForum thread on Sourceror+Igniter for codemods — https://elixirforum.com/t/inserting-a-use-statement-with-sourceror-in-a-mix-task/73224
+- Igniter in practice: SmartLogic writeup — https://smartlogic.io/blog/potions-in-a-cauldron-elixir-app-development-code-generation/
+- RFC 8058 — https://datatracker.ietf.org/doc/html/rfc8058 (canonical RFC, no new deps)
 
 ---
 
-## 12. Confidence summary
+## 10. Critical corrections to existing planning docs
 
-| Decision area | Confidence | Reason |
-|---|---|---|
-| Required core deps + versions | **HIGH** | All verified live on Hex.pm Apr 2026; aligned with PROJECT.md D-06 floor. |
-| Optional deps (Oban, OTel, mjml, gen_smtp, sigra) | **HIGH** | Verified versions; rationale grounded in PROJECT.md decisions + engineering-DNA §3.4. One correction: `:mrml` is `:mjml` on Hex. |
-| Test stack (StreamData/Mox/Fake adapter) | **HIGH** | Per PROJECT.md v0.1 reqs + engineering-DNA §3.5. ExMachina exclusion confirmed with concrete reasoning. |
-| CI tooling | **HIGH** | All action versions verified Apr 2026; lane structure matches engineering-DNA §2.2 (4-of-4 convergence). |
-| ExDoc + llms.txt | **HIGH** | Confirmed ExDoc 0.40.x ships llms.txt out of the box per HexDocs. |
-| What NOT to use | **HIGH** | Every "don't" is grounded in a citable PROJECT.md decision, prompts/ research finding, or engineering-DNA gotcha. |
-| 2026 email-compliance landscape | **HIGH** | Cross-verified against 5 industry sources Apr 2026. Gmail/Yahoo/Microsoft enforcement status, AMP for Email sunset, RFC 8058 specifics all confirmed. |
-| Premailex long-term maintenance | **MEDIUM** | 15-month-old release; no credible replacement exists. Risk: contributor pickup needed if we want to influence direction. Acceptable risk for v0.1; flag as "watch this dep" in v1.0 maintenance plan. |
-| sigra adapter | **MEDIUM** | sigra is pre-1.0 single-developer; treat as soft dependency, never block on it. |
+These items are **wrong in current planning docs** and must be corrected before Phase 8 planning:
+
+| Document | Incorrect claim | Correct fact |
+|----------|----------------|--------------|
+| STATE.md, PROJECT.md | "Dialyzer `--halt-exit-status`" | The flag is `--ignore-exit-status` (the advisory mode flag). The **default** `mix dialyzer` (no flags) already halts on warnings. Re-tightening means REMOVING `--ignore-exit-status` from the CI command, not ADDING a new flag. |
+| STATE.md | "re-tighten Tests gate to halt-on-failure" describes the Dialyzer work as adding a flag | It's REMOVING the `--ignore-exit-status` flag. The fix is subtraction, not addition. |
 
 ---
 
-## 13. Gaps I'm filling vs decisions already locked
-
-**Already locked in PROJECT.md / prompts/ — I am citing, not deciding:**
-- Hard required deps list (PROJECT.md "Constraints")
-- Optional deps list (PROJECT.md "Constraints")
-- Phoenix 1.8 / LiveView 1.1 / Ecto 3.13 / Postgres floor (D-06)
-- Swoosh as transport, not replacement (PROJECT.md "what this is" + D-07)
-- HEEx + Phoenix.Component as default renderer; MJML opt-in (D-18)
-- Open/click tracking off by default (D-08)
-- ExMachina excluded; Map.merge/2 fixtures (engineering-DNA §2.6)
-- Conventional Commits + Release Please + Hex publish from protected ref (engineering-DNA §2.3 + PROJECT.md D-16)
-- Telemetry naming convention (engineering-DNA §2.5)
-- Custom Credo checks for domain rules (D-17)
-- Anymail taxonomy verbatim for webhook normalization (D-14)
-- Append-only event ledger with immutability trigger (D-15)
-- Fake adapter as required release gate (D-13)
-- ExDoc with `main: "getting-started"` (PROJECT.md v0.1 active reqs)
-
-**Gaps I'm filling in this STACK.md:**
-- **Specific 2026 versions** for every dep (not in PROJECT.md or prompts/)
-- **`:mjml` vs `:mrml` correction** — PROJECT.md and prompts/ reference `:mrml` as the optional dep but the actual Hex package is `:mjml` (Rust NIF wrapping the underlying mrml Rust crate). No `:mrml` Hex package exists.
-- **Confirmed ExDoc 0.40.x ships `llms.txt` automatically** — answers the milestone-context question affirmatively with verification.
-- **Verified GitHub Action versions** for setup-beam, release-please-action, dependency-review-action, actionlint as of Apr 2026.
-- **Confirmed the 2024 Yahooglesoft trio is now permanently enforcing** — Gmail Nov 2025 escalation, Microsoft May 2025 join.
-- **Confirmed AMP for Email sunset** via Cloudflare community thread (Aug 2025 announce → Oct 20, 2025 deprecation).
-- **The "version compatibility matrix"** (§9) — practical guidance for adopters running into mix dep conflict resolution.
-- **The "stack patterns by variant"** (§10) — what changes when adopters do/don't have Oban, sigra, phx.gen.auth, Ash.
-
----
-
-*Stack research for: mailglass — Phoenix-native transactional email framework*
-*Researched: 2026-04-21*
-*Source-of-truth files: `.planning/PROJECT.md`, `prompts/*.md`*
+*Stack research for: mailglass v0.2 "Production-Credible Core" milestone*
+*Researched: 2026-04-26*
+*Scope: New v0.2 additions only. v0.1 validated stack in `.planning/milestones/v0.1-research/STACK.md`.*
