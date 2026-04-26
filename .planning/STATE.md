@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1.0
 milestone_name: packages to Hex.pm
 status: executing
-stopped_at: Completed 07.1-08-PLAN.md
-last_updated: "2026-04-25T21:31:20.148Z"
-last_activity: 2026-04-25
+stopped_at: Completed 07.1-10-PLAN.md (PR #8 open — Plan 11 blocked on CI)
+last_updated: "2026-04-26T13:38:00.000Z"
+last_activity: 2026-04-26
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 61
-  completed_plans: 51
-  percent: 84
+  completed_plans: 53
+  percent: 87
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 07.1 (publish-v0-1-0-packages-to-hex-pm) — EXECUTING
-Plan: 9 of 11 (Wave 3 complete; Wave 4 next)
-Status: Wave 3 landed — plans 07.1-07..09 on main
-Last activity: 2026-04-26 -- Wave 3 of Phase 07.1 complete (9/11 plans)
+Plan: 10 of 11 complete (Wave 4 done) — Plan 11 blocked on CI red
+Status: release-please PR #8 open at v0.1.0; Plan 11 publish ceremony cannot fire until CI is green
+Last activity: 2026-04-26 -- Plan 07.1-10 complete + workflow plumbing fixes + Release-As pushed
 
 **Wave 1 + 2 + 3 commits on main (8c2e7f3..87206d3):**
 
@@ -53,9 +53,38 @@ Interleaved: `7cdf7b1` user-authored fix moving custom credo checks to `credo_ch
 
 **Wave 1 recovery note:** Original Wave 1 spawned 5 parallel agents but credits ran out mid-wave. Recovery (this session) salvaged 07.1-02/03/05 from worktrees via cherry-pick, restarted 07.1-01 and 07.1-04 from current main HEAD because their previous worktree work was incomplete (only 1 of 2 required files done in each). All 5 plans now land as a single linear sequence on main.
 
-**Next:** Wave 4 — 07.1-10 release-please bootstrap reset (human-verify checkpoints) when user confirms.
+**Wave 4 commits on main (`3a19b43..9e7732e`):**
 
-Progress: [█████████░] 95%
+- `2ada396` 07.1-09 SUMMARY backfill (post-publish-smoke workflow)
+- `3a19b43` 07.1-10 Tasks 1+2 — manifest reset to 0.0.0 + bootstrap-sha pin
+- `70d0306` 07.1-10 unplanned: workflow plumbing fixes (release-please SHA + publish-hex gating)
+- `e26b691` 07.1-10 Task 3 — empty `chore: release 0.1.0` with `Release-As: 0.1.0` trailer
+- `9e7732e` 07.1-10 SUMMARY
+
+**Wave 4 outcome:** PR #8 opened by `app/github-actions` — `chore: release main` (label `autorelease: pending`), proposing both `mailglass` and `mailglass_admin` at v0.1.0 with full Conventional-Commits CHANGELOG entries.
+
+**One-time API call:** `gh api -X PUT repos/szTheory/mailglass/actions/permissions/workflow` set `default_workflow_permissions: write` and `can_approve_pull_request_reviews: true` (was `read` / `false`). Required to let release-please-action open the PR.
+
+**Plan 11 blocker — CI red on main HEAD `e26b691`:**
+
+8 of 10 CI gates fail. Will block `publish-hex.yml`'s `gate-ci-green` step at PR #8 merge time:
+
+| Gate | Result | Triaged root cause |
+|------|--------|-------------------|
+| Hex Audit | ✓ pass | — |
+| Compile Warnings as Errors | ✓ pass | — |
+| Tests | ✗ fail | not deeply diagnosed |
+| Format Check | ✗ fail | Elixir 1.19 (local) vs 1.18 (CI) line-split heuristic mismatch on `lib/mailglass/outbound.ex` and `lib/mix/tasks/mailglass.publish.check.ex` |
+| Compile No Optional Deps | ✗ fail | `Mailglass.Oban.TenancyMiddleware` + `Mailglass.Outbound.Worker` listed as exports without `OptionalDeps.Oban.available?/0` gating |
+| Docs Warnings as Errors | ✗ fail | not deeply diagnosed |
+| Credo Strict | ✗ fail | `Mailglass.Error.BatchFailed` violates `*Error` suffix consistency convention |
+| Dialyzer | ✗ fail | not deeply diagnosed |
+| Installer Golden Gate | ✗ fail | not deeply diagnosed |
+| Admin Smoke Gate | ✗ fail | not deeply diagnosed |
+
+**Next:** Open a CI-fix sub-phase before Plan 11 publish ceremony. Suggested: `/gsd-add-phase` for `07.1-CI-FIX` or `/gsd-debug` to triage and patch.
+
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
