@@ -535,8 +535,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
     checks = [
       {is_binary(description) and byte_size(description) <= 300 and
-         String.trim_leading(description) == description and not String.ends_with?(description, "."),
-       "description"},
+         String.trim_leading(description) == description and
+         not String.ends_with?(description, "."), "description"},
       {licenses == ["MIT"], "licenses"},
       {is_map(links) and Map.get(links, "GitHub") == source_url, "links.GitHub"},
       {ctx.package != :mailglass_admin or Map.has_key?(links, "HexDocs"), "links.HexDocs"},

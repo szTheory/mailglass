@@ -76,7 +76,15 @@ defmodule Mailglass.MixProject do
         :otel_span,
         Mjml,
         :gen_smtp_client,
-        Sigra
+        Sigra,
+        # Premailex transitively references Meeseeks.Error in an optional
+        # HTML-parser integration. Meeseeks isn't a mailglass dep; suppress
+        # the bare-reference warning to keep test --warnings-as-errors clean.
+        Meeseeks,
+        Meeseeks.Error,
+        Meeseeks.Document,
+        # :asn1ct surfaces in OTP 27 SendGrid ECDSA shim; not in our deps.
+        :asn1ct
       ]
     ]
   end

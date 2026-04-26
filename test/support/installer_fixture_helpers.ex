@@ -139,17 +139,6 @@ defmodule Mailglass.Test.InstallerFixtureHelpers do
     Path.join(System.tmp_dir!(), "mailglass-installer-fixture-#{name}-#{unique}")
   end
 
-  defp migration_timestamp do
-    NaiveDateTime.utc_now()
-    |> NaiveDateTime.truncate(:second)
-    |> Calendar.strftime("%Y%m%d%H%M%S")
-  end
-
-  defp random_secret do
-    :crypto.strong_rand_bytes(16)
-    |> Base.encode16(case: :lower)
-  end
-
   defp sha256(contents) do
     :crypto.hash(:sha256, contents)
     |> Base.encode16(case: :lower)
