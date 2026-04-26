@@ -243,13 +243,17 @@ jobs:
       - name: mix deps.get
         working-directory: ${{ runner.temp }}/sandbox
         run: mix deps.get
-      - name: Run mix mailglass.install
+      - name: Run mix mailglass.install --force
+        # NOTE: --force is needed in v0.1.0 because Templates.router_anchor/0
+        # looks for the literal string `use Phoenix.Router` which real
+        # Phoenix apps' source files DON'T contain (they have
+        # `use MyAppWeb, :router` which expands to `use Phoenix.Router`
+        # at compile time). Without --force, the installer writes two
+        # conflict sidecars and exits 1. v0.1.1 will fix the anchor to
+        # match `:router` keyword (or any of several known Phoenix
+        # router shapes) so a clean install works without --force.
         working-directory: ${{ runner.temp }}/sandbox
-        # `mix mailglass.install` accepts only --dry-run, --no-admin, --force
-        # (per OptionParser strict in lib/mix/tasks/mailglass.install.ex). The
-        # install runs non-interactively by default (no prompts), so no --yes
-        # flag is needed or supported.
-        run: mix mailglass.install
+        run: mix mailglass.install --force
       - name: Compile, fail on warnings
         working-directory: ${{ runner.temp }}/sandbox
         run: |
