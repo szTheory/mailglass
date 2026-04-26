@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1](https://github.com/szTheory/mailglass/compare/mailglass-v0.1.0...mailglass-v0.1.1) (2026-04-26)
+
+
+### Features
+
+* **installer:** match real Phoenix router anchor + Swoosh Finch default ([cf287f9](https://github.com/szTheory/mailglass/commit/cf287f972cc70138205762a3a3528ba2f7bb4c3a))
+
+
+### Bug Fixes
+
+* **post-publish-smoke:** add hackney to sandbox deps for Swoosh ([9482a60](https://github.com/szTheory/mailglass/commit/9482a607a828fb5b5b8ed2b5e45c309ed837e12a))
+* **post-publish-smoke:** drop --yes from mix mailglass.install ([17188b0](https://github.com/szTheory/mailglass/commit/17188b094656a192c48e6ad764e9293e08e97601))
+* **post-publish-smoke:** list cron-guard as direct needs of all downstream jobs ([b636648](https://github.com/szTheory/mailglass/commit/b6366482837c94f62071aaab16265aa92f747cdb))
+* **post-publish-smoke:** use --force on install (v0.1.0 anchor workaround) ([33f1212](https://github.com/szTheory/mailglass/commit/33f1212d09a89ee660c78d3903a6b5fb9f1b1933))
+* **release-please:** bump mailglass_admin -&gt; mailglass dep pin on every release ([eb0370f](https://github.com/szTheory/mailglass/commit/eb0370ff464d2711275b3ad8386e2be81aed38a7))
+* **release-please:** move x-release-please-version annotation onto its own line ([e0b1edb](https://github.com/szTheory/mailglass/commit/e0b1edbbdfd0b2458fad1bf09987b73d141d6a21))
+* **release-please:** sync mailglass_admin -&gt; mailglass dep pin via workflow sed ([9fc4009](https://github.com/szTheory/mailglass/commit/9fc40093e8844ce59bb518e153b85382913dc17d))
+
+
+### Miscellaneous Chores
+
+* release 0.1.1 ([bfd001f](https://github.com/szTheory/mailglass/commit/bfd001fdf3a994de0da74b0091c1d60972c57605))
+
 ## 0.1.0 (2026-04-26)
 
 
