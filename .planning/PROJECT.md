@@ -38,14 +38,31 @@ v0.1 milestone closed 2026-04-26. 8 phases (7 planned + 1 inserted), 61 plans, 8
 - Phase 4 standard-depth review WR-01..WR-06 (none block)
 - Adopter feedback: Mailable API exposes too much Swoosh — v0.2 design discussion candidate
 
-## Next Milestone Goals
+## Current Milestone: v0.2 Production-Credible Core
 
-To be defined via `/gsd-new-milestone`. Candidate scopes:
+**Goal:** Lock mailglass's public API for downstream OSS dependencies, ship the RFC 8058 + auto-suppression deliverability floor that makes "batteries-included" load-bearing, and close v0.1.1 release-engineering debt so the publish pipeline is trustworthy for sibling-version coordinated releases.
 
-- **v0.1.2 polish** — release-engineering fixes from v0.1.1 ship surface
-- **v0.2 Mailable API** — abstract above Swoosh based on adopter feedback
-- **v0.5 Deliverability + Admin** — DELIV-01..10 (RFC 8058 List-Unsubscribe, message-stream separation, auto-suppression, Mailgun/SES/Resend webhook normalization, prod-mountable admin LiveView, `mix mail.doctor`, per-tenant adapter resolver)
-- **v0.5+ Inbound** — `mailglass_inbound` separate sibling package (Action Mailbox equivalent)
+**Driving constraint:** Other OSS libraries (e.g. `accrue`) are about to depend on mailglass. Locking the public API NOW is the highest-leverage move; every breaking change after v0.2 multiplies cost across downstream pinners.
+
+**Target features (3 pillars):**
+
+- **API stability** — Mailable redesign hides Swoosh; native `Mailglass.Message` field setters (`to/2`, `from/2`, `subject/2`, `body/2`, `header/3`, `attach/2`, etc.); `update_swoosh/2` retained as documented escape hatch (per domain-language guide §3, intentional not default); `api_stability.md` v2 with explicit public-surface freeze; `mix mailglass.upgrade.v0_2` codemod task; deprecation warnings on v0.1 paths (one-cycle BC for `~> 0.1` adopters).
+- **Deliverability floor** — Message-stream separation enforced (`:transactional`/`:operational`/`:bulk`) at compile + runtime; RFC 8058 List-Unsubscribe + List-Unsubscribe-Post auto-injected on `:bulk` (opt-in on `:operational`) with both inside DKIM `h=`; signed-token unsubscribe controller (`Phoenix.Token` rotation) + `mix mailglass.gen.unsubscribe`; auto-suppression on `:bounced`/`:complained`/`:unsubscribed` events with configurable soft-bounce escalation; `mix mailglass.suppressions.resync`; stable Feedback-ID format `{sender_id}:{mailable}:{tenant_id}:{stream}`.
+- **Release-engineering hardening** — Close 9 v0.1.2 TODOs (HexDocs `CLAUDE.md` exclusion; tag-push trigger on `publish-hex.yml` + `post-publish-smoke.yml`; installer-goldens wired into `mix mailglass.publish.check`; `verify.phase_NN` semantic rename; internal D-NN/LINT-NN strip from public guides; Advisory Matrix DB-setup + 1.17 fixes; managed-snippet drift detection); re-tighten Tests gate to halt-on-failure; `Credo --strict`; `Dialyzer --halt-exit-status` triage budget.
+
+**Phase shape:** 6 phases (Phase 8 → Phase 13), continuing numbering from v0.1's last phase 07.1. Plan count estimate: 30–40. Calendar pace similar to v0.1.
+
+**Explicit deferrals:**
+
+- **v0.3** — DELIV-04 webhook coverage (Mailgun + SES + Resend) as a focused single-purpose milestone
+- **v0.5** — DELIV-05 prod-mountable admin LiveView + DELIV-06 `mix mail.doctor` + DELIV-07 per-tenant adapter resolver + DELIV-08/09/10 polish
+- **v0.5+** — `mailglass_inbound` separate sibling package (Action Mailbox equivalent)
+
+## Next Milestone Goals (post-v0.2)
+
+- **v0.3 Webhook Coverage Expansion** — DELIV-04: Mailgun (HMAC-SHA256), SES (SNS subscription confirmation + signature), Resend (provider-specific signing). Closes "batteries-included webhook coverage" claim across the major Anymail providers.
+- **v0.5 Deliverability + Admin** — DELIV-05 (prod-mountable admin LiveView with sent-mail browser, event timeline, suppression UI, replay webhook, step-up auth on destructive actions); DELIV-06 (`mix mail.doctor` — DNS deliverability checks: SPF, DKIM, DMARC, MX, BIMI); DELIV-07 (per-tenant adapter resolver); DELIV-08 (cluster-coordinated rate limit via `:pg`); DELIV-09 (DKIM signing helper for self-hosted SMTP); DELIV-10 polish.
+- **v0.5+ Inbound** — `mailglass_inbound` separate sibling package (Action Mailbox equivalent: Router DSL, Mailbox behaviour, ingress plugs for Postmark/SendGrid/Mailgun/SES, SMTP relay via `gen_smtp`, async routing via Oban, dev Conductor LiveView).
 
 ## Core Value
 
@@ -75,9 +92,19 @@ All 84 v1 REQ-IDs satisfied. Full archive: [`.planning/milestones/v0.1-REQUIREME
 - ✓ DOCS-01..05 — ExDoc with 9 guides, migration-from-swoosh, doc-contract tests, governance files
 - ✓ BRAND-01..03 — Brand-conformant UI + voice + docs
 
-## Active (Next Milestone — TBD)
+## Active (v0.2 — Production-Credible Core)
 
-To be re-derived via `/gsd-new-milestone`. v0.5 candidate set already tracked in archived `v0.1-REQUIREMENTS.md` under "v2 Requirements" — not yet promoted to active.
+Re-derived 2026-04-26 for v0.2 milestone. Full REQ-IDs + traceability in `.planning/REQUIREMENTS.md`.
+
+**Five categories planned for v0.2:**
+
+- **API-01..07** — Mailable API redesign + native Message field setters + `api_stability.md` v2 + codemod task + deprecation warnings + migration guide
+- **STREAM-01..04** — Message-stream separation (`:transactional`/`:operational`/`:bulk`) + runtime + compile-time enforcement + stream-aware Feedback-ID
+- **UNSUB-01..06** — RFC 8058 List-Unsubscribe headers + signed-token controller + rotation + generator + property tests
+- **SUPP-01..05** — Auto-suppression on bounce/complaint/unsubscribe + soft-bounce escalation + resync mix task + default-deny pre-send check
+- **REL-01..16** — Release-engineering hardening: 9 v0.1.2 polish TODOs + Tests gate halt-on-failure + Credo strict + Dialyzer halt-exit-status + release ceremony (CHANGELOG, migration guide, Hex publish)
+
+**Out-of-scope-for-v0.2 (deferred to v0.3+, tracked in archived `milestones/v0.1-REQUIREMENTS.md` under "v2 Requirements"):** DELIV-04 (Mailgun/SES/Resend webhooks), DELIV-05 (prod admin LiveView), DELIV-06 (`mix mail.doctor`), DELIV-07 (per-tenant adapter), DELIV-08 (cluster rate limit), DELIV-09 (DKIM helper), INBOUND-01..07.
 
 ## Out of Scope
 
@@ -185,4 +212,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-04-26 after v0.1 milestone completion (v0.1.0 + v0.1.1 shipped to Hex.pm).*
+*Last updated: 2026-04-26 — v0.2 milestone "Production-Credible Core" started after v0.1 close.*
