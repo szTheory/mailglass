@@ -57,18 +57,24 @@ jobs:
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-      - name: Install deps
+      - name: Install deps (root)
+        run: mix deps.get
+      - name: Install deps (admin)
+        if: ${{ github.event.inputs.package != 'mailglass' }}
+        working-directory: mailglass_admin
         run: mix deps.get
       - name: Pre-publish check for mailglass
         if: ${{ github.event.inputs.package != 'mailglass_admin' }}
         run: |
           echo "## mailglass" >> "$GITHUB_STEP_SUMMARY"
-          mix mailglass.publish.check --package mailglass >> "$GITHUB_STEP_SUMMARY" 2>&1
+          set -o pipefail
+          mix mailglass.publish.check --package mailglass 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Pre-publish check for mailglass_admin
         if: ${{ github.event.inputs.package != 'mailglass' }}
         run: |
           echo "## mailglass_admin" >> "$GITHUB_STEP_SUMMARY"
-          mix mailglass.publish.check --package mailglass_admin >> "$GITHUB_STEP_SUMMARY" 2>&1
+          set -o pipefail
+          mix mailglass.publish.check --package mailglass_admin 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
 
   gate-ci-green:
     runs-on: ubuntu-latest
