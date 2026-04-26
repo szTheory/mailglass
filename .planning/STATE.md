@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
 status: planning
-stopped_at: "v0.2 roadmap created — Phase 8 ready to plan"
-last_updated: "2026-04-26T20:00:00.000Z"
-last_activity: 2026-04-26
+stopped_at: Phase 8 context gathered
+last_updated: "2026-04-26T21:49:17.034Z"
+last_activity: 2026-04-26 — v0.2 roadmap created; 38/38 REQ-IDs mapped
 progress:
-  total_phases: 6
+  total_phases: 5
   completed_phases: 0
-  total_plans: 37
+  total_plans: 0
   completed_plans: 0
   percent: 0
 ---
@@ -35,6 +35,7 @@ Progress: [░░░░░░░░░░] 0%
 ## Milestone Spec (v0.2)
 
 **Three pillars:**
+
 - **API stability** — Mailable redesign hides Swoosh; native Message field setters; `update_swoosh/2` as documented escape hatch; `api_stability.md` v2; `mix mailglass.upgrade.v0_2` Igniter codemod; deprecation warnings on v0.1 paths.
 - **Deliverability floor** — Stream separation enforced (compile + runtime); RFC 8058 List-Unsubscribe atomic header injection + signed-token controller; auto-suppression on bounce/complaint/unsubscribe + soft-bounce escalation; stream-aware Feedback-ID.
 - **Release-engineering hardening** — Close 9 v0.1.2 TODOs; Tests gate halt-on-failure; Credo --strict; Dialyzer triage (remove --ignore-exit-status — subtraction, not addition).
@@ -46,6 +47,7 @@ Progress: [░░░░░░░░░░] 0%
 ### Decisions
 
 D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
+
 - D-22: Mailable API public surface freeze policy (api_stability.md v2) — to be logged at Phase 9
 - D-23: Stream policy enforcement boundary (compile + runtime both required per AF-V2-08) — Phase 10
 - D-24: Auto-suppression idempotency (Multi.run inside webhook ingest, on_conflict: :nothing) — Phase 12
@@ -73,6 +75,6 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 
 ## Session Continuity
 
-Last session: 2026-04-26T20:00:00Z
-Stopped at: v0.2 roadmap created — Phase 8 ready to plan
+Last session: --stopped-at
+Stopped at: Phase 8 context gathered
 Resume: `/gsd-plan-phase 8`
