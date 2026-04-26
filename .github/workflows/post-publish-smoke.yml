@@ -231,7 +231,11 @@ jobs:
           version = os.environ["VERSION"]
           mix_path = pathlib.Path("mix.exs")
           content = mix_path.read_text()
-          entries = f'      {{:mailglass, "== {version}"}},\n      {{:mailglass_admin, "== {version}"}},\n'
+          # hackney is Swoosh's default api_client at v1.25; phx.new doesn't
+          # ship it. v0.1.1 will configure mailglass.install to set
+          # `config :swoosh, :api_client, Swoosh.ApiClient.Finch` (Finch ships
+          # with phx.new) so this manual hackney pin becomes unnecessary.
+          entries = f'      {{:mailglass, "== {version}"}},\n      {{:mailglass_admin, "== {version}"}},\n      {{:hackney, "~> 1.18"}},\n'
           content = re.sub(r"(defp deps do\n\s*\[\n)", r"\1" + entries, content, count=1)
           mix_path.write_text(content)
           PYEOF
