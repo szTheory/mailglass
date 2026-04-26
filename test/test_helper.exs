@@ -16,14 +16,34 @@ end
 # as a first-time setup step (documented in CONTRIBUTING.md — Phase 7).
 # `with_repo` also stops the ephemeral repo it started after its block returns,
 # so we start the TestRepo explicitly for the test run immediately after.
+#
+# **Pool override for migration phase:** TestRepo is configured with
+# `pool: Ecto.Adapters.SQL.Sandbox` (config/test.exs) so test bodies can
+# `Sandbox.checkout/checkin`. But Sandbox needs `mode/2` to be set before
+# checkouts work, and we set `:manual` only AFTER migrations finish. If we
+# leave the pool as Sandbox during `with_repo`, the migrator's connection
+# checkout hangs and times out (`DBConnection.ConnectionError ... request
+# was dropped from queue after 5998ms`). Override the pool to the default
+# `DBConnection.ConnectionPool` for the migration step, then restore the
+# Sandbox pool config for the long-lived TestRepo that test bodies use.
 migrations_path =
   :code.priv_dir(:mailglass)
   |> Path.join("repo/migrations")
+
+test_repo_config = Application.get_env(:mailglass, Mailglass.TestRepo)
+
+Application.put_env(
+  :mailglass,
+  Mailglass.TestRepo,
+  Keyword.put(test_repo_config, :pool, DBConnection.ConnectionPool)
+)
 
 {:ok, _, _} =
   Ecto.Migrator.with_repo(Mailglass.TestRepo, fn repo ->
     Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
   end)
+
+Application.put_env(:mailglass, Mailglass.TestRepo, test_repo_config)
 
 {:ok, _pid} = Mailglass.TestRepo.start_link()
 
