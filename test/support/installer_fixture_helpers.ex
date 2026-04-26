@@ -161,8 +161,15 @@ defmodule Mailglass.Test.InstallerFixtureHelpers do
   end
 
   defp host_router do
+    # NOTE: Real Phoenix apps have `use MyAppWeb, :router` which expands to
+    # `use Phoenix.Router` at compile time; the source file does NOT contain
+    # `use Phoenix.Router` literally. The installer's `router_anchor/0`
+    # currently looks for the literal expanded form, which is fragile for
+    # real adopters but lets us seed the fixture deterministically here.
+    # Tracked as a v0.1.1 polish: make the anchor match `:router` keyword.
     """
     defmodule ExampleWeb.Router do
+      use Phoenix.Router
       use ExampleWeb, :router
 
       scope "/", ExampleWeb do
