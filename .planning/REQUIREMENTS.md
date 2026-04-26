@@ -142,55 +142,64 @@ Explicitly excluded with permanent reasoning. Anti-features documented to preven
 
 ## Traceability
 
-Populated by `gsd-roadmapper` during roadmap creation. Each requirement maps to exactly one phase.
+38/38 v0.2 requirements mapped to exactly one phase. No orphans, no duplicates.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| API-01 | TBD | Pending |
-| API-02 | TBD | Pending |
-| API-03 | TBD | Pending |
-| API-04 | TBD | Pending |
-| API-05 | TBD | Pending |
-| API-06 | TBD | Pending |
-| API-07 | TBD | Pending |
-| STREAM-01 | TBD | Pending |
-| STREAM-02 | TBD | Pending |
-| STREAM-03 | TBD | Pending |
-| STREAM-04 | TBD | Pending |
-| UNSUB-01 | TBD | Pending |
-| UNSUB-02 | TBD | Pending |
-| UNSUB-03 | TBD | Pending |
-| UNSUB-04 | TBD | Pending |
-| UNSUB-05 | TBD | Pending |
-| UNSUB-06 | TBD | Pending |
-| SUPP-01 | TBD | Pending |
-| SUPP-02 | TBD | Pending |
-| SUPP-03 | TBD | Pending |
-| SUPP-04 | TBD | Pending |
-| SUPP-05 | TBD | Pending |
-| REL-01 | TBD | Pending |
-| REL-02 | TBD | Pending |
-| REL-03 | TBD | Pending |
-| REL-04 | TBD | Pending |
-| REL-05 | TBD | Pending |
-| REL-06 | TBD | Pending |
-| REL-07 | TBD | Pending |
-| REL-08 | TBD | Pending |
-| REL-09 | TBD | Pending |
-| REL-10 | TBD | Pending |
-| REL-11 | TBD | Pending |
-| REL-12 | TBD | Pending |
-| REL-13 | TBD | Pending |
-| REL-14 | TBD | Pending |
-| REL-15 | TBD | Pending |
-| REL-16 | TBD | Pending |
+| API-01 | Phase 9 | Pending |
+| API-02 | Phase 9 | Pending |
+| API-03 | Phase 9 | Pending |
+| API-04 | Phase 9 | Pending |
+| API-05 | Phase 9 | Pending |
+| API-06 | Phase 9 | Pending |
+| API-07 | Phase 9 | Pending |
+| STREAM-01 | Phase 10 | Pending |
+| STREAM-02 | Phase 10 | Pending |
+| STREAM-03 | Phase 10 | Pending |
+| STREAM-04 | Phase 10 | Pending |
+| UNSUB-01 | Phase 11 | Pending |
+| UNSUB-02 | Phase 11 | Pending |
+| UNSUB-03 | Phase 11 | Pending |
+| UNSUB-04 | Phase 11 | Pending |
+| UNSUB-05 | Phase 11 | Pending |
+| UNSUB-06 | Phase 11 | Pending |
+| SUPP-01 | Phase 12 | Pending |
+| SUPP-02 | Phase 12 | Pending |
+| SUPP-03 | Phase 12 | Pending |
+| SUPP-04 | Phase 12 | Pending |
+| SUPP-05 | Phase 12 | Pending |
+| REL-01 | Phase 8 | Pending |
+| REL-02 | Phase 8 | Pending |
+| REL-03 | Phase 8 | Pending |
+| REL-04 | Phase 8 | Pending |
+| REL-05 | Phase 8 | Pending |
+| REL-06 | Phase 8 | Pending |
+| REL-07 | Phase 8 | Pending |
+| REL-08 | Phase 8 | Pending |
+| REL-09 | Phase 8 | Pending |
+| REL-10 | Phase 8 | Pending |
+| REL-11 | Phase 8 | Pending |
+| REL-12 | Phase 8 | Pending |
+| REL-13 | Phase 13 | Pending |
+| REL-14 | Phase 13 | Pending |
+| REL-15 | Phase 13 | Pending |
+| REL-16 | Phase 13 | Pending |
 
 **Coverage:**
 - v0.2 requirements: 38 total (API: 7, STREAM: 4, UNSUB: 6, SUPP: 5, REL: 16)
-- Mapped to phases: 0 / 38 (filled by roadmapper)
-- Unmapped: 38
+- Mapped to phases: 38 / 38
+- Unmapped: 0
+
+**Phase breakdown:**
+- Phase 8: REL-01..12 (12 requirements)
+- Phase 9: API-01..07 (7 requirements)
+- Phase 10: STREAM-01..04 (4 requirements)
+- Phase 11: UNSUB-01..06 (6 requirements)
+- Phase 12: SUPP-01..05 (5 requirements)
+- Phase 13: REL-13..16 (4 requirements)
 
 ---
 
 *Requirements defined: 2026-04-26*
+*Traceability populated: 2026-04-26 (gsd-roadmapper)*
 *Source: research/SUMMARY.md + research/PITFALLS.md (5 corrections folded in: Dialyzer flag subtraction, `on: release:` trigger, Multi event-first ordering, controller in core, `mailable.ex:129` injection site).*
