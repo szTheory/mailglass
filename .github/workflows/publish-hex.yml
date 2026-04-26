@@ -212,8 +212,15 @@ jobs:
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-      - name: Install deps
+      - name: Install deps (MIX_PUBLISH=true → resolves :mailglass as Hex package)
+        # mailglass_admin/mix.exs has a conditional `mailglass_dep/0`:
+        # MIX_PUBLISH=true → {:mailglass, "== 0.1.0"} from Hex
+        # otherwise → {:mailglass, path: "..", override: true}
+        # `mix deps.get` must run with MIX_PUBLISH=true so the lock + fetch
+        # match what `mix hex.publish` will resolve in the next step.
         working-directory: mailglass_admin
+        env:
+          MIX_PUBLISH: "true"
         run: mix deps.get
       - name: Publish mailglass_admin to Hex.pm
         working-directory: mailglass_admin
