@@ -80,12 +80,18 @@ defmodule MailglassAdmin.MixProject do
   # interpolation. mix_config_test.exs evaluates this function's body in
   # isolation (via Code.string_to_quoted + Code.eval_quoted) where module
   # attributes are unreachable — `@version` would raise
-  # `cannot invoke @/1 outside module`. Release Please's linked-versions
-  # plugin updates BOTH `@version` above AND this literal atomically per
-  # Phase 7 D-03.
+  # `cannot invoke @/1 outside module`.
+  #
+  # Per Phase 7 D-03 the sibling packages must move in lockstep. Release
+  # Please's linked-versions plugin bumps the `@version` attribute above
+  # automatically; the `# x-release-please-version` annotation on the dep
+  # line below tells release-please's `generic` updater (wired through
+  # `extra-files` for this package in `release-please-config.json`) to
+  # rewrite the literal `0.1.X` so the strict `==` pin always matches the
+  # newly published `mailglass` core.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 0.1.0"}
+      {:mailglass, "== 0.1.0"} # x-release-please-version
     else
       {:mailglass, path: "..", override: true}
     end

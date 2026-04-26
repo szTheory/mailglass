@@ -11,7 +11,13 @@
       "package-name": "mailglass_admin",
       "release-type": "elixir",
       "component": "mailglass_admin",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "mailglass_admin/mix.exs"
+        }
+      ]
     }
   },
   "plugins": [
