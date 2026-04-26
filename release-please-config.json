@@ -1,4 +1,5 @@
 {
+  "bootstrap-sha": "858632b49037296a22e32559e13db93c8194a709",
   "packages": {
     ".": {
       "package-name": "mailglass",
