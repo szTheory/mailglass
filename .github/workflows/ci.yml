@@ -364,5 +364,8 @@ jobs:
             ${{ runner.os }}-mix-
       - name: Install core deps
         run: mix deps.get
+      - name: Install admin deps
+        working-directory: mailglass_admin
+        run: mix deps.get
       - name: Run admin smoke gate
         run: cd mailglass_admin && mix test --only admin_smoke --warnings-as-errors

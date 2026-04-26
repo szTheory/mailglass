@@ -5,7 +5,12 @@ defmodule Mix.Tasks.Mailglass.Gen.Migration do
 
   @shortdoc "Generate the Mailglass installer migration"
 
-  @moduledoc false
+  @moduledoc """
+  Generates the 8-line wrapper migration file in `priv/repo/migrations/`
+  that delegates `up/0` and `down/0` to `Mailglass.Migration`.
+
+  Run after `mix mailglass.install` if the wrapper is missing; idempotent.
+  """
 
   @impl Mix.Task
   def run(argv) do
