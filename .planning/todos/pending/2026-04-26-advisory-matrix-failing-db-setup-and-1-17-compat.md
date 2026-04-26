@@ -5,6 +5,8 @@ area: ci
 files:
   - .github/workflows/advisory-matrix.yml (test step missing ecto.create + 1.17 compile failure)
 priority: v0.1.2
+resolves_phase: 8
+resolves_req: REL-06
 ---
 
 ## Problem

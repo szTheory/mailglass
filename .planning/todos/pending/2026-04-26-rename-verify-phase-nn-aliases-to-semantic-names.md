@@ -8,6 +8,8 @@ files:
   - README.md (Installation section references `mix verify.phase_07`)
   - https://hexdocs.pm/mailglass/readme.html#installation
 priority: v0.1.1
+resolves_phase: 8
+resolves_req: REL-03
 ---
 
 ## Problem

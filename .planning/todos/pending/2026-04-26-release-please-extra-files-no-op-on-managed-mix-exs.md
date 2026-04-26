@@ -7,6 +7,8 @@ files:
   - release-please-config.json (extra-files briefly added then reverted on main)
   - mailglass_admin/mix.exs:74-95 (comment block now references the workflow sed, not extra-files)
 priority: documentation / lessons-learned
+resolves_phase: 8
+resolves_req: REL-05
 ---
 
 ## What we learned during the v0.1.1 cycle

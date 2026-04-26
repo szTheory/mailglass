@@ -8,6 +8,8 @@ files:
   - prompts/mailglass-brand-book.md (voice/UX intent)
   - prompts/mailer-domain-language-deep-research.md (domain language)
 priority: api-design (revisit before stabilizing the Mailable contract)
+resolves_phase: 9
+resolves_req: API-01,API-02,API-03,API-04,API-05
 ---
 
 ## Problem

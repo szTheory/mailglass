@@ -9,6 +9,8 @@ files:
   - guides/*.md (sweep all)
   - https://hexdocs.pm/mailglass/webhooks.html (current leak)
 priority: v0.1.2 (or v0.2)
+resolves_phase: 8
+resolves_req: REL-02
 ---
 
 ## Problem

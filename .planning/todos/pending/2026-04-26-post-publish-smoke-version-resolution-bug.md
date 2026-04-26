@@ -6,6 +6,8 @@ files:
   - .github/workflows/post-publish-smoke.yml (the VERSION resolution step)
   - .github/workflows/publish-hex.yml:38-44 (related: same head_branch architectural bug)
 priority: v0.1.2
+resolves_phase: 8
+resolves_req: REL-01
 ---
 
 ## Problem
