@@ -82,16 +82,16 @@ defmodule MailglassAdmin.MixProject do
   # attributes are unreachable — `@version` would raise
   # `cannot invoke @/1 outside module`.
   #
-  # Per Phase 7 D-03 the sibling packages must move in lockstep. Release
-  # Please's linked-versions plugin bumps the `@version` attribute above
-  # automatically; the `# x-release-please-version` annotation on the dep
-  # line below tells release-please's `generic` updater (wired through
-  # `extra-files` for this package in `release-please-config.json`) to
-  # rewrite the literal `0.1.X` so the strict `==` pin always matches the
-  # newly published `mailglass` core.
+  # Release Please's linked-versions plugin bumps the `@version` attribute
+  # above automatically. The `==` literal below is rewritten by a sed step
+  # in `.github/workflows/release-please.yml` that runs after the
+  # release-please action and pushes a sync commit onto the
+  # `release-please--branches--main` PR branch. (release-please's own
+  # `extra-files` generic updater silently no-ops on a mix.exs already
+  # managed by the elixir release-type, so we cannot rely on it — verified
+  # empirically during the v0.1.1 cycle.)
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      # x-release-please-version
       {:mailglass, "== 0.1.0"}
     else
       {:mailglass, path: "..", override: true}

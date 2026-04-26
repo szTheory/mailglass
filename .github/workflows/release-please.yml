@@ -13,8 +13,64 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071  # v4.4.1
+      - id: release
+        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071  # v4.4.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # Path 2 fix: release-please's `extra-files` generic updater silently
+      # no-ops on a mix.exs already managed by the elixir release-type, so
+      # the {:mailglass, "== <ver>"} pin in mailglass_admin/mix.exs never
+      # gets rewritten. We sync it ourselves on the release-please PR branch
+      # after the action runs. Idempotent — exits clean if the pin is already
+      # correct or if there's no release-please PR pending.
+      #
+      # Recursion-safe: pushes authenticated with GITHUB_TOKEN do NOT trigger
+      # further workflow runs (GitHub anti-recursion guarantee).
+      - name: Checkout main for sync step
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Sync mailglass_admin -> mailglass dep pin on release-please branch
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        run: |
+          set -euo pipefail
+          BRANCH=release-please--branches--main
+
+          if ! git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "No $BRANCH on origin — nothing to sync."
+            exit 0
+          fi
+
+          git fetch origin "$BRANCH":"$BRANCH"
+          git checkout "$BRANCH"
+
+          NEW_VERSION=$(jq -r '.["mailglass_admin"]' .release-please-manifest.json)
+          if [ -z "$NEW_VERSION" ] || [ "$NEW_VERSION" = "null" ]; then
+            echo "ERROR: could not read mailglass_admin version from .release-please-manifest.json" >&2
+            exit 1
+          fi
+          echo "Target dep pin: {:mailglass, \"== $NEW_VERSION\"}"
+
+          # Rewrite the strict pin literal. Match `== <semver>` inside the
+          # {:mailglass, "..."} tuple body. Multi-line .exs is fine — sed -E
+          # handles the regex on a per-line basis.
+          sed -i -E 's/\{:mailglass, "== [0-9]+\.[0-9]+\.[0-9]+"\}/{:mailglass, "== '"$NEW_VERSION"'"}/' mailglass_admin/mix.exs
+
+          if git diff --quiet -- mailglass_admin/mix.exs; then
+            echo "Pin already at $NEW_VERSION — nothing to commit."
+            exit 0
+          fi
+
+          echo "Pin updated; diff follows:"
+          git --no-pager diff -- mailglass_admin/mix.exs
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mailglass_admin/mix.exs
+          git commit -m "chore(release-please): sync mailglass_admin -> mailglass dep pin to == $NEW_VERSION"
+          git push origin "$BRANCH"
