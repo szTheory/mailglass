@@ -3,8 +3,8 @@ defmodule Mailglass.Install.IdempotencyTest do
 
   import Mailglass.Test.InstallerFixtureHelpers
 
-  @preview_route ~s(forward "/dev/mailglass", MailglassAdmin.Router)
-  @drift_route ~s(get "/dev/mailglass", PreviewController, :index)
+  @preview_route ~s(mailglass_admin_routes "/mail")
+  @drift_route ~s(get "/dev/mail", PreviewController, :index)
 
   test "second install run produces no fixture diff" do
     fixture_root = new_fixture_root!("idempotency-no-diff")

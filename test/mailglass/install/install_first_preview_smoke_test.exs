@@ -14,7 +14,7 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
     router_path = Path.join(fixture_root, "lib/example_web/router.ex")
     layout_path = Path.join(fixture_root, "lib/example/mailer/layouts/default.html.heex")
 
-    assert File.read!(router_path) =~ ~s(forward "/dev/mailglass", MailglassAdmin.Router)
+    assert File.read!(router_path) =~ ~s(mailglass_admin_routes "/mail")
     assert File.exists?(layout_path)
     assert File.exists?(mailable_path)
 
