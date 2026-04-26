@@ -19,4 +19,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Lint workflow files
-        uses: rhysd/actionlint@e7d448ef7507c20fc4c88a95d0c448b848cd6127
+        uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca
