@@ -24,10 +24,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # REL-06: Elixir 1.17 removed — mailglass requires elixir "~> 1.18" (mix.exs).
+          # 1.17 was never a supported target; the matrix row existed only as advisory
+          # coverage and failed on every push due to 1.18-only stdlib usage in the codebase.
+          # Remove when re-adding any future advisory-only version row.
           - elixir: "1.18"
             otp: "27"
-          - elixir: "1.17"
-            otp: "26"
     services:
       postgres:
         image: postgres:16-alpine
@@ -66,5 +68,11 @@ jobs:
         run: mix deps.get
       - name: Compile
         run: mix compile --warnings-as-errors
+      - name: Wait for postgres + create test DB
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run advisory tests
         run: mix test --warnings-as-errors --exclude provider_live
