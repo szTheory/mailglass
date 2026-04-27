@@ -16,6 +16,7 @@ defmodule MailglassAdmin.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
+      dialyzer: dialyzer(),
       name: "MailglassAdmin",
       description: @description,
       source_url: @source_url,
@@ -27,6 +28,27 @@ defmodule MailglassAdmin.MixProject do
 
   def application do
     [extra_applications: [:logger]]
+  end
+
+  defp dialyzer do
+    [
+      # D-08-01: :no_opaque + :no_match kill the Elixir 1.18 opaque-type
+      # cascade (elixir-lang/elixir#14837). :error_handling, :missing_return,
+      # :underspecs improve coverage; revisit removing :underspecs after the
+      # <=15-entry baseline is hit (D-08-07).
+      flags: [:error_handling, :missing_return, :no_opaque, :no_match, :underspecs],
+      # D-08-03: ignore_file_strict pins to {file, short_description} tuples
+      # (stable across line-number drift). D-08-04: list_unused_filters fails
+      # CI loudly when a future fix invalidates an existing ignore (prevents
+      # silent drift).
+      ignore_file_strict: ".dialyzer_ignore.exs",
+      list_unused_filters: true,
+      # Add :credo and :mix to PLT so dev-only modules don't produce
+      # callback_info_missing + unknown_function warnings. credo is a :dev/:test
+      # dep; without :credo in the PLT, the 13 custom check files each generate
+      # ~11 dialyzer warnings. Mix.Task behaviour is similarly dev-only.
+      plt_add_apps: [:credo, :mix, :ex_unit]
+    ]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]

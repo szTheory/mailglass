@@ -293,7 +293,6 @@ defmodule Mailglass.Installer.Apply do
     {:ok, %{op | status: status, reason: reason}, next_manifest}
   end
 
-  @spec write_file(String.t(), String.t(), boolean()) :: :ok | {:error, term()}
   defp write_file(path, contents, true) when is_binary(path) and is_binary(contents), do: :ok
 
   defp write_file(path, contents, false) when is_binary(path) and is_binary(contents) do
@@ -355,7 +354,6 @@ defmodule Mailglass.Installer.Apply do
     String.trim_trailing(contents) <> "\n\n" <> String.trim_trailing(addition) <> "\n"
   end
 
-  @spec maybe_write_manifest(Manifest.t(), String.t(), boolean()) :: :ok | {:error, term()}
   defp maybe_write_manifest(_manifest, _path, true), do: :ok
   defp maybe_write_manifest(manifest, path, false), do: Manifest.write(manifest, path)
 

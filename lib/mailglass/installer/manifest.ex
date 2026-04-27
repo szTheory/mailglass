@@ -149,7 +149,6 @@ defmodule Mailglass.Installer.Manifest do
     Enum.join(header ++ path_lines ++ [""], "\n")
   end
 
-  @spec blank_to_nil(String.t()) :: String.t() | nil
   defp blank_to_nil(""), do: nil
   defp blank_to_nil(value), do: value
 

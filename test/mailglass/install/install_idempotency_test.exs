@@ -59,7 +59,7 @@ defmodule Mailglass.Install.IdempotencyTest do
 
       # A .mailglass_conflict_ sidecar must have been written
       sidecars = runtime_conflict_sidecars(fixture_root)
-      assert length(sidecars) >= 1,
+      assert sidecars != [],
              "Managed snippet drifted from snapshot. Run `mix mailglass.install --force` " <>
                "(or fix the drifted file manually), or refresh the installer template."
 
@@ -126,7 +126,7 @@ defmodule Mailglass.Install.IdempotencyTest do
     assert File.read!(router_path) == drifted_router
 
     sidecars = conflict_sidecars(router_path)
-    assert length(sidecars) >= 1
+    assert sidecars != []
 
     assert Enum.all?(sidecars, fn sidecar ->
              String.starts_with?(Path.basename(sidecar), ".mailglass_conflict_")

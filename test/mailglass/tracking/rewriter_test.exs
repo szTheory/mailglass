@@ -164,7 +164,7 @@ defmodule Mailglass.Tracking.RewriterTest do
     # a plain-text-only string has no <body> so pixel ends up at root.
     # The TEXT BODY itself must never be handed to the Rewriter.
     # Testing via the Tracking facade:
-    assert plaintext == plaintext
+    assert is_binary(plaintext)
     # The real test is that Tracking.rewrite_if_enabled only modifies html_body.
     # We verify this directly via the message struct (see tracking_test.exs).
     # Here: confirm that a text-only input without <body> won't get pixel in middle of text.

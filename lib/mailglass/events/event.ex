@@ -123,11 +123,9 @@ defmodule Mailglass.Events.Event do
 
   @doc "Closed type atom set (Anymail taxonomy + internal). Cross-checked in api_stability.md."
   @doc since: "0.1.0"
-  @spec __types__() :: [atom()]
   def __types__, do: @event_types
 
   @doc "Closed reject_reason atom set."
   @doc since: "0.1.0"
-  @spec __reject_reasons__() :: [atom()]
   def __reject_reasons__, do: @reject_reasons
 end

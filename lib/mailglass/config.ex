@@ -305,7 +305,7 @@ defmodule Mailglass.Config do
       {Mailglass.Adapters.Fake, []}
   """
   @doc since: "0.1.0"
-  @spec new!(keyword()) :: keyword()
+  @spec new!(keyword()) :: keyword() | map()
   def new!(opts \\ []) when is_list(opts) do
     NimbleOptions.validate!(opts, @schema)
   end

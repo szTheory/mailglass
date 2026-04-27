@@ -59,7 +59,7 @@ if Code.ensure_loaded?(Oban.Worker) do
     Application boot-warning.
     """
     @doc since: "0.1.0"
-    @spec available?() :: boolean()
+    @spec available?() :: true
     def available?, do: true
 
     @impl Oban.Worker

@@ -78,7 +78,10 @@ defmodule Mailglass.Error do
   """
   @doc since: "0.1.0"
   @spec is_error?(term()) :: boolean()
+  # Tracking: Phase 9 rename to error?/1 (D-08-20 — do not rename in Phase 8)
+  # credo:disable-for-next-line Credo.Check.Readability.PredicateFunctionNames
   def is_error?(%{__struct__: s}) when s in @error_modules, do: true
+  # credo:disable-for-next-line Credo.Check.Readability.PredicateFunctionNames
   def is_error?(_), do: false
 
   @doc """
