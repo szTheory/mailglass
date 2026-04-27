@@ -78,6 +78,37 @@ defmodule Mailglass.MessageTest do
       updated2 = Message.put_tag(updated, "onboarding")
       assert updated2.tags == ["welcome-series", "onboarding"]
     end
+
+    test "put_stream/2 sets stream" do
+      msg = Message.build(Swoosh.Email.new())
+      updated = Message.put_stream(msg, :bulk)
+      assert updated.stream == :bulk
+    end
+
+    test "put_stream/2 raises FunctionClauseError for invalid stream" do
+      msg = Message.build(Swoosh.Email.new())
+      assert_raise FunctionClauseError, fn ->
+        Message.put_stream(msg, :invalid)
+      end
+    end
+  end
+
+  describe "new_from_use/2" do
+    test "defaults to :transactional stream" do
+      msg = Message.new_from_use(MyApp.UserMailer, [])
+      assert msg.stream == :transactional
+    end
+
+    test "accepts valid stream opt" do
+      msg = Message.new_from_use(MyApp.UserMailer, stream: :bulk)
+      assert msg.stream == :bulk
+    end
+
+    test "raises FunctionClauseError or ArgumentError for invalid stream opt" do
+      assert_raise ArgumentError, ~r/invalid stream/, fn ->
+        Message.new_from_use(MyApp.UserMailer, stream: :invalid)
+      end
+    end
   end
 
   describe "put_metadata/3" do
