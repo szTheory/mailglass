@@ -22,6 +22,23 @@ defmodule Mailglass.Stream do
 
   alias Mailglass.Message
 
+  @streams [:transactional, :operational, :bulk]
+
+  @doc """
+  Guard that checks if a value is a valid stream atom.
+  """
+  defguard is_stream(stream) when stream in @streams
+
+  @doc """
+  Checks if a given atom is a valid stream.
+
+  Valid streams are `:transactional`, `:operational`, and `:bulk`.
+  """
+  @doc since: "0.2.0"
+  @spec valid?(atom() | any()) :: boolean()
+  def valid?(stream) when is_stream(stream), do: true
+  def valid?(_), do: false
+
   @doc """
   Checks stream policy for the given message. Returns `:ok` at v0.1 for all streams.
 
