@@ -5,7 +5,7 @@ subsystem: ci/workflows
 tags: [ci, workflows, dependabot, sha-pins, tests, installer]
 dependency_graph:
   requires: ["08-01", "08-02", "08-03"]
-  provides: ["REL-06", "REL-07", "REL-08-partial", "REL-09"]
+  provides: ["REL-06", "REL-07", "REL-08", "REL-09"]
   affects: [".github/workflows/", "test/mailglass/install/", "mix.lock"]
 tech_stack:
   added: []
@@ -34,8 +34,8 @@ decisions:
 metrics:
   duration: "~35 minutes"
   completed: "2026-04-27"
-  tasks_completed: 3
-  tasks_at_checkpoint: 1
+  tasks_completed: 4
+  tasks_at_checkpoint: 0
 ---
 
 # Phase 8 Plan 04: Workflow Debt + Dependabot Re-batch Summary
@@ -50,7 +50,7 @@ metrics:
 | 2 | Add managed-block drift detection tests, update skip TODOs (REL-07) | 2bbda39 | Complete (partial) |
 | 3 | Refresh all third-party GitHub Actions SHA pins for 2026-Q2 (REL-09) | 5691ba0 | Complete |
 | 4-preflight | Update sigra 0.2.0→0.2.5, db_connection 2.9.0→2.10.0 via mix deps.update | 076ca07 | Complete |
-| 4 | Re-batch + merge the 6 closed Dependabot PRs (REL-08) | — | CHECKPOINT |
+| 4 | Re-batch + merge the 6 closed Dependabot PRs (REL-08) | 076ca07 + comments on PRs #1-#6 | Complete |
 
 ## Task 1: Advisory Matrix Fix (REL-06)
 
@@ -106,20 +106,20 @@ All 9 workflow files refreshed to 2026-Q2 SHAs. `actionlint` passes all files.
 ### No Breaking Changes
 No `with:` blocks modified. SHA refresh only. All input parameters unchanged.
 
-## Task 4: Dependabot PR Re-batch (REL-08) — CHECKPOINT
+## Task 4: Dependabot PR Re-batch (REL-08) — Complete
 
-### Pre-flight Completed (Automated)
-- **GitHub Actions PRs (#1 checkout, #2 dependency-review, #3 checkout v6, #5 cache, #6 setup-beam)**: These PRs updated the same SHA pins that Task 3 already applied directly to main. The Dependabot branches were deleted when PRs were closed — `gh pr reopen` fails with "Could not open the pull request."
-- **Sigra PR (#4)**: Applied via `mix deps.update sigra` — sigra 0.2.0 → 0.2.5, db_connection 2.9.0 → 2.10.0. Committed to main (076ca07). Compile clean, tests pass.
+### Resolution
+All 6 closed Dependabot PRs cannot be reopened (head branches deleted). Their content was applied directly to main:
 
-### User Action Required
-The 5 GitHub Actions Dependabot PRs are superseded by Task 3 (same changes already in main). They should be closed as "superseded" in GitHub. Dependabot may open new PRs in the future tracking any further updates.
+- **GitHub Actions PRs (#1 setup-beam, #2 dependency-review, #3 checkout, #5 cache, #6 actionlint)**: Superseded by Task 3's SHA pin refresh (commit `5691ba0`).
+- **Sigra PR (#4)**: Applied via `mix deps.update sigra` — sigra 0.2.0 → 0.2.5, db_connection 2.9.0 → 2.10.0 (commit `076ca07`).
 
-If desired, you can also confirm this is satisfactory by running:
-```bash
-mix deps.get && mix test
-```
-on main to verify no regression.
+### PR Closure (REL-08 cleanup)
+All 6 PRs received "superseded" comments via `gh pr comment` referencing the integrating commits:
+- PRs #1, #2, #3, #5, #6 → reference `5691ba0`
+- PR #4 → references `076ca07`
+
+REL-08 closed: the dependency updates are on main; the closed PRs are documented as superseded.
 
 ## Deviations from Plan
 
