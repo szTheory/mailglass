@@ -109,6 +109,7 @@ lib/mailglass/webhook/reconciler.ex
 lib/mailglass/webhook/router.ex
 lib/mailglass/webhook/telemetry.ex
 lib/mailglass/webhook/webhook_event.ex
+lib/mix/tasks/mailglass.docs.check.ex
 lib/mix/tasks/mailglass.gen.migration.ex
 lib/mix/tasks/mailglass.install.ex
 lib/mix/tasks/mailglass.publish.check.ex
