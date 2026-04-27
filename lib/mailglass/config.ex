@@ -2,6 +2,11 @@ defmodule Mailglass.Config do
   # Schema is declared BEFORE @moduledoc so NimbleOptions.docs(@schema) can
   # interpolate into the module documentation.
   @schema [
+    feedback_id: [
+      type: {:or, [:string, nil]},
+      default: nil,
+      doc: "Optional Feedback-ID prefix (RFC 8058/Deliverability). When set, auto-populates as `{sender_id}:{mailable}:{tenant_id}:{stream}`."
+    ],
     repo: [
       type: {:or, [:atom, nil]},
       required: false,
