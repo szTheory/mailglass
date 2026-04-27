@@ -1,15 +1,14 @@
 name: post-publish-smoke
 
 on:
-  workflow_run:
-    workflows: ["publish-hex"]
-    types: [completed]
+  release:
+    types: [published]
   schedule:
     - cron: "0 12 * * *"
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version to smoke-check (e.g. 0.1.0). Default: latest published."
+      tag:
+        description: "Tag to smoke-test (e.g. mailglass-v0.2.0)"
         required: false
         type: string
 
@@ -18,7 +17,7 @@ permissions:
   issues: write
 
 concurrency:
-  group: post-publish-smoke-${{ github.event.inputs.version || github.ref }}
+  group: post-publish-smoke-${{ github.event.inputs.tag || github.event.release.tag_name || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -42,24 +41,30 @@ jobs:
             };
 
             const eventName = context.eventName;
-            const inputVersion = normalizeVersion(context.payload?.inputs?.version || "");
+
+            if (eventName === 'release') {
+              const tagName = context.payload?.release?.tag_name || "";
+              const version = normalizeVersion(tagName);
+              if (version) {
+                core.setOutput('should_run', 'true');
+                core.setOutput('version', version);
+                core.info(`Smoke triggered by release event; should_run=true; version='${version}'`);
+                return;
+              }
+              core.setOutput('should_run', 'false');
+              core.setOutput('version', '');
+              core.warning(`Release event with unparseable tag_name='${tagName}'; skipping smoke.`);
+              return;
+            }
+
+            const inputTag = context.payload?.inputs?.tag || "";
+            const inputVersion = normalizeVersion(inputTag);
 
             if (eventName === 'workflow_dispatch' && inputVersion) {
               core.setOutput('should_run', 'true');
               core.setOutput('version', inputVersion);
               core.info(`Smoke triggered by workflow_dispatch; should_run=true; version='${inputVersion}'`);
               return;
-            }
-
-            if (eventName === 'workflow_run') {
-              const headBranch = context.payload?.workflow_run?.head_branch || "";
-              const branchVersion = normalizeVersion(headBranch);
-              if (branchVersion) {
-                core.setOutput('should_run', 'true');
-                core.setOutput('version', branchVersion);
-                core.info(`Smoke triggered by workflow_run; should_run=true; version='${branchVersion}'`);
-                return;
-              }
             }
 
             const owner = context.repo.owner;
@@ -258,6 +263,7 @@ jobs:
         run: |
           mix phx.server &
           SERVER_PID=$!
+          # shellcheck disable=SC2064
           trap "kill $SERVER_PID 2>/dev/null || true" EXIT
 
           DEADLINE=$(( SECONDS + 30 ))
@@ -322,7 +328,7 @@ jobs:
   notify-on-failure:
     name: Open issue on smoke failure
     runs-on: ubuntu-latest
-    needs: [wait-for-index, wait-for-hexdocs, consumer-install, retracted-check]
+    needs: [cron-guard, wait-for-index, wait-for-hexdocs, consumer-install, retracted-check]
     if: failure() && needs.cron-guard.outputs.should_run == 'true'
     continue-on-error: true
     steps:
