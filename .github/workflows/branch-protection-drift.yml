@@ -1,0 +1,58 @@
+name: Branch Protection Drift
+
+# Daily idempotent re-assertion of main's required-status-checks.
+# If someone (or some external action) removes a required check, this
+# workflow restores it within 24h. Idempotent — re-running with the
+# same checks is observably a no-op.
+#
+# Reason: REL-10 PR-C requires Tests to remain a required status check
+# on main. Without drift detection, an admin could silently remove the
+# requirement and the gate would stop blocking failing PRs.
+#
+# Requires the BRANCH_PROTECTION_PAT secret — a fine-grained PAT scoped
+# to this repo with "Administration: Read and write" permission.
+# If the secret is unset, the job no-ops and posts a notice in the
+# workflow summary.
+
+on:
+  schedule:
+    - cron: "37 6 * * *"  # 06:37 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reassert-protection:
+    name: Re-assert branch protection on main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for BRANCH_PROTECTION_PAT secret
+        id: check-pat
+        env:
+          PAT_SET: ${{ secrets.BRANCH_PROTECTION_PAT != '' }}
+        run: |
+          if [ "$PAT_SET" = "true" ]; then
+            echo "pat_present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pat_present=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "## Branch Protection Drift — Skipped"
+              echo ""
+              echo "BRANCH_PROTECTION_PAT secret not set."
+              echo "Configure a fine-grained PAT with 'Administration: Read and write'"
+              echo "and add it as a repo secret to enable drift detection."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Checkout
+        if: steps.check-pat.outputs.pat_present == 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Re-assert branch protection (idempotent)
+        if: steps.check-pat.outputs.pat_present == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_PAT }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: ./scripts/setup_branch_protection.sh main
