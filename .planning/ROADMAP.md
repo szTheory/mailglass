@@ -60,7 +60,7 @@ Plans:
 - [x] 08-02: HexDocs hygiene — exclude CLAUDE.md; strip D-NN/LINT-NN from guides; add mix mailglass.docs.check CI gate (REL-02)
 - [x] 08-03: Rename verify aliases to semantic names + wire installer goldens into mix mailglass.publish.check + resolve release-please extra-files (REL-03, REL-04, REL-05)
 - [x] 08-04: Fix Advisory Matrix CI (DB-setup + Elixir 1.17); unskip install_idempotency tests; re-batch 6 Dependabot PRs; refresh SHA pins (REL-06, REL-07, REL-08, REL-09)
-- [ ] 08-05: Re-tighten Tests gate — sandbox + Task.Supervisor isolation; citext-OID-cache race fix; halt-on-failure (REL-10)
+- [x] 08-05: Re-tighten Tests gate — sandbox + Task.Supervisor isolation; citext-OID-cache race fix; halt-on-failure (REL-10) — PR-A+PR-B shipped; PR-C deferred to operator (1-week tests_strict soak then halt-on-failure flip + branch protection)
 - [ ] 08-06: Enable Credo --strict (REL-11) + Dialyzer triage: remove --ignore-exit-status, triage ~230 findings to ≤15 annotated .dialyzer_ignore.exs entries (REL-12)
 
 ### Phase 9: Mailable API Redesign + Freeze
