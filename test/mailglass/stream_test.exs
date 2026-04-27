@@ -28,9 +28,18 @@ defmodule Mailglass.StreamTest do
       assert :ok = Stream.policy_check(msg)
     end
 
-    test "returns :ok for :bulk" do
-      msg = %Message{stream: :bulk, tenant_id: "t1", swoosh_email: Swoosh.Email.new()}
+    test "returns :ok for :bulk when mailable is present" do
+      msg = %Message{stream: :bulk, tenant_id: "t1", mailable: DummyMailable, swoosh_email: Swoosh.Email.new()}
       assert :ok = Stream.policy_check(msg)
+    end
+
+    test "returns {:error, %StreamPolicyError{}} for :bulk missing mailable" do
+      msg = %Message{stream: :bulk, tenant_id: "t1", mailable: nil, swoosh_email: Swoosh.Email.new()}
+      
+      assert {:error, %Mailglass.StreamPolicyError{
+               type: :stream_policy_violated,
+               detail: %{rule: :bulk_requires_mailable}
+             }} = Stream.policy_check(msg)
     end
 
     test "emits [:mailglass, :outbound, :stream_policy, :stop] with whitelisted metadata" do
