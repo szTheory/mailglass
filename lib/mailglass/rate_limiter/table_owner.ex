@@ -58,6 +58,5 @@ defmodule Mailglass.RateLimiter.TableOwner do
 
   @doc "Returns the ETS table name. Public so tests can inspect state."
   @doc since: "0.1.0"
-  @spec table() :: atom()
   def table, do: @table
 end

@@ -27,7 +27,7 @@ if Code.ensure_loaded?(Sigra) do
     so its mere existence implies availability.
     """
     @doc since: "0.1.0"
-    @spec available?() :: boolean()
+    @spec available?() :: true
     def available?, do: true
   end
 end

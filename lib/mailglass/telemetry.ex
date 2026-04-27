@@ -185,7 +185,7 @@ defmodule Mailglass.Telemetry do
   Callers are expected to prepend `:mailglass` to the event path.
   """
   @doc since: "0.1.0"
-  @spec execute([atom()], map(), map()) :: :ok
+  @spec execute([atom(), ...], map(), map()) :: :ok
   def execute(event_name, measurements \\ %{}, metadata \\ %{})
       when is_list(event_name) and is_map(measurements) and is_map(metadata) do
     :telemetry.execute(event_name, measurements, metadata)

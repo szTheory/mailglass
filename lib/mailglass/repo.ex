@@ -190,6 +190,6 @@ defmodule Mailglass.Repo do
   # and let the context carry the pg_code. Callers that care about the
   # distinction can read ctx.pg_code or walk `:cause` to the raw Postgrex
   # error.
-  @spec infer_immutability_type(Postgrex.Error.t()) :: :update_attempt | :delete_attempt
+  @spec infer_immutability_type(Postgrex.Error.t()) :: :update_attempt
   defp infer_immutability_type(%Postgrex.Error{} = _err), do: :update_attempt
 end

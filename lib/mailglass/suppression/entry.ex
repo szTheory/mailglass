@@ -116,16 +116,13 @@ defmodule Mailglass.Suppression.Entry do
 
   @doc "Closed scope atom set."
   @doc since: "0.1.0"
-  @spec __scopes__() :: [atom()]
   def __scopes__, do: @scopes
 
   @doc "Closed stream atom set."
   @doc since: "0.1.0"
-  @spec __streams__() :: [atom()]
   def __streams__, do: @streams
 
   @doc "Closed reason atom set."
   @doc since: "0.1.0"
-  @spec __reasons__() :: [atom()]
   def __reasons__, do: @reasons
 end

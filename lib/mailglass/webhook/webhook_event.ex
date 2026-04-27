@@ -81,6 +81,5 @@ defmodule Mailglass.Webhook.WebhookEvent do
 
   @doc "Closed set of valid `:status` atoms. Cross-checked in api_stability.md."
   @doc since: "0.1.0"
-  @spec __statuses__() :: [atom()]
   def __statuses__, do: @valid_statuses
 end
