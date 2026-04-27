@@ -58,7 +58,7 @@ Full details: [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md).
 Plans:
 - [x] 08-01: Fix publish-hex.yml + post-publish-smoke.yml triggers (on: release: types: [published]) + mix hex.info pre-check idempotency guard (REL-01)
 - [x] 08-02: HexDocs hygiene — exclude CLAUDE.md; strip D-NN/LINT-NN from guides; add mix mailglass.docs.check CI gate (REL-02)
-- [ ] 08-03: Rename verify aliases to semantic names + wire installer goldens into mix mailglass.publish.check + resolve release-please extra-files (REL-03, REL-04, REL-05)
+- [x] 08-03: Rename verify aliases to semantic names + wire installer goldens into mix mailglass.publish.check + resolve release-please extra-files (REL-03, REL-04, REL-05)
 - [ ] 08-04: Fix Advisory Matrix CI (DB-setup + Elixir 1.17); unskip install_idempotency tests; re-batch 6 Dependabot PRs; refresh SHA pins (REL-06, REL-07, REL-08, REL-09)
 - [ ] 08-05: Re-tighten Tests gate — sandbox + Task.Supervisor isolation; citext-OID-cache race fix; halt-on-failure (REL-10)
 - [ ] 08-06: Enable Credo --strict (REL-11) + Dialyzer triage: remove --ignore-exit-status, triage ~230 findings to ≤15 annotated .dialyzer_ignore.exs entries (REL-12)
