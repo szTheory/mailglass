@@ -48,6 +48,8 @@ defmodule Mailglass.Message do
 
   """
 
+  require Mailglass.Stream
+
   @type stream :: :transactional | :operational | :bulk
 
   @type t :: %__MODULE__{
@@ -138,6 +140,10 @@ defmodule Mailglass.Message do
       end
 
     stream = Keyword.get(use_opts, :stream, :transactional)
+
+    unless Mailglass.Stream.valid?(stream) do
+      raise ArgumentError, "invalid stream: #{inspect(stream)}"
+    end
 
     %__MODULE__{
       swoosh_email: email,
@@ -257,6 +263,18 @@ defmodule Mailglass.Message do
   @spec put_tag(t(), String.t()) :: t()
   def put_tag(%__MODULE__{tags: tags} = msg, tag) when is_binary(tag) do
     %{msg | tags: tags ++ [tag]}
+  end
+
+  @doc """
+  Sets the stream for the message.
+
+  Valid streams are `:transactional`, `:operational`, and `:bulk`.
+  Raises `FunctionClauseError` if an invalid stream atom is provided.
+  """
+  @doc since: "0.2.0"
+  @spec put_stream(t(), stream()) :: t()
+  def put_stream(%__MODULE__{} = msg, stream) when Mailglass.Stream.is_stream(stream) do
+    %{msg | stream: stream}
   end
 
   @doc """
