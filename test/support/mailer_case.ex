@@ -29,14 +29,14 @@ defmodule Mailglass.MailerCase do
 
   ## Async tests and deliver_later/2
 
-  `MailerCase` supports `async: true` (the default). For async tests that exercise
-  `deliver_later/2`, pass `async_adapter: :task_supervisor` as a `deliver_later/2`
-  option rather than relying on the global Application env:
+  By default, MailerCase configures `:async_adapter_impl` ->
+  `Mailglass.Outbound.AsyncAdapter.Inline` so `deliver_later/2` runs the
+  dispatch synchronously under the calling test's connection.
 
-      Outbound.deliver_later(msg, async_adapter: :task_supervisor)
-
-  This is already supported at `outbound.ex` via `Keyword.get(opts, :async_adapter)`.
-  Global Application env mutation is reserved for `async: false` tests only (HI-01 fix).
+  Tests that exercise real async dispatch (`Task.Supervisor` in the prod
+  supervision tree) MUST set `@tag :set_mailglass_global` which flips the
+  impl back to `TaskSupervisor`, switches `Sandbox.mode` to `:shared`, and
+  forces `async: false`.
 
   ## Global mode opt-out
 
@@ -90,15 +90,8 @@ defmodule Mailglass.MailerCase do
     # Probe the checked-out connection for a stale citext OID.
     # Same rationale and pattern as DataCase.setup — see that module for the
     # full explanation. MailerCase does not inherit DataCase, so the probe is
-    # duplicated here.
-    for _ <- 1..5 do
-      try do
-        Mailglass.TestRepo.query!("SELECT 'probe'::citext")
-      rescue
-        # disconnect_on_error_codes fires; ownership auto-reconnects
-        Postgrex.Error -> :ok
-      end
-    end
+    # called here separately.
+    Mailglass.TestSupport.CitextProbe.run([])
 
     :ok = Mailglass.Adapters.Fake.checkout()
 
@@ -123,6 +116,14 @@ defmodule Mailglass.MailerCase do
     # If we unconditionally wrote :oban on restore, adopters who boot with :task_supervisor
     # would have it silently overwritten after every test. Snapshot before any mutation below.
     prior_async_adapter = Application.get_env(:mailglass, :async_adapter)
+
+    # Snapshot + set the :async_adapter_impl env key (D-08-11, HI-01).
+    # Default to Inline so deliver_later/2 runs synchronously under the calling
+    # test's sandbox connection — no cross-process ownership transfer needed.
+    # set_mailglass_global flips this back to TaskSupervisor for the rare tests
+    # that need real async dispatch (shared Sandbox mode + async: false required).
+    prior_async_adapter_impl = Application.get_env(:mailglass, :async_adapter_impl)
+    Application.put_env(:mailglass, :async_adapter_impl, Mailglass.Outbound.AsyncAdapter.Inline)
 
     # Async delivery mode (D-08, I-12).
     #
@@ -189,6 +190,14 @@ defmodule Mailglass.MailerCase do
         Application.delete_env(:mailglass, :async_adapter)
       end
 
+      # HI-01 fix: restore :async_adapter_impl to whatever it was before this test
+      # ran (D-08-11). Snapshot-then-restore prevents inter-test leakage.
+      if prior_async_adapter_impl != nil do
+        Application.put_env(:mailglass, :async_adapter_impl, prior_async_adapter_impl)
+      else
+        Application.delete_env(:mailglass, :async_adapter_impl)
+      end
+
       Ecto.Adapters.SQL.Sandbox.stop_owner(pid)
     end)
 
@@ -201,6 +210,11 @@ defmodule Mailglass.MailerCase do
 
   Usage: `setup :set_mailglass_global`
 
+  In addition to sharing the Fake adapter, this flips `:async_adapter_impl`
+  to `TaskSupervisor` (the prod-default) and switches the Sandbox to
+  `{:shared, self()}` mode so Task.Supervisor workers can access the test's
+  DB connection without explicit `Sandbox.allow/2` calls (D-08-11).
+
   Fake.set_shared(self()) enables any process (without explicit allow/2)
   to deliver into this test's ETS bucket. Use sparingly — prefer `allow/2`
   for targeted cross-process delegation (LiveView, Oban workers, Playwright).
@@ -212,8 +226,28 @@ defmodule Mailglass.MailerCase do
               "set `use Mailglass.MailerCase, async: false` at the module level"
     end
 
+    repo = Application.get_env(:mailglass, :repo, Mailglass.TestRepo)
+
+    # Snapshot + flip :async_adapter_impl to TaskSupervisor for this test.
+    # The setup block already set it to Inline; global mode uses the real
+    # Task.Supervisor path + shared sandbox so all spawned processes can
+    # access the test's DB connection.
+    prior_impl = Application.get_env(:mailglass, :async_adapter_impl)
+    Application.put_env(:mailglass, :async_adapter_impl, Mailglass.Outbound.AsyncAdapter.TaskSupervisor)
+
+    Ecto.Adapters.SQL.Sandbox.mode(repo, {:shared, self()})
     Mailglass.Adapters.Fake.set_shared(self())
-    on_exit(fn -> Mailglass.Adapters.Fake.set_shared(nil) end)
+
+    on_exit(fn ->
+      Mailglass.Adapters.Fake.set_shared(nil)
+      # Restore :async_adapter_impl snapshot.
+      if prior_impl != nil do
+        Application.put_env(:mailglass, :async_adapter_impl, prior_impl)
+      else
+        Application.delete_env(:mailglass, :async_adapter_impl)
+      end
+    end)
+
     :ok
   end
 end

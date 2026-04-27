@@ -59,14 +59,7 @@ defmodule Mailglass.DataCase do
     # This is the same pattern as `persistence_integration_test.exs`'s
     # `probe_until_clean/5` — loop up to pool_size times to handle the worst-case
     # where the reconnected worker itself was stale and needed a second cycle.
-    for _ <- 1..5 do
-      try do
-        Mailglass.TestRepo.query!("SELECT 'probe'::citext")
-      rescue
-        # disconnect_on_error_codes fires; ownership auto-reconnects
-        Postgrex.Error -> :ok
-      end
-    end
+    Mailglass.TestSupport.CitextProbe.run([])
 
     # Stamp a default tenant per D-40 so tests exercise the
     # "tenant stamped" code path, not the SingleTenant fallback.
