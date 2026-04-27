@@ -97,7 +97,7 @@ defmodule Mailglass.MailableTest do
     #  2. @before_compile Mailglass.Mailable
     #  3. @mailglass_opts opts
     #  4. @compile {:no_warn_undefined, Mailglass.Outbound}
-    #  5. import Swoosh.Email, except: [new: 0]
+    #  5. import Mailglass.Message, only: [...]
     #  6. import Mailglass.Components
     #  7. def __mailglass_opts__
     #  8. def new

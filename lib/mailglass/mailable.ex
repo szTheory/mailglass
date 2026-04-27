@@ -125,7 +125,18 @@ defmodule Mailglass.Mailable do
       @before_compile Mailglass.Mailable
       @mailglass_opts opts
       @compile {:no_warn_undefined, Mailglass.Outbound}
-      import Swoosh.Email, except: [new: 0]
+      import Mailglass.Message,
+        only: [
+          to: 2,
+          from: 2,
+          subject: 2,
+          html_body: 2,
+          text_body: 2,
+          header: 3,
+          attach: 2,
+          put_tag: 2
+        ]
+
       import Mailglass.Components
 
       @doc false
