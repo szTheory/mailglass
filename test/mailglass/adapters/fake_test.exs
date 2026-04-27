@@ -148,7 +148,7 @@ defmodule Mailglass.Adapters.FakeTest do
 
       spawn(fn ->
         email = Swoosh.Email.new(to: "x@x.com", from: "y@y.com", subject: "hi")
-        msg = Mailglass.Message.new(email, mailable: TestMailer, tenant_id: "test-tenant")
+        msg = Mailglass.Message.build(email, mailable: TestMailer, tenant_id: "test-tenant")
 
         result =
           try do
@@ -245,7 +245,7 @@ defmodule Mailglass.Adapters.FakeTest do
         spawn(fn ->
           Fake.checkout()
           email = Swoosh.Email.new(to: "x@x.com", from: "y@y.com", subject: "hi")
-          msg = Mailglass.Message.new(email, mailable: TestMailer, tenant_id: "test-tenant")
+          msg = Mailglass.Message.build(email, mailable: TestMailer, tenant_id: "test-tenant")
           Fake.deliver(msg, [])
           # Exit normally after delivering — DOWN handler auto-checkins
         end)

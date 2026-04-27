@@ -38,7 +38,7 @@ defmodule Mailglass.RendererTest do
       end
 
       email = %Swoosh.Email{html_body: component}
-      message = Mailglass.Message.new(email, tenant_id: "t")
+      message = Mailglass.Message.build(email, tenant_id: "t")
 
       assert {:ok, rendered} = Mailglass.Renderer.render(message)
       # Premailex inlines the <style> rule into a style="color:..." on <p>.
@@ -120,7 +120,7 @@ defmodule Mailglass.RendererTest do
       end
 
       email = %Swoosh.Email{html_body: component}
-      message = Mailglass.Message.new(email, tenant_id: "t")
+      message = Mailglass.Message.build(email, tenant_id: "t")
 
       assert {:ok, rendered} = Mailglass.Renderer.render(message)
       html = rendered.swoosh_email.html_body
@@ -144,7 +144,7 @@ defmodule Mailglass.RendererTest do
 
     test "invalid html_body (not function or string) returns {:error, %TemplateError{}}" do
       email = %Swoosh.Email{html_body: :not_renderable}
-      message = Mailglass.Message.new(email, tenant_id: "t")
+      message = Mailglass.Message.build(email, tenant_id: "t")
 
       assert {:error, err} = Mailglass.Renderer.render(message)
       assert err.__struct__ == Mailglass.TemplateError

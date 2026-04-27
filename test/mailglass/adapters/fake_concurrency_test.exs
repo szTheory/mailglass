@@ -30,7 +30,7 @@ defmodule Mailglass.Adapters.FakeConcurrencyTest do
                     subject: "Test #{i}-#{j}"
                   )
 
-                Mailglass.Message.new(email,
+                Mailglass.Message.build(email,
                   mailable: Mailglass.FakeFixtures.TestMailer,
                   tenant_id: tenant_id
                 )

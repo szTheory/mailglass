@@ -193,7 +193,7 @@ end
 
 ## Open Questions
 
-1. **Codemod Aliasing**
+1. **Codemod Aliasing (RESOLVED)**
    - What we know: We are removing `import Swoosh.Email` from `__using__`.
    - What's unclear: Does the macro inject `import Mailglass.Message` instead, or should the codemod rewrite `Swoosh.Email.to/2` fully to `Mailglass.Message.to/2` to avoid import conflicts?
    - Recommendation: The macro should `import Mailglass.Message, only: [to: 2, from: 2, ...]` to keep adopter code visually clean (e.g., `to(user.email)`), and the codemod should just strip the `Swoosh.Email.` prefix.

@@ -74,17 +74,14 @@ Plans:
   3. A v0.1 adopter's existing mailable code compiled against v0.2 emits `@deprecated` compile-time warnings at every superseded call site, but does NOT fail compilation (one-cycle BC)
   4. `mix mailglass.upgrade.v0_2 --dry-run` prints all mechanically-rewritable sites; `--apply` rewrites them; ambiguous cases emit `IO.warn` with migration guide URL and are NOT silently rewritten
   5. `mix mailglass.stability.check` exits zero; no `Swoosh.Email.t()` reference appears in public-API docstrings or typespecs; `guides/upgrading-from-v0_1.md` doctest snippets compile in CI
-**Plans**: 8 plans
+**Plans**: 5 plans
 
 Plans:
-- [ ] 09-01: Add Igniter ~> 0.7 dev dep + add 8 native field setters to Mailglass.Message (API-01)
-- [ ] 09-02: Remove import Swoosh.Email at mailable.ex:129; update use Mailglass.Mailable injection to ≤20 lines (API-03)
-- [ ] 09-03: Add @deprecated annotations on all v0.1 superseded paths (API-04)
-- [ ] 09-04: Retain + document update_swoosh/2 as named escape hatch; add to api_stability.md v2 §Message Extensions (API-02)
-- [ ] 09-05: Implement mix mailglass.upgrade.v0_2 Igniter codemod — dry-run default, --apply flag, ambiguous-case warn+skip, skip string literals/heredocs/comments (API-05)
-- [ ] 09-06: Write api_stability.md v2 — public surface freeze, Since: annotations, deprecation policy, freeze-until-vNext promise (API-06)
-- [ ] 09-07: Add mix mailglass.stability.check script + doc-contract test asserting no Swoosh.Email.t() in public typespecs (API-06)
-- [ ] 09-08: Write guides/upgrading-from-v0_1.md — before/after examples, codemod walkthrough, ambiguous-case recipes, dep matrix, rollback procedure (API-07)
+- [ ] 09-01-PLAN.md — Core API Setters + Deprecations
+- [ ] 09-02-PLAN.md — Mailable Macro Update
+- [ ] 09-03-PLAN.md — Igniter Codemod
+- [ ] 09-04-PLAN.md — API Stability Check & Contract
+- [ ] 09-05-PLAN.md — Upgrade Guide
 
 ### Phase 10: Stream Policy Implementation
 **Goal**: Message stream separation is enforced at both compile-time and runtime; the existing no-op seam at stream.ex:35 is replaced with real policy; adopters cannot accidentally ship a :bulk mailable without a stream set

@@ -122,7 +122,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       |> Swoosh.Email.html_body("<p>Test body</p>")
       |> Swoosh.Email.text_body("Test body")
 
-    Message.new(email,
+    Message.build(email,
       mailable: Mailglass.FakeFixtures.TestMailer,
       tenant_id: "test-tenant",
       stream: :transactional

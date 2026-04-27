@@ -40,7 +40,7 @@ defmodule Mailglass.Message do
   ## Examples
 
       iex> email = Swoosh.Email.new(subject: "Welcome")
-      iex> msg = Mailglass.Message.new(email, mailable: MyApp.UserMailer)
+      iex> msg = Mailglass.Message.build(email, mailable: MyApp.UserMailer)
       iex> msg.stream
       :transactional
       iex> msg.mailable
@@ -85,14 +85,20 @@ defmodule Mailglass.Message do
   ## Examples
 
       iex> email = Swoosh.Email.new(subject: "Welcome")
-      iex> msg = Mailglass.Message.new(email, mailable: MyApp.UserMailer)
+      iex> msg = Mailglass.Message.build(email, mailable: MyApp.UserMailer)
       iex> msg.stream
       :transactional
 
   """
   @doc since: "0.1.0"
+  @deprecated "Use native Mailglass.Message setters instead"
   @spec new(Swoosh.Email.t(), keyword()) :: t()
   def new(%Swoosh.Email{} = swoosh_email, opts \\ []) when is_list(opts) do
+    build(swoosh_email, opts)
+  end
+
+  @doc false
+  def build(%Swoosh.Email{} = swoosh_email, opts \\ []) when is_list(opts) do
     %__MODULE__{
       swoosh_email: swoosh_email,
       mailable: Keyword.get(opts, :mailable),

@@ -29,7 +29,7 @@ defmodule Mailglass.Outbound.PreflightTest do
         |> Swoosh.Email.text_body("Click here")
 
       msg =
-        Message.new(email,
+        Message.build(email,
           mailable: Mailglass.FakeFixtures.TrackingMailer,
           mailable_function: :magic_link,
           tenant_id: "test-tenant",
@@ -138,7 +138,7 @@ defmodule Mailglass.Outbound.PreflightTest do
         |> Swoosh.Email.html_body(broken_component)
 
       msg =
-        Message.new(email,
+        Message.build(email,
           mailable: Mailglass.FakeFixtures.TestMailer,
           tenant_id: "test-tenant",
           stream: :transactional
@@ -180,7 +180,7 @@ defmodule Mailglass.Outbound.PreflightTest do
       |> Swoosh.Email.html_body("<p>Body</p>")
       |> Swoosh.Email.text_body("Body")
 
-    Message.new(email,
+    Message.build(email,
       mailable: Mailglass.FakeFixtures.TestMailer,
       tenant_id: "test-tenant",
       stream: stream

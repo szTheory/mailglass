@@ -117,7 +117,7 @@ defmodule Mailglass.Outbound do
   end
 
   def send(%Swoosh.Email{} = email, opts) do
-    msg = Message.new(email, tenant_id: Tenancy.current())
+    msg = Message.build(email, tenant_id: Tenancy.current())
     send(msg, opts)
   end
 

@@ -6,14 +6,14 @@ defmodule Mailglass.MessageTest do
   describe "mailable_function field" do
     test "Message struct has :mailable_function field defaulting to nil" do
       email = Swoosh.Email.new(subject: "Test")
-      msg = Message.new(email)
+      msg = Message.build(email)
       assert msg.mailable_function == nil
     end
 
     test "Message.new/2 populates :mailable_function from opts" do
       email = Swoosh.Email.new(subject: "Welcome")
 
-      msg = Message.new(email, mailable: MyApp.UserMailer, mailable_function: :welcome)
+      msg = Message.build(email, mailable: MyApp.UserMailer, mailable_function: :welcome)
 
       assert msg.mailable == MyApp.UserMailer
       assert msg.mailable_function == :welcome
@@ -21,57 +21,57 @@ defmodule Mailglass.MessageTest do
 
     test "Message.new/2 with :password_reset function populates the field" do
       email = Swoosh.Email.new(subject: "Reset")
-      msg = Message.new(email, mailable: MyApp.UserMailer, mailable_function: :password_reset)
+      msg = Message.build(email, mailable: MyApp.UserMailer, mailable_function: :password_reset)
       assert msg.mailable_function == :password_reset
     end
   end
 
   describe "native setters" do
     test "to/2 sets recipient" do
-      msg = Message.new(Swoosh.Email.new())
+      msg = Message.build(Swoosh.Email.new())
       updated = Message.to(msg, "user@example.com")
       assert updated.swoosh_email.to == [{"", "user@example.com"}]
     end
 
     test "from/2 sets sender" do
-      msg = Message.new(Swoosh.Email.new())
+      msg = Message.build(Swoosh.Email.new())
       updated = Message.from(msg, "sender@example.com")
       assert updated.swoosh_email.from == {"", "sender@example.com"}
     end
 
     test "subject/2 sets subject" do
-      msg = Message.new(Swoosh.Email.new())
+      msg = Message.build(Swoosh.Email.new())
       updated = Message.subject(msg, "Hello")
       assert updated.swoosh_email.subject == "Hello"
     end
 
     test "text_body/2 sets text body" do
-      msg = Message.new(Swoosh.Email.new())
+      msg = Message.build(Swoosh.Email.new())
       updated = Message.text_body(msg, "Text content")
       assert updated.swoosh_email.text_body == "Text content"
     end
 
     test "html_body/2 sets html body" do
-      msg = Message.new(Swoosh.Email.new())
+      msg = Message.build(Swoosh.Email.new())
       updated = Message.html_body(msg, "<p>HTML</p>")
       assert updated.swoosh_email.html_body == "<p>HTML</p>"
     end
 
     test "header/3 sets custom header" do
-      msg = Message.new(Swoosh.Email.new())
+      msg = Message.build(Swoosh.Email.new())
       updated = Message.header(msg, "X-Custom", "value")
       assert updated.swoosh_email.headers["X-Custom"] == "value"
     end
 
     test "attach/2 adds attachment" do
-      msg = Message.new(Swoosh.Email.new())
+      msg = Message.build(Swoosh.Email.new())
       attachment = Swoosh.Attachment.new({:data, "content"}, filename: "test.txt")
       updated = Message.attach(msg, attachment)
       assert updated.swoosh_email.attachments == [attachment]
     end
 
     test "put_tag/2 adds to message tags list" do
-      msg = Message.new(Swoosh.Email.new())
+      msg = Message.build(Swoosh.Email.new())
       updated = Message.put_tag(msg, "welcome-series")
       assert updated.tags == ["welcome-series"]
 
@@ -83,7 +83,7 @@ defmodule Mailglass.MessageTest do
   describe "put_metadata/3" do
     test "returns a new %Message{} with metadata[key] = value" do
       email = Swoosh.Email.new(subject: "Test")
-      msg = Message.new(email)
+      msg = Message.build(email)
 
       updated = Message.put_metadata(msg, :delivery_id, "01HXYZ")
 
@@ -94,7 +94,7 @@ defmodule Mailglass.MessageTest do
 
     test "other fields are untouched" do
       email = Swoosh.Email.new(subject: "Welcome")
-      msg = Message.new(email, mailable: MyApp.UserMailer, stream: :transactional)
+      msg = Message.build(email, mailable: MyApp.UserMailer, stream: :transactional)
 
       updated = Message.put_metadata(msg, :delivery_id, "abc123")
 
@@ -105,7 +105,7 @@ defmodule Mailglass.MessageTest do
 
     test "on a message with existing metadata, merges without overwriting other keys" do
       email = Swoosh.Email.new(subject: "Test")
-      msg = Message.new(email, metadata: %{existing_key: "existing_val"})
+      msg = Message.build(email, metadata: %{existing_key: "existing_val"})
 
       updated = Message.put_metadata(msg, :delivery_id, "01HXYZ")
 
@@ -114,7 +114,7 @@ defmodule Mailglass.MessageTest do
 
     test "initialises metadata to %{key => value} when metadata is nil/empty (no crash)" do
       email = Swoosh.Email.new(subject: "Test")
-      msg = Message.new(email)
+      msg = Message.build(email)
       # Default metadata is %{}, put_metadata should work
       updated = Message.put_metadata(msg, :step, "init")
       assert updated.metadata == %{step: "init"}
