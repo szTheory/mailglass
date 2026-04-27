@@ -98,18 +98,25 @@ defmodule MailglassAdmin.MixProject do
     end
   end
 
+  # REL-03: Semantic names are canonical. The `verify.phase_05` key below is a
+  # deprecated one-cycle pass-through that delegates to the semantic alias.
+  # Remove it in the next release cycle.
+  #
   # Phase 5 verification gate. Intentionally RED at Plan 02 completion:
   #   - step 2 (test --warnings-as-errors) fails because Plans 03-06 tests are RED
   #   - step 3 (mailglass_admin.assets.build) fails because Plan 05 ships that task
   # Step 4 is the PREV-06 / CONTEXT D-04 merge gate — bundle drift CI check.
   defp aliases do
     [
-      "verify.phase_05": [
+      # Semantic alias (REL-03)
+      "verify.preview": [
         "compile --no-optional-deps --warnings-as-errors",
         "test --warnings-as-errors --exclude flaky",
         "mailglass_admin.assets.build",
         "cmd git diff --exit-code priv/static/"
-      ]
+      ],
+      # Deprecated pass-through (REL-03, one cycle) — use verify.preview instead
+      "verify.phase_05": ["verify.preview"]
     ]
   end
 

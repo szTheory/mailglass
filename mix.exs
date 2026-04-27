@@ -36,10 +36,21 @@ defmodule Mailglass.MixProject do
   # nested inside aliases. Every composite verify.* alias must declare its
   # preferred env here, otherwise `mix verify.phase_07` (and friends) raise
   # the `set MIX_ENV explicitly` error before any sub-task runs.
+  #
+  # REL-03: Both semantic names (verify.foundation etc.) and deprecated
+  # pass-throughs (verify.phase_NN) are listed for one cycle.
   def cli do
     [
       preferred_envs: [
+        # Semantic aliases (REL-03)
+        "verify.foundation": :test,
+        "verify.persistence": :test,
+        "verify.send_pipeline": :test,
+        "verify.webhooks": :test,
+        "verify.installer": :test,
+        # Deprecated pass-throughs — remove after one release cycle
         "verify.phase01": :test,
+        "verify.phase_01": :test,
         "verify.phase_02": :test,
         "verify.phase_03": :test,
         "verify.phase_04": :test,
@@ -127,42 +138,74 @@ defmodule Mailglass.MixProject do
 
   # INST-04: `mix verify.phaseNN` is the single-command gate CI runs per phase.
   # Phase 6 expands this with custom Credo checks; the alias names stay stable.
+  #
+  # REL-03: Semantic names are canonical. The `verify.phase_NN` keys below are
+  # deprecated one-cycle pass-throughs that delegate to the semantic aliases.
+  # Remove them in the next release cycle.
   defp aliases do
     [
-      "verify.phase01": [
+      # --- Semantic verify aliases (REL-03) ---
+
+      # Phase 1: foundation — no-optional-deps compile + full test suite + Credo strict.
+      "verify.foundation": [
         "compile --no-optional-deps --warnings-as-errors",
         "test --warnings-as-errors",
         "credo --strict"
       ],
-      # Phase 2 UAT gate — drops and rebuilds the test DB so migration/seed
-      # regressions surface named, runs the 6 success-criteria test files
-      # explicitly (equivalent to `mix test --only phase_02_uat`), then the
-      # no-optional-deps compile lane (Oban middleware conditional compile).
+      # Phase 2: persistence — drops/rebuilds the test DB, runs phase_02_uat tests,
+      # then the no-optional-deps compile lane (Oban middleware conditional compile).
       # Mailglass.TestRepo lives in test/support (not in project ecto_repos),
       # so ecto tasks need `-r` to target it explicitly.
-      "verify.phase_02": [
+      "verify.persistence": [
         "ecto.drop -r Mailglass.TestRepo --quiet",
         "ecto.create -r Mailglass.TestRepo --quiet",
         "test --warnings-as-errors --only phase_02_uat --exclude flaky",
         "compile --no-optional-deps --warnings-as-errors"
       ],
-      # Phase 3 UAT gate per INST-04.
-      "verify.phase_03": [
+      # Phase 3: send pipeline UAT gate per INST-04.
+      "verify.send_pipeline": [
         "ecto.drop -r Mailglass.TestRepo --quiet",
         "ecto.create -r Mailglass.TestRepo --quiet",
         "test --warnings-as-errors --only phase_03_uat --exclude flaky",
         "compile --no-optional-deps --warnings-as-errors"
       ],
-      # Phase 4 UAT gate per INST-04. Wave 0 wires the alias; Wave 4 (Plan 09)
+      # Phase 4: webhooks UAT gate per INST-04. Wave 0 wires the alias; Wave 4 (Plan 09)
       # ships the first `@tag :phase_04_uat` tests. Zero-test runs are a valid
       # pass — the alias verifies the DB can be dropped/created and the
       # no-optional-deps compile lane stays green.
-      "verify.phase_04": [
+      "verify.webhooks": [
         "ecto.drop -r Mailglass.TestRepo --quiet",
         "ecto.create -r Mailglass.TestRepo --quiet",
         "test --warnings-as-errors --only phase_04_uat --exclude flaky",
         "compile --no-optional-deps --warnings-as-errors"
       ],
+      # Phase 7: installer — runs the installer and docs test suites in a
+      # single `mix test` invocation. Chaining individual aliases would trip
+      # Mix's task-deduplication (each `verify.installer.*` calls `mix test`,
+      # but `mix test` only runs once per invocation, so a chain would execute
+      # only the first file).
+      "verify.installer": [
+        "test test/mailglass/install test/mailglass/docs_contract_test.exs test/mailglass/docs_migration_smoke_test.exs --warnings-as-errors --exclude flaky"
+      ],
+
+      # --- Deprecated pass-throughs (REL-03, one cycle) ---
+      # These delegate to the canonical semantic aliases above.
+
+      # verify.phase01 (legacy spelling without underscore) — deprecated; use verify.foundation
+      "verify.phase01": ["verify.foundation"],
+      # verify.phase_01 — deprecated; use verify.foundation
+      "verify.phase_01": ["verify.foundation"],
+      # verify.phase_02 — deprecated; use verify.persistence
+      "verify.phase_02": ["verify.persistence"],
+      # verify.phase_03 — deprecated; use verify.send_pipeline
+      "verify.phase_03": ["verify.send_pipeline"],
+      # verify.phase_04 — deprecated; use verify.webhooks
+      "verify.phase_04": ["verify.webhooks"],
+      # verify.phase_07 — deprecated; use verify.installer
+      "verify.phase_07": ["verify.installer"],
+
+      # --- Non-phase aliases (unchanged) ---
+
       "verify.installer.golden": [
         "test test/mailglass/install/install_golden_test.exs --warnings-as-errors"
       ],
@@ -177,14 +220,6 @@ defmodule Mailglass.MixProject do
       ],
       "verify.docs.migration": [
         "test test/mailglass/docs_migration_smoke_test.exs --warnings-as-errors"
-      ],
-      # Phase 7 UAT gate per INST-04. Runs the installer and docs test suites
-      # in a single `mix test` invocation — chaining the individual aliases
-      # would trip Mix's task-deduplication (each `verify.installer.*` calls
-      # `mix test`, but `mix test` only runs once per invocation, so a chain
-      # would execute only the first file).
-      "verify.phase_07": [
-        "test test/mailglass/install test/mailglass/docs_contract_test.exs test/mailglass/docs_migration_smoke_test.exs --warnings-as-errors --exclude flaky"
       ],
       # Cold-start smoke — full suite from a fresh DB. Catches startup-order,
       # seed, and missing-migration issues that warm-state runs can mask.

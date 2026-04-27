@@ -56,10 +56,29 @@ jobs:
           fi
           echo "Target dep pin: {:mailglass, \"== $NEW_VERSION\"}"
 
-          # Rewrite the strict pin literal. Match `== <semver>` inside the
-          # {:mailglass, "..."} tuple body. Multi-line .exs is fine — sed -E
-          # handles the regex on a per-line basis.
-          sed -i -E 's/\{:mailglass, "== [0-9]+\.[0-9]+\.[0-9]+"\}/{:mailglass, "== '"$NEW_VERSION"'"}/' mailglass_admin/mix.exs
+          # REL-05: Bash-loop generalization keyed on (path, dep_atom) pairs.
+          # Future-proofs adding mailglass_inbound at v0.5+ — uncomment one line.
+          PINS=(
+            "mailglass_admin/mix.exs:mailglass"
+            # "mailglass_inbound/mix.exs:mailglass"   # uncomment at v0.5
+          )
+
+          for entry in "${PINS[@]}"; do
+            path="${entry%:*}"
+            dep="${entry##*:}"
+
+            # REL-05: exit-1 guard — catches the case where the dep tuple was
+            # renamed and the sed would silently no-op. Two layers of protection:
+            # (1) this guard, (2) mix_config_test.exs sed-anchor stability test.
+            matches=$(grep -cE "\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}" "$path" || true)
+            if [ "$matches" -eq 0 ]; then
+              echo "ERROR: sed anchor regex matched zero lines in $path." >&2
+              echo "The dep tuple shape may have been renamed — see CONTRIBUTING.md REL-05 section." >&2
+              exit 1
+            fi
+
+            sed -i -E "s/\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}/{:${dep}, \"== ${NEW_VERSION}\"}/" "$path"
+          done
 
           if git diff --quiet -- mailglass_admin/mix.exs; then
             echo "Pin already at $NEW_VERSION — nothing to commit."

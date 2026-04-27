@@ -18,6 +18,25 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     * `--package` - optional package selector (`mailglass` or `mailglass_admin`);
       when omitted, both packages are checked sequentially.
     * `--keep` - preserve `_publish_check/<pkg>/` for inspection.
+
+  ## Pre-publish checks (in order)
+
+    1. Installer goldens — asserts installer manifest has not drifted from
+       the committed snapshot (mailglass package only; REL-04). Fails fast
+       before the slower tarball build.
+    2. Build and unpack tarball
+    3. Compare allowlist
+    4. Check denylist
+    5. Check tarball size
+    6. Check required files
+    7. Check CHANGELOG section
+    8. Check mix metadata
+    9. Check dependency shapes
+    10. Check linked-version constraint
+    11. Check prod deps resolution
+    12. Compile tarball in isolation
+    13. Run hex.audit
+    14. Capture hex.outdated advisory
   """
 
   use Mix.Task
@@ -66,6 +85,17 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     ctx = load_package_context(package)
 
     counts = %{create: 0, update: 0, unchanged: 0, conflict: 0}
+
+    # REL-04: installer goldens drift detection (mailglass only).
+    # If the installer manifest drifted from the snapshot, version bumps
+    # would silently ship broken installer output. Fail pre-publish here,
+    # not at post-merge CI. Runs before the slower tarball build for fast failure.
+    {counts, ctx} =
+      if package == :mailglass do
+        step(counts, :unchanged, package, "run installer goldens", ctx, &verify_installer_goldens/1)
+      else
+        {counts, ctx}
+      end
 
     {counts, ctx} =
       step(counts, :create, package, "build and unpack tarball", ctx, &build_tarball/1)
@@ -997,6 +1027,34 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
       %{file | path: path}
     end)
+  end
+
+  # REL-04: Run the installer golden tests to detect manifest drift before publish.
+  # Uses System.cmd to invoke `mix test` in the repo root in a clean sub-process
+  # so Mix's task-deduplication does not skip the run (publish.check itself was
+  # invoked via `mix`, so re-running Mix.Task.run("test", ...) would be a no-op).
+  defp verify_installer_goldens(ctx) do
+    Mix.shell().info("[mailglass.publish.check] running installer goldens...")
+
+    {output, status} =
+      System.cmd(
+        "mix",
+        ["test", "test/mailglass/install", "--warnings-as-errors", "--exclude", "flaky"],
+        cd: ctx.repo_root,
+        env: [{"MIX_ENV", "test"}],
+        stderr_to_stdout: true
+      )
+
+    if status != 0 do
+      Mix.shell().error(output)
+
+      fail_step(
+        "run installer goldens",
+        "Delivery blocked: installer goldens drifted (REL-04). Re-snapshot or fix installer output. Run `mix verify.installer` locally to reproduce."
+      )
+    end
+
+    ctx
   end
 
   defp eval_mailglass_dep(body) do
