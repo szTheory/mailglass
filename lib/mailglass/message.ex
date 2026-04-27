@@ -166,6 +166,94 @@ defmodule Mailglass.Message do
   end
 
   @doc """
+  Sets the recipient of the message.
+
+  Delegates to `Swoosh.Email.to/2`.
+  """
+  @doc since: "0.2.0"
+  @spec to(t(), Swoosh.Email.recipient() | [Swoosh.Email.recipient()]) :: t()
+  def to(%__MODULE__{} = msg, recipient) do
+    update_swoosh(msg, &Swoosh.Email.to(&1, recipient))
+  end
+
+  @doc """
+  Sets the sender of the message.
+
+  Delegates to `Swoosh.Email.from/2`.
+  """
+  @doc since: "0.2.0"
+  @spec from(t(), Swoosh.Email.recipient()) :: t()
+  def from(%__MODULE__{} = msg, sender) do
+    update_swoosh(msg, &Swoosh.Email.from(&1, sender))
+  end
+
+  @doc """
+  Sets the subject of the message.
+
+  Delegates to `Swoosh.Email.subject/2`.
+  """
+  @doc since: "0.2.0"
+  @spec subject(t(), String.t()) :: t()
+  def subject(%__MODULE__{} = msg, subject) do
+    update_swoosh(msg, &Swoosh.Email.subject(&1, subject))
+  end
+
+  @doc """
+  Sets the HTML body of the message.
+
+  Delegates to `Swoosh.Email.html_body/2`.
+  """
+  @doc since: "0.2.0"
+  @spec html_body(t(), String.t()) :: t()
+  def html_body(%__MODULE__{} = msg, html_body) do
+    update_swoosh(msg, &Swoosh.Email.html_body(&1, html_body))
+  end
+
+  @doc """
+  Sets the text body of the message.
+
+  Delegates to `Swoosh.Email.text_body/2`.
+  """
+  @doc since: "0.2.0"
+  @spec text_body(t(), String.t()) :: t()
+  def text_body(%__MODULE__{} = msg, text_body) do
+    update_swoosh(msg, &Swoosh.Email.text_body(&1, text_body))
+  end
+
+  @doc """
+  Sets a custom header on the message.
+
+  Delegates to `Swoosh.Email.header/3`.
+  """
+  @doc since: "0.2.0"
+  @spec header(t(), String.t(), String.t()) :: t()
+  def header(%__MODULE__{} = msg, name, value) do
+    update_swoosh(msg, &Swoosh.Email.header(&1, name, value))
+  end
+
+  @doc """
+  Adds an attachment to the message.
+
+  Delegates to `Swoosh.Email.attachment/2`.
+  """
+  @doc since: "0.2.0"
+  @spec attach(t(), Swoosh.Attachment.t() | map()) :: t()
+  def attach(%__MODULE__{} = msg, attachment) do
+    update_swoosh(msg, &Swoosh.Email.attachment(&1, attachment))
+  end
+
+  @doc """
+  Appends a tag to the message.
+
+  Modifies the `:tags` list on the `%Mailglass.Message{}` struct.
+  """
+  @doc since: "0.2.0"
+  @spec put_tag(t(), String.t()) :: t()
+  def put_tag(%__MODULE__{tags: tags} = msg, tag) when is_binary(tag) do
+    %{msg | tags: tags ++ [tag]}
+  end
+
+  @doc """
   Stamps the `:mailable_function` field on a `%Message{}`.
 
   Called in adopter mailable functions to record which function built the
