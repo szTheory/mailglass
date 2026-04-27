@@ -3,6 +3,20 @@ defmodule Mailglass.StreamTest do
 
   alias Mailglass.{Message, Stream}
 
+  describe "valid?/1" do
+    test "returns true for valid streams" do
+      assert Stream.valid?(:transactional)
+      assert Stream.valid?(:operational)
+      assert Stream.valid?(:bulk)
+    end
+
+    test "returns false for invalid streams" do
+      refute Stream.valid?(:other)
+      refute Stream.valid?("bulk")
+      refute Stream.valid?(nil)
+    end
+  end
+
   describe "policy_check/1" do
     test "returns :ok for :transactional" do
       msg = %Message{stream: :transactional, tenant_id: "t1", swoosh_email: Swoosh.Email.new()}
