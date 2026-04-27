@@ -48,9 +48,25 @@ defmodule Mailglass.Stream do
   v0.5 DELIV-02 will swap this implementation; callers do not change.
   """
   @doc since: "0.1.0"
-  @spec policy_check(Message.t()) :: :ok
-  def policy_check(%Message{} = msg) do
+  @spec policy_check(Message.t()) :: :ok | {:error, Mailglass.StreamPolicyError.t()}
+  def policy_check(%{__struct__: Mailglass.Message} = msg) do
     start = System.monotonic_time(:microsecond)
+    
+    result =
+      case msg do
+        %{stream: :bulk, mailable: nil} ->
+          {:error,
+           Mailglass.StreamPolicyError.new(:stream_policy_violated,
+             detail: %{
+               rule: :bulk_requires_mailable,
+               suggestion: "A mailable module is required when sending via the :bulk stream."
+             }
+           )}
+
+        _ ->
+          :ok
+      end
+
     duration_us = System.monotonic_time(:microsecond) - start
 
     :telemetry.execute(
@@ -59,6 +75,6 @@ defmodule Mailglass.Stream do
       %{tenant_id: msg.tenant_id, stream: msg.stream}
     )
 
-    :ok
+    result
   end
 end
