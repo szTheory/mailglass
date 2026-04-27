@@ -432,9 +432,12 @@ defmodule Mailglass.Outbound do
 
     case Repo.multi(multi) do
       {:ok, %{delivery: d}} ->
-        # Spawn non-linked task under Mailglass.TaskSupervisor.
-        # Tenancy process-dict MUST be re-stamped (not inherited) — D-21.
-        Task.Supervisor.start_child(Mailglass.TaskSupervisor, fn ->
+        # AsyncAdapter dispatch (D-08-11). TaskSupervisor impl is prod default;
+        # Inline impl is test default. Tenancy re-stamp inside the closure works
+        # for both paths (D-08-15) — Inline runs sync under caller, TaskSupervisor
+        # runs in fresh process; with_tenant/2 stamps the executing process
+        # either way.
+        Mailglass.Outbound.AsyncAdapter.dispatch(fn ->
           Mailglass.Tenancy.with_tenant(tenant_id, fn ->
             try do
               case dispatch_by_id(d.id) do
@@ -457,7 +460,7 @@ defmodule Mailglass.Outbound do
                 )
             end
           end)
-        end)
+        end, [])
 
         {:ok, %{d | status: :queued, last_event_type: :queued}}
 
@@ -604,7 +607,8 @@ defmodule Mailglass.Outbound do
       :ok
     else
       Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-        Task.Supervisor.start_child(Mailglass.TaskSupervisor, fn ->
+        # AsyncAdapter dispatch (D-08-11). TaskSupervisor (prod) | Inline (test).
+        Mailglass.Outbound.AsyncAdapter.dispatch(fn ->
           Mailglass.Tenancy.with_tenant(t, fn ->
             try do
               case dispatch_by_id(id) do
@@ -627,7 +631,7 @@ defmodule Mailglass.Outbound do
                 )
             end
           end)
-        end)
+        end, [])
       end)
 
       :ok
