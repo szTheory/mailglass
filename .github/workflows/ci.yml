@@ -286,6 +286,8 @@ jobs:
         run: mix deps.get
       - name: Build docs
         run: mix docs --warnings-as-errors
+      - name: Validate guides have no leaked internal IDs (REL-02)
+        run: mix mailglass.docs.check
 
   hex_audit:
     name: Hex Audit (Elixir 1.18 / OTP 27)
