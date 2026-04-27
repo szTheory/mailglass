@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/*.yml"
       - ".github/workflows/*.yaml"
+      - "scripts/check_tests_gate.sh"
   workflow_dispatch:
 
 permissions:
@@ -20,3 +21,5 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       - name: Lint workflow files
         uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca  # v1.7.12
+      - name: Verify Tests gate is halt-on-failure
+        run: ./scripts/check_tests_gate.sh
