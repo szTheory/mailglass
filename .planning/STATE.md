@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
 status: planning
-stopped_at: Completed 09-01-PLAN.md
-last_updated: "2026-04-27T20:13:43.376Z"
+stopped_at: Completed 09-02-PLAN.md
+last_updated: "2026-04-27T20:19:40.441Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
-  percent: 64
+  completed_plans: 8
+  percent: 73
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to plan
 Last activity: 2026-04-27
 
-Progress: [██████░░░░] 64%
+Progress: [███████░░░] 73%
 
 ## Milestone Spec (v0.2)
 
@@ -52,6 +52,7 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 - D-23: Stream policy enforcement boundary (compile + runtime both required per AF-V2-08) — Phase 10
 - D-24: Auto-suppression idempotency (Multi.run inside webhook ingest, on_conflict: :nothing) — Phase 12
 - Introduced Message.build/2 internally to sidestep the deprecation warning on Message.new/2.
+- D-22: Replaced Swoosh.Email import with Mailglass.Message in the Mailable macro, restricting to 8 native setters to prevent namespace pollution.
 
 ### Key Corrections (propagate into phase plans)
 
@@ -76,8 +77,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 
 ## Session Continuity
 
-Last session: 2026-04-27T20:13:43.371Z
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-04-27T20:19:40.435Z
+Stopped at: Completed 09-02-PLAN.md
 Resume: `/gsd-plan-phase 8`
 
 **Planned Phase:** 08 (Release-Engineering Hardening) — 6 plans — 2026-04-27T02:26:05.655Z
