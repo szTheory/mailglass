@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
 status: planning
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-04-27T21:11:00.607Z"
+stopped_at: Completed 10-02-PLAN.md
+last_updated: "2026-04-27T21:16:36.053Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 16
-  completed_plans: 12
-  percent: 75
+  completed_plans: 13
+  percent: 81
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to plan
 Last activity: 2026-04-27
 
-Progress: [████████░░] 75%
+Progress: [████████░░] 81%
 
 ## Milestone Spec (v0.2)
 
@@ -58,6 +58,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 - Promised 'freeze-until-vNext' for the v0.2 milestone.
 - Valid streams are strictly closed to :transactional, :operational, and :bulk.
 - Enforce stream atom validity at compile-time via new_from_use/2 and runtime via put_stream/2.
+- Return {:error, %StreamPolicyError{}} for invalid streams instead of raising, enabling seamless integration into with macro pipelines.
+- Mitigated T-10-02 by explicitly requiring a mailable for the :bulk stream to ensure auditability.
 
 ### Key Corrections (propagate into phase plans)
 
@@ -82,8 +84,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 
 ## Session Continuity
 
-Last session: 2026-04-27T21:11:00.601Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-04-27T21:16:36.047Z
+Stopped at: Completed 10-02-PLAN.md
 Resume: `/gsd-plan-phase 8`
 
 **Planned Phase:** 08 (Release-Engineering Hardening) — 6 plans — 2026-04-27T02:26:05.655Z
