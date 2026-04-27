@@ -53,6 +53,7 @@ defmodule Mailglass.Error do
           | Mailglass.ConfigError.t()
           | Mailglass.EventLedgerImmutableError.t()
           | Mailglass.TenancyError.t()
+          | Mailglass.StreamPolicyError.t()
 
   @doc "Returns the error's closed `:type` atom."
   @callback type(t()) :: atom()
@@ -68,7 +69,8 @@ defmodule Mailglass.Error do
     Mailglass.RateLimitError,
     Mailglass.ConfigError,
     Mailglass.EventLedgerImmutableError,
-    Mailglass.TenancyError
+    Mailglass.TenancyError,
+    Mailglass.StreamPolicyError
   ]
 
   @doc """
