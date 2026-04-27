@@ -26,6 +26,60 @@ defmodule Mailglass.MessageTest do
     end
   end
 
+  describe "native setters" do
+    test "to/2 sets recipient" do
+      msg = Message.new(Swoosh.Email.new())
+      updated = Message.to(msg, "user@example.com")
+      assert updated.swoosh_email.to == [{"", "user@example.com"}]
+    end
+
+    test "from/2 sets sender" do
+      msg = Message.new(Swoosh.Email.new())
+      updated = Message.from(msg, "sender@example.com")
+      assert updated.swoosh_email.from == {"", "sender@example.com"}
+    end
+
+    test "subject/2 sets subject" do
+      msg = Message.new(Swoosh.Email.new())
+      updated = Message.subject(msg, "Hello")
+      assert updated.swoosh_email.subject == "Hello"
+    end
+
+    test "text_body/2 sets text body" do
+      msg = Message.new(Swoosh.Email.new())
+      updated = Message.text_body(msg, "Text content")
+      assert updated.swoosh_email.text_body == "Text content"
+    end
+
+    test "html_body/2 sets html body" do
+      msg = Message.new(Swoosh.Email.new())
+      updated = Message.html_body(msg, "<p>HTML</p>")
+      assert updated.swoosh_email.html_body == "<p>HTML</p>"
+    end
+
+    test "header/3 sets custom header" do
+      msg = Message.new(Swoosh.Email.new())
+      updated = Message.header(msg, "X-Custom", "value")
+      assert updated.swoosh_email.headers["X-Custom"] == "value"
+    end
+
+    test "attach/2 adds attachment" do
+      msg = Message.new(Swoosh.Email.new())
+      attachment = Swoosh.Attachment.new({:data, "content"}, filename: "test.txt")
+      updated = Message.attach(msg, attachment)
+      assert updated.swoosh_email.attachments == [attachment]
+    end
+
+    test "put_tag/2 adds to message tags list" do
+      msg = Message.new(Swoosh.Email.new())
+      updated = Message.put_tag(msg, "welcome-series")
+      assert updated.tags == ["welcome-series"]
+
+      updated2 = Message.put_tag(updated, "onboarding")
+      assert updated2.tags == ["welcome-series", "onboarding"]
+    end
+  end
+
   describe "put_metadata/3" do
     test "returns a new %Message{} with metadata[key] = value" do
       email = Swoosh.Email.new(subject: "Test")
