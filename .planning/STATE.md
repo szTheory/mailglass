@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
 status: planning
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-04-27T20:19:40.441Z"
+stopped_at: Completed 09-05-PLAN.md
+last_updated: "2026-04-27T20:35:00.000Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
-  completed_plans: 8
-  percent: 73
+  completed_plans: 11
+  percent: 100
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to plan
 Last activity: 2026-04-27
 
-Progress: [███████░░░] 73%
+Progress: [████████░░] 82%
 
 ## Milestone Spec (v0.2)
 
@@ -53,6 +53,9 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 - D-24: Auto-suppression idempotency (Multi.run inside webhook ingest, on_conflict: :nothing) — Phase 12
 - Introduced Message.build/2 internally to sidestep the deprecation warning on Message.new/2.
 - D-22: Replaced Swoosh.Email import with Mailglass.Message in the Mailable macro, restricting to 8 native setters to prevent namespace pollution.
+- Used source code scanning instead of Code.Typespecs API for the stability script to reliably detect Swoosh.Email.t() leaks.
+- Declared update_swoosh/2 as the official escape hatch for advanced Swoosh functionality.
+- Promised 'freeze-until-vNext' for the v0.2 milestone.
 
 ### Key Corrections (propagate into phase plans)
 
@@ -77,8 +80,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 
 ## Session Continuity
 
-Last session: 2026-04-27T20:19:40.435Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-04-27T20:30:02.582Z
+Stopped at: Completed 09-04-PLAN.md
 Resume: `/gsd-plan-phase 8`
 
 **Planned Phase:** 08 (Release-Engineering Hardening) — 6 plans — 2026-04-27T02:26:05.655Z
