@@ -36,16 +36,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
       - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
         with:
           elixir-version: "1.18"
           otp-version: "27"
       - name: Cache deps
-        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
@@ -74,7 +74,7 @@ jobs:
     steps:
       - name: Resolve tagged SHA
         id: resolve-sha
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
             const ref = context.payload.release?.tag_name || context.payload.inputs?.tag || context.sha;
@@ -85,7 +85,7 @@ jobs:
             });
             core.setOutput('sha', commit.data.sha);
       - name: Verify CI is green on tagged SHA
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
             const sha = '${{ steps.resolve-sha.outputs.sha }}';
@@ -117,16 +117,16 @@ jobs:
     environment: hex-publish
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
       - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
         with:
           elixir-version: "1.18"
           otp-version: "27"
       - name: Cache deps
-        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
@@ -194,16 +194,16 @@ jobs:
     environment: hex-publish
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
       - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
         with:
           elixir-version: "1.18"
           otp-version: "27"
       - name: Cache deps
-        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
