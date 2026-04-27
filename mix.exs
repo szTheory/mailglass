@@ -227,7 +227,6 @@ defmodule Mailglass.MixProject do
       source_ref: "v#{@version}",
       skip_undefined_reference_warnings_on: [
         "README.md",
-        "CLAUDE.md",
         "CONTRIBUTING.md",
         "guides/webhooks.md"
       ],
@@ -258,11 +257,10 @@ defmodule Mailglass.MixProject do
         "MAINTAINING.md",
         "CONTRIBUTING.md",
         "SECURITY.md",
-        "CODE_OF_CONDUCT.md",
-        "CLAUDE.md"
+        "CODE_OF_CONDUCT.md"
       ],
       groups_for_extras: [
-        Overview: ["README.md", "CLAUDE.md"],
+        Overview: ["README.md"],
         Guides: [
           "guides/getting-started.md",
           "guides/authoring-mailables.md",
