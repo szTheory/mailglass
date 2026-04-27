@@ -83,7 +83,7 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
 
       # normalize/2 returns a non-empty list of Anymail-mapped events.
       events = SendGrid.normalize(body, headers)
-      assert length(events) >= 1
+      assert events != []
 
       for event <- events do
         assert event.metadata["provider"] == "sendgrid"

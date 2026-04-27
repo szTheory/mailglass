@@ -153,7 +153,7 @@ defmodule Mailglass.Repo do
   `multi/1` instead.
   """
   @doc since: "0.1.0"
-  @spec query!(String.t(), [term()]) :: %Postgrex.Result{}
+  @spec query!(String.t(), [term()]) :: term()
   def query!(sql, params \\ []), do: repo().query!(sql, params)
 
   # Resolves the configured repo module. Raises `Mailglass.ConfigError` with

@@ -17,6 +17,7 @@ defmodule Mailglass.FakeFixtures do
   # [Rule 2 — missing critical: Plan 06 integration tests call the full Outbound
   # pipeline; TestMailer must produce renderable messages.]
   defmodule TestMailer do
+    @moduledoc false
     use Mailglass.Mailable, stream: :transactional
 
     def welcome(email) when is_binary(email) do
@@ -49,6 +50,7 @@ defmodule Mailglass.FakeFixtures do
   # Mailable with tracking opts — used by Plan 04 Task 2 auth-stream guard tests.
   # stream: :operational with both opens + clicks enabled.
   defmodule TrackingMailer do
+    @moduledoc false
     use Mailglass.Mailable, stream: :operational, tracking: [opens: true, clicks: true]
 
     def campaign(email) when is_binary(email) do

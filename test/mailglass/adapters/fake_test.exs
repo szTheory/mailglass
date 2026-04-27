@@ -213,7 +213,7 @@ defmodule Mailglass.Adapters.FakeTest do
 
       # The delivery should be in self()'s bucket (we are the shared pid)
       records = Fake.deliveries(owner: self())
-      assert length(records) >= 1
+      assert records != []
       assert Enum.any?(records, fn r -> r.message == msg end)
     end
   end
