@@ -34,7 +34,7 @@ Full details: [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md).
 
 **Phase Numbering:** Continues from v0.1's last phase (07.1) → starts at Phase 8.
 
-- [ ] **Phase 8: Release-Engineering Hardening** - Close 9 v0.1.2 debt items + re-tighten Credo/Dialyzer/Tests gates before any API-freezing work
+- [x] **Phase 8: Release-Engineering Hardening** (completed 2026-04-27) - Close 9 v0.1.2 debt items + re-tighten Credo/Dialyzer/Tests gates before any API-freezing work
 - [ ] **Phase 9: Mailable API Redesign + Freeze** - Remove Swoosh namespace leakage; ship native Message field setters, deprecation warnings, Igniter codemod, and api_stability.md v2
 - [ ] **Phase 10: Stream Policy Implementation** - Fill the existing no-op seam at stream.ex:35; enforce compile-time + runtime stream separation; add StreamPolicyConsistent Credo check
 - [ ] **Phase 11: RFC 8058 List-Unsubscribe** - Signed-token unsubscribe controller (core package); atomic header injection; mix mailglass.gen.unsubscribe; property tests
@@ -60,8 +60,9 @@ Plans:
 - [x] 08-02: HexDocs hygiene — exclude CLAUDE.md; strip D-NN/LINT-NN from guides; add mix mailglass.docs.check CI gate (REL-02)
 - [x] 08-03: Rename verify aliases to semantic names + wire installer goldens into mix mailglass.publish.check + resolve release-please extra-files (REL-03, REL-04, REL-05)
 - [x] 08-04: Fix Advisory Matrix CI (DB-setup + Elixir 1.17); unskip install_idempotency tests; re-batch 6 Dependabot PRs; refresh SHA pins (REL-06, REL-07, REL-08, REL-09)
-- [x] 08-05: Re-tighten Tests gate — sandbox + Task.Supervisor isolation; citext-OID-cache race fix; halt-on-failure (REL-10) — PR-A+PR-B shipped; PR-C deferred to operator (1-week tests_strict soak then halt-on-failure flip + branch protection)
+- [x] 08-05: Re-tighten Tests gate — sandbox + Task.Supervisor isolation; citext-OID-cache race fix; halt-on-failure (REL-10) — PR-A+PR-B shipped
 - [x] 08-06: Enable Credo --strict (REL-11) + Dialyzer triage: remove --ignore-exit-status, triage ~230 findings to ≤15 annotated .dialyzer_ignore.exs entries (REL-12)
+- [x] 08-07: Auto-PR-C — flip Tests lane, add gate-self-test workflow, automate branch protection (resolves 08-05 PR-C without human action)
 
 ### Phase 9: Mailable API Redesign + Freeze
 **Goal**: Adopter mailable modules compile against v0.2 with zero Swoosh.Email references in their API surface; downstream OSS packages can pin to `mailglass ~> 0.2` with a frozen, machine-readable public surface
