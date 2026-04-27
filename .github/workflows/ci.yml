@@ -250,16 +250,12 @@ jobs:
             ${{ runner.os }}-mix-
       - name: Install deps
         run: mix deps.get
-      - name: Run Credo (advisory until post-publish cleanup)
-        # `--mute-exit-status` keeps the run advisory: Credo prints the
-        # findings but never fails the build. Per CLAUDE.md, custom checks
-        # in credo_checks/ are the MANDATORY enforcement — they ALSO run
-        # under `mix compile --warnings-as-errors` (the dedicated CI lane),
-        # so the safety net is preserved. The pre-existing ~42 NORMAL/LOW
-        # software-design / readability / refactoring suggestions are out
-        # of v0.1.0 scope and will be cleaned up in a discrete post-publish
-        # phase that re-tightens this gate.
-        run: mix credo --mute-exit-status
+      - name: Verify suppression docs (shell gate)
+        # Fails CI if any {Credo.Check..., false} entry is missing
+        # a `# Reason:` + `# Tracking:` comment block (D-08-18/D-08-19).
+        run: bash scripts/check_credo_suppressions.sh
+      - name: Run Credo strict
+        run: mix credo --strict
 
 
   dialyzer:
@@ -304,18 +300,21 @@ jobs:
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             ${{ runner.os }}-mix-
+      - name: Cache PLT
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: _build/dev/*.plt
+          key: ${{ runner.os }}-dialyzer-plt-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-dialyzer-plt-${{ matrix.otp }}-${{ matrix.elixir }}-
       - name: Install deps
         run: mix deps.get
-      - name: Run Dialyzer (advisory until post-publish cleanup)
-        # Dialyzer surfaces 230 type-mismatch findings across the Phase
-        # 02-06 codebase — out of v0.1.0 scope. The findings are
-        # informational (no compile failures, no runtime bugs uncovered)
-        # and a discrete clean-up phase will close them post-publish.
-        # `continue-on-error: true` keeps the gate visible in CI without
-        # blocking the v0.1.0 publish path. Re-enable --halt-exit-status
-        # in the cleanup phase.
-        continue-on-error: true
-        run: mix dialyzer --halt-exit-status
+      - name: Verify ignore-file docs (shell gate)
+        # Fails CI if any {file, short_description} entry in .dialyzer_ignore.exs
+        # is missing a `# Reason:` comment block (D-08-27).
+        run: bash scripts/check_dialyzer_ignore.sh
+      - name: Run Dialyzer
+        run: mix dialyzer
 
   docs_warnings_as_errors:
     name: Docs Warnings as Errors (Elixir 1.18 / OTP 27)
