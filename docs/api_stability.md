@@ -1,9 +1,15 @@
 # API Stability — mailglass
 
-> This file documents the closed sets of values that form part of the public
-> API contract. Adding a value requires a CHANGELOG entry plus an `@since`
-> annotation on the new atom (minor version bump). Removing a value requires
-> a major version bump.
+> **v0.2 API Freeze Policy:**
+> This file documents the closed sets of values and public API surface that form the
+> `mailglass` contract. As of the v0.2 milestone, the public API is completely frozen.
+> We promise "freeze-until-vNext": no breaking changes will occur until a major version bump.
+>
+> **Deprecation Policy:**
+> Adding a value requires a CHANGELOG entry plus a `Since:` annotation on the new atom or function (minor version bump).
+> Removing or structurally altering a value requires a major version bump. Functions from v0.1 that expose
+> internal engine types (e.g., `Swoosh.Email.t()`) are deprecated in v0.2 but retained with warnings
+> to ensure backward compatibility.
 >
 > Automated tests in `test/mailglass/` assert that each error module's
 > `__types__/0` function returns exactly the set documented here.
@@ -852,17 +858,18 @@ Since: 0.1.0.
 @spec update_swoosh(Message.t(), (Swoosh.Email.t() -> Swoosh.Email.t())) :: Message.t()
 ```
 
-Applies a transformation function to the inner `%Swoosh.Email{}`. Adopters use this to pipe
-through Swoosh builder functions while keeping the `%Message{}` wrapper intact. The canonical
-pattern for building mailable functions:
+Applies a transformation function to the inner `%Swoosh.Email{}`. As of the v0.2 API freeze, `Swoosh` is an internal implementation detail hidden from the native setters to prevent namespace pollution. This function serves as the explicitly documented **escape hatch** for advanced Swoosh functionality not covered by the native setters. Adopters use this to pipe through Swoosh builder functions while keeping the `%Message{}` wrapper intact.
+
+The canonical pattern for building mailable functions using native setters and the escape hatch:
 
 ```elixir
 def welcome(user) do
   new()
+  |> Mailglass.Message.to(user.email)
+  |> Mailglass.Message.subject("Welcome!")
   |> Mailglass.Message.update_swoosh(fn e ->
-       e
-       |> Swoosh.Email.to(user.email)
-       |> Swoosh.Email.subject("Welcome!")
+       # Escape hatch for advanced Swoosh functionality (e.g., custom provider headers)
+       Swoosh.Email.header(e, "X-Custom-Feature", "true")
      end)
   |> Mailglass.Message.put_function(:welcome)
 end
