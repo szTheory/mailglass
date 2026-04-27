@@ -152,6 +152,7 @@ defmodule Mailglass.MixProject do
       {:mox, "~> 1.2", only: [:test]},
       {:excoveralls, "~> 0.18", only: [:test]},
       # Dev/test
+      {:igniter, "~> 0.7", only: :dev},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
