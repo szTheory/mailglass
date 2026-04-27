@@ -154,75 +154,11 @@ jobs:
         run: |
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
-      - name: Run tests (advisory until post-publish cleanup)
-        # ~11 of ~520 tests fail in the full-suite CI run with Sandbox +
-        # async + Task.Supervisor ownership patterns (`cannot find
-        # ownership process for #PID...`). The same tests pass in
-        # isolation locally — the failures are CI-order-dependent
-        # ExUnit/Sandbox interactions, not real library bugs (Compile,
-        # Compile-No-Optional-Deps, Installer Golden Gate, Admin Smoke
-        # Gate, Hex Audit, Format, Docs, Credo, Dialyzer all green).
-        # Re-tighten once the Sandbox shared-mode + Task.Supervisor
-        # ownership transfers are audited in a v0.1.1 cleanup phase.
-        continue-on-error: true
-        run: mix test --warnings-as-errors
-
-  tests_strict:
-    name: Tests Strict (advisory, ~1 week soak)
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - elixir: "1.18"
-            otp: "27"
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    env:
-      MIX_ENV: test
-      POSTGRES_HOST: localhost
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-      - name: Set up OTP + Elixir
-        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
-        with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
-      - name: Cache deps
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
-        with:
-          path: deps
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-mix-
-      - name: Install deps
-        run: mix deps.get
-      - name: Wait for postgres + create test DB
-        env:
-          PGPASSWORD: postgres
-        run: |
-          until pg_isready -h localhost -U postgres; do sleep 1; done
-          mix ecto.create -r Mailglass.TestRepo --quiet
-      - name: Run tests strict (advisory)
-        # PR-B: NOT marked required. Soaks in parallel with the existing
-        # Tests lane (continue-on-error: true) for ~1 week (>=5 random-seed
-        # runs) before PR-C flips the existing lane to halt-on-failure.
-        # D-08-14: No --seed 0 pin — random seed retained so ordering bugs
-        # are visible. D-08-13: delete this job in PR-C after soak completes.
+      - name: Run tests (halt-on-failure)
+        # Tests are now mandatory. Random seed retained per D-08-14 so
+        # ordering bugs surface. Foundation work (AsyncAdapter behaviour
+        # + CitextProbe + CaseTemplate hardening) shipped in plan 08-05;
+        # gate-self-test.yml verifies the gate blocks synthetic failures.
         run: mix test --warnings-as-errors
 
   credo_strict:
