@@ -38,9 +38,11 @@
 
 #### Streams (Phase 10)
 
-- [ ] **STREAM-01**: `Mailglass.Stream` module exposes a closed atom set: `:transactional | :operational | :bulk`. Streams are settable both compile-time (via `use Mailglass.Mailable, stream: :bulk`, stamped onto `%Message{}` in `Message.new_from_use/2`) and runtime (via `%Message{stream: :bulk}`). Per-Mailable default-stream resolution. (TS-V2-06)
+- [x] **STREAM-01
+**: `Mailglass.Stream` module exposes a closed atom set: `:transactional | :operational | :bulk`. Streams are settable both compile-time (via `use Mailglass.Mailable, stream: :bulk`, stamped onto `%Message{}` in `Message.new_from_use/2`) and runtime (via `%Message{stream: :bulk}`). Per-Mailable default-stream resolution. (TS-V2-06)
 - [ ] **STREAM-02**: `Mailglass.Send.Pipeline.StreamPolicy` stage replaces the v0.1 no-op seam at `lib/mailglass/stream.ex:35`. Runtime check raises `%Mailglass.Error{type: :stream_policy_violated, detail: %{rule: atom, suggestion: String.t}}` with informative messages. Existing call sites at `outbound.ex:291`, `:355`, `:509` require zero modification (the `with :ok <- Stream.policy_check(msg)` pattern already handles `{:error, _}` short-circuits). (Pitfall STREAM-03)
-- [ ] **STREAM-03**: Custom Credo check `Mailglass.Credo.StreamPolicyConsistent` flags compile-time stream-policy violations: tracking on `:transactional`, missing stream on `:bulk` mailables, `:operational` mailables with `List-Unsubscribe` opt-out missing. Follows the structure of existing `NoTrackingOnAuthStream` (`credo_checks/no_tracking_on_auth_stream.ex`) — both checks coexist (related but independent). 13th custom Credo check (LINT-13). (DF-V2-01; pitfalls STREAM-01, STREAM-02)
+- [x] **STREAM-03**: Custom Credo check `Mailglass.Credo.StreamPolicyConsistent` flags compile-time stream-policy violations: tracking on `:transactional`, missing stream on `:bulk` mailables, `:operational` mailables with `List-Unsubscribe` opt-out missing. Follows the structure of existing `NoTrackingOnAuthStream` (`credo_checks/no_tracking_on_auth_stream.ex`) — both checks coexist (related but independent). 13th custom Credo check (LINT-13). (DF-V2-01; pitfalls STREAM-01
+, STREAM-02)
 - [ ] **STREAM-04**: Stream-aware Feedback-ID format `{sender_id}:{mailable}:{tenant_id}:{stream}` (DELIV-10 carried over from v0.5 candidates because it's small and ships free with stream work). Auto-injected when `feedback_id` is configured. (TS-V2-14)
 
 #### List-Unsubscribe (Phase 11)
