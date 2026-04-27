@@ -1,5 +1,6 @@
 defmodule Mailglass.StreamTest do
   use ExUnit.Case, async: true
+  use ExUnitProperties
 
   alias Mailglass.{Message, Stream}
 
@@ -18,6 +19,27 @@ defmodule Mailglass.StreamTest do
   end
 
   describe "policy_check/1" do
+    property "allows valid combinations and explicitly rejects :bulk without mailable" do
+      check all(
+              stream <- member_of([:transactional, :operational, :bulk]),
+              tenant_id <- one_of([string(:alphanumeric), constant(nil)]),
+              mailable <- one_of([constant(DummyMailable), constant(nil)])
+            ) do
+        msg = %Message{
+          stream: stream,
+          tenant_id: tenant_id,
+          mailable: mailable,
+          swoosh_email: Swoosh.Email.new()
+        }
+
+        if stream == :bulk and is_nil(mailable) do
+          assert {:error, %Mailglass.StreamPolicyError{}} = Stream.policy_check(msg)
+        else
+          assert :ok = Stream.policy_check(msg)
+        end
+      end
+    end
+
     test "returns :ok for :transactional" do
       msg = %Message{stream: :transactional, tenant_id: "t1", swoosh_email: Swoosh.Email.new()}
       assert :ok = Stream.policy_check(msg)
