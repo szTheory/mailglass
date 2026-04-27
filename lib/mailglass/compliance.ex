@@ -67,6 +67,34 @@ defmodule Mailglass.Compliance do
     put_header_if_absent(email, "Mailglass-Mailable", header_value)
   end
 
+  @doc """
+  Injects the `Feedback-ID` header into the inner `%Swoosh.Email{}` if configured and absent.
+
+  Requires a `%Mailglass.Message{}` because it interpolates the stream, tenant, and mailable.
+  """
+  @doc since: "0.2.0"
+  @spec maybe_add_feedback_id(Mailglass.Message.t()) :: Mailglass.Message.t()
+  def maybe_add_feedback_id(%Mailglass.Message{} = message) do
+    if feedback_id = Application.get_env(:mailglass, :feedback_id) do
+      tenant_id = message.tenant_id || "default"
+      mailable_str = extract_mailable_name(message.mailable)
+      stream = message.stream
+      header_value = "#{feedback_id}:#{mailable_str}:#{tenant_id}:#{stream}"
+
+      updated_email = put_header_if_absent(message.swoosh_email, "Feedback-ID", header_value)
+      %{message | swoosh_email: updated_email}
+    else
+      message
+    end
+  end
+
+  defp extract_mailable_name(nil), do: "unknown"
+  defp extract_mailable_name(module) when is_atom(module) do
+    module
+    |> Atom.to_string()
+    |> String.replace_prefix("Elixir.", "")
+  end
+
   # --- Private helpers ---
 
   defp maybe_add_date(%Swoosh.Email{} = email) do

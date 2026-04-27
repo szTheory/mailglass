@@ -90,4 +90,62 @@ defmodule Mailglass.ComplianceTest do
       refute String.starts_with?(result.headers["Mailglass-Mailable"], "Elixir.")
     end
   end
+
+  describe "maybe_add_feedback_id/1" do
+    setup do
+      original_config = Application.get_env(:mailglass, :feedback_id)
+      on_exit(fn -> Application.put_env(:mailglass, :feedback_id, original_config) end)
+      :ok
+    end
+
+    test "does not inject header if feedback_id is nil" do
+      Application.put_env(:mailglass, :feedback_id, nil)
+      message = %Mailglass.Message{swoosh_email: %Swoosh.Email{}}
+      result = Mailglass.Compliance.maybe_add_feedback_id(message)
+      refute Map.has_key?(result.swoosh_email.headers, "Feedback-ID")
+    end
+
+    test "injects Feedback-ID with expected format when configured" do
+      Application.put_env(:mailglass, :feedback_id, "my-sender")
+
+      message = %Mailglass.Message{
+        swoosh_email: %Swoosh.Email{},
+        tenant_id: "acme",
+        mailable: MyApp.WelcomeMailer,
+        stream: :bulk
+      }
+
+      result = Mailglass.Compliance.maybe_add_feedback_id(message)
+      assert result.swoosh_email.headers["Feedback-ID"] == "my-sender:MyApp.WelcomeMailer:acme:bulk"
+    end
+
+    test "interpolates defaults for missing tenant and mailable" do
+      Application.put_env(:mailglass, :feedback_id, "my-sender")
+
+      message = %Mailglass.Message{
+        swoosh_email: %Swoosh.Email{},
+        tenant_id: nil,
+        mailable: nil,
+        stream: :transactional
+      }
+
+      result = Mailglass.Compliance.maybe_add_feedback_id(message)
+      assert result.swoosh_email.headers["Feedback-ID"] == "my-sender:unknown:default:transactional"
+    end
+
+    test "does NOT overwrite an explicitly set Feedback-ID header" do
+      Application.put_env(:mailglass, :feedback_id, "my-sender")
+
+      email = %Swoosh.Email{headers: %{"Feedback-ID" => "explicit:override:value"}}
+      message = %Mailglass.Message{
+        swoosh_email: email,
+        tenant_id: "acme",
+        mailable: MyApp.WelcomeMailer,
+        stream: :bulk
+      }
+
+      result = Mailglass.Compliance.maybe_add_feedback_id(message)
+      assert result.swoosh_email.headers["Feedback-ID"] == "explicit:override:value"
+    end
+  end
 end
