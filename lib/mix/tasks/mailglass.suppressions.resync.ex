@@ -48,7 +48,9 @@ defmodule Mix.Tasks.Mailglass.Suppressions.Resync do
         Mix.raise("Suppression resync blocked: --#{field} must be ISO-8601, got #{inspect(value)}")
 
       {:error, {:invalid_window, from, to}} ->
-        Mix.raise("Suppression resync blocked: --from must be before or equal to --to (#{from} > #{to})")
+        Mix.raise(
+          "Suppression resync blocked: --from must be before or equal to --to (#{from} > #{to})"
+        )
 
       {:error, reason} ->
         Mix.raise("Suppression resync failed: #{inspect(reason)}")
@@ -57,7 +59,9 @@ defmodule Mix.Tasks.Mailglass.Suppressions.Resync do
 
   defp validate_cli!(opts, rest, invalid) do
     if rest != [] do
-      Mix.raise("Suppression resync blocked: unexpected positional arguments #{Enum.join(rest, " ")}")
+      Mix.raise(
+        "Suppression resync blocked: unexpected positional arguments #{Enum.join(rest, " ")}"
+      )
     end
 
     if invalid != [] do

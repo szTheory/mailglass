@@ -15,19 +15,32 @@ defmodule Mix.Tasks.Mailglass.Suppressions.ResyncTest do
   describe "Mailglass.Suppression.Resync.run/1" do
     test "uses one tenant-scoped candidate path for dry-run and apply" do
       complaint = insert_delivery!(tenant_id: @tenant_id, recipient: "complaint@example.com")
-      unsubscribed = insert_delivery!(tenant_id: @tenant_id, recipient: "unsub@example.com", stream: :bulk)
+
+      unsubscribed =
+        insert_delivery!(tenant_id: @tenant_id, recipient: "unsub@example.com", stream: :bulk)
+
       hard_bounce = insert_delivery!(tenant_id: @tenant_id, recipient: "bounce@example.com")
 
-      _other_delivery = insert_delivery!(tenant_id: @other_tenant_id, recipient: "other@example.com")
+      _other_delivery =
+        insert_delivery!(tenant_id: @other_tenant_id, recipient: "other@example.com")
 
       insert_event!(complaint, :complained, "evt-complaint")
       insert_event!(unsubscribed, :unsubscribed, "evt-unsub")
       insert_event!(hard_bounce, :bounced, "evt-bounce", reject_reason: :bounced)
-      insert_event!(complaint, :complained, "evt-old", occurred_at: DateTime.add(Clock.utc_now(), -91, :day))
+
+      insert_event!(complaint, :complained, "evt-old",
+        occurred_at: DateTime.add(Clock.utc_now(), -91, :day)
+      )
+
       insert_existing_suppression!(@tenant_id, "complaint@example.com", :address, nil, :complaint)
 
       insert_event!(
-        %Delivery{id: Ecto.UUID.generate(), tenant_id: @other_tenant_id, recipient: "other@example.com", stream: :transactional},
+        %Delivery{
+          id: Ecto.UUID.generate(),
+          tenant_id: @other_tenant_id,
+          recipient: "other@example.com",
+          stream: :transactional
+        },
         :complained,
         "evt-other"
       )
@@ -57,8 +70,13 @@ defmodule Mix.Tasks.Mailglass.Suppressions.ResyncTest do
     test "defaults to the last 90 days when no window overrides are given" do
       delivery = insert_delivery!(tenant_id: @tenant_id, recipient: "window@example.com")
 
-      insert_event!(delivery, :complained, "evt-recent", occurred_at: DateTime.add(Clock.utc_now(), -89, :day))
-      insert_event!(delivery, :complained, "evt-stale", occurred_at: DateTime.add(Clock.utc_now(), -91, :day))
+      insert_event!(delivery, :complained, "evt-recent",
+        occurred_at: DateTime.add(Clock.utc_now(), -89, :day)
+      )
+
+      insert_event!(delivery, :complained, "evt-stale",
+        occurred_at: DateTime.add(Clock.utc_now(), -91, :day)
+      )
 
       assert {:ok, result} = Resync.run(tenant_id: @tenant_id, dry_run: true)
       assert result.scanned == 1
