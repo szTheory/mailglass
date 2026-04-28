@@ -15,6 +15,11 @@ jobs:
     steps:
       - id: release
         # DO NOT bump to v5 until Phase 13 release ceremony (per .planning/phases/08-release-engineering-hardening/08-CONTEXT.md D-08-26)
+        # Rehearsed 2026-04-28: stay on the pinned v4 path for the v0.2.0 cut.
+        # `secrets.GITHUB_TOKEN` is acceptable for release/tag creation here,
+        # but maintainers must treat publish/smoke workflow_dispatch from the
+        # release tag as the canonical fallback if downstream release fan-out
+        # does not occur automatically.
         uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071  # v4.4.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -27,6 +32,9 @@ jobs:
       # gets rewritten. We sync it ourselves on the release-please PR branch
       # after the action runs. Idempotent — exits clean if the pin is already
       # correct or if there's no release-please PR pending.
+      # Ceremony rule: review this generated PR diff before merge. The repo's
+      # linked-version dep pin is custom, so the release PR is not a vanilla
+      # release-please artifact.
       #
       # Recursion-safe: pushes authenticated with GITHUB_TOKEN do NOT trigger
       # further workflow runs (GitHub anti-recursion guarantee).

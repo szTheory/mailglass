@@ -10,7 +10,7 @@ Mailglass uses [Release Please](https://github.com/googleapis/release-please) to
 2. Release Please will open a "Release PR" with the version bump and updated `CHANGELOG.md`.
 3. Merging the Release PR should trigger the `publish-hex` workflow from the
    published GitHub Release. If downstream workflow fan-out does not happen,
-   `workflow_dispatch` with the release tag is the canonical maintainer
+   `workflow_dispatch` with the core release tag (`mailglass-v<version>`) is the canonical maintainer
    fallback.
 4. The `publish-hex` workflow is environment-gated and requires manual approval in the GitHub Actions UI.
 
@@ -88,8 +88,11 @@ window before the published artifact becomes permanent.
    Check `actions/workflows/ci.yml` — required because publish-hex.yml gates
    on this SHA via the `gate-ci-green` job (per Plan 08, D-16).
 2. **Merge the release-please PR.**
-   Squash-merge keeps the changelog history linear. The merge commit is what
-   release-please tags as `mailglass-sibling-group-v<version>`.
+   Squash-merge keeps the changelog history linear.
+   Review the release PR diff before merge. This repo uses a custom
+   mailglass_admin dep-pin sync step, so the generated PR is load-bearing.
+   The current release path emits package tags such as `mailglass-v<version>`
+   and `mailglass_admin-v<version>`.
 3. **Approve the `hex-publish` deployment in the GitHub Environment UI.**
    Review the pre-publish summary in the workflow run page (rendered by the
    `prepublish-summary` job per D-15) BEFORE clicking Approve. Verify the
@@ -97,7 +100,8 @@ window before the published artifact becomes permanent.
    expectations.
    If the Release Please tag/release exists but `publish-hex` did not fan out,
    use `workflow_dispatch` on `.github/workflows/publish-hex.yml` with the
-   known tag instead of improvising a separate publish path.
+   known core tag (for `0.2.0`: `mailglass-v0.2.0`) instead of improvising a
+   separate publish path or dispatching from `main`.
 4. **Within 60 minutes of publish: smoke-install in a fresh Phoenix app.**
    Set a literal timer when approving the deployment.
    Run:
@@ -121,6 +125,8 @@ window before the published artifact becomes permanent.
    The post-publish-smoke workflow (`.github/workflows/post-publish-smoke.yml`,
    Plan 09) runs the same smoke automatically — but it does not respect the
    60-minute window. Run the manual smoke during the window regardless.
+   If publish succeeds but smoke does not fan out, use `workflow_dispatch` on
+   `.github/workflows/post-publish-smoke.yml` with that same core tag.
 5. **Post the release link to Elixir Forum #libraries section** (post-publish, optional
    — performed by maintainer on their own cadence; not gated by Phase 07.1's
    milestone-shipped marker per CONTEXT line 14 / line 351).

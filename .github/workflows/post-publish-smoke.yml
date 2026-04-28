@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: "0 12 * * *"
   workflow_dispatch:
+    # Canonical fallback for v0.2.0 if publish succeeds but automatic smoke
+    # fan-out does not occur: dispatch against the same reviewed core release
+    # tag used for publish (e.g. `mailglass-v0.2.0`).
     inputs:
       tag:
         description: "Tag to smoke-test (e.g. mailglass-v0.2.0)"
@@ -66,6 +69,11 @@ jobs:
               core.info(`Smoke triggered by workflow_dispatch; should_run=true; version='${inputVersion}'`);
               return;
             }
+
+            // Historical note from the 2026-04-28 rehearsal: an older
+            // workflow_run-triggered path ended up resolving VERSION=main and
+            // waited on `mix hex.info mailglass main`. Keep the manual fallback
+            // tag-based so version resolution stays deterministic.
 
             const owner = context.repo.owner;
             const repo = context.repo.repo;

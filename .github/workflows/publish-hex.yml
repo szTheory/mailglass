@@ -4,9 +4,12 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    # Canonical fallback for v0.2.0 if the release event does not fan out:
+    # dispatch this workflow against the core release tag (e.g.
+    # `mailglass-v0.2.0`), not `main`.
     inputs:
       tag:
-        description: "Git tag/ref to publish from (e.g. mailglass-sibling-group-v0.1.0)"
+        description: "Git tag/ref to publish from (canonical fallback: mailglass-v0.2.0)"
         required: true
         type: string
       dry_run:
@@ -38,6 +41,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
+          # Rehearsed fallback contract: checkout the known release tag when
+          # using workflow_dispatch so publish runs against the reviewed release
+          # commit, not a later `main` SHA.
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
