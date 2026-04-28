@@ -233,7 +233,12 @@ defmodule Mailglass.MailerCase do
     # Task.Supervisor path + shared sandbox so all spawned processes can
     # access the test's DB connection.
     prior_impl = Application.get_env(:mailglass, :async_adapter_impl)
-    Application.put_env(:mailglass, :async_adapter_impl, Mailglass.Outbound.AsyncAdapter.TaskSupervisor)
+
+    Application.put_env(
+      :mailglass,
+      :async_adapter_impl,
+      Mailglass.Outbound.AsyncAdapter.TaskSupervisor
+    )
 
     Ecto.Adapters.SQL.Sandbox.mode(repo, {:shared, self()})
     Mailglass.Adapters.Fake.set_shared(self())

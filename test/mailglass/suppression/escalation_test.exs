@@ -32,10 +32,7 @@ defmodule Mailglass.Suppression.EscalationTest do
         assert source =~ "Mailglass.OptionalDeps.Oban.insert"
 
         start_supervised!(
-          {Oban,
-           testing: :manual,
-           repo: TestRepo,
-           queues: [mailglass_suppression_escalation: 10]}
+          {Oban, testing: :manual, repo: TestRepo, queues: [mailglass_suppression_escalation: 10]}
         )
 
         multi =

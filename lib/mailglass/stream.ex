@@ -51,7 +51,7 @@ defmodule Mailglass.Stream do
   @spec policy_check(Message.t()) :: :ok | {:error, Mailglass.StreamPolicyError.t()}
   def policy_check(%{__struct__: Mailglass.Message} = msg) do
     start = System.monotonic_time(:microsecond)
-    
+
     result =
       case msg do
         %{stream: :bulk, mailable: nil} ->

@@ -5,7 +5,8 @@ defmodule Mailglass.Config do
     feedback_id: [
       type: {:or, [:string, nil]},
       default: nil,
-      doc: "Optional Feedback-ID prefix (RFC 8058/Deliverability). When set, auto-populates as `{sender_id}:{mailable}:{tenant_id}:{stream}`."
+      doc:
+        "Optional Feedback-ID prefix (RFC 8058/Deliverability). When set, auto-populates as `{sender_id}:{mailable}:{tenant_id}:{stream}`."
     ],
     repo: [
       type: {:or, [:atom, nil]},

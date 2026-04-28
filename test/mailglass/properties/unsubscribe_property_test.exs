@@ -176,7 +176,11 @@ defmodule Mailglass.Properties.UnsubscribePropertyTest do
           ) do
       bulk =
         %Swoosh.Email{}
-        |> Message.build(stream: :bulk, tenant_id: "tenant-1", metadata: %{delivery_id: delivery_id})
+        |> Message.build(
+          stream: :bulk,
+          tenant_id: "tenant-1",
+          metadata: %{delivery_id: delivery_id}
+        )
         |> Mailglass.Compliance.apply_outbound_headers()
 
       transactional =

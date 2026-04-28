@@ -41,9 +41,11 @@ defmodule Mix.Tasks.Mailglass.Stability.Check do
       # Returning normally exits with 0
     else
       Mix.shell().error("API Stability Check Failed: Swoosh types leaked into public API.")
+
       for {file, line_num, line} <- leaks do
         Mix.shell().error("  #{file}:#{line_num} -> #{line}")
       end
+
       exit({:shutdown, 1})
     end
   end

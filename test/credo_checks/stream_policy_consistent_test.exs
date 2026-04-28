@@ -62,7 +62,7 @@ defmodule Mailglass.Credo.StreamPolicyConsistentTest do
     |> run_check(StreamPolicyConsistent)
     |> refute_issues()
   end
-  
+
   test "does not report violation when tracking is not set" do
     """
     defmodule MyMailer do

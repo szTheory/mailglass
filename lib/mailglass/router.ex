@@ -59,8 +59,8 @@ defmodule Mailglass.Router do
     quote bind_quoted: [route_path: route_path, as: opts[:as]] do
       Mailglass.Router.__ensure_route_available__(__MODULE__, route_path, :get)
       Mailglass.Router.__ensure_route_available__(__MODULE__, route_path, :post)
-      get route_path, Mailglass.Compliance.UnsubscribeController, :show, as: as
-      post route_path, Mailglass.Compliance.UnsubscribeController, :unsubscribe, as: as
+      get(route_path, Mailglass.Compliance.UnsubscribeController, :show, as: as)
+      post(route_path, Mailglass.Compliance.UnsubscribeController, :unsubscribe, as: as)
     end
   end
 
@@ -110,5 +110,4 @@ defmodule Mailglass.Router do
     |> String.trim_leading("/")
     |> then(fn normalized -> "/" <> normalized end)
   end
-
 end

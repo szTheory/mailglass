@@ -172,6 +172,7 @@ defmodule Mailglass.ComplianceTest do
       Application.put_env(:mailglass, :feedback_id, "my-sender")
 
       email = %Swoosh.Email{headers: %{"Feedback-ID" => "explicit:override:value"}}
+
       message = %Mailglass.Message{
         swoosh_email: email,
         tenant_id: "acme",
@@ -208,7 +209,11 @@ defmodule Mailglass.ComplianceTest do
     test "adds unsubscribe headers for operational messages only when the mailable opts in" do
       opted_in =
         %Swoosh.Email{}
-        |> Message.build(stream: :operational, tenant_id: "tenant-1", mailable: OperationalOptInMailer)
+        |> Message.build(
+          stream: :operational,
+          tenant_id: "tenant-1",
+          mailable: OperationalOptInMailer
+        )
         |> Mailglass.Compliance.apply_outbound_headers()
 
       opted_out =
@@ -233,7 +238,9 @@ defmodule Mailglass.ComplianceTest do
       }
 
       message = Message.build(email, stream: :bulk, tenant_id: "tenant-1")
-      result = Mailglass.Compliance.inject_unsubscribe_headers(message, "https://mailglass.dev/unsub")
+
+      result =
+        Mailglass.Compliance.inject_unsubscribe_headers(message, "https://mailglass.dev/unsub")
 
       assert result.swoosh_email.headers["List-Unsubscribe"] == "<https://example.test/unsub>"
       assert result.swoosh_email.headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
@@ -247,7 +254,9 @@ defmodule Mailglass.ComplianceTest do
       }
 
       message = Message.build(email, stream: :bulk, tenant_id: "tenant-1")
-      result = Mailglass.Compliance.inject_unsubscribe_headers(message, "https://mailglass.dev/unsub")
+
+      result =
+        Mailglass.Compliance.inject_unsubscribe_headers(message, "https://mailglass.dev/unsub")
 
       assert result.swoosh_email.headers["List-Unsubscribe"] == "<https://example.test/unsub>"
       refute Map.has_key?(result.swoosh_email.headers, "List-Unsubscribe-Post")

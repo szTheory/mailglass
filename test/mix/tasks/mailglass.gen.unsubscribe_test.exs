@@ -122,7 +122,8 @@ defmodule Mix.Tasks.Mailglass.Gen.UnsubscribeTest do
   end
 
   defp compile_router_with_get_collision do
-    module_name = Module.concat(__MODULE__, "ClaimedPathRouter#{System.unique_integer([:positive])}")
+    module_name =
+      Module.concat(__MODULE__, "ClaimedPathRouter#{System.unique_integer([:positive])}")
 
     compiled =
       Code.compile_string("""

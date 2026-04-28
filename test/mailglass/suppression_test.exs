@@ -159,8 +159,8 @@ defmodule Mailglass.SuppressionTest do
 
       assert {:error, %SuppressedError{}} = Suppression.check_before_send(msg)
 
-      assert_receive {[:mailglass, :suppression, :pre_send_blocked, :stop], ^ref,
-                      %{duration_us: _}, meta}
+      assert_receive {[:mailglass, :suppression, :pre_send_blocked, :stop], ^ref, %{duration_us: _},
+                      meta}
 
       assert meta.tenant_id == "tenant-blocked"
       assert meta.scope == :address
@@ -196,8 +196,7 @@ defmodule Mailglass.SuppressionTest do
       assert {:ok, :inserted} =
                AutoSuppress.apply(AutoSuppressRepoStub, {:matched, delivery, event})
 
-      assert_receive {[:mailglass, :suppression, :auto_added, :stop], ^ref, %{duration_us: _},
-                      meta}
+      assert_receive {[:mailglass, :suppression, :auto_added, :stop], ^ref, %{duration_us: _}, meta}
 
       assert meta.tenant_id == "tenant-auto"
       assert meta.scope == :address_stream
@@ -297,7 +296,10 @@ defmodule Mailglass.SuppressionTest do
           })
 
         entry_id = entry.id
-        assert {:ok, %Entry{id: ^entry_id}} = Suppression.remove(entry_id, tenant_id: entry.tenant_id)
+
+        assert {:ok, %Entry{id: ^entry_id}} =
+                 Suppression.remove(entry_id, tenant_id: entry.tenant_id)
+
         refute TestRepo.get(Entry, entry_id)
       end
     end

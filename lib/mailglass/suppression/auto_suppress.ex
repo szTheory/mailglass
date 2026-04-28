@@ -47,7 +47,8 @@ defmodule Mailglass.Suppression.AutoSuppress do
     end
   end
 
-  @spec insert(Ecto.Repo.t() | module(), map() | :skip) :: {:ok, Entry.t() | :skip} | {:error, term()}
+  @spec insert(Ecto.Repo.t() | module(), map() | :skip) ::
+          {:ok, Entry.t() | :skip} | {:error, term()}
   def insert(_repo, :skip), do: {:ok, :skip}
 
   def insert(repo, attrs) when is_map(attrs) do
@@ -82,7 +83,8 @@ defmodule Mailglass.Suppression.AutoSuppress do
     %{scope: :address, reason: :complaint}
   end
 
-  defp suppression_shape(%Event{type: :unsubscribed}, %Delivery{stream: stream}) when not is_nil(stream) do
+  defp suppression_shape(%Event{type: :unsubscribed}, %Delivery{stream: stream})
+       when not is_nil(stream) do
     %{scope: :address_stream, stream: stream, reason: :unsubscribe}
   end
 

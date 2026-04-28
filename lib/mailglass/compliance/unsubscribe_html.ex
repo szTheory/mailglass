@@ -3,5 +3,5 @@ defmodule Mailglass.Compliance.UnsubscribeHTML do
 
   use Phoenix.Component
 
-  embed_templates "unsubscribe_html/*"
+  embed_templates("unsubscribe_html/*")
 end

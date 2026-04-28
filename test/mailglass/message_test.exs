@@ -87,6 +87,7 @@ defmodule Mailglass.MessageTest do
 
     test "put_stream/2 raises FunctionClauseError for invalid stream" do
       msg = Message.build(Swoosh.Email.new())
+
       assert_raise FunctionClauseError, fn ->
         Message.put_stream(msg, :invalid)
       end

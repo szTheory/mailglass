@@ -151,7 +151,10 @@ defmodule Mix.Tasks.Mailglass.Gen.Unsubscribe do
 
     cond do
       managed? and MapSet.equal?(verbs, MapSet.new([:get, :post])) ->
-        [{:ok, router_module, "already exposes GET and POST #{canonical_route_path()} via Mailglass.Compliance.UnsubscribeController"}]
+        [
+          {:ok, router_module,
+           "already exposes GET and POST #{canonical_route_path()} via Mailglass.Compliance.UnsubscribeController"}
+        ]
 
       true ->
         [{:warning, router_module, collision_message(routes)}]

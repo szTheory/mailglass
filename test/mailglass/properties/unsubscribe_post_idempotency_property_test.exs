@@ -15,27 +15,32 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
     use Phoenix.Router
 
     pipeline :browser do
-      plug :accepts, ["html"]
-      plug :fetch_session
-      plug :put_secure_browser_headers
+      plug(:accepts, ["html"])
+      plug(:fetch_session)
+      plug(:put_secure_browser_headers)
     end
 
     scope "/" do
-      pipe_through :browser
+      pipe_through(:browser)
 
-      post "/mailglass/unsubscribe/:token", Mailglass.Compliance.UnsubscribeController, :unsubscribe
+      post(
+        "/mailglass/unsubscribe/:token",
+        Mailglass.Compliance.UnsubscribeController,
+        :unsubscribe
+      )
     end
   end
 
   defmodule TestEndpoint do
     use Phoenix.Endpoint, otp_app: :mailglass
 
-    plug Plug.Session,
+    plug(Plug.Session,
       store: :cookie,
       key: "_mailglass_unsubscribe_property_test",
       signing_salt: "unsubscribe-property-test"
+    )
 
-    plug TestRouter
+    plug(TestRouter)
   end
 
   @endpoint TestEndpoint
@@ -74,7 +79,11 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
       live_view: [signing_salt: "unsubscribe-live"]
     )
 
-    Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint", host: "localhost", salts: ["test-salt"])
+    Application.put_env(:mailglass, :tracking,
+      endpoint: "tracking-endpoint",
+      host: "localhost",
+      salts: ["test-salt"]
+    )
 
     Application.put_env(:mailglass, :compliance,
       endpoint: TestEndpoint,
@@ -140,9 +149,10 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
 
   defp durable_snapshot(delivery_id) do
     TestRepo.all(
-      from event in Event,
+      from(event in Event,
         where: event.delivery_id == ^delivery_id and event.type == :unsubscribed,
         select: {event.idempotency_key, event.type}
+      )
     )
   end
 end

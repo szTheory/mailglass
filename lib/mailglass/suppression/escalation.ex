@@ -121,7 +121,11 @@ if Code.ensure_loaded?(Oban.Worker) do
     defp insert_suppression(attrs) do
       changeset = Entry.changeset(attrs)
 
-      case Repo.insert(changeset, on_conflict: :nothing, conflict_target: @conflict_target, returning: true) do
+      case Repo.insert(changeset,
+             on_conflict: :nothing,
+             conflict_target: @conflict_target,
+             returning: true
+           ) do
         {:ok, %Entry{id: nil}} ->
           {:ok, fetch_existing!(attrs.tenant_id, attrs.address)}
 

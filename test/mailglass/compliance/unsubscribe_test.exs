@@ -183,7 +183,9 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
     test "builds unsubscribe URLs from the compliance config" do
       assert url = Unsubscribe.unsubscribe_url("delivery-123", %{tenant_id: "tenant-1"})
       assert String.starts_with?(url, "https://unsubscribe.example.com/mailglass/unsubscribe/")
-      assert {:ok, %{delivery_id: "delivery-123"}} = url |> String.split("/") |> List.last() |> Unsubscribe.verify_token()
+
+      assert {:ok, %{delivery_id: "delivery-123"}} =
+               url |> String.split("/") |> List.last() |> Unsubscribe.verify_token()
     end
 
     test "tokens signed before endpoint rotation still verify via previous_secrets" do
@@ -204,6 +206,7 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
 
     test "tampered tokens return a structured invalid outcome" do
       token = Unsubscribe.sign_token("delivery-123")
+
       tampered =
         token
         |> String.slice(0, byte_size(token) - 1)
@@ -227,7 +230,11 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
       Application.delete_env(:mailglass, :tenancy)
 
       default_url = Unsubscribe.unsubscribe_url("delivery-default", %{tenant_id: "tenant-1"})
-      assert String.starts_with?(default_url, "https://unsubscribe.example.com/mailglass/unsubscribe/")
+
+      assert String.starts_with?(
+               default_url,
+               "https://unsubscribe.example.com/mailglass/unsubscribe/"
+             )
     end
 
     test "rejects unsubscribe URLs longer than 900 bytes" do

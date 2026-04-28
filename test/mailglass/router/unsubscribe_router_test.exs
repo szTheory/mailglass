@@ -7,7 +7,11 @@ defmodule Mailglass.Router.UnsubscribeRouterTest do
     prior_mailglass = Application.get_all_env(:mailglass)
 
     Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint-secret-123")
-    Application.put_env(:mailglass, :compliance, host: "unsubscribe.example.com", mount_path: "/mailglass/unsubscribe")
+
+    Application.put_env(:mailglass, :compliance,
+      host: "unsubscribe.example.com",
+      mount_path: "/mailglass/unsubscribe"
+    )
 
     on_exit(fn ->
       Application.put_all_env(mailglass: prior_mailglass)
@@ -24,7 +28,7 @@ defmodule Mailglass.Router.UnsubscribeRouterTest do
       import Mailglass.Router
 
       scope "/" do
-        mailglass_router_routes "/mailglass"
+        mailglass_router_routes("/mailglass")
       end
     end
 
@@ -73,7 +77,10 @@ defmodule Mailglass.Router.UnsubscribeRouterTest do
     end
 
     test "sources the default mount path through Mailglass.Config" do
-      Application.put_env(:mailglass, :compliance, host: "unsubscribe.example.com", mount_path: "/custom/unsubscribe")
+      Application.put_env(:mailglass, :compliance,
+        host: "unsubscribe.example.com",
+        mount_path: "/custom/unsubscribe"
+      )
 
       compiled =
         Code.compile_string("""

@@ -14,28 +14,34 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     use Phoenix.Router
 
     pipeline :browser do
-      plug :accepts, ["html"]
-      plug :fetch_session
-      plug :put_secure_browser_headers
+      plug(:accepts, ["html"])
+      plug(:fetch_session)
+      plug(:put_secure_browser_headers)
     end
 
     scope "/" do
-      pipe_through :browser
+      pipe_through(:browser)
 
-      get "/mailglass/unsubscribe/:token", Mailglass.Compliance.UnsubscribeController, :show
-      post "/mailglass/unsubscribe/:token", Mailglass.Compliance.UnsubscribeController, :unsubscribe
+      get("/mailglass/unsubscribe/:token", Mailglass.Compliance.UnsubscribeController, :show)
+
+      post(
+        "/mailglass/unsubscribe/:token",
+        Mailglass.Compliance.UnsubscribeController,
+        :unsubscribe
+      )
     end
   end
 
   defmodule TestEndpoint do
     use Phoenix.Endpoint, otp_app: :mailglass
 
-    plug Plug.Session,
+    plug(Plug.Session,
       store: :cookie,
       key: "_mailglass_unsubscribe_test",
       signing_salt: "unsubscribe-test"
+    )
 
-    plug TestRouter
+    plug(TestRouter)
   end
 
   defmodule RecordingLifecycle do
@@ -89,7 +95,11 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       live_view: [signing_salt: "unsubscribe-live"]
     )
 
-    Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint", host: "localhost", salts: ["test-salt"])
+    Application.put_env(:mailglass, :tracking,
+      endpoint: "tracking-endpoint",
+      host: "localhost",
+      salts: ["test-salt"]
+    )
 
     Application.put_env(:mailglass, :compliance,
       endpoint: TestEndpoint,
@@ -122,8 +132,14 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     end
 
     test "redirects when compliance redirect is configured", %{conn: conn} do
-      Application.put_env(:mailglass, :compliance,
-        Keyword.put(Application.fetch_env!(:mailglass, :compliance), :redirect, "/settings/unsubscribe")
+      Application.put_env(
+        :mailglass,
+        :compliance,
+        Keyword.put(
+          Application.fetch_env!(:mailglass, :compliance),
+          :redirect,
+          "/settings/unsubscribe"
+        )
       )
 
       delivery = Generators.delivery_fixture()
@@ -134,7 +150,9 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     end
 
     test "returns structured 410 for expired tokens", %{conn: conn} do
-      Application.put_env(:mailglass, :compliance,
+      Application.put_env(
+        :mailglass,
+        :compliance,
         Keyword.put(Application.fetch_env!(:mailglass, :compliance), :max_age, 1)
       )
 
@@ -172,7 +190,9 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     } do
       Application.put_env(:mailglass, :unsubscribe_test_pid, self())
 
-      Application.put_env(:mailglass, :compliance,
+      Application.put_env(
+        :mailglass,
+        :compliance,
         Keyword.put(Application.fetch_env!(:mailglass, :compliance), :lifecycle, RecordingLifecycle)
       )
 
@@ -186,15 +206,19 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
 
       assert response(conn, 200) == ""
       assert get_resp_header(conn, "location") == []
-      assert_receive {:lifecycle_multi, operations, %{delivery_id: ^delivery_id, event: :unsubscribed}}
+
+      assert_receive {:lifecycle_multi, operations,
+                      %{delivery_id: ^delivery_id, event: :unsubscribed}}
+
       assert :unsubscribe_event in operations
       assert_receive {:lifecycle_txn, ^delivery_id}
       assert_receive {:delivery_updated, ^delivery_id, :unsubscribed, %{tenant_id: ^tenant_id}}
 
       events =
         TestRepo.all(
-          from event in Event,
+          from(event in Event,
             where: event.delivery_id == ^delivery.id and event.type == :unsubscribed
+          )
         )
 
       assert length(events) == 1
@@ -223,7 +247,9 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     end
 
     test "expired POST returns 200 without redirecting or writing an event", %{conn: conn} do
-      Application.put_env(:mailglass, :compliance,
+      Application.put_env(
+        :mailglass,
+        :compliance,
         Keyword.put(Application.fetch_env!(:mailglass, :compliance), :max_age, 1)
       )
 

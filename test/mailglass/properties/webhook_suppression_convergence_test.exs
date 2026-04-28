@@ -125,8 +125,12 @@ defmodule Mailglass.Properties.WebhookSuppressionConvergenceTest do
     |> TestRepo.insert!()
   end
 
-  defp provider_event_id_for(:complained, suffix), do: "SpamComplaint:#{suffix}:2026-04-28T12:00:00Z"
-  defp provider_event_id_for(:unsubscribed, suffix), do: "SubscriptionChange:#{suffix}:2026-04-28T12:00:00Z"
+  defp provider_event_id_for(:complained, suffix),
+    do: "SpamComplaint:#{suffix}:2026-04-28T12:00:00Z"
+
+  defp provider_event_id_for(:unsubscribed, suffix),
+    do: "SubscriptionChange:#{suffix}:2026-04-28T12:00:00Z"
+
   defp provider_event_id_for(:bounced, suffix), do: "Bounce:#{suffix}:2026-04-28T12:00:00Z"
   defp provider_event_id_for(:deferred, suffix), do: "Deferred:#{suffix}:2026-04-28T12:00:00Z"
 

@@ -59,6 +59,7 @@ defmodule Mailglass.Install.IdempotencyTest do
 
       # A .mailglass_conflict_ sidecar must have been written
       sidecars = runtime_conflict_sidecars(fixture_root)
+
       assert sidecars != [],
              "Managed snippet drifted from snapshot. Run `mix mailglass.install --force` " <>
                "(or fix the drifted file manually), or refresh the installer template."
@@ -69,6 +70,7 @@ defmodule Mailglass.Install.IdempotencyTest do
 
       # Sidecar content must reference the drift reason
       sidecar_content = sidecars |> hd() |> File.read!()
+
       assert String.contains?(sidecar_content, "managed_block_drift") or
                String.contains?(sidecar_content, "partial_markers"),
              "Sidecar must reference the drift reason. Got: #{sidecar_content}"
@@ -96,6 +98,7 @@ defmodule Mailglass.Install.IdempotencyTest do
       final_runtime = File.read!(runtime_path)
       assert String.contains?(final_runtime, start_marker)
       assert String.contains?(final_runtime, end_marker)
+
       assert runtime_conflict_sidecars(fixture_root) == [],
              "No conflict sidecars expected after --force resolve."
     end

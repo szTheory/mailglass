@@ -140,6 +140,7 @@ defmodule Mailglass.Compliance do
   def configured_lifecycle, do: Mailglass.Config.compliance_lifecycle()
 
   defp extract_mailable_name(nil), do: "unknown"
+
   defp extract_mailable_name(module) when is_atom(module) do
     module
     |> Atom.to_string()
@@ -201,7 +202,9 @@ defmodule Mailglass.Compliance do
 
   defp maybe_add_unsubscribe_headers(%Mailglass.Message{} = message) do
     if should_inject_unsubscribe_headers?(message) do
-      url = Unsubscribe.unsubscribe_url(unsubscribe_delivery_id(message), unsubscribe_context(message))
+      url =
+        Unsubscribe.unsubscribe_url(unsubscribe_delivery_id(message), unsubscribe_context(message))
+
       inject_unsubscribe_headers(message, url)
     else
       message
@@ -210,7 +213,10 @@ defmodule Mailglass.Compliance do
 
   defp should_inject_unsubscribe_headers?(%Mailglass.Message{stream: :bulk}), do: true
 
-  defp should_inject_unsubscribe_headers?(%Mailglass.Message{stream: :operational, mailable: mailable})
+  defp should_inject_unsubscribe_headers?(%Mailglass.Message{
+         stream: :operational,
+         mailable: mailable
+       })
        when is_atom(mailable) do
     if function_exported?(mailable, :__mailglass_unsubscribe__, 0) do
       mailable.__mailglass_unsubscribe__()
