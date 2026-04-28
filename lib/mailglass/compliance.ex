@@ -135,6 +135,10 @@ defmodule Mailglass.Compliance do
     %{message | swoosh_email: email}
   end
 
+  @doc false
+  @spec configured_lifecycle() :: module()
+  def configured_lifecycle, do: Mailglass.Config.compliance_lifecycle()
+
   defp extract_mailable_name(nil), do: "unknown"
   defp extract_mailable_name(module) when is_atom(module) do
     module

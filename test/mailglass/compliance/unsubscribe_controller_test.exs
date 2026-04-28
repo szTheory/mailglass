@@ -172,7 +172,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       token = Unsubscribe.sign_token(delivery.id)
       :ok = Phoenix.PubSub.subscribe(Mailglass.PubSub, Topics.events(tenant_id, delivery_id))
 
-      conn = post(conn, "/mailglass/unsubscribe/#{token}", "")
+      conn = post(conn, "/mailglass/unsubscribe/#{token}", %{})
 
       assert response(conn, 200) == ""
       assert get_resp_header(conn, "location") == []
@@ -195,8 +195,8 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       delivery = Generators.delivery_fixture()
       token = Unsubscribe.sign_token(delivery.id)
 
-      first = post(conn, "/mailglass/unsubscribe/#{token}", "")
-      second = post(build_conn(), "/mailglass/unsubscribe/#{token}", "")
+      first = post(conn, "/mailglass/unsubscribe/#{token}", %{})
+      second = post(build_conn(), "/mailglass/unsubscribe/#{token}", %{})
 
       assert response(first, 200) == ""
       assert response(second, 200) == ""
