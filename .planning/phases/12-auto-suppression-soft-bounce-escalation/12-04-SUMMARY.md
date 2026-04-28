@@ -59,6 +59,7 @@ Each task was committed atomically:
 2. **Task 2: Add the strict Mix task contract**
    - `67b9203` (`test`) RED
    - `02a2e55` (`feat`) GREEN
+   - `834ffa0` (`style`) formatter follow-up
 
 ## Files Created/Modified
 
@@ -91,7 +92,7 @@ None - no external service configuration required.
 ## Self-Check: PASSED
 
 - Summary file exists at `.planning/phases/12-auto-suppression-soft-bounce-escalation/12-04-SUMMARY.md`.
-- Task commits present: `7fa1e07`, `78cfdc3`, `67b9203`, `02a2e55`.
+- Task commits present: `7fa1e07`, `78cfdc3`, `67b9203`, `02a2e55`, `834ffa0`.
 
 ---
 *Phase: 12-auto-suppression-soft-bounce-escalation*
