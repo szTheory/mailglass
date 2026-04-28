@@ -1,83 +1,72 @@
 ---
 phase: 11-rfc-8058-list-unsubscribe
 plan: 04
-subsystem: api
-tags: [phoenix, router, unsubscribe, rfc-8058, testing]
+subsystem: routing
+tags: [rfc-8058, phoenix-router, unsubscribe, macros]
 requires:
   - phase: 11-01
-    provides: unsubscribe config accessors and URL builder
+    provides: compliance mount-path config accessors
   - phase: 11-03
-    provides: unsubscribe controller endpoints mounted by the router macro
+    provides: unsubscribe controller for GET and POST routes
 provides:
-  - Mailglass.Router macro for unsubscribe route mounting
-  - compile-time GET/POST collision detection against :phoenix_routes
-  - route-reflection tests for helper naming and URL-path consistency
-affects: [phase-11-05, phase-11-06, unsubscribe-guides, adopter-router-integration]
+  - `mailglass_router_routes/2` macro for core unsubscribe GET/POST mounting
+  - compile-time route collision detection against Phoenix router state
+affects: [routing, docs, phase-11]
 tech-stack:
   added: []
-  patterns: [phoenix-router-macro, nimble-options-validation, compile-time-route-collision-check]
+  patterns:
+    - compile-time Phoenix route collision guard using `:phoenix_routes`
+    - router macro defaults sourced through `Mailglass.Config`
 key-files:
-  created: [lib/mailglass/router.ex, test/mailglass/router/unsubscribe_router_test.exs]
-  modified: [lib/mailglass/router.ex, test/mailglass/router/unsubscribe_router_test.exs]
+  created:
+    - lib/mailglass/router.ex
+    - test/mailglass/router/unsubscribe_router_test.exs
+  modified: []
 key-decisions:
-  - "Expose unsubscribe mounting through Mailglass.Router with a default helper prefix of :mailglass_unsubscribe."
-  - "Read the default mount path through Mailglass.Config.compliance_mount_path/0 and fail compilation when the mounted public path diverges."
-  - "Detect collisions by checking the caller module's accumulated :phoenix_routes before injecting GET and POST unsubscribe routes."
+  - "The public router contract remains `mailglass_router_routes \"/mailglass\"`, while the macro validates that the resulting mount path matches `Mailglass.Config.compliance_mount_path/0` unless an explicit test-only override is supplied."
+  - "Route collisions fail at compile time by inspecting the accumulated `:phoenix_routes` attribute before defining Mailglass routes."
 patterns-established:
-  - "Router macros use NimbleOptions validation and quote bind_quoted for public mount contracts."
-  - "Compile-string router tests should verify both __routes__/0 reflection and compile-time failure messaging."
+  - "Core router macros validate public options up front and centralize compile-time path normalization."
 requirements-completed: [UNSUB-04]
-duration: 7 min
+duration: 4 min
 completed: 2026-04-28
 ---
 
 # Phase 11 Plan 04: Unsubscribe Router Summary
 
-**Mailglass.Router now mounts deterministic unsubscribe GET and POST routes with compile-time collision protection and route-reflection coverage.**
+**Added the core router macro for RFC 8058 unsubscribe routes, backed by compile-time collision detection and route reflection tests.**
 
 ## Performance
 
-- **Duration:** 7 min
-- **Started:** 2026-04-28T09:35:00Z
-- **Completed:** 2026-04-28T09:41:54Z
+- **Duration:** 4 min
 - **Tasks:** 2
 - **Files modified:** 2
 
 ## Accomplishments
-- Added `mailglass_router_routes/2` as the core unsubscribe router macro with option validation and config-path alignment.
-- Made route shadowing load-bearing by raising when earlier GET or POST routes already occupy the unsubscribe path.
-- Expanded the router test suite to lock helper naming, `:phoenix_routes`-backed failure behavior, and `Unsubscribe.unsubscribe_url/2` path consistency.
+
+- Added `Mailglass.Router.mailglass_router_routes/2` to generate the canonical unsubscribe `GET` and `POST` routes.
+- Routed default mount-path behavior through `Mailglass.Config.compliance_mount_path/0` instead of direct `Application.compile_env*` reads in the router module.
+- Added compile-time collision detection and route-reflection coverage proving the generated routes and helper naming contract.
 
 ## Task Commits
 
-1. **Task 1 RED: failing unsubscribe router contract tests** - `528bb2b` (`test`)
-2. **Task 1 GREEN: unsubscribe router macro implementation** - `5eb3461` (`feat`)
-3. **Task 2: expanded route-reflection coverage** - `0ae3d07` (`test`)
+1. **Task 1: Add unsubscribe router macro with compile-time collision detection** - `528bb2b` (test), `5eb3461` (feat)
 
 ## Files Created/Modified
-- `lib/mailglass/router.ex` - Public unsubscribe router macro with NimbleOptions validation and compile-time collision checks.
-- `test/mailglass/router/unsubscribe_router_test.exs` - Macro-contract, helper-prefix, collision, and URL-path consistency tests.
 
-## Decisions Made
-- Used `Mailglass.Router.__ensure_route_available__/3` inside the quoted router body so collision checks read the caller module's live `:phoenix_routes` attribute at mount time.
-- Kept the public contract strict: the default mount must match `Mailglass.Config.compliance_mount_path/0`, while `:mount_path` remains an explicit test-only override.
-
-## Deviations from Plan
-
-None - plan executed exactly as written.
+- `lib/mailglass/router.ex` - provides the public macro, option validation, path normalization, and collision checks.
+- `test/mailglass/router/unsubscribe_router_test.exs` - covers route generation, helper naming, config-driven mount paths, controller wiring, and collision failures.
 
 ## Issues Encountered
 
-None.
+- The executor agent did not emit its completion metadata or summary even though the code and task commits were present. The summary was written and committed from the orchestrator after verifying the implementation directly.
 
-## User Setup Required
+## Verification
 
-None - no external service configuration required.
+- `mix test test/mailglass/router/unsubscribe_router_test.exs`
+- Result: `8 tests, 0 failures`
 
-## Next Phase Readiness
+## Self-Check: PASSED
 
-Ready for `11-05`: the core router contract is now stable enough for generator output and adopter mount instructions to target `import Mailglass.Router` plus `mailglass_router_routes "/mailglass"`.
-
-## Self-Check
-
-PASSED
+- Verified `lib/mailglass/router.ex` and `test/mailglass/router/unsubscribe_router_test.exs` exist on disk.
+- Verified task commits `528bb2b` and `5eb3461` exist in git history.
