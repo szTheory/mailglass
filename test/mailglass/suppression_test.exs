@@ -1,11 +1,13 @@
 defmodule Mailglass.SuppressionTest do
-  use ExUnit.Case, async: false
+  use Mailglass.DataCase, async: false
 
-  alias Mailglass.{Suppression, SuppressedError, Message}
+  alias Mailglass.{Message, Suppression, SuppressedError}
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
   alias Mailglass.Suppression.AutoSuppress
+  alias Mailglass.Suppression.Entry
   alias Mailglass.SuppressionStore.ETS
+  alias Mailglass.TestRepo
 
   defmodule AutoSuppressRepoStub do
     def insert(changeset, _opts) do
@@ -242,5 +244,68 @@ defmodule Mailglass.SuppressionTest do
       refute Map.has_key?(ctx, :recipient)
       refute Map.has_key?(ctx, :address)
     end
+  end
+
+  describe "remove/2" do
+    test "rejects complaint removal with a structured rejection error" do
+      entry =
+        insert_entry(%{
+          tenant_id: "tenant-remove",
+          address: "complaint@example.com",
+          scope: :address,
+          reason: :complaint,
+          source: "webhook:auto_suppress"
+        })
+
+      assert {:error, %Mailglass.SendError{type: :preflight_rejected, context: context}} =
+               Suppression.remove(entry.id, tenant_id: entry.tenant_id)
+
+      assert context.reason == :complaint
+      assert context.tenant_id == "tenant-remove"
+      assert context.removable == false
+      assert TestRepo.get(Entry, entry.id)
+    end
+
+    test "rejects unsubscribe removal with a structured rejection error" do
+      entry =
+        insert_entry(%{
+          tenant_id: "tenant-remove",
+          address: "unsubscribe@example.com",
+          scope: :address_stream,
+          stream: :bulk,
+          reason: :unsubscribe,
+          source: "webhook:auto_suppress"
+        })
+
+      assert {:error, %Mailglass.SendError{type: :preflight_rejected, context: context}} =
+               Suppression.remove(entry.id, tenant_id: entry.tenant_id)
+
+      assert context.reason == :unsubscribe
+      assert context.removable == false
+      assert TestRepo.get(Entry, entry.id)
+    end
+
+    test "deletes removable reasons" do
+      for reason <- [:hard_bounce, :manual, :policy] do
+        entry =
+          insert_entry(%{
+            tenant_id: "tenant-remove",
+            address: "#{reason}@example.com",
+            scope: :address,
+            reason: reason,
+            source: "ops"
+          })
+
+        entry_id = entry.id
+        assert {:ok, %Entry{id: ^entry_id}} = Suppression.remove(entry_id, tenant_id: entry.tenant_id)
+        refute TestRepo.get(Entry, entry_id)
+      end
+    end
+  end
+
+  defp insert_entry(attrs) do
+    attrs
+    |> Entry.changeset()
+    |> TestRepo.insert!()
   end
 end
