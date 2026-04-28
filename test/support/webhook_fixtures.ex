@@ -158,6 +158,30 @@ defmodule Mailglass.WebhookFixtures do
     File.read!(Path.join([@fixture_root, "sendgrid", name <> ".json"]))
   end
 
+  @doc """
+  Signs `svix_id.svix_timestamp.raw_body` with the given secret.
+
+  Returns the base64-encoded HMAC-SHA256 signature that Resend's
+  Svix-backed webhooks expect in the `svix-signature` header.
+  """
+  @spec sign_resend_payload(String.t(), String.t(), binary(), binary()) :: String.t()
+  def sign_resend_payload(svix_id, svix_timestamp, raw_body, secret)
+      when is_binary(svix_id) and is_binary(svix_timestamp) and is_binary(raw_body) and
+             is_binary(secret) do
+    signed_content = "#{svix_id}.#{svix_timestamp}.#{raw_body}"
+
+    :crypto.mac(:hmac, :sha256, secret, signed_content)
+    |> Base.encode64()
+  end
+
+  @doc """
+  Loads `test/support/fixtures/webhooks/resend/\#{name}.json` as raw bytes.
+  """
+  @spec load_resend_fixture(String.t()) :: binary()
+  def load_resend_fixture(name) when is_binary(name) do
+    File.read!(Path.join([@fixture_root, "resend", name <> ".json"]))
+  end
+
   @doc "Absolute path to the webhook fixtures root (for `File.ls!/1` in tests)."
   @spec fixture_root() :: String.t()
   def fixture_root, do: @fixture_root
