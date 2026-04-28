@@ -1,4 +1,7 @@
+# credo:disable-for-this-file Credo.Check.Readability.ModuleNames
 defmodule Fixture.SupportedBefore do
+  @moduledoc false
+
   def build(msg) do
     msg
     |> to("to@example.com")

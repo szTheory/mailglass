@@ -183,7 +183,12 @@ defmodule Mailglass.Message do
   Delegates to `Swoosh.Email.to/2`.
   """
   @doc since: "0.2.0"
-  @spec to(t(), Swoosh.Email.recipient() | [Swoosh.Email.recipient()]) :: t()
+  @spec to(
+          t(),
+          Swoosh.Email.address()
+          | Swoosh.Email.mailbox()
+          | [Swoosh.Email.address() | Swoosh.Email.mailbox()]
+        ) :: t()
   def to(%__MODULE__{} = msg, recipient) do
     update_swoosh(msg, &Swoosh.Email.to(&1, recipient))
   end
@@ -194,7 +199,7 @@ defmodule Mailglass.Message do
   Delegates to `Swoosh.Email.from/2`.
   """
   @doc since: "0.2.0"
-  @spec from(t(), Swoosh.Email.recipient()) :: t()
+  @spec from(t(), Swoosh.Email.address() | Swoosh.Email.mailbox()) :: t()
   def from(%__MODULE__{} = msg, sender) do
     update_swoosh(msg, &Swoosh.Email.from(&1, sender))
   end

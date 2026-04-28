@@ -1,3 +1,4 @@
+# credo:disable-for-this-file Credo.Check.Readability.ModuleNames
 defmodule Mix.Tasks.Mailglass.Upgrade.V0_2 do
   use Boundary, classify_to: Mailglass
 

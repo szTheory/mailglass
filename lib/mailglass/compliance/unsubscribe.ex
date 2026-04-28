@@ -166,17 +166,19 @@ defmodule Mailglass.Compliance.Unsubscribe do
   end
 
   defp private_ipv4?(host) do
-    with {:ok, {a, b, c, d}} <- :inet.parse_ipv4strict_address(String.to_charlist(host)) do
-      _ = c
-      _ = d
+    case :inet.parse_ipv4strict_address(String.to_charlist(host)) do
+      {:ok, {a, b, c, d}} ->
+        _ = c
+        _ = d
 
-      a == 10 or
-        (a == 127) or
-        (a == 169 and b == 254) or
-        (a == 172 and b in 16..31) or
-        (a == 192 and b == 168)
-    else
-      {:error, _reason} -> false
+        a == 10 or
+          a == 127 or
+          (a == 169 and b == 254) or
+          (a == 172 and b in 16..31) or
+          (a == 192 and b == 168)
+
+      {:error, _reason} ->
+        false
     end
   end
 
@@ -186,14 +188,16 @@ defmodule Mailglass.Compliance.Unsubscribe do
       |> String.trim_leading("[")
       |> String.trim_trailing("]")
 
-    with {:ok, tuple} <- :inet.parse_ipv6strict_address(String.to_charlist(normalized)) do
-      tuple == {0, 0, 0, 0, 0, 0, 0, 1} or
-        tuple == {0, 0, 0, 0, 0, 0, 0, 0} or
-        match?({0xFE80, _, _, _, _, _, _, _}, tuple) or
-        match?({0xFC00, _, _, _, _, _, _, _}, tuple) or
-        match?({0xFD00, _, _, _, _, _, _, _}, tuple)
-    else
-      {:error, _reason} -> false
+    case :inet.parse_ipv6strict_address(String.to_charlist(normalized)) do
+      {:ok, tuple} ->
+        tuple == {0, 0, 0, 0, 0, 0, 0, 1} or
+          tuple == {0, 0, 0, 0, 0, 0, 0, 0} or
+          match?({0xFE80, _, _, _, _, _, _, _}, tuple) or
+          match?({0xFC00, _, _, _, _, _, _, _}, tuple) or
+          match?({0xFD00, _, _, _, _, _, _, _}, tuple)
+
+      {:error, _reason} ->
+        false
     end
   end
 

@@ -24,7 +24,7 @@ defmodule Mailglass.Compliance.UnsubscribeController do
   @doc false
   def show(conn, %{"token" => token}) do
     with {:ok, %{delivery_id: delivery_id}} <- Unsubscribe.verify_token(token),
-         %Delivery{} = delivery <- Repo.get(Delivery, delivery_id) do
+         %Delivery{} = delivery <- fetch_delivery(delivery_id) do
       maybe_redirect_or_render(conn, delivery)
     else
       {:error, :expired} -> failure(conn, 410, "unsubscribe token expired")
@@ -69,7 +69,7 @@ defmodule Mailglass.Compliance.UnsubscribeController do
 
   defp resolve_delivery(token) do
     with {:ok, %{delivery_id: delivery_id}} <- Unsubscribe.verify_token(token),
-         %Delivery{} = delivery <- Repo.get(Delivery, delivery_id) do
+         %Delivery{} = delivery <- fetch_delivery(delivery_id) do
       {:ok, delivery}
     else
       {:error, reason} -> {:error, reason}
@@ -83,6 +83,15 @@ defmodule Mailglass.Compliance.UnsubscribeController do
       |> unsubscribe_multi()
       |> Repo.multi()
     end)
+  end
+
+  defp fetch_delivery(delivery_id) do
+    Tenancy.audit_unscoped_bypass(%{
+      reason: :unsubscribe_token_delivery_lookup,
+      resource: :delivery
+    })
+
+    Repo.get(Delivery, delivery_id, scope: :unscoped)
   end
 
   defp unsubscribe_multi(%Delivery{} = delivery) do
@@ -110,12 +119,13 @@ defmodule Mailglass.Compliance.UnsubscribeController do
 
   defp canonical_event(repo, %Event{inserted_at: nil}, %Delivery{} = delivery) do
     repo.one!(
-      from event in Event,
+      from(event in Event,
         where:
           event.delivery_id == ^delivery.id and
             event.type == :unsubscribed and
             event.idempotency_key == ^unsubscribe_idempotency_key(delivery),
         limit: 1
+      )
     )
   end
 

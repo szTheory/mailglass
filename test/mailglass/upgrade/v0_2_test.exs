@@ -1,3 +1,4 @@
+# credo:disable-for-this-file Credo.Check.Readability.ModuleNames
 defmodule Mailglass.Upgrade.V0_2Test do
   use ExUnit.Case
   import ExUnit.CaptureIO
@@ -47,7 +48,10 @@ defmodule Mailglass.Upgrade.V0_2Test do
   test "rewrites committed supported v0.1 fixture with zero manual edits", %{igniter: igniter} do
     igniter =
       igniter
-      |> Igniter.create_new_file("lib/fixture/supported_before.ex", fixture!("v0_2_supported_before.ex"))
+      |> Igniter.create_new_file(
+        "lib/fixture/supported_before.ex",
+        fixture!("v0_2_supported_before.ex")
+      )
       |> Igniter.compose_task(Mix.Tasks.Mailglass.Upgrade.V0_2)
       |> apply_igniter!()
 
@@ -86,7 +90,9 @@ defmodule Mailglass.Upgrade.V0_2Test do
     """)
   end
 
-  test "keeps ambiguous Swoosh usage in place and warns with migration-guide URL", %{igniter: igniter} do
+  test "keeps ambiguous Swoosh usage in place and warns with migration-guide URL", %{
+    igniter: igniter
+  } do
     warning_output =
       capture_io(:stderr, fn ->
         igniter =

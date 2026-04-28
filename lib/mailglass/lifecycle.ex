@@ -22,7 +22,11 @@ defmodule Mailglass.Lifecycle do
 end
 
 defmodule Mailglass.Lifecycle.Noop do
-  @moduledoc false
+  @moduledoc """
+  Default no-op lifecycle implementation.
+
+  Returns the in-flight multi unchanged.
+  """
 
   @behaviour Mailglass.Lifecycle
 
