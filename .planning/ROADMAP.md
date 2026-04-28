@@ -31,7 +31,12 @@ Plans:
   2. Invalid or expired Mailgun signatures are rejected
   3. Replayed Mailgun tokens are rejected via token caching
   4. Mailgun events are correctly mapped to the internal normalized taxonomy
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 15-01-PLAN.md — Build replay-aware Mailgun provider core and tests
+- [ ] 15-02-PLAN.md — Wire Mailgun into plug, router, config, and runtime tests
+- [ ] 15-03-PLAN.md — Update installer snippets, webhook docs, and goldens for Mailgun opt-in
 
 ### Phase 16: SES Webhook Provider & SNS Cache
 **Goal**: System securely ingests and normalizes AWS SES (via SNS) webhooks with automatic subscription handling and certificate caching
