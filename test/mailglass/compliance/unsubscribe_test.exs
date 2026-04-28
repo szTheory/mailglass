@@ -185,5 +185,70 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
       assert String.starts_with?(url, "https://unsubscribe.example.com/mailglass/unsubscribe/")
       assert {:ok, %{delivery_id: "delivery-123"}} = url |> String.split("/") |> List.last() |> Unsubscribe.verify_token()
     end
+
+    test "tokens signed before endpoint rotation still verify via previous_secrets" do
+      token = Unsubscribe.sign_token("delivery-rotated")
+
+      Application.put_env(:mailglass, :compliance,
+        endpoint: "rotated-secret-key-base-123",
+        host: "unsubscribe.example.com",
+        scheme: "https",
+        mount_path: "/mailglass/unsubscribe",
+        previous_secrets: ["current-secret-key-base-123"],
+        redirect: nil,
+        max_age: 60
+      )
+
+      assert {:ok, %{delivery_id: "delivery-rotated"}} = Unsubscribe.verify_token(token)
+    end
+
+    test "tampered tokens return a structured invalid outcome" do
+      token = Unsubscribe.sign_token("delivery-123")
+      tampered =
+        token
+        |> String.slice(0, byte_size(token) - 1)
+        |> Kernel.<>(
+          if String.ends_with?(token, "A") do
+            "B"
+          else
+            "A"
+          end
+        )
+
+      assert {:error, :invalid} = Unsubscribe.verify_token(tampered)
+    end
+
+    test "tenant compliance_host override wins and :default falls back to global host" do
+      Application.put_env(:mailglass, :tenancy, TenantWithComplianceHost)
+
+      tenant_url = Unsubscribe.unsubscribe_url("delivery-tenant", %{tenant_id: "tenant-1"})
+      assert String.starts_with?(tenant_url, "https://tenant.example.com/mailglass/unsubscribe/")
+
+      Application.delete_env(:mailglass, :tenancy)
+
+      default_url = Unsubscribe.unsubscribe_url("delivery-default", %{tenant_id: "tenant-1"})
+      assert String.starts_with?(default_url, "https://unsubscribe.example.com/mailglass/unsubscribe/")
+    end
+
+    test "rejects unsubscribe URLs longer than 900 bytes" do
+      Application.put_env(:mailglass, :compliance,
+        endpoint: "current-secret-key-base-123",
+        host: String.duplicate("a", 860) <> ".example.com",
+        scheme: "https",
+        mount_path: "/mailglass/unsubscribe",
+        previous_secrets: [],
+        redirect: nil,
+        max_age: 60
+      )
+
+      err =
+        assert_raise Mailglass.ConfigError, fn ->
+          Unsubscribe.unsubscribe_url("delivery-123", %{})
+        end
+
+      assert err.type == :invalid
+      assert err.context[:reason] == :unsubscribe_url_too_long
+      assert err.context[:max_bytes] == 900
+    end
   end
 end
