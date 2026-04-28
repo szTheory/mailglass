@@ -29,4 +29,15 @@
 
 ## Traceability
 
-*(Will be filled by the roadmapper)*
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| RESEND-01 | Phase 14 | Pending |
+| RESEND-02 | Phase 14 | Pending |
+| MAILGUN-01 | Phase 15 | Pending |
+| MAILGUN-02 | Phase 15 | Pending |
+| MAILGUN-03 | Phase 15 | Pending |
+| SES-01 | Phase 16 | Pending |
+| SES-02 | Phase 16 | Pending |
+| SES-03 | Phase 16 | Pending |
+| SES-04 | Phase 16 | Pending |
+| SES-05 | Phase 16 | Pending |
