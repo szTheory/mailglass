@@ -6,6 +6,13 @@ Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
 ## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v0.1.1...mailglass_admin-v0.2.0) (2026-04-28)
 
+
+### Miscellaneous Chores
+
+* **mailglass_admin:** Synchronize mailglass-sibling-group versions
+
+## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v0.1.1...mailglass_admin-v0.2.0) (2026-04-28)
+
 `mailglass_admin` 0.2.0 is coordinated with `mailglass` 0.2.0. There is no
 standalone admin codemod or admin-only rollback path: bump both sibling
 packages together, run the core `mix mailglass.upgrade.v0_2` flow if your
