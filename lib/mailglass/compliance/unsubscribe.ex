@@ -149,6 +149,7 @@ defmodule Mailglass.Compliance.Unsubscribe do
     end
   end
 
+  @spec raise_invalid_host!() :: no_return()
   defp raise_invalid_host! do
     raise ConfigError.new(:invalid,
             context: %{

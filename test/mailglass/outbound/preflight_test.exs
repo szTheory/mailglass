@@ -201,6 +201,10 @@ defmodule Mailglass.Outbound.PreflightTest do
   end
 
   defp insert_suppression!(attrs) do
+    insert_suppression!(attrs, 4)
+  end
+
+  defp insert_suppression!(attrs, attempts_left) when attempts_left > 0 do
     try do
       attrs
       |> Mailglass.Suppression.Entry.changeset()
@@ -209,9 +213,13 @@ defmodule Mailglass.Outbound.PreflightTest do
       Postgrex.Error ->
         Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
 
-        attrs
-        |> Mailglass.Suppression.Entry.changeset()
-        |> TestRepo.insert()
+        if attempts_left > 1 do
+          insert_suppression!(attrs, attempts_left - 1)
+        else
+          attrs
+          |> Mailglass.Suppression.Entry.changeset()
+          |> TestRepo.insert()
+        end
     end
   end
 end

@@ -47,7 +47,7 @@ defmodule Mailglass.Tracking.Token do
   Raises `%Mailglass.ConfigError{type: :missing}` if no salts are configured.
   """
   @doc since: "0.1.0"
-  @spec sign_open(endpoint :: atom() | binary(), delivery_id :: String.t(), tenant_id :: String.t()) ::
+  @spec sign_open(endpoint :: term(), delivery_id :: String.t(), tenant_id :: String.t()) ::
           binary()
   def sign_open(endpoint, delivery_id, tenant_id)
       when is_binary(delivery_id) and is_binary(tenant_id) do
@@ -61,7 +61,7 @@ defmodule Mailglass.Tracking.Token do
   Iterates over ALL configured salts to support rotation windows.
   """
   @doc since: "0.1.0"
-  @spec verify_open(endpoint :: atom() | binary(), binary()) ::
+  @spec verify_open(endpoint :: term(), binary()) ::
           {:ok, %{delivery_id: String.t(), tenant_id: String.t()}} | :error
   def verify_open(endpoint, token) when is_binary(token) do
     iterate_salts(salts(), fn salt ->
@@ -83,7 +83,7 @@ defmodule Mailglass.Tracking.Token do
   scheme is not `http` or `https`.
   """
   @doc since: "0.1.0"
-  @spec sign_click(endpoint :: atom() | binary(), String.t(), String.t(), String.t()) :: binary()
+  @spec sign_click(endpoint :: term(), String.t(), String.t(), String.t()) :: binary()
   def sign_click(endpoint, delivery_id, tenant_id, target_url)
       when is_binary(delivery_id) and is_binary(tenant_id) and is_binary(target_url) do
     validate_target!(target_url)
@@ -105,7 +105,7 @@ defmodule Mailglass.Tracking.Token do
   re-check at verify time per T-3-07-10).
   """
   @doc since: "0.1.0"
-  @spec verify_click(endpoint :: atom() | binary(), binary()) ::
+  @spec verify_click(endpoint :: term(), binary()) ::
           {:ok, %{delivery_id: String.t(), tenant_id: String.t(), target_url: String.t()}}
           | :error
   def verify_click(endpoint, token) when is_binary(token) do

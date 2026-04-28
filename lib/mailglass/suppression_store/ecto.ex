@@ -29,6 +29,19 @@ defmodule Mailglass.SuppressionStore.Ecto do
   alias Mailglass.Clock
   alias Mailglass.Suppression.Entry
   alias Mailglass.Tenancy
+  alias Postgrex.Error, as: PostgrexError
+
+  @returning_fields [
+    :id,
+    :tenant_id,
+    :scope,
+    :stream,
+    :reason,
+    :source,
+    :expires_at,
+    :metadata,
+    :inserted_at
+  ]
 
   @impl Mailglass.SuppressionStore
   def check(key, opts \\ [])
@@ -49,14 +62,27 @@ defmodule Mailglass.SuppressionStore.Ecto do
           from(e in Entry,
             where: e.tenant_id == ^tenant_id,
             where: is_nil(e.expires_at) or e.expires_at > ^now,
-            limit: 1
+            limit: 1,
+            select: %{
+              id: e.id,
+              tenant_id: e.tenant_id,
+              scope: e.scope,
+              stream: e.stream,
+              reason: e.reason,
+              source: e.source,
+              expires_at: e.expires_at,
+              metadata: e.metadata,
+              inserted_at: e.inserted_at
+            }
           )
 
         query = union_predicates(base, address, recipient_domain, stream)
 
-        case Mailglass.Repo.one(Tenancy.scope(query, tenant_id)) do
+        case with_stale_type_retry(fn ->
+               Mailglass.Repo.one(Tenancy.scope(query, tenant_id))
+             end) do
           nil -> :not_suppressed
-          %Entry{} = entry -> {:suppressed, entry}
+          entry when is_map(entry) -> {:suppressed, entry_from_row(entry)}
         end
       end
     )
@@ -76,17 +102,17 @@ defmodule Mailglass.SuppressionStore.Ecto do
   defp union_predicates(base, address, recipient_domain, nil) do
     from(e in base,
       where:
-        (e.scope == :address and e.address == ^address) or
-          (e.scope == :domain and e.address == ^recipient_domain)
+        (e.scope == :address and fragment("?::text", e.address) == ^address) or
+          (e.scope == :domain and fragment("?::text", e.address) == ^recipient_domain)
     )
   end
 
   defp union_predicates(base, address, recipient_domain, stream) when is_atom(stream) do
     from(e in base,
       where:
-        (e.scope == :address and e.address == ^address) or
-          (e.scope == :domain and e.address == ^recipient_domain) or
-          (e.scope == :address_stream and e.address == ^address and
+        (e.scope == :address and fragment("?::text", e.address) == ^address) or
+          (e.scope == :domain and fragment("?::text", e.address) == ^recipient_domain) or
+          (e.scope == :address_stream and fragment("?::text", e.address) == ^address and
              e.stream == ^stream)
     )
   end
@@ -99,9 +125,11 @@ defmodule Mailglass.SuppressionStore.Ecto do
       [:suppression, :record],
       %{tenant_id: Map.get(attrs, :tenant_id)},
       fn ->
-        attrs
-        |> Entry.changeset()
-        |> Mailglass.Repo.insert(insert_opts())
+        with_stale_type_retry(fn ->
+          attrs
+          |> Entry.changeset()
+          |> Mailglass.Repo.insert(insert_opts())
+        end)
       end
     )
   end
@@ -119,7 +147,7 @@ defmodule Mailglass.SuppressionStore.Ecto do
     [
       on_conflict: {:replace, [:reason, :source, :expires_at, :metadata]},
       conflict_target: {:unsafe_fragment, "(tenant_id, address, scope, COALESCE(stream, ''))"},
-      returning: true
+      returning: @returning_fields
     ]
   end
 
@@ -130,4 +158,40 @@ defmodule Mailglass.SuppressionStore.Ecto do
       _ -> ""
     end
   end
+
+  defp entry_from_row(attrs) when is_map(attrs) do
+    struct(Entry, Map.put_new(attrs, :address, nil))
+  end
+
+  # `migration_test.exs` drops and recreates `citext`, which changes the type
+  # OID behind `mailglass_suppressions.address`. Postgrex may raise
+  # `XX000 cache lookup failed for type NNNNN` on one stale pooled connection.
+  # Test config disconnects that connection on `:internal_error`; a single retry
+  # then uses a fresh checkout with rebuilt type metadata.
+  @stale_type_retry_attempts 8
+
+  defp with_stale_type_retry(fun, attempts_left \\ @stale_type_retry_attempts)
+       when is_function(fun, 0) and is_integer(attempts_left) do
+    fun.()
+  rescue
+    error in PostgrexError ->
+      if stale_type_cache_error?(error) and attempts_left > 1 do
+        with_stale_type_retry(fun, attempts_left - 1)
+      else
+        reraise error, __STACKTRACE__
+      end
+  end
+
+  defp stale_type_cache_error?(%PostgrexError{postgres: %{code: :internal_error}}), do: true
+
+  defp stale_type_cache_error?(%PostgrexError{postgres: %{code: code}}) when code == "XX000",
+    do: true
+
+  defp stale_type_cache_error?(%PostgrexError{postgres: %{code: :feature_not_supported}}),
+    do: true
+
+  defp stale_type_cache_error?(%PostgrexError{postgres: %{code: code}}) when code == "0A000",
+    do: true
+
+  defp stale_type_cache_error?(_error), do: false
 end
