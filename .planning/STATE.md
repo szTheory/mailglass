@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
 status: executing
-stopped_at: Completed 11-06-PLAN.md
-last_updated: "2026-04-28T09:57:20.051Z"
-last_activity: 2026-04-28 -- Completed 11-06-PLAN.md
+stopped_at: Completed 11-07-PLAN.md
+last_updated: "2026-04-28T10:02:35.462Z"
+last_activity: 2026-04-28
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 23
-  completed_plans: 22
-  percent: 96
+  completed_plans: 23
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-26 — v0.2 "Production-Credible Core" started)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 11 — RFC 8058 List-Unsubscribe
+**Current focus:** Phase 12 — Auto-Suppression + Soft-Bounce Escalation
 
 ## Current Position
 
-Phase: 11 — EXECUTING
-Plan: 6 of 7
-Status: Ready for 11-07
-Last activity: 2026-04-28 -- Completed 11-06-PLAN.md
+Phase: 11 — COMPLETE
+Plan: 7 of 7
+Status: Ready for Phase 12
+Last activity: 2026-04-28 -- Completed 11-07-PLAN.md
 
-Progress: [██████████] 96%
+Progress: [██████████] 100%
 
 ## Milestone Spec (v0.2)
 
@@ -71,6 +71,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 - Used loaded router __routes__/0 reflection for generator preflight reporting so warnings match the runtime route contract.
 - Unsubscribe URL generation rejects scheme-bearing, path-bearing, whitespace-containing, and local/private hosts before emitting one-click links.
 - Unsubscribe POST replay convergence is verified through a mounted Phoenix endpoint property harness with Sandbox auto mode and TRUNCATE isolation.
+- Published Phase 11 unsubscribe setup as a dedicated guide and made its route/generator contract load-bearing via ExUnit smoke tests.
+- Added DKIM h= verification guidance requiring both List-Unsubscribe headers, with Postmark and SendGrid rollout checks.
 
 ### Key Corrections (propagate into phase plans)
 
@@ -95,8 +97,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 
 ## Session Continuity
 
-Last session: 2026-04-28T09:57:20.045Z
-Stopped at: Completed 11-06-PLAN.md
-Resume: `/gsd-execute-phase 11`
+Last session: 2026-04-28T10:02:35.454Z
+Stopped at: Completed 11-07-PLAN.md
+Resume: `/gsd-execute-phase 12`
 
 **Planned Phase:** 11 (RFC 8058 List-Unsubscribe) — 7 plans — 2026-04-28T09:57:20.045Z

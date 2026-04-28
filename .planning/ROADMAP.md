@@ -37,7 +37,7 @@ Full details: [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md).
 - [x] **Phase 8: Release-Engineering Hardening** (completed 2026-04-27) - Close 9 v0.1.2 debt items + re-tighten Credo/Dialyzer/Tests gates before any API-freezing work
 - [ ] **Phase 9: Mailable API Redesign + Freeze** - Remove Swoosh namespace leakage; ship native Message field setters, deprecation warnings, Igniter codemod, and api_stability.md v2
 - [ ] **Phase 10: Stream Policy Implementation** - Fill the existing no-op seam at stream.ex:35; enforce compile-time + runtime stream separation; add StreamPolicyConsistent Credo check
-- [ ] **Phase 11: RFC 8058 List-Unsubscribe** (6/7 plans complete) - Signed-token unsubscribe controller (core package); atomic header injection; mix mailglass.gen.unsubscribe; property tests
+- [x] **Phase 11: RFC 8058 List-Unsubscribe** (completed 2026-04-28) - Signed-token unsubscribe controller (core package); atomic header injection; mix mailglass.gen.unsubscribe; property tests; published adopter and DKIM verification guides
 - [ ] **Phase 12: Auto-Suppression + Soft-Bounce Escalation** - Event-first Multi suppression inserts; Oban escalation worker; suppressions.resync task; complained permanence constraint
 - [ ] **Phase 13: v0.2 Release Ceremony** - CHANGELOG, adopter walkthrough validation, full doc audit, coordinated Hex publish
 
@@ -120,7 +120,7 @@ Plans:
 - [x] 11-04: Mailglass.Router macro — mount /mailglass/unsubscribe/:token routes; configurable path prefix; collision detection against adopter routes (UNSUB-04)
 - [x] 11-05: mix mailglass.gen.unsubscribe — print mount instructions, config snippets, test recipe (does NOT copy code) (UNSUB-04)
 - [x] 11-06: StreamData property tests — rotation boundary, expired-token rejection, idempotent POST, SSRF/open-redirect check (UNSUB-05)
-- [ ] 11-07: guides/unsubscribe.md + guides/dkim-setup.md — per-ESP DKIM h= (Postmark auto; SendGrid gap #893 documented); rotation playbook; troubleshooting (UNSUB-06)
+- [x] 11-07: guides/unsubscribe.md + guides/dkim-setup.md — per-ESP DKIM h= (Postmark auto; SendGrid gap #893 documented); rotation playbook; troubleshooting (UNSUB-06)
 
 ### Phase 12: Auto-Suppression + Soft-Bounce Escalation
 **Goal**: Webhook ingest automatically suppresses recipients on :bounced/:complained/:unsubscribed events with the event row FIRST in Multi always; :complained suppression is permanent by Postgres constraint; soft-bounce escalation is async via Oban; resync task is strictly per-tenant
@@ -177,7 +177,7 @@ Plans:
 | 8. Release-Engineering Hardening | v0.2 | 0/6 | Not started | - |
 | 9. Mailable API Redesign + Freeze | v0.2 | 0/8 | Not started | - |
 | 10. Stream Policy Implementation | v0.2 | 0/5 | Not started | - |
-| 11. RFC 8058 List-Unsubscribe | v0.2 | 6/7 | In progress | - |
+| 11. RFC 8058 List-Unsubscribe | v0.2 | 7/7 | Complete | 2026-04-28 |
 | 12. Auto-Suppression + Soft-Bounce Escalation | v0.2 | 0/6 | Not started | - |
 | 13. v0.2 Release Ceremony | v0.2 | 0/5 | Not started | - |
 

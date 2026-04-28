@@ -51,7 +51,7 @@
 
 - [x] **UNSUB-01**: `Mailglass.Compliance.Unsubscribe` module mints + verifies signed tokens via `Phoenix.Token` with multi-salt rotation (minimum 2 salts during rotation window). Token payload is minimal — `delivery_id` only — so URL byte length stays ≤900 octets (well below RFC 5322 998-octet line limit). `byte_size(url) <= 900` assertion fails fast in `unsubscribe_url/2`. (TS-V2-08; pitfalls UNSUB-01
 , UNSUB-03)
-- [ ] **UNSUB-02**: `Mailglass.Compliance.Unsubscribe.inject_unsubscribe_headers/2` is the **ONLY** code path that sets either `List-Unsubscribe` or `List-Unsubscribe-Post` on a Message. Both headers are injected atomically — both or neither, never one without the other. Custom Credo check `Mailglass.Credo.RequireAtomicUnsubscribeHeaders` enforces. `Mailglass.Compliance.add_rfc_required_headers/1` extended to call `inject_unsubscribe_headers/2` conditionally on `msg.stream`: mandatory on `:bulk`, opt-in on `:operational`, **never** on `:transactional`. (TS-V2-07; pitfall UNSUB-02 — Gmail/Yahoo bulk-sender silent compliance failure)
+- [x] **UNSUB-02**: `Mailglass.Compliance.Unsubscribe.inject_unsubscribe_headers/2` is the **ONLY** code path that sets either `List-Unsubscribe` or `List-Unsubscribe-Post` on a Message. Both headers are injected atomically — both or neither, never one without the other. Custom Credo check `Mailglass.Credo.RequireAtomicUnsubscribeHeaders` enforces. `Mailglass.Compliance.add_rfc_required_headers/1` extended to call `inject_unsubscribe_headers/2` conditionally on `msg.stream`: mandatory on `:bulk`, opt-in on `:operational`, **never** on `:transactional`. (TS-V2-07; pitfall UNSUB-02 — Gmail/Yahoo bulk-sender silent compliance failure)
 - [x] **UNSUB-03
 **: `Mailglass.Compliance.UnsubscribeController` (Phoenix.Controller, **`mailglass` core package** — NOT `mailglass_admin`) handles `GET /mailglass/unsubscribe/:token` (confirmation page) + `POST /mailglass/unsubscribe/:token` (RFC 8058 one-click; returns 200 within 5 seconds; idempotent; no redirects per RFC). Persists `:unsubscribed` event to ledger via existing `Events.append_multi/3`. (TS-V2-08; pitfall UNSUB-04)
 - [x] **UNSUB-04
@@ -172,12 +172,12 @@ Explicitly excluded with permanent reasoning. Anti-features documented to preven
 | STREAM-02 | Phase 10 | Pending |
 | STREAM-03 | Phase 10 | Pending |
 | STREAM-04 | Phase 10 | Pending |
-| UNSUB-01 | Phase 11 | Pending |
-| UNSUB-02 | Phase 11 | Pending |
-| UNSUB-03 | Phase 11 | Pending |
-| UNSUB-04 | Phase 11 | Pending |
-| UNSUB-05 | Phase 11 | Pending |
-| UNSUB-06 | Phase 11 | Pending |
+| UNSUB-01 | Phase 11 | Complete |
+| UNSUB-02 | Phase 11 | Complete |
+| UNSUB-03 | Phase 11 | Complete |
+| UNSUB-04 | Phase 11 | Complete |
+| UNSUB-05 | Phase 11 | Complete |
+| UNSUB-06 | Phase 11 | Complete |
 | SUPP-01 | Phase 12 | Pending |
 | SUPP-02 | Phase 12 | Pending |
 | SUPP-03 | Phase 12 | Pending |
