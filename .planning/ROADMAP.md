@@ -38,7 +38,7 @@ Full details: [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md).
 - [ ] **Phase 9: Mailable API Redesign + Freeze** - Remove Swoosh namespace leakage; ship native Message field setters, deprecation warnings, Igniter codemod, and api_stability.md v2
 - [ ] **Phase 10: Stream Policy Implementation** - Fill the existing no-op seam at stream.ex:35; enforce compile-time + runtime stream separation; add StreamPolicyConsistent Credo check
 - [x] **Phase 11: RFC 8058 List-Unsubscribe** (completed 2026-04-28) - Signed-token unsubscribe controller (core package); atomic header injection; mix mailglass.gen.unsubscribe; property tests; published adopter and DKIM verification guides
-- [ ] **Phase 12: Auto-Suppression + Soft-Bounce Escalation** - Event-first Multi suppression inserts; Oban escalation worker; suppressions.resync task; complained permanence constraint
+- [x] **Phase 12: Auto-Suppression + Soft-Bounce Escalation** (completed 2026-04-28) - Event-first Multi suppression inserts; Oban escalation worker; suppressions.resync task; complained permanence constraint
 - [ ] **Phase 13: v0.2 Release Ceremony** - CHANGELOG, adopter walkthrough validation, full doc audit, coordinated Hex publish (4/5 plans complete; live publish pending)
 
 ## Phase Details
@@ -132,13 +132,15 @@ Plans:
   3. After 5 `:deferred` events within a 7-day window for a recipient, an Oban job runs `Escalation` and inserts a hard suppression row; the job does NOT run synchronously inside the webhook request cycle
   4. `mix mailglass.suppressions.resync` without `--tenant-id` exits with a structured error; with `--tenant-id`, it projects `mailglass_events` into `mailglass_suppressions` idempotently via `Tenancy.scope/2`
   5. `Mailglass.Suppression.remove/2` with `reason: :complaint` returns a structured `%Mailglass.Error{}` and does NOT delete the row; the Postgres `CHECK (reason != 'complaint' OR expires_at IS NULL)` constraint prevents any expiry being set on complaint rows
-**Plans**: 4 plans
+**Plans**: 6/6 plans complete
 
 Plans:
-- [ ] 12-01-PLAN.md — Auto-suppression projection + event-first Credo guard for linked hard-bounce/complaint/unsubscribe events (SUPP-01)
-- [ ] 12-02-PLAN.md — Async Oban soft-bounce escalation, covering index migration, and suppression operator guide (SUPP-02)
-- [ ] 12-03-PLAN.md — Tenant-required suppression resync task with shared dry-run/apply projection path (SUPP-03)
-- [ ] 12-04-PLAN.md — Tightened pre-send suppression behavior plus complaint permanence and removal policy enforcement (SUPP-04, SUPP-05)
+- [x] 12-01-PLAN.md — Auto-suppression projection + event-first Credo guard for linked hard-bounce/complaint/unsubscribe events (SUPP-01)
+- [x] 12-02-PLAN.md — Async Oban soft-bounce escalation, covering index migration, and suppression operator guide (SUPP-02)
+- [x] 12-03-PLAN.md — Tenant-required suppression resync task with shared dry-run/apply projection path (SUPP-03)
+- [x] 12-04-PLAN.md — Tightened pre-send suppression behavior plus complaint permanence and removal policy enforcement (SUPP-04, SUPP-05)
+- [x] 12-05-PLAN.md — Structured suppression preflight errors and suppression telemetry surface (SUPP-04)
+- [x] 12-06-PLAN.md — Permanent complaint/unsubscribe suppression guardrails and retention guidance (SUPP-05)
 
 ### Phase 13: v0.2 Release Ceremony
 **Goal**: mailglass 0.2.0 and mailglass_admin 0.2.0 are published to Hex.pm via protected-ref trigger; all guides audited for v0.2 surface; adopter walkthrough validated end-to-end
@@ -176,7 +178,7 @@ Plans:
 | 9. Mailable API Redesign + Freeze | v0.2 | 0/8 | Not started | - |
 | 10. Stream Policy Implementation | v0.2 | 0/5 | Not started | - |
 | 11. RFC 8058 List-Unsubscribe | v0.2 | 7/7 | Complete | 2026-04-28 |
-| 12. Auto-Suppression + Soft-Bounce Escalation | v0.2 | 0/6 | Not started | - |
+| 12. Auto-Suppression + Soft-Bounce Escalation | v0.2 | 6/6 | Complete | 2026-04-28 |
 | 13. v0.2 Release Ceremony | v0.2 | 4/5 | In progress | - |
 
 ---
