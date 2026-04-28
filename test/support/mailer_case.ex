@@ -219,7 +219,7 @@ defmodule Mailglass.MailerCase do
   to deliver into this test's ETS bucket. Use sparingly — prefer `allow/2`
   for targeted cross-process delegation (LiveView, Oban workers, Playwright).
   """
-  @spec set_mailglass_global(ExUnit.Callbacks.test_context()) :: :ok
+  @spec set_mailglass_global(map()) :: :ok
   def set_mailglass_global(context) do
     if Map.get(context, :async, true) do
       raise "Mailglass.MailerCase global mode requires async: false — " <>
