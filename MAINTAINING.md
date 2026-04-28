@@ -93,6 +93,10 @@ window before the published artifact becomes permanent.
    mailglass_admin dep-pin sync step, so the generated PR is load-bearing.
    The current release path emits package tags such as `mailglass-v<version>`
    and `mailglass_admin-v<version>`.
+   If a broad milestone PR was squash-merged under a non-releasable subject
+   and release-please skips the cut, recover with a tiny follow-up commit that
+   carries a `Release-As: <intended-version>` footer. Do not hand-edit
+   `.release-please-manifest.json` to force the version.
 3. **Approve the `hex-publish` deployment in the GitHub Environment UI.**
    Review the pre-publish summary in the workflow run page (rendered by the
    `prepublish-summary` job per D-15) BEFORE clicking Approve. Verify the
