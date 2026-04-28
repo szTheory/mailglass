@@ -96,6 +96,8 @@ defmodule Mailglass.Webhook.Ingest do
   alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
   alias Mailglass.Webhook.WebhookEvent
 
+  @auto_suppress_module Mailglass.Suppression.AutoSuppress
+
   @doc """
   Ingest a verified webhook into the persistence layer.
 
@@ -301,7 +303,7 @@ defmodule Mailglass.Webhook.Ingest do
             changeset = Projector.update_projections(delivery, inserted_event)
 
             case repo.update(changeset) do
-              {:ok, _projected} -> {:ok, {delivery, inserted_event}}
+              {:ok, _projected} -> {:ok, {:matched, delivery, inserted_event}}
               {:error, reason} -> {:error, reason}
             end
 
@@ -309,6 +311,9 @@ defmodule Mailglass.Webhook.Ingest do
             # :no_event_row or :orphan_skipped — pass through
             {:ok, other}
         end
+      end)
+      |> Multi.run({:auto_suppress, idx}, fn repo, changes ->
+        apply(@auto_suppress_module, :apply, [repo, Map.get(changes, {:projector_apply, idx})])
       end)
     end)
   end
@@ -439,7 +444,7 @@ defmodule Mailglass.Webhook.Ingest do
       |> Enum.with_index()
       |> Enum.flat_map(fn {input_event, idx} ->
         case Map.get(changes, {:projector_apply, idx}) do
-          {delivery, inserted_event} ->
+          {:matched, delivery, inserted_event} ->
             # Matched — projector ran.
             [{inserted_event, delivery, false}]
 
