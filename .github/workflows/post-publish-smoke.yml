@@ -193,6 +193,9 @@ jobs:
 
   consumer-install:
     name: Consumer install (Phoenix host)
+    # Keep this job aligned with the committed repo-local proof in
+    # test/mailglass/install/install_first_preview_smoke_test.exs:
+    # add deps -> install -> compile -> boot -> GET /dev/mail/.
     runs-on: ubuntu-latest
     # cron-guard listed explicitly: GitHub Actions `needs.<job>.outputs`
     # propagates only through DIRECT dependencies, not transitively. Without
