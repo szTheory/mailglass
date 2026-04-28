@@ -19,6 +19,7 @@ defmodule Mailglass.OutboundTest do
 
   setup do
     Fake.checkout()
+    Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
 
     prior_compliance = Application.get_env(:mailglass, :compliance)
 
@@ -159,15 +160,7 @@ defmodule Mailglass.OutboundTest do
 
     test "raises the error struct directly (no generic wrapping) on suppression" do
       # Add suppression
-      {:ok, _} =
-        Mailglass.Suppression.Entry.changeset(%{
-          tenant_id: "test-tenant",
-          address: "suppressed@example.com",
-          scope: :address,
-          reason: :manual,
-          source: "test"
-        })
-        |> TestRepo.insert()
+      {:ok, _} = insert_suppression!("suppressed@example.com")
 
       msg = build_message("suppressed@example.com")
 
@@ -218,6 +211,29 @@ defmodule Mailglass.OutboundTest do
       tenant_id: "test-tenant",
       stream: Keyword.get(opts, :stream, :transactional)
     )
+  end
+
+  defp insert_suppression!(address) do
+    attrs = %{
+      tenant_id: "test-tenant",
+      address: address,
+      scope: :address,
+      reason: :manual,
+      source: "test"
+    }
+
+    try do
+      attrs
+      |> Mailglass.Suppression.Entry.changeset()
+      |> TestRepo.insert()
+    rescue
+      Postgrex.Error ->
+        Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
+
+        attrs
+        |> Mailglass.Suppression.Entry.changeset()
+        |> TestRepo.insert()
+    end
   end
 
   defp unsubscribe_token!(%Message{} = message) do

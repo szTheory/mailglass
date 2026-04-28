@@ -397,6 +397,7 @@ defmodule Mailglass.Config do
       :mailglass
       |> Application.get_all_env()
       |> Keyword.take(known_keys)
+      |> normalize_optional_keyword_subtrees()
 
     validated = NimbleOptions.validate!(opts, @schema)
 
@@ -412,6 +413,16 @@ defmodule Mailglass.Config do
     end
 
     :ok
+  end
+
+  defp normalize_optional_keyword_subtrees(opts) do
+    Enum.reduce([:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance], opts, fn key,
+                                                                                               acc ->
+      case Keyword.get(acc, key, :__missing__) do
+        nil -> Keyword.put(acc, key, [])
+        _ -> acc
+      end
+    end)
   end
 
   # Mailglass is Postgres-only at v0.1 per PROJECT.md (MySQL/SQLite out of
@@ -531,6 +542,7 @@ defmodule Mailglass.Config do
     :mailglass
     |> Application.get_all_env()
     |> Keyword.take(known_keys)
+    |> normalize_optional_keyword_subtrees()
     |> NimbleOptions.validate!(@schema)
   end
 end

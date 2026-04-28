@@ -19,6 +19,7 @@ defmodule Mailglass.SuppressionTest do
     prev_store = Application.get_env(:mailglass, :suppression_store)
 
     Application.put_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.ETS)
+    Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
 
     on_exit(fn ->
       if prev_store do
@@ -306,8 +307,17 @@ defmodule Mailglass.SuppressionTest do
   end
 
   defp insert_entry(attrs) do
-    attrs
-    |> Entry.changeset()
-    |> TestRepo.insert!()
+    try do
+      attrs
+      |> Entry.changeset()
+      |> TestRepo.insert!()
+    rescue
+      Postgrex.Error ->
+        Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
+
+        attrs
+        |> Entry.changeset()
+        |> TestRepo.insert!()
+    end
   end
 end

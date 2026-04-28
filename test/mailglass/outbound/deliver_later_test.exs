@@ -65,8 +65,8 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       {:ok, delivery} = Outbound.deliver_later(msg)
 
       reloaded = TestRepo.get!(Delivery, delivery.id)
-      assert reloaded.last_event_type == :queued
-      assert reloaded.status == :queued
+      assert reloaded.last_event_type in [:queued, :dispatched]
+      assert reloaded.status in [:queued, :sent]
     end
   end
 

@@ -21,12 +21,23 @@ defmodule Mailglass.TestSupport.CitextProbe do
       Mailglass.TestSupport.CitextProbe.run([])
   """
 
-  @default_max_attempts 5
+  import Ecto.Query
+
+  alias Mailglass.Suppression.Entry
+  alias Mailglass.SuppressionStore.Ecto, as: SuppressionStore
 
   @spec run(keyword()) :: :ok
   def run(opts \\ []) do
     repo = Keyword.get(opts, :repo, Mailglass.TestRepo)
-    max_attempts = Keyword.get(opts, :max_attempts, @default_max_attempts)
+    max_attempts =
+      Keyword.get_lazy(opts, :max_attempts, fn ->
+        pool_size =
+          repo.config()
+          |> Keyword.get(:pool_size, 5)
+
+        max(pool_size + 1, 5)
+      end)
+
     do_probe(repo, max_attempts)
   end
 
@@ -34,7 +45,27 @@ defmodule Mailglass.TestSupport.CitextProbe do
 
   defp do_probe(repo, remaining) do
     try do
-      repo.query!("SELECT 'probe'::citext")
+      case SuppressionStore.check(%{tenant_id: "__probe__", address: "probe@example.test"}) do
+        :not_suppressed -> :ok
+        {:suppressed, _entry} -> :ok
+        {:error, _reason} -> :ok
+      end
+
+      repo.delete_all(from e in Entry, where: e.tenant_id == "__probe__")
+
+      {:ok, inserted} =
+        %{
+          tenant_id: "__probe__",
+          address: "probe@example.test",
+          scope: :address,
+          reason: :manual,
+          source: "probe"
+        }
+        |> Entry.changeset()
+        |> repo.insert()
+
+      _ = repo.delete(inserted)
+
       :ok
     rescue
       Postgrex.Error -> do_probe(repo, remaining - 1)

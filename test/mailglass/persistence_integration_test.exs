@@ -138,6 +138,17 @@ defmodule Mailglass.PersistenceIntegrationTest do
     test "SingleTenant default: current/0 returns 'default' when no stamping" do
       # Clear the DataCase-stamped tenant.
       Process.delete(:mailglass_tenant_id)
+      prior_tenancy = Application.get_env(:mailglass, :tenancy)
+      Application.put_env(:mailglass, :tenancy, Mailglass.Tenancy.SingleTenant)
+
+      on_exit(fn ->
+        if is_nil(prior_tenancy) do
+          Application.delete_env(:mailglass, :tenancy)
+        else
+          Application.put_env(:mailglass, :tenancy, prior_tenancy)
+        end
+      end)
+
       assert Tenancy.current() == "default"
     end
   end

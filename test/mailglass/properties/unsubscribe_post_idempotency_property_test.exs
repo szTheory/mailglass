@@ -132,8 +132,6 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
       assert Phoenix.ConnTest.response(baseline_conn, 200) == ""
       assert baseline_snapshot == [{"unsubscribe:#{delivery.id}", :unsubscribed}]
 
-      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
-
       replay_responses =
         for _ <- 1..replay_count do
           Phoenix.ConnTest.post(Phoenix.ConnTest.build_conn(), path, %{})

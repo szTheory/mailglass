@@ -6,6 +6,7 @@ defmodule Mailglass.Outbound.PreflightTest do
 
   setup do
     Mailglass.Adapters.Fake.checkout()
+    Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
     :ok
   end
 
@@ -45,7 +46,7 @@ defmodule Mailglass.Outbound.PreflightTest do
       expires_at = DateTime.add(DateTime.utc_now(), 3_600, :second)
 
       {:ok, _} =
-        Mailglass.Suppression.Entry.changeset(%{
+        insert_suppression!(%{
           tenant_id: "test-tenant",
           address: "blocked@example.com",
           scope: :address,
@@ -53,7 +54,6 @@ defmodule Mailglass.Outbound.PreflightTest do
           source: "test",
           expires_at: expires_at
         })
-        |> TestRepo.insert()
 
       msg = build_message("blocked@example.com")
 
@@ -112,14 +112,13 @@ defmodule Mailglass.Outbound.PreflightTest do
     test "suppression error prevents rate-limit consumption" do
       # Record a suppression
       {:ok, _} =
-        Mailglass.Suppression.Entry.changeset(%{
+        insert_suppression!(%{
           tenant_id: "test-tenant",
           address: "order@example.com",
           scope: :address,
           reason: :manual,
           source: "test"
         })
-        |> TestRepo.insert()
 
       Application.put_env(:mailglass, :rate_limit, default: [capacity: 1, per_minute: 1])
       on_exit(fn -> Application.delete_env(:mailglass, :rate_limit) end)
@@ -199,5 +198,20 @@ defmodule Mailglass.Outbound.PreflightTest do
       tenant_id: "test-tenant",
       stream: stream
     )
+  end
+
+  defp insert_suppression!(attrs) do
+    try do
+      attrs
+      |> Mailglass.Suppression.Entry.changeset()
+      |> TestRepo.insert()
+    rescue
+      Postgrex.Error ->
+        Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
+
+        attrs
+        |> Mailglass.Suppression.Entry.changeset()
+        |> TestRepo.insert()
+    end
   end
 end

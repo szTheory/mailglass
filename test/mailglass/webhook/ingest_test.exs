@@ -32,6 +32,10 @@ defmodule Mailglass.Webhook.IngestTest do
     # Per revision W7: use Mailglass.Tenancy.clear/0 in on_exit (NOT raw
     # Process.delete) so the internal atom can be refactored without
     # breaking test code.
+    TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
+    TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+    TestRepo.query!("TRUNCATE TABLE mailglass_deliveries CASCADE", [])
+
     on_exit(fn -> Tenancy.clear() end)
     :ok
   end

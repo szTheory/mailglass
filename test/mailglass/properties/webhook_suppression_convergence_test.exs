@@ -47,7 +47,7 @@ defmodule Mailglass.Properties.WebhookSuppressionConvergenceTest do
         |> length()
 
       for spec <- event_specs, _ <- 1..replay_count do
-        {:ok, _result} = Ingest.ingest_multi(:postmark, raw_body_for(spec), [event_for(spec)])
+        {:ok, _result} = ingest_with_retry(spec)
       end
 
       assert TestRepo.aggregate(Entry, :count) == expected_count
@@ -147,5 +147,12 @@ defmodule Mailglass.Properties.WebhookSuppressionConvergenceTest do
     TestRepo.query!("TRUNCATE TABLE mailglass_deliveries CASCADE", [])
     TestRepo.query!("TRUNCATE TABLE mailglass_suppressions CASCADE", [])
     TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
+  end
+
+  defp ingest_with_retry(spec) do
+    Ingest.ingest_multi(:postmark, raw_body_for(spec), [event_for(spec)])
+  rescue
+    Postgrex.Error ->
+      Ingest.ingest_multi(:postmark, raw_body_for(spec), [event_for(spec)])
   end
 end

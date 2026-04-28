@@ -5,6 +5,7 @@ defmodule Mailglass.Properties.UnsubscribePropertyTest do
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.ConfigError
   alias Mailglass.Message
+  alias Mailglass.Tenancy
 
   @moduletag :property
 
@@ -30,6 +31,9 @@ defmodule Mailglass.Properties.UnsubscribePropertyTest do
   setup do
     prior_mailglass = Application.get_all_env(:mailglass)
 
+    Application.delete_env(:mailglass, :tenancy)
+    Tenancy.clear()
+
     Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint-secret")
 
     Application.put_env(:mailglass, :compliance,
@@ -46,6 +50,7 @@ defmodule Mailglass.Properties.UnsubscribePropertyTest do
     on_exit(fn ->
       Application.put_all_env(mailglass: prior_mailglass)
       Application.delete_env(:mailglass, :tenancy)
+      Tenancy.clear()
     end)
 
     :ok

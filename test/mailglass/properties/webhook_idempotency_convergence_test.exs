@@ -37,6 +37,8 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
   use ExUnit.Case, async: false
   use ExUnitProperties
 
+  import Ecto.Query
+
   alias Ecto.Adapters.SQL.Sandbox
   alias Mailglass.{Tenancy, TestRepo}
   alias Mailglass.Events.Event
@@ -118,15 +120,24 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
         events
         |> Enum.map(& &1.metadata["provider_event_id"])
         |> Enum.uniq()
-        |> length()
+      
+      webhook_event_count =
+        TestRepo.aggregate(
+          from(w in WebhookEvent,
+            where:
+              w.tenant_id == "prop-test-tenant" and w.provider == "postmark" and
+                w.provider_event_id in ^unique_provider_event_ids
+          ),
+          :count
+        )
 
-      webhook_event_count = TestRepo.aggregate(WebhookEvent, :count)
+      unique_provider_event_count = length(unique_provider_event_ids)
 
-      assert webhook_event_count == unique_provider_event_ids,
+      assert webhook_event_count == unique_provider_event_count,
              """
              Convergence failed!
              events: #{length(events)}
-             unique provider_event_ids: #{unique_provider_event_ids}
+             unique provider_event_ids: #{unique_provider_event_count}
              webhook_event_count: #{webhook_event_count}
              replay_count: #{replay_count}
              """
@@ -135,12 +146,20 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
       # inserts a mailglass_events row with delivery_id: nil even when
       # there's no matching Delivery). Replay is structurally idempotent
       # via the `idempotency_key` partial UNIQUE index on mailglass_events.
-      event_count = TestRepo.aggregate(Event, :count)
+      event_count =
+        TestRepo.aggregate(
+          from(e in Event,
+            where:
+              e.tenant_id == "prop-test-tenant" and
+                fragment("?->>? = ANY(?)", e.metadata, "provider_event_id", ^unique_provider_event_ids)
+          ),
+          :count
+        )
 
-      assert event_count == unique_provider_event_ids,
+      assert event_count == unique_provider_event_count,
              """
              Event-table convergence failed!
-             unique provider_event_ids: #{unique_provider_event_ids}
+             unique provider_event_ids: #{unique_provider_event_count}
              event_count: #{event_count}
              replay_count: #{replay_count}
              """

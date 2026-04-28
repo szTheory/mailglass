@@ -116,6 +116,8 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
     @describetag :token_service
 
     setup do
+      Application.delete_env(:mailglass, :tenancy)
+
       Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint-secret-123")
 
       Application.put_env(:mailglass, :compliance,
