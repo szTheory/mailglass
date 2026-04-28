@@ -152,6 +152,20 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
 
       assert response(conn, 404) =~ "invalid"
     end
+
+    test "returns structured 404 for tampered tokens", %{conn: conn} do
+      delivery = Generators.delivery_fixture()
+      token = Unsubscribe.sign_token(delivery.id)
+
+      tampered =
+        token
+        |> String.slice(0, byte_size(token) - 1)
+        |> Kernel.<>("x")
+
+      conn = get(conn, "/mailglass/unsubscribe/#{tampered}")
+
+      assert response(conn, 404) =~ "invalid"
+    end
   end
 
   describe "POST /mailglass/unsubscribe/:token" do
@@ -210,6 +224,56 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
         )
 
       assert count == 1
+    end
+
+    test "expired POST returns 200 without redirecting or writing an event", %{conn: conn} do
+      Application.put_env(:mailglass, :compliance,
+        Keyword.put(Application.fetch_env!(:mailglass, :compliance), :max_age, 1)
+      )
+
+      delivery = Generators.delivery_fixture()
+      token = Unsubscribe.sign_token(delivery.id)
+      Process.sleep(1_100)
+
+      conn = post(conn, "/mailglass/unsubscribe/#{token}", %{})
+
+      assert response(conn, 200) == ""
+      assert get_resp_header(conn, "location") == []
+
+      count =
+        TestRepo.aggregate(
+          from(event in Event,
+            where: event.delivery_id == ^delivery.id and event.type == :unsubscribed
+          ),
+          :count
+        )
+
+      assert count == 0
+    end
+
+    test "tampered POST returns 200 without redirecting or writing an event", %{conn: conn} do
+      delivery = Generators.delivery_fixture()
+      token = Unsubscribe.sign_token(delivery.id)
+
+      tampered =
+        token
+        |> String.slice(0, byte_size(token) - 1)
+        |> Kernel.<>("x")
+
+      conn = post(conn, "/mailglass/unsubscribe/#{tampered}", %{})
+
+      assert response(conn, 200) == ""
+      assert get_resp_header(conn, "location") == []
+
+      count =
+        TestRepo.aggregate(
+          from(event in Event,
+            where: event.delivery_id == ^delivery.id and event.type == :unsubscribed
+          ),
+          :count
+        )
+
+      assert count == 0
     end
   end
 end
