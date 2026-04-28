@@ -1,46 +1,40 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.2
-milestone_name: Production-Credible Core
-status: completed
-stopped_at: Completed 12-04-PLAN.md
+milestone: v0.3
+milestone_name: Webhook Coverage Expansion
+status: defining_requirements
 last_updated: "2026-04-28T21:26:07.664Z"
 last_activity: 2026-04-28
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 29
-  completed_plans: 29
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-28 — v0.2 "Production-Credible Core" complete)
+See: `.planning/PROJECT.md` (updated 2026-04-28 — v0.3 "Webhook Coverage Expansion" started)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Archive milestone
+**Current focus:** Defining requirements
 
 ## Current Position
 
-Phase: 13
-Plan: 5 of 5
-Status: Milestone complete
-Last activity: 2026-04-28
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-28 — Milestone v0.3 started
 
-Progress: [████████████████████] 100%
-
-## Milestone Spec (v0.2)
+## Milestone Spec (v0.3)
 
 **Three pillars:**
-
-- **API stability** — Mailable redesign hides Swoosh; native Message field setters; `update_swoosh/2` as documented escape hatch; `api_stability.md` v2; `mix mailglass.upgrade.v0_2` Igniter codemod; deprecation warnings on v0.1 paths.
-- **Deliverability floor** — Stream separation enforced (compile + runtime); RFC 8058 List-Unsubscribe atomic header injection + signed-token controller; auto-suppression on bounce/complaint/unsubscribe + soft-bounce escalation; stream-aware Feedback-ID.
-- **Release-engineering hardening** — Close 9 v0.1.2 TODOs; Tests gate halt-on-failure; Credo --strict; Dialyzer triage (remove --ignore-exit-status — subtraction, not addition).
-
-**Phase shape:** 6 phases (8–13), ~37 plans.
+- **Mailgun** — HMAC-SHA256 signature verification.
+- **SES** — SNS subscription confirmation + signature verification.
+- **Resend** — provider-specific signing.
 
 ## Accumulated Context
 

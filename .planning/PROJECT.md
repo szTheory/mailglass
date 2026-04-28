@@ -102,7 +102,7 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 
 ## Active
 
-Currently no active requirements as milestone is complete.
+**v0.3 Requirements gathering in progress.**
 
 ## Out of Scope
 
@@ -211,3 +211,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 *Last updated: 2026-04-28 — v0.2 milestone "Production-Credible Core" complete.*
+ion" started.*
