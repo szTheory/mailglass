@@ -4,6 +4,9 @@ defmodule Mailglass.Router.UnsubscribeRouterTest do
   setup do
     prior_mailglass = Application.get_all_env(:mailglass)
 
+    Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint")
+    Application.put_env(:mailglass, :compliance, host: "unsubscribe.example.com", mount_path: "/mailglass/unsubscribe")
+
     on_exit(fn ->
       Application.put_all_env(mailglass: prior_mailglass)
     end)
@@ -41,10 +44,9 @@ defmodule Mailglass.Router.UnsubscribeRouterTest do
     end
 
     test "sources the default mount path through Mailglass.Config" do
-      Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint")
       Application.put_env(:mailglass, :compliance, host: "unsubscribe.example.com", mount_path: "/custom/unsubscribe")
 
-      [{router_module, _bytecode}] =
+      compiled =
         Code.compile_string("""
         defmodule Mailglass.Router.UnsubscribeRouterTest.ConfigDrivenRouter do
           use Phoenix.Router
@@ -55,6 +57,11 @@ defmodule Mailglass.Router.UnsubscribeRouterTest do
           end
         end
         """)
+
+      {router_module, _bytecode} =
+        Enum.find(compiled, fn {module, _bytecode} ->
+          module == Mailglass.Router.UnsubscribeRouterTest.ConfigDrivenRouter
+        end)
 
       routes = router_module.__routes__()
       assert Enum.all?(routes, &(&1.path == "/custom/unsubscribe/:token"))
