@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Mailglass.Gen.Unsubscribe do
     """
     Mailglass unsubscribe checklist
 
-    This task copies zero files. Wire the config and router manually, then run the UAT steps below.
+    This task intentionally copies zero files. Wire the config and router manually, then run the UAT steps below.
     """
   end
 
