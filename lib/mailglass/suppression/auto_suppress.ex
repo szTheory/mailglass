@@ -18,7 +18,7 @@ defmodule Mailglass.Suppression.AutoSuppress do
 
     with {:ok, attrs} <- build_attrs(event, delivery),
          {:ok, entry} <- insert(repo, attrs) do
-      emit_auto_added(start, delivery.tenant_id, entry)
+      maybe_emit_auto_added(start, delivery.tenant_id, entry)
       {:ok, :inserted}
     end
   end
@@ -60,7 +60,9 @@ defmodule Mailglass.Suppression.AutoSuppress do
     )
   end
 
-  defp emit_auto_added(start, tenant_id, %Entry{} = entry) do
+  defp maybe_emit_auto_added(_start, _tenant_id, :skip), do: :ok
+
+  defp maybe_emit_auto_added(start, tenant_id, %Entry{} = entry) do
     duration_us = System.monotonic_time(:microsecond) - start
 
     :telemetry.execute(
