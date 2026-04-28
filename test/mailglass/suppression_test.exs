@@ -42,6 +42,8 @@ defmodule Mailglass.SuppressionTest do
 
   describe "check_before_send/1 — suppressed address" do
     test "Test 7 (suppressed): returns {:error, %SuppressedError{type: scope}} when suppressed" do
+      expires_at = DateTime.add(DateTime.utc_now(), 3_600, :second)
+
       {:ok, _} =
         ETS.record(
           %{
@@ -49,14 +51,26 @@ defmodule Mailglass.SuppressionTest do
             address: "blocked@example.com",
             scope: :address,
             reason: :manual,
-            source: "test"
+            source: "test",
+            expires_at: expires_at
           },
           []
         )
 
       msg = build_message(to: "blocked@example.com")
       result = Suppression.check_before_send(msg)
-      assert {:error, %SuppressedError{type: :address}} = result
+
+      assert {:error,
+              %SuppressedError{
+                type: :address,
+                context: %{
+                  tenant_id: "tenant-test",
+                  stream: :transactional,
+                  reason: :manual,
+                  source: "test",
+                  expires_at: ^expires_at
+                }
+              }} = result
     end
   end
 
@@ -128,6 +142,9 @@ defmodule Mailglass.SuppressionTest do
       # Context must only contain :tenant_id and :stream
       assert Map.has_key?(ctx, :tenant_id)
       assert Map.has_key?(ctx, :stream)
+      assert Map.has_key?(ctx, :reason)
+      assert Map.has_key?(ctx, :source)
+      assert Map.has_key?(ctx, :expires_at)
 
       # Must NOT contain PII
       refute Map.has_key?(ctx, :to)
