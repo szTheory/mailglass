@@ -80,6 +80,26 @@ defmodule Mailglass.Suppression.EntryTest do
     end
   end
 
+  describe "changeset/1 — complaint permanence" do
+    test "rejects complaint rows with expires_at" do
+      expires_at = DateTime.add(DateTime.utc_now(), 3_600, :second)
+      attrs = valid_attrs(%{reason: :complaint, expires_at: expires_at})
+      changeset = Entry.changeset(attrs)
+
+      refute changeset.valid?
+      assert {"must be omitted when reason is :complaint", _} = changeset.errors[:expires_at]
+    end
+
+    test "allows expiry for non-complaint rows" do
+      expires_at = DateTime.add(DateTime.utc_now(), 3_600, :second)
+      attrs = valid_attrs(%{reason: :hard_bounce, expires_at: expires_at})
+      changeset = Entry.changeset(attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :expires_at) == expires_at
+    end
+  end
+
   describe "DB CHECK constraint (belt-and-suspenders)" do
     test "DB rejects scope=:address_stream with NULL stream when changeset bypassed" do
       # Bypass changeset to test the DB CHECK directly. This proves
@@ -105,6 +125,20 @@ defmodule Mailglass.Suppression.EntryTest do
             (id, tenant_id, address, scope, stream, reason, source, metadata, inserted_at)
           VALUES
             ($1, 'test', 'x@y.test', 'address', 'bulk', 'manual', 'test', '{}', now())
+          """,
+          [uuid_binary()]
+        )
+      end
+    end
+
+    test "DB rejects complaint rows with expires_at when changeset is bypassed" do
+      assert_raise Postgrex.Error, ~r/mailglass_suppressions_complaint_permanent_check/, fn ->
+        TestRepo.query!(
+          """
+          INSERT INTO mailglass_suppressions
+            (id, tenant_id, address, scope, reason, source, expires_at, metadata, inserted_at)
+          VALUES
+            ($1, 'test', 'complaint@y.test', 'address', 'complaint', 'webhook:auto_suppress', now(), '{}', now())
           """,
           [uuid_binary()]
         )
