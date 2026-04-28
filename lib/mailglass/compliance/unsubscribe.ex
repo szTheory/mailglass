@@ -85,15 +85,21 @@ defmodule Mailglass.Compliance.Unsubscribe do
   defp resolve_host!(context) do
     case Tenancy.compliance_host(context) do
       {:ok, host} when is_binary(host) and host != "" ->
-        host
+        validate_host!(host)
 
       :default ->
-        Config.compliance_host() ||
-          raise ConfigError.new(:missing,
-                  context: %{
-                    key: :compliance_host
-                  }
-                )
+        Config.compliance_host()
+        |> case do
+          nil ->
+            raise ConfigError.new(:missing,
+                    context: %{
+                      key: :compliance_host
+                    }
+                  )
+
+          host ->
+            validate_host!(host)
+        end
     end
   end
 
@@ -109,6 +115,86 @@ defmodule Mailglass.Compliance.Unsubscribe do
 
   defp verify_opts do
     Keyword.put(@sign_opts, :max_age, Config.compliance_max_age())
+  end
+
+  defp validate_host!(host) when is_binary(host) do
+    trimmed = String.trim(host)
+
+    uri = URI.parse("https://#{trimmed}")
+
+    cond do
+      trimmed == "" ->
+        raise_invalid_host!()
+
+      trimmed != host ->
+        raise_invalid_host!()
+
+      String.match?(trimmed, ~r/\s/u) ->
+        raise_invalid_host!()
+
+      String.contains?(trimmed, ["/", "?", "#", "@"]) ->
+        raise_invalid_host!()
+
+      String.contains?(trimmed, ["://", "\\"]) ->
+        raise_invalid_host!()
+
+      is_nil(uri.host) or uri.host != trimmed or uri.path not in [nil, ""] ->
+        raise_invalid_host!()
+
+      local_or_private_host?(trimmed) ->
+        raise_invalid_host!()
+
+      true ->
+        trimmed
+    end
+  end
+
+  defp raise_invalid_host! do
+    raise ConfigError.new(:invalid,
+            context: %{
+              key: :compliance_host
+            }
+          )
+  end
+
+  defp local_or_private_host?(host) do
+    downcased = String.downcase(host)
+
+    downcased == "localhost" or
+      private_ipv4?(downcased) or
+      private_ipv6?(downcased)
+  end
+
+  defp private_ipv4?(host) do
+    with {:ok, {a, b, c, d}} <- :inet.parse_ipv4strict_address(String.to_charlist(host)) do
+      _ = c
+      _ = d
+
+      a == 10 or
+        (a == 127) or
+        (a == 169 and b == 254) or
+        (a == 172 and b in 16..31) or
+        (a == 192 and b == 168)
+    else
+      {:error, _reason} -> false
+    end
+  end
+
+  defp private_ipv6?(host) do
+    normalized =
+      host
+      |> String.trim_leading("[")
+      |> String.trim_trailing("]")
+
+    with {:ok, tuple} <- :inet.parse_ipv6strict_address(String.to_charlist(normalized)) do
+      tuple == {0, 0, 0, 0, 0, 0, 0, 1} or
+        tuple == {0, 0, 0, 0, 0, 0, 0, 0} or
+        match?({0xFE80, _, _, _, _, _, _, _}, tuple) or
+        match?({0xFC00, _, _, _, _, _, _, _}, tuple) or
+        match?({0xFD00, _, _, _, _, _, _, _}, tuple)
+    else
+      {:error, _reason} -> false
+    end
   end
 
   defp iterate_contexts([], _fun), do: {:error, :invalid}

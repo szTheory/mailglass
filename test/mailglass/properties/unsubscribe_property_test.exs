@@ -54,8 +54,8 @@ defmodule Mailglass.Properties.UnsubscribePropertyTest do
   property "verify_token succeeds across current-secret rotation when legacy secret remains configured" do
     check all(
             delivery_id <- string(:alphanumeric, min_length: 1, max_length: 64),
-            legacy_secret <- string(:alphanumeric, min_length: 16, max_length: 48),
-            rotated_secret <- string(:alphanumeric, min_length: 16, max_length: 48),
+            legacy_secret <- string(:alphanumeric, min_length: 20, max_length: 48),
+            rotated_secret <- string(:alphanumeric, min_length: 20, max_length: 48),
             max_runs: 50
           ) do
       Application.put_env(:mailglass, :compliance,
@@ -142,6 +142,29 @@ defmodule Mailglass.Properties.UnsubscribePropertyTest do
 
       assert_raise ConfigError, fn ->
         Unsubscribe.unsubscribe_url(delivery_id, %{tenant_id: "tenant-1", host: host})
+      end
+    end
+  end
+
+  property "unsubscribe_url raises once the generated link would exceed 900 bytes" do
+    check all(
+            oversized_host_prefix <- string(:alphanumeric, min_length: 860, max_length: 900),
+            delivery_id <- string(:alphanumeric, min_length: 1, max_length: 64),
+            max_runs: 20
+          ) do
+      Application.put_env(:mailglass, :compliance,
+        endpoint: "current-secret-key-base-123",
+        host: oversized_host_prefix <> ".example.com",
+        scheme: "https",
+        mount_path: "/mailglass/unsubscribe",
+        previous_secrets: [],
+        redirect: nil,
+        max_age: 60,
+        lifecycle: Mailglass.Lifecycle.Noop
+      )
+
+      assert_raise ConfigError, fn ->
+        Unsubscribe.unsubscribe_url(delivery_id, %{})
       end
     end
   end
