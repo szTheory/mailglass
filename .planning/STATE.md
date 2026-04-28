@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
 status: executing
-stopped_at: Completed 11-07-PLAN.md
-last_updated: "2026-04-28T10:02:35.462Z"
-last_activity: 2026-04-28
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-04-28T12:05:56.493Z"
+last_activity: 2026-04-28 -- Phase --phase execution started
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 23
-  completed_plans: 23
-  percent: 100
+  total_plans: 29
+  completed_plans: 24
+  percent: 83
 ---
 
 # Project State
@@ -73,6 +73,9 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 - Unsubscribe POST replay convergence is verified through a mounted Phoenix endpoint property harness with Sandbox auto mode and TRUNCATE isolation.
 - Published Phase 11 unsubscribe setup as a dedicated guide and made its route/generator contract load-bearing via ExUnit smoke tests.
 - Added DKIM h= verification guidance requiring both List-Unsubscribe headers, with Postmark and SendGrid rollout checks.
+- Centralized webhook auto-suppression translation in Mailglass.Suppression.AutoSuppress.
+- Webhook ingest now runs suppression projection as a flat Multi step after projector application.
+- Webhook replay suppression inserts use conflict-ignore semantics for convergence.
 
 ### Key Corrections (propagate into phase plans)
 
@@ -97,8 +100,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 
 ## Session Continuity
 
-Last session: 2026-04-28T10:02:35.454Z
-Stopped at: Completed 11-07-PLAN.md
+Last session: 2026-04-28T12:05:56.488Z
+Stopped at: Completed 12-01-PLAN.md
 Resume: `/gsd-execute-phase 12`
 
 **Planned Phase:** 11 (RFC 8058 List-Unsubscribe) — 7 plans — 2026-04-28T09:57:20.045Z
