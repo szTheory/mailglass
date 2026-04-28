@@ -2,6 +2,7 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
   use ExUnit.Case, async: false
 
   alias Mailglass.Config
+  alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Lifecycle
   alias Mailglass.Tenancy
 
@@ -108,6 +109,81 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
       Application.delete_env(:mailglass, :tenancy)
 
       assert Tenancy.compliance_host(%{tenant_id: "tenant-1"}) == :default
+    end
+  end
+
+  describe "token service" do
+    @describetag :token_service
+
+    setup do
+      Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint")
+
+      Application.put_env(:mailglass, :compliance,
+        endpoint: "current-secret",
+        host: "unsubscribe.example.com",
+        scheme: "https",
+        mount_path: "/mailglass/unsubscribe",
+        previous_secrets: [],
+        redirect: nil,
+        max_age: 60
+      )
+
+      :ok
+    end
+
+    test "signs only the delivery id and verifies against the current endpoint" do
+      token = Unsubscribe.sign_token("delivery-123")
+
+      assert is_binary(token)
+      refute String.contains?(token, "delivery-123")
+
+      assert {:ok, %{delivery_id: "delivery-123"}} = Unsubscribe.verify_token(token)
+    end
+
+    test "falls back to configured previous raw secrets when current verification fails" do
+      Application.put_env(:mailglass, :compliance,
+        endpoint: "rotated-secret",
+        host: "unsubscribe.example.com",
+        scheme: "https",
+        mount_path: "/mailglass/unsubscribe",
+        previous_secrets: ["legacy-secret-key-base-123"],
+        redirect: nil,
+        max_age: 60
+      )
+
+      token =
+        Phoenix.Token.sign(
+          "legacy-secret-key-base-123",
+          "mailglass_unsubscribe_v1",
+          "delivery-legacy"
+        )
+
+      assert {:ok, %{delivery_id: "delivery-legacy"}} = Unsubscribe.verify_token(token)
+    end
+
+    test "returns structured outcomes for invalid and expired tokens" do
+      assert {:error, :invalid} = Unsubscribe.verify_token("garbage-token")
+
+      Application.put_env(:mailglass, :compliance,
+        endpoint: "current-secret",
+        host: "unsubscribe.example.com",
+        scheme: "https",
+        mount_path: "/mailglass/unsubscribe",
+        previous_secrets: [],
+        redirect: nil,
+        max_age: 1
+      )
+
+      token = Unsubscribe.sign_token("delivery-expired")
+      Process.sleep(1_100)
+
+      assert {:error, :expired} = Unsubscribe.verify_token(token)
+    end
+
+    test "builds unsubscribe URLs from the compliance config" do
+      assert url = Unsubscribe.unsubscribe_url("delivery-123", %{tenant_id: "tenant-1"})
+      assert String.starts_with?(url, "https://unsubscribe.example.com/mailglass/unsubscribe/")
+      assert {:ok, %{delivery_id: "delivery-123"}} = url |> String.split("/") |> List.last() |> Unsubscribe.verify_token()
     end
   end
 end
