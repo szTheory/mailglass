@@ -116,10 +116,10 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
     @describetag :token_service
 
     setup do
-      Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint")
+      Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint-secret-123")
 
       Application.put_env(:mailglass, :compliance,
-        endpoint: "current-secret",
+        endpoint: "current-secret-key-base-123",
         host: "unsubscribe.example.com",
         scheme: "https",
         mount_path: "/mailglass/unsubscribe",
@@ -142,7 +142,7 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
 
     test "falls back to configured previous raw secrets when current verification fails" do
       Application.put_env(:mailglass, :compliance,
-        endpoint: "rotated-secret",
+        endpoint: "rotated-secret-key-base-123",
         host: "unsubscribe.example.com",
         scheme: "https",
         mount_path: "/mailglass/unsubscribe",
@@ -165,7 +165,7 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
       assert {:error, :invalid} = Unsubscribe.verify_token("garbage-token")
 
       Application.put_env(:mailglass, :compliance,
-        endpoint: "current-secret",
+        endpoint: "current-secret-key-base-123",
         host: "unsubscribe.example.com",
         scheme: "https",
         mount_path: "/mailglass/unsubscribe",
