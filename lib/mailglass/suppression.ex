@@ -23,8 +23,12 @@ defmodule Mailglass.Suppression do
   (stream is enum-narrow, not recipient-identifying).
   """
 
-  alias Mailglass.{Message, SuppressedError}
+  import Ecto.Query
+
+  alias Mailglass.{Message, SendError, SuppressedError}
+  alias Mailglass.Repo
   alias Mailglass.Suppression.Entry
+  alias Mailglass.Tenancy
 
   @doc """
   Pre-send suppression check. Returns `:ok` when allowed, `{:error, %SuppressedError{}}` when blocked.
@@ -62,6 +66,41 @@ defmodule Mailglass.Suppression do
         {:error, err}
     end
   end
+
+  @doc """
+  Removes a suppression entry unless the reason is permanently non-removable.
+
+  Complaint and unsubscribe rows remain durable compliance controls and return
+  a structured rejection error instead of deleting the row.
+  """
+  @doc since: "0.2.0"
+  @spec remove(Ecto.UUID.t(), keyword()) ::
+          {:ok, Entry.t()}
+          | {:error, SendError.t() | Ecto.Changeset.t() | :invalid_id | :not_found}
+  def remove(id, opts \\ [])
+
+  def remove(id, opts) when is_binary(id) and is_list(opts) do
+    tenant_id = Keyword.get(opts, :tenant_id, Tenancy.current())
+
+    Mailglass.Telemetry.persist_span(
+      [:suppression, :remove],
+      %{tenant_id: tenant_id},
+      fn ->
+        case fetch_entry(id, tenant_id) do
+          nil ->
+            {:error, :not_found}
+
+          %Entry{reason: reason} = entry when reason in [:complaint, :unsubscribe] ->
+            {:error, permanent_reason_error(entry)}
+
+          %Entry{} = entry ->
+            Repo.delete(entry)
+        end
+      end
+    )
+  end
+
+  def remove(_id, _opts), do: {:error, :invalid_id}
 
   defp store do
     Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.Ecto)
@@ -106,5 +145,26 @@ defmodule Mailglass.Suppression do
       source: entry.source,
       expires_at: entry.expires_at
     }
+  end
+
+  defp fetch_entry(id, tenant_id) when is_binary(tenant_id) do
+    Entry
+    |> where([entry], entry.id == ^id and entry.tenant_id == ^tenant_id)
+    |> Tenancy.scope(tenant_id)
+    |> Repo.one()
+  end
+
+  defp fetch_entry(_id, _tenant_id), do: nil
+
+  defp permanent_reason_error(%Entry{} = entry) do
+    SendError.new(:preflight_rejected,
+      context: %{
+        tenant_id: entry.tenant_id,
+        reason: entry.reason,
+        scope: entry.scope,
+        stream: entry.stream,
+        removable: false
+      }
+    )
   end
 end
