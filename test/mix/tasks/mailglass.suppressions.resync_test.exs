@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Mailglass.Suppressions.ResyncTest do
   use Mailglass.DataCase, async: false
 
+  import ExUnit.CaptureIO
+
   alias Mailglass.{Clock, TestRepo}
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
@@ -61,6 +63,52 @@ defmodule Mix.Tasks.Mailglass.Suppressions.ResyncTest do
       assert {:ok, result} = Resync.run(tenant_id: @tenant_id, dry_run: true)
       assert result.scanned == 1
       assert result.would_insert == 1
+    end
+  end
+
+  describe "Mix.Tasks.Mailglass.Suppressions.Resync.run/1" do
+    test "fails loudly without --tenant-id" do
+      assert_raise Mix.Error, ~r/--tenant-id/, fn ->
+        Mix.Tasks.Mailglass.Suppressions.Resync.run([])
+      end
+    end
+
+    test "dry-run reports counts without writing rows" do
+      delivery = insert_delivery!(tenant_id: @tenant_id, recipient: "task-dry-run@example.com")
+      insert_event!(delivery, :complained, "evt-task-dry-run")
+
+      output =
+        capture_io(fn ->
+          Mix.Tasks.Mailglass.Suppressions.Resync.run(["--tenant-id", @tenant_id, "--dry-run"])
+        end)
+
+      assert output =~ "tenant=#{@tenant_id}"
+      assert output =~ "scanned=1"
+      assert output =~ "would_insert=1"
+      assert output =~ "inserted=0"
+      assert output =~ "existing=0"
+      assert TestRepo.aggregate(Entry, :count) == 0
+    end
+
+    test "repeated apply stays idempotent on the second run" do
+      delivery = insert_delivery!(tenant_id: @tenant_id, recipient: "task-apply@example.com")
+      insert_event!(delivery, :complained, "evt-task-apply")
+
+      first_output =
+        capture_io(fn ->
+          Mix.Tasks.Mailglass.Suppressions.Resync.run(["--tenant-id", @tenant_id])
+        end)
+
+      second_output =
+        capture_io(fn ->
+          Mix.Tasks.Mailglass.Suppressions.Resync.run(["--tenant-id", @tenant_id])
+        end)
+
+      assert first_output =~ "inserted=1"
+      assert second_output =~ "would_insert=0"
+      assert second_output =~ "inserted=0"
+      assert second_output =~ "existing=1"
+      assert TestRepo.aggregate(Entry, :count) == 1
     end
   end
 
