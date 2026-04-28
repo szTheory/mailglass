@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
 status: executing
-stopped_at: Completed 11-03-PLAN.md
-last_updated: "2026-04-28T09:33:59.723Z"
+stopped_at: Completed 11-04-PLAN.md
+last_updated: "2026-04-28T09:42:42.603Z"
 last_activity: 2026-04-28 -- Phase --phase execution started
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 23
-  completed_plans: 19
-  percent: 83
+  completed_plans: 20
+  percent: 87
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 1 of --name
 Status: Executing Phase --phase
 Last activity: 2026-04-28 -- Phase --phase execution started
 
-Progress: [████████░░] 83%
+Progress: [█████████░] 87%
 
 ## Milestone Spec (v0.2)
 
@@ -65,6 +65,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 - GET renders a library-owned HTML confirmation page unless compliance.redirect is configured.
 - POST canonicalizes replayed unsubscribed rows inside the transaction before lifecycle and broadcast handling.
 - Lifecycle hooks compose on the in-flight Ecto.Multi; PubSub fan-out stays strictly post-commit.
+- Expose unsubscribe mounting through Mailglass.Router with a default helper prefix of :mailglass_unsubscribe.
+- Detect route collisions by reading the caller module's accumulated :phoenix_routes before injecting unsubscribe routes.
 
 ### Key Corrections (propagate into phase plans)
 
@@ -89,8 +91,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 
 ## Session Continuity
 
-Last session: 2026-04-28T09:33:59.717Z
-Stopped at: Completed 11-03-PLAN.md
+Last session: 2026-04-28T09:42:42.596Z
+Stopped at: Completed 11-04-PLAN.md
 Resume: `/gsd-plan-phase 8`
 
 **Planned Phase:** 08 (Release-Engineering Hardening) — 6 plans — 2026-04-27T02:26:05.655Z
