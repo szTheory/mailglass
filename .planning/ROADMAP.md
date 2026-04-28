@@ -123,7 +123,7 @@ Plans:
 - [x] 11-07: guides/unsubscribe.md + guides/dkim-setup.md — per-ESP DKIM h= (Postmark auto; SendGrid gap #893 documented); rotation playbook; troubleshooting (UNSUB-06)
 
 ### Phase 12: Auto-Suppression + Soft-Bounce Escalation
-**Goal**: Webhook ingest automatically suppresses recipients on :bounced/:complained/:unsubscribed events with the event row FIRST in Multi always; :complained suppression is permanent by Postgres constraint; soft-bounce escalation is async via Oban; resync task is strictly per-tenant
+**Goal**: Webhook ingest automatically suppresses recipients on :bounced/:complained/:unsubscribed events with the event row FIRST in Multi always; `:complaint` suppression is permanent by Postgres constraint; soft-bounce escalation is async via Oban; resync task is strictly per-tenant
 **Depends on**: Phase 11 (full :unsubscribed lifecycle testable end-to-end before that event type is covered in AutoSuppress)
 **Requirements**: SUPP-01, SUPP-02, SUPP-03, SUPP-04, SUPP-05
 **Success Criteria** (what must be TRUE):
@@ -131,16 +131,14 @@ Plans:
   2. `mix credo --strict` raises `MultiEventFirstInWebhookIngest` if any suppression insert step precedes the event row step in the webhook ingest Multi
   3. After 5 `:deferred` events within a 7-day window for a recipient, an Oban job runs `Escalation` and inserts a hard suppression row; the job does NOT run synchronously inside the webhook request cycle
   4. `mix mailglass.suppressions.resync` without `--tenant-id` exits with a structured error; with `--tenant-id`, it projects `mailglass_events` into `mailglass_suppressions` idempotently via `Tenancy.scope/2`
-  5. `Mailglass.Suppression.remove/2` with `reason: :complained` returns a structured `%Mailglass.Error{}` and does NOT delete the row; the Postgres `CHECK (reason != 'complained' OR expires_at IS NULL)` constraint prevents any expiry being set on complained rows
-**Plans**: 6 plans
+  5. `Mailglass.Suppression.remove/2` with `reason: :complaint` returns a structured `%Mailglass.Error{}` and does NOT delete the row; the Postgres `CHECK (reason != 'complaint' OR expires_at IS NULL)` constraint prevents any expiry being set on complaint rows
+**Plans**: 4 plans
 
 Plans:
-- [ ] 12-01: Mailglass.Suppression.AutoSuppress — Multi.run {:auto_suppress, idx} after {:projector_apply, idx}; on_conflict: :nothing; triggers on :bounced/:complained/:unsubscribed (SUPP-01)
-- [ ] 12-02: Mailglass.Credo.MultiEventFirstInWebhookIngest — lint check (LINT-14) enforcing event-first Multi ordering (SUPP-01)
-- [ ] 12-03: Mailglass.Suppression.Escalation — Oban worker; soft-bounce threshold (5, 7d, :hard_suppress); covering index migration; OptionalDeps.Oban gate; Task.Supervisor fallback warning at boot (SUPP-02)
-- [ ] 12-04: mix mailglass.suppressions.resync — --tenant-id required; Tenancy.scope/2; idempotent; --from/--to ISO-8601; default last-90-days scan window (SUPP-03)
-- [ ] 12-05: Tighten pre-send check to default-deny on match; structured %Mailglass.Error{type: :suppressed}; telemetry [:mailglass, :suppression, :auto_added | :pre_send_blocked, :stop] with whitelisted metadata (SUPP-04)
-- [ ] 12-06: :complained permanence — Postgres CHECK constraint; Suppression.remove/2 rejects :complained with structured error; GDPR delete-source/keep-suppression pattern documented (SUPP-05)
+- [ ] 12-01-PLAN.md — Auto-suppression projection + event-first Credo guard for linked hard-bounce/complaint/unsubscribe events (SUPP-01)
+- [ ] 12-02-PLAN.md — Async Oban soft-bounce escalation, covering index migration, and suppression operator guide (SUPP-02)
+- [ ] 12-03-PLAN.md — Tenant-required suppression resync task with shared dry-run/apply projection path (SUPP-03)
+- [ ] 12-04-PLAN.md — Tightened pre-send suppression behavior plus complaint permanence and removal policy enforcement (SUPP-04, SUPP-05)
 
 ### Phase 13: v0.2 Release Ceremony
 **Goal**: mailglass 0.2.0 and mailglass_admin 0.2.0 are published to Hex.pm via protected-ref trigger; all guides audited for v0.2 surface; adopter walkthrough validated end-to-end
