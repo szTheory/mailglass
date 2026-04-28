@@ -80,6 +80,8 @@ defmodule Mailglass do
         PubSub,
         PubSub.Topics,
         Mailable,
+        Compliance,
+        Compliance.Unsubscribe,
         Tracking,
         Clock,
         # Renderer exposed so MailglassAdmin.PreviewLive can call the

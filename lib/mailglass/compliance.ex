@@ -67,6 +67,26 @@ defmodule Mailglass.Compliance do
     put_header_if_absent(email, "Mailglass-Mailable", header_value)
   end
 
+  alias Mailglass.Compliance.Unsubscribe
+
+  @unsubscribe_post_value "List-Unsubscribe=One-Click"
+
+  @doc """
+  Applies message-aware outbound compliance headers after render while stream
+  context is still available.
+
+  Generic RFC headers stay on the `%Swoosh.Email{}` primitive. Stream-aware
+  headers such as `Feedback-ID` and RFC 8058 unsubscribe headers flow through
+  this wrapper.
+  """
+  @doc since: "0.2.0"
+  @spec apply_outbound_headers(Mailglass.Message.t()) :: Mailglass.Message.t()
+  def apply_outbound_headers(%Mailglass.Message{} = message) do
+    message
+    |> maybe_add_feedback_id()
+    |> maybe_add_unsubscribe_headers()
+  end
+
   @doc """
   Injects the `Feedback-ID` header into the inner `%Swoosh.Email{}` if configured and absent.
 
@@ -86,6 +106,33 @@ defmodule Mailglass.Compliance do
     else
       message
     end
+  end
+
+  @doc """
+  Writes the RFC 8058 unsubscribe header pair atomically on the inner
+  `%Swoosh.Email{}`.
+
+  This is the only allowed mutation path for `List-Unsubscribe` and
+  `List-Unsubscribe-Post`.
+  """
+  @doc since: "0.2.0"
+  @spec inject_unsubscribe_headers(Mailglass.Message.t(), String.t()) :: Mailglass.Message.t()
+  def inject_unsubscribe_headers(%Mailglass.Message{} = message, url) when is_binary(url) do
+    email =
+      case unsubscribe_header_state(message.swoosh_email) do
+        :absent ->
+          message.swoosh_email
+          |> put_header_if_absent("List-Unsubscribe", "<#{url}>")
+          |> put_header_if_absent("List-Unsubscribe-Post", @unsubscribe_post_value)
+
+        :complete ->
+          message.swoosh_email
+
+        :partial ->
+          message.swoosh_email
+      end
+
+    %{message | swoosh_email: email}
   end
 
   defp extract_mailable_name(nil), do: "unknown"
@@ -146,6 +193,50 @@ defmodule Mailglass.Compliance do
   # RFC 2822 date format: "Mon, 22 Apr 2026 12:00:00 +0000"
   defp format_rfc2822_date(%DateTime{} = dt) do
     Calendar.strftime(dt, "%a, %d %b %Y %H:%M:%S +0000")
+  end
+
+  defp maybe_add_unsubscribe_headers(%Mailglass.Message{} = message) do
+    if should_inject_unsubscribe_headers?(message) do
+      url = Unsubscribe.unsubscribe_url(unsubscribe_delivery_id(message), unsubscribe_context(message))
+      inject_unsubscribe_headers(message, url)
+    else
+      message
+    end
+  end
+
+  defp should_inject_unsubscribe_headers?(%Mailglass.Message{stream: :bulk}), do: true
+
+  defp should_inject_unsubscribe_headers?(%Mailglass.Message{stream: :operational, mailable: mailable})
+       when is_atom(mailable) do
+    if function_exported?(mailable, :__mailglass_unsubscribe__, 0) do
+      mailable.__mailglass_unsubscribe__()
+      |> Keyword.get(:enabled, false)
+      |> Kernel.==(true)
+    else
+      false
+    end
+  end
+
+  defp should_inject_unsubscribe_headers?(%Mailglass.Message{stream: :operational}), do: false
+  defp should_inject_unsubscribe_headers?(%Mailglass.Message{}), do: false
+
+  defp unsubscribe_delivery_id(%Mailglass.Message{} = message) do
+    message.metadata[:delivery_id] || Ecto.UUID.generate()
+  end
+
+  defp unsubscribe_context(%Mailglass.Message{} = message) do
+    %{tenant_id: message.tenant_id}
+  end
+
+  defp unsubscribe_header_state(%Swoosh.Email{} = email) do
+    list_unsubscribe? = has_header?(email, "List-Unsubscribe")
+    one_click? = has_header?(email, "List-Unsubscribe-Post")
+
+    cond do
+      list_unsubscribe? and one_click? -> :complete
+      list_unsubscribe? or one_click? -> :partial
+      true -> :absent
+    end
   end
 
   defp has_header?(%Swoosh.Email{headers: headers}, key) when is_map(headers) do

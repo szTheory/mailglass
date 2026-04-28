@@ -77,6 +77,7 @@ defmodule Mailglass.Outbound do
 
   alias Mailglass.{
     Clock,
+    Compliance,
     Events,
     Message,
     Renderer,
@@ -289,7 +290,11 @@ defmodule Mailglass.Outbound do
          :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg) do
-      rewritten = Tracking.rewrite_if_enabled(rendered)
+      rewritten =
+        rendered
+        |> Compliance.apply_outbound_headers()
+        |> Tracking.rewrite_if_enabled()
+
       do_send_after_preflight(rewritten, opts)
     end
   end
@@ -353,7 +358,11 @@ defmodule Mailglass.Outbound do
          :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg) do
-      rewritten = Tracking.rewrite_if_enabled(rendered)
+      rewritten =
+        rendered
+        |> Compliance.apply_outbound_headers()
+        |> Tracking.rewrite_if_enabled()
+
       enqueue_via_async_adapter(rewritten, opts)
     end
   end
@@ -510,7 +519,12 @@ defmodule Mailglass.Outbound do
          :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg) do
-      {:ok, Tracking.rewrite_if_enabled(rendered)}
+      prepared =
+        rendered
+        |> Compliance.apply_outbound_headers()
+        |> Tracking.rewrite_if_enabled()
+
+      {:ok, prepared}
     else
       {:error, err} -> {:error, err, msg}
       {:error, _step, err, _} -> {:error, to_error(err), msg}
