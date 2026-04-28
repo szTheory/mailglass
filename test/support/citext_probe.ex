@@ -29,6 +29,7 @@ defmodule Mailglass.TestSupport.CitextProbe do
   @spec run(keyword()) :: :ok
   def run(opts \\ []) do
     repo = Keyword.get(opts, :repo, Mailglass.TestRepo)
+
     max_attempts =
       Keyword.get_lazy(opts, :max_attempts, fn ->
         pool_size =
@@ -51,7 +52,7 @@ defmodule Mailglass.TestSupport.CitextProbe do
         {:error, _reason} -> :ok
       end
 
-      repo.delete_all(from e in Entry, where: e.tenant_id == "__probe__")
+      repo.delete_all(from(e in Entry, where: e.tenant_id == "__probe__"))
 
       {:ok, inserted} =
         %{

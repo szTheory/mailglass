@@ -120,7 +120,7 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
         events
         |> Enum.map(& &1.metadata["provider_event_id"])
         |> Enum.uniq()
-      
+
       webhook_event_count =
         TestRepo.aggregate(
           from(w in WebhookEvent,
@@ -151,7 +151,12 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
           from(e in Event,
             where:
               e.tenant_id == "prop-test-tenant" and
-                fragment("?->>? = ANY(?)", e.metadata, "provider_event_id", ^unique_provider_event_ids)
+                fragment(
+                  "?->>? = ANY(?)",
+                  e.metadata,
+                  "provider_event_id",
+                  ^unique_provider_event_ids
+                )
           ),
           :count
         )
