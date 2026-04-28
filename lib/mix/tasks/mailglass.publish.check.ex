@@ -766,7 +766,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     {output, status} =
       System.cmd("mix", ["deps.get"],
         cd: tmp_dir,
-        env: [{"MIX_ENV", "prod"}],
+        env: mix_env(ctx, [{"MIX_ENV", "prod"}]),
         stderr_to_stdout: true
       )
 
@@ -799,7 +799,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     try do
       System.put_env("MIX_HOME", mix_home)
       install_mix_archives!(mix_home)
-      fetch_compile_deps!(compile_root)
+      fetch_compile_deps!(compile_root, ctx)
 
       {output, status} =
         System.cmd("mix", ["compile", "--no-optional-deps"],
@@ -809,11 +809,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
         )
 
       if status != 0 do
-        Mix.shell().info(
-          "[update] tarball compile returned non-zero in the isolated temp environment; continuing with captured output"
-        )
-
-        Mix.shell().error(
+        fail_step(
+          "compile tarball in isolation",
           "Delivery blocked: tarball compile returned non-zero in the isolated temp environment. #{String.trim(output)}"
         )
       end
@@ -827,13 +824,17 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     ctx
   end
 
-  defp compile_env(%{package: :mailglass_admin}), do: []
+  defp compile_env(%{package: :mailglass_admin}), do: mix_env(%{package: :mailglass_admin})
 
-  defp compile_env(_ctx), do: []
+  defp compile_env(ctx), do: mix_env(ctx)
 
-  defp fetch_compile_deps!(compile_root) do
+  defp fetch_compile_deps!(compile_root, ctx) do
     {output, status} =
-      System.cmd("mix", ["deps.get"], cd: compile_root, stderr_to_stdout: true)
+      System.cmd("mix", ["deps.get"],
+        cd: compile_root,
+        env: mix_env(ctx),
+        stderr_to_stdout: true
+      )
 
     if status != 0 do
       fail_step(
@@ -879,10 +880,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       File.write!(
         mix_exs,
         File.read!(mix_exs)
-        |> String.replace(
-          "{:mailglass, \"== #{ctx.root_version}\"}",
-          "{:mailglass, path: \"#{ctx.repo_root}\", override: true}"
-        )
+        |> rewrite_mailglass_publish_dep(ctx.repo_root)
       )
 
       File.cp!(Path.join(ctx.package_dir, "mix.lock"), mix_lock)
@@ -917,8 +915,15 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   end
 
   defp verify_audit(ctx) do
+    audit_root = compile_root(ctx)
+    fetch_compile_deps!(audit_root, ctx)
+
     {output, status} =
-      System.cmd("mix", ["hex.audit"], cd: ctx.package_dir, stderr_to_stdout: true)
+      System.cmd("mix", ["hex.audit"],
+        cd: audit_root,
+        env: mix_env(ctx),
+        stderr_to_stdout: true
+      )
 
     if status != 0 do
       fail_step(
@@ -1069,6 +1074,28 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
         value -> System.put_env("MIX_PUBLISH", value)
       end
     end
+  end
+
+  defp rewrite_mailglass_publish_dep(source, repo_root) do
+    Regex.replace(
+      ~r/defp mailglass_dep do\n.*?\n  end/s,
+      source,
+      """
+      defp mailglass_dep do
+        {:mailglass, path: #{inspect(repo_root)}, override: true}
+      end
+      """
+    )
+  end
+
+  defp mix_env(ctx, extra \\ [])
+
+  defp mix_env(%{package: :mailglass_admin}, extra) do
+    [{"MIX_PUBLISH", "true"} | extra]
+  end
+
+  defp mix_env(_ctx, extra) do
+    extra
   end
 
   defp with_disabled_otel(fun) do
