@@ -1,48 +1,61 @@
 # Upgrading from v0.1 to v0.2
 
-This guide helps you safely migrate your existing Mailglass applications from the v0.1 API to the v0.2 API. The primary change in v0.2 is the introduction of native setter functions on `Mailglass.Message`, removing direct dependencies on `Swoosh.Email` in your mailables.
+This guide is the authoritative migration path from the v0.1 mailable API to the v0.2 public surface. The big change is that the common authoring path now uses native `Mailglass.Message` setters instead of direct `Swoosh.Email` calls inside your mailables.
 
 ## Before/After Examples
 
-In v0.1, you used `Swoosh.Email` functions to construct messages:
+In v0.1, mailables commonly piped directly into `Swoosh.Email`:
 
 ```elixir
 # v0.1 Mailable
 defmodule MyApp.WelcomeEmail do
   use Mailglass.Mailable, stream: :transactional
 
-  def build(user) do
-    msg()
+  def welcome(user) do
+    new()
     |> Swoosh.Email.to(user.email)
     |> Swoosh.Email.from("hello@myapp.com")
     |> Swoosh.Email.subject("Welcome!")
     |> Swoosh.Email.html_body("<h1>Welcome</h1>")
     |> Swoosh.Email.attachment("path/to/guide.pdf")
+    |> Mailglass.Message.put_function(:welcome)
   end
 end
 ```
 
-In v0.2, you use the native `Mailglass.Message` functions directly, and `attachment/2` is renamed to `attach/2`:
+In v0.2, the same mailable becomes:
 
 ```elixir
 # v0.2 Mailable
 defmodule MyApp.WelcomeEmail do
   use Mailglass.Mailable, stream: :transactional
 
-  def build(user) do
-    msg()
+  def welcome(user) do
+    new()
     |> to(user.email)
     |> from("hello@myapp.com")
     |> subject("Welcome!")
     |> html_body("<h1>Welcome</h1>")
     |> attach("path/to/guide.pdf")
+    |> Mailglass.Message.put_function(:welcome)
   end
 end
 ```
 
+The codemod covers these eight setters:
+
+- `to/2`
+- `from/2`
+- `subject/2`
+- `text_body/2`
+- `html_body/2`
+- `header/3`
+- `attachment/2` -> `attach/2`
+- `put_tag/2`
+
 ## Codemod Walkthrough
 
-To automate the transition to the new API, v0.2 includes an Igniter-powered codemod that will automatically rewrite your standard Swoosh setters.
+`mix mailglass.upgrade.v0_2` is an Igniter-backed codemod. Use it as a dry-run first, then apply once the diff looks right.
 
 1. Ensure you have the `igniter` dependency installed in your `mix.exs`:
 
@@ -60,47 +73,60 @@ end
 mix deps.get
 ```
 
-3. Run the automated codemod task:
+3. Preview the rewrite:
+
+```bash
+mix mailglass.upgrade.v0_2
+```
+
+4. Apply the rewrite:
 
 ```bash
 mix mailglass.upgrade.v0_2 --apply
 ```
 
-This task safely traverses your codebase and replaces the known 8 `Swoosh.Email` calls (`to/2`, `from/2`, `subject/2`, `text_body/2`, `html_body/2`, `header/3`, `attachment/2`, and `put_tag/2`) with the newly imported native equivalents.
+5. Compile and run your test suite before committing the change:
+
+```bash
+mix compile
+mix test
+```
 
 ## Ambiguous Cases / Recipes
 
-The codemod handles the 8 core standard setters. If you used other `Swoosh.Email` functions (e.g., `put_provider_option/3`), the codemod will skip them and emit a warning:
+The codemod rewrites only the eight setters above. If you use another `Swoosh.Email` function, the task leaves that call in place and emits a warning with the migration-guide URL and the supported escape hatch.
 
 ```text
-Skipping unknown Swoosh.Email function: put_provider_option/2
+Skipping unknown Swoosh.Email function: put_provider_option/2. Review https://hexdocs.pm/mailglass/guides/upgrading-from-v0_1.html for ambiguous-case migration guidance and the Mailglass.Message.update_swoosh/2 escape hatch.
 ```
 
-**Recipe for Unsupported Swoosh Functions:**
-If you still need advanced Swoosh capabilities that are not supported natively, use the `Mailglass.Message.update_swoosh/2` escape hatch:
+If you still need advanced Swoosh capabilities that are not native setters, keep the common path on `Mailglass.Message` and use `Mailglass.Message.update_swoosh/2` only around the unsupported call:
 
 ```elixir
-msg()
+new()
 |> to("user@example.com")
-# Update the underlying Swoosh.Email struct directly
 |> Mailglass.Message.update_swoosh(fn email ->
   Swoosh.Email.put_provider_option(email, :template_id, "my-template")
 end)
+|> Mailglass.Message.put_function(:welcome)
 ```
 
 ## Dependency Matrix
 
 To use this upgrade codemod successfully, ensure your dependencies meet the minimum versions:
 - `mailglass`: `~> 0.2`
+- `phoenix`: `~> 1.8`
+- `phoenix_live_view`: `~> 1.1`
 - `igniter`: `~> 0.7`
 
 ## Rollback Procedure
 
-If the codemod produces unintended changes, do not panic. Since the tool operates on standard Elixir AST, you can safely abort and rollback the changes using Git:
+If the codemod produces unintended changes, keep the rollback narrow and explicit:
 
 1. View the changes the codemod made:
    `git diff`
-2. Discard all unstaged changes:
-   `git checkout .` or `git restore .`
+2. Restore only the files you do not want to keep:
+   `git restore path/to/file.ex`
+3. Re-run the task after adjusting the ambiguous cases by hand.
 
-After checking out, review your AST and file an issue if the codemod failed to parse a standard pattern.
+If a standard pattern was skipped unexpectedly, keep the diff and file an issue with the warning output.

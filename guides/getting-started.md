@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide wires mailglass into a Phoenix app and sends one message through the standard pipeline.
+This guide wires mailglass into a Phoenix app and sends one message through the v0.2 public pipeline.
 
 ## Prerequisites
 
@@ -15,7 +15,7 @@ This guide wires mailglass into a Phoenix app and sends one message through the 
 mix deps.get
 mix mailglass.install
 mix ecto.migrate
-mix verify.phase_07
+mix compile
 ```
 
 ## 2) Configure mailglass
@@ -61,12 +61,11 @@ defmodule MyApp.UserMailer do
 
   def welcome(user) do
     new()
-    |> Mailglass.Message.update_swoosh(fn email ->
-      email
-      |> Swoosh.Email.to(user.email)
-      |> Swoosh.Email.from({"MyApp", "support@example.com"})
-      |> Swoosh.Email.subject("Welcome")
-    end)
+    |> to(user.email)
+    |> from({"MyApp", "support@example.com"})
+    |> subject("Welcome")
+    |> html_body("<h1>Welcome to MyApp</h1>")
+    |> text_body("Welcome to MyApp")
     |> Mailglass.Message.put_function(:welcome)
   end
 end
@@ -83,5 +82,5 @@ end
 mix deps.get
 mix mailglass.install
 mix ecto.migrate
-mix verify.phase_07
+mix compile
 ```

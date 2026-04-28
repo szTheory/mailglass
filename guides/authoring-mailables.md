@@ -1,6 +1,6 @@
 # Authoring Mailables
 
-Use `Mailglass.Mailable` to define message builders that stay close to plain Swoosh while adding tenant, stream, and telemetry metadata.
+Use `Mailglass.Mailable` to define message builders on the native v0.2 API. The macro imports the common `Mailglass.Message` setters so the default path does not have to call `Swoosh.Email.*` directly.
 
 ## Prerequisites
 
@@ -16,14 +16,30 @@ defmodule MyApp.BillingMailer do
 
   def receipt(invoice) do
     new()
-    |> Mailglass.Message.update_swoosh(fn email ->
-      email
-      |> Swoosh.Email.to(invoice.customer_email)
-      |> Swoosh.Email.from({"Billing", "billing@example.com"})
-      |> Swoosh.Email.subject("Receipt #{invoice.number}")
-    end)
+    |> to(invoice.customer_email)
+    |> from({"Billing", "billing@example.com"})
+    |> subject("Receipt #{invoice.number}")
+    |> html_body("<p>Receipt #{invoice.number}</p>")
+    |> text_body("Receipt #{invoice.number}")
+    |> put_tag("billing")
     |> Mailglass.Message.put_function(:receipt)
   end
+end
+```
+
+## Use `update_swoosh/2` only for unsupported Swoosh features
+
+Keep uncommon provider-specific calls isolated:
+
+```elixir
+def receipt_with_template(invoice) do
+  new()
+  |> to(invoice.customer_email)
+  |> subject("Receipt #{invoice.number}")
+  |> Mailglass.Message.update_swoosh(fn email ->
+    Swoosh.Email.put_provider_option(email, :template_id, "receipt-template")
+  end)
+  |> Mailglass.Message.put_function(:receipt_with_template)
 end
 ```
 

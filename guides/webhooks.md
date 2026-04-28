@@ -215,46 +215,36 @@ Sustained elevated duplicate rate = the provider is retrying.
 Investigate your endpoint's `p95` latency and 5xx rate; mailglass's
 own 2 s statement timeout (see §7) bounds ingest latency.
 
-### Recipe — auto-suppression on bounce/complaint
+### Auto-suppression behavior
 
-Until v0.5 ships first-class auto-suppression, attach a
-telemetry handler on the ingest span:
+Mailglass v0.2 projects suppressions automatically after a verified
+webhook event is matched to a delivery:
+
+- `:complained` -> address-wide suppression
+- hard `:bounced` -> address-wide suppression
+- `:unsubscribed` -> stream-scoped suppression using the delivery's stream
+- `:deferred` -> no immediate suppression; repeated soft bounces are handled by the soft-bounce escalation policy
+
+That projection happens inside mailglass. You do not need a telemetry
+handler to create the suppression rows yourself.
+
+Use telemetry for monitoring instead:
 
 ```elixir
 :telemetry.attach(
-  "auto-suppress",
-  [:mailglass, :webhook, :ingest, :stop],
-  fn _event, _measurements, meta, _ ->
-    # ingest meta carries `event_count` + `duplicate` — but not the
-    # per-event type. For suppression decisions you need the per-event
-    # normalize emit metadata:
-    :ok
-  end,
-  nil
-)
-
-:telemetry.attach(
-  "auto-suppress-normalize",
-  [:mailglass, :webhook, :normalize, :stop],
-  fn _event, _measurements, %{event_type: type, provider: provider}, _ ->
-    if type in [:bounced, :complained, :unsubscribed] do
-      # You'll need the recipient too — mailglass does NOT include it
-      # in normalize metadata (telemetry PII policy). Subscribe to the adopter's own
-      # PubSub topic or query mailglass_events by (tenant_id, type) to
-      # pull the recipient address, then:
-      MyApp.Suppressions.maybe_add(provider, type)
-    end
+  "webhook-auto-suppress-monitor",
+  [:mailglass, :suppression, :auto_added, :stop],
+  fn _event, _measurements, %{reason: reason, scope: scope, tenant_id: tenant_id}, _ ->
+    MyApp.Metrics.increment("mailglass.suppression.auto_added",
+      tags: [reason: reason, scope: scope, tenant_id: tenant_id]
+    )
   end,
   nil
 )
 ```
 
-> **Note on recipient discovery.** Mailglass deliberately excludes the
-> recipient email from telemetry metadata (telemetry PII policy). Your
-> auto-suppression handler can pull the recipient from the normalized
-> `mailglass_events` row via the `:delivery_id` → `mailglass_deliveries`
-> join. This is the v0.1 pattern; v0.5 ships first-class
-> auto-suppression that reads the ledger internally.
+If you need to rebuild suppression state from the event ledger, run
+`mix mailglass.suppressions.resync --tenant-id <tenant>`.
 
 ## 4. IP allowlist (Postmark, opt-in)
 
