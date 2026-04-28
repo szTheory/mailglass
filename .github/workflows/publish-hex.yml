@@ -37,6 +37,24 @@ concurrency:
 jobs:
   prepublish-summary:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -57,6 +75,13 @@ jobs:
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
       - name: Install deps (root)
         run: mix deps.get
+      - name: Wait for postgres + create test DB
+        if: ${{ github.event.inputs.package != 'mailglass_admin' }}
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          MIX_ENV=test mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Install deps (admin)
         if: ${{ github.event.inputs.package != 'mailglass' }}
         working-directory: mailglass_admin
