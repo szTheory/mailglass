@@ -156,11 +156,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     test "returns structured 404 for tampered tokens", %{conn: conn} do
       delivery = Generators.delivery_fixture()
       token = Unsubscribe.sign_token(delivery.id)
-
-      tampered =
-        token
-        |> String.slice(0, byte_size(token) - 1)
-        |> Kernel.<>("x")
+      tampered = tamper_token!(token)
 
       conn = get(conn, "/mailglass/unsubscribe/#{tampered}")
 
@@ -254,11 +250,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
     test "tampered POST returns 200 without redirecting or writing an event", %{conn: conn} do
       delivery = Generators.delivery_fixture()
       token = Unsubscribe.sign_token(delivery.id)
-
-      tampered =
-        token
-        |> String.slice(0, byte_size(token) - 1)
-        |> Kernel.<>("x")
+      tampered = tamper_token!(token)
 
       conn = post(conn, "/mailglass/unsubscribe/#{tampered}", %{})
 
@@ -275,5 +267,23 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
 
       assert count == 0
     end
+  end
+
+  defp tamper_token!(token) when is_binary(token) do
+    tampered =
+      token
+      |> String.split(".")
+      |> List.update_at(-1, &mutate_segment!/1)
+      |> Enum.join(".")
+
+    case Unsubscribe.verify_token(tampered) do
+      {:error, :invalid} -> tampered
+      other -> raise "expected tampered token to be invalid, got: #{inspect(other)}"
+    end
+  end
+
+  defp mutate_segment!(segment) when is_binary(segment) and segment != "" do
+    replacement = if String.first(segment) == "A", do: "B", else: "A"
+    String.replace_prefix(segment, String.first(segment), replacement)
   end
 end
