@@ -39,7 +39,7 @@ Full details: [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md).
 - [ ] **Phase 10: Stream Policy Implementation** - Fill the existing no-op seam at stream.ex:35; enforce compile-time + runtime stream separation; add StreamPolicyConsistent Credo check
 - [x] **Phase 11: RFC 8058 List-Unsubscribe** (completed 2026-04-28) - Signed-token unsubscribe controller (core package); atomic header injection; mix mailglass.gen.unsubscribe; property tests; published adopter and DKIM verification guides
 - [ ] **Phase 12: Auto-Suppression + Soft-Bounce Escalation** - Event-first Multi suppression inserts; Oban escalation worker; suppressions.resync task; complained permanence constraint
-- [ ] **Phase 13: v0.2 Release Ceremony** - CHANGELOG, adopter walkthrough validation, full doc audit, coordinated Hex publish
+- [ ] **Phase 13: v0.2 Release Ceremony** - CHANGELOG, adopter walkthrough validation, full doc audit, coordinated Hex publish (4/5 plans complete; live publish pending)
 
 ## Phase Details
 
@@ -149,13 +149,13 @@ Plans:
   2. Fresh Phoenix 1.8.5 host runs `mix mailglass.install` then `mix mailglass.upgrade.v0_2` from a v0.1 fixture project with zero manual edits for non-ambiguous cases; ambiguous cases emit clear `IO.warn` with migration guide URL
   3. All 9 v0.1 guides updated for v0.2 surface; `migration-from-swoosh.md` targets v0.2 native Message API; `upgrading-from-v0_1.md` finalized; `dkim-setup.md` covers per-ESP List-Unsubscribe DKIM h= verification
   4. Release Please bumps both packages to 0.2.0 via linked-versions; tarball sizes verified (<500KB mailglass, <2MB mailglass_admin); Hex publish from protected ref + GitHub Environment; `curl -fsI https://hexdocs.pm/mailglass/0.2.0/` returns HTTP 200
-**Plans**: 5 plans
+**Plans**: 4/5 plans complete
 
 Plans:
-- [ ] 13-01: Write CHANGELOG narrative — breaking changes, upgrade path, dep matrix, rollback (REL-13)
-- [ ] 13-02: Adopter walkthrough validation — v0.1 fixture → mix mailglass.install → mix mailglass.upgrade.v0_2; assert zero manual edits for non-ambiguous cases (REL-14)
-- [ ] 13-03: Doc audit — update all 9 v0.1 guides for v0.2 surface; finalize upgrading-from-v0_1.md; finalize dkim-setup.md (REL-15)
-- [ ] 13-04: Release Please bump + tarball whitelist + size budget verification (REL-16)
+- [x] 13-01: Write CHANGELOG narrative — breaking changes, upgrade path, dep matrix, rollback (REL-13)
+- [x] 13-02: Adopter walkthrough validation — v0.1 fixture → mix mailglass.install → mix mailglass.upgrade.v0_2; assert zero manual edits for non-ambiguous cases (REL-14)
+- [x] 13-03: Doc audit — update all 9 v0.1 guides for v0.2 surface; finalize upgrading-from-v0_1.md; finalize dkim-setup.md (REL-15)
+- [x] 13-04: Release Please bump + tarball whitelist + size budget verification (REL-16)
 - [ ] 13-05: Hex publish from protected ref + GitHub Environment + post-publish smoke (curl hexdocs + mix hex.info) (REL-16)
 
 ## Progress
@@ -177,7 +177,7 @@ Plans:
 | 10. Stream Policy Implementation | v0.2 | 0/5 | Not started | - |
 | 11. RFC 8058 List-Unsubscribe | v0.2 | 7/7 | Complete | 2026-04-28 |
 | 12. Auto-Suppression + Soft-Bounce Escalation | v0.2 | 0/6 | Not started | - |
-| 13. v0.2 Release Ceremony | v0.2 | 0/5 | Not started | - |
+| 13. v0.2 Release Ceremony | v0.2 | 4/5 | In progress | - |
 
 ---
 *v0.1 roadmap defined: 2026-04-21. v0.1 archived: 2026-04-26.*

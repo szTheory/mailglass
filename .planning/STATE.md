@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
 status: executing
-stopped_at: Completed 12-04-PLAN.md
-last_updated: "2026-04-28T12:28:08Z"
-last_activity: 2026-04-28 -- Completed 12-04-PLAN.md
+stopped_at: Awaiting 13-05 live publish evidence
+last_updated: "2026-04-28T15:19:35Z"
+last_activity: 2026-04-28 -- Completed 13-04-PLAN.md; awaiting live v0.2.0 release/tag for 13-05
 progress:
-  total_phases: 5
-  completed_phases: 4
-  total_plans: 29
-  completed_plans: 24
-  percent: 83
+  total_phases: 6
+  completed_phases: 5
+  total_plans: 34
+  completed_plans: 33
+  percent: 97
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-26 — v0.2 "Production-Credible Core" started)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 12 — Auto-Suppression + Soft-Bounce Escalation
+**Current focus:** Phase 13 — v0.2 release ceremony
 
 ## Current Position
 
-Phase: 11 — COMPLETE
-Plan: 7 of 7
-Status: Ready for Phase 12
-Last activity: 2026-04-28 -- Completed 11-07-PLAN.md
+Phase: 13 (v0-2-release-ceremony) — EXECUTING
+Plan: 5 of 5
+Status: Awaiting live v0.2.0 publish evidence for 13-05
+Last activity: 2026-04-28 -- Completed 13-04-PLAN.md; awaiting live v0.2.0 release/tag for 13-05
 
-Progress: [██████████] 100%
+Progress: [██████████] 97%
 
 ## Milestone Spec (v0.2)
 
