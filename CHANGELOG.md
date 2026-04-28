@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.1.1...mailglass-v0.2.0) (2026-04-28)
 
+
+### Documentation
+
+* document release-as recovery flow ([2272e72](https://github.com/szTheory/mailglass/commit/2272e72c7ef9fa1d2a193a612b0650e5fe4c53a1))
+
+## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.1.1...mailglass-v0.2.0) (2026-04-28)
+
 Mailglass 0.2.0 is the release that turns the first adopter-facing mailable API,
 deliverability floor, and migration path into a public contract. If you already
 ship on `~> 0.1`, read this entry first, then use
