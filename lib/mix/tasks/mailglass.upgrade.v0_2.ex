@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Mailglass.Upgrade.V0_2 do
   use Boundary, classify_to: Mailglass
 
+  @migration_guide_url "https://hexdocs.pm/mailglass/guides/upgrading-from-v0_1.html"
+
   @shortdoc "Codemod to upgrade raw Swoosh calls to native Mailglass.Message setters"
 
   @moduledoc """
@@ -62,7 +64,12 @@ defmodule Mix.Tasks.Mailglass.Upgrade.V0_2 do
             {:attach, meta1, args}
 
           _ ->
-            IO.warn("Skipping unknown Swoosh.Email function: #{function_name}/#{length(args || [])}")
+            IO.warn(
+              "Skipping unknown Swoosh.Email function: #{function_name}/#{length(args || [])}. " <>
+                "Review #{@migration_guide_url} for ambiguous-case migration guidance and " <>
+                "the Mailglass.Message.update_swoosh/2 escape hatch."
+            )
+
             node
         end
 
