@@ -184,3 +184,21 @@ Plans:
 ---
 *v0.1 roadmap defined: 2026-04-21. v0.1 archived: 2026-04-26.*
 *v0.2 roadmap defined: 2026-04-26. Coverage: 38/38 v0.2 REQ-IDs mapped. No orphans, no duplicates.*
+
+## Backlog
+
+### Phase 999.1: Human-Readable Code Comments + GSD Artifact Cleanup (BACKLOG)
+**Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with $gsd-review-backlog when ready)
+
+### Phase 999.2: Shift-Left Email Screenshot + Responsive Preview Workflow (BACKLOG)
+**Goal:** Make it easy at any time to see realistic rendered example emails across themes and mobile/responsive layouts, ideally through an idiomatic low-friction workflow such as a mix task, preview pipeline, or CI-generated screenshots
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with $gsd-review-backlog when ready)

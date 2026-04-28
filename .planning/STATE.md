@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
-status: planning
-stopped_at: Completed 10-05-PLAN.md
-last_updated: "2026-04-27T21:25:21.559Z"
-last_activity: 2026-04-27
+status: executing
+stopped_at: Completed 11-rfc-8058-list-unsubscribe-01-PLAN.md
+last_updated: "2026-04-28T09:24:24.884Z"
+last_activity: 2026-04-28 -- Phase --phase execution started
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 16
-  completed_plans: 16
-  percent: 100
+  total_plans: 23
+  completed_plans: 17
+  percent: 74
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-26 — v0.2 "Production-Credible Core" started)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase 08 — release-engineering-hardening
+**Current focus:** Phase --phase — 11
 
 ## Current Position
 
-Phase: 9
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-27
+Phase: --phase (11) — EXECUTING
+Plan: 1 of --name
+Status: Executing Phase --phase
+Last activity: 2026-04-28 -- Phase --phase execution started
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 74%
 
 ## Milestone Spec (v0.2)
 
@@ -60,6 +60,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 - Enforce stream atom validity at compile-time via new_from_use/2 and runtime via put_stream/2.
 - Return {:error, %StreamPolicyError{}} for invalid streams instead of raising, enabling seamless integration into with macro pipelines.
 - Mitigated T-10-02 by explicitly requiring a mailable for the :bulk stream to ensure auditability.
+- Compliance endpoint resolution falls back to Mailglass.Tracking.endpoint/0 so unsubscribe tokens inherit the existing Phoenix endpoint chain unless explicitly overridden.
+- Unsubscribe verification returns {:error, :invalid | :expired} while URL generation raises ConfigError for oversize links.
 
 ### Key Corrections (propagate into phase plans)
 
@@ -84,8 +86,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 
 ## Session Continuity
 
-Last session: 2026-04-27T21:25:21.555Z
-Stopped at: Completed 10-05-PLAN.md
+Last session: 2026-04-28T09:24:24.873Z
+Stopped at: Completed 11-rfc-8058-list-unsubscribe-01-PLAN.md
 Resume: `/gsd-plan-phase 8`
 
 **Planned Phase:** 08 (Release-Engineering Hardening) — 6 plans — 2026-04-27T02:26:05.655Z
