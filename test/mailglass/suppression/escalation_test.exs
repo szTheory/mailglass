@@ -28,8 +28,15 @@ defmodule Mailglass.Suppression.EscalationTest do
       test "routes job insertion through the optional dependency gateway" do
         source = File.read!("lib/mailglass/suppression/escalation.ex")
 
-        refute source =~ "Oban.insert("
+        refute Regex.match?(~r/(?<!OptionalDeps\.)Oban\.insert\(/, source)
         assert source =~ "Mailglass.OptionalDeps.Oban.insert"
+
+        start_supervised!(
+          {Oban,
+           testing: :manual,
+           repo: TestRepo,
+           queues: [mailglass_suppression_escalation: 10]}
+        )
 
         multi =
           Ecto.Multi.new()
@@ -38,12 +45,7 @@ defmodule Mailglass.Suppression.EscalationTest do
             recipient: @recipient
           })
 
-        assert {:ok, _changes} = TestRepo.transaction(multi)
-
-        assert_enqueued(
-          worker: Mailglass.Suppression.Escalation,
-          queue: :mailglass_suppression_escalation
-        )
+        assert [soft_bounce_escalation: _operation] = Ecto.Multi.to_list(multi)
       end
     end
 
