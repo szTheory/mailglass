@@ -29,6 +29,7 @@ extra_checks = [
      },
      included_path_prefixes: ["lib/mailglass/"]
    ]},
+  {Mailglass.Credo.MultiEventFirstInWebhookIngest, []},
   {Mailglass.Credo.NoOversizedUseInjection, [max_lines: 20]},
   {Mailglass.Credo.PrefixedPubSubTopics, [required_prefix: "mailglass:"]},
   {Mailglass.Credo.NoDefaultModuleNameSingleton,
