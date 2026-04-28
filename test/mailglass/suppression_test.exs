@@ -2,7 +2,16 @@ defmodule Mailglass.SuppressionTest do
   use ExUnit.Case, async: false
 
   alias Mailglass.{Suppression, SuppressedError, Message}
+  alias Mailglass.Events.Event
+  alias Mailglass.Outbound.Delivery
+  alias Mailglass.Suppression.AutoSuppress
   alias Mailglass.SuppressionStore.ETS
+
+  defmodule AutoSuppressRepoStub do
+    def insert(changeset, _opts) do
+      {:ok, Ecto.Changeset.apply_changes(changeset)}
+    end
+  end
 
   setup do
     prev_store = Application.get_env(:mailglass, :suppression_store)
@@ -116,6 +125,86 @@ defmodule Mailglass.SuppressionTest do
       refute Map.has_key?(meta, :recipient)
       refute Map.has_key?(meta, :email)
       refute Map.has_key?(meta, :address)
+
+      :telemetry.detach(ref)
+    end
+
+    test "emits [:mailglass, :suppression, :pre_send_blocked, :stop] with whitelist-safe metadata" do
+      {:ok, _} =
+        ETS.record(
+          %{
+            tenant_id: "tenant-blocked",
+            address: "blocked-telemetry@example.com",
+            scope: :address,
+            reason: :manual,
+            source: "ops",
+            expires_at: nil
+          },
+          []
+        )
+
+      ref =
+        :telemetry_test.attach_event_handlers(self(), [
+          [:mailglass, :suppression, :pre_send_blocked, :stop]
+        ])
+
+      msg =
+        build_message(
+          to: "blocked-telemetry@example.com",
+          tenant_id: "tenant-blocked",
+          stream: :operational
+        )
+
+      assert {:error, %SuppressedError{}} = Suppression.check_before_send(msg)
+
+      assert_receive {[:mailglass, :suppression, :pre_send_blocked, :stop], ^ref,
+                      %{duration_us: _}, meta}
+
+      assert meta.tenant_id == "tenant-blocked"
+      assert meta.scope == :address
+      assert meta.reason == :manual
+      assert meta.source == "ops"
+      assert meta.expires_at? == false
+      refute Map.has_key?(meta, :address)
+      refute Map.has_key?(meta, :recipient)
+      refute Map.has_key?(meta, :email)
+
+      :telemetry.detach(ref)
+    end
+
+    test "emits [:mailglass, :suppression, :auto_added, :stop] with whitelist-safe metadata" do
+      ref =
+        :telemetry_test.attach_event_handlers(self(), [
+          [:mailglass, :suppression, :auto_added, :stop]
+        ])
+
+      delivery = %Delivery{
+        id: Ecto.UUID.generate(),
+        tenant_id: "tenant-auto",
+        recipient: "auto@example.com",
+        stream: :bulk
+      }
+
+      event = %Event{
+        id: Ecto.UUID.generate(),
+        type: :unsubscribed,
+        metadata: %{"provider" => "sendgrid", "provider_event_id" => "evt_123"}
+      }
+
+      assert {:ok, :inserted} =
+               AutoSuppress.apply(AutoSuppressRepoStub, {:matched, delivery, event})
+
+      assert_receive {[:mailglass, :suppression, :auto_added, :stop], ^ref, %{duration_us: _},
+                      meta}
+
+      assert meta.tenant_id == "tenant-auto"
+      assert meta.scope == :address_stream
+      assert meta.reason == :unsubscribe
+      assert meta.source == "webhook:auto_suppress"
+      assert meta.expires_at? == false
+      refute Map.has_key?(meta, :address)
+      refute Map.has_key?(meta, :recipient)
+      refute Map.has_key?(meta, :email)
 
       :telemetry.detach(ref)
     end
