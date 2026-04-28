@@ -17,7 +17,10 @@
   2. Invalid Resend Svix webhook signatures are rejected
   3. Resend events (delivered, bounced, complained) are mapped to the internal normalized taxonomy
   4. Raw body caching plug successfully preserves the body for Svix validation without breaking subsequent JSON parsers
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [x] 14-01-PLAN.md — Implement Resend Provider and Tests
 
 ### Phase 15: Mailgun Webhook Provider
 **Goal**: System securely ingests and normalizes Mailgun webhooks while preventing replay attacks
@@ -46,6 +49,6 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Resend Webhook Provider & Core Ingest | 0/0 | Not started | - |
+| 14. Resend Webhook Provider & Core Ingest | 1/1 | Verification blocked | - |
 | 15. Mailgun Webhook Provider | 0/0 | Not started | - |
 | 16. SES Webhook Provider & SNS Cache | 0/0 | Not started | - |
