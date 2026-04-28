@@ -83,7 +83,9 @@ defmodule Mailglass.Events.Reconciler do
         Mailglass.Repo.all(query, scope: :unscoped)
 
       tid when is_binary(tid) ->
-        Mailglass.Repo.all(Tenancy.scope(query, tid))
+        query
+        |> where([e], e.tenant_id == ^tid)
+        |> Mailglass.Repo.all()
     end
   end
 

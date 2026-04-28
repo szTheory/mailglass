@@ -148,7 +148,7 @@ defmodule Mailglass.Adapters.FakeTest do
 
       spawn(fn ->
         email = Swoosh.Email.new(to: "x@x.com", from: "y@y.com", subject: "hi")
-        msg = Mailglass.Message.new(email, mailable: TestMailer, tenant_id: "test-tenant")
+        msg = Mailglass.Message.build(email, mailable: TestMailer, tenant_id: "test-tenant")
 
         result =
           try do
@@ -213,7 +213,7 @@ defmodule Mailglass.Adapters.FakeTest do
 
       # The delivery should be in self()'s bucket (we are the shared pid)
       records = Fake.deliveries(owner: self())
-      assert length(records) >= 1
+      assert records != []
       assert Enum.any?(records, fn r -> r.message == msg end)
     end
   end
@@ -245,7 +245,7 @@ defmodule Mailglass.Adapters.FakeTest do
         spawn(fn ->
           Fake.checkout()
           email = Swoosh.Email.new(to: "x@x.com", from: "y@y.com", subject: "hi")
-          msg = Mailglass.Message.new(email, mailable: TestMailer, tenant_id: "test-tenant")
+          msg = Mailglass.Message.build(email, mailable: TestMailer, tenant_id: "test-tenant")
           Fake.deliver(msg, [])
           # Exit normally after delivering — DOWN handler auto-checkins
         end)

@@ -5,6 +5,109 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.1.1...mailglass-v0.2.0) (2026-04-28)
+
+Mailglass 0.2.0 is the release that turns the first adopter-facing mailable API,
+deliverability floor, and migration path into a public contract. If you already
+ship on `~> 0.1`, read this entry first, then use
+[`guides/upgrading-from-v0_1.md`](guides/upgrading-from-v0_1.md) for the full
+walkthrough and examples.
+
+### Breaking Changes
+
+- `use Mailglass.Mailable` now expects native `Mailglass.Message` setters in
+  mailables. The supported builder surface is `to/2`, `from/2`, `subject/2`,
+  `text_body/2`, `html_body/2`, `header/3`, `attach/2`, and `put_tag/2`.
+- `Swoosh.Email.attachment/2` is renamed to `attach/2` on
+  `Mailglass.Message`.
+- Direct `Swoosh.Email.*` calls are no longer the default authoring API. Keep
+  provider-specific or uncommon Swoosh mutations behind
+  `Mailglass.Message.update_swoosh/2`.
+
+### Exact Upgrade Path
+
+1. Update your dependencies to `{:mailglass, "~> 0.2"}` and, if you will run
+   the codemod, `{:igniter, "~> 0.7", only: [:dev, :test]}`.
+2. Run `mix deps.get`.
+3. Run `mix mailglass.upgrade.v0_2` first to inspect the dry-run diff. Re-run
+   with `mix mailglass.upgrade.v0_2 --apply` once the changes look correct.
+4. Recompile and run your normal test suite.
+5. Use [`guides/upgrading-from-v0_1.md`](guides/upgrading-from-v0_1.md) for
+   the full before/after examples and manual follow-up checklist.
+
+### Dependency / Runtime Floor
+
+- Elixir `~> 1.18`
+- OTP 27+
+- Phoenix `~> 1.8`
+- Phoenix LiveView `~> 1.1`
+- Phoenix HTML `~> 4.1`
+- Igniter `~> 0.7` when running `mix mailglass.upgrade.v0_2`
+
+### Ambiguous Swoosh Usage and Escape Hatch
+
+- `mix mailglass.upgrade.v0_2` rewrites only the eight known
+  `Swoosh.Email` setters listed above.
+- Unknown `Swoosh.Email.*` calls are left in place and emit `IO.warn`; the
+  task does not silently guess at a rewrite for ambiguous cases.
+- Keep advanced provider-specific behavior by wrapping it in
+  `Mailglass.Message.update_swoosh/2`. The upgrade guide includes the expected
+  pattern for `put_provider_option/3` and similar calls.
+
+### Rollback
+
+- Treat the upgrade task as a git-clean operation. Run it from a disposable
+  branch, worktree, or otherwise clean working tree so `git diff` tells you
+  exactly what changed.
+- If the codemod output is not what you want, discard the upgrade diff with
+  `git restore .` (or `git checkout .` if that is still your local workflow)
+  and review the guide before trying again.
+- Mailglass does not promise cleanup of unrelated local edits in a dirty
+  working tree.
+
+### Immediate Behavior Changes
+
+- The public mailable API now lives on `Mailglass.Message`, with
+  `Mailglass.Message.update_swoosh/2` as the documented escape hatch instead
+  of direct `Swoosh.Email` builder chains.
+- Stream policy is now enforced across `:transactional`, `:operational`, and
+  `:bulk`, so invalid or drifted stream usage fails early instead of silently
+  shipping.
+- RFC 8058 unsubscribe support is now first-class: config, routes, GET/POST
+  behavior, DKIM rollout guidance, and replay-safe one-click semantics are part
+  of the supported contract.
+- Webhook-driven suppression is now load-bearing. Complaints remain durable
+  compliance blocks, and bounce/complaint/unsubscribe events feed the
+  suppression surface instead of staying advisory-only.
+
+### Added
+
+- `mix mailglass.upgrade.v0_2`, an Igniter-powered codemod for the standard
+  `Swoosh.Email` setter migration path.
+- RFC 8058 one-click unsubscribe support, including router mounts, a read-only
+  generator, replay-safe POST handling, and DKIM verification guidance.
+- Webhook-driven suppression automation, including complaint/unsubscribe
+  projection and soft-bounce escalation into the same suppression surface.
+
+### Changed
+
+- `Mailglass.Mailable` now imports the native `Mailglass.Message` authoring
+  surface instead of asking adopters to build mailables around raw
+  `Swoosh.Email` calls.
+- Stream policy enforcement now spans compile-time guidance, runtime checks,
+  and the public docs contract for `:transactional`, `:operational`, and
+  `:bulk` mail.
+- The upgrade guide is now the deep dive for `~> 0.1` adopters, while this
+  changelog entry acts as the release-day migration front door.
+
+### Fixed
+
+- Ambiguous `Swoosh.Email` migrations now fail safely by warning and preserving
+  the original call site instead of implying automatic support that does not
+  exist.
+- Unsubscribe replay handling and suppression projection now converge on
+  idempotent outcomes that are safer to operate at release time.
+
 ## [0.1.1](https://github.com/szTheory/mailglass/compare/mailglass-v0.1.0...mailglass-v0.1.1) (2026-04-26)
 
 

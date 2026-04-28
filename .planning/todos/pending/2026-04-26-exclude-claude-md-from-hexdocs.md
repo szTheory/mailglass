@@ -7,6 +7,8 @@ files:
   - mix.exs:264-283 (groups_for_extras)
   - https://hexdocs.pm/mailglass/claude.html (current leak)
 priority: v0.1.2
+resolves_phase: 8
+resolves_req: REL-02
 ---
 
 ## Problem

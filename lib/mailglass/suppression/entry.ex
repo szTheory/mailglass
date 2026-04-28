@@ -84,6 +84,7 @@ defmodule Mailglass.Suppression.Entry do
     |> cast(attrs, @cast)
     |> validate_required(@required)
     |> validate_scope_stream_coupling()
+    |> validate_complaint_permanence()
     |> downcase_address()
   end
 
@@ -114,18 +115,25 @@ defmodule Mailglass.Suppression.Entry do
     end
   end
 
+  defp validate_complaint_permanence(changeset) do
+    case {get_field(changeset, :reason), get_field(changeset, :expires_at)} do
+      {:complaint, expires_at} when not is_nil(expires_at) ->
+        add_error(changeset, :expires_at, "must be omitted when reason is :complaint")
+
+      _ ->
+        changeset
+    end
+  end
+
   @doc "Closed scope atom set."
   @doc since: "0.1.0"
-  @spec __scopes__() :: [atom()]
   def __scopes__, do: @scopes
 
   @doc "Closed stream atom set."
   @doc since: "0.1.0"
-  @spec __streams__() :: [atom()]
   def __streams__, do: @streams
 
   @doc "Closed reason atom set."
   @doc since: "0.1.0"
-  @spec __reasons__() :: [atom()]
   def __reasons__, do: @reasons
 end

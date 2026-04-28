@@ -318,7 +318,7 @@ defmodule Mailglass.Credo.IntegrationTest do
         use Mailglass.Mailable
 
         def password_reset(user) do
-          Mailglass.Message.new(Swoosh.Email.new(), to: user.email, tracking: [opens: true])
+          Mailglass.Message.build(Swoosh.Email.new(), to: user.email, tracking: [opens: true])
         end
       end
       """,
@@ -327,7 +327,7 @@ defmodule Mailglass.Credo.IntegrationTest do
         use Mailglass.Mailable
 
         def password_reset(user) do
-          Mailglass.Message.new(Swoosh.Email.new(), to: user.email, tracking: [])
+          Mailglass.Message.build(Swoosh.Email.new(), to: user.email, tracking: [])
         end
       end
       """

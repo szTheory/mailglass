@@ -92,7 +92,6 @@ defmodule Mix.Tasks.Mailglass.Install do
     )
   end
 
-  @spec maybe_raise_conflict_error(map()) :: :ok
   defp maybe_raise_conflict_error(%{conflict: 0}), do: :ok
 
   defp maybe_raise_conflict_error(%{conflict: conflict_count}) do

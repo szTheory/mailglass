@@ -6,6 +6,7 @@ defmodule Mailglass.Outbound.PreflightTest do
 
   setup do
     Mailglass.Adapters.Fake.checkout()
+    Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
     :ok
   end
 
@@ -29,7 +30,7 @@ defmodule Mailglass.Outbound.PreflightTest do
         |> Swoosh.Email.text_body("Click here")
 
       msg =
-        Message.new(email,
+        Message.build(email,
           mailable: Mailglass.FakeFixtures.TrackingMailer,
           mailable_function: :magic_link,
           tenant_id: "test-tenant",
@@ -41,19 +42,32 @@ defmodule Mailglass.Outbound.PreflightTest do
   end
 
   describe "preflight stage 2 — Suppression.check_before_send" do
-    test "suppressed recipient returns {:error, %SuppressedError{}}; no Delivery row inserted" do
+    test "suppressed recipient returns enriched SuppressedError context and inserts no Delivery row" do
+      expires_at = DateTime.add(DateTime.utc_now(), 3_600, :second)
+
       {:ok, _} =
-        Mailglass.Suppression.Entry.changeset(%{
+        insert_suppression!(%{
           tenant_id: "test-tenant",
           address: "blocked@example.com",
           scope: :address,
           reason: :manual,
-          source: "test"
+          source: "test",
+          expires_at: expires_at
         })
-        |> TestRepo.insert()
 
       msg = build_message("blocked@example.com")
-      assert {:error, %Mailglass.SuppressedError{}} = Outbound.send(msg)
+
+      assert {:error,
+              %Mailglass.SuppressedError{
+                type: :address,
+                context: %{
+                  tenant_id: "test-tenant",
+                  stream: :transactional,
+                  reason: :manual,
+                  source: "test",
+                  expires_at: ^expires_at
+                }
+              }} = Outbound.send(msg)
 
       # No Delivery row inserted
       import Ecto.Query
@@ -98,14 +112,13 @@ defmodule Mailglass.Outbound.PreflightTest do
     test "suppression error prevents rate-limit consumption" do
       # Record a suppression
       {:ok, _} =
-        Mailglass.Suppression.Entry.changeset(%{
+        insert_suppression!(%{
           tenant_id: "test-tenant",
           address: "order@example.com",
           scope: :address,
           reason: :manual,
           source: "test"
         })
-        |> TestRepo.insert()
 
       Application.put_env(:mailglass, :rate_limit, default: [capacity: 1, per_minute: 1])
       on_exit(fn -> Application.delete_env(:mailglass, :rate_limit) end)
@@ -138,7 +151,7 @@ defmodule Mailglass.Outbound.PreflightTest do
         |> Swoosh.Email.html_body(broken_component)
 
       msg =
-        Message.new(email,
+        Message.build(email,
           mailable: Mailglass.FakeFixtures.TestMailer,
           tenant_id: "test-tenant",
           stream: :transactional
@@ -180,10 +193,33 @@ defmodule Mailglass.Outbound.PreflightTest do
       |> Swoosh.Email.html_body("<p>Body</p>")
       |> Swoosh.Email.text_body("Body")
 
-    Message.new(email,
+    Message.build(email,
       mailable: Mailglass.FakeFixtures.TestMailer,
       tenant_id: "test-tenant",
       stream: stream
     )
+  end
+
+  defp insert_suppression!(attrs) do
+    insert_suppression!(attrs, 4)
+  end
+
+  defp insert_suppression!(attrs, attempts_left) when attempts_left > 0 do
+    try do
+      attrs
+      |> Mailglass.Suppression.Entry.changeset()
+      |> TestRepo.insert()
+    rescue
+      Postgrex.Error ->
+        Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
+
+        if attempts_left > 1 do
+          insert_suppression!(attrs, attempts_left - 1)
+        else
+          attrs
+          |> Mailglass.Suppression.Entry.changeset()
+          |> TestRepo.insert()
+        end
+    end
   end
 end

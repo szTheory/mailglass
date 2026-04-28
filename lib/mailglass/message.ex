@@ -40,13 +40,15 @@ defmodule Mailglass.Message do
   ## Examples
 
       iex> email = Swoosh.Email.new(subject: "Welcome")
-      iex> msg = Mailglass.Message.new(email, mailable: MyApp.UserMailer)
+      iex> msg = Mailglass.Message.build(email, mailable: MyApp.UserMailer)
       iex> msg.stream
       :transactional
       iex> msg.mailable
       MyApp.UserMailer
 
   """
+
+  require Mailglass.Stream
 
   @type stream :: :transactional | :operational | :bulk
 
@@ -85,14 +87,20 @@ defmodule Mailglass.Message do
   ## Examples
 
       iex> email = Swoosh.Email.new(subject: "Welcome")
-      iex> msg = Mailglass.Message.new(email, mailable: MyApp.UserMailer)
+      iex> msg = Mailglass.Message.build(email, mailable: MyApp.UserMailer)
       iex> msg.stream
       :transactional
 
   """
   @doc since: "0.1.0"
+  @deprecated "Use native Mailglass.Message setters instead"
   @spec new(Swoosh.Email.t(), keyword()) :: t()
   def new(%Swoosh.Email{} = swoosh_email, opts \\ []) when is_list(opts) do
+    build(swoosh_email, opts)
+  end
+
+  @doc false
+  def build(%Swoosh.Email{} = swoosh_email, opts \\ []) when is_list(opts) do
     %__MODULE__{
       swoosh_email: swoosh_email,
       mailable: Keyword.get(opts, :mailable),
@@ -133,6 +141,10 @@ defmodule Mailglass.Message do
 
     stream = Keyword.get(use_opts, :stream, :transactional)
 
+    unless Mailglass.Stream.valid?(stream) do
+      raise ArgumentError, "invalid stream: #{inspect(stream)}"
+    end
+
     %__MODULE__{
       swoosh_email: email,
       mailable: mailable,
@@ -163,6 +175,111 @@ defmodule Mailglass.Message do
   @spec update_swoosh(t(), (Swoosh.Email.t() -> Swoosh.Email.t())) :: t()
   def update_swoosh(%__MODULE__{swoosh_email: email} = msg, fun) when is_function(fun, 1) do
     %{msg | swoosh_email: fun.(email)}
+  end
+
+  @doc """
+  Sets the recipient of the message.
+
+  Delegates to `Swoosh.Email.to/2`.
+  """
+  @doc since: "0.2.0"
+  @spec to(
+          t(),
+          Swoosh.Email.address()
+          | Swoosh.Email.mailbox()
+          | [Swoosh.Email.address() | Swoosh.Email.mailbox()]
+        ) :: t()
+  def to(%__MODULE__{} = msg, recipient) do
+    update_swoosh(msg, &Swoosh.Email.to(&1, recipient))
+  end
+
+  @doc """
+  Sets the sender of the message.
+
+  Delegates to `Swoosh.Email.from/2`.
+  """
+  @doc since: "0.2.0"
+  @spec from(t(), Swoosh.Email.address() | Swoosh.Email.mailbox()) :: t()
+  def from(%__MODULE__{} = msg, sender) do
+    update_swoosh(msg, &Swoosh.Email.from(&1, sender))
+  end
+
+  @doc """
+  Sets the subject of the message.
+
+  Delegates to `Swoosh.Email.subject/2`.
+  """
+  @doc since: "0.2.0"
+  @spec subject(t(), String.t()) :: t()
+  def subject(%__MODULE__{} = msg, subject) do
+    update_swoosh(msg, &Swoosh.Email.subject(&1, subject))
+  end
+
+  @doc """
+  Sets the HTML body of the message.
+
+  Delegates to `Swoosh.Email.html_body/2`.
+  """
+  @doc since: "0.2.0"
+  @spec html_body(t(), String.t()) :: t()
+  def html_body(%__MODULE__{} = msg, html_body) do
+    update_swoosh(msg, &Swoosh.Email.html_body(&1, html_body))
+  end
+
+  @doc """
+  Sets the text body of the message.
+
+  Delegates to `Swoosh.Email.text_body/2`.
+  """
+  @doc since: "0.2.0"
+  @spec text_body(t(), String.t()) :: t()
+  def text_body(%__MODULE__{} = msg, text_body) do
+    update_swoosh(msg, &Swoosh.Email.text_body(&1, text_body))
+  end
+
+  @doc """
+  Sets a custom header on the message.
+
+  Delegates to `Swoosh.Email.header/3`.
+  """
+  @doc since: "0.2.0"
+  @spec header(t(), String.t(), String.t()) :: t()
+  def header(%__MODULE__{} = msg, name, value) do
+    update_swoosh(msg, &Swoosh.Email.header(&1, name, value))
+  end
+
+  @doc """
+  Adds an attachment to the message.
+
+  Delegates to `Swoosh.Email.attachment/2`.
+  """
+  @doc since: "0.2.0"
+  @spec attach(t(), Swoosh.Attachment.t() | map()) :: t()
+  def attach(%__MODULE__{} = msg, attachment) do
+    update_swoosh(msg, &Swoosh.Email.attachment(&1, attachment))
+  end
+
+  @doc """
+  Appends a tag to the message.
+
+  Modifies the `:tags` list on the `%Mailglass.Message{}` struct.
+  """
+  @doc since: "0.2.0"
+  @spec put_tag(t(), String.t()) :: t()
+  def put_tag(%__MODULE__{tags: tags} = msg, tag) when is_binary(tag) do
+    %{msg | tags: tags ++ [tag]}
+  end
+
+  @doc """
+  Sets the stream for the message.
+
+  Valid streams are `:transactional`, `:operational`, and `:bulk`.
+  Raises `FunctionClauseError` if an invalid stream atom is provided.
+  """
+  @doc since: "0.2.0"
+  @spec put_stream(t(), stream()) :: t()
+  def put_stream(%__MODULE__{} = msg, stream) when Mailglass.Stream.is_stream(stream) do
+    %{msg | stream: stream}
   end
 
   @doc """

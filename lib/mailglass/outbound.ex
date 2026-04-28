@@ -77,6 +77,7 @@ defmodule Mailglass.Outbound do
 
   alias Mailglass.{
     Clock,
+    Compliance,
     Events,
     Message,
     Renderer,
@@ -117,7 +118,7 @@ defmodule Mailglass.Outbound do
   end
 
   def send(%Swoosh.Email{} = email, opts) do
-    msg = Message.new(email, tenant_id: Tenancy.current())
+    msg = Message.build(email, tenant_id: Tenancy.current())
     send(msg, opts)
   end
 
@@ -289,8 +290,7 @@ defmodule Mailglass.Outbound do
          :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg) do
-      rewritten = Tracking.rewrite_if_enabled(rendered)
-      do_send_after_preflight(rewritten, opts)
+      do_send_after_preflight(prepare_outbound_message(rendered), opts)
     end
   end
 
@@ -298,13 +298,9 @@ defmodule Mailglass.Outbound do
   # can correctly persist :failed status when the adapter call fails (T-3-05-07).
   defp do_send_after_preflight(%Message{} = rendered, opts) do
     with {:ok, %{delivery: delivery}} <- persist_queued(rendered, opts),
-         # I-07: stamp delivery.id into metadata BEFORE adapter sees the message.
-         # Fake.deliver records metadata.delivery_id for TestAssertions correlation.
-         rendered_with_id = Message.put_metadata(rendered, :delivery_id, delivery.id),
-         {:ok, dispatch_result} <-
-           call_adapter_or_persist_failure(delivery, rendered_with_id, opts),
+         {:ok, dispatch_result} <- call_adapter_or_persist_failure(delivery, rendered, opts),
          {:ok, %{delivery: updated}} <-
-           persist_dispatched_multi(delivery, dispatch_result, rendered_with_id) do
+           persist_dispatched_multi(delivery, dispatch_result, rendered) do
       Projector.broadcast_delivery_updated(updated, :dispatched, %{
         tenant_id: updated.tenant_id,
         delivery_id: updated.id,
@@ -353,8 +349,7 @@ defmodule Mailglass.Outbound do
          :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg) do
-      rewritten = Tracking.rewrite_if_enabled(rendered)
-      enqueue_via_async_adapter(rewritten, opts)
+      enqueue_via_async_adapter(prepare_outbound_message(rendered), opts)
     end
   end
 
@@ -378,12 +373,13 @@ defmodule Mailglass.Outbound do
   defp enqueue_oban(%Message{} = rendered, _opts) do
     ik = compute_idempotency_key(rendered)
     tenant_id = rendered.tenant_id
+    delivery_id = delivery_id!(rendered)
 
     attrs = base_delivery_attrs(rendered, ik)
 
     result =
       Ecto.Multi.new()
-      |> Ecto.Multi.insert(:delivery, Delivery.changeset(attrs))
+      |> Ecto.Multi.insert(:delivery, Delivery.changeset(%Delivery{id: delivery_id}, attrs))
       |> Events.append_multi(:event_queued, fn %{delivery: d} ->
         %{
           tenant_id: tenant_id,
@@ -414,11 +410,12 @@ defmodule Mailglass.Outbound do
   defp enqueue_task_supervisor(%Message{} = rendered, _opts) do
     ik = compute_idempotency_key(rendered)
     tenant_id = rendered.tenant_id
+    delivery_id = delivery_id!(rendered)
     attrs = base_delivery_attrs(rendered, ik)
 
     multi =
       Ecto.Multi.new()
-      |> Ecto.Multi.insert(:delivery, Delivery.changeset(attrs))
+      |> Ecto.Multi.insert(:delivery, Delivery.changeset(%Delivery{id: delivery_id}, attrs))
       |> Events.append_multi(:event_queued, fn %{delivery: d} ->
         %{
           tenant_id: tenant_id,
@@ -432,32 +429,38 @@ defmodule Mailglass.Outbound do
 
     case Repo.multi(multi) do
       {:ok, %{delivery: d}} ->
-        # Spawn non-linked task under Mailglass.TaskSupervisor.
-        # Tenancy process-dict MUST be re-stamped (not inherited) — D-21.
-        Task.Supervisor.start_child(Mailglass.TaskSupervisor, fn ->
-          Mailglass.Tenancy.with_tenant(tenant_id, fn ->
-            try do
-              case dispatch_by_id(d.id) do
-                {:ok, _} ->
-                  :ok
+        # AsyncAdapter dispatch (D-08-11). TaskSupervisor impl is prod default;
+        # Inline impl is test default. Tenancy re-stamp inside the closure works
+        # for both paths (D-08-15) — Inline runs sync under caller, TaskSupervisor
+        # runs in fresh process; with_tenant/2 stamps the executing process
+        # either way.
+        Mailglass.Outbound.AsyncAdapter.dispatch(
+          fn ->
+            Mailglass.Tenancy.with_tenant(tenant_id, fn ->
+              try do
+                case dispatch_by_id(d.id) do
+                  {:ok, _} ->
+                    :ok
 
-                {:error, err} ->
+                  {:error, err} ->
+                    require Logger
+
+                    Logger.warning(
+                      "[mailglass] Task.Supervisor dispatch failed: #{Exception.message(err)}"
+                    )
+                end
+              rescue
+                err ->
                   require Logger
 
                   Logger.warning(
-                    "[mailglass] Task.Supervisor dispatch failed: #{Exception.message(err)}"
+                    "[mailglass] Task.Supervisor dispatch raised: #{Exception.message(err)}"
                   )
               end
-            rescue
-              err ->
-                require Logger
-
-                Logger.warning(
-                  "[mailglass] Task.Supervisor dispatch raised: #{Exception.message(err)}"
-                )
-            end
-          end)
-        end)
+            end)
+          end,
+          []
+        )
 
         {:ok, %{d | status: :queued, last_event_type: :queued}}
 
@@ -507,7 +510,7 @@ defmodule Mailglass.Outbound do
          :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg) do
-      {:ok, Tracking.rewrite_if_enabled(rendered)}
+      {:ok, prepare_outbound_message(rendered)}
     else
       {:error, err} -> {:error, err, msg}
       {:error, _step, err, _} -> {:error, to_error(err), msg}
@@ -524,7 +527,7 @@ defmodule Mailglass.Outbound do
         ik = compute_idempotency_key(m)
 
         base_delivery_attrs(m, ik)
-        |> Map.put(:id, Ecto.UUID.generate())
+        |> Map.put(:id, delivery_id!(m))
         |> Map.put(:inserted_at, now)
         |> Map.put(:updated_at, now)
       end)
@@ -604,30 +607,34 @@ defmodule Mailglass.Outbound do
       :ok
     else
       Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-        Task.Supervisor.start_child(Mailglass.TaskSupervisor, fn ->
-          Mailglass.Tenancy.with_tenant(t, fn ->
-            try do
-              case dispatch_by_id(id) do
-                {:ok, _} ->
-                  :ok
+        # AsyncAdapter dispatch (D-08-11). TaskSupervisor (prod) | Inline (test).
+        Mailglass.Outbound.AsyncAdapter.dispatch(
+          fn ->
+            Mailglass.Tenancy.with_tenant(t, fn ->
+              try do
+                case dispatch_by_id(id) do
+                  {:ok, _} ->
+                    :ok
 
-                {:error, err} ->
+                  {:error, err} ->
+                    require Logger
+
+                    Logger.warning(
+                      "[mailglass] Task.Supervisor batch dispatch failed for #{id}: #{Exception.message(err)}"
+                    )
+                end
+              rescue
+                err ->
                   require Logger
 
                   Logger.warning(
-                    "[mailglass] Task.Supervisor batch dispatch failed for #{id}: #{Exception.message(err)}"
+                    "[mailglass] Task.Supervisor batch dispatch raised for #{id}: #{Exception.message(err)}"
                   )
               end
-            rescue
-              err ->
-                require Logger
-
-                Logger.warning(
-                  "[mailglass] Task.Supervisor batch dispatch raised for #{id}: #{Exception.message(err)}"
-                )
-            end
-          end)
-        end)
+            end)
+          end,
+          []
+        )
       end)
 
       :ok
@@ -658,6 +665,7 @@ defmodule Mailglass.Outbound do
   defp persist_queued(%Message{} = rendered, _opts) do
     ik = compute_idempotency_key(rendered)
     tenant_id = rendered.tenant_id
+    delivery_id = delivery_id!(rendered)
 
     # I-01: Multi#1 writes status: :queued (public API column) AND
     # last_event_type: :queued (ledger projection).
@@ -668,7 +676,7 @@ defmodule Mailglass.Outbound do
           Ecto.Multi.new()
           |> Ecto.Multi.insert(
             :delivery,
-            Delivery.changeset(%{
+            Delivery.changeset(%Delivery{id: delivery_id}, %{
               tenant_id: tenant_id,
               mailable: inspect(rendered.mailable),
               stream: rendered.stream,
@@ -924,19 +932,22 @@ defmodule Mailglass.Outbound do
   # Extracted to avoid duplicating Swoosh.Email assembly across both
   # rehydration paths (ME-03 restructure).
   defp build_rehydrated_message(%Delivery{} = delivery, mod_atom) do
+    metadata = rehydrated_metadata(delivery.metadata || %{})
+
     email =
       Swoosh.Email.new()
       |> Swoosh.Email.to(delivery.recipient)
       |> Swoosh.Email.subject(get_in(delivery.metadata, ["subject"]) || "")
       |> Swoosh.Email.html_body(get_in(delivery.metadata, ["rendered_html"]))
       |> Swoosh.Email.text_body(get_in(delivery.metadata, ["rendered_text"]))
+      |> put_rehydrated_headers(Map.get(delivery.metadata || %{}, "headers", %{}))
 
     %Message{
       swoosh_email: email,
       mailable: mod_atom,
       tenant_id: delivery.tenant_id,
       stream: delivery.stream,
-      metadata: delivery.metadata || %{}
+      metadata: metadata
     }
   end
 
@@ -1002,11 +1013,51 @@ defmodule Mailglass.Outbound do
         Map.merge(rendered.metadata || %{}, %{
           rendered_html: rendered.swoosh_email.html_body,
           rendered_text: rendered.swoosh_email.text_body,
-          subject: rendered.swoosh_email.subject
+          subject: rendered.swoosh_email.subject,
+          headers: rendered.swoosh_email.headers || %{}
         }),
       idempotency_key: ik
     }
   end
+
+  defp prepare_outbound_message(%Message{} = rendered) do
+    delivery_id = existing_delivery_id(rendered) || Ecto.UUID.generate()
+
+    rendered
+    |> Message.put_metadata(:delivery_id, delivery_id)
+    |> Compliance.apply_outbound_headers()
+    |> Tracking.rewrite_if_enabled()
+  end
+
+  defp delivery_id!(%Message{} = rendered) do
+    existing_delivery_id(rendered) ||
+      raise ArgumentError, "delivery_id missing from message metadata before persistence"
+  end
+
+  defp existing_delivery_id(%Message{metadata: metadata}) when is_map(metadata) do
+    metadata[:delivery_id] || metadata["delivery_id"]
+  end
+
+  defp existing_delivery_id(%Message{}), do: nil
+
+  defp rehydrated_metadata(metadata) when is_map(metadata) do
+    case Map.get(metadata, "delivery_id") do
+      delivery_id when is_binary(delivery_id) ->
+        Map.put_new(metadata, :delivery_id, delivery_id)
+
+      _ ->
+        metadata
+    end
+  end
+
+  defp put_rehydrated_headers(%Swoosh.Email{} = email, headers)
+       when is_map(headers) or is_list(headers) do
+    Enum.reduce(headers, email, fn {key, value}, acc ->
+      Swoosh.Email.header(acc, key, value)
+    end)
+  end
+
+  defp put_rehydrated_headers(%Swoosh.Email{} = email, _headers), do: email
 
   # ME-05: Safe provider tag extraction from adapter dispatch result.
   # provider_response is adapter-defined (term()) — must not assume map shape.

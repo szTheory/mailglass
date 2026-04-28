@@ -103,7 +103,8 @@ defmodule Mailglass.Tenancy.ResolveFromPathTest do
     end
 
     test "exports resolve_webhook_tenant/1 callback" do
-      assert function_exported?(ResolveFromPath, :resolve_webhook_tenant, 1)
+      assert {:module, ResolveFromPath} = Code.ensure_loaded(ResolveFromPath)
+      assert {:resolve_webhook_tenant, 1} in ResolveFromPath.__info__(:functions)
     end
   end
 end

@@ -1,13 +1,25 @@
 defmodule Mailglass.SuppressionTest do
-  use ExUnit.Case, async: false
+  use Mailglass.DataCase, async: false
 
-  alias Mailglass.{Suppression, SuppressedError, Message}
+  alias Mailglass.{Message, Suppression, SuppressedError}
+  alias Mailglass.Events.Event
+  alias Mailglass.Outbound.Delivery
+  alias Mailglass.Suppression.AutoSuppress
+  alias Mailglass.Suppression.Entry
   alias Mailglass.SuppressionStore.ETS
+  alias Mailglass.TestRepo
+
+  defmodule AutoSuppressRepoStub do
+    def insert(changeset, _opts) do
+      {:ok, Ecto.Changeset.apply_changes(changeset)}
+    end
+  end
 
   setup do
     prev_store = Application.get_env(:mailglass, :suppression_store)
 
     Application.put_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.ETS)
+    Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
 
     on_exit(fn ->
       if prev_store do
@@ -42,6 +54,8 @@ defmodule Mailglass.SuppressionTest do
 
   describe "check_before_send/1 — suppressed address" do
     test "Test 7 (suppressed): returns {:error, %SuppressedError{type: scope}} when suppressed" do
+      expires_at = DateTime.add(DateTime.utc_now(), 3_600, :second)
+
       {:ok, _} =
         ETS.record(
           %{
@@ -49,14 +63,26 @@ defmodule Mailglass.SuppressionTest do
             address: "blocked@example.com",
             scope: :address,
             reason: :manual,
-            source: "test"
+            source: "test",
+            expires_at: expires_at
           },
           []
         )
 
       msg = build_message(to: "blocked@example.com")
       result = Suppression.check_before_send(msg)
-      assert {:error, %SuppressedError{type: :address}} = result
+
+      assert {:error,
+              %SuppressedError{
+                type: :address,
+                context: %{
+                  tenant_id: "tenant-test",
+                  stream: :transactional,
+                  reason: :manual,
+                  source: "test",
+                  expires_at: ^expires_at
+                }
+              }} = result
     end
   end
 
@@ -105,6 +131,85 @@ defmodule Mailglass.SuppressionTest do
 
       :telemetry.detach(ref)
     end
+
+    test "emits [:mailglass, :suppression, :pre_send_blocked, :stop] with whitelist-safe metadata" do
+      {:ok, _} =
+        ETS.record(
+          %{
+            tenant_id: "tenant-blocked",
+            address: "blocked-telemetry@example.com",
+            scope: :address,
+            reason: :manual,
+            source: "ops",
+            expires_at: nil
+          },
+          []
+        )
+
+      ref =
+        :telemetry_test.attach_event_handlers(self(), [
+          [:mailglass, :suppression, :pre_send_blocked, :stop]
+        ])
+
+      msg =
+        build_message(
+          to: "blocked-telemetry@example.com",
+          tenant_id: "tenant-blocked",
+          stream: :operational
+        )
+
+      assert {:error, %SuppressedError{}} = Suppression.check_before_send(msg)
+
+      assert_receive {[:mailglass, :suppression, :pre_send_blocked, :stop], ^ref, %{duration_us: _},
+                      meta}
+
+      assert meta.tenant_id == "tenant-blocked"
+      assert meta.scope == :address
+      assert meta.reason == :manual
+      assert meta.source == "ops"
+      assert meta.expires_at? == false
+      refute Map.has_key?(meta, :address)
+      refute Map.has_key?(meta, :recipient)
+      refute Map.has_key?(meta, :email)
+
+      :telemetry.detach(ref)
+    end
+
+    test "emits [:mailglass, :suppression, :auto_added, :stop] with whitelist-safe metadata" do
+      ref =
+        :telemetry_test.attach_event_handlers(self(), [
+          [:mailglass, :suppression, :auto_added, :stop]
+        ])
+
+      delivery = %Delivery{
+        id: Ecto.UUID.generate(),
+        tenant_id: "tenant-auto",
+        recipient: "auto@example.com",
+        stream: :bulk
+      }
+
+      event = %Event{
+        id: Ecto.UUID.generate(),
+        type: :unsubscribed,
+        metadata: %{"provider" => "sendgrid", "provider_event_id" => "evt_123"}
+      }
+
+      assert {:ok, :inserted} =
+               AutoSuppress.apply(AutoSuppressRepoStub, {:matched, delivery, event})
+
+      assert_receive {[:mailglass, :suppression, :auto_added, :stop], ^ref, %{duration_us: _}, meta}
+
+      assert meta.tenant_id == "tenant-auto"
+      assert meta.scope == :address_stream
+      assert meta.reason == :unsubscribe
+      assert meta.source == "webhook:auto_suppress"
+      assert meta.expires_at? == false
+      refute Map.has_key?(meta, :address)
+      refute Map.has_key?(meta, :recipient)
+      refute Map.has_key?(meta, :email)
+
+      :telemetry.detach(ref)
+    end
   end
 
   describe "check_before_send/1 — PII refutation (T-3-03-02, Test 10)" do
@@ -128,6 +233,9 @@ defmodule Mailglass.SuppressionTest do
       # Context must only contain :tenant_id and :stream
       assert Map.has_key?(ctx, :tenant_id)
       assert Map.has_key?(ctx, :stream)
+      assert Map.has_key?(ctx, :reason)
+      assert Map.has_key?(ctx, :source)
+      assert Map.has_key?(ctx, :expires_at)
 
       # Must NOT contain PII
       refute Map.has_key?(ctx, :to)
@@ -135,6 +243,81 @@ defmodule Mailglass.SuppressionTest do
       refute Map.has_key?(ctx, :email)
       refute Map.has_key?(ctx, :recipient)
       refute Map.has_key?(ctx, :address)
+    end
+  end
+
+  describe "remove/2" do
+    test "rejects complaint removal with a structured rejection error" do
+      entry =
+        insert_entry(%{
+          tenant_id: "tenant-remove",
+          address: "complaint@example.com",
+          scope: :address,
+          reason: :complaint,
+          source: "webhook:auto_suppress"
+        })
+
+      assert {:error, %Mailglass.SendError{type: :preflight_rejected, context: context}} =
+               Suppression.remove(entry.id, tenant_id: entry.tenant_id)
+
+      assert context.reason == :complaint
+      assert context.tenant_id == "tenant-remove"
+      assert context.removable == false
+      assert TestRepo.get(Entry, entry.id)
+    end
+
+    test "rejects unsubscribe removal with a structured rejection error" do
+      entry =
+        insert_entry(%{
+          tenant_id: "tenant-remove",
+          address: "unsubscribe@example.com",
+          scope: :address_stream,
+          stream: :bulk,
+          reason: :unsubscribe,
+          source: "webhook:auto_suppress"
+        })
+
+      assert {:error, %Mailglass.SendError{type: :preflight_rejected, context: context}} =
+               Suppression.remove(entry.id, tenant_id: entry.tenant_id)
+
+      assert context.reason == :unsubscribe
+      assert context.removable == false
+      assert TestRepo.get(Entry, entry.id)
+    end
+
+    test "deletes removable reasons" do
+      for reason <- [:hard_bounce, :manual, :policy] do
+        entry =
+          insert_entry(%{
+            tenant_id: "tenant-remove",
+            address: "#{reason}@example.com",
+            scope: :address,
+            reason: reason,
+            source: "ops"
+          })
+
+        entry_id = entry.id
+
+        assert {:ok, %Entry{id: ^entry_id}} =
+                 Suppression.remove(entry_id, tenant_id: entry.tenant_id)
+
+        refute TestRepo.get(Entry, entry_id)
+      end
+    end
+  end
+
+  defp insert_entry(attrs) do
+    try do
+      attrs
+      |> Entry.changeset()
+      |> TestRepo.insert!()
+    rescue
+      Postgrex.Error ->
+        Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
+
+        attrs
+        |> Entry.changeset()
+        |> TestRepo.insert!()
     end
   end
 end

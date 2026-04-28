@@ -30,6 +30,7 @@ defmodule Mailglass.Webhook.PrunerTest do
   alias Mailglass.Webhook.{Pruner, WebhookEvent}
 
   setup do
+    TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
     on_exit(fn -> Tenancy.clear() end)
 
     if Pruner.available?() do

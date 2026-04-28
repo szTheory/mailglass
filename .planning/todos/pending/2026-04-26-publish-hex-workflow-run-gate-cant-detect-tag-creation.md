@@ -5,6 +5,8 @@ area: release-engineering
 files:
   - .github/workflows/publish-hex.yml:38-44 (broken gate condition)
 priority: v0.1.2
+resolves_phase: 8
+resolves_req: REL-01
 ---
 
 ## Problem

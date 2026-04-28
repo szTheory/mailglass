@@ -149,7 +149,6 @@ if Code.ensure_loaded?(Oban.Worker) do
     available in the closure the caller constructs.
     """
     @doc since: "0.1.0"
-    @spec wrap_perform(map(), (-> any())) :: any()
     def wrap_perform(%{args: args}, fun) when is_function(fun, 0) do
       case args do
         %{"mailglass_tenant_id" => tenant_id} when is_binary(tenant_id) ->

@@ -21,6 +21,12 @@ config :mailglass, Mailglass.TestRepo,
   database: "mailglass_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10,
+  # Test-only: `migration_test.exs` intentionally drops and recreates `citext`.
+  # Unnamed statements avoid reusing prepared plans that still point at the
+  # pre-drop type OID, which is what surfaces as `XX000 cache lookup failed for
+  # type NNNNNN` / `0A000 cached plan must not change result type` later in the
+  # suite. Production adopters should keep their own repo default here.
+  prepare: :unnamed,
   # `migration_test.exs` drops and recreates the citext extension to prove
   # the down/up round-trip. The fresh OID makes the Postgrex TypeServer's
   # cached type info stale, surfacing as

@@ -170,11 +170,9 @@ defmodule Mailglass.Outbound.Delivery do
 
   @doc "Closed event-type atom set. Tested against api_stability.md (Phase 6 check)."
   @doc since: "0.1.0"
-  @spec __event_types__() :: [atom()]
   def __event_types__, do: @event_types
 
   @doc "Closed stream atom set."
   @doc since: "0.1.0"
-  @spec __streams__() :: [atom()]
   def __streams__, do: @streams
 end

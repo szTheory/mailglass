@@ -14,6 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: release
+        # DO NOT bump to v5 until Phase 13 release ceremony (per .planning/phases/08-release-engineering-hardening/08-CONTEXT.md D-08-26)
+        # Rehearsed 2026-04-28: stay on the pinned v4 path for the v0.2.0 cut.
+        # `secrets.GITHUB_TOKEN` is acceptable for release/tag creation here,
+        # but maintainers must treat publish/smoke workflow_dispatch from the
+        # release tag as the canonical fallback if downstream release fan-out
+        # does not occur automatically.
         uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071  # v4.4.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -26,12 +32,15 @@ jobs:
       # gets rewritten. We sync it ourselves on the release-please PR branch
       # after the action runs. Idempotent — exits clean if the pin is already
       # correct or if there's no release-please PR pending.
+      # Ceremony rule: review this generated PR diff before merge. The repo's
+      # linked-version dep pin is custom, so the release PR is not a vanilla
+      # release-please artifact.
       #
       # Recursion-safe: pushes authenticated with GITHUB_TOKEN do NOT trigger
       # further workflow runs (GitHub anti-recursion guarantee).
       - name: Checkout main for sync step
         if: ${{ steps.release.outputs.prs_created == 'true' }}
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
 
@@ -56,10 +65,29 @@ jobs:
           fi
           echo "Target dep pin: {:mailglass, \"== $NEW_VERSION\"}"
 
-          # Rewrite the strict pin literal. Match `== <semver>` inside the
-          # {:mailglass, "..."} tuple body. Multi-line .exs is fine — sed -E
-          # handles the regex on a per-line basis.
-          sed -i -E 's/\{:mailglass, "== [0-9]+\.[0-9]+\.[0-9]+"\}/{:mailglass, "== '"$NEW_VERSION"'"}/' mailglass_admin/mix.exs
+          # REL-05: Bash-loop generalization keyed on (path, dep_atom) pairs.
+          # Future-proofs adding mailglass_inbound at v0.5+ — uncomment one line.
+          PINS=(
+            "mailglass_admin/mix.exs:mailglass"
+            # "mailglass_inbound/mix.exs:mailglass"   # uncomment at v0.5
+          )
+
+          for entry in "${PINS[@]}"; do
+            path="${entry%:*}"
+            dep="${entry##*:}"
+
+            # REL-05: exit-1 guard — catches the case where the dep tuple was
+            # renamed and the sed would silently no-op. Two layers of protection:
+            # (1) this guard, (2) mix_config_test.exs sed-anchor stability test.
+            matches=$(grep -cE "\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}" "$path" || true)
+            if [ "$matches" -eq 0 ]; then
+              echo "ERROR: sed anchor regex matched zero lines in $path." >&2
+              echo "The dep tuple shape may have been renamed — see CONTRIBUTING.md REL-05 section." >&2
+              exit 1
+            fi
+
+            sed -i -E "s/\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}/{:${dep}, \"== ${NEW_VERSION}\"}/" "$path"
+          done
 
           if git diff --quiet -- mailglass_admin/mix.exs; then
             echo "Pin already at $NEW_VERSION — nothing to commit."

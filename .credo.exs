@@ -29,6 +29,7 @@ extra_checks = [
      },
      included_path_prefixes: ["lib/mailglass/"]
    ]},
+  {Mailglass.Credo.MultiEventFirstInWebhookIngest, []},
   {Mailglass.Credo.NoOversizedUseInjection, [max_lines: 20]},
   {Mailglass.Credo.PrefixedPubSubTopics, [required_prefix: "mailglass:"]},
   {Mailglass.Credo.NoDefaultModuleNameSingleton,
@@ -50,6 +51,7 @@ extra_checks = [
      allowed_modules: [Mailglass.Clock, Mailglass.Clock.System, Mailglass.Clock.Frozen],
      included_path_prefixes: ["lib/mailglass/"]
    ]},
+  {Mailglass.Credo.RequireAtomicUnsubscribeHeaders, []},
   {Mailglass.Credo.NoTrackingOnAuthStream,
    [
      auth_name_heuristics:
@@ -61,22 +63,96 @@ extra_checks = [
   configs: [
     %{
       name: "default",
-      # `strict: true` would fail the build on ~169 lower-priority software
-      # design / readability / refactoring suggestions that pre-date Phase
-      # 07.1 — out of scope for v0.1.0. Custom Credo checks (12 in
-      # credo_checks/) remain mandatory at default priority. Re-enable
-      # strict in a post-publish cleanup phase.
-      strict: false,
+      strict: true,
       files: %{
+        # D-08-21: included stays ["lib/", "test/"]; do NOT add credo_checks/
+        # (Credo would lint its own checks, producing false positives).
         included: ["lib/", "test/"],
         excluded: []
       },
       requires: ["./credo_checks/*.ex"],
-      # `Mailglass.Error.*` is the project's intentional error namespace
-      # (see CLAUDE.md "Errors as a public API contract"). The default
-      # ExceptionNames check picks the dominant `*Error` suffix and flags
-      # `Mailglass.Error.BatchFailed` as inconsistent — false positive.
-      checks: extra_checks ++ [{Credo.Check.Consistency.ExceptionNames, false}],
+      checks:
+        extra_checks ++
+          [
+            # `Mailglass.Error.*` is the project's intentional error namespace
+            # (see CLAUDE.md "Errors as a public API contract"). The default
+            # ExceptionNames check picks the dominant `*Error` suffix and flags
+            # `Mailglass.Error.BatchFailed` as inconsistent — false positive.
+            # Reason: project uses Mailglass.Error.* namespace intentionally; ExceptionNames
+            # flags it as inconsistent when it is consistent by design.
+            # Tracking: permanent.
+            {Credo.Check.Consistency.ExceptionNames, false},
+
+            # Reason: stylistic; conflicts with deliberate `apply/3` use in adapter dispatch.
+            # Tracking: permanent.
+            {Credo.Check.Refactor.Apply, false},
+
+            # Reason: macro-heavy library; `quote do` blocks in `Mailable`/`MailglassAdmin.Router`
+            # are intentionally long for `use` injection.
+            # Tracking: permanent.
+            {Credo.Check.Refactor.LongQuoteBlocks, false},
+
+            # Reason: low signal in a 33k-LOC codebase with mixed nesting depth.
+            # Tracking: permanent (Oban posture).
+            {Credo.Check.Readability.AliasOrder, false},
+
+            # Reason: 102 findings, 99% in test files where nested-module-aliases are
+            # deliberate scoping.
+            # Tracking: permanent.
+            {Credo.Check.Design.AliasUsage, false},
+
+            # Reason: explicit `try`/`rescue` in `webhook/providers/sendgrid.ex` and
+            # `webhook/plug.ex` documents the rescue-and-rewrap contract for
+            # `Mailglass.SignatureError`.
+            # Tracking: permanent (house style).
+            {Credo.Check.Readability.PreferImplicitTry, false},
+
+            # Reason: nesting depth exceeds Credo's default in webhook/ingest.ex,
+            # suppression_store/ets.ex, tracking/rewriter.ex, tracking/token.ex,
+            # webhook/reconciler.ex, events/reconciler.ex, and outbound.ex — all
+            # structurally justified by the multi-step pipeline and error-propagation
+            # patterns. In-scope refactors (installer/apply.ex, postmark.ex) have
+            # been fixed; remaining sites are Phase-9-stable or lower-risk.
+            # Tracking: revisit after Phase 9 API redesign; reduce to 0 suppressions.
+            {Credo.Check.Refactor.Nesting, false},
+
+            # Reason: cyclomatic complexity exceeds 9 in webhook/ingest.ex and
+            # publish.check.ex — both have intentionally broad branching for
+            # provider event-type dispatch and tarball validation respectively.
+            # In-scope files (installer/apply.ex, postmark.ex) have been refactored.
+            # Tracking: revisit after Phase 9; extract provider dispatch to reduce score.
+            {Credo.Check.Refactor.CyclomaticComplexity, false},
+
+            # Reason: single-condition `cond do` used deliberately in
+            # installer/apply.ex, events/reconciler.ex, and mailer_case.ex for
+            # future-extensibility (additional conditions expected in follow-on plans).
+            # Tracking: revisit at v0.3 cleanup phase.
+            {Credo.Check.Refactor.CondStatements, false},
+
+            # Reason: TODO tags in test files are intentional Phase-8 REL-07 reminders
+            # for installer idempotency work; they are tracked in .planning/ todos and
+            # will be resolved in the follow-on cleanup plan.
+            # Tracking: remove after REL-07 todos are resolved.
+            {Credo.Check.Design.TagTODO, false},
+
+            # Reason: large integers in webhook_fixtures.ex are OID tuples (e.g.
+            # secp256r1 OID {1, 2, 840, 10045, 3, 1, 7}) — underscores would
+            # misrepresent the structure and hurt readability for this domain literal.
+            # Tracking: permanent (OID values are domain constants, not human numbers).
+            {Credo.Check.Readability.LargeNumbers, false},
+
+            # Reason: `Enum.map/2 |> Enum.join/2` is used in publish.check.ex and
+            # install.ex where readability of the intermediate step is more important
+            # than micro-optimisation; these are CLI tools, not hot paths.
+            # Tracking: revisit at v0.3 cleanup phase; convert if performance evidence found.
+            {Credo.Check.Refactor.MapJoin, false},
+
+            # Reason: `if not condition do` is used in worker_test.exs for optional-dep
+            # guard clauses (Code.ensure_loaded?) where the positive form would require
+            # an extra level of nesting or an unless that obscures the skip intent.
+            # Tracking: permanent (test-file guard pattern for optional deps).
+            {Credo.Check.Refactor.NegatedConditionsWithElse, false}
+          ],
       extra_checks: extra_checks
     }
   ]

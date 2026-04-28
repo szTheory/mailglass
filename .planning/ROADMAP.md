@@ -1,213 +1,204 @@
 # Roadmap: mailglass
 
-**Defined:** 2026-04-21
 **Granularity:** standard (config.json)
-**Milestone:** v0.1 (validation release — `mailglass` core + `mailglass_admin` dev preview only)
 **Sibling package out of milestone:** `mailglass_inbound` (v0.5+, not roadmapped here)
 
-## Overview
+## Milestones
 
-mailglass v0.1 ships in 7 phases tracing the 7-layer build order from `research/SUMMARY.md`. The spine is dependency-forced: zero-dep foundations and pure rendering first, then the immutable event ledger and multi-tenancy (which cannot be retrofitted per D-09), then the Fake adapter (built FIRST per D-13) plus the send pipeline, then webhook ingest (Postmark + SendGrid only per D-10), then the dev-only preview LiveView (`mailglass_admin` v0.1 per D-11), then custom Credo checks refined against real code, then the installer + CI/CD + docs (built last so installer goldens lock the public API). All 84 v1 REQ-IDs map to exactly one phase. Three phases are flagged for `/gsd-research-phase` before planning (Phase 2, 4, 5).
+- ✅ **v0.1 Validation Release** — Phases 1–7 + 07.1 (shipped 2026-04-26) — see [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md)
+- 🚧 **v0.2 Production-Credible Core** — Phases 8–13 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work.
-- Decimal phases (2.1, 2.2): Urgent insertions (added later via `/gsd-insert-phase`, never planned upfront).
+<details>
+<summary>✅ v0.1 Validation Release (Phases 1–07.1) — SHIPPED 2026-04-26</summary>
 
-- [x] **Phase 1: Foundation** - Zero-dep modules + pure HEEx renderer pipeline ("render an email from HEEx" milestone). Complete 2026-04-22.
-- [x] **Phase 2: Persistence + Tenancy** - Append-only event ledger with SQLSTATE 45A01 trigger + multi-tenant schemas from day one. Complete 2026-04-22.
-- [x] **Phase 3: Transport + Send Pipeline** - Fake adapter built first (D-13), then end-to-end Mailable → Outbound → Worker → Adapter → Multi(Delivery + Event) hot path. Complete 2026-04-23.
-- [x] **Phase 4: Webhook Ingest** - Postmark + SendGrid HMAC-verified, idempotent, Anymail-normalized event ingest.
-- [ ] **Phase 5: Dev Preview LiveView** - `mailglass_admin` sibling package with mailable sidebar, `preview_props/0` auto-discovery, device + dark toggles, HTML/Text/Raw/Headers tabs.
-- [x] **Phase 6: Custom Credo + Boundary** - Twelve domain-rule lint checks plus `boundary` enforcement, refined against real code. (completed 2026-04-24)
-- [ ] **Phase 7: Installer + CI/CD + Docs** - `mix mailglass.install` with golden-diff CI, full GHA pipeline, ExDoc with 9 guides + doctest contracts.
+- [x] Phase 1: Foundation (6/6 plans) — completed 2026-04-22
+- [x] Phase 2: Persistence + Tenancy (6/6 plans) — completed 2026-04-22
+- [x] Phase 3: Transport + Send Pipeline (12/12 plans) — completed 2026-04-23
+- [x] Phase 4: Webhook Ingest (9/9 plans) — completed 2026-04-24
+- [x] Phase 5: Dev Preview LiveView (6/6 plans) — completed 2026-04-25
+- [x] Phase 6: Custom Credo + Boundary (6/6 plans) — completed 2026-04-24
+- [x] Phase 7: Installer + CI/CD + Docs (5/5 plans) — completed 2026-04-25
+- [x] Phase 07.1: Publish to Hex.pm (INSERTED) (11/11 plans) — completed 2026-04-26
+
+Total: 8 phases, 61 plans. Hex.pm: `mailglass` 0.1.0 + 0.1.1, `mailglass_admin` 0.1.0 + 0.1.1.
+
+Full details: [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md).
+
+</details>
+
+### 🚧 v0.2 Production-Credible Core (In Progress)
+
+**Milestone Goal:** Lock mailglass's public API for downstream OSS dependencies, ship the RFC 8058 + auto-suppression deliverability floor that makes "batteries-included" load-bearing, and close v0.1.1 release-engineering debt so the publish pipeline is trustworthy for sibling-version coordinated releases.
+
+**Phase Numbering:** Continues from v0.1's last phase (07.1) → starts at Phase 8.
+
+- [x] **Phase 8: Release-Engineering Hardening** (completed 2026-04-27) - Close 9 v0.1.2 debt items + re-tighten Credo/Dialyzer/Tests gates before any API-freezing work
+- [ ] **Phase 9: Mailable API Redesign + Freeze** - Remove Swoosh namespace leakage; ship native Message field setters, deprecation warnings, Igniter codemod, and api_stability.md v2
+- [ ] **Phase 10: Stream Policy Implementation** - Fill the existing no-op seam at stream.ex:35; enforce compile-time + runtime stream separation; add StreamPolicyConsistent Credo check
+- [x] **Phase 11: RFC 8058 List-Unsubscribe** (completed 2026-04-28) - Signed-token unsubscribe controller (core package); atomic header injection; mix mailglass.gen.unsubscribe; property tests; published adopter and DKIM verification guides
+- [x] **Phase 12: Auto-Suppression + Soft-Bounce Escalation** (completed 2026-04-28) - Event-first Multi suppression inserts; Oban escalation worker; suppressions.resync task; complained permanence constraint
+- [ ] **Phase 13: v0.2 Release Ceremony** - CHANGELOG, adopter walkthrough validation, full doc audit, coordinated Hex publish (4/5 plans complete; live publish pending)
 
 ## Phase Details
 
-### Phase 1: Foundation
-**Goal**: Zero-dep modules every later layer depends on are in place, and a pure-function HEEx renderer pipeline can render `MyApp.UserMailer.welcome(user)` to inlined-CSS HTML + plaintext without persistence or transport.
-**Depends on**: Nothing (first phase)
-**Requirements**: CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, AUTHOR-02, AUTHOR-03, AUTHOR-04, AUTHOR-05, COMP-01, COMP-02
+### Phase 8: Release-Engineering Hardening
+**Goal**: Quality gates (Dialyzer, Credo strict, Tests halt-on-failure) are enforced and 9 v0.1.2 debt items are closed before any API-freezing work begins
+**Depends on**: Nothing (v0.1.1 already shipped; first v0.2 phase)
+**Requirements**: REL-01, REL-02, REL-03, REL-04, REL-05, REL-06, REL-07, REL-08, REL-09, REL-10, REL-11, REL-12
 **Success Criteria** (what must be TRUE):
-  1. A developer can call `Mailglass.Renderer.render(message)` on a HEEx-based mailable and receive `{html_body, text_body}` with CSS inlined and plaintext auto-generated, in under 50ms for a typical template.
-  2. `Mailglass.Components` (`<.container>`, `<.section>`, `<.row>`, `<.column>`, `<.heading>`, `<.text>`, `<.button>`, `<.img>`, `<.link>`, `<.hr>`, `<.preheader>`) render with MSO Outlook VML fallbacks and require zero Node toolchain at any point.
-  3. `mix compile --no-optional-deps --warnings-as-errors` passes against the v0.1 required-deps-only set; optional deps (`oban`, `opentelemetry`, `mjml`, `gen_smtp`, `sigra`) route through `Mailglass.OptionalDeps.*` gateway modules.
-  4. A `Mailglass.Error` raised by any v0.1 surface area is pattern-matchable by struct (`%SendError{}`, `%TemplateError{}`, `%SignatureError{}`, `%SuppressedError{}`, `%RateLimitError{}`, `%ConfigError{}`) without parsing the message string; the closed `:type` atom set is documented in `api_stability.md`.
-  5. Every `:telemetry.execute/3` call emitted by mailglass uses the 4-level `[:mailglass, :domain, :resource, :action, :start | :stop | :exception]` convention with metadata keys drawn only from the whitelisted set; a telemetry handler that raises does not break the pipeline.
-**Pitfalls guarded against**: LIB-02 (compile-time dep explosion via `compile_env`), LIB-07 (only `Config` may use `compile_env`), OBS-01 (PII in telemetry — whitelist enforced from day one), OBS-04 (logger PII), DIST-04 (optional dep gateway pattern locked here so later phases cannot leak), MAINT-04 (Premailex flagged as MEDIUM-confidence "watch this dep").
+  1. Tag-push to mailglass-v0.2.0 triggers `publish-hex.yml` via `on: release: types: [published]` — NOT `on: push: tags:` — and a workflow rerun does NOT double-publish (`mix hex.info` pre-check skips if version already on Hex)
+  2. `mix credo --strict` passes with zero warnings; each suppressed check in `.credo.exs` has a reasoning comment; `mix dialyzer` halts on warnings with `--ignore-exit-status` REMOVED from CI (subtraction, not addition); residual `.dialyzer_ignore.exs` entries are ≤15, each with a comment explaining why
+  3. Bare `mix test` completes without the citext-OID-cache race; Tests gate runs `continue-on-error: false`; `mix test --only phase_NN_uat` is clean
+  4. `CLAUDE.md` does not appear in HexDocs extras; no `D-NN` or `LINT-NN` IDs appear in public guides; `mix mailglass.docs.check` fails the build if any internal ID leaks
+  5. All 6 closed Dependabot PRs merged; all Actions SHA pins refreshed for 2026-Q2; `verify.phase_NN` aliases renamed to semantic names (with deprecated pass-throughs for one cycle)
 **Plans**: 6 plans
+
 Plans:
-- [x] 01-01-PLAN.md — Project scaffold, deps, Boundary compiler, Wave 0 test stubs
-- [x] 01-02-PLAN.md — Error hierarchy (6 defexception structs + namespace behaviour + api_stability.md)
-- [x] 01-03-PLAN.md — Config (NimbleOptions), Telemetry (span helpers), Repo (transact/1), IdempotencyKey
-- [x] 01-04-PLAN.md — Message struct + OptionalDeps gateway modules (Oban, OTel, MJML, GenSmtp, Sigra)
-- [x] 01-05-PLAN.md — Components (11 HEEx components + Layout + golden VML fixture test)
-- [x] 01-06-PLAN.md — TemplateEngine behaviour + HEEx impl + Renderer pipeline + Compliance + Gettext
-**UI hint**: no
+- [x] 08-01: Fix publish-hex.yml + post-publish-smoke.yml triggers (on: release: types: [published]) + mix hex.info pre-check idempotency guard (REL-01)
+- [x] 08-02: HexDocs hygiene — exclude CLAUDE.md; strip D-NN/LINT-NN from guides; add mix mailglass.docs.check CI gate (REL-02)
+- [x] 08-03: Rename verify aliases to semantic names + wire installer goldens into mix mailglass.publish.check + resolve release-please extra-files (REL-03, REL-04, REL-05)
+- [x] 08-04: Fix Advisory Matrix CI (DB-setup + Elixir 1.17); unskip install_idempotency tests; re-batch 6 Dependabot PRs; refresh SHA pins (REL-06, REL-07, REL-08, REL-09)
+- [x] 08-05: Re-tighten Tests gate — sandbox + Task.Supervisor isolation; citext-OID-cache race fix; halt-on-failure (REL-10) — PR-A+PR-B shipped
+- [x] 08-06: Enable Credo --strict (REL-11) + Dialyzer triage: remove --ignore-exit-status, triage ~230 findings to ≤15 annotated .dialyzer_ignore.exs entries (REL-12)
+- [x] 08-07: Auto-PR-C — flip Tests lane, add gate-self-test workflow, automate branch protection (resolves 08-05 PR-C without human action)
 
-### Phase 2: Persistence + Tenancy
-**Goal**: The append-only event ledger exists, the SQLSTATE 45A01 immutability trigger fires on every UPDATE/DELETE attempt, and `tenant_id` lives on every mailglass-owned schema so multi-tenancy is structural rather than retrofitted.
-**Depends on**: Phase 1
-**Requirements**: PERSIST-01, PERSIST-02, PERSIST-03, PERSIST-04, PERSIST-05, PERSIST-06, TENANT-01, TENANT-02
+### Phase 9: Mailable API Redesign + Freeze
+**Goal**: Adopter mailable modules compile against v0.2 with zero Swoosh.Email references in their API surface; downstream OSS packages can pin to `mailglass ~> 0.2` with a frozen, machine-readable public surface
+**Depends on**: Phase 8 (clean lint/test gates required before API-freezing work)
+**Requirements**: API-01, API-02, API-03, API-04, API-05, API-06, API-07
 **Success Criteria** (what must be TRUE):
-  1. `assert_raise EventLedgerImmutableError, fn -> Repo.update(event) end` and the equivalent `Repo.delete/1` test both pass against the live `mailglass_events` schema (SQLSTATE 45A01 from `mailglass_raise_immutability` trigger).
-  2. A StreamData property test generates 1000 sequences of `(webhook_event, replay_count_1..10)` and asserts that applying any sequence converges to the same final state as applying each event once (idempotency `UNIQUE` partial index on `idempotency_key WHERE idempotency_key IS NOT NULL` plus `on_conflict: :nothing`).
-  3. `mailglass_deliveries`, `mailglass_events`, and `mailglass_suppressions` each have a `tenant_id` column (indexed; nullable for single-tenant mode), and `Mailglass.Tenancy.SingleTenant` is the default no-op resolver.
-  4. Calling `Mailglass.Events.append/2` outside an `Ecto.Multi` raises `ArgumentError` — there is no other public path to write the event ledger. (Revised per CONTEXT.md D-02: the runtime-raise invariant is superseded by a lint-time check landing in Phase 6 `NoRawEventInsert`; Plan 05 ships `append/1` + `append_multi/3` as the ONLY writer paths. The PERSIST-05 invariant "no raw Repo.insert(%Event{}) anywhere in mailglass code" is preserved.)
-  5. An adopter runs `mix mailglass.gen.migration` (or the migration block embedded in the installer) and `mix ecto.migrate` brings the three schemas + the immutability trigger into existence.
-**Pitfalls guarded against**: MAIL-03 (idempotency), MAIL-07 (suppression `:scope` enum has no default), MAIL-09 (provider `message_id` collision — UNIQUE on `(provider, provider_message_id)`), PHX-04 (no FKs to adopter tables; polymorphic `(owner_type, owner_id)`), PHX-05 partial (tenant column lives everywhere — Credo enforcement comes in Phase 6).
-**Research flag**: yes — `/gsd-research-phase` before planning. Open questions: `metadata jsonb` projection columns shape; orphan-webhook reconciliation worker cadence; whether to adopt `:typed_struct` / `:typed_ecto_schema` given Elixir 1.18+ set-theoretic types; status state machine app-enforced vs DB check constraint (recommend app-enforced — see SUMMARY.md Q6).
-**Plans**: 6 plans
+  1. Adopter app on `~> 0.2` compiles `MyApp.UserMailer` with zero `Swoosh.Email` references at call sites; native setters `to/2`, `from/2`, `subject/2`, `html_body/2`, `text_body/2`, `header/3`, `attach/2`, `put_tag/2` all work
+  2. `update_swoosh/2` compiles, works, and appears in `api_stability.md` v2 §Message Extensions; running `mix mailglass.upgrade.v0_2` does NOT rewrite any `update_swoosh/2` call sites
+  3. A v0.1 adopter's existing mailable code compiled against v0.2 emits `@deprecated` compile-time warnings at every superseded call site, but does NOT fail compilation (one-cycle BC)
+  4. `mix mailglass.upgrade.v0_2 --dry-run` prints all mechanically-rewritable sites; `--apply` rewrites them; ambiguous cases emit `IO.warn` with migration guide URL and are NOT silently rewritten
+  5. `mix mailglass.stability.check` exits zero; no `Swoosh.Email.t()` reference appears in public-API docstrings or typespecs; `guides/upgrading-from-v0_1.md` doctest snippets compile in CI
+**Plans**: 5 plans
+
 Plans:
-- [x] 02-01-PLAN.md — Wave 0 scaffolding: `:uuidv7` dep + `Mailglass.Schema` macro + `EventLedgerImmutableError` + `TenancyError` + SuppressedError pre-GA patch + Telemetry spans (events_append, persist) + Repo SQLSTATE translation + TestRepo/DataCase/Generators + `config/test.exs` wiring
-- [x] 02-02-PLAN.md — Migration module + Oban-pattern Postgres dispatcher + V01 DDL (3 tables + immutability trigger + CHECK + indexes + citext) + test_helper runs synthetic migration + immutability integration test
-- [x] 02-03-PLAN.md — Ecto schemas: `Mailglass.Outbound.Delivery` + `Mailglass.Events.Event` + `Mailglass.Suppression.Entry` with hand-written typespecs, `Ecto.Enum` fields, closed-atom-set reflectors, scope/stream coupling validation
-- [x] 02-04-PLAN.md — `Mailglass.Tenancy` behaviour + `SingleTenant` default + process-dict helpers + `Mailglass.Oban.TenancyMiddleware` (conditionally compiled) + DataCase upgrade
-- [x] 02-05-PLAN.md — `Mailglass.Events.append/1` + `append_multi/3` (D-01..D-06: idempotency via partial-unique + id:nil replay fetch + telemetry spans) + `Mailglass.Events.Reconciler` pure-query orphan lookup + StreamData convergence property test
-- [x] 02-06-PLAN.md — `Mailglass.Outbound.Projector` (monotonic D-15 + optimistic_lock D-18) + `Mailglass.SuppressionStore` behaviour + Ecto default impl + phase-wide integration test proving all 5 ROADMAP criteria
-**UI hint**: no
+- [ ] 09-01-PLAN.md — Core API Setters + Deprecations
+- [ ] 09-02-PLAN.md — Mailable Macro Update
+- [ ] 09-03-PLAN.md — Igniter Codemod
+- [ ] 09-04-PLAN.md — API Stability Check & Contract
+- [ ] 09-05-PLAN.md — Upgrade Guide
 
-### Phase 3: Transport + Send Pipeline
-**Goal**: The Fake adapter (built FIRST per D-13) is the merge-blocking release gate, and the full hot path — `Mailable → Outbound → preflight (suppression + rate-limit + stream policy) → render → Multi(Delivery + Event(:queued) + Worker enqueue) → Adapter → Multi(Delivery update + Event(:dispatched))` — is testable end-to-end against Fake without any real provider.
-**Depends on**: Phase 2
-**Requirements**: AUTHOR-01, TRANS-01, TRANS-02, TRANS-03, TRANS-04, SEND-01, SEND-02, SEND-03, SEND-04, SEND-05, TRACK-01, TRACK-03, TEST-01, TEST-02, TEST-05
+### Phase 10: Stream Policy Implementation
+**Goal**: Message stream separation is enforced at both compile-time and runtime; the existing no-op seam at stream.ex:35 is replaced with real policy; adopters cannot accidentally ship a :bulk mailable without a stream set
+**Depends on**: Phase 9 (StreamPolicyConsistent Credo check inspects the v0.2 macro shape; macro must be finalized first)
+**Requirements**: STREAM-01, STREAM-02, STREAM-03, STREAM-04
 **Success Criteria** (what must be TRUE):
-  1. An adopter writes `defmodule MyApp.UserMailer do; use Mailglass.Mailable; def welcome(user), do: ...; end`, calls `Mailglass.Outbound.deliver/2`, and the Fake adapter records the message; `Mailglass.TestAssertions.assert_mail_sent/1` asserts on it in fewer than 20 lines of test code.
-  2. `Mailglass.Outbound.deliver_later/2` enqueues an Oban job when `:oban` is loaded; without Oban it falls back to `Task.Supervisor.async_nolink` and emits exactly one `Logger.warning` at boot — both code paths return `{:ok, %Delivery{}}`.
-  3. `Mailglass.Outbound.deliver_many/2` survives partial failure: a batch where the third recipient errors records two successful `Delivery` rows + one `%SendError{}` and re-running the batch produces no duplicate deliveries (idempotency key replay).
-  4. Open and click tracking are off by default — no tracking pixel injection or link rewriting unless `tracking: [opens: true, clicks: true]` is explicitly set per-mailable (the `NoTrackingOnAuthStream` Credo enforcement lands in Phase 6).
-  5. `Mailglass.RateLimiter` enforces a per-`(tenant_id, recipient_domain)` ETS-backed token bucket; exceeding the configured limit returns `{:error, %RateLimitError{retry_after_ms: int}}` and the `mix verify.core_send` alias runs the full pipeline against Fake.
-**Pitfalls guarded against**: LIB-01 (≤20-line `use` macro — Credo check lands Phase 6), LIB-03 (return-type stability locked in `api_stability.md`), LIB-04 (tuple returns for adapters), LIB-05 (no `name: __MODULE__` singletons; rate limiter is small supervisor child owning ETS), LIB-06 (renderer + Swoosh bridge are pure), MAIL-01 (tracking off by default), TEST-01 (Fake first, Mox not used for transport), TEST-06 (`Mailglass.Clock` injection point).
-**Plans**: 12 plans (7 original + 5 gap-closure)
+  1. A mailable declared `use Mailglass.Mailable, stream: :bulk` has `%Message{stream: :bulk}` stamped at `Message.new_from_use/2`; runtime `%Message{stream: :bulk}` assignment also works; `:transactional`, `:operational`, `:bulk` are the only accepted atoms
+  2. Sending a message that violates stream policy raises `%Mailglass.Error{type: :stream_policy_violated, detail: %{rule: atom, suggestion: String.t}}` with an informative message; existing `with :ok <- Stream.policy_check(msg)` call sites require zero modification
+  3. `mix credo --strict` catches a `:bulk` mailable with no stream set and a `:transactional` mailable with tracking enabled at compile time, via `Mailglass.Credo.StreamPolicyConsistent` (LINT-13)
+  4. Feedback-ID format auto-populated as `{sender_id}:{mailable}:{tenant_id}:{stream}` when feedback_id is configured; stream slot reflects runtime stream value
+**Plans**: 5 plans
+
 Plans:
-- [x] 03-01-PLAN.md — Wave 1 foundations: Clock, PubSub.Topics, Mailglass.PubSub name, BatchFailed + ConfigError atom extensions, Message.mailable_function field, Telemetry span helpers, supervision tree (PubSub + Task.Supervisor) + Config schema + mix verify.phase_03 alias + Wave 0 fixtures
-- [x] 03-02-PLAN.md — Wave 2: Mailglass.Adapter behaviour + Mailglass.Adapters.Fake (merge-blocking release gate per D-13) + Mailglass.Adapters.Swoosh wrapper + Projector.broadcast_delivery_updated/3
-- [x] 03-03-PLAN.md — Wave 3: Preflight stages — RateLimiter (supervisor-owned ETS token bucket, :transactional bypass D-24), Suppression facade + SuppressionStore.ETS impl, Stream.policy_check no-op seam
-- [x] 03-04-PLAN.md — Wave 3: Mailglass.Mailable behaviour + `use` macro (≤15-line injection), Mailglass.Tracking facade + Mailglass.Tracking.Guard runtime auth-stream enforcement (D-38)
-- [x] 03-05-PLAN.md — Wave 4: Mailglass.Outbound facade (send/deliver/deliver_later/deliver_many/bang variants) + Mailglass.Outbound.Worker (Oban conditional-compile) + Task.Supervisor fallback + idempotency-key migration + top-level Mailglass defdelegates
-- [x] 03-07-PLAN.md — Wave 4: Mailglass.Tracking.Token (Phoenix.Token + salts rotation), Mailglass.Tracking.Rewriter (Floki pixel injection + link rewriting), Mailglass.Tracking.Plug (GET /o/:token.gif + GET /c/:token with D-39 no-enumeration), Mailglass.Tracking.ConfigValidator (boot-time host assertion D-32)
-- [x] 03-06-PLAN.md — Wave 5: Mailglass.TestAssertions (4 matcher styles + PubSub-backed delivered/bounced) + Mailglass.MailerCase (async: true default) + WebhookCase + AdminCase stubs + phase-wide UAT gate (test/mailglass/core_send_integration_test.exs tagged :phase_03_uat) + mix verify.phase_03 sign-off
-- [x] 03-09-PLAN.md — [GAP] Wave 5: Tracking endpoint config unification — single Tracking.endpoint/0 function shared by Rewriter and Plug; raise on missing config (HI-02 fix)
-- [x] 03-10-PLAN.md — [GAP] Wave 5: MailerCase async_adapter env isolation — guard Application.put_env with unless async?; snapshot/restore in on_exit (HI-01 fix) + Oban :manual support
-- [x] 03-11-PLAN.md — [GAP] Wave 5: citext OID cache fix — confirm disconnect_on_error_codes + test_helper probe (Phase 2 infrastructure flake)
-- [x] 03-08-PLAN.md — [GAP] Wave 6: Wire Tracking.rewrite_if_enabled/1 into Outbound hot paths (do_send, do_deliver_later, preflight_single) + positive tracking UAT test (TRACK-03 closure, depends_on ["09"])
-- [x] 03-12-PLAN.md — [GAP] Wave 6: Medium-severity cleanup — ME-01 Events Clock, ME-02 BatchFailed simplification, ME-03 to_existing_atom, ME-04 safe_broadcast exit catch, ME-05 provider_tag pattern match (depends_on ["08"])
-**UI hint**: no
+- [ ] 10-01: Implement Mailglass.Stream module — closed atom set, per-mailable default resolution, Message.new_from_use/2 stamping (STREAM-01)
+- [ ] 10-02: Replace no-op seam at stream.ex:35 with real StreamPolicy stage — runtime check, structured :stream_policy_violated error (STREAM-02)
+- [ ] 10-03: Write Mailglass.Credo.StreamPolicyConsistent (LINT-13) — bulk-missing + tracking-on-transactional checks; coexists with NoTrackingOnAuthStream (STREAM-03)
+- [ ] 10-04: Update Feedback-ID format to include stream slot (STREAM-04)
+- [ ] 10-05: Boundary tests + StreamData property — policy violations caught at compile + runtime; stream stamping round-trips correctly
 
-### Phase 4: Webhook Ingest
-**Goal**: A Postmark or SendGrid webhook arriving at `/webhooks/<provider>` is HMAC-verified, parsed to the Anymail event taxonomy verbatim, written through one `Ecto.Multi` (Event row + Delivery projection update + PubSub broadcast), and replayed N times converges to the same state as applying once.
-**Depends on**: Phases 2 and 3
-**Requirements**: HOOK-01, HOOK-02, HOOK-03, HOOK-04, HOOK-05, HOOK-06, HOOK-07, TEST-03
+### Phase 11: RFC 8058 List-Unsubscribe
+**Goal**: Bulk mailables rendered from a Phoenix host carry both List-Unsubscribe and List-Unsubscribe-Post headers (atomically injected — both or neither); a one-click POST records an :unsubscribed event within 5 seconds; signed tokens survive rotation
+**Depends on**: Phase 10 (stream policy gates RFC 8058 header injection; add_rfc_required_headers/1 reads msg.stream)
+**Requirements**: UNSUB-01, UNSUB-02, UNSUB-03, UNSUB-04, UNSUB-05, UNSUB-06
 **Success Criteria** (what must be TRUE):
-  1. A real Postmark webhook payload (sample fixture) and a real SendGrid webhook payload pass HMAC verification (Basic Auth + IP for Postmark; ECDSA via OTP `:crypto` for SendGrid) and produce normalized `:queued | :sent | :rejected | :failed | :bounced | :deferred | :delivered | :autoresponded | :opened | :clicked | :complained | :unsubscribed | :subscribed | :unknown` events with `reject_reason ∈ :invalid | :bounced | :timed_out | :blocked | :spam | :unsubscribed | :other | nil`.
-  2. A forged webhook signature raises `Mailglass.SignatureError` at the call site with no recovery path, returns 401, and records a telemetry event (the `Logger.warning` audit happens too).
-  3. A duplicate webhook (same `idempotency_key`) returns 200 OK and produces zero new event rows; the StreamData property test on 1000 replay sequences passes (TEST-03).
-  4. An orphan webhook (no matching `delivery_id`) inserts an event row with `delivery_id: nil` + `needs_reconciliation: true` rather than failing — orphan-rate is observable via telemetry.
-  5. Per-provider mappers exhaustively case on the provider's event vocabulary; an unmapped event type falls through to `:unknown` only after a `Logger.warning` (no silent catch-all).
-**Pitfalls guarded against**: MAIL-03 (idempotency end-to-end), MAIL-08 (Anymail taxonomy verbatim per D-14, no silent `_ -> :hard_bounce`), HOOK-04 (200 OK on replay, 401 only on actual signature mismatch), OBS-02 (webhook telemetry never logs raw payload), OBS-05 (signature failure logged without leaking payload).
-**Research flag**: yes — `/gsd-research-phase` before planning. Open questions: SendGrid ECDSA verification using OTP 27 `:crypto` exact API; `Mailglass.Webhook.CachingBodyReader` interaction with Plug 1.18 body-reader chain; orphan reconciliation worker scope and cadence (need empirical Postmark + SendGrid orphan rates first).
-**Plans**: TBD
-**UI hint**: no
+  1. Bulk mailable rendered from a Phoenix host has both `List-Unsubscribe` and `List-Unsubscribe-Post` headers; `:transactional` mailable has neither; `byte_size(url) <= 900` assertion fails fast in `unsubscribe_url/2` before any header is set
+  2. `inject_unsubscribe_headers/2` is the ONLY code path that sets either header; `mix credo --strict` rejects any other path via `RequireAtomicUnsubscribeHeaders`; both headers are always set together, never one without the other
+  3. One-click POST to `/mailglass/unsubscribe/:token` returns HTTP 200 within 5 seconds; a subsequent identical POST also returns 200 (idempotent); an `:unsubscribed` event row appears in `mailglass_events` for the delivery
+  4. A token minted with salt A, then verified after rotation to salt B (with A still in rotation window), resolves correctly; an expired token returns a structured error (not a 500)
+  5. StreamData property test (100 sequences): round-trip mint → verify across rotation boundary passes; SSRF/open-redirect check on `unsubscribe_url/2` passes; List-Unsubscribe present on `:bulk`, absent on `:transactional`
+**Plans**: 7 plans
 
-### Phase 5: Dev Preview LiveView
-**Goal**: A Phoenix 1.8 adopter mounts `mailglass_admin_routes "/dev/mail"` in their `:dev` router pipeline and sees a mailable sidebar (auto-discovered via `preview_props/0`) with a live-assigns form, device width toggle (mobile/tablet/desktop), dark/light toggle, and HTML/Text/Raw/Headers tabs — the v0.1 killer demo.
-**Depends on**: Phase 3
-**Requirements**: PREV-01, PREV-02, PREV-03, PREV-04, PREV-05, PREV-06, BRAND-01
-**Success Criteria** (what must be TRUE):
-  1. An adopter mounts the preview LiveView in `:dev` only (per D-11), reloads the browser after editing a mailable file, and sees the rendered email refresh without a full page reload (LiveReload integration).
-  2. Every `Mailglass.Mailable` module that defines a `preview_props/0` callback appears in the sidebar with one entry per preview function and a live-editable assigns form per `preview_props/0` field.
-  3. The HTML / Text / Raw / Headers tabs each render the corresponding artifact of the same `Mailglass.Renderer` output the production pipeline produces — no placeholder shape divergence.
-  4. The UI conforms to the brand book (Ink/Glass/Ice/Mist/Paper/Slate palette, Inter + Inter Tight + IBM Plex Mono, mobile-first responsive, no glassmorphism / lens flares / literal broken-glass visuals; WCAG AA contrast verified) and ships daisyUI 5 + Tailwind v4 with no Node toolchain required of adopters.
-  5. `mailglass_admin/priv/static/` is a committed compiled bundle, `git diff --exit-code` after `mix mailglass_admin.assets.build` passes in CI, and the Hex tarball stays under 2MB.
-**Pitfalls guarded against**: PHX-02 (mount path is the adopter's first arg, no default; relative routes throughout), PHX-03 (admin assets in `mailglass_admin/priv/static/` only — Hex tarball size CI gate <500KB core / <2MB admin), PHX-06 (PubSub topics namespaced `mailglass:` — `PrefixedPubSubTopics` Credo check lands Phase 6), DIST-01 (`mailglass_admin/mix.exs` declares `{:mailglass, "== <pinned_version>"}` — sibling versions never drift), DIST-02 (`git diff --exit-code` on `priv/static/` after asset build).
-**Research flag**: yes — `/gsd-research-phase` before planning. Open questions: `MailglassAdmin.Router` macro signature should be prototyped against `~/projects/sigra/lib/sigra/admin/router.ex`; LiveView session cookie collision with adopter sessions; daisyUI 5 + Tailwind v4 ergonomics without a Node toolchain in adopter builds.
-**Plans**: 6 plans
 Plans:
-- [ ] 05-01-PLAN.md — Wave 0 doc-fix sweep + test infrastructure (support harness + fixtures + 9 RED-by-default test files)
-- [ ] 05-02-PLAN.md — mailglass_admin Hex package skeleton (mix.exs with linked mailglass dep + config + root module with Boundary + README/CHANGELOG/LICENSE)
-- [ ] 05-03-PLAN.md — Router macro (mailglass_admin_routes/2 + __session__/2 whitelisted callback) + PubSub.Topics + Layouts
-- [ ] 05-04-PLAN.md — Preview.Discovery (runtime reflection + graceful failure) + Preview.Mount on_mount hook
-- [ ] 05-05-PLAN.md — Asset pipeline: app.css with brand palette + 3 Mix tasks + Controllers.Assets + compiled bundle
-- [ ] 05-06-PLAN.md — PreviewLive + 4 function components (Sidebar/Tabs/DeviceFrame/AssignsForm) + Components + optional-deps gateway
-**UI hint**: yes
+- [x] 11-01: Mailglass.Compliance.Unsubscribe — token mint/verify, multi-salt rotation, byte_size(url) <= 900 assertion in unsubscribe_url/2 (UNSUB-01)
+- [x] 11-02: inject_unsubscribe_headers/2 as sole atomic header injection path; extend add_rfc_required_headers/1 with stream-conditional logic (mandatory :bulk, opt-in :operational, never :transactional) (UNSUB-02)
+- [x] 11-03: Mailglass.Compliance.UnsubscribeController in mailglass core — GET (confirmation page) + POST (RFC 8058 one-click, 200, idempotent, no redirect) (UNSUB-03)
+- [x] 11-04: Mailglass.Router macro — mount /mailglass/unsubscribe/:token routes; configurable path prefix; collision detection against adopter routes (UNSUB-04)
+- [x] 11-05: mix mailglass.gen.unsubscribe — print mount instructions, config snippets, test recipe (does NOT copy code) (UNSUB-04)
+- [x] 11-06: StreamData property tests — rotation boundary, expired-token rejection, idempotent POST, SSRF/open-redirect check (UNSUB-05)
+- [x] 11-07: guides/unsubscribe.md + guides/dkim-setup.md — per-ESP DKIM h= (Postmark auto; SendGrid gap #893 documented); rotation playbook; troubleshooting (UNSUB-06)
 
-### Phase 6: Custom Credo + Boundary
-**Goal**: Twelve domain-rule Credo checks plus `boundary` blocks per `ARCHITECTURE.md` §7 are operational, refined against the real code from Phases 1–5, and CI flags violations before merge.
-**Depends on**: Phase 5
-**Requirements**: TENANT-03, TRACK-02, LINT-01, LINT-02, LINT-03, LINT-04, LINT-05, LINT-06, LINT-07, LINT-08, LINT-09, LINT-10, LINT-11, LINT-12
+### Phase 12: Auto-Suppression + Soft-Bounce Escalation
+**Goal**: Webhook ingest automatically suppresses recipients on :bounced/:complained/:unsubscribed events with the event row FIRST in Multi always; `:complaint` suppression is permanent by Postgres constraint; soft-bounce escalation is async via Oban; resync task is strictly per-tenant
+**Depends on**: Phase 11 (full :unsubscribed lifecycle testable end-to-end before that event type is covered in AutoSuppress)
+**Requirements**: SUPP-01, SUPP-02, SUPP-03, SUPP-04, SUPP-05
 **Success Criteria** (what must be TRUE):
-  1. A PR that adds a raw `Swoosh.Mailer.deliver/1` call inside mailglass library code fails CI with `NoRawSwooshSendInLib`; a PR that adds `tracking: [opens: true]` to a mailable named `password_reset/1` fails CI with `NoTrackingOnAuthStream`.
-  2. A PR that adds a literal `:to`, `:from`, `:body`, `:html_body`, `:subject`, `:headers`, `:recipient`, or `:email` key to a telemetry metadata map fails CI with `NoPiiInTelemetryMeta`; a PR that calls `Repo.all(Delivery)` without passing through `Mailglass.Tenancy.scope/2` fails CI with `NoUnscopedTenantQueryInLib` (bypass requires explicit `scope: :unscoped` opt with telemetry audit emit).
-  3. A PR that calls `Oban.insert/2`, `OpenTelemetry.*`, or `Mjml.*` outside the `Mailglass.OptionalDeps.*` gateway modules fails CI with `NoBareOptionalDepReference`; `mix compile --no-optional-deps --warnings-as-errors` continues to pass.
-  4. A PR that broadcasts a `Phoenix.PubSub` topic without the `mailglass:` prefix fails CI with `PrefixedPubSubTopics`; a PR that calls `DateTime.utc_now/0` outside `Mailglass.Clock` fails CI with `NoDirectDateTimeNow`.
-  5. The multi-tenant property test (Phase 2) plus the boundary contract test (`Mailglass.Renderer` cannot depend on `Mailglass.Outbound`, `Mailglass.Repo`, or any process; `Mailglass.Events` cannot depend on `Mailglass.Outbound`) both pass.
-**Pitfalls guarded against**: LIB-01 (oversized `use` injection), LIB-05 (singleton GenServers), LIB-07 (`compile_env` outside Config), LIB-09 (other-app env reads), MAIL-01 (tracking on auth-carrying messages — operationalized via `NoTrackingOnAuthStream`), OBS-01 (PII in telemetry), OBS-04 (full response in logs), OBS-05 (telemetry naming convention drift), PHX-01 (PubSub topic namespacing), PHX-05 (tenant scope leak), PHX-06 (PubSub prefix), DIST-04 (bare optional dep references), TEST-06 (direct `DateTime.utc_now/0`).
-**Plans**: TBD
-**UI hint**: no
+  1. StreamData property test (100 webhook sequences): recipient count in `mailglass_suppressions` exactly equals distinct suppression-causing events; replaying the same webhook sequence twice produces identical suppression state (`on_conflict: :nothing`)
+  2. `mix credo --strict` raises `MultiEventFirstInWebhookIngest` if any suppression insert step precedes the event row step in the webhook ingest Multi
+  3. After 5 `:deferred` events within a 7-day window for a recipient, an Oban job runs `Escalation` and inserts a hard suppression row; the job does NOT run synchronously inside the webhook request cycle
+  4. `mix mailglass.suppressions.resync` without `--tenant-id` exits with a structured error; with `--tenant-id`, it projects `mailglass_events` into `mailglass_suppressions` idempotently via `Tenancy.scope/2`
+  5. `Mailglass.Suppression.remove/2` with `reason: :complaint` returns a structured `%Mailglass.Error{}` and does NOT delete the row; the Postgres `CHECK (reason != 'complaint' OR expires_at IS NULL)` constraint prevents any expiry being set on complaint rows
+**Plans**: 6/6 plans complete
 
-### Phase 7: Installer + CI/CD + Docs
-**Goal**: A Phoenix 1.8 host runs `mix mailglass.install` and goes from zero to first-preview-styled email in under 5 minutes; the full GHA pipeline (lint, test matrix, Dialyzer, golden install diff, admin smoke, dependency review, actionlint, Release Please, protected-ref Hex publish) is green; ExDoc with 9 guides + doctest contracts publishes to HexDocs.
-**Depends on**: Phase 6
-**Requirements**: TEST-04, INST-01, INST-02, INST-03, INST-04, CI-01, CI-02, CI-03, CI-04, CI-05, CI-06, CI-07, DOCS-01, DOCS-02, DOCS-03, DOCS-04, DOCS-05, BRAND-02, BRAND-03
+Plans:
+- [x] 12-01-PLAN.md — Auto-suppression projection + event-first Credo guard for linked hard-bounce/complaint/unsubscribe events (SUPP-01)
+- [x] 12-02-PLAN.md — Async Oban soft-bounce escalation, covering index migration, and suppression operator guide (SUPP-02)
+- [x] 12-03-PLAN.md — Tenant-required suppression resync task with shared dry-run/apply projection path (SUPP-03)
+- [x] 12-04-PLAN.md — Tightened pre-send suppression behavior plus complaint permanence and removal policy enforcement (SUPP-04, SUPP-05)
+- [x] 12-05-PLAN.md — Structured suppression preflight errors and suppression telemetry surface (SUPP-04)
+- [x] 12-06-PLAN.md — Permanent complaint/unsubscribe suppression guardrails and retention guidance (SUPP-05)
+
+### Phase 13: v0.2 Release Ceremony
+**Goal**: mailglass 0.2.0 and mailglass_admin 0.2.0 are published to Hex.pm via protected-ref trigger; all guides audited for v0.2 surface; adopter walkthrough validated end-to-end
+**Depends on**: Phases 8–12 (coordinated release requires all three pillars complete)
+**Requirements**: REL-13, REL-14, REL-15, REL-16
 **Success Criteria** (what must be TRUE):
-  1. A new Phoenix 1.8 host app reaches "first preview-styled HEEx email rendered in the browser" in under 5 minutes from zero via `mix mailglass.install` + 5 lines of mailable code; an adopter migrating from raw Swoosh + `Phoenix.Swoosh` follows `guides/migration-from-swoosh.md` in a single afternoon with no production behavior change.
-  2. A second run of `mix mailglass.install` on a host with no changes produces zero file modifications (`.mailglass_conflict_*` sidecars rather than clobbering); the golden-diff snapshot test in `test/example/` catches any installer behavior change in PRs.
-  3. A coordinated release of `mailglass` and `mailglass_admin` produced by Release Please ships both packages to Hex with linked versions; `mailglass_admin/mix.exs` declares `{:mailglass, "== <new-version>"}`; the `mailglass` Hex tarball is <500KB and contains zero `priv/static/` assets; the `mailglass_admin` tarball is <2MB.
-  4. CI on a PR runs format + compile (with `--warnings-as-errors`, separately with `--no-optional-deps --warnings-as-errors`) + ExUnit + Credo `--strict` (including the 12 custom checks) + Dialyzer with cached PLT + `mix docs --warnings-as-errors` + `mix hex.audit` + dependency-review + actionlint; real-provider sandbox tests (`@tag :provider_live`) run on daily cron + `workflow_dispatch` only and never block PRs.
-  5. ExDoc publishes with `main: "getting-started"` plus 9 guides (getting-started, authoring-mailables, components, preview, webhooks, multi-tenancy, telemetry, testing, migration-from-swoosh), `llms.txt` ships automatically (ExDoc 0.40+), every README "Quick Start" snippet compiles, and `MAINTAINING.md` + `CONTRIBUTING.md` + `SECURITY.md` + `CODE_OF_CONDUCT.md` are present at the repo root with brand-voice-conformant copy throughout.
-**Pitfalls guarded against**: DIST-01 (sibling version drift via Release Please linked-versions), DIST-03 (`mix mailglass.install` non-idempotent — `.mailglass_conflict_*` sidecars + second-rerun no-op test), DIST-05 (Hex publish from PR / forked branch — protected ref + GitHub Environment with required reviewers), DIST-06 (Hex tarball size enforcement), CI-01 through CI-06 (full GHA discipline), TEST-02 (real-provider sandbox tests advisory only), TEST-04 (doc-contract drift between README/guides and real APIs).
-**Plans**: TBD
-**UI hint**: no
+  1. CHANGELOG for mailglass 0.2.0 + mailglass_admin 0.2.0 lists breaking changes (Mailable API redesign), upgrade path (`mix mailglass.upgrade.v0_2`), and minimum dep matrix; an adopter reading it has everything needed to migrate without reaching for search
+  2. Fresh Phoenix 1.8.5 host runs `mix mailglass.install` then `mix mailglass.upgrade.v0_2` from a v0.1 fixture project with zero manual edits for non-ambiguous cases; ambiguous cases emit clear `IO.warn` with migration guide URL
+  3. All 9 v0.1 guides updated for v0.2 surface; `migration-from-swoosh.md` targets v0.2 native Message API; `upgrading-from-v0_1.md` finalized; `dkim-setup.md` covers per-ESP List-Unsubscribe DKIM h= verification
+  4. Release Please bumps both packages to 0.2.0 via linked-versions; tarball sizes verified (<500KB mailglass, <2MB mailglass_admin); Hex publish from protected ref + GitHub Environment; `curl -fsI https://hexdocs.pm/mailglass/0.2.0/` returns HTTP 200
+**Plans**: 4/5 plans complete
 
-## Phase Ordering Rationale
-
-The 7-phase grouping matches `research/SUMMARY.md` "Implications for Roadmap" exactly and is the result of dependency analysis across Layer 0 → 7. Granularity is `standard` (5–8 phases) and 7 sits inside that band.
-
-- **Layer 0 → 1 → 2 → 3 is dependency-forced.** Errors / Config / Telemetry are zero-dep. Renderer is pure (no DB). Schemas before send pipeline so `Multi` inserts are typed. Adapter behaviour + Fake before Mailable because `deliver/2`'s return shape comes from the adapter contract.
-- **Webhook (Phase 4) follows Send (Phase 3)** so we can test webhook → event → projection update against an actually-written delivery row.
-- **Preview (Phase 5) follows Send + Webhook** so the live-assigns form reflects the real `Message` struct, not a placeholder.
-- **Custom Credo checks (Phase 6) follow implementation** because rules need real-code targets to refine against. Building Credo checks first would mean fighting an immature lint surface against immature library code — known time-sink across all 4 prior libs.
-- **Installer + CI/CD + Docs (Phase 7) is last** because installer goldens lock the public API; building goldens against a churning API wastes work.
-- **`mailglass_inbound` (v0.5+) is intentionally absent.** It shares webhook plumbing with v0.5 deliverability work; pulling forward to v0.1 would waste work that v0.5 will rewrite.
-
-The granularity-standard band suggested 5–8; 7 phases is mid-band. No compression to 5 because Phases 4 (webhook), 5 (preview UI), and 6 (Credo) have orthogonal verification surfaces and merging any pair would obscure success criteria. No expansion to 8 because no phase has >18 requirements with mixed orthogonal concerns.
-
-## Phases Flagged for `/gsd-research-phase`
-
-Per `research/SUMMARY.md` "Research Flags," these three phases require a research pass before planning. The other four can plan directly from synthesis (patterns are 4-of-4 convergent across prior libs).
-
-| Phase | Open questions | Reference impl |
-|-------|----------------|----------------|
-| **Phase 2** | `metadata jsonb` projection columns; orphan-webhook reconciliation worker cadence; `:typed_struct` adoption decision; status state machine app-enforced vs DB check | `~/projects/accrue/lib/accrue/events/` |
-| **Phase 4** | SendGrid ECDSA verification API on OTP 27 `:crypto`; `CachingBodyReader` + Plug 1.18 chain interaction | `~/projects/lattice_stripe/lib/lattice_stripe/webhook/` |
-| **Phase 5** | `MailglassAdmin.Router` macro signature; LiveView session cookie collision; daisyUI 5 + Tailwind v4 without Node | `~/projects/sigra/lib/sigra/admin/router.ex` |
+Plans:
+- [x] 13-01: Write CHANGELOG narrative — breaking changes, upgrade path, dep matrix, rollback (REL-13)
+- [x] 13-02: Adopter walkthrough validation — v0.1 fixture → mix mailglass.install → mix mailglass.upgrade.v0_2; assert zero manual edits for non-ambiguous cases (REL-14)
+- [x] 13-03: Doc audit — update all 9 v0.1 guides for v0.2 surface; finalize upgrading-from-v0_1.md; finalize dkim-setup.md (REL-15)
+- [x] 13-04: Release Please bump + tarball whitelist + size budget verification (REL-16)
+- [ ] 13-05: Hex publish from protected ref + GitHub Environment + post-publish smoke (curl hexdocs + mix hex.info) (REL-16)
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+**Execution Order:** 8 → 9 → 10 → 11 → 12 → 13
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation | 6/6 | Complete | 2026-04-22 |
-| 2. Persistence + Tenancy | 6/6 | Complete | 2026-04-22 |
-| 3. Transport + Send Pipeline | 12/12 | Complete | 2026-04-23 |
-| 4. Webhook Ingest | 9/9 | Complete | 2026-04-24 |
-| 5. Dev Preview LiveView | 0/TBD | Not started | - |
-| 6. Custom Credo + Boundary | 6/6 | Complete    | 2026-04-24 |
-| 7. Installer + CI/CD + Docs | 0/TBD | Not started | - |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Foundation | v0.1 | 6/6 | Complete | 2026-04-22 |
+| 2. Persistence + Tenancy | v0.1 | 6/6 | Complete | 2026-04-22 |
+| 3. Transport + Send Pipeline | v0.1 | 12/12 | Complete | 2026-04-23 |
+| 4. Webhook Ingest | v0.1 | 9/9 | Complete | 2026-04-24 |
+| 5. Dev Preview LiveView | v0.1 | 6/6 | Complete | 2026-04-25 |
+| 6. Custom Credo + Boundary | v0.1 | 6/6 | Complete | 2026-04-24 |
+| 7. Installer + CI/CD + Docs | v0.1 | 5/5 | Complete | 2026-04-25 |
+| 07.1. Publish to Hex.pm (INSERTED) | v0.1 | 11/11 | Complete | 2026-04-26 |
+| 8. Release-Engineering Hardening | v0.2 | 0/6 | Not started | - |
+| 9. Mailable API Redesign + Freeze | v0.2 | 0/8 | Not started | - |
+| 10. Stream Policy Implementation | v0.2 | 0/5 | Not started | - |
+| 11. RFC 8058 List-Unsubscribe | v0.2 | 7/7 | Complete | 2026-04-28 |
+| 12. Auto-Suppression + Soft-Bounce Escalation | v0.2 | 6/6 | Complete | 2026-04-28 |
+| 13. v0.2 Release Ceremony | v0.2 | 4/5 | In progress | - |
 
 ---
-*Roadmap defined: 2026-04-21*
-*Coverage: 84/84 v1 REQ-IDs mapped to exactly one phase. No orphans, no duplicates.*
+*v0.1 roadmap defined: 2026-04-21. v0.1 archived: 2026-04-26.*
+*v0.2 roadmap defined: 2026-04-26. Coverage: 38/38 v0.2 REQ-IDs mapped. No orphans, no duplicates.*
 
-### Phase 07.1: Publish v0.1.0 packages to Hex.pm (INSERTED)
+## Backlog
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
-**Depends on:** Phase 7
+### Phase 999.1: Human-Readable Code Comments + GSD Artifact Cleanup (BACKLOG)
+**Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
+**Requirements:** TBD
 **Plans:** 0 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 07.1 to break down)
+- [ ] TBD (promote with $gsd-review-backlog when ready)
+
+### Phase 999.2: Shift-Left Email Screenshot + Responsive Preview Workflow (BACKLOG)
+**Goal:** Make it easy at any time to see realistic rendered example emails across themes and mobile/responsive layouts, ideally through an idiomatic low-friction workflow such as a mix task, preview pipeline, or CI-generated screenshots
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with $gsd-review-backlog when ready)

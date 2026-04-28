@@ -33,7 +33,7 @@ defmodule Mailglass.Test.Fixtures do
     end
 
     email = %Swoosh.Email{html_body: component}
-    Mailglass.Message.new(email, mailable: TestMailer, tenant_id: "test_tenant")
+    Mailglass.Message.build(email, mailable: TestMailer, tenant_id: "test_tenant")
   end
 
   @doc """
@@ -71,6 +71,6 @@ defmodule Mailglass.Test.Fixtures do
     end
 
     email = %Swoosh.Email{html_body: component}
-    Mailglass.Message.new(email, mailable: TestMailer, tenant_id: "test_tenant")
+    Mailglass.Message.build(email, mailable: TestMailer, tenant_id: "test_tenant")
   end
 end

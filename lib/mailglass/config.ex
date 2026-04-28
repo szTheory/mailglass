@@ -2,6 +2,12 @@ defmodule Mailglass.Config do
   # Schema is declared BEFORE @moduledoc so NimbleOptions.docs(@schema) can
   # interpolate into the module documentation.
   @schema [
+    feedback_id: [
+      type: {:or, [:string, nil]},
+      default: nil,
+      doc:
+        "Optional Feedback-ID prefix (RFC 8058/Deliverability). When set, auto-populates as `{sender_id}:{mailable}:{tenant_id}:{stream}`."
+    ],
     repo: [
       type: {:or, [:atom, nil]},
       required: false,
@@ -114,6 +120,13 @@ defmodule Mailglass.Config do
         "Open/click tracking configuration (TRACK-03). When any mailable enables opens or " <>
           "clicks, `:host` is REQUIRED or boot raises `%ConfigError{type: :tracking_host_missing}`.",
       keys: [
+        endpoint: [
+          type: {:or, [:atom, :string, nil]},
+          default: nil,
+          doc:
+            "Phoenix.Token endpoint/secret override for open/click tracking. When nil, " <>
+              "`Mailglass.Tracking.endpoint/0` falls back to `:adapter_endpoint`."
+        ],
         host: [
           type: {:or, [:string, nil]},
           default: nil,
@@ -135,6 +148,61 @@ defmodule Mailglass.Config do
           type: :pos_integer,
           default: 2 * 365 * 86_400,
           doc: "Token max age in seconds. Default: 2 years."
+        ]
+      ]
+    ],
+    compliance: [
+      type: :keyword_list,
+      default: [],
+      doc:
+        "RFC 8058 unsubscribe configuration. Phase 11 reads this subtree through " <>
+          "`Mailglass.Config` accessors only so router/controller/token code avoids " <>
+          "new direct compile-env lookups.",
+      keys: [
+        endpoint: [
+          type: {:or, [:atom, :string, nil]},
+          default: nil,
+          doc:
+            "Phoenix.Token endpoint/secret override for unsubscribe signing. When nil, " <>
+              "`Mailglass.Config.compliance_endpoint/0` falls back to the tracking endpoint chain."
+        ],
+        host: [
+          type: {:or, [:string, nil]},
+          default: nil,
+          doc: "Canonical host used for unsubscribe URLs (for example `unsubscribe.example.com`)."
+        ],
+        scheme: [
+          type: {:in, ["http", "https"]},
+          default: "https",
+          doc: "Unsubscribe URL scheme. `http` is intended for local development only."
+        ],
+        mount_path: [
+          type: :string,
+          default: "/mailglass/unsubscribe",
+          doc: "Absolute path prefix used when generating unsubscribe URLs."
+        ],
+        previous_secrets: [
+          type: {:list, :string},
+          default: [],
+          doc:
+            "Raw prior `secret_key_base` values accepted during unsubscribe token verification after endpoint-secret rotation."
+        ],
+        redirect: [
+          type: {:or, [:string, nil]},
+          default: nil,
+          doc:
+            "Optional GET unsubscribe redirect escape hatch (for example `/settings/unsubscribe`)."
+        ],
+        max_age: [
+          type: :pos_integer,
+          default: 2 * 365 * 86_400,
+          doc: "Unsubscribe token max age in seconds. Default: 2 years."
+        ],
+        lifecycle: [
+          type: :atom,
+          default: Mailglass.Lifecycle.Noop,
+          doc:
+            "Module implementing `Mailglass.Lifecycle` for transaction-local unsubscribe side effects."
         ]
       ]
     ],
@@ -305,7 +373,7 @@ defmodule Mailglass.Config do
       {Mailglass.Adapters.Fake, []}
   """
   @doc since: "0.1.0"
-  @spec new!(keyword()) :: keyword()
+  @spec new!(keyword()) :: keyword() | map()
   def new!(opts \\ []) when is_list(opts) do
     NimbleOptions.validate!(opts, @schema)
   end
@@ -329,6 +397,7 @@ defmodule Mailglass.Config do
       :mailglass
       |> Application.get_all_env()
       |> Keyword.take(known_keys)
+      |> normalize_optional_keyword_subtrees()
 
     validated = NimbleOptions.validate!(opts, @schema)
 
@@ -344,6 +413,16 @@ defmodule Mailglass.Config do
     end
 
     :ok
+  end
+
+  defp normalize_optional_keyword_subtrees(opts) do
+    Enum.reduce([:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance], opts, fn key,
+                                                                                               acc ->
+      case Keyword.get(acc, key, :__missing__) do
+        nil -> Keyword.put(acc, key, [])
+        _ -> acc
+      end
+    end)
   end
 
   # Mailglass is Postgres-only at v0.1 per PROJECT.md (MySQL/SQLite out of
@@ -394,6 +473,57 @@ defmodule Mailglass.Config do
     :persistent_term.get({__MODULE__, :theme}, [])
   end
 
+  @doc """
+  Returns the validated compliance subtree with defaults applied.
+  """
+  @doc since: "0.1.0"
+  @spec compliance() :: keyword()
+  def compliance do
+    validated_config()
+    |> Keyword.fetch!(:compliance)
+  end
+
+  @doc """
+  Resolves the current unsubscribe signing endpoint.
+
+  Falls back to `Mailglass.Tracking.endpoint/0` so unsubscribe tokens reuse the
+  same endpoint-secret chain unless adopters opt into a compliance-specific
+  override.
+  """
+  @doc since: "0.1.0"
+  @spec compliance_endpoint() :: module() | binary()
+  def compliance_endpoint do
+    compliance()[:endpoint] || Mailglass.Tracking.endpoint()
+  end
+
+  @doc since: "0.1.0"
+  @spec compliance_host() :: String.t() | nil
+  def compliance_host, do: compliance()[:host]
+
+  @doc since: "0.1.0"
+  @spec compliance_scheme() :: String.t()
+  def compliance_scheme, do: compliance()[:scheme]
+
+  @doc since: "0.1.0"
+  @spec compliance_mount_path() :: String.t()
+  def compliance_mount_path, do: compliance()[:mount_path]
+
+  @doc since: "0.1.0"
+  @spec compliance_previous_secrets() :: [String.t()]
+  def compliance_previous_secrets, do: compliance()[:previous_secrets]
+
+  @doc since: "0.1.0"
+  @spec compliance_redirect() :: String.t() | nil
+  def compliance_redirect, do: compliance()[:redirect]
+
+  @doc since: "0.1.0"
+  @spec compliance_max_age() :: pos_integer()
+  def compliance_max_age, do: compliance()[:max_age]
+
+  @doc since: "0.1.0"
+  @spec compliance_lifecycle() :: module()
+  def compliance_lifecycle, do: compliance()[:lifecycle]
+
   # Phase 4 CONTEXT D-11 / revision B2. Exposed as `@doc false` because
   # `:async` is reserved at v0.1 — the accessor lets Plan 06's
   # `Mailglass.Webhook.Ingest.ingest_multi/3` branch on the value and
@@ -404,5 +534,15 @@ defmodule Mailglass.Config do
   @spec webhook_ingest_mode() :: :sync | :async
   def webhook_ingest_mode do
     Application.get_env(:mailglass, :webhook_ingest_mode, :sync)
+  end
+
+  defp validated_config do
+    known_keys = Keyword.keys(@schema)
+
+    :mailglass
+    |> Application.get_all_env()
+    |> Keyword.take(known_keys)
+    |> normalize_optional_keyword_subtrees()
+    |> NimbleOptions.validate!(@schema)
   end
 end

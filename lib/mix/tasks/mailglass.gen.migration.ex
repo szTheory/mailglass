@@ -22,14 +22,28 @@ defmodule Mix.Tasks.Mailglass.Gen.Migration do
 
     _upgrade? = opts[:upgrade] == true
 
-    path = Path.join(["priv", "repo", "migrations", "#{timestamp()}_mailglass_install.exs"])
+    case existing_wrapper_migration() do
+      nil ->
+        path = Path.join(["priv", "repo", "migrations", "#{timestamp()}_mailglass_install.exs"])
 
-    File.mkdir_p!(Path.dirname(path))
-    File.write!(path, migration_body())
+        File.mkdir_p!(Path.dirname(path))
+        File.write!(path, migration_body())
 
-    Mix.shell().info("created #{path}")
+        Mix.shell().info("created #{path}")
+
+      path ->
+        Mix.shell().info("unchanged #{path}")
+    end
 
     :ok
+  end
+
+  defp existing_wrapper_migration do
+    ["priv", "repo", "migrations", "*_mailglass_install.exs"]
+    |> Path.join()
+    |> Path.wildcard()
+    |> Enum.sort()
+    |> List.first()
   end
 
   defp timestamp do

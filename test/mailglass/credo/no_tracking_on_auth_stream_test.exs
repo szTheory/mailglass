@@ -15,7 +15,7 @@ defmodule Mailglass.Credo.NoTrackingOnAuthStreamTest do
       use Mailglass.Mailable
 
       def password_reset(user) do
-        Mailglass.Message.new(Swoosh.Email.new(), to: user.email, tracking: [opens: true])
+        Mailglass.Message.build(Swoosh.Email.new(), to: user.email, tracking: [opens: true])
       end
     end
     """
@@ -32,7 +32,7 @@ defmodule Mailglass.Credo.NoTrackingOnAuthStreamTest do
       use Mailglass.Mailable
 
       def verify_email(user) do
-        Mailglass.Message.new(Swoosh.Email.new(), to: user.email, tracking: [])
+        Mailglass.Message.build(Swoosh.Email.new(), to: user.email, tracking: [])
       end
     end
     """
@@ -46,7 +46,7 @@ defmodule Mailglass.Credo.NoTrackingOnAuthStreamTest do
       use Mailglass.Mailable
 
       def welcome(user) do
-        Mailglass.Message.new(Swoosh.Email.new(), to: user.email, tracking: [opens: true, clicks: true])
+        Mailglass.Message.build(Swoosh.Email.new(), to: user.email, tracking: [opens: true, clicks: true])
       end
     end
     """
@@ -58,7 +58,7 @@ defmodule Mailglass.Credo.NoTrackingOnAuthStreamTest do
     source = """
     defmodule Mailglass.OtherModule do
       def confirm_account(user) do
-        Mailglass.Message.new(Swoosh.Email.new(), to: user.email, tracking: [opens: true])
+        Mailglass.Message.build(Swoosh.Email.new(), to: user.email, tracking: [opens: true])
       end
     end
     """
@@ -72,7 +72,7 @@ defmodule Mailglass.Credo.NoTrackingOnAuthStreamTest do
       use Mailglass.Mailable
 
       def two_factor_code(user) do
-        Mailglass.Message.new(Swoosh.Email.new(), to: user.email, tracking: %{opens: true})
+        Mailglass.Message.build(Swoosh.Email.new(), to: user.email, tracking: %{opens: true})
       end
     end
     """

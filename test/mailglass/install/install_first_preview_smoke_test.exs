@@ -4,19 +4,25 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
   import Mailglass.Test.InstallerFixtureHelpers
 
   @tag timeout: 300_000
-  test "installer + first preview scaffold completes in under five minutes" do
+  test "installer + first preview scaffold matches the release-day smoke contract" do
     started_ms = System.monotonic_time(:millisecond)
-
     fixture_root = new_fixture_root!("first-preview-smoke")
     run_install!(fixture_root, [])
     mailable_path = apply_minimal_mailable_scaffold!(fixture_root)
 
     router_path = Path.join(fixture_root, "lib/example_web/router.ex")
     layout_path = Path.join(fixture_root, "lib/example_web/components/layouts/mailglass.html.heex")
+    workflow_path = Path.expand("../../../.github/workflows/post-publish-smoke.yml", __DIR__)
 
     assert File.read!(router_path) =~ ~s(mailglass_admin_routes "/mail")
     assert File.exists?(layout_path)
     assert File.exists?(mailable_path)
+
+    workflow = File.read!(workflow_path)
+    assert workflow =~ "Run mix mailglass.install"
+    assert workflow =~ "Compile, fail on warnings"
+    assert workflow =~ "Boot endpoint and curl /dev/mail/"
+    assert workflow =~ "GET /dev/mail/ → HTTP ${STATUS}"
 
     elapsed_ms = System.monotonic_time(:millisecond) - started_ms
     assert elapsed_ms < 300_000

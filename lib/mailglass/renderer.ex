@@ -53,7 +53,7 @@ defmodule Mailglass.Renderer do
 
       component = fn _assigns -> ~H|<p>Hello</p>| end
       email = %Swoosh.Email{html_body: component}
-      message = Mailglass.Message.new(email, mailable: MyMailer)
+      message = Mailglass.Message.build(email, mailable: MyMailer)
       {:ok, rendered} = Mailglass.Renderer.render(message)
 
   """

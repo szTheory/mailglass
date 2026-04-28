@@ -18,7 +18,7 @@ defmodule Mailglass.Adapters.SwooshTest do
         text_body: "Hello"
       )
 
-    Message.new(email,
+    Message.build(email,
       mailable: MyTestMailer,
       tenant_id: Keyword.get(opts, :tenant_id, "test-tenant")
     )

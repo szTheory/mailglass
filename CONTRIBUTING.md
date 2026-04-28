@@ -29,3 +29,64 @@ Use Conventional Commits:
 - All CI checks must pass.
 - New features must include documentation and tests.
 - Maintain atomic commits.
+
+## Why we sed mix.exs after release-please runs
+
+Release Please's `extra-files` generic updater silently no-ops on a `mix.exs`
+already managed by the `elixir` release-type. The `{:mailglass, "== <ver>"}`
+pin in `mailglass_admin/mix.exs` therefore never gets rewritten by the action
+itself.
+
+`.github/workflows/release-please.yml` syncs the pin via a `sed` step on the
+release-please PR branch after the action runs. This is the **steady-state
+mitigation** rather than authoring a TypeScript plugin (which would violate
+the "no Node toolchain anywhere" engineering DNA) or refactoring to
+`version.exs` (which adds Hex tarball + `Code.eval_file` load-order risk).
+
+**Recursion-safety guarantee:** the sync push uses `GITHUB_TOKEN`, which by
+GitHub's anti-recursion guarantee does NOT trigger further workflow runs.
+
+**Sed-anchor stability:** `mailglass_admin/test/mailglass_admin/mix_config_test.exs`
+asserts the dep tuple in `mailglass_admin/mix.exs` matches the literal
+`{:mailglass, "== <semver>"}` shape the sed regex anchors on. Any future
+rename of the dep tuple form will fail this test loudly — update the sed
+regex (in `release-please.yml`) and this section together.
+
+**Pointer:** see `.planning/todos/pending/2026-04-26-release-please-extra-files-no-op-on-managed-mix-exs.md`
+for the empirical observation history.
+
+## One-time setup: branch protection automation
+
+`main` is protected with required status checks (`Tests`, `Credo Strict`,
+`Dialyzer`, `actionlint`, `PR title (semantic)`). This protection is
+configured idempotently by `scripts/setup_branch_protection.sh` and
+re-asserted daily by `.github/workflows/branch-protection-drift.yml`.
+
+To enable the drift-detection workflow, add a repo secret
+`BRANCH_PROTECTION_PAT`:
+
+1. Generate a fine-grained PAT scoped to `szTheory/mailglass` with
+   **Administration: Read and write** permission. (Settings → Developer
+   settings → Personal access tokens → Fine-grained tokens.)
+2. Add it as a repo secret named `BRANCH_PROTECTION_PAT`. (Repo settings
+   → Secrets and variables → Actions → New repository secret.)
+3. Run `Branch Protection Drift` once via the Actions tab to confirm.
+
+Without the secret, the drift workflow no-ops and posts a notice in its
+workflow summary. Without it, you can still call the script directly:
+
+```bash
+GH_TOKEN=<admin-PAT> scripts/setup_branch_protection.sh main
+```
+
+## Verifying the Tests gate blocks failing PRs
+
+`scripts/check_tests_gate.sh` runs in CI's `actionlint` job and fails
+if `continue-on-error: true` is reintroduced on the Tests job. Static
+guard.
+
+For an end-to-end check, run the `Gate Self-Test` workflow via the
+Actions tab. It creates a temporary branch with a synthetic
+`assert false`, opens a draft PR, polls until the Tests check
+finishes, asserts FAILED, then closes the PR and deletes the branch.
+~5 minutes round-trip.

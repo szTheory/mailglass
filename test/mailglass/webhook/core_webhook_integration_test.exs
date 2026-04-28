@@ -29,6 +29,7 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
   @moduletag :phase_04_uat
 
   import ExUnit.CaptureLog
+  import Ecto.Query
 
   alias Mailglass.{Repo, TestRepo}
   alias Mailglass.Events.Event
@@ -83,7 +84,7 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
 
       # normalize/2 returns a non-empty list of Anymail-mapped events.
       events = SendGrid.normalize(body, headers)
-      assert length(events) >= 1
+      assert events != []
 
       for event <- events do
         assert event.metadata["provider"] == "sendgrid"
@@ -150,13 +151,16 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
 
   describe "ROADMAP §3: duplicate replay → 200 + zero new rows" do
     test "second ingest_multi/3 call with same provider_event_id is structural no-op" do
+      provider_event_id = "UAT:dup:1"
+      tenant_id = Mailglass.Tenancy.tenant_id!()
+
       events = [
         %Event{
           type: :delivered,
           reject_reason: nil,
           metadata: %{
             "provider" => "postmark",
-            "provider_event_id" => "UAT:dup:1",
+            "provider_event_id" => provider_event_id,
             "record_type" => "Delivery",
             "message_id" => "uat_dup_001"
           }
@@ -173,7 +177,12 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
 
       refute first.duplicate
 
-      assert TestRepo.aggregate(WebhookEvent, :count) == 1
+      assert TestRepo.aggregate(
+               from(w in WebhookEvent,
+                 where: w.tenant_id == ^tenant_id and w.provider_event_id == ^provider_event_id
+               ),
+               :count
+             ) == 1
 
       # Second call — UNIQUE collision on (provider, provider_event_id)
       assert {:ok, second} =
@@ -186,8 +195,21 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
       assert second.duplicate
 
       # Zero NEW webhook_event rows; zero NEW event rows
-      assert TestRepo.aggregate(WebhookEvent, :count) == 1
-      assert TestRepo.aggregate(Event, :count) == 1
+      assert TestRepo.aggregate(
+               from(w in WebhookEvent,
+                 where: w.tenant_id == ^tenant_id and w.provider_event_id == ^provider_event_id
+               ),
+               :count
+             ) == 1
+
+      assert TestRepo.aggregate(
+               from(e in Event,
+                 where:
+                   e.tenant_id == ^tenant_id and
+                     fragment("?->>? = ?", e.metadata, "provider_event_id", ^provider_event_id)
+               ),
+               :count
+             ) == 1
     end
 
     test "HOOK-07 1000-replay convergence property file exists and runs" do
@@ -209,6 +231,9 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
 
   describe "ROADMAP §4: orphan webhook inserts with needs_reconciliation: true" do
     test "no matching Delivery → event.delivery_id == nil + needs_reconciliation == true" do
+      provider_event_id = "UAT:orphan:1"
+      tenant_id = Mailglass.Tenancy.tenant_id!()
+
       # No Delivery seeded with provider_message_id == "uat_orphan_001"
       events = [
         %Event{
@@ -216,7 +241,7 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
           reject_reason: :bounced,
           metadata: %{
             "provider" => "postmark",
-            "provider_event_id" => "UAT:orphan:1",
+            "provider_event_id" => provider_event_id,
             "record_type" => "Bounce",
             "message_id" => "uat_orphan_001"
           }
@@ -235,13 +260,27 @@ defmodule Mailglass.CoreWebhookIntegrationTest do
       assert result.orphan_event_count == 1
 
       # The Event row exists with delivery_id: nil + needs_reconciliation: true
-      [event_row] = Repo.all(Event)
+      [event_row] =
+        Repo.all(
+          from(e in Event,
+            where:
+              e.tenant_id == ^tenant_id and
+                fragment("?->>? = ?", e.metadata, "provider_event_id", ^provider_event_id)
+          )
+        )
+
       assert is_nil(event_row.delivery_id)
       assert event_row.needs_reconciliation == true
 
       # The webhook_event still flipped to :succeeded (orphan is normal flow,
       # not failure — Plan 04-07 Reconciler sweeps orphans later).
-      [webhook_event] = Repo.all(WebhookEvent)
+      [webhook_event] =
+        Repo.all(
+          from(w in WebhookEvent,
+            where: w.tenant_id == ^tenant_id and w.provider_event_id == ^provider_event_id
+          )
+        )
+
       assert webhook_event.status == :succeeded
     end
 

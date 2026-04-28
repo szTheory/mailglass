@@ -39,7 +39,7 @@ defmodule Mailglass.Tenancy do
 
   @callback scope(queryable :: Ecto.Queryable.t(), context :: term()) :: Ecto.Queryable.t()
 
-  @optional_callbacks tracking_host: 1, resolve_webhook_tenant: 1
+  @optional_callbacks tracking_host: 1, compliance_host: 1, resolve_webhook_tenant: 1
 
   @doc """
   Optional: return a per-tenant tracking host override (D-32).
@@ -50,6 +50,15 @@ defmodule Mailglass.Tenancy do
   for strict cookie/origin isolation.
   """
   @callback tracking_host(context :: term()) :: {:ok, String.t()} | :default
+
+  @doc """
+  Optional: return a per-tenant unsubscribe host override.
+
+  Mirrors `tracking_host/1`, but applies specifically to RFC 8058 URL
+  generation so multi-tenant adopters can keep unsubscribe origins
+  tenant-scoped without forking the core URL builder.
+  """
+  @callback compliance_host(context :: term()) :: {:ok, String.t()} | :default
 
   @doc """
   Optional: resolve the tenant from a verified webhook context (D-12).
@@ -298,6 +307,26 @@ defmodule Mailglass.Tenancy do
       module.resolve_webhook_tenant(context)
     else
       {:ok, "default"}
+    end
+  end
+
+  @doc """
+  Dispatch to the configured tenancy module's optional `compliance_host/1`
+  callback.
+
+  Adopters returning `{:ok, host}` override the global
+  `config :mailglass, :compliance, host:` value for the current tenant.
+  Returning `:default` keeps the global host.
+  """
+  @doc since: "0.1.0"
+  @spec compliance_host(term()) :: {:ok, String.t()} | :default
+  def compliance_host(context) do
+    module = resolver()
+
+    if function_exported?(module, :compliance_host, 1) do
+      module.compliance_host(context)
+    else
+      :default
     end
   end
 

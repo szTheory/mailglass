@@ -84,6 +84,44 @@ defmodule MailglassAdmin.MixConfigTest do
     result
   end
 
+  describe "release-please sed-anchor regex stability (REL-05)" do
+    # The sed step in .github/workflows/release-please.yml anchors on the
+    # literal `{:mailglass, "== <semver>"}` shape. Renaming the dep tuple,
+    # or changing the version-pin format, would silently break the no-op fix
+    # documented in CONTRIBUTING.md "Why we sed mix.exs after release-please
+    # runs". This test fails LOUDLY before the workflow silently becomes a
+    # no-op again.
+    setup do
+      original = System.get_env("MIX_PUBLISH")
+
+      on_exit(fn ->
+        case original do
+          nil -> System.delete_env("MIX_PUBLISH")
+          val -> System.put_env("MIX_PUBLISH", val)
+        end
+      end)
+
+      {:ok, original_env: original}
+    end
+
+    test "MIX_PUBLISH=true emits dep tuple matching the sed regex literal" do
+      System.put_env("MIX_PUBLISH", "true")
+      source = File.read!(@mix_exs)
+
+      # Same regex shape as the sed step:
+      # sed -E 's/\{:mailglass, "== [0-9]+\.[0-9]+\.[0-9]+"\}/.../'
+      sed_anchor = ~r/\{:mailglass, "== \d+\.\d+\.\d+"\}/
+
+      assert Regex.match?(sed_anchor, source),
+             """
+             release-please.yml sed step anchors on the literal
+             `{:mailglass, "== <semver>"}` form. The current mix.exs no longer
+             emits this form. Either update the sed regex (and CONTRIBUTING.md
+             REL-05 section) or restore the literal pin shape.
+             """
+    end
+  end
+
   defp extract_function_body(ast, name, arity) do
     {_, acc} =
       Macro.prewalk(ast, nil, fn

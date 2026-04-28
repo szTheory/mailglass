@@ -7,6 +7,8 @@ files:
   - test/mailglass/install/install_golden_test.exs
   - .github/workflows/publish-hex.yml:64-77 (prepublish-summary calls publish.check)
 priority: v0.1.2
+resolves_phase: 8
+resolves_req: REL-04
 ---
 
 ## Problem

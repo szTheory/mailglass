@@ -28,7 +28,7 @@ defmodule Mailglass.Properties.WebhookSignatureFailureTest do
   use Mailglass.WebhookCase, async: false
   use ExUnitProperties
 
-  alias Mailglass.{ConfigError, Repo, SignatureError, TestRepo}
+  alias Mailglass.{ConfigError, SignatureError, TestRepo}
   alias Mailglass.Events.Event
   alias Mailglass.Webhook.WebhookEvent
 
@@ -50,12 +50,12 @@ defmodule Mailglass.Properties.WebhookSignatureFailureTest do
 
   setup do
     # Keep DB empty — verifier is pure, no writes should happen.
-    Repo.delete_all(WebhookEvent)
-    Repo.delete_all(Event)
+    TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
+    TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
 
     on_exit(fn ->
-      Repo.delete_all(WebhookEvent)
-      Repo.delete_all(Event)
+      TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
+      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
     end)
 
     :ok
@@ -76,8 +76,8 @@ defmodule Mailglass.Properties.WebhookSignatureFailureTest do
     check all(mutation <- mutation_gen(), max_runs: 200) do
       # Reset count BEFORE each iteration — nothing should change
       # regardless of mutation shape.
-      Repo.delete_all(WebhookEvent)
-      Repo.delete_all(Event)
+      TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
+      TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
 
       body = Mailglass.WebhookFixtures.load_postmark_fixture("delivered")
       headers = build_mutated_headers(mutation)

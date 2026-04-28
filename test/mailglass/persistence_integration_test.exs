@@ -53,23 +53,8 @@ defmodule Mailglass.PersistenceIntegrationTest do
     # sandbox's next operation lands a freshly-reconnected worker. 5 tries
     # is more than the pool_size, covering the worst-case "every worker
     # was poisoned" scenario.
-    probe_until_clean(5)
+    Mailglass.TestSupport.CitextProbe.run(repo: Mailglass.TestRepo)
     :ok
-  end
-
-  defp probe_until_clean(0), do: :ok
-
-  defp probe_until_clean(remaining) do
-    try do
-      Mailglass.TestRepo.query!(
-        "SELECT address FROM mailglass_suppressions LIMIT 1",
-        []
-      )
-
-      :ok
-    rescue
-      _ -> probe_until_clean(remaining - 1)
-    end
   end
 
   alias Mailglass.EventLedgerImmutableError
@@ -153,6 +138,17 @@ defmodule Mailglass.PersistenceIntegrationTest do
     test "SingleTenant default: current/0 returns 'default' when no stamping" do
       # Clear the DataCase-stamped tenant.
       Process.delete(:mailglass_tenant_id)
+      prior_tenancy = Application.get_env(:mailglass, :tenancy)
+      Application.put_env(:mailglass, :tenancy, Mailglass.Tenancy.SingleTenant)
+
+      on_exit(fn ->
+        if is_nil(prior_tenancy) do
+          Application.delete_env(:mailglass, :tenancy)
+        else
+          Application.put_env(:mailglass, :tenancy, prior_tenancy)
+        end
+      end)
+
       assert Tenancy.current() == "default"
     end
   end

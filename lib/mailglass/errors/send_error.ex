@@ -38,7 +38,6 @@ defmodule Mailglass.SendError do
 
   @doc "Returns the closed set of valid `:type` atoms. Tested against `docs/api_stability.md`."
   @doc since: "0.1.0"
-  @spec __types__() :: [atom()]
   def __types__, do: @types
 
   @impl Mailglass.Error

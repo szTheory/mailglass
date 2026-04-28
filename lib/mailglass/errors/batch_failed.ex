@@ -37,7 +37,6 @@ defmodule Mailglass.Error.BatchFailed do
 
   @doc "Returns the closed set of valid `:type` atoms."
   @doc since: "0.1.0"
-  @spec __types__() :: [atom()]
   def __types__, do: @types
 
   @impl Mailglass.Error

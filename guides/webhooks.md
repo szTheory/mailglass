@@ -78,10 +78,10 @@ config :mailglass, :sendgrid,
 SendGrid's public key is base64-encoded **SPKI DER** (not PEM). Copy
 it verbatim from the SendGrid Event Webhook security settings page.
 
-## 2. Multi-tenant patterns (D-12)
+## 2. Multi-tenant patterns
 
-Mailglass resolves the tenant AFTER the signature verifies (D-13
-"verify-first, tenant-second"). Three resolver shapes ship:
+Mailglass resolves the tenant AFTER the signature verifies ("verify-first,
+tenant-second"). Three resolver shapes ship:
 
 ### Strategy A — Single-tenant (default — zero config)
 
@@ -168,7 +168,7 @@ for the rest of the ingest pipeline (normalize → persist → broadcast).
 ## 3. Telemetry recipes
 
 Mailglass emits six webhook events. All metadata complies with the
-D-23 whitelist — no `:ip`, `:user_agent`, `:remote_ip`, `:raw_body`,
+telemetry PII policy — no `:ip`, `:user_agent`, `:remote_ip`, `:raw_body`,
 `:headers`, `:body`, `:to`, `:from`, `:subject`, `:recipient`,
 `:email` ever appears.
 
@@ -195,7 +195,7 @@ D-23 whitelist — no `:ip`, `:user_agent`, `:remote_ip`, `:raw_body`,
 ```
 
 `failure_reason` is always one of the seven atoms from
-`Mailglass.SignatureError.__types__/0` (closed set per D-21). Alert
+`Mailglass.SignatureError.__types__/0` (closed atom set). Alert
 thresholds keyed to atoms are safe — no regex parsing needed.
 
 ### Recipe — distinguish retry storms from real traffic
@@ -215,48 +215,49 @@ Sustained elevated duplicate rate = the provider is retrying.
 Investigate your endpoint's `p95` latency and 5xx rate; mailglass's
 own 2 s statement timeout (see §7) bounds ingest latency.
 
-### Recipe — auto-suppression on bounce/complaint (D-25)
+### Auto-suppression behavior
 
-Until v0.5 DELIV-02 ships first-class auto-suppression, attach a
-telemetry handler on the ingest span:
+Mailglass v0.2 projects suppressions automatically after a verified
+webhook event is matched to a delivery:
+
+- `:complained` -> address-wide suppression
+- hard `:bounced` -> address-wide suppression
+- `:unsubscribed` -> stream-scoped suppression using the delivery's stream
+- `:deferred` -> no immediate suppression; repeated soft bounces are handled by the soft-bounce escalation policy
+
+That projection happens inside mailglass. You do not need a telemetry
+handler to create the suppression rows yourself.
+
+Use telemetry for monitoring instead:
 
 ```elixir
 :telemetry.attach(
-  "auto-suppress",
-  [:mailglass, :webhook, :ingest, :stop],
-  fn _event, _measurements, meta, _ ->
-    # ingest meta carries `event_count` + `duplicate` — but not the
-    # per-event type. For suppression decisions you need the per-event
-    # normalize emit metadata:
-    :ok
-  end,
-  nil
-)
-
-:telemetry.attach(
-  "auto-suppress-normalize",
-  [:mailglass, :webhook, :normalize, :stop],
-  fn _event, _measurements, %{event_type: type, provider: provider}, _ ->
-    if type in [:bounced, :complained, :unsubscribed] do
-      # You'll need the recipient too — mailglass does NOT include it
-      # in normalize metadata (D-23). Subscribe to the adopter's own
-      # PubSub topic or query mailglass_events by (tenant_id, type) to
-      # pull the recipient address, then:
-      MyApp.Suppressions.maybe_add(provider, type)
-    end
+  "webhook-auto-suppress-monitor",
+  [:mailglass, :suppression, :auto_added, :stop],
+  fn _event, _measurements, %{reason: reason, scope: scope, tenant_id: tenant_id}, _ ->
+    MyApp.Metrics.increment("mailglass.suppression.auto_added",
+      tags: [reason: reason, scope: scope, tenant_id: tenant_id]
+    )
   end,
   nil
 )
 ```
 
-> **Note on recipient discovery.** Mailglass deliberately excludes the
-> recipient email from telemetry metadata per D-23. Your
-> auto-suppression handler can pull the recipient from the normalized
-> `mailglass_events` row via the `:delivery_id` → `mailglass_deliveries`
-> join. This is the v0.1 pattern; v0.5 ships first-class
-> auto-suppression that reads the ledger internally.
+If you need to rebuild suppression state from the event ledger, run
+`mix mailglass.suppressions.resync --tenant-id <tenant>`.
 
-## 4. IP allowlist (Postmark, opt-in per D-04)
+## 4. IP allowlist (Postmark, opt-in)
+
+## Complaint suppressions are permanent
+
+Mailglass treats complaint suppressions as durable compliance blocks.
+You can delete source delivery rows or retained webhook payload data to
+meet retention or erasure policy, but the complaint suppression row
+itself remains in place to prevent future sends to that recipient.
+
+This is intentional: GDPR or retention cleanup may erase the evidence
+that originally produced the complaint, while the suppression record
+continues to enforce the "do not send here again" contract.
 
 Postmark publishes ~13 webhook IPs at
 <https://postmarkapp.com/support/article/800-ips-for-firewalls>. To
@@ -288,7 +289,7 @@ When a webhook arrives BEFORE the matching `Delivery` row commits
 the event with `delivery_id: nil + needs_reconciliation: true`.
 `Mailglass.Webhook.Reconciler` (Oban worker) sweeps these orphans and
 APPENDS a `:reconciled` event when the matching `Delivery` later
-commits (D-18 — append, never UPDATE).
+commits (append-only ledger — never UPDATE).
 
 Wire the cron in your Oban config:
 
@@ -322,7 +323,7 @@ not loaded, pointing adopters here.
 
 ## 6. Webhook event retention (Pruner)
 
-Three knobs in `Mailglass.Config :webhook_retention` (D-16):
+Three knobs in `Mailglass.Config :webhook_retention`:
 
 ```elixir
 config :mailglass, :webhook_retention,
@@ -352,7 +353,7 @@ delete the `mailglass_webhook_events` row (prunable) and leave the
 ledger's event rows whose `:delivery_id` no longer resolves (they
 become anonymous audit facts).
 
-## 7. Statement timeout runbook (D-29)
+## 7. Statement timeout runbook
 
 `Mailglass.Webhook.Ingest.ingest_multi/3` issues
 `SET LOCAL statement_timeout = '2s'` and
@@ -386,7 +387,7 @@ latency + zero ledger-loss risk.
 | Status | What it means |
 |--------|---------------|
 | 200 | Event persisted (or replay-duplicate structural no-op) |
-| 401 | `%Mailglass.SignatureError{}` — one of 7 D-21 atoms |
+| 401 | `%Mailglass.SignatureError{}` — one of the closed atom set (see `Mailglass.SignatureError.__types__/0`) |
 | 422 | `%Mailglass.TenancyError{type: :webhook_tenant_unresolved}` — your resolver returned `{:error, _}` |
 | 500 | `%Mailglass.ConfigError{}` — plug wiring gap or missing secret. Check Logger output. |
 

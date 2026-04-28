@@ -72,11 +72,6 @@ Mailglass.ObanHelpers.maybe_create_oban_jobs()
 # the suite), DataCase.setup and MailerCase.setup each run this same probe on
 # every sandbox checkout, so the connection used by each test body is already
 # clean before the test runs.
-try do
-  Mailglass.TestRepo.query!("SELECT 'probe'::citext")
-rescue
-  # disconnect_on_error_codes fires; next connection is clean
-  Postgrex.Error -> :ok
-end
+Mailglass.TestSupport.CitextProbe.run([])
 
 Ecto.Adapters.SQL.Sandbox.mode(Mailglass.TestRepo, :manual)

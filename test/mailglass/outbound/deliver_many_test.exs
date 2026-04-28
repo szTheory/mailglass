@@ -15,6 +15,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
     # This is safer than :auto — background tasks share the test process's connection
     # rather than getting their own, avoiding stale OID cache errors in the full suite.
     Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
+    Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
 
     on_exit(fn ->
       Process.sleep(50)
@@ -111,15 +112,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       uid = unique_id()
       blocked_addr = "suppressed-batch-#{uid}@example.com"
 
-      {:ok, _} =
-        Mailglass.Suppression.Entry.changeset(%{
-          tenant_id: "test-tenant",
-          address: blocked_addr,
-          scope: :address,
-          reason: :manual,
-          source: "test"
-        })
-        |> TestRepo.insert()
+      {:ok, _} = insert_suppression!(blocked_addr)
 
       msgs = [
         build_message("ok1-#{uid}@example.com"),
@@ -171,15 +164,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       uid = unique_id()
       blocked_addr = "bang-blocked-#{uid}@example.com"
 
-      {:ok, _} =
-        Mailglass.Suppression.Entry.changeset(%{
-          tenant_id: "test-tenant",
-          address: blocked_addr,
-          scope: :address,
-          reason: :manual,
-          source: "test"
-        })
-        |> TestRepo.insert()
+      {:ok, _} = insert_suppression!(blocked_addr)
 
       msgs = [
         build_message("bang-ok-#{uid}@example.com"),
@@ -208,15 +193,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       addr2 = "all-fail-2-#{uid}@example.com"
 
       for addr <- [addr1, addr2] do
-        {:ok, _} =
-          Mailglass.Suppression.Entry.changeset(%{
-            tenant_id: "test-tenant",
-            address: addr,
-            scope: :address,
-            reason: :manual,
-            source: "test"
-          })
-          |> TestRepo.insert()
+        {:ok, _} = insert_suppression!(addr)
       end
 
       msgs = [build_message(addr1), build_message(addr2)]
@@ -263,10 +240,41 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       |> Swoosh.Email.html_body("<p>Test body</p>")
       |> Swoosh.Email.text_body("Test body")
 
-    Message.new(email,
+    Message.build(email,
       mailable: Mailglass.FakeFixtures.TestMailer,
       tenant_id: "test-tenant",
       stream: :transactional
     )
+  end
+
+  defp insert_suppression!(address) do
+    attrs = %{
+      tenant_id: "test-tenant",
+      address: address,
+      scope: :address,
+      reason: :manual,
+      source: "test"
+    }
+
+    insert_suppression!(attrs, 4)
+  end
+
+  defp insert_suppression!(attrs, attempts_left) when attempts_left > 0 do
+    try do
+      attrs
+      |> Mailglass.Suppression.Entry.changeset()
+      |> TestRepo.insert()
+    rescue
+      Postgrex.Error ->
+        Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
+
+        if attempts_left > 1 do
+          insert_suppression!(attrs, attempts_left - 1)
+        else
+          attrs
+          |> Mailglass.Suppression.Entry.changeset()
+          |> TestRepo.insert()
+        end
+    end
   end
 end

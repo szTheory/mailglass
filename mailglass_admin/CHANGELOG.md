@@ -4,6 +4,21 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v0.1.1...mailglass_admin-v0.2.0) (2026-04-28)
+
+`mailglass_admin` 0.2.0 is coordinated with `mailglass` 0.2.0. There is no
+standalone admin codemod or admin-only rollback path: bump both sibling
+packages together, run the core `mix mailglass.upgrade.v0_2` flow if your
+mailables still call `Swoosh.Email.*`, and keep the preview package on the
+matching sibling version.
+
+### Changed
+
+- Coordinated the preview package with the `mailglass` 0.2.0 message-authoring
+  API and release line.
+- Existing preview mounts do not need extra admin-only router or asset changes
+  beyond taking the matching core release.
+
 ## [0.1.1](https://github.com/szTheory/mailglass/compare/mailglass_admin-v0.1.0...mailglass_admin-v0.1.1) (2026-04-26)
 
 
