@@ -47,6 +47,35 @@ pattern is recommended. They don't expect engineering-process metadata.
 tenant-second` — the quoted phrase already conveys the rule; the `D-13`
 prefix is pure noise from the adopter's perspective.
 
+## Additional follow-up context from the 2026-04-28 doc pass
+
+`guides/webhooks.md` has a few concrete adopter-facing glitches that should be
+fixed as part of the same sweep:
+
+- Section `## 3. Telemetry recipes` has rendered oddly in HexDocs for at least
+  one reader, specifically around the event-path code spans like
+  `[:mailglass, :webhook, :ingest, :start | :stop | :exception]` and
+  `[:mailglass, :webhook, :signature, :verify, :start | :stop | :exception]`.
+  Source table rows in `guides/webhooks.md:175-182` look structurally correct,
+  so verify the rendered output and adjust escaping / table formatting if the
+  pipes are confusing the renderer.
+- The same guide still contains maintainer-facing parentheticals that read like
+  internal breadcrumbs instead of adopter docs:
+  - `## 4. IP allowlist (Postmark, opt-in)` at `guides/webhooks.md:259`
+  - `append-only ledger — never UPDATE` at `guides/webhooks.md:291`
+  - `## 7. Statement timeout runbook` content still references
+    `Pitfall 6` at `guides/webhooks.md:360`
+- Footer freshness is suspicious:
+  `*Last updated: 2026-04-24 (Phase 4 ships at v0.1).*` at
+  `guides/webhooks.md:433`.
+  Even if the date is technically correct, "Phase 4 ships at v0.1" is
+  maintainer-process language and should probably be removed from public docs.
+
+This means the follow-up is not just "strip `D-NN` tokens." It is a broader
+adopter-doc cleanup pass: remove internal artifacting, verify rendered Markdown
+in HexDocs, and refresh any stale milestone / phase language that leaked into
+published guides.
+
 ## Recommended fix
 
 1. Sweep `guides/*.md` for the patterns:
@@ -62,6 +91,10 @@ prefix is pure noise from the adopter's perspective.
      reason mailglass forbids tracking on auth-carrying messages — privacy
      compliance" instead of "(D-08)")
    - **Move to maintainer-only doc** if the audience is wrong for that section
+   - **Render-check HexDocs tables / code spans** anywhere inline `|` pipes may
+     be getting interpreted strangely in published output
+   - **Refresh footers / section labels** that still mention milestone or phase
+     shipping language instead of user-facing version history
 3. Add a Credo or doctest-style guard so future doc PRs flag re-introductions:
    - Quick win: a script in `mix mailglass.publish.check` that greps the
      `extras` files for the patterns and warns
