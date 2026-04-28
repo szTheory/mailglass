@@ -28,8 +28,9 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
 
     * `use ExUnit.Case, async: false` — not `DataCase` (the transaction
       wrapper deadlocks on 1000 iterations that TRUNCATE between runs).
-    * `Sandbox.mode(TestRepo, :auto)` in setup; restore `:manual` on
-      exit so DataCase-using siblings stay isolated.
+    * `Sandbox.start_owner!/2` in setup with an extended ownership
+      timeout; stop the owner on exit so long property runs do not lose
+      the checked-out connection mid-iteration.
     * `TRUNCATE ... CASCADE` between iterations (trigger blocks
       UPDATE/DELETE; TRUNCATE is the only bulk-wipe path).
   """
@@ -48,7 +49,13 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
   @moduletag timeout: :infinity
 
   setup do
-    Sandbox.mode(TestRepo, :auto)
+    owner =
+      Sandbox.start_owner!(TestRepo,
+        shared: true,
+        ownership_timeout: 10 * 60_000
+      )
+
+    Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
     :ok = Tenancy.put_current("prop-test-tenant")
 
     TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
@@ -58,7 +65,7 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
       TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
       TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
       Tenancy.clear()
-      Sandbox.mode(TestRepo, :manual)
+      Sandbox.stop_owner(owner)
     end)
 
     :ok
