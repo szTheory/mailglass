@@ -24,6 +24,7 @@ defmodule Mailglass.Suppression do
   """
 
   alias Mailglass.{Message, SuppressedError}
+  alias Mailglass.Suppression.Entry
 
   @doc """
   Pre-send suppression check. Returns `:ok` when allowed, `{:error, %SuppressedError{}}` when blocked.
@@ -52,10 +53,7 @@ defmodule Mailglass.Suppression do
 
         {:error,
          SuppressedError.new(scope,
-           context: %{
-             tenant_id: msg.tenant_id,
-             stream: msg.stream
-           }
+           context: error_context(msg, result)
          )}
 
       {:error, err} ->
@@ -83,5 +81,15 @@ defmodule Mailglass.Suppression do
       %{duration_us: duration_us},
       %{hit: hit, tenant_id: tenant_id}
     )
+  end
+
+  defp error_context(%Message{} = msg, {:suppressed, %Entry{} = entry}) do
+    %{
+      tenant_id: msg.tenant_id,
+      stream: msg.stream,
+      reason: entry.reason,
+      source: entry.source,
+      expires_at: entry.expires_at
+    }
   end
 end

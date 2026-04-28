@@ -12,6 +12,17 @@ defmodule Mailglass.SuppressedError do
   - `:domain` — the recipient domain is globally suppressed
   - `:address_stream` — the recipient is suppressed for a specific stream (e.g. `:bulk`)
 
+  ## Context
+
+  Suppression-hit context stays PII-safe while carrying enough diagnostic detail
+  for callers:
+
+  - `:tenant_id` — stamped tenant
+  - `:stream` — current message stream
+  - `:reason` — suppression reason atom
+  - `:source` — suppression source class/string
+  - `:expires_at` — expiry timestamp or `nil`
+
   See `Mailglass.Error` for the shared contract and `docs/api_stability.md`
   for the locked `:type` atom set.
   """
@@ -27,7 +38,14 @@ defmodule Mailglass.SuppressedError do
           type: :address | :domain | :address_stream,
           message: String.t(),
           cause: Exception.t() | nil,
-          context: %{atom() => term()}
+          context: %{
+            optional(:tenant_id) => String.t(),
+            optional(:stream) => atom() | nil,
+            optional(:reason) => atom() | nil,
+            optional(:source) => String.t() | nil,
+            optional(:expires_at) => DateTime.t() | nil,
+            optional(atom()) => term()
+          }
         }
 
   @doc "Returns the closed set of valid `:type` atoms. Tested against `docs/api_stability.md`."
