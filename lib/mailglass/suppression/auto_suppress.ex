@@ -14,8 +14,11 @@ defmodule Mailglass.Suppression.AutoSuppress do
           {:ok, Entry.t() | :inserted | :skip | :orphan_skipped | :no_event_row}
           | {:error, term()}
   def apply(repo, {:matched, %Delivery{} = delivery, %Event{} = event}) do
+    start = System.monotonic_time(:microsecond)
+
     with {:ok, attrs} <- build_attrs(event, delivery),
-         {:ok, _entry} <- insert(repo, attrs) do
+         {:ok, entry} <- insert(repo, attrs) do
+      emit_auto_added(start, delivery.tenant_id, entry)
       {:ok, :inserted}
     end
   end
@@ -54,6 +57,22 @@ defmodule Mailglass.Suppression.AutoSuppress do
       on_conflict: :nothing,
       conflict_target: @conflict_target,
       returning: true
+    )
+  end
+
+  defp emit_auto_added(start, tenant_id, %Entry{} = entry) do
+    duration_us = System.monotonic_time(:microsecond) - start
+
+    :telemetry.execute(
+      [:mailglass, :suppression, :auto_added, :stop],
+      %{duration_us: duration_us},
+      %{
+        tenant_id: tenant_id,
+        scope: entry.scope,
+        reason: entry.reason,
+        source: entry.source,
+        expires_at?: not is_nil(entry.expires_at)
+      }
     )
   end
 

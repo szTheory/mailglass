@@ -50,6 +50,7 @@ defmodule Mailglass.Suppression do
 
       {:suppressed, %{scope: scope}} ->
         emit_telemetry(duration_us, true, msg.tenant_id)
+        emit_pre_send_blocked(duration_us, result, msg)
 
         {:error,
          SuppressedError.new(scope,
@@ -80,6 +81,20 @@ defmodule Mailglass.Suppression do
       [:mailglass, :outbound, :suppression, :stop],
       %{duration_us: duration_us},
       %{hit: hit, tenant_id: tenant_id}
+    )
+  end
+
+  defp emit_pre_send_blocked(duration_us, {:suppressed, %Entry{} = entry}, %Message{} = msg) do
+    :telemetry.execute(
+      [:mailglass, :suppression, :pre_send_blocked, :stop],
+      %{duration_us: duration_us},
+      %{
+        tenant_id: msg.tenant_id,
+        scope: entry.scope,
+        reason: entry.reason,
+        source: entry.source,
+        expires_at?: not is_nil(entry.expires_at)
+      }
     )
   end
 
