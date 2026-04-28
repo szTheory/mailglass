@@ -10,12 +10,13 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**Shipped: v0.1.1 on Hex.pm (2026-04-26).**
+**Shipped: v0.2.0 on Hex.pm (2026-04-28).**
 
-- `mailglass` 0.1.1 — https://hex.pm/packages/mailglass/0.1.1
-- `mailglass_admin` 0.1.1 — https://hex.pm/packages/mailglass_admin/0.1.1
-- HexDocs: https://hexdocs.pm/mailglass/0.1.1/ + https://hexdocs.pm/mailglass_admin/0.1.1/
+- `mailglass` 0.2.0 — https://hex.pm/packages/mailglass/0.2.0
+- `mailglass_admin` 0.2.0 — https://hex.pm/packages/mailglass_admin/0.2.0
+- HexDocs: https://hexdocs.pm/mailglass/0.2.0/ + https://hexdocs.pm/mailglass_admin/0.2.0/
 
+v0.2 milestone closed 2026-04-28. 6 phases (8-13), 35 plans, 38/38 REQ-IDs mapped.
 v0.1 milestone closed 2026-04-26. 8 phases (7 planned + 1 inserted), 61 plans, 84/84 v1 REQ-IDs satisfied, ~33k LOC of Elixir, 319 commits, 6-day cycle. Full archive: [`.planning/milestones/v0.1-ROADMAP.md`](milestones/v0.1-ROADMAP.md).
 
 **Codebase characteristics:**
@@ -70,11 +71,18 @@ v0.1 milestone closed 2026-04-26. 8 phases (7 planned + 1 inserted), 61 plans, 8
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (v0.1 — SHIPPED)
+## Validated Requirements (v0.1 & v0.2 — SHIPPED)
 
-All 84 v1 REQ-IDs satisfied. Full archive: [`.planning/milestones/v0.1-REQUIREMENTS.md`](milestones/v0.1-REQUIREMENTS.md).
+All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 
-**By category:**
+**By category (v0.2 - Production-Credible Core):**
+- ✓ API-01..07 — Mailable API redesign + native Message field setters + `api_stability.md` v2 + codemod task + deprecation warnings + migration guide
+- ✓ STREAM-01..04 — Message-stream separation (`:transactional`/`:operational`/`:bulk`) + runtime + compile-time enforcement + stream-aware Feedback-ID
+- ✓ UNSUB-01..06 — RFC 8058 List-Unsubscribe headers + signed-token controller + rotation + generator + property tests
+- ✓ SUPP-01..05 — Auto-suppression on bounce/complaint/unsubscribe + soft-bounce escalation + resync mix task + default-deny pre-send check
+- ✓ REL-01..16 — Release-engineering hardening: 9 v0.1.2 polish TODOs + Tests gate halt-on-failure + Credo strict + Dialyzer halt-exit-status + release ceremony (CHANGELOG, migration guide, Hex publish)
+
+**By category (v0.1):**
 - ✓ CORE-01..07 — Error hierarchy, Config, Telemetry whitelist, Repo.transact/1, IdempotencyKey, OptionalDeps gateway, boundary
 - ✓ AUTHOR-01..05 — Mailable behaviour, HEEx components with MSO fallbacks, render pipeline <50ms, Gettext i18n, MJML opt-in
 - ✓ PERSIST-01..06 — 3 tables (deliveries/events/suppressions), append-only trigger, idempotency partial UNIQUE, append/1 + append_multi/3, migration generator
@@ -92,19 +100,9 @@ All 84 v1 REQ-IDs satisfied. Full archive: [`.planning/milestones/v0.1-REQUIREME
 - ✓ DOCS-01..05 — ExDoc with 9 guides, migration-from-swoosh, doc-contract tests, governance files
 - ✓ BRAND-01..03 — Brand-conformant UI + voice + docs
 
-## Active (v0.2 — Production-Credible Core)
+## Active
 
-Re-derived 2026-04-26 for v0.2 milestone. Full REQ-IDs + traceability in `.planning/REQUIREMENTS.md`.
-
-**Five categories planned for v0.2:**
-
-- **API-01..07** — Mailable API redesign + native Message field setters + `api_stability.md` v2 + codemod task + deprecation warnings + migration guide
-- **STREAM-01..04** — Message-stream separation (`:transactional`/`:operational`/`:bulk`) + runtime + compile-time enforcement + stream-aware Feedback-ID
-- **UNSUB-01..06** — RFC 8058 List-Unsubscribe headers + signed-token controller + rotation + generator + property tests
-- **SUPP-01..05** — Auto-suppression on bounce/complaint/unsubscribe + soft-bounce escalation + resync mix task + default-deny pre-send check
-- **REL-01..16** — Release-engineering hardening: 9 v0.1.2 polish TODOs + Tests gate halt-on-failure + Credo strict + Dialyzer halt-exit-status + release ceremony (CHANGELOG, migration guide, Hex publish)
-
-**Out-of-scope-for-v0.2 (deferred to v0.3+, tracked in archived `milestones/v0.1-REQUIREMENTS.md` under "v2 Requirements"):** DELIV-04 (Mailgun/SES/Resend webhooks), DELIV-05 (prod admin LiveView), DELIV-06 (`mix mail.doctor`), DELIV-07 (per-tenant adapter), DELIV-08 (cluster rate limit), DELIV-09 (DKIM helper), INBOUND-01..07.
+Currently no active requirements as milestone is complete.
 
 ## Out of Scope
 
@@ -212,4 +210,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-04-26 — v0.2 milestone "Production-Credible Core" started after v0.1 close.*
+*Last updated: 2026-04-28 — v0.2 milestone "Production-Credible Core" complete.*
