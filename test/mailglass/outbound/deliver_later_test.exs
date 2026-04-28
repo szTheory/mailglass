@@ -2,6 +2,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
   # async: false required — we switch sandbox to shared mode and use Application.put_env
   use Mailglass.DataCase, async: false
 
+  alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.{Outbound, Message, TestRepo}
   alias Mailglass.Outbound.Delivery
 
@@ -10,10 +11,21 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     # async: false guarantees no other test owns the shared bucket during this test.
     Mailglass.Adapters.Fake.checkout()
     Mailglass.Adapters.Fake.set_shared(self())
+    prior_compliance = Application.get_env(:mailglass, :compliance)
 
     # Use task_supervisor for deliver_later tests — Oban is not started in the test suite.
     # Worker-specific tests (worker_test.exs) test the Worker module directly.
     Application.put_env(:mailglass, :async_adapter, :task_supervisor)
+
+    Application.put_env(:mailglass, :compliance,
+      endpoint: "deliver-later-test-secret",
+      host: "unsubscribe.example.com",
+      scheme: "https",
+      mount_path: "/mailglass/unsubscribe",
+      previous_secrets: [],
+      redirect: nil,
+      max_age: 60
+    )
 
     # The Task.Supervisor spawns a background process that accesses the DB.
     # Use shared mode so background tasks share the test process's connection
@@ -26,6 +38,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       # before the sandbox is torn down (avoids Postgrex disconnect noise).
       Process.sleep(50)
       Application.put_env(:mailglass, :async_adapter, :oban)
+      Application.put_env(:mailglass, :compliance, prior_compliance)
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
@@ -80,6 +93,19 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       assert reloaded.status in [:queued, :sent]
     end
 
+    test "bulk async deliveries sign the persisted delivery id into unsubscribe headers" do
+      msg = build_message("later-bulk-#{unique_id()}@example.com", stream: :bulk)
+      {:ok, delivery} = Outbound.deliver_later(msg)
+      delivery_id = delivery.id
+
+      Process.sleep(150)
+
+      [record] = Mailglass.Adapters.Fake.deliveries()
+      token = unsubscribe_token!(record.message)
+
+      assert {:ok, %{delivery_id: ^delivery_id}} = Unsubscribe.verify_token(token)
+    end
+
     test "fallback return shape is {:ok, %Delivery{status: :queued}} regardless of Oban availability" do
       msg = build_message("shape-#{unique_id()}@example.com")
       result = Outbound.deliver_later(msg)
@@ -113,7 +139,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
 
   defp unique_id, do: System.unique_integer([:positive])
 
-  defp build_message(to_addr) do
+  defp build_message(to_addr, opts \\ []) do
     email =
       Swoosh.Email.new()
       |> Swoosh.Email.from({"Test", "from@example.com"})
@@ -125,7 +151,17 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     Message.build(email,
       mailable: Mailglass.FakeFixtures.TestMailer,
       tenant_id: "test-tenant",
-      stream: :transactional
+      stream: Keyword.get(opts, :stream, :transactional)
     )
+  end
+
+  defp unsubscribe_token!(%Message{} = message) do
+    message.swoosh_email.headers["List-Unsubscribe"]
+    |> String.trim_leading("<")
+    |> String.trim_trailing(">")
+    |> URI.parse()
+    |> Map.fetch!(:path)
+    |> String.split("/", trim: true)
+    |> List.last()
   end
 end

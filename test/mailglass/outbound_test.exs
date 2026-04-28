@@ -11,6 +11,7 @@ end
 defmodule Mailglass.OutboundTest do
   use Mailglass.DataCase, async: false
 
+  alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Outbound
   alias Mailglass.Outbound.Delivery
   alias Mailglass.Adapters.Fake
@@ -18,6 +19,23 @@ defmodule Mailglass.OutboundTest do
 
   setup do
     Fake.checkout()
+
+    prior_compliance = Application.get_env(:mailglass, :compliance)
+
+    Application.put_env(:mailglass, :compliance,
+      endpoint: "outbound-test-secret",
+      host: "unsubscribe.example.com",
+      scheme: "https",
+      mount_path: "/mailglass/unsubscribe",
+      previous_secrets: [],
+      redirect: nil,
+      max_age: 60
+    )
+
+    on_exit(fn ->
+      Application.put_env(:mailglass, :compliance, prior_compliance)
+    end)
+
     :ok
   end
 
@@ -62,6 +80,17 @@ defmodule Mailglass.OutboundTest do
 
       [record] = Fake.deliveries()
       assert record.message.metadata[:delivery_id] == delivery.id
+    end
+
+    test "bulk deliveries sign the persisted delivery id into unsubscribe headers" do
+      msg = build_message("bulk@example.com", stream: :bulk)
+      {:ok, delivery} = Outbound.send(msg)
+      delivery_id = delivery.id
+
+      [record] = Fake.deliveries()
+      token = unsubscribe_token!(record.message)
+
+      assert {:ok, %{delivery_id: ^delivery_id}} = Unsubscribe.verify_token(token)
     end
   end
 
@@ -175,7 +204,7 @@ defmodule Mailglass.OutboundTest do
 
   # Helper to build a minimal test message for the Fake adapter.
   # html_body must be a binary (HTML string) or 1-arity function — Renderer requires it.
-  defp build_message(to_addr) do
+  defp build_message(to_addr, opts \\ []) do
     email =
       Swoosh.Email.new()
       |> Swoosh.Email.from({"Test", "from@example.com"})
@@ -187,7 +216,17 @@ defmodule Mailglass.OutboundTest do
     Message.build(email,
       mailable: Mailglass.FakeFixtures.TestMailer,
       tenant_id: "test-tenant",
-      stream: :transactional
+      stream: Keyword.get(opts, :stream, :transactional)
     )
+  end
+
+  defp unsubscribe_token!(%Message{} = message) do
+    message.swoosh_email.headers["List-Unsubscribe"]
+    |> String.trim_leading("<")
+    |> String.trim_trailing(">")
+    |> URI.parse()
+    |> Map.fetch!(:path)
+    |> String.split("/", trim: true)
+    |> List.last()
   end
 end
