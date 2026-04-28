@@ -50,6 +50,7 @@ extra_checks = [
      allowed_modules: [Mailglass.Clock, Mailglass.Clock.System, Mailglass.Clock.Frozen],
      included_path_prefixes: ["lib/mailglass/"]
    ]},
+  {Mailglass.Credo.RequireAtomicUnsubscribeHeaders, []},
   {Mailglass.Credo.NoTrackingOnAuthStream,
    [
      auth_name_heuristics:
