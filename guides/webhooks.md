@@ -258,6 +258,17 @@ telemetry handler on the ingest span:
 
 ## 4. IP allowlist (Postmark, opt-in)
 
+## Complaint suppressions are permanent
+
+Mailglass treats complaint suppressions as durable compliance blocks.
+You can delete source delivery rows or retained webhook payload data to
+meet retention or erasure policy, but the complaint suppression row
+itself remains in place to prevent future sends to that recipient.
+
+This is intentional: GDPR or retention cleanup may erase the evidence
+that originally produced the complaint, while the suppression record
+continues to enforce the "do not send here again" contract.
+
 Postmark publishes ~13 webhook IPs at
 <https://postmarkapp.com/support/article/800-ips-for-firewalls>. To
 enable:

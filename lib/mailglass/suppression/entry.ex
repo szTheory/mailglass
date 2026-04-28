@@ -84,6 +84,7 @@ defmodule Mailglass.Suppression.Entry do
     |> cast(attrs, @cast)
     |> validate_required(@required)
     |> validate_scope_stream_coupling()
+    |> validate_complaint_permanence()
     |> downcase_address()
   end
 
@@ -111,6 +112,16 @@ defmodule Mailglass.Suppression.Entry do
     case get_change(changeset, :address) do
       nil -> changeset
       addr -> put_change(changeset, :address, String.downcase(addr))
+    end
+  end
+
+  defp validate_complaint_permanence(changeset) do
+    case {get_field(changeset, :reason), get_field(changeset, :expires_at)} do
+      {:complaint, expires_at} when not is_nil(expires_at) ->
+        add_error(changeset, :expires_at, "must be omitted when reason is :complaint")
+
+      _ ->
+        changeset
     end
   end
 
