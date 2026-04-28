@@ -58,7 +58,8 @@
 **: `Mailglass.Router` macro mounts unsubscribe routes (`mailglass_router_routes "/mailglass"`) following the `MailglassAdmin.Router` pattern (PREV-02 reference). `mix mailglass.gen.unsubscribe` mix task prints mount instructions, config snippets, and a test recipe — does NOT copy code (unlike `mix mailglass.install`). Configurable path prefix; collision detection against adopter routes. (TS-V2-09; pitfall UNSUB-06)
 - [x] **UNSUB-05**: StreamData property test (Phase 11 UAT): round-trip mint → verify across rotation boundary; expired-token rejection; one-click POST recorded as `:unsubscribed` event with idempotent insert; SSRF/open-redirect check on `unsubscribe_url/2`; List-Unsubscribe header present on `:bulk`, absent on `:transactional`, conditionally present on `:operational`. Integrates into the existing HOOK-07 1000-replay convergence property. (Pitfalls UNSUB-04
 , UNSUB-05)
-- [ ] **UNSUB-06**: `guides/unsubscribe.md` ships with: adopter walkthrough; per-ESP DKIM `h=` verification (Postmark auto-includes both headers; SendGrid has known historical gap on `List-Unsubscribe-Post`, GitHub issue #893 — adopter must verify in their ESP diagnostics); rotation playbook; troubleshooting "user can't unsubscribe" scenarios. (DF-V2-03; pitfall UNSUB-05)
+- [x] **UNSUB-06**: `guides/unsubscribe.md` ships with: adopter walkthrough; per-ESP DKIM `h=` verification (Postmark auto-includes both headers; SendGrid has known historical gap on `List-Unsubscribe-Post`, GitHub issue #893 — adopter must verify in their ESP diagnostics); rotation playbook; troubleshooting "user can't unsubscribe" scenarios. (DF-V2-03; pitfall UNSUB-05
+)
 
 #### Auto-Suppression (Phase 12)
 

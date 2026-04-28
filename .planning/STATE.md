@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Production-Credible Core
 status: executing
-stopped_at: Completed 11-05-PLAN.md
-last_updated: "2026-04-28T09:49:12.001Z"
-last_activity: 2026-04-28 -- Phase --phase execution started
+stopped_at: Completed 11-06-PLAN.md
+last_updated: "2026-04-28T09:57:20.051Z"
+last_activity: 2026-04-28 -- Completed 11-06-PLAN.md
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 23
-  completed_plans: 21
-  percent: 91
+  completed_plans: 22
+  percent: 96
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-26 — v0.2 "Production-Credible Core" started)
 
 **Core value:** Email you can see, audit, and trust before it ships.
-**Current focus:** Phase --phase — 11
+**Current focus:** Phase 11 — RFC 8058 List-Unsubscribe
 
 ## Current Position
 
-Phase: --phase (11) — EXECUTING
-Plan: 1 of --name
-Status: Executing Phase --phase
-Last activity: 2026-04-28 -- Phase --phase execution started
+Phase: 11 — EXECUTING
+Plan: 6 of 7
+Status: Ready for 11-07
+Last activity: 2026-04-28 -- Completed 11-06-PLAN.md
 
-Progress: [█████████░] 91%
+Progress: [██████████] 96%
 
 ## Milestone Spec (v0.2)
 
@@ -69,6 +69,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 - Detect route collisions by reading the caller module's accumulated :phoenix_routes before injecting unsubscribe routes.
 - Kept mix mailglass.gen.unsubscribe strictly read-only and terminal-output only.
 - Used loaded router __routes__/0 reflection for generator preflight reporting so warnings match the runtime route contract.
+- Unsubscribe URL generation rejects scheme-bearing, path-bearing, whitespace-containing, and local/private hosts before emitting one-click links.
+- Unsubscribe POST replay convergence is verified through a mounted Phoenix endpoint property harness with Sandbox auto mode and TRUNCATE isolation.
 
 ### Key Corrections (propagate into phase plans)
 
@@ -93,8 +95,8 @@ D-01..D-21 logged in PROJECT.md Key Decisions. v0.2 decisions pending:
 
 ## Session Continuity
 
-Last session: 2026-04-28T09:49:11.993Z
-Stopped at: Completed 11-05-PLAN.md
-Resume: `/gsd-plan-phase 8`
+Last session: 2026-04-28T09:57:20.045Z
+Stopped at: Completed 11-06-PLAN.md
+Resume: `/gsd-execute-phase 11`
 
-**Planned Phase:** 08 (Release-Engineering Hardening) — 6 plans — 2026-04-27T02:26:05.655Z
+**Planned Phase:** 11 (RFC 8058 List-Unsubscribe) — 7 plans — 2026-04-28T09:57:20.045Z
