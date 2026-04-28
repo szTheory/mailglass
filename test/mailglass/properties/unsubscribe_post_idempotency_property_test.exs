@@ -3,7 +3,7 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
   use ExUnitProperties
 
   import Ecto.Query
-  import Phoenix.ConnTest
+  require Phoenix.ConnTest
 
   alias Ecto.Adapters.SQL.Sandbox
   alias Mailglass.Compliance.Unsubscribe
@@ -117,22 +117,22 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
       token = Unsubscribe.sign_token(delivery.id)
       path = "/mailglass/unsubscribe/#{token}"
 
-      baseline_conn = post(build_conn(), path, %{})
+      baseline_conn = Phoenix.ConnTest.post(Phoenix.ConnTest.build_conn(), path, %{})
       baseline_snapshot = durable_snapshot(delivery.id)
 
-      assert response(baseline_conn, 200) == ""
+      assert Phoenix.ConnTest.response(baseline_conn, 200) == ""
       assert baseline_snapshot == [{"unsubscribe:#{delivery.id}", :unsubscribed}]
 
       TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
 
       replay_responses =
         for _ <- 1..replay_count do
-          post(build_conn(), path, %{})
+          Phoenix.ConnTest.post(Phoenix.ConnTest.build_conn(), path, %{})
         end
 
       replay_snapshot = durable_snapshot(delivery.id)
 
-      assert Enum.all?(replay_responses, &(response(&1, 200) == ""))
+      assert Enum.all?(replay_responses, &(Phoenix.ConnTest.response(&1, 200) == ""))
       assert replay_snapshot == baseline_snapshot
       assert length(replay_snapshot) == 1
     end
