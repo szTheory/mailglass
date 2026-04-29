@@ -6,12 +6,12 @@ on:
   schedule:
     - cron: "0 12 * * *"
   workflow_dispatch:
-    # Canonical fallback for v0.2.0 if publish succeeds but automatic smoke
+    # Canonical fallback for v0.3.0 if publish succeeds but automatic smoke
     # fan-out does not occur: dispatch against the same reviewed core release
-    # tag used for publish (e.g. `mailglass-v0.2.0`).
+    # tag used for publish (e.g. `mailglass-v0.3.0`).
     inputs:
       tag:
-        description: "Tag to smoke-test (e.g. mailglass-v0.2.0)"
+        description: "Tag to smoke-test (e.g. mailglass-v0.3.0)"
         required: false
         type: string
 
@@ -100,6 +100,27 @@ jobs:
               core.setOutput('version', version);
               core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; skipping scheduled smoke.`);
               return;
+            }
+
+            if (eventName === 'schedule' && version) {
+              const response = await fetch('https://hex.pm/api/packages/mailglass');
+              if (!response.ok) {
+                core.warning(`Hex API lookup failed with status ${response.status}; skipping scheduled smoke for safety.`);
+                core.setOutput('should_run', 'false');
+                core.setOutput('version', version);
+                return;
+              }
+
+              const hexPackage = await response.json();
+              const hexReleases = Array.isArray(hexPackage.releases) ? hexPackage.releases : [];
+              const onHex = hexReleases.some((release) => release.version === version);
+
+              if (!onHex) {
+                core.setOutput('should_run', 'false');
+                core.setOutput('version', version);
+                core.warning(`Latest GitHub release ${latest.tag_name} is not on Hex.pm; skipping scheduled smoke until a public package exists.`);
+                return;
+              }
             }
 
             core.setOutput('should_run', 'true');

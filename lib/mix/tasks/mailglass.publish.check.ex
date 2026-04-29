@@ -761,7 +761,13 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
     File.rm_rf!(tmp_dir)
     File.mkdir_p!(tmp_dir)
-    File.cp!(ctx.source_path, Path.join(tmp_dir, "mix.exs"))
+    mix_exs = Path.join(tmp_dir, "mix.exs")
+
+    File.write!(
+      mix_exs,
+      ctx.source
+      |> maybe_rewrite_publish_dep(ctx)
+    )
 
     {output, status} =
       System.cmd("mix", ["deps.get"],
@@ -781,6 +787,17 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
     ctx
   end
+
+  # mailglass_admin is co-released with mailglass. During pre-publish validation
+  # the new sibling version is not on Hex yet, so `mix deps.get` must validate
+  # the dependency graph against the local sibling checkout instead of requiring
+  # a not-yet-published Hex release. The exact-version contract is enforced
+  # separately by verify_deps/1 and verify_linked_constraint/1.
+  defp maybe_rewrite_publish_dep(source, %{package: :mailglass_admin, repo_root: repo_root}) do
+    rewrite_mailglass_publish_dep(source, repo_root)
+  end
+
+  defp maybe_rewrite_publish_dep(source, _ctx), do: source
 
   defp verify_compile(ctx) do
     mix_home =
