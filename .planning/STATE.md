@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-04-29T00:59:30.000Z"
+last_updated: "2026-04-29T01:08:38.276Z"
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -22,14 +22,14 @@ progress:
 ## Current Position
 
 Phase: 15 (mailgun-webhook-provider) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 **Phase:** Phase 15: Mailgun Webhook Provider
-**Plan:** 15-02 complete
+**Plan:** 15-03 complete
 **Status:** Executing Phase 15
 
 **Progress:**
-[██████░░░░] 60%
-*(1/3 phases complete; 2/4 plans in Phase 15 complete)*
+[████████░░] 80%
+*(1/3 phases complete; 3/4 plans in Phase 15 complete)*
 
 ## Performance Metrics
 
@@ -48,6 +48,9 @@ Plan: 3 of 4
 - D-26: Mailgun token replay defense uses a supervised ETS table-owner cache started from `Mailglass.Application`.
 - D-27: Mailgun uses the webhook token as both replay-cache key and normalized `provider_event_id`.
 - D-28: Mailgun failed-event normalization preserves raw `severity`, `reason`, `delivery-status`, and `timestamp` metadata keys alongside the normalized event type.
+- D-29: Mailgun replay exits from `Mailglass.Webhook.Plug` as HTTP 200 before tenant resolution or ingest work begins.
+- D-30: Mailgun is a valid webhook router provider only when adopters opt in explicitly; the default route surface stays Postmark plus SendGrid.
+- D-31: `Mailglass.Webhook.Ingest` accepts Mailgun and derives durable provider event ids from the Mailgun token-backed metadata path.
 
 ### Blockers
 
@@ -58,6 +61,7 @@ Plan: 3 of 4
 - Phase 14 plan 14-01 executed with two commits and a summary artifact.
 - Phase 15 plan 15-01 executed with Mailgun test scaffolds, replay-aware provider contract updates, and supervised ETS replay cache wiring.
 - Phase 15 plan 15-02 executed with raw Mailgun fixtures, provider verification/normalization, and fixture-driven provider tests.
+- Phase 15 plan 15-03 executed with Mailgun runtime wiring in plug/router/config/ingest and regression coverage for replay-safe 200 responses.
 - Targeted Resend provider tests pass; broader suite still has an unrelated tracking endpoint assertion failure.
 
 **Planned Phase:** 15 (mailgun-webhook-provider) — 4 plans — 2026-04-29T00:49:28Z

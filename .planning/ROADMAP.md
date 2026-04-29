@@ -36,7 +36,7 @@ Plans:
 Plans:
 - [x] 15-01-PLAN.md — Define the replay-aware Mailgun contract and ETS cache
 - [x] 15-02-PLAN.md — Implement the Mailgun provider, fixtures, and provider tests
-- [ ] 15-03-PLAN.md — Wire Mailgun into plug, router, config, and runtime tests
+- [x] 15-03-PLAN.md — Wire Mailgun into plug, router, config, and runtime tests
 - [ ] 15-04-PLAN.md — Update installer snippets, webhook docs, and goldens for Mailgun opt-in
 
 ### Phase 16: SES Webhook Provider & SNS Cache
@@ -56,5 +56,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Resend Webhook Provider & Core Ingest | 1/1 | Verification blocked | - |
-| 15. Mailgun Webhook Provider | 2/4 | In progress | - |
+| 15. Mailgun Webhook Provider | 3/4 | In progress | - |
 | 16. SES Webhook Provider & SNS Cache | 0/0 | Not started | - |
