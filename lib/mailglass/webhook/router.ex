@@ -37,8 +37,8 @@ defmodule Mailglass.Webhook.Router do
   ## Options
 
     * `:providers` — list of provider atoms. Validated set:
-      `[:postmark, :sendgrid, :mailgun]`. The default remains
-      `[:postmark, :sendgrid]`; Mailgun requires explicit opt-in.
+      `[:postmark, :sendgrid, :mailgun, :ses]`. The default remains
+      `[:postmark, :sendgrid]`; Mailgun and SES require explicit opt-in.
       Unknown providers raise `ArgumentError` at compile time — invalid
       config fails at router-mount, not at request time (D-07).
     * `:as` — route helper prefix. Default `:mailglass_webhook` per
@@ -68,7 +68,7 @@ defmodule Mailglass.Webhook.Router do
   at request time — the 500 is the diagnostic.
   """
 
-  @valid_providers [:postmark, :sendgrid, :mailgun]
+  @valid_providers [:postmark, :sendgrid, :mailgun, :ses]
   @default_providers [:postmark, :sendgrid]
   @default_as :mailglass_webhook
 

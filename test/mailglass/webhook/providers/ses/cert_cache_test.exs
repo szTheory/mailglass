@@ -7,7 +7,6 @@ defmodule Mailglass.Webhook.Providers.SES.CertCacheTest do
   @fake_public_key {:RSAPublicKey, 1_234_567, 65537}
 
   setup do
-    start_supervised!(CertCache.Supervisor)
     CertCache.reset()
     :ok
   end

@@ -113,6 +113,70 @@ not `401`. This is intentional: Mailgun retries non-`200` webhook
 responses for hours, so duplicate tokens must stop retry amplification
 without looking like a forged request.
 
+### Amazon SES (via SNS)
+
+AWS SES delivers webhook events through Amazon SNS HTTP subscriptions. SNS sends
+`text/plain` POST requests signed with an RSA certificate. Mailglass verifies the
+RSA signature, caches the X.509 certificate in ETS to avoid per-request network calls,
+and automatically confirms SNS subscription handshakes.
+
+> **SES is an explicit opt-in provider.** It does not appear in the default route
+> surface. Add `:ses` to your `:providers` list when mounting webhook routes.
+
+#### Setup
+
+1. **Add `:ses` to your webhook route providers:**
+
+   ```elixir
+   mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :ses]
+   ```
+
+2. **Configure the SES provider** (optional — defaults are safe):
+
+   ```elixir
+   config :mailglass, :ses,
+     cert_cache_ttl_seconds: 86_400   # cache X.509 certs for 24 hours (default)
+   ```
+
+3. **Create an SNS topic** in the AWS console and subscribe your endpoint:
+   - Topic type: Standard
+   - Subscription protocol: HTTPS
+   - Endpoint: `https://your-app.example.com/webhooks/ses`
+
+4. **Configure SES to publish to your SNS topic:**
+   - For classic SES feedback notifications (bounces, complaints, deliveries):
+     SES → Configuration → Verified identities → Notifications → Configure SNS Topic
+   - For SES event publishing (full event lifecycle including open/click):
+     SES → Configuration → Configuration sets → Event destinations → Add destination → SNS
+
+Mailglass automatically handles the SNS `SubscriptionConfirmation` handshake after
+your endpoint is reachable. No manual confirmation step is required.
+
+> **Duplicate events:** SES feedback notifications and SES event publishing can both
+> deliver bounce/complaint/delivery events to the same SNS topic. If you configure both
+> sources pointing to the same topic, you will receive duplicate events per message.
+> The `(provider, provider_event_id)` uniqueness constraint prevents duplicate rows in
+> the event ledger, but each source still produces an ingest attempt. Point only one
+> SES notification source at each SNS topic unless you intentionally want both signals
+> (D-18).
+
+#### Supported SES events
+
+| SES event | Normalized type | Notes |
+|-----------|----------------|-------|
+| Bounce (Permanent, General) | `:bounced` | Hard bounce — triggers suppression |
+| Bounce (Permanent, Suppressed) | `:rejected` | Already on suppression list |
+| Bounce (Transient) | `:deferred` | Mailbox full or temporary error |
+| Bounce (Undetermined) | `:deferred` | Conservative mapping |
+| Complaint | `:complained` | Spam report |
+| Delivery | `:delivered` | Accepted by recipient MTA |
+| Send | `:sent` | Handed to provider (event publishing only) |
+| Reject | `:rejected` | SES rejected before sending |
+| Open | `:opened` | Requires open tracking enabled on config set |
+| Click | `:clicked` | Requires click tracking enabled on config set |
+| Rendering Failure | `:failed` | Template rendering error |
+| DeliveryDelay | `:deferred` | Transient delivery delay |
+
 ## 2. Multi-tenant patterns
 
 Mailglass resolves the tenant AFTER the signature verifies ("verify-first,
