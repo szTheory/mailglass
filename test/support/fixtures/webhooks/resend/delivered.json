@@ -1,0 +1,9 @@
+{
+  "id": "evt_delivered_001",
+  "type": "email.delivered",
+  "created_at": "2026-04-29T12:00:00Z",
+  "data": {
+    "email_id": "email_delivered_001",
+    "to": ["test@example.com"]
+  }
+}
