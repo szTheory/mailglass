@@ -25,7 +25,7 @@ defmodule Mailglass.Webhook.Provider do
               raw_body :: binary(),
               headers :: [{String.t(), String.t()}],
               config :: map()
-            ) :: :ok
+            ) :: :ok | {:ok, :replay}
 
   @doc """
   Normalize a verified webhook body into a list of `%Mailglass.Events.Event{}`
