@@ -47,6 +47,9 @@ defmodule Mailglass.WebhookCase do
   """
   use ExUnit.CaseTemplate
 
+  @resend_secret_bytes :crypto.strong_rand_bytes(32)
+  @resend_secret "whsec_" <> Base.encode64(@resend_secret_bytes)
+
   using opts do
     quote do
       use Mailglass.MailerCase, unquote(opts)
@@ -63,6 +66,7 @@ defmodule Mailglass.WebhookCase do
           stub_mailgun_fixture: 1,
           stub_ses_fixture: 1,
           stub_sendgrid_fixture: 1,
+          stub_resend_fixture: 1,
           freeze_timestamp: 1
         ]
 
@@ -87,6 +91,7 @@ defmodule Mailglass.WebhookCase do
     prior_postmark = Application.get_env(:mailglass, :postmark)
     prior_mailgun = Application.get_env(:mailglass, :mailgun)
     prior_ses = Application.get_env(:mailglass, :ses)
+    prior_resend = Application.get_env(:mailglass, :resend)
 
     if install_config? do
       Application.put_env(:mailglass, :sendgrid,
@@ -113,6 +118,12 @@ defmodule Mailglass.WebhookCase do
         enabled: true,
         cert_cache_ttl_seconds: 86_400
       )
+
+      Application.put_env(:mailglass, :resend,
+        enabled: true,
+        secret: @resend_secret,
+        timestamp_tolerance_seconds: 300
+      )
     end
 
     on_exit(fn ->
@@ -120,6 +131,7 @@ defmodule Mailglass.WebhookCase do
       restore_env(:postmark, prior_postmark)
       restore_env(:mailgun, prior_mailgun)
       restore_env(:ses, prior_ses)
+      restore_env(:resend, prior_resend)
     end)
 
     {:ok, sendgrid_keypair: {pub_b64, priv_key}}
@@ -150,7 +162,7 @@ defmodule Mailglass.WebhookCase do
       `opts[:timestamp]` (string) or `System.system_time(:second)` as a
       string.
   """
-  @spec mailglass_webhook_conn(:postmark | :sendgrid | :mailgun | :ses, binary(), keyword()) ::
+  @spec mailglass_webhook_conn(:postmark | :sendgrid | :mailgun | :ses | :resend, binary(), keyword()) ::
           Plug.Conn.t()
   def mailglass_webhook_conn(provider, raw_body, opts \\ [])
 
@@ -209,6 +221,28 @@ defmodule Mailglass.WebhookCase do
     |> Plug.Conn.put_req_header("content-type", "text/plain")
     |> Plug.Conn.put_req_header("x-amz-sns-message-type", "Notification")
     |> Plug.Conn.put_private(:raw_body, raw_body)
+  end
+
+  def mailglass_webhook_conn(:resend, raw_body, _opts) when is_binary(raw_body) do
+    svix_id = "msg_test_#{System.unique_integer([:positive])}"
+    svix_timestamp = Integer.to_string(System.system_time(:second))
+
+    secret_bytes =
+      case Application.fetch_env(:mailglass, :resend) do
+        {:ok, cfg} ->
+          "whsec_" <> encoded = Keyword.fetch!(cfg, :secret)
+          Base.decode64!(encoded)
+
+        :error ->
+          :crypto.strong_rand_bytes(32)
+      end
+
+    sig = Mailglass.WebhookFixtures.sign_resend_payload(svix_id, svix_timestamp, raw_body, secret_bytes)
+
+    base_conn(:resend, raw_body)
+    |> Plug.Conn.put_req_header("svix-id", svix_id)
+    |> Plug.Conn.put_req_header("svix-timestamp", svix_timestamp)
+    |> Plug.Conn.put_req_header("svix-signature", "v1," <> sig)
   end
 
   # Builds the shared `%Plug.Conn{}` skeleton: POST to /webhooks/<provider>
@@ -297,6 +331,10 @@ defmodule Mailglass.WebhookCase do
   @doc "Loads an SES fixture and returns raw bytes ready for `mailglass_webhook_conn/2`."
   @spec stub_ses_fixture(String.t()) :: binary()
   def stub_ses_fixture(name), do: Mailglass.WebhookFixtures.load_ses_fixture(name)
+
+  @doc "Loads a Resend fixture and returns raw bytes ready for `mailglass_webhook_conn/2`."
+  @spec stub_resend_fixture(String.t()) :: binary()
+  def stub_resend_fixture(name), do: Mailglass.WebhookFixtures.load_resend_fixture(name)
 
   @doc """
   Re-export of `Mailglass.Clock.Frozen.freeze/1`.

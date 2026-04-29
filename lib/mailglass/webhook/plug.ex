@@ -81,7 +81,7 @@ defmodule Mailglass.Webhook.Plug do
   # Plan 06 ships the module.
   @compile {:no_warn_undefined, [Mailglass.Webhook.Ingest]}
 
-  @valid_providers [:postmark, :sendgrid, :mailgun, :ses]
+  @valid_providers [:postmark, :sendgrid, :mailgun, :ses, :resend]
 
   @impl Plug
   def init(opts) when is_list(opts) do
@@ -265,6 +265,15 @@ defmodule Mailglass.Webhook.Plug do
     }
   end
 
+  defp resolve_config!(:resend, _conn) do
+    env = Application.get_env(:mailglass, :resend, [])
+
+    %{
+      secret: env[:secret],
+      timestamp_tolerance_seconds: env[:timestamp_tolerance_seconds] || 300
+    }
+  end
+
   # Step 2: telemetry-wrapped Provider.verify!/3 (CONTEXT D-22 inner span).
   # Plan 08 named helper. On success the inner fn returns `:ok`; on
   # signature failure the `verify!/3` call raises %SignatureError{} which
@@ -392,4 +401,5 @@ defmodule Mailglass.Webhook.Plug do
   defp provider_module(:sendgrid), do: Mailglass.Webhook.Providers.SendGrid
   defp provider_module(:mailgun), do: Mailglass.Webhook.Providers.Mailgun
   defp provider_module(:ses), do: Mailglass.Webhook.Providers.SES
+  defp provider_module(:resend), do: Mailglass.Webhook.Providers.Resend
 end
