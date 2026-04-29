@@ -2,8 +2,9 @@
 
 This guide walks through mounting Mailglass webhook ingest in your
 Phoenix app. Mailglass ships first-party verifiers for Postmark (Basic
-Auth) and SendGrid (ECDSA P-256); v0.5 adds Mailgun, SES, and Resend
-behind the same internal `Mailglass.Webhook.Provider` behaviour.
+Auth), SendGrid (ECDSA P-256), and Mailgun (HMAC-SHA256 over the JSON
+body's `signature.timestamp <> signature.token`). SES and Resend land
+later behind the same internal `Mailglass.Webhook.Provider` behaviour.
 
 ## 1. Install + endpoint wiring
 
@@ -59,6 +60,19 @@ This generates two POST routes, each handled by
   * `POST /webhooks/postmark`
   * `POST /webhooks/sendgrid`
 
+Mailgun stays off the default zero-arg mount. Opt in explicitly:
+
+```elixir
+scope "/", MyAppWeb do
+  pipe_through :mailglass_webhooks
+  mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun]
+end
+```
+
+That adds:
+
+  * `POST /webhooks/mailgun`
+
 ### Step 3 — Configure provider credentials
 
 ```elixir
@@ -77,6 +91,27 @@ config :mailglass, :sendgrid,
 
 SendGrid's public key is base64-encoded **SPKI DER** (not PEM). Copy
 it verbatim from the SendGrid Event Webhook security settings page.
+
+### Mailgun setup
+
+```elixir
+config :mailglass, :mailgun,
+  enabled: true,
+  signing_key: System.fetch_env!("MAILGUN_WEBHOOK_SIGNING_KEY"),
+  timestamp_tolerance_seconds: 28_800,
+  future_skew_seconds: 300,
+  replay_cache_ttl_seconds: 28_800
+```
+
+Mailgun signs the `"signature"` object embedded in the JSON payload.
+Mailglass verifies `signature.timestamp <> signature.token` with your
+`MAILGUN_WEBHOOK_SIGNING_KEY`, then reads the normalized event from the
+payload's `"event-data"` object.
+
+Mailgun replay tokens converge to HTTP `200` as an idempotent no-op,
+not `401`. This is intentional: Mailgun retries non-`200` webhook
+responses for hours, so duplicate tokens must stop retry amplification
+without looking like a forged request.
 
 ## 2. Multi-tenant patterns
 
@@ -386,7 +421,7 @@ latency + zero ledger-loss risk.
 
 | Status | What it means |
 |--------|---------------|
-| 200 | Event persisted (or replay-duplicate structural no-op) |
+| 200 | Event persisted (or replay-duplicate structural no-op; Mailgun token replays stop here) |
 | 401 | `%Mailglass.SignatureError{}` — one of the closed atom set (see `Mailglass.SignatureError.__types__/0`) |
 | 422 | `%Mailglass.TenancyError{type: :webhook_tenant_unresolved}` — your resolver returned `{:error, _}` |
 | 500 | `%Mailglass.ConfigError{}` — plug wiring gap or missing secret. Check Logger output. |
