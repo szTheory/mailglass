@@ -3,7 +3,8 @@ defmodule Mailglass.Webhook.Providers.SES.CertCacheTest do
 
   alias Mailglass.Webhook.Providers.SES.CertCache
 
-  @url "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-test.pem"
+  @url "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-abc123.pem"
+  @fake_public_key {:RSAPublicKey, 1_234_567, 65537}
 
   setup do
     start_supervised!(CertCache.Supervisor)
@@ -12,42 +13,30 @@ defmodule Mailglass.Webhook.Providers.SES.CertCacheTest do
   end
 
   defp future_dt(seconds \\ 86_400),
-    do: DateTime.add(DateTime.utc_now(), seconds, :second)
+    do: DateTime.add(Mailglass.Clock.utc_now(), seconds, :second)
 
   defp past_dt(seconds \\ 1),
-    do: DateTime.add(DateTime.utc_now(), -seconds, :second)
+    do: DateTime.add(Mailglass.Clock.utc_now(), -seconds, :second)
 
   describe "fetch_public_key/1" do
     test "returns :miss on empty cache" do
       assert :miss = CertCache.fetch_public_key(@url)
     end
 
-    test "returns {:ok, public_key} on cache hit within TTL" do
-      fake_key = {:RSAPublicKey, 12345, 65537}
-      CertCache.put(@url, fake_key, future_dt())
-
-      assert {:ok, ^fake_key} = CertCache.fetch_public_key(@url)
+    test "returns {:ok, key} when cached and not expired" do
+      :ok = CertCache.put(@url, @fake_public_key, future_dt())
+      assert {:ok, @fake_public_key} = CertCache.fetch_public_key(@url)
     end
 
-    test "returns :miss for expired entry" do
-      fake_key = {:RSAPublicKey, 12345, 65537}
-      CertCache.put(@url, fake_key, past_dt())
-
+    test "returns :miss when TTL is expired" do
+      :ok = CertCache.put(@url, @fake_public_key, past_dt())
       assert :miss = CertCache.fetch_public_key(@url)
     end
 
-    test "evicts expired entry from ETS on miss path" do
-      fake_key = {:RSAPublicKey, 12345, 65537}
-      CertCache.put(@url, fake_key, past_dt())
-
-      # Confirm it was stored
-      assert :ets.lookup(CertCache.table(), @url) != []
-
-      # Trigger expiry eviction via fetch
+    test "evicts expired entry from ETS on miss" do
+      :ok = CertCache.put(@url, @fake_public_key, past_dt())
       assert :miss = CertCache.fetch_public_key(@url)
-
-      # Confirm it was evicted
-      assert :ets.lookup(CertCache.table(), @url) == []
+      assert [] = :ets.lookup(CertCache.table(), @url)
     end
 
     test "different URLs are cached independently" do
@@ -56,8 +45,8 @@ defmodule Mailglass.Webhook.Providers.SES.CertCacheTest do
       key_a = {:RSAPublicKey, 11111, 65537}
       key_b = {:RSAPublicKey, 22222, 65537}
 
-      CertCache.put(url_a, key_a, future_dt())
-      CertCache.put(url_b, key_b, future_dt())
+      :ok = CertCache.put(url_a, key_a, future_dt())
+      :ok = CertCache.put(url_b, key_b, future_dt())
 
       assert {:ok, ^key_a} = CertCache.fetch_public_key(url_a)
       assert {:ok, ^key_b} = CertCache.fetch_public_key(url_b)
@@ -65,19 +54,19 @@ defmodule Mailglass.Webhook.Providers.SES.CertCacheTest do
   end
 
   describe "reset/0" do
-    test "clears all entries from the cache" do
-      CertCache.put(@url, {:RSAPublicKey, 99, 3}, future_dt())
+    test "deletes all objects from ETS table" do
+      :ok = CertCache.put(@url, @fake_public_key, future_dt())
       assert {:ok, _} = CertCache.fetch_public_key(@url)
 
-      CertCache.reset()
+      :ok = CertCache.reset()
 
       assert :miss = CertCache.fetch_public_key(@url)
     end
   end
 
   describe "table/0" do
-    test "returns the ETS table atom" do
-      assert CertCache.table() == :mailglass_webhook_ses_cert_cache
+    test "returns :mailglass_webhook_ses_cert_cache" do
+      assert :mailglass_webhook_ses_cert_cache = CertCache.table()
     end
   end
 end
