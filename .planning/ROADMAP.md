@@ -69,7 +69,11 @@ Plans:
   3. Invalid Resend Svix signatures are rejected with `Mailglass.SignatureError`
   4. Resend events (delivered, bounced, complained) map to the correct Anymail taxonomy atoms
   5. Phase 14 marked complete in ROADMAP.md
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 17-01-PLAN.md — Plug wiring, test fix, and WebhookCase :resend infrastructure
+- [ ] 17-02-PLAN.md — Resend plug integration tests, fixture, and Phase 14 completion
 
 ### Phase 18: Ship v0.3.0
 **Goal**: v0.3.0 published to Hex.pm with complete CHANGELOG and updated provider guides
