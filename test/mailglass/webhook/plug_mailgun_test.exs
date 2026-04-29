@@ -30,7 +30,9 @@ defmodule Mailglass.Webhook.PlugMailgunTest do
   describe "call/2 Mailgun replay response" do
     test "returns 200 on a valid signed Mailgun request" do
       raw_body = Mailglass.WebhookCase.stub_mailgun_fixture("accepted")
-      conn = Mailglass.WebhookCase.mailglass_webhook_conn(:mailgun, raw_body, token: "mailgun-valid-200")
+
+      conn =
+        Mailglass.WebhookCase.mailglass_webhook_conn(:mailgun, raw_body, token: "mailgun-valid-200")
 
       result = WebhookPlug.call(conn, WebhookPlug.init(provider: :mailgun))
 
@@ -60,8 +62,16 @@ defmodule Mailglass.Webhook.PlugMailgunTest do
   describe "call/2 Mailgun bad signature response" do
     test "returns 401 when the Mailgun signature is invalid" do
       raw_body = Mailglass.WebhookCase.stub_mailgun_fixture("accepted")
-      conn = Mailglass.WebhookCase.mailglass_webhook_conn(:mailgun, raw_body, token: "mailgun-bad-signature")
-      tampered_body = String.replace(conn.private[:raw_body], "\"signature\":\"", "\"signature\":\"0", global: false)
+
+      conn =
+        Mailglass.WebhookCase.mailglass_webhook_conn(:mailgun, raw_body,
+          token: "mailgun-bad-signature"
+        )
+
+      tampered_body =
+        String.replace(conn.private[:raw_body], "\"signature\":\"", "\"signature\":\"0",
+          global: false
+        )
 
       tampered_conn =
         conn
@@ -81,7 +91,12 @@ defmodule Mailglass.Webhook.PlugMailgunTest do
   describe "call/2 Mailgun missing config response" do
     test "returns 500 when Mailgun signing config is missing" do
       raw_body = Mailglass.WebhookCase.stub_mailgun_fixture("accepted")
-      conn = Mailglass.WebhookCase.mailglass_webhook_conn(:mailgun, raw_body, token: "mailgun-missing-config")
+
+      conn =
+        Mailglass.WebhookCase.mailglass_webhook_conn(:mailgun, raw_body,
+          token: "mailgun-missing-config"
+        )
+
       prior = Application.get_env(:mailglass, :mailgun)
 
       Application.put_env(:mailglass, :mailgun,

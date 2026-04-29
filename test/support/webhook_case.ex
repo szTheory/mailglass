@@ -162,7 +162,11 @@ defmodule Mailglass.WebhookCase do
       `opts[:timestamp]` (string) or `System.system_time(:second)` as a
       string.
   """
-  @spec mailglass_webhook_conn(:postmark | :sendgrid | :mailgun | :ses | :resend, binary(), keyword()) ::
+  @spec mailglass_webhook_conn(
+          :postmark | :sendgrid | :mailgun | :ses | :resend,
+          binary(),
+          keyword()
+        ) ::
           Plug.Conn.t()
   def mailglass_webhook_conn(provider, raw_body, opts \\ [])
 
@@ -237,7 +241,8 @@ defmodule Mailglass.WebhookCase do
           :crypto.strong_rand_bytes(32)
       end
 
-    sig = Mailglass.WebhookFixtures.sign_resend_payload(svix_id, svix_timestamp, raw_body, secret_bytes)
+    sig =
+      Mailglass.WebhookFixtures.sign_resend_payload(svix_id, svix_timestamp, raw_body, secret_bytes)
 
     base_conn(:resend, raw_body)
     |> Plug.Conn.put_req_header("svix-id", svix_id)

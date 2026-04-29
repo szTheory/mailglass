@@ -76,8 +76,11 @@ defmodule Mailglass.Webhook.Providers.SES do
     # Verify RSA signature
     digest =
       case sig_version do
-        "1" -> :sha
-        "2" -> :sha256
+        "1" ->
+          :sha
+
+        "2" ->
+          :sha256
 
         other ->
           raise SignatureError.new(:malformed_header,
@@ -121,7 +124,10 @@ defmodule Mailglass.Webhook.Providers.SES do
         []
 
       _other ->
-        Logger.warning("[mailglass] SES normalize: unexpected SNS payload shape or non-Notification type")
+        Logger.warning(
+          "[mailglass] SES normalize: unexpected SNS payload shape or non-Notification type"
+        )
+
         []
     end
   end
@@ -568,7 +574,16 @@ defmodule Mailglass.Webhook.Providers.SES do
   # adding lookup value — telemetry emission never touches metadata, so the PII
   # policy does not apply to the DB path, but we keep the field absent to keep the
   # schema minimal and consistent across all normalizers.
-  defp build_event(payload, sns_message_id, type, reject_reason, provider_event_id, _email, record_type, extra_metadata) do
+  defp build_event(
+         payload,
+         sns_message_id,
+         type,
+         reject_reason,
+         provider_event_id,
+         _email,
+         record_type,
+         extra_metadata
+       ) do
     mail = Map.get(payload, "mail", %{})
     ses_message_id = to_string_or_nil(mail["messageId"])
 

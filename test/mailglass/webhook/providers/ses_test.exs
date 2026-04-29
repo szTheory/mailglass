@@ -82,7 +82,10 @@ defmodule Mailglass.Webhook.Providers.SESTest do
       CertCache.put(@cert_url, public_key, future)
 
       raw = sign_fixture(load_ses_fixture("notification_delivery"), private_key)
-      tampered = String.replace(raw, "\"Message\":", "\"Message\":\"TAMPERED\", \"X\":", global: false)
+
+      tampered =
+        String.replace(raw, "\"Message\":", "\"Message\":\"TAMPERED\", \"X\":", global: false)
+
       refute tampered == raw
 
       err = catch_raised(fn -> SES.verify!(tampered, [], @config) end)
@@ -136,7 +139,7 @@ defmodule Mailglass.Webhook.Providers.SESTest do
       raw = load_ses_fixture("notification_bounce_permanent")
       events = SES.normalize(raw, [])
 
-      assert length(events) >= 1
+      assert events != []
       [event | _] = events
       assert %Event{type: :bounced, reject_reason: :bounced} = event
       assert event.metadata["provider"] == "ses"
