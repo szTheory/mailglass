@@ -68,7 +68,7 @@ defmodule Mailglass.Webhook.Router do
   at request time — the 500 is the diagnostic.
   """
 
-  @valid_providers [:postmark, :sendgrid, :mailgun, :ses]
+  @valid_providers [:postmark, :sendgrid, :mailgun, :ses, :resend]
   @default_providers [:postmark, :sendgrid]
   @default_as :mailglass_webhook
 
