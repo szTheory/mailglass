@@ -61,6 +61,7 @@ defmodule Mailglass.WebhookCase do
           mailglass_webhook_conn: 3,
           stub_postmark_fixture: 1,
           stub_mailgun_fixture: 1,
+          stub_ses_fixture: 1,
           stub_sendgrid_fixture: 1,
           freeze_timestamp: 1
         ]
@@ -85,6 +86,7 @@ defmodule Mailglass.WebhookCase do
     prior_sendgrid = Application.get_env(:mailglass, :sendgrid)
     prior_postmark = Application.get_env(:mailglass, :postmark)
     prior_mailgun = Application.get_env(:mailglass, :mailgun)
+    prior_ses = Application.get_env(:mailglass, :ses)
 
     if install_config? do
       Application.put_env(:mailglass, :sendgrid,
@@ -106,12 +108,18 @@ defmodule Mailglass.WebhookCase do
         future_skew_seconds: 300,
         replay_cache_ttl_seconds: 28_800
       )
+
+      Application.put_env(:mailglass, :ses,
+        enabled: true,
+        cert_cache_ttl_seconds: 86_400
+      )
     end
 
     on_exit(fn ->
       restore_env(:sendgrid, prior_sendgrid)
       restore_env(:postmark, prior_postmark)
       restore_env(:mailgun, prior_mailgun)
+      restore_env(:ses, prior_ses)
     end)
 
     {:ok, sendgrid_keypair: {pub_b64, priv_key}}
@@ -142,7 +150,7 @@ defmodule Mailglass.WebhookCase do
       `opts[:timestamp]` (string) or `System.system_time(:second)` as a
       string.
   """
-  @spec mailglass_webhook_conn(:postmark | :sendgrid | :mailgun, binary(), keyword()) ::
+  @spec mailglass_webhook_conn(:postmark | :sendgrid | :mailgun | :ses, binary(), keyword()) ::
           Plug.Conn.t()
   def mailglass_webhook_conn(provider, raw_body, opts \\ [])
 
@@ -193,6 +201,14 @@ defmodule Mailglass.WebhookCase do
     signed_body = Mailglass.WebhookFixtures.sign_mailgun_payload(raw_body, signing_key, opts)
 
     base_conn(:mailgun, signed_body)
+  end
+
+  def mailglass_webhook_conn(:ses, raw_body, _opts) when is_binary(raw_body) do
+    :post
+    |> Plug.Test.conn("/webhooks/ses", raw_body)
+    |> Plug.Conn.put_req_header("content-type", "text/plain")
+    |> Plug.Conn.put_req_header("x-amz-sns-message-type", "Notification")
+    |> Plug.Conn.put_private(:raw_body, raw_body)
   end
 
   # Builds the shared `%Plug.Conn{}` skeleton: POST to /webhooks/<provider>
@@ -277,6 +293,10 @@ defmodule Mailglass.WebhookCase do
   @doc "Loads a Mailgun fixture and returns raw bytes ready for `mailglass_webhook_conn/2`."
   @spec stub_mailgun_fixture(String.t()) :: binary()
   def stub_mailgun_fixture(name), do: Mailglass.WebhookFixtures.load_mailgun_fixture(name)
+
+  @doc "Loads an SES fixture and returns raw bytes ready for `mailglass_webhook_conn/2`."
+  @spec stub_ses_fixture(String.t()) :: binary()
+  def stub_ses_fixture(name), do: Mailglass.WebhookFixtures.load_ses_fixture(name)
 
   @doc """
   Re-export of `Mailglass.Clock.Frozen.freeze/1`.
