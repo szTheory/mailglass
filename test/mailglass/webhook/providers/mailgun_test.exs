@@ -40,9 +40,10 @@ defmodule Mailglass.Webhook.Providers.MailgunTest do
       assert %ConfigError{type: :webhook_verification_key_missing} = err
     end
 
-    test "raises :bad_signature when the body is tampered after signing" do
+    test "raises :bad_signature when the signature is tampered" do
       body = signed_fixture("delivered")
-      tampered = String.replace(body, "Delivered", "Tampered once")
+      tampered = String.replace(body, "\"signature\":\"", "\"signature\":\"0", global: false)
+      refute tampered == body
 
       err = catch_raised(fn -> Mailgun.verify!(tampered, [], @config) end)
       assert %SignatureError{type: :bad_signature, provider: :mailgun} = err

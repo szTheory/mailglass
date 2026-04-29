@@ -170,10 +170,10 @@ defmodule Mailglass.Webhook.Providers.Mailgun do
         "record_type" => to_string_or_nil(event_data["event"]),
         "message_id" => get_in(event_data, ["message", "headers", "message-id"]),
         "mailgun_event_id" => to_string_or_nil(event_data["id"]),
-        "mailgun_timestamp" => stringify_timestamp(event_data["timestamp"]),
-        "mailgun_severity" => to_string_or_nil(event_data["severity"]),
-        "mailgun_reason" => to_string_or_nil(event_data["reason"]),
-        "mailgun_delivery_status" => stringify_map(event_data["delivery-status"])
+        "timestamp" => stringify_timestamp(event_data["timestamp"]),
+        "severity" => to_string_or_nil(event_data["severity"]),
+        "reason" => to_string_or_nil(event_data["reason"]),
+        "delivery-status" => stringify_map(event_data["delivery-status"])
       }
     }
   end
