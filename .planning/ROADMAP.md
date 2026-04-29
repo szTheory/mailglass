@@ -49,7 +49,13 @@ Plans:
   3. Valid SES RSA signatures are accepted using X.509 certificates fetched from AWS
   4. X.509 certificates are cached in `:ets` preventing repeated network calls per webhook
   5. SES events wrapped inside the SNS message are mapped to the internal normalized taxonomy
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Wave 0: test scaffolding, JSON fixtures, WebhookFixtures RSA helpers
+- [ ] 16-02-PLAN.md — Wave 1: TrustPolicy SSRF guard + ETS CertCache OTP trio
+- [ ] 16-03-PLAN.md — Wave 2: SES provider verify!/3 + SNS control-plane handling
+- [ ] 16-04-PLAN.md — Wave 3: normalize/2 + plug/router/application wiring + webhooks guide
 
 ## Progress
 
@@ -57,4 +63,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 14. Resend Webhook Provider & Core Ingest | 1/1 | Verification blocked | - |
 | 15. Mailgun Webhook Provider | 4/4 | Complete    | 2026-04-29 |
-| 16. SES Webhook Provider & SNS Cache | 0/0 | Not started | - |
+| 16. SES Webhook Provider & SNS Cache | 0/4 | Not started | - |
