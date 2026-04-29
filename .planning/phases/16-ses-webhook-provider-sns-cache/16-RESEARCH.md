@@ -306,7 +306,7 @@ defp extract_public_key_from_pem!(pem_binary) do
 end
 ```
 
-**Note on pkix_extract_public_key/1:** Available in OTP 24+. Since this project targets OTP 27 (per STACK.md context), this is the cleanest approach. [ASSUMED — verify OTP version constraint in project mix.exs]
+**Note on pkix_extract_public_key/1:** Available in OTP 24+. This project requires `elixir: "~> 1.18"` (mix.exs confirmed), and Elixir 1.18 requires OTP 26 at minimum; the project targets OTP 27 per STACK.md. Therefore `pkix_extract_public_key/1` is safe to use. [RESOLVED: OTP 27 target confirmed in mix.exs — use pkix_extract_public_key/1]
 
 ### Pattern 3: SigningCertURL Trust Policy Validation
 
@@ -358,7 +358,7 @@ arn:aws-us-gov:sns:us-gov-west-1:123:T  -> amazonaws.com (GovCloud)
 arn:aws-cn:sns:cn-north-1:123:Topic     -> amazonaws.com.cn (China)
 ```
 
-For D-06 "exact SNS host derived from the signed TopicArn region/partition": the key insight is that the signed TopicArn contains the region, which can be used to derive the expected SNS hostname. For the purposes of D-09 (failing closed), it is acceptable to apply the regex pattern above without requiring exact TopicArn-to-host correlation — the regex already excludes all non-SNS endpoints. [ASSUMED — the exact requirement for TopicArn-derived host matching vs regex-only is a discretion-area implementation choice]
+For D-06 "exact SNS host derived from the signed TopicArn region/partition": the key insight is that the signed TopicArn contains the region, which can be used to derive the expected SNS hostname. For the purposes of D-09 (failing closed), it is acceptable to apply the regex pattern above without requiring exact TopicArn-to-host correlation — the regex already excludes all non-SNS endpoints. [RESOLVED: regex-only guard is sufficient — D-07 constructs ConfirmSubscription from TopicArn+Token (not SubscribeURL), so ARN region correlation adds no additional security over the host regex. Discretion of implementer per CONTEXT.md.]
 
 ### Pattern 4: ETS Certificate Cache (MailgunReplayCache OTP Style)
 
@@ -437,7 +437,7 @@ defp confirm_subscription(url) do
 end
 ```
 
-**OTP 26+ cacerts_get:** `:public_key.cacerts_get/0` returns the system CA bundle (available since OTP 26). For the :httpc SSL verification of the AWS ConfirmSubscription endpoint, this avoids bundling CA certs in the library. [ASSUMED — verify OTP 26 is minimum target for this project]
+**OTP 26+ cacerts_get:** `:public_key.cacerts_get/0` returns the system CA bundle (available since OTP 26). For the :httpc SSL verification of the AWS ConfirmSubscription endpoint, this avoids bundling CA certs in the library. [RESOLVED: project targets OTP 27 (Elixir 1.18 requires OTP 26+, per mix.exs) — `:public_key.cacerts_get/0` is confirmed safe to use]
 
 ### Pattern 6: SES Dual-Format Normalization with Recipient Fan-out
 
@@ -726,22 +726,22 @@ end
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **OTP version minimum for project**
    - What we know: STACK.md mentions OTP 27 features (:crypto ECDSA changes). Application.ex uses features compatible with OTP 25+.
-   - What's unclear: Whether `:public_key.pkix_extract_public_key/1` (OTP 26+) is safe to use, or if the manual record-pattern approach is needed.
-   - Recommendation: Check `mix.exs` `:elixir` / OTP constraint; if 26+ confirmed, use `pkix_extract_public_key`. Otherwise use `elem()` traversal of the OTP Certificate record.
+   - What was unclear: Whether `:public_key.pkix_extract_public_key/1` (OTP 26+) is safe to use, or if the manual record-pattern approach is needed.
+   - **RESOLVED:** `mix.exs` specifies `elixir: "~> 1.18"`. Elixir 1.18 requires OTP 26 at minimum; the project also explicitly targets OTP 27 per STACK.md. Therefore `:public_key.pkix_extract_public_key/1` is safe and is the recommended approach. `:public_key.cacerts_get/0` (OTP 26+) is also confirmed safe.
 
 2. **SES config block key names**
    - What we know: Other providers use `:postmark`, `:sendgrid`, `:mailgun` as top-level Application env keys.
-   - What's unclear: Whether `:ses` or `:amazon_ses` or `:aws_ses` is the preferred key.
-   - Recommendation: Use `:ses` — shortest, matches the phase name and provider atom, consistent with `:mailgun` brevity. Discretion area per CONTEXT.md.
+   - What was unclear: Whether `:ses` or `:amazon_ses` or `:aws_ses` is the preferred key.
+   - **RESOLVED:** Use `:ses` — shortest, matches the phase name and provider atom, consistent with `:mailgun` brevity. Plans already use `:ses` consistently. Discretion area per CONTEXT.md.
 
 3. **Exact SNS TopicArn region correlation for SubscribeURL validation (D-06)**
    - What we know: D-06 says "exact SNS host derived from the signed TopicArn region/partition."
-   - What's unclear: Whether implementation must verify that SigningCertURL region matches TopicArn region exactly, or whether the generic SNS host regex is sufficient (both prevent the SSRF attack).
-   - Recommendation: Implement the regex pattern as the primary guard. Optionally extract region from TopicArn and assert the cert host contains that region. The security goal is met by either approach; the stricter check is better but may cause false rejections on AWS topic-in-one-region / endpoint-in-another configurations.
+   - What was unclear: Whether implementation must verify that SigningCertURL region matches TopicArn region exactly, or whether the generic SNS host regex is sufficient (both prevent the SSRF attack).
+   - **RESOLVED:** Regex-only guard (`^sns\.[a-zA-Z0-9\-]{3,}\.amazonaws\.com(\.cn)?$`) is sufficient. D-07 constructs the ConfirmSubscription request independently from TopicArn+Token (not from SubscribeURL), so exact ARN-to-host region correlation adds no additional security over the host pattern. The regex correctly blocks all non-SNS AWS endpoints. No per-region assertion is required.
 
 ---
 
