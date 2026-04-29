@@ -1,0 +1,15 @@
+{
+  "event-data": {
+    "event": "clicked",
+    "id": "mailgun-event-clicked-001",
+    "timestamp": 1777377960.875,
+    "message": {
+      "headers": {
+        "message-id": "<clicked-001@example.mailgun.org>"
+      }
+    },
+    "recipient": "clicked@example.com",
+    "url": "https://example.com/welcome",
+    "user-agent": "Mozilla/5.0"
+  }
+}

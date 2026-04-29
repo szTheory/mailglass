@@ -1,0 +1,23 @@
+{
+  "event-data": {
+    "event": "failed",
+    "id": "mailgun-event-failed-bounce-001",
+    "timestamp": 1777377780.5,
+    "severity": "permanent",
+    "reason": "bounce",
+    "message": {
+      "headers": {
+        "message-id": "<failed-bounce-001@example.mailgun.org>"
+      }
+    },
+    "delivery-status": {
+      "attempt-no": 3,
+      "code": 550,
+      "description": "No such user here",
+      "message": "5.1.1 user unknown",
+      "session-seconds": 1.031,
+      "tls": true
+    },
+    "recipient": "bounce@example.com"
+  }
+}

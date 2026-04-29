@@ -1,0 +1,16 @@
+{
+  "event-data": {
+    "event": "complained",
+    "id": "mailgun-event-complained-001",
+    "timestamp": 1777378021.0,
+    "message": {
+      "headers": {
+        "message-id": "<complained-001@example.mailgun.org>"
+      }
+    },
+    "recipient": "complained@example.com",
+    "tags": [
+      "transactional"
+    ]
+  }
+}

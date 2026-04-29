@@ -1,0 +1,21 @@
+{
+  "event-data": {
+    "event": "delivered",
+    "id": "mailgun-event-delivered-001",
+    "timestamp": 1777377660.25,
+    "message": {
+      "headers": {
+        "message-id": "<delivered-001@example.mailgun.org>"
+      }
+    },
+    "delivery-status": {
+      "attempt-no": 1,
+      "code": 250,
+      "description": "Queued. Thank you.",
+      "message": "2.0.0 Delivered",
+      "session-seconds": 0.184,
+      "tls": true
+    },
+    "recipient": "delivered@example.com"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "event-data": {
+    "event": "opened",
+    "id": "mailgun-event-opened-001",
+    "timestamp": 1777377900.75,
+    "message": {
+      "headers": {
+        "message-id": "<opened-001@example.mailgun.org>"
+      }
+    },
+    "recipient": "opened@example.com",
+    "ip": "192.0.2.10",
+    "client-info": {
+      "client-name": "Mail User Agent",
+      "client-os": "macOS",
+      "device-type": "desktop"
+    }
+  }
+}
