@@ -1,111 +1,74 @@
 ---
 phase: 15-mailgun-webhook-provider
-reviewed: 2026-04-29T01:17:15Z
+reviewed: 2026-04-29T01:25:56Z
 depth: standard
-files_reviewed: 20
+files_reviewed: 16
 files_reviewed_list:
-  - lib/mailglass/webhook/provider.ex
+  - .planning/phases/15-mailgun-webhook-provider/15-01-SUMMARY.md
+  - .planning/phases/15-mailgun-webhook-provider/15-02-SUMMARY.md
+  - .planning/phases/15-mailgun-webhook-provider/15-03-SUMMARY.md
+  - .planning/phases/15-mailgun-webhook-provider/15-04-SUMMARY.md
   - lib/mailglass/webhook/providers/mailgun_replay_cache.ex
-  - lib/mailglass/webhook/providers/mailgun_replay_cache/supervisor.ex
-  - lib/mailglass/webhook/providers/mailgun_replay_cache/table_owner.ex
-  - lib/mailglass/application.ex
   - lib/mailglass/webhook/providers/mailgun.ex
   - lib/mailglass/webhook/plug.ex
   - lib/mailglass/webhook/router.ex
   - lib/mailglass/config.ex
   - lib/mailglass/webhook/ingest.ex
-  - lib/mailglass/installer/templates.ex
   - guides/webhooks.md
-  - test/support/webhook_fixtures.ex
-  - test/support/webhook_case.ex
   - test/mailglass/webhook/providers/mailgun_test.exs
   - test/mailglass/webhook/plug_mailgun_test.exs
   - test/mailglass/webhook/router_test.exs
   - test/mailglass/config_test.exs
   - test/mailglass/install/install_golden_test.exs
-  - test/example/README.md
 findings:
-  critical: 1
+  critical: 0
   warning: 1
-  info: 1
-  total: 3
+  info: 0
+  total: 1
 status: issues_found
 ---
 # Phase 15: Code Review Report
 
-**Reviewed:** 2026-04-29T01:17:15Z
+**Reviewed:** 2026-04-29T01:25:56Z
 **Depth:** standard
-**Files Reviewed:** 20
+**Files Reviewed:** 16
 **Status:** issues_found
 
 ## Summary
 
-Reviewed the Phase 15 Mailgun provider/runtime/docs/test surface at standard depth. The main defect is in the replay cache: duplicate-token acceptance is implemented as a non-atomic `lookup` plus `insert`, so concurrent replays can bypass the intended protection and both proceed down the verified path.
+Re-reviewed the final Phase 15 state at commit `31e5a85` (`HEAD`) across the Mailgun provider, replay cache, plug/router/config wiring, docs, and targeted tests.
 
-Targeted verification passed:
+The prior replay-window finding is resolved. [`lib/mailglass/config.ex`](/Users/jon/projects/mailglass/lib/mailglass/config.ex:595) now rejects `replay_cache_ttl_seconds < timestamp_tolerance_seconds`, and [`test/mailglass/config_test.exs`](/Users/jon/projects/mailglass/test/mailglass/config_test.exs:76) covers that validation. The targeted verification evidence supplied for this review is consistent with the current tree: `mix test test/mailglass/webhook/providers/mailgun_test.exs test/mailglass/webhook/plug_mailgun_test.exs test/mailglass/webhook/router_test.exs test/mailglass/config_test.exs test/mailglass/install/install_golden_test.exs --warnings-as-errors` passed with `46 tests, 0 failures`.
 
-- `mix test test/mailglass/webhook/providers/mailgun_test.exs test/mailglass/webhook/plug_mailgun_test.exs test/mailglass/webhook/router_test.exs test/mailglass/config_test.exs test/mailglass/install/install_golden_test.exs`
-
-## Critical Issues
-
-### CR-01: Mailgun replay protection is race-prone and can accept the same token twice
-
-**File:** `/Users/jon/projects/mailglass/lib/mailglass/webhook/providers/mailgun_replay_cache.ex:12-23`
-**Issue:** `check_and_put/2` performs `:ets.lookup/2` and `:ets.insert/2` as two separate operations on a public ETS table. Two concurrent requests with the same Mailgun token can both observe "no row yet" and both return `:ok`, which defeats `MAILGUN-02` under load and allows replayed requests to reach ingest twice.
-**Fix:**
-```elixir
-def check_and_put(token, %DateTime{} = expires_at) when is_binary(token) do
-  now = Mailglass.Clock.utc_now()
-
-  case :ets.lookup(@table, token) do
-    [{^token, %DateTime{} = existing_expires_at}] ->
-      if DateTime.compare(existing_expires_at, now) == :lt do
-        :ets.take(@table, token)
-        if :ets.insert_new(@table, {token, expires_at}), do: :ok, else: {:error, :replay}
-      else
-        {:error, :replay}
-      end
-
-    [] ->
-      if :ets.insert_new(@table, {token, expires_at}), do: :ok, else: {:error, :replay}
-  end
-end
-```
-Use an atomic claim path for fresh tokens. `:ets.insert_new/2` is the key change; if you want the expired-row replacement to be strictly serialized too, route the mutation through the table-owner process instead of exposing a public table write path.
+One warning remains: the newly documented Mailgun `enabled` flag is still only schema metadata. Explicitly mounted Mailgun routes stay reachable even when `config :mailglass, :mailgun, enabled: false` is set, so the public config contract is misleading and can leave a supposedly disabled endpoint live.
 
 ## Warnings
 
-### WR-01: Tests do not cover the concurrent replay path that exposes the cache race
+### WR-01: Mailgun `enabled: false` does not disable an explicitly mounted route
 
-**File:** `/Users/jon/projects/mailglass/test/mailglass/webhook/providers/mailgun_test.exs:72-79`
-**Issue:** The replay suite only verifies sequential reuse of the same token. It never starts two verifications at the same time, so the current race in `MailgunReplayCache.check_and_put/2` can ship undetected.
+**File:** `/Users/jon/projects/mailglass/lib/mailglass/config.ex:288-299`
+**Issue:** The Mailgun config schema and guide present `enabled` as a real disable switch (`"Enable the Mailgun webhook route when explicitly mounted."` in [`lib/mailglass/config.ex`](/Users/jon/projects/mailglass/lib/mailglass/config.ex:288) and the runtime example in [`guides/webhooks.md`](/Users/jon/projects/mailglass/guides/webhooks.md:97)). But the generated route path is determined solely by the caller-provided `providers:` list in [`lib/mailglass/webhook/router.ex`](/Users/jon/projects/mailglass/lib/mailglass/webhook/router.ex:89), and `Mailglass.Webhook.Plug` reads only `signing_key` and timing knobs from Mailgun config in [`lib/mailglass/webhook/plug.ex`](/Users/jon/projects/mailglass/lib/mailglass/webhook/plug.ex:238). No runtime path consults `enabled`. An adopter can therefore set `enabled: false`, leave `mailglass_webhook_routes "/webhooks", providers: [:mailgun]` in place, and still expose a live `/webhooks/mailgun` endpoint. That is a correctness bug because the documented "disabled" state does not actually disable traffic.
 **Fix:**
 ```elixir
-test "only one concurrent verification can claim a fresh token" do
-  body = signed_fixture("accepted", token: "mailgun-race-token")
+defmacro mailglass_webhook_routes(path, opts \\ []) do
+  providers =
+    Keyword.get(opts, :providers, @default_providers)
+    |> Enum.reject(fn provider -> provider_disabled?(provider) end)
 
-  results =
-    1..2
-    |> Task.async_stream(fn -> Mailgun.verify!(body, [], @config) end,
-      ordered: false,
-      max_concurrency: 2
-    )
-    |> Enum.map(fn {:ok, result} -> result end)
-
-  assert Enum.sort(results) == [:ok, {:ok, :replay}]
+  # ...
 end
+
+defp provider_disabled?(:mailgun) do
+  Application.get_env(:mailglass, :mailgun, [])[:enabled] == false
+end
+
+defp provider_disabled?(_provider), do: false
 ```
 
-## Info
-
-### IN-01: Webhook tenancy callback docs still omit `:mailgun` from the provider union
-
-**File:** `/Users/jon/projects/mailglass/guides/webhooks.md:193-200`
-**Issue:** The guide now documents Mailgun as a first-party webhook provider, but the callback context example still says `provider: :postmark | :sendgrid`. Adopters copying that contract into custom tenancy code will have stale docs for the new provider.
-**Fix:** Update the example union to `:postmark | :sendgrid | :mailgun`.
+If compile-time env lookup in the router is undesirable, remove `enabled` from the public Mailgun docs/schema and treat explicit route mounting as the only enable/disable mechanism. In either case, add a regression test showing the chosen behavior.
 
 ---
 
-_Reviewed: 2026-04-29T01:17:15Z_
+_Reviewed: 2026-04-29T01:25:56Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_

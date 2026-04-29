@@ -3,7 +3,7 @@
 ## Phases
 
 - [ ] **Phase 14: Resend Webhook Provider & Core Ingest** - System securely ingests and normalizes Resend webhooks through a new provider behavior
-- [ ] **Phase 15: Mailgun Webhook Provider** - System securely ingests and normalizes Mailgun webhooks while preventing replay attacks
+- [x] **Phase 15: Mailgun Webhook Provider** - System securely ingests and normalizes Mailgun webhooks while preventing replay attacks (completed 2026-04-29)
 - [ ] **Phase 16: SES Webhook Provider & SNS Cache** - System securely ingests and normalizes AWS SES (via SNS) webhooks with automatic subscription handling and certificate caching
 
 ## Phase Details
@@ -37,7 +37,7 @@ Plans:
 - [x] 15-01-PLAN.md — Define the replay-aware Mailgun contract and ETS cache
 - [x] 15-02-PLAN.md — Implement the Mailgun provider, fixtures, and provider tests
 - [x] 15-03-PLAN.md — Wire Mailgun into plug, router, config, and runtime tests
-- [ ] 15-04-PLAN.md — Update installer snippets, webhook docs, and goldens for Mailgun opt-in
+- [x] 15-04-PLAN.md — Update installer snippets, webhook docs, and goldens for Mailgun opt-in
 
 ### Phase 16: SES Webhook Provider & SNS Cache
 **Goal**: System securely ingests and normalizes AWS SES (via SNS) webhooks with automatic subscription handling and certificate caching
@@ -56,5 +56,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Resend Webhook Provider & Core Ingest | 1/1 | Verification blocked | - |
-| 15. Mailgun Webhook Provider | 3/4 | In progress | - |
+| 15. Mailgun Webhook Provider | 4/4 | Complete    | 2026-04-29 |
 | 16. SES Webhook Provider & SNS Cache | 0/0 | Not started | - |
