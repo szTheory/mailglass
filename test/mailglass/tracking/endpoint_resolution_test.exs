@@ -3,7 +3,7 @@ defmodule Mailglass.Tracking.EndpointResolutionTest do
   Asserts that Mailglass.Tracking.endpoint/0 has a single, consistent fallback
   chain used by both Rewriter and Plug (HI-02 fix verification).
   """
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Mailglass.Tracking
 

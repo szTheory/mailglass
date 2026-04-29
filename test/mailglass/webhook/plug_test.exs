@@ -35,10 +35,8 @@ defmodule Mailglass.Webhook.PlugTest do
       assert Keyword.get(WebhookPlug.init(provider: :sendgrid), :provider) == :sendgrid
     end
 
-    test "raises ArgumentError on unknown provider" do
-      assert_raise ArgumentError, ~r/unknown :provider/, fn ->
-        WebhookPlug.init(provider: :resend)
-      end
+    test "valid :resend provider opt survives init" do
+      assert Keyword.get(WebhookPlug.init(provider: :resend), :provider) == :resend
     end
 
     test "raises KeyError when :provider opt missing" do
