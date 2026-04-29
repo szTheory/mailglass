@@ -10,13 +10,14 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**Shipped: v0.2.0 on Hex.pm (2026-04-28).**
+**Shipped: v0.2.0 on Hex.pm (2026-04-28). Phase 16 (SES webhook provider + SNS cert cache) complete 2026-04-29.**
 
 - `mailglass` 0.2.0 — https://hex.pm/packages/mailglass/0.2.0
 - `mailglass_admin` 0.2.0 — https://hex.pm/packages/mailglass_admin/0.2.0
 - HexDocs: https://hexdocs.pm/mailglass/0.2.0/ + https://hexdocs.pm/mailglass_admin/0.2.0/
 
 v0.2 milestone closed 2026-04-28. 6 phases (8-13), 35 plans, 38/38 REQ-IDs mapped.
+Phase 16 complete 2026-04-29: SES webhook provider — SNS signature verification (SHA-1/SHA-256), ETS-backed cert cache OTP supervisor, SSRF-guarded TrustPolicy, full Anymail normalization (classic + event-publishing formats), wired into plug/router/application. SES-01..SES-05 validated.
 v0.1 milestone closed 2026-04-26. 8 phases (7 planned + 1 inserted), 61 plans, 84/84 v1 REQ-IDs satisfied, ~33k LOC of Elixir, 319 commits, 6-day cycle. Full archive: [`.planning/milestones/v0.1-ROADMAP.md`](milestones/v0.1-ROADMAP.md).
 
 **Codebase characteristics:**
@@ -102,7 +103,7 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 
 ## Active
 
-Currently no active requirements as milestone is complete.
+**v0.3 Requirements gathering in progress.**
 
 ## Out of Scope
 
@@ -211,3 +212,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 *Last updated: 2026-04-28 — v0.2 milestone "Production-Credible Core" complete.*
+ion" started.*

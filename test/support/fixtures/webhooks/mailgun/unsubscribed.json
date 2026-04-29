@@ -1,0 +1,16 @@
+{
+  "event-data": {
+    "event": "unsubscribed",
+    "id": "mailgun-event-unsubscribed-001",
+    "timestamp": 1777378081.125,
+    "message": {
+      "headers": {
+        "message-id": "<unsubscribed-001@example.mailgun.org>"
+      }
+    },
+    "recipient": "unsubscribed@example.com",
+    "tags": [
+      "product-updates"
+    ]
+  }
+}

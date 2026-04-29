@@ -82,6 +82,26 @@ defmodule Mailglass.Webhook.RouterTest do
       # default :as prefix still applies
       assert route.helper == "mailglass_webhook_sendgrid"
     end
+
+    defmodule MailgunEnabledRouter do
+      use Phoenix.Router
+      import Mailglass.Webhook.Router
+
+      scope "/" do
+        mailglass_webhook_routes("/webhooks", providers: [:postmark, :sendgrid, :mailgun])
+      end
+    end
+
+    test "respects explicit provider lists that include :mailgun" do
+      routes = MailgunEnabledRouter.__routes__()
+      assert length(routes) == 3
+
+      mailgun_route = Enum.find(routes, &(&1.path == "/webhooks/mailgun"))
+      assert mailgun_route != nil
+      assert mailgun_route.verb == :post
+      assert mailgun_route.plug == Mailglass.Webhook.Plug
+      assert mailgun_route.plug_opts[:provider] == :mailgun
+    end
   end
 
   describe "mailglass_webhook_routes/2 compile-time validation (D-07)" do
@@ -98,14 +118,13 @@ defmodule Mailglass.Webhook.RouterTest do
             import Mailglass.Webhook.Router
 
             scope "/" do
-              mailglass_webhook_routes "/webhooks", providers: [:mailgun]
+              mailglass_webhook_routes "/webhooks", providers: [:unknown_provider]
             end
           end
           """)
         end
 
-      assert err.message =~ ":mailgun"
-      assert err.message =~ "v0.1"
+      assert err.message =~ ":unknown_provider"
     end
   end
 end

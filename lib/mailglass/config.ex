@@ -280,6 +280,46 @@ defmodule Mailglass.Config do
         ]
       ]
     ],
+    mailgun: [
+      type: :keyword_list,
+      default: [],
+      doc: "Mailgun webhook configuration.",
+      keys: [
+        enabled: [
+          type: :boolean,
+          default: true,
+          doc: "Enable the Mailgun webhook route when explicitly mounted."
+        ],
+        signing_key: [
+          type: {:or, [:string, nil]},
+          default: nil,
+          doc:
+            "Mailgun webhook signing key used for HMAC verification. Required " <>
+              "for signature verification; omit only if the provider is disabled."
+        ],
+        timestamp_tolerance_seconds: [
+          type: :pos_integer,
+          default: 28_800,
+          doc:
+            "Maximum accepted age for the Mailgun signature timestamp in " <>
+              "seconds. Default: `28_800`."
+        ],
+        future_skew_seconds: [
+          type: :pos_integer,
+          default: 300,
+          doc:
+            "Maximum accepted future skew for the Mailgun signature " <>
+              "timestamp in seconds. Default: `300`."
+        ],
+        replay_cache_ttl_seconds: [
+          type: :pos_integer,
+          default: 28_800,
+          doc:
+            "Replay cache retention window for Mailgun tokens in seconds. " <>
+              "Default: `28_800`."
+        ]
+      ]
+    ],
     # Phase 4 CONTEXT D-11 / revision B2. `:sync` is the v0.1 locked
     # ingest mode — the webhook Plug runs `Mailglass.Webhook.Ingest`
     # inline and responds 200 only after the Multi commits. `:async` is
@@ -375,7 +415,9 @@ defmodule Mailglass.Config do
   @doc since: "0.1.0"
   @spec new!(keyword()) :: keyword() | map()
   def new!(opts \\ []) when is_list(opts) do
-    NimbleOptions.validate!(opts, @schema)
+    opts
+    |> NimbleOptions.validate!(@schema)
+    |> validate_mailgun_replay_window!()
   end
 
   @doc """
@@ -399,7 +441,10 @@ defmodule Mailglass.Config do
       |> Keyword.take(known_keys)
       |> normalize_optional_keyword_subtrees()
 
-    validated = NimbleOptions.validate!(opts, @schema)
+    validated =
+      opts
+      |> NimbleOptions.validate!(@schema)
+      |> validate_mailgun_replay_window!()
 
     validate_repo_adapter!(Keyword.get(validated, :repo))
 
@@ -544,5 +589,22 @@ defmodule Mailglass.Config do
     |> Keyword.take(known_keys)
     |> normalize_optional_keyword_subtrees()
     |> NimbleOptions.validate!(@schema)
+    |> validate_mailgun_replay_window!()
+  end
+
+  defp validate_mailgun_replay_window!(validated) do
+    mailgun = Keyword.get(validated, :mailgun, [])
+    ttl = Keyword.get(mailgun, :replay_cache_ttl_seconds, 28_800)
+    tolerance = Keyword.get(mailgun, :timestamp_tolerance_seconds, 28_800)
+
+    if ttl < tolerance do
+      raise NimbleOptions.ValidationError,
+        key: :mailgun,
+        message:
+          ":replay_cache_ttl_seconds must be greater than or equal to " <>
+            ":timestamp_tolerance_seconds"
+    end
+
+    validated
   end
 end

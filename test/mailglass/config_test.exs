@@ -30,6 +30,61 @@ defmodule Mailglass.ConfigTest do
         Mailglass.Config.new!(renderer: [css_inliner: :invalid_backend])
       end
     end
+
+    test "accepts a valid mailgun subtree" do
+      config =
+        Mailglass.Config.new!(
+          mailgun: [
+            enabled: true,
+            signing_key: "mailgun-signing-key",
+            timestamp_tolerance_seconds: 28_800,
+            future_skew_seconds: 300,
+            replay_cache_ttl_seconds: 28_800
+          ]
+        )
+
+      mailgun = Keyword.fetch!(config, :mailgun)
+      assert Keyword.fetch!(mailgun, :signing_key) == "mailgun-signing-key"
+      assert Keyword.fetch!(mailgun, :future_skew_seconds) == 300
+      assert Keyword.fetch!(mailgun, :replay_cache_ttl_seconds) == 28_800
+    end
+
+    test "rejects unknown keys in the mailgun subtree" do
+      assert_raise NimbleOptions.ValidationError, fn ->
+        Mailglass.Config.new!(mailgun: [unknown_key: true])
+      end
+    end
+
+    test "rejects invalid mailgun signing_key types" do
+      assert_raise NimbleOptions.ValidationError, fn ->
+        Mailglass.Config.new!(mailgun: [signing_key: 123])
+      end
+    end
+
+    test "rejects invalid mailgun future skew types" do
+      assert_raise NimbleOptions.ValidationError, fn ->
+        Mailglass.Config.new!(mailgun: [future_skew_seconds: "300"])
+      end
+    end
+
+    test "rejects invalid mailgun replay cache ttl types" do
+      assert_raise NimbleOptions.ValidationError, fn ->
+        Mailglass.Config.new!(mailgun: [replay_cache_ttl_seconds: "28_800"])
+      end
+    end
+
+    test "rejects mailgun replay cache ttl shorter than timestamp tolerance" do
+      assert_raise NimbleOptions.ValidationError,
+                   ~r/replay_cache_ttl_seconds must be greater than or equal to :timestamp_tolerance_seconds/,
+                   fn ->
+                     Mailglass.Config.new!(
+                       mailgun: [
+                         timestamp_tolerance_seconds: 300,
+                         replay_cache_ttl_seconds: 60
+                       ]
+                     )
+                   end
+    end
   end
 
   describe "validate_at_boot!/0" do

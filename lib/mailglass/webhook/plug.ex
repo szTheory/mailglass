@@ -9,7 +9,7 @@ defmodule Mailglass.Webhook.Plug do
        `Mailglass.Webhook.CachingBodyReader` in the adopter's
        `Plug.Parsers` `:body_reader`)
     2. Dispatch to `Mailglass.Webhook.Provider` impl per route opts
-       (`provider: :postmark | :sendgrid`)
+       (`provider: :postmark | :sendgrid | :mailgun`)
     3. `Provider.verify!/3` — raises `%SignatureError{}` on failure
     4. `Mailglass.Tenancy.resolve_webhook_tenant/1` (D-12) — runs
        AFTER verify (D-13)
@@ -81,7 +81,7 @@ defmodule Mailglass.Webhook.Plug do
   # Plan 06 ships the module.
   @compile {:no_warn_undefined, [Mailglass.Webhook.Ingest]}
 
-  @valid_providers [:postmark, :sendgrid]
+  @valid_providers [:postmark, :sendgrid, :mailgun, :ses]
 
   @impl Plug
   def init(opts) when is_list(opts) do
@@ -122,20 +122,43 @@ defmodule Mailglass.Webhook.Plug do
       config = resolve_config!(provider, conn)
 
       # Step 1: verify FIRST (D-13)
-      verify_with_telemetry!(provider, raw_body, headers, config)
+      case verify_with_telemetry!(provider, raw_body, headers, config) do
+        {:ok, :replay} ->
+          conn = send_resp(conn, 200, "")
 
-      # Step 2: resolve tenant (D-12 — runs AFTER verify per D-13)
-      tenant_id = resolve_tenant!(provider, conn, raw_body, headers)
+          {conn,
+           %{
+             provider: provider,
+             status: :replay,
+             duplicate: true,
+             event_count: 0
+           }}
 
-      # Step 3: ingest under tenant scope (Pitfall 7 — block form)
-      Tenancy.with_tenant(tenant_id, fn ->
-        events =
-          provider
-          |> provider_module()
-          |> apply(:normalize, [raw_body, headers])
+        {:ok, :control_plane, outcome} ->
+          Logger.info("[mailglass] SNS control-plane: provider=#{provider} outcome=#{outcome}")
+          conn = send_resp(conn, 200, "")
 
-        ingest_and_respond(conn, provider, raw_body, events, tenant_id)
-      end)
+          {conn,
+           %{
+             provider: provider,
+             status: :control_plane,
+             outcome: outcome
+           }}
+
+        :ok ->
+          # Step 2: resolve tenant (D-12 — runs AFTER verify per D-13)
+          tenant_id = resolve_tenant!(provider, conn, raw_body, headers)
+
+          # Step 3: ingest under tenant scope (Pitfall 7 — block form)
+          Tenancy.with_tenant(tenant_id, fn ->
+            events =
+              provider
+              |> provider_module()
+              |> apply(:normalize, [raw_body, headers])
+
+            ingest_and_respond(conn, provider, raw_body, events, tenant_id)
+          end)
+      end
     rescue
       e in SignatureError ->
         Logger.warning("Webhook signature failed: provider=#{provider} reason=#{e.type}")
@@ -223,6 +246,25 @@ defmodule Mailglass.Webhook.Plug do
     }
   end
 
+  defp resolve_config!(:mailgun, _conn) do
+    env = Application.get_env(:mailglass, :mailgun, [])
+
+    %{
+      signing_key: env[:signing_key],
+      timestamp_tolerance_seconds: env[:timestamp_tolerance_seconds] || 28_800,
+      future_skew_seconds: env[:future_skew_seconds] || 300,
+      replay_cache_ttl_seconds: env[:replay_cache_ttl_seconds] || 28_800
+    }
+  end
+
+  defp resolve_config!(:ses, _conn) do
+    env = Application.get_env(:mailglass, :ses, [])
+
+    %{
+      cert_cache_ttl_seconds: env[:cert_cache_ttl_seconds] || 86_400
+    }
+  end
+
   # Step 2: telemetry-wrapped Provider.verify!/3 (CONTEXT D-22 inner span).
   # Plan 08 named helper. On success the inner fn returns `:ok`; on
   # signature failure the `verify!/3` call raises %SignatureError{} which
@@ -235,7 +277,6 @@ defmodule Mailglass.Webhook.Plug do
       fn ->
         module = provider_module(provider)
         apply(module, :verify!, [raw_body, headers, config])
-        :ok
       end
     )
   end
@@ -349,4 +390,6 @@ defmodule Mailglass.Webhook.Plug do
   # clauses are exhaustive for all reachable call sites).
   defp provider_module(:postmark), do: Mailglass.Webhook.Providers.Postmark
   defp provider_module(:sendgrid), do: Mailglass.Webhook.Providers.SendGrid
+  defp provider_module(:mailgun), do: Mailglass.Webhook.Providers.Mailgun
+  defp provider_module(:ses), do: Mailglass.Webhook.Providers.SES
 end

@@ -28,6 +28,14 @@ defmodule Mailglass.Application do
         Mailglass.SuppressionStore.ETS.Supervisor,
         {Mailglass.SuppressionStore.ETS.Supervisor, []}
       )
+      |> maybe_add(
+        Mailglass.Webhook.Providers.MailgunReplayCache.Supervisor,
+        {Mailglass.Webhook.Providers.MailgunReplayCache.Supervisor, []}
+      )
+      |> maybe_add(
+        Mailglass.Webhook.Providers.SES.CertCache.Supervisor,
+        {Mailglass.Webhook.Providers.SES.CertCache.Supervisor, []}
+      )
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Mailglass.Supervisor)
   end

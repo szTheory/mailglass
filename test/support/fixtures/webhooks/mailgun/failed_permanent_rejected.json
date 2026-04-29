@@ -1,0 +1,23 @@
+{
+  "event-data": {
+    "event": "failed",
+    "id": "mailgun-event-failed-rejected-001",
+    "timestamp": 1777377840.625,
+    "severity": "permanent",
+    "reason": "suppress-bounce",
+    "message": {
+      "headers": {
+        "message-id": "<failed-rejected-001@example.mailgun.org>"
+      }
+    },
+    "delivery-status": {
+      "attempt-no": 1,
+      "code": 605,
+      "description": "Recipient is on the suppression list",
+      "message": "Recipient address is suppressed due to prior hard bounce",
+      "session-seconds": 0.042,
+      "tls": false
+    },
+    "recipient": "rejected@example.com"
+  }
+}

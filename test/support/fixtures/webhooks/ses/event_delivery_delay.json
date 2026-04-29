@@ -1,0 +1,10 @@
+{
+  "Type": "Notification",
+  "MessageId": "sns-msg-id-event-delay",
+  "TopicArn": "arn:aws:sns:us-east-1:123456789012:ses-events",
+  "Timestamp": "2026-04-01T12:00:00.000Z",
+  "SignatureVersion": "1",
+  "Signature": "PLACEHOLDER_REPLACED_AT_TEST_RUNTIME",
+  "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-test.pem",
+  "Message": "{\"eventType\":\"DeliveryDelay\",\"mail\":{\"messageId\":\"ses-evt-delay\",\"source\":\"sender@example.com\",\"sendingAccountId\":\"123456789012\",\"destination\":[\"dest@example.com\"]},\"deliveryDelay\":{\"delayType\":\"TransientCommunicationFailure\",\"delayedRecipients\":[{\"emailAddress\":\"dest@example.com\",\"status\":\"4.4.1\",\"diagnosticCode\":\"smtp; 421 service unavailable\"}],\"expirationTime\":\"2026-04-02T12:00:00.000Z\",\"reportingMTA\":\"smtp.example.com\"}}"
+}

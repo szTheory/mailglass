@@ -37,7 +37,7 @@ defmodule Mailglass.Webhook.PlugTest do
 
     test "raises ArgumentError on unknown provider" do
       assert_raise ArgumentError, ~r/unknown :provider/, fn ->
-        WebhookPlug.init(provider: :mailgun)
+        WebhookPlug.init(provider: :resend)
       end
     end
 

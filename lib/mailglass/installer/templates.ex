@@ -48,7 +48,7 @@ defmodule Mailglass.Installer.Templates do
   @spec webhook_mount_snippet(keyword()) :: String.t()
   def webhook_mount_snippet(_opts \\ []) do
     """
-        # Mailglass webhook routes (Postmark + SendGrid).
+        # Mailglass webhook routes (Postmark + SendGrid + Mailgun).
         import Mailglass.Webhook.Router
 
         pipeline :mailglass_webhooks do
@@ -59,7 +59,7 @@ defmodule Mailglass.Installer.Templates do
 
         scope "/" do
           pipe_through :mailglass_webhooks
-          mailglass_webhook_routes "/webhooks"
+          mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun]
         end
     """
   end

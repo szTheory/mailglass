@@ -1,0 +1,23 @@
+{
+  "event-data": {
+    "event": "failed",
+    "id": "mailgun-event-failed-temporary-001",
+    "timestamp": 1777377720.375,
+    "severity": "temporary",
+    "reason": "generic",
+    "message": {
+      "headers": {
+        "message-id": "<failed-temporary-001@example.mailgun.org>"
+      }
+    },
+    "delivery-status": {
+      "attempt-no": 2,
+      "code": 421,
+      "description": "Service not available, closing transmission channel",
+      "message": "4.3.2 Temporary system problem",
+      "session-seconds": 0.711,
+      "tls": true
+    },
+    "recipient": "temporary@example.com"
+  }
+}

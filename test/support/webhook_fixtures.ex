@@ -158,6 +158,144 @@ defmodule Mailglass.WebhookFixtures do
     File.read!(Path.join([@fixture_root, "sendgrid", name <> ".json"]))
   end
 
+  @doc """
+  Signs `svix_id.svix_timestamp.raw_body` with the given secret.
+
+  Returns the base64-encoded HMAC-SHA256 signature that Resend's
+  Svix-backed webhooks expect in the `svix-signature` header.
+  """
+  @spec sign_resend_payload(String.t(), String.t(), binary(), binary()) :: String.t()
+  def sign_resend_payload(svix_id, svix_timestamp, raw_body, secret)
+      when is_binary(svix_id) and is_binary(svix_timestamp) and is_binary(raw_body) and
+             is_binary(secret) do
+    signed_content = "#{svix_id}.#{svix_timestamp}.#{raw_body}"
+
+    :crypto.mac(:hmac, :sha256, secret, signed_content)
+    |> Base.encode64()
+  end
+
+  @doc """
+  Loads `test/support/fixtures/webhooks/resend/\#{name}.json` as raw bytes.
+  """
+  @spec load_resend_fixture(String.t()) :: binary()
+  def load_resend_fixture(name) when is_binary(name) do
+    File.read!(Path.join([@fixture_root, "resend", name <> ".json"]))
+  end
+
+  @doc """
+  Loads `test/support/fixtures/webhooks/mailgun/\#{name}.json` as raw bytes.
+  """
+  @spec load_mailgun_fixture(String.t()) :: binary()
+  def load_mailgun_fixture(name) when is_binary(name) do
+    File.read!(Path.join([@fixture_root, "mailgun", name <> ".json"]))
+  end
+
+  @doc """
+  Generates a fresh RSA 2048-bit keypair for SNS signature testing.
+
+  Returns `{public_key_term, private_key_record}`:
+
+    * `public_key_term` — an `{:RSAPublicKey, n, e}` record for use with
+      `CertCache.put/3`. This is the term `CertCache` stores and passes to
+      `:public_key.verify/4`.
+    * `private_key_record` — the RSA private key for signing canonical strings
+      via `sign_sns_canonical_string/3`.
+
+  Fresh per call (random). Tests that need a stable keypair across multiple
+  `verify!/3` calls should generate once in `setup` and reuse.
+
+  ## Test usage pattern
+
+  Since tests stub the CertCache directly (no `:httpc` call needed):
+
+      {public_key, private_key} = generate_sns_keypair()
+      future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
+      CertCache.put(cert_url, public_key, future)
+      raw = sign_fixture(raw_fixture_json, private_key)
+      assert :ok = SES.verify!(raw, [], config)
+  """
+  @spec generate_sns_keypair() :: {term(), term()}
+  def generate_sns_keypair do
+    private_key = :public_key.generate_key({:rsa, 2048, 65537})
+    # RSAPrivateKey record layout (OTP 27):
+    # {:RSAPrivateKey, :two-prime, n, e, d, p, q, dp, dq, qi, other_prime_infos}
+    # Index 2 = n (modulus), Index 3 = e (public exponent)
+    n = elem(private_key, 2)
+    e = elem(private_key, 3)
+    public_key = {:RSAPublicKey, n, e}
+    {public_key, private_key}
+  end
+
+  @doc """
+  Signs an SNS canonical string with the given RSA private key.
+
+  The canonical string must be pre-built by the caller using the field-sorted
+  `"key\\nvalue\\n"` algorithm from AWS docs. Returns the base64-encoded RSA-SHA1
+  signature (SignatureVersion 1) — or SHA256 for SignatureVersion 2 when
+  `digest: :sha256` is passed in opts.
+
+  Use this in tests to inject a valid `"Signature"` field into a fixture
+  before calling `verify!/3`.
+
+  ## Example
+
+      {_public_key, private_key} = generate_sns_keypair()
+      canonical = "Message\\nhello world\\nType\\nNotification\\n"
+      sig = sign_sns_canonical_string(canonical, private_key)
+      # => base64-encoded RSA-SHA1 signature
+  """
+  @spec sign_sns_canonical_string(binary(), term(), keyword()) :: String.t()
+  def sign_sns_canonical_string(canonical_string, private_key, opts \\ [])
+      when is_binary(canonical_string) do
+    digest = Keyword.get(opts, :digest, :sha)
+    sig = :public_key.sign(canonical_string, digest, private_key)
+    Base.encode64(sig)
+  end
+
+  @doc """
+  Loads `test/support/fixtures/webhooks/ses/\#{name}.json` as raw bytes.
+  """
+  @spec load_ses_fixture(String.t()) :: binary()
+  def load_ses_fixture(name) when is_binary(name) do
+    File.read!(Path.join([@fixture_root, "ses", name <> ".json"]))
+  end
+
+  @doc """
+  Injects a Mailgun `signature` object into a raw payload-only fixture.
+
+  Options:
+
+    * `:timestamp` - Unix timestamp string or integer. Defaults to current time.
+    * `:token` - webhook token used for both signature replay identity and HMAC payload.
+  """
+  @spec sign_mailgun_payload(binary(), binary(), keyword()) :: binary()
+  def sign_mailgun_payload(raw_body, signing_key, opts)
+      when is_binary(raw_body) and is_binary(signing_key) and is_list(opts) do
+    timestamp =
+      case Keyword.get(opts, :timestamp, System.system_time(:second)) do
+        value when is_integer(value) -> Integer.to_string(value)
+        value when is_binary(value) -> value
+      end
+
+    token =
+      Keyword.get_lazy(opts, :token, fn ->
+        "mailgun-token-" <> Integer.to_string(System.unique_integer([:positive]))
+      end)
+
+    signature =
+      :crypto.mac(:hmac, :sha256, signing_key, timestamp <> token)
+      |> Base.encode16(case: :lower)
+
+    raw_body
+    |> Jason.decode!()
+    |> Map.put("signature", %{
+      "timestamp" => timestamp,
+      "token" => token,
+      "signature" => signature
+    })
+    |> Jason.encode!()
+  end
+
   @doc "Absolute path to the webhook fixtures root (for `File.ls!/1` in tests)."
   @spec fixture_root() :: String.t()
   def fixture_root, do: @fixture_root

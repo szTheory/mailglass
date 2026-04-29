@@ -1,0 +1,16 @@
+{
+  "event-data": {
+    "event": "accepted",
+    "id": "mailgun-event-accepted-001",
+    "timestamp": 1777377600.125,
+    "message": {
+      "headers": {
+        "message-id": "<accepted-001@example.mailgun.org>"
+      }
+    },
+    "flags": {
+      "is-test-mode": false
+    },
+    "recipient": "accepted@example.com"
+  }
+}
