@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.2.0...mailglass-v0.3.0) (2026-04-29)
 
+
+### Features
+
+* **14-01:** add resend webhook provider ([f97d2be](https://github.com/szTheory/mailglass/commit/f97d2be0479603f205a9a946ebd4751a82aea8ab))
+* **15-01:** add mailgun replay cache supervision ([dfb0d16](https://github.com/szTheory/mailglass/commit/dfb0d165903b20eb28b8c4ec46c58b2ce6244442))
+* **15-01:** allow replay-aware webhook verification ([395c9cb](https://github.com/szTheory/mailglass/commit/395c9cbb67b2b4ebbcc1e5a7eee88f978d0ea29f))
+* **15-02:** finish mailgun provider test coverage ([1c6549d](https://github.com/szTheory/mailglass/commit/1c6549d02855d3281d15f0b5378042c0f3fe69a9))
+* **15-02:** implement mailgun provider verification ([c52beac](https://github.com/szTheory/mailglass/commit/c52beacdf2a32b3dc81c899cf52cae1740368e59))
+* **15-03:** add mailgun webhook test harness ([9639da0](https://github.com/szTheory/mailglass/commit/9639da06fff40d12e7b00f3686d8e74f5a475b4c))
+* **15-03:** enable mailgun ingest runtime ([f7e8c18](https://github.com/szTheory/mailglass/commit/f7e8c18f8e7ae1d81f06ad5661e14f22e17b7953))
+* **15-03:** wire mailgun into webhook runtime ([2cc9948](https://github.com/szTheory/mailglass/commit/2cc9948056328176e24d9704104e01c4993952d4))
+* **16-02:** implement CertCache Supervisor and TableOwner ([11ba834](https://github.com/szTheory/mailglass/commit/11ba83469ccf19a5b92daf5b94b4b7cdd4c4854c))
+* **16-02:** implement TrustPolicy and CertCache modules ([7bb099a](https://github.com/szTheory/mailglass/commit/7bb099a880744d3a7684eb06dce972356ea18b89))
+* **16-03:** implement SES provider verify!/3 with SNS signature verification ([4093276](https://github.com/szTheory/mailglass/commit/4093276fec8784c700b2b8cbc84d93ec0e2dd6e8))
+* **16-04:** implement normalize/2 in SES provider ([20df34f](https://github.com/szTheory/mailglass/commit/20df34f016896517c3d546bb6d0f08863c51773a))
+* **16-04:** wire SES into plug, router, application, and webhooks guide ([3a3f3f9](https://github.com/szTheory/mailglass/commit/3a3f3f9917c6889d47653e10b59a914da2cf2018))
+* **17-01:** add :resend lifecycle to WebhookCase ([396e940](https://github.com/szTheory/mailglass/commit/396e9406cedf01e1e140c2629338763074910eff))
+* **17-01:** wire :resend into plug.ex and router.ex static dispatch ([eebf866](https://github.com/szTheory/mailglass/commit/eebf8661408d4259253050c1dcea88c6d6b2fab5))
+
+
+### Bug Fixes
+
+* **15-01:** keep mailgun test scaffolds warning-clean ([30ed9bd](https://github.com/szTheory/mailglass/commit/30ed9bd662d64104e3f8bf96f627432481e50775))
+* **15:** enforce mailgun replay cache window ([31e5a85](https://github.com/szTheory/mailglass/commit/31e5a854250cf359ee0aea3933a66d77f999292e))
+* **15:** harden mailgun replay claims ([043c293](https://github.com/szTheory/mailglass/commit/043c2939c31aec6415b39c5e194c0c2bbf6eee57))
+* **16:** CR-01 add port guard to TrustPolicy to block SSRF via non-standard port ([87eed93](https://github.com/szTheory/mailglass/commit/87eed9329d8b0e233a7b93ddcc59cfaba385719a))
+* **16:** CR-02 CR-03 safe base64 decode and explicit SignatureVersion case ([ecbc261](https://github.com/szTheory/mailglass/commit/ecbc2611fd61621dcfafa8f406e66d4707f855c6))
+* **16:** WR-01 replace DateTime.utc_now() with Mailglass.Clock.utc_now() in tests ([079d312](https://github.com/szTheory/mailglass/commit/079d312dbe3b232f4ab6cb8deb00a3015de4ee23))
+* **16:** WR-02 document intentional _email discard in build_event/8 ([d6b215d](https://github.com/szTheory/mailglass/commit/d6b215d17c97016c5e70099eb4b52ef6990e1e67))
+* **16:** WR-03 document cache-miss stampede behavior in fetch_public_key!/2 ([813b7ce](https://github.com/szTheory/mailglass/commit/813b7ce8305557d5a9d472d769b6f874bf5f0122))
+* **16:** WR-04 add :ses to provider type union in webhooks guide ([76d32ee](https://github.com/szTheory/mailglass/commit/76d32ee9e32c1ec0ff049a68622df447e61eb08e))
+* **17-01:** fix async race and update plug_test :resend assertion ([f65a7ee](https://github.com/szTheory/mailglass/commit/f65a7ee98c99a5e76345b7b8dbcf9aacdaaf8d74))
+* **ci:** add postgres service to prepublish-summary job ([33efe73](https://github.com/szTheory/mailglass/commit/33efe73e354f395e1a014a506f1f2a42e4c4780c))
+* **ci:** satisfy release branch quality gates ([153c9f7](https://github.com/szTheory/mailglass/commit/153c9f7a2e1c668f9d6382737b2730955612ea84))
+* **ci:** satisfy workflow shellcheck ([f5b66cd](https://github.com/szTheory/mailglass/commit/f5b66cd14661e32d35bc2b4966efa233885f9590))
+* **release:** recover sibling publish validation ([db5f06f](https://github.com/szTheory/mailglass/commit/db5f06f838a9ac38636b3975fd509e9a1cae74d6))
+* resolve add/add conflict in cert_cache_test.exs (use Clock.utc_now, keep multi-URL test) ([2d770a0](https://github.com/szTheory/mailglass/commit/2d770a05ffe55bbaafc62ea82396f589e18d9c0d))
+
+## [0.3.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.2.0...mailglass-v0.3.0) (2026-04-29)
+
 Mailglass 0.3.0 is the webhook-coverage-complete release. If you already ship
 on `~> 0.2`, this cut is for teams that want the full first-party webhook
 ingest story across Postmark, SendGrid, Mailgun, SES, and Resend without taking
