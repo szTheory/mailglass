@@ -31,6 +31,6 @@ defmodule Mailglass.Webhook.Providers.SES.CertCache.TableOwner do
   end
 
   @doc since: "0.3.0"
-  @spec table() :: atom()
+  @spec table() :: :mailglass_webhook_ses_cert_cache
   def table, do: @table
 end
