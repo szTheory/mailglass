@@ -415,7 +415,9 @@ defmodule Mailglass.Config do
   @doc since: "0.1.0"
   @spec new!(keyword()) :: keyword() | map()
   def new!(opts \\ []) when is_list(opts) do
-    NimbleOptions.validate!(opts, @schema)
+    opts
+    |> NimbleOptions.validate!(@schema)
+    |> validate_mailgun_replay_window!()
   end
 
   @doc """
@@ -439,7 +441,10 @@ defmodule Mailglass.Config do
       |> Keyword.take(known_keys)
       |> normalize_optional_keyword_subtrees()
 
-    validated = NimbleOptions.validate!(opts, @schema)
+    validated =
+      opts
+      |> NimbleOptions.validate!(@schema)
+      |> validate_mailgun_replay_window!()
 
     validate_repo_adapter!(Keyword.get(validated, :repo))
 
@@ -584,5 +589,22 @@ defmodule Mailglass.Config do
     |> Keyword.take(known_keys)
     |> normalize_optional_keyword_subtrees()
     |> NimbleOptions.validate!(@schema)
+    |> validate_mailgun_replay_window!()
+  end
+
+  defp validate_mailgun_replay_window!(validated) do
+    mailgun = Keyword.get(validated, :mailgun, [])
+    ttl = Keyword.get(mailgun, :replay_cache_ttl_seconds, 28_800)
+    tolerance = Keyword.get(mailgun, :timestamp_tolerance_seconds, 28_800)
+
+    if ttl < tolerance do
+      raise NimbleOptions.ValidationError,
+        key: :mailgun,
+        message:
+          ":replay_cache_ttl_seconds must be greater than or equal to " <>
+            ":timestamp_tolerance_seconds"
+    end
+
+    validated
   end
 end

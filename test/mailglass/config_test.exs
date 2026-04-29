@@ -72,6 +72,19 @@ defmodule Mailglass.ConfigTest do
         Mailglass.Config.new!(mailgun: [replay_cache_ttl_seconds: "28_800"])
       end
     end
+
+    test "rejects mailgun replay cache ttl shorter than timestamp tolerance" do
+      assert_raise NimbleOptions.ValidationError,
+                   ~r/replay_cache_ttl_seconds must be greater than or equal to :timestamp_tolerance_seconds/,
+                   fn ->
+                     Mailglass.Config.new!(
+                       mailgun: [
+                         timestamp_tolerance_seconds: 300,
+                         replay_cache_ttl_seconds: 60
+                       ]
+                     )
+                   end
+    end
   end
 
   describe "validate_at_boot!/0" do
