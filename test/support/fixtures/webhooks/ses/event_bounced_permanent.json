@@ -1,0 +1,10 @@
+{
+  "Type": "Notification",
+  "MessageId": "sns-msg-id-event-bounce-perm",
+  "TopicArn": "arn:aws:sns:us-east-1:123456789012:ses-events",
+  "Timestamp": "2026-04-01T12:00:00.000Z",
+  "SignatureVersion": "1",
+  "Signature": "PLACEHOLDER_REPLACED_AT_TEST_RUNTIME",
+  "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-test.pem",
+  "Message": "{\"eventType\":\"Bounce\",\"mail\":{\"messageId\":\"ses-evt-bounce-perm\",\"source\":\"sender@example.com\",\"sendingAccountId\":\"123456789012\",\"destination\":[\"hardbounce@example.com\"]},\"bounce\":{\"bounceType\":\"Permanent\",\"bounceSubType\":\"General\",\"bouncedRecipients\":[{\"emailAddress\":\"hardbounce@example.com\",\"action\":\"failed\",\"status\":\"5.1.1\",\"diagnosticCode\":\"smtp; 550 user unknown\"}],\"timestamp\":\"2026-04-01T12:00:00.000Z\",\"feedbackId\":\"feedback-004\",\"remoteMtaIp\":\"1.2.3.4\"}}"
+}

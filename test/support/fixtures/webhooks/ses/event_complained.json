@@ -1,0 +1,10 @@
+{
+  "Type": "Notification",
+  "MessageId": "sns-msg-id-event-complaint",
+  "TopicArn": "arn:aws:sns:us-east-1:123456789012:ses-events",
+  "Timestamp": "2026-04-01T12:00:00.000Z",
+  "SignatureVersion": "1",
+  "Signature": "PLACEHOLDER_REPLACED_AT_TEST_RUNTIME",
+  "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-test.pem",
+  "Message": "{\"eventType\":\"Complaint\",\"mail\":{\"messageId\":\"ses-evt-complaint\",\"source\":\"sender@example.com\",\"sendingAccountId\":\"123456789012\",\"destination\":[\"complaint@example.com\"]},\"complaint\":{\"complainedRecipients\":[{\"emailAddress\":\"complaint@example.com\"}],\"timestamp\":\"2026-04-01T12:00:00.000Z\",\"feedbackId\":\"feedback-006\",\"complaintFeedbackType\":\"abuse\"}}"
+}

@@ -1,0 +1,10 @@
+{
+  "Type": "Notification",
+  "MessageId": "sns-msg-id-event-opened",
+  "TopicArn": "arn:aws:sns:us-east-1:123456789012:ses-events",
+  "Timestamp": "2026-04-01T12:00:00.000Z",
+  "SignatureVersion": "1",
+  "Signature": "PLACEHOLDER_REPLACED_AT_TEST_RUNTIME",
+  "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-test.pem",
+  "Message": "{\"eventType\":\"Open\",\"mail\":{\"messageId\":\"ses-evt-opened\",\"source\":\"sender@example.com\",\"sendingAccountId\":\"123456789012\",\"destination\":[\"dest@example.com\"]},\"open\":{\"ipAddress\":\"192.0.2.1\",\"timestamp\":\"2026-04-01T12:00:00.000Z\",\"userAgent\":\"Mozilla/5.0\",\"link\":\"https://example.com\"}}"
+}

@@ -1,0 +1,10 @@
+{
+  "Type": "Notification",
+  "MessageId": "sns-msg-id-delivery",
+  "TopicArn": "arn:aws:sns:us-east-1:123456789012:ses-events",
+  "Timestamp": "2026-04-01T12:00:00.000Z",
+  "SignatureVersion": "1",
+  "Signature": "PLACEHOLDER_REPLACED_AT_TEST_RUNTIME",
+  "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-test.pem",
+  "Message": "{\"notificationType\":\"Delivery\",\"mail\":{\"messageId\":\"ses-msg-id-delivery\",\"source\":\"sender@example.com\"},\"delivery\":{\"timestamp\":\"2026-04-01T12:00:00.000Z\",\"processingTimeMillis\":100,\"recipients\":[\"delivered@example.com\"],\"smtpResponse\":\"250 ok\",\"reportingMTA\":\"smtp.example.com\"}}"
+}
