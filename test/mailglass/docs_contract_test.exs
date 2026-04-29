@@ -3,7 +3,7 @@ defmodule Mailglass.DocsContractTest do
   import Mailglass.DocsHelpers
 
   describe "README.md contract" do
-    test "installation snippet targets the v0.2 surface" do
+    test "installation snippet targets the v0.3 surface" do
       blocks = extract_code_blocks("README.md")
       install_block = Enum.find(blocks, &(&1 =~ "mix mailglass.install"))
 
@@ -12,8 +12,9 @@ defmodule Mailglass.DocsContractTest do
       refute Enum.any?(blocks, &String.contains?(&1, "mix verify.phase_07"))
 
       readme = File.read!("README.md")
-      assert readme =~ "{:mailglass, \"~> 0.2\"}"
+      assert readme =~ "{:mailglass, \"~> 0.3\"}"
       refute readme =~ "v0.1 in development"
+      refute readme =~ "{:mailglass, \"~> 0.2\"}"
     end
 
     test "Quickstart snippet compiles" do
