@@ -32,8 +32,14 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   ]
   @tier1_surface_rules %{
     "README.md" => %{
-      required: ["{:mailglass, \"~> 0.2\"}", "mix mailglass.install", "RFC 8058 List-Unsubscribe"],
-      forbidden: ["~> 0.1", "verify.phase_07", "v0.1 in development", "and — at v0.5 — RFC 8058"]
+      required: ["{:mailglass, \"~> 0.3\"}", "mix mailglass.install", "RFC 8058 List-Unsubscribe"],
+      forbidden: [
+        "~> 0.1",
+        "~> 0.2",
+        "verify.phase_07",
+        "v0.1 in development",
+        "and — at v0.5 — RFC 8058"
+      ]
     },
     "guides/getting-started.md" => %{
       required: ["mix mailglass.install", "|> to(user.email)", "|> subject(\"Welcome\")"],
@@ -49,7 +55,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     },
     "guides/migration-from-swoosh.md" => %{
       required: [
-        "{:mailglass, \"~> 0.2\"}",
+        "{:mailglass, \"~> 0.3\"}",
         "Mailglass still accepts a plain `%Swoosh.Email{}`",
         "assert {:ok, _delivery} = Mailglass.deliver(email)"
       ],
@@ -79,7 +85,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     },
     "guides/webhooks.md" => %{
       required: [
-        "Mailglass v0.2 projects suppressions automatically",
+        "Mailglass v0.3 projects suppressions automatically",
         "[:mailglass, :suppression, :auto_added, :stop]",
         "mix mailglass.suppressions.resync --tenant-id <tenant>"
       ],
