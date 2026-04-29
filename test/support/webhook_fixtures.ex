@@ -214,7 +214,8 @@ defmodule Mailglass.WebhookFixtures do
       raw = sign_fixture(raw_fixture_json, private_key)
       assert :ok = SES.verify!(raw, [], config)
   """
-  @spec generate_sns_keypair() :: {term(), term()}
+  @spec generate_sns_keypair() ::
+          {{:RSAPublicKey, non_neg_integer(), non_neg_integer()}, tuple()}
   def generate_sns_keypair do
     private_key = :public_key.generate_key({:rsa, 2048, 65537})
     # RSAPrivateKey record layout (OTP 27):
@@ -244,9 +245,14 @@ defmodule Mailglass.WebhookFixtures do
       sig = sign_sns_canonical_string(canonical, private_key)
       # => base64-encoded RSA-SHA1 signature
   """
-  @spec sign_sns_canonical_string(binary(), term(), keyword()) :: String.t()
+  @spec sign_sns_canonical_string(
+          binary(),
+          {:RSAPrivateKey, term(), term(), term(), term(), term(), term(), term(), term(), term(),
+           term()},
+          keyword()
+        ) :: String.t()
   def sign_sns_canonical_string(canonical_string, private_key, opts \\ [])
-      when is_binary(canonical_string) do
+      when is_binary(canonical_string) and is_tuple(private_key) do
     digest = Keyword.get(opts, :digest, :sha)
     sig = :public_key.sign(canonical_string, digest, private_key)
     Base.encode64(sig)
