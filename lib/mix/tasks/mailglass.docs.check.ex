@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Mailglass.Docs.Check do
   use Boundary, classify_to: Mailglass
 
-  @shortdoc "Checks Tier 1 docs for leaked internal IDs and stale v0.2 surface drift"
+  @shortdoc "Checks Tier 1 docs for leaked internal IDs and stale v0.3 surface drift"
 
   @moduledoc """
   Fail the build if Tier 1 docs leak internal IDs or drift back to known
@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
       |> Kernel.++(tier1_surface_issues())
 
     if issues == [] do
-      Mix.shell().info("[mailglass.docs.check] OK — Tier 1 docs match the v0.2 release surface.")
+      Mix.shell().info("[mailglass.docs.check] OK — Tier 1 docs match the v0.3 release surface.")
       :ok
     else
       Enum.each(issues, &emit_issue/1)
