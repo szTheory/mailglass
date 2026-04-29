@@ -76,6 +76,20 @@ defmodule Mailglass.Webhook.Providers.MailgunTest do
       assert :ok = Mailgun.verify!(body, [], @config)
       assert {:ok, :replay} = Mailgun.verify!(body, [], @config)
     end
+
+    test "only one concurrent verification can claim a fresh token" do
+      body = signed_fixture("accepted", token: "mailgun-race-token")
+
+      results =
+        1..2
+        |> Task.async_stream(fn _ -> Mailgun.verify!(body, [], @config) end,
+          ordered: false,
+          max_concurrency: 2
+        )
+        |> Enum.map(fn {:ok, result} -> result end)
+
+      assert Enum.sort(results) == [:ok, {:ok, :replay}]
+    end
   end
 
   describe "normalize/2 Mailgun event mapping" do

@@ -12,15 +12,23 @@ defmodule Mailglass.Webhook.Providers.MailgunReplayCache do
     case :ets.lookup(@table, token) do
       [{^token, %DateTime{} = existing_expires_at}] ->
         if DateTime.compare(existing_expires_at, now) == :lt do
-          :ets.insert(@table, {token, expires_at})
-          :ok
+          :ets.take(@table, token)
+
+          if :ets.insert_new(@table, {token, expires_at}) do
+            :ok
+          else
+            {:error, :replay}
+          end
         else
           {:error, :replay}
         end
 
       _ ->
-        :ets.insert(@table, {token, expires_at})
-        :ok
+        if :ets.insert_new(@table, {token, expires_at}) do
+          :ok
+        else
+          {:error, :replay}
+        end
     end
   end
 
