@@ -31,8 +31,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RESEND-01 | Phase 14 | Pending |
-| RESEND-02 | Phase 14 | Pending |
+| RESEND-01 | Phase 14 (implemented), Phase 17 (verification) | Pending |
+| RESEND-02 | Phase 14 (implemented), Phase 17 (verification) | Pending |
 | MAILGUN-01 | Phase 15 | Complete |
 | MAILGUN-02 | Phase 15 | Complete |
 | MAILGUN-03 | Phase 15 | Complete |
@@ -41,3 +41,4 @@
 | SES-03 | Phase 16 | Complete |
 | SES-04 | Phase 16 | Complete |
 | SES-05 | Phase 16 | Complete |
+| DELIV-04 | Phase 18 | Pending |

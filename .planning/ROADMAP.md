@@ -5,6 +5,8 @@
 - [ ] **Phase 14: Resend Webhook Provider & Core Ingest** - System securely ingests and normalizes Resend webhooks through a new provider behavior
 - [x] **Phase 15: Mailgun Webhook Provider** - System securely ingests and normalizes Mailgun webhooks while preventing replay attacks (completed 2026-04-29)
 - [x] **Phase 16: SES Webhook Provider & SNS Cache** - System securely ingests and normalizes AWS SES (via SNS) webhooks with automatic subscription handling and certificate caching (completed 2026-04-29)
+- [ ] **Phase 17: Unblock & Verify Resend** - Full test suite passes clean and Resend provider is confirmed production-ready
+- [ ] **Phase 18: Ship v0.3.0** - v0.3.0 published to Hex.pm with complete CHANGELOG and updated provider guides
 
 ## Phase Details
 
@@ -57,10 +59,36 @@ Plans:
 - [x] 16-03-PLAN.md — Wave 2: SES provider verify!/3 + SNS control-plane handling
 - [x] 16-04-PLAN.md — Wave 3: normalize/2 + plug/router/application wiring + webhooks guide
 
+### Phase 17: Unblock & Verify Resend
+**Goal**: Full test suite passes clean and Resend provider is confirmed production-ready
+**Depends on**: Phase 16
+**Requirements**: RESEND-01, RESEND-02
+**Success Criteria** (what must be TRUE):
+  1. `mix test` passes clean with no `--only` scoping or test exclusions
+  2. Valid Resend Svix signatures are accepted by the webhook plug
+  3. Invalid Resend Svix signatures are rejected with `Mailglass.SignatureError`
+  4. Resend events (delivered, bounced, complained) map to the correct Anymail taxonomy atoms
+  5. Phase 14 marked complete in ROADMAP.md
+**Plans**: TBD
+
+### Phase 18: Ship v0.3.0
+**Goal**: v0.3.0 published to Hex.pm with complete CHANGELOG and updated provider guides
+**Depends on**: Phase 17
+**Requirements**: DELIV-04
+**Success Criteria** (what must be TRUE):
+  1. `https://hex.pm/packages/mailglass/0.3.0` is live and installable
+  2. `https://hex.pm/packages/mailglass_admin/0.3.0` is live and installable
+  3. webhooks.md documents Resend configuration including `CachingBodyReader` setup
+  4. CHANGELOG.md has a complete v0.3 section covering Mailgun, SES, and Resend providers
+  5. DELIV-04 marked complete in PROJECT.md
+**Plans**: TBD
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Resend Webhook Provider & Core Ingest | 1/1 | Verification blocked | - |
+| 14. Resend Webhook Provider & Core Ingest | 1/1 | Verification blocked (implementation complete) | - |
 | 15. Mailgun Webhook Provider | 4/4 | Complete    | 2026-04-29 |
 | 16. SES Webhook Provider & SNS Cache | 4/4 | Complete    | 2026-04-29 |
+| 17. Unblock & Verify Resend | 0/2 | Not started | - |
+| 18. Ship v0.3.0 | 0/2 | Not started | - |
