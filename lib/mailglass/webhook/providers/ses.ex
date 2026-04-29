@@ -74,8 +74,29 @@ defmodule Mailglass.Webhook.Providers.SES do
     canonical = build_canonical_string(payload, msg_type)
 
     # Verify RSA signature
-    digest = if sig_version == "2", do: :sha256, else: :sha
-    decoded_sig = Base.decode64!(signature_b64)
+    digest =
+      case sig_version do
+        "1" -> :sha
+        "2" -> :sha256
+
+        other ->
+          raise SignatureError.new(:malformed_header,
+                  provider: :ses,
+                  context: %{detail: "Unknown SignatureVersion: #{inspect(other)}"}
+                )
+      end
+
+    decoded_sig =
+      case Base.decode64(signature_b64) do
+        {:ok, bytes} ->
+          bytes
+
+        :error ->
+          raise SignatureError.new(:malformed_header,
+                  provider: :ses,
+                  context: %{detail: "Signature field is not valid base64"}
+                )
+      end
 
     unless :public_key.verify(canonical, digest, decoded_sig, public_key) do
       raise SignatureError.new(:bad_signature, provider: :ses)
