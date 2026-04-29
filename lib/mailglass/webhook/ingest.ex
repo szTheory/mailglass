@@ -119,7 +119,7 @@ defmodule Mailglass.Webhook.Ingest do
   @spec ingest_multi(atom(), binary(), [Event.t()]) ::
           {:ok, map()} | {:error, term()}
   def ingest_multi(provider, raw_body, events)
-      when provider in [:postmark, :sendgrid, :mailgun] and is_binary(raw_body) and
+      when provider in [:postmark, :sendgrid, :mailgun, :resend] and is_binary(raw_body) and
              is_list(events) do
     # Tenancy.tenant_id!/0 is the fail-loud accessor — raises %TenancyError{:unstamped}
     # when the process-dict key is absent. Unlike Tenancy.current/0 (which falls back
