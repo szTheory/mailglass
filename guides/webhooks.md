@@ -255,7 +255,7 @@ for the rest of the ingest pipeline (normalize → persist → broadcast).
 
 ```elixir
 %{
-  provider: :postmark | :sendgrid | :mailgun,
+  provider: :postmark | :sendgrid | :mailgun | :ses,
   conn: Plug.Conn.t(),
   raw_body: binary(),
   headers: [{name, value}],
