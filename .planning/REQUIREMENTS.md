@@ -8,7 +8,7 @@
 
 ### Mailgun
 - [ ] **MAILGUN-01**: Webhook plug verifies HMAC-SHA256 signature using `timestamp`, `token`, and webhook signing key.
-- [ ] **MAILGUN-02**: Token caching mechanism prevents replay attacks for previously verified tokens.
+- [x] **MAILGUN-02**: Token caching mechanism prevents replay attacks for previously verified tokens.
 - [ ] **MAILGUN-03**: Webhook maps Mailgun events to `mailglass` normalized taxonomy.
 
 ### SES
@@ -34,7 +34,7 @@
 | RESEND-01 | Phase 14 | Pending |
 | RESEND-02 | Phase 14 | Pending |
 | MAILGUN-01 | Phase 15 | Pending |
-| MAILGUN-02 | Phase 15 | Pending |
+| MAILGUN-02 | Phase 15 | Complete |
 | MAILGUN-03 | Phase 15 | Pending |
 | SES-01 | Phase 16 | Pending |
 | SES-02 | Phase 16 | Pending |
