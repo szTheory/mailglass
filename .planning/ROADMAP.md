@@ -75,24 +75,28 @@ Plans:
 - [x] 17-01-PLAN.md — Plug wiring, test fix, and WebhookCase :resend infrastructure
 - [ ] 17-02-PLAN.md — Resend plug integration tests, fixture, and Phase 14 completion
 
-### Phase 18: Ship v0.3.0
-**Goal**: v0.3.0 published to Hex.pm with complete CHANGELOG and updated provider guides
+### Phase 18: Ship v0.3.x
+**Goal**: v0.3.x published to Hex.pm with complete CHANGELOG and updated provider guides
 **Depends on**: Phase 17
-**Requirements**: DELIV-04
+**Requirements**: DELIV-04 (Complete)
 **Success Criteria** (what must be TRUE):
-  1. `https://hex.pm/packages/mailglass/0.3.0` is live and installable
-  2. `https://hex.pm/packages/mailglass_admin/0.3.0` is live and installable
-  3. webhooks.md documents Resend configuration including `CachingBodyReader` setup
-  4. CHANGELOG.md has a complete v0.3 section covering Mailgun, SES, and Resend providers
-  5. DELIV-04 marked complete in PROJECT.md
-**Plans**: TBD
+  1. `https://hex.pm/packages/mailglass/0.3.x` is live and installable — ✓ (shipped as 0.3.2 after gate-ci-green required 0.3.0 → 0.3.1 → 0.3.2 patch recovery via Conventional Commits / Release Please; orphan tags 0.3.0 and 0.3.1 remain on GitHub but never on Hex; see 18-02-PUBLISH-EVIDENCE.md)
+  2. `https://hex.pm/packages/mailglass_admin/0.3.x` is live and installable — ✓ (shipped as 0.3.2 alongside core via linked-versions plugin)
+  3. webhooks.md documents Resend configuration including `CachingBodyReader` setup — ✓ (locked in `mix mailglass.docs.check`)
+  4. CHANGELOG.md has a complete v0.3 section covering Mailgun, SES, and Resend providers — ✓ (curated 0.3.0 narrative + auto-generated 0.3.1 / 0.3.2 patch entries)
+  5. DELIV-04 marked complete in PROJECT.md — ✓
+**Plans**: 2 plans
+
+Plans:
+- [x] 18-01-PLAN.md — Refresh release surface (changelogs, webhooks guide, README, runbook, workflow comments)
+- [x] 18-02-PLAN.md — Real publish ceremony, evidence capture, milestone closure
 
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Resend Webhook Provider & Core Ingest | 1/1 | Verification blocked (implementation complete) | - |
+| 14. Resend Webhook Provider & Core Ingest | 1/1 | Complete (verified in Phase 17 + 18) | 2026-04-29 |
 | 15. Mailgun Webhook Provider | 4/4 | Complete    | 2026-04-29 |
 | 16. SES Webhook Provider & SNS Cache | 4/4 | Complete    | 2026-04-29 |
-| 17. Unblock & Verify Resend | 1/2 | In progress | - |
-| 18. Ship v0.3.0 | 0/2 | Not started | - |
+| 17. Unblock & Verify Resend | 2/2 | Complete    | 2026-04-29 |
+| 18. Ship v0.3.x (shipped as v0.3.2 — see EVIDENCE) | 2/2 | Complete    | 2026-04-29 |

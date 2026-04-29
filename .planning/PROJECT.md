@@ -40,14 +40,14 @@ v0.1 milestone closed 2026-04-26. 8 phases (7 planned + 1 inserted), 61 plans, 8
 - Phase 4 standard-depth review WR-01..WR-06 (none block)
 - Adopter feedback: Mailable API exposes too much Swoosh — v0.2 design discussion candidate
 
-## Current Milestone: v0.3 Webhook Coverage Complete
+## Current Milestone: v0.3 Webhook Coverage Complete — SHIPPED 2026-04-29
 
-**Goal:** Unblock and verify the Resend webhook provider, completing DELIV-04 coverage across all five major providers (Postmark, SendGrid, Mailgun, SES, Resend), then publish v0.3.0 to Hex.
+**Goal:** Unblock and verify the Resend webhook provider, completing DELIV-04 coverage across all five major providers (Postmark, SendGrid, Mailgun, SES, Resend), then publish v0.3.x to Hex. **DELIV-04 marked complete; v0.3.0 shipped as v0.3.2 after a 3-cycle Conventional-Commits / Release Please patch recovery — see `.planning/phases/18-ship-v0-3-0/18-02-PUBLISH-EVIDENCE.md` for the chain.**
 
 **Target features:**
 
-- **Resend verification** — Fix test suite blocker; verify RESEND-01 (Svix HMAC-SHA256 signature verification using `svix-id`, `svix-timestamp`, and raw request body) and RESEND-02 (event normalization to Anymail taxonomy); confirm Phase 14 complete.
-- **v0.3.0 release** — CHANGELOG, webhooks.md Resend section, `mix mailglass.publish.check`, Hex publish ceremony.
+- **Resend verification** — Fix test suite blocker; verify RESEND-01 (Svix HMAC-SHA256 signature verification using `svix-id`, `svix-timestamp`, and raw request body) and RESEND-02 (event normalization to Anymail taxonomy); confirm Phase 14 complete. ✓
+- **v0.3.x release** — CHANGELOG, webhooks.md Resend section, `mix mailglass.publish.check`, Hex publish ceremony. ✓ (mailglass 0.3.2 + mailglass_admin 0.3.2 live on Hex.pm 2026-04-29; HexDocs HTTP 200 for both)
 
 **Phase shape:** 2 phases (Phase 17 → Phase 18), continuing numbering from Phase 16.
 

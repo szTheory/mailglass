@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v0.3.0
-milestone_name: "**Goal**: v0.3.0 published to Hex.pm with complete CHANGELOG and updated provider guides"
-status: executing
-last_updated: "2026-04-29T16:16:21.369Z"
-last_activity: 2026-04-29 -- Phase --phase execution started
+milestone_name: "**Goal**: v0.3.x published to Hex.pm with complete CHANGELOG and updated provider guides — SHIPPED as 0.3.2"
+status: complete
+last_updated: "2026-04-29T21:30:00.000Z"
+last_activity: 2026-04-29 -- v0.3.2 shipped to Hex.pm; Phase 18 complete; DELIV-04 closed
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 5
   total_plans: 11
-  completed_plans: 9
-  percent: 82
+  completed_plans: 11
+  percent: 100
 ---
 
 # Project State
@@ -18,20 +18,20 @@ progress:
 ## Project Reference
 
 **Core Value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current Focus:** Phase --phase — 17
+**Current Focus:** Milestone v0.3 closed; ready for v0.4 milestone planning.
 
 ## Current Position
 
-Phase: --phase (17) — EXECUTING
-Plan: 1 of --name
-Status: Executing Phase --phase
-Last activity: 2026-04-29 -- Phase --phase execution started
+Phase: 18 — COMPLETE
+Plan: 2 of 2
+Status: Milestone v0.3 complete
+Last activity: 2026-04-29 -- v0.3.2 shipped to Hex.pm; Phase 18 complete; DELIV-04 closed
 
 ## Performance Metrics
 
-- **Cycle Time:** N/A (Milestone just started)
-- **Phase Completion:** N/A
-- **Requirement Coverage:** 2/2 mapped (100%) — RESEND-01/02 pending verification
+- **Cycle Time:** v0.3 milestone single-day cycle (2026-04-29 start → 2026-04-29 ship)
+- **Phase Completion:** 5 of 5
+- **Requirement Coverage:** 10/10 — RESEND-01/02, MAILGUN-01/02/03, SES-01/02/03/04/05, DELIV-04 all Complete
 
 ## Accumulated Context
 
@@ -47,14 +47,22 @@ Last activity: 2026-04-29 -- Phase --phase execution started
 - D-29: Mailgun replay exits from `Mailglass.Webhook.Plug` as HTTP 200 before tenant resolution or ingest work begins.
 - D-30: Mailgun is a valid webhook router provider only when adopters opt in explicitly; the default route surface stays Postmark plus SendGrid.
 - D-31: `Mailglass.Webhook.Ingest` accepts Mailgun and derives durable provider event ids from the Mailgun token-backed metadata path.
+- D-32: Phase 18 recovery pattern locked — when CI fails on a Release Please tagged commit, never re-point the tag; land `fix:` commits and let RP cut the next patch (orphan tags are acceptable historical records).
 
 ### Blockers
 
-- Full `mix test` is currently failing outside Phase 14 in `test/mailglass/tracking/endpoint_resolution_test.exs:32`
+- (none active)
+
+### Carry-forward to next milestone
+
+- **Issue #25** — post-publish-smoke fresh-host install crashes on missing `:hackney` (Swoosh ApiClient default in Phoenix 1.8). Recommended fix: `mix mailglass.install` writes `config :swoosh, :api_client, false` (or Finch). v0.4 candidate.
+- **Issue #9** — chronic post-publish-smoke version-resolution bug. Sidestepped here via `workflow_dispatch tag=mailglass-v0.3.2`; structural fix still pending.
 
 ## Session Continuity
 
 - v0.3 milestone started 2026-04-29.
-- Phase 14 (Resend) implementation complete (plan 14-01 executed). Verification blocked by `test/mailglass/tracking/endpoint_resolution_test.exs:32` (unrelated to Resend).
+- Phase 14 (Resend) implementation complete (plan 14-01 executed). Verification finalized by Phase 17 (plug wiring + test fix) and Phase 18 PR #20 (Plug-level integration coverage).
 - Phase 15 (Mailgun) complete 2026-04-29 — all 4 plans executed and verified.
 - Phase 16 (SES) complete 2026-04-29 — all 4 plans executed and verified.
+- Phase 17 (Unblock & Verify Resend) complete 2026-04-29 — both plans executed.
+- Phase 18 (Ship v0.3.x) complete 2026-04-29 — shipped as v0.3.2 after 3-cycle CI recovery (PRs #20, #22 → #21 / 0.3.1 orphan; #23 → #24 / 0.3.2 shipped). DELIV-04 marked Complete; smoke contract gap (Issue #25) tracked for v0.4.

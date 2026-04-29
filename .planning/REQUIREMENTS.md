@@ -3,8 +3,8 @@
 ## Active
 
 ### Resend
-- [ ] **RESEND-01**: Webhook plug verifies Svix HMAC-SHA256 signature using `svix-id`, `svix-timestamp`, and raw request body.
-- [ ] **RESEND-02**: Webhook maps Resend events (delivered, bounced, complained) to `mailglass` normalized taxonomy.
+- [x] **RESEND-01**: Webhook plug verifies Svix HMAC-SHA256 signature using `svix-id`, `svix-timestamp`, and raw request body.
+- [x] **RESEND-02**: Webhook maps Resend events (delivered, bounced, complained) to `mailglass` normalized taxonomy.
 
 ### Mailgun
 - [x] **MAILGUN-01**: Webhook plug verifies HMAC-SHA256 signature using `timestamp`, `token`, and webhook signing key.
@@ -31,8 +31,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RESEND-01 | Phase 14 (implemented), Phase 17 (verification) | Pending |
-| RESEND-02 | Phase 14 (implemented), Phase 17 (verification) | Pending |
+| RESEND-01 | Phase 14 (implemented), Phase 17 (verification), Phase 18 (Plug-level integration test added in PR #20) | Complete |
+| RESEND-02 | Phase 14 (implemented), Phase 17 (verification), Phase 18 (Plug-level integration test added in PR #20) | Complete |
 | MAILGUN-01 | Phase 15 | Complete |
 | MAILGUN-02 | Phase 15 | Complete |
 | MAILGUN-03 | Phase 15 | Complete |
@@ -41,4 +41,4 @@
 | SES-03 | Phase 16 | Complete |
 | SES-04 | Phase 16 | Complete |
 | SES-05 | Phase 16 | Complete |
-| DELIV-04 | Phase 18 | Pending |
+| DELIV-04 | Phase 18 | Complete |
