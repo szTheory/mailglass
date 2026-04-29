@@ -182,6 +182,50 @@ defmodule Mailglass.WebhookFixtures do
     File.read!(Path.join([@fixture_root, "resend", name <> ".json"]))
   end
 
+  @doc """
+  Loads `test/support/fixtures/webhooks/mailgun/\#{name}.json` as raw bytes.
+  """
+  @spec load_mailgun_fixture(String.t()) :: binary()
+  def load_mailgun_fixture(name) when is_binary(name) do
+    File.read!(Path.join([@fixture_root, "mailgun", name <> ".json"]))
+  end
+
+  @doc """
+  Injects a Mailgun `signature` object into a raw payload-only fixture.
+
+  Options:
+
+    * `:timestamp` - Unix timestamp string or integer. Defaults to current time.
+    * `:token` - webhook token used for both signature replay identity and HMAC payload.
+  """
+  @spec sign_mailgun_payload(binary(), binary(), keyword()) :: binary()
+  def sign_mailgun_payload(raw_body, signing_key, opts)
+      when is_binary(raw_body) and is_binary(signing_key) and is_list(opts) do
+    timestamp =
+      case Keyword.get(opts, :timestamp, System.system_time(:second)) do
+        value when is_integer(value) -> Integer.to_string(value)
+        value when is_binary(value) -> value
+      end
+
+    token =
+      Keyword.get_lazy(opts, :token, fn ->
+        "mailgun-token-" <> Integer.to_string(System.unique_integer([:positive]))
+      end)
+
+    signature =
+      :crypto.mac(:hmac, :sha256, signing_key, timestamp <> token)
+      |> Base.encode16(case: :lower)
+
+    raw_body
+    |> Jason.decode!()
+    |> Map.put("signature", %{
+      "timestamp" => timestamp,
+      "token" => token,
+      "signature" => signature
+    })
+    |> Jason.encode!()
+  end
+
   @doc "Absolute path to the webhook fixtures root (for `File.ls!/1` in tests)."
   @spec fixture_root() :: String.t()
   def fixture_root, do: @fixture_root
