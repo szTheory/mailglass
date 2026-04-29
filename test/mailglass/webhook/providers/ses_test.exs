@@ -1,16 +1,22 @@
+defmodule Mailglass.HTTPCStub do
+  @moduledoc false
+  # Minimal :httpc stub for SubscriptionConfirmation tests.
+  # Returns HTTP 200 for any GET request, avoiding real network calls.
+  def request(:get, _url_req, _http_opts, _opts),
+    do: {:ok, {{"HTTP/1.1", 200, "OK"}, [], ""}}
+end
+
 defmodule Mailglass.Webhook.Providers.SESTest do
   use Mailglass.WebhookCase, async: false
 
-  import ExUnit.CaptureLog
-
-  alias Mailglass.{ConfigError, SignatureError}
+  alias Mailglass.SignatureError
   alias Mailglass.Events.Event
   alias Mailglass.Webhook.Providers.SES
   alias Mailglass.Webhook.Providers.SES.CertCache
 
   @cert_url "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-test.pem"
-  @topic_arn "arn:aws:sns:us-east-1:123456789012:ses-events"
   @config %{cert_cache_ttl_seconds: 86_400}
+  @config_with_httpc_stub %{cert_cache_ttl_seconds: 86_400, httpc_client: Mailglass.HTTPCStub}
 
   # SNS signable fields (byte-sorted alphabetical) for Notification:
   # Message, MessageId, Subject (if present), Timestamp, TopicArn, Type
@@ -108,10 +114,10 @@ defmodule Mailglass.Webhook.Providers.SESTest do
       CertCache.put(@cert_url, public_key, future)
 
       raw = sign_fixture(load_ses_fixture("subscription_confirmation"), private_key)
-      # :httpc call is made during subscription_confirmed; stub it or mock it in later wave.
-      # For Wave 0: test that the function signature compiles and the describe block exists.
-      # Implementation is Wave 2/Plan 03 — this test will fail until then (RED state).
-      assert {:ok, :control_plane, :subscription_confirmed} = SES.verify!(raw, [], @config)
+      # Use @config_with_httpc_stub to inject Mailglass.HTTPCStub instead of real :httpc,
+      # preventing network I/O to AWS during tests (D-07 compliant constructed URL).
+      assert {:ok, :control_plane, :subscription_confirmed} =
+               SES.verify!(raw, [], @config_with_httpc_stub)
     end
 
     test "returns {:ok, :control_plane, :unsubscribe_confirmed} for UnsubscribeConfirmation" do
