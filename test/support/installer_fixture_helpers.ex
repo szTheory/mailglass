@@ -88,6 +88,7 @@ defmodule Mailglass.Test.InstallerFixtureHelpers do
     |> normalize_migration_ts()
     |> normalize_last_run_at()
     |> normalize_secret()
+    |> normalize_installer_version()
     |> String.trim()
   end
 
@@ -114,10 +115,19 @@ defmodule Mailglass.Test.InstallerFixtureHelpers do
     |> normalize_migration_ts()
     |> normalize_last_run_at()
     |> normalize_secret()
+    |> normalize_installer_version()
   end
 
   defp normalize_last_run_at(snapshot) do
     Regex.replace(~r/(last_run_at = ")[^"]+(")/, snapshot, "\\1<LAST_RUN_AT>\\2")
+  end
+
+  defp normalize_installer_version(snapshot) do
+    Regex.replace(
+      ~r/(installer_version\s*=\s*")\d+\.\d+\.\d+[^"]*(")/,
+      snapshot,
+      "\\1<INSTALLER_VERSION>\\2"
+    )
   end
 
   defp ensure_host_skeleton!(fixture_root) do

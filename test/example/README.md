@@ -12,7 +12,7 @@ Refresh both snapshots with:
 <!-- GOLDEN_FRESH_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:4cba18c3446d78a2afd2ddd36fd1f73d42296cae8695b904b1dbe0bf6e4ab57d
+- .mailglass.toml sha256:2eb67153858109cfc1ea31f6bd136d61d45de0ca61f63ed66ad4454d5d84b015
 - config/runtime.exs sha256:2cc43bcd5ede9de69f9b6dcfb5b57e2474b81fdd01b084637342598fa2845c93
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
@@ -31,7 +31,7 @@ Refresh both snapshots with:
 
 
 @@ .mailglass.toml
-installer_version = "0.3.0"
+installer_version = "<INSTALLER_VERSION>"
 last_run_at = "<LAST_RUN_AT>"
 
 [paths]
@@ -169,7 +169,7 @@ end
 <!-- GOLDEN_NO_ADMIN_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:bc01c1402ef4e7c86e28fc8d19c350b7fa67faf8aeda4e7f36aeee747321f788
+- .mailglass.toml sha256:aec16ba421bc8a80613ad651d490fb0bfbbe71e6c5fc715f08904884ad3cf76a
 - config/runtime.exs sha256:2cc43bcd5ede9de69f9b6dcfb5b57e2474b81fdd01b084637342598fa2845c93
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
@@ -188,7 +188,7 @@ end
 
 
 @@ .mailglass.toml
-installer_version = "0.3.0"
+installer_version = "<INSTALLER_VERSION>"
 last_run_at = "<LAST_RUN_AT>"
 
 [paths]
