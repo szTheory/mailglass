@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1](https://github.com/szTheory/mailglass/compare/mailglass-v0.3.0...mailglass-v0.3.1) (2026-04-29)
+
+
+### Bug Fixes
+
+* **dialyzer:** match SNS test-helper specs to success typing (CI test-env) ([#22](https://github.com/szTheory/mailglass/issues/22)) ([67f5961](https://github.com/szTheory/mailglass/commit/67f5961a5233649d2953594e33b4bf5738d3f5ab))
+* **release:** unblock v0.3.1 CI for Hex publish ([#20](https://github.com/szTheory/mailglass/issues/20)) ([7269059](https://github.com/szTheory/mailglass/commit/726905976432b50d3349cd7b8a0d7941978a73f8))
+
 ## [0.3.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.2.0...mailglass-v0.3.0) (2026-04-29)
 
 
