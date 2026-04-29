@@ -1,0 +1,10 @@
+{
+  "Type": "Notification",
+  "MessageId": "sns-msg-id-event-failed",
+  "TopicArn": "arn:aws:sns:us-east-1:123456789012:ses-events",
+  "Timestamp": "2026-04-01T12:00:00.000Z",
+  "SignatureVersion": "1",
+  "Signature": "PLACEHOLDER_REPLACED_AT_TEST_RUNTIME",
+  "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-test.pem",
+  "Message": "{\"eventType\":\"Rendering Failure\",\"mail\":{\"messageId\":\"ses-evt-failed\",\"source\":\"sender@example.com\",\"sendingAccountId\":\"123456789012\",\"destination\":[\"dest@example.com\"]},\"failure\":{\"errorMessage\":\"Couldn't render the template.\",\"templateName\":\"MyTemplate\"}}"
+}
