@@ -70,11 +70,13 @@ defmodule Mailglass.Webhook.Providers.Resend do
   end
 
   defp verify_timestamp(timestamp, tolerance) do
-    with {timestamp_int, ""} <- Integer.parse(timestamp) do
-      diff = abs(System.system_time(:second) - timestamp_int)
-      if diff <= tolerance, do: :ok, else: {:error, :timestamp_skew}
-    else
-      _ -> {:error, :malformed_timestamp}
+    case Integer.parse(timestamp) do
+      {timestamp_int, ""} ->
+        diff = abs(System.system_time(:second) - timestamp_int)
+        if diff <= tolerance, do: :ok, else: {:error, :timestamp_skew}
+
+      _ ->
+        {:error, :malformed_timestamp}
     end
   end
 

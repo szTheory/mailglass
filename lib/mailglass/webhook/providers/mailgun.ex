@@ -186,7 +186,9 @@ defmodule Mailglass.Webhook.Providers.Mailgun do
   defp map_event(%{"event" => "unsubscribed"}), do: {:unsubscribed, nil}
 
   defp map_event(%{"event" => "failed", "severity" => "temporary"}), do: {:deferred, nil}
-  defp map_event(%{"event" => "failed", "severity" => "permanent", "reason" => "bounce"}), do: {:bounced, :bounced}
+
+  defp map_event(%{"event" => "failed", "severity" => "permanent", "reason" => "bounce"}),
+    do: {:bounced, :bounced}
 
   defp map_event(%{"event" => "failed", "severity" => "permanent"} = event_data) do
     reason = event_data["reason"] |> map_reject_reason()
@@ -203,13 +205,22 @@ defmodule Mailglass.Webhook.Providers.Mailgun do
   defp map_event(_other), do: {:unknown, nil}
 
   defp map_reject_reason(reason) when reason in ["generic", "bounce"], do: :bounced
-  defp map_reject_reason(reason) when reason in ["suppress-bounce", "suppress-complaint"], do: :blocked
+
+  defp map_reject_reason(reason) when reason in ["suppress-bounce", "suppress-complaint"],
+    do: :blocked
+
   defp map_reject_reason(reason) when reason in ["spam", "spamtrap"], do: :spam
-  defp map_reject_reason(reason) when reason in ["unsubscribe", "suppress-unsubscribe"], do: :unsubscribed
+
+  defp map_reject_reason(reason) when reason in ["unsubscribe", "suppress-unsubscribe"],
+    do: :unsubscribed
+
   defp map_reject_reason(_reason), do: :other
 
   defp stringify_timestamp(value) when is_integer(value), do: Integer.to_string(value)
-  defp stringify_timestamp(value) when is_float(value), do: :erlang.float_to_binary(value, [:compact])
+
+  defp stringify_timestamp(value) when is_float(value),
+    do: :erlang.float_to_binary(value, [:compact])
+
   defp stringify_timestamp(value) when is_binary(value), do: value
   defp stringify_timestamp(_value), do: nil
 

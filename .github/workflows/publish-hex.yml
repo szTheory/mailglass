@@ -80,8 +80,11 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: |
-          until pg_isready -h localhost -U postgres; do sleep 1; done
-          MIX_ENV=test mix ecto.create -r Mailglass.TestRepo --quiet
+          while ! pg_isready -h localhost -U postgres; do
+            sleep 1
+          done
+          export MIX_ENV=test
+          mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Install deps (admin)
         if: ${{ github.event.inputs.package != 'mailglass' }}
         working-directory: mailglass_admin

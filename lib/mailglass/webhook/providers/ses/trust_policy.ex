@@ -36,7 +36,15 @@ defmodule Mailglass.Webhook.Providers.SES.TrustPolicy do
   @spec valid_cert_url?(binary()) :: boolean()
   def valid_cert_url?(url) when is_binary(url) do
     case URI.parse(url) do
-      %URI{scheme: "https", host: host, port: port, userinfo: nil, fragment: nil, path: path, query: nil}
+      %URI{
+        scheme: "https",
+        host: host,
+        port: port,
+        userinfo: nil,
+        fragment: nil,
+        path: path,
+        query: nil
+      }
       when is_binary(host) and is_binary(path) and port in [nil, 443] ->
         Regex.match?(@cert_host_pattern, host) and String.ends_with?(path, ".pem")
 
