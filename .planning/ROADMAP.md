@@ -4,7 +4,7 @@
 
 - [ ] **Phase 14: Resend Webhook Provider & Core Ingest** - System securely ingests and normalizes Resend webhooks through a new provider behavior
 - [x] **Phase 15: Mailgun Webhook Provider** - System securely ingests and normalizes Mailgun webhooks while preventing replay attacks (completed 2026-04-29)
-- [ ] **Phase 16: SES Webhook Provider & SNS Cache** - System securely ingests and normalizes AWS SES (via SNS) webhooks with automatic subscription handling and certificate caching
+- [x] **Phase 16: SES Webhook Provider & SNS Cache** - System securely ingests and normalizes AWS SES (via SNS) webhooks with automatic subscription handling and certificate caching (completed 2026-04-29)
 
 ## Phase Details
 
@@ -52,10 +52,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 16-01-PLAN.md — Wave 0: test scaffolding, JSON fixtures, WebhookFixtures RSA helpers
-- [ ] 16-02-PLAN.md — Wave 1: TrustPolicy SSRF guard + ETS CertCache OTP trio
-- [ ] 16-03-PLAN.md — Wave 2: SES provider verify!/3 + SNS control-plane handling
-- [ ] 16-04-PLAN.md — Wave 3: normalize/2 + plug/router/application wiring + webhooks guide
+- [x] 16-01-PLAN.md — Wave 0: test scaffolding, JSON fixtures, WebhookFixtures RSA helpers
+- [x] 16-02-PLAN.md — Wave 1: TrustPolicy SSRF guard + ETS CertCache OTP trio
+- [x] 16-03-PLAN.md — Wave 2: SES provider verify!/3 + SNS control-plane handling
+- [x] 16-04-PLAN.md — Wave 3: normalize/2 + plug/router/application wiring + webhooks guide
 
 ## Progress
 
@@ -63,4 +63,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 14. Resend Webhook Provider & Core Ingest | 1/1 | Verification blocked | - |
 | 15. Mailgun Webhook Provider | 4/4 | Complete    | 2026-04-29 |
-| 16. SES Webhook Provider & SNS Cache | 0/4 | Not started | - |
+| 16. SES Webhook Provider & SNS Cache | 4/4 | Complete    | 2026-04-29 |

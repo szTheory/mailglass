@@ -12,11 +12,11 @@
 - [x] **MAILGUN-03**: Webhook maps Mailgun events to `mailglass` normalized taxonomy.
 
 ### SES
-- [ ] **SES-01**: Webhook plug parses SNS payloads arriving with `text/plain` Content-Type.
-- [ ] **SES-02**: System automatically performs HTTP GET to `SubscribeURL` upon receiving `SubscriptionConfirmation` events.
-- [ ] **SES-03**: Webhook plug verifies RSA-SHA1/SHA256 signatures using X.509 certificates fetched from AWS.
-- [ ] **SES-04**: X.509 certificates are fetched via `:httpc` and cached in `:ets` to avoid synchronous network I/O per webhook.
-- [ ] **SES-05**: Webhook maps SES events inside the SNS `Message` envelope to `mailglass` normalized taxonomy.
+- [x] **SES-01**: Webhook plug parses SNS payloads arriving with `text/plain` Content-Type.
+- [x] **SES-02**: System automatically performs HTTP GET to `SubscribeURL` upon receiving `SubscriptionConfirmation` events.
+- [x] **SES-03**: Webhook plug verifies RSA-SHA1/SHA256 signatures using X.509 certificates fetched from AWS.
+- [x] **SES-04**: X.509 certificates are fetched via `:httpc` and cached in `:ets` to avoid synchronous network I/O per webhook.
+- [x] **SES-05**: Webhook maps SES events inside the SNS `Message` envelope to `mailglass` normalized taxonomy.
 
 ## Future Requirements
 
@@ -36,8 +36,8 @@
 | MAILGUN-01 | Phase 15 | Complete |
 | MAILGUN-02 | Phase 15 | Complete |
 | MAILGUN-03 | Phase 15 | Complete |
-| SES-01 | Phase 16 | Pending |
-| SES-02 | Phase 16 | Pending |
-| SES-03 | Phase 16 | Pending |
-| SES-04 | Phase 16 | Pending |
-| SES-05 | Phase 16 | Pending |
+| SES-01 | Phase 16 | Complete |
+| SES-02 | Phase 16 | Complete |
+| SES-03 | Phase 16 | Complete |
+| SES-04 | Phase 16 | Complete |
+| SES-05 | Phase 16 | Complete |
