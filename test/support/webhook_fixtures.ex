@@ -209,7 +209,7 @@ defmodule Mailglass.WebhookFixtures do
   Since tests stub the CertCache directly (no `:httpc` call needed):
 
       {public_key, private_key} = generate_sns_keypair()
-      future = DateTime.add(DateTime.utc_now(), 86_400, :second)
+      future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
       CertCache.put(cert_url, public_key, future)
       raw = sign_fixture(raw_fixture_json, private_key)
       assert :ok = SES.verify!(raw, [], config)

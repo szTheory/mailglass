@@ -69,7 +69,7 @@ defmodule Mailglass.Webhook.Providers.SESTest do
   describe "verify!/3 SES SNS signature verification" do
     test "returns :ok for a valid Notification payload" do
       {public_key, private_key} = generate_sns_keypair()
-      future = DateTime.add(DateTime.utc_now(), 86_400, :second)
+      future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
       CertCache.put(@cert_url, public_key, future)
 
       raw = sign_fixture(load_ses_fixture("notification_delivery"), private_key)
@@ -78,7 +78,7 @@ defmodule Mailglass.Webhook.Providers.SESTest do
 
     test "raises :bad_signature for a tampered Notification payload" do
       {public_key, private_key} = generate_sns_keypair()
-      future = DateTime.add(DateTime.utc_now(), 86_400, :second)
+      future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
       CertCache.put(@cert_url, public_key, future)
 
       raw = sign_fixture(load_ses_fixture("notification_delivery"), private_key)
@@ -109,7 +109,7 @@ defmodule Mailglass.Webhook.Providers.SESTest do
   describe "verify!/3 SES SNS control-plane" do
     test "returns {:ok, :control_plane, :subscription_confirmed} for SubscriptionConfirmation" do
       {public_key, private_key} = generate_sns_keypair()
-      future = DateTime.add(DateTime.utc_now(), 86_400, :second)
+      future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
       CertCache.put(@cert_url, public_key, future)
 
       raw = sign_fixture(load_ses_fixture("subscription_confirmation"), private_key)
@@ -121,7 +121,7 @@ defmodule Mailglass.Webhook.Providers.SESTest do
 
     test "returns {:ok, :control_plane, :unsubscribe_confirmed} for UnsubscribeConfirmation" do
       {public_key, private_key} = generate_sns_keypair()
-      future = DateTime.add(DateTime.utc_now(), 86_400, :second)
+      future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
       CertCache.put(@cert_url, public_key, future)
 
       raw = sign_fixture(load_ses_fixture("unsubscribe_confirmation"), private_key)
