@@ -87,9 +87,22 @@ defmodule Mailglass.Webhook.Providers.SES do
 
   @impl Mailglass.Webhook.Provider
   @spec normalize(binary(), [{String.t(), String.t()}]) :: [Event.t()]
-  def normalize(_raw_body, _headers) do
-    # Stub — implemented in Plan 04
-    []
+  def normalize(raw_body, _headers) when is_binary(raw_body) do
+    with {:ok, sns_payload} <- Jason.decode(raw_body),
+         "Notification" <- Map.get(sns_payload, "Type"),
+         message_str when is_binary(message_str) <- Map.get(sns_payload, "Message"),
+         {:ok, ses_payload} <- Jason.decode(message_str) do
+      sns_message_id = Map.get(sns_payload, "MessageId", "unknown")
+      normalize_ses(ses_payload, sns_message_id)
+    else
+      {:error, _} ->
+        Logger.warning("[mailglass] SES normalize: malformed SNS envelope JSON")
+        []
+
+      _other ->
+        Logger.warning("[mailglass] SES normalize: unexpected SNS payload shape or non-Notification type")
+        []
+    end
   end
 
   # ---- Private: message type dispatch ----
@@ -311,4 +324,278 @@ defmodule Mailglass.Webhook.Providers.SES do
         Keyword.get(ses_env, :httpc_client, :httpc)
     end
   end
+
+  # ---- Private: SES normalization ----
+
+  defp normalize_ses(%{"notificationType" => type} = payload, sns_message_id) do
+    normalize_feedback(type, payload, sns_message_id)
+  end
+
+  defp normalize_ses(%{"eventType" => type} = payload, sns_message_id) do
+    normalize_event_publishing(type, payload, sns_message_id)
+  end
+
+  defp normalize_ses(_payload, _sns_message_id) do
+    Logger.warning("[mailglass] SES normalize: no notificationType or eventType found")
+    []
+  end
+
+  # ---- Classic SES feedback notifications (notificationType) ----
+
+  defp normalize_feedback("Bounce", payload, sns_message_id) do
+    bounce = Map.get(payload, "bounce", %{})
+    recipients = Map.get(bounce, "bouncedRecipients", [])
+    {type, reject_reason} = map_bounce(bounce)
+
+    recipients
+    |> Enum.with_index()
+    |> Enum.map(fn {recipient, idx} ->
+      email = recipient["emailAddress"]
+      provider_event_id = build_provider_event_id(sns_message_id, email, idx)
+
+      build_event(
+        payload,
+        sns_message_id,
+        type,
+        reject_reason,
+        provider_event_id,
+        email,
+        "Bounce",
+        %{
+          "bounce_type" => to_string_or_nil(get_in(payload, ["bounce", "bounceType"])),
+          "bounce_subtype" => to_string_or_nil(get_in(payload, ["bounce", "bounceSubType"]))
+        }
+      )
+    end)
+  end
+
+  defp normalize_feedback("Complaint", payload, sns_message_id) do
+    complaint = Map.get(payload, "complaint", %{})
+    recipients = Map.get(complaint, "complainedRecipients", [])
+
+    recipients
+    |> Enum.with_index()
+    |> Enum.map(fn {recipient, idx} ->
+      email = recipient["emailAddress"]
+      provider_event_id = build_provider_event_id(sns_message_id, email, idx)
+
+      build_event(
+        payload,
+        sns_message_id,
+        :complained,
+        nil,
+        provider_event_id,
+        email,
+        "Complaint",
+        %{"complaint_feedback_type" => to_string_or_nil(complaint["complaintFeedbackType"])}
+      )
+    end)
+  end
+
+  defp normalize_feedback("Delivery", payload, sns_message_id) do
+    delivery = Map.get(payload, "delivery", %{})
+    recipients = Map.get(delivery, "recipients", [])
+
+    recipients
+    |> Enum.with_index()
+    |> Enum.map(fn {email, idx} ->
+      provider_event_id = build_provider_event_id(sns_message_id, email, idx)
+
+      build_event(
+        payload,
+        sns_message_id,
+        :delivered,
+        nil,
+        provider_event_id,
+        email,
+        "Delivery",
+        %{}
+      )
+    end)
+  end
+
+  defp normalize_feedback(other, _payload, _sns_message_id) do
+    Logger.warning("[mailglass] Unmapped SES notificationType: #{inspect(other)}")
+    []
+  end
+
+  # ---- SES event publishing (eventType) ----
+
+  defp normalize_event_publishing("Bounce", payload, sns_message_id) do
+    bounce = Map.get(payload, "bounce", %{})
+    recipients = Map.get(bounce, "bouncedRecipients", [])
+    {type, reject_reason} = map_bounce(bounce)
+    mail = Map.get(payload, "mail", %{})
+
+    recipients
+    |> Enum.with_index()
+    |> Enum.map(fn {recipient, idx} ->
+      email = recipient["emailAddress"]
+      provider_event_id = build_provider_event_id(sns_message_id, email, idx)
+
+      build_event(
+        payload,
+        sns_message_id,
+        type,
+        reject_reason,
+        provider_event_id,
+        email,
+        "Bounce",
+        %{
+          "bounce_type" => to_string_or_nil(bounce["bounceType"]),
+          "bounce_subtype" => to_string_or_nil(bounce["bounceSubType"]),
+          "ses_message_id" => to_string_or_nil(mail["messageId"])
+        }
+      )
+    end)
+  end
+
+  defp normalize_event_publishing("Complaint", payload, sns_message_id) do
+    complaint = Map.get(payload, "complaint", %{})
+    recipients = Map.get(complaint, "complainedRecipients", [])
+    mail = Map.get(payload, "mail", %{})
+
+    recipients
+    |> Enum.with_index()
+    |> Enum.map(fn {recipient, idx} ->
+      email = recipient["emailAddress"]
+      provider_event_id = build_provider_event_id(sns_message_id, email, idx)
+
+      build_event(
+        payload,
+        sns_message_id,
+        :complained,
+        nil,
+        provider_event_id,
+        email,
+        "Complaint",
+        %{
+          "complaint_feedback_type" => to_string_or_nil(complaint["complaintFeedbackType"]),
+          "ses_message_id" => to_string_or_nil(mail["messageId"])
+        }
+      )
+    end)
+  end
+
+  defp normalize_event_publishing("Delivery", payload, sns_message_id) do
+    delivery = Map.get(payload, "delivery", %{})
+    recipients = Map.get(delivery, "recipients", [])
+    mail = Map.get(payload, "mail", %{})
+
+    recipients
+    |> Enum.with_index()
+    |> Enum.map(fn {email, idx} ->
+      provider_event_id = build_provider_event_id(sns_message_id, email, idx)
+
+      build_event(
+        payload,
+        sns_message_id,
+        :delivered,
+        nil,
+        provider_event_id,
+        email,
+        "Delivery",
+        %{"ses_message_id" => to_string_or_nil(mail["messageId"])}
+      )
+    end)
+  end
+
+  defp normalize_event_publishing(event_type, payload, sns_message_id) do
+    mail = Map.get(payload, "mail", %{})
+    destinations = Map.get(mail, "destination", [])
+
+    {type, reject_reason} = map_event_type(event_type)
+
+    if is_nil(type) do
+      # map_event_type returned nil (e.g. Subscription) — drop silently
+      []
+    else
+      destinations
+      |> Enum.with_index()
+      |> Enum.map(fn {email, idx} ->
+        provider_event_id = build_provider_event_id(sns_message_id, email, idx)
+
+        build_event(
+          payload,
+          sns_message_id,
+          type,
+          reject_reason,
+          provider_event_id,
+          email,
+          event_type,
+          %{"ses_message_id" => to_string_or_nil(mail["messageId"])}
+        )
+      end)
+    end
+  end
+
+  # ---- Shared event builder ----
+
+  defp build_event(payload, sns_message_id, type, reject_reason, provider_event_id, _email, record_type, extra_metadata) do
+    mail = Map.get(payload, "mail", %{})
+    ses_message_id = to_string_or_nil(mail["messageId"])
+
+    %Event{
+      type: type,
+      reject_reason: reject_reason,
+      metadata:
+        %{
+          "provider" => "ses",
+          "provider_event_id" => provider_event_id,
+          "record_type" => record_type,
+          "message_id" => ses_message_id,
+          "sns_message_id" => sns_message_id,
+          "ses_message_id" => ses_message_id
+        }
+        |> Map.merge(extra_metadata)
+    }
+  end
+
+  # ---- SES bounce mapping (D-17) ----
+
+  defp map_bounce(%{"bounceType" => "Permanent", "bounceSubType" => sub_type}) do
+    case sub_type do
+      sub when sub in ["Suppressed", "OnAccountSuppressionList", "UnsubscribedRecipient"] ->
+        {:rejected, :blocked}
+
+      _ ->
+        {:bounced, :bounced}
+    end
+  end
+
+  defp map_bounce(%{"bounceType" => "Transient"}), do: {:deferred, nil}
+  defp map_bounce(%{"bounceType" => "Undetermined"}), do: {:deferred, nil}
+  defp map_bounce(_), do: {:bounced, :bounced}
+
+  # ---- SES event publishing type mapping (D-14) ----
+
+  defp map_event_type("Send"), do: {:sent, nil}
+  defp map_event_type("Delivery"), do: {:delivered, nil}
+  defp map_event_type("Reject"), do: {:rejected, :other}
+  defp map_event_type("Complaint"), do: {:complained, nil}
+  defp map_event_type("Open"), do: {:opened, nil}
+  defp map_event_type("Click"), do: {:clicked, nil}
+  defp map_event_type("Rendering Failure"), do: {:failed, nil}
+  defp map_event_type("DeliveryDelay"), do: {:deferred, nil}
+  defp map_event_type("Subscription"), do: {nil, nil}
+
+  defp map_event_type(other) do
+    Logger.warning("[mailglass] Unmapped SES eventType: #{inspect(other)}")
+    {:unknown, nil}
+  end
+
+  # ---- Stable provider_event_id (D-16) ----
+
+  defp build_provider_event_id(sns_message_id, email, _idx) when is_binary(email) do
+    "#{sns_message_id}:#{email}"
+  end
+
+  defp build_provider_event_id(sns_message_id, _email, idx) do
+    "#{sns_message_id}:#{idx}"
+  end
+
+  # ---- Utility helpers ----
+
+  defp to_string_or_nil(nil), do: nil
+  defp to_string_or_nil(value), do: to_string(value)
 end

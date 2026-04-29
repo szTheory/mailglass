@@ -24,7 +24,6 @@ defmodule Mailglass.Webhook.Providers.SESTest do
   # Message, MessageId, SubscribeURL, Timestamp, Token, TopicArn, Type
 
   setup do
-    start_supervised!(CertCache.Supervisor)
     CertCache.reset()
     :ok
   end

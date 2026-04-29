@@ -81,7 +81,7 @@ defmodule Mailglass.Webhook.Plug do
   # Plan 06 ships the module.
   @compile {:no_warn_undefined, [Mailglass.Webhook.Ingest]}
 
-  @valid_providers [:postmark, :sendgrid, :mailgun]
+  @valid_providers [:postmark, :sendgrid, :mailgun, :ses]
 
   @impl Plug
   def init(opts) when is_list(opts) do
@@ -132,6 +132,17 @@ defmodule Mailglass.Webhook.Plug do
              status: :replay,
              duplicate: true,
              event_count: 0
+           }}
+
+        {:ok, :control_plane, outcome} ->
+          Logger.info("[mailglass] SNS control-plane: provider=#{provider} outcome=#{outcome}")
+          conn = send_resp(conn, 200, "")
+
+          {conn,
+           %{
+             provider: provider,
+             status: :control_plane,
+             outcome: outcome
            }}
 
         :ok ->
@@ -243,6 +254,14 @@ defmodule Mailglass.Webhook.Plug do
       timestamp_tolerance_seconds: env[:timestamp_tolerance_seconds] || 28_800,
       future_skew_seconds: env[:future_skew_seconds] || 300,
       replay_cache_ttl_seconds: env[:replay_cache_ttl_seconds] || 28_800
+    }
+  end
+
+  defp resolve_config!(:ses, _conn) do
+    env = Application.get_env(:mailglass, :ses, [])
+
+    %{
+      cert_cache_ttl_seconds: env[:cert_cache_ttl_seconds] || 86_400
     }
   end
 
@@ -372,4 +391,5 @@ defmodule Mailglass.Webhook.Plug do
   defp provider_module(:postmark), do: Mailglass.Webhook.Providers.Postmark
   defp provider_module(:sendgrid), do: Mailglass.Webhook.Providers.SendGrid
   defp provider_module(:mailgun), do: Mailglass.Webhook.Providers.Mailgun
+  defp provider_module(:ses), do: Mailglass.Webhook.Providers.SES
 end
