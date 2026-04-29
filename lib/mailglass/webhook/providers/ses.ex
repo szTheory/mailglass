@@ -233,6 +233,15 @@ defmodule Mailglass.Webhook.Providers.SES do
 
   # ---- Private: certificate fetching ----
 
+  # NOTE — cache-miss stampede: this is a check-then-act pattern. If N webhook
+  # requests arrive concurrently before the cert for a given URL is cached (cold
+  # start or after a TTL expiry), each caller independently sees :miss, issues its
+  # own :httpc request, and writes the result. ETS :insert is atomic so all writers
+  # converge on the same key; correctness is not affected. The impact is N
+  # simultaneous HTTP GETs to the SNS cert endpoint per cold burst — acceptable for
+  # the expected traffic pattern (one unique cert URL per SNS topic, rarely changes).
+  # If serialization is required in future, route the cache-miss path through a
+  # TableOwner GenServer call to serialize writers under the same cert URL.
   defp fetch_public_key!(cert_url, config) do
     case CertCache.fetch_public_key(cert_url) do
       {:ok, public_key} ->
