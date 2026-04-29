@@ -72,7 +72,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 17-01-PLAN.md — Plug wiring, test fix, and WebhookCase :resend infrastructure
+- [x] 17-01-PLAN.md — Plug wiring, test fix, and WebhookCase :resend infrastructure
 - [ ] 17-02-PLAN.md — Resend plug integration tests, fixture, and Phase 14 completion
 
 ### Phase 18: Ship v0.3.0
@@ -94,5 +94,5 @@ Plans:
 | 14. Resend Webhook Provider & Core Ingest | 1/1 | Verification blocked (implementation complete) | - |
 | 15. Mailgun Webhook Provider | 4/4 | Complete    | 2026-04-29 |
 | 16. SES Webhook Provider & SNS Cache | 4/4 | Complete    | 2026-04-29 |
-| 17. Unblock & Verify Resend | 0/2 | Not started | - |
+| 17. Unblock & Verify Resend | 1/2 | In progress | - |
 | 18. Ship v0.3.0 | 0/2 | Not started | - |
