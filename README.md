@@ -41,8 +41,8 @@ Add `mailglass` to your dependencies:
 # mix.exs
 def deps do
   [
-    {:mailglass, "~> 0.2"},
-    {:mailglass_admin, "~> 0.2", only: [:dev]}
+    {:mailglass, "~> 0.3"},
+    {:mailglass_admin, "~> 0.3", only: [:dev]}
   ]
 end
 ```
@@ -136,8 +136,8 @@ HTML/Text/Raw/Headers tabs, live-editable assigns.
 - **Normalized webhook events** — Anymail event taxonomy verbatim
   (`queued`, `sent`, `bounced`, `delivered`, `opened`, `clicked`,
   `complained`, `unsubscribed`, …) with `reject_reason` enum.
-  Postmark (Basic Auth + IP allowlist) and SendGrid (ECDSA) are
-  first-party in v0.2, and matched `:bounced`, `:complained`, and
+  Postmark, SendGrid, Mailgun, SES, and Resend are all shipped
+  first-party providers, and matched `:bounced`, `:complained`, and
   `:unsubscribed` events project suppressions automatically.
 - **Test assertions** — `assert_mail_sent/1`, `last_mail/0`,
   `wait_for_mail/1`, plus `MailerCase`, `WebhookCase`, `AdminCase`
@@ -155,8 +155,8 @@ HTML/Text/Raw/Headers tabs, live-editable assigns.
 
 | Package             | Status                   | What it is |
 |---------------------|--------------------------|------------|
-| `mailglass`         | v0.2 public surface      | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
-| `mailglass_admin`   | v0.2 (dev-preview only)  | Mountable LiveView preview in dev. Prod-mountable sent-mail inbox + event timeline + suppression UI arrive in v0.5. |
+| `mailglass`         | v0.3 public surface      | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
+| `mailglass_admin`   | v0.3 (dev-preview only)  | Mountable LiveView preview in dev. Prod-mountable sent-mail inbox + event timeline + suppression UI arrive in v0.5. |
 | `mailglass_inbound` | v0.5+                    | Inbound routing (Action Mailbox equivalent): recipient/subject/header matchers, ingress plugs per provider, storage adapters, Oban routing. |
 
 ## Roadmap
@@ -165,8 +165,8 @@ HTML/Text/Raw/Headers tabs, live-editable assigns.
   setter API, `mix mailglass.upgrade.v0_2`, message-stream policy,
   RFC 8058 unsubscribe, webhook-driven suppression projection, linked
   release hardening, and release-blocking Tier 1 docs.
-- **v0.5 — Deliverability + admin** — Mailgun/SES/Resend webhook verification,
-  prod-mountable admin, `mix mail.doctor` deliverability checks,
+- **v0.5 — Deliverability + admin** — prod-mountable admin,
+  `mix mail.doctor` deliverability checks,
   per-tenant adapter resolver, per-domain rate limiting.
 - **v1.0** — API stability lock, production references, long-lived
   deprecation policy.

@@ -4,12 +4,12 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    # Canonical fallback for v0.2.0 if the release event does not fan out:
+    # Canonical fallback for v0.3.0 if the release event does not fan out:
     # dispatch this workflow against the core release tag (e.g.
-    # `mailglass-v0.2.0`), not `main`.
+    # `mailglass-v0.3.0`), not `main`.
     inputs:
       tag:
-        description: "Git tag/ref to publish from (canonical fallback: mailglass-v0.2.0)"
+        description: "Git tag/ref to publish from (canonical fallback: mailglass-v0.3.0)"
         required: true
         type: string
       dry_run:
