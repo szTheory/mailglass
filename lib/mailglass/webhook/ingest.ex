@@ -367,6 +367,13 @@ defmodule Mailglass.Webhook.Ingest do
     extract_event_provider_id(first) || ""
   end
 
+  # Resend (Svix) sends one event per webhook with a stable `id` like
+  # "evt_..."; Phase 14 normalize/2 plumbs that into
+  # Event.metadata["provider_event_id"], same convention as Postmark.
+  defp derive_webhook_provider_event_id(:resend, _raw_body, [first | _]) do
+    extract_event_provider_id(first) || ""
+  end
+
   defp derive_webhook_provider_event_id(_provider, _raw_body, []), do: ""
 
   # Per revision W9 — Plans 02 + 03 normalize/2 emit STRING keys in
