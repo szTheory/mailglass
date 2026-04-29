@@ -36,18 +36,18 @@ defmodule Mailglass.Webhook.Router do
 
   ## Options
 
-    * `:providers` — list of provider atoms. v0.1 validated set:
-      `[:postmark, :sendgrid]` (default both). Unknown providers raise
-      `ArgumentError` at compile time — invalid config fails at
-      router-mount, not at request time (D-07).
+    * `:providers` — list of provider atoms. Validated set:
+      `[:postmark, :sendgrid, :mailgun]`. The default remains
+      `[:postmark, :sendgrid]`; Mailgun requires explicit opt-in.
+      Unknown providers raise `ArgumentError` at compile time — invalid
+      config fails at router-mount, not at request time (D-07).
     * `:as` — route helper prefix. Default `:mailglass_webhook` per
       CONTEXT D-08 (shared vocabulary lock with the Phase 5 admin
       mount). Each generated route's helper is `:"\#{as}_\#{provider}"`.
 
-  The provider list is locked at v0.1 per PROJECT D-10 — Mailgun/SES/Resend
-  land at v0.5. Additions to `@valid_providers` are minor-version API
-  extensions (additive); they do not break adopters already passing the
-  default.
+  The default mount surface remains stable even as `@valid_providers`
+  expands; additive providers must be explicitly listed by adopters when
+  they should become reachable.
 
   ## Endpoint wiring (separate from this macro)
 
@@ -68,8 +68,8 @@ defmodule Mailglass.Webhook.Router do
   at request time — the 500 is the diagnostic.
   """
 
-  @valid_providers [:postmark, :sendgrid]
-  @default_providers @valid_providers
+  @valid_providers [:postmark, :sendgrid, :mailgun]
+  @default_providers [:postmark, :sendgrid]
   @default_as :mailglass_webhook
 
   @doc """
@@ -96,8 +96,7 @@ defmodule Mailglass.Webhook.Router do
       unless p in @valid_providers do
         raise ArgumentError,
               "Mailglass.Webhook.Router: unknown provider #{inspect(p)} " <>
-                "(valid at v0.1: #{inspect(@valid_providers)}; " <>
-                "Mailgun/SES/Resend land in v0.5 per PROJECT D-10)"
+                "(valid: #{inspect(@valid_providers)})"
       end
     end)
 

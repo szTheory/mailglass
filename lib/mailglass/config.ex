@@ -280,6 +280,46 @@ defmodule Mailglass.Config do
         ]
       ]
     ],
+    mailgun: [
+      type: :keyword_list,
+      default: [],
+      doc: "Mailgun webhook configuration.",
+      keys: [
+        enabled: [
+          type: :boolean,
+          default: true,
+          doc: "Enable the Mailgun webhook route when explicitly mounted."
+        ],
+        signing_key: [
+          type: {:or, [:string, nil]},
+          default: nil,
+          doc:
+            "Mailgun webhook signing key used for HMAC verification. Required " <>
+              "for signature verification; omit only if the provider is disabled."
+        ],
+        timestamp_tolerance_seconds: [
+          type: :pos_integer,
+          default: 28_800,
+          doc:
+            "Maximum accepted age for the Mailgun signature timestamp in " <>
+              "seconds. Default: `28_800`."
+        ],
+        future_skew_seconds: [
+          type: :pos_integer,
+          default: 300,
+          doc:
+            "Maximum accepted future skew for the Mailgun signature " <>
+              "timestamp in seconds. Default: `300`."
+        ],
+        replay_cache_ttl_seconds: [
+          type: :pos_integer,
+          default: 28_800,
+          doc:
+            "Replay cache retention window for Mailgun tokens in seconds. " <>
+              "Default: `28_800`."
+        ]
+      ]
+    ],
     # Phase 4 CONTEXT D-11 / revision B2. `:sync` is the v0.1 locked
     # ingest mode — the webhook Plug runs `Mailglass.Webhook.Ingest`
     # inline and responds 200 only after the Multi commits. `:async` is
