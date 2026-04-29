@@ -4,12 +4,16 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
-## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v0.1.1...mailglass_admin-v0.2.0) (2026-04-28)
+## [0.3.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v0.2.0...mailglass_admin-v0.3.0) (2026-04-29)
 
+`mailglass_admin` 0.3.0 stays version-paired with `mailglass` 0.3.0. There is
+no admin-only migration story in this release; bump the sibling packages
+together and take the updated core webhook/docs surface as a coordinated cut.
 
-### Miscellaneous Chores
+### Changed
 
-* **mailglass_admin:** Synchronize mailglass-sibling-group versions
+- The preview package stays aligned to the core `0.3.0` release line and its
+  maintainer-written release narrative.
 
 ## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v0.1.1...mailglass_admin-v0.2.0) (2026-04-28)
 

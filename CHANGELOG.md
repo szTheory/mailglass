@@ -5,12 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.1.1...mailglass-v0.2.0) (2026-04-28)
+## [0.3.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.2.0...mailglass-v0.3.0) (2026-04-29)
 
+Mailglass 0.3.0 is the webhook-coverage-complete release. If you already ship
+on `~> 0.2`, this cut is for teams that want the full first-party webhook
+ingest story across Postmark, SendGrid, Mailgun, SES, and Resend without taking
+on a new migration or codemod path first.
 
-### Documentation
+This is not a `0.2.0`-style migration release. There is no urgent codemod, no
+special rollback procedure, and no new "rewrite your mailables first" story to
+absorb before upgrading.
 
-* document release-as recovery flow ([2272e72](https://github.com/szTheory/mailglass/commit/2272e72c7ef9fa1d2a193a612b0650e5fe4c53a1))
+### Added
+
+- First-party Resend webhook verification and normalization docs, including the
+  raw-body `CachingBodyReader` requirement and explicit opt-in route/config
+  examples.
+- Public release guidance for the now-shipped Mailgun, SES, and Resend webhook
+  providers so the adopter-facing docs match the provider surface that is
+  already in the library.
+
+### Changed
+
+- The webhook guide, README positioning, and release runbook now all describe
+  `0.3.0` as the release where webhook provider coverage is complete.
+- Release fallback examples now use the real `mailglass-v0.3.0` tag path
+  instead of stale `0.2.0` examples.
+
+### Fixed
+
+- Removed duplicate generated `0.2.0` changelog clutter so the current release
+  history reads like a maintainer-owned narrative instead of a mixed generated
+  stub plus curated entry.
 
 ## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.1.1...mailglass-v0.2.0) (2026-04-28)
 

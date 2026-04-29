@@ -3,8 +3,9 @@
 This guide walks through mounting Mailglass webhook ingest in your
 Phoenix app. Mailglass ships first-party verifiers for Postmark (Basic
 Auth), SendGrid (ECDSA P-256), and Mailgun (HMAC-SHA256 over the JSON
-body's `signature.timestamp <> signature.token`). SES and Resend land
-later behind the same internal `Mailglass.Webhook.Provider` behaviour.
+body's `signature.timestamp <> signature.token`). SES (RSA-signed SNS)
+and Resend (Svix-style HMAC) are also shipped providers behind the same
+`Mailglass.Webhook.Provider` behaviour.
 
 ## 1. Install + endpoint wiring
 
@@ -60,18 +61,21 @@ This generates two POST routes, each handled by
   * `POST /webhooks/postmark`
   * `POST /webhooks/sendgrid`
 
-Mailgun stays off the default zero-arg mount. Opt in explicitly:
+Mailgun, SES, and Resend stay off the default zero-arg mount. Opt in
+explicitly:
 
 ```elixir
 scope "/", MyAppWeb do
   pipe_through :mailglass_webhooks
-  mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun]
+  mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun, :ses, :resend]
 end
 ```
 
 That adds:
 
   * `POST /webhooks/mailgun`
+  * `POST /webhooks/ses`
+  * `POST /webhooks/resend`
 
 ### Step 3 — Configure provider credentials
 
@@ -176,6 +180,39 @@ your endpoint is reachable. No manual confirmation step is required.
 | Click | `:clicked` | Requires click tracking enabled on config set |
 | Rendering Failure | `:failed` | Template rendering error |
 | DeliveryDelay | `:deferred` | Transient delivery delay |
+
+### Resend setup
+
+> **Resend is an explicit opt-in provider.** It does not appear in the default
+> route surface. Add `:resend` to your `:providers` list when mounting webhook
+> routes.
+
+```elixir
+mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :resend]
+```
+
+```elixir
+config :mailglass, :resend,
+  enabled: true,
+  secret: System.fetch_env!("RESEND_WEBHOOK_SECRET"),
+  timestamp_tolerance_seconds: 300
+```
+
+The secret must look like `whsec_...`. Mailglass verifies the Svix headers
+`svix-id`, `svix-timestamp`, and `svix-signature` against the exact raw request
+body, so `Mailglass.Webhook.CachingBodyReader` is required at the endpoint
+boundary before JSON parsing happens.
+
+Resend currently normalizes these event types into the public Mailglass event
+taxonomy:
+
+| Resend event | Normalized type |
+|--------------|-----------------|
+| `email.sent` | `:sent` |
+| `email.delivered` | `:delivered` |
+| `email.delivery_delayed` | `:deferred` |
+| `email.bounced` | `:bounced` |
+| `email.complained` | `:complained` |
 
 ## 2. Multi-tenant patterns
 

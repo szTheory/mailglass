@@ -102,10 +102,9 @@ window before the published artifact becomes permanent.
    `prepublish-summary` job per D-15) BEFORE clicking Approve. Verify the
    file count, total size, CHANGELOG excerpt, and top files all match
    expectations.
-   If the Release Please tag/release exists but `publish-hex` did not fan out,
-   use `workflow_dispatch` on `.github/workflows/publish-hex.yml` with the
-   known core tag (for `0.2.0`: `mailglass-v0.2.0`) instead of improvising a
-   separate publish path or dispatching from `main`.
+   - **Package order:** The workflow guarantees `mailglass` (core) publishes first, then `mailglass_admin` publishes against the newly live core.
+   - **Idempotency:** Both publish steps check `mix hex.info` first and skip the publish command if the version is already live, making the workflow safe to retry.
+   - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=both` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag (for `0.3.0`: `mailglass-v0.3.0`) so the publish run is pinned to the exact commit Release Please tagged.
 4. **Within 60 minutes of publish: smoke-install in a fresh Phoenix app.**
    Set a literal timer when approving the deployment.
    Run:
@@ -113,7 +112,7 @@ window before the published artifact becomes permanent.
        mix archive.install hex phx_new --force
        mix phx.new sandbox --no-ecto --no-mailer --install
        cd sandbox
-       # add {:mailglass, "~> 0.2"}, {:mailglass_admin, "~> 0.2"} to deps
+       # add {:mailglass, "~> 0.3"}, {:mailglass_admin, "~> 0.3"} to deps
        mix deps.get && mix mailglass.install && mix compile --warnings-as-errors
        mix phx.server  # visit http://localhost:4000/dev/mail/
 
