@@ -552,6 +552,13 @@ defmodule Mailglass.Webhook.Providers.SES do
 
   # ---- Shared event builder ----
 
+  # _email is intentionally discarded here. The recipient address is embedded in
+  # provider_event_id ("#{sns_message_id}:#{email}") and is recoverable from that
+  # field for deduplication and orphan reconciliation. Storing it in a separate
+  # metadata key would duplicate PII inside the persisted Event record without
+  # adding lookup value — telemetry emission never touches metadata, so the PII
+  # policy does not apply to the DB path, but we keep the field absent to keep the
+  # schema minimal and consistent across all normalizers.
   defp build_event(payload, sns_message_id, type, reject_reason, provider_event_id, _email, record_type, extra_metadata) do
     mail = Map.get(payload, "mail", %{})
     ses_message_id = to_string_or_nil(mail["messageId"])
