@@ -161,8 +161,7 @@ your endpoint is reachable. No manual confirmation step is required.
 > sources pointing to the same topic, you will receive duplicate events per message.
 > The `(provider, provider_event_id)` uniqueness constraint prevents duplicate rows in
 > the event ledger, but each source still produces an ingest attempt. Point only one
-> SES notification source at each SNS topic unless you intentionally want both signals
-> (D-18).
+> SES notification source at each SNS topic unless you intentionally want both signals.
 
 #### Supported SES events
 
@@ -353,7 +352,7 @@ own 2 s statement timeout (see §7) bounds ingest latency.
 
 ### Auto-suppression behavior
 
-Mailglass v0.2 projects suppressions automatically after a verified
+Mailglass v0.3 projects suppressions automatically after a verified
 webhook event is matched to a delivery:
 
 - `:complained` -> address-wide suppression
