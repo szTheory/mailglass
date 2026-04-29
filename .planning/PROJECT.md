@@ -10,7 +10,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**Shipped: v0.2.0 on Hex.pm (2026-04-28). Phase 16 (SES webhook provider + SNS cert cache) complete 2026-04-29.**
+**v0.2.0 shipped 2026-04-28. Milestone v0.3 "Webhook Coverage Complete" started 2026-04-29.**
 
 - `mailglass` 0.2.0 — https://hex.pm/packages/mailglass/0.2.0
 - `mailglass_admin` 0.2.0 — https://hex.pm/packages/mailglass_admin/0.2.0
@@ -40,30 +40,25 @@ v0.1 milestone closed 2026-04-26. 8 phases (7 planned + 1 inserted), 61 plans, 8
 - Phase 4 standard-depth review WR-01..WR-06 (none block)
 - Adopter feedback: Mailable API exposes too much Swoosh — v0.2 design discussion candidate
 
-## Current Milestone: v0.2 Production-Credible Core
+## Current Milestone: v0.3 Webhook Coverage Complete
 
-**Goal:** Lock mailglass's public API for downstream OSS dependencies, ship the RFC 8058 + auto-suppression deliverability floor that makes "batteries-included" load-bearing, and close v0.1.1 release-engineering debt so the publish pipeline is trustworthy for sibling-version coordinated releases.
+**Goal:** Unblock and verify the Resend webhook provider, completing DELIV-04 coverage across all five major providers (Postmark, SendGrid, Mailgun, SES, Resend), then publish v0.3.0 to Hex.
 
-**Driving constraint:** Other OSS libraries (e.g. `accrue`) are about to depend on mailglass. Locking the public API NOW is the highest-leverage move; every breaking change after v0.2 multiplies cost across downstream pinners.
+**Target features:**
 
-**Target features (3 pillars):**
+- **Resend verification** — Fix test suite blocker; verify RESEND-01 (Svix HMAC-SHA256 signature verification using `svix-id`, `svix-timestamp`, and raw request body) and RESEND-02 (event normalization to Anymail taxonomy); confirm Phase 14 complete.
+- **v0.3.0 release** — CHANGELOG, webhooks.md Resend section, `mix mailglass.publish.check`, Hex publish ceremony.
 
-- **API stability** — Mailable redesign hides Swoosh; native `Mailglass.Message` field setters (`to/2`, `from/2`, `subject/2`, `body/2`, `header/3`, `attach/2`, etc.); `update_swoosh/2` retained as documented escape hatch (per domain-language guide §3, intentional not default); `api_stability.md` v2 with explicit public-surface freeze; `mix mailglass.upgrade.v0_2` codemod task; deprecation warnings on v0.1 paths (one-cycle BC for `~> 0.1` adopters).
-- **Deliverability floor** — Message-stream separation enforced (`:transactional`/`:operational`/`:bulk`) at compile + runtime; RFC 8058 List-Unsubscribe + List-Unsubscribe-Post auto-injected on `:bulk` (opt-in on `:operational`) with both inside DKIM `h=`; signed-token unsubscribe controller (`Phoenix.Token` rotation) + `mix mailglass.gen.unsubscribe`; auto-suppression on `:bounced`/`:complained`/`:unsubscribed` events with configurable soft-bounce escalation; `mix mailglass.suppressions.resync`; stable Feedback-ID format `{sender_id}:{mailable}:{tenant_id}:{stream}`.
-- **Release-engineering hardening** — Close 9 v0.1.2 TODOs (HexDocs `CLAUDE.md` exclusion; tag-push trigger on `publish-hex.yml` + `post-publish-smoke.yml`; installer-goldens wired into `mix mailglass.publish.check`; `verify.phase_NN` semantic rename; internal D-NN/LINT-NN strip from public guides; Advisory Matrix DB-setup + 1.17 fixes; managed-snippet drift detection); re-tighten Tests gate to halt-on-failure; `Credo --strict`; `Dialyzer --halt-exit-status` triage budget.
-
-**Phase shape:** 6 phases (Phase 8 → Phase 13), continuing numbering from v0.1's last phase 07.1. Plan count estimate: 30–40. Calendar pace similar to v0.1.
+**Phase shape:** 2 phases (Phase 17 → Phase 18), continuing numbering from Phase 16.
 
 **Explicit deferrals:**
 
-- **v0.3** — DELIV-04 webhook coverage (Mailgun + SES + Resend) as a focused single-purpose milestone
-- **v0.5** — DELIV-05 prod-mountable admin LiveView + DELIV-06 `mix mail.doctor` + DELIV-07 per-tenant adapter resolver + DELIV-08/09/10 polish
+- **v0.4** — DELIV-05 prod-mountable admin LiveView + DELIV-06 `mix mail.doctor` + DELIV-07 per-tenant adapter resolver + DX polish (`mix mailglass.gen.mailable`, richer test helpers)
 - **v0.5+** — `mailglass_inbound` separate sibling package (Action Mailbox equivalent)
 
-## Next Milestone Goals (post-v0.2)
+## Next Milestone Goals (post-v0.3)
 
-- **v0.3 Webhook Coverage Expansion** — DELIV-04: Mailgun (HMAC-SHA256), SES (SNS subscription confirmation + signature), Resend (provider-specific signing). Closes "batteries-included webhook coverage" claim across the major Anymail providers.
-- **v0.5 Deliverability + Admin** — DELIV-05 (prod-mountable admin LiveView with sent-mail browser, event timeline, suppression UI, replay webhook, step-up auth on destructive actions); DELIV-06 (`mix mail.doctor` — DNS deliverability checks: SPF, DKIM, DMARC, MX, BIMI); DELIV-07 (per-tenant adapter resolver); DELIV-08 (cluster-coordinated rate limit via `:pg`); DELIV-09 (DKIM signing helper for self-hosted SMTP); DELIV-10 polish.
+- **v0.4 Operator Confidence** — DELIV-05 prod-mountable admin LiveView (sent-mail browser, event timeline per delivery, suppression management UI, webhook replay, step-up auth on destructive actions); DELIV-06 (`mix mail.doctor` — DNS deliverability checks: SPF, DKIM, DMARC, MX, BIMI); DELIV-07 (per-tenant adapter resolver); DX polish (`mix mailglass.gen.mailable` scaffold generator, richer test assertion helpers, webhook troubleshooting guide).
 - **v0.5+ Inbound** — `mailglass_inbound` separate sibling package (Action Mailbox equivalent: Router DSL, Mailbox behaviour, ingress plugs for Postmark/SendGrid/Mailgun/SES, SMTP relay via `gen_smtp`, async routing via Oban, dev Conductor LiveView).
 
 ## Core Value
@@ -103,7 +98,7 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 
 ## Active
 
-**v0.3 Requirements gathering in progress.**
+**v0.3 requirements defined. RESEND-01/02 pending verification — Phase 14 implementation complete, blocked on test suite fix.**
 
 ## Out of Scope
 
@@ -211,5 +206,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-04-28 — v0.2 milestone "Production-Credible Core" complete.*
-ion" started.*
+*Last updated: 2026-04-29 — v0.3 milestone "Webhook Coverage Complete" started.*
