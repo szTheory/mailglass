@@ -119,7 +119,7 @@ defmodule Mailglass.Webhook.Ingest do
   @spec ingest_multi(atom(), binary(), [Event.t()]) ::
           {:ok, map()} | {:error, term()}
   def ingest_multi(provider, raw_body, events)
-      when provider in [:postmark, :sendgrid, :mailgun] and is_binary(raw_body) and
+      when provider in [:postmark, :sendgrid, :mailgun, :resend] and is_binary(raw_body) and
              is_list(events) do
     # Tenancy.tenant_id!/0 is the fail-loud accessor — raises %TenancyError{:unstamped}
     # when the process-dict key is absent. Unlike Tenancy.current/0 (which falls back
@@ -364,6 +364,13 @@ defmodule Mailglass.Webhook.Ingest do
   # Mailgun replay and ingest both key off the webhook token surfaced in
   # Event.metadata["provider_event_id"].
   defp derive_webhook_provider_event_id(:mailgun, _raw_body, [first | _]) do
+    extract_event_provider_id(first) || ""
+  end
+
+  # Resend (Svix) sends one event per webhook with a stable `id` like
+  # "evt_..."; Phase 14 normalize/2 plumbs that into
+  # Event.metadata["provider_event_id"], same convention as Postmark.
+  defp derive_webhook_provider_event_id(:resend, _raw_body, [first | _]) do
     extract_event_provider_id(first) || ""
   end
 

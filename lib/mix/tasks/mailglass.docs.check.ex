@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Mailglass.Docs.Check do
   use Boundary, classify_to: Mailglass
 
-  @shortdoc "Checks Tier 1 docs for leaked internal IDs and stale v0.2 surface drift"
+  @shortdoc "Checks Tier 1 docs for leaked internal IDs and stale v0.3 surface drift"
 
   @moduledoc """
   Fail the build if Tier 1 docs leak internal IDs or drift back to known
@@ -32,8 +32,14 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   ]
   @tier1_surface_rules %{
     "README.md" => %{
-      required: ["{:mailglass, \"~> 0.2\"}", "mix mailglass.install", "RFC 8058 List-Unsubscribe"],
-      forbidden: ["~> 0.1", "verify.phase_07", "v0.1 in development", "and — at v0.5 — RFC 8058"]
+      required: ["{:mailglass, \"~> 0.3\"}", "mix mailglass.install", "RFC 8058 List-Unsubscribe"],
+      forbidden: [
+        "~> 0.1",
+        "~> 0.2",
+        "verify.phase_07",
+        "v0.1 in development",
+        "and — at v0.5 — RFC 8058"
+      ]
     },
     "guides/getting-started.md" => %{
       required: ["mix mailglass.install", "|> to(user.email)", "|> subject(\"Welcome\")"],
@@ -49,7 +55,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     },
     "guides/migration-from-swoosh.md" => %{
       required: [
-        "{:mailglass, \"~> 0.2\"}",
+        "{:mailglass, \"~> 0.3\"}",
         "Mailglass still accepts a plain `%Swoosh.Email{}`",
         "assert {:ok, _delivery} = Mailglass.deliver(email)"
       ],
@@ -79,7 +85,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     },
     "guides/webhooks.md" => %{
       required: [
-        "Mailglass v0.2 projects suppressions automatically",
+        "Mailglass v0.3 projects suppressions automatically",
         "[:mailglass, :suppression, :auto_added, :stop]",
         "mix mailglass.suppressions.resync --tenant-id <tenant>"
       ],
@@ -102,7 +108,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
       |> Kernel.++(tier1_surface_issues())
 
     if issues == [] do
-      Mix.shell().info("[mailglass.docs.check] OK — Tier 1 docs match the v0.2 release surface.")
+      Mix.shell().info("[mailglass.docs.check] OK — Tier 1 docs match the v0.3 release surface.")
       :ok
     else
       Enum.each(issues, &emit_issue/1)

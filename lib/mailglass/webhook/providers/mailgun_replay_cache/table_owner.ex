@@ -27,6 +27,6 @@ defmodule Mailglass.Webhook.Providers.MailgunReplayCache.TableOwner do
   end
 
   @doc since: "0.2.1"
-  @spec table() :: atom()
+  @spec table() :: :mailglass_webhook_mailgun_replay_cache
   def table, do: @table
 end
