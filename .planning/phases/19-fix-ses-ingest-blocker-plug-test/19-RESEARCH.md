@@ -649,26 +649,30 @@ All four requirements are unsatisfied **end-to-end** because of the BLOCKER (aud
 **Total production code change: ~7 lines (1 line in guard + 6-line clause + comment).**
 **Total test code addition: 1 file, ~120 lines.**
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **New test file location: `test/mailglass/webhook/plug_ses_test.exs` (Mailgun pattern) vs. `test/mailglass/webhook/providers/ses_plug_test.exs` (Resend pattern + roadmap success criterion)?**
    - What we know: Both paths work; the codebase has both conventions in active use.
    - What's unclear: User intent. Roadmap line 105 says `test/mailglass/webhook/providers/ses_plug_test.exs` (matches Resend); existing convention favors `test/mailglass/webhook/plug_ses_test.exs` (matches Mailgun).
+   - **RESOLVED:** Use the Mailgun convention `test/mailglass/webhook/plug_ses_test.exs` (planner choice; honored by Plan 19-02 `files_modified`). Rationale: cleaner separation between unit tests in `providers/` and Plug-level integration tests in `webhook/`. Roadmap text was a copy-paste from the Resend analog; both paths function identically.
    - Recommendation: Plan should explicitly choose one. Default to the **Mailgun convention (`plug_ses_test.exs`)** for cleaner separation between unit tests (`providers/`) and plug-level tests (`webhook/`). If the planner / discuss-phase prefers honoring the roadmap text verbatim, the alternate path also works — flag for user confirmation.
 
 2. **Should the new test cover SubscriptionConfirmation flow at the plug level, or rely on the existing unit test at `ses_test.exs:121`?**
    - What we know: Roadmap success criterion #3 explicitly says "real signed SES Notification" — singular, Notification-only. The audit BLOCKER is also Notification-only (control plane never reaches `ingest_multi/3`).
    - What's unclear: Whether a defense-in-depth SubscriptionConfirmation plug test adds enough value to justify the `Mailglass.HTTPCStub` cross-file dependency (Pitfall 5).
+   - **RESOLVED:** Skip SubscriptionConfirmation at the plug level — already covered by existing unit test `ses_test.exs:121`. Phase 19 plug test stays Notification-only, matching Roadmap Phase 19 success criterion #3 verbatim. Plan 19-02 explicitly excludes SubscriptionConfirmation tests (enforced by `<success_criteria>` block).
    - Recommendation: Skip SubscriptionConfirmation at the plug level (covered by existing unit test). Phase 19 plug test stays Notification-focused, matching success criterion #3 verbatim.
 
 3. **Should the new clause in `derive_webhook_provider_event_id/3` be inserted before or after the `:resend` clause?**
    - What we know: Both are equivalent functionally; `extract_event_provider_id/1` is content-agnostic.
    - What's unclear: Stylistic ordering preference.
+   - **RESOLVED:** Insert the new `:ses` clause between the existing `:mailgun` and `:resend` clauses in `derive_webhook_provider_event_id/3` to match `@valid_providers` ordering (`[:postmark, :sendgrid, :mailgun, :ses, :resend]`) at `plug.ex:84`. Plan 19-01 Task 19-01-02 specifies this insertion point explicitly.
    - Recommendation: Insert between `:mailgun` (line 366) and `:resend` (line 373) to match `Mailglass.Webhook.Plug.@valid_providers` ordering at plug.ex:84 (`[:postmark, :sendgrid, :mailgun, :ses, :resend]`). This keeps reviewers seeing the same atom order in both places.
 
 4. **Conventional Commits message format for the fix.**
    - What we know: Phase 18 used `fix(release):`, `fix(install):`, `fix(dialyzer):`, `fix(ci):` — all triggered patch bumps. Roadmap success criterion #5 says "Conventional Commits `fix:`".
    - What's unclear: Specific scope qualifier.
+   - **RESOLVED:** Use `fix(ingest): accept :ses provider in webhook ingest seam` as the Conventional Commits subject. Plan 19-03 SUMMARY frontmatter and Task 19-03-02 acceptance criteria reference this exact string. Release Please will consume the `fix:` type and cut v0.3.3 on merge to main.
    - Recommendation: `fix(ingest): accept :ses provider in webhook ingest seam` (or `fix(webhook):`) — captures the seam being fixed. Single PR with the ingest.ex edit + new test file. Release Please will produce v0.3.3 from this on merge to main.
 
 ## Assumptions Log

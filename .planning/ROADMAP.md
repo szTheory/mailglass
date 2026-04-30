@@ -105,7 +105,12 @@ Plans:
   3. New `test/mailglass/webhook/providers/ses_plug_test.exs` exercises a real signed SES Notification through `Mailglass.Webhook.Plug` end-to-end and asserts a `WebhookEvent` row is persisted
   4. `mix test` passes clean with no `--only` scoping or test exclusions
   5. v0.3.3 published to Hex.pm via Release Please (Conventional Commits `fix:`)
-**Plans**: TBD via `/gsd-plan-phase 19`
+**Plans**: 3 plans
+
+Plans:
+- [ ] 19-01-PLAN.md — Fix `ingest_multi/3` guard + `derive_webhook_provider_event_id(:ses, ...)` clause (closes SES-01, SES-03)
+- [ ] 19-02-PLAN.md — Add `test/mailglass/webhook/plug_ses_test.exs` Plug-level integration test (closes SES-04)
+- [ ] 19-03-PLAN.md — Full-suite gate + Conventional Commits ceremony + Release Please observation flow (closes SES-05)
 
 ### Phase 20: Config Schema & Installer Surface for SES + Resend
 **Goal**: Adopter typos in `:ses` / `:resend` config fail at boot, installer template surfaces both providers, publish-check guards installer-golden drift
