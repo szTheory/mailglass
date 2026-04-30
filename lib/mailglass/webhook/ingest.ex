@@ -119,7 +119,7 @@ defmodule Mailglass.Webhook.Ingest do
   @spec ingest_multi(atom(), binary(), [Event.t()]) ::
           {:ok, map()} | {:error, term()}
   def ingest_multi(provider, raw_body, events)
-      when provider in [:postmark, :sendgrid, :mailgun, :resend] and is_binary(raw_body) and
+      when provider in [:postmark, :sendgrid, :mailgun, :ses, :resend] and is_binary(raw_body) and
              is_list(events) do
     # Tenancy.tenant_id!/0 is the fail-loud accessor — raises %TenancyError{:unstamped}
     # when the process-dict key is absent. Unlike Tenancy.current/0 (which falls back
@@ -364,6 +364,14 @@ defmodule Mailglass.Webhook.Ingest do
   # Mailgun replay and ingest both key off the webhook token surfaced in
   # Event.metadata["provider_event_id"].
   defp derive_webhook_provider_event_id(:mailgun, _raw_body, [first | _]) do
+    extract_event_provider_id(first) || ""
+  end
+
+  # SES (SNS) populates `provider_event_id` as "#{sns_message_id}:#{email}" via
+  # `Mailglass.Webhook.Providers.SES.build_provider_event_id/3`. Stable across SNS
+  # retries because both fields come from the signed payload. Same dispatch as
+  # Mailgun/Resend.
+  defp derive_webhook_provider_event_id(:ses, _raw_body, [first | _]) do
     extract_event_provider_id(first) || ""
   end
 
