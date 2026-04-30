@@ -320,6 +320,45 @@ defmodule Mailglass.Config do
         ]
       ]
     ],
+    ses: [
+      type: :keyword_list,
+      default: [],
+      doc: "SES webhook configuration.",
+      keys: [
+        enabled: [
+          type: :boolean,
+          default: true,
+          doc: "Enable the SES webhook route when explicitly mounted."
+        ],
+        cert_cache_ttl_seconds: [
+          type: :pos_integer,
+          default: 86_400,
+          doc: "TTL in seconds for cached SNS signing certificates. Default: `86_400`."
+        ]
+      ]
+    ],
+    resend: [
+      type: :keyword_list,
+      default: [],
+      doc: "Resend webhook configuration.",
+      keys: [
+        enabled: [
+          type: :boolean,
+          default: true,
+          doc: "Enable the Resend webhook route when explicitly mounted."
+        ],
+        secret: [
+          type: {:or, [:string, nil]},
+          default: nil,
+          doc: "Svix webhook secret used for Resend signature verification. Required for verification; omit only if the provider is disabled."
+        ],
+        timestamp_tolerance_seconds: [
+          type: :pos_integer,
+          default: 300,
+          doc: "Maximum accepted age for the Svix timestamp in seconds. Default: `300`."
+        ]
+      ]
+    ],
     # Phase 4 CONTEXT D-11 / revision B2. `:sync` is the v0.1 locked
     # ingest mode — the webhook Plug runs `Mailglass.Webhook.Ingest`
     # inline and responds 200 only after the Multi commits. `:async` is
@@ -416,6 +455,7 @@ defmodule Mailglass.Config do
   @spec new!(keyword()) :: keyword()
   def new!(opts \\ []) when is_list(opts) do
     opts
+    |> normalize_optional_keyword_subtrees()
     |> NimbleOptions.validate!(@schema)
     |> validate_mailgun_replay_window!()
   end
@@ -461,7 +501,7 @@ defmodule Mailglass.Config do
   end
 
   defp normalize_optional_keyword_subtrees(opts) do
-    Enum.reduce([:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance], opts, fn key,
+    Enum.reduce([:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance, :ses, :resend], opts, fn key,
                                                                                                acc ->
       case Keyword.get(acc, key, :__missing__) do
         nil -> Keyword.put(acc, key, [])

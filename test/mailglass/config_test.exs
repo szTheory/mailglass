@@ -85,6 +85,60 @@ defmodule Mailglass.ConfigTest do
                      )
                    end
     end
+
+    test "accepts a valid ses subtree" do
+      config =
+        Mailglass.Config.new!(
+          ses: [
+            enabled: true,
+            cert_cache_ttl_seconds: 86_400
+          ]
+        )
+
+      ses = Keyword.fetch!(config, :ses)
+      assert Keyword.fetch!(ses, :enabled) == true
+      assert Keyword.fetch!(ses, :cert_cache_ttl_seconds) == 86_400
+    end
+
+    test "accepts a valid resend subtree" do
+      config =
+        Mailglass.Config.new!(
+          resend: [
+            enabled: true,
+            secret: "whsec_123",
+            timestamp_tolerance_seconds: 300
+          ]
+        )
+
+      resend = Keyword.fetch!(config, :resend)
+      assert Keyword.fetch!(resend, :enabled) == true
+      assert Keyword.fetch!(resend, :secret) == "whsec_123"
+      assert Keyword.fetch!(resend, :timestamp_tolerance_seconds) == 300
+    end
+
+    test "rejects unknown keys in the ses subtree" do
+      assert_raise NimbleOptions.ValidationError, fn ->
+        Mailglass.Config.new!(ses: [unknown_key: true])
+      end
+    end
+
+    test "rejects unknown keys in the resend subtree" do
+      assert_raise NimbleOptions.ValidationError, fn ->
+        Mailglass.Config.new!(resend: [unknown_key: true])
+      end
+    end
+
+    test "rejects invalid resend timestamp_tolerance_seconds type" do
+      assert_raise NimbleOptions.ValidationError, fn ->
+        Mailglass.Config.new!(resend: [timestamp_tolerance_seconds: "300"])
+      end
+    end
+
+    test "normalizes nil ses and resend subtrees to default values" do
+      config = Mailglass.Config.new!(ses: nil, resend: nil)
+      assert Keyword.fetch!(config, :ses)[:enabled] == true
+      assert Keyword.fetch!(config, :resend)[:enabled] == true
+    end
   end
 
   describe "validate_at_boot!/0" do

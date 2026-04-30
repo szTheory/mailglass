@@ -215,7 +215,7 @@ resend: [
 
 **What goes wrong:** `new!/1` would validate direct calls, but boot-time `validate_at_boot!/0` could still treat `nil` keyword-list subtrees inconsistently if the new subtree is not normalized the same way as other optional keyword lists. [VERIFIED: lib/mailglass/config.ex]
 
-**How to avoid:** Add `:ses` and `:resend` to the normalization list if the project wants `config :mailglass, ses: nil` or `resend: nil` to collapse to `[]` like the other optional keyword-list subtrees. Decide this explicitly in planning; do not leave boot and direct validation with different behavior. [VERIFIED: lib/mailglass/config.ex]
+**How to avoid:** Add `:ses` and `:resend` to the normalization list. This keeps `config :mailglass, ses: nil` and `config :mailglass, resend: nil` behavior consistent with the other optional keyword-list subtrees and avoids boot-vs-direct-validation drift. [VERIFIED: lib/mailglass/config.ex]
 
 ### Pitfall 2: Updating the installer snippet without refreshing the golden source
 
@@ -272,7 +272,7 @@ This is why the installer should show the zero-arg mount or an explicit equivale
 
 ## Concrete File Targets
 
-- `lib/mailglass/config.ex`: add `:ses` and `:resend` keyword-list schemas with only the locked keys; review `normalize_optional_keyword_subtrees/1` for parity behavior. [VERIFIED: lib/mailglass/config.ex][VERIFIED: .planning/phases/20-config-schema-installer-surface-for-ses-resend/20-CONTEXT.md]
+- `lib/mailglass/config.ex`: add `:ses` and `:resend` keyword-list schemas with only the locked keys; add both keys to `normalize_optional_keyword_subtrees/1` so `nil` collapses to `[]` like the other optional keyword-list subtrees. [VERIFIED: lib/mailglass/config.ex][VERIFIED: .planning/phases/20-config-schema-installer-surface-for-ses-resend/20-CONTEXT.md]
 - `lib/mailglass/installer/templates.ex`: change `webhook_mount_snippet/1` to use the narrow default mount and add comment text for optional `:mailgun`, `:ses`, and `:resend`. [VERIFIED: lib/mailglass/installer/templates.ex][VERIFIED: lib/mailglass/webhook/router.ex]
 - `guides/webhooks.md`: ensure generated snippet wording remains aligned with the documented default-vs-opt-in router contract. [VERIFIED: guides/webhooks.md]
 - `test/mailglass/config_test.exs`: add positive and negative tests for `:ses` and `:resend` subtrees, mirroring the current Mailgun pattern. [VERIFIED: test/mailglass/config_test.exs]
@@ -367,12 +367,12 @@ This is why the installer should show the zero-arg mount or an explicit equivale
 | A2 | The best way to make publish-check failure testable may require extracting a helper or runner seam. | Validation Architecture | Low; execution can still test via subprocess if a smaller seam is unnecessary. |
 | A3 | `MIX_PUBLISH=true mix mailglass.publish.check --package mailglass` should remain the phase gate once the typed path lands. | Validation Architecture | Low; the task already exists, but final gate wording may evolve slightly. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `normalize_optional_keyword_subtrees/1` include `:ses` and `:resend`?**
-   - What we know: Existing optional keyword-list subtrees are normalized from `nil` to `[]` before validation, but `:ses` and `:resend` are not present yet. [VERIFIED: lib/mailglass/config.ex]
-   - What's unclear: Whether project policy wants `config :mailglass, ses: nil` to behave like other optional subtrees or to raise. [VERIFIED: lib/mailglass/config.ex]
-   - Recommendation: Planner should make this an explicit subtask under Plan 20-01 and lock one behavior with tests. [VERIFIED: lib/mailglass/config.ex]
+   - Decision: **Yes.** Add both keys to `normalize_optional_keyword_subtrees/1`.
+   - Rationale: every other optional keyword-list subtree already normalizes `nil` to `[]`; Phase 20 should preserve that house rule instead of creating a one-off boot-time behavior difference for SES and Resend. [VERIFIED: lib/mailglass/config.ex]
+   - Planning consequence: Plan 20-01 must explicitly edit the normalization list and add tests covering `ses: nil` and `resend: nil` parity. [VERIFIED: lib/mailglass/config.ex]
 
 ## Sources
 
