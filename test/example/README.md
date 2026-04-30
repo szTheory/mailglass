@@ -12,14 +12,14 @@ Refresh both snapshots with:
 <!-- GOLDEN_FRESH_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:2eb67153858109cfc1ea31f6bd136d61d45de0ca61f63ed66ad4454d5d84b015
+- .mailglass.toml sha256:e964c36de33b47cf19ded7458085777b1003662ac0d1d442b22393d0e07f420d
 - config/runtime.exs sha256:2cc43bcd5ede9de69f9b6dcfb5b57e2474b81fdd01b084637342598fa2845c93
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
 - lib/example/mail_context.ex sha256:0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec
 - lib/example_web/components/layouts/mailglass.html.heex sha256:60ab5acdfdba875c680090dd5d8b571766da9236a7276a662adc338ca1f878c8
 - lib/example_web/endpoint.ex sha256:79d5ce677921a2940250d88838add81306c780ec3466df64343ba5fd011dcaa9
-- lib/example_web/router.ex sha256:e24b926f0bee39698608769895d5657515141fc9da328b26174b29f42cdef031
+- lib/example_web/router.ex sha256:4747d09df93dec9ea6a3188ba8c62ad218c8ecbe80337428c56361252fa10e83
 - mix.exs sha256:bac6a815dfa817a388e07ad7c2325f4ffa993e970f09c2471b61b3dfd8055ddc
 - priv/repo/migrations/<MIGRATION_TS>_mailglass_install.exs sha256:fb5ea9dcdef2d6c1724f20e136cfa04ddfb7b9f2c130d6b0e6ce79ecf1eba80d
 
@@ -41,7 +41,7 @@ last_run_at = "<LAST_RUN_AT>"
 "lib/example/mail_context.ex" = "0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec"
 "lib/example_web/components/layouts/mailglass.html.heex" = "60ab5acdfdba875c680090dd5d8b571766da9236a7276a662adc338ca1f878c8"
 "lib/example_web/endpoint.ex" = "79d5ce677921a2940250d88838add81306c780ec3466df64343ba5fd011dcaa9"
-"lib/example_web/router.ex" = "e24b926f0bee39698608769895d5657515141fc9da328b26174b29f42cdef031"
+"lib/example_web/router.ex" = "4747d09df93dec9ea6a3188ba8c62ad218c8ecbe80337428c56361252fa10e83"
 
 
 @@ config/runtime.exs
@@ -126,7 +126,9 @@ defmodule ExampleWeb.Router do
 
     scope "/" do
       pipe_through :mailglass_webhooks
-      mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun]
+      # Optional providers stay explicit opt-in:
+      # mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun, :ses, :resend]
+      mailglass_webhook_routes "/webhooks"
     end
     # Mailglass admin routes (dev-only; flip :dev_routes in config to expose).
     import MailglassAdmin.Router
@@ -169,14 +171,14 @@ end
 <!-- GOLDEN_NO_ADMIN_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:aec16ba421bc8a80613ad651d490fb0bfbbe71e6c5fc715f08904884ad3cf76a
+- .mailglass.toml sha256:4bb9308caab1c2abb4b6f66e8829f9c58a753cd317f5a1297a46972022092ae7
 - config/runtime.exs sha256:2cc43bcd5ede9de69f9b6dcfb5b57e2474b81fdd01b084637342598fa2845c93
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
 - lib/example/mail_context.ex sha256:0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec
 - lib/example_web/components/layouts/mailglass.html.heex sha256:60ab5acdfdba875c680090dd5d8b571766da9236a7276a662adc338ca1f878c8
 - lib/example_web/endpoint.ex sha256:79d5ce677921a2940250d88838add81306c780ec3466df64343ba5fd011dcaa9
-- lib/example_web/router.ex sha256:c0876ec32f588e4931be47ce072ad7271254b5e0cdb92d3e267cd4ed6fd64a5d
+- lib/example_web/router.ex sha256:c8c755dcbde7313b2a7e5eaec6655794be62d69cc403dc35eabf2c1e381c6675
 - mix.exs sha256:bac6a815dfa817a388e07ad7c2325f4ffa993e970f09c2471b61b3dfd8055ddc
 - priv/repo/migrations/<MIGRATION_TS>_mailglass_install.exs sha256:fb5ea9dcdef2d6c1724f20e136cfa04ddfb7b9f2c130d6b0e6ce79ecf1eba80d
 
@@ -198,7 +200,7 @@ last_run_at = "<LAST_RUN_AT>"
 "lib/example/mail_context.ex" = "0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec"
 "lib/example_web/components/layouts/mailglass.html.heex" = "60ab5acdfdba875c680090dd5d8b571766da9236a7276a662adc338ca1f878c8"
 "lib/example_web/endpoint.ex" = "79d5ce677921a2940250d88838add81306c780ec3466df64343ba5fd011dcaa9"
-"lib/example_web/router.ex" = "c0876ec32f588e4931be47ce072ad7271254b5e0cdb92d3e267cd4ed6fd64a5d"
+"lib/example_web/router.ex" = "c8c755dcbde7313b2a7e5eaec6655794be62d69cc403dc35eabf2c1e381c6675"
 
 
 @@ config/runtime.exs
@@ -283,7 +285,9 @@ defmodule ExampleWeb.Router do
 
     scope "/" do
       pipe_through :mailglass_webhooks
-      mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun]
+      # Optional providers stay explicit opt-in:
+      # mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun, :ses, :resend]
+      mailglass_webhook_routes "/webhooks"
     end
   scope "/", ExampleWeb do
     pipe_through :browser
