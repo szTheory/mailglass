@@ -7,6 +7,9 @@
 - [x] **Phase 16: SES Webhook Provider & SNS Cache** - System securely ingests and normalizes AWS SES (via SNS) webhooks with automatic subscription handling and certificate caching (completed 2026-04-29)
 - [ ] **Phase 17: Unblock & Verify Resend** - Full test suite passes clean and Resend provider is confirmed production-ready
 - [ ] **Phase 18: Ship v0.3.0** - v0.3.0 published to Hex.pm with complete CHANGELOG and updated provider guides
+- [ ] **Phase 19: Fix SES Ingest BLOCKER + Plug-level Integration Test** - SES Notification flow ingests end-to-end through the core webhook seam, ships as v0.3.3 patch
+- [ ] **Phase 20: Config Schema & Installer Surface for SES + Resend** - Adopter typos in `:ses` / `:resend` config fail at boot, installer template surfaces both providers, publish-check guards installer-golden drift
+- [ ] **Phase 21: SES-02 D-07 Override + SUMMARY Frontmatter Backfill** - SES-02 verification status closes from `human_needed` to `passed` with formal D-07 override, missing `requirements-completed` frontmatter backfilled
 
 ## Phase Details
 
@@ -91,12 +94,53 @@ Plans:
 - [x] 18-01-PLAN.md — Refresh release surface (changelogs, webhooks guide, README, runbook, workflow comments)
 - [x] 18-02-PLAN.md — Real publish ceremony, evidence capture, milestone closure
 
+### Phase 19: Fix SES Ingest BLOCKER + Plug-level Integration Test
+**Goal**: SES Notification flow ingests end-to-end through the core webhook seam, ships as v0.3.3 patch
+**Depends on**: Phase 18
+**Requirements**: SES-01, SES-03, SES-04, SES-05 (gap closure for v0.3.0-MILESTONE-AUDIT BLOCKER)
+**Gap Closure**: Closes `gaps.integration` BLOCKER (`ingest_multi/3` provider guard rejects `:ses`) and the `gaps.flows` "SES Notification → mailglass_events" entry from v0.3.0-MILESTONE-AUDIT.md.
+**Success Criteria** (what must be TRUE):
+  1. `Mailglass.Webhook.Ingest.ingest_multi/3` accepts `:ses` (guard at `lib/mailglass/webhook/ingest.ex:122` updated)
+  2. `derive_webhook_provider_event_id(:ses, raw_body, [first | _])` clause exists and delegates to `extract_event_provider_id(first)` mirroring the Mailgun/Resend pattern
+  3. New `test/mailglass/webhook/providers/ses_plug_test.exs` exercises a real signed SES Notification through `Mailglass.Webhook.Plug` end-to-end and asserts a `WebhookEvent` row is persisted
+  4. `mix test` passes clean with no `--only` scoping or test exclusions
+  5. v0.3.3 published to Hex.pm via Release Please (Conventional Commits `fix:`)
+**Plans**: TBD via `/gsd-plan-phase 19`
+
+### Phase 20: Config Schema & Installer Surface for SES + Resend
+**Goal**: Adopter typos in `:ses` / `:resend` config fail at boot, installer template surfaces both providers, publish-check guards installer-golden drift
+**Depends on**: Phase 19
+**Requirements**: Defensive — affects SES-01..SES-05, RESEND-01, RESEND-02 (no requirement reset; these are warnings not unsatisfied)
+**Gap Closure**: Closes `gaps.integration` Warning #2 (`Mailglass.Config @schema` lacks `:ses`/`:resend` subtrees) and Warning #3 (installer template provider list omits `:ses`/`:resend`) from v0.3.0-MILESTONE-AUDIT.md. Also absorbs todo `2026-04-26-add-installer-goldens-to-publish-check.md` (release-engineering hygiene that fits naturally because Phase 20 already regenerates the installer golden).
+**Success Criteria** (what must be TRUE):
+  1. `Mailglass.Config.@schema` has `:ses` and `:resend` subtrees so `validate_at_boot!` no longer silently drops adopter config under those keys
+  2. `lib/mailglass/installer/templates.ex` example providers list includes `:ses` and `:resend`
+  3. `test/mailglass/install/install_golden_test.exs` regenerated to match the new template output (clean diff after `MIX_INSTALLER_ACCEPT_GOLDEN=1`)
+  4. `mix mailglass.publish.check` runs the installer golden test in dry-run mode (gated on `MIX_PUBLISH=true`) and fails fast with `%Mailglass.Error{type: :publish_blocked_golden_drift}` pointing at the regen command
+  5. `mix test` passes; pre-publish gate exits 0 for both packages
+**Plans**: TBD via `/gsd-plan-phase 20`
+
+### Phase 21: SES-02 D-07 Override + SUMMARY Frontmatter Backfill
+**Goal**: SES-02 verification status closes from `human_needed` to `passed` with formal D-07 override, missing `requirements-completed` frontmatter backfilled
+**Depends on**: Phase 20
+**Requirements**: SES-02 (paperwork closure — code already correct per D-07)
+**Gap Closure**: Closes the SES-02 `partial` row in `gaps.requirements`, the INFO-severity status-doc divergence, and the Phase 16 tech-debt items from v0.3.0-MILESTONE-AUDIT.md. Pure planning artifacts — no code, no Hex publish.
+**Success Criteria** (what must be TRUE):
+  1. `.planning/phases/16-ses-webhook-provider-sns-cache/16-VERIFICATION.md` carries a formal override block recording the D-07 deviation (auto-confirm via TopicArn+Token instead of raw SubscribeURL) and flips `status: passed`
+  2. `16-02-SUMMARY.md` and `16-04-SUMMARY.md` carry `requirements-completed` frontmatter listing SES-04 and SES-05 respectively
+  3. `gsd-sdk query audit-uat --raw` returns `summary.total_items: 0`
+  4. Re-running `/gsd-audit-milestone v0.3.0` returns `status: passing` with the SES-02 row showing `satisfied`
+**Plans**: TBD via `/gsd-plan-phase 21`
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Resend Webhook Provider & Core Ingest | 1/1 | Complete (verified in Phase 17 + 18) | 2026-04-29 |
 | 15. Mailgun Webhook Provider | 4/4 | Complete    | 2026-04-29 |
-| 16. SES Webhook Provider & SNS Cache | 4/4 | Complete    | 2026-04-29 |
+| 16. SES Webhook Provider & SNS Cache | 4/4 | Complete (E2E gap closed in Phase 19) | 2026-04-29 |
 | 17. Unblock & Verify Resend | 2/2 | Complete    | 2026-04-29 |
 | 18. Ship v0.3.x (shipped as v0.3.2 — see EVIDENCE) | 2/2 | Complete    | 2026-04-29 |
+| 19. Fix SES Ingest BLOCKER + Plug-level Integration Test | 0/0 | Pending (gap closure) | — |
+| 20. Config Schema & Installer Surface for SES + Resend | 0/0 | Pending (gap closure) | — |
+| 21. SES-02 D-07 Override + SUMMARY Frontmatter Backfill | 0/0 | Pending (gap closure) | — |

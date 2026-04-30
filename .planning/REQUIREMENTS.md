@@ -12,11 +12,11 @@
 - [x] **MAILGUN-03**: Webhook maps Mailgun events to `mailglass` normalized taxonomy.
 
 ### SES
-- [x] **SES-01**: Webhook plug parses SNS payloads arriving with `text/plain` Content-Type.
-- [x] **SES-02**: System automatically performs HTTP GET to `SubscribeURL` upon receiving `SubscriptionConfirmation` events.
-- [x] **SES-03**: Webhook plug verifies RSA-SHA1/SHA256 signatures using X.509 certificates fetched from AWS.
-- [x] **SES-04**: X.509 certificates are fetched via `:httpc` and cached in `:ets` to avoid synchronous network I/O per webhook.
-- [x] **SES-05**: Webhook maps SES events inside the SNS `Message` envelope to `mailglass` normalized taxonomy.
+- [ ] **SES-01**: Webhook plug parses SNS payloads arriving with `text/plain` Content-Type. _Reset 2026-04-29 by v0.3.0-MILESTONE-AUDIT — unit-level verification passed but E2E ingest blocked at `lib/mailglass/webhook/ingest.ex:122` (`:ses` missing from provider guard). Closes in Phase 19._
+- [x] **SES-02**: System automatically performs HTTP GET to `SubscribeURL` upon receiving `SubscriptionConfirmation` events. _Implementation auto-confirms via TopicArn+Token per D-07 (functionally satisfies the requirement). Formal override block awaiting record in 16-VERIFICATION.md → Phase 21._
+- [ ] **SES-03**: Webhook plug verifies RSA-SHA1/SHA256 signatures using X.509 certificates fetched from AWS. _Reset 2026-04-29 by v0.3.0-MILESTONE-AUDIT — unit-level verification passed but E2E ingest blocked. Closes in Phase 19._
+- [ ] **SES-04**: X.509 certificates are fetched via `:httpc` and cached in `:ets` to avoid synchronous network I/O per webhook. _Reset 2026-04-29 by v0.3.0-MILESTONE-AUDIT — unit-level verification passed but E2E ingest blocked. Closes in Phase 19._
+- [ ] **SES-05**: Webhook maps SES events inside the SNS `Message` envelope to `mailglass` normalized taxonomy. _Reset 2026-04-29 by v0.3.0-MILESTONE-AUDIT — unit-level verification passed but E2E ingest blocked. Closes in Phase 19._
 
 ## Future Requirements
 
@@ -36,9 +36,9 @@
 | MAILGUN-01 | Phase 15 | Complete |
 | MAILGUN-02 | Phase 15 | Complete |
 | MAILGUN-03 | Phase 15 | Complete |
-| SES-01 | Phase 16 | Complete |
-| SES-02 | Phase 16 | Complete |
-| SES-03 | Phase 16 | Complete |
-| SES-04 | Phase 16 | Complete |
-| SES-05 | Phase 16 | Complete |
+| SES-01 | Phase 16 (unit), Phase 19 (E2E ingest fix) | Pending |
+| SES-02 | Phase 16 (implemented per D-07), Phase 21 (formal override paperwork) | Partial |
+| SES-03 | Phase 16 (unit), Phase 19 (E2E ingest fix) | Pending |
+| SES-04 | Phase 16 (unit), Phase 19 (E2E ingest fix) | Pending |
+| SES-05 | Phase 16 (unit), Phase 19 (E2E ingest fix) | Pending |
 | DELIV-04 | Phase 18 | Complete |
