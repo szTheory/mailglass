@@ -213,6 +213,20 @@ Retryable: `false` — the caller failed to establish tenant context.
 
 Since: 0.1.0.
 
+### `Mailglass.PublishError`
+
+Raised when installer golden drift is detected during the `mix mailglass.publish.check` task.
+
+Type atom set:
+
+- `:publish_blocked_golden_drift`
+
+Per-kind fields: none.
+
+Retryable: `false`.
+
+Since: 0.2.0.
+
 ## Shared Error Serialization
 
 Every error struct derives:

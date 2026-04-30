@@ -27,6 +27,10 @@ defmodule Mailglass.ErrorTest do
     assert_raise Mailglass.ConfigError, fn ->
       raise Mailglass.ConfigError.new(:missing, context: %{key: :repo})
     end
+
+    assert_raise Mailglass.PublishError, fn ->
+      raise Mailglass.PublishError.new(:publish_blocked_golden_drift)
+    end
   end
 
   test "pattern-match by struct discriminates correctly" do
