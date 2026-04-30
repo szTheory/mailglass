@@ -1058,25 +1058,13 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   defp verify_installer_goldens(ctx) do
     Mix.shell().info("[mailglass.publish.check] running installer goldens...")
 
-    {output, status} =
-      System.cmd(
-        "mix",
-        ["test", "test/mailglass/install", "--warnings-as-errors", "--exclude", "flaky"],
-        cd: ctx.repo_root,
-        env: [{"MIX_ENV", "test"}],
-        stderr_to_stdout: true
-      )
+    case Mailglass.Publish.InstallerGoldenCheck.run(ctx.repo_root) do
+      :ok ->
+        ctx
 
-    if status != 0 do
-      Mix.shell().error(output)
-
-      fail_step(
-        "run installer goldens",
-        "Delivery blocked: installer goldens drifted (REL-04). Re-snapshot or fix installer output. Run `mix verify.installer` locally to reproduce."
-      )
+      {:error, error} ->
+        fail_step("run installer goldens", Exception.message(error))
     end
-
-    ctx
   end
 
   defp eval_mailglass_dep(body) do
