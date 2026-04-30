@@ -2,6 +2,7 @@
 phase: 16-ses-webhook-provider-sns-cache
 plan: "02"
 subsystem: webhook
+requirements-completed: [SES-04]
 tags: [ses, sns, cert-cache, trust-policy, ets, otp, ssrf-guard, tdd]
 dependency_graph:
   requires: ["16-01"]

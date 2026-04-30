@@ -60,39 +60,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **release:** recover sibling publish validation ([db5f06f](https://github.com/szTheory/mailglass/commit/db5f06f838a9ac38636b3975fd509e9a1cae74d6))
 * resolve add/add conflict in cert_cache_test.exs (use Clock.utc_now, keep multi-URL test) ([2d770a0](https://github.com/szTheory/mailglass/commit/2d770a05ffe55bbaafc62ea82396f589e18d9c0d))
 
-## [0.3.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.2.0...mailglass-v0.3.0) (2026-04-29)
-
-Mailglass 0.3.0 is the webhook-coverage-complete release. If you already ship
-on `~> 0.2`, this cut is for teams that want the full first-party webhook
-ingest story across Postmark, SendGrid, Mailgun, SES, and Resend without taking
-on a new migration or codemod path first.
-
-This is not a `0.2.0`-style migration release. There is no urgent codemod, no
-special rollback procedure, and no new "rewrite your mailables first" story to
-absorb before upgrading.
-
-### Added
-
-- First-party Resend webhook verification and normalization docs, including the
-  raw-body `CachingBodyReader` requirement and explicit opt-in route/config
-  examples.
-- Public release guidance for the now-shipped Mailgun, SES, and Resend webhook
-  providers so the adopter-facing docs match the provider surface that is
-  already in the library.
-
-### Changed
-
-- The webhook guide, README positioning, and release runbook now all describe
-  `0.3.0` as the release where webhook provider coverage is complete.
-- Release fallback examples now use the real `mailglass-v0.3.0` tag path
-  instead of stale `0.2.0` examples.
-
-### Fixed
-
-- Removed duplicate generated `0.2.0` changelog clutter so the current release
-  history reads like a maintainer-owned narrative instead of a mixed generated
-  stub plus curated entry.
-
 ## [0.2.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.1.1...mailglass-v0.2.0) (2026-04-28)
 
 Mailglass 0.2.0 is the release that turns the first adopter-facing mailable API,

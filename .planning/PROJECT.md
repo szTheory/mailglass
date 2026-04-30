@@ -10,14 +10,14 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v0.2.0 shipped 2026-04-28. Milestone v0.3 "Webhook Coverage Complete" started 2026-04-29.**
+**v0.3.2 shipped 2026-04-29. Milestone v0.3 "Webhook Coverage Complete" closed 2026-04-30. No active milestone is open.**
 
-- `mailglass` 0.2.0 — https://hex.pm/packages/mailglass/0.2.0
-- `mailglass_admin` 0.2.0 — https://hex.pm/packages/mailglass_admin/0.2.0
-- HexDocs: https://hexdocs.pm/mailglass/0.2.0/ + https://hexdocs.pm/mailglass_admin/0.2.0/
+- `mailglass` 0.3.2 — https://hex.pm/packages/mailglass/0.3.2
+- `mailglass_admin` 0.3.2 — https://hex.pm/packages/mailglass_admin/0.3.2
+- HexDocs: https://hexdocs.pm/mailglass/0.3.2/ + https://hexdocs.pm/mailglass_admin/0.3.2/
 
 v0.2 milestone closed 2026-04-28. 6 phases (8-13), 35 plans, 38/38 REQ-IDs mapped.
-Phase 16 complete 2026-04-29: SES webhook provider — SNS signature verification (SHA-1/SHA-256), ETS-backed cert cache OTP supervisor, SSRF-guarded TrustPolicy, full Anymail normalization (classic + event-publishing formats), wired into plug/router/application. SES-01..SES-05 validated.
+v0.3 milestone closed 2026-04-30. 8 phases (14-21), 19 plans, provider coverage complete across Postmark / SendGrid / Mailgun / SES / Resend. Full archive: [`.planning/milestones/v0.3-ROADMAP.md`](milestones/v0.3-ROADMAP.md).
 v0.1 milestone closed 2026-04-26. 8 phases (7 planned + 1 inserted), 61 plans, 84/84 v1 REQ-IDs satisfied, ~33k LOC of Elixir, 319 commits, 6-day cycle. Full archive: [`.planning/milestones/v0.1-ROADMAP.md`](milestones/v0.1-ROADMAP.md).
 
 **Codebase characteristics:**
@@ -40,7 +40,10 @@ v0.1 milestone closed 2026-04-26. 8 phases (7 planned + 1 inserted), 61 plans, 8
 - Phase 4 standard-depth review WR-01..WR-06 (none block)
 - Adopter feedback: Mailable API exposes too much Swoosh — v0.2 design discussion candidate
 
-## Current Milestone: v0.3 Webhook Coverage Complete — SHIPPED 2026-04-29
+## Latest Completed Milestone
+
+<details>
+<summary>v0.3 Webhook Coverage Complete — shipped on Hex as 0.3.2, milestone closed 2026-04-30</summary>
 
 **Goal:** Unblock and verify the Resend webhook provider, completing DELIV-04 coverage across all five major providers (Postmark, SendGrid, Mailgun, SES, Resend), then publish v0.3.x to Hex. **DELIV-04 marked complete; v0.3.0 shipped as v0.3.2 after a 3-cycle Conventional-Commits / Release Please patch recovery — see `.planning/phases/18-ship-v0-3-0/18-02-PUBLISH-EVIDENCE.md` for the chain.**
 
@@ -55,6 +58,8 @@ v0.1 milestone closed 2026-04-26. 8 phases (7 planned + 1 inserted), 61 plans, 8
 
 - **v0.4** — DELIV-05 prod-mountable admin LiveView + DELIV-06 `mix mail.doctor` + DELIV-07 per-tenant adapter resolver + DX polish (`mix mailglass.gen.mailable`, richer test helpers)
 - **v0.5+** — `mailglass_inbound` separate sibling package (Action Mailbox equivalent)
+
+</details>
 
 ## Next Milestone Goals (post-v0.3)
 
@@ -98,7 +103,7 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 
 ## Active
 
-**v0.3 requirements defined. RESEND-01/02 pending verification — Phase 14 implementation complete, blocked on test suite fix.**
+No active milestone requirements are open. Define the next milestone with `$gsd-new-milestone`.
 
 ## Out of Scope
 
@@ -206,4 +211,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-04-29 — v0.3 milestone "Webhook Coverage Complete" started.*
+*Last updated: 2026-04-30 — v0.3 milestone archived; waiting on next milestone definition.*

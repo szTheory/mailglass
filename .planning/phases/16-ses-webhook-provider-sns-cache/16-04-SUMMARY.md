@@ -2,6 +2,7 @@
 phase: 16-ses-webhook-provider-sns-cache
 plan: "04"
 subsystem: webhook
+requirements-completed: [SES-05]
 tags: [ses, sns, normalize, event-mapping, plug, router, application, supervision, docs]
 dependency_graph:
   requires:

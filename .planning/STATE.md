@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v0.3.0
-milestone_name: milestone
-status: executing
-last_updated: "2026-04-30T18:12:08.188Z"
+milestone_name: webhook-coverage-complete
+status: shipped
+last_updated: "2026-04-30T16:30:40-04:00"
 last_activity: 2026-04-30
 progress:
   total_phases: 8
-  completed_phases: 7
-  total_plans: 18
-  completed_plans: 18
+  completed_phases: 8
+  total_plans: 19
+  completed_plans: 19
   percent: 100
 ---
 
@@ -18,19 +18,19 @@ progress:
 ## Project Reference
 
 **Core Value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current Focus:** Phase 19 — fix-ses-ingest-blocker-plug-test
+**Current Focus:** No active milestone
 
 ## Current Position
 
-Phase: 19 (fix-ses-ingest-blocker-plug-test) — EXECUTING
-Plan: 3 of 3
-Status: Ready to execute
+Phase: none
+Plan: none
+Status: Milestone archived and waiting for the next milestone definition
 Last activity: 2026-04-30
 
 ## Performance Metrics
 
-- **Cycle Time:** v0.3 milestone single-day cycle (2026-04-29 start → 2026-04-29 ship)
-- **Phase Completion:** 5 of 5
+- **Cycle Time:** v0.3 milestone two-day closeout (2026-04-29 start → 2026-04-30 archive)
+- **Phase Completion:** 8 of 8
 - **Requirement Coverage:** 10/10 — RESEND-01/02, MAILGUN-01/02/03, SES-01/02/03/04/05, DELIV-04 all Complete
 
 ## Accumulated Context
@@ -53,6 +53,16 @@ Last activity: 2026-04-30
 
 - (none active)
 
+## Deferred Items
+
+Items acknowledged and deferred at milestone close on 2026-04-30:
+
+| Category | Item | Status |
+|----------|------|--------|
+| verification | Backfill formal `VERIFICATION.md` artifacts for phases 14, 17, 18, 19, 20, and 21 | deferred |
+| testing | Add plug-level SES `SubscriptionConfirmation` regression coverage | deferred |
+| environment | Investigate intermittent `too_many_connections` and optional OTLP warning noise during local test runs | deferred |
+
 ### Carry-forward to next milestone
 
 - **Issue #25** — post-publish-smoke fresh-host install crashes on missing `:hackney` (Swoosh ApiClient default in Phoenix 1.8). Recommended fix: `mix mailglass.install` writes `config :swoosh, :api_client, false` (or Finch). v0.4 candidate.
@@ -66,5 +76,7 @@ Last activity: 2026-04-30
 - Phase 16 (SES) complete 2026-04-29 — all 4 plans executed and verified.
 - Phase 17 (Unblock & Verify Resend) complete 2026-04-29 — both plans executed.
 - Phase 18 (Ship v0.3.x) complete 2026-04-29 — shipped as v0.3.2 after 3-cycle CI recovery (PRs #20, #22 → #21 / 0.3.1 orphan; #23 → #24 / 0.3.2 shipped). DELIV-04 marked Complete; smoke contract gap (Issue #25) tracked for v0.4.
-
-**Planned Phase:** 19 (Fix SES Ingest BLOCKER + Plug-level Integration Test) — 3 plans — 2026-04-30T15:41:47.449Z
+- Phase 19 (SES ingest blocker closure) completed 2026-04-30 after the current full suite returned green (`20 properties, 913 tests, 0 failures, 6 skipped`).
+- Phase 20 (config schema + installer surface) complete 2026-04-30.
+- Phase 21 (SES-02 override paperwork closure) complete 2026-04-30.
+- Milestone archived 2026-04-30; next milestone not yet defined.

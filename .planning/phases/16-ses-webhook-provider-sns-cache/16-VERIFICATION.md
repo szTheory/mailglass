@@ -1,20 +1,21 @@
 ---
 phase: 16-ses-webhook-provider-sns-cache
 verified: 2026-04-29T23:30:00Z
-status: human_needed
-score: 9/10 must-haves verified
-overrides_applied: 0
-human_verification:
-  - test: "Confirm that auto-confirming SNS subscriptions via ConfirmSubscription API (from TopicArn+Token) satisfies SES-02 and ROADMAP SC-2"
-    expected: "SNS subscription is automatically confirmed when a SubscriptionConfirmation message is received, resulting in a 200 response and the topic becoming active"
-    why_human: "ROADMAP Success Criterion 2 says 'automatically confirms SNS subscriptions by fetching the SubscribeURL', but the implementation constructs and fetches the ConfirmSubscription API URL from TopicArn+Token per D-07 (security design decision). The functional outcome is identical but the mechanism deliberately differs. A human must confirm this deviation is acceptable to close SES-02 and ROADMAP SC-2 as satisfied."
+status: passed
+score: 10/10 must-haves verified
+overrides_applied: 1
+overrides:
+  - must_have: "System automatically confirms SNS subscriptions by fetching the SubscribeURL (ROADMAP SC-2, SES-02)"
+    reason: "D-07 security decision: ConfirmSubscription API URL is constructed from signed TopicArn+Token rather than following SubscribeURL directly. SubscribeURL is validated for trust but not followed as an authority (prevents open-redirect attacks). Functional outcome — automatic subscription confirmation — is achieved identically. RESEARCH.md line 56 documents this mapping explicitly."
+    accepted_by: "jon"
+    accepted_at: "2026-04-30T19:40:35Z"
 ---
 
 # Phase 16: SES Webhook Provider & SNS Cache — Verification Report
 
 **Phase Goal:** Implement the SES webhook provider — SNS signature verification with certificate caching via OTP supervisor
 **Verified:** 2026-04-29T23:30:00Z
-**Status:** human_needed
+**Status:** passed
 **Re-verification:** No — initial verification
 
 ## Goal Achievement
@@ -24,7 +25,7 @@ human_verification:
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
 | 1 | System successfully parses `text/plain` SES SNS payloads (ROADMAP SC-1, SES-01) | VERIFIED | `ses.ex` line 55: `verify!/3` accepts `raw_body :: binary()`; plug.ex `resolve_config!(:ses)` reads `Application.get_env(:mailglass, :ses)`; `provider_module(:ses)` dispatches to `Mailglass.Webhook.Providers.SES` |
-| 2 | System automatically confirms SNS subscriptions by fetching the SubscribeURL (ROADMAP SC-2, SES-02) | ? UNCERTAIN | Implementation makes HTTP GET to ConfirmSubscription URL constructed from TopicArn+Token per D-07 — NOT the raw SubscribeURL. SubscribeURL is validated for trust only. Functional outcome is subscription confirmation; mechanism deliberately differs from REQUIREMENTS.md literal wording. Requires human decision. |
+| 2 | System automatically confirms SNS subscriptions by fetching the SubscribeURL (ROADMAP SC-2, SES-02) | PASSED (override) | Override accepted: Implementation makes HTTP GET to ConfirmSubscription URL constructed from TopicArn+Token per D-07 rather than following the raw SubscribeURL directly. SubscribeURL is validated for trust only. Functional outcome is identical automatic subscription confirmation. |
 | 3 | Valid SES RSA signatures are accepted using X.509 certificates fetched from AWS (ROADMAP SC-3, SES-03) | VERIFIED | `ses.ex` lines 63-103: TrustPolicy.valid_cert_url? checked first; CertCache.fetch_public_key + :httpc fallback; `:public_key.verify/4` called; all 6 verify!/3 tests pass; 29/29 tests green |
 | 4 | X.509 certificates are cached in `:ets` preventing repeated network calls per webhook (ROADMAP SC-4, SES-04) | VERIFIED | `cert_cache.ex`: ETS table `:mailglass_webhook_ses_cert_cache`; `fetch_public_key/1` returns `{:ok, key}` on hit; lazy TTL eviction on miss; `application.ex` lines 36-37: `SES.CertCache.Supervisor` in maybe_add chain; 7 CertCache tests pass |
 | 5 | SES events wrapped inside the SNS Message are mapped to the normalized taxonomy (ROADMAP SC-5, SES-05) | VERIFIED | `ses.ex` lines 110-127: `normalize/2` double-decodes SNS envelope then inner Message; dispatches on `notificationType` vs `eventType`; 10 event type mappings verified; 16 normalize tests pass |
@@ -34,7 +35,7 @@ human_verification:
 | 9 | Plug, Router, Application are wired for SES as opt-in provider | VERIFIED | `plug.ex` line 84: `:ses` in `@valid_providers`; `router.ex` line 71: `:ses` in `@valid_providers`, line 72: NOT in `@default_providers`; `application.ex` lines 36-37: `SES.CertCache.Supervisor` in maybe_add chain |
 | 10 | guides/webhooks.md documents SES setup including config key | VERIFIED | `guides/webhooks.md` line 116: "### Amazon SES (via SNS)" section with setup steps, config example, event table, duplicate-source warning |
 
-**Score:** 9/10 truths verified (1 requires human confirmation)
+**Score:** 10/10 truths verified (includes 1 accepted override)
 
 ### Required Artifacts
 
@@ -90,7 +91,7 @@ human_verification:
 | Requirement | Source Plans | Description | Status | Evidence |
 |-------------|-------------|-------------|--------|----------|
 | SES-01 | 16-01, 16-03, 16-04 | Webhook plug parses SNS payloads arriving with `text/plain` Content-Type | SATISFIED | `ses.ex verify!/3` accepts raw binary; `plug.ex` dispatches SES; `WebhookCase` :ses conn builder sets `content-type: text/plain` |
-| SES-02 | 16-03, 16-04 | System automatically performs HTTP GET to `SubscribeURL` upon receiving `SubscriptionConfirmation` events | NEEDS HUMAN | Implementation performs HTTP GET to ConfirmSubscription API URL constructed from TopicArn+Token (D-07), not raw SubscribeURL. Functional outcome (auto-confirmation) is achieved. Literal wording differs. |
+| SES-02 | 16-03, 16-04 | System automatically performs HTTP GET to `SubscribeURL` upon receiving `SubscriptionConfirmation` events | PASSED (override) | Override accepted: Implementation performs HTTP GET to the ConfirmSubscription API URL constructed from TopicArn+Token (D-07), not the raw SubscribeURL. Functional outcome (auto-confirmation) is achieved identically while avoiding trust in the raw URL. |
 | SES-03 | 16-02, 16-03 | Webhook plug verifies RSA-SHA1/SHA256 signatures using X.509 certificates fetched from AWS | SATISFIED | `ses.ex` lines 63-103: TrustPolicy → CertCache/httpc → :public_key.verify; both SHA1 and SHA256 supported via SignatureVersion dispatch |
 | SES-04 | 16-02 | X.509 certificates are fetched via `:httpc` and cached in `:ets` to avoid synchronous network I/O per webhook | SATISFIED | `cert_cache.ex` + `cert_cache/table_owner.ex` + `application.ex`: ETS table created by OTP supervisor; CertCache hit returns without network I/O; miss fetches via :httpc and stores with TTL |
 | SES-05 | 16-04 | Webhook maps SES events inside the SNS `Message` envelope to `mailglass` normalized taxonomy | SATISFIED | `ses.ex normalize/2`: double-decode, dispatch on notificationType/eventType, all 10 event types mapped; fan-out per recipient; string-keyed metadata |
@@ -104,31 +105,19 @@ human_verification:
 
 No blockers found.
 
-### Human Verification Required
+### Accepted Override
 
 #### 1. SES-02 / ROADMAP SC-2: SubscribeURL vs Constructed ConfirmSubscription URL
 
-**Test:** When the Mailglass webhook endpoint receives an SNS `SubscriptionConfirmation` message, confirm that the SNS topic subscription becomes active (confirmed) in the AWS console without manual intervention.
-
-**Expected:** Within seconds of the first `SubscriptionConfirmation` message reaching the endpoint, the SNS subscription status should change from "Pending confirmation" to "Confirmed".
-
-**Why human:** REQUIREMENTS.md SES-02 says "performs HTTP GET to `SubscribeURL`" and ROADMAP SC-2 says "confirms SNS subscriptions by fetching the SubscribeURL". The implementation satisfies the auto-confirmation goal but does so by constructing the `ConfirmSubscription` API URL from `TopicArn+Token` (D-07 security design) rather than following the raw `SubscribeURL` directly. The `SubscribeURL` is validated for trust but not followed. Whether this deviation satisfies the letter of the requirement needs a human decision. The RESEARCH.md line 56 explicitly documents this mapping with D-07 as the justification.
+The implementation satisfies the auto-confirmation requirement via the accepted D-07 security deviation: instead of following the raw `SubscribeURL` directly, it validates that URL for trust and constructs the `ConfirmSubscription` API request from signed `TopicArn` + `Token`. This preserves the required automatic HTTP GET confirmation behavior while preventing trust in attacker-influenceable redirect targets.
 
 **Code path:** `ses.ex` lines 133-167: `dispatch_message_type("SubscriptionConfirmation")` → `fetch_required_field!(payload, "SubscribeURL")` (validation only) → `build_confirm_url(topic_arn, token)` → `confirm_subscription(confirm_url, config)` → `:httpc.request(:get, ...)`.
 
-**Override suggestion:** If this deviation is accepted, add to VERIFICATION.md frontmatter:
-
-```yaml
-overrides:
-  - must_have: "System automatically confirms SNS subscriptions by fetching the SubscribeURL (ROADMAP SC-2, SES-02)"
-    reason: "D-07 security decision: ConfirmSubscription API URL is constructed from signed TopicArn+Token rather than following SubscribeURL directly. SubscribeURL is validated for trust but not followed as an authority (prevents open-redirect attacks). Functional outcome — automatic subscription confirmation — is achieved identically. RESEARCH.md line 56 documents this mapping explicitly."
-    accepted_by: "szTheory"
-    accepted_at: "2026-04-29T00:00:00Z"
-```
+**Accepted by:** jon at 2026-04-30T19:40:35Z.
 
 ### Gaps Summary
 
-No blocking gaps found. All implementation artifacts exist, are substantive, wired, and data flows correctly. All 200 webhook tests pass with 0 failures including 29 new SES-specific tests. The single open item is a human decision on whether the D-07 security deviation (constructing ConfirmSubscription URL from TopicArn+Token rather than following raw SubscribeURL) satisfies the literal wording of REQUIREMENTS.md SES-02 and ROADMAP SC-2. The functional behavior is correct — auto-confirmation is achieved.
+No blocking gaps found. All implementation artifacts exist, are substantive, wired, and data flows correctly. All 200 webhook tests pass with 0 failures including 29 new SES-specific tests. The prior SES-02 paperwork gap is closed via the accepted D-07 override, so the verification record now fully reflects the shipped behavior.
 
 ---
 

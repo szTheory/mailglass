@@ -74,6 +74,8 @@ defmodule Mailglass.Suppression.EscalationTest do
   end
 
   defp insert_deferred_events(count) do
+    now = Mailglass.Clock.utc_now()
+
     delivery =
       %{
         tenant_id: @tenant_id,
@@ -81,14 +83,14 @@ defmodule Mailglass.Suppression.EscalationTest do
         stream: :transactional,
         recipient: @recipient,
         last_event_type: :deferred,
-        last_event_at: ~U[2026-04-28 12:00:00Z],
+        last_event_at: now,
         metadata: %{}
       }
       |> Delivery.changeset()
       |> TestRepo.insert!()
 
     Enum.each(1..count, fn idx ->
-      occurred_at = DateTime.add(~U[2026-04-28 12:00:00Z], -idx, :day)
+      occurred_at = DateTime.add(now, -idx * 24 * 60 * 60, :second)
 
       %{
         tenant_id: @tenant_id,
