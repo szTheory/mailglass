@@ -59,7 +59,9 @@ defmodule Mailglass.Installer.Templates do
 
         scope "/" do
           pipe_through :mailglass_webhooks
-          mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun]
+          # Optional providers stay explicit opt-in:
+          # mailglass_webhook_routes "/webhooks", providers: [:postmark, :sendgrid, :mailgun, :ses, :resend]
+          mailglass_webhook_routes "/webhooks"
         end
     """
   end
