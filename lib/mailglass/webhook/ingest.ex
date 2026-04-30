@@ -367,6 +367,14 @@ defmodule Mailglass.Webhook.Ingest do
     extract_event_provider_id(first) || ""
   end
 
+  # SES (SNS) populates `provider_event_id` as "#{sns_message_id}:#{email}" via
+  # `Mailglass.Webhook.Providers.SES.build_provider_event_id/3`. Stable across SNS
+  # retries because both fields come from the signed payload. Same dispatch as
+  # Mailgun/Resend.
+  defp derive_webhook_provider_event_id(:ses, _raw_body, [first | _]) do
+    extract_event_provider_id(first) || ""
+  end
+
   # Resend (Svix) sends one event per webhook with a stable `id` like
   # "evt_..."; Phase 14 normalize/2 plumbs that into
   # Event.metadata["provider_event_id"], same convention as Postmark.
