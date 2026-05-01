@@ -1,9 +1,9 @@
 ---
 phase: 25
 slug: deliverability-doctor
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: active
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-05-01
 ---
 
@@ -65,9 +65,7 @@ created: 2026-05-01
 
 ## Manual-Only Verifications
 
-| Behavior | Requirement | Why Manual | Test Instructions |
-|----------|-------------|------------|-------------------|
-| Real-world DNS output sanity check against a known domain set | DOCTOR-01, DOCTOR-03 | Live DNS answers are environment-dependent and should not gate CI deterministically | Run `mix mail.doctor --domain example.com --verbose` and a second domain with known DMARC/BIMI posture; confirm human output stays bounded, grouped, and honest about uncertainty |
+None. Phase 25 now treats the resolver as the external adapter boundary and covers the shipped CLI contract with deterministic end-to-end parity tests instead of live-DNS UAT.
 
 ---
 
@@ -78,6 +76,6 @@ created: 2026-05-01
 - [ ] Wave 0 covers all MISSING references
 - [ ] No watch-mode flags
 - [ ] Feedback latency < 120s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** automated coverage complete

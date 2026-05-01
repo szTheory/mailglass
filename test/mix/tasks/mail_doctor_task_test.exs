@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Mail.DoctorTest do
 
   import ExUnit.CaptureIO
 
+  alias Mailglass.Deliverability.Formatter
   alias Mailglass.TestSupport.DeliverabilityResolverStub
 
   setup do
@@ -71,6 +72,64 @@ defmodule Mix.Tasks.Mail.DoctorTest do
       assert verbose_output =~ "Evidence:"
     end
 
+    test "keeps cli human output, cli json output, and runtime contract in parity" do
+      put_parity_fixtures()
+
+      {:ok, runtime_result} =
+        Mailglass.Deliverability.run(
+          domain: "parity.example",
+          dkim_selectors: ["selector1", "selector2"],
+          resolver: DeliverabilityResolverStub
+        )
+
+      human_output =
+        run_task!(["--domain", "parity.example", "--dkim-selector", "selector1", "--dkim-selector", "selector2"])
+
+      verbose_output =
+        run_task!([
+          "--domain",
+          "parity.example",
+          "--dkim-selector",
+          "selector1",
+          "--dkim-selector",
+          "selector2",
+          "--verbose"
+        ])
+
+      json_output =
+        run_task!([
+          "--domain",
+          "parity.example",
+          "--dkim-selector",
+          "selector1",
+          "--dkim-selector",
+          "selector2",
+          "--format",
+          "json"
+        ])
+
+      assert human_output == Formatter.render_human(runtime_result)
+      assert verbose_output == Formatter.render_human(runtime_result, verbose?: true)
+      assert Jason.decode!(json_output) == Jason.decode!(Formatter.render_json(runtime_result))
+
+      decoded = Jason.decode!(json_output)
+
+      assert decoded["domain"] == "parity.example"
+      assert decoded["schema_version"] == 1
+      assert decoded["summary"] == %{
+               "cannot_verify" => 0,
+               "fail" => 1,
+               "pass" => 5,
+               "warn" => 7
+             }
+
+      assert human_output =~ "parity.example: 5 pass, 7 warn, 1 fail, 0 cannot_verify"
+      assert human_output =~ "[fail] Selector selector2 is revoked"
+      assert human_output =~ "[warn] BIMI certificate location is not published"
+      refute human_output =~ "Evidence:"
+      assert verbose_output =~ "Evidence:"
+    end
+
     test "reports cannot_verify when dkim selectors are omitted" do
       put_success_fixtures()
 
@@ -117,6 +176,7 @@ defmodule Mix.Tasks.Mail.DoctorTest do
     capture_io(fn ->
       Mix.Tasks.Mail.Doctor.run(argv)
     end)
+    |> String.trim_trailing()
   end
 
   defp put_success_fixtures do
@@ -129,6 +189,27 @@ defmodule Mix.Tasks.Mail.DoctorTest do
       },
       mx: %{"example.com" => {:ok, [%{exchange: ".", preference: 0}]}},
       cname: %{"selector1._domainkey.example.com" => {:ok, "selector1.provider.example"}}
+    })
+  end
+
+  defp put_parity_fixtures do
+    DeliverabilityResolverStub.put_fixtures(%{
+      txt: %{
+        "parity.example" => {:ok, ["v=spf1 include:_spf.mailer.parity.example -all"]},
+        "_spf.mailer.parity.example" => {:ok, ["v=spf1 ip4:192.0.2.0/24 -all"]},
+        "_dmarc.parity.example" => {:ok, ["v=DMARC1; p=quarantine; rua=mailto:dmarc@parity.example"]},
+        "selector1._domainkey.parity.example" => {:ok, ["v=DKIM1; k=rsa; p=YWJjREVGR0g="]},
+        "selector2._domainkey.parity.example" => {:ok, ["v=DKIM1; p="]},
+        "default._bimi.parity.example" =>
+          {:ok, ["v=BIMI1; l=https://cdn.parity.example/logo.svg"]}
+      },
+      mx: %{
+        "parity.example" => {:ok, [%{exchange: "mx1.parity.example", preference: 10}]}
+      },
+      cname: %{
+        "selector1._domainkey.parity.example" => {:error, :nxdomain},
+        "selector2._domainkey.parity.example" => {:error, :nxdomain}
+      }
     })
   end
 end
