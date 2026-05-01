@@ -151,6 +151,8 @@ defmodule Mailglass.MixProject do
       {:stream_data, "~> 1.3", only: [:test]},
       {:mox, "~> 1.2", only: [:test]},
       {:excoveralls, "~> 0.18", only: [:test]},
+      {:lazy_html, ">= 0.1.0", only: :test},
+      {:phoenix_live_reload, "~> 1.6", optional: true, only: [:dev, :test]},
       # Dev/test
       # Public upgrade codemod task ships in the package, so Igniter must be
       # available when consumer apps compile mailglass as a dependency.

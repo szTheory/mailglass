@@ -31,7 +31,12 @@ defmodule MailglassAdmin.TestAdopter.Router do
 
   scope "/dev" do
     pipe_through :browser
-    mailglass_admin_routes "/mail"
+    mailglass_admin_routes "/mail",
+      mailables: [
+        :"Elixir.MailglassAdmin.Fixtures.HappyMailer",
+        :"Elixir.MailglassAdmin.Fixtures.StubMailer",
+        :"Elixir.MailglassAdmin.Fixtures.BrokenMailer"
+      ]
   end
 end
 

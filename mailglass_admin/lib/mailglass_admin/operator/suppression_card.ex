@@ -37,7 +37,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
               <p class="mt-1 text-base-content">{@suppression_state.source}</p>
             </div>
           </div>
-          <p class="text-secondary">{@suppression_state.reversibility_copy}</p>
+          <p class="text-secondary">{body_copy(@suppression_state)}</p>
         </div>
       <% else %>
         <p class="text-sm text-secondary">
@@ -51,6 +51,10 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
   defp headline(nil), do: "No suppression"
   defp headline(%{reversibility: :immutable}), do: "Immutable by policy"
   defp headline(%{reversibility: :reversible}), do: "Reversible in a later phase"
+
+  defp body_copy(%{reversibility: :immutable}), do: "This suppression is immutable by policy."
+  defp body_copy(%{reversibility: :reversible}), do: "This suppression is reversible in a later phase."
+  defp body_copy(%{reversibility_copy: copy}) when is_binary(copy), do: copy
 
   defp label(nil), do: "Unknown"
 

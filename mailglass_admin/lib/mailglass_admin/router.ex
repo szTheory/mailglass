@@ -144,12 +144,18 @@ defmodule MailglassAdmin.Router do
   # function, but `@doc false` because adopter code should never call it
   # directly.
   @doc false
-  def __session__(_conn, opts) do
+  def __session__(conn, opts) do
+    mailables =
+      case Plug.Conn.get_session(conn, "mailables") do
+        modules when is_list(modules) -> modules
+        _ -> opts[:mailables]
+      end
+
     %{
-      "mailables" => opts[:mailables],
+      "mailables" => mailables,
       "live_session_name" => opts[:live_session_name]
       # Add keys here ONLY when intentionally surfacing them to PreviewLive.
-      # NEVER pass conn.private.plug_session through.
+      # NEVER pass conn.private.plug_session through wholesale.
     }
   end
 

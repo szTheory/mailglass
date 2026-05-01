@@ -14,22 +14,9 @@ defmodule MailglassAdmin.LiveViewCase do
 
   use ExUnit.CaseTemplate
 
-  using do
+  using opts do
     quote do
-      import Plug.Conn
-      import Phoenix.ConnTest
-      import Phoenix.LiveViewTest
-      @endpoint MailglassAdmin.TestAdopter.Endpoint
+      use Mailglass.AdminCase, unquote(opts)
     end
-  end
-
-  setup_all do
-    {:ok, _} = Application.ensure_all_started(:phoenix)
-    _ = MailglassAdmin.TestAdopter.Endpoint.start_link()
-    :ok
-  end
-
-  setup do
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

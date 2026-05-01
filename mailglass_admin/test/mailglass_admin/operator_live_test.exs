@@ -1,5 +1,5 @@
 defmodule MailglassAdmin.OperatorLiveTest do
-  use MailglassAdmin.LiveViewCase, async: false
+  use Mailglass.AdminCase, async: false
 
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
@@ -114,7 +114,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
       |> element("button[phx-value-id='#{delivery.id}']")
       |> render_click()
 
-      assert_patch(view, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+      assert_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "delivery_id" => delivery.id,
+          "window_hours" => "168"
+        })
+      )
 
       html = render(view)
 
