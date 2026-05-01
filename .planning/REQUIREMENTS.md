@@ -1,0 +1,94 @@
+# Requirements: mailglass
+
+**Defined:** 2026-04-30
+**Core Value:** Email you can see, audit, and trust before it ships.
+
+## v0.4 Requirements
+
+### Admin
+
+- [ ] **ADMIN-01**: Adopter can mount a production-safe `mailglass_admin` operator surface inside a Phoenix app.
+- [ ] **ADMIN-02**: Operator can browse recent deliveries with tenant-aware filtering.
+- [ ] **ADMIN-03**: Operator can open a delivery and inspect a chronological event timeline derived from the append-only ledger.
+- [ ] **ADMIN-04**: Operator can view suppression entries and see whether each entry is removable or immutable, with the reason surfaced in the UI.
+- [ ] **ADMIN-05**: Destructive operator actions require recent authentication.
+
+### Replay
+
+- [ ] **REPLAY-01**: Operator can trigger webhook replay for a targeted event or delivery from the admin surface.
+- [ ] **REPLAY-02**: Replay records durable audit context for who triggered it, what was replayed, and when.
+- [ ] **REPLAY-03**: Replay respects tenant scoping and existing idempotency and verification boundaries.
+
+### Deliverability Doctor
+
+- [ ] **DOCTOR-01**: User can run `mix mail.doctor` against a domain and receive SPF, DKIM, DMARC, MX, and BIMI findings.
+- [ ] **DOCTOR-02**: `mix mail.doctor` classifies findings as pass, warn, fail, or cannot-verify.
+- [ ] **DOCTOR-03**: `mix mail.doctor` explains remediation in operator-facing language without overstating certainty.
+
+### Tenant Routing
+
+- [ ] **TENANT-01**: Adopter can configure runtime per-tenant adapter resolution for outbound delivery.
+- [ ] **TENANT-02**: Delivery pipeline resolves the effective adapter using tenant context without recompilation.
+- [ ] **TENANT-03**: Single-tenant apps retain a deterministic default path when no tenant resolver is configured.
+
+### Release / Install Closure
+
+- [ ] **REL-17**: Fresh-host install no longer crashes on missing `:hackney` / Swoosh API client defaults (`Issue #25`).
+- [ ] **REL-18**: Post-publish smoke no longer depends on the current manual version-resolution workaround (`Issue #9`).
+
+## Future Requirements
+
+### Adoption Hardening
+
+- **ADOPT-01**: User can generate a new mailable scaffold with `mix mailglass.gen.mailable`.
+- **ADOPT-02**: User has richer test assertion helpers for delivery and webhook verification.
+- **ADOPT-03**: User can follow a first-party webhook troubleshooting guide and install/upgrade/operator runbooks.
+- **ADOPT-04**: Per-domain rate limiting is configurable with stronger adoption-facing defaults and docs.
+
+### Production Maturity
+
+- **MAT-01**: Operator has hardened replay / reconcile / incident-response workflows.
+- **MAT-02**: Operator-facing observability and support docs cover real production failure modes.
+
+### Post-v1.0 Inbound
+
+- **INBOUND-01**: Adopter can route inbound mail through a separate `mailglass_inbound` package once the outbound/operator core is stable.
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Inbound mail routing in `v0.4` | Explicitly deferred until after the pre-`v1.0` operator/adoption/stability arc |
+| Marketing / campaign tooling | Different product category and compliance surface |
+| Standalone admin authentication system | `mailglass_admin` mounts inside adopter apps, so identity ownership stays with the adopter |
+| New provider expansion | Provider coverage is already the completed `v0.3` milestone |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| ADMIN-02 | Phase 22 | Complete |
+| ADMIN-03 | Phase 22 | Complete |
+| ADMIN-04 | Phase 22 | Complete |
+| ADMIN-01 | Phase 23 | Pending |
+| ADMIN-05 | Phase 23 | Pending |
+| REPLAY-01 | Phase 24 | Pending |
+| REPLAY-02 | Phase 24 | Pending |
+| REPLAY-03 | Phase 24 | Pending |
+| DOCTOR-01 | Phase 25 | Pending |
+| DOCTOR-02 | Phase 25 | Pending |
+| DOCTOR-03 | Phase 25 | Pending |
+| TENANT-01 | Phase 26 | Pending |
+| TENANT-02 | Phase 26 | Pending |
+| TENANT-03 | Phase 26 | Pending |
+| REL-17 | Phase 27 | Pending |
+| REL-18 | Phase 27 | Pending |
+
+**Coverage:**
+- v0.4 requirements: 16 total
+- Mapped to phases: 16
+- Unmapped: 0
+
+---
+*Requirements defined: 2026-04-30*
+*Last updated: 2026-05-01 after activating v0.4 and marking Phase 22 requirement coverage complete*

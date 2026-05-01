@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.3.0
-milestone_name: webhook-coverage-complete
-status: shipped
-last_updated: "2026-04-30T16:30:40-04:00"
-last_activity: 2026-04-30
+milestone: v0.4.0
+milestone_name: operator-confidence
+status: active
+last_updated: "2026-05-01T11:01:03-04:00"
+last_activity: 2026-05-01
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 19
-  completed_plans: 19
-  percent: 100
+  total_phases: 6
+  completed_phases: 1
+  total_plans: 0
+  completed_plans: 0
+  percent: 17
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 ## Project Reference
 
 **Core Value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current Focus:** No active milestone
+**Current Focus:** v0.4 Operator Confidence — Phase 23 production admin mount is next
 
 ## Current Position
 
-Phase: none
-Plan: none
-Status: Milestone archived and waiting for the next milestone definition
-Last activity: 2026-04-30
+Phase: 23
+Plan: not started
+Status: v0.4 active; Phase 22 operator data foundation is complete and the milestone is ready for Phase 23 planning
+Last activity: 2026-05-01 — Activated v0.4 Operator Confidence
 
 ## Performance Metrics
 
@@ -79,4 +79,5 @@ Items acknowledged and deferred at milestone close on 2026-04-30:
 - Phase 19 (SES ingest blocker closure) completed 2026-04-30 after the current full suite returned green (`20 properties, 913 tests, 0 failures, 6 skipped`).
 - Phase 20 (config schema + installer surface) complete 2026-04-30.
 - Phase 21 (SES-02 override paperwork closure) complete 2026-04-30.
-- Milestone archived 2026-04-30; next milestone not yet defined.
+- v0.4 Operator Confidence activated 2026-05-01.
+- Phase 22 (operator data foundation) completed and verified 2026-05-01; deliveries, timeline, and suppression visibility are in place as the admin MVP foundation.

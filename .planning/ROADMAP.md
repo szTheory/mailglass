@@ -11,7 +11,24 @@
 
 ## Current Milestone
 
-No active milestone is open. Start the next one with `$gsd-new-milestone`.
+### v0.4 Operator Confidence
+
+**Goal:** Make mailglass credible for production operators, not just library authors.
+
+**Why now:** Provider coverage is complete. The next missing layer is operator trust: mounting the admin safely, inspecting deliveries and timelines, replaying safely, validating deliverability posture, and closing fresh-host shipping gaps.
+
+**Progress:** 1/6 phases complete
+
+| Phase | Status | Goal | Requirements |
+|-------|--------|------|--------------|
+| 22 | Complete | Establish the read-only operator data foundation for deliveries, timelines, and suppression visibility. | `ADMIN-02`, `ADMIN-03`, `ADMIN-04` |
+| 23 | Pending | Make the operator surface production-mountable and enforce step-up auth on destructive actions. | `ADMIN-01`, `ADMIN-05` |
+| 24 | Pending | Add tenant-safe webhook replay with durable audit context. | `REPLAY-01`, `REPLAY-02`, `REPLAY-03` |
+| 25 | Pending | Ship `mix mail.doctor` with actionable DNS deliverability diagnostics. | `DOCTOR-01`, `DOCTOR-02`, `DOCTOR-03` |
+| 26 | Pending | Add runtime per-tenant outbound adapter resolution without breaking single-tenant defaults. | `TENANT-01`, `TENANT-02`, `TENANT-03` |
+| 27 | Pending | Close the known install and post-publish smoke gaps before milestone ship. | `REL-17`, `REL-18` |
+
+**Next up:** `$gsd-plan-phase 23`
 
 ## Backlog
 
