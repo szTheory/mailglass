@@ -2,11 +2,10 @@ defmodule Mailglass.Deliverability do
   @moduledoc """
   Runtime entrypoint for one-domain deliverability doctor runs.
 
-  Phase 25 starts with a stable result contract and resolver seam. Protocol
-  analyzers land in later plans and will continue to build on the same shape.
+  Runs the full DNS-only deliverability analyzer suite for one domain.
   """
 
-  alias Mailglass.Deliverability.{Resolver, Result}
+  alias Mailglass.Deliverability.{BIMI, DKIM, DMARC, MX, Resolver, Result, SPF}
 
   @type result :: Result.t()
 
@@ -15,14 +14,17 @@ defmodule Mailglass.Deliverability do
     with {:ok, domain} <- fetch_domain(opts),
          {:ok, dkim_selectors} <- fetch_dkim_selectors(opts),
          {:ok, resolver} <- fetch_resolver(opts) do
-      facts = collect_facts(domain, dkim_selectors, resolver)
+      collected = collect_facts(domain, dkim_selectors, resolver)
+      analyses = analyze_all(collected.facts, resolver)
+      facts = Enum.into(analyses, %{}, fn {area, analysis} -> {area, analysis.facts} end)
+      findings = Enum.flat_map(ordered_areas(), fn area -> analyses[area].findings end)
 
       Result.new(
         domain: domain,
         dkim_selectors: dkim_selectors,
-        facts: facts.facts,
-        findings: [],
-        resolver_errors: facts.resolver_errors
+        facts: facts,
+        findings: findings,
+        resolver_errors: collected.resolver_errors
       )
     end
   end
@@ -95,8 +97,25 @@ defmodule Mailglass.Deliverability do
     |> put_dkim_bucket(domain, dkim_selectors, resolver)
     |> put_txt_bucket(:dmarc, :txt_records, dmarc_domain, resolver)
     |> put_mx_bucket(domain, resolver)
-    |> put_cname_bucket(:bimi, :cname, bimi_domain, resolver)
+    |> put_txt_bucket(:bimi, :txt_records, bimi_domain, resolver)
   end
+
+  defp analyze_all(facts, resolver) do
+    spf = SPF.analyze(facts.spf, resolver: resolver)
+    dkim = DKIM.analyze(facts.dkim)
+    dmarc = DMARC.analyze(facts.dmarc)
+    mx = MX.analyze(facts.mx)
+
+    bimi =
+      BIMI.analyze(
+        facts.bimi,
+        dmarc_posture: Map.get(dmarc.facts, :posture)
+      )
+
+    %{spf: spf, dkim: dkim, dmarc: dmarc, mx: mx, bimi: bimi}
+  end
+
+  defp ordered_areas, do: [:spf, :dkim, :dmarc, :mx, :bimi]
 
   defp put_txt_bucket(state, area, key, domain, resolver) do
     case resolver.lookup_txt(domain) do
@@ -159,18 +178,6 @@ defmodule Mailglass.Deliverability do
         state
         |> update_fact(:mx, %{domain: domain, records: []})
         |> add_resolver_error(:mx, domain, reason, %{area: :mx})
-    end
-  end
-
-  defp put_cname_bucket(state, area, key, domain, resolver) do
-    case resolver.lookup_cname(domain) do
-      {:ok, target} ->
-        update_fact(state, area, %{key => target, domain: domain})
-
-      {:error, reason} ->
-        state
-        |> update_fact(area, %{domain: domain})
-        |> add_resolver_error(:cname, domain, reason, %{area: area})
     end
   end
 
