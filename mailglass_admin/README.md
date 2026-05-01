@@ -1,8 +1,9 @@
 # mailglass_admin
 
-Mountable LiveView dashboard for mailglass. The dev-preview surface at v0.1:
-see every mailable in your app, pick a scenario, edit the assigns inline, and
-inspect HTML / Text / Raw / Headers tabs — all without leaving the browser.
+Mountable LiveView surfaces for mailglass. Today that means:
+
+- a dev-preview dashboard for mailable iteration
+- a production operator dashboard for delivery inspection and targeted webhook replay inside an adopter-owned auth boundary
 
 ## Installation
 
@@ -17,7 +18,7 @@ Add `mailglass_admin` to your adopter app's `mix.exs`:
 
 Then `mix deps.get`.
 
-## Mount the preview
+## Mount the dev preview
 
 Add four lines to `lib/my_app_web/router.ex`:
 
@@ -36,6 +37,53 @@ The `if Application.compile_env(:my_app, :dev_routes) do ... end` wrapper is
 the Phoenix 1.8 convention (same gate that protects `live_dashboard` and
 `Plug.Swoosh.MailboxPreview`). `mailglass_admin` does not check `Mix.env()`
 itself — dev-only is the adopter's responsibility.
+
+## Mount the production operator surface
+
+Import the same router helpers, but mount the operator surface inside your
+normal authenticated browser scope:
+
+    import MailglassAdmin.Router
+
+    scope "/ops" do
+      pipe_through [:browser, :require_authenticated_user]
+
+      mailglass_operator_routes "/mail",
+        auth: MyApp.MailglassAdminAuth,
+        session: [
+          subject_id: "current_user_id",
+          tenant_id: "current_tenant_id",
+          auth_method: "auth_method",
+          recent_auth_at: "recent_auth_at"
+        ],
+        on_mount: [{MyAppWeb.UserAuth, :require_authenticated_user}],
+        unauthorized_path: "/users/log-in"
+    end
+
+`auth:` stays adopter-owned. `mailglass_admin` does not ship a login system,
+session schema, or recent-auth prompt. It expects your app to decide who may
+enter the operator surface and how "recent authentication" is satisfied.
+
+## Operator replay contract
+
+The operator surface now supports targeted webhook replay from the selected
+delivery detail pane.
+
+- Replay starts from one selected delivery, but the server resolves that UI
+  selection to one exact stored `mailglass_webhook_events` row before any
+  side effect runs.
+- When exactly one raw webhook target is safe, the confirmation modal
+  preselects it. When multiple targets are safe, the operator must choose
+  one explicitly. When no exact target is safe, the modal explains why replay
+  is unavailable instead of guessing.
+- Confirming replay calls your adopter-owned `auth:` module with
+  `:destructive_action` at action time. Mount-time authorization is not
+  enough for replay.
+- Replay reuses mailglass's existing webhook normalization and idempotency
+  semantics. A replay can honestly result in either new work or a duplicate
+  / no-op convergence outcome.
+- Every replay attempt is ledger-audited with requested, succeeded, or failed
+  facts that stay visible in the delivery timeline.
 
 ## LiveReload setup (optional)
 
@@ -87,13 +135,21 @@ before you write any scenarios.
   re-render
 - Device toggle (375 / 768 / 1024) + chrome dark toggle
 - Graceful failure badges for mailables whose `preview_props/0` raises
+- A production operator mount with a separate `live_session`, explicit
+  session whitelist, and adopter-owned auth seam
+- Delivery, timeline, and suppression visibility in the operator UI
+- Targeted webhook replay from the selected delivery detail view with
+  action-time auth checks, exact-target confirmation, and durable timeline
+  audit visibility
 
 ## What this does NOT ship
 
-- Any prod-mountable admin surface (sent-mail inbox, event timeline,
-  suppression UI). That lands at v0.5.
-- Authentication or step-up protection. Dev-only mount relies on the
-  adopter's `:dev_routes` wrapper — do not mount this in production.
+- Hosted authentication, user storage, or a recent-auth UX. Keep auth and
+  step-up ownership in the adopter app.
+- Bulk replay, "replay latest", or delivery-wide replay guessing. The operator
+  surface replays one exact stored webhook target at a time.
+- Suppression removal flows. The recent-auth seam exists, but suppression
+  reversal remains a later phase.
 - Search, filter, or pagination over mailables. v0.5.
 - Inbound-mail (`mailglass_inbound`) Conductor LiveView — separate sibling
   package, v0.5+.
