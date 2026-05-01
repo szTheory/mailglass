@@ -238,6 +238,36 @@ adapter structs that may carry provider payloads with recipient PII (T-PII-002).
 Adopters that need the full cause chain walk it explicitly via
 `Mailglass.Error.root_cause/1`.
 
+## Event Type Contract
+
+`Mailglass.Events.Event.__types__/0` is a closed atom set.
+
+Anymail taxonomy atoms:
+
+- `:queued`
+- `:sent`
+- `:rejected`
+- `:failed`
+- `:bounced`
+- `:deferred`
+- `:delivered`
+- `:autoresponded`
+- `:opened`
+- `:clicked`
+- `:complained`
+- `:unsubscribed`
+- `:subscribed`
+- `:unknown`
+
+Mailglass-internal atoms:
+
+- `:dispatched`
+- `:suppressed`
+- `:reconciled`
+- `:webhook_replay_requested`
+- `:webhook_replay_succeeded`
+- `:webhook_replay_failed`
+
 ## §Telemetry Extensions (Phase 3)
 
 ### New named span helpers

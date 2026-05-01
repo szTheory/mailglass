@@ -60,7 +60,14 @@ defmodule Mailglass.Events.Event do
   # never by provider mappers. Keeps the ledger a complete audit trail for
   # "when did this orphan get linked?" without back-filling the original.
   # Pitfall 8: do NOT add to `@anymail_event_types`.
-  @mailglass_internal_types [:dispatched, :suppressed, :reconciled]
+  @mailglass_internal_types [
+    :dispatched,
+    :suppressed,
+    :reconciled,
+    :webhook_replay_requested,
+    :webhook_replay_succeeded,
+    :webhook_replay_failed
+  ]
   @event_types @anymail_event_types ++ @mailglass_internal_types
 
   @reject_reasons [:invalid, :bounced, :timed_out, :blocked, :spam, :unsubscribed, :other]
