@@ -11,10 +11,18 @@ defmodule MailglassAdmin.OperatorLive do
 
   use Phoenix.LiveView
 
-  alias Mailglass.Operator.{Deliveries, Suppressions}
+  alias Mailglass.Operator.{Deliveries, ReplayHistory, ReplayTargets, Suppressions}
+  alias Mailglass.Webhook.Replay
+  alias MailglassAdmin.Auth
   alias Mailglass.Operator.Timeline, as: OperatorTimelineData
   alias MailglassAdmin.Components
-  alias MailglassAdmin.Operator.{DeliveriesList, DetailHeader, FiltersForm, SuppressionCard}
+  alias MailglassAdmin.Operator.{
+    DeliveriesList,
+    DetailHeader,
+    FiltersForm,
+    ReplayModal,
+    SuppressionCard
+  }
   alias MailglassAdmin.Operator.Timeline, as: OperatorTimeline
 
   @status_values [:queued, :sent, :dispatched, :failed, :suppressed]
@@ -30,11 +38,18 @@ defmodule MailglassAdmin.OperatorLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
+     |> assign_new(:operator_actor, fn -> nil end)
+     |> assign_new(:operator_auth, fn -> %{status: :unknown, recent_auth?: false} end)
      |> assign(:deliveries, [])
      |> assign(:selected_delivery, nil)
      |> assign(:timeline_events, [])
      |> assign(:suppression_state, nil)
      |> assign(:detail_error, nil)
+     |> assign(:replay_targets, nil)
+     |> assign(:replay_history, [])
+     |> assign(:replay_modal_open?, false)
+     |> assign(:replay_selected_target_id, nil)
+     |> assign(:recent_auth_at, get_in(socket.assigns, [:operator_actor, :recent_auth_at]))
      |> assign(:base_path, "/operator")
      |> assign(:status_values, @status_values)
      |> assign(:event_values, @event_values)
@@ -47,23 +62,14 @@ defmodule MailglassAdmin.OperatorLive do
   @impl true
   def handle_params(params, uri, socket) do
     filter_params = normalize_filter_params(params)
-    deliveries = load_deliveries(filter_params)
-    selected_delivery_id = blank_to_nil(params["delivery_id"])
-    selected_delivery = find_selected_delivery(deliveries, selected_delivery_id)
-    detail_error = detail_error_for(selected_delivery_id, selected_delivery)
-    timeline_events = load_timeline(filter_params, selected_delivery)
-    suppression_state = load_suppression(filter_params, selected_delivery)
 
     {:noreply,
      socket
      |> assign(:base_path, URI.parse(uri).path || "/operator")
-     |> assign(:deliveries, deliveries)
-     |> assign(:selected_delivery, selected_delivery)
-     |> assign(:timeline_events, timeline_events)
-     |> assign(:suppression_state, suppression_state)
-     |> assign(:detail_error, detail_error)
      |> assign(:filter_params, filter_params)
-     |> assign(:filter_form, to_form(filter_params, as: :filters))}
+     |> assign(:filter_form, to_form(filter_params, as: :filters))
+     |> assign_delivery_state(filter_params, blank_to_nil(params["delivery_id"]))
+     |> close_replay_modal()}
   end
 
   @impl true
@@ -91,6 +97,62 @@ defmodule MailglassAdmin.OperatorLive do
     {:noreply, push_patch(socket, to: socket.assigns.base_path)}
   end
 
+  def handle_event("open_replay", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:replay_modal_open?, true)
+     |> assign(:replay_selected_target_id, default_replay_target_id(socket.assigns.replay_targets))}
+  end
+
+  def handle_event("close_replay", _params, socket) do
+    {:noreply, close_replay_modal(socket)}
+  end
+
+  def handle_event("choose_replay_target", %{"webhook_event_id" => webhook_event_id}, socket) do
+    {:noreply, assign(socket, :replay_selected_target_id, blank_to_nil(webhook_event_id))}
+  end
+
+  def handle_event("choose_replay_target", %{"replay" => %{"webhook_event_id" => webhook_event_id}}, socket) do
+    {:noreply, assign(socket, :replay_selected_target_id, blank_to_nil(webhook_event_id))}
+  end
+
+  def handle_event("confirm_replay", _params, socket) do
+    with %{selected_delivery: %{id: delivery_id, tenant_id: tenant_id} = delivery} <- socket.assigns,
+         {:ok, target} <- selected_replay_target(socket.assigns.replay_targets, socket.assigns.replay_selected_target_id),
+         {:ok, socket} <- authorize_replay(socket, delivery, target),
+         {:ok, result} <-
+           Replay.execute(%{
+             tenant_id: tenant_id,
+             delivery_id: delivery_id,
+             webhook_event_id: target.webhook_event_id,
+             actor: socket.assigns.operator_actor
+           }) do
+      {:noreply,
+       socket
+       |> assign_delivery_state(socket.assigns.filter_params, delivery_id)
+       |> close_replay_modal()
+       |> put_flash(:info, replay_success_message(result.status))}
+    else
+      {:error, :no_selected_delivery} ->
+        {:noreply, put_flash(socket, :error, "Select a delivery before replaying a webhook.")}
+
+      {:error, :unavailable} ->
+        {:noreply, put_flash(socket, :error, "Replay is unavailable for this delivery.")}
+
+      {:error, :target_required} ->
+        {:noreply, put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
+
+      {:error, {:auth, message}} ->
+        {:noreply, put_flash(socket, :error, message)}
+
+      {:error, reason} ->
+        {:noreply,
+         socket
+         |> assign_delivery_state(socket.assigns.filter_params, socket.assigns.selected_delivery.id)
+         |> put_flash(:error, replay_failure_message(reason))}
+    end
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -102,6 +164,21 @@ defmodule MailglassAdmin.OperatorLive do
             Browse tenant-scoped deliveries, inspect their event timeline, and review suppression state.
           </p>
         </header>
+
+        <div class="space-y-3">
+          <div
+            :if={Phoenix.Flash.get(@flash, :info)}
+            class="rounded-box border border-success bg-success/10 px-4 py-3 text-sm text-base-content"
+          >
+            {Phoenix.Flash.get(@flash, :info)}
+          </div>
+          <div
+            :if={Phoenix.Flash.get(@flash, :error)}
+            class="rounded-box border border-error bg-error/10 px-4 py-3 text-sm text-base-content"
+          >
+            {Phoenix.Flash.get(@flash, :error)}
+          </div>
+        </div>
 
         <section class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5">
           <.form
@@ -129,8 +206,14 @@ defmodule MailglassAdmin.OperatorLive do
           </.form>
         </section>
 
-        <section class="mt-6 grid gap-6 lg:grid-cols-[minmax(22rem,28rem)_1fr]">
-          <aside class="card rounded-box border border-base-300 bg-base-200 p-0">
+        <section
+          data-testid="operator-master-detail"
+          class="mt-6 grid gap-6 lg:grid-cols-[minmax(22rem,28rem)_1fr]"
+        >
+          <aside
+            data-testid="operator-deliveries-list-card"
+            class="card rounded-box border border-base-300 bg-base-200 p-0"
+          >
             <div class="border-b border-base-300 px-4 py-3">
               <h2 class="text-sm font-bold uppercase tracking-[0.08em] text-secondary">
                 Recent deliveries
@@ -142,10 +225,13 @@ defmodule MailglassAdmin.OperatorLive do
             />
           </aside>
 
-          <section class="space-y-4">
+          <section data-testid="operator-detail-column" class="space-y-4">
             <%= cond do %>
               <% @detail_error -> %>
-                <div class="card rounded-box border border-error bg-base-100 p-6">
+                <div
+                  data-testid="operator-detail-error"
+                  class="card rounded-box border border-error bg-base-100 p-6"
+                >
                   <div class="flex items-center gap-2">
                     <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
                     <h2 class="text-base font-bold text-base-content">
@@ -155,20 +241,34 @@ defmodule MailglassAdmin.OperatorLive do
                 </div>
 
               <% is_nil(@selected_delivery) -> %>
-                <div class="card rounded-box border border-base-300 bg-base-200 p-6">
+                <div
+                  data-testid="operator-empty-detail"
+                  class="card rounded-box border border-base-300 bg-base-200 p-6"
+                >
                   <h2 class="text-base font-bold text-base-content">
                     Select a delivery to inspect its event timeline and suppression state.
                   </h2>
                 </div>
 
               <% true -> %>
-                <DetailHeader.detail_header delivery={@selected_delivery} />
+                <DetailHeader.detail_header
+                  delivery={@selected_delivery}
+                  replay_targets={@replay_targets}
+                  latest_replay={latest_replay(@replay_history)}
+                />
                 <OperatorTimeline.timeline timeline_events={@timeline_events} />
                 <SuppressionCard.suppression_card suppression_state={@suppression_state} />
             <% end %>
           </section>
         </section>
       </main>
+
+      <ReplayModal.replay_modal
+        open?={@replay_modal_open?}
+        delivery={@selected_delivery}
+        replay_targets={@replay_targets}
+        selected_target_id={@replay_selected_target_id}
+      />
     </div>
     """
   end
@@ -241,6 +341,114 @@ defmodule MailglassAdmin.OperatorLive do
   defp detail_error_for(nil, _selected_delivery), do: nil
   defp detail_error_for(_delivery_id, nil), do: :not_found
   defp detail_error_for(_delivery_id, _selected_delivery), do: nil
+
+  defp load_replay_targets(_filter_params, nil), do: nil
+
+  defp load_replay_targets(filter_params, delivery) do
+    case ReplayTargets.list_delivery_targets(%{
+           tenant_id: filter_params["tenant_id"],
+           delivery_id: delivery.id
+         }) do
+      {:ok, targets} -> targets
+      {:error, _reason} -> %{status: :unavailable, reason: :missing_replay_linkage, candidates: []}
+    end
+  end
+
+  defp load_replay_history(_filter_params, nil), do: []
+
+  defp load_replay_history(filter_params, delivery) do
+    ReplayHistory.list_delivery_replay_history(%{
+      tenant_id: filter_params["tenant_id"],
+      delivery_id: delivery.id
+    })
+  end
+
+  defp assign_delivery_state(socket, filter_params, selected_delivery_id) do
+    deliveries = load_deliveries(filter_params)
+    selected_delivery = find_selected_delivery(deliveries, selected_delivery_id)
+    replay_targets = load_replay_targets(filter_params, selected_delivery)
+    replay_history = load_replay_history(filter_params, selected_delivery)
+
+    socket
+    |> assign(:deliveries, deliveries)
+    |> assign(:selected_delivery, selected_delivery)
+    |> assign(:timeline_events, load_timeline(filter_params, selected_delivery))
+    |> assign(:suppression_state, load_suppression(filter_params, selected_delivery))
+    |> assign(:detail_error, detail_error_for(selected_delivery_id, selected_delivery))
+    |> assign(:replay_targets, replay_targets)
+    |> assign(:replay_history, replay_history)
+    |> assign(:replay_selected_target_id, preserve_replay_selection(replay_targets, socket.assigns[:replay_selected_target_id]))
+  end
+
+  defp close_replay_modal(socket) do
+    socket
+    |> assign(:replay_modal_open?, false)
+    |> assign(:replay_selected_target_id, default_replay_target_id(socket.assigns.replay_targets))
+  end
+
+  defp preserve_replay_selection(%{status: :ambiguous, candidates: candidates}, selected_target_id)
+       when is_binary(selected_target_id) do
+    if Enum.any?(candidates, &(&1.webhook_event_id == selected_target_id)) do
+      selected_target_id
+    else
+      nil
+    end
+  end
+
+  defp preserve_replay_selection(replay_targets, _selected_target_id),
+    do: default_replay_target_id(replay_targets)
+
+  defp default_replay_target_id(%{status: :exact, candidate: candidate}), do: candidate.webhook_event_id
+  defp default_replay_target_id(_replay_targets), do: nil
+
+  defp selected_replay_target(nil, _selected_target_id), do: {:error, :unavailable}
+  defp selected_replay_target(%{status: :unavailable}, _selected_target_id), do: {:error, :unavailable}
+
+  defp selected_replay_target(%{status: :exact, candidate: candidate}, _selected_target_id),
+    do: {:ok, candidate}
+
+  defp selected_replay_target(%{status: :ambiguous, candidates: _candidates}, nil),
+    do: {:error, :target_required}
+
+  defp selected_replay_target(%{status: :ambiguous, candidates: candidates}, selected_target_id) do
+    case Enum.find(candidates, &(&1.webhook_event_id == selected_target_id)) do
+      nil -> {:error, :target_required}
+      candidate -> {:ok, candidate}
+    end
+  end
+
+  defp authorize_replay(%{assigns: %{operator_auth: %{adapter: adapter}}} = socket, delivery, target)
+       when is_atom(adapter) do
+    case Auth.authorize(adapter, :destructive_action, %{
+           actor: socket.assigns.operator_actor,
+           delivery: delivery,
+           replay_target: target
+         }) do
+      {:ok, %{actor: actor, assigns: extra_assigns}} ->
+        {:ok, assign_extra_assigns(assign(socket, :operator_actor, actor), extra_assigns)}
+
+      {:error, _reason, details} ->
+        {:error, {:auth, Map.get(details, :message, "Replay is not authorized.")}}
+    end
+  end
+
+  defp authorize_replay(_socket, _delivery, _target), do: {:error, {:auth, "Replay is not authorized."}}
+
+  defp assign_extra_assigns(socket, extra_assigns) when map_size(extra_assigns) == 0, do: socket
+
+  defp assign_extra_assigns(socket, extra_assigns) do
+    Enum.reduce(extra_assigns, socket, fn {key, value}, acc -> assign(acc, key, value) end)
+  end
+
+  defp replay_success_message(:replayed), do: "Replay completed and produced new work."
+  defp replay_success_message(:noop), do: "Replay converged without new downstream work."
+
+  defp replay_failure_message(:webhook_event_not_found), do: "Replay target is no longer available."
+  defp replay_failure_message(:unknown_provider), do: "Replay failed before provider normalization could begin."
+  defp replay_failure_message(_reason), do: "Replay failed. Check the timeline for the durable audit result."
+
+  defp latest_replay([]), do: nil
+  defp latest_replay(replay_history), do: List.last(replay_history)
 
   defp build_path(base_path, filter_params, delivery_id) do
     params =
