@@ -82,10 +82,12 @@ defmodule Mailglass.Generators do
       mailable: Keyword.get(opts, :mailable, "Mailglass.FakeFixtures.TestMailer"),
       stream: Keyword.get(opts, :stream, :transactional),
       recipient: Keyword.get(opts, :recipient, "fixture@example.com"),
+      provider: Keyword.get(opts, :provider),
       last_event_type: Keyword.get(opts, :last_event_type, :queued),
       last_event_at: Keyword.get(opts, :last_event_at, Mailglass.Clock.utc_now()),
       metadata: Keyword.get(opts, :metadata, %{}),
-      idempotency_key: Keyword.get(opts, :idempotency_key)
+      idempotency_key: Keyword.get(opts, :idempotency_key),
+      status: Keyword.get(opts, :status, :queued)
     }
 
     {:ok, delivery} =
