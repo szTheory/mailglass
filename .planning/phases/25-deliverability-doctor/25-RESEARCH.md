@@ -340,17 +340,15 @@ end
 |---|-------|---------|---------------|
 | None | All material claims in this document were verified locally or cited from primary sources. | — | — |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **How much raw DNS evidence belongs in default output versus `--verbose`?**
-   What we know: The phase locks `--verbose` and requires human-first default output. [VERIFIED: .planning/phases/25-deliverability-doctor/25-CONTEXT.md]
-   What's unclear: Exact truncation rules for long SPF expansion traces and multi-record evidence are not yet decided. [VERIFIED: .planning/phases/25-deliverability-doctor/25-CONTEXT.md]
-   Recommendation: Keep default output to one concise observation per finding and move recursion trees, raw TXT lists, and resolver diagnostics into `evidence` plus `--verbose`. [VERIFIED: .planning/phases/25-deliverability-doctor/25-CONTEXT.md]
+   Resolved decision: Keep default output to one concise observation per finding and move recursion trees, raw TXT lists, and resolver diagnostics into `evidence` plus `--verbose`. [VERIFIED: .planning/phases/25-deliverability-doctor/25-CONTEXT.md]
+   Execution impact: The formatter should render only `title`, `why it matters`, `observed`, and `remediation` by default; long SPF expansion traces and resolver details live behind `verbose?: true`.
 
 2. **Should DKIM selector input support both repeated flags and comma lists?**
-   What we know: The locked preference is explicit repeatable `--dkim-selector`. [VERIFIED: .planning/phases/25-deliverability-doctor/25-CONTEXT.md]
-   What's unclear: Whether adding comma-list parsing would help or only complicate strict CLI validation. [ASSUMED]
-   Recommendation: Plan repeated `--dkim-selector` only for v0.4 and defer alternate syntaxes unless user demand appears. [VERIFIED: .planning/phases/25-deliverability-doctor/25-CONTEXT.md]
+   Resolved decision: Support repeated `--dkim-selector` only in v0.4 and defer alternate syntaxes unless real user demand appears. [VERIFIED: .planning/phases/25-deliverability-doctor/25-CONTEXT.md]
+   Execution impact: The Mix task should parse `--dkim-selector` with `OptionParser` `:keep`, reject hidden alternate syntaxes, and preserve selector order as supplied.
 
 ## Environment Availability
 
