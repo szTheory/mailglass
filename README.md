@@ -104,6 +104,29 @@ Preview mailables in dev at `http://localhost:4000/dev/mail` — sidebar
 of discovered mailables, device width and dark-mode toggles,
 HTML/Text/Raw/Headers tabs, live-editable assigns.
 
+## Deliverability Doctor
+
+Run the DNS-only doctor against one explicit domain at a time:
+
+```bash
+mix mail.doctor --domain example.com
+mix mail.doctor --domain example.com --dkim-selector default --dkim-selector selector2
+mix mail.doctor --domain example.com --verbose
+mix mail.doctor --domain example.com --format json
+```
+
+`mix mail.doctor` reports DNS truth and remediation guidance for SPF,
+DKIM, DMARC, MX, and BIMI. It can return honest `cannot_verify`
+outcomes when DNS alone is insufficient, and it does not promise inbox
+placement certainty or a deliverability grade.
+
+- `--domain` is required, and each run checks exactly one domain.
+- `--dkim-selector` is repeatable so you can name the selectors your
+  mail stream actually uses.
+- `--verbose` includes supporting evidence inline.
+- `--format json` emits the shared machine-readable result shape with
+  `schema_version: 1`.
+
 ## Feature highlights
 
 - **HEEx-native components** (`container`, `section`, `row`, `column`,
