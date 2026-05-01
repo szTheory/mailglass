@@ -82,6 +82,9 @@ defmodule Mailglass.Webhook.IngestTest do
       assert event_row.delivery_id == delivery.id
       assert event_row.needs_reconciliation == false
       assert event_row.type == :delivered
+      assert event_row.metadata["webhook_event_id"] == webhook_event.id
+      assert event_row.metadata["webhook_provider_event_id"] == webhook_event.provider_event_id
+      assert event_row.metadata["provider_event_id"] == "Delivery:1:2026-04-23T12:00:00Z"
 
       # Assert the events_with_deliveries 3-tuple shape carries the matched delivery.
       assert [{_event, delivery_tuple, false}] = result.events_with_deliveries
@@ -163,6 +166,11 @@ defmodule Mailglass.Webhook.IngestTest do
       # on mailglass_events also catches this via `for_webhook_event/3` with
       # the same index → same key → ON CONFLICT DO NOTHING).
       assert TestRepo.aggregate(Event, :count) == 1
+
+      [webhook_event] = Repo.all(WebhookEvent)
+      [event_row] = Repo.all(Event)
+      assert event_row.metadata["webhook_event_id"] == webhook_event.id
+      assert event_row.metadata["webhook_provider_event_id"] == webhook_event.provider_event_id
     end
   end
 
@@ -198,6 +206,15 @@ defmodule Mailglass.Webhook.IngestTest do
       # One webhook_event row; 5 mailglass_events rows.
       assert TestRepo.aggregate(WebhookEvent, :count) == 1
       assert TestRepo.aggregate(Event, :count) == 5
+
+      [webhook_event] = Repo.all(WebhookEvent)
+      event_rows = Repo.all(Event)
+      assert Enum.all?(event_rows, &(&1.metadata["webhook_event_id"] == webhook_event.id))
+
+      assert Enum.all?(
+               event_rows,
+               &(&1.metadata["webhook_provider_event_id"] == webhook_event.provider_event_id)
+             )
 
       # Matched events carry their delivery struct; orphans carry nil.
       for {_event, delivery_or_nil, orphan?} <- result.events_with_deliveries do

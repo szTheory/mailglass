@@ -240,7 +240,8 @@ defmodule Mailglass.Webhook.Ingest do
       # to an atom via String.to_atom/1. Bounded atom creation: idx is bounded
       # by the event count (Postmark: 1; SendGrid: ≤128 per batch), so atom
       # table growth is O(128) across the library's lifetime — safe.
-      Events.append_multi(acc, event_step_name(idx), fn _changes ->
+      Events.append_multi(acc, event_step_name(idx), fn changes ->
+        webhook_event = Map.fetch!(changes, :webhook_event)
         delivery_id = resolve_delivery_id(provider, event)
 
         %{
@@ -254,7 +255,7 @@ defmodule Mailglass.Webhook.Ingest do
               extract_event_provider_id(event),
               idx
             ),
-          metadata: event.metadata || %{},
+          metadata: replay_metadata(event.metadata || %{}, webhook_event),
           reject_reason: event.reject_reason,
           occurred_at: Clock.utc_now()
         }
@@ -419,6 +420,15 @@ defmodule Mailglass.Webhook.Ingest do
       _ -> %{"_raw" => raw_body}
     end
   end
+
+  defp replay_metadata(metadata, %WebhookEvent{} = webhook_event) when is_map(metadata) do
+    metadata
+    |> Map.put("webhook_event_id", webhook_event.id)
+    |> maybe_put_replay_metadata("webhook_provider_event_id", webhook_event.provider_event_id)
+  end
+
+  defp maybe_put_replay_metadata(metadata, _key, value) when value in [nil, ""], do: metadata
+  defp maybe_put_replay_metadata(metadata, key, value), do: Map.put(metadata, key, value)
 
   # Look up the matching `%Delivery{}` id by (provider, provider_message_id).
   # Per revision W9 — reads STRING keys ("message_id", "sg_message_id") first;
