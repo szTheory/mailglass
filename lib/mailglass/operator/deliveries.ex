@@ -31,8 +31,11 @@ defmodule Mailglass.Operator.Deliveries do
     |> select([delivery], %{
       id: delivery.id,
       tenant_id: delivery.tenant_id,
+      mailable: delivery.mailable,
+      stream: delivery.stream,
       recipient: delivery.recipient,
       provider: delivery.provider,
+      provider_message_id: delivery.provider_message_id,
       status: delivery.status,
       last_event_type: delivery.last_event_type,
       last_event_at: delivery.last_event_at,

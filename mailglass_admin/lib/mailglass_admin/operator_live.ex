@@ -11,8 +11,11 @@ defmodule MailglassAdmin.OperatorLive do
 
   use Phoenix.LiveView
 
-  alias Mailglass.Operator.{Deliveries, Suppressions, Timeline}
+  alias Mailglass.Operator.{Deliveries, Suppressions}
+  alias Mailglass.Operator.Timeline, as: OperatorTimelineData
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.{DeliveriesList, DetailHeader, FiltersForm, SuppressionCard}
+  alias MailglassAdmin.Operator.Timeline, as: OperatorTimeline
 
   @status_values [:queued, :sent, :dispatched, :failed, :suppressed]
   @event_values Mailglass.Outbound.Delivery.__event_types__()
@@ -33,6 +36,9 @@ defmodule MailglassAdmin.OperatorLive do
      |> assign(:suppression_state, nil)
      |> assign(:detail_error, nil)
      |> assign(:base_path, "/operator")
+     |> assign(:status_values, @status_values)
+     |> assign(:event_values, @event_values)
+     |> assign(:window_options, @window_options)
      |> assign(:filter_params, default_filter_params())
      |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
      |> assign(:page_title, "mailglass — Operator")}
@@ -81,6 +87,10 @@ defmodule MailglassAdmin.OperatorLive do
      )}
   end
 
+  def handle_event("clear_filters", _params, socket) do
+    {:noreply, push_patch(socket, to: socket.assigns.base_path)}
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -99,86 +109,23 @@ defmodule MailglassAdmin.OperatorLive do
             id="operator-filters"
             phx-change="validate_filters"
             phx-submit="apply_filters"
-            class="grid gap-3 md:grid-cols-2 xl:grid-cols-5"
+            class="grid gap-3"
           >
-            <label class="form-control">
-              <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
-                Tenant
-              </span>
-              <input
-                type="text"
-                name={@filter_form[:tenant_id].name}
-                value={@filter_form[:tenant_id].value}
-                class="input input-bordered min-h-11 w-full"
-                placeholder="tenant-123"
+            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+              <FiltersForm.fields
+                form={@filter_form}
+                status_values={@status_values}
+                event_values={@event_values}
+                window_options={@window_options}
               />
-            </label>
+            </div>
 
-            <label class="form-control">
-              <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
-                Provider
-              </span>
-              <input
-                type="text"
-                name={@filter_form[:provider].name}
-                value={@filter_form[:provider].value}
-                class="input input-bordered min-h-11 w-full"
-                placeholder="postmark"
-              />
-            </label>
-
-            <label class="form-control">
-              <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
-                Status
-              </span>
-              <select
-                name={@filter_form[:status].name}
-                class="select select-bordered min-h-11 w-full"
-              >
-                <option value="">Any status</option>
-                <%= for status <- @status_values do %>
-                  <option value={Atom.to_string(status)} selected={@filter_form[:status].value == Atom.to_string(status)}>
-                    {status_label(status)}
-                  </option>
-                <% end %>
-              </select>
-            </label>
-
-            <label class="form-control">
-              <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
-                Event
-              </span>
-              <select
-                name={@filter_form[:event].name}
-                class="select select-bordered min-h-11 w-full"
-              >
-                <option value="">Any event</option>
-                <%= for event <- @event_values do %>
-                  <option value={Atom.to_string(event)} selected={@filter_form[:event].value == Atom.to_string(event)}>
-                    {event_label(event)}
-                  </option>
-                <% end %>
-              </select>
-            </label>
-
-            <label class="form-control">
-              <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
-                Window
-              </span>
-              <div class="flex gap-2">
-                <select
-                  name={@filter_form[:window_hours].name}
-                  class="select select-bordered min-h-11 flex-1"
-                >
-                  <%= for {label, value} <- @window_options do %>
-                    <option value={value} selected={@filter_form[:window_hours].value == value}>
-                      {label}
-                    </option>
-                  <% end %>
-                </select>
-                <button type="submit" class="btn btn-primary min-h-11 px-5">Open delivery</button>
-              </div>
-            </label>
+            <div class="flex flex-wrap gap-2">
+              <button type="submit" class="btn btn-primary min-h-11 px-5">Open delivery</button>
+              <button type="button" phx-click="clear_filters" class="btn btn-ghost min-h-11 px-5">
+                Clear filters
+              </button>
+            </div>
           </.form>
         </section>
 
@@ -189,53 +136,10 @@ defmodule MailglassAdmin.OperatorLive do
                 Recent deliveries
               </h2>
             </div>
-
-            <%= if @deliveries == [] do %>
-              <div class="flex min-h-64 flex-col items-center justify-center gap-3 p-6 text-center">
-                <Components.icon name="hero-inbox-stack" class="h-8 w-8 text-secondary" />
-                <div class="space-y-1">
-                  <h3 class="text-base font-bold text-base-content">No recent deliveries</h3>
-                  <p class="text-sm text-secondary">
-                    No recent deliveries match these filters. Clear the filters or wait for the next send.
-                  </p>
-                </div>
-              </div>
-            <% else %>
-              <ul class="divide-y divide-base-300">
-                <%= for delivery <- @deliveries do %>
-                  <li>
-                    <button
-                      type="button"
-                      phx-click="select_delivery"
-                      phx-value-id={delivery.id}
-                      aria-current={if @selected_delivery && @selected_delivery.id == delivery.id, do: "true", else: "false"}
-                      class={[
-                        "flex min-h-11 w-full flex-col gap-3 px-4 py-4 text-left transition-colors",
-                        delivery_row_classes(@selected_delivery, delivery)
-                      ]}
-                    >
-                      <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                          <p class="truncate text-sm font-bold text-base-content">{delivery.recipient}</p>
-                          <p class="mono mt-1 text-xs text-secondary">{delivery.id}</p>
-                        </div>
-                        <span class={["badge badge-sm", badge_class(delivery.status)]}>
-                          {status_label(delivery.status)}
-                        </span>
-                      </div>
-
-                      <div class="flex flex-wrap items-center gap-2 text-xs text-secondary">
-                        <span>{String.upcase(delivery.provider || "unknown")}</span>
-                        <span>&middot;</span>
-                        <span>{event_label(delivery.last_event_type)}</span>
-                        <span>&middot;</span>
-                        <span class="mono">{format_datetime(delivery.last_event_at)}</span>
-                      </div>
-                    </button>
-                  </li>
-                <% end %>
-              </ul>
-            <% end %>
+            <DeliveriesList.deliveries_list
+              deliveries={@deliveries}
+              selected_delivery={@selected_delivery}
+            />
           </aside>
 
           <section class="space-y-4">
@@ -258,102 +162,9 @@ defmodule MailglassAdmin.OperatorLive do
                 </div>
 
               <% true -> %>
-                <article class="card rounded-box border border-base-300 bg-base-200 p-6">
-                  <div class="flex flex-wrap items-start justify-between gap-4">
-                    <div class="space-y-2">
-                      <div class="flex flex-wrap items-center gap-2">
-                        <h2 class="text-xl font-bold text-base-content">{@selected_delivery.recipient}</h2>
-                        <span class={["badge", badge_class(@selected_delivery.status)]}>
-                          {status_label(@selected_delivery.status)}
-                        </span>
-                      </div>
-                      <p class="mono text-xs text-secondary">{@selected_delivery.id}</p>
-                    </div>
-
-                    <dl class="grid gap-3 text-sm text-secondary sm:grid-cols-2">
-                      <div>
-                        <dt class="text-xs font-bold uppercase tracking-[0.08em]">Tenant</dt>
-                        <dd class="mt-1 text-base-content">{@selected_delivery.tenant_id}</dd>
-                      </div>
-                      <div>
-                        <dt class="text-xs font-bold uppercase tracking-[0.08em]">Provider</dt>
-                        <dd class="mt-1 text-base-content">{String.upcase(@selected_delivery.provider || "unknown")}</dd>
-                      </div>
-                      <div>
-                        <dt class="text-xs font-bold uppercase tracking-[0.08em]">Latest event</dt>
-                        <dd class="mt-1 text-base-content">{event_label(@selected_delivery.last_event_type)}</dd>
-                      </div>
-                      <div>
-                        <dt class="text-xs font-bold uppercase tracking-[0.08em]">Updated</dt>
-                        <dd class="mono mt-1 text-base-content">{format_datetime(@selected_delivery.last_event_at)}</dd>
-                      </div>
-                    </dl>
-                  </div>
-                </article>
-
-                <article class="card rounded-box border border-base-300 bg-base-200 p-6">
-                  <div class="mb-4 flex items-center justify-between gap-3">
-                    <h3 class="text-base font-bold text-base-content">Event timeline</h3>
-                    <span class="text-xs text-secondary">Chronological order</span>
-                  </div>
-
-                  <%= if @timeline_events == [] do %>
-                    <p class="text-sm text-secondary">
-                      No delivery events have been recorded for this item yet.
-                    </p>
-                  <% else %>
-                    <ol class="space-y-4">
-                      <%= for event <- @timeline_events do %>
-                        <li class="flex gap-3">
-                          <div class="mt-1 flex flex-col items-center">
-                            <span class="h-3 w-3 rounded-full bg-primary"></span>
-                            <span class="mt-2 h-full w-px bg-base-300"></span>
-                          </div>
-                          <div class="min-w-0 flex-1 rounded-box border border-base-300 bg-base-100 p-4">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                              <div>
-                                <p class="text-sm font-bold text-base-content">{event_label(event.type)}</p>
-                                <p :if={event.reject_reason} class="mt-1 text-sm text-secondary">
-                                  {reject_reason_label(event.reject_reason)}
-                                </p>
-                              </div>
-                              <p class="mono text-xs text-secondary">{format_datetime(event.occurred_at)}</p>
-                            </div>
-                          </div>
-                        </li>
-                      <% end %>
-                    </ol>
-                  <% end %>
-                </article>
-
-                <article class="card rounded-box border border-base-300 bg-base-200 p-6">
-                  <div class="mb-4 flex items-center justify-between gap-3">
-                    <h3 class="text-base font-bold text-base-content">Suppression state</h3>
-                    <span class="badge badge-outline">
-                      {suppression_state_label(@suppression_state)}
-                    </span>
-                  </div>
-
-                  <%= if @suppression_state do %>
-                    <div class="space-y-3 text-sm">
-                      <div class="grid gap-3 sm:grid-cols-2">
-                        <div>
-                          <p class="text-xs font-bold uppercase tracking-[0.08em] text-secondary">Scope</p>
-                          <p class="mt-1 text-base-content">{scope_label(@suppression_state.scope)}</p>
-                        </div>
-                        <div>
-                          <p class="text-xs font-bold uppercase tracking-[0.08em] text-secondary">Reason</p>
-                          <p class="mt-1 text-base-content">{reason_label(@suppression_state.reason)}</p>
-                        </div>
-                      </div>
-                      <p class="text-secondary">{@suppression_state.reversibility_copy}</p>
-                    </div>
-                  <% else %>
-                    <p class="text-sm text-secondary">
-                      No active suppression entry matches this delivery.
-                    </p>
-                  <% end %>
-                </article>
+                <DetailHeader.detail_header delivery={@selected_delivery} />
+                <OperatorTimeline.timeline timeline_events={@timeline_events} />
+                <SuppressionCard.suppression_card suppression_state={@suppression_state} />
             <% end %>
           </section>
         </section>
@@ -402,7 +213,7 @@ defmodule MailglassAdmin.OperatorLive do
   defp load_timeline(_filter_params, nil), do: []
 
   defp load_timeline(filter_params, delivery) do
-    Timeline.list_delivery_events(
+    OperatorTimelineData.list_delivery_events(
       %{
         tenant_id: filter_params["tenant_id"],
         delivery_id: delivery.id
@@ -417,13 +228,14 @@ defmodule MailglassAdmin.OperatorLive do
     Suppressions.get_delivery_suppression_state(
       %{
         tenant_id: filter_params["tenant_id"],
-        recipient: delivery.recipient
+        recipient: delivery.recipient,
+        stream: delivery.stream
       },
       []
     )
   end
 
-  defp find_selected_delivery(deliveries, nil), do: nil
+  defp find_selected_delivery(_deliveries, nil), do: nil
   defp find_selected_delivery(deliveries, delivery_id), do: Enum.find(deliveries, &(&1.id == delivery_id))
 
   defp detail_error_for(nil, _selected_delivery), do: nil
@@ -443,38 +255,6 @@ defmodule MailglassAdmin.OperatorLive do
     end
   end
 
-  defp delivery_row_classes(%{id: id}, %{id: id}),
-    do: "border-l-4 border-primary bg-base-100 text-base-content"
-
-  defp delivery_row_classes(_selected_delivery, _delivery),
-    do: "border-l-4 border-transparent bg-base-200 text-base-content hover:bg-base-100"
-
-  defp badge_class(status) when status in [:delivered, :sent, :dispatched], do: "badge-success"
-  defp badge_class(:deferred), do: "badge-warning"
-  defp badge_class(status) when status in [:failed, :bounced, :complained], do: "badge-error"
-  defp badge_class(:suppressed), do: "badge-warning"
-  defp badge_class(_status), do: "badge-outline"
-
-  defp status_label(nil), do: "Unknown"
-  defp status_label(status), do: status |> Atom.to_string() |> String.replace("_", " ") |> String.capitalize()
-
-  defp event_label(nil), do: "Unknown event"
-  defp event_label(event), do: status_label(event)
-
-  defp reject_reason_label(reason), do: "Reason: " <> status_label(reason)
-
-  defp suppression_state_label(nil), do: "No suppression"
-  defp suppression_state_label(%{reversibility: :immutable}), do: "Immutable by policy"
-  defp suppression_state_label(%{reversibility: :reversible}), do: "Reversible in a later phase"
-
-  defp scope_label(scope), do: status_label(scope)
-  defp reason_label(reason), do: status_label(reason)
-
-  defp format_datetime(nil), do: "Pending"
-
-  defp format_datetime(%DateTime{} = datetime) do
-    Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
-  end
 
   defp cast_enum("", _allowed), do: nil
 
