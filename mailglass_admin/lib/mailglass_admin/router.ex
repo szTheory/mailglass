@@ -128,6 +128,7 @@ defmodule MailglassAdmin.Router do
           root_layout: {MailglassAdmin.Layouts, :root} do
           live "/", MailglassAdmin.PreviewLive, :index
           live "/:mailable/:scenario", MailglassAdmin.PreviewLive, :show
+          live "/operator", MailglassAdmin.OperatorLive, :index
         end
       end
     end
