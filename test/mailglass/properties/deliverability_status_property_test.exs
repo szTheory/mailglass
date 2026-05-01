@@ -21,7 +21,7 @@ defmodule Mailglass.Properties.DeliverabilityStatusPropertyTest do
                  findings: findings
                )
 
-      assert Map.keys(result.summary) == [:pass, :warn, :fail, :cannot_verify]
+      assert result.summary |> Map.keys() |> Enum.sort() == [:cannot_verify, :fail, :pass, :warn]
       assert Enum.all?(result.findings, &Result.status?(&1.status))
       assert result.summary.cannot_verify == Enum.count(statuses, &(&1 == :cannot_verify))
       assert result.summary.pass == Enum.count(statuses, &(&1 == :pass))
