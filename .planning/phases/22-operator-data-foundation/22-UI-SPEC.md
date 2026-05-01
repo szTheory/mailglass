@@ -1,10 +1,11 @@
 ---
 phase: 22
 slug: operator-data-foundation
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-30
+reviewed_at: 2026-04-30T00:00:00-04:00
 ---
 
 # Phase 22 — UI Design Contract
@@ -34,6 +35,8 @@ This phase extends the existing `mailglass_admin` design language. Do not introd
 - Keep the existing flat visual language: bordered cards, `rounded-box`, no shadows, no bevels, no glassmorphism.
 - Surface three data areas only in this phase: recent deliveries, delivery event timeline, suppression visibility/removability state.
 - Do not render authentication prompts, replay actions, or suppression mutation controls in this phase. Reserve those entry points for later phases.
+- On first load, the recent-deliveries list is the primary visual anchor. After a row is selected, the delivery detail header and event timeline become the primary focus.
+- Visual priority after selection is fixed: `1.` selected delivery summary, `2.` event timeline, `3.` suppression state card.
 
 ---
 
@@ -166,4 +169,4 @@ All copy must keep the existing mailglass voice: clear, exact, confident, warm, 
 - [ ] Dimension 5 Spacing: PASS
 - [ ] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-04-30
