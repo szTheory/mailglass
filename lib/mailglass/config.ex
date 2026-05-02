@@ -594,11 +594,15 @@ defmodule Mailglass.Config do
   @doc since: "0.4.0"
   @spec resolve_adapter_ref(atom() | String.t()) :: {module(), keyword()}
   def resolve_adapter_ref(ref) when is_atom(ref) or is_binary(ref) do
-    case Map.fetch(adapters(), ref) do
-      {:ok, adapter} ->
+    normalized_ref = normalize_adapter_ref_lookup(ref)
+
+    case Enum.find(adapters(), fn {registered_ref, _adapter} ->
+           normalize_adapter_ref_lookup(registered_ref) == normalized_ref
+         end) do
+      {_registered_ref, adapter} ->
         adapter
 
-      :error ->
+      nil ->
         raise Mailglass.ConfigError.new(:invalid,
                 context: %{key: :adapter_ref, adapter_ref: ref, reason: "unknown adapter ref"}
               )
@@ -700,6 +704,9 @@ defmodule Mailglass.Config do
       key: :adapters,
       message: "expected entries like {ref, module} or {ref, {module, opts}}, got: #{inspect(other)}"
   end
+
+  defp normalize_adapter_ref_lookup(ref) when is_atom(ref), do: Atom.to_string(ref)
+  defp normalize_adapter_ref_lookup(ref) when is_binary(ref), do: ref
 
   defp normalize_adapter_ref!(ref) when is_atom(ref) or is_binary(ref), do: ref
 

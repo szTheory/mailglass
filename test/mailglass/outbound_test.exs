@@ -22,6 +22,9 @@ defmodule Mailglass.OutboundTest do
     Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
 
     prior_compliance = Application.get_env(:mailglass, :compliance)
+    prior_adapter = Application.get_env(:mailglass, :adapter)
+    prior_adapters = Application.get_env(:mailglass, :adapters)
+    prior_tenancy = Application.get_env(:mailglass, :tenancy)
 
     Application.put_env(:mailglass, :compliance,
       endpoint: "outbound-test-secret",
@@ -35,6 +38,15 @@ defmodule Mailglass.OutboundTest do
 
     on_exit(fn ->
       Application.put_env(:mailglass, :compliance, prior_compliance)
+      Application.put_env(:mailglass, :adapter, prior_adapter)
+
+      if is_nil(prior_adapters) do
+        Application.delete_env(:mailglass, :adapters)
+      else
+        Application.put_env(:mailglass, :adapters, prior_adapters)
+      end
+
+      Application.put_env(:mailglass, :tenancy, prior_tenancy)
     end)
 
     :ok
@@ -48,6 +60,7 @@ defmodule Mailglass.OutboundTest do
                Outbound.send(msg)
 
       assert delivery.last_event_type == :dispatched
+      assert delivery.adapter_ref == Delivery.default_adapter_ref()
       assert not is_nil(delivery.dispatched_at)
       assert not is_nil(delivery.provider_message_id)
 
@@ -151,6 +164,44 @@ defmodule Mailglass.OutboundTest do
     end
   end
 
+  describe "runtime adapter resolution" do
+    test "sync adapter_ref override wins over tenancy/default routing and persists the chosen ref" do
+      configure_routed_adapters(self())
+      Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.RouteB)
+
+      msg = build_message("route-a@example.com")
+
+      assert {:ok, %Delivery{adapter_ref: "route_a"}} = Outbound.send(msg, adapter_ref: :route_a)
+      assert_receive {:adapter_route, :route_a, _delivery_id, "test-tenant"}
+    end
+
+    test "explicit sync adapter override wins over adapter_ref and tenancy routing" do
+      configure_routed_adapters(self())
+      Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.RouteA)
+
+      msg = build_message("explicit@example.com")
+
+      assert {:ok, %Delivery{}} =
+               Outbound.send(msg,
+                 adapter: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :explicit]},
+                 adapter_ref: :route_b
+               )
+
+      assert_receive {:adapter_route, :explicit, _delivery_id, "test-tenant"}
+    end
+
+    test "invalid tenancy callback output fails loudly instead of falling back to the default adapter" do
+      configure_routed_adapters(self())
+      Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.InvalidRoute)
+
+      msg = build_message("invalid-route@example.com")
+
+      assert {:error, %Mailglass.SendError{} = err} = Outbound.send(msg)
+      assert err.context.reason_class == :invalid_adapter_ref_callback
+      refute_received {:adapter_route, _, _, _}
+    end
+  end
+
   describe "deliver!/2 bang variant" do
     test "returns %Delivery{} on success" do
       msg = build_message("bang@example.com")
@@ -211,6 +262,15 @@ defmodule Mailglass.OutboundTest do
       tenant_id: "test-tenant",
       stream: Keyword.get(opts, :stream, :transactional)
     )
+  end
+
+  defp configure_routed_adapters(test_pid) do
+    Application.put_env(:mailglass, :adapter, {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :default]})
+
+    Application.put_env(:mailglass, :adapters, [
+      route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_a]},
+      route_b: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_b]}
+    ])
   end
 
   defp insert_suppression!(address) do

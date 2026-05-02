@@ -16,10 +16,22 @@ defmodule Mailglass.Outbound.DeliverManyTest do
     # rather than getting their own, avoiding stale OID cache errors in the full suite.
     Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
     Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
+    prior_adapter = Application.get_env(:mailglass, :adapter)
+    prior_adapters = Application.get_env(:mailglass, :adapters)
+    prior_tenancy = Application.get_env(:mailglass, :tenancy)
 
     on_exit(fn ->
       Process.sleep(50)
       Application.put_env(:mailglass, :async_adapter, :oban)
+      Application.put_env(:mailglass, :adapter, prior_adapter)
+
+      if is_nil(prior_adapters) do
+        Application.delete_env(:mailglass, :adapters)
+      else
+        Application.put_env(:mailglass, :adapters, prior_adapters)
+      end
+
+      Application.put_env(:mailglass, :tenancy, prior_tenancy)
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
@@ -222,10 +234,29 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       for d <- deliveries do
         reloaded = TestRepo.get!(Delivery, d.id)
         assert reloaded.id == d.id
+        assert reloaded.adapter_ref == Delivery.default_adapter_ref()
         # The background task may complete before or after this assertion;
         # accept :queued (still pending) or :sent (dispatch completed).
         assert reloaded.status in [:queued, :sent]
       end
+    end
+  end
+
+  describe "deliver_many/2 — tenant-aware routing" do
+    test "persists adapter refs per message before queue handoff" do
+      configure_routed_adapters(self())
+      Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.RouteA)
+
+      uid = unique_id()
+
+      msgs = [
+        build_message("route-batch-1-#{uid}@example.com"),
+        build_message("route-batch-2-#{uid}@example.com")
+      ]
+
+      {:ok, deliveries} = Outbound.deliver_many(msgs, [])
+
+      assert Enum.all?(deliveries, &(&1.adapter_ref == "route_a"))
     end
   end
 
@@ -245,6 +276,11 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       tenant_id: "test-tenant",
       stream: :transactional
     )
+  end
+
+  defp configure_routed_adapters(test_pid) do
+    Application.put_env(:mailglass, :adapter, {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :default]})
+    Application.put_env(:mailglass, :adapters, [route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_a]}])
   end
 
   defp insert_suppression!(address) do

@@ -78,6 +78,7 @@ defmodule Mailglass.Outbound do
   alias Mailglass.{
     Clock,
     Compliance,
+    Config,
     Events,
     Message,
     Renderer,
@@ -255,7 +256,9 @@ defmodule Mailglass.Outbound do
   def dispatch_by_id(delivery_id) when is_binary(delivery_id) do
     with {:ok, delivery} <- load_delivery(delivery_id),
          {:ok, rendered} <- rehydrate_message(delivery),
-         {:ok, dispatch_result} <- call_adapter(rendered, []) do
+         prepared = Message.put_metadata(rendered, :delivery_id, delivery.id),
+         {:ok, adapter} <- resolve_persisted_adapter(delivery.adapter_ref),
+         {:ok, dispatch_result} <- call_adapter(prepared, adapter) do
       case persist_dispatched_multi(delivery, dispatch_result, rendered) do
         {:ok, %{delivery: updated}} ->
           Projector.broadcast_delivery_updated(updated, :dispatched, %{
@@ -297,8 +300,9 @@ defmodule Mailglass.Outbound do
   # Called only after all preflight stages pass. Multi#1 happens here, so we
   # can correctly persist :failed status when the adapter call fails (T-3-05-07).
   defp do_send_after_preflight(%Message{} = rendered, opts) do
-    with {:ok, %{delivery: delivery}} <- persist_queued(rendered, opts),
-         {:ok, dispatch_result} <- call_adapter_or_persist_failure(delivery, rendered, opts),
+    with {:ok, route} <- resolve_sync_route(rendered, opts),
+         {:ok, %{delivery: delivery}} <- persist_queued(rendered, route.adapter_ref),
+         {:ok, dispatch_result} <- call_adapter_or_persist_failure(delivery, rendered, route.adapter),
          {:ok, %{delivery: updated}} <-
            persist_dispatched_multi(delivery, dispatch_result, rendered) do
       Projector.broadcast_delivery_updated(updated, :dispatched, %{
@@ -322,8 +326,8 @@ defmodule Mailglass.Outbound do
 
   # Calls the adapter; on failure writes Multi#2 with :failed status (T-3-05-07).
   # Adapter call is OUTSIDE any transaction (D-20).
-  defp call_adapter_or_persist_failure(%Delivery{} = delivery, %Message{} = rendered, opts) do
-    case call_adapter(rendered, opts) do
+  defp call_adapter_or_persist_failure(%Delivery{} = delivery, %Message{} = rendered, adapter) do
+    case call_adapter(rendered, adapter) do
       {:ok, _} = ok ->
         ok
 
@@ -348,34 +352,36 @@ defmodule Mailglass.Outbound do
          :ok <- Suppression.check_before_send(msg),
          :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
          :ok <- Stream.policy_check(msg),
-         {:ok, rendered} <- Renderer.render(msg) do
-      enqueue_via_async_adapter(prepare_outbound_message(rendered), opts)
+         {:ok, rendered} <- Renderer.render(msg),
+         prepared = prepare_outbound_message(rendered),
+         {:ok, adapter_ref} <- resolve_async_adapter_ref(prepared, opts) do
+      enqueue_via_async_adapter(prepared, adapter_ref, opts)
     end
   end
 
-  defp enqueue_via_async_adapter(%Message{} = rendered, opts) do
+  defp enqueue_via_async_adapter(%Message{} = rendered, adapter_ref, opts) do
     async_adapter =
       Keyword.get(opts, :async_adapter) ||
         Application.get_env(:mailglass, :async_adapter, :oban)
 
     cond do
       async_adapter == :task_supervisor ->
-        enqueue_task_supervisor(rendered, opts)
+        enqueue_task_supervisor(rendered, adapter_ref, opts)
 
       Mailglass.OptionalDeps.Oban.available?() ->
-        enqueue_oban(rendered, opts)
+        enqueue_oban(rendered, adapter_ref, opts)
 
       true ->
-        enqueue_task_supervisor(rendered, opts)
+        enqueue_task_supervisor(rendered, adapter_ref, opts)
     end
   end
 
-  defp enqueue_oban(%Message{} = rendered, _opts) do
+  defp enqueue_oban(%Message{} = rendered, adapter_ref, _opts) do
     ik = compute_idempotency_key(rendered)
     tenant_id = rendered.tenant_id
     delivery_id = delivery_id!(rendered)
 
-    attrs = base_delivery_attrs(rendered, ik)
+    attrs = base_delivery_attrs(rendered, ik, adapter_ref)
 
     result =
       Ecto.Multi.new()
@@ -407,11 +413,11 @@ defmodule Mailglass.Outbound do
     end
   end
 
-  defp enqueue_task_supervisor(%Message{} = rendered, _opts) do
+  defp enqueue_task_supervisor(%Message{} = rendered, adapter_ref, _opts) do
     ik = compute_idempotency_key(rendered)
     tenant_id = rendered.tenant_id
     delivery_id = delivery_id!(rendered)
-    attrs = base_delivery_attrs(rendered, ik)
+    attrs = base_delivery_attrs(rendered, ik, adapter_ref)
 
     multi =
       Ecto.Multi.new()
@@ -473,7 +479,7 @@ defmodule Mailglass.Outbound do
   # Internal — batch path (deliver_many)
   # =========================================================
 
-  defp do_deliver_many(messages, _opts) do
+  defp do_deliver_many(messages, opts) do
     {eligible, failed_preflight} =
       messages
       |> Enum.map(&preflight_single/1)
@@ -484,12 +490,25 @@ defmodule Mailglass.Outbound do
 
     eligible_messages = Enum.map(eligible, fn {:ok, msg} -> msg end)
 
+    {routable, failed_routes} =
+      eligible_messages
+      |> Enum.map(fn %Message{} = msg ->
+        case resolve_async_adapter_ref(msg, opts) do
+          {:ok, adapter_ref} -> {:ok, {msg, adapter_ref}}
+          {:error, err} -> {:error, err, msg}
+        end
+      end)
+      |> Enum.split_with(fn
+        {:ok, _} -> true
+        {:error, _err, _msg} -> false
+      end)
+
     failed_deliveries =
-      Enum.map(failed_preflight, fn {:error, err, msg} ->
+      Enum.map(failed_preflight ++ failed_routes, fn {:error, err, msg} ->
         build_failed_delivery(msg, err)
       end)
 
-    case insert_batch(eligible_messages) do
+    case insert_batch(Enum.map(routable, fn {:ok, route} -> route end)) do
       {:ok, inserted_deliveries} ->
         # I-13: Only re-enqueue :queued rows. On replay, some rows may already
         # be :sent/:failed — do NOT re-enqueue them (duplicate send risk).
@@ -519,14 +538,14 @@ defmodule Mailglass.Outbound do
 
   defp insert_batch([]), do: {:ok, []}
 
-  defp insert_batch(messages) when is_list(messages) do
+  defp insert_batch(messages_with_refs) when is_list(messages_with_refs) do
     now = Clock.utc_now()
 
     rows =
-      Enum.map(messages, fn %Message{} = m ->
+      Enum.map(messages_with_refs, fn {%Message{} = m, adapter_ref} ->
         ik = compute_idempotency_key(m)
 
-        base_delivery_attrs(m, ik)
+        base_delivery_attrs(m, ik, adapter_ref)
         |> Map.put(:id, delivery_id!(m))
         |> Map.put(:inserted_at, now)
         |> Map.put(:updated_at, now)
@@ -662,7 +681,7 @@ defmodule Mailglass.Outbound do
   # Internal — persistence helpers
   # =========================================================
 
-  defp persist_queued(%Message{} = rendered, _opts) do
+  defp persist_queued(%Message{} = rendered, adapter_ref) do
     ik = compute_idempotency_key(rendered)
     tenant_id = rendered.tenant_id
     delivery_id = delivery_id!(rendered)
@@ -682,6 +701,7 @@ defmodule Mailglass.Outbound do
               stream: rendered.stream,
               recipient: primary_recipient(rendered),
               recipient_domain: recipient_domain(rendered),
+              adapter_ref: adapter_ref,
               status: :queued,
               last_event_type: :queued,
               last_event_at: Clock.utc_now(),
@@ -704,8 +724,7 @@ defmodule Mailglass.Outbound do
     )
   end
 
-  defp call_adapter(%Message{} = rendered, opts) do
-    {adapter_mod, adapter_opts} = resolve_adapter(opts)
+  defp call_adapter(%Message{} = rendered, {adapter_mod, adapter_opts}) do
 
     Telemetry.dispatch_span(
       %{
@@ -951,20 +970,195 @@ defmodule Mailglass.Outbound do
     }
   end
 
-  defp resolve_adapter(opts) do
+  defp resolve_sync_route(%Message{} = rendered, opts) do
     case Keyword.fetch(opts, :adapter) do
-      {:ok, {mod, kw}} ->
-        {mod, kw}
-
-      {:ok, mod} when is_atom(mod) ->
-        {mod, []}
+      {:ok, adapter_override} ->
+        with {:ok, adapter} <- normalize_runtime_adapter(adapter_override) do
+          {:ok,
+           %{
+             adapter: adapter,
+             adapter_ref: persisted_adapter_ref_for_runtime_adapter(adapter)
+           }}
+        end
 
       :error ->
-        case Application.get_env(:mailglass, :adapter, {Mailglass.Adapters.Fake, []}) do
-          {mod, kw} -> {mod, kw}
-          mod when is_atom(mod) -> {mod, []}
+        case Keyword.fetch(opts, :adapter_ref) do
+          {:ok, adapter_ref} ->
+            build_named_route(adapter_ref)
+
+          :error ->
+            resolve_tenancy_or_default_route(rendered, :sync)
         end
     end
+  end
+
+  defp resolve_async_adapter_ref(%Message{} = rendered, opts) do
+    case Keyword.fetch(opts, :adapter) do
+      {:ok, adapter_override} ->
+        with {:ok, adapter} <- normalize_runtime_adapter(adapter_override) do
+          case persisted_adapter_ref_for_runtime_adapter(adapter) do
+            nil ->
+              {:error,
+               Mailglass.SendError.new(:adapter_failure,
+                 context: %{reason_class: :queued_adapter_override_not_persistable}
+               )}
+
+            adapter_ref ->
+              {:ok, adapter_ref}
+          end
+        end
+
+      :error ->
+        case Keyword.fetch(opts, :adapter_ref) do
+          {:ok, adapter_ref} ->
+            with {:ok, _adapter} <- safe_resolve_named_adapter(adapter_ref) do
+              {:ok, persisted_adapter_ref(adapter_ref)}
+            end
+
+          :error ->
+            case resolve_tenancy_outcome(rendered, :async) do
+              :default ->
+                {:ok, Delivery.default_adapter_ref()}
+
+              {:ok, adapter_ref} ->
+                with {:ok, _adapter} <- safe_resolve_named_adapter(adapter_ref) do
+                  {:ok, persisted_adapter_ref(adapter_ref)}
+                end
+
+              {:error, err} ->
+                {:error, err}
+            end
+        end
+    end
+  end
+
+  defp resolve_tenancy_or_default_route(%Message{} = rendered, mode) do
+    case resolve_tenancy_outcome(rendered, mode) do
+      :default ->
+        with {:ok, adapter} <- safe_default_adapter() do
+          {:ok, %{adapter: adapter, adapter_ref: Delivery.default_adapter_ref()}}
+        end
+
+      {:ok, adapter_ref} ->
+        build_named_route(adapter_ref)
+
+      {:error, err} ->
+        {:error, err}
+    end
+  end
+
+  defp resolve_tenancy_outcome(%Message{} = rendered, mode) do
+    context = %{tenant_id: rendered.tenant_id, message: rendered, mode: mode}
+
+    case Tenancy.resolve_outbound_adapter_ref(context) do
+      :default ->
+        :default
+
+      {:ok, adapter_ref} when is_atom(adapter_ref) or is_binary(adapter_ref) ->
+        {:ok, adapter_ref}
+
+      other ->
+        {:error,
+         Mailglass.SendError.new(:adapter_failure,
+           context: %{
+             reason_class: :invalid_adapter_ref_callback,
+             returned: inspect(other)
+           }
+         )}
+    end
+  end
+
+  defp build_named_route(adapter_ref) do
+    with {:ok, adapter} <- safe_resolve_named_adapter(adapter_ref) do
+      {:ok, %{adapter: adapter, adapter_ref: persisted_adapter_ref(adapter_ref)}}
+    end
+  end
+
+  defp resolve_persisted_adapter(nil), do: safe_default_adapter()
+
+  defp resolve_persisted_adapter(adapter_ref) do
+    if adapter_ref == Delivery.default_adapter_ref() do
+      safe_default_adapter()
+    else
+      safe_resolve_named_adapter(adapter_ref)
+    end
+  end
+
+  defp safe_default_adapter do
+    {:ok, Config.default_adapter()}
+  rescue
+    err in [Mailglass.ConfigError, NimbleOptions.ValidationError] ->
+      {:error, normalize_adapter_config_error(:adapter, nil, err)}
+  end
+
+  defp safe_resolve_named_adapter(adapter_ref) do
+    {:ok, Config.resolve_adapter_ref(adapter_ref)}
+  rescue
+    err in [Mailglass.ConfigError, NimbleOptions.ValidationError] ->
+      {:error, normalize_adapter_config_error(:adapters, adapter_ref, err)}
+  end
+
+  defp normalize_runtime_adapter(adapter) do
+    case adapter do
+      mod when is_atom(mod) ->
+        {:ok, {mod, []}}
+
+      {mod, opts} when is_atom(mod) and is_list(opts) ->
+        if Keyword.keyword?(opts) do
+          {:ok, {mod, opts}}
+        else
+          {:error, Mailglass.ConfigError.new(:invalid, context: %{key: :adapter})}
+        end
+
+      _ ->
+        {:error, Mailglass.ConfigError.new(:invalid, context: %{key: :adapter})}
+    end
+  end
+
+  defp persisted_adapter_ref_for_runtime_adapter(adapter) do
+    cond do
+      default_adapter_matches?(adapter) ->
+        Delivery.default_adapter_ref()
+
+      named_ref = matching_named_adapter_ref(adapter) ->
+        named_ref
+
+      true ->
+        nil
+    end
+  end
+
+  defp default_adapter_matches?(adapter) do
+    case safe_default_adapter() do
+      {:ok, default_adapter} -> default_adapter == adapter
+      {:error, _err} -> false
+    end
+  end
+
+  defp matching_named_adapter_ref(adapter) do
+    try do
+      Config.adapters()
+      |> Enum.find_value(fn {registered_ref, registered_adapter} ->
+        if registered_adapter == adapter, do: persisted_adapter_ref(registered_ref)
+      end)
+    rescue
+      _ -> nil
+    end
+  end
+
+  defp persisted_adapter_ref(adapter_ref) when is_atom(adapter_ref), do: Atom.to_string(adapter_ref)
+  defp persisted_adapter_ref(adapter_ref) when is_binary(adapter_ref), do: adapter_ref
+
+  defp normalize_adapter_config_error(_key, _adapter_ref, %Mailglass.ConfigError{} = err), do: err
+
+  defp normalize_adapter_config_error(key, adapter_ref, %NimbleOptions.ValidationError{} = err) do
+    Mailglass.ConfigError.new(:invalid,
+      context: %{
+        key: key,
+        adapter_ref: adapter_ref,
+        reason: Exception.message(err)
+      }
+    )
   end
 
   defp metadata_for(%Message{} = msg) do
@@ -999,13 +1193,14 @@ defmodule Mailglass.Outbound do
     |> Base.encode16(case: :lower)
   end
 
-  defp base_delivery_attrs(%Message{} = rendered, ik) do
+  defp base_delivery_attrs(%Message{} = rendered, ik, adapter_ref) do
     %{
       tenant_id: rendered.tenant_id,
       mailable: inspect(rendered.mailable),
       stream: rendered.stream,
       recipient: primary_recipient(rendered),
       recipient_domain: recipient_domain(rendered),
+      adapter_ref: adapter_ref,
       status: :queued,
       last_event_type: :queued,
       last_event_at: Clock.utc_now(),

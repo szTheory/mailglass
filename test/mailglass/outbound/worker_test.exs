@@ -15,6 +15,19 @@ defmodule Mailglass.Outbound.WorkerTest do
     end
 
     Mailglass.Adapters.Fake.checkout()
+    prior_adapter = Application.get_env(:mailglass, :adapter)
+    prior_adapters = Application.get_env(:mailglass, :adapters)
+
+    on_exit(fn ->
+      Application.put_env(:mailglass, :adapter, prior_adapter)
+
+      if is_nil(prior_adapters) do
+        Application.delete_env(:mailglass, :adapters)
+      else
+        Application.put_env(:mailglass, :adapters, prior_adapters)
+      end
+    end)
+
     :ok
   end
 
@@ -107,6 +120,38 @@ defmodule Mailglass.Outbound.WorkerTest do
         [{:tenant, tenant}] = :ets.lookup(captured_tenant, :tenant)
         assert tenant == "middleware-tenant"
         :ets.delete(captured_tenant)
+      end
+    end
+
+    test "queued dispatch uses the persisted adapter_ref instead of rerunning tenancy routing" do
+      if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
+        :skip
+      else
+        Application.put_env(:mailglass, :adapter, {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :default]})
+
+        Application.put_env(:mailglass, :adapters, [
+          route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :route_a]},
+          route_b: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :route_b]}
+        ])
+
+        delivery =
+          Generators.delivery_fixture(
+            tenant_id: "worker-tenant",
+            adapter_ref: "route_a",
+            metadata: %{
+              "rendered_html" => "<p>Hello</p>",
+              "rendered_text" => "Hello",
+              "subject" => "Test"
+            }
+          )
+        delivery_id = delivery.id
+
+        job = %Oban.Job{
+          args: %{"delivery_id" => delivery.id, "mailglass_tenant_id" => "worker-tenant"}
+        }
+
+        assert :ok = Mailglass.Outbound.Worker.perform(job)
+        assert_receive {:adapter_route, :route_a, ^delivery_id, "worker-tenant"}
       end
     end
   end

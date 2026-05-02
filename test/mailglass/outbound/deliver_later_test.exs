@@ -12,6 +12,9 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     Mailglass.Adapters.Fake.checkout()
     Mailglass.Adapters.Fake.set_shared(self())
     prior_compliance = Application.get_env(:mailglass, :compliance)
+    prior_adapter = Application.get_env(:mailglass, :adapter)
+    prior_adapters = Application.get_env(:mailglass, :adapters)
+    prior_tenancy = Application.get_env(:mailglass, :tenancy)
 
     # Use task_supervisor for deliver_later tests — Oban is not started in the test suite.
     # Worker-specific tests (worker_test.exs) test the Worker module directly.
@@ -39,6 +42,15 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       Process.sleep(50)
       Application.put_env(:mailglass, :async_adapter, :oban)
       Application.put_env(:mailglass, :compliance, prior_compliance)
+      Application.put_env(:mailglass, :adapter, prior_adapter)
+
+      if is_nil(prior_adapters) do
+        Application.delete_env(:mailglass, :adapters)
+      else
+        Application.put_env(:mailglass, :adapters, prior_adapters)
+      end
+
+      Application.put_env(:mailglass, :tenancy, prior_tenancy)
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
@@ -58,6 +70,7 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       msg = build_message("idem-#{unique_id()}@example.com")
       {:ok, delivery} = Outbound.deliver_later(msg)
       assert is_binary(delivery.idempotency_key)
+      assert delivery.adapter_ref == Delivery.default_adapter_ref()
     end
 
     test "Delivery row is persisted with last_event_type: :queued before return" do
@@ -114,6 +127,37 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     end
   end
 
+  describe "deliver_later/2 — adapter refs" do
+    test "persists the chosen adapter_ref at enqueue time and worker dispatch honors it later" do
+      configure_routed_adapters(self())
+      Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.RouteA)
+
+      msg = build_message("route-later-#{unique_id()}@example.com")
+      {:ok, delivery} = Outbound.deliver_later(msg)
+      delivery_id = delivery.id
+
+      assert delivery.adapter_ref == "route_a"
+
+      Application.put_env(:mailglass, :tenancy, Mailglass.TestTenancy.RouteB)
+      Process.sleep(150)
+
+      assert_receive {:adapter_route, :route_a, ^delivery_id, "test-tenant"}
+      reloaded = TestRepo.get!(Delivery, delivery.id)
+      assert reloaded.adapter_ref == "route_a"
+    end
+
+    test "queued raw adapter overrides fail when Mailglass cannot persist them safely" do
+      msg = build_message("unsafe-override-#{unique_id()}@example.com")
+
+      assert {:error, %Mailglass.SendError{} = err} =
+               Outbound.deliver_later(msg,
+                 adapter: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :ephemeral]}
+               )
+
+      assert err.context.reason_class == :queued_adapter_override_not_persistable
+    end
+  end
+
   describe "deliver_later/2 — preflight failures" do
     test "suppressed recipient returns {:error, %SuppressedError{}} — no Delivery row" do
       addr = "blocked-later-#{unique_id()}@example.com"
@@ -153,6 +197,15 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       tenant_id: "test-tenant",
       stream: Keyword.get(opts, :stream, :transactional)
     )
+  end
+
+  defp configure_routed_adapters(test_pid) do
+    Application.put_env(:mailglass, :adapter, {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :default]})
+
+    Application.put_env(:mailglass, :adapters, [
+      route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_a]},
+      route_b: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_b]}
+    ])
   end
 
   defp unsubscribe_token!(%Message{} = message) do
