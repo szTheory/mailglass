@@ -149,8 +149,10 @@ placement certainty or a deliverability grade.
   `idempotency_key WHERE idempotency_key IS NOT NULL`; replay-safe
   webhooks and delivery retries.
 - **Multi-tenant from day one** — `tenant_id` on every record,
-  `Mailglass.Tenancy` behaviour, `SingleTenant` default resolver, and
-  an Oban tenancy middleware (conditionally compiled).
+  `Mailglass.Tenancy` behaviour, `SingleTenant` default resolver,
+  runtime per-tenant adapter resolution through tenancy callbacks plus
+  named `adapter_ref` routes, and an Oban tenancy middleware
+  (conditionally compiled).
 - **Fake adapter as the release gate** — deterministic, in-memory,
   time-advanceable; merge-blocking in CI so the full pipeline is
   testable without real provider credentials.

@@ -25,6 +25,15 @@ defmodule Mailglass.DocsContractTest do
       assert mailable_code =~ "|> to(user.email)"
       assert {:ok, _quoted} = Code.string_to_quoted(mailable_code)
     end
+
+    test "README mentions the shipped runtime routing terms without deferred-scope promises" do
+      readme = File.read!("README.md")
+
+      assert readme =~ "tenancy callbacks"
+      assert readme =~ "adapter_ref"
+      refute readme =~ "round-robin"
+      refute readme =~ "failover"
+    end
   end
 
   describe "Task existence" do
@@ -51,6 +60,27 @@ defmodule Mailglass.DocsContractTest do
       assert code =~ "config :mailglass"
       assert code =~ "repo:"
       assert code =~ "adapter:"
+    end
+
+    test "Multi-tenancy routing example parses and documents the shipped adapter_ref surface" do
+      blocks = extract_code_blocks("guides/multi-tenancy.md")
+      tenancy_code = Enum.find(blocks, &String.contains?(&1, "resolve_outbound_adapter_ref"))
+
+      assert tenancy_code
+      assert tenancy_code =~ ":default"
+      assert {:ok, _quoted} = Code.string_to_quoted(tenancy_code)
+
+      guide = File.read!("guides/multi-tenancy.md")
+      assert guide =~ "config :mailglass, adapters:"
+      assert guide =~ "single-tenant"
+      assert guide =~ "Different ESP per tenant"
+      assert guide =~ "different credentials"
+      assert guide =~ "different stream or domain routes"
+      assert guide =~ "adapter_ref"
+      refute guide =~ "round-robin"
+      refute guide =~ "failover"
+      refute guide =~ "registry process"
+      refute guide =~ "cache invalidation"
     end
   end
 end
