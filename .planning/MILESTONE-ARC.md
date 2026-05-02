@@ -87,7 +87,7 @@ gap is operating, inspecting, and trusting the system in a real SaaS app.
 - Step-up auth on destructive actions
 - `mix mail.doctor` core DNS checks: SPF, DKIM, DMARC, MX, BIMI
 - Per-tenant adapter resolver
-- Carry-forward ship/install fixes from `Issue #25` and `Issue #9`
+- Carry-forward ship/install fixes from `Issue #25` and `Issue #9` (closed in Phase 27 — see REL-17/REL-18)
 
 **Explicit non-goals:**
 - Inbound routing

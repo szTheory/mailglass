@@ -121,7 +121,7 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 - [ ] `REPLAY-01` / `REPLAY-02` / `REPLAY-03` — webhook replay flow with durable audit trail
 - [ ] `DOCTOR-01` / `DOCTOR-02` / `DOCTOR-03` — `mix mail.doctor` deliverability diagnostics
 - [ ] `TENANT-01` / `TENANT-02` / `TENANT-03` — runtime per-tenant adapter resolution
-- [ ] `REL-17` / `REL-18` — fresh-host install and post-publish smoke closure
+- [x] `REL-17` / `REL-18` — fresh-host install and post-publish smoke closure (Phase 27)
 
 ## Out of Scope
 

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Operator Confidence
 status: executing
-last_updated: "2026-05-02T15:07:05.488Z"
+last_updated: "2026-05-02T15:13:22.225Z"
 last_activity: 2026-05-02 -- Phase --phase execution started
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 19
-  completed_plans: 16
-  percent: 84
+  completed_plans: 17
+  percent: 89
 ---
 
 # Project State
@@ -62,11 +62,12 @@ Items acknowledged and deferred at milestone close on 2026-04-30:
 | verification | Backfill formal `VERIFICATION.md` artifacts for phases 14, 17, 18, 19, 20, and 21 | deferred |
 | testing | Add plug-level SES `SubscriptionConfirmation` regression coverage | deferred |
 | environment | Investigate intermittent `too_many_connections` and optional OTLP warning noise during local test runs | deferred |
+| Phase 27 P01 | 5 | 3 tasks | 3 files |
 
-### Carry-forward to next milestone
+### Carry-forward closure (resolved in Phase 27)
 
-- **Issue #25** — post-publish-smoke fresh-host install crashes on missing `:hackney` (Swoosh ApiClient default in Phoenix 1.8). Recommended fix: `mix mailglass.install` writes `config :swoosh, :api_client, false` (or Finch). v0.4 candidate.
-- **Issue #9** — chronic post-publish-smoke version-resolution bug. Sidestepped here via `workflow_dispatch tag=mailglass-v0.3.2`; structural fix still pending.
+- **Issue #25** — RESOLVED in Phase 27 (REL-17). The installer now writes `config :swoosh, :api_client, false` so a fresh `mix phx.new --no-mailer` host boots without `:finch` in deps. See `.planning/phases/27-release-install-closure/27-01-PLAN.md` and the historical narrative archived under `.planning/milestones/v0.3-phases/18-ship-v0-3-0/`.
+- **Issue #9** — RESOLVED in Phase 27 (REL-18). Workflow comments hardened so the canonical release-event path and fallback `workflow_dispatch tag=...` recovery path are explicitly documented in `.github/workflows/post-publish-smoke.yml` and `.github/workflows/publish-hex.yml`. Rehearsal evidence: `.planning/phases/27-release-install-closure/27-02-EVIDENCE.md`.
 
 ## Session Continuity
 
@@ -75,7 +76,7 @@ Items acknowledged and deferred at milestone close on 2026-04-30:
 - Phase 15 (Mailgun) complete 2026-04-29 — all 4 plans executed and verified.
 - Phase 16 (SES) complete 2026-04-29 — all 4 plans executed and verified.
 - Phase 17 (Unblock & Verify Resend) complete 2026-04-29 — both plans executed.
-- Phase 18 (Ship v0.3.x) complete 2026-04-29 — shipped as v0.3.2 after 3-cycle CI recovery (PRs #20, #22 → #21 / 0.3.1 orphan; #23 → #24 / 0.3.2 shipped). DELIV-04 marked Complete; smoke contract gap (Issue #25) tracked for v0.4.
+- Phase 18 (Ship v0.3.x) complete 2026-04-29 — shipped as v0.3.2 after 3-cycle CI recovery (PRs #20, #22 → #21 / 0.3.1 orphan; #23 → #24 / 0.3.2 shipped). DELIV-04 marked Complete; smoke contract gap (Issue #25) was carried forward to v0.4 and closed in Phase 27 (REL-17).
 - Phase 19 (SES ingest blocker closure) completed 2026-04-30 after the current full suite returned green (`20 properties, 913 tests, 0 failures, 6 skipped`).
 - Phase 20 (config schema + installer surface) complete 2026-04-30.
 - Phase 21 (SES-02 override paperwork closure) complete 2026-04-30.

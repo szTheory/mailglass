@@ -7,11 +7,11 @@
 
 ### Admin
 
-- [ ] **ADMIN-01**: Adopter can mount a production-safe `mailglass_admin` operator surface inside a Phoenix app.
+- [x] **ADMIN-01**: Adopter can mount a production-safe `mailglass_admin` operator surface inside a Phoenix app.
 - [ ] **ADMIN-02**: Operator can browse recent deliveries with tenant-aware filtering.
 - [ ] **ADMIN-03**: Operator can open a delivery and inspect a chronological event timeline derived from the append-only ledger.
 - [ ] **ADMIN-04**: Operator can view suppression entries and see whether each entry is removable or immutable, with the reason surfaced in the UI.
-- [ ] **ADMIN-05**: Destructive operator actions require recent authentication.
+- [x] **ADMIN-05**: Destructive operator actions require recent authentication.
 
 ### Replay
 
@@ -33,8 +33,8 @@
 
 ### Release / Install Closure
 
-- [ ] **REL-17**: Fresh-host install no longer crashes on missing `:hackney` / Swoosh API client defaults (`Issue #25`).
-- [ ] **REL-18**: Post-publish smoke no longer depends on the current manual version-resolution workaround (`Issue #9`).
+- [x] **REL-17**: Fresh-host install no longer crashes on missing `:hackney` / Swoosh API client defaults (closed in Phase 27; previously tracked as `Issue #25`).
+- [x] **REL-18**: Post-publish smoke no longer depends on the prior manual version-resolution workaround (closed in Phase 27; previously tracked as `Issue #9`).
 
 ## Future Requirements
 
@@ -70,8 +70,8 @@
 | ADMIN-02 | Phase 22 | Complete |
 | ADMIN-03 | Phase 22 | Complete |
 | ADMIN-04 | Phase 22 | Complete |
-| ADMIN-01 | Phase 23 | Pending |
-| ADMIN-05 | Phase 23 | Pending |
+| ADMIN-01 | Phase 23 | Complete |
+| ADMIN-05 | Phase 23 | Complete |
 | REPLAY-01 | Phase 24 | Pending |
 | REPLAY-02 | Phase 24 | Pending |
 | REPLAY-03 | Phase 24 | Pending |
@@ -81,8 +81,8 @@
 | TENANT-01 | Phase 26 | Pending |
 | TENANT-02 | Phase 26 | Pending |
 | TENANT-03 | Phase 26 | Pending |
-| REL-17 | Phase 27 | Pending |
-| REL-18 | Phase 27 | Pending |
+| REL-17 | Phase 27 | Complete |
+| REL-18 | Phase 27 | Complete |
 
 **Coverage:**
 - v0.4 requirements: 16 total
@@ -91,4 +91,4 @@
 
 ---
 *Requirements defined: 2026-04-30*
-*Last updated: 2026-05-01 after activating v0.4 and marking Phase 22 requirement coverage complete*
+*Last updated: 2026-05-01 after marking Phase 23 requirement coverage complete*
