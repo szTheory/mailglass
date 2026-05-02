@@ -48,10 +48,11 @@ Plans:
 **Success Criteria**:
   1. User can assert a mailable was dispatched with specific assigns.
   2. User can simulate and assert webhook handling easily in tests.
-**Plans**: 0/0 complete
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD — plan with `$gsd-plan-phase 29`
+- [ ] 29-01-PLAN.md — Outbound Delivery Assertions
+- [ ] 29-02-PLAN.md — Webhook Simulation & Idempotency Assertions
 
 ### Phase 30: Per-Domain Rate Limiting
 **Goal**: Operators can protect domain reputation through configurable per-domain rate limiting.
