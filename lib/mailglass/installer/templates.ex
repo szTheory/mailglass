@@ -129,13 +129,16 @@ defmodule Mailglass.Installer.Templates do
   @doc """
   Returns the managed block body inserted into `runtime.exs`.
 
-  Sets Swoosh's `:api_client` to `Swoosh.ApiClient.Finch` because Finch
-  ships with `mix phx.new` (it's the default HTTP client for the host
-  Phoenix app). Swoosh's own default at v1.25 is
-  `Swoosh.ApiClient.Hackney` which would require adopters to add
-  `{:hackney, "~> 1.18"}` and start a hackney supervisor manually. With
-  Finch, no extra deps or boot wiring is needed — adopters can `mix
-  mailglass.install` and immediately `mix phx.server` without surprise.
+  Sets Swoosh's `:api_client` to `false`, matching mailglass's own
+  `config/config.exs` and `mailglass_admin/config/config.exs`. Mailglass
+  does not pin a specific HTTP client at the package level: API-based
+  Swoosh adapters (Postmark, SendGrid, Mailgun, SES, Resend) require an
+  HTTP client, but the choice belongs to the adopter. With
+  `:api_client` set to `false`, `Swoosh.ApiClient.init/0` no-ops cleanly
+  so a fresh `mix phx.new --no-mailer` host boots without needing
+  `:finch`, `:hackney`, or `:req` in deps. Adopters using an API-based
+  Swoosh adapter must opt in explicitly — the commented examples below
+  show how.
   """
   @spec runtime_config_body() :: String.t()
   def runtime_config_body do
@@ -144,7 +147,12 @@ defmodule Mailglass.Installer.Templates do
       telemetry_prefix: [:mailglass],
       enable_preview: true
 
-    config :swoosh, :api_client, Swoosh.ApiClient.Finch
+    # Swoosh ships three HTTP clients; mailglass does not pin one. Pick the
+    # one matching your `:swoosh` adapter dep and uncomment the line below.
+    # config :swoosh, :api_client, Swoosh.ApiClient.Finch
+    # config :swoosh, :api_client, Swoosh.ApiClient.Hackney
+    # config :swoosh, :api_client, Swoosh.ApiClient.Req
+    config :swoosh, :api_client, false
     """
   end
 
