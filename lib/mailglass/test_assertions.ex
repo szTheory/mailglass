@@ -142,10 +142,16 @@ defmodule Mailglass.TestAssertions do
         assert msg.tenant_id == v,
                "tenant_id mismatch: expected #{inspect(v)}, got #{inspect(msg.tenant_id)}"
 
+      {:assigns, v} when is_map(v) or is_list(v) ->
+        expected_assigns = Map.new(v)
+
+        assert Enum.all?(expected_assigns, fn {k, val} -> Map.get(msg.assigns, k) == val end),
+               "assigns mismatch: expected assigns #{inspect(expected_assigns)} to be present in #{inspect(msg.assigns)}"
+
       {key, _} ->
         flunk(
           "Unsupported matcher key: #{inspect(key)}. " <>
-            "Supported: :subject, :to, :mailable, :stream, :tenant"
+            "Supported: :subject, :to, :mailable, :stream, :tenant, :assigns"
         )
     end)
   end
@@ -248,4 +254,42 @@ defmodule Mailglass.TestAssertions do
 
   defp to_delivery_id(%Outbound.Delivery{id: id}), do: id
   defp to_delivery_id(id) when is_binary(id), do: id
+
+  # ===== Content Matchers =====
+
+  @doc """
+  Asserts that the HTML body of a message matches a binary or regex pattern.
+  """
+  @doc since: "0.4.0"
+  @spec assert_mail_html_matches(Message.t(), String.t() | Regex.t()) :: :ok
+  def assert_mail_html_matches(%Message{swoosh_email: %{html_body: body}}, pattern) do
+    do_match_content(:html, body, pattern)
+  end
+
+  @doc """
+  Asserts that the text body of a message matches a binary or regex pattern.
+  """
+  @doc since: "0.4.0"
+  @spec assert_mail_text_matches(Message.t(), String.t() | Regex.t()) :: :ok
+  def assert_mail_text_matches(%Message{swoosh_email: %{text_body: body}}, pattern) do
+    do_match_content(:text, body, pattern)
+  end
+
+  defp do_match_content(type, nil, _pattern) do
+    flunk("Expected #{type} body to match pattern, but the #{type} body is nil")
+  end
+
+  defp do_match_content(type, body, %Regex{} = pattern) do
+    assert Regex.match?(pattern, body),
+           "Expected #{type} body to match regex #{inspect(pattern)}, got:\n#{body}"
+
+    :ok
+  end
+
+  defp do_match_content(type, body, string) when is_binary(string) do
+    assert String.contains?(body, string),
+           "Expected #{type} body to contain string #{inspect(string)}, got:\n#{body}"
+
+    :ok
+  end
 end

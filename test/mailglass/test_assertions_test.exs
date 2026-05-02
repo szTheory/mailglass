@@ -135,6 +135,77 @@ defmodule Mailglass.TestAssertionsTest do
     end
   end
 
+  describe "assigns matcher" do
+    test "assert_mail_sent(assigns: %{...}) passes if a matching message is in the mailbox" do
+      msg = stub_message()
+      msg = %{msg | assigns: %{user: "Jon", id: 123}}
+
+      send(self(), {:mail, msg})
+      assert_mail_sent(assigns: %{user: "Jon"})
+
+      send(self(), {:mail, msg})
+      assert_mail_sent(assigns: %{id: 123})
+
+      send(self(), {:mail, msg})
+      assert_mail_sent(assigns: %{user: "Jon", id: 123})
+    end
+
+    test "assert_mail_sent(assigns: %{...}) fails with a clear message if :assigns don't match or are partially missing" do
+      msg = stub_message()
+      msg = %{msg | assigns: %{user: "Jon", id: 123}}
+
+      send(self(), {:mail, msg})
+      assert_raise ExUnit.AssertionError, ~r/assigns mismatch/, fn ->
+        assert_mail_sent(assigns: %{user: "Arya"})
+      end
+
+      send(self(), {:mail, msg})
+      assert_raise ExUnit.AssertionError, ~r/assigns mismatch/, fn ->
+        assert_mail_sent(assigns: %{missing_key: "value"})
+      end
+    end
+  end
+
+  describe "content matchers" do
+    test "assert_mail_html_matches(msg, ~r/invoice_1234/) passes when HTML body contains the regex" do
+      msg = stub_message()
+      msg = %{msg | swoosh_email: %{msg.swoosh_email | html_body: "<h1>Invoice invoice_1234</h1>"}}
+
+      assert_mail_html_matches(msg, ~r/invoice_1234/)
+      assert_mail_html_matches(msg, "invoice_1234")
+    end
+
+    test "assert_mail_html_matches fails when not matched" do
+      msg = stub_message()
+      msg = %{msg | swoosh_email: %{msg.swoosh_email | html_body: "<h1>Invoice invoice_1234</h1>"}}
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_mail_html_matches(msg, ~r/receipt_9999/)
+      end
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_mail_html_matches(msg, "receipt_9999")
+      end
+    end
+
+    test "assert_mail_text_matches(msg, string) passes when text body contains the string" do
+      msg = stub_message()
+      msg = %{msg | swoosh_email: %{msg.swoosh_email | text_body: "Your total is $50"}}
+
+      assert_mail_text_matches(msg, "total")
+      assert_mail_text_matches(msg, ~r/\$\d+/)
+    end
+
+    test "assert_mail_text_matches fails when not matched" do
+      msg = stub_message()
+      msg = %{msg | swoosh_email: %{msg.swoosh_email | text_body: "Your total is $50"}}
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_mail_text_matches(msg, "receipt")
+      end
+    end
+  end
+
   # Test 14: __match_keyword__ with unsupported key raises
   test "__match_keyword__/2 raises on unsupported keyword key", %{msg: msg} do
     assert_raise ExUnit.AssertionError, ~r/Unsupported matcher key/, fn ->
