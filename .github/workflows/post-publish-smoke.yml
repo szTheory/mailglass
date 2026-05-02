@@ -6,12 +6,17 @@ on:
   schedule:
     - cron: "0 12 * * *"
   workflow_dispatch:
-    # Canonical fallback for v0.3.0 if publish succeeds but automatic smoke
-    # fan-out does not occur: dispatch against the same reviewed core release
-    # tag used for publish (e.g. `mailglass-v0.3.0`).
+    # Trigger contract (per Phase 27, D-27-05/06/07):
+    #   - release: types: [published] is the CANONICAL release-day path; version
+    #     is resolved from `github.event.release.tag_name`.
+    #   - workflow_dispatch is FALLBACK-ONLY for manual recovery or rehearsal;
+    #     supply the published tag (e.g. `mailglass-vX.Y.Z`) via `inputs.tag`.
+    #   - schedule (`cron`) is an INDEPENDENT health-check that resolves the
+    #     latest published release on its own; it must not gate release-day
+    #     correctness.
     inputs:
       tag:
-        description: "Tag to smoke-test (e.g. mailglass-v0.3.0)"
+        description: "Tag to smoke-test (e.g. mailglass-vX.Y.Z); fallback path only"
         required: false
         type: string
 
@@ -70,10 +75,12 @@ jobs:
               return;
             }
 
-            // Historical note from the 2026-04-28 rehearsal: an older
-            // workflow_run-triggered path ended up resolving VERSION=main and
-            // waited on `mix hex.info mailglass main`. Keep the manual fallback
-            // tag-based so version resolution stays deterministic.
+            // Historical note (2026-04-28 rehearsal, archived in
+            // .planning/milestones/v0.3-phases/18-ship-v0-3-0/): an older
+            // workflow_run-triggered path resolved VERSION=main and stalled on
+            // `mix hex.info mailglass main`. Per Phase 27 D-27-05/06: the
+            // fallback dispatch path stays tag-based so version resolution is
+            // deterministic from the supplied input.
 
             const owner = context.repo.owner;
             const repo = context.repo.repo;

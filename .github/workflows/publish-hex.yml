@@ -4,12 +4,15 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    # Canonical fallback for v0.3.0 if the release event does not fan out:
-    # dispatch this workflow against the core release tag (e.g.
-    # `mailglass-v0.3.0`), not `main`.
+    # Trigger contract (per Phase 27, D-27-05/06):
+    #   - release: types: [published] is the CANONICAL publish path;
+    #     `github.event.release.tag_name` resolves the tag/ref to publish.
+    #   - workflow_dispatch is FALLBACK-ONLY for manual recovery; supply the
+    #     published tag (e.g. `mailglass-vX.Y.Z`) via `inputs.tag`. Never
+    #     dispatch against `main` — version resolution is tag-based.
     inputs:
       tag:
-        description: "Git tag/ref to publish from (canonical fallback: mailglass-v0.3.0)"
+        description: "Git tag/ref to publish from; fallback-only (e.g. mailglass-vX.Y.Z)"
         required: true
         type: string
       dry_run:
