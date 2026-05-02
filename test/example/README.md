@@ -12,8 +12,8 @@ Refresh both snapshots with:
 <!-- GOLDEN_FRESH_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:e964c36de33b47cf19ded7458085777b1003662ac0d1d442b22393d0e07f420d
-- config/runtime.exs sha256:2cc43bcd5ede9de69f9b6dcfb5b57e2474b81fdd01b084637342598fa2845c93
+- .mailglass.toml sha256:be0be8021f4e35dab53e29d4f8aee03aa3d44585802a1d207169c9eaa7ad6e0a
+- config/runtime.exs sha256:56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
 - lib/example/mail_context.ex sha256:0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec
@@ -35,7 +35,7 @@ installer_version = "<INSTALLER_VERSION>"
 last_run_at = "<LAST_RUN_AT>"
 
 [paths]
-"config/runtime.exs" = "2cc43bcd5ede9de69f9b6dcfb5b57e2474b81fdd01b084637342598fa2845c93"
+"config/runtime.exs" = "56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900"
 "lib/example/mail/default_mailable.ex" = "f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b"
 "lib/example/mail/worker.ex" = "fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7"
 "lib/example/mail_context.ex" = "0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec"
@@ -51,7 +51,12 @@ config :mailglass,
   telemetry_prefix: [:mailglass],
   enable_preview: true
 
-config :swoosh, :api_client, Swoosh.ApiClient.Finch
+# Swoosh ships three HTTP clients; mailglass does not pin one. Pick the
+# one matching your `:swoosh` adapter dep and uncomment the line below.
+# config :swoosh, :api_client, Swoosh.ApiClient.Finch
+# config :swoosh, :api_client, Swoosh.ApiClient.Hackney
+# config :swoosh, :api_client, Swoosh.ApiClient.Req
+config :swoosh, :api_client, false
 # mailglass:end runtime
 
 
@@ -171,8 +176,8 @@ end
 <!-- GOLDEN_NO_ADMIN_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:4bb9308caab1c2abb4b6f66e8829f9c58a753cd317f5a1297a46972022092ae7
-- config/runtime.exs sha256:2cc43bcd5ede9de69f9b6dcfb5b57e2474b81fdd01b084637342598fa2845c93
+- .mailglass.toml sha256:9512f34fb7fcd628a66f11b1b0dd5ee672aa1a3e8814dfa746617ad363007254
+- config/runtime.exs sha256:56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
 - lib/example/mail_context.ex sha256:0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec
@@ -194,7 +199,7 @@ installer_version = "<INSTALLER_VERSION>"
 last_run_at = "<LAST_RUN_AT>"
 
 [paths]
-"config/runtime.exs" = "2cc43bcd5ede9de69f9b6dcfb5b57e2474b81fdd01b084637342598fa2845c93"
+"config/runtime.exs" = "56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900"
 "lib/example/mail/default_mailable.ex" = "f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b"
 "lib/example/mail/worker.ex" = "fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7"
 "lib/example/mail_context.ex" = "0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec"
@@ -210,7 +215,12 @@ config :mailglass,
   telemetry_prefix: [:mailglass],
   enable_preview: true
 
-config :swoosh, :api_client, Swoosh.ApiClient.Finch
+# Swoosh ships three HTTP clients; mailglass does not pin one. Pick the
+# one matching your `:swoosh` adapter dep and uncomment the line below.
+# config :swoosh, :api_client, Swoosh.ApiClient.Finch
+# config :swoosh, :api_client, Swoosh.ApiClient.Hackney
+# config :swoosh, :api_client, Swoosh.ApiClient.Req
+config :swoosh, :api_client, false
 # mailglass:end runtime
 
 
