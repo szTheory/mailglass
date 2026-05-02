@@ -18,13 +18,13 @@
 
 **Why now:** Once the operator story is real, the next leverage comes from making setup, scaffolding, testing, and troubleshooting feel unusually smooth.
 
-**Progress:** 0/4 phases complete
+**Progress:** 2/4 phases complete
 
 | Phase | Status | Goal | Requirements |
 |-------|--------|------|--------------|
-| 28 | Not started | Developers can scaffold mailables instantly without looking up boilerplate. | `SCAFFOLD-01` |
-| 29 | Not started | Developers can confidently write tests for their mailables and webhooks using dedicated assertion helpers. | `TEST-01`, `TEST-02` |
-| 30 | Not started | Operators can protect domain reputation through configurable per-domain rate limiting. | `RATE-01`, `RATE-02` |
+| 28 | ✅ Complete | Developers can scaffold mailables instantly without looking up boilerplate. | `SCAFFOLD-01` |
+| 29 | ✅ Complete | Developers can confidently write tests for their mailables and webhooks using dedicated assertion helpers. | `TEST-01`, `TEST-02` |
+| 30 | 🏗️ Planning | Operators can protect domain reputation through configurable per-domain rate limiting. | `RATE-01`, `RATE-02` |
 | 31 | Not started | Adopters experience zero friction during install and have clear troubleshooting runbooks for operational edge cases. | `DOCS-01`, `DOCS-02`, `REL-19` |
 
 ## Phase Details
@@ -39,7 +39,7 @@
 **Plans**: 1/1 complete
 
 Plans:
-- [ ] 28-01-PLAN.md — Mailable Code Generator
+- [x] 28-01-PLAN.md — Mailable Code Generator
 
 ### Phase 29: Test Assertion Helpers
 **Goal**: Developers can confidently write tests for their mailables and webhooks using dedicated assertion helpers.
@@ -48,11 +48,11 @@ Plans:
 **Success Criteria**:
   1. User can assert a mailable was dispatched with specific assigns.
   2. User can simulate and assert webhook handling easily in tests.
-**Plans**: 2 plans
+**Plans**: 2/2 complete
 
 Plans:
-- [ ] 29-01-PLAN.md — Outbound Delivery Assertions
-- [ ] 29-02-PLAN.md — Webhook Simulation & Idempotency Assertions
+- [x] 29-01-PLAN.md — Outbound Delivery Assertions
+- [x] 29-02-PLAN.md — Webhook Simulation & Idempotency Assertions
 
 ### Phase 30: Per-Domain Rate Limiting
 **Goal**: Operators can protect domain reputation through configurable per-domain rate limiting.
@@ -61,10 +61,11 @@ Plans:
 **Success Criteria**:
   1. The system throttles outbound dispatch per-domain based on configuration.
   2. Rate limiting includes sensible defaults that prevent unintentional bursts.
-**Plans**: 0/0 complete
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD — plan with `$gsd-plan-phase 30`
+- [ ] 30-01-PLAN.md — Multi-Bucket Rate Limiting
+- [ ] 30-02-PLAN.md — Sensible Defaults & Documentation
 
 ### Phase 31: Documentation & Reliability Tightening
 **Goal**: Adopters experience zero friction during install and have clear troubleshooting runbooks for operational edge cases.
