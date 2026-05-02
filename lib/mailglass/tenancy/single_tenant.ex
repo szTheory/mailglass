@@ -27,4 +27,7 @@ defmodule Mailglass.Tenancy.SingleTenant do
 
   @impl Mailglass.Tenancy
   def resolve_webhook_tenant(_context), do: {:ok, "default"}
+
+  @impl Mailglass.Tenancy
+  def resolve_outbound_adapter_ref(_context), do: :default
 end

@@ -39,6 +39,18 @@ defmodule Mailglass.TenancyTest do
     end
   end
 
+  describe "resolve_outbound_adapter_ref/1" do
+    test "returns :default when the configured tenancy module does not implement the callback" do
+      context = %{tenant_id: "tenant-a", message: message_fixture(), mode: :sync}
+      assert Tenancy.resolve_outbound_adapter_ref(context) == :default
+    end
+
+    test "SingleTenant preserves the default outbound adapter path" do
+      context = %{tenant_id: "default", message: message_fixture(), mode: :async}
+      assert Mailglass.Tenancy.SingleTenant.resolve_outbound_adapter_ref(context) == :default
+    end
+  end
+
   describe "with_tenant/2" do
     test "scopes tenant for the block and restores prior value" do
       Tenancy.put_current("outer")
@@ -145,5 +157,12 @@ defmodule Mailglass.TenancyTest do
       # @impl annotation would have raised. Runtime sanity check:
       assert function_exported?(Mailglass.Tenancy.SingleTenant, :scope, 2)
     end
+  end
+
+  defp message_fixture do
+    Swoosh.Email.new()
+    |> Swoosh.Email.to("user@example.com")
+    |> Swoosh.Email.subject("Hello")
+    |> Mailglass.Message.build(mailable: __MODULE__, tenant_id: "tenant-a")
   end
 end

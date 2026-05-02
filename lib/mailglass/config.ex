@@ -19,6 +19,13 @@ defmodule Mailglass.Config do
       default: {Mailglass.Adapters.Fake, []},
       doc: "Adapter module or `{module, opts}` tuple. Default: the Fake adapter."
     ],
+    adapters: [
+      type: {:list, :any},
+      default: [],
+      doc:
+        "Optional named adapter registry for runtime route refs. Each entry is " <>
+          "`{ref, module}` or `{ref, {module, opts}}`, where `ref` is an atom or string."
+    ],
     theme: [
       type: :keyword_list,
       default: [],
@@ -457,6 +464,7 @@ defmodule Mailglass.Config do
     opts
     |> normalize_optional_keyword_subtrees()
     |> NimbleOptions.validate!(@schema)
+    |> validate_adapter_config!()
     |> validate_mailgun_replay_window!()
   end
 
@@ -484,6 +492,7 @@ defmodule Mailglass.Config do
     validated =
       opts
       |> NimbleOptions.validate!(@schema)
+      |> validate_adapter_config!()
       |> validate_mailgun_replay_window!()
 
     validate_repo_adapter!(Keyword.get(validated, :repo))
@@ -501,8 +510,7 @@ defmodule Mailglass.Config do
   end
 
   defp normalize_optional_keyword_subtrees(opts) do
-    Enum.reduce([:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance, :ses, :resend], opts, fn key,
-                                                                                               acc ->
+    Enum.reduce([:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance, :ses, :resend], opts, fn key, acc ->
       case Keyword.get(acc, key, :__missing__) do
         nil -> Keyword.put(acc, key, [])
         _ -> acc
@@ -556,6 +564,45 @@ defmodule Mailglass.Config do
   @spec get_theme() :: keyword()
   def get_theme do
     :persistent_term.get({__MODULE__, :theme}, [])
+  end
+
+  @doc """
+  Returns the validated global default adapter as `{module, opts}`.
+  """
+  @doc since: "0.4.0"
+  @spec default_adapter() :: {module(), keyword()}
+  def default_adapter do
+    validated_config()
+    |> Keyword.fetch!(:adapter)
+    |> normalize_adapter_entry!(:adapter)
+  end
+
+  @doc """
+  Returns the validated named adapter registry keyed by stable route ref.
+  """
+  @doc since: "0.4.0"
+  @spec adapters() :: %{optional(atom() | String.t()) => {module(), keyword()}}
+  def adapters do
+    validated_config()
+    |> Keyword.get(:adapters, [])
+    |> Enum.into(%{}, fn {ref, adapter} -> {ref, normalize_adapter_entry!(adapter, :adapters)} end)
+  end
+
+  @doc """
+  Resolves a named adapter ref into the normalized `{module, opts}` shape.
+  """
+  @doc since: "0.4.0"
+  @spec resolve_adapter_ref(atom() | String.t()) :: {module(), keyword()}
+  def resolve_adapter_ref(ref) when is_atom(ref) or is_binary(ref) do
+    case Map.fetch(adapters(), ref) do
+      {:ok, adapter} ->
+        adapter
+
+      :error ->
+        raise Mailglass.ConfigError.new(:invalid,
+                context: %{key: :adapter_ref, adapter_ref: ref, reason: "unknown adapter ref"}
+              )
+    end
   end
 
   @doc """
@@ -629,7 +676,61 @@ defmodule Mailglass.Config do
     |> Keyword.take(known_keys)
     |> normalize_optional_keyword_subtrees()
     |> NimbleOptions.validate!(@schema)
+    |> validate_adapter_config!()
     |> validate_mailgun_replay_window!()
+  end
+
+  defp validate_adapter_config!(validated) do
+    _ = normalize_adapter_entry!(Keyword.fetch!(validated, :adapter), :adapter)
+
+    adapters =
+      validated
+      |> Keyword.get(:adapters, [])
+      |> Enum.map(&normalize_registry_entry!/1)
+
+    Keyword.put(validated, :adapters, adapters)
+  end
+
+  defp normalize_registry_entry!({ref, adapter}) do
+    {normalize_adapter_ref!(ref), normalize_adapter_entry!(adapter, :adapters)}
+  end
+
+  defp normalize_registry_entry!(other) do
+    raise NimbleOptions.ValidationError,
+      key: :adapters,
+      message: "expected entries like {ref, module} or {ref, {module, opts}}, got: #{inspect(other)}"
+  end
+
+  defp normalize_adapter_ref!(ref) when is_atom(ref) or is_binary(ref), do: ref
+
+  defp normalize_adapter_ref!(ref) do
+    raise NimbleOptions.ValidationError,
+      key: :adapters,
+      message: "adapter refs must be atoms or strings, got: #{inspect(ref)}"
+  end
+
+  defp normalize_adapter_entry!(adapter, key) do
+    case adapter do
+      mod when is_atom(mod) ->
+        {mod, []}
+
+      {mod, opts} when is_atom(mod) and is_list(opts) ->
+        if Keyword.keyword?(opts) do
+          {mod, opts}
+        else
+          invalid_adapter_entry!(key, adapter)
+        end
+
+      _ ->
+        invalid_adapter_entry!(key, adapter)
+    end
+  end
+
+  defp invalid_adapter_entry!(key, adapter) do
+    raise NimbleOptions.ValidationError,
+      key: key,
+      message:
+        "adapter entries must be a module or {module, keyword_opts}, got: #{inspect(adapter)}"
   end
 
   defp validate_mailgun_replay_window!(validated) do

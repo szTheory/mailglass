@@ -39,7 +39,12 @@ defmodule Mailglass.Tenancy do
 
   @callback scope(queryable :: Ecto.Queryable.t(), context :: term()) :: Ecto.Queryable.t()
 
-  @optional_callbacks tracking_host: 1, compliance_host: 1, resolve_webhook_tenant: 1
+  @type outbound_adapter_ref :: atom() | String.t()
+
+  @optional_callbacks tracking_host: 1,
+                      compliance_host: 1,
+                      resolve_webhook_tenant: 1,
+                      resolve_outbound_adapter_ref: 1
 
   @doc """
   Optional: return a per-tenant tracking host override (D-32).
@@ -59,6 +64,25 @@ defmodule Mailglass.Tenancy do
   tenant-scoped without forking the core URL builder.
   """
   @callback compliance_host(context :: term()) :: {:ok, String.t()} | :default
+
+  @doc """
+  Optional: resolve a per-send outbound adapter ref for the current tenant.
+
+  Returning `{:ok, adapter_ref}` selects a named route from
+  `config :mailglass, adapters:`. Returning `:default` keeps the global
+  `config :mailglass, adapter` path.
+
+  The callback stays narrowly scoped to outbound routing decisions:
+
+    * `:tenant_id` — stamped tenant id for the current send
+    * `:message` — the `%Mailglass.Message{}` being delivered
+    * `:mode` — `:sync` or `:async`
+  """
+  @callback resolve_outbound_adapter_ref(context :: %{
+              tenant_id: String.t() | nil,
+              message: Mailglass.Message.t(),
+              mode: :sync | :async
+            }) :: {:ok, outbound_adapter_ref()} | :default
 
   @doc """
   Optional: resolve the tenant from a verified webhook context (D-12).
@@ -325,6 +349,32 @@ defmodule Mailglass.Tenancy do
 
     if function_exported?(module, :compliance_host, 1) do
       module.compliance_host(context)
+    else
+      :default
+    end
+  end
+
+  @doc """
+  Dispatch to the configured tenancy module's optional
+  `resolve_outbound_adapter_ref/1` callback.
+
+  Adopters returning `{:ok, adapter_ref}` select a named route from the
+  validated adapter registry. Returning `:default` keeps the global
+  default adapter path. Adopters not implementing the callback fall back
+  to `:default`.
+  """
+  @doc since: "0.4.0"
+  @spec resolve_outbound_adapter_ref(%{
+          tenant_id: String.t() | nil,
+          message: Mailglass.Message.t(),
+          mode: :sync | :async
+        }) :: {:ok, outbound_adapter_ref()} | :default
+  def resolve_outbound_adapter_ref(%{message: %Mailglass.Message{}, mode: mode} = context)
+      when mode in [:sync, :async] do
+    module = resolver()
+
+    if function_exported?(module, :resolve_outbound_adapter_ref, 1) do
+      module.resolve_outbound_adapter_ref(context)
     else
       :default
     end

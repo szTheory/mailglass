@@ -10,6 +10,7 @@ defmodule Mailglass.ConfigTest do
     test "accepts empty opts and uses all defaults" do
       assert config = Mailglass.Config.new!([])
       assert Keyword.get(config, :adapter) == {Mailglass.Adapters.Fake, []}
+      assert Keyword.get(config, :adapters) == []
     end
 
     test "accepts valid opts unchanged and fills defaults" do
@@ -47,6 +48,43 @@ defmodule Mailglass.ConfigTest do
       assert Keyword.fetch!(mailgun, :signing_key) == "mailgun-signing-key"
       assert Keyword.fetch!(mailgun, :future_skew_seconds) == 300
       assert Keyword.fetch!(mailgun, :replay_cache_ttl_seconds) == 28_800
+    end
+
+    test "normalizes named adapter registry entries" do
+      config =
+        Mailglass.Config.new!(
+          adapters: [
+            {"tenant-b", {Mailglass.Adapters.Fake, api_key: "secret"}},
+            tenant_a: Mailglass.Adapters.Fake
+          ]
+        )
+
+      assert Keyword.fetch!(config, :adapters) == [
+               {"tenant-b", {Mailglass.Adapters.Fake, [api_key: "secret"]}},
+               {:tenant_a, {Mailglass.Adapters.Fake, []}}
+             ]
+    end
+
+    test "rejects invalid adapter refs in the named registry" do
+      assert_raise NimbleOptions.ValidationError, ~r/adapter refs must be atoms or strings/, fn ->
+        Mailglass.Config.new!(adapters: [{123, Mailglass.Adapters.Fake}])
+      end
+    end
+
+    test "rejects malformed named adapter entries" do
+      assert_raise NimbleOptions.ValidationError,
+                   ~r/adapter entries must be a module or \{module, keyword_opts\}/,
+                   fn ->
+                     Mailglass.Config.new!(adapters: [tenant_a: {"not a module", []}])
+                   end
+    end
+
+    test "rejects malformed default adapter entries" do
+      assert_raise NimbleOptions.ValidationError,
+                   ~r/adapter entries must be a module or \{module, keyword_opts\}/,
+                   fn ->
+                     Mailglass.Config.new!(adapter: {Mailglass.Adapters.Fake, [:not, :keyword]})
+                   end
     end
 
     test "rejects unknown keys in the mailgun subtree" do
