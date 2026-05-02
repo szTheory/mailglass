@@ -1,110 +1,82 @@
 # Roadmap: mailglass
 
 **Granularity:** standard (config.json)
-**Sibling package out of milestone:** `mailglass_inbound` (v0.5+, not roadmapped here)
+**Sibling package out of milestone:** `mailglass_inbound` (v0.6+, not roadmapped here)
 
 ## Milestones
 
 - ✅ **v0.1 Validation Release** — Phases 1-7 + 07.1 (shipped 2026-04-26) — see [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md)
 - ✅ **v0.2 Production-Credible Core** — Phases 8-13 (shipped 2026-04-28) — see [milestones/v0.2-ROADMAP.md](milestones/v0.2-ROADMAP.md)
 - ✅ **v0.3 Webhook Coverage Complete** — Phases 14-21 (shipped 2026-04-30) — see [milestones/v0.3-ROADMAP.md](milestones/v0.3-ROADMAP.md)
+- ✅ **v0.4 Operator Confidence** — Phases 22-27 (shipped 2026-05-02) — see [milestones/v0.4-ROADMAP.md](milestones/v0.4-ROADMAP.md)
 
 ## Current Milestone
 
-### v0.4 Operator Confidence
+### v0.5 Adoption Hardening
 
-**Goal:** Make mailglass credible for production operators, not just library authors.
+**Goal:** Reduce adopter friction and close the “serious SaaS team” integration gaps.
 
-**Why now:** Provider coverage is complete. The next missing layer is operator trust: mounting the admin safely, inspecting deliveries and timelines, replaying safely, validating deliverability posture, and closing fresh-host shipping gaps.
+**Why now:** Once the operator story is real, the next leverage comes from making setup, scaffolding, testing, and troubleshooting feel unusually smooth.
 
-**Progress:** 2/6 phases complete
+**Progress:** 0/4 phases complete
 
 | Phase | Status | Goal | Requirements |
 |-------|--------|------|--------------|
-| 22 | Complete | Establish the read-only operator data foundation for deliveries, timelines, and suppression visibility. | `ADMIN-02`, `ADMIN-03`, `ADMIN-04` |
-| 23 | Complete | Make the operator surface production-mountable and enforce step-up auth on destructive actions. | `ADMIN-01`, `ADMIN-05` |
-| 24 | Pending | Add tenant-safe webhook replay with durable audit context. | `REPLAY-01`, `REPLAY-02`, `REPLAY-03` |
-| 25 | Pending | Ship `mix mail.doctor` with actionable DNS deliverability diagnostics. | `DOCTOR-01`, `DOCTOR-02`, `DOCTOR-03` |
-| 26 | Pending | Add runtime per-tenant outbound adapter resolution without breaking single-tenant defaults. | `TENANT-01`, `TENANT-02`, `TENANT-03` |
-| 27 | Pending | Close the known install and post-publish smoke gaps before milestone ship. | `REL-17`, `REL-18` |
-
-#### Phase 23 Plan Set
-
-**Plans:** 3 plans
-
-Plans:
-- [x] `23-01-PLAN.md` — Split preview/operator router products, `live_session`s, and session whitelists; add operator-only production mount path.
-- [x] `23-02-PLAN.md` — Add the adopter-owned recent-auth behavior/helper seam and wire operator mount/live assigns for future destructive checks.
-- [x] `23-03-PLAN.md` — Lock the contract with router/auth/operator tests and update README + roadmap docs for preview versus production mounting.
-
-**Next up:** `$gsd-plan-phase 24`
+| 28 | Not started | Developers can scaffold mailables instantly without looking up boilerplate. | `SCAFFOLD-01` |
+| 29 | Not started | Developers can confidently write tests for their mailables and webhooks using dedicated assertion helpers. | `TEST-01`, `TEST-02` |
+| 30 | Not started | Operators can protect domain reputation through configurable per-domain rate limiting. | `RATE-01`, `RATE-02` |
+| 31 | Not started | Adopters experience zero friction during install and have clear troubleshooting runbooks for operational edge cases. | `DOCS-01`, `DOCS-02`, `REL-19` |
 
 ## Phase Details
 
-### Phase 22: Operator Data Foundation
-**Goal**: Establish the read-only operator data foundation for deliveries, timelines, and suppression visibility.
-**Depends on**: Phase 21
-**Requirements**: ADMIN-02, ADMIN-03, ADMIN-04
-**Plans**: 3/3 complete
+### Phase 28: Mailable Scaffolding
+**Goal**: Developers can scaffold mailables instantly without looking up boilerplate.
+**Depends on**: Phase 27
+**Requirements**: SCAFFOLD-01
+**Success Criteria**:
+  1. `mix mailglass.gen.mailable` generates a module and HEEx template.
+  2. Generated mailables compile and work out of the box.
+**Plans**: 1/1 complete
 
 Plans:
-- [x] `22-01-PLAN.md` — Add tenant-scoped operator delivery, timeline, and suppression read-model seams in core mailglass.
-- [x] `22-02-PLAN.md` — Build the read-only operator LiveView on top of the new delivery/timeline/suppression data seams.
-- [x] `22-03-PLAN.md` — Lock the operator UI contract with LiveView tests, responsive checks, and verification evidence.
+- [ ] 28-01-PLAN.md — Mailable Code Generator
 
-### Phase 23: Production Admin Mount and Step-Up Auth
-**Goal**: Make the operator surface production-mountable and enforce step-up auth on destructive actions.
-**Depends on**: Phase 22
-**Requirements**: ADMIN-01, ADMIN-05
-**Plans**: 3/3 complete
-
-Plans:
-- [x] `23-01-PLAN.md` — Split preview/operator router products, `live_session`s, and session whitelists; add operator-only production mount path.
-- [x] `23-02-PLAN.md` — Add the adopter-owned recent-auth behavior/helper seam and wire operator mount/live assigns for future destructive checks.
-- [x] `23-03-PLAN.md` — Lock the contract with router/auth/operator tests and update README + roadmap docs for preview versus production mounting.
-
-### Phase 24: Tenant-Safe Webhook Replay with Audit Context
-**Goal**: Add tenant-safe webhook replay with durable audit context.
-**Depends on**: Phase 23
-**Requirements**: REPLAY-01, REPLAY-02, REPLAY-03
+### Phase 29: Test Assertion Helpers
+**Goal**: Developers can confidently write tests for their mailables and webhooks using dedicated assertion helpers.
+**Depends on**: Phase 28
+**Requirements**: TEST-01, TEST-02
+**Success Criteria**:
+  1. User can assert a mailable was dispatched with specific assigns.
+  2. User can simulate and assert webhook handling easily in tests.
 **Plans**: 0/0 complete
 
 Plans:
-- [ ] TBD — plan with `$gsd-plan-phase 24`
+- [ ] TBD — plan with `$gsd-plan-phase 29`
 
-### Phase 25: Deliverability Doctor
-**Goal**: Ship `mix mail.doctor` with actionable DNS deliverability diagnostics.
-**Depends on**: Phase 24
-**Requirements**: DOCTOR-01, DOCTOR-02, DOCTOR-03
-**Plans**: 0/4 complete
-
-Plans:
-- [ ] `25-01-PLAN.md` — Define the shared deliverability result contract, resolver seam, and one-domain runtime entrypoint.
-- [ ] `25-02-PLAN.md` — Implement the SPF, DKIM, and DMARC analyzers with explicit uncertainty semantics and test coverage.
-- [ ] `25-03-PLAN.md` — Implement the MX and BIMI analyzers plus shared human/JSON formatting.
-- [ ] `25-04-PLAN.md` — Ship the strict `mix mail.doctor` CLI wrapper, contract tests, and README usage/docs.
-
-### Phase 26: Runtime Per-Tenant Adapter Resolution
-**Goal**: Add runtime per-tenant outbound adapter resolution without breaking single-tenant defaults.
-**Depends on**: Phase 25
-**Requirements**: TENANT-01, TENANT-02, TENANT-03
-**Plans**: 0/3 complete
+### Phase 30: Per-Domain Rate Limiting
+**Goal**: Operators can protect domain reputation through configurable per-domain rate limiting.
+**Depends on**: Phase 29
+**Requirements**: RATE-01, RATE-02
+**Success Criteria**:
+  1. The system throttles outbound dispatch per-domain based on configuration.
+  2. Rate limiting includes sensible defaults that prevent unintentional bursts.
+**Plans**: 0/0 complete
 
 Plans:
-- [ ] `26-01-PLAN.md` — Add the tenancy callback, additive adapter-ref config registry, and dedicated delivery route-ref persistence contract.
-- [ ] `26-02-PLAN.md` — Wire sync/async/batch outbound routing, queue-time route snapshotting, and persisted-ref worker dispatch.
-- [ ] `26-03-PLAN.md` — Update multi-tenant routing docs and lock the public contract with docs coverage.
+- [ ] TBD — plan with `$gsd-plan-phase 30`
 
-### Phase 27: Release / Install Closure
-**Goal**: Close the known install and post-publish smoke gaps before milestone ship.
-**Depends on**: Phase 26
-**Requirements**: REL-17, REL-18
-**Plans**: 3 plans
+### Phase 31: Documentation & Reliability Tightening
+**Goal**: Adopters experience zero friction during install and have clear troubleshooting runbooks for operational edge cases.
+**Depends on**: Phase 30
+**Requirements**: DOCS-01, DOCS-02, REL-19
+**Success Criteria**:
+  1. New users can install and smoke test without hitting known brittle edge cases.
+  2. Operators can resolve webhook delivery issues using the troubleshooting guide.
+  3. Upgrades are straightforward due to clear and actionable migration docs.
+**Plans**: 0/0 complete
 
 Plans:
-- [ ] `27-01-PLAN.md` — Switch installer Swoosh default to `api_client: false`, refresh both install golden snapshots, add regression sentinel (REL-17).
-- [ ] `27-02-PLAN.md` — Harden post-publish-smoke + publish-hex YAML header comments to make canonical / fallback / scheduled triggers explicit; capture rehearsal evidence (REL-18).
-- [ ] `27-03-PLAN.md` — Flip REL-17/REL-18 checkboxes and reframe Issues #25/#9 as resolved-in-Phase-27 across active planning state (D-27-08/09).
+- [ ] TBD — plan with `$gsd-plan-phase 31`
 
 ## Backlog
 
