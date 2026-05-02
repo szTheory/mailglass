@@ -43,16 +43,25 @@ defmodule Mailglass.Outbound.DeliveryTest do
       assert opts[:validation] == :inclusion
       assert is_list(opts[:enum])
     end
+
+    test "accepts adapter_ref for durable route identity" do
+      attrs = valid_attrs(%{adapter_ref: Delivery.default_adapter_ref()})
+      changeset = Delivery.changeset(attrs)
+
+      assert changeset.valid?
+      assert get_change(changeset, :adapter_ref) == Delivery.default_adapter_ref()
+    end
   end
 
   describe "round-trip" do
     test "inserts and reloads with all 8 projection columns null-or-typed" do
-      attrs = valid_attrs(%{})
+      attrs = valid_attrs(%{adapter_ref: Delivery.default_adapter_ref()})
       {:ok, delivery} = attrs |> Delivery.changeset() |> TestRepo.insert()
 
       reloaded = TestRepo.get!(Delivery, delivery.id)
       # Ecto.Enum coerces back to atom
       assert reloaded.stream == :transactional
+      assert reloaded.adapter_ref == Delivery.default_adapter_ref()
       assert reloaded.last_event_type == :queued
       assert reloaded.terminal == false
       assert reloaded.lock_version == 1

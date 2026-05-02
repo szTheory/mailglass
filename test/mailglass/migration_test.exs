@@ -41,6 +41,7 @@ defmodule Mailglass.MigrationTest do
       assert table_exists?("mailglass_deliveries")
       assert table_exists?("mailglass_events")
       assert table_exists?("mailglass_suppressions")
+      assert column_exists?("mailglass_deliveries", "adapter_ref")
     end
 
     test "installs the mailglass_events_immutable_trigger on mailglass_events" do
@@ -63,6 +64,10 @@ defmodule Mailglass.MigrationTest do
       # drives this assertion so it stays correct as new versions land).
       assert Migration.migrated_version() ==
                Mailglass.Migrations.Postgres.current_version()
+    end
+
+    test "current version exposes V04 through the dispatcher" do
+      assert Mailglass.Migrations.Postgres.current_version() == 4
     end
 
     test "is idempotent — rerunning the migration is a no-op" do
@@ -133,6 +138,7 @@ defmodule Mailglass.MigrationTest do
       refute table_exists?("mailglass_deliveries")
       refute table_exists?("mailglass_events")
       refute table_exists?("mailglass_suppressions")
+      refute column_exists?("mailglass_deliveries", "adapter_ref")
 
       # Trigger function should be dropped
       {:ok, %{rows: fn_rows}} =
@@ -172,6 +178,18 @@ defmodule Mailglass.MigrationTest do
       TestRepo.query("""
       SELECT 1 FROM information_schema.tables
       WHERE table_name = '#{table_name}' AND table_schema = 'public'
+      """)
+
+    rows != []
+  end
+
+  defp column_exists?(table_name, column_name) do
+    {:ok, %{rows: rows}} =
+      TestRepo.query("""
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = '#{table_name}'
+        AND column_name = '#{column_name}'
+        AND table_schema = 'public'
       """)
 
     rows != []

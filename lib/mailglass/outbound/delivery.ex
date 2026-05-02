@@ -54,6 +54,7 @@ defmodule Mailglass.Outbound.Delivery do
   @streams [:transactional, :operational, :bulk]
 
   @status_values [:queued, :sent, :dispatched, :failed, :suppressed]
+  @default_adapter_ref "__default__"
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t() | nil,
@@ -62,6 +63,7 @@ defmodule Mailglass.Outbound.Delivery do
           stream: :transactional | :operational | :bulk | nil,
           recipient: String.t() | nil,
           recipient_domain: String.t() | nil,
+          adapter_ref: String.t() | nil,
           provider: String.t() | nil,
           provider_message_id: String.t() | nil,
           last_event_type: atom() | nil,
@@ -87,6 +89,7 @@ defmodule Mailglass.Outbound.Delivery do
     field(:stream, Ecto.Enum, values: @streams)
     field(:recipient, :string)
     field(:recipient_domain, :string)
+    field(:adapter_ref, :string)
     field(:provider, :string)
     field(:provider_message_id, :string)
     field(:last_event_type, Ecto.Enum, values: @event_types)
@@ -123,7 +126,7 @@ defmodule Mailglass.Outbound.Delivery do
 
   @required ~w[tenant_id mailable stream recipient last_event_type last_event_at]a
   @cast @required ++
-          ~w[recipient_domain provider provider_message_id terminal
+          ~w[recipient_domain adapter_ref provider provider_message_id terminal
              dispatched_at delivered_at bounced_at complained_at
              suppressed_at metadata idempotency_key status last_error]a
 
@@ -171,6 +174,10 @@ defmodule Mailglass.Outbound.Delivery do
   @doc "Closed event-type atom set. Tested against api_stability.md (Phase 6 check)."
   @doc since: "0.1.0"
   def __event_types__, do: @event_types
+
+  @doc "Reserved adapter ref persisted for the global default outbound route."
+  @doc since: "0.4.0"
+  def default_adapter_ref, do: @default_adapter_ref
 
   @doc "Closed stream atom set."
   @doc since: "0.1.0"
