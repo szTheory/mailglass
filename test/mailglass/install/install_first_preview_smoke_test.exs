@@ -10,6 +10,15 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
     run_install!(fixture_root, [])
     mailable_path = apply_minimal_mailable_scaffold!(fixture_root)
 
+    runtime_path = Path.join(fixture_root, "config/runtime.exs")
+    runtime = File.read!(runtime_path)
+
+    assert runtime =~ "config :swoosh, :api_client, false",
+           "REL-17 regression sentinel: generated runtime.exs must set Swoosh's api_client to `false` so a fresh --no-mailer host boots without :finch in deps."
+
+    refute runtime =~ ~r/^\s*config :swoosh, :api_client, Swoosh\.ApiClient\.Finch\b/m,
+           "REL-17 regression sentinel: generated runtime.exs must not contain an uncommented `Swoosh.ApiClient.Finch` line. Commented opt-in examples are allowed."
+
     router_path = Path.join(fixture_root, "lib/example_web/router.ex")
     layout_path = Path.join(fixture_root, "lib/example_web/components/layouts/mailglass.html.heex")
     workflow_path = Path.expand("../../../.github/workflows/post-publish-smoke.yml", __DIR__)
