@@ -59,7 +59,8 @@ defmodule Mailglass.Message do
           tenant_id: String.t() | nil,
           stream: stream(),
           tags: [String.t()],
-          metadata: %{atom() => term()}
+          metadata: %{atom() => term()},
+          assigns: %{atom() => term()}
         }
 
   defstruct [
@@ -69,7 +70,8 @@ defmodule Mailglass.Message do
     :tenant_id,
     stream: :transactional,
     tags: [],
-    metadata: %{}
+    metadata: %{},
+    assigns: %{}
   ]
 
   @doc """
@@ -316,5 +318,23 @@ defmodule Mailglass.Message do
   @spec put_metadata(t(), atom(), any()) :: t()
   def put_metadata(%__MODULE__{metadata: meta} = msg, key, value) when is_atom(key) do
     %__MODULE__{msg | metadata: Map.put(meta || %{}, key, value)}
+  end
+
+  @doc """
+  Sets a single key-value pair in the message assigns.
+  """
+  @doc since: "0.4.0"
+  @spec assign(t(), atom(), term()) :: t()
+  def assign(%__MODULE__{assigns: assigns} = msg, key, value) when is_atom(key) do
+    %{msg | assigns: Map.put(assigns, key, value)}
+  end
+
+  @doc """
+  Merges a keyword list or map into the message assigns.
+  """
+  @doc since: "0.4.0"
+  @spec assign(t(), map() | keyword()) :: t()
+  def assign(%__MODULE__{assigns: assigns} = msg, attrs) do
+    %{msg | assigns: Map.merge(assigns, Map.new(attrs))}
   end
 end

@@ -142,7 +142,10 @@ defmodule Mailglass.Mailable do
       @doc false
       def __mailglass_opts__, do: @mailglass_opts
 
-      def new, do: Mailglass.Message.new_from_use(__MODULE__, @mailglass_opts)
+      def new(assigns \\ []) do
+        Mailglass.Message.new_from_use(__MODULE__, @mailglass_opts)
+        |> Mailglass.Message.assign(assigns)
+      end
 
       def render(msg, _template, _assigns), do: Mailglass.Renderer.render(msg)
 
@@ -150,7 +153,7 @@ defmodule Mailglass.Mailable do
 
       def deliver_later(msg, opts \\ []), do: Mailglass.Outbound.deliver_later(msg, opts)
 
-      defoverridable new: 0, render: 3, deliver: 2, deliver_later: 2
+      defoverridable new: 0, new: 1, render: 3, deliver: 2, deliver_later: 2
     end
   end
 

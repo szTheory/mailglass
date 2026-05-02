@@ -112,6 +112,35 @@ defmodule Mailglass.MessageTest do
     end
   end
 
+  describe "assign/3 and assign/2" do
+    test "Message.assign/3 adds a key-value to assigns" do
+      msg = Message.build(Swoosh.Email.new())
+      updated = Message.assign(msg, :user, "Jon")
+      assert updated.assigns == %{user: "Jon"}
+      updated = Message.assign(updated, :age, 30)
+      assert updated.assigns == %{user: "Jon", age: 30}
+    end
+
+    test "Message.assign/2 merges a keyword list or map into assigns" do
+      msg = Message.build(Swoosh.Email.new())
+      updated = Message.assign(msg, user: "Jon", age: 30)
+      assert updated.assigns == %{user: "Jon", age: 30}
+      updated2 = Message.assign(updated, %{city: "London"})
+      assert updated2.assigns == %{user: "Jon", age: 30, city: "London"}
+    end
+  end
+
+  describe "Mailable new/1 assigns" do
+    defmodule DummyMailable do
+      use Mailglass.Mailable
+    end
+
+    test "new/1 initializes message with assigns" do
+      msg = DummyMailable.new(user: "Jon", status: "active")
+      assert msg.assigns == %{user: "Jon", status: "active"}
+    end
+  end
+
   describe "put_metadata/3" do
     test "returns a new %Message{} with metadata[key] = value" do
       email = Swoosh.Email.new(subject: "Test")
