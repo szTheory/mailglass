@@ -88,19 +88,23 @@ Plans:
 **Goal**: Add runtime per-tenant outbound adapter resolution without breaking single-tenant defaults.
 **Depends on**: Phase 25
 **Requirements**: TENANT-01, TENANT-02, TENANT-03
-**Plans**: 0/0 complete
+**Plans**: 0/3 complete
 
 Plans:
-- [ ] TBD — plan with `$gsd-plan-phase 26`
+- [ ] `26-01-PLAN.md` — Add the tenancy callback, additive adapter-ref config registry, and dedicated delivery route-ref persistence contract.
+- [ ] `26-02-PLAN.md` — Wire sync/async/batch outbound routing, queue-time route snapshotting, and persisted-ref worker dispatch.
+- [ ] `26-03-PLAN.md` — Update multi-tenant routing docs and lock the public contract with docs coverage.
 
 ### Phase 27: Release / Install Closure
 **Goal**: Close the known install and post-publish smoke gaps before milestone ship.
 **Depends on**: Phase 26
 **Requirements**: REL-17, REL-18
-**Plans**: 0/0 complete
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD — plan with `$gsd-plan-phase 27`
+- [ ] `27-01-PLAN.md` — Switch installer Swoosh default to `api_client: false`, refresh both install golden snapshots, add regression sentinel (REL-17).
+- [ ] `27-02-PLAN.md` — Harden post-publish-smoke + publish-hex YAML header comments to make canonical / fallback / scheduled triggers explicit; capture rehearsal evidence (REL-18).
+- [ ] `27-03-PLAN.md` — Flip REL-17/REL-18 checkboxes and reframe Issues #25/#9 as resolved-in-Phase-27 across active planning state (D-27-08/09).
 
 ## Backlog
 
