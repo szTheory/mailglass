@@ -24,8 +24,8 @@
 |-------|--------|------|--------------|
 | 28 | ✅ Complete | Developers can scaffold mailables instantly without looking up boilerplate. | `SCAFFOLD-01` |
 | 29 | ✅ Complete | Developers can confidently write tests for their mailables and webhooks using dedicated assertion helpers. | `TEST-01`, `TEST-02` |
-| 30 | 🏗️ Planning | Operators can protect domain reputation through configurable per-domain rate limiting. | `RATE-01`, `RATE-02` |
-| 31 | Not started | Adopters experience zero friction during install and have clear troubleshooting runbooks for operational edge cases. | `DOCS-01`, `DOCS-02`, `REL-19` |
+| 30 | ✅ Complete | Operators can protect domain reputation through configurable per-domain rate limiting. | `RATE-01`, `RATE-02` |
+| 31 | ⏳ In progress | Adopters experience zero friction during install and have clear troubleshooting runbooks for operational edge cases. | `DOCS-01`, `DOCS-02`, `REL-19` |
 
 ## Phase Details
 
@@ -61,11 +61,11 @@ Plans:
 **Success Criteria**:
   1. The system throttles outbound dispatch per-domain based on configuration.
   2. Rate limiting includes sensible defaults that prevent unintentional bursts.
-**Plans**: 2 plans
+**Plans**: 2/2 complete
 
 Plans:
-- [ ] 30-01-PLAN.md — Multi-Bucket Rate Limiting
-- [ ] 30-02-PLAN.md — Sensible Defaults & Documentation
+- [x] 30-01-PLAN.md — Multi-Bucket Rate Limiting
+- [x] 30-02-PLAN.md — Sensible Defaults & Documentation
 
 ### Phase 31: Documentation & Reliability Tightening
 **Goal**: Adopters experience zero friction during install and have clear troubleshooting runbooks for operational edge cases.
@@ -75,10 +75,11 @@ Plans:
   1. New users can install and smoke test without hitting known brittle edge cases.
   2. Operators can resolve webhook delivery issues using the troubleshooting guide.
   3. Upgrades are straightforward due to clear and actionable migration docs.
-**Plans**: 0/0 complete
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD — plan with `$gsd-plan-phase 31`
+- [ ] 31-01-PLAN.md — Documentation & Troubleshooting
+- [ ] 31-02-PLAN.md — Installer & Smoke Test Hardening
 
 ## Backlog
 
