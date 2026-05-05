@@ -10,7 +10,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v0.6 Production Maturity shipped 2026-05-05. `v1.0 Stability Lock` is the next recommended milestone.**
+**`v1.0 Stability Lock` is now the active milestone after `v0.6 Production Maturity` shipped on 2026-05-05.**
 
 - `mailglass` 0.5.0
 - `mailglass_admin` 0.5.0
@@ -52,6 +52,18 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - A small number of non-blocking boundary warnings remain in verification-time support surfaces.
 
 </details>
+
+## Current Milestone: v1.0 Stability Lock
+
+**Goal:** Declare the transactional and admin core stable for long-lived production adoption without expanding the product boundary.
+
+**Target features:**
+- Explicit `v1.x` public-contract map across `mailglass` and `mailglass_admin`, with stable versus internal boundaries that match actual adopter and sibling-package seams
+- Conservative `1.x` deprecation, compatibility, and upgrade policy with clear guidance for warnings-as-errors adopters
+- Targeted contract-enforcement checks and trust docs that prove the documented surface instead of relying on maintainer memory
+- Release rehearsal and proof artifacts showing fresh install, upgrade, docs, and sibling-package publish flow are stable enough for `v1.0`
+
+**Why now:** Production maturity work is complete. The next leverage is turning the existing transactional/admin surface into a narrow, explicit, and provable contract that serious Phoenix teams can adopt without expecting churn.
 
 ## Next Milestone Goals
 
@@ -95,11 +107,10 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 
 ## Active
 
-- [x] `MAT-01` — operator replay and reconcile workflows are hardened with tenant-safe authorization, auditability, and defensible failure handling
-- [x] `MAT-02` — operator-facing observability and incident-response/support docs cover real production failure modes
-- [x] `MAT-03` — deferred verification and regression gaps are closed where they materially affect production maturity
-- [ ] `STAB-01` — adopter can rely on a documented stability and deprecation contract for the transactional/admin core
-- [ ] `STAB-02` — maintainer has proof artifacts demonstrating the core surface is stable enough for long-lived production adoption
+- [ ] `STAB-01` — adopter can identify the exact `v1.x` stable surface across `mailglass` and `mailglass_admin`, including what remains internal
+- [ ] `STAB-02` — adopter can upgrade across `1.x` with a documented deprecation, compatibility, and support-window policy that avoids surprise churn
+- [ ] `STAB-03` — maintainer has targeted contract-enforcement checks and trust docs that keep the documented public surface honest
+- [ ] `STAB-04` — maintainer has release-proof artifacts showing fresh install, upgrade, docs, and sibling-package publish flow are stable enough for `v1.0`
 
 ## Out of Scope
 
@@ -207,4 +218,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-05-05 — activated v0.6 Production Maturity and aligned active requirements with the next pre-`v1.0` support/stability milestone.*
+*Last updated: 2026-05-05 — activated v1.0 Stability Lock after research and aligned active requirements to the narrow stability-contract milestone.*

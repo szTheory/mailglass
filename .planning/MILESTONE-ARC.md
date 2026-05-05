@@ -162,7 +162,7 @@ to support.
 
 **Unlocks next:** `v1.0` stability lock with confidence.
 
-### `candidate` — v1.0 Stability Lock
+### `active` — v1.0 Stability Lock
 
 **Goal:** Declare the transactional/admin core stable for long-lived production
 adoption.
@@ -188,6 +188,8 @@ surface is stable, documented, and proven enough to promise continuity.
   transactional/admin surface
 
 **Unlocks next:** The right to expand beyond the current product boundary.
+
+**Activation note (2026-05-05):** `v1.0 Stability Lock` is now the active milestone. Research locked the milestone shape to a docs-heavy proof release with targeted contract enforcement, not product-surface expansion.
 
 ## Future Bets (post-`v1.0`)
 
@@ -231,4 +233,4 @@ source of truth:
    drifting doc-by-doc.
 
 ---
-*Last updated: 2026-05-05 after shipping v0.6 Production Maturity.*
+*Last updated: 2026-05-05 after activating v1.0 Stability Lock.*
