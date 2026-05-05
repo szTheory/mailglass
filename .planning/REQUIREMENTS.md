@@ -64,27 +64,27 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOCK-01 | TBC | Pending |
-| LOCK-02 | TBC | Pending |
-| LOCK-03 | TBC | Pending |
-| LOCK-04 | TBC | Pending |
-| COMPAT-01 | TBC | Pending |
-| COMPAT-02 | TBC | Pending |
-| COMPAT-03 | TBC | Pending |
-| COMPAT-04 | TBC | Pending |
-| PROOF-01 | TBC | Pending |
-| PROOF-02 | TBC | Pending |
-| PROOF-03 | TBC | Pending |
-| PROOF-04 | TBC | Pending |
-| RELS-01 | TBC | Pending |
-| RELS-02 | TBC | Pending |
-| RELS-03 | TBC | Pending |
-| RELS-04 | TBC | Pending |
+| LOCK-01 | Phase 35 | Pending |
+| LOCK-02 | Phase 35 | Pending |
+| LOCK-03 | Phase 35 | Pending |
+| LOCK-04 | Phase 35 | Pending |
+| COMPAT-01 | Phase 36 | Pending |
+| COMPAT-02 | Phase 36 | Pending |
+| COMPAT-03 | Phase 36 | Pending |
+| COMPAT-04 | Phase 36 | Pending |
+| PROOF-01 | Phase 37 | Pending |
+| PROOF-02 | Phase 37 | Pending |
+| PROOF-03 | Phase 37 | Pending |
+| PROOF-04 | Phase 37 | Pending |
+| RELS-01 | Phase 38 | Pending |
+| RELS-02 | Phase 38 | Pending |
+| RELS-03 | Phase 38 | Pending |
+| RELS-04 | Phase 38 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 16 total
-- Mapped to phases: 0
-- Unmapped: 16
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-05*
