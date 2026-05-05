@@ -196,6 +196,63 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert detail_html =~ selected_delivery.recipient
     end
 
+    test "support card drilldowns reveal concrete webhook, replay audit, orphan, and reconcile exemplars",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{
+        selected_delivery: selected_delivery,
+        reconcile_delivery: reconcile_delivery,
+        orphan_event: orphan_event,
+        replay_event: replay_event,
+        reconcile_event: reconcile_event
+      } = insert_support_summary_fixture!()
+
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id}))
+
+      view
+      |> element("[data-testid='support-card-failed-ingest-drilldown']")
+      |> render_click()
+
+      failed_ingest_html = render(view)
+
+      assert failed_ingest_html =~ ~s(data-testid="support-card-failed-ingest-detail")
+      assert failed_ingest_html =~ "failed-dead"
+
+      view
+      |> element("[data-testid='support-card-orphan-backlog-drilldown']")
+      |> render_click()
+
+      orphan_html = render(view)
+
+      assert orphan_html =~ ~s(data-testid="support-card-orphan-backlog-detail")
+      assert orphan_html =~ orphan_event.id
+      assert orphan_html =~ "orphan-open"
+
+      view
+      |> element("[data-testid='support-card-replay-outcomes-drilldown']")
+      |> render_click()
+
+      replay_html = render(view)
+
+      assert replay_html =~ "Showing replay audit fact"
+      assert replay_html =~ replay_event.id
+      assert replay_html =~ ~s(data-highlighted="true")
+
+      view
+      |> element("[data-testid='support-card-reconcile-facts-drilldown']")
+      |> render_click()
+
+      reconcile_html = render(view)
+      detail_html = view |> element("[data-testid='operator-detail-header']") |> render()
+
+      assert reconcile_html =~ "Showing reconcile fact"
+      assert reconcile_html =~ reconcile_event.id
+      assert detail_html =~ reconcile_delivery.recipient
+      assert detail_html =~ ~s(pm-support-linked)
+    end
+
     test "renders no timeline events and immutable suppression copy when selected delivery has no events",
          %{conn: conn} do
       conn = operator_conn(conn)
