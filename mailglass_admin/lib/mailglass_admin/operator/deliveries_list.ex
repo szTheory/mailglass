@@ -23,14 +23,17 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         </div>
       </div>
     <% else %>
-      <ul class="divide-y divide-base-300">
+      <ul data-testid="operator-deliveries-list" class="divide-y divide-base-300">
         <%= for delivery <- @deliveries do %>
           <li>
             <button
+              data-testid="operator-delivery-row"
+              data-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
               type="button"
               phx-click="select_delivery"
               phx-value-id={delivery.id}
-              aria-current={if @selected_delivery && @selected_delivery.id == delivery.id, do: "true", else: "false"}
+              aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
+              aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
               class={[
                 "flex min-h-11 w-full flex-col gap-3 px-4 py-4 text-left transition-colors",
                 row_classes(@selected_delivery, delivery)
@@ -38,7 +41,9 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
             >
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <p class="truncate text-sm font-bold text-base-content">{delivery.recipient}</p>
+                  <p class="truncate text-sm font-bold text-base-content">
+                    {mask_recipient(delivery.recipient)}
+                  </p>
                   <p class="mono mt-1 text-xs text-secondary">{delivery.id}</p>
                 </div>
                 <span class={["badge badge-sm", badge_class(delivery.status)]}>
@@ -63,6 +68,9 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     """
   end
 
+  defp selected?(%{id: id}, %{id: id}), do: true
+  defp selected?(_selected_delivery, _delivery), do: false
+
   defp row_classes(%{id: id}, %{id: id}),
     do: "border-l-4 border-primary bg-base-100 text-base-content"
 
@@ -86,4 +94,29 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   defp format_datetime(nil), do: "Pending"
   defp format_datetime(%DateTime{} = datetime), do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
+
+  defp mask_recipient(nil), do: "Unavailable"
+
+  defp mask_recipient(recipient) when is_binary(recipient) do
+    case String.split(recipient, "@", parts: 2) do
+      [local, domain] -> mask_email(local, domain)
+      _ -> mask_value(recipient)
+    end
+  end
+
+  defp mask_email(local, domain) do
+    case String.split(domain, ".", parts: 2) do
+      [label, suffix] -> mask_value(local) <> "@" <> mask_value(label) <> "." <> suffix
+      _ -> mask_value(local) <> "@" <> mask_value(domain)
+    end
+  end
+
+  defp mask_value(value) do
+    value
+    |> String.graphemes()
+    |> case do
+      [] -> ""
+      [first | rest] -> first <> String.duplicate("*", length(rest))
+    end
+  end
 end

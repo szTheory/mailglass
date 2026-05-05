@@ -21,7 +21,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Recent deliveries"
       assert html =~ ~s(data-testid="operator-master-detail")
-      assert html =~ delivery.recipient
+      assert html =~ "s*******@e******.com"
+      refute html =~ delivery.recipient
       assert html =~ "Select a delivery to inspect its event timeline and suppression state."
       refute html =~ "Event timeline"
     end
@@ -84,7 +85,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
-      assert html =~ matching.recipient
+      assert html =~ "m****@e******.com"
+      refute html =~ matching.recipient
       refute html =~ "skip@example.com"
       assert html =~ ~s(value="postmark")
       assert html =~ ~s(<option value="sent" selected)
