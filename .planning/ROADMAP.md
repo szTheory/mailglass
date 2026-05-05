@@ -1,7 +1,7 @@
 # Roadmap: mailglass
 
 **Granularity:** standard (config.json)
-**Sibling package out of milestone:** `mailglass_inbound` (v0.6+, not roadmapped here)
+**Sibling package out of milestone:** `mailglass_inbound` (post-`v1.0`, not roadmapped here)
 
 ## Milestones
 
@@ -9,77 +9,64 @@
 - ✅ **v0.2 Production-Credible Core** — Phases 8-13 (shipped 2026-04-28) — see [milestones/v0.2-ROADMAP.md](milestones/v0.2-ROADMAP.md)
 - ✅ **v0.3 Webhook Coverage Complete** — Phases 14-21 (shipped 2026-04-30) — see [milestones/v0.3-ROADMAP.md](milestones/v0.3-ROADMAP.md)
 - ✅ **v0.4 Operator Confidence** — Phases 22-27 (shipped 2026-05-02) — see [milestones/v0.4-ROADMAP.md](milestones/v0.4-ROADMAP.md)
+- ✅ **v0.5 Adoption Hardening** — Phases 28-31 (shipped 2026-05-03)
 
 ## Current Milestone
 
-### v0.5 Adoption Hardening
+### v0.6 Production Maturity
 
-**Goal:** Reduce adopter friction and close the “serious SaaS team” integration gaps.
+**Goal:** Make mailglass resilient and legible under real production support conditions.
 
-**Why now:** Once the operator story is real, the next leverage comes from making setup, scaffolding, testing, and troubleshooting feel unusually smooth.
+**Why now:** v0.5 reduced integration friction. The next gap before `v1.0` is operational maturity during real incidents, support, and regression prevention.
 
-**Progress:** 2/4 phases complete
+**Progress:** 0/3 phases complete
 
 | Phase | Status | Goal | Requirements |
 |-------|--------|------|--------------|
-| 28 | ✅ Complete | Developers can scaffold mailables instantly without looking up boilerplate. | `SCAFFOLD-01` |
-| 29 | ✅ Complete | Developers can confidently write tests for their mailables and webhooks using dedicated assertion helpers. | `TEST-01`, `TEST-02` |
-| 30 | ✅ Complete | Operators can protect domain reputation through configurable per-domain rate limiting. | `RATE-01`, `RATE-02` |
-| 31 | ⏳ In progress | Adopters experience zero friction during install and have clear troubleshooting runbooks for operational edge cases. | `DOCS-01`, `DOCS-02`, `REL-19` |
+| 32 | Not started | Operators can replay and reconcile delivery state safely, with clear audit trails and defensible authorization boundaries. | `MAT-01` |
+| 33 | Not started | Operators can diagnose production delivery issues through documented telemetry and incident-response workflows. | `MAT-02` |
+| 34 | Not started | Maintainers can trust automated verification to catch the most material support and regression gaps before `v1.0`. | `MAT-03` |
 
 ## Phase Details
 
-### Phase 28: Mailable Scaffolding
-**Goal**: Developers can scaffold mailables instantly without looking up boilerplate.
-**Depends on**: Phase 27
-**Requirements**: SCAFFOLD-01
+### Phase 32: Replay & Reconcile Hardening
+**Goal**: Operators can replay and reconcile webhook-driven delivery state safely, with explicit guardrails around authorization, ambiguity, and audit outcomes.
+**Depends on**: Phase 31
+**Requirements**: MAT-01
 **Success Criteria**:
-  1. `mix mailglass.gen.mailable` generates a module and HEEx template.
-  2. Generated mailables compile and work out of the box.
-**Plans**: 1/1 complete
+  1. Replay and reconcile actions require tenant-safe target resolution and recent authorization where appropriate.
+  2. Operator-visible replay outcomes stay auditable and clearly distinguish new work, no-op outcomes, and failures.
+  3. Regression coverage exists for the most failure-prone replay/reconcile operator paths.
+**Plans**: 0 plans
 
 Plans:
-- [x] 28-01-PLAN.md — Mailable Code Generator
+- [ ] TBD
 
-### Phase 29: Test Assertion Helpers
-**Goal**: Developers can confidently write tests for their mailables and webhooks using dedicated assertion helpers.
-**Depends on**: Phase 28
-**Requirements**: TEST-01, TEST-02
+### Phase 33: Observability & Incident Support
+**Goal**: Operators can diagnose production delivery issues through documented telemetry, backlog signals, and incident-response workflows.
+**Depends on**: Phase 32
+**Requirements**: MAT-02
 **Success Criteria**:
-  1. User can assert a mailable was dispatched with specific assigns.
-  2. User can simulate and assert webhook handling easily in tests.
-**Plans**: 2/2 complete
+  1. Delivery, webhook ingest, orphan reconciliation, and replay/reconcile signals are documented in one operator-facing support surface.
+  2. Incident-response guidance explains how to diagnose the highest-value production failure modes without exposing PII.
+  3. Support workflows are consistent with the actual telemetry and admin capabilities shipped in the codebase.
+**Plans**: 0 plans
 
 Plans:
-- [x] 29-01-PLAN.md — Outbound Delivery Assertions
-- [x] 29-02-PLAN.md — Webhook Simulation & Idempotency Assertions
+- [ ] TBD
 
-### Phase 30: Per-Domain Rate Limiting
-**Goal**: Operators can protect domain reputation through configurable per-domain rate limiting.
-**Depends on**: Phase 29
-**Requirements**: RATE-01, RATE-02
+### Phase 34: Verification & Regression Closure
+**Goal**: Maintainers can trust automated verification to catch the most material support and regression gaps before `v1.0`.
+**Depends on**: Phase 33
+**Requirements**: MAT-03
 **Success Criteria**:
-  1. The system throttles outbound dispatch per-domain based on configuration.
-  2. Rate limiting includes sensible defaults that prevent unintentional bursts.
-**Plans**: 2/2 complete
+  1. The highest-risk deferred verification seams have explicit automated coverage or a documented enforced gate.
+  2. CI/support validation reflects the actual production-maturity contract being promised for `v0.6`.
+  3. The milestone can close without carrying forward material support-critical regressions as undocumented debt.
+**Plans**: 0 plans
 
 Plans:
-- [x] 30-01-PLAN.md — Multi-Bucket Rate Limiting
-- [x] 30-02-PLAN.md — Sensible Defaults & Documentation
-
-### Phase 31: Documentation & Reliability Tightening
-**Goal**: Adopters experience zero friction during install and have clear troubleshooting runbooks for operational edge cases.
-**Depends on**: Phase 30
-**Requirements**: DOCS-01, DOCS-02, REL-19
-**Success Criteria**:
-  1. New users can install and smoke test without hitting known brittle edge cases.
-  2. Operators can resolve webhook delivery issues using the troubleshooting guide.
-  3. Upgrades are straightforward due to clear and actionable migration docs.
-**Plans**: 2 plans
-
-Plans:
-- [ ] 31-01-PLAN.md — Documentation & Troubleshooting
-- [ ] 31-02-PLAN.md — Installer & Smoke Test Hardening
+- [ ] TBD
 
 ## Backlog
 

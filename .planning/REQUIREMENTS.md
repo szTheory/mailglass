@@ -1,33 +1,24 @@
 # Requirements: mailglass
 
-**Defined:** 2026-05-02
+**Defined:** 2026-05-05
 **Core Value:** Email you can see, audit, and trust before it ships.
 
-## v0.5 Requirements
+## v0.6 Requirements
 
-### Scaffolding
-- [ ] **SCAFFOLD-01**: User can generate a new mailable scaffold and matching HEEx template with `mix mailglass.gen.mailable`.
+### Replay & Reconcile
+- [ ] **MAT-01**: Operator can replay or reconcile webhook-driven delivery state with explicit tenant-safe authorization, auditable outcomes, and clear failure handling.
 
-### Testing
-- [x] **TEST-01
-**: User has richer test assertion helpers for outbound delivery verification.
-- [ ] **TEST-02**: User has richer test assertion helpers for webhook payload and idempotency verification.
+### Observability & Support
+- [ ] **MAT-02**: Operator-facing observability and incident-response/support docs cover delivery, webhook ingest, and reconciliation failure modes without exposing PII.
 
-### Rate Limiting
-- [ ] **RATE-01**: Operator can configure per-domain rate limiting for outbound dispatch.
-- [ ] **RATE-02**: Rate limiting applies adoption-facing sensible defaults and documentation out of the box.
-
-### Documentation & Reliability
-- [ ] **DOCS-01**: Adopters can access a dedicated first-party webhook troubleshooting guide.
-- [ ] **DOCS-02**: Adopters can consult refined upgrade documentation and operator guides addressing real integration friction.
-- [ ] **REL-19**: Install and post-publish smoke test contracts are tightened to eliminate known brittleness.
+### Verification & Regression Closure
+- [ ] **MAT-03**: Maintainer has automated verification for the highest-risk deferred regression and production-support gaps before `v1.0`.
 
 ## Future Requirements
 
-### Production Maturity (v0.6)
-- **MAT-01**: Operator has hardened replay / reconcile / incident-response workflows.
-- **MAT-02**: Operator-facing observability and support docs cover real production failure modes.
-- **MAT-03**: Deferred verification and regression gaps are closed where material.
+### Stability Lock (v1.0)
+- **STAB-01**: Adopter can rely on a documented stability and deprecation contract for the transactional/admin core.
+- **STAB-02**: Maintainer has proof artifacts demonstrating the core surface is stable enough for long-lived production adoption.
 
 ### Post-v1.0 Inbound
 - **INBOUND-01**: Adopter can route inbound mail through a separate `mailglass_inbound` package once the outbound/operator core is stable.
@@ -36,28 +27,23 @@
 
 | Feature | Reason |
 |---------|--------|
-| Inbound mail routing in `v0.5` | Explicitly deferred until after the pre-`v1.0` operator/adoption/stability arc |
+| Inbound mail routing in `v0.6` | Explicitly deferred until after the pre-`v1.0` stability arc |
 | Marketing / campaign tooling | Different product category and compliance surface |
-| Large new conceptual surface area | Goal is adoption hardening of the current core, not expansion |
+| Major pre-`v1.0` abstraction pivots | Goal is production maturity of the current core, not expansion |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCAFFOLD-01 | Phase 28 | Pending |
-| TEST-01 | Phase 29 | Pending |
-| TEST-02 | Phase 29 | Pending |
-| RATE-01 | Phase 30 | Pending |
-| RATE-02 | Phase 30 | Pending |
-| DOCS-01 | Phase 31 | Pending |
-| DOCS-02 | Phase 31 | Pending |
-| REL-19 | Phase 31 | Pending |
+| MAT-01 | Phase 32 | Pending |
+| MAT-02 | Phase 33 | Pending |
+| MAT-03 | Phase 34 | Pending |
 
 **Coverage:**
-- v0.5 requirements: 8 total
-- Mapped to phases: 8
+- v0.6 requirements: 3 total
+- Mapped to phases: 3
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-05-02*
-*Last updated: 2026-05-02*
+*Requirements defined: 2026-05-05*
+*Last updated: 2026-05-05*

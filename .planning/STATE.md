@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.5
-milestone_name: Adoption Hardening
-status: Active
-last_updated: "2026-05-02T19:24:58.668Z"
-last_activity: 2026-05-02 -- Initialized v0.5 Adoption Hardening milestone
+milestone: v0.6
+milestone_name: Production Maturity
+status: Defining requirements
+last_updated: "2026-05-05T12:00:00.000Z"
+last_activity: 2026-05-05 -- Initialized Milestone v0.6 Production Maturity
 progress:
-  total_phases: 6
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 2
-  percent: 67
+  total_phases: 3
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -18,16 +18,17 @@ progress:
 ## Project Reference
 
 **Core Value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current Focus:** v0.5 Adoption Hardening
+**Current Focus:** v0.6 Production Maturity
 
 ## Current Position
 
-Phase: none
-Plan: none
-Status: Active
-Last activity: 2026-05-02 -- Initialized v0.5 Adoption Hardening milestone
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-05 -- Milestone v0.6 started
 
 ## Session Continuity
 
-- v0.4 milestone closed and archived on 2026-05-02.
-- Awaiting roadmap generation for v0.5 Adoption Hardening.
+- v0.5 Adoption Hardening is complete and archived in current planning artifacts.
+- v0.6 focuses on replay/reconcile hardening, observability/support workflows, and deferred verification closure.
+- Phase 32 is the next planning target once milestone initialization is accepted.

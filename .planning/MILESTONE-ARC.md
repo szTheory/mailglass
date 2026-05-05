@@ -71,7 +71,7 @@ coverage while major providers were still missing or partially verified.
 **Unlocked next:** Shift from provider parity to operator confidence and
 adopter confidence.
 
-### `active` — v0.4 Operator Confidence
+### `shipped` — v0.4 Operator Confidence
 
 **Goal:** Make mailglass credible for production operators, not just library
 authors.
@@ -107,7 +107,7 @@ gap is operating, inspecting, and trusting the system in a real SaaS app.
 Phase 22 completed the read-only operator data foundation, so the next work
 starts at production admin mount/auth rather than re-scoping the milestone.
 
-### `candidate` — v0.5 Adoption Hardening
+### `shipped` — v0.5 Adoption Hardening
 
 **Goal:** Reduce adopter friction and close the “serious SaaS team” integration
 gaps.
@@ -136,7 +136,7 @@ making setup, scaffolding, testing, and troubleshooting feel unusually smooth.
 
 **Unlocks next:** Production maturity and stabilization.
 
-### `candidate` — v0.6 Production Maturity
+### `active` — v0.6 Production Maturity
 
 **Goal:** Make the system resilient and legible under real production support
 conditions.
@@ -231,4 +231,4 @@ source of truth:
    drifting doc-by-doc.
 
 ---
-*Last updated: 2026-05-01 after activating v0.4 Operator Confidence.*
+*Last updated: 2026-05-05 after activating v0.6 Production Maturity.*
