@@ -90,6 +90,48 @@ defmodule Mailglass.Operator.SupportSummaryTest do
       assert summary.reconcile_facts.reconciled_count == 1
       assert summary.reconcile_facts.still_unmatched_count == 1
     end
+
+    test "counts failed and dead webhook rows and exposes the latest failed-ingest exemplar" do
+      %{failed: failed} = seed_support_facts()
+
+      summary = SupportSummary.summarize_tenant(%{tenant_id: "tenant-a", window_hours: 24})
+
+      assert summary.failed_ingest.count == 2
+      assert summary.failed_ingest.latest.status == :dead
+      assert summary.failed_ingest.latest.webhook_event_id == failed.dead.id
+      assert summary.failed_ingest.latest.received_at == failed.dead.received_at
+      refute summary.failed_ingest.latest.webhook_event_id == failed.failed.id
+    end
+
+    test "reports only unresolved orphan backlog facts and keeps the oldest unresolved exemplar" do
+      %{orphan: orphan} = seed_support_facts()
+
+      summary = SupportSummary.summarize_tenant(%{tenant_id: "tenant-a", window_hours: 24})
+
+      assert summary.orphan_backlog.count == 1
+      assert is_integer(summary.orphan_backlog.oldest_age_seconds)
+      assert summary.orphan_backlog.oldest_age_seconds >= 17_000
+      assert summary.orphan_backlog.oldest.event_id == orphan.unresolved.id
+      assert summary.reconcile_facts.oldest_unmatched.event_id == orphan.unresolved.id
+      refute summary.orphan_backlog.oldest.event_id == orphan.linked.id
+    end
+
+    test "keeps replay outcomes distinct from reconcile facts" do
+      %{replay: replay, reconciled: reconciled} = seed_support_facts()
+
+      summary = SupportSummary.summarize_tenant(%{tenant_id: "tenant-a", window_hours: 24})
+
+      assert summary.replay_outcomes.counts == %{failed: 1, noop: 1, replayed: 1}
+      assert summary.replay_outcomes.latest.event_id == replay.replayed.id
+      assert summary.replay_outcomes.latest.outcome == "replayed"
+
+      assert summary.reconcile_facts.reconciled_count == 1
+      assert summary.reconcile_facts.latest_reconciled.event_id == reconciled.event.id
+      assert summary.reconcile_facts.latest_reconciled.reconciled_from_event_id ==
+               reconciled.orphan.id
+
+      refute summary.reconcile_facts.latest_reconciled.event_id == replay.replayed.id
+    end
   end
 
   defp seed_support_facts do
