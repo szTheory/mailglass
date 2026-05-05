@@ -194,6 +194,14 @@ defmodule MailglassAdmin.Operator.SupportCards do
           </div>
         </article>
       </div>
+
+      <div
+        :if={drilldown_banner(@support_state)}
+        data-testid="support-card-drilldown-banner"
+        class="mt-4 rounded-box border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-base-content"
+      >
+        {drilldown_banner(@support_state)}
+      </div>
     </section>
     """
   end
@@ -201,6 +209,12 @@ defmodule MailglassAdmin.Operator.SupportCards do
   defp replay_count_summary(counts) do
     "failed #{counts.failed} · no change #{counts.noop} · new work #{counts.replayed}"
   end
+
+  defp drilldown_banner(%{focus: :failed_ingest}), do: "Showing failed ingest webhook row"
+  defp drilldown_banner(%{focus: :orphan_backlog}), do: "Showing unmatched reconcile fact"
+  defp drilldown_banner(%{focus: :replay_outcomes}), do: "Showing replay audit fact"
+  defp drilldown_banner(%{focus: :reconcile_facts}), do: "Showing reconcile fact"
+  defp drilldown_banner(_support_state), do: nil
 
   defp focused?(%{focus: focus}, current_focus), do: focus == current_focus
   defp focused?(_support_state, _current_focus), do: false
