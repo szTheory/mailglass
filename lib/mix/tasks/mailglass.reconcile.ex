@@ -30,15 +30,12 @@ defmodule Mix.Tasks.Mailglass.Reconcile do
   :exception]` telemetry span as the Oban worker (telemetry metadata
   stays whitelist-conformant per D-23).
 
-  Exits with status 1 when the `Mailglass.Webhook.Reconciler` module is
-  not compiled (Oban absent from deps).
+  When Oban is absent, this task still performs the same reconcile
+  sweep and serves as the maintenance fallback you can run manually or
+  from system cron.
   """
 
   use Mix.Task
-
-  # Reconciler.reconcile/2 is only defined when Oban is loaded (the module
-  # is conditionally compiled at file top level). Guarded by `available?()`.
-  @compile {:no_warn_undefined, {Mailglass.Webhook.Reconciler, :reconcile, 2}}
 
   @impl Mix.Task
   def run(argv) do
@@ -52,21 +49,28 @@ defmodule Mix.Tasks.Mailglass.Reconcile do
     tenant_id = opts[:tenant_id]
     batch_size = opts[:batch_size] || 1000
 
-    if Mailglass.Webhook.Reconciler.available?() do
-      {:ok, %{scanned: scanned, linked: linked}} =
-        Mailglass.Webhook.Reconciler.reconcile(tenant_id, batch_size)
+    reconciler = reconciler_module()
 
-      Mix.shell().info(
-        "Reconcile complete: scanned=#{scanned} linked=#{linked}" <>
-          if(tenant_id, do: " tenant=#{tenant_id}", else: "")
-      )
-    else
-      Mix.shell().error(
-        "Mailglass.Webhook.Reconciler is not compiled (Oban not available). " <>
-          "Add {:oban, \"~> 2.21\"} to your deps to enable reconciliation."
-      )
+    {:ok, %{scanned: scanned, linked: linked}} =
+      reconciler.reconcile(tenant_id, batch_size)
 
-      exit({:shutdown, 1})
-    end
+    still_unmatched = max(scanned - linked, 0)
+
+    scheduler_note =
+      if reconciler.available?() do
+        "Oban scheduling is available."
+      else
+        "Oban is not installed; run this task manually or from system cron for scheduled sweeps."
+      end
+
+    Mix.shell().info(
+      "Reconcile complete: scanned=#{scanned} linked=#{linked} still_unmatched=#{still_unmatched}" <>
+        if(tenant_id, do: " tenant=#{tenant_id}", else: "") <>
+        " " <> scheduler_note
+    )
+  end
+
+  defp reconciler_module do
+    Application.get_env(:mailglass, :webhook_reconciler, Mailglass.Webhook.Reconciler)
   end
 end

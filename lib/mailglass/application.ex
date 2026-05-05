@@ -77,9 +77,9 @@ defmodule Mailglass.Application do
   end
 
   # Phase 4 D-20: Webhook Reconciler + Pruner are both Oban-backed cron workers.
-  # Without Oban, orphan events accumulate until `mix mailglass.reconcile` runs
-  # and succeeded/dead webhook_events rows accumulate until `mix
-  # mailglass.webhooks.prune` runs. Per revision W2 option b: ONE consolidated
+  # Without Oban, orphan reconciliation and pruning still work through their
+  # canonical mix tasks, but adopters must schedule those tasks themselves
+  # (for example via system cron). Per revision W2 option b: ONE consolidated
   # warning covers both workers (mentions both mix tasks) — reduces log noise
   # vs. two separate warnings that repeat the same operator action.
   #
@@ -98,11 +98,10 @@ defmodule Mailglass.Application do
 
       true ->
         Logger.warning("""
-        [mailglass] Webhook orphan reconciliation AND retention pruning require :oban.
-        Without Oban: orphan events will accumulate until you run
-        `mix mailglass.reconcile` (manually or via system cron), AND
-        succeeded/dead webhook_events rows will accumulate until you run
-        `mix mailglass.webhooks.prune` (also manually or via system cron).
+        [mailglass] Oban is not loaded, so webhook maintenance will not run in the background.
+        Run `mix mailglass.reconcile` to link orphan webhook events and report linked vs still unmatched outcomes,
+        and run `mix mailglass.webhooks.prune` to remove succeeded/dead webhook_events rows.
+        Schedule those tasks manually or via system cron when Oban is absent.
         To enable scheduled background workers, add {:oban, "~> 2.21"} to your deps.
         """)
 
