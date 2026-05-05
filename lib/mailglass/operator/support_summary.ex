@@ -65,21 +65,24 @@ defmodule Mailglass.Operator.SupportSummary do
   end
 
   defp orphan_backlog_summary(tenant_id, unresolved_orphans) do
+    oldest =
+      unresolved_orphans
+      |> order_by([event], asc: event.occurred_at, asc: event.inserted_at, asc: event.id)
+      |> limit(1)
+      |> select([event], %{
+        event_id: event.id,
+        occurred_at: event.occurred_at,
+        provider: fragment("?->>'provider'", event.metadata),
+        provider_event_id: fragment("?->>'provider_event_id'", event.metadata),
+        webhook_event_id: fragment("?->>'webhook_event_id'", event.metadata)
+      })
+      |> Tenancy.scope(tenant_id)
+      |> Repo.one()
+
     %{
       count: count_rows(unresolved_orphans, tenant_id),
-      oldest:
-        unresolved_orphans
-        |> order_by([event], asc: event.occurred_at, asc: event.inserted_at, asc: event.id)
-        |> limit(1)
-        |> select([event], %{
-          event_id: event.id,
-          occurred_at: event.occurred_at,
-          provider: fragment("?->>'provider'", event.metadata),
-          provider_event_id: fragment("?->>'provider_event_id'", event.metadata),
-          webhook_event_id: fragment("?->>'webhook_event_id'", event.metadata)
-        })
-        |> Tenancy.scope(tenant_id)
-        |> Repo.one()
+      oldest: oldest,
+      oldest_age_seconds: age_seconds(oldest)
     }
   end
 
@@ -243,5 +246,11 @@ defmodule Mailglass.Operator.SupportSummary do
       hours when is_integer(hours) and hours > 0 -> hours
       _ -> @default_window_hours
     end
+  end
+
+  defp age_seconds(nil), do: nil
+
+  defp age_seconds(%{occurred_at: %DateTime{} = occurred_at}) do
+    DateTime.diff(Clock.utc_now(), occurred_at, :second)
   end
 end
