@@ -215,6 +215,7 @@ Full trajectory in [`.planning/ROADMAP.md`](.planning/ROADMAP.md) and
   one-click unsubscribe
 - [`guides/webhooks.md`](guides/webhooks.md) — webhook ingest,
   verification, suppression, and retention
+- [`guides/rate-limiting.md`](guides/rate-limiting.md) — multi-bucket throughput protection
 
 ## Contributing
 

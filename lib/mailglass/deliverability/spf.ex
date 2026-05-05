@@ -120,7 +120,8 @@ defmodule Mailglass.Deliverability.SPF do
             observed_terminal_policy(policy),
             "End the SPF record with -all once you have confirmed every legitimate sender is listed."
           )
-        | findings]
+          | findings
+        ]
     end
   end
 
@@ -139,7 +140,8 @@ defmodule Mailglass.Deliverability.SPF do
     ]
   end
 
-  defp maybe_add_lookup_pressure(findings, analysis) when analysis.lookup_count >= @near_lookup_limit do
+  defp maybe_add_lookup_pressure(findings, analysis)
+       when analysis.lookup_count >= @near_lookup_limit do
     [
       finding(
         :warn,
@@ -272,7 +274,12 @@ defmodule Mailglass.Deliverability.SPF do
     walk_terms(analysis, domain, resolver, visited_domains, rest)
   end
 
-  defp maybe_follow_include(analysis, %{kind: :include, value: include_domain}, resolver, visited_domains) do
+  defp maybe_follow_include(
+         analysis,
+         %{kind: :include, value: include_domain},
+         resolver,
+         visited_domains
+       ) do
     analysis =
       %{analysis | visited_includes: [include_domain | analysis.visited_includes]}
 
@@ -281,7 +288,12 @@ defmodule Mailglass.Deliverability.SPF do
         add_structural_failure(analysis, {:loop, :include, include_domain})
 
       true ->
-        resolve_nested_spf(analysis, include_domain, resolver, MapSet.put(visited_domains, include_domain))
+        resolve_nested_spf(
+          analysis,
+          include_domain,
+          resolver,
+          MapSet.put(visited_domains, include_domain)
+        )
     end
   end
 
@@ -291,14 +303,23 @@ defmodule Mailglass.Deliverability.SPF do
 
   defp maybe_follow_redirect(analysis, _domain, resolver, visited_domains, redirect_domain) do
     analysis =
-      %{analysis | visited_redirects: [redirect_domain | analysis.visited_redirects], lookup_count: analysis.lookup_count + 1}
+      %{
+        analysis
+        | visited_redirects: [redirect_domain | analysis.visited_redirects],
+          lookup_count: analysis.lookup_count + 1
+      }
 
     cond do
       MapSet.member?(visited_domains, redirect_domain) ->
         add_structural_failure(analysis, {:loop, :redirect, redirect_domain})
 
       true ->
-        resolve_nested_spf(analysis, redirect_domain, resolver, MapSet.put(visited_domains, redirect_domain))
+        resolve_nested_spf(
+          analysis,
+          redirect_domain,
+          resolver,
+          MapSet.put(visited_domains, redirect_domain)
+        )
     end
   end
 
@@ -481,7 +502,8 @@ defmodule Mailglass.Deliverability.SPF do
   defp parse_redirect(""), do: {:error, :blank_redirect_target}
   defp parse_redirect(domain), do: {:ok, {:redirect, domain}}
 
-  defp split_qualifier(<<qualifier::binary-size(1), rest::binary>>) when qualifier in ["+", "-", "~", "?"] do
+  defp split_qualifier(<<qualifier::binary-size(1), rest::binary>>)
+       when qualifier in ["+", "-", "~", "?"] do
     {qualifier, rest}
   end
 

@@ -75,7 +75,9 @@ defmodule Mailglass.TestSupport.DeliverabilityResolverStub do
 
   defp normalize_response({:ok, value}, :cname) when is_binary(value), do: {:ok, value}
 
-  defp normalize_response({:error, reason}, _kind) when reason in @error_reasons, do: {:error, reason}
+  defp normalize_response({:error, reason}, _kind) when reason in @error_reasons,
+    do: {:error, reason}
+
   defp normalize_response(_response, _kind), do: {:error, :malformed_answer}
 
   defp valid_mx?(%{exchange: exchange, preference: preference})

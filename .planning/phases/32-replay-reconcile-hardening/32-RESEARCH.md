@@ -391,12 +391,12 @@ use Oban.Worker,
 
 All claims in this research were verified or cited — no user confirmation is required before planning.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the Oban-less reconcile fallback be implemented in the mix task itself or by moving pure reconcile logic out of the Oban-gated worker module?**
-   - What we know: The current worker is conditionally compiled behind `Code.ensure_loaded?(Oban.Worker)`, the warning/docs promise a manual fallback, and the task currently exits when Oban is absent. [VERIFIED: codebase grep]
-   - What's unclear: Which implementation shape minimizes conditional-compilation complexity while preserving the optional-dependency contract. [VERIFIED: codebase grep]
-   - Recommendation: Decide this during planning, but treat “warnings/docs/task/tests all agree” as the non-negotiable output and keep the resulting reconcile function pure and reusable. [VERIFIED: codebase grep]
+   - Resolution: Keep `Mailglass.Webhook.Reconciler.reconcile/2` as the single canonical maintenance entrypoint in both Oban-present and Oban-absent installs, and gate only the Oban worker-facing pieces behind the optional dependency. This preserves one truth for docs, runtime warnings, CLI behavior, and tests while keeping scheduling optional. [VERIFIED: .planning/phases/32-replay-reconcile-hardening/32-03-PLAN.md]
+   - Why this shape wins: It minimizes contract drift, keeps reconcile behavior pure and reusable, and avoids duplicating maintenance semantics in the mix task just to satisfy the optional-dependency story. [VERIFIED: .planning/phases/32-replay-reconcile-hardening/32-03-PLAN.md]
+   - Planning consequence: Plan `32-03` should refactor `lib/mailglass/webhook/reconciler.ex` so `reconcile/2` is always available, while `perform/1` and worker-specific wiring remain conditional on Oban. [VERIFIED: .planning/phases/32-replay-reconcile-hardening/32-03-PLAN.md]
 
 ## Environment Availability
 

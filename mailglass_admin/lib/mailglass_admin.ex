@@ -1,6 +1,6 @@
 defmodule MailglassAdmin do
   @moduledoc """
-  Mountable LiveView dashboard for mailglass. Dev preview at v0.1; prod admin at v0.5.
+  Mountable LiveView preview and operator surfaces for mailglass.
 
   ## Quick start
 
@@ -17,7 +17,8 @@ defmodule MailglassAdmin do
 
   Restart `mix phx.server`, visit `/dev/mail`. Done.
 
-  See `MailglassAdmin.Router.mailglass_admin_routes/2` for options.
+  See `MailglassAdmin.Router.mailglass_admin_routes/2` and
+  `MailglassAdmin.Router.mailglass_operator_routes/2` for options.
   """
 
   # CONTEXT D-10 / CORE-07 renderer-purity rule: PreviewLive may call

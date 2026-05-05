@@ -9,5 +9,5 @@ defmodule Mailglass.Webhook do
 
   use Boundary,
     deps: [Mailglass, Mailglass.Events],
-    exports: [CachingBodyReader, Plug, Router, Reconciler, Pruner, Replay]
+    exports: [CachingBodyReader, Plug, Router, Reconciler, Pruner, Replay, WebhookEvent]
 end

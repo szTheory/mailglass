@@ -385,10 +385,18 @@ defmodule Mailglass.Webhook.Plug do
         :ok
 
       {event, delivery, false} ->
-        Projector.broadcast_delivery_updated(delivery, event.type, %{
-          event_id: event.id,
-          provider: event.provider
-        })
+        # Per Events.append_multi/3 (D-03): a nil inserted_at signals a
+        # conflict-replay (the row already exists). Skip broadcast so
+        # LiveView/TestAssertions don't see duplicate signals for the same
+        # webhook delivery.
+        if is_nil(event.inserted_at) do
+          :ok
+        else
+          Projector.broadcast_delivery_updated(delivery, event.type, %{
+            event_id: event.id,
+            provider: event.metadata["provider"]
+          })
+        end
     end)
   end
 

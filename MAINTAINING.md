@@ -25,11 +25,26 @@ When the installer output or golden files change:
 ## Required Checks
 
 Before merging any PR, ensure:
-- `mix compile --warnings-as-errors`
-- `mix test --warnings-as-errors`
+- `scripts/verify_support_contract.sh`
+- `Support Contract Core`
+- `Support Contract Admin`
+- `Compile No Optional Deps`
 - `mix credo --strict`
 - `mix dialyzer`
 - `mix docs --warnings-as-errors`
+
+The honest repo-root entrypoint is `scripts/verify_support_contract.sh`. It runs the
+three required branch-protection buckets in sequence:
+- `Support Contract Core`
+- `Support Contract Admin`
+- `Compile No Optional Deps`
+
+The following checks are advisory signal, not branch-protection truth:
+- `Core Full Suite Advisory`
+- `Provider Compatibility Advisory`
+- `Provider Live Advisory`
+
+`Provider Live Advisory` remains a cron and `workflow_dispatch` canary. It is not a merge blocker.
 
 ## Bus Factor & Continuity
 

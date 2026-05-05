@@ -18,10 +18,9 @@ defmodule MailglassAdmin.Preview.Mount do
   ## v0.1 always-cont contract
 
   This hook returns `{:cont, socket}` unconditionally. The dev preview
-  dashboard has no auth at v0.1 (CONTEXT D-01 dev-only scope). v0.5's
-  prod-admin mount will ship a separate on_mount (or replace this one)
-  with auth gating; keeping the v0.1 contract always-cont keeps the
-  adopter-facing surface simple.
+  dashboard remains discovery-only, while the production operator
+  surface now uses the separate `MailglassAdmin.Operator.Mount`
+  authorization hook.
 
   ## Boundary classification
 

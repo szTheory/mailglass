@@ -20,6 +20,6 @@
 
 **Diagnoses:** Workflows that gather enough context to see the tradeoffs, but still hand the decision burden back to the user too early instead of synthesizing a coherent recommendation set.
 
-**Recommends:** Research across local code, official docs, and strong ecosystem precedents; compare alternatives internally; then present one cohesive recommendation set that fits the project vision, maintainer budget, least-surprise UX, and long-term architecture. Escalate only if the choice is likely to materially change public contract, user trust semantics, major maintainer burden, or high-visibility workflow behavior the project owner is especially likely to care about.
+**Recommends:** Research across local code, official docs, and strong ecosystem precedents; compare alternatives internally; then present one cohesive recommendation set that fits the project vision, maintainer budget, least-surprise UX, and long-term architecture. Prefer a single decisive recommendation over broad option menus. Shift this left in downstream workflows: default to one-shot synthesis and escalate only if the choice is likely to materially change public contract, user trust semantics, major maintainer burden, tenant-boundary guarantees, secret-handling posture, branch-protection/release posture, or other very impactful workflow behavior the project owner is especially likely to care about.
 
 **Apply when:** Discuss, assumptions, research, and planning workflows encounter multiple plausible approaches and enough evidence exists to recommend one without another interview round.

@@ -9,7 +9,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
 
   def suppression_card(assigns) do
     ~H"""
-    <article class="card rounded-box border border-base-300 bg-base-200 p-6">
+    <article data-testid="operator-suppression-card" class="card rounded-box border border-base-300 bg-base-200 p-6">
       <div class="mb-4 flex items-center justify-between gap-3">
         <h3 class="text-base font-bold text-base-content">Suppression state</h3>
         <span class="badge badge-outline">

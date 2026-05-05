@@ -144,8 +144,8 @@ defmodule Mailglass.Deliverability do
               {%{selector: selector, domain: selector_domain, txt_records: records}, []}
 
             {:error, reason} ->
-              { %{selector: selector, domain: selector_domain, txt_records: []},
-                [resolver_error(:txt, selector_domain, reason, %{area: :dkim, selector: selector})] }
+              {%{selector: selector, domain: selector_domain, txt_records: []},
+               [resolver_error(:txt, selector_domain, reason, %{area: :dkim, selector: selector})]}
           end
 
         {selector_entry, cname_errors} =
@@ -154,8 +154,8 @@ defmodule Mailglass.Deliverability do
               {Map.put(selector_entry, :cname, target), []}
 
             {:error, reason} ->
-              { selector_entry,
-                [resolver_error(:cname, selector_domain, reason, %{area: :dkim, selector: selector})] }
+              {selector_entry,
+               [resolver_error(:cname, selector_domain, reason, %{area: :dkim, selector: selector})]}
           end
 
         {

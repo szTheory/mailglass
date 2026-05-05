@@ -79,8 +79,11 @@ defmodule Mailglass.Webhook.Replay do
           end)
 
         case Repo.multi(multi) do
-          {:ok, changes} -> {:ok, build_success_result(params, webhook_event, requested_audit, changes)}
-          {:error, _step, reason, _changes} -> {:error, reason}
+          {:ok, changes} ->
+            {:ok, build_success_result(params, webhook_event, requested_audit, changes)}
+
+          {:error, _step, reason, _changes} ->
+            {:error, reason}
         end
       end)
 
@@ -94,7 +97,9 @@ defmodule Mailglass.Webhook.Replay do
     end
   end
 
-  defp normalize_params(%{tenant_id: tenant_id, webhook_event_id: webhook_event_id, actor: actor} = attrs)
+  defp normalize_params(
+         %{tenant_id: tenant_id, webhook_event_id: webhook_event_id, actor: actor} = attrs
+       )
        when is_binary(tenant_id) and tenant_id != "" and is_binary(webhook_event_id) and
               webhook_event_id != "" and is_map(actor) do
     {:ok,
@@ -138,13 +143,21 @@ defmodule Mailglass.Webhook.Replay do
   defp append_failed_audit(params, webhook_event, requested_audit_event_id, reason) do
     _ =
       Events.append(
-        failed_audit_attrs(params, webhook_event, requested_audit_event_id, classify_failure(reason))
+        failed_audit_attrs(
+          params,
+          webhook_event,
+          requested_audit_event_id,
+          classify_failure(reason)
+        )
       )
 
     :ok
   end
 
-  defp maybe_append_failed_audit(%{tenant_id: tenant_id, webhook_event_id: webhook_event_id, actor: actor} = attrs, reason)
+  defp maybe_append_failed_audit(
+         %{tenant_id: tenant_id, webhook_event_id: webhook_event_id, actor: actor} = attrs,
+         reason
+       )
        when is_binary(tenant_id) and is_binary(webhook_event_id) and is_map(actor) do
     with {:ok, params} <- normalize_params(attrs),
          {:ok, webhook_event} <- fetch_target(params.tenant_id, params.webhook_event_id) do
@@ -252,7 +265,8 @@ defmodule Mailglass.Webhook.Replay do
         tenant_id: webhook_event.tenant_id,
         delivery_id: delivery_id,
         needs_reconciliation: is_nil(delivery_id),
-        idempotency_key: IdempotencyKey.for_webhook_event(provider, extract_event_provider_id(event), idx),
+        idempotency_key:
+          IdempotencyKey.for_webhook_event(provider, extract_event_provider_id(event), idx),
         metadata: replay_metadata(event.metadata || %{}, webhook_event),
         reject_reason: event.reject_reason,
         occurred_at: Clock.utc_now()
@@ -369,7 +383,8 @@ defmodule Mailglass.Webhook.Replay do
       id when is_binary(id) and id != "" ->
         query =
           from(delivery in Delivery,
-            where: delivery.provider == ^Atom.to_string(provider) and delivery.provider_message_id == ^id,
+            where:
+              delivery.provider == ^Atom.to_string(provider) and delivery.provider_message_id == ^id,
             select: delivery.id,
             limit: 1
           )

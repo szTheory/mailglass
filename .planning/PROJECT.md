@@ -110,7 +110,7 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 
 ## Active
 
-- [ ] `MAT-01` — operator replay and reconcile workflows are hardened with tenant-safe authorization, auditability, and defensible failure handling
+- [x] `MAT-01` — operator replay and reconcile workflows are hardened with tenant-safe authorization, auditability, and defensible failure handling
 - [ ] `MAT-02` — operator-facing observability and incident-response/support docs cover real production failure modes
 - [ ] `MAT-03` — deferred verification and regression gaps are closed where they materially affect production maturity
 

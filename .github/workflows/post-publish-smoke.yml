@@ -270,15 +270,14 @@ jobs:
         env:
           VERSION: ${{ needs.cron-guard.outputs.version }}
         run: |
-          python3 - <<'PYEOF'
-          import os, pathlib, re
-          version = os.environ["VERSION"]
-          mix_path = pathlib.Path("mix.exs")
-          content = mix_path.read_text()
-          entries = f'      {{:mailglass, "== {version}"}},\n      {{:mailglass_admin, "== {version}"}},\n'
-          content = re.sub(r"(defp deps do\n\s*\[\n)", r"\1" + entries, content, count=1)
-          mix_path.write_text(content)
-          PYEOF
+          elixir -e '
+            version = System.get_env("VERSION")
+            mix_path = "mix.exs"
+            content = File.read!(mix_path)
+            entries = "      {:mailglass, \"== #{version}\"},\n      {:mailglass_admin, \"== #{version}\"},\n"
+            updated = String.replace(content, ~r/(defp deps do\n\s*\[\n)/, "\\1" <> entries, global: false)
+            File.write!(mix_path, updated)
+          '
           grep -F "mailglass" mix.exs
       - name: mix deps.get
         working-directory: ${{ runner.temp }}/sandbox

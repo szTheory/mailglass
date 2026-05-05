@@ -183,7 +183,9 @@ defmodule Mailglass.OutboundTest do
 
       assert {:ok, %Delivery{}} =
                Outbound.send(msg,
-                 adapter: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :explicit]},
+                 adapter:
+                   {Mailglass.TestSupport.RouteRecordingAdapter,
+                    [test_pid: self(), route: :explicit]},
                  adapter_ref: :route_b
                )
 
@@ -265,12 +267,16 @@ defmodule Mailglass.OutboundTest do
   end
 
   defp configure_routed_adapters(test_pid) do
-    Application.put_env(:mailglass, :adapter, {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :default]})
+    Application.put_env(
+      :mailglass,
+      :adapter,
+      {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :default]}
+    )
 
-    Application.put_env(:mailglass, :adapters, [
+    Application.put_env(:mailglass, :adapters,
       route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_a]},
       route_b: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_b]}
-    ])
+    )
   end
 
   defp insert_suppression!(address) do

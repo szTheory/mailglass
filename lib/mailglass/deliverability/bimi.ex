@@ -151,7 +151,8 @@ defmodule Mailglass.Deliverability.BIMI do
     end
   end
 
-  defp dmarc_prerequisite_findings(posture) when posture in [:partial_enforcement, :enforcement], do: []
+  defp dmarc_prerequisite_findings(posture) when posture in [:partial_enforcement, :enforcement],
+    do: []
 
   defp dmarc_prerequisite_findings(posture) do
     [
@@ -202,7 +203,8 @@ defmodule Mailglass.Deliverability.BIMI do
       ]
   end
 
-  defp add_certificate_finding(findings, %{"a" => certificate_location}) when certificate_location != "" do
+  defp add_certificate_finding(findings, %{"a" => certificate_location})
+       when certificate_location != "" do
     findings ++
       [
         finding(

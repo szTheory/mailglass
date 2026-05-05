@@ -11,8 +11,8 @@ defmodule MailglassAdmin.RouterTest do
 
   use MailglassAdmin.EndpointCase, async: false
 
-  describe "mailglass_admin_routes/2 macro expansion" do
-    test "expands into four asset routes and two LiveView routes at `/dev/mail`" do
+  describe "router macro expansion" do
+    test "keeps preview routes isolated from the production operator mount" do
       routes = MailglassAdmin.TestAdopter.Router.__routes__()
 
       assert Enum.any?(routes, fn r ->
@@ -44,12 +44,22 @@ defmodule MailglassAdmin.RouterTest do
                r.verb == :get and r.path == "/dev/mail/:mailable/:scenario"
              end),
              "expected LIVE /dev/mail/:mailable/:scenario show route"
+
+      refute Enum.any?(routes, fn r ->
+               r.verb == :get and r.path == "/dev/mail/operator"
+             end),
+             "preview mount should no longer ship the operator route"
+
+      assert Enum.any?(routes, fn r ->
+               r.verb == :get and r.path == "/ops/mail"
+             end),
+             "expected LIVE /ops/mail operator route"
     end
   end
 
-  describe "__session__/2 whitelisted callback (CONTEXT D-08)" do
+  describe "whitelisted session callbacks" do
     @tag :session_isolation
-    test "never returns adopter session keys", %{conn: conn} do
+    test "preview session never returns adopter session keys", %{conn: conn} do
       conn =
         conn
         |> Plug.Test.init_test_session(%{
@@ -58,7 +68,7 @@ defmodule MailglassAdmin.RouterTest do
         })
 
       session =
-        MailglassAdmin.Router.__session__(conn,
+        MailglassAdmin.Router.__preview_session__(conn,
           mailables: :auto_scan,
           live_session_name: :test_session
         )
@@ -70,11 +80,51 @@ defmodule MailglassAdmin.RouterTest do
              "adopter `csrf_token` must never leak into admin session"
 
       assert Enum.sort(Map.keys(session)) == ["live_session_name", "mailables"],
-             "__session__/2 must return exactly the whitelisted keys, got #{inspect(Map.keys(session))}"
+             "__preview_session__/2 must return exactly the whitelisted keys, got #{inspect(Map.keys(session))}"
+    end
+
+    @tag :session_isolation
+    test "operator session only returns the explicit auth whitelist", %{conn: conn} do
+      recent_auth_at = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+
+      conn =
+        conn
+        |> Plug.Test.init_test_session(%{
+          "current_user_id" => "operator-1",
+          "tenant_id" => "tenant-a",
+          "auth_method" => "password",
+          "recent_auth_at" => recent_auth_at,
+          "csrf_token" => "secret"
+        })
+
+      session =
+        MailglassAdmin.Router.__operator_session__(conn,
+          auth: MailglassAdmin.TestOperatorAuth,
+          session: [
+            subject_id: "current_user_id",
+            tenant_id: "tenant_id",
+            auth_method: "auth_method",
+            recent_auth_at: "recent_auth_at"
+          ],
+          live_session_name: :mailglass_admin_operator,
+          unauthorized_path: "/login",
+          on_mount: []
+        )
+
+      refute Map.has_key?(session, "current_user_id")
+      refute Map.has_key?(session, "csrf_token")
+
+      assert session == %{
+               "subject_id" => "operator-1",
+               "tenant_id" => "tenant-a",
+               "auth_method" => "password",
+               "recent_auth_at" => recent_auth_at,
+               "live_session_name" => :mailglass_admin_operator
+             }
     end
   end
 
-  describe "mailglass_admin_routes/2 opts validation (CONTEXT D-09)" do
+  describe "router opts validation" do
     test "unknown opts raise ArgumentError at compile time" do
       assert_raise ArgumentError, ~r/invalid opts for mailglass_admin_routes\/2/, fn ->
         Code.eval_string("""
@@ -83,6 +133,27 @@ defmodule MailglassAdmin.RouterTest do
           import MailglassAdmin.Router
 
           mailglass_admin_routes "/x", bogus: true
+        end
+        """)
+      end
+    end
+
+    test "operator mount accepts tuple-form on_mount hooks and rejects unknown opts" do
+      routes = MailglassAdmin.TestAdopter.Router.__routes__()
+
+      assert Enum.any?(routes, &(&1.path == "/ops/mail"))
+
+      assert_raise ArgumentError, ~r/invalid opts for mailglass_operator_routes\/2/, fn ->
+        Code.eval_string("""
+        defmodule InvalidOperatorOptsRouter do
+          use Phoenix.Router
+          import Phoenix.LiveView.Router
+          import MailglassAdmin.Router
+
+          scope "/ops" do
+            pipe_through :browser
+            mailglass_operator_routes "/mail", bogus: true
+          end
         end
         """)
       end

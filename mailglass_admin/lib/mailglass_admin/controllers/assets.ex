@@ -58,7 +58,27 @@ defmodule MailglassAdmin.Controllers.Assets do
   @phoenix_live_view_js Application.app_dir(:phoenix_live_view, "priv/static/phoenix_live_view.js")
   @external_resource @phoenix_js
   @external_resource @phoenix_live_view_js
-  @js Enum.map_join([@phoenix_js, @phoenix_live_view_js], "\n", &File.read!/1)
+  @live_socket_bootstrap """
+  ;(() => {
+    const csrfToken = document
+      .querySelector("meta[name='csrf-token']")
+      ?.getAttribute("content")
+
+    const liveSocket = new LiveView.LiveSocket("/live", Phoenix.Socket, {
+      params: csrfToken ? { _csrf_token: csrfToken } : {}
+    })
+
+    window.liveSocket = liveSocket
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => liveSocket.connect(), { once: true })
+    } else {
+      liveSocket.connect()
+    }
+  })();
+  """
+  @js Enum.map_join([@phoenix_js, @phoenix_live_view_js], "\n", &File.read!/1) <>
+        "\n" <> @live_socket_bootstrap
   @js_hash Base.encode16(:crypto.hash(:md5, @js), case: :lower)
 
   # ---- Logo ----
@@ -85,6 +105,10 @@ defmodule MailglassAdmin.Controllers.Assets do
   """
   @spec js_hash() :: String.t()
   def js_hash, do: @js_hash
+
+  @doc false
+  @spec js_body() :: binary()
+  def js_body, do: @js
 
   # Plug-controller dispatch per Phoenix Router macro expansion. The
   # Router emits `get "/css-:md5", MailglassAdmin.Controllers.Assets, :css`

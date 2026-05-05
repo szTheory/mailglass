@@ -104,8 +104,8 @@ jobs:
       - name: Compile without optional deps
         run: mix compile --no-optional-deps --warnings-as-errors
 
-  tests:
-    name: Tests (Elixir 1.18 / OTP 27)
+  support_contract_core:
+    name: Support Contract Core (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -154,12 +154,8 @@ jobs:
         run: |
           until pg_isready -h localhost -U postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
-      - name: Run tests (halt-on-failure)
-        # Tests are now mandatory. Random seed retained per D-08-14 so
-        # ordering bugs surface. Foundation work (AsyncAdapter behaviour
-        # + CitextProbe + CaseTemplate hardening) shipped in plan 08-05;
-        # gate-self-test.yml verifies the gate blocks synthetic failures.
-        run: mix test --warnings-as-errors
+      - name: Run core support contract
+        run: mix verify.support_contract.core
 
   credo_strict:
     name: Credo Strict (Elixir 1.18 / OTP 27)
@@ -363,8 +359,8 @@ jobs:
       - name: Run installer golden gate
         run: mix verify.installer.golden
 
-  admin_smoke_gate:
-    name: Admin Smoke Gate (Elixir 1.18 / OTP 27)
+  support_contract_admin:
+    name: Support Contract Admin (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -412,5 +408,78 @@ jobs:
       - name: Install admin deps
         working-directory: mailglass_admin
         run: mix deps.get
-      - name: Run admin smoke gate
-        run: cd mailglass_admin && mix test --only admin_smoke --warnings-as-errors
+      - name: Run admin support contract
+        run: cd mailglass_admin && mix verify.support_contract.admin
+
+  operator_browser_gate:
+    name: Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+            node: "22"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      CI: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: mailglass_admin/package-lock.json
+      - name: Cache deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: |
+            deps
+            mailglass_admin/deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install core deps
+        run: mix deps.get
+      - name: Install admin deps
+        working-directory: mailglass_admin
+        run: mix deps.get
+      - name: Install browser test deps
+        working-directory: mailglass_admin
+        run: npm ci
+      - name: Wait for postgres + create test DB
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: Install Playwright browser
+        working-directory: mailglass_admin
+        run: npx playwright install --with-deps chromium
+      - name: Run operator browser gate
+        working-directory: mailglass_admin
+        run: npm run test:operator-browser

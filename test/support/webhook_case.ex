@@ -71,7 +71,16 @@ defmodule Mailglass.WebhookCase do
         ]
 
       # `assert_webhook_ingested/1,2` is a macro (must be imported separately).
-      import Mailglass.WebhookCase, only: [assert_webhook_ingested: 1, assert_webhook_ingested: 2]
+      import Mailglass.WebhookCase, only: [
+        assert_webhook_ingested: 1,
+        assert_webhook_ingested: 2,
+        assert_webhook_processed: 2,
+        assert_webhook_processed: 3,
+        assert_webhook_idempotent: 2,
+        assert_webhook_idempotent: 3,
+        assert_delivery_state: 2,
+        assert_delivery_event_count: 2
+      ]
     end
   end
 
@@ -350,4 +359,97 @@ defmodule Mailglass.WebhookCase do
   """
   @spec freeze_timestamp(DateTime.t()) :: DateTime.t()
   def freeze_timestamp(%DateTime{} = dt), do: Mailglass.Clock.Frozen.freeze(dt)
+
+  @doc """
+  Dispatches a webhook payload for the given provider through the Mailglass
+  webhook plug pipeline, asserting a 20x response and waiting for the
+  subsequent Event Projector broadcast to verify ingestion.
+
+  Returns the resulting `%Plug.Conn{}`.
+  """
+  defmacro assert_webhook_processed(provider, fixture_name, opts \\ []) do
+    quote do
+      opts = unquote(opts)
+      provider = unquote(provider)
+      fixture_name = unquote(fixture_name)
+
+      raw = apply(Mailglass.WebhookCase, :"stub_#{provider}_fixture", [fixture_name])
+      conn = Mailglass.WebhookCase.mailglass_webhook_conn(provider, raw, opts)
+
+      opts_for_plug = Mailglass.Webhook.Plug.init(provider: provider)
+      conn = Mailglass.Webhook.Plug.call(conn, opts_for_plug)
+
+      assert conn.status in 200..299, "Expected webhook to return 20x, got #{conn.status}"
+      assert_webhook_ingested(nil, Keyword.get(opts, :timeout, 100))
+
+      conn
+    end
+  end
+
+  @doc """
+  Dispatches a webhook payload twice to verify idempotency. Asserts the first
+  dispatch generates an event and the second returns 20x but does NOT generate
+  a duplicate event.
+  """
+  defmacro assert_webhook_idempotent(provider, fixture_name, opts \\ []) do
+    quote do
+      opts = unquote(opts)
+      provider = unquote(provider)
+      fixture_name = unquote(fixture_name)
+      timeout = Keyword.get(opts, :timeout, 100)
+
+      # First dispatch - should succeed and broadcast
+      assert_webhook_processed(provider, fixture_name, opts)
+
+      # Second dispatch - same payload
+      raw = apply(Mailglass.WebhookCase, :"stub_#{provider}_fixture", [fixture_name])
+      conn = Mailglass.WebhookCase.mailglass_webhook_conn(provider, raw, opts)
+
+      opts_for_plug = Mailglass.Webhook.Plug.init(provider: provider)
+      conn = Mailglass.Webhook.Plug.call(conn, opts_for_plug)
+
+      assert conn.status in 200..299, "Expected duplicate webhook to return 20x, got #{conn.status}"
+
+      # Verify NO new broadcast occurred
+      refute_receive {:delivery_updated, _id, _type, _meta}, timeout,
+        "assert_webhook_idempotent: expected duplicate webhook to NOT broadcast, but it did"
+    end
+  end
+
+  @doc """
+  Asserts that a Delivery in the DB has the expected `status` (e.g. `:delivered`).
+  """
+  defmacro assert_delivery_state(delivery_id, expected_status) do
+    quote do
+      delivery_id = unquote(delivery_id)
+      expected_status = unquote(expected_status)
+
+      delivery = Mailglass.TestRepo.get!(Mailglass.Outbound.Delivery, delivery_id)
+
+      actual_status = delivery.status
+      actual_event = delivery.last_event_type
+
+      assert actual_status == expected_status or actual_event == expected_status,
+        "assert_delivery_state: expected status or last_event_type to be #{inspect(expected_status)}, but got status=#{inspect(actual_status)} and last_event_type=#{inspect(actual_event)}"
+    end
+  end
+
+  @doc """
+  Asserts that a Delivery has exactly `expected_count` events.
+  """
+  defmacro assert_delivery_event_count(delivery_id, expected_count) do
+    quote do
+      import Ecto.Query
+      delivery_id = unquote(delivery_id)
+      expected_count = unquote(expected_count)
+
+      count =
+        Mailglass.Events.Event
+        |> where([e], e.delivery_id == ^delivery_id)
+        |> Mailglass.TestRepo.aggregate(:count, :id)
+
+      assert count == expected_count,
+        "assert_delivery_event_count: expected #{expected_count} events for delivery #{delivery_id}, got #{count}"
+    end
+  end
 end

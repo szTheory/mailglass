@@ -70,7 +70,9 @@ defmodule Mailglass.Operator.TimelineTest do
     end
 
     test "orders events chronologically with a stable tie-breaker" do
-      delivery = Generators.delivery_fixture(tenant_id: "tenant-a", recipient: "ordered@example.com")
+      delivery =
+        Generators.delivery_fixture(tenant_id: "tenant-a", recipient: "ordered@example.com")
+
       occurred_at = DateTime.add(DateTime.utc_now(), -90, :second)
 
       {:ok, first} =
@@ -103,6 +105,44 @@ defmodule Mailglass.Operator.TimelineTest do
       rows = Timeline.list_delivery_events(%{tenant_id: "tenant-a", delivery_id: delivery.id}, [])
 
       assert Enum.map(rows, & &1.id) == [first.id, second.id, third.id]
+    end
+
+    test "keeps replay audit rows distinct and preserves facts for requested and completed summaries" do
+      delivery = Generators.delivery_fixture(tenant_id: "tenant-a", recipient: "replay@example.com")
+      now = DateTime.utc_now()
+
+      {:ok, _requested} =
+        Events.append(%{
+          tenant_id: "tenant-a",
+          delivery_id: delivery.id,
+          type: :webhook_replay_requested,
+          occurred_at: DateTime.add(now, -120, :second),
+          metadata: %{
+            "actor_id" => "operator-1",
+            "provider" => "postmark",
+            "webhook_event_id" => "webhook-1"
+          }
+        })
+
+      {:ok, _completed} =
+        Events.append(%{
+          tenant_id: "tenant-a",
+          delivery_id: delivery.id,
+          type: :webhook_replay_succeeded,
+          occurred_at: DateTime.add(now, -60, :second),
+          metadata: %{
+            "actor_id" => "operator-1",
+            "provider" => "postmark",
+            "webhook_event_id" => "webhook-1",
+            "outcome" => "noop"
+          }
+        })
+
+      rows = Timeline.list_delivery_events(%{tenant_id: "tenant-a", delivery_id: delivery.id}, [])
+
+      assert Enum.map(rows, & &1.type) == [:webhook_replay_requested, :webhook_replay_succeeded]
+      assert Enum.map(rows, &replay_summary_for(&1)) == ["requested", "completed · no change"]
+      assert Enum.all?(rows, &Map.has_key?(&1.metadata, "webhook_event_id"))
     end
   end
 
@@ -168,7 +208,11 @@ defmodule Mailglass.Operator.TimelineTest do
           }
         })
 
-      rows = ReplayHistory.list_delivery_replay_history(%{tenant_id: "tenant-a", delivery_id: selected.id})
+      rows =
+        ReplayHistory.list_delivery_replay_history(%{
+          tenant_id: "tenant-a",
+          delivery_id: selected.id
+        })
 
       assert Enum.map(rows, & &1.type) == [:webhook_replay_requested, :webhook_replay_succeeded]
       assert Enum.map(rows, & &1.actor_id) == ["operator-1", "operator-1"]
@@ -177,4 +221,13 @@ defmodule Mailglass.Operator.TimelineTest do
       assert List.last(rows).outcome == "replayed"
     end
   end
+
+  defp replay_summary_for(%{type: :webhook_replay_requested}), do: "requested"
+  defp replay_summary_for(%{type: :webhook_replay_failed}), do: "failed"
+
+  defp replay_summary_for(%{type: :webhook_replay_succeeded, metadata: %{"outcome" => "replayed"}}),
+    do: "completed · new work"
+
+  defp replay_summary_for(%{type: :webhook_replay_succeeded, metadata: %{"outcome" => "noop"}}),
+    do: "completed · no change"
 end

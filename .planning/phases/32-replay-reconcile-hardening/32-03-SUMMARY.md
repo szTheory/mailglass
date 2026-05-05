@@ -1,3 +1,10 @@
+---
+phase: 32-replay-reconcile-hardening
+plan: 03
+requirements-completed: [MAT-01]
+completed: 2026-05-05
+---
+
 # Phase 32 Plan 32-03 Summary
 
 ## Outcome
@@ -13,6 +20,10 @@ the same maintenance sweep via `mix mailglass.reconcile` and get honest
 
 - Refactored `Mailglass.Webhook.Reconciler` so `reconcile/2` is always
   compiled, while `perform/1` remains optional-dep gated behind Oban.
+  After phase verification exposed a consumer compile failure, rewrote
+  the module to use the same top-level conditional definition pattern
+  as the other Oban-optional modules so adopter projects compile cleanly
+  without `Oban.Worker`.
 - Updated `Mailglass.Application` warning copy to describe the truthful
   fallback contract: no background maintenance without Oban, but manual
   reconcile and prune tasks still work and should be scheduled via
@@ -32,12 +43,16 @@ the same maintenance sweep via `mix mailglass.reconcile` and get honest
 ## Verification
 
 - `mix test test/mailglass/webhook/reconciler_test.exs test/mix/tasks/mailglass_reconcile_test.exs --warnings-as-errors`
+- `mix compile --no-optional-deps --warnings-as-errors`
+- `cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs --warnings-as-errors`
 - `rg -n "mailglass\\.reconcile|system cron|linked|still unmatched|Oban" lib/mailglass/application.ex lib/mix/tasks/mailglass.reconcile.ex guides/webhooks.md guides/webhook-troubleshooting.md`
 
 ## Deviations
 
-- None. The plan executed within the scoped files and did not require
-  any architecture changes.
+- The initial reconcile refactor passed root tests but still broke a
+  consumer compile path without Oban. Verification caught the issue, and
+  the phase was corrected in-place by switching `reconciler.ex` to the
+  established top-level optional-dependency stub pattern.
 
 ## Commits
 

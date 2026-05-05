@@ -38,6 +38,91 @@ defmodule MailglassAdmin.TestAdopter.Router do
         :"Elixir.MailglassAdmin.Fixtures.BrokenMailer"
       ]
   end
+
+  scope "/ops" do
+    pipe_through :browser
+
+    get "/browser-login", MailglassAdmin.TestAdopter.BrowserSessionController, :create
+
+    mailglass_operator_routes "/mail",
+      auth: MailglassAdmin.TestOperatorAuth,
+      session: [
+        subject_id: "current_user_id",
+        tenant_id: "tenant_id",
+        auth_method: "auth_method",
+        recent_auth_at: "recent_auth_at"
+      ],
+      on_mount: [{MailglassAdmin.TestOperatorHook, :audit}],
+      unauthorized_path: "/login"
+  end
+end
+
+defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
+  use Phoenix.Controller, formats: [:html]
+
+  def create(conn, params) do
+    tenant_id = Map.get(params, "tenant_id", "browser-tenant")
+    return_to = Map.get(params, "return_to", "/ops/mail?tenant_id=#{tenant_id}")
+    now = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+
+    conn
+    |> Plug.Conn.put_session("current_user_id", "operator-1")
+    |> Plug.Conn.put_session("tenant_id", tenant_id)
+    |> Plug.Conn.put_session("auth_method", "password")
+    |> Plug.Conn.put_session("recent_auth_at", now)
+    |> Phoenix.Controller.redirect(to: return_to)
+  end
+end
+
+defmodule MailglassAdmin.TestOperatorHook do
+  @moduledoc false
+
+  import Phoenix.Component, only: [assign: 3]
+
+  def on_mount(:audit, _params, _session, socket) do
+    {:cont, assign(socket, :operator_hook, :audit)}
+  end
+end
+
+defmodule MailglassAdmin.TestOperatorAuth do
+  @moduledoc false
+
+  @behaviour MailglassAdmin.Auth
+
+  @max_age_seconds 900
+
+  def authorize(:operator_access, %{actor: %{subject_id: nil}}) do
+    {:error, :unauthorized, %{message: "Operator access requires a signed-in actor.", to: "/login"}}
+  end
+
+  def authorize(:operator_access, %{actor: %{subject_id: "blocked"}}) do
+    {:error, :unauthorized, %{message: "Operator access denied.", to: "/login"}}
+  end
+
+  def authorize(:operator_access, %{actor: actor}) do
+    {:ok,
+     %{
+       actor: Map.put_new(actor, :auth_method, actor[:auth_method] || "password"),
+       assigns: %{operator_access_checked?: true}
+     }}
+  end
+
+  def authorize(:destructive_action, %{actor: %{subject_id: nil}}) do
+    {:error, :unauthorized, %{message: "Operator access requires a signed-in actor."}}
+  end
+
+  def authorize(:destructive_action, %{actor: %{recent_auth_at: nil}}) do
+    {:error, :stale_auth, %{message: "Recent authentication is required."}}
+  end
+
+  def authorize(:destructive_action, %{actor: %{recent_auth_at: recent_auth_at}})
+      when is_struct(recent_auth_at, DateTime) do
+    if DateTime.diff(DateTime.utc_now(), recent_auth_at, :second) <= @max_age_seconds do
+      {:ok, %{subject_id: "operator-1", recent_auth_at: recent_auth_at}}
+    else
+      {:error, :stale_auth, %{message: "Recent authentication is required."}}
+    end
+  end
 end
 
 defmodule MailglassAdmin.TestAdopter.Endpoint do
@@ -57,13 +142,27 @@ defmodule MailglassAdmin.TestAdopter.Endpoint do
 
   use Phoenix.Endpoint, otp_app: :mailglass_admin
 
-  plug Plug.Session,
+  @session_options [
     store: :cookie,
     key: "_mailglass_admin_test_session",
     signing_salt: "test-salt-01234567",
     same_site: "Lax"
+  ]
+
+  socket "/live", Phoenix.LiveView.Socket,
+    websocket: [connect_info: [session: @session_options], check_origin: false]
+
+  plug Plug.Session, @session_options
 
   plug MailglassAdmin.TestAdopter.Router
+end
+
+defmodule MailglassAdmin.TestAdopter.ErrorHTML do
+  @moduledoc false
+
+  def render(template, _assigns) do
+    Phoenix.Controller.status_message_from_template(template)
+  end
 end
 
 defmodule MailglassAdmin.EndpointCase do
@@ -86,17 +185,15 @@ defmodule MailglassAdmin.EndpointCase do
       import Plug.Conn
       import Phoenix.ConnTest
       alias MailglassAdmin.TestAdopter.Router.Helpers, as: Routes
-      @endpoint MailglassAdmin.TestAdopter.Endpoint
+      @endpoint MailglassAdmin.TestSupport.AdminBootstrap.endpoint()
     end
   end
 
   setup_all do
-    {:ok, _} = Application.ensure_all_started(:phoenix)
-    _ = MailglassAdmin.TestAdopter.Endpoint.start_link()
-    :ok
+    MailglassAdmin.TestSupport.AdminBootstrap.setup_all()
   end
 
   setup do
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    {:ok, conn: MailglassAdmin.TestSupport.AdminBootstrap.build_conn()}
   end
 end

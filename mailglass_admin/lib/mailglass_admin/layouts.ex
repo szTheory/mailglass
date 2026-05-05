@@ -26,18 +26,20 @@ defmodule MailglassAdmin.Layouts do
   # without leading slash) so the browser resolves them against whatever
   # mount path the adopter chose (e.g. /dev/mail -> /dev/mail/css-XX.css).
   defp css_url do
-    if function_exported?(MailglassAdmin.Controllers.Assets, :css_hash, 0) do
-      "css-" <> MailglassAdmin.Controllers.Assets.css_hash() <> ".css"
+    if Code.ensure_loaded?(MailglassAdmin.Controllers.Assets) and
+         function_exported?(MailglassAdmin.Controllers.Assets, :css_hash, 0) do
+      "css-" <> MailglassAdmin.Controllers.Assets.css_hash()
     else
       "css-pending.css"
     end
   end
 
-  defp js_url do
-    if function_exported?(MailglassAdmin.Controllers.Assets, :js_hash, 0) do
-      "js-" <> MailglassAdmin.Controllers.Assets.js_hash() <> ".js"
+  defp js_inline do
+    if Code.ensure_loaded?(MailglassAdmin.Controllers.Assets) and
+         function_exported?(MailglassAdmin.Controllers.Assets, :js_body, 0) do
+      MailglassAdmin.Controllers.Assets.js_body()
     else
-      "js-pending.js"
+      ""
     end
   end
 end

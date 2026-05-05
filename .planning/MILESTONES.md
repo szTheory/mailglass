@@ -32,3 +32,15 @@
 - Tenant-scoped suppression removal now rejects complaint and unsubscribe rows, complaint expiries are blocked before insert and in Postgres, and the webhook guide documents why complaint suppression outlives deletable source evidence.
 
 ---
+
+## v0.5 Adoption Hardening (Shipped: 2026-05-03)
+
+**Phases completed:** 4 phases, 7 plans
+
+**Key accomplishments:**
+
+- `mix mailglass.gen.mailable` generator implemented using Igniter for boilerplate-free scaffolding of mailable modules and HEEx templates.
+- Comprehensive `Mailglass.TestAssertions` suite added, providing high-signal helpers for verifying outbound delivery, async webhook outcomes (delivered/bounced), and HTML content matching.
+- Multi-bucket per-domain rate limiting implemented with `Mailglass.RateLimiter`, ensuring reputation protection with transactional bypass safety for critical emails.
+- First-party Webhook Troubleshooting Guide and Upgrading Guide published to address common adopter friction points.
+- Hardened `mix mailglass.install` with dry-run support, conflict detection, and improved dependency management.

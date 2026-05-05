@@ -106,17 +106,58 @@ defmodule Mailglass.Config do
     rate_limit: [
       type: :keyword_list,
       default: [],
-      doc: "Rate-limiter configuration (SEND-02).",
+      doc: "Rate-limiter configuration (RATE-01).",
       keys: [
-        default: [
+        tenant_recipient: [
           type: :keyword_list,
-          default: [capacity: 100, per_minute: 100],
-          doc: "Default per-(tenant, domain) bucket. Capacity + per-minute refill."
-        ],
-        overrides: [
-          type: {:list, :any},
           default: [],
-          doc: "Per-(tenant_id, domain) overrides as list of {{tenant_id, domain}, opts} tuples."
+          doc: "Per-{tenant, domain} rate limits.",
+          keys: [
+            default: [
+              type: :keyword_list,
+              default: [capacity: 100, per_minute: 100],
+              doc: "Default per-{tenant, domain} bucket."
+            ],
+            overrides: [
+              type: {:list, :any},
+              default: [],
+              doc: "Per-{tenant, domain} overrides as {{tenant_id, domain}, opts}."
+            ]
+          ]
+        ],
+        global_recipient: [
+          type: :keyword_list,
+          default: [],
+          doc: "Global per-recipient domain rate limits.",
+          keys: [
+            default: [
+              type: :keyword_list,
+              default: [capacity: 1000, per_minute: 1000],
+              doc: "Default global per-domain bucket."
+            ],
+            overrides: [
+              type: {:list, :any},
+              default: [],
+              doc: "Global per-domain overrides as {domain, opts}."
+            ]
+          ]
+        ],
+        sender_domain: [
+          type: :keyword_list,
+          default: [],
+          doc: "Global per-sender domain rate limits.",
+          keys: [
+            default: [
+              type: :keyword_list,
+              default: [capacity: 500, per_minute: 500],
+              doc: "Default global per-sender domain bucket."
+            ],
+            overrides: [
+              type: {:list, :any},
+              default: [],
+              doc: "Global per-sender domain overrides as {domain, opts}."
+            ]
+          ]
         ]
       ]
     ],
@@ -357,7 +398,8 @@ defmodule Mailglass.Config do
         secret: [
           type: {:or, [:string, nil]},
           default: nil,
-          doc: "Svix webhook secret used for Resend signature verification. Required for verification; omit only if the provider is disabled."
+          doc:
+            "Svix webhook secret used for Resend signature verification. Required for verification; omit only if the provider is disabled."
         ],
         timestamp_tolerance_seconds: [
           type: :pos_integer,
@@ -510,12 +552,35 @@ defmodule Mailglass.Config do
   end
 
   defp normalize_optional_keyword_subtrees(opts) do
-    Enum.reduce([:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance, :ses, :resend], opts, fn key, acc ->
-      case Keyword.get(acc, key, :__missing__) do
-        nil -> Keyword.put(acc, key, [])
-        _ -> acc
+    Enum.reduce(
+      [:theme, :telemetry, :renderer, :rate_limit, :tracking, :compliance, :ses, :resend],
+      opts,
+      fn key, acc ->
+        case Keyword.get(acc, key, :__missing__) do
+          nil -> Keyword.put(acc, key, [])
+          _ -> acc
+        end
       end
-    end)
+    )
+    |> normalize_rate_limit_config()
+  end
+
+  defp normalize_rate_limit_config(opts) do
+    case Keyword.get(opts, :rate_limit) do
+      rl when is_list(rl) ->
+        # Backward compatibility: If :default or :overrides are present at the
+        # top level of :rate_limit, wrap them into :tenant_recipient.
+        if Keyword.has_key?(rl, :default) or Keyword.has_key?(rl, :overrides) do
+          tenant_recipient = Keyword.take(rl, [:default, :overrides])
+          rest = Keyword.drop(rl, [:default, :overrides])
+          Keyword.put(opts, :rate_limit, Keyword.put(rest, :tenant_recipient, tenant_recipient))
+        else
+          opts
+        end
+
+      _ ->
+        opts
+    end
   end
 
   # Mailglass is Postgres-only at v0.1 per PROJECT.md (MySQL/SQLite out of
@@ -702,7 +767,8 @@ defmodule Mailglass.Config do
   defp normalize_registry_entry!(other) do
     raise NimbleOptions.ValidationError,
       key: :adapters,
-      message: "expected entries like {ref, module} or {ref, {module, opts}}, got: #{inspect(other)}"
+      message:
+        "expected entries like {ref, module} or {ref, {module, opts}}, got: #{inspect(other)}"
   end
 
   defp normalize_adapter_ref_lookup(ref) when is_atom(ref), do: Atom.to_string(ref)

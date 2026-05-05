@@ -6,13 +6,13 @@
 ## v0.6 Requirements
 
 ### Replay & Reconcile
-- [ ] **MAT-01**: Operator can replay or reconcile webhook-driven delivery state with explicit tenant-safe authorization, auditable outcomes, and clear failure handling.
+- [x] **MAT-01**: Operator can replay or reconcile webhook-driven delivery state with explicit tenant-safe authorization, auditable outcomes, and clear failure handling.
 
 ### Observability & Support
-- [ ] **MAT-02**: Operator-facing observability and incident-response/support docs cover delivery, webhook ingest, and reconciliation failure modes without exposing PII.
+- [x] **MAT-02**: Operator-facing observability and incident-response/support docs cover delivery, webhook ingest, and reconciliation failure modes without exposing PII.
 
 ### Verification & Regression Closure
-- [ ] **MAT-03**: Maintainer has automated verification for the highest-risk deferred regression and production-support gaps before `v1.0`.
+- [x] **MAT-03**: Maintainer has automated verification for the highest-risk deferred regression and production-support gaps before `v1.0`.
 
 ## Future Requirements
 
@@ -35,9 +35,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MAT-01 | Phase 32 | Pending |
-| MAT-02 | Phase 33 | Pending |
-| MAT-03 | Phase 34 | Pending |
+| MAT-01 | Phase 32 | Complete |
+| MAT-02 | Phase 33 | Complete |
+| MAT-03 | Phase 34 | Complete |
 
 **Coverage:**
 - v0.6 requirements: 3 total

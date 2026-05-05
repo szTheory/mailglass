@@ -111,6 +111,26 @@ end)
 |> Mailglass.Message.put_function(:welcome)
 ```
 
+## New in v0.2
+
+### Per-Domain Rate Limiting
+
+v0.2 introduces a multi-bucket rate limiter to protect your sender reputation. Outbound messages (except those on the `:transactional` stream) are now checked against:
+- `:tenant_recipient` limits (100/min default)
+- `:global_recipient` limits (1000/min default)
+- `:sender_domain` limits (500/min default)
+
+If you see `{:error, %Mailglass.RateLimitError{}}`, your message was throttled. See the [Rate Limiting Guide](rate-limiting.md) for configuration overrides.
+
+### Enhanced Test Assertions
+
+The testing surface has been modernized. `import Mailglass.TestAssertions` now provides:
+- `assert_mail_sent(params)`
+- `last_mail()`
+- `wait_for_mail(params)`
+
+These replace manual mailbox inspections and work seamlessly with the new `Mailglass.Adapters.Fake`.
+
 ## Dependency Matrix
 
 To use this upgrade codemod successfully, ensure your dependencies meet the minimum versions:
@@ -119,14 +139,23 @@ To use this upgrade codemod successfully, ensure your dependencies meet the mini
 - `phoenix_live_view`: `~> 1.1`
 - `igniter`: `~> 0.7`
 
-## Rollback Procedure
+## Troubleshooting
 
-If the codemod produces unintended changes, keep the rollback narrow and explicit:
+### Codemod skips my mailables
 
-1. View the changes the codemod made:
-   `git diff`
-2. Restore only the files you do not want to keep:
-   `git restore path/to/file.ex`
-3. Re-run the task after adjusting the ambiguous cases by hand.
+- Ensure your mailables use the `use Mailglass.Mailable` macro.
+- The codemod targets direct `Swoosh.Email` calls. If you have aliased `Swoosh.Email` or are using qualified calls that don't match the expected patterns, you may need to update them manually.
 
-If a standard pattern was skipped unexpectedly, keep the diff and file an issue with the warning output.
+### "RateLimitError" after upgrading
+
+- v0.2 enables rate limiting by default for `:bulk` and `:operational` streams.
+- If your existing volume exceeds the new defaults, configure overrides in `config/runtime.exs` or move time-sensitive alerts to the `:transactional` stream.
+
+### Tests fail with "no mail sent"
+
+- Confirm you have switched to `Mailglass.Adapters.Fake` in `config/test.exs`.
+- Ensure you are importing `Mailglass.TestAssertions` and not relying on internal mailbox structure which may have changed.
+
+---
+
+*Last updated: 2026-05-03 (Phase 31 ships at v0.1).*

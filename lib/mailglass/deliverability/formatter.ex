@@ -52,8 +52,11 @@ defmodule Mailglass.Deliverability.Formatter do
     ]
 
     case verbose? and Map.has_key?(finding, :evidence) do
-      true -> base_lines ++ ["Evidence: " <> inspect(finding.evidence, pretty: true, limit: :infinity)]
-      false -> base_lines
+      true ->
+        base_lines ++ ["Evidence: " <> inspect(finding.evidence, pretty: true, limit: :infinity)]
+
+      false ->
+        base_lines
     end
   end
 

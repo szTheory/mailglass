@@ -16,7 +16,27 @@ defmodule MailglassAdmin.LiveViewCase do
 
   using opts do
     quote do
-      use Mailglass.AdminCase, unquote(opts)
+      use ExUnit.Case, unquote(opts)
+      import Plug.Conn
+      import Phoenix.ConnTest
+      import Phoenix.LiveViewTest
+      alias MailglassAdmin.TestAdopter.Router.Helpers, as: Routes
+      alias MailglassAdmin.TestRepo
+      @endpoint MailglassAdmin.TestSupport.AdminBootstrap.endpoint()
     end
+  end
+
+  setup_all do
+    MailglassAdmin.TestSupport.AdminBootstrap.setup_all()
+  end
+
+  setup do
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(MailglassAdmin.TestRepo, shared: true)
+    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+
+    MailglassAdmin.TestSupport.CitextProbe.run(repo: MailglassAdmin.TestRepo)
+    Mailglass.Tenancy.put_current("test-tenant")
+
+    {:ok, conn: MailglassAdmin.TestSupport.AdminBootstrap.build_conn()}
   end
 end

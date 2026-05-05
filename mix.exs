@@ -60,6 +60,8 @@ defmodule Mailglass.MixProject do
         "verify.installer.golden": :test,
         "verify.installer.idempotency": :test,
         "verify.installer.smoke": :test,
+        "verify.support_contract.core": :test,
+        "verify.provider_compatibility": :test,
         "verify.docs.contract": :test,
         "verify.docs.migration": :test
       ]
@@ -241,6 +243,12 @@ defmodule Mailglass.MixProject do
       ],
       "verify.installer.smoke": [
         "test test/mailglass/install/install_first_preview_smoke_test.exs --warnings-as-errors"
+      ],
+      "verify.support_contract.core": [
+        "test test/mailglass/docs_contract_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs --warnings-as-errors"
+      ],
+      "verify.provider_compatibility": [
+        "test test/mailglass/adapter_test.exs test/mailglass/adapters/swoosh_test.exs test/mailglass/webhook/providers/postmark_test.exs test/mailglass/webhook/providers/sendgrid_test.exs test/mailglass/webhook/providers/mailgun_test.exs test/mailglass/webhook/providers/resend_test.exs test/mailglass/webhook/providers/ses_test.exs test/mailglass/webhook/providers/ses/cert_cache_test.exs test/mailglass/webhook/plug_mailgun_test.exs test/mailglass/webhook/plug_ses_test.exs test/mailglass/webhook/providers/resend_webhook_plug_test.exs --warnings-as-errors"
       ],
       "verify.docs.contract": [
         "test test/mailglass/docs_contract_test.exs --warnings-as-errors"

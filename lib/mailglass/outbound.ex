@@ -290,7 +290,7 @@ defmodule Mailglass.Outbound do
     with :ok <- Tenancy.assert_stamped!(),
          :ok <- Tracking.Guard.assert_safe!(msg),
          :ok <- Suppression.check_before_send(msg),
-         :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
+         :ok <- RateLimiter.check(msg),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg) do
       do_send_after_preflight(prepare_outbound_message(rendered), opts)
@@ -302,7 +302,8 @@ defmodule Mailglass.Outbound do
   defp do_send_after_preflight(%Message{} = rendered, opts) do
     with {:ok, route} <- resolve_sync_route(rendered, opts),
          {:ok, %{delivery: delivery}} <- persist_queued(rendered, route.adapter_ref),
-         {:ok, dispatch_result} <- call_adapter_or_persist_failure(delivery, rendered, route.adapter),
+         {:ok, dispatch_result} <-
+           call_adapter_or_persist_failure(delivery, rendered, route.adapter),
          {:ok, %{delivery: updated}} <-
            persist_dispatched_multi(delivery, dispatch_result, rendered) do
       Projector.broadcast_delivery_updated(updated, :dispatched, %{
@@ -350,7 +351,7 @@ defmodule Mailglass.Outbound do
     with :ok <- Tenancy.assert_stamped!(),
          :ok <- Tracking.Guard.assert_safe!(msg),
          :ok <- Suppression.check_before_send(msg),
-         :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
+         :ok <- RateLimiter.check(msg),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg),
          prepared = prepare_outbound_message(rendered),
@@ -526,7 +527,7 @@ defmodule Mailglass.Outbound do
   defp preflight_single(%Message{} = msg) do
     with :ok <- Tracking.Guard.assert_safe!(msg),
          :ok <- Suppression.check_before_send(msg),
-         :ok <- RateLimiter.check(msg.tenant_id, recipient_domain(msg), msg.stream),
+         :ok <- RateLimiter.check(msg),
          :ok <- Stream.policy_check(msg),
          {:ok, rendered} <- Renderer.render(msg) do
       {:ok, prepare_outbound_message(rendered)}
@@ -725,7 +726,6 @@ defmodule Mailglass.Outbound do
   end
 
   defp call_adapter(%Message{} = rendered, {adapter_mod, adapter_opts}) do
-
     Telemetry.dispatch_span(
       %{
         tenant_id: rendered.tenant_id,

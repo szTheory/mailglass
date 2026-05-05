@@ -34,7 +34,11 @@ defmodule Mailglass.Properties.DeliverabilitySPFPropertyTest do
 
       assert analysis.facts.lookup_count >= 10
       refute Enum.any?(analysis.findings, &(&1.status == :pass))
-      assert Enum.any?(analysis.findings, &(&1.status == :fail and &1.check == :lookup_limit_exceeded))
+
+      assert Enum.any?(
+               analysis.findings,
+               &(&1.status == :fail and &1.check == :lookup_limit_exceeded)
+             )
     end
   end
 

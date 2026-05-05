@@ -55,7 +55,9 @@ defmodule Mailglass.Operator.Suppressions do
   defp normalize_context(context) when is_list(context), do: Map.new(context)
   defp normalize_context(context) when is_map(context), do: Map.new(context)
 
-  defp fetch_tenant_id!(%{tenant_id: tenant_id}) when is_binary(tenant_id) and tenant_id != "", do: tenant_id
+  defp fetch_tenant_id!(%{tenant_id: tenant_id}) when is_binary(tenant_id) and tenant_id != "",
+    do: tenant_id
+
   defp fetch_tenant_id!(_context), do: raise(ArgumentError, "tenant_id is required")
 
   defp fetch_recipient(%{recipient: recipient}) when is_binary(recipient) and recipient != "",

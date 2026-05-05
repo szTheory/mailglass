@@ -84,3 +84,20 @@ mix mailglass.install
 mix ecto.migrate
 mix compile
 ```
+
+## Troubleshooting the Installer
+
+### `mix mailglass.install` fails to find `endpoint.ex`
+
+- Ensure you are running the task from the root of your Phoenix application.
+- If your application has a non-standard directory structure, you may need to manually wire the components described in the [Webhooks Guide](webhooks.md).
+
+### Webhooks return 401 after installation
+
+- The installer adds `Mailglass.Webhook.CachingBodyReader` to your `Plug.Parsers` configuration.
+- Check `lib/my_app_web/endpoint.ex` and ensure that your existing `Plug.Parsers` block was either updated or that the Mailglass-specific parser appears **above** your application's default JSON parser.
+- If multiple `Plug.Parsers` are present, the first one that matches the request path will consume the body.
+
+---
+
+*Last updated: 2026-05-03 (Phase 31 ships at v0.1).*

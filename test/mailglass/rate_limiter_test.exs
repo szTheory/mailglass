@@ -194,4 +194,76 @@ defmodule Mailglass.RateLimiterTest do
       assert ok_count == 500
     end
   end
+
+  describe "check/1 multi-bucket — global_recipient" do
+    test "Test 9: global_recipient bucket throttles even if tenant bucket is fresh" do
+      Application.put_env(:mailglass, :rate_limit,
+        global_recipient: [default: [capacity: 2, per_minute: 60]]
+      )
+
+      :ets.delete_all_objects(:mailglass_rate_limit)
+
+      msg1 = %Mailglass.Message{
+        tenant_id: "tenant-1",
+        stream: :operational,
+        swoosh_email: Swoosh.Email.new() |> Swoosh.Email.to("u1@global.com")
+      }
+
+      msg2 = %Mailglass.Message{
+        tenant_id: "tenant-2",
+        stream: :operational,
+        swoosh_email: Swoosh.Email.new() |> Swoosh.Email.to("u2@global.com")
+      }
+
+      msg3 = %Mailglass.Message{
+        tenant_id: "tenant-3",
+        stream: :operational,
+        swoosh_email: Swoosh.Email.new() |> Swoosh.Email.to("u3@global.com")
+      }
+
+      assert :ok = RateLimiter.check(msg1)
+      assert :ok = RateLimiter.check(msg2)
+      assert {:error, %RateLimitError{}} = RateLimiter.check(msg3)
+    end
+  end
+
+  describe "check/1 multi-bucket — sender_domain" do
+    test "Test 10: sender_domain bucket throttles across recipients" do
+      Application.put_env(:mailglass, :rate_limit,
+        sender_domain: [default: [capacity: 2, per_minute: 60]]
+      )
+
+      :ets.delete_all_objects(:mailglass_rate_limit)
+
+      email1 =
+        Swoosh.Email.new() |> Swoosh.Email.from("app@sender.com") |> Swoosh.Email.to("u1@a.com")
+
+      email2 =
+        Swoosh.Email.new() |> Swoosh.Email.from("app@sender.com") |> Swoosh.Email.to("u2@b.com")
+
+      email3 =
+        Swoosh.Email.new() |> Swoosh.Email.from("app@sender.com") |> Swoosh.Email.to("u3@c.com")
+
+      assert :ok =
+               RateLimiter.check(%Mailglass.Message{
+                 tenant_id: "t1",
+                 stream: :operational,
+                 swoosh_email: email1
+               })
+
+      assert :ok =
+               RateLimiter.check(%Mailglass.Message{
+                 tenant_id: "t1",
+                 stream: :operational,
+                 swoosh_email: email2
+               })
+
+      assert {:error, %RateLimitError{}} =
+               RateLimiter.check(%Mailglass.Message{
+                 tenant_id: "t1",
+                 stream: :operational,
+                 swoosh_email: email3
+               })
+    end
+  end
 end

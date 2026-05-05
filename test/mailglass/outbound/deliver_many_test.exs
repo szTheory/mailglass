@@ -279,8 +279,15 @@ defmodule Mailglass.Outbound.DeliverManyTest do
   end
 
   defp configure_routed_adapters(test_pid) do
-    Application.put_env(:mailglass, :adapter, {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :default]})
-    Application.put_env(:mailglass, :adapters, [route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_a]}])
+    Application.put_env(
+      :mailglass,
+      :adapter,
+      {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :default]}
+    )
+
+    Application.put_env(:mailglass, :adapters,
+      route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: test_pid, route: :route_a]}
+    )
   end
 
   defp insert_suppression!(address) do

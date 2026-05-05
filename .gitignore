@@ -12,6 +12,11 @@ erl_crash.dump
 
 # Mix
 /tmp/
+/mailglass_admin/node_modules/
+/mailglass_admin/test-results/
+/mailglass_admin/playwright-report/
+/mailglass-*.tar
+/mailglass_admin/*.tar
 
 # macOS
 .DS_Store
@@ -23,4 +28,3 @@ erl_crash.dump
 /.cursor/
 /.gsd/
 /.mcp.json
-

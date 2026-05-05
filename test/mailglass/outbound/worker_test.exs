@@ -127,12 +127,18 @@ defmodule Mailglass.Outbound.WorkerTest do
       if not Code.ensure_loaded?(Mailglass.Outbound.Worker) do
         :skip
       else
-        Application.put_env(:mailglass, :adapter, {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :default]})
+        Application.put_env(
+          :mailglass,
+          :adapter,
+          {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :default]}
+        )
 
-        Application.put_env(:mailglass, :adapters, [
-          route_a: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :route_a]},
-          route_b: {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :route_b]}
-        ])
+        Application.put_env(:mailglass, :adapters,
+          route_a:
+            {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :route_a]},
+          route_b:
+            {Mailglass.TestSupport.RouteRecordingAdapter, [test_pid: self(), route: :route_b]}
+        )
 
         delivery =
           Generators.delivery_fixture(
@@ -144,6 +150,7 @@ defmodule Mailglass.Outbound.WorkerTest do
               "subject" => "Test"
             }
           )
+
         delivery_id = delivery.id
 
         job = %Oban.Job{

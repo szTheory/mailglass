@@ -53,7 +53,8 @@ defmodule Mailglass.PublishError do
   end
 
   defp format_message(:publish_blocked_golden_drift, ctx) do
-    base = "Publish blocked: installer goldens drifted. Run:\n\nMIX_INSTALLER_ACCEPT_GOLDEN=1 mix test test/mailglass/install/install_golden_test.exs --warnings-as-errors"
+    base =
+      "Publish blocked: installer goldens drifted. Run:\n\nMIX_INSTALLER_ACCEPT_GOLDEN=1 mix test test/mailglass/install/install_golden_test.exs --warnings-as-errors"
 
     case ctx[:output] do
       output when is_binary(output) and output != "" ->

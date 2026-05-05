@@ -9,13 +9,17 @@ defmodule Mailglass.Webhook.ReplayTest do
   alias Mailglass.Webhook.Providers.Postmark
 
   describe "execute/1" do
-    test "successfully replays one stored webhook target and records requested and succeeded audits" do
+    test "successfully replays one stored webhook target and records requested and completed audit facts" do
       delivery = insert_delivery!(provider_message_id: "msg-replay-success")
 
       webhook_event =
         insert_webhook_event!(
           provider_event_id: "postmark-webhook-success",
-          raw_payload: %{"RecordType" => "Delivery", "MessageID" => "msg-replay-success", "ID" => 101}
+          raw_payload: %{
+            "RecordType" => "Delivery",
+            "MessageID" => "msg-replay-success",
+            "ID" => 101
+          }
         )
 
       assert {:ok, result} =
@@ -54,6 +58,7 @@ defmodule Mailglass.Webhook.ReplayTest do
       assert succeeded.metadata["actor_id"] == "operator-1"
       assert succeeded.metadata["outcome"] == "replayed"
       assert succeeded.metadata["requested_audit_event_id"] == requested.id
+      refute succeeded.metadata["outcome"] == "noop"
     end
 
     test "returns a noop outcome when replay converges on existing ledger rows" do
@@ -75,7 +80,16 @@ defmodule Mailglass.Webhook.ReplayTest do
       assert result.new_event_count == 0
       assert result.replayed_event_count == 1
 
-      assert TestRepo.aggregate(WebhookEvent, :count) == 1
+      assert 1 ==
+               TestRepo.aggregate(
+                 from(webhook_event in WebhookEvent,
+                   where:
+                     webhook_event.provider == ^ingest_result.webhook_event.provider and
+                       webhook_event.provider_event_id ==
+                         ^ingest_result.webhook_event.provider_event_id
+                 ),
+                 :count
+               )
       [delivered] = delivery_events_for(ingest_result.webhook_event.id, :delivered)
       [requested] = replay_events_for(ingest_result.webhook_event.id, :webhook_replay_requested)
       [succeeded] = replay_events_for(ingest_result.webhook_event.id, :webhook_replay_succeeded)
@@ -84,6 +98,7 @@ defmodule Mailglass.Webhook.ReplayTest do
       assert requested.metadata["actor_id"] == "operator-2"
       assert succeeded.metadata["actor_id"] == "operator-2"
       assert succeeded.metadata["outcome"] == "noop"
+      refute succeeded.metadata["outcome"] == "replayed"
     end
 
     test "rejects tenant mismatches before replay work begins" do

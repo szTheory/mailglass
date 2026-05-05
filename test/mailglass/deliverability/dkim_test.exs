@@ -53,7 +53,10 @@ defmodule Mailglass.Deliverability.DKIMTest do
         ]
       })
 
-    assert Enum.any?(result.findings, &(&1.status == :cannot_verify and &1.check == :malformed_selector_data))
+    assert Enum.any?(
+             result.findings,
+             &(&1.status == :cannot_verify and &1.check == :malformed_selector_data)
+           )
   end
 
   test "delegating CNAME selectors are accepted without claiming domain-wide success" do

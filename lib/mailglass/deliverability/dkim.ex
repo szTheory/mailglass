@@ -76,7 +76,12 @@ defmodule Mailglass.Deliverability.DKIM do
 
     cond do
       not is_binary(selector) or String.trim(selector) == "" ->
-        selector_issue(normalized_selector, :cannot_verify, :invalid_selector, "Selector entry is malformed")
+        selector_issue(
+          normalized_selector,
+          :cannot_verify,
+          :invalid_selector,
+          "Selector entry is malformed"
+        )
 
       malformed_txt?(txt_records) or malformed_cname?(cname) ->
         selector_issue(
@@ -105,7 +110,13 @@ defmodule Mailglass.Deliverability.DKIM do
   end
 
   defp analyze_selector(selector_entry) do
-    normalized_selector = %{selector: nil, domain: nil, txt_records: [], cname: nil, raw: selector_entry}
+    normalized_selector = %{
+      selector: nil,
+      domain: nil,
+      txt_records: [],
+      cname: nil,
+      raw: selector_entry
+    }
 
     {
       [
@@ -291,7 +302,11 @@ defmodule Mailglass.Deliverability.DKIM do
             observed_selector(selector, tags),
             "Confirm your ESP signs mail with this selector and rotate keys on your normal schedule."
           )
-          |> with_evidence(%{selector: selector.selector, domain: selector.domain, tags: Map.take(tags, ["k", "h", "t"])})
+          |> with_evidence(%{
+            selector: selector.selector,
+            domain: selector.domain,
+            tags: Map.take(tags, ["k", "h", "t"])
+          })
         ]
     end
   end
@@ -383,7 +398,9 @@ defmodule Mailglass.Deliverability.DKIM do
     "Found selector #{selector.selector} with DKIM key type #{key_type}."
   end
 
-  defp selector_label(%{selector: selector}) when is_binary(selector) and selector != "", do: selector
+  defp selector_label(%{selector: selector}) when is_binary(selector) and selector != "",
+    do: selector
+
   defp selector_label(_selector), do: "unknown"
 
   defp format_parse_error(:missing_version_tag), do: "missing v=DKIM1"

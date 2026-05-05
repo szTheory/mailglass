@@ -19,13 +19,13 @@
 
 **Why now:** v0.5 reduced integration friction. The next gap before `v1.0` is operational maturity during real incidents, support, and regression prevention.
 
-**Progress:** 0/3 phases complete
+**Progress:** 3/3 phases complete
 
 | Phase | Status | Goal | Requirements |
 |-------|--------|------|--------------|
-| 32 | Not started | Operators can replay and reconcile delivery state safely, with clear audit trails and defensible authorization boundaries. | `MAT-01` |
-| 33 | Not started | Operators can diagnose production delivery issues through documented telemetry and incident-response workflows. | `MAT-02` |
-| 34 | Not started | Maintainers can trust automated verification to catch the most material support and regression gaps before `v1.0`. | `MAT-03` |
+| 32 | ✅ Complete | Operators can replay and reconcile delivery state safely, with clear audit trails and defensible authorization boundaries. | `MAT-01` |
+| 33 | ✅ Complete | Operators can diagnose production delivery issues through documented telemetry and incident-response workflows. | `MAT-02` |
+| 34 | ✅ Complete | Maintainers can trust automated verification to catch the most material support and regression gaps before `v1.0`. | `MAT-03` |
 
 ## Phase Details
 
@@ -40,9 +40,9 @@
 **Plans**: 3 plans
 
 Plans:
-- [ ] 32-01-PLAN.md — Action-time replay authorization and exact-target guardrails
-- [ ] 32-02-PLAN.md — Shared repair-state wording for replay availability, outcome, and effect
-- [ ] 32-03-PLAN.md — Reconcile fallback contract, docs, and regression coverage
+- [x] 32-01-PLAN.md — Action-time replay authorization and exact-target guardrails
+- [x] 32-02-PLAN.md — Shared repair-state wording for replay availability, outcome, and effect
+- [x] 32-03-PLAN.md — Reconcile fallback contract, docs, and regression coverage
 
 ### Phase 33: Observability & Incident Support
 **Goal**: Operators can diagnose production delivery issues through documented telemetry, backlog signals, and incident-response workflows.
@@ -52,10 +52,12 @@ Plans:
   1. Delivery, webhook ingest, orphan reconciliation, and replay/reconcile signals are documented in one operator-facing support surface.
   2. Incident-response guidance explains how to diagnose the highest-value production failure modes without exposing PII.
   3. Support workflows are consistent with the actual telemetry and admin capabilities shipped in the codebase.
-**Plans**: 0 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [x] 33-01-PLAN.md — Canonical incident guide, telemetry contract correction, and docs-alignment tests
+- [x] 33-02-PLAN.md — Tenant-scoped support-summary read model backed by durable webhook and ledger facts
+- [x] 33-03-PLAN.md — Operator support cards, privacy-minimized overview cues, and LiveView regression coverage
 
 ### Phase 34: Verification & Regression Closure
 **Goal**: Maintainers can trust automated verification to catch the most material support and regression gaps before `v1.0`.
@@ -65,10 +67,12 @@ Plans:
   1. The highest-risk deferred verification seams have explicit automated coverage or a documented enforced gate.
   2. CI/support validation reflects the actual production-maturity contract being promised for `v0.6`.
   3. The milestone can close without carrying forward material support-critical regressions as undocumented debt.
-**Plans**: 0 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [x] 34-01-PLAN.md — Root support-contract authority and bootstrap honesty
+- [x] 34-02-PLAN.md — Admin support-contract authority and bootstrap honesty
+- [x] 34-03-PLAN.md — Honest orchestrator, explicit CI contract, and advisory/docs alignment
 
 ## Backlog
 

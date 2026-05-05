@@ -72,7 +72,9 @@ defmodule Mailglass.Deliverability.SPFTest do
       SPF.analyze(
         %{
           domain: root_domain,
-          txt_records: ["v=spf1 " <> Enum.map_join(include_domains, " ", &"include:#{&1}") <> " -all"]
+          txt_records: [
+            "v=spf1 " <> Enum.map_join(include_domains, " ", &"include:#{&1}") <> " -all"
+          ]
         },
         resolver: DeliverabilityResolverStub
       )
@@ -97,7 +99,9 @@ defmodule Mailglass.Deliverability.SPFTest do
       SPF.analyze(
         %{
           domain: root_domain,
-          txt_records: ["v=spf1 " <> Enum.map_join(include_domains, " ", &"include:#{&1}") <> " -all"]
+          txt_records: [
+            "v=spf1 " <> Enum.map_join(include_domains, " ", &"include:#{&1}") <> " -all"
+          ]
         },
         resolver: DeliverabilityResolverStub
       )

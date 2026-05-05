@@ -69,6 +69,7 @@ defmodule Mailglass.Deliverability.ResultTest do
     assert result.summary == %{pass: 0, warn: 0, fail: 0, cannot_verify: 0}
     assert result.facts.spf == %{records: ["v=spf1 -all"]}
     assert result.facts.dkim == %{}
+
     assert result.resolver_errors == [
              %{lookup: :txt, domain: "selector._domainkey.example.com", reason: :timeout}
            ]

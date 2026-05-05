@@ -1,5 +1,28 @@
 import Config
 
+# Mailglass core test runtime for the sibling package's own test suite.
+config :mailglass,
+  adapter: {Mailglass.Adapters.Fake, []},
+  repo: MailglassAdmin.TestRepo,
+  tenancy: Mailglass.Tenancy.SingleTenant,
+  suppression_store: Mailglass.SuppressionStore.Ecto,
+  async_adapter: :task_supervisor,
+  adapter_endpoint: "mailglass-test-endpoint"
+
+config :mailglass, MailglassAdmin.TestRepo,
+  username: System.get_env("POSTGRES_USER", "postgres"),
+  password: System.get_env("POSTGRES_PASSWORD", "postgres"),
+  hostname: System.get_env("POSTGRES_HOST", "localhost"),
+  database: "mailglass_test#{System.get_env("MIX_TEST_PARTITION")}",
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 10,
+  prepare: :unnamed,
+  disconnect_on_error_codes: [:internal_error]
+
+config :mailglass, :tracking,
+  host: "localhost:4000",
+  salts: ["test-salt"]
+
 # Synthetic adopter endpoint for router + LiveView test coverage.
 # See test/support/endpoint_case.ex. The `secret_key_base` literal is
 # 72 chars (>= Phoenix's 64-byte minimum).
@@ -18,3 +41,5 @@ config :mailglass_admin, MailglassAdmin.TestAdopter.Endpoint,
   live_view: [signing_salt: "mailglass_admin_test_signing_salt_0123"],
   pubsub_server: Mailglass.PubSub,
   render_errors: [formats: [html: MailglassAdmin.TestAdopter.ErrorHTML], layout: false]
+
+config :logger, level: :warning

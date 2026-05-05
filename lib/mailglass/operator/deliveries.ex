@@ -26,7 +26,11 @@ defmodule Mailglass.Operator.Deliveries do
     |> maybe_filter_status(normalized[:status])
     |> maybe_filter_event(normalized[:event] || normalized[:last_event_type])
     |> maybe_filter_window(normalized[:window_hours] || normalized[:recent_window_hours])
-    |> order_by([delivery], desc: delivery.last_event_at, desc: delivery.inserted_at, desc: delivery.id)
+    |> order_by([delivery],
+      desc: delivery.last_event_at,
+      desc: delivery.inserted_at,
+      desc: delivery.id
+    )
     |> limit(^limit)
     |> select([delivery], %{
       id: delivery.id,
@@ -48,7 +52,9 @@ defmodule Mailglass.Operator.Deliveries do
   defp normalize_filters(filters) when is_list(filters), do: Map.new(filters)
   defp normalize_filters(filters) when is_map(filters), do: Map.new(filters)
 
-  defp fetch_tenant_id!(%{tenant_id: tenant_id}) when is_binary(tenant_id) and tenant_id != "", do: tenant_id
+  defp fetch_tenant_id!(%{tenant_id: tenant_id}) when is_binary(tenant_id) and tenant_id != "",
+    do: tenant_id
+
   defp fetch_tenant_id!(_filters), do: raise(ArgumentError, "tenant_id is required")
 
   defp limit_from(filters, opts) do
@@ -83,7 +89,8 @@ defmodule Mailglass.Operator.Deliveries do
     where(query, [delivery], delivery.last_event_at >= ^since)
   end
 
-  defp maybe_filter_window(query, window_hours) when is_integer(window_hours) and window_hours > 0 do
+  defp maybe_filter_window(query, window_hours)
+       when is_integer(window_hours) and window_hours > 0 do
     since = DateTime.add(Mailglass.Clock.utc_now(), -window_hours, :hour)
     where(query, [delivery], delivery.last_event_at >= ^since)
   end

@@ -5,10 +5,12 @@ defmodule MailglassAdmin.Operator.ReplayModal do
 
   use Phoenix.Component
 
-  attr :open?, :boolean, required: true
-  attr :delivery, :map, default: nil
-  attr :replay_targets, :map, default: nil
-  attr :selected_target_id, :string, default: nil
+  alias MailglassAdmin.Operator.RepairState
+
+  attr(:open?, :boolean, required: true)
+  attr(:delivery, :map, default: nil)
+  attr(:replay_targets, :map, default: nil)
+  attr(:selected_target_id, :string, default: nil)
 
   def replay_modal(assigns) do
     ~H"""
@@ -35,7 +37,8 @@ defmodule MailglassAdmin.Operator.ReplayModal do
             <% %{status: :exact, candidate: candidate} -> %>
               <div class="mt-6 space-y-4">
                 <p class="text-sm text-base-content">
-                  This delivery resolves to one exact webhook target. Confirm to replay that stored request.
+                  Replay is <span class="font-semibold">{RepairState.availability_label(:exact)}</span>.
+                  Confirm to replay that stored request.
                 </p>
                 <.target_card candidate={candidate} selected={true} />
               </div>
@@ -43,6 +46,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
             <% %{status: :ambiguous, candidates: candidates} -> %>
               <div class="mt-6 space-y-4">
                 <p class="text-sm text-base-content">
+                  Replay is <span class="font-semibold">{RepairState.availability_label(:ambiguous)}</span>.
                   Choose one webhook target. The operator UI will not guess across multiple replayable webhook rows.
                 </p>
 
@@ -69,7 +73,10 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               <div class="mt-6 space-y-4">
                 <div class="rounded-box border border-warning bg-warning/10 p-4 text-sm text-base-content">
                   <p class="font-bold">Replay unavailable</p>
-                  <p class="mt-1">{unavailable_copy(reason)}</p>
+                  <p class="mt-1">
+                    Replay is <span class="font-semibold">{RepairState.availability_label(:unavailable)}</span>.
+                    {RepairState.unavailable_reason_copy(reason)}
+                  </p>
                 </div>
               </div>
 
@@ -99,8 +106,8 @@ defmodule MailglassAdmin.Operator.ReplayModal do
     """
   end
 
-  attr :candidate, :map, required: true
-  attr :selected, :boolean, default: false
+  attr(:candidate, :map, required: true)
+  attr(:selected, :boolean, default: false)
 
   defp target_card(assigns) do
     ~H"""
@@ -134,21 +141,12 @@ defmodule MailglassAdmin.Operator.ReplayModal do
 
   defp confirm_enabled?(_replay_targets, _selected_target_id), do: false
 
-  defp unavailable_copy(:historical_sendgrid_batch),
-    do: "Historical SendGrid child events do not safely imply one raw webhook identity."
-
-  defp unavailable_copy(:missing_replay_linkage),
-    do: "Historical rows without exact webhook linkage cannot be replayed safely."
-
-  defp unavailable_copy(:no_delivery_events),
-    do: "This delivery does not yet have any linked webhook events to replay."
-
-  defp unavailable_copy(_reason), do: "Replay target resolution is unavailable for this delivery."
-
   defp present(nil), do: "Unavailable"
   defp present(""), do: "Unavailable"
   defp present(value), do: value
 
   defp format_datetime(nil), do: "Pending"
-  defp format_datetime(%DateTime{} = datetime), do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
+
+  defp format_datetime(%DateTime{} = datetime),
+    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
 end

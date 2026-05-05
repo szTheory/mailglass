@@ -116,5 +116,19 @@ defmodule Mailglass.DocsContractTest do
       assert admin =~ "mix mailglass.reconcile"
       assert admin =~ "exact stored webhook target"
     end
+
+    test "MAINTAINING.md pins the required versus advisory verification contract" do
+      maintaining = File.read!("MAINTAINING.md")
+
+      assert maintaining =~ "scripts/verify_support_contract.sh"
+      assert maintaining =~ "Support Contract Core"
+      assert maintaining =~ "Support Contract Admin"
+      assert maintaining =~ "Compile No Optional Deps"
+      assert maintaining =~ "Core Full Suite Advisory"
+      assert maintaining =~ "Provider Compatibility Advisory"
+      assert maintaining =~ "Provider Live Advisory"
+      assert maintaining =~ "cron and `workflow_dispatch` canary"
+      assert maintaining =~ "not a merge blocker"
+    end
   end
 end

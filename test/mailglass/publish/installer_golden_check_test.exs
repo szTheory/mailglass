@@ -24,7 +24,10 @@ defmodule Mailglass.Publish.InstallerGoldenCheckTest do
              InstallerGoldenCheck.run("/tmp/repo", runner)
 
     message = Exception.message(error)
-    assert message =~ "MIX_INSTALLER_ACCEPT_GOLDEN=1 mix test test/mailglass/install/install_golden_test.exs --warnings-as-errors"
+
+    assert message =~
+             "MIX_INSTALLER_ACCEPT_GOLDEN=1 mix test test/mailglass/install/install_golden_test.exs --warnings-as-errors"
+
     assert message =~ "snapshot mismatch"
   end
 end

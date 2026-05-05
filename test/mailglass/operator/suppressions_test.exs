@@ -84,7 +84,11 @@ defmodule Mailglass.Operator.SuppressionsTest do
         source: "ops:review"
       })
 
-      state = Suppressions.get_delivery_suppression_state(%{tenant_id: "tenant-a", delivery: delivery}, [])
+      state =
+        Suppressions.get_delivery_suppression_state(
+          %{tenant_id: "tenant-a", delivery: delivery},
+          []
+        )
 
       assert state.reversibility == :reversible
       assert state.reversibility_copy == "Reversible in a later phase"

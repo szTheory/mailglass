@@ -29,6 +29,8 @@ defmodule Mailglass.Installer.Apply do
     manifest_path = Keyword.get(opts, :manifest_path, Manifest.default_path())
     dry_run? = Keyword.get(opts, :dry_run, false)
 
+    validate_preflight(opts)
+
     with {:ok, manifest} <- Manifest.load(manifest_path),
          {:ok, operations, next_manifest} <- apply_operations(plan, manifest, opts),
          :ok <- maybe_write_manifest(next_manifest, manifest_path, dry_run?) do
@@ -39,6 +41,37 @@ defmodule Mailglass.Installer.Apply do
          manifest_path: manifest_path,
          dry_run?: dry_run?
        }}
+    end
+  end
+
+  defp validate_preflight(opts) do
+    otp_app = Keyword.get(opts, :otp_app) || Mailglass.Installer.Plan.detect_otp_app()
+    web_dir = to_string(otp_app) <> "_web"
+    endpoint_path = "lib/#{web_dir}/endpoint.ex"
+
+    if File.exists?(endpoint_path) do
+      contents = File.read!(endpoint_path)
+
+      start_marker = Templates.endpoint_webhook_block_start()
+      end_marker = Templates.endpoint_webhook_block_end()
+
+      stripped_contents =
+        case replace_managed_block(contents, start_marker, end_marker, "") do
+          {:ok, stripped} -> stripped
+          _ -> contents
+        end
+
+      if String.contains?(stripped_contents, "plug Plug.Parsers") and
+           not String.contains?(stripped_contents, "body_reader") do
+        Mix.shell().info([
+          :yellow,
+          "![warning] Found an existing `plug Plug.Parsers` in #{endpoint_path} without a `:body_reader`.\n",
+          :reset,
+          "Mailglass requires a `:body_reader` to verify webhook signatures. Ensure that either:\n",
+          "1. Your existing parser includes `body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}`\n",
+          "2. The Mailglass-managed parser block remains ABOVE your existing parser."
+        ])
+      end
     end
   end
 

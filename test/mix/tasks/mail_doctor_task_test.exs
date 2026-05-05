@@ -66,7 +66,9 @@ defmodule Mix.Tasks.Mail.DoctorTest do
       put_success_fixtures()
 
       default_output = run_task!(["--domain", "example.com", "--dkim-selector", "selector1"])
-      verbose_output = run_task!(["--domain", "example.com", "--dkim-selector", "selector1", "--verbose"])
+
+      verbose_output =
+        run_task!(["--domain", "example.com", "--dkim-selector", "selector1", "--verbose"])
 
       refute default_output =~ "Evidence:"
       assert verbose_output =~ "Evidence:"
@@ -83,7 +85,14 @@ defmodule Mix.Tasks.Mail.DoctorTest do
         )
 
       human_output =
-        run_task!(["--domain", "parity.example", "--dkim-selector", "selector1", "--dkim-selector", "selector2"])
+        run_task!([
+          "--domain",
+          "parity.example",
+          "--dkim-selector",
+          "selector1",
+          "--dkim-selector",
+          "selector2"
+        ])
 
       verbose_output =
         run_task!([
@@ -116,6 +125,7 @@ defmodule Mix.Tasks.Mail.DoctorTest do
 
       assert decoded["domain"] == "parity.example"
       assert decoded["schema_version"] == 1
+
       assert decoded["summary"] == %{
                "cannot_verify" => 0,
                "fail" => 1,
@@ -197,11 +207,11 @@ defmodule Mix.Tasks.Mail.DoctorTest do
       txt: %{
         "parity.example" => {:ok, ["v=spf1 include:_spf.mailer.parity.example -all"]},
         "_spf.mailer.parity.example" => {:ok, ["v=spf1 ip4:192.0.2.0/24 -all"]},
-        "_dmarc.parity.example" => {:ok, ["v=DMARC1; p=quarantine; rua=mailto:dmarc@parity.example"]},
+        "_dmarc.parity.example" =>
+          {:ok, ["v=DMARC1; p=quarantine; rua=mailto:dmarc@parity.example"]},
         "selector1._domainkey.parity.example" => {:ok, ["v=DKIM1; k=rsa; p=YWJjREVGR0g="]},
         "selector2._domainkey.parity.example" => {:ok, ["v=DKIM1; p="]},
-        "default._bimi.parity.example" =>
-          {:ok, ["v=BIMI1; l=https://cdn.parity.example/logo.svg"]}
+        "default._bimi.parity.example" => {:ok, ["v=BIMI1; l=https://cdn.parity.example/logo.svg"]}
       },
       mx: %{
         "parity.example" => {:ok, [%{exchange: "mx1.parity.example", preference: 10}]}

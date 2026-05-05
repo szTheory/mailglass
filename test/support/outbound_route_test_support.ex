@@ -1,10 +1,14 @@
 defmodule Mailglass.TestSupport.RouteRecordingAdapter do
+  @moduledoc false
   @behaviour Mailglass.Adapter
 
   @impl Mailglass.Adapter
   def deliver(%Mailglass.Message{} = msg, opts) do
     if pid = Keyword.get(opts, :test_pid) do
-      send(pid, {:adapter_route, Keyword.get(opts, :route), msg.metadata[:delivery_id], msg.tenant_id})
+      send(
+        pid,
+        {:adapter_route, Keyword.get(opts, :route), msg.metadata[:delivery_id], msg.tenant_id}
+      )
     end
 
     route = Keyword.get(opts, :route, :unknown)
@@ -18,6 +22,7 @@ defmodule Mailglass.TestSupport.RouteRecordingAdapter do
 end
 
 defmodule Mailglass.TestTenancy.RouteA do
+  @moduledoc false
   @behaviour Mailglass.Tenancy
 
   @impl Mailglass.Tenancy
@@ -28,6 +33,7 @@ defmodule Mailglass.TestTenancy.RouteA do
 end
 
 defmodule Mailglass.TestTenancy.RouteB do
+  @moduledoc false
   @behaviour Mailglass.Tenancy
 
   @impl Mailglass.Tenancy
@@ -38,6 +44,7 @@ defmodule Mailglass.TestTenancy.RouteB do
 end
 
 defmodule Mailglass.TestTenancy.InvalidRoute do
+  @moduledoc false
   @behaviour Mailglass.Tenancy
 
   @impl Mailglass.Tenancy

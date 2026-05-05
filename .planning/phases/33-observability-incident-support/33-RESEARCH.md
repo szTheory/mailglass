@@ -360,16 +360,14 @@ MailglassAdmin.Auth.authorize(adapter, :destructive_action, %{
 
 | # | Claim | Section | Risk if Wrong |
 |---|-------|---------|---------------|
-| A1 | Keeping `guides/webhook-troubleshooting.md` as a shim path is preferable to deleting it immediately. [ASSUMED] | Open Questions | Low. This affects doc migration ergonomics, not runtime behavior or trust boundaries. |
+| A1 | `guides/webhook-troubleshooting.md` should remain as a thin entry shim that points to the canonical operator guide and exact webhook reference sections, rather than being deleted outright in Phase 33. [RESOLVED] | Open Questions (RESOLVED) | Low. This affects doc migration ergonomics, not runtime behavior or trust boundaries. |
 
-If planners prefer, they can ignore `A1` and keep the research recommendation set unchanged. [VERIFIED: codebase grep]
-
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `guides/webhook-troubleshooting.md` remain as a thin entry shim or be fully replaced by the canonical operator guide?**
-   - What we know: the current troubleshooting content is useful, but it is narrower than the Phase 33 support contract and now overlaps with replay/reconcile docs. [VERIFIED: codebase grep]
-   - What's unclear: whether maintainers want to preserve the old path for inbound links or simplify to one guide immediately. [ASSUMED]
-   - Recommendation: keep the file path, replace it with a short intro plus links into the canonical guide and `guides/webhooks.md`, then remove duplication. [ASSUMED]
+   - RESOLVED: keep the path in Phase 33 as a short operator entry shim with links into `guides/operator-incident-support.md` and the exact webhook setup/reference sections in `guides/webhooks.md`. [RESOLVED]
+   - Why: this preserves inbound-link stability and existing operator muscle memory while eliminating duplicated troubleshooting logic that would otherwise drift again. [VERIFIED: codebase grep]
+   - Planning consequence: 33-01 should rewrite the file into a concise redirect-style document, not delete it and not leave a second canonical troubleshooting narrative in place. [RESOLVED]
 
 ## Environment Availability
 
@@ -457,7 +455,7 @@ If planners prefer, they can ignore `A1` and keep the research recommendation se
 - None. All recommendations were grounded in repo sources or Hex metadata. [VERIFIED: codebase grep]
 
 ### Tertiary (LOW confidence)
-- None beyond the open-question recommendation about whether to keep `guides/webhook-troubleshooting.md` as a shim path. [ASSUMED]
+- None. The only prior open question about `guides/webhook-troubleshooting.md` has been resolved in favor of a thin shim path for Phase 33. [RESOLVED]
 
 ## Metadata
 

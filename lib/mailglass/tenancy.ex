@@ -78,11 +78,13 @@ defmodule Mailglass.Tenancy do
     * `:message` — the `%Mailglass.Message{}` being delivered
     * `:mode` — `:sync` or `:async`
   """
-  @callback resolve_outbound_adapter_ref(context :: %{
-              tenant_id: String.t() | nil,
-              message: Mailglass.Message.t(),
-              mode: :sync | :async
-            }) :: {:ok, outbound_adapter_ref()} | :default
+  @callback resolve_outbound_adapter_ref(
+              context :: %{
+                tenant_id: String.t() | nil,
+                message: Mailglass.Message.t(),
+                mode: :sync | :async
+              }
+            ) :: {:ok, outbound_adapter_ref()} | :default
 
   @doc """
   Optional: resolve the tenant from a verified webhook context (D-12).
