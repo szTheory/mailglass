@@ -37,10 +37,12 @@
   1. Replay and reconcile actions require tenant-safe target resolution and recent authorization where appropriate.
   2. Operator-visible replay outcomes stay auditable and clearly distinguish new work, no-op outcomes, and failures.
   3. Regression coverage exists for the most failure-prone replay/reconcile operator paths.
-**Plans**: 0 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [ ] 32-01-PLAN.md — Action-time replay authorization and exact-target guardrails
+- [ ] 32-02-PLAN.md — Shared repair-state wording for replay availability, outcome, and effect
+- [ ] 32-03-PLAN.md — Reconcile fallback contract, docs, and regression coverage
 
 ### Phase 33: Observability & Incident Support
 **Goal**: Operators can diagnose production delivery issues through documented telemetry, backlog signals, and incident-response workflows.
