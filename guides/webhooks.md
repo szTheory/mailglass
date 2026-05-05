@@ -471,9 +471,7 @@ performs the orphan sweep in Oban-less installs and reports:
   sweep
 
 This is a maintenance backfill path, not a per-delivery operator action.
-The Admin UI keeps replay as the only delivery-detail repair action. Replay
-acts on one exact stored webhook row for one selected delivery; reconcile is
-the background-first sweep for backlog rows that remain unmatched.
+The Admin UI keeps replay as the only delivery-detail repair action. Replay acts on one exact stored webhook row for one selected delivery; reconcile is the background-first sweep for backlog rows that remain unmatched.
 
 ## 6. Webhook event retention (Pruner)
 

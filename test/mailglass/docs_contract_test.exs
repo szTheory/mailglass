@@ -82,5 +82,36 @@ defmodule Mailglass.DocsContractTest do
       refute guide =~ "registry process"
       refute guide =~ "cache invalidation"
     end
+
+    test "Phase 33 support docs use the shipped telemetry and repair vocabulary" do
+      telemetry = File.read!("guides/telemetry.md")
+      troubleshooting = File.read!("guides/webhook-troubleshooting.md")
+      webhooks = File.read!("guides/webhooks.md")
+      admin = File.read!("mailglass_admin/README.md")
+
+      assert telemetry =~ "[:mailglass, :render, :message"
+      assert telemetry =~ "[:mailglass, :outbound, :dispatch"
+      assert telemetry =~ "[:mailglass, :webhook, :ingest"
+      assert telemetry =~ "[:mailglass, :webhook, :reconcile"
+      refute telemetry =~ "[:mailglass, :deliver]"
+      refute telemetry =~ "[:mailglass, :reconcile]"
+      refute telemetry =~ "metadata.function"
+
+      assert troubleshooting =~ "canonical incident guide"
+      assert troubleshooting =~ "Exact webhook reference sections"
+      assert troubleshooting =~ "provider lifecycle facts"
+      assert troubleshooting =~ "replay facts"
+      assert troubleshooting =~ "reconcile facts"
+
+      assert webhooks =~ "provider lifecycle facts, replay facts, and reconcile facts"
+      assert webhooks =~ "Replay acts on one exact stored webhook row"
+      assert webhooks =~ "background-first sweep"
+
+      assert admin =~ "provider lifecycle facts"
+      assert admin =~ "replay facts"
+      assert admin =~ "reconcile facts"
+      assert admin =~ "mix mailglass.reconcile"
+      assert admin =~ "exact stored webhook target"
+    end
   end
 end

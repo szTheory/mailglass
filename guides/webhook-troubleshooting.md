@@ -14,7 +14,7 @@ canonical incident guide. This page is only the webhook-specific entry shim.
 - For "replay completed but nothing changed", start at
   [Replay completed but nothing changed](./operator-incident-support.md#replay-completed-but-nothing-changed).
 
-## Webhook reference sections
+## Exact webhook reference sections
 
 - Route wiring, provider setup, and supported providers:
   [webhooks.md](./webhooks.md)
@@ -24,11 +24,11 @@ canonical incident guide. This page is only the webhook-specific entry shim.
 
 ## Fast boundary reminders
 
-- Provider lifecycle facts come from the provider send/accept/retry behavior
+- provider lifecycle facts come from the provider send/accept/retry behavior
   plus normalized webhook events.
-- Replay facts come from one operator-triggered replay against one exact stored
+- replay facts come from one operator-triggered replay against one exact stored
   webhook row.
-- Reconcile facts come from the background-first orphan sweep and appended
+- reconcile facts come from the background-first orphan sweep and appended
   `:reconciled` audit events.
 
 If you need the full "mailglass can tell you this / cannot tell you this"
