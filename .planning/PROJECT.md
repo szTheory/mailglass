@@ -10,13 +10,13 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**v0.5.0 shipped 2026-05-03. Milestone v0.6 "Production Maturity" is active as of 2026-05-05. Phase 32 is next.**
+**v0.6 Production Maturity shipped 2026-05-05. `v1.0 Stability Lock` is the next recommended milestone.**
 
 - `mailglass` 0.5.0
 - `mailglass_admin` 0.5.0
 
+v0.6 milestone closed 2026-05-05. 3 phases (32-34), 9 plans, Production Maturity complete.
 v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening complete.
-v0.4 milestone closed 2026-05-02. 6 phases (22-27), 21 plans, Operator Confidence complete.
 
 **Codebase characteristics:**
 - Three sibling Hex packages (`mailglass`, `mailglass_admin`, `mailglass_inbound` deferred until after the pre-`v1.0` stability arc)
@@ -30,45 +30,30 @@ v0.4 milestone closed 2026-05-02. 6 phases (22-27), 21 plans, Operator Confidenc
 - Preview LiveView shipped at v0.1; production admin workflows, replay history, and tenant-safe operator actions shipped by v0.5
 
 **Open issues / debt**:
-- Replay and reconcile workflows need production-grade hardening around authorization, ambiguity handling, and incident follow-through.
-- Operator-facing observability stops at raw telemetry/docs; support workflows are not yet consolidated into a production incident playbook.
-- The highest-risk deferred verification gaps are still concentrated around support workflows, advisory/live-provider lanes, and regression-prone operational seams.
+- GitHub branch-protection verification remains a manual closeout step because the required-check configuration lives outside the repo.
+- Non-blocking boundary warnings remain in support-summary and admin probe verification paths.
 - Bare `mix test` citext-OID-cache race remains a known non-blocking test-environment sharp edge.
 - Phase 4 standard-depth review WR-01..WR-06 remains tracked but non-blocking.
 
 ## Latest Completed Milestone
 
 <details>
-<summary>v0.3 Webhook Coverage Complete — shipped on Hex as 0.3.2, milestone closed 2026-04-30</summary>
+<summary>v0.6 Production Maturity — milestone closed 2026-05-05</summary>
 
-**Goal:** Unblock and verify the Resend webhook provider, completing DELIV-04 coverage across all five major providers (Postmark, SendGrid, Mailgun, SES, Resend), then publish v0.3.x to Hex. **DELIV-04 marked complete; v0.3.0 shipped as v0.3.2 after a 3-cycle Conventional-Commits / Release Please patch recovery — see `.planning/phases/18-ship-v0-3-0/18-02-PUBLISH-EVIDENCE.md` for the chain.**
+**Goal:** Make mailglass resilient and legible under real production support conditions before locking the transactional/admin core for `v1.0`.
 
-**Target features:**
+- **Replay / reconcile hardening** — operator replay now resolves exact tenant-safe targets before adopter-owned destructive-action authorization; reconcile now has one honest contract with or without Oban. ✓
+- **Observability / support surface** — canonical incident-support docs, truthful telemetry references, tenant-scoped support-summary read model, masked overview cues, and exemplar drilldowns are now shipped. ✓
+- **Verification closure** — explicit root/admin support-contract authorities and the three required CI buckets are now the authoritative pre-`v1.0` support contract. ✓
 
-- **Resend verification** — Fix test suite blocker; verify RESEND-01 (Svix HMAC-SHA256 signature verification using `svix-id`, `svix-timestamp`, and raw request body) and RESEND-02 (event normalization to Anymail taxonomy); confirm Phase 14 complete. ✓
-- **v0.3.x release** — CHANGELOG, webhooks.md Resend section, `mix mailglass.publish.check`, Hex publish ceremony. ✓ (mailglass 0.3.2 + mailglass_admin 0.3.2 live on Hex.pm 2026-04-29; HexDocs HTTP 200 for both)
+**Accepted closeout debt:**
 
-**Phase shape:** 2 phases (Phase 17 → Phase 18), continuing numbering from Phase 16.
-
-**Explicit deferrals:**
-
-- **v0.4** — DELIV-05 prod-mountable admin LiveView + DELIV-06 `mix mail.doctor` + DELIV-07 per-tenant adapter resolver + DX polish (`mix mailglass.gen.mailable`, richer test helpers)
-- **v0.5+** — `mailglass_inbound` separate sibling package (Action Mailbox equivalent)
+- Manual GitHub branch-protection verification remains external to the repo.
+- A small number of non-blocking boundary warnings remain in verification-time support surfaces.
 
 </details>
 
-## Current Milestone: v0.6 Production Maturity
-
-**Goal:** Make mailglass resilient and legible under real production support conditions.
-
-**Target features:**
-- Replay / reconcile hardening with explicit operator guardrails
-- Operator-facing observability and production incident-response docs
-- Deferred verification and regression closure for support-critical seams
-
-**Why now:** v0.5 made adoption smoother. The next credibility gap before `v1.0` is whether mailglass stays understandable, auditable, and supportable during real incidents.
-
-## Next Milestone Goals (post-v0.6)
+## Next Milestone Goals
 
 - **v1.0 Stability Lock** — API stability lock, long-lived deprecation policy, proof artifacts for production adoption, and final docs/positioning sweep once production maturity lands cleanly.
 - **Post-v1.0 Inbound** — `mailglass_inbound` separate sibling package (Action Mailbox equivalent: Router DSL, Mailbox behaviour, ingress plugs for Postmark/SendGrid/Mailgun/SES, SMTP relay via `gen_smtp`, async routing via Oban, dev Conductor LiveView) after the outbound/operator core is stable.
@@ -111,8 +96,10 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 ## Active
 
 - [x] `MAT-01` — operator replay and reconcile workflows are hardened with tenant-safe authorization, auditability, and defensible failure handling
-- [ ] `MAT-02` — operator-facing observability and incident-response/support docs cover real production failure modes
-- [ ] `MAT-03` — deferred verification and regression gaps are closed where they materially affect production maturity
+- [x] `MAT-02` — operator-facing observability and incident-response/support docs cover real production failure modes
+- [x] `MAT-03` — deferred verification and regression gaps are closed where they materially affect production maturity
+- [ ] `STAB-01` — adopter can rely on a documented stability and deprecation contract for the transactional/admin core
+- [ ] `STAB-02` — maintainer has proof artifacts demonstrating the core surface is stable enough for long-lived production adoption
 
 ## Out of Scope
 

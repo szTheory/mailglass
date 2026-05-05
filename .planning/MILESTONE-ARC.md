@@ -136,7 +136,7 @@ making setup, scaffolding, testing, and troubleshooting feel unusually smooth.
 
 **Unlocks next:** Production maturity and stabilization.
 
-### `active` — v0.6 Production Maturity
+### `shipped` — v0.6 Production Maturity
 
 **Goal:** Make the system resilient and legible under real production support
 conditions.
@@ -231,4 +231,4 @@ source of truth:
    drifting doc-by-doc.
 
 ---
-*Last updated: 2026-05-05 after activating v0.6 Production Maturity.*
+*Last updated: 2026-05-05 after shipping v0.6 Production Maturity.*

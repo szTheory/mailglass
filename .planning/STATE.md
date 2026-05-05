@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.6
-milestone_name: Production Maturity
-status: Phase 34 complete
-last_updated: "2026-05-05T19:46:54Z"
-last_activity: 2026-05-05 -- Completed Phase 34 verification closure and finished the v0.6 roadmap execution set
+milestone: none
+milestone_name: Ready for v1.0 Stability Lock
+status: v0.6 shipped
+last_updated: "2026-05-05T20:15:00Z"
+last_activity: 2026-05-05 -- Archived v0.6 Production Maturity and prepared the planning state for v1.0 initialization
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -18,18 +18,17 @@ progress:
 ## Project Reference
 
 **Core Value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current Focus:** v0.6 Production Maturity
+**Current Focus:** Ready to initialize v1.0 Stability Lock
 
 ## Current Position
 
-Phase: 34 - Verification & Regression Closure
+Phase: —
 Plan: —
-Status: Phase 34 complete
-Last activity: 2026-05-05 -- Completed Phase 34 verification closure and finished the v0.6 roadmap execution set
+Status: v0.6 shipped
+Last activity: 2026-05-05 -- Archived v0.6 Production Maturity and prepared the planning state for v1.0 initialization
 
 ## Session Continuity
 
-- v0.5 Adoption Hardening is complete and archived in current planning artifacts.
-- v0.6 replay/reconcile hardening, observability/support workflows, and verification closure are now all implemented in planning artifacts.
-- Phase 32 is complete; deferred human verification lives in `.planning/phases/32-replay-reconcile-hardening/32-UAT.md`.
-- Phase 33 is complete; the remaining root-level test bootstrap instability is deferred into Phase 34's verification-closure work.
+- v0.5 Adoption Hardening and v0.6 Production Maturity are both archived in milestone artifacts.
+- v0.6 closed with accepted debt limited to manual GitHub branch-protection verification and non-blocking boundary warnings in support-summary/admin probe verification paths.
+- The next recommended planning step is to initialize `v1.0 Stability Lock` with `$gsd-new-milestone`.
