@@ -5,6 +5,11 @@ Mountable LiveView surfaces for mailglass. Today that means:
 - a dev-preview dashboard for mailable iteration
 - a production operator dashboard for delivery inspection and targeted webhook replay inside an adopter-owned auth boundary
 
+The operator surface is delivery-centric. It helps an authenticated operator
+inspect provider lifecycle facts, replay facts, and reconcile facts for one
+selected delivery. The canonical support runbook lives in
+`guides/operator-incident-support.md`.
+
 ## Installation
 
 Add `mailglass_admin` to your adopter app's `mix.exs`:
@@ -84,6 +89,17 @@ delivery detail pane.
   / no-op convergence outcome.
 - Every replay attempt is ledger-audited with requested, succeeded, or failed
   facts that stay visible in the delivery timeline.
+
+## Operator support boundary
+
+- Provider lifecycle facts come from the delivery timeline, matched webhook
+  events, and the shipped telemetry families documented in `guides/telemetry.md`.
+- Replay facts are operator-triggered audit facts for one exact stored webhook
+  target.
+- Reconcile facts come from the background-first orphan sweep and
+  `mix mailglass.reconcile`.
+- `mailglass_admin` does not ship a separate observability dashboard,
+  cross-tenant incident console, or unauthenticated support route.
 
 ## LiveReload setup (optional)
 

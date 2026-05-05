@@ -302,6 +302,11 @@ for the rest of the ingest pipeline (normalize → persist → broadcast).
 
 ## 3. Telemetry recipes
 
+For the canonical support workflow, read
+[operator-incident-support.md](./operator-incident-support.md) first. The guide
+there keeps provider lifecycle facts, replay facts, and reconcile facts
+separate. This section is the webhook-specific telemetry reference.
+
 Mailglass emits six webhook events. All metadata complies with the
 telemetry PII policy — no `:ip`, `:user_agent`, `:remote_ip`, `:raw_body`,
 `:headers`, `:body`, `:to`, `:from`, `:subject`, `:recipient`,
@@ -466,7 +471,9 @@ performs the orphan sweep in Oban-less installs and reports:
   sweep
 
 This is a maintenance backfill path, not a per-delivery operator action.
-The Admin UI keeps replay as the only delivery-detail repair action.
+The Admin UI keeps replay as the only delivery-detail repair action. Replay
+acts on one exact stored webhook row for one selected delivery; reconcile is
+the background-first sweep for backlog rows that remain unmatched.
 
 ## 6. Webhook event retention (Pruner)
 
