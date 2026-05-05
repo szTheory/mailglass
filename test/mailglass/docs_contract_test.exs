@@ -88,14 +88,17 @@ defmodule Mailglass.DocsContractTest do
       troubleshooting = File.read!("guides/webhook-troubleshooting.md")
       webhooks = File.read!("guides/webhooks.md")
       admin = File.read!("mailglass_admin/README.md")
+      stale_deliver = "[:mailglass, :" <> "deliver]"
+      stale_reconcile = "[:mailglass, :" <> "reconcile]"
+      stale_metadata_key = "metadata." <> "function"
 
       assert telemetry =~ "[:mailglass, :render, :message"
       assert telemetry =~ "[:mailglass, :outbound, :dispatch"
       assert telemetry =~ "[:mailglass, :webhook, :ingest"
       assert telemetry =~ "[:mailglass, :webhook, :reconcile"
-      refute telemetry =~ "[:mailglass, :deliver]"
-      refute telemetry =~ "[:mailglass, :reconcile]"
-      refute telemetry =~ "metadata.function"
+      refute telemetry =~ stale_deliver
+      refute telemetry =~ stale_reconcile
+      refute telemetry =~ stale_metadata_key
 
       assert troubleshooting =~ "canonical incident guide"
       assert troubleshooting =~ "Exact webhook reference sections"
