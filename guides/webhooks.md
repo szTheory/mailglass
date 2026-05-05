@@ -417,14 +417,16 @@ config :mailglass, :postmark,
 > `ip_disallowed` rate increases via the signature-failure telemetry
 > handler above.
 
-## 5. Orphan reconciliation (Oban cron)
+## 5. Orphan reconciliation (background-first maintenance)
 
 When a webhook arrives BEFORE the matching `Delivery` row commits
 (empirical 5–30 s race for low-latency providers), mailglass inserts
 the event with `delivery_id: nil + needs_reconciliation: true`.
-`Mailglass.Webhook.Reconciler` (Oban worker) sweeps these orphans and
+`Mailglass.Webhook.Reconciler.reconcile/2` sweeps these orphans and
 APPENDS a `:reconciled` event when the matching `Delivery` later
-commits (append-only ledger — never UPDATE).
+commits (append-only ledger — never UPDATE). When Oban is installed,
+the same canonical function also runs through the `Mailglass.Webhook.Reconciler`
+worker on a background cron schedule.
 
 Wire the cron in your Oban config:
 
@@ -446,7 +448,8 @@ config :my_app, Oban,
 
 ### Running without Oban
 
-Call the mix tasks from system cron / Kubernetes CronJob:
+Call the same maintenance tasks manually or from system cron / Kubernetes
+CronJob:
 
 ```bash
 */5 * * * *  cd /app && mix mailglass.reconcile
@@ -454,7 +457,16 @@ Call the mix tasks from system cron / Kubernetes CronJob:
 ```
 
 Mailglass emits a single `Logger.warning` at app boot when `Oban` is
-not loaded, pointing adopters here.
+not loaded, pointing adopters here. `mix mailglass.reconcile` still
+performs the orphan sweep in Oban-less installs and reports:
+
+- `linked` — orphan events that were matched to a delivery and had a
+  `:reconciled` audit event appended
+- `still unmatched` — scanned orphans that remain unresolved after this
+  sweep
+
+This is a maintenance backfill path, not a per-delivery operator action.
+The Admin UI keeps replay as the only delivery-detail repair action.
 
 ## 6. Webhook event retention (Pruner)
 

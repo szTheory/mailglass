@@ -22,14 +22,12 @@ defmodule Mailglass.Webhook.ReconcilerTest do
   be async, and telemetry handlers attached globally would collide under
   concurrency.
 
-  Tagged `:requires_oban` — the `Mailglass.Webhook.Reconciler` module is
-  conditionally compiled behind `if Code.ensure_loaded?(Oban.Worker)`.
-  Tests are skipped when Oban is not available.
+  The canonical `reconcile/2` path is available with or without Oban.
+  Worker-only assertions adapt to `available?/0`, but the append-only
+  maintenance behavior remains covered in every install.
   """
 
   use Mailglass.WebhookCase, async: false
-
-  @moduletag :requires_oban
 
   alias Mailglass.{Clock, Repo, Tenancy, TestRepo}
   alias Mailglass.Events.Event
@@ -43,12 +41,7 @@ defmodule Mailglass.Webhook.ReconcilerTest do
     # Tenancy.clear/0 API in on_exit so the internal process-dict atom stays
     # encapsulated.
     on_exit(fn -> Tenancy.clear() end)
-
-    if Reconciler.available?() do
-      :ok
-    else
-      {:skip, "Oban not available; Mailglass.Webhook.Reconciler not compiled"}
-    end
+    :ok
   end
 
   describe "reconcile/2 happy path (matching Delivery commits AFTER orphan)" do
@@ -214,14 +207,18 @@ defmodule Mailglass.Webhook.ReconcilerTest do
     end
   end
 
-  describe "Oban.Worker compliance" do
-    test "module use Oban.Worker with queue: :mailglass_reconcile and unique: [period: 60]" do
-      # Sanity: perform/1 is defined, and the module exports the Worker
-      # callback. We cannot exercise the cron registration (adopter-owned)
-      # but we can probe the behaviour contract.
-      assert function_exported?(Reconciler, :perform, 1)
+  describe "availability contract" do
+    test "always exports reconcile/2 and gates worker entrypoints behind available?/0" do
       assert function_exported?(Reconciler, :reconcile, 2)
-      assert Reconciler.available?() == true
+      assert Reconciler.available?() in [true, false]
+
+      if Reconciler.available?() do
+        # Sanity: perform/1 is defined only when the Oban worker entrypoint is
+        # compiled. We cannot exercise adopter-owned cron registration here.
+        assert function_exported?(Reconciler, :perform, 1)
+      else
+        refute function_exported?(Reconciler, :perform, 1)
+      end
     end
   end
 
