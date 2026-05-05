@@ -31,7 +31,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ "No recent deliveries"
-      assert html =~ "No recent deliveries match these filters. Clear the filters or wait for the next send."
+
+      assert html =~
+               "No recent deliveries match these filters. Clear the filters or wait for the next send."
+
       assert html =~ "Select a delivery to inspect its event timeline and suppression state."
     end
 
@@ -102,7 +105,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
           mailable: "Mailglass.Example.WelcomeMailer"
         )
 
-      insert_event!(delivery, %{type: :sent, occurred_at: hours_ago(3), metadata: %{provider: "postmark"}})
+      insert_event!(delivery, %{
+        type: :sent,
+        occurred_at: hours_ago(3),
+        metadata: %{provider: "postmark"}
+      })
 
       insert_event!(delivery, %{
         type: :delivered,
@@ -156,6 +163,37 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "recent auth"
     end
 
+    test "renders support cards, masks overview recipients, and distinguishes replay audit from reconcile facts",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+      %{selected_delivery: selected_delivery, replay_event: replay_event, reconcile_event: reconcile_event} =
+        insert_support_summary_fixture!()
+
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id}))
+
+      html = render(view)
+      list_html = view |> element("[data-testid='operator-deliveries-list']") |> render()
+      detail_html = view |> element("[data-testid='operator-detail-header']") |> render()
+
+      assert html =~ ~s(data-testid="operator-support-cards")
+      assert html =~ "Failed ingest"
+      assert html =~ "Orphan backlog"
+      assert html =~ "Replay outcomes"
+      assert html =~ "Reconcile facts"
+      assert html =~ "Tenant-scoped facts from the current support window."
+      assert html =~ "Replay audit"
+      assert html =~ "Reconcile fact"
+      assert html =~ replay_event.id
+      assert html =~ reconcile_event.id
+      refute html =~ "real-time"
+
+      assert list_html =~ "s*******@e******.com"
+      refute list_html =~ selected_delivery.recipient
+
+      assert detail_html =~ selected_delivery.recipient
+    end
+
     test "renders no timeline events and immutable suppression copy when selected delivery has no events",
          %{conn: conn} do
       conn = operator_conn(conn)
@@ -176,7 +214,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
         source: "webhook:auto_suppress"
       })
 
-      {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
 
       html = render(view)
 
@@ -186,13 +225,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end
 
     test "rejects operator mounts without an authorized actor", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/login"}}} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+      assert {:error, {:redirect, %{to: "/login"}}} =
+               live(conn, operator_path(%{"tenant_id" => @tenant_id}))
     end
 
     test "rejects blocked operators through the auth seam", %{conn: conn} do
       conn = operator_conn(conn, %{"current_user_id" => "blocked"})
 
-      assert {:error, {:redirect, %{to: "/login"}}} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+      assert {:error, {:redirect, %{to: "/login"}}} =
+               live(conn, operator_path(%{"tenant_id" => @tenant_id}))
     end
 
     test "shows the replay CTA only after a delivery is selected", %{conn: conn} do
@@ -214,7 +255,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
       {delivery, webhook_event} = insert_exact_replay_fixture!("msg-exact-ui", 401)
 
-      {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -223,7 +265,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = render(view)
 
       assert html =~ ~s(data-testid="operator-replay-modal")
-      assert html =~ "one exact webhook target"
+      assert html =~ "Replay is ready."
+      assert html =~ "One exact webhook target is available for confirmation."
+      refute html =~ "Replay is choice required."
       assert html =~ webhook_event.provider_event_id
       assert html =~ ~s(data-testid="operator-replay-confirm")
     end
@@ -231,13 +275,24 @@ defmodule MailglassAdmin.OperatorLiveTest do
     test "requires explicit target choice when multiple replay targets exist", %{conn: conn} do
       conn = operator_conn(conn)
       delivery = insert_delivery!(recipient: "many@example.com", provider_message_id: "pm-many")
-      first = insert_webhook_event!(provider_event_id: "postmark-many-1", raw_payload: raw_postmark_payload("pm-many", 501))
-      second = insert_webhook_event!(provider_event_id: "postmark-many-2", raw_payload: raw_postmark_payload("pm-many", 502))
+
+      first =
+        insert_webhook_event!(
+          provider_event_id: "postmark-many-1",
+          raw_payload: raw_postmark_payload("pm-many", 501)
+        )
+
+      second =
+        insert_webhook_event!(
+          provider_event_id: "postmark-many-2",
+          raw_payload: raw_postmark_payload("pm-many", 502)
+        )
 
       insert_linked_event!(delivery, first, "seed-many-1")
       insert_linked_event!(delivery, second, "seed-many-2")
 
-      {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -245,10 +300,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
+      assert html =~ "Replay is choice required."
       assert html =~ "Choose one webhook target"
       assert html =~ first.provider_event_id
       assert html =~ second.provider_event_id
       refute html =~ ~s(data-testid="operator-replay-confirm")
+      assert replay_audit_rows_for(first.id) == []
+      assert replay_audit_rows_for(second.id) == []
 
       view
       |> form("#operator-replay-targets", %{"webhook_event_id" => second.id})
@@ -259,14 +317,21 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
     test "shows unavailable replay copy when no safe target can be resolved", %{conn: conn} do
       conn = operator_conn(conn)
-      delivery = insert_delivery!(recipient: "historical@example.com", provider_message_id: "pm-historical")
+
+      delivery =
+        insert_delivery!(recipient: "historical@example.com", provider_message_id: "pm-historical")
 
       insert_event!(delivery, %{
         type: :delivered,
-        metadata: %{"provider" => "postmark", "provider_event_id" => "historical-child-only", "message_id" => "pm-historical"}
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => "historical-child-only",
+          "message_id" => "pm-historical"
+        }
       })
 
-      {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -275,16 +340,23 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = render(view)
 
       assert html =~ "Replay unavailable"
+      assert html =~ "Replay is unavailable."
       assert html =~ "Historical rows without exact webhook linkage"
       refute html =~ ~s(data-testid="operator-replay-confirm")
     end
 
     test "returns a stale-auth error without performing replay", %{conn: conn} do
-      stale = DateTime.utc_now() |> DateTime.add(-1_800, :second) |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+      stale =
+        DateTime.utc_now()
+        |> DateTime.add(-1_800, :second)
+        |> DateTime.truncate(:second)
+        |> DateTime.to_iso8601()
+
       conn = operator_conn(conn, %{"recent_auth_at" => stale})
       {delivery, webhook_event} = insert_exact_replay_fixture!("msg-stale-ui", 601)
 
-      {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -304,7 +376,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
       {delivery, _webhook_event} = insert_exact_replay_fixture!("msg-success-ui", 701)
 
-      {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -316,10 +389,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
-      assert html =~ "Replay completed and produced new work."
+      assert html =~ "Replay completed with new work."
       assert html =~ "Webhook replay requested"
-      assert html =~ "Webhook replay succeeded"
-      assert html =~ "Last replay: succeeded"
+      assert html =~ "Webhook replay completed"
+      assert html =~ "POSTMARK"
+      assert html =~ "requested"
+      assert html =~ "completed"
+      assert html =~ "new work"
+      assert html =~ "Last replay: completed · new work"
     end
 
     test "shows explicit no-op replay copy when the replay converges", %{conn: conn} do
@@ -328,11 +405,18 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       insert_event!(delivery, %{
         type: :delivered,
-        idempotency_key: IdempotencyKey.for_webhook_event(:postmark, "Delivery:801:2026-05-01T00:00:00Z", 0),
-        metadata: linked_replay_metadata(webhook_event, "Delivery:801:2026-05-01T00:00:00Z", delivery.provider_message_id)
+        idempotency_key:
+          IdempotencyKey.for_webhook_event(:postmark, "Delivery:801:2026-05-01T00:00:00Z", 0),
+        metadata:
+          linked_replay_metadata(
+            webhook_event,
+            "Delivery:801:2026-05-01T00:00:00Z",
+            delivery.provider_message_id
+          )
       })
 
-      {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -344,9 +428,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
-      assert html =~ "Replay converged without new downstream work."
-      assert html =~ "No new work"
-      assert html =~ "Last replay: converged with no new work"
+      assert html =~ "Replay completed with no change."
+      assert html =~ "Webhook replay completed"
+      assert html =~ "no change"
+      assert html =~ "Last replay: completed · no change"
     end
   end
 
@@ -365,7 +450,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
     })
     |> Plug.Conn.fetch_session()
     |> Plug.Conn.configure_session(renew: false)
-    |> then(fn conn -> Plug.Test.init_test_session(conn, Map.merge(get_session_map(conn), session)) end)
+    |> then(fn conn ->
+      Plug.Test.init_test_session(conn, Map.merge(get_session_map(conn), session))
+    end)
   end
 
   defp get_session_map(conn) do
@@ -432,6 +519,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
     row =
       attrs
       |> Enum.into(defaults)
+      |> Map.update!(:status, fn
+        status when is_atom(status) -> Atom.to_string(status)
+        status -> status
+      end)
       |> Map.put_new(:updated_at, DateTime.utc_now())
       |> Map.put_new(:inserted_at, DateTime.utc_now())
 
@@ -467,7 +558,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
   defp insert_linked_event!(delivery, webhook_event, child_provider_event_id) do
     insert_event!(delivery, %{
       type: :sent,
-      metadata: linked_replay_metadata(webhook_event, child_provider_event_id, delivery.provider_message_id)
+      metadata:
+        linked_replay_metadata(webhook_event, child_provider_event_id, delivery.provider_message_id)
     })
   end
 
@@ -558,10 +650,130 @@ defmodule MailglassAdmin.OperatorLiveTest do
     TestRepo.all(
       from(event in Event,
         where:
-          event.type in [:webhook_replay_requested, :webhook_replay_succeeded, :webhook_replay_failed] and
+          event.type in [
+            :webhook_replay_requested,
+            :webhook_replay_succeeded,
+            :webhook_replay_failed
+          ] and
             fragment("?->>'webhook_event_id' = ?", event.metadata, ^webhook_event_id)
       )
     )
+  end
+
+  defp insert_support_summary_fixture! do
+    selected_delivery =
+      insert_delivery!(
+        recipient: "selected@example.com",
+        provider_message_id: "pm-support-selected",
+        status: :sent,
+        last_event_type: :delivered
+      )
+
+    reconcile_delivery =
+      insert_delivery!(
+        recipient: "linked@example.com",
+        provider_message_id: "pm-support-linked",
+        status: :sent,
+        last_event_type: :delivered
+      )
+
+    insert_event!(selected_delivery, %{
+      type: :delivered,
+      occurred_at: hours_ago(4),
+      metadata: %{"provider" => "postmark", "source" => "webhook"}
+    })
+
+    replay_webhook_event =
+      insert_webhook_event!(
+        provider_event_id: "support-replay-webhook",
+        raw_payload: raw_postmark_payload("pm-support-selected", 901)
+      )
+
+    insert_linked_event!(selected_delivery, replay_webhook_event, "support-replay-child")
+
+    {:ok, replay_event} =
+      Mailglass.Events.append(%{
+        tenant_id: @tenant_id,
+        delivery_id: selected_delivery.id,
+        type: :webhook_replay_succeeded,
+        occurred_at: hours_ago(1),
+        metadata: %{
+          "provider" => "postmark",
+          "webhook_event_id" => replay_webhook_event.id,
+          "webhook_provider_event_id" => replay_webhook_event.provider_event_id,
+          "outcome" => "replayed",
+          "actor_id" => "operator-1"
+        }
+      })
+
+    {:ok, orphan_event} =
+      Mailglass.Events.append(%{
+        tenant_id: @tenant_id,
+        type: :delivered,
+        delivery_id: nil,
+        occurred_at: hours_ago(5),
+        needs_reconciliation: true,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => "orphan-open",
+          "provider_message_id" => "pm-orphan-open"
+        }
+      })
+
+    {:ok, linked_orphan} =
+      Mailglass.Events.append(%{
+        tenant_id: @tenant_id,
+        type: :delivered,
+        delivery_id: nil,
+        occurred_at: hours_ago(3),
+        needs_reconciliation: true,
+        metadata: %{
+          "provider" => "postmark",
+          "provider_event_id" => "orphan-linked",
+          "provider_message_id" => "pm-orphan-linked"
+        }
+      })
+
+    {:ok, reconcile_event} =
+      Mailglass.Events.append(%{
+        tenant_id: @tenant_id,
+        delivery_id: reconcile_delivery.id,
+        type: :reconciled,
+        occurred_at: minutes_ago(30),
+        metadata: %{
+          "reconciled_from_event_id" => linked_orphan.id,
+          "reconciled_provider" => "postmark",
+          "reconciled_provider_event_id" => "orphan-linked"
+        }
+      })
+
+    _failed_ingest =
+      insert_webhook_event!(
+        provider_event_id: "failed-ingest",
+        status: :failed,
+        received_at: hours_ago(2)
+      )
+
+    _dead_ingest =
+      insert_webhook_event!(
+        provider_event_id: "failed-dead",
+        status: :dead,
+        received_at: minutes_ago(45)
+      )
+
+    insert_event!(reconcile_delivery, %{
+      type: :delivered,
+      occurred_at: hours_ago(2),
+      metadata: %{"provider" => "postmark", "source" => "webhook"}
+    })
+
+    %{
+      selected_delivery: selected_delivery,
+      reconcile_delivery: reconcile_delivery,
+      orphan_event: orphan_event,
+      replay_event: replay_event,
+      reconcile_event: reconcile_event
+    }
   end
 
   defp normalize_suppression_row(row) do
@@ -574,4 +786,6 @@ defmodule MailglassAdmin.OperatorLiveTest do
       stream -> Atom.to_string(stream)
     end)
   end
+
+  defp minutes_ago(minutes), do: DateTime.add(DateTime.utc_now(), -minutes, :minute)
 end
