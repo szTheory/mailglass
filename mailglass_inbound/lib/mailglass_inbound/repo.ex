@@ -18,6 +18,15 @@ defmodule MailglassInbound.Repo do
     repo().insert(struct_or_changeset, opts)
   end
 
+  @spec one(Ecto.Queryable.t(), keyword()) :: struct() | nil
+  def one(queryable, opts \\ []), do: repo().one(queryable, opts)
+
+  @spec multi(Ecto.Multi.t(), keyword()) ::
+          {:ok, map()} | {:error, atom(), any(), map()}
+  def multi(multi, opts \\ []) when is_list(opts) do
+    repo().transaction(multi, opts)
+  end
+
   @spec all(Ecto.Queryable.t(), keyword()) :: [struct()]
   def all(queryable, opts \\ []), do: repo().all(queryable, opts)
 

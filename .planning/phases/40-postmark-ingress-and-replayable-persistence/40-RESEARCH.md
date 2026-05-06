@@ -461,17 +461,21 @@ end
 
 All substantive implementation claims in this research were verified against the current repo or cited from official documentation. No user confirmation is required before planning. [VERIFIED: this document]
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **What exact public module should adopters mount?**
-   - What we know: The phase wants one obvious adopter-facing ingress path and a sealed internal provider seam. [VERIFIED: 40-CONTEXT.md]
-   - What's unclear: Whether the stable public mount should be `MailglassInbound.Ingress.Plug`, `MailglassInbound.Ingress`, or a small router helper.
-   - Recommendation: Decide this in planning, but keep only one public ingress mount module and keep provider-specific modules internal. [VERIFIED: 40-CONTEXT.md, mailglass_inbound/docs/api_stability.md]
+1. **Public adopter mount module**
+   - **Resolved decision:** use `MailglassInbound.Ingress.Plug` as the single
+     adopter-facing mount module for Phase 40.
+   - **Why:** it matches the existing webhook house pattern and preserves one
+     obvious public ingress seam while keeping provider-specific modules
+     internal.
 
-2. **Should the route-compatibility proof run inside or after the write transaction?**
-   - What we know: The matcher is pure and mailbox execution is deferred. [VERIFIED: mailglass_inbound/lib/mailglass_inbound/router/matcher.ex, 40-CONTEXT.md]
-   - What's unclear: Whether the plan wants matcher proof included in the returned transaction result or performed after commit.
-   - Recommendation: Persist first, then run the pure matcher after commit so duplicate/store semantics stay DB-focused and route proof cannot affect durability. [VERIFIED: lib/mailglass/webhook/ingest.ex pattern, 40-CONTEXT.md]
+2. **Route-compatibility proof timing**
+   - **Resolved decision:** run route-compatibility proof after the
+     canonical/evidence transaction commits.
+   - **Why:** matcher evaluation is pure and must not affect insert or
+     duplicate durability. The fixed sequence is
+     `verify -> normalize -> persist -> commit -> route proof`.
 
 ## Environment Availability
 
@@ -505,11 +509,11 @@ All substantive implementation claims in this research were verified against the
 
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| INGRESS-01 | Reject unverifiable Postmark inbound requests before tenancy/persistence | unit + Plug integration | `mix test mailglass_inbound/test/mailglass_inbound/ingress/postmark_provider_test.exs mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs` | ❌ Wave 0 |
-| INGRESS-01 | Normalize Postmark payload fields into canonical `%InboundMessage{}` including `OriginalRecipient`, `MessageID`, structured contacts, headers, and attachment manifest | unit | `mix test mailglass_inbound/test/mailglass_inbound/ingress/postmark_provider_test.exs` | ❌ Wave 0 |
-| STORE-01 | Persist one canonical row plus one evidence row in one transaction | integration | `mix test mailglass_inbound/test/mailglass_inbound/ingress/persist_test.exs` | ❌ Wave 0 |
-| STORE-01 | Duplicate Postmark ingress reuses existing truth instead of inserting a second fresh receive | integration | `mix test mailglass_inbound/test/mailglass_inbound/ingress/persist_test.exs` | ❌ Wave 0 |
-| INGRESS-01 / STORE-01 | Route matcher can evaluate the normalized message without mailbox execution | unit | `mix test mailglass_inbound/test/mailglass_inbound/ingress/route_compatibility_test.exs` | ❌ Wave 0 |
+| INGRESS-01 | Reject unverifiable Postmark inbound requests before tenancy/persistence | unit + Plug integration | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/postmark_provider_test.exs test/mailglass_inbound/ingress/plug_test.exs --warnings-as-errors` | ⬜ Plan creates files |
+| INGRESS-01 | Normalize Postmark payload fields into canonical `%InboundMessage{}` including `OriginalRecipient`, `MessageID`, structured contacts, headers, and attachment manifest | unit | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/postmark_provider_test.exs --warnings-as-errors` | ⬜ Plan creates files |
+| STORE-01 | Persist one canonical row plus one evidence row in one transaction | integration | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/persist_test.exs --warnings-as-errors` | ⬜ Plan creates files |
+| STORE-01 | Duplicate Postmark ingress reuses existing truth instead of inserting a second fresh receive | integration | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/persist_test.exs --warnings-as-errors` | ⬜ Plan creates files |
+| INGRESS-01 / STORE-01 | Route matcher can evaluate the normalized message without mailbox execution | integration | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/persist_test.exs test/mailglass_inbound/ingress/plug_test.exs --warnings-as-errors` | covered by planned proof files |
 
 ### Sampling Rate
 
@@ -517,13 +521,20 @@ All substantive implementation claims in this research were verified against the
 - **Per wave merge:** `mix test`
 - **Phase gate:** Full relevant inbound package tests green before `/gsd-verify-work`
 
-### Wave 0 Gaps
+### Wave 0 Resolution
 
-- [ ] `mailglass_inbound/test/mailglass_inbound/ingress/postmark_provider_test.exs` — covers verify/normalize semantics for `INGRESS-01`
-- [ ] `mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs` — covers response mapping, verify-before-tenancy, and duplicate/no-match handling
-- [ ] `mailglass_inbound/test/mailglass_inbound/ingress/persist_test.exs` — covers canonical/evidence transaction and idempotency for `STORE-01`
-- [ ] `mailglass_inbound/test/mailglass_inbound/ingress/route_compatibility_test.exs` — covers matcher proof against normalized Postmark messages
-- [ ] If no live Repo-backed test helper exists for inbound persistence, add one shared fixture helper under `mailglass_inbound/test/support/` before implementation. [VERIFIED: current inbound tests are mostly contract/unit-level]
+Existing infrastructure covers the phase. No new harness or standalone
+`route_compatibility_test.exs` file is required before execution.
+
+- `postmark_provider_test.exs`, `plug_test.exs`, and `persist_test.exs` should
+  be created during plan execution.
+- Route-compatibility proof should live inside `persist_test.exs` and
+  `plug_test.exs`, where inserted and duplicate ingress results can prove
+  `Matcher.match/2` compatibility without mailbox execution.
+- If no live Repo-backed test helper exists for inbound persistence, add one
+  shared fixture helper under `mailglass_inbound/test/support/` during
+  implementation rather than as a planning prerequisite. [VERIFIED: current
+  inbound tests are mostly contract/unit-level]
 
 ## Security Domain
 
@@ -613,10 +624,12 @@ All substantive implementation claims in this research were verified against the
 | Architecture | HIGH | The phase is tightly constrained by locked context decisions and already-shipped webhook/inbound seams. [VERIFIED: 40-CONTEXT.md, lib/mailglass/webhook/*.ex, mailglass_inbound/lib/mailglass_inbound/*.ex] |
 | Pitfalls | HIGH | The main risks are directly supported by current code behavior and current Postmark docs. [VERIFIED: mailglass_inbound/lib/mailglass_inbound/router/matcher.ex][CITED: https://postmarkapp.com/support/article/understanding-inbound-webhook-retries-in-postmark][CITED: https://postmarkapp.com/manual] |
 
-### Open Questions
+### Open Questions (RESOLVED)
 
-- Exact public ingress module name for the adopter mount seam.
-- Whether route-compatibility proof is returned from the transaction result or run immediately after commit.
+- Public adopter mount module: `MailglassInbound.Ingress.Plug`.
+- Route-compatibility proof timing: run it after the canonical/evidence
+  transaction commits, using the fixed sequence
+  `verify -> normalize -> persist -> commit -> route proof`.
 
 ### Ready for Planning
 

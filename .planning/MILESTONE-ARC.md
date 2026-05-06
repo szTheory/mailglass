@@ -8,7 +8,7 @@ starting from a blank prompt every time.
 ## Current Strategic Posture
 
 - **Trajectory:** Operator-first
-- **Planning horizon:** Concrete through the next post-`v1.0` milestone; lighter-weight beyond that
+- **Planning horizon:** Concrete through the active inbound milestone; lighter-weight beyond that
 - **Current product thesis:** Become the canonical production transactional
   email framework for Phoenix SaaS apps before expanding into inbound or
   broader adjacent surfaces
@@ -192,21 +192,36 @@ surface is stable, documented, and proven enough to promise continuity.
 
 **Shipped note (2026-05-06):** `v1.0 Stability Lock` is now shipped. The contract, compatibility, trust-doc, and release-rehearsal proof surfaces are archived; remaining branch-protection proof is explicit accepted external debt.
 
-## Next Candidate
+## Active Milestone
 
-### `candidate` — mailglass_inbound
+### `active` — v1.1 Inbound Core Slice (`mailglass_inbound`)
 
-**Why next:** The outbound/operator core is now locked tightly enough that expanding into inbound can happen without weakening the `v1.x` contract.
+**Why now:** The outbound/operator core is now locked tightly enough that Mailglass can expand into inbound without weakening the `v1.x` contract, but the first slice still needs to stay smaller than the full historical inbound vision.
 
-**Candidate scope:**
+**Active scope:**
 - Router DSL
 - Mailbox behaviour
-- Provider-specific ingress plugs
-- Storage adapters
-- Async routing via Oban
-- Conductor-style dev UI
+- Postmark inbound ingress
+- SendGrid inbound ingress
+- Storage for normalized records plus raw provider source material
+- Async routing via Oban with a bounded fallback when Oban is absent
 
-**Gate before activation:** Complete the live `v1.0` cutover and confirm that inbound is still the highest-leverage post-`v1.0` move.
+**Explicit non-goals:**
+- Conductor-style dev UI
+- Mailgun inbound
+- SES inbound
+- `gen_smtp` relay ingress
+- Adjacent deliverability / workflow bets unrelated to the sibling package contract
+
+**Activation gate:** Cleared on 2026-05-06 when Phase 39 execution began. Remaining live `v1.0` closeout tasks stay external to the v1.1 milestone scope.
+
+**Exit criteria:**
+- An adopter can receive inbound mail through first-party Postmark and SendGrid ingress.
+- Mailglass persists normalized inbound data plus raw source evidence honestly enough for replay and debugging.
+- An adopter can route inbound mail to app-defined mailboxes with explicit outcomes and tenant-safe execution.
+- The sibling package has honest install, testing, and operator docs without requiring Oban in every install.
+
+**Activation note (2026-05-06):** The former `candidate` inbound milestone is now active as `v1.1 Inbound Core Slice`, with the first release-closeout work still treated as an external precondition rather than milestone scope.
 
 ## Future Bets (post-`v1.0`)
 
@@ -232,4 +247,4 @@ source of truth:
    drifting doc-by-doc.
 
 ---
-*Last updated: 2026-05-06 after shipping v1.0 Stability Lock and promoting the post-v1.0 inbound candidate.*
+*Last updated: 2026-05-06 after activating v1.1 Inbound Core Slice and locking the first `mailglass_inbound` milestone boundaries.*

@@ -72,5 +72,8 @@ defmodule MailglassInbound.InboundRecords.InboundRecord do
     %__MODULE__{}
     |> cast(attrs, @cast)
     |> validate_required(@required)
+    |> unique_constraint(:provider_message_id,
+      name: :mailglass_inbound_records_postmark_idempotency_idx
+    )
   end
 end
