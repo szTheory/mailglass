@@ -7,6 +7,7 @@ defmodule MailglassInbound.Ingress.Providers.Sendgrid do
   alias MailglassInbound.InboundMessage
   alias MailglassInbound.Ingress.Request
 
+  @impl false
   def verify!(%Request{headers: headers}, %{} = config) when is_list(headers) do
     {user, pass} = fetch_basic_auth!(config)
     verify_basic_auth!(headers, user, pass)
@@ -19,6 +20,7 @@ defmodule MailglassInbound.Ingress.Providers.Sendgrid do
     verify!(%Request{provider: :sendgrid, raw_mime: raw_body, headers: headers}, config)
   end
 
+  @impl false
   def normalize(%Request{} = request) do
     raw_mime = require_raw_mime!(request)
     payload = request.params || %{}
