@@ -5,6 +5,7 @@ defmodule MailglassInbound.Ingress.Persist do
 
   alias MailglassInbound.InboundMessage
   alias MailglassInbound.InboundRecords
+  alias MailglassInbound.InboundRecords.InboundEvidence
   alias MailglassInbound.InboundRecords.InboundRecord
   alias MailglassInbound.Router.Matcher
 
@@ -19,10 +20,11 @@ defmodule MailglassInbound.Ingress.Persist do
   def persist(%{tenant_id: tenant_id, provider: provider, message: %InboundMessage{} = message} = handoff, opts)
       when is_binary(tenant_id) and is_list(opts) do
     repo = Keyword.get(opts, :repo, MailglassInbound.Repo)
+    provider = normalize_provider(provider)
 
     result =
       repo.transact(fn ->
-        case load_duplicate(repo, tenant_id, provider, message.provider_message_id) do
+        case load_duplicate(repo, tenant_id, provider, message, handoff.evidence) do
           %InboundRecord{} = record ->
             {:ok,
              %{
@@ -58,11 +60,32 @@ defmodule MailglassInbound.Ingress.Persist do
     end
   end
 
-  defp load_duplicate(_repo, _tenant_id, _provider, nil), do: nil
+  defp load_duplicate(repo, tenant_id, "sendgrid", _message, evidence) do
+    case evidence_raw_mime_fingerprint(evidence) do
+      nil ->
+        nil
 
-  defp load_duplicate(repo, tenant_id, provider, provider_message_id) do
-    provider = to_string(provider)
+      fingerprint ->
+        query =
+          from(record in InboundRecord,
+            join: inbound_evidence in InboundEvidence,
+            on: inbound_evidence.inbound_record_id == record.id,
+            where:
+              record.tenant_id == ^tenant_id and
+                record.provider == ^"sendgrid" and
+                inbound_evidence.provider == ^"sendgrid" and
+                fragment("md5(?)", inbound_evidence.raw_mime) == ^fingerprint,
+            limit: 1
+          )
 
+        repo.one(query)
+    end
+  end
+
+  defp load_duplicate(_repo, _tenant_id, _provider, %InboundMessage{provider_message_id: nil}, _evidence), do: nil
+
+  defp load_duplicate(repo, tenant_id, provider, %InboundMessage{provider_message_id: provider_message_id}, _evidence) do
+    
     query =
       from(record in InboundRecord,
         where:
@@ -104,7 +127,7 @@ defmodule MailglassInbound.Ingress.Persist do
 
       {:error, changeset} = error ->
         if duplicate_constraint?(changeset) do
-          case load_duplicate(repo, tenant_id, provider, message.provider_message_id) do
+          case load_duplicate(repo, tenant_id, provider, message, %{}) do
             %InboundRecord{} = record -> {:ok, record}
             nil -> error
           end
@@ -115,14 +138,19 @@ defmodule MailglassInbound.Ingress.Persist do
   end
 
   defp insert_evidence(repo, tenant_id, provider, record, evidence) do
+    raw_mime_fingerprint = evidence_raw_mime_fingerprint(evidence)
+
     attrs = %{
       tenant_id: tenant_id,
-      provider: to_string(provider),
+      provider: normalize_provider(provider),
       inbound_record_id: record.id,
       raw_payload: Map.get(evidence, :raw_payload, %{}),
       raw_headers: Map.get(evidence, :raw_headers, %{}),
       raw_mime: Map.get(evidence, :raw_mime),
-      verification_facts: Map.get(evidence, :verification_facts, %{}),
+      verification_facts:
+        evidence
+        |> Map.get(:verification_facts, %{})
+        |> maybe_put_fingerprint(raw_mime_fingerprint),
       parse_warnings: Map.get(evidence, :parse_warnings, %{}),
       attachment_blobs: Map.get(evidence, :attachment_blobs, %{})
     }
@@ -152,4 +180,25 @@ defmodule MailglassInbound.Ingress.Persist do
       _ -> false
     end)
   end
+
+  defp evidence_raw_mime_fingerprint(evidence) when is_map(evidence) do
+    case Map.get(evidence, :raw_mime) do
+      raw_mime when is_binary(raw_mime) and raw_mime != "" ->
+        :md5
+        |> :crypto.hash(raw_mime)
+        |> Base.encode16(case: :lower)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp maybe_put_fingerprint(verification_facts, nil), do: verification_facts
+
+  defp maybe_put_fingerprint(verification_facts, fingerprint) do
+    Map.put_new(verification_facts, :raw_mime_fingerprint, fingerprint)
+  end
+
+  defp normalize_provider(provider) when is_atom(provider), do: Atom.to_string(provider)
+  defp normalize_provider(provider) when is_binary(provider), do: provider
 end

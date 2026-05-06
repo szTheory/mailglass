@@ -277,7 +277,7 @@ defmodule MailglassInbound.ReplayTest do
         outcome: :no_match
       }
 
-      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, no_match_run])
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, nil, no_match_run])
 
       assert {:error, {:replay_mailbox_missing, %{reason: :no_prior_match}}} =
                Replay.replay(record.id,
@@ -294,7 +294,7 @@ defmodule MailglassInbound.ReplayTest do
       record = valid_inbound_record()
       evidence = valid_inbound_evidence(record.id)
 
-      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, nil])
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, nil, nil])
 
       assert {:error, {:replay_mailbox_missing, %{reason: :execution_history_missing}}} =
                Replay.replay(record.id,
