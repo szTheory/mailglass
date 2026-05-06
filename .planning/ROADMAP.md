@@ -107,12 +107,16 @@ Plans:
 **Depends on**: Phase 43
 **Requirements**: EXEC-01, EXEC-02, ADOPT-01
 **Gap Closure:** Closes closeout-readiness integration gaps and the remaining milestone verification chain gaps from the `v1.1` audit.
-**Plans**: 0 plans
+**Plans**: 2 plans
 **Status:** Pending
 
 Plans:
 
-- [ ] TBD (`$gsd-plan-phase 44`)
+**Wave 1**
+- [ ] 44-01-PLAN.md — Recover Phase 42 execution verification report (42-VERIFICATION.md) from re-run proof lanes
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 44-02-PLAN.md — Reconcile REQUIREMENTS.md, STATE.md, ROADMAP.md and produce v1.1-MILESTONE-AUDIT-CLOSEOUT.md
 
 ---
 
