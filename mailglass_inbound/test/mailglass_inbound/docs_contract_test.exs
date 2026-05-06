@@ -6,7 +6,7 @@ defmodule MailglassInbound.DocsContractTest do
   @postmark_ingress_path Path.expand("../../docs/postmark_ingress.md", __DIR__)
   @sendgrid_ingress_path Path.expand("../../docs/sendgrid_ingress.md", __DIR__)
 
-  test "docs inventory names the stable phase 41 public modules" do
+  test "docs inventory names the stable public modules for the inbound slice" do
     readme = File.read!(@readme_path)
     stability = File.read!(@stability_path)
 
@@ -56,8 +56,13 @@ defmodule MailglassInbound.DocsContractTest do
     readme = File.read!(@readme_path)
     stability = File.read!(@stability_path)
 
-    assert readme =~ "optional Oban"
+    assert readme =~ "Oban-backed execution"
+    assert readme =~ "Task.Supervisor fallback"
+    assert readme =~ "best-effort only"
+    assert readme =~ "replay or operator action"
     assert stability =~ "MailglassInbound.OptionalDeps.Oban"
+    assert stability =~ "MailglassInbound.Execution.Worker"
+    assert stability =~ "Task.Supervisor"
     assert stability =~ "not part of the stable contract"
 
     for doc <- [readme, stability] do
@@ -80,6 +85,35 @@ defmodule MailglassInbound.DocsContractTest do
 
     assert sendgrid =~ "execution outcomes do not control provider retries"
     assert sendgrid =~ "raw_mime_fingerprint"
+  end
+
+  test "readme gives one canonical manual setup lane and rejects installer framing" do
+    readme = File.read!(@readme_path)
+
+    assert readme =~ "mix deps.get"
+    assert readme =~ "mix ecto.migrate"
+    assert readme =~ "body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}"
+    assert readme =~ ~s(forward "/inbound/:tenant_id/postmark")
+    assert readme =~ ~s(forward "/inbound/:tenant_id/sendgrid")
+    assert readme =~ "router: MyApp.MailglassInboundRouter"
+    assert readme =~ "Oban-backed execution is the durable path"
+    assert readme =~ "Task.Supervisor fallback is bounded best-effort only"
+    assert readme =~ "mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
+
+    refute readme =~ "mix mailglass.install"
+    refute readme =~ "installer"
+  end
+
+  test "stability docs keep workers, queue details, and replay orchestration internal" do
+    stability = File.read!(@stability_path)
+
+    assert stability =~ "MailglassInbound.Execution.Worker"
+    assert stability =~ "queue names"
+    assert stability =~ "internal"
+    assert stability =~ "public replay API"
+
+    refute stability =~ "stable public replay API"
+    refute stability =~ "public worker contract"
   end
 
   test "docs reject replay-as-fresh and unshipped verification claims" do
