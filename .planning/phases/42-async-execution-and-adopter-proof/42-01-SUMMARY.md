@@ -2,18 +2,18 @@
 phase: 42-async-execution-and-adopter-proof
 plan: "01"
 subsystem: inbound
-tags: [mailglass_inbound, oban, task_supervisor, replay, ingress]
+tags: [async-execution, oban, fallback, replay]
 requires:
-  - phase: 41-sendgrid-ingress-and-mailbox-routing
-    provides: persist-first inbound truth, mailbox routing, and replay lineage constraints
+  - phase: 41
+    provides: truthful SendGrid ingress, mailbox routing, replay over stored truth
 provides:
-  - shared async inbound execution seam with internal Oban worker dispatch
-  - bounded Task.Supervisor fallback with once-per-node warning posture
-  - ingress and replay rewired to one execution runner and lineage model
-affects: [phase-42-docs, inbound-adoption, operator-trust]
+  - shared async execution dispatcher
+  - internal Oban worker with package-local gateway
+  - bounded Task.Supervisor fallback with explicit warning posture
+affects: [phase-42, mailglass_inbound]
 tech-stack:
   added: []
-  patterns: [package-local optional Oban gateway, internal worker wrapper, shared execution runner]
+  patterns: [shared execution seam, optional dependency gateway, best-effort fallback]
 key-files:
   created:
     - mailglass_inbound/lib/mailglass_inbound/application.ex
@@ -29,88 +29,73 @@ key-files:
     - mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs
     - mailglass_inbound/test/mailglass_inbound/replay_test.exs
 key-decisions:
-  - "Oban job args keep only internal route facts plus record/evidence ids so durable workers can reconstruct the exact mailbox target without widening the public contract."
-  - "Fallback execution remains post-persist Task.Supervisor work with explicit best-effort warning semantics and no fake durability."
+  - "Kept all direct Oban interaction behind MailglassInbound.OptionalDeps.Oban and an internal worker so no Oban job shape leaks into the public contract."
+  - "Made Task.Supervisor fallback explicitly best-effort, once-per-node warned, and recovery-oriented via replay rather than pretending it is durable."
 patterns-established:
-  - "Ingress persists first and then calls Execution.dispatch/2; request acknowledgments do not depend on mailbox completion."
-  - "Fresh, replay, Oban worker, and fallback execution all converge on Execution.execute/2 with source tagging."
+  - "Fresh ingress dispatches asynchronously after persistence succeeds, while replay reuses the same execution runner with lineage source preserved."
 requirements-completed: [EXEC-01, EXEC-02]
-duration: 6min
+duration: unknown
 completed: 2026-05-06
 ---
 
-# Phase 42 Plan 01 Summary
+# Phase 42-01 Summary
 
-**Shared inbound async execution now prefers internal Oban jobs, falls back honestly to Task.Supervisor, and reuses one execution-lineage runner for fresh ingress and replay.**
+**`mailglass_inbound` now dispatches persisted inbound work asynchronously through one shared seam, preferring durable Oban execution when available and falling back honestly to supervised best-effort tasks when it is not.**
 
 ## Performance
 
-- **Duration:** 6 min
-- **Started:** 2026-05-06T18:28:07Z
-- **Completed:** 2026-05-06T18:34:30Z
+- **Duration:** unknown
+- **Started:** 2026-05-06
+- **Completed:** 2026-05-06
 - **Tasks:** 2
-- **Files modified:** 12
+- **Files modified:** 11
 
 ## Accomplishments
-- Added a package-owned `MailglassInbound.Application` with a dedicated task supervisor and once-per-node fallback warning posture.
-- Split `MailglassInbound.Execution` into shared dispatch, load, and execute responsibilities plus an internal Oban worker wrapper.
-- Rewired fresh ingress and internal replay to the shared execution seam so all trigger modes append through one truth model.
+
+- Added a shared `MailglassInbound.Execution.dispatch/2` seam with a package-owned application supervisor and internal Oban worker.
+- Extended the optional dependency gateway so execution mode selection and enqueue behavior stay package-local.
+- Rewired fresh ingress and internal replay to share one execution truth model while preserving duplicate short-circuiting and replay lineage.
+- Added focused tests for Oban dispatch, Task.Supervisor fallback, worker job loading, ingress async behavior, and replay reuse.
 
 ## Task Commits
 
-1. **Task 1: Introduce one shared async dispatch seam with package-local Oban gateway support** - `5069051` (`test`), `547529c` (`feat`)
-2. **Task 2: Rewire fresh ingress and replay to use the shared async execution seam** - `1d88d13` (`feat`)
+- `5069051` - failing async execution seam coverage
+- `547529c` - shared async execution seam, worker, application wiring, and fallback warning posture
+- `1d88d13` - ingress and replay rewired to the shared execution seam
 
 ## Files Created/Modified
-- `mailglass_inbound/lib/mailglass_inbound/application.ex` - package runtime supervision and fallback warning emission
-- `mailglass_inbound/lib/mailglass_inbound/execution.ex` - shared dispatch, payload loading, and unified execution runner
-- `mailglass_inbound/lib/mailglass_inbound/execution/worker.ex` - internal Oban worker wrapper over the shared runner
-- `mailglass_inbound/lib/mailglass_inbound/optional_deps.ex` - runtime mode selection and internal enqueue helper
-- `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex` - post-persist async dispatch hook
-- `mailglass_inbound/lib/mailglass_inbound/internal/replay.ex` - replay reuse of the shared execution runner
-- `mailglass_inbound/test/mailglass_inbound/async_execution_test.exs` - dispatch branching and fallback warning proof
-- `mailglass_inbound/test/mailglass_inbound/worker_test.exs` - worker arg-shape and failure mapping proof
-- `mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs` - async dispatch-after-persist proof
-- `mailglass_inbound/test/mailglass_inbound/replay_test.exs` - shared replay runner proof
+
+- `mailglass_inbound/lib/mailglass_inbound/application.ex` - package supervisor plus once-per-node fallback warning.
+- `mailglass_inbound/lib/mailglass_inbound/execution/worker.ex` - internal Oban worker wrapper over the shared runner.
+- `mailglass_inbound/lib/mailglass_inbound/execution.ex` - dispatch/load/execute seam spanning fresh, replay, Oban, and fallback paths.
+- `mailglass_inbound/lib/mailglass_inbound/optional_deps.ex` - package-local execution mode and enqueue helpers.
+- `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex` - async post-persist dispatch for fresh ingress.
+- `mailglass_inbound/lib/mailglass_inbound/internal/replay.ex` - replay routed through the shared execution runner with `:replay` lineage.
+- `mailglass_inbound/test/mailglass_inbound/async_execution_test.exs` - dispatch and fallback proof lane.
+- `mailglass_inbound/test/mailglass_inbound/worker_test.exs` - worker arg loading and result mapping proof lane.
+- `mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs` - fresh ingress async handoff assertions.
+- `mailglass_inbound/test/mailglass_inbound/replay_test.exs` - replay lineage and shared execution assertions.
 
 ## Decisions Made
-- Replay now delegates to `Execution.execute/2` with `source: :replay` instead of duplicating mailbox classification and insert logic.
-- Internal Oban job args include the matched mailbox identity and route status because the current durable inbound record does not persist route truth before the first execution run.
+
+- Preserved persist-first receive semantics by dispatching only after canonical/evidence truth is written.
+- Kept replay internal and execution-source aware so fresh durable async, fresh fallback async, and replay all write one lineage model.
 
 ## Deviations from Plan
 
-### Auto-fixed Issues
-
-**1. [Rule 3 - Blocking] Worked around missing executor `gsd-sdk query` subcommands**
-- **Found during:** Plan bootstrap
-- **Issue:** The local `gsd-sdk` binary in this repo exposes `run/auto/init` only, so the executor-specific `query` commands in the orchestration instructions were unavailable.
-- **Fix:** Used the checked-in `.planning` artifacts directly for plan/state context and completed the phase with manual summary evidence instead of automated query-driven state handlers.
-- **Files modified:** `.planning/phases/42-async-execution-and-adopter-proof/42-01-SUMMARY.md`
-- **Verification:** Plan tasks and both verification commands completed successfully without the missing CLI surface.
-- **Committed in:** pending summary commit
-
----
-
-**Total deviations:** 1 auto-fixed (Rule 3: 1)
-**Impact on plan:** No scope creep in runtime code. The implementation and verification match the plan; only the executor bookkeeping path fell back to manual handling.
+None - plan executed within the intended scope.
 
 ## Issues Encountered
-- Parallel plan verification runs briefly waited on the Elixir build directory lock from an earlier process in the same checkout. Waiting for the exact plan commands resolved it without changing the verification lane.
+
+- The local `gsd-sdk` installation in this environment does not expose the workflow `query` interface, so the phase summary had to be written manually rather than by the planned helper command.
 
 ## User Setup Required
 
-None - no external service configuration was required for this plan execution.
+None - no external service configuration required for the codebase itself.
 
 ## Next Phase Readiness
-- `mailglass_inbound` now has the async runtime seam needed for the docs/adopter proof follow-up work in Phase 42.
-- `ADOPT-01` remains for a later plan in this phase; this plan completed the execution requirements only.
 
-## Verification
-
-- `cd mailglass_inbound && mix test test/mailglass_inbound/async_execution_test.exs test/mailglass_inbound/worker_test.exs test/mailglass_inbound/mailbox_execution_test.exs --warnings-as-errors` — PASS (`10 tests, 0 failures`)
-- `cd mailglass_inbound && mix test test/mailglass_inbound/async_execution_test.exs test/mailglass_inbound/ingress/plug_test.exs test/mailglass_inbound/replay_test.exs test/mailglass_inbound/mailbox_execution_test.exs --warnings-as-errors` — PASS (`26 tests, 0 failures`)
-
-## Self-Check: PASSED
+Plan 42-02 can now document the real adoption and operator story for durable Oban execution versus bounded fallback behavior.
 
 ---
 *Phase: 42-async-execution-and-adopter-proof*
