@@ -13,6 +13,7 @@ defmodule MailglassInbound.MixProject do
       elixirc_options: elixirc_options(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      aliases: aliases(),
       name: "MailglassInbound",
       description: @description,
       source_url: @source_url,
@@ -24,6 +25,16 @@ defmodule MailglassInbound.MixProject do
 
   def application do
     [extra_applications: [:logger]]
+  end
+
+  defp aliases do
+    [
+      test: [&configure_test_swoosh/1, "test"]
+    ]
+  end
+
+  defp configure_test_swoosh(_args) do
+    Application.put_env(:swoosh, :api_client, false, persistent: true)
   end
 
   defp elixirc_options do
