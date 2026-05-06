@@ -27,7 +27,9 @@ defmodule MailglassInbound.MixProject do
 
   defp deps do
     [
+      {:ecto_sql, "~> 3.13"},
       {:nimble_options, "~> 1.1"},
+      {:uuidv7, "~> 1.0"},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
   end
