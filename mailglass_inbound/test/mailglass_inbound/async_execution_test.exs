@@ -57,6 +57,8 @@ defmodule MailglassInbound.AsyncExecutionTest do
     assert Process.get(:mailglass_inbound_async_enqueue_attrs) == %{
              "inbound_record_id" => "record-123",
              "inbound_evidence_id" => "evidence-123",
+             "route_status" => "matched",
+             "mailbox" => "Elixir.MailglassInbound.AsyncExecutionTest",
              "source" => "fresh",
              "mailglass_tenant_id" => "tenant-123"
            }

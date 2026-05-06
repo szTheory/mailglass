@@ -24,7 +24,10 @@ defmodule MailglassInbound.MixProject do
   end
 
   def application do
-    [extra_applications: [:logger]]
+    [
+      mod: {MailglassInbound.Application, []},
+      extra_applications: [:logger]
+    ]
   end
 
   defp aliases do
@@ -81,16 +84,20 @@ defmodule MailglassInbound.MixProject do
       source_ref: "v" <> @version,
       extras: [
         "README.md",
-        "docs/api_stability.md"
+        "docs/api_stability.md",
+        "docs/postmark_ingress.md"
       ],
       groups_for_extras: [
         Overview: ["README.md"],
-        Contract: ["docs/api_stability.md"]
+        Contract: ["docs/api_stability.md"],
+        Guides: ["docs/postmark_ingress.md"]
       ],
       groups_for_modules: [
         Stable: [
           MailglassInbound,
           MailglassInbound.InboundMessage,
+          MailglassInbound.Ingress.CachingBodyReader,
+          MailglassInbound.Ingress.Plug,
           MailglassInbound.Router,
           MailglassInbound.Mailbox
         ],

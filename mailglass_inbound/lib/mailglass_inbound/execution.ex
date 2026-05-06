@@ -3,14 +3,44 @@ defmodule MailglassInbound.Execution do
 
   alias MailglassInbound.InboundMessage
   alias MailglassInbound.InboundRecords
+  alias MailglassInbound.InboundRecords.InboundEvidence
+  alias MailglassInbound.InboundRecords.InboundRecord
   alias MailglassInbound.Mailbox
+  alias MailglassInbound.OptionalDeps.Oban, as: OptionalOban
+  alias MailglassInbound.Repo
+
+  @compile {:no_warn_undefined, [MailglassInbound.Execution.Worker]}
+
+  @spec dispatch(map(), keyword()) :: {:ok, map()} | {:error, term()}
+  def dispatch(persisted, opts \\ [])
+
+  def dispatch(%{status: :inserted} = persisted, opts) when is_list(opts) do
+    optional_deps = Keyword.get(opts, :optional_deps, OptionalOban)
+    source = Keyword.get(opts, :source, :fresh)
+
+    case optional_deps.runner() do
+      :oban ->
+        worker = Keyword.get(opts, :worker, MailglassInbound.Execution.Worker)
+
+        case optional_deps.enqueue_inbound_execution(worker, enqueue_attrs(persisted, source), opts) do
+          {:ok, _job} -> {:ok, %{status: :queued, mode: :oban}}
+          {:error, reason} -> {:error, reason}
+        end
+
+      :task_supervisor ->
+        dispatch_task_supervisor(persisted, source, opts)
+    end
+  end
+
+  def dispatch(%{status: :duplicate}, _opts), do: {:ok, %{status: :skipped}}
 
   @spec execute(map(), keyword()) :: {:ok, map()} | {:error, term()}
   def execute(persisted, opts \\ [])
 
   def execute(%{status: :inserted} = persisted, opts) when is_list(opts) do
     records = Keyword.get(opts, :inbound_records, InboundRecords)
-    attrs = execution_attrs(persisted)
+    source = Keyword.get(opts, :source, :fresh)
+    attrs = execution_attrs(persisted, source)
     normalized_result = normalize_result(attrs)
 
     with {:ok, _run} <- records.insert_execution_run(attrs) do
@@ -20,17 +50,122 @@ defmodule MailglassInbound.Execution do
 
   def execute(%{status: status}, _opts) when status in [:duplicate], do: {:ok, %{status: :skipped}}
 
+  @spec load(map(), keyword()) :: {:ok, map()} | {:error, term()}
+  def load(job_args, opts \\ [])
+
+  def load(
+        %{
+          "inbound_record_id" => inbound_record_id,
+          "inbound_evidence_id" => inbound_evidence_id,
+          "route_status" => route_status
+        } = job_args,
+        opts
+      )
+      when is_binary(inbound_record_id) and is_binary(inbound_evidence_id) and is_binary(route_status) and
+             is_list(opts) do
+    repo = Keyword.get(opts, :repo, Repo)
+
+    with %InboundRecord{} = record <- repo.get(InboundRecord, inbound_record_id),
+         %InboundEvidence{} = evidence <- repo.get(InboundEvidence, inbound_evidence_id),
+         {:ok, route} <- decode_route(route_status, Map.get(job_args, "mailbox")) do
+      {:ok,
+       %{
+         status: :inserted,
+         message: message_from_record(record),
+         inbound_record: record,
+         inbound_evidence: evidence,
+         route: route
+       }}
+    else
+      nil -> {:error, :not_found}
+      {:error, _reason} = error -> error
+    end
+  end
+
+  def load(_job_args, _opts), do: {:error, :invalid_job_args}
+
+  @spec message_from_record(InboundRecord.t()) :: InboundMessage.t()
+  def message_from_record(record) do
+    %InboundMessage{
+      tenant_id: record.tenant_id,
+      provider: normalize_provider(record.provider),
+      provider_message_id: record.provider_message_id,
+      message_id: record.message_id,
+      envelope_recipient: record.envelope_recipient,
+      from: record.from,
+      to: record.to,
+      cc: record.cc,
+      bcc: record.bcc,
+      reply_to: record.reply_to,
+      subject: record.subject,
+      headers: record.headers,
+      sent_at: record.sent_at,
+      received_at: record.received_at,
+      text_body: record.text_body,
+      html_body: record.html_body,
+      attachments: record.attachments
+    }
+  end
+
+  defp dispatch_task_supervisor(persisted, source, opts) do
+    task_supervisor = Keyword.get(opts, :task_supervisor, Task.Supervisor)
+    task_supervisor_name = Keyword.get(opts, :task_supervisor_name, MailglassInbound.TaskSupervisor)
+    execution = Keyword.get(opts, :execution, __MODULE__)
+    execution_opts = execution_opts(opts, source)
+
+    _ = MailglassInbound.Application.maybe_warn_fallback_mode(opts)
+
+    case task_supervisor.start_child(task_supervisor_name, fn ->
+           _ = execution.execute(persisted, execution_opts)
+           :ok
+         end) do
+      {:ok, _pid} ->
+        {:ok, %{status: :queued, mode: :task_supervisor, durability: :best_effort}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp enqueue_attrs(
+         %{
+           route: route,
+           message: %InboundMessage{} = message,
+           inbound_record: %{id: inbound_record_id},
+           inbound_evidence: %{id: inbound_evidence_id}
+         },
+         source
+       ) do
+    %{
+      "inbound_record_id" => inbound_record_id,
+      "inbound_evidence_id" => inbound_evidence_id,
+      "route_status" => route_status(route),
+      "mailbox" => route_mailbox(route),
+      "source" => Atom.to_string(source),
+      "mailglass_tenant_id" => message.tenant_id
+    }
+  end
+
+  defp execution_opts(opts, source) do
+    []
+    |> Keyword.put(:source, source)
+    |> maybe_put(:inbound_records, Keyword.get(opts, :inbound_records))
+  end
+
+  defp maybe_put(opts, _key, nil), do: opts
+  defp maybe_put(opts, key, value), do: Keyword.put(opts, key, value)
+
   defp execution_attrs(%{
          route: %{status: :no_match},
          message: %InboundMessage{} = message,
          inbound_record: inbound_record,
          inbound_evidence: inbound_evidence
-       }) do
+       }, source) do
     %{
       tenant_id: message.tenant_id || inbound_record.tenant_id,
       inbound_record_id: inbound_record.id,
       inbound_evidence_id: inbound_evidence.id,
-      source: :fresh,
+      source: source,
       mailbox: nil,
       mailbox_outcome: :no_match
     }
@@ -41,14 +176,14 @@ defmodule MailglassInbound.Execution do
          message: %InboundMessage{} = message,
          inbound_record: inbound_record,
          inbound_evidence: inbound_evidence
-       }) do
+       }, source) do
     mailbox_name = Atom.to_string(mailbox)
 
     %{
       tenant_id: message.tenant_id || inbound_record.tenant_id,
       inbound_record_id: inbound_record.id,
       inbound_evidence_id: inbound_evidence.id,
-      source: :fresh,
+      source: source,
       mailbox: mailbox_name
     }
     |> classify_mailbox_result(mailbox, message)
@@ -90,4 +225,29 @@ defmodule MailglassInbound.Execution do
     |> Enum.reject(fn {_key, value} -> is_nil(value) or value == %{} end)
     |> Map.new()
   end
+
+  defp decode_route("no_match", _mailbox), do: {:ok, %{status: :no_match}}
+
+  defp decode_route("matched", mailbox) when is_binary(mailbox) and mailbox != "" do
+    {:ok, %{status: :matched, mailbox: mailbox_module(mailbox)}}
+  rescue
+    ArgumentError -> {:error, :invalid_job_args}
+  end
+
+  defp decode_route(_route_status, _mailbox), do: {:error, :invalid_job_args}
+
+  defp mailbox_module("Elixir." <> _rest = mailbox), do: String.to_existing_atom(mailbox)
+  defp mailbox_module(mailbox), do: mailbox |> String.split(".") |> Module.concat()
+
+  defp route_status(%{status: status}) when is_atom(status), do: Atom.to_string(status)
+  defp route_status(_route), do: "unknown"
+
+  defp route_mailbox(%{status: :matched, mailbox: mailbox}) when is_atom(mailbox) do
+    Atom.to_string(mailbox)
+  end
+
+  defp route_mailbox(_route), do: nil
+
+  defp normalize_provider(provider) when is_binary(provider), do: String.to_atom(provider)
+  defp normalize_provider(provider), do: provider
 end

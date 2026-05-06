@@ -38,8 +38,34 @@ defmodule MailglassInbound.OptionalDeps.Oban do
   @doc """
   Reports which execution seam is available for future internal runners.
   """
-  @spec runner() :: :oban | :inline
+  @spec runner() :: :oban | :task_supervisor
   def runner do
-    if available?(), do: :oban, else: :inline
+    configured = Application.get_env(:mailglass_inbound, :async_adapter)
+
+    cond do
+      configured == :task_supervisor ->
+        :task_supervisor
+
+      available?() ->
+        :oban
+
+      true ->
+        :task_supervisor
+    end
+  end
+
+  @doc """
+  Enqueues an internal inbound execution worker job when Oban is available.
+  """
+  @spec enqueue_inbound_execution(module(), map(), keyword()) :: {:ok, term()} | {:error, term()}
+  def enqueue_inbound_execution(worker, attrs, opts \\ [])
+      when is_atom(worker) and is_map(attrs) and is_list(opts) do
+    if runner() == :oban and Code.ensure_loaded?(worker) do
+      worker
+      |> apply(:new, [attrs, []])
+      |> Oban.insert()
+    else
+      {:error, :oban_unavailable}
+    end
   end
 end

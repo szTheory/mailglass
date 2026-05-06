@@ -2,12 +2,18 @@ defmodule MailglassInbound.WorkerTest do
   use ExUnit.Case, async: false
 
   defmodule Loader do
-    def load(%{"inbound_record_id" => record_id, "inbound_evidence_id" => evidence_id, "source" => source}) do
-      Process.put(:mailglass_inbound_worker_load_args, {record_id, evidence_id, source})
+    def load(%{
+          "inbound_record_id" => record_id,
+          "inbound_evidence_id" => evidence_id,
+          "source" => source,
+          "route_status" => route_status,
+          "mailbox" => mailbox
+        }) do
+      Process.put(:mailglass_inbound_worker_load_args, {record_id, evidence_id, source, route_status, mailbox})
 
       {:ok,
        %{
-         status: :inserted,
+          status: :inserted,
          route: %{status: :matched, mailbox: MailglassInbound.WorkerTest.AcceptMailbox},
          message: %MailglassInbound.InboundMessage{
            tenant_id: "tenant-123",
@@ -43,6 +49,8 @@ defmodule MailglassInbound.WorkerTest do
       args: %{
         "inbound_record_id" => "record-123",
         "inbound_evidence_id" => "evidence-123",
+        "route_status" => "matched",
+        "mailbox" => "Elixir.MailglassInbound.WorkerTest.AcceptMailbox",
         "source" => "fresh",
         "mailglass_tenant_id" => "tenant-123"
       }
@@ -55,7 +63,8 @@ defmodule MailglassInbound.WorkerTest do
              )
 
     assert Process.get(:mailglass_inbound_worker_load_args) ==
-             {"record-123", "evidence-123", "fresh"}
+             {"record-123", "evidence-123", "fresh", "matched",
+              "Elixir.MailglassInbound.WorkerTest.AcceptMailbox"}
 
     assert Keyword.get(Process.get(:mailglass_inbound_worker_execute_opts, []), :source) == :fresh
   end
@@ -65,6 +74,8 @@ defmodule MailglassInbound.WorkerTest do
       args: %{
         "inbound_record_id" => "record-123",
         "inbound_evidence_id" => "evidence-123",
+        "route_status" => "matched",
+        "mailbox" => "Elixir.MailglassInbound.WorkerTest.AcceptMailbox",
         "source" => "fresh",
         "mailglass_tenant_id" => "tenant-123"
       }
