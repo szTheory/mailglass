@@ -1,7 +1,7 @@
 # API Stability — mailglass_inbound
 
 This document is the canonical contract inventory for the `mailglass_inbound`
-package foundation shipped in Phase 39.
+package slice shipped in Phase 41.
 
 It answers three questions:
 
@@ -16,10 +16,12 @@ explicit inventory in this file.
 
 ### `stable`
 
-These surfaces are the stable Phase 39 package contract:
+These surfaces are the stable Phase 41 package contract:
 
 - `MailglassInbound`
 - `MailglassInbound.InboundMessage`
+- `MailglassInbound.Ingress.Plug`
+- `MailglassInbound.Ingress.CachingBodyReader`
 - `MailglassInbound.Router`
 - `MailglassInbound.Mailbox`
 - the documented storage boundary between canonical normalized rows and raw
@@ -28,8 +30,12 @@ These surfaces are the stable Phase 39 package contract:
 Stable means adopters may rely on:
 
 - one canonical `%MailglassInbound.InboundMessage{}` value object
+- one Postmark ingress mount path with explicit `body_reader` wiring
+- one SendGrid ingress mount path with explicit raw MIME delivery and shared
+  secret basic auth
 - one router DSL with recipient, subject, and header matchers only
 - one mailbox callback, `process/1`, with the documented outcomes only
+- canonical and raw evidence persistence happening before mailbox execution
 - replay remaining distinct from fresh receive semantics
 
 ### `internal`
@@ -39,6 +45,11 @@ execution work, but they are not part of the stable contract:
 
 - `MailglassInbound.OptionalDeps`
 - `MailglassInbound.OptionalDeps.Oban`
+- `MailglassInbound.Ingress.Provider`
+- `MailglassInbound.Ingress.Providers.Postmark`
+- `MailglassInbound.Ingress.Providers.Sendgrid`
+- `MailglassInbound.Ingress.Persist`
+- `MailglassInbound.Internal.Replay`
 - package-local persistence modules under `MailglassInbound.InboundRecords.*`
 - repo and schema helpers used to stamp package-owned storage
 
@@ -50,12 +61,12 @@ contract.
 
 ### `deferred`
 
-These capabilities are explicitly deferred beyond Phase 39:
+These capabilities are explicitly deferred beyond Phase 41:
 
-- provider-specific Postmark ingress
-- provider-specific SendGrid ingress
-- execution implementations for inline, async, bounded fallback, or replay
-  runners
+- providers beyond Postmark and SendGrid
+- public replay API, replay rerouting controls, or replay-as-reingest flows
+- mailbox execution implementations for inline, async, bounded fallback, or
+  operator-triggered runners
 - operator or UI surfaces
 - matcher expansion beyond recipient, subject, and headers
 
@@ -80,7 +91,7 @@ Stable root helper for package identity.
 
 Stable canonical normalized inbound value object.
 
-Documented field promises in Phase 39:
+Documented field promises in Phase 41:
 
 - tenant scope
 - provider provenance
@@ -96,6 +107,32 @@ Documented field promises in Phase 39:
 
 The stable struct intentionally excludes raw evidence, verification facts,
 replay identifiers, mailbox outcomes, storage paths, and provider-only extras.
+
+### `MailglassInbound.Ingress.Plug`
+
+Stable first-party Postmark and SendGrid ingress seam.
+
+Documented guarantees:
+
+- verify before tenant resolution or persistence
+- return explicit rejection, tenant failure, config failure, and duplicate
+  outcomes
+- normalize only into the locked `%MailglassInbound.InboundMessage{}`
+- persist canonical row plus raw evidence row before mailbox execution
+- acknowledge provider retries from durable receive truth instead of mailbox
+  outcomes
+
+### `MailglassInbound.Ingress.CachingBodyReader`
+
+Stable package-local `Plug.Parsers` helper used by the ingress plug.
+
+Documented guarantees:
+
+- stores exact bytes in `conn.private[:raw_body]`
+- remains path-local and opt-in
+- supports verify-first request handling for provider ingress
+- is required for Postmark raw-body verification and not required for SendGrid
+  multipart raw MIME delivery
 
 ### `MailglassInbound.Router`
 
@@ -119,3 +156,5 @@ Documented guarantees:
   `{:bounce, reason}`
 - raises, throws, and exits are execution failures handled by internal runners,
   not semantic mailbox outcomes
+- replay uses stored canonical and evidence truth, but replay orchestration is
+  still internal rather than public API

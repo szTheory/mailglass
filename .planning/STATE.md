@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Stability Lock
-status: ready for next milestone
-last_updated: "2026-05-06T13:15:00Z"
-last_activity: 2026-05-06 -- Archived v1.0 Stability Lock after Phase 38 completion and milestone audit closeout
+milestone: v1.1
+milestone_name: Inbound Core Slice
+status: phase 41 complete; phase 42 ready
+last_updated: "2026-05-06T17:04:11Z"
+last_activity: 2026-05-06 -- Completed Phase 41 SendGrid ingress, mailbox routing, replay truth, and docs-contract proof for `mailglass_inbound`
 progress:
   total_phases: 4
-  completed_phases: 4
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 12
-  percent: 100
+  completed_plans: 9
+  percent: 75
 ---
 
 # Project State
@@ -18,22 +18,22 @@ progress:
 ## Project Reference
 
 **Core Value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current Focus:** Post-`v1.0` milestone selection and live release cutover
+**Current Focus:** `v1.1` inbound package expansion in Phase 42, with async execution and adopter proof next after truthful two-provider ingress and replay delivery
 
 ## Current Position
 
-Phase: Milestone closeout complete
-Plan: —
-Status: Ready for next milestone
-Last activity: 2026-05-06 -- Archived v1.0 Stability Lock after Phase 38 completion and milestone audit closeout
+Phase: Phase 41 complete
+Plan: 41-01 / 41-02 / 41-03 complete
+Status: `mailglass_inbound` now ships truthful Postmark and SendGrid ingress, post-commit mailbox execution, SendGrid-specific duplicate collapse, replay over stored truth, and locked docs-contract proof; Phase 42 is next
+Last activity: 2026-05-06 -- Completed truthful second-provider ingress, mailbox routing, replay semantics, and docs-contract proof for Phase 41
 
-Progress: [██████████] 100%
+Progress: [#######---] 75%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 12
+- Total plans completed: 16
 - Average duration: —
 - Total execution time: —
 
@@ -47,3 +47,8 @@ Progress: [██████████] 100%
 - Phase 37 completed with canonical testing and admin trust docs, semantic Tier 1 drift checks, and a repo-root `verify.stability_contract` proof entrypoint.
 - Phase 38 completed with committed release proof artifacts, strict install/upgrade rehearsal evidence, and an explicit release checklist/record for the live cutover.
 - v1.0 milestone audit passed with accepted tech debt only: partial Nyquist bookkeeping for Phase 35, non-blocking boundary warnings in the support-contract lane, and manual branch-protection confirmation outside the repo.
+- v1.1 is intentionally the first sibling-package expansion after the core lock: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional mailbox execution.
+- Phase 39 is complete: `mailglass_inbound` now has a stable `InboundMessage`, router DSL, mailbox behaviour, package-local persistence boundary, optional Oban seam, and contract-proof docs/tests.
+- Phase 40 is complete: `mailglass_inbound` now ships a verify-first Postmark ingress plug, sealed normalization seam, duplicate-safe canonical/evidence persistence, and honest Phase 40 docs with contract-proof tests.
+- Phase 41 is complete: `mailglass_inbound` now supports truthful SendGrid ingress, post-commit mailbox execution, SendGrid-specific duplicate collapse, honest replay over stored truth, and locked second-provider docs-contract proof.
+- Conductor UI, Mailgun, SES, and `gen_smtp` relay ingress remain deliberately deferred so the first inbound milestone stays narrow and supportable.

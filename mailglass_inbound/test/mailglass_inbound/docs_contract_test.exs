@@ -3,12 +3,20 @@ defmodule MailglassInbound.DocsContractTest do
 
   @readme_path Path.expand("../../README.md", __DIR__)
   @stability_path Path.expand("../../docs/api_stability.md", __DIR__)
+  @postmark_ingress_path Path.expand("../../docs/postmark_ingress.md", __DIR__)
+  @sendgrid_ingress_path Path.expand("../../docs/sendgrid_ingress.md", __DIR__)
 
-  test "docs inventory names the stable phase 39 public modules" do
+  test "docs inventory names the stable phase 41 public modules" do
     readme = File.read!(@readme_path)
     stability = File.read!(@stability_path)
 
-    for module_name <- ["MailglassInbound.InboundMessage", "MailglassInbound.Router", "MailglassInbound.Mailbox"] do
+    for module_name <- [
+          "MailglassInbound.InboundMessage",
+          "MailglassInbound.Ingress.Plug",
+          "MailglassInbound.Ingress.CachingBodyReader",
+          "MailglassInbound.Router",
+          "MailglassInbound.Mailbox"
+        ] do
       assert readme =~ module_name
       assert stability =~ module_name
     end
@@ -18,18 +26,30 @@ defmodule MailglassInbound.DocsContractTest do
     assert stability =~ "deferred"
   end
 
-  test "package docs describe canonical storage plus raw evidence without overstating shipped ingress" do
+  test "package docs describe canonical storage plus raw evidence without widening provider internals" do
     readme = File.read!(@readme_path)
     stability = File.read!(@stability_path)
+    postmark = File.read!(@postmark_ingress_path)
+    sendgrid = File.read!(@sendgrid_ingress_path)
 
-    for doc <- [readme, stability] do
+    for doc <- [readme, stability, postmark, sendgrid] do
       assert doc =~ "canonical"
       assert doc =~ "raw evidence"
       assert doc =~ "replay"
-      refute doc =~ "Postmark ingress ships today"
-      refute doc =~ "SendGrid ingress ships today"
+      refute doc =~ "public provider behaviour"
+      refute doc =~ "public provider extension API"
       refute doc =~ "Conductor UI"
     end
+  end
+
+  test "postmark docs describe the body_reader requirement and explicit duplicate semantics" do
+    postmark = File.read!(@postmark_ingress_path)
+
+    assert postmark =~ "body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}"
+    assert postmark =~ "MailglassInbound.Ingress.Plug"
+    assert postmark =~ "duplicate"
+    assert postmark =~ "route compatibility"
+    refute postmark =~ "Mailbox.process/1 runs during ingress"
   end
 
   test "docs make the optional Oban seam explicit without making Oban mandatory" do
@@ -46,9 +66,40 @@ defmodule MailglassInbound.DocsContractTest do
     end
   end
 
+  test "sendgrid docs describe raw mime, basic auth, and persistence-before-execution posture" do
+    readme = File.read!(@readme_path)
+    stability = File.read!(@stability_path)
+    sendgrid = File.read!(@sendgrid_ingress_path)
+
+    for doc <- [readme, stability, sendgrid] do
+      assert doc =~ "SendGrid"
+      assert doc =~ "basic auth"
+      assert doc =~ "raw MIME"
+      assert doc =~ "before mailbox execution"
+    end
+
+    assert sendgrid =~ "execution outcomes do not control provider retries"
+    assert sendgrid =~ "raw_mime_fingerprint"
+  end
+
+  test "docs reject replay-as-fresh and unshipped verification claims" do
+    readme = File.read!(@readme_path)
+    stability = File.read!(@stability_path)
+    sendgrid = File.read!(@sendgrid_ingress_path)
+
+    for doc <- [readme, stability, sendgrid] do
+      refute doc =~ "replay as fresh receive"
+      refute doc =~ "re-ingest provider payloads"
+      refute doc =~ "signed multipart verification shipped"
+      refute doc =~ "replay reroutes silently"
+    end
+  end
+
   test "docs exclude deferred matcher, mailbox lifecycle, and fan-out claims" do
     readme = File.read!(@readme_path)
     stability = File.read!(@stability_path)
+    postmark = File.read!(@postmark_ingress_path)
+    sendgrid = File.read!(@sendgrid_ingress_path)
 
     forbidden_claims = [
       "body matcher",
@@ -61,7 +112,7 @@ defmodule MailglassInbound.DocsContractTest do
       "handle_failed"
     ]
 
-    for doc <- [readme, stability], claim <- forbidden_claims do
+    for doc <- [readme, stability, postmark, sendgrid], claim <- forbidden_claims do
       refute doc =~ claim
     end
   end
