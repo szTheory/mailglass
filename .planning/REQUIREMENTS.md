@@ -7,18 +7,18 @@
 
 ### Core Model And Routing
 
-- [x] **MODEL-01**: Adopter can depend on one canonical `%InboundMessage{}` struct for the first-party inbound package, with stable fields for routing, tenancy, and provider provenance.
-- [x] **ROUTE-01**: Adopter can route inbound mail to mailboxes using one DSL that matches on recipient, subject, and headers.
-- [x] **MAILBOX-01**: Adopter can implement mailbox handlers with explicit `:accept`, `:reject`, `:ignore`, and `{:bounce, reason}` outcomes.
+- [ ] **MODEL-01**: Adopter can depend on one canonical `%InboundMessage{}` struct for the first-party inbound package, with stable fields for routing, tenancy, and provider provenance.
+- [ ] **ROUTE-01**: Adopter can route inbound mail to mailboxes using one DSL that matches on recipient, subject, and headers.
+- [ ] **MAILBOX-01**: Adopter can implement mailbox handlers with explicit `:accept`, `:reject`, `:ignore`, and `{:bounce, reason}` outcomes.
 
 ### Provider Ingress
 
-- [x] **INGRESS-01**: Maintainer can verify and normalize Postmark inbound payloads into the canonical inbound model through a first-party ingress plug.
-- [x] **INGRESS-02**: Maintainer can verify and normalize SendGrid inbound payloads into the canonical inbound model through a first-party ingress plug.
+- [ ] **INGRESS-01**: Maintainer can verify and normalize Postmark inbound payloads into the canonical inbound model through a first-party ingress plug.
+- [ ] **INGRESS-02**: Maintainer can verify and normalize SendGrid inbound payloads into the canonical inbound model through a first-party ingress plug.
 
 ### Storage And Replay
 
-- [x] **STORE-01**: Operator can persist each inbound message as both normalized canonical data and raw provider source material sufficient for replay and debugging.
+- [ ] **STORE-01**: Operator can persist each inbound message as both normalized canonical data and raw provider source material sufficient for replay and debugging.
 - [ ] **STORE-02**: Operator can replay a stored inbound message through routing and mailbox processing without pretending it is a newly received provider event.
 
 ### Execution And Adoption
@@ -50,16 +50,16 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MODEL-01 | Phase 39 | Complete |
-| ROUTE-01 | Phase 39 | Complete |
-| MAILBOX-01 | Phase 39 | Complete |
-| INGRESS-01 | Phase 40 | Complete |
-| STORE-01 | Phase 40 | Complete |
-| INGRESS-02 | Phase 41 | Complete |
-| STORE-02 | Phase 41 | Pending |
-| EXEC-01 | Phase 42 | Pending |
-| EXEC-02 | Phase 42 | Pending |
-| ADOPT-01 | Phase 42 | Pending |
+| MODEL-01 | Phase 43 | Pending |
+| ROUTE-01 | Phase 43 | Pending |
+| MAILBOX-01 | Phase 43 | Pending |
+| INGRESS-01 | Phase 43 | Pending |
+| STORE-01 | Phase 43 | Pending |
+| INGRESS-02 | Phase 43 | Pending |
+| STORE-02 | Phase 43 | Pending |
+| EXEC-01 | Phase 44 | Pending |
+| EXEC-02 | Phase 44 | Pending |
+| ADOPT-01 | Phase 44 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 10 total
@@ -68,4 +68,4 @@
 
 ---
 *Requirements defined: 2026-05-06*
-*Last updated: 2026-05-06 after completing Phase 41 Plan 01 SendGrid ingress normalization*
+*Last updated: 2026-05-06 after adding gap-closure Phases 43-44 from the v1.1 milestone audit*

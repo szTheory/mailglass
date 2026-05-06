@@ -12,14 +12,14 @@
 - ✅ **v0.5 Adoption Hardening** — Phases 28-31 (shipped 2026-05-03) — see [milestones/v0.5-ROADMAP.md](milestones/v0.5-ROADMAP.md)
 - ✅ **v0.6 Production Maturity** — Phases 32-34 (shipped 2026-05-05) — see [milestones/v0.6-ROADMAP.md](milestones/v0.6-ROADMAP.md)
 - ✅ **v1.0 Stability Lock** — Phases 35-38 (shipped 2026-05-06) — see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1 Inbound Core Slice** — Phases 39-42 (active; Phase 39 completed 2026-05-06)
+- 🚧 **v1.1 Inbound Core Slice** — Phases 39-44 (active; audit gap closure phases added 2026-05-06)
 
 ## Current Milestone
 
 ### v1.1 Inbound Core Slice
 
-**Status:** Active. Phase 42 is complete; milestone closeout is next.
-**Phases:** 39-42
+**Status:** Active. Product implementation phases 39-42 are complete; audit gap closure phases 43-44 are next.
+**Phases:** 39-44
 **Total Plans:** 12
 
 ## Overview
@@ -87,6 +87,32 @@ Plans:
 - [x] 42-01: Add Oban-backed inbound execution plus a supported non-Oban fallback path
 - [x] 42-02: Publish canonical install, testing, and operator-trust docs for the core inbound slice
 - [x] 42-03: Extend sibling-package release and root verification proof to cover `mailglass_inbound`
+
+### Phase 43: Execution Verification Recovery
+
+**Goal**: Restore execution-level verification evidence for the inbound implementation phases so milestone requirements can be satisfied under the three-source audit check.
+**Depends on**: Phase 42
+**Requirements**: MODEL-01, ROUTE-01, MAILBOX-01, INGRESS-01, STORE-01, INGRESS-02, STORE-02
+**Gap Closure:** Closes execution verification and validation gaps identified by the `v1.1` milestone audit.
+**Plans**: 0 plans
+**Status:** Pending
+
+Plans:
+
+- [ ] TBD (`$gsd-plan-phase 43`)
+
+### Phase 44: Async Adoption Closeout Reconciliation
+
+**Goal**: Complete async/adopter verification evidence and reconcile milestone bookkeeping so closeout records no longer contradict the audit.
+**Depends on**: Phase 43
+**Requirements**: EXEC-01, EXEC-02, ADOPT-01
+**Gap Closure:** Closes closeout-readiness integration gaps and the remaining milestone verification chain gaps from the `v1.1` audit.
+**Plans**: 0 plans
+**Status:** Pending
+
+Plans:
+
+- [ ] TBD (`$gsd-plan-phase 44`)
 
 ---
 
