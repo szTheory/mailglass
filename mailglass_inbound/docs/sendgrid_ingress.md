@@ -1,11 +1,12 @@
 # SendGrid Ingress
 
-Phase 41 adds the second real inbound path: verified SendGrid ingress plus
-truthful mailbox execution and replay posture.
+Use the README as the primary setup lane. This guide keeps the SendGrid-specific
+details focused: raw MIME delivery, duplicate fingerprinting, and replay
+recovery posture.
 
 ## Mount Path
 
-Mount the package-local plug on an obvious SendGrid route:
+Mount the package-local plug on one obvious SendGrid route:
 
 ```elixir
 forward "/inbound/:tenant_id/sendgrid",
@@ -20,19 +21,19 @@ The ingress plug is verify-first:
 2. resolve tenant scope
 3. normalize the raw MIME `email` part into `%MailglassInbound.InboundMessage{}`
 4. persist one canonical row plus one raw evidence row
-5. execute the matched mailbox only after durable persistence commits
+5. dispatch the matched mailbox only after durable persistence commits
 
 ## Configuration
 
-Configure the shipped Phase 41 SendGrid seam through `:mailglass_inbound`:
+Configure the shipped SendGrid seam through `:mailglass_inbound`:
 
 ```elixir
 config :mailglass_inbound, :sendgrid,
   basic_auth: {"sendgrid-user", "sendgrid-pass"}
 ```
 
-Phase 41 ships shared-secret basic auth only. Signed multipart verification did
-not ship in this slice.
+This slice ships shared-secret basic auth only. Signed multipart verification
+did not ship in this slice.
 
 ## Raw MIME Requirement
 
@@ -48,8 +49,10 @@ Verified SendGrid ingress writes two truths before mailbox execution starts:
 - one linked raw evidence row in `mailglass_inbound_evidence`
 
 Mailbox execution happens after persistence and records append-only internal
-execution lineage. execution outcomes do not control provider retries; the
-provider receives `200` once receive truth is safely committed.
+execution lineage. Oban-backed execution is the durable path. Task.Supervisor
+fallback is bounded best-effort only with no durable enqueue and no automatic
+retry. execution outcomes do not control provider retries; the provider
+receives `200` once receive truth is safely committed.
 
 ## Duplicate Handling
 
@@ -78,4 +81,5 @@ Replay is not:
 
 If the record predates execution-lineage capture, or if fresh history only
 contains `:no_match`, replay fails with an explicit operator-facing error
-instead of guessing a mailbox.
+instead of guessing a mailbox. Recovery in fallback mode depends on replay or
+operator action over the stored truth rather than automatic retries.

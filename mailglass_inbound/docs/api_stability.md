@@ -1,13 +1,13 @@
 # API Stability — mailglass_inbound
 
-This document is the canonical contract inventory for the `mailglass_inbound`
-package slice shipped in Phase 41.
+This document is the canonical contract inventory for the shipped
+`mailglass_inbound` slice.
 
 It answers three questions:
 
 1. Which surfaces are stable now.
 2. Which reachable surfaces are internal implementation support.
-3. Which capabilities are deferred to later phases.
+3. Which capabilities are still deferred.
 
 Generated docs reachability is not the contract by itself. The contract is the
 explicit inventory in this file.
@@ -16,7 +16,7 @@ explicit inventory in this file.
 
 ### `stable`
 
-These surfaces are the stable Phase 41 package contract:
+These surfaces are the stable package contract:
 
 - `MailglassInbound`
 - `MailglassInbound.InboundMessage`
@@ -30,21 +30,26 @@ These surfaces are the stable Phase 41 package contract:
 Stable means adopters may rely on:
 
 - one canonical `%MailglassInbound.InboundMessage{}` value object
-- one Postmark ingress mount path with explicit `body_reader` wiring
-- one SendGrid ingress mount path with explicit raw MIME delivery and shared
-  secret basic auth
+- one explicit manual setup path with `Plug.Parsers` body-reader wiring
+- one Postmark ingress mount path and one SendGrid ingress mount path
+- one SendGrid raw MIME path with basic auth verification
 - one router DSL with recipient, subject, and header matchers only
 - one mailbox callback, `process/1`, with the documented outcomes only
-- canonical and raw evidence persistence happening before mailbox execution
+- canonical and raw evidence persistence happening before mailbox execution is
+  dispatched
+- Oban-backed execution being the durable path when Oban is present
+- Task.Supervisor fallback being bounded best-effort only when Oban is absent
 - replay remaining distinct from fresh receive semantics
 
 ### `internal`
 
-These surfaces may exist for package wiring, compile support, or future
-execution work, but they are not part of the stable contract:
+These surfaces may exist for package wiring or async execution support, but they
+are not part of the stable contract:
 
 - `MailglassInbound.OptionalDeps`
 - `MailglassInbound.OptionalDeps.Oban`
+- `MailglassInbound.Execution`
+- `MailglassInbound.Execution.Worker`
 - `MailglassInbound.Ingress.Provider`
 - `MailglassInbound.Ingress.Providers.Postmark`
 - `MailglassInbound.Ingress.Providers.Sendgrid`
@@ -52,22 +57,27 @@ execution work, but they are not part of the stable contract:
 - `MailglassInbound.Internal.Replay`
 - package-local persistence modules under `MailglassInbound.InboundRecords.*`
 - repo and schema helpers used to stamp package-owned storage
+- queue names, retry tuning, worker args, and direct `Oban` integration details
+- Task.Supervisor startup and process wiring
 
-`MailglassInbound.OptionalDeps.Oban` is intentionally reachable so later plans
-can add execution runners without hard-coupling Oban into the package.
-Availability checks through this module are supported, but Oban-backed workers,
-queue names, and direct `Oban` integration details are not part of the stable
-contract.
+`MailglassInbound.OptionalDeps.Oban` is intentionally reachable so the package
+can branch on Oban availability without forcing direct `Oban` references into
+adopter code. Availability checks through this module are supported, but worker
+modules, Oban job structs, queue names, and enqueue internals are not part of
+the stable contract.
+
+Replay orchestration is also internal. The package preserves replay over stored
+truth, but no public replay API is stable here, and no adopter-facing worker
+surface or operator UI surface is promised.
 
 ### `deferred`
 
-These capabilities are explicitly deferred beyond Phase 41:
+These capabilities are explicitly deferred:
 
+- public replay API, replay command surface, or replay rerouting controls
+- operator or UI surfaces for inbound inspection and replay
+- public worker hooks, public queue configuration, or Oban job struct contracts
 - providers beyond Postmark and SendGrid
-- public replay API, replay rerouting controls, or replay-as-reingest flows
-- mailbox execution implementations for inline, async, bounded fallback, or
-  operator-triggered runners
-- operator or UI surfaces
 - matcher expansion beyond recipient, subject, and headers
 
 Deferred means the package does not yet promise:
@@ -91,7 +101,7 @@ Stable root helper for package identity.
 
 Stable canonical normalized inbound value object.
 
-Documented field promises in Phase 41:
+Documented field promises in this slice:
 
 - tenant scope
 - provider provenance
@@ -106,7 +116,7 @@ Documented field promises in Phase 41:
 - normalized attachment manifest without attachment bytes
 
 The stable struct intentionally excludes raw evidence, verification facts,
-replay identifiers, mailbox outcomes, storage paths, and provider-only extras.
+replay identifiers, worker metadata, storage paths, and provider-only extras.
 
 ### `MailglassInbound.Ingress.Plug`
 
@@ -118,7 +128,8 @@ Documented guarantees:
 - return explicit rejection, tenant failure, config failure, and duplicate
   outcomes
 - normalize only into the locked `%MailglassInbound.InboundMessage{}`
-- persist canonical row plus raw evidence row before mailbox execution
+- persist canonical row plus raw evidence row before mailbox execution is
+  dispatched
 - acknowledge provider retries from durable receive truth instead of mailbox
   outcomes
 
@@ -132,7 +143,7 @@ Documented guarantees:
 - remains path-local and opt-in
 - supports verify-first request handling for provider ingress
 - is required for Postmark raw-body verification and not required for SendGrid
-  multipart raw MIME delivery
+  raw MIME delivery
 
 ### `MailglassInbound.Router`
 
@@ -143,7 +154,7 @@ Documented guarantees:
 - routes are evaluated top to bottom
 - multiple clauses on one route are logical `AND`
 - exact string and regex support only
-- no-match is explicit and non-exceptional
+- `:no_match` is explicit and non-exceptional
 
 ### `MailglassInbound.Mailbox`
 
@@ -156,5 +167,5 @@ Documented guarantees:
   `{:bounce, reason}`
 - raises, throws, and exits are execution failures handled by internal runners,
   not semantic mailbox outcomes
-- replay uses stored canonical and evidence truth, but replay orchestration is
-  still internal rather than public API
+- replay uses stored canonical and raw evidence truth, but replay orchestration
+  remains internal rather than public API

@@ -1,95 +1,208 @@
 # MailglassInbound
 
-`mailglass_inbound` is the inbound sibling package for Mailglass.
+`mailglass_inbound` is the inbound sibling package for Mailglass. This README
+is the canonical adoption lane for the shipped inbound slice: install the
+package manually, wire the endpoint/body-reader path explicitly, mount the
+provider plugs you need, choose the async execution mode you want, and verify
+the contract with the package test lanes.
 
-Phase 41 ships the first honest multi-provider inbound slice: one canonical
-normalized inbound message contract, one shared ingress plug for Postmark and
-SendGrid, one router DSL, one mailbox behaviour, one package-local storage
-boundary between canonical rows and raw evidence, and one append-only internal
-execution lineage for fresh runs and replay.
+## Stable Package Surface
 
-## Stable in Phase 41
+The stable inbound package contract is intentionally narrow:
 
-- `MailglassInbound.InboundMessage` is the stable normalized value object used
-  for routing and mailbox processing.
-- `MailglassInbound.Ingress.Plug` is the stable first-party Postmark and
-  SendGrid ingress entrypoint for verified inbound requests.
-- `MailglassInbound.Ingress.CachingBodyReader` is the stable `Plug.Parsers`
-  `:body_reader` helper required by the Postmark ingress path.
-- `MailglassInbound.Router` is the stable adopter-owned routing DSL with
-  recipient, subject, and header matching.
-- `MailglassInbound.Mailbox` is the stable mailbox callback contract with the
-  four documented outcomes.
-- Canonical storage and raw evidence storage are distinct on purpose:
-  canonical rows hold normalized adopter-facing truth, raw evidence preserves
-  replay and audit material that does not belong on the public struct.
+- `MailglassInbound`
+- `MailglassInbound.InboundMessage`
+- `MailglassInbound.Ingress.Plug`
+- `MailglassInbound.Ingress.CachingBodyReader`
+- `MailglassInbound.Router`
+- `MailglassInbound.Mailbox`
 
-## Storage Posture
+Use [`docs/api_stability.md`](docs/api_stability.md) as the canonical inventory
+for what is stable, what is internal, and what is still deferred.
+
+## Manual Setup
+
+Inbound setup is manual in this phase. There is no generated setup path for
+`mailglass_inbound`, so adopters should wire the package explicitly.
+
+### 1. Add the dependency and fetch deps
+
+```elixir
+defp deps do
+  [
+    {:mailglass_inbound, "~> 0.3.2"},
+    {:mailglass, "~> 0.3.2"},
+    {:oban, "~> 2.21"}
+  ]
+end
+```
+
+If you do not want durable background execution yet, omit `{:oban, "~> 2.21"}`
+and the package will use the bounded fallback described below.
+
+Fetch dependencies:
+
+```bash
+mix deps.get
+```
+
+### 2. Run the inbound migrations
+
+`mailglass_inbound` persists canonical receive truth, raw evidence, and
+append-only execution lineage. Run the package migrations in the host app
+before mounting ingress:
+
+```bash
+mix ecto.migrate
+```
+
+### 3. Wire `Plug.Parsers` with the package body reader
+
+Postmark verification requires the exact request bytes. SendGrid raw MIME
+delivery does not need the cached raw body, but the shared ingress path should
+still be wired once at the endpoint:
+
+```elixir
+plug Plug.Parsers,
+  parsers: [:urlencoded, :multipart, :json],
+  pass: ["*/*"],
+  json_decoder: Jason,
+  body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}
+```
+
+Without that `body_reader`, the Postmark path fails closed with
+`:webhook_caching_body_reader_missing`.
+
+### 4. Define the router and mailboxes
+
+```elixir
+defmodule MyApp.MailglassInboundRouter do
+  use MailglassInbound.Router
+
+  route MyApp.Mailboxes.SupportMailbox, recipient: "support@example.com"
+end
+```
+
+Mailboxes implement one stable callback:
+
+```elixir
+defmodule MyApp.Mailboxes.SupportMailbox do
+  @behaviour MailglassInbound.Mailbox
+
+  @impl true
+  def process(message) do
+    _ = message
+    :accept
+  end
+end
+```
+
+Supported outcomes are `:accept`, `:ignore`, `{:reject, reason}`, and
+`{:bounce, reason}`.
+
+### 5. Mount the provider ingress paths
+
+Mount one obvious route per provider you are using:
+
+```elixir
+forward "/inbound/:tenant_id/postmark",
+  MailglassInbound.Ingress.Plug,
+  provider: :postmark,
+  router: MyApp.MailglassInboundRouter
+
+forward "/inbound/:tenant_id/sendgrid",
+  MailglassInbound.Ingress.Plug,
+  provider: :sendgrid,
+  router: MyApp.MailglassInboundRouter
+```
+
+The plug verifies first, resolves the tenant, normalizes into
+`%MailglassInbound.InboundMessage{}`, and persists canonical and raw evidence
+rows before mailbox execution is dispatched for newly inserted records.
+
+### 6. Configure each provider
+
+```elixir
+config :mailglass_inbound, :postmark,
+  basic_auth: {"postmark-user", "postmark-pass"},
+  ip_allowlist: []
+
+config :mailglass_inbound, :sendgrid,
+  basic_auth: {"sendgrid-user", "sendgrid-pass"}
+```
+
+Postmark uses shared-secret basic auth plus optional IP allowlisting. SendGrid
+ships shared-secret basic auth only in this slice.
+
+### 7. Choose the async execution mode
+
+Oban-backed execution is the durable path. When Oban is present, new matched
+records are enqueued through an internal worker after persistence commits.
+
+Task.Supervisor fallback is bounded best-effort only. When Oban is absent, the
+package starts a supervised background task with no durable enqueue and no
+automatic retry. Recovery after node loss or shutdown depends on replay or operator action
+over the stored receive truth.
+
+You may force fallback mode explicitly:
+
+```elixir
+config :mailglass_inbound, :async_adapter, :task_supervisor
+```
+
+The public contract does not include Oban job shapes, queue names, worker
+modules, or replay orchestration details.
+
+## Provider Notes
+
+Keep the README as the primary setup path, then use the focused provider guides
+for provider-specific caveats:
+
+- [`docs/postmark_ingress.md`](docs/postmark_ingress.md) for raw-body
+  verification, duplicate behavior, and Postmark-specific persistence notes
+- [`docs/sendgrid_ingress.md`](docs/sendgrid_ingress.md) for raw MIME delivery,
+  duplicate fingerprinting, and replay/recovery posture
+
+## Receive, Duplicate, And Replay Truth
 
 The package stores two kinds of truth:
 
 - canonical normalized rows for stable routing and mailbox inputs
-- raw evidence for provider payloads, raw MIME, verification facts, attachment
-  bytes, and replay support
+- raw evidence for provider payloads, raw MIME, verification facts, parse
+  warnings, and replay support
 
 Fresh ingress persists canonical plus raw evidence truth before any mailbox
-execution runs. Provider retries are acknowledged from receive truth; mailbox
-outcomes do not drive provider retry semantics.
+execution is dispatched. Provider retries are acknowledged from receive truth;
+mailbox outcomes do not drive provider retry semantics.
 
-Replay is explicit rerun execution against stored canonical plus evidence truth.
-It is not presented as a fresh inbound receive, and it does not silently
-reroute to a different mailbox.
+Duplicate fresh ingress is explicit and provider-specific:
 
-## Ingress Now
+- Postmark collapses on `(tenant_id, provider, provider_message_id)`
+- SendGrid collapses on `(tenant_id, provider, raw_mime_fingerprint)`
 
-Phase 41 adds two honest inbound paths through the same plug:
+Replay is a recovery operation over stored canonical plus raw evidence truth.
+It is not a fresh provider receive, it does not silently reroute to a different
+mailbox, and it is not a public API in this phase.
 
-- mount `MailglassInbound.Ingress.Plug` behind your Phoenix route for Postmark
-  or SendGrid
-- configure `Plug.Parsers` with
-  `body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}`
-- set `config :mailglass_inbound, :postmark, basic_auth: {user, pass}` for
-  verify-first basic auth
-- set `config :mailglass_inbound, :sendgrid, basic_auth: {user, pass}` for
-  verify-first basic auth
-- for SendGrid, enable the raw MIME `email` part; the package fails closed if
-  SendGrid only posts parsed multipart fields
-- expect verify-first request handling, explicit rejection or duplicate
-  outcomes, canonical-plus-evidence persistence before mailbox execution, and post-commit mailbox
-  execution for newly inserted records only
+## Verification Commands
 
-The ingress plug verifies provider credentials before tenant resolution,
-normalizes into `%MailglassInbound.InboundMessage{}`, persists one canonical row
-plus one raw evidence row, and returns explicit `inserted` or `duplicate`
-success outcomes. When a new record matches a mailbox, execution happens after
-durable persistence and is recorded as internal execution lineage.
+Recommended package proof lanes after wiring the package:
 
-See [`docs/postmark_ingress.md`](docs/postmark_ingress.md) for the concrete
-Postmark path and [`docs/sendgrid_ingress.md`](docs/sendgrid_ingress.md) for
-the SendGrid path, duplicate semantics, and replay posture.
+```bash
+mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors
+mix test test/mailglass_inbound/ingress/plug_test.exs test/mailglass_inbound/replay_test.exs --warnings-as-errors
+```
 
-## Optional Oban Seam
+Those lanes prove the package docs, duplicate handling, async ingress
+acknowledgment, replay posture, and stability claims stay aligned with shipped
+behavior.
 
-Phase 39 keeps an optional Oban seam without making Oban mandatory.
-`MailglassInbound.OptionalDeps.Oban` reports whether Oban is available so later
-internal execution runners can branch cleanly. No queue configuration,
-worker contract, or job-shaped return value is promised in this phase.
+## Deferred Beyond This Slice
 
-## Deferred Beyond Phase 41
+These capabilities remain intentionally out of the stable inbound contract:
 
-These capabilities are intentionally deferred:
-
-- broader provider parity beyond Postmark and SendGrid
-- public replay API, inline/async execution configuration, and operator-facing
-  replay tooling
-- operator and UI surfaces
-- expanded matcher surface beyond recipient, subject, and header clauses
-
-That means no body matching, attachment matching, raw MIME matching,
-multi-match routing, or mailbox lifecycle hooks are part of the package
-contract yet. Provider internals and replay internals remain package-local.
-
-## Contract Inventory
-
-Use [`docs/api_stability.md`](docs/api_stability.md) as the canonical contract
-inventory for what is stable now, what is internal, and what remains deferred.
+- public replay API or replay command surface
+- operator UI for inbound receive/replay flows
+- direct worker contracts, queue configuration, or Oban job return values
+- providers beyond Postmark and SendGrid
+- matcher expansion beyond recipient, subject, and headers
