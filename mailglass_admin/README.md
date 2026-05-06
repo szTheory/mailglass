@@ -10,14 +10,43 @@ inspect provider lifecycle facts, replay facts, and reconcile facts for one
 selected delivery. The canonical support runbook lives in
 `guides/operator-incident-support.md`.
 
+## API Stability
+
+The canonical operator trust contract lives in
+[`docs/operator-trust.md`](docs/operator-trust.md).
+
+The canonical `v1.x` admin surface inventory lives in
+[`docs/api_stability.md`](docs/api_stability.md).
+
+The canonical matched-sibling compatibility and deprecation policy lives in the
+core repo guide
+[`../guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md)
+and is re-exposed here through
+[`docs/compatibility-and-deprecations.md`](docs/compatibility-and-deprecations.md).
+
+The trust contract is intentionally narrow:
+
+- stable: router macros, their documented options, the `MailglassAdmin.Auth`
+  behaviour, and the operator auth/session/replay semantics
+- internal: LiveView modules, component modules, DOM/CSS shape, preview assigns
+  plumbing, layouts, and internal mount wiring
+
+Do not treat ExDoc visibility, public function reachability, or framework
+callback exports as the contract by themselves.
+
+Use `docs/operator-trust.md` for the stable router/auth/session/replay
+semantics. Use the compatibility guide for release-line matching,
+support-matrix truth, retained compatibility bridges, and upgrade posture. Use
+the admin stability page only for the package surface inventory.
+
 ## Installation
 
 Add `mailglass_admin` to your adopter app's `mix.exs`:
 
     def deps do
       [
-        {:mailglass, "~> 0.1"},
-        {:mailglass_admin, "~> 0.1", only: :dev}
+        {:mailglass, "~> 0.3"},
+        {:mailglass_admin, "~> 0.3", only: :dev}
       ]
     end
 
@@ -115,7 +144,7 @@ entry to your endpoint:
       ]
 
 The topic is prefixed `mailglass:admin:reload` (not bare `mailglass_admin_reload`)
-to match the LINT-06 `mailglass:`-prefixed PubSub topic convention. When
+to match the package's `mailglass:`-prefixed PubSub naming convention. When
 LiveReload is not configured the preview still works — the adopter just
 refreshes the browser manually.
 
@@ -169,8 +198,10 @@ before you write any scenarios.
 - Search, filter, or pagination over mailables. v0.5.
 - Inbound-mail (`mailglass_inbound`) Conductor LiveView — separate sibling
   package, v0.5+.
+- Stable DOM/component/LiveView implementation APIs. Those remain internal even
+  when they are visible in generated docs or reachable in source.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE). Released alongside `mailglass` via
-coordinated linked-version Release Please tags.
+MIT. Released alongside `mailglass` via coordinated linked-version Release
+Please tags.

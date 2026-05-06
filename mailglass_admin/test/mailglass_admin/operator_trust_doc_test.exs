@@ -8,7 +8,8 @@ defmodule MailglassAdmin.OperatorTrustDocTest do
 
     assert doc =~ "## Stable seams"
     assert doc =~ "MailglassAdmin.Router"
-    assert doc =~ "MailglassAdmin.Auth.authorize/2"
+    assert doc =~ "MailglassAdmin.Auth"
+    assert doc =~ "`authorize/2` callback"
     assert doc =~ "subject_id"
     assert doc =~ "tenant_id"
     assert doc =~ "auth_method"

@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Mailglass.Reconcile do
 
   @shortdoc "Run the webhook orphan reconciliation sweep on demand"
 
+  @moduledoc since: "0.3.0"
   @moduledoc """
   Manually trigger the same reconciliation sweep that
   `Mailglass.Webhook.Reconciler` runs on its Oban cron schedule.

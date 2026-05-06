@@ -44,8 +44,7 @@ the common path honest.
 Helper semantics in this baseline are exact:
 
 - `assert_mail_sent/0,1` reads the current test process mailbox.
-- `last_mail/0` reads Fake-backed delivery storage and does not consume the
-  process mailbox.
+- `last_mail/0` reads Fake-backed delivery storage and does not consume the process mailbox.
 - `wait_for_mail/1` waits up to a timeout for `{:mail, %Mailglass.Message{}}`
   to arrive and fails if nothing arrives before the timeout.
 

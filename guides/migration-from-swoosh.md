@@ -1,5 +1,13 @@
 # Migration from raw Swoosh
 
+This guide is now a subordinate raw-Swoosh migration reference.
+
+The canonical latest-`0.x` to `1.0` path lives in
+[`upgrading-to-v1_0.md`](upgrading-to-v1_0.md). Use that guide for the full
+compatibility-lane inventory, support matrix, and strict-CI posture. Use this
+page when you specifically need the incremental "keep raw `%Swoosh.Email{}` for
+parity while adopting mailglass" slice.
+
 This guide helps you move from a raw Swoosh setup to mailglass while preserving your adapter credentials and your ability to deliver plain `%Swoosh.Email{}` values through the mailglass pipeline.
 
 ## Prerequisites
@@ -72,6 +80,11 @@ MyApp.UserMailer.welcome(%{email: "migrated@example.com"})
 ```
 
 Mailglass still accepts a plain `%Swoosh.Email{}` when you need parity during an incremental migration.
+
+That raw-email path is a retained compatibility bridge, not the preferred
+`1.x` authoring lane. For the canonical support horizon and replacement story,
+defer to [`upgrading-to-v1_0.md`](upgrading-to-v1_0.md) and
+[`compatibility-and-deprecations.md`](compatibility-and-deprecations.md).
 
 ## End-to-End Example
 

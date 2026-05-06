@@ -22,8 +22,8 @@
 
 ## Phases
 
-- [ ] **Phase 35: Stability Contract Audit** - Lock the exact stable `v1.x` surface across `mailglass` and `mailglass_admin`.
-- [ ] **Phase 36: Deprecation and Compatibility Contract** - Publish the canonical `1.x` policy, support matrix, and `0.x -> 1.0` upgrade path.
+- [x] **Phase 35: Stability Contract Audit** - Lock the exact stable `v1.x` surface across `mailglass` and `mailglass_admin`. (completed 2026-05-05)
+- [x] **Phase 36: Deprecation and Compatibility Contract** - Publish the canonical `1.x` policy, support matrix, and `0.x -> 1.0` upgrade path. (completed 2026-05-05)
 - [ ] **Phase 37: Contract Enforcement and Trust Docs** - Enforce the documented contract and ship trust docs for testing and admin semantics.
 - [ ] **Phase 38: Release Rehearsal and Proof Artifacts** - Rehearse install, upgrade, artifact verification, and release cutover for `v1.0`.
 
@@ -38,10 +38,12 @@
   2. Adopter can find one canonical inventory of stable `mailglass_admin` router, auth, and operator-service seams, with UI implementation details explicitly marked as internal.
   3. Maintainer can classify exported-but-unsupported surfaces as internal or sibling-package-only without expanding the accidental public contract.
   4. Generated docs show `@since` and deprecation metadata on stable public APIs so the contract is visible at the point of use.
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [x] 35-01-PLAN.md — Publish the canonical core `mailglass` v1.x contract inventory and align root adopter docs.
+- [x] 35-02-PLAN.md — Define the narrow `mailglass_admin` stable boundary and mark UI internals as non-contract.
+- [x] 35-03-PLAN.md — Complete point-of-use metadata and refresh light docs-contract checks for the stability inventory.
 
 ### Phase 36: Deprecation and Compatibility Contract
 **Goal**: Adopters can upgrade within `1.x` and from the latest `0.x` path using one narrow, explicit compatibility promise.
@@ -52,10 +54,12 @@ Plans:
   2. Adopter can read one support matrix covering runtime floors, Phoenix/Postgres scope, sibling-package expectations, and optional-dependency lanes.
   3. Adopter can follow one canonical `0.x -> 1.0` upgrade guide that identifies legacy entrypoints, required code changes, and expected warning behavior.
   4. Maintainer can verify every still-supported deprecated path has a documented replacement and no planned removal before `v2.0`.
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [x] 36-01-PLAN.md — Publish the canonical `1.x` compatibility/deprecation policy and repo-truth support matrix, then point Tier 1 docs to it.
+- [x] 36-02-PLAN.md — Publish the canonical latest-`0.x` to `1.0` upgrade guide and classify the retained compatibility lane against source truth.
+- [x] 36-03-PLAN.md — Extend lightweight docs/tests checks so the compatibility contract and deprecated-path inventory stay verifiable without heavy enforcement.
 
 ### Phase 37: Contract Enforcement and Trust Docs
 **Goal**: Maintainers can prove the documented contract stays honest, and adopters can rely on stable testing and admin semantics without depending on internals.
@@ -66,10 +70,12 @@ Plans:
   2. Maintainer can detect leaked internal modules, docs, types, mix tasks, or sibling-package contract violations before release.
   3. Adopter can rely on one documented testing contract covering inline, async, Oban, and cross-process delivery workflows.
   4. Adopter can rely on admin mount, auth, and operator-action docs that describe stable semantics without freezing DOM, component, or LiveView internals.
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [ ] 37-01-PLAN.md — Rewrite `guides/testing.md` into the canonical testing contract and prove it against shipped helper and harness semantics.
+- [ ] 37-02-PLAN.md — Publish the canonical admin trust contract and prove the stable router/auth/session/replay seams without freezing UI internals.
+- [ ] 37-03-PLAN.md — Add one semantic repo-root stability proof workflow and wire lightweight contract enforcement around the canonical trust docs.
 
 ### Phase 38: Release Rehearsal and Proof Artifacts
 **Goal**: Maintainers have fresh proof artifacts showing the documented install, upgrade, docs, and sibling-package release flow are trustworthy enough for `v1.0`.
@@ -80,26 +86,28 @@ Plans:
   2. Maintainer can prove an app on the latest `0.x` upgrade path can reach `v1.0` using the documented migration steps and smoke checks.
   3. Maintainer can verify tarball contents, HexDocs inputs, and sibling-package version pins before publish so release artifacts match the documented contract.
   4. Maintainer can execute a release checklist that includes the required CI buckets and any remaining manual external checks needed for a trustworthy `v1.0` cut.
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [ ] 38-01-PLAN.md — Export the committed prepublish proof bundle from existing package/docs/pin release seams.
+- [ ] 38-02-PLAN.md — Rehearse the canonical fresh-install and strict upgrade paths with committed evidence artifacts.
+- [ ] 38-03-PLAN.md — Publish the narrow release checklist and release record for the final `v1.0` cutover.
 
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 35. Stability Contract Audit | 0/TBD | Not started | - |
-| 36. Deprecation and Compatibility Contract | 0/TBD | Not started | - |
-| 37. Contract Enforcement and Trust Docs | 0/TBD | Not started | - |
-| 38. Release Rehearsal and Proof Artifacts | 0/TBD | Not started | - |
+| 35. Stability Contract Audit | 3/3 | Complete    | 2026-05-05 |
+| 36. Deprecation and Compatibility Contract | 3/3 | Complete | 2026-05-05 |
+| 37. Contract Enforcement and Trust Docs | 0/3 | Not started | - |
+| 38. Release Rehearsal and Proof Artifacts | 0/3 | Not started | - |
 
 ## Backlog
 
 ### Phase 999.1: Human-Readable Code Comments + GSD Artifact Cleanup (BACKLOG)
 **Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
 **Requirements:** TBD
-**Plans:** 5/5 plans complete
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] TBD (promote with $gsd-review-backlog when ready)

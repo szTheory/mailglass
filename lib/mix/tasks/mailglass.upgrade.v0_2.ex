@@ -2,13 +2,17 @@
 defmodule Mix.Tasks.Mailglass.Upgrade.V0_2 do
   use Boundary, classify_to: Mailglass
 
-  @migration_guide_url "https://hexdocs.pm/mailglass/guides/upgrading-from-v0_1.html"
+  @migration_guide_url "https://hexdocs.pm/mailglass/guides/upgrading-to-v1_0.html"
 
-  @shortdoc "Codemod to upgrade raw Swoosh calls to native Mailglass.Message setters"
+  @shortdoc "Transitional codemod for the Mailglass.Message setter upgrade path"
 
   @moduledoc """
-  Upgrades adopter code from raw `Swoosh.Email` usage to native `Mailglass.Message` setters
-  as part of the v0.2 Mailable API redesign.
+  Transitional codemod that upgrades adopter code from raw `Swoosh.Email`
+  usage to native `Mailglass.Message` setters.
+
+  Use this task as one step in the canonical `0.x -> 1.0` migration path, not
+  as the whole compatibility contract by itself. The authoritative guide lives
+  at `guides/upgrading-to-v1_0.md`.
 
   ## Options
 

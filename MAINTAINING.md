@@ -25,6 +25,7 @@ When the installer output or golden files change:
 ## Required Checks
 
 Before merging any PR, ensure:
+- `mix verify.stability_contract`
 - `scripts/verify_support_contract.sh`
 - `Support Contract Core`
 - `Support Contract Admin`
@@ -33,11 +34,18 @@ Before merging any PR, ensure:
 - `mix dialyzer`
 - `mix docs --warnings-as-errors`
 
-The honest repo-root entrypoint is `scripts/verify_support_contract.sh`. It runs the
-three required branch-protection buckets in sequence:
+The honest repo-root entrypoint is `mix verify.stability_contract` or
+`scripts/verify_support_contract.sh`. They run the three required
+branch-protection buckets in sequence:
 - `Support Contract Core`
 - `Support Contract Admin`
 - `Compile No Optional Deps`
+
+When those checks pass, they prove the current compatibility contract described
+in [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md):
+runtime floors, matched `mailglass_admin` release truth, docs wiring, and the
+required-vs-advisory split below. Do not claim broader support than those repo
+artifacts prove.
 
 The following checks are advisory signal, not branch-protection truth:
 - `Core Full Suite Advisory`
@@ -74,6 +82,8 @@ months tells evaluators "don't bet on this lib."
    AND ship `<ver+1>` immediately.
 2. **User-visible breakage with workaround.**
    Do NOT retire. Patch within 7 days. Add a CHANGELOG entry.
+   If the fix changes a documented compatibility bridge or support claim, update
+   `guides/compatibility-and-deprecations.md` in the same patch.
 3. **Cosmetic / docs / non-runtime.**
    Do NOT retire. Roll into next planned patch.
 4. **Published less than 60 minutes ago AND zero downloads.**
@@ -99,9 +109,23 @@ Private Vulnerability Reporting if no email is reachable.
 Five steps. Step 4 has a literal 60-minute timer — that is the last revert
 window before the published artifact becomes permanent.
 
+Use the Phase 38 release-day proof forms while running these steps:
+- `.planning/phases/38-release-rehearsal-and-proof-artifacts/38-03-RELEASE-CHECKLIST.md`
+- `.planning/phases/38-release-rehearsal-and-proof-artifacts/38-03-RELEASE-RECORD.md`
+
+The checklist separates repo-proved gates from manual/external proof and forces
+explicit capture of the tag, workflow run URLs, approver identity, fallback
+usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
+
 1. **Verify CI green on `main` for the SHA to be released.**
    Check `actions/workflows/ci.yml` — required because publish-hex.yml gates
    on this SHA via the `gate-ci-green` job (per Plan 08, D-16).
+   The required release-truth buckets are:
+   - `Support Contract Core (Elixir 1.18 / OTP 27)`
+   - `Support Contract Admin (Elixir 1.18 / OTP 27)`
+   - `Compile No Optional Deps (Elixir 1.18 / OTP 27)`
+   - Phase 38 prepublish proof/export bundle (`38-01-PREPUBLISH-PROOF.md`)
+   - Phase 38 install/upgrade rehearsal artifact (`38-02-REHEARSAL-EVIDENCE.md`)
 2. **Merge the release-please PR.**
    Squash-merge keeps the changelog history linear.
    Review the release PR diff before merge. This repo uses a custom
@@ -117,6 +141,8 @@ window before the published artifact becomes permanent.
    `prepublish-summary` job per D-15) BEFORE clicking Approve. Verify the
    file count, total size, CHANGELOG excerpt, and top files all match
    expectations.
+   Record the tag, publish workflow run URL, approver identity, and approval
+   timestamp in `38-03-RELEASE-RECORD.md`.
    - **Package order:** The workflow guarantees `mailglass` (core) publishes first, then `mailglass_admin` publishes against the newly live core.
    - **Idempotency:** Both publish steps check `mix hex.info` first and skip the publish command if the version is already live, making the workflow safe to retry.
    - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=both` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag (for `0.3.0`: `mailglass-v0.3.0`) so the publish run is pinned to the exact commit Release Please tagged.
@@ -135,6 +161,9 @@ window before the published artifact becomes permanent.
    downloads have happened, the Retract Decision Tree rule 4
    (`mix hex.publish --revert`) is reachable. After 60 minutes the only
    options are retire-then-patch (rule 1) or patch-only (rule 2).
+   Keep the published support story honest: if the smoke or support-contract
+   checks reveal a mismatch with the documented matrix or upgrade posture, fix
+   the guide and package metadata together rather than carrying split truth.
    If you need to reproduce the v0.2 codemod or rollback story during this
    window, do it in a disposable fixture or git-clean worktree only. The
    public rollback contract is git-based review/revert of the upgrade diff,
@@ -145,6 +174,9 @@ window before the published artifact becomes permanent.
    60-minute window. Run the manual smoke during the window regardless.
    If publish succeeds but smoke does not fan out, use `workflow_dispatch` on
    `.github/workflows/post-publish-smoke.yml` with that same core tag.
+   Record the post-publish smoke run URL, whether fallback dispatch was used,
+   Hex/HexDocs URLs, and the final 60-minute decision in the Phase 38 release
+   record.
 5. **Post the release link to Elixir Forum #libraries section** (post-publish, optional
    — performed by maintainer on their own cadence; not gated by Phase 07.1's
    milestone-shipped marker per CONTEXT line 14 / line 351).

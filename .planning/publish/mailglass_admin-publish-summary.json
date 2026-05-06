@@ -1,0 +1,125 @@
+{
+  "expected_file": ".planning/publish/mailglass_admin-files.expected",
+  "extras": [
+    "README.md",
+    "docs/operator-trust.md",
+    "docs/api_stability.md",
+    "docs/compatibility-and-deprecations.md"
+  ],
+  "files": [
+    ".formatter.exs",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "docs/api_stability.md",
+    "docs/compatibility-and-deprecations.md",
+    "docs/operator-trust.md",
+    "hex_metadata.config",
+    "lib/mailglass_admin.ex",
+    "lib/mailglass_admin/auth.ex",
+    "lib/mailglass_admin/components.ex",
+    "lib/mailglass_admin/controllers/assets.ex",
+    "lib/mailglass_admin/layouts.ex",
+    "lib/mailglass_admin/layouts/app.html.heex",
+    "lib/mailglass_admin/layouts/root.html.heex",
+    "lib/mailglass_admin/operator/deliveries_list.ex",
+    "lib/mailglass_admin/operator/destructive_action.ex",
+    "lib/mailglass_admin/operator/detail_header.ex",
+    "lib/mailglass_admin/operator/filters_form.ex",
+    "lib/mailglass_admin/operator/mount.ex",
+    "lib/mailglass_admin/operator/repair_state.ex",
+    "lib/mailglass_admin/operator/replay_modal.ex",
+    "lib/mailglass_admin/operator/support_cards.ex",
+    "lib/mailglass_admin/operator/suppression_card.ex",
+    "lib/mailglass_admin/operator/timeline.ex",
+    "lib/mailglass_admin/operator_live.ex",
+    "lib/mailglass_admin/optional_deps/phoenix_live_reload.ex",
+    "lib/mailglass_admin/preview/assigns_form.ex",
+    "lib/mailglass_admin/preview/device_frame.ex",
+    "lib/mailglass_admin/preview/discovery.ex",
+    "lib/mailglass_admin/preview/mount.ex",
+    "lib/mailglass_admin/preview/sidebar.ex",
+    "lib/mailglass_admin/preview/tabs.ex",
+    "lib/mailglass_admin/preview_live.ex",
+    "lib/mailglass_admin/pub_sub/topics.ex",
+    "lib/mailglass_admin/router.ex",
+    "lib/mix/tasks/mailglass_admin.assets.build.ex",
+    "lib/mix/tasks/mailglass_admin.assets.watch.ex",
+    "lib/mix/tasks/mailglass_admin.daisyui.update.ex",
+    "mix.exs",
+    "priv/static/app.css",
+    "priv/static/fonts/ibm-plex-mono-400.woff2",
+    "priv/static/fonts/ibm-plex-mono-700.woff2",
+    "priv/static/fonts/inter-400.woff2",
+    "priv/static/fonts/inter-700.woff2",
+    "priv/static/fonts/inter-tight-400.woff2",
+    "priv/static/fonts/inter-tight-700.woff2",
+    "priv/static/mailglass-logo.svg"
+  ],
+  "groups_for_extras": {
+    "Contract": [
+      "docs/operator-trust.md",
+      "docs/api_stability.md",
+      "docs/compatibility-and-deprecations.md"
+    ],
+    "Overview": [
+      "README.md"
+    ]
+  },
+  "linked_versions": {
+    "mailglass": "0.3.2",
+    "mailglass_admin": "0.3.2"
+  },
+  "mailglass_admin_publish_pin": "== 0.3.2",
+  "manifest_version": "0.3.2",
+  "package": "mailglass_admin",
+  "package_files": [
+    "lib",
+    "priv/static",
+    "docs",
+    ".formatter.exs",
+    "mix.exs",
+    "README*",
+    "CHANGELOG*",
+    "LICENSE*"
+  ],
+  "required_files": {
+    "checked": [
+      {
+        "path": "LICENSE",
+        "present": true
+      },
+      {
+        "path": "README.md",
+        "present": true
+      },
+      {
+        "path": "CHANGELOG.md",
+        "present": true
+      },
+      {
+        "path": "mix.exs",
+        "present": true
+      },
+      {
+        "path": "priv/static/app.css",
+        "present": true
+      },
+      {
+        "path": "priv/static/mailglass-logo.svg",
+        "present": true
+      },
+      {
+        "path": "priv/static/fonts/*.woff2",
+        "present": true
+      }
+    ],
+    "status": "ok",
+    "woff2_count": 6
+  },
+  "source_ref": "v0.3.2",
+  "source_ref_pattern": "mailglass-sibling-group-v%{version}",
+  "source_url": "https://github.com/szTheory/mailglass",
+  "tarball_size": 366742,
+  "version": "0.3.2"
+}

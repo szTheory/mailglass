@@ -1,18 +1,209 @@
 # API Stability — mailglass
 
-> **v0.2 API Freeze Policy:**
-> This file documents the closed sets of values and public API surface that form the
-> `mailglass` contract. As of the v0.2 milestone, the public API is completely frozen.
-> We promise "freeze-until-vNext": no breaking changes will occur until a major version bump.
->
-> **Deprecation Policy:**
-> Adding a value requires a CHANGELOG entry plus a `Since:` annotation on the new atom or function (minor version bump).
-> Removing or structurally altering a value requires a major version bump. Functions from v0.1 that expose
-> internal engine types (e.g., `Swoosh.Email.t()`) are deprecated in v0.2 but retained with warnings
-> to ensure backward compatibility.
->
-> Automated tests in `test/mailglass/` assert that each error module's
-> `__types__/0` function returns exactly the set documented here.
+This document is the canonical `v1.x` stability inventory for the core
+`mailglass` package.
+
+For compatibility, deprecation, support-matrix, and upgrade-horizon policy, use
+[`guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md).
+This file stays inventory-shaped on purpose.
+
+It answers two distinct questions:
+
+1. What adopters may treat as stable for the `v1.x` line.
+2. What is merely reachable or exported for framework wiring, sibling-package
+   integration, or internal implementation.
+
+`Boundary` exports, generated docs visibility, and module reachability are not
+the contract by themselves. The contract is the explicit inventory in this
+document plus the `@since` / deprecation metadata on the stable APIs named
+here.
+
+`mailglass_admin` has its own narrow contract surface and is documented
+separately in `mailglass_admin/docs/api_stability.md`. `mailglass_inbound`
+is not part of the `v1.x` stability promise for this milestone.
+
+## Contract Posture
+
+### `stable`
+
+These surfaces are part of the documented `v1.x` adopter contract. Breaking
+them requires a major-version change.
+
+- Root adopter entrypoint: `Mailglass.deliver/2`, `deliver!/2`,
+  `deliver_later/2`, `deliver_many/2`, and `deliver_many!/2`.
+- Core message and mailable surface: `Mailglass.Message`,
+  `Mailglass.Mailable`, and `Mailglass.Renderer`.
+- Delivery and provider seams: `Mailglass.Outbound`, `Mailglass.Adapter`,
+  `Mailglass.Adapters.Fake`, and `Mailglass.Adapters.Swoosh`.
+- Config and tenancy seams: `Mailglass.Config`, `Mailglass.Tenancy`,
+  `Mailglass.TenancyError`, `Mailglass.Clock`, `Mailglass.Stream`,
+  `Mailglass.RateLimiter`, `Mailglass.Suppression`, `Mailglass.Tracking`,
+  `Mailglass.Compliance`, and `Mailglass.Compliance.Unsubscribe`.
+- Webhook/public routing seams: `Mailglass.Webhook`,
+  `Mailglass.Webhook.CachingBodyReader`, `Mailglass.Webhook.Plug`, and
+  `Mailglass.Webhook.Router`.
+- Event and telemetry seams: `Mailglass.Events`, `Mailglass.Events.Event`,
+  and the named telemetry families under `[:mailglass, ...]` documented in
+  this file.
+- Stable operator/read-model query surfaces used by adopters and sibling
+  packages: `Mailglass.Operator.Deliveries`,
+  `Mailglass.Operator.ReplayHistory`, `Mailglass.Operator.ReplayTargets`,
+  `Mailglass.Operator.Timeline`, and `Mailglass.Operator.Suppressions`.
+- Stable Mix tasks: `mix mailglass.install`, `mix mailglass.reconcile`,
+  `mix mail.doctor`, `mix mailglass.publish.check`,
+  `mix mailglass.docs.check`, and `mix mailglass.stability.check`.
+- Stable errors and closed atom/type sets documented below, including
+  `Mailglass.Error`, `Mailglass.SendError`, `Mailglass.TemplateError`,
+  `Mailglass.SignatureError`, `Mailglass.SuppressedError`,
+  `Mailglass.RateLimitError`, `Mailglass.ConfigError`,
+  `Mailglass.EventLedgerImmutableError`, `Mailglass.TenancyError`, and
+  `Mailglass.PublishError`.
+
+### `internal`
+
+These surfaces may be exported, visible in docs, or reachable in source, but
+they are not promised as stable adopter API for `v1.x`.
+
+- Internal implementation helpers and infrastructure such as
+  `Mailglass.Outbound.Projector`, `Mailglass.PubSub`,
+  `Mailglass.PubSub.Topics`, `Mailglass.Repo`, `Mailglass.Schema`,
+  `Mailglass.IdempotencyKey`, `Mailglass.OptionalDeps.Oban`, and Oban worker
+  modules exported only because the runtime or sibling packages need them.
+- Internal singleton names, ETS tables, storage processes, trigger helpers,
+  migration runners, and other library-owned machinery documented later in
+  this file.
+- Internal HTML/controller/component modules and implementation-only helpers,
+  even when they contribute to a stable semantic seam.
+- Docs or source comments that explain internals are explanatory only; they do
+  not promote those modules to public contract status.
+
+### `sibling-package-only`
+
+These surfaces are intentionally reachable for first-party sibling packages or
+framework integration but are not part of the general adopter promise.
+
+- Root exports retained so `mailglass_admin` can integrate with the production
+  render, operator, webhook, and projection pipelines without depending on
+  private code paths.
+- Oban-facing modules and optional-dependency shims required for async or
+  scheduler integration.
+- Internal query/read-model surfaces that first-party packages may call while
+  the maintainers keep the right to refine their shape outside the documented
+  stable subset above.
+
+## Stable Inventory
+
+### Root `Mailglass` contract
+
+`Mailglass` itself is a narrow convenience entrypoint, not a promise that every
+root export is public API. The stable root promise is:
+
+- delivery delegates on `Mailglass`
+- the module/behaviour seams listed in `stable`
+- the closed struct/type/atom sets documented below
+- the stable Mix tasks listed in this document
+
+If a root-exported module is not called out here as `stable`, treat it as
+`internal` or `sibling-package-only`.
+
+### Stable categories
+
+#### Modules and behaviours
+
+- Delivery: `Mailglass`, `Mailglass.Outbound`, `Mailglass.Adapter`,
+  `Mailglass.Adapters.Fake`, `Mailglass.Adapters.Swoosh`
+- Message authoring/rendering: `Mailglass.Message`, `Mailglass.Mailable`,
+  `Mailglass.Renderer`
+- Config/runtime: `Mailglass.Config`, `Mailglass.Clock`, `Mailglass.Tenancy`,
+  `Mailglass.Stream`, `Mailglass.RateLimiter`, `Mailglass.Suppression`,
+  `Mailglass.Tracking`, `Mailglass.Compliance`,
+  `Mailglass.Compliance.Unsubscribe`
+- Event/webhook: `Mailglass.Events`, `Mailglass.Events.Event`,
+  `Mailglass.Webhook`, `Mailglass.Webhook.CachingBodyReader`,
+  `Mailglass.Webhook.Plug`, `Mailglass.Webhook.Router`
+- Stable operator semantics: `Mailglass.Operator.Deliveries`,
+  `Mailglass.Operator.ReplayHistory`, `Mailglass.Operator.ReplayTargets`,
+  `Mailglass.Operator.Timeline`, `Mailglass.Operator.Suppressions`
+
+#### Mix tasks
+
+- `mix mailglass.install` — installer and first-app bootstrap contract
+- `mix mailglass.reconcile` — stable reconciliation operator task
+- `mix mail.doctor` — DNS-only deliverability doctor contract
+- `mix mailglass.publish.check` — release-facing publish drift check
+- `mix mailglass.docs.check` — light docs-contract drift check
+- `mix mailglass.stability.check` — light public-surface drift check
+
+Generator and legacy-upgrade tasks remain useful tooling, but they are not part
+of the narrow `v1.x` stable contract unless and until they are listed here.
+
+#### Telemetry families
+
+The stable telemetry contract is semantic and family-based:
+
+- delivery spans and events under `[:mailglass, :outbound, ...]`
+- webhook ingest spans and events under `[:mailglass, :webhook, ...]`
+- render/tracking/compliance-related events under documented
+  `[:mailglass, ...]` names in this file
+
+Telemetry remains part of the stable contract only at the documented event-name
+and metadata-shape level. Internal helper functions that emit those events are
+not themselves promoted to stable API.
+
+#### Structs, errors, and documented field promises
+
+The stable data contract includes the closed struct/type/atom sets documented in
+this file, plus any field-level promises called out in those sections. In
+particular:
+
+- stable error `type` atoms are closed sets unless this document says a section
+  is extended in a minor release
+- documented per-kind fields and stable JSON serialization fields are part of
+  the contract
+- callers should pattern-match by struct and `type`, never by exception message
+
+## Inventory Notes
+
+- Stable does not mean "everything ExDoc renders". This file is narrower than
+  generated docs by design.
+- Compatibility and deprecation lifecycle rules live in
+  `guides/compatibility-and-deprecations.md`, not in this inventory.
+- Exported does not mean stable. Root `Boundary` exports include framework and
+  sibling-package hooks that remain outside the adopter contract.
+- Hidden docs do not make a surface private. If a reachable helper is omitted
+  from the stable inventory, it is intentionally non-contract.
+- Future `v1.x` minor releases may add stable APIs, atoms, fields, or tasks,
+  but only with matching doc metadata and updates to this inventory.
+
+## `mailglass_admin` Contract Summary
+
+The sibling `mailglass_admin` package has a separate package-local contract
+page at `mailglass_admin/docs/api_stability.md`. The core contract only relies
+on these admin-facing truths:
+
+### Stable admin seams
+
+- `MailglassAdmin.Router.mailglass_admin_routes/2` and
+  `MailglassAdmin.Router.mailglass_operator_routes/2` are the stable mount
+  macros and option contracts.
+- `MailglassAdmin.Auth` is the stable adopter-owned authorization behaviour.
+- Operator semantics are stable at the level of auth/session/replay/read-model
+  behavior, not at the level of LiveView implementation modules.
+- Stable admin docs point adopters to core read-model/query seams such as
+  `Mailglass.Operator.Deliveries`, `Mailglass.Operator.Timeline`,
+  `Mailglass.Operator.ReplayHistory`, `Mailglass.Operator.ReplayTargets`, and
+  `Mailglass.Operator.Suppressions`.
+
+### Internal admin surfaces
+
+- LiveView modules, component modules, layouts, DOM shape, CSS classes, asset
+  file names, preview assigns plumbing, and internal `on_mount` hook wiring are
+  implementation details.
+- Exported functions required by Phoenix `live_session` callbacks or router
+  code generation are not stable unless they are called out in the admin
+  contract page.
+- `MailglassAdmin.Operator.Mount` remains internal even though framework wiring
+  requires it to stay reachable.
 
 ## Error Hierarchy
 
@@ -180,13 +371,14 @@ Retryable: `false` (append-only invariant; the calling code has a bug).
 
 **Translator asymmetry (Phase 2, IN-03):** both atoms are part of the
 closed type set and stable, but the v0.1 translator in
-`Mailglass.Repo.infer_immutability_type/1` always emits
-`:update_attempt`. The Postgrex error message is not a stable public
-API, and the v0.1 trigger function is shared between UPDATE and DELETE
-rule violations. `:delete_attempt` is reserved for a future Phase 4+
-refinement that distinguishes the two actions (either via dedicated
-trigger functions per action, or by pattern-matching the constraint
-name) when webhook-path DELETE-attempt telemetry becomes valuable.
+the `infer_immutability_type/1` helper inside `Mailglass.Repo` always
+emits `:update_attempt`. The Postgrex error message is not a stable
+public API, and the v0.1 trigger function is shared between UPDATE and
+DELETE rule violations. `:delete_attempt` is reserved for a future
+Phase 4+ refinement that distinguishes the two actions (either via
+dedicated trigger functions per action, or by pattern-matching the
+constraint name) when webhook-path DELETE-attempt telemetry becomes
+valuable.
 Callers pattern-matching today should match either atom
 (`err.type in [:update_attempt, :delete_attempt]`) to stay forward-
 compatible.
@@ -424,11 +616,11 @@ Since: 0.1.0.
 
 Since: 0.1.0.
 
-### `Mailglass.Tenancy` optional callback: `c:tracking_host/1`
+### `Mailglass.Tenancy` optional callback: `tracking_host/1`
 
 - `@callback tracking_host(context :: term()) :: {:ok, String.t()} | :default` — optional per-tenant tracking host override (D-32). Default resolution: `:default` (use global `config :mailglass, :tracking, host:`). Adopters returning `{:ok, host}` get per-tenant subdomains for strict cookie/origin isolation.
 
-### `Mailglass.Tenancy` optional callback: `c:resolve_webhook_tenant/1` (Phase 4, CONTEXT D-12)
+### `Mailglass.Tenancy` optional callback: `resolve_webhook_tenant/1` (Phase 4, CONTEXT D-12)
 
 ```elixir
 @optional_callbacks tracking_host: 1, resolve_webhook_tenant: 1
@@ -452,13 +644,14 @@ surfaces HTTP 422.
 
 **Default impls shipped in Phase 4 Plan 05:**
 
-- `Mailglass.Tenancy.SingleTenant.resolve_webhook_tenant/1` — returns
-  `{:ok, "default"}` (zero-config default).
-- `Mailglass.Tenancy.ResolveFromPath.resolve_webhook_tenant/1` — opt-in
-  URL-prefix sugar. Reads `context.path_params["tenant_id"]` and
-  returns `{:ok, tid}` or `{:error, :missing_path_param}`. Module
-  fails CLOSED on `scope/2` — adopters using it for the full Tenancy
-  contract MUST compose it with a real `scope/2` impl.
+- `Mailglass.Tenancy.SingleTenant` implements `resolve_webhook_tenant/1`
+  by returning `{:ok, "default"}` (zero-config default).
+- `Mailglass.Tenancy.ResolveFromPath` implements
+  `resolve_webhook_tenant/1` as opt-in URL-prefix sugar. It reads
+  `context.path_params["tenant_id"]` and returns `{:ok, tid}` or
+  `{:error, :missing_path_param}`. The module fails CLOSED on `scope/2`
+  — adopters using it for the full Tenancy contract MUST compose it
+  with a real `scope/2` impl.
 
 Adopter tenancy modules that do not implement this optional callback
 fall through to `{:ok, "default"}` via the dispatcher's

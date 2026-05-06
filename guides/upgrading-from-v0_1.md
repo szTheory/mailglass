@@ -1,6 +1,17 @@
 # Upgrading from v0.1 to v0.2
 
-This guide is the authoritative migration path from the v0.1 mailable API to the v0.2 public surface. The big change is that the common authoring path now uses native `Mailglass.Message` setters instead of direct `Swoosh.Email` calls inside your mailables.
+This guide is now a subordinate codemod reference.
+
+The canonical latest-`0.x` to `1.0` path lives in
+[`upgrading-to-v1_0.md`](upgrading-to-v1_0.md). Use that guide for the full
+compatibility story, support matrix, strict-CI posture, and retained legacy
+bridge inventory. Use this page when you specifically need the focused
+`v0.1 -> v0.2` setter rewrite details.
+
+This guide covers the original `v0.1` mailable API migration to the `v0.2`
+public surface. The big change is that the common authoring path now uses
+native `Mailglass.Message` setters instead of direct `Swoosh.Email` calls
+inside your mailables.
 
 ## Before/After Examples
 
@@ -56,6 +67,11 @@ The codemod covers these eight setters:
 ## Codemod Walkthrough
 
 `mix mailglass.upgrade.v0_2` is an Igniter-backed codemod. Use it as a dry-run first, then apply once the diff looks right.
+
+If you are upgrading for the `1.0` contract rather than replaying the original
+`v0.2` cutover, read
+[`upgrading-to-v1_0.md`](upgrading-to-v1_0.md) first and then come back here
+for the codemod specifics.
 
 1. Ensure you have the `igniter` dependency installed in your `mix.exs`:
 
@@ -120,7 +136,9 @@ v0.2 introduces a multi-bucket rate limiter to protect your sender reputation. O
 - `:global_recipient` limits (1000/min default)
 - `:sender_domain` limits (500/min default)
 
-If you see `{:error, %Mailglass.RateLimitError{}}`, your message was throttled. See the [Rate Limiting Guide](rate-limiting.md) for configuration overrides.
+If you see `{:error, %Mailglass.RateLimitError{}}`, your message was throttled.
+See the current rate-limiting guide in the published Mailglass docs for
+configuration overrides.
 
 ### Enhanced Test Assertions
 
@@ -138,6 +156,11 @@ To use this upgrade codemod successfully, ensure your dependencies meet the mini
 - `phoenix`: `~> 1.8`
 - `phoenix_live_view`: `~> 1.1`
 - `igniter`: `~> 0.7`
+
+For the latest supported `0.x` to `1.0` release posture, support horizon, and
+matched sibling-package expectations, defer to
+[`upgrading-to-v1_0.md`](upgrading-to-v1_0.md) and
+[`compatibility-and-deprecations.md`](compatibility-and-deprecations.md).
 
 ## Troubleshooting
 

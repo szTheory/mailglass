@@ -23,3 +23,33 @@
 **Recommends:** Research across local code, official docs, and strong ecosystem precedents; compare alternatives internally; then present one cohesive recommendation set that fits the project vision, maintainer budget, least-surprise UX, and long-term architecture. Prefer a single decisive recommendation over broad option menus. Shift this left in downstream workflows: default to one-shot synthesis and escalate only if the choice is likely to materially change public contract, user trust semantics, major maintainer burden, tenant-boundary guarantees, secret-handling posture, branch-protection/release posture, or other very impactful workflow behavior the project owner is especially likely to care about.
 
 **Apply when:** Discuss, assumptions, research, and planning workflows encounter multiple plausible approaches and enough evidence exists to recommend one without another interview round.
+
+For release, upgrade, compatibility, and trust-contract phases, push this even
+further left: default to one cohesive recommendation set and escalate only when
+the choice is likely to materially change the public contract, irreversible
+publish posture, security/trust semantics, or long-term maintainer burden.
+
+## Compatibility Contract Ergonomics
+
+**Diagnoses:** Compatibility, deprecation, and upgrade phases that discover
+warnings-as-errors fallout, silent legacy aliases, or support-horizon ambiguity
+too late, after docs and CI already disagree.
+
+**Recommends:** For any phase that changes public contract, deprecations,
+upgrade guides, release policy, or support matrix, planning should produce a
+small deprecation-DX inventory before implementation starts:
+- surface
+- replacement
+- warning channel
+- `--warnings-as-errors` impact
+- support-until version
+- proof artifact
+
+Prefer one canonical compatibility story, explicit support horizons, and the
+narrowest honest promise that preserves a smooth upgrade path. Default to
+decisive synthesis; escalate only if a choice materially changes the public
+contract, long-term maintainer burden, or user trust semantics.
+
+**Apply when:** Stability, compatibility, trust-doc, release, and upgrade
+phases, especially in library work where strict CI adopters are part of the
+intended audience.

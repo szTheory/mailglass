@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   @shortdoc "Run the pre-publish Hex package checks"
 
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Verify the published tarball before Hex.pm release.
 
@@ -207,6 +208,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       unpack_dir: Path.join(package_dir, "_publish_check/#{package}"),
       actual_file: Path.join(package_dir, "_publish_check/#{package}-files.actual"),
       expected_file: Path.join(repo_root, ".planning/publish/#{package}-files.expected"),
+      proof_summary_file: Path.join(repo_root, ".planning/publish/#{package}-publish-summary.json"),
       summary_path: System.get_env("GITHUB_STEP_SUMMARY"),
       mix_publish?: package == :mailglass_admin,
       helper_body: maybe_find_function_body(ast, :mailglass_dep, 0)
@@ -292,6 +294,15 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       nil -> raise "Delivery blocked: cannot find #{inspect(key)} in quoted body"
       value -> value
     end
+  end
+
+  defp maybe_keyword_value(body_ast, key) do
+    body_entries(body_ast)
+    |> Enum.find_value(fn
+      {^key, _, value} -> value
+      {^key, value} -> value
+      _ -> nil
+    end)
   end
 
   defp substitute_attrs(ast, attrs) do
@@ -572,11 +583,21 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   defp verify_metadata(ctx) do
     project_body = find_function_body(ctx.ast, :project, 0)
     package_body = find_function_body(ctx.ast, :package, 0)
+    docs_body = find_function_body(ctx.ast, :docs, 0)
     description = eval_ast(keyword_value(project_body, :description), ctx.attrs)
     source_url = eval_ast(keyword_value(project_body, :source_url), ctx.attrs)
     homepage_url = eval_ast(keyword_value(project_body, :homepage_url), ctx.attrs)
     licenses = eval_ast(keyword_value(package_body, :licenses), ctx.attrs)
     links = eval_ast(keyword_value(package_body, :links), ctx.attrs)
+    package_files = eval_ast(keyword_value(package_body, :files), ctx.attrs)
+    extras = eval_ast(keyword_value(docs_body, :extras), ctx.attrs)
+    groups_for_extras = eval_ast(keyword_value(docs_body, :groups_for_extras), ctx.attrs)
+    docs_source_url = eval_ast(keyword_value(docs_body, :source_url), ctx.attrs)
+    source_ref = maybe_eval_ast(maybe_keyword_value(docs_body, :source_ref), ctx.attrs)
+
+    source_ref_pattern =
+      maybe_eval_ast(maybe_keyword_value(package_body, :source_ref_pattern), ctx.attrs) ||
+        maybe_eval_ast(maybe_keyword_value(docs_body, :source_ref_pattern), ctx.attrs)
 
     checks = [
       {is_binary(description) and byte_size(description) <= 300 and
@@ -598,7 +619,13 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
           source_url: source_url,
           homepage_url: homepage_url,
           licenses: licenses,
-          links: links
+          links: links,
+          package_files: package_files,
+          docs_extras: extras,
+          docs_groups_for_extras: groups_for_extras,
+          docs_source_url: docs_source_url,
+          docs_source_ref: source_ref,
+          docs_source_ref_pattern: source_ref_pattern
         })
 
       {_, "description"} ->
@@ -688,7 +715,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
                  _ -> false
                end) do
             {:mailglass, "== " <> version} when version == ctx.root_version ->
-              ctx
+              Map.put(ctx, :mailglass_admin_publish_pin, "== #{version}")
 
             {:mailglass, "== " <> version} ->
               fail_step(
@@ -963,15 +990,18 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   end
 
   defp write_summary(ctx) do
+    prev = ctx.manifest_version || "none"
+
+    version_delta =
+      if prev == "none", do: "none → v#{ctx.version}", else: "v#{prev} → v#{ctx.version}"
+
+    logical_files = files_relative_to(artifact_root(ctx), ctx.files)
+    size_mb = Float.round(ctx.total_bytes / 1_048_576, 2)
+    top_files = ctx.files |> Enum.sort_by(&{-&1.size, &1.path}) |> Enum.take(10)
+
+    write_proof_summary_file(ctx, logical_files)
+
     if ctx.summary_path do
-      prev = ctx.manifest_version || "none"
-
-      version_delta =
-        if prev == "none", do: "none → v#{ctx.version}", else: "v#{prev} → v#{ctx.version}"
-
-      size_mb = Float.round(ctx.total_bytes / 1_048_576, 2)
-      top_files = ctx.files |> Enum.sort_by(&{-&1.size, &1.path}) |> Enum.take(10)
-
       summary =
         [
           "## Pre-publish check: #{ctx.package_name} v#{ctx.version}",
@@ -1021,6 +1051,89 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
     ctx
   end
+
+  defp write_proof_summary_file(ctx, logical_files) do
+    linked_versions =
+      %{
+        "mailglass" => manifest_version(ctx.manifest, :mailglass),
+        "mailglass_admin" => manifest_version(ctx.manifest, :mailglass_admin)
+      }
+      |> Enum.reject(fn {_package, version} -> is_nil(version) end)
+      |> Map.new()
+
+    summary =
+      %{
+        "package" => ctx.package_name,
+        "version" => ctx.version,
+        "manifest_version" => ctx.manifest_version,
+        "expected_file" => Path.relative_to(ctx.expected_file, ctx.repo_root),
+        "package_files" => ctx.package_files,
+        "files" => Enum.map(logical_files, & &1.path),
+        "tarball_size" => ctx.total_bytes,
+        "required_files" => required_files_summary(ctx, logical_files),
+        "extras" => ctx.docs_extras,
+        "groups_for_extras" => encode_groups_for_extras(ctx.docs_groups_for_extras),
+        "source_url" => ctx.docs_source_url,
+        "source_ref" => ctx.docs_source_ref,
+        "source_ref_pattern" => ctx.docs_source_ref_pattern,
+        "linked_versions" => linked_versions
+      }
+      |> maybe_put("mailglass_admin_publish_pin", ctx[:mailglass_admin_publish_pin])
+
+    File.mkdir_p!(Path.dirname(ctx.proof_summary_file))
+    File.write!(ctx.proof_summary_file, Jason.encode_to_iodata!(summary, pretty: true))
+  end
+
+  defp required_files_summary(ctx, logical_files) do
+    paths = MapSet.new(Enum.map(logical_files, & &1.path))
+
+    woff2_count =
+      Enum.count(logical_files, fn file ->
+        String.starts_with?(file.path, "priv/static/fonts/") and
+          String.ends_with?(file.path, ".woff2")
+      end)
+
+    checks =
+      required_file_entries(ctx.package)
+      |> Enum.map(fn entry ->
+        present? =
+          case entry do
+            "priv/static/fonts/*.woff2" -> woff2_count > 0
+            path -> MapSet.member?(paths, path)
+          end
+
+        %{"path" => entry, "present" => present?}
+      end)
+
+    base = %{"status" => "ok", "checked" => checks}
+
+    if ctx.package == :mailglass_admin do
+      Map.put(base, "woff2_count", woff2_count)
+    else
+      base
+    end
+  end
+
+  defp required_file_entries(:mailglass), do: ["LICENSE", "README.md", "CHANGELOG.md", "mix.exs"]
+
+  defp required_file_entries(:mailglass_admin) do
+    required_file_entries(:mailglass) ++
+      ["priv/static/app.css", "priv/static/mailglass-logo.svg", "priv/static/fonts/*.woff2"]
+  end
+
+  defp maybe_eval_ast(nil, _attrs), do: nil
+  defp maybe_eval_ast(ast, attrs), do: eval_ast(ast, attrs)
+
+  defp maybe_put(map, _key, nil), do: map
+  defp maybe_put(map, key, value), do: Map.put(map, key, value)
+
+  defp encode_groups_for_extras(groups) when is_list(groups) do
+    groups
+    |> Enum.map(fn {group, extras} -> {to_string(group), extras} end)
+    |> Map.new()
+  end
+
+  defp encode_groups_for_extras(groups), do: groups
 
   defp cleanup(ctx, true) do
     Mix.shell().info("[unchanged] _publish_check/#{ctx.package_name} retained for inspection")

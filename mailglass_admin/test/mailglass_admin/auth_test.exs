@@ -33,4 +33,16 @@ defmodule MailglassAdmin.AuthTest do
                actor: %{subject_id: "operator-1", recent_auth_at: nil}
              })
   end
+
+  test "session_actor normalizes ISO8601 recent_auth_at" do
+    recent_auth_at = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+
+    actor =
+      Auth.session_actor(%{
+        "subject_id" => "operator-1",
+        "recent_auth_at" => recent_auth_at
+      })
+
+    assert %DateTime{} = actor.recent_auth_at
+  end
 end

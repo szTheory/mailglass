@@ -1,6 +1,12 @@
 defmodule MailglassAdmin.Router do
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Preview and operator dashboard mounts.
+
+  This module is the stable `v1.x` admin router seam. The contract covers the
+  two mount macros and their documented options. It does not freeze internal
+  LiveView module names, DOM shape, CSS classes, or internal mount-hook
+  implementation details.
 
   ## Usage
 
@@ -52,8 +58,8 @@ defmodule MailglassAdmin.Router do
       * `:unauthorized_path` — redirect target when operator access is denied
       * `:as` — Route helper prefix (default `:mailglass_admin`)
 
-  Every opt is a public API contract once shipped; both macros keep
-  their surface explicit and narrowly whitelisted.
+  Every documented opt is part of the stable router contract once shipped; the
+  rest of the implementation remains internal.
 
   ## Dev-only enforcement
 
@@ -217,6 +223,14 @@ defmodule MailglassAdmin.Router do
   session callback, and an internal `MailglassAdmin.Operator.Mount`
   authorization seam. Adopter-owned auth hooks may run before the
   internal mount hook via `:on_mount`.
+
+  Stable contract:
+
+  - `:auth` points to an adopter-owned `MailglassAdmin.Auth` implementation
+  - `:session` is an explicit whitelist, not a pass-through of the whole Plug
+    session
+  - authorization semantics are stable, but the internal mount module and UI
+    implementation are not
   """
   @doc since: "0.1.0"
   defmacro mailglass_operator_routes(path, opts \\ []) do

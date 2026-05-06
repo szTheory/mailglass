@@ -274,22 +274,19 @@ end
 |---|-------|---------|---------------|
 | A1 | A 30-day freshness window is reasonable for this research because the phase relies mostly on stable Elixir/ExDoc documentation and current repo state. [ASSUMED] | Metadata | The planner may over-trust this research if a fast follow-up changes repo versions or docs policy sooner. |
 
-## Open Questions
+## Resolved Decisions
 
-1. **Which version history is authoritative for `@since` metadata?**
-   - What we know: `PROJECT.md` says current packages are `0.5.0`, but both [`mix.exs`](/Users/jon/projects/mailglass/mix.exs:4) and [`mailglass_admin/mix.exs`](/Users/jon/projects/mailglass/mailglass_admin/mix.exs:4) still declare `0.3.2`, and [`mailglass_admin/README.md`](/Users/jon/projects/mailglass/mailglass_admin/README.md:15) still shows `~> 0.1`. [VERIFIED: repo grep]
-   - What's unclear: whether planning artifacts are ahead of release metadata, or package manifests/readmes are stale. [VERIFIED: repo grep]
-   - Recommendation: resolve this before finalizing `LOCK-04`; otherwise `@since` work can only be provisional. [VERIFIED: repo grep]
+1. **Authoritative version history for `@since` metadata**
+   - Decision: the source-controlled package manifests in [`mix.exs`](/Users/jon/projects/mailglass/mix.exs:4) and [`mailglass_admin/mix.exs`](/Users/jon/projects/mailglass/mailglass_admin/mix.exs:4) are the authoritative version source for package history during Phase 35 planning. Planning artifacts describing `0.5.0` / `v0.6` milestone state are milestone-progress markers, not package-version truth. [VERIFIED: repo grep]
+   - Impact on planning: `LOCK-04` work must treat stale README/planning version language as drift to be corrected, and it must not rewrite `@since` history to match milestone labels. Use the package manifests plus existing source annotations as the baseline. [VERIFIED: repo grep]
 
-2. **Is `MailglassAdmin.Auth` part of the intended stable `v1.x` contract?**
-   - What we know: the roadmap says the admin auth seam is stable for `v1.x`, but `mailglass_admin` currently exports only `Router` from its root boundary and `MailglassAdmin.Auth` lacks public docs metadata. [VERIFIED: repo grep]
-   - What's unclear: whether the package wants `Auth` documented as a first-class public behavior or merely referenced from router docs. [VERIFIED: repo grep]
-   - Recommendation: lock this explicitly in Phase 35; the current roadmap wording suggests "yes". [VERIFIED: repo grep]
+2. **`MailglassAdmin.Auth` contract status**
+   - Decision: `MailglassAdmin.Auth` is part of the intended stable `v1.x` contract because the roadmap explicitly includes the admin auth seam in Phase 35 scope. It should be documented as a first-class adopter-owned behaviour seam, even if the top-level `Boundary` export remains narrow. [VERIFIED: repo grep]
+   - Impact on planning: Phase 35 must update package-local docs and point-of-use docs so adopters can discover the auth seam without inferring it indirectly from router examples. [VERIFIED: repo grep]
 
-3. **Should `docs/api_stability.md` stay monolithic or split by package?**
-   - What we know: the core package already has a large stability document, while `mailglass_admin` has none. [VERIFIED: repo grep]
-   - What's unclear: whether maintainers want one combined cross-package contract page or one canonical page per package. [VERIFIED: repo grep]
-   - Recommendation: keep one canonical contract page per published package; that matches how adopters install and read HexDocs. [VERIFIED: repo grep][CITED: https://hexdocs.pm/ex_doc/ExDoc.html]
+3. **Canonical contract document shape**
+   - Decision: keep one canonical contract page per published package. `mailglass` continues to use [`docs/api_stability.md`](/Users/jon/projects/mailglass/docs/api_stability.md:1), while `mailglass_admin` should gain its own package-local contract page surfaced through `mailglass_admin` ExDoc configuration. [VERIFIED: repo grep][CITED: https://hexdocs.pm/ex_doc/ExDoc.html]
+   - Impact on planning: shared root docs may still cross-link the package contracts, but `LOCK-02` requires a package-local admin artifact and `mailglass_admin/mix.exs` docs curation rather than README-only discoverability. [VERIFIED: repo grep]
 
 ## Environment Availability
 

@@ -77,6 +77,12 @@ defmodule Mailglass.Message do
   @doc """
   Creates a new `Mailglass.Message` wrapping the given `%Swoosh.Email{}`.
 
+  This retained `v0.1` constructor remains available as a deprecated
+  compatibility path so older integrations can land on the `1.x` stable lane in
+  stages. New code should prefer native `Mailglass.Message` setters on the
+  value returned by `new/0` from `use Mailglass.Mailable`, or use
+  `new_from_use/2` inside builder-driven flows.
+
   ## Options
 
   - `:mailable` — the module that built this message
@@ -95,7 +101,7 @@ defmodule Mailglass.Message do
 
   """
   @doc since: "0.1.0"
-  @deprecated "Use native Mailglass.Message setters instead"
+  @deprecated "Use native Mailglass.Message setters instead; retained as a compatibility bridge during the 1.x upgrade path"
   @spec new(Swoosh.Email.t(), keyword()) :: t()
   def new(%Swoosh.Email{} = swoosh_email, opts \\ []) when is_list(opts) do
     build(swoosh_email, opts)

@@ -5,6 +5,7 @@ defmodule Mailglass.ObanHelpers do
   The mailglass project does not ship an Oban migration in `priv/repo/migrations/`
   — adopters bring their own Oban migration. For the test suite's `@tag oban: :manual`
   and `@tag oban: :inline` tests to function, the `oban_jobs` table must exist.
+  Both lanes require `async: false`.
 
   `maybe_create_oban_jobs/0` is called from `test_helper.exs` after the mailglass
   migrations run. It delegates to `Oban.Migrations.up/1` (IF NOT EXISTS semantics),
@@ -13,7 +14,7 @@ defmodule Mailglass.ObanHelpers do
   ## Requirements for `@tag oban: :manual` tests
 
   1. `async: false` — enforced by the I-12 guard in `Mailglass.MailerCase`.
-  2. `oban_jobs` table in the test DB — ensured by this helper at test_helper.exs start.
+  2. `oban_jobs` table must exist in the test DB — ensured by this helper at test_helper.exs start.
   3. Oban >= 2.18 in deps (listed in `mix.exs` as `{:oban, "~> 2.21", optional: true}`).
 
   ## Usage

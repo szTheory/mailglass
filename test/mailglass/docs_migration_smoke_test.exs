@@ -2,6 +2,7 @@ defmodule Mailglass.DocsMigrationSmokeTest do
   use Mailglass.MailerCase, async: true
   import Mailglass.DocsHelpers
 
+  @canonical_guide_path "guides/upgrading-to-v1_0.md"
   @guide_path "guides/migration-from-swoosh.md"
 
   test "migration guide steps are accurate" do
@@ -21,10 +22,49 @@ defmodule Mailglass.DocsMigrationSmokeTest do
     assert {:ok, _delivery} = Mailglass.deliver(email)
   end
 
+  test "canonical upgrade guide is the single upgrade authority" do
+    canonical = File.read!(@canonical_guide_path)
+    older = File.read!("guides/upgrading-from-v0_1.md")
+    swoosh = File.read!(@guide_path)
+
+    assert canonical =~ "canonical latest-`0.x` to `1.0` upgrade guide"
+    assert canonical =~ "| surface | replacement | warning channel | `--warnings-as-errors` impact | support-until version | proof artifact |"
+    assert canonical =~ "Mailglass.Outbound.send/2"
+    assert canonical =~ "Mailglass.deliver/2"
+    assert canonical =~ "mix mailglass.upgrade.v0_2"
+    assert canonical =~ "mailglass_admin"
+    assert canonical =~ "mix verify.docs.migration"
+    assert canonical =~ "mix verify.stability_contract"
+    assert canonical =~ "Mailglass.Message.new/2"
+    assert canonical =~ "release-blocking for strict adopters"
+
+    assert older =~ "subordinate codemod reference"
+    assert older =~ "upgrading-to-v1_0.md"
+
+    assert swoosh =~ "subordinate raw-Swoosh migration reference"
+    assert swoosh =~ "upgrading-to-v1_0.md"
+  end
+
   test "upgrade guide examples stay on the supported codemod path" do
+    canonical_blocks = extract_code_blocks(@canonical_guide_path)
+    preferred_block =
+      Enum.find(canonical_blocks, fn block ->
+        String.contains?(block, "defmodule MyApp.WelcomeEmail") and
+          String.contains?(block, "|> attach(\"path/to/guide.pdf\")")
+      end)
+
+    parity_block = Enum.find(canonical_blocks, &String.contains?(&1, "Migration test"))
     blocks = extract_code_blocks("guides/upgrading-from-v0_1.md")
     after_block = Enum.find(blocks, &String.contains?(&1, "# v0.2 Mailable"))
     escape_hatch_block = Enum.find(blocks, &String.contains?(&1, "put_provider_option"))
+
+    assert preferred_block
+    assert preferred_block =~ "|> attach(\"path/to/guide.pdf\")"
+    assert {:ok, _quoted} = Code.string_to_quoted(preferred_block)
+
+    assert parity_block
+    assert parity_block =~ "assert {:ok, _delivery} = Mailglass.deliver(email)"
+    assert {:ok, _quoted} = Code.string_to_quoted(parity_block)
 
     assert after_block
     assert after_block =~ "|> attach(\"path/to/guide.pdf\")"

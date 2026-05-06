@@ -122,6 +122,34 @@ defmodule MailglassAdmin.RouterTest do
                "live_session_name" => :mailglass_admin_operator
              }
     end
+
+    @tag :session_isolation
+    test "operator session preserves nil optional session keys while requiring subject_id", %{conn: conn} do
+      conn =
+        conn
+        |> Plug.Test.init_test_session(%{
+          "current_user_id" => "operator-2"
+        })
+
+      session =
+        MailglassAdmin.Router.__operator_session__(conn,
+          auth: MailglassAdmin.TestOperatorAuth,
+          session: [
+            subject_id: "current_user_id",
+            tenant_id: nil,
+            auth_method: nil,
+            recent_auth_at: nil
+          ],
+          live_session_name: :mailglass_admin_operator,
+          unauthorized_path: "/login",
+          on_mount: []
+        )
+
+      assert session["subject_id"] == "operator-2"
+      assert session["tenant_id"] == nil
+      assert session["auth_method"] == nil
+      assert session["recent_auth_at"] == nil
+    end
   end
 
   describe "router opts validation" do

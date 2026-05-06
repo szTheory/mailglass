@@ -12,8 +12,9 @@ defmodule Mailglass.Outbound do
   ## Public verbs
 
   `deliver/2` is the canonical public name (matches Swoosh + ActionMailer
-  familiarity). `send/2` is the internal implementation verb; `deliver/2`
-  is a `defdelegate` alias (D-13).
+  familiarity). `send/2` is the internal implementation verb and a retained
+  compatibility bridge; `deliver/2` is the stable-lane `defdelegate` alias
+  (D-13).
 
   ## Preflight pipeline (SEND-01, D-18)
 
@@ -104,8 +105,9 @@ defmodule Mailglass.Outbound do
   via two Multis (adapter call between them, OUTSIDE any transaction per D-20),
   and returns `{:ok, %Delivery{status: :sent}}` on success.
 
-  `deliver/2` is the canonical public alias (see below). `send/2` is the
-  internal implementation verb.
+  `deliver/2` is the canonical public alias (see below). `send/2` remains as a
+  legacy compatibility bridge so existing callers can migrate without a runtime
+  break, but new adopter code should call `deliver/2`.
   """
   @doc since: "0.1.0"
   @spec send(Message.t() | Swoosh.Email.t(), keyword()) ::
@@ -126,7 +128,8 @@ defmodule Mailglass.Outbound do
   @doc """
   Canonical public verb for synchronous delivery (D-13). Delegates to `send/2`.
   Matches the naming convention from Swoosh and ActionMailer for adopter
-  familiarity.
+  familiarity and is the stable-lane front door documented by the `1.x`
+  compatibility policy.
   """
   @doc since: "0.1.0"
   defdelegate deliver(msg, opts \\ []), to: __MODULE__, as: :send

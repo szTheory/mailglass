@@ -3,7 +3,7 @@ defmodule Mailglass.DocsContractTest do
   import Mailglass.DocsHelpers
 
   describe "README.md contract" do
-    test "installation snippet targets the v0.3 surface" do
+    test "installation snippet targets the current stable surface" do
       blocks = extract_code_blocks("README.md")
       install_block = Enum.find(blocks, &(&1 =~ "mix mailglass.install"))
 
@@ -13,8 +13,13 @@ defmodule Mailglass.DocsContractTest do
 
       readme = File.read!("README.md")
       assert readme =~ "{:mailglass, \"~> 0.3\"}"
+      assert readme =~ "docs/api_stability.md"
+      assert readme =~ "guides/compatibility-and-deprecations.md"
+      assert readme =~ "guides/upgrading-to-v1_0.md"
+      assert readme =~ "`mailglass_inbound` is outside the `v1.x` stability promise"
       refute readme =~ "v0.1 in development"
       refute readme =~ "{:mailglass, \"~> 0.2\"}"
+      refute readme =~ "v0.3 public surface"
     end
 
     test "Quickstart snippet compiles" do
@@ -33,6 +38,18 @@ defmodule Mailglass.DocsContractTest do
       assert readme =~ "adapter_ref"
       refute readme =~ "round-robin"
       refute readme =~ "failover"
+    end
+
+    test "admin README points to the canonical admin contract and excludes UI internals" do
+      admin = File.read!("mailglass_admin/README.md")
+
+      assert admin =~ "docs/operator-trust.md"
+      assert admin =~ "docs/api_stability.md"
+      assert admin =~ "docs/compatibility-and-deprecations.md"
+      assert admin =~ "MailglassAdmin.Auth"
+      assert admin =~ "Stable DOM/component/LiveView implementation APIs"
+      refute admin =~ "{:mailglass, \"~> 0.1\"}"
+      refute admin =~ "{:mailglass_admin, \"~> 0.1\"}"
     end
   end
 
@@ -129,6 +146,50 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "Provider Live Advisory"
       assert maintaining =~ "cron and `workflow_dispatch` canary"
       assert maintaining =~ "not a merge blocker"
+      assert maintaining =~ "guides/compatibility-and-deprecations.md"
+    end
+
+    test "compatibility and upgrade guides are wired into Tier 1 docs" do
+      compatibility = File.read!("guides/compatibility-and-deprecations.md")
+      upgrade = File.read!("guides/upgrading-to-v1_0.md")
+      testing = File.read!("guides/testing.md")
+      trust_doc = File.read!("mailglass_admin/docs/operator-trust.md")
+      docs_check = File.read!("lib/mix/tasks/mailglass.docs.check.ex")
+
+      assert compatibility =~ "stable lane"
+      assert compatibility =~ "support matrix"
+      assert compatibility =~ "upgrading-to-v1_0.md"
+
+      assert upgrade =~ "canonical latest-`0.x` to `1.0` upgrade guide"
+      assert upgrade =~ "subordinate references"
+      assert upgrade =~ "proof artifact"
+
+      assert testing =~ "## deliver/2 baseline"
+      assert testing =~ "Fake.allow/2"
+      assert trust_doc =~ "## Stable seams"
+      assert trust_doc =~ "new work"
+      assert docs_check =~ "\"guides/testing.md\""
+      assert docs_check =~ "\"mailglass_admin/docs/operator-trust.md\""
+    end
+
+    test "phase 38 prepublish proof bundle captures package, docs, and sibling release truth" do
+      proof =
+        File.read!(
+          ".planning/phases/38-release-rehearsal-and-proof-artifacts/38-01-PREPUBLISH-PROOF.md"
+        )
+
+      assert proof =~ "## Tarball/package truth"
+      assert proof =~ "## HexDocs input truth"
+      assert proof =~ "## Sibling release truth"
+      assert proof =~ "## Release rehearsal evidence"
+      assert proof =~ ".planning/publish/mailglass-publish-summary.json"
+      assert proof =~ ".planning/publish/mailglass_admin-publish-summary.json"
+      assert proof =~ "groups_for_extras"
+      assert proof =~ "source_url"
+      assert proof =~ "source_ref"
+      assert proof =~ ".release-please-manifest.json"
+      assert proof =~ ".github/workflows/publish-hex.yml"
+      assert proof =~ ".github/workflows/post-publish-smoke.yml"
     end
   end
 end

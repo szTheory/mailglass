@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Mailglass.Stability.Check do
 
   @shortdoc "Checks for Swoosh type leaks in the public API"
 
+  @moduledoc since: "0.3.0"
   @moduledoc """
   Ensures that `Swoosh.Email.t()` types do not leak into the `Mailglass`
   public namespace, preventing downstream developers from accidentally coupling
@@ -10,8 +11,8 @@ defmodule Mix.Tasks.Mailglass.Stability.Check do
 
   Exemptions (escape hatches and internals):
   - `Mailglass.Message.update_swoosh/2` (official escape hatch)
-  - `Mailglass.Message.new/2` (deprecated v0.1 API)
-  - `Mailglass.Outbound.send/2` (deprecated v0.1 API)
+  - `Mailglass.Message.new/2` (deprecated compatibility path during the `1.x` upgrade window)
+  - `Mailglass.Outbound.send/2` (legacy compatibility bridge; `deliver/2` is canonical)
   - `Mailglass.Compliance` (internal utility)
   - `Mailglass.Adapters.*` (internal implementations)
   """

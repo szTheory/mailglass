@@ -9,10 +9,10 @@ Requirements for the `v1.0 Stability Lock` milestone. Each maps to exactly one r
 
 ### Stability Contract
 
-- [ ] **LOCK-01**: Adopter can identify the exact `mailglass` core modules, behaviours, mix tasks, telemetry names, structs, and documented fields that are stable for `v1.x`.
-- [ ] **LOCK-02**: Adopter can identify the exact `mailglass_admin` router, auth, and operator-service seams that are stable for `v1.x`, and which admin UI details remain internal.
-- [ ] **LOCK-03**: Maintainer can classify exported but non-contract surfaces as internal or sibling-package-only so accidental public surface does not expand during `v1.x`.
-- [ ] **LOCK-04**: Stable public APIs carry complete `@since` and deprecation metadata so the contract is visible in generated docs, not only in planning notes.
+- [x] **LOCK-01**: Adopter can identify the exact `mailglass` core modules, behaviours, mix tasks, telemetry names, structs, and documented fields that are stable for `v1.x`.
+- [x] **LOCK-02**: Adopter can identify the exact `mailglass_admin` router, auth, and operator-service seams that are stable for `v1.x`, and which admin UI details remain internal.
+- [x] **LOCK-03**: Maintainer can classify exported but non-contract surfaces as internal or sibling-package-only so accidental public surface does not expand during `v1.x`.
+- [x] **LOCK-04**: Stable public APIs carry complete `@since` and deprecation metadata so the contract is visible in generated docs, not only in planning notes.
 
 ### Compatibility And Upgrade Contract
 
@@ -64,10 +64,10 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOCK-01 | Phase 35 | Pending |
-| LOCK-02 | Phase 35 | Pending |
-| LOCK-03 | Phase 35 | Pending |
-| LOCK-04 | Phase 35 | Pending |
+| LOCK-01 | Phase 35 | Complete |
+| LOCK-02 | Phase 35 | Complete |
+| LOCK-03 | Phase 35 | Complete |
+| LOCK-04 | Phase 35 | Complete |
 | COMPAT-01 | Phase 36 | Pending |
 | COMPAT-02 | Phase 36 | Pending |
 | COMPAT-03 | Phase 36 | Pending |

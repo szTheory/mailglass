@@ -7,6 +7,7 @@ defmodule Mix.Tasks.Mail.Doctor do
 
   @shortdoc "Run DNS-only deliverability checks for one domain"
 
+  @moduledoc since: "0.4.0"
   @moduledoc """
   Run DNS-only deliverability checks for one explicit domain.
 

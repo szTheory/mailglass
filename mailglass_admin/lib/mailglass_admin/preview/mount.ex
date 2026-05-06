@@ -2,15 +2,15 @@ defmodule MailglassAdmin.Preview.Mount do
   @moduledoc """
   `on_mount` hook the Router macro appends after any adopter-provided
   `:on_mount` hooks. Reads the whitelisted session `"mailables"` value
-  populated by `MailglassAdmin.Router.__session__/2` and runs discovery
-  before `MailglassAdmin.PreviewLive.mount/3` fires.
+  populated by the router's preview session callback and runs discovery
+  before the preview LiveView finishes mounting.
 
   ## Order (Phoenix LiveView 1.1)
 
-      session callback (MailglassAdmin.Router.__session__/2)
+      preview session callback
         -> opts[:on_mount] hooks (adopter-provided, in order given)
         -> MailglassAdmin.Preview.Mount (this module)
-        -> MailglassAdmin.PreviewLive.mount/3
+        -> preview LiveView mount
 
   Adopter hooks run BEFORE this one so they can short-circuit
   (`{:halt, socket}`) without triggering discovery.

@@ -4,9 +4,12 @@ defmodule MailglassAdmin.Operator.Mount do
   surface.
 
   This hook consumes the operator session whitelist from
-  `MailglassAdmin.Router.__operator_session__/2`, calls the adopter-owned
-  `MailglassAdmin.Auth` implementation, and assigns normalized auth
-  context for later operator actions.
+  the router's operator session callback, calls the adopter-owned
+  `MailglassAdmin.Auth` implementation, and assigns normalized auth context
+  for later operator actions.
+
+  This module remains internal even though Phoenix wiring requires it to stay
+  reachable from the router macro expansion.
   """
 
   import Phoenix.Component, only: [assign: 3]

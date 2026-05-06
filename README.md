@@ -127,6 +127,30 @@ placement certainty or a deliverability grade.
 - `--format json` emits the shared machine-readable result shape with
   `schema_version: 1`.
 
+## API Stability
+
+The canonical `v1.x` contract inventory for the core package lives in
+[`docs/api_stability.md`](docs/api_stability.md).
+
+The canonical `1.x` compatibility, deprecation, and support-matrix policy
+lives in
+[`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md).
+
+Use that document, not root-module reachability, as the source of truth for:
+
+- which `Mailglass` modules, behaviours, Mix tasks, telemetry families,
+  structs, and documented fields are stable
+- which exported surfaces are intentionally `internal`
+- which hooks exist only for first-party sibling-package integration
+
+`mailglass_admin` has its own narrow contract inventory, and
+`mailglass_inbound` is outside the `v1.x` stability promise for this
+milestone.
+
+For release posture, support floors, retained legacy bridges, and upgrade
+expectations, use the compatibility guide rather than inferring policy from the
+stability inventory alone.
+
 ## Feature highlights
 
 - **HEEx-native components** (`container`, `section`, `row`, `column`,
@@ -180,8 +204,8 @@ placement certainty or a deliverability grade.
 
 | Package             | Status                   | What it is |
 |---------------------|--------------------------|------------|
-| `mailglass`         | v0.3 public surface      | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
-| `mailglass_admin`   | v0.3 (dev-preview only)  | Mountable LiveView preview in dev. Prod-mountable sent-mail inbox + event timeline + suppression UI arrive in v0.5. |
+| `mailglass`         | `v1.x` contract inventory documented in `docs/api_stability.md` | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
+| `mailglass_admin`   | Narrow `v1.x` admin contract documented separately | Mountable LiveView dashboard with stable router/auth/operator seams and internal UI implementation details. |
 | `mailglass_inbound` | v0.5+                    | Inbound routing (Action Mailbox equivalent): recipient/subject/header matchers, ingress plugs per provider, storage adapters, Oban routing. |
 
 ## Roadmap
@@ -203,6 +227,10 @@ Full trajectory in [`.planning/ROADMAP.md`](.planning/ROADMAP.md) and
 
 - [`guides/getting-started.md`](guides/getting-started.md) — install,
   route mounting, and first delivery
+- [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)
+  — canonical `1.x` compatibility, deprecation, and support-matrix policy
+- [`guides/upgrading-to-v1_0.md`](guides/upgrading-to-v1_0.md) — canonical
+  latest-`0.x` to `1.0` upgrade path
 - [`guides/upgrading-from-v0_1.md`](guides/upgrading-from-v0_1.md) —
   codemod-backed upgrade path for existing adopters
 - [`guides/migration-from-swoosh.md`](guides/migration-from-swoosh.md)

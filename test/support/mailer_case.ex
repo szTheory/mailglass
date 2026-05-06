@@ -38,6 +38,10 @@ defmodule Mailglass.MailerCase do
   impl back to `TaskSupervisor`, switches `Sandbox.mode` to `:shared`, and
   forces `async: false`.
 
+  Use `Mailglass.Adapters.Fake.allow/2` first for targeted cross-process access.
+  Shared/global fallback via `setup :set_mailglass_global` is the non-async
+  escape hatch when explicit ownership transfer is not practical.
+
   ## Global mode opt-out
 
   `setup :set_mailglass_global` — mirrors `set_swoosh_global`. Forces
@@ -53,7 +57,8 @@ defmodule Mailglass.MailerCase do
 
   Tests that need to assert on the Oban queue (e.g. backpressure tests) use
   `@tag oban: :manual` — but they MUST run with `async: false` (see I-12 note
-  in the moduledoc).
+  in the moduledoc). Both documented Oban lanes require `async: false` and the
+  `oban_jobs` table.
   """
   use ExUnit.CaseTemplate
 

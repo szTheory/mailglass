@@ -37,9 +37,8 @@ defmodule MailglassAdmin.Preview.Discovery do
   Submodule auto-classifies into the `MailglassAdmin` root boundary declared
   in `lib/mailglass_admin.ex` (`use Boundary, deps: [Mailglass], exports:
   [Router]`); Boundary's `classify_to:` directive is reserved for mix tasks
-  and protocol implementations and is not used here. Matches the convention
-  established by `MailglassAdmin.PubSub.Topics` and `MailglassAdmin.Layouts`
-  in Plan 03.
+  and protocol implementations and is not used here. Matches the package's
+  general convention for internal support modules.
   """
 
   @type scenario :: {atom(), map()}

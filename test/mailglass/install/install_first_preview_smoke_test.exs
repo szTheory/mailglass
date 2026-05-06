@@ -28,10 +28,14 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
     assert File.exists?(mailable_path)
 
     workflow = File.read!(workflow_path)
+    assert workflow =~
+             "mix phx.new sandbox --module Sandbox --app sandbox --no-ecto --no-mailer --install"
+
     assert workflow =~ "Run mix mailglass.install"
     assert workflow =~ "Compile, fail on warnings"
     assert workflow =~ "Boot endpoint and curl /dev/mail/"
     assert workflow =~ "GET /dev/mail/ → HTTP ${STATUS}"
+    assert workflow =~ "canonical release-window gate"
 
     elapsed_ms = System.monotonic_time(:millisecond) - started_ms
     assert elapsed_ms < 300_000

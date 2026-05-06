@@ -61,6 +61,7 @@ defmodule Mailglass.MixProject do
         "verify.installer.idempotency": :test,
         "verify.installer.smoke": :test,
         "verify.support_contract.core": :test,
+        "verify.stability_contract": :test,
         "verify.provider_compatibility": :test,
         "verify.docs.contract": :test,
         "verify.docs.migration": :test
@@ -245,16 +246,21 @@ defmodule Mailglass.MixProject do
         "test test/mailglass/install/install_first_preview_smoke_test.exs --warnings-as-errors"
       ],
       "verify.support_contract.core": [
-        "test test/mailglass/docs_contract_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs --warnings-as-errors"
+        "test test/mailglass/docs_contract_test.exs test/mailglass/docs/testing_guide_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compatibility_contract_test.exs test/mailglass/docs_migration_smoke_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs --warnings-as-errors"
+      ],
+      "verify.stability_contract": [
+        "verify.support_contract.core",
+        "cmd --cd mailglass_admin mix verify.support_contract.admin",
+        "compile --no-optional-deps --warnings-as-errors"
       ],
       "verify.provider_compatibility": [
         "test test/mailglass/adapter_test.exs test/mailglass/adapters/swoosh_test.exs test/mailglass/webhook/providers/postmark_test.exs test/mailglass/webhook/providers/sendgrid_test.exs test/mailglass/webhook/providers/mailgun_test.exs test/mailglass/webhook/providers/resend_test.exs test/mailglass/webhook/providers/ses_test.exs test/mailglass/webhook/providers/ses/cert_cache_test.exs test/mailglass/webhook/plug_mailgun_test.exs test/mailglass/webhook/plug_ses_test.exs test/mailglass/webhook/providers/resend_webhook_plug_test.exs --warnings-as-errors"
       ],
       "verify.docs.contract": [
-        "test test/mailglass/docs_contract_test.exs --warnings-as-errors"
+        "test test/mailglass/docs_contract_test.exs test/mailglass/compatibility_contract_test.exs --warnings-as-errors"
       ],
       "verify.docs.migration": [
-        "test test/mailglass/docs_migration_smoke_test.exs --warnings-as-errors"
+        "test test/mailglass/docs_migration_smoke_test.exs test/mailglass/compatibility_contract_test.exs --warnings-as-errors"
       ],
       # Cold-start smoke — full suite from a fresh DB. Catches startup-order,
       # seed, and missing-migration issues that warm-state runs can mask.
@@ -305,6 +311,7 @@ defmodule Mailglass.MixProject do
       # Mailglass modules — moduledoc prose still mentions them by name.
       skip_code_autolink_to: [
         "Swoosh.Adapter.deliver/2",
+        "Swoosh.ApiClient.init/0",
         "Swoosh.Mailer.deliver/1",
         "Swoosh.Adapters.Sandbox.Storage",
         "Ecto.Repo.rollback/1",
@@ -315,6 +322,9 @@ defmodule Mailglass.MixProject do
       ],
       extras: [
         "README.md",
+        "docs/api_stability.md",
+        "guides/compatibility-and-deprecations.md",
+        "guides/upgrading-to-v1_0.md",
         "guides/getting-started.md",
         "guides/authoring-mailables.md",
         "guides/components.md",
@@ -325,6 +335,7 @@ defmodule Mailglass.MixProject do
         "guides/multi-tenancy.md",
         "guides/telemetry.md",
         "guides/testing.md",
+        "guides/upgrading-from-v0_1.md",
         "guides/migration-from-swoosh.md",
         "MAINTAINING.md",
         "CONTRIBUTING.md",
@@ -333,7 +344,12 @@ defmodule Mailglass.MixProject do
       ],
       groups_for_extras: [
         Overview: ["README.md"],
+        Contract: [
+          "docs/api_stability.md",
+          "guides/compatibility-and-deprecations.md"
+        ],
         Guides: [
+          "guides/upgrading-to-v1_0.md",
           "guides/getting-started.md",
           "guides/authoring-mailables.md",
           "guides/components.md",
@@ -344,6 +360,7 @@ defmodule Mailglass.MixProject do
           "guides/multi-tenancy.md",
           "guides/telemetry.md",
           "guides/testing.md",
+          "guides/upgrading-from-v0_1.md",
           "guides/migration-from-swoosh.md"
         ],
         Maintainers: [

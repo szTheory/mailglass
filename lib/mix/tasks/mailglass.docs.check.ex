@@ -1,11 +1,12 @@
 defmodule Mix.Tasks.Mailglass.Docs.Check do
   use Boundary, classify_to: Mailglass
 
-  @shortdoc "Checks Tier 1 docs for leaked internal IDs and stale v0.3 surface drift"
+  @shortdoc "Checks Tier 1 docs for stability-contract drift"
 
+  @moduledoc since: "0.3.0"
   @moduledoc """
-  Fail the build if Tier 1 docs leak internal IDs or drift back to known
-  stale pre-v0.2 surface markers. The checks are deterministic and scoped
+  Fail the build if Tier 1 docs leak internal IDs or drift away from the
+  canonical stability-contract story. The checks are deterministic and scoped
   to release-blocking docs only.
 
   ## Usage
@@ -22,6 +23,11 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   @banned_patterns [~r/\bD-\d{2,3}\b/, ~r/\bLINT-\d{2}\b/]
   @tier1_paths [
     "README.md",
+    "mailglass_admin/README.md",
+    "guides/testing.md",
+    "mailglass_admin/docs/operator-trust.md",
+    "guides/compatibility-and-deprecations.md",
+    "guides/upgrading-to-v1_0.md",
     "guides/getting-started.md",
     "guides/upgrading-from-v0_1.md",
     "guides/migration-from-swoosh.md",
@@ -32,14 +38,93 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   ]
   @tier1_surface_rules %{
     "README.md" => %{
-      required: ["{:mailglass, \"~> 0.3\"}", "mix mailglass.install", "RFC 8058 List-Unsubscribe"],
+      required: [
+        "docs/api_stability.md",
+        "guides/compatibility-and-deprecations.md",
+        "guides/upgrading-to-v1_0.md",
+        "mix mailglass.install",
+        "mailglass_inbound` is outside the `v1.x` stability promise"
+      ],
       forbidden: [
         "~> 0.1",
         "~> 0.2",
         "verify.phase_07",
         "v0.1 in development",
-        "and — at v0.5 — RFC 8058"
+        "v0.3 public surface"
       ]
+    },
+    "mailglass_admin/README.md" => %{
+      required: [
+        "docs/operator-trust.md",
+        "docs/api_stability.md",
+        "docs/compatibility-and-deprecations.md",
+        "MailglassAdmin.Auth",
+        "Stable DOM/component/LiveView implementation APIs"
+      ],
+      forbidden: [
+        "{:mailglass, \"~> 0.1\"}",
+        "{:mailglass_admin, \"~> 0.1\"}"
+      ]
+    },
+    "guides/testing.md" => %{
+      required: [
+        "## deliver/2 baseline",
+        "## deliver_later/2 baseline",
+        "## Optional Oban lanes",
+        "## Cross-process and browser ownership",
+        "## PubSub and webhook assertions",
+        "## Footguns and strict-CI posture",
+        "last_mail/0",
+        "wait_for_mail/1",
+        "Fake.allow/2",
+        "shared/global",
+        "async: false",
+        "oban_jobs"
+      ],
+      forbidden: [
+        "returns the last delivered message in the current process mailbox"
+      ]
+    },
+    "mailglass_admin/docs/operator-trust.md" => %{
+      required: [
+        "## Stable seams",
+        "## Session contract",
+        "## Authorization timing",
+        "## Replay semantics",
+        "## Intentionally internal",
+        "MailglassAdmin.Router",
+        "MailglassAdmin.Auth",
+        "`authorize/2` callback",
+        "subject_id",
+        "tenant_id",
+        "auth_method",
+        "recent_auth_at",
+        ":operator_access",
+        ":destructive_action",
+        "new work",
+        "no change",
+        "Replay and reconcile are intentionally distinct"
+      ],
+      forbidden: []
+    },
+    "guides/compatibility-and-deprecations.md" => %{
+      required: [
+        "stable lane",
+        "compatibility lane",
+        "warnings-as-errors",
+        "mailglass_inbound"
+      ],
+      forbidden: ["Phase 37", "v0.1 in development"]
+    },
+    "guides/upgrading-to-v1_0.md" => %{
+      required: [
+        "canonical latest-`0.x` to `1.0` upgrade guide",
+        "support-until version",
+        "proof artifact",
+        "Mailglass.Outbound.send/2",
+        "mix mailglass.upgrade.v0_2"
+      ],
+      forbidden: ["authoritative migration path from the v0.1 mailable API to the v0.2 public surface"]
     },
     "guides/getting-started.md" => %{
       required: ["mix mailglass.install", "|> to(user.email)", "|> subject(\"Welcome\")"],
@@ -47,6 +132,8 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     },
     "guides/upgrading-from-v0_1.md" => %{
       required: [
+        "subordinate codemod reference",
+        "upgrading-to-v1_0.md",
         "mix mailglass.upgrade.v0_2 --apply",
         "Mailglass.Message.update_swoosh/2",
         "`attachment/2` -> `attach/2`"
@@ -55,6 +142,8 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     },
     "guides/migration-from-swoosh.md" => %{
       required: [
+        "subordinate raw-Swoosh migration reference",
+        "upgrading-to-v1_0.md",
         "{:mailglass, \"~> 0.3\"}",
         "Mailglass still accepts a plain `%Swoosh.Email{}`",
         "assert {:ok, _delivery} = Mailglass.deliver(email)"
@@ -108,7 +197,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
       |> Kernel.++(tier1_surface_issues())
 
     if issues == [] do
-      Mix.shell().info("[mailglass.docs.check] OK — Tier 1 docs match the v0.3 release surface.")
+      Mix.shell().info("[mailglass.docs.check] OK — Tier 1 docs match the stability contract.")
       :ok
     else
       Enum.each(issues, &emit_issue/1)

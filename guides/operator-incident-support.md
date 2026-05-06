@@ -4,6 +4,9 @@ This is the canonical incident guide for production mailglass support. Start
 from the customer symptom, then use the stage drilldowns below to separate
 provider lifecycle facts, replay facts, and reconcile facts.
 
+`mailglass_admin/docs/operator-trust.md` is the canonical admin trust doc for
+the stable router/auth/session/replay semantics referenced by this guide.
+
 ## Symptom-first entrypoints
 
 ### customer says the email never arrived

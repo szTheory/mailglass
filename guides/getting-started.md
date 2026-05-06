@@ -1,6 +1,7 @@
 # Getting Started
 
-This guide wires mailglass into a Phoenix app and sends one message through the v0.2 public pipeline.
+This guide wires mailglass into a Phoenix app and sends one message through the
+stable `v1.x` lane.
 
 ## Prerequisites
 
@@ -15,7 +16,7 @@ This guide wires mailglass into a Phoenix app and sends one message through the 
 mix deps.get
 mix mailglass.install
 mix ecto.migrate
-mix compile
+mix compile --warnings-as-errors
 ```
 
 ## 2) Configure mailglass
@@ -82,7 +83,7 @@ end
 mix deps.get
 mix mailglass.install
 mix ecto.migrate
-mix compile
+mix compile --warnings-as-errors
 ```
 
 ## Troubleshooting the Installer

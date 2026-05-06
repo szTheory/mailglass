@@ -232,6 +232,9 @@ jobs:
     # Keep this job aligned with the committed repo-local proof in
     # test/mailglass/install/install_first_preview_smoke_test.exs:
     # add deps -> install -> compile -> boot -> GET /dev/mail/.
+    # This remains the canonical release-window gate. The deeper Ecto-backed
+    # "first send" proof stays repo-local and guide-backed so the fast smoke
+    # path can preserve a quick 60-minute revert decision loop.
     runs-on: ubuntu-latest
     # cron-guard listed explicitly: GitHub Actions `needs.<job>.outputs`
     # propagates only through DIRECT dependencies, not transitively. Without

@@ -27,8 +27,10 @@ defmodule Mailglass.TestAssertions do
 
   ## Process-local + PubSub-backed assertions
 
-  - `last_mail/0`, `wait_for_mail/1`, `assert_no_mail_sent/0` — read
-    the current process's mailbox (`Mailglass.Adapters.Fake.Storage` sends
+  - `last_mail/0` reads Fake-backed delivery storage without consuming the
+    process mailbox.
+  - `wait_for_mail/1`, `assert_no_mail_sent/0`, and `assert_mail_sent/0,1`
+    read the current process mailbox (`Mailglass.Adapters.Fake.Storage` sends
     `{:mail, %Message{}}` to the owner via `send/2` on every delivery).
   - `assert_mail_delivered/2`, `assert_mail_bounced/2` — consume
     PubSub broadcasts from
@@ -176,7 +178,7 @@ defmodule Mailglass.TestAssertions do
   end
 
   @doc """
-  Blocks until a mail arrives or `timeout` elapses. Returns the message.
+  Blocks until a `{:mail, %Message{}}` arrives or `timeout` elapses. Returns the message.
   Flunks on timeout with a descriptive failure message.
 
   Unlike `assert_mail_sent/0` (which uses `assert_received` and checks

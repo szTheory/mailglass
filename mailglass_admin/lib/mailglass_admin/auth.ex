@@ -1,7 +1,12 @@
 defmodule MailglassAdmin.Auth do
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Stack-agnostic authorization seam for production operator access and
   future destructive actions.
+
+  This behaviour is the stable adopter-owned auth seam for `mailglass_admin`.
+  If your app integrates with the operator surface, this is the module contract
+  to depend on.
 
   Adopters implement this behaviour and pass the module to
   `mailglass_operator_routes/2`. MailglassAdmin normalizes the return
@@ -24,20 +29,28 @@ defmodule MailglassAdmin.Auth do
   constant or policy.
   """
 
+  @typedoc since: "0.1.0"
   @type action :: :operator_access | :destructive_action | atom()
+  @typedoc since: "0.1.0"
   @type actor :: %{
           required(:subject_id) => term(),
           optional(:tenant_id) => term() | nil,
           optional(:auth_method) => String.t() | atom() | nil,
           optional(:recent_auth_at) => DateTime.t() | nil
         }
+  @typedoc since: "0.1.0"
   @type success :: {:ok, actor()} | {:ok, %{required(:actor) => actor(), optional(:assigns) => map()}}
+  @typedoc since: "0.1.0"
   @type failure_reason :: :unauthorized | :stale_auth
+  @typedoc since: "0.1.0"
   @type failure :: {:error, failure_reason(), map()}
+  @typedoc since: "0.1.0"
   @type result :: success() | failure()
 
+  @doc since: "0.1.0"
   @callback authorize(action(), context :: map()) :: result()
 
+  @doc since: "0.1.0"
   @spec authorize(module(), action(), map()) :: {:ok, %{actor: actor(), assigns: map()}} | failure()
   def authorize(module, action, context) when is_atom(module) do
     unless Code.ensure_loaded?(module) and function_exported?(module, :authorize, 2) do
@@ -50,6 +63,7 @@ defmodule MailglassAdmin.Auth do
     |> normalize_result()
   end
 
+  @doc since: "0.1.0"
   @spec session_actor(map()) :: actor()
   def session_actor(session) when is_map(session) do
     %{

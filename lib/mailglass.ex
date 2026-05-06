@@ -1,6 +1,7 @@
 defmodule Mailglass do
   @compile {:no_warn_undefined, [Mailglass.Oban.TenancyMiddleware, Mailglass.Outbound.Worker]}
 
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Transactional email framework for Phoenix.
 
@@ -18,9 +19,26 @@ defmodule Mailglass do
            swoosh_adapter:
              {Swoosh.Adapters.Postmark, api_key: System.fetch_env!("POSTMARK_API_KEY")}}
 
+  ## Stability Contract
+
+  The canonical `v1.x` contract inventory for the core package lives in
+  `docs/api_stability.md`.
+
+  Treat this module as a narrow root entrypoint:
+
+  - `Mailglass.deliver/2`, `deliver!/2`, `deliver_later/2`,
+    `deliver_many/2`, and `deliver_many!/2` are stable adopter-facing
+    delegates.
+  - Root reachability or `Boundary` exports do not mean every exported
+    `Mailglass.*` module is promised public API.
+  - Exported helpers used for framework wiring, internal implementation, or
+    sibling-package integration remain classified in the stability inventory as
+    `stable`, `internal`, or `sibling-package-only`.
+
   ## Architecture
 
-  See `Mailglass.Config`, `Mailglass.Renderer`, `Mailglass.Components`.
+  See `Mailglass.Config`, `Mailglass.Renderer`, `Mailglass.Components`, and
+  `docs/api_stability.md`.
   """
 
   # Root boundary. Phase 1 keeps the graph flat: a single root that contains

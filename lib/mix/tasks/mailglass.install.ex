@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Mailglass.Install do
 
   @shortdoc "Install mailglass into a Phoenix host app"
 
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Install mailglass into a Phoenix host app.
 
