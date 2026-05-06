@@ -20,11 +20,12 @@ key-files:
   created:
     - .planning/publish/mailglass_inbound-files.expected
     - .planning/publish/mailglass_inbound-publish-summary.json
-    - mailglass_inbound/.formatter.exs
-    - mailglass_inbound/CHANGELOG.md
-    - mailglass_inbound/LICENSE
     - .planning/phases/42-async-execution-and-adopter-proof/42-03-SUMMARY.md
   modified:
+    - mix.exs
+    - lib/mix/tasks/mailglass.docs.check.ex
+    - mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs
+    - MAINTAINING.md
     - .github/workflows/release-please.yml
     - release-please-config.json
     - .release-please-manifest.json
@@ -57,23 +58,25 @@ completed: 2026-05-06
 
 - Extended root stability proof so `mailglass_inbound` docs and release assertions are part of the semantic verification lane.
 - Generalized `mailglass.publish.check` to understand a third sibling package, including linked-version validation and inbound-specific publish artifacts.
-- Added inbound package publish metadata files (`.formatter.exs`, `CHANGELOG.md`, `LICENSE`) and updated `mailglass_inbound/mix.exs` so a publish-mode Hex build succeeds.
-- Registered `mailglass_inbound` in release-please config/manifest and committed a dedicated inbound publish allowlist plus proof summary derived from a real tarball build.
+- Registered `mailglass_inbound` in release-please config/manifest and committed a dedicated inbound publish allowlist plus proof summary derived from a real publish-check run.
 
 ## Task Commits
 
-- `8796091` - extend root inbound proof lane
+1. **Task 1: Extend the root proof lane so `mailglass_inbound` is part of semantic verification** - `8796091` (feat)
+2. **Task 2: Align release automation and publish expectations with the inbound sibling package proof** - `79524c0` (feat)
 
 ## Files Created/Modified
 
 - `mix.exs` - root verification aliases include inbound docs proof within the semantic lanes.
+- `lib/mix/tasks/mailglass.docs.check.ex` - Tier 1 docs proof now scans inbound README and ingress/stability guides.
+- `mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs` - inbound docs contract asserts repo-root verification wiring.
+- `MAINTAINING.md` - maintainer guidance names the inbound sibling docs lane inside the root proof story.
 - `lib/mix/tasks/mailglass.publish.check.ex` - sibling-package publish checker now supports `mailglass_inbound`.
 - `.github/workflows/release-please.yml` - release PR sync step updates inbound sibling dep pins too.
 - `release-please-config.json` and `.release-please-manifest.json` - `mailglass_inbound` added to linked-version release truth.
-- `mailglass_inbound/mix.exs` - publish metadata widened to include sendgrid docs and package-local release files.
+- `mailglass_inbound/mix.exs` - docs metadata now exports the SendGrid guide inside the package release surface.
 - `.planning/publish/mailglass_inbound-files.expected` - committed inbound tarball allowlist.
 - `.planning/publish/mailglass_inbound-publish-summary.json` - committed inbound publish proof summary.
-- `mailglass_inbound/.formatter.exs`, `mailglass_inbound/CHANGELOG.md`, `mailglass_inbound/LICENSE` - sibling package publish artifacts required by the tarball contract.
 - `test/mailglass/stability_contract_test.exs` - root proof assertions for inbound release truth.
 
 ## Decisions Made
@@ -88,7 +91,7 @@ None - plan executed within the intended scope.
 ## Issues Encountered
 
 - The local `gsd-sdk` installation in this environment does not expose the workflow `query` interface, so phase bookkeeping stayed manual.
-- `mailglass_inbound` was not initially publishable because its package metadata referenced missing release files; the plan was completed by adding those package-local artifacts and regenerating publish proof from the real tarball.
+- The current tree already contained package-local inbound release files outside my ownership scope; I adjusted the repo-root proof surfaces around that existing tree state and regenerated publish proof from the real tarball.
 
 ## User Setup Required
 
@@ -99,7 +102,7 @@ None - no external service configuration required for the repository itself.
 - `mix test test/mailglass/stability_contract_test.exs --warnings-as-errors` — PASS
 - `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors` — PASS
 - `actionlint .github/workflows/release-please.yml` — PASS
-- `cd mailglass_inbound && MIX_PUBLISH=true mix hex.build --unpack --output _publish_check/mailglass_inbound` — PASS
+- `mix mailglass.publish.check --package mailglass_inbound --keep` — PASS
 
 ## Next Phase Readiness
 
