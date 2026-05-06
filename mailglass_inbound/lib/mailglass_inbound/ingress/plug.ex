@@ -11,6 +11,7 @@ defmodule MailglassInbound.Ingress.Plug do
   import Plug.Conn
 
   alias Mailglass.{ConfigError, SignatureError, Tenancy, TenancyError}
+  alias MailglassInbound.Execution
   alias MailglassInbound.Ingress.Request
 
   @impl Plug
@@ -38,9 +39,12 @@ defmodule MailglassInbound.Ingress.Plug do
       handoff = build_handoff(normalized, provider, tenant_id, verification_facts)
 
       persistence = Keyword.get(opts, :persistence, MailglassInbound.Ingress.Persist)
+      execution = Keyword.get(opts, :execution, Execution)
 
       case persistence.persist(handoff, persistence_opts(opts)) do
         {:ok, result} ->
+          maybe_execute(execution, result)
+
           send_json(conn, 200, %{
             status: Atom.to_string(result.status),
             route: route_status(result.route)
@@ -195,6 +199,13 @@ defmodule MailglassInbound.Ingress.Plug do
 
   defp route_status(%{status: status}) when is_atom(status), do: Atom.to_string(status)
   defp route_status(_), do: "unknown"
+
+  defp maybe_execute(_execution, %{status: :duplicate}), do: :ok
+
+  defp maybe_execute(execution, %{status: :inserted} = result) do
+    _ = execution.execute(result)
+    :ok
+  end
 
   defp send_json(conn, status, payload) do
     body = Jason.encode!(payload)
