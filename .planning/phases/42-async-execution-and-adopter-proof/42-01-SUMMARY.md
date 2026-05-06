@@ -27,7 +27,6 @@ key-files:
     - mailglass_inbound/lib/mailglass_inbound/internal/replay.ex
     - mailglass_inbound/lib/mailglass_inbound/optional_deps.ex
     - mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs
-    - mailglass_inbound/test/mailglass_inbound/mailbox_execution_test.exs
     - mailglass_inbound/test/mailglass_inbound/replay_test.exs
 key-decisions:
   - "Oban job args keep only internal route facts plus record/evidence ids so durable workers can reconstruct the exact mailbox target without widening the public contract."
