@@ -33,14 +33,34 @@ defmodule MailglassInbound.Ingress.PlugTest do
     def persist(handoff, opts) do
       Process.put(:mailglass_inbound_last_handoff, handoff)
       Process.put(:mailglass_inbound_last_persist_opts, opts)
+      Process.put(:mailglass_inbound_execution_order, [:persist | Process.get(:mailglass_inbound_execution_order, [])])
 
       status = Process.get(:mailglass_inbound_persist_status, :inserted)
 
       {:ok,
        %{
          status: status,
+         message: handoff.message,
+         inbound_record: %{id: "record-123", tenant_id: handoff.tenant_id},
+         inbound_evidence: %{id: "evidence-123"},
          route: %{status: :matched, mailbox: SupportMailbox}
        }}
+    end
+  end
+
+  defmodule FakeExecution do
+    def execute(result, _opts \\ []) do
+      Process.put(:mailglass_inbound_last_execution_result, result)
+      Process.put(:mailglass_inbound_execution_order, [:execute | Process.get(:mailglass_inbound_execution_order, [])])
+
+      case Process.get(:mailglass_inbound_execution_outcome, :accept) do
+        :accept -> {:ok, %{outcome: :accept}}
+        :ignore -> {:ok, %{outcome: :ignore}}
+        :no_match -> {:ok, %{outcome: :no_match}}
+        :reject -> {:ok, %{outcome: :reject, outcome_reason: "spam"}}
+        :bounce -> {:ok, %{outcome: :bounce, outcome_reason: "loop"}}
+        :failed -> {:ok, %{outcome: :failed, failure: %{kind: :error}}}
+      end
     end
   end
 
@@ -64,6 +84,9 @@ defmodule MailglassInbound.Ingress.PlugTest do
     Process.delete(:mailglass_inbound_last_persist_opts)
     Process.delete(:mailglass_inbound_persist_status)
     Process.delete(:mailglass_inbound_tenant_resolved)
+    Process.delete(:mailglass_inbound_last_execution_result)
+    Process.delete(:mailglass_inbound_execution_order)
+    Process.delete(:mailglass_inbound_execution_outcome)
 
     on_exit(fn ->
       if is_nil(prior_tenancy) do
@@ -99,21 +122,27 @@ defmodule MailglassInbound.Ingress.PlugTest do
         IngressPlug.init(
           provider: :postmark,
           router: TestRouter,
-          persistence: FakePersistence
+          persistence: FakePersistence,
+          execution: FakeExecution
         )
       )
 
     body = Jason.decode!(conn.resp_body)
     handoff = Process.get(:mailglass_inbound_last_handoff)
+    execution_result = Process.get(:mailglass_inbound_last_execution_result)
 
     assert conn.status == 200
     assert body["status"] == "inserted"
     assert body["route"] == "matched"
+    assert Enum.reverse(Process.get(:mailglass_inbound_execution_order)) == [:persist, :execute]
     assert handoff.tenant_id == "tenant-123"
     assert handoff.message.tenant_id == "tenant-123"
     assert handoff.message.provider == :postmark
     assert handoff.message.envelope_recipient == "support@example.com"
     assert handoff.evidence.verification_facts.auth == :basic_auth
+    assert execution_result.inbound_record.id == "record-123"
+    assert execution_result.inbound_evidence.id == "evidence-123"
+    assert execution_result.route == %{status: :matched, mailbox: SupportMailbox}
   end
 
   test "maps duplicate persistence outcomes to 200 without pretending it is new work" do
@@ -126,11 +155,17 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :postmark, router: TestRouter, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :postmark,
+          router: TestRouter,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
       )
 
     assert conn.status == 200
     assert Jason.decode!(conn.resp_body)["status"] == "duplicate"
+    assert Process.get(:mailglass_inbound_last_execution_result) == nil
   end
 
   test "returns 401 on auth failure" do
@@ -176,7 +211,12 @@ defmodule MailglassInbound.Ingress.PlugTest do
     conn =
       IngressPlug.call(
         conn,
-        IngressPlug.init(provider: :sendgrid, router: TestRouter, persistence: FakePersistence)
+        IngressPlug.init(
+          provider: :sendgrid,
+          router: TestRouter,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
       )
 
     body = Jason.decode!(conn.resp_body)
@@ -192,6 +232,30 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert handoff.message.envelope_recipient == "support@example.com"
     assert handoff.evidence.verification_facts.auth == :basic_auth
     assert handoff.evidence.raw_mime == sendgrid_raw_mime()
+  end
+
+  test "acknowledges 200 after durable receive truth for semantic and failed execution outcomes" do
+    for outcome <- [:ignore, :reject, :bounce, :failed] do
+      Process.put(:mailglass_inbound_execution_outcome, outcome)
+
+      conn =
+        conn_with_auth(postmark_payload())
+        |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+
+      conn =
+        IngressPlug.call(
+          conn,
+          IngressPlug.init(
+            provider: :postmark,
+            router: TestRouter,
+            persistence: FakePersistence,
+            execution: FakeExecution
+          )
+        )
+
+      assert conn.status == 200
+      assert Jason.decode!(conn.resp_body)["status"] == "inserted"
+    end
   end
 
   test "returns 401 on sendgrid auth failure without resolving tenant" do
