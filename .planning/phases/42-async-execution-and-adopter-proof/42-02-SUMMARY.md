@@ -2,90 +2,91 @@
 phase: 42-async-execution-and-adopter-proof
 plan: "02"
 subsystem: docs
-tags: [adoption, docs-contract, replay, operator-trust]
+tags: [mailglass_inbound, docs-contract, oban, replay, operator-trust]
 requires:
   - phase: 42-01
-    provides: shared async execution seam and bounded fallback semantics
+    provides: async execution seams and bounded fallback semantics for inbound receive truth
 provides:
-  - canonical inbound adoption README
-  - tightened stability and provider guides
-  - operator-trust wording aligned with async execution and replay reality
+  - canonical inbound adoption runbook
+  - narrowed stability and provider docs for async execution
+  - docs-contract proof for replay, fallback, and operator-trust wording
 affects: [phase-42, mailglass_inbound, mailglass_admin]
 tech-stack:
   added: []
-  patterns: [docs-contract enforcement, canonical manual setup lane, honest replay posture]
+  patterns: [manual setup runbook, docs-contract drift guard, narrow public contract]
 key-files:
   created:
-    - .planning/phases/42-async-execution-and-adopter-proof/42-02-SUMMARY.md
+    - mailglass_inbound/docs/postmark_ingress.md
   modified:
     - mailglass_inbound/README.md
     - mailglass_inbound/docs/api_stability.md
-    - mailglass_inbound/docs/postmark_ingress.md
     - mailglass_inbound/docs/sendgrid_ingress.md
-    - mailglass_admin/docs/operator-trust.md
     - mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs
 key-decisions:
-  - "Made the README the one canonical manual setup path instead of spreading installation and runtime guidance across provider docs."
-  - "Kept replay and worker orchestration explicitly internal while documenting the durability gap between Oban and Task.Supervisor fallback."
+  - "Made the README the single canonical setup lane and pushed provider-specific caveats into focused guides instead of duplicating setup truth."
+  - "Kept Oban durability, Task.Supervisor fallback limits, replay recovery, and worker details explicit in docs without widening the stable public surface."
 patterns-established:
-  - "Docs claims are enforced by a dedicated docs-contract lane that checks wording around durability, replay, provider setup, and stable-vs-internal boundaries."
+  - "Inbound docs now lead with manual wiring, then link to focused provider guides and a narrow stability inventory."
+  - "Operator-trust claims are enforced through docs-contract assertions rather than relying on prose review."
 requirements-completed: [ADOPT-01, EXEC-01, EXEC-02]
-duration: unknown
+duration: 5 min
 completed: 2026-05-06
 ---
 
-# Phase 42-02 Summary
+# Phase 42 Plan 02: Canonical Inbound Adoption Docs Summary
 
-**The inbound package now has one canonical adoption lane, provider guides that stay honest about durability and replay, and operator-trust wording that matches the async execution model shipped in `42-01`.**
+**`mailglass_inbound` now ships one honest manual setup lane, focused provider guides, and docs-contract proof that keeps fallback, replay, and operator-trust claims aligned with the async runtime.**
 
 ## Performance
 
-- **Duration:** unknown
-- **Started:** 2026-05-06
-- **Completed:** 2026-05-06
+- **Duration:** 5 min
+- **Started:** 2026-05-06T18:37:25Z
+- **Completed:** 2026-05-06T18:42:40Z
 - **Tasks:** 2
-- **Files modified:** 6
+- **Files modified:** 5
 
 ## Accomplishments
 
-- Rewrote `mailglass_inbound/README.md` into the canonical manual setup path covering dependencies, migrations, parser wiring, route mounts, execution modes, and verification commands.
-- Tightened `api_stability.md`, `postmark_ingress.md`, and `sendgrid_ingress.md` so the durable Oban path, bounded Task.Supervisor fallback, replay posture, and stable/internal boundaries are explicit.
-- Updated operator-trust guidance so replay is described as recovery over stored inbound truth rather than a fresh provider receive or public replay surface.
-- Expanded the docs-contract proof lane to mechanically reject durability overstatements, installer framing, and widened replay or worker claims.
+- Rewrote the inbound README into the canonical adoption runbook covering deps, migrations, parser wiring, provider mounts, async mode selection, and verification commands.
+- Tightened the Postmark, SendGrid, and stability guides so durable Oban execution, bounded Task.Supervisor fallback, replay recovery, and internal worker boundaries are documented precisely.
+- Extended the docs-contract lane so future copy drift fails when it overstates replay/public UI support or blurs the durable-versus-best-effort execution boundary.
 
 ## Task Commits
 
-- `a20db42` - tightened docs-contract assertions for the inbound adoption lane
+1. **Task 1: Publish one canonical inbound adoption lane with explicit Oban and fallback semantics** - `a20db42` (test), `570b8cb` (feat)
+2. **Task 2: Align operator-trust wording and proof lanes with async execution and replay reality** - `63fac55` (test)
 
 ## Files Created/Modified
 
-- `mailglass_inbound/README.md` - canonical adoption lane for install, wiring, execution modes, and verification.
-- `mailglass_inbound/docs/api_stability.md` - stable/internal/deferred inventory aligned with async execution semantics.
-- `mailglass_inbound/docs/postmark_ingress.md` - focused Postmark guide with raw-body, duplicate, route-compatibility, and replay wording.
-- `mailglass_inbound/docs/sendgrid_ingress.md` - focused SendGrid guide with raw MIME, duplicate fingerprint, and retry/replay semantics.
-- `mailglass_admin/docs/operator-trust.md` - operator recovery story aligned with stored truth first and async execution second.
-- `mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs` - wording-level proof lane for adoption and replay claims.
+- `mailglass_inbound/README.md` - canonical manual setup path for the inbound slice.
+- `mailglass_inbound/docs/api_stability.md` - narrowed stable versus internal async contract inventory.
+- `mailglass_inbound/docs/postmark_ingress.md` - focused Postmark verification, duplicate, and replay notes.
+- `mailglass_inbound/docs/sendgrid_ingress.md` - focused SendGrid raw MIME, duplicate fingerprint, and replay notes.
+- `mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs` - drift guards for setup, fallback, replay, and operator-trust claims.
 
 ## Decisions Made
 
-- Chose one README-first documentation lane and demoted provider docs to focused supplements.
-- Kept `%Oban.Job{}` details, worker contracts, replay orchestration, and UI claims out of the public contract.
+- Kept setup manual and explicit in this phase rather than implying generated wiring or installer help that does not ship.
+- Documented replay strictly as recovery over stored truth, not as fresh receive semantics or a widened public API.
 
 ## Deviations from Plan
 
-None - plan executed within the intended scope.
+None - plan executed exactly as written against the current tree.
 
 ## Issues Encountered
 
-- The local executor returned after landing the test commit but before writing the summary or finishing the doc text, so the final documentation pass and summary write were completed inline.
+- The local `gsd-sdk` installation in this environment does not expose the planned `query` interface, so `.planning/STATE.md`, `.planning/ROADMAP.md`, and `.planning/REQUIREMENTS.md` were not updated through helper commands.
+- `mailglass_admin/docs/operator-trust.md` already contained the required replay/fallback wording in the current tree, so Task 2 landed as tighter docs-contract proof rather than an additional doc diff.
 
 ## User Setup Required
 
-None - no external service configuration required for the repository itself.
+None - the plan documents manual adopter setup but does not require repo-local secret or dashboard changes.
 
 ## Next Phase Readiness
 
-Plan 42-03 can now extend the repo-root verification and release-proof lanes around a documented and contract-protected `mailglass_inbound` package surface.
+Plan 42-03 can now extend root verification and release-proof lanes against one canonical inbound docs story instead of scattered setup notes.
+
+## Self-Check: PASSED
 
 ---
 *Phase: 42-async-execution-and-adopter-proof*
