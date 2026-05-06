@@ -5,6 +5,7 @@ defmodule MailglassInbound.DocsContractTest do
   @stability_path Path.expand("../../docs/api_stability.md", __DIR__)
   @postmark_ingress_path Path.expand("../../docs/postmark_ingress.md", __DIR__)
   @sendgrid_ingress_path Path.expand("../../docs/sendgrid_ingress.md", __DIR__)
+  @operator_trust_path Path.expand("../../../mailglass_admin/docs/operator-trust.md", __DIR__)
 
   test "docs inventory names the stable public modules for the inbound slice" do
     readme = File.read!(@readme_path)
@@ -114,6 +115,20 @@ defmodule MailglassInbound.DocsContractTest do
 
     refute stability =~ "stable public replay API"
     refute stability =~ "public worker contract"
+  end
+
+  test "operator trust docs keep replay separate from fresh receive and public ui claims" do
+    operator_trust = File.read!(@operator_trust_path)
+
+    assert operator_trust =~ "fresh provider receipt"
+    assert operator_trust =~ "Task.Supervisor fallback"
+    assert operator_trust =~ "best-effort"
+    assert operator_trust =~ "no_prior_match"
+    assert operator_trust =~ "execution_history_missing"
+
+    refute operator_trust =~ "public replay API"
+    refute operator_trust =~ "operator UI already ships"
+    refute operator_trust =~ "silent reroute"
   end
 
   test "docs reject replay-as-fresh and unshipped verification claims" do
