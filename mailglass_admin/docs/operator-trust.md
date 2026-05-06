@@ -50,19 +50,32 @@ the `MailglassAdmin.Auth` `authorize/2` callback.
 
 ## Replay semantics
 
-Replay is an operator action against one exact stored webhook event for one
-selected delivery.
+Replay is an operator recovery action against one exact stored inbound receive
+truth for one selected delivery.
 
 - Replay is exact-target, not delivery-wide guessing.
 - Replay stays tenant-scoped.
 - Replay is ledger-audited as requested, succeeded, or failed facts.
-- Replay reuses the existing local ingest and idempotency path.
+- Replay runs after canonical and raw evidence truth already exists; it is not
+  a fresh provider receipt.
 - Replay can honestly end in `new work` or `no change`.
 
+Fresh provider receipt and later execution are intentionally distinct. The
+durable promise is the stored inbound receive truth. Execution may happen later
+through Oban-backed durable jobs or, when Oban is unavailable, through a
+bounded Task.Supervisor fallback with no automatic retry. Replay is the
+recovery tool when operators need to rerun stored truth after best-effort
+fallback loss or a previous failure.
+
 Replay and reconcile are intentionally distinct. Replay reruns one exact stored
-webhook target through local semantics. Reconcile is background-first backlog
-maintenance for unmatched webhook rows and is not a delivery-detail replay
-tool.
+inbound target through local semantics and does not silently reroute to a
+different mailbox. Reconcile is background-first backlog maintenance for
+unmatched webhook rows and is not a delivery-detail replay tool.
+
+When execution history is incomplete, replay fails explicitly rather than
+guessing. The current failure vocabulary includes `:no_prior_match` for records
+whose fresh history never matched a mailbox and `:execution_history_missing`
+for records that predate execution-lineage capture.
 
 ## Intentionally internal
 
