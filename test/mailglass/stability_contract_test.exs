@@ -70,5 +70,27 @@ defmodule Mailglass.StabilityContractTest do
       assert maintaining =~ "mailglass_inbound"
       assert maintaining =~ "mix verify.stability_contract"
     end
+
+    test "release automation and publish proof keep mailglass_inbound in sibling-package truth" do
+      workflow = File.read!(".github/workflows/release-please.yml")
+      config = File.read!("release-please-config.json")
+      manifest = File.read!(".release-please-manifest.json")
+      publish_check = File.read!("lib/mix/tasks/mailglass.publish.check.ex")
+      inbound_mix = File.read!("mailglass_inbound/mix.exs")
+      expected = File.read!(".planning/publish/mailglass_inbound-files.expected")
+      summary = File.read!(".planning/publish/mailglass_inbound-publish-summary.json")
+
+      assert workflow =~ "\"mailglass_inbound/mix.exs:mailglass\""
+      assert config =~ "\"mailglass_inbound\""
+      assert manifest =~ "\"mailglass_inbound\": \"0.3.2\""
+      assert publish_check =~ "defp packages(nil), do: [:mailglass, :mailglass_admin, :mailglass_inbound]"
+      assert publish_check =~ "defp packages(\"mailglass_inbound\"), do: [:mailglass_inbound]"
+      assert publish_check =~ "defp package_dir(repo_root, :mailglass_inbound)"
+      assert inbound_mix =~ "{:mailglass, \"== 0.3.2\"}"
+      assert inbound_mix =~ "\"docs/sendgrid_ingress.md\""
+      assert expected =~ "docs/sendgrid_ingress.md"
+      assert summary =~ "\"package\": \"mailglass_inbound\""
+      assert summary =~ "\"mailglass_inbound\": \"0.3.2\""
+    end
   end
 end

@@ -12,11 +12,12 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       mix mailglass.publish.check
       mix mailglass.publish.check --package mailglass
       mix mailglass.publish.check --package mailglass_admin
+      mix mailglass.publish.check --package mailglass_inbound
       mix mailglass.publish.check --package mailglass --keep
 
   ## Options
 
-    * `--package` - optional package selector (`mailglass` or `mailglass_admin`);
+    * `--package` - optional package selector (`mailglass`, `mailglass_admin`, or `mailglass_inbound`);
       when omitted, both packages are checked sequentially.
     * `--keep` - preserve `_publish_check/<pkg>/` for inspection.
 
@@ -58,14 +59,15 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     end)
   end
 
-  defp packages(nil), do: [:mailglass, :mailglass_admin]
+  defp packages(nil), do: [:mailglass, :mailglass_admin, :mailglass_inbound]
 
   defp packages("mailglass"), do: [:mailglass]
   defp packages("mailglass_admin"), do: [:mailglass_admin]
+  defp packages("mailglass_inbound"), do: [:mailglass_inbound]
 
   defp packages(other) do
     Mix.raise(
-      "Delivery blocked: unknown package #{inspect(other)}. Use mailglass or mailglass_admin."
+      "Delivery blocked: unknown package #{inspect(other)}. Use mailglass, mailglass_admin, or mailglass_inbound."
     )
   end
 
@@ -210,13 +212,14 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       expected_file: Path.join(repo_root, ".planning/publish/#{package}-files.expected"),
       proof_summary_file: Path.join(repo_root, ".planning/publish/#{package}-publish-summary.json"),
       summary_path: System.get_env("GITHUB_STEP_SUMMARY"),
-      mix_publish?: package == :mailglass_admin,
+      mix_publish?: package in [:mailglass_admin, :mailglass_inbound],
       helper_body: maybe_find_function_body(ast, :mailglass_dep, 0)
     }
   end
 
   defp package_dir(repo_root, :mailglass), do: repo_root
   defp package_dir(repo_root, :mailglass_admin), do: Path.join(repo_root, "mailglass_admin")
+  defp package_dir(repo_root, :mailglass_inbound), do: Path.join(repo_root, "mailglass_inbound")
 
   # Root package (`mailglass`) uses release-please's path key `.` first, then
   # falls back to legacy `mailglass` key. Nested package (`mailglass_admin`)
@@ -227,6 +230,10 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   defp manifest_version(manifest, :mailglass_admin) do
     Map.get(manifest, "mailglass_admin")
+  end
+
+  defp manifest_version(manifest, :mailglass_inbound) do
+    Map.get(manifest, "mailglass_inbound")
   end
 
   defp read_root_version(repo_root) do
@@ -461,6 +468,10 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     denylist_patterns(:mailglass) ++ [~r/^assets\//]
   end
 
+  defp denylist_patterns(:mailglass_inbound) do
+    denylist_patterns(:mailglass)
+  end
+
   defp verify_size(ctx) do
     total = Enum.reduce(ctx.files, 0, fn file, acc -> acc + file.size end)
     mb = total / 1_048_576
@@ -485,7 +496,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     root = artifact_root(ctx)
     logical_files = files_relative_to(root, ctx.files)
     paths = MapSet.new(Enum.map(logical_files, & &1.path))
-    required = ["LICENSE", "README.md", "CHANGELOG.md", "mix.exs"]
+    required = required_file_entries(ctx.package)
 
     missing = Enum.reject(required, &MapSet.member?(paths, &1))
 
@@ -536,7 +547,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       if missing != [] do
         fail_step(
           "check required files",
-          "Delivery blocked: missing required file #{Enum.join(missing, ", ")}. Add to mix.exs :package :files OR rebuild assets (cd mailglass_admin/assets && bun run build) for priv/static/* targets."
+          "Delivery blocked: missing required file #{Enum.join(missing, ", ")}. Add the file to mix.exs :package :files or restore the package artifact before publishing."
         )
       end
     end
@@ -546,6 +557,15 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   defp verify_changelog(ctx) do
     path = Path.join(artifact_root(ctx), "CHANGELOG.md")
+
+    if not File.exists?(path) do
+      Map.put(ctx, :changelog_excerpt, nil)
+    else
+      do_verify_changelog(ctx, path)
+    end
+  end
+
+  defp do_verify_changelog(ctx, path) do
     lines = File.read!(path) |> String.split("\n", trim: false)
     heading = ~r/^##\s*\[?v?#{Regex.escape(ctx.version)}\]?/m
 
@@ -605,7 +625,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
          not String.ends_with?(description, "."), "description"},
       {licenses == ["MIT"], "licenses"},
       {is_map(links) and Map.get(links, "GitHub") == source_url, "links.GitHub"},
-      {ctx.package != :mailglass_admin or Map.has_key?(links, "HexDocs"), "links.HexDocs"},
+      {ctx.package not in [:mailglass_admin, :mailglass_inbound] or Map.has_key?(links, "HexDocs"),
+       "links.HexDocs"},
       {source_url == homepage_url, "homepage_url"},
       {String.starts_with?(source_url, "https://github.com/"), "source_url"},
       {Regex.match?(~r/^\d+\.\d+\.\d+(-[\w.+-]+)?$/, ctx.version), "version"},
@@ -649,7 +670,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       {_, "links.HexDocs"} ->
         fail_step(
           "check mix metadata",
-          "Delivery blocked: mix.exs metadata links must include HexDocs for mailglass_admin. Fix #{ctx.package_name}/mix.exs and rebuild."
+          "Delivery blocked: mix.exs metadata links must include HexDocs for sibling packages. Fix #{ctx.package_name}/mix.exs and rebuild."
         )
 
       {_, "homepage_url"} ->
@@ -708,25 +729,25 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
     case forbidden do
       nil ->
-        if ctx.package == :mailglass_admin do
+        if ctx.package in [:mailglass_admin, :mailglass_inbound] do
           case Enum.find(deps, fn
                  {:mailglass, _req} -> true
                  {:mailglass, _req, _opts} -> true
                  _ -> false
                end) do
             {:mailglass, "== " <> version} when version == ctx.root_version ->
-              Map.put(ctx, :mailglass_admin_publish_pin, "== #{version}")
+              Map.put(ctx, sibling_publish_pin_key(ctx.package), "== #{version}")
 
             {:mailglass, "== " <> version} ->
               fail_step(
                 "check dependency shapes",
-                "Delivery blocked: mailglass_admin's mailglass dep is \"== #{version}\" but mailglass core declares @version \"#{ctx.root_version}\". Run release-please to re-link versions, then re-publish."
+                "Delivery blocked: #{ctx.package_name}'s mailglass dep is \"== #{version}\" but mailglass core declares @version \"#{ctx.root_version}\". Run release-please to re-link versions, then re-publish."
               )
 
             other ->
               fail_step(
                 "check dependency shapes",
-                "Delivery blocked: mailglass_admin's mailglass dep is not a Hex version constraint: #{inspect(other)}. Run release-please to re-link versions, then re-publish."
+                "Delivery blocked: #{ctx.package_name}'s mailglass dep is not a Hex version constraint: #{inspect(other)}. Run release-please to re-link versions, then re-publish."
               )
           end
         else
@@ -742,7 +763,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   end
 
   defp verify_linked_constraint(ctx) do
-    if ctx.package == :mailglass_admin do
+    if ctx.package in [:mailglass_admin, :mailglass_inbound] do
       deps_body = find_function_body(ctx.ast, :deps, 0)
       helper = if ctx.helper_body, do: eval_mailglass_dep(ctx.helper_body), else: nil
 
@@ -765,13 +786,13 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
         {:mailglass, "== " <> version} ->
           fail_step(
             "check linked-version constraint",
-            "Delivery blocked: mailglass_admin's mailglass dep is \"== #{version}\" but mailglass core declares @version \"#{ctx.root_version}\". Run release-please to re-link versions, then re-publish."
+            "Delivery blocked: #{ctx.package_name}'s mailglass dep is \"== #{version}\" but mailglass core declares @version \"#{ctx.root_version}\". Run release-please to re-link versions, then re-publish."
           )
 
         other ->
           fail_step(
             "check linked-version constraint",
-            "Delivery blocked: mailglass_admin's mailglass dep is not a Hex version constraint: #{inspect(other)}. Run release-please to re-link versions, then re-publish."
+            "Delivery blocked: #{ctx.package_name}'s mailglass dep is not a Hex version constraint: #{inspect(other)}. Run release-please to re-link versions, then re-publish."
           )
       end
     else
@@ -815,12 +836,13 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     ctx
   end
 
-  # mailglass_admin is co-released with mailglass. During pre-publish validation
+  # sibling packages are co-released with mailglass. During pre-publish validation
   # the new sibling version is not on Hex yet, so `mix deps.get` must validate
   # the dependency graph against the local sibling checkout instead of requiring
   # a not-yet-published Hex release. The exact-version contract is enforced
   # separately by verify_deps/1 and verify_linked_constraint/1.
-  defp maybe_rewrite_publish_dep(source, %{package: :mailglass_admin, repo_root: repo_root}) do
+  defp maybe_rewrite_publish_dep(source, %{package: package, repo_root: repo_root})
+       when package in [:mailglass_admin, :mailglass_inbound] do
     rewrite_mailglass_publish_dep(source, repo_root)
   end
 
@@ -908,7 +930,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   defp compile_root(ctx) do
     root = artifact_root(ctx)
 
-    if ctx.package == :mailglass_admin do
+    if ctx.package in [:mailglass_admin, :mailglass_inbound] do
       temp_dir =
         Path.join(
           System.tmp_dir!(),
@@ -1056,7 +1078,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     linked_versions =
       %{
         "mailglass" => manifest_version(ctx.manifest, :mailglass),
-        "mailglass_admin" => manifest_version(ctx.manifest, :mailglass_admin)
+        "mailglass_admin" => manifest_version(ctx.manifest, :mailglass_admin),
+        "mailglass_inbound" => manifest_version(ctx.manifest, :mailglass_inbound)
       }
       |> Enum.reject(fn {_package, version} -> is_nil(version) end)
       |> Map.new()
@@ -1079,6 +1102,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
         "linked_versions" => linked_versions
       }
       |> maybe_put("mailglass_admin_publish_pin", ctx[:mailglass_admin_publish_pin])
+      |> maybe_put("mailglass_inbound_publish_pin", ctx[:mailglass_inbound_publish_pin])
 
     File.mkdir_p!(Path.dirname(ctx.proof_summary_file))
     File.write!(ctx.proof_summary_file, Jason.encode_to_iodata!(summary, pretty: true))
@@ -1119,6 +1143,11 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   defp required_file_entries(:mailglass_admin) do
     required_file_entries(:mailglass) ++
       ["priv/static/app.css", "priv/static/mailglass-logo.svg", "priv/static/fonts/*.woff2"]
+  end
+
+  defp required_file_entries(:mailglass_inbound) do
+    required_file_entries(:mailglass) ++
+      [".formatter.exs", "docs/api_stability.md", "docs/postmark_ingress.md", "docs/sendgrid_ingress.md"]
   end
 
   defp maybe_eval_ast(nil, _attrs), do: nil
@@ -1212,9 +1241,16 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     [{"MIX_PUBLISH", "true"} | extra]
   end
 
+  defp mix_env(%{package: :mailglass_inbound}, extra) do
+    [{"MIX_PUBLISH", "true"} | extra]
+  end
+
   defp mix_env(_ctx, extra) do
     extra
   end
+
+  defp sibling_publish_pin_key(:mailglass_admin), do: :mailglass_admin_publish_pin
+  defp sibling_publish_pin_key(:mailglass_inbound), do: :mailglass_inbound_publish_pin
 
   defp with_disabled_otel(fun) do
     original =

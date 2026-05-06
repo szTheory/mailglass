@@ -12,13 +12,19 @@
       "release-type": "elixir",
       "component": "mailglass_admin",
       "changelog-path": "CHANGELOG.md"
+    },
+    "mailglass_inbound": {
+      "package-name": "mailglass_inbound",
+      "release-type": "elixir",
+      "component": "mailglass_inbound",
+      "changelog-path": "CHANGELOG.md"
     }
   },
   "plugins": [
     {
       "type": "linked-versions",
       "groupName": "mailglass-sibling-group",
-      "components": ["mailglass", "mailglass_admin"]
+      "components": ["mailglass", "mailglass_admin", "mailglass_inbound"]
     }
   ],
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"

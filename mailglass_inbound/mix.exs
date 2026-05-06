@@ -85,12 +85,13 @@ defmodule MailglassInbound.MixProject do
       extras: [
         "README.md",
         "docs/api_stability.md",
-        "docs/postmark_ingress.md"
+        "docs/postmark_ingress.md",
+        "docs/sendgrid_ingress.md"
       ],
       groups_for_extras: [
         Overview: ["README.md"],
         Contract: ["docs/api_stability.md"],
-        Guides: ["docs/postmark_ingress.md"]
+        Guides: ["docs/postmark_ingress.md", "docs/sendgrid_ingress.md"]
       ],
       groups_for_modules: [
         Stable: [

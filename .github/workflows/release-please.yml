@@ -44,7 +44,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Sync mailglass_admin -> mailglass dep pin on release-please branch
+      - name: Sync sibling package -> mailglass dep pin on release-please branch
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         run: |
           set -euo pipefail
@@ -58,18 +58,18 @@ jobs:
           git fetch origin "$BRANCH":"$BRANCH"
           git checkout "$BRANCH"
 
-          NEW_VERSION=$(jq -r '.["mailglass_admin"]' .release-please-manifest.json)
+          NEW_VERSION=$(jq -r '.["mailglass_inbound"] // .["mailglass_admin"] // .["."]' .release-please-manifest.json)
           if [ -z "$NEW_VERSION" ] || [ "$NEW_VERSION" = "null" ]; then
-            echo "ERROR: could not read mailglass_admin version from .release-please-manifest.json" >&2
+            echo "ERROR: could not read sibling package version from .release-please-manifest.json" >&2
             exit 1
           fi
           echo "Target dep pin: {:mailglass, \"== $NEW_VERSION\"}"
 
           # REL-05: Bash-loop generalization keyed on (path, dep_atom) pairs.
-          # Future-proofs adding mailglass_inbound at v0.5+ — uncomment one line.
+          # Keep the linked sibling packages explicit in the release PR diff.
           PINS=(
             "mailglass_admin/mix.exs:mailglass"
-            # "mailglass_inbound/mix.exs:mailglass"   # uncomment at v0.5
+            "mailglass_inbound/mix.exs:mailglass"
           )
 
           for entry in "${PINS[@]}"; do
@@ -89,16 +89,16 @@ jobs:
             sed -i -E "s/\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}/{:${dep}, \"== ${NEW_VERSION}\"}/" "$path"
           done
 
-          if git diff --quiet -- mailglass_admin/mix.exs; then
+          if git diff --quiet -- mailglass_admin/mix.exs mailglass_inbound/mix.exs; then
             echo "Pin already at $NEW_VERSION — nothing to commit."
             exit 0
           fi
 
           echo "Pin updated; diff follows:"
-          git --no-pager diff -- mailglass_admin/mix.exs
+          git --no-pager diff -- mailglass_admin/mix.exs mailglass_inbound/mix.exs
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add mailglass_admin/mix.exs
-          git commit -m "chore(release-please): sync mailglass_admin -> mailglass dep pin to == $NEW_VERSION"
+          git add mailglass_admin/mix.exs mailglass_inbound/mix.exs
+          git commit -m "chore(release-please): sync sibling mailglass dep pins to == $NEW_VERSION"
           git push origin "$BRANCH"
