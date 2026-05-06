@@ -10,6 +10,7 @@ defmodule MailglassInbound.MixProject do
       app: :mailglass_inbound,
       version: @version,
       elixir: "~> 1.18",
+      elixirc_options: elixirc_options(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       name: "MailglassInbound",
@@ -25,13 +26,27 @@ defmodule MailglassInbound.MixProject do
     [extra_applications: [:logger]]
   end
 
+  defp elixirc_options do
+    [no_warn_undefined: [Oban, Oban.Job, Oban.Worker]]
+  end
+
   defp deps do
     [
+      mailglass_dep(),
       {:ecto_sql, "~> 3.13"},
       {:nimble_options, "~> 1.1"},
+      {:oban, "~> 2.21", optional: true},
       {:uuidv7, "~> 1.0"},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
+  end
+
+  defp mailglass_dep do
+    if System.get_env("MIX_PUBLISH") == "true" do
+      {:mailglass, "== 0.3.2"}
+    else
+      {:mailglass, path: "..", override: true}
+    end
   end
 
   defp package do
@@ -44,7 +59,7 @@ defmodule MailglassInbound.MixProject do
         "GitHub" => @source_url,
         "HexDocs" => "https://hexdocs.pm/mailglass_inbound"
       },
-      files: ~w(lib mix.exs README* CHANGELOG* LICENSE*)
+      files: ~w(lib docs priv .formatter.exs mix.exs README* CHANGELOG* LICENSE*)
     ]
   end
 
@@ -52,7 +67,24 @@ defmodule MailglassInbound.MixProject do
     [
       main: "MailglassInbound",
       source_url: @source_url,
-      source_ref: "v" <> @version
+      source_ref: "v" <> @version,
+      extras: [
+        "README.md",
+        "docs/api_stability.md"
+      ],
+      groups_for_extras: [
+        Overview: ["README.md"],
+        Contract: ["docs/api_stability.md"]
+      ],
+      groups_for_modules: [
+        Stable: [
+          MailglassInbound,
+          MailglassInbound.InboundMessage,
+          MailglassInbound.Router,
+          MailglassInbound.Mailbox
+        ],
+        Internal: [MailglassInbound.OptionalDeps]
+      ]
     ]
   end
 end

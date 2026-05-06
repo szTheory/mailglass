@@ -9,6 +9,13 @@ defmodule MailglassInbound do
   - `MailglassInbound.Router` is the adopter-owned routing DSL.
   - `MailglassInbound.Mailbox` is the mailbox callback contract.
   - `version/0` returns the package version string at compile time.
+
+  The canonical Phase 39 contract inventory lives in
+  `mailglass_inbound/docs/api_stability.md`.
+
+  Provider-specific ingress, mailbox execution runners, and any operator or UI
+  surfaces remain deferred to later phases even when package-local internals
+  exist to support them.
   """
 
   @version Mix.Project.config()[:version]
