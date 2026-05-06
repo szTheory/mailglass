@@ -18,7 +18,7 @@
 
 ### v1.1 Inbound Core Slice
 
-**Status:** Active. Phase 41 is complete; Phase 42 is next.
+**Status:** Active. Phase 42 is complete; milestone closeout is next.
 **Phases:** 39-42
 **Total Plans:** 12
 
@@ -80,12 +80,13 @@ Plans:
 **Goal**: Make the first inbound slice operationally credible with Oban-backed execution, bounded fallback semantics, and honest install/test/operator docs.
 **Depends on**: Phase 41
 **Plans**: 3 plans
+**Status:** Complete (2026-05-06)
 
 Plans:
 
-- [ ] 42-01: Add Oban-backed inbound execution plus a supported non-Oban fallback path
-- [ ] 42-02: Publish canonical install, testing, and operator-trust docs for the core inbound slice
-- [ ] 42-03: Extend sibling-package release and root verification proof to cover `mailglass_inbound`
+- [x] 42-01: Add Oban-backed inbound execution plus a supported non-Oban fallback path
+- [x] 42-02: Publish canonical install, testing, and operator-trust docs for the core inbound slice
+- [x] 42-03: Extend sibling-package release and root verification proof to cover `mailglass_inbound`
 
 ---
 
