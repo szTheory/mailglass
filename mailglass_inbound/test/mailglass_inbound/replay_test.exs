@@ -35,16 +35,10 @@ defmodule MailglassInbound.ReplayTest do
   end
 
   defmodule ReplayExecution do
-    def execute(result, _opts \\ []) do
+    def execute(result, opts \\ []) do
       Process.put(:mailglass_inbound_replay_execution_payload, result)
+      Process.put(:mailglass_inbound_replay_execution_opts, opts)
       {:ok, %{outcome: :accept}}
-    end
-  end
-
-  defmodule ReplayInboundRecords do
-    def insert_replay_run(attrs, _opts \\ []) do
-      Process.put(:mailglass_inbound_replay_inserted_run, attrs)
-      {:ok, struct(MailglassInbound.InboundRecords.ExecutionRun, attrs)}
     end
   end
 
@@ -80,7 +74,7 @@ defmodule MailglassInbound.ReplayTest do
   setup do
     Process.delete(:mailglass_inbound_replay_repo_sequence)
     Process.delete(:mailglass_inbound_replay_execution_payload)
-    Process.delete(:mailglass_inbound_replay_inserted_run)
+    Process.delete(:mailglass_inbound_replay_execution_opts)
     Process.delete(:mailglass_inbound_replay_last_message)
     Process.delete(:mailglass_inbound_persist_repo_sequence)
     Process.delete(:mailglass_inbound_persist_inserts)
@@ -246,24 +240,19 @@ defmodule MailglassInbound.ReplayTest do
       assert {:ok, %{outcome: :accept}} =
                Replay.replay(record.id,
                  repo: ReplayRepo,
-                 execution: ReplayExecution,
-                 inbound_records: ReplayInboundRecords
+                 execution: ReplayExecution
                )
 
       execution_payload = Process.get(:mailglass_inbound_replay_execution_payload)
-      inserted_run = Process.get(:mailglass_inbound_replay_inserted_run)
-      replayed_message = Process.get(:mailglass_inbound_replay_last_message)
+      execution_opts = Process.get(:mailglass_inbound_replay_execution_opts)
 
       assert execution_payload.status == :inserted
       assert execution_payload.inbound_record.id == record.id
       assert execution_payload.inbound_evidence.id == evidence.id
       assert execution_payload.route == %{status: :matched, mailbox: SupportMailbox}
-      assert replayed_message.message_id == record.message_id
-      assert replayed_message.provider == :sendgrid
-      assert inserted_run.source == :replay
-      assert inserted_run.inbound_record_id == record.id
-      assert inserted_run.inbound_evidence_id == evidence.id
-      assert inserted_run.mailbox == Atom.to_string(SupportMailbox)
+      assert execution_payload.message.message_id == record.message_id
+      assert execution_payload.message.provider == :sendgrid
+      assert Keyword.get(execution_opts, :source) == :replay
     end
 
     test "fails explicitly when only no-match fresh history exists" do
@@ -282,12 +271,10 @@ defmodule MailglassInbound.ReplayTest do
       assert {:error, {:replay_mailbox_missing, %{reason: :no_prior_match}}} =
                Replay.replay(record.id,
                  repo: ReplayRepo,
-                 execution: ReplayExecution,
-                 inbound_records: ReplayInboundRecords
+                 execution: ReplayExecution
                )
 
       assert Process.get(:mailglass_inbound_replay_execution_payload) == nil
-      assert Process.get(:mailglass_inbound_replay_inserted_run) == nil
     end
 
     test "fails explicitly when the record predates execution lineage capture" do
@@ -299,8 +286,7 @@ defmodule MailglassInbound.ReplayTest do
       assert {:error, {:replay_mailbox_missing, %{reason: :execution_history_missing}}} =
                Replay.replay(record.id,
                  repo: ReplayRepo,
-                 execution: ReplayExecution,
-                 inbound_records: ReplayInboundRecords
+                 execution: ReplayExecution
                )
     end
   end

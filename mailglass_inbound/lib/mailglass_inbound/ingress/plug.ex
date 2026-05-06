@@ -203,7 +203,7 @@ defmodule MailglassInbound.Ingress.Plug do
   defp maybe_execute(_execution, %{status: :duplicate}), do: :ok
 
   defp maybe_execute(execution, %{status: :inserted} = result) do
-    _ = execution.execute(result)
+    _ = execution.dispatch(result)
     :ok
   end
 

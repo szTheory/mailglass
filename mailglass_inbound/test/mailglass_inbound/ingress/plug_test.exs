@@ -49,17 +49,17 @@ defmodule MailglassInbound.Ingress.PlugTest do
   end
 
   defmodule FakeExecution do
-    def execute(result, _opts \\ []) do
+    def dispatch(result, _opts \\ []) do
       Process.put(:mailglass_inbound_last_execution_result, result)
-      Process.put(:mailglass_inbound_execution_order, [:execute | Process.get(:mailglass_inbound_execution_order, [])])
+      Process.put(:mailglass_inbound_execution_order, [:dispatch | Process.get(:mailglass_inbound_execution_order, [])])
 
       case Process.get(:mailglass_inbound_execution_outcome, :accept) do
-        :accept -> {:ok, %{outcome: :accept}}
-        :ignore -> {:ok, %{outcome: :ignore}}
-        :no_match -> {:ok, %{outcome: :no_match}}
-        :reject -> {:ok, %{outcome: :reject, outcome_reason: "spam"}}
-        :bounce -> {:ok, %{outcome: :bounce, outcome_reason: "loop"}}
-        :failed -> {:ok, %{outcome: :failed, failure: %{kind: :error}}}
+        :accept -> {:ok, %{status: :queued, mode: :oban}}
+        :ignore -> {:ok, %{status: :queued, mode: :task_supervisor, durability: :best_effort}}
+        :no_match -> {:ok, %{status: :queued, mode: :oban}}
+        :reject -> {:ok, %{status: :queued, mode: :oban}}
+        :bounce -> {:ok, %{status: :queued, mode: :oban}}
+        :failed -> {:error, :dispatch_failed}
       end
     end
   end
@@ -134,7 +134,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert conn.status == 200
     assert body["status"] == "inserted"
     assert body["route"] == "matched"
-    assert Enum.reverse(Process.get(:mailglass_inbound_execution_order)) == [:persist, :execute]
+    assert Enum.reverse(Process.get(:mailglass_inbound_execution_order)) == [:persist, :dispatch]
     assert handoff.tenant_id == "tenant-123"
     assert handoff.message.tenant_id == "tenant-123"
     assert handoff.message.provider == :postmark
