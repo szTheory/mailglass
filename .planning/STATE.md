@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Stability Lock
-status: ready to plan
-last_updated: "2026-05-06T02:12:33Z"
-last_activity: 2026-05-05 -- Completed Phase 37 Contract Enforcement and Trust Docs and advanced to Phase 38 planning
+status: ready for next milestone
+last_updated: "2026-05-06T13:15:00Z"
+last_activity: 2026-05-06 -- Archived v1.0 Stability Lock after Phase 38 completion and milestone audit closeout
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 75
+  completed_phases: 4
+  total_plans: 12
+  completed_plans: 12
+  percent: 100
 ---
 
 # Project State
@@ -18,22 +18,22 @@ progress:
 ## Project Reference
 
 **Core Value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current Focus:** Phase 38 - Release Rehearsal and Proof Artifacts
+**Current Focus:** Post-`v1.0` milestone selection and live release cutover
 
 ## Current Position
 
-Phase: 38 of 38 (Release Rehearsal and Proof Artifacts)
+Phase: Milestone closeout complete
 Plan: —
-Status: Ready to plan
-Last activity: 2026-05-05 -- Completed Phase 37 Contract Enforcement and Trust Docs and advanced to Phase 38 planning
+Status: Ready for next milestone
+Last activity: 2026-05-06 -- Archived v1.0 Stability Lock after Phase 38 completion and milestone audit closeout
 
-Progress: [████████░░] 75%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 9
+- Total plans completed: 12
 - Average duration: —
 - Total execution time: —
 
@@ -45,4 +45,5 @@ Progress: [████████░░] 75%
 - Phase 35 completed with a canonical core/admin stability inventory, compiled-doc metadata checks, and passing docs-contract verification.
 - Phase 36 completed with a canonical compatibility policy, a canonical `0.x -> 1.0` upgrade guide, and lightweight compatibility-proof checks wired into existing support-contract aliases.
 - Phase 37 completed with canonical testing and admin trust docs, semantic Tier 1 drift checks, and a repo-root `verify.stability_contract` proof entrypoint.
-- Phase 38 is the next planning target and will rehearse the release workflow and publishable proof artifacts for `v1.0`.
+- Phase 38 completed with committed release proof artifacts, strict install/upgrade rehearsal evidence, and an explicit release checklist/record for the live cutover.
+- v1.0 milestone audit passed with accepted tech debt only: partial Nyquist bookkeeping for Phase 35, non-blocking boundary warnings in the support-contract lane, and manual branch-protection confirmation outside the repo.

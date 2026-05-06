@@ -1,3 +1,33 @@
+---
+phase: 38-release-rehearsal-and-proof-artifacts
+plan: 03
+subsystem: release-closeout
+tags: [release, checklist, record, branch-protection, maintaining]
+requires:
+  - plan: 38-01
+    provides: canonical proof bundle
+  - plan: 38-02
+    provides: install and upgrade rehearsal evidence
+provides:
+  - release checklist with repo-proved and manual/external proof sections
+  - populated release record for rehearsal or live cutover
+  - honest branch-protection note for external closeout debt
+affects: [MAINTAINING.md, release-record, release-checklist, phase-38-proof-bundle]
+tech-stack:
+  added: []
+  patterns: [explicit-manual-proof-fields, honest-external-debt-recording]
+key-files:
+  created: [.planning/phases/38-release-rehearsal-and-proof-artifacts/38-03-RELEASE-CHECKLIST.md, .planning/phases/38-release-rehearsal-and-proof-artifacts/38-03-RELEASE-RECORD.md, .planning/phases/38-release-rehearsal-and-proof-artifacts/38-03-BRANCH-PROTECTION-NOTE.md]
+  modified: [MAINTAINING.md, .planning/phases/38-release-rehearsal-and-proof-artifacts/38-01-PREPUBLISH-PROOF.md]
+key-decisions:
+  - "Separated repo-proved truth from manual/external proof rather than mixing both in a single vague runbook."
+  - "Recorded branch-protection verification as accepted external closeout debt instead of overstating automation."
+patterns-established:
+  - "Release records require explicit URLs, timestamps, and approver identity for every manual step."
+requirements-completed: [RELS-04]
+completed: 2026-05-06
+---
+
 # Phase 38 Plan 03 Summary
 
 ## Outcome

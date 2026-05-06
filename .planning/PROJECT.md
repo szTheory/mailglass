@@ -10,10 +10,11 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**`v1.0 Stability Lock` is now the active milestone after `v0.6 Production Maturity` shipped on 2026-05-05.**
+**`v1.0 Stability Lock` shipped on 2026-05-06.**
 
-- `mailglass` 0.5.0
-- `mailglass_admin` 0.5.0
+- Planning milestone closed: 4 phases (35-38), 12 plans, all complete
+- Current package version in repo: `mailglass` 0.3.2 / `mailglass_admin` 0.3.2
+- Release posture: repo proof and rehearsal artifacts are complete; the live publish still follows the Phase 38 checklist and external closeout steps
 
 v0.6 milestone closed 2026-05-05. 3 phases (32-34), 9 plans, Production Maturity complete.
 v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening complete.
@@ -38,37 +39,30 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 ## Latest Completed Milestone
 
 <details>
-<summary>v0.6 Production Maturity — milestone closed 2026-05-05</summary>
+<summary>v1.0 Stability Lock — milestone closed 2026-05-06</summary>
 
-**Goal:** Make mailglass resilient and legible under real production support conditions before locking the transactional/admin core for `v1.0`.
+**Goal:** Declare the transactional/admin core stable for long-lived production adoption without expanding the product boundary.
 
-- **Replay / reconcile hardening** — operator replay now resolves exact tenant-safe targets before adopter-owned destructive-action authorization; reconcile now has one honest contract with or without Oban. ✓
-- **Observability / support surface** — canonical incident-support docs, truthful telemetry references, tenant-scoped support-summary read model, masked overview cues, and exemplar drilldowns are now shipped. ✓
-- **Verification closure** — explicit root/admin support-contract authorities and the three required CI buckets are now the authoritative pre-`v1.0` support contract. ✓
+- **Stable surface lock** — core and admin contract inventories are now canonical, narrow, and backed by compiled-doc and docs-surface proof. ✓
+- **Compatibility promise** — `1.x` deprecation/support policy and the canonical `0.x -> 1.0` upgrade path are now explicit and mechanically verified. ✓
+- **Trust and release proof** — semantic stability verification, canonical testing/admin trust docs, and committed release rehearsal artifacts are now shipped. ✓
 
 **Accepted closeout debt:**
 
+- Phase 35 Nyquist bookkeeping still reports `wave_0_complete: false` even though verification now passes.
+- Non-blocking boundary warnings remain in the stability verification lane.
 - Manual GitHub branch-protection verification remains external to the repo.
-- A small number of non-blocking boundary warnings remain in verification-time support surfaces.
 
 </details>
 
-## Current Milestone: v1.0 Stability Lock
+## Current Milestone
 
-**Goal:** Declare the transactional and admin core stable for long-lived production adoption without expanding the product boundary.
-
-**Target features:**
-- Explicit `v1.x` public-contract map across `mailglass` and `mailglass_admin`, with stable versus internal boundaries that match actual adopter and sibling-package seams
-- Conservative `1.x` deprecation, compatibility, and upgrade policy with clear guidance for warnings-as-errors adopters
-- Targeted contract-enforcement checks and trust docs that prove the documented surface instead of relying on maintainer memory
-- Release rehearsal and proof artifacts showing fresh install, upgrade, docs, and sibling-package publish flow are stable enough for `v1.0`
-
-**Why now:** Production maturity work is complete. The next leverage is turning the existing transactional/admin surface into a narrow, explicit, and provable contract that serious Phoenix teams can adopt without expecting churn.
+No milestone is active. The next milestone should be created after the live `v1.0` release cut and the post-`v1.0` product scope is chosen.
 
 ## Next Milestone Goals
 
-- **v1.0 Stability Lock** — API stability lock, long-lived deprecation policy, proof artifacts for production adoption, and final docs/positioning sweep once production maturity lands cleanly.
-- **Post-v1.0 Inbound** — `mailglass_inbound` separate sibling package (Action Mailbox equivalent: Router DSL, Mailbox behaviour, ingress plugs for Postmark/SendGrid/Mailgun/SES, SMTP relay via `gen_smtp`, async routing via Oban, dev Conductor LiveView) after the outbound/operator core is stable.
+- **Live `v1.0` cutover** — publish the sibling packages, confirm branch protection and protected-environment proof, and close the remaining external release steps captured in the Phase 38 checklist and record.
+- **Post-`v1.0` inbound candidate** — decide whether `mailglass_inbound` becomes the next active milestone now that the outbound/operator core is locked.
 
 ## Core Value
 
@@ -107,10 +101,10 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 
 ## Active
 
-- [ ] `STAB-01` — adopter can identify the exact `v1.x` stable surface across `mailglass` and `mailglass_admin`, including what remains internal
-- [ ] `STAB-02` — adopter can upgrade across `1.x` with a documented deprecation, compatibility, and support-window policy that avoids surprise churn
-- [ ] `STAB-03` — maintainer has targeted contract-enforcement checks and trust docs that keep the documented public surface honest
-- [ ] `STAB-04` — maintainer has release-proof artifacts showing fresh install, upgrade, docs, and sibling-package publish flow are stable enough for `v1.0`
+- [ ] `REL-POST-01` — maintainer completes the live `v1.0` publish closeout using the rehearsed Phase 38 checklist and records the external proof fields
+- [ ] `INBOUND-01` — adopter can receive and route inbound email through a first-party `mailglass_inbound` sibling package
+- [ ] `DELIV-01` — maintainer can explore adjacent deliverability workflow bets such as warmup, BIMI tooling expansion, or other post-`v1.0` support surfaces without weakening the core contract
+- [ ] `COMPAT-05` — maintainer can evaluate heavier compatibility tooling or broader support-matrix expansion only after the narrow `v1.x` contract is stable in practice
 
 ## Out of Scope
 
@@ -218,4 +212,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-05-05 — activated v1.0 Stability Lock after research and aligned active requirements to the narrow stability-contract milestone.*
+*Last updated: 2026-05-06 — archived v1.0 Stability Lock, recorded shipped state, and shifted the next decision to live release cutover plus post-v1.0 scope.*

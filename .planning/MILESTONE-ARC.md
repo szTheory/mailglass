@@ -1,18 +1,19 @@
-# Milestone Arc: mailglass Through v1.0
+# Milestone Arc: mailglass Post-v1.0
 
-This document is the canonical pre-`v1.0` milestone vision for mailglass.
+This document is the canonical milestone arc for mailglass after the `v1.0`
+stability lock.
 It exists to keep `$gsd-new-milestone` grounded in the product arc instead of
 starting from a blank prompt every time.
 
 ## Current Strategic Posture
 
 - **Trajectory:** Operator-first
-- **Planning horizon:** Concrete through `v1.0`; lighter-weight beyond that
+- **Planning horizon:** Concrete through the next post-`v1.0` milestone; lighter-weight beyond that
 - **Current product thesis:** Become the canonical production transactional
   email framework for Phoenix SaaS apps before expanding into inbound or
   broader adjacent surfaces
-- **Current rule:** Pre-`v1.0` milestones optimize for operator confidence,
-  adopter confidence, and production maturity
+- **Current rule:** Post-`v1.0` milestones should protect the narrow core
+  contract while expanding only where product leverage is clear
 
 ## Status Key
 
@@ -20,7 +21,7 @@ starting from a blank prompt every time.
 - `active` — current open milestone
 - `shipped` — completed and archived
 - `deferred` — intentionally not next
-- `future-bet` — visible but not committed in the pre-`v1.0` sequence
+- `future-bet` — visible but not committed in the milestone sequence
 
 ## Arc
 
@@ -162,7 +163,7 @@ to support.
 
 **Unlocks next:** `v1.0` stability lock with confidence.
 
-### `active` — v1.0 Stability Lock
+### `shipped` — v1.0 Stability Lock
 
 **Goal:** Declare the transactional/admin core stable for long-lived production
 adoption.
@@ -189,15 +190,13 @@ surface is stable, documented, and proven enough to promise continuity.
 
 **Unlocks next:** The right to expand beyond the current product boundary.
 
-**Activation note (2026-05-05):** `v1.0 Stability Lock` is now the active milestone. Research locked the milestone shape to a docs-heavy proof release with targeted contract enforcement, not product-surface expansion.
+**Shipped note (2026-05-06):** `v1.0 Stability Lock` is now shipped. The contract, compatibility, trust-doc, and release-rehearsal proof surfaces are archived; remaining branch-protection proof is explicit accepted external debt.
 
-## Future Bets (post-`v1.0`)
+## Next Candidate
 
-### `future-bet` — mailglass_inbound
+### `candidate` — mailglass_inbound
 
-**Why visible:** It is still part of the product vision, but pre-`v1.0`
-focus should stay on becoming the best production transactional email
-framework first.
+**Why next:** The outbound/operator core is now locked tightly enough that expanding into inbound can happen without weakening the `v1.x` contract.
 
 **Candidate scope:**
 - Router DSL
@@ -207,9 +206,9 @@ framework first.
 - Async routing via Oban
 - Conductor-style dev UI
 
-**Trigger to promote:** Sustained adopter pull after the outbound/operator core
-is stable, or strong evidence that inbound materially improves the transactional
-framework story rather than diluting it.
+**Gate before activation:** Complete the live `v1.0` cutover and confirm that inbound is still the highest-leverage post-`v1.0` move.
+
+## Future Bets (post-`v1.0`)
 
 ### `future-bet` — adjacent deliverability / workflow bets
 
@@ -233,4 +232,4 @@ source of truth:
    drifting doc-by-doc.
 
 ---
-*Last updated: 2026-05-05 after activating v1.0 Stability Lock.*
+*Last updated: 2026-05-06 after shipping v1.0 Stability Lock and promoting the post-v1.0 inbound candidate.*
