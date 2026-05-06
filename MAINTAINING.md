@@ -36,16 +36,17 @@ Before merging any PR, ensure:
 
 The honest repo-root entrypoint is `mix verify.stability_contract` or
 `scripts/verify_support_contract.sh`. They run the three required
-branch-protection buckets in sequence:
+branch-protection buckets plus the inbound sibling-package docs lane in sequence:
 - `Support Contract Core`
 - `Support Contract Admin`
+- `mailglass_inbound` docs contract (`mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs`)
 - `Compile No Optional Deps`
 
 When those checks pass, they prove the current compatibility contract described
 in [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md):
-runtime floors, matched `mailglass_admin` release truth, docs wiring, and the
-required-vs-advisory split below. Do not claim broader support than those repo
-artifacts prove.
+runtime floors, matched sibling-package docs wiring for `mailglass_inbound`,
+matched `mailglass_admin` release truth, and the required-vs-advisory split
+below. Do not claim broader support than those repo artifacts prove.
 
 The following checks are advisory signal, not branch-protection truth:
 - `Core Full Suite Advisory`
@@ -161,9 +162,12 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    downloads have happened, the Retract Decision Tree rule 4
    (`mix hex.publish --revert`) is reachable. After 60 minutes the only
    options are retire-then-patch (rule 1) or patch-only (rule 2).
-   Keep the published support story honest: if the smoke or support-contract
+Keep the published support story honest: if the smoke or support-contract
    checks reveal a mismatch with the documented matrix or upgrade posture, fix
    the guide and package metadata together rather than carrying split truth.
+   For inbound-slice changes, rerun `mix verify.stability_contract` so the
+   repo-root lane proves the canonical `mailglass_inbound` docs and support
+   posture before you publish.
    If you need to reproduce the v0.2 codemod or rollback story during this
    window, do it in a disposable fixture or git-clean worktree only. The
    public rollback contract is git-based review/revert of the upgrade diff,

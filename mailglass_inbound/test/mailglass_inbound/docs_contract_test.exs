@@ -165,4 +165,19 @@ defmodule MailglassInbound.DocsContractTest do
       refute doc =~ claim
     end
   end
+
+  test "repo-root verification keeps inbound docs and release proof in the canonical lane" do
+    root_mix = File.read!(Path.expand("../../../mix.exs", __DIR__))
+    docs_check = File.read!(Path.expand("../../../lib/mix/tasks/mailglass.docs.check.ex", __DIR__))
+    maintaining = File.read!(Path.expand("../../../MAINTAINING.md", __DIR__))
+
+    assert root_mix =~
+             "cmd --cd mailglass_inbound mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
+
+    assert docs_check =~ "\"mailglass_inbound/README.md\""
+    assert docs_check =~ "\"mailglass_inbound/docs/api_stability.md\""
+    assert docs_check =~ "\"mailglass_inbound/docs/sendgrid_ingress.md\""
+    assert maintaining =~ "mailglass_inbound"
+    assert maintaining =~ "mix verify.stability_contract"
+  end
 end

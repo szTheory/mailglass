@@ -24,8 +24,12 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   @tier1_paths [
     "README.md",
     "mailglass_admin/README.md",
+    "mailglass_inbound/README.md",
     "guides/testing.md",
     "mailglass_admin/docs/operator-trust.md",
+    "mailglass_inbound/docs/api_stability.md",
+    "mailglass_inbound/docs/postmark_ingress.md",
+    "mailglass_inbound/docs/sendgrid_ingress.md",
     "guides/compatibility-and-deprecations.md",
     "guides/upgrading-to-v1_0.md",
     "guides/getting-started.md",
@@ -64,6 +68,20 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
       forbidden: [
         "{:mailglass, \"~> 0.1\"}",
         "{:mailglass_admin, \"~> 0.1\"}"
+      ]
+    },
+    "mailglass_inbound/README.md" => %{
+      required: [
+        "canonical adoption lane",
+        "MailglassInbound.Ingress.CachingBodyReader",
+        "Oban-backed execution is the durable path",
+        "Task.Supervisor fallback is bounded best-effort only",
+        "mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
+      ],
+      forbidden: [
+        "mix mailglass.install",
+        "public replay API",
+        "operator UI"
       ]
     },
     "guides/testing.md" => %{
@@ -106,6 +124,40 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "Replay and reconcile are intentionally distinct"
       ],
       forbidden: []
+    },
+    "mailglass_inbound/docs/api_stability.md" => %{
+      required: [
+        "MailglassInbound.Execution.Worker",
+        "Task.Supervisor fallback being bounded best-effort only when Oban is absent",
+        "replay remaining distinct from fresh receive semantics"
+      ],
+      forbidden: [
+        "public replay API is stable",
+        "%Oban.Job{}"
+      ]
+    },
+    "mailglass_inbound/docs/postmark_ingress.md" => %{
+      required: [
+        "body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}",
+        "duplicate",
+        "Task.Supervisor fallback is bounded best-effort only"
+      ],
+      forbidden: [
+        "Mailbox.process/1 runs during ingress",
+        "public replay API"
+      ]
+    },
+    "mailglass_inbound/docs/sendgrid_ingress.md" => %{
+      required: [
+        "raw MIME",
+        "basic auth",
+        "Task.Supervisor fallback is bounded best-effort only",
+        "execution outcomes do not control provider retries"
+      ],
+      forbidden: [
+        "signed multipart verification shipped",
+        "re-ingest of provider payloads"
+      ]
     },
     "guides/compatibility-and-deprecations.md" => %{
       required: [

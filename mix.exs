@@ -64,6 +64,7 @@ defmodule Mailglass.MixProject do
         "verify.stability_contract": :test,
         "verify.provider_compatibility": :test,
         "verify.docs.contract": :test,
+        "verify.docs.contract.inbound": :test,
         "verify.docs.migration": :test
       ]
     ]
@@ -251,13 +252,20 @@ defmodule Mailglass.MixProject do
       "verify.stability_contract": [
         "verify.support_contract.core",
         "cmd --cd mailglass_admin mix verify.support_contract.admin",
+        "cmd --cd mailglass_inbound mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors",
+        "mailglass.docs.check",
         "compile --no-optional-deps --warnings-as-errors"
       ],
       "verify.provider_compatibility": [
         "test test/mailglass/adapter_test.exs test/mailglass/adapters/swoosh_test.exs test/mailglass/webhook/providers/postmark_test.exs test/mailglass/webhook/providers/sendgrid_test.exs test/mailglass/webhook/providers/mailgun_test.exs test/mailglass/webhook/providers/resend_test.exs test/mailglass/webhook/providers/ses_test.exs test/mailglass/webhook/providers/ses/cert_cache_test.exs test/mailglass/webhook/plug_mailgun_test.exs test/mailglass/webhook/plug_ses_test.exs test/mailglass/webhook/providers/resend_webhook_plug_test.exs --warnings-as-errors"
       ],
+      "verify.docs.contract.inbound": [
+        "cmd --cd mailglass_inbound mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
+      ],
       "verify.docs.contract": [
-        "test test/mailglass/docs_contract_test.exs test/mailglass/compatibility_contract_test.exs --warnings-as-errors"
+        "test test/mailglass/docs_contract_test.exs test/mailglass/compatibility_contract_test.exs --warnings-as-errors",
+        "verify.docs.contract.inbound",
+        "mailglass.docs.check"
       ],
       "verify.docs.migration": [
         "test test/mailglass/docs_migration_smoke_test.exs test/mailglass/compatibility_contract_test.exs --warnings-as-errors"

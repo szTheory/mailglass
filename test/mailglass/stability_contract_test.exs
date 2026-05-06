@@ -55,7 +55,20 @@ defmodule Mailglass.StabilityContractTest do
       assert mixfile =~ "\"verify.stability_contract\""
       assert mixfile =~ "\"verify.support_contract.core\""
       assert mixfile =~ "cmd --cd mailglass_admin mix verify.support_contract.admin"
+      assert mixfile =~
+               "cmd --cd mailglass_inbound mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
       assert mixfile =~ "compile --no-optional-deps --warnings-as-errors"
+    end
+
+    test "root docs proof explicitly include mailglass_inbound" do
+      docs_check = File.read!("lib/mix/tasks/mailglass.docs.check.ex")
+      maintaining = File.read!("MAINTAINING.md")
+
+      assert docs_check =~ "\"mailglass_inbound/README.md\""
+      assert docs_check =~ "\"mailglass_inbound/docs/api_stability.md\""
+      assert docs_check =~ "\"mailglass_inbound/docs/sendgrid_ingress.md\""
+      assert maintaining =~ "mailglass_inbound"
+      assert maintaining =~ "mix verify.stability_contract"
     end
   end
 end
