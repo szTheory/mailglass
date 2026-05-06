@@ -168,6 +168,29 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert Process.get(:mailglass_inbound_last_execution_result) == nil
   end
 
+  test "does not execute the mailbox a second time for sendgrid duplicates" do
+    Process.put(:mailglass_inbound_persist_status, :duplicate)
+
+    conn =
+      sendgrid_conn(sendgrid_params())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(
+          provider: :sendgrid,
+          router: TestRouter,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+      )
+
+    assert conn.status == 200
+    assert Jason.decode!(conn.resp_body)["status"] == "duplicate"
+    assert Process.get(:mailglass_inbound_last_execution_result) == nil
+  end
+
   test "returns 401 on auth failure" do
     conn =
       Plug.Test.conn(:post, "/inbound/tenant-123/postmark", postmark_payload())

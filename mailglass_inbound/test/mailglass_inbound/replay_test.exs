@@ -1,11 +1,91 @@
 defmodule MailglassInbound.ReplayTest do
   use ExUnit.Case, async: false
 
+  alias MailglassInbound.InboundMessage
   alias MailglassInbound.InboundRecords
+  alias MailglassInbound.InboundRecords.InboundEvidence
   alias MailglassInbound.InboundRecords.ExecutionRun
+  alias MailglassInbound.InboundRecords.InboundRecord
+  alias MailglassInbound.Ingress.Persist
+  alias MailglassInbound.Internal.Replay
 
   @migration_path Path.expand("../../priv/repo/migrations/20260506163000_create_mailglass_inbound_storage_foundation.exs", __DIR__)
   @execution_migration_path Path.expand("../../priv/repo/migrations/20260506210000_generalize_replay_runs_to_execution_lineage.exs", __DIR__)
+  @phase_41_migration_path Path.expand("../../priv/repo/migrations/20260506220000_add_sendgrid_fingerprint_and_replay_contract_fields.exs", __DIR__)
+
+  defmodule SupportMailbox do
+    @behaviour MailglassInbound.Mailbox
+    def process(message) do
+      Process.put(:mailglass_inbound_replay_last_message, message)
+      :accept
+    end
+  end
+
+  defmodule ReplayRepo do
+    def one(_query, _opts \\ []) do
+      case Process.get(:mailglass_inbound_replay_repo_sequence, []) do
+        [next | rest] ->
+          Process.put(:mailglass_inbound_replay_repo_sequence, rest)
+          next
+
+        [] ->
+          nil
+      end
+    end
+  end
+
+  defmodule ReplayExecution do
+    def execute(result, _opts \\ []) do
+      Process.put(:mailglass_inbound_replay_execution_payload, result)
+      {:ok, %{outcome: :accept}}
+    end
+  end
+
+  defmodule ReplayInboundRecords do
+    def insert_replay_run(attrs, _opts \\ []) do
+      Process.put(:mailglass_inbound_replay_inserted_run, attrs)
+      {:ok, struct(MailglassInbound.InboundRecords.ExecutionRun, attrs)}
+    end
+  end
+
+  defmodule PersistRepo do
+    def transact(fun, _opts \\ []), do: fun.()
+
+    def one(_query, _opts \\ []) do
+      case Process.get(:mailglass_inbound_persist_repo_sequence, []) do
+        [next | rest] ->
+          Process.put(:mailglass_inbound_persist_repo_sequence, rest)
+          next
+
+        [] ->
+          nil
+      end
+    end
+
+    def insert(changeset, _opts \\ []) do
+      struct =
+        changeset
+        |> Ecto.Changeset.apply_changes()
+        |> ensure_id()
+
+      inserted = Process.get(:mailglass_inbound_persist_inserts, [])
+      Process.put(:mailglass_inbound_persist_inserts, inserted ++ [struct])
+      {:ok, struct}
+    end
+
+    defp ensure_id(%{id: nil} = struct), do: %{struct | id: Ecto.UUID.generate()}
+    defp ensure_id(struct), do: struct
+  end
+
+  setup do
+    Process.delete(:mailglass_inbound_replay_repo_sequence)
+    Process.delete(:mailglass_inbound_replay_execution_payload)
+    Process.delete(:mailglass_inbound_replay_inserted_run)
+    Process.delete(:mailglass_inbound_replay_last_message)
+    Process.delete(:mailglass_inbound_persist_repo_sequence)
+    Process.delete(:mailglass_inbound_persist_inserts)
+    :ok
+  end
 
   describe "execution lineage" do
     test "links fresh and replay execution runs to stored record and evidence truth" do
@@ -117,5 +197,174 @@ defmodule MailglassInbound.ReplayTest do
       refute :latest_execution_outcome in record_fields
       refute :matched_mailbox in record_fields
     end
+  end
+
+  describe "sendgrid duplicate persistence" do
+    test "collapses duplicates on tenant/provider/raw mime fingerprint without overloading provider_message_id" do
+      duplicate_record = %InboundRecord{
+        id: Ecto.UUID.generate(),
+        tenant_id: "tenant-123",
+        provider: "sendgrid",
+        provider_message_id: nil,
+        received_at: DateTime.utc_now()
+      }
+
+      Process.put(:mailglass_inbound_persist_repo_sequence, [duplicate_record])
+
+      {:ok, result} =
+        Persist.persist(valid_sendgrid_handoff(),
+          repo: PersistRepo,
+          routes: []
+        )
+
+      inserts = Process.get(:mailglass_inbound_persist_inserts, [])
+      migration_source = File.read!(@phase_41_migration_path)
+
+      assert result.status == :duplicate
+      assert result.inbound_record.id == duplicate_record.id
+      assert inserts == []
+      assert migration_source =~ "raw_mime_fingerprint"
+      assert migration_source =~ "mailglass_inbound_records_sendgrid_fingerprint_idx"
+      refute migration_source =~ "provider_message_id"
+    end
+  end
+
+  describe "internal replay" do
+    test "reuses stored canonical and evidence truth, defaults to the latest fresh matched mailbox, and appends replay lineage" do
+      record = valid_inbound_record()
+      evidence = valid_inbound_evidence(record.id)
+      latest_fresh_match = %ExecutionRun{
+        inbound_record_id: record.id,
+        inbound_evidence_id: evidence.id,
+        source: :fresh,
+        mailbox: Atom.to_string(SupportMailbox),
+        outcome: :accept
+      }
+
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, latest_fresh_match])
+
+      assert {:ok, %{outcome: :accept}} =
+               Replay.replay(record.id,
+                 repo: ReplayRepo,
+                 execution: ReplayExecution,
+                 inbound_records: ReplayInboundRecords
+               )
+
+      execution_payload = Process.get(:mailglass_inbound_replay_execution_payload)
+      inserted_run = Process.get(:mailglass_inbound_replay_inserted_run)
+      replayed_message = Process.get(:mailglass_inbound_replay_last_message)
+
+      assert execution_payload.status == :inserted
+      assert execution_payload.inbound_record.id == record.id
+      assert execution_payload.inbound_evidence.id == evidence.id
+      assert execution_payload.route == %{status: :matched, mailbox: SupportMailbox}
+      assert replayed_message.message_id == record.message_id
+      assert replayed_message.provider == :sendgrid
+      assert inserted_run.source == :replay
+      assert inserted_run.inbound_record_id == record.id
+      assert inserted_run.inbound_evidence_id == evidence.id
+      assert inserted_run.mailbox == Atom.to_string(SupportMailbox)
+    end
+
+    test "fails explicitly when only no-match fresh history exists" do
+      record = valid_inbound_record()
+      evidence = valid_inbound_evidence(record.id)
+      no_match_run = %ExecutionRun{
+        inbound_record_id: record.id,
+        inbound_evidence_id: evidence.id,
+        source: :fresh,
+        mailbox: nil,
+        outcome: :no_match
+      }
+
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, no_match_run])
+
+      assert {:error, {:replay_mailbox_missing, %{reason: :no_prior_match}}} =
+               Replay.replay(record.id,
+                 repo: ReplayRepo,
+                 execution: ReplayExecution,
+                 inbound_records: ReplayInboundRecords
+               )
+
+      assert Process.get(:mailglass_inbound_replay_execution_payload) == nil
+      assert Process.get(:mailglass_inbound_replay_inserted_run) == nil
+    end
+
+    test "fails explicitly when the record predates execution lineage capture" do
+      record = valid_inbound_record()
+      evidence = valid_inbound_evidence(record.id)
+
+      Process.put(:mailglass_inbound_replay_repo_sequence, [record, evidence, nil])
+
+      assert {:error, {:replay_mailbox_missing, %{reason: :execution_history_missing}}} =
+               Replay.replay(record.id,
+                 repo: ReplayRepo,
+                 execution: ReplayExecution,
+                 inbound_records: ReplayInboundRecords
+               )
+    end
+  end
+
+  defp valid_sendgrid_handoff do
+    %{
+      tenant_id: "tenant-123",
+      provider: :sendgrid,
+      message: %InboundMessage{
+        tenant_id: "tenant-123",
+        provider: :sendgrid,
+        provider_message_id: nil,
+        message_id: "<rfc-message@example.com>",
+        envelope_recipient: "support@example.com",
+        from: [%{address: "sender@example.com"}],
+        to: [%{address: "support@example.com"}],
+        subject: "Support request",
+        headers: %{"message-id" => ["<rfc-message@example.com>"]},
+        received_at: DateTime.utc_now(),
+        text_body: "Plain body"
+      },
+      evidence: %{
+        raw_payload: %{"from" => "sender@example.com"},
+        raw_headers: %{"content-type" => ["multipart/form-data"]},
+        raw_mime: "Message-ID: <rfc-message@example.com>\r\n\r\nhello",
+        verification_facts: %{auth: :basic_auth}
+      }
+    }
+  end
+
+  defp valid_inbound_record do
+    %InboundRecord{
+      id: Ecto.UUID.generate(),
+      tenant_id: "tenant-123",
+      provider: "sendgrid",
+      provider_message_id: nil,
+      message_id: "<rfc-message@example.com>",
+      envelope_recipient: "support@example.com",
+      from: [%{address: "sender@example.com"}],
+      to: [%{address: "support@example.com"}],
+      cc: [],
+      bcc: [],
+      reply_to: [%{address: "reply@example.com"}],
+      subject: "Support request",
+      headers: %{"message-id" => ["<rfc-message@example.com>"]},
+      received_at: DateTime.utc_now(),
+      text_body: "Plain body",
+      html_body: "<p>HTML body</p>",
+      attachments: []
+    }
+  end
+
+  defp valid_inbound_evidence(record_id) do
+    %InboundEvidence{
+      id: Ecto.UUID.generate(),
+      tenant_id: "tenant-123",
+      inbound_record_id: record_id,
+      provider: "sendgrid",
+      raw_payload: %{"from" => "sender@example.com"},
+      raw_headers: %{"content-type" => ["multipart/form-data"]},
+      raw_mime: "Message-ID: <rfc-message@example.com>\r\n\r\nhello",
+      verification_facts: %{auth: :basic_auth},
+      parse_warnings: %{},
+      attachment_blobs: %{}
+    }
   end
 end
