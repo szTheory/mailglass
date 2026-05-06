@@ -72,6 +72,13 @@ inbound target through local semantics and does not silently reroute to a
 different mailbox. Reconcile is background-first backlog maintenance for
 unmatched webhook rows and is not a delivery-detail replay tool.
 
+Known replay failure cases are also part of the honest operator story:
+
+- `no_prior_match` means fresh execution history only proves `:no_match`, so
+  replay cannot safely infer a mailbox target.
+- `execution_history_missing` means the record predates execution-lineage
+  capture or lacks the stored facts replay needs to rerun mailbox execution.
+
 When execution history is incomplete, replay fails explicitly rather than
 guessing. The current failure vocabulary includes `:no_prior_match` for records
 whose fresh history never matched a mailbox and `:execution_history_missing`
