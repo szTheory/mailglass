@@ -2,6 +2,7 @@ defmodule MailglassInbound.MixProject do
   use Mix.Project
 
   @version "0.1.0"
+  # First Hex publish — see Phase 044.5 release ceremony record
   @source_url "https://github.com/szTheory/mailglass"
   @description "Inbound routing contract package for mailglass"
 
