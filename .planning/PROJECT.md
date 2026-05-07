@@ -13,9 +13,9 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 **`v1.1 Inbound Core Slice` shipped on 2026-05-06.**
 
 - Planning milestone closed: 6 phases (39-44), 17 plans (12 product + 5 audit-gap closure), all complete
-- Current package versions in repo: `mailglass` 0.3.2 / `mailglass_admin` 0.3.2 / `mailglass_inbound` 0.1.0 (initial)
+- **Current package versions on Hex: `mailglass` 1.0.0 / `mailglass_admin` 1.0.0 / `mailglass_inbound` 0.1.0** (live as of 2026-05-07 via Phase 44.5; mailglass_inbound 0.1.0 is the first publish ever)
 - v1.1 milestone audit re-run on 2026-05-07 with `status: passed` after Phase 43 + 44 closeout
-- Release posture: repo proof and rehearsal artifacts are complete; the live `v1.0` publish still follows the Phase 38 checklist and external closeout steps
+- Release posture: live publish complete. Phase 44.5 ceremony record at `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-RELEASE-RECORD.md`. Branch-protection evidence at `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-BRANCH-PROTECTION-EVIDENCE.md`. Phase 45 (Inbound Telemetry + Idempotency Foundation) unblocked per the release-cadence rule.
 
 v1.0 milestone closed 2026-05-06. 4 phases (35-38), 12 plans, Stability Lock complete.
 v0.6 milestone closed 2026-05-05. 3 phases (32-34), 9 plans, Production Maturity complete.
@@ -34,11 +34,11 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Inbound package: canonical `%InboundMessage{}` value object, thin router DSL, mailbox behaviour with locked outcomes, Postmark + SendGrid first-party ingress, tenant-safe replayable storage of normalized + raw provider source, Oban-backed async execution with bounded `Task.Supervisor` fallback (v1.1)
 
 **Open issues / debt**:
-- GitHub branch-protection verification remains a manual closeout step because the required-check configuration lives outside the repo.
+- GitHub branch-protection automation deferred to Phase 51 CLOSE-02. Phase 44.5 captured the present state in `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-BRANCH-PROTECTION-EVIDENCE.md`: no protection rule on `main`, `hex-publish` Environment has `protection_rules: []`. Phase 51 owns the install of the desired-state script + daily drift workflow.
 - Non-blocking boundary warnings remain in support-summary and admin probe verification paths.
 - Bare `mix test` citext-OID-cache race remains a known non-blocking test-environment sharp edge.
 - Phase 4 standard-depth review WR-01..WR-06 remains tracked but non-blocking.
-- v1.0 live publish closeout (external to repo) still pending — Hex tarball publish + branch-protection rule confirmation.
+- v1.0/1.1 live publish closeout: complete (2026-05-07). Five Phase 51 carry-forward cleanup items captured in `.planning/phases/044.5-v1-0-1-1-release-ceremony/deferred-items.md` (#6 release-as config fields, #7 mix.exs editorial comments, #8 post-publish-smoke sandbox builder, #9 Operator Browser Gate re-strict, #10 gate-ci-green ADVISORY_LANES re-empty).
 
 ## Latest Completed Milestone
 

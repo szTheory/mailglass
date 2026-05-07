@@ -110,7 +110,7 @@ Bundled into v1.2 Phase 51 rather than slipping further. None of these are adopt
 - [ ] **CLOSE-03**: Bare `mix test` citext-OID-cache race is fixed (likely a `Postgrex.Types` reload + sandbox checkout reorder) so `mix test` is green from a clean clone
 - [ ] **CLOSE-04**: Non-blocking boundary warnings in support-summary and admin probe verification paths are resolved (no warnings on `mix boundary --no-checkout`)
 - [ ] **CLOSE-05**: Phase 4 standard-depth review WR-01..WR-06 items are addressed or formally closed-no-action with rationale in `.planning/milestones/v1.0-MILESTONE-AUDIT.md`
-- [ ] **CLOSE-06**: v1.0 live Hex publish closeout is coordinated (tarball published, branch-protection rule confirmed externally, MILESTONES.md updated)
+- [x] **CLOSE-06**: v1.0 live Hex publish closeout coordinated (closed 2026-05-07 via Phase 44.5; see `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-RELEASE-RECORD.md` and `044.5-BRANCH-PROTECTION-EVIDENCE.md`)
 
 ---
 
@@ -216,7 +216,7 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 | CLOSE-03 | Phase 51 | Pending |
 | CLOSE-04 | Phase 51 | Pending |
 | CLOSE-05 | Phase 51 | Pending |
-| CLOSE-06 | Phase 44.5 | Pending |
+| CLOSE-06 | Phase 44.5 | Complete (2026-05-07) |
 
 **Coverage:**
 - v1.2 requirements: **58 total** (TELE×8 + MIME×4 + MGUN×5 + SESI×6 + ITEST×7 + IGEN×4 + IADM×7 + IOPS×5 + IDOC×6 + CLOSE×6 = 58). Note: an earlier draft of this file stated "53 total" — that was a counting error in the source doc; actual checkbox count is 58.
