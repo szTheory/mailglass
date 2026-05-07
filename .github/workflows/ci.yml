@@ -408,6 +408,16 @@ jobs:
       - name: Install admin deps
         working-directory: mailglass_admin
         run: mix deps.get
+      - name: Wait for postgres + create test DB
+        # mailglass_admin/test/test_helper.exs runs the core repo migrations
+        # against MailglassAdmin.TestRepo (database "mailglass_test"); the
+        # database must exist before tests start. Create it here from the
+        # root project context where Mailglass.TestRepo is available.
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run admin support contract
         run: cd mailglass_admin && mix verify.support_contract.admin
 
