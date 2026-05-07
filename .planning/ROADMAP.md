@@ -113,7 +113,7 @@ Plans:
 Plans:
 
 **Wave 1**
-- [ ] 44-01-PLAN.md — Recover Phase 42 execution verification report (42-VERIFICATION.md) from re-run proof lanes
+- [x] 44-01-PLAN.md — Recover Phase 42 execution verification report (42-VERIFICATION.md) from re-run proof lanes
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 44-02-PLAN.md — Reconcile REQUIREMENTS.md, STATE.md, ROADMAP.md and produce v1.1-MILESTONE-AUDIT-CLOSEOUT.md
