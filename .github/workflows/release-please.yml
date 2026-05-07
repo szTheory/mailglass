@@ -58,12 +58,15 @@ jobs:
           git fetch origin "$BRANCH":"$BRANCH"
           git checkout "$BRANCH"
 
-          NEW_VERSION=$(jq -r '.["mailglass_inbound"] // .["mailglass_admin"] // .["."]' .release-please-manifest.json)
-          if [ -z "$NEW_VERSION" ] || [ "$NEW_VERSION" = "null" ]; then
-            echo "ERROR: could not read sibling package version from .release-please-manifest.json" >&2
+          # Both mailglass_admin and mailglass_inbound pin to CORE'S manifest version,
+          # not their own. Read .["."] directly; do NOT use a fallback chain (would
+          # return inbound's unlinked version after the linked-versions split).
+          CORE_VERSION=$(jq -r '.["."]' .release-please-manifest.json)
+          if [ -z "$CORE_VERSION" ] || [ "$CORE_VERSION" = "null" ]; then
+            echo "ERROR: could not read core version (.[\".\"]) from .release-please-manifest.json" >&2
             exit 1
           fi
-          echo "Target dep pin: {:mailglass, \"== $NEW_VERSION\"}"
+          echo "Target dep pin: {:mailglass, \"== $CORE_VERSION\"}"
 
           # REL-05: Bash-loop generalization keyed on (path, dep_atom) pairs.
           # Keep the linked sibling packages explicit in the release PR diff.
@@ -86,11 +89,11 @@ jobs:
               exit 1
             fi
 
-            sed -i -E "s/\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}/{:${dep}, \"== ${NEW_VERSION}\"}/" "$path"
+            sed -i -E "s/\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}/{:${dep}, \"== ${CORE_VERSION}\"}/" "$path"
           done
 
           if git diff --quiet -- mailglass_admin/mix.exs mailglass_inbound/mix.exs; then
-            echo "Pin already at $NEW_VERSION — nothing to commit."
+            echo "Pin already at $CORE_VERSION — nothing to commit."
             exit 0
           fi
 
@@ -100,5 +103,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add mailglass_admin/mix.exs mailglass_inbound/mix.exs
-          git commit -m "chore(release-please): sync sibling mailglass dep pins to == $NEW_VERSION"
+          git commit -m "chore(release-please): sync sibling mailglass dep pins to == $CORE_VERSION"
           git push origin "$BRANCH"
