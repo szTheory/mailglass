@@ -298,6 +298,16 @@ jobs:
         # otherwise → {:mailglass, path: "..", override: true}
         # `mix deps.get` must run with MIX_PUBLISH=true so the lock + fetch
         # match what `mix hex.publish` will resolve in the next step.
+        #
+        # Dry-run skips this step: at a release where mailglass's linked
+        # version is not yet on Hex (e.g., the v1.0.0 cut, or any future
+        # minor/patch where dry-run runs before live core publish), the
+        # MIX_PUBLISH=true `mix deps.get` cannot resolve. Tarball-integrity
+        # validation for siblings is already covered by `prepublish-summary`
+        # via `mix mailglass.publish.check`. Live mode is unaffected — the
+        # subsequent `Wait for Hex.pm to index` step blocks until publish-core
+        # finishes, then this resolution succeeds normally.
+        if: github.event.inputs.dry_run != 'true'
         working-directory: mailglass_admin
         env:
           MIX_PUBLISH: "true"
@@ -317,14 +327,14 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Publish mailglass_admin to Hex.pm
-        if: steps.idempotency.outputs.skip != 'true'
+        # Skipped in dry-run: tarball-integrity is validated upstream by
+        # `prepublish-summary`'s `mix mailglass.publish.check`. The per-sibling
+        # `mix hex.publish --dry-run` here would require deps to have resolved,
+        # which fails when the linked-version pin isn't yet on Hex (see
+        # `Install deps (MIX_PUBLISH=true)` step note above).
+        if: github.event.inputs.dry_run != 'true' && steps.idempotency.outputs.skip != 'true'
         working-directory: mailglass_admin
-        run: |
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            mix hex.publish --dry-run
-          else
-            mix hex.publish --yes
-          fi
+        run: mix hex.publish --yes
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
           MIX_PUBLISH: "true"
@@ -373,6 +383,13 @@ jobs:
         # otherwise → {:mailglass, path: "..", override: true}
         # `mix deps.get` must run with MIX_PUBLISH=true so the lock + fetch
         # match what `mix hex.publish` will resolve in the next step.
+        #
+        # Dry-run skips this step: same rationale as the publish-admin job —
+        # mailglass's linked version isn't yet on Hex during a dry-run dispatch
+        # at a v1.x.0 cut, so MIX_PUBLISH=true `mix deps.get` can't resolve.
+        # Tarball validation is upstream in `prepublish-summary`; live mode is
+        # unaffected because `Wait for Hex.pm to index` runs first.
+        if: github.event.inputs.dry_run != 'true'
         working-directory: mailglass_inbound
         env:
           MIX_PUBLISH: "true"
@@ -392,14 +409,14 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Publish mailglass_inbound to Hex.pm
-        if: steps.idempotency.outputs.skip != 'true'
+        # Skipped in dry-run: tarball-integrity is validated upstream by
+        # `prepublish-summary`'s `mix mailglass.publish.check`. Same rationale
+        # as publish-admin — the per-sibling `mix hex.publish --dry-run` needs
+        # deps to have resolved, which fails when mailglass's linked version
+        # isn't yet on Hex.
+        if: github.event.inputs.dry_run != 'true' && steps.idempotency.outputs.skip != 'true'
         working-directory: mailglass_inbound
-        run: |
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            mix hex.publish --dry-run
-          else
-            mix hex.publish --yes
-          fi
+        run: mix hex.publish --yes
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
           MIX_PUBLISH: "true"
