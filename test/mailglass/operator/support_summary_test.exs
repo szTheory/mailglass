@@ -127,6 +127,7 @@ defmodule Mailglass.Operator.SupportSummaryTest do
 
       assert summary.reconcile_facts.reconciled_count == 1
       assert summary.reconcile_facts.latest_reconciled.event_id == reconciled.event.id
+
       assert summary.reconcile_facts.latest_reconciled.reconciled_from_event_id ==
                reconciled.orphan.id
 
@@ -349,7 +350,12 @@ defmodule Mailglass.Operator.SupportSummaryTest do
     %{
       failed: %{failed: failed, dead: dead},
       orphan: %{unresolved: unresolved_orphan, linked: linked_orphan},
-      replay: %{delivery: replay_delivery, failed: replay_failed, noop: replay_noop, replayed: replay_replayed},
+      replay: %{
+        delivery: replay_delivery,
+        failed: replay_failed,
+        noop: replay_noop,
+        replayed: replay_replayed
+      },
       reconciled: %{delivery: reconciled_delivery, orphan: linked_orphan, event: reconciled_event}
     }
   end

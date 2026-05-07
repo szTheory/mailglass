@@ -62,15 +62,22 @@ defmodule Mailglass.Docs.TestingGuideTest do
     oban_helpers = File.read!(@oban_helpers)
 
     assert test_assertions =~ "`last_mail/0` reads Fake-backed delivery storage"
-    assert test_assertions =~ "`wait_for_mail/1`, `assert_no_mail_sent/0`, and `assert_mail_sent/0,1`"
+
+    assert test_assertions =~
+             "`wait_for_mail/1`, `assert_no_mail_sent/0`, and `assert_mail_sent/0,1`"
+
     assert test_assertions =~ "reads Fake-backed delivery storage"
     assert test_assertions =~ "without consuming the"
     assert test_assertions =~ "process mailbox"
     assert test_assertions =~ "wait_for_mail timed out after"
     assert test_assertions =~ "Use when asserting webhook-received events"
 
-    assert mailer_case =~ "Application.put_env(:mailglass, :async_adapter_impl, Mailglass.Outbound.AsyncAdapter.Inline)"
-    assert mailer_case =~ "Use `Mailglass.Adapters.Fake.allow/2` first for targeted cross-process access."
+    assert mailer_case =~
+             "Application.put_env(:mailglass, :async_adapter_impl, Mailglass.Outbound.AsyncAdapter.Inline)"
+
+    assert mailer_case =~
+             "Use `Mailglass.Adapters.Fake.allow/2` first for targeted cross-process access."
+
     assert mailer_case =~ "Shared/global fallback via `setup :set_mailglass_global`"
     assert mailer_case =~ "non-async"
     assert mailer_case =~ "Both documented Oban lanes require `async: false`"

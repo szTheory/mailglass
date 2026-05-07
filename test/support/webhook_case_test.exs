@@ -7,7 +7,7 @@ defmodule Mailglass.WebhookCaseTest do
     @describetag tenant: "default"
     setup do
       # single_event.json has sg_message_id = "00000000-0000-0000-0000-000000000010"
-      delivery = 
+      delivery =
         %{
           id: "00000000-0000-0000-0000-000000000010",
           tenant_id: "default",
@@ -27,16 +27,22 @@ defmodule Mailglass.WebhookCaseTest do
       {:ok, delivery: delivery}
     end
 
-    test "assert_webhook_processed dispatches and verifies ingest", %{delivery: delivery, sendgrid_keypair: keypair} do
+    test "assert_webhook_processed dispatches and verifies ingest", %{
+      delivery: delivery,
+      sendgrid_keypair: keypair
+    } do
       conn = assert_webhook_processed(:sendgrid, "single_event", keypair: keypair)
-      
+
       assert conn.status in 200..299
       assert_delivery_state(delivery.id, :delivered)
     end
-    
-    test "assert_webhook_idempotent processes twice without duplicates", %{delivery: delivery, sendgrid_keypair: keypair} do
+
+    test "assert_webhook_idempotent processes twice without duplicates", %{
+      delivery: delivery,
+      sendgrid_keypair: keypair
+    } do
       assert_webhook_idempotent(:sendgrid, "single_event", keypair: keypair)
-      
+
       assert_delivery_event_count(delivery.id, 1)
     end
   end

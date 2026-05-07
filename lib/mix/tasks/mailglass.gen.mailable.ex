@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Mailglass.Gen.Mailable do
   def igniter(igniter) do
     mailable_arg = igniter.args.positional.mailable
     app_module = Igniter.Project.Application.app_module(igniter) || Test
-    
+
     module_name =
       if String.contains?(mailable_arg, ".") do
         Module.concat([mailable_arg])
@@ -49,9 +49,11 @@ defmodule Mix.Tasks.Mailglass.Gen.Mailable do
 
     module_path = Igniter.Project.Module.proper_location(igniter, module_name)
     module_dir = Path.rootname(module_path)
-    
+
     template_path = Path.join(module_dir, "#{lowercase_name}_template.html.heex")
-    template_code = "<Mailglass.Components.heading>#{mailable_basename}</Mailglass.Components.heading>\n"
+
+    template_code =
+      "<Mailglass.Components.heading>#{mailable_basename}</Mailglass.Components.heading>\n"
 
     igniter
     |> Igniter.Project.Module.create_module(module_name, module_code)

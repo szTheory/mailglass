@@ -63,8 +63,12 @@ defmodule Mix.Tasks.Mailglass.Gen.MailableTest do
     end
     """)
 
-    assert_file_content(igniter, "lib/my_app/mail/welcome_email/welcome_email_template.html.heex", """
-    <Mailglass.Components.heading>WelcomeEmail</Mailglass.Components.heading>
-    """)
+    assert_file_content(
+      igniter,
+      "lib/my_app/mail/welcome_email/welcome_email_template.html.heex",
+      """
+      <Mailglass.Components.heading>WelcomeEmail</Mailglass.Components.heading>
+      """
+    )
   end
 end

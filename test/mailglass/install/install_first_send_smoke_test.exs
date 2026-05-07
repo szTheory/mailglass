@@ -18,8 +18,11 @@ defmodule Mailglass.Install.FirstSendSmokeTest do
   end
 
   test "getting-started guide keeps the ecto-backed first-send lane executable" do
-    install_block = extract_block_after_heading("guides/getting-started.md", "1) Install and verify")
-    first_send_block = extract_block_after_heading("guides/getting-started.md", "4) Send your first message")
+    install_block =
+      extract_block_after_heading("guides/getting-started.md", "1) Install and verify")
+
+    first_send_block =
+      extract_block_after_heading("guides/getting-started.md", "4) Send your first message")
 
     assert install_block
     assert install_block =~ "mix ecto.migrate"

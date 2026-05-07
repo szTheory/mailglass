@@ -1159,7 +1159,12 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   defp required_file_entries(:mailglass_inbound) do
     required_file_entries(:mailglass) ++
-      [".formatter.exs", "docs/api_stability.md", "docs/postmark_ingress.md", "docs/sendgrid_ingress.md"]
+      [
+        ".formatter.exs",
+        "docs/api_stability.md",
+        "docs/postmark_ingress.md",
+        "docs/sendgrid_ingress.md"
+      ]
   end
 
   defp maybe_eval_ast(nil, _attrs), do: nil

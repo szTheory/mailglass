@@ -90,6 +90,7 @@ defmodule Mailglass.Webhook.ReplayTest do
                  ),
                  :count
                )
+
       [delivered] = delivery_events_for(ingest_result.webhook_event.id, :delivered)
       [requested] = replay_events_for(ingest_result.webhook_event.id, :webhook_replay_requested)
       [succeeded] = replay_events_for(ingest_result.webhook_event.id, :webhook_replay_succeeded)

@@ -177,8 +177,7 @@ defmodule Mailglass.Operator.SupportSummary do
           event_id: event.id,
           occurred_at: event.occurred_at,
           provider: fragment("?->>'reconciled_provider'", event.metadata),
-          reconciled_from_event_id:
-            fragment("?->>'reconciled_from_event_id'", event.metadata),
+          reconciled_from_event_id: fragment("?->>'reconciled_from_event_id'", event.metadata),
           reconciled_provider_event_id:
             fragment("?->>'reconciled_provider_event_id'", event.metadata)
         })

@@ -55,8 +55,10 @@ defmodule Mailglass.StabilityContractTest do
       assert mixfile =~ "\"verify.stability_contract\""
       assert mixfile =~ "\"verify.support_contract.core\""
       assert mixfile =~ "cmd --cd mailglass_admin mix verify.support_contract.admin"
+
       assert mixfile =~
                "cmd --cd mailglass_inbound mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
+
       assert mixfile =~ "compile --no-optional-deps --warnings-as-errors"
     end
 
@@ -83,7 +85,10 @@ defmodule Mailglass.StabilityContractTest do
       assert workflow =~ "\"mailglass_inbound/mix.exs:mailglass\""
       assert config =~ "\"mailglass_inbound\""
       assert manifest =~ "\"mailglass_inbound\": \"0.3.2\""
-      assert publish_check =~ "defp packages(nil), do: [:mailglass, :mailglass_admin, :mailglass_inbound]"
+
+      assert publish_check =~
+               "defp packages(nil), do: [:mailglass, :mailglass_admin, :mailglass_inbound]"
+
       assert publish_check =~ "defp packages(\"mailglass_inbound\"), do: [:mailglass_inbound]"
       assert publish_check =~ "defp package_dir(repo_root, :mailglass_inbound)"
       assert inbound_mix =~ "{:mailglass, \"== 0.3.2\"}"

@@ -155,11 +155,13 @@ defmodule Mailglass.TestAssertionsTest do
       msg = %{msg | assigns: %{user: "Jon", id: 123}}
 
       send(self(), {:mail, msg})
+
       assert_raise ExUnit.AssertionError, ~r/assigns mismatch/, fn ->
         assert_mail_sent(assigns: %{user: "Arya"})
       end
 
       send(self(), {:mail, msg})
+
       assert_raise ExUnit.AssertionError, ~r/assigns mismatch/, fn ->
         assert_mail_sent(assigns: %{missing_key: "value"})
       end

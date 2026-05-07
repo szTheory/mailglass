@@ -28,6 +28,7 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
     assert File.exists?(mailable_path)
 
     workflow = File.read!(workflow_path)
+
     assert workflow =~
              "mix phx.new sandbox --module Sandbox --app sandbox --no-ecto --no-mailer --install"
 

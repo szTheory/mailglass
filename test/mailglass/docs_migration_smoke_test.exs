@@ -28,7 +28,10 @@ defmodule Mailglass.DocsMigrationSmokeTest do
     swoosh = File.read!(@guide_path)
 
     assert canonical =~ "canonical latest-`0.x` to `1.0` upgrade guide"
-    assert canonical =~ "| surface | replacement | warning channel | `--warnings-as-errors` impact | support-until version | proof artifact |"
+
+    assert canonical =~
+             "| surface | replacement | warning channel | `--warnings-as-errors` impact | support-until version | proof artifact |"
+
     assert canonical =~ "Mailglass.Outbound.send/2"
     assert canonical =~ "Mailglass.deliver/2"
     assert canonical =~ "mix mailglass.upgrade.v0_2"
@@ -47,6 +50,7 @@ defmodule Mailglass.DocsMigrationSmokeTest do
 
   test "upgrade guide examples stay on the supported codemod path" do
     canonical_blocks = extract_code_blocks(@canonical_guide_path)
+
     preferred_block =
       Enum.find(canonical_blocks, fn block ->
         String.contains?(block, "defmodule MyApp.WelcomeEmail") and

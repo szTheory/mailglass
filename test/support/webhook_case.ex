@@ -71,16 +71,17 @@ defmodule Mailglass.WebhookCase do
         ]
 
       # `assert_webhook_ingested/1,2` is a macro (must be imported separately).
-      import Mailglass.WebhookCase, only: [
-        assert_webhook_ingested: 1,
-        assert_webhook_ingested: 2,
-        assert_webhook_processed: 2,
-        assert_webhook_processed: 3,
-        assert_webhook_idempotent: 2,
-        assert_webhook_idempotent: 3,
-        assert_delivery_state: 2,
-        assert_delivery_event_count: 2
-      ]
+      import Mailglass.WebhookCase,
+        only: [
+          assert_webhook_ingested: 1,
+          assert_webhook_ingested: 2,
+          assert_webhook_processed: 2,
+          assert_webhook_processed: 3,
+          assert_webhook_idempotent: 2,
+          assert_webhook_idempotent: 3,
+          assert_delivery_state: 2,
+          assert_delivery_event_count: 2
+        ]
     end
   end
 
@@ -411,8 +412,9 @@ defmodule Mailglass.WebhookCase do
       assert conn.status in 200..299, "Expected duplicate webhook to return 20x, got #{conn.status}"
 
       # Verify NO new broadcast occurred
-      refute_receive {:delivery_updated, _id, _type, _meta}, timeout,
-        "assert_webhook_idempotent: expected duplicate webhook to NOT broadcast, but it did"
+      refute_receive {:delivery_updated, _id, _type, _meta},
+                     timeout,
+                     "assert_webhook_idempotent: expected duplicate webhook to NOT broadcast, but it did"
     end
   end
 
@@ -430,7 +432,7 @@ defmodule Mailglass.WebhookCase do
       actual_event = delivery.last_event_type
 
       assert actual_status == expected_status or actual_event == expected_status,
-        "assert_delivery_state: expected status or last_event_type to be #{inspect(expected_status)}, but got status=#{inspect(actual_status)} and last_event_type=#{inspect(actual_event)}"
+             "assert_delivery_state: expected status or last_event_type to be #{inspect(expected_status)}, but got status=#{inspect(actual_status)} and last_event_type=#{inspect(actual_event)}"
     end
   end
 
@@ -449,7 +451,7 @@ defmodule Mailglass.WebhookCase do
         |> Mailglass.TestRepo.aggregate(:count, :id)
 
       assert count == expected_count,
-        "assert_delivery_event_count: expected #{expected_count} events for delivery #{delivery_id}, got #{count}"
+             "assert_delivery_event_count: expected #{expected_count} events for delivery #{delivery_id}, got #{count}"
     end
   end
 end

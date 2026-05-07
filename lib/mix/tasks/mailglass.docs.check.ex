@@ -176,7 +176,9 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "Mailglass.Outbound.send/2",
         "mix mailglass.upgrade.v0_2"
       ],
-      forbidden: ["authoritative migration path from the v0.1 mailable API to the v0.2 public surface"]
+      forbidden: [
+        "authoritative migration path from the v0.1 mailable API to the v0.2 public surface"
+      ]
     },
     "guides/getting-started.md" => %{
       required: ["mix mailglass.install", "|> to(user.email)", "|> subject(\"Welcome\")"],
