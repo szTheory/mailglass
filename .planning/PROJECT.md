@@ -76,11 +76,23 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 </details>
 
-## Current Milestone
+## Current Milestone: v1.2 Inbound Production Confidence
 
-### Planning next milestone
+**Goal:** Bring `mailglass_inbound` to the operator/dev/admin maturity outbound reached across v0.4–v0.6, so adopters on the major providers can install, debug from the dashboard, write tests, and operate inbound with the same confidence they already get on outbound.
 
-v1.1 closed on 2026-05-06 with the v1.1 audit re-run confirming `status: passed`. The next milestone is undefined — kick it off with `/gsd-new-milestone` to scope, research, define requirements, and roadmap the next slice.
+**One-line framing:** v1.1 opened the inbound package; v1.2 finishes opening it.
+
+**Target features:**
+- Mailgun + SES inbound ingress (lift-and-alias from outbound webhook verifiers; defer Cloudflare + `gen_smtp` to v1.3)
+- Inbound admin LiveView (`InboundLive`, evidence/timeline cards, replay modal, routing trace card)
+- Inbound test helpers + DX parity (`TestAssertions`, `MailboxCase`, `Test.Ingress`, fixtures, 3 Igniter generators)
+- Inbound runtime operator tooling (`mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limiting, suppression flag-only)
+- Inbound telemetry foundation (currently zero `:telemetry` calls in `mailglass_inbound/lib/`)
+- Idempotency convergence proof (1000-replay StreamData property mirroring outbound v0.1)
+- Inbound documentation pass (install, testing, operator, Mailgun + SES setup, routing-debug guides)
+- Stability closeout (Phase 35 Nyquist bookkeeping, branch-protection automation, citext-OID-cache race, boundary warnings, WR-01..06)
+
+**Key context:** Research convergence across 5 parallel agents (`.planning/research/milestone-candidates/`) showed inbound provider expansion is mostly **lift-and-alias** — outbound webhook providers already ship full-fat verifiers for Mailgun (HMAC + ETS replay cache) and SES (SNS X.509 + CertCache + TrustPolicy + auto-confirm). Same lift story for admin (`OperatorLive→InboundLive` near-1:1), DX (`MailerCase→MailboxCase`), and runtime tooling (replay/pruner/rate-limiter all shipped on outbound). Strategic alternatives (relay package, multi-tenant deepening, outbound deepening, marketing-adjacent, test extraction) all had weaker vision-fit and weaker adopter pull than completing what v1.1 just opened. Cloudflare Email Routing deferred (no first-party contract). `gen_smtp` listener deferred (different transport class — TLS SMTP listener vs HTTP webhook — belongs in own milestone or `mailglass_relay` sibling).
 
 ## Core Value
 
@@ -128,7 +140,18 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 
 ## Active
 
-(v1.1 closed — fresh requirements will be defined for the next milestone via `/gsd-new-milestone`.)
+v1.2 requirements live in `.planning/REQUIREMENTS.md`. Categories (REQ-IDs continue from v1.1):
+
+- **TEL** — Inbound telemetry spans (ingress/route/execute/persist) + 1000-replay convergence property
+- **MIME** — Shared MIME parsing module with optional `:gen_smtp`/`:mimemail` backend gateway
+- **MGUN** — Mailgun inbound ingress (HMAC verify + replay cache + plug allowlist)
+- **AWS** — SES inbound ingress (SNS X.509 + CertCache + TrustPolicy + S3 fetcher behaviour + optional `:ex_aws_s3` gateway)
+- **TEST** — `MailglassInbound.TestAssertions` + `MailboxCase` + `Test.Ingress` + Fixtures
+- **GEN** — Igniter generators (`gen.mailbox`, `gen.inbound_router`, `gen.inbound_route`)
+- **ALIVE** — Inbound admin LiveView (`InboundLive` + evidence/timeline cards + replay modal + routing trace card)
+- **OPS** — Operator runtime tooling (`mix mailglass.inbound.{doctor,replay,prune}` + ingress rate limit + suppression flag-only)
+- **DOCS** — Inbound install/testing/operator/setup/routing-debug guides
+- **CLOSE** — v1.0 carry-forward debt closeout (Phase 35 Nyquist, branch-protection, citext race, boundary warnings, WR-01..06, v1.0 publish coord)
 
 ## Out of Scope
 
@@ -239,4 +262,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-05-07 — closed v1.1 Inbound Core Slice after audit re-passed; mailglass_inbound shipped with Postmark + SendGrid ingress, replayable persistence, Oban-optional async execution, and end-to-end verification chain.*
+*Last updated: 2026-05-06 — opened v1.2 Inbound Production Confidence milestone; 7 phases (45-51) covering inbound provider expansion (Mailgun + SES), admin LiveView, DX parity, runtime tooling, telemetry foundation, documentation, and v1.0 carry-forward debt closeout. Research synthesis in `.planning/research/milestone-candidates/SYNTHESIS.md`.*
