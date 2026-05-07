@@ -67,8 +67,8 @@ modules, Oban job structs, queue names, and enqueue internals are not part of
 the stable contract.
 
 Replay orchestration is also internal. The package preserves replay over stored
-truth, but no public replay API is stable here, and no adopter-facing worker
-surface or operator UI surface is promised.
+truth, but the replay command surface is not promised as stable here, and no
+adopter-facing worker surface or operator dashboard surface is promised.
 
 ### `deferred`
 

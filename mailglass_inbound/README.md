@@ -201,8 +201,8 @@ behavior.
 
 These capabilities remain intentionally out of the stable inbound contract:
 
-- public replay API or replay command surface
-- operator UI for inbound receive/replay flows
+- a publicly stable replay/command-surface API
+- an operator dashboard for inbound receive or replay flows
 - direct worker contracts, queue configuration, or Oban job return values
 - providers beyond Postmark and SendGrid
 - matcher expansion beyond recipient, subject, and headers
