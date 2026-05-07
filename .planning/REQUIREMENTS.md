@@ -216,7 +216,7 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 | CLOSE-03 | Phase 51 | Pending |
 | CLOSE-04 | Phase 51 | Pending |
 | CLOSE-05 | Phase 51 | Pending |
-| CLOSE-06 | Phase 51 | Pending |
+| CLOSE-06 | Phase 44.5 | Pending |
 
 **Coverage:**
 - v1.2 requirements: **58 total** (TELE×8 + MIME×4 + MGUN×5 + SESI×6 + ITEST×7 + IGEN×4 + IADM×7 + IOPS×5 + IDOC×6 + CLOSE×6 = 58). Note: an earlier draft of this file stated "53 total" — that was a counting error in the source doc; actual checkbox count is 58.

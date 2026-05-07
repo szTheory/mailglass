@@ -12,7 +12,7 @@
 - ✅ **v0.6 Production Maturity** — Phases 32-34 (shipped 2026-05-05) — see [milestones/v0.6-ROADMAP.md](milestones/v0.6-ROADMAP.md)
 - ✅ **v1.0 Stability Lock** — Phases 35-38 (shipped 2026-05-06) — see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Inbound Core Slice** — Phases 39-44 (shipped 2026-05-06) — see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
-- 🚧 **v1.2 Inbound Production Confidence** — Phases 45-51 (planning, opened 2026-05-06)
+- 🚧 **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 51 (planning, opened 2026-05-06; v1.0 release ceremony bracketing v1.2 implementation)
 
 ## Phases
 
@@ -30,17 +30,38 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 
 </details>
 
-### v1.2 Inbound Production Confidence (Phases 45-51)
+### v1.2 Inbound Production Confidence
 
+- [ ] **Phase 44.5: v1.0/1.1 Release Ceremony** — Single linked-version cut: `mailglass` 0.3.2 → **1.0.0**, `mailglass_admin` 0.3.2 → **1.0.0**, `mailglass_inbound` first Hex publish at **0.1.0**. Bundles 4 unreleased milestones (v0.5/v0.6/v1.0/v1.1, 169 commits since v0.3.0 tag). Resolves CLOSE-06.
 - [ ] **Phase 45: Inbound Telemetry + Idempotency Foundation** — 4-level telemetry spans across all inbound stages, shared MIME module, and 1000-replay convergence proof
 - [ ] **Phase 46: Mailgun + SES Inbound Ingress** — Lift outbound verifiers into inbound; ship Mailgun (HMAC) and SES (SNS X.509 + S3 fetch) provider plugs
 - [ ] **Phase 47: Inbound Test Helpers + Generators** — `TestAssertions`, `MailboxCase`, `Test.Ingress`, code-built fixtures, and 3 Igniter generators
 - [ ] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card
 - [ ] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only
 - [ ] **Phase 50: Inbound Documentation Pass** — Install / testing / operator / Mailgun + SES setup / routing-debug guides
-- [ ] **Phase 51: Stability Closeout** — v1.0 carry-forward debt: Phase 35 Nyquist, branch-protection automation, citext race, boundary warnings, WR-01..06, v1.0 publish coordination
+- [ ] **Phase 50.5: v1.2 Release Ceremony** — Linked-version cut: `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** (inbound stays on 0.x version line until Conductor + relay providers land). Ships all v1.2 inbound work to adopters.
+- [ ] **Phase 51: Stability Closeout** — v1.0 carry-forward debt: Phase 35 Nyquist (CLOSE-01), branch-protection automation (CLOSE-02), citext race (CLOSE-03), boundary warnings (CLOSE-04), WR-01..06 (CLOSE-05). CLOSE-06 resolved by Phase 44.5.
 
 ## Phase Details
+
+### Phase 44.5: v1.0/1.1 Release Ceremony
+
+**Goal**: Ship four milestones of unreleased work to Hex.pm before starting v1.2 implementation, so adopters get the v0.5 + v0.6 + v1.0 + v1.1 value (`TestAssertions`, generators, `RateLimiter`, replay/reconcile, support summary, stability lock, compatibility promise, `mailglass_inbound` foundation) and v1.2 implementation lands against a fresh release base instead of compounding the gap further.
+**Depends on**: Phase 44 (v1.1 Inbound Core Slice complete)
+**Requirements**: CLOSE-06 (pulled forward from Phase 51)
+**Success Criteria** (what must be TRUE):
+  1. `mailglass` and `mailglass_admin` are published to Hex.pm at **1.0.0** via Release Please linked-versions PR; `mailglass_inbound` is published at **0.1.0** as its first Hex appearance.
+  2. CHANGELOG entries for all three packages document the bundled v0.5 + v0.6 + v1.0 + v1.1 milestone work with REQ-ID references; the upgrade path doc (`docs/upgrade-from-0.x.md`) is verified end-to-end against a sandbox app.
+  3. The `v1.0.0` git tag is pushed; the existing release-rehearsal artifacts from v1.0 milestone (Phase 38) are converted from rehearsal to live; the protected GitHub Environment publish flow is exercised for real (HEX_API_KEY + reviewer approval).
+  4. `mix hex.info mailglass`, `mix hex.info mailglass_admin`, and `mix hex.info mailglass_inbound` all return 1.0.0 / 1.0.0 / 0.1.0 respectively; PROJECT.md "Current State" is updated to reflect the live publish; `MILESTONES.md` v1.0 entry adds the live-publish date.
+  5. GitHub branch-protection rule is verified externally (closes the v1.0 carry-forward "manual GitHub branch-protection verification" item, partially fulfilling CLOSE-02 — the automation work in Phase 51 supplements this with a `gh api` script).
+**Plans**: TBD
+**UI hint**: no
+
+**Hardest sub-tasks:**
+- Release Please linked-versions config currently lock-steps `mailglass` + `mailglass_admin` at the same version (0.3.2). Adding `mailglass_inbound` at a separate 0.1.0 version line requires confirming the linked-versions plugin allows mixed major-version sibling packages — read `release-please-config.json` carefully and validate via `release-please --dry-run` before tagging.
+- The `mailglass_admin/mix.exs` "literal pin" pattern (the `{:mailglass, "== 0.1.0"}` literal that comments warn is not `@version`-driven) needs to be bumped manually to `"== 1.0.0"` and verified the linked-versions plugin's sed step handles it correctly. This is the load-bearing constraint that v0.1's release engineering surfaced.
+- The first-time `mailglass_inbound` Hex publish requires a separate `HEX_PACKAGE` registration step (or transitively via `--organization`) and an explicit `description` + `links` block in `mailglass_inbound/mix.exs`. Don't assume it inherits from the parent.
 
 ### Phase 45: Inbound Telemetry + Idempotency Foundation
 
@@ -157,24 +178,40 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 - Routing-debug guide (IDOC-05) requires a worked example of a real "why didn't this match?" debugging session — needs to ship with at least one fully-narrated trace from initial confusion to root cause.
 - Doc-contract test (IDOC-06 via `mix mailglass.docs.check`) is strict; every docref + module link must resolve. Schedule the docs-check pass after all other code lands so churn is minimized.
 
+### Phase 50.5: v1.2 Release Ceremony
+
+**Goal**: Ship v1.2 inbound production confidence work to Hex.pm so adopters can `{:mailglass, "~> 1.2"}` and pick up Mailgun + SES inbound, admin LiveView for inbound, test helpers, and operator tooling — closing the v1.2 milestone with a published release rather than a planning label.
+**Depends on**: Phase 50 (docs done) — code from Phases 45-49 is in place; this phase only ships it.
+**Requirements**: (no new REQ-IDs — release-engineering ceremony, not feature work)
+**Success Criteria** (what must be TRUE):
+  1. `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** all published to Hex.pm via Release Please linked-versions PR.
+  2. CHANGELOG entries document v1.2 work by REQ-ID category (TELE, MIME, MGUN, SESI, ITEST, IGEN, IADM, IOPS, IDOC) with adopter-facing notes for breaking-or-additive changes.
+  3. `mailglass_inbound` 0.2.0 release notes explicitly call out: still 0.x because Conductor-style dev UI + Mailgun/SES inbound + relay providers are the pre-1.0 expansion target; semver shape is documented in upgrade guide.
+  4. `mix hex.info` confirms all three packages live; `v1.2.0` git tag pushed; release-engineering verification (the live publish flow exercised in Phase 44.5) used again — no new ceremony surface.
+  5. PROJECT.md "Current State" updated; MILESTONES.md v1.2 entry adds live-publish date.
+**Plans**: TBD
+**UI hint**: no
+
+**Hardest sub-tasks:**
+- Coordinating `mailglass_inbound` 0.x version line with `mailglass` 1.x line through the linked-versions plugin (already exercised in Phase 44.5 — should be a repeat, not a discovery).
+- CHANGELOG hygiene across 9 v1.2 REQ categories — keep adopter-facing notes scoped to behavioural changes, not internal refactors.
+
 ### Phase 51: Stability Closeout
 
-**Goal**: Every v1.0 carry-forward debt item is closed (or formally accepted with rationale) so the v1.2 milestone audit has zero compounding-debt findings — honoring RETROSPECTIVE.md's standing lesson that compounding debt across milestones is the failure mode.
+**Goal**: Every v1.0 carry-forward debt item is closed (or formally accepted with rationale) so the v1.2 milestone audit has zero compounding-debt findings — honoring RETROSPECTIVE.md's standing lesson that compounding debt across milestones is the failure mode. CLOSE-06 (v1.0 publish closeout) is resolved by Phase 44.5; CLOSE-02 partial branch-protection verification also resolved by Phase 44.5, with the `gh api` automation work landing here.
 **Depends on**: None (parallel-safe with all v1.2 inbound phases — no overlap with `mailglass_inbound/`)
-**Requirements**: CLOSE-01, CLOSE-02, CLOSE-03, CLOSE-04, CLOSE-05, CLOSE-06
+**Requirements**: CLOSE-01, CLOSE-02, CLOSE-03, CLOSE-04, CLOSE-05
 **Success Criteria** (what must be TRUE):
   1. `mailglass_admin/priv/audit/phases/35.json` records `wave_0_complete: true` after Phase 35 verification re-runs cleanly (CLOSE-01); verification audit is rerun and committed.
   2. `mix test` runs green from a clean clone — the bare `mix test` citext-OID-cache race is fixed (likely a `Postgrex.Types` reload + sandbox checkout reorder); CI has a smoke job proving green-from-clean (CLOSE-03).
   3. `mix boundary --no-checkout` reports zero warnings; the support-summary and admin probe boundary warnings are resolved by either correcting boundary classifications or formally accepting them with documented rationale (CLOSE-04).
-  4. Either `scripts/verify-branch-protection.sh` (using `gh api`) reports pass against the live repo, or `MAINTAINING.md` documents the manual owner-runbook accepting the boundary explicitly (CLOSE-02); Phase 4 standard-depth review WR-01..WR-06 items are individually addressed or formally closed-no-action with rationale appended to `.planning/milestones/v1.0-MILESTONE-AUDIT.md` (CLOSE-05).
-  5. `mailglass` 1.0.0 + `mailglass_admin` 1.0.0 tarballs are published to Hex.pm, branch-protection rule is confirmed externally, MILESTONES.md is updated with the live-publish date, and v1.0 closeout is officially closed (CLOSE-06).
+  4. `scripts/verify-branch-protection.sh` (using `gh api`) reports pass against the live repo and runs in CI as a non-blocking advisory job (CLOSE-02 automation supplements the external verification done in Phase 44.5); Phase 4 standard-depth review WR-01..WR-06 items are individually addressed or formally closed-no-action with rationale appended to `.planning/milestones/v1.0-MILESTONE-AUDIT.md` (CLOSE-05).
 **Plans**: TBD
 **UI hint**: no
 
 **Hardest sub-tasks:**
 - CLOSE-03 citext-OID-cache race: requires reproducing the race deterministically before fixing it. The `Postgrex.Types` reload + sandbox checkout reorder is a hypothesis, not a confirmed fix; first plan should be diagnostic.
-- CLOSE-02 branch-protection automation requires deciding between `gh api` repo-as-code (preferred — verifiable in CI) vs documented manual runbook (acceptable — but deferred verification debt). Build the `gh api` script unless adopter access constraints prevent it.
-- CLOSE-06 v1.0 live publish coordination is partially out-of-repo: the Hex tarball publish is gated by the protected GitHub Environment + reviewer approval (per CI-07 from v0.1). Coordinate the timing with the v1.2 release ceremony so both go out together, not separately.
+- CLOSE-02 `gh api` repo-as-code script needs to assert against the actual ruleset (required checks, required reviewers, dismissal policy) — keep it idempotent so it can run as a CI job without false alarms.
 
 ## Backlog
 
@@ -198,12 +235,16 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
+| **44.5. v1.0/1.1 Release Ceremony** | 0/TBD | **Not started — BLOCKING Phase 45** | — |
 | 45. Inbound Telemetry + Idempotency Foundation | 0/TBD | Not started | — |
 | 46. Mailgun + SES Inbound Ingress | 0/TBD | Not started | — |
 | 47. Inbound Test Helpers + Generators | 0/TBD | Not started | — |
 | 48. Inbound Admin LiveView | 0/TBD | Not started | — |
 | 49. Inbound Runtime Operator Tooling | 0/TBD | Not started | — |
 | 50. Inbound Documentation Pass | 0/TBD | Not started | — |
+| **50.5. v1.2 Release Ceremony** | 0/TBD | Not started | — |
 | 51. Stability Closeout | 0/TBD | Not started | — |
 
-**Estimated total plans:** ~18-22 (per SYNTHESIS.md). Plan counts will be set during `/gsd-plan-phase <N>` for each phase.
+**Estimated total plans:** ~20-24 (SYNTHESIS.md ~18-22 inbound + 2 release ceremonies). Plan counts will be set during `/gsd-plan-phase <N>` for each phase.
+
+**Release-cadence rule (added 2026-05-06):** Each milestone closes with a release ceremony (Phase X.5 by convention). Don't start the next milestone implementation while previous-milestone work is unreleased. The 4-milestone-deep gap between v0.3.2 and 1.0.0 is the failure mode this rule prevents.

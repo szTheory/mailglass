@@ -261,5 +261,7 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
+**Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
+
 ---
 *Last updated: 2026-05-06 — opened v1.2 Inbound Production Confidence milestone; 7 phases (45-51) covering inbound provider expansion (Mailgun + SES), admin LiveView, DX parity, runtime tooling, telemetry foundation, documentation, and v1.0 carry-forward debt closeout. Research synthesis in `.planning/research/milestone-candidates/SYNTHESIS.md`.*
