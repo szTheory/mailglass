@@ -35,7 +35,26 @@ jobs:
     outputs:
       should_run: ${{ steps.guard.outputs.should_run }}
       version: ${{ steps.guard.outputs.version }}
+      version_inbound: ${{ steps.read-inbound-version.outputs.version_inbound }}
     steps:
+      - name: Checkout (read inbound version from tag)
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          # Pinned to the tag/release ref so version_inbound resolves from the
+          # exact commit being smoked (Pitfall 3 mitigation: inbound version is
+          # independent of core/admin after D-44.5-01 unlinking).
+          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+      - name: Read mailglass_inbound version
+        id: read-inbound-version
+        run: |
+          if [ -f mailglass_inbound/mix.exs ]; then
+            VERSION_INBOUND=$(grep -E '@version "[0-9]' mailglass_inbound/mix.exs | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+            echo "version_inbound=${VERSION_INBOUND}" >> "$GITHUB_OUTPUT"
+            echo "Resolved mailglass_inbound version: ${VERSION_INBOUND}"
+          else
+            echo "version_inbound=" >> "$GITHUB_OUTPUT"
+            echo "mailglass_inbound/mix.exs not present at this ref; downstream inbound steps will skip."
+          fi
       - name: Determine if smoke should run
         id: guard
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
@@ -182,6 +201,24 @@ jobs:
             sleep 30
           done
           echo "Hex.pm indexed mailglass_admin ${VERSION}."
+      - name: Wait for mailglass_inbound index
+        env:
+          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
+        run: |
+          if [ -z "${VERSION_INBOUND}" ]; then
+            echo "No inbound version resolved; skipping."
+            exit 0
+          fi
+          DEADLINE=$(( SECONDS + 300 ))
+          until mix hex.info mailglass_inbound "${VERSION_INBOUND}" >/dev/null 2>&1; do
+            if [ $SECONDS -ge $DEADLINE ]; then
+              echo "Smoke aborted: Hex.pm did not index mailglass_inbound ${VERSION_INBOUND} within 5 minutes."
+              exit 1
+            fi
+            echo "Waiting for Hex.pm to index mailglass_inbound ${VERSION_INBOUND}..."
+            sleep 30
+          done
+          echo "Hex.pm indexed mailglass_inbound ${VERSION_INBOUND}."
 
   wait-for-hexdocs:
     name: Wait for HexDocs build
@@ -226,6 +263,24 @@ jobs:
             sleep 60
           done
           echo "HexDocs built mailglass_admin ${VERSION}."
+      - name: Wait for mailglass_inbound HexDocs
+        env:
+          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
+        run: |
+          if [ -z "${VERSION_INBOUND}" ]; then
+            echo "No inbound version resolved; skipping."
+            exit 0
+          fi
+          DEADLINE=$(( SECONDS + 600 ))
+          until curl -fsI "https://hexdocs.pm/mailglass_inbound/${VERSION_INBOUND}/" >/dev/null 2>&1; do
+            if [ $SECONDS -ge $DEADLINE ]; then
+              echo "Smoke aborted: HexDocs did not build mailglass_inbound ${VERSION_INBOUND} within 10 minutes."
+              exit 1
+            fi
+            echo "Waiting for HexDocs to build mailglass_inbound ${VERSION_INBOUND}..."
+            sleep 60
+          done
+          echo "HexDocs built mailglass_inbound ${VERSION_INBOUND}."
 
   consumer-install:
     name: Consumer install (Phoenix host)
@@ -272,12 +327,20 @@ jobs:
         working-directory: ${{ runner.temp }}/sandbox
         env:
           VERSION: ${{ needs.cron-guard.outputs.version }}
+          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
         run: |
           elixir -e '
             version = System.get_env("VERSION")
+            version_inbound = System.get_env("VERSION_INBOUND")
             mix_path = "mix.exs"
             content = File.read!(mix_path)
-            entries = "      {:mailglass, \"== #{version}\"},\n      {:mailglass_admin, \"== #{version}\"},\n"
+            inbound_entry =
+              if version_inbound && version_inbound != "" do
+                "      {:mailglass_inbound, \"== #{version_inbound}\"},\n"
+              else
+                ""
+              end
+            entries = "      {:mailglass, \"== #{version}\"},\n      {:mailglass_admin, \"== #{version}\"},\n" <> inbound_entry
             updated = String.replace(content, ~r/(defp deps do\n\s*\[\n)/, "\\1" <> entries, global: false)
             File.write!(mix_path, updated)
           '
@@ -363,6 +426,20 @@ jobs:
           echo "${INFO}"
           if echo "${INFO}" | grep -F "Retired"; then
             echo "Smoke failed: mailglass_admin ${VERSION} is retired between publish and smoke."
+            exit 1
+          fi
+      - name: Check mailglass_inbound not retracted
+        env:
+          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
+        run: |
+          if [ -z "${VERSION_INBOUND}" ]; then
+            echo "No inbound version resolved; skipping."
+            exit 0
+          fi
+          INFO=$(mix hex.info mailglass_inbound "${VERSION_INBOUND}" 2>&1)
+          echo "${INFO}"
+          if echo "${INFO}" | grep -F "Retired"; then
+            echo "Smoke failed: mailglass_inbound ${VERSION_INBOUND} is retired between publish and smoke."
             exit 1
           fi
 
