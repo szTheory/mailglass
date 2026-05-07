@@ -38,3 +38,29 @@ Out-of-scope discoveries logged during plan execution. These are NOT regressions
   - **(a)** Accept the local-only `[conflict]` as a documented bootstrap-period quirk (no code change). Remove the Task 3 acceptance-criterion line that says publish.check must exit 0 in Commit-A state.
   - **(b)** Add a `--bootstrap` flag to `mix mailglass.publish.check` in a small follow-up plan (after Plan 04 lands, or in Phase 51 closeout). The flag would skip `verify_metadata`'s manifest-equality assertion and `verify_linked_constraint`'s root-version assertion when the manifest holds `0.0.0` for the package.
   - **(c)** Modify the task to special-case `manifest_version == "0.0.0"` automatically (no flag needed), treating it as "this is a first-publish bootstrap package; defer manifest equality until release-please PR opens". This is the most ergonomic but also the largest behavior change.
+
+## From Plan 044.5-04 (Wave 3 / live ceremony) — discovered 2026-05-07
+
+### 4. Stale `stability_contract_test.exs` assertions for `mailglass_inbound`
+
+- **Observed during:** Plan 044.5-04 Task 2 investigation (after fixing the publish.check glob-entry bug)
+- **What:** `test/mailglass/stability_contract_test.exs:74` asserts `manifest =~ "\"mailglass_inbound\": \"0.3.2\""` and `inbound_mix =~ "{:mailglass, \"== 0.3.2\"}"` and `summary =~ "\"mailglass_inbound\": \"0.3.2\""`. After Plan 01's Commit A (which is correctly merged to `main`), the manifest now reads `0.0.0`, the inbound mix.exs pin reads `== 1.0.0`, and the inbound mix.exs `@version` reads `0.1.0`. All three assertions fail.
+- **Pre-existing on `main`:** Yes — confirmed by running `mix test test/mailglass/stability_contract_test.exs:74` against HEAD `749e01d`. The test ALREADY fails on `main`. Plan 01 should have updated these assertions as part of Commit A.
+- **Severity:** Low. The CI lane that gates `publish-hex.yml` (`gate-ci-green`) ran successfully against the PR head (otherwise the dry-run would not have reached prepublish-summary). So this test is either excluded from the gate, or was already excluded as part of Plan 01's known-broken-state.
+- **Why it didn't surface earlier:** The `verify.stability_contract` Mix alias chain (which would run this test) exits early on `mix mailglass.docs.check` failures (Item 2 above), short-circuiting before the stability tests run.
+- **Why deferred:** Updating these test assertions is a Plan 01 / Commit A scope item that was missed. Adding it to Plan 04 would conflict with the Plan 04 task list (no test changes are in scope for Plan 04). The correct fix is a small follow-up commit on `main` updating the three assertions:
+  - `manifest =~ "\"mailglass_inbound\": \"0.0.0\""` (or update again post-merge to `0.1.0`)
+  - `inbound_mix =~ "{:mailglass, \"== 1.0.0\"}"`
+  - `inbound_mix =~ "@version \"0.1.0\""` (additional assertion to cover the new value)
+  - `summary =~ "\"mailglass_inbound\":` ... (drop the `0.3.2` qualifier or update post-merge)
+- **Suggested follow-up:** Plan 05 (Wave 4 closeout). Bundle with `release-as` cleanup of `release-please-config.json` and the `unowned-package` evidence capture as a single closeout task.
+
+### 5. `mailglass.publish.check` glob-entry false-positive for `priv/static/fonts/*.woff2`
+
+- **Observed during:** Plan 044.5-04 Task 2 dry-run dispatch (initial attempt, run id 25498258711)
+- **What:** `mix mailglass.publish.check --package mailglass_admin` was failing with `"Delivery blocked: missing required file priv/static/fonts/*.woff2"` even though six `.woff2` files were present in the unpacked tarball.
+- **Root cause:** `required_file_entries(:mailglass_admin)` includes the literal glob string `"priv/static/fonts/*.woff2"` (introduced in 79524c0 / Phase 42-03 refactor). The `verify_required_files` `MapSet.member?` check rejects the glob string (no literal path matches it), so it ends up in the `missing` list. The package-specific `woff2_count >= 1` check passes correctly, but the generic `if missing != [] do fail_step` at line 540 still trips.
+- **Status:** Fixed in commit 12002ea (Plan 04 Rule 1 deviation) — `verify_required_files` now excludes glob entries (any string containing `*`) from the literal path-membership scan. Tracked here for Plan 05 SUMMARY visibility.
+- **Pre-existing on `main`:** Yes — present since 79524c0 (May 6 2026). Never surfaced before Phase 44.5 because admin publish.check was last successfully run at v0.3.2 (Phase 38) on pre-79524c0 tooling.
+- **Severity:** High at the moment of discovery — blocked the dry-run dispatch entirely. Now resolved.
+- **Suggested follow-up:** None required; fix landed in 12002ea. This entry is a paper-trail for Plan 05 SUMMARY auditing.
