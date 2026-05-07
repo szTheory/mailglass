@@ -10,17 +10,19 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**`v1.0 Stability Lock` shipped on 2026-05-06.**
+**`v1.1 Inbound Core Slice` shipped on 2026-05-06.**
 
-- Planning milestone closed: 4 phases (35-38), 12 plans, all complete
-- Current package version in repo: `mailglass` 0.3.2 / `mailglass_admin` 0.3.2
-- Release posture: repo proof and rehearsal artifacts are complete; the live publish still follows the Phase 38 checklist and external closeout steps
+- Planning milestone closed: 6 phases (39-44), 17 plans (12 product + 5 audit-gap closure), all complete
+- Current package versions in repo: `mailglass` 0.3.2 / `mailglass_admin` 0.3.2 / `mailglass_inbound` 0.1.0 (initial)
+- v1.1 milestone audit re-run on 2026-05-07 with `status: passed` after Phase 43 + 44 closeout
+- Release posture: repo proof and rehearsal artifacts are complete; the live `v1.0` publish still follows the Phase 38 checklist and external closeout steps
 
+v1.0 milestone closed 2026-05-06. 4 phases (35-38), 12 plans, Stability Lock complete.
 v0.6 milestone closed 2026-05-05. 3 phases (32-34), 9 plans, Production Maturity complete.
 v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening complete.
 
 **Codebase characteristics:**
-- Three sibling Hex packages (`mailglass`, `mailglass_admin`, `mailglass_inbound`)
+- Three sibling Hex packages (`mailglass`, `mailglass_admin`, `mailglass_inbound`) — `mailglass_inbound` opened in v1.1
 - Phoenix 1.8+ / Elixir 1.18+ / OTP 27+ / Postgres only
 - Append-only `mailglass_events` ledger with SQLSTATE 45A01 immutability trigger
 - Multi-tenant first-class — `tenant_id` on every record
@@ -29,14 +31,33 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Optional-deps (Oban, OpenTelemetry, MJML, gen_smtp, sigra) gated through `Mailglass.OptionalDeps.*` modules
 - HEEx + MSO VML fallbacks; zero Node toolchain anywhere
 - Preview LiveView shipped at v0.1; production admin workflows, replay history, and tenant-safe operator actions shipped by v0.5
+- Inbound package: canonical `%InboundMessage{}` value object, thin router DSL, mailbox behaviour with locked outcomes, Postmark + SendGrid first-party ingress, tenant-safe replayable storage of normalized + raw provider source, Oban-backed async execution with bounded `Task.Supervisor` fallback (v1.1)
 
 **Open issues / debt**:
 - GitHub branch-protection verification remains a manual closeout step because the required-check configuration lives outside the repo.
 - Non-blocking boundary warnings remain in support-summary and admin probe verification paths.
 - Bare `mix test` citext-OID-cache race remains a known non-blocking test-environment sharp edge.
 - Phase 4 standard-depth review WR-01..WR-06 remains tracked but non-blocking.
+- v1.0 live publish closeout (external to repo) still pending — Hex tarball publish + branch-protection rule confirmation.
 
 ## Latest Completed Milestone
+
+<details>
+<summary>v1.1 Inbound Core Slice — milestone closed 2026-05-06 (audit re-passed 2026-05-07)</summary>
+
+**Goal:** Open `mailglass_inbound` as the first deliberate post-`v1.0` expansion, proving Mailglass can receive, persist, route, and process inbound transactional email without weakening the locked outbound/admin core.
+
+- **Inbound package foundation** — canonical `%InboundMessage{}`, thin router DSL, mailbox behaviour with locked outcomes, package-local persistence boundary, optional-Oban execution seam. ✓
+- **First-party provider ingress** — Postmark verify-first ingress with sealed normalization; SendGrid second-provider proof with shared canonical shape and provider-specific dedup. ✓
+- **Replayable persistence** — normalized canonical inbound rows alongside raw provider source evidence; replay over stored truth that never pretends a stored message is a fresh provider event. ✓
+- **Async execution + adopter proof** — Oban-backed inbound worker, bounded `Task.Supervisor` fallback with explicit warn-on-enter, canonical install / testing / operator docs, repo-root release-proof coverage for the new sibling package. ✓
+- **Audit-gap closure** — Phase 43 recovered Phases 39-41 verification artifacts and added Phase 41 validation; Phase 44 recovered Phase 42 verification and reconciled REQUIREMENTS.md / STATE.md / ROADMAP.md so the v1.1 audit re-ran with `status: passed`. No source code under `mailglass/` or `mailglass_inbound/` was modified during the gap closure. ✓
+
+**Accepted closeout debt:**
+
+- No new debt introduced in v1.1. Carry-forward only: v1.0 partial Nyquist bookkeeping for Phase 35, non-blocking boundary warnings in support-contract lanes, manual GitHub branch-protection verification, bare `mix test` citext-OID-cache race.
+
+</details>
 
 <details>
 <summary>v1.0 Stability Lock — milestone closed 2026-05-06</summary>
@@ -57,24 +78,9 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 ## Current Milestone
 
-### v1.1 Inbound Core Slice (**opened 2026-05-06**)
+### Planning next milestone
 
-**Goal:** Open `mailglass_inbound` as the first deliberate post-`v1.0` expansion, proving Mailglass can receive, persist, route, and process inbound transactional email without weakening the locked outbound/admin core.
-
-**Target features:**
-- Canonical `mailglass_inbound` package contract: `%InboundMessage{}`, router DSL, and mailbox behaviour
-- First-party Postmark and SendGrid ingress with normalized plus raw-source durable storage
-- Tenant-safe replayable inbound persistence and mailbox execution outcomes
-- Async routing that prefers Oban but still supports a bounded non-Oban fallback
-- Honest install, testing, replay, and operator docs for the first inbound slice
-
-**Status:** Phase 39 completed on 2026-05-06. The remaining live `v1.0` release closeout stays external to this milestone scope.
-
-## Milestone Goals
-
-- **Core inbound slice only** — ship the package contract, two ingress providers, replayable storage, and async execution; do not sprawl into the full historical inbound wish list.
-- **Operator-trustworthy persistence** — store normalized inbound data and raw provider source so debugging and replay are first-class, not afterthoughts.
-- **Package honesty over breadth** — prefer a smaller `mailglass_inbound` that is supportable and verifiable now over broad provider/UI scope that would dilute the first post-`v1.0` expansion.
+v1.1 closed on 2026-05-06 with the v1.1 audit re-run confirming `status: passed`. The next milestone is undefined — kick it off with `/gsd-new-milestone` to scope, research, define requirements, and roadmap the next slice.
 
 ## Core Value
 
@@ -82,9 +88,18 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (v0.1 & v0.2 — SHIPPED)
+## Validated Requirements (v0.1, v0.2, v1.1 — SHIPPED)
 
-All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
+All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
+
+**By category (v1.1 — Inbound Core Slice):**
+- ✓ MODEL-01 — Canonical `%MailglassInbound.InboundMessage{}` value object with stable fields for routing, tenancy, and provider provenance — v1.1
+- ✓ ROUTE-01 — Inbound router DSL matching on recipient, subject, and headers, backed by compiled ordered route data and pure matcher engine — v1.1
+- ✓ MAILBOX-01 — Mailbox behaviour with locked `:accept` / `:reject` / `:ignore` / `{:bounce, reason}` outcomes — v1.1
+- ✓ INGRESS-01..02 — First-party Postmark + SendGrid ingress plugs with verify-first signature checks and sealed normalization into the canonical inbound model — v1.1
+- ✓ STORE-01..02 — Tenant-safe persistence of normalized canonical data plus raw provider source evidence; replay over stored truth without re-receive ambiguity — v1.1
+- ✓ EXEC-01..02 — Oban-backed async mailbox execution with bounded `Task.Supervisor` fallback and explicit warn-on-enter for the degraded path — v1.1
+- ✓ ADOPT-01 — Canonical install / testing / operator-trust docs and repo-root release-proof coverage for the inbound sibling package — v1.1
 
 **By category (v0.2 - Production-Credible Core):**
 - ✓ API-01..07 — Mailable API redesign + native Message field setters + `api_stability.md` v2 + codemod task + deprecation warnings + migration guide
@@ -113,12 +128,7 @@ All 84 v1 REQ-IDs and 38 v0.2 REQ-IDs satisfied.
 
 ## Active
 
-- [x] `MODEL-01` — adopter can depend on one canonical `%InboundMessage{}` struct for the first-party inbound package
-- [x] `ROUTE-01` — adopter can route inbound mail to mailboxes using one DSL that matches recipient, subject, and headers
-- [x] `MAILBOX-01` — adopter can implement mailbox handlers with explicit `:accept`, `:reject`, `:ignore`, and `{:bounce, reason}` outcomes
-- [ ] `INGRESS-01` — maintainer can verify and normalize Postmark inbound into the canonical model, with SendGrid following in the same milestone
-- [ ] `STORE-01` — operator can persist inbound messages as both normalized canonical data and raw provider source material for replay/debug
-- [ ] `EXEC-01` — adopter can execute inbound routing through Oban when available and through a bounded fallback when it is absent
+(v1.1 closed — fresh requirements will be defined for the next milestone via `/gsd-new-milestone`.)
 
 ## Out of Scope
 
@@ -191,7 +201,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-02 | MIT license across all packages | Aligns with Swoosh/Phoenix/Ecto; maximizes adoption | ✓ Held v0.1 |
 | D-03 | Marketing email **permanently** out of scope | Different problem (lists/segments/campaigns), different compliance surface, different abstraction | ✓ Held v0.1 |
 | D-04 | Single-pane multi-channel notifications **out** | That's a Noticed-shaped lib; mailglass stays email-only | ✓ Held v0.1 |
-| D-05 | Inbound (Action Mailbox equivalent) **in scope** as `mailglass_inbound` sibling package | Inbound webhook plumbing shares HMAC + plug + event-normalization infrastructure with the existing mailglass delivery and webhook foundation | — Active in v1.1 core slice |
+| D-05 | Inbound (Action Mailbox equivalent) **in scope** as `mailglass_inbound` sibling package | Inbound webhook plumbing shares HMAC + plug + event-normalization infrastructure with the existing mailglass delivery and webhook foundation | ✓ Validated v1.1 — `mailglass_inbound` opened with Postmark + SendGrid ingress, replayable persistence, Oban-optional execution |
 | D-06 | Bleeding-edge version floor (Elixir 1.18+ / OTP 27+ / Phoenix 1.8+ / LiveView 1.0+ / Ecto 3.13+) | Newest features (streams, async, scopes, schema_redact, colocated hooks); smallest CI matrix | ✓ Validated v0.1 — Elixir 1.19 type checker forced struct-discrimination tests via `__struct__` comparison (worked, with documented workaround) |
 | D-07 | Ecto + Phoenix **required**; Oban **optional** | mailglass is a Phoenix-first framework; `deliver_later/2` degrades to `Task.Supervisor` with a warning when Oban absent | ✓ Validated v0.1 — Outbound.Worker conditionally compiled; Task.Supervisor fallback path tested |
 | D-08 | Open/click tracking **off by default** | Apple Mail Privacy Protection makes opens noisy; auth-carrying messages must NEVER have rewritten links | ✓ Validated v0.1 — NoTrackingOnAuthStream Credo check operationalizes |
@@ -208,7 +218,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-19 | Brand voice & visual identity locked to `prompts/mailglass-brand-book.md` | Brand discipline prevents drift toward generic SaaS or growth-marketing aesthetic | ✓ Held v0.1 |
 | D-20 | Domain vocabulary locked to `prompts/mailer-domain-language-deep-research.md` | Borrowed from battle-tested libs; avoid "Email" or "Status" as ambiguous primitives | ✓ Held v0.1 |
 | D-21 | Adapter call between Multi#1 and Multi#2 (never inside transaction) | Postgres pool starvation prevention | ✓ Held v0.1 — Phase 3 Outbound enforces |
-| D-22 | The first `mailglass_inbound` milestone stays narrow: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional execution; Conductor/Mailgun/SES/SMTP are deferred | Protect the locked `v1.x` core and make the first sibling-package expansion supportable for a one-person maintainer | — Active in v1.1 |
+| D-22 | The first `mailglass_inbound` milestone stays narrow: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional execution; Conductor/Mailgun/SES/SMTP are deferred | Protect the locked `v1.x` core and make the first sibling-package expansion supportable for a one-person maintainer | ✓ Validated v1.1 — narrow scope held; Conductor / Mailgun / SES / `gen_smtp` remained deliberately deferred |
 
 ## Evolution
 
@@ -229,4 +239,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Brand voice / domain vocabulary still aligned with `prompts/` source-of-truth files? Reconcile any drift.
 
 ---
-*Last updated: 2026-05-06 — opened v1.1 Inbound Core Slice and locked the first `mailglass_inbound` milestone boundaries.*
+*Last updated: 2026-05-07 — closed v1.1 Inbound Core Slice after audit re-passed; mailglass_inbound shipped with Postmark + SendGrid ingress, replayable persistence, Oban-optional async execution, and end-to-end verification chain.*
