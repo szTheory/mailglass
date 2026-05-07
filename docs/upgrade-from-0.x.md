@@ -37,12 +37,13 @@ contract.
 | v1.0 Stability Lock | 35-38 | Compatibility guide, `upgrading-to-v1_0.md`, deprecation contract, release-rehearsal proof |
 | v1.1 Inbound Core Slice | 39-44 | `mailglass_inbound` first Hex appearance (separate 0.x line), Postmark + SendGrid inbound ingress |
 
-Cross-references to the per-milestone audits if you want the deep-dive:
+Cross-references to the per-milestone audits (in-repo, GitHub) if you
+want the deep-dive:
 
-- [`v0.5-MILESTONE-AUDIT.md`](../.planning/milestones/v0.5-MILESTONE-AUDIT.md)
-- [`v0.6-MILESTONE-AUDIT.md`](../.planning/milestones/v0.6-MILESTONE-AUDIT.md)
-- [`v1.0-MILESTONE-AUDIT.md`](../.planning/milestones/v1.0-MILESTONE-AUDIT.md)
-- [`v1.1-MILESTONE-AUDIT.md`](../.planning/milestones/v1.1-MILESTONE-AUDIT.md)
+- [`v0.5-MILESTONE-AUDIT.md`](https://github.com/szTheory/mailglass/blob/main/.planning/milestones/v0.5-MILESTONE-AUDIT.md)
+- [`v0.6-MILESTONE-AUDIT.md`](https://github.com/szTheory/mailglass/blob/main/.planning/milestones/v0.6-MILESTONE-AUDIT.md)
+- [`v1.0-MILESTONE-AUDIT.md`](https://github.com/szTheory/mailglass/blob/main/.planning/milestones/v1.0-MILESTONE-AUDIT.md)
+- [`v1.1-MILESTONE-AUDIT.md`](https://github.com/szTheory/mailglass/blob/main/.planning/milestones/v1.1-MILESTONE-AUDIT.md)
 
 ## Before/After Examples
 
