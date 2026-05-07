@@ -50,16 +50,18 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MODEL-01 | Phase 43 | Pending |
-| ROUTE-01 | Phase 43 | Pending |
-| MAILBOX-01 | Phase 43 | Pending |
-| INGRESS-01 | Phase 43 | Pending |
-| STORE-01 | Phase 43 | Pending |
-| INGRESS-02 | Phase 43 | Pending |
-| STORE-02 | Phase 43 | Pending |
+| MODEL-01 | Phase 43 | Satisfied |
+| ROUTE-01 | Phase 43 | Satisfied |
+| MAILBOX-01 | Phase 43 | Satisfied |
+| INGRESS-01 | Phase 43 | Satisfied |
+| STORE-01 | Phase 43 | Satisfied |
+| INGRESS-02 | Phase 43 | Satisfied |
+| STORE-02 | Phase 43 | Satisfied |
 | EXEC-01 | Phase 44 | Pending |
 | EXEC-02 | Phase 44 | Pending |
 | ADOPT-01 | Phase 44 | Pending |
+
+Phase 43 reconciles bookkeeping only: these seven requirements were implemented in Phases 39 to 41 and recovered under Phase 43 by restoring execution verification artifacts.
 
 **Coverage:**
 - v1.1 requirements: 10 total
@@ -68,4 +70,4 @@
 
 ---
 *Requirements defined: 2026-05-06*
-*Last updated: 2026-05-06 after adding gap-closure Phases 43-44 from the v1.1 milestone audit*
+*Last updated: 2026-05-06 after recovering Phase 39-41 execution verification artifacts under Phase 43*
