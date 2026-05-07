@@ -1,7 +1,7 @@
 defmodule MailglassAdmin.MixProject do
   use Mix.Project
 
-  @version "0.3.2"
+  @version "1.0.0"
   @source_url "https://github.com/szTheory/mailglass"
   @description "Mountable LiveView dashboard for mailglass — dev preview + admin"
 
@@ -125,7 +125,7 @@ defmodule MailglassAdmin.MixProject do
   # empirically during the v0.1.1 cycle.)
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 0.3.2"}
+      {:mailglass, "== 1.0.0"}
     else
       {:mailglass, path: "..", override: true}
     end

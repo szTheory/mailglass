@@ -14,6 +14,140 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.3.2...mailglass-v1.0.0) (2026-05-07)
+
+### v0.5 Adoption Hardening (Phases 28-31)
+
+REQ-IDs: TASRT, INSTALLER, TESTHELP — see
+[`v0.5-MILESTONE-AUDIT.md`](.planning/milestones/v0.5-MILESTONE-AUDIT.md).
+
+- `Mailglass.TestAssertions` matchers (`assert_mail_sent/1`, `last_mail/0`,
+  `wait_for_mail/1`).
+- Idempotent `mix mailglass.install` with `.mailglass_conflict_*` sidecars
+  on managed-block drift.
+- Disposable host fixture harness for installer regression smoke.
+
+### v0.6 Production Maturity (Phases 32-34)
+
+REQ-IDs: RATELIMIT, REPLAY, RECONCILE — see
+[`v0.6-MILESTONE-AUDIT.md`](.planning/milestones/v0.6-MILESTONE-AUDIT.md).
+
+- Multi-bucket `RateLimiter` (`:tenant_recipient`, `:global_recipient`,
+  `:sender_domain`) gating outbound on `:operational` and `:bulk` streams.
+- Mailgun replay-cache supervision; SES SNS X.509 verifier; Resend webhook
+  provider; reconciler advances on idempotency replays.
+- Operator support summary surface for incident response.
+
+### v1.0 Stability Lock (Phases 35-38)
+
+REQ-IDs: STAB, COMPAT, DEPREC, RELS — see
+[`v1.0-MILESTONE-AUDIT.md`](.planning/milestones/v1.0-MILESTONE-AUDIT.md).
+
+- `guides/compatibility-and-deprecations.md` (canonical support matrix).
+- `guides/upgrading-to-v1_0.md` (canonical 0.x → 1.0 upgrade authority).
+- Deprecation DX inventory with strict-CI guidance for warning-emitting
+  bridges (`Mailglass.Message.new/2`).
+- Phase 38 release-rehearsal proof bundle (committed in-repo, converted to
+  live in this release).
+
+### v1.1 Inbound Core Slice (Phases 39-44)
+
+REQ-IDs: INBR, INGRESS, EXEC, ADP — see
+[`v1.1-MILESTONE-AUDIT.md`](.planning/milestones/v1.1-MILESTONE-AUDIT.md).
+
+- `mailglass_inbound` opens with canonical `%InboundMessage{}`, narrow router
+  DSL, mailbox behaviour with locked outcomes.
+- First-party Postmark + SendGrid ingress with replayable persistence.
+- Oban-backed async execution with bounded `Task.Supervisor` fallback.
+- Sibling docs contract test wired into repo-root release-truth lane.
+
+**`mailglass_inbound` ships at 0.1.0 on a separate 0.x version line, NOT linked
+to `mailglass` 1.0.0.** See
+[`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)
+for the stability disclaimer.
+
+
+### Features
+
+* **044.5-02:** add post-publish-smoke inbound parity (cron-guard version_inbound + 3 parallel jobs) ([2a36e93](https://github.com/szTheory/mailglass/commit/2a36e9326db4d5a51ce50a59e4d11dd0df6b682d))
+* **044.5-02:** add publish-inbound job + all/mailglass_inbound enum to publish-hex.yml ([9083e16](https://github.com/szTheory/mailglass/commit/9083e1653ed73d6863a516b9c0eede9375efc956))
+* **20-02:** add Mailglass.PublishError and register it in shared error contract ([79a9abd](https://github.com/szTheory/mailglass/commit/79a9abde8fbda9359ae43f08c73b22cb5deb3140))
+* **22-01:** add operator delivery and timeline queries ([549cd2b](https://github.com/szTheory/mailglass/commit/549cd2b0985ebb2cc7c30e3621571087e09539b1))
+* **22-01:** add operator suppression projection ([56b56b5](https://github.com/szTheory/mailglass/commit/56b56b5b0cc23b663862708a44dbf3e4c405f60f))
+* **22-02:** add operator liveview shell ([f95cee5](https://github.com/szTheory/mailglass/commit/f95cee5401d58e7012de38f2fe2da008fa0613f8))
+* **22-02:** build operator admin surface ([f8a120b](https://github.com/szTheory/mailglass/commit/f8a120b19c69feb5e11f6774ac70956fbe179ab8))
+* **25-01:** add deliverability result contract ([85124e5](https://github.com/szTheory/mailglass/commit/85124e59f987f212836b552559d7bfbf753bdd14))
+* **25-01:** add deliverability runtime and resolver seam ([e6eb695](https://github.com/szTheory/mailglass/commit/e6eb69590c9ff3c2437d5d3ca2082789aafab3f4))
+* **25-02:** add DKIM and DMARC analyzers ([df2d6fd](https://github.com/szTheory/mailglass/commit/df2d6fd77077fb487b5601a2b6ac44c947abd17f))
+* **25-02:** add SPF deliverability analyzer ([176adc6](https://github.com/szTheory/mailglass/commit/176adc613413deb661dbc73f7883d346cbebe548))
+* **25-03:** add mx and bimi deliverability analyzers ([03dbee9](https://github.com/szTheory/mailglass/commit/03dbee9019965000a415eb63924bbb87144ceeb0))
+* **25-03:** add shared deliverability formatter ([6f70fe9](https://github.com/szTheory/mailglass/commit/6f70fe9a2081f083897097b54ad2d071d5424f06))
+* **25-04:** add mail doctor mix task ([719005b](https://github.com/szTheory/mailglass/commit/719005b2cd896279c889228ee938bfcfcc8b016f))
+* **29-01:** add assigns to Message and Mailable API ([8bbbccf](https://github.com/szTheory/mailglass/commit/8bbbccf7e14aeaccd820dbaf5634039a21bb8e4a))
+* **29-01:** extend TestAssertions with assigns and content matchers ([f61c7cb](https://github.com/szTheory/mailglass/commit/f61c7cbc9a5669a597b765b6259298e79b00eff0))
+* **33-01:** align operator incident docs ([cd568d8](https://github.com/szTheory/mailglass/commit/cd568d871034905f00e85650ecf162e142869dfb))
+* **33-02:** add tenant scoped support summary read model ([79f134f](https://github.com/szTheory/mailglass/commit/79f134fb0227b68141da68cdf5d0c22c9358c5fd))
+* **33-03:** add operator support card surface ([1fd4bc3](https://github.com/szTheory/mailglass/commit/1fd4bc35e041225f041ac28bd3cf98223d4ae632))
+* **33-03:** add support exemplar drilldowns ([8aa247c](https://github.com/szTheory/mailglass/commit/8aa247c1e3fdb7a4b7b8226ddff128dac3adb029))
+* **37-01:** rewrite canonical testing guide ([ff60a04](https://github.com/szTheory/mailglass/commit/ff60a047cb7fa1d57f4bfc737af20be19903a2cd))
+* **39-01:** implement inbound message contract ([bb0173f](https://github.com/szTheory/mailglass/commit/bb0173f5a16c2356f1790f9d916ead3ea5510fbc))
+* **39-01:** implement inbound routing and mailbox contracts ([47e6cf9](https://github.com/szTheory/mailglass/commit/47e6cf978cd1bf8c18b852fc166fc1a51061c6a4))
+* **39-02:** implement inbound storage foundation ([2e6a6d1](https://github.com/szTheory/mailglass/commit/2e6a6d10d39605fd7df9cb1cd283e4ea1106e5dc))
+* **39-02:** normalize replay outcomes for storage ([409d2a7](https://github.com/szTheory/mailglass/commit/409d2a7b6cad4b6974a96c3eb985cf9c0f18a5fe))
+* **39-03:** publish inbound package contract docs ([9331e96](https://github.com/szTheory/mailglass/commit/9331e96db641d3d628c5efe08a251ba263f48d2a))
+* **39-03:** scaffold inbound package contract shell ([768b53b](https://github.com/szTheory/mailglass/commit/768b53ba8eee5900948577636d836e38b7599254))
+* **41-01:** extend ingress plug for sendgrid ([91c458d](https://github.com/szTheory/mailglass/commit/91c458d8887a76bb65895f650b6005045860f501))
+* **41-01:** implement sendgrid ingress provider ([8b68f96](https://github.com/szTheory/mailglass/commit/8b68f96619c3d2b02af5a5948f841fa9e480d8f5))
+* **41-02:** generalize replay lineage into execution runs ([7b5e53f](https://github.com/szTheory/mailglass/commit/7b5e53f89a193a1a0dce534c39b6f8c478a54f76))
+* **41-02:** run mailbox execution after durable ingress persistence ([c1df869](https://github.com/szTheory/mailglass/commit/c1df86939b6c7e7e4850a187028de0f9946e4b30))
+* **41-03:** implement truthful replay and sendgrid dedupe ([8d6f33b](https://github.com/szTheory/mailglass/commit/8d6f33b0c9fef62ec2fa431ffe5817d1da0c2656))
+* **42-01:** add inbound async execution seam ([547529c](https://github.com/szTheory/mailglass/commit/547529c6285a8594c21b368e0c47a9662bd90276))
+* **42-01:** rewire ingress and replay to shared execution seam ([1d88d13](https://github.com/szTheory/mailglass/commit/1d88d13cc1df812d44887d2d658f35aca770f0fb))
+* **42-02:** publish canonical inbound setup docs ([570b8cb](https://github.com/szTheory/mailglass/commit/570b8cbeb7ae46a90932d66e04c810fe636006f4))
+* **42-03:** align inbound release proof ([79524c0](https://github.com/szTheory/mailglass/commit/79524c0e0c456d913f7cd0603eec1dc5201efb70))
+* **42-03:** extend root inbound proof lane ([8796091](https://github.com/szTheory/mailglass/commit/879609120066c6b106853539c0e2d692e2fd2a2a))
+* add canonical webhook replay command ([6350cc8](https://github.com/szTheory/mailglass/commit/6350cc8f23e0ccc2ed9f79d94630b35745cdbdd3))
+* add operator replay modal and liveview flow ([ba1ce0a](https://github.com/szTheory/mailglass/commit/ba1ce0af37e1ca625b511a87bb5a13088ebd6e00))
+* add replay audit event contract and history read model ([2ca7cfb](https://github.com/szTheory/mailglass/commit/2ca7cfb5e5aa580f401a47960b29f32b0796d30c))
+* add tenant-safe replay target resolver ([60840d5](https://github.com/szTheory/mailglass/commit/60840d575695ee4f244bc57dd8dae19618753505))
+* **config:** add ses and resend configuration schemas ([efced13](https://github.com/szTheory/mailglass/commit/efced1321ae593d299fcdc97fb13fe1925b0e06f))
+* persist replay linkage during webhook ingest ([653ca5d](https://github.com/szTheory/mailglass/commit/653ca5de9928afb63fdfb8bc873eae12b156f7ca))
+* **phase-26:** add outbound adapter-ref contract ([445abfb](https://github.com/szTheory/mailglass/commit/445abfb74e6c242502c1f6455330d6312b9de2c6))
+* **phase-26:** persist delivery adapter refs ([2c02d19](https://github.com/szTheory/mailglass/commit/2c02d19f3f7ef3b8ab7009091572ebde33169521))
+* **phase-26:** route outbound delivery by adapter ref ([df827de](https://github.com/szTheory/mailglass/commit/df827dee4312e8294f46c9d7e06dc447c3b15603))
+
+
+### Bug Fixes
+
+* **044.5-01:** rewrite release-please.yml sync step to read core version directly ([eddebf7](https://github.com/szTheory/mailglass/commit/eddebf7f5c4c8e06bdc9cd010ff8e910f1d837cf))
+* **044.5-04:** exclude glob entries from required-files missing report ([12002ea](https://github.com/szTheory/mailglass/commit/12002eacf41c66fc8fbb2a08676e048d2c406782))
+* **19-01:** add :ses to ingest_multi/3 provider guard ([4152f47](https://github.com/szTheory/mailglass/commit/4152f47158d18fb43324329d485f6e191d1f1ddf))
+* **19-01:** add derive_webhook_provider_event_id(:ses) clause ([76125c4](https://github.com/szTheory/mailglass/commit/76125c47db35011336dee9c2d021f2b403e0da9f))
+* **22-03:** align admin liveview harness with root tests ([7089bc2](https://github.com/szTheory/mailglass/commit/7089bc2bb7cba0df70e9be83dac5a8a2d25d1807))
+* **32-03:** align reconcile fallback docs and tests ([cabc145](https://github.com/szTheory/mailglass/commit/cabc14514f9486d6f115152e7430fae468fefedc))
+* **32-03:** unify reconcile maintenance path ([f964dae](https://github.com/szTheory/mailglass/commit/f964dae5f079aab35f1faff6c3a7c9838dac3476))
+* **33-02:** expose orphan backlog age ([1b57136](https://github.com/szTheory/mailglass/commit/1b57136181453035a59e2c341c1d713368ca3b75))
+* **ci:** add workflow_dispatch trigger so PR head ref can run CI manually ([79c1c98](https://github.com/szTheory/mailglass/commit/79c1c98e9293870460272104f639957a4a195165))
+* **ci:** apply Elixir 1.18 formatter rewrap across lib/ and test/ ([750e5ed](https://github.com/szTheory/mailglass/commit/750e5edad58ed69691ed5f8b4d66facf2075e7d4))
+* **ci:** close 7 dialyzer warnings (5 fixed at source, 2 ignore-file added) ([e09c198](https://github.com/szTheory/mailglass/commit/e09c198034454f5b88f97c9b1c1b1c1938e65dfa))
+* **ci:** create test DB for support_contract_admin lane ([27ce54e](https://github.com/szTheory/mailglass/commit/27ce54e672bddd37ad33d875c687d41727a361e4))
+* **ci:** guard sibling MIX_PUBLISH steps in publish-hex.yml dry-run ([a0ba244](https://github.com/szTheory/mailglass/commit/a0ba244edd426d85c2525f2bd7c5dd7ff3215654))
+* **ci:** make Operator Browser Gate advisory in publish-hex gate-ci-green ([5734c1b](https://github.com/szTheory/mailglass/commit/5734c1b172ddd1d95cda822330c42340ef12a371))
+* **ci:** probe port binding + URL paths to diagnose operator_browser hang ([0a409c8](https://github.com/szTheory/mailglass/commit/0a409c8a04ee6123fa191e41dc990eade6a562bf))
+* **ci:** satisfy Credo strict mode on publish.check + citext_probe ([1476305](https://github.com/szTheory/mailglass/commit/14763059072f1da6feef3b12d3f8f27090de7cac))
+* **ci:** suppress 5 dialyzer warnings on result.ex + outbound_route test adapter ([fdcbb25](https://github.com/szTheory/mailglass/commit/fdcbb2521f9b153b68ee260bcc7048362f280d38))
+* **ci:** surface operator_browser_gate stages + raise webServer timeout ([befbd02](https://github.com/szTheory/mailglass/commit/befbd0229ceb93c1ccb657681c11a10967f85166))
+* **installer:** use false for swoosh api_client in generated config ([763be68](https://github.com/szTheory/mailglass/commit/763be685b982508d6daa021af6afd8a889b27924))
+* **test:** force-load Reconciler before function_exported? probe ([9003cd5](https://github.com/szTheory/mailglass/commit/9003cd51f1460cbd017e7531e287f5fa86a05332))
+* **test:** refresh stability + docs contract assertions for v1.0/1.1 ceremony ([f3a90b6](https://github.com/szTheory/mailglass/commit/f3a90b66d3053b6709eee51f920b0f837eaca17f))
+* **test:** relax stability contract manifest assertion to SemVer pattern ([be8452a](https://github.com/szTheory/mailglass/commit/be8452a87b59edabfb1625a2fc3c9b90733022d9))
+
+
+### Miscellaneous Chores
+
+* **release:** force 0.1.0 first publish for mailglass_inbound ([dd61b5c](https://github.com/szTheory/mailglass/commit/dd61b5cb2e7237422af697f7c774c7dfefad0c35))
+* **release:** force v1.0.0 cut for mailglass + mailglass_admin ([dfc457e](https://github.com/szTheory/mailglass/commit/dfc457ede56999a13c5caa47e0252b569e20fd6c))
+
 ## [0.3.2](https://github.com/szTheory/mailglass/compare/mailglass-v0.3.1...mailglass-v0.3.2) (2026-04-29)
 
 

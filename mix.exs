@@ -1,7 +1,7 @@
 defmodule Mailglass.MixProject do
   use Mix.Project
 
-  @version "0.3.2"
+  @version "1.0.0"
   # v1.0.0 cut — see Phase 044.5 release ceremony record
   @source_url "https://github.com/szTheory/mailglass"
 
