@@ -498,7 +498,16 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     paths = MapSet.new(Enum.map(logical_files, & &1.path))
     required = required_file_entries(ctx.package)
 
-    missing = Enum.reject(required, &MapSet.member?(paths, &1))
+    # Glob entries (e.g. "priv/static/fonts/*.woff2") are validated by
+    # package-specific count checks below; exclude them from the literal
+    # path-membership scan so they never appear in the generic `missing`
+    # report. Without this filter the literal glob string is rejected from
+    # `paths` and falsely surfaced as a missing file even when matching
+    # files are present in the tarball.
+    missing =
+      required
+      |> Enum.reject(&glob_entry?/1)
+      |> Enum.reject(&MapSet.member?(paths, &1))
 
     if ctx.package == :mailglass_admin do
       missing =
@@ -554,6 +563,9 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
     ctx
   end
+
+  defp glob_entry?(entry) when is_binary(entry), do: String.contains?(entry, "*")
+  defp glob_entry?(_), do: false
 
   defp verify_changelog(ctx) do
     path = Path.join(artifact_root(ctx), "CHANGELOG.md")
