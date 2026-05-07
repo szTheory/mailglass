@@ -505,9 +505,9 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     # `paths` and falsely surfaced as a missing file even when matching
     # files are present in the tarball.
     missing =
-      required
-      |> Enum.reject(&glob_entry?/1)
-      |> Enum.reject(&MapSet.member?(paths, &1))
+      Enum.reject(required, fn entry ->
+        glob_entry?(entry) or MapSet.member?(paths, entry)
+      end)
 
     if ctx.package == :mailglass_admin do
       missing =

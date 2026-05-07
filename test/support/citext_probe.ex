@@ -47,18 +47,31 @@ defmodule Mailglass.TestSupport.CitextProbe do
     raise "citext probe exhausted for #{inspect(repo)} after #{attempted} attempts"
   end
 
+  # The rescue here is intentionally non-reraising: the `Postgrex.Error` surface
+  # (`XX000 cache lookup failed for type NNNNNN`) is the *expected* poisoned-OID
+  # signal we want to retry away. Reraising would defeat the probe loop. The
+  # exhaustion path returns `:exhausted`; the caller then raises a bespoke
+  # message *outside* the rescue block so Credo's `RaiseInsideRescue` warning is
+  # not triggered while the user-facing diagnostics stay informative.
   defp do_probe(repo, remaining, attempted, probe_fun) do
-    try do
-      probe_fun.(repo)
-      :ok
-    rescue
-      Postgrex.Error ->
+    case attempt_probe(repo, probe_fun) do
+      :ok ->
+        :ok
+
+      :rescued ->
         if remaining == 1 do
           raise "citext probe exhausted for #{inspect(repo)} after #{attempted} attempts"
         else
           do_probe(repo, remaining - 1, attempted, probe_fun)
         end
     end
+  end
+
+  defp attempt_probe(repo, probe_fun) do
+    probe_fun.(repo)
+    :ok
+  rescue
+    Postgrex.Error -> :rescued
   end
 
   defp default_probe(repo) do
