@@ -11,6 +11,12 @@ on:
     paths-ignore:
       - ".planning/**"
       - "prompts/**"
+  workflow_dispatch:
+    # Manual dispatch is required for the release-please PR head ref.
+    # GITHUB_TOKEN-driven pushes (release-please bot) do NOT trigger
+    # `push` or `pull_request` events (GitHub anti-recursion), so
+    # `publish-hex.yml`'s `gate-ci-green` job cannot find ci.yml runs
+    # on the PR head SHA without an explicit dispatch on the PR ref.
 
 permissions:
   contents: read
