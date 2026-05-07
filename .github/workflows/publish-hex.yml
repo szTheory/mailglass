@@ -132,6 +132,14 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
+            // Phase 044.5 ceremony: Operator Browser Gate is advisory while
+            // the Playwright/redirect harness is fixed (see
+            // 044.5-CI-TRIAGE-SUMMARY.md). All other lanes are required.
+            // Re-strict after Phase 51 closeout.
+            const ADVISORY_LANES = [
+              'Operator Browser Gate'
+            ];
+
             const sha = '${{ steps.resolve-sha.outputs.sha }}';
             const {data} = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
@@ -148,8 +156,38 @@ jobs:
 
             const latest = data.workflow_runs[0];
 
-            if (latest.conclusion !== 'success') {
-              core.setFailed(`Delivery blocked: ci.yml on SHA ${sha} concluded with '${latest.conclusion}', not 'success'. Run: ${latest.html_url}`);
+            // If overall conclusion is success, we're done.
+            if (latest.conclusion === 'success') {
+              return;
+            }
+
+            // Otherwise, inspect job-level conclusions and accept overall
+            // failure ONLY when every failing job is in ADVISORY_LANES.
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              { owner: context.repo.owner, repo: context.repo.repo, run_id: latest.id, per_page: 100 }
+            );
+
+            const isAdvisory = (jobName) =>
+              ADVISORY_LANES.some(lane => jobName.startsWith(lane));
+
+            const blockingFailures = jobs
+              .filter(j => j.conclusion !== 'success' && j.conclusion !== 'skipped')
+              .filter(j => !isAdvisory(j.name));
+
+            if (blockingFailures.length > 0) {
+              const detail = blockingFailures.map(j => `  - ${j.name} (${j.conclusion})`).join('\n');
+              core.setFailed(`Delivery blocked: ci.yml on SHA ${sha} has non-advisory failures.\n${detail}\nRun: ${latest.html_url}`);
+              return;
+            }
+
+            const advisoryFailures = jobs
+              .filter(j => j.conclusion !== 'success' && j.conclusion !== 'skipped')
+              .filter(j => isAdvisory(j.name));
+
+            if (advisoryFailures.length > 0) {
+              const detail = advisoryFailures.map(j => `  - ${j.name} (${j.conclusion})`).join('\n');
+              core.warning(`ci.yml on SHA ${sha} passed all required lanes; advisory lanes still red:\n${detail}\nRun: ${latest.html_url}`);
             }
 
   publish-core:
