@@ -27,7 +27,16 @@ module.exports = defineConfig({
       BROWSER_SERVER_PORT: port
     },
     url: `${baseURL}${browserLoginPath}`,
-    timeout: 120_000,
-    reuseExistingServer: !process.env.CI
+    // CI-cold start runs `mix run` which compiles every transitive dep in
+    // test env (incl. Phoenix, LiveView, mailglass core, mailglass_admin)
+    // plus runs all 5 mailglass core migrations (citext extension, append-
+    // only events trigger, suppression store, etc.) before the endpoint
+    // binds to `port`. 120s was tight; 300s gives a comfortable margin
+    // without masking real hangs. stdout/stderr from `mix run` is surfaced
+    // by OperatorBrowserServer.run!/0 step-prints so any stall is visible.
+    timeout: 300_000,
+    reuseExistingServer: !process.env.CI,
+    stdout: "pipe",
+    stderr: "pipe"
   }
 });
