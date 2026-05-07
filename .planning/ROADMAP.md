@@ -55,7 +55,12 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
   3. The `v1.0.0` git tag is pushed; the existing release-rehearsal artifacts from v1.0 milestone (Phase 38) are converted from rehearsal to live; the protected GitHub Environment publish flow is exercised for real (HEX_API_KEY + reviewer approval).
   4. `mix hex.info mailglass`, `mix hex.info mailglass_admin`, and `mix hex.info mailglass_inbound` all return 1.0.0 / 1.0.0 / 0.1.0 respectively; PROJECT.md "Current State" is updated to reflect the live publish; `MILESTONES.md` v1.0 entry adds the live-publish date.
   5. GitHub branch-protection rule is verified externally (closes the v1.0 carry-forward "manual GitHub branch-protection verification" item, partially fulfilling CLOSE-02 — the automation work in Phase 51 supplements this with a `gh api` script).
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 044.5-01-PLAN.md — Commit A: inbound version-line break (D-44.5-01) — Wave 1, parallel
+- [ ] 044.5-02-PLAN.md — Commit B: publish-hex.yml inbound job + post-publish-smoke parity (D-44.5-03) — Wave 1, parallel
+- [ ] 044.5-03-PLAN.md — Commit C: curated CHANGELOG front-matter + docs/upgrade-from-0.x.md + mix.exs docs.extras (D-44.5-02) — Wave 2
+- [ ] 044.5-04-PLAN.md — Live ceremony: dry-run dispatch + Release PR merge + 60-min window + sandbox install + 044.5-RELEASE-RECORD.md (D-44.5-04) — Wave 3, autonomous=false
+- [ ] 044.5-05-PLAN.md — Closeout: branch-protection evidence + MILESTONES.md + PROJECT.md + STATE.md + close CLOSE-06 (D-44.5-05) — Wave 4, autonomous=false
 **UI hint**: no
 
 **Hardest sub-tasks:**
@@ -235,7 +240,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| **44.5. v1.0/1.1 Release Ceremony** | 0/TBD | **Not started — BLOCKING Phase 45** | — |
+| **44.5. v1.0/1.1 Release Ceremony** | 0/5 | **Planned (5 plans, 4 waves) — BLOCKING Phase 45** | — |
 | 45. Inbound Telemetry + Idempotency Foundation | 0/TBD | Not started | — |
 | 46. Mailgun + SES Inbound Ingress | 0/TBD | Not started | — |
 | 47. Inbound Test Helpers + Generators | 0/TBD | Not started | — |
