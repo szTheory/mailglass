@@ -14,8 +14,8 @@
   {"lib/mailglass/tenancy/resolve_from_path.ex", "Function scope/2 only terminates with explicit exception."},
   # Reason: fail_step/2 raises intentionally to halt CI with a non-zero exit; no_return is by design.
   {"lib/mix/tasks/mailglass.publish.check.ex", "Function fail_step/2 only terminates with explicit exception."},
-  # Reason: schema_version/0 spec'd as pos_integer() for forward-compat; narrowing to `1` would force consumers to widen on every bump.
-  {"lib/mailglass/deliverability/result.ex", "Type specification is a supertype of the success typing."},
-  # Reason: RouteRecordingAdapter (test/support/outbound_route_test_support.ex) is a deliberately-misshapen test adapter that returns `{:error, :bad_shape}` to assert `Mailglass.Tenancy.resolve_outbound_adapter_ref/1`'s dispatcher rejects malformed shapes; the divergence is the test contract.
-  {"test/support/outbound_route_test_support.ex", "Type mismatch for @callback resolve_outbound_adapter_ref/1 in Mailglass.Tenancy behaviour."}
+  # Reason: invalid_adapter_entry!/2 raises NimbleOptions.ValidationError intentionally to surface adapter-config typos at boot; no_return is by design (matches resolve_from_path scope/2 pattern above).
+  {"lib/mailglass/config.ex", "Function invalid_adapter_entry!/2 only terminates with explicit exception."},
+  # Reason: BIMI.analyze/2 spec'd as analysis_result() (open map shape) for forward-compat; success typing collapses to a closed atom-set on findings/facts which would force every consumer to widen on the next BIMI status enum bump.
+  {"lib/mailglass/deliverability/bimi.ex", "Type specification for analyze is a supertype of the success typing."}
 ]

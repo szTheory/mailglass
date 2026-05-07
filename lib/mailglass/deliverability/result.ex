@@ -70,10 +70,19 @@ defmodule Mailglass.Deliverability.Result do
           required(:resolver_errors) => [resolver_error()]
         }
 
-  @spec schema_version() :: pos_integer()
+  # Narrowed from `pos_integer()` to the literal value because Elixir 1.18's
+  # dialyzer reports contract_supertype on the broader spec. Forward-compat
+  # bumps will widen this assertion (e.g. to `1 | 2`) at the same time the
+  # `@schema_version` module attribute changes — versioned together, no
+  # consumer-side widening required between bumps.
+  @spec schema_version() :: 1
   def schema_version, do: @schema_version
 
-  @spec statuses() :: [status()]
+  # Narrowed from `[status()]` (which permits `[]`) to non-empty list because
+  # `@statuses` is a module-attribute literal with 4 entries. Same forward-
+  # compat strategy as schema_version/0 — narrow today, widen explicitly at
+  # the time the underlying constant changes.
+  @spec statuses() :: nonempty_list(status())
   def statuses, do: @statuses
 
   @spec status?(term()) :: boolean()
@@ -109,12 +118,31 @@ defmodule Mailglass.Deliverability.Result do
     end)
   end
 
-  @spec empty_summary() :: summary()
+  # Narrowed from the broader `summary()` shape because the success typing is
+  # `%{pass: 0, ...}` (literal zeros). The `summary()` type is what callers
+  # consume — `summary/1` (above) updates these counters to non-zero values
+  # and returns a `summary()` shape. The `empty_summary/0` factory is a more
+  # specific subtype.
+  @spec empty_summary() :: %{
+          pass: 0,
+          warn: 0,
+          fail: 0,
+          cannot_verify: 0
+        }
   def empty_summary do
     %{pass: 0, warn: 0, fail: 0, cannot_verify: 0}
   end
 
-  @spec empty_facts() :: facts()
+  # Narrowed from the broader `facts()` shape; same forward-compat reasoning as
+  # `empty_summary/0`. Producers of populated `facts()` (`Deliverability.run/1`)
+  # widen the values to populated maps.
+  @spec empty_facts() :: %{
+          spf: %{},
+          dkim: %{},
+          dmarc: %{},
+          mx: %{},
+          bimi: %{}
+        }
   def empty_facts do
     %{spf: %{}, dkim: %{}, dmarc: %{}, mx: %{}, bimi: %{}}
   end
