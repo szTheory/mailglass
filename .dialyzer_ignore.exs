@@ -13,5 +13,9 @@
   # Reason: resolve_from_path scope/2 raises Mailglass.ConfigError intentionally; no_return is by design.
   {"lib/mailglass/tenancy/resolve_from_path.ex", "Function scope/2 only terminates with explicit exception."},
   # Reason: fail_step/2 raises intentionally to halt CI with a non-zero exit; no_return is by design.
-  {"lib/mix/tasks/mailglass.publish.check.ex", "Function fail_step/2 only terminates with explicit exception."}
+  {"lib/mix/tasks/mailglass.publish.check.ex", "Function fail_step/2 only terminates with explicit exception."},
+  # Reason: schema_version/0 spec'd as pos_integer() for forward-compat; narrowing to `1` would force consumers to widen on every bump.
+  {"lib/mailglass/deliverability/result.ex", "Type specification is a supertype of the success typing."},
+  # Reason: RouteRecordingAdapter (test/support/outbound_route_test_support.ex) is a deliberately-misshapen test adapter that returns `{:error, :bad_shape}` to assert `Mailglass.Tenancy.resolve_outbound_adapter_ref/1`'s dispatcher rejects malformed shapes; the divergence is the test contract.
+  {"test/support/outbound_route_test_support.ex", "Type mismatch for @callback resolve_outbound_adapter_ref/1 in Mailglass.Tenancy behaviour."}
 ]
