@@ -59,7 +59,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 - [x] 044.5-01-PLAN.md — Commit A: inbound version-line break (D-44.5-01) — Wave 1, parallel
 - [x] 044.5-02-PLAN.md — Commit B: publish-hex.yml inbound job + post-publish-smoke parity (D-44.5-03) — Wave 1, parallel
 - [x] 044.5-03-PLAN.md — Commit C: curated CHANGELOG front-matter + docs/upgrade-from-0.x.md + mix.exs docs.extras (D-44.5-02) — Wave 2
-- [ ] 044.5-04-PLAN.md — Live ceremony: dry-run dispatch + Release PR merge + 60-min window + sandbox install + 044.5-RELEASE-RECORD.md (D-44.5-04) — Wave 3, autonomous=false
+- [x] 044.5-04-PLAN.md — Live ceremony: dry-run dispatch + Release PR merge + 60-min window + sandbox install + 044.5-RELEASE-RECORD.md (D-44.5-04) — Wave 3, autonomous=false
 - [ ] 044.5-05-PLAN.md — Closeout: branch-protection evidence + MILESTONES.md + PROJECT.md + STATE.md + close CLOSE-06 (D-44.5-05) — Wave 4, autonomous=false
 **UI hint**: no
 
