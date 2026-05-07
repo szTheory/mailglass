@@ -84,11 +84,13 @@ defmodule Mailglass.StabilityContractTest do
 
       assert workflow =~ "\"mailglass_inbound/mix.exs:mailglass\""
       assert config =~ "\"mailglass_inbound\""
-      # Phase 044.5 Plan 01 (Commit A) reset the manifest's inbound entry to
-      # the release-please first-publish sentinel `0.0.0`. The release-please
-      # PR will compute the next version (0.1.0). After v1.1 publish lands and
-      # release-please advances the manifest, update this assertion to match.
-      assert manifest =~ "\"mailglass_inbound\": \"0.0.0\""
+      # The manifest's `mailglass_inbound` entry is `0.0.0` on `main` (the
+      # release-please first-publish sentinel from Phase 044.5 Plan 01) and
+      # gets bumped on the release-please PR head (`0.1.0` for v1.0/1.1
+      # ceremony). Either form is valid; the contract is that the entry
+      # exists with a SemVer-shaped value so release-please can compute
+      # the next bump.
+      assert manifest =~ ~r/"mailglass_inbound": "\d+\.\d+\.\d+"/
 
       assert publish_check =~
                "defp packages(nil), do: [:mailglass, :mailglass_admin, :mailglass_inbound]"
