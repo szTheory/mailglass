@@ -1,56 +1,56 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Inbound Core Slice
-status: phase 44 complete; v1.1 milestone audit re-passed; ready for milestone archival
-last_updated: "2026-05-07T00:15:57Z"
-last_activity: 2026-05-06 -- Phase 44 closed the v1.1 audit gap by adding 42-VERIFICATION.md and reconciling EXEC-01/EXEC-02/ADOPT-01 traceability; v1.1 milestone audit re-ran with status: passed
+milestone: none
+milestone_name: between milestones
+status: v1.1 milestone archived; awaiting /gsd-new-milestone to scope the next slice
+last_updated: "2026-05-07T00:30:00Z"
+last_activity: 2026-05-07 -- v1.1 Inbound Core Slice archived; ROADMAP.md, REQUIREMENTS.md, PROJECT.md, MILESTONES.md, and phase directories all moved into .planning/milestones/v1.1-* with audit closeout-proof under status passed
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 17
-  completed_plans: 17
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-**Core Value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current Focus:** Phase 44 — async-adoption-closeout-reconciliation
+See: .planning/PROJECT.md (updated 2026-05-07 after v1.1 milestone close)
+
+**Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
+**Current focus:** Planning next milestone — run `/gsd-new-milestone` to scope, research, define requirements, and roadmap the next slice.
 
 ## Current Position
 
-Phase: Phase 44 complete
-Plan: 2 of 2
-Status: v1.1 audit closeout-proof complete; mailglass_inbound implementation, verification chain, and central bookkeeping all aligned; ready for $gsd-complete-milestone v1.1
-Last activity: 2026-05-06 -- Phase 44 closed the v1.1 audit gap by adding 42-VERIFICATION.md and reconciling EXEC-01/EXEC-02/ADOPT-01 traceability; v1.1 milestone audit re-ran with status: passed
+Phase: none (between milestones)
+Plan: —
+Status: v1.1 milestone closed and archived; v1.0 + v1.1 entries up to date in MILESTONES.md; ROADMAP.md collapsed; REQUIREMENTS.md removed pending fresh authorship by `/gsd-new-milestone`
+Last activity: 2026-05-07 -- v1.1 milestone close ceremony executed (`/gsd-complete-milestone v1.1`): archive files written, phase directories moved into milestones/v1.1-phases/, PROJECT.md evolved, REQUIREMENTS.md removed, git tag v1.1 prepared
 
-Progress: [##########] 100%
+Progress: between milestones
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 16
-- Average duration: —
-- Total execution time: —
+- v1.1 plans completed: 17 (12 product across Phases 39-42, 5 audit-gap closure across Phases 43-44)
+- v1.0 plans completed: 12 (across Phases 35-38)
+- Total v1.1 milestone duration: single-day blitz on 2026-05-06 (audit re-pass on 2026-05-07)
+
+## Open Carry-Forward Items (Outside v1.1 Scope)
+
+- Live `v1.0` Hex publish closeout and external GitHub branch-protection verification.
+- v1.0 partial Nyquist bookkeeping for Phase 35 (`wave_0_complete: false` despite verification passing).
+- Non-blocking boundary warnings in support-summary and admin probe verification paths.
+- Bare `mix test` citext-OID-cache race (test environment sharp edge).
+- Phase 4 standard-depth review WR-01..WR-06 (tracked, non-blocking).
 
 ## Session Continuity
 
-- v0.5 Adoption Hardening and v0.6 Production Maturity are both archived in milestone artifacts.
-- v0.6 closed with accepted debt limited to manual GitHub branch-protection verification and non-blocking boundary warnings in support-summary/admin probe verification paths.
-- Research selected a docs-heavy proof milestone with targeted contract enforcement, a narrow stable surface, and no new runtime dependencies.
-- Phase 35 completed with a canonical core/admin stability inventory, compiled-doc metadata checks, and passing docs-contract verification.
-- Phase 36 completed with a canonical compatibility policy, a canonical `0.x -> 1.0` upgrade guide, and lightweight compatibility-proof checks wired into existing support-contract aliases.
-- Phase 37 completed with canonical testing and admin trust docs, semantic Tier 1 drift checks, and a repo-root `verify.stability_contract` proof entrypoint.
-- Phase 38 completed with committed release proof artifacts, strict install/upgrade rehearsal evidence, and an explicit release checklist/record for the live cutover.
-- v1.0 milestone audit passed with accepted tech debt only: partial Nyquist bookkeeping for Phase 35, non-blocking boundary warnings in the support-contract lane, and manual branch-protection confirmation outside the repo.
-- v1.1 is intentionally the first sibling-package expansion after the core lock: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional mailbox execution.
-- Phase 39 is complete: `mailglass_inbound` now has a stable `InboundMessage`, router DSL, mailbox behaviour, package-local persistence boundary, optional Oban seam, and contract-proof docs/tests.
-- Phase 40 is complete: `mailglass_inbound` now ships a verify-first Postmark ingress plug, sealed normalization seam, duplicate-safe canonical/evidence persistence, and honest Phase 40 docs with contract-proof tests.
-- Phase 41 is complete: `mailglass_inbound` now supports truthful SendGrid ingress, post-commit mailbox execution, SendGrid-specific duplicate collapse, honest replay over stored truth, and locked second-provider docs-contract proof.
-- Phase 42 is complete: `mailglass_inbound` now supports Oban-backed async execution with bounded Task.Supervisor fallback, one canonical adoption/operator story, and repo-root release-proof coverage for the sibling package.
-- Conductor UI, Mailgun, SES, and `gen_smtp` relay ingress remain deliberately deferred so the first inbound milestone stays narrow and supportable.
-- Phase 43 closed Phases 39-41 verification recovery and Phase 44 closed Phase 42 verification recovery; v1.1 milestone audit re-ran with status: passed and is now ready for $gsd-complete-milestone v1.1.
+- v0.1 through v1.0 archived in `.planning/milestones/v0.1-*` through `.planning/milestones/v1.0-*`.
+- v1.1 archived in `.planning/milestones/v1.1-ROADMAP.md`, `.planning/milestones/v1.1-REQUIREMENTS.md`, `.planning/milestones/v1.1-MILESTONE-AUDIT.md`, `.planning/milestones/v1.1-MILESTONE-AUDIT-CLOSEOUT.md`, and the per-phase tree under `.planning/milestones/v1.1-phases/`.
+- v1.1 product behavior shipped on 2026-05-06: `mailglass_inbound` opened with canonical `%InboundMessage{}`, narrow router DSL, mailbox behaviour with locked outcomes, first-party Postmark + SendGrid ingress, tenant-safe replayable persistence of normalized + raw provider source, Oban-backed async execution with bounded `Task.Supervisor` fallback, canonical adoption docs, and repo-root release-proof coverage.
+- v1.1 audit chain restored on 2026-05-06 across Phase 43 (recovered 39/40/41 verification, added 41 validation) and Phase 44 (recovered 42 verification, reconciled bookkeeping); audit re-ran with `status: passed`.
+- Next step: run `/gsd-new-milestone` to define the next milestone scope, research, requirements, and roadmap. Conductor-style dev UI, Mailgun, SES, and `gen_smtp` relay ingress remain candidate themes deferred from v1.1.
