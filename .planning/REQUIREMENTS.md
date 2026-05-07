@@ -23,9 +23,9 @@
 
 ### Execution And Adoption
 
-- [ ] **EXEC-01**: Adopter can execute inbound routing asynchronously through Oban when Oban is installed and configured.
-- [ ] **EXEC-02**: Adopter can execute the same logical mailbox contract through a supported bounded fallback when Oban is absent.
-- [ ] **ADOPT-01**: Adopter can install, configure, test, and support the core inbound slice through honest first-party docs and verification lanes.
+- [x] **EXEC-01**: Adopter can execute inbound routing asynchronously through Oban when Oban is installed and configured.
+- [x] **EXEC-02**: Adopter can execute the same logical mailbox contract through a supported bounded fallback when Oban is absent.
+- [x] **ADOPT-01**: Adopter can install, configure, test, and support the core inbound slice through honest first-party docs and verification lanes.
 
 ## Future Requirements
 
@@ -57,11 +57,11 @@
 | STORE-01 | Phase 43 | Satisfied |
 | INGRESS-02 | Phase 43 | Satisfied |
 | STORE-02 | Phase 43 | Satisfied |
-| EXEC-01 | Phase 44 | Pending |
-| EXEC-02 | Phase 44 | Pending |
-| ADOPT-01 | Phase 44 | Pending |
+| EXEC-01 | Phase 44 | Satisfied |
+| EXEC-02 | Phase 44 | Satisfied |
+| ADOPT-01 | Phase 44 | Satisfied |
 
-Phase 43 reconciles bookkeeping only: these seven requirements were implemented in Phases 39 to 41 and recovered under Phase 43 by restoring execution verification artifacts.
+Phase 43 reconciles bookkeeping for the seven requirements implemented in Phases 39 to 41 by restoring execution verification artifacts. Phase 44 reconciles bookkeeping for `EXEC-01`, `EXEC-02`, and `ADOPT-01`, which were implemented in Phase 42 and recovered under Phase 44 by creating an execution-level `42-VERIFICATION.md`.
 
 **Coverage:**
 - v1.1 requirements: 10 total
@@ -70,4 +70,4 @@ Phase 43 reconciles bookkeeping only: these seven requirements were implemented 
 
 ---
 *Requirements defined: 2026-05-06*
-*Last updated: 2026-05-06 after recovering Phase 39-41 execution verification artifacts under Phase 43*
+*Last updated: 2026-05-06 after recovering Phase 39-41 execution verification artifacts under Phase 43, then recovering Phase 42 execution verification under Phase 44*
