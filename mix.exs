@@ -345,6 +345,7 @@ defmodule Mailglass.MixProject do
         "guides/testing.md",
         "guides/upgrading-from-v0_1.md",
         "guides/migration-from-swoosh.md",
+        "docs/upgrade-from-0.x.md",
         "MAINTAINING.md",
         "CONTRIBUTING.md",
         "SECURITY.md",
@@ -369,7 +370,8 @@ defmodule Mailglass.MixProject do
           "guides/telemetry.md",
           "guides/testing.md",
           "guides/upgrading-from-v0_1.md",
-          "guides/migration-from-swoosh.md"
+          "guides/migration-from-swoosh.md",
+          "docs/upgrade-from-0.x.md"
         ],
         Maintainers: [
           "MAINTAINING.md",

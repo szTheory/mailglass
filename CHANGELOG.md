@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Mailglass 1.0.0 bundles four shipped milestones (v0.5 + v0.6 + v1.0 + v1.1) into
+the first stable release. If you ship on `~> 0.3`, read the
+[bundle upgrade companion at `docs/upgrade-from-0.x.md`](docs/upgrade-from-0.x.md)
+for the deep-dive walkthrough across all four milestones, then follow
+[`guides/upgrading-to-v1_0.md`](guides/upgrading-to-v1_0.md) for the strict-CI
+canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
+release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
+version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
+
 ## [0.3.2](https://github.com/szTheory/mailglass/compare/mailglass-v0.3.1...mailglass-v0.3.2) (2026-04-29)
 
 

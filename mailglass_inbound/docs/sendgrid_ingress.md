@@ -49,10 +49,10 @@ Verified SendGrid ingress writes two truths before mailbox execution starts:
 - one linked raw evidence row in `mailglass_inbound_evidence`
 
 Mailbox execution happens after persistence and records append-only internal
-execution lineage. Oban-backed execution is the durable path. Task.Supervisor
-fallback is bounded best-effort only with no durable enqueue and no automatic
-retry. execution outcomes do not control provider retries; the provider
-receives `200` once receive truth is safely committed.
+execution lineage. Oban-backed execution is the durable path.
+Task.Supervisor fallback is bounded best-effort only — with no durable enqueue
+and no automatic retry. execution outcomes do not control provider retries;
+the provider receives `200` once receive truth is safely committed.
 
 ## Duplicate Handling
 
@@ -75,7 +75,7 @@ mailbox against stored canonical plus raw evidence truth.
 Replay is not:
 
 - a fresh provider receive
-- a re-ingest of provider payloads
+- a re-ingestion of stored provider payloads as new events
 - a silent reroute to a different mailbox
 - a widened public provider surface
 
