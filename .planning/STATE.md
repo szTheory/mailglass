@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Inbound Production Confidence
 status: planning
-last_updated: "2026-05-07T00:59:13.361Z"
+last_updated: "2026-05-07T01:30:00.000Z"
 last_activity: 2026-05-07
 progress:
-  total_phases: 0
+  total_phases: 7
   completed_phases: 0
-  total_plans: 0
+  total_plans: 20
   completed_plans: 0
   percent: 0
 ---
@@ -24,10 +24,25 @@ See: .planning/PROJECT.md (updated 2026-05-06 after v1.2 milestone open)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 45 (planning — not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-07 — Milestone v1.2 started
+Status: Roadmap drafted (2026-05-07); awaiting `/gsd-cleanup` then `/gsd-discuss-phase 45` or `/gsd-plan-phase 45`
+Last activity: 2026-05-07 — Roadmap drafted with 7 phases (45-51) covering all 58 v1.2 REQ-IDs
+
+## v1.2 Phase Plan
+
+| Phase | Name | REQ Count | Plans (est.) | Depends |
+|-------|------|-----------|--------------|---------|
+| 45 | Inbound Telemetry + Idempotency Foundation | 11 | 3 | Phase 44 |
+| 46 | Mailgun + SES Inbound Ingress | 9 | 3 | 45 |
+| 47 | Inbound Test Helpers + Generators | 11 | 3 | 45 |
+| 48 | Inbound Admin LiveView | 7 | 3 | 45 |
+| 49 | Inbound Runtime Operator Tooling | 6 | 3 | 45, 46 |
+| 50 | Inbound Documentation Pass | 8 | 3 | 46, 47, 48, 49 |
+| 51 | Stability Closeout | 6 | 2 | none (parallel-safe) |
+| **Total** | | **58** | **~20** | |
+
+Plan counts are estimates per SYNTHESIS.md (~18-22 total). Final plan counts are set during `/gsd-plan-phase <N>`.
 
 ## Performance Metrics
 
@@ -58,5 +73,6 @@ The following v1.0 carry-forward debt is being closed in v1.2 Phase 51 rather th
 - v1.1 product behavior shipped on 2026-05-06: `mailglass_inbound` opened with canonical `%InboundMessage{}`, narrow router DSL, mailbox behaviour with locked outcomes, first-party Postmark + SendGrid ingress, tenant-safe replayable persistence of normalized + raw provider source, Oban-backed async execution with bounded `Task.Supervisor` fallback, canonical adoption docs, and repo-root release-proof coverage.
 - v1.1 audit chain restored on 2026-05-06 across Phase 43 (recovered 39/40/41 verification, added 41 validation) and Phase 44 (recovered 42 verification, reconciled bookkeeping); audit re-ran with `status: passed`.
 - v1.2 milestone opened on 2026-05-06 with 5-agent parallel research and synthesis at `.planning/research/milestone-candidates/SYNTHESIS.md`. Milestone shape: 7 phases (45-51), goal of bringing `mailglass_inbound` to outbound-equivalent production maturity — Mailgun + SES ingress, admin LiveView, DX parity (TestAssertions/MailboxCase/generators), runtime tooling (`mailglass.inbound.{doctor,replay,prune}` + ingress rate limiting + telemetry foundation), documentation, and v1.0 carry-forward debt closeout. Cloudflare Email Routing and `gen_smtp` listener deferred to v1.3 / own milestone (different transport class).
+- v1.2 roadmap drafted on 2026-05-07 by `gsd-roadmapper`. All 58 v1.2 REQ-IDs mapped to exactly one phase. Note: REQUIREMENTS.md previously stated "53 total" — that was a counting error in the source; actual checkbox count is 58, now corrected.
 - Conductor-style synthetic-inbound dev tool deferred to v1.2.1 (security design pass needed for dev-only enforcement and tenant-scoping on synthetic stamps).
 - Next step: `/gsd-cleanup` to archive leftover `.planning/phases/` directories, then `/gsd-discuss-phase 45` (or `/gsd-plan-phase 45` to skip discussion) to start the Inbound Telemetry + Idempotency Foundation phase.

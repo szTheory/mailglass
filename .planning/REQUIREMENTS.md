@@ -155,18 +155,88 @@ Inheriting all PROJECT.md Out-of-Scope items. v1.2-specific permanent exclusions
 
 ## Traceability
 
-Will be filled by the `gsd-roadmapper` agent during roadmap creation. Empty until then.
+Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md` (Phases 45-51). Every v1.2 REQ-ID maps to exactly one phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | | |
+| TELE-01 | Phase 45 | Pending |
+| TELE-02 | Phase 45 | Pending |
+| TELE-03 | Phase 45 | Pending |
+| TELE-04 | Phase 45 | Pending |
+| TELE-05 | Phase 45 | Pending |
+| TELE-06 | Phase 45 | Pending |
+| TELE-07 | Phase 45 | Pending |
+| TELE-08 | Phase 45 | Pending |
+| MIME-01 | Phase 45 | Pending |
+| MIME-02 | Phase 45 | Pending |
+| MIME-03 | Phase 49 | Pending |
+| MIME-04 | Phase 45 | Pending |
+| MGUN-01 | Phase 46 | Pending |
+| MGUN-02 | Phase 46 | Pending |
+| MGUN-03 | Phase 46 | Pending |
+| MGUN-04 | Phase 46 | Pending |
+| MGUN-05 | Phase 50 | Pending |
+| SESI-01 | Phase 46 | Pending |
+| SESI-02 | Phase 46 | Pending |
+| SESI-03 | Phase 46 | Pending |
+| SESI-04 | Phase 46 | Pending |
+| SESI-05 | Phase 46 | Pending |
+| SESI-06 | Phase 50 | Pending |
+| ITEST-01 | Phase 47 | Pending |
+| ITEST-02 | Phase 47 | Pending |
+| ITEST-03 | Phase 47 | Pending |
+| ITEST-04 | Phase 47 | Pending |
+| ITEST-05 | Phase 47 | Pending |
+| ITEST-06 | Phase 47 | Pending |
+| ITEST-07 | Phase 47 | Pending |
+| IGEN-01 | Phase 47 | Pending |
+| IGEN-02 | Phase 47 | Pending |
+| IGEN-03 | Phase 47 | Pending |
+| IGEN-04 | Phase 47 | Pending |
+| IADM-01 | Phase 48 | Pending |
+| IADM-02 | Phase 48 | Pending |
+| IADM-03 | Phase 48 | Pending |
+| IADM-04 | Phase 48 | Pending |
+| IADM-05 | Phase 48 | Pending |
+| IADM-06 | Phase 48 | Pending |
+| IADM-07 | Phase 48 | Pending |
+| IOPS-01 | Phase 49 | Pending |
+| IOPS-02 | Phase 49 | Pending |
+| IOPS-03 | Phase 49 | Pending |
+| IOPS-04 | Phase 49 | Pending |
+| IOPS-05 | Phase 49 | Pending |
+| IDOC-01 | Phase 50 | Pending |
+| IDOC-02 | Phase 50 | Pending |
+| IDOC-03 | Phase 50 | Pending |
+| IDOC-04 | Phase 50 | Pending |
+| IDOC-05 | Phase 50 | Pending |
+| IDOC-06 | Phase 50 | Pending |
+| CLOSE-01 | Phase 51 | Pending |
+| CLOSE-02 | Phase 51 | Pending |
+| CLOSE-03 | Phase 51 | Pending |
+| CLOSE-04 | Phase 51 | Pending |
+| CLOSE-05 | Phase 51 | Pending |
+| CLOSE-06 | Phase 51 | Pending |
 
 **Coverage:**
-- v1.2 requirements: 53 total (TELE×8 + MIME×4 + MGUN×5 + SESI×6 + ITEST×7 + IGEN×4 + IADM×7 + IOPS×5 + IDOC×6 + CLOSE×6)
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 53 ⚠ (pending roadmap)
+- v1.2 requirements: **58 total** (TELE×8 + MIME×4 + MGUN×5 + SESI×6 + ITEST×7 + IGEN×4 + IADM×7 + IOPS×5 + IDOC×6 + CLOSE×6 = 58). Note: an earlier draft of this file stated "53 total" — that was a counting error in the source doc; actual checkbox count is 58.
+- Mapped to phases: **58** ✓
+- Unmapped: **0** ✓
+
+**Per-phase distribution:**
+
+| Phase | REQ-IDs | Count |
+|-------|---------|-------|
+| Phase 45: Inbound Telemetry + Idempotency Foundation | TELE-01..08, MIME-01, MIME-02, MIME-04 | 11 |
+| Phase 46: Mailgun + SES Inbound Ingress | MGUN-01..04, SESI-01..05 | 9 |
+| Phase 47: Inbound Test Helpers + Generators | ITEST-01..07, IGEN-01..04 | 11 |
+| Phase 48: Inbound Admin LiveView | IADM-01..07 | 7 |
+| Phase 49: Inbound Runtime Operator Tooling | IOPS-01..05, MIME-03 | 6 |
+| Phase 50: Inbound Documentation Pass | IDOC-01..06, MGUN-05, SESI-06 | 8 |
+| Phase 51: Stability Closeout | CLOSE-01..06 | 6 |
+| **Total** | | **58** |
 
 ---
 
 *Requirements defined: 2026-05-06*
-*Last updated: 2026-05-06 after milestone v1.2 open*
+*Last updated: 2026-05-07 — `gsd-roadmapper` populated traceability table for Phases 45-51; corrected category count from "53 total" to actual 58 total*
