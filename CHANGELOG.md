@@ -16,6 +16,56 @@ version line per [`guides/compatibility-and-deprecations.md`](guides/compatibili
 
 ## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.3.2...mailglass-v1.0.0) (2026-05-07)
 
+### v0.5 Adoption Hardening (Phases 28-31)
+
+REQ-IDs: TASRT, INSTALLER, TESTHELP — see
+[`v0.5-MILESTONE-AUDIT.md`](.planning/milestones/v0.5-MILESTONE-AUDIT.md).
+
+- `Mailglass.TestAssertions` matchers (`assert_mail_sent/1`, `last_mail/0`,
+  `wait_for_mail/1`).
+- Idempotent `mix mailglass.install` with `.mailglass_conflict_*` sidecars
+  on managed-block drift.
+- Disposable host fixture harness for installer regression smoke.
+
+### v0.6 Production Maturity (Phases 32-34)
+
+REQ-IDs: RATELIMIT, REPLAY, RECONCILE — see
+[`v0.6-MILESTONE-AUDIT.md`](.planning/milestones/v0.6-MILESTONE-AUDIT.md).
+
+- Multi-bucket `RateLimiter` (`:tenant_recipient`, `:global_recipient`,
+  `:sender_domain`) gating outbound on `:operational` and `:bulk` streams.
+- Mailgun replay-cache supervision; SES SNS X.509 verifier; Resend webhook
+  provider; reconciler advances on idempotency replays.
+- Operator support summary surface for incident response.
+
+### v1.0 Stability Lock (Phases 35-38)
+
+REQ-IDs: STAB, COMPAT, DEPREC, RELS — see
+[`v1.0-MILESTONE-AUDIT.md`](.planning/milestones/v1.0-MILESTONE-AUDIT.md).
+
+- `guides/compatibility-and-deprecations.md` (canonical support matrix).
+- `guides/upgrading-to-v1_0.md` (canonical 0.x → 1.0 upgrade authority).
+- Deprecation DX inventory with strict-CI guidance for warning-emitting
+  bridges (`Mailglass.Message.new/2`).
+- Phase 38 release-rehearsal proof bundle (committed in-repo, converted to
+  live in this release).
+
+### v1.1 Inbound Core Slice (Phases 39-44)
+
+REQ-IDs: INBR, INGRESS, EXEC, ADP — see
+[`v1.1-MILESTONE-AUDIT.md`](.planning/milestones/v1.1-MILESTONE-AUDIT.md).
+
+- `mailglass_inbound` opens with canonical `%InboundMessage{}`, narrow router
+  DSL, mailbox behaviour with locked outcomes.
+- First-party Postmark + SendGrid ingress with replayable persistence.
+- Oban-backed async execution with bounded `Task.Supervisor` fallback.
+- Sibling docs contract test wired into repo-root release-truth lane.
+
+**`mailglass_inbound` ships at 0.1.0 on a separate 0.x version line, NOT linked
+to `mailglass` 1.0.0.** See
+[`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)
+for the stability disclaimer.
+
 
 ### Features
 

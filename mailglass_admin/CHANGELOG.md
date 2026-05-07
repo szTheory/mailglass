@@ -6,6 +6,16 @@ Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
 ## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v0.3.2...mailglass_admin-v1.0.0) (2026-05-07)
 
+`mailglass_admin` 1.0.0 is coordinated with `mailglass` 1.0.0 and shares the
+1.x stability promise (per `guides/compatibility-and-deprecations.md`). There
+is no admin-only migration story for the 1.0 cut: bump both linked sibling
+packages together. See [`docs/upgrade-from-0.x.md`](../docs/upgrade-from-0.x.md)
+for the bundled v0.5 → v1.1 upgrade story.
+
+### Changed
+
+- Stays version-paired with `mailglass` 1.0.0 release line.
+
 
 ### Features
 
