@@ -209,6 +209,10 @@ defmodule Mailglass.Webhook.ReconcilerTest do
 
   describe "availability contract" do
     test "always exports reconcile/2 and gates worker entrypoints behind available?/0" do
+      # function_exported?/3 returns false for unloaded modules. Force load
+      # before the membership probes so the assertion measures the export
+      # table, not the load state.
+      Code.ensure_loaded!(Reconciler)
       assert function_exported?(Reconciler, :reconcile, 2)
       assert Reconciler.available?() in [true, false]
 
