@@ -18,7 +18,7 @@
 
 ### v1.1 Inbound Core Slice
 
-**Status:** Active. Product implementation phases 39-42 are complete; audit gap closure phases 43-44 are next.
+**Status:** Audit closeout-proof complete (2026-05-06). Phases 39-42 shipped product behavior; Phases 43-44 closed the verification evidence chain. Ready for $gsd-complete-milestone v1.1 when the project owner archives the milestone.
 **Phases:** 39-44
 **Total Plans:** 12
 
@@ -94,12 +94,14 @@ Plans:
 **Depends on**: Phase 42
 **Requirements**: MODEL-01, ROUTE-01, MAILBOX-01, INGRESS-01, STORE-01, INGRESS-02, STORE-02
 **Gap Closure:** Closes execution verification and validation gaps identified by the `v1.1` milestone audit.
-**Plans**: 0 plans
-**Status:** Pending
+**Plans**: 3 plans
+**Status:** Complete (2026-05-06)
 
 Plans:
 
-- [ ] TBD (`$gsd-plan-phase 43`)
+- [x] 43-01: Recover Phase 39 execution verification report
+- [x] 43-02: Recover Phase 40 execution verification report
+- [x] 43-03: Create Phase 41 validation artifact, replace Phase 41 verification, reconcile REQUIREMENTS.md
 
 ### Phase 44: Async Adoption Closeout Reconciliation
 
@@ -108,15 +110,12 @@ Plans:
 **Requirements**: EXEC-01, EXEC-02, ADOPT-01
 **Gap Closure:** Closes closeout-readiness integration gaps and the remaining milestone verification chain gaps from the `v1.1` audit.
 **Plans**: 2 plans
-**Status:** Pending
+**Status:** Complete (2026-05-06)
 
 Plans:
 
-**Wave 1**
-- [x] 44-01-PLAN.md — Recover Phase 42 execution verification report (42-VERIFICATION.md) from re-run proof lanes
-
-**Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 44-02-PLAN.md — Reconcile REQUIREMENTS.md, STATE.md, ROADMAP.md and produce v1.1-MILESTONE-AUDIT-CLOSEOUT.md
+- [x] 44-01: Recover Phase 42 execution verification report
+- [x] 44-02: Reconcile REQUIREMENTS.md, STATE.md, ROADMAP.md and run the v1.1 milestone audit closeout
 
 ---
 

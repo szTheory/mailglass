@@ -1,18 +1,18 @@
 ---
 phase: 41-sendgrid-ingress-and-mailbox-routing
-verified: 2026-05-06T16:25:00Z
+verified: 2026-05-06T23:42:00Z
 status: passed
-score: 5/5 planning checks verified
+score: 5/5 must-haves verified
 overrides_applied: 0
 human_verification: []
 ---
 
 # Phase 41: SendGrid Ingress And Mailbox Routing Verification Report
 
-**Phase Goal:** Extend the package to a second provider shape and prove the routing/mailbox contract against real inbound execution paths.
-**Verified:** 2026-05-06T16:25:00Z
+**Phase Goal:** Maintainers can prove the shipped second-provider ingress, post-commit mailbox execution, replay-over-stored-truth, and docs-contract posture from execution evidence instead of planning artifacts.
+**Verified:** 2026-05-06T23:42:00Z
 **Status:** passed
-**Re-verification:** Yes - after plan-check revision
+**Re-verification:** Yes - recovered execution verification after milestone audit gap
 
 ## Goal Achievement
 
@@ -20,60 +20,67 @@ human_verification: []
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | The phase has a complete research artifact that ties the locked Phase 41 decisions to the existing repo seams and the current SendGrid/Plug constraints. | ✓ VERIFIED | [41-RESEARCH.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-RESEARCH.md:1) covers SendGrid multipart/raw-MIME posture, execution lineage, and replay truth. |
-| 2 | The phase has a pattern map that reuses the existing ingress, persistence, router, mailbox, and replay seams instead of inventing parallel architecture. | ✓ VERIFIED | [41-PATTERNS.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-PATTERNS.md:1) maps the concrete file analogs and candidate file sets for all three roadmap plans. |
-| 3 | Plan `41-01` now makes the multipart provider seam explicit instead of assuming the Postmark raw-body JSON contract can carry SendGrid multipart ingress. | ✓ VERIFIED | [41-01-PLAN.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-01-PLAN.md:1) adds `Ingress.Request`, updates the provider contract, and requires parsed multipart facts plus raw MIME. |
-| 4 | Plans `41-02` and `41-03` preserve contract discipline by keeping execution/replay internals package-local and by grounding replay in stored execution lineage rather than mutable router state. | ✓ VERIFIED | [41-02-PLAN.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-02-PLAN.md:1) requires fresh lineage to persist mailbox identity, and [41-03-PLAN.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-03-PLAN.md:1) keeps replay package-local and defaults it to the recorded fresh mailbox. |
-| 5 | The full Phase 41 plan set matches the roadmap split and passes plan-check after revision. | ✓ VERIFIED | [ROADMAP.md](/Users/jon/projects/mailglass/.planning/ROADMAP.md:65) declares the three-plan split, and the final checker pass returned `## VERIFICATION PASSED` against the updated artifacts. |
+| 1 | SendGrid inbound requests now verify through the shared first-party ingress plug, require raw MIME delivery, and normalize into the locked canonical `%InboundMessage{}` without widening the public contract. | ✓ VERIFIED | [41-01-SUMMARY.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-01-SUMMARY.md:1) records the shipped provider seam, and [sendgrid_provider_test.exs](/Users/jon/projects/mailglass/mailglass_inbound/test/mailglass_inbound/ingress/sendgrid_provider_test.exs:1) plus [plug_test.exs](/Users/jon/projects/mailglass/mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs:1) re-passed on 2026-05-06 with `4 tests, 0 failures` and `15 tests, 0 failures`. |
+| 2 | Fresh inbound requests persist canonical and evidence truth before mailbox execution, and the mailbox runner records semantic outcomes plus failure classes as append-only execution lineage. | ✓ VERIFIED | [41-02-SUMMARY.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-02-SUMMARY.md:1), [mailbox_execution_test.exs](/Users/jon/projects/mailglass/mailglass_inbound/test/mailglass_inbound/mailbox_execution_test.exs:1), and [plug_test.exs](/Users/jon/projects/mailglass/mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs:1) prove post-commit execution ordering and explicit outcome capture, with recovered lanes re-passing on 2026-05-06. |
+| 3 | SendGrid duplicate collapse keys on raw MIME truth and replay reruns stored canonical plus evidence truth instead of pretending to be a new provider receive. | ✓ VERIFIED | [41-03-SUMMARY.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-03-SUMMARY.md:1), [replay_test.exs](/Users/jon/projects/mailglass/mailglass_inbound/test/mailglass_inbound/replay_test.exs:1), and [plug_test.exs](/Users/jon/projects/mailglass/mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs:1) re-passed on 2026-05-06 with `18 tests, 0 failures` for replay-plus-plug behavior. |
+| 4 | Replay defaults to the stored mailbox identity from fresh execution lineage and fails explicitly when that prior truth is unavailable, instead of silently rerouting through mutable router state. | ✓ VERIFIED | [41-02-SUMMARY.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-02-SUMMARY.md:1) establishes stored mailbox identity as execution truth, and [replay_test.exs](/Users/jon/projects/mailglass/mailglass_inbound/test/mailglass_inbound/replay_test.exs:1) re-passed on 2026-05-06 inside both replay proof bundles. |
+| 5 | The shipped docs posture stays honest: SendGrid security, replay semantics, and public-surface boundaries are enforced by docs-contract tests rather than implied by plan text. | ✓ VERIFIED | [41-03-SUMMARY.md](/Users/jon/projects/mailglass/.planning/phases/41-sendgrid-ingress-and-mailbox-routing/41-03-SUMMARY.md:1), [docs/sendgrid_ingress.md](/Users/jon/projects/mailglass/mailglass_inbound/docs/sendgrid_ingress.md:1), and [docs_contract_test.exs](/Users/jon/projects/mailglass/mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs:1) re-passed on 2026-05-06 with `18 tests, 0 failures` in the docs-plus-replay lane. |
 
-**Score:** 5/5 planning checks verified
+**Score:** 5/5 truths verified
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `41-RESEARCH.md` | Phase-scoped technical research | ✓ VERIFIED | Present and aligned to locked Phase 41 context. |
-| `41-PATTERNS.md` | Concrete pattern map for likely implementation seams | ✓ VERIFIED | Present and aligned to current ingress/persist/replay code. |
-| `41-01-PLAN.md` | SendGrid ingress/normalization execution prompt | ✓ VERIFIED | Present and revised to make multipart seam explicit. |
-| `41-02-PLAN.md` | Mailbox execution and fresh lineage execution prompt | ✓ VERIFIED | Present and records mailbox identity as replay source of truth. |
-| `41-03-PLAN.md` | Replay/persistence/proof execution prompt | ✓ VERIFIED | Present and revised to keep replay internal and truthful. |
+| `41-VALIDATION.md` | Recovered Nyquist validation strategy with real proof lanes | ✓ VERIFIED | Present, `nyquist_compliant: true`, and maps the actual execution lanes for `INGRESS-02` and `STORE-02`. |
+| `41-01-SUMMARY.md` | SendGrid ingress and normalization execution evidence | ✓ VERIFIED | Establishes the shipped verify-first SendGrid provider contract. |
+| `41-02-SUMMARY.md` | Post-commit mailbox execution evidence | ✓ VERIFIED | Establishes durable receive truth before mailbox side effects and append-only execution lineage. |
+| `41-03-SUMMARY.md` | Replay, dedupe, and docs-contract evidence | ✓ VERIFIED | Establishes replay-over-stored-truth, raw MIME duplicate collapse, and honest docs posture. |
+| `test/mailglass_inbound/ingress/sendgrid_provider_test.exs` | Provider-level SendGrid auth and normalization proof | ✓ VERIFIED | Re-run successfully on 2026-05-06. |
+| `test/mailglass_inbound/mailbox_execution_test.exs` | Post-commit mailbox execution proof | ✓ VERIFIED | Re-run successfully on 2026-05-06. |
+| `test/mailglass_inbound/replay_test.exs` | Replay and duplicate semantics proof | ✓ VERIFIED | Re-run successfully on 2026-05-06. |
+| `test/mailglass_inbound/docs_contract_test.exs` | Honest second-provider docs proof | ✓ VERIFIED | Re-run successfully on 2026-05-06. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- | --- |
-| `41-RESEARCH.md` | `41-01-PLAN.md` | multipart/raw-MIME posture | ✓ WIRED | Research explicitly supports the plan’s `Ingress.Request` seam and SendGrid raw MIME requirement. |
-| `41-PATTERNS.md` | `41-02-PLAN.md` | shared execution lineage recommendation | ✓ WIRED | Pattern map recommends broadening replay lineage into shared execution truth, which the plan now implements. |
-| `41-02-PLAN.md` | `41-03-PLAN.md` | replay mailbox sourcing | ✓ WIRED | Fresh execution lineage records mailbox identity; replay defaults to that stored identity. |
-| `41-CONTEXT.md` | `41-03-PLAN.md` | replay honesty and no silent reroute | ✓ WIRED | The plan now follows the locked “stored truth, original mailbox, no reroute-by-default” posture. |
+| `41-01-SUMMARY.md` | `41-VERIFICATION.md` | `INGRESS-02` execution truth | ✓ WIRED | Summary claims are now backed by recovered SendGrid provider and plug proof lanes. |
+| `41-02-SUMMARY.md` | `41-VERIFICATION.md` | mailbox execution and lineage truth | ✓ WIRED | Summary claims are now backed by mailbox execution and plug proof lanes. |
+| `41-03-SUMMARY.md` | `41-VERIFICATION.md` | replay, dedupe, and docs truth | ✓ WIRED | Summary claims are now backed by replay and docs-contract proof lanes. |
+| `41-VALIDATION.md` | `41-VERIFICATION.md` | Nyquist proof lanes become behavioral spot-checks | ✓ WIRED | Every automated command named in the recovered validation artifact was re-run for recovery. |
 
-### Plan-Check Findings
+### Behavioral Spot-Checks
 
-| Pass | Result | Status | Details |
+| Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Initial plan-check | `## ISSUES FOUND` | ✓ RESOLVED | The checker flagged two blockers: hidden multipart-interface assumptions and inconsistent replay/public-contract posture. |
-| Revision pass | `## VERIFICATION PASSED` | ✓ PASS | The updated plans resolved the multipart seam, replay scope, and replay mailbox-source ambiguities. |
+| SendGrid provider auth and raw-MIME normalization | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/sendgrid_provider_test.exs --warnings-as-errors` | `4 tests, 0 failures` | ✓ PASS |
+| Shared ingress plug support for SendGrid | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/plug_test.exs test/mailglass_inbound/ingress/sendgrid_provider_test.exs --warnings-as-errors` | `15 tests, 0 failures` | ✓ PASS |
+| Post-commit mailbox execution and shared execution lineage | `cd mailglass_inbound && mix test test/mailglass_inbound/replay_test.exs test/mailglass_inbound/mailbox_execution_test.exs --warnings-as-errors` | `12 tests, 0 failures` | ✓ PASS |
+| Ingress acknowledgement semantics after mailbox execution | `cd mailglass_inbound && mix test test/mailglass_inbound/mailbox_execution_test.exs test/mailglass_inbound/ingress/plug_test.exs --warnings-as-errors` | `16 tests, 0 failures` | ✓ PASS |
+| Replay-over-stored-truth and SendGrid duplicate collapse | `cd mailglass_inbound && mix test test/mailglass_inbound/replay_test.exs test/mailglass_inbound/ingress/plug_test.exs --warnings-as-errors` | `18 tests, 0 failures` | ✓ PASS |
+| Honest second-provider docs posture | `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs test/mailglass_inbound/replay_test.exs --warnings-as-errors` | `18 tests, 0 failures` | ✓ PASS |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| `INGRESS-02` | `41-01`, `41-03` | Maintainer can verify and normalize SendGrid inbound payloads through a first-party ingress plug. | ✓ PLANNED | Research and Plan 01 define the explicit SendGrid multipart/raw-MIME seam and proof lane. |
-| `STORE-02` | `41-02`, `41-03` | Operator can replay a stored inbound message without pretending it is a newly received provider event. | ✓ PLANNED | Plans 02 and 03 define shared execution lineage and replay-over-stored-truth behavior. |
+| `INGRESS-02` | `41-01`, `41-03` | Maintainer can verify and normalize SendGrid inbound payloads into the canonical inbound model through a first-party ingress plug. | ✓ SATISFIED | Backed by the SendGrid provider and plug proof lanes, the Phase 41 summaries, and the recovered validation map. |
+| `STORE-02` | `41-02`, `41-03` | Operator can replay a stored inbound message through routing and mailbox processing without pretending it is a newly received provider event. | ✓ SATISFIED | Backed by mailbox execution, replay, and docs-contract lanes proving stored-truth replay and append-only execution lineage. |
 
-### Residual Warnings
+### Anti-Patterns Found
 
-| File | Pattern | Severity | Impact |
-| --- | --- | --- | --- |
-| `41-03-PLAN.md` | Dedupe/replay/docs/proof still share one plan | ⚠️ Warning | The scope is plausible but somewhat broad; execution should keep the docs/proof task tightly bounded. |
+| File | Line | Pattern | Severity | Impact |
+| --- | --- | --- | --- | --- |
+| `v1.1-MILESTONE-AUDIT.md` | 1 | Phase 41 lacked both Nyquist validation and execution verification artifacts despite shipped proof lanes | ⚠️ Warning | The audit gap was artifact generation and bookkeeping, not missing SendGrid, execution, or replay behavior. |
 
 ### Gaps Summary
 
-No blocking planning gaps remain.
+No Phase 41 behavior gap remains.
 
-Residual risk is limited to normal execution sprawl in `41-03`: the plan combines provider-specific dedupe, replay behavior, docs, and contract proof. That is acceptable for now because the task text is explicit and the checker found no remaining blocker after revision.
+The prior blocker was missing artifact generation rather than missing test surface or product behavior. This recovered report replaces the misleading plan-check artifact with execution evidence for truthful SendGrid ingress, post-commit mailbox execution, duplicate collapse, replay-over-stored-truth, and docs-contract honesty.
 
 ---
 
-_Verified: 2026-05-06T16:25:00Z_  
-_Verifier: Codex + gsd-plan-checker_
+_Verified: 2026-05-06T23:42:00Z_
+_Verifier: Codex_
