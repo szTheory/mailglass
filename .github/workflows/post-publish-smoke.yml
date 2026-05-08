@@ -35,26 +35,9 @@ jobs:
     outputs:
       should_run: ${{ steps.guard.outputs.should_run }}
       version: ${{ steps.guard.outputs.version }}
+      release_ref: ${{ steps.guard.outputs.release_ref }}
       version_inbound: ${{ steps.read-inbound-version.outputs.version_inbound }}
     steps:
-      - name: Checkout (read inbound version from tag)
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-        with:
-          # Pinned to the tag/release ref so version_inbound resolves from the
-          # exact commit being smoked (Pitfall 3 mitigation: inbound version is
-          # independent of core/admin after D-44.5-01 unlinking).
-          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
-      - name: Read mailglass_inbound version
-        id: read-inbound-version
-        run: |
-          if [ -f mailglass_inbound/mix.exs ]; then
-            VERSION_INBOUND=$(grep -E '@version "[0-9]' mailglass_inbound/mix.exs | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
-            echo "version_inbound=${VERSION_INBOUND}" >> "$GITHUB_OUTPUT"
-            echo "Resolved mailglass_inbound version: ${VERSION_INBOUND}"
-          else
-            echo "version_inbound=" >> "$GITHUB_OUTPUT"
-            echo "mailglass_inbound/mix.exs not present at this ref; downstream inbound steps will skip."
-          fi
       - name: Determine if smoke should run
         id: guard
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
@@ -66,20 +49,31 @@ jobs:
               const match = raw.match(/(?:^|[-/])v?(\d+\.\d+\.\d+(?:[-\w.+]+)?)/);
               return match ? match[1] : raw.replace(/^v/, "");
             };
+            const isCoreReleaseTag = (value) =>
+              /^mailglass-v\d+\.\d+\.\d+(?:[-\w.+]+)?$/.test(String(value || "").trim());
 
             const eventName = context.eventName;
 
             if (eventName === 'release') {
               const tagName = context.payload?.release?.tag_name || "";
+              if (!isCoreReleaseTag(tagName)) {
+                core.setOutput('should_run', 'false');
+                core.setOutput('version', '');
+                core.setOutput('release_ref', '');
+                core.info(`Skipping non-core release tag '${tagName}'.`);
+                return;
+              }
               const version = normalizeVersion(tagName);
               if (version) {
                 core.setOutput('should_run', 'true');
                 core.setOutput('version', version);
+                core.setOutput('release_ref', tagName);
                 core.info(`Smoke triggered by release event; should_run=true; version='${version}'`);
                 return;
               }
               core.setOutput('should_run', 'false');
               core.setOutput('version', '');
+              core.setOutput('release_ref', '');
               core.warning(`Release event with unparseable tag_name='${tagName}'; skipping smoke.`);
               return;
             }
@@ -87,9 +81,10 @@ jobs:
             const inputTag = context.payload?.inputs?.tag || "";
             const inputVersion = normalizeVersion(inputTag);
 
-            if (eventName === 'workflow_dispatch' && inputVersion) {
+            if (eventName === 'workflow_dispatch' && inputVersion && isCoreReleaseTag(inputTag)) {
               core.setOutput('should_run', 'true');
               core.setOutput('version', inputVersion);
+              core.setOutput('release_ref', inputTag);
               core.info(`Smoke triggered by workflow_dispatch; should_run=true; version='${inputVersion}'`);
               return;
             }
@@ -106,17 +101,18 @@ jobs:
             const {data: releases} = await github.rest.repos.listReleases({
               owner,
               repo,
-              per_page: 5
+              per_page: 20
             });
 
-            if (releases.length === 0) {
+            const latest = releases.find((release) => isCoreReleaseTag(release.tag_name));
+
+            if (!latest) {
               core.setOutput('should_run', 'false');
               core.setOutput('version', '');
-              core.info('No releases found; skipping scheduled smoke.');
+              core.setOutput('release_ref', '');
+              core.info('No core package releases found; skipping scheduled smoke.');
               return;
             }
-
-            const latest = releases[0];
             const releasedAt = new Date(latest.published_at);
             const ageDays = (Date.now() - releasedAt.getTime()) / (1000 * 60 * 60 * 24);
             const version = normalizeVersion(latest.tag_name);
@@ -124,6 +120,7 @@ jobs:
             if (eventName === 'schedule' && ageDays > 7) {
               core.setOutput('should_run', 'false');
               core.setOutput('version', version);
+              core.setOutput('release_ref', latest.tag_name);
               core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; skipping scheduled smoke.`);
               return;
             }
@@ -134,6 +131,7 @@ jobs:
                 core.warning(`Hex API lookup failed with status ${response.status}; skipping scheduled smoke for safety.`);
                 core.setOutput('should_run', 'false');
                 core.setOutput('version', version);
+                core.setOutput('release_ref', latest.tag_name);
                 return;
               }
 
@@ -144,6 +142,7 @@ jobs:
               if (!onHex) {
                 core.setOutput('should_run', 'false');
                 core.setOutput('version', version);
+                core.setOutput('release_ref', latest.tag_name);
                 core.warning(`Latest GitHub release ${latest.tag_name} is not on Hex.pm; skipping scheduled smoke until a public package exists.`);
                 return;
               }
@@ -151,7 +150,25 @@ jobs:
 
             core.setOutput('should_run', 'true');
             core.setOutput('version', version);
+            core.setOutput('release_ref', latest.tag_name);
             core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; running smoke for v${version}.`);
+      - name: Checkout release ref
+        if: ${{ steps.guard.outputs.should_run == 'true' && steps.guard.outputs.release_ref != '' }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          ref: ${{ steps.guard.outputs.release_ref }}
+      - name: Read mailglass_inbound version
+        id: read-inbound-version
+        if: ${{ steps.guard.outputs.should_run == 'true' && steps.guard.outputs.release_ref != '' }}
+        run: |
+          if [ -f mailglass_inbound/mix.exs ]; then
+            VERSION_INBOUND=$(grep -E '@version "[0-9]' mailglass_inbound/mix.exs | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+            echo "version_inbound=${VERSION_INBOUND}" >> "$GITHUB_OUTPUT"
+            echo "Resolved mailglass_inbound version: ${VERSION_INBOUND}"
+          else
+            echo "version_inbound=" >> "$GITHUB_OUTPUT"
+            echo "mailglass_inbound/mix.exs not present at this ref; downstream inbound steps will skip."
+          fi
 
   wait-for-index:
     name: Wait for Hex.pm index
@@ -317,6 +334,28 @@ jobs:
         run: |
           mix local.hex --force
           mix local.rebar --force
+      - name: Check published inbound compatibility
+        id: inbound-compat
+        env:
+          VERSION: ${{ needs.cron-guard.outputs.version }}
+          VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
+        run: |
+          if [ -z "${VERSION_INBOUND}" ]; then
+            echo "include_inbound=false" >> "$GITHUB_OUTPUT"
+            echo "No inbound version resolved; consumer install will skip inbound."
+            exit 0
+          fi
+
+          INFO=$(mix hex.info mailglass_inbound "${VERSION_INBOUND}" 2>&1)
+          echo "${INFO}"
+
+          if echo "${INFO}" | grep -F "mailglass == ${VERSION}" >/dev/null; then
+            echo "include_inbound=true" >> "$GITHUB_OUTPUT"
+            echo "mailglass_inbound ${VERSION_INBOUND} is compatible with mailglass ${VERSION}."
+          else
+            echo "include_inbound=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping inbound consumer dependency: mailglass_inbound ${VERSION_INBOUND} is not compatible with mailglass ${VERSION}."
+          fi
       - name: Install phx_new archive
         run: mix archive.install hex phx_new --force
       - name: Generate Phoenix host project
@@ -328,14 +367,16 @@ jobs:
         env:
           VERSION: ${{ needs.cron-guard.outputs.version }}
           VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
+          INCLUDE_INBOUND: ${{ steps.inbound-compat.outputs.include_inbound }}
         run: |
           elixir -e '
             version = System.get_env("VERSION")
             version_inbound = System.get_env("VERSION_INBOUND")
+            include_inbound = System.get_env("INCLUDE_INBOUND") == "true"
             mix_path = "mix.exs"
             content = File.read!(mix_path)
             inbound_entry =
-              if version_inbound && version_inbound != "" do
+              if include_inbound && version_inbound && version_inbound != "" do
                 "      {:mailglass_inbound, \"== #{version_inbound}\"},\n"
               else
                 ""

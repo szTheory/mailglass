@@ -5,7 +5,7 @@ defmodule Mailglass.Upgrade.V0_2Test do
   import Igniter.Test
 
   @fixtures_root Path.expand("../../fixtures/upgrade", __DIR__)
-  @migration_guide_url "https://hexdocs.pm/mailglass/guides/upgrading-from-v0_1.html"
+  @migration_guide_url "https://hexdocs.pm/mailglass/guides/upgrading-to-v1_0.html"
 
   setup do
     [

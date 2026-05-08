@@ -27,7 +27,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -46,7 +46,23 @@ jobs:
           otp-version: "27"
       - name: Install deps
         run: mix deps.get
+      - name: Wait for postgres + create test DB
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres -d postgres; do sleep 1; done
+          mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: Detect provider-live tests
+        id: provider-live-tests
+        run: |
+          if rg -n '@tag\s+:provider_live|@moduletag\s+:provider_live' test >/dev/null 2>&1; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No :provider_live-tagged tests found; skipping advisory run."
+          fi
       - name: Run provider-live tests
+        if: ${{ steps.provider-live-tests.outputs.present == 'true' }}
         run: mix test --only provider_live --warnings-as-errors
 
   notify_provider_live_failure:

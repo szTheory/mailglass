@@ -28,7 +28,13 @@ defmodule Mailglass.RateLimiterSupervisionTest do
       Application.put_env(:mailglass, :rate_limit, default: [capacity: 100, per_minute: 100])
       :ets.delete_all_objects(:mailglass_rate_limit)
       assert :ok = RateLimiter.check("tenant-crash", "crash.com", :operational)
-      assert length(:ets.lookup(:mailglass_rate_limit, {"tenant-crash", "crash.com"})) == 1
+
+      assert length(
+               :ets.lookup(
+                 :mailglass_rate_limit,
+                 {:tenant_recipient, {"tenant-crash", "crash.com"}}
+               )
+             ) == 1
 
       # Kill the TableOwner
       Process.exit(owner_pid, :kill)
@@ -45,7 +51,10 @@ defmodule Mailglass.RateLimiterSupervisionTest do
       assert new_owner_pid != owner_pid, "Restarted TableOwner should be a new process"
 
       # ETS counters reset — prior entry should be gone
-      assert :ets.lookup(:mailglass_rate_limit, {"tenant-crash", "crash.com"}) == []
+      assert :ets.lookup(
+               :mailglass_rate_limit,
+               {:tenant_recipient, {"tenant-crash", "crash.com"}}
+             ) == []
 
       # Subsequent check should work fine (fresh bucket)
       assert :ok = RateLimiter.check("tenant-crash", "crash.com", :operational)

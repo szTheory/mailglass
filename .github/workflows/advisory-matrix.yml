@@ -40,7 +40,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -72,7 +72,7 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: |
-          until pg_isready -h localhost -U postgres; do sleep 1; done
+          until pg_isready -h localhost -U postgres -d postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run advisory full suite
         run: mix test --warnings-as-errors
@@ -96,7 +96,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -126,7 +126,7 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: |
-          until pg_isready -h localhost -U postgres; do sleep 1; done
+          until pg_isready -h localhost -U postgres -d postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run provider compatibility advisory
         run: mix verify.provider_compatibility
