@@ -21,6 +21,18 @@ version line per [`guides/compatibility-and-deprecations.md`](guides/compatibili
 
 * **ci:** restore release readiness gates ([683f653](https://github.com/szTheory/mailglass/commit/683f653ce6252f951c82c8ab581596dc31408aeb))
 * **ci:** restore release readiness gates ([b3acce2](https://github.com/szTheory/mailglass/commit/b3acce29c9172af4ed9d495bd375100a614cbed2))
+* **ci:** skip stale release-please reruns by release tags ([68e845a](https://github.com/szTheory/mailglass/commit/68e845a12f96a7fbe79ac99c33ce26fe1c6fe22f))
+* **ci:** skip stale tagged release-please reruns ([b74d05e](https://github.com/szTheory/mailglass/commit/b74d05eff9937092619f94226401fd7d80499643))
+* **ci:** stabilize operator browser gate ([370433d](https://github.com/szTheory/mailglass/commit/370433d5df68c2ceaf9b95bba6f2c2be2c63ea42))
+* **ci:** update tests gate verifier for split CI ([37129d8](https://github.com/szTheory/mailglass/commit/37129d840ce5592dd002a4e848f2537b3f7c869b))
+
+## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.0.0...mailglass-v1.0.0) (2026-05-08)
+
+
+### Bug Fixes
+
+* **ci:** restore release readiness gates ([683f653](https://github.com/szTheory/mailglass/commit/683f653ce6252f951c82c8ab581596dc31408aeb))
+* **ci:** restore release readiness gates ([b3acce2](https://github.com/szTheory/mailglass/commit/b3acce29c9172af4ed9d495bd375100a614cbed2))
 * **ci:** skip stale tagged release-please reruns ([b74d05e](https://github.com/szTheory/mailglass/commit/b74d05eff9937092619f94226401fd7d80499643))
 * **ci:** stabilize operator browser gate ([370433d](https://github.com/szTheory/mailglass/commit/370433d5df68c2ceaf9b95bba6f2c2be2c63ea42))
 * **ci:** update tests gate verifier for split CI ([37129d8](https://github.com/szTheory/mailglass/commit/37129d840ce5592dd002a4e848f2537b3f7c869b))
