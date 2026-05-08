@@ -2,6 +2,7 @@ defmodule MailglassAdmin.TestSupport.OperatorBrowserServer do
   @moduledoc false
 
   alias MailglassAdmin.TestSupport.{AdminBootstrap, OperatorFixtures}
+  @server_ownership_timeout 10 * 60_000
 
   # Step-by-step IO.puts so a CI hang surfaces the exact stage that blocks
   # (DB create, migration, endpoint start, fixtures). Without these prints
@@ -18,7 +19,12 @@ defmodule MailglassAdmin.TestSupport.OperatorBrowserServer do
     {:ok, _} = Application.ensure_all_started(:mailglass)
 
     IO.puts("[operator-browser-server] :mailglass started — running AdminBootstrap.setup_all")
-    AdminBootstrap.setup_all(port: port, server: true, pool: :connection, ensure_repo: true)
+    AdminBootstrap.setup_all(port: port, server: true, pool: :sandbox, ensure_repo: true)
+
+    owner = AdminBootstrap.start_server_owner!(ownership_timeout: @server_ownership_timeout)
+    IO.puts(
+      "[operator-browser-server] sandbox owner started — timeout=#{@server_ownership_timeout} pid=#{inspect(owner)}"
+    )
 
     IO.puts("[operator-browser-server] AdminBootstrap done — seeding fixtures")
     OperatorFixtures.seed_browser_scenario!()
@@ -46,7 +52,7 @@ defmodule MailglassAdmin.TestSupport.OperatorBrowserServer do
 
     # Also probe both URL paths Playwright might be polling so we can tell
     # whether the route is wired correctly.
-    for path <- ["/ops/browser-login?tenant_id=browser-tenant", "/dev/mail/operator"] do
+    for path <- ["/ops/browser-ready", "/ops/browser-login?tenant_id=browser-tenant"] do
       probe_url = "http://127.0.0.1:#{port}#{path}"
 
       try do

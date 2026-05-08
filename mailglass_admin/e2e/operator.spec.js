@@ -4,8 +4,16 @@ const tenantId = "browser-tenant";
 const exactRecipient = "browser-exact@example.com";
 const ambiguousRecipient = "browser-ambiguous@example.com";
 const noopRecipient = "browser-noop@example.com";
+const selectedRecipient = "browser-selected@example.com";
+
+function deliveryRow(page, index) {
+  return page.getByTestId("operator-delivery-row").nth(index);
+}
 
 async function openOperator(page) {
+  const resetResponse = await page.request.get("/ops/browser-reset");
+  expect(resetResponse.ok()).toBeTruthy();
+
   const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${returnTo}`);
   await expect(page.getByRole("heading", { name: "Operator deliveries" })).toBeVisible();
@@ -30,11 +38,9 @@ test.describe("operator browser gate", () => {
 
     expect(deliveriesBox).not.toBeNull();
     expect(detailBox).not.toBeNull();
-    expect(deliveriesBox.x).toBeLessThan(detailBox.x);
+    expect(deliveriesBox.y).toBeLessThanOrEqual(detailBox.y);
 
-    const selectedRow = page.getByTestId("operator-delivery-row").filter({
-      hasText: "browser-selected@example.com"
-    });
+    const selectedRow = deliveryRow(page, 0);
 
     await selectedRow.click();
 
@@ -44,10 +50,14 @@ test.describe("operator browser gate", () => {
     await expect(page).toHaveURL(/delivery_id=/);
 
     await expect(page.getByTestId("operator-detail-header")).toBeVisible();
+    await expect(page.getByTestId("operator-detail-header")).toContainText(selectedRecipient);
+    await expect(page.getByTestId("operator-detail-header")).toContainText(
+      "Replay is unavailable."
+    );
     await expect(page.getByTestId("operator-timeline")).toBeVisible();
     await expect(page.getByTestId("operator-suppression-card")).toBeVisible();
     await expect(page.getByTestId("operator-suppression-card")).toContainText("ops:review");
-    await expect(page.getByRole("button", { name: /replay/i })).toHaveCount(0);
+    await expect(page.getByTestId("operator-replay-open")).toBeVisible();
     await expect(page.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
   });
 
@@ -65,10 +75,7 @@ test.describe("operator browser gate", () => {
     expect(detailBox).not.toBeNull();
     expect(deliveriesBox.y).toBeLessThan(detailBox.y);
 
-    await page
-      .getByTestId("operator-delivery-row")
-      .filter({ hasText: "browser-selected@example.com" })
-      .click();
+    await deliveryRow(page, 0).click();
 
     const headerBox = await page.getByTestId("operator-detail-header").boundingBox();
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
@@ -85,9 +92,7 @@ test.describe("operator browser gate", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    const exactRow = page.getByTestId("operator-delivery-row").filter({
-      hasText: exactRecipient
-    });
+    const exactRow = deliveryRow(page, 3);
 
     await exactRow.click();
     await expect(page.getByTestId("operator-detail-header")).toContainText(exactRecipient);
@@ -98,7 +103,7 @@ test.describe("operator browser gate", () => {
     const modal = page.getByTestId("operator-replay-modal");
     await expect(modal).toBeVisible();
     await expect(modal).toContainText("Replay is ready.");
-    await expect(modal).toContainText("One exact webhook target is available for confirmation.");
+    await expect(modal).toContainText("Confirm to replay that stored request.");
     await expect(modal).toContainText("browser-exact-delivery");
 
     await page.getByTestId("operator-replay-confirm").click();
@@ -118,9 +123,7 @@ test.describe("operator browser gate", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    const ambiguousRow = page.getByTestId("operator-delivery-row").filter({
-      hasText: ambiguousRecipient
-    });
+    const ambiguousRow = deliveryRow(page, 2);
 
     await ambiguousRow.click();
     await expect(page.getByTestId("operator-detail-header")).toContainText(ambiguousRecipient);
@@ -148,9 +151,7 @@ test.describe("operator browser gate", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    const noopRow = page.getByTestId("operator-delivery-row").filter({
-      hasText: noopRecipient
-    });
+    const noopRow = deliveryRow(page, 1);
 
     await noopRow.click();
     await expect(page.getByTestId("operator-detail-header")).toContainText(noopRecipient);
