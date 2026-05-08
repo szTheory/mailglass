@@ -4,6 +4,14 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.0.0...mailglass_admin-v1.0.0) (2026-05-08)
+
+
+### Bug Fixes
+
+* **ci:** restore release readiness gates ([683f653](https://github.com/szTheory/mailglass/commit/683f653ce6252f951c82c8ab581596dc31408aeb))
+* **ci:** stabilize operator browser gate ([370433d](https://github.com/szTheory/mailglass/commit/370433d5df68c2ceaf9b95bba6f2c2be2c63ea42))
+
 ## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v0.3.2...mailglass_admin-v1.0.0) (2026-05-07)
 
 `mailglass_admin` 1.0.0 is coordinated with `mailglass` 1.0.0 and shares the

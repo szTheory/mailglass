@@ -14,6 +14,16 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.0.0...mailglass-v1.0.0) (2026-05-08)
+
+
+### Bug Fixes
+
+* **ci:** restore release readiness gates ([683f653](https://github.com/szTheory/mailglass/commit/683f653ce6252f951c82c8ab581596dc31408aeb))
+* **ci:** restore release readiness gates ([b3acce2](https://github.com/szTheory/mailglass/commit/b3acce29c9172af4ed9d495bd375100a614cbed2))
+* **ci:** stabilize operator browser gate ([370433d](https://github.com/szTheory/mailglass/commit/370433d5df68c2ceaf9b95bba6f2c2be2c63ea42))
+* **ci:** update tests gate verifier for split CI ([37129d8](https://github.com/szTheory/mailglass/commit/37129d840ce5592dd002a4e848f2537b3f7c869b))
+
 ## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass-v0.3.2...mailglass-v1.0.0) (2026-05-07)
 
 ### v0.5 Adoption Hardening (Phases 28-31)
