@@ -3,6 +3,7 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
 
   @endpoint MailglassAdmin.TestAdopter.Endpoint
   @error_html MailglassAdmin.TestAdopter.ErrorHTML
+  @default_server_ownership_timeout 10 * 60_000
 
   def endpoint, do: @endpoint
 
@@ -82,6 +83,14 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
     if pool_mode == :sandbox do
       Ecto.Adapters.SQL.Sandbox.mode(MailglassAdmin.TestRepo, :manual)
     end
+  end
+
+  def start_server_owner!(opts \\ []) do
+    Ecto.Adapters.SQL.Sandbox.start_owner!(
+      MailglassAdmin.TestRepo,
+      shared: true,
+      ownership_timeout: Keyword.get(opts, :ownership_timeout, @default_server_ownership_timeout)
+    )
   end
 
   defp ensure_test_app_path! do

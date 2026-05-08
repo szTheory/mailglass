@@ -2,6 +2,7 @@ const { defineConfig } = require("@playwright/test");
 
 const port = process.env.BROWSER_SERVER_PORT || "4101";
 const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${port}`;
+const browserReadyPath = "/ops/browser-ready";
 const browserLoginPath = `/ops/browser-login?tenant_id=browser-tenant&return_to=${encodeURIComponent(
   "/ops/mail?tenant_id=browser-tenant"
 )}`;
@@ -26,7 +27,7 @@ module.exports = defineConfig({
       MIX_ENV: "test",
       BROWSER_SERVER_PORT: port
     },
-    url: `${baseURL}${browserLoginPath}`,
+    url: `${baseURL}${browserReadyPath}`,
     // CI-cold start runs `mix run` which compiles every transitive dep in
     // test env (incl. Phoenix, LiveView, mailglass core, mailglass_admin)
     // plus runs all 5 mailglass core migrations (citext extension, append-

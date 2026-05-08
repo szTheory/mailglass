@@ -42,6 +42,8 @@ defmodule MailglassAdmin.TestAdopter.Router do
   scope "/ops" do
     pipe_through :browser
 
+    get "/browser-ready", MailglassAdmin.TestAdopter.BrowserSessionController, :ready
+    get "/browser-reset", MailglassAdmin.TestAdopter.BrowserSessionController, :reset
     get "/browser-login", MailglassAdmin.TestAdopter.BrowserSessionController, :create
 
     mailglass_operator_routes "/mail",
@@ -59,6 +61,17 @@ end
 
 defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
   use Phoenix.Controller, formats: [:html]
+
+  alias MailglassAdmin.TestSupport.OperatorFixtures
+
+  def ready(conn, _params) do
+    text(conn, "ok")
+  end
+
+  def reset(conn, _params) do
+    OperatorFixtures.seed_browser_scenario!()
+    text(conn, "ok")
+  end
 
   def create(conn, params) do
     tenant_id = Map.get(params, "tenant_id", "browser-tenant")
