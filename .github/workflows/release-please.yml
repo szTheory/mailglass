@@ -42,6 +42,38 @@ jobs:
             exit 0
           fi
 
+          mapfile -t expected_tags < <(
+            jq -r '
+              to_entries[]
+              | .key as $package
+              | .value as $version
+              | if $package == "." then "mailglass-v\($version)" else "\($package)-v\($version)" end
+            ' .release-please-manifest.json
+          )
+
+          missing_tags=()
+          present_tags=()
+          for tag in "${expected_tags[@]}"; do
+            if gh release view "$tag" >/dev/null 2>&1; then
+              present_tags+=("$tag")
+            else
+              missing_tags+=("$tag")
+            fi
+          done
+
+          if [ "${#present_tags[@]}" -gt 0 ] && [ "${#missing_tags[@]}" -gt 0 ]; then
+            printf 'Partial release state detected. Present: %s. Missing: %s.\n' \
+              "$(IFS=,; echo "${present_tags[*]}")" \
+              "$(IFS=,; echo "${missing_tags[*]}")" >&2
+            exit 1
+          fi
+
+          if [ "${#missing_tags[@]}" -eq 0 ]; then
+            printf 'All expected release tags already exist: %s\n' "$(IFS=,; echo "${present_tags[*]}")"
+            echo "should_run=false" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           labels=$(gh pr view "$pr_number" --json labels --jq '.labels[].name' 2>/dev/null || true)
           if grep -qx 'autorelease: tagged' <<<"$labels"; then
             echo "Release PR #$pr_number is already tagged; skipping release-please rerun."
@@ -49,7 +81,7 @@ jobs:
             exit 0
           fi
 
-          echo "Release PR #$pr_number is not tagged yet; running release-please."
+          echo "Release PR #$pr_number is not fully published yet; running release-please."
           echo "should_run=true" >>"$GITHUB_OUTPUT"
 
       - id: release
