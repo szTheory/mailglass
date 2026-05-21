@@ -151,7 +151,7 @@ defmodule Mailglass.MixProject do
       {:opentelemetry, "~> 1.7", optional: true},
       {:mjml, "~> 5.3", optional: true},
       {:gen_smtp, "~> 1.3", optional: true},
-      {:sigra, "~> 0.2", optional: true},
+      {:sigra, "~> 1.0", optional: true},
       # Test only
       {:stream_data, "~> 1.3", only: [:test]},
       {:mox, "~> 1.2", only: [:test]},
