@@ -754,22 +754,25 @@ end
 | A6 | Inbound emits ONLY via `:telemetry.span` (no `:telemetry.execute`), so `TelemetryEventConvention` (which only inspects `execute`) won't fire on spans | Pitfall 2 | MEDIUM — if any single-emit `:telemetry.execute([:mailglass_inbound,...])` is added, it WILL be flagged. Defensively widen the check to accept `:mailglass_inbound`. |
 | A7 | Adding `{:gen_smtp, "~> 1.3", optional: true}` to `mailglass_inbound/mix.exs` is needed for inbound test/dev to load `:mimemail` | Package Audit | LOW — it's transitively available via core, but the inbound suite needs it loaded to test the real parser. Confirm `--no-optional-deps` lane stays green. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Which repo backs the inbound convergence test — a new `MailglassInbound.TestRepo` or core's `Mailglass.TestRepo` with inbound migrations applied?**
    - What we know: inbound has no test DB today; inbound migrations exist at `mailglass_inbound/priv/repo/migrations/`; core has `Mailglass.TestRepo` + Postgres CI.
    - What's unclear: whether to run inbound migrations into core's test DB (one DB, simplest CI) or stand up a separate inbound test repo + CI job.
    - Recommendation: prefer a dedicated `MailglassInbound.TestRepo` configured via `config :mailglass_inbound, :repo` in a new inbound `config/test.exs`, with all 4 migrations applied in `test_helper.exs`. It keeps the package self-contained and matches the `Repo` facade design. Surface as a planning decision (Claude's discretion per D-45-09 mentions only structure).
+   - **RESOLVED:** dedicated `MailglassInbound.TestRepo` + inbound `config/test.exs` + migration-running `test_helper.exs`. Implemented in Plan 45-01 Tasks 1 & 2.
 
 2. **Does CI need a new job to run the inbound `@property` suite, and where?**
    - What we know: no inbound `mix test` job exists in `ci.yml`; the property is `max_runs: 1000` + `timeout: :infinity`.
    - What's unclear: whether to add a `working-directory: mailglass_inbound` test job (with postgres service) or fold inbound tests into an existing core job.
    - Recommendation: add a dedicated inbound test CI job with a `postgres:16-alpine` service (mirror `support_contract_core`); tag the 1000-run property so it can be gated/timed separately. Planner should confirm with release engineering posture.
+   - **RESOLVED:** dedicated `working-directory: mailglass_inbound` CI job with a `postgres:16-alpine` service running `mix test --exclude property`; the 1000-run property is gated separately in Wave 2. Implemented in Plan 45-01 Task 2.
 
 3. **Should `TelemetryEventConvention` accept `:mailglass_inbound` as a valid root, or is span-only emission sufficient?**
    - What we know: the check only inspects `:telemetry.execute` (not `:telemetry.span`); inbound plans to use spans only.
    - What's unclear: whether any inbound single-emit will ever be needed (none in scope).
    - Recommendation: confirm no inbound `:telemetry.execute`, AND widen the check to accept `:mailglass_inbound` defensively. Low effort; prevents a future silent break.
+   - **RESOLVED:** widen `TelemetryEventConvention` to accept both `:mailglass` and `:mailglass_inbound` roots (defensive; spans remain the only inbound emission path). Implemented in Plan 45-01 Task 3.
 
 ## Environment Availability
 
