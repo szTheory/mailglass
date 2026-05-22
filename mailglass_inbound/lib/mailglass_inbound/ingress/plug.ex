@@ -4,6 +4,21 @@ defmodule MailglassInbound.Ingress.Plug do
 
   The plug verifies provider requests first, resolves tenant scope second, then
   normalizes and persists the canonical inbound message without executing any mailbox.
+
+  ## Telemetry + post-commit broadcast
+
+  The whole request is wrapped in a `[:mailglass_inbound, :ingress, :request, *]`
+  span via `MailglassInbound.Telemetry` (TELE-01).
+
+  After `Persist.persist/2` returns `{:ok, %{status: :inserted}}` — i.e. AFTER the
+  `repo.transact` inside `Persist.persist/2` has committed — the plug broadcasts a
+  PII-free `{:inbound_record_inserted, record_id, %{provider:, record_type:}}`
+  message on `Mailglass.PubSub` to the per-tenant topic from
+  `MailglassInbound.PubSub.Topics.inbound_record_inserted/1` (TELE-07, D-45-06,
+  D-45-07). The broadcast runs OUTSIDE the transaction and never rolls it back:
+  the committed `InboundRecord` is the durable source of truth, PubSub is the
+  realtime fan-out for the Phase 48 admin LiveView. A `:duplicate` result
+  broadcasts nothing.
   """
 
   @behaviour Plug
@@ -240,7 +255,55 @@ defmodule MailglassInbound.Ingress.Plug do
 
   defp maybe_execute(execution, %{status: :inserted} = result) do
     _ = execution.dispatch(result)
+    _ = broadcast_inbound_inserted(result)
     :ok
+  end
+
+  # Post-commit fan-out (TELE-07, D-45-06). This runs in `maybe_execute/2`, which
+  # the plug only reaches AFTER `persistence.persist/2` returns — i.e. AFTER the
+  # `repo.transact` inside `Persist.persist/2` has committed. The broadcast NEVER
+  # runs on a rolled-back transaction: the persisted `InboundRecord` is the
+  # durable source of truth, PubSub is the realtime fan-out. Only the `:inserted`
+  # branch broadcasts; `:duplicate` stays a no-op.
+  #
+  # The topic comes from `MailglassInbound.PubSub.Topics.inbound_record_inserted/1`
+  # (never a literal string — LINT-06 / D-45-08); the payload is PII-free
+  # (record id + provider + record_type only — D-45-03).
+  defp broadcast_inbound_inserted(%{
+         inbound_record: %{id: record_id, tenant_id: tenant_id},
+         message: %{provider: provider}
+       })
+       when is_binary(tenant_id) do
+    topic = MailglassInbound.PubSub.Topics.inbound_record_inserted(tenant_id)
+    payload = {:inbound_record_inserted, record_id, %{provider: provider, record_type: "inbound_record"}}
+
+    safe_broadcast(topic, payload)
+  end
+
+  defp broadcast_inbound_inserted(_result), do: :ok
+
+  # Copied verbatim from `Mailglass.Outbound.Projector.safe_broadcast/2`, changing
+  # only the log tag to `[mailglass_inbound]`. The rescue list and the
+  # `catch :exit` clause are both load-bearing: PubSub may be unreachable at
+  # shutdown/partition, and the committed row is the durable source of truth, so a
+  # broadcast failure must never crash the already-committed inbound pipeline
+  # (D-45-06, threat T-45-08).
+  defp safe_broadcast(topic, payload) do
+    Phoenix.PubSub.broadcast(Mailglass.PubSub, topic, payload)
+  rescue
+    e in [ArgumentError, RuntimeError] ->
+      require Logger
+
+      Logger.debug("[mailglass_inbound] PubSub broadcast failed (non-fatal): #{Exception.message(e)}")
+
+      :ok
+  catch
+    :exit, reason ->
+      require Logger
+
+      Logger.debug("[mailglass_inbound] PubSub broadcast exited (non-fatal): #{inspect(reason)}")
+
+      :ok
   end
 
   defp send_json(conn, status, payload) do
