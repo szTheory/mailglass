@@ -80,7 +80,11 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
   4. Admin LiveView (Phase 48) can subscribe to inbound updates via `MailglassAdmin.PubSub.Topics` because TELE-07 surfaces telemetry events into the existing topic registry.
   5. StreamData property test replays an arbitrary inbound payload 1000× through the real persist+route+execute path and asserts exactly one `InboundRecord` + one fresh `ExecutionRun`, mirroring the outbound v0.1 webhook ingest convergence proof.
   6. `MailglassInbound.MIME` parses canonical RFC 5322 bodies into a stable internal representation; malformed payloads return structured `Mailglass.Error{type: :inbound_mime_invalid}` and never raise; backend gating goes through `Mailglass.OptionalDeps.GenSmtp` with a documented degraded fallback.
-**Plans**: TBD
+**Plans**: 4 plans (3 waves)
+- [ ] 45-01-PLAN.md — Wave 0: inbound test DB infra (MailglassInbound.TestRepo + config/test.exs + migration-running test_helper + Postgres CI job) + cross-package Credo coverage (.credo.exs widen, TelemetryEventConvention root) + gen_smtp optional dep [TELE-06]
+- [ ] 45-02-PLAN.md — Wave 1: MailglassInbound.Telemetry single span surface + 4 fixed span wraps (ingress/route/persist/execution) + per-tenant PubSub topic builder + post-commit broadcast [TELE-01..05, TELE-07]
+- [ ] 45-03-PLAN.md — Wave 1 (parallel): standalone MailglassInbound.MIME never-raise parser + extended GenSmtp decode/2 seam + package-local MailglassInbound.MIMEError [MIME-01, MIME-02, MIME-04]
+- [ ] 45-04-PLAN.md — Wave 2: StreamData 1000-replay convergence property through the real persist+execute write path (one InboundRecord + one fresh ExecutionRun per unique payload) [TELE-08]
 **UI hint**: no
 
 **Hardest sub-tasks:**
