@@ -14,6 +14,20 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [Unreleased]
+
+### Added
+
+- `Mailglass.OptionalDeps.GenSmtp.decode/2` — a never-raising RFC 5322 MIME
+  parse seam over `:mimemail.decode/2` (gen_smtp 1.3.0), gated through the
+  existing optional-dep gateway. Returns `{:ok, tuple}` or a tagged
+  `{:error, {kind, reason}}` (`:error` / `:throw` / `:exit`) and wraps all three
+  `:mimemail` escape mechanisms (`erlang:error`, `throw`, `:exit`). Passes
+  `{:encoding, :none}` (skips iconv, which gen_smtp does not bundle) and
+  `{:allow_missing_version, true}`. `@since "1.2.0"`. This is the producer
+  behind `MailglassInbound.MIME.parse/1`; Phase 46 (Mailgun/SES raw-MIME
+  ingress) is the first consumer.
+
 ## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.0.0...mailglass-v1.0.0) (2026-05-08)
 
 
