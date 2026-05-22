@@ -24,6 +24,8 @@ These surfaces are the stable package contract:
 - `MailglassInbound.Ingress.CachingBodyReader`
 - `MailglassInbound.Router`
 - `MailglassInbound.Mailbox`
+- `MailglassInbound.PubSub.Topics`
+- `MailglassInbound.MIMEError`
 - the documented storage boundary between canonical normalized rows and raw
   evidence used for replay and audit truth
 
@@ -169,3 +171,29 @@ Documented guarantees:
   not semantic mailbox outcomes
 - replay uses stored canonical and raw evidence truth, but replay orchestration
   remains internal rather than public API
+
+### `MailglassInbound.PubSub.Topics`
+
+Stable PubSub topic builder for inbound subscribers (admin LiveView and operator
+tooling subscribe through it rather than hardcoding topic strings).
+
+Documented guarantees:
+
+- topic strings are derived through this module, never hand-built by adopters
+- every topic carries the `mailglass:` prefix required by the project's
+  PubSub-topic convention
+- topics are tenant-scoped where the subscribed resource is tenant-owned
+
+### `MailglassInbound.MIMEError`
+
+Stable structured error for raw MIME parse failures (matched by struct, never by
+message string — consistent with the project's "errors as a public API
+contract" posture).
+
+Documented guarantees:
+
+- raised or returned when raw MIME source cannot be parsed into a canonical
+  `%MailglassInbound.InboundMessage{}`
+- carries a closed, documented `:type` set so callers pattern-match on the
+  struct rather than the message
+- does not leak raw MIME bytes or recipient PII in its message

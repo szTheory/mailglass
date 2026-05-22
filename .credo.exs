@@ -20,14 +20,23 @@ extra_checks = [
    ]},
   {Mailglass.Credo.NoBareOptionalDepReference,
    [
+     # Each optional-dep root maps to its sanctioned gateway module(s). The
+     # inbound sibling package keeps its own gateway surface
+     # (MailglassInbound.OptionalDeps.*) rather than reusing the core gateways
+     # across the package boundary, so those gateways are listed as additional
+     # allowed call sites for the deps inbound integrates (Oban; GenSmtp lands
+     # with Plan 03's MIME parser gateway).
      gated_modules: %{
-       Oban => Mailglass.OptionalDeps.Oban,
+       Oban => [Mailglass.OptionalDeps.Oban, MailglassInbound.OptionalDeps.Oban],
        OpenTelemetry => Mailglass.OptionalDeps.OpenTelemetry,
        Mjml => Mailglass.OptionalDeps.Mjml,
-       GenSmtp => Mailglass.OptionalDeps.GenSmtp,
+       GenSmtp => [Mailglass.OptionalDeps.GenSmtp, MailglassInbound.OptionalDeps.GenSmtp],
        Sigra => Mailglass.OptionalDeps.Sigra
      },
-     included_path_prefixes: ["lib/mailglass/"]
+     # Inbound code routes `:mimemail` (gen_smtp) through a gateway only; this
+     # prefix makes the check flag any bare reference in inbound code outside the
+     # gateway (Plan 03 depends on this guard).
+     included_path_prefixes: ["lib/mailglass/", "mailglass_inbound/lib/"]
    ]},
   {Mailglass.Credo.MultiEventFirstInWebhookIngest, []},
   {Mailglass.Credo.NoOversizedUseInjection, [max_lines: 20]},
@@ -41,7 +50,8 @@ extra_checks = [
      allowed_modules: [Mailglass.Config]
    ]},
   {Mailglass.Credo.NoOtherAppEnvReads, [allowed_apps: [:mailglass]]},
-  {Mailglass.Credo.TelemetryEventConvention, [required_root: :mailglass, min_segments: 4]},
+  {Mailglass.Credo.TelemetryEventConvention,
+   [required_root: [:mailglass, :mailglass_inbound], min_segments: 4]},
   {Mailglass.Credo.NoFullResponseInLogs,
    [
      suspicious_fragments: ~w(response resp body payload)
@@ -49,6 +59,16 @@ extra_checks = [
   {Mailglass.Credo.NoDirectDateTimeNow,
    [
      allowed_modules: [Mailglass.Clock, Mailglass.Clock.System, Mailglass.Clock.Frozen],
+     # Reason: NoDirectDateTimeNow stays scoped to core only this phase. The
+     # `mailglass_inbound` sibling package deliberately does not depend on the
+     # core `Mailglass.Clock` seam (it has no clock-injection surface of its
+     # own yet), and routing inbound's five `DateTime.utc_now/0` sites — several
+     # of which stamp replay-lineage `executed_at`/`received_at` timestamps —
+     # through the core Clock is a runtime refactor outside this Wave-0 lint/infra
+     # plan's scope. The D-45 `.credo.exs` path-scope widening intentionally does
+     # NOT extend this check to inbound; an inbound clock seam is a future-phase
+     # decision. (Plan allowance: document non-applicability rather than widen.)
+     # Tracking: revisit if inbound gains a clock-injection seam.
      included_path_prefixes: ["lib/mailglass/"]
    ]},
   {Mailglass.Credo.RequireAtomicUnsubscribeHeaders, []},
@@ -65,9 +85,12 @@ extra_checks = [
       name: "default",
       strict: true,
       files: %{
-        # D-08-21: included stays ["lib/", "test/"]; do NOT add credo_checks/
-        # (Credo would lint its own checks, producing false positives).
-        included: ["lib/", "test/"],
+        # D-08-21: do NOT add credo_checks/ (Credo would lint its own checks,
+        # producing false positives). Widened in D-45 Wave 0 to cover the
+        # mailglass_inbound sibling package so TELE-06's PII check, the bare
+        # optional-dep check, and the full --strict ruleset actually lint it
+        # (silent non-coverage was the prior failure mode — RESEARCH Pitfall 1).
+        included: ["lib/", "test/", "mailglass_inbound/lib/", "mailglass_inbound/test/"],
         excluded: []
       },
       requires: ["./credo_checks/*.ex"],

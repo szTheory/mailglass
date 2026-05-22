@@ -18,7 +18,8 @@ defmodule Mailglass.Credo.NoBareOptionalDepReference do
       gateway modules, never referenced directly from application code.
       """,
       params: [
-        gated_modules: "Map of optional dependency root modules to their required gateway module.",
+        gated_modules:
+          "Map of optional dependency root modules to their required gateway module (a single module or a list of allowed gateway modules).",
         included_path_prefixes: "Only files in these path prefixes are linted."
       ]
     ]
@@ -59,16 +60,16 @@ defmodule Mailglass.Credo.NoBareOptionalDepReference do
        when is_atom(function_name) do
     issue =
       with {:ok, dependency_root} <- root_module(module_ast),
-           {:ok, gateway_module} <- Map.fetch(gated_modules, dependency_root),
+           {:ok, gateway_modules} <- Map.fetch(gated_modules, dependency_root),
            current_module <- List.first(state.module_stack),
-           false <- allowed_module?(current_module, gateway_module) do
+           false <- allowed_module?(current_module, gateway_modules) do
         issue_for(
           issue_meta,
           meta[:line],
           meta[:column],
           dependency_root,
           function_name,
-          gateway_module
+          gateway_modules
         )
       else
         _ -> nil
@@ -104,17 +105,19 @@ defmodule Mailglass.Credo.NoBareOptionalDepReference do
   defp root_module(root) when is_atom(root), do: {:ok, root}
   defp root_module(_ast), do: :error
 
-  defp allowed_module?(nil, _gateway_module), do: false
+  defp allowed_module?(nil, _gateway_modules), do: false
 
-  defp allowed_module?(module, gateway_module) do
-    module == gateway_module
+  defp allowed_module?(module, gateway_modules) do
+    module in List.wrap(gateway_modules)
   end
 
-  defp issue_for(issue_meta, line_no, column, dependency_root, function_name, gateway_module) do
+  defp issue_for(issue_meta, line_no, column, dependency_root, function_name, gateway_modules) do
+    gateway = gateway_modules |> List.wrap() |> Enum.map_join(" or ", &"`#{&1}`")
+
     format_issue(
       issue_meta,
       message:
-        "Optional dependency call `#{dependency_root}.#{function_name}` must go through `#{gateway_module}`.",
+        "Optional dependency call `#{dependency_root}.#{function_name}` must go through #{gateway}.",
       trigger: "#{dependency_root}.#{function_name}",
       line_no: line_no,
       column: column

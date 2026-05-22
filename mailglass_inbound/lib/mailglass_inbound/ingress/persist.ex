@@ -85,7 +85,6 @@ defmodule MailglassInbound.Ingress.Persist do
   defp load_duplicate(_repo, _tenant_id, _provider, %InboundMessage{provider_message_id: nil}, _evidence), do: nil
 
   defp load_duplicate(repo, tenant_id, provider, %InboundMessage{provider_message_id: provider_message_id}, _evidence) do
-    
     query =
       from(record in InboundRecord,
         where:
