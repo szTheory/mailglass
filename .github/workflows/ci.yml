@@ -225,9 +225,16 @@ jobs:
           mix ecto.create -r MailglassInbound.TestRepo --quiet
       - name: Run inbound tests
         # --exclude property: the 1000-run convergence property is gated
-        # separately in Wave 2's plan; this job runs the fast unit subset.
+        # separately in the step below; this runs the fast unit subset first.
         working-directory: mailglass_inbound
         run: mix test --exclude property
+      - name: Run inbound convergence property (TELE-08)
+        # --only property: the TELE-08 1000-run replay-convergence proof runs
+        # against the real MailglassInbound.TestRepo Postgres DB created above.
+        # It is `timeout: :infinity` (StreamData drives 1000 iterations), so it
+        # is gated as its own step after the unit subset rather than folded in.
+        working-directory: mailglass_inbound
+        run: mix test --only property
 
   credo_strict:
     name: Credo Strict (Elixir 1.18 / OTP 27)

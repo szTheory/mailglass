@@ -63,6 +63,9 @@ defmodule MailglassInbound.MixProject do
       # it is NOT added to elixirc_options no_warn_undefined here (no bare references
       # in inbound code). Pinned to the vetted 1.3.0 core lockfile resolution.
       {:gen_smtp, "~> 1.3", optional: true},
+      # StreamData backs the TELE-08 1000-run inbound convergence property
+      # (test/mailglass_inbound/properties/). Test-only; mirrors core's 1.3 pin.
+      {:stream_data, "~> 1.3", only: [:test]},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
   end
