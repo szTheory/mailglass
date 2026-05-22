@@ -11,6 +11,7 @@ defmodule MailglassInbound.MixProject do
       app: :mailglass_inbound,
       version: @version,
       elixir: "~> 1.18",
+      elixirc_paths: elixirc_paths(Mix.env()),
       elixirc_options: elixirc_options(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -45,6 +46,11 @@ defmodule MailglassInbound.MixProject do
     [no_warn_undefined: [Oban, Oban.Job, Oban.Worker]]
   end
 
+  # `test/support` carries MailglassInbound.TestRepo (the Postgres-backed test
+  # repo) so it must compile in the :test env. Mirror core mix.exs.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   defp deps do
     [
       mailglass_dep(),
@@ -52,6 +58,11 @@ defmodule MailglassInbound.MixProject do
       {:nimble_options, "~> 1.1"},
       {:oban, "~> 2.21", optional: true},
       {:uuidv7, "~> 1.0"},
+      # `:mimemail` (from gen_smtp) is exercised by the real MIME parser in Plan 03.
+      # All access goes through the core Mailglass.OptionalDeps.GenSmtp gateway, so
+      # it is NOT added to elixirc_options no_warn_undefined here (no bare references
+      # in inbound code). Pinned to the vetted 1.3.0 core lockfile resolution.
+      {:gen_smtp, "~> 1.3", optional: true},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
   end
