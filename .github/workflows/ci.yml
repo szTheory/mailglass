@@ -163,6 +163,72 @@ jobs:
       - name: Run core support contract
         run: mix verify.support_contract.core
 
+  inbound_test:
+    name: Inbound Test (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: |
+            deps
+            mailglass_inbound/deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install core deps
+        run: mix deps.get
+      - name: Install inbound deps
+        working-directory: mailglass_inbound
+        run: mix deps.get
+      - name: Wait for postgres + create test DB
+        # mailglass_inbound/test/test_helper.exs runs the inbound migrations
+        # against MailglassInbound.TestRepo (database "mailglass_inbound_test");
+        # the database must exist before tests start. Create it from the inbound
+        # project context where MailglassInbound.TestRepo is available.
+        working-directory: mailglass_inbound
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          mix ecto.create -r MailglassInbound.TestRepo --quiet
+      - name: Run inbound tests
+        # --exclude property: the 1000-run convergence property is gated
+        # separately in Wave 2's plan; this job runs the fast unit subset.
+        working-directory: mailglass_inbound
+        run: mix test --exclude property
+
   credo_strict:
     name: Credo Strict (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
