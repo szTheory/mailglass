@@ -90,8 +90,8 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 **Plans**: 4 plans (3 waves)
 
 - [x] 45-01-PLAN.md — Wave 0: inbound test DB infra (MailglassInbound.TestRepo + config/test.exs + migration-running test_helper + Postgres CI job) + cross-package Credo coverage (.credo.exs widen, TelemetryEventConvention root) + gen_smtp optional dep [TELE-06]
-- [ ] 45-02-PLAN.md — Wave 1: MailglassInbound.Telemetry single span surface + 4 fixed span wraps (ingress/route/persist/execution) + per-tenant PubSub topic builder + post-commit broadcast [TELE-01..05, TELE-07]
-- [ ] 45-03-PLAN.md — Wave 1 (parallel): standalone MailglassInbound.MIME never-raise parser + extended GenSmtp decode/2 seam + package-local MailglassInbound.MIMEError [MIME-01, MIME-02, MIME-04]
+- [x] 45-02-PLAN.md — Wave 1: MailglassInbound.Telemetry single span surface + 4 fixed span wraps (ingress/route/persist/execution) + per-tenant PubSub topic builder + post-commit broadcast [TELE-01..05, TELE-07]
+- [x] 45-03-PLAN.md — Wave 1 (parallel): standalone MailglassInbound.MIME never-raise parser + extended GenSmtp decode/2 seam + package-local MailglassInbound.MIMEError [MIME-01, MIME-02, MIME-04]
 - [ ] 45-04-PLAN.md — Wave 2: StreamData 1000-replay convergence property through the real persist+execute write path (one InboundRecord + one fresh ExecutionRun per unique payload) [TELE-08]
 
 **UI hint**: no
@@ -259,7 +259,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 
 **Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
 **Requirements:** TBD
-**Plans:** 1/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 
@@ -280,7 +280,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | **44.5. v1.0/1.1 Release Ceremony** | 0/5 | **Planned (5 plans, 4 waves) — BLOCKING Phase 45** | — |
-| 45. Inbound Telemetry + Idempotency Foundation | 1/4 | In Progress|  |
+| 45. Inbound Telemetry + Idempotency Foundation | 3/4 | In Progress|  |
 | 46. Mailgun + SES Inbound Ingress | 0/TBD | Not started | — |
 | 47. Inbound Test Helpers + Generators | 0/TBD | Not started | — |
 | 48. Inbound Admin LiveView | 0/TBD | Not started | — |
