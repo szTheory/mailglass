@@ -6,10 +6,26 @@ defmodule MailglassInbound.Router.Matcher do
 
   @spec match([Route.t()], InboundMessage.t()) :: {:ok, Route.t()} | :no_match
   def match(routes, %InboundMessage{} = message) when is_list(routes) do
-    Enum.find_value(routes, :no_match, fn route ->
-      if matches_route?(route, message), do: {:ok, route}, else: false
-    end)
+    candidate_count = length(routes)
+
+    MailglassInbound.Telemetry.route_span(
+      %{candidate_count: candidate_count},
+      fn ->
+        result =
+          Enum.find_value(routes, :no_match, fn route ->
+            if matches_route?(route, message), do: {:ok, route}, else: false
+          end)
+
+        {result, route_stop_metadata(result, candidate_count)}
+      end
+    )
   end
+
+  defp route_stop_metadata({:ok, %Route{mailbox: mailbox}}, candidate_count),
+    do: %{mailbox: mailbox, candidate_count: candidate_count}
+
+  defp route_stop_metadata(:no_match, candidate_count),
+    do: %{status: :no_match, candidate_count: candidate_count}
 
   @spec matches_route?(Route.t(), InboundMessage.t()) :: boolean()
   def matches_route?(%Route{} = route, %InboundMessage{} = message) do

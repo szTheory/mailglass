@@ -30,6 +30,12 @@ defmodule MailglassInbound.Ingress.Plug do
   def call(conn, opts) do
     provider = Keyword.get(opts, :provider, :postmark)
 
+    MailglassInbound.Telemetry.ingress_span(%{provider: provider}, fn ->
+      do_call(conn, provider, opts)
+    end)
+  end
+
+  defp do_call(conn, provider, opts) do
     try do
       request = build_request!(provider, conn)
       config = resolve_config!(provider, conn, opts)
@@ -45,29 +51,59 @@ defmodule MailglassInbound.Ingress.Plug do
         {:ok, result} ->
           maybe_execute(execution, result)
 
-          send_json(conn, 200, %{
-            status: Atom.to_string(result.status),
-            route: route_status(result.route)
-          })
+          resp =
+            send_json(conn, 200, %{
+              status: Atom.to_string(result.status),
+              route: route_status(result.route)
+            })
+
+          {resp,
+           %{
+             provider: provider,
+             tenant_id: tenant_id,
+             status: result.status,
+             byte_size: request_byte_size(request)
+           }}
 
         {:error, reason} ->
-          send_json(conn, 500, %{status: "error", reason: inspect(reason)})
+          resp = send_json(conn, 500, %{status: "error", reason: inspect(reason)})
+
+          {resp,
+           %{
+             provider: provider,
+             tenant_id: tenant_id,
+             status: :error,
+             byte_size: request_byte_size(request)
+           }}
       end
     rescue
       e in SignatureError ->
-        send_json(conn, 401, %{status: "rejected", reason: Atom.to_string(e.type)})
+        resp = send_json(conn, 401, %{status: "rejected", reason: Atom.to_string(e.type)})
+        {resp, %{provider: provider, status: :rejected}}
 
       e in TenancyError ->
-        send_json(conn, 422, %{status: "tenant_unresolved", reason: Atom.to_string(e.type)})
+        resp = send_json(conn, 422, %{status: "tenant_unresolved", reason: Atom.to_string(e.type)})
+        {resp, %{provider: provider, status: :tenant_unresolved}}
 
       e in ConfigError ->
-        send_json(conn, 500, %{
-          status: "config_error",
-          reason: Atom.to_string(e.type),
-          message: Exception.message(e)
-        })
+        resp =
+          send_json(conn, 500, %{
+            status: "config_error",
+            reason: Atom.to_string(e.type),
+            message: Exception.message(e)
+          })
+
+        {resp, %{provider: provider, status: :config_error}}
     end
   end
+
+  defp request_byte_size(%Request{raw_body: raw_body}) when is_binary(raw_body),
+    do: byte_size(raw_body)
+
+  defp request_byte_size(%Request{raw_mime: raw_mime}) when is_binary(raw_mime),
+    do: byte_size(raw_mime)
+
+  defp request_byte_size(_request), do: 0
 
   defp build_request!(:postmark, conn) do
     raw_body = extract_raw_body!(conn)

@@ -23,28 +23,42 @@ defmodule MailglassInbound.Ingress.Persist do
     provider = normalize_provider(provider)
 
     result =
-      repo.transact(fn ->
-        case load_duplicate(repo, tenant_id, provider, message, handoff.evidence) do
-          %InboundRecord{} = record ->
-            {:ok,
-             %{
-               status: :duplicate,
-               inbound_record: record,
-               inbound_evidence: nil
-             }}
+      MailglassInbound.Telemetry.persist_span(
+        %{tenant_id: tenant_id, provider: provider, record_type: "inbound_record"},
+        fn ->
+          transact_result =
+            repo.transact(fn ->
+              case load_duplicate(repo, tenant_id, provider, message, handoff.evidence) do
+                %InboundRecord{} = record ->
+                  {:ok,
+                   %{
+                     status: :duplicate,
+                     inbound_record: record,
+                     inbound_evidence: nil
+                   }}
 
-          nil ->
-            with {:ok, record} <- insert_record(repo, tenant_id, provider, message),
-                 {:ok, evidence} <- insert_evidence(repo, tenant_id, provider, record, handoff.evidence) do
-              {:ok,
-               %{
-                 status: :inserted,
-                 inbound_record: record,
-                 inbound_evidence: evidence
-               }}
-            end
+                nil ->
+                  with {:ok, record} <- insert_record(repo, tenant_id, provider, message),
+                       {:ok, evidence} <- insert_evidence(repo, tenant_id, provider, record, handoff.evidence) do
+                    {:ok,
+                     %{
+                       status: :inserted,
+                       inbound_record: record,
+                       inbound_evidence: evidence
+                     }}
+                  end
+              end
+            end)
+
+          {transact_result,
+           %{
+             tenant_id: tenant_id,
+             provider: provider,
+             operation: persist_operation(transact_result),
+             record_type: "inbound_record"
+           }}
         end
-      end)
+      )
 
     case result do
       {:ok, payload} ->
@@ -59,6 +73,10 @@ defmodule MailglassInbound.Ingress.Persist do
         other
     end
   end
+
+  defp persist_operation({:ok, %{status: :inserted}}), do: :insert
+  defp persist_operation({:ok, %{status: :duplicate}}), do: :dedup_skip
+  defp persist_operation(_other), do: :error
 
   defp load_duplicate(repo, tenant_id, "sendgrid", _message, evidence) do
     case evidence_raw_mime_fingerprint(evidence) do

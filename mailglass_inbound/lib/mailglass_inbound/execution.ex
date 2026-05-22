@@ -43,9 +43,20 @@ defmodule MailglassInbound.Execution do
     attrs = execution_attrs(persisted, source)
     normalized_result = normalize_result(attrs)
 
-    with {:ok, _run} <- records.insert_execution_run(attrs) do
-      {:ok, normalized_result}
-    end
+    stop_metadata = %{
+      mailbox: Map.get(attrs, :mailbox),
+      outcome: Map.get(normalized_result, :outcome),
+      source: source
+    }
+
+    MailglassInbound.Telemetry.execution_span(stop_metadata, fn ->
+      result =
+        with {:ok, _run} <- records.insert_execution_run(attrs) do
+          {:ok, normalized_result}
+        end
+
+      {result, stop_metadata}
+    end)
   end
 
   def execute(%{status: status}, _opts) when status in [:duplicate], do: {:ok, %{status: :skipped}}
