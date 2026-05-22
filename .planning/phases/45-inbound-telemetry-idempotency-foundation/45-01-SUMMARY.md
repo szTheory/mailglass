@@ -185,6 +185,13 @@ None - no external service configuration required. CI provides Postgres via a se
 - Wave-1 plans (02/03) can land `MailglassInbound.PubSub.Topics` and `MailglassInbound.MIMEError` without touching api_stability.md (already inventoried).
 - Note for the orchestrator/verifier: the committed core `mix.lock` is intentionally unchanged; do not interpret the worktree's locally-upgraded `deps` as a committed change.
 
+## Self-Check: PASSED
+
+- All 8 created/key files present on disk.
+- All 4 commits present in git history (f6fbe33, b07420b, 3879186, 3fd6c19).
+- Core `mix.lock` confirmed identical to phase base (no unintended dependency churn committed).
+- `gen_smtp` confirmed pinned in `mailglass_inbound/mix.lock`.
+
 ---
 *Phase: 45-inbound-telemetry-idempotency-foundation*
 *Completed: 2026-05-22*
