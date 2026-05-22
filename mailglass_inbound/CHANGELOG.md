@@ -5,6 +5,19 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `MailglassInbound.MIMEError` — a package-local structured error for raw MIME
+  parse failures, mirroring the core `Mailglass.ConfigError` shape. Closed
+  `:type` set `[:inbound_mime_invalid, :gen_smtp_unavailable]`, a
+  `[:type, :message, :cause, :context]` `defexception`, and a `Jason.Encoder`
+  derivation that excludes `:cause` so raw payload fragments do not leak into
+  serialized output. Matched by struct, never by message string. `@since
+  "0.2.0"` (minor bump). It does NOT implement the core `Mailglass.Error`
+  behaviour.
+
 ## 0.1.0 (2026-05-07)
 
 
