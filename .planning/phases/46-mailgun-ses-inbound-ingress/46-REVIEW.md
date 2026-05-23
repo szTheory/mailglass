@@ -35,7 +35,14 @@ findings:
   warning: 6
   info: 5
   total: 13
-status: issues_found
+status: resolved
+resolved_at: 2026-05-23T16:30:00Z
+resolution: |
+  All BLOCKER/Critical (CR-01, CR-02) and all WARNING (WR-01..WR-06) findings
+  fixed and committed atomically with regression tests. The 5 INFO findings
+  (IN-01..IN-05) are intentionally out of scope for this fix pass (deferred).
+resolved_findings: [CR-01, CR-02, WR-01, WR-02, WR-03, WR-04, WR-05, WR-06]
+deferred_findings: [IN-01, IN-02, IN-03, IN-04, IN-05]
 ---
 
 # Phase 46: Code Review Report
@@ -72,6 +79,8 @@ WARNINGs concern the verify→normalize handoff fragility and an unguarded
 ## Critical Issues
 
 ### CR-01: Mailgun fingerprint dedupe has no `unique_constraint` — concurrent duplicate raises unhandled `Postgrex.Error`
+
+**Status:** resolved (commit d7d1c61) — `InboundEvidence.changeset/1` declares the matching `unique_constraint/3`; `Persist` reloads the surviving duplicate on a fingerprint violation, collapsing the race to `:duplicate`. Postgres-backed race test added.
 
 **File:** `mailglass_inbound/lib/mailglass_inbound/ingress/persist.ex:193-214`
 (insert path) and `mailglass_inbound/lib/mailglass_inbound/inbound_records/inbound_evidence.ex:50-56`
@@ -126,6 +135,8 @@ one `InboundRecord` plus a clean `:duplicate`, not a raised error.
 
 ### CR-02: `S3FetchError` raised from `verify!` escapes the plug's rescue allowlist — uncontrolled 500 / no telemetry stop-meta
 
+**Status:** resolved (commit b87512e) — explicit `S3FetchError` rescue clause maps `:s3_object_not_ready` -> 500 (transient) and `:s3_fetch_failed` -> 422 (permanent), with `e.type` on PII-free telemetry stop-meta. Plug-level tests added for both types.
+
 **File:** `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex:98-121`
 and `mailglass_inbound/lib/mailglass_inbound/ingress/providers/ses.ex:50-69, 197-210`
 
@@ -167,6 +178,8 @@ status code and PII-free body for both `S3FetchError` types.
 
 ### WR-01: SES verify→normalize handoff via process dictionary is fragile and the fallback can raise
 
+**Status:** resolved (commit 3673866) — fallback uses `Jason.decode/1` (degrades malformed JSON, never raises), threads the real app-env config into the re-fetch, and `verify!/2` clears any stale stash before stashing. Tests added.
+
 **File:** `mailglass_inbound/lib/mailglass_inbound/ingress/providers/ses.ex:259-279`
 
 **Issue:** `verify!` stashes `{payload, raw_mime}` in the process dictionary and
@@ -193,6 +206,8 @@ fallback rather than `%{}`. Add `Process.delete(@pd_key)` cleanup in a plug-leve
 
 ### WR-02: SES messages with no `mail.messageId` and no Message-Id header never dedupe
 
+**Status:** resolved (commit 17a943a) — split SES `load_duplicate` clause adds the MD5(raw_mime) fingerprint fallback, backed by the new `mailglass_inbound_records_ses_fingerprint_idx` + matching `unique_constraint`; `missing_provider_message_id` parse_warning recorded. Postgres-backed dedupe tests added.
+
 **File:** `mailglass_inbound/lib/mailglass_inbound/ingress/persist.ex:135-139`
 and `mailglass_inbound/lib/mailglass_inbound/ingress/providers/ses.ex:90-92, 233-235`
 
@@ -214,6 +229,8 @@ fingerprint. If SES is expected to always carry `mail.messageId`, document that
 invariant and add a `parse_warning` when it is missing.
 
 ### WR-03: `verify_request!` runs the S3 network fetch before tenant resolution
+
+**Status:** resolved (commit 09fd68a) — documented the intentional fetch-before-tenant design (verify-first security invariant; bounded + per-deployment tunable via `:s3_retry_opts`, threaded by WR-04). Reordering rejected as a larger redesign of the single-fetch-in-verify contract (D-46-12).
 
 **File:** `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex:81-97, 128-129`
 and `ses.ex:50-58`
@@ -240,6 +257,8 @@ actually tune the retry from app config).
 
 ### WR-04: SES config drops `:s3_retry_opts` — documented tuning knob is unreachable in production
 
+**Status:** resolved (commit 2b19989) — `resolve_config!(:ses, ...)` now includes `s3_retry_opts: config[:s3_retry_opts] || []`. Plug tests assert it is threaded into the verify config and defaults to `[]`.
+
 **File:** `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex:333-344`
 and `ses.ex:197-202`
 
@@ -255,6 +274,8 @@ surface: adopters who set retry opts get silently ignored behavior.
 `resolve_config!(:ses, _conn, opts)`.
 
 ### WR-05: SES inline-content base64 heuristic can mis-decode legitimately base64-looking MIME
+
+**Status:** resolved (commit 3e01518) — `looks_like_mime?/1` now requires a real RFC-5322 header line (`^[A-Za-z][A-Za-z0-9-]*:[ \t]`) at the start of the decoded bytes; an `inline_content_base64_decoded` parse_warning is recorded whenever the base64 branch is taken. Tests added.
 
 **File:** `mailglass_inbound/lib/mailglass_inbound/ingress/providers/ses.ex:214-224`
 
@@ -277,6 +298,8 @@ first blank line, and record a `parse_warning` whenever the base64 branch is
 taken so the ambiguity is auditable.
 
 ### WR-06: `MailglassInbound.OptionalDeps.ExAwsS3` gateway not gated by `available?/0` — relies solely on `:undef` rescue
+
+**Status:** resolved (commit 674e6e3) — `get_object/2` short-circuits on `available?/0`, returning `{:error, {:s3_fetch_failed, :ex_aws_unavailable}}` when the dep is absent (classified non-retryable, so no retry budget is burned). Tests added; both compile lanes green.
 
 **File:** `mailglass_inbound/lib/mailglass_inbound/optional_deps.ex:142-148`
 
@@ -312,6 +335,12 @@ end
 ```
 
 ## Info
+
+> **Deferred:** IN-01..IN-05 are intentionally out of scope for the
+> `--fix` pass (BLOCKER/Critical + WARNING only). They remain open for a
+> follow-up (e.g. the release-ceremony version bump IN-03, the shared
+> address-parsing extraction IN-05, and the provider type/docs reconciliation
+> IN-01 are good release-gate / docs-phase candidates).
 
 ### IN-01: `MailglassInbound.InboundMessage` type/docs not widened for new providers
 
