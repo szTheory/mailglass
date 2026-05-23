@@ -134,8 +134,8 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 Plans:
 **Wave 1**
 
-- [ ] 47-01-PLAN.md — Fixtures: code-built canonical %InboundMessage{} + Postmark/SendGrid/Mailgun/SES-SNS payloads, signed SNS via real CertCache (ITEST-07) [Wave 1]
-- [ ] 47-02-PLAN.md — Three Igniter generators (gen.mailbox / gen.inbound_router / gen.inbound_route), idempotent zipper edit + --dry-run (IGEN-01..04) [Wave 1, core pkg]
+- [x] 47-01-PLAN.md — Fixtures: code-built canonical %InboundMessage{} + Postmark/SendGrid/Mailgun/SES-SNS payloads, signed SNS via real CertCache (ITEST-07) [Wave 1]
+- [x] 47-02-PLAN.md — Three Igniter generators (gen.mailbox / gen.inbound_router / gen.inbound_route), idempotent zipper edit + --dry-run (IGEN-01..04) [Wave 1, core pkg]
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -266,7 +266,7 @@ Plans:
 
 **Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
 **Requirements:** TBD
-**Plans:** 3/3 plans complete
+**Plans:** 2/4 plans executed
 
 Plans:
 
@@ -289,7 +289,7 @@ Plans:
 | **44.5. v1.0/1.1 Release Ceremony** | 5/5 | ✅ Complete | 2026-05-07 |
 | 45. Inbound Telemetry + Idempotency Foundation | 12/12 | ✅ Complete | 2026-05-23 |
 | 46. Mailgun + SES Inbound Ingress | 3/3 | Complete    | 2026-05-23 |
-| 47. Inbound Test Helpers + Generators | 0/TBD | Not started | — |
+| 47. Inbound Test Helpers + Generators | 2/4 | In Progress|  |
 | 48. Inbound Admin LiveView | 0/TBD | Not started | — |
 | 49. Inbound Runtime Operator Tooling | 0/TBD | Not started | — |
 | 50. Inbound Documentation Pass | 0/TBD | Not started | — |
