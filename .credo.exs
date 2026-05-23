@@ -32,11 +32,19 @@ extra_checks = [
      # parser) and `:gen_smtp_client` (the SMTP client) — see the
      # `Mailglass.OptionalDeps.GenSmtp` gateway moduledoc. The check resolves a
      # bare `:mimemail.decode(...)` call to the root atom `:mimemail`, so the map
-     # MUST be keyed on those atoms for the guard to fire (a `GenSmtp` alias key
-     # alone never matches a bare-atom call). The `GenSmtp` alias key is retained
-     # because inbound `mime.ex` reaches the gateway via
-     # `alias Mailglass.OptionalDeps.GenSmtp, as: OptionalGenSmtp`, whose call
-     # root resolves to the `GenSmtp` alias — that path must keep passing.
+     # MUST be keyed on those atoms for the guard to fire — CR-01 coverage rides
+     # ENTIRELY on the `:mimemail` / `:gen_smtp_client` atom keys.
+     #
+     # WR-04 correction: Credo does NOT resolve aliases. Inbound `mime.ex` uses
+     # `alias Mailglass.OptionalDeps.GenSmtp, as: OptionalGenSmtp` and calls
+     # `OptionalGenSmtp.decode/2`; Credo sees the literal call root
+     # `OptionalGenSmtp`, NOT the underlying `GenSmtp` alias target. That call
+     # passes the guard simply because `OptionalGenSmtp` is not a key in
+     # `gated_modules` — never because the alias is followed back to a `GenSmtp`
+     # key. The vestigial `GenSmtp` key below would only ever match a *literal*
+     # `GenSmtp.<fn>` call, which no Elixir code makes (the dep is the Erlang
+     # `:gen_smtp`). It is retained as documentation of the gateway alias name,
+     # but it carries no live CR-01 coverage.
      gated_modules: %{
        Oban => [Mailglass.OptionalDeps.Oban, MailglassInbound.OptionalDeps.Oban],
        OpenTelemetry => Mailglass.OptionalDeps.OpenTelemetry,
@@ -103,7 +111,15 @@ extra_checks = [
    [
      auth_name_heuristics:
        ~w(magic_link password_reset verify_email confirm_account reset_token verification_token confirm_email two_factor 2fa)
-   ]}
+   ]},
+  # Open/click tracking is opt-in per mailable and demands an explicit
+  # `:bulk`/`:operational` stream — a tracking-enabled mailable left on the
+  # default/`:transactional` stream is a policy violation (CLAUDE.md
+  # open/click-tracking discipline). `[]` selects the check's param_defaults
+  # (`mailable_module: Mailglass.Mailable`). Registered here so it actually runs
+  # under `mix credo`; the checks_have_tests meta-test fails CI if any
+  # credo_checks/*.ex is defined but left unregistered like this one was.
+  {Mailglass.Credo.StreamPolicyConsistent, []}
 ]
 
 %{
