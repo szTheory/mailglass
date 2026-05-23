@@ -39,12 +39,20 @@ defmodule MailglassInbound.Fixtures do
   """
 
   alias MailglassInbound.InboundMessage
+  alias MailglassInbound.S3Fetcher
+  alias Mailglass.Webhook.Providers.SES.CertCache
 
   @default_tenant_id "fixture-tenant"
   @default_from "sender@example.com"
   @default_to "support@example.com"
   @default_subject "Inbound fixture"
   @default_text_body "Hello from a code-built fixture.\r\n"
+
+  # SES SNS fixture defaults.
+  @ses_bucket "fixture-inbound-bucket"
+  @ses_cert_host "https://sns.us-east-1.amazonaws.com"
+  @ses_topic_arn "arn:aws:sns:us-east-1:123456789012:fixture-topic"
+  @ses_cert_ttl_seconds 86_400
 
   # --------------------------------------------------------------------------
   # Canonical %InboundMessage{}
@@ -222,6 +230,149 @@ defmodule MailglassInbound.Fixtures do
         "attachment-count" => "0"
       }
     }
+  end
+
+  # --------------------------------------------------------------------------
+  # SES — X.509-signed SNS notification (real CertCache priming)
+  # --------------------------------------------------------------------------
+
+  @doc """
+  Builds a valid X.509-signed SES SNS `Notification` payload entirely from code.
+
+  Mints a fresh in-memory RSA-2048 keypair, builds an SNS `Notification`
+  envelope carrying an `Action:S3` receipt, computes the byte-sorted canonical
+  string, signs it with `:public_key.sign(canonical, :sha, private_key)`, and
+  `Jason.encode!`s the result. The builder then primes:
+
+  - the **real** `Mailglass.Webhook.Providers.SES.CertCache` so the real
+    `SES.verify!` is a cache hit (no `:httpc` fetch), and
+  - the `MailglassInbound.S3Fetcher.Fake` so the `Action:S3` body path resolves
+    to the fixture's raw MIME.
+
+  The keypair is ephemeral, in-memory, and per call — nothing is written to
+  disk (D-47-10, security V6). The `SigningCertURL` carries a per-call unique
+  suffix so concurrent fixtures priming the shared `:public` cert cache never
+  collide (Pitfall 2); the host still satisfies the SNS cert-host TrustPolicy.
+
+  Returns a map with:
+
+  - `:raw_body` — the JSON SNS envelope (feed to `SES.verify!/2` then `SES.normalize/1`).
+  - `:headers` — the request header list.
+  - `:config` — `%{s3_fetcher: S3Fetcher.Fake, cert_cache_ttl_seconds: 86_400}`
+    (the SES config seam).
+
+  ## Options
+
+  - `:tenant_id` (carried for API symmetry), `:subject`, `:from`, `:recipient`,
+    `:text_body`, `:provider_message_id`
+  """
+  @spec build_ses_sns_payload(keyword()) :: %{
+          raw_body: binary(),
+          headers: [{String.t(), String.t()}],
+          config: map()
+        }
+  def build_ses_sns_payload(opts \\ []) do
+    from = Keyword.get(opts, :from, @default_from)
+    recipient = Keyword.get(opts, :recipient, @default_to)
+    subject = Keyword.get(opts, :subject, @default_subject)
+    text_body = Keyword.get(opts, :text_body, @default_text_body)
+    ses_message_id = Keyword.get(opts, :provider_message_id, generate_id("ses"))
+
+    raw_mime =
+      [
+        "Message-ID: <#{ses_message_id}@example.com>",
+        "From: #{from}",
+        "To: #{recipient}",
+        "Subject: #{subject}",
+        "Content-Type: text/plain",
+        "",
+        text_body
+      ]
+      |> Enum.join("\r\n")
+
+    {public_key, private_key} = generate_sns_keypair()
+    cert_url = unique_cert_url()
+
+    # Prime the REAL ETS cert cache so SES.verify! is a cache hit (D-47-10).
+    future = DateTime.add(DateTime.utc_now(), @ses_cert_ttl_seconds, :second)
+    CertCache.put(cert_url, public_key, future)
+
+    # Prime the fake fetcher for the Action:S3 body path.
+    S3Fetcher.Fake.put(@ses_bucket, ses_message_id, raw_mime)
+
+    inner =
+      Jason.encode!(%{
+        "notificationType" => "Received",
+        "mail" => %{"messageId" => ses_message_id, "source" => from},
+        "receipt" => %{
+          "action" => %{
+            "type" => "S3",
+            "bucketName" => @ses_bucket,
+            "objectKey" => ses_message_id
+          }
+        }
+      })
+
+    raw_body = sign_notification(private_key, cert_url, "sns-#{ses_message_id}", subject, inner)
+
+    %{
+      raw_body: raw_body,
+      headers: [{"content-type", "text/plain"}],
+      config: %{s3_fetcher: S3Fetcher.Fake, cert_cache_ttl_seconds: @ses_cert_ttl_seconds}
+    }
+  end
+
+  # --------------------------------------------------------------------------
+  # SES SNS signing helpers (extracted verbatim from ses_provider_test.exs)
+  # --------------------------------------------------------------------------
+
+  # Source: ses_provider_test.exs:287-301 — SNS Notification envelope + sign.
+  defp sign_notification(private_key, cert_url, sns_message_id, subject, inner_message) do
+    payload = %{
+      "Type" => "Notification",
+      "MessageId" => sns_message_id,
+      "Subject" => subject,
+      "TopicArn" => @ses_topic_arn,
+      "Message" => inner_message,
+      "Timestamp" => DateTime.to_iso8601(DateTime.utc_now()),
+      "SignatureVersion" => "1",
+      "SigningCertURL" => cert_url
+    }
+
+    canonical = canonical_string(payload)
+    sig = sign_canonical(canonical, private_key)
+    payload |> Map.put("Signature", sig) |> Jason.encode!()
+  end
+
+  # Source: ses_provider_test.exs:330-334 — byte-sorted canonical string for a
+  # Notification (matches core build_canonical_string/2).
+  defp canonical_string(payload) do
+    ~w(Message MessageId Subject Timestamp TopicArn Type)
+    |> Enum.filter(&Map.has_key?(payload, &1))
+    |> Enum.map_join(fn k -> "#{k}\n#{payload[k]}\n" end)
+  end
+
+  # Source: ses_provider_test.exs:343-345.
+  defp sign_canonical(canonical, private_key) do
+    :public_key.sign(canonical, :sha, private_key) |> Base.encode64()
+  end
+
+  # Source: ses_provider_test.exs:347-352 — OTP 27 RSAPrivateKey: index 2 =
+  # modulus, index 3 = public exponent; emit an {:RSAPublicKey, n, e} record.
+  defp generate_sns_keypair do
+    private_key = :public_key.generate_key({:rsa, 2048, 65537})
+    n = elem(private_key, 2)
+    e = elem(private_key, 3)
+    {{:RSAPublicKey, n, e}, private_key}
+  end
+
+  # Per-call unique cert URL. The host stays inside the SNS cert-host TrustPolicy
+  # (`sns.<region>.amazonaws.com`) and the path ends in `.pem`; only the filename
+  # suffix varies so concurrent primes of the shared `:public` cache never
+  # collide (Pitfall 2, T-47-03).
+  defp unique_cert_url do
+    suffix = :crypto.strong_rand_bytes(8) |> Base.url_encode64(padding: false)
+    "#{@ses_cert_host}/SimpleNotificationService-#{suffix}.pem"
   end
 
   # --------------------------------------------------------------------------
