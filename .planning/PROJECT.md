@@ -15,7 +15,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - Planning milestone closed: 6 phases (39-44), 17 plans (12 product + 5 audit-gap closure), all complete
 - **Current package versions on Hex: `mailglass` 1.0.0 / `mailglass_admin` 1.0.0 / `mailglass_inbound` 0.1.0** (live as of 2026-05-07 via Phase 44.5; mailglass_inbound 0.1.0 is the first publish ever)
 - v1.1 milestone audit re-run on 2026-05-07 with `status: passed` after Phase 43 + 44 closeout
-- Release posture: live publish complete. Phase 44.5 ceremony record at `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-RELEASE-RECORD.md`. Branch-protection evidence at `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-BRANCH-PROTECTION-EVIDENCE.md`. Phase 45 (Inbound Telemetry + Idempotency Foundation) unblocked per the release-cadence rule.
+- Release posture: live publish complete. Phase 44.5 ceremony record at `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-RELEASE-RECORD.md`. Branch-protection evidence at `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-BRANCH-PROTECTION-EVIDENCE.md`. Phase 45 (Inbound Telemetry + Idempotency Foundation) **complete (2026-05-23)** — inbound telemetry span surface + per-tenant PubSub, never-raise MIME parser, idempotent replay convergence, and cross-package Credo coverage in which every check is registered in `.credo.exs` and meta-test-enforced (gap-closure round 2 closed the inert-guard blind spot: `StreamPolicyConsistent` registered, a registration-asserting meta-test added with proven teeth, `TelemetryEventConvention` extended to real inbound spans, and the egress PII guard hardened — TELE-06).
 
 v1.0 milestone closed 2026-05-06. 4 phases (35-38), 12 plans, Stability Lock complete.
 v0.6 milestone closed 2026-05-05. 3 phases (32-34), 9 plans, Production Maturity complete.
@@ -26,7 +26,7 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Phoenix 1.8+ / Elixir 1.18+ / OTP 27+ / Postgres only
 - Append-only `mailglass_events` ledger with SQLSTATE 45A01 immutability trigger
 - Multi-tenant first-class — `tenant_id` on every record
-- 12 custom Credo checks operationalizing domain rules at lint time
+- 17 custom Credo checks operationalizing domain rules at lint time (every check registered in `.credo.exs` and meta-test-enforced against the inert-guard blind spot as of Phase 45)
 - Boundary-enforced module hierarchy
 - Optional-deps (Oban, OpenTelemetry, MJML, gen_smtp, sigra) gated through `Mailglass.OptionalDeps.*` modules
 - HEEx + MSO VML fallbacks; zero Node toolchain anywhere
@@ -264,4 +264,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-06 — opened v1.2 Inbound Production Confidence milestone; 7 phases (45-51) covering inbound provider expansion (Mailgun + SES), admin LiveView, DX parity, runtime tooling, telemetry foundation, documentation, and v1.0 carry-forward debt closeout. Research synthesis in `.planning/research/milestone-candidates/SYNTHESIS.md`.*
+*Last updated: 2026-05-23 — Phase 45 (Inbound Telemetry + Idempotency Foundation) complete: telemetry/idempotency foundation shipped and cross-package Credo coverage made self-detecting (17/17 checks registered + meta-test-enforced). v1.2 Inbound Production Confidence milestone; 7 phases (45-51) covering inbound provider expansion (Mailgun + SES), admin LiveView, DX parity, runtime tooling, telemetry foundation, documentation, and v1.0 carry-forward debt closeout. Research synthesis in `.planning/research/milestone-candidates/SYNTHESIS.md`.*
