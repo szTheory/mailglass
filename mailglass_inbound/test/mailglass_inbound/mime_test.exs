@@ -113,7 +113,7 @@ defmodule MailglassInbound.MIMETest do
     end
   end
 
-  describe "parse/2 — boundary-bomb / deep-nesting guard (T-45-12, V5)" do
+  describe "parse/2 — representation max_depth guard (MIME-04)" do
     test "deeply nested multipart beyond max_depth returns a structured error, not a crash" do
       nested = deeply_nested_multipart(50)
       raw = "From: a@example.com\r\nMIME-Version: 1.0\r\n" <> nested

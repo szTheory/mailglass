@@ -17,12 +17,27 @@ defmodule MailglassInbound.MIME do
   - `{:ok, repr}` — `repr` is `%{headers: ..., parts: ..., attachments: ...,
     inline: ...}` (see *Internal representation* below).
   - `{:error, %MIMEError{type: :inbound_mime_invalid}}` — the raw source could
-    not be parsed (any of the three escape mechanisms, or the deep-nesting
-    guard tripped). `:cause` carries the tagged gateway failure; `:context`
-    carries `%{byte_size: byte_size(raw)}`.
+    not be parsed (any of the three escape mechanisms, or the representation
+    exceeded `:max_depth`). `:cause` carries the tagged gateway failure;
+    `:context` carries `%{byte_size: byte_size(raw)}`.
   - `{:error, %MIMEError{type: :gen_smtp_unavailable}}` — the optional
     `gen_smtp` dependency is not loaded; MIME parsing is unavailable
     (`MIME-02` degraded fallback).
+
+  > #### Note {: .info}
+  >
+  > The `:max_depth` option bounds the depth of the **internal representation
+  > walk** — `collect_leaves/3` re-walking the already-decoded tree — and gives
+  > a deterministic structured ceiling on what the pipeline iterates. It does
+  > **not** limit the underlying `:mimemail` decoder recursion: `decode_and_build/2`
+  > calls the decoder *first*, which fully parses to any depth before the guard
+  > ever runs. So `:max_depth` does **not** by itself defend against
+  > provider-fed deep-nesting (boundary-bomb) DoS.
+  >
+  > Provider-fed DoS hardening — a real decoder-level recursion limit — is a
+  > **Phase 46** concern that will plug into this same seam. The guard is kept
+  > because it is that seam and because it bounds the representation the
+  > pipeline iterates.
 
   ## Internal representation
 
@@ -98,8 +113,10 @@ defmodule MailglassInbound.MIME do
 
   ## Options
 
-  - `:max_depth` — maximum multipart nesting depth before the boundary-bomb
-    guard trips and returns `:inbound_mime_invalid` (default `#{@default_max_depth}`).
+  - `:max_depth` — maximum multipart nesting depth before the
+    representation-depth guard trips and returns `:inbound_mime_invalid`
+    (default `#{@default_max_depth}`). See the moduledoc note on what this
+    guard does and does not bound.
   - `:gen_smtp_available?` — overrides the gateway availability check (testing
     seam for the `MIME-02` degraded path). Defaults to
     `Mailglass.OptionalDeps.GenSmtp.available?/0`.
