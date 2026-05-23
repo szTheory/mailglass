@@ -26,6 +26,8 @@ These surfaces are the stable package contract:
 - `MailglassInbound.Mailbox`
 - `MailglassInbound.PubSub.Topics`
 - `MailglassInbound.MIMEError`
+- `MailglassInbound.SignatureError`
+- `MailglassInbound.S3FetchError`
 - the documented storage boundary between canonical normalized rows and raw
   evidence used for replay and audit truth
 
@@ -197,3 +199,50 @@ Documented guarantees:
 - carries a closed, documented `:type` set so callers pattern-match on the
   struct rather than the message
 - does not leak raw MIME bytes or recipient PII in its message
+
+### `MailglassInbound.SignatureError`
+
+Stable, **no-recovery** structured error for inbound provider signature
+verification failures (matched by struct, never by message string — consistent
+with the project's "errors as a public API contract" posture and the
+no-recovery contract of core `Mailglass.SignatureError`). `@since 0.2.0`.
+
+Closed `:type` set (the locked contract):
+
+- `:bad_signature`
+- `:missing_header`
+- `:malformed_header`
+- `:timestamp_skew`
+- `:subscribe_url_untrusted`
+
+Documented guarantees:
+
+- raised when an inbound Mailgun HMAC or SES SNS X.509 signature fails to
+  verify, or when an SNS `SubscribeURL`/`SigningCertURL` fails trust-policy
+  validation; the ingress plug maps it to a 401 with no recovery path
+- carries a closed, documented `:type` set so callers pattern-match on the
+  struct rather than the message
+- excludes `:cause` and `:provider` from its serialized (`Jason.Encoder`) form
+  so signing secrets and raw payload fragments never leak
+- is package-local: it does NOT implement the core `Mailglass.Error` behaviour
+
+### `MailglassInbound.S3FetchError`
+
+Stable structured error for AWS SES inbound S3-object fetch failures (matched by
+struct, never by message string). `@since 0.2.0`.
+
+Closed `:type` set (the locked contract):
+
+- `:s3_object_not_ready` — bounded `GetObject` retry exhausted; transient, SNS
+  redelivers (the handler does not ack)
+- `:s3_fetch_failed` — non-retryable S3 error
+
+Documented guarantees:
+
+- raised or returned when a SES receipt-rule S3 action object cannot be fetched
+  for MIME parsing
+- carries a closed, documented `:type` set so callers pattern-match on the
+  struct rather than the message
+- excludes `:cause` from its serialized (`Jason.Encoder`) form so raw S3/error
+  fragments never leak
+- is package-local: it does NOT implement the core `Mailglass.Error` behaviour

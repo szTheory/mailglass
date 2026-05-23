@@ -17,6 +17,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   serialized output. Matched by struct, never by message string. `@since
   "0.2.0"` (minor bump). It does NOT implement the core `Mailglass.Error`
   behaviour.
+- `MailglassInbound.SignatureError` — a package-local, **no-recovery** structured
+  error for inbound provider signature failures (Mailgun HMAC, SES SNS X.509, SNS
+  `SubscribeURL` trust-policy). Closed `:type` set
+  `[:bad_signature, :missing_header, :malformed_header, :timestamp_skew, :subscribe_url_untrusted]`,
+  a `[:type, :message, :cause, :context, :provider]` `defexception`, and a
+  `Jason.Encoder` derivation that excludes `:cause` and `:provider` so signing
+  secrets and raw payload fragments do not leak. Mirrors the no-recovery contract
+  of core `Mailglass.SignatureError` while staying package-local (it does NOT
+  implement the core `Mailglass.Error` behaviour). `@since "0.2.0"` (minor bump).
+  (D-46-19)
+- `MailglassInbound.S3FetchError` — a package-local structured error for AWS SES
+  inbound S3-object fetch failures, mirroring the `MailglassInbound.MIMEError`
+  shape. Closed `:type` set `[:s3_object_not_ready, :s3_fetch_failed]`, a
+  `[:type, :message, :cause, :context]` `defexception`, and a `Jason.Encoder`
+  derivation that excludes `:cause`. Matched by struct, never by message string.
+  It does NOT implement the core `Mailglass.Error` behaviour. `@since "0.2.0"`
+  (minor bump). (D-46-17)
 
 ## 0.1.0 (2026-05-07)
 
