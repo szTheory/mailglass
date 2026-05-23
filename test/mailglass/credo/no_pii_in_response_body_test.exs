@@ -55,6 +55,43 @@ defmodule Mailglass.Credo.NoPiiInResponseBodyTest do
     assert length(run_check(source, @in_scope)) == 1
   end
 
+  test "flags a differently-named error variable as a response-body field (WR-02, err)" do
+    # The error term is bound to `err`, NOT `reason`/`changeset`. Today the
+    # original check's fragment list missed this; the mandated bare-variable
+    # body-arg rule (plus the optional `"error"` fragment that substring-matches
+    # `err`) closes it.
+    source = """
+    defmodule MailglassInbound.Ingress.LeakErr do
+      def run(conn, err) do
+        send_json(conn, 500, %{status: "error", detail: err})
+      end
+    end
+    """
+
+    issues = run_check(source, @in_scope)
+
+    assert length(issues) == 1
+  end
+
+  test "flags the two-step payload construction shape (WR-03)" do
+    # The `inspect` lives in a prior `=` assignment, not inside the sink call.
+    # The bare `payload` body variable passed to `send_json` is what the
+    # mandated bare-variable body-arg rule catches — fragment-name broadening
+    # alone cannot reach this intra-function two-step shape.
+    source = """
+    defmodule MailglassInbound.Ingress.LeakTwoStep do
+      def run(conn, changeset) do
+        payload = %{status: "error", detail: inspect(changeset)}
+        send_json(conn, 500, payload)
+      end
+    end
+    """
+
+    issues = run_check(source, @in_scope)
+
+    assert length(issues) == 1
+  end
+
   test "does NOT flag the fixed static body (closed code)" do
     source = """
     defmodule MailglassInbound.Ingress.Safe do
