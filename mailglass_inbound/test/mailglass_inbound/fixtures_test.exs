@@ -68,7 +68,10 @@ defmodule MailglassInbound.FixturesTest do
   describe "build_sendgrid_payload/1" do
     test "round-trips through the real SendGrid verify!/normalize to a valid %InboundMessage{}" do
       %{raw_mime: raw_mime, headers: headers, params: params} =
-        Fixtures.build_sendgrid_payload(subject: "SendGrid inbound", recipient: "support@example.test")
+        Fixtures.build_sendgrid_payload(
+          subject: "SendGrid inbound",
+          recipient: "support@example.test"
+        )
 
       assert is_binary(raw_mime)
       assert raw_mime != ""
@@ -88,7 +91,10 @@ defmodule MailglassInbound.FixturesTest do
   describe "build_mailgun_payload/1" do
     test "round-trips through the real Mailgun.normalize to a valid %InboundMessage{}" do
       %{params: params, headers: headers} =
-        Fixtures.build_mailgun_payload(subject: "Mailgun inbound", recipient: "support@example.test")
+        Fixtures.build_mailgun_payload(
+          subject: "Mailgun inbound",
+          recipient: "support@example.test"
+        )
 
       assert is_map(params)
 
