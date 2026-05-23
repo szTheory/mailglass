@@ -23,9 +23,21 @@ defmodule MailglassInbound.Ingress.Plug do
 
   @behaviour Plug
 
+  # The Mailgun/SES ingress providers are forward references within this same
+  # phase — the four-provider allowlist + dispatch contract (D-46-05, MGUN-04)
+  # lands in Plan 01, while the provider modules themselves land in Plans 02/03.
+  # Suppress the not-yet-defined warning so the contract compiles
+  # warning-free now; the plug only resolves these modules when a :mailgun/:ses
+  # request is actually dispatched (covered by Wave 2 integration tests).
+  @compile {:no_warn_undefined,
+            [MailglassInbound.Ingress.Providers.Mailgun, MailglassInbound.Ingress.Providers.SES]}
+
   import Plug.Conn
 
   alias Mailglass.{ConfigError, SignatureError, Tenancy, TenancyError}
+  # Net-new inbound signature error raised by the Mailgun/SES providers (D-46-19).
+  # Aliased here so the rescue clause can catch BOTH it and core's SignatureError.
+  alias MailglassInbound.SignatureError, as: InboundSignatureError
   alias MailglassInbound.Execution
   alias MailglassInbound.Ingress.Request
 
@@ -33,9 +45,9 @@ defmodule MailglassInbound.Ingress.Plug do
   def init(opts) when is_list(opts) do
     provider = Keyword.get(opts, :provider, :postmark)
 
-    unless provider in [:postmark, :sendgrid] do
+    unless provider in [:postmark, :sendgrid, :mailgun, :ses] do
       raise ArgumentError,
-            "MailglassInbound.Ingress.Plug currently supports provider: :postmark or :sendgrid only"
+            "MailglassInbound.Ingress.Plug supports provider: :postmark, :sendgrid, :mailgun, or :ses only"
     end
 
     opts
@@ -54,65 +66,42 @@ defmodule MailglassInbound.Ingress.Plug do
     try do
       request = build_request!(provider, conn)
       config = resolve_config!(provider, conn, opts)
-      verification_facts = verify_request!(provider, request, config)
-      tenant_id = resolve_tenant!(provider, conn, request)
-      normalized = normalize_request!(provider, request)
-      handoff = build_handoff(normalized, provider, tenant_id, verification_facts)
 
-      persistence = Keyword.get(opts, :persistence, MailglassInbound.Ingress.Persist)
-      execution = Keyword.get(opts, :execution, Execution)
+      # Widened verify result contract (D-46-06; mirrors core
+      # lib/mailglass/webhook/plug.ex:119-161). Verify can now express
+      # non-persisting verified outcomes:
+      #   * {:replay}            — Mailgun replay hit → 200 no-op, NO record (T-46-02)
+      #   * {:control_plane, _}  — SES SNS Subscription/Unsubscribe confirmation
+      #                            → 200 no-op, NO record (T-46-02)
+      #   * {:ok, facts}         — verified (Mailgun/SES struct arity) → persist
+      #   * facts (bare map)     — verified (legacy Postmark/SendGrid) → persist
+      # Replay and control-plane MUST be 200 no-ops — never SignatureError/401
+      # (providers retry-storm on non-200; T-46-03). Forgery raises and is caught
+      # by the rescue below (→ 401).
+      case verify_request!(provider, request, config, opts) do
+        {:replay} ->
+          resp = send_json(conn, 200, %{status: "replay"})
+          {resp, %{provider: provider, status: :replay}}
 
-      case persistence.persist(handoff, persistence_opts(opts)) do
-        {:ok, result} ->
-          maybe_execute(execution, result)
+        {:control_plane, _http_status} ->
+          resp = send_json(conn, 200, %{status: "control_plane"})
+          {resp, %{provider: provider, status: :control_plane}}
 
-          resp =
-            send_json(conn, 200, %{
-              status: Atom.to_string(result.status),
-              route: route_status(result.route)
-            })
+        {:ok, facts} when is_map(facts) ->
+          persist_and_respond(conn, provider, request, facts, opts)
 
-          {resp,
-           %{
-             provider: provider,
-             tenant_id: tenant_id,
-             status: result.status,
-             byte_size: request_byte_size(request)
-           }}
-
-        {:error, reason} ->
-          # PII-safe egress (TELE-06). `reason` is the `{:error, term}` from
-          # Persist.persist/2 — typically an `%Ecto.Changeset{}` whose `changes`
-          # carry recipient PII (subject/from/to/cc/bcc/reply_to/text_body/
-          # html_body). NEVER interpolate it into the response body: that would
-          # leak recipient email contents to the provider on a transient DB
-          # failure. Mirror the core webhook plug's static-500 posture
-          # (lib/mailglass/webhook/plug.ex returns `send_resp(conn, 500, "")` on
-          # its config-error branch) — the JSON-shaped equivalent is a static
-          # closed code. Status stays 500: it is the correct retry signal for all
-          # four providers (Postmark/Mailgun/SES retry non-2xx; SendGrid Inbound
-          # Parse DROPS 4xx with no retry, so downgrading would permanently lose
-          # the email on a transient error). A DB error is operational, not an
-          # Anymail rejection.
-          log_persist_failure(reason)
-          resp = send_json(conn, 500, %{status: "error", reason: "persist_failed"})
-
-          # Adopter DX detail rides the telemetry stop-meta as a PII-free
-          # classified atom — NOT the response body, and NOT the raw `reason`.
-          # This is an `{:error, _}` tuple (not a raise), so `:stop` enrichment is
-          # the right channel; the full-fidelity record already lives in the
-          # committed tenant-scoped `InboundEvidence` row.
-          {resp,
-           %{
-             provider: provider,
-             tenant_id: tenant_id,
-             status: :error,
-             error_kind: classify_persist_error(reason),
-             byte_size: request_byte_size(request)
-           }}
+        facts when is_map(facts) ->
+          # Legacy bare-map return from Postmark/SendGrid verify! (unchanged
+          # shipped-v1.1 providers). Treated as a successful, persisting verify.
+          persist_and_respond(conn, provider, request, facts, opts)
       end
     rescue
-      e in SignatureError ->
+      # D-46-19 / Anchor Drift #4: Postmark/SendGrid raise core's
+      # Mailglass.SignatureError; Mailgun/SES raise the net-new
+      # MailglassInbound.SignatureError. Both map to 401 with no recovery
+      # (T-46-01) — a forged-signature path must NEVER escape as a 500. Both
+      # structs expose a `.type` atom, so the body is identical.
+      e in [SignatureError, InboundSignatureError] ->
         resp = send_json(conn, 401, %{status: "rejected", reason: Atom.to_string(e.type)})
         {resp, %{provider: provider, status: :rejected}}
 
@@ -129,6 +118,69 @@ defmodule MailglassInbound.Ingress.Plug do
           })
 
         {resp, %{provider: provider, status: :config_error}}
+    end
+  end
+
+  # The persisting verify path (D-46-06 `{:ok, facts}` / legacy bare-map).
+  # Resolves tenant → normalizes → builds the handoff → persists → dispatches.
+  # Extracted verbatim from the pre-widening `do_call/2` body so the persist +
+  # PII-safe egress behavior is unchanged for Postmark/SendGrid.
+  defp persist_and_respond(conn, provider, request, verification_facts, opts) do
+    tenant_id = resolve_tenant!(provider, conn, request)
+    normalized = normalize_request!(provider, request, opts)
+    handoff = build_handoff(normalized, provider, tenant_id, verification_facts)
+
+    persistence = Keyword.get(opts, :persistence, MailglassInbound.Ingress.Persist)
+    execution = Keyword.get(opts, :execution, Execution)
+
+    case persistence.persist(handoff, persistence_opts(opts)) do
+      {:ok, result} ->
+        maybe_execute(execution, result)
+
+        resp =
+          send_json(conn, 200, %{
+            status: Atom.to_string(result.status),
+            route: route_status(result.route)
+          })
+
+        {resp,
+         %{
+           provider: provider,
+           tenant_id: tenant_id,
+           status: result.status,
+           byte_size: request_byte_size(request)
+         }}
+
+      {:error, reason} ->
+        # PII-safe egress (TELE-06). `reason` is the `{:error, term}` from
+        # Persist.persist/2 — typically an `%Ecto.Changeset{}` whose `changes`
+        # carry recipient PII (subject/from/to/cc/bcc/reply_to/text_body/
+        # html_body). NEVER interpolate it into the response body: that would
+        # leak recipient email contents to the provider on a transient DB
+        # failure. Mirror the core webhook plug's static-500 posture
+        # (lib/mailglass/webhook/plug.ex returns `send_resp(conn, 500, "")` on
+        # its config-error branch) — the JSON-shaped equivalent is a static
+        # closed code. Status stays 500: it is the correct retry signal for all
+        # four providers (Postmark/Mailgun/SES retry non-2xx; SendGrid Inbound
+        # Parse DROPS 4xx with no retry, so downgrading would permanently lose
+        # the email on a transient error). A DB error is operational, not an
+        # Anymail rejection.
+        log_persist_failure(reason)
+        resp = send_json(conn, 500, %{status: "error", reason: "persist_failed"})
+
+        # Adopter DX detail rides the telemetry stop-meta as a PII-free
+        # classified atom — NOT the response body, and NOT the raw `reason`.
+        # This is an `{:error, _}` tuple (not a raise), so `:stop` enrichment is
+        # the right channel; the full-fidelity record already lives in the
+        # committed tenant-scoped `InboundEvidence` row.
+        {resp,
+         %{
+           provider: provider,
+           tenant_id: tenant_id,
+           status: :error,
+           error_kind: classify_persist_error(reason),
+           byte_size: request_byte_size(request)
+         }}
     end
   end
 
@@ -200,6 +252,32 @@ defmodule MailglassInbound.Ingress.Plug do
     }
   end
 
+  # Mailgun inbound routes POST form fields (urlencoded, or multipart when
+  # attachments are present); the HMAC triple + payload arrive as top-level form
+  # fields in `conn.params`. Raw-body capture mirrors SendGrid (D-46-08).
+  defp build_request!(:mailgun, conn) do
+    %Request{
+      provider: :mailgun,
+      raw_body: conn.private[:raw_body],
+      headers: conn.req_headers,
+      params: conn.params || %{},
+      content_type: List.first(get_req_header(conn, "content-type"))
+    }
+  end
+
+  # SES delivers the SNS JSON envelope as the request body; raw-body capture
+  # mirrors SendGrid. The SNS payload itself is parsed by the provider's verify
+  # seam (D-46-12).
+  defp build_request!(:ses, conn) do
+    %Request{
+      provider: :ses,
+      raw_body: conn.private[:raw_body],
+      headers: conn.req_headers,
+      params: conn.params || %{},
+      content_type: List.first(get_req_header(conn, "content-type"))
+    }
+  end
+
   defp extract_raw_body!(conn) do
     case conn.private[:raw_body] do
       raw when is_binary(raw) -> raw
@@ -238,20 +316,77 @@ defmodule MailglassInbound.Ingress.Plug do
     %{basic_auth: config[:basic_auth]}
   end
 
-  defp verify_request!(:postmark, request, config) do
-    provider_module(:postmark).verify!(request.raw_body, request.headers, config)
+  # Mailgun config surfaces the HMAC signing key (D-46-08). The opts `:config`
+  # override wins, else app env. Provider verify! raises ConfigError when absent.
+  defp resolve_config!(:mailgun, _conn, opts) do
+    config =
+      case Keyword.get(opts, :config) do
+        nil -> Application.get_env(:mailglass_inbound, :mailgun, [])
+        value -> value
+      end
+
+    %{signing_key: config[:signing_key]}
   end
 
-  defp verify_request!(:sendgrid, request, config) do
-    provider_module(:sendgrid).verify!(request, config)
+  # SES config surfaces the S3Fetcher module seam and an optional cert-cache TTL
+  # (D-46-13). The opts `:config` override wins, else app env.
+  defp resolve_config!(:ses, _conn, opts) do
+    config =
+      case Keyword.get(opts, :config) do
+        nil -> Application.get_env(:mailglass_inbound, :ses, [])
+        value -> value
+      end
+
+    %{
+      s3_fetcher: config[:s3_fetcher],
+      cert_cache_ttl_seconds: config[:cert_cache_ttl_seconds]
+    }
   end
 
-  defp normalize_request!(:postmark, request) do
-    provider_module(:postmark).normalize(request.raw_body, request.headers)
+  defp verify_request!(:postmark, request, config, opts) do
+    resolve_provider_module(:postmark, opts).verify!(request.raw_body, request.headers, config)
   end
 
-  defp normalize_request!(:sendgrid, request) do
-    provider_module(:sendgrid).normalize(request)
+  defp verify_request!(:sendgrid, request, config, opts) do
+    resolve_provider_module(:sendgrid, opts).verify!(request, config)
+  end
+
+  # Mailgun/SES use the widened struct arity verify!(%Request{}, config) and may
+  # return {:ok, facts} | {:replay} | {:control_plane, status} (D-46-06/07).
+  defp verify_request!(:mailgun, request, config, opts) do
+    resolve_provider_module(:mailgun, opts).verify!(request, config)
+  end
+
+  defp verify_request!(:ses, request, config, opts) do
+    resolve_provider_module(:ses, opts).verify!(request, config)
+  end
+
+  defp normalize_request!(:postmark, request, opts) do
+    resolve_provider_module(:postmark, opts).normalize(request.raw_body, request.headers)
+  end
+
+  defp normalize_request!(:sendgrid, request, opts) do
+    resolve_provider_module(:sendgrid, opts).normalize(request)
+  end
+
+  defp normalize_request!(:mailgun, request, opts) do
+    resolve_provider_module(:mailgun, opts).normalize(request)
+  end
+
+  defp normalize_request!(:ses, request, opts) do
+    resolve_provider_module(:ses, opts).normalize(request)
+  end
+
+  # Test seam: an opts `:provider_module` override lets tests inject a stub
+  # provider to exercise the widened verify-result branches (replay /
+  # control-plane / persist) without the real Mailgun/SES providers (which land
+  # in Plans 02/03). In production, opts carries no `:provider_module`, so this
+  # falls back to the hardcoded `provider_module/1` dispatch.
+  defp resolve_provider_module(provider, opts) do
+    case Keyword.get(opts, :provider_module) do
+      mod when is_atom(mod) and not is_nil(mod) -> mod
+      _ -> provider_module(provider)
+    end
   end
 
   defp resolve_tenant!(provider, conn, request) do
@@ -371,4 +506,8 @@ defmodule MailglassInbound.Ingress.Plug do
 
   defp provider_module(:postmark), do: MailglassInbound.Ingress.Providers.Postmark
   defp provider_module(:sendgrid), do: MailglassInbound.Ingress.Providers.Sendgrid
+  # Mailgun/SES providers land in Plans 02/03 (referenced by name; the plug only
+  # resolves them when a :mailgun/:ses request is actually dispatched).
+  defp provider_module(:mailgun), do: MailglassInbound.Ingress.Providers.Mailgun
+  defp provider_module(:ses), do: MailglassInbound.Ingress.Providers.SES
 end

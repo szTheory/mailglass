@@ -70,6 +70,41 @@ defmodule MailglassInbound.Ingress.PlugTest do
     end
   end
 
+  # Stub provider injected via the plug's `:provider_module` opts seam so the
+  # widened verify-result branches (D-46-06) and the dual SignatureError rescue
+  # (D-46-19) can be exercised without the real Mailgun/SES providers (Plans
+  # 02/03). The verify outcome is process-dictionary driven.
+  defmodule StubProvider do
+    # A test double, not a full behaviour implementation: the plug dispatches the
+    # struct-arity verify!/2 + normalize/1 for :mailgun/:ses, which is all this
+    # stub needs to provide. Declaring @behaviour would force the legacy
+    # normalize/2 arity it never uses.
+    def verify!(%MailglassInbound.Ingress.Request{}, _config) do
+      case Process.get(:mailglass_inbound_stub_verify, {:ok, %{auth: :stub}}) do
+        {:raise, :inbound} ->
+          raise MailglassInbound.SignatureError.new(:bad_signature, provider: :mailgun)
+
+        {:raise, :core} ->
+          raise Mailglass.SignatureError.new(:bad_signature, provider: :ses)
+
+        other ->
+          other
+      end
+    end
+
+    def normalize(%MailglassInbound.Ingress.Request{} = request) do
+      %{
+        message: %MailglassInbound.InboundMessage{
+          provider: request.provider,
+          provider_message_id: "stub-message-1",
+          envelope_recipient: "support@example.com",
+          to: [%{address: "support@example.com", name: nil}]
+        },
+        evidence: %{verification_facts: %{}}
+      }
+    end
+  end
+
   setup do
     prior_tenancy = Application.get_env(:mailglass, :tenancy)
     prior_postmark = Application.get_env(:mailglass_inbound, :postmark)
@@ -93,6 +128,8 @@ defmodule MailglassInbound.Ingress.PlugTest do
     Process.delete(:mailglass_inbound_last_execution_result)
     Process.delete(:mailglass_inbound_execution_order)
     Process.delete(:mailglass_inbound_execution_outcome)
+    Process.delete(:mailglass_inbound_stub_verify)
+    Process.delete(:mailglass_inbound_persist_error)
 
     on_exit(fn ->
       if is_nil(prior_tenancy) do
@@ -370,6 +407,134 @@ defmodule MailglassInbound.Ingress.PlugTest do
 
     assert conn.status == 500
     assert Jason.decode!(conn.resp_body)["reason"] == "webhook_verification_key_missing"
+  end
+
+  # ---- Phase 46: four-provider allowlist (MGUN-04, D-46-05) ----
+
+  test "init/1 accepts all four providers and rejects unknown ones" do
+    assert is_list(IngressPlug.init(provider: :postmark))
+    assert is_list(IngressPlug.init(provider: :sendgrid))
+    assert is_list(IngressPlug.init(provider: :mailgun))
+    assert is_list(IngressPlug.init(provider: :ses))
+
+    assert_raise ArgumentError, fn -> IngressPlug.init(provider: :cloudflare) end
+  end
+
+  # ---- Phase 46: widened do_call result contract (D-46-06) ----
+
+  test "a {:replay} verify return is a 200 no-op with no InboundRecord" do
+    Process.put(:mailglass_inbound_stub_verify, {:replay})
+
+    conn = stub_provider_conn(:mailgun)
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(
+          provider: :mailgun,
+          provider_module: StubProvider,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+      )
+
+    assert conn.status == 200
+    assert Jason.decode!(conn.resp_body)["status"] == "replay"
+    # No persistence, no execution — replay creates no state (T-46-02).
+    assert Process.get(:mailglass_inbound_last_handoff) == nil
+    assert Process.get(:mailglass_inbound_last_execution_result) == nil
+  end
+
+  test "a {:control_plane, 200} verify return is a 200 no-op with no InboundRecord" do
+    Process.put(:mailglass_inbound_stub_verify, {:control_plane, 200})
+
+    conn = stub_provider_conn(:ses)
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(
+          provider: :ses,
+          provider_module: StubProvider,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+      )
+
+    assert conn.status == 200
+    assert Jason.decode!(conn.resp_body)["status"] == "control_plane"
+    assert Process.get(:mailglass_inbound_last_handoff) == nil
+    assert Process.get(:mailglass_inbound_last_execution_result) == nil
+  end
+
+  test "an {:ok, facts} verify return persists as today" do
+    Process.put(:mailglass_inbound_stub_verify, {:ok, %{auth: :hmac}})
+
+    conn = stub_provider_conn(:mailgun)
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(
+          provider: :mailgun,
+          provider_module: StubProvider,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+      )
+
+    handoff = Process.get(:mailglass_inbound_last_handoff)
+
+    assert conn.status == 200
+    assert Jason.decode!(conn.resp_body)["status"] == "inserted"
+    assert handoff.tenant_id == "tenant-123"
+    assert handoff.message.provider == :mailgun
+    assert handoff.evidence.verification_facts.auth == :hmac
+    assert Process.get(:mailglass_inbound_last_execution_result).inbound_record.id == "record-123"
+  end
+
+  # ---- Phase 46: dual SignatureError rescue (D-46-19, T-46-01) ----
+
+  test "a stub raising MailglassInbound.SignatureError maps to 401" do
+    Process.put(:mailglass_inbound_stub_verify, {:raise, :inbound})
+
+    conn = stub_provider_conn(:mailgun)
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(provider: :mailgun, provider_module: StubProvider, persistence: FakePersistence)
+      )
+
+    assert conn.status == 401
+    assert Jason.decode!(conn.resp_body)["status"] == "rejected"
+    assert Jason.decode!(conn.resp_body)["reason"] == "bad_signature"
+    assert Process.get(:mailglass_inbound_last_handoff) == nil
+  end
+
+  test "a stub raising core Mailglass.SignatureError maps to 401" do
+    Process.put(:mailglass_inbound_stub_verify, {:raise, :core})
+
+    conn = stub_provider_conn(:ses)
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(provider: :ses, provider_module: StubProvider, persistence: FakePersistence)
+      )
+
+    assert conn.status == 401
+    assert Jason.decode!(conn.resp_body)["status"] == "rejected"
+    assert Jason.decode!(conn.resp_body)["reason"] == "bad_signature"
+    assert Process.get(:mailglass_inbound_last_handoff) == nil
+  end
+
+  defp stub_provider_conn(provider) do
+    Plug.Test.conn(:post, "/inbound/tenant-123/#{provider}", "")
+    |> Plug.Conn.put_req_header("content-type", "application/json")
+    |> Plug.Conn.put_private(:raw_body, "{}")
+    |> Map.put(:params, %{})
+    |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
   end
 
   defp conn_with_auth(body) do

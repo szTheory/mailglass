@@ -25,6 +25,14 @@ defmodule Mailglass.Webhook.Providers.SES do
        URL from TopicArn + Token, :httpc GET with redirects disabled (D-07)
      - `UnsubscribeConfirmation` → log telemetry, return control-plane no-op
 
+  ## Inbound-reuse seam
+
+  `verify_envelope!/2` exposes steps 1-5 (the SNS X.509 verification) as a public
+  seam so `mailglass_inbound`'s SES ingress can reuse the byte-identical SNS
+  envelope verification without reinventing cryptography (D-46-01). `verify!/3`
+  calls it, then dispatches on `MessageType`; its public return and behavior are
+  unchanged.
+
   ## Configuration (Application env)
 
       config :mailglass, :ses,
@@ -53,6 +61,32 @@ defmodule Mailglass.Webhook.Providers.SES do
   @spec verify!(binary(), [{String.t(), String.t()}], map()) ::
           :ok | {:ok, :control_plane, :subscription_confirmed | :unsubscribe_confirmed}
   def verify!(raw_body, _headers, %{} = config) when is_binary(raw_body) do
+    # Step 1: verify the SNS envelope (shared crypto seam, reused by inbound).
+    {:ok, payload} = verify_envelope!(raw_body, config)
+    msg_type = fetch_required_field!(payload, "Type")
+
+    # Step 2: dispatch on MessageType (all types verified above — D-05).
+    dispatch_message_type(msg_type, payload, config)
+  end
+
+  @doc """
+  Verify the SNS envelope's X.509 signature and trust policy, returning the
+  decoded SNS payload.
+
+  This is the **inbound-reuse seam** (D-46-01): the SNS JSON envelope is
+  byte-identical for outbound webhooks and `mailglass_inbound` SES ingress, so
+  the crypto primitive (decode → `TrustPolicy.valid_cert_url?` → `CertCache`
+  public-key fetch → canonical-string build → `:public_key.verify`) is factored
+  out for `mailglass_inbound.Ingress.Providers.SES` to call directly, then drive
+  its own MessageType dispatch (S3 fetch / inline content / control-plane).
+
+  Raises `Mailglass.SignatureError` on any verification failure — identical
+  behavior to the steps previously inlined in `verify!/3`. The outbound
+  `verify!/3` return and behavior are unchanged.
+  """
+  @doc since: "1.2.0"
+  @spec verify_envelope!(binary(), map()) :: {:ok, map()}
+  def verify_envelope!(raw_body, %{} = config) when is_binary(raw_body) do
     payload = decode_payload!(raw_body)
     cert_url = fetch_required_field!(payload, "SigningCertURL")
     sig_version = Map.get(payload, "SignatureVersion", "1")
@@ -105,8 +139,7 @@ defmodule Mailglass.Webhook.Providers.SES do
       raise SignatureError.new(:bad_signature, provider: :ses)
     end
 
-    # Dispatch on MessageType (all types verified above — D-05)
-    dispatch_message_type(msg_type, payload, config)
+    {:ok, payload}
   end
 
   @impl Mailglass.Webhook.Provider

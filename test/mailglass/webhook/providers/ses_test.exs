@@ -107,6 +107,42 @@ defmodule Mailglass.Webhook.Providers.SESTest do
     end
   end
 
+  # -------- verify_envelope!/2 — inbound-reuse crypto seam ---------
+
+  describe "verify_envelope!/2 (inbound-reuse seam, D-46-01)" do
+    test "returns {:ok, payload} with the decoded SNS payload for a valid Notification" do
+      {public_key, private_key} = generate_sns_keypair()
+      future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
+      CertCache.put(@cert_url, public_key, future)
+
+      raw = sign_fixture(load_ses_fixture("notification_delivery"), private_key)
+
+      assert {:ok, payload} = SES.verify_envelope!(raw, @config)
+      assert is_map(payload)
+      assert payload["Type"] == "Notification"
+      assert Map.has_key?(payload, "Message")
+    end
+
+    test "raises :bad_signature for a tampered payload (no dispatch on the seam)" do
+      {public_key, private_key} = generate_sns_keypair()
+      future = DateTime.add(Mailglass.Clock.utc_now(), 86_400, :second)
+      CertCache.put(@cert_url, public_key, future)
+
+      raw = sign_fixture(load_ses_fixture("notification_delivery"), private_key)
+
+      tampered =
+        String.replace(raw, "\"Message\":", "\"Message\":\"TAMPERED\", \"X\":", global: false)
+
+      err = catch_raised(fn -> SES.verify_envelope!(tampered, @config) end)
+      assert %SignatureError{type: :bad_signature, provider: :ses} = err
+    end
+
+    test "raises :malformed_header for non-JSON body" do
+      err = catch_raised(fn -> SES.verify_envelope!("not json", @config) end)
+      assert %SignatureError{type: :malformed_header, provider: :ses} = err
+    end
+  end
+
   # -------- verify!/3 — control-plane paths ------------------------
 
   describe "verify!/3 SES SNS control-plane" do
