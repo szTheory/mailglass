@@ -78,3 +78,10 @@ None.
 
 - Recurrence backstops (check-coverage meta-test, `.credo.exs` config sentinel) and the two pre-existing uncovered-check regression tests live in plan 45-09 (wave 3) — this plan deliberately pins check BEHAVIOR (via threaded params) while 45-09 will pin the .credo.exs CONFIG.
 - The `validate/8` helper is the single source of root/length logic for both telemetry call forms; future threshold changes should flow through it, not the per-clause walk heads.
+
+## Self-Check: PASSED
+
+- File `.planning/phases/45-inbound-telemetry-idempotency-foundation/45-05-SUMMARY.md` — FOUND
+- All four modified files present in tree — FOUND
+- Commits `81f0e93` (CR-01), `de99c8b` (WR-02), `5ca23599` (SUMMARY) — all FOUND in git log
+- Working tree clean
