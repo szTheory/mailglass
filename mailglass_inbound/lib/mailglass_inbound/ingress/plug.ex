@@ -369,7 +369,13 @@ defmodule MailglassInbound.Ingress.Plug do
 
     %{
       s3_fetcher: config[:s3_fetcher],
-      cert_cache_ttl_seconds: config[:cert_cache_ttl_seconds]
+      cert_cache_ttl_seconds: config[:cert_cache_ttl_seconds],
+      # WR-04: thread the documented retry tuning knob into the config map.
+      # `fetch_s3_body!` reads `Map.get(config, :s3_retry_opts, [])`, but this
+      # resolver previously never copied it from app env / opts — so the real
+      # plug path always used the hardcoded default (3 attempts, [250,1000,2000]
+      # backoff) and adopter-configured retry opts were silently ignored.
+      s3_retry_opts: config[:s3_retry_opts] || []
     }
   end
 

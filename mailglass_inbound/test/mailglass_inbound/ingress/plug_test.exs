@@ -116,6 +116,20 @@ defmodule MailglassInbound.Ingress.PlugTest do
     end
   end
 
+  # WR-04: a stub that records the config map the plug threads into verify!/2, so
+  # we can prove resolve_config!(:ses, ...) now carries the documented
+  # :s3_retry_opts tuning knob (previously dropped, making it dead config).
+  defmodule ConfigCaptureProvider do
+    def verify!(%MailglassInbound.Ingress.Request{}, config) do
+      Process.put(:mailglass_inbound_captured_config, config)
+      {:replay}
+    end
+
+    def normalize(%MailglassInbound.Ingress.Request{} = request) do
+      %{message: %MailglassInbound.InboundMessage{provider: request.provider}, evidence: %{}}
+    end
+  end
+
   setup do
     prior_tenancy = Application.get_env(:mailglass, :tenancy)
     prior_postmark = Application.get_env(:mailglass_inbound, :postmark)
@@ -593,6 +607,50 @@ defmodule MailglassInbound.Ingress.PlugTest do
     refute conn.resp_body =~ "bob@secret.example"
     refute conn.resp_body =~ "Confidential merger terms"
     refute conn.resp_body =~ "secret-bucket"
+  end
+
+  # ---- Phase 46: SES config threads :s3_retry_opts (WR-04) ----
+
+  test "resolve_config!(:ses, ...) threads :s3_retry_opts from opts config into verify config" do
+    Process.delete(:mailglass_inbound_captured_config)
+    retry_opts = [attempts: 5, backoff_ms: [0, 0, 0, 0]]
+
+    conn = stub_provider_conn(:ses)
+
+    IngressPlug.call(
+      conn,
+      IngressPlug.init(
+        provider: :ses,
+        provider_module: ConfigCaptureProvider,
+        persistence: FakePersistence,
+        config: [s3_fetcher: nil, cert_cache_ttl_seconds: 60, s3_retry_opts: retry_opts]
+      )
+    )
+
+    captured = Process.get(:mailglass_inbound_captured_config)
+
+    assert is_map(captured)
+    assert captured[:s3_retry_opts] == retry_opts
+  end
+
+  test "resolve_config!(:ses, ...) defaults :s3_retry_opts to [] when unset" do
+    Process.delete(:mailglass_inbound_captured_config)
+
+    conn = stub_provider_conn(:ses)
+
+    IngressPlug.call(
+      conn,
+      IngressPlug.init(
+        provider: :ses,
+        provider_module: ConfigCaptureProvider,
+        persistence: FakePersistence,
+        config: [s3_fetcher: nil, cert_cache_ttl_seconds: 60]
+      )
+    )
+
+    captured = Process.get(:mailglass_inbound_captured_config)
+
+    assert captured[:s3_retry_opts] == []
   end
 
   defp stub_provider_conn(provider) do
