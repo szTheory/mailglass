@@ -115,11 +115,19 @@ extra_checks = [
   # Open/click tracking is opt-in per mailable and demands an explicit
   # `:bulk`/`:operational` stream — a tracking-enabled mailable left on the
   # default/`:transactional` stream is a policy violation (CLAUDE.md
-  # open/click-tracking discipline). `[]` selects the check's param_defaults
-  # (`mailable_module: Mailglass.Mailable`). Registered here so it actually runs
-  # under `mix credo`; the checks_have_tests meta-test fails CI if any
+  # open/click-tracking discipline). Registered here so it actually runs under
+  # `mix credo`; the checks_have_tests meta-test fails CI if any
   # credo_checks/*.ex is defined but left unregistered like this one was.
-  {Mailglass.Credo.StreamPolicyConsistent, []}
+  #
+  # Path-scoped to production mailables (same pattern as NoDirectDateTimeNow /
+  # NoPiiInResponseBody / NoBareOptionalDepReference): test fixtures in
+  # core_send_integration_test.exs deliberately declare `tracking` on a
+  # `:transactional` stream to exercise the *runtime* auth-stream guard
+  # (`UATAuthMailer` asserts the ConfigError; `TrackingOnMailer` asserts pixel
+  # injection). Those are intentional bad-config shapes, so linting test files
+  # would be a false positive that breaks `mix credo --strict` (exit 16).
+  {Mailglass.Credo.StreamPolicyConsistent,
+   [included_path_prefixes: ["lib/mailglass/", "mailglass_inbound/lib/"]]}
 ]
 
 %{

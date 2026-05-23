@@ -16,7 +16,7 @@ defmodule Mailglass.Credo.StreamPolicyConsistentTest do
     end
     """
 
-    issues = run_check(source)
+    issues = run_check(source, "lib/mailglass/mailers/tracked_no_stream.ex")
 
     assert length(issues) == 1
     message = hd(issues).message
@@ -30,7 +30,7 @@ defmodule Mailglass.Credo.StreamPolicyConsistentTest do
     end
     """
 
-    assert run_check(source) == []
+    assert run_check(source, "lib/mailglass/mailers/tracked_bulk.ex") == []
   end
 
   test "does not flag a mailable with tracking disabled and no stream" do
@@ -40,12 +40,25 @@ defmodule Mailglass.Credo.StreamPolicyConsistentTest do
     end
     """
 
-    assert run_check(source) == []
+    assert run_check(source, "lib/mailglass/mailers/no_tracking.ex") == []
   end
 
-  defp run_check(source) do
+  test "ignores files outside the production path scope (test fixtures may declare bad config)" do
+    # A tracking-enabled mailable on :transactional is a deliberate test-fixture
+    # shape (it exercises the runtime auth-stream guard). Linting test files would
+    # be a false positive, so the check is path-scoped to production mailables.
+    source = """
+    defmodule Mailglass.Mailers.FixtureTrackedNoStream do
+      use Mailglass.Mailable, stream: :transactional, tracking: [opens: true]
+    end
+    """
+
+    assert run_check(source, "test/mailglass/core_send_integration_test.exs") == []
+  end
+
+  defp run_check(source, filename) do
     source
-    |> SourceFile.parse("test/mailglass/credo/stream_policy_consistent_fixture.ex")
+    |> SourceFile.parse(filename)
     |> StreamPolicyConsistent.run([])
   end
 end

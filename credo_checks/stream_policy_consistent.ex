@@ -3,36 +3,48 @@ defmodule Mailglass.Credo.StreamPolicyConsistent do
     category: :warning,
     base_priority: :high,
     param_defaults: [
-      mailable_module: Mailglass.Mailable
+      mailable_module: Mailglass.Mailable,
+      included_path_prefixes: ["lib/mailglass/", "mailglass_inbound/lib/"]
     ],
     explanations: [
       check: """
       Mailable tracking requires an explicit `:bulk` or `:operational` stream.
       """,
       params: [
-        mailable_module: "Module used to identify mailable modules (`use Mailglass.Mailable`)."
+        mailable_module: "Module used to identify mailable modules (`use Mailglass.Mailable`).",
+        included_path_prefixes:
+          "Only files in these path prefixes are linted. Scoped to production mailables; " <>
+            "test fixtures deliberately declare tracking on `:transactional` to exercise the " <>
+            "runtime auth-stream guard, so linting them would be a false positive."
       ]
     ]
 
   @impl true
   def run(%SourceFile{} = source_file, params \\ []) do
-    issue_meta = IssueMeta.for(source_file, params)
-    mailable_tail = params |> Params.get(:mailable_module, __MODULE__) |> module_tail_name()
+    included_path_prefixes = Params.get(params, :included_path_prefixes, __MODULE__)
 
-    ast = SourceFile.ast(source_file)
+    if included_path?(source_file, included_path_prefixes) do
+      issue_meta = IssueMeta.for(source_file, params)
+      mailable_tail = params |> Params.get(:mailable_module, __MODULE__) |> module_tail_name()
 
-    {_ast, issues} =
-      Macro.traverse(
-        ast,
-        [],
-        &prewalk(&1, &2, issue_meta, mailable_tail),
-        fn ast, state -> {ast, state} end
-      )
+      ast = SourceFile.ast(source_file)
 
-    Enum.reverse(issues)
+      {_ast, issues} =
+        Macro.traverse(
+          ast,
+          [],
+          &prewalk(&1, &2, issue_meta, mailable_tail),
+          fn ast, state -> {ast, state} end
+        )
+
+      Enum.reverse(issues)
+    else
+      []
+    end
   end
 
-  defp prewalk({:use, meta, [module_ast, opts]} = ast, issues, issue_meta, mailable_tail) when is_list(opts) do
+  defp prewalk({:use, meta, [module_ast, opts]} = ast, issues, issue_meta, mailable_tail)
+       when is_list(opts) do
     if module_tail_from_ast(module_ast) == mailable_tail do
       if node_enables_tracking?(opts) do
         stream_val = Keyword.get(opts, :stream)
@@ -108,4 +120,10 @@ defmodule Mailglass.Credo.StreamPolicyConsistent do
   end
 
   defp module_tail_from_ast(_), do: nil
+
+  defp included_path?(%SourceFile{filename: filename}, prefixes) when is_binary(filename) do
+    Enum.any?(prefixes, &String.starts_with?(filename, &1))
+  end
+
+  defp included_path?(_source_file, _prefixes), do: false
 end
