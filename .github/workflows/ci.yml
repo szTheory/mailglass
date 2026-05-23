@@ -236,6 +236,47 @@ jobs:
         working-directory: mailglass_inbound
         run: mix test --only property
 
+  inbound_compile_no_optional_deps:
+    name: Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)
+    # Compile-only gate (no Postgres, no MIX_ENV: test). Exercises the inbound→core
+    # cross-package reference (MailglassInbound.Execution.Worker → Mailglass.Oban.TenancyMiddleware)
+    # under `--no-optional-deps`, where Oban is stripped from both inbound's dep and
+    # the path-dep core. The core `compile_no_optional_deps` lane uses `--only test`
+    # and never builds inbound, so it never touches this path — this job is additive.
+    # Separate job (not a step in inbound_test) so a compile-gate failure is legible
+    # in the checks list and runs in parallel.
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: |
+            deps
+            mailglass_inbound/deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install core deps
+        run: mix deps.get
+      - name: Install inbound deps
+        working-directory: mailglass_inbound
+        run: mix deps.get
+      - name: Compile inbound without optional deps
+        working-directory: mailglass_inbound
+        run: mix compile --no-optional-deps --warnings-as-errors
+
   credo_strict:
     name: Credo Strict (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
