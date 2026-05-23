@@ -87,6 +87,17 @@ defmodule MailglassInbound.Ingress.PlugTest do
         {:raise, :core} ->
           raise Mailglass.SignatureError.new(:bad_signature, provider: :ses)
 
+        {:raise, :s3, type} ->
+          # CR-02: SES verify!/2 raises S3FetchError on retry exhaustion /
+          # non-retryable S3 error. `:cause` carries the raw recipient-adjacent
+          # S3 fragment so the test can prove it never leaks into the response.
+          raise %MailglassInbound.S3FetchError{
+            type: type,
+            message: "stub S3 fetch failure",
+            cause: {:s3, "bob@secret.example", "Confidential merger terms"},
+            context: %{bucket: "secret-bucket"}
+          }
+
         other ->
           other
       end
@@ -527,6 +538,61 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert Jason.decode!(conn.resp_body)["status"] == "rejected"
     assert Jason.decode!(conn.resp_body)["reason"] == "bad_signature"
     assert Process.get(:mailglass_inbound_last_handoff) == nil
+  end
+
+  # ---- Phase 46: S3FetchError rescue (CR-02, T-46-24) ----
+
+  test "a stub raising S3FetchError :s3_object_not_ready maps to 500 (transient, SNS redelivers)" do
+    Process.put(:mailglass_inbound_stub_verify, {:raise, :s3, :s3_object_not_ready})
+
+    conn = stub_provider_conn(:ses)
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(provider: :ses, provider_module: StubProvider, persistence: FakePersistence)
+      )
+
+    body = Jason.decode!(conn.resp_body)
+
+    # Transient -> 500 so the handler does NOT ack and SNS redelivers.
+    assert conn.status == 500
+    assert body["status"] == "s3_fetch_error"
+    assert body["reason"] == "s3_object_not_ready"
+
+    # No record was persisted on the verify-time S3 failure.
+    assert Process.get(:mailglass_inbound_last_handoff) == nil
+
+    # PII-free body: the S3FetchError :cause carries recipient-adjacent fragments
+    # that must NEVER reach the provider in the response.
+    refute conn.resp_body =~ "bob@secret.example"
+    refute conn.resp_body =~ "Confidential merger terms"
+    refute conn.resp_body =~ "secret-bucket"
+  end
+
+  test "a stub raising S3FetchError :s3_fetch_failed maps to 422 (permanent, stops redelivery storm)" do
+    Process.put(:mailglass_inbound_stub_verify, {:raise, :s3, :s3_fetch_failed})
+
+    conn = stub_provider_conn(:ses)
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(provider: :ses, provider_module: StubProvider, persistence: FakePersistence)
+      )
+
+    body = Jason.decode!(conn.resp_body)
+
+    # Permanent -> 422 (non-retryable): retrying will not help.
+    assert conn.status == 422
+    assert body["status"] == "s3_fetch_error"
+    assert body["reason"] == "s3_fetch_failed"
+
+    assert Process.get(:mailglass_inbound_last_handoff) == nil
+
+    refute conn.resp_body =~ "bob@secret.example"
+    refute conn.resp_body =~ "Confidential merger terms"
+    refute conn.resp_body =~ "secret-bucket"
   end
 
   defp stub_provider_conn(provider) do

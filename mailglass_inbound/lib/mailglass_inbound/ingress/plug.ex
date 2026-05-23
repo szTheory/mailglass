@@ -38,6 +38,11 @@ defmodule MailglassInbound.Ingress.Plug do
   # Net-new inbound signature error raised by the Mailgun/SES providers (D-46-19).
   # Aliased here so the rescue clause can catch BOTH it and core's SignatureError.
   alias MailglassInbound.SignatureError, as: InboundSignatureError
+  # SES verify!/2 fetches the raw MIME body from S3 during verification; on retry
+  # exhaustion or a non-retryable S3 error it raises S3FetchError. Aliased so the
+  # rescue clause can catch it and map transient vs permanent to the right
+  # response (CR-02) instead of letting it escape as an uncontrolled 500.
+  alias MailglassInbound.S3FetchError
   alias MailglassInbound.Execution
   alias MailglassInbound.Ingress.Request
 
@@ -104,6 +109,31 @@ defmodule MailglassInbound.Ingress.Plug do
       e in [SignatureError, InboundSignatureError] ->
         resp = send_json(conn, 401, %{status: "rejected", reason: Atom.to_string(e.type)})
         {resp, %{provider: provider, status: :rejected}}
+
+      # CR-02: SES verify!/2 fetches the raw MIME from S3 inside verification;
+      # retry exhaustion or a non-retryable S3 error raises S3FetchError. Without
+      # this clause it escaped the rescue allowlist and the telemetry span,
+      # producing an uncontrolled 500 (only correct by accident) and collapsing
+      # the transient/permanent distinction so a permanently-failing object would
+      # trigger infinite SNS redelivery. Map the two closed types explicitly:
+      #
+      #   * :s3_object_not_ready  -> 500 (transient; the handler does NOT ack, so
+      #                              SNS redelivers and the dedupe layer absorbs
+      #                              the duplicate — the designed safety net).
+      #   * :s3_fetch_failed      -> 422 (permanent; retry will not help, so a
+      #                              non-retryable status stops the redelivery
+      #                              storm). SNS treats non-2xx as failure either
+      #                              way, but 422 documents the permanent intent.
+      #
+      # The `e.type` rides the PII-free telemetry stop-meta as `error_kind`; the
+      # response body carries only the closed-type atom name, never PII.
+      e in S3FetchError ->
+        status = if e.type == :s3_object_not_ready, do: 500, else: 422
+
+        resp =
+          send_json(conn, status, %{status: "s3_fetch_error", reason: Atom.to_string(e.type)})
+
+        {resp, %{provider: provider, status: :s3_fetch_error, error_kind: e.type}}
 
       e in TenancyError ->
         resp = send_json(conn, 422, %{status: "tenant_unresolved", reason: Atom.to_string(e.type)})
