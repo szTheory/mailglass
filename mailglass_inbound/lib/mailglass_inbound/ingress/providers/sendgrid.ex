@@ -7,7 +7,7 @@ defmodule MailglassInbound.Ingress.Providers.Sendgrid do
   alias MailglassInbound.InboundMessage
   alias MailglassInbound.Ingress.Request
 
-  @impl false
+  @impl MailglassInbound.Ingress.Provider
   def verify!(%Request{headers: headers}, %{} = config) when is_list(headers) do
     {user, pass} = fetch_basic_auth!(config)
     verify_basic_auth!(headers, user, pass)
