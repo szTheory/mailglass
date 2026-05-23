@@ -48,6 +48,14 @@ defmodule MailglassInbound.Ingress.Providers.SES do
 
   @impl MailglassInbound.Ingress.Provider
   def verify!(%Request{raw_body: raw_body} = _request, %{} = config) when is_binary(raw_body) do
+    # WR-01: clear any stale stash from a prior request before stashing this
+    # one. Under per-request processes (Cowboy/Bandit) the dictionary is fresh,
+    # but if the plug is ever driven from a long-lived/pooled process a leftover
+    # entry (e.g. a prior request whose tenant resolution raised between verify!
+    # and normalize/1, so normalize/1 never consumed the stash) must not bleed
+    # into this request. This makes the stash safe regardless of process model.
+    Process.delete(@pd_key)
+
     payload = verify_envelope!(raw_body, config)
 
     case Map.get(payload, "Type") do
@@ -270,12 +278,38 @@ defmodule MailglassInbound.Ingress.Providers.SES do
         {payload, raw_mime}
 
       _ ->
-        # Defensive fallback: re-parse the SNS envelope (signature already
-        # enforced by verify!) and re-resolve the body from app-env config.
-        payload = Jason.decode!(raw_body)
-        raw_mime = extract_raw_mime!(payload, %{})
-        {payload, raw_mime}
+        # Defensive fallback: the plug always calls verify!/2 (which stashes)
+        # before normalize/1 in the same request process, so this path is only
+        # reached via the legacy normalize/2 shim or a misuse. Honor the module's
+        # never-raise posture for body parsing (WR-01): a malformed SNS envelope
+        # degrades to an empty record rather than escaping as a Jason.DecodeError
+        # that the plug rescue would not catch (same leak class as CR-02). The
+        # SNS signature was already enforced by verify!/2 upstream.
+        case Jason.decode(raw_body) do
+          {:ok, %{} = payload} ->
+            # Thread the REAL resolved config (app env, incl. :s3_retry_opts)
+            # into the re-fetch instead of an empty %{}, so the configured
+            # fetcher + retry tuning are honored on this path too (WR-01).
+            {payload, extract_raw_mime!(payload, fallback_config())}
+
+          _ ->
+            {%{}, ""}
+        end
     end
+  end
+
+  # Build the SES config from app env for the defensive normalize/1 fallback.
+  # Mirrors the shape resolve_config!(:ses, ...) builds in the plug, so the
+  # fallback honors the adopter's configured fetcher and retry opts rather than
+  # silently defaulting (WR-01).
+  defp fallback_config do
+    config = Application.get_env(:mailglass_inbound, :ses, [])
+
+    %{
+      s3_fetcher: config[:s3_fetcher],
+      cert_cache_ttl_seconds: config[:cert_cache_ttl_seconds],
+      s3_retry_opts: config[:s3_retry_opts] || []
+    }
   end
 
   # ---- MIME repr → normalized fields -----------------------------------

@@ -149,6 +149,40 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     refute Map.has_key?(message, :raw_mime)
   end
 
+  # ---- WR-01: defensive normalize/1 fallback + stale-stash clearing ----
+
+  test "normalize/1 fallback degrades malformed JSON to an empty record instead of raising" do
+    # No prior verify! in this process, so normalize/1 takes the defensive
+    # fallback. A malformed SNS envelope must NOT raise Jason.DecodeError (which
+    # the plug rescue would not catch); it degrades to an empty record.
+    request = ses_request("{not valid json")
+
+    %{message: message, evidence: evidence} = SES.normalize(request)
+
+    assert message.provider == :ses
+    assert message.provider_message_id == nil
+    assert evidence.raw_mime == ""
+  end
+
+  test "verify! clears a stale stash from a prior request before stashing the new one", %{
+    private_key: pk
+  } do
+    # Simulate a pooled-process footgun: a leftover stash from a prior request
+    # whose normalize/1 never ran. A fresh verify! must overwrite it so the new
+    # request's normalize/1 reads the CURRENT body, never the stale one.
+    Process.put({SES, :verified}, {%{"Type" => "Notification"}, "STALE BODY FROM PRIOR REQUEST"})
+
+    S3Fetcher.Fake.put(@bucket, "ses-fresh", @raw_mime)
+    raw = signed_s3_notification(pk, "ses-fresh")
+    request = ses_request(raw)
+
+    assert {:ok, _facts} = SES.verify!(request, ses_config())
+    %{evidence: evidence} = SES.normalize(request)
+
+    assert evidence.raw_mime == @raw_mime
+    refute evidence.raw_mime == "STALE BODY FROM PRIOR REQUEST"
+  end
+
   # ---- helpers ---------------------------------------------------------
 
   defp ses_config, do: %{s3_fetcher: S3Fetcher.Fake, cert_cache_ttl_seconds: 86_400}
