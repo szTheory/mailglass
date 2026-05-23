@@ -13,18 +13,27 @@ defmodule Mailglass.Credo.TelemetryEventConvention do
 
         * direct `:telemetry.execute/3` call sites — the full event name;
         * direct `:telemetry.span/3` call sites — the event PREFIX; and
-        * the package's own `span/3` wrapper call sites (a call to a function
-          named `span`, e.g. the inbound private wrapper and the outbound
-          `Mailglass.Telemetry.span/3`) — the literal event PREFIX, which is
-          where the inbound event names actually live.
+        * the package's own span-WRAPPER call sites — a call to a function whose
+          name starts with `span` (`span`, `span_with_enrichment`), covering the
+          inbound private wrapper, the outbound `Mailglass.Telemetry.span/3`, and
+          the webhook `span_with_enrichment/3`. The literal event PREFIX lives
+          here — this is where the inbound (and webhook) event names actually
+          live.
 
       The inbound package wraps every emission in a private `span/3` that
       forwards a VARIABLE prefix to `:telemetry.span/3`; the literal full
       prefix lives at the `span([...], ...)` wrapper call sites inside the
-      `*_span/2` helpers. Validating the `span/3` wrapper call site is what
-      gives REAL inbound coverage — a literal-only `:telemetry.span/3` clause
-      would never fire on inbound code, because the inbound `:telemetry.span`
-      call carries a variable.
+      `*_span/2` helpers. Validating the span-wrapper call site is what gives
+      REAL inbound coverage — a literal-only `:telemetry.span/3` clause would
+      never fire on inbound code, because the inbound `:telemetry.span` call
+      carries a variable.
+
+      The wrapper is matched by a `span`-prefixed name, NOT a `*_span` suffix:
+      the public helpers END with `_span` and pass a PARTIAL suffix or no
+      literal at their call site (outbound `persist_span([:delivery, …], …)`
+      passes a suffix the wrapper prepends a root onto), so a suffix match would
+      false-positive. The span-WRAPPER (`span`-prefixed) always carries the
+      full literal prefix.
 
       A `:telemetry.span/3` prefix and a `span/3` wrapper prefix are both
       validated against `min_segments - 1` because the runtime appends
@@ -87,58 +96,78 @@ defmodule Mailglass.Credo.TelemetryEventConvention do
     )
   end
 
-  # `span/3` wrapper call sites — the package's own named span wrapper. This is
-  # where the LITERAL inbound event names actually live: the inbound `*_span/2`
-  # public helpers forward to a private `span([literal_prefix], metadata, fun)`,
-  # and the outbound core calls `Mailglass.Telemetry.span([literal_prefix], ...)`.
+  # Span-WRAPPER call sites — the package's own named span wrappers. This is
+  # where the LITERAL event prefixes actually live across all three packages:
+  #
+  #   * inbound `*_span/2` helpers forward to a private `span([literal], ...)`;
+  #   * outbound core calls `Mailglass.Telemetry.span([literal], ...)`; and
+  #   * webhook `*_span/2` helpers forward to `span_with_enrichment([literal], ...)`.
+  #
   # A literal-only `:telemetry.span/3` clause never fires on inbound code because
   # the inbound `:telemetry.span` call carries a VARIABLE prefix — so validating
-  # the `span/3` wrapper call site is what delivers real inbound coverage.
+  # the wrapper call site is what delivers real inbound (and webhook) coverage.
   #
   # The wrapper forwards its first arg to `:telemetry.span/3`, so the literal
   # prefix is one segment short of the emitted event (runtime appends
   # `:start`/`:stop`/`:exception`) — validated against `min_segments - 1`, the
   # same off-by-one as the `:telemetry.span` clause. A variable first arg (the
-  # private wrapper's own `event_prefix` forward) yields `:error` from
+  # wrapper's own `event_prefix` forward) yields `:error` from
   # `literal_atom_list/1` and produces no issue (false-positive avoidance).
   #
-  # Two heads cover the bare-atom local call `span([...], ...)` and the qualified
-  # remote call `Mod.span([...], ...)`. Matching the function name `span` (not a
-  # `*_span` suffix) is deliberate: the inbound/outbound `*_span/2,/3` helpers do
-  # NOT carry a full literal prefix at their public call site — outbound
-  # `persist_span([:delivery, :update_projections], ...)` passes a partial SUFFIX
-  # that the wrapper prepends `[:mailglass, :persist]` onto, so flagging it by
-  # `*_span` suffix would be a false positive. The full literal prefix is always
-  # at the `span([...], ...)` wrapper call site.
+  # The wrapper is matched by a function name that STARTS WITH `"span"`
+  # (`span`, `span_with_enrichment`) — see `span_wrapper_name?/1`. Starts-with,
+  # NOT a `*_span` suffix: the public helpers END with `_span` and do NOT carry
+  # a full literal prefix at their call site (outbound
+  # `persist_span([:delivery, :update_projections], ...)` passes a partial
+  # SUFFIX the wrapper prepends `[:mailglass, :persist]` onto), so a
+  # `*_span`-suffix match would be a false positive. The full literal prefix is
+  # always at the span-wrapper call site. Two heads cover the bare-atom local
+  # call `span([...], ...)` and the qualified remote call `Mod.span([...], ...)`.
   defp walk(
-         {:span, meta, [event_ast | _rest] = args} = ast,
+         {fn_name, meta, [event_ast | _rest] = args} = ast,
          ctx,
          issue_meta,
          required_roots,
          min_segments
        )
-       when length(args) >= 2 do
-    validate(ast, ctx, issue_meta, required_roots, min_segments, event_ast, meta,
-      threshold: min_segments - 1,
-      trigger: "span"
-    )
+       when is_atom(fn_name) and length(args) >= 2 do
+    if span_wrapper_name?(fn_name) do
+      validate(ast, ctx, issue_meta, required_roots, min_segments, event_ast, meta,
+        threshold: min_segments - 1,
+        trigger: Atom.to_string(fn_name)
+      )
+    else
+      {ast, ctx}
+    end
   end
 
   defp walk(
-         {{:., _, [_module, :span]}, meta, [event_ast | _rest] = args} = ast,
+         {{:., _, [_module, fn_name]}, meta, [event_ast | _rest] = args} = ast,
          ctx,
          issue_meta,
          required_roots,
          min_segments
        )
-       when length(args) >= 2 do
-    validate(ast, ctx, issue_meta, required_roots, min_segments, event_ast, meta,
-      threshold: min_segments - 1,
-      trigger: "span"
-    )
+       when is_atom(fn_name) and length(args) >= 2 do
+    if span_wrapper_name?(fn_name) do
+      validate(ast, ctx, issue_meta, required_roots, min_segments, event_ast, meta,
+        threshold: min_segments - 1,
+        trigger: Atom.to_string(fn_name)
+      )
+    else
+      {ast, ctx}
+    end
   end
 
   defp walk(ast, ctx, _issue_meta, _required_roots, _min_segments), do: {ast, ctx}
+
+  # A telemetry span WRAPPER is named `span` or `span_*` (e.g.
+  # `span_with_enrichment`) — these carry the FULL literal event prefix. Public
+  # helpers named `*_span` (e.g. `persist_span`, `ingress_span`) carry a partial
+  # suffix or no literal and are intentionally NOT matched here.
+  defp span_wrapper_name?(fn_name) when is_atom(fn_name) do
+    String.starts_with?(Atom.to_string(fn_name), "span")
+  end
 
   # Shared root/length validation for both `:telemetry.execute` and
   # `:telemetry.span` clauses. `threshold` is the minimum prefix length for the

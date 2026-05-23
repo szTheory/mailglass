@@ -211,6 +211,112 @@ defmodule Mailglass.Credo.TelemetryEventConventionTest do
     assert length(run_check(source, @configured)) == 1
   end
 
+  test "generalizes to a span_with_enrichment/3 wrapper (webhook package shape)" do
+    # The webhook package's wrapper is named `span_with_enrichment` (a `span`-
+    # PREFIXED name), not `span`. It carries the full literal prefix too, so it
+    # must be covered by the same wrapper clause. Wrong root -> one issue.
+    source = """
+    defmodule Demo do
+      def ingest_span(metadata, fun) do
+        span_with_enrichment([:my_app, :webhook, :ingest], metadata, fun)
+      end
+
+      defp span_with_enrichment(event_prefix, metadata, fun) do
+        :telemetry.span(event_prefix, metadata, fun)
+      end
+    end
+    """
+
+    assert length(run_check(source, @configured)) == 1
+  end
+
+  test "does not flag a *_span helper carrying a partial suffix (outbound persist_span shape)" do
+    # Outbound `persist_span([:delivery, :update_projections], ...)` passes a
+    # partial SUFFIX (not a full prefix) that the wrapper prepends
+    # `[:mailglass, :persist]` onto. A `*_span`-suffix match would false-positive
+    # here; the `span`-PREFIX match correctly leaves it alone.
+    source = """
+    defmodule Demo do
+      def run do
+        persist_span([:delivery, :update_projections], %{}, fn -> :ok end)
+      end
+
+      def persist_span(suffix, metadata, fun) do
+        span([:mailglass, :persist] ++ suffix, metadata, fun)
+      end
+
+      defp span(event_prefix, metadata, fun) do
+        :telemetry.span(event_prefix, metadata, fun)
+      end
+    end
+    """
+
+    assert run_check(source, @configured) == []
+  end
+
+  # --- WR-02 real-inbound proof -------------------------------------------------
+  #
+  # The charter requires the check to demonstrably cover REAL inbound code, not
+  # just isolated fixtures. We parse the live `mailglass_inbound` telemetry module
+  # (the source of the four real literal event prefixes at its `span([...], ...)`
+  # wrapper call sites) and assert:
+  #   * unmodified source -> zero issues (the real prefixes are correct AND are
+  #     now SEEN by the check at the span/3 wrapper call site); and
+  #   * a mutated copy with one real literal list made wrong -> an issue (proving
+  #     the coverage is real and not vacuous: correct -> clean, mutated -> flagged).
+
+  @inbound_telemetry_path "mailglass_inbound/lib/mailglass_inbound/telemetry.ex"
+
+  test "real mailglass_inbound telemetry.ex event names are validated by the span/3 wrapper clause" do
+    source = File.read!(@inbound_telemetry_path)
+
+    issues =
+      source
+      |> SourceFile.parse(@inbound_telemetry_path)
+      |> TelemetryEventConvention.run(@configured)
+
+    assert issues == [],
+           "unmodified real inbound telemetry.ex should be clean, got: #{inspect(issues)}"
+
+    # Mutate ONE real literal prefix to a wrong (non-mailglass) root. The real
+    # source contains `[:mailglass_inbound, :ingress, :request]`; flip the root.
+    assert String.contains?(source, "[:mailglass_inbound, :ingress, :request]"),
+           "expected real inbound source to contain the ingress span literal — update the mutation if the source moved"
+
+    mutated =
+      String.replace(
+        source,
+        "[:mailglass_inbound, :ingress, :request]",
+        "[:wrong_app, :ingress, :request]"
+      )
+
+    mutated_issues =
+      mutated
+      |> SourceFile.parse(@inbound_telemetry_path)
+      |> TelemetryEventConvention.run(@configured)
+
+    assert length(mutated_issues) == 1,
+           "mutating a real inbound event prefix to a wrong root should be flagged, got: #{inspect(mutated_issues)}"
+  end
+
+  test "passes a full real-shaped inbound *_span/2 helper forwarding a correct literal" do
+    # Full real shape: a `*_span/2` public helper forwarding to a private `span/3`
+    # wrapper carrying the literal prefix. The literal is correct -> zero issues.
+    source = """
+    defmodule Demo do
+      def execution_span(metadata, fun) do
+        span([:mailglass_inbound, :execution, :run], metadata, fun)
+      end
+
+      defp span(event_prefix, metadata, fun) do
+        :telemetry.span(event_prefix, metadata, fun)
+      end
+    end
+    """
+
+    assert run_check(source, @configured) == []
+  end
+
   defp run_check(source) do
     source
     |> SourceFile.parse("test/mailglass/credo/telemetry_event_convention_fixture.ex")
