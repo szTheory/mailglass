@@ -85,3 +85,10 @@ None. Every builder produces a payload that round-trips through the real, produc
 ## Threat Flags
 
 None. No new network endpoint, auth path, or schema surface is introduced beyond the threat register already documented in the plan (T-47-01..04), all of which are mitigated as designed.
+
+## Self-Check: PASSED
+
+- FOUND: `mailglass_inbound/lib/mailglass_inbound/fixtures.ex` (386 lines, contains `defmodule MailglassInbound.Fixtures`)
+- FOUND: `mailglass_inbound/test/mailglass_inbound/fixtures_test.exs` (contains `SES.verify!`)
+- FOUND commits: da879b5 (test), be8430b (feat), 3a934d2 (test), cb472f0 (feat), e4cc6da (docs)
+- TDD gate sequence verified: `test()` → `feat()` for both Task 1 and Task 2.
