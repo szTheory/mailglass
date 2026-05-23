@@ -34,7 +34,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 
 - [x] **Phase 44.5: v1.0/1.1 Release Ceremony** — Single linked-version cut: `mailglass` 0.3.2 → **1.0.0**, `mailglass_admin` 0.3.2 → **1.0.0**, `mailglass_inbound` first Hex publish at **0.1.0**. Bundles 4 unreleased milestones (v0.5/v0.6/v1.0/v1.1, 169 commits since v0.3.0 tag). Resolves CLOSE-06. — completed 2026-05-07
 - [x] **Phase 45: Inbound Telemetry + Idempotency Foundation** — 4-level telemetry spans across all inbound stages, shared MIME module, and 1000-replay convergence proof (12 plans: 4 functional + 8 gap-closure across 2 rounds) — completed 2026-05-23
-- [ ] **Phase 46: Mailgun + SES Inbound Ingress** — Lift outbound verifiers into inbound; ship Mailgun (HMAC) and SES (SNS X.509 + S3 fetch) provider plugs
+- [ ] **Phase 46: Mailgun + SES Inbound Ingress** — Lift outbound verifiers into inbound; ship Mailgun (HMAC) and SES (SNS X.509 + S3 fetch) provider plugs (3 plans, 2 waves)
 - [ ] **Phase 47: Inbound Test Helpers + Generators** — `TestAssertions`, `MailboxCase`, `Test.Ingress`, code-built fixtures, and 3 Igniter generators
 - [ ] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card
 - [ ] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only
@@ -94,7 +94,10 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
   3. POSTing an authentic SES SNS notification to `/inbound/ses` verifies the X.509 signature via `Mailglass.Webhook.Providers.SES.{CertCache, TrustPolicy}` (URL allowlist enforced); `SubscriptionConfirmation` notifications auto-confirm only when SubscribeURL passes `TrustPolicy`; forged or hijacked URLs are rejected.
   4. SES `Action: S3` notifications fetch the MIME body via the `MailglassInbound.S3Fetcher` behaviour; `MailglassInbound.S3Fetcher.Fake` ships in core (test default), and `MailglassInbound.S3Fetcher.ExAwsS3` ships behind the new `Mailglass.OptionalDeps.ExAwsS3` gateway; SNS-arriving-before-S3-consistency races recover with bounded retry + structured error.
   5. `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex` allowlist accepts `:mailgun` and `:ses` alongside the existing `:postmark` and `:sendgrid`; verifier dispatch is one switch, not two parallel pipelines.
-**Plans**: TBD
+**Plans**: 3 plans (2 waves)
+- [ ] 46-01-PLAN.md — Shared foundation: net-new SignatureError + S3FetchError, S3Fetcher behaviour, widened Provider callback, widened Plug (4-provider allowlist + 3-variant result case + dual rescue), core SES verify_envelope!/2 seam (MGUN-04, SESI-03)
+- [ ] 46-02-PLAN.md — Mailgun provider: flat-field HMAC + replay no-op + multipart normalize + Message-Id/fingerprint dedupe + fingerprint migration (MGUN-01, MGUN-02, MGUN-03)
+- [ ] 46-03-PLAN.md — SES provider + S3: SNS X.509 via core seam + control-plane no-op + S3Fetcher Fake/ExAwsS3 + OptionalDeps.ExAwsS3 gateway + bounded retry (SESI-01, SESI-02, SESI-04, SESI-05)
 **UI hint**: no
 
 **Hardest sub-tasks:**
