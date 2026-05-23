@@ -129,5 +129,34 @@ defmodule MailglassInbound.S3FetcherTest do
       # only ONE attempt — the non-retryable error short-circuits
       assert S3Fetcher.Fake.call_count("b", "k") == 1
     end
+
+    # WR-06: an absent-ex_aws deployment must NOT burn the full retry budget +
+    # backoff sleeps on a config error. The gateway tags the absent dep as
+    # {:s3_fetch_failed, :ex_aws_unavailable}; the ExAwsS3 adapter passes that
+    # through unchanged, and the retry layer classifies it as non-retryable, so
+    # exactly ONE attempt is made before raising :s3_fetch_failed.
+    test "absent-dep {:s3_fetch_failed, :ex_aws_unavailable} is non-retryable (single attempt)" do
+      S3Fetcher.Fake.put_error("b", "k", {:s3_fetch_failed, :ex_aws_unavailable})
+
+      err =
+        assert_raise S3FetchError, fn ->
+          S3Fetcher.Retry.fetch_with_retry(S3Fetcher.Fake, "b", "k", @opts)
+        end
+
+      assert err.type == :s3_fetch_failed
+      assert S3Fetcher.Fake.call_count("b", "k") == 1
+    end
+  end
+
+  describe "ExAwsS3 gateway absent-dep classification (WR-06)" do
+    test "ExAwsS3 adapter passes the absent-dep tag through unchanged" do
+      # Simulate the gateway returning the absent-dep tag (what get_object/2
+      # returns when available?/0 is false). The adapter must surface it verbatim
+      # so the retry layer can classify it as non-retryable.
+      stub = fn _bucket, _key -> {:error, {:s3_fetch_failed, :ex_aws_unavailable}} end
+
+      assert {:error, {:s3_fetch_failed, :ex_aws_unavailable}} =
+               S3Fetcher.ExAwsS3.fetch("bucket", "key", gateway_get_object: stub)
+    end
   end
 end

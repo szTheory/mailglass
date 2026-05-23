@@ -105,14 +105,20 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
   inbound code are forbidden so `mix compile --no-optional-deps
   --warnings-as-errors` stays green.
 
-  ## get_object/2 — never raises
+  ## get_object/2 — never raises, gates on `available?/0`
 
-  `get_object/2` wraps `ExAws.S3.get_object/2 |> ExAws.request/1` in
-  `try/rescue` AND `catch :exit` so an absent dep (`:undef`), an HTTP-client
-  failure, or a process exit surfaces as a tagged `{:error, {kind, reason}}`
-  tuple rather than escaping. The normal degraded path is the `available?/0`
-  gate; this wrapper is the defensive backstop mirroring
-  `Mailglass.OptionalDeps.GenSmtp.decode/2`.
+  `get_object/2` short-circuits on `available?/0` (the documented normal
+  degraded path) and only then wraps `ExAws.S3.get_object/2 |> ExAws.request/1`
+  in `try/rescue` AND `catch :exit` (the defensive backstop, mirroring
+  `Mailglass.OptionalDeps.GenSmtp.decode/2`).
+
+  The absent-dep case is tagged distinctly as
+  `{:error, {:s3_fetch_failed, :ex_aws_unavailable}}` rather than collapsing to
+  the generic `:undef` rescue. This matters for the retry layer (WR-06): a
+  `{:s3_fetch_failed, _}` reason is classified non-retryable by
+  `MailglassInbound.S3Fetcher.Retry.retryable?/1`, so a dep-absent deployment
+  fails fast on the FIRST attempt instead of burning the full retry budget and
+  every backoff sleep on a config error that no amount of retrying can fix.
   """
 
   @compile {:no_warn_undefined, [ExAws, ExAws.S3]}
@@ -132,15 +138,28 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
   Fetches an S3 object, never raising.
 
   Returns `{:ok, %{body: binary(), ...}}` on success (the ExAws response map —
-  the caller extracts `:body`) or a tagged `{:error, {kind, reason}}` tuple
-  where `kind` is `:error` (rescued exception, incl. the `:undef` backstop when
-  the dep is absent) or `:exit` (a process EXIT from the HTTP client). All
-  `ExAws`/`ExAws.S3` access is confined to this function.
+  the caller extracts `:body`).
+
+  When the optional dep is absent, returns
+  `{:error, {:s3_fetch_failed, :ex_aws_unavailable}}` (WR-06) — a non-retryable
+  config error the retry layer short-circuits on, distinct from a genuine
+  transient AWS/HTTP failure.
+
+  Otherwise returns a tagged `{:error, {kind, reason}}` tuple where `kind` is
+  `:error` (rescued exception — the defensive backstop) or `:exit` (a process
+  EXIT from the HTTP client). All `ExAws`/`ExAws.S3` access is confined to this
+  function.
   """
   @doc since: "0.2.0"
   @spec get_object(String.t(), String.t()) :: {:ok, map()} | {:error, term()}
   def get_object(bucket, key) when is_binary(bucket) and is_binary(key) do
-    ExAws.S3.get_object(bucket, key) |> ExAws.request()
+    if available?() do
+      ExAws.S3.get_object(bucket, key) |> ExAws.request()
+    else
+      # WR-06: the normal degraded path. Tag the absent dep distinctly so the
+      # retry layer classifies it as non-retryable (config error, not transient).
+      {:error, {:s3_fetch_failed, :ex_aws_unavailable}}
+    end
   rescue
     e -> {:error, {:error, e}}
   catch
