@@ -69,6 +69,20 @@ extra_checks = [
    [
      suspicious_fragments: ~w(response resp body payload)
    ]},
+  # Egress PII guard for HTTP response bodies (TELE-06). NoFullResponseInLogs
+  # covers logs and NoPiiInTelemetryMeta covers telemetry, but neither inspects
+  # response-body sinks — that gap let `inspect(reason)` (a changeset carrying
+  # recipient PII) reach the provider on a persist failure. This check flags
+  # inspect/changeset/bare-error payloads inside send_resp/send_json/put_resp_body
+  # call heads, scoped to the only surfaces that build provider response bodies:
+  # the core webhook plug and the inbound ingress plug.
+  {Mailglass.Credo.NoPiiInResponseBody,
+   [
+     included_path_prefixes: [
+       "lib/mailglass/webhook/",
+       "mailglass_inbound/lib/mailglass_inbound/ingress/"
+     ]
+   ]},
   {Mailglass.Credo.NoDirectDateTimeNow,
    [
      allowed_modules: [Mailglass.Clock, Mailglass.Clock.System, Mailglass.Clock.Frozen],
