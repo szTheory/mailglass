@@ -1,10 +1,12 @@
 defmodule MailglassInbound.Ingress.PersistTest do
   use ExUnit.Case, async: false
 
+  alias Ecto.Adapters.SQL.Sandbox
   alias MailglassInbound.InboundMessage
   alias MailglassInbound.InboundRecords.InboundEvidence
   alias MailglassInbound.InboundRecords.InboundRecord
   alias MailglassInbound.Ingress.Persist
+  alias MailglassInbound.TestRepo
 
   defmodule SupportMailbox do
     @behaviour MailglassInbound.Mailbox
@@ -87,6 +89,87 @@ defmodule MailglassInbound.Ingress.PersistTest do
     assert migration =~ "create unique_index"
     assert migration =~ "provider_message_id IS NOT NULL"
     assert migration =~ "mailglass_inbound_records_postmark_idempotency_idx"
+  end
+
+  describe "Mailgun dedupe (Postgres-backed)" do
+    setup do
+      owner = Sandbox.start_owner!(TestRepo, shared: true)
+      truncate_all()
+      on_exit(fn -> Sandbox.stop_owner(owner) end)
+      :ok
+    end
+
+    test "two Mailgun payloads with the SAME Message-Id collapse to one InboundRecord (generic index)" do
+      handoff = mailgun_handoff(provider_message_id: "<mg-same@example.com>", raw_mime: nil)
+
+      {:ok, first} = Persist.persist(handoff, repo: TestRepo, routes: [])
+      {:ok, second} = Persist.persist(handoff, repo: TestRepo, routes: [])
+
+      assert first.status == :inserted
+      assert second.status == :duplicate
+      assert TestRepo.aggregate(InboundRecord, :count) == 1
+    end
+
+    test "two Mailgun payloads with NO Message-Id but identical raw collapse to one InboundRecord (fingerprint index)" do
+      raw = "Subject: no message id\r\n\r\nidentical raw body"
+      handoff = mailgun_handoff(provider_message_id: nil, raw_mime: raw)
+
+      {:ok, first} = Persist.persist(handoff, repo: TestRepo, routes: [])
+      {:ok, second} = Persist.persist(handoff, repo: TestRepo, routes: [])
+
+      assert first.status == :inserted
+      assert second.status == :duplicate
+      assert TestRepo.aggregate(InboundRecord, :count) == 1
+    end
+
+    test "documents the Mailgun-scoped partial unique fingerprint index migration" do
+      migration =
+        File.read!(
+          Path.expand(
+            "../../../priv/repo/migrations/20260523120000_add_mailgun_fingerprint_index.exs",
+            __DIR__
+          )
+        )
+
+      assert migration =~ "create unique_index"
+      assert migration =~ "provider = 'mailgun' AND raw_mime_fingerprint IS NOT NULL"
+      assert migration =~ "mailglass_inbound_records_mailgun_fingerprint_idx"
+      refute migration =~ "generated:"
+    end
+  end
+
+  defp truncate_all do
+    TestRepo.query!("TRUNCATE TABLE mailglass_inbound_records CASCADE", [])
+  end
+
+  defp mailgun_handoff(opts) do
+    provider_message_id = Keyword.get(opts, :provider_message_id)
+    raw_mime = Keyword.get(opts, :raw_mime)
+
+    %{
+      tenant_id: "mg-tenant",
+      provider: :mailgun,
+      message: %InboundMessage{
+        tenant_id: "mg-tenant",
+        provider: :mailgun,
+        provider_message_id: provider_message_id,
+        message_id: provider_message_id,
+        envelope_recipient: "support@example.com",
+        from: [%{address: "sender@example.com"}],
+        to: [%{address: "support@example.com"}],
+        subject: "Mailgun dedupe",
+        headers: %{},
+        received_at: DateTime.utc_now()
+      },
+      evidence: %{
+        raw_payload: %{"recipient" => "support@example.com"},
+        raw_headers: %{},
+        raw_mime: raw_mime,
+        verification_facts: %{auth: :hmac},
+        parse_warnings: %{},
+        attachment_blobs: %{}
+      }
+    }
   end
 
   defp valid_handoff do

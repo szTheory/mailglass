@@ -156,9 +156,155 @@ defmodule MailglassInbound.Ingress.MailgunProviderTest do
     end
   end
 
+  describe "normalize/1 — parsed mode" do
+    test "builds %InboundMessage{} from parsed Mailgun fields with provider_message_id" do
+      request = parsed_request()
+
+      %{message: message} = Mailgun.normalize(request)
+
+      assert message.provider == :mailgun
+      assert message.provider_message_id == "<mg-parsed@example.com>"
+      assert message.message_id == "<mg-parsed@example.com>"
+      assert [%{address: "sender@example.com", name: "Sender"}] = message.from
+      assert [%{address: "support@example.com", name: "Support"}] = message.to
+      assert message.subject == "Inbound parsed test"
+      assert message.text_body == "Plain body"
+      assert message.html_body == "<p>HTML body</p>"
+    end
+
+    test "populates envelope_recipient from the Mailgun recipient field" do
+      request = parsed_request()
+
+      %{message: message} = Mailgun.normalize(request)
+
+      assert message.envelope_recipient == "support@example.com"
+    end
+
+    test "captures attachments into attachment_blobs as index:filename => bytes" do
+      request = parsed_request_with_attachment()
+
+      %{message: message, evidence: evidence} = Mailgun.normalize(request)
+
+      assert [%{filename: "invoice.txt", content_type: "text/plain"}] = message.attachments
+      assert evidence.attachment_blobs["1:invoice.txt"] == "invoice-bytes"
+    end
+  end
+
+  describe "normalize/1 — raw-MIME mode" do
+    test "routes body-mime through MailglassInbound.MIME.parse/1" do
+      request = raw_mime_request(raw_mime_fixture())
+
+      %{message: message} = Mailgun.normalize(request)
+
+      assert message.provider == :mailgun
+      assert message.subject == "Raw MIME subject"
+      assert message.provider_message_id == "<mg-rawmime@example.com>"
+      assert message.text_body =~ "Raw plain body"
+    end
+
+    test "malformed body-mime records parse_warnings and never raises" do
+      request = raw_mime_request("this is not valid MIME at all")
+
+      %{message: _message, evidence: evidence} = Mailgun.normalize(request)
+
+      assert is_map(evidence.parse_warnings)
+      assert evidence.parse_warnings != %{}
+    end
+  end
+
+  describe "normalize/1 — evidence shape" do
+    test "evidence carries raw_payload, raw_headers, raw_mime, attachment_blobs" do
+      request = parsed_request()
+
+      %{evidence: evidence} = Mailgun.normalize(request)
+
+      assert Map.has_key?(evidence, :raw_payload)
+      assert Map.has_key?(evidence, :raw_headers)
+      assert Map.has_key?(evidence, :raw_mime)
+      assert Map.has_key?(evidence, :attachment_blobs)
+      assert Map.has_key?(evidence, :verification_facts)
+      assert Map.has_key?(evidence, :parse_warnings)
+      assert evidence.raw_payload["body-plain"] == "Plain body"
+    end
+
+    test "does NOT widen the public InboundMessage struct for provider quirks" do
+      %{message: message} = Mailgun.normalize(parsed_request())
+
+      refute Map.has_key?(message, :attachment_blobs)
+      refute Map.has_key?(message, :raw_mime)
+    end
+  end
+
   # ----------------------------------------------------------------------------
   # Code-built fixtures (no .eml files)
   # ----------------------------------------------------------------------------
+
+  defp parsed_request(overrides \\ []) do
+    params =
+      %{
+        "recipient" => "support@example.com",
+        "sender" => "sender@example.com",
+        "from" => "Sender <sender@example.com>",
+        "to" => "Support <support@example.com>",
+        "subject" => "Inbound parsed test",
+        "body-plain" => "Plain body",
+        "body-html" => "<p>HTML body</p>",
+        "message-headers" =>
+          Jason.encode!([
+            ["Message-Id", "<mg-parsed@example.com>"],
+            ["From", "Sender <sender@example.com>"],
+            ["To", "Support <support@example.com>"],
+            ["Subject", "Inbound parsed test"],
+            ["Date", "Tue, 06 May 2026 12:00:00 +0000"]
+          ])
+      }
+      |> Map.merge(Map.new(overrides))
+
+    %Request{
+      provider: :mailgun,
+      headers: [{"content-type", "application/x-www-form-urlencoded"}],
+      params: params,
+      content_type: "application/x-www-form-urlencoded"
+    }
+  end
+
+  defp parsed_request_with_attachment do
+    request = parsed_request()
+
+    params =
+      Map.merge(request.params, %{
+        "attachment-count" => "1",
+        "attachment-1" => "invoice-bytes",
+        "attachment-1-filename" => "invoice.txt",
+        "attachment-1-content-type" => "text/plain"
+      })
+
+    %{request | params: params, content_type: "multipart/form-data"}
+  end
+
+  defp raw_mime_request(body_mime) do
+    %Request{
+      provider: :mailgun,
+      headers: [{"content-type", "application/x-www-form-urlencoded"}],
+      params: %{"body-mime" => body_mime},
+      content_type: "application/x-www-form-urlencoded"
+    }
+  end
+
+  defp raw_mime_fixture do
+    [
+      "From: Sender <sender@example.com>\r\n",
+      "To: Support <support@example.com>\r\n",
+      "Subject: Raw MIME subject\r\n",
+      "Message-Id: <mg-rawmime@example.com>\r\n",
+      "Date: Tue, 06 May 2026 12:00:00 +0000\r\n",
+      "MIME-Version: 1.0\r\n",
+      "Content-Type: text/plain; charset=UTF-8\r\n",
+      "\r\n",
+      "Raw plain body\r\n"
+    ]
+    |> IO.iodata_to_binary()
+  end
 
   defp mailgun_request(overrides \\ []) do
     timestamp = Keyword.get(overrides, :timestamp, Integer.to_string(System.os_time(:second)))
