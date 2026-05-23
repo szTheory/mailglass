@@ -1,8 +1,8 @@
 ---
 phase: 46
 slug: mailgun-ses-inbound-ingress
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-05-23
 ---
@@ -96,11 +96,12 @@ created: 2026-05-23
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies (plan-checker D8 PASS)
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
+- [ ] `wave_0_complete` — flips during execution once Wave 0 test files are written and red→green
 
-**Approval:** pending
+**Approval:** approved 2026-05-23 (plan-checker VERIFICATION PASSED, all 12 dimensions)
