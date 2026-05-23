@@ -7,8 +7,10 @@ defmodule MailglassInbound.FixturesTest do
 
   alias MailglassInbound.Fixtures
   alias MailglassInbound.InboundMessage
-  alias MailglassInbound.Ingress.Providers.{Mailgun, Postmark, Sendgrid}
+  alias MailglassInbound.Ingress.Providers.{Mailgun, Postmark, Sendgrid, SES}
   alias MailglassInbound.Ingress.Request
+  alias MailglassInbound.S3Fetcher
+  alias Mailglass.Webhook.Providers.SES.CertCache
 
   describe "build_inbound_message/1" do
     test "returns a valid %InboundMessage{} with a defaulted tenant_id and address-shaped lists" do
@@ -105,6 +107,65 @@ defmodule MailglassInbound.FixturesTest do
       assert %InboundMessage{provider: :mailgun} = message
       assert message.subject == "Mailgun inbound"
       assert message.envelope_recipient == "support@example.test"
+    end
+  end
+
+  describe "build_ses_sns_payload/1" do
+    setup do
+      # The builder primes the process-global CertCache ETS and the process-dict
+      # S3Fetcher.Fake; reset both so each test starts clean (ses_provider_test.exs:26-28).
+      CertCache.reset()
+      S3Fetcher.Fake.reset()
+      :ok
+    end
+
+    test "the built X.509-signed SNS payload passes the real SES.verify! via the primed CertCache" do
+      %{raw_body: raw_body, headers: headers, config: config} =
+        Fixtures.build_ses_sns_payload(subject: "SES inbound")
+
+      assert is_binary(raw_body)
+      request = %Request{provider: :ses, raw_body: raw_body, headers: headers}
+
+      # Real verifier — does NOT raise because the fixture primed the real CertCache.
+      assert {:ok, facts} = SES.verify!(request, config)
+      assert facts.auth == :sns_x509
+
+      %{message: message, evidence: evidence} = SES.normalize(request)
+      assert %InboundMessage{provider: :ses} = message
+      assert message.subject == "SES inbound"
+      # The Action:S3 body path served the raw MIME via the primed S3Fetcher.Fake.
+      assert is_binary(evidence.raw_mime)
+      assert evidence.raw_mime != ""
+    end
+
+    test "mints a per-call unique cert URL so concurrent primes do not collide" do
+      %{raw_body: raw_one} = Fixtures.build_ses_sns_payload()
+      %{raw_body: raw_two} = Fixtures.build_ses_sns_payload()
+
+      cert_url_one = Jason.decode!(raw_one)["SigningCertURL"]
+      cert_url_two = Jason.decode!(raw_two)["SigningCertURL"]
+
+      assert cert_url_one != cert_url_two
+      # Both must still satisfy the SNS cert-host TrustPolicy (sns.<region>.amazonaws.com/*.pem).
+      assert String.starts_with?(cert_url_one, "https://sns.")
+      assert String.ends_with?(cert_url_one, ".pem")
+    end
+
+    test "a forged signature against the same envelope fails the real verifier" do
+      # Build a legitimate payload, then re-sign nothing — swap the Signature for
+      # garbage. The real verifier must reject it (proves verify! is genuinely
+      # exercising the signature, not a stub).
+      %{raw_body: raw_body, headers: headers, config: config} = Fixtures.build_ses_sns_payload()
+
+      forged =
+        raw_body
+        |> Jason.decode!()
+        |> Map.put("Signature", Base.encode64("not-a-real-signature"))
+        |> Jason.encode!()
+
+      request = %Request{provider: :ses, raw_body: forged, headers: headers}
+
+      assert_raise MailglassInbound.SignatureError, fn -> SES.verify!(request, config) end
     end
   end
 end
