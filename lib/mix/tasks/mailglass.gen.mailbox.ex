@@ -1,0 +1,126 @@
+defmodule Mix.Tasks.Mailglass.Gen.Mailbox do
+  @shortdoc "Scaffolds an inbound mailbox, a route stub, and a MailboxCase test stub"
+
+  @moduledoc """
+  Scaffolds an inbound mailbox and wires it into your router.
+
+  Generates three things:
+
+    1. A mailbox module implementing `MailglassInbound.Mailbox` with a default
+       `process/1` that returns the neutral `:accept` outcome.
+    2. A route stub in the configured router, inserted idempotently via the same
+       helper that backs `mix mailglass.gen.inbound_route`.
+    3. An ExUnit test stub that `use MailglassInbound.MailboxCase`.
+
+  If the configured router module is not found, an actionable notice is emitted
+  instead of auto-creating one — run `mix mailglass.gen.inbound_router` first.
+
+  ## Examples
+
+      mix mailglass.gen.mailbox MyApp.Inbound.Support
+      mix mailglass.gen.mailbox MyApp.Inbound.Support --recipient support@example.com
+      mix mailglass.gen.mailbox MyApp.Inbound.Support --router MyApp.InboundRouter
+
+  ## Positional arguments
+
+    * `mailbox` - the mailbox module to create.
+
+  ## Options
+
+    * `--router` - the router to add the route stub to. Defaults to `<App>.InboundRouter`.
+    * `--recipient` - the recipient matcher for the route stub. Defaults to
+      `<underscored-mailbox-name>@example.com`.
+
+  `--dry-run` is supported as the framework-provided global switch (it is *not*
+  in this task's option schema); it previews the diff and writes nothing.
+  """
+
+  use Boundary, classify_to: Mailglass
+  use Igniter.Mix.Task
+
+  alias Mix.Tasks.Mailglass.Gen.InboundRoute
+
+  @impl Igniter.Mix.Task
+  def info(_argv, _composing_task) do
+    %Igniter.Mix.Task.Info{
+      schema: [router: :string, recipient: :string],
+      positional: [:mailbox]
+    }
+  end
+
+  @impl Igniter.Mix.Task
+  def igniter(igniter) do
+    mailbox_arg = igniter.args.positional.mailbox
+    options = igniter.args.options
+
+    mailbox = InboundRoute.parse_module(mailbox_arg)
+    router = InboundRoute.router_module(igniter, options[:router])
+    recipient = options[:recipient] || default_recipient(mailbox)
+
+    # Resolve the test-file location from the source location BEFORE creating
+    # the module so ordering against `create_module/3` cannot perturb the path.
+    test_path =
+      igniter
+      |> Igniter.Project.Module.proper_location(mailbox, :source_folder)
+      |> String.replace_prefix("lib/", "test/")
+      |> String.replace_suffix(".ex", "_test.exs")
+
+    test_module = test_module(mailbox)
+
+    igniter
+    |> Igniter.Project.Module.create_module(mailbox, mailbox_body())
+    |> Igniter.create_new_file(test_path, test_stub_body(test_module))
+    # Reuse the shared idempotent add-route helper (route stub). When the router
+    # is missing, the helper emits the actionable "run gen.inbound_router" notice.
+    |> InboundRoute.add_route(router, mailbox, recipient: recipient)
+  end
+
+  # Conventional ExUnit test-module name: suffix `Test` on the LAST segment
+  # (`Foo.Bar` -> `Foo.BarTest`), which keeps igniter from relocating the file
+  # into a nested `bar/test.exs` based on a `Foo.Bar.Test` module name.
+  defp test_module(mailbox) do
+    mailbox
+    |> Module.split()
+    |> List.update_at(-1, &(&1 <> "Test"))
+    |> Module.concat()
+  end
+
+  defp default_recipient(mailbox) do
+    name =
+      mailbox
+      |> Module.split()
+      |> List.last()
+      |> Macro.underscore()
+
+    "#{name}@example.com"
+  end
+
+  defp mailbox_body do
+    """
+    @behaviour MailglassInbound.Mailbox
+
+    @impl MailglassInbound.Mailbox
+    def process(%MailglassInbound.InboundMessage{} = _message) do
+      # Inspect the message and return one of the locked mailbox outcomes:
+      # :accept | :ignore | {:reject, reason} | {:bounce, reason}.
+      :accept
+    end
+    """
+  end
+
+  defp test_stub_body(test_module) do
+    """
+    defmodule #{inspect(test_module)} do
+      use MailglassInbound.MailboxCase
+
+      # MailboxCase provides helpers for building %InboundMessage{} fixtures and
+      # asserting mailbox outcomes. Replace this with assertions for your routing
+      # and process/1 behavior.
+      test "accepts an inbound message" do
+        # message = build_inbound_message(recipient: "support@example.com")
+        # assert :accept = process(message)
+      end
+    end
+    """
+  end
+end
