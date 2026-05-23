@@ -1,293 +1,346 @@
 ---
 phase: 45-inbound-telemetry-idempotency-foundation
-reviewed: 2026-05-23T00:00:00Z
+reviewed: 2026-05-23T12:30:00Z
 depth: standard
-files_reviewed: 28
+files_reviewed: 17
 files_reviewed_list:
   - .credo.exs
   - .github/workflows/ci.yml
-  - credo_checks/no_bare_optional_dep_reference.ex
+  - credo_checks/no_pii_in_response_body.ex
   - credo_checks/telemetry_event_convention.ex
   - lib/mailglass/optional_deps/gen_smtp.ex
-  - mailglass_inbound/config/config.exs
-  - mailglass_inbound/config/dev.exs
-  - mailglass_inbound/config/prod.exs
-  - mailglass_inbound/config/test.exs
-  - mailglass_inbound/docs/api_stability.md
-  - mailglass_inbound/lib/mailglass_inbound/execution.ex
-  - mailglass_inbound/lib/mailglass_inbound/ingress/persist.ex
   - mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex
   - mailglass_inbound/lib/mailglass_inbound/mime.ex
-  - mailglass_inbound/lib/mailglass_inbound/mime_error.ex
-  - mailglass_inbound/lib/mailglass_inbound/pub_sub/topics.ex
-  - mailglass_inbound/lib/mailglass_inbound/router/matcher.ex
-  - mailglass_inbound/lib/mailglass_inbound/telemetry.ex
   - mailglass_inbound/mix.exs
-  - mailglass_inbound/test/mailglass_inbound/mime_error_test.exs
+  - mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs
   - mailglass_inbound/test/mailglass_inbound/mime_test.exs
-  - mailglass_inbound/test/mailglass_inbound/properties/inbound_idempotency_convergence_test.exs
-  - mailglass_inbound/test/mailglass_inbound/pub_sub/topics_test.exs
-  - mailglass_inbound/test/mailglass_inbound/telemetry_test.exs
-  - mailglass_inbound/test/support/test_repo.ex
-  - mailglass_inbound/test/test_helper.exs
-  - test/mailglass/optional_deps/gen_smtp_test.exs
+  - test/mailglass/credo/checks_have_tests_test.exs
+  - test/mailglass/credo/credo_config_sentinel_test.exs
+  - test/mailglass/credo/no_bare_optional_dep_reference_test.exs
+  - test/mailglass/credo/no_pii_in_response_body_test.exs
+  - test/mailglass/credo/require_atomic_unsubscribe_headers_test.exs
+  - test/mailglass/credo/stream_policy_consistent_test.exs
+  - test/mailglass/credo/telemetry_event_convention_test.exs
 findings:
   critical: 1
   warning: 5
-  info: 5
-  total: 11
+  info: 2
+  total: 8
 status: issues_found
 ---
 
 # Phase 45: Code Review Report
 
-**Reviewed:** 2026-05-23
+**Reviewed:** 2026-05-23T12:30:00Z
 **Depth:** standard
-**Files Reviewed:** 28
+**Files Reviewed:** 17
 **Status:** issues_found
 
 ## Summary
 
-This phase adds the inbound telemetry span surface, a never-raising standalone
-MIME parser, the package-local `MIMEError`, a PubSub topic builder, a post-commit
-broadcast in the ingress plug, and the TELE-08 1000-run idempotency convergence
-property — plus widens two custom Credo checks and the `.credo.exs` scope to cover
-the `mailglass_inbound` sibling.
+Phase 45 is a gap-closure cycle that closes a prior review's CR-01 (inert
+`NoBareOptionalDepReference`), WR-02 (`TelemetryEventConvention` missing
+`:telemetry.span/3`), WR-03 (missing inbound `--no-optional-deps` CI lane),
+the inbound plug PII-egress leak, and two doc-honesty Info items.
 
-The telemetry whitelist discipline is well-enforced in tests (`assert_pii_free`
-across all four spans), the never-raise MIME contract is genuinely exercised
-against the real `:mimemail` parser, and the convergence property drives a real
-Postgres write path. However, two of the phase's headline lint/security guarantees
-do not hold:
+The headline fixes are mostly sound and verified empirically:
 
-1. **The `NoBareOptionalDepReference` guard does not protect gen_smtp at all**
-   (BLOCKER) — it keys on a non-existent `GenSmtp` Elixir module while gen_smtp is
-   reached exclusively through the Erlang atoms `:mimemail` / `:gen_smtp_client`,
-   so a bare `:mimemail.decode(...)` anywhere in inbound code would compile and pass
-   CI. Both `.credo.exs` comments and the gateway moduledoc assert the guard works.
-2. **The boundary-bomb / deep-nesting guard in `MailglassInbound.MIME` provides no
-   DoS protection** (WARNING) — `:mimemail.decode/2` (which has no recursion limit)
-   fully parses the entire nesting depth *before* the `collect_leaves` depth guard
-   runs against the already-decoded tree.
+- **CR-01 is genuinely fixed.** The `:mimemail` / `:gen_smtp_client` atom keys
+  in `.credo.exs gated_modules` make `NoBareOptionalDepReference` fire on a bare
+  `:mimemail.decode(...)` call (confirmed by running the check). The config
+  sentinel and behavior tests pin both layers.
+- **The plug.ex PII-egress fix is correct for the actual code path.** The persist
+  failure branch returns a static `%{status: "error", reason: "persist_failed"}`
+  body, keeps status 500 (correct retry signal for all four providers), and routes
+  detail to PII-free telemetry. The new `log_persist_failure/1` logs only
+  changeset *field names* via `traverse_errors`, never `changes` values.
+- **The doc-honesty corrections are accurate.** The gen_smtp `:undef` taxonomy
+  (a class-`:error` caught by `rescue`, not `catch :exit`) and the `:max_depth`
+  "not a DoS defense" caveat are both factually correct improvements.
 
-Two further lint-coverage gaps (the `TelemetryEventConvention` check never inspects
-`:telemetry.span/3`, and there is no `--no-optional-deps` compile lane for inbound)
-mean the phase's "now lints inbound" claims are partially inert.
+The five changed-Credo test suites and the core test run pass (25 tests, 0
+failures in the changed checks). However, adversarial probing surfaced one defect
+of the *same class this phase exists to eliminate*, plus several guards whose new
+tests certify coverage the guards do not actually deliver:
+
+1. **A second inert Credo guard ships unregistered** (`StreamPolicyConsistent`) —
+   defined, now tested (added this phase), but never wired into `.credo.exs`, so
+   `mix credo` never runs it. This is the exact CR-01 defect family, and the new
+   test masks it.
+2. **The WR-02 span clause never fires on real inbound code.** Every inbound
+   telemetry event name is routed through a wrapper whose `:telemetry.span` call
+   takes a *variable* prefix, so the convention check (which only matches literal
+   atom lists) is inert against the package it was widened to cover.
+3. **`NoPiiInResponseBody` has real false negatives** for the most likely future
+   regression shapes (a changeset variable not named `reason`/`changeset`, and a
+   payload assembled in a prior variable).
+4. **The `.credo.exs` rationale comment for the retained `GenSmtp` alias key is
+   factually wrong** about why that key is load-bearing.
+
+None of the false-negative gaps is an *active* PII leak — current production code
+is clean — so they are WARNING, not BLOCKER. The inert `StreamPolicyConsistent`
+guard is classified BLOCKER because it is a never-running safety check whose new
+test falsely certifies enforcement, which is precisely the failure mode this
+gap-closure phase was chartered to close.
 
 ## Critical Issues
 
-### CR-01: `NoBareOptionalDepReference` silently fails to gate gen_smtp (`:mimemail` / `:gen_smtp_client`)
+### CR-01: `StreamPolicyConsistent` is a registered-nowhere, never-run safety guard — and this phase added a test that falsely certifies it
 
-**File:** `.credo.exs:33` (and `credo_checks/no_bare_optional_dep_reference.ex:62`)
+**File:** `test/mailglass/credo/stream_policy_consistent_test.exs:1-52`, `credo_checks/stream_policy_consistent.ex:1-111`, `.credo.exs:1-107`
+
 **Issue:**
-gen_smtp is an Erlang library. It has **no Elixir `GenSmtp` module** — every access
-goes through the Erlang module atoms `:mimemail` (the parser) and
-`:gen_smtp_client` (the availability probe), as `lib/mailglass/optional_deps/gen_smtp.ex:46,72`
-confirms (`Code.ensure_loaded?(:gen_smtp_client)`, `:mimemail.decode(...)`).
+`credo_checks/stream_policy_consistent.ex` defines `Mailglass.Credo.StreamPolicyConsistent`,
+a real guard enforcing "tracking-enabled mailables must declare an explicit
+`:bulk`/`:operational` stream" — directly adjacent to the CLAUDE.md
+open/click-tracking discipline. It is **not registered in `.credo.exs`** (it never
+has been — `git log -S StreamPolicyConsistent -- .credo.exs` is empty), so
+`mix credo --strict` never executes it. The check is inert config: defined,
+tested, never run.
 
-The check resolves the call-site root with `root_module/1`. For a bare call
-`:mimemail.decode(raw)` it returns `{:ok, :mimemail}`, then does
-`Map.fetch(gated_modules, :mimemail)`. But `.credo.exs` keys gen_smtp on the Elixir
-alias `GenSmtp` (which is the atom `:"Elixir.GenSmtp"`), so the fetch misses and the
-`with` short-circuits to `nil` — **no issue is ever raised**. The check therefore
-does nothing for gen_smtp: a bare `:mimemail.decode(...)` written anywhere in
-`mailglass_inbound/lib/` outside the gateway would compile clean and pass `mix credo --strict`.
+This phase's commit `258644c test(45-09): cover the two pre-existing uncovered
+Credo checks` added `stream_policy_consistent_test.exs` to satisfy the
+`checks_have_tests_test` meta-guard. The test passes against hand-passed params,
+so it gives a green check that *implies* the stream-policy rule is enforced when
+it is not. This is the identical "claimed-but-inert guard" defect class as the
+CR-01 this phase is closing — and the meta-guard has a blind spot that lets it
+through: `checks_have_tests_test.exs:18` asserts only that a test *file exists*,
+never that the check is *registered in `.credo.exs`*.
 
-This defeats a non-negotiable convention ("Optional deps gated through
-`Mailglass.OptionalDeps.*`") and contradicts the explicit claims in
-`.credo.exs:36-39` ("this prefix makes the check flag any bare reference in inbound
-code outside the gateway (Plan 03 depends on this guard)") and the gateway moduledoc
-`lib/mailglass/optional_deps/gen_smtp.ex:15-17` ("bare references elsewhere are
-forbidden by the `NoBareOptionalDepReference` Credo check"). Oban/OpenTelemetry/Mjml/
-Sigra are unaffected because those are real Elixir modules; only gen_smtp is broken.
+Verified empirically: 17 files in `credo_checks/*.ex`, but only 16 modules appear
+in `.credo.exs`; the missing one is `Mailglass.Credo.StreamPolicyConsistent`.
 
-**Fix:** Key the gen_smtp entry on the Erlang module atoms actually used at call
-sites, not the phantom `GenSmtp` alias:
+(Supporting context, out of file scope: `test/mailglass/credo/integration_test.exs`
+keeps a *duplicate, now-stale* hardcoded `@extra_checks` list that also omits
+`StreamPolicyConsistent` and still carries the pre-CR-01 / pre-WR-02 params —
+`required_root: :mailglass` singular and no `:mimemail` key. It cannot catch this
+drift.)
+
+**Fix:**
+Register the check in `.credo.exs extra_checks` so it actually runs:
+
 ```elixir
-gated_modules: %{
-  Oban => [Mailglass.OptionalDeps.Oban, MailglassInbound.OptionalDeps.Oban],
-  OpenTelemetry => Mailglass.OptionalDeps.OpenTelemetry,
-  Mjml => Mailglass.OptionalDeps.Mjml,
-  # gen_smtp is Erlang-only; gate on the atoms used at call sites:
-  :mimemail => [Mailglass.OptionalDeps.GenSmtp, MailglassInbound.OptionalDeps.GenSmtp],
-  :gen_smtp_client => [Mailglass.OptionalDeps.GenSmtp, MailglassInbound.OptionalDeps.GenSmtp],
-  Sigra => Mailglass.OptionalDeps.Sigra
-}
+# .credo.exs — add to extra_checks
+{Mailglass.Credo.StreamPolicyConsistent, []},
 ```
-Add a regression test (a fixture module with a bare `:mimemail.decode/1` reference
-outside the gateway must produce a Credo issue), since the existing tests evidently
-did not cover the Erlang-atom path.
+
+Then close the meta-guard blind spot so an unregistered check fails CI instead of
+passing on test-existence alone. Extend `checks_have_tests_test.exs` (or add a
+companion to `credo_config_sentinel_test.exs`) to assert every `credo_checks/*.ex`
+module is present in the shipped `.credo.exs` checks list:
+
+```elixir
+test "every custom Credo check is registered in .credo.exs" do
+  {config, _} = Code.eval_file(".credo.exs")
+
+  registered =
+    config.configs
+    |> hd()
+    |> Map.fetch!(:checks)
+    |> Enum.map(fn
+      {mod, _params} -> mod
+      mod when is_atom(mod) -> mod
+    end)
+    |> MapSet.new()
+
+  defined =
+    "credo_checks/*.ex"
+    |> Path.wildcard()
+    |> Enum.map(fn p ->
+      Module.concat([Mailglass, Credo, Macro.camelize(Path.basename(p, ".ex"))])
+    end)
+
+  unregistered = Enum.reject(defined, &MapSet.member?(registered, &1))
+  assert unregistered == [], "Defined-but-unregistered Credo checks: #{inspect(unregistered)}"
+end
+```
 
 ## Warnings
 
-### WR-01: MIME deep-nesting guard provides no boundary-bomb protection (T-45-12)
+### WR-01: WR-02's `:telemetry.span/3` clause never fires on real inbound code — the package it was widened to cover is uncovered
 
-**File:** `mailglass_inbound/lib/mailglass_inbound/mime.ex:125-152, 172-193`
+**File:** `credo_checks/telemetry_event_convention.ex:52-63`, `.credo.exs:66-67`
+
 **Issue:**
-`decode_and_build/2` calls `OptionalGenSmtp.decode(raw)` **first**, which invokes
-`:mimemail.decode/2`. `mimemail.erl` has no recursion/depth limit (verified — no
-`depth`/`limit` guard exists in the dep source), so it eagerly parses the entire
-multipart tree to whatever depth the attacker chose. Only *after* that fully-decoded
-tree is returned does `collect_leaves/3` re-walk it and `throw(@depth_exceeded)` on
-overflow. The `:max_depth` guard therefore limits re-traversal of an
-already-parsed structure — it cannot stop the boundary-bomb DoS it is documented to
-defend (moduledoc line 21, `mime_test.exs:116` "boundary-bomb / deep-nesting guard
-(T-45-12, V5)"). The test passes only because gen_smtp successfully decodes 50 valid
-levels; it gives false confidence that the threat is mitigated.
-**Fix:** Either (a) enforce a depth/size bound on the *raw bytes* before handing them
-to `:mimemail.decode/2` (e.g. cap boundary-marker count or total byte size up front),
-or (b) update the moduledoc/test to state plainly that the guard bounds the
-internal representation only and does **not** mitigate decoder-side recursion, and
-track the real DoS mitigation as a follow-up. Do not leave a control documented as
-protective when it is not.
+The new span-aware clause is correct in isolation (a literal
+`:telemetry.span([:wrong_app, :x], ...)` is flagged; a 3-segment
+`[:mailglass_inbound, :ingress, :request]` prefix passes — both verified). But
+**every** real telemetry emission in both packages routes the literal event name
+through a wrapper before reaching `:telemetry.span`. In
+`mailglass_inbound/lib/mailglass_inbound/telemetry.ex:135-136`:
 
-### WR-02: `TelemetryEventConvention` check never inspects `:telemetry.span/3` — inbound spans are unenforced
-
-**File:** `credo_checks/telemetry_event_convention.ex:30-52` (config `.credo.exs:53-54`)
-**Issue:**
-The `.credo.exs` change widens `required_root` to `[:mailglass, :mailglass_inbound]`
-so the convention "lints" the inbound package. But the check's `walk/5` only matches
-`{{:., _, [:telemetry, :execute]}, ...}` — it never matches `:telemetry.span`. Every
-one of the four new inbound events is emitted via `:telemetry.span/3`
-(`telemetry.ex:136`), and the existing core span surfaces use `:telemetry.span/3`
-too. So the widened root list is inert: no inbound (or core) span event is ever
-checked for the 4-segment / `:mailglass_inbound`-root convention. The module's own
-docstring claims the "4-level convention [is enforced] at lint time," which is not
-true for span-based events.
-**Fix:** Extend `walk/5` to also match `:telemetry.span/3` calls. Note `span/3`
-takes a *prefix* list (e.g. `[:mailglass_inbound, :ingress, :request]`) that the
-runtime expands with `:start`/`:stop`/`:exception`, so the literal must be checked
-as `length(prefix) >= min_segments - 1` for span prefixes. Add a fixture test
-covering both `:telemetry.execute` and `:telemetry.span` to lock the behavior.
-
-### WR-03: No `--no-optional-deps` compile lane for `mailglass_inbound`
-
-**File:** `.github/workflows/ci.yml:85-111` (and the `inbound_test` job at 166-237)
-**Issue:**
-CLAUDE.md mandates "CI lane `mix compile --no-optional-deps --warnings-as-errors`
-is mandatory." The `compile_no_optional_deps` job runs only at the repo root for
-core mailglass. The inbound sibling has its own optional deps (`{:oban, optional:
-true}`, `{:gen_smtp, optional: true}` — `mix.exs:59,65`) and an explicit degraded
-fallback (MIME-02 `:gen_smtp_unavailable`), but the `inbound_test` job runs
-`mix deps.get` (fetches all, including optionals) and never compiles inbound without
-them. The `:gen_smtp_unavailable` path is exercised only through the
-`gen_smtp_available?: false` test seam, never through a real no-optional-deps
-compile. A bare optional-dep reference that resolves only when the dep is present
-(and which CR-01 shows Credo will not catch for gen_smtp) would slip through CI
-entirely.
-**Fix:** Add an inbound `compile_no_optional_deps` job mirroring the core one, run
-from `working-directory: mailglass_inbound` with `mix compile --no-optional-deps
---warnings-as-errors`.
-
-### WR-04: `decode_route` builds atoms from job args via `Module.concat/1` (atom-injection vector + dead branch)
-
-**File:** `mailglass_inbound/lib/mailglass_inbound/execution.ex:242-251`
-**Issue:**
-`load/2` decodes the persisted Oban job arg `"mailbox"` through `decode_route/2` →
-`mailbox_module/1`. The legitimate enqueue path always writes
-`Atom.to_string(module)` (`route_mailbox/1`, line 257), i.e. an `"Elixir."`-prefixed
-string, which hits the safe `String.to_existing_atom` clause (line 250). The second
-clause `mailbox |> String.split(".") |> Module.concat()` (line 251) is therefore
-dead for legitimate flows, but it remains reachable with tampered/corrupt job args
-and **creates a brand-new atom from external input** (`Module.concat` does not
-require pre-existing atoms), an atom-table-exhaustion vector. The `rescue
-ArgumentError` on line 245 only guards the `to_existing_atom` branch; `Module.concat`
-never raises, so the unsafe path is unguarded.
-**Fix:** Drop the `Module.concat` clause and treat any non-`"Elixir."`-prefixed
-mailbox as invalid:
 ```elixir
-defp mailbox_module("Elixir." <> _rest = mailbox), do: String.to_existing_atom(mailbox)
-defp mailbox_module(_mailbox), do: raise(ArgumentError, "unknown mailbox")
+defp span(event_prefix, metadata, fun) do
+  :telemetry.span(event_prefix, metadata, fn -> ... end)   # event_prefix is a VARIABLE
+end
 ```
-The surrounding `rescue ArgumentError -> {:error, :invalid_job_args}` then covers it.
-(The identical pattern in `internal/replay.ex:107-108`, out of this review's scope,
-should be fixed too.)
 
-### WR-05: 500 error response inlines `inspect(reason)`, which can leak message PII
+The literal lists live in the named helpers (`span([:mailglass_inbound, :persist,
+:record], ...)`), which call the *private* `span/3`, not `:telemetry.span`. The
+check's `literal_atom_list/1` returns `:error` for a variable, so the clause is a
+no-op against production. Confirmed: `grep ':telemetry\.\(span\|execute\)(\[:'`
+over `lib/` and `mailglass_inbound/lib/` returns zero matches, and running the
+check over the real `telemetry.ex` produces 0 issues. WR-02 therefore adds test
+coverage for a code shape that does not exist in the codebase while leaving the
+inbound event names it targets unvalidated. (The pre-existing `:telemetry.execute`
+clause shares this limitation; WR-02 inherits rather than introduces it, but the
+WR-02 charter — "cover the inbound sibling package's events" — is not met.)
 
-**File:** `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex:84`
+**Fix:**
+Either (a) document explicitly that the check only guards *direct literal* call
+sites and is a tripwire for accidental bare `:telemetry.*` use, not a verifier of
+the wrapper-routed event names; or (b) extend the check to also validate literal
+atom-list arguments passed to the package's own span wrappers at their definition
+site (`MailglassInbound.Telemetry.*_span`, `Mailglass.Webhook.Telemetry.*_span`),
+where the event name *is* a literal. Option (b) is the only one that actually
+closes WR-02.
+
+### WR-02: `NoPiiInResponseBody` misses a changeset variable not named `reason`/`changeset`
+
+**File:** `credo_checks/no_pii_in_response_body.ex:125-183`
+
 **Issue:**
-On `{:error, reason}` from `persistence.persist/2`, the plug returns
-`send_json(conn, 500, %{status: "error", reason: inspect(reason)})`. When `reason`
-is an Ecto changeset from `insert_record/4` (a real DB/validation error), `inspect`
-renders its `changes` map, which contains `subject`, `from`, `to`, `text_body`,
-`html_body`, etc. — exactly the fields CLAUDE.md forbids exposing. Even though this
-goes to the provider rather than logs/telemetry, leaking recipient/sender/subject/
-body bytes in an error response contradicts the project's strict no-PII posture and
-the "don't put full response/payload in logs" rule. (The line is wrapped, not newly
-introduced, this phase, but it is the new telemetry-tuple return path so it is in
-scope.)
-**Fix:** Return a stable, PII-free reason and do not serialize the raw error:
+`dangerous_body?/2` flags an arg only if it contains `inspect(...)`, an
+`%Ecto.Changeset{}` *literal*, or a *variable whose name* contains `reason`/
+`changeset`. A raw changeset (or any PII-bearing error term) bound to a
+differently-named variable escapes all three. Verified by running the check:
+
 ```elixir
-{:error, _reason} ->
-  resp = send_json(conn, 500, %{status: "error", reason: "persist_failed"})
+send_json(conn, 500, %{status: "error", detail: err})   # `err` holds a changeset → 0 issues
 ```
-Log a structured, whitelisted summary internally instead of echoing `inspect(reason)`
-to the wire.
+
+The real-world leak vector is an error *variable*, and developers routinely name
+it `e`, `err`, `error`, or `result`. Today's code is clean, so this is a latent
+gap that would let a future regression of this shape ship undetected — directly
+undermining the "No PII on egress" invariant the check exists to enforce.
+
+**Fix:**
+Broaden `suspicious_fragments` to cover the common error-variable names
+(`["reason", "changeset", "error", "err"]`), and/or treat any *bare local
+variable* (not a literal, not a static map/binary) appearing directly as a
+response-body arg as suspicious on these two narrow egress surfaces — the
+documented-safe shape is a static map/binary or a JSON-encoded `body`, both of
+which are distinguishable from a bare error var. Add a regression test mirroring
+`plug_test.exs:200` but with the error bound to `err`.
+
+### WR-03: `NoPiiInResponseBody` misses a payload assembled in a prior variable
+
+**File:** `credo_checks/no_pii_in_response_body.ex:105-131`
+
+**Issue:**
+The check only inspects the AST *inside the sink call's args*. A two-step
+construction defeats it because the `inspect`/changeset lives in a separate `=`
+assignment node, not within the sink call:
+
+```elixir
+payload = %{status: "error", detail: inspect(changeset)}
+send_json(conn, 500, payload)            # arg is just `payload` → 0 issues (verified)
+```
+
+The current plug.ex inlines the map, so no active leak; but this is the obvious
+refactor a future maintainer would make, and it would silently bypass the guard.
+
+**Fix:**
+This is the harder structural case (intra-function dataflow). At minimum,
+document the limitation in the check's `@explanations` so reviewers know the
+guard assumes inline construction. A pragmatic mitigation: flag a bare-variable
+sink arg (per WR-02's fix) on these surfaces, which catches `send_json(conn, 500,
+payload)` regardless of how `payload` was built. The legitimate `send_json`
+helper's internal `send_resp(status, body)` would need to stay excluded — its
+`body` is a Jason-encoded binary, already carved out per the design note at
+lines 11-17; verify any broadened rule keeps that case green.
+
+### WR-04: `.credo.exs` rationale for the retained `GenSmtp` alias key is factually incorrect
+
+**File:** `.credo.exs:36-39`
+
+**Issue:**
+The comment claims the `GenSmtp` map key is "retained because inbound `mime.ex`
+reaches the gateway via `alias Mailglass.OptionalDeps.GenSmtp, as: OptionalGenSmtp`,
+whose call root resolves to the `GenSmtp` alias — that path must keep passing."
+This is wrong. Credo operates on raw AST and does not resolve aliases. The call
+`OptionalGenSmtp.decode(raw)` resolves to root `OptionalGenSmtp`, which is **not**
+a key in `gated_modules` at all — so the call passes by *missing the map
+entirely*, not by matching the `GenSmtp` key. Verified empirically: the aliased
+call yields 0 issues, and a bare `GenSmtp.decode(...)` (a module that does not
+even exist — gen_smtp is the Erlang `:gen_smtp`) is what the `GenSmtp` key
+actually matches. The `GenSmtp` alias key is therefore effectively dead for every
+real call site; the CR-01 fix rides entirely on the `:mimemail` /
+`:gen_smtp_client` atom keys.
+
+A future maintainer trusting this comment could "fix" a perceived gap by
+renaming the alias to `GenSmtp` (re-introducing the original inert-key bug) or
+remove the atom keys believing the alias key covers mime.ex.
+
+**Fix:**
+Correct the comment to state the truth: the `GenSmtp` key matches only a literal
+`GenSmtp.<fn>` call (which no Elixir code makes, since the dep is the Erlang
+`:gen_smtp`); the aliased `OptionalGenSmtp.decode/2` call passes because its root
+is not gated; the live CR-01 coverage is the `:mimemail` / `:gen_smtp_client`
+atom keys. Consider dropping the `GenSmtp` key (and the `Mjml`/`Sigra` analogues
+if equally vestigial) unless a literal `GenSmtp.*` call site is expected.
+
+### WR-05: `integration_test.exs` carries a stale, duplicated copy of `.credo.exs` check params (drift risk)
+
+**File:** `.credo.exs:6-67` (in scope) vs `test/mailglass/credo/integration_test.exs:6-60` (out of direct scope; flagged because it weakens verification of the in-scope config)
+
+**Issue:**
+`integration_test.exs` hardcodes its own `@extra_checks` that has *not* been
+updated for this phase: it still has `TelemetryEventConvention` with
+`required_root: :mailglass` (singular, pre-WR-02) and `NoBareOptionalDepReference`
+*without* the `:mimemail`/`:gen_smtp_client` atom keys (pre-CR-01). Because it is
+a hand-maintained duplicate, it can neither detect nor protect against `.credo.exs`
+drift, and it is now silently inconsistent with the shipped config that the
+`credo_config_sentinel_test` pins. The sentinel test prevents *some* drift
+(specific keys) but the integration test's stale copy will keep diverging and
+exercises params that no longer match production.
+
+**Fix:**
+Have `integration_test.exs` load the real config via `Code.eval_file(".credo.exs")`
+(as `credo_config_sentinel_test.exs:16` already does) instead of duplicating it,
+so the integration run exercises the actual shipped params and cannot drift.
 
 ## Info
 
-### IN-01: Gateway moduledoc misattributes `:undef` to the `catch :exit` clause
+### IN-01: gen_smtp gateway `available?/0` and `decode/2` are gated by different modules
 
-**File:** `lib/mailglass/optional_deps/gen_smtp.ex:30-33`
-**Issue:** The moduledoc says `:exit`/`:undef` from missing `:iconv` is "caught by
-`catch :exit`." An `:undef` (calling `iconv:convert/3` when the module is absent)
-raises `UndefinedFunctionError`, which is an *error* and is caught by the `rescue`
-clause (surfaced as `{:error, {:error, e}}`), not by `catch :exit`. The never-raise
-contract still holds, but the documented mapping is wrong.
-**Fix:** Correct the moduledoc to attribute `:undef`/`UndefinedFunctionError` to the
-`rescue` branch; reserve the `catch :exit` description for genuine `exit(reason)`.
+**File:** `lib/mailglass/optional_deps/gen_smtp.ex:51,77`
 
-### IN-02: New stable modules missing from ExDoc `Stable` group
+**Issue:**
+`available?/0` checks `Code.ensure_loaded?(:gen_smtp_client)` while `decode/2`
+calls `:mimemail.decode/2`. These are two distinct modules from the same Hex
+package. In a partial/corrupt install where `:gen_smtp_client` loads but
+`:mimemail` does not, `available?/0` returns `true` and `decode/2` hits the
+`:undef` rescue path — which the moduledoc now correctly documents as the
+backstop. This is acceptable (the never-raise contract holds and surfaces
+`{:error, {:error, %UndefinedFunctionError{}}}`), but the availability predicate
+and the actual decode dependency being different modules is a subtle coupling
+worth a one-line note.
 
-**File:** `mailglass_inbound/mix.exs:111-121`
-**Issue:** `docs/api_stability.md:27-28` declares `MailglassInbound.PubSub.Topics`
-and `MailglassInbound.MIMEError` as `stable`, but the `groups_for_modules: [Stable:
-[...]]` list in `mix.exs` still contains only the original six modules. The two new
-stable surfaces will render outside the Stable heading in generated docs,
-contradicting the contract inventory.
-**Fix:** Add `MailglassInbound.PubSub.Topics` and `MailglassInbound.MIMEError` to the
-`Stable` group.
+**Fix:** Add a sentence to `available?/0`'s doc noting it probes
+`:gen_smtp_client` as a proxy for the package, and that `:mimemail` absence is
+handled by `decode/2`'s `:undef` rescue rather than the predicate.
 
-### IN-03: `@doc since:` annotations reference unreleased versions
+### IN-02: `included` path widening to `mailglass_inbound/test/` will lint test fixtures with the full strict ruleset
 
-**File:** `mailglass_inbound/mix.exs:4`; `mime.ex:92,107`, `mime_error.ex:43`,
-`pub_sub/topics.ex:31`, `telemetry.ex:71,86,101,119`; `lib/mailglass/optional_deps/gen_smtp.ex:68`
-**Issue:** Inbound's package version is `@version "0.1.0"` but the new public
-functions are annotated `@doc since: "0.2.0"`; the core gateway `decode/2` is
-`@doc since: "1.2.0"` while core is at 1.0.0. HexDocs will show "since" tags for
-versions that do not yet exist. This is the conventional forward-reference for an
-in-flight release, but if the version bump is missed at publish time the docs become
-inconsistent.
-**Fix:** Ensure the release ceremony bumps `@version` to match (`0.2.0` inbound /
-`1.2.0` core) before publish, or hold the `@since` tags until the bump lands.
+**File:** `.credo.exs:120`
 
-### IN-04: Execution telemetry reports outcome even when the run insert fails
+**Issue:**
+The `included` list now covers `mailglass_inbound/test/`. The core `.credo.exs`
+already documents (lines 199-204, `NegatedConditionsWithElse: false`) that test
+files use guard idioms the strict ruleset dislikes. Widening to inbound tests may
+surface new strict findings in inbound test fixtures (e.g. the deliberate
+`if not ...` optional-dep guards, nested module aliases) that were previously
+unlinted. This is a deliberate, documented widening (D-45 Wave 0), so it is
+expected — flagged only so that any resulting inbound-test Credo noise is
+attributed to this intentional change rather than treated as a new defect.
 
-**File:** `mailglass_inbound/lib/mailglass_inbound/execution.ex:40-60`
-**Issue:** `stop_metadata` is computed from `normalized_result` (derived from
-`attrs` via `change_execution_run`) *before* `insert_execution_run` runs, then
-returned verbatim from the span regardless of insert success. If
-`insert_execution_run` returns `{:error, _}`, the `:stop` event still reports e.g.
-`outcome: :accept` for a run that was never persisted, and the failure is not
-reflected in `:status`/metadata. Observability is mildly misleading (no functional
-bug — the caller still receives the error tuple).
-**Fix:** Branch the stop metadata on the insert result (e.g. attach `status: :error`
-when `insert_execution_run` fails) so the span reflects what actually persisted.
-
-### IN-05: Property test runs `truncate_all/0` twice per iteration
-
-**File:** `mailglass_inbound/test/mailglass_inbound/properties/inbound_idempotency_convergence_test.exs:78, 95-96`
-**Issue:** `truncate_all/0` is called once in `setup` and again at the top of the
-property body. The setup call is redundant — the body truncates before every
-generated iteration anyway, and the setup truncation is immediately followed by the
-first iteration's truncation. Harmless, but the duplicate `TRUNCATE ... CASCADE`
-adds noise to an already long 1000-run job.
-**Fix:** Drop the `truncate_all()` call from `setup` (or document why both are
-intentional); the per-iteration truncation is the load-bearing one.
+**Fix:** None required. If inbound test fixtures trip strict checks, prefer
+narrow per-finding suppressions with `# Reason:`/`# Tracking:` blocks (per the
+`check_credo_suppressions.sh` gate) over reverting the widening.
 
 ---
 
-_Reviewed: 2026-05-23_
+_Reviewed: 2026-05-23T12:30:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
