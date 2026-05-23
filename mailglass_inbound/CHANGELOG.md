@@ -34,6 +34,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   derivation that excludes `:cause`. Matched by struct, never by message string.
   It does NOT implement the core `Mailglass.Error` behaviour. `@since "0.2.0"`
   (minor bump). (D-46-17)
+- `MailglassInbound.OptionalDeps.ExAwsS3` — inbound-local optional-dep gateway
+  for `ex_aws`/`ex_aws_s3`, mirroring the `Mailglass.OptionalDeps.GenSmtp` shape
+  (`@compile {:no_warn_undefined, [ExAws, ExAws.S3]}` + `available?/0` +
+  never-raise `get_object/2`). All `ExAws`/`ExAws.S3` access in inbound flows
+  through this gateway; bare references are forbidden by `NoBareOptionalDepReference`.
+  (D-46-14)
+- `MailglassInbound.S3Fetcher.Fake` (fake-adapter-first test default, D-13) and
+  `MailglassInbound.S3Fetcher.ExAwsS3` (real, optional-dep-gated) — implementations
+  of the `MailglassInbound.S3Fetcher` behaviour. The fetcher module is resolved
+  via a config-map-then-app-env seam defaulting to `Fake` in `:test` and
+  `ExAwsS3` otherwise (D-46-13).
+- `MailglassInbound.Ingress.Providers.SES` — SES inbound provider. Verifies the
+  SNS X.509 signature by reusing core's `Mailglass.Webhook.Providers.SES.verify_envelope!/2`
+  seam (CertCache + TrustPolicy), auto-confirms `SubscriptionConfirmation` /
+  `UnsubscribeConfirmation` as a `{:control_plane, 200}` no-op (no record), and
+  extracts the raw MIME body from the receipt-rule S3 action (primary) or the
+  SNS-inline `content` field (secondary, ≤150 KB) into the canonical
+  `%MailglassInbound.InboundMessage{}` + evidence. A small bounded GetObject
+  retry maps exhaustion to `MailglassInbound.S3FetchError` `:s3_object_not_ready`
+  so SNS redelivers. (SESI-01, SESI-02, SESI-04, SESI-05)
+
+### Dependencies
+
+- **Added `{:ex_aws, "~> 2.7", optional: true}` and `{:ex_aws_s3, "~> 2.5",
+  optional: true}`** — the FIRST new optional runtime deps since the v1.0 STACK
+  lock ("Optional deps: Add none"). Deliberate, scoped departure (D-46-20): they
+  are exercised only by the SES inbound provider's real S3 fetcher and gated
+  behind `MailglassInbound.OptionalDeps.ExAwsS3`, so a default install carries no
+  AWS footprint and `mix compile --no-optional-deps --warnings-as-errors` stays
+  green. Both verified on Hex (ex_aws 2.7.x, ex_aws_s3 2.5.x).
 
 ## 0.1.0 (2026-05-07)
 

@@ -52,6 +52,14 @@ extra_checks = [
        GenSmtp => [Mailglass.OptionalDeps.GenSmtp, MailglassInbound.OptionalDeps.GenSmtp],
        :mimemail => Mailglass.OptionalDeps.GenSmtp,
        :gen_smtp_client => Mailglass.OptionalDeps.GenSmtp,
+       # ex_aws/ex_aws_s3 (Phase 46, D-46-14): SES inbound's real S3 fetcher
+       # routes all ExAws access through the inbound-local
+       # MailglassInbound.OptionalDeps.ExAwsS3 gateway. Both the root `ExAws`
+       # (for `ExAws.request/1`) and `ExAws.S3` (for `get_object/2`) are keyed so
+       # NoBareOptionalDepReference flags any stray reference outside the gateway.
+       # included_path_prefixes already covers "mailglass_inbound/lib/".
+       ExAws => MailglassInbound.OptionalDeps.ExAwsS3,
+       ExAws.S3 => MailglassInbound.OptionalDeps.ExAwsS3,
        Sigra => Mailglass.OptionalDeps.Sigra
      },
      # Inbound code routes `:mimemail` (gen_smtp) through a gateway only; this

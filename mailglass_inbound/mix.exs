@@ -74,6 +74,17 @@ defmodule MailglassInbound.MixProject do
       # it is NOT added to elixirc_options no_warn_undefined here (no bare references
       # in inbound code). Pinned to the vetted 1.3.0 core lockfile resolution.
       {:gen_smtp, "~> 1.3", optional: true},
+      # `ex_aws`/`ex_aws_s3` (D-46-15, D-46-20): the FIRST new optional runtime
+      # deps since the v1.0 STACK lock. Used only by the SES inbound provider's
+      # real S3 fetcher (`MailglassInbound.S3Fetcher.ExAwsS3`); the fake-first
+      # test default (`S3Fetcher.Fake`) needs neither. All `ExAws`/`ExAws.S3`
+      # access flows through the `MailglassInbound.OptionalDeps.ExAwsS3` gateway,
+      # whose own `@compile {:no_warn_undefined, [ExAws, ExAws.S3]}` covers the
+      # references — so (like gen_smtp above) they are NOT added to the
+      # project-level `no_warn_undefined` list. Adopters also wire `:sweet_xml`,
+      # an HTTP client, and AWS creds themselves (Phase 50 setup guide).
+      {:ex_aws, "~> 2.7", optional: true},
+      {:ex_aws_s3, "~> 2.5", optional: true},
       # StreamData backs the TELE-08 1000-run inbound convergence property
       # (test/mailglass_inbound/properties/). Test-only; mirrors core's 1.3 pin.
       {:stream_data, "~> 1.3", only: [:test]},
