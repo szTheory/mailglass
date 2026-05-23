@@ -119,6 +119,42 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     assert evidence.raw_mime == @raw_mime
   end
 
+  # WR-05: the base64 branch is an ambiguous heuristic, so taking it must be
+  # auditable via a parse_warning.
+  test "SNS-inline base64 decode records a parse_warning so the ambiguity is auditable", %{
+    private_key: pk
+  } do
+    encoded = Base.encode64(@raw_mime)
+    raw = signed_inline_notification(pk, "ses-inline-b64-warn", encoded)
+    request = ses_request(raw)
+
+    assert {:ok, _facts} = SES.verify!(request, ses_config())
+    %{evidence: evidence} = SES.normalize(request)
+
+    assert evidence.parse_warnings[:inline_content_base64_decoded] == true
+  end
+
+  # WR-05: terse content that happens to be valid base64 but whose decoded form
+  # is NOT a MIME header block must be kept as raw content (not mis-decoded), and
+  # no base64 warning is recorded.
+  test "SNS-inline content that is valid base64 but not MIME stays raw (tightened heuristic)", %{
+    private_key: pk
+  } do
+    # "From: x@example.com..." base64-decodes to bytes that do NOT start with an
+    # RFC-5322 header line, so the tightened looks_like_mime?/1 rejects the
+    # decode and the content is treated as raw MIME.
+    not_mime_but_base64 = Base.encode64("not a header block, just prose with a : colon inside")
+    raw = signed_inline_notification(pk, "ses-inline-raw", not_mime_but_base64)
+    request = ses_request(raw)
+
+    assert {:ok, _facts} = SES.verify!(request, ses_config())
+    %{evidence: evidence} = SES.normalize(request)
+
+    # Kept as raw content (the base64 form), NOT silently decoded.
+    assert evidence.raw_mime == not_mime_but_base64
+    refute Map.has_key?(evidence.parse_warnings, :inline_content_base64_decoded)
+  end
+
   test "S3 fetch failing the first N calls retries then surfaces, no record on exhaustion", %{
     private_key: pk
   } do

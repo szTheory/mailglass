@@ -60,8 +60,8 @@ defmodule MailglassInbound.Ingress.Providers.SES do
 
     case Map.get(payload, "Type") do
       "Notification" ->
-        raw_mime = extract_raw_mime!(payload, config)
-        stash(payload, raw_mime)
+        {raw_mime, extraction_warnings} = extract_raw_mime!(payload, config)
+        stash(payload, raw_mime, extraction_warnings)
         {:ok, %{auth: :sns_x509}}
 
       type when type in ["SubscriptionConfirmation", "UnsubscribeConfirmation"] ->
@@ -82,7 +82,7 @@ defmodule MailglassInbound.Ingress.Providers.SES do
   # provider's struct-arity normalize.
   @impl false
   def normalize(%Request{raw_body: raw_body} = request) do
-    {payload, raw_mime} = fetch_verified(raw_body)
+    {payload, raw_mime, extraction_warnings} = fetch_verified(raw_body)
 
     repr =
       case MailglassInbound.MIME.parse(raw_mime) do
@@ -121,7 +121,7 @@ defmodule MailglassInbound.Ingress.Providers.SES do
         raw_headers: select_safe_headers(request.headers),
         raw_mime: raw_mime,
         verification_facts: %{},
-        parse_warnings: parse_warnings(message),
+        parse_warnings: Map.merge(parse_warnings(message), extraction_warnings),
         attachment_blobs: attachment_blobs
       }
     }
@@ -180,6 +180,10 @@ defmodule MailglassInbound.Ingress.Providers.SES do
 
   # ---- MIME extraction (S3 primary, inline secondary) ------------------
 
+  # Returns `{raw_mime, warnings}` where `warnings` is a map merged into the
+  # record's parse_warnings by normalize/1. The S3 path adds no warnings; the
+  # inline-content path flags when the ambiguous base64 heuristic was taken
+  # (WR-05).
   defp extract_raw_mime!(payload, config) do
     inner = decode_inner_message(payload)
     action_type = get_in(inner, ["receipt", "action", "type"])
@@ -188,10 +192,13 @@ defmodule MailglassInbound.Ingress.Providers.SES do
       action_type == "S3" ->
         bucket = get_in(inner, ["receipt", "action", "bucketName"])
         key = get_in(inner, ["receipt", "action", "objectKey"]) || get_in(inner, ["mail", "messageId"])
-        fetch_s3_body!(bucket, key, config)
+        {fetch_s3_body!(bucket, key, config), %{}}
 
       is_binary(Map.get(inner, "content")) ->
-        decode_inline_content(Map.get(inner, "content"))
+        case decode_inline_content(Map.get(inner, "content")) do
+          {raw_mime, true} -> {raw_mime, %{inline_content_base64_decoded: true}}
+          {raw_mime, false} -> {raw_mime, %{}}
+        end
 
       true ->
         raise %S3FetchError{
@@ -219,16 +226,27 @@ defmodule MailglassInbound.Ingress.Providers.SES do
 
   # SNS-inline content is UTF-8 or Base64 (≤150 KB). Try Base64 first only when
   # the content is not already valid printable MIME; fall back to raw bytes.
+  # Returns `{raw_mime, base64_decoded?}` so normalize/1 can record a
+  # parse_warning whenever the base64 branch is taken (WR-05) — the heuristic is
+  # inherently ambiguous, so the decision is made auditable.
   defp decode_inline_content(content) do
     case Base.decode64(content) do
-      {:ok, decoded} -> if looks_like_mime?(decoded), do: decoded, else: content
-      :error -> content
+      {:ok, decoded} -> if looks_like_mime?(decoded), do: {decoded, true}, else: {content, false}
+      :error -> {content, false}
     end
   end
 
+  # WR-05: a `:`-anywhere check is too weak (any "Key: value"-ish text passes,
+  # and terse single-line raw MIME that happens to be valid base64 could be
+  # mis-decoded). Require a real RFC-5322 header line — `Field-Name:` followed by
+  # SP/HTAB — at the very start of the decoded bytes (before the first blank
+  # line). This is the deterministic signal a decoded MIME message begins with a
+  # header block, not arbitrary text.
+  @header_line_regex ~r/\A[A-Za-z][A-Za-z0-9-]*:[ \t]/
+
   defp looks_like_mime?(bytes) do
-    # A decoded MIME message has a header block before the first blank line.
-    String.contains?(bytes, ":") and String.printable?(binary_part(bytes, 0, min(64, byte_size(bytes))))
+    prefix = binary_part(bytes, 0, min(byte_size(bytes), 998))
+    String.printable?(prefix) and Regex.match?(@header_line_regex, prefix)
   end
 
   defp decode_inner_message(payload) do
@@ -266,16 +284,17 @@ defmodule MailglassInbound.Ingress.Providers.SES do
 
   # ---- verify→normalize handoff (process-local) ------------------------
 
-  defp stash(payload, raw_mime) do
-    Process.put(@pd_key, {payload, raw_mime})
+  defp stash(payload, raw_mime, warnings) do
+    Process.put(@pd_key, {payload, raw_mime, warnings})
     :ok
   end
 
+  # Returns `{payload, raw_mime, extraction_warnings}`.
   defp fetch_verified(raw_body) do
     case Process.get(@pd_key) do
-      {payload, raw_mime} ->
+      {payload, raw_mime, warnings} ->
         Process.delete(@pd_key)
-        {payload, raw_mime}
+        {payload, raw_mime, warnings}
 
       _ ->
         # Defensive fallback: the plug always calls verify!/2 (which stashes)
@@ -290,10 +309,11 @@ defmodule MailglassInbound.Ingress.Providers.SES do
             # Thread the REAL resolved config (app env, incl. :s3_retry_opts)
             # into the re-fetch instead of an empty %{}, so the configured
             # fetcher + retry tuning are honored on this path too (WR-01).
-            {payload, extract_raw_mime!(payload, fallback_config())}
+            {raw_mime, warnings} = extract_raw_mime!(payload, fallback_config())
+            {payload, raw_mime, warnings}
 
           _ ->
-            {%{}, ""}
+            {%{}, "", %{}}
         end
     end
   end
