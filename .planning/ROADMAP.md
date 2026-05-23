@@ -8,7 +8,7 @@
 - [x] 45-06-PLAN.md — Gap Wave 1 (parallel): inbound `--no-optional-deps` lane — add `Mailglass.Oban.TenancyMiddleware` to inbound `no_warn_undefined` (WR-03 fix) + dedicated `inbound_compile_no_optional_deps` CI job (compile-only, SHA-pinned) [MIME-02]
 - [x] 45-07-PLAN.md — Gap Wave 2: PII-safe ingress error path — static `persist_failed` 500 body + `classify_persist_error/1` (PII-free `error_kind` in stop-meta, status stays 500) + new `NoPiiInResponseBody` egress Credo check + its test [TELE-06]
 - [x] 45-08-PLAN.md — Gap Wave 1 (parallel): doc honesty — mime.ex max_depth-guard admonition + contract bullet fix + mime_test describe rename + gen_smtp.ex `:undef`-under-rescue correction (doc/test-only) [MIME-01, MIME-04]
-- [ ] 45-09-PLAN.md — Gap Wave 3: recurrence backstops + pre-existing-check coverage — positive/negative regression tests for the two uncovered checks (RequireAtomicUnsubscribeHeaders, StreamPolicyConsistent) + check-coverage meta-test (zero exclusions) + `.credo.exs` config sentinel pinning the CR-01/WR-02 keys [MIME-02, TELE-06]
+- [x] 45-09-PLAN.md — Gap Wave 3: recurrence backstops + pre-existing-check coverage — positive/negative regression tests for the two uncovered checks (RequireAtomicUnsubscribeHeaders, StreamPolicyConsistent) + check-coverage meta-test (zero exclusions) + `.credo.exs` config sentinel pinning the CR-01/WR-02 keys [MIME-02, TELE-06]
 
 **UI hint**: no
 
