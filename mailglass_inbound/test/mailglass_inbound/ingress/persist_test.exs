@@ -40,9 +40,32 @@ defmodule MailglassInbound.Ingress.PersistTest do
     defp ensure_id(struct), do: struct
   end
 
+  # CR-01: a Postgres-backed TestRepo decorator that forces the FIRST `one/2`
+  # (the in-transaction `load_duplicate` check) to miss — reproducing the race
+  # window where a redelivery's dedup snapshot was taken before the winning
+  # transaction committed. Every other call (insert, transact, and the
+  # post-violation reload `one/2`) delegates to the real TestRepo, so the
+  # fingerprint unique index is genuinely enforced by Postgres.
+  defmodule RaceRepo do
+    def transact(fun, opts \\ []), do: TestRepo.transact(fun, opts)
+    def insert(changeset, opts \\ []), do: TestRepo.insert(changeset, opts)
+
+    def one(query, opts \\ []) do
+      case Process.get(:mailglass_inbound_race_one_seen, false) do
+        false ->
+          Process.put(:mailglass_inbound_race_one_seen, true)
+          nil
+
+        true ->
+          TestRepo.one(query, opts)
+      end
+    end
+  end
+
   setup do
     Process.delete(:mailglass_inbound_duplicate_record)
     Process.delete(:mailglass_inbound_inserts)
+    Process.delete(:mailglass_inbound_race_one_seen)
     :ok
   end
 
@@ -135,6 +158,43 @@ defmodule MailglassInbound.Ingress.PersistTest do
       assert migration =~ "provider = 'mailgun' AND raw_mime_fingerprint IS NOT NULL"
       assert migration =~ "mailglass_inbound_records_mailgun_fingerprint_idx"
       refute migration =~ "generated:"
+    end
+
+    # CR-01: the check-then-act dedup window. A concurrent redelivery of the same
+    # no-Message-Id Mailgun body can pass `load_duplicate` (both readers see nil)
+    # before either evidence row is committed, so both proceed to insert. The
+    # canonical record carries no unique key for the no-Message-Id case, so two
+    # records insert; the SECOND evidence insert violates the fingerprint partial
+    # unique index. Without the matching `unique_constraint/3` this raised a raw
+    # `Postgrex.Error` (a 500); the fix translates it to `{:error, changeset}`,
+    # the persist layer recognizes the fingerprint constraint and reloads the
+    # surviving duplicate, collapsing the race to a clean `:duplicate`.
+    #
+    # The sandbox serializes connections, so the race window is reproduced
+    # deterministically with a repo decorator that returns `nil` for the
+    # in-transaction dedup check (simulating the snapshot taken before the winner
+    # committed) and delegates everything else — including the post-violation
+    # reload — to the real Postgres-backed TestRepo. This drives the exact
+    # production code path: insert -> fingerprint violation -> reload -> duplicate.
+    test "concurrent no-Message-Id redelivery collapses to :duplicate, never a raised Postgrex.Error" do
+      raw = "Subject: race condition\r\n\r\nidentical concurrent body"
+      handoff = mailgun_handoff(provider_message_id: nil, raw_mime: raw)
+
+      # Winner: insert the first record + evidence normally (this is the row the
+      # concurrent transaction committed first).
+      {:ok, winner} = Persist.persist(handoff, repo: TestRepo, routes: [])
+      assert winner.status == :inserted
+      assert TestRepo.aggregate(InboundRecord, :count) == 1
+
+      # Loser: the same body arrives again, but its in-transaction dedup check
+      # missed (RaceRepo forces the first `one/2` to nil). It inserts a second
+      # record, then the evidence insert violates the fingerprint unique index.
+      result = Persist.persist(handoff, repo: RaceRepo, routes: [])
+
+      assert {:ok, %{status: :duplicate, inbound_record: %InboundRecord{}}} = result
+      # The fingerprint constraint rolled back the loser's record insert: still
+      # exactly one canonical InboundRecord, never two.
+      assert TestRepo.aggregate(InboundRecord, :count) == 1
     end
   end
 

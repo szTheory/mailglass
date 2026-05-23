@@ -28,27 +28,9 @@ defmodule MailglassInbound.Ingress.Persist do
         fn ->
           transact_result =
             repo.transact(fn ->
-              case load_duplicate(repo, tenant_id, provider, message, handoff.evidence) do
-                %InboundRecord{} = record ->
-                  {:ok,
-                   %{
-                     status: :duplicate,
-                     inbound_record: record,
-                     inbound_evidence: nil
-                   }}
-
-                nil ->
-                  with {:ok, record} <- insert_record(repo, tenant_id, provider, message),
-                       {:ok, evidence} <- insert_evidence(repo, tenant_id, provider, record, handoff.evidence) do
-                    {:ok,
-                     %{
-                       status: :inserted,
-                       inbound_record: record,
-                       inbound_evidence: evidence
-                     }}
-                  end
-              end
+              persist_in_transaction(repo, tenant_id, provider, message, handoff.evidence)
             end)
+            |> resolve_fingerprint_race(repo, tenant_id, provider, message, handoff.evidence)
 
           {transact_result,
            %{
@@ -73,6 +55,54 @@ defmodule MailglassInbound.Ingress.Persist do
         other
     end
   end
+
+  defp persist_in_transaction(repo, tenant_id, provider, message, evidence) do
+    case load_duplicate(repo, tenant_id, provider, message, evidence) do
+      %InboundRecord{} = record ->
+        {:ok,
+         %{
+           status: :duplicate,
+           inbound_record: record,
+           inbound_evidence: nil
+         }}
+
+      nil ->
+        with {:ok, record} <- insert_record(repo, tenant_id, provider, message),
+             {:ok, evidence_row} <- insert_evidence(repo, tenant_id, provider, record, evidence) do
+          {:ok,
+           %{
+             status: :inserted,
+             inbound_record: record,
+             inbound_evidence: evidence_row
+           }}
+        end
+    end
+  end
+
+  # CR-01: A concurrent redelivery of the same no-Message-Id body can pass
+  # `load_duplicate` (both see nil), both insert the canonical record, and the
+  # second evidence insert violates the fingerprint partial unique index. With
+  # the matching `unique_constraint/3` on the evidence changeset, that violation
+  # now surfaces as `{:error, %Ecto.Changeset{}}` (rolling back this
+  # transaction's just-inserted record) instead of a raw `Postgrex.Error`. We
+  # recognize the fingerprint constraint and reload the surviving duplicate (the
+  # row the winning transaction committed), collapsing the race to a clean
+  # `:duplicate` rather than a 500.
+  defp resolve_fingerprint_race({:error, %Ecto.Changeset{} = changeset} = error, repo, tenant_id, provider, message, evidence) do
+    if fingerprint_constraint?(changeset) do
+      case load_duplicate(repo, tenant_id, provider, message, evidence) do
+        %InboundRecord{} = record ->
+          {:ok, %{status: :duplicate, inbound_record: record, inbound_evidence: nil}}
+
+        nil ->
+          error
+      end
+    else
+      error
+    end
+  end
+
+  defp resolve_fingerprint_race(result, _repo, _tenant_id, _provider, _message, _evidence), do: result
 
   defp persist_operation({:ok, %{status: :inserted}}), do: :insert
   defp persist_operation({:ok, %{status: :duplicate}}), do: :dedup_skip
@@ -230,6 +260,22 @@ defmodule MailglassInbound.Ingress.Persist do
   defp duplicate_constraint?(changeset) do
     Enum.any?(changeset.errors, fn
       {:provider_message_id, {_msg, opts}} -> opts[:constraint_name] == "mailglass_inbound_records_postmark_idempotency_idx"
+      _ -> false
+    end)
+  end
+
+  @fingerprint_constraints [
+    "mailglass_inbound_records_mailgun_fingerprint_idx",
+    "mailglass_inbound_records_sendgrid_fingerprint_idx"
+  ]
+
+  # CR-01: recognize an evidence-level fingerprint partial-unique-index violation
+  # translated by `InboundEvidence.changeset/1`'s `unique_constraint/3`. The error
+  # is attached to `:raw_mime_fingerprint`; match the constraint name to avoid
+  # confusing it with any other future unique constraint on the same field.
+  defp fingerprint_constraint?(changeset) do
+    Enum.any?(changeset.errors, fn
+      {:raw_mime_fingerprint, {_msg, opts}} -> opts[:constraint_name] in @fingerprint_constraints
       _ -> false
     end)
   end

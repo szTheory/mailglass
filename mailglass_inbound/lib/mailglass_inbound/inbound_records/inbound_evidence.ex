@@ -53,5 +53,19 @@ defmodule MailglassInbound.InboundRecords.InboundEvidence do
     |> cast(attrs, @cast)
     |> validate_required(@required)
     |> foreign_key_constraint(:inbound_record_id)
+    # The MD5(raw_mime) dedupe fallback (Mailgun/SendGrid no-Message-Id path) is
+    # enforced by provider-scoped partial unique indexes on the generated
+    # `raw_mime_fingerprint` column. Declaring the matching `unique_constraint/3`
+    # here lets Ecto translate a concurrent-insert violation into
+    # `{:error, changeset}` instead of letting it escape as a raw
+    # `Ecto.ConstraintError` / `Postgrex.Error` (CR-01). The error is attached to
+    # `:raw_mime_fingerprint` (the index's discriminating column); the persist
+    # layer reloads the surviving duplicate on this error.
+    |> unique_constraint(:raw_mime_fingerprint,
+      name: :mailglass_inbound_records_mailgun_fingerprint_idx
+    )
+    |> unique_constraint(:raw_mime_fingerprint,
+      name: :mailglass_inbound_records_sendgrid_fingerprint_idx
+    )
   end
 end
