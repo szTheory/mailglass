@@ -34,7 +34,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 
 - [x] **Phase 44.5: v1.0/1.1 Release Ceremony** — Single linked-version cut: `mailglass` 0.3.2 → **1.0.0**, `mailglass_admin` 0.3.2 → **1.0.0**, `mailglass_inbound` first Hex publish at **0.1.0**. Bundles 4 unreleased milestones (v0.5/v0.6/v1.0/v1.1, 169 commits since v0.3.0 tag). Resolves CLOSE-06. — completed 2026-05-07
 - [x] **Phase 45: Inbound Telemetry + Idempotency Foundation** — 4-level telemetry spans across all inbound stages, shared MIME module, and 1000-replay convergence proof (12 plans: 4 functional + 8 gap-closure across 2 rounds) — completed 2026-05-23
-- [ ] **Phase 46: Mailgun + SES Inbound Ingress** — Lift outbound verifiers into inbound; ship Mailgun (HMAC) and SES (SNS X.509 + S3 fetch) provider plugs (3 plans, 2 waves)
+- [x] **Phase 46: Mailgun + SES Inbound Ingress** — Lift outbound verifiers into inbound; ship Mailgun (HMAC) and SES (SNS X.509 + S3 fetch) provider plugs (3 plans, 2 waves) (completed 2026-05-23)
 - [ ] **Phase 47: Inbound Test Helpers + Generators** — `TestAssertions`, `MailboxCase`, `Test.Ingress`, code-built fixtures, and 3 Igniter generators
 - [ ] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card
 - [ ] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only
@@ -105,8 +105,8 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 **Plans**: 3 plans (2 waves)
 
 - [x] 46-01-PLAN.md — Shared foundation: net-new SignatureError + S3FetchError, S3Fetcher behaviour, widened Provider callback, widened Plug (4-provider allowlist + 3-variant result case + dual rescue), core SES verify_envelope!/2 seam (MGUN-04, SESI-03)
-- [ ] 46-02-PLAN.md — Mailgun provider: flat-field HMAC + replay no-op + multipart normalize + Message-Id/fingerprint dedupe + fingerprint migration (MGUN-01, MGUN-02, MGUN-03)
-- [ ] 46-03-PLAN.md — SES provider + S3: SNS X.509 via core seam + control-plane no-op + S3Fetcher Fake/ExAwsS3 + OptionalDeps.ExAwsS3 gateway + bounded retry (SESI-01, SESI-02, SESI-04, SESI-05)
+- [x] 46-02-PLAN.md — Mailgun provider: flat-field HMAC + replay no-op + multipart normalize + Message-Id/fingerprint dedupe + fingerprint migration (MGUN-01, MGUN-02, MGUN-03)
+- [x] 46-03-PLAN.md — SES provider + S3: SNS X.509 via core seam + control-plane no-op + S3Fetcher Fake/ExAwsS3 + OptionalDeps.ExAwsS3 gateway + bounded retry (SESI-01, SESI-02, SESI-04, SESI-05)
 
 **UI hint**: no
 
@@ -251,7 +251,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 
 **Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
 **Requirements:** TBD
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 
@@ -273,7 +273,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | **44.5. v1.0/1.1 Release Ceremony** | 5/5 | ✅ Complete | 2026-05-07 |
 | 45. Inbound Telemetry + Idempotency Foundation | 12/12 | ✅ Complete | 2026-05-23 |
-| 46. Mailgun + SES Inbound Ingress | 1/3 | In Progress|  |
+| 46. Mailgun + SES Inbound Ingress | 3/3 | Complete   | 2026-05-23 |
 | 47. Inbound Test Helpers + Generators | 0/TBD | Not started | — |
 | 48. Inbound Admin LiveView | 0/TBD | Not started | — |
 | 49. Inbound Runtime Operator Tooling | 0/TBD | Not started | — |
