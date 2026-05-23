@@ -26,11 +26,24 @@ extra_checks = [
      # across the package boundary, so those gateways are listed as additional
      # allowed call sites for the deps inbound integrates (Oban; GenSmtp lands
      # with Plan 03's MIME parser gateway).
+     #
+     # gen_smtp is an Erlang library with NO `GenSmtp` Elixir module: its surface
+     # is reached only via the Erlang call-site atoms `:mimemail` (the MIME
+     # parser) and `:gen_smtp_client` (the SMTP client) — see the
+     # `Mailglass.OptionalDeps.GenSmtp` gateway moduledoc. The check resolves a
+     # bare `:mimemail.decode(...)` call to the root atom `:mimemail`, so the map
+     # MUST be keyed on those atoms for the guard to fire (a `GenSmtp` alias key
+     # alone never matches a bare-atom call). The `GenSmtp` alias key is retained
+     # because inbound `mime.ex` reaches the gateway via
+     # `alias Mailglass.OptionalDeps.GenSmtp, as: OptionalGenSmtp`, whose call
+     # root resolves to the `GenSmtp` alias — that path must keep passing.
      gated_modules: %{
        Oban => [Mailglass.OptionalDeps.Oban, MailglassInbound.OptionalDeps.Oban],
        OpenTelemetry => Mailglass.OptionalDeps.OpenTelemetry,
        Mjml => Mailglass.OptionalDeps.Mjml,
        GenSmtp => [Mailglass.OptionalDeps.GenSmtp, MailglassInbound.OptionalDeps.GenSmtp],
+       :mimemail => Mailglass.OptionalDeps.GenSmtp,
+       :gen_smtp_client => Mailglass.OptionalDeps.GenSmtp,
        Sigra => Mailglass.OptionalDeps.Sigra
      },
      # Inbound code routes `:mimemail` (gen_smtp) through a gateway only; this
