@@ -81,13 +81,33 @@ defmodule MailglassInbound.Ingress.Plug do
            }}
 
         {:error, reason} ->
-          resp = send_json(conn, 500, %{status: "error", reason: inspect(reason)})
+          # PII-safe egress (TELE-06). `reason` is the `{:error, term}` from
+          # Persist.persist/2 — typically an `%Ecto.Changeset{}` whose `changes`
+          # carry recipient PII (subject/from/to/cc/bcc/reply_to/text_body/
+          # html_body). NEVER interpolate it into the response body: that would
+          # leak recipient email contents to the provider on a transient DB
+          # failure. Mirror the core webhook plug's static-500 posture
+          # (lib/mailglass/webhook/plug.ex returns `send_resp(conn, 500, "")` on
+          # its config-error branch) — the JSON-shaped equivalent is a static
+          # closed code. Status stays 500: it is the correct retry signal for all
+          # four providers (Postmark/Mailgun/SES retry non-2xx; SendGrid Inbound
+          # Parse DROPS 4xx with no retry, so downgrading would permanently lose
+          # the email on a transient error). A DB error is operational, not an
+          # Anymail rejection.
+          log_persist_failure(reason)
+          resp = send_json(conn, 500, %{status: "error", reason: "persist_failed"})
 
+          # Adopter DX detail rides the telemetry stop-meta as a PII-free
+          # classified atom — NOT the response body, and NOT the raw `reason`.
+          # This is an `{:error, _}` tuple (not a raise), so `:stop` enrichment is
+          # the right channel; the full-fidelity record already lives in the
+          # committed tenant-scoped `InboundEvidence` row.
           {resp,
            %{
              provider: provider,
              tenant_id: tenant_id,
              status: :error,
+             error_kind: classify_persist_error(reason),
              byte_size: request_byte_size(request)
            }}
       end
@@ -110,6 +130,41 @@ defmodule MailglassInbound.Ingress.Plug do
 
         {resp, %{provider: provider, status: :config_error}}
     end
+  end
+
+  # Map a persist failure term to a PII-free atom for the telemetry stop-meta.
+  # `%Ecto.Changeset{}` carries recipient PII in `.changes`, so we collapse it to
+  # a closed code rather than echoing it. Already-safe atom codes pass through.
+  defp classify_persist_error(%Ecto.Changeset{}), do: :changeset_invalid
+  defp classify_persist_error(:not_found), do: :not_found
+  defp classify_persist_error(reason) when is_atom(reason), do: reason
+  defp classify_persist_error(_reason), do: :unknown
+
+  # Optional scrubbed adopter-DX log. Logs ONLY changeset field names + their
+  # validation messages via `Ecto.Changeset.traverse_errors/2` — NEVER the
+  # `changes` values (which carry recipient PII). No `inspect` of the changeset,
+  # no body/recipient interpolation, so this stays below the NoFullResponseInLogs
+  # / NoPiiInResponseBody bar. The durable record is the committed
+  # `InboundEvidence` row; this is debuggability only.
+  defp log_persist_failure(%Ecto.Changeset{} = changeset) do
+    require Logger
+
+    field_errors =
+      changeset
+      |> Ecto.Changeset.traverse_errors(fn {msg, _opts} -> msg end)
+      |> Map.keys()
+      |> Enum.sort()
+      |> Enum.join(",")
+
+    Logger.error("[mailglass_inbound] inbound persist failed: changeset_invalid fields=#{field_errors}")
+    :ok
+  end
+
+  defp log_persist_failure(reason) do
+    require Logger
+
+    Logger.error("[mailglass_inbound] inbound persist failed: #{classify_persist_error(reason)}")
+    :ok
   end
 
   defp request_byte_size(%Request{raw_body: raw_body}) when is_binary(raw_body),

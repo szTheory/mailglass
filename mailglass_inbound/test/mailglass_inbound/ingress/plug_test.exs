@@ -35,16 +35,22 @@ defmodule MailglassInbound.Ingress.PlugTest do
       Process.put(:mailglass_inbound_last_persist_opts, opts)
       Process.put(:mailglass_inbound_execution_order, [:persist | Process.get(:mailglass_inbound_execution_order, [])])
 
-      status = Process.get(:mailglass_inbound_persist_status, :inserted)
+      case Process.get(:mailglass_inbound_persist_error) do
+        nil ->
+          status = Process.get(:mailglass_inbound_persist_status, :inserted)
 
-      {:ok,
-       %{
-         status: status,
-         message: handoff.message,
-         inbound_record: %{id: "record-123", tenant_id: handoff.tenant_id},
-         inbound_evidence: %{id: "evidence-123"},
-         route: %{status: :matched, mailbox: SupportMailbox}
-       }}
+          {:ok,
+           %{
+             status: status,
+             message: handoff.message,
+             inbound_record: %{id: "record-123", tenant_id: handoff.tenant_id},
+             inbound_evidence: %{id: "evidence-123"},
+             route: %{status: :matched, mailbox: SupportMailbox}
+           }}
+
+        reason ->
+          {:error, reason}
+      end
     end
   end
 
@@ -189,6 +195,49 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert conn.status == 200
     assert Jason.decode!(conn.resp_body)["status"] == "duplicate"
     assert Process.get(:mailglass_inbound_last_execution_result) == nil
+  end
+
+  test "persist failure returns a static PII-free 500 body (no changeset/inspect leak)" do
+    # A transient persist failure returns an `%Ecto.Changeset{}` whose `changes`
+    # carry recipient PII. The branch MUST NOT interpolate it into the response.
+    pii_changeset =
+      {%{}, %{from: :string, to: :string, subject: :string}}
+      |> Ecto.Changeset.cast(
+        %{from: "alice@secret.example", to: "bob@secret.example", subject: "Confidential merger terms"},
+        [:from, :to, :subject]
+      )
+      |> Ecto.Changeset.add_error(:subject, "is invalid")
+
+    Process.put(:mailglass_inbound_persist_error, pii_changeset)
+
+    conn =
+      conn_with_auth(postmark_payload())
+      |> Map.put(:path_params, %{"tenant_id" => "tenant-123"})
+
+    conn =
+      IngressPlug.call(
+        conn,
+        IngressPlug.init(
+          provider: :postmark,
+          router: TestRouter,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+      )
+
+    # Status stays 500 (correct retry signal for all four providers).
+    assert conn.status == 500
+
+    body = Jason.decode!(conn.resp_body)
+    assert body["status"] == "error"
+    # Static closed code — NOT the changeset, NOT inspect(reason).
+    assert body["reason"] == "persist_failed"
+
+    # No recipient PII reaches the provider in the response body.
+    refute conn.resp_body =~ "alice@secret.example"
+    refute conn.resp_body =~ "bob@secret.example"
+    refute conn.resp_body =~ "Confidential merger terms"
+    refute conn.resp_body =~ "Ecto.Changeset"
   end
 
   test "returns 401 on auth failure" do
