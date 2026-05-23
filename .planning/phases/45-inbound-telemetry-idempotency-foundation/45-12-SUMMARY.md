@@ -108,3 +108,7 @@ The plan flagged automated verification as "MISSING locally (toolchain caveat)",
 ## Known Stubs
 
 None. No placeholder values, no unwired data sources.
+
+## Self-Check: PASSED
+
+All claimed files exist (credo_checks/no_pii_in_response_body.ex, test/mailglass/credo/no_pii_in_response_body_test.exs, lib/mailglass/optional_deps/gen_smtp.ex, this SUMMARY) and all task commits exist in git (e474993 test, 11f2a58 feat, a93007b docs/IN-01).
