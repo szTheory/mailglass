@@ -129,7 +129,13 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
   4. `MailglassInbound.Test.Ingress.receive_inbound/2` and `receive_provider_payload/3` drive the production write path end-to-end (a single fake-provider seam, mirroring outbound `Adapters.Fake.trigger_event/3`); `MailglassInbound.Fixtures` builds canonical Postmark JSON / SendGrid form / Mailgun multipart / SES SNS payloads entirely from code (no `.eml` files in `test/fixtures/`).
   5. `mix mailglass.gen.mailbox MyApp.Inbound.Support` scaffolds the mailbox module, a route stub in the configured router, and an ExUnit test stub using `MailboxCase`; `mix mailglass.gen.inbound_router` and `mix mailglass.gen.inbound_route` scaffold/extend routers idempotently; all three support `--dry-run` matching `mix mailglass.install` v0.5 hardening.
 
-**Plans**: TBD
+**Plans**: 4 plans (3 waves)
+
+Plans:
+- [ ] 47-01-PLAN.md — Fixtures: code-built canonical %InboundMessage{} + Postmark/SendGrid/Mailgun/SES-SNS payloads, signed SNS via real CertCache (ITEST-07) [Wave 1]
+- [ ] 47-02-PLAN.md — Three Igniter generators (gen.mailbox / gen.inbound_router / gen.inbound_route), idempotent zipper edit + --dry-run (IGEN-01..04) [Wave 1, core pkg]
+- [ ] 47-03-PLAN.md — Test.Ingress real persist+sync-execute driver + capture seam, TestAssertions 4 styles + outcome + routing + negative (ITEST-01..04, ITEST-06) [Wave 2]
+- [ ] 47-04-PLAN.md — MailboxCase ExUnit case template (app-env repo, snapshot-nothing) + Hex packaging Testing group + docs contract (ITEST-05) [Wave 3]
 **UI hint**: no
 
 **Hardest sub-tasks:**
