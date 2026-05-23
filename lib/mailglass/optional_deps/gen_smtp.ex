@@ -21,13 +21,18 @@ defmodule Mailglass.OptionalDeps.GenSmtp do
   `:mimemail.decode/2` reaches its callers through **three** escape mechanisms,
   so `decode/2` wraps `try/rescue` AND `catch :throw` AND `catch :exit`:
 
-  - `erlang:error` (caught by `rescue`) — `no_boundary`, `missing_boundary`,
-    `missing_last_boundary`, `non_mime_multipart`, `{mime_version, _}`,
-    `unterminated_quotes`, `unterminated_comment`. Surfaced as
-    `{:error, {:error, exception}}`.
+  - `erlang:error` / `:undef` (caught by `rescue`) — raised errors
+    (`no_boundary`, `missing_boundary`, `missing_last_boundary`,
+    `non_mime_multipart`, `{mime_version, _}`, `unterminated_quotes`,
+    `unterminated_comment`) **and** the `:undef` backstop: if `decode/2` is
+    reached without the `available?/0` gate and `:mimemail` is absent, the
+    call raises a class-`:error` `UndefinedFunctionError` (`:undef`), which
+    `rescue` catches. Surfaced as `{:error, {:error, exception}}`. (The normal
+    degraded path returns `:gen_smtp_unavailable` upstream via the availability
+    gate before `decode/2` is ever called.)
   - `throw` (caught by `catch :throw`) — `bad_content_type`, `bad_disposition`,
     `badchar`. Surfaced as `{:error, {:throw, reason}}`.
-  - `:exit`/`:undef` (caught by `catch :exit`) — `iconv:convert/3` when
+  - `:exit` (caught by `catch :exit`) — the `iconv:convert/3` EXIT signal when
     `:iconv` is not installed (gen_smtp does not bundle it). Surfaced as
     `{:error, {:exit, reason}}`. This path is a defensive backstop: the
     mandatory `{:encoding, :none}` opt skips iconv entirely.
