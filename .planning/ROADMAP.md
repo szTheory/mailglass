@@ -132,10 +132,19 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 **Plans**: 4 plans (3 waves)
 
 Plans:
+**Wave 1**
+
 - [ ] 47-01-PLAN.md — Fixtures: code-built canonical %InboundMessage{} + Postmark/SendGrid/Mailgun/SES-SNS payloads, signed SNS via real CertCache (ITEST-07) [Wave 1]
 - [ ] 47-02-PLAN.md — Three Igniter generators (gen.mailbox / gen.inbound_router / gen.inbound_route), idempotent zipper edit + --dry-run (IGEN-01..04) [Wave 1, core pkg]
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 47-03-PLAN.md — Test.Ingress real persist+sync-execute driver + capture seam, TestAssertions 4 styles + outcome + routing + negative (ITEST-01..04, ITEST-06) [Wave 2]
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 47-04-PLAN.md — MailboxCase ExUnit case template (app-env repo, snapshot-nothing) + Hex packaging Testing group + docs contract (ITEST-05) [Wave 3]
+
 **UI hint**: no
 
 **Hardest sub-tasks:**
