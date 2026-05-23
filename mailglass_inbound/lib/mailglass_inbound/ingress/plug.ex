@@ -72,6 +72,27 @@ defmodule MailglassInbound.Ingress.Plug do
       request = build_request!(provider, conn)
       config = resolve_config!(provider, conn, opts)
 
+      # WR-03 (intentional fetch-before-tenant for SES): verify runs BEFORE
+      # resolve_tenant!. For SES this means the bounded S3 GetObject (with up to
+      # the configured backoff) happens inside verify_request!, before the tenant
+      # is resolved. This ordering is deliberate and safe:
+      #
+      #   * Signature is verified FIRST inside verify_envelope! (X.509), so only
+      #     authentic SNS messages ever reach the S3 fetch — a forgery is rejected
+      #     with no network I/O. Verify-before-tenant is the security invariant
+      #     (D-46-12); we never do tenant work for an unauthenticated request.
+      #   * The S3 fetch is part of verification because the verified SNS payload
+      #     is what names the bucket/objectKey (single fetch, no double fetch).
+      #   * The fetch cost is BOUNDED and now CONFIGURABLE: the retry attempts +
+      #     backoff are tunable per deployment via :s3_retry_opts, which the SES
+      #     resolve_config! threads into the provider (WR-04). A deployment that
+      #     cannot afford holding a request process across the default backoff can
+      #     shrink it (e.g. attempts: 1) from app config.
+      #
+      # The residual cost — an authentic message for an unresolvable tenant pays
+      # the fetch before the 422 — is accepted: it requires a valid SNS signature
+      # for the configured topic, so it is not an unauthenticated DoS vector.
+      #
       # Widened verify result contract (D-46-06; mirrors core
       # lib/mailglass/webhook/plug.ex:119-161). Verify can now express
       # non-persisting verified outcomes:
