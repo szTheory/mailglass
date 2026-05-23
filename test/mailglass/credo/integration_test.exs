@@ -3,64 +3,13 @@ defmodule Mailglass.Credo.IntegrationTest do
 
   alias Credo.SourceFile
 
-  @extra_checks [
-    {Mailglass.Credo.NoRawSwooshSendInLib,
-     [
-       allowed_modules: [Mailglass.Adapters.Swoosh]
-     ]},
-    {Mailglass.Credo.NoPiiInTelemetryMeta,
-     [
-       blocked_keys: ~w(to from cc bcc body html_body text_body subject headers recipient email)a
-     ]},
-    {Mailglass.Credo.NoUnscopedTenantQueryInLib,
-     [
-       tenanted_schemas: [
-         Mailglass.Outbound.Delivery,
-         Mailglass.Events.Event,
-         Mailglass.Suppression.Entry,
-         Mailglass.Webhook.WebhookEvent
-       ],
-       repo_functions: [:all, :one, :get, :get!, :get_by, :get_by!],
-       unscoped_audit_helpers: [{Mailglass.Tenancy, :audit_unscoped_bypass}]
-     ]},
-    {Mailglass.Credo.NoBareOptionalDepReference,
-     [
-       gated_modules: %{
-         Oban => Mailglass.OptionalDeps.Oban,
-         OpenTelemetry => Mailglass.OptionalDeps.OpenTelemetry,
-         Mjml => Mailglass.OptionalDeps.Mjml,
-         GenSmtp => Mailglass.OptionalDeps.GenSmtp,
-         Sigra => Mailglass.OptionalDeps.Sigra
-       },
-       included_path_prefixes: ["lib/mailglass/"]
-     ]},
-    {Mailglass.Credo.NoOversizedUseInjection, [max_lines: 20]},
-    {Mailglass.Credo.PrefixedPubSubTopics, [required_prefix: "mailglass:"]},
-    {Mailglass.Credo.NoDefaultModuleNameSingleton,
-     [
-       watched_modules: [GenServer, Agent, Registry, Supervisor]
-     ]},
-    {Mailglass.Credo.NoCompileEnvOutsideConfig,
-     [
-       allowed_modules: [Mailglass.Config]
-     ]},
-    {Mailglass.Credo.NoOtherAppEnvReads, [allowed_apps: [:mailglass]]},
-    {Mailglass.Credo.TelemetryEventConvention, [required_root: :mailglass, min_segments: 4]},
-    {Mailglass.Credo.NoFullResponseInLogs,
-     [
-       suspicious_fragments: ~w(response resp body payload)
-     ]},
-    {Mailglass.Credo.NoDirectDateTimeNow,
-     [
-       allowed_modules: [Mailglass.Clock, Mailglass.Clock.System, Mailglass.Clock.Frozen],
-       included_path_prefixes: ["lib/mailglass/"]
-     ]},
-    {Mailglass.Credo.NoTrackingOnAuthStream,
-     [
-       auth_name_heuristics:
-         ~w(magic_link password_reset verify_email confirm_account reset_token verification_token confirm_email two_factor 2fa)
-     ]}
-  ]
+  # WR-05: the integration corpus exercises the SHIPPED .credo.exs params, sourced
+  # live via Code.eval_file in setup_all — not a hand-maintained duplicate that can
+  # drift. (The former hardcoded check-params literal had gone stale: a
+  # singular-atom TelemetryEventConvention root, no :mimemail/:gen_smtp_client
+  # gated keys, and no StreamPolicyConsistent.) @check_cases below is the real
+  # fixture corpus (synthetic bad/clean sources per check) and is intentionally
+  # kept; only the param SOURCE moved to the live config.
 
   @check_cases [
     %{
@@ -336,22 +285,37 @@ defmodule Mailglass.Credo.IntegrationTest do
 
   setup_all do
     {:ok, _apps} = Application.ensure_all_started(:credo)
-    :ok
+    {config, _binding} = Code.eval_file(".credo.exs")
+    {:ok, live_checks: load_checks(config)}
   end
 
-  test "integration fixture includes all 13 custom checks" do
-    assert length(@extra_checks) == 13
-    assert length(@check_cases) == 13
+  test "every @check_cases module is registered in the live .credo.exs config", %{
+    live_checks: live_checks
+  } do
+    registered =
+      live_checks
+      |> Enum.map(fn {mod, _params} -> mod end)
+      |> MapSet.new()
+
+    missing =
+      @check_cases
+      |> Enum.map(& &1.check)
+      |> Enum.reject(&MapSet.member?(registered, &1))
+
+    assert missing == [],
+           "Integration corpus references checks not registered in the live " <>
+             ".credo.exs (stale fixture / renamed or removed check):\n" <>
+             Enum.map_join(missing, "\n", fn mod -> "  #{inspect(mod)}" end)
   end
 
-  test "synthetic violations trigger each custom check" do
+  test "synthetic violations trigger each custom check", %{live_checks: live_checks} do
     Enum.each(@check_cases, fn check_case ->
       issues =
         run_check(
           check_case.check,
           check_case.bad_source,
           check_case.filename,
-          params_for(check_case.check)
+          params_for(live_checks, check_case.check)
         )
 
       assert issues != [],
@@ -359,14 +323,14 @@ defmodule Mailglass.Credo.IntegrationTest do
     end)
   end
 
-  test "synthetic clean code passes each custom check" do
+  test "synthetic clean code passes each custom check", %{live_checks: live_checks} do
     Enum.each(@check_cases, fn check_case ->
       issues =
         run_check(
           check_case.check,
           check_case.clean_source,
           check_case.filename,
-          params_for(check_case.check)
+          params_for(live_checks, check_case.check)
         )
 
       assert issues == [],
@@ -374,9 +338,9 @@ defmodule Mailglass.Credo.IntegrationTest do
     end)
   end
 
-  defp params_for(check_module) do
-    case Enum.find(@extra_checks, fn {module, _params} -> module == check_module end) do
-      {_module, params} -> params
+  defp params_for(live_checks, check_module) do
+    case find_check(live_checks, check_module) do
+      params when is_list(params) -> params
       nil -> []
     end
   end
@@ -385,5 +349,36 @@ defmodule Mailglass.Credo.IntegrationTest do
     source
     |> SourceFile.parse(filename)
     |> check_module.run(params)
+  end
+
+  # Normalize the first config's :checks into a flat list of {module, params}
+  # tuples. The value may be a flat keyword-style list or grouped under
+  # :enabled / :extra / :disabled keys — handle both (mirrors
+  # credo_config_sentinel_test.exs so the two cannot drift).
+  defp load_checks(config) do
+    config
+    |> Map.fetch!(:configs)
+    |> hd()
+    |> Map.fetch!(:checks)
+    |> flatten_checks()
+  end
+
+  defp flatten_checks(checks) when is_list(checks) do
+    if Keyword.keyword?(checks) and
+         Enum.all?(Keyword.keys(checks), &(&1 in [:enabled, :extra, :disabled])) and
+         checks != [] do
+      checks
+      |> Keyword.values()
+      |> List.flatten()
+    else
+      checks
+    end
+  end
+
+  defp find_check(checks, module) do
+    Enum.find_value(checks, fn
+      {^module, params} -> params
+      _ -> nil
+    end)
   end
 end
