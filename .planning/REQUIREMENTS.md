@@ -36,19 +36,19 @@ Currently `mailglass_inbound/lib/` contains **zero** `:telemetry` calls. This is
 
 ### Mailgun Inbound Ingress (MGUN)
 
-- [ ] **MGUN-01**: `MailglassInbound.Ingress.Providers.Mailgun` plug verifies HMAC-SHA256 timestamp+token signature and rejects forged requests by raising `MailglassInbound.SignatureError` (no recovery path, mirroring outbound D-22)
-- [ ] **MGUN-02**: Mailgun ingress reuses the existing `Mailglass.Webhook.Providers.MailgunReplayCache` ETS table (or aliases its supervisor/owner pattern) to prevent timestamp-replay attacks
-- [ ] **MGUN-03**: Mailgun ingress normalizes the multipart payload into the canonical `%MailglassInbound.InboundMessage{}` shape and persists raw provider source to `inbound_evidence` for replay truth
-- [ ] **MGUN-04**: `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex` allowlist is extended to recognize the Mailgun provider key
+- [x] **MGUN-01**: `MailglassInbound.Ingress.Providers.Mailgun` plug verifies HMAC-SHA256 timestamp+token signature and rejects forged requests by raising `MailglassInbound.SignatureError` (no recovery path, mirroring outbound D-22)
+- [x] **MGUN-02**: Mailgun ingress reuses the existing `Mailglass.Webhook.Providers.MailgunReplayCache` ETS table (or aliases its supervisor/owner pattern) to prevent timestamp-replay attacks
+- [x] **MGUN-03**: Mailgun ingress normalizes the multipart payload into the canonical `%MailglassInbound.InboundMessage{}` shape and persists raw provider source to `inbound_evidence` for replay truth
+- [x] **MGUN-04**: `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex` allowlist is extended to recognize the Mailgun provider key
 - [ ] **MGUN-05**: Mailgun setup guide at `docs/inbound-mailgun.md` covers HTTP route URL, API key configuration, signing key rotation, and verification
 
 ### SES Inbound Ingress (SESI)
 
-- [ ] **SESI-01**: `MailglassInbound.Ingress.Providers.SES` plug verifies SNS X.509 message signatures using the existing `Mailglass.Webhook.Providers.SES.CertCache` and `TrustPolicy` modules (URL allowlist for SubscriptionConfirmation prevents hijacking attacks)
-- [ ] **SESI-02**: SES ingress auto-confirms `SubscriptionConfirmation` notifications when the SubscribeURL passes TrustPolicy validation (mirrors outbound webhook behavior)
-- [ ] **SESI-03**: `MailglassInbound.S3Fetcher` behaviour defines the contract for fetching MIME body from S3 when SES delivers `Action: S3` notifications
-- [ ] **SESI-04**: A `MailglassInbound.S3Fetcher.Fake` test implementation ships in core; a real `MailglassInbound.S3Fetcher.ExAwsS3` adapter ships behind `Mailglass.OptionalDeps.ExAwsS3` (new optional-dep gateway, mirroring `OptionalDeps.GenSmtp`)
-- [ ] **SESI-05**: SES ingress handles the message-id race (SNS notification arriving before S3 object is consistent) with bounded retry + structured error
+- [x] **SESI-01**: `MailglassInbound.Ingress.Providers.SES` plug verifies SNS X.509 message signatures using the existing `Mailglass.Webhook.Providers.SES.CertCache` and `TrustPolicy` modules (URL allowlist for SubscriptionConfirmation prevents hijacking attacks)
+- [x] **SESI-02**: SES ingress auto-confirms `SubscriptionConfirmation` notifications when the SubscribeURL passes TrustPolicy validation (mirrors outbound webhook behavior)
+- [x] **SESI-03**: `MailglassInbound.S3Fetcher` behaviour defines the contract for fetching MIME body from S3 when SES delivers `Action: S3` notifications
+- [x] **SESI-04**: A `MailglassInbound.S3Fetcher.Fake` test implementation ships in core; a real `MailglassInbound.S3Fetcher.ExAwsS3` adapter ships behind `Mailglass.OptionalDeps.ExAwsS3` (new optional-dep gateway, mirroring `OptionalDeps.GenSmtp`)
+- [x] **SESI-05**: SES ingress handles the message-id race (SNS notification arriving before S3 object is consistent) with bounded retry + structured error
 - [ ] **SESI-06**: SES setup guide at `docs/inbound-ses.md` covers SNS topic configuration, IAM policy template, S3 bucket setup, optional-dep installation, and the SubscribeURL allowlist
 
 ### Inbound Test Helpers (ITEST)
@@ -171,16 +171,16 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 | MIME-02 | Phase 45 | Pending |
 | MIME-03 | Phase 49 | Pending |
 | MIME-04 | Phase 45 | Pending |
-| MGUN-01 | Phase 46 | Pending |
-| MGUN-02 | Phase 46 | Pending |
-| MGUN-03 | Phase 46 | Pending |
-| MGUN-04 | Phase 46 | Pending |
+| MGUN-01 | Phase 46 | Complete |
+| MGUN-02 | Phase 46 | Complete |
+| MGUN-03 | Phase 46 | Complete |
+| MGUN-04 | Phase 46 | Complete |
 | MGUN-05 | Phase 50 | Pending |
-| SESI-01 | Phase 46 | Pending |
-| SESI-02 | Phase 46 | Pending |
-| SESI-03 | Phase 46 | Pending |
-| SESI-04 | Phase 46 | Pending |
-| SESI-05 | Phase 46 | Pending |
+| SESI-01 | Phase 46 | Complete |
+| SESI-02 | Phase 46 | Complete |
+| SESI-03 | Phase 46 | Complete |
+| SESI-04 | Phase 46 | Complete |
+| SESI-05 | Phase 46 | Complete |
 | SESI-06 | Phase 50 | Pending |
 | ITEST-01 | Phase 47 | Pending |
 | ITEST-02 | Phase 47 | Pending |

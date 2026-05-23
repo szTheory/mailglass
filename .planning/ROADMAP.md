@@ -273,7 +273,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | **44.5. v1.0/1.1 Release Ceremony** | 5/5 | ✅ Complete | 2026-05-07 |
 | 45. Inbound Telemetry + Idempotency Foundation | 12/12 | ✅ Complete | 2026-05-23 |
-| 46. Mailgun + SES Inbound Ingress | 3/3 | Complete   | 2026-05-23 |
+| 46. Mailgun + SES Inbound Ingress | 3/3 | Complete    | 2026-05-23 |
 | 47. Inbound Test Helpers + Generators | 0/TBD | Not started | — |
 | 48. Inbound Admin LiveView | 0/TBD | Not started | — |
 | 49. Inbound Runtime Operator Tooling | 0/TBD | Not started | — |
