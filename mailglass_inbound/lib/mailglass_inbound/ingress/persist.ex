@@ -162,6 +162,41 @@ defmodule MailglassInbound.Ingress.Persist do
     end
   end
 
+  # SES dedupes on `mail.messageId` (provider_message_id) when present, and falls
+  # back to the MD5(raw_mime) fingerprint when absent (WR-02) — mirroring the
+  # Mailgun split clause. Without this, an SES message whose inner JSON omits
+  # `mail.messageId` (inline-content notifications, degraded payloads) would
+  # always match the generic `provider_message_id: nil` clause and be treated as
+  # new, so an SNS at-least-once redelivery inserts a duplicate InboundRecord and
+  # re-dispatches the mailbox — defeating the idempotency the dedupe layer exists
+  # to provide. Backed by the new `mailglass_inbound_records_ses_fingerprint_idx`.
+  defp load_duplicate(repo, tenant_id, "ses", %InboundMessage{provider_message_id: provider_message_id}, _evidence)
+       when is_binary(provider_message_id) do
+    load_by_provider_message_id(repo, tenant_id, "ses", provider_message_id)
+  end
+
+  defp load_duplicate(repo, tenant_id, "ses", %InboundMessage{provider_message_id: nil}, evidence) do
+    case evidence_raw_mime_fingerprint(evidence) do
+      nil ->
+        nil
+
+      fingerprint ->
+        query =
+          from(record in InboundRecord,
+            join: inbound_evidence in InboundEvidence,
+            on: inbound_evidence.inbound_record_id == record.id,
+            where:
+              record.tenant_id == ^tenant_id and
+                record.provider == ^"ses" and
+                inbound_evidence.provider == ^"ses" and
+                fragment("md5(?)", inbound_evidence.raw_mime) == ^fingerprint,
+            limit: 1
+          )
+
+        repo.one(query)
+    end
+  end
+
   defp load_duplicate(_repo, _tenant_id, _provider, %InboundMessage{provider_message_id: nil}, _evidence), do: nil
 
   defp load_duplicate(repo, tenant_id, provider, %InboundMessage{provider_message_id: provider_message_id}, _evidence) do
@@ -266,7 +301,8 @@ defmodule MailglassInbound.Ingress.Persist do
 
   @fingerprint_constraints [
     "mailglass_inbound_records_mailgun_fingerprint_idx",
-    "mailglass_inbound_records_sendgrid_fingerprint_idx"
+    "mailglass_inbound_records_sendgrid_fingerprint_idx",
+    "mailglass_inbound_records_ses_fingerprint_idx"
   ]
 
   # CR-01: recognize an evidence-level fingerprint partial-unique-index violation

@@ -185,6 +185,22 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
     refute Map.has_key?(message, :raw_mime)
   end
 
+  # WR-02: SES dedupes primarily on mail.messageId. When the inner JSON omits it
+  # (inline-content / degraded payloads), normalize/1 must flag the missing
+  # primary anchor so the weaker MD5(raw_mime) fallback path is auditable.
+  test "normalize records :missing_provider_message_id when mail.messageId is absent", %{
+    private_key: pk
+  } do
+    raw = signed_inline_notification_without_message_id(pk, @raw_mime)
+    request = ses_request(raw)
+
+    assert {:ok, _facts} = SES.verify!(request, ses_config())
+    %{message: message, evidence: evidence} = SES.normalize(request)
+
+    assert message.provider_message_id == nil
+    assert evidence.parse_warnings[:missing_provider_message_id] == true
+  end
+
   # ---- WR-01: defensive normalize/1 fallback + stale-stash clearing ----
 
   test "normalize/1 fallback degrades malformed JSON to an empty record instead of raising" do
@@ -252,6 +268,20 @@ defmodule MailglassInbound.Ingress.SesProviderTest do
       })
 
     sign_notification(private_key, "sns-#{message_id}", inner)
+  end
+
+  # SES inbound "Received" inline notification whose inner JSON omits
+  # mail.messageId (WR-02 path).
+  defp signed_inline_notification_without_message_id(private_key, content) do
+    inner =
+      Jason.encode!(%{
+        "notificationType" => "Received",
+        "mail" => %{"source" => "sender@example.com"},
+        "receipt" => %{"action" => %{"type" => "SNS"}},
+        "content" => content
+      })
+
+    sign_notification(private_key, "sns-no-msg-id", inner)
   end
 
   defp sign_notification(private_key, sns_message_id, inner_message) do

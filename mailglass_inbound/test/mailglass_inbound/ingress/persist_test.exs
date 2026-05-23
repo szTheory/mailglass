@@ -198,6 +198,86 @@ defmodule MailglassInbound.Ingress.PersistTest do
     end
   end
 
+  describe "SES dedupe (Postgres-backed, WR-02)" do
+    setup do
+      owner = Sandbox.start_owner!(TestRepo, shared: true)
+      truncate_all()
+      on_exit(fn -> Sandbox.stop_owner(owner) end)
+      :ok
+    end
+
+    test "two SES payloads with the SAME mail.messageId collapse to one InboundRecord (generic index)" do
+      handoff = ses_handoff(provider_message_id: "ses-msg-same", raw_mime: nil)
+
+      {:ok, first} = Persist.persist(handoff, repo: TestRepo, routes: [])
+      {:ok, second} = Persist.persist(handoff, repo: TestRepo, routes: [])
+
+      assert first.status == :inserted
+      assert second.status == :duplicate
+      assert TestRepo.aggregate(InboundRecord, :count) == 1
+    end
+
+    # WR-02: SES with no mail.messageId previously NEVER deduped (matched the
+    # generic provider_message_id: nil clause -> always new). The new SES
+    # fingerprint fallback + index collapse identical-raw redeliveries.
+    test "two SES payloads with NO mail.messageId but identical raw collapse to one InboundRecord (fingerprint index)" do
+      raw = "Subject: ses no message id\r\n\r\nidentical ses raw body"
+      handoff = ses_handoff(provider_message_id: nil, raw_mime: raw)
+
+      {:ok, first} = Persist.persist(handoff, repo: TestRepo, routes: [])
+      {:ok, second} = Persist.persist(handoff, repo: TestRepo, routes: [])
+
+      assert first.status == :inserted
+      assert second.status == :duplicate
+      assert TestRepo.aggregate(InboundRecord, :count) == 1
+    end
+
+    test "documents the SES-scoped partial unique fingerprint index migration" do
+      migration =
+        File.read!(
+          Path.expand(
+            "../../../priv/repo/migrations/20260523130000_add_ses_fingerprint_index.exs",
+            __DIR__
+          )
+        )
+
+      assert migration =~ "create unique_index"
+      assert migration =~ "provider = 'ses' AND raw_mime_fingerprint IS NOT NULL"
+      assert migration =~ "mailglass_inbound_records_ses_fingerprint_idx"
+      refute migration =~ "generated:"
+    end
+  end
+
+  defp ses_handoff(opts) do
+    provider_message_id = Keyword.get(opts, :provider_message_id)
+    raw_mime = Keyword.get(opts, :raw_mime)
+
+    %{
+      tenant_id: "ses-tenant",
+      provider: :ses,
+      message: %InboundMessage{
+        tenant_id: "ses-tenant",
+        provider: :ses,
+        provider_message_id: provider_message_id,
+        message_id: provider_message_id,
+        envelope_recipient: "support@example.com",
+        from: [%{address: "sender@example.com"}],
+        to: [%{address: "support@example.com"}],
+        subject: "SES dedupe",
+        headers: %{},
+        received_at: DateTime.utc_now()
+      },
+      evidence: %{
+        raw_payload: %{"Type" => "Notification"},
+        raw_headers: %{},
+        raw_mime: raw_mime,
+        verification_facts: %{auth: :sns_x509},
+        parse_warnings: %{},
+        attachment_blobs: %{}
+      }
+    }
+  end
+
   defp truncate_all do
     TestRepo.query!("TRUNCATE TABLE mailglass_inbound_records CASCADE", [])
   end

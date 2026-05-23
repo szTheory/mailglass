@@ -67,5 +67,8 @@ defmodule MailglassInbound.InboundRecords.InboundEvidence do
     |> unique_constraint(:raw_mime_fingerprint,
       name: :mailglass_inbound_records_sendgrid_fingerprint_idx
     )
+    |> unique_constraint(:raw_mime_fingerprint,
+      name: :mailglass_inbound_records_ses_fingerprint_idx
+    )
   end
 end

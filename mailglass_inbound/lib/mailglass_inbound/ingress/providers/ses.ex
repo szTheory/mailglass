@@ -470,6 +470,10 @@ defmodule MailglassInbound.Ingress.Providers.SES do
   defp parse_warnings(message) do
     %{}
     |> maybe_put_warning(:missing_message_id_header, is_nil(message.message_id))
+    # WR-02: SES dedupes primarily on `mail.messageId` (provider_message_id).
+    # When it is absent the dedupe falls back to the MD5(raw_mime) fingerprint;
+    # flag the missing primary anchor so the weaker fallback path is auditable.
+    |> maybe_put_warning(:missing_provider_message_id, is_nil(message.provider_message_id))
   end
 
   defp maybe_put_warning(warnings, _key, false), do: warnings
