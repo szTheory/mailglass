@@ -45,6 +45,12 @@ defmodule Mailglass.OptionalDeps.GenSmtp do
 
   @doc """
   Returns `true` when `:gen_smtp` (`:gen_smtp_client`) is loaded.
+
+  This probes `:gen_smtp_client` as a PROXY for the `:gen_smtp` package as a
+  whole; `:mimemail` (the MIME parser used by `decode/2`) is a distinct module
+  from the same Hex package and is NOT probed here. A partial install where
+  `:gen_smtp_client` loads but `:mimemail` does not falls through to `decode/2`'s
+  `:undef` rescue rather than being caught by this predicate (IN-01).
   """
   @doc since: "0.1.0"
   @spec available?() :: boolean()
