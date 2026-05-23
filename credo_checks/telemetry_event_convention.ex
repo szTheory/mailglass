@@ -7,6 +7,11 @@ defmodule Mailglass.Credo.TelemetryEventConvention do
       check: """
       Telemetry event names must follow mailglass's 4-level convention and
       start with `:mailglass` (or `:mailglass_inbound` for the inbound package).
+
+      The convention is enforced for BOTH `:telemetry.execute/3` and
+      `:telemetry.span/3`. A `:telemetry.span/3` prefix is validated against
+      `min_segments - 1` because the runtime appends `:start`/`:stop`/`:exception`
+      to the prefix, so the emitted event name reaches the full segment count.
       """,
       params: [
         required_root:
@@ -34,33 +39,66 @@ defmodule Mailglass.Credo.TelemetryEventConvention do
          required_roots,
          min_segments
        ) do
+    validate(ast, ctx, issue_meta, required_roots, min_segments, event_ast, meta,
+      threshold: min_segments,
+      trigger: ":telemetry.execute"
+    )
+  end
+
+  # `:telemetry.span/3` is arity 3 — `[event_prefix, start_metadata, fun]`. The
+  # prefix is one segment shorter than the emitted event because the runtime
+  # appends `:start`/`:stop`/`:exception`, so it is validated against
+  # `min_segments - 1`.
+  defp walk(
+         {{:., _, [:telemetry, :span]}, meta, [event_ast, _metadata, _fun]} = ast,
+         ctx,
+         issue_meta,
+         required_roots,
+         min_segments
+       ) do
+    validate(ast, ctx, issue_meta, required_roots, min_segments, event_ast, meta,
+      threshold: min_segments - 1,
+      trigger: ":telemetry.span"
+    )
+  end
+
+  defp walk(ast, ctx, _issue_meta, _required_roots, _min_segments), do: {ast, ctx}
+
+  # Shared root/length validation for both `:telemetry.execute` and
+  # `:telemetry.span` clauses. `threshold` is the minimum prefix length for the
+  # specific call form (execute uses `min_segments`; span uses `min_segments - 1`).
+  # The reported message always references `min_segments` because operators reason
+  # in final event-name terms, not prefix length. A non-literal prefix (a var)
+  # yields `:error` and produces no issue (false-positive avoidance).
+  defp validate(ast, ctx, issue_meta, required_roots, min_segments, event_ast, meta,
+         threshold: threshold,
+         trigger: trigger
+       ) do
     case literal_atom_list(event_ast) do
       {:ok, [root | _] = event}
-      when length(event) >= min_segments ->
+      when length(event) >= threshold ->
         if root in required_roots do
           {ast, ctx}
         else
-          {ast, put_issue(ctx, root_issue(issue_meta, required_roots, min_segments, meta))}
+          {ast, put_issue(ctx, root_issue(issue_meta, required_roots, min_segments, meta, trigger))}
         end
 
       {:ok, _event} ->
-        {ast, put_issue(ctx, root_issue(issue_meta, required_roots, min_segments, meta))}
+        {ast, put_issue(ctx, root_issue(issue_meta, required_roots, min_segments, meta, trigger))}
 
       :error ->
         {ast, ctx}
     end
   end
 
-  defp walk(ast, ctx, _issue_meta, _required_roots, _min_segments), do: {ast, ctx}
-
-  defp root_issue(issue_meta, required_roots, min_segments, meta) do
+  defp root_issue(issue_meta, required_roots, min_segments, meta, trigger) do
     roots = required_roots |> Enum.map(&inspect/1) |> Enum.join(" or ")
 
     format_issue(
       issue_meta,
       message:
         "Telemetry event must start with #{roots} and contain at least #{min_segments} segments.",
-      trigger: ":telemetry.execute",
+      trigger: trigger,
       line_no: meta[:line],
       column: meta[:column]
     )
