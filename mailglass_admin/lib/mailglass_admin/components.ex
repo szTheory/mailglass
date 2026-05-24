@@ -113,4 +113,54 @@ defmodule MailglassAdmin.Components do
     <span class="text-secondary text-xs">—</span>
     """
   end
+
+  @doc """
+  Masks a recipient email for operator display (PII minimization, D-48-13).
+
+  The ONE audited masking definition in the admin package: both
+  `MailglassAdmin.Operator.DeliveriesList` (outbound) and the Phase 48 inbound
+  components call this so there is never a second, drifting copy. Keeps the first
+  grapheme of each segment and stars the rest, preserving the email shape:
+
+      mask_recipient("alice@example.com") #=> "a****@e******.com"
+      mask_recipient(nil)                 #=> "Unavailable"
+  """
+  @doc since: "0.2.0"
+  @spec mask_recipient(String.t() | nil) :: String.t()
+  def mask_recipient(nil), do: "Unavailable"
+
+  def mask_recipient(recipient) when is_binary(recipient) do
+    case String.split(recipient, "@", parts: 2) do
+      [local, domain] -> mask_email(local, domain)
+      _ -> mask_value(recipient)
+    end
+  end
+
+  @doc """
+  Masks the `local`/`domain` halves of an already-split email address. Public so
+  the inbound components can mask address-shaped values that are pre-split.
+  """
+  @doc since: "0.2.0"
+  @spec mask_email(String.t(), String.t()) :: String.t()
+  def mask_email(local, domain) do
+    case String.split(domain, ".", parts: 2) do
+      [label, suffix] -> mask_value(local) <> "@" <> mask_value(label) <> "." <> suffix
+      _ -> mask_value(local) <> "@" <> mask_value(domain)
+    end
+  end
+
+  @doc """
+  Masks a single value: keeps the first grapheme, stars the rest. Public so other
+  admin surfaces reuse the one masking primitive rather than reinventing it.
+  """
+  @doc since: "0.2.0"
+  @spec mask_value(String.t()) :: String.t()
+  def mask_value(value) do
+    value
+    |> String.graphemes()
+    |> case do
+      [] -> ""
+      [first | rest] -> first <> String.duplicate("*", length(rest))
+    end
+  end
 end

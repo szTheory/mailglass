@@ -42,7 +42,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <p class="truncate text-sm font-bold text-base-content">
-                    {mask_recipient(delivery.recipient)}
+                    {Components.mask_recipient(delivery.recipient)}
                   </p>
                   <p class="mono mt-1 text-xs text-secondary">{delivery.id}</p>
                 </div>
@@ -94,29 +94,4 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   defp format_datetime(nil), do: "Pending"
   defp format_datetime(%DateTime{} = datetime), do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
-
-  defp mask_recipient(nil), do: "Unavailable"
-
-  defp mask_recipient(recipient) when is_binary(recipient) do
-    case String.split(recipient, "@", parts: 2) do
-      [local, domain] -> mask_email(local, domain)
-      _ -> mask_value(recipient)
-    end
-  end
-
-  defp mask_email(local, domain) do
-    case String.split(domain, ".", parts: 2) do
-      [label, suffix] -> mask_value(local) <> "@" <> mask_value(label) <> "." <> suffix
-      _ -> mask_value(local) <> "@" <> mask_value(domain)
-    end
-  end
-
-  defp mask_value(value) do
-    value
-    |> String.graphemes()
-    |> case do
-      [] -> ""
-      [first | rest] -> first <> String.duplicate("*", length(rest))
-    end
-  end
 end
