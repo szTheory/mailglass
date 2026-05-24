@@ -20,6 +20,17 @@ defmodule MailglassAdmin.TestAdopter.Router do
   import Phoenix.LiveView.Router
   import MailglassAdmin.Router
 
+  # Force the optional-inbound gateway to compile + load BEFORE the
+  # `mailglass_operator_routes` macro expands below. That macro gates the
+  # `/inbound` route on `Code.ensure_loaded?(MailglassAdmin.OptionalDeps.MailglassInbound)`,
+  # which is reliable in real adopter apps (mailglass_admin is a fully-compiled
+  # dependency before the adopter router compiles) but RACES here: this synthetic
+  # router lives in mailglass_admin's own test/support and compiles in the SAME
+  # run as the gateway, with no tracked compile-time ordering between them. The
+  # `ensure_compiled!/1` reference (the sanctioned gateway, never the MailglassInbound
+  # dep — D-48-02) establishes that ordering so the route is emitted deterministically.
+  Code.ensure_compiled!(MailglassAdmin.OptionalDeps.MailglassInbound)
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session

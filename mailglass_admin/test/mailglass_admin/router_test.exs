@@ -119,7 +119,11 @@ defmodule MailglassAdmin.RouterTest do
                "tenant_id" => "tenant-a",
                "auth_method" => "password",
                "recent_auth_at" => recent_auth_at,
-               "live_session_name" => :mailglass_admin_operator
+               "live_session_name" => :mailglass_admin_operator,
+               # D-48-07: compile-time opt (an atom, never cookie-sourced) surfaced
+               # so the operator LiveView can reflect declared inbound routes for the
+               # routing-trace card. nil here because no `inbound_router` opt is passed.
+               "inbound_router" => nil
              }
     end
 
