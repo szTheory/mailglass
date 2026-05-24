@@ -11,6 +11,14 @@ defmodule MailglassInbound.Internal.Operator.Records do
   # repo. The optional outcome filter is cast against `ExecutionRun.__outcomes__/0`
   # and resolved via a subquery on the ExecutionRun lineage schema (Pitfall 7:
   # ExecutionRun, not the replay-run schema).
+  #
+  # The list projection carries each record's real disposition (WR-01): the
+  # `outcome` + `mailbox` of its LATEST FRESH ExecutionRun, resolved via correlated
+  # subqueries that REUSE the same `source: :fresh` + tenant-scoping shape the
+  # `Detail` read-model uses (`latest_fresh_run/2`). A record with no fresh run
+  # (or `:no_match`) yields `nil` mailbox — the admin list then reads "no match".
+  # The subqueries are themselves tenant-scoped (explicit `tenant_id` where), so
+  # the projection can never surface a foreign tenant's disposition.
 
   import Ecto.Query
 
@@ -33,18 +41,19 @@ defmodule MailglassInbound.Internal.Operator.Records do
       {:ok, tenant_id} ->
         limit = limit_from(normalized, opts)
 
-        InboundRecord
-        |> where([record], record.tenant_id == ^tenant_id)
+        from(record in InboundRecord, as: :rec)
+        |> where([rec: record], record.tenant_id == ^tenant_id)
         |> maybe_filter_provider(normalized[:provider])
         |> maybe_filter_outcome(tenant_id, normalized[:outcome])
         |> maybe_filter_window(normalized[:window_hours] || normalized[:recent_window_hours])
-        |> order_by([record],
+        |> maybe_filter_search(normalized[:search])
+        |> order_by([rec: record],
           desc: record.received_at,
           desc: record.inserted_at,
           desc: record.id
         )
         |> limit(^limit)
-        |> select([record], %{
+        |> select([rec: record], %{
           id: record.id,
           tenant_id: record.tenant_id,
           provider: record.provider,
@@ -53,15 +62,53 @@ defmodule MailglassInbound.Internal.Operator.Records do
           envelope_recipient: record.envelope_recipient,
           subject: record.subject,
           received_at: record.received_at,
-          inserted_at: record.inserted_at
+          inserted_at: record.inserted_at,
+          outcome: subquery(latest_fresh_run_field(tenant_id, :outcome)),
+          mailbox: subquery(latest_fresh_run_field(tenant_id, :mailbox))
         })
         |> Tenancy.scope(tenant_id)
         |> Repo.all()
+        |> Enum.map(&cast_projected_outcome/1)
 
       :blank ->
         []
     end
   end
+
+  # Correlated subquery: the named `field` of the LATEST FRESH ExecutionRun for the
+  # outer `:rec` record, tenant-scoped (T-48-01). Mirrors `Detail.latest_fresh_run/2`
+  # ordering (newest `inserted_at` first). Returns nil when the record has no fresh
+  # run — the admin list then renders "no match"/"Pending".
+  defp latest_fresh_run_field(tenant_id, field) do
+    from(run in ExecutionRun,
+      where:
+        run.tenant_id == ^tenant_id and
+          run.source == :fresh and
+          run.inbound_record_id == parent_as(:rec).id,
+      order_by: [desc: run.inserted_at],
+      limit: 1,
+      select: field(run, ^field)
+    )
+  end
+
+  # A correlated subquery over an `Ecto.Enum` column projects the RAW DB string
+  # (e.g. "accept"), not the cast atom — the enum load-cast only runs for a column
+  # selected directly from its own schema. Restore the atom against the closed
+  # `ExecutionRun.__outcomes__/0` allow-list so the admin badge (which pattern-
+  # matches `:accept`/`:no_match`/…) sees the same atom `Detail` returns. An
+  # unrecognized value (or nil for a record with no fresh run) stays nil.
+  defp cast_projected_outcome(%{outcome: outcome} = row) do
+    %{row | outcome: cast_outcome_atom(outcome)}
+  end
+
+  defp cast_outcome_atom(outcome) when is_atom(outcome), do: outcome
+
+  defp cast_outcome_atom(outcome) when is_binary(outcome) do
+    atom = safe_existing_atom(outcome)
+    if atom in ExecutionRun.__outcomes__(), do: atom, else: nil
+  end
+
+  defp cast_outcome_atom(_outcome), do: nil
 
   defp normalize_filters(filters) when is_list(filters), do: Map.new(filters)
   defp normalize_filters(filters) when is_map(filters), do: Map.new(filters)
@@ -85,10 +132,45 @@ defmodule MailglassInbound.Internal.Operator.Records do
   end
 
   defp maybe_filter_provider(query, provider) when is_binary(provider) and provider != "" do
-    where(query, [record], record.provider == ^provider)
+    where(query, [rec: record], record.provider == ^provider)
   end
 
   defp maybe_filter_provider(query, _provider), do: query
+
+  # Case-insensitive substring search (WR-03) over the tenant-scoped field set the
+  # FiltersForm advertises ("subject or recipient") plus the provider message id —
+  # a sensible identifier an operator pastes from a provider dashboard. A blank or
+  # missing search is a no-op (the full list comes back). The user input is
+  # escaped for LIKE wildcards so a literal `%`/`_` cannot widen the match, then
+  # bound as a parameter (never interpolated into SQL).
+  defp maybe_filter_search(query, search) when is_binary(search) do
+    case String.trim(search) do
+      "" ->
+        query
+
+      trimmed ->
+        pattern = "%" <> escape_like(trimmed) <> "%"
+
+        where(
+          query,
+          [rec: record],
+          ilike(record.subject, ^pattern) or
+            ilike(record.envelope_recipient, ^pattern) or
+            ilike(record.provider_message_id, ^pattern)
+        )
+    end
+  end
+
+  defp maybe_filter_search(query, _search), do: query
+
+  # Neutralize LIKE/ILIKE metacharacters in operator-supplied search text so `%`
+  # and `_` match literally. `\` is escaped first so the escape char itself is safe.
+  defp escape_like(value) do
+    value
+    |> String.replace("\\", "\\\\")
+    |> String.replace("%", "\\%")
+    |> String.replace("_", "\\_")
+  end
 
   # Outcome filter: keep only records that have at least one execution run with
   # the requested outcome. The outcome value is cast against the closed
@@ -128,13 +210,13 @@ defmodule MailglassInbound.Internal.Operator.Records do
 
   defp maybe_filter_window(query, nil) do
     since = DateTime.add(DateTime.utc_now(), -@default_window_hours, :hour)
-    where(query, [record], record.received_at >= ^since)
+    where(query, [rec: record], record.received_at >= ^since)
   end
 
   defp maybe_filter_window(query, window_hours)
        when is_integer(window_hours) and window_hours > 0 do
     since = DateTime.add(DateTime.utc_now(), -window_hours, :hour)
-    where(query, [record], record.received_at >= ^since)
+    where(query, [rec: record], record.received_at >= ^since)
   end
 
   defp maybe_filter_window(query, _window_hours), do: query
