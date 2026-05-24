@@ -69,7 +69,7 @@ defmodule Mix.Tasks.Mailglass.Gen.Mailbox do
 
     igniter
     |> Igniter.Project.Module.create_module(mailbox, mailbox_body())
-    |> Igniter.create_new_file(test_path, test_stub_body(test_module))
+    |> Igniter.create_new_file(test_path, test_stub_body(test_module, mailbox))
     # Reuse the shared idempotent add-route helper (route stub). When the router
     # is missing, the helper emits the actionable "run gen.inbound_router" notice.
     |> InboundRoute.add_route(router, mailbox, recipient: recipient)
@@ -108,17 +108,26 @@ defmodule Mix.Tasks.Mailglass.Gen.Mailbox do
     """
   end
 
-  defp test_stub_body(test_module) do
+  defp test_stub_body(test_module, mailbox) do
     """
     defmodule #{inspect(test_module)} do
       use MailglassInbound.MailboxCase
 
-      # MailboxCase provides helpers for building %InboundMessage{} fixtures and
-      # asserting mailbox outcomes. Replace this with assertions for your routing
-      # and process/1 behavior.
+      # MailboxCase imports TestAssertions and aliases Fixtures / Test, builds an
+      # %InboundMessage{} fixture, drives the real persist + route + execute path
+      # via Test.Ingress, and asserts the captured outcome. Replace the body with
+      # assertions for your routing and process/1 behavior.
       test "accepts an inbound message" do
-        # message = build_inbound_message(recipient: "support@example.com")
-        # assert :accept = process(message)
+        # message = Fixtures.build_inbound_message(subject: "hi")
+        #
+        # {:ok, _} =
+        #   Test.Ingress.receive_inbound(message,
+        #     routes: [%MailglassInbound.Router.Route{mailbox: #{inspect(mailbox)}}]
+        #   )
+        #
+        # # Each assert_inbound_* consumes ONE captured tuple, so drive one
+        # # message per assertion.
+        # assert_inbound_accepted()
       end
     end
     """
