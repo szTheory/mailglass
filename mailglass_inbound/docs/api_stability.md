@@ -104,7 +104,12 @@ not internal or deferred:
   `%MailglassInbound.InboundMessage{}` and raw provider payloads that round-trip
   through the real provider verify/normalize seam.
 - `MailglassInbound.Test.Ingress` — drives the real synchronous persist + route
-  + execute write path and captures the outcome in the test process.
+  + execute write path and captures the outcome in the test process. Drive
+  routing through the `:router` option with a compiled `use
+  MailglassInbound.Router` module (the stable `Router` authoring seam). The
+  internal `MailglassInbound.Router.Route` struct is `@moduledoc false` and is
+  **not** part of the testing or stable contract; the `:routes` option that
+  accepts it is a package-internal input, not an adopter surface.
 - `MailglassInbound.TestAssertions` — `assert_inbound_*` matchers reading the
   captured outcome (the inbound mirror of `assert_mail_sent`).
 - `MailglassInbound.MailboxCase` — the `ExUnit.CaseTemplate` adopters `use`,

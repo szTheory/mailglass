@@ -111,9 +111,14 @@ defmodule MailglassInbound.Test.Ingress do
 
   - `:repo` — the Ecto repo (default `MailglassInbound.Repo`; tests pass
     `MailglassInbound.TestRepo`).
-  - `:routes` — a list of `%MailglassInbound.Router.Route{}` for the matcher.
-  - `:router` — a compiled router module (`__mailglass_inbound_routes__/0`);
-    mutually exclusive with `:routes`.
+  - `:router` — a compiled `use MailglassInbound.Router` module (the same router
+    your endpoint mounts). This is the adopter-facing way to drive routing: define
+    routes with the `route/2` DSL once and reuse the module here. Mutually
+    exclusive with `:routes`.
+  - `:routes` — the package-internal lower-level input: a pre-built list of route
+    data. The route-data shape is `@moduledoc false` internal and is not part of
+    the stable or testing contract, so prefer `:router` in adopter suites;
+    `:routes` exists mainly for the package's own tests.
   - `:evidence` — the evidence map persisted alongside the record
     (default `%{raw_payload: %{}}`). For raw_mime-dedupe providers driven via
     `receive_inbound/2`, pass `evidence: %{raw_mime: ...}` so replays dedupe.

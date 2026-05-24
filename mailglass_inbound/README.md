@@ -42,8 +42,10 @@ defmodule MyApp.WelcomeMailboxTest do
   test "accepts a welcome message" do
     message = Fixtures.build_inbound_message(subject: "Welcome")
 
+    # Drive routing through your compiled `use MailglassInbound.Router` module
+    # (the same router your endpoint mounts) via the `:router` option.
     {:ok, %{outcome: %{outcome: :accept}, route: %{mailbox: MyApp.WelcomeMailbox}}} =
-      Test.Ingress.receive_inbound(message, routes: my_routes())
+      Test.Ingress.receive_inbound(message, router: MyApp.MailglassInboundRouter)
 
     # ONE assertion per drive: each `assert_inbound_*` reads the captured tuple
     # with `assert_received`, which CONSUMES it from the process mailbox. To run
