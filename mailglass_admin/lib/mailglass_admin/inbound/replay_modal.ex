@@ -1,0 +1,60 @@
+defmodule MailglassAdmin.Inbound.ReplayModal do
+  @moduledoc """
+  Server-rendered replay confirmation modal for the inbound record detail view.
+
+  Sibling of `MailglassAdmin.Operator.ReplayModal` (D-48-13), SIMPLIFIED: inbound
+  replay has no ambiguous-multi target (IADM-03 — the replay target is the record
+  itself), so there is no multi-target branch, no target cards, and no
+  confirm-enabled predicate. `Confirm replay` is always enabled while the modal is
+  open.
+  """
+
+  use Phoenix.Component
+
+  alias MailglassAdmin.Components
+
+  attr :open?, :boolean, required: true
+  attr :record, :map, default: nil
+
+  def replay_modal(assigns) do
+    ~H"""
+    <%= if @open? and @record do %>
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-base-content/40 p-4">
+        <div
+          data-testid="inbound-replay-modal"
+          class="w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-2xl"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="space-y-1">
+              <h2 class="text-lg font-bold text-base-content">
+                Replay inbound for {Components.mask_recipient(@record.envelope_recipient)}
+              </h2>
+              <p class="text-sm text-secondary">
+                Replay inbound: This re-runs mailbox routing against the stored message and records a new replay run in the append-only ledger. Confirm to replay.
+              </p>
+            </div>
+
+            <button type="button" phx-click="close_replay" class="btn btn-ghost btn-sm">
+              Close
+            </button>
+          </div>
+
+          <div class="mt-6 flex flex-wrap justify-end gap-3">
+            <button type="button" phx-click="close_replay" class="btn btn-ghost min-h-11 px-5">
+              Cancel
+            </button>
+            <button
+              type="button"
+              phx-click="confirm_replay"
+              data-testid="inbound-replay-confirm"
+              class="btn btn-error min-h-11 px-5"
+            >
+              Confirm replay
+            </button>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    """
+  end
+end
