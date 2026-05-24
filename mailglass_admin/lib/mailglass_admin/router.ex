@@ -90,6 +90,7 @@ defmodule MailglassAdmin.Router do
               MailglassAdmin.Preview.Mount,
               MailglassAdmin.OperatorLive,
               MailglassAdmin.Operator.Mount,
+              MailglassAdmin.InboundLive,
               MailglassAdmin.Controllers.Assets
             ]}
 
@@ -258,6 +259,16 @@ defmodule MailglassAdmin.Router do
           on_mount: on_mount_hooks,
           root_layout: {MailglassAdmin.Layouts, :root} do
           live "/", MailglassAdmin.OperatorLive, :index
+
+          # CONTEXT D-48-03/D-48-12: the inbound surface mounts in the SAME operator
+          # live_session (Operator.Mount + Auth gate), NOT the dev-preview session —
+          # mounting in dev-preview would bypass Auth and leak tenant data. The route
+          # is emitted only when `mailglass_inbound` is loaded (available?/0 gate via
+          # Code.ensure_loaded?/1), so an admin without inbound no-ops the route + nav.
+          if Code.ensure_loaded?(MailglassAdmin.OptionalDeps.MailglassInbound) and
+               MailglassAdmin.OptionalDeps.MailglassInbound.available?() do
+            live "/inbound", MailglassAdmin.InboundLive, :index
+          end
         end
       end
     end
