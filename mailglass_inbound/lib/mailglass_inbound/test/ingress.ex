@@ -77,8 +77,9 @@ defmodule MailglassInbound.Test.Ingress do
   ## PII posture
 
   The driver writes to the adopter's sandboxed test DB (rolled back per test)
-  and sends the capture tuple only to the current test process. It emits no
-  telemetry of its own and adds no PII spans (T-47-09/12).
+  and sends the capture tuple only to the current test process. It adds no
+  telemetry of its own (the `Execution.execute/2` it drives emits the normal
+  PII-free execution span) and adds no PII spans (T-47-09/12).
   """
 
   alias MailglassInbound.Execution
