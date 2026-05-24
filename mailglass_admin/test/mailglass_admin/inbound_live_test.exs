@@ -20,6 +20,7 @@ defmodule MailglassAdmin.InboundLiveTest do
   @tenant_id "test-tenant"
   @other_tenant "other-tenant"
   @base_path "/ops/mail/inbound"
+  @banned ["Oops", "Whoops", "Uh oh", "Something went wrong"]
 
   describe "inbound surface" do
     test "renders the no-selection prompt and masks recipients by default (V5)", %{conn: conn} do
@@ -450,6 +451,191 @@ defmodule MailglassAdmin.InboundLiveTest do
       html = render(view)
 
       refute html =~ foreign.id
+    end
+  end
+
+  describe "brand-voice + PII sweep (IADM-06, V10/V5)" do
+    test "empty + no-selection states carry verbatim copy and no banned words (V10)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ "No inbound records"
+
+      assert html =~
+               "No inbound records match these filters. Clear the filters or wait for the next inbound message."
+
+      assert html =~
+               "Select an inbound record to inspect its routing, execution timeline, and raw source."
+
+      refute_banned(html)
+    end
+
+    test "detail-load-error band carries verbatim copy and no banned words (V10)", %{conn: conn} do
+      conn = operator_conn(conn)
+      %{record: foreign} = InboundFixtures.seed_matched!(@other_tenant)
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
+
+      assert html =~
+               "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
+
+      refute_banned(html)
+    end
+
+    test "no-execution-runs copy renders for a record with no runs (V10)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      # A record with evidence but no execution runs at all.
+      record = InboundFixtures.insert_record!(@tenant_id, recipient: "norun@example.com")
+      _evidence = InboundFixtures.insert_evidence!(@tenant_id, record.id)
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      assert html =~ "No execution runs have been recorded for this message yet."
+      refute_banned(html)
+    end
+
+    test "replay success, mailbox-missing block, and not-authorized block carry verbatim copy (V10)",
+         %{conn: conn} do
+      # Success.
+      conn1 = operator_conn(conn)
+      %{record: matched} = InboundFixtures.seed_matched!(@tenant_id, recipient: "ok@example.com")
+
+      {:ok, view1, _html} =
+        live(conn1, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => matched.id}))
+
+      success_html = render_click(view1, "confirm_replay", %{})
+
+      assert unescape(success_html) =~
+               "Replay recorded. A new replay run was appended to this message's timeline."
+
+      refute_banned(success_html)
+
+      # Mailbox-missing (:no_match).
+      conn2 = operator_conn(conn)
+      %{record: nomatch} = InboundFixtures.seed_no_match!(@tenant_id, recipient: "nm@example.com")
+
+      {:ok, view2, _html} =
+        live(conn2, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => nomatch.id}))
+
+      block_html = render_click(view2, "confirm_replay", %{})
+      assert block_html =~ "Replay blocked: mailbox module not found."
+      refute_banned(block_html)
+
+      # Not authorized (denied capability).
+      conn3 = operator_conn(conn, %{"current_user_id" => "deny-replay"})
+      %{record: denied} = InboundFixtures.seed_matched!(@tenant_id, recipient: "no@example.com")
+
+      {:ok, view3, _html} =
+        live(conn3, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => denied.id}))
+
+      denied_html = render_click(view3, "confirm_replay", %{})
+      assert denied_html =~ "Replay blocked: this action is not authorized for the current operator."
+      refute_banned(denied_html)
+    end
+
+    test "evidence redacted-default + reveal-denied carry verbatim copy (V10)", %{conn: conn} do
+      conn = operator_conn(conn, %{"current_user_id" => "deny-reveal"})
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "ev@example.com",
+          evidence: [raw_payload: %{"body" => "SECRET-BYTES"}]
+        )
+
+      {:ok, view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      assert html =~
+               "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
+
+      denied_html = render_click(view, "reveal_raw", %{})
+
+      assert denied_html =~
+               "Raw source not revealed: the reveal_raw capability is not granted for this operator."
+
+      refute denied_html =~ "SECRET-BYTES"
+      refute_banned(denied_html)
+    end
+
+    test "routing-trace heading + sub-label + legend carry verbatim copy (V10)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_no_match!(@tenant_id, recipient: "trace@example.com")
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      assert html =~ "Routing trace"
+      assert html =~ "Why this message did not match"
+
+      assert html =~
+               "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and ~r/…/ matches by regular expression."
+
+      refute_banned(html)
+    end
+
+    test "recipient is masked across list, detail header, and routing-trace actual (V5 full)", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      raw = "fulltrace@example.com"
+      masked = "f********@e******.com"
+
+      %{record: record} = InboundFixtures.seed_no_match!(@tenant_id, recipient: raw)
+
+      # List surface.
+      {:ok, _view, list_html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+      assert list_html =~ masked
+      refute list_html =~ raw
+
+      # Detail + routing-trace surfaces (selected).
+      {:ok, _view2, detail_html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      # Masked in the detail header AND the routing-trace recipient "actual".
+      assert detail_html =~ masked
+      refute detail_html =~ raw
+      assert detail_html =~ ~s(data-testid="inbound-routing-trace")
+    end
+
+    test "raw evidence bytes are absent until :reveal_raw is granted (V5)", %{conn: conn} do
+      secret = "RAW-SECRET-#{System.unique_integer([:positive])}"
+
+      # Default-redacted: bytes absent.
+      conn1 = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "rr@example.com",
+          evidence: [raw_payload: %{"body" => secret}]
+        )
+
+      {:ok, _view, redacted_html} =
+        live(conn1, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      refute redacted_html =~ secret
+
+      # Granted: bytes present in the read-only pre region.
+      conn2 = operator_conn(conn)
+
+      {:ok, view2, _html} =
+        live(conn2, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      revealed_html = render_click(view2, "reveal_raw", %{})
+      assert revealed_html =~ secret
+      assert revealed_html =~ ~s(data-testid="inbound-evidence-raw")
+    end
+  end
+
+  defp refute_banned(html) do
+    for word <- @banned do
+      refute html =~ word, "banned brand-voice word #{inspect(word)} found in rendered HTML"
     end
   end
 

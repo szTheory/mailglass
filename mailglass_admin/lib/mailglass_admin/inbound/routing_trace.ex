@@ -55,40 +55,36 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                 <span class="badge badge-outline badge-error">No match</span>
               </div>
 
-              <ul class="space-y-2">
+              <ul class="space-y-3">
                 <%= for verdict <- annotate(route.verdicts) do %>
                   <li
                     data-testid="inbound-trace-clause"
                     class={[
-                      "flex flex-col gap-1 rounded-box p-2 sm:flex-row sm:items-start sm:gap-4",
-                      verdict.first_failing? && "border-l-4 border-error pl-3"
+                      "space-y-1 rounded-box",
+                      verdict.first_failing? && "border-l-4 border-error px-3"
                     ]}
                   >
-                    <div class="sm:w-40 sm:shrink-0">
-                      <span class="text-xs font-bold uppercase tracking-[0.08em] text-secondary">
-                        {verdict.dimension}
-                      </span>
+                    <span class="text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+                      {verdict.dimension}
+                    </span>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                      <Components.icon
+                        name={if verdict.pass?, do: "hero-check-circle", else: "hero-x-circle"}
+                        class={[
+                          "h-4 w-4",
+                          if(verdict.pass?, do: "text-success", else: "text-error")
+                        ]}
+                      />
+                      <span class="text-xs text-secondary">Expected:</span>
+                      {expected_markup(assigns, verdict)}
+                      <span class="text-xs text-secondary">Actual:</span>
+                      <span class="mono text-xs text-base-content">{verdict.actual}</span>
                     </div>
 
-                    <div class="min-w-0 flex-1 space-y-1">
-                      <div class="flex flex-wrap items-center gap-2">
-                        <Components.icon
-                          name={if verdict.pass?, do: "hero-check-circle", else: "hero-x-circle"}
-                          class={[
-                            "h-4 w-4",
-                            if(verdict.pass?, do: "text-success", else: "text-error")
-                          ]}
-                        />
-                        <span class="text-xs text-secondary">Expected:</span>
-                        {expected_markup(assigns, verdict)}
-                        <span class="text-xs text-secondary">Actual:</span>
-                        <span class="mono text-xs text-base-content">{verdict.actual}</span>
-                      </div>
-
-                      <p :if={verdict.first_failing?} class="text-sm text-secondary">
-                        {verdict.reason}
-                      </p>
-                    </div>
+                    <p :if={verdict.first_failing?} class="text-sm text-secondary">
+                      {verdict.reason}
+                    </p>
                   </li>
                 <% end %>
               </ul>

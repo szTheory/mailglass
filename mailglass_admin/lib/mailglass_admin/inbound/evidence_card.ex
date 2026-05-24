@@ -50,7 +50,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           No raw provider source has been stored for this message.
         </p>
       <% else %>
-        <dl class="mb-4 grid gap-3 text-sm text-secondary sm:grid-cols-3">
+        <dl class="mb-4 grid gap-3 text-sm text-secondary sm:grid-cols-2">
           <div>
             <dt class="text-xs font-bold uppercase tracking-[0.08em]">Provider</dt>
             <dd class="mt-1 text-base-content">{String.upcase(@evidence.provider || "unknown")}</dd>
@@ -71,7 +71,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           </p>
           <dl class="grid gap-1 text-sm sm:grid-cols-2">
             <%= for {key, value} <- @evidence.verification_facts do %>
-              <div class="flex items-baseline gap-2">
+              <div class="flex items-center gap-2">
                 <dt class="mono text-xs text-secondary">{key}</dt>
                 <dd class="mono text-xs text-base-content">{inspect_value(value)}</dd>
               </div>
@@ -87,7 +87,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
               </p>
               <pre
                 data-testid="inbound-evidence-raw"
-                class="mono max-h-96 overflow-auto rounded-box border border-base-300 bg-base-100 p-3 text-xs text-base-content"
+                class="mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-3 text-xs text-base-content"
               ><%= raw_payload_text(@evidence) %></pre>
             </div>
 
