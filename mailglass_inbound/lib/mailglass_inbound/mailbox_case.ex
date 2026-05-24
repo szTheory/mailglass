@@ -67,10 +67,14 @@ defmodule MailglassInbound.MailboxCase do
         test "accepts a welcome message" do
           message = Fixtures.build_inbound_message(subject: "Welcome")
 
-          {:ok, _} = Test.Ingress.receive_inbound(message, routes: my_routes())
+          {:ok, %{outcome: %{outcome: :accept}, route: %{mailbox: MyApp.WelcomeMailbox}}} =
+            Test.Ingress.receive_inbound(message, routes: my_routes())
 
+          # ONE assertion per drive: each `assert_inbound_*` reads the captured
+          # tuple with `assert_received`, which CONSUMES it from the process
+          # mailbox. To run a second assertion, drive a second message (with a
+          # distinct `provider_message_id` so it is a fresh receive).
           assert_inbound_received(subject: "Welcome")
-          assert_inbound_accepted()
         end
       end
   """
