@@ -462,7 +462,8 @@ defmodule MailglassAdmin.InboundLive do
           provider: blank_to_nil(filter_params["provider"]),
           outcome: cast_enum(filter_params["outcome"], @outcome_values),
           window_hours:
-            parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+            parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
+          search: blank_to_nil(filter_params["search"])
         },
         []
       ])

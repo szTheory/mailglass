@@ -59,6 +59,194 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
     end
   end
 
+  describe "Records.list_records/2 disposition projection (WR-01)" do
+    test "a matched record projects its latest-fresh-run outcome + mailbox" do
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+
+      {:ok, _run} =
+        insert_run("tenant-a", record.id, evidence.id,
+          source: :fresh,
+          mailbox: "MyApp.SupportMailbox",
+          outcome: :accept
+        )
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.id == record.id
+      assert row.outcome == :accept
+      assert row.mailbox == "MyApp.SupportMailbox"
+    end
+
+    test "a :no_match record projects a nil mailbox (reads as 'no match')" do
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+
+      {:ok, _run} =
+        insert_run("tenant-a", record.id, evidence.id, source: :fresh, outcome: :no_match)
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.outcome == :no_match
+      assert row.mailbox == nil
+    end
+
+    test "a record with no fresh run projects nil outcome + nil mailbox" do
+      {:ok, record} = insert_record("tenant-a")
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.id == record.id
+      assert row.outcome == nil
+      assert row.mailbox == nil
+    end
+
+    test "projects the LATEST fresh run when a record has several" do
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+
+      {:ok, _older} =
+        insert_run("tenant-a", record.id, evidence.id,
+          source: :fresh,
+          mailbox: "MyApp.OldMailbox",
+          outcome: :accept,
+          executed_at: DateTime.add(DateTime.utc_now(), -3600, :second)
+        )
+
+      {:ok, _newer} =
+        insert_run("tenant-a", record.id, evidence.id,
+          source: :fresh,
+          mailbox: "MyApp.NewMailbox",
+          outcome: :ignore
+        )
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.outcome == :ignore
+      assert row.mailbox == "MyApp.NewMailbox"
+    end
+
+    test "ignores a replay run, projecting only the latest FRESH disposition" do
+      {:ok, record} = insert_record("tenant-a")
+      {:ok, evidence} = insert_evidence("tenant-a", record.id)
+
+      {:ok, _fresh} =
+        insert_run("tenant-a", record.id, evidence.id,
+          source: :fresh,
+          mailbox: "MyApp.FreshMailbox",
+          outcome: :accept
+        )
+
+      {:ok, _replay} =
+        insert_run("tenant-a", record.id, evidence.id,
+          source: :replay,
+          mailbox: "MyApp.ReplayMailbox",
+          outcome: :ignore
+        )
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.outcome == :accept
+      assert row.mailbox == "MyApp.FreshMailbox"
+    end
+
+    test "the disposition subquery is tenant-scoped — a foreign run never leaks in" do
+      # tenant-a record with NO run of its own; tenant-b has an :accept run.
+      # The correlated subquery filters by tenant_id, so tenant-a's row must
+      # project nil disposition rather than borrowing tenant-b's run.
+      {:ok, record_a} = insert_record("tenant-a")
+
+      {:ok, record_b} = insert_record("tenant-b")
+      {:ok, ev_b} = insert_evidence("tenant-b", record_b.id)
+
+      {:ok, _b_run} =
+        insert_run("tenant-b", record_b.id, ev_b.id,
+          source: :fresh,
+          mailbox: "MyApp.BMailbox",
+          outcome: :accept
+        )
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.id == record_a.id
+      assert row.outcome == nil
+      assert row.mailbox == nil
+    end
+  end
+
+  describe "Records.list_records/2 search filter (WR-03)" do
+    test "blank search is a no-op (returns all)" do
+      {:ok, r1} = insert_record("tenant-a", subject: "Invoice #42")
+      {:ok, r2} = insert_record("tenant-a", subject: "Welcome aboard")
+
+      ids =
+        %{tenant_id: "tenant-a", search: ""}
+        |> Records.list_records([])
+        |> Enum.map(& &1.id)
+
+      assert r1.id in ids
+      assert r2.id in ids
+    end
+
+    test "missing search is a no-op (returns all)" do
+      {:ok, r1} = insert_record("tenant-a")
+      {:ok, r2} = insert_record("tenant-a")
+
+      ids = %{tenant_id: "tenant-a"} |> Records.list_records([]) |> Enum.map(& &1.id)
+      assert r1.id in ids
+      assert r2.id in ids
+    end
+
+    test "narrows results by a case-insensitive subject substring" do
+      {:ok, invoice} = insert_record("tenant-a", subject: "Invoice #42 due")
+      {:ok, _welcome} = insert_record("tenant-a", subject: "Welcome aboard")
+
+      ids =
+        %{tenant_id: "tenant-a", search: "invoice"}
+        |> Records.list_records([])
+        |> Enum.map(& &1.id)
+
+      assert ids == [invoice.id]
+    end
+
+    test "matches against the envelope recipient" do
+      {:ok, support} = insert_record("tenant-a", recipient: "support@acme.test")
+      {:ok, _billing} = insert_record("tenant-a", recipient: "billing@other.test")
+
+      ids =
+        %{tenant_id: "tenant-a", search: "ACME"}
+        |> Records.list_records([])
+        |> Enum.map(& &1.id)
+
+      assert ids == [support.id]
+    end
+
+    test "matches against the provider message id" do
+      {:ok, target} = insert_record("tenant-a", provider_message_id: "needle-abc-123")
+      {:ok, _other} = insert_record("tenant-a", provider_message_id: "haystack-zzz")
+
+      ids =
+        %{tenant_id: "tenant-a", search: "needle-abc"}
+        |> Records.list_records([])
+        |> Enum.map(& &1.id)
+
+      assert ids == [target.id]
+    end
+
+    test "treats LIKE wildcards as literals (no widening)" do
+      {:ok, _literal} = insert_record("tenant-a", subject: "100% complete")
+      {:ok, _other} = insert_record("tenant-a", subject: "plain subject")
+
+      # "%%" must NOT match every row — the % is escaped to a literal.
+      ids =
+        %{tenant_id: "tenant-a", search: "100%%"}
+        |> Records.list_records([])
+        |> Enum.map(& &1.id)
+
+      assert ids == []
+    end
+
+    test "stays tenant-scoped — a matching foreign row is invisible" do
+      {:ok, _foreign} = insert_record("tenant-b", subject: "shared keyword")
+
+      assert Records.list_records(%{tenant_id: "tenant-a", search: "shared keyword"}, []) == []
+    end
+  end
+
   describe "Records.list_records/2 outcome filter" do
     test "filters records to those with a matching execution-run outcome" do
       {:ok, accepted} = insert_record("tenant-a")

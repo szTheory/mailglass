@@ -195,6 +195,145 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
+  describe "list disposition (WR-01) — real outcome + mailbox per row" do
+    test "a matched row shows its real Accept badge + matched mailbox", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: matched} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "matched@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ matched.id
+      # The list row carries the real disposition, not a constant fallback.
+      assert html =~ "Accept"
+      assert html =~ "MyApp.Mailboxes.SupportMailbox"
+    end
+
+    test "a :no_match row reads 'no match' with a warning badge", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: unmatched} =
+        InboundFixtures.seed_no_match!(@tenant_id, recipient: "nobody@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ unmatched.id
+      assert html =~ "No match"
+      assert html =~ "no match"
+      assert html =~ "badge-warning"
+    end
+
+    test "distinct rows show distinct dispositions in the same list", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: matched} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "yes@example.com")
+
+      %{record: unmatched} =
+        InboundFixtures.seed_no_match!(@tenant_id, recipient: "no@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ matched.id
+      assert html =~ unmatched.id
+      # Both real dispositions are present — the list is no longer a constant.
+      assert html =~ "Accept"
+      assert html =~ "MyApp.Mailboxes.SupportMailbox"
+      assert html =~ "No match"
+    end
+  end
+
+  describe "search filter (WR-03) — end-to-end narrowing" do
+    test "typing a subject search narrows the list", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: invoice} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "billing@example.com",
+          subject: "Invoice #42 is due"
+        )
+
+      %{record: welcome} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "hello@example.com",
+          subject: "Welcome aboard"
+        )
+
+      {:ok, view, html0} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      # Both records present before searching.
+      assert html0 =~ invoice.id
+      assert html0 =~ welcome.id
+
+      view
+      |> form("#inbound-filters",
+        filters: %{
+          "tenant_id" => @tenant_id,
+          "provider" => "",
+          "outcome" => "",
+          "window_hours" => "168",
+          "search" => "invoice"
+        }
+      )
+      |> render_submit()
+
+      html = render(view)
+
+      assert html =~ invoice.id
+      refute html =~ welcome.id
+    end
+
+    test "a blank search is a no-op (all rows remain)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: a} = InboundFixtures.seed_matched!(@tenant_id, recipient: "a@example.com")
+      %{record: b} = InboundFixtures.seed_matched!(@tenant_id, recipient: "b@example.com")
+
+      {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      view
+      |> form("#inbound-filters",
+        filters: %{
+          "tenant_id" => @tenant_id,
+          "provider" => "",
+          "outcome" => "",
+          "window_hours" => "168",
+          "search" => ""
+        }
+      )
+      |> render_submit()
+
+      html = render(view)
+      assert html =~ a.id
+      assert html =~ b.id
+    end
+
+    test "search stays tenant-scoped — a foreign match never appears", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: foreign} =
+        InboundFixtures.seed_matched!(@other_tenant, subject: "shared unique keyword")
+
+      {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      view
+      |> form("#inbound-filters",
+        filters: %{
+          "tenant_id" => @tenant_id,
+          "provider" => "",
+          "outcome" => "",
+          "window_hours" => "168",
+          "search" => "shared unique keyword"
+        }
+      )
+      |> render_submit()
+
+      html = render(view)
+      refute html =~ foreign.id
+    end
+  end
+
   describe "routing-trace card (IADM-04)" do
     test "is omitted for a matched record (only :no_match)", %{conn: conn} do
       conn = operator_conn(conn)
