@@ -35,6 +35,22 @@ defmodule MailglassInbound.Test.Ingress do
     execute + capture chain. Use it to exercise provider parsing + verification
     end to end.
 
+  ## SES cross-test hygiene: reset the cert cache
+
+  `receive_provider_payload(:ses, …)` consumes an SES fixture built by
+  `MailglassInbound.Fixtures.build_ses_sns_payload/1`, which primes the
+  **process-global** ETS cert cache (`Mailglass.Webhook.Providers.SES.CertCache`,
+  shared across concurrent async tests) with one never-evicted entry per call.
+  The driver deliberately does NOT reset that cache itself (it ships in `lib/`
+  and stays free of an `:ex_unit` runtime dependency). If you drive SES fixtures
+  from a plain `ExUnit.Case`, reset the cache between tests:
+
+      setup do: Mailglass.Webhook.Providers.SES.CertCache.reset()
+
+  `MailglassInbound.MailboxCase` already resets it in its `setup`, so suites that
+  `use` it need no extra step. The Postmark/SendGrid/Mailgun lanes touch no
+  process-global state.
+
   ## The captured `outcome` slot
 
   The third element of the captured tuple is the **normalized `execute/2` result

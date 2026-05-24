@@ -254,6 +254,20 @@ defmodule MailglassInbound.Fixtures do
   suffix so concurrent fixtures priming the shared `:public` cert cache never
   collide (Pitfall 2); the host still satisfies the SNS cert-host TrustPolicy.
 
+  > #### Cross-test hygiene: reset the cert cache {: .warning}
+  >
+  > This builder primes the **process-global** ETS cert cache
+  > (`Mailglass.Webhook.Providers.SES.CertCache`, shared across concurrent async
+  > tests). Each call inserts one entry under a unique cert URL with a 24h TTL
+  > that is never evicted within a run. If you build SES fixtures from a plain
+  > `ExUnit.Case` (without `MailglassInbound.MailboxCase`), reset the cache
+  > between tests so entries do not accumulate or bleed across cases:
+  >
+  >     setup do: Mailglass.Webhook.Providers.SES.CertCache.reset()
+  >
+  > `MailglassInbound.MailboxCase` already does this in its `setup`, so suites
+  > that `use` it need no extra step.
+
   Returns a map with:
 
   - `:raw_body` — the JSON SNS envelope (feed to `SES.verify!/2` then `SES.normalize/1`).
