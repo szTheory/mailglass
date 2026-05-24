@@ -134,7 +134,24 @@ defmodule Mix.Tasks.Mailglass.Gen.InboundRoute do
     "route(#{inspect(mailbox)}, #{matchers})"
   end
 
+  # A well-formed Elixir module name: dot-separated CamelCase segments.
+  @module_name_re ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
+
   @doc false
   @spec parse_module(String.t()) :: module()
-  def parse_module(arg), do: Module.concat([arg])
+  def parse_module(arg) do
+    unless Regex.match?(@module_name_re, arg) do
+      # Bare `Module.concat(["support@example.com"])` would mint an odd atom like
+      # :"Elixir.support@example.com" that renders badly in the generated route.
+      # Fail fast with an actionable message instead (IN-02).
+      Mix.raise("""
+      Expected a module name like `MyApp.Inbound.Support`, got: #{inspect(arg)}.
+
+      The mailbox/router argument must be dot-separated CamelCase segments
+      (e.g. `MyApp.SupportMailbox`), not an email address or arbitrary string.
+      """)
+    end
+
+    Module.concat([arg])
+  end
 end
