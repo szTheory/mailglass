@@ -139,7 +139,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 47-03-PLAN.md — Test.Ingress real persist+sync-execute driver + capture seam, TestAssertions 4 styles + outcome + routing + negative (ITEST-01..04, ITEST-06) [Wave 2]
+- [x] 47-03-PLAN.md — Test.Ingress real persist+sync-execute driver + capture seam, TestAssertions 4 styles + outcome + routing + negative (ITEST-01..04, ITEST-06) [Wave 2]
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -266,7 +266,7 @@ Plans:
 
 **Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
 **Requirements:** TBD
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 
@@ -289,7 +289,7 @@ Plans:
 | **44.5. v1.0/1.1 Release Ceremony** | 5/5 | ✅ Complete | 2026-05-07 |
 | 45. Inbound Telemetry + Idempotency Foundation | 12/12 | ✅ Complete | 2026-05-23 |
 | 46. Mailgun + SES Inbound Ingress | 3/3 | Complete    | 2026-05-23 |
-| 47. Inbound Test Helpers + Generators | 2/4 | In Progress|  |
+| 47. Inbound Test Helpers + Generators | 3/4 | In Progress|  |
 | 48. Inbound Admin LiveView | 0/TBD | Not started | — |
 | 49. Inbound Runtime Operator Tooling | 0/TBD | Not started | — |
 | 50. Inbound Documentation Pass | 0/TBD | Not started | — |
