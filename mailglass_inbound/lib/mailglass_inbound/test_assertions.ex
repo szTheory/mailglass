@@ -187,7 +187,10 @@ defmodule MailglassInbound.TestAssertions do
   # ===== Outcome assertions (ITEST-02) =====
 
   @doc """
-  Asserts the most recent captured inbound was accepted (`outcome == :accept`).
+  Asserts the next captured inbound was accepted (`outcome == :accept`).
+
+  Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
+  the matched tuple), so drive one message per outcome assertion.
   """
   @doc since: "0.1.0"
   defmacro assert_inbound_accepted do
@@ -195,7 +198,10 @@ defmodule MailglassInbound.TestAssertions do
   end
 
   @doc """
-  Asserts the most recent captured inbound was ignored (`outcome == :ignore`).
+  Asserts the next captured inbound was ignored (`outcome == :ignore`).
+
+  Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
+  the matched tuple), so drive one message per outcome assertion.
   """
   @doc since: "0.1.0"
   defmacro assert_inbound_ignored do
@@ -203,7 +209,10 @@ defmodule MailglassInbound.TestAssertions do
   end
 
   @doc """
-  Asserts the most recent captured inbound was rejected (`outcome == :reject`).
+  Asserts the next captured inbound was rejected (`outcome == :reject`).
+
+  Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
+  the matched tuple), so drive one message per outcome assertion.
   """
   @doc since: "0.1.0"
   defmacro assert_inbound_rejected do
@@ -211,7 +220,10 @@ defmodule MailglassInbound.TestAssertions do
   end
 
   @doc """
-  Asserts the most recent captured inbound was bounced (`outcome == :bounce`).
+  Asserts the next captured inbound was bounced (`outcome == :bounce`).
+
+  Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
+  the matched tuple), so drive one message per outcome assertion.
   """
   @doc since: "0.1.0"
   defmacro assert_inbound_bounced do
@@ -235,8 +247,11 @@ defmodule MailglassInbound.TestAssertions do
   # ===== Routing assertions (ITEST-03) =====
 
   @doc """
-  Asserts the most recent captured inbound was routed to `expected_mailbox`
+  Asserts the next captured inbound was routed to `expected_mailbox`
   (route `%{status: :matched, mailbox: ^expected_mailbox}`).
+
+  Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
+  the matched tuple), so drive one message per routing assertion.
   """
   @doc since: "0.1.0"
   defmacro assert_inbound_routed_to(expected_mailbox) do
@@ -252,8 +267,11 @@ defmodule MailglassInbound.TestAssertions do
   end
 
   @doc """
-  Asserts the most recent captured inbound did not match any route
+  Asserts the next captured inbound did not match any route
   (route `%{status: :no_match}`).
+
+  Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
+  the matched tuple), so drive one message per routing assertion.
   """
   @doc since: "0.1.0"
   defmacro assert_inbound_no_match do
