@@ -78,6 +78,32 @@ defmodule MailglassInbound.TestAssertionsTest do
       assert_raises_assertion(fn -> assert_inbound_received(nonsense_key: "x") end)
     end
 
+    test "style 2: a non-binary :from/:to flunks with an accurate (non-contradictory) message" do
+      # WR-04: passing the address-list shape the struct actually stores (instead
+      # of a bare string) must NOT fall through to the catch-all, which would
+      # report :from as an "Unsupported matcher key" while also listing it as
+      # supported.
+      capture(from: "alice@example.com")
+
+      error =
+        assert_raise ExUnit.AssertionError, fn ->
+          assert_inbound_received(from: ["alice@example.com"])
+        end
+
+      assert error.message =~ "from matcher expects a bare address string"
+      refute error.message =~ "Unsupported matcher key"
+
+      capture(to: "team@example.com")
+
+      to_error =
+        assert_raise ExUnit.AssertionError, fn ->
+          assert_inbound_received(to: ["team@example.com"])
+        end
+
+      assert to_error.message =~ "to matcher expects a bare address string"
+      refute to_error.message =~ "Unsupported matcher key"
+    end
+
     test "style 3: struct pattern matches the captured message" do
       capture(subject: "Pattern subject")
       assert_inbound_received(%{subject: "Pattern subject"})

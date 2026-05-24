@@ -153,6 +153,17 @@ defmodule MailglassInbound.TestAssertions do
         assert address_present?(msg.to, v),
                "to mismatch: #{inspect(v)} not in #{inspect(msg.to)}"
 
+      # `:from`/`:to` match against a single bare address string. Reject a
+      # non-binary value (e.g. the address-list shape the struct stores) with an
+      # accurate message BEFORE the catch-all, so it can no longer fall through
+      # and be reported as an "Unsupported matcher key" — which contradicts the
+      # supported-keys list in that same message.
+      {:from, v} ->
+        flunk("from matcher expects a bare address string, got: #{inspect(v)}")
+
+      {:to, v} ->
+        flunk("to matcher expects a bare address string, got: #{inspect(v)}")
+
       {:tenant, v} ->
         assert msg.tenant_id == v,
                "tenant_id mismatch: expected #{inspect(v)}, got #{inspect(msg.tenant_id)}"
