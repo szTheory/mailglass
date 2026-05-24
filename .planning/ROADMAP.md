@@ -171,7 +171,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 48-01-PLAN.md — Wave 0 seams: floating optional inbound dep + test-infra (inbound repo/migrations/:inbound_router opt), `Router.Matcher.explain/2` reflection, `Internal.Operator.*` tenant-scoped read-model, `OptionalDeps.MailglassInbound` gateway, `inbound_record_inserted/1` topic builder, `mask_recipient/1` promotion (IADM-01, IADM-04, IADM-05) [Wave 1]
+- [x] 48-01-PLAN.md — Wave 0 seams: floating optional inbound dep + test-infra (inbound repo/migrations/:inbound_router opt), `Router.Matcher.explain/2` reflection, `Internal.Operator.*` tenant-scoped read-model, `OptionalDeps.MailglassInbound` gateway, `inbound_record_inserted/1` topic builder, `mask_recipient/1` promotion (IADM-01, IADM-04, IADM-05) [Wave 1]
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -280,7 +280,7 @@ Plans:
 
 **Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
 **Requirements:** TBD
-**Plans:** 4/4 plans complete
+**Plans:** 1/3 plans executed
 
 Plans:
 
@@ -304,7 +304,7 @@ Plans:
 | 45. Inbound Telemetry + Idempotency Foundation | 12/12 | ✅ Complete | 2026-05-23 |
 | 46. Mailgun + SES Inbound Ingress | 3/3 | Complete    | 2026-05-23 |
 | 47. Inbound Test Helpers + Generators | 4/4 | Complete    | 2026-05-24 |
-| 48. Inbound Admin LiveView | 0/TBD | Not started | — |
+| 48. Inbound Admin LiveView | 1/3 | In Progress|  |
 | 49. Inbound Runtime Operator Tooling | 0/TBD | Not started | — |
 | 50. Inbound Documentation Pass | 0/TBD | Not started | — |
 | **50.5. v1.2 Release Ceremony** | 0/TBD | Not started | — |
