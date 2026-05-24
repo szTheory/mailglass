@@ -160,6 +160,63 @@ defmodule MailglassInbound.Test.IngressTest do
       assert record_count() == 1
       assert fresh_run_count() == 1
     end
+
+    # WR-08 (the gap that let CR-01 ship): the SendGrid round-trip was only ever
+    # tested through direct `Sendgrid.normalize/1`, never through the driver's
+    # real `verify!`-first seam. This drives the full verify!-then-normalize seam
+    # with the shipped fixture and asserts it composes out of the box — it failed
+    # before the CR-01 fix (the driver dropped opts[:headers] and the fixture
+    # carried no `authorization` header) and passes after it.
+    test "runs the real SendGrid verify!/normalize seam out of the box (CR-01/WR-08)" do
+      payload = Fixtures.build_sendgrid_payload(subject: "SendGrid seam")
+
+      assert {:ok, %{outcome: outcome, route: route}} =
+               Ingress.receive_provider_payload(:sendgrid, payload,
+                 repo: TestRepo,
+                 tenant_id: "provider-tenant",
+                 routes: accept_routes()
+               )
+
+      assert_received {:inbound, _msg, ^outcome, ^route}
+      assert %{outcome: :accept} = outcome
+    end
+
+    # WR-08: SendGrid dedupes on md5(raw_mime), so two drives of the SAME fixture
+    # converge to one record + one fresh run through the real verify!-first seam.
+    test "SendGrid raw_mime dedupe converges on replay through the verify! seam" do
+      payload = Fixtures.build_sendgrid_payload(provider_message_id: "sg-converge")
+
+      for _ <- 1..2 do
+        assert {:ok, _} =
+                 Ingress.receive_provider_payload(:sendgrid, payload,
+                   repo: TestRepo,
+                   tenant_id: "provider-tenant",
+                   routes: accept_routes()
+                 )
+      end
+
+      assert record_count() == 1
+      assert fresh_run_count() == 1
+    end
+
+    # WR-08 (the gap that let CR-01 ship): Mailgun was only ever tested through
+    # direct `Mailgun.normalize/1`, never through the driver's real `verify!`-first
+    # seam. The shipped fixture now HMAC-signs the timestamp/token/signature
+    # triple against the documented default signing key, so the real `verify!`
+    # passes out of the box — it raised `:missing_header` before the CR-01 fix.
+    test "runs the real Mailgun verify!/normalize seam out of the box (CR-01/WR-08)" do
+      payload = Fixtures.build_mailgun_payload(subject: "Mailgun seam")
+
+      assert {:ok, %{outcome: outcome, route: route}} =
+               Ingress.receive_provider_payload(:mailgun, payload,
+                 repo: TestRepo,
+                 tenant_id: "provider-tenant",
+                 routes: accept_routes()
+               )
+
+      assert_received {:inbound, _msg, ^outcome, ^route}
+      assert %{outcome: :accept} = outcome
+    end
   end
 
   defp accept_routes, do: [%Route{mailbox: AcceptMailbox}]
