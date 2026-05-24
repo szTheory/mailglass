@@ -137,12 +137,25 @@ defmodule MailglassInbound.Test.Ingress do
   fixture `payload`, then drives the same persist + execute + capture chain as
   `receive_inbound/2`.
 
-  `payload` is the raw fixture shape produced by `MailglassInbound.Fixtures`:
+  `payload` is the raw fixture shape produced by `MailglassInbound.Fixtures`.
+  The `Fixtures` builders for `:sendgrid`, `:mailgun`, and `:ses` self-sign their
+  payloads against documented defaults, so those three providers verify **out of
+  the box** with no extra options. `:postmark` is the one provider whose fixture
+  carries no auth, so it needs an explicit `config:` + `headers:` pair (see below):
 
-  - `:postmark` — a JSON binary (`build_postmark_payload/1`).
-  - `:sendgrid` — `%{raw_mime:, headers:, params:}` (`build_sendgrid_payload/1`).
-  - `:mailgun` — `%{params:, headers:}` (`build_mailgun_payload/1`).
-  - `:ses` — `%{raw_body:, headers:, config:}` (`build_ses_sns_payload/1`).
+  - `:postmark` — a JSON binary (`build_postmark_payload/1`); needs `config:` +
+    `headers:`.
+  - `:sendgrid` — `%{raw_mime:, headers:, params:, config:}`
+    (`build_sendgrid_payload/1`); the fixture self-signs an `authorization` header
+    against `Fixtures.sendgrid_fixture_config/0`, and the driver defaults
+    `config:` to the fixture's `:config`.
+  - `:mailgun` — `%{params:, headers:, config:}` (`build_mailgun_payload/1`); the
+    fixture HMAC-signs the `timestamp`/`token`/`signature` triple against
+    `Fixtures.mailgun_fixture_config/0`, and the driver defaults `config:` to the
+    fixture's `:config`.
+  - `:ses` — `%{raw_body:, headers:, config:}` (`build_ses_sns_payload/1`); the
+    fixture primes the real `CertCache` and the driver defaults `config:` to the
+    fixture's `:config`.
 
   ## Options
 
@@ -151,14 +164,16 @@ defmodule MailglassInbound.Test.Ingress do
     we deliberately do NOT depend on here (Pitfall 6); the driver takes it as an
     option instead (default `"fixture-tenant"`).
   - `:config` — the provider config passed straight to `verify!`. The real
-    verifier is never weakened (T-47-11), so the config must satisfy it: e.g.
-    Postmark requires `config: %{basic_auth: {user, pass}}` AND an
-    `authorization` header (see `:headers`); SES defaults to the fixture's own
-    `config` (which names `S3Fetcher.Fake`), with `s3_fetcher:` defaulting to
-    `MailglassInbound.S3Fetcher.Fake` if absent.
-  - `:headers` — request headers for the `:postmark` request (the fixture JSON
-    body carries none); pass the `{"authorization", "Basic …"}` header matching
-    `:config`'s `basic_auth`.
+    verifier is never weakened (T-47-11), so the config must satisfy it. For
+    `:sendgrid`/`:mailgun`/`:ses` the driver defaults this to the fixture's own
+    self-signed `:config`, so you only pass it to override (e.g. to sign against
+    your own credentials/key). `:postmark` has no fixture config and requires
+    `config: %{basic_auth: {user, pass}}` AND a matching `authorization` header.
+    For `:ses`, `s3_fetcher:` defaults to `MailglassInbound.S3Fetcher.Fake` if absent.
+  - `:headers` — request headers. For `:postmark` (the fixture JSON body carries
+    none) pass the `{"authorization", "Basic …"}` header matching `:config`'s
+    `basic_auth`. For `:sendgrid`/`:mailgun` the fixture already supplies the
+    headers verify! needs; pass `:headers` only to override them.
   - `:repo`, `:routes`, `:router`, `:evidence` — as in `receive_inbound/2`.
   """
   @spec receive_provider_payload(atom(), term(), keyword()) ::
@@ -222,21 +237,35 @@ defmodule MailglassInbound.Test.Ingress do
     {request, Keyword.get(opts, :config, %{})}
   end
 
-  defp build_request(:sendgrid, %{raw_mime: raw_mime, headers: headers, params: params}, opts) do
+  defp build_request(:sendgrid, %{raw_mime: raw_mime, headers: headers, params: params} = payload, opts) do
     request = %Request{
       provider: :sendgrid,
       raw_body: raw_mime,
-      headers: headers,
+      # Honor caller-supplied headers like the :postmark clause does (CR-01): the
+      # fixture self-signs an `authorization` header into `headers`, so default to
+      # that, but let the caller override to test their own credentials.
+      headers: Keyword.get(opts, :headers, headers),
       params: params,
       raw_mime: raw_mime
     }
 
-    {request, Keyword.get(opts, :config, %{})}
+    # Default the verify! config from the fixture's self-signed `:config`
+    # (mirrors the :ses clause) so the fixture verifies out of the box.
+    config = Keyword.get(opts, :config, Map.get(payload, :config, %{}))
+    {request, config}
   end
 
-  defp build_request(:mailgun, %{params: params, headers: headers}, opts) do
-    request = %Request{provider: :mailgun, headers: headers, params: params}
-    {request, Keyword.get(opts, :config, %{})}
+  defp build_request(:mailgun, %{params: params, headers: headers} = payload, opts) do
+    request = %Request{
+      provider: :mailgun,
+      headers: Keyword.get(opts, :headers, headers),
+      params: params
+    }
+
+    # Default the verify! config from the fixture's self-signed `:config`
+    # (mirrors the :ses clause) so the HMAC-signed fixture verifies out of the box.
+    config = Keyword.get(opts, :config, Map.get(payload, :config, %{}))
+    {request, config}
   end
 
   defp build_request(:ses, %{raw_body: raw_body, headers: headers} = payload, opts) do

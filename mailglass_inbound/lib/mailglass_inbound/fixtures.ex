@@ -48,6 +48,20 @@ defmodule MailglassInbound.Fixtures do
   @default_subject "Inbound fixture"
   @default_text_body "Hello from a code-built fixture.\r\n"
 
+  # SendGrid fixture verify! defaults. The fixture self-signs against these
+  # documented credentials (mirroring how `build_ses_sns_payload/1` self-signs
+  # against a primed cert) so `Test.Ingress.receive_provider_payload(:sendgrid,
+  # …)` passes the REAL `Sendgrid.verify!` basic-auth seam out of the box. They
+  # are public via `sendgrid_fixture_config/0`.
+  @default_sendgrid_basic_auth {"fixture-sendgrid-user", "fixture-sendgrid-pass"}
+
+  # Mailgun fixture verify! defaults. The fixture HMAC-signs `timestamp <> token`
+  # with this documented signing key (mirroring the SES self-sign-against-a-primed-
+  # seam pattern) so `Test.Ingress.receive_provider_payload(:mailgun, …)` passes
+  # the REAL `Mailgun.verify!` HMAC seam out of the box. Public via
+  # `mailgun_fixture_config/0`.
+  @default_mailgun_signing_key "fixture-mailgun-signing-key"
+
   # SES SNS fixture defaults.
   @ses_bucket "fixture-inbound-bucket"
   @ses_cert_host "https://sns.us-east-1.amazonaws.com"
@@ -137,25 +151,40 @@ defmodule MailglassInbound.Fixtures do
   # --------------------------------------------------------------------------
 
   @doc """
-  Builds a SendGrid inbound payload.
+  Builds a SendGrid inbound payload that passes the **real** `Sendgrid.verify!`
+  basic-auth seam out of the box.
+
+  The header list carries an `authorization: Basic …` header self-signed against
+  the documented default credentials returned by `sendgrid_fixture_config/0`
+  (mirroring how `build_ses_sns_payload/1` self-signs against a primed cert), so
+  `MailglassInbound.Test.Ingress.receive_provider_payload(:sendgrid, …)` works
+  with no extra config — the driver defaults its config to those same credentials.
+  Pass `basic_auth: {user, pass}` here to sign against your own credentials (then
+  supply the matching `config: %{basic_auth: {user, pass}}` to the driver).
 
   Returns a map with:
 
   - `:raw_mime` — the raw MIME the SendGrid provider parses (also the dedupe key
     `md5(raw_mime)` when `provider_message_id` is nil; expose it via
     `evidence: %{raw_mime: ...}` so replays are detected — Pitfall 5).
-  - `:headers` — the request header list.
+  - `:headers` — the request header list, including the self-signed
+    `authorization` header the real `verify!` requires.
   - `:params` — the form params (carries `"envelope"` so the provider resolves
     `envelope_recipient`).
+  - `:config` — `%{basic_auth: {user, pass}}` the SendGrid `verify!` config seam;
+    the driver defaults to this when the caller passes no `:config`.
 
   ## Options
 
   - `:tenant_id`, `:subject`, `:from`, `:recipient`, `:text_body`
+  - `:basic_auth` — `{user, pass}` to self-sign against (default the documented
+    `sendgrid_fixture_config/0` credentials)
   """
   @spec build_sendgrid_payload(keyword()) :: %{
           raw_mime: binary(),
           headers: [{String.t(), String.t()}],
-          params: map()
+          params: map(),
+          config: map()
         }
   def build_sendgrid_payload(opts \\ []) do
     from = Keyword.get(opts, :from, @default_from)
@@ -163,6 +192,8 @@ defmodule MailglassInbound.Fixtures do
     subject = Keyword.get(opts, :subject, @default_subject)
     text_body = Keyword.get(opts, :text_body, @default_text_body)
     message_id = Keyword.get(opts, :provider_message_id, generate_id("sendgrid"))
+    {user, pass} = Keyword.get(opts, :basic_auth, @default_sendgrid_basic_auth)
+    encoded_auth = Base.encode64("#{user}:#{pass}")
 
     raw_mime =
       [
@@ -178,29 +209,58 @@ defmodule MailglassInbound.Fixtures do
 
     %{
       raw_mime: raw_mime,
-      headers: [{"content-type", "multipart/form-data"}],
-      params: %{"envelope" => Jason.encode!(%{"to" => [recipient], "from" => from})}
+      headers: [
+        {"content-type", "multipart/form-data"},
+        {"authorization", "Basic #{encoded_auth}"}
+      ],
+      params: %{"envelope" => Jason.encode!(%{"to" => [recipient], "from" => from})},
+      config: %{basic_auth: {user, pass}}
     }
   end
+
+  @doc """
+  The documented default SendGrid `verify!` config the fixture self-signs against:
+  `%{basic_auth: {user, pass}}`. `Test.Ingress.receive_provider_payload(:sendgrid,
+  …)` defaults its config to this so the fixture verifies out of the box.
+  """
+  @spec sendgrid_fixture_config() :: %{basic_auth: {String.t(), String.t()}}
+  def sendgrid_fixture_config, do: %{basic_auth: @default_sendgrid_basic_auth}
 
   # --------------------------------------------------------------------------
   # Mailgun — parsed multipart params
   # --------------------------------------------------------------------------
 
   @doc """
-  Builds a Mailgun inbound payload (parsed mode).
+  Builds a Mailgun inbound payload (parsed mode) that passes the **real**
+  `Mailgun.verify!` HMAC seam out of the box.
+
+  The params carry a `timestamp`/`token`/`signature` triple HMAC-signed
+  (`sha256` over `timestamp <> token`) against the documented default signing key
+  returned by `mailgun_fixture_config/0` (mirroring how `build_ses_sns_payload/1`
+  self-signs against a primed cert), so
+  `MailglassInbound.Test.Ingress.receive_provider_payload(:mailgun, …)` works with
+  no extra config — the driver defaults its config to that same signing key. The
+  `timestamp` is the current Unix time so it lands inside `verify!`'s skew
+  tolerance; the `token` is a fresh per-call nonce (also the replay-cache key).
+  Pass `signing_key:` here to sign against your own key (then supply the matching
+  `config: %{signing_key: …}` to the driver).
 
   Returns a map with `:params` (the flat form fields the Mailgun provider
-  normalizes) and `:headers` (the request header list). `message-headers`
-  carries the RFC `Message-Id` Mailgun has no flat field for (D-46-10).
+  normalizes, including the signature triple), `:headers` (the request header
+  list), and `:config` (`%{signing_key: …}` the driver defaults to).
+  `message-headers` carries the RFC `Message-Id` Mailgun has no flat field for
+  (D-46-10).
 
   ## Options
 
   - `:tenant_id`, `:subject`, `:from`, `:recipient`, `:text_body`
+  - `:signing_key` — the HMAC signing key to sign against (default the documented
+    `mailgun_fixture_config/0` key)
   """
   @spec build_mailgun_payload(keyword()) :: %{
           params: map(),
-          headers: [{String.t(), String.t()}]
+          headers: [{String.t(), String.t()}],
+          config: map()
         }
   def build_mailgun_payload(opts \\ []) do
     from = Keyword.get(opts, :from, @default_from)
@@ -208,6 +268,7 @@ defmodule MailglassInbound.Fixtures do
     subject = Keyword.get(opts, :subject, @default_subject)
     text_body = Keyword.get(opts, :text_body, @default_text_body)
     message_id = Keyword.get(opts, :provider_message_id, generate_id("mailgun"))
+    signing_key = Keyword.get(opts, :signing_key, @default_mailgun_signing_key)
 
     message_headers =
       Jason.encode!([
@@ -216,6 +277,16 @@ defmodule MailglassInbound.Fixtures do
         ["From", from],
         ["To", recipient]
       ])
+
+    # Sign the verify! triple: HMAC-SHA256 over `timestamp <> token`, hex-lower
+    # encoded — exactly what `Mailgun.verify!` recomputes. The timestamp is "now"
+    # so it lands inside verify!'s skew tolerance; the token is a fresh nonce.
+    timestamp = Integer.to_string(System.system_time(:second))
+    token = generate_id("mg-token")
+
+    signature =
+      :crypto.mac(:hmac, :sha256, signing_key, timestamp <> token)
+      |> Base.encode16(case: :lower)
 
     %{
       headers: [{"content-type", "multipart/form-data"}],
@@ -227,10 +298,22 @@ defmodule MailglassInbound.Fixtures do
         "subject" => subject,
         "body-plain" => text_body,
         "message-headers" => message_headers,
-        "attachment-count" => "0"
-      }
+        "attachment-count" => "0",
+        "timestamp" => timestamp,
+        "token" => token,
+        "signature" => signature
+      },
+      config: %{signing_key: signing_key}
     }
   end
+
+  @doc """
+  The documented default Mailgun `verify!` config the fixture self-signs against:
+  `%{signing_key: key}`. `Test.Ingress.receive_provider_payload(:mailgun, …)`
+  defaults its config to this so the fixture verifies out of the box.
+  """
+  @spec mailgun_fixture_config() :: %{signing_key: String.t()}
+  def mailgun_fixture_config, do: %{signing_key: @default_mailgun_signing_key}
 
   # --------------------------------------------------------------------------
   # SES — X.509-signed SNS notification (real CertCache priming)
