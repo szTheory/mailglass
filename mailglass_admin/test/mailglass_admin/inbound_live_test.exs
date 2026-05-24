@@ -11,7 +11,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
   use MailglassAdmin.LiveViewCase, async: false
 
+  import Ecto.Query
+
+  alias MailglassAdmin.PubSub.Topics
   alias MailglassAdmin.TestSupport.InboundFixtures
+  alias MailglassInbound.InboundRecords.ExecutionRun
 
   @tenant_id "test-tenant"
   @other_tenant "other-tenant"
@@ -303,11 +307,184 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
+  describe "replay confirm flow (IADM-03)" do
+    test "confirming replay on a matched record appends a :replay ExecutionRun (V2)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "replay@example.com")
+
+      before_count = run_count(record.id)
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      view |> element("button[phx-click='open_replay']") |> render_click()
+
+      html =
+        view
+        |> element("button[phx-click='confirm_replay']")
+        |> render_click()
+
+      assert unescape(html) =~
+               "Replay recorded. A new replay run was appended to this message's timeline."
+
+      after_count = run_count(record.id)
+      assert after_count == before_count + 1
+
+      # The newest run is source: :replay (append-only — prior rows untouched).
+      latest = latest_run(record.id)
+      assert latest.source == :replay
+    end
+
+    test "replaying a :no_match record is blocked with the mailbox-missing copy and appends no run (V11)",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_no_match!(@tenant_id, recipient: "nomatch@example.com")
+
+      before_count = run_count(record.id)
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      # The confirm path is defensively mapped even though the button is disabled
+      # in the header (render→click race) — drive the event directly.
+      html = render_click(view, "confirm_replay", %{})
+
+      assert html =~ "Replay blocked: mailbox module not found."
+      assert run_count(record.id) == before_count
+    end
+
+    test "a tenant-A operator cannot replay a tenant-B record id (D-48-05 cross-tenant)", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      %{record: foreign} =
+        InboundFixtures.seed_matched!(@other_tenant, recipient: "foreign@example.com")
+
+      before_count = run_count(foreign.id)
+
+      # Operator scoped to @tenant_id selects a guessed tenant-B record id.
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
+
+      html = render_click(view, "confirm_replay", %{})
+
+      assert html =~ "Replay blocked: this action is not authorized for the current operator."
+      # No run appended to the foreign record — the tenant gate fired BEFORE replay/2.
+      assert run_count(foreign.id) == before_count
+    end
+
+    test "a denied :replay_inbound capability changes no state (V6)", %{conn: conn} do
+      conn = operator_conn(conn, %{"current_user_id" => "deny-replay"})
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "denied@example.com")
+
+      before_count = run_count(record.id)
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      html = render_click(view, "confirm_replay", %{})
+
+      assert html =~ "Replay blocked: this action is not authorized for the current operator."
+      assert run_count(record.id) == before_count
+    end
+  end
+
+  describe "live updates (IADM-05)" do
+    test "a tenant broadcast prepends the re-fetched record without stealing selection (V7)", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      %{record: selected} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "selected@example.com")
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => selected.id}))
+
+      # A NEW record arrives after mount.
+      %{record: fresh} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "fresh@example.com")
+
+      Phoenix.PubSub.broadcast(
+        Mailglass.PubSub,
+        Topics.inbound_record_inserted(@tenant_id),
+        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
+      )
+
+      html = render(view)
+
+      # The new record appears in the list.
+      assert html =~ fresh.id
+      # The current selection is preserved (detail header still rendered for it).
+      assert html =~ ~s(data-testid="inbound-detail-header")
+      assert html =~ selected.id
+    end
+
+    test "a foreign-tenant broadcast id is dropped (V7 isolation)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: _mine} = InboundFixtures.seed_matched!(@tenant_id, recipient: "mine@example.com")
+
+      {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      %{record: foreign} =
+        InboundFixtures.seed_matched!(@other_tenant, recipient: "foreign@example.com")
+
+      # Broadcast a foreign-tenant id on THIS tenant's topic (a malformed/forged
+      # broadcast). The re-fetch is tenant-scoped, so it resolves to nil and is
+      # dropped — no foreign id ever reaches the list.
+      Phoenix.PubSub.broadcast(
+        Mailglass.PubSub,
+        Topics.inbound_record_inserted(@tenant_id),
+        {:inbound_record_inserted, foreign.id,
+         %{provider: "mailgun", record_type: "inbound_record"}}
+      )
+
+      html = render(view)
+
+      refute html =~ foreign.id
+    end
+  end
+
   defp inbound_path(params) do
     case URI.encode_query(params) do
       "" -> @base_path
       query -> @base_path <> "?" <> query
     end
+  end
+
+  # HEEx HTML-escapes text nodes, so verbatim UI-SPEC copy with an apostrophe
+  # renders as `&#39;`. Decode the handful of entities Phoenix emits so copy
+  # assertions can use the exact UI-SPEC string.
+  defp unescape(html) do
+    html
+    |> String.replace("&#39;", "'")
+    |> String.replace("&#x27;", "'")
+    |> String.replace("&quot;", "\"")
+    |> String.replace("&lt;", "<")
+    |> String.replace("&gt;", ">")
+    |> String.replace("&amp;", "&")
+  end
+
+  defp run_count(record_id) do
+    ExecutionRun
+    |> where([run], run.inbound_record_id == ^record_id)
+    |> TestRepo.aggregate(:count, :id)
+  end
+
+  defp latest_run(record_id) do
+    ExecutionRun
+    |> where([run], run.inbound_record_id == ^record_id)
+    |> order_by([run], desc: run.inserted_at, desc: run.id)
+    |> limit(1)
+    |> TestRepo.one()
   end
 
   defp operator_conn(conn, session \\ %{}) do

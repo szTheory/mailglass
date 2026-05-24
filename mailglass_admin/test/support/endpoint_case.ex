@@ -150,6 +150,32 @@ defmodule MailglassAdmin.TestOperatorAuth do
       {:error, :stale_auth, %{message: "Recent authentication is required."}}
     end
   end
+
+  # Inbound replay capability (D-48-09 — rides the existing atom() action type, no
+  # new auth surface). Denied for the sentinel actor so denial-path tests drive the
+  # gate via the session-controlled subject_id; granted otherwise.
+  def authorize(:replay_inbound, %{actor: %{subject_id: "deny-replay"}}) do
+    {:error, :unauthorized,
+     %{message: "Replay blocked: this action is not authorized for the current operator."}}
+  end
+
+  def authorize(:replay_inbound, %{actor: actor, inbound_record: _record}) do
+    {:ok, %{actor: actor}}
+  end
+
+  # Evidence reveal capability (D-48-09). Denied for the sentinel actor; granted
+  # otherwise.
+  def authorize(:reveal_raw, %{actor: %{subject_id: "deny-reveal"}}) do
+    {:error, :unauthorized,
+     %{
+       message:
+         "Raw source not revealed: the reveal_raw capability is not granted for this operator."
+     }}
+  end
+
+  def authorize(:reveal_raw, %{actor: actor}) do
+    {:ok, %{actor: actor}}
+  end
 end
 
 defmodule MailglassAdmin.TestAdopter.Endpoint do

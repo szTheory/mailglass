@@ -23,6 +23,7 @@ defmodule MailglassAdmin.InboundLive do
   use Phoenix.LiveView
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Inbound.DestructiveAction
   alias MailglassAdmin.Inbound.DetailHeader
   alias MailglassAdmin.Inbound.EvidenceCard
   alias MailglassAdmin.Inbound.FiltersForm
@@ -50,6 +51,18 @@ defmodule MailglassAdmin.InboundLive do
     # session (router.ex __operator_session__) as an atom, never cookie-sourced.
     # The routing-trace card reflects its routes via the runtime gateway.
     inbound_router = session_inbound_router(session)
+    tenant_id = session_tenant_id(session)
+
+    # Live updates (IADM-05 / D-48-11): subscribe on the CONNECTED mount only, to
+    # the per-tenant inbound stream via the builder (never a literal — LINT-06 /
+    # V9). The producer is `mailglass_inbound`; the payload is id-only and PII-free
+    # (Pitfall 6), so handle_info re-fetches tenant-scoped before prepending.
+    if connected?(socket) and is_binary(tenant_id) and tenant_id != "" do
+      Phoenix.PubSub.subscribe(
+        Mailglass.PubSub,
+        MailglassAdmin.PubSub.Topics.inbound_record_inserted(tenant_id)
+      )
+    end
 
     {:ok,
      socket
@@ -76,6 +89,9 @@ defmodule MailglassAdmin.InboundLive do
     do: Map.get(session, "inbound_router")
 
   defp session_inbound_router(_session), do: nil
+
+  defp session_tenant_id(session) when is_map(session), do: Map.get(session, "tenant_id")
+  defp session_tenant_id(_session), do: nil
 
   @impl true
   def handle_params(params, uri, socket) do
@@ -129,6 +145,78 @@ defmodule MailglassAdmin.InboundLive do
   def handle_event("reveal_raw", _params, socket) do
     {:noreply, assign(socket, :reveal_state, authorize_reveal(socket))}
   end
+
+  # Replay confirm flow (IADM-03). Simplified clone of OperatorLive's confirm_replay
+  # (no multi-target branch, D-48-08). The gate order is load-bearing:
+  #
+  #   1. TENANT gate (D-48-05): `Internal.Replay.replay/2` loads by id ONLY and is
+  #      NOT tenant-scoped, so this admin-side check is the cross-tenant defense —
+  #      a guessed foreign-tenant id is rejected BEFORE the gateway replay call.
+  #   2. CAPABILITY gate (V6): `:replay_inbound` over the existing Auth seam.
+  #   3. REPLAY: structured errors mapped to UI-SPEC copy by matching the
+  #      STRUCT/tuple, never the message string (CLAUDE.md rule 7). A :no_match
+  #      record can never replay (V11 / Pitfall 1) — the button is disabled AND the
+  #      tuple is mapped here for the render→click race.
+  def handle_event("confirm_replay", _params, socket) do
+    with {:ok, record} <- selected_replayable_record(socket),
+         :ok <- verify_tenant(record, socket.assigns.filter_params),
+         {:ok, socket} <-
+           DestructiveAction.authorize(
+             socket,
+             socket.assigns.operator_auth[:adapter],
+             record
+           ),
+         {:ok, _result} <- replay_record(record.id) do
+      {:noreply,
+       socket
+       |> assign_inbound_state(socket.assigns.filter_params, record.id)
+       |> close_replay_modal()
+       |> put_flash(
+         :info,
+         "Replay recorded. A new replay run was appended to this message's timeline."
+       )}
+    else
+      {:error, :no_selection} ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Select an inbound record to inspect its routing, execution timeline, and raw source."
+         )}
+
+      {:error, :cross_tenant} ->
+        {:noreply,
+         socket
+         |> close_replay_modal()
+         |> put_flash(
+           :error,
+           "Replay blocked: this action is not authorized for the current operator."
+         )}
+
+      {:error, {:auth, message}} ->
+        {:noreply,
+         socket
+         |> close_replay_modal()
+         |> put_flash(:error, message)}
+
+      {:error, reason} ->
+        {:noreply,
+         socket
+         |> close_replay_modal()
+         |> put_flash(:error, replay_error_copy(reason))}
+    end
+  end
+
+  # Live update (IADM-05 / D-48-11, Pitfall 6): the broadcast payload is id-only.
+  # Re-fetch the record TENANT-SCOPED through the gateway; if it resolves to nil
+  # (foreign tenant or filtered out) drop it; otherwise PREPEND to the list WITHOUT
+  # stealing the current selection or resetting filters.
+  @impl true
+  def handle_info({:inbound_record_inserted, record_id, _meta}, socket) do
+    {:noreply, prepend_live_record(socket, record_id)}
+  end
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   @impl true
   def render(assigns) do
@@ -279,6 +367,88 @@ defmodule MailglassAdmin.InboundLive do
   end
 
   defp routing_trace_for(_inbound_router, _detail), do: []
+
+  # ---------------------------------------------------------------------------
+  # Replay confirm flow (IADM-03) — tenant gate + capability gate + structured
+  # error → UI-SPEC copy.
+  # ---------------------------------------------------------------------------
+
+  # The replayable record is the loaded detail's canonical struct (tenant-resolved
+  # by the read-model). A selected id that did NOT resolve to a detail (a foreign
+  # tenant's id, or a deleted/forged id) surfaces as a `detail_error` — confirming
+  # replay against it is blocked as not-authorized (the tenant gate D-48-05 fired
+  # at the read-model BEFORE replay/2). A confirm with no selection at all is a
+  # no-selection no-op.
+  defp selected_replayable_record(%{assigns: %{detail: %{record: record}}}), do: {:ok, record}
+
+  defp selected_replayable_record(%{assigns: %{detail_error: error}}) when not is_nil(error),
+    do: {:error, :cross_tenant}
+
+  defp selected_replayable_record(_socket), do: {:error, :no_selection}
+
+  # D-48-05 cross-tenant gate: the active tenant comes from filter_params; the
+  # record's tenant_id must match it. (The detail read-model already tenant-scopes
+  # the load; this is belt-and-suspenders directly before the un-scoped replay/2.)
+  defp verify_tenant(%{tenant_id: tenant_id}, %{"tenant_id" => active})
+       when is_binary(tenant_id) and tenant_id == active and active != "",
+       do: :ok
+
+  defp verify_tenant(_record, _filter_params), do: {:error, :cross_tenant}
+
+  defp replay_record(record_id) do
+    if gateway_available?() do
+      apply(@gateway, :replay, [record_id, []])
+    else
+      {:error, :unavailable}
+    end
+  end
+
+  # Map the structured replay errors to UI-SPEC copy by matching the tuple/struct,
+  # never the message string (CLAUDE.md rule 7).
+  defp replay_error_copy({:replay_mailbox_missing, _details}),
+    do: "Replay blocked: mailbox module not found."
+
+  defp replay_error_copy(:not_found),
+    do: "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
+
+  defp replay_error_copy(:unavailable),
+    do: "Replay blocked: the inbound package is not available."
+
+  defp replay_error_copy(_reason),
+    do: "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
+
+  # ---------------------------------------------------------------------------
+  # Live-update prepend (IADM-05) — tenant-scoped re-fetch, no selection/filter theft.
+  # ---------------------------------------------------------------------------
+
+  defp prepend_live_record(socket, record_id) do
+    filter_params = socket.assigns.filter_params
+
+    case fetch_live_record(filter_params, record_id) do
+      nil ->
+        socket
+
+      record ->
+        records = socket.assigns.records
+
+        if Enum.any?(records, &(&1.id == record.id)) do
+          socket
+        else
+          assign(socket, :records, [record | records])
+        end
+    end
+  end
+
+  # Re-fetch the inserted record tenant-scoped. Reuses the list read-model and
+  # picks the matching id so the projection shape matches the existing list rows
+  # (and a foreign-tenant / filtered-out id resolves to nil).
+  defp fetch_live_record(%{"tenant_id" => ""}, _record_id), do: nil
+
+  defp fetch_live_record(filter_params, record_id) do
+    filter_params
+    |> load_inbound_records()
+    |> Enum.find(&(&1.id == record_id))
+  end
 
   # Tenant-required-or-empty (D-48-04) — the load-bearing security head BEFORE any
   # data call. A blank tenant yields [] without touching the gateway.
