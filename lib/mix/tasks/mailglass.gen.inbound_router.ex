@@ -50,6 +50,11 @@ defmodule Mix.Tasks.Mailglass.Gen.InboundRouter do
 
     # Routes are matched top-to-bottom, first-match-wins. Replace this sample
     # route with your own, or add more with `mix mailglass.gen.inbound_route`.
+    #
+    # `SampleMailbox` is a PLACEHOLDER — it points at a module that does not
+    # exist yet. Routing only stores the alias as an atom, so this file compiles,
+    # but the route resolves to nothing until you create the mailbox (e.g. with
+    # `mix mailglass.gen.mailbox MyApp.Inbound.Support`) and rename the route.
     route SampleMailbox, recipient: "support@example.com"
     """
   end
