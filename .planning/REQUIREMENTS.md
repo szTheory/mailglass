@@ -76,13 +76,13 @@ All Igniter-based, mirroring `mix mailglass.gen.mailable`.
 
 Architecturally clones `mailglass_admin/lib/mailglass_admin/operator_live.ex` patterns.
 
-- [ ] **IADM-01**: `MailglassAdmin.InboundLive` master/detail layout lists inbound records with URL-param filters (provider, mailbox outcome, time window, search), tenant-required gate (empty list when no tenant scope, never cross-tenant leak)
-- [ ] **IADM-02**: Inbound detail view shows canonical `%InboundMessage{}`, the raw provider source from `InboundEvidence` (with PII handling), the matched mailbox + execution result, and a timeline of replay runs
-- [ ] **IADM-03**: Replay modal (cloned from `operator/replay_modal.ex`) with destructive-action confirmation, tenant-bound by `operator/destructive_action.ex` pattern, no ambiguous-multi case (inbound replay target is the record itself, simpler than outbound)
-- [ ] **IADM-04**: Routing trace card answers "why didn't this message match this mailbox?" by rendering a matcher diff against `__mailglass_inbound_routes__/0` reflection
-- [ ] **IADM-05**: InboundLive subscribes to `MailglassAdmin.PubSub.Topics` for live updates from TELE-07 events
-- [ ] **IADM-06**: Inbound admin honors the brand voice: error messages composed and specific (e.g., "Replay blocked: mailbox module not found"), no "Oops!" or generic copy
-- [ ] **IADM-07**: Inbound surface is reachable from the admin nav, gated by the existing `MailglassAdmin.Auth` plug (no new auth surface required)
+- [x] **IADM-01**: `MailglassAdmin.InboundLive` master/detail layout lists inbound records with URL-param filters (provider, mailbox outcome, time window, search), tenant-required gate (empty list when no tenant scope, never cross-tenant leak)
+- [x] **IADM-02**: Inbound detail view shows canonical `%InboundMessage{}`, the raw provider source from `InboundEvidence` (with PII handling), the matched mailbox + execution result, and a timeline of replay runs
+- [x] **IADM-03**: Replay modal (cloned from `operator/replay_modal.ex`) with destructive-action confirmation, tenant-bound by `operator/destructive_action.ex` pattern, no ambiguous-multi case (inbound replay target is the record itself, simpler than outbound)
+- [x] **IADM-04**: Routing trace card answers "why didn't this message match this mailbox?" by rendering a matcher diff against `__mailglass_inbound_routes__/0` reflection
+- [x] **IADM-05**: InboundLive subscribes to `MailglassAdmin.PubSub.Topics` for live updates from TELE-07 events
+- [x] **IADM-06**: Inbound admin honors the brand voice: error messages composed and specific (e.g., "Replay blocked: mailbox module not found"), no "Oops!" or generic copy
+- [x] **IADM-07**: Inbound surface is reachable from the admin nav, gated by the existing `MailglassAdmin.Auth` plug (no new auth surface required)
 
 ### Inbound Operator Runtime Tooling (IOPS)
 
@@ -193,13 +193,13 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 | IGEN-02 | Phase 47 | Complete |
 | IGEN-03 | Phase 47 | Complete |
 | IGEN-04 | Phase 47 | Complete |
-| IADM-01 | Phase 48 | Pending |
-| IADM-02 | Phase 48 | Pending |
-| IADM-03 | Phase 48 | Pending |
-| IADM-04 | Phase 48 | Pending |
-| IADM-05 | Phase 48 | Pending |
-| IADM-06 | Phase 48 | Pending |
-| IADM-07 | Phase 48 | Pending |
+| IADM-01 | Phase 48 | Complete |
+| IADM-02 | Phase 48 | Complete |
+| IADM-03 | Phase 48 | Complete |
+| IADM-04 | Phase 48 | Complete |
+| IADM-05 | Phase 48 | Complete |
+| IADM-06 | Phase 48 | Complete |
+| IADM-07 | Phase 48 | Complete |
 | IOPS-01 | Phase 49 | Pending |
 | IOPS-02 | Phase 49 | Pending |
 | IOPS-03 | Phase 49 | Pending |
