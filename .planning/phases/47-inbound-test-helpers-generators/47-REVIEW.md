@@ -1,7 +1,8 @@
 ---
 phase: 47-inbound-test-helpers-generators
-reviewed: 2026-05-24T00:00:00Z
+reviewed: 2026-05-24T13:15:00Z
 depth: standard
+iteration: 2
 files_reviewed: 18
 files_reviewed_list:
   - lib/mix/tasks/mailglass.gen.inbound_route.ex
@@ -24,340 +25,289 @@ files_reviewed_list:
   - test/mix/tasks/mailglass.gen.mailbox_test.exs
 findings:
   critical: 1
-  warning: 6
+  warning: 2
   info: 4
-  total: 11
+  total: 7
 status: issues_found
 ---
 
-# Phase 47: Code Review Report
+# Phase 47: Code Review Report (Iteration 2 — re-review)
 
-**Reviewed:** 2026-05-24T00:00:00Z
+**Reviewed:** 2026-05-24T13:15:00Z
 **Depth:** standard
 **Files Reviewed:** 18
 **Status:** issues_found
 
 ## Summary
 
-Phase 47 ships four Hex-public Testing helpers (`Fixtures`, `Test.Ingress`,
-`TestAssertions`, `MailboxCase`) plus three Igniter generators. The **security
-posture is sound**: the SES fixture mints an ephemeral in-memory RSA-2048
-keypair, stores only the PUBLIC key in the ETS `CertCache`, never writes a
-`.pem`/`.eml` to disk, uses `:crypto.strong_rand_bytes` for cert-URL
-uniqueness, and the private key never leaves the function scope. No hardcoded
-secrets, no command/path injection, no PII in telemetry (the driver-exercised
-`Execution.execute/2` span carries only `mailbox`/`outcome`/`source`). Generator
-tests are green (15/15), and the SES forged-signature negative test proves the
-real verifier is genuinely exercised.
+This is a re-review after iteration 1 (11 findings) and a fix run that resolved
+the 7 critical+warning findings (CR-01, WR-01..WR-06).
 
-The defects are concentrated in **public-facing documentation and scaffold
-correctness** — which matter disproportionately here because these are the
-canonical onboarding artifacts for a published library. The headline issue
-(CR-01) is that the primary copy-paste usage example shipped in BOTH the README
-and the `MailboxCase` moduledoc does not work: it drives one capture and then
-runs two consuming `assert_received`-based assertions, so the second always
-fails. This is empirically reproduced below. A cluster of warnings covers
-version-metadata drift (`@since 0.2.0` on a 0.1.0 package; README `~> 0.3.2`),
-inaccurate "most recent" FIFO semantics in the assertion docs, a generator
-scaffold whose own commented hint references undefined functions and a wrong
-option, a self-contradictory matcher error message, and an unbounded
-process-global `CertCache` growth path that is not reset on the
-`receive_provider_payload` SES lane.
+**Iteration-1 fixes are genuinely resolved.** I re-read every changed surface and
+ran the suites deterministically (`--seed 0`):
+
+- CR-01 (broken README/MailboxCase example) — both the README (`README.md:42-54`)
+  and the `MailboxCase` moduledoc (`mailbox_case.ex:64-79`) now drive ONE
+  assertion per capture with an inline single-consume note. Fixed.
+- WR-01 (version drift) — `mix.exs @version` `0.1.0`, all `TestAssertions`
+  `@doc since:` tags `"0.1.0"`, `api_stability.md` `@since 0.1.0`, README pins
+  `{:mailglass_inbound, "~> 0.1"}` / `{:mailglass, "~> 1.0"}`. The new
+  pin-tracking docs-contract test passes (13/13). Fixed.
+- WR-02 ("most recent" → FIFO) — zero "most recent" strings remain; the six
+  outcome/routing `@doc`s now say "the next captured inbound (oldest unconsumed;
+  `assert_received` is FIFO …)". Fixed.
+- WR-03 (broken scaffold hint) — `gen.mailbox` now threads the generated mailbox
+  into the stub and emits a runnable `Fixtures.build_inbound_message/…` →
+  `Test.Ingress.receive_inbound/…` → `assert_inbound_accepted()` hint. Generator
+  tests pass (6/6). Fixed (but see WR-07 for a residual struct-surface concern).
+- WR-04 (self-contradictory matcher error) — explicit non-binary `:from`/`:to`
+  flunk clauses now precede the catch-all; regression test asserts the accurate
+  message and absence of "Unsupported matcher key". Fixed.
+- WR-05 (unreset SES CertCache) — `Fixtures.build_ses_sns_payload/1` carries a
+  `{: .warning}` admonition and `Test.Ingress` has a "SES cross-test hygiene"
+  section. Fixed (documentation route, as the review permitted).
+- WR-06 (untested raw_mime dedupe via `receive_inbound/2`) — two new tests in the
+  `receive_inbound/2` block (SendGrid convergence + fingerprint discrimination);
+  suite passes (8/8). Fixed.
+
+Suite status this run: generators 15/15, inbound docs-contract 13/13, the four
+DB-backed inbound suites 35/35, clean `mix compile --warnings-as-errors` and
+`mix compile --no-optional-deps --warnings-as-errors` for the inbound package.
+
+**However, this re-review surfaced a previously-undetected BLOCKER.** Two of the
+four shipped Testing helpers do not compose for two of their documented providers:
+`Test.Ingress.receive_provider_payload/3` cannot succeed for `:sendgrid` or
+`:mailgun` with the shipped `Fixtures` payloads — it raises unconditionally. This
+is phase-47 code (introduced in commit 6e27951) on a Hex-published, `@since 0.1.0`
+adopter-facing contract, and it is empirically reproduced below. The prior review
+missed it because the only `receive_provider_payload` tests cover `:postmark` and
+`:ses`; `:sendgrid` and `:mailgun` have no driver-level test (WR-08).
+
+The four Info findings (IN-01..IN-04) were intentionally left unfixed in
+iteration 1; I re-evaluated each and all four still apply (unchanged).
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: Shipped README / MailboxCase usage example is broken — second assertion always fails
+### CR-01: `Test.Ingress.receive_provider_payload/3` is broken for `:sendgrid` and `:mailgun` — raises unconditionally with the shipped `Fixtures`
 
-**File:** `mailglass_inbound/README.md:42-47` and
-`mailglass_inbound/lib/mailglass_inbound/mailbox_case.ex:67-74`
+**File:** `mailglass_inbound/lib/mailglass_inbound/test/ingress.ex:225-240`
+(`build_request/3` for `:sendgrid`/`:mailgun`), with
+`mailglass_inbound/lib/mailglass_inbound/fixtures.ex:160-233`
+(`build_sendgrid_payload/1` / `build_mailgun_payload/1`)
 
-**Issue:** The canonical onboarding example shows one drive followed by two
-assertions:
+**Issue:** `Fixtures` and `Test.Ingress` are both shipped, Hex-published,
+`@since 0.1.0` Testing-surface helpers (`api_stability.md:97-115`). The driver's
+own `receive_provider_payload/3` doc lists `:sendgrid` and `:mailgun` as
+supported payload shapes produced by `Fixtures` (`ingress.ex:142-145`) and the
+whole purpose of `receive_provider_payload` is to "run the **real** provider
+`verify!`/`normalize` seam" (`ingress.ex:135-138`). For two of those four
+providers, the helpers cannot be composed at all:
 
-```elixir
-{:ok, _} = Test.Ingress.receive_inbound(message, routes: my_routes())
-assert_inbound_received(subject: "Welcome")
-assert_inbound_accepted()
+**SendGrid — broken two ways:**
+
+1. `build_request(:sendgrid, %{raw_mime:, headers:, params:}, opts)`
+   (`ingress.ex:225-235`) reads the request `headers` from the **payload map**,
+   so it **silently ignores** the caller's `opts[:headers]`. By contrast the
+   `:postmark` clause correctly uses `Keyword.get(opts, :headers, [])`
+   (`ingress.ex:214-223`) — an inconsistency that is itself the bug.
+2. `Fixtures.build_sendgrid_payload/1` returns `headers:
+   [{"content-type", "multipart/form-data"}]` (`fixtures.ex:181`) with **no**
+   `authorization` header. SendGrid `verify!` requires one
+   (`sendgrid.ex` `verify_basic_auth!`: raises `SignatureError(:missing_header)`
+   when no `authorization` header is present).
+
+Because the driver ignores `opts[:headers]` for SendGrid, an adopter cannot
+inject the missing auth header. Even supplying both
+`config: %{basic_auth: {u,p}}` **and** a correct `authorization` header opt still
+raises — reproduced directly:
+
+```
+SENDGRID with caller-supplied config+header RESULT:
+  {:raised, Mailglass.SignatureError, "Webhook signature failed: signature header is missing"}
+FIXTURE HEADERS (note: no authorization): [{"content-type", "multipart/form-data"}]
 ```
 
-`Test.Ingress.drive/3` (`lib/mailglass_inbound/test/ingress.ex:187`) sends
-exactly ONE `{:inbound, message, outcome, route}` tuple per drive. Every
-`assert_inbound_*` macro reads it with `assert_received`, which **consumes** the
-matched message from the process mailbox. So `assert_inbound_received(subject:
-"Welcome")` consumes the only tuple, and `assert_inbound_accepted()` then finds
-an empty mailbox and raises `ExUnit.AssertionError`. This was reproduced
-directly:
+**Mailgun — structurally impossible with the fixture:**
+
+`Mailgun.verify!` requires `timestamp`, `token`, and `signature` params
+(`mailgun.ex` `fetch_signature_fields!`) plus a `signing_key` config.
+`Fixtures.build_mailgun_payload/1` produces none of those signature params
+(`fixtures.ex:220-232` — only `recipient`/`sender`/`from`/`to`/`subject`/
+`body-plain`/`message-headers`/`attachment-count`), so there is **no** config
+that makes it pass. Reproduced directly:
 
 ```
-RESULT: second assertion FAILED - documented example is broken
+MAILGUN receive_provider_payload RESULT:
+  {:raised, MailglassInbound.SignatureError, "Inbound signature failed: a required signing field is missing"}
 ```
 
-The package's own test files already encode the correct discipline ("Each
-`assert_*` consumes ONE captured tuple ... so drive one capture per assertion",
-`test_assertions_test.exs:55-68`, `mailbox_case_test.exs:27-42`), which proves
-the maintainers know the constraint — but the shipped public examples violate
-it. An adopter copying the README/moduledoc snippet hits a red test on first
-contact with the library.
+So `receive_provider_payload(:mailgun, Fixtures.build_mailgun_payload(...), …)`
+can never succeed, and `receive_provider_payload(:sendgrid, …)` can never succeed
+with the shipped fixture/driver. Both fixtures only round-trip through
+`Provider.normalize/1` directly (which is what `fixtures_test.exs:70-111`
+actually exercises — never through `verify!`-then-normalize). An adopter
+following the docs to test SendGrid or Mailgun provider parsing end to end hits
+an unconditional raise. This is phase-47 code (commit 6e27951, in scope), not
+pre-existing.
 
-**Fix:** Either drive once per assertion in the examples, or document the
-single-consume semantics explicitly. Minimal correct form:
+**Fix:** Two parts.
 
-```elixir
-test "accepts a welcome message" do
-  message = Fixtures.build_inbound_message(subject: "Welcome")
+1. Make the SendGrid `build_request` clause honor caller headers like Postmark
+   does, merging/overriding the fixture's headers with `opts[:headers]`:
 
-  {:ok, %{outcome: %{outcome: :accept}, route: %{mailbox: MyApp.WelcomeMailbox}}} =
-    Test.Ingress.receive_inbound(message, routes: my_routes())
+   ```elixir
+   defp build_request(:sendgrid, %{raw_mime: raw_mime, headers: headers, params: params}, opts) do
+     request = %Request{
+       provider: :sendgrid,
+       raw_body: raw_mime,
+       headers: Keyword.get(opts, :headers, headers),
+       params: params,
+       raw_mime: raw_mime
+     }
 
-  # ONE assertion per drive (assert_received consumes the captured tuple):
-  assert_inbound_received(subject: "Welcome")
-end
-```
+     {request, Keyword.get(opts, :config, %{})}
+   end
+   ```
 
-If two assertions on a single message are desired, drive twice (distinct
-`provider_message_id` to avoid dedupe, as `mailbox_case_test.exs:37` does), or
-add a non-consuming combined matcher. Apply the same fix to both the README and
-the `MailboxCase` moduledoc.
+2. Either (a) make the fixtures emit a payload that passes the real `verify!`
+   for `:sendgrid` (include an `authorization` header consistent with a documented
+   default `basic_auth`) and `:mailgun` (emit signed `timestamp`/`token`/`signature`
+   params against a documented default signing key — mirroring how
+   `build_ses_sns_payload/1` already self-signs against a primed cert), so
+   `receive_provider_payload` works out of the box; OR (b) if the fixtures are
+   intentionally verify!-incompatible, remove `:sendgrid`/`:mailgun` from the
+   `receive_provider_payload/3` supported-shape list (`ingress.ex:142-145`) and
+   document that those fixtures are for the direct `normalize` lane /
+   `receive_inbound/2` only. Option (a) is strongly preferred — it is the SES
+   fixture's own already-shipped pattern and keeps the documented contract whole.
+   Whichever path, add the WR-08 driver-level tests so this cannot regress.
 
 ## Warnings
 
-### WR-01: Version metadata drift across mix.exs, `@since` tags, and README deps
+### WR-07: Shipped Testing helpers and the `gen.mailbox` scaffold steer adopters to construct the `@moduledoc false` internal `%MailglassInbound.Router.Route{}` struct
 
-**File:** `mailglass_inbound/mix.exs:4`,
-`mailglass_inbound/lib/mailglass_inbound/test_assertions.ex:83,107,116,130,192,…`,
-`mailglass_inbound/README.md:61-62`
+**File:** `mailglass_inbound/lib/mailglass_inbound/test/ingress.ex:114`
+(`:routes` doc) and `lib/mix/tasks/mailglass.gen.mailbox.ex:125` (generated stub),
+against `mailglass_inbound/lib/mailglass_inbound/router/route.ex:2`
+(`@moduledoc false`)
 
-**Issue:** Three mutually inconsistent version numbers ship to HexDocs/Hex:
+**Issue:** `MailglassInbound.Router.Route` is an internal struct
+(`route.ex:2` is `@moduledoc false`) and appears in **neither** the `stable` nor
+the `testing` inventory of `api_stability.md`. Yet:
 
-- `mix.exs` `@version "0.1.0"` (also drives `docs source_ref: "v0.1.0"`).
-- Every new `TestAssertions` macro carries `@doc since: "0.2.0"` (and
-  `api_stability.md` references `@since 0.2.0` for `SignatureError`/`S3FetchError`).
-  HexDocs will render "since 0.2.0" for symbols published in a `0.1.0` artifact —
-  a version that does not exist and is *higher* than the package version.
-- README install snippet pins `{:mailglass_inbound, "~> 0.3.2"}` and
-  `{:mailglass, "~> 0.3.2"}` — a third, unrelated number that will not resolve
-  against a `0.1.0` publish.
+1. `Test.Ingress.receive_inbound/2`'s documented `:routes` option says to pass
+   `[%MailglassInbound.Router.Route{}]` (`ingress.ex:114`).
+2. The WR-03 fix made `gen.mailbox` emit a literal
+   `%MailglassInbound.Router.Route{mailbox: …}` in the generated test stub
+   (`mailbox.ex:125`).
 
-**Fix:** Pick one truth. If this slice publishes as `0.2.0`, bump
-`mix.exs @version` to `0.2.0` and update README deps to `~> 0.2`. If it
-publishes as `0.1.0`, change the `@doc since:` tags to `"0.1.0"` and the README
-pins to `~> 0.1`. Add a docs-contract assertion that the README dep pin's major.minor
-matches `Mix.Project.config()[:version]` so this cannot drift again.
+The README and `MailboxCase` moduledoc deliberately use the abstract
+`routes: my_routes()` and never name the struct, which suggests the maintainers
+intend adopters to build routes via `use MailglassInbound.Router` + the
+`:router` option, not by hand-constructing the internal struct. The shipped
+`Test.Ingress` doc and the generated scaffold contradict that by guiding adopters
+to a `@moduledoc false`, contract-unlisted struct as the canonical happy path.
+If `Route`'s shape ever changes, every adopter test that copied the scaffold
+breaks against a struct that was never promised stable.
 
-### WR-02: `TestAssertions` outcome/routing assertions document "most recent" but read FIFO (oldest)
+**Fix:** Pick one and make it consistent across `Test.Ingress`'s `:routes` doc,
+the `gen.mailbox` scaffold, the README, and `api_stability.md`:
 
-**File:** `mailglass_inbound/lib/mailglass_inbound/test_assertions.ex:190,198,206,214,238,254`
+- If hand-built routes are a supported testing input, document
+  `MailglassInbound.Router.Route` (at least its `:mailbox`/`:recipient`/`:subject`
+  fields) as part of the `testing` surface in `api_stability.md` and give it a
+  real `@moduledoc`.
+- Otherwise, change the `gen.mailbox` scaffold and the `Test.Ingress` `:routes`
+  example to drive routing through a `use MailglassInbound.Router` module + the
+  `:router` option (the path the README already implies), so no adopter is told
+  to construct the internal struct.
 
-**Issue:** The moduledoc and per-macro `@doc`s repeatedly say "the most recent
-captured inbound was accepted / ignored / rejected / bounced / routed". The
-implementation uses `assert_received`, which matches the **oldest** unconsumed
-matching message (process mailbox is FIFO), not the most recent. Reproduced:
+### WR-08: No driver-level test exercises `receive_provider_payload/3` for `:sendgrid` or `:mailgun` — the gap that let CR-01 ship
 
-```
-assert_received matched: :first   # two sends (:first then :second), got :first
-```
+**File:** `mailglass_inbound/test/mailglass_inbound/test/ingress_test.exs:126-163`
+(`receive_provider_payload/3` describe block covers `:postmark` and `:ses` only)
 
-If an adopter drives two messages and then asserts an outcome, they assert
-against the FIRST message's outcome while believing it is the latest — a silent
-wrong-assertion trap that the one-drive-per-assertion happy path hides.
+**Issue:** The `receive_provider_payload/3` tests cover Postmark
+(`ingress_test.exs:127`) and SES (`ingress_test.exs:148`). There is no test
+driving `receive_provider_payload(:sendgrid, …)` or
+`receive_provider_payload(:mailgun, …)`, even though both are listed as supported
+payload shapes (`ingress.ex:142-145`) and both have shipped `Fixtures` builders.
+This is precisely the coverage hole that let CR-01 reach iteration 2 undetected:
+the SendGrid round-trip is tested only through direct `Sendgrid.normalize/1`
+(`fixtures_test.exs:70-91`), never through the driver's `verify!`-first seam, so
+the driver's silent `opts[:headers]` drop and the fixture's missing auth header
+were never exercised together.
 
-**Fix:** Replace "most recent" with accurate language, e.g. "the next captured
-inbound (oldest unconsumed; `assert_received` is FIFO and consumes the matched
-tuple)". This pairs naturally with the CR-01 fix.
-
-### WR-03: `gen.mailbox` test scaffold's commented hint references undefined functions and a non-existent option
-
-**File:** `lib/mix/tasks/mailglass.gen.mailbox.ex:111-124`
-
-**Issue:** The generated test stub `use MailglassInbound.MailboxCase` and then
-comments:
-
-```elixir
-# message = build_inbound_message(recipient: "support@example.com")
-# assert :accept = process(message)
-```
-
-Three problems if an adopter uncomments these (the explicit purpose of a
-scaffold hint):
-
-1. `MailboxCase` only `alias`es `Fixtures` (`mailbox_case.ex:82`); it does NOT
-   `import` it. `build_inbound_message/1` is undefined in the test scope — it
-   must be `Fixtures.build_inbound_message(...)`.
-2. `build_inbound_message/1` has no `:recipient` option
-   (`fixtures.ex:78-97` accepts `:to` / `:envelope_recipient`); `:recipient` is
-   silently ignored, so the resulting message would not have the intended
-   recipient.
-3. `process/1` is defined on the mailbox module, not in the test scope — the
-   bare `process(message)` call is undefined.
-
-The whole value proposition of `gen.mailbox` is a working starting point; its
-own hint does not compile and uses a wrong option.
-
-**Fix:** Make the scaffold hint accurate and runnable, e.g.:
-
-```elixir
-# message = Fixtures.build_inbound_message(to: "support@example.com")
-# assert :accept = MyApp.Inbound.Support.process(message)
-```
-
-or, better, demonstrate the actual capture lane the helpers exist for:
-
-```elixir
-# message = Fixtures.build_inbound_message(subject: "hi")
-# {:ok, _} = Test.Ingress.receive_inbound(message, routes: [%MailglassInbound.Router.Route{mailbox: MyApp.Inbound.Support}])
-# assert_inbound_accepted()
-```
-
-### WR-04: `__match_keyword__` emits a self-contradictory error for non-binary `:from`/`:to`
-
-**File:** `mailglass_inbound/lib/mailglass_inbound/test_assertions.ex:148-155,169-173`
-
-**Issue:** The `:from`/`:to` clauses are guarded `when is_binary(v)`. A non-binary
-value (e.g. `from: ["alice@example.com"]` — the same address-list shape the
-struct actually stores) falls through to the catch-all `{key, _}` clause and
-flunks with:
-
-```
-Unsupported matcher key: :from. Supported: :subject, :from, :to, :tenant, :provider, :envelope_recipient
-```
-
-The message lists `:from` as both unsupported and supported — contradictory and
-actively misleading. Reproduced verbatim above. An adopter who passes the
-natural list shape gets told `:from` is an unknown key.
-
-**Fix:** Add explicit clauses that reject a non-binary `:from`/`:to` with an
-accurate message, e.g.:
-
-```elixir
-{:from, v} ->
-  flunk("from matcher expects a bare address string, got: #{inspect(v)}")
-{:to, v} ->
-  flunk("to matcher expects a bare address string, got: #{inspect(v)}")
-```
-
-placed before the catch-all so the guard fall-through can no longer reach it.
-
-### WR-05: `Test.Ingress.receive_provider_payload(:ses, …)` primes the process-global `CertCache` ETS but never resets it
-
-**File:** `mailglass_inbound/lib/mailglass_inbound/fixtures.ex:296-298` (prime),
-`mailglass_inbound/lib/mailglass_inbound/test/ingress.ex` (driver does not reset)
-
-**Issue:** `build_ses_sns_payload/1` calls
-`CertCache.put(cert_url, public_key, future)` with a 24h TTL into the
-**process-global** ETS table `:mailglass_webhook_ses_cert_cache` (confirmed
-`cert_cache.ex`: `:ets.insert`, no per-process scoping). The cert URL is unique
-per call and the entry is never evicted within a TTL window. `MailboxCase.setup`
-and `FixturesTest`/`Test.IngressTest` reset it, but the shipped Testing surface
-does not require `MailboxCase`. An adopter who calls
-`receive_provider_payload(:ses, …)` from plain `async: true` ExUnit cases
-(a supported usage per `api_stability.md` "driven from their own test suites")
-accumulates one global ETS cert entry per SES fixture for the whole run, and the
-global table is shared across concurrent async tests. This is a cross-test
-shared-state / cleanliness hazard the moduledoc's "the only shared-state hygiene
-is the per-setup ETS reset" claim only covers when `MailboxCase` is used.
-
-**Fix:** Document prominently in `Fixtures.build_ses_sns_payload/1` and
-`Test.Ingress` that SES fixtures require `CertCache.reset()` (or `MailboxCase`)
-between tests, OR have the SES fixture register an `ExUnit.Callbacks.on_exit`
-cleanup of just the URL it primed. Minimal:
-
-```elixir
-# in build_ses_sns_payload/1, after CertCache.put(...):
-# (only when running under ExUnit) ExUnit.Callbacks.on_exit(fn -> CertCache.reset() end)
-```
-
-Prefer the documentation fix if the helper must stay free of an `:ex_unit`
-runtime dependency at call time.
-
-### WR-06: Documented `Test.Ingress` raw_mime-dedupe path for SendGrid/SES via `receive_inbound/2` is untested
-
-**File:** `mailglass_inbound/lib/mailglass_inbound/test/ingress.ex:101-104`
-(doc instructs `evidence: %{raw_mime: ...}`),
-`mailglass_inbound/test/mailglass_inbound/test/ingress_test.exs:103-117`
-(covers SES only via `receive_provider_payload`)
-
-**Issue:** `receive_inbound/2` documents that for raw_mime-dedupe providers the
-caller must pass `evidence: %{raw_mime: ...}` so replays dedupe. The persist
-layer's dedupe for `sendgrid`/`ses`/`mailgun`-with-nil-provider-id keys on
-`md5(evidence.raw_mime)` (`persist.ex:112-200`). The default evidence is
-`%{raw_payload: %{}}` (no `raw_mime`). No test drives a sendgrid/ses canonical
-message through `receive_inbound/2` with `evidence: %{raw_mime: ...}` and
-asserts convergence — the only convergence proofs use `provider_message_id`
-dedupe (`receive_inbound` Postmark) or `receive_provider_payload` (SES). If the
-nil-fingerprint path collapses unrelated messages to the same hash, no test
-would catch it. This is a coverage gap on a documented public contract, not a
-proven defect.
-
-**Fix:** Add a `receive_inbound/2` convergence test for a SendGrid (or
-SES-with-nil-provider-id) canonical message passing `evidence: %{raw_mime: ...}`,
-asserting `record_count() == 1` and `fresh_run_count() == 1` on replay; and a
-companion test that two distinct raw_mime payloads produce two records (proving
-the fingerprint discriminates).
+**Fix:** After fixing CR-01, add `receive_provider_payload/3` tests for
+`:sendgrid` and `:mailgun` that assert `{:ok, %{outcome: %{outcome: :accept}}}`
+(or the documented duplicate/convergence behavior) — mirroring the existing
+Postmark/SES tests. These tests must fail today and pass after CR-01 is fixed,
+proving the helpers compose for all four advertised providers.
 
 ## Info
 
-### IN-01: `gen.inbound_router` scaffolds a `route` to a non-existent `SampleMailbox`
+### IN-01: `gen.inbound_router` scaffolds a `route` to a non-existent `SampleMailbox` (unchanged from iteration 1)
 
 **File:** `lib/mix/tasks/mailglass.gen.inbound_router.ex:53`
 
-**Issue:** The generated router emits `route SampleMailbox, recipient:
-"support@example.com"`. `MailglassInbound.Router.route/2` only `Macro.expand`s
-the alias and stores the atom without verifying the module exists or implements
-the behaviour (`router.ex:48-62`), so the file compiles, but `SampleMailbox`
-resolves to a module that does not exist. This is acceptable as a documented
-copy-edit starting point, but a reader may be surprised that the scaffold's
-sample route silently points at nothing.
+**Issue:** The generated router still emits
+`route SampleMailbox, recipient: "support@example.com"`. `Router.route/2` only
+`Macro.expand`s the alias and stores the atom without verifying the module exists
+(`router.ex:48-62`), so the file compiles but `SampleMailbox` resolves to a
+non-existent module. Acceptable as a documented copy-edit starting point, but a
+reader may be surprised the sample route points at nothing. Still applies.
 
-**Fix:** Optional. Either add a trailing comment clarifying `SampleMailbox` is a
-placeholder to replace, or scaffold the sample route commented out.
+**Fix:** Optional. Add a trailing comment clarifying `SampleMailbox` is a
+placeholder, or scaffold the sample route commented out.
 
-### IN-02: `parse_module/1` accepts arbitrary strings and mints odd atoms
+### IN-02: `parse_module/1` accepts arbitrary strings and mints odd atoms (unchanged from iteration 1)
 
 **File:** `lib/mix/tasks/mailglass.gen.inbound_route.ex:139`,
 `lib/mix/tasks/mailglass.gen.mailbox.ex:56`
 
 **Issue:** `Module.concat([arg])` on a malformed mailbox arg (e.g. an email
-string) produces atoms like `:"Elixir.support@example.com"`, which then render
-oddly via `inspect/1` in `route_code/2`. This is user error surfacing in
-user-visible generated output rather than a security issue (no eval, no
-injection), but there is no validation that the positional `mailbox` looks like
-a module name.
+string) produces atoms like `:"Elixir.support@example.com"`, which render oddly
+via `inspect/1` in `route_code/2`. No validation that the positional `mailbox`
+looks like a module name. User-error surfacing in generated output, not a
+security issue — these are developer-run CLI tasks, not network-facing, so no
+atom-exhaustion DoS. Still applies.
 
-**Fix:** Optional. Validate the mailbox arg matches a module-name shape
-(`~r/^[A-Z]\w*(\.[A-Z]\w*)*$/`) in `info/2` positional handling or at parse
-time, and emit a clear error otherwise.
+**Fix:** Optional. Validate the mailbox/router arg matches
+`~r/^[A-Z]\w*(\.[A-Z]\w*)*$/` and emit a clear error otherwise.
 
-### IN-03: `assert_inbound_received` predicate clause does not handle captured-function syntax
+### IN-03: `assert_inbound_received` predicate clause does not handle captured-function syntax (unchanged from iteration 1)
 
 **File:** `mailglass_inbound/lib/mailglass_inbound/test_assertions.ex:117,131`
 
-**Issue:** The predicate clause matches only `{:fn, _, _}` (anonymous `fn ->`).
-A captured function (`&pred/1`, AST `{:&, _, _}`) falls through to the keyword
-clause and calls `__match_keyword__(msg, &pred/1)`, which fails its
-`is_list(params)` guard with a raw `FunctionClauseError` rather than a clean
-message. Edge case; the documented usage is `fn`.
+**Issue:** Re-verified by AST probe: the predicate clause matches only
+`{:fn, _, _}` (anonymous `fn ->`). A captured function (`&pred/1`, AST
+`{:&, _, _}`) falls through to the keyword clause and calls
+`__match_keyword__(msg, &pred/1)`, which fails its `is_list(params)` guard with a
+raw `FunctionClauseError` rather than a clean message. (Empty-list and runtime-
+variable args route to the keyword clause too, but degrade gracefully.) Edge
+case; documented usage is the `fn` literal. Still applies.
 
 **Fix:** Optional. Add a `{:&, _, _}` clause mirroring the `{:fn, _, _}` branch,
 or document that the predicate must be an anonymous-function literal.
 
-### IN-04: `Test.Ingress` moduledoc "emits no telemetry of its own" can read as "drives no telemetry"
+### IN-04: `Test.Ingress` moduledoc "emits no telemetry of its own" can read as "drives no telemetry" (unchanged from iteration 1)
 
-**File:** `mailglass_inbound/lib/mailglass_inbound/test/ingress.ex:64-66`
+**File:** `mailglass_inbound/lib/mailglass_inbound/test/ingress.ex:80-82`
 
-**Issue:** The driver itself adds no spans (accurate), but it drives
-`Execution.execute/2`, which emits an `execution_span` with `mailbox`,
-`outcome`, `source` metadata. That metadata is PII-free and convention-compliant
-(verified against `execution.ex:44-49`), so there is no violation — but a reader
-auditing PII posture might mis-read the line as "no telemetry fires on this
-path."
+**Issue:** The line now reads "It emits no telemetry of its own and adds no PII
+spans." The "of its own" qualifier helps slightly, but the driver does drive
+`Execution.execute/2`, which emits a PII-free `execution_span`
+(`execution.ex:46-59`). A reader auditing PII posture could still mis-read this
+as "no telemetry fires on this path." No violation (the span is convention-
+compliant and PII-free). Still mildly applies.
 
 **Fix:** Optional. Clarify to "adds no telemetry of its own (the
 `Execution.execute/2` it drives emits the normal PII-free execution span)".
 
 ---
 
-_Reviewed: 2026-05-24T00:00:00Z_
+_Reviewed: 2026-05-24T13:15:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
