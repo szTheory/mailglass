@@ -35,7 +35,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 - [x] **Phase 44.5: v1.0/1.1 Release Ceremony** — Single linked-version cut: `mailglass` 0.3.2 → **1.0.0**, `mailglass_admin` 0.3.2 → **1.0.0**, `mailglass_inbound` first Hex publish at **0.1.0**. Bundles 4 unreleased milestones (v0.5/v0.6/v1.0/v1.1, 169 commits since v0.3.0 tag). Resolves CLOSE-06. — completed 2026-05-07
 - [x] **Phase 45: Inbound Telemetry + Idempotency Foundation** — 4-level telemetry spans across all inbound stages, shared MIME module, and 1000-replay convergence proof (12 plans: 4 functional + 8 gap-closure across 2 rounds) — completed 2026-05-23
 - [x] **Phase 46: Mailgun + SES Inbound Ingress** — Lift outbound verifiers into inbound; ship Mailgun (HMAC) and SES (SNS X.509 + S3 fetch) provider plugs (3 plans, 2 waves) (completed 2026-05-23)
-- [ ] **Phase 47: Inbound Test Helpers + Generators** — `TestAssertions`, `MailboxCase`, `Test.Ingress`, code-built fixtures, and 3 Igniter generators
+- [x] **Phase 47: Inbound Test Helpers + Generators** — `TestAssertions`, `MailboxCase`, `Test.Ingress`, code-built fixtures, and 3 Igniter generators (completed 2026-05-24)
 - [ ] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card
 - [ ] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only
 - [ ] **Phase 50: Inbound Documentation Pass** — Install / testing / operator / Mailgun + SES setup / routing-debug guides
@@ -143,7 +143,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 47-04-PLAN.md — MailboxCase ExUnit case template (app-env repo, snapshot-nothing) + Hex packaging Testing group + docs contract (ITEST-05) [Wave 3]
+- [x] 47-04-PLAN.md — MailboxCase ExUnit case template (app-env repo, snapshot-nothing) + Hex packaging Testing group + docs contract (ITEST-05) [Wave 3]
 
 **UI hint**: no
 
@@ -266,7 +266,7 @@ Plans:
 
 **Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
 **Requirements:** TBD
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 
@@ -289,7 +289,7 @@ Plans:
 | **44.5. v1.0/1.1 Release Ceremony** | 5/5 | ✅ Complete | 2026-05-07 |
 | 45. Inbound Telemetry + Idempotency Foundation | 12/12 | ✅ Complete | 2026-05-23 |
 | 46. Mailgun + SES Inbound Ingress | 3/3 | Complete    | 2026-05-23 |
-| 47. Inbound Test Helpers + Generators | 3/4 | In Progress|  |
+| 47. Inbound Test Helpers + Generators | 4/4 | Complete   | 2026-05-24 |
 | 48. Inbound Admin LiveView | 0/TBD | Not started | — |
 | 49. Inbound Runtime Operator Tooling | 0/TBD | Not started | — |
 | 50. Inbound Documentation Pass | 0/TBD | Not started | — |
