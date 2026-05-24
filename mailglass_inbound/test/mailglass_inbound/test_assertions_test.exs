@@ -51,11 +51,20 @@ defmodule MailglassInbound.TestAssertionsTest do
     end
 
     test "style 2: keyword match on subject / tenant / from / to" do
-      capture(subject: "Welcome aboard", from: "alice@example.com", to: "team@example.com")
+      # Each assert_inbound_received consumes one captured tuple (assert_received
+      # semantics), so capture once per assertion.
+      msg_opts = [subject: "Welcome aboard", from: "alice@example.com", to: "team@example.com"]
 
+      capture(msg_opts)
       assert_inbound_received(subject: "Welcome aboard")
+
+      capture(msg_opts)
       assert_inbound_received(from: "alice@example.com")
+
+      capture(msg_opts)
       assert_inbound_received(to: "team@example.com")
+
+      capture(msg_opts)
       assert_inbound_received(tenant: "fixture-tenant")
     end
 
