@@ -76,6 +76,51 @@ defmodule MailglassInbound.Test.IngressTest do
       assert record_count() == 1
       assert fresh_run_count() == 1
     end
+
+    # WR-06: the documented raw_mime-dedupe contract for receive_inbound/2.
+    # SendGrid keys dedupe on md5(evidence.raw_mime) (persist.ex load_duplicate),
+    # NOT on provider_message_id, so the caller must pass evidence: %{raw_mime: ...}.
+    # The id-dedupe convergence test above does not exercise that path.
+    test "SendGrid raw_mime replay via receive_inbound/2 converges (evidence: raw_mime dedupe)" do
+      message = Fixtures.build_inbound_message(provider: :sendgrid)
+      raw_mime = "Message-ID: <wr06-converge@example.com>\r\nSubject: hi\r\n\r\nbody"
+
+      for _ <- 1..3 do
+        assert {:ok, _} =
+                 Ingress.receive_inbound(message,
+                   repo: TestRepo,
+                   routes: accept_routes(),
+                   evidence: %{raw_mime: raw_mime}
+                 )
+      end
+
+      assert record_count() == 1
+      assert fresh_run_count() == 1
+    end
+
+    test "two distinct raw_mime payloads produce two records (fingerprint discriminates)" do
+      # Real SendGrid carries no provider_message_id, so dedupe is raw_mime-only;
+      # model that (nil id) so the only discriminator under test is the
+      # md5(raw_mime) fingerprint, not the provider-id unique index.
+      base = Fixtures.build_inbound_message(provider: :sendgrid, provider_message_id: nil)
+
+      assert {:ok, _} =
+               Ingress.receive_inbound(base,
+                 repo: TestRepo,
+                 routes: accept_routes(),
+                 evidence: %{raw_mime: "Message-ID: <wr06-a@example.com>\r\n\r\nfirst"}
+               )
+
+      assert {:ok, _} =
+               Ingress.receive_inbound(base,
+                 repo: TestRepo,
+                 routes: accept_routes(),
+                 evidence: %{raw_mime: "Message-ID: <wr06-b@example.com>\r\n\r\nsecond"}
+               )
+
+      assert record_count() == 2
+      assert fresh_run_count() == 2
+    end
   end
 
   describe "receive_provider_payload/3" do
