@@ -177,6 +177,12 @@ None - no external service configuration required. (mix.lock changes from `mix d
 
 No new security-relevant surface beyond the plan's `<threat_model>`. The gateway (T-48-03), read-models (T-48-01), mix.exs dep (T-48-02), and mask_recipient promotion (T-48-04) are exactly the registered surfaces; all mitigations are implemented (Tenancy.scope/2 + tenant where-clause on every read-model query; floating optional dep out of PINS; Boundary deps unchanged; one audited mask definition).
 
+## Self-Check: PASSED
+
+All 8 created source/test files verified present on disk; all 5 commits
+(4 task commits + SUMMARY) verified in git log; working tree clean (mix.lock
+intentionally excluded per worktree/mailglass policy).
+
 ---
 *Phase: 48-inbound-admin-liveview*
 *Completed: 2026-05-24*
