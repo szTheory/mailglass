@@ -50,6 +50,65 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "MAILGUN"
       assert html =~ "no match"
     end
+
+    test "renders the real outcome badge + matched mailbox for a matched record (WR-01)" do
+      record = %{
+        id: "rec-2",
+        tenant_id: "tenant-a",
+        provider: "postmark",
+        envelope_recipient: "alice@example.com",
+        subject: "Hello",
+        received_at: ~U[2026-05-24 10:00:00Z],
+        outcome: :accept,
+        mailbox: "MyApp.SupportMailbox"
+      }
+
+      html = render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+
+      assert html =~ "Accept"
+      assert html =~ "badge-success"
+      assert html =~ "MyApp.SupportMailbox"
+      refute html =~ "Pending"
+      refute html =~ "no match"
+    end
+
+    test "renders 'no match' + warning badge for a :no_match record (WR-01)" do
+      record = %{
+        id: "rec-3",
+        tenant_id: "tenant-a",
+        provider: "postmark",
+        envelope_recipient: "alice@example.com",
+        subject: "Hello",
+        received_at: ~U[2026-05-24 10:00:00Z],
+        outcome: :no_match,
+        mailbox: nil
+      }
+
+      html = render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+
+      assert html =~ "No match"
+      assert html =~ "badge-warning"
+      assert html =~ "no match"
+    end
+
+    test "renders the neutral Pending badge for a record with no run yet (nil outcome)" do
+      record = %{
+        id: "rec-4",
+        tenant_id: "tenant-a",
+        provider: "postmark",
+        envelope_recipient: "alice@example.com",
+        subject: "Hello",
+        received_at: ~U[2026-05-24 10:00:00Z],
+        outcome: nil,
+        mailbox: nil
+      }
+
+      html = render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+
+      assert html =~ "Pending"
+      assert html =~ "badge-outline"
+      assert html =~ "no match"
+    end
   end
 
   describe "DetailHeader.detail_header/1" do
@@ -117,6 +176,99 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
       refute html =~ ~r/data-testid="inbound-replay-open"[^>]*disabled/
+    end
+
+    test "the From cell shows the masked SENDER from `from`, not the recipient (WR-02)" do
+      detail = %{
+        record: %{
+          id: "rec-1",
+          tenant_id: "tenant-a",
+          provider: "mailgun",
+          envelope_recipient: "alice@example.com",
+          from: [%{address: "bob@sender.test"}],
+          subject: "Hello",
+          received_at: ~U[2026-05-24 10:00:00Z]
+        },
+        mailbox: "MyApp.SupportMailbox",
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+
+      # Sender masked + present; raw sender never leaks.
+      assert html =~ "b**@s*****.test"
+      refute html =~ "bob@sender.test"
+      # The recipient is masked in the title, but the From cell is the sender.
+      assert html =~ "a****@e******.com"
+    end
+
+    test "the From cell reads STRING-keyed `from` maps (DB JSONB round-trip)" do
+      detail = %{
+        record: %{
+          id: "rec-1",
+          tenant_id: "tenant-a",
+          provider: "mailgun",
+          envelope_recipient: "alice@example.com",
+          from: [%{"address" => "carol@vendor.test", "name" => "Carol"}],
+          subject: "Hello",
+          received_at: ~U[2026-05-24 10:00:00Z]
+        },
+        mailbox: "MyApp.SupportMailbox",
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+
+      assert html =~ "c****@v*****.test"
+      refute html =~ "carol@vendor.test"
+    end
+
+    test "the From cell degrades to 'Unavailable' on an empty `from`" do
+      detail = %{
+        record: %{
+          id: "rec-1",
+          tenant_id: "tenant-a",
+          provider: "mailgun",
+          envelope_recipient: "alice@example.com",
+          from: [],
+          subject: "Hello",
+          received_at: ~U[2026-05-24 10:00:00Z]
+        },
+        mailbox: "MyApp.SupportMailbox",
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+
+      assert html =~ "Unavailable"
+    end
+
+    test "the From cell degrades gracefully on a malformed `from` entry" do
+      detail = %{
+        record: %{
+          id: "rec-1",
+          tenant_id: "tenant-a",
+          provider: "mailgun",
+          envelope_recipient: "alice@example.com",
+          from: [%{"display" => "no address key"}],
+          subject: "Hello",
+          received_at: ~U[2026-05-24 10:00:00Z]
+        },
+        mailbox: "MyApp.SupportMailbox",
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      }
+
+      html = render_component(&DetailHeader.detail_header/1, detail: detail)
+
+      assert html =~ "Unavailable"
     end
   end
 

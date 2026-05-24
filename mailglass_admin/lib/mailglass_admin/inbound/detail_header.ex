@@ -62,7 +62,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           </div>
           <div>
             <dt class="text-xs font-bold uppercase tracking-[0.08em]">From</dt>
-            <dd class="mt-1 text-base-content">{Components.mask_recipient(@record.envelope_recipient)}</dd>
+            <dd class="mt-1 text-base-content">{sender_display(@record)}</dd>
           </div>
           <div>
             <dt class="text-xs font-bold uppercase tracking-[0.08em]">Subject</dt>
@@ -101,6 +101,30 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
 
   # Pitfall 2 — defensive read; the field does not exist until Phase 49.
   defp suppression_flagged?(record), do: Map.get(record, :suppression_flagged, false)
+
+  # The masked SENDER for the "From" cell (WR-02). `InboundRecord.from` is an
+  # `{:array, :map}` of parsed address maps — the sender is PII, so each address is
+  # masked through the one audited `Components.mask_recipient/1` definition (same
+  # treatment recipients get). Address maps round-trip through JSONB as STRING keys
+  # ("address"), but freshly built structs carry ATOM keys (:address); both are
+  # read. An empty or malformed `from` (no usable address) degrades to the neutral
+  # "Unavailable" placeholder rather than crashing or rendering a falsehood.
+  defp sender_display(record) do
+    record
+    |> Map.get(:from, [])
+    |> List.wrap()
+    |> Enum.map(&address_value/1)
+    |> Enum.reject(&(&1 in [nil, ""]))
+    |> case do
+      [] -> "Unavailable"
+      addresses -> addresses |> Enum.map(&Components.mask_recipient/1) |> Enum.join(", ")
+    end
+  end
+
+  defp address_value(%{address: address}) when is_binary(address), do: address
+  defp address_value(%{"address" => address}) when is_binary(address), do: address
+  defp address_value(address) when is_binary(address), do: address
+  defp address_value(_other), do: nil
 
   # Pitfall 1 — a :no_match record can never replay (no prior matched mailbox).
   defp replay_disabled?(:no_match), do: true
