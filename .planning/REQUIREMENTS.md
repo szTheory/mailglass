@@ -55,22 +55,22 @@ Currently `mailglass_inbound/lib/` contains **zero** `:telemetry` calls. This is
 
 API mirrors outbound `Mailglass.TestAssertions` (`lib/mailglass/test_assertions.ex`).
 
-- [ ] **ITEST-01**: `MailglassInbound.TestAssertions` provides 4 matcher styles for `assert_inbound_received/1` (no-arg / keyword filter / function predicate / pattern match), mirroring the outbound `assert_delivered` family
-- [ ] **ITEST-02**: Outcome-specific assertions: `assert_inbound_accepted/1`, `assert_inbound_rejected/1`, `assert_inbound_ignored/1`, `assert_inbound_bounced/1` keyed off the locked mailbox outcome atoms
-- [ ] **ITEST-03**: Routing assertions: `assert_inbound_routed_to/2` (mailbox module match) and `assert_inbound_no_match/1` (no route matched)
-- [ ] **ITEST-04**: Negative assertion `assert_no_inbound_received/0` (no inbound message received in the test process scope)
-- [ ] **ITEST-05**: `MailglassInbound.MailboxCase` ExUnit case template sets up sandbox + pub_sub subscription + per-test fixtures, including the HI-01 snapshot/restore pattern for `:async_execution_impl` config (mirrors `Mailglass.MailerCase`)
-- [ ] **ITEST-06**: `MailglassInbound.Test.Ingress` drives the real persist+route+execute write path with a single fake-provider seam (analogous to `Mailglass.Adapters.Fake.trigger_event/3` for outbound)
-- [ ] **ITEST-07**: `MailglassInbound.Fixtures` builds canonical `%InboundMessage{}` and raw provider payloads (Postmark JSON, SendGrid form-encoded, Mailgun multipart, SES SNS) entirely from code — no `.eml` files on disk (avoids real-PII commits)
+- [x] **ITEST-01**: `MailglassInbound.TestAssertions` provides 4 matcher styles for `assert_inbound_received/1` (no-arg / keyword filter / function predicate / pattern match), mirroring the outbound `assert_delivered` family
+- [x] **ITEST-02**: Outcome-specific assertions: `assert_inbound_accepted/1`, `assert_inbound_rejected/1`, `assert_inbound_ignored/1`, `assert_inbound_bounced/1` keyed off the locked mailbox outcome atoms
+- [x] **ITEST-03**: Routing assertions: `assert_inbound_routed_to/2` (mailbox module match) and `assert_inbound_no_match/1` (no route matched)
+- [x] **ITEST-04**: Negative assertion `assert_no_inbound_received/0` (no inbound message received in the test process scope)
+- [x] **ITEST-05**: `MailglassInbound.MailboxCase` ExUnit case template sets up sandbox + pub_sub subscription + per-test fixtures, including the HI-01 snapshot/restore pattern for `:async_execution_impl` config (mirrors `Mailglass.MailerCase`)
+- [x] **ITEST-06**: `MailglassInbound.Test.Ingress` drives the real persist+route+execute write path with a single fake-provider seam (analogous to `Mailglass.Adapters.Fake.trigger_event/3` for outbound)
+- [x] **ITEST-07**: `MailglassInbound.Fixtures` builds canonical `%InboundMessage{}` and raw provider payloads (Postmark JSON, SendGrid form-encoded, Mailgun multipart, SES SNS) entirely from code — no `.eml` files on disk (avoids real-PII commits)
 
 ### Inbound Generators (IGEN)
 
 All Igniter-based, mirroring `mix mailglass.gen.mailable`.
 
-- [ ] **IGEN-01**: `mix mailglass.gen.mailbox <ModuleName>` scaffolds a mailbox module with the behaviour, a default callback, a route stub in the configured router, and an ExUnit test stub using `MailboxCase`
-- [ ] **IGEN-02**: `mix mailglass.gen.inbound_router <ModuleName>` scaffolds a new inbound router module with the macro DSL and a sample route
-- [ ] **IGEN-03**: `mix mailglass.gen.inbound_route <pattern> <MailboxModule>` adds a route to an existing inbound router with idempotent code modification
-- [ ] **IGEN-04**: All generators support `--dry-run` (preview changes without applying), matching `mix mailglass.install` v0.5 hardening
+- [x] **IGEN-01**: `mix mailglass.gen.mailbox <ModuleName>` scaffolds a mailbox module with the behaviour, a default callback, a route stub in the configured router, and an ExUnit test stub using `MailboxCase`
+- [x] **IGEN-02**: `mix mailglass.gen.inbound_router <ModuleName>` scaffolds a new inbound router module with the macro DSL and a sample route
+- [x] **IGEN-03**: `mix mailglass.gen.inbound_route <pattern> <MailboxModule>` adds a route to an existing inbound router with idempotent code modification
+- [x] **IGEN-04**: All generators support `--dry-run` (preview changes without applying), matching `mix mailglass.install` v0.5 hardening
 
 ### Inbound Admin LiveView (IADM)
 
@@ -182,17 +182,17 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 | SESI-04 | Phase 46 | Complete |
 | SESI-05 | Phase 46 | Complete |
 | SESI-06 | Phase 50 | Pending |
-| ITEST-01 | Phase 47 | Pending |
-| ITEST-02 | Phase 47 | Pending |
-| ITEST-03 | Phase 47 | Pending |
-| ITEST-04 | Phase 47 | Pending |
-| ITEST-05 | Phase 47 | Pending |
-| ITEST-06 | Phase 47 | Pending |
-| ITEST-07 | Phase 47 | Pending |
-| IGEN-01 | Phase 47 | Pending |
-| IGEN-02 | Phase 47 | Pending |
-| IGEN-03 | Phase 47 | Pending |
-| IGEN-04 | Phase 47 | Pending |
+| ITEST-01 | Phase 47 | Complete |
+| ITEST-02 | Phase 47 | Complete |
+| ITEST-03 | Phase 47 | Complete |
+| ITEST-04 | Phase 47 | Complete |
+| ITEST-05 | Phase 47 | Complete |
+| ITEST-06 | Phase 47 | Complete |
+| ITEST-07 | Phase 47 | Complete |
+| IGEN-01 | Phase 47 | Complete |
+| IGEN-02 | Phase 47 | Complete |
+| IGEN-03 | Phase 47 | Complete |
+| IGEN-04 | Phase 47 | Complete |
 | IADM-01 | Phase 48 | Pending |
 | IADM-02 | Phase 48 | Pending |
 | IADM-03 | Phase 48 | Pending |
