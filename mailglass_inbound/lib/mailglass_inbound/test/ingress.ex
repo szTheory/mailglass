@@ -1,0 +1,261 @@
+defmodule MailglassInbound.Test.Ingress do
+  @moduledoc """
+  The inbound test driver (ITEST-06): drives the **real** synchronous
+  persist + route + execute write path and captures the outcome in the
+  current test process's mailbox.
+
+  This is the inbound analog of outbound's `Fake.Storage` → `{:mail, _}` →
+  `Mailglass.TestAssertions` triangle. Outbound has a `Fake.Storage` that
+  emits `{:mail, %Message{}}` on every delivery; inbound has no delivery row,
+  so the capture seam lives **here** in the driver: after `Execution.execute/2`
+  returns, `Test.Ingress` does
+
+      send(self(), {:inbound, message, outcome, route})
+
+  so that `MailglassInbound.TestAssertions` can read the captured tuple with
+  `assert_received` (the inbound mirror of `assert_mail_sent`).
+
+  ## Why this ships in `lib/` (not `test/support/`)
+
+  Adopters `import MailglassInbound.TestAssertions` and drive captures via this
+  module from their own suites, so it ships in the `mailglass_inbound` Hex
+  package via the `files: ~w(lib …)` manifest — despite the `Test` in its name,
+  `lib/mailglass_inbound/test/ingress.ex` is a `lib/` path. Because it ships in
+  `lib/`, it references ONLY core/runtime modules (`Persist`, `Execution`, the
+  inbound providers) — never `Oban`, `ExAws`, or `Plug.Test` (Pitfall 6), so it
+  compiles under `mix compile --no-optional-deps --warnings-as-errors`.
+
+  ## Two entry points
+
+  - `receive_inbound/2` — drive a code-built `%InboundMessage{}` straight through
+    persist + execute (skips the provider parse seam; use it when you already
+    have a canonical message, e.g. from `MailglassInbound.Fixtures`).
+  - `receive_provider_payload/3` — run the **real** provider `verify!`/`normalize`
+    seam first (the same seam the production plug drives), then the same persist +
+    execute + capture chain. Use it to exercise provider parsing + verification
+    end to end.
+
+  ## The captured `outcome` slot
+
+  The third element of the captured tuple is the **normalized `execute/2` result
+  map** — the actual return value of `MailglassInbound.Execution.execute/2`
+  (`%{outcome: :accept}`, `%{outcome: :reject, outcome_reason: "..."}`,
+  `%{outcome: :no_match}`, `%{status: :skipped}` on a duplicate, …), NOT the raw
+  `%MailglassInbound.Mailbox{}` outcome atom. Keeping the real seam's return as
+  the captured value means `MailglassInbound.TestAssertions` matches on the same
+  enum the persisted `ExecutionRun.outcome` carries (`:accept | :ignore |
+  :reject | :bounce | :no_match | :failed`), so an assertion can never drift
+  from what was actually persisted.
+
+  ## Synchronous only — never `dispatch/2`
+
+  The driver drives `Execution.execute/2` (SYNC) with `source: :fresh`. It NEVER
+  calls `Execution.dispatch/2` (async — Oban or a detached `Task.Supervisor`
+  child), which produces non-deterministic `ExecutionRun` counts (D-47-03/04,
+  proven by the replay-convergence property). Replaying the same message
+  converges: persist dedupes (DB unique index — provider-id for Postmark,
+  `md5(raw_mime)` for SendGrid/SES/Mailgun), and `execute/2` on a `:duplicate`
+  persist result short-circuits to `{:ok, %{status: :skipped}}`, inserting zero
+  fresh `ExecutionRun` rows.
+
+  ## PII posture
+
+  The driver writes to the adopter's sandboxed test DB (rolled back per test)
+  and sends the capture tuple only to the current test process. It emits no
+  telemetry of its own and adds no PII spans (T-47-09/12).
+  """
+
+  alias MailglassInbound.Execution
+  alias MailglassInbound.InboundMessage
+  alias MailglassInbound.Ingress.Persist
+  alias MailglassInbound.Ingress.Request
+  alias MailglassInbound.Ingress.Providers.{Mailgun, Postmark, SES, Sendgrid}
+  alias MailglassInbound.S3Fetcher
+
+  @persist_opt_keys [:routes, :router, :repo]
+  @default_tenant_id "fixture-tenant"
+
+  @typedoc "The capture tuple sent to the current process on every receive."
+  @type capture :: {:inbound, InboundMessage.t(), map(), map()}
+
+  @typedoc "The success return of both entry points."
+  @type result :: %{
+          message: InboundMessage.t(),
+          outcome: map(),
+          route: map(),
+          persisted: map()
+        }
+
+  @doc """
+  Drives a code-built `%InboundMessage{}` through the real persist + execute
+  path, captures `{:inbound, message, outcome, route}` in the current process,
+  and returns `{:ok, %{message:, outcome:, route:, persisted:}}`.
+
+  ## Options
+
+  - `:repo` — the Ecto repo (default `MailglassInbound.Repo`; tests pass
+    `MailglassInbound.TestRepo`).
+  - `:routes` — a list of `%MailglassInbound.Router.Route{}` for the matcher.
+  - `:router` — a compiled router module (`__mailglass_inbound_routes__/0`);
+    mutually exclusive with `:routes`.
+  - `:evidence` — the evidence map persisted alongside the record
+    (default `%{raw_payload: %{}}`). For raw_mime-dedupe providers driven via
+    `receive_inbound/2`, pass `evidence: %{raw_mime: ...}` so replays dedupe.
+
+  The message carries its own `:tenant_id` and `:provider`.
+  """
+  @spec receive_inbound(InboundMessage.t(), keyword()) :: {:ok, result()} | {:error, term()}
+  def receive_inbound(%InboundMessage{} = message, opts \\ []) when is_list(opts) do
+    handoff = %{
+      tenant_id: message.tenant_id,
+      provider: message.provider,
+      message: message,
+      evidence: Keyword.get(opts, :evidence, %{raw_payload: %{}})
+    }
+
+    drive(handoff, message, opts)
+  end
+
+  @doc """
+  Runs the **real** provider `verify!`/`normalize` seam for `provider` over a
+  fixture `payload`, then drives the same persist + execute + capture chain as
+  `receive_inbound/2`.
+
+  `payload` is the raw fixture shape produced by `MailglassInbound.Fixtures`:
+
+  - `:postmark` — a JSON binary (`build_postmark_payload/1`).
+  - `:sendgrid` — `%{raw_mime:, headers:, params:}` (`build_sendgrid_payload/1`).
+  - `:mailgun` — `%{params:, headers:}` (`build_mailgun_payload/1`).
+  - `:ses` — `%{raw_body:, headers:, config:}` (`build_ses_sns_payload/1`).
+
+  ## Options
+
+  - `:tenant_id` — the tenant assigned to the normalized message. The production
+    plug resolves this from the request via `Tenancy`, which needs a `%Plug.Conn{}`
+    we deliberately do NOT depend on here (Pitfall 6); the driver takes it as an
+    option instead (default `"fixture-tenant"`).
+  - `:config` — the provider config passed straight to `verify!`. The real
+    verifier is never weakened (T-47-11), so the config must satisfy it: e.g.
+    Postmark requires `config: %{basic_auth: {user, pass}}` AND an
+    `authorization` header (see `:headers`); SES defaults to the fixture's own
+    `config` (which names `S3Fetcher.Fake`), with `s3_fetcher:` defaulting to
+    `MailglassInbound.S3Fetcher.Fake` if absent.
+  - `:headers` — request headers for the `:postmark` request (the fixture JSON
+    body carries none); pass the `{"authorization", "Basic …"}` header matching
+    `:config`'s `basic_auth`.
+  - `:repo`, `:routes`, `:router`, `:evidence` — as in `receive_inbound/2`.
+  """
+  @spec receive_provider_payload(atom(), term(), keyword()) ::
+          {:ok, result()} | {:error, term()}
+  def receive_provider_payload(provider, payload, opts \\ [])
+      when is_atom(provider) and is_list(opts) do
+    tenant_id = Keyword.get(opts, :tenant_id, @default_tenant_id)
+    {request, config} = build_request(provider, payload, opts)
+
+    facts = verify_request!(provider, request, config)
+    normalized = normalize_request!(provider, request)
+
+    message =
+      normalized.message
+      |> Map.put(:tenant_id, tenant_id)
+      |> Map.put(:provider, provider)
+
+    evidence =
+      normalized.evidence
+      |> Map.update(:verification_facts, facts, &Map.merge(&1, facts))
+
+    handoff = %{
+      tenant_id: tenant_id,
+      provider: provider,
+      message: message,
+      evidence: evidence
+    }
+
+    drive(handoff, message, opts)
+  end
+
+  # ---- shared persist → execute → capture chain ----------------------------
+
+  defp drive(handoff, message, opts) do
+    persist_opts = Keyword.take(opts, @persist_opt_keys)
+
+    with {:ok, persisted} <- Persist.persist(handoff, persist_opts),
+         {:ok, outcome} <- Execution.execute(persisted, source: :fresh) do
+      # THE CAPTURE SEAM — the inbound analog of outbound's {:mail, _} send
+      # (lib/mailglass/test_assertions.ex:33-34). Sent to the current test
+      # process so `MailglassInbound.TestAssertions` can `assert_received` it.
+      send(self(), {:inbound, message, outcome, persisted.route})
+
+      {:ok, %{message: message, outcome: outcome, route: persisted.route, persisted: persisted}}
+    end
+  end
+
+  # ---- per-provider Request build + real verify!/normalize dispatch --------
+  # Mirrors the production plug (ingress/plug.ex build_request!/verify_request!/
+  # normalize_request!) without a %Plug.Conn{} — the fixture payload carries the
+  # raw bytes/params the plug would otherwise read off the conn.
+
+  defp build_request(:postmark, raw_body, opts) when is_binary(raw_body) do
+    request = %Request{
+      provider: :postmark,
+      raw_body: raw_body,
+      headers: Keyword.get(opts, :headers, []),
+      params: %{}
+    }
+
+    {request, Keyword.get(opts, :config, %{})}
+  end
+
+  defp build_request(:sendgrid, %{raw_mime: raw_mime, headers: headers, params: params}, opts) do
+    request = %Request{
+      provider: :sendgrid,
+      raw_body: raw_mime,
+      headers: headers,
+      params: params,
+      raw_mime: raw_mime
+    }
+
+    {request, Keyword.get(opts, :config, %{})}
+  end
+
+  defp build_request(:mailgun, %{params: params, headers: headers}, opts) do
+    request = %Request{provider: :mailgun, headers: headers, params: params}
+    {request, Keyword.get(opts, :config, %{})}
+  end
+
+  defp build_request(:ses, %{raw_body: raw_body, headers: headers} = payload, opts) do
+    request = %Request{provider: :ses, raw_body: raw_body, headers: headers, params: %{}}
+
+    config =
+      opts
+      |> Keyword.get(:config, Map.get(payload, :config, %{}))
+      |> Map.put_new(:s3_fetcher, S3Fetcher.Fake)
+
+    {request, config}
+  end
+
+  # Postmark uses the legacy verify!/3 returning a bare facts map; the struct-
+  # arity providers return {:ok, facts}. Both collapse to a plain facts map here.
+  defp verify_request!(:postmark, %Request{} = request, config) do
+    Postmark.verify!(request.raw_body, request.headers, config)
+  end
+
+  defp verify_request!(:sendgrid, %Request{} = request, config),
+    do: unwrap_facts(Sendgrid.verify!(request, config))
+
+  defp verify_request!(:mailgun, %Request{} = request, config),
+    do: unwrap_facts(Mailgun.verify!(request, config))
+
+  defp verify_request!(:ses, %Request{} = request, config),
+    do: unwrap_facts(SES.verify!(request, config))
+
+  defp unwrap_facts({:ok, facts}) when is_map(facts), do: facts
+  defp unwrap_facts(facts) when is_map(facts), do: facts
+
+  defp normalize_request!(:postmark, %Request{} = request),
+    do: Postmark.normalize(request.raw_body, request.headers)
+
+  defp normalize_request!(:sendgrid, %Request{} = request), do: Sendgrid.normalize(request)
+  defp normalize_request!(:mailgun, %Request{} = request), do: Mailgun.normalize(request)
+  defp normalize_request!(:ses, %Request{} = request), do: SES.normalize(request)
+end

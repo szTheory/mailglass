@@ -83,11 +83,7 @@ defmodule MailglassInbound.Test.IngressTest do
       raw = Fixtures.build_postmark_payload(subject: "Provider seam")
 
       assert {:ok, %{outcome: outcome, route: route}} =
-               Ingress.receive_provider_payload(:postmark, raw,
-                 repo: TestRepo,
-                 tenant_id: "provider-tenant",
-                 routes: accept_routes()
-               )
+               Ingress.receive_provider_payload(:postmark, raw, postmark_opts())
 
       assert_received {:inbound, _msg, ^outcome, ^route}
       assert %{outcome: :accept} = outcome
@@ -97,12 +93,7 @@ defmodule MailglassInbound.Test.IngressTest do
       raw = Fixtures.build_postmark_payload(provider_message_id: "pm-converge")
 
       for _ <- 1..3 do
-        assert {:ok, _} =
-                 Ingress.receive_provider_payload(:postmark, raw,
-                   repo: TestRepo,
-                   tenant_id: "provider-tenant",
-                   routes: accept_routes()
-                 )
+        assert {:ok, _} = Ingress.receive_provider_payload(:postmark, raw, postmark_opts())
       end
 
       assert record_count() == 1
@@ -127,6 +118,24 @@ defmodule MailglassInbound.Test.IngressTest do
   end
 
   defp accept_routes, do: [%Route{mailbox: AcceptMailbox}]
+
+  # Postmark verify! is real (T-47-11, never weakened): it requires a
+  # basic_auth config AND a matching `authorization` header on the request.
+  # Supply valid credentials + the matching Basic header so the real verifier
+  # passes.
+  defp postmark_opts do
+    user = "pm-user"
+    pass = "pm-pass"
+    encoded = Base.encode64("#{user}:#{pass}")
+
+    [
+      repo: TestRepo,
+      tenant_id: "provider-tenant",
+      routes: accept_routes(),
+      config: %{basic_auth: {user, pass}},
+      headers: [{"authorization", "Basic #{encoded}"}]
+    ]
+  end
 
   defp record_count, do: TestRepo.aggregate(InboundRecord, :count)
 
