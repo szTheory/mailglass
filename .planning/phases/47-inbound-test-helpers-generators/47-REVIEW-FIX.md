@@ -1,191 +1,141 @@
 ---
 phase: 47-inbound-test-helpers-generators
-fixed_at: 2026-05-24T11:03:00Z
+fixed_at: 2026-05-24T13:30:00Z
 review_path: .planning/phases/47-inbound-test-helpers-generators/47-REVIEW.md
-iteration: 1
+iteration: 2
 findings_in_scope: 7
 fixed: 7
 skipped: 0
 status: all_fixed
 ---
 
-# Phase 47: Code Review Fix Report
+# Phase 47: Code Review Fix Report (Iteration 2)
 
-**Fixed at:** 2026-05-24T11:03:00Z
-**Source review:** .planning/phases/47-inbound-test-helpers-generators/47-REVIEW.md
-**Iteration:** 1
+**Source review:** `.planning/phases/47-inbound-test-helpers-generators/47-REVIEW.md`
+**Iteration:** 2
+**fix_scope:** all (CR + WR + IN)
 
-**Summary:**
-- Findings in scope: 7 (CR-01 + WR-01..WR-06; Info findings IN-01..IN-04 out of scope)
+**Summary**
+- Findings in scope: 7
 - Fixed: 7
 - Skipped: 0
+- Status: `all_fixed`
 
-All work was done in an isolated git worktree on branch `gsd-reviewfix/47-…`,
-one atomic commit per finding, then fast-forwarded back to `main`. The repo's
-pre-existing unrelated dirty files (`.planning/REQUIREMENTS.md`, `CLAUDE.md`,
-`MAINTAINING.md`, root `mix.exs`/`mix.lock`, `test/mailglass/docs_contract_test.exs`)
-were never staged — each commit used explicit per-path `git add` / `git commit -- <path>`.
-The root `mix.lock` drift introduced by `mix deps.get` during testing was reverted
-(`git checkout -- mix.lock`) and never committed.
+All work was done in an isolated worktree on `gsd-reviewfix/47-43989`, one atomic
+commit per finding, then fast-forwarded to `main`. No pre-existing dirty files
+were staged; no `mix.lock` drift was committed (reverted after each
+`mix deps.get`). All inbound test runs used `--seed 0`.
+
+The iteration-1 fix report (CR-01 + WR-01..WR-06) is preserved as
+`47-REVIEW-FIX.iter1.md`.
 
 ## Fixed Issues
 
-### CR-01: Shipped README / MailboxCase usage example is broken — second assertion always fails
+### CR-01: `receive_provider_payload/3` broken for `:sendgrid` and `:mailgun`
 
-**Files modified:** `mailglass_inbound/README.md`, `mailglass_inbound/lib/mailglass_inbound/mailbox_case.ex`
-**Commit:** 67e0828
-**Applied fix:** Rewrote the canonical onboarding example in both the README and
-the `MailboxCase` moduledoc to drive ONE assertion per capture (matching the
-minimal correct form in the review and the discipline already encoded in the
-package's own test files). Destructured the `Test.Ingress.receive_inbound/2`
-return to show the accept outcome + routed mailbox, dropped the second consuming
-`assert_inbound_accepted()`, and added an inline note explaining that each
-`assert_inbound_*` consumes the captured tuple (`assert_received`), so a second
-assertion needs a second drive.
-**Verification:** Tier 1 (re-read) + Tier 2 (`Code.string_to_quoted!` parse-check
-on `mailbox_case.ex`). Documentation-only; no test asserts the example text.
+**Files:** `mailglass_inbound/lib/mailglass_inbound/fixtures.ex`, `mailglass_inbound/lib/mailglass_inbound/test/ingress.ex`
+**Commit:** `42b80b9`
+**Option taken:** Review's strongly-preferred **option (a)** — keep the four-provider
+contract whole by making the fixtures self-sign against documented defaults
+(mirroring `build_ses_sns_payload/1`'s self-sign-against-a-primed-cert pattern).
+Option (b) was not needed.
+**Applied fix:**
+- SendGrid: `build_request(:sendgrid, …)` now honors `opts[:headers]` like the
+  `:postmark` clause (it was silently dropping them). `build_sendgrid_payload/1`
+  emits an `authorization: Basic …` header self-signed against
+  `Fixtures.sendgrid_fixture_config/0` and returns a `:config`; the driver
+  defaults config from the fixture's `:config` (mirrors `:ses`).
+- Mailgun: `build_mailgun_payload/1` HMAC-signs the `timestamp`/`token`/`signature`
+  triple against `Fixtures.mailgun_fixture_config/0` (current timestamp inside
+  verify!'s skew tolerance; fresh nonce token); `build_request(:mailgun, …)`
+  defaults config from the fixture's `:config`.
+- The real `verify!` seams are never weakened — the fixtures now satisfy them.
+  Added public `sendgrid_fixture_config/0` and `mailgun_fixture_config/0`.
+  Updated the `receive_provider_payload/3` doc.
+**Note:** This is a behavioral/logic fix, empirically validated — the WR-08 tests
+fail before this fix and pass after (proven by stashing the source and re-running).
 
-### WR-01: Version metadata drift across mix.exs, `@since` tags, and README deps
+### WR-08: No driver-level test for `:sendgrid`/`:mailgun`
 
-**Files modified:** `mailglass_inbound/lib/mailglass_inbound/test_assertions.ex`, `mailglass_inbound/docs/api_stability.md`, `mailglass_inbound/README.md`, `mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs`
-**Commit:** f912ffa
-**Applied fix:** Resolved to the internally consistent published truth `0.1.0`
-(the package's `mix.exs @version`, left unchanged as the source of truth):
-- `TestAssertions` `@doc since: "0.2.0"` → `"0.1.0"` (all occurrences).
-- `api_stability.md` `@since 0.2.0` for `SignatureError` and `S3FetchError` → `0.1.0`
-  (exactly the two references WR-01 names).
-- README install pins `{:mailglass_inbound, "~> 0.3.2"}` → `~> 0.1`, and
-  `{:mailglass, "~> 0.3.2"}` → `~> 1.0` (matching the core `@version "1.0.0"` and
-  the `{:mailglass, "== 1.0.0"}` publish pin in inbound `mix.exs`).
-- Added a docs-contract test asserting the README `mailglass_inbound` pin's
-  `major.minor` equals `Mix.Project.config()[:version]`, so the pin can never
-  drift from the artifact again.
+**Files:** `mailglass_inbound/test/mailglass_inbound/test/ingress_test.exs`
+**Commit:** `f277ff9`
+**Applied fix:** Added three `receive_provider_payload/3` tests (SendGrid
+out-of-the-box accept, SendGrid raw_mime dedupe convergence through the verify!
+seam, Mailgun out-of-the-box accept). Verified they fail against pre-CR-01 source
+and pass after.
 
-Scope note: other `@doc since: "0.2.0"` / `"0.5.0"` tags exist in non-phase-47
-modules (`signature_error.ex`, `s3_fetch_error.ex`, `mime.ex`, `telemetry.ex`,
-`optional_deps.ex`, `mailglass_inbound.ex`, …). WR-01's `File:` list scopes the
-fix to the `TestAssertions` macros, the two `api_stability.md` references, and
-the README pins; those source-module tags are pre-existing and out of this
-finding's scope, so they were intentionally left untouched.
-**Verification:** Tier 1 + Tier 2 (parse-check on both `.ex` files) + ran
-`mix test test/mailglass_inbound/docs_contract_test.exs --seed 0` → 13 tests,
-0 failures (the new pin-tracking assertion passes; clean compile, no warnings).
+### WR-07: Helpers steer adopters to the internal `%Route{}` struct
 
-### WR-02: `TestAssertions` outcome/routing assertions document "most recent" but read FIFO (oldest)
+**Files:** `lib/mix/tasks/mailglass.gen.mailbox.ex`, `mailglass_inbound/README.md`, `mailglass_inbound/docs/api_stability.md`, `mailglass_inbound/lib/mailglass_inbound/test/ingress.ex`
+**Commit:** `d395116`
+**Option taken:** Review's **second option** (most consistent with the
+README/MailboxCase, which already drive routing abstractly): point adopters at the
+stable `Router` authoring seam via the `:router` option instead of the
+`@moduledoc false` struct.
+**Applied fix:** gen.mailbox scaffold now drives `router: <App>.InboundRouter`
+(the route stub it already adds); `Test.Ingress.receive_inbound/2` `:routes` doc
+reframes `:router` as the adopter input and `:routes` as package-internal; README
+example uses `router:`; api_stability.md states the `Route` struct is not part of
+the contract.
 
-**Files modified:** `mailglass_inbound/lib/mailglass_inbound/test_assertions.ex`
-**Commit:** 0955571
-**Applied fix:** Replaced "the most recent captured inbound" with accurate
-language across all six outcome/routing assertion `@doc`s
-(`assert_inbound_accepted/ignored/rejected/bounced`, `assert_inbound_routed_to`,
-`assert_inbound_no_match`): "the next captured inbound" plus a note that
-`assert_received` is FIFO (oldest unconsumed) and consumes the matched tuple, so
-drive one message per assertion. This pairs with the CR-01 one-drive-per-assertion
-discipline.
-**Verification:** Tier 1 + Tier 2 (parse-check) + confirmed zero remaining
-"most recent" occurrences. Documentation-only.
+### IN-01: gen.inbound_router scaffolds a route to non-existent `SampleMailbox`
 
-### WR-03: `gen.mailbox` test scaffold's commented hint references undefined functions and a non-existent option
+**Files:** `lib/mix/tasks/mailglass.gen.inbound_router.ex`
+**Commit:** `138b878`
+**Applied fix:** Added a comment block explaining `SampleMailbox` is a placeholder
+and how to replace it; kept the active route so the scaffold stays a working
+starting point.
 
-**Files modified:** `lib/mix/tasks/mailglass.gen.mailbox.ex`
-**Commit:** 6e44f97
-**Applied fix:** Threaded the generated `mailbox` module into `test_stub_body/2`
-and rewrote the commented hint to the actual capture lane the helpers exist for:
-`Fixtures.build_inbound_message(subject: "hi")` →
-`Test.Ingress.receive_inbound(message, routes: [%MailglassInbound.Router.Route{mailbox: <GeneratedMailbox>}])`
-→ `assert_inbound_accepted()`, with the one-assertion-per-drive note. This fixes
-all three defects: undefined `build_inbound_message/1` (now `Fixtures.`-qualified),
-the non-existent `:recipient` option (now uses the real `:subject`/routes lane),
-and the undefined bare `process/1` (replaced by the driven capture + assertion).
-**Verification:** Tier 1 + Tier 2 (parse-check) + ran
-`mix test test/mix/tasks/mailglass.gen.mailbox_test.exs --seed 0` → 6 tests,
-0 failures. The generator emits the hint commented out, so the runnable
-correctness is the load-bearing aspect; generator tests confirm generation works.
+### IN-02: `parse_module/1` mints odd atoms from arbitrary strings
 
-### WR-04: `__match_keyword__` emits a self-contradictory error for non-binary `:from`/`:to`
+**Files:** `lib/mix/tasks/mailglass.gen.inbound_route.ex`
+**Commit:** `645a08d`
+**Applied fix:** `parse_module/1` validates the arg matches dot-separated
+CamelCase (`~r/^[A-Z]\w*(\.[A-Z]\w*)*$/`) and `Mix.raise`s a clear message
+otherwise. The recipient `pattern` positional is unaffected.
 
-**Files modified:** `mailglass_inbound/lib/mailglass_inbound/test_assertions.ex`, `mailglass_inbound/test/mailglass_inbound/test_assertions_test.exs`
-**Commit:** 8a337ee
-**Applied fix:** Added explicit `{:from, v}` / `{:to, v}` clauses (after the
-`is_binary` guards, before the catch-all) that flunk with
-"from/to matcher expects a bare address string, got: …" so a non-binary value
-(e.g. the address-list shape the struct stores) no longer falls through to the
-"Unsupported matcher key: :from. Supported: … :from …" catch-all message that
-listed `:from` as both unsupported and supported. Added a regression test
-asserting the accurate message and the absence of the contradictory text for
-both `:from` and `:to`.
-**Verification:** Tier 1 + Tier 2 (parse-check) + ran
-`mix test test/mailglass_inbound/test_assertions_test.exs --seed 0` → 16 tests,
-0 failures. This finding touched runtime matching logic; the new regression test
-empirically confirms the new clauses fire with the correct message (not a flag
-needing human verification — behavior is asserted by the suite).
+### IN-03: predicate clause does not handle captured-function syntax
 
-### WR-05: `Test.Ingress.receive_provider_payload(:ses, …)` primes the process-global `CertCache` ETS but never resets it
+**Files:** `mailglass_inbound/lib/mailglass_inbound/test_assertions.ex`, `mailglass_inbound/test/mailglass_inbound/test_assertions_test.exs`
+**Commit:** `883c44e`
+**Applied fix:** Added a `{:&, _, _}` macro clause mirroring `{:fn, _, _}` plus a
+regression test. Verified the test fails with `FunctionClauseError` without the
+clause and passes with it.
 
-**Files modified:** `mailglass_inbound/lib/mailglass_inbound/fixtures.ex`, `mailglass_inbound/lib/mailglass_inbound/test/ingress.ex`
-**Commit:** 8ccf099
-**Applied fix:** Chose the review's preferred documentation fix (keeps the helper
-free of an `:ex_unit` runtime dependency at call time). Added a prominent
-`{: .warning}` admonition to `Fixtures.build_ses_sns_payload/1` and a "SES
-cross-test hygiene" section to the `Test.Ingress` moduledoc, both stating that
-SES fixtures prime the process-global `Mailglass.Webhook.Providers.SES.CertCache`
-(shared across concurrent async tests, 24h non-evicting entries) and that suites
-not using `MailglassInbound.MailboxCase` must `setup do: …CertCache.reset()`
-between tests. Noted that `MailboxCase` already resets it and the
-Postmark/SendGrid/Mailgun lanes touch no process-global state.
-**Verification:** Tier 1 + Tier 2 (parse-check on both `.ex` files) + clean
-`mix compile --warnings-as-errors` on the inbound package. Documentation-only.
+### IN-04: `Test.Ingress` "emits no telemetry of its own" can mislead
 
-### WR-06: Documented `Test.Ingress` raw_mime-dedupe path for SendGrid/SES via `receive_inbound/2` is untested
-
-**Files modified:** `mailglass_inbound/test/mailglass_inbound/test/ingress_test.exs`
-**Commit:** 5db3bf8
-**Applied fix:** Added two tests to the `receive_inbound/2` describe block:
-1. A SendGrid convergence test driving the same canonical message + identical
-   `evidence: %{raw_mime: ...}` three times, asserting `record_count() == 1` and
-   `fresh_run_count() == 1` (proves the documented `md5(raw_mime)` dedupe path
-   converges on replay — the existing convergence proofs only used
-   `provider_message_id` dedupe or `receive_provider_payload`).
-2. A discrimination test: two distinct `raw_mime` payloads (with `provider_message_id: nil`
-   to model real SendGrid, so the only discriminator is the fingerprint) produce
-   two records and two fresh runs.
-
-Implementation note discovered while writing the test: a unique index exists on
-`(tenant_id, provider, provider_message_id) WHERE provider_message_id IS NOT NULL`
-(`add_postmark_ingress_idempotency` migration). The discrimination test therefore
-uses `provider_message_id: nil` so the second insert is gated purely by the
-raw_mime fingerprint, not the provider-id index. The convergence test reuses a
-single message (auto-id) safely because the raw_mime dedupe short-circuits to
-`:duplicate` before any second insert.
-**Verification:** Tier 1 + Tier 2 (parse-check) + ran
-`mix test test/mailglass_inbound/test/ingress_test.exs --seed 0` → 8 tests,
-0 failures (6 original + 2 new). Both new tests pass, proving the contract holds
-and the fingerprint discriminates.
-
-## Post-fix verification (cross-file)
-
-Ran all four touched inbound test files together:
-`mix test test_assertions_test.exs test/ingress_test.exs mailbox_case_test.exs docs_contract_test.exs --seed 0`
-→ **40 tests, 0 failures.** Generator suite
-`mix test test/mix/tasks/mailglass.gen.mailbox_test.exs --seed 0` → 6 tests, 0 failures.
-The known intermittent inbound flake (DB pool tcp recv:closed) was not hit;
-`--seed 0` was used throughout for a deterministic signal.
-
-Which findings were verified green vs. documentation-only:
-- Code/test-behavior verified green by the suite: WR-01 (docs-contract test),
-  WR-03 (generator test), WR-04 (matcher regression test), WR-06 (dedupe tests).
-- Documentation-only (parse-checked + compiled, no test exercises the prose):
-  CR-01, WR-02, WR-05.
+**Files:** `mailglass_inbound/lib/mailglass_inbound/test/ingress.ex`
+**Commit:** `eeab4a7`
+**Applied fix:** Reworded the PII-posture moduledoc to "adds no telemetry of its
+own (the `Execution.execute/2` it drives emits the normal PII-free execution
+span)".
 
 ## Skipped Issues
 
-None — all 7 in-scope findings were fixed.
+None.
 
-(Info findings IN-01..IN-04 were explicitly out of scope for this `critical_warning`
-run and were not attempted.)
+## Verification performed
+
+- Affected inbound suites (`ingress_test`, `fixtures_test`, `test_assertions_test`,
+  `docs_contract_test`): 49/49 pass, `--seed 0`.
+- Generator suites (`gen.inbound_router`, `gen.inbound_route`, `gen.mailbox`):
+  15/15 pass, `--seed 0`.
+- `mix compile --warnings-as-errors` and
+  `mix compile --no-optional-deps --warnings-as-errors` for the inbound package:
+  both clean.
+- Each design-bearing/logic finding (CR-01, WR-08, IN-03) was proven
+  regression-meaningful by reverting the fix and confirming the test fails.
+
+## Cleanup
+
+Transactional cleanup tail completed in order: fast-forward `main` → remove
+worktree → delete temp branch `gsd-reviewfix/47-43989` → drop recovery sentinel.
+Final state verified: no orphan reviewfix worktree/branch, sentinel absent,
+pre-existing dirty files (`CLAUDE.md`, `MAINTAINING.md`, root `mix.exs`/`mix.lock`,
+`test/mailglass/docs_contract_test.exs`, `guides/jobs.md`) untouched.
 
 ---
 
-_Fixed: 2026-05-24T11:03:00Z_
+_Fixed: 2026-05-24T13:30:00Z_
 _Fixer: Claude (gsd-code-fixer)_
-_Iteration: 1_
+_Iteration: 2_
