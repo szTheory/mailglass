@@ -199,4 +199,23 @@ defmodule MailglassInbound.DocsContractTest do
     assert maintaining =~ "mailglass_inbound"
     assert maintaining =~ "mix verify.stability_contract"
   end
+
+  # WR-01: keep the README install snippet's `mailglass_inbound` dep pin from
+  # drifting away from the published package version. The README's `~> X.Y`
+  # major.minor must match `Mix.Project.config()[:version]` so a copy-pasted
+  # install line always resolves against the artifact this repo publishes.
+  test "readme mailglass_inbound dep pin major.minor matches the package version" do
+    readme = File.read!(@readme_path)
+
+    [_, major_minor] =
+      Regex.run(~r/\{:mailglass_inbound,\s*"~>\s*(\d+\.\d+)/, readme) ||
+        flunk("README is missing a `{:mailglass_inbound, \"~> X.Y\"}` dep pin")
+
+    version = Mix.Project.config()[:version]
+    [major, minor | _] = String.split(version, ".")
+
+    assert major_minor == "#{major}.#{minor}",
+           "README pins mailglass_inbound to ~> #{major_minor} but the package " <>
+             "version is #{version} (expected ~> #{major}.#{minor})"
+  end
 end

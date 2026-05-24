@@ -226,7 +226,7 @@ Documented guarantees:
 Stable, **no-recovery** structured error for inbound provider signature
 verification failures (matched by struct, never by message string — consistent
 with the project's "errors as a public API contract" posture and the
-no-recovery contract of core `Mailglass.SignatureError`). `@since 0.2.0`.
+no-recovery contract of core `Mailglass.SignatureError`). `@since 0.1.0`.
 
 Closed `:type` set (the locked contract):
 
@@ -250,7 +250,7 @@ Documented guarantees:
 ### `MailglassInbound.S3FetchError`
 
 Stable structured error for AWS SES inbound S3-object fetch failures (matched by
-struct, never by message string). `@since 0.2.0`.
+struct, never by message string). `@since 0.1.0`.
 
 Closed `:type` set (the locked contract):
 
