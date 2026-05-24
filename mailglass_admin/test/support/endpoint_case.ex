@@ -55,7 +55,10 @@ defmodule MailglassAdmin.TestAdopter.Router do
         recent_auth_at: "recent_auth_at"
       ],
       on_mount: [{MailglassAdmin.TestOperatorHook, :audit}],
-      unauthorized_path: "/login"
+      unauthorized_path: "/login",
+      # CONTEXT D-48-07: thread the synthetic inbound router so Wave 2's
+      # routing-trace card has declared inbound routes to reflect.
+      inbound_router: MailglassAdmin.TestSupport.InboundTestRouter
   end
 end
 

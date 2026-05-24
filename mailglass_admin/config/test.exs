@@ -23,6 +23,13 @@ config :mailglass, :tracking,
   host: "localhost:4000",
   salts: ["test-salt"]
 
+# Point the MailglassInbound.Repo facade at the admin test repo so the inbound
+# read-models (Internal.Operator.{Records,Timeline,Detail}) and replay seam
+# resolve a repo under the admin suite. The facade RAISES when :repo is unset
+# (mailglass_inbound/lib/mailglass_inbound/repo.ex). Inbound migrations are run
+# against this same DB in test/test_helper.exs so InboundLive fixtures insert.
+config :mailglass_inbound, :repo, MailglassAdmin.TestRepo
+
 # Synthetic adopter endpoint for router + LiveView test coverage.
 # See test/support/endpoint_case.ex. The `secret_key_base` literal is
 # 72 chars (>= Phoenix's 64-byte minimum).

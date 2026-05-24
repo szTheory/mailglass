@@ -76,6 +76,14 @@ defmodule MailglassAdmin.MixProject do
       # immediately. Published Hex tarball: pinned version match (linked
       # versions per CONTEXT D-02 / DIST-01 / PREV-01).
       mailglass_dep(),
+      # Optional sibling: the admin LiveView reads inbound rows through the
+      # `MailglassAdmin.OptionalDeps.MailglassInbound` runtime gateway. The dep
+      # is FLOATING (`~> 0.2`, never `==`) and `optional: true` so the
+      # `mix compile --no-optional-deps --warnings-as-errors` lane compiles with
+      # inbound stripped (CONTEXT D-48-01, Pitfall 4). It is INTENTIONALLY OUT of
+      # the release-please PINS array — a `==` cross-line pin into a 0.2.x package
+      # is unsatisfiable; the gateway, not a version pin, is the integration seam.
+      mailglass_inbound_dep(),
       {:phoenix, "~> 1.8"},
       {:phoenix_live_view, "~> 1.1"},
       {:phoenix_html, "~> 4.1"},
@@ -128,6 +136,28 @@ defmodule MailglassAdmin.MixProject do
       {:mailglass, "== 1.0.0"}
     else
       {:mailglass, path: "..", override: true}
+    end
+  end
+
+  # CONTEXT D-48-01: the optional inbound sibling. Mirrors `mailglass_dep/0`'s
+  # MIX_PUBLISH branch STRUCTURE (path dep for local-dev, version constraint when
+  # publishing) but is FLOATING (`~> 0.2`, NEVER `== X.Y.Z`) and `optional: true`.
+  #
+  # Why floating, not pinned: `mailglass_inbound` is a 0.2.x package whose own
+  # version is NOT linked to the core `mailglass` group version. A `==` pin (the
+  # shape release-please's sed step writes for the linked siblings) would write an
+  # unsatisfiable cross-line version. This dep is therefore deliberately ABSENT
+  # from the release-please PINS array in `.github/workflows/release-please.yml`.
+  #
+  # The admin reads inbound rows exclusively through the
+  # `MailglassAdmin.OptionalDeps.MailglassInbound` runtime gateway
+  # (`Code.ensure_loaded?(MailglassInbound)` + `apply/3`), so `optional: true`
+  # keeps the `--no-optional-deps` compile lane green with inbound stripped.
+  defp mailglass_inbound_dep do
+    if System.get_env("MIX_PUBLISH") == "true" do
+      {:mailglass_inbound, "~> 0.2", optional: true}
+    else
+      {:mailglass_inbound, path: "../mailglass_inbound", optional: true}
     end
   end
 

@@ -167,6 +167,16 @@ defmodule MailglassAdmin.Router do
       default: "/",
       doc: "Redirect target when operator access is denied."
     ],
+    inbound_router: [
+      type: {:or, [:atom, nil]},
+      default: nil,
+      doc:
+        "Optional adopter router module declaring `MailglassInbound.Router` routes " <>
+          "(CONTEXT D-48-07). When set, the operator dashboard's routing-trace card " <>
+          "reflects the declared inbound routes via `__mailglass_inbound_routes__/0`. " <>
+          "`nil` (the default) disables the inbound surface — the dashboard renders " <>
+          "without the routing-trace card."
+    ],
     as: [
       type: :atom,
       default: :mailglass_admin,
@@ -297,7 +307,12 @@ defmodule MailglassAdmin.Router do
       "tenant_id" => get_optional_session(conn, session_opts[:tenant_id]),
       "auth_method" => get_optional_session(conn, session_opts[:auth_method]),
       "recent_auth_at" => get_optional_session(conn, session_opts[:recent_auth_at]),
-      "live_session_name" => opts[:live_session_name]
+      "live_session_name" => opts[:live_session_name],
+      # CONTEXT D-48-07: the inbound router module is a compile-time opt, not a
+      # session value — surfaced here (as an atom, never cookie-sourced) so the
+      # operator LiveView can reflect declared inbound routes for the
+      # routing-trace card without an inbound→admin compile dependency.
+      "inbound_router" => opts[:inbound_router]
     }
   end
 
