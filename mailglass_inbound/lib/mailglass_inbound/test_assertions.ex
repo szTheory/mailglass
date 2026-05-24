@@ -128,6 +128,22 @@ defmodule MailglassInbound.TestAssertions do
   end
 
   @doc since: "0.1.0"
+  defmacro assert_inbound_received({:&, _, _} = fun_ast) do
+    # Style 4 (capture form): predicate — `&pred/1`. Mirrors the `fn` clause so a
+    # captured function does not fall through to the keyword clause and crash its
+    # `is_list/1` guard with a raw FunctionClauseError (IN-03).
+    quote do
+      assert_received {:inbound, msg, _outcome, _route},
+                      "No inbound message received to apply the predicate to."
+
+      fun = unquote(fun_ast)
+
+      assert fun.(msg),
+             "assert_inbound_received predicate returned false for message #{inspect(msg)}"
+    end
+  end
+
+  @doc since: "0.1.0"
   defmacro assert_inbound_received(params) do
     # Style 2: keyword list. Matched at runtime by __match_keyword__/2.
     quote do

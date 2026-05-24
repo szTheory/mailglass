@@ -114,7 +114,25 @@ defmodule MailglassInbound.TestAssertionsTest do
       assert_inbound_received(fn msg -> msg.subject == "Predicate subject" end)
       assert_raises_assertion(fn -> assert_inbound_received(fn msg -> msg.subject == "no" end) end)
     end
+
+    # IN-03: a captured function (`&pred/1`, AST `{:&, _, _}`) used to fall through
+    # to the keyword clause and crash its is_list/1 guard with a raw
+    # FunctionClauseError. The dedicated capture clause now dispatches it like a
+    # plain predicate.
+    test "style 4 (capture form): &predicate/1 over the captured message" do
+      capture(subject: "Capture subject")
+      assert_inbound_received(&__MODULE__.subject_capture?/1)
+
+      capture(subject: "Other subject")
+      assert_raises_assertion(fn -> assert_inbound_received(&__MODULE__.never_matches?/1) end)
+    end
   end
+
+  @doc false
+  def subject_capture?(msg), do: msg.subject == "Capture subject"
+
+  @doc false
+  def never_matches?(_msg), do: false
 
   describe "outcome assertions key off the locked enum (ITEST-02)" do
     test "accepted matches :accept and refutes the others" do
