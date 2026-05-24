@@ -36,7 +36,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 - [x] **Phase 45: Inbound Telemetry + Idempotency Foundation** — 4-level telemetry spans across all inbound stages, shared MIME module, and 1000-replay convergence proof (12 plans: 4 functional + 8 gap-closure across 2 rounds) — completed 2026-05-23
 - [x] **Phase 46: Mailgun + SES Inbound Ingress** — Lift outbound verifiers into inbound; ship Mailgun (HMAC) and SES (SNS X.509 + S3 fetch) provider plugs (3 plans, 2 waves) (completed 2026-05-23)
 - [x] **Phase 47: Inbound Test Helpers + Generators** — `TestAssertions`, `MailboxCase`, `Test.Ingress`, code-built fixtures, and 3 Igniter generators (completed 2026-05-24)
-- [ ] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card
+- [ ] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card (3 plans, 3 waves)
 - [ ] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only
 - [ ] **Phase 50: Inbound Documentation Pass** — Install / testing / operator / Mailgun + SES setup / routing-debug guides
 - [ ] **Phase 50.5: v1.2 Release Ceremony** — Linked-version cut: `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** (inbound stays on 0.x version line until Conductor + relay providers land). Ships all v1.2 inbound work to adopters.
@@ -166,7 +166,21 @@ Plans:
   4. For a `:no_match` execution row, the routing-trace card renders a matcher diff against `__mailglass_inbound_routes__/0` showing every route that was tried and which clause failed — answering "why didn't this match `SupportMailbox`?" without `iex` archaeology.
   5. New inbound records appear in the list card without manual refresh because `InboundLive` subscribes to `MailglassAdmin.PubSub.Topics.inbound_record_inserted/1` (per-tenant); error messages are composed and specific (no "Oops!"), honoring the brand voice.
 
-**Plans**: TBD
+**Plans**: 3 plans (3 waves)
+
+Plans:
+**Wave 1**
+
+- [ ] 48-01-PLAN.md — Wave 0 seams: floating optional inbound dep + test-infra (inbound repo/migrations/:inbound_router opt), `Router.Matcher.explain/2` reflection, `Internal.Operator.*` tenant-scoped read-model, `OptionalDeps.MailglassInbound` gateway, `inbound_record_inserted/1` topic builder, `mask_recipient/1` promotion (IADM-01, IADM-04, IADM-05) [Wave 1]
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 48-02-PLAN.md — InboundLive shell + cloned Inbound.* components (list/detail/timeline/filters/replay-modal/destructive-action) + `/inbound` route in operator live_session + nav, tenant-required-or-empty (IADM-01, IADM-02, IADM-07) [Wave 2]
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 48-03-PLAN.md — Routing-trace card + default-redacted evidence card + tenant-gated/capability-gated replay confirm (`:no_match` blocked) + live PubSub updates + brand-voice/PII sweep (IADM-02, IADM-03, IADM-04, IADM-05, IADM-06) [Wave 3]
+
 **UI hint**: yes
 
 **Hardest sub-tasks:**

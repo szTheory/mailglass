@@ -2,7 +2,7 @@
 phase: 48
 slug: inbound-admin-liveview
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-05-24
 ---
@@ -46,17 +46,17 @@ created: 2026-05-24
 
 | Inv | Requirement | Layer | Highest-signal assertion | Automated Command | File Exists | Status |
 |-----|-------------|-------|--------------------------|-------------------|-------------|--------|
-| V1 | IADM-01 | LiveView + unit | Blank tenant → empty-state copy, `[]`, NO other-tenant id/recipient leak; read-model unit: tenant A query never returns tenant B rows | `mix test .../inbound_live_test.exs` + `cd mailglass_inbound && mix test .../internal/operator/records_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| V2 | IADM-03 | integration | Replay a *matched* record → NEW `ExecutionRun` `source: :replay` appended; count +1, no UPDATE, prior row byte-identical | `cd mailglass_inbound && mix test .../internal/replay_test.exs --seed 0` + admin modal integration | ❌ W0 | ⬜ pending |
-| V3 | IADM-04 | unit (property) | `Enum.all?(explain(route,msg), &last) == matches_route?(route,msg)` for all route×message combos (3 matcher kinds × {present,absent,nil} × header AND) | `cd mailglass_inbound && mix test .../router/matcher_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| V4 | IADM-07 / arch | compile | `mix compile --no-optional-deps --warnings-as-errors` green with inbound stripped; InboundLive/route/nav no-op; no bare `MailglassInbound.*` escapes the `apply/3` seam | `cd mailglass_admin && mix compile --no-optional-deps --warnings-as-errors` | ✅ | ⬜ pending |
-| V5 | IADM-02 | LiveView + voice | Evidence default-redacted (raw bytes ABSENT until `:reveal_raw`); recipient masked by default; no PII in LiveView telemetry | `mix test .../inbound_live_test.exs` (`refute html =~ raw_recipient`) | ❌ W0 | ⬜ pending |
-| V6 | IADM-03 / IADM-02 | LiveView | `:replay_inbound` denied → composed flash, no run appended; `:reveal_raw` denied → placeholder stays; both ride `Auth.authorize/3` `atom()`, NO new auth module | `mix test .../inbound_live_test.exs` (stub `Auth` returns `{:error, :unauthorized, ...}`) | ❌ W0 | ⬜ pending |
-| V7 | IADM-05 | LiveView | Broadcast `{:inbound_record_inserted, id, meta}` → list prepends tenant-scoped re-fetched record; selection + filter params UNCHANGED | `mix test .../inbound_live_test.exs` | ❌ W0 | ⬜ pending |
-| V8 | IADM-05 | unit | `MailglassAdmin.PubSub.Topics.inbound_record_inserted(t) == MailglassInbound.PubSub.Topics.inbound_record_inserted(t)` | `mix test .../pub_sub/topics_test.exs` | ❌ W0 | ⬜ pending |
-| V9 | IADM-05 | credo | Both topic builders pass `Mailglass.Credo.PrefixedPubSubTopics` (LINT-06) — no literal topic strings at call sites | `mix credo --strict` | ✅ | ⬜ pending |
-| V10 | IADM-06 | voice | Rendered HTML for every error/empty/blocked state matches locked UI-SPEC copy; no "Oops/Whoops/Something went wrong" | `mix test .../inbound_live_test.exs` (voice greps) | ❌ W0 | ⬜ pending |
-| V11 | IADM-04 / IADM-06 | LiveView | Replaying a `:no_match` record surfaces `Replay blocked: mailbox module not found.` (maps `{:replay_mailbox_missing, ...}`); no run appended | `mix test .../inbound_live_test.exs` | ❌ W0 | ⬜ pending |
+| V1 | IADM-01 (48-01-T3 unit, 48-02-T2 LiveView) | LiveView + unit | Blank tenant → empty-state copy, `[]`, NO other-tenant id/recipient leak; read-model unit: tenant A query never returns tenant B rows | `mix test .../inbound_live_test.exs` + `cd mailglass_inbound && mix test .../internal/operator/records_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| V2 | IADM-03 (48-03-T2) | integration | Replay a *matched* record → NEW `ExecutionRun` `source: :replay` appended; count +1, no UPDATE, prior row byte-identical | `cd mailglass_inbound && mix test .../internal/replay_test.exs --seed 0` + admin modal integration | ❌ W0 | ⬜ pending |
+| V3 | IADM-04 (48-01-T2) | unit (property) | `Enum.all?(explain(route,msg), &last) == matches_route?(route,msg)` for all route×message combos (3 matcher kinds × {present,absent,nil} × header AND) | `cd mailglass_inbound && mix test .../router/matcher_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| V4 | IADM-07 / arch (48-01-T1, re-checked 48-02-T3 + 48-03-T3) | compile | `mix compile --no-optional-deps --warnings-as-errors` green with inbound stripped; InboundLive/route/nav no-op; no bare `MailglassInbound.*` escapes the `apply/3` seam | `cd mailglass_admin && mix compile --no-optional-deps --warnings-as-errors` | ✅ | ⬜ pending |
+| V5 | IADM-02 (48-02-T2 masking, 48-03-T1 evidence, 48-03-T3 sweep) | LiveView + voice | Evidence default-redacted (raw bytes ABSENT until `:reveal_raw`); recipient masked by default; no PII in LiveView telemetry | `mix test .../inbound_live_test.exs` (`refute html =~ raw_recipient`) | ❌ W0 | ⬜ pending |
+| V6 | IADM-03 / IADM-02 (48-03-T2) | LiveView | `:replay_inbound` denied → composed flash, no run appended; `:reveal_raw` denied → placeholder stays; both ride `Auth.authorize/3` `atom()`, NO new auth module | `mix test .../inbound_live_test.exs` (stub `Auth` returns `{:error, :unauthorized, ...}`) | ❌ W0 | ⬜ pending |
+| V7 | IADM-05 (48-03-T2) | LiveView | Broadcast `{:inbound_record_inserted, id, meta}` → list prepends tenant-scoped re-fetched record; selection + filter params UNCHANGED | `mix test .../inbound_live_test.exs` | ❌ W0 | ⬜ pending |
+| V8 | IADM-05 (48-01-T4) | unit | `MailglassAdmin.PubSub.Topics.inbound_record_inserted(t) == MailglassInbound.PubSub.Topics.inbound_record_inserted(t)` | `mix test .../pub_sub/topics_test.exs` | ❌ W0 | ⬜ pending |
+| V9 | IADM-05 (48-01-T4, 48-03-T3) | credo | Both topic builders pass `Mailglass.Credo.PrefixedPubSubTopics` (LINT-06) — no literal topic strings at call sites | `mix credo --strict` | ✅ | ⬜ pending |
+| V10 | IADM-06 (48-03-T3) | voice | Rendered HTML for every error/empty/blocked state matches locked UI-SPEC copy; no "Oops/Whoops/Something went wrong" | `mix test .../inbound_live_test.exs` (voice greps) | ❌ W0 | ⬜ pending |
+| V11 | IADM-04 / IADM-06 (48-03-T2) | LiveView | Replaying a `:no_match` record surfaces `Replay blocked: mailbox module not found.` (maps `{:replay_mailbox_missing, ...}`); no run appended | `mix test .../inbound_live_test.exs` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky · `❌ W0` = blocked on Wave 0 test infra*
 
@@ -95,4 +95,4 @@ Test-infrastructure gaps that MUST land before implementation tests can pass (fr
 - [ ] Feedback latency < 60s
 - [ ] `nyquist_compliant: true` set in frontmatter (after planner maps task IDs)
 
-**Approval:** pending
+**Approval:** task IDs mapped by planner (48-01..48-03); Wave 0 infra owned by 48-01.
