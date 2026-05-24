@@ -50,6 +50,7 @@ defmodule Mailglass.MixProject do
         "verify.send_pipeline": :test,
         "verify.webhooks": :test,
         "verify.installer": :test,
+        "verify.mix_tasks": :test,
         # Deprecated pass-throughs — remove after one release cycle
         "verify.phase01": :test,
         "verify.phase_01": :test,
@@ -246,6 +247,19 @@ defmodule Mailglass.MixProject do
       ],
       "verify.installer.smoke": [
         "test test/mailglass/install/install_first_preview_smoke_test.exs --warnings-as-errors"
+      ],
+      # Mix-task / generator CLI surface (`mix mailglass.gen.*`, doctor, reconcile,
+      # suppressions.resync). Directory-scoped ON PURPOSE: a file-enumerated list
+      # (as used by the contract aliases below) silently drops newly-added task
+      # tests from CI — the exact drift footgun that left the Phase-47 inbound
+      # generators advisory-only. A directory glob auto-includes every
+      # test/mix/tasks/*_test.exs, is non-vacuous (the dir exists + has tests, so
+      # it can't pass by matching zero tests), and keeps one focused concern per
+      # alias per engineering-DNA. The Igniter generator tests are in-memory
+      # (Igniter.Test) but the core test_helper boots Mailglass.TestRepo, so the
+      # CI job that runs this still needs the test DB created.
+      "verify.mix_tasks": [
+        "test test/mix/tasks/ --warnings-as-errors"
       ],
       "verify.support_contract.core": [
         "test test/mailglass/docs_contract_test.exs test/mailglass/docs/testing_guide_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compatibility_contract_test.exs test/mailglass/docs_migration_smoke_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs --warnings-as-errors"

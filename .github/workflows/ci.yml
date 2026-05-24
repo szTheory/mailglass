@@ -163,6 +163,65 @@ jobs:
       - name: Run core support contract
         run: mix verify.support_contract.core
 
+  mix_task_tests:
+    name: Mix Task Tests (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        run: mix deps.get
+      - name: Wait for postgres + create test DB
+        # The core test_helper.exs boots Mailglass.TestRepo (runs migrations),
+        # so even though the mix.gen.* generator tests run in-memory via
+        # Igniter.Test and never touch the DB, the test run requires the DB.
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: Run mix-task / generator tests
+        # Directory-scoped (test/mix/tasks/) so newly-added task tests can't
+        # silently escape CI — closes the drift gap that left the Phase-47
+        # inbound generators advisory-only. See the verify.mix_tasks alias note.
+        run: mix verify.mix_tasks
+
   inbound_test:
     name: Inbound Test (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
