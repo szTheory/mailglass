@@ -190,6 +190,119 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
+  describe "routing-trace card (IADM-04)" do
+    test "is omitted for a matched record (only :no_match)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "matched@example.com")
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      refute html =~ ~s(data-testid="inbound-routing-trace")
+      refute html =~ "Routing trace"
+    end
+
+    test "renders per-route clause diffs from explain/2 for a :no_match record", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      # A no-match record whose recipient/subject/headers fail the synthetic
+      # router's three routes (support@ recipient, ~r/^\[billing\]/ subject,
+      # x-priority: high header).
+      %{record: record} =
+        InboundFixtures.seed_no_match!(@tenant_id,
+          recipient: "nobody@example.com",
+          subject: "general question",
+          headers: %{}
+        )
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      assert html =~ ~s(data-testid="inbound-routing-trace")
+      assert html =~ "Routing trace"
+      assert html =~ "Why this message did not match"
+
+      # One sub-card per declared route (3 routes in the synthetic router).
+      trace_cards =
+        html
+        |> String.split(~s(data-testid="inbound-route-card"))
+        |> length()
+        |> Kernel.-(1)
+
+      assert trace_cards == 3
+
+      # Mailbox module name appears in the route header (mono).
+      assert html =~ "MailglassAdmin.TestSupport.InboundTestMailbox"
+      # Clause dimensions.
+      assert html =~ "Recipient"
+      assert html =~ "Subject"
+      assert html =~ "Header: x-priority"
+      # Legend (verbatim).
+      assert html =~
+               "Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and ~r/…/ matches by regular expression."
+    end
+
+    test "renders matcher kinds — nil → any, exact verbatim, regex → ~r/, and masks recipient actual",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_no_match!(@tenant_id,
+          recipient: "nomatch@example.com",
+          subject: "general question",
+          headers: %{}
+        )
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      # Exact recipient matcher verbatim (route 1: recipient "support@example.com").
+      assert html =~ "support@example.com"
+      # Regex subject matcher rendered as ~r/ form (route 2: ~r/^\[billing\]/).
+      assert html =~ "~r/"
+      # Wildcard clauses (nil matchers, e.g. the subject on route 1) render "any".
+      assert html =~ ">any<"
+      # The recipient ACTUAL is masked, never raw.
+      assert html =~ "n******@e******.com"
+      refute html =~ "nomatch@example.com"
+      # First failing clause has the error left-border emphasis.
+      assert html =~ "border-l-4 border-error"
+    end
+  end
+
+  describe "evidence card (IADM-02 raw half, V5)" do
+    test "default-renders the redacted placeholder and never leaks raw bytes", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      secret = "TOP-SECRET-RAW-PROVIDER-BYTES-#{System.unique_integer([:positive])}"
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "evidence@example.com",
+          evidence: [
+            raw_payload: %{"body" => secret},
+            verification_facts: %{"spf" => "pass", "dkim" => "pass"}
+          ]
+        )
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      assert html =~ ~s(data-testid="inbound-evidence-card")
+      assert html =~ "Raw provider source"
+      # Redacted-by-default copy (verbatim).
+      assert html =~
+               "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
+
+      # The raw payload bytes MUST be absent from the HTML by default.
+      refute html =~ secret
+      # Verification facts ARE shown (not redacted).
+      assert html =~ "spf"
+    end
+  end
+
   defp inbound_path(params) do
     case URI.encode_query(params) do
       "" -> @base_path

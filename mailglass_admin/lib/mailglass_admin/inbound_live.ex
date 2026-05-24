@@ -24,9 +24,11 @@ defmodule MailglassAdmin.InboundLive do
 
   alias MailglassAdmin.Components
   alias MailglassAdmin.Inbound.DetailHeader
+  alias MailglassAdmin.Inbound.EvidenceCard
   alias MailglassAdmin.Inbound.FiltersForm
   alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.Inbound.ReplayModal
+  alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.Timeline
 
   @gateway MailglassAdmin.OptionalDeps.MailglassInbound
@@ -43,7 +45,12 @@ defmodule MailglassAdmin.InboundLive do
   ]
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
+    # D-48-07: the declared inbound router module is surfaced in the operator
+    # session (router.ex __operator_session__) as an atom, never cookie-sourced.
+    # The routing-trace card reflects its routes via the runtime gateway.
+    inbound_router = session_inbound_router(session)
+
     {:ok,
      socket
      |> assign_new(:operator_actor, fn -> nil end)
@@ -52,6 +59,9 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:selected_record, nil)
      |> assign(:detail, nil)
      |> assign(:runs, [])
+     |> assign(:routing_trace, [])
+     |> assign(:reveal_state, :redacted)
+     |> assign(:inbound_router, inbound_router)
      |> assign(:detail_error, nil)
      |> assign(:replay_modal_open?, false)
      |> assign(:base_path, "/inbound")
@@ -61,6 +71,11 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
      |> assign(:page_title, "mailglass — Inbound")}
   end
+
+  defp session_inbound_router(session) when is_map(session),
+    do: Map.get(session, "inbound_router")
+
+  defp session_inbound_router(_session), do: nil
 
   @impl true
   def handle_params(params, uri, socket) do
@@ -105,6 +120,14 @@ defmodule MailglassAdmin.InboundLive do
 
   def handle_event("close_replay", _params, socket) do
     {:noreply, close_replay_modal(socket)}
+  end
+
+  # Evidence reveal (IADM-02) — capability-gated by the :reveal_raw atom over the
+  # SAME Auth.authorize/3 seam as replay (no new auth surface, D-48-09). On grant
+  # the evidence card renders the raw payload read-only; on denial the redacted
+  # placeholder stays and a brand-voice line explains the gate.
+  def handle_event("reveal_raw", _params, socket) do
+    {:noreply, assign(socket, :reveal_state, authorize_reveal(socket))}
   end
 
   @impl true
@@ -203,7 +226,11 @@ defmodule MailglassAdmin.InboundLive do
               <% true -> %>
                 <DetailHeader.detail_header detail={@detail} />
                 <Timeline.timeline runs={@runs} />
-                <%!-- Wave 2 slots: routing-trace card (when outcome :no_match) + evidence card render here. --%>
+                <RoutingTrace.routing_trace
+                  :if={@detail[:outcome] == :no_match}
+                  trace={@routing_trace}
+                />
+                <EvidenceCard.evidence_card evidence={@detail[:evidence]} reveal_state={@reveal_state} />
             <% end %>
           </section>
         </section>
@@ -229,8 +256,29 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:selected_record, selected_record)
     |> assign(:detail, detail)
     |> assign(:runs, load_timeline(filter_params, selected_inbound_id))
+    |> assign(:routing_trace, routing_trace_for(socket.assigns.inbound_router, detail))
+    # Selecting (or re-selecting) a record collapses the evidence card back to
+    # redacted — reveal is a per-view capability action, never sticky across
+    # selections.
+    |> assign(:reveal_state, :redacted)
     |> assign(:detail_error, detail_error_for(selected_inbound_id, detail))
   end
+
+  # Routing-trace data (IADM-04) — ONLY for a :no_match record. Reflected from the
+  # adopter's declared inbound router via the runtime gateway (D-48-06); the view
+  # never re-implements match semantics. Any other outcome (or no detail) yields
+  # [] so the card is omitted entirely.
+  defp routing_trace_for(_inbound_router, nil), do: []
+
+  defp routing_trace_for(inbound_router, %{outcome: :no_match, record: record}) do
+    if gateway_available?() do
+      apply(@gateway, :explain_routes, [inbound_router, record])
+    else
+      []
+    end
+  end
+
+  defp routing_trace_for(_inbound_router, _detail), do: []
 
   # Tenant-required-or-empty (D-48-04) — the load-bearing security head BEFORE any
   # data call. A blank tenant yields [] without touching the gateway.
@@ -295,6 +343,24 @@ defmodule MailglassAdmin.InboundLive do
 
   defp gateway_available? do
     Code.ensure_loaded?(@gateway) and @gateway.available?()
+  end
+
+  # Rides the existing Auth.authorize/3 atom() action type with :reveal_raw — no
+  # new auth module/plug/behaviour (D-48-09). Returns :revealed on grant, :denied
+  # otherwise. The adapter arrives from the operator Mount hook.
+  defp authorize_reveal(socket) do
+    adapter = socket.assigns.operator_auth[:adapter]
+
+    if is_atom(adapter) and not is_nil(adapter) do
+      case MailglassAdmin.Auth.authorize(adapter, :reveal_raw, %{
+             actor: socket.assigns.operator_actor
+           }) do
+        {:ok, _result} -> :revealed
+        {:error, _reason, _details} -> :denied
+      end
+    else
+      :denied
+    end
   end
 
   # ---------------------------------------------------------------------------

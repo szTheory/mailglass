@@ -41,7 +41,8 @@ if Code.ensure_loaded?(MailglassInbound) do
                 MailglassInbound.Internal.Operator.Timeline,
                 MailglassInbound.Internal.Operator.Detail,
                 MailglassInbound.Router.Matcher,
-                MailglassInbound.Internal.Replay
+                MailglassInbound.Internal.Replay,
+                MailglassInbound.Execution
               ]}
 
     @doc """
@@ -79,6 +80,44 @@ if Code.ensure_loaded?(MailglassInbound) do
     @spec explain(struct(), struct()) :: [tuple()]
     def explain(route, message) do
       apply(MailglassInbound.Router.Matcher, :explain, [route, message])
+    end
+
+    @doc """
+    Builds the per-route routing-trace for one inbound record (IADM-04).
+
+    Reflects the adopter's declared routes from `router_module` via
+    `__mailglass_inbound_routes__/0` (in declared order), reconstructs the
+    canonical `%InboundMessage{}` from the stored record through
+    `MailglassInbound.Execution.message_from_record/1`, and runs the in-package
+    `Router.Matcher.explain/2` per route — so the rendered verdict equals real
+    matcher behavior (D-48-06; the view never re-implements match semantics).
+
+    Returns a list (declared route order) of `%{mailbox: String.t(), verdicts:
+    [tuple()]}`. The `mailbox` is the route's mailbox module rendered as a string;
+    `verdicts` is the per-clause list from `explain/2`. Returns `[]` when
+    `router_module` is `nil` or does not export the reflection function.
+    """
+    @doc since: "0.2.0"
+    @spec explain_routes(module() | nil, struct()) :: [%{mailbox: String.t(), verdicts: [tuple()]}]
+    def explain_routes(nil, _record), do: []
+
+    def explain_routes(router_module, record)
+        when is_atom(router_module) do
+      if Code.ensure_loaded?(router_module) and
+           function_exported?(router_module, :__mailglass_inbound_routes__, 0) do
+        message = apply(MailglassInbound.Execution, :message_from_record, [record])
+
+        router_module
+        |> apply(:__mailglass_inbound_routes__, [])
+        |> Enum.map(fn route ->
+          %{
+            mailbox: inspect(route.mailbox),
+            verdicts: apply(MailglassInbound.Router.Matcher, :explain, [route, message])
+          }
+        end)
+      else
+        []
+      end
     end
 
     @doc """

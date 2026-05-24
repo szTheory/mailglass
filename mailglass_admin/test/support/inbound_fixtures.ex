@@ -26,6 +26,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
         provider_message_id: Keyword.get(opts, :provider_message_id, unique("pmid")),
         envelope_recipient: Keyword.get(opts, :recipient, "support@example.com"),
         subject: Keyword.get(opts, :subject, "Inbound fixture"),
+        headers: Keyword.get(opts, :headers, %{}),
         received_at: Keyword.get(opts, :received_at, DateTime.utc_now())
       })
 
@@ -39,7 +40,10 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
         tenant_id: tenant_id,
         inbound_record_id: record_id,
         provider: Keyword.get(opts, :provider, "mailgun"),
-        raw_payload: Keyword.get(opts, :raw_payload, %{"ok" => true})
+        raw_payload: Keyword.get(opts, :raw_payload, %{"ok" => true}),
+        raw_headers: Keyword.get(opts, :raw_headers, %{}),
+        verification_facts: Keyword.get(opts, :verification_facts, %{}),
+        parse_warnings: Keyword.get(opts, :parse_warnings, %{})
       })
 
     evidence
@@ -79,7 +83,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   """
   def seed_matched!(tenant_id, opts \\ []) do
     record = insert_record!(tenant_id, opts)
-    evidence = insert_evidence!(tenant_id, record.id)
+    evidence = insert_evidence!(tenant_id, record.id, Keyword.get(opts, :evidence, []))
 
     fresh =
       insert_run!(tenant_id, record.id, evidence.id,
@@ -106,7 +110,7 @@ defmodule MailglassAdmin.TestSupport.InboundFixtures do
   """
   def seed_no_match!(tenant_id, opts \\ []) do
     record = insert_record!(tenant_id, opts)
-    evidence = insert_evidence!(tenant_id, record.id)
+    evidence = insert_evidence!(tenant_id, record.id, Keyword.get(opts, :evidence, []))
 
     run =
       insert_run!(tenant_id, record.id, evidence.id,
