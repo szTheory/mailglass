@@ -93,6 +93,27 @@ Deferred means the package does not yet promise:
 - multi-route fan-out
 - mailbox lifecycle hooks beyond `process/1`
 
+### `testing`
+
+These surfaces ship in `lib/` for adopters to drive and assert inbound flows in
+their own suites. They sit alongside the stable runtime contract as a distinct
+testing surface — they are not part of the runtime stable contract, and they are
+not internal or deferred:
+
+- `MailglassInbound.Fixtures` — code-only builders for a canonical
+  `%MailglassInbound.InboundMessage{}` and raw provider payloads that round-trip
+  through the real provider verify/normalize seam.
+- `MailglassInbound.Test.Ingress` — drives the real synchronous persist + route
+  + execute write path and captures the outcome in the test process.
+- `MailglassInbound.TestAssertions` — `assert_inbound_*` matchers reading the
+  captured outcome (the inbound mirror of `assert_mail_sent`).
+- `MailglassInbound.MailboxCase` — the `ExUnit.CaseTemplate` adopters `use`,
+  which imports `TestAssertions`, checks out an Ecto sandbox on the adopter's
+  configured repo, sets tenancy, and resets process-global fixture state.
+
+Testing means adopters may rely on these four helper modules existing and
+shipping in the package, driven from their own test suites.
+
 ## Stable Inventory
 
 ### `MailglassInbound`

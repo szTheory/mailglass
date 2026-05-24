@@ -139,6 +139,12 @@ defmodule MailglassInbound.MixProject do
           MailglassInbound.Router,
           MailglassInbound.Mailbox
         ],
+        Testing: [
+          MailglassInbound.TestAssertions,
+          MailglassInbound.MailboxCase,
+          MailglassInbound.Test.Ingress,
+          MailglassInbound.Fixtures
+        ],
         Internal: [MailglassInbound.OptionalDeps]
       ]
     ]

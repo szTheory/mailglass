@@ -20,6 +20,34 @@ The stable inbound package contract is intentionally narrow:
 Use [`docs/api_stability.md`](docs/api_stability.md) as the canonical inventory
 for what is stable, what is internal, and what is still deferred.
 
+## Testing Helpers
+
+The package ships four testing helpers in `lib/` so you can drive and assert
+inbound flows in your own suite:
+
+- `MailglassInbound.Fixtures` — build a canonical `%MailglassInbound.InboundMessage{}`
+  or raw provider payloads that round-trip through the real provider parser.
+- `MailglassInbound.Test.Ingress` — drive the real synchronous persist + route +
+  execute path and capture the outcome in your test process.
+- `MailglassInbound.TestAssertions` — `assert_inbound_received/0,1`,
+  `assert_inbound_accepted/0`, `assert_inbound_routed_to/1`, and friends.
+- `MailglassInbound.MailboxCase` — an `ExUnit.CaseTemplate` you `use` that imports
+  `TestAssertions`, checks out an Ecto sandbox on your configured repo, and sets
+  tenancy. Configure your repo first: `config :mailglass_inbound, :repo, MyApp.Repo`.
+
+```elixir
+defmodule MyApp.WelcomeMailboxTest do
+  use MailglassInbound.MailboxCase, async: false
+
+  test "accepts a welcome message" do
+    message = Fixtures.build_inbound_message(subject: "Welcome")
+    {:ok, _} = Test.Ingress.receive_inbound(message, routes: my_routes())
+    assert_inbound_received(subject: "Welcome")
+    assert_inbound_accepted()
+  end
+end
+```
+
 ## Manual Setup
 
 Inbound setup is manual in this phase. There is no generated setup path for

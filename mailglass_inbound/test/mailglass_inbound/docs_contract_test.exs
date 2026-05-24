@@ -27,6 +27,25 @@ defmodule MailglassInbound.DocsContractTest do
     assert stability =~ "deferred"
   end
 
+  test "docs inventory names the four Testing helpers shipped for adopters (ITEST-05)" do
+    readme = File.read!(@readme_path)
+    stability = File.read!(@stability_path)
+
+    for module_name <- [
+          "MailglassInbound.TestAssertions",
+          "MailglassInbound.MailboxCase",
+          "MailglassInbound.Test.Ingress",
+          "MailglassInbound.Fixtures"
+        ] do
+      assert readme =~ module_name
+      assert stability =~ module_name
+    end
+
+    # The helpers ship as a distinct adopter-facing Testing surface, kept out of
+    # the runtime stable contract and out of the internal/deferred buckets.
+    assert stability =~ "testing"
+  end
+
   test "package docs describe canonical storage plus raw evidence without widening provider internals" do
     readme = File.read!(@readme_path)
     stability = File.read!(@stability_path)
