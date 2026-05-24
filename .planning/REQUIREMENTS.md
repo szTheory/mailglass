@@ -15,24 +15,24 @@
 
 Currently `mailglass_inbound/lib/` contains **zero** `:telemetry` calls. This is the biggest single observability gap and a blocker for `MailglassAdmin.PubSub.Topics` live-update wiring.
 
-- [ ] **TELE-01**: Inbound emits `[:mailglass_inbound, :ingress, :request, :start | :stop | :exception]` spans on every ingress request, with PII-free metadata (provider, tenant_id, status, latency, byte size — never recipient, sender, body, headers)
-- [ ] **TELE-02**: Inbound emits `[:mailglass_inbound, :route, :match, :start | :stop | :exception]` spans during router matching, with metadata for matched mailbox / no-match outcome / candidate count
-- [ ] **TELE-03**: Inbound emits `[:mailglass_inbound, :execution, :run, :start | :stop | :exception]` spans wrapping mailbox execution (both Oban worker path and Task.Supervisor fallback path), with mailbox module / outcome (`:accept | :reject | :ignore | {:bounce, reason}`) / source (`:fresh | :replay`) metadata
-- [ ] **TELE-04**: Inbound emits `[:mailglass_inbound, :persist, :record, :start | :stop | :exception]` spans during persistence, with operation (insert/update/dedup_skip) / record_type metadata
-- [ ] **TELE-05**: A telemetry handler raising during inbound processing does not break business logic (mirrors outbound contract)
-- [ ] **TELE-06**: All telemetry metadata passes the existing `NoPIIInTelemetry` Credo check; the check is extended to cover `mailglass_inbound/`
-- [ ] **TELE-07**: Inbound telemetry events are surfaced through `MailglassAdmin.PubSub.Topics` so the v1.2 admin LiveView can subscribe for live updates
+- [x] **TELE-01**: Inbound emits `[:mailglass_inbound, :ingress, :request, :start | :stop | :exception]` spans on every ingress request, with PII-free metadata (provider, tenant_id, status, latency, byte size — never recipient, sender, body, headers)
+- [x] **TELE-02**: Inbound emits `[:mailglass_inbound, :route, :match, :start | :stop | :exception]` spans during router matching, with metadata for matched mailbox / no-match outcome / candidate count
+- [x] **TELE-03**: Inbound emits `[:mailglass_inbound, :execution, :run, :start | :stop | :exception]` spans wrapping mailbox execution (both Oban worker path and Task.Supervisor fallback path), with mailbox module / outcome (`:accept | :reject | :ignore | {:bounce, reason}`) / source (`:fresh | :replay`) metadata
+- [x] **TELE-04**: Inbound emits `[:mailglass_inbound, :persist, :record, :start | :stop | :exception]` spans during persistence, with operation (insert/update/dedup_skip) / record_type metadata
+- [x] **TELE-05**: A telemetry handler raising during inbound processing does not break business logic (mirrors outbound contract)
+- [x] **TELE-06**: All telemetry metadata passes the existing `NoPIIInTelemetry` Credo check; the check is extended to cover `mailglass_inbound/`
+- [x] **TELE-07**: Inbound telemetry events are surfaced through `MailglassAdmin.PubSub.Topics` so the v1.2 admin LiveView can subscribe for live updates
 
 ### Idempotency Convergence Proof (TELE — continued)
 
-- [ ] **TELE-08**: A StreamData property test proves 1000-replay convergence on inbound ingest (same provider payload N times → exactly one `InboundRecord` + one `ExecutionRun`), mirroring the outbound v0.1 webhook ingest proof
+- [x] **TELE-08**: A StreamData property test proves 1000-replay convergence on inbound ingest (same provider payload N times → exactly one `InboundRecord` + one `ExecutionRun`), mirroring the outbound v0.1 webhook ingest proof
 
 ### Shared MIME Module (MIME)
 
-- [ ] **MIME-01**: `MailglassInbound.MIME` module parses canonical RFC 5322 message bodies into a stable internal representation (headers, parts, attachments, inline content)
-- [ ] **MIME-02**: MIME backend is gated through `Mailglass.OptionalDeps.GenSmtp` (existing) for nested-multipart parsing; degraded fallback path documented
+- [x] **MIME-01**: `MailglassInbound.MIME` module parses canonical RFC 5322 message bodies into a stable internal representation (headers, parts, attachments, inline content)
+- [x] **MIME-02**: MIME backend is gated through `Mailglass.OptionalDeps.GenSmtp` (existing) for nested-multipart parsing; degraded fallback path documented
 - [ ] **MIME-03**: `mailglass.inbound.doctor` reports MIME backend availability and which optional dep is in use
-- [ ] **MIME-04**: MIME parsing handles malformed payloads without raising; returns structured `Mailglass.Error{type: :inbound_mime_invalid}` matching the project's error contract
+- [x] **MIME-04**: MIME parsing handles malformed payloads without raising; returns structured `Mailglass.Error{type: :inbound_mime_invalid}` matching the project's error contract
 
 ### Mailgun Inbound Ingress (MGUN)
 
@@ -159,18 +159,18 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TELE-01 | Phase 45 | Pending |
-| TELE-02 | Phase 45 | Pending |
-| TELE-03 | Phase 45 | Pending |
-| TELE-04 | Phase 45 | Pending |
-| TELE-05 | Phase 45 | Pending |
-| TELE-06 | Phase 45 | Pending |
-| TELE-07 | Phase 45 | Pending |
-| TELE-08 | Phase 45 | Pending |
-| MIME-01 | Phase 45 | Pending |
-| MIME-02 | Phase 45 | Pending |
+| TELE-01 | Phase 45 | Complete |
+| TELE-02 | Phase 45 | Complete |
+| TELE-03 | Phase 45 | Complete |
+| TELE-04 | Phase 45 | Complete |
+| TELE-05 | Phase 45 | Complete |
+| TELE-06 | Phase 45 | Complete |
+| TELE-07 | Phase 45 | Complete |
+| TELE-08 | Phase 45 | Complete |
+| MIME-01 | Phase 45 | Complete |
+| MIME-02 | Phase 45 | Complete |
 | MIME-03 | Phase 49 | Pending |
-| MIME-04 | Phase 45 | Pending |
+| MIME-04 | Phase 45 | Complete |
 | MGUN-01 | Phase 46 | Complete |
 | MGUN-02 | Phase 46 | Complete |
 | MGUN-03 | Phase 46 | Complete |
@@ -241,3 +241,4 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 
 *Requirements defined: 2026-05-06*
 *Last updated: 2026-05-07 — `gsd-roadmapper` populated traceability table for Phases 45-51; corrected category count from "53 total" to actual 58 total*
+*Reconciled: 2026-05-23 — interim milestone audit (`/gsd-audit-milestone`, phases 44.5/45/46) flipped Phase 45's checkboxes + traceability rows (TELE-01..08, MIME-01/02/04) from Pending → Complete; phase 45 was verified `passed` 2026-05-23 but the phase-complete checkbox update had lagged. See `.planning/v1.2-MILESTONE-AUDIT-INTERIM.md`.*
