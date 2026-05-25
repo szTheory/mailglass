@@ -37,7 +37,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 - [x] **Phase 46: Mailgun + SES Inbound Ingress** — Lift outbound verifiers into inbound; ship Mailgun (HMAC) and SES (SNS X.509 + S3 fetch) provider plugs (3 plans, 2 waves) (completed 2026-05-23)
 - [x] **Phase 47: Inbound Test Helpers + Generators** — `TestAssertions`, `MailboxCase`, `Test.Ingress`, code-built fixtures, and 3 Igniter generators (completed 2026-05-24)
 - [x] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card (3 plans, 3 waves) (completed 2026-05-24)
-- [ ] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only
+- [x] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only (completed 2026-05-25)
 - [ ] **Phase 50: Inbound Documentation Pass** — Install / testing / operator / Mailgun + SES setup / routing-debug guides
 - [ ] **Phase 50.5: v1.2 Release Ceremony** — Linked-version cut: `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** (inbound stays on 0.x version line until Conductor + relay providers land). Ships all v1.2 inbound work to adopters.
 - [ ] **Phase 51: Stability Closeout** — v1.0 carry-forward debt: Phase 35 Nyquist (CLOSE-01), branch-protection automation (CLOSE-02), citext race (CLOSE-03), boundary warnings (CLOSE-04), WR-01..06 (CLOSE-05). CLOSE-06 resolved by Phase 44.5.
@@ -280,7 +280,7 @@ Plans:
 
 **Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
 **Requirements:** TBD
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 
@@ -305,7 +305,7 @@ Plans:
 | 46. Mailgun + SES Inbound Ingress | 3/3 | Complete    | 2026-05-23 |
 | 47. Inbound Test Helpers + Generators | 4/4 | Complete    | 2026-05-24 |
 | 48. Inbound Admin LiveView | 4/3 | Complete    | 2026-05-24 |
-| 49. Inbound Runtime Operator Tooling | 1/3 | In Progress|  |
+| 49. Inbound Runtime Operator Tooling | 3/3 | Complete   | 2026-05-25 |
 | 50. Inbound Documentation Pass | 0/TBD | Not started | — |
 | **50.5. v1.2 Release Ceremony** | 0/TBD | Not started | — |
 | 51. Stability Closeout | 0/TBD | Not started | — |
