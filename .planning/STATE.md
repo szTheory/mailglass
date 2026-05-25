@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Inbound Production Confidence
 status: executing
-last_updated: "2026-05-25T15:29:06.489Z"
-last_activity: 2026-05-25 -- Phase 50.5 planning complete
+last_updated: "2026-05-25T16:15:40Z"
+last_activity: 2026-05-25 -- Phase 50.5 Plan 01 complete (Commit A: version force + allowlist refresh)
 progress:
   total_phases: 11
   completed_phases: 7
   total_plans: 36
-  completed_plans: 35
+  completed_plans: 36
   percent: 64
 ---
 
@@ -25,10 +25,9 @@ See: .planning/PROJECT.md (updated 2026-05-06 after v1.2 milestone open)
 ## Current Position
 
 Phase: 50.5
-Plan: Not started
-Phase: 50 (inbound-documentation-pass) — PLANNED (2026-05-25); ready to execute
-Status: Ready to execute
-Last activity: 2026-05-25 -- Phase 50.5 planning complete
+Plan: 01 — COMPLETE (2026-05-25); Commit A at 5421b14 (not yet pushed)
+Status: Executing — Wave 2 (Commit B: CHANGELOG curation) is next
+Last activity: 2026-05-25 -- Phase 50.5 Plan 01 complete (Commit A: version force + allowlist refresh)
 
 ## v1.2 Phase Plan
 
@@ -88,3 +87,4 @@ The following v1.0 carry-forward debt is being closed in v1.2 Phase 51 rather th
 |-------|------|----------|-------|
 | Phase 50 P02 | 3 | 2 tasks | 2 files |
 | Phase 50 P03 | 5 | 3 tasks | 4 files |
+| Phase 50.5 P01 | 15min | 3 tasks | 8 files | Commit A: version force + allowlist refresh |

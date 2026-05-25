@@ -260,7 +260,7 @@ Plans:
 **Plans**: 3 plans (3 waves)
 
 Plans:
-- [ ] 50.5-01-PLAN.md — Commit A: force 1.2.0 in release-please-config.json, remove editorial recovery anchors, refresh all 3 tarball allowlists (core +4, admin +10, inbound +39), update MAINTAINING.md sandbox recipe [Wave 1]
+- [x] 50.5-01-PLAN.md — Commit A: force 1.2.0 in release-please-config.json, remove editorial recovery anchors, refresh all 3 tarball allowlists (core +4, admin +10, inbound +39), update MAINTAINING.md sandbox recipe [Wave 1] — completed 2026-05-25 (5421b14)
 - [ ] 50.5-02-PLAN.md — Commit B: curate CHANGELOGs (inbound 0.2.0 Phases 45-49 + 0.x disclaimer, core 1.2.0 narrative with 9 REQ categories, admin [Unreleased] coordinated-sibling note) [Wave 2]
 - [ ] 50.5-03-PLAN.md — Live ceremony: verify release-please PR diff, dry-run dispatch, merge + publish, 60-minute sandbox install proof, 50.5-RELEASE-RECORD.md + PROJECT.md + MILESTONES.md close-out [Wave 3]
 
