@@ -17,10 +17,22 @@ defmodule MailglassInbound.Ingress.Persist do
         }
 
   @spec persist(handoff_t(), keyword()) :: {:ok, map()} | {:error, term()}
-  def persist(%{tenant_id: tenant_id, provider: provider, message: %InboundMessage{} = message} = handoff, opts)
+  def persist(
+        %{tenant_id: tenant_id, provider: provider, message: %InboundMessage{} = message} = handoff,
+        opts
+      )
       when is_binary(tenant_id) and is_list(opts) do
     repo = Keyword.get(opts, :repo, MailglassInbound.Repo)
     provider = normalize_provider(provider)
+
+    # WR-03: compute the diagnostic suppression flag BEFORE the write transaction.
+    # The lookup hits the CORE suppression store (a different repo / connection
+    # pool than the inbound `repo`); running it inside `repo.transact` would hold
+    # a second pooled connection open for the duration of the inbound write — a
+    # pool-exhaustion / deadlock surface on the ingress hot path. It needs only
+    # `tenant_id` + the message's first `from` address, none of which require the
+    # transaction. The span + degrade-open semantics are preserved (D-49-23).
+    suppression_flagged = compute_suppression_flag(tenant_id, provider, message)
 
     result =
       MailglassInbound.Telemetry.persist_span(
@@ -28,7 +40,14 @@ defmodule MailglassInbound.Ingress.Persist do
         fn ->
           transact_result =
             repo.transact(fn ->
-              persist_in_transaction(repo, tenant_id, provider, message, handoff.evidence)
+              persist_in_transaction(
+                repo,
+                tenant_id,
+                provider,
+                message,
+                handoff.evidence,
+                suppression_flagged
+              )
             end)
             |> resolve_fingerprint_race(repo, tenant_id, provider, message, handoff.evidence)
 
@@ -56,7 +75,7 @@ defmodule MailglassInbound.Ingress.Persist do
     end
   end
 
-  defp persist_in_transaction(repo, tenant_id, provider, message, evidence) do
+  defp persist_in_transaction(repo, tenant_id, provider, message, evidence, suppression_flagged) do
     case load_duplicate(repo, tenant_id, provider, message, evidence) do
       %InboundRecord{} = record ->
         {:ok,
@@ -67,7 +86,7 @@ defmodule MailglassInbound.Ingress.Persist do
          }}
 
       nil ->
-        with {:ok, record} <- insert_record(repo, tenant_id, provider, message),
+        with {:ok, record} <- insert_record(repo, tenant_id, provider, message, suppression_flagged),
              {:ok, evidence_row} <- insert_evidence(repo, tenant_id, provider, record, evidence) do
           {:ok,
            %{
@@ -88,7 +107,14 @@ defmodule MailglassInbound.Ingress.Persist do
   # recognize the fingerprint constraint and reload the surviving duplicate (the
   # row the winning transaction committed), collapsing the race to a clean
   # `:duplicate` rather than a 500.
-  defp resolve_fingerprint_race({:error, %Ecto.Changeset{} = changeset} = error, repo, tenant_id, provider, message, evidence) do
+  defp resolve_fingerprint_race(
+         {:error, %Ecto.Changeset{} = changeset} = error,
+         repo,
+         tenant_id,
+         provider,
+         message,
+         evidence
+       ) do
     if fingerprint_constraint?(changeset) do
       case load_duplicate(repo, tenant_id, provider, message, evidence) do
         %InboundRecord{} = record ->
@@ -102,7 +128,8 @@ defmodule MailglassInbound.Ingress.Persist do
     end
   end
 
-  defp resolve_fingerprint_race(result, _repo, _tenant_id, _provider, _message, _evidence), do: result
+  defp resolve_fingerprint_race(result, _repo, _tenant_id, _provider, _message, _evidence),
+    do: result
 
   defp persist_operation({:ok, %{status: :inserted}}), do: :insert
   defp persist_operation({:ok, %{status: :duplicate}}), do: :dedup_skip
@@ -135,12 +162,24 @@ defmodule MailglassInbound.Ingress.Persist do
   # row WITH a Message-Id resolves through the same `(tenant_id, provider,
   # provider_message_id)` query the generic clause uses; a row WITHOUT one uses
   # the new `mailglass_inbound_records_mailgun_fingerprint_idx` (DRIFT #3).
-  defp load_duplicate(repo, tenant_id, "mailgun", %InboundMessage{provider_message_id: provider_message_id}, _evidence)
+  defp load_duplicate(
+         repo,
+         tenant_id,
+         "mailgun",
+         %InboundMessage{provider_message_id: provider_message_id},
+         _evidence
+       )
        when is_binary(provider_message_id) do
     load_by_provider_message_id(repo, tenant_id, "mailgun", provider_message_id)
   end
 
-  defp load_duplicate(repo, tenant_id, "mailgun", %InboundMessage{provider_message_id: nil}, evidence) do
+  defp load_duplicate(
+         repo,
+         tenant_id,
+         "mailgun",
+         %InboundMessage{provider_message_id: nil},
+         evidence
+       ) do
     case evidence_raw_mime_fingerprint(evidence) do
       nil ->
         nil
@@ -170,7 +209,13 @@ defmodule MailglassInbound.Ingress.Persist do
   # new, so an SNS at-least-once redelivery inserts a duplicate InboundRecord and
   # re-dispatches the mailbox — defeating the idempotency the dedupe layer exists
   # to provide. Backed by the new `mailglass_inbound_records_ses_fingerprint_idx`.
-  defp load_duplicate(repo, tenant_id, "ses", %InboundMessage{provider_message_id: provider_message_id}, _evidence)
+  defp load_duplicate(
+         repo,
+         tenant_id,
+         "ses",
+         %InboundMessage{provider_message_id: provider_message_id},
+         _evidence
+       )
        when is_binary(provider_message_id) do
     load_by_provider_message_id(repo, tenant_id, "ses", provider_message_id)
   end
@@ -197,9 +242,22 @@ defmodule MailglassInbound.Ingress.Persist do
     end
   end
 
-  defp load_duplicate(_repo, _tenant_id, _provider, %InboundMessage{provider_message_id: nil}, _evidence), do: nil
+  defp load_duplicate(
+         _repo,
+         _tenant_id,
+         _provider,
+         %InboundMessage{provider_message_id: nil},
+         _evidence
+       ),
+       do: nil
 
-  defp load_duplicate(repo, tenant_id, provider, %InboundMessage{provider_message_id: provider_message_id}, _evidence) do
+  defp load_duplicate(
+         repo,
+         tenant_id,
+         provider,
+         %InboundMessage{provider_message_id: provider_message_id},
+         _evidence
+       ) do
     load_by_provider_message_id(repo, tenant_id, provider, provider_message_id)
   end
 
@@ -216,7 +274,7 @@ defmodule MailglassInbound.Ingress.Persist do
     repo.one(query)
   end
 
-  defp insert_record(repo, tenant_id, provider, message) do
+  defp insert_record(repo, tenant_id, provider, message, suppression_flagged) do
     attrs = %{
       tenant_id: tenant_id,
       provider: to_string(provider),
@@ -235,7 +293,9 @@ defmodule MailglassInbound.Ingress.Persist do
       text_body: message.text_body,
       html_body: message.html_body,
       attachments: message.attachments,
-      suppression_flagged: compute_suppression_flag(tenant_id, provider, message)
+      # WR-03: precomputed BEFORE the transaction (see persist/2) so the cross-repo
+      # suppression-store lookup never holds a second connection inside the write.
+      suppression_flagged: suppression_flagged
     }
 
     changeset = InboundRecords.change_inbound_record(attrs)
@@ -256,23 +316,24 @@ defmodule MailglassInbound.Ingress.Persist do
     end
   end
 
-  # IOPS-05 (D-49-19/23): compute the diagnostic suppression flag once, at INSERT.
-  # The flag is NOT a gate — it degrades OPEN so a store hiccup, a malformed key,
-  # or an empty `from` can never block legitimate inbound mail. A `true` flag
-  # triggers no auto-bounce and no auto-suppression; the message is preserved and
-  # the adopter's mailbox decides reject/process. We call the CONFIGURED store's
-  # `check/2` directly (NOT the outbound `Mailglass.Suppression` send-preflight
-  # facade, which reads swoosh `:to` and emits OUTBOUND telemetry). The whole
-  # compute runs inside the inbound `:suppression_flag` span; its stop metadata is
-  # `%{flagged, tenant_id, provider}` only — never the address (D-49-23).
+  # IOPS-05 (D-49-19/23): compute the diagnostic suppression flag once, BEFORE the
+  # write transaction (WR-03 — the cross-repo lookup must not hold a second
+  # connection inside the inbound write). The flag is NOT a gate — it degrades
+  # OPEN so a store hiccup, a malformed key, or an empty `from` can never block
+  # legitimate inbound mail. A `true` flag triggers no auto-bounce and no
+  # auto-suppression; the message is preserved and the adopter's mailbox decides
+  # reject/process. We call the CONFIGURED store's `check/2` directly (NOT the
+  # outbound `Mailglass.Suppression` send-preflight facade, which reads swoosh
+  # `:to` and emits OUTBOUND telemetry). The whole compute runs inside the inbound
+  # `:suppression_flag` span; its stop metadata is `%{flagged, tenant_id,
+  # provider}` only — never the address (D-49-23).
   defp compute_suppression_flag(tenant_id, provider, message) do
     MailglassInbound.Telemetry.suppression_flag(
       %{tenant_id: tenant_id, provider: normalize_provider(provider)},
       fn ->
         flag = suppressed_sender?(tenant_id, message)
 
-        {flag,
-         %{tenant_id: tenant_id, provider: normalize_provider(provider), flagged: flag}}
+        {flag, %{tenant_id: tenant_id, provider: normalize_provider(provider), flagged: flag}}
       end
     )
   end
@@ -341,9 +402,14 @@ defmodule MailglassInbound.Ingress.Persist do
   defp route_compatibility(message, opts) do
     routes =
       cond do
-        Keyword.has_key?(opts, :routes) -> Keyword.fetch!(opts, :routes)
-        Keyword.has_key?(opts, :router) -> Keyword.fetch!(opts, :router).__mailglass_inbound_routes__()
-        true -> []
+        Keyword.has_key?(opts, :routes) ->
+          Keyword.fetch!(opts, :routes)
+
+        Keyword.has_key?(opts, :router) ->
+          Keyword.fetch!(opts, :router).__mailglass_inbound_routes__()
+
+        true ->
+          []
       end
 
     case Matcher.match(routes, message) do
@@ -354,8 +420,11 @@ defmodule MailglassInbound.Ingress.Persist do
 
   defp duplicate_constraint?(changeset) do
     Enum.any?(changeset.errors, fn
-      {:provider_message_id, {_msg, opts}} -> opts[:constraint_name] == "mailglass_inbound_records_postmark_idempotency_idx"
-      _ -> false
+      {:provider_message_id, {_msg, opts}} ->
+        opts[:constraint_name] == "mailglass_inbound_records_postmark_idempotency_idx"
+
+      _ ->
+        false
     end)
   end
 
