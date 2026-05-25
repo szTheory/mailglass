@@ -21,3 +21,19 @@ config :mailglass_inbound, MailglassInbound.TestRepo,
   database: "mailglass_inbound_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10
+
+# Neutralize the post-verify ingress rate limiter (IOPS-04) by default in the
+# test env. The limiter is always-on in production with sensible defaults
+# (tenant 1000/min, recipient 500/min, sender_domain 200/min), but it reads ONE
+# node-local ETS table (:mailglass_inbound_rate_limit) shared across the whole
+# suite. Unrelated ingress tests (e.g. telemetry_test) drive many requests that
+# share a sender_domain/tenant and would otherwise drain a bucket and trip 429s
+# in a later, order-dependent test. Effectively-unlimited capacities make the
+# limiter inert for incidental traffic. The dedicated rate-limit tests
+# (RateLimiterTest, plug_test "ingress rate limiter" describe) override these
+# per-test with tiny capacities AND reset the ETS table, so tripping is still
+# fully exercised.
+config :mailglass_inbound, :rate_limit,
+  tenant: [capacity: 1_000_000, per_minute: 60],
+  recipient: [capacity: 1_000_000, per_minute: 60],
+  sender_domain: [capacity: 1_000_000, per_minute: 60]
