@@ -164,16 +164,30 @@ jobs:
             sed -i -E "s/\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}/{:${dep}, \"== ${CORE_VERSION}\"}/" "$path"
           done
 
-          if git diff --quiet -- mailglass_admin/mix.exs mailglass_inbound/mix.exs; then
-            echo "Pin already at $CORE_VERSION — nothing to commit."
+          # Sync the inbound README's `{:mailglass_inbound, "~> X.Y"}` install
+          # pin to the inbound package's new major.minor. The docs contract
+          # (WR-01, mailglass_inbound/test/.../docs_contract_test.exs) asserts
+          # README major.minor == @version major.minor, which would otherwise
+          # fail on the PR branch the moment release-please bumps @version.
+          # Inbound is UNLINKED, so read its own manifest entry (not core's).
+          INBOUND_VERSION=$(jq -r '.["mailglass_inbound"]' .release-please-manifest.json)
+          if [ -n "$INBOUND_VERSION" ] && [ "$INBOUND_VERSION" != "null" ]; then
+            INBOUND_MM=$(echo "$INBOUND_VERSION" | cut -d. -f1,2)
+            echo "Target inbound README pin: {:mailglass_inbound, \"~> $INBOUND_MM\"}"
+            sed -i -E "s/\{:mailglass_inbound, \"~> [0-9]+\.[0-9]+\"\}/{:mailglass_inbound, \"~> ${INBOUND_MM}\"}/" mailglass_inbound/README.md
+          fi
+
+          SYNC_PATHS=(mailglass_admin/mix.exs mailglass_inbound/mix.exs mailglass_inbound/README.md)
+          if git diff --quiet -- "${SYNC_PATHS[@]}"; then
+            echo "Pins + README already synced — nothing to commit."
             exit 0
           fi
 
-          echo "Pin updated; diff follows:"
-          git --no-pager diff -- mailglass_admin/mix.exs mailglass_inbound/mix.exs
+          echo "Pins/README updated; diff follows:"
+          git --no-pager diff -- "${SYNC_PATHS[@]}"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add mailglass_admin/mix.exs mailglass_inbound/mix.exs
-          git commit -m "chore(release-please): sync sibling mailglass dep pins to == $CORE_VERSION"
+          git add "${SYNC_PATHS[@]}"
+          git commit -m "chore(release-please): sync sibling mailglass dep pins to == $CORE_VERSION + inbound README pin"
           git push origin "$BRANCH"

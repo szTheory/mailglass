@@ -17,5 +17,7 @@
   # Reason: invalid_adapter_entry!/2 raises NimbleOptions.ValidationError intentionally to surface adapter-config typos at boot; no_return is by design (matches resolve_from_path scope/2 pattern above).
   {"lib/mailglass/config.ex", "Function invalid_adapter_entry!/2 only terminates with explicit exception."},
   # Reason: BIMI.analyze/2 spec'd as analysis_result() (open map shape) for forward-compat; success typing collapses to a closed atom-set on findings/facts which would force every consumer to widen on the next BIMI status enum bump.
-  {"lib/mailglass/deliverability/bimi.ex", "Type specification for analyze is a supertype of the success typing."}
+  {"lib/mailglass/deliverability/bimi.ex", "Type specification for analyze is a supertype of the success typing."},
+  # Reason: GenSmtp.decode/2 spec widens the ok branch to {:ok, tuple()} on purpose — the :mimemail 5-tuple shape varies across gen_smtp versions and callers pattern-match the tuple themselves; dialyzer flags the generic tuple() as an extra range (same intentional-supertype pattern as the BIMI entry above).
+  {"lib/mailglass/optional_deps/gen_smtp.ex", "The type specification has too many types for the function."}
 ]
