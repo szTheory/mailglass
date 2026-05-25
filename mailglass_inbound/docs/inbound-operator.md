@@ -362,7 +362,7 @@ When an inbound sender's address appears on the suppression list, the
 `InboundRecord` is inserted with `suppression_flagged: true`. The message still
 flows through routing and mailbox execution. The flag is visible:
 
-- In the `InboundMessage.metadata` map under the `:suppression_flagged` key
+- In the `InboundMessage.signals` struct under the `:suppression_flagged` field
 - In the inbound admin LiveView record list and detail panel
 
 ### Why flag-only, not auto-bounce
@@ -388,7 +388,7 @@ defmodule MyApp.Mailboxes.SupportMailbox do
 
   @impl true
   def process(message) do
-    if message.metadata[:suppression_flagged] do
+    if message.signals.suppression_flagged do
       # Route to a human review queue rather than auto-processing
       {:reject, "suppressed sender — flagged for manual review"}
     else
