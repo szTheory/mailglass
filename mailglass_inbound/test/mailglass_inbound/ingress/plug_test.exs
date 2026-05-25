@@ -653,6 +653,141 @@ defmodule MailglassInbound.Ingress.PlugTest do
     assert captured[:s3_retry_opts] == []
   end
 
+  # ---- Phase 49: post-verify ingress rate limiter (IOPS-04, D-49-14) ----
+
+  # A stub whose normalized message carries both a `from` (so the limiter can
+  # derive sender_domain) and an envelope_recipient (the recipient bucket key),
+  # exercising the real RateLimiter.check/3 in persist_and_respond/5.
+  defmodule RateLimitedProvider do
+    def verify!(%MailglassInbound.Ingress.Request{}, _config), do: {:ok, %{auth: :stub}}
+
+    def normalize(%MailglassInbound.Ingress.Request{} = request) do
+      %{
+        message: %MailglassInbound.InboundMessage{
+          provider: request.provider,
+          provider_message_id: "rl-message-1",
+          envelope_recipient: "support@example.com",
+          from: [%{address: "flooder@spam.example", name: "Flooder"}],
+          to: [%{address: "support@example.com", name: nil}]
+        },
+        evidence: %{verification_facts: %{}}
+      }
+    end
+  end
+
+  describe "ingress rate limiter (post-verify)" do
+    setup do
+      prior_rate_limit = Application.get_env(:mailglass_inbound, :rate_limit)
+
+      on_exit(fn ->
+        if is_nil(prior_rate_limit) do
+          Application.delete_env(:mailglass_inbound, :rate_limit)
+        else
+          Application.put_env(:mailglass_inbound, :rate_limit, prior_rate_limit)
+        end
+      end)
+
+      # Tiny tenant capacity so the limiter trips on the 2nd verified request.
+      Application.put_env(:mailglass_inbound, :rate_limit,
+        tenant: [capacity: 1, per_minute: 60],
+        recipient: [capacity: 1000, per_minute: 60],
+        sender_domain: [capacity: 1000, per_minute: 60]
+      )
+
+      :ets.delete_all_objects(:mailglass_inbound_rate_limit)
+      :ok
+    end
+
+    test "an over-limit verified request returns 429 with a retry-after header and bucket type" do
+      opts =
+        IngressPlug.init(
+          provider: :mailgun,
+          provider_module: RateLimitedProvider,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+
+      # First request is allowed.
+      first = IngressPlug.call(stub_provider_conn(:mailgun), opts)
+      assert first.status == 200
+
+      # Second request trips the tenant bucket → 429.
+      second = IngressPlug.call(stub_provider_conn(:mailgun), opts)
+
+      assert second.status == 429
+      body = Jason.decode!(second.resp_body)
+      assert body["status"] == "rate_limited"
+      assert body["bucket"] == "tenant"
+
+      retry_after = Plug.Conn.get_resp_header(second, "retry-after")
+      assert [value] = retry_after
+      assert String.to_integer(value) >= 1
+    end
+
+    test "a forged request returns 401 and consumes no rate budget (limiter is post-verify)" do
+      opts =
+        IngressPlug.init(
+          provider: :mailgun,
+          provider_module: StubProvider,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+
+      Process.put(:mailglass_inbound_stub_verify, {:raise, :inbound})
+
+      # Flood with forgeries — none should consume the tenant's budget.
+      for _i <- 1..5 do
+        conn = IngressPlug.call(stub_provider_conn(:mailgun), opts)
+        assert conn.status == 401
+      end
+
+      # The budget is intact: a verified request through a separate provider
+      # using the SAME tenant still succeeds (capacity: 1 was never burned).
+      verified_opts =
+        IngressPlug.init(
+          provider: :mailgun,
+          provider_module: RateLimitedProvider,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+
+      verified = IngressPlug.call(stub_provider_conn(:mailgun), verified_opts)
+      assert verified.status == 200
+    end
+
+    test "the rate_limit stop telemetry carries bucket TYPE only (no PII value keys)" do
+      ref =
+        :telemetry_test.attach_event_handlers(self(), [
+          [:mailglass_inbound, :rate_limit, :stop]
+        ])
+
+      opts =
+        IngressPlug.init(
+          provider: :mailgun,
+          provider_module: RateLimitedProvider,
+          persistence: FakePersistence,
+          execution: FakeExecution
+        )
+
+      # First allowed, second trips → emits the rate_limit span.
+      IngressPlug.call(stub_provider_conn(:mailgun), opts)
+      IngressPlug.call(stub_provider_conn(:mailgun), opts)
+
+      assert_receive {[:mailglass_inbound, :rate_limit, :stop], ^ref, _measurements, meta}
+
+      assert meta[:bucket] in [:tenant, :recipient, :sender_domain]
+
+      # PII value keys must NEVER appear in the telemetry meta.
+      refute Map.has_key?(meta, :recipient)
+      refute Map.has_key?(meta, :sender)
+      refute Map.has_key?(meta, :to)
+      refute Map.has_key?(meta, :from)
+      refute Map.has_key?(meta, :email)
+
+      :telemetry.detach(ref)
+    end
+  end
+
   defp stub_provider_conn(provider) do
     Plug.Test.conn(:post, "/inbound/tenant-123/#{provider}", "")
     |> Plug.Conn.put_req_header("content-type", "application/json")
