@@ -257,7 +257,13 @@ Plans:
   4. `mix hex.info` confirms all three packages live; `v1.2.0` git tag pushed; release-engineering verification (the live publish flow exercised in Phase 44.5) used again — no new ceremony surface.
   5. PROJECT.md "Current State" updated; MILESTONES.md v1.2 entry adds live-publish date.
 
-**Plans**: TBD
+**Plans**: 3 plans (3 waves)
+
+Plans:
+- [ ] 50.5-01-PLAN.md — Commit A: force 1.2.0 in release-please-config.json, remove editorial recovery anchors, refresh all 3 tarball allowlists (core +4, admin +10, inbound +39), update MAINTAINING.md sandbox recipe [Wave 1]
+- [ ] 50.5-02-PLAN.md — Commit B: curate CHANGELOGs (inbound 0.2.0 Phases 45-49 + 0.x disclaimer, core 1.2.0 narrative with 9 REQ categories, admin [Unreleased] coordinated-sibling note) [Wave 2]
+- [ ] 50.5-03-PLAN.md — Live ceremony: verify release-please PR diff, dry-run dispatch, merge + publish, 60-minute sandbox install proof, 50.5-RELEASE-RECORD.md + PROJECT.md + MILESTONES.md close-out [Wave 3]
+
 **UI hint**: no
 
 **Hardest sub-tasks:**
@@ -318,7 +324,7 @@ Plans:
 | 48. Inbound Admin LiveView | 4/3 | Complete    | 2026-05-24 |
 | 49. Inbound Runtime Operator Tooling | 3/3 | Complete   | 2026-05-25 |
 | 50. Inbound Documentation Pass | 3/3 | Complete    | 2026-05-25 |
-| **50.5. v1.2 Release Ceremony** | 0/TBD | Not started | — |
+| **50.5. v1.2 Release Ceremony** | 0/3 | Not started | — |
 | 51. Stability Closeout | 0/TBD | Not started | — |
 
 **Estimated total plans:** ~20-24 (SYNTHESIS.md ~18-22 inbound + 2 release ceremonies). Plan counts will be set during `/gsd-plan-phase <N>` for each phase.
