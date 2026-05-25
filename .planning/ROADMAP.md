@@ -317,7 +317,7 @@ Plans:
 | 47. Inbound Test Helpers + Generators | 4/4 | Complete    | 2026-05-24 |
 | 48. Inbound Admin LiveView | 4/3 | Complete    | 2026-05-24 |
 | 49. Inbound Runtime Operator Tooling | 3/3 | Complete   | 2026-05-25 |
-| 50. Inbound Documentation Pass | 3/3 | Complete   | 2026-05-25 |
+| 50. Inbound Documentation Pass | 3/3 | Complete    | 2026-05-25 |
 | **50.5. v1.2 Release Ceremony** | 0/TBD | Not started | — |
 | 51. Stability Closeout | 0/TBD | Not started | — |
 
