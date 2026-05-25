@@ -213,7 +213,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       proof_summary_file: Path.join(repo_root, ".planning/publish/#{package}-publish-summary.json"),
       summary_path: System.get_env("GITHUB_STEP_SUMMARY"),
       mix_publish?: package in [:mailglass_admin, :mailglass_inbound],
-      helper_body: maybe_find_function_body(ast, :mailglass_dep, 0)
+      helper_body: maybe_find_function_body(ast, :mailglass_dep, 0),
+      helper_body_inbound: maybe_find_function_body(ast, :mailglass_inbound_dep, 0)
     }
   end
 
@@ -719,11 +720,17 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
         do: eval_mailglass_dep(ctx.helper_body),
         else: nil
 
+    inbound_helper =
+      if ctx.mix_publish? and ctx.helper_body_inbound,
+        do: eval_mailglass_dep(ctx.helper_body_inbound),
+        else: nil
+
     deps =
       deps_body
       |> body_entries()
       |> Enum.map(fn
         {:mailglass_dep, _, []} -> helper
+        {:mailglass_inbound_dep, _, []} -> inbound_helper
         expr -> eval_ast(expr, ctx.attrs)
       end)
 
@@ -779,11 +786,15 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       deps_body = find_function_body(ctx.ast, :deps, 0)
       helper = if ctx.helper_body, do: eval_mailglass_dep(ctx.helper_body), else: nil
 
+      inbound_helper =
+        if ctx.helper_body_inbound, do: eval_mailglass_dep(ctx.helper_body_inbound), else: nil
+
       deps =
         deps_body
         |> body_entries()
         |> Enum.map(fn
           {:mailglass_dep, _, []} -> helper
+          {:mailglass_inbound_dep, _, []} -> inbound_helper
           expr -> eval_ast(expr, ctx.attrs)
         end)
 
@@ -1162,6 +1173,12 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       [
         ".formatter.exs",
         "docs/api_stability.md",
+        "docs/inbound-install.md",
+        "docs/inbound-mailgun.md",
+        "docs/inbound-operator.md",
+        "docs/inbound-routing-debug.md",
+        "docs/inbound-ses.md",
+        "docs/inbound-testing.md",
         "docs/postmark_ingress.md",
         "docs/sendgrid_ingress.md"
       ]
@@ -1241,12 +1258,23 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   end
 
   defp rewrite_mailglass_publish_dep(source, repo_root) do
+    source1 =
+      Regex.replace(
+        ~r/defp mailglass_dep do\n.*?\n  end/s,
+        source,
+        """
+        defp mailglass_dep do
+          {:mailglass, path: #{inspect(repo_root)}, override: true}
+        end
+        """
+      )
+
     Regex.replace(
-      ~r/defp mailglass_dep do\n.*?\n  end/s,
-      source,
+      ~r/defp mailglass_inbound_dep do\n.*?\n  end/s,
+      source1,
       """
-      defp mailglass_dep do
-        {:mailglass, path: #{inspect(repo_root)}, override: true}
+      defp mailglass_inbound_dep do
+        {:mailglass_inbound, path: #{inspect(Path.join(repo_root, "mailglass_inbound"))}, override: true}
       end
       """
     )

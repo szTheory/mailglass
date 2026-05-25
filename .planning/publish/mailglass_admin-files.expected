@@ -10,6 +10,15 @@ lib/mailglass_admin.ex
 lib/mailglass_admin/auth.ex
 lib/mailglass_admin/components.ex
 lib/mailglass_admin/controllers/assets.ex
+lib/mailglass_admin/inbound/destructive_action.ex
+lib/mailglass_admin/inbound/detail_header.ex
+lib/mailglass_admin/inbound/evidence_card.ex
+lib/mailglass_admin/inbound/filters_form.ex
+lib/mailglass_admin/inbound/records_list.ex
+lib/mailglass_admin/inbound/replay_modal.ex
+lib/mailglass_admin/inbound/routing_trace.ex
+lib/mailglass_admin/inbound/timeline.ex
+lib/mailglass_admin/inbound_live.ex
 lib/mailglass_admin/layouts.ex
 lib/mailglass_admin/layouts/app.html.heex
 lib/mailglass_admin/layouts/root.html.heex
@@ -24,6 +33,7 @@ lib/mailglass_admin/operator/support_cards.ex
 lib/mailglass_admin/operator/suppression_card.ex
 lib/mailglass_admin/operator/timeline.ex
 lib/mailglass_admin/operator_live.ex
+lib/mailglass_admin/optional_deps/mailglass_inbound.ex
 lib/mailglass_admin/optional_deps/phoenix_live_reload.ex
 lib/mailglass_admin/preview/assigns_form.ex
 lib/mailglass_admin/preview/device_frame.ex

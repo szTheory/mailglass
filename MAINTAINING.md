@@ -22,6 +22,61 @@ When the installer output or golden files change:
 2. If the failure is expected, update the golden files in `test/fixtures/`.
 3. Commit the updated fixtures with a `chore: update installer golden files` message.
 
+## JTBD Docs Refresh Protocol
+
+The JTBD docs are a two-file system:
+
+- `guides/jobs.md` is the **public adopter ramp-up guide**
+- `.planning/research/JTBD-COVERAGE.md` is the **internal source of truth**
+
+Always refresh the internal map first, then project the stable Built rows into
+the public guide.
+
+### Refresh order
+
+1. Read the current:
+   - `guides/jobs.md`
+   - `.planning/research/JTBD-COVERAGE.md`
+   - `README.md`
+   - `CHANGELOG.md`
+   - `.planning/PROJECT.md`
+   - `.planning/ROADMAP.md`
+   - `.planning/REQUIREMENTS.md`
+   - `.planning/STATE.md`
+2. Reconcile shipped behavior against live code. When planning artifacts
+   disagree, prefer live code, then `PROJECT.md`, then `ROADMAP.md`, then phase
+   summaries/verification, and treat `STATE.md` as last-resort bookkeeping.
+3. Run a primary-source ecosystem sanity check before changing priority claims.
+   Current comparison set:
+   - Rails Action Mailer
+   - Rails Action Mailbox
+   - Anymail
+   - Laravel Mail
+   - Resend inbound docs
+4. Update `.planning/research/JTBD-COVERAGE.md`:
+   - refresh built/planned/deferred statuses
+   - refresh the active gap list
+   - refresh the priority ordering
+   - refresh the diminishing-returns line
+   - append a row to the refresh log
+5. Update `guides/jobs.md` from that map:
+   - stable shipped jobs only
+   - keep the narrative, adopter-facing framing
+   - keep inbound summarized separately while it remains outside the `v1.x`
+     promise
+6. Refresh dates in both files with exact calendar dates.
+7. Update README or docs navigation only if the JTBD docs became harder to
+   discover.
+8. Run the docs contract tests before merging.
+
+### Guardrails
+
+- Do not let `guides/jobs.md` become a roadmap doc.
+- Do not let `JTBD-COVERAGE.md` become feature-inventory churn; it is about
+  adopter jobs, gaps, and priority.
+- If external research reveals only convenience asks, do not promote them above
+  trust-proof or inbound-maturity work.
+
 ## Required Checks
 
 Before merging any PR, ensure:
@@ -154,7 +209,7 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
        mix archive.install hex phx_new --force
        mix phx.new sandbox --no-ecto --no-mailer --install
        cd sandbox
-       # add {:mailglass, "== 1.0.0"}, {:mailglass_admin, "== 1.0.0"}, {:mailglass_inbound, "== 0.1.0"} to deps
+       # add {:mailglass, "~> 1.2"}, {:mailglass_admin, "~> 1.2"}, {:mailglass_inbound, "~> 0.2"} to deps
        mix deps.get && mix mailglass.install && mix compile --warnings-as-errors
        mix phx.server  # visit http://localhost:4000/dev/mail/
 

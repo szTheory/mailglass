@@ -10,6 +10,7 @@ guides/compatibility-and-deprecations.md
 guides/components.md
 guides/dkim-setup.md
 guides/getting-started.md
+guides/jobs.md
 guides/migration-from-swoosh.md
 guides/multi-tenancy.md
 guides/operator-incident-support.md
@@ -162,6 +163,9 @@ lib/mailglass/webhook/telemetry.ex
 lib/mailglass/webhook/webhook_event.ex
 lib/mix/tasks/mail.doctor.ex
 lib/mix/tasks/mailglass.docs.check.ex
+lib/mix/tasks/mailglass.gen.inbound_route.ex
+lib/mix/tasks/mailglass.gen.inbound_router.ex
+lib/mix/tasks/mailglass.gen.mailbox.ex
 lib/mix/tasks/mailglass.gen.mailable.ex
 lib/mix/tasks/mailglass.gen.migration.ex
 lib/mix/tasks/mailglass.gen.unsubscribe.ex

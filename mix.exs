@@ -2,7 +2,6 @@ defmodule Mailglass.MixProject do
   use Mix.Project
 
   @version "1.0.0"
-  # v1.0.0 cut — see Phase 044.5 release ceremony record
   @source_url "https://github.com/szTheory/mailglass"
 
   def project do
@@ -327,7 +326,8 @@ defmodule Mailglass.MixProject do
       skip_undefined_reference_warnings_on: [
         "README.md",
         "CONTRIBUTING.md",
-        "guides/webhooks.md"
+        "guides/webhooks.md",
+        "guides/jobs.md"
       ],
       # Disable auto-linking (and the matching warnings) for cross-refs to
       # external Swoosh/Ecto internals and to intentionally @moduledoc-false
@@ -349,6 +349,7 @@ defmodule Mailglass.MixProject do
         "guides/compatibility-and-deprecations.md",
         "guides/upgrading-to-v1_0.md",
         "guides/getting-started.md",
+        "guides/jobs.md",
         "guides/authoring-mailables.md",
         "guides/components.md",
         "guides/preview.md",
@@ -375,6 +376,7 @@ defmodule Mailglass.MixProject do
         Guides: [
           "guides/upgrading-to-v1_0.md",
           "guides/getting-started.md",
+          "guides/jobs.md",
           "guides/authoring-mailables.md",
           "guides/components.md",
           "guides/preview.md",
