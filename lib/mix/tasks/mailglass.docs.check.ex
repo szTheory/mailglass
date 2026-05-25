@@ -38,7 +38,13 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     "guides/authoring-mailables.md",
     "guides/unsubscribe.md",
     "guides/dkim-setup.md",
-    "guides/webhooks.md"
+    "guides/webhooks.md",
+    "mailglass_inbound/docs/inbound-install.md",
+    "mailglass_inbound/docs/inbound-testing.md",
+    "mailglass_inbound/docs/inbound-operator.md",
+    "mailglass_inbound/docs/inbound-mailgun.md",
+    "mailglass_inbound/docs/inbound-ses.md",
+    "mailglass_inbound/docs/inbound-routing-debug.md"
   ]
   @tier1_surface_rules %{
     "README.md" => %{
@@ -236,6 +242,63 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "Until v0.5 ships first-class auto-suppression",
         "MyApp.Suppressions.maybe_add(provider, type)"
       ]
+    },
+    "mailglass_inbound/docs/inbound-install.md" => %{
+      required: [
+        "body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}",
+        "use MailglassInbound.Router",
+        "use MailglassInbound.Mailbox",
+        "mix ecto.migrate",
+        "async: false"
+      ],
+      forbidden: ["mix mailglass.install"]
+    },
+    "mailglass_inbound/docs/inbound-testing.md" => %{
+      required: [
+        "use MailglassInbound.MailboxCase",
+        "assert_inbound_received",
+        "Test.Ingress.receive_inbound",
+        "async: false",
+        "StreamData"
+      ],
+      forbidden: []
+    },
+    "mailglass_inbound/docs/inbound-operator.md" => %{
+      required: [
+        "mix mailglass.inbound.doctor",
+        "mix mailglass.inbound.replay",
+        "mix mailglass.inbound.prune",
+        "--tenant",
+        "retention:"
+      ],
+      forbidden: []
+    },
+    "mailglass_inbound/docs/inbound-mailgun.md" => %{
+      required: [
+        "signing_key",
+        "HMAC-SHA256",
+        "MailglassInbound.Ingress.CachingBodyReader"
+      ],
+      forbidden: []
+    },
+    "mailglass_inbound/docs/inbound-ses.md" => %{
+      required: [
+        "ex_aws_s3",
+        "S3Fetcher.ExAwsS3",
+        "sweet_xml",
+        "SubscribeURL",
+        "SubscriptionConfirmation"
+      ],
+      forbidden: []
+    },
+    "mailglass_inbound/docs/inbound-routing-debug.md" => %{
+      required: [
+        "routing-trace",
+        "__mailglass_inbound_routes__",
+        "mix mailglass.inbound.doctor",
+        "envelope"
+      ],
+      forbidden: []
     }
   }
 
