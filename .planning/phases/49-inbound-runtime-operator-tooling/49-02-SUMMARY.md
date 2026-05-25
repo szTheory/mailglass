@@ -115,3 +115,9 @@ None. The flag is wired end-to-end (compute at INSERT → DB column → struct p
 ## TDD Gate Compliance
 
 Plan-level RED→GREEN honored: a `test(49-02)` commit (818e604) precedes the `feat(49-02)` GREEN commits (38d0e9d, dcdc371). No REFACTOR commit was needed.
+
+## Self-Check: PASSED
+
+- Created files verified present: `inbound_message/signals.ex`, the migration, this SUMMARY.
+- Commits verified in git log: 818e604, 38d0e9d, dcdc371, 4947a19.
+- Working tree clean; `mix.lock` (both root and inbound) unchanged.
