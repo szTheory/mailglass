@@ -61,15 +61,17 @@ defmodule Mix.Tasks.Mailglass.Inbound.PruneTest do
 
   describe "--dry-run" do
     test "reports scope and never invokes prune/0" do
-      {_code, output} = run_with_io(["--dry-run"])
+      run(["--dry-run"])
       assert Process.get(:stub_prune_called) != true
+      output = shell_output()
       assert output =~ ~r/dry.?run/i or output =~ "would"
     end
   end
 
   describe "output" do
     test "--yes prints per-table deletion counts" do
-      {_code, output} = run_with_io(["--yes"])
+      run(["--yes"])
+      output = shell_output()
       assert output =~ "records"
       assert output =~ "3"
     end
@@ -90,22 +92,16 @@ defmodule Mix.Tasks.Mailglass.Inbound.PruneTest do
     end
   end
 
-  defp run_with_io(argv) do
-    Mix.Task.reenable("mailglass.inbound.prune")
+  # Drains Mix.Shell.Process info/error messages into a single string.
+  defp shell_output do
+    drain_shell([])
+  end
 
-    {code, output} =
-      ExUnit.CaptureIO.with_io(fn ->
-        try do
-          Mix.Tasks.Mailglass.Inbound.Prune.run(argv ++ ["--no-start"],
-            prune: StubPrune,
-            repo: TestRepo
-          )
-          0
-        catch
-          :exit, {:shutdown, n} -> n
-        end
-      end)
-
-    {code, output}
+  defp drain_shell(acc) do
+    receive do
+      {:mix_shell, kind, [msg]} when kind in [:info, :error] -> drain_shell([msg | acc])
+    after
+      0 -> acc |> Enum.reverse() |> Enum.join("\n")
+    end
   end
 end

@@ -33,16 +33,16 @@ defmodule MailglassInbound.Internal.PruneTest do
   @within 5
 
   setup do
-    # Real shared connection (not the per-test sandbox transaction): the prune
-    # sweep commits between batches and uses session advisory locks.
+    # Real shared connection (NOT the per-test sandbox transaction): the prune
+    # sweep commits between batches and uses session advisory locks. Cleanup runs
+    # at the START of each test (real rows persist across tests), so on_exit only
+    # restores config — it must not touch the DB connection it does not own.
     :ok = Sandbox.checkout(TestRepo, sandbox: false)
+    Sandbox.mode(TestRepo, {:shared, self()})
     truncate_all()
     prior = Application.get_env(:mailglass_inbound, :retention)
 
-    on_exit(fn ->
-      truncate_all()
-      restore(:retention, prior)
-    end)
+    on_exit(fn -> restore(:retention, prior) end)
 
     :ok
   end
@@ -112,7 +112,7 @@ defmodule MailglassInbound.Internal.PruneTest do
       {:ok, old_rec} = insert_record(days_ago: @over)
 
       # Acquire the prune advisory lock from a SEPARATE session, then call prune/0.
-      {:ok, conn} = Postgrex.start_link(TestRepo.config())
+      {:ok, conn} = Postgrex.start_link(conn_opts())
       key = Prune.lock_key()
       %{rows: [[true]]} = Postgrex.query!(conn, "SELECT pg_try_advisory_lock($1)", [key])
 
@@ -231,6 +231,12 @@ defmodule MailglassInbound.Internal.PruneTest do
   end
 
   defp backdate(days_ago), do: DateTime.add(DateTime.utc_now(), -days_ago * 86_400, :second)
+
+  # Plain Postgrex connection opts for a SEPARATE session (drop the Sandbox pool).
+  defp conn_opts do
+    TestRepo.config()
+    |> Keyword.take([:username, :password, :hostname, :database, :port])
+  end
 
   defp truncate_all do
     TestRepo.query!(

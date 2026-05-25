@@ -107,7 +107,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
       {:ok, _r} = insert_record("tenant-a")
 
       {_code, output} = run_with_exit(["--tenant", "tenant-a", "--dry-run"])
-      assert output =~ ~r/1/
+      assert output =~ "1 record"
       assert Process.get(:stub_replay_ids, []) == []
     end
   end
@@ -168,20 +168,30 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
   defp run_with_exit(argv) do
     Mix.Task.reenable("mailglass.inbound.replay")
 
-    {code, output} =
-      ExUnit.CaptureIO.with_io(fn ->
-        try do
-          Mix.Tasks.Mailglass.Inbound.Replay.run(argv ++ ["--no-start"],
-            replay: StubReplay,
-            repo: TestRepo
-          )
-          0
-        catch
-          :exit, {:shutdown, n} -> n
-        end
-      end)
+    code =
+      try do
+        Mix.Tasks.Mailglass.Inbound.Replay.run(argv ++ ["--no-start"],
+          replay: StubReplay,
+          repo: TestRepo
+        )
+        0
+      catch
+        :exit, {:shutdown, n} -> n
+      end
 
-    {code, output}
+    {code, shell_output()}
+  end
+
+  defp shell_output do
+    drain_shell([])
+  end
+
+  defp drain_shell(acc) do
+    receive do
+      {:mix_shell, kind, [msg]} when kind in [:info, :error] -> drain_shell([msg | acc])
+    after
+      0 -> acc |> Enum.reverse() |> Enum.join("\n")
+    end
   end
 
   defp catch_exit_run(argv, opts) do
