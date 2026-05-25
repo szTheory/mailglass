@@ -218,13 +218,24 @@ Plans:
 **Requirements**: IDOC-01, IDOC-02, IDOC-03, IDOC-04, IDOC-05, IDOC-06, MGUN-05, SESI-06
 **Success Criteria** (what must be TRUE):
 
-  1. `docs/inbound-install.md` walks an adopter from `{:mailglass_inbound, "~> 1.2"}` through repo configuration, router macro setup, first mailbox, first ingress endpoint, and a sandboxed test that proves end-to-end wiring.
+  1. `docs/inbound-install.md` walks an adopter from `{:mailglass_inbound, "~> 0.2"}` through repo configuration, router macro setup, first mailbox, first ingress endpoint, and a sandboxed test that proves end-to-end wiring. (`~> 0.2` because `mailglass_inbound` ships at 0.2.0 in Phase 50.5 — the inbound package remains on 0.x until Conductor + relay providers land; `~> 1.2` was milestone shorthand, not the package version.)
   2. `docs/inbound-testing.md` covers `MailglassInbound.MailboxCase`, all 4 `TestAssertions` matcher styles + outcome + routing assertions, `Test.Ingress` usage, `Fixtures` patterns (no `.eml` on disk), and the StreamData idempotency property pattern from TELE-08.
   3. `docs/inbound-operator.md` covers `mix mailglass.inbound.{doctor,replay,prune}`, retention policy, rate-limit configuration (3 buckets), and suppression-flag interpretation (why flag-only, not auto-bounce).
   4. `docs/inbound-mailgun.md` (MGUN-05) and `docs/inbound-ses.md` (SESI-06) are end-to-end provider walkthroughs with example payloads — Mailgun covers HTTP route URL / API key / signing-key rotation / verification; SES covers SNS topic / IAM template / S3 bucket / `:ex_aws_s3` install / SubscribeURL allowlist.
   5. `docs/inbound-routing-debug.md` covers the InboundLive routing-trace card workflow, common matcher failure modes (header AND-semantics, regex vs exact, recipient envelope vs To:), and CLI inspection patterns; all v1.2 inbound docs pass `mix mailglass.docs.check` with zero warnings (IDOC-06).
 
-**Plans**: TBD
+**Plans**: 3 plans (2 waves)
+
+Plans:
+**Wave 1**
+
+- [ ] 50-01-PLAN.md — Install guide (inbound-install.md) + Testing guide (inbound-testing.md) + Operator guide (inbound-operator.md) [IDOC-01, IDOC-02, IDOC-03] [Wave 1]
+- [ ] 50-02-PLAN.md — Mailgun guide (inbound-mailgun.md) + SES guide (inbound-ses.md) [MGUN-05, SESI-06] [Wave 1, parallel with 50-01]
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 50-03-PLAN.md — Routing-debug guide (inbound-routing-debug.md) + docs.check extension (add 6 new docs to @tier1_paths + @tier1_surface_rules) + mix.exs docs update + docs_contract_test [IDOC-05, IDOC-06] [Wave 2]
+
 **UI hint**: no
 
 **Hardest sub-tasks:**
@@ -306,7 +317,7 @@ Plans:
 | 47. Inbound Test Helpers + Generators | 4/4 | Complete    | 2026-05-24 |
 | 48. Inbound Admin LiveView | 4/3 | Complete    | 2026-05-24 |
 | 49. Inbound Runtime Operator Tooling | 3/3 | Complete   | 2026-05-25 |
-| 50. Inbound Documentation Pass | 0/TBD | Not started | — |
+| 50. Inbound Documentation Pass | 0/3 | Not started | — |
 | **50.5. v1.2 Release Ceremony** | 0/TBD | Not started | — |
 | 51. Stability Closeout | 0/TBD | Not started | — |
 
