@@ -56,10 +56,14 @@ config :mailglass_inbound, :repo, MyApp.Repo
 For tests, point it at the test repo in `config/test.exs`:
 
 ```elixir
+# config/test.exs
+# If you have a dedicated sandbox repo, replace MyApp.Repo with your test repo module:
 config :mailglass_inbound, :repo, MyApp.Repo
 ```
 
-If you use a separate test repo for isolation, use that module name instead.
+This entry is optional if your application uses only one Ecto repo. If you use a
+separate test repo for isolation (e.g. `MyApp.TestRepo`), replace `MyApp.Repo` with
+that module name here — that is the only line you need to change.
 
 ## 4. Wire the body reader in your endpoint
 
