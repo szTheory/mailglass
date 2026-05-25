@@ -112,7 +112,8 @@ defmodule MailglassInbound.Internal.Doctor do
            check: :router_configured,
            status: :fail,
            title: "Module is not a MailglassInbound.Router",
-           observed: "`#{inspect(router)}` does not `use MailglassInbound.Router` (cannot diagnose)",
+           observed:
+             "`#{inspect(router)}` does not `use MailglassInbound.Router` (cannot diagnose)",
            remediation: "Add `use MailglassInbound.Router` and declare `route/2` entries.",
            evidence: %{cannot_diagnose: true, router: inspect(router)}
          }}
@@ -352,8 +353,7 @@ defmodule MailglassInbound.Internal.Doctor do
       if available? do
         {:pass, "MIME backend gen_smtp (:mimemail) #{version || "available"} is loaded"}
       else
-        {:warn,
-         "MIME backend gen_smtp (:mimemail) is not loaded — raw MIME parsing is unavailable"}
+        {:warn, "MIME backend gen_smtp (:mimemail) is not loaded — raw MIME parsing is unavailable"}
       end
 
     [
@@ -410,12 +410,15 @@ defmodule MailglassInbound.Internal.Doctor do
     base = %{pass: 0, warn: 0, fail: 0, cannot_diagnose: 0}
 
     Enum.reduce(findings, base, fn finding, acc ->
-      acc = Map.update!(acc, finding.status, &(&1 + 1))
-
+      # WR-04: a cannot-diagnose finding (no router / router won't compile) is NOT
+      # the same disposition as a failed check. Count it ONLY under
+      # `:cannot_diagnose`, not under `:fail`, so the human tally and exit code
+      # both reflect "couldn't check" rather than conflating it with "check
+      # failed". (The finding keeps `status: :fail` for the per-finding render.)
       if Map.get(finding[:evidence] || %{}, :cannot_diagnose) do
         Map.update!(acc, :cannot_diagnose, &(&1 + 1))
       else
-        acc
+        Map.update!(acc, finding.status, &(&1 + 1))
       end
     end)
   end

@@ -5,8 +5,11 @@ defmodule MailglassInbound.Operator.Formatter do
   Cloned from `Mailglass.Deliverability.Formatter` (`render_human/2` +
   `render_json/1`), adapted to the locked D-49-05 finding shape
   `%{check, status, title, observed, remediation, evidence}` (no `:why_it_matters`,
-  no `:area`). The summary line is `"N pass, N warn, N fail"`; cannot-diagnose is
-  surfaced via the doctor's exit code (2), not a tally column.
+  no `:area`). The summary line is `"N pass, N warn, N fail"`, plus a trailing
+  `", N cannot diagnose"` only when the summary carries a non-zero
+  `:cannot_diagnose` count (WR-04 — a cannot-diagnose state is a distinct
+  disposition from a failed check, so it is no longer folded into the `fail`
+  tally). It also still drives the doctor's exit code (2).
 
   `render_json/1` emits ONE machine-parseable object
   `%{summary: %{pass, warn, fail}, findings: [...]}` — never a bare list.
@@ -52,7 +55,15 @@ defmodule MailglassInbound.Operator.Formatter do
   end
 
   defp summary_line(%{summary: summary}) do
-    "#{Map.get(summary, :pass, 0)} pass, #{Map.get(summary, :warn, 0)} warn, #{Map.get(summary, :fail, 0)} fail"
+    base =
+      "#{Map.get(summary, :pass, 0)} pass, #{Map.get(summary, :warn, 0)} warn, #{Map.get(summary, :fail, 0)} fail"
+
+    # WR-04: only surface the cannot-diagnose count when there is one, so a normal
+    # run keeps the familiar "N pass, N warn, N fail" line.
+    case Map.get(summary, :cannot_diagnose, 0) do
+      n when is_integer(n) and n > 0 -> base <> ", #{n} cannot diagnose"
+      _ -> base
+    end
   end
 
   defp render_finding(finding, verbose?) do

@@ -88,6 +88,19 @@ defmodule Mix.Tasks.Mailglass.Inbound.DoctorTest do
       assert output =~ "fail"
     end
 
+    test "WR-04: a no-router run reports 'cannot diagnose', not '1 fail'" do
+      # WR-04 regression: a cannot-diagnose finding used to be tallied as a fail,
+      # so the human summary read "0 pass, 0 warn, 1 fail" for a no-router run even
+      # though the real disposition is "cannot diagnose". The summary must now read
+      # "0 fail" with a distinct cannot-diagnose count.
+      Application.delete_env(:mailglass_inbound, :router)
+
+      {2, output} = run_task([])
+
+      assert output =~ "0 fail", "cannot-diagnose must not inflate the fail tally"
+      assert output =~ "cannot diagnose", "the human summary must surface cannot-diagnose"
+    end
+
     test "json output is one parseable object with summary + findings (parity)" do
       Application.put_env(:mailglass_inbound, :router, CleanRouter)
 
