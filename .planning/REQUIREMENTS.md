@@ -94,9 +94,9 @@ Architecturally clones `mailglass_admin/lib/mailglass_admin/operator_live.ex` pa
 
 ### Inbound Documentation (IDOC)
 
-- [ ] **IDOC-01**: Inbound install guide: `docs/inbound-install.md` covers `mix.exs` deps, repo configuration, router macro setup, first mailbox, first ingress, sandboxed test
-- [ ] **IDOC-02**: Inbound testing guide: `docs/inbound-testing.md` covers `MailboxCase`, `TestAssertions`, `Test.Ingress`, fixtures, and idempotency property-test patterns
-- [ ] **IDOC-03**: Inbound operator guide: `docs/inbound-operator.md` covers `inbound.doctor`, `inbound.replay`, `inbound.prune`, rate-limit configuration, suppression flag interpretation
+- [x] **IDOC-01**: Inbound install guide: `docs/inbound-install.md` covers `mix.exs` deps, repo configuration, router macro setup, first mailbox, first ingress, sandboxed test
+- [x] **IDOC-02**: Inbound testing guide: `docs/inbound-testing.md` covers `MailboxCase`, `TestAssertions`, `Test.Ingress`, fixtures, and idempotency property-test patterns
+- [x] **IDOC-03**: Inbound operator guide: `docs/inbound-operator.md` covers `inbound.doctor`, `inbound.replay`, `inbound.prune`, rate-limit configuration, suppression flag interpretation
 - [ ] **IDOC-04**: Mailgun setup guide (MGUN-05) and SES setup guide (SESI-06) are complete, end-to-end walkthroughs with example payloads
 - [ ] **IDOC-05**: Routing debug guide: `docs/inbound-routing-debug.md` covers the InboundLive routing-trace card workflow, common matcher failure modes, and CLI inspection patterns
 - [ ] **IDOC-06**: All v1.2 inbound docs pass the existing doc-contract test (`mix mailglass.docs.check`) without warnings
@@ -205,9 +205,9 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 | IOPS-03 | Phase 49 | Pending |
 | IOPS-04 | Phase 49 | Pending |
 | IOPS-05 | Phase 49 | Pending |
-| IDOC-01 | Phase 50 | Pending |
-| IDOC-02 | Phase 50 | Pending |
-| IDOC-03 | Phase 50 | Pending |
+| IDOC-01 | Phase 50 | Complete |
+| IDOC-02 | Phase 50 | Complete |
+| IDOC-03 | Phase 50 | Complete |
 | IDOC-04 | Phase 50 | Pending |
 | IDOC-05 | Phase 50 | Pending |
 | IDOC-06 | Phase 50 | Pending |
