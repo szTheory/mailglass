@@ -201,7 +201,7 @@ defmodule Mailglass.DocsContractTest do
       doc = File.read!("mailglass_inbound/docs/inbound-install.md")
       assert doc =~ "body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}"
       assert doc =~ "use MailglassInbound.Router"
-      assert doc =~ "use MailglassInbound.Mailbox"
+      assert doc =~ "@behaviour MailglassInbound.Mailbox"
       assert doc =~ "mix ecto.migrate"
       assert doc =~ "async: false"
       refute doc =~ "mix mailglass.install"

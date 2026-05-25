@@ -247,7 +247,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
       required: [
         "body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}",
         "use MailglassInbound.Router",
-        "use MailglassInbound.Mailbox",
+        "@behaviour MailglassInbound.Mailbox",
         "mix ecto.migrate",
         "async: false"
       ],
