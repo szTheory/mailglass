@@ -1,11 +1,12 @@
 ---
 phase: 49
 slug: inbound-runtime-operator-tooling
-status: ready
+status: audited
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-05-25
 populated: 2026-05-25
+audited: 2026-05-25
 ---
 
 # Phase 49 — Validation Strategy
@@ -13,8 +14,9 @@ populated: 2026-05-25
 > Per-phase validation contract for feedback sampling during execution.
 > Source: `49-RESEARCH.md` § Validation Architecture (per-deliverable test seams).
 > Populated from the three written plans after the plan-checker pass (0 blockers, 2026-05-25).
-> `wave_0_complete` stays `false` until the Wave 0 RED scaffolds are created and run during
-> `/gsd:execute-phase 49`.
+> Audited 2026-05-25 after `/gsd:execute-phase 49`: all 11 test files exist and run green
+> (143 tests, 0 failures, `--seed 0`). `wave_0_complete: true`. See the Validation Audit
+> trail at the foot of this file.
 
 ---
 
@@ -47,17 +49,17 @@ populated: 2026-05-25
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 49-01-01 | 01 | 1 | IOPS-04 | T-49-01..05 | RED scaffolds: rate-limit/config/plug tests (capacity trip, forgery-budget, PII-free span) | unit + integration | `cd mailglass_inbound && mix test test/mailglass_inbound/config_test.exs test/mailglass_inbound/rate_limiter_test.exs --seed 0` (expect RED) | ❌ W0 | ⬜ pending |
-| 49-01-02 | 01 | 1 | IOPS-04 | T-49-01 / T-49-02 | Config validates locked key shape (`:infinity` ok); rate-limiter buckets trip in tenant→recipient→sender_domain order; PII-free telemetry | unit | `cd mailglass_inbound && mix test test/mailglass_inbound/config_test.exs test/mailglass_inbound/rate_limiter_test.exs --seed 0` (GREEN) | ❌ W0 | ⬜ pending |
-| 49-01-03 | 01 | 1 | IOPS-04 | T-49-03 / T-49-04 | Post-verify limit → 429 + `retry-after`; forged request → 401 with budget intact (rate limit applied after signature verify) | integration | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/plug_test.exs --seed 0` (GREEN) | ❌ W0 | ⬜ pending |
-| 49-02-01 | 02 | 2 | IOPS-05 | T-49-06..10 | RED scaffolds: signals struct/predicate, suppression-flag persist, degrade-OPEN, no-auto-bounce, PII-free span | unit + integration | `cd mailglass_inbound && mix test test/mailglass_inbound/inbound_message_test.exs --seed 0` (expect RED) | ❌ W0 | ⬜ pending |
-| 49-02-02 | 02 | 2 | IOPS-05 | T-49-06 | `Signals` default `suppression_flagged: false` (no KeyError); `suppression_flagged?/1` predicate; pattern-match on `%Signals{}` | unit | `cd mailglass_inbound && mix test test/mailglass_inbound/inbound_message_test.exs --seed 0` (GREEN) | ❌ W0 | ⬜ pending |
-| 49-02-03 | 02 | 2 | IOPS-05 | T-49-07..10 | `suppression_flagged` computed at persist; degrade-OPEN on store error (persist still succeeds, flag false); no auto-bounce; list projection; PII-free span | integration | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/persist_test.exs test/mailglass_inbound/internal/operator/records_test.exs --seed 0` (GREEN) | ❌ W0 | ⬜ pending |
-| 49-03-01 | 03 | 2 | IOPS-01, IOPS-02, IOPS-03, MIME-03 | T-49-11..17 | RED scaffolds + fixtures (fake routers w/ conflict pairs, fake mailbox w/wo `process/1`, over-window seed) for doctor/replay/prune | unit + integration | `cd mailglass_inbound && mix test test/mailglass_inbound/internal/doctor_test.exs test/mailglass_inbound/internal/prune_test.exs --seed 0` (expect RED) | ❌ W0 | ⬜ pending |
-| 49-03-02 | 03 | 2 | IOPS-01, MIME-03 | T-49-11..13 | Doctor DNS-free 3-state exit (0/1/2), human+JSON parity, route-conflict detection naming `router.ex:LINE`, MIME backend name+vsn (warn when absent) | unit | `cd mailglass_inbound && mix test test/mailglass_inbound/internal/doctor_test.exs test/mix/tasks/mailglass_inbound_doctor_test.exs --seed 0` (GREEN) | ❌ W0 | ⬜ pending |
-| 49-03-03 | 03 | 2 | IOPS-02, IOPS-03 | T-49-14..17 | Replay selector AND-combine, `[y/N]` default-No, `--yes` skips, appends `source: :replay`; prune LIMIT-1000 batched, session advisory-lock single-run, child-first order, `:infinity` disables, per-table telemetry counts | integration | `cd mailglass_inbound && mix test test/mailglass_inbound/internal/prune_test.exs test/mix/tasks/mailglass_inbound_replay_test.exs test/mix/tasks/mailglass_inbound_prune_test.exs --seed 0` (GREEN) | ❌ W0 | ⬜ pending |
+| 49-01-01 | 01 | 1 | IOPS-04 | T-49-01..05 | RED scaffolds: rate-limit/config/plug tests (capacity trip, forgery-budget, PII-free span) | unit + integration | `cd mailglass_inbound && mix test test/mailglass_inbound/config_test.exs test/mailglass_inbound/rate_limiter_test.exs --seed 0` (scaffold, now GREEN) | ✅ | ✅ green |
+| 49-01-02 | 01 | 1 | IOPS-04 | T-49-01 / T-49-02 | Config validates locked key shape (`:infinity` ok); rate-limiter buckets trip in tenant→recipient→sender_domain order; PII-free telemetry | unit | `cd mailglass_inbound && mix test test/mailglass_inbound/config_test.exs test/mailglass_inbound/rate_limiter_test.exs --seed 0` (GREEN) | ✅ | ✅ green |
+| 49-01-03 | 01 | 1 | IOPS-04 | T-49-03 / T-49-04 | Post-verify limit → 429 + `retry-after`; forged request → 401 with budget intact (rate limit applied after signature verify) | integration | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/plug_test.exs --seed 0` (GREEN) | ✅ | ✅ green |
+| 49-02-01 | 02 | 2 | IOPS-05 | T-49-06..10 | RED scaffolds: signals struct/predicate, suppression-flag persist, degrade-OPEN, no-auto-bounce, PII-free span | unit + integration | `cd mailglass_inbound && mix test test/mailglass_inbound/inbound_message_test.exs --seed 0` (scaffold, now GREEN) | ✅ | ✅ green |
+| 49-02-02 | 02 | 2 | IOPS-05 | T-49-06 | `Signals` default `suppression_flagged: false` (no KeyError); `suppression_flagged?/1` predicate; pattern-match on `%Signals{}` | unit | `cd mailglass_inbound && mix test test/mailglass_inbound/inbound_message_test.exs --seed 0` (GREEN) | ✅ | ✅ green |
+| 49-02-03 | 02 | 2 | IOPS-05 | T-49-07..10 | `suppression_flagged` computed at persist; degrade-OPEN on store error (persist still succeeds, flag false); no auto-bounce; list projection; PII-free span | integration | `cd mailglass_inbound && mix test test/mailglass_inbound/ingress/persist_test.exs test/mailglass_inbound/internal/operator/records_test.exs --seed 0` (GREEN) | ✅ | ✅ green |
+| 49-03-01 | 03 | 2 | IOPS-01, IOPS-02, IOPS-03, MIME-03 | T-49-11..17 | RED scaffolds + fixtures (fake routers w/ conflict pairs, fake mailbox w/wo `process/1`, over-window seed) for doctor/replay/prune | unit + integration | `cd mailglass_inbound && mix test test/mailglass_inbound/internal/doctor_test.exs test/mailglass_inbound/internal/prune_test.exs --seed 0` (scaffold, now GREEN) | ✅ | ✅ green |
+| 49-03-02 | 03 | 2 | IOPS-01, MIME-03 | T-49-11..13 | Doctor DNS-free 3-state exit (0/1/2), human+JSON parity, route-conflict detection naming `router.ex:LINE`, MIME backend name+vsn (warn when absent) | unit | `cd mailglass_inbound && mix test test/mailglass_inbound/internal/doctor_test.exs test/mix/tasks/mailglass_inbound_doctor_test.exs --seed 0` (GREEN) | ✅ | ✅ green |
+| 49-03-03 | 03 | 2 | IOPS-02, IOPS-03 | T-49-14..17 | Replay selector AND-combine, `[y/N]` default-No, `--yes` skips, appends `source: :replay`; prune LIMIT-1000 batched, session advisory-lock single-run, child-first order, `:infinity` disables, per-table telemetry counts | integration | `cd mailglass_inbound && mix test test/mailglass_inbound/internal/prune_test.exs test/mix/tasks/mailglass_inbound_replay_test.exs test/mix/tasks/mailglass_inbound_prune_test.exs --seed 0` (GREEN) | ✅ | ✅ green |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky · File Exists: `❌ W0` = created by the plan's Wave 0 (`-01`) scaffold task during execution.*
+*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky · File Exists: `✅` = file present on disk and verified green at audit (2026-05-25). All Wave 0 (`-01`) scaffolds were created during execution and turned green by their `-02`/`-03` implementation tasks.*
 
 Cross-cutting gates (every plan's `<verification>` block):
 - `cd /Users/jon/projects/mailglass && mix credo --strict` green (telemetry whitelist + no-PII; **run credo, do not grep**).
@@ -67,11 +69,11 @@ Cross-cutting gates (every plan's `<verification>` block):
 
 ## Wave 0 Requirements
 
-Each plan's `-01` task creates the failing (RED) test files the implementation tasks then turn GREEN:
+Each plan's `-01` task creates the failing (RED) test files the implementation tasks then turn GREEN. All created and verified green at audit (2026-05-25):
 
-- [ ] `mailglass_inbound/test/mailglass_inbound/config_test.exs`, `rate_limiter_test.exs`, `ingress/plug_test.exs` (extended) — stubs for IOPS-04
-- [ ] `mailglass_inbound/test/mailglass_inbound/inbound_message_test.exs` (extended), `ingress/persist_test.exs` (extended), `internal/operator/records_test.exs` (extended) — stubs for IOPS-05
-- [ ] `mailglass_inbound/test/mailglass_inbound/internal/doctor_test.exs`, `internal/prune_test.exs`, `test/mix/tasks/mailglass_inbound_doctor_test.exs`, `mailglass_inbound_replay_test.exs`, `mailglass_inbound_prune_test.exs` + fixtures (fake routers/mailboxes, over-window seed) — stubs for IOPS-01/02/03 + MIME-03
+- [x] `mailglass_inbound/test/mailglass_inbound/config_test.exs`, `rate_limiter_test.exs`, `ingress/plug_test.exs` (extended) — stubs for IOPS-04
+- [x] `mailglass_inbound/test/mailglass_inbound/inbound_message_test.exs` (extended), `ingress/persist_test.exs` (extended), `internal/operator/records_test.exs` (extended) — stubs for IOPS-05
+- [x] `mailglass_inbound/test/mailglass_inbound/internal/doctor_test.exs`, `internal/prune_test.exs`, `test/mix/tasks/mailglass_inbound_doctor_test.exs`, `mailglass_inbound_replay_test.exs`, `mailglass_inbound_prune_test.exs` + fixtures (fake routers/mailboxes, over-window seed) — stubs for IOPS-01/02/03 + MIME-03
 
 ---
 
@@ -91,7 +93,21 @@ Each plan's `-01` task creates the failing (RED) test files the implementation t
 - [x] Sampling continuity: no 3 consecutive tasks without automated verify (each plan = 3 tasks, all carry `--seed 0` verify)
 - [x] Wave 0 covers all MISSING references (each plan's `-01` scaffold creates the files its `-02`/`-03` tasks turn GREEN — plan-checker Dim 8d)
 - [x] No watch-mode flags
-- [ ] Feedback latency < Ns (measured at execution)
+- [x] Feedback latency < 2s (measured at audit: 143 tests across all 11 files in 1.0s; scoped per-file runs sub-second)
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** approved 2026-05-25 (plan-checker: 0 blockers, 3 warnings — none gating). `wave_0_complete` and per-task Status remain pending until `/gsd:execute-phase 49` runs the Wave 0 scaffolds.
+**Approval:** approved 2026-05-25 (plan-checker: 0 blockers, 3 warnings — none gating). Audited 2026-05-25 post-`/gsd:execute-phase 49`: `wave_0_complete: true`, all per-task Status ✅ green.
+
+---
+
+## Validation Audit 2026-05-25
+
+Audited the stale pre-execution map against the executed phase. All 11 mapped test files exist on disk; the combined suite runs **143 tests, 0 failures** (`--seed 0`, 1.0s). Every requirement (IOPS-01..05, MIME-03) is COVERED with green automated verification — no MISSING or PARTIAL gaps, so no auditor agent or new tests were needed. Updated the per-task map (pending → green), `wave_0_complete` (false → true), and the Wave 0 / Sign-Off checklists.
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+| Tests verified green | 143 |
+| Manual-only | 0 |
