@@ -32,7 +32,9 @@ defmodule Mailglass.Credo.CredoConfigSentinelTest do
            "CR-01 regression: .credo.exs NoBareOptionalDepReference gated_modules is missing the :gen_smtp_client atom key"
   end
 
-  test "TelemetryEventConvention required_root includes :mailglass_inbound (WR-02)", %{checks: checks} do
+  test "TelemetryEventConvention required_root includes :mailglass_inbound (WR-02)", %{
+    checks: checks
+  } do
     params = find_check(checks, Mailglass.Credo.TelemetryEventConvention)
 
     assert is_list(params),
