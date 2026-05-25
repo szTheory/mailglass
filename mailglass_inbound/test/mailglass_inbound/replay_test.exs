@@ -239,6 +239,7 @@ defmodule MailglassInbound.ReplayTest do
 
       assert {:ok, %{outcome: :accept}} =
                Replay.replay(record.id,
+                 tenant_id: record.tenant_id,
                  repo: ReplayRepo,
                  execution: ReplayExecution
                )
@@ -270,6 +271,7 @@ defmodule MailglassInbound.ReplayTest do
 
       assert {:error, {:replay_mailbox_missing, %{reason: :no_prior_match}}} =
                Replay.replay(record.id,
+                 tenant_id: record.tenant_id,
                  repo: ReplayRepo,
                  execution: ReplayExecution
                )
@@ -285,9 +287,22 @@ defmodule MailglassInbound.ReplayTest do
 
       assert {:error, {:replay_mailbox_missing, %{reason: :execution_history_missing}}} =
                Replay.replay(record.id,
+                 tenant_id: record.tenant_id,
                  repo: ReplayRepo,
                  execution: ReplayExecution
                )
+    end
+
+    test "raises without a :tenant_id (T-49-17 cross-tenant replay guard)" do
+      record = valid_inbound_record()
+
+      assert_raise ArgumentError, ~r/requires a non-empty :tenant_id/, fn ->
+        Replay.replay(record.id, repo: ReplayRepo, execution: ReplayExecution)
+      end
+
+      assert_raise ArgumentError, ~r/requires a non-empty :tenant_id/, fn ->
+        Replay.replay(record.id, tenant_id: "", repo: ReplayRepo, execution: ReplayExecution)
+      end
     end
   end
 

@@ -16,22 +16,26 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
   @moduledoc """
   Replay previously-received inbound records through their mailboxes (IOPS-02).
 
-  Selectors are AND-combinable: `--record-id`, `--since <iso8601>`, and
-  `--tenant <id>` narrow the same record set. Matching records are iterated through
-  the shipped single-record `MailglassInbound.Internal.Replay.replay/2`, which
-  appends an `ExecutionRun` with `source: :replay` (append-only — no UPDATE).
+  `--tenant <id>` is **required** — it is the cross-tenant replay guard (T-49-17):
+  every record is loaded scoped to that tenant, so a foreign-tenant `--record-id`
+  resolves to nothing rather than replaying across the boundary. `--record-id` and
+  `--since <iso8601>` further narrow the set WITHIN that tenant (AND-combinable).
+  Matching records are iterated through the shipped single-record
+  `MailglassInbound.Internal.Replay.replay/2`, which appends an `ExecutionRun` with
+  `source: :replay` (append-only — no UPDATE).
 
   ## Usage
 
-      mix mailglass.inbound.replay --record-id <uuid>
+      mix mailglass.inbound.replay --tenant acme --record-id <uuid>
       mix mailglass.inbound.replay --tenant acme --since 2026-05-01T00:00:00Z
       mix mailglass.inbound.replay --tenant acme --dry-run
       mix mailglass.inbound.replay --tenant acme --yes
 
-  Replay is non-destructive (it appends lineage rows), so the confirmation tier is
-  a simple `[y/N]` defaulting to **No**. `--yes`/`-y` skips the prompt; `--dry-run`
-  reports the count + scope without replaying. Zero matches exits `0` with
-  "nothing to replay."
+  In single-tenant deployments pass the resolver's tenant (`--tenant default` under
+  `Mailglass.Tenancy.SingleTenant`). Replay is non-destructive (it appends lineage
+  rows), so the confirmation tier is a simple `[y/N]` defaulting to **No**.
+  `--yes`/`-y` skips the prompt; `--dry-run` reports the count + scope without
+  replaying. Zero matches exits `0` with "nothing to replay."
   """
 
   @impl Mix.Task
@@ -50,6 +54,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
       )
 
     validate_cli!(rest, invalid)
+    tenant = require_tenant!(opts)
 
     unless Keyword.get(opts, :no_start, false) do
       Mix.Task.run("app.start")
@@ -70,7 +75,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
         Mix.shell().info("Inbound replay (dry run): #{length(ids)} record(s) would be replayed.")
 
       confirmed?(opts, length(ids)) ->
-        replay_all(replay, ids)
+        replay_all(replay, ids, tenant)
 
       true ->
         Mix.shell().info("Inbound replay: aborted (no records replayed).")
@@ -88,6 +93,22 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
     end
 
     :ok
+  end
+
+  # --tenant is the cross-tenant replay guard (T-49-17): replay loads are scoped to
+  # this tenant, so it must be supplied explicitly (use `--tenant default` under the
+  # SingleTenant resolver). Blank/missing is a CLI misuse → Mix.raise.
+  defp require_tenant!(opts) do
+    case opts[:tenant] do
+      tenant when is_binary(tenant) and tenant != "" ->
+        tenant
+
+      _ ->
+        Mix.raise(
+          "Inbound replay blocked: --tenant <id> is required (cross-tenant replay guard). " <>
+            "Use --tenant default under the SingleTenant resolver."
+        )
+    end
   end
 
   defp parse_selectors!(opts) do
@@ -139,10 +160,10 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
     end
   end
 
-  defp replay_all(replay, ids) do
+  defp replay_all(replay, ids, tenant) do
     {ok, errors} =
       Enum.reduce(ids, {0, 0}, fn id, {ok, errors} ->
-        case replay.replay(id, []) do
+        case replay.replay(id, tenant_id: tenant) do
           {:ok, _result} ->
             {ok + 1, errors}
 

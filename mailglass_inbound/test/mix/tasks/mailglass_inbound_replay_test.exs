@@ -55,9 +55,19 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
       {:ok, target} = insert_record("tenant-a")
       {:ok, _other} = insert_record("tenant-a")
 
-      run(["--record-id", target.id, "--yes"])
+      run(["--tenant", "tenant-a", "--record-id", target.id, "--yes"])
 
       assert Process.get(:stub_replay_ids, []) == [target.id]
+    end
+
+    test "a foreign-tenant --record-id resolves to nothing (T-49-17 cross-tenant guard)" do
+      {:ok, foreign} = insert_record("tenant-b")
+
+      assert {0, output} =
+               run_with_exit(["--tenant", "tenant-a", "--record-id", foreign.id, "--yes"])
+
+      assert output =~ "nothing to replay"
+      assert Process.get(:stub_replay_ids, []) == []
     end
 
     test "--since AND --tenant combine (only records after the cutoff in that tenant)" do
@@ -93,6 +103,23 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
       run(["--tenant", "tenant-a"])
 
       assert Process.get(:stub_replay_ids, []) == [r.id]
+    end
+  end
+
+  describe "tenant requirement (T-49-17)" do
+    test "--tenant is required — omitting it is a CLI error" do
+      {:ok, _r} = insert_record("tenant-a")
+
+      assert_raise Mix.Error, ~r/--tenant <id> is required/, fn ->
+        Mix.Task.reenable("mailglass.inbound.replay")
+
+        Mix.Tasks.Mailglass.Inbound.Replay.run(["--yes", "--no-start"],
+          replay: StubReplay,
+          repo: TestRepo
+        )
+      end
+
+      assert Process.get(:stub_replay_ids, []) == []
     end
   end
 
@@ -133,7 +160,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
 
       send(self(), {:mix_shell_input, :yes?, true})
       # Note: no `replay:` stub here — use the real Internal.Replay.
-      run_real(["--record-id", record.id])
+      run_real(["--tenant", "tenant-a", "--record-id", record.id])
 
       after_count = TestRepo.aggregate(ExecutionRun, :count)
       assert after_count == before + 1

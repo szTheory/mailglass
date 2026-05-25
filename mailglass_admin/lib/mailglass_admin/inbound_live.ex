@@ -149,9 +149,10 @@ defmodule MailglassAdmin.InboundLive do
   # Replay confirm flow (IADM-03). Simplified clone of OperatorLive's confirm_replay
   # (no multi-target branch, D-48-08). The gate order is load-bearing:
   #
-  #   1. TENANT gate (D-48-05): `Internal.Replay.replay/2` loads by id ONLY and is
-  #      NOT tenant-scoped, so this admin-side check is the cross-tenant defense —
-  #      a guessed foreign-tenant id is rejected BEFORE the gateway replay call.
+  #   1. TENANT gate (D-48-05): rejects a guessed foreign-tenant id BEFORE the
+  #      gateway replay call. `Internal.Replay.replay/2` is now itself tenant-scoped
+  #      (T-49-17) — this admin-side check stays as defense-in-depth, no longer the
+  #      sole cross-tenant defense.
   #   2. CAPABILITY gate (V6): `:replay_inbound` over the existing Auth seam.
   #   3. REPLAY: structured errors mapped to UI-SPEC copy by matching the
   #      STRUCT/tuple, never the message string (CLAUDE.md rule 7). A :no_match
@@ -166,7 +167,7 @@ defmodule MailglassAdmin.InboundLive do
              socket.assigns.operator_auth[:adapter],
              record
            ),
-         {:ok, _result} <- replay_record(record.id) do
+         {:ok, _result} <- replay_record(record) do
       {:noreply,
        socket
        |> assign_inbound_state(socket.assigns.filter_params, record.id)
@@ -395,9 +396,13 @@ defmodule MailglassAdmin.InboundLive do
 
   defp verify_tenant(_record, _filter_params), do: {:error, :cross_tenant}
 
-  defp replay_record(record_id) do
+  # `record` is already tenant-resolved (read-model load) AND verify_tenant/2 has
+  # confirmed record.tenant_id == active tenant. Thread that tenant_id into the
+  # tenant-scoped replay/2 (T-49-17): the admin gate is now backed by a replay seam
+  # that refuses cross-tenant ids by construction, not just by this caller's check.
+  defp replay_record(%{id: record_id, tenant_id: tenant_id}) do
     if gateway_available?() do
-      apply(@gateway, :replay, [record_id, []])
+      apply(@gateway, :replay, [record_id, [tenant_id: tenant_id]])
     else
       {:error, :unavailable}
     end

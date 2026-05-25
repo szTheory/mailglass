@@ -121,8 +121,11 @@ if Code.ensure_loaded?(MailglassInbound) do
     end
 
     @doc """
-    Replays a stored inbound record by id. The caller MUST tenant-gate first
-    (via `detail/2`) — `Internal.Replay` loads by id only (D-48-05).
+    Replays a stored inbound record by id. The caller passes `tenant_id:` in `opts`
+    — `Internal.Replay.replay/2` scopes every load to that tenant and refuses a
+    foreign-tenant id with `{:error, :not_found}` (T-49-17). The admin's
+    `verify_tenant/2` gate (D-48-05) remains the first line of defence; this seam is
+    now tenant-safe by construction too.
     """
     @doc since: "0.2.0"
     @spec replay(Ecto.UUID.t(), keyword()) :: {:ok, map()} | {:error, term()}
