@@ -118,6 +118,17 @@ defmodule Mix.Tasks.Mailglass.Inbound.DoctorTest do
         run_task!(["surprise"])
       end
     end
+
+    test "WR-02: --no-start is a declared flag (parsed, not rejected as unknown)" do
+      # WR-02 regression: --no-start used to be absent from the strict spec, so it
+      # was rejected as an unknown option and the run/1 `no_start` branch was dead.
+      # It must now parse cleanly and skip the app.start boot the task otherwise
+      # runs (so the run completes with the normal three-state exit code, here 0
+      # for a clean router).
+      Application.put_env(:mailglass_inbound, :router, CleanRouter)
+
+      assert {0, _output} = run_task(["--no-start"])
+    end
   end
 
   # ---- helpers --------------------------------------------------------------

@@ -40,7 +40,10 @@ defmodule Mix.Tasks.Mailglass.Inbound.Doctor do
   def run(argv) do
     {opts, rest, invalid} =
       OptionParser.parse(argv,
-        strict: [format: :string, strict: :boolean, verbose: :boolean]
+        # WR-02: `no_start` must be declared in the strict spec (matching the
+        # replay/prune tasks), or the `--no-start` flag the run/1 body branches on
+        # below is rejected as an unknown option and the escape hatch is dead.
+        strict: [format: :string, strict: :boolean, verbose: :boolean, no_start: :boolean]
       )
 
     validate_cli!(opts, rest, invalid)
