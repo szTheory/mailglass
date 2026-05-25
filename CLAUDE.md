@@ -9,18 +9,22 @@
 
 Three sibling Hex packages, MIT, no Node toolchain anywhere:
 - **`mailglass`** — core lib (Phoenix + Ecto + Postgres required, Oban optional)
-- **`mailglass_admin`** — mountable LiveView dashboard (dev preview at v0.1, prod admin v0.5)
-- **`mailglass_inbound`** — Action Mailbox equivalent (v0.5+, separate package)
+- **`mailglass_admin`** — mountable LiveView dashboard (dev preview shipped v0.1, prod admin shipped v0.5)
+- **`mailglass_inbound`** — Action Mailbox equivalent (opened v1.1; outside the `v1.x` stability promise for now)
 
 **Marketing email and multi-channel notifications are permanently out of scope.** See `.planning/PROJECT.md` Out of Scope for the full list with reasoning.
+
+**Current state (as of 2026-05-22):** v0.1 → v1.1 shipped to Hex (`mailglass` 1.0.0 / `mailglass_admin` 1.0.0 / `mailglass_inbound` 0.1.0); **v1.2 Inbound Production Confidence** is in flight. `.planning/STATE.md` is the live source of truth for milestone/phase status — read it rather than trusting any milestone number hardcoded in this file.
 
 ## Where to Look
 
 | If you need… | Read |
 |---|---|
-| The vision, scope, brand, locked decisions D-01..D-20 | `.planning/PROJECT.md` |
-| The 84 v1 REQ-IDs (CORE/AUTHOR/PERSIST/TENANT/TRANS/SEND/TRACK/HOOK/COMP/PREV/TEST/LINT/INST/CI/DOCS/BRAND) | `.planning/REQUIREMENTS.md` |
-| The 7-phase v0.1 roadmap with phase goals + success criteria + dependencies | `.planning/ROADMAP.md` |
+| The vision, scope, brand, locked decisions D-01..D-22 | `.planning/PROJECT.md` |
+| Current-milestone REQ-IDs (v1.2: TEL/MIME/MGUN/AWS/TEST/GEN/ALIVE/OPS/DOCS/CLOSE). Shipped v1 REQ-IDs (84 across CORE/AUTHOR/PERSIST/…) are recorded under PROJECT.md "Validated Requirements" | `.planning/REQUIREMENTS.md` |
+| The current-milestone roadmap (phase goals + success criteria + dependencies); per-milestone archives live in `.planning/milestones/` | `.planning/ROADMAP.md` |
+| Adopter-facing user flows / jobs-to-be-done — the ramp-up map for anyone *using* the library | `guides/jobs.md` |
+| Internal JTBD frontier map — what's built vs. gaps, priority ordering, the diminishing-returns line (feeds milestone planning) | `.planning/research/JTBD-COVERAGE.md` |
 | Current state and next action | `.planning/STATE.md` |
 | Verified 2026 versions, optional-dep gateway pattern, CI lane structure | `.planning/research/STACK.md` |
 | Feature catalog with TS-/DF-/AF- IDs + competitor matrix | `.planning/research/FEATURES.md` |
@@ -85,6 +89,19 @@ This project uses GSD (Get Shit Done) for planning + execution. Common entry poi
 
 Other phases (1, 3, 6, 7) plan directly from synthesis — patterns are 4-of-4 convergent across prior libs.
 
+## Decision Policy — Research-First, Decide, Escalate Rarely
+
+This applies in **every** context — discuss/plan/spec phases **and** mid-execution, debugging, and release ceremonies. It is not limited to scoping workflows.
+
+For any gray-area decision:
+
+1. **Research first.** Spawn research subagent(s) (parallel, one per area) to investigate pros/cons/tradeoffs, what's idiomatic for this ecosystem (Elixir/Plug/Ecto/Phoenix), lessons + footguns from comparable successful libs (even cross-language), DX/UX implications, and what the `prompts/` research + `PROJECT.md` already settle. Don't punt the research to the user.
+2. **Synthesize + decide.** Produce one coherent recommendation set where choices reinforce each other and the locked vision, then **proceed** with it. Document the decision + rationale (in CONTEXT.md / the plan / the commit) — never silently drop a decision.
+3. **Escalate only genuinely strategic forks.** Ask the user ONLY when research leaves no clear winner AND the call is one a staff/architect engineer would personally want: ship-or-don't, license, vendor/framework lock-in that's expensive to reverse, brand/visual identity, or a public-API shape where the *project's own goals* (not ecosystem norms) decide and it could plausibly go either way. A strong idiomatic precedent settles it → research-and-lock, do not ask (even for irreversible public-API shape — see the `%InboundMessage{} :signals` precedent).
+4. **Reversibility test before asking:** if it can be added/changed later without rip-out, just pick the recommended option. When in doubt, lean toward NOT asking — "one-shot a perfect set of recommendations." A wrong call is cheaper than breaking the user's flow; they can redirect mid-execution.
+
+Encoded for GSD in `~/.claude/get-shit-done/USER-PROFILE.md` (advisor mode, `vendor_philosophy: opinionated` → `minimal_decisive`), in `.planning/config.json` `preferences.vendor_philosophy`, and in the user memory `feedback_research_driven_recommendations.md`. Persist multi-pass research under `.planning/research/` so it isn't regenerated.
+
 ## Commit & Branch Conventions
 
 - **Conventional Commits enforced** (PR title check). Squash-merge workflow.
@@ -110,4 +127,4 @@ Other phases (1, 3, 6, 7) plan directly from synthesis — patterns are 4-of-4 c
 MIT across all sibling packages. Forever. (See PROJECT.md D-02.)
 
 ---
-*Generated: 2026-04-21 from `.planning/` artifacts.*
+*Generated: 2026-04-21 from `.planning/` artifacts. "What This Is" + "Where to Look" refreshed 2026-05-22 (v0.1→v1.1 shipped, v1.2 in flight; added `guides/jobs.md` + `.planning/research/JTBD-COVERAGE.md`).*
