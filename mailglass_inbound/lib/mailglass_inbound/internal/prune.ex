@@ -15,12 +15,20 @@ defmodule MailglassInbound.Internal.Prune do
 
     * `mailglass_inbound_replay_runs` WHERE `source = :replay` AND age > replay_runs_days (30d)
     * `mailglass_inbound_replay_runs` WHERE `source = :fresh`  AND age > execution_runs_days (90d)
-    * `mailglass_inbound_evidence` WHERE age > evidence_days (30d)
+    * `mailglass_inbound_evidence` WHERE age > evidence_days (90d)
     * `mailglass_inbound_records` WHERE age > records_days (90d)
 
   Deletes run child-first (D-49-26): replay_runs (both source filters) -> evidence
   -> records. FKs are `on_delete: :nothing`, so a mis-ordered delete fails loudly
   on the FK (the designed safety net — do NOT switch to CASCADE).
+
+  Because the FKs are `:nothing`, a parent window can never be shorter than a child
+  that references it, or the child-first sweep would leave a surviving child whose
+  parent the next delete tries to remove — tripping a `foreign_key_violation`
+  (CR-02). `MailglassInbound.Config.retention/0` enforces this by clamping
+  `evidence_days >= max(execution_runs_days, replay_runs_days)` and
+  `records_days >= evidence_days`, so the default windows (evidence 90d, not the
+  former 30d) never invert against `:fresh` runs aged 30-90 days.
 
   `source` is filtered via `ExecutionRun` (which maps the `:source` column);
   NEVER `ReplayRun` (no `:source` field — Pitfall 4).
@@ -77,9 +85,13 @@ defmodule MailglassInbound.Internal.Prune do
   end
 
   defp sweep(repo, retention) do
+    # Fallback defaults match Config's safe defaults (CR-02): evidence outlives the
+    # run windows it is referenced by. When prune is driven by Config.retention/0
+    # the windows are already clamped to respect the FK lineage; these fallbacks
+    # only apply to a partial keyword list passed directly via the :retention opt.
     replay_days = Keyword.get(retention, :replay_runs_days, 30)
     fresh_days = Keyword.get(retention, :execution_runs_days, 90)
-    evidence_days = Keyword.get(retention, :evidence_days, 30)
+    evidence_days = Keyword.get(retention, :evidence_days, 90)
     records_days = Keyword.get(retention, :records_days, 90)
 
     # Child-first order (D-49-26): replay_runs (both source filters) -> evidence

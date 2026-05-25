@@ -80,20 +80,62 @@ defmodule MailglassInbound.ConfigTest do
 
       retention = Config.retention()
 
+      # CR-02: evidence default is 90 (>= the 90d execution_runs window it is
+      # referenced by), not the former 30, so the child-first prune never trips an
+      # on_delete: :nothing FK on a fresh run aged 30-90 days.
       assert retention[:records_days] == 90
-      assert retention[:evidence_days] == 30
+      assert retention[:evidence_days] == 90
       assert retention[:execution_runs_days] == 90
       assert retention[:replay_runs_days] == 30
     end
 
     test "merges configured overrides over the defaults" do
-      Application.put_env(:mailglass_inbound, :retention, evidence_days: :infinity)
+      Application.put_env(:mailglass_inbound, :retention, replay_runs_days: 7)
 
       retention = Config.retention()
 
-      assert retention[:evidence_days] == :infinity
+      assert retention[:replay_runs_days] == 7
       # Unset classes still carry their defaults.
       assert retention[:records_days] == 90
+      assert retention[:evidence_days] == 90
+    end
+
+    test "CR-02: clamps evidence_days up to the longest referencing run window" do
+      # An operator who sets evidence shorter than a run window that references it
+      # would otherwise crash prune on an FK violation. Config clamps it up.
+      Application.put_env(:mailglass_inbound, :retention,
+        evidence_days: 10,
+        execution_runs_days: 90,
+        replay_runs_days: 30
+      )
+
+      retention = Config.retention()
+
+      assert retention[:evidence_days] == 90, "evidence clamped to max(execution_runs, replay_runs)"
+      assert retention[:records_days] >= retention[:evidence_days], "records clamped >= evidence"
+    end
+
+    test "CR-02: clamps records_days up to evidence_days" do
+      Application.put_env(:mailglass_inbound, :retention,
+        records_days: 30,
+        evidence_days: 120
+      )
+
+      retention = Config.retention()
+
+      assert retention[:records_days] == 120, "records clamped up to evidence_days"
+      assert retention[:evidence_days] == 120
+    end
+
+    test "CR-02: :infinity on a child forces its parents to :infinity" do
+      Application.put_env(:mailglass_inbound, :retention, execution_runs_days: :infinity)
+
+      retention = Config.retention()
+
+      # :infinity execution_runs means evidence (and records) must never be pruned
+      # while a run that references them could survive.
+      assert retention[:evidence_days] == :infinity
+      assert retention[:records_days] == :infinity
     end
   end
 

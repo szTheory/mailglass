@@ -74,6 +74,33 @@ defmodule MailglassInbound.Internal.PruneTest do
       refute TestRepo.get(InboundRecord, old_rec.id)
     end
 
+    test "CR-02: a fresh run + evidence aged 30-90d does not trip the FK (evidence survives)" do
+      # CR-02 regression: with the OLD defaults (evidence 30d, execution_runs 90d),
+      # a 45-day-old :fresh run SURVIVES (45 < 90) while its 45-day-old evidence
+      # was selected for deletion (45 > 30) — the child-first DELETE of evidence
+      # then violated the surviving run's inbound_evidence_id FK and crashed the
+      # whole sweep. Config.retention/0 now clamps evidence_days up to >= the run
+      # windows, so this shape prunes cleanly with the evidence preserved.
+      #
+      # Drive the DEFAULT (clamped) windows — do NOT put_env a partial override,
+      # because the clamp lives in Config.retention/0 and that is exactly what the
+      # production prune/0 path resolves.
+      Application.delete_env(:mailglass_inbound, :retention)
+
+      {:ok, rec} = insert_record(days_ago: 45)
+      {:ok, ev} = insert_evidence(rec.id, days_ago: 45)
+      {:ok, run} = insert_run(rec.id, ev.id, source: :fresh, days_ago: 45)
+
+      # No raise: the sweep completes instead of crashing on a foreign_key_violation.
+      assert {:ok, counts} = Prune.prune()
+      assert is_map(counts)
+
+      # The evidence row referenced by the surviving fresh run must NOT be deleted.
+      assert TestRepo.get(InboundEvidence, ev.id)
+      assert TestRepo.get(InboundRecord, rec.id)
+      assert TestRepo.get(ExecutionRun, run.id)
+    end
+
     test ":infinity on records disables that window (0 deleted, row preserved)" do
       Application.put_env(:mailglass_inbound, :retention,
         records_days: :infinity,

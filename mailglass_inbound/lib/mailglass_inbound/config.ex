@@ -17,12 +17,21 @@ defmodule MailglassInbound.Config do
       default: [],
       doc: """
       Retention windows (in days) per inbound table class. `:infinity` on a class
-      disables that window. Defaults: records 90, evidence 30, execution_runs 90,
+      disables that window. Defaults: records 90, evidence 90, execution_runs 90,
       replay_runs 30.
+
+      The windows must respect the FK lineage so the child-first prune never trips
+      an `on_delete: :nothing` foreign key (CR-02): `replay_runs` rows reference
+      both `records` and `evidence`, and `evidence` references `records`. So a
+      parent must outlive every child that references it —
+      `evidence_days >= max(execution_runs_days, replay_runs_days)` and
+      `records_days >= evidence_days`. `retention/0` CLAMPS any configured override
+      up to satisfy this invariant rather than letting prune crash on an FK
+      violation.
       """,
       keys: [
         records_days: [type: @retention_class, default: 90],
-        evidence_days: [type: @retention_class, default: 30],
+        evidence_days: [type: @retention_class, default: 90],
         execution_runs_days: [type: @retention_class, default: 90],
         replay_runs_days: [type: @retention_class, default: 30]
       ]
@@ -58,7 +67,7 @@ defmodule MailglassInbound.Config do
       config :mailglass_inbound,
         retention: [
           records_days: 90,
-          evidence_days: 30,
+          evidence_days: 90,
           execution_runs_days: 90,
           replay_runs_days: 30
         ],
@@ -96,11 +105,51 @@ defmodule MailglassInbound.Config do
 
   @doc """
   Returns the validated retention windows as a keyword list with every class
-  present (defaults merged over any configured overrides).
+  present (defaults merged over any configured overrides), CLAMPED to satisfy the
+  FK-lineage invariant (CR-02).
+
+  The inbound prune deletes child-first against `on_delete: :nothing` FKs, so a
+  parent window can never be shorter than a child that references it. This
+  accessor enforces:
+
+    * `evidence_days >= max(execution_runs_days, replay_runs_days)` — evidence is
+      referenced by both `:fresh` and `:replay` runs.
+    * `records_days >= evidence_days` — records are referenced by evidence (and by
+      runs, but `evidence_days` already dominates the run windows).
+
+  A configured override that would invert the lineage is silently clamped UP to
+  the smallest safe value rather than allowed to crash the sweep on a
+  `foreign_key_violation`. `:infinity` (window disabled) is treated as the
+  maximum, so an `:infinity` child forces its parents to `:infinity` too.
   """
   @doc since: "1.2.0"
   @spec retention() :: keyword()
-  def retention, do: Keyword.fetch!(validated(), :retention)
+  def retention, do: clamp_retention(Keyword.fetch!(validated(), :retention))
+
+  # Clamp parent windows up so they always outlive the children referencing them
+  # via `on_delete: :nothing` (CR-02). `:infinity` is the maximum.
+  defp clamp_retention(retention) do
+    fresh = Keyword.fetch!(retention, :execution_runs_days)
+    replay = Keyword.fetch!(retention, :replay_runs_days)
+    evidence = Keyword.fetch!(retention, :evidence_days)
+    records = Keyword.fetch!(retention, :records_days)
+
+    safe_evidence = window_max([evidence, fresh, replay])
+    safe_records = window_max([records, safe_evidence])
+
+    retention
+    |> Keyword.put(:evidence_days, safe_evidence)
+    |> Keyword.put(:records_days, safe_records)
+  end
+
+  # `:infinity` dominates any finite day count.
+  defp window_max(windows) do
+    if Enum.any?(windows, &(&1 == :infinity)) do
+      :infinity
+    else
+      Enum.max(windows)
+    end
+  end
 
   @doc """
   Returns the validated rate-limit buckets as a keyword list with every bucket
