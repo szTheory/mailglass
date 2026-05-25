@@ -21,7 +21,35 @@ defmodule MailglassInbound.InboundMessage do
   - `:sent_at`, `:received_at` - normalized timestamps.
   - `:text_body`, `:html_body` - normalized body fields.
   - `:attachments` - normalized attachment manifest without attachment bytes.
+  - `:signals` - framework-derived, read-only signals about the message; a typed
+    `MailglassInbound.InboundMessage.Signals` struct (framework writes, adopter
+    reads). See `MailglassInbound.InboundMessage.Signals`.
+
+  ## Reading framework signals (IOPS-05, D-49-21)
+
+  The `:signals` field exposes framework-derived facts, today the
+  `suppression_flagged` boolean. Read it via safe dot-access or pattern-match it
+  in a mailbox `process/1` head:
+
+      def process(%MailglassInbound.InboundMessage{
+            signals: %MailglassInbound.InboundMessage.Signals{suppression_flagged: true}
+          }), do: {:reject, :sender_suppressed}
+
+      def process(%MailglassInbound.InboundMessage{} = message) do
+        if MailglassInbound.InboundMessage.suppression_flagged?(message),
+          do: ...,
+          else: :accept
+      end
+
+  > **Deviation D-49-21:** IOPS-05's literal wording exposes the flag at
+  > `%InboundMessage{}.metadata.suppression_flagged`. Mailglass instead ships
+  > `%InboundMessage{}.signals.suppression_flagged` as a deliberate, documented
+  > improvement (the SESI-04-erratum precedent): `:metadata` is reserved
+  > framework-wide for adopter-owned data, so framework-derived facts live on the
+  > distinct, framework-owned `:signals` typed struct.
   """
+
+  alias MailglassInbound.InboundMessage.Signals
 
   @type provider :: :postmark | :sendgrid | String.t()
 
@@ -54,7 +82,8 @@ defmodule MailglassInbound.InboundMessage do
           received_at: DateTime.t() | nil,
           text_body: String.t() | nil,
           html_body: String.t() | nil,
-          attachments: [attachment()]
+          attachments: [attachment()],
+          signals: Signals.t()
         }
 
   defstruct [
@@ -74,6 +103,20 @@ defmodule MailglassInbound.InboundMessage do
     bcc: [],
     reply_to: [],
     headers: %{},
-    attachments: []
+    attachments: [],
+    signals: %Signals{}
   ]
+
+  @doc """
+  Returns the message's `suppression_flagged` signal (IOPS-05).
+
+  `true` when the message's first `from` address was on the tenant's suppression
+  list at receipt time. This is the one convenience predicate over the `:signals`
+  struct; read other signals via dot-access or pattern-matching. Safe on any
+  `%InboundMessage{}` — the `:signals` default guarantees no `KeyError`.
+  """
+  @doc since: "1.2.0"
+  @spec suppression_flagged?(t()) :: boolean()
+  def suppression_flagged?(%__MODULE__{signals: %Signals{suppression_flagged: flagged}}),
+    do: flagged
 end

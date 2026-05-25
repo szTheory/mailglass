@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `MailglassInbound.InboundMessage.Signals` — a framework-owned, read-only typed
+  nested struct carrying framework-derived signals about an inbound message
+  (today `suppression_flagged: false`), exposed on the new
+  `%MailglassInbound.InboundMessage{}.signals` field (defaults to `%Signals{}`).
+  Plus `MailglassInbound.InboundMessage.suppression_flagged?/1`. Every field is
+  defaulted and non-nil, so safe dot-access never raises — including for records
+  persisted before the signal column existed. A new
+  `suppression_flagged :boolean, null: false, default: false` column on
+  `mailglass_inbound_records` (generated migration adopters run) is the source of
+  truth; a message from a suppressed sender persists normally with the flag set
+  and still reaches the mailbox — there is no auto-bounce and no auto-suppression
+  (IOPS-05). **Deviation D-49-21:** IOPS-05's literal wording places the flag at
+  `.metadata.suppression_flagged`; it ships at `.signals.suppression_flagged`
+  because `:metadata` is reserved framework-wide for adopter-owned data
+  (SESI-04-erratum precedent). `@since "1.2.0"` (linked minor bump).
 - `MailglassInbound.MIMEError` — a package-local structured error for raw MIME
   parse failures, mirroring the core `Mailglass.ConfigError` shape. Closed
   `:type` set `[:inbound_mime_invalid, :gen_smtp_unavailable]`, a
