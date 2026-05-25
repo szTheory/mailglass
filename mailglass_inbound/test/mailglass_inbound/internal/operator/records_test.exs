@@ -168,6 +168,28 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
     end
   end
 
+  describe "Records.list_records/2 suppression flag projection (IOPS-05)" do
+    test "the list select surfaces each record's suppression_flagged column" do
+      {:ok, flagged} = insert_record("tenant-a", suppression_flagged: true)
+      {:ok, clean} = insert_record("tenant-a", suppression_flagged: false)
+
+      rows = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      by_id = Map.new(rows, &{&1.id, &1})
+
+      assert Map.has_key?(by_id[flagged.id], :suppression_flagged)
+      assert by_id[flagged.id].suppression_flagged == true
+      assert by_id[clean.id].suppression_flagged == false
+    end
+
+    test "a record left at the column default reads suppression_flagged: false" do
+      {:ok, record} = insert_record("tenant-a")
+
+      assert [row] = Records.list_records(%{tenant_id: "tenant-a"}, [])
+      assert row.id == record.id
+      assert row.suppression_flagged == false
+    end
+  end
+
   describe "Records.list_records/2 search filter (WR-03)" do
     test "blank search is a no-op (returns all)" do
       {:ok, r1} = insert_record("tenant-a", subject: "Invoice #42")
@@ -369,7 +391,8 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
       provider_message_id: Keyword.get(opts, :provider_message_id, unique("pmid")),
       envelope_recipient: Keyword.get(opts, :recipient, "support@example.com"),
       subject: Keyword.get(opts, :subject, "Inbound fixture"),
-      received_at: Keyword.get(opts, :received_at, DateTime.utc_now())
+      received_at: Keyword.get(opts, :received_at, DateTime.utc_now()),
+      suppression_flagged: Keyword.get(opts, :suppression_flagged, false)
     })
   end
 

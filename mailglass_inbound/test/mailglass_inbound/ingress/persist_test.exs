@@ -19,6 +19,24 @@ defmodule MailglassInbound.Ingress.PersistTest do
     route SupportMailbox, recipient: "support@example.com"
   end
 
+  # IOPS-05: a configurable stub of `Mailglass.SuppressionStore` so the
+  # suppression-flag compute can be driven deterministically without a running
+  # core `Mailglass.Repo` (the inbound suite owns only `MailglassInbound.TestRepo`;
+  # the default `Mailglass.SuppressionStore.Ecto` queries the core repo, which is
+  # absent here). The stub reads its scripted reply from the process dictionary so
+  # each test owns its own behavior.
+  defmodule StubSuppressionStore do
+    @behaviour Mailglass.SuppressionStore
+
+    @impl true
+    def check(%{tenant_id: _tenant_id, address: _address}, _opts \\ []) do
+      Process.get(:mailglass_inbound_stub_suppression_reply, :not_suppressed)
+    end
+
+    @impl true
+    def record(_attrs, _opts \\ []), do: {:error, :not_supported}
+  end
+
   defmodule FakeRepo do
     def transact(fun, _opts \\ []), do: fun.()
 
@@ -246,6 +264,128 @@ defmodule MailglassInbound.Ingress.PersistTest do
       assert migration =~ "mailglass_inbound_records_ses_fingerprint_idx"
       refute migration =~ "generated:"
     end
+  end
+
+  describe "suppression flag-only contract (IOPS-05)" do
+    setup do
+      previous = Application.get_env(:mailglass, :suppression_store)
+      Application.put_env(:mailglass, :suppression_store, StubSuppressionStore)
+
+      on_exit(fn ->
+        if previous do
+          Application.put_env(:mailglass, :suppression_store, previous)
+        else
+          Application.delete_env(:mailglass, :suppression_store)
+        end
+
+        Process.delete(:mailglass_inbound_stub_suppression_reply)
+      end)
+
+      :ok
+    end
+
+    test "a message from a suppressed sender persists with suppression_flagged: true" do
+      Process.put(
+        :mailglass_inbound_stub_suppression_reply,
+        {:suppressed, %Mailglass.Suppression.Entry{}}
+      )
+
+      {:ok, _result} = Persist.persist(valid_handoff(), repo: FakeRepo, router: TestRouter)
+
+      record = inserted_record()
+      assert record.suppression_flagged == true
+    end
+
+    test "a non-suppressed sender persists with suppression_flagged: false" do
+      Process.put(:mailglass_inbound_stub_suppression_reply, :not_suppressed)
+
+      {:ok, _result} = Persist.persist(valid_handoff(), repo: FakeRepo, router: TestRouter)
+
+      record = inserted_record()
+      assert record.suppression_flagged == false
+    end
+
+    test "degrades OPEN on a store {:error, _}: flag is false AND persist succeeds" do
+      Process.put(:mailglass_inbound_stub_suppression_reply, {:error, :boom})
+
+      assert {:ok, result} = Persist.persist(valid_handoff(), repo: FakeRepo, router: TestRouter)
+      assert result.status == :inserted
+
+      record = inserted_record()
+      assert record.suppression_flagged == false
+    end
+
+    test "degrades OPEN on an empty from: flag is false AND persist succeeds" do
+      # The store would say suppressed, but with no from-address there is nothing
+      # to look up, so the flag is false without ever consulting the store.
+      Process.put(
+        :mailglass_inbound_stub_suppression_reply,
+        {:suppressed, %Mailglass.Suppression.Entry{}}
+      )
+
+      handoff = put_in(valid_handoff().message.from, [])
+
+      assert {:ok, result} = Persist.persist(handoff, repo: FakeRepo, router: TestRouter)
+      assert result.status == :inserted
+
+      record = inserted_record()
+      assert record.suppression_flagged == false
+    end
+
+    test "no auto-bounce: a suppressed sender still reaches the mailbox (route matched)" do
+      Process.put(
+        :mailglass_inbound_stub_suppression_reply,
+        {:suppressed, %Mailglass.Suppression.Entry{}}
+      )
+
+      {:ok, result} = Persist.persist(valid_handoff(), repo: FakeRepo, router: TestRouter)
+
+      # The message is preserved and routed; the adopter decides reject/process.
+      assert result.status == :inserted
+      assert result.route == %{status: :matched, mailbox: SupportMailbox}
+      assert %InboundMessage{} = result.message
+    end
+
+    test "emits a PII-free [:mailglass_inbound, :ingress, :suppression_flag, :stop] span" do
+      Process.put(
+        :mailglass_inbound_stub_suppression_reply,
+        {:suppressed, %Mailglass.Suppression.Entry{}}
+      )
+
+      ref = make_ref()
+      parent = self()
+      event = [:mailglass_inbound, :ingress, :suppression_flag, :stop]
+
+      :telemetry.attach(
+        "suppression-flag-test-#{inspect(ref)}",
+        event,
+        fn ^event, measurements, metadata, _config ->
+          send(parent, {ref, measurements, metadata})
+        end,
+        nil
+      )
+
+      on_exit(fn -> :telemetry.detach("suppression-flag-test-#{inspect(ref)}") end)
+
+      {:ok, _result} = Persist.persist(valid_handoff(), repo: FakeRepo, router: TestRouter)
+
+      assert_receive {^ref, measurements, metadata}, 1_000
+      assert is_integer(measurements.duration)
+
+      assert metadata.flagged == true
+      assert metadata.tenant_id == "tenant-123"
+      assert metadata.provider == "postmark"
+
+      # No PII may ride the suppression-flag span.
+      for forbidden <- [:address, :from, :to, :recipient, :sender, :email, :subject] do
+        refute Map.has_key?(metadata, forbidden)
+      end
+    end
+  end
+
+  defp inserted_record do
+    Process.get(:mailglass_inbound_inserts, [])
+    |> Enum.find(&match?(%InboundRecord{}, &1))
   end
 
   defp ses_handoff(opts) do
