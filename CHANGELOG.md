@@ -16,6 +16,28 @@ version line per [`guides/compatibility-and-deprecations.md`](guides/compatibili
 
 ## [Unreleased]
 
+## What's new in 1.2.0 (v1.2 Inbound Production Confidence)
+
+`mailglass` 1.2.0 ships the v1.2 milestone: production-ready inbound email
+processing via `mailglass_inbound` 0.2.0. The primary deliverable is the
+`mailglass_inbound` sibling package — see its
+[0.2.0 CHANGELOG](mailglass_inbound/CHANGELOG.md) for the full feature narrative.
+Sibling: `mailglass_admin` 1.2.0 (linked release) ships the InboundLive admin UI.
+`mailglass_inbound` remains on the 0.x version line — see
+[`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md).
+
+### v1.2 REQ-ID categories shipped
+
+- **TELE (TELE-01..08)** — `:telemetry` spans at four inbound levels (ingress/route/execution/persist) with property-tested 1000-replay convergence proof
+- **MIME (MIME-01..02, MIME-04)** — RFC 5322 MIME parse seam via `Mailglass.OptionalDeps.GenSmtp.decode/2` (the core addition in this release)
+- **MGUN (MGUN-01..04)** — Mailgun inbound provider with HMAC-SHA256 ingress and dual body-mime/parsed mode
+- **SESI (SESI-01..05)** — SES inbound provider with SNS X.509 verification and S3 receipt-rule extraction
+- **ITEST (ITEST-01..09)** — `MailglassInbound.MailboxCase`, `TestAssertions`, `Test.Ingress`, `Fixtures` test helpers
+- **IGEN (IGEN-01..04)** — `mix mailglass.gen.mailbox`, `mix mailglass.gen.inbound_router`, `mix mailglass.gen.inbound_route` generators
+- **IADM (IADM-01..07)** — InboundLive admin UI shipped via `mailglass_admin` 1.2.0 (list/detail/timeline/routing-trace, tenant-gated replay)
+- **IOPS (IOPS-01..05)** — `mix mailglass.inbound.doctor`, `.replay`, `.prune`; `MailglassInbound.RateLimiter`; suppression signals
+- **IDOC (IDOC-01..06)** — six production operator guides (install, mailgun, ses, testing, operator, routing-debug)
+
 ### Added
 
 - `Mailglass.OptionalDeps.GenSmtp.decode/2` — a never-raising RFC 5322 MIME

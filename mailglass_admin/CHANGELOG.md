@@ -4,6 +4,27 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [Unreleased]
+
+`mailglass_admin` 1.2.0 is coordinated with `mailglass` 1.2.0 (linked release).
+Ships the InboundLive admin UI: `/inbound` route with list, detail, timeline,
+and routing-trace views; tenant-gated replay confirm modal. Requires
+`{:mailglass_inbound, "~> 0.2"}` for the inbound UI surface. No breaking
+changes for existing admin users who do not use `mailglass_inbound`. See
+[`mailglass_inbound` 0.2.0 CHANGELOG](../mailglass_inbound/CHANGELOG.md) for
+the full inbound feature narrative.
+
+### Added
+
+- `MailglassAdmin.InboundLive` — mountable LiveView for inbound message
+  management (IADM-01..07); gated behind `MailglassInbound` optional dep.
+- `MailglassAdmin.OptionalDeps.MailglassInbound` — optional-dep gateway for
+  `mailglass_inbound`, following the project's gateway pattern.
+
+### Changed
+
+- Stays version-paired with `mailglass` 1.2.0 release line.
+
 ## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.0.0...mailglass_admin-v1.0.0) (2026-05-08)
 
 

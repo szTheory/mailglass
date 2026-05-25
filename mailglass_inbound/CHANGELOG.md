@@ -7,23 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+`mailglass_inbound` 0.2.0 ships five phases of production-confidence work:
+telemetry instrumentation, MIME parsing, the Mailgun provider, a full test
+helper suite with generators, admin LiveView integration, and operator tooling.
+`mailglass_inbound` remains on the **0.x version line** — the 1.x stability
+promise applies to `mailglass` + `mailglass_admin` only. Conductor-style
+synthetic inbound dev tool, Cloudflare Email Routing, and `gen_smtp` listener
+are the pre-1.0 expansion targets. See
+[`guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md).
 
-- `MailglassInbound.InboundMessage.Signals` — a framework-owned, read-only typed
-  nested struct carrying framework-derived signals about an inbound message
-  (today `suppression_flagged: false`), exposed on the new
-  `%MailglassInbound.InboundMessage{}.signals` field (defaults to `%Signals{}`).
-  Plus `MailglassInbound.InboundMessage.suppression_flagged?/1`. Every field is
-  defaulted and non-nil, so safe dot-access never raises — including for records
-  persisted before the signal column existed. A new
-  `suppression_flagged :boolean, null: false, default: false` column on
-  `mailglass_inbound_records` (generated migration adopters run) is the source of
-  truth; a message from a suppressed sender persists normally with the flag set
-  and still reaches the mailbox — there is no auto-bounce and no auto-suppression
-  (IOPS-05). **Deviation D-49-21:** IOPS-05's literal wording places the flag at
-  `.metadata.suppression_flagged`; it ships at `.signals.suppression_flagged`
-  because `:metadata` is reserved framework-wide for adopter-owned data
-  (SESI-04-erratum precedent). `@since "1.2.0"` (linked minor bump).
+### Phase 45 — Telemetry + MIME (TELE-01..08, MIME-01..02, MIME-04)
+
+- `:telemetry` spans at `[:mailglass_inbound, :ingress, :request, :start/:stop/:exception]`,
+  `[:route, :match, *]`, `[:execution, :run, *]`, `[:persist, :record, *]`
+  with metadata whitelisted per core PII policy (no recipient/body/subject).
+  `MailglassInbound.Telemetry` is the single attach-point module.
+- `MailglassInbound.MIME` — RFC 5322 MIME parse seam via
+  `Mailglass.OptionalDeps.GenSmtp.decode/2`; returns `{:ok, tuple}` or a
+  `{:error, %MailglassInbound.MIMEError{}}`. Never raises. MIME-01, MIME-02,
+  MIME-04.
+- StreamData property test: 1000-replay convergence proof confirming telemetry
+  handler failures do not propagate to business logic (TELE-08).
+
+### Phase 46 — Mailgun + SES Providers (MGUN-01..04, SESI-01..05)
+
+- `MailglassInbound.Ingress.Providers.Mailgun` — HMAC-SHA256 ingress provider
+  with dual body-mime/parsed mode. Verifies `X-Mailgun-Signature-V1` header;
+  raises `MailglassInbound.SignatureError` on failure per no-recovery contract.
+  Supports both raw MIME and pre-parsed Mailgun multipart payloads (MGUN-01..04).
 - `MailglassInbound.MIMEError` — a package-local structured error for raw MIME
   parse failures, mirroring the core `Mailglass.ConfigError` shape. Closed
   `:type` set `[:inbound_mime_invalid, :gen_smtp_unavailable]`, a
@@ -69,6 +80,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `%MailglassInbound.InboundMessage{}` + evidence. A small bounded GetObject
   retry maps exhaustion to `MailglassInbound.S3FetchError` `:s3_object_not_ready`
   so SNS redelivers. (SESI-01, SESI-02, SESI-04, SESI-05)
+
+### Phase 47 — Test Helpers + Generators (ITEST-01..09, IGEN-01..04)
+
+- `MailglassInbound.MailboxCase` — ExUnit test case module (`async: false`,
+  ETS sandbox). Use `use MailglassInbound.MailboxCase` in inbound tests
+  (ITEST-01).
+- `MailglassInbound.TestAssertions` — four assertion styles: exact match,
+  pattern match, outcome assertion, routing assertion. `assert_routed_to/2`,
+  `assert_mailbox_received/2`, `refute_mailbox_received/1` (ITEST-02..06).
+- `MailglassInbound.Test.Ingress` — test ingress dispatch helper for bypassing
+  the HTTP layer in unit tests (ITEST-07).
+- `MailglassInbound.Fixtures` — in-memory fixture builder. No `.eml` files on
+  disk; fixtures are constructed programmatically for Postmark, SendGrid,
+  Mailgun, and SES-SNS payloads (ITEST-08, ITEST-09).
+- `mix mailglass.gen.mailbox` — generates a `MyApp.Mailboxes.MyMailbox` module
+  with `@behaviour MailglassInbound.Mailbox` (IGEN-01, IGEN-02).
+- `mix mailglass.gen.inbound_router` — generates the router module for inbound
+  routing configuration (IGEN-03).
+- `mix mailglass.gen.inbound_route` — generates an individual route entry
+  (IGEN-04). All generators perform idempotent Sourceror-zipper edits and
+  support `--dry-run`.
+
+### Phase 48 — Admin LiveView Integration (IADM-01..07)
+
+- InboundLive shipped via `mailglass_admin` 1.2.0. Requires
+  `{:mailglass_admin, "~> 1.2"}` for the admin UI. The inbound package itself
+  has no LiveView dependency — the UI is entirely in `mailglass_admin`.
+  See `mailglass_admin` 1.2.0 CHANGELOG for the full admin surface narrative.
+
+### Phase 49 — Runtime Operator Tooling (IOPS-01..05)
+
+- `MailglassInbound.InboundMessage.Signals` — a framework-owned, read-only typed
+  nested struct carrying framework-derived signals about an inbound message
+  (today `suppression_flagged: false`), exposed on the new
+  `%MailglassInbound.InboundMessage{}.signals` field (defaults to `%Signals{}`).
+  Plus `MailglassInbound.InboundMessage.suppression_flagged?/1`. Every field is
+  defaulted and non-nil, so safe dot-access never raises — including for records
+  persisted before the signal column existed. A new
+  `suppression_flagged :boolean, null: false, default: false` column on
+  `mailglass_inbound_records` (generated migration adopters run) is the source of
+  truth; a message from a suppressed sender persists normally with the flag set
+  and still reaches the mailbox — there is no auto-bounce and no auto-suppression
+  (IOPS-05). **Deviation D-49-21:** IOPS-05's literal wording places the flag at
+  `.metadata.suppression_flagged`; it ships at `.signals.suppression_flagged`
+  because `:metadata` is reserved framework-wide for adopter-owned data
+  (SESI-04-erratum precedent). `@since "1.2.0"` (linked minor bump).
+- `mix mailglass.inbound.doctor` — three-state exit (0 = healthy, 1 = warnings,
+  2 = errors). DNS-free checks. `--strict` flag promotes warnings to errors.
+  `--format json` for CI integrations (IOPS-01).
+- `mix mailglass.inbound.replay` — tenant-scoped message replay. `--tenant` is
+  REQUIRED. `--dry-run` for preview, `--yes` for cron/CI (IOPS-02).
+- `mix mailglass.inbound.prune` — typed "yes" confirmation for destructive prune.
+  `--dry-run`, `--yes` flags. Bounded retention window (IOPS-03).
+- `MailglassInbound.RateLimiter` — three-bucket rate limiter (tenant /
+  sender_domain / recipient) with ETS-backed sliding window (IOPS-04).
 
 ### Dependencies
 
