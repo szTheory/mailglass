@@ -72,7 +72,6 @@ Add the Mailgun signing key to your application config:
 # config/runtime.exs
 config :mailglass_inbound, :mailgun,
   signing_key: System.get_env("MAILGUN_WEBHOOK_SIGNING_KEY")
-  # TODO: set MAILGUN_WEBHOOK_SIGNING_KEY in your environment
 ```
 
 **Where to find the signing key:** Mailgun Dashboard → **Settings → API Security →
