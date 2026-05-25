@@ -758,7 +758,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
     test "the rate_limit stop telemetry carries bucket TYPE only (no PII value keys)" do
       ref =
         :telemetry_test.attach_event_handlers(self(), [
-          [:mailglass_inbound, :rate_limit, :stop]
+          [:mailglass_inbound, :ingress, :rate_limit, :stop]
         ])
 
       opts =
@@ -773,7 +773,7 @@ defmodule MailglassInbound.Ingress.PlugTest do
       IngressPlug.call(stub_provider_conn(:mailgun), opts)
       IngressPlug.call(stub_provider_conn(:mailgun), opts)
 
-      assert_receive {[:mailglass_inbound, :rate_limit, :stop], ^ref, _measurements, meta}
+      assert_receive {[:mailglass_inbound, :ingress, :rate_limit, :stop], ^ref, _measurements, meta}
 
       assert meta[:bucket] in [:tenant, :recipient, :sender_domain]
 

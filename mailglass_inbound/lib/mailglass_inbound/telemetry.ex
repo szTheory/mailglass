@@ -15,6 +15,18 @@ defmodule MailglassInbound.Telemetry do
   | `[:mailglass_inbound, :route, :match, :start \\| :stop \\| :exception]` | full span | `mailbox, candidate_count, status` |
   | `[:mailglass_inbound, :persist, :record, :start \\| :stop \\| :exception]` | full span | `provider, tenant_id, operation, record_type` |
   | `[:mailglass_inbound, :execution, :run, :start \\| :stop \\| :exception]` | full span | `mailbox, outcome, source` |
+  | `[:mailglass_inbound, :ingress, :rate_limit, :start \\| :stop \\| :exception]` | full span | `provider, tenant_id, bucket, limit, retry_after` |
+  | `[:mailglass_inbound, :ingress, :suppression_flag, :start \\| :stop \\| :exception]` | full span | `provider, tenant_id, flagged` |
+  | `[:mailglass_inbound, :prune, :sweep, :start \\| :stop \\| :exception]` | full span | `status, records_deleted, evidence_deleted, fresh_runs_deleted, replay_runs_deleted` |
+
+  > **Event-name convention note (D-49-17 deviation):** the CONTEXT named the
+  > rate-limit event `[:mailglass_inbound, :rate_limit, :stop]` and the prune event
+  > `[:mailglass_inbound, :prune, :stop]` (3 final segments). The locked
+  > `[root, domain, resource, action]` 4-segment telemetry convention
+  > (`TelemetryEventConvention`, enforced at lint time) requires 4 final segments,
+  > so these ship as `[:mailglass_inbound, :ingress, :rate_limit, *]` (rate-limit is
+  > an ingress-path event, beside `:suppression_flag`) and
+  > `[:mailglass_inbound, :prune, :sweep, *]`. Same resource name, convention-compliant.
 
   Every helper is a full `:start`/`:stop`/`:exception` span via `:telemetry.span/3`.
   There is no single-emit (fire-and-forget) helper here — inbound emits via spans
@@ -34,10 +46,17 @@ defmodule MailglassInbound.Telemetry do
 
   ## Whitelist discipline (D-45-03)
 
-  The ONLY allowed metadata keys across all four spans:
+  The ONLY allowed metadata keys across all spans:
 
       provider, tenant_id, status, latency, byte_size, mailbox, candidate_count,
-      outcome, source, operation, record_type
+      outcome, source, operation, record_type,
+      bucket, limit, retry_after, flagged,
+      records_deleted, evidence_deleted, fresh_runs_deleted, replay_runs_deleted
+
+  The Phase-49 additions (`bucket, limit, retry_after, flagged` + the per-table
+  prune counts) are all counts/types/statuses — never PII (D-49-17/23/29). The
+  rate-limit + suppression-flag spans carry the bucket TYPE and a boolean flag,
+  never the recipient/sender value.
 
   **NEVER include in any metadata map:**
 
@@ -120,6 +139,59 @@ defmodule MailglassInbound.Telemetry do
   @spec execution_span(map(), (-> result | {result, map()})) :: result when result: term()
   def execution_span(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
     span([:mailglass_inbound, :execution, :run], metadata, fun)
+  end
+
+  @doc """
+  Wrap the post-verify rate-limit check in a
+  `[:mailglass_inbound, :ingress, :rate_limit, *]` span (IOPS-04, D-49-17). The
+  rate limiter is an ingress-path event, so it lives under the `:ingress` domain
+  (beside `:suppression_flag`) to satisfy the 4-segment event convention.
+
+  Stop metadata SHOULD include `:provider`, `:tenant_id`, and on a trip the
+  bucket `:bucket` TYPE (`:tenant | :recipient | :sender_domain`), `:limit`
+  (capacity), and `:retry_after` (seconds). It MUST NOT carry the recipient or
+  sender VALUE — only the bucket type (D-49-16).
+
+  `fun` may return a bare `result` OR `{result, stop_metadata}`.
+  """
+  @doc since: "1.2.0"
+  @spec rate_limit(map(), (-> result | {result, map()})) :: result when result: term()
+  def rate_limit(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
+    span([:mailglass_inbound, :ingress, :rate_limit], metadata, fun)
+  end
+
+  @doc """
+  Wrap the inbound suppression-flag computation in a
+  `[:mailglass_inbound, :ingress, :suppression_flag, *]` span (IOPS-05, D-49-23).
+  Consumed by Plan 02.
+
+  Stop metadata SHOULD include `:flagged` (boolean), `:tenant_id`, `:provider` —
+  never the address. No auto-bounce, no auto-suppression: the flag is diagnostic
+  signal only.
+
+  `fun` may return a bare `result` OR `{result, stop_metadata}`.
+  """
+  @doc since: "1.2.0"
+  @spec suppression_flag(map(), (-> result | {result, map()})) :: result when result: term()
+  def suppression_flag(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
+    span([:mailglass_inbound, :ingress, :suppression_flag], metadata, fun)
+  end
+
+  @doc """
+  Wrap a retention prune sweep in a `[:mailglass_inbound, :prune, :sweep, *]`
+  span (IOPS-03, D-49-29). Consumed by Plan 03. The `:sweep` resource segment
+  satisfies the 4-segment event convention.
+
+  Stop metadata SHOULD include the per-table counts `:records_deleted`,
+  `:evidence_deleted`, `:fresh_runs_deleted`, `:replay_runs_deleted`, and a
+  `:status`. Counts only — no PII.
+
+  `fun` may return a bare `result` OR `{result, stop_metadata}`.
+  """
+  @doc since: "1.2.0"
+  @spec prune(map(), (-> result | {result, map()})) :: result when result: term()
+  def prune(metadata, fun) when is_map(metadata) and is_function(fun, 0) do
+    span([:mailglass_inbound, :prune, :sweep], metadata, fun)
   end
 
   # Shared full-span implementation. Calls `:telemetry.span/3` directly (the

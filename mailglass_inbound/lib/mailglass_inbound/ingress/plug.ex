@@ -179,6 +179,98 @@ defmodule MailglassInbound.Ingress.Plug do
   defp persist_and_respond(conn, provider, request, verification_facts, opts) do
     tenant_id = resolve_tenant!(provider, conn, request)
     normalized = normalize_request!(provider, request, opts)
+
+    # Post-verify rate limiter (IOPS-04, D-49-14). This branch is reached ONLY on
+    # a successful verify ({:ok, facts} / legacy bare-map), so a forged-payload
+    # flood is rejected with 401 BEFORE any budget is read — the limiter is never
+    # an unauthenticated-DoS amplifier (T-49-01). It sits after resolve_tenant!
+    # (needs tenant_id) and after normalize (needs the recipient + sender_domain),
+    # before persist. On trip it NEVER raises — it returns the {resp, meta} 429
+    # tuple, mirroring the TenancyError egress idiom; a raise would escape the
+    # rescue allowlist as a 500 and trigger provider retry storms (T-49-03).
+    case check_rate_limit(conn, provider, tenant_id, normalized.message) do
+      :ok ->
+        persist_and_dispatch(conn, provider, request, tenant_id, normalized, verification_facts, opts)
+
+      {:rate_limited, resp, meta} ->
+        {resp, meta}
+    end
+  end
+
+  # Run the three-bucket post-verify limiter inside the dedicated rate_limit span
+  # (single-span-surface invariant — emit from MailglassInbound.Telemetry, never
+  # inline). Returns :ok to proceed, or {:rate_limited, resp, meta} to short out.
+  defp check_rate_limit(conn, provider, tenant_id, message) do
+    recipient = rate_limit_recipient(message)
+    sender_domain = rate_limit_sender_domain(message)
+
+    case MailglassInbound.RateLimiter.check(tenant_id, recipient, sender_domain) do
+      :ok ->
+        :ok
+
+      {:error, %Mailglass.RateLimitError{} = err} ->
+        bucket = bucket_type(err)
+        retry_after_s = max(1, ceil(err.retry_after_ms / 1000))
+
+        # PII-free stop meta: bucket TYPE + limit + retry_after only — never the
+        # recipient/sender VALUE (D-49-16/17).
+        meta = %{
+          provider: provider,
+          tenant_id: tenant_id,
+          status: :rate_limited,
+          bucket: bucket,
+          limit: err.context[:limit],
+          retry_after: retry_after_s
+        }
+
+        # Emit the rate_limit span from the single-span surface (never inline).
+        # The inner fn returns {resp, meta} so :telemetry.span stamps the
+        # classified PII-free stop meta; the span itself returns `resp`.
+        resp =
+          MailglassInbound.Telemetry.rate_limit(meta, fn ->
+            resp =
+              conn
+              |> put_resp_header("retry-after", Integer.to_string(retry_after_s))
+              |> send_json(429, %{status: "rate_limited", bucket: Atom.to_string(bucket)})
+
+            {resp, meta}
+          end)
+
+        {:rate_limited, resp, meta}
+    end
+  end
+
+  # Map the RateLimitError back to the inbound bucket type for the 429 body +
+  # telemetry. The limiter stamps the bucket TYPE into err.context[:bucket]
+  # (PII-free, D-49-16); fall back to the closed @types if absent.
+  defp bucket_type(%Mailglass.RateLimitError{context: %{bucket: bucket}})
+       when bucket in [:tenant, :recipient, :sender_domain],
+       do: bucket
+
+  defp bucket_type(%Mailglass.RateLimitError{type: :per_tenant}), do: :tenant
+  defp bucket_type(%Mailglass.RateLimitError{}), do: :recipient
+
+  # Recipient bucket key: envelope recipient, else first `to` address. May be the
+  # full address (routing identity, node-local ETS, never logged — D-49-16).
+  defp rate_limit_recipient(%{envelope_recipient: r}) when is_binary(r) and r != "", do: r
+
+  defp rate_limit_recipient(%{to: [%{address: addr} | _]}) when is_binary(addr), do: addr
+  defp rate_limit_recipient(_message), do: nil
+
+  # Sender bucket key: the DOMAIN of the first `from` address, never the full
+  # sender address (D-49-16).
+  defp rate_limit_sender_domain(%{from: [%{address: addr} | _]}) when is_binary(addr) do
+    case String.split(addr, "@", parts: 2) do
+      [_local, domain] -> String.downcase(domain)
+      _ -> nil
+    end
+  end
+
+  defp rate_limit_sender_domain(_message), do: nil
+
+  # The persisting tail, extracted so the rate-limit short-circuit can return
+  # before persist without duplicating the persist + dispatch + egress logic.
+  defp persist_and_dispatch(conn, provider, request, tenant_id, normalized, verification_facts, opts) do
     handoff = build_handoff(normalized, provider, tenant_id, verification_facts)
 
     persistence = Keyword.get(opts, :persistence, MailglassInbound.Ingress.Persist)
