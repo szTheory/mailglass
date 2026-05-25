@@ -123,12 +123,26 @@ defmodule MailglassInbound.MixProject do
         "README.md",
         "docs/api_stability.md",
         "docs/postmark_ingress.md",
-        "docs/sendgrid_ingress.md"
+        "docs/sendgrid_ingress.md",
+        "docs/inbound-install.md",
+        "docs/inbound-testing.md",
+        "docs/inbound-operator.md",
+        "docs/inbound-mailgun.md",
+        "docs/inbound-ses.md",
+        "docs/inbound-routing-debug.md"
       ],
       groups_for_extras: [
         Overview: ["README.md"],
         Contract: ["docs/api_stability.md"],
-        Guides: ["docs/postmark_ingress.md", "docs/sendgrid_ingress.md"]
+        Guides: ["docs/postmark_ingress.md", "docs/sendgrid_ingress.md"],
+        "Inbound Guides": [
+          "docs/inbound-install.md",
+          "docs/inbound-testing.md",
+          "docs/inbound-operator.md",
+          "docs/inbound-mailgun.md",
+          "docs/inbound-ses.md",
+          "docs/inbound-routing-debug.md"
+        ]
       ],
       groups_for_modules: [
         Stable: [

@@ -147,6 +147,15 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "cron and `workflow_dispatch` canary"
       assert maintaining =~ "not a merge blocker"
       assert maintaining =~ "guides/compatibility-and-deprecations.md"
+      assert maintaining =~ "JTBD Docs Refresh Protocol"
+      assert maintaining =~ "guides/jobs.md"
+      assert maintaining =~ ".planning/research/JTBD-COVERAGE.md"
+      assert maintaining =~ "Always refresh the internal map first"
+      assert maintaining =~ "Rails Action Mailer"
+      assert maintaining =~ "Action Mailbox"
+      assert maintaining =~ "Anymail"
+      assert maintaining =~ "Laravel Mail"
+      assert maintaining =~ "Resend inbound docs"
     end
 
     test "compatibility and upgrade guides are wired into Tier 1 docs" do
@@ -184,6 +193,119 @@ defmodule Mailglass.DocsContractTest do
       # rewrite is out of scope for this CI-triage commit. Phase 51 closeout
       # should re-pin these assertions to the v1.0/1.1 release-record format.
       :ok
+    end
+  end
+
+  describe "inbound doc contracts" do
+    test "inbound install guide covers the canonical setup steps" do
+      doc = File.read!("mailglass_inbound/docs/inbound-install.md")
+      assert doc =~ "body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}"
+      assert doc =~ "use MailglassInbound.Router"
+      assert doc =~ "use MailglassInbound.Mailbox"
+      assert doc =~ "mix ecto.migrate"
+      assert doc =~ "async: false"
+      refute doc =~ "mix mailglass.install"
+    end
+
+    test "inbound testing guide covers MailboxCase, assertions, and StreamData" do
+      doc = File.read!("mailglass_inbound/docs/inbound-testing.md")
+      assert doc =~ "use MailglassInbound.MailboxCase"
+      assert doc =~ "assert_inbound_received"
+      assert doc =~ "Test.Ingress.receive_inbound"
+      assert doc =~ "async: false"
+      assert doc =~ "StreamData"
+    end
+
+    test "inbound operator guide covers the three mix tasks and retention config" do
+      doc = File.read!("mailglass_inbound/docs/inbound-operator.md")
+      assert doc =~ "mix mailglass.inbound.doctor"
+      assert doc =~ "mix mailglass.inbound.replay"
+      assert doc =~ "mix mailglass.inbound.prune"
+      assert doc =~ "--tenant"
+      assert doc =~ "retention:"
+    end
+
+    test "inbound mailgun guide covers signing key and HMAC verification" do
+      doc = File.read!("mailglass_inbound/docs/inbound-mailgun.md")
+      assert doc =~ "signing_key"
+      assert doc =~ "HMAC-SHA256"
+      assert doc =~ "MailglassInbound.Ingress.CachingBodyReader"
+    end
+
+    test "inbound SES guide covers S3 fetcher, sweet_xml, and subscription confirmation" do
+      doc = File.read!("mailglass_inbound/docs/inbound-ses.md")
+      assert doc =~ "ex_aws_s3"
+      assert doc =~ "S3Fetcher.ExAwsS3"
+      assert doc =~ "sweet_xml"
+      assert doc =~ "SubscribeURL"
+      assert doc =~ "SubscriptionConfirmation"
+    end
+
+    test "inbound routing-debug guide covers the routing-trace card, CLI inspection, and envelope distinction" do
+      doc = File.read!("mailglass_inbound/docs/inbound-routing-debug.md")
+      assert doc =~ "routing-trace"
+      assert doc =~ "__mailglass_inbound_routes__"
+      assert doc =~ "mix mailglass.inbound.doctor"
+      assert doc =~ "envelope"
+    end
+  end
+
+  describe "jobs.md contract" do
+    # guides/jobs.md is the public JTBD ramp-up guide. Its snippets are a
+    # projection of the canonical surface, so they must keep parsing and keep
+    # using the documented public API as the library evolves. See
+    # .planning/research/JTBD-COVERAGE.md for the source-of-truth map.
+
+    # Each job's code block, located by a stable marker. Keep in sync with the
+    # <!-- JN --> markers in guides/jobs.md.
+    @jobs_markers [
+      "import Mailglass.Components",
+      "mailglass_admin_routes",
+      "password_reset",
+      "Mailglass.deliver_later()",
+      "Mailglass.PubSub.Topics.events",
+      "import Mailglass.TestAssertions",
+      "Mailglass.SuppressedError",
+      "mailglass_webhook_routes",
+      "mailglass_operator_routes",
+      "resolve_outbound_adapter_ref"
+    ]
+
+    test "freshness stamp and inbound stability boundary are present" do
+      jobs = File.read!("guides/jobs.md")
+
+      assert jobs =~ "Current as of 2026-05-23"
+      assert jobs =~ "mailglass` and `mailglass_admin`"
+      assert jobs =~ "outside the"
+      assert jobs =~ "`v1.x` stability promise"
+    end
+
+    test "every documented job snippet parses to a valid quoted form" do
+      blocks = extract_code_blocks("guides/jobs.md")
+
+      for marker <- @jobs_markers do
+        block = Enum.find(blocks, &String.contains?(&1, marker))
+        assert block, "expected a jobs.md code block containing #{inspect(marker)}"
+        assert {:ok, _quoted} = Code.string_to_quoted(block)
+      end
+    end
+
+    test "jobs.md stays on the canonical path and never leaks Swoosh internals" do
+      blocks = extract_code_blocks("guides/jobs.md")
+
+      refute Enum.any?(blocks, &String.contains?(&1, "Swoosh.Email"))
+      refute Enum.any?(blocks, &String.contains?(&1, "Swoosh.Mailer.deliver"))
+    end
+
+    test "the auth-send job uses the canonical Mailable + deliver surface" do
+      blocks = extract_code_blocks("guides/jobs.md")
+      send_block = Enum.find(blocks, &String.contains?(&1, "password_reset"))
+
+      assert send_block
+      assert send_block =~ "use Mailglass.Mailable"
+      assert send_block =~ "|> to(user.email)"
+      assert send_block =~ "Mailglass.deliver()"
+      refute send_block =~ "Swoosh.Email.to"
     end
   end
 end
