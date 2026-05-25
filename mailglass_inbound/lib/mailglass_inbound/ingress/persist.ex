@@ -234,7 +234,8 @@ defmodule MailglassInbound.Ingress.Persist do
       received_at: message.received_at || DateTime.utc_now(),
       text_body: message.text_body,
       html_body: message.html_body,
-      attachments: message.attachments
+      attachments: message.attachments,
+      suppression_flagged: compute_suppression_flag(tenant_id, provider, message)
     }
 
     changeset = InboundRecords.change_inbound_record(attrs)
@@ -254,6 +255,65 @@ defmodule MailglassInbound.Ingress.Persist do
         end
     end
   end
+
+  # IOPS-05 (D-49-19/23): compute the diagnostic suppression flag once, at INSERT.
+  # The flag is NOT a gate — it degrades OPEN so a store hiccup, a malformed key,
+  # or an empty `from` can never block legitimate inbound mail. A `true` flag
+  # triggers no auto-bounce and no auto-suppression; the message is preserved and
+  # the adopter's mailbox decides reject/process. We call the CONFIGURED store's
+  # `check/2` directly (NOT the outbound `Mailglass.Suppression` send-preflight
+  # facade, which reads swoosh `:to` and emits OUTBOUND telemetry). The whole
+  # compute runs inside the inbound `:suppression_flag` span; its stop metadata is
+  # `%{flagged, tenant_id, provider}` only — never the address (D-49-23).
+  defp compute_suppression_flag(tenant_id, provider, message) do
+    MailglassInbound.Telemetry.suppression_flag(
+      %{tenant_id: tenant_id, provider: normalize_provider(provider)},
+      fn ->
+        flag = suppressed_sender?(tenant_id, message)
+
+        {flag,
+         %{tenant_id: tenant_id, provider: normalize_provider(provider), flagged: flag}}
+      end
+    )
+  end
+
+  defp suppressed_sender?(tenant_id, %InboundMessage{from: from}) do
+    case first_from_address(from) do
+      nil ->
+        # Empty/missing from → nothing to look up → degrade OPEN.
+        false
+
+      address ->
+        store =
+          Application.get_env(:mailglass, :suppression_store, Mailglass.SuppressionStore.Ecto)
+
+        check_suppression(store, tenant_id, address)
+    end
+  end
+
+  # A raised exception (e.g. the configured store's repo is unavailable in an
+  # inbound-only runtime) is the same hazard class as `{:error, _}` — a store
+  # hiccup must never block legitimate inbound mail, so we degrade OPEN here too.
+  defp check_suppression(store, tenant_id, address) do
+    case store.check(%{tenant_id: tenant_id, address: String.downcase(address)}) do
+      {:suppressed, _entry} -> true
+      :not_suppressed -> false
+      {:error, _reason} -> false
+    end
+  rescue
+    _error -> false
+  catch
+    _kind, _reason -> false
+  end
+
+  defp first_from_address([%{address: address} | _rest]) when is_binary(address) and address != "",
+    do: address
+
+  defp first_from_address([%{"address" => address} | _rest])
+       when is_binary(address) and address != "",
+       do: address
+
+  defp first_from_address(_from), do: nil
 
   defp insert_evidence(repo, tenant_id, provider, record, evidence) do
     raw_mime_fingerprint = evidence_raw_mime_fingerprint(evidence)

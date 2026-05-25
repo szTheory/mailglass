@@ -114,7 +114,13 @@ defmodule MailglassInbound.Execution do
       received_at: record.received_at,
       text_body: record.text_body,
       html_body: record.html_body,
-      attachments: record.attachments
+      attachments: record.attachments,
+      # IOPS-05: the single projection point — the persisted column becomes the
+      # framework-owned typed signal the adopter reads. A pre-migration row reads
+      # the DB default `false`, so this never produces nil/KeyError.
+      signals: %MailglassInbound.InboundMessage.Signals{
+        suppression_flagged: record.suppression_flagged
+      }
     }
   end
 

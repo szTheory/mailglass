@@ -63,6 +63,9 @@ defmodule MailglassInbound.Internal.Operator.Records do
           subject: record.subject,
           received_at: record.received_at,
           inserted_at: record.inserted_at,
+          # IOPS-05 (D-49-20): the column is the source of truth — select it
+          # directly from the :rec binding (no subquery; the flag is set at INSERT).
+          suppression_flagged: record.suppression_flagged,
           outcome: subquery(latest_fresh_run_field(tenant_id, :outcome)),
           mailbox: subquery(latest_fresh_run_field(tenant_id, :mailbox))
         })
