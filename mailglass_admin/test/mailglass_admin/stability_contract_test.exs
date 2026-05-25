@@ -61,4 +61,28 @@ defmodule MailglassAdmin.StabilityContractTest do
       assert trust_doc =~ ":destructive_action"
     end
   end
+
+  describe "README install pin freshness" do
+    # Keep the README install snippet's `~> X.Y` pins from drifting away from the
+    # published version so a copy-paste install always resolves. Dynamic (not
+    # hardcoded) — mirrors the core + inbound docs-contract tests. mailglass and
+    # mailglass_admin are linked, so both pins match this package's @version
+    # major.minor. release-please's sed step bumps the README on the release PR.
+    test "README mailglass/mailglass_admin dep pins major.minor match the package version" do
+      readme = File.read!("README.md")
+      version = Mix.Project.config()[:version]
+      [major, minor | _] = String.split(version, ".")
+      expected_major_minor = "#{major}.#{minor}"
+
+      for dep <- ["mailglass", "mailglass_admin"] do
+        [_, major_minor] =
+          Regex.run(~r/\{:#{dep},\s*"~>\s*(\d+\.\d+)/, readme) ||
+            flunk("README is missing a `{:#{dep}, \"~> X.Y\"}` dep pin")
+
+        assert major_minor == expected_major_minor,
+               "README pins #{dep} to ~> #{major_minor} but the package version " <>
+                 "is #{version} (expected ~> #{expected_major_minor})"
+      end
+    end
+  end
 end

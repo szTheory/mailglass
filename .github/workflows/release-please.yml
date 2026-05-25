@@ -177,7 +177,21 @@ jobs:
             sed -i -E "s/\{:mailglass_inbound, \"~> [0-9]+\.[0-9]+\"\}/{:mailglass_inbound, \"~> ${INBOUND_MM}\"}/" mailglass_inbound/README.md
           fi
 
-          SYNC_PATHS=(mailglass_admin/mix.exs mailglass_inbound/mix.exs mailglass_inbound/README.md)
+          # Sync the core + admin README `{:mailglass, "~> X.Y"}` and
+          # `{:mailglass_admin, "~> X.Y"}` install pins to the CORE major.minor.
+          # core + admin are LINKED, so both packages share the core version.
+          # The docs-contract tests (test/mailglass/docs_contract_test.exs and
+          # mailglass_admin/test/.../stability_contract_test.exs) assert README
+          # pin major.minor == @version major.minor, which would otherwise fail
+          # on the PR branch the moment release-please bumps @version.
+          CORE_MM=$(echo "$CORE_VERSION" | cut -d. -f1,2)
+          echo "Target core/admin README pins: ~> $CORE_MM"
+          for readme in README.md mailglass_admin/README.md; do
+            sed -i -E "s/\{:mailglass, \"~> [0-9]+\.[0-9]+\"/{:mailglass, \"~> ${CORE_MM}\"/" "$readme"
+            sed -i -E "s/\{:mailglass_admin, \"~> [0-9]+\.[0-9]+\"/{:mailglass_admin, \"~> ${CORE_MM}\"/" "$readme"
+          done
+
+          SYNC_PATHS=(mailglass_admin/mix.exs mailglass_inbound/mix.exs mailglass_inbound/README.md README.md mailglass_admin/README.md)
           if git diff --quiet -- "${SYNC_PATHS[@]}"; then
             echo "Pins + README already synced — nothing to commit."
             exit 0

@@ -12,13 +12,32 @@ defmodule Mailglass.DocsContractTest do
       refute Enum.any?(blocks, &String.contains?(&1, "mix verify.phase_07"))
 
       readme = File.read!("README.md")
-      assert readme =~ "{:mailglass, \"~> 0.3\"}"
+
+      # The install snippet's `~> X.Y` pins must track the published version so a
+      # copy-paste install always resolves. Dynamic (not hardcoded) so the pin
+      # can never silently drift from @version — mirrors the inbound WR-01 test
+      # at mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs. core
+      # + mailglass_admin are linked, so both pins match the core @version
+      # major.minor. release-please's sed step bumps the README on the release PR.
+      version = Mix.Project.config()[:version]
+      [major, minor | _] = String.split(version, ".")
+      expected_major_minor = "#{major}.#{minor}"
+
+      for dep <- ["mailglass", "mailglass_admin"] do
+        [_, major_minor] =
+          Regex.run(~r/\{:#{dep},\s*"~>\s*(\d+\.\d+)/, readme) ||
+            flunk("README is missing a `{:#{dep}, \"~> X.Y\"}` dep pin")
+
+        assert major_minor == expected_major_minor,
+               "README pins #{dep} to ~> #{major_minor} but the package version " <>
+                 "is #{version} (expected ~> #{expected_major_minor})"
+      end
+
       assert readme =~ "docs/api_stability.md"
       assert readme =~ "guides/compatibility-and-deprecations.md"
       assert readme =~ "guides/upgrading-to-v1_0.md"
       assert readme =~ "`mailglass_inbound` is outside the `v1.x` stability promise"
       refute readme =~ "v0.1 in development"
-      refute readme =~ "{:mailglass, \"~> 0.2\"}"
       refute readme =~ "v0.3 public surface"
     end
 
