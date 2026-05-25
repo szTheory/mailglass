@@ -74,11 +74,23 @@ are not available for X.509 verification.
    - Endpoint: `https://your-app.example.com/inbound/YOUR_TENANT_ID/ses`
    - Click **Create subscription**.
 
-3. **Subscription confirmation is automatic.** When SNS delivers the
-   `SubscriptionConfirmation` message to your endpoint, the ingress plug validates the
-   `SubscribeURL` against the hardcoded AWS trust policy and responds with `200 OK`. SNS
-   then marks the subscription as confirmed. No adopter action is required — see
-   [SubscribeURL Trust Policy](#subscribeurl-trust-policy) for details on why this is safe.
+3. **Confirm the subscription manually.** After SNS delivers a
+   `SubscriptionConfirmation` POST to your endpoint, the ingress plug validates
+   the `SubscribeURL` host against the hardcoded SNS trust policy (SSRF guard)
+   and returns `200 OK`, but it does **not** follow the URL. SNS requires an
+   HTTP GET to the `SubscribeURL` to complete confirmation.
+
+   Visit the SNS console → your subscription → **Request confirmation** (or
+   retrieve the `SubscribeURL` from the SNS delivery attempt logs and curl it):
+
+   ```bash
+   curl "https://sns.us-east-1.amazonaws.com/?Action=ConfirmSubscription&..."
+   ```
+
+   The subscription status changes from `PendingConfirmation` to `Confirmed`
+   once SNS receives your GET. Until confirmed, no `Notification` messages are
+   delivered. See [SubscribeURL Trust Policy](#subscribeurl-trust-policy) for
+   details on the host validation that guards against SSRF.
 
 ## IAM Policy
 
@@ -268,11 +280,19 @@ making any real S3 calls. You do not need AWS credentials to run the test suite.
 Use the built-in fixture helper to construct test payloads:
 
 ```elixir
-payload = MailglassInbound.Fixtures.build_ses_sns_payload(%{
-  bucket: "test-bucket",
-  key: "inbound/test-message-id"
-})
+# Keyword list — map is not accepted here
+payload = MailglassInbound.Fixtures.build_ses_sns_payload(subject: "SES inbound test")
+
+# To test with a custom body:
+payload = MailglassInbound.Fixtures.build_ses_sns_payload(
+  subject: "SES inbound test",
+  text_body: "Custom body content"
+)
 ```
+
+> **Note:** `:bucket` and `:key` are fixture-internal constants and cannot be
+> overridden via options. To control the message content, use the supported options
+> above (`:subject`, `:text_body`, `:html_body`, `:from`, `:to`).
 
 The Fake adapter is wired by default when no `s3_fetcher` is configured in the test
 environment. In production, the `s3_fetcher` must be set explicitly to
