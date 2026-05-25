@@ -40,7 +40,7 @@ Currently `mailglass_inbound/lib/` contains **zero** `:telemetry` calls. This is
 - [x] **MGUN-02**: Mailgun ingress reuses the existing `Mailglass.Webhook.Providers.MailgunReplayCache` ETS table (or aliases its supervisor/owner pattern) to prevent timestamp-replay attacks
 - [x] **MGUN-03**: Mailgun ingress normalizes the multipart payload into the canonical `%MailglassInbound.InboundMessage{}` shape and persists raw provider source to `inbound_evidence` for replay truth
 - [x] **MGUN-04**: `mailglass_inbound/lib/mailglass_inbound/ingress/plug.ex` allowlist is extended to recognize the Mailgun provider key
-- [ ] **MGUN-05**: Mailgun setup guide at `docs/inbound-mailgun.md` covers HTTP route URL, API key configuration, signing key rotation, and verification
+- [x] **MGUN-05**: Mailgun setup guide at `docs/inbound-mailgun.md` covers HTTP route URL, API key configuration, signing key rotation, and verification
 
 ### SES Inbound Ingress (SESI)
 
@@ -49,7 +49,7 @@ Currently `mailglass_inbound/lib/` contains **zero** `:telemetry` calls. This is
 - [x] **SESI-03**: `MailglassInbound.S3Fetcher` behaviour defines the contract for fetching MIME body from S3 when SES delivers `Action: S3` notifications
 - [x] **SESI-04**: A `MailglassInbound.S3Fetcher.Fake` test implementation ships in core; a real `MailglassInbound.S3Fetcher.ExAwsS3` adapter ships behind `Mailglass.OptionalDeps.ExAwsS3` (new optional-dep gateway, mirroring `OptionalDeps.GenSmtp`)
 - [x] **SESI-05**: SES ingress handles the message-id race (SNS notification arriving before S3 object is consistent) with bounded retry + structured error
-- [ ] **SESI-06**: SES setup guide at `docs/inbound-ses.md` covers SNS topic configuration, IAM policy template, S3 bucket setup, optional-dep installation, and the SubscribeURL allowlist
+- [x] **SESI-06**: SES setup guide at `docs/inbound-ses.md` covers SNS topic configuration, IAM policy template, S3 bucket setup, optional-dep installation, and the SubscribeURL allowlist
 
 ### Inbound Test Helpers (ITEST)
 
@@ -97,7 +97,7 @@ Architecturally clones `mailglass_admin/lib/mailglass_admin/operator_live.ex` pa
 - [x] **IDOC-01**: Inbound install guide: `docs/inbound-install.md` covers `mix.exs` deps, repo configuration, router macro setup, first mailbox, first ingress, sandboxed test
 - [x] **IDOC-02**: Inbound testing guide: `docs/inbound-testing.md` covers `MailboxCase`, `TestAssertions`, `Test.Ingress`, fixtures, and idempotency property-test patterns
 - [x] **IDOC-03**: Inbound operator guide: `docs/inbound-operator.md` covers `inbound.doctor`, `inbound.replay`, `inbound.prune`, rate-limit configuration, suppression flag interpretation
-- [ ] **IDOC-04**: Mailgun setup guide (MGUN-05) and SES setup guide (SESI-06) are complete, end-to-end walkthroughs with example payloads
+- [x] **IDOC-04**: Mailgun setup guide (MGUN-05) and SES setup guide (SESI-06) are complete, end-to-end walkthroughs with example payloads
 - [ ] **IDOC-05**: Routing debug guide: `docs/inbound-routing-debug.md` covers the InboundLive routing-trace card workflow, common matcher failure modes, and CLI inspection patterns
 - [ ] **IDOC-06**: All v1.2 inbound docs pass the existing doc-contract test (`mix mailglass.docs.check`) without warnings
 
@@ -175,13 +175,13 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 | MGUN-02 | Phase 46 | Complete |
 | MGUN-03 | Phase 46 | Complete |
 | MGUN-04 | Phase 46 | Complete |
-| MGUN-05 | Phase 50 | Pending |
+| MGUN-05 | Phase 50 | Complete |
 | SESI-01 | Phase 46 | Complete |
 | SESI-02 | Phase 46 | Complete |
 | SESI-03 | Phase 46 | Complete |
 | SESI-04 | Phase 46 | Complete |
 | SESI-05 | Phase 46 | Complete |
-| SESI-06 | Phase 50 | Pending |
+| SESI-06 | Phase 50 | Complete |
 | ITEST-01 | Phase 47 | Complete |
 | ITEST-02 | Phase 47 | Complete |
 | ITEST-03 | Phase 47 | Complete |
@@ -208,7 +208,7 @@ Populated by `gsd-roadmapper` agent on 2026-05-07 against `.planning/ROADMAP.md`
 | IDOC-01 | Phase 50 | Complete |
 | IDOC-02 | Phase 50 | Complete |
 | IDOC-03 | Phase 50 | Complete |
-| IDOC-04 | Phase 50 | Pending |
+| IDOC-04 | Phase 50 | Complete |
 | IDOC-05 | Phase 50 | Pending |
 | IDOC-06 | Phase 50 | Pending |
 | CLOSE-01 | Phase 51 | Pending |
