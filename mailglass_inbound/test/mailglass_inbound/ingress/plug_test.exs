@@ -685,6 +685,16 @@ defmodule MailglassInbound.Ingress.PlugTest do
         else
           Application.put_env(:mailglass_inbound, :rate_limit, prior_rate_limit)
         end
+
+        # Clear the shared node-local ETS table on the way out too. These
+        # tests deliberately drain a tiny-capacity bucket; resetting only on
+        # entry leaves drained bucket entries that trip an order-dependent
+        # 429 in a later test sharing a tenant/recipient/sender_domain key
+        # (flake reproduced at seed 12345). Resetting on exit keeps the
+        # shared table pristine for the rest of the suite.
+        if :ets.whereis(:mailglass_inbound_rate_limit) != :undefined do
+          :ets.delete_all_objects(:mailglass_inbound_rate_limit)
+        end
       end)
 
       # Tiny tenant capacity so the limiter trips on the 2nd verified request.
