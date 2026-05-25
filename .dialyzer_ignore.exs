@@ -18,6 +18,6 @@
   {"lib/mailglass/config.ex", "Function invalid_adapter_entry!/2 only terminates with explicit exception."},
   # Reason: BIMI.analyze/2 spec'd as analysis_result() (open map shape) for forward-compat; success typing collapses to a closed atom-set on findings/facts which would force every consumer to widen on the next BIMI status enum bump.
   {"lib/mailglass/deliverability/bimi.ex", "Type specification for analyze is a supertype of the success typing."},
-  # Reason: GenSmtp.decode/2 spec widens the ok branch to {:ok, tuple()} on purpose — the :mimemail 5-tuple shape varies across gen_smtp versions and callers pattern-match the tuple themselves; dialyzer flags the generic tuple() as an extra range (same intentional-supertype pattern as the BIMI entry above).
-  {"lib/mailglass/optional_deps/gen_smtp.ex", "The type specification has too many types for the function."}
+  # Reason: GenSmtp.decode/2 spec widens the ok branch to {:ok, tuple()} on purpose — the :mimemail 5-tuple shape varies across gen_smtp versions and callers pattern-match the tuple themselves; with :underspecs dialyzer flags {:ok, tuple()} as an extra range (same intentional-supertype pattern as the BIMI entry above).
+  {"lib/mailglass/optional_deps/gen_smtp.ex", "@spec for decode has more types than are returned by the function."}
 ]
