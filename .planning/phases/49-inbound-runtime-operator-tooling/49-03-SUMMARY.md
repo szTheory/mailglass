@@ -126,3 +126,6 @@ DNS-free `mix mailglass.inbound.doctor` (three-state exit + MIME-03 report + mat
 
 ## Known Stubs
 None. The optional `Prune.Worker` Oban stub branch (`available?/0 -> false`) is the intended degraded fallback, not a placeholder. The prune typed-confirmation threshold is a deliberate "always confirm" (threshold 0); candidate-row counting for a numeric threshold is out of scope (planner discretion).
+
+## Self-Check: PASSED
+All 8 created files present on disk; all 4 commits (0f56774, 5191e57, 0ea4bc2, b8baac8) found in git history.
