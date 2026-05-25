@@ -145,12 +145,14 @@ defmodule MailglassInbound.ConfigTest do
 
       rate_limit = Config.rate_limit()
 
+      # WR-01: per_minute == capacity so the advertised "N/min" is the sustained
+      # refill rate, matching the core Mailglass.RateLimiter convention.
       assert rate_limit[:tenant][:capacity] == 1000
-      assert rate_limit[:tenant][:per_minute] == 60
+      assert rate_limit[:tenant][:per_minute] == 1000
       assert rate_limit[:recipient][:capacity] == 500
-      assert rate_limit[:recipient][:per_minute] == 60
+      assert rate_limit[:recipient][:per_minute] == 500
       assert rate_limit[:sender_domain][:capacity] == 200
-      assert rate_limit[:sender_domain][:per_minute] == 60
+      assert rate_limit[:sender_domain][:per_minute] == 200
     end
 
     test "merges configured bucket overrides over the defaults" do

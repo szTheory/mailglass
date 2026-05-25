@@ -33,7 +33,11 @@ config :mailglass_inbound, MailglassInbound.TestRepo,
 # (RateLimiterTest, plug_test "ingress rate limiter" describe) override these
 # per-test with tiny capacities AND reset the ETS table, so tripping is still
 # fully exercised.
+#
+# WR-01: per_minute == capacity here mirrors the core Mailglass.RateLimiter
+# convention (sustained refill == burst size). With a huge per_minute the bucket
+# also refills instantly, reinforcing the "inert for incidental traffic" intent.
 config :mailglass_inbound, :rate_limit,
-  tenant: [capacity: 1_000_000, per_minute: 60],
-  recipient: [capacity: 1_000_000, per_minute: 60],
-  sender_domain: [capacity: 1_000_000, per_minute: 60]
+  tenant: [capacity: 1_000_000, per_minute: 1_000_000],
+  recipient: [capacity: 1_000_000, per_minute: 1_000_000],
+  sender_domain: [capacity: 1_000_000, per_minute: 1_000_000]

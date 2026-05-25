@@ -42,13 +42,16 @@ defmodule MailglassInbound.Config do
       doc: """
       Post-verify ingress rate-limit buckets. Three buckets evaluated fail-fast
       in order tenant -> recipient -> sender_domain. Each bucket has a `capacity`
-      (token-bucket size) and a `per_minute` refill rate. Defaults: tenant
-      1000/min, recipient 500/min, sender_domain 200/min.
+      (token-bucket BURST size) and a `per_minute` SUSTAINED refill rate. Following
+      the core `Mailglass.RateLimiter` convention, the defaults set
+      `per_minute == capacity`, so "N/min" is literally the sustained throughput:
+      the bucket refills its full capacity each minute. Defaults: tenant 1000/min,
+      recipient 500/min, sender_domain 200/min.
       """,
       keys: [
-        tenant: Keyword.put(@bucket_schema, :default, capacity: 1000, per_minute: 60),
-        sender_domain: Keyword.put(@bucket_schema, :default, capacity: 200, per_minute: 60),
-        recipient: Keyword.put(@bucket_schema, :default, capacity: 500, per_minute: 60)
+        tenant: Keyword.put(@bucket_schema, :default, capacity: 1000, per_minute: 1000),
+        sender_domain: Keyword.put(@bucket_schema, :default, capacity: 200, per_minute: 200),
+        recipient: Keyword.put(@bucket_schema, :default, capacity: 500, per_minute: 500)
       ]
     ]
   ]
@@ -72,9 +75,9 @@ defmodule MailglassInbound.Config do
           replay_runs_days: 30
         ],
         rate_limit: [
-          tenant:        [capacity: 1000, per_minute: 60],
-          sender_domain: [capacity: 200,  per_minute: 60],
-          recipient:     [capacity: 500,  per_minute: 60]
+          tenant:        [capacity: 1000, per_minute: 1000],
+          sender_domain: [capacity: 200,  per_minute: 200],
+          recipient:     [capacity: 500,  per_minute: 500]
         ]
 
   `:infinity` on any retention class disables that window. Only the knobs the
