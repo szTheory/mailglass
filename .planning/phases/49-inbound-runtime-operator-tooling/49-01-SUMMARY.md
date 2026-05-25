@@ -139,3 +139,9 @@ returns HTTP 429 with a per-bucket `Retry-After`, plus a validated package-local
 ## No Known Stubs
 
 `suppression_flag/2` and `prune/2` are unused-in-this-plan but are explicitly required deliverables consumed by plans 02/03 — forward infrastructure, not stubs.
+
+## Self-Check: PASSED
+
+- All 5 created files present on disk (config.ex, rate_limiter.ex, rate_limiter/table_owner.ex, config_test.exs, rate_limiter_test.exs).
+- SUMMARY.md present.
+- All 4 commits present in git history (d41e99a, bdc9875, e5ae195, 748b357).
