@@ -49,11 +49,14 @@ defmodule MailglassInbound.Router do
     expanded_mailbox = Macro.expand(mailbox, __CALLER__)
     {evaluated_opts, _binding} = Code.eval_quoted(opts, [], __CALLER__)
     validated = validate_route_opts!(expanded_mailbox, evaluated_opts)
+    # Capture the declaration site at compile time so the doctor can name
+    # `router.ex:LINE` in route-conflict findings (D-49-08).
     route = %Route{
       mailbox: expanded_mailbox,
       recipient: validated[:recipient],
       subject: validated[:subject],
-      headers: validated[:headers]
+      headers: validated[:headers],
+      source: {__CALLER__.file, __CALLER__.line}
     }
 
     quote bind_quoted: [route: Macro.escape(route)] do
