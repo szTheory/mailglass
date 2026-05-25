@@ -125,6 +125,31 @@ defmodule MailglassInbound.Internal.PruneTest do
       # Nothing deleted while locked out.
       assert TestRepo.get(InboundRecord, old_rec.id)
     end
+
+    test "two sequential prune/0 runs both acquire the lock (CR-01: lock is released)" do
+      # CR-01 regression: the advisory lock must be acquired AND released on the
+      # SAME pooled connection (via Repo.checkout/2). If acquire/release land on
+      # different connections, the first run leaks the lock and a second run lands
+      # on a connection where the lock is held — returning {:ok, :locked_out}
+      # instead of completing. Drive two sequential prune/0 calls and assert the
+      # SECOND is NOT locked out (proving the first run released its lock).
+      {:ok, old_rec} = insert_record(days_ago: @over)
+
+      assert {:ok, first} = Prune.prune()
+      refute match?(:locked_out, first)
+      assert first.records_deleted >= 1
+
+      # A fresh over-window row for the second sweep to act on.
+      {:ok, old_rec_2} = insert_record(days_ago: @over)
+
+      assert {:ok, second} = Prune.prune()
+      # The crux: the second run must NOT be locked out — the first released.
+      refute match?(:locked_out, second)
+      assert second.records_deleted >= 1
+
+      refute TestRepo.get(InboundRecord, old_rec.id)
+      refute TestRepo.get(InboundRecord, old_rec_2.id)
+    end
   end
 
   describe "telemetry" do

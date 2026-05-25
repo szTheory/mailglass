@@ -115,18 +115,30 @@ defmodule MailglassInbound.Internal.Prune do
 
   # ---- advisory lock --------------------------------------------------------
 
+  # CR-01: PostgreSQL session-level advisory locks (the non-`_xact_`
+  # `pg_try_advisory_lock` / `pg_advisory_unlock` variants) are bound to the
+  # database SESSION (connection). Outside an explicit checkout, Ecto/DBConnection
+  # hands each `query!` / `delete_all` a possibly-different pooled connection — so
+  # the lock would be taken on one connection and released on another (where no
+  # lock is held), leaking the lock on the original connection and letting two
+  # concurrent sweeps interleave. `Repo.checkout/2` pins ONE connection for the
+  # whole closure (across the separate per-batch transactions, preserving the
+  # batched-commit design), so the acquire, the batched deletes, and the release
+  # all share a single session.
   defp with_advisory_lock(repo, fun) do
-    case repo.query!("SELECT pg_try_advisory_lock($1)", [@prune_lock_key]) do
-      %{rows: [[true]]} ->
-        try do
-          fun.()
-        after
-          repo.query!("SELECT pg_advisory_unlock($1)", [@prune_lock_key])
-        end
+    repo.checkout(fn ->
+      case repo.query!("SELECT pg_try_advisory_lock($1)", [@prune_lock_key]) do
+        %{rows: [[true]]} ->
+          try do
+            fun.()
+          after
+            repo.query!("SELECT pg_advisory_unlock($1)", [@prune_lock_key])
+          end
 
-      %{rows: [[false]]} ->
-        {:ok, :locked_out}
-    end
+        %{rows: [[false]]} ->
+          {:ok, :locked_out}
+      end
+    end)
   end
 
   # ---- batched deletes ------------------------------------------------------
