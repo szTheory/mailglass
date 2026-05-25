@@ -11,7 +11,12 @@ defmodule MailglassInbound.Application do
     :ok = maybe_warn_fallback_mode()
 
     children = [
-      {Task.Supervisor, name: MailglassInbound.TaskSupervisor}
+      {Task.Supervisor, name: MailglassInbound.TaskSupervisor},
+      # Owns the :mailglass_inbound_rate_limit ETS table for the post-verify
+      # ingress rate limiter (IOPS-04, D-49-11). The prune Oban worker is NOT
+      # auto-registered here (D-49-28) — it stays unregistered; operators run
+      # `mix mailglass.inbound.prune` or wire the documented cron themselves.
+      MailglassInbound.RateLimiter.TableOwner
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: MailglassInbound.Supervisor)
