@@ -1,9 +1,9 @@
 ---
 phase: 35
 slug: stability-contract-audit
-status: ready
+status: complete
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-05-05
 ---
 
@@ -38,14 +38,14 @@ created: 2026-05-05
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 35-01-01 | 01 | 1 | LOCK-01, LOCK-03 | T-35-01 / T-35-02 | Core stability inventory classifies stable vs internal vs sibling-only surfaces honestly. | docs-contract | `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors` | ⚠️ Wave 0 | ⬜ pending |
-| 35-01-02 | 01 | 1 | LOCK-01, LOCK-03 | T-35-02 / T-35-03 | README and `Mailglass` moduledoc point at the canonical core contract and do not overclaim package scope. | docs-contract | `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors` | ⚠️ Wave 0 | ⬜ pending |
-| 35-02-01 | 02 | 2 | LOCK-02, LOCK-03 | T-35-04 / T-35-05 | `mailglass_admin` package docs expose the stable admin seam and mark UI internals as internal. | docs-contract | `cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors` | ⚠️ Wave 0 | ⬜ pending |
-| 35-02-02 | 02 | 2 | LOCK-02, LOCK-03 | T-35-05 / T-35-06 | Router/auth/operator source docs match the package-local admin contract. | docs-contract | `cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors` | ⚠️ Wave 0 | ⬜ pending |
-| 35-03-01 | 03 | 3 | LOCK-04 | T-35-07 / T-35-09 | Stable public task surfaces expose truthful `:since` / deprecation metadata in compiled docs. | unit | `mix test test/mailglass/stability_contract_test.exs --warnings-as-errors && cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors` | ⚠️ Wave 0 | ⬜ pending |
-| 35-03-02 | 03 | 3 | LOCK-01, LOCK-02, LOCK-03, LOCK-04 | T-35-07 / T-35-08 / T-35-09 | Contract docs, compiled-doc tests, and generated docs remain aligned without pulling Phase 37 enforcement forward. | docs-build | `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors && cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors && cd .. && mix docs --warnings-as-errors` | ⚠️ Wave 0 | ⬜ pending |
+| 35-01-01 | 01 | 1 | LOCK-01, LOCK-03 | T-35-01 / T-35-02 | Core stability inventory classifies stable vs internal vs sibling-only surfaces honestly. | docs-contract | `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 35-01-02 | 01 | 1 | LOCK-01, LOCK-03 | T-35-02 / T-35-03 | README and `Mailglass` moduledoc point at the canonical core contract and do not overclaim package scope. | docs-contract | `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 35-02-01 | 02 | 2 | LOCK-02, LOCK-03 | T-35-04 / T-35-05 | `mailglass_admin` package docs expose the stable admin seam and mark UI internals as internal. | docs-contract | `cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 35-02-02 | 02 | 2 | LOCK-02, LOCK-03 | T-35-05 / T-35-06 | Router/auth/operator source docs match the package-local admin contract. | docs-contract | `cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 35-03-01 | 03 | 3 | LOCK-04 | T-35-07 / T-35-09 | Stable public task surfaces expose truthful `:since` / deprecation metadata in compiled docs. | unit | `mix test test/mailglass/stability_contract_test.exs --warnings-as-errors && cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 35-03-02 | 03 | 3 | LOCK-01, LOCK-02, LOCK-03, LOCK-04 | T-35-07 / T-35-08 / T-35-09 | Contract docs, compiled-doc tests, and generated docs remain aligned without pulling Phase 37 enforcement forward. | docs-build | `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors && cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors && cd .. && mix docs --warnings-as-errors` | ✅ | ✅ green |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ Wave 0 dependency*
+*Status: open · ✅ green · ❌ red · ⚠️ Wave 0 dependency*
 
 ---
 
@@ -75,4 +75,6 @@ created: 2026-05-05
 - [x] Feedback latency < 90s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+Approval: approved 2026-05-26
+
+Completion Evidence: Re-verified 2026-05-26 with `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors`, `cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors`, `cd mailglass_admin && mix docs --warnings-as-errors >/tmp/mailglass-admin-phase35-docs.log`, and `rg -n "api_stability|Stability|Contract" mailglass_admin/doc/**/*.html mailglass_admin/doc/dist/search_data-*.js`.
