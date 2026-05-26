@@ -12,11 +12,11 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 **`v1.2 Inbound Production Confidence` shipped on 2026-05-26.**
 
-- Planning milestone effectively closed (Phase 51 Stability Closeout remains as carry-forward): 7 phases (45-50 + 50.5 ceremony), 18+ plans
-- **Current package versions on Hex: `mailglass` 1.2.0 / `mailglass_admin` 1.2.0 / `mailglass_inbound` 0.2.0** (live as of 2026-05-26 via Phase 50.5; ceremony record at `.planning/phases/50.5-v1-2-release-ceremony/50.5-RELEASE-RECORD.md`; sandbox install proof passed within the 60-minute window)
-- v1.1 (preceding) shipped 2026-05-06 via Phase 44.5: `mailglass` 1.0.0 / `mailglass_admin` 1.0.0 / `mailglass_inbound` 0.1.0
-- v1.1 milestone audit re-run on 2026-05-07 with `status: passed` after Phase 43 + 44 closeout
-- Release posture: live publish complete. Phase 44.5 ceremony record at `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-RELEASE-RECORD.md`. Branch-protection evidence at `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-BRANCH-PROTECTION-EVIDENCE.md`. Phase 45 (Inbound Telemetry + Idempotency Foundation) **complete (2026-05-23)** — inbound telemetry span surface + per-tenant PubSub, never-raise MIME parser, idempotent replay convergence, and cross-package Credo coverage in which every check is registered in `.credo.exs` and meta-test-enforced (gap-closure round 2 closed the inert-guard blind spot: `StreamPolicyConsistent` registered, a registration-asserting meta-test added with proven teeth, `TelemetryEventConvention` extended to real inbound spans, and the egress PII guard hardened — TELE-06). Phase 46 (Mailgun + SES Inbound Ingress) **complete (2026-05-23)** — lifted the outbound HMAC (Mailgun) and SNS X.509 + S3-fetch (SES) verifiers into inbound provider plugs behind the widened 4-provider `Ingress.Plug` (3-variant result `case`, dual `SignatureError` rescue), with closed-type `SignatureError`/`S3FetchError`, an `:ex_aws`/`:ex_aws_s3` optional-dep gateway (`MailglassInbound.OptionalDeps.ExAwsS3` — first optional deps since the v1.0 STACK lock, `--no-optional-deps` lane intact), SSRF-guarded SNS trust, and concurrent-redelivery dedupe hardening (fingerprint `unique_constraint` race + `S3FetchError` transient/permanent mapping). Verification 13/13 passed; code-review 2 BLOCKER + 6 WARNING resolved (MGUN-01..04, SESI-01..05). Phase 47 (Inbound Test Helpers + Generators) **complete (2026-05-24)** — shipped the four Hex-public Testing helpers (`Fixtures` code-built Postmark/SendGrid/Mailgun/SES-SNS payloads incl. a signed SNS minted from an ephemeral RSA-2048 keypair through the real `CertCache`, no `.eml`/`.pem` on disk; `Test.Ingress` real persist+sync-execute driver with a single capture seam; `TestAssertions` 4 matcher styles + outcome + routing + negative; `MailboxCase` ExUnit case template resolving repo from app-env, snapshot-nothing per D-47-12) plus three core Igniter generators (`mix mailglass.gen.{inbound_route,inbound_router,mailbox}`, idempotent Sourceror-zipper edits, `--dry-run` free from Igniter), reaching full inbound test DX parity with outbound. Verification 12/12 passed (209 inbound tests + 1 property green); code-review surfaced 1 advisory doc-example blocker — the shipped `MailboxCase` README/moduledoc snippet drives one capture then runs two consuming assertions — tracked in `47-REVIEW.md`, not yet fixed (ITEST-01..07, IGEN-01..04). Phase 50 (Inbound Documentation Pass) **complete (2026-05-25)** — shipped 6 adopter-facing guides under `mailglass_inbound/docs/`: install, testing, operator, Mailgun, SES, routing-debug; extended `mix mailglass.docs.check` (all 6 in @tier1_paths + @tier1_surface_rules, exits 0), updated `mailglass_inbound/mix.exs` extras with new "Inbound Guides" ExDoc group, added `docs_contract_test` describe block (22 tests green). Code review found 3 factual doc accuracy issues (CR-01: wrong suppression accessor; CR-02: SES SubscriptionConfirmation auto-confirm claim; CR-03: Fixtures API call shape) plus 4 warnings — tracked in 50-REVIEW.md, to be resolved before v1.2 publish (IDOC-01..06, MGUN-05, SESI-06).
+- Milestone archive complete: 10 phases (`44.5`, `45-50`, `50.5`, `50.7`, `51`), 42 plans, 58/58 requirements satisfied, final audit `status: passed`
+- **Current package versions on Hex: `mailglass` 1.2.0 / `mailglass_admin` 1.2.0 / `mailglass_inbound` 0.2.0** (live on 2026-05-26 via Phase 50.5; archive finalized the same day)
+- `mailglass_inbound` now has production-credible telemetry, Mailgun + SES ingress, test helpers + generators, admin observability, operator tooling, and six first-party inbound guides
+- Phase 51 retired the remaining v1.0 carry-forward debt inside the same milestone: Phase 35 Nyquist bookkeeping, branch-protection repo truth, bare `mix test` citext race, boundary warnings, and WR-01..WR-06 dispositions
+- `v1.1` remains the previous shipped slice: `mailglass` 1.0.0 / `mailglass_admin` 1.0.0 / `mailglass_inbound` 0.1.0 published on 2026-05-07 via Phase 44.5
 
 v1.0 milestone closed 2026-05-06. 4 phases (35-38), 12 plans, Stability Lock complete.
 v0.6 milestone closed 2026-05-05. 3 phases (32-34), 9 plans, Production Maturity complete.
@@ -35,13 +35,30 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Inbound package: canonical `%InboundMessage{}` value object, thin router DSL, mailbox behaviour with locked outcomes, Postmark + SendGrid first-party ingress, tenant-safe replayable storage of normalized + raw provider source, Oban-backed async execution with bounded `Task.Supervisor` fallback (v1.1)
 
 **Open issues / debt**:
-- GitHub branch-protection automation deferred to Phase 51 CLOSE-02. Phase 44.5 captured the present state in `.planning/phases/044.5-v1-0-1-1-release-ceremony/044.5-BRANCH-PROTECTION-EVIDENCE.md`: no protection rule on `main`, `hex-publish` Environment has `protection_rules: []`. Phase 51 owns the install of the desired-state script + daily drift workflow.
-- Non-blocking boundary warnings remain in support-summary and admin probe verification paths.
-- Bare `mix test` citext-OID-cache race remains a known non-blocking test-environment sharp edge.
-- Phase 4 standard-depth review WR-01..WR-06 remains tracked but non-blocking.
-- v1.0/1.1 live publish closeout: complete (2026-05-07). Five Phase 51 carry-forward cleanup items captured in `.planning/phases/044.5-v1-0-1-1-release-ceremony/deferred-items.md` (#6 release-as config fields, #7 mix.exs editorial comments, #8 post-publish-smoke sandbox builder, #9 Operator Browser Gate re-strict, #10 gate-ci-green ADVISORY_LANES re-empty).
+- Release-workflow fanout still relies on the documented `workflow_dispatch` fallback because GitHub `GITHUB_TOKEN` anti-recursion blocks downstream publish workflows from release-created releases.
+- Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
+- `SEED-003-ecosystem-integrations` is intentionally deferred and remains dormant for later milestone selection.
+- A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
 ## Latest Completed Milestone
+
+<details>
+<summary>v1.2 Inbound Production Confidence — milestone closed 2026-05-26</summary>
+
+**Goal:** Finish opening `mailglass_inbound` so adopters can install, observe, test, and operate inbound mail with the same confidence already available on outbound.
+
+- **Telemetry + replay proof** — shipped PII-safe inbound spans, PubSub hooks, never-raise MIME parsing, and a 1000-replay convergence proof. ✓
+- **Major-provider ingress** — shipped Mailgun and SES inbound verification, normalization, replay-safe persistence, and bounded S3 fetch handling. ✓
+- **Adopter DX** — shipped `MailboxCase`, `TestAssertions`, `Test.Ingress`, code-built fixtures, and three Igniter generators. ✓
+- **Operator/admin depth** — shipped `InboundLive`, routing-trace and evidence views, replay controls, `mailglass.inbound.{doctor,replay,prune}`, rate limiting, and suppression-flag-only behavior. ✓
+- **Closeout discipline** — published `mailglass` 1.2.0 / `mailglass_admin` 1.2.0 / `mailglass_inbound` 0.2.0, then resolved the remaining v1.0 carry-forward debt in Phase 51 before archiving. ✓
+
+**Accepted residual debt:**
+
+- Release-workflow fallback remains manual-by-design until a future maintainer chooses PAT-based or alternate fanout automation.
+- `SEED-003-ecosystem-integrations` is acknowledged and dormant, not promoted into the next milestone automatically.
+
+</details>
 
 <details>
 <summary>v1.1 Inbound Core Slice — milestone closed 2026-05-06 (audit re-passed 2026-05-07)</summary>
@@ -77,23 +94,11 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 </details>
 
-## Current Milestone: v1.2 Inbound Production Confidence
+## Next Milestone Goals
 
-**Goal:** Bring `mailglass_inbound` to the operator/dev/admin maturity outbound reached across v0.4–v0.6, so adopters on the major providers can install, debug from the dashboard, write tests, and operate inbound with the same confidence they already get on outbound.
-
-**One-line framing:** v1.1 opened the inbound package; v1.2 finishes opening it.
-
-**Target features:**
-- Mailgun + SES inbound ingress (lift-and-alias from outbound webhook verifiers; defer Cloudflare + `gen_smtp` to v1.3)
-- Inbound admin LiveView (`InboundLive`, evidence/timeline cards, replay modal, routing trace card)
-- Inbound test helpers + DX parity (`TestAssertions`, `MailboxCase`, `Test.Ingress`, fixtures, 3 Igniter generators)
-- Inbound runtime operator tooling (`mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limiting, suppression flag-only)
-- Inbound telemetry foundation (currently zero `:telemetry` calls in `mailglass_inbound/lib/`)
-- Idempotency convergence proof (1000-replay StreamData property mirroring outbound v0.1)
-- Inbound documentation pass (install, testing, operator, Mailgun + SES setup, routing-debug guides)
-- Stability closeout (Phase 35 Nyquist bookkeeping, branch-protection automation, citext-OID-cache race, boundary warnings, WR-01..06)
-
-**Key context:** Research convergence across 5 parallel agents (`.planning/research/milestone-candidates/`) showed inbound provider expansion is mostly **lift-and-alias** — outbound webhook providers already ship full-fat verifiers for Mailgun (HMAC + ETS replay cache) and SES (SNS X.509 + CertCache + TrustPolicy + auto-confirm). Same lift story for admin (`OperatorLive→InboundLive` near-1:1), DX (`MailerCase→MailboxCase`), and runtime tooling (replay/pruner/rate-limiter all shipped on outbound). Strategic alternatives (relay package, multi-tenant deepening, outbound deepening, marketing-adjacent, test extraction) all had weaker vision-fit and weaker adopter pull than completing what v1.1 just opened. Cloudflare Email Routing deferred (no first-party contract). `gen_smtp` listener deferred (different transport class — TLS SMTP listener vs HTTP webhook — belongs in own milestone or `mailglass_relay` sibling).
+- Decide whether the next milestone stays inbound-adjacent or shifts back to core/operator leverage.
+- Re-scope deferred candidates explicitly instead of treating any `v1.2` leftovers as automatically active work.
+- Keep `SEED-003-ecosystem-integrations`, Cloudflare Email Routing, `gen_smtp` relay ingress, and Conductor-style synthetic inbound tooling as candidate inputs rather than implicit commitments.
 
 ## Core Value
 
@@ -141,18 +146,7 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 
 ## Active
 
-v1.2 requirements live in `.planning/REQUIREMENTS.md`. Categories (REQ-IDs continue from v1.1):
-
-- **TEL** — Inbound telemetry spans (ingress/route/execute/persist) + 1000-replay convergence property
-- **MIME** — Shared MIME parsing module with optional `:gen_smtp`/`:mimemail` backend gateway
-- **MGUN** — Mailgun inbound ingress (HMAC verify + replay cache + plug allowlist)
-- **AWS** — SES inbound ingress (SNS X.509 + CertCache + TrustPolicy + S3 fetcher behaviour + optional `:ex_aws_s3` gateway)
-- **TEST** — `MailglassInbound.TestAssertions` + `MailboxCase` + `Test.Ingress` + Fixtures
-- **GEN** — Igniter generators (`gen.mailbox`, `gen.inbound_router`, `gen.inbound_route`)
-- **ALIVE** — Inbound admin LiveView (`InboundLive` + evidence/timeline cards + replay modal + routing trace card)
-- **OPS** — Operator runtime tooling (`mix mailglass.inbound.{doctor,replay,prune}` + ingress rate limit + suppression flag-only)
-- **DOCS** — Inbound install/testing/operator/setup/routing-debug guides
-- **CLOSE** — v1.0 carry-forward debt closeout (Phase 35 Nyquist, branch-protection, citext race, boundary warnings, WR-01..06, v1.0 publish coord)
+No live milestone requirements are open. The next active requirement set begins when `$gsd-new-milestone` creates a fresh `.planning/REQUIREMENTS.md`.
 
 ## Out of Scope
 

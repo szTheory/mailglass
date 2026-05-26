@@ -8,10 +8,10 @@ starting from a blank prompt every time.
 ## Current Strategic Posture
 
 - **Trajectory:** Operator-first
-- **Planning horizon:** Concrete through the active inbound milestone; lighter-weight beyond that
+- **Planning horizon:** `v1.2` is shipped; next milestone should be chosen from explicit candidates rather than implied carry-forward
 - **Current product thesis:** Become the canonical production transactional
-  email framework for Phoenix SaaS apps before expanding into inbound or
-  broader adjacent surfaces
+  email framework for Phoenix SaaS apps with a credible inbound sibling package,
+  then expand only where operator and adopter leverage stay clear
 - **Current rule:** Post-`v1.0` milestones should protect the narrow core
   contract while expanding only where product leverage is clear
 
@@ -192,36 +192,72 @@ surface is stable, documented, and proven enough to promise continuity.
 
 **Shipped note (2026-05-06):** `v1.0 Stability Lock` is now shipped. The contract, compatibility, trust-doc, and release-rehearsal proof surfaces are archived; remaining branch-protection proof is explicit accepted external debt.
 
-## Active Milestone
+## Recently Shipped
 
-### `active` — v1.1 Inbound Core Slice (`mailglass_inbound`)
+### `shipped` — v1.1 Inbound Core Slice (`mailglass_inbound`)
 
-**Why now:** The outbound/operator core is now locked tightly enough that Mailglass can expand into inbound without weakening the `v1.x` contract, but the first slice still needs to stay smaller than the full historical inbound vision.
+**Why it mattered:** Opened the inbound sibling package without weakening the
+locked `v1.x` outbound/admin core.
 
-**Active scope:**
-- Router DSL
-- Mailbox behaviour
-- Postmark inbound ingress
-- SendGrid inbound ingress
-- Storage for normalized records plus raw provider source material
-- Async routing via Oban with a bounded fallback when Oban is absent
+**Delivered:**
+- Router DSL and mailbox behaviour
+- Postmark and SendGrid inbound ingress
+- Replayable normalized + raw inbound storage
+- Oban-backed async routing with bounded fallback
 
-**Explicit non-goals:**
-- Conductor-style dev UI
-- Mailgun inbound
-- SES inbound
+**Unlocked next:** Provider expansion, operator/admin depth, DX parity, and
+runtime tooling for inbound.
+
+### `shipped` — v1.2 Inbound Production Confidence
+
+**Why now:** Once the inbound package existed, the highest-leverage next step
+was to make it genuinely operable and supportable for real adopters instead of
+leaving it as a narrow proof slice.
+
+**Delivered:**
+- Inbound telemetry, MIME seam, and 1000-replay convergence proof
+- Mailgun and SES inbound ingress
+- Inbound test helpers, fixtures, and generators
+- Tenant-safe inbound admin LiveView and runtime operator tooling
+- Six inbound guides plus repo-truth closeout
+- Phase 51 stability debt retirement inside the same milestone
+
+**Unlocked next:** A choice among ecosystem integrations, broader inbound
+transport/provider expansion, or adjacent operator leverage.
+
+## Candidate Milestones
+
+### `candidate` — Ecosystem Integrations
+
+**Why it is viable:** `SEED-003-ecosystem-integrations` survived milestone
+closeout as a real opportunity, but it was intentionally kept dormant rather
+than being smuggled into `v1.2`.
+
+**Possible scope:**
+- High-value integrations with adjacent Phoenix/email tooling
+- Lightweight glue that improves adoption without creating a second product
+- Work that builds on the now-stable inbound + operator surface
+
+**Why it is not active yet:** The seed is acknowledged, not selected.
+
+### `candidate` — Broader Inbound Expansion
+
+**Why it is viable:** `v1.2` shipped the credible operator-grade inbound base,
+so the next inbound milestone could broaden transport and provider reach.
+
+**Possible scope:**
+- Cloudflare Email Routing support
 - `gen_smtp` relay ingress
-- Adjacent deliverability / workflow bets unrelated to the sibling package contract
+- Conductor-style synthetic inbound dev tooling
 
-**Activation gate:** Cleared on 2026-05-06 when Phase 39 execution began. Remaining live `v1.0` closeout tasks stay external to the v1.1 milestone scope.
+**Why it is not active yet:** These were explicitly deferred past `v1.2` and
+need fresh scoping because they are not all the same transport/problem class.
 
-**Exit criteria:**
-- An adopter can receive inbound mail through first-party Postmark and SendGrid ingress.
-- Mailglass persists normalized inbound data plus raw source evidence honestly enough for replay and debugging.
-- An adopter can route inbound mail to app-defined mailboxes with explicit outcomes and tenant-safe execution.
-- The sibling package has honest install, testing, and operator docs without requiring Oban in every install.
+### `deferred` — Ecosystem Integrations Seed
 
-**Activation note (2026-05-06):** The former `candidate` inbound milestone is now active as `v1.1 Inbound Core Slice`, with the first release-closeout work still treated as an external precondition rather than milestone scope.
+**Item:** `SEED-003-ecosystem-integrations`
+
+**Status:** Dormant at `v1.2` milestone close on 2026-05-26.
 
 ## Future Bets (post-`v1.0`)
 
@@ -247,4 +283,4 @@ source of truth:
    drifting doc-by-doc.
 
 ---
-*Last updated: 2026-05-06 after activating v1.1 Inbound Core Slice and locking the first `mailglass_inbound` milestone boundaries.*
+*Last updated: 2026-05-26 after shipping and archiving v1.2 Inbound Production Confidence.*

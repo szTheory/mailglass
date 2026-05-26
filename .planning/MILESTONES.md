@@ -93,7 +93,7 @@
 
 ## v1.2 Inbound Production Confidence (Shipped: 2026-05-26)
 
-**Phases completed:** 7 phases (45, 46, 47, 48, 49, 50, 50.5 release ceremony), 18+ plans
+**Phases completed:** 10 phases (44.5, 45-50, 50.5, 50.7, 51), 42 plans
 
 **Live publish: 2026-05-26** — `mailglass` 1.2.0, `mailglass_admin` 1.2.0, `mailglass_inbound` 0.2.0 published to Hex.pm via Phase 50.5 ceremony. See `.planning/phases/50.5-v1-2-release-ceremony/50.5-RELEASE-RECORD.md`. Sandbox install proof (`mix phx.new` + `~> 1.2` / `~> 0.2` deps + `mix compile --warnings-as-errors`) passed within the 60-minute window.
 
@@ -108,10 +108,11 @@
 - **IADM** (Phase 48) — `MailglassAdmin.InboundLive` mountable admin UI at `/inbound` (list, detail, timeline, routing-trace views; tenant-gated replay confirm modal); `MailglassAdmin.OptionalDeps.MailglassInbound` runtime gateway so admin works with or without inbound.
 - **IOPS** (Phase 49) — `mix mailglass.inbound.{doctor,replay,prune}` operator tasks (three-state exit codes; `--tenant` required for replay; typed "yes" confirmation for prune; `--dry-run` / `--yes` for cron); `MailglassInbound.RateLimiter` three-bucket limiter (tenant / sender_domain / recipient); `InboundMessage.Signals` suppression-flag-only contract at `.signals.suppression_flagged` (no auto-bounce, Deviation D-49-21).
 - **IDOC** (Phase 50) — Six adopter guides under `mailglass_inbound/docs/`: install, testing, operator, mailgun, ses, routing-debug; extended `mix mailglass.docs.check` to enforce all six.
+- **CLOSE** (Phases 44.5 and 51) — Live `v1.0`/`v1.1` publish closeout, Phase 35 Nyquist reconciliation, branch-protection repo truth, citext race fix, boundary cleanup, and explicit WR-01..WR-06 dispositions.
 
-**Phase 51 carry-forward (Stability Closeout, deliberately deferred):**
-- release-please-action v5 + GITHUB_TOKEN anti-recursion breaks `release: published` auto-fanout to `publish-hex.yml` (workflow_dispatch fallback now canonical; decision needed on PAT vs. dispatch).
-- New admin → inbound Hex-index race in `publish-hex.yml` (parallel publish-admin and publish-inbound; admin's `MIX_PUBLISH=true mix deps.get` needs a wait-for-mailglass_inbound-index step mirroring the existing core wait).
-- Phase 44.5 deferred items: `post-publish-smoke.yml` consumer-install bug (#8), Operator Browser Gate advisory re-strict (#9-10), branch-protection re-verification (CLOSE-04).
-- `release-as: 1.2.0` cleanup in `release-please-config.json` (mirror Phase 44.5 item #6 pattern).
-- Repo-hygiene pass completed 2026-05-26 as Phase 50.7: planning truth reconciled, branch/PR triage captured, and `.planning/publish/*-publish-summary.json` explicitly retained as tracked contract snapshots because `test/mailglass/stability_contract_test.exs` reads them directly. Remaining follow-up is Phase 51 execution, not policy discovery.
+**Known deferred items at close:** 1 (see `STATE.md` Deferred Items)
+
+**Residual follow-up (non-blocking):**
+- release-please-action v5 + `GITHUB_TOKEN` anti-recursion still forces `workflow_dispatch` for downstream publish fanout.
+- Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
+- `SEED-003-ecosystem-integrations` remains dormant for a future milestone rather than being treated as partial `v1.2` scope.

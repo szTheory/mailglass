@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Inbound Production Confidence
-status: executing
-last_updated: "2026-05-26T13:30:00Z"
-last_activity: 2026-05-26 -- Phase 50.7 hygiene pass completed after live v1.2 publish
+status: ready
+last_updated: "2026-05-26T14:30:00Z"
+last_activity: 2026-05-26 -- Phase 51 completed; v1.2 ready for milestone archive
 progress:
-  total_phases: 12
-  completed_phases: 8
-  total_plans: 37
-  completed_plans: 37
-  percent: 67
+  total_phases: 10
+  completed_phases: 10
+  total_plans: 42
+  completed_plans: 42
+  percent: 100
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-06 after v1.2 milestone open)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 51 — stability-closeout planning
+**Current focus:** Next milestone discovery after v1.2 archive
 
 ## Current Position
 
-Phase: 51
-Plan: not started
-Status: Ready for planning after Phase 50.7 hygiene pass
-Last activity: 2026-05-26 -- Phase 50.7 completed; planning/bookkeeping reconciled after v1.2 release
+Phase: 51 (stability-closeout) — COMPLETE
+Plan: 4 of 4
+Status: v1.2 archived and ready for next-milestone scoping
+Last activity: 2026-05-26 -- v1.2 archive finalized after Phase 51 closeout
 
 ## v1.2 Phase Plan
 
@@ -42,7 +42,7 @@ Last activity: 2026-05-26 -- Phase 50.7 completed; planning/bookkeeping reconcil
 | 50 | Inbound Documentation Pass | 8 | 3 | 46, 47, 48, 49 |
 | **50.5** | **v1.2 Release Ceremony** | **0** (release-eng only) | **1-2** | 50 |
 | **50.7** | **v1.2 Repo Hygiene Pass** | **0** (repo/process only) | **1** | 50.5 |
-| 51 | Stability Closeout | 5 (CLOSE-01..05) | 2 | none (parallel-safe with 45-50) |
+| 51 | Stability Closeout | 5 (CLOSE-01..05) | 4 | none (parallel-safe with 45-50) |
 | **Total** | | **58** | **~22-24** | |
 
 Plan counts are estimates per SYNTHESIS.md + 2 release ceremonies. Final plan counts are set during `/gsd-plan-phase <N>`.
@@ -57,15 +57,13 @@ Plan counts are estimates per SYNTHESIS.md + 2 release ceremonies. Final plan co
 - v1.0 plans completed: 12 (across Phases 35-38)
 - Total v1.1 milestone duration: single-day blitz on 2026-05-06 (audit re-pass on 2026-05-07)
 
-## Open Carry-Forward Items (Bundled into v1.2 Phase 51 Closeout)
+## Deferred Items
 
-The following v1.0 carry-forward debt is being closed in v1.2 Phase 51 rather than slipping further:
+Items acknowledged and deferred at milestone close on 2026-05-26:
 
-- Live `v1.0` Hex publish closeout and external GitHub branch-protection verification.
-- v1.0 partial Nyquist bookkeeping for Phase 35 (`wave_0_complete: false` despite verification passing).
-- Non-blocking boundary warnings in support-summary and admin probe verification paths.
-- Bare `mix test` citext-OID-cache race (test environment sharp edge).
-- Phase 4 standard-depth review WR-01..WR-06 (tracked, non-blocking).
+| Category | Item | Status |
+|----------|------|--------|
+| seed | 003-ecosystem-integrations | dormant |
 
 ## Pre-existing Cleanup Backlog (Not v1.2 Scope)
 
@@ -82,7 +80,7 @@ The following v1.0 carry-forward debt is being closed in v1.2 Phase 51 rather th
 - Conductor-style synthetic-inbound dev tool deferred to v1.2.1 (security design pass needed for dev-only enforcement and tenant-scoping on synthetic stamps).
 - v1.2 shipped live on 2026-05-26 via Phase 50.5: `mailglass` 1.2.0, `mailglass_admin` 1.2.0, `mailglass_inbound` 0.2.0. Ceremony record: `.planning/phases/50.5-v1-2-release-ceremony/50.5-RELEASE-RECORD.md`.
 - Phase 50.7 ran immediately after the live publish to restore planning truth, audit branch/PR backlog, and settle the publish-summary policy: `.planning/publish/*-publish-summary.json` remains tracked because `test/mailglass/stability_contract_test.exs` reads it directly.
-- Next step: `/gsd-plan-phase 51` to close the remaining carry-forward debt (CLOSE-01..05), using the 50.7 branch/PR triage notes as planning input.
+- Next step: `/gsd-new-milestone` to open the post-v1.2 planning cycle.
 
 ## Performance Metrics
 
