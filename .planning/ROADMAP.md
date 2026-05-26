@@ -12,7 +12,7 @@
 - ✅ **v0.6 Production Maturity** — Phases 32-34 (shipped 2026-05-05) — see [milestones/v0.6-ROADMAP.md](milestones/v0.6-ROADMAP.md)
 - ✅ **v1.0 Stability Lock** — Phases 35-38 (shipped 2026-05-06) — see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Inbound Core Slice** — Phases 39-44 (shipped 2026-05-06) — see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
-- 🚧 **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 51 (in progress, opened 2026-05-06; Phases 44.5 + 45 complete, **Phase 46 next**; v1.0 release ceremony bracketing v1.2 implementation)
+- 🚧 **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5 complete; 50.7 hygiene complete; Phase 51 next (opened 2026-05-06, live release shipped 2026-05-26)
 
 ## Phases
 
@@ -39,7 +39,8 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 - [x] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card (3 plans, 3 waves) (completed 2026-05-24)
 - [x] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only (completed 2026-05-25)
 - [x] **Phase 50: Inbound Documentation Pass** — Install / testing / operator / Mailgun + SES setup / routing-debug guides (completed 2026-05-25)
-- [ ] **Phase 50.5: v1.2 Release Ceremony** — Linked-version cut: `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** (inbound stays on 0.x version line until Conductor + relay providers land). Ships all v1.2 inbound work to adopters.
+- [x] **Phase 50.5: v1.2 Release Ceremony** — Linked-version cut: `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** (inbound stays on 0.x version line until Conductor + relay providers land). Ships all v1.2 inbound work to adopters. — completed 2026-05-26
+- [x] **Phase 50.7: v1.2 Repo Hygiene Pass** — Post-release bookkeeping and repo cleanup: reconcile STATE/ROADMAP truth, triage stale local branches and open PRs, settle publish-summary snapshot policy, and carry forward only the deliberate Phase 51 debt. — completed 2026-05-26
 - [ ] **Phase 51: Stability Closeout** — v1.0 carry-forward debt: Phase 35 Nyquist (CLOSE-01), branch-protection automation (CLOSE-02), citext race (CLOSE-03), boundary warnings (CLOSE-04), WR-01..06 (CLOSE-05). CLOSE-06 resolved by Phase 44.5.
 
 ## Phase Details
@@ -261,8 +262,8 @@ Plans:
 
 Plans:
 - [x] 50.5-01-PLAN.md — Commit A: force 1.2.0 in release-please-config.json, remove editorial recovery anchors, refresh all 3 tarball allowlists (core +4, admin +10, inbound +39), update MAINTAINING.md sandbox recipe [Wave 1] — completed 2026-05-25 (5421b14)
-- [ ] 50.5-02-PLAN.md — Commit B: curate CHANGELOGs (inbound 0.2.0 Phases 45-49 + 0.x disclaimer, core 1.2.0 narrative with 9 REQ categories, admin [Unreleased] coordinated-sibling note) [Wave 2]
-- [ ] 50.5-03-PLAN.md — Live ceremony: verify release-please PR diff, dry-run dispatch, merge + publish, 60-minute sandbox install proof, 50.5-RELEASE-RECORD.md + PROJECT.md + MILESTONES.md close-out [Wave 3]
+- [x] 50.5-02-PLAN.md — Commit B: curate CHANGELOGs (inbound 0.2.0 Phases 45-49 + 0.x disclaimer, core 1.2.0 narrative with 9 REQ categories, admin [Unreleased] coordinated-sibling note) [Wave 2] — completed 2026-05-25 (`ec600ed`)
+- [x] 50.5-03-PLAN.md — Live ceremony: verify release-please PR diff, dry-run dispatch, merge + publish, 60-minute sandbox install proof, 50.5-RELEASE-RECORD.md + PROJECT.md + MILESTONES.md close-out [Wave 3] — completed 2026-05-26 (`26468c3`)
 
 **UI hint**: no
 
@@ -290,6 +291,24 @@ Plans:
 
 - CLOSE-03 citext-OID-cache race: requires reproducing the race deterministically before fixing it. The `Postgrex.Types` reload + sandbox checkout reorder is a hypothesis, not a confirmed fix; first plan should be diagnostic.
 - CLOSE-02 `gh api` repo-as-code script needs to assert against the actual ruleset (required checks, required reviewers, dismissal policy) — keep it idempotent so it can run as a CI job without false alarms.
+
+### Phase 50.7: v1.2 Repo Hygiene Pass
+
+**Goal**: Restore planning and repo truth immediately after the v1.2 live publish so Phase 51 starts from a clean baseline rather than inheriting stale ceremony state, noisy generated-artifact confusion, or untriaged branch/PR backlog.
+**Depends on**: Phase 50.5 (v1.2 live publish complete)
+**Requirements**: none (repo/process only)
+**Success Criteria** (what must be TRUE):
+
+  1. `STATE.md`, `ROADMAP.md`, `PROJECT.md`, and `MILESTONES.md` agree that v1.2 shipped on 2026-05-26 and that Phase 51 is the next planned work.
+  2. The publish-summary snapshot policy is explicit: `.planning/publish/*-publish-summary.json` remains tracked because the stability contract test reads it directly.
+  3. Local branch audit distinguishes safe-to-delete merged worktree branches from still-unique branches that require manual follow-up.
+  4. Open PRs are triaged into merge-soon, superseded/stale, or keep-for-manual-review buckets with Phase 51 input captured.
+  5. Untracked planning artifacts created during release execution are either retained as milestone evidence or explicitly dropped.
+
+**Plans**: 1 plan
+
+Plans:
+- [x] 50.7-01-SUMMARY.md — Reconcile planning truth, document publish-summary policy, audit local branches and open PRs, and retain load-bearing release/milestone artifacts — completed 2026-05-26
 
 ## Backlog
 
@@ -324,7 +343,8 @@ Plans:
 | 48. Inbound Admin LiveView | 4/3 | Complete    | 2026-05-24 |
 | 49. Inbound Runtime Operator Tooling | 3/3 | Complete   | 2026-05-25 |
 | 50. Inbound Documentation Pass | 3/3 | Complete    | 2026-05-25 |
-| **50.5. v1.2 Release Ceremony** | 0/3 | Not started | — |
+| **50.5. v1.2 Release Ceremony** | 3/3 | ✅ Complete | 2026-05-26 |
+| **50.7. v1.2 Repo Hygiene Pass** | 1/1 | ✅ Complete | 2026-05-26 |
 | 51. Stability Closeout | 0/TBD | Not started | — |
 
 **Estimated total plans:** ~20-24 (SYNTHESIS.md ~18-22 inbound + 2 release ceremonies). Plan counts will be set during `/gsd-plan-phase <N>` for each phase.

@@ -6,6 +6,7 @@
     "guides/compatibility-and-deprecations.md",
     "guides/upgrading-to-v1_0.md",
     "guides/getting-started.md",
+    "guides/jobs.md",
     "guides/authoring-mailables.md",
     "guides/components.md",
     "guides/preview.md",
@@ -17,6 +18,7 @@
     "guides/testing.md",
     "guides/upgrading-from-v0_1.md",
     "guides/migration-from-swoosh.md",
+    "docs/upgrade-from-0.x.md",
     "MAINTAINING.md",
     "CONTRIBUTING.md",
     "SECURITY.md",
@@ -35,6 +37,7 @@
     "guides/components.md",
     "guides/dkim-setup.md",
     "guides/getting-started.md",
+    "guides/jobs.md",
     "guides/migration-from-swoosh.md",
     "guides/multi-tenancy.md",
     "guides/operator-incident-support.md",
@@ -187,7 +190,10 @@
     "lib/mailglass/webhook/webhook_event.ex",
     "lib/mix/tasks/mail.doctor.ex",
     "lib/mix/tasks/mailglass.docs.check.ex",
+    "lib/mix/tasks/mailglass.gen.inbound_route.ex",
+    "lib/mix/tasks/mailglass.gen.inbound_router.ex",
     "lib/mix/tasks/mailglass.gen.mailable.ex",
+    "lib/mix/tasks/mailglass.gen.mailbox.ex",
     "lib/mix/tasks/mailglass.gen.migration.ex",
     "lib/mix/tasks/mailglass.gen.unsubscribe.ex",
     "lib/mix/tasks/mailglass.install.ex",
@@ -209,6 +215,7 @@
     "Guides": [
       "guides/upgrading-to-v1_0.md",
       "guides/getting-started.md",
+      "guides/jobs.md",
       "guides/authoring-mailables.md",
       "guides/components.md",
       "guides/preview.md",
@@ -219,7 +226,8 @@
       "guides/telemetry.md",
       "guides/testing.md",
       "guides/upgrading-from-v0_1.md",
-      "guides/migration-from-swoosh.md"
+      "guides/migration-from-swoosh.md",
+      "docs/upgrade-from-0.x.md"
     ],
     "Maintainers": [
       "MAINTAINING.md",
@@ -232,10 +240,11 @@
     ]
   },
   "linked_versions": {
-    "mailglass": "0.3.2",
-    "mailglass_admin": "0.3.2"
+    "mailglass": "1.2.0",
+    "mailglass_admin": "1.2.0",
+    "mailglass_inbound": "0.2.0"
   },
-  "manifest_version": "0.3.2",
+  "manifest_version": "1.2.0",
   "package": "mailglass",
   "package_files": [
     "lib",
@@ -271,9 +280,9 @@
     ],
     "status": "ok"
   },
-  "source_ref": "v0.3.2",
+  "source_ref": "v1.2.0",
   "source_ref_pattern": "mailglass-sibling-group-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 995822,
-  "version": "0.3.2"
+  "tarball_size": 1078341,
+  "version": "1.2.0"
 }

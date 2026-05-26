@@ -22,6 +22,20 @@ When the installer output or golden files change:
 2. If the failure is expected, update the golden files in `test/fixtures/`.
 3. Commit the updated fixtures with a `chore: update installer golden files` message.
 
+## Publish Summary Snapshot Protocol
+
+The files under `.planning/publish/*-publish-summary.json` are tracked release
+proof snapshots, not scratch output.
+
+- Refresh them with `mix mailglass.publish.check` for the affected package(s).
+- Review the diff together with the paired `*-files.expected` allowlist diff.
+- Commit the snapshot update when the underlying package contents or version
+  truth changed intentionally.
+
+Do not gitignore these files: `test/mailglass/stability_contract_test.exs`
+reads the inbound summary directly as part of the sibling-package release
+contract.
+
 ## JTBD Docs Refresh Protocol
 
 The JTBD docs are a two-file system:
