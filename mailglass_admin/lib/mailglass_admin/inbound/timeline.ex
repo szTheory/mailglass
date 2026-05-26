@@ -4,7 +4,7 @@ defmodule MailglassAdmin.Inbound.Timeline do
 
   Sibling of `MailglassAdmin.Operator.Timeline` (D-48-13). Rows are
   `ExecutionRun` projections (Pitfall 7 — the lineage schema, NOT the replay-run
-  schema) from `MailglassInbound.Internal.Operator.Timeline`, each carrying
+  schema) from the internal inbound timeline gateway, each carrying
   `source` (`:fresh`/`:replay`), `mailbox`, `outcome`, `outcome_reason`,
   `executed_at`, and the run `id`.
   """

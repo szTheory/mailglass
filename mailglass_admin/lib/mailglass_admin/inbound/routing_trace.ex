@@ -6,7 +6,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
   by rendering a per-route clause diff for a `:no_match` record. This component is
   NET-NEW, but reuses ONLY existing card/badge/marker chrome (no charts, no JS).
 
-  The verdicts are computed upstream by `MailglassInbound.Router.Matcher.explain/2`
+  The verdicts are computed upstream by the internal matcher explain function
   (reached through the runtime gateway, D-48-06), so the rendered pass/fail equals
   real matcher behavior — this view NEVER re-implements equality/regex/wildcard
   semantics. The `trace` assign is a list (declared route order) of

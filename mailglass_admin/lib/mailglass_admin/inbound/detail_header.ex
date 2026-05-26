@@ -4,7 +4,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
 
   Sibling of `MailglassAdmin.Operator.DetailHeader` (D-48-13). Receives the
   detail read-model map `%{record: %InboundRecord{}, mailbox:, outcome:,
-  outcome_reason:, evidence:}` from `MailglassInbound.Internal.Operator.Detail`.
+  outcome_reason:, evidence:}` from the internal inbound detail gateway.
 
   CRITICAL (Pitfall 2): the `:suppression_flagged` field does NOT exist on any
   Phase 48 schema — it lands in Phase 49. The flag is read with

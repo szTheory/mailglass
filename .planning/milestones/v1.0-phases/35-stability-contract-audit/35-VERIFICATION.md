@@ -1,6 +1,7 @@
 ---
 phase: 35-stability-contract-audit
 verified: 2026-05-06T08:45:00Z
+reverified: 2026-05-26T13:32:57Z
 status: passed
 score: 4/4 must-haves verified
 overrides_applied: 0
@@ -56,6 +57,15 @@ human_verification: []
 | Admin stability contract bundle | `cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors` | Included in the 2026-05-06 admin milestone bundle; green | ✓ PASS |
 | Core docs build | `mix docs --warnings-as-errors` | Succeeded | ✓ PASS |
 | Admin docs build | `cd mailglass_admin && mix docs --warnings-as-errors` | Succeeded | ✓ PASS |
+
+### Phase 51 Bookkeeping Re-Verification
+
+Per D-01, Phase 51 treats CLOSE-01 as bookkeeping repair only, but reran the
+archived Phase 35 proof bundle before touching any Nyquist state.
+
+| Rerun Date | Command | Result | Notes |
+| --- | --- | --- | --- |
+| 2026-05-26 | `mix test test/mailglass/docs_contract_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors && cd mailglass_admin && mix test test/mailglass_admin/stability_contract_test.exs --warnings-as-errors && mix docs --warnings-as-errors >/tmp/mailglass-admin-phase35-docs.log && rg -n "api_stability\|Stability\|Contract" doc/**/*.html doc/dist/search_data-*.js` | PASS | Root lane: `27 tests, 0 failures, 1 skipped`; admin lane: `5 tests, 0 failures`; docs build and grep proof passed after a narrow ExDoc hidden-xref wording fix in inbound moduledocs. |
 
 ### Requirements Coverage
 

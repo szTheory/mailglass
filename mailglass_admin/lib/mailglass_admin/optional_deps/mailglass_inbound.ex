@@ -87,8 +87,8 @@ if Code.ensure_loaded?(MailglassInbound) do
 
     Reflects the adopter's declared routes from `router_module` via
     `__mailglass_inbound_routes__/0` (in declared order), reconstructs the
-    canonical `%InboundMessage{}` from the stored record through
-    `MailglassInbound.Execution.message_from_record/1`, and runs the in-package
+    canonical `%InboundMessage{}` from the stored record through the internal
+    inbound message reconstruction helper, and runs the in-package
     `Router.Matcher.explain/2` per route — so the rendered verdict equals real
     matcher behavior (D-48-06; the view never re-implements match semantics).
 
