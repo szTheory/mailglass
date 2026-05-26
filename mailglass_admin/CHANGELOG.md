@@ -4,6 +4,30 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.2.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.0.0...mailglass_admin-v1.2.0) (2026-05-25)
+
+
+### Features
+
+* **48-01:** admin seams — inbound gateway, topic builder, mask_recipient promotion (IADM-05) ([6874895](https://github.com/szTheory/mailglass/commit/687489532b790664a557585535577247a89a1535))
+* **48-01:** wire optional inbound dep + admin test-infra (Wave 0) ([be1fd76](https://github.com/szTheory/mailglass/commit/be1fd76f3cb1f702aee77927951f94ee54560583))
+* **48-02:** clone inbound sibling components (list, detail, timeline, filters, replay-modal, destructive-action) ([7f98e39](https://github.com/szTheory/mailglass/commit/7f98e391bb212890e13ee396e55dbf313ae7bc16))
+* **48-02:** InboundLive shell — URL-state, tenant gate, list/detail/timeline via the gateway ([9c6ade6](https://github.com/szTheory/mailglass/commit/9c6ade6824d7b02d9ac858c353708e2457e38712))
+* **48-02:** router wiring — /inbound route in operator live_session, available?/0-gated (IADM-07) ([decb24e](https://github.com/szTheory/mailglass/commit/decb24e26a662b9b17e6ae37f71de2260abbd65a))
+* **48-03:** routing-trace + evidence cards wired into detail pane ([f4dc7a7](https://github.com/szTheory/mailglass/commit/f4dc7a7450718d05901e90ba41ea3b64d246f50a))
+* **48-03:** tenant-gated replay confirm flow + live PubSub updates ([decb6d5](https://github.com/szTheory/mailglass/commit/decb6d555907abea54e41336fdbe0d313903a1e9))
+
+
+### Bug Fixes
+
+* **48:** detail 'From' cell shows the masked sender, not the recipient (WR-02) ([d549b3a](https://github.com/szTheory/mailglass/commit/d549b3af124989cce6052e89a0e3dedf8804c85f))
+* **48:** deterministic inbound-route test ordering + operator-session assertion ([bba56a1](https://github.com/szTheory/mailglass/commit/bba56a1a9300422fee6941fd8423ab9ac76e0474))
+* **48:** thread inbound search end-to-end + assert list disposition (WR-03, WR-01) ([ddb6f31](https://github.com/szTheory/mailglass/commit/ddb6f31ef5f92419788d524de4b47707c2d62dbc))
+* **49:** T-49-17 tenant-scope inbound replay to prevent cross-tenant replay ([3f92c1d](https://github.com/szTheory/mailglass/commit/3f92c1d391fa1e40391db777819f5045aef6fb9b))
+* **ci:** restore release readiness gates ([683f653](https://github.com/szTheory/mailglass/commit/683f653ce6252f951c82c8ab581596dc31408aeb))
+* **ci:** stabilize operator browser gate ([370433d](https://github.com/szTheory/mailglass/commit/370433d5df68c2ceaf9b95bba6f2c2be2c63ea42))
+* **docs:** harden core/admin README version pins + self-maintaining enforcement ([79e88d0](https://github.com/szTheory/mailglass/commit/79e88d0a3f29922457f85a8169ced310a13d6251))
+
 ## [Unreleased]
 
 `mailglass_admin` 1.2.0 is coordinated with `mailglass` 1.2.0 (linked release).
