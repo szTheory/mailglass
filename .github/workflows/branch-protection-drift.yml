@@ -1,13 +1,8 @@
-name: Branch Protection Drift
+name: Branch Protection Apply
 
-# Daily idempotent re-assertion of main's required-status-checks.
-# If someone (or some external action) removes a required check, this
-# workflow restores it within 24h. Idempotent — re-running with the
-# same checks is observably a no-op.
-#
-# Reason: REL-10 PR-C requires Tests to remain a required status check
-# on main. Without drift detection, an admin could silently remove the
-# requirement and the gate would stop blocking failing PRs.
+# Owner-controlled re-assertion of the desired branch-protection ruleset.
+# CI performs read-only verification separately; this workflow is the only
+# repo-owned path allowed to mutate live protection settings.
 #
 # Requires the BRANCH_PROTECTION_PAT secret — a fine-grained PAT scoped
 # to this repo with "Administration: Read and write" permission.
@@ -37,11 +32,11 @@ jobs:
           else
             echo "pat_present=false" >> "$GITHUB_OUTPUT"
             {
-              echo "## Branch Protection Drift — Skipped"
+              echo "## Branch Protection Apply — Skipped"
               echo ""
               echo "BRANCH_PROTECTION_PAT secret not set."
               echo "Configure a fine-grained PAT with 'Administration: Read and write'"
-              echo "and add it as a repo secret to enable drift detection."
+              echo "and add it as a repo secret to enable owner-applied re-assertion."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
@@ -49,7 +44,7 @@ jobs:
         if: steps.check-pat.outputs.pat_present == 'true'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
-      - name: Re-assert branch protection (idempotent)
+      - name: Re-assert branch protection
         if: steps.check-pat.outputs.pat_present == 'true'
         env:
           GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_PAT }}

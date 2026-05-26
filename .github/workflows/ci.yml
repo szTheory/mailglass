@@ -672,3 +672,53 @@ jobs:
       - name: Run operator browser gate
         working-directory: mailglass_admin
         run: npm run test:operator-browser
+
+  branch_protection_advisory:
+    name: Branch Protection Advisory
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for BRANCH_PROTECTION_PAT secret
+        id: check-pat
+        env:
+          PAT_SET: ${{ secrets.BRANCH_PROTECTION_PAT != '' }}
+        run: |
+          if [ "$PAT_SET" = "true" ]; then
+            echo "pat_present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pat_present=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "## Branch Protection Advisory"
+              echo ""
+              echo "Skipped live verification because BRANCH_PROTECTION_PAT is not set."
+              echo "Run \`scripts/verify-branch-protection.sh --print-expected\` locally"
+              echo "to inspect the expected ruleset."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Checkout
+        if: steps.check-pat.outputs.pat_present == 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Verify branch protection
+        if: steps.check-pat.outputs.pat_present == 'true'
+        id: verify-protection
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_PAT }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: ./scripts/verify-branch-protection.sh main
+
+      - name: Write advisory summary
+        if: steps.check-pat.outputs.pat_present == 'true'
+        run: |
+          {
+            echo "## Branch Protection Advisory"
+            echo ""
+            if [ "${{ steps.verify-protection.outcome }}" = "success" ]; then
+              echo "Live branch protection matches the expected read-only ruleset."
+            else
+              echo "Live branch protection drifted from the expected ruleset."
+              echo "Review the verifier step log and re-apply with ./scripts/setup_branch_protection.sh main."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
