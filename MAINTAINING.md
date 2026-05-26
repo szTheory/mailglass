@@ -111,6 +111,20 @@ branch-protection buckets plus the inbound sibling-package docs lane in sequence
 - `mailglass_inbound` docs contract (`mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs`)
 - `Compile No Optional Deps`
 
+Branch protection truth is narrower than "everything we like to run in CI".
+The exact required contexts are:
+- `Support Contract Core (Elixir 1.18 / OTP 27)`
+- `Support Contract Admin (Elixir 1.18 / OTP 27)`
+- `Compile No Optional Deps (Elixir 1.18 / OTP 27)`
+
+Owner-applied branch protection:
+- `GH_TOKEN=<admin-pat> ./scripts/setup_branch_protection.sh main`
+
+Read-only branch-protection verification:
+- `./scripts/verify-branch-protection.sh --print-expected`
+- `./scripts/verify-branch-protection.sh --print-expected-json`
+- `GH_TOKEN=<admin-pat> ./scripts/verify-branch-protection.sh main`
+
 When those checks pass, they prove the current compatibility contract described
 in [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md):
 runtime floors, matched sibling-package docs wiring for `mailglass_inbound`,
@@ -118,8 +132,15 @@ matched `mailglass_admin` release truth, and the required-vs-advisory split
 below. Do not claim broader support than those repo artifacts prove.
 
 The following checks are advisory signal, not branch-protection truth:
+- `Format Check`
+- `Compile Warnings as Errors`
+- `Mix Task Tests`
+- `Inbound Test`
+- `Inbound Compile No Optional Deps`
+- `Operator Browser Gate`
 - `Core Full Suite Advisory`
 - `Provider Compatibility Advisory`
+- `Branch Protection Advisory`
 - `Provider Live Advisory`
 
 `Provider Live Advisory` remains a cron and `workflow_dispatch` canary. It is not a merge blocker.
