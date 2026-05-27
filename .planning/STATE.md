@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Release Discipline & Repo Truth
-status: executing
-last_updated: "2026-05-27T00:00:00Z"
-last_activity: 2026-05-27 -- Phase 54 planned after Phase 52/53 implementation commit fab1384
+status: blocked
+last_updated: "2026-05-27T06:18:00Z"
+last_activity: 2026-05-27 -- Phase 54 executed PR triage and v1.3 CI proof; blocked by Core Full Suite Advisory failure on PR #41 head ad75494
 progress:
   total_phases: 3
   completed_phases: 2
@@ -26,8 +26,8 @@ See: `.planning/PROJECT.md`.
 
 Phase: 54 — PR/Branch Triage + Green Main Proof
 Plan: 54-01 — PR/Branch Triage + Green Main Proof
-Status: planned
-Last activity: 2026-05-27 -- Phase 52/53 implementation committed as `fab1384`; Phase 54 execution plan prepared to push the v1.3 branch, dispose open PRs, document/prune stale branches, and capture green-main evidence.
+Status: blocked
+Last activity: 2026-05-27 -- PR #41 is open on `work/v1.3-release-discipline`; PRs #17, #27, #28, #29, #30, #37, #38, and #39 were closed as superseded; branch protection verifies; Phase 54 is blocked by `Core Full Suite Advisory (Elixir 1.18 / OTP 27)` failing `mix test --warnings-as-errors`.
 
 ## v1.3 Phase Plan
 
@@ -39,11 +39,10 @@ Last activity: 2026-05-27 -- Phase 52/53 implementation committed as `fab1384`; 
 
 ## Open Work
 
-- Execute `.planning/phases/54-pr-branch-triage-green-main-proof/54-01-PLAN.md`.
-- Push `work/v1.3-release-discipline` and record CI for the v1.3 hygiene SHA.
-- Refresh, merge, close, or explicitly defer open PRs #17, #27, #28, #29, #30, #37, #38, and #39.
-- Document or prune stale local branches, preserving `preserve/*` archives.
-- Capture final `mix mailglass.repo.hygiene --check --format json` evidence.
+- Fix or explicitly accept the `Core Full Suite Advisory` failure on PR #41.
+- Re-run `mix test --warnings-as-errors` and PR #41 CI after the fix.
+- Re-run `GH_TOKEN="$(gh auth token)" GITHUB_REPOSITORY=szTheory/mailglass mix mailglass.repo.hygiene --check --format json`.
+- Merge PR #41 only after the full-suite blocker is resolved or formally accepted.
 
 ## Session Continuity
 
