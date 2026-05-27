@@ -171,12 +171,11 @@ defmodule Mailglass.RendererTest do
 
       {:ok, _} = Mailglass.Renderer.render(Fixtures.simple_message())
 
-      assert_received {:telemetry, [:mailglass, :render, :message, :start], meta_start}
-      assert meta_start.tenant_id == "test_tenant"
-      assert meta_start.mailable == TestMailer
+      assert_receive {:telemetry, [:mailglass, :render, :message, :start],
+                      %{tenant_id: "test_tenant", mailable: TestMailer}}
 
-      assert_received {:telemetry, [:mailglass, :render, :message, :stop], meta_stop}
-      assert meta_stop.tenant_id == "test_tenant"
+      assert_receive {:telemetry, [:mailglass, :render, :message, :stop],
+                      %{tenant_id: "test_tenant"}}
     end
   end
 

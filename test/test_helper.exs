@@ -48,8 +48,8 @@ Application.put_env(:mailglass, Mailglass.TestRepo, test_repo_config)
 {:ok, _pid} = Mailglass.TestRepo.start_link()
 
 # Phase 3 (Plan 10): ensure oban_jobs table exists for @tag oban: :manual tests.
-# Oban.Migrations.up/0 is idempotent (IF NOT EXISTS semantics) — safe on warm DB.
-# No-op when Oban is not in deps (Code.ensure_loaded? guard inside the helper).
+# Oban.Migrations.up/0 must execute inside an Ecto migration runner; the helper
+# wraps it in a test-only migration so failures surface during suite startup.
 Mailglass.ObanHelpers.maybe_create_oban_jobs()
 
 # Warm the citext OID cache on a fresh connection right after migrations.

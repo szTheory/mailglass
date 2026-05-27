@@ -13,6 +13,7 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
     ensure_test_app_path!()
     configure_endpoint(opts)
     start_endpoint!()
+    ensure_endpoint_config_table!()
     :ok
   end
 
@@ -36,6 +37,20 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
     case Process.whereis(@endpoint) do
       nil -> @endpoint.start_link()
       _pid -> {:ok, @endpoint}
+    end
+  end
+
+  def ensure_endpoint_config_table! do
+    if endpoint_config_ready?() do
+      :ok
+    else
+      restart_endpoint!()
+
+      unless endpoint_config_ready?() do
+        raise "#{inspect(@endpoint)} started without its Phoenix endpoint config table"
+      end
+
+      :ok
     end
   end
 
@@ -110,5 +125,36 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
     end
 
     :code.add_patha(String.to_charlist(ebin_dir))
+  end
+
+  defp endpoint_config_ready? do
+    _render_errors = @endpoint.config(:render_errors)
+    true
+  rescue
+    ArgumentError -> false
+  end
+
+  defp restart_endpoint! do
+    if pid = Process.whereis(@endpoint) do
+      Process.exit(pid, :kill)
+      wait_until_endpoint_stopped()
+    end
+
+    case @endpoint.start_link() do
+      {:ok, _pid} -> :ok
+      {:error, {:already_started, _pid}} -> :ok
+    end
+  end
+
+  defp wait_until_endpoint_stopped(attempts \\ 50)
+  defp wait_until_endpoint_stopped(0), do: :ok
+
+  defp wait_until_endpoint_stopped(attempts) do
+    if Process.whereis(@endpoint) do
+      Process.sleep(10)
+      wait_until_endpoint_stopped(attempts - 1)
+    else
+      :ok
+    end
   end
 end
