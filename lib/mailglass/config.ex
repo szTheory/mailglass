@@ -485,6 +485,7 @@ defmodule Mailglass.Config do
   Raises `NimbleOptions.ValidationError` on invalid configuration. Raising at
   boot is intentional — a misconfigured mailer should never limp into
   production serving half-rendered mail.
+  Raise on invalid configuration so misconfigured mailers fail fast at boot.
   """
 
   @doc """

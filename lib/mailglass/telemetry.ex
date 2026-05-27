@@ -30,6 +30,7 @@ defmodule Mailglass.Telemetry do
 
   **Forbidden (PII):** `:to, :from, :body, :html_body, :subject, :headers,
   :recipient, :email`.
+  Telemetry metadata must never include recipient or message-content PII.
 
   Enforcement is lint-time ( custom Credo check `NoPiiInTelemetryMeta`)
   plus a runtime StreamData property test that asserts every emitted stop

@@ -27,6 +27,7 @@ defmodule Mailglass.Events.Reconciler do
   - `attempt_link/2` — look up the matching delivery (by `provider`
     + `provider_message_id` in `:metadata` / `:normalized_payload`;
      V02 migration dropped `raw_payload` from the ledger per )
+  Replay duplicates are handled as an idempotent no-op, never a re-dispatch.
   """
 
   alias Mailglass.Clock

@@ -78,6 +78,7 @@ defmodule Mailglass.Mailable do
   `new/0`, `render/3`, `deliver/2`, `deliver_later/2` — all four injected
   functions are overridable. Adopters who bypass `Mailglass.Outbound` via
   `deliver/2` override lose telemetry + projection writes (T-3-04-04 accepted).
+  Match on %Mailglass.Error{} structs, never message strings.
 
   See `docs/api_stability.md §Mailable` for the locked contract.
   """
