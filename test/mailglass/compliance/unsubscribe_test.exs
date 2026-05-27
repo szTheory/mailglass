@@ -209,18 +209,7 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
     test "tampered tokens return a structured invalid outcome" do
       token = Unsubscribe.sign_token("delivery-123")
 
-      tampered =
-        token
-        |> String.slice(0, byte_size(token) - 1)
-        |> Kernel.<>(
-          if String.ends_with?(token, "A") do
-            "B"
-          else
-            "A"
-          end
-        )
-
-      assert {:error, :invalid} = Unsubscribe.verify_token(tampered)
+      assert {:error, :invalid} = Unsubscribe.verify_token(tamper_signature!(token))
     end
 
     test "tenant compliance_host override wins and :default falls back to global host" do
@@ -259,5 +248,17 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
       assert err.context[:reason] == :unsubscribe_url_too_long
       assert err.context[:max_bytes] == 900
     end
+  end
+
+  defp tamper_signature!(token) when is_binary(token) do
+    token
+    |> String.split(".")
+    |> List.update_at(-1, &mutate_segment!/1)
+    |> Enum.join(".")
+  end
+
+  defp mutate_segment!(segment) when is_binary(segment) and segment != "" do
+    replacement = if String.first(segment) == "A", do: "B", else: "A"
+    String.replace_prefix(segment, String.first(segment), replacement)
   end
 end

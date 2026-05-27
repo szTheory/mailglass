@@ -8,10 +8,10 @@ starting from a blank prompt every time.
 ## Current Strategic Posture
 
 - **Trajectory:** Operator-first
-- **Planning horizon:** Concrete through the active inbound milestone; lighter-weight beyond that
+- **Planning horizon:** `v1.3` is active as a release-discipline pivot before the next product expansion
 - **Current product thesis:** Become the canonical production transactional
-  email framework for Phoenix SaaS apps before expanding into inbound or
-  broader adjacent surfaces
+  email framework for Phoenix SaaS apps with release hygiene strong enough for
+  consumer adoption
 - **Current rule:** Post-`v1.0` milestones should protect the narrow core
   contract while expanding only where product leverage is clear
 
@@ -192,9 +192,9 @@ surface is stable, documented, and proven enough to promise continuity.
 
 **Shipped note (2026-05-06):** `v1.0 Stability Lock` is now shipped. The contract, compatibility, trust-doc, and release-rehearsal proof surfaces are archived; remaining branch-protection proof is explicit accepted external debt.
 
-## Active Milestone
+## Recently Shipped
 
-### `active` — v1.1 Inbound Core Slice (`mailglass_inbound`)
+### `shipped` — v1.1 Inbound Core Slice (`mailglass_inbound`)
 
 **Why now:** The outbound/operator core is now locked tightly enough that Mailglass can expand into inbound without weakening the `v1.x` contract, but the first slice still needs to stay smaller than the full historical inbound vision.
 
@@ -223,6 +223,44 @@ surface is stable, documented, and proven enough to promise continuity.
 
 **Activation note (2026-05-06):** The former `candidate` inbound milestone is now active as `v1.1 Inbound Core Slice`, with the first release-closeout work still treated as an external precondition rather than milestone scope.
 
+### `shipped` — v1.2 Inbound Production Confidence
+
+**Why it mattered:** Finished opening `mailglass_inbound` for production use
+after the narrow v1.1 package slice.
+
+**Delivered:**
+- Mailgun and SES inbound ingress
+- Inbound telemetry, replay proof, test helpers, generators, admin LiveView,
+  runtime operator tooling, and six inbound guides
+- Live v1.2 publish on 2026-05-26
+
+## Active Milestone
+
+### `active` — v1.3 Release Discipline & Repo Truth
+
+**Why now:** The library is mature enough that release and repository hygiene
+must become a repeatable maintainer system instead of a manual recovery habit.
+
+**Active scope:**
+- Preserve current local dirty/ahead state before cleanup
+- Add `mix mailglass.repo.hygiene` as the canonical maintainer entrypoint
+- Restore release fan-out with `RELEASE_PLEASE_PAT`
+- Keep tag-pinned manual publish fallback
+- Serialize package publishing as core, inbound, then admin
+- Add scheduled/manual repo-hygiene workflow evidence
+- Triage open PR and stale branch truth before the next product milestone
+
+**Explicit non-goals:**
+- New provider or inbound transport features
+- Marketing surfaces
+- Broad dependency modernization outside the triaged PR set
+
+**Exit criteria:**
+- Release work starts from clean git truth.
+- Maintainers have one documented, automated clean-state procedure.
+- Open PRs are merged, closed, or explicitly deferred.
+- Release workflows can fan out automatically while preserving the fallback path.
+
 ## Future Bets (post-`v1.0`)
 
 ### `future-bet` — adjacent deliverability / workflow bets
@@ -247,4 +285,4 @@ source of truth:
    drifting doc-by-doc.
 
 ---
-*Last updated: 2026-05-06 after activating v1.1 Inbound Core Slice and locking the first `mailglass_inbound` milestone boundaries.*
+*Last updated: 2026-05-27 after activating v1.3 Release Discipline & Repo Truth.*

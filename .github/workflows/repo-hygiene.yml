@@ -1,0 +1,62 @@
+name: repo-hygiene
+
+on:
+  schedule:
+    - cron: "30 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: repo-hygiene-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - name: Cache deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+      - name: Install deps
+        run: mix deps.get
+      - name: Run repo hygiene audit
+        id: hygiene
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_HYGIENE_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          set -o pipefail
+          mix mailglass.repo.hygiene --check --format json | tee repo-hygiene.json
+      - name: Write readiness summary
+        if: always()
+        run: |
+          {
+            echo "## repo hygiene"
+            echo
+            if [ -f repo-hygiene.json ]; then
+              jq -r '.checks[] | "- \(.status) `\(.name)`: \(.message)"' repo-hygiene.json
+            else
+              echo "Repo hygiene did not produce an artifact."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload hygiene artifact
+        if: always()
+        uses: actions/upload-artifact@44c2f75f8c36362987c4ac663f4347d1ebd7723c  # v4.6.2
+        with:
+          name: repo-hygiene
+          path: repo-hygiene.json
+          if-no-files-found: error

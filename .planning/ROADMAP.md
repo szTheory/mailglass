@@ -12,7 +12,8 @@
 - ✅ **v0.6 Production Maturity** — Phases 32-34 (shipped 2026-05-05) — see [milestones/v0.6-ROADMAP.md](milestones/v0.6-ROADMAP.md)
 - ✅ **v1.0 Stability Lock** — Phases 35-38 (shipped 2026-05-06) — see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Inbound Core Slice** — Phases 39-44 (shipped 2026-05-06) — see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
-- 🚧 **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 51 (in progress, opened 2026-05-06; Phases 44.5 + 45 complete, **Phase 46 next**; v1.0 release ceremony bracketing v1.2 implementation)
+- ✅ **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26)
+- 🚧 **v1.3 Release Discipline & Repo Truth** — Phases 52-54 (opened 2026-05-27)
 
 ## Phases
 
@@ -30,7 +31,8 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 
 </details>
 
-### v1.2 Inbound Production Confidence
+<details>
+<summary>✅ v1.2 Inbound Production Confidence — SHIPPED 2026-05-26</summary>
 
 - [x] **Phase 44.5: v1.0/1.1 Release Ceremony** — Single linked-version cut: `mailglass` 0.3.2 → **1.0.0**, `mailglass_admin` 0.3.2 → **1.0.0**, `mailglass_inbound` first Hex publish at **0.1.0**. Bundles 4 unreleased milestones (v0.5/v0.6/v1.0/v1.1, 169 commits since v0.3.0 tag). Resolves CLOSE-06. — completed 2026-05-07
 - [x] **Phase 45: Inbound Telemetry + Idempotency Foundation** — 4-level telemetry spans across all inbound stages, shared MIME module, and 1000-replay convergence proof (12 plans: 4 functional + 8 gap-closure across 2 rounds) — completed 2026-05-23
@@ -39,10 +41,67 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 - [x] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card (3 plans, 3 waves) (completed 2026-05-24)
 - [x] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only (completed 2026-05-25)
 - [x] **Phase 50: Inbound Documentation Pass** — Install / testing / operator / Mailgun + SES setup / routing-debug guides (completed 2026-05-25)
-- [ ] **Phase 50.5: v1.2 Release Ceremony** — Linked-version cut: `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** (inbound stays on 0.x version line until Conductor + relay providers land). Ships all v1.2 inbound work to adopters.
-- [ ] **Phase 51: Stability Closeout** — v1.0 carry-forward debt: Phase 35 Nyquist (CLOSE-01), branch-protection automation (CLOSE-02), citext race (CLOSE-03), boundary warnings (CLOSE-04), WR-01..06 (CLOSE-05). CLOSE-06 resolved by Phase 44.5.
+- [x] **Phase 50.5: v1.2 Release Ceremony** — Linked-version cut: `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** (completed 2026-05-26).
+- [x] **Phase 50.7: v1.2 Repo Hygiene Pass** — Release-state documentation and branch/PR backlog triage (completed 2026-05-26).
+- [x] **Phase 51: Stability Closeout** — v1.0 carry-forward debt retired inside the v1.2 archive (completed 2026-05-26).
+
+</details>
+
+### v1.3 Release Discipline & Repo Truth
+
+- [x] **Phase 52: Clean-State Quarantine + Hygiene Automation** — Preserve current local state, open v1.3 planning truth, add `mix mailglass.repo.hygiene`, and add scheduled/manual hygiene workflow.
+- [x] **Phase 53: Release Fan-out + Publish Ordering** — Use `RELEASE_PLEASE_PAT`, preserve tag-pinned fallback, and serialize package publish order as core → inbound → admin.
+- [ ] **Phase 54: PR/Branch Triage + Green Main Proof** — Refresh or close open PRs, prune/document stale branches, and capture final green-main evidence.
 
 ## Phase Details
+
+### Phase 52: Clean-State Quarantine + Hygiene Automation
+
+**Goal**: Preserve current local dirty/ahead work before cleanup, open v1.3 planning truth, and add one canonical maintainer hygiene entrypoint plus scheduled/manual workflow evidence.
+**Depends on**: v1.2 archive complete
+**Requirements**: RH-01, RH-02, RH-03, RH-04, RH-05, RH-06, TRUTH-03
+**Success Criteria** (what must be TRUE):
+
+  1. Pre-existing local dirty/ahead work is preserved on a named `preserve/*` branch before any cleanup.
+  2. Release-discipline implementation starts from a clean `origin/main` work branch.
+  3. `mix mailglass.repo.hygiene --check --format text|json` reports git, CI, branch-protection, PR, branch, and release-workflow truth.
+  4. `mix mailglass.repo.hygiene --apply` performs only deterministic safe actions.
+  5. Scheduled/manual `repo-hygiene` workflow uploads JSON readiness evidence.
+
+**Plans**: Inline recovery implementation — committed as `fab1384`
+**UI hint**: no
+
+### Phase 53: Release Fan-out + Publish Ordering
+
+**Goal**: Restore automatic release fan-out while preserving tag-pinned fallback, and serialize sibling-package publishing so admin never races inbound Hex indexing.
+**Depends on**: Phase 52
+**Requirements**: RELH-01, RELH-02, RELH-03, RELH-04, RELH-05, TRUTH-02
+**Success Criteria** (what must be TRUE):
+
+  1. Release Please uses `RELEASE_PLEASE_PAT` for release creation.
+  2. `publish-hex.yml` still supports tag-pinned `workflow_dispatch` fallback and never publishes from `main`.
+  3. Publish order is deterministic: `mailglass`, then `mailglass_inbound`, then `mailglass_admin`.
+  4. Hex publish remains protected by the `hex-publish` environment approval.
+  5. Maintainer docs describe clean-state and release trigger truth.
+
+**Plans**: Inline recovery implementation — committed as `fab1384`
+**UI hint**: no
+
+### Phase 54: PR/Branch Triage + Green Main Proof
+
+**Goal**: Clear the remaining repo-truth blockers by explicitly disposing open PRs, documenting/pruning stale branches, and capturing green-main plus branch-protection evidence so `mix mailglass.repo.hygiene --check --format json` can become the release-readiness gate.
+**Depends on**: Phase 52, Phase 53
+**Requirements**: TRUTH-01 plus final acceptance evidence
+**Success Criteria** (what must be TRUE):
+
+  1. Open PRs #17, #27, #28, #29, #30, #37, #38, and #39 are each merged, closed, or deferred with an explicit reason.
+  2. Local branches are either pruned when safe or documented as preserved exceptions.
+  3. The v1.3 hygiene branch is pushed and CI result for the relevant SHA is recorded.
+  4. Branch-protection truth is verified with the read-only verifier when credentials are available.
+  5. Final `mix mailglass.repo.hygiene --check --format json` evidence is captured, with remaining blockers either zero or explicitly accepted.
+
+**Plans**: 1 plan — [54-01-PLAN.md](phases/54-pr-branch-triage-green-main-proof/54-01-PLAN.md)
+**UI hint**: no
 
 ### Phase 44.5: v1.0/1.1 Release Ceremony
 
