@@ -67,8 +67,10 @@ defmodule Mailglass.DocsContractTest do
       assert admin =~ "docs/compatibility-and-deprecations.md"
       assert admin =~ "MailglassAdmin.Auth"
       assert admin =~ "Stable DOM/component/LiveView implementation APIs"
+      assert Regex.match?(~r/preview-pipeline confidence\s+only/i, admin)
       refute admin =~ "{:mailglass, \"~> 0.1\"}"
       refute admin =~ "{:mailglass_admin, \"~> 0.1\"}"
+      refute admin =~ "guaranteed client parity"
     end
   end
 
@@ -175,6 +177,25 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "Anymail"
       assert maintaining =~ "Laravel Mail"
       assert maintaining =~ "Resend inbound docs"
+    end
+
+    test "preview docs stay within bounded preview-pipeline confidence language" do
+      preview_guide = File.read!("guides/preview.md")
+      admin = File.read!("mailglass_admin/README.md")
+
+      assert Regex.match?(~r/preview-pipeline confidence\s+only/i, preview_guide)
+      assert Regex.match?(~r/preview-pipeline confidence\s+only/i, admin)
+      refute preview_guide =~ "guaranteed client parity"
+      refute admin =~ "guaranteed client parity"
+      assert Regex.match?(
+               ~r/(?:does(?:\s+\*\*not\*\*|\s+not)\s+claim|not)\s+cross-client parity/i,
+               preview_guide
+             )
+
+      assert Regex.match?(
+               ~r/(?:does(?:\s+\*\*not\*\*|\s+not)\s+claim|not)\s+cross-client parity/i,
+               admin
+             )
     end
 
     test "compatibility and upgrade guides are wired into Tier 1 docs" do

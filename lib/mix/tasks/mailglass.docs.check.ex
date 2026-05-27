@@ -25,6 +25,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     "README.md",
     "mailglass_admin/README.md",
     "mailglass_inbound/README.md",
+    "guides/preview.md",
     "guides/testing.md",
     "mailglass_admin/docs/operator-trust.md",
     "mailglass_inbound/docs/api_stability.md",
@@ -46,6 +47,10 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     "mailglass_inbound/docs/inbound-ses.md",
     "mailglass_inbound/docs/inbound-routing-debug.md"
   ]
+  @preview_boundary_paths ["guides/preview.md", "mailglass_admin/README.md"]
+  @preview_confidence_regex ~r/preview-pipeline confidence\s+only/i
+  @cross_client_parity_regex ~r/cross-client parity/i
+  @allowed_cross_client_parity_regex ~r/(?:does(?:\s+\*\*not\*\*|\s+not)\s+claim|not)\s+cross-client parity/i
   @tier1_surface_rules %{
     "README.md" => %{
       required: [
@@ -73,7 +78,16 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
       ],
       forbidden: [
         "{:mailglass, \"~> 0.1\"}",
-        "{:mailglass_admin, \"~> 0.1\"}"
+        "{:mailglass_admin, \"~> 0.1\"}",
+        "guaranteed client parity"
+      ]
+    },
+    "guides/preview.md" => %{
+      required: [
+        "preview-pipeline confidence only"
+      ],
+      forbidden: [
+        "guaranteed client parity"
       ]
     },
     "mailglass_inbound/README.md" => %{
@@ -312,6 +326,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     issues =
       leak_issues(paths)
       |> Kernel.++(tier1_surface_issues())
+      |> Kernel.++(preview_boundary_issues())
 
     if issues == [] do
       Mix.shell().info("[mailglass.docs.check] OK — Tier 1 docs match the stability contract.")
@@ -371,6 +386,34 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     end)
   end
 
+  defp preview_boundary_issues do
+    Enum.flat_map(@preview_boundary_paths, fn path ->
+      content = File.read!(path)
+
+      confidence_issues =
+        if Regex.match?(@preview_confidence_regex, content) do
+          []
+        else
+          [{:missing_boundary, path, "preview-pipeline confidence only"}]
+        end
+
+      parity_issues =
+        content
+        |> String.split("\n")
+        |> Enum.with_index(1)
+        |> Enum.flat_map(fn {line, line_number} ->
+          if Regex.match?(@cross_client_parity_regex, line) and
+               not Regex.match?(@allowed_cross_client_parity_regex, line) do
+            [{:parity_overreach, path, line_number, String.trim(line)}]
+          else
+            []
+          end
+        end)
+
+      confidence_issues ++ parity_issues
+    end)
+  end
+
   defp emit_issue({:internal_id, path, token}) do
     Mix.shell().error("[mailglass.docs.check] internal ID #{inspect(token)} found in #{path}")
   end
@@ -384,6 +427,18 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   defp emit_issue({:stale, path, token}) do
     Mix.shell().error(
       "[mailglass.docs.check] stale Tier 1 token found in #{path}: #{inspect(token)}"
+    )
+  end
+
+  defp emit_issue({:parity_overreach, path, line_number, line}) do
+    Mix.shell().error(
+      "[mailglass.docs.check] parity-overreach wording found in #{path}:#{line_number}: #{inspect(line)}"
+    )
+  end
+
+  defp emit_issue({:missing_boundary, path, token}) do
+    Mix.shell().error(
+      "[mailglass.docs.check] preview-boundary wording missing in #{path}: #{inspect(token)}"
     )
   end
 end
