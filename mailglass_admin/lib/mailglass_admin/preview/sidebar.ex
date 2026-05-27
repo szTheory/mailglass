@@ -23,9 +23,11 @@ defmodule MailglassAdmin.Preview.Sidebar do
 
   alias MailglassAdmin.Components
 
-  attr :mailables, :list, required: true
-  attr :current_mailable, :atom, default: nil
-  attr :current_scenario, :atom, default: nil
+  attr(:mailables, :list, required: true)
+  attr(:current_mailable, :atom, default: nil)
+  attr(:current_scenario, :atom, default: nil)
+  attr(:device_width, :integer, default: 768)
+  attr(:dark_chrome, :boolean, default: false)
 
   @doc """
   Renders the mailable sidebar.
@@ -48,6 +50,8 @@ defmodule MailglassAdmin.Preview.Sidebar do
               reflection={reflection}
               current_mailable={@current_mailable}
               current_scenario={@current_scenario}
+              device_width={@device_width}
+              dark_chrome={@dark_chrome}
             />
           </li>
         <% end %>
@@ -56,10 +60,12 @@ defmodule MailglassAdmin.Preview.Sidebar do
     """
   end
 
-  attr :mod, :atom, required: true
-  attr :reflection, :any, required: true
-  attr :current_mailable, :atom, default: nil
-  attr :current_scenario, :atom, default: nil
+  attr(:mod, :atom, required: true)
+  attr(:reflection, :any, required: true)
+  attr(:current_mailable, :atom, default: nil)
+  attr(:current_scenario, :atom, default: nil)
+  attr(:device_width, :integer, default: 768)
+  attr(:dark_chrome, :boolean, default: false)
 
   # Function component dispatched by reflection shape. Phoenix.Component
   # requires `def` (not `defp`) for `<.mailable_entry ... />` invocation.
@@ -73,7 +79,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
         <%= for {scenario_name, _defaults} <- @reflection do %>
           <li>
             <.link
-              patch={scenario_path(@mod, scenario_name)}
+              patch={scenario_path(@mod, scenario_name, @device_width, @dark_chrome)}
               class={[
                 "flex items-center gap-2 px-3 py-2 min-h-11 text-sm truncate transition-colors",
                 scenario_classes(@current_mailable, @current_scenario, @mod, scenario_name)
@@ -115,8 +121,15 @@ defmodule MailglassAdmin.Preview.Sidebar do
   # Relative path helpers — browser resolves against the current LiveView's
   # document URL, so these work under any adopter mount path (`/dev/mail`,
   # `/admin/preview`, etc.).
-  defp scenario_path(mod, scenario) do
-    "./" <> inspect(mod) <> "/" <> Atom.to_string(scenario)
+  defp scenario_path(mod, scenario, width, dark_chrome) do
+    "./" <>
+      inspect(mod) <>
+      "/" <>
+      Atom.to_string(scenario) <>
+      "?width=" <>
+      Integer.to_string(width) <>
+      "&theme=" <>
+      theme_param(dark_chrome)
   end
 
   defp broken_path(mod) do
@@ -132,4 +145,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   defp scenario_classes(_current_mod, _current_scenario, _mod, _scenario) do
     "border-l-[3px] border-transparent text-secondary hover:bg-base-200"
   end
+
+  defp theme_param(true), do: "dark"
+  defp theme_param(false), do: "light"
 end

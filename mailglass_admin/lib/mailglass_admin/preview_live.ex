@@ -68,6 +68,7 @@ defmodule MailglassAdmin.PreviewLive do
       |> assign(:current_assigns, %{})
       |> assign(:device_width, 768)
       |> assign(:dark_chrome, false)
+      |> assign(:base_path, nil)
       |> assign(:active_tab, :html)
       |> assign(:render_nonce, System.unique_integer([:positive]))
       |> assign(:html_body, "")
@@ -81,16 +82,30 @@ defmodule MailglassAdmin.PreviewLive do
   end
 
   @impl true
-  def handle_params(%{"mailable" => mod_str, "scenario" => name_str}, _uri, socket) do
+  def handle_params(%{"mailable" => mod_str, "scenario" => name_str} = params, uri, socket) do
+    {device_width, theme} = normalize_capture_url_state(params, socket)
+    base_path = uri_path(uri)
+
     with {:ok, mailable} <- safe_mailable_atom(mod_str),
          {:ok, scenario} <- safe_scenario_atom(name_str),
          {:ok, defaults} <-
            lookup_scenario_defaults(socket.assigns.mailables, mailable, scenario) do
+      current_assigns =
+        if socket.assigns.current_mailable == mailable and
+             socket.assigns.current_scenario == scenario do
+          socket.assigns.current_assigns
+        else
+          defaults
+        end
+
       socket =
         socket
         |> assign(:current_mailable, mailable)
         |> assign(:current_scenario, scenario)
-        |> assign(:current_assigns, defaults)
+        |> assign(:current_assigns, current_assigns)
+        |> assign(:device_width, device_width)
+        |> assign(:dark_chrome, theme == "dark")
+        |> assign(:base_path, base_path)
         |> assign(:page_title, "mailglass — " <> to_string(scenario))
         |> rerender()
 
@@ -103,6 +118,9 @@ defmodule MailglassAdmin.PreviewLive do
          socket
          |> assign(:current_mailable, mailable)
          |> assign(:current_scenario, :__error__)
+         |> assign(:device_width, device_width)
+         |> assign(:dark_chrome, theme == "dark")
+         |> assign(:base_path, base_path)
          |> assign(:render_error, msg)
          |> assign(:page_title, "mailglass — error")}
 
@@ -111,6 +129,7 @@ defmodule MailglassAdmin.PreviewLive do
          socket
          |> assign(:current_mailable, nil)
          |> assign(:current_scenario, nil)
+         |> assign(:base_path, nil)
          |> put_flash(:error, "Scenario not found")}
     end
   end
@@ -120,6 +139,7 @@ defmodule MailglassAdmin.PreviewLive do
      socket
      |> assign(:current_mailable, nil)
      |> assign(:current_scenario, nil)
+     |> assign(:base_path, nil)
      |> assign(:page_title, "mailglass — Preview")}
   end
 
@@ -130,24 +150,24 @@ defmodule MailglassAdmin.PreviewLive do
   end
 
   def handle_event("set_device", %{"width" => w}, socket) do
-    case Integer.parse(w) do
-      {width, _} ->
-        # Bump :render_nonce to force a fresh iframe id — the iframe
-        # uses phx-update="ignore" so LiveView won't update its style
-        # in place; only a new element id re-renders the element with
-        # the new @device_width inline style (05-UI-SPEC line 307).
-        {:noreply,
-         socket
-         |> assign(:device_width, width)
-         |> assign(:render_nonce, System.unique_integer([:positive]))}
+    width = parse_device_width_param(w)
 
-      :error ->
-        {:noreply, socket}
-    end
+    # Bump :render_nonce to force a fresh iframe id — the iframe uses
+    # phx-update="ignore" so LiveView won't update its style in place;
+    # only a new element id re-renders the element with the new
+    # @device_width inline style (05-UI-SPEC line 307).
+    {:noreply,
+     socket
+     |> assign(:device_width, width)
+     |> assign(:render_nonce, System.unique_integer([:positive]))
+     |> sync_patch_capture_url_state()}
   end
 
   def handle_event("toggle_dark", _params, socket) do
-    {:noreply, assign(socket, :dark_chrome, not socket.assigns.dark_chrome)}
+    {:noreply,
+     socket
+     |> assign(:dark_chrome, not socket.assigns.dark_chrome)
+     |> sync_patch_capture_url_state()}
   end
 
   def handle_event("set_tab", %{"tab" => t}, socket) do
@@ -209,6 +229,8 @@ defmodule MailglassAdmin.PreviewLive do
           mailables={@mailables}
           current_mailable={@current_mailable}
           current_scenario={@current_scenario}
+          device_width={@device_width}
+          dark_chrome={@dark_chrome}
         />
       </aside>
 
@@ -311,6 +333,75 @@ defmodule MailglassAdmin.PreviewLive do
   end
 
   defp safe_tab_atom(_), do: :error
+
+  defp parse_device_width_param(value) when is_integer(value) and value in [375, 768, 1024],
+    do: value
+
+  defp parse_device_width_param(value) when is_binary(value) do
+    case Integer.parse(value) do
+      {width, ""} when width in [375, 768, 1024] -> width
+      _ -> 768
+    end
+  end
+
+  defp parse_device_width_param(_), do: 768
+
+  defp parse_theme_param("dark"), do: "dark"
+  defp parse_theme_param("light"), do: "light"
+  defp parse_theme_param("mailglass-dark"), do: "dark"
+  defp parse_theme_param("mailglass-light"), do: "light"
+  defp parse_theme_param(_), do: "light"
+
+  defp normalize_capture_url_state(params, socket) do
+    width =
+      case Map.fetch(params, "width") do
+        {:ok, width_param} -> parse_device_width_param(width_param)
+        :error -> socket.assigns.device_width
+      end
+
+    theme =
+      case Map.fetch(params, "theme") do
+        {:ok, theme_param} -> parse_theme_param(theme_param)
+        :error -> theme_param(socket.assigns.dark_chrome)
+      end
+
+    {width, theme}
+  end
+
+  defp sync_patch_capture_url_state(socket) do
+    current_mailable = socket.assigns.current_mailable
+    current_scenario = socket.assigns.current_scenario
+
+    if is_atom(current_mailable) and is_atom(current_scenario) and current_scenario != :__error__ and
+         is_binary(socket.assigns.base_path) do
+      push_patch(
+        socket,
+        to:
+          build_capture_url(
+            socket.assigns.base_path,
+            Integer.to_string(socket.assigns.device_width),
+            theme_param(socket.assigns.dark_chrome)
+          )
+      )
+    else
+      socket
+    end
+  end
+
+  defp build_capture_url(base_path, width, theme),
+    do: base_path <> "?width=" <> width <> "&theme=" <> theme
+
+  defp theme_param(true), do: "dark"
+  defp theme_param(false), do: "light"
+
+  defp uri_path(uri) when is_binary(uri) do
+    case URI.parse(uri) do
+      %URI{path: path} when is_binary(path) -> path
+      _ -> nil
+    end
+  end
+
+  defp uri_path(_), do: nil
 
   defp mailable_from_str(str) do
     String.to_existing_atom("Elixir." <> str)

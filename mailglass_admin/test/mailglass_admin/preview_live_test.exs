@@ -53,27 +53,33 @@ defmodule MailglassAdmin.PreviewLiveTest do
     @tag :tabs
     test "HTML, Text, Raw, Headers tabs each render the correct artifact",
          %{conn: conn} do
-      {:ok, view, _html} = live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
       # HTML tab (default) renders an iframe with srcdoc
       html = render(view)
+
       assert html =~ ~r/<iframe[^>]*srcdoc=/i,
              "HTML tab must render <iframe ... srcdoc=\"...\"/>"
 
       # Text tab shows the literal rendered text_body
       text_html = render_click(view, "set_tab", %{"tab" => "text"})
+
       assert text_html =~ "Hi Ada",
              "Text tab must contain the rendered text_body literal"
 
       # Raw tab shows MIME boundary-looking content
       raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
+
       assert raw_html =~ ~r/(boundary=|Content-Type:|MIME-Version:)/i,
              "Raw tab must contain RFC 5322 envelope markers"
 
       # Headers tab shows auto-injected Message-ID + Date rows
       headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
+
       assert headers_html =~ "Message-ID",
              "Headers tab must show the Message-ID row"
+
       assert headers_html =~ "Date",
              "Headers tab must show the Date row"
     end
@@ -83,7 +89,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
     @tag :device_toggle
     test "device width toggle updates iframe width CSS inline",
          %{conn: conn} do
-      {:ok, view, html} = live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+      {:ok, view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
       # Initial default per 05-UI-SPEC line 184 is 768px (tablet).
       assert html =~ "width: 768px",
@@ -97,16 +104,55 @@ defmodule MailglassAdmin.PreviewLiveTest do
     end
   end
 
+  describe "URL capture state" do
+    @tag :url_state
+    test "width= and theme= URL params are applied on mount for scenario routes",
+         %{conn: conn} do
+      path = "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=375&theme=dark"
+      {:ok, _view, html} = live(conn, path)
+
+      assert html =~ "width: 375px"
+      assert html =~ ~s|data-theme="mailglass-dark"|
+    end
+
+    @tag :url_state
+    test "invalid width and invalid theme params fallback to deterministic defaults",
+         %{conn: conn} do
+      invalid_path =
+        "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=999&theme=unknown"
+
+      {:ok, _view, html} = live(conn, invalid_path)
+
+      assert html =~ "width: 768px"
+      assert html =~ ~s|data-theme="mailglass-light"|
+    end
+
+    @tag :url_state
+    test "set_device and toggle_dark keep canonical width/theme URL params",
+         %{conn: conn} do
+      base_path = "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default"
+      {:ok, view, _html} = live(conn, base_path <> "?width=768&theme=light")
+
+      render_click(view, "set_device", %{"width" => "375"})
+      assert_patch(view, base_path <> "?width=375&theme=light")
+
+      render_click(view, "toggle_dark", %{})
+      assert_patch(view, base_path <> "?width=375&theme=dark")
+    end
+  end
+
   describe "dark toggle" do
     @tag :dark_toggle
     test "dark chrome toggle flips data-theme on wrapper",
          %{conn: conn} do
-      {:ok, view, html} = live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+      {:ok, view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
       assert html =~ ~s|data-theme="mailglass-light"|,
              "initial data-theme must be mailglass-light"
 
       after_toggle = render_click(view, "toggle_dark", %{})
+
       assert after_toggle =~ ~s|data-theme="mailglass-dark"|,
              "data-theme must flip to mailglass-dark after toggle_dark event"
     end
@@ -116,7 +162,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
     @tag :assigns_form
     test "assigns form re-renders preview on change",
          %{conn: conn} do
-      {:ok, view, _html} = live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
       after_change =
         render_change(view, "assigns_changed", %{"assigns" => %{"user_name" => "Grace"}})
@@ -130,7 +177,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
     @tag :live_reload
     test "PreviewLive subscribes to mailglass:admin:reload and refreshes on broadcast",
          %{conn: conn} do
-      {:ok, view, _html} = live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+      {:ok, view, _html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
       # Broadcast the literal LINT-06-compliant topic. PreviewLive subscribes
       # on mount and `handle_info/2` puts a flash + re-discovers mailables.
