@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Adopter Trust Proof
-status: executing
-last_updated: "2026-05-27T22:27:29.484Z"
+status: verifying
+last_updated: "2026-05-27T22:36:30.019Z"
 last_activity: 2026-05-27
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 13
-  completed_plans: 12
-  percent: 50
+  completed_plans: 13
+  percent: 63
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-27 after v1.3 preflight lock)
 
 Phase: 58 (verify-first-webhook-operator-path) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-27
 
 ## v1.3 Milestone Intent
@@ -49,6 +49,9 @@ Last activity: 2026-05-27
 - Phase 58 Plan 01 uses Postmark as the representative verify-first route proof path.
 - Phase 58 Plan 01 keeps `trust_runner.v1` and existing stage names while adding bounded `webhook_ingest` evidence only on non-dry-run runs.
 - Phase 58 Plan 01 preserves dry-run compatibility by skipping live route proof and evidence emission in dry-run mode.
+- [Phase 58]: Phase 58 Plan 02 uses the admin inbound optional gateway explain_routes/2 path to derive no-match operator evidence.
+- [Phase 58]: Phase 58 Plan 02 keeps checkpoint_sha256 scoped to ordered stage/status/fixture_id rows while validating evidence separately.
+- [Phase 58]: Phase 58 Plan 02 retires deferred wording after signed Postmark and no-match operator evidence are deterministic.
 
 ## Roadmap Snapshot
 
@@ -79,6 +82,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
 | Phase 999.1 P1 | 5 min | 2 tasks | 84 files |
 | Phase 58 P01 | 10min | 2 tasks | 7 files |
+| Phase 58 P02 | 7min | 2 tasks | 8 files |
 
 ## Accumulated Context
 

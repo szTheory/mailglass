@@ -18,7 +18,7 @@ Requirements for the Adopter Trust Proof milestone. Scope is intentionally narro
 - [ ] **JOUR-01**: One deterministic trust runner command proves install -> preview -> send -> webhook ingest -> operator troubleshooting.
 - [ ] **JOUR-02**: Trust fixtures use stable IDs/payloads so local and CI assertions are reproducible.
 - [x] **JOUR-03**: Webhook proof executes the real verify-first route path with signed payloads plus one failing-signature assertion.
-- [ ] **JOUR-04**: Operator troubleshooting includes one scripted non-happy-path flow with deterministic evidence and diagnosis.
+- [x] **JOUR-04**: Operator troubleshooting includes one scripted non-happy-path flow with deterministic evidence and diagnosis.
 
 ### CI and Release Trust Evidence
 
@@ -72,7 +72,7 @@ Each v1.3 requirement maps to exactly one phase.
 | JOUR-01 | Phase 57 | Pending |
 | JOUR-02 | Phase 57 | Pending |
 | JOUR-03 | Phase 58 | Complete |
-| JOUR-04 | Phase 58 | Pending |
+| JOUR-04 | Phase 58 | Complete |
 | EVID-01 | Phase 59 | Pending |
 | EVID-02 | Phase 59 | Pending |
 | EVID-04 | Phase 59 | Pending |

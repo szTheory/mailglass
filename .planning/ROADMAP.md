@@ -60,7 +60,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 
 - [x] Phase 52: Trust Scope Lock + Reference Host Baseline (0/3 plans) (completed 2026-05-27)
 - [x] Phase 57: Deterministic Trust Runner + Fixtures (0/0 plans) (completed 2026-05-27)
-- [ ] Phase 58: Verify-First Webhook + Operator Path (0/2 plans)
+- [x] Phase 58: Verify-First Webhook + Operator Path (2/2 plans) (completed 2026-05-27)
 - [ ] Phase 59: CI Trust Lanes + Checkpoint Evidence (0/0 plans)
 - [ ] Phase 60: Release Trust Gate + Drift Prevention (0/0 plans)
 - [ ] Phase 61: Docs Contract Boundary Enforcement (0/0 plans)
@@ -90,7 +90,7 @@ Goal: complete trust journey proof for signed webhook verification and one deter
 Requirements: JOUR-03, JOUR-04  
 Plans:
 - [x] 58-01-PLAN.md — Route-level Postmark verify-first proof and webhook_ingest runner evidence
-- [ ] 58-02-PLAN.md — Deterministic no-match operator evidence and checkpoint validator semantics
+- [x] 58-02-PLAN.md — Deterministic no-match operator evidence and checkpoint validator semantics
 Success criteria:
 
 1. Webhook proof executes the real verify-first signed payload route path.
