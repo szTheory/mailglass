@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Adopter Trust Proof
-status: roadmap_defined
-last_updated: "2026-05-27T08:53:00Z"
-last_activity: 2026-05-27 -- v1.3 preflight locked, requirements defined, roadmap created
+status: Roadmap defined; ready for discuss/plan
+last_updated: "2026-05-27T09:06:02.674Z"
+last_activity: 2026-05-27 -- v1.3 preflight convergence accepted and roadmap written
 progress:
-  total_phases: 5
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
