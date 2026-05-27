@@ -1,7 +1,7 @@
 ---
 phase: 52
-status: human_needed
-updated: 2026-05-27T09:36:36Z
+status: passed
+updated: 2026-05-27T12:28:03Z
 ---
 
 # Phase 52 Verification
@@ -10,7 +10,7 @@ updated: 2026-05-27T09:36:36Z
 
 - Overall: 8.5/10
 - Must-have implementation coverage: 10/10
-- Practical command verification in current workspace: 7/10 (root test execution blocked by dependency lock mismatch)
+- Practical command verification in current workspace: 9/10 (root tests executed successfully; non-blocking OTP/Postgrex warnings observed)
 
 ## must-have checks
 
@@ -74,24 +74,26 @@ updated: 2026-05-27T09:36:36Z
 - PASS: `cd reference/host_app && mix phx.routes`
   - Rendered inbound routes for `postmark` and `sendgrid` through `MailglassInbound.Ingress.Plug`.
 - PASS: token and boundary scans (`rg`) for required/forbidden HOST-01/02/03 markers.
-- BLOCKED: `mix test test/reference_host/boot_contract_test.exs test/reference_host/public_seams_contract_test.exs test/reference_host/scope_lock_contract_test.exs test/reference_host/compile_smoke_test.exs --warnings-as-errors`
-  - Mix exited before test execution due root dependency lock mismatch (`Unchecked dependencies for environment test` and multiple lock drift entries).
+- PASS: `mix deps.get`
+- PASS: `mix test test/reference_host/boot_contract_test.exs test/reference_host/public_seams_contract_test.exs test/reference_host/scope_lock_contract_test.exs test/reference_host/compile_smoke_test.exs --warnings-as-errors`
+  - Result: 5 tests, 0 failures.
+  - Note: observed non-blocking warnings for missing optional OTLP exporter and transient Postgrex `too_many_connections` noise from existing local DB concurrency.
 
 ## blockers/risks
 
-- Environment blocker: root workspace dependency lock mismatch prevents running Phase 52 root-level contract tests in this verification pass.
-- Risk level: low-medium for Phase 52 correctness (static artifacts and host compile/routes are consistent), medium for audit confidence until root tests are rerun cleanly.
+- No blocking verification issues remain for Phase 52.
+- Risk level: low. Keep an eye on local Postgres connection saturation during broad test runs.
 
 ## decision
 
-- Status: `human_needed`
-- Rationale: Phase 52 requirements appear implemented and host runtime checks pass, but root contract tests could not be executed in this environment due dependency lock drift.
+- Status: `passed`
+- Rationale: All Phase 52 requirement checks and root-level contract tests now execute successfully in this workspace.
 
 ### human verification checklist
 
-- [ ] Run `mix deps.get` at repo root to reconcile dependency lock state.
-- [ ] Re-run `mix test test/reference_host/boot_contract_test.exs --warnings-as-errors`.
-- [ ] Re-run `mix test test/reference_host/public_seams_contract_test.exs --warnings-as-errors`.
-- [ ] Re-run `mix test test/reference_host/scope_lock_contract_test.exs --warnings-as-errors`.
-- [ ] Re-run `mix test test/reference_host/compile_smoke_test.exs --warnings-as-errors`.
-- [ ] If all pass, update this file status to `passed` with refreshed timestamp.
+- [x] Run `mix deps.get` at repo root to reconcile dependency lock state.
+- [x] Re-run `mix test test/reference_host/boot_contract_test.exs --warnings-as-errors`.
+- [x] Re-run `mix test test/reference_host/public_seams_contract_test.exs --warnings-as-errors`.
+- [x] Re-run `mix test test/reference_host/scope_lock_contract_test.exs --warnings-as-errors`.
+- [x] Re-run `mix test test/reference_host/compile_smoke_test.exs --warnings-as-errors`.
+- [x] If all pass, update this file status to `passed` with refreshed timestamp.

@@ -13,7 +13,7 @@
 - ✅ **v1.0 Stability Lock** — Phases 35-38 (shipped 2026-05-06) — see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Inbound Core Slice** — Phases 39-44 (shipped 2026-05-06) — see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26) — see [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
-- 🚧 **v1.3 Adopter Trust Proof** — Phases 52-56 (planned 2026-05-27)
+- 🚧 **v1.3 Adopter Trust Proof** — Phases 52, 57-61 (planned 2026-05-27)
 
 ## Phases
 
@@ -50,7 +50,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 </details>
 
 <details>
-<summary>🚧 v1.3 Adopter Trust Proof (Phases 52-56) — PLANNED 2026-05-27</summary>
+<summary>🚧 v1.3 Adopter Trust Proof (Phases 52, 57-61) — PLANNED 2026-05-27</summary>
 
 **Goal:** Prove adoption confidence with one maintained Phoenix reference host app and deterministic trust evidence across local, CI, and published-version release checks.
 
@@ -59,10 +59,11 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 **Requirements coverage:** 16/16 mapped from `.planning/REQUIREMENTS.md` (HOST/JOUR/EVID/DOCB/OPS categories).
 
 - [x] Phase 52: Trust Scope Lock + Reference Host Baseline (0/3 plans) (completed 2026-05-27)
-- [ ] Phase 53: Deterministic End-to-End Trust Journey (0/0 plans)
-- [ ] Phase 54: CI Trust Lanes + Checkpoint Artifacts (0/0 plans)
-- [ ] Phase 55: Docs Boundary + Contract Positioning (0/0 plans)
-- [ ] Phase 56: Drift Prevention + Release-Gate Integration (0/0 plans)
+- [ ] Phase 57: Deterministic Trust Runner + Fixtures (0/0 plans)
+- [ ] Phase 58: Verify-First Webhook + Operator Path (0/0 plans)
+- [ ] Phase 59: CI Trust Lanes + Checkpoint Evidence (0/0 plans)
+- [ ] Phase 60: Release Trust Gate + Drift Prevention (0/0 plans)
+- [ ] Phase 61: Docs Contract Boundary Enforcement (0/0 plans)
 
 ### Phase Details
 
@@ -75,42 +76,51 @@ Success criteria:
 2. Host integration boundary uses public Mailglass seams only.
 3. Scope allowlist and non-goals are committed and enforced as review criteria.
 
-**Phase 53: Deterministic End-to-End Trust Journey**  
-Goal: make trust proof reproducible with one command and deterministic fixtures.  
-Requirements: JOUR-01, JOUR-02, JOUR-03, JOUR-04  
+**Phase 57: Deterministic Trust Runner + Fixtures**  
+Goal: establish a deterministic trust-runner command and stable fixture/checkpoint harness for reproducible trust assertions.  
+Requirements: JOUR-01, JOUR-02  
 Success criteria:
 
 1. One runner command executes install -> preview -> send -> webhook ingest -> operator troubleshooting.
-2. Fixtures and assertions are deterministic across repeated runs.
-3. Webhook proof uses signed verify-first route path and includes one negative signature case.
-4. Operator diagnosis flow includes one scripted non-happy-path scenario.
+2. Fixtures and IDs are deterministic across local reruns and CI.
+3. Runner output emits stable checkpoints consumed by downstream trust lanes.
 
-**Phase 54: CI Trust Lanes + Checkpoint Artifacts**  
-Goal: block drift with required CI trust lanes and machine-readable evidence.  
+**Phase 58: Verify-First Webhook + Operator Path**  
+Goal: complete trust journey proof for signed webhook verification and one deterministic non-happy-path diagnosis scenario.  
+Requirements: JOUR-03, JOUR-04  
+Success criteria:
+
+1. Webhook proof executes the real verify-first signed payload route path.
+2. Negative signature assertion is included and must fail deterministically.
+3. Operator troubleshooting scenario is scripted with deterministic diagnosis evidence.
+4. Runner and operator paths align on shared trust checkpoint semantics.
+
+**Phase 59: CI Trust Lanes + Checkpoint Evidence**  
+Goal: enforce trust proof in required CI lanes and publish machine-readable checkpoint evidence artifacts.  
 Requirements: EVID-01, EVID-02, EVID-04  
 Success criteria:
 
-1. Repo-head trust lane is required and fails on missing checkpoints.
-2. Clean-baseline lane enforces Hex-first resolution and fails on path-dependency leakage.
-3. Trust lanes emit checkpoint artifacts used by release evidence.
+1. Repo-head trust lane is required and fails on missing trust checkpoints.
+2. Clean-baseline trust lane enforces Hex-first dependency resolution and blocks path-dependency leakage.
+3. CI emits machine-readable trust checkpoint artifacts for release evidence ingestion.
 
-**Phase 55: Docs Boundary + Contract Positioning**  
-Goal: keep reference-app usage proof separate from API-contract truth.  
-Requirements: DOCB-01, DOCB-02, DOCB-03  
-Success criteria:
-
-1. Reference docs explicitly state usage-proof-only boundary.
-2. Canonical contract documents/tests are linked at every trust-journey touchpoint.
-3. Docs contract checks enforce boundary language and prevent accidental API guarantees.
-
-**Phase 56: Drift Prevention + Release-Gate Integration**  
-Goal: operationalize trust-proof reliability and close active smoke-risk debt.  
+**Phase 60: Release Trust Gate + Drift Prevention**  
+Goal: gate release trust claims on published-version trust evidence and close the active smoke-risk reliability gap.  
 Requirements: EVID-03, OPS-01, OPS-02  
 Success criteria:
 
 1. Post-publish/published-version trust journey runs before milestone trust claims are accepted.
 2. Active hackney smoke failure is resolved with regression protection.
 3. Release checklist and maintenance cadence require green trust evidence.
+
+**Phase 61: Docs Contract Boundary Enforcement**  
+Goal: enforce reference-host docs as usage proof while directing contract guarantees to canonical API stability artifacts.  
+Requirements: DOCB-01, DOCB-02, DOCB-03  
+Success criteria:
+
+1. Reference docs explicitly state usage-proof-only boundary.
+2. Canonical stability contract documents and tests are linked at each trust-journey surface.
+3. Docs contract verification blocks language that implies reference internals are public API guarantees.
 
 </details>
 

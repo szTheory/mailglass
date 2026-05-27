@@ -1,7 +1,15 @@
+---
+seed_id: SEED-003
+title: Ecosystem Integrations (High-Value Wins)
+status: archived
+updated: 2026-05-27T12:28:03Z
+note: Deferred after v1.3 trust-proof planning convergence; retained as future reference only.
+---
+
 # Ecosystem Integrations (High-Value Wins)
 
 **Domain:** Interoperability with sztheory ecosystem libraries
-**Status:** Seed / Future Roadmap
+**Status:** Archived seed (deferred)
 
 Mailglass is the premier email rendering and delivery substrate. Its biggest ecosystem wins come from separating its concerns from orchestration, while providing standard rendering artifacts for other libraries.
 

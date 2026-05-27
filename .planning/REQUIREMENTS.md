@@ -69,19 +69,19 @@ Each v1.3 requirement maps to exactly one phase.
 | HOST-01 | Phase 52 | Pending |
 | HOST-02 | Phase 52 | Pending |
 | HOST-03 | Phase 52 | Pending |
-| JOUR-01 | Phase 53 | Pending |
-| JOUR-02 | Phase 53 | Pending |
-| JOUR-03 | Phase 53 | Pending |
-| JOUR-04 | Phase 53 | Pending |
-| EVID-01 | Phase 54 | Pending |
-| EVID-02 | Phase 54 | Pending |
-| EVID-04 | Phase 54 | Pending |
-| DOCB-01 | Phase 55 | Pending |
-| DOCB-02 | Phase 55 | Pending |
-| DOCB-03 | Phase 55 | Pending |
-| EVID-03 | Phase 56 | Pending |
-| OPS-01 | Phase 56 | Pending |
-| OPS-02 | Phase 56 | Pending |
+| JOUR-01 | Phase 57 | Pending |
+| JOUR-02 | Phase 57 | Pending |
+| JOUR-03 | Phase 58 | Pending |
+| JOUR-04 | Phase 58 | Pending |
+| EVID-01 | Phase 59 | Pending |
+| EVID-02 | Phase 59 | Pending |
+| EVID-04 | Phase 59 | Pending |
+| DOCB-01 | Phase 61 | Pending |
+| DOCB-02 | Phase 61 | Pending |
+| DOCB-03 | Phase 61 | Pending |
+| EVID-03 | Phase 60 | Pending |
+| OPS-01 | Phase 60 | Pending |
+| OPS-02 | Phase 60 | Pending |
 
 **Coverage:**
 
@@ -91,4 +91,4 @@ Each v1.3 requirement maps to exactly one phase.
 
 ---
 *Requirements defined: 2026-05-27*
-*Last updated: 2026-05-27 after v1.3 trust-proof preflight convergence*
+*Last updated: 2026-05-27 after v1.3 milestone gap-closure phase planning*
