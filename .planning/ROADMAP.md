@@ -58,7 +58,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 
 **Requirements coverage:** 16/16 mapped from `.planning/REQUIREMENTS.md` (HOST/JOUR/EVID/DOCB/OPS categories).
 
-- [ ] Phase 52: Trust Scope Lock + Reference Host Baseline (0/0 plans)
+- [x] Phase 52: Trust Scope Lock + Reference Host Baseline (0/3 plans) (completed 2026-05-27)
 - [ ] Phase 53: Deterministic End-to-End Trust Journey (0/0 plans)
 - [ ] Phase 54: CI Trust Lanes + Checkpoint Artifacts (0/0 plans)
 - [ ] Phase 55: Docs Boundary + Contract Positioning (0/0 plans)
@@ -70,6 +70,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 Goal: establish one thin maintained reference host app with explicit proof-scope allowlist and non-goals.  
 Requirements: HOST-01, HOST-02, HOST-03  
 Success criteria:
+
 1. Maintained reference host boots from clean checkout and documented setup.
 2. Host integration boundary uses public Mailglass seams only.
 3. Scope allowlist and non-goals are committed and enforced as review criteria.
@@ -78,6 +79,7 @@ Success criteria:
 Goal: make trust proof reproducible with one command and deterministic fixtures.  
 Requirements: JOUR-01, JOUR-02, JOUR-03, JOUR-04  
 Success criteria:
+
 1. One runner command executes install -> preview -> send -> webhook ingest -> operator troubleshooting.
 2. Fixtures and assertions are deterministic across repeated runs.
 3. Webhook proof uses signed verify-first route path and includes one negative signature case.
@@ -87,6 +89,7 @@ Success criteria:
 Goal: block drift with required CI trust lanes and machine-readable evidence.  
 Requirements: EVID-01, EVID-02, EVID-04  
 Success criteria:
+
 1. Repo-head trust lane is required and fails on missing checkpoints.
 2. Clean-baseline lane enforces Hex-first resolution and fails on path-dependency leakage.
 3. Trust lanes emit checkpoint artifacts used by release evidence.
@@ -95,6 +98,7 @@ Success criteria:
 Goal: keep reference-app usage proof separate from API-contract truth.  
 Requirements: DOCB-01, DOCB-02, DOCB-03  
 Success criteria:
+
 1. Reference docs explicitly state usage-proof-only boundary.
 2. Canonical contract documents/tests are linked at every trust-journey touchpoint.
 3. Docs contract checks enforce boundary language and prevent accidental API guarantees.
@@ -103,6 +107,7 @@ Success criteria:
 Goal: operationalize trust-proof reliability and close active smoke-risk debt.  
 Requirements: EVID-03, OPS-01, OPS-02  
 Success criteria:
+
 1. Post-publish/published-version trust journey runs before milestone trust claims are accepted.
 2. Active hackney smoke failure is resolved with regression protection.
 3. Release checklist and maintenance cadence require green trust evidence.

@@ -84,6 +84,7 @@ Each v1.3 requirement maps to exactly one phase.
 | OPS-02 | Phase 56 | Pending |
 
 **Coverage:**
+
 - v1.3 requirements: 16 total
 - Mapped to phases: 16
 - Unmapped: 0
