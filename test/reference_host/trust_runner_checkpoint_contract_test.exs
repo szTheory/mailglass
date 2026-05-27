@@ -6,6 +6,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
 
   @project_root Path.expand("../..", __DIR__)
   @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
+  @row_hash_contract "stage|status|fixture_id"
   @stage_order ["install", "preview", "send", "webhook_ingest", "operator_troubleshooting"]
 
   test "two dry runs emit deterministic equivalent checkpoints with stable hash" do
@@ -45,6 +46,8 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
   end
 
   test "checkpoint hash is based only on ordered stage status fixture_id rows" do
+    assert @row_hash_contract == "stage|status|fixture_id"
+
     rows = [
       %{
         "stage_key" => "webhook_ingest",

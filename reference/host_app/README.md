@@ -44,5 +44,7 @@ Use one command as the trust-journey entrypoint for local verification and CI:
 mix verify.reference_host.journey
 ```
 
-Phase boundary: signed-negative webhook proof (`JOUR-03`) and scripted
-non-happy-path operator diagnosis (`JOUR-04`) are deferred to Phase 58.
+Phase boundary: signed Postmark webhook verification (`JOUR-03`) and scripted
+no-match operator diagnosis (`JOUR-04`) are proven by deterministic runner evidence.
+
+Trust claim: reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence.

@@ -5,7 +5,7 @@ defmodule Mailglass.ReferenceHost.TrustCheckpoint do
 
   @schema_version "trust_runner.v1"
 
-  @claim_boundary "reference-host trust-journey confidence only; signed-negative webhook and non-happy-path diagnosis are deferred to Phase 58"
+  @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
 
   @stage_order %{
     "install" => 1,
@@ -62,6 +62,7 @@ defmodule Mailglass.ReferenceHost.TrustCheckpoint do
   end
 
   defp checkpoint_sha256(rows) do
+    # Hash identity is intentionally limited to stage|status|fixture_id.
     rows
     |> Enum.map(fn row -> "#{row["stage"]}|#{row["status"]}|#{row["fixture_id"]}" end)
     |> Enum.join("\n")

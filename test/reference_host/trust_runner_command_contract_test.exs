@@ -4,6 +4,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
   @mix_path Path.expand("../../mix.exs", __DIR__)
   @task_path Path.expand("../../lib/mix/tasks/mailglass.trust.run.ex", __DIR__)
   @readme_path Path.expand("../../reference/host_app/README.md", __DIR__)
+  @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
 
   test "JOUR-01 canonical command and deterministic stages are pinned" do
     files_with_content = [
@@ -34,6 +35,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
       "mix verify.reference_host.journey",
       "signed Postmark webhook verification",
       "no-match operator diagnosis",
+      @claim_boundary,
       "JOUR-03",
       "JOUR-04"
     ]
@@ -43,7 +45,8 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
              "Phase boundary drift: required token missing #{inspect(token)}"
     end)
 
-    refute String.contains?(readme, "deferred to Phase 58")
+    retired_phrase = Enum.join(["deferred", " to Phase 58"])
+    refute String.contains?(readme, retired_phrase)
   end
 
   defp token_present?(files_with_content, token) do

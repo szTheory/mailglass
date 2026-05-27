@@ -49,10 +49,7 @@ import sys
 
 checkpoint_path = pathlib.Path(sys.argv[1])
 expected_schema = "trust_runner.v1"
-expected_boundary = (
-    "reference-host trust-journey confidence only; signed-negative webhook and "
-    "non-happy-path diagnosis are deferred to Phase 58"
-)
+expected_boundary = "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
 required_stages = [
     "install",
     "preview",
@@ -87,7 +84,7 @@ if checkpoint.get("schema_version") != expected_schema:
     )
 
 if checkpoint.get("claim_boundary") != expected_boundary:
-    errors.append("claim_boundary is missing required bounded language for Phase 58 defer")
+    errors.append("claim_boundary is missing required bounded Phase 58 evidence language")
 
 checkpoints = checkpoint.get("checkpoints")
 if not isinstance(checkpoints, list):
@@ -131,6 +128,77 @@ if stages != required_stages:
 if sorted(stages) != sorted(required_stages):
     errors.append(f"stage set mismatch: expected {required_stages}, got {stages}")
 
+rows_by_stage = {
+    row.get("stage"): row
+    for row in checkpoints
+    if isinstance(row, dict) and isinstance(row.get("stage"), str)
+}
+
+forbidden_evidence_keys = {"raw_payload", "payload", "headers", "recipient", "sender", "subject", "html"}
+
+
+def evidence_for(stage):
+    row = rows_by_stage.get(stage, {})
+    evidence = row.get("evidence")
+    if not isinstance(evidence, dict):
+        errors.append(f"{stage}.evidence must be an object")
+        return {}
+    return evidence
+
+
+def validate_no_forbidden_evidence_keys(value, path):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            key_path = f"{path}.{key}"
+            if key in forbidden_evidence_keys:
+                errors.append(f"forbidden evidence key at {key_path}")
+            validate_no_forbidden_evidence_keys(child, key_path)
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            validate_no_forbidden_evidence_keys(child, f"{path}[{index}]")
+
+
+webhook_evidence = evidence_for("webhook_ingest")
+operator_evidence = evidence_for("operator_troubleshooting")
+
+for stage_name, evidence in [
+    ("webhook_ingest", webhook_evidence),
+    ("operator_troubleshooting", operator_evidence),
+]:
+    validate_no_forbidden_evidence_keys(evidence, f"{stage_name}.evidence")
+
+if webhook_evidence:
+    if webhook_evidence.get("negative_status") != 401:
+        errors.append("webhook_ingest.evidence.negative_status must be 401")
+    if webhook_evidence.get("negative_reason") != "bad_credentials":
+        errors.append("webhook_ingest.evidence.negative_reason must be 'bad_credentials'")
+    if webhook_evidence.get("verified_before_tenant") is not True:
+        errors.append("webhook_ingest.evidence.verified_before_tenant must be true")
+
+if operator_evidence:
+    expected_dimensions = ["recipient", "subject", "header:x-priority"]
+    if operator_evidence.get("scenario") != "no_match":
+        errors.append("operator_troubleshooting.evidence.scenario must be 'no_match'")
+    if operator_evidence.get("outcome") != "no_match":
+        errors.append("operator_troubleshooting.evidence.outcome must be 'no_match'")
+    if operator_evidence.get("status_language") != "no matching mailbox route":
+        errors.append(
+            "operator_troubleshooting.evidence.status_language must be 'no matching mailbox route'"
+        )
+    if operator_evidence.get("raw_payload_included") is not False:
+        errors.append("operator_troubleshooting.evidence.raw_payload_included must be false")
+    if operator_evidence.get("private_recipient_included") is not False:
+        errors.append("operator_troubleshooting.evidence.private_recipient_included must be false")
+    if operator_evidence.get("recipient_masked") is not True:
+        errors.append("operator_troubleshooting.evidence.recipient_masked must be true")
+    if operator_evidence.get("route_clause_dimensions") != expected_dimensions:
+        errors.append(
+            "operator_troubleshooting.evidence.route_clause_dimensions must be "
+            f"{expected_dimensions}"
+        )
+    if operator_evidence.get("trace_card_count") != 3:
+        errors.append("operator_troubleshooting.evidence.trace_card_count must be 3")
+
 hash_rows = []
 for row in checkpoints:
     if not isinstance(row, dict):
@@ -144,6 +212,7 @@ for row in checkpoints:
         hash_rows.append(f"{stage}|{status}|{fixture_id}")
 
 computed_sha = hashlib.sha256("\n".join(hash_rows).encode()).hexdigest()
+# Hash identity is intentionally limited to stage|status|fixture_id.
 if checkpoint.get("checkpoint_sha256") != computed_sha:
     errors.append(
         "checkpoint_sha256 mismatch: expected deterministic SHA from ordered checkpoint rows"
