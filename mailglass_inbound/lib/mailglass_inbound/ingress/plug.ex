@@ -8,35 +8,33 @@ defmodule MailglassInbound.Ingress.Plug do
   ## Telemetry + post-commit broadcast
 
   The whole request is wrapped in a `[:mailglass_inbound, :ingress, :request, *]`
-  span via `MailglassInbound.Telemetry` (TELE-01).
+  span via `MailglassInbound.Telemetry`.
 
   After `Persist.persist/2` returns `{:ok, %{status: :inserted}}` — i.e. AFTER the
   `repo.transact` inside `Persist.persist/2` has committed — the plug broadcasts a
   PII-free `{:inbound_record_inserted, record_id, %{provider:, record_type:}}`
   message on `Mailglass.PubSub` to the per-tenant topic from
-  `MailglassInbound.PubSub.Topics.inbound_record_inserted/1` (TELE-07, D-45-06,
-  D-45-07). The broadcast runs OUTSIDE the transaction and never rolls it back:
+  `MailglassInbound.PubSub.Topics.inbound_record_inserted/1`. The broadcast runs
+  OUTSIDE the transaction and never rolls it back:
   the committed `InboundRecord` is the durable source of truth, PubSub is the
-  realtime fan-out for the Phase 48 admin LiveView. A `:duplicate` result
+  realtime fan-out for the admin LiveView. A `:duplicate` result
   broadcasts nothing.
   """
 
   @behaviour Plug
 
-  # The Mailgun/SES ingress providers are forward references within this same
-  # phase — the four-provider allowlist + dispatch contract (D-46-05, MGUN-04)
-  # lands in Plan 01, while the provider modules themselves land in Plans 02/03.
+  # Mailgun/SES ingress providers are forward references in this module.
   # Suppress the not-yet-defined warning so the contract compiles
-  # warning-free now; the plug only resolves these modules when a :mailgun/:ses
-  # request is actually dispatched (covered by Wave 2 integration tests).
+  # warning-free now; the plug only resolves these modules when a
+  # :mailgun/:ses request is actually dispatched.
   @compile {:no_warn_undefined,
             [MailglassInbound.Ingress.Providers.Mailgun, MailglassInbound.Ingress.Providers.SES]}
 
   import Plug.Conn
 
   alias Mailglass.{ConfigError, SignatureError, Tenancy, TenancyError}
-  # Net-new inbound signature error raised by the Mailgun/SES providers (D-46-19).
-  # Aliased here so the rescue clause can catch BOTH it and core's SignatureError.
+  # Inbound signature error raised by the Mailgun/SES providers.
+  # Aliased here so the rescue clause can catch both it and core's SignatureError.
   alias MailglassInbound.SignatureError, as: InboundSignatureError
   # SES verify!/2 fetches the raw MIME body from S3 during verification; on retry
   # exhaustion or a non-retryable S3 error it raises S3FetchError. Aliased so the
@@ -72,15 +70,16 @@ defmodule MailglassInbound.Ingress.Plug do
       request = build_request!(provider, conn)
       config = resolve_config!(provider, conn, opts)
 
-      # WR-03 (intentional fetch-before-tenant for SES): verify runs BEFORE
+      # Verify signature before tenant lookup to fail closed on spoofed payloads.
+      # For SES, verify runs before resolve_tenant!.
       # resolve_tenant!. For SES this means the bounded S3 GetObject (with up to
       # the configured backoff) happens inside verify_request!, before the tenant
       # is resolved. This ordering is deliberate and safe:
       #
       #   * Signature is verified FIRST inside verify_envelope! (X.509), so only
       #     authentic SNS messages ever reach the S3 fetch — a forgery is rejected
-      #     with no network I/O. Verify-before-tenant is the security invariant
-      #     (D-46-12); we never do tenant work for an unauthenticated request.
+      #     with no network I/O. Verify-before-tenant is a security invariant;
+      #     we never do tenant work for an unauthenticated request.
       #   * The S3 fetch is part of verification because the verified SNS payload
       #     is what names the bucket/objectKey (single fetch, no double fetch).
       #   * The fetch cost is BOUNDED and now CONFIGURABLE: the retry attempts +
@@ -93,7 +92,7 @@ defmodule MailglassInbound.Ingress.Plug do
       # the fetch before the 422 — is accepted: it requires a valid SNS signature
       # for the configured topic, so it is not an unauthenticated DoS vector.
       #
-      # Widened verify result contract (D-46-06; mirrors core
+      # Widened verify result contract (mirrors core
       # lib/mailglass/webhook/plug.ex:119-161). Verify can now express
       # non-persisting verified outcomes:
       #   * {:replay}            — Mailgun replay hit → 200 no-op, NO record (T-46-02)
@@ -122,7 +121,8 @@ defmodule MailglassInbound.Ingress.Plug do
           persist_and_respond(conn, provider, request, facts, opts)
       end
     rescue
-      # D-46-19 / Anchor Drift #4: Postmark/SendGrid raise core's
+      # Signature failures are terminal typed errors; do not recover in the plug.
+      # Postmark/SendGrid raise core's
       # Mailglass.SignatureError; Mailgun/SES raise the net-new
       # MailglassInbound.SignatureError. Both map to 401 with no recovery
       # (T-46-01) — a forged-signature path must NEVER escape as a 500. Both
@@ -172,7 +172,7 @@ defmodule MailglassInbound.Ingress.Plug do
     end
   end
 
-  # The persisting verify path (D-46-06 `{:ok, facts}` / legacy bare-map).
+  # The persisting verify path (`{:ok, facts}` / legacy bare-map).
   # Resolves tenant → normalizes → builds the handoff → persists → dispatches.
   # Extracted verbatim from the pre-widening `do_call/2` body so the persist +
   # PII-safe egress behavior is unchanged for Postmark/SendGrid.
@@ -180,7 +180,7 @@ defmodule MailglassInbound.Ingress.Plug do
     tenant_id = resolve_tenant!(provider, conn, request)
     normalized = normalize_request!(provider, request, opts)
 
-    # Post-verify rate limiter (IOPS-04, D-49-14). This branch is reached ONLY on
+    # Post-verify rate limiter. This branch is reached only on
     # a successful verify ({:ok, facts} / legacy bare-map), so a forged-payload
     # flood is rejected with 401 BEFORE any budget is read — the limiter is never
     # an unauthenticated-DoS amplifier (T-49-01). It sits after resolve_tenant!
@@ -213,7 +213,7 @@ defmodule MailglassInbound.Ingress.Plug do
         retry_after_s = max(1, ceil(err.retry_after_ms / 1000))
 
         # PII-free stop meta: bucket TYPE + limit + retry_after only — never the
-        # recipient/sender VALUE (D-49-16/17).
+        # recipient/sender VALUE.
         meta = %{
           provider: provider,
           tenant_id: tenant_id,
@@ -242,7 +242,7 @@ defmodule MailglassInbound.Ingress.Plug do
 
   # Map the RateLimitError back to the inbound bucket type for the 429 body +
   # telemetry. The limiter stamps the bucket TYPE into err.context[:bucket]
-  # (PII-free, D-49-16); fall back to the closed @types if absent.
+  # (PII-free); fall back to the closed @types if absent.
   defp bucket_type(%Mailglass.RateLimitError{context: %{bucket: bucket}})
        when bucket in [:tenant, :recipient, :sender_domain],
        do: bucket
@@ -251,14 +251,14 @@ defmodule MailglassInbound.Ingress.Plug do
   defp bucket_type(%Mailglass.RateLimitError{}), do: :recipient
 
   # Recipient bucket key: envelope recipient, else first `to` address. May be the
-  # full address (routing identity, node-local ETS, never logged — D-49-16).
+  # full address (routing identity, node-local ETS, never logged).
   defp rate_limit_recipient(%{envelope_recipient: r}) when is_binary(r) and r != "", do: r
 
   defp rate_limit_recipient(%{to: [%{address: addr} | _]}) when is_binary(addr), do: addr
   defp rate_limit_recipient(_message), do: nil
 
-  # Sender bucket key: the DOMAIN of the first `from` address, never the full
-  # sender address (D-49-16).
+  # Sender bucket key: the domain of the first `from` address, never the full
+  # sender address.
   defp rate_limit_sender_domain(%{from: [%{address: addr} | _]}) when is_binary(addr) do
     case String.split(addr, "@", parts: 2) do
       [_local, domain] -> String.downcase(domain)
@@ -397,7 +397,7 @@ defmodule MailglassInbound.Ingress.Plug do
 
   # Mailgun inbound routes POST form fields (urlencoded, or multipart when
   # attachments are present); the HMAC triple + payload arrive as top-level form
-  # fields in `conn.params`. Raw-body capture mirrors SendGrid (D-46-08).
+  # fields in `conn.params`. Raw-body capture mirrors SendGrid.
   defp build_request!(:mailgun, conn) do
     %Request{
       provider: :mailgun,
@@ -410,7 +410,7 @@ defmodule MailglassInbound.Ingress.Plug do
 
   # SES delivers the SNS JSON envelope as the request body; raw-body capture
   # mirrors SendGrid. The SNS payload itself is parsed by the provider's verify
-  # seam (D-46-12).
+  # seam.
   defp build_request!(:ses, conn) do
     %Request{
       provider: :ses,
@@ -459,7 +459,7 @@ defmodule MailglassInbound.Ingress.Plug do
     %{basic_auth: config[:basic_auth]}
   end
 
-  # Mailgun config surfaces the HMAC signing key (D-46-08). The opts `:config`
+  # Mailgun config surfaces the HMAC signing key. The opts `:config`
   # override wins, else app env. Provider verify! raises ConfigError when absent.
   defp resolve_config!(:mailgun, _conn, opts) do
     config =
@@ -471,8 +471,8 @@ defmodule MailglassInbound.Ingress.Plug do
     %{signing_key: config[:signing_key]}
   end
 
-  # SES config surfaces the S3Fetcher module seam and an optional cert-cache TTL
-  # (D-46-13). The opts `:config` override wins, else app env.
+  # SES config surfaces the S3Fetcher module seam and an optional cert-cache TTL.
+  # The opts `:config` override wins, else app env.
   defp resolve_config!(:ses, _conn, opts) do
     config =
       case Keyword.get(opts, :config) do
@@ -501,7 +501,7 @@ defmodule MailglassInbound.Ingress.Plug do
   end
 
   # Mailgun/SES use the widened struct arity verify!(%Request{}, config) and may
-  # return {:ok, facts} | {:replay} | {:control_plane, status} (D-46-06/07).
+  # return {:ok, facts} | {:replay} | {:control_plane, status}.
   defp verify_request!(:mailgun, request, config, opts) do
     resolve_provider_module(:mailgun, opts).verify!(request, config)
   end
@@ -598,7 +598,7 @@ defmodule MailglassInbound.Ingress.Plug do
     :ok
   end
 
-  # Post-commit fan-out (TELE-07, D-45-06). This runs in `maybe_execute/2`, which
+  # Post-commit fan-out. This runs in `maybe_execute/2`, which
   # the plug only reaches AFTER `persistence.persist/2` returns — i.e. AFTER the
   # `repo.transact` inside `Persist.persist/2` has committed. The broadcast NEVER
   # runs on a rolled-back transaction: the persisted `InboundRecord` is the
@@ -606,8 +606,8 @@ defmodule MailglassInbound.Ingress.Plug do
   # branch broadcasts; `:duplicate` stays a no-op.
   #
   # The topic comes from `MailglassInbound.PubSub.Topics.inbound_record_inserted/1`
-  # (never a literal string — LINT-06 / D-45-08); the payload is PII-free
-  # (record id + provider + record_type only — D-45-03).
+  # (never a literal string); the payload is PII-free
+  # (record id + provider + record_type only).
   defp broadcast_inbound_inserted(%{
          inbound_record: %{id: record_id, tenant_id: tenant_id},
          message: %{provider: provider}
@@ -625,8 +625,7 @@ defmodule MailglassInbound.Ingress.Plug do
   # only the log tag to `[mailglass_inbound]`. The rescue list and the
   # `catch :exit` clause are both load-bearing: PubSub may be unreachable at
   # shutdown/partition, and the committed row is the durable source of truth, so a
-  # broadcast failure must never crash the already-committed inbound pipeline
-  # (D-45-06, threat T-45-08).
+  # broadcast failure must never crash the already-committed inbound pipeline.
   defp safe_broadcast(topic, payload) do
     Phoenix.PubSub.broadcast(Mailglass.PubSub, topic, payload)
   rescue

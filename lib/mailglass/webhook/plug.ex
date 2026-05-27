@@ -1,9 +1,9 @@
 defmodule Mailglass.Webhook.Plug do
   @moduledoc """
-  Single-ingress webhook orchestrator (CONTEXT D-10).
+  Single-ingress webhook orchestrator.
 
-  Plugged at adopter-mounted paths via `Mailglass.Webhook.Router`
-  (Plan 05). Owns the full request lifecycle:
+  Plugged at adopter-mounted paths via `Mailglass.Webhook.Router`.
+  Owns the full request lifecycle:
 
     1. Extract `raw_body` from `conn.private[:raw_body]` (populated by
        `Mailglass.Webhook.CachingBodyReader` in the adopter's
@@ -11,19 +11,17 @@ defmodule Mailglass.Webhook.Plug do
     2. Dispatch to `Mailglass.Webhook.Provider` impl per route opts
        (`provider: :postmark | :sendgrid | :mailgun`)
     3. `Provider.verify!/3` — raises `%SignatureError{}` on failure
-    4. `Mailglass.Tenancy.resolve_webhook_tenant/1` (D-12) — runs
-       AFTER verify (D-13)
+    4. `Mailglass.Tenancy.resolve_webhook_tenant/1` — runs after verify
     5. `Mailglass.Tenancy.with_tenant/2` BLOCK form — clean tenant
        cleanup on raise (Pitfall 7)
     6. `Provider.normalize/2` — pure, returns `[%Event{}]`
     7. `Mailglass.Webhook.Ingest.ingest_multi/3` — single Ecto.Multi
-       inside `Repo.transact/1` (Plan 06, forward-declared)
+       inside `Repo.transact/1`
     8. Post-commit: `Mailglass.Outbound.Projector.broadcast_delivery_updated/3`
-       per matched delivery (Phase 3 D-04 — Plan 06 returns the
-       `events_with_deliveries` 3-tuples for this loop)
+       per matched delivery (`events_with_deliveries` 3-tuples)
     9. `send_resp(conn, 200, "")`
 
-  ## Response code matrix (CONTEXT D-10 + D-14 + D-21)
+  ## Response code matrix
 
   | Outcome | Status | Notes |
   |---------|--------|-------|
@@ -35,12 +33,12 @@ defmodule Mailglass.Webhook.Plug do
   | %ConfigError{:webhook_verification_key_missing} | 500 | Missing provider secret |
   | Ingest {:error, reason} | 500 | Logger.error with reason atom only |
 
-  ## Telemetry (CONTEXT D-22)
+  ## Telemetry
 
   Emits `[:mailglass, :webhook, :ingest, :start | :stop | :exception]`
   around the entire call/2 body via
-  `Mailglass.Webhook.Telemetry.ingest_span/2` (Plan 08). Stop metadata
-  follows D-23 whitelist:
+  `Mailglass.Webhook.Telemetry.ingest_span/2`. Stop metadata
+  is intentionally whitelisted:
   `%{provider, tenant_id, status, event_count, duplicate, failure_reason}`
   — never IP, headers, or payload bytes.
 
@@ -48,7 +46,7 @@ defmodule Mailglass.Webhook.Plug do
   :exception]` around `Provider.verify!/3` via
   `Mailglass.Webhook.Telemetry.verify_span/2`.
 
-  ## Failure log discipline (CONTEXT D-24)
+  ## Failure log discipline
 
   `Logger.warning` on signature failure includes `provider` + atom
   `reason` only. Never the source IP, headers, or payload excerpts.
@@ -59,10 +57,9 @@ defmodule Mailglass.Webhook.Plug do
 
   ## Forward-declared contracts
 
-  `Mailglass.Webhook.Ingest.ingest_multi/3` is shipped by Plan 06
-  (Wave 3). This module references it directly; the `@compile
-  {:no_warn_undefined, ...}` attribute below suppresses the warning
-  during `mix compile --warnings-as-errors` until Plan 06 lands.
+  `Mailglass.Webhook.Ingest.ingest_multi/3` is referenced directly; the
+  `@compile {:no_warn_undefined, ...}` attribute below suppresses
+  compile warnings until the module is available.
   """
 
   @behaviour Plug
@@ -76,9 +73,9 @@ defmodule Mailglass.Webhook.Plug do
   alias Mailglass.Tenancy
   alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
 
-  # Forward-reference to Plan 06's Ingest Multi. Referenced at runtime;
-  # silenced at compile time so `--warnings-as-errors` stays green before
-  # Plan 06 ships the module.
+  # Forward reference to the ingest module. Referenced at runtime and
+  # silenced at compile time so `--warnings-as-errors` stays green
+  # before the module exists.
   @compile {:no_warn_undefined, [Mailglass.Webhook.Ingest]}
 
   @valid_providers [:postmark, :sendgrid, :mailgun, :ses, :resend]
@@ -100,10 +97,9 @@ defmodule Mailglass.Webhook.Plug do
   def call(conn, opts) do
     provider = Keyword.fetch!(opts, :provider)
 
-    # Plan 08 named helper. `do_call/3` returns `{conn, stop_metadata}`
-    # — `ingest_span/2` recognizes the tuple shape and attaches the
-    # per-request enrichment to the `:stop` event. The conn (first
-    # tuple element) is returned to `Plug.call/2`.
+    # `do_call/3` returns `{conn, stop_metadata}` and `ingest_span/2`
+    # attaches that metadata to the `:stop` event. The first tuple
+    # element (conn) is returned to `Plug.call/2`.
     WebhookTelemetry.ingest_span(
       %{provider: provider, status: :pending},
       fn -> do_call(conn, provider, opts) end
@@ -121,7 +117,7 @@ defmodule Mailglass.Webhook.Plug do
       {raw_body, headers} = extract_headers_and_raw_body!(conn)
       config = resolve_config!(provider, conn)
 
-      # Step 1: verify FIRST (D-13)
+      # Verify signature before tenant lookup to fail closed on spoofed payloads.
       case verify_with_telemetry!(provider, raw_body, headers, config) do
         {:ok, :replay} ->
           conn = send_resp(conn, 200, "")
@@ -146,7 +142,7 @@ defmodule Mailglass.Webhook.Plug do
            }}
 
         :ok ->
-          # Step 2: resolve tenant (D-12 — runs AFTER verify per D-13)
+          # Resolve tenant only after verification succeeds.
           tenant_id = resolve_tenant!(provider, conn, raw_body, headers)
 
           # Step 3: ingest under tenant scope (Pitfall 7 — block form)
@@ -161,6 +157,7 @@ defmodule Mailglass.Webhook.Plug do
       end
     rescue
       e in SignatureError ->
+        # Signature failures are terminal typed errors; do not recover in the plug.
         Logger.warning("Webhook signature failed: provider=#{provider} reason=#{e.type}")
 
         conn = send_resp(conn, 401, "")
@@ -202,8 +199,8 @@ defmodule Mailglass.Webhook.Plug do
   end
 
   # Step 1a: extract raw bytes + headers; fail fast if CachingBodyReader
-  # not wired. Raises ConfigError with :webhook_caching_body_reader_missing
-  # (per Phase 4 D-21 revision B4) — distinct from
+  # is not wired. Raises ConfigError with :webhook_caching_body_reader_missing,
+  # which is distinct from
   # :webhook_verification_key_missing which is used when the provider's
   # signing key secret is missing from Application env. Distinct atoms so
   # adopter Logger parsing / Grafana alerts can differentiate "setup gap"
@@ -274,8 +271,8 @@ defmodule Mailglass.Webhook.Plug do
     }
   end
 
-  # Step 2: telemetry-wrapped Provider.verify!/3 (CONTEXT D-22 inner span).
-  # Plan 08 named helper. On success the inner fn returns `:ok`; on
+  # Step 2: telemetry-wrapped Provider.verify!/3 inner span.
+  # On success the inner function returns `:ok`; on
   # signature failure the `verify!/3` call raises %SignatureError{} which
   # :telemetry.span/3 (inside `verify_span/2`) reports via the :exception
   # event and re-raises — the outer SignatureError rescue in do_call/3
@@ -290,9 +287,7 @@ defmodule Mailglass.Webhook.Plug do
     )
   end
 
-  # Step 3: tenant resolution via Mailglass.Tenancy.resolve_webhook_tenant/1
-  # (Plan 05 formalizes the @optional_callback; this plan ships a stub
-  # dispatcher that returns {:ok, "default"} for SingleTenant).
+  # Step 3: tenant resolution via Mailglass.Tenancy.resolve_webhook_tenant/1.
   defp resolve_tenant!(provider, conn, raw_body, headers) do
     ctx = %{
       provider: provider,
@@ -316,13 +311,13 @@ defmodule Mailglass.Webhook.Plug do
 
   # Step 4: normalize → ingest → respond
   #
-  # Plan 06 contract (see Plan 06's finalize_changes/2): ingest_multi/3
+  # Ingest contract: ingest_multi/3
   # returns `{:ok, %{webhook_event: %WebhookEvent{}, duplicate: boolean,
   # events_with_deliveries: [{event, delivery, orphan?}, ...],
   # orphan_event_count: int}}`.
   #
-  # Local name `result` (per revision W5) over `changes` to avoid shadowing
-  # Ecto.Multi's "changes" terminology that the Ingest module uses
+  # Local name `result` avoids shadowing Ecto.Multi's "changes"
+  # terminology that the ingest module uses
   # internally.
   defp ingest_and_respond(conn, provider, raw_body, events, tenant_id) do
     case Mailglass.Webhook.Ingest.ingest_multi(provider, raw_body, events) do
@@ -371,13 +366,12 @@ defmodule Mailglass.Webhook.Plug do
     end
   end
 
-  # Post-commit broadcast — runs AFTER Repo.transact returns {:ok, _}
-  # (Phase 3 D-04 invariant). Per Plan 06 finalize_changes/2 (revision B7),
+  # Post-commit broadcast — runs after Repo.transact returns {:ok, _}.
   # `events_with_deliveries` is a list of 3-tuples:
   # `{inserted_event, delivery_or_nil, orphan?}`. Orphans are skipped here
-  # (delivery is nil — there is nothing to broadcast against; Plan 07's
-  # Reconciler later emits a :reconciled event when the matching Delivery
-  # commits per D-18 append-only).
+  # (delivery is nil, so there is nothing to broadcast against). The
+  # reconciler later emits a :reconciled event when the matching delivery
+  # is committed.
   defp broadcast_post_commit(%{events_with_deliveries: events_with_deliveries})
        when is_list(events_with_deliveries) do
     Enum.each(events_with_deliveries, fn
@@ -385,7 +379,7 @@ defmodule Mailglass.Webhook.Plug do
         :ok
 
       {event, delivery, false} ->
-        # Per Events.append_multi/3 (D-03): a nil inserted_at signals a
+        # In Events.append_multi/3, a nil inserted_at signals a
         # conflict-replay (the row already exists). Skip broadcast so
         # LiveView/TestAssertions don't see duplicate signals for the same
         # webhook delivery.
@@ -402,9 +396,8 @@ defmodule Mailglass.Webhook.Plug do
 
   defp broadcast_post_commit(_), do: :ok
 
-  # Static dispatch — exhaustive case per CONTEXT D-01 (init/1 validates
-  # that provider is in @valid_providers at mount time, so the defp
-  # clauses are exhaustive for all reachable call sites).
+  # Static dispatch — init/1 validates that provider is in @valid_providers
+  # at mount time, so these clauses are exhaustive for all reachable calls.
   defp provider_module(:postmark), do: Mailglass.Webhook.Providers.Postmark
   defp provider_module(:sendgrid), do: Mailglass.Webhook.Providers.SendGrid
   defp provider_module(:mailgun), do: Mailglass.Webhook.Providers.Mailgun
