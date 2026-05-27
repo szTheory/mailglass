@@ -55,6 +55,54 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 
 ## Phase Details
 
+### Phase 52: Clean-State Quarantine + Hygiene Automation
+
+**Goal**: Preserve current local dirty/ahead work before cleanup, open v1.3 planning truth, and add one canonical maintainer hygiene entrypoint plus scheduled/manual workflow evidence.
+**Depends on**: v1.2 archive complete
+**Requirements**: RH-01, RH-02, RH-03, RH-04, RH-05, RH-06, TRUTH-03
+**Success Criteria** (what must be TRUE):
+
+  1. Pre-existing local dirty/ahead work is preserved on a named `preserve/*` branch before any cleanup.
+  2. Release-discipline implementation starts from a clean `origin/main` work branch.
+  3. `mix mailglass.repo.hygiene --check --format text|json` reports git, CI, branch-protection, PR, branch, and release-workflow truth.
+  4. `mix mailglass.repo.hygiene --apply` performs only deterministic safe actions.
+  5. Scheduled/manual `repo-hygiene` workflow uploads JSON readiness evidence.
+
+**Plans**: Inline recovery implementation — committed as `fab1384`
+**UI hint**: no
+
+### Phase 53: Release Fan-out + Publish Ordering
+
+**Goal**: Restore automatic release fan-out while preserving tag-pinned fallback, and serialize sibling-package publishing so admin never races inbound Hex indexing.
+**Depends on**: Phase 52
+**Requirements**: RELH-01, RELH-02, RELH-03, RELH-04, RELH-05, TRUTH-02
+**Success Criteria** (what must be TRUE):
+
+  1. Release Please uses `RELEASE_PLEASE_PAT` for release creation.
+  2. `publish-hex.yml` still supports tag-pinned `workflow_dispatch` fallback and never publishes from `main`.
+  3. Publish order is deterministic: `mailglass`, then `mailglass_inbound`, then `mailglass_admin`.
+  4. Hex publish remains protected by the `hex-publish` environment approval.
+  5. Maintainer docs describe clean-state and release trigger truth.
+
+**Plans**: Inline recovery implementation — committed as `fab1384`
+**UI hint**: no
+
+### Phase 54: PR/Branch Triage + Green Main Proof
+
+**Goal**: Clear the remaining repo-truth blockers by explicitly disposing open PRs, documenting/pruning stale branches, and capturing green-main plus branch-protection evidence so `mix mailglass.repo.hygiene --check --format json` can become the release-readiness gate.
+**Depends on**: Phase 52, Phase 53
+**Requirements**: TRUTH-01 plus final acceptance evidence
+**Success Criteria** (what must be TRUE):
+
+  1. Open PRs #17, #27, #28, #29, #30, #37, #38, and #39 are each merged, closed, or deferred with an explicit reason.
+  2. Local branches are either pruned when safe or documented as preserved exceptions.
+  3. The v1.3 hygiene branch is pushed and CI result for the relevant SHA is recorded.
+  4. Branch-protection truth is verified with the read-only verifier when credentials are available.
+  5. Final `mix mailglass.repo.hygiene --check --format json` evidence is captured, with remaining blockers either zero or explicitly accepted.
+
+**Plans**: 1 plan — [54-01-PLAN.md](phases/54-pr-branch-triage-green-main-proof/54-01-PLAN.md)
+**UI hint**: no
+
 ### Phase 44.5: v1.0/1.1 Release Ceremony
 
 **Goal**: Ship four milestones of unreleased work to Hex.pm before starting v1.2 implementation, so adopters get the v0.5 + v0.6 + v1.0 + v1.1 value (`TestAssertions`, generators, `RateLimiter`, replay/reconcile, support summary, stability lock, compatibility promise, `mailglass_inbound` foundation) and v1.2 implementation lands against a fresh release base instead of compounding the gap further.
