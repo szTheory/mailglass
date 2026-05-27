@@ -36,4 +36,21 @@ defmodule Mailglass.ReferenceHost.TrustRunnerFixtures do
   def fixture_for_stage(stage) when is_binary(stage) do
     Enum.find(stage_fixtures(), &(&1["stage"] == stage))
   end
+
+  @spec webhook_ingest_evidence() :: map()
+  def webhook_ingest_evidence do
+    %{
+      "provider" => "postmark",
+      "route" => "/inbound/:tenant_id/postmark",
+      "entrypoint" => "MailglassReferenceHostWeb.Router",
+      "ingress_plug" => "MailglassInbound.Ingress.Plug",
+      "positive_status" => 200,
+      "negative_status" => 401,
+      "negative_reason" => "bad_credentials",
+      "verified_before_tenant" => true,
+      "tenant_resolution_marker" => nil,
+      "persistence_marker" => nil,
+      "execution_marker" => nil
+    }
+  end
 end

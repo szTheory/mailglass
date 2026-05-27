@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
 
   use Mix.Task
   alias Mailglass.ReferenceHost.TrustCheckpoint
+  alias Mailglass.ReferenceHost.WebhookOperatorProof
 
   @shortdoc "Run deterministic reference-host trust stages"
 
@@ -107,6 +108,7 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
         "status" => signal_to_status(signal),
         "fixture_id" => "trust.#{stage_name}.001"
       }
+      |> maybe_put_evidence(signal_evidence(signal))
     end)
   end
 
@@ -129,7 +131,7 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
 
   defp stage_signal(:webhook_ingest, host_root, false) do
     require_file!(host_root, "config/runtime.exs", :webhook_ingest)
-    :verified
+    {:verified, webhook_ingest_evidence(host_root)}
   end
 
   defp stage_signal(:operator_troubleshooting, host_root, false) do
@@ -140,8 +142,33 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
   defp stage_signal(_stage_key, _host_root, false), do: nil
 
   defp signal_to_status(:verified), do: "completed"
+  defp signal_to_status({:verified, _evidence}), do: "completed"
   defp signal_to_status(:dry_run), do: "dry_run"
   defp signal_to_status(_other), do: nil
+
+  defp signal_evidence({:verified, evidence}) when is_map(evidence), do: evidence
+  defp signal_evidence(_signal), do: nil
+
+  defp maybe_put_evidence(stage_record, nil), do: stage_record
+  defp maybe_put_evidence(stage_record, evidence), do: Map.put(stage_record, "evidence", evidence)
+
+  defp webhook_ingest_evidence(_host_root) do
+    proof = WebhookOperatorProof.run()
+
+    %{
+      "provider" => "postmark",
+      "route" => "/inbound/:tenant_id/postmark",
+      "entrypoint" => "MailglassReferenceHostWeb.Router",
+      "ingress_plug" => "MailglassInbound.Ingress.Plug",
+      "positive_status" => proof.positive_status,
+      "negative_status" => proof.negative_status,
+      "negative_reason" => proof.negative_reason,
+      "verified_before_tenant" => proof.verified_before_tenant,
+      "tenant_resolution_marker" => proof.tenant_resolution_marker,
+      "persistence_marker" => proof.persistence_marker,
+      "execution_marker" => proof.execution_marker
+    }
+  end
 
   defp require_file!(host_root, relative_path, stage_key) do
     file_path = Path.join(host_root, relative_path)

@@ -1,6 +1,8 @@
 defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
   use ExUnit.Case, async: false
 
+  alias Mailglass.ReferenceHost.TrustRunnerFixtures
+
   @project_root Path.expand("../..", __DIR__)
 
   test "two dry runs emit deterministic equivalent checkpoints with stable hash" do
@@ -60,19 +62,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     assert webhook["status"] == "completed"
     assert webhook["fixture_id"] == "trust.webhook_ingest.001"
 
-    assert webhook["evidence"] == %{
-             "provider" => "postmark",
-             "route" => "/inbound/:tenant_id/postmark",
-             "entrypoint" => "MailglassReferenceHostWeb.Router",
-             "ingress_plug" => "MailglassInbound.Ingress.Plug",
-             "positive_status" => 200,
-             "negative_status" => 401,
-             "negative_reason" => "bad_credentials",
-             "verified_before_tenant" => true,
-             "tenant_resolution_marker" => nil,
-             "persistence_marker" => nil,
-             "execution_marker" => nil
-           }
+    assert webhook["evidence"] == TrustRunnerFixtures.webhook_ingest_evidence()
   end
 
   defp decode!(path), do: path |> File.read!() |> Jason.decode!()

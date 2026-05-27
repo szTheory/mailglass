@@ -47,7 +47,13 @@ defmodule Mailglass.ReferenceHost.TrustCheckpoint do
       "status" => to_string(status),
       "fixture_id" => to_string(fixture_id)
     }
+    |> maybe_put_evidence(row["evidence"] || row[:evidence])
   end
+
+  defp maybe_put_evidence(row, nil), do: row
+
+  defp maybe_put_evidence(row, evidence) when is_map(evidence),
+    do: Map.put(row, "evidence", evidence)
 
   defp row_sort_key(row) do
     stage = row["stage"]
