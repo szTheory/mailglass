@@ -130,7 +130,7 @@ Plans:
 
 **Goal:** Make it easy at any time to see realistic rendered example emails across themes and mobile/responsive layouts, ideally through an idiomatic low-friction workflow such as a mix task, preview pipeline, or CI-generated screenshots
 **Requirements:** TBD
-**Plans:** 0 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 
