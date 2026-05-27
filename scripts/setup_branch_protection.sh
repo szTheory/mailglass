@@ -2,11 +2,9 @@
 # setup_branch_protection.sh — idempotently configure branch protection on main.
 #
 # Adds the required CI checks to main's required_status_checks:
-#   - Tests (Elixir 1.18 / OTP 27)
-#   - Credo Strict (Elixir 1.18 / OTP 27)
-#   - Dialyzer (Elixir 1.18 / OTP 27)
-#   - actionlint
-#   - PR title (semantic)
+#   - Support Contract Core (Elixir 1.18 / OTP 27)
+#   - Support Contract Admin (Elixir 1.18 / OTP 27)
+#   - Compile No Optional Deps (Elixir 1.18 / OTP 27)
 #
 # Usage:
 #   GH_TOKEN=<admin-PAT> scripts/setup_branch_protection.sh
@@ -25,21 +23,12 @@ REPO_NAME="${REPO_NAME:-mailglass}"
 REPO="${OWNER}/${REPO_NAME}"
 BRANCH="${1:-main}"
 
-if [ -z "${GH_TOKEN:-}" ]; then
-  echo "Delivery blocked: GH_TOKEN not set. Provide an admin PAT with 'repo' scope."
-  exit 1
-fi
-
-echo "Configuring branch protection for ${REPO}@${BRANCH}..."
-
 # Required status checks. Names must EXACTLY match the GitHub Actions
 # job names as they appear in CI (with matrix expansion).
 REQUIRED_CHECKS=(
-  "Tests (Elixir 1.18 / OTP 27)"
-  "Credo Strict (Elixir 1.18 / OTP 27)"
-  "Dialyzer (Elixir 1.18 / OTP 27)"
-  "actionlint"
-  "PR title (semantic)"
+  "Support Contract Core (Elixir 1.18 / OTP 27)"
+  "Support Contract Admin (Elixir 1.18 / OTP 27)"
+  "Compile No Optional Deps (Elixir 1.18 / OTP 27)"
 )
 
 # Build the JSON contexts array.
@@ -60,10 +49,29 @@ PAYLOAD=$(cat <<JSON
   "block_creations": false,
   "required_conversation_resolution": false,
   "lock_branch": false,
-  "allow_fork_syncing": true
+  "allow_fork_syncing": false
 }
 JSON
 )
+
+case "${1:-}" in
+  --print-expected-json)
+    jq . <<<"${PAYLOAD}"
+    exit 0
+    ;;
+  --print-expected)
+    echo "Expected branch protection payload for ${REPO}@main:"
+    jq . <<<"${PAYLOAD}"
+    exit 0
+    ;;
+esac
+
+if [ -z "${GH_TOKEN:-}" ]; then
+  echo "Delivery blocked: GH_TOKEN not set. Provide an admin PAT with 'repo' scope."
+  exit 1
+fi
+
+echo "Configuring branch protection for ${REPO}@${BRANCH}..."
 
 # PUT replaces the entire protection rule. Idempotent — re-running with
 # the same payload is a no-op as far as observable state goes.
