@@ -138,6 +138,7 @@ The following checks are advisory signal, not branch-protection truth:
 - `Inbound Test`
 - `Inbound Compile No Optional Deps`
 - `Operator Browser Gate`
+- `Preview Capture Advisory`
 - `Core Full Suite Advisory`
 - `Provider Compatibility Advisory`
 - `Branch Protection Advisory`

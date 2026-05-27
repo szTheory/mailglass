@@ -673,6 +673,134 @@ jobs:
         working-directory: mailglass_admin
         run: npm run test:operator-browser
 
+  preview_capture_advisory:
+    name: Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+            node: "22"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      CI: true
+      PREVIEW_CAPTURE_ROOT: mailglass_admin/tmp/preview_capture_advisory
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: mailglass_admin/package-lock.json
+      - name: Cache deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: |
+            deps
+            mailglass_admin/deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install core deps
+        run: mix deps.get
+      - name: Install admin deps
+        working-directory: mailglass_admin
+        run: mix deps.get
+      - name: Install browser test deps
+        working-directory: mailglass_admin
+        run: npm ci
+      - name: Wait for postgres + create test DB
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: Install Playwright browser
+        working-directory: mailglass_admin
+        run: npx playwright install --with-deps chromium
+      - name: Resolve Chromium binary path
+        working-directory: mailglass_admin
+        run: |
+          CHROMIUM_BIN=$(node -e "const { chromium } = require('playwright'); process.stdout.write(chromium.executablePath())")
+          if [ -z "$CHROMIUM_BIN" ] || [ ! -x "$CHROMIUM_BIN" ]; then
+            echo "Failed to resolve executable Chromium path from Playwright" >&2
+            exit 1
+          fi
+          echo "MAILGLASS_ADMIN_CHROMIUM_BIN=$CHROMIUM_BIN" >> "$GITHUB_ENV"
+      - name: Start deterministic preview capture server
+        working-directory: mailglass_admin
+        env:
+          BROWSER_SERVER_PORT: "4101"
+        run: |
+          mix run --no-halt -e "MailglassAdmin.TestSupport.OperatorBrowserServer.run!()" > "$RUNNER_TEMP/preview-capture-server.log" 2>&1 &
+          echo "PREVIEW_CAPTURE_SERVER_PID=$!" >> "$GITHUB_ENV"
+      - name: Wait for preview capture server readiness
+        run: |
+          for _ in $(seq 1 90); do
+            if node -e "fetch('http://127.0.0.1:4101/dev/mail').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Preview capture server did not become ready in time." >&2
+          cat "$RUNNER_TEMP/preview-capture-server.log" || true
+          exit 1
+      - name: Run advisory preview capture
+        working-directory: mailglass_admin
+        env:
+          MAILGLASS_ADMIN_CHROMIUM_BIN: ${{ env.MAILGLASS_ADMIN_CHROMIUM_BIN }}
+        run: |
+          mix mailglass_admin.preview.capture \
+            --base-url http://127.0.0.1:4101/dev/mail \
+            --mailables MailglassAdmin.Fixtures.HappyMailer \
+            --output-dir tmp/preview_capture_advisory/screenshots \
+            --manifest-out tmp/preview_capture_advisory/manifest.json \
+            --checkpoint-out tmp/preview_capture_advisory/checkpoint.json
+      - name: Upload preview capture advisory artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: preview-capture-advisory-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            ${{ env.PREVIEW_CAPTURE_ROOT }}/screenshots
+            ${{ env.PREVIEW_CAPTURE_ROOT }}/manifest.json
+            ${{ env.PREVIEW_CAPTURE_ROOT }}/checkpoint.json
+      - name: Print preview capture server log on failure
+        if: failure()
+        run: cat "$RUNNER_TEMP/preview-capture-server.log" || true
+      - name: Stop preview capture server
+        if: always()
+        run: |
+          if [ -n "${PREVIEW_CAPTURE_SERVER_PID:-}" ]; then
+            kill "$PREVIEW_CAPTURE_SERVER_PID" || true
+          fi
+
   branch_protection_advisory:
     name: Branch Protection Advisory
     runs-on: ubuntu-latest
