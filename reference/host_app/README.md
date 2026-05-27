@@ -6,6 +6,8 @@ Maintained trust-proof host artifact (not a fixture seed)
 trust journey. It exists to prove clean-checkout bootstrap behavior and public
 Mailglass integration shape.
 
+Scope contract: see reference/host_app/SCOPE.md
+
 `test/example remains fixture-only`
 
 ## Setup (clean checkout)
