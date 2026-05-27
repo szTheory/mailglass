@@ -35,7 +35,7 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
 
   def start_endpoint! do
     case Process.whereis(@endpoint) do
-      nil -> @endpoint.start_link()
+      nil -> start_unlinked_endpoint!()
       _pid -> {:ok, @endpoint}
     end
   end
@@ -141,9 +141,20 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
       wait_until_endpoint_stopped()
     end
 
-    case @endpoint.start_link() do
+    case start_unlinked_endpoint!() do
       {:ok, _pid} -> :ok
       {:error, {:already_started, _pid}} -> :ok
+    end
+  end
+
+  defp start_unlinked_endpoint! do
+    case @endpoint.start_link() do
+      {:ok, pid} = result ->
+        Process.unlink(pid)
+        result
+
+      other ->
+        other
     end
   end
 
