@@ -104,7 +104,12 @@ defmodule Mailglass.Operator.TimelineTest do
 
       rows = Timeline.list_delivery_events(%{tenant_id: "tenant-a", delivery_id: delivery.id}, [])
 
-      assert Enum.map(rows, & &1.id) == [first.id, second.id, third.id]
+      expected =
+        [first, second, third]
+        |> Enum.sort_by(&event_order_key/1)
+        |> Enum.map(& &1.id)
+
+      assert Enum.map(rows, & &1.id) == expected
     end
 
     test "keeps replay audit rows distinct and preserves facts for requested and completed summaries" do
@@ -230,4 +235,12 @@ defmodule Mailglass.Operator.TimelineTest do
 
   defp replay_summary_for(%{type: :webhook_replay_succeeded, metadata: %{"outcome" => "noop"}}),
     do: "completed · no change"
+
+  defp event_order_key(event) do
+    {
+      DateTime.to_unix(event.occurred_at, :microsecond),
+      DateTime.to_unix(event.inserted_at, :microsecond),
+      event.id
+    }
+  end
 end
