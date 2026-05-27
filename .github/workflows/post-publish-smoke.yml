@@ -177,6 +177,14 @@ jobs:
     if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
     timeout-minutes: 8
     steps:
+      - name: Validate VERSION is semver
+        env:
+          VERSION: ${{ needs.cron-guard.outputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9.]+)?$ ]]; then
+            echo "::error::VERSION='$VERSION' is not valid semver; refusing to run smoke. Check cron-guard version resolution."
+            exit 1
+          fi
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
         with:
