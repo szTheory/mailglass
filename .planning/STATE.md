@@ -1,53 +1,40 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Inbound Production Confidence
-status: ready
-last_updated: "2026-05-27T08:20:00Z"
-last_activity: 2026-05-27 -- post-v1.2 next-milestone assessment captured; recommended next wedge is Adopter Trust Proof
+milestone: v1.3
+milestone_name: Adopter Trust Proof
+status: defining_requirements
+last_updated: "2026-05-27T08:23:00Z"
+last_activity: 2026-05-27 -- milestone v1.3 started for golden reference host-app trust proof
 progress:
-  total_phases: 10
-  completed_phases: 10
-  total_plans: 42
-  completed_plans: 42
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-27 after post-v1.2 next-step assessment)
+See: .planning/PROJECT.md (updated 2026-05-27 after opening v1.3)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Next milestone discovery after v1.2 archive, with a recommended first wedge: Adopter Trust Proof (golden reference host app)
+**Current focus:** Defining v1.3 Adopter Trust Proof requirements and roadmap for the maintained golden reference host app
 
 ## Current Position
 
-Phase: 51 (stability-closeout) — COMPLETE
-Plan: 4 of 4
-Status: v1.2 archived, with post-archive recommendation captured and ready for `/gsd-new-milestone`
-Last activity: 2026-05-27 -- ranked next-milestone wedges and done-enough definition persisted to planning docs
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-27 -- Milestone v1.3 started
 
-## v1.2 Phase Plan
+## v1.3 Milestone Intent
 
-| Phase | Name | REQ Count | Plans (est.) | Depends |
-|-------|------|-----------|--------------|---------|
-| **44.5** | **v1.0/1.1 Release Ceremony** | **1 (CLOSE-06)** | **1-2** | Phase 44 |
-| 45 | Inbound Telemetry + Idempotency Foundation | 11 | 3 | 44.5 |
-| 46 | Mailgun + SES Inbound Ingress | 9 | 3 | 45 |
-| 47 | Inbound Test Helpers + Generators | 11 | 3 | 45 |
-| 48 | Inbound Admin LiveView | 7 | 3 | 45 |
-| 49 | Inbound Runtime Operator Tooling | 6 | 3 | 45, 46 |
-| 50 | Inbound Documentation Pass | 8 | 3 | 46, 47, 48, 49 |
-| **50.5** | **v1.2 Release Ceremony** | **0** (release-eng only) | **1-2** | 50 |
-| **50.7** | **v1.2 Repo Hygiene Pass** | **0** (repo/process only) | **1** | 50.5 |
-| 51 | Stability Closeout | 5 (CLOSE-01..05) | 4 | none (parallel-safe with 45-50) |
-| **Total** | | **58** | **~22-24** | |
-
-Plan counts are estimates per SYNTHESIS.md + 2 release ceremonies. Final plan counts are set during `/gsd-plan-phase <N>`.
-
-**Release-cadence rule (added 2026-05-06):** Each milestone closes with a release ceremony (Phase X.5 by convention). Don't start the next milestone implementation while previous-milestone work is unreleased. The 4-milestone-deep gap between v0.3.2 and 1.0.0 is the failure mode this rule prevents.
+- Establish one maintained Phoenix reference host app demonstrating install -> preview -> send -> webhook ingest -> operator troubleshooting
+- Add a clean-baseline CI journey proving that flow
+- Keep docs explicit that the reference app demonstrates usage, while API contract truth remains in core contract docs/tests
+- Preserve release-cadence rule for milestone closeout
 
 ## Performance Metrics
 
@@ -69,7 +56,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Pre-existing Cleanup Backlog (Not v1.2 Scope)
 
-`.planning/phases/` still contains 14 leftover phase directories from earlier milestones (28-38 from v0.5/v0.6/v1.0, plus `999.1-*` and `999.2-*` artifact-cleanup phases). These should have been moved into `.planning/milestones/v0.X-phases/` during their respective `/gsd-complete-milestone` runs but were not. Run `/gsd-cleanup` before starting v1.2 phase 45 to avoid name-collision risk.
+`.planning/phases/` still contains 14 leftover phase directories from earlier milestones (28-38 from v0.5/v0.6/v1.0, plus `999.1-*` and `999.2-*` artifact-cleanup phases). These should have been moved into `.planning/milestones/v0.X-phases/` during their respective `/gsd-complete-milestone` runs but were not. Run `/gsd-cleanup` before active v1.3 phase execution to avoid name-collision risk.
 
 ## Session Continuity
 

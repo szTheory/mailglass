@@ -42,6 +42,15 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - `mailglass_inbound` runtime capability is stronger than its contract framing in some docs; `mailglass_inbound` still sits outside the `1.x` compatibility promise and needs a dedicated stability-lock milestone after trust proof work.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
+## Current Milestone: v1.3 Adopter Trust Proof
+
+**Goal:** Prove real-world adoption confidence with one maintained Phoenix reference host app that demonstrates the end-to-end Mailglass journey.
+
+**Target features:**
+- Maintained reference app proving install -> preview -> send -> webhook ingest -> operator troubleshooting in one runnable flow
+- CI lane that validates the reference journey on a clean host-app baseline
+- Docs positioning that the reference app is usage proof, while API contract truth remains in core docs and contract tests
+
 ## Latest Completed Milestone
 
 <details>
@@ -96,19 +105,14 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 </details>
 
-## Next Milestone Goals
+## Next Milestone Queue (after v1.3)
 
-- **Recommended single next milestone:** **Adopter Trust Proof** (golden reference host app).
-- Define done-enough for that milestone as:
-  - one maintained reference Phoenix host app (not fixture-only) demonstrating install -> preview -> send -> webhook ingest -> operator troubleshooting flow;
-  - one CI lane proving the reference journey on a clean app baseline;
-  - docs positioning that the host app is a usage proof artifact, not the source of API contract truth.
-- Keep follow-on ordering explicit:
-  1) inbound stability lock (`mailglass_inbound` contract + compatibility/deprecation posture hardening),
-  2) synthetic inbound dev tooling (dev-only, tenant-safe, provenance-stamped),
-  3) Cloudflare forwarding recipe docs or narrow pull-driven ecosystem integration slices,
-  4) re-evaluate `gen_smtp` listener only with strong adopter pull.
-- Preserve milestone-open guardrail: do not auto-promote `SEED-003-ecosystem-integrations` or transport-expansion tails as default next work.
+- **Recommended next milestone after Adopter Trust Proof:** inbound stability lock (`mailglass_inbound` contract + compatibility/deprecation posture hardening).
+- Follow-on ordering:
+  1) synthetic inbound dev tooling (dev-only, tenant-safe, provenance-stamped),
+  2) Cloudflare forwarding recipe docs or narrow pull-driven ecosystem integration slices,
+  3) re-evaluate `gen_smtp` listener only with strong adopter pull.
+- Guardrail remains: do not auto-promote `SEED-003-ecosystem-integrations` or transport-expansion tails as default next work.
 
 ## Core Value
 
@@ -156,7 +160,9 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 
 ## Active
 
-No live milestone requirements are open. The next active requirement set begins when `$gsd-new-milestone` creates a fresh `.planning/REQUIREMENTS.md`.
+- [ ] Prove install -> preview -> send -> webhook ingest -> operator troubleshooting inside one maintained Phoenix reference host app
+- [ ] Add a clean-baseline CI lane that runs and verifies the reference journey end to end
+- [ ] Position reference-app docs as adoption proof artifacts while preserving core docs/tests as the API contract source of truth
 
 ## Out of Scope
 
@@ -269,4 +275,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-27 — v1.2 is shipped/archived and post-milestone next-step assessment is captured. Recommended next wedge is Adopter Trust Proof (golden reference host app), followed by inbound stability lock; transport/integration expansion remains pull-driven.*
+*Last updated: 2026-05-27 — opened v1.3 Adopter Trust Proof milestone, set active trust-proof scope, and moved inbound stability lock to the next queue after v1.3.*
