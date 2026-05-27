@@ -190,7 +190,15 @@ defmodule MailglassInbound.Ingress.Plug do
     # rescue allowlist as a 500 and trigger provider retry storms (T-49-03).
     case check_rate_limit(conn, provider, tenant_id, normalized.message) do
       :ok ->
-        persist_and_dispatch(conn, provider, request, tenant_id, normalized, verification_facts, opts)
+        persist_and_dispatch(
+          conn,
+          provider,
+          request,
+          tenant_id,
+          normalized,
+          verification_facts,
+          opts
+        )
 
       {:rate_limited, resp, meta} ->
         {resp, meta}
@@ -270,11 +278,34 @@ defmodule MailglassInbound.Ingress.Plug do
 
   # The persisting tail, extracted so the rate-limit short-circuit can return
   # before persist without duplicating the persist + dispatch + egress logic.
-  defp persist_and_dispatch(conn, provider, request, tenant_id, normalized, verification_facts, opts) do
+  defp persist_and_dispatch(
+         conn,
+         provider,
+         request,
+         tenant_id,
+         normalized,
+         verification_facts,
+         opts
+       ) do
     handoff = build_handoff(normalized, provider, tenant_id, verification_facts)
 
-    persistence = Keyword.get(opts, :persistence, MailglassInbound.Ingress.Persist)
-    execution = Keyword.get(opts, :execution, Execution)
+    persistence =
+      Keyword.get(
+        opts,
+        :persistence,
+        Application.get_env(
+          :mailglass_inbound,
+          :ingress_persistence,
+          MailglassInbound.Ingress.Persist
+        )
+      )
+
+    execution =
+      Keyword.get(
+        opts,
+        :execution,
+        Application.get_env(:mailglass_inbound, :ingress_execution, Execution)
+      )
 
     case persistence.persist(handoff, persistence_opts(opts)) do
       {:ok, result} ->
@@ -351,7 +382,10 @@ defmodule MailglassInbound.Ingress.Plug do
       |> Enum.sort()
       |> Enum.join(",")
 
-    Logger.error("[mailglass_inbound] inbound persist failed: changeset_invalid fields=#{field_errors}")
+    Logger.error(
+      "[mailglass_inbound] inbound persist failed: changeset_invalid fields=#{field_errors}"
+    )
+
     :ok
   end
 
@@ -423,7 +457,8 @@ defmodule MailglassInbound.Ingress.Plug do
 
   defp extract_raw_body!(conn) do
     case conn.private[:raw_body] do
-      raw when is_binary(raw) -> raw
+      raw when is_binary(raw) ->
+        raw
 
       _ ->
         raise ConfigError.new(:webhook_caching_body_reader_missing,
@@ -614,7 +649,9 @@ defmodule MailglassInbound.Ingress.Plug do
        })
        when is_binary(tenant_id) do
     topic = MailglassInbound.PubSub.Topics.inbound_record_inserted(tenant_id)
-    payload = {:inbound_record_inserted, record_id, %{provider: provider, record_type: "inbound_record"}}
+
+    payload =
+      {:inbound_record_inserted, record_id, %{provider: provider, record_type: "inbound_record"}}
 
     safe_broadcast(topic, payload)
   end
@@ -632,7 +669,9 @@ defmodule MailglassInbound.Ingress.Plug do
     e in [ArgumentError, RuntimeError] ->
       require Logger
 
-      Logger.debug("[mailglass_inbound] PubSub broadcast failed (non-fatal): #{Exception.message(e)}")
+      Logger.debug(
+        "[mailglass_inbound] PubSub broadcast failed (non-fatal): #{Exception.message(e)}"
+      )
 
       :ok
   catch
