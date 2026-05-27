@@ -72,6 +72,35 @@ the Phoenix 1.8 convention (same gate that protects `live_dashboard` and
 `Plug.Swoosh.MailboxPreview`). `mailglass_admin` does not check `Mix.env()`
 itself — dev-only is the adopter's responsibility.
 
+## Deterministic preview capture
+
+Maintainers can capture deterministic preview screenshots with one command:
+
+    cd mailglass_admin
+    mix mailglass_admin.preview.capture \
+      --base-url http://localhost:4000/dev/mail \
+      --output-dir tmp/mailglass_admin_preview_capture
+
+Use `--dry-run` to inspect the matrix before rendering:
+
+    cd mailglass_admin
+    mix mailglass_admin.preview.capture --dry-run
+
+Matrix dimensions are intentionally bounded in v1:
+
+- scenario: each mailable's `preview_props/0`
+- width: `375`, `768`, `1024`
+- theme: `light`, `dark`
+
+Output contract:
+
+- screenshots under `tmp/mailglass_admin_preview_capture/*.png`
+- deterministic `manifest.json` and `checkpoint.json`
+- schema version `preview_capture.v1`
+
+Bounded trust statement: this workflow provides **preview-pipeline confidence
+only** and does **not** claim cross-client parity.
+
 ## Mount the production operator surface
 
 Import the same router helpers, but mount the operator surface inside your
