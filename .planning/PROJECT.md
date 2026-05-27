@@ -15,6 +15,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - Milestone archive complete: 10 phases (`44.5`, `45-50`, `50.5`, `50.7`, `51`), 42 plans, 58/58 requirements satisfied, final audit `status: passed`
 - **Current package versions on Hex: `mailglass` 1.2.0 / `mailglass_admin` 1.2.0 / `mailglass_inbound` 0.2.0** (live on 2026-05-26 via Phase 50.5; archive finalized the same day)
 - v1.3 Phase 52 completed on 2026-05-27: the maintained `reference/host_app` baseline, public-seam boundary guardrails, and scope lock contract are now in place for the trust-proof milestone
+- v1.3 Phase 57 completed on 2026-05-27: canonical deterministic trust-runner command, fixture stability contract, and schema-versioned trust checkpoint evidence are now enforced for local/CI trust lanes
 - Backlog phase 999.1 completed on 2026-05-27: planning-artifact comment cleanup now covers scoped core/admin/inbound source paths, with Credo drift prevention (`Mailglass.Credo.NoPlanningArtifactComments`) and guard tests added
 - Backlog phase 999.2 completed on 2026-05-27: deterministic preview URL/capture matrix foundations, mix screenshot capture workflow, advisory CI artifact lane, and docs claim-boundary contract checks are now in place
 - `mailglass_inbound` now has production-credible telemetry, Mailgun + SES ingress, test helpers + generators, admin observability, operator tooling, and six first-party inbound guides
@@ -135,6 +136,7 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 
 **By category (v1.3 Phase 52 — trust baseline):**
 - ✓ HOST-01..03 — Maintained reference host baseline, public-seam-only integration boundary, and fail-closed scope lock artifact/test contracts validated in Phase 52
+- ✓ JOUR-01..02 — Canonical deterministic trust-runner command plus deterministic fixture/checkpoint schema and validator contract validated in Phase 57
 
 **By category (v1.1 — Inbound Core Slice):**
 - ✓ MODEL-01 — Canonical `%MailglassInbound.InboundMessage{}` value object with stable fields for routing, tenancy, and provider provenance — v1.1
@@ -175,7 +177,7 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 - [ ] Prove install -> preview -> send -> webhook ingest -> operator troubleshooting inside one maintained Phoenix reference host app
 - [ ] Add a clean-baseline CI lane that runs and verifies the reference journey end to end
 - [ ] Position reference-app docs as adoption proof artifacts while preserving core docs/tests as the API contract source of truth
-- [ ] Lock and enforce one deterministic trust runner and trust-checkpoint artifact across local + CI + release proof paths
+- [x] Lock and enforce one deterministic trust runner and trust-checkpoint artifact across local + CI + release proof paths (Phase 57 complete)
 - [ ] Resolve the post-publish smoke hackney dependency failure before claiming v1.3 trust proof completion
 
 ## Out of Scope
@@ -292,4 +294,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-27 — Phase 52 trust baseline plus backlog phases 999.1/999.2 cleanup and preview-capture trust scaffolding are complete; v1.3 preflight locks remain in force for remaining trust-proof phases.*
+*Last updated: 2026-05-27 — Phase 57 deterministic trust runner + fixture/checkpoint contract is complete, Phase 52 baseline remains in force, and the remaining v1.3 trust-proof work is centered on webhook/operator proof, CI trust lanes, docs boundary enforcement, and release-gate reliability closure.*
