@@ -14,6 +14,26 @@ Mailglass uses [Release Please](https://github.com/googleapis/release-please) to
    fallback.
 4. The `publish-hex` workflow is environment-gated and requires manual approval in the GitHub Actions UI.
 
+## Trust runner checkpoint handoff
+
+Use `mix verify.reference_host.journey` as the canonical trust-runner command.
+By default it writes the checkpoint artifact to
+`tmp/mailglass_trust_runner/checkpoint.json`.
+
+Checkpoint consumers should require these keys exactly:
+
+- `schema_version`
+- `claim_boundary`
+- `checkpoint_count`
+- `checkpoint_sha256`
+- `checkpoints`
+
+Validate artifacts with
+`bash scripts/check_trust_runner_checkpoint.sh --checkpoint tmp/mailglass_trust_runner/checkpoint.json`.
+
+Phase 58 extends this contract with signed-negative webhook and non-happy-path
+diagnosis semantics; it does not redefine or rename the Phase 57 stage keys.
+
 ## Snapshot Update Protocol
 
 When the installer output or golden files change:
