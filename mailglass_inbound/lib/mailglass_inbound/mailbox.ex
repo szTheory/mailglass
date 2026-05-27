@@ -2,7 +2,7 @@ defmodule MailglassInbound.Mailbox do
   @moduledoc """
   Behaviour for adopter-defined inbound mailboxes.
 
-  Phase 39 locks the public mailbox contract to one callback:
+  this milestone phase locks the public mailbox contract to one callback:
   `process/1`. The callback receives the stable
   `%MailglassInbound.InboundMessage{}` value object and must return one of the
   approved outcomes:

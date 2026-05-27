@@ -13,7 +13,7 @@ defmodule MailglassInbound.Ingress.Providers.Mailgun do
   @default_replay_cache_ttl_seconds 28_800
 
   # ---------------------------------------------------------------------------
-  # verify! — flat-field HMAC over `timestamp <> token` (D-46-08).
+  # verify! — flat-field HMAC over `timestamp <> token` (the design contract).
   #
   # Mailgun INBOUND routes deliver the signature triple as TOP-LEVEL form
   # fields (`params["timestamp"]`/`["token"]`/`["signature"]`), NOT the nested
@@ -46,13 +46,13 @@ defmodule MailglassInbound.Ingress.Providers.Mailgun do
 
     case MailgunReplayCache.check_and_put(token, expires_at) do
       :ok -> {:ok, %{auth: :hmac}}
-      # Replay is a 200 no-op handled by the plug (D-46-06) — NEVER raise/401.
+      # Replay is a 200 no-op handled by the plug (the design contract) — NEVER raise/401.
       {:error, :replay} -> {:replay}
     end
   end
 
   # ---------------------------------------------------------------------------
-  # normalize/1 — two modes (D-46-09).
+  # normalize/1 — two modes (the design contract).
   #
   # Branch on presence of `params["body-mime"]` (RESEARCH Open Question 3 rec —
   # branch on the payload field, more robust than parsing the URL suffix):
@@ -249,7 +249,7 @@ defmodule MailglassInbound.Ingress.Providers.Mailgun do
   end
 
   # ---------------------------------------------------------------------------
-  # Message-Id extraction (D-46-10).
+  # Message-Id extraction (the design contract).
   #
   # Mailgun inbound has no flat `Message-Id` form field; the RFC Message-Id
   # lives inside the `message-headers` field — a JSON-encoded ordered list of

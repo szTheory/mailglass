@@ -2,7 +2,7 @@ defmodule MailglassInbound.S3Fetcher.ExAwsS3 do
   @moduledoc false
 
   # Real `S3Fetcher` adapter, gated behind the optional `ex_aws`/`ex_aws_s3`
-  # deps (D-46-15). It fetches the SES inbound message's raw MIME body from the
+  # deps (the design contract). It fetches the SES inbound message's raw MIME body from the
   # adopter's S3 bucket and extracts the `:body` binary from the ExAws response.
   #
   # CRITICAL (Pitfall 5): this module must NOT name `ExAws`/`ExAws.S3` directly.

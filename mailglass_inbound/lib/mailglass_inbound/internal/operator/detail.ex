@@ -6,9 +6,9 @@ defmodule MailglassInbound.Internal.Operator.Detail do
   # load_evidence, latest_matched_fresh_run / latest_fresh_run) but ADDS a
   # `tenant_id` where-clause + `Mailglass.Tenancy.scope/2` to every query.
   # `Internal.Replay` loads by id ONLY (no tenant scope) on purpose — that is why
-  # the admin tenant-gates BEFORE replay (D-48-05); this read model is the tenant
+  # the admin tenant-gates BEFORE replay (the design contract); this read model is the tenant
   # gate. A blank/missing tenant, or a record that belongs to a different tenant,
-  # returns `nil` (T-48-01, D-48-04). Reads go through the `MailglassInbound.Repo`
+  # returns `nil` (T-48-01, the design contract). Reads go through the `MailglassInbound.Repo`
   # facade and read the ExecutionRun lineage schema, never the replay-run schema
   # (Pitfall 7).
 

@@ -1,9 +1,9 @@
 defmodule MailglassInbound.Operator.Formatter do
   @moduledoc """
-  Shared human and JSON renderers for inbound operator results (D-49-04).
+  Shared human and JSON renderers for inbound operator results (the design contract).
 
   Cloned from `Mailglass.Deliverability.Formatter` (`render_human/2` +
-  `render_json/1`), adapted to the locked D-49-05 finding shape
+  `render_json/1`), adapted to the locked the design contract finding shape
   `%{check, status, title, observed, remediation, evidence}` (no `:why_it_matters`,
   no `:area`). The summary line is `"N pass, N warn, N fail"`, plus a trailing
   `", N cannot diagnose"` only when the summary carries a non-zero

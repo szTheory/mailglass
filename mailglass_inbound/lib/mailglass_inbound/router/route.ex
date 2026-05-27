@@ -15,6 +15,6 @@ defmodule MailglassInbound.Router.Route do
   # `:source` is additive, internal reflection metadata captured at compile time
   # (`{file, line}` via `__CALLER__` in `Router.route/2`). It lets
   # `MailglassInbound.Internal.Doctor` name `router.ex:LINE` in route-conflict
-  # findings (D-49-08) without changing runtime match semantics.
+  # findings (the design contract) without changing runtime match semantics.
   defstruct [:mailbox, :recipient, :subject, :source, headers: []]
 end

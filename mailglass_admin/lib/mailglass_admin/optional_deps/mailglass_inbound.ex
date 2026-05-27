@@ -7,16 +7,16 @@
 # `optional_deps/phoenix_live_reload.ex` and the core Oban call-site gate
 # (lib/mailglass.ex:55-60).
 #
-# CONTEXT D-48-02: the `MailglassAdmin` Boundary decl in `lib/mailglass_admin.ex`
+# CONTEXT the design contract: the `MailglassAdmin` Boundary decl in `lib/mailglass_admin.ex`
 # is INTENTIONALLY left unchanged (`deps: [Mailglass]`). Listing an absent app in
 # `deps:` emits `unknown_dep` and breaks the no-optional-deps lane; all inbound
 # access therefore crosses a RUNTIME `apply/3` edge here, never a compile-time /
-# Boundary edge (D-48-03 — `available?/0` gates the whole surface).
+# Boundary edge (the design contract — `available?/0` gates the whole surface).
 if Code.ensure_loaded?(MailglassInbound) do
   defmodule MailglassAdmin.OptionalDeps.MailglassInbound do
     @moduledoc """
     Runtime gateway for all `mailglass_inbound` access from `mailglass_admin`
-    (CONTEXT D-48-02 / D-48-03).
+    (CONTEXT the design contract / the design contract).
 
     The admin LiveView never references `MailglassInbound.*` directly — it calls
     these wrappers, which `apply/3` into the inbound read-models
@@ -90,7 +90,7 @@ if Code.ensure_loaded?(MailglassInbound) do
     canonical `%InboundMessage{}` from the stored record through the internal
     inbound message reconstruction helper, and runs the in-package
     `Router.Matcher.explain/2` per route — so the rendered verdict equals real
-    matcher behavior (D-48-06; the view never re-implements match semantics).
+    matcher behavior (the design contract; the view never re-implements match semantics).
 
     Returns a list (declared route order) of `%{mailbox: String.t(), verdicts:
     [tuple()]}`. The `mailbox` is the route's mailbox module rendered as a string;
@@ -124,7 +124,7 @@ if Code.ensure_loaded?(MailglassInbound) do
     Replays a stored inbound record by id. The caller passes `tenant_id:` in `opts`
     — `Internal.Replay.replay/2` scopes every load to that tenant and refuses a
     foreign-tenant id with `{:error, :not_found}` (T-49-17). The admin's
-    `verify_tenant/2` gate (D-48-05) remains the first line of defence; this seam is
+    `verify_tenant/2` gate (the design contract) remains the first line of defence; this seam is
     now tenant-safe by construction too.
     """
     @doc since: "0.2.0"

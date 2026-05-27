@@ -115,10 +115,10 @@ defmodule MailglassAdmin.Components do
   end
 
   @doc """
-  Masks a recipient email for operator display (PII minimization, D-48-13).
+  Masks a recipient email for operator display (PII minimization, the design contract).
 
   The ONE audited masking definition in the admin package: both
-  `MailglassAdmin.Operator.DeliveriesList` (outbound) and the Phase 48 inbound
+  `MailglassAdmin.Operator.DeliveriesList` (outbound) and the this milestone phase inbound
   components call this so there is never a second, drifting copy. Keeps the first
   grapheme of each segment and stars the rest, preserving the email shape:
 

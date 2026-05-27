@@ -1,27 +1,27 @@
 defmodule MailglassInbound.RateLimiter do
   @moduledoc """
-  Inbound-local multi-bucket ETS token-bucket rate limiter (IOPS-04, D-49-11).
+  Inbound-local multi-bucket ETS token-bucket rate limiter (IOPS-04, the design contract).
 
   Cloned from `Mailglass.RateLimiter` — the load-bearing `:ets.update_counter/4`
   refill math is copied verbatim. Adapted for inbound:
 
   - **Three buckets, fail-fast** via `with`, in order tenant (1000/min) ->
     recipient (500/min) -> sender_domain (200/min). The first bucket to trip
-    returns ITS OWN `Retry-After` — never a cross-bucket max (D-49-13).
+    returns ITS OWN `Retry-After` — never a cross-bucket max (the design contract).
   - **No stream-based bypass clause** — inbound has no stream semantics, so the
-    core limiter's auth-stream short-circuit is intentionally dropped (D-49-13).
+    core limiter's auth-stream short-circuit is intentionally dropped (the design contract).
   - **No `%Mailglass.Message{}` coupling** — takes plain args.
   - Reads `:mailglass_inbound` config via `MailglassInbound.Config`, never
-    `:mailglass` (D-49-02).
+    `:mailglass` (the design contract).
   - Builds `Mailglass.RateLimitError` internally (reuse the struct, never
     re-create it): `:per_tenant` for the tenant bucket, `:per_domain` for the
     recipient + sender_domain buckets.
 
   Hot path is `:ets.update_counter/4` on the `:mailglass_inbound_rate_limit`
   table owned by `MailglassInbound.RateLimiter.TableOwner` — no GenServer
-  mailbox serialization (D-49-12).
+  mailbox serialization (the design contract).
 
-  ## PII discipline (D-49-16)
+  ## PII discipline (the design contract)
 
   The **sender bucket is keyed on the sender DOMAIN only**, never the full sender
   address. The **recipient bucket may key on the full recipient address** — it is
@@ -32,7 +32,7 @@ defmodule MailglassInbound.RateLimiter do
   exists so a future lint pass does not false-positive on the recipient-address
   ETS key.
 
-  ## Per-node scope (D-49-18)
+  ## Per-node scope (the design contract)
 
   Counters live in node-local ETS — an N-node cluster enforces N x the limit.
   Acceptable for the single-node-default library posture; cluster-global
@@ -125,7 +125,7 @@ defmodule MailglassInbound.RateLimiter do
   # Map a tripped bucket to the reused Mailglass.RateLimitError struct. The
   # tenant bucket is :per_tenant; recipient + sender_domain are :per_domain. The
   # context is PII-free: bucket TYPE + capacity only, never the key value
-  # (D-49-16).
+  # (the design contract).
   defp build_error(bucket, refill_per_ms) do
     ms = retry_after_ms(refill_per_ms)
     type = if bucket == :tenant, do: :per_tenant, else: :per_domain

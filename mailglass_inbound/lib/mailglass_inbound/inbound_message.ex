@@ -25,7 +25,7 @@ defmodule MailglassInbound.InboundMessage do
     `MailglassInbound.InboundMessage.Signals` struct (framework writes, adopter
     reads). See `MailglassInbound.InboundMessage.Signals`.
 
-  ## Reading framework signals (IOPS-05, D-49-21)
+  ## Reading framework signals (IOPS-05, the design contract)
 
   The `:signals` field exposes framework-derived facts, today the
   `suppression_flagged` boolean. Read it via safe dot-access or pattern-match it
@@ -41,7 +41,7 @@ defmodule MailglassInbound.InboundMessage do
           else: :accept
       end
 
-  > **Deviation D-49-21:** IOPS-05's literal wording exposes the flag at
+  > **Deviation the design contract:** IOPS-05's literal wording exposes the flag at
   > `%InboundMessage{}.metadata.suppression_flagged`. Mailglass instead ships
   > `%InboundMessage{}.signals.suppression_flagged` as a deliberate, documented
   > improvement (the SESI-04-erratum precedent): `:metadata` is reserved

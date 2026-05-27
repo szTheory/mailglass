@@ -2,7 +2,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
   @moduledoc """
   Compact filter controls for the inbound records screen.
 
-  Sibling of `MailglassAdmin.Operator.FiltersForm` (D-48-13). The mailbox-outcome
+  Sibling of `MailglassAdmin.Operator.FiltersForm` (the design contract). The mailbox-outcome
   select offers exactly the internal execution-run outcome set
   (`[:no_match, :accept, :ignore, :reject, :bounce, :failed]`) — the same closed
   set the read-model casts against (V5 input-validation allow-list).

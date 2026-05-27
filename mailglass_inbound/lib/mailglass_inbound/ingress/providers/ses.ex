@@ -5,7 +5,7 @@ defmodule MailglassInbound.Ingress.Providers.SES do
   # seam, drives its own three-way MessageType dispatch, and extracts the raw
   # MIME body from the receipt-rule S3 action (primary) or the SNS-inline
   # `content` field (secondary). Mirrors the SendGrid provider's
-  # verify!/normalize struct shape (D-46-12).
+  # verify!/normalize struct shape (the design contract).
   #
   # ## Verify / normalize handoff
   #
@@ -19,22 +19,22 @@ defmodule MailglassInbound.Ingress.Providers.SES do
   # (signature already enforced by `verify!`) and re-resolving the body via the
   # configured fetcher.
   #
-  # ## Trust reuse (do NOT re-supervise — D-46-02)
+  # ## Trust reuse (do NOT re-supervise — the design contract)
   #
   #   * `Mailglass.Webhook.Providers.SES.verify_envelope!/2` — the SNS X.509
   #     crypto seam (decode → TrustPolicy.valid_cert_url? → CertCache public-key
   #     fetch → canonical-string → :public_key.verify). Raises core
   #     `Mailglass.SignatureError` on forgery; we re-raise as the package-local
   #     `MailglassInbound.SignatureError` so the plug's dual rescue maps it to 401
-  #     (D-46-19, SESI-01).
+  #     (the design contract, SESI-01).
   #   * `TrustPolicy.valid_subscribe_url?/1` — SSRF/hijack guard for the
   #     control-plane SubscribeURL (T-46-22).
   #
-  # ## Out of scope (documented, D-46-18)
+  # ## Out of scope (documented, the design contract)
   #
   # SES client-side KMS-encrypted objects are NOT decrypted: a `GetObject`
   # returns ciphertext that an Elixir gateway cannot transparently decrypt.
-  # Adopters use bucket-level SSE instead (Phase 50 setup doc). Ciphertext simply
+  # Adopters use bucket-level SSE instead (this milestone phase setup doc). Ciphertext simply
   # parses as a degraded record, never a crash (MIME.parse/1 never raises).
 
   @behaviour MailglassInbound.Ingress.Provider
@@ -145,7 +145,7 @@ defmodule MailglassInbound.Ingress.Providers.SES do
   rescue
     e in Mailglass.SignatureError ->
       # Re-raise core's forgery/SSRF rejection as the package-local error so the
-      # inbound plug's dual rescue maps it to 401 (D-46-19). `reraise` with a new
+      # inbound plug's dual rescue maps it to 401 (the design contract). `reraise` with a new
       # exception preserves the original stacktrace (mirrors core SendGrid's
       # rewrap). Map a known :type through; everything else collapses to
       # :bad_signature. The core cause rides on `:cause` (excluded from JSON).
@@ -157,7 +157,7 @@ defmodule MailglassInbound.Ingress.Providers.SES do
 
   # ---- control-plane (Subscription/Unsubscribe) ------------------------
 
-  # The control plane is a 200 no-op with NO record (D-46-06, T-46-23). We do NOT
+  # The control plane is a 200 no-op with NO record (the design contract, T-46-23). We do NOT
   # follow SubscribeURL; we validate it against the TrustPolicy host allowlist as
   # an SSRF/hijack guard (T-46-22). A hijacked URL fails closed with
   # :subscribe_url_untrusted. Topic activation (the actual ConfirmSubscription

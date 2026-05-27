@@ -7,7 +7,7 @@ defmodule MailglassAdmin.Layouts do
   # declared in `lib/mailglass_admin.ex`; `classify_to:` is reserved for
   # mix tasks and protocol implementations and is not used here.
 
-  # Plan 05 ships `MailglassAdmin.Controllers.Assets`; until then the css/js
+  # this plan ships `MailglassAdmin.Controllers.Assets`; until then the css/js
   # helpers below fall back to the "pending" placeholders via the runtime
   # `function_exported?/3` guards. Declaring the forward reference here
   # keeps `mix compile --warnings-as-errors` green.
@@ -17,10 +17,10 @@ defmodule MailglassAdmin.Layouts do
 
   # Asset URL helpers. Phoenix.Component.embed_templates compiles templates
   # at compile time; calling MailglassAdmin.Controllers.Assets.css_hash/0
-  # directly inside the HEEx template would fail Plan 03 compile because
-  # Plan 05 has not shipped the controller yet. The helpers are evaluated
+  # directly inside the HEEx template would fail this plan compile because
+  # this plan has not shipped the controller yet. The helpers are evaluated
   # at RENDER time via `<%= css_url() %>`, so the function_exported?/3
-  # guard picks up the real hash automatically once Plan 05 lands.
+  # guard picks up the real hash automatically once this plan lands.
   #
   # Per 05-RESEARCH.md line 940, asset hrefs are RELATIVE ("css-:md5.css"
   # without leading slash) so the browser resolves them against whatever

@@ -2,7 +2,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   @moduledoc """
   Recent inbound records list with semantic selected-row treatment.
 
-  Sibling of `MailglassAdmin.Operator.DeliveriesList` (D-48-13 — clone, not a
+  Sibling of `MailglassAdmin.Operator.DeliveriesList` (the design contract — clone, not a
   refactor). Rows render the masked envelope recipient via the one promoted
   `MailglassAdmin.Components.mask_recipient/1` definition, the record id in mono,
   an outcome badge, and a meta line `tenant · PROVIDER · matched-mailbox-or-"no

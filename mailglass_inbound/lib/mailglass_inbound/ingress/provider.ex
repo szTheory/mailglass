@@ -17,7 +17,7 @@ defmodule MailglassInbound.Ingress.Provider do
   """
   @type verification_facts :: map()
 
-  # Widened `verify!` contract (D-46-06, D-46-07). The struct-arity
+  # Widened `verify!` contract (the design contract, the design contract). The struct-arity
   # `verify!(%Request{}, config)` is the unified shape all four providers trend
   # toward (SendGrid already uses it); the return widens to a three-variant union
   # so the plug's `do_call/2` can express non-persisting verified outcomes the
@@ -58,7 +58,7 @@ defmodule MailglassInbound.Ingress.Provider do
               headers :: [{String.t(), String.t()}]
             ) :: normalized_t()
 
-  # Mixed-arity transition (D-46-07): a provider implements EXACTLY ONE `verify!`
+  # Mixed-arity transition (the design contract): a provider implements EXACTLY ONE `verify!`
   # arity — Postmark the legacy `verify!/3`, SendGrid/Mailgun/SES the struct
   # `verify!/2`. Marking both optional lets each provider compile warning-free
   # while the plug dispatches the right arity per provider. `normalize/2` stays

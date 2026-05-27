@@ -49,7 +49,7 @@ defmodule MailglassInbound.Router.Matcher do
           | {:header, String.t(), Route.matcher(), [String.t()], boolean()}
 
   @doc false
-  # IADM-04 routing-trace reflection (D-48-06). Returns the per-clause verdict
+  # IADM-04 routing-trace reflection (the design contract). Returns the per-clause verdict
   # list whose AND equals `matches_route?/2`. It REUSES the in-module
   # `matches_matcher?/2` predicates and the same header default/AND-any logic as
   # `matches_headers?/2` — there is a SINGLE source of truth for match semantics;

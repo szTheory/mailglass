@@ -8,7 +8,7 @@ defmodule MailglassInbound.Internal.Operator.Timeline do
   # `limit: 1` and the `source == :fresh` filter. It reads the ExecutionRun
   # lineage schema, never the replay-run schema (Pitfall 7: the ExecutionRun row
   # is the one carrying `:no_match` + `source`). A blank/missing tenant returns
-  # `[]` (D-48-04). Every query applies
+  # `[]` (the design contract). Every query applies
   # `Mailglass.Tenancy.scope/2` + an explicit `tenant_id` where-clause (T-48-01)
   # and runs through the `MailglassInbound.Repo` facade.
 

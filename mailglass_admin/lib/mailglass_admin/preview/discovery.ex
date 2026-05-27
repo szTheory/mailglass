@@ -15,7 +15,7 @@ defmodule MailglassAdmin.Preview.Discovery do
       module counts, or adopter preference. Each module MUST have the marker
       or discovery raises `ArgumentError` with an actionable message.
 
-  ## Graceful failures (CONTEXT D-13)
+  ## Graceful failures (CONTEXT the design contract)
 
     * Marker present, no `preview_props/0` defined -> `{module, :no_previews}`
     * `preview_props/0` raises -> `{module, {:error, formatted_stacktrace}}`
@@ -109,7 +109,7 @@ defmodule MailglassAdmin.Preview.Discovery do
     end
   end
 
-  # CONTEXT D-11 return shape: [{atom(), map()}]. Anything else is invalid.
+  # CONTEXT the design contract return shape: [{atom(), map()}]. Anything else is invalid.
   # 05-RESEARCH.md Pitfall 7: preview_props returning {atom, function} crashes
   # the type-inferred form renderer with a confusing FunctionClauseError.
   # Catching shape violations at discovery time surfaces a clear error card.

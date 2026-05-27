@@ -2,11 +2,11 @@ defmodule MailglassInbound.Internal.Doctor do
   @moduledoc """
   DNS-free pre-deploy config check runner for `mix mailglass.inbound.doctor`
   (IOPS-01, MIME-03). All checks are pure reflection — no DB, no DNS, no network
-  — so the doctor is fast, offline, and CI-friendly (D-49-06).
+  — so the doctor is fast, offline, and CI-friendly (the design contract).
 
   `run/1` returns `%{summary: %{pass, warn, fail, cannot_diagnose}, findings: [...]}`
   with the locked finding shape `%{check, status, title, observed, remediation,
-  evidence}` (D-49-05). The CLI shell maps the summary to the three-state exit code.
+  evidence}` (the design contract). The CLI shell maps the summary to the three-state exit code.
 
   ## Checks (all DNS-free)
 
@@ -19,9 +19,9 @@ defmodule MailglassInbound.Internal.Doctor do
     * MIME backend availability + version via `Mailglass.OptionalDeps.GenSmtp`
       (MIME-03, no bare optional-dep reference);
     * route-conflict detection REUSING `MailglassInbound.Router.Matcher.matches_route?/2`
-      (D-49-07): structural subsumption (broad-before-narrow) -> `:fail`,
+      (the design contract): structural subsumption (broad-before-narrow) -> `:fail`,
       witness-probe shadow -> `:fail`, regex-vs-regex overlap -> `:warn`. Conflict
-      findings name `router.ex:LINE` via `Route.:source` (D-49-08).
+      findings name `router.ex:LINE` via `Route.:source` (the design contract).
   """
 
   alias MailglassInbound.InboundMessage
@@ -210,7 +210,7 @@ defmodule MailglassInbound.Internal.Doctor do
 
   # For every ordered pair (earlier precedes later), classify how the earlier
   # route shadows the later one. We REUSE `Matcher.matches_route?/2` for the
-  # witness-probe so match semantics never drift from runtime (D-49-07).
+  # witness-probe so match semantics never drift from runtime (the design contract).
   defp conflict_findings(routes) do
     indexed = Enum.with_index(routes)
 

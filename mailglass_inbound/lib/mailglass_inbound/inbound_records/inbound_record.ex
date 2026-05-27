@@ -56,7 +56,7 @@ defmodule MailglassInbound.InboundRecords.InboundRecord do
     field :text_body, :string
     field :html_body, :string
     field :attachments, {:array, :map}, default: []
-    # IOPS-05 (D-49-20): diagnostic suppression flag, set once at INSERT by
+    # IOPS-05 (the design contract): diagnostic suppression flag, set once at INSERT by
     # `Ingress.Persist`. Settable (in @cast) but never required — it defaults to
     # false so a row inserted before the column existed reads false, never nil.
     field :suppression_flagged, :boolean, default: false

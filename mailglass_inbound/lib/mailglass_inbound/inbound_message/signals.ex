@@ -16,7 +16,7 @@ defmodule MailglassInbound.InboundMessage.Signals do
     * `:suppression_flagged` — `true` when the message's first `from` address is
       on the tenant's suppression list at receipt time (IOPS-05). It is a
       diagnostic signal only: there is no auto-bounce and no auto-suppression
-      (D-49-23). The adopter decides whether to reject, ignore, or process.
+      (the design contract). The adopter decides whether to reject, ignore, or process.
 
   Because every field has a non-nil default, safe dot-access
   (`message.signals.suppression_flagged`) never raises a `KeyError` — including
@@ -25,7 +25,7 @@ defmodule MailglassInbound.InboundMessage.Signals do
 
   This struct holds framework-derived facts only and is distinct from the
   adopter-owned application data that lives elsewhere in the framework — see
-  `MailglassInbound.InboundMessage`'s D-49-21 note for the naming rationale.
+  `MailglassInbound.InboundMessage`'s the design contract note for the naming rationale.
 
   ## Evolution
 

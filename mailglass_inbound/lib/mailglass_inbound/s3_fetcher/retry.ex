@@ -2,7 +2,7 @@ defmodule MailglassInbound.S3Fetcher.Retry do
   @moduledoc false
 
   # Small bounded GetObject retry around a `MailglassInbound.S3Fetcher`
-  # implementation (D-46-16). S3 has had strong read-after-write consistency
+  # implementation (the design contract). S3 has had strong read-after-write consistency
   # since Dec 2020 and SES publishes the SNS notification AFTER PutObject, so the
   # real safety net is idempotency on `messageId`/`objectKey` + SNS
   # at-least-once redelivery — NOT eventual consistency. This retry is therefore

@@ -7,7 +7,7 @@ defmodule MailglassInbound.Router do
   by `MailglassInbound.Router.Matcher`, which preserves top-to-bottom,
   first-match-wins semantics.
 
-  Phase 39 intentionally keeps the public matcher surface narrow:
+  this milestone phase intentionally keeps the public matcher surface narrow:
 
   - `:recipient` accepts an exact string or regex and matches the envelope recipient.
   - `:subject` accepts an exact string or regex.
@@ -50,7 +50,7 @@ defmodule MailglassInbound.Router do
     {evaluated_opts, _binding} = Code.eval_quoted(opts, [], __CALLER__)
     validated = validate_route_opts!(expanded_mailbox, evaluated_opts)
     # Capture the declaration site at compile time so the doctor can name
-    # `router.ex:LINE` in route-conflict findings (D-49-08).
+    # `router.ex:LINE` in route-conflict findings (the design contract).
     route = %Route{
       mailbox: expanded_mailbox,
       recipient: validated[:recipient],

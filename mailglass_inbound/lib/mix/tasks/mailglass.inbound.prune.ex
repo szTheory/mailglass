@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
   # NOTE: no `use Boundary, classify_to:` here. `mailglass_inbound` does not run
   # the `:boundary` compiler, so the annotation would not compile. The boundary
   # LAW (inbound depends on core, never the reverse) is still honored — this omits
-  # only the compile-time annotation (deliberate deviation from D-49-04, 49-03).
+  # only the compile-time annotation (deliberate deviation from the design contract, 49-03).
   use Mix.Task
 
   alias MailglassInbound.Internal.Prune
@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
   Manually run the inbound retention sweep (IOPS-03).
 
   Runs `MailglassInbound.Internal.Prune.prune/0` SYNCHRONOUSLY whether or not Oban
-  is installed (D-49-28) — only *scheduling* needs Oban; the batched sweep is the
+  is installed (the design contract) — only *scheduling* needs Oban; the batched sweep is the
   workhorse. Deletes happen in batches of 1000 (`FOR UPDATE SKIP LOCKED`) under a
   `pg_try_advisory_lock` single-run guard, child-first across the four retention
   windows (replay_runs 30d, execution_runs 90d, evidence 30d, records 90d), with
@@ -27,17 +27,17 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
       mix mailglass.inbound.prune --yes        # skip confirmation (cron/CI)
 
   Because the sweep DELETES rows, the confirmation tier is stronger than replay's
-  `[y/N]`: it requires a typed `yes` (D-49-10). `--yes`/`-y` skips it for cron/CI;
+  `[y/N]`: it requires a typed `yes` (the design contract). `--yes`/`-y` skips it for cron/CI;
   `--dry-run` reports scope without deleting.
 
   Emits `[:mailglass_inbound, :prune, :sweep, :stop]` with per-table deletion
-  counts (no PII, D-49-29).
+  counts (no PII, the design contract).
 
   ## Scheduled pruning
 
   An optional `MailglassInbound.Prune.Worker` Oban cron worker exists but is NOT
-  auto-registered (D-49-28). Operators wire `0 3 * * *` in their own Oban config
-  (Phase 50 operator guide). Oban-less adopters run this task from system cron.
+  auto-registered (the design contract). Operators wire `0 3 * * *` in their own Oban config
+  (this milestone phase operator guide). Oban-less adopters run this task from system cron.
   """
 
   @impl Mix.Task
@@ -84,7 +84,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
     :ok
   end
 
-  # Destructive (DELETE) tier: a typed `yes` is required (D-49-10). `--yes`/`-y`
+  # Destructive (DELETE) tier: a typed `yes` is required (the design contract). `--yes`/`-y`
   # skips it for cron/CI.
   defp confirmed?(opts) do
     if Keyword.get(opts, :yes, false) do
@@ -97,7 +97,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
     end
   end
 
-  # No Oban-availability gate (D-49-28): prune/0 runs synchronously regardless.
+  # No Oban-availability gate (the design contract): prune/0 runs synchronously regardless.
   defp run_prune(prune) do
     case prune.prune() do
       {:ok, :locked_out} ->

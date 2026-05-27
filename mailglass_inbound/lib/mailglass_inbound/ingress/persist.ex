@@ -31,7 +31,7 @@ defmodule MailglassInbound.Ingress.Persist do
     # a second pooled connection open for the duration of the inbound write — a
     # pool-exhaustion / deadlock surface on the ingress hot path. It needs only
     # `tenant_id` + the message's first `from` address, none of which require the
-    # transaction. The span + degrade-open semantics are preserved (D-49-23).
+    # transaction. The span + degrade-open semantics are preserved (the design contract).
     suppression_flagged = compute_suppression_flag(tenant_id, provider, message)
 
     result =
@@ -158,7 +158,7 @@ defmodule MailglassInbound.Ingress.Persist do
   end
 
   # Mailgun dedupes on the RFC Message-Id when present (generic anchor), and
-  # falls back to the MD5(raw_mime) fingerprint when absent (D-46-10). A Mailgun
+  # falls back to the MD5(raw_mime) fingerprint when absent (the design contract). A Mailgun
   # row WITH a Message-Id resolves through the same `(tenant_id, provider,
   # provider_message_id)` query the generic clause uses; a row WITHOUT one uses
   # the new `mailglass_inbound_records_mailgun_fingerprint_idx` (DRIFT #3).
@@ -316,7 +316,7 @@ defmodule MailglassInbound.Ingress.Persist do
     end
   end
 
-  # IOPS-05 (D-49-19/23): compute the diagnostic suppression flag once, BEFORE the
+  # IOPS-05 (the design contract/23): compute the diagnostic suppression flag once, BEFORE the
   # write transaction (WR-03 — the cross-repo lookup must not hold a second
   # connection inside the inbound write). The flag is NOT a gate — it degrades
   # OPEN so a store hiccup, a malformed key, or an empty `from` can never block
@@ -326,7 +326,7 @@ defmodule MailglassInbound.Ingress.Persist do
   # outbound `Mailglass.Suppression` send-preflight facade, which reads swoosh
   # `:to` and emits OUTBOUND telemetry). The whole compute runs inside the inbound
   # `:suppression_flag` span; its stop metadata is `%{flagged, tenant_id,
-  # provider}` only — never the address (D-49-23).
+  # provider}` only — never the address (the design contract).
   defp compute_suppression_flag(tenant_id, provider, message) do
     MailglassInbound.Telemetry.suppression_flag(
       %{tenant_id: tenant_id, provider: normalize_provider(provider)},

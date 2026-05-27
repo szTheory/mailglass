@@ -35,7 +35,7 @@ defmodule MailglassAdmin do
   `MailglassAdmin.Router.mailglass_operator_routes/2` for options.
   """
 
-  # CONTEXT D-10 / CORE-07 renderer-purity rule: PreviewLive may call
+  # CONTEXT the design contract / CORE-07 renderer-purity rule: PreviewLive may call
   # `Mailglass.Renderer.render/1` and `Mailglass.Message.*` builders but
   # NOT `Mailglass.Outbound.deliver/2` (preview NEVER sends).
   # `exports: [Router]` reflects the narrow stable package root. Other modules

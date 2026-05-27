@@ -1,15 +1,15 @@
 defmodule MailglassInbound.Telemetry do
   @moduledoc """
-  The single span surface for `mailglass_inbound` (D-45-01).
+  The single span surface for `mailglass_inbound` (the design contract).
 
   Mirrors `Mailglass.Webhook.Telemetry`: every inbound `:telemetry.span/3` call
   lives here so the extended `NoPiiInTelemetry` check (enabled for inbound in
-  Plan 01) has exactly ONE module to audit, plus the four call sites. Callers
+  this plan) has exactly ONE module to audit, plus the four call sites. Callers
   MUST NOT reach for `:telemetry.span/3` directly — use the named helpers below.
 
   ## Events emitted
 
-  | Event | Type | Stop metadata keys (D-45-03 whitelist) |
+  | Event | Type | Stop metadata keys (the design contract whitelist) |
   |-------|------|----------------------------------------|
   | `[:mailglass_inbound, :ingress, :request, :start \\| :stop \\| :exception]` | full span | `provider, tenant_id, status, byte_size` |
   | `[:mailglass_inbound, :route, :match, :start \\| :stop \\| :exception]` | full span | `mailbox, candidate_count, status` |
@@ -19,7 +19,7 @@ defmodule MailglassInbound.Telemetry do
   | `[:mailglass_inbound, :ingress, :suppression_flag, :start \\| :stop \\| :exception]` | full span | `provider, tenant_id, flagged` |
   | `[:mailglass_inbound, :prune, :sweep, :start \\| :stop \\| :exception]` | full span | `status, records_deleted, evidence_deleted, fresh_runs_deleted, replay_runs_deleted` |
 
-  > **Event-name convention note (D-49-17 deviation):** the CONTEXT named the
+  > **Event-name convention note (the design contract deviation):** the CONTEXT named the
   > rate-limit event `[:mailglass_inbound, :rate_limit, :stop]` and the prune event
   > `[:mailglass_inbound, :prune, :stop]` (3 final segments). The locked
   > `[root, domain, resource, action]` 4-segment telemetry convention
@@ -44,7 +44,7 @@ defmodule MailglassInbound.Telemetry do
       `:outcome`, `:mailbox` onto the `:stop` event after the inner function
       returns. Start metadata is always the `metadata` argument at call time.
 
-  ## Whitelist discipline (D-45-03)
+  ## Whitelist discipline (the design contract)
 
   The ONLY allowed metadata keys across all spans:
 
@@ -52,9 +52,10 @@ defmodule MailglassInbound.Telemetry do
       outcome, source, operation, record_type,
       bucket, limit, retry_after, flagged,
       records_deleted, evidence_deleted, fresh_runs_deleted, replay_runs_deleted
+  Inbound telemetry metadata must never include raw payload or recipient PII.
 
   The Phase-49 additions (`bucket, limit, retry_after, flagged` + the per-table
-  prune counts) are all counts/types/statuses — never PII (D-49-17/23/29). The
+  prune counts) are all counts/types/statuses — never PII (the design contract/23/29). The
   rate-limit + suppression-flag spans carry the bucket TYPE and a boolean flag,
   never the recipient/sender value.
 
@@ -63,7 +64,7 @@ defmodule MailglassInbound.Telemetry do
       :to, :from, :cc, :bcc, :subject, :body, :html_body, :headers,
       :recipient, :sender, :email
 
-  `NoPiiInTelemetry` (extended to inbound in Plan 01) lints THIS module plus every
+  `NoPiiInTelemetry` (extended to inbound in this plan) lints THIS module plus every
   caller against the forbidden-key set.
 
   ## Handler isolation (TELE-05)
@@ -128,7 +129,7 @@ defmodule MailglassInbound.Telemetry do
   `[:mailglass_inbound, :execution, :run, *]` span.
 
   This is the single synchronous sync point both the Oban and Task.Supervisor
-  async paths funnel through, so the span covers both (D-45-02, RESEARCH Pitfall 5
+  async paths funnel through, so the span covers both (the design contract, RESEARCH Pitfall 5
   — wrap `execute/2`, never `dispatch/2`).
 
   Stop metadata SHOULD include `:mailbox`, `:outcome`, `:source`. All PII-free.
@@ -143,14 +144,14 @@ defmodule MailglassInbound.Telemetry do
 
   @doc """
   Wrap the post-verify rate-limit check in a
-  `[:mailglass_inbound, :ingress, :rate_limit, *]` span (IOPS-04, D-49-17). The
+  `[:mailglass_inbound, :ingress, :rate_limit, *]` span (IOPS-04, the design contract). The
   rate limiter is an ingress-path event, so it lives under the `:ingress` domain
   (beside `:suppression_flag`) to satisfy the 4-segment event convention.
 
   Stop metadata SHOULD include `:provider`, `:tenant_id`, and on a trip the
   bucket `:bucket` TYPE (`:tenant | :recipient | :sender_domain`), `:limit`
   (capacity), and `:retry_after` (seconds). It MUST NOT carry the recipient or
-  sender VALUE — only the bucket type (D-49-16).
+  sender VALUE — only the bucket type (the design contract).
 
   `fun` may return a bare `result` OR `{result, stop_metadata}`.
   """
@@ -162,8 +163,8 @@ defmodule MailglassInbound.Telemetry do
 
   @doc """
   Wrap the inbound suppression-flag computation in a
-  `[:mailglass_inbound, :ingress, :suppression_flag, *]` span (IOPS-05, D-49-23).
-  Consumed by Plan 02.
+  `[:mailglass_inbound, :ingress, :suppression_flag, *]` span (IOPS-05, the design contract).
+  Consumed by this plan.
 
   Stop metadata SHOULD include `:flagged` (boolean), `:tenant_id`, `:provider` —
   never the address. No auto-bounce, no auto-suppression: the flag is diagnostic
@@ -179,7 +180,7 @@ defmodule MailglassInbound.Telemetry do
 
   @doc """
   Wrap a retention prune sweep in a `[:mailglass_inbound, :prune, :sweep, *]`
-  span (IOPS-03, D-49-29). Consumed by Plan 03. The `:sweep` resource segment
+  span (IOPS-03, the design contract). Consumed by this plan. The `:sweep` resource segment
   satisfies the 4-segment event convention.
 
   Stop metadata SHOULD include the per-table counts `:records_deleted`,

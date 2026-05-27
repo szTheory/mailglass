@@ -67,7 +67,7 @@ defmodule MailglassInbound.Test.Ingress do
 
   The driver drives `Execution.execute/2` (SYNC) with `source: :fresh`. It NEVER
   calls `Execution.dispatch/2` (async — Oban or a detached `Task.Supervisor`
-  child), which produces non-deterministic `ExecutionRun` counts (D-47-03/04,
+  child), which produces non-deterministic `ExecutionRun` counts (the design contract/04,
   proven by the replay-convergence property). Replaying the same message
   converges: persist dedupes (DB unique index — provider-id for Postmark,
   `md5(raw_mime)` for SendGrid/SES/Mailgun), and `execute/2` on a `:duplicate`

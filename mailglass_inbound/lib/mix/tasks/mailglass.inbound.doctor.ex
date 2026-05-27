@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Doctor do
   # the `:boundary` compiler (only `mailglass` core does), so the annotation would
   # not compile. The boundary LAW (inbound depends on core, never the reverse) is
   # still honored — this omits only the compile-time annotation (deliberate
-  # deviation from D-49-04's literal wording, orchestrator-resolved in 49-03).
+  # deviation from the design contract's literal wording, orchestrator-resolved in 49-03).
   use Mix.Task
 
   alias MailglassInbound.Internal.Doctor

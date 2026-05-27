@@ -13,8 +13,8 @@ defmodule MailglassInbound.Application do
     children = [
       {Task.Supervisor, name: MailglassInbound.TaskSupervisor},
       # Owns the :mailglass_inbound_rate_limit ETS table for the post-verify
-      # ingress rate limiter (IOPS-04, D-49-11). The prune Oban worker is NOT
-      # auto-registered here (D-49-28) — it stays unregistered; operators run
+      # ingress rate limiter (IOPS-04, the design contract). The prune Oban worker is NOT
+      # auto-registered here (the design contract) — it stays unregistered; operators run
       # `mix mailglass.inbound.prune` or wire the documented cron themselves.
       MailglassInbound.RateLimiter.TableOwner
     ]

@@ -19,7 +19,7 @@ defmodule MailglassInbound.Fixtures do
   ## Locked posture
 
   - **Code-built only.** No `.eml` file and no `.pem` key/cert is ever written to
-    disk or committed (D-47-10, D-47-11; security V6/V7).
+    disk or committed (the design contract, the design contract; security V6/V7).
   - **No real-PII sample data.** Defaults use `.test` / `example.com` addresses.
   - **Defaulted `tenant_id`.** Every builder defaults a `tenant_id` so a test
     cannot accidentally assert across tenants (security V4, T-47-04).
@@ -249,7 +249,7 @@ defmodule MailglassInbound.Fixtures do
   normalizes, including the signature triple), `:headers` (the request header
   list), and `:config` (`%{signing_key: …}` the driver defaults to).
   `message-headers` carries the RFC `Message-Id` Mailgun has no flat field for
-  (D-46-10).
+  (the design contract).
 
   ## Options
 
@@ -333,7 +333,7 @@ defmodule MailglassInbound.Fixtures do
     to the fixture's raw MIME.
 
   The keypair is ephemeral, in-memory, and per call — nothing is written to
-  disk (D-47-10, security V6). The `SigningCertURL` carries a per-call unique
+  disk (the design contract, security V6). The `SigningCertURL` carries a per-call unique
   suffix so concurrent fixtures priming the shared `:public` cert cache never
   collide (Pitfall 2); the host still satisfies the SNS cert-host TrustPolicy.
 
@@ -390,7 +390,7 @@ defmodule MailglassInbound.Fixtures do
     {public_key, private_key} = generate_sns_keypair()
     cert_url = unique_cert_url()
 
-    # Prime the REAL ETS cert cache so SES.verify! is a cache hit (D-47-10).
+    # Prime the REAL ETS cert cache so SES.verify! is a cache hit (the design contract).
     future = DateTime.add(DateTime.utc_now(), @ses_cert_ttl_seconds, :second)
     CertCache.put(cert_url, public_key, future)
 

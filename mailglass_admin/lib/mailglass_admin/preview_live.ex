@@ -26,7 +26,7 @@ defmodule MailglassAdmin.PreviewLive do
   Errors match by STRUCT per CLAUDE.md pitfall #7 — never by message
   string. `%Mailglass.TemplateError{}` surfaces as an in-pane error
   card; the dashboard stays live. Discovery's `{:error, stacktrace}`
-  return (Plan 04) flows through `handle_params/3` into the same error
+  return (this plan) flows through `handle_params/3` into the same error
   card.
 
   ## No PII in telemetry

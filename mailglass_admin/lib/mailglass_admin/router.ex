@@ -79,11 +79,11 @@ defmodule MailglassAdmin.Router do
       library code per CLAUDE.md)
   """
 
-  # Plan 04 ships MailglassAdmin.Preview.Mount; Plan 05 ships
-  # MailglassAdmin.Controllers.Assets; Plan 06 ships
+  # this plan ships MailglassAdmin.Preview.Mount; this plan ships
+  # MailglassAdmin.Controllers.Assets; this plan ships
   # MailglassAdmin.PreviewLive. Until they land, this suppresses the
   # compile-time warnings so --warnings-as-errors stays green from
-  # Plan 03 onward.
+  # this plan onward.
   @compile {:no_warn_undefined,
             [
               MailglassAdmin.PreviewLive,
@@ -173,7 +173,7 @@ defmodule MailglassAdmin.Router do
       default: nil,
       doc:
         "Optional adopter router module declaring `MailglassInbound.Router` routes " <>
-          "(CONTEXT D-48-07). When set, the operator dashboard's routing-trace card " <>
+          "(CONTEXT the design contract). When set, the operator dashboard's routing-trace card " <>
           "reflects the declared inbound routes via `__mailglass_inbound_routes__/0`. " <>
           "`nil` (the default) disables the inbound surface — the dashboard renders " <>
           "without the routing-trace card."
@@ -260,7 +260,7 @@ defmodule MailglassAdmin.Router do
           root_layout: {MailglassAdmin.Layouts, :root} do
           live "/", MailglassAdmin.OperatorLive, :index
 
-          # CONTEXT D-48-03/D-48-12: the inbound surface mounts in the SAME operator
+          # CONTEXT the design contract/the design contract: the inbound surface mounts in the SAME operator
           # live_session (Operator.Mount + Auth gate), NOT the dev-preview session —
           # mounting in dev-preview would bypass Auth and leak tenant data. The route
           # is emitted only when `mailglass_inbound` is loaded (available?/0 gate via
@@ -284,7 +284,7 @@ defmodule MailglassAdmin.Router do
     end
   end
 
-  # Whitelisted session callback — the CONTEXT D-08 / T-05-01 load-bearing
+  # Whitelisted session callback — the CONTEXT the design contract / T-05-01 load-bearing
   # security seam. Called by Phoenix `live_session` machinery on every
   # mount. The first arg is bound as `_conn` (underscore prefix) so any
   # future edit that tries to call `get_session(_conn, ...)` fails compile
@@ -319,7 +319,7 @@ defmodule MailglassAdmin.Router do
       "auth_method" => get_optional_session(conn, session_opts[:auth_method]),
       "recent_auth_at" => get_optional_session(conn, session_opts[:recent_auth_at]),
       "live_session_name" => opts[:live_session_name],
-      # CONTEXT D-48-07: the inbound router module is a compile-time opt, not a
+      # CONTEXT the design contract: the inbound router module is a compile-time opt, not a
       # session value — surfaced here (as an atom, never cookie-sourced) so the
       # operator LiveView can reflect declared inbound routes for the
       # routing-trace card without an inbound→admin compile dependency.

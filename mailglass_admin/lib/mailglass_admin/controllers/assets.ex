@@ -25,7 +25,7 @@ defmodule MailglassAdmin.Controllers.Assets do
   packages' `priv/static/` directories via `Application.app_dir/2`.
   Those bytes are NOT in mailglass_admin's Hex tarball — adopters
   already pay for them via their own `:phoenix` + `:phoenix_live_view`
-  deps. The CONTEXT D-23 2 MB tarball gate only measures files we ship.
+  deps. The CONTEXT the design contract 2 MB tarball gate only measures files we ship.
 
   ## Font allowlist
 

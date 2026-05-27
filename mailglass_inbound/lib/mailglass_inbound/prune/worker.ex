@@ -2,7 +2,7 @@ if Code.ensure_loaded?(Oban.Worker) do
   defmodule MailglassInbound.Prune.Worker do
     @moduledoc """
     Optional Oban cron worker that runs the inbound retention sweep (IOPS-03,
-    D-49-28). The batched workhorse lives in `MailglassInbound.Internal.Prune`;
+    the design contract). The batched workhorse lives in `MailglassInbound.Internal.Prune`;
     this worker's `perform/1` just delegates to `prune/0`.
 
     ## Optional-dep gating
@@ -15,9 +15,9 @@ if Code.ensure_loaded?(Oban.Worker) do
 
     ## Never auto-registered
 
-    This worker is NOT auto-registered in `MailglassInbound.Application` (D-49-28).
+    This worker is NOT auto-registered in `MailglassInbound.Application` (the design contract).
     Operators wire the cron in their own Oban config — the recommended cadence is
-    `0 3 * * *` (3 AM UTC; documented in the Phase 50 operator guide). The
+    `0 3 * * *` (3 AM UTC; documented in the this milestone phase operator guide). The
     `mix mailglass.inbound.prune` task runs the sweep synchronously whether or not
     Oban is present, so Oban-less adopters still get a working prune.
     """
@@ -47,7 +47,7 @@ else
 
     `available?/0` returns `false`. The `mix mailglass.inbound.prune` task does
     NOT gate on this — it runs `MailglassInbound.Internal.Prune.prune/0`
-    synchronously regardless (only scheduling needs Oban, D-49-28).
+    synchronously regardless (only scheduling needs Oban, the design contract).
     """
 
     @doc since: "1.2.0"

@@ -2,14 +2,14 @@ defmodule MailglassInbound.S3Fetcher do
   @moduledoc false
 
   # Behaviour contract for fetching a SES inbound message's raw MIME bytes from
-  # S3 (D-46-13). The SES receipt-rule S3 action stores the message at
+  # S3 (the design contract). The SES receipt-rule S3 action stores the message at
   # `s3://{bucketName}/{objectKey}` (where `objectKey == mail.messageId`); the
   # fetched binary is fed into `MailglassInbound.MIME.parse/1`.
   #
   # Behaviour only — no implementation here. `MailglassInbound.S3Fetcher.Fake`
-  # (the fake-adapter-first test default, D-13) and
+  # (the fake-adapter-first test default, the design contract) and
   # `MailglassInbound.S3Fetcher.ExAwsS3` (the real, optional-dep-gated adapter)
-  # are built in Plan 03.
+  # are built in this plan.
 
   @doc """
   Fetch the raw object bytes for `key` in `bucket`.

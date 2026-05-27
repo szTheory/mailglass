@@ -1,7 +1,7 @@
 defmodule MailglassInbound.S3Fetcher.Fake do
   @moduledoc false
 
-  # Fake-adapter-first (D-13, D-46-13): the `:test`-default `S3Fetcher`. It is
+  # Fake-adapter-first (the design contract, the design contract): the `:test`-default `S3Fetcher`. It is
   # the merge-blocking release gate for SES inbound — every SES provider /
   # bounded-retry test drives this fetcher, never `ExAwsS3`. Dependency-free (no
   # ExAws, no network).

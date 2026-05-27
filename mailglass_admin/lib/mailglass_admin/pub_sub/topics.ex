@@ -1,18 +1,19 @@
 defmodule MailglassAdmin.PubSub.Topics do
   @moduledoc """
   Typed topic builder for `mailglass_admin` PubSub broadcasts. Every topic is
-  prefixed `mailglass:` — Phase 6 `LINT-06 PrefixedPubSubTopics` (see the
+  prefixed `mailglass:` — this milestone phase `LINT-06 PrefixedPubSubTopics` (see the
   forthcoming check in the core `mailglass` package) enforces the prefix at
   lint time. The prefixed shape matches `Mailglass.PubSub.Topics` in the core
   library; the two modules intentionally share the convention so adopter
   telemetry handlers can pattern-match on a single namespace.
+  PubSub topics remain prefixed to avoid cross-application collisions.
 
   ## Topics emitted
 
   - `admin_reload/0` — `"mailglass:admin:reload"` — the LiveReload notify
     target. `MailglassAdmin.PreviewLive` subscribes on mount; broadcasts
     originate from the adopter's `:phoenix_live_reload` config (CONTEXT
-    D-24). The admin package itself never broadcasts on this topic at
+    the design contract). The admin package itself never broadcasts on this topic at
     v0.1 — it is purely a consumer surface.
 
   - `inbound_record_inserted/1` — `"mailglass:inbound:\#{tenant_id}"` — the
@@ -20,14 +21,14 @@ defmodule MailglassAdmin.PubSub.Topics do
     `Mailglass.PubSub`) so new inbound mail renders in real time. The admin is
     a CONSUMER of this topic; `mailglass_inbound` is the producer. The builder
     here MUST return the IDENTICAL string as
-    `MailglassInbound.PubSub.Topics.inbound_record_inserted/1` (CONTEXT D-48-11,
+    `MailglassInbound.PubSub.Topics.inbound_record_inserted/1` (CONTEXT the design contract,
     V8) — the parity test asserts it — so a subscribe here matches a broadcast
     there without an inbound→admin compile dependency.
 
   `admin_reload/0` and `inbound_record_inserted/1` are the topics the admin
   package consumes. Every call site that subscribes to or broadcasts on these
   topics MUST go through this module — literal topic strings in call sites are
-  banned by the Phase 6 lint discipline (LINT-06 PrefixedPubSubTopics).
+  banned by the this milestone phase lint discipline (LINT-06 PrefixedPubSubTopics).
 
   Submodules of `MailglassAdmin` are auto-classified into the root
   boundary (`use Boundary, deps: [Mailglass], exports: [Router]` in
@@ -47,7 +48,7 @@ defmodule MailglassAdmin.PubSub.Topics do
   The operator dashboard subscribes to this topic on `Mailglass.PubSub`. The
   `tenant_id` is embedded so subscribers are scoped to a single tenant. Returns
   the IDENTICAL string as `MailglassInbound.PubSub.Topics.inbound_record_inserted/1`
-  (CONTEXT D-48-11) — the admin consumes the inbound producer's stream without an
+  (CONTEXT the design contract) — the admin consumes the inbound producer's stream without an
   inbound→admin compile dependency.
   """
   @doc since: "0.2.0"

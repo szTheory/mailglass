@@ -2,7 +2,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
   @moduledoc """
   Server-rendered replay confirmation modal for the inbound record detail view.
 
-  Sibling of `MailglassAdmin.Operator.ReplayModal` (D-48-13), SIMPLIFIED: inbound
+  Sibling of `MailglassAdmin.Operator.ReplayModal` (the design contract), SIMPLIFIED: inbound
   replay has no ambiguous-multi target (IADM-03 — the replay target is the record
   itself), so there is no multi-target branch, no target cards, and no
   confirm-enabled predicate. `Confirm replay` is always enabled while the modal is

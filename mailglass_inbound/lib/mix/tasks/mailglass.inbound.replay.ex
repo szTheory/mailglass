@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
   # NOTE: no `use Boundary, classify_to:` here. `mailglass_inbound` does not run
   # the `:boundary` compiler, so the annotation would not compile. The boundary
   # LAW (inbound depends on core, never the reverse) is still honored — this omits
-  # only the compile-time annotation (deliberate deviation from D-49-04, 49-03).
+  # only the compile-time annotation (deliberate deviation from the design contract, 49-03).
   use Mix.Task
 
   import Ecto.Query
@@ -151,7 +151,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
   defp filter_since(query, nil), do: query
   defp filter_since(query, since), do: from(r in query, where: r.received_at >= ^since)
 
-  # [y/N] defaulting No (D-49-09). `--yes`/`-y` skips the prompt entirely.
+  # [y/N] defaulting No (the design contract). `--yes`/`-y` skips the prompt entirely.
   defp confirmed?(opts, count) do
     if Keyword.get(opts, :yes, false) do
       true

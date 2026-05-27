@@ -3,7 +3,7 @@ defmodule MailglassInbound do
   @moduledoc """
   Public contract root for the `mailglass_inbound` sibling package.
 
-  Phase 40 keeps the stable surface narrow and explicit:
+  this milestone phase keeps the stable surface narrow and explicit:
 
   - `MailglassInbound.InboundMessage` is the canonical normalized inbound value object.
   - `MailglassInbound.Router` is the adopter-owned routing DSL.
@@ -12,7 +12,7 @@ defmodule MailglassInbound do
   - `MailglassInbound.Ingress.CachingBodyReader` is the package-local raw-body capture helper.
   - `version/0` returns the package version string at compile time.
 
-  The canonical Phase 39 contract inventory lives in
+  The canonical this milestone phase contract inventory lives in
   `mailglass_inbound/docs/api_stability.md`.
 
   Provider internals, persistence internals, mailbox execution runners, and any

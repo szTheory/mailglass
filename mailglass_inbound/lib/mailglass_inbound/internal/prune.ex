@@ -1,26 +1,27 @@
 defmodule MailglassInbound.Internal.Prune do
   @moduledoc """
   Oban-independent batched retention sweep for inbound tables (IOPS-03,
-  D-49-25..30). This is the workhorse: `mix mailglass.inbound.prune` and the
+  the design contract..30). This is the workhorse: `mix mailglass.inbound.prune` and the
   optional `MailglassInbound.Prune.Worker` cron both call `prune/0`.
 
   Mirrors `Mailglass.Webhook.Pruner`'s STRUCTURE (`:infinity` disables a class,
   per-table telemetry) but UPGRADES the unbounded `delete_all` to a batched idiom
-  (D-49-27): each table deletes `LIMIT 1000` rows at a time
+  (the design contract): each table deletes `LIMIT 1000` rows at a time
   (`FOR UPDATE SKIP LOCKED`), looping until a batch deletes `< 1000`. The whole
   sweep is serialized by a session `pg_try_advisory_lock` — a concurrent second
   run returns `{:ok, :locked_out}` and deletes nothing.
 
-  ## Window split (D-49-25) — three physical tables, four windows
+  ## Window split (the design contract) — three physical tables, four windows
 
     * `mailglass_inbound_replay_runs` WHERE `source = :replay` AND age > replay_runs_days (30d)
     * `mailglass_inbound_replay_runs` WHERE `source = :fresh`  AND age > execution_runs_days (90d)
     * `mailglass_inbound_evidence` WHERE age > evidence_days (90d)
     * `mailglass_inbound_records` WHERE age > records_days (90d)
 
-  Deletes run child-first (D-49-26): replay_runs (both source filters) -> evidence
+  Deletes run child-first (the design contract): replay_runs (both source filters) -> evidence
   -> records. FKs are `on_delete: :nothing`, so a mis-ordered delete fails loudly
   on the FK (the designed safety net — do NOT switch to CASCADE).
+  Prune operations must remain tenant-scoped and operator-confirmed before destructive actions.
 
   Because the FKs are `:nothing`, a parent window can never be shorter than a child
   that references it, or the child-first sweep would leave a surviving child whose
@@ -94,7 +95,7 @@ defmodule MailglassInbound.Internal.Prune do
     evidence_days = Keyword.get(retention, :evidence_days, 90)
     records_days = Keyword.get(retention, :records_days, 90)
 
-    # Child-first order (D-49-26): replay_runs (both source filters) -> evidence
+    # Child-first order (the design contract): replay_runs (both source filters) -> evidence
     # -> records. The window field is `inserted_at` (matches Webhook.Pruner).
     {replay_deleted, replay_batches} =
       delete_source_window(repo, :replay, replay_days)
@@ -181,7 +182,7 @@ defmodule MailglassInbound.Internal.Prune do
 
   # DELETE ... WHERE id IN (SELECT id ... WHERE <window> LIMIT 1000
   # FOR UPDATE SKIP LOCKED), looped until a batch deletes < @batch_size. The loop
-  # is NOT one transaction — each delete_all commits on its own (D-49-27).
+  # is NOT one transaction — each delete_all commits on its own (the design contract).
   defp delete_batched(repo, schema, window) do
     Stream.repeatedly(fn ->
       inner =
@@ -204,7 +205,7 @@ defmodule MailglassInbound.Internal.Prune do
 
   defp cutoff(days), do: DateTime.add(DateTime.utc_now(), -days * 86_400, :second)
 
-  # ---- telemetry (per-table counts only, no PII — D-49-29) ------------------
+  # ---- telemetry (per-table counts only, no PII — the design contract) ------------------
 
   defp emit_telemetry(counts) do
     metadata = %{

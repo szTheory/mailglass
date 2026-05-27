@@ -3,7 +3,7 @@ defmodule MailglassInbound.Internal.Operator.Records do
   # Tenant-scoped read model for recent inbound-record browsing (IADM-01 seam).
   #
   # Mirrors `Mailglass.Operator.Deliveries`: a tenant is REQUIRED, but a blank or
-  # missing tenant returns `[]` rather than raising (D-48-04, tenant-required-or-
+  # missing tenant returns `[]` rather than raising (the design contract, tenant-required-or-
   # empty — the admin gateway must never surface a crash on an unset tenant).
   # Every query applies `Mailglass.Tenancy.scope/2` AND an explicit `tenant_id`
   # where-clause (T-48-01) — this is inbound's FIRST `Tenancy.scope/2` usage.
@@ -63,7 +63,7 @@ defmodule MailglassInbound.Internal.Operator.Records do
           subject: record.subject,
           received_at: record.received_at,
           inserted_at: record.inserted_at,
-          # IOPS-05 (D-49-20): the column is the source of truth — select it
+          # IOPS-05 (the design contract): the column is the source of truth — select it
           # directly from the :rec binding (no subquery; the flag is set at INSERT).
           suppression_flagged: record.suppression_flagged,
           outcome: subquery(latest_fresh_run_field(tenant_id, :outcome)),
@@ -116,7 +116,7 @@ defmodule MailglassInbound.Internal.Operator.Records do
   defp normalize_filters(filters) when is_list(filters), do: Map.new(filters)
   defp normalize_filters(filters) when is_map(filters), do: Map.new(filters)
 
-  # Tenant-required-or-empty (D-48-04). Unlike the outbound analog's
+  # Tenant-required-or-empty (the design contract). Unlike the outbound analog's
   # `fetch_tenant_id!` (which raises), a blank/missing tenant returns `:blank` so
   # the caller can yield `[]` — the admin gateway must not crash on an unset
   # tenant context.

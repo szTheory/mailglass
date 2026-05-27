@@ -7,7 +7,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
   NET-NEW, but reuses ONLY existing card/badge/marker chrome (no charts, no JS).
 
   The verdicts are computed upstream by the internal matcher explain function
-  (reached through the runtime gateway, D-48-06), so the rendered pass/fail equals
+  (reached through the runtime gateway, the design contract), so the rendered pass/fail equals
   real matcher behavior — this view NEVER re-implements equality/regex/wildcard
   semantics. The `trace` assign is a list (declared route order) of
   `%{mailbox: String.t(), verdicts: [tuple()]}`; each verdict tuple's LAST element

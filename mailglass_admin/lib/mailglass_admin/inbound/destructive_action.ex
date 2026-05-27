@@ -2,7 +2,7 @@ defmodule MailglassAdmin.Inbound.DestructiveAction do
   @moduledoc """
   Action-time authorization helper for destructive inbound work (replay).
 
-  Sibling of `MailglassAdmin.Operator.DestructiveAction` (D-48-10 / D-48-13). Rides
+  Sibling of `MailglassAdmin.Operator.DestructiveAction` (the design contract / the design contract). Rides
   the existing `MailglassAdmin.Auth.authorize/3` `atom()` action type — NO new auth
   surface — with action `:replay_inbound`, and passes the record under the
   `:inbound_record` context key, NEVER `:delivery`. An adopter `Auth` implementation

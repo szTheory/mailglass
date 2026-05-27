@@ -6,6 +6,7 @@ defmodule MailglassInbound.OptionalDeps do
   gateway surface instead of reusing `Mailglass.OptionalDeps.*` across package
   boundaries. This preserves a coherent sibling-package contract and keeps
   `mix compile --no-optional-deps --warnings-as-errors` green.
+  Route optional dependencies through gateway modules only so --no-optional-deps builds stay clean.
   """
 end
 
@@ -13,7 +14,7 @@ defmodule MailglassInbound.OptionalDeps.Oban do
   @moduledoc """
   Gateway for the optional Oban dependency (`{:oban, "~> 2.21"}`).
 
-  Phase 39 does not ship an async execution runner. This module exists so later
+  this milestone phase does not ship an async execution runner. This module exists so later
   execution plans can branch on Oban availability without turning Oban into a
   mandatory install-time or runtime dependency for the package.
 
@@ -24,7 +25,7 @@ defmodule MailglassInbound.OptionalDeps.Oban do
     referencing `Oban` directly outside this gateway.
 
   No `%Oban.Job{}` contract, queue names, worker modules, or execution hooks
-  are part of the Phase 39 package surface.
+  are part of the this milestone phase package surface.
   """
 
   @compile {:no_warn_undefined, [Oban, Oban.Job, Oban.Worker]}
@@ -75,25 +76,25 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
   Gateway for the optional `ex_aws` / `ex_aws_s3` dependencies
   (`{:ex_aws, "~> 2.7"}` + `{:ex_aws_s3, "~> 2.5"}`).
 
-  Phase 46's SES inbound provider fetches the raw MIME body of a received
+  this milestone phase's SES inbound provider fetches the raw MIME body of a received
   message from the adopter's S3 bucket (the SES receipt-rule S3 action stores
   the message at `s3://{bucketName}/{objectKey}`). The real fetch implementation
   (`MailglassInbound.S3Fetcher.ExAwsS3`) routes **all** `ExAws`/`ExAws.S3`
   access through this gateway; the fake-adapter-first test default
-  (`MailglassInbound.S3Fetcher.Fake`) needs no AWS dependency at all (D-13).
+  (`MailglassInbound.S3Fetcher.Fake`) needs no AWS dependency at all (the design contract).
 
-  ## STACK-lock departure (D-46-20)
+  ## STACK-lock departure (the design contract)
 
   `ex_aws`/`ex_aws_s3` are the **first new optional runtime deps since the v1.0
   STACK lock** ("Optional deps: Add none"). The addition is deliberate and is
   recorded in the inbound CHANGELOG. Both deps are optional, so a default install
   carries no AWS footprint; adopters who run SES inbound add `:ex_aws`,
   `:ex_aws_s3`, an HTTP client (`:hackney`/`:req`), and `:sweet_xml` themselves
-  (Phase 50 setup guide). Credentials resolve via ex_aws's standard chain
+  (this milestone phase setup guide). Credentials resolve via ex_aws's standard chain
   (env → pod-identity → instance/task role) with no mailglass-specific config
-  (D-46-15).
+  (the design contract).
 
-  ## Inbound-local placement (D-46-14)
+  ## Inbound-local placement (the design contract)
 
   This gateway lives in `mailglass_inbound`, NOT core. `MailglassInbound`
   "keeps optional runtime integrations behind its own gateway surface instead of
