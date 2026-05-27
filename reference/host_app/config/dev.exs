@@ -9,3 +9,5 @@ config :mailglass_reference_host, MailglassReferenceHost.Repo,
   show_sensitive_data_on_connection_error: true,
   stacktrace: true,
   pool_size: 10
+
+config :mailglass_reference_host, :dev_routes, true

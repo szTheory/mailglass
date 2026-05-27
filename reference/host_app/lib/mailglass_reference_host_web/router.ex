@@ -16,10 +16,10 @@ defmodule MailglassReferenceHostWeb.Router do
   # - MailglassAdmin.Router.mailglass_admin_routes/2
   # - MailglassAdmin.Router.mailglass_operator_routes/2
   # - MailglassInbound.Ingress.Plug
-  scope "/inbound/:tenant_id" do
+  scope "/inbound" do
     pipe_through :mailglass_webhooks
-    forward "/postmark", MailglassInbound.Ingress.Plug, provider: :postmark
-    forward "/sendgrid", MailglassInbound.Ingress.Plug, provider: :sendgrid
+    post "/:tenant_id/postmark", MailglassInbound.Ingress.Plug, provider: :postmark
+    post "/:tenant_id/sendgrid", MailglassInbound.Ingress.Plug, provider: :sendgrid
   end
 
   if Application.compile_env(:mailglass_reference_host, :dev_routes, false) do
