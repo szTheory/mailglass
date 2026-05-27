@@ -38,7 +38,48 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     assert payload_1["claim_boundary"] =~ "deferred to Phase 58"
   end
 
+  test "webhook ingest checkpoint includes route-level Postmark proof evidence" do
+    checkpoint_dir = Path.join(@project_root, "tmp/mailglass_trust_runner")
+    checkpoint = Path.join(checkpoint_dir, "phase58-plan01-webhook.json")
+
+    File.rm_rf!(checkpoint_dir)
+    File.mkdir_p!(checkpoint_dir)
+
+    assert {_, 0} =
+             System.cmd(
+               "mix",
+               ["verify.reference_host.journey", "--checkpoint-out", checkpoint],
+               cd: @project_root,
+               stderr_to_stdout: true,
+               env: [{"MIX_ENV", "test"}]
+             )
+
+    payload = decode!(checkpoint)
+    webhook = checkpoint_for_stage(payload, "webhook_ingest")
+
+    assert webhook["status"] == "completed"
+    assert webhook["fixture_id"] == "trust.webhook_ingest.001"
+
+    assert webhook["evidence"] == %{
+             "provider" => "postmark",
+             "route" => "/inbound/:tenant_id/postmark",
+             "entrypoint" => "MailglassReferenceHostWeb.Router",
+             "ingress_plug" => "MailglassInbound.Ingress.Plug",
+             "positive_status" => 200,
+             "negative_status" => 401,
+             "negative_reason" => "bad_credentials",
+             "verified_before_tenant" => true,
+             "tenant_resolution_marker" => nil,
+             "persistence_marker" => nil,
+             "execution_marker" => nil
+           }
+  end
+
   defp decode!(path), do: path |> File.read!() |> Jason.decode!()
+
+  defp checkpoint_for_stage(payload, stage) do
+    Enum.find(payload["checkpoints"], &(&1["stage"] == stage))
+  end
 
   defp normalize(payload) do
     %{
