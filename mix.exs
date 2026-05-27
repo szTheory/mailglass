@@ -50,6 +50,7 @@ defmodule Mailglass.MixProject do
         "verify.webhooks": :test,
         "verify.installer": :test,
         "verify.mix_tasks": :test,
+        "verify.reference_host.journey": :test,
         # Deprecated pass-throughs — remove after one release cycle
         "verify.phase01": :test,
         "verify.phase_01": :test,
@@ -218,6 +219,11 @@ defmodule Mailglass.MixProject do
       # only the first file).
       "verify.installer": [
         "test test/mailglass/install test/mailglass/docs_contract_test.exs test/mailglass/docs_migration_smoke_test.exs --warnings-as-errors --exclude flaky"
+      ],
+      # Phase 57: canonical deterministic trust-runner entrypoint for
+      # reference-host journey verification across local and CI surfaces.
+      "verify.reference_host.journey": [
+        "mailglass.trust.run"
       ],
 
       # --- Deprecated pass-throughs (REL-03, one cycle) ---
