@@ -281,7 +281,7 @@ assert html =~ "Subject"
 ### Pitfall 3: Breaking Checkpoint Determinism
 **What goes wrong:** Adding maps/lists with unstable order changes `checkpoint_sha256` unexpectedly. [VERIFIED: lib/mailglass/reference_host/trust_checkpoint.ex:52-64]  
 **Why it happens:** Current hash uses only ordered row triples; adding evidence requires a deliberate canonicalization choice if evidence participates in hashing. [VERIFIED: lib/mailglass/reference_host/trust_checkpoint.ex:58-64]  
-**How to avoid:** Either keep the hash contract on the existing row triple and validate evidence separately, or introduce canonical evidence hashing with sorted keys and update tests/validator together. [VERIFIED: scripts/check_trust_runner_checkpoint.sh]  
+**How to avoid:** Keep the hash contract on the existing row triple and validate evidence separately with `scripts/check_trust_runner_checkpoint.sh`; do not include evidence in `checkpoint_sha256` during Phase 58. [VERIFIED: scripts/check_trust_runner_checkpoint.sh, 58-CONTEXT.md]
 **Warning signs:** Dry-run checkpoint tests fail intermittently or `scripts/check_trust_runner_checkpoint.sh` rejects valid evidence. [VERIFIED: test/reference_host/trust_runner_checkpoint_contract_test.exs]
 
 ### Pitfall 4: Treating LiveView DOM as Stable API
@@ -367,17 +367,17 @@ end
 
 All claims in this research were verified or cited from repository files, local command output, or locked phase context; no user confirmation is needed before planning. [VERIFIED: codebase inspection]
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should checkpoint evidence participate in `checkpoint_sha256`?**
+1. **RESOLVED: Should checkpoint evidence participate in `checkpoint_sha256`?**
    - What we know: Current hash covers `stage|status|fixture_id` rows only. [VERIFIED: lib/mailglass/reference_host/trust_checkpoint.ex:58-64]
-   - What's unclear: Phase 58 can either validate evidence fields separately or make evidence part of a new canonical hash input. [VERIFIED: scripts/check_trust_runner_checkpoint.sh]
-   - Recommendation: Preserve the existing row hash for compatibility and add validator checks for required evidence fields under `webhook_ingest` and `operator_troubleshooting`. [VERIFIED: 58-CONTEXT.md]
+   - Decision: Preserve the existing row hash for compatibility. Phase 58 evidence must be validated separately by `scripts/check_trust_runner_checkpoint.sh` and contract tests under `webhook_ingest` and `operator_troubleshooting`. [VERIFIED: 58-CONTEXT.md]
+   - Planning implication: Plans must not authorize changing `checkpoint_sha256` semantics. If a future phase needs evidence hashing, it requires an explicit checkpoint contract decision before implementation.
 
-2. **Where should route-level proof helpers live?**
+2. **RESOLVED: Where should route-level proof helpers live?**
    - What we know: Existing deterministic fixtures live in `test/support/reference_host/trust_runner_fixtures.ex`; existing route/plug proof patterns live in inbound tests. [VERIFIED: test/support/reference_host/trust_runner_fixtures.ex, mailglass_inbound/test/mailglass_inbound/ingress/plug_test.exs]
-   - What's unclear: Whether to add helper functions to existing fixture module or create a new reference-host proof helper. [VERIFIED: codebase inspection]
-   - Recommendation: Add a small `test/support/reference_host/trust_webhook_fixtures.ex` or extend `TrustRunnerFixtures` only with data, keeping route invocation in tests/runner code. [VERIFIED: existing test/support pattern]
+   - Decision: Add production-accessible reference-host proof support under `lib/mailglass/reference_host/` for runner-executed route/operator proof, and use `test/support/reference_host/trust_runner_fixtures.ex` only for deterministic fixture data shared by tests. [VERIFIED: lib/mix/tasks/mailglass.trust.run.ex, test/support/reference_host/trust_runner_fixtures.ex]
+   - Planning implication: Runner evidence must be derived from executing deterministic proof code, not by returning literal maps after source-text checks. Route-level tests should call the same proof support or assert the same observed values.
 
 ## Environment Availability
 
