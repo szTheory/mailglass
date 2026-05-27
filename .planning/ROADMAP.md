@@ -89,7 +89,7 @@ Success criteria:
 Goal: complete trust journey proof for signed webhook verification and one deterministic non-happy-path diagnosis scenario.  
 Requirements: JOUR-03, JOUR-04  
 Plans:
-- [ ] 58-01-PLAN.md — Route-level Postmark verify-first proof and webhook_ingest runner evidence
+- [x] 58-01-PLAN.md — Route-level Postmark verify-first proof and webhook_ingest runner evidence
 - [ ] 58-02-PLAN.md — Deterministic no-match operator evidence and checkpoint validator semantics
 Success criteria:
 

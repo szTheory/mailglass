@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Adopter Trust Proof
 status: executing
-last_updated: "2026-05-27T21:47:03.381Z"
+last_updated: "2026-05-27T22:27:29.484Z"
 last_activity: 2026-05-27
 progress:
   total_phases: 8
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 13
+  completed_plans: 12
   percent: 50
 ---
 
@@ -20,13 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-27 after v1.3 preflight lock)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 57 — deterministic-trust-runner-fixtures
+**Current focus:** Phase 58 — verify-first-webhook-operator-path
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
-Status: Executing Phase 57
+Phase: 58 (verify-first-webhook-operator-path) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-05-27
 
 ## v1.3 Milestone Intent
@@ -43,6 +43,12 @@ Last activity: 2026-05-27
 - Out-of-scope lock: no provider-matrix broadening, no `gen_smtp` transport expansion, no `SEED-003` auto-promotion in v1.3
 - Deterministic ingress/operator proof lock: signed verify-first webhook path + one scripted non-happy-path diagnosis
 - Risk carry-forward lock: active post-publish smoke hackney dependency failure is an explicit milestone prerequisite, not deferred cleanup
+
+## Decisions
+
+- Phase 58 Plan 01 uses Postmark as the representative verify-first route proof path.
+- Phase 58 Plan 01 keeps `trust_runner.v1` and existing stage names while adding bounded `webhook_ingest` evidence only on non-dry-run runs.
+- Phase 58 Plan 01 preserves dry-run compatibility by skipping live route proof and evidence emission in dry-run mode.
 
 ## Roadmap Snapshot
 
@@ -72,6 +78,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
 | Phase 999.1 P1 | 5 min | 2 tasks | 84 files |
+| Phase 58 P01 | 10min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
