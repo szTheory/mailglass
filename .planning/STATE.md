@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Inbound Production Confidence
 status: ready
-last_updated: "2026-05-26T14:30:00Z"
-last_activity: 2026-05-26 -- Phase 51 completed; v1.2 ready for milestone archive
+last_updated: "2026-05-27T08:20:00Z"
+last_activity: 2026-05-27 -- post-v1.2 next-milestone assessment captured; recommended next wedge is Adopter Trust Proof
 progress:
   total_phases: 10
   completed_phases: 10
@@ -17,17 +17,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-06 after v1.2 milestone open)
+See: .planning/PROJECT.md (updated 2026-05-27 after post-v1.2 next-step assessment)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Next milestone discovery after v1.2 archive
+**Current focus:** Next milestone discovery after v1.2 archive, with a recommended first wedge: Adopter Trust Proof (golden reference host app)
 
 ## Current Position
 
 Phase: 51 (stability-closeout) — COMPLETE
 Plan: 4 of 4
-Status: v1.2 archived and ready for next-milestone scoping
-Last activity: 2026-05-26 -- v1.2 archive finalized after Phase 51 closeout
+Status: v1.2 archived, with post-archive recommendation captured and ready for `/gsd-new-milestone`
+Last activity: 2026-05-27 -- ranked next-milestone wedges and done-enough definition persisted to planning docs
 
 ## v1.2 Phase Plan
 
@@ -65,6 +65,8 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 |----------|------|--------|
 | seed | 003-ecosystem-integrations | dormant |
 
+**Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
+
 ## Pre-existing Cleanup Backlog (Not v1.2 Scope)
 
 `.planning/phases/` still contains 14 leftover phase directories from earlier milestones (28-38 from v0.5/v0.6/v1.0, plus `999.1-*` and `999.2-*` artifact-cleanup phases). These should have been moved into `.planning/milestones/v0.X-phases/` during their respective `/gsd-complete-milestone` runs but were not. Run `/gsd-cleanup` before starting v1.2 phase 45 to avoid name-collision risk.
@@ -80,7 +82,11 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 - Conductor-style synthetic-inbound dev tool deferred to v1.2.1 (security design pass needed for dev-only enforcement and tenant-scoping on synthetic stamps).
 - v1.2 shipped live on 2026-05-26 via Phase 50.5: `mailglass` 1.2.0, `mailglass_admin` 1.2.0, `mailglass_inbound` 0.2.0. Ceremony record: `.planning/phases/50.5-v1-2-release-ceremony/50.5-RELEASE-RECORD.md`.
 - Phase 50.7 ran immediately after the live publish to restore planning truth, audit branch/PR backlog, and settle the publish-summary policy: `.planning/publish/*-publish-summary.json` remains tracked because `test/mailglass/stability_contract_test.exs` reads it directly.
-- Next step: `/gsd-new-milestone` to open the post-v1.2 planning cycle.
+- 2026-05-27 post-v1.2 next-step assessment recommendation:
+  - **single next milestone pick:** Adopter Trust Proof (golden reference host app)
+  - **ranking after that:** inbound stability lock -> synthetic inbound dev tooling -> Cloudflare forwarding recipe docs / narrow ecosystem slice -> re-evaluate `gen_smtp` listener only with clear adopter pull
+  - **diminishing-returns read:** major expansion should slow after trust proof + inbound contract posture hardening
+- Next step: `/gsd-new-milestone` to open the post-v1.2 planning cycle using the recommended ordering above.
 
 ## Performance Metrics
 

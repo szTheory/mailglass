@@ -38,7 +38,17 @@
   "agent_skills": {},
   "features": {},
   "preferences": {
-    "vendor_philosophy": "opinionated"
+    "vendor_philosophy": "opinionated",
+    "milestone_discovery": {
+      "research_first": true,
+      "parallel_candidate_analysis": true,
+      "ranking_lens": "adopter-jtbd-first",
+      "writeback_checklist": [
+        "STATE.md",
+        "threads",
+        "milestone-candidate-note"
+      ]
+    }
   },
   "resolve_model_ids": "omit",
   "mode": "yolo",

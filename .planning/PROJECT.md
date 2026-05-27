@@ -38,6 +38,8 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Release-workflow fanout still relies on the documented `workflow_dispatch` fallback because GitHub `GITHUB_TOKEN` anti-recursion blocks downstream publish workflows from release-created releases.
 - Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
 - `SEED-003-ecosystem-integrations` is intentionally deferred and remains dormant for later milestone selection.
+- The highest remaining adopter-trust gap is still the absence of a maintained, runnable golden reference host app proving install -> preview -> send -> webhook -> operator journey end to end.
+- `mailglass_inbound` runtime capability is stronger than its contract framing in some docs; `mailglass_inbound` still sits outside the `1.x` compatibility promise and needs a dedicated stability-lock milestone after trust proof work.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
 ## Latest Completed Milestone
@@ -96,9 +98,17 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 ## Next Milestone Goals
 
-- Decide whether the next milestone stays inbound-adjacent or shifts back to core/operator leverage.
-- Re-scope deferred candidates explicitly instead of treating any `v1.2` leftovers as automatically active work.
-- Keep `SEED-003-ecosystem-integrations`, Cloudflare Email Routing, `gen_smtp` relay ingress, and Conductor-style synthetic inbound tooling as candidate inputs rather than implicit commitments.
+- **Recommended single next milestone:** **Adopter Trust Proof** (golden reference host app).
+- Define done-enough for that milestone as:
+  - one maintained reference Phoenix host app (not fixture-only) demonstrating install -> preview -> send -> webhook ingest -> operator troubleshooting flow;
+  - one CI lane proving the reference journey on a clean app baseline;
+  - docs positioning that the host app is a usage proof artifact, not the source of API contract truth.
+- Keep follow-on ordering explicit:
+  1) inbound stability lock (`mailglass_inbound` contract + compatibility/deprecation posture hardening),
+  2) synthetic inbound dev tooling (dev-only, tenant-safe, provenance-stamped),
+  3) Cloudflare forwarding recipe docs or narrow pull-driven ecosystem integration slices,
+  4) re-evaluate `gen_smtp` listener only with strong adopter pull.
+- Preserve milestone-open guardrail: do not auto-promote `SEED-003-ecosystem-integrations` or transport-expansion tails as default next work.
 
 ## Core Value
 
@@ -259,4 +269,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-25 — Phase 50 (Inbound Documentation Pass) complete: 6 adopter-facing guides shipped (install/testing/operator/Mailgun/SES/routing-debug), docs.check enforcement extended, ExDoc extras updated, docs_contract_test added (22 tests green). Code review found 3 factual accuracy issues tracked in 50-REVIEW.md for resolution before v1.2 publish. v1.2 Inbound Production Confidence milestone; 7 phases (45-51) covering inbound provider expansion, admin LiveView, DX parity, runtime tooling, telemetry foundation, documentation, and v1.0 carry-forward debt closeout.*
+*Last updated: 2026-05-27 — v1.2 is shipped/archived and post-milestone next-step assessment is captured. Recommended next wedge is Adopter Trust Proof (golden reference host app), followed by inbound stability lock; transport/integration expansion remains pull-driven.*

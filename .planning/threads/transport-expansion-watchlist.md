@@ -1,0 +1,32 @@
+# Thread: Transport Expansion Watchlist
+
+**Opened:** 2026-05-27  
+**Status:** open  
+**Priority:** watchlist (not next)  
+**Owner:** maintainer
+
+## Question
+
+When should transport-adjacent inbound expansion be promoted, and how should it
+be split to avoid scope coupling?
+
+## Items
+
+- Cloudflare Email Routing support (prefer recipe/docs until first-party signed
+  contract is compelling).
+- Synthetic inbound dev tooling (high DX, but requires strict dev-only and
+  tenant/provenance safety gates).
+- `gen_smtp` listener ingress (separate transport class; evaluate only with
+  strong pull).
+
+## Promotion Rules
+
+- Promote only with clear adopter pull and a narrow problem statement.
+- Do not bundle all transport-adjacent items into one milestone.
+- Preserve one-person maintainer sustainability over capability breadth.
+
+## Exit Signal
+
+This thread closes when each item is either:
+- promoted into a specifically-scoped milestone, or
+- explicitly deferred with an updated rationale and review date.

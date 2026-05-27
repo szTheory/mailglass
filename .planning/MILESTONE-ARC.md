@@ -9,6 +9,7 @@ starting from a blank prompt every time.
 
 - **Trajectory:** Operator-first
 - **Planning horizon:** `v1.2` is shipped; next milestone should be chosen from explicit candidates rather than implied carry-forward
+- **Recommended next wedge (2026-05-27 assessment):** Adopter Trust Proof (golden reference host app) before further transport/integration expansion
 - **Current product thesis:** Become the canonical production transactional
   email framework for Phoenix SaaS apps with a credible inbound sibling package,
   then expand only where operator and adopter leverage stay clear
@@ -227,6 +228,37 @@ transport/provider expansion, or adjacent operator leverage.
 
 ## Candidate Milestones
 
+### `candidate` — Adopter Trust Proof (Golden Reference Host App)
+
+**Why it is viable:** The strongest remaining gap is adopter trust proof, not
+core capability. The repo has deep test and docs coverage but no single
+maintained runnable host app that proves the full integration journey end to
+end for a new adopter.
+
+**Possible scope:**
+- One maintained reference Phoenix host app showing install -> preview -> send
+  -> webhook -> operator flow
+- One CI lane proving the reference flow on a clean baseline
+- Docs language clarifying this is a usage proof artifact, not API-contract
+  source-of-truth
+
+**Why it should go first:** It lifts evaluator confidence across all adopters
+with lower maintenance risk than opening a new transport class.
+
+### `candidate` — Inbound Stability Lock
+
+**Why it is viable:** `mailglass_inbound` runtime surface is now broad and
+production-capable, but still outside the core `1.x` compatibility promise and
+needs a dedicated contract-hardening pass.
+
+**Possible scope:**
+- Align inbound contract inventory with shipped `0.2.0` reality
+- Add inbound compatibility/deprecation posture
+- Harden inbound contract verification lanes
+
+**Why it is sequenced after trust proof:** Reference-host evidence should stress
+adopter ergonomics before locking more inbound seams.
+
 ### `candidate` — Ecosystem Integrations
 
 **Why it is viable:** `SEED-003-ecosystem-integrations` survived milestone
@@ -252,6 +284,8 @@ so the next inbound milestone could broaden transport and provider reach.
 
 **Why it is not active yet:** These were explicitly deferred past `v1.2` and
 need fresh scoping because they are not all the same transport/problem class.
+Current ordering preference is to split this into smaller follow-ons rather
+than bundle all three in one milestone.
 
 ### `deferred` — Ecosystem Integrations Seed
 
@@ -283,4 +317,4 @@ source of truth:
    drifting doc-by-doc.
 
 ---
-*Last updated: 2026-05-26 after shipping and archiving v1.2 Inbound Production Confidence.*
+*Last updated: 2026-05-27 after post-v1.2 next-step assessment (recommended next wedge: Adopter Trust Proof).*
