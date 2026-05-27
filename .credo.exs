@@ -85,6 +85,11 @@ extra_checks = [
    [
      suspicious_fragments: ~w(response resp body payload)
    ]},
+  {Mailglass.Credo.NoPlanningArtifactComments,
+   [
+     included_path_prefixes: ["lib/mailglass/", "mailglass_admin/lib/", "mailglass_inbound/lib/"],
+     allowed_literals: []
+   ]},
   # Egress PII guard for HTTP response bodies (TELE-06). NoFullResponseInLogs
   # covers logs and NoPiiInTelemetryMeta covers telemetry, but neither inspects
   # response-body sinks — that gap let `inspect(reason)` (a changeset carrying
