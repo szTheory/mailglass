@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Adopter Trust Proof
 status: executing
-last_updated: "2026-05-27T10:28:31.598Z"
+last_updated: "2026-05-27T10:40:31.653Z"
 last_activity: 2026-05-27
 progress:
   total_phases: 2
