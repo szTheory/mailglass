@@ -3,9 +3,9 @@ defmodule Mailglass.Events.Event do
   Append-only row in `mailglass_events`.
 
   Exposes `changeset/1` for INSERTS only. There is NO update/delete
-  helper — the `mailglass_events_immutable_trigger` (Plan 02) raises
+  helper — the `mailglass_events_immutable_trigger` () raises
   SQLSTATE 45A01 on any UPDATE/DELETE; `Mailglass.Repo.transact/1`
-  (Plan 01) translates to `Mailglass.EventLedgerImmutableError`.
+  () translates to `Mailglass.EventLedgerImmutableError`.
 
   Absence of an update helper also prevents code that looks like it
   could work but blows up in production.
@@ -13,22 +13,22 @@ defmodule Mailglass.Events.Event do
   ## Atom Sets
 
   - `:type` — full Anymail taxonomy + mailglass internal `:dispatched`
-    and `:suppressed` (D-14 project-level).
+    and `:suppressed` ( project-level).
   - `:reject_reason` — `:invalid | :bounced | :timed_out | :blocked |
-    :spam | :unsubscribed | :other` (nullable; D-14).
+    :spam | :unsubscribed | :other` (nullable; ).
 
   ## Relationships
 
   `delivery_id` is a logical `:binary_id` reference — NO FK to
   `mailglass_deliveries` (ARCHITECTURE §4.3; Pitfall 4 in RESEARCH).
   Orphan webhooks insert with `delivery_id: nil` and are linked later
-  by `Mailglass.Events.Reconciler` (Plan 05).
+  by `Mailglass.Events.Reconciler` ().
 
   ## Idempotency
 
   `:idempotency_key` is a nullable string backed by a partial UNIQUE
   index (`mailglass_events_idempotency_key_idx WHERE idempotency_key IS
-  NOT NULL`). Plan 05's `Events.append/1` will pass
+  NOT NULL`). 's `Events.append/1` will pass
   `on_conflict: :nothing, conflict_target: {:unsafe_fragment,
   "(idempotency_key) WHERE idempotency_key IS NOT NULL"}` — replays are
   no-ops.
@@ -53,7 +53,7 @@ defmodule Mailglass.Events.Event do
     :unknown
   ]
 
-  # Per PROJECT D-14 amendment (Phase 4 CONTEXT spec_lock): `:reconciled` is
+  # Per PROJECT  amendment ( CONTEXT spec_lock): `:reconciled` is
   # the ONE mailglass-internal exception to the "Anymail taxonomy verbatim"
   # lock. Emitted ONLY by `Mailglass.Webhook.Reconciler` when linking an
   # orphan event (delivery_id: nil) to a late-committing Delivery row —
@@ -87,9 +87,9 @@ defmodule Mailglass.Events.Event do
           inserted_at: DateTime.t() | nil
         }
 
-  # Phase 4 V02 migration drops `mailglass_events.raw_payload` — raw
+  #  V02 migration drops `mailglass_events.raw_payload` — raw
   # provider bytes now live in `mailglass_webhook_events.raw_payload`
-  # (D-15). The ledger holds the normalized projection + audit metadata
+  # (). The ledger holds the normalized projection + audit metadata
   # only; callers that previously stashed arbitrary context in
   # `raw_payload` move it to `:metadata`.
   schema "mailglass_events" do

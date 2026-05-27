@@ -8,23 +8,23 @@ defmodule Mailglass.SignatureError do
 
   ## Types
 
-  The closed atom set is extended per Phase 4 D-21 from the original
-  four-atom Phase 1 set to the seven-atom webhook-ingest set. The legacy
+  The closed atom set is extended per   from the original
+  four-atom  set to the seven-atom webhook-ingest set. The legacy
   atoms (`:missing`, `:malformed`, `:mismatch`) remain in the set for
-  backward compatibility with any code that already raises them; Plan 05
+  backward compatibility with any code that already raises them; 
   formally hardens the migration with `api_stability.md` documentation
   and final message wording.
 
-  - `:missing_header` — the provider's signature header is not present on the request (D-21)
+  - `:missing_header` — the provider's signature header is not present on the request ()
   - `:malformed_header` — the header is present but cannot be parsed (bad Base64, missing prefix)
   - `:bad_credentials` — Postmark Basic Auth user/pass mismatch (`Plug.Crypto.secure_compare/2` returned false)
-  - `:ip_disallowed` — Postmark IP allowlist mismatch (opt-in; D-04)
-  - `:bad_signature` — HMAC/ECDSA math returned false; collapses `:tampered_body` per D-21
+  - `:ip_disallowed` — Postmark IP allowlist mismatch (opt-in; )
+  - `:bad_signature` — HMAC/ECDSA math returned false; collapses `:tampered_body` per 
   - `:timestamp_skew` — the signed timestamp is outside the acceptable window
   - `:malformed_key` — PEM/DER decode failure at config validate-at-boot time
-  - `:missing` — (legacy) alias of `:missing_header`; retained until Plan 05 consolidates
-  - `:malformed` — (legacy) alias of `:malformed_header`; retained until Plan 05 consolidates
-  - `:mismatch` — (legacy) alias of `:bad_signature`; retained until Plan 05 consolidates
+  - `:missing` — (legacy) alias of `:missing_header`; retained until  consolidates
+  - `:malformed` — (legacy) alias of `:malformed_header`; retained until  consolidates
+  - `:mismatch` — (legacy) alias of `:bad_signature`; retained until  consolidates
 
   ## Per-kind Fields
 
@@ -37,10 +37,10 @@ defmodule Mailglass.SignatureError do
 
   @behaviour Mailglass.Error
 
-  # Phase 4 D-21 extends the atom set from 4 to 7. The legacy atoms
-  # (`:missing`, `:malformed`, `:mismatch`) are retained so Phase 1's
+  #   extends the atom set from 4 to 7. The legacy atoms
+  # (`:missing`, `:malformed`, `:mismatch`) are retained so 's
   # error_test.exs assertions and any raise sites outside this module
-  # continue to work. Plan 05 consolidates naming + `api_stability.md`.
+  # continue to work.  consolidates naming + `api_stability.md`.
   @types [
     :missing_header,
     :malformed_header,
@@ -49,7 +49,7 @@ defmodule Mailglass.SignatureError do
     :bad_signature,
     :timestamp_skew,
     :malformed_key,
-    # Legacy (Phase 1):
+    # Legacy ():
     :missing,
     :malformed,
     :mismatch
@@ -114,7 +114,7 @@ defmodule Mailglass.SignatureError do
     }
   end
 
-  # Phase 4 D-21 messages. Brand voice per CLAUDE.md (thoughtful
+  #   messages. Brand voice per CLAUDE.md (thoughtful
   # maintainer): specific, composed, never "Oops!" — each message names
   # the failure mode in atom-aligned terms so operators can correlate
   # Logger output with the typed :type field.
@@ -142,7 +142,7 @@ defmodule Mailglass.SignatureError do
   defp format_message(:malformed_key, _ctx),
     do: "Webhook verification key failed to decode (DER/Base64 invalid; check your provider config)"
 
-  # Phase 1 legacy messages — preserved verbatim.
+  #  legacy messages — preserved verbatim.
   defp format_message(:missing, _ctx),
     do: "Webhook signature verification failed: signature header is missing"
 

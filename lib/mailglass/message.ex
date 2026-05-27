@@ -26,12 +26,12 @@ defmodule Mailglass.Message do
     and preview auto-discovery.
   - `:mailable_function` — the mailable function that built this message (e.g.
     `:welcome`, `:password_reset`). Populated by the `use Mailglass.Mailable`
-    macro's injected builder (D-38). Used by the runtime auth-stream tracking
+    macro's injected builder (). Used by the runtime auth-stream tracking
     guard. Default: `nil`.
-  - `:tenant_id` — multi-tenant scope. Carried on every record (CORE-03, D-09
+  - `:tenant_id` — multi-tenant scope. Carried on every record (CORE-03, 
     project-level). `nil` in single-tenant mode.
   - `:stream` — message stream: `:transactional`, `:operational`, or `:bulk`.
-    Auth and security emails must use `:transactional` (no tracking, per D-08
+    Auth and security emails must use `:transactional` (no tracking, per 
     project-level). Default: `:transactional`.
   - `:tags` — free-form string tags for filtering and analytics. Default: `[]`.
   - `:metadata` — adopter-supplied extras. **PII-free by convention** (not
@@ -294,7 +294,7 @@ defmodule Mailglass.Message do
   Stamps the `:mailable_function` field on a `%Message{}`.
 
   Called in adopter mailable functions to record which function built the
-  message. Required by the D-38 runtime tracking guard
+  message. Required by the  runtime tracking guard
   (`Mailglass.Tracking.Guard.assert_safe!/1`).
 
   ## Examples
@@ -314,7 +314,7 @@ defmodule Mailglass.Message do
   @doc """
   Returns a new `%Message{}` with the given key put into `metadata`.
 
-  Used by the send pipeline (Plan 05) to stamp `delivery_id` into the
+  Used by the send pipeline () to stamp `delivery_id` into the
   message's metadata AFTER the Delivery row is inserted but BEFORE the
   adapter is called — so `Mailglass.Adapters.Fake` records the same
   `delivery_id` that the DB persisted (otherwise

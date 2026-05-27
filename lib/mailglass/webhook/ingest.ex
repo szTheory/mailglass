@@ -12,12 +12,12 @@ defmodule Mailglass.Webhook.Ingest do
        orphans skip the projector step per Pitfall 4)
     4. Status flip on the webhook_event row to `:succeeded`
 
-  ## Composition (CONTEXT D-15 amended HOOK-06)
+  ## Composition (CONTEXT  amended HOOK-06)
 
   Inside `Mailglass.Repo.transact/1`:
 
-    1. `SET LOCAL statement_timeout = '2s'` (D-29 — DoS bound)
-    2. `SET LOCAL lock_timeout = '500ms'` (D-29)
+    1. `SET LOCAL statement_timeout = '2s'` ( — DoS bound)
+    2. `SET LOCAL lock_timeout = '500ms'` ()
     3. `Multi.run(:duplicate_check, ...)` — deterministic pre-insert
        lookup against UNIQUE(provider, provider_event_id) inside the
        same snapshot as the upcoming insert. Per revision B5.
@@ -45,7 +45,7 @@ defmodule Mailglass.Webhook.Ingest do
   heuristic — Ecto's `on_conflict: :nothing, returning: true` returns
   the conflict-target row with its existing id, so id is never nil
   after insert/conflict). The deterministic duplicate signal comes
-  from the `:duplicate_check` step's pre-insert lookup; Plan 04's Plug
+  from the `:duplicate_check` step's pre-insert lookup; 's Plug
   returns 200 either way.
 
   ## Orphan path
@@ -53,16 +53,16 @@ defmodule Mailglass.Webhook.Ingest do
   A normalized event whose `message_id` / `sg_message_id` doesn't
   match any `mailglass_deliveries.provider_message_id` is an "orphan"
   — the webhook arrived before the Delivery row committed (empirical
-  5-30s race window for SendGrid + Postmark). Per CONTEXT D-15 +
+  5-30s race window for SendGrid + Postmark). Per CONTEXT  +
   Pitfall 4: the `mailglass_events` row inserts with
   `delivery_id: nil + needs_reconciliation: true` AND the projector
   step is SKIPPED for that event (`Projector.update_projections/2`
   pattern-matches `%Delivery{}` and would `FunctionClauseError` on
   nil).
 
-  Plan 04-07's `Mailglass.Webhook.Reconciler` Oban cron sweeps these
+  -07's `Mailglass.Webhook.Reconciler` Oban cron sweeps these
   orphans and appends a `:reconciled` event when the matching
-  Delivery later commits (D-18 — append, never UPDATE).
+  Delivery later commits ( — append, never UPDATE).
 
   ## Output shape
 
@@ -74,10 +74,10 @@ defmodule Mailglass.Webhook.Ingest do
       }}
 
   The 3-tuple `events_with_deliveries` shape (per revision B7) lets
-  Plan 04-04's Plug drive post-commit broadcast without set-difference
+  -04's Plug drive post-commit broadcast without set-difference
   recomputation: `{event, delivery, false}` triggers
   `Projector.broadcast_delivery_updated/3`; `{event, nil, true}`
-  skips (Plan 04-07 Reconciler emits `:reconciled` when the matching
+  skips (-07 Reconciler emits `:reconciled` when the matching
   Delivery surfaces — broadcasting twice would confuse LiveView
   subscribers).
 
@@ -112,7 +112,7 @@ defmodule Mailglass.Webhook.Ingest do
 
   See module doc for the full output shape. Caller (Plug) iterates
   `:events_with_deliveries` to call `Projector.broadcast_delivery_updated/3`
-  AFTER this function returns `{:ok, _}` (Phase 3 D-04 — broadcast
+  AFTER this function returns `{:ok, _}` (  — broadcast
   post-commit).
   """
   @doc since: "0.1.0"
@@ -128,8 +128,8 @@ defmodule Mailglass.Webhook.Ingest do
     # so reaching ingest without a stamped process is a programmer error.
     tenant_id = Tenancy.tenant_id!()
 
-    # Per revision B2 + CONTEXT D-11: guard against :async at v0.1. The
-    # NimbleOptions schema entry (Plan 04-05) enforces {:in, [:sync, :async]}
+    # Per revision B2 + CONTEXT : guard against :async at v0.1. The
+    # NimbleOptions schema entry (-05) enforces {:in, [:sync, :async]}
     # at boot; this runtime raise catches the reserved knob path so adopters
     # get a clear error rather than a silent :sync fallback.
     case Config.webhook_ingest_mode() do
@@ -137,13 +137,13 @@ defmodule Mailglass.Webhook.Ingest do
         :ok
 
       :async ->
-        raise "webhook_ingest_mode: :async is reserved for v0.5 (CONTEXT D-11); " <>
+        raise "webhook_ingest_mode: :async is reserved for v0.5 (CONTEXT ); " <>
                 "v0.1 supports :sync only"
     end
 
     result =
       Repo.transact(fn ->
-        # CONTEXT D-29: SET LOCAL inside the transaction (Pitfall 6 — outside
+        # CONTEXT : SET LOCAL inside the transaction (Pitfall 6 — outside
         # a transaction these are no-ops).
         _ = Repo.query!("SET LOCAL statement_timeout = '2s'", [])
         _ = Repo.query!("SET LOCAL lock_timeout = '500ms'", [])
@@ -159,11 +159,11 @@ defmodule Mailglass.Webhook.Ingest do
         end
       end)
 
-    # Plan 08: per-event + per-ingest telemetry signals. Fires AFTER the
-    # transact returns {:ok, _} (Phase 3 D-04 post-commit invariant) so
+    # : per-event + per-ingest telemetry signals. Fires AFTER the
+    # transact returns {:ok, _} (  post-commit invariant) so
     # adopters observing the emits know the events are durable. Emits are
     # best-effort with no rescue — `:telemetry.execute/3` handler
-    # isolation (D-27 via the Phase 1 wrapper) contains any handler raise
+    # isolation ( via the  wrapper) contains any handler raise
     # from propagating into this pipeline.
     case result do
       {:ok, finalized} ->
@@ -186,7 +186,7 @@ defmodule Mailglass.Webhook.Ingest do
     # lookup. Runs INSIDE the same transaction (Multi.run) so the read sees
     # the same snapshot as the subsequent insert. If the row already exists,
     # on_conflict: :nothing below is a no-op AND this flag surfaces via
-    # finalize_changes/2 so Plan 04's Plug returns 200 without resuming work.
+    # finalize_changes/2 so 's Plug returns 200 without resuming work.
     duplicate_check_step =
       Multi.run(Multi.new(), :duplicate_check, fn _repo, _changes ->
         duplicate_query =
@@ -231,7 +231,7 @@ defmodule Mailglass.Webhook.Ingest do
 
   # Step 2: for each %Event{} in the normalized list, append an Events.append_multi
   # step that resolves delivery_id lazily from prior changes. Function-form
-  # append_multi (Phase 3 I-03) matches Multi.insert/4 + Oban.insert/2 shape.
+  # append_multi ( I-03) matches Multi.insert/4 + Oban.insert/2 shape.
   defp append_events_for_each(multi, events, provider, tenant_id) do
     events
     |> Enum.with_index()
@@ -332,7 +332,7 @@ defmodule Mailglass.Webhook.Ingest do
 
   # ---- Helpers --------------------------------------------------------
 
-  # Events.append_multi/3 guards `is_atom(name)` for parity with the Phase 2/3
+  # Events.append_multi/3 guards `is_atom(name)` for parity with the /3
   # single-insert shape (and to keep change-map keys inspectable). We synthesize
   # the step name as `:"event_#{idx}"` — atom creation is bounded by the input
   # batch size (Postmark: 1; SendGrid: ≤128 per batch), so atom table growth
@@ -377,7 +377,7 @@ defmodule Mailglass.Webhook.Ingest do
   end
 
   # Resend (Svix) sends one event per webhook with a stable `id` like
-  # "evt_..."; Phase 14 normalize/2 plumbs that into
+  # "evt_...";  normalize/2 plumbs that into
   # Event.metadata["provider_event_id"], same convention as Postmark.
   defp derive_webhook_provider_event_id(:resend, _raw_body, [first | _]) do
     extract_event_provider_id(first) || ""
@@ -459,7 +459,7 @@ defmodule Mailglass.Webhook.Ingest do
 
   # Build the final result map for the Plug. Per revision B7 — 3-tuples
   # {inserted_event, delivery_or_nil, orphan?} give downstream consumers
-  # (Plan 04-04 broadcast_post_commit/1, Plan 04-08 emit_per_event_signals/2)
+  # (-04 broadcast_post_commit/1, -08 emit_per_event_signals/2)
   # an explicit orphan? flag without recomputing set differences.
   defp finalize_changes(changes, events) do
     webhook_event = Map.get(changes, :webhook_event)
@@ -483,9 +483,9 @@ defmodule Mailglass.Webhook.Ingest do
           _other ->
             # :orphan_skipped, :no_event_row, or missing. Fall back to the
             # inserted event row (orphan path inserts with delivery_id: nil)
-            # so Plan 04-04's broadcast loop still receives a sensible shape
+            # so -04's broadcast loop still receives a sensible shape
             # even on the orphan branch. Orphans are knowingly skipped for
-            # broadcast by Plan 04-04 — Plan 07 Reconciler re-emits when
+            # broadcast by -04 —  Reconciler re-emits when
             # matching Delivery surfaces.
             inserted_event = Map.get(changes, event_step_name(idx), input_event)
             [{inserted_event, nil, true}]
@@ -503,15 +503,15 @@ defmodule Mailglass.Webhook.Ingest do
     }
   end
 
-  # Plan 08 per-event telemetry emits. Walks the 3-tuple list from
+  #  per-event telemetry emits. Walks the 3-tuple list from
   # finalize_changes/2 (per revision B7) — no set-difference, no
   # Event-struct equality (post-insert structs differ from input structs
   # by :id/:inserted_at). Branches on the explicit `orphan?` flag.
   #
-  # Metadata complies with D-23 whitelist: `provider, event_type,
+  # Metadata complies with  whitelist: `provider, event_type,
   # tenant_id, age_seconds, mapped`. No PII, no raw payloads, no IPs.
   #
-  # `provider` is the outer ingest arg (Plan 04-02 decision: provider
+  # `provider` is the outer ingest arg (-02 decision: provider
   # identity lives in Event.metadata with string keys, NOT as a schema
   # column — cannot read `event.provider`).
   defp emit_per_event_signals(provider, %{events_with_deliveries: tuples}, tenant_id) do
@@ -535,9 +535,9 @@ defmodule Mailglass.Webhook.Ingest do
     :ok
   end
 
-  # Plan 08 duplicate-signal emit. Fires once per ingest call (not
+  #  duplicate-signal emit. Fires once per ingest call (not
   # per-event) — adopters alert on its rate to distinguish provider
-  # retry storms from real traffic (CONTEXT D-24 alternative to
+  # retry storms from real traffic (CONTEXT  alternative to
   # log-scraping). Passes through to a no-op when the ingest was not a
   # duplicate replay.
   defp emit_duplicate_signal(_provider, %{duplicate: false}), do: :ok

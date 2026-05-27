@@ -3,9 +3,9 @@ defmodule Mailglass.Schema do
   Stamps mailglass-wide schema conventions onto a module.
 
   Three module attributes, no behaviour injection, no magic — consistent
-  with Phase 1's "pluggable behaviours over magic" DNA. Consumed by
+  with 's "pluggable behaviours over magic" DNA. Consumed by
   `Mailglass.Outbound.Delivery`, `Mailglass.Events.Event`, and
-  `Mailglass.Suppression.Entry` (Plan 03).
+  `Mailglass.Suppression.Entry` ().
 
   ## Usage
 
@@ -18,7 +18,7 @@ defmodule Mailglass.Schema do
         end
       end
 
-  Stamped attributes per D-28:
+  Stamped attributes per :
 
   - `@primary_key {:id, UUIDv7, autogenerate: true}`
   - `@foreign_key_type :binary_id`

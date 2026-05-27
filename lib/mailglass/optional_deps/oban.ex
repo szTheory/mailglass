@@ -7,10 +7,10 @@ defmodule Mailglass.OptionalDeps.Oban do
   `Mailglass.Outbound.deliver_later/2` falls back to `Task.Supervisor` with a
   `Logger.warning` emitted at boot (see `Mailglass.Application`).
 
-  Oban integration lands in Phase 3 (Outbound). This gateway is delivered in
-  Phase 1 so Config/Telemetry can reference it without forward-reference pain.
+  Oban integration lands in  (Outbound). This gateway is delivered in
+   so Config/Telemetry can reference it without forward-reference pain.
 
-  ## Phase 2 addition — TenancyMiddleware (D-33)
+  ##  addition — TenancyMiddleware ()
 
   `Mailglass.Oban.TenancyMiddleware` (defined as a sibling module in this
   file, conditionally compiled when `Oban.Worker` is loaded) serializes
@@ -26,7 +26,7 @@ defmodule Mailglass.OptionalDeps.Oban do
   worker's `perform/1`. Both paths converge on the same
   `Mailglass.Tenancy.with_tenant/2` wrap.
 
-  ## Lint Enforcement (Phase 6)
+  ## Lint Enforcement ()
 
   The Credo check `NoBareOptionalDepReference` flags direct `Oban.*` calls
   outside this module. All Oban interaction routes through the Outbound
@@ -87,11 +87,11 @@ end
 if Code.ensure_loaded?(Oban.Worker) do
   defmodule Mailglass.Oban.TenancyMiddleware do
     @moduledoc """
-    Serializes `Mailglass.Tenancy.current/0` across Oban job boundaries (D-33).
+    Serializes `Mailglass.Tenancy.current/0` across Oban job boundaries ().
 
     ## Enqueue side
 
-    Phase 3 `Mailglass.Outbound` adds a `put_tenant_in_args/2` helper that
+     `Mailglass.Outbound` adds a `put_tenant_in_args/2` helper that
     merges `%{"mailglass_tenant_id" => current()}` into job args at enqueue
     time. The serialized value is a plain string — JSON-safe, no coercion.
 

@@ -1,5 +1,5 @@
 defmodule Mailglass.RateLimiter.Supervisor do
-  @moduledoc "Supervises `Mailglass.RateLimiter.TableOwner` (D-22)."
+  @moduledoc "Supervises `Mailglass.RateLimiter.TableOwner` ()."
   use Supervisor
 
   def start_link(opts) do

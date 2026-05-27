@@ -13,9 +13,9 @@ defmodule Mailglass.Application do
     maybe_warn_missing_oban()
     maybe_warn_missing_oban_for_webhook_workers()
 
-    # Phase 3: PubSub first (Projector broadcasts depend on it), then Task.Supervisor
+    # : PubSub first (Projector broadcasts depend on it), then Task.Supervisor
     # (Oban-absent async fallback). The three optional supervisors are gated via
-    # Code.ensure_loaded?/1 so Plan 01 can land first without Plans 02 + 03 having
+    # Code.ensure_loaded?/1 so  can land first without Plans 02 + 03 having
     # shipped yet — and so both later plans can avoid patching this file (I-08).
     children =
       [
@@ -41,14 +41,14 @@ defmodule Mailglass.Application do
   end
 
   # Adds `child_spec` to the children list iff `module` is compiled-and-loadable.
-  # The truthy branch makes Plan 02 (Fake.Supervisor) and Plan 03 (RateLimiter +
+  # The truthy branch makes  (Fake.Supervisor) and  (RateLimiter +
   # SuppressionStore.ETS) land their children purely by creating their supervisor
   # module — no second patch to this file required.
   defp maybe_add(children, module, child_spec) do
     if Code.ensure_loaded?(module), do: children ++ [child_spec], else: children
   end
 
-  # D-17: emit exactly once per BEAM node lifetime via :persistent_term gate.
+  # : emit exactly once per BEAM node lifetime via :persistent_term gate.
   # Subsequent Application.start/2 calls (supervisor restart, test harness) do not re-emit.
   defp maybe_warn_missing_oban do
     configured = Application.get_env(:mailglass, :async_adapter)
@@ -76,7 +76,7 @@ defmodule Mailglass.Application do
     end
   end
 
-  # Phase 4 D-20: Webhook Reconciler + Pruner are both Oban-backed cron workers.
+  #  : Webhook Reconciler + Pruner are both Oban-backed cron workers.
   # Without Oban, orphan reconciliation and pruning still work through their
   # canonical mix tasks, but adopters must schedule those tasks themselves
   # (for example via system cron). Per revision W2 option b: ONE consolidated

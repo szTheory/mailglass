@@ -6,7 +6,7 @@ defmodule Mailglass.Outbound.AsyncAdapter.TaskSupervisor do
   # Spawns a non-linked task under the top-level Mailglass.TaskSupervisor,
   # which is started in Mailglass.Application. The caller's closure is
   # responsible for re-stamping tenancy via Mailglass.Tenancy.with_tenant/2
-  # (D-08-15) since the task runs in a fresh process that does not inherit
+  # (-15) since the task runs in a fresh process that does not inherit
   # the parent process-dict.
 
   @impl true

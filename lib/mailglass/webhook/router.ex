@@ -5,7 +5,7 @@ defmodule Mailglass.Webhook.Router do
 
   Mirrors the `Phoenix.LiveDashboard.Router` + `Oban.Web.Router` idiom:
   the macro is invoked inside an adopter-owned `scope` block with
-  adopter-owned `pipe_through` (CONTEXT D-06). Mailglass does NOT
+  adopter-owned `pipe_through` (CONTEXT ). Mailglass does NOT
   provide its own router — adopters keep full control over the
   surrounding pipeline (CORS, IP allowlist, rate-limit, endpoint
   selection).
@@ -28,7 +28,7 @@ defmodule Mailglass.Webhook.Router do
         end
       end
 
-  Generates two `post` routes by default (CONTEXT D-07 — provider-per-path
+  Generates two `post` routes by default (CONTEXT  — provider-per-path
   discipline):
 
     * `POST /webhooks/postmark` → `Mailglass.Webhook.Plug` with `[provider: :postmark]`
@@ -40,9 +40,9 @@ defmodule Mailglass.Webhook.Router do
       `[:postmark, :sendgrid, :mailgun, :ses]`. The default remains
       `[:postmark, :sendgrid]`; Mailgun and SES require explicit opt-in.
       Unknown providers raise `ArgumentError` at compile time — invalid
-      config fails at router-mount, not at request time (D-07).
+      config fails at router-mount, not at request time ().
     * `:as` — route helper prefix. Default `:mailglass_webhook` per
-      CONTEXT D-08 (shared vocabulary lock with the Phase 5 admin
+      CONTEXT  (shared vocabulary lock with the  admin
       mount). Each generated route's helper is `:"\#{as}_\#{provider}"`.
 
   The default mount surface remains stable even as `@valid_providers`

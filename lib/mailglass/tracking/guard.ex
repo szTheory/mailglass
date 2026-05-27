@@ -1,19 +1,19 @@
 defmodule Mailglass.Tracking.Guard do
   @moduledoc """
-  Runtime auth-stream tracking guard (D-38).
+  Runtime auth-stream tracking guard ().
 
-  **Dual enforcement with Phase 6 `TRACK-02 NoTrackingOnAuthStream`**:
+  **Dual enforcement with  `TRACK-02 NoTrackingOnAuthStream`**:
 
-  - Compile-time: Phase 6 Credo catches most cases via AST inspection of
+  - Compile-time:  Credo catches most cases via AST inspection of
     `@mailglass_opts` + mailable function names.
   - Runtime: THIS MODULE catches the dynamic-function-name bypass
     (metaprogrammed mailables, `def unquote(name)(...)` patterns).
 
-  Invoked from `Mailglass.Outbound.send/2` (Plan 05) as a precondition
+  Invoked from `Mailglass.Outbound.send/2` () as a precondition
   similar to `Mailglass.Tenancy.assert_stamped!/0` — not a preflight STAGE
   (no `{:error, _}` return path), but a FAIL-LOUD raise.
 
-  ## Regex (D-38)
+  ## Regex ()
 
   `^(magic_link|password_reset|verify_email|confirm_account)` — matches the
   four canonical auth-carrying function-name prefixes. Variant function names
@@ -24,14 +24,14 @@ defmodule Mailglass.Tracking.Guard do
 
   ## Adopters CANNOT turn this off
 
-  Deliberate choice (D-38). The "acknowledged" escape hatch is not provided.
+  Deliberate choice (). The "acknowledged" escape hatch is not provided.
   Adopters who hit the regex falsely should rename their function or split their
   mailable module.
 
   ## nil mailable_function (T-3-04-01)
 
   When `mailable_function` is `nil`, the guard returns `:ok` — it cannot perform
-  the heuristic without a function name. Phase 6 Credo `TRACK-02` is the primary
+  the heuristic without a function name.  Credo `TRACK-02` is the primary
   enforcement for this case via compile-time AST inspection.
   """
 

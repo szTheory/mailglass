@@ -3,7 +3,7 @@ defmodule Mailglass.Outbound do
   @compile {:no_warn_undefined, [Mailglass.Outbound.Worker]}
 
   @moduledoc """
-  Public facade for the mailglass send pipeline (TRANS-04, SEND-01).
+  Public facade for the mailglass send pipeline (TRANS-04, SEN).
 
   All four delivery shapes (sync, async, batch, bang variants) converge
   on the same `%Mailglass.Outbound.Delivery{}` return object. Adopter code
@@ -14,12 +14,12 @@ defmodule Mailglass.Outbound do
   `deliver/2` is the canonical public name (matches Swoosh + ActionMailer
   familiarity). `send/2` is the internal implementation verb and a retained
   compatibility bridge; `deliver/2` is the stable-lane `defdelegate` alias
-  (D-13).
+  for synchronous sends.
 
-  ## Preflight pipeline (SEND-01, D-18)
+  ## Preflight pipeline
 
   0. `Mailglass.Tenancy.assert_stamped!/0` — precondition (raises)
-  1. `Mailglass.Tracking.Guard.assert_safe!/1` — D-38 precondition (raises)
+  1. `Mailglass.Tracking.Guard.assert_safe!/1` —  precondition (raises)
   2. `Mailglass.Suppression.check_before_send/1`
   3. `Mailglass.RateLimiter.check/3` (`:transactional` bypasses)
   4. `Mailglass.Stream.policy_check/1` (no-op seam v0.1)
@@ -29,13 +29,13 @@ defmodule Mailglass.Outbound do
   Preconditions (0 + 1) raise on violation. Stages 2-5 return
   `{:error, struct}`; the `with` short-circuits.
 
-  ## Two-Multi sync path (D-20)
+  ## Two-Multi sync path
 
   Multi#1 (inside `Repo.multi/1`):
   - `Ecto.Multi.insert(:delivery, Delivery.changeset(attrs))`
   - `Mailglass.Events.append_multi(:event_queued, ...)`
 
-  Adapter call OUTSIDE any transaction.
+  Provider adapter delivery runs outside the database transaction to avoid pool starvation and lock amplification.
 
   Multi#2 (inside `Repo.multi/1`):
   - `Ecto.Multi.update(:delivery, ...)` — applies
@@ -44,10 +44,10 @@ defmodule Mailglass.Outbound do
 
   After Multi#2 commits → `Projector.broadcast_delivery_updated/3`.
 
-  **Adapter-call-in-transaction is a hard no** (D-20) — Postgres
+  **Adapter-call-in-transaction is a hard no** — Postgres
   connection-pool starvation under provider latency. Orphan `:queued`
   Delivery rows between Multi#1 and adapter call are reconcilable via
-  `Mailglass.Events.Reconciler` (Phase 2 D-19) with age ≥5min.
+  `Mailglass.Events.Reconciler` with age >= 5min.
 
   ## Return shapes
 
@@ -58,8 +58,6 @@ defmodule Mailglass.Outbound do
 
   Async-only. Every message produces an Oban job (or Task.Supervisor spawn
   when Oban absent). Sync-batch fan-out deferred to v0.5.
-  `[ASSUMED — Plan 05 Task 4 decision]`
-
   ## Heterogeneous-tenant batches
 
   `deliver_many/2` assumes all messages share the same tenant_id. Mixed-tenant
@@ -102,7 +100,7 @@ defmodule Mailglass.Outbound do
 
   @doc """
   Synchronous hot path. Runs the full preflight pipeline, persists the Delivery
-  via two Multis (adapter call between them, OUTSIDE any transaction per D-20),
+  via two Multis (adapter call between them, outside any transaction),
   and returns `{:ok, %Delivery{status: :sent}}` on success.
 
   `deliver/2` is the canonical public alias (see below). `send/2` remains as a
@@ -126,7 +124,7 @@ defmodule Mailglass.Outbound do
   end
 
   @doc """
-  Canonical public verb for synchronous delivery (D-13). Delegates to `send/2`.
+  Canonical public verb for synchronous delivery. Delegates to `send/2`.
   Matches the naming convention from Swoosh and ActionMailer for adopter
   familiarity and is the stable-lane front door documented by the `1.x`
   compatibility policy.
@@ -162,7 +160,7 @@ defmodule Mailglass.Outbound do
   Async delivery. Runs preflight pipeline, persists the Delivery, and enqueues
   an Oban job (or spawns a Task.Supervisor task when Oban is absent).
   Always returns `{:ok, %Delivery{status: :queued}}` on success — never an
-  `%Oban.Job{}` (D-14 return-shape lock).
+  `%Oban.Job{}` ( return-shape lock).
   """
   @doc since: "0.1.0"
   @spec deliver_later(Message.t(), keyword()) ::
@@ -178,10 +176,9 @@ defmodule Mailglass.Outbound do
   # =========================================================
 
   @doc """
-  Async batch send (TRANS-04, D-15). v0.1 scope: **async-only** — every
+  Async batch send (TRANS-04). v0.1 scope: **async-only** — every
   message in the batch produces an Oban job (or Task.Supervisor spawn
   when Oban absent). Sync-batch fan-out deferred to v0.5.
-  `[ASSUMED — Plan 05 Task 4 decision]`
 
   ## Return shape
 
@@ -194,8 +191,8 @@ defmodule Mailglass.Outbound do
 
   ## Replay safety
 
-  `idempotency_key` + partial UNIQUE index make re-running the same batch a
-  DB-level no-op. Existing rows are re-fetched via companion SELECT.
+  Idempotency keys make duplicate dispatch attempts a database-level no-op.
+  Existing rows are re-fetched via companion SELECT.
   """
   @doc since: "0.1.0"
   @spec deliver_many([Message.t()], keyword()) ::
@@ -215,7 +212,7 @@ defmodule Mailglass.Outbound do
   when any Delivery has `status: :failed`.
 
   `deliver_later!/2` is deliberately NOT provided (enqueue isn't a
-  delivery — nothing delivery-shaped to raise about, per D-16).
+  delivery — nothing delivery-shaped to raise about.
   """
   @doc since: "0.1.0"
   @spec deliver_many!([Message.t()], keyword()) :: [Delivery.t()]
@@ -329,7 +326,7 @@ defmodule Mailglass.Outbound do
   end
 
   # Calls the adapter; on failure writes Multi#2 with :failed status (T-3-05-07).
-  # Adapter call is OUTSIDE any transaction (D-20).
+  # Adapter call is outside any transaction.
   defp call_adapter_or_persist_failure(%Delivery{} = delivery, %Message{} = rendered, adapter) do
     case call_adapter(rendered, adapter) do
       {:ok, _} = ok ->
@@ -439,9 +436,9 @@ defmodule Mailglass.Outbound do
 
     case Repo.multi(multi) do
       {:ok, %{delivery: d}} ->
-        # AsyncAdapter dispatch (D-08-11). TaskSupervisor impl is prod default;
+        # AsyncAdapter dispatch (-11). TaskSupervisor impl is prod default;
         # Inline impl is test default. Tenancy re-stamp inside the closure works
-        # for both paths (D-08-15) — Inline runs sync under caller, TaskSupervisor
+        # for both paths (-15) — Inline runs sync under caller, TaskSupervisor
         # runs in fresh process; with_tenant/2 stamps the executing process
         # either way.
         Mailglass.Outbound.AsyncAdapter.dispatch(
@@ -630,7 +627,7 @@ defmodule Mailglass.Outbound do
       :ok
     else
       Enum.each(deliveries, fn %Delivery{id: id, tenant_id: t} ->
-        # AsyncAdapter dispatch (D-08-11). TaskSupervisor (prod) | Inline (test).
+        # AsyncAdapter dispatch (-11). TaskSupervisor (prod) | Inline (test).
         Mailglass.Outbound.AsyncAdapter.dispatch(
           fn ->
             Mailglass.Tenancy.with_tenant(t, fn ->
@@ -756,7 +753,7 @@ defmodule Mailglass.Outbound do
       normalized_payload: %{provider_message_id: pmid}
     }
 
-    # Build a stubbed Event to feed update_projections/2 (Phase 2 sig takes an Event struct).
+    # Build a stubbed Event to feed update_projections/2 ( sig takes an Event struct).
     event_for_projection = %Mailglass.Events.Event{
       tenant_id: delivery.tenant_id,
       delivery_id: delivery.id,
@@ -834,7 +831,7 @@ defmodule Mailglass.Outbound do
   # I-11: Serialize any %Mailglass.Error{} (or generic Exception) into a
   # plain map suitable for the :last_error :map column. Shape: %{type: atom,
   # message: binary, module: binary}. Adopters pattern-match on :type, never
-  # on :message string (D-07 contract).
+  # on :message string ( contract).
   defp serialize_error(%{__exception__: true, __struct__: mod} = err) do
     base = %{module: Atom.to_string(mod), message: Exception.message(err)}
 

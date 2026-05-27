@@ -1,10 +1,10 @@
 defmodule Mailglass.Clock do
   @moduledoc """
   The single legitimate source of wall-clock time in mailglass (TEST-05).
-  Phase 6 `LINT-12 NoDirectDateTimeNow` forbids `DateTime.utc_now/0`
+   `LINT-12 NoDirectDateTimeNow` forbids `DateTime.utc_now/0`
   outside this module.
 
-  ## Three-tier resolution (D-07)
+  ## Three-tier resolution ()
 
   1. If `Process.get(:mailglass_clock_frozen_at)` is a `%DateTime{}` → return it.
   2. Else if `Application.get_env(:mailglass, :clock)` is set → delegate to

@@ -4,7 +4,7 @@ defmodule Mailglass.Webhook.Providers.SES.TrustPolicy do
 
   Validates `SigningCertURL` and `SubscribeURL` from SNS messages before any
   network I/O. Implements the safe host pattern from the AWS PHP SDK reference
-  implementation to prevent S3 namespace collision attacks (per D-06, D-09).
+  implementation to prevent S3 namespace collision attacks (per , ).
 
   All functions are pure predicates — no side effects, no network I/O, no Logger.
   Callers raise `%Mailglass.SignatureError{}` on `false`.
@@ -64,7 +64,7 @@ defmodule Mailglass.Webhook.Providers.SES.TrustPolicy do
   - No userinfo component
   - No fragment component
 
-  Note: SubscribeURL validation is a consistency check per D-07. The actual
+  Note: SubscribeURL validation is a consistency check per . The actual
   subscription confirmation does NOT follow this URL — it constructs the
   ConfirmSubscription API request from `TopicArn` + `Token` instead.
   """

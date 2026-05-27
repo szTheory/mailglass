@@ -4,13 +4,13 @@ defmodule Mailglass.Webhook.Providers.Postmark do
 
   Verifier: HTTP Basic Auth (Postmark has no HMAC) via
   `Plug.Crypto.secure_compare/2` for timing-attack-safe comparison
-  (CONTEXT D-04). Optional IP allowlist (off by default — Postmark's
+  (CONTEXT ). Optional IP allowlist (off by default — Postmark's
   own docs warn origin IPs change; opt-in avoids surprise-blocking).
 
   Normalizer: pattern-matches each documented `RecordType` to the
-  Anymail event taxonomy verbatim (PROJECT D-14). Unmapped types
+  Anymail event taxonomy verbatim (PROJECT ). Unmapped types
   fall through to `:unknown` with `Logger.warning` — never silent
-  `_ -> :hard_bounce` (CONTEXT D-05).
+  `_ -> :hard_bounce` (CONTEXT ).
 
   ## Provider identity lives in `Event.metadata`
 
@@ -18,7 +18,7 @@ defmodule Mailglass.Webhook.Providers.Postmark do
   (per V02 schema — provider identity lives on `mailglass_webhook_events`).
   This module stashes `"provider"` + `"provider_event_id"` in
   `Event.metadata` with STRING keys (revision W9; JSONB roundtrip safety).
-  Plan 04's Ingest Multi reads these metadata keys to populate the
+  's Ingest Multi reads these metadata keys to populate the
   `mailglass_webhook_events` row.
   """
 
@@ -40,7 +40,7 @@ defmodule Mailglass.Webhook.Providers.Postmark do
     verify_basic_auth!(headers, user, pass)
     # IP allowlist is opt-in. When configured, the Plug must forward
     # `:remote_ip` via the config map (the Provider contract is Conn-free
-    # per D-02, so the Plug extracts `conn.remote_ip` and threads it
+    # per , so the Plug extracts `conn.remote_ip` and threads it
     # through).
     verify_ip_allowlist!(config)
     :ok
@@ -179,7 +179,7 @@ defmodule Mailglass.Webhook.Providers.Postmark do
       reject_reason: reject_reason,
       # STRING keys per revision W9 — Ecto stores metadata as JSONB;
       # JSONB returns string keys on read; normalizing on write prevents
-      # atom-vs-string drift downstream. Plan 04's Ingest layer reads
+      # atom-vs-string drift downstream. 's Ingest layer reads
       # `metadata["provider"]` + `metadata["provider_event_id"]` to
       # populate the `mailglass_webhook_events` row's UNIQUE columns.
       metadata: %{

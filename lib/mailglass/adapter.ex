@@ -9,7 +9,7 @@ defmodule Mailglass.Adapter do
 
   On success: `{:ok, %{message_id: String.t(), provider_response: term()}}`.
   The `:message_id` is the adapter's canonical identifier for this
-  delivery — Phase 4 webhook ingest uses it to join incoming events to
+  delivery —  webhook ingest uses it to join incoming events to
   the `%Delivery{}` row via `provider_message_id`.
 
   On failure: `{:error, %Mailglass.Error{}}`. Return struct must be a
@@ -20,7 +20,7 @@ defmodule Mailglass.Adapter do
   ## Adapters in this repo
 
   - `Mailglass.Adapters.Fake` (TRANS-02) — in-memory, Swoosh.Sandbox-style
-    ownership. The merge-blocking release gate (D-13).
+    ownership. The merge-blocking release gate ().
   - `Mailglass.Adapters.Swoosh` (TRANS-03) — wraps any `Swoosh.Adapter`
     (Postmark, SendGrid, Mailgun, SES, Resend, SMTP). Normalizes errors
     into `%Mailglass.SendError{}`.

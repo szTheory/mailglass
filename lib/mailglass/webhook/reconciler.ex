@@ -20,16 +20,16 @@ if Code.ensure_loaded?(Oban.Worker) do
          batch (tenant-scoped, age-bounded, newest `max_age_minutes` only)
       2. `Mailglass.Events.Reconciler.attempt_link/1` looks up the Delivery
          via `(provider, provider_message_id)` from the orphan's metadata
-      3. On match: append a NEW `:reconciled` event (D-18 — append, never
+      3. On match: append a NEW `:reconciled` event ( — append, never
          UPDATE the orphan row; preserves the SQLSTATE 45A01 append-only
          invariant) + call `Projector.update_projections/2` for the
          matched Delivery + post-commit broadcast on the Projector PubSub
-         topic (Phase 3 D-04)
+         topic ( )
       4. On no-match: leave the orphan row untouched; next sweep retries
 
     After 7 days (`max_age_minutes: 7 * 24 * 60`), `find_orphans/1` filters
     the row out of the scan (admin LiveView shows it as "older than 7 days
-    — unlikely to reconcile" per D-19).
+    — unlikely to reconcile" per ).
 
     ## Optional-dep gating
 
@@ -76,7 +76,7 @@ if Code.ensure_loaded?(Oban.Worker) do
       tenant_id = Map.get(args, "tenant_id")
       limit = Map.get(args, "limit", @batch_limit)
 
-      # Phase 2 TenancyMiddleware wraps perform via `"mailglass_tenant_id"` in
+      #  TenancyMiddleware wraps perform via `"mailglass_tenant_id"` in
       # job args when present; direct adopter cron args like `"tenant_id"`
       # just pass through here. Either way, `reconcile/2` is a pure
       # application-layer call — no middleware required at this layer.

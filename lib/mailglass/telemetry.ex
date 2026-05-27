@@ -9,11 +9,11 @@ defmodule Mailglass.Telemetry do
       [:mailglass, :domain, :resource, :action, :start | :stop | :exception]
 
   Named span helpers wrap `:telemetry.span/3` for each domain. Domain helpers
-  land in their owning phase (render in Phase 1, send/batch in Phase 3,
-  persist/events in Phase 2, webhook_verify/webhook_ingest in Phase 4,
-  preview_render in Phase 5).
+  land in their owning phase (render in , send/batch in ,
+  persist/events in , webhook_verify/webhook_ingest in ,
+  preview_render in ).
 
-  ## Phase 1 Events
+  ##  Events
 
   ### Render pipeline
 
@@ -22,7 +22,7 @@ defmodule Mailglass.Telemetry do
       — Measurements on `:stop`: `%{duration: native_time}`
       — Metadata: `%{tenant_id: string, mailable: atom}`
 
-  ## Metadata Policy (D-31)
+  ## Metadata Policy ()
 
   **Whitelisted keys:** `:tenant_id, :mailable, :provider, :status,
   :message_id, :delivery_id, :event_id, :latency_ms, :recipient_count,
@@ -31,7 +31,7 @@ defmodule Mailglass.Telemetry do
   **Forbidden (PII):** `:to, :from, :body, :html_body, :subject, :headers,
   :recipient, :email`.
 
-  Enforcement is lint-time (Phase 6 custom Credo check `NoPiiInTelemetryMeta`)
+  Enforcement is lint-time ( custom Credo check `NoPiiInTelemetryMeta`)
   plus a runtime StreamData property test that asserts every emitted stop
   event's metadata keys are a subset of the whitelist across 1000 varied
   inputs.
@@ -61,14 +61,14 @@ defmodule Mailglass.Telemetry do
   @logged_events [
     [:mailglass, :render, :message, :stop],
     [:mailglass, :render, :message, :exception],
-    # Phase 2: events-append + persist spans.
+    # : events-append + persist spans.
     [:mailglass, :events, :append, :stop],
     [:mailglass, :events, :append, :exception],
     [:mailglass, :persist, :delivery, :update_projections, :stop],
     [:mailglass, :persist, :delivery, :update_projections, :exception],
     [:mailglass, :persist, :reconcile, :link, :stop],
     [:mailglass, :persist, :reconcile, :link, :exception],
-    # Phase 3: outbound hot path.
+    # : outbound hot path.
     [:mailglass, :outbound, :send, :stop],
     [:mailglass, :outbound, :send, :exception],
     [:mailglass, :outbound, :dispatch, :stop],
@@ -104,7 +104,7 @@ defmodule Mailglass.Telemetry do
   end
 
   @doc """
-  Named span helper for the render pipeline. Phase 1 surface.
+  Named span helper for the render pipeline.  surface.
 
   Equivalent to `span([:mailglass, :render, :message], metadata, fun)`.
   """
@@ -115,11 +115,11 @@ defmodule Mailglass.Telemetry do
   end
 
   @doc """
-  Named span helper for the events-append write path. Phase 2 surface.
+  Named span helper for the events-append write path.  surface.
 
   Equivalent to `span([:mailglass, :events, :append], metadata, fun)`.
   `:stop` metadata SHOULD include `inserted?: boolean` and
-  `idempotency_key_present?: boolean` per D-04.
+  `idempotency_key_present?: boolean` per .
   """
   @doc since: "0.1.0"
   @spec events_append_span(map(), (-> result)) :: result when result: term()
@@ -129,7 +129,7 @@ defmodule Mailglass.Telemetry do
 
   @doc """
   Named span helper for persist-layer write paths (projector, reconciler).
-  Phase 2 surface.
+   surface.
 
   Event path: `[:mailglass, :persist | suffix]`. Examples:
 
@@ -144,10 +144,10 @@ defmodule Mailglass.Telemetry do
   end
 
   @doc """
-  Named span helper for the Outbound hot path (Phase 3, D-26).
+  Named span helper for the Outbound hot path (, ).
 
   Emits `[:mailglass, :outbound, :send, :start | :stop | :exception]`.
-  Metadata whitelist per D-31: `:tenant_id, :mailable, :stream, :delivery_id, :status, :latency_ms`.
+  Metadata whitelist per : `:tenant_id, :mailable, :stream, :delivery_id, :status, :latency_ms`.
   """
   @doc since: "0.1.0"
   @spec send_span(map(), (-> any())) :: any()
@@ -156,7 +156,7 @@ defmodule Mailglass.Telemetry do
   end
 
   @doc """
-  Named span helper wrapping the adapter.deliver/2 call (Phase 3, D-26).
+  Named span helper wrapping the adapter.deliver/2 call (, ).
 
   Emits `[:mailglass, :outbound, :dispatch, :start | :stop | :exception]`.
   Provider latency is the fat tail — this span captures it.
@@ -168,7 +168,7 @@ defmodule Mailglass.Telemetry do
   end
 
   @doc """
-  Named span helper wrapping each Multi commit in the send pipeline (Phase 3, D-26).
+  Named span helper wrapping each Multi commit in the send pipeline (, ).
 
   Emits `[:mailglass, :persist, :outbound, :multi, :start | :stop | :exception]`.
   Metadata carries `:step_name` (`:persist_queued | :persist_dispatched | :persist_failed`).
@@ -192,7 +192,7 @@ defmodule Mailglass.Telemetry do
   end
 
   @doc """
-  Attaches the default logger handler for the Phase 1 event set.
+  Attaches the default logger handler for the  event set.
 
   Returns `:ok` on first attach and `{:error, :already_exists}` if a handler
   with the same ID is already attached (useful for idempotent boot paths).

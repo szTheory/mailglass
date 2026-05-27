@@ -11,7 +11,7 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
   The verifier pattern-matches strictly on `true` from
   `:public_key.verify/4`. `false`, `{:error, _}`, and DER-decode
   exceptions all collapse to `%SignatureError{type: :bad_signature}`
-  per CONTEXT D-03 (closes the "wrong algo silently returns false"
+  per CONTEXT  (closes the "wrong algo silently returns false"
   footgun).
 
   Replay protection: `300`-second timestamp tolerance window
@@ -24,13 +24,13 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
   The `%Mailglass.Events.Event{}` struct has no `:provider` column
   (per V02 schema — provider identity lives on `mailglass_webhook_events`).
   This module stashes `"event"` + `"sg_message_id"` in `Event.metadata`
-  with STRING keys (revision W9; JSONB roundtrip safety). Plan 06's
+  with STRING keys (revision W9; JSONB roundtrip safety). 's
   Ingest Multi reads these metadata keys to populate the
   `mailglass_webhook_events` row's UNIQUE columns.
 
   Normalizer: decodes the JSON array of events (1..128 per request);
   maps each event string to the Anymail taxonomy verbatim. Unmapped
-  strings fall through to `:unknown` with `Logger.warning` per D-05.
+  strings fall through to `:unknown` with `Logger.warning` per .
   """
 
   @behaviour Mailglass.Webhook.Provider
@@ -111,7 +111,7 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
     end
   end
 
-  # ECDSA verify per RESEARCH §Pattern 2 + CONTEXT D-03.
+  # ECDSA verify per RESEARCH §Pattern 2 + CONTEXT .
   # Uses OTP 27 `:public_key.der_decode/2` (NOT `:pem_decode/1` — the
   # SendGrid dashboard ships raw DER without PEM framing; see Pitfall 1).
   #
@@ -152,7 +152,7 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
           raise SignatureError.new(:bad_signature, provider: :sendgrid)
       end
     rescue
-      # Pattern-match-strictly discipline per CONTEXT D-03 — collapse
+      # Pattern-match-strictly discipline per CONTEXT  — collapse
       # every DER/ASN.1/EC failure mode to either `:bad_signature`
       # (wrong-signature-for-right-shape key) or `:malformed_key` (the
       # supplied public_key blob is not a valid base64 SPKI DER).
@@ -227,7 +227,7 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
       reject_reason: reject_reason,
       # STRING keys per revision W9 — Ecto stores metadata as JSONB;
       # JSONB returns string keys on read; normalizing on write prevents
-      # atom-vs-string drift downstream. Plan 06's Ingest reads
+      # atom-vs-string drift downstream. 's Ingest reads
       # `metadata["provider"]` + `metadata["provider_event_id"]` to
       # populate the `mailglass_webhook_events` row's UNIQUE columns.
       metadata: %{
@@ -259,7 +259,7 @@ defmodule Mailglass.Webhook.Providers.SendGrid do
   # Per SendGrid Event Webhook docs:
   #   https://www.twilio.com/docs/sendgrid/for-developers/tracking-events/event
   #
-  # Anymail taxonomy verbatim per PROJECT D-14 / CONTEXT D-05. Unmapped
+  # Anymail taxonomy verbatim per PROJECT  / CONTEXT . Unmapped
   # strings fall through to `:unknown` with `Logger.warning` — never
   # silent `_ -> :hard_bounce` catch-all.
   defp map_event(%{"event" => "processed"}), do: {:queued, nil}

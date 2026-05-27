@@ -1,6 +1,6 @@
 defmodule Mailglass.Suppression do
   @moduledoc """
-  Public preflight facade for suppression checks (SEND-04).
+  Public preflight facade for suppression checks (SEN).
 
   Thin wrapper over `Mailglass.SuppressionStore.check/2` configured via:
 

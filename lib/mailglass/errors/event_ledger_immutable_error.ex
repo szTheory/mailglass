@@ -2,7 +2,7 @@ defmodule Mailglass.EventLedgerImmutableError do
   @moduledoc """
   Raised when the `mailglass_events` append-only immutability trigger fires.
 
-  The event ledger is append-only by design (D-15 project-level, D-06 phase-level).
+  The event ledger is append-only by design ( project-level,  phase-level).
   A Postgres `BEFORE UPDATE OR DELETE` trigger on `mailglass_events` raises
   `SQLSTATE 45A01` for every mutation attempt. `Mailglass.Repo.transact/1`
   translates that `%Postgrex.Error{}` into this struct so callers pattern-match

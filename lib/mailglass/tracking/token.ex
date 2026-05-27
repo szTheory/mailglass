@@ -1,13 +1,13 @@
 defmodule Mailglass.Tracking.Token do
   @moduledoc """
-  Phoenix.Token-signed tokens for open pixel + click redirect URLs (TRACK-03, D-33..D-35).
+  Phoenix.Token-signed tokens for open pixel + click redirect URLs (TRACK-03, ..).
 
-  ## Token shape (D-34 + D-35)
+  ## Token shape ( + )
 
   Open pixel payload: `{:open, delivery_id, tenant_id}`
   Click redirect payload: `{:click, delivery_id, tenant_id, target_url}`
 
-  ## Open-redirect prevention (D-35 pattern a)
+  ## Open-redirect prevention ( pattern a)
 
   Target URL lives INSIDE the signed token, NEVER as a query parameter.
   The class of CVE that Mailchimp shipped in 2019 + 2022
@@ -19,7 +19,7 @@ defmodule Mailglass.Tracking.Token do
   `http` or `https` only. Attempting to sign a `javascript:` or `ftp:`
   URL raises `%Mailglass.ConfigError{type: :invalid}`.
 
-  ## Salts rotation (D-33)
+  ## Salts rotation ()
 
   `config :mailglass, :tracking, salts: ["q2-2026", "q1-2026"]`. The
   HEAD of the list signs; ALL salts in the list verify (iterate with
@@ -27,10 +27,10 @@ defmodule Mailglass.Tracking.Token do
   until removed from the list. Token max_age default: 2 years
   (archived-email pixel loads still work).
 
-  ## `tenant_id` in payload, not URL (D-39)
+  ## `tenant_id` in payload, not URL ()
 
   Decoded `tenant_id` comes from the SIGNED PAYLOAD, not from URL
-  path/query. Phase 3 Plug uses it to call `Tenancy.put_current/1`.
+  path/query.  Plug uses it to call `Tenancy.put_current/1`.
   URL path + query leak to referrer headers, shared-link screenshots,
   corporate proxy logs; the signed payload is the only privacy-preserving
   option.

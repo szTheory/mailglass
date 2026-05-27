@@ -64,7 +64,7 @@ defmodule Mailglass.Migrations.Postgres.V01 do
     # Table 2: mailglass_events — append-only ledger. No :updated_at column.
     # delivery_id is a logical reference (UUID type) but NOT a foreign key
     # per ARCHITECTURE §4.3 — webhooks may arrive before the Delivery row exists
-    # (orphan case; reconciled via Phase 4's Oban worker over the
+    # (orphan case; reconciled via 's Oban worker over the
     # needs_reconciliation flag).
     create table(:mailglass_events, primary_key: false, prefix: prefix) do
       add(:id, :uuid, primary_key: true)
@@ -84,7 +84,7 @@ defmodule Mailglass.Migrations.Postgres.V01 do
 
     # Pitfall 1: the `where:` clause here MUST match the Ecto
     # `conflict_target: {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"}`
-    # that Plan 05's Events writer will use — character-for-character. Changing
+    # that 's Events writer will use — character-for-character. Changing
     # this fragment here requires coordinated changes in the writer.
     create(
       unique_index(:mailglass_events, [:idempotency_key],
@@ -159,9 +159,9 @@ defmodule Mailglass.Migrations.Postgres.V01 do
       add(:inserted_at, :utc_datetime_usec, null: false, default: fragment("now()"))
     end
 
-    # Structural CHECK per D-07 — scope/stream coupling is a DB-level invariant
+    # Structural CHECK per  — scope/stream coupling is a DB-level invariant
     # (belt-and-suspenders with the changeset's validate_scope_stream_coupling/1
-    # in Plan 03). Either scope=:address_stream with stream NOT NULL, or
+    # in ). Either scope=:address_stream with stream NOT NULL, or
     # scope in (:address, :domain) with stream IS NULL.
     execute(
       """

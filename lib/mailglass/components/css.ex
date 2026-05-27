@@ -5,7 +5,7 @@ defmodule Mailglass.Components.CSS do
   Internal to `Mailglass.Components`. Components build a base inline `style="..."`
   string (the email-client invariant part) and merge an optional adopter-supplied
   class/style override via `merge_style/2`. No external class-composition library
-  is used (D-20).
+  is used ().
   """
 
   @doc """

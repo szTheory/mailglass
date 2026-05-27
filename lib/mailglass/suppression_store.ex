@@ -2,8 +2,8 @@ defmodule Mailglass.SuppressionStore do
   @moduledoc """
   Behaviour for suppression-list storage backends.
 
-  Phase 2 ships two callbacks — `check/2` (pre-send lookup) and
-  `record/2` (add/update entry). Phase 3 may extend with more
+   ships two callbacks — `check/2` (pre-send lookup) and
+  `record/2` (add/update entry).  may extend with more
   callbacks when the Outbound preflight lands. Default impl is
   `Mailglass.SuppressionStore.Ecto` (Postgres-backed).
 

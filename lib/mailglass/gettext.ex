@@ -2,7 +2,7 @@ defmodule Mailglass.Gettext do
   @moduledoc """
   Gettext backend for mailglass default strings.
 
-  Adopters use their own Gettext backend inside HEEx slots (CONTEXT.md D-23):
+  Adopters use their own Gettext backend inside HEEx slots (CONTEXT.md ):
 
       <.heading>
         <%= dgettext("emails", "Welcome, %{name}", name: @user.name) %>

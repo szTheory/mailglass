@@ -1,20 +1,20 @@
 defmodule Mailglass.Webhook.WebhookEvent do
   @moduledoc """
   Ecto schema for the `mailglass_webhook_events` table (V02 migration,
-  Plan 04-01). Mutable + prunable — UNLIKE `mailglass_events` which is
-  append-only via the SQLSTATE 45A01 trigger (CONTEXT D-15 split).
+  -01). Mutable + prunable — UNLIKE `mailglass_events` which is
+  append-only via the SQLSTATE 45A01 trigger (CONTEXT  split).
 
   Stores raw webhook payloads from Postmark + SendGrid for:
 
     * **Idempotency:** UNIQUE `(provider, provider_event_id)` defends
-      against replay (D-15 + PITFALLS MAIL-03). Plan 04-06's
+      against replay ( + PITFALLS MAIL-03). -06's
       `Mailglass.Webhook.Ingest.ingest_multi/3` inserts with
       `on_conflict: :nothing, conflict_target: [:provider, :provider_event_id]`
       — a replay is a no-op SELECT-by-index, not an INSERT.
     * **Audit:** full raw payload available for support / debugging.
     * **GDPR erasure:** targeted `DELETE FROM mailglass_webhook_events
       WHERE raw_payload->>'to' = ?` without touching the append-only
-      ledger (D-15).
+      ledger ().
 
   The `:raw_payload` field is marked `redact: true` so `Inspect` output
   (test failures, IEx) does NOT leak PII bytes. Mirrors accrue's
@@ -22,9 +22,9 @@ defmodule Mailglass.Webhook.WebhookEvent do
 
   ## Status state machine
 
-  `:received → :processing → :succeeded | :failed → :dead`. Plan 04-06
+  `:received → :processing → :succeeded | :failed → :dead`. -06
   inserts at `:processing` and flips to `:succeeded` at the end of the
-  Multi; failures (outside Plan 04-06 scope) will surface the Plan 08
+  Multi; failures (outside -06 scope) will surface the 
   DLQ.
   """
 
@@ -62,7 +62,7 @@ defmodule Mailglass.Webhook.WebhookEvent do
   Caller passes `:provider`, `:provider_event_id`, `:event_type_raw`,
   `:tenant_id`, `:raw_payload`. Other fields default sensibly:
 
-    * `:status` defaults to `:processing` (Plan 04-06 flips to
+    * `:status` defaults to `:processing` (-06 flips to
       `:succeeded` after the Multi commits)
     * `:received_at` defaults to `Mailglass.Clock.utc_now/0`
   """

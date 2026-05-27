@@ -1,8 +1,8 @@
 defmodule Mailglass.Adapters.Fake do
   @moduledoc """
-  In-memory, time-advanceable test adapter (TRANS-02, D-01..D-03).
+  In-memory, time-advanceable test adapter (TRANS-02, ..).
 
-  **The merge-blocking release gate (D-13).** Every PR runs the full
+  **The merge-blocking release gate ().** Every PR runs the full
   pipeline against this adapter. Mirrors `Swoosh.Adapters.Sandbox`:
   ownership-by-pid, `$callers` inheritance, `allow/2` for
   cross-process delegation (LiveView, Playwright, Oban worker), shared
@@ -24,7 +24,7 @@ defmodule Mailglass.Adapters.Fake do
   `provider_message_id` lets `trigger_event/3` look up the Delivery row
   by id and simulate a Phase-4 webhook event via the REAL
   `Events.append_multi/3 + Projector.update_projections/2` write path
-  (D-03). This keeps the Fake in sync with the production write path.
+  (). This keeps the Fake in sync with the production write path.
 
   ## Public API
 
@@ -38,7 +38,7 @@ defmodule Mailglass.Adapters.Fake do
   ## Async: true safety
 
   Ownership keys every ETS bucket by owner pid; each test is its own
-  owner (via `Mailglass.MailerCase` setup, Plan 06). Cross-process
+  owner (via `Mailglass.MailerCase` setup, ). Cross-process
   deliveries (LiveView, Task.Supervisor, Oban worker) resolve via
   `$callers` or explicit `allow/2`.
   """
@@ -139,23 +139,23 @@ defmodule Mailglass.Adapters.Fake do
   # ──────────────────────────────────────────────────────────────
 
   @doc """
-  Simulates a webhook-shaped event for a previously-delivered message (D-03).
+  Simulates a webhook-shaped event for a previously-delivered message ().
 
   Looks up the `%Delivery{}` row by `provider_message_id`, builds an
   `%Events.Event{}`, and runs it through
   `Events.append_multi/3 + Projector.update_projections/2` inside
-  `Repo.transact/1`. This is the SAME write path Phase 4 webhook ingest
+  `Repo.transact/1`. This is the SAME write path  webhook ingest
   uses — the Fake proves the production write path.
 
   After the transaction commits, broadcasts via
-  `Projector.broadcast_delivery_updated/3` (D-04).
+  `Projector.broadcast_delivery_updated/3` ().
 
   ## Opts
 
   - `:occurred_at` — DateTime; defaults to `Mailglass.Clock.utc_now()`
   - `:reject_reason` — atom from the reject_reason closed set
-  - `:metadata` — map stored in `Event.metadata` (Phase 4: `raw_payload`
-    moved to `mailglass_webhook_events`; see D-15)
+  - `:metadata` — map stored in `Event.metadata` (: `raw_payload`
+    moved to `mailglass_webhook_events`; see )
 
   ## Returns
 
@@ -270,7 +270,7 @@ defmodule Mailglass.Adapters.Fake do
       type: type,
       occurred_at: Keyword.get(opts, :occurred_at, Mailglass.Clock.utc_now()),
       idempotency_key: "fake:" <> delivery.id <> ":" <> Atom.to_string(type),
-      # Phase 4 V02 migration drops `mailglass_events.raw_payload` — store
+      #  V02 migration drops `mailglass_events.raw_payload` — store
       # caller-supplied metadata in the `:metadata` column (same shape,
       # right semantic home). Raw provider evidence lives in
       # `mailglass_webhook_events` when a real webhook drives the event.

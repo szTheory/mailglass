@@ -4,32 +4,32 @@ defmodule Mailglass.Webhook.Providers.SES do
 
   Implements `Mailglass.Webhook.Provider` for SES events delivered through
   SNS HTTP subscriptions. Handles all three SNS message types on the same
-  endpoint per D-01:
+  endpoint:
 
     * `Notification` — SES event payload; returns `:ok` for the ingest pipeline
     * `SubscriptionConfirmation` — auto-confirms after verification; returns
-      `{:ok, :control_plane, :subscription_confirmed}` (D-03)
+      `{:ok, :control_plane, :subscription_confirmed}`
     * `UnsubscribeConfirmation` — verifies and no-ops; returns
-      `{:ok, :control_plane, :unsubscribe_confirmed}` (D-04)
+      `{:ok, :control_plane, :unsubscribe_confirmed}`
 
   ## Verification algorithm
 
   1. Parse raw body as JSON (SNS delivers `text/plain` but body is valid JSON)
-  2. Validate `SigningCertURL` with `TrustPolicy.valid_cert_url?/1` before network I/O (D-06)
-  3. Fetch X.509 public key from `CertCache` (ETS hit) or `:httpc` (cache miss) (D-10)
+  2. Validate `SigningCertURL` with `TrustPolicy.valid_cert_url?/1` before network I/O
+  3. Fetch X.509 public key from `CertCache` (ETS hit) or `:httpc` (cache miss)
   4. Build canonical string from message fields (byte-sorted per AWS spec)
   5. Verify RSA-SHA1 (SignatureVersion 1) or RSA-SHA256 (SignatureVersion 2) signature
   6. Dispatch on `MessageType`:
      - `Notification` → return `:ok`
      - `SubscriptionConfirmation` → validate SubscribeURL, construct ConfirmSubscription
-       URL from TopicArn + Token, :httpc GET with redirects disabled (D-07)
+      URL from TopicArn + Token, :httpc GET with redirects disabled
      - `UnsubscribeConfirmation` → log telemetry, return control-plane no-op
 
   ## Inbound-reuse seam
 
   `verify_envelope!/2` exposes steps 1-5 (the SNS X.509 verification) as a public
   seam so `mailglass_inbound`'s SES ingress can reuse the byte-identical SNS
-  envelope verification without reinventing cryptography (D-46-01). `verify!/3`
+  envelope verification without reinventing cryptography (-01). `verify!/3`
   calls it, then dispatches on `MessageType`; its public return and behavior are
   unchanged.
 
@@ -65,7 +65,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     {:ok, payload} = verify_envelope!(raw_body, config)
     msg_type = fetch_required_field!(payload, "Type")
 
-    # Step 2: dispatch on MessageType (all types verified above — D-05).
+    # Step 2: dispatch on MessageType (all types verified above).
     dispatch_message_type(msg_type, payload, config)
   end
 
@@ -73,7 +73,7 @@ defmodule Mailglass.Webhook.Providers.SES do
   Verify the SNS envelope's X.509 signature and trust policy, returning the
   decoded SNS payload.
 
-  This is the **inbound-reuse seam** (D-46-01): the SNS JSON envelope is
+  This is the **inbound-reuse seam** (-01): the SNS JSON envelope is
   byte-identical for outbound webhooks and `mailglass_inbound` SES ingress, so
   the crypto primitive (decode → `TrustPolicy.valid_cert_url?` → `CertCache`
   public-key fetch → canonical-string build → `:public_key.verify`) is factored
@@ -93,7 +93,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     signature_b64 = fetch_required_field!(payload, "Signature")
     msg_type = fetch_required_field!(payload, "Type")
 
-    # D-06, D-09: validate cert URL BEFORE any network I/O
+    # Validate cert URL before any network I/O.
     unless TrustPolicy.valid_cert_url?(cert_url) do
       raise SignatureError.new(:bad_signature,
               provider: :ses,
@@ -174,7 +174,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     topic_arn = fetch_required_field!(payload, "TopicArn")
     token = fetch_required_field!(payload, "Token")
 
-    # D-07: validate SubscribeURL for consistency only — do not follow it
+    # Validate SubscribeURL for consistency only; do not follow it.
     unless TrustPolicy.valid_subscribe_url?(subscribe_url) do
       raise SignatureError.new(:bad_signature,
               provider: :ses,
@@ -182,7 +182,7 @@ defmodule Mailglass.Webhook.Providers.SES do
             )
     end
 
-    # D-07: construct ConfirmSubscription URL from signed TopicArn + Token
+    # Construct ConfirmSubscription URL from signed TopicArn + Token.
     confirm_url = build_confirm_url(topic_arn, token)
 
     case confirm_subscription(confirm_url, config) do
@@ -195,7 +195,8 @@ defmodule Mailglass.Webhook.Providers.SES do
           "[mailglass] SES SNS SubscriptionConfirmation failed topic=#{topic_arn} reason=#{inspect(reason)}"
         )
 
-        # Fail closed per D-09 — verification succeeded but confirmation failed
+        # Treat signature verification failures as non-recoverable input trust failures.
+        # Verification succeeded but confirmation failed, so this path still fails closed.
         raise SignatureError.new(:bad_signature,
                 provider: :ses,
                 context: %{
@@ -209,7 +210,7 @@ defmodule Mailglass.Webhook.Providers.SES do
   defp dispatch_message_type("UnsubscribeConfirmation", payload, _config) do
     topic_arn = Map.get(payload, "TopicArn", "unknown")
     Logger.info("[mailglass] SES SNS UnsubscribeConfirmation received topic=#{topic_arn}")
-    # D-04: no-op — do not silently re-confirm
+    # No-op; do not silently re-confirm.
     {:ok, :control_plane, :unsubscribe_confirmed}
   end
 
@@ -344,7 +345,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     end
   end
 
-  # ---- Private: ConfirmSubscription URL construction (D-07) ----
+  # ---- Private: ConfirmSubscription URL construction () ----
 
   defp build_confirm_url(topic_arn, token) do
     # TopicArn format: arn:{partition}:sns:{region}:{account}:{name}
@@ -636,7 +637,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     }
   end
 
-  # ---- SES bounce mapping (D-17) ----
+  # ---- SES bounce mapping () ----
 
   defp map_bounce(%{"bounceType" => "Permanent", "bounceSubType" => sub_type}) do
     case sub_type do
@@ -652,7 +653,7 @@ defmodule Mailglass.Webhook.Providers.SES do
   defp map_bounce(%{"bounceType" => "Undetermined"}), do: {:deferred, nil}
   defp map_bounce(_), do: {:bounced, :bounced}
 
-  # ---- SES event publishing type mapping (D-14) ----
+  # ---- SES event publishing type mapping () ----
 
   defp map_event_type("Send"), do: {:sent, nil}
   defp map_event_type("Delivery"), do: {:delivered, nil}
@@ -669,7 +670,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     {:unknown, nil}
   end
 
-  # ---- Stable provider_event_id (D-16) ----
+  # ---- Stable provider_event_id () ----
 
   defp build_provider_event_id(sns_message_id, email, _idx) when is_binary(email) do
     "#{sns_message_id}:#{email}"

@@ -90,7 +90,7 @@ defmodule Mailglass.SuppressionStore.Ecto do
 
   # Fallback clause for malformed keys (missing :tenant_id / :address, or
   # non-binary values). Returns the behaviour's documented `{:error, term()}`
-  # shape so Phase 3's `Outbound.preflight` can log/handle instead of
+  # shape so 's `Outbound.preflight` can log/handle instead of
   # surfacing a FunctionClauseError stacktrace from a mis-wired adopter
   # helper (WR-03).
   def check(_key, _opts), do: {:error, :invalid_key}

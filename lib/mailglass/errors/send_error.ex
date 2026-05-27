@@ -12,7 +12,7 @@ defmodule Mailglass.SendError do
   ## Per-kind Fields
 
   - `:delivery_id` — binary reference to the failed `%Mailglass.Delivery{}`
-    record when available (lands in Phase 2). `nil` when the failure occurred
+    record when available (lands in ). `nil` when the failure occurred
     before the delivery row was persisted.
 
   See `Mailglass.Error` for the shared contract and `docs/api_stability.md`
@@ -23,7 +23,7 @@ defmodule Mailglass.SendError do
 
   @types [:adapter_failure, :rendering_failed, :preflight_rejected, :serialization_failed]
 
-  # D-06 / T-PII-002: `:cause` deliberately excluded from JSON serialization —
+  #  / T-PII-002: `:cause` deliberately excluded from JSON serialization —
   # adapter errors wrapped in `:cause` may carry provider payloads with PII.
   @derive {Jason.Encoder, only: [:type, :message, :context]}
   defexception [:type, :message, :cause, :context, :delivery_id]
@@ -75,7 +75,7 @@ defmodule Mailglass.SendError do
     }
   end
 
-  # Brand-voice-conformant messages (D-08). Never "Oops!" or "Something went wrong."
+  # Brand-voice-conformant messages (). Never "Oops!" or "Something went wrong."
   defp format_message(:adapter_failure, _ctx), do: "Delivery failed: adapter returned an error"
 
   defp format_message(:rendering_failed, _ctx),

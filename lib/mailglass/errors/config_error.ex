@@ -4,7 +4,7 @@ defmodule Mailglass.ConfigError do
 
   Configuration errors are never retryable — the host application must
   fix the configuration and restart. `Mailglass.Config.validate_at_boot!/0`
-  (lands in Plan 03) raises this at application startup.
+  (lands in ) raises this at application startup.
 
   ## Types
 
@@ -14,19 +14,19 @@ defmodule Mailglass.ConfigError do
   - `:optional_dep_missing` — an optional dependency is required for the
     selected configuration but is not loaded
   - `:tracking_on_auth_stream` — open/click tracking is enabled on a mailable
-    whose function name matches an auth-stream heuristic (D-38). Forbidden.
+    whose function name matches an auth-stream heuristic (). Forbidden.
   - `:tracking_host_missing` — a mailable enables opens or clicks but no
-    tracking host is configured (D-32). Required for link rewriting.
+    tracking host is configured (). Required for link rewriting.
   - `:tracking_endpoint_missing` — tracking is enabled but no Phoenix.Token
     endpoint is configured. Set `config :mailglass, :tracking, endpoint:` or
     `config :mailglass, :adapter_endpoint` to enable open/click tracking.
   - `:webhook_verification_key_missing` — a webhook provider is configured
     but its verification credentials are not set (Postmark `basic_auth`,
-    SendGrid `public_key`). Phase 4 D-21.
+    SendGrid `public_key`).  .
   - `:webhook_caching_body_reader_missing` — the webhook plug received a
     request with `conn.private[:raw_body]` unset, meaning the adopter has
     not wired `Mailglass.Webhook.CachingBodyReader` into their
-    `Plug.Parsers` `:body_reader`. Phase 4 D-21 / revision B4.
+    `Plug.Parsers` `:body_reader`.   / revision B4.
 
   See `Mailglass.Error` for the shared contract and `docs/api_stability.md`
   for the locked `:type` atom set.
@@ -42,7 +42,7 @@ defmodule Mailglass.ConfigError do
     :tracking_on_auth_stream,
     :tracking_host_missing,
     :tracking_endpoint_missing,
-    # Phase 4 D-21: webhook config surface.
+    #  : webhook config surface.
     :webhook_verification_key_missing,
     :webhook_caching_body_reader_missing
   ]

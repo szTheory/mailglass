@@ -1,12 +1,12 @@
 defmodule Mailglass.Outbound.Projector do
   @moduledoc """
   The single place where `mailglass_deliveries` projection columns are
-  updated (D-14). Consumed by Phase 3 dispatch, Phase 4 webhook ingest,
-  and Phase 4+ orphan reconciliation. No projection update happens
-  outside this module — a Phase 6 candidate Credo check
+  updated (). Consumed by  dispatch,  webhook ingest,
+  and + orphan reconciliation. No projection update happens
+  outside this module — a  candidate Credo check
   (`NoProjectorOutsideOutbound`) will enforce at lint time.
 
-  ## App-level monotonic rule (D-15)
+  ## App-level monotonic rule ()
 
   - `last_event_at` — `max(current, event.occurred_at)`; monotonic.
   - `last_event_type` — advances together with `last_event_at`. The two
@@ -16,7 +16,7 @@ defmodule Mailglass.Outbound.Projector do
   - `dispatched_at` / `delivered_at` / `bounced_at` / `complained_at` /
     `suppressed_at` — set ONCE when the matching event type arrives;
     never overwritten. Note that `:rejected` and `:failed` events DO
-    flip `terminal` but have no corresponding `*_at` column (D-13
+    flip `terminal` but have no corresponding `*_at` column (
     scoped five lifecycle timestamps) — querying "when did this
     delivery fail?" joins the event ledger on (delivery_id, type)
     rather than reading a single column on `mailglass_deliveries`
@@ -30,17 +30,17 @@ defmodule Mailglass.Outbound.Projector do
   webhook batches). DB CHECK constraints on lifecycle ordering would
   cause production failures on valid provider behavior.
 
-  ## Optimistic locking (D-18)
+  ## Optimistic locking ()
 
   Every returned changeset chains `Ecto.Changeset.optimistic_lock(:lock_version)`.
   Concurrent dispatch attempts on the same delivery raise
-  `Ecto.StaleEntryError` on the loser. Phase 3's dispatch worker adds
-  the single-retry; Phase 2 proves the mechanism works.
+  `Ecto.StaleEntryError` on the loser. 's dispatch worker adds
+  the single-retry;  proves the mechanism works.
 
   ## Telemetry
 
   Emits `[:mailglass, :persist, :delivery, :update_projections, :*]` with
-  `tenant_id` + `delivery_id` metadata per Phase 1 D-31 whitelist.
+  `tenant_id` + `delivery_id` metadata per   whitelist.
   """
 
   alias Mailglass.Events.Event
@@ -49,7 +49,7 @@ defmodule Mailglass.Outbound.Projector do
   @terminal_event_types ~w[delivered bounced complained rejected failed suppressed]a
 
   @doc """
-  Returns a changeset that applies D-15 monotonic projection updates for
+  Returns a changeset that applies  monotonic projection updates for
   the given `%Delivery{}` against `%Event{}`. The changeset chains
   `Ecto.Changeset.optimistic_lock(:lock_version)` so concurrent updates
   on the same delivery raise `Ecto.StaleEntryError` on the loser.
@@ -135,14 +135,14 @@ defmodule Mailglass.Outbound.Projector do
 
   @doc """
   Broadcasts a post-commit `{:delivery_updated, delivery_id, event_type, meta}`
-  payload to the relevant Mailglass.PubSub topics (D-04).
+  payload to the relevant Mailglass.PubSub topics ().
 
   Called AFTER the caller's `Repo.transact/1` (or `Repo.multi/1`) returns
   `{:ok, _}`. Broadcasting INSIDE the transaction would couple PubSub
-  availability to DB commit success — violates D-04's "broadcast runs AFTER
+  availability to DB commit success — violates 's "broadcast runs AFTER
   commit" rule.
 
-  Broadcasts to BOTH topics (D-27, SEND-05):
+  Broadcasts to BOTH topics (, SEN):
 
   - `Mailglass.PubSub.Topics.events(tenant_id)` — tenant-wide event stream
     (admin dashboard, tenant-wide observers)
@@ -156,10 +156,10 @@ defmodule Mailglass.Outbound.Projector do
 
   ## Callers
 
-  - `Mailglass.Outbound.send/2` (Plan 05 Multi#2 success path)
-  - `Mailglass.Outbound.Worker.perform/1` (Plan 05 async Multi#2 success)
+  - `Mailglass.Outbound.send/2` ( Multi#2 success path)
+  - `Mailglass.Outbound.Worker.perform/1` ( async Multi#2 success)
   - `Mailglass.Adapters.Fake.trigger_event/3` (after its own transact)
-  - `Mailglass.Webhook.Plug` (Phase 4 — after webhook Multi commits)
+  - `Mailglass.Webhook.Plug` ( — after webhook Multi commits)
   """
   @doc since: "0.1.0"
   @spec broadcast_delivery_updated(Delivery.t(), atom(), map()) :: :ok

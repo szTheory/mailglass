@@ -33,7 +33,7 @@ defmodule Mailglass.Adapters.Swoosh do
   response body — may contain provider-emitted error strings (never
   user-supplied content). The 8 forbidden keys
   (`:to, :from, :body, :html_body, :subject, :headers, :recipient, :email`)
-  NEVER appear in error context. Phase 6 `LINT-02 NoPiiInTelemetryMeta`
+  NEVER appear in error context.  `LINT-02 NoPiiInTelemetryMeta`
   enforces.
 
   ## What this module does NOT do

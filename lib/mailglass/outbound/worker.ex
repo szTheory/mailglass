@@ -1,7 +1,7 @@
 if Code.ensure_loaded?(Oban.Worker) do
   defmodule Mailglass.Outbound.Worker do
     @moduledoc """
-    Oban worker that dispatches a queued Delivery (SEND-03). Conditionally
+    Oban worker that dispatches a queued Delivery (SEN). Conditionally
     compiled — entire module elided when `:oban` is not loaded.
 
     ## Args schema (api_stability.md §Outbound.Worker)

@@ -4,18 +4,18 @@ defmodule Mailglass.RateLimiter do
 
   Hot path is `:ets.update_counter/4` — no GenServer mailbox
   serialization. The `TableOwner` GenServer exists only to own the
-  table (see D-22). ≈1-3μs on OTP 27 with `decentralized_counters: true`
+  table (see ). ≈1-3μs on OTP 27 with `decentralized_counters: true`
   plus `write_concurrency: :auto`.
 
   ## Invariants
 
-  - **`:transactional` bypass (D-24):** `check/1` with
+  - **`:transactional` bypass ():** `check/1` with
     `stream == :transactional` returns `:ok` BEFORE any ETS read.
     Password-reset / magic-link / verify-email MUST NOT be throttled
     because a marketing campaign saturated the bucket. Documented as
     a reserved invariant in `docs/api_stability.md`; this is NOT a
     tunable.
-  - **Leaky-bucket continuous refill (D-23):** capacity tokens refill
+  - **Leaky-bucket continuous refill ():** capacity tokens refill
     at `capacity / 60_000` tokens/ms.
 
   ## Configuration
@@ -41,7 +41,7 @@ defmodule Mailglass.RateLimiter do
   - Metadata: `%{allowed: boolean(), tenant_id: String.t()}`
 
   **No PII** — domains are NOT emitted in telemetry (to stay inside
-  the Phase 1 D-31 whitelist).
+  the   whitelist).
   """
 
   alias Mailglass.RateLimitError

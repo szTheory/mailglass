@@ -3,7 +3,7 @@ defmodule Mailglass.Migration do
   Public migration API for mailglass.
 
   Adopters consume this via a single 8-line wrapper file that
-  `mix mailglass.gen.migration` (Phase 7) emits:
+  `mix mailglass.gen.migration` () emits:
 
       defmodule MyApp.Repo.Migrations.AddMailglass do
         use Ecto.Migration

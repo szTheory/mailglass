@@ -3,21 +3,22 @@ defmodule MailglassAdmin.InboundLive do
   Read-only operator dashboard for recent inbound records, execution lineage,
   and routing reflection (IADM-01/02/07).
 
-  Sibling of `MailglassAdmin.OperatorLive` (D-48-13 — clone, not a refactor). The
+  Sibling of `MailglassAdmin.OperatorLive` (clone, not a refactor). The
   screen keeps filter and selection state in URL params so refresh, back/forward
   navigation, and copied links preserve the current operator context.
 
-  All inbound data access crosses a RUNTIME `apply/3` edge through
-  `MailglassAdmin.OptionalDeps.MailglassInbound` (D-48-02/03). This module never
+  All inbound data access crosses a runtime `apply/3` edge through
+  `MailglassAdmin.OptionalDeps.MailglassInbound`. This module never
   references the optional inbound modules directly, so the `--no-optional-deps`
   compile lane stays green: when `mailglass_inbound` is absent the gateway module is
   elided, `gateway_available?/0` returns `false`, and every data call degrades to the
   empty surface.
 
-  Tenant-required-or-empty (D-48-04): a blank/missing tenant renders the empty state
+  Tenant-required-or-empty: a blank/missing tenant renders the empty state
   and never leaks another tenant's record id or recipient. The read-model enforces
   the tenant where-clause + `Tenancy.scope/2`; this LiveView adds the
   `load_inbound_records(%{"tenant_id" => ""})` short-circuit head as defense in depth.
+  Tenant-scoped operator actions must never widen visibility outside the current tenant.
   """
 
   use Phoenix.LiveView
@@ -47,13 +48,13 @@ defmodule MailglassAdmin.InboundLive do
 
   @impl true
   def mount(_params, session, socket) do
-    # D-48-07: the declared inbound router module is surfaced in the operator
+    # The declared inbound router module is surfaced in the operator
     # session (router.ex __operator_session__) as an atom, never cookie-sourced.
     # The routing-trace card reflects its routes via the runtime gateway.
     inbound_router = session_inbound_router(session)
     tenant_id = session_tenant_id(session)
 
-    # Live updates (IADM-05 / D-48-11): subscribe on the CONNECTED mount only, to
+    # Live updates (IADM-05): subscribe on the CONNECTED mount only, to
     # the per-tenant inbound stream via the builder (never a literal — LINT-06 /
     # V9). The producer is `mailglass_inbound`; the payload is id-only and PII-free
     # (Pitfall 6), so handle_info re-fetches tenant-scoped before prepending.
@@ -139,7 +140,7 @@ defmodule MailglassAdmin.InboundLive do
   end
 
   # Evidence reveal (IADM-02) — capability-gated by the :reveal_raw atom over the
-  # SAME Auth.authorize/3 seam as replay (no new auth surface, D-48-09). On grant
+  # SAME Auth.authorize/3 seam as replay (no new auth surface, -09). On grant
   # the evidence card renders the raw payload read-only; on denial the redacted
   # placeholder stays and a brand-voice line explains the gate.
   def handle_event("reveal_raw", _params, socket) do
@@ -147,9 +148,9 @@ defmodule MailglassAdmin.InboundLive do
   end
 
   # Replay confirm flow (IADM-03). Simplified clone of OperatorLive's confirm_replay
-  # (no multi-target branch, D-48-08). The gate order is load-bearing:
+  # (no multi-target branch, -08). The gate order is load-bearing:
   #
-  #   1. TENANT gate (D-48-05): rejects a guessed foreign-tenant id BEFORE the
+  #   1. TENANT gate (-05): rejects a guessed foreign-tenant id BEFORE the
   #      gateway replay call. `Internal.Replay.replay/2` is now itself tenant-scoped
   #      (T-49-17) — this admin-side check stays as defense-in-depth, no longer the
   #      sole cross-tenant defense.
@@ -208,7 +209,7 @@ defmodule MailglassAdmin.InboundLive do
     end
   end
 
-  # Live update (IADM-05 / D-48-11, Pitfall 6): the broadcast payload is id-only.
+  # Live update (IADM-05 / -11, Pitfall 6): the broadcast payload is id-only.
   # Re-fetch the record TENANT-SCOPED through the gateway; if it resolves to nil
   # (foreign tenant or filtered out) drop it; otherwise PREPEND to the list WITHOUT
   # stealing the current selection or resetting filters.
@@ -354,7 +355,7 @@ defmodule MailglassAdmin.InboundLive do
   end
 
   # Routing-trace data (IADM-04) — ONLY for a :no_match record. Reflected from the
-  # adopter's declared inbound router via the runtime gateway (D-48-06); the view
+  # adopter's declared inbound router via the runtime gateway (-06); the view
   # never re-implements match semantics. Any other outcome (or no detail) yields
   # [] so the card is omitted entirely.
   defp routing_trace_for(_inbound_router, nil), do: []
@@ -377,7 +378,7 @@ defmodule MailglassAdmin.InboundLive do
   # The replayable record is the loaded detail's canonical struct (tenant-resolved
   # by the read-model). A selected id that did NOT resolve to a detail (a foreign
   # tenant's id, or a deleted/forged id) surfaces as a `detail_error` — confirming
-  # replay against it is blocked as not-authorized (the tenant gate D-48-05 fired
+  # replay against it is blocked as not-authorized (the tenant gate -05 fired
   # at the read-model BEFORE replay/2). A confirm with no selection at all is a
   # no-selection no-op.
   defp selected_replayable_record(%{assigns: %{detail: %{record: record}}}), do: {:ok, record}
@@ -387,7 +388,7 @@ defmodule MailglassAdmin.InboundLive do
 
   defp selected_replayable_record(_socket), do: {:error, :no_selection}
 
-  # D-48-05 cross-tenant gate: the active tenant comes from filter_params; the
+  # -05 cross-tenant gate: the active tenant comes from filter_params; the
   # record's tenant_id must match it. (The detail read-model already tenant-scopes
   # the load; this is belt-and-suspenders directly before the un-scoped replay/2.)
   defp verify_tenant(%{tenant_id: tenant_id}, %{"tenant_id" => active})
@@ -455,7 +456,7 @@ defmodule MailglassAdmin.InboundLive do
     |> Enum.find(&(&1.id == record_id))
   end
 
-  # Tenant-required-or-empty (D-48-04) — the load-bearing security head BEFORE any
+  # Tenant-required-or-empty (-04) — the load-bearing security head BEFORE any
   # data call. A blank tenant yields [] without touching the gateway.
   defp load_inbound_records(%{"tenant_id" => ""}), do: []
 
@@ -522,7 +523,7 @@ defmodule MailglassAdmin.InboundLive do
   end
 
   # Rides the existing Auth.authorize/3 atom() action type with :reveal_raw — no
-  # new auth module/plug/behaviour (D-48-09). Returns :revealed on grant, :denied
+  # new auth module/plug/behaviour (-09). Returns :revealed on grant, :denied
   # otherwise. The adapter arrives from the operator Mount hook.
   defp authorize_reveal(socket) do
     adapter = socket.assigns.operator_auth[:adapter]

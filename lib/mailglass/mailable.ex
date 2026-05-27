@@ -23,25 +23,25 @@ defmodule Mailglass.Mailable do
       # Adopter sends:
       user |> MyApp.UserMailer.welcome() |> MyApp.UserMailer.deliver()
 
-  ## `use` opts (D-11 — compile-time tier)
+  ## `use` opts ( — compile-time tier)
 
   - `:stream` — `:transactional | :operational | :bulk` (default
-    `:transactional`). Compile-time known; Phase 6 LINT-checks read via AST.
+    `:transactional`). Compile-time known;  LINT-checks read via AST.
   - `:tracking` — `[opens: boolean, clicks: boolean]` (default all false).
-    Off by default (TRACK-01 / D-08 project-level). Phase 6
-    `TRACK-02 NoTrackingOnAuthStream` enforces at compile time; Phase 3
-    `Mailglass.Tracking.Guard.assert_safe!/1` enforces at runtime (D-38).
+    Off by default (TRACK-01 /  project-level). 
+    `TRACK-02 NoTrackingOnAuthStream` enforces at compile time; 
+    `Mailglass.Tracking.Guard.assert_safe!/1` enforces at runtime ().
   - `:from_default` — `{name, address}` tuple for the `from` header. Applied
     at `new/0` time; per-call `Swoosh.Email.from/2` overrides.
   - `:reply_to_default` — same shape as `:from_default` for Reply-To.
 
-  ## Adopter convention (D-10)
+  ## Adopter convention ()
 
   `new/0` returns a `%Mailglass.Message{}`. Use `Mailglass.Message.update_swoosh/2`
   to pipe into Swoosh builder functions and `Mailglass.Message.put_function/2` to
-  stamp the `:mailable_function` field (required by D-38 runtime Guard).
+  stamp the `:mailable_function` field (required by  runtime Guard).
 
-  ## Runtime tier (D-11)
+  ## Runtime tier ()
 
   The injected `new/0` returns a `%Mailglass.Message{}`; adopters pipe
   through `Mailglass.Message.update_swoosh/2` and Swoosh builder functions.
@@ -54,12 +54,12 @@ defmodule Mailglass.Mailable do
   adopter-owned concern. Adopters who need template resolution override via
   `defoverridable render: 3`.
 
-  Phase 5 admin preview calls `Mailglass.Renderer.render/1` directly on the
+   admin preview calls `Mailglass.Renderer.render/1` directly on the
   already-built `%Message{}`; no template resolution happens at render time.
 
-  ## Injection budget (LINT-05, D-09)
+  ## Injection budget (LINT-05, )
 
-  The `__using__/1` macro injects ≤20 top-level AST forms (target: 15). Phase 6
+  The `__using__/1` macro injects ≤20 top-level AST forms (target: 15). 
   `NoOversizedUseInjection` enforces; a runtime AST-counting test in this
   phase asserts the budget.
 
@@ -67,11 +67,11 @@ defmodule Mailglass.Mailable do
 
   - `Phoenix.Component` — adopters opt in per-mailable by importing it
     themselves. Avoids HEEx collision risk with adopter-defined components.
-  - Default `preview_props/0` — optional callback; adopters who want Phase 5
+  - Default `preview_props/0` — optional callback; adopters who want 
     admin discovery define it themselves.
   - Module attributes like `@subject` or `@from` — compile-time interpolation
     does not work the way adopters expect; the builder-function tier is the
-    only correct place (D-11 rationale).
+    only correct place ( rationale).
 
   ## defoverridable surface
 
@@ -82,7 +82,7 @@ defmodule Mailglass.Mailable do
   See `docs/api_stability.md §Mailable` for the locked contract.
   """
 
-  # Mailglass.Outbound is shipped in Plan 05 — suppress undefined-module warnings
+  # Mailglass.Outbound is shipped in  — suppress undefined-module warnings
   # until then. The injected deliver/2 and deliver_later/2 reference it.
   @compile {:no_warn_undefined, Mailglass.Outbound}
 
@@ -112,12 +112,12 @@ defmodule Mailglass.Mailable do
   @callback preview_props() :: [{atom(), map()}]
 
   # ---------------------------------------------------------------------------
-  # __using__/1 macro — ≤20 top-level AST forms (LINT-05 / D-09)
+  # __using__/1 macro — ≤20 top-level AST forms (LINT-05 / )
   # ---------------------------------------------------------------------------
 
   @doc """
   Injects the mailable boilerplate. ≤20 top-level AST forms (LINT-05 enforces
-  at Phase 6).
+  at ).
   """
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
@@ -158,7 +158,7 @@ defmodule Mailglass.Mailable do
   end
 
   # ---------------------------------------------------------------------------
-  # @before_compile — Phase 5 admin discovery marker
+  # @before_compile —  admin discovery marker
   # ---------------------------------------------------------------------------
 
   @doc false

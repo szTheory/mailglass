@@ -1,7 +1,7 @@
 defmodule Mailglass.PubSub.Topics do
   @moduledoc """
-  Typed topic builder for `Mailglass.PubSub` (SEND-05, D-27). Every topic
-  is prefixed `mailglass:` — Phase 6 `LINT-06 PrefixedPubSubTopics`
+  Typed topic builder for `Mailglass.PubSub` (SEN, ). Every topic
+  is prefixed `mailglass:` —  `LINT-06 PrefixedPubSubTopics`
   enforces the prefix at lint time.
 
   ## Topics emitted
@@ -11,7 +11,7 @@ defmodule Mailglass.PubSub.Topics do
   - `deliveries/1` — `"mailglass:deliveries:\#{tenant_id}"` — delivery-list stream
 
   Projector broadcasts on BOTH `events/1` and `events/2` after every
-  successful projection update (D-04).
+  successful projection update ().
   """
 
   @doc "Returns the tenant-wide event stream topic."

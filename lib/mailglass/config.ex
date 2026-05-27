@@ -12,7 +12,7 @@ defmodule Mailglass.Config do
       type: {:or, [:atom, nil]},
       required: false,
       default: nil,
-      doc: "The adopter's Ecto.Repo module. Required from Phase 2+ onwards."
+      doc: "The adopter's Ecto.Repo module. Required from + onwards."
     ],
     adapter: [
       type: :any,
@@ -203,7 +203,7 @@ defmodule Mailglass.Config do
       type: :keyword_list,
       default: [],
       doc:
-        "RFC 8058 unsubscribe configuration. Phase 11 reads this subtree through " <>
+        "RFC 8058 unsubscribe configuration.  reads this subtree through " <>
           "`Mailglass.Config` accessors only so router/controller/token code avoids " <>
           "new direct compile-env lookups.",
       keys: [
@@ -261,13 +261,13 @@ defmodule Mailglass.Config do
         "Module implementing `utc_now/0`. Default: `Mailglass.Clock.System`. Tests use " <>
           "`Mailglass.Clock.Frozen`-backed per-process freezing without overriding this key."
     ],
-    # Phase 4 D-04 / Claude's Discretion per plan Task 2. Per-provider
+    #   / Claude's Discretion per plan Task 2. Per-provider
     # sub-trees are additive; `enabled: true` is the default so the router
     # macro wires the route without explicit opt-in. `basic_auth` is
     # required for real-world Postmark; the webhook plug raises
     # `%ConfigError{type: :webhook_verification_key_missing}` at request
     # time if it is not set. `ip_allowlist` is opt-in — Postmark's own docs
-    # warn origin IPs can change (D-04).
+    # warn origin IPs can change ().
     postmark: [
       type: :keyword_list,
       default: [],
@@ -290,11 +290,11 @@ defmodule Mailglass.Config do
           default: [],
           doc:
             "Opt-in list of CIDR strings (e.g. `[\"50.31.156.0/24\"]`). " <>
-              "Off by default per D-04 — Postmark's origin IPs can change."
+              "Off by default per  — Postmark's origin IPs can change."
         ]
       ]
     ],
-    # Phase 4 D-03 / HOOK-04. SendGrid Event Webhook verification is
+    #   / HOOK-04. SendGrid Event Webhook verification is
     # ECDSA P-256 over `timestamp <> raw_body`. `:public_key` is a base64
     # SPKI DER (NOT PEM — the SendGrid dashboard ships raw DER). Missing
     # at request time raises `%ConfigError{type: :webhook_verification_key_missing}`.
@@ -408,11 +408,11 @@ defmodule Mailglass.Config do
         ]
       ]
     ],
-    # Phase 4 CONTEXT D-11 / revision B2. `:sync` is the v0.1 locked
+    #  CONTEXT  / revision B2. `:sync` is the v0.1 locked
     # ingest mode — the webhook Plug runs `Mailglass.Webhook.Ingest`
     # inline and responds 200 only after the Multi commits. `:async` is
     # reserved (`@doc false`) pending v0.5's Dead-Letter Queue admin
-    # surface. Plan 06's `ingest_multi/3` runtime-guards `:async` with
+    # surface. 's `ingest_multi/3` runtime-guards `:async` with
     # a raise so adopters who set it receive a clear error instead of
     # silently running the sync path.
     webhook_ingest_mode: [
@@ -420,7 +420,7 @@ defmodule Mailglass.Config do
       default: :sync,
       doc: false
     ],
-    # Phase 4 CONTEXT D-16. Three retention knobs for
+    #  CONTEXT . Three retention knobs for
     # `Mailglass.Webhook.Pruner`:
     #   * `:succeeded_days` (default 14) — retain :succeeded rows N days
     #   * `:dead_days` (default 90) — retain :dead (terminal-after-retries)
@@ -464,9 +464,9 @@ defmodule Mailglass.Config do
 
   **Only this module may call `Application.compile_env*`.** Every other module
   reads configuration through `Application.get_env/2` (enforced by the
-  `LINT-08` Credo check in Phase 6).
+  `LINT-08` Credo check in ).
 
-  The brand theme (D-19) is cached in `:persistent_term` after validation so
+  The brand theme () is cached in `:persistent_term` after validation so
   the render hot path reads it in O(1) without re-parsing the Application env
   on every message.
 
@@ -593,7 +593,7 @@ defmodule Mailglass.Config do
   #
   # `:repo` is optional at v0.1 (phases 0/1 don't need it) — skip the
   # check when unset; the Repo facade will raise `:missing` on first
-  # use if a Phase 2+ code path needs it.
+  # use if a + code path needs it.
   defp validate_repo_adapter!(nil), do: :ok
 
   defp validate_repo_adapter!(repo) when is_atom(repo) do
@@ -725,8 +725,8 @@ defmodule Mailglass.Config do
   @spec compliance_lifecycle() :: module()
   def compliance_lifecycle, do: compliance()[:lifecycle]
 
-  # Phase 4 CONTEXT D-11 / revision B2. Exposed as `@doc false` because
-  # `:async` is reserved at v0.1 — the accessor lets Plan 06's
+  #  CONTEXT  / revision B2. Exposed as `@doc false` because
+  # `:async` is reserved at v0.1 — the accessor lets 's
   # `Mailglass.Webhook.Ingest.ingest_multi/3` branch on the value and
   # raise an explicit error if an adopter has set `:async` before the
   # v0.5 DLQ admin ships.

@@ -7,7 +7,7 @@ defmodule Mailglass.Tenancy.SingleTenant do
   `Mailglass.Config`-resolved default when `:tenancy` is `nil`.
   `Mailglass.Tenancy.current/0` returns the literal string `"default"`
   when this resolver is active and no explicit `put_current/1` has
-  run, and webhook ingest (Phase 4) stamps the same `"default"` value
+  run, and webhook ingest () stamps the same `"default"` value
   on every verified request.
 
   Adopters who want real tenant isolation implement their own module

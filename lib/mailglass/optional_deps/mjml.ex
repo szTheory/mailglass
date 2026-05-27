@@ -7,7 +7,7 @@ defmodule Mailglass.OptionalDeps.Mjml do
   distinction called out in `STACK.md`. Used by `Mailglass.TemplateEngine.MJML`
   when adopters opt into MJML as an alternate rendering path (AUTHOR-05).
 
-  HEEx is the default `Mailglass.TemplateEngine` (D-18 project-level); MJML is
+  HEEx is the default `Mailglass.TemplateEngine` ( project-level); MJML is
   strictly opt-in. When `:mjml` is absent and an adopter configures the MJML
   engine, `Mailglass.Config.validate_at_boot!/0` raises
   `%Mailglass.ConfigError{type: :optional_dep_missing}`.

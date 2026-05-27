@@ -2,7 +2,7 @@ defmodule Mailglass.Migrations.Postgres.V02 do
   @moduledoc false
   use Ecto.Migration
 
-  # Phase 4 Wave 0 (CONTEXT D-15). Two DDL actions:
+  #  Wave 0 (CONTEXT ). Two DDL actions:
   #
   #   1. Create `mailglass_webhook_events` — separate mutable table that
   #      owns raw provider payloads + per-webhook processing state. Keeps
@@ -38,7 +38,7 @@ defmodule Mailglass.Migrations.Postgres.V02 do
       # `:received | :processing | :succeeded | :failed | :dead`
       add(:status, :text, null: false)
       # JSONB at the DB level — Postgrex maps :map -> jsonb.
-      # Mutable + prunable; PII lives here (per Retention Pruner, D-16).
+      # Mutable + prunable; PII lives here (per Retention Pruner, ).
       add(:raw_payload, :map, null: false)
       add(:received_at, :utc_datetime_usec, null: false)
       add(:processed_at, :utc_datetime_usec)
@@ -46,7 +46,7 @@ defmodule Mailglass.Migrations.Postgres.V02 do
     end
 
     # Webhook-source idempotency: one row per (provider, provider_event_id).
-    # Plan 06's `Mailglass.Webhook.Ingest` Multi inserts with
+    # 's `Mailglass.Webhook.Ingest` Multi inserts with
     # `on_conflict: :nothing, conflict_target: [:provider, :provider_event_id]`
     # — a replay is a no-op SELECT-by-index, not an INSERT.
     create(
@@ -68,7 +68,7 @@ defmodule Mailglass.Migrations.Postgres.V02 do
     )
 
     # Drop the unused `mailglass_events.raw_payload` column. V01:77 declared
-    # it nullable and no shipped v0.1 writer populates it (Phase 3 Projector
+    # it nullable and no shipped v0.1 writer populates it ( Projector
     # writes to `mailglass_deliveries`; Events.append_multi sets
     # `normalized_payload` + `metadata` only). Raw evidence now lives in
     # `mailglass_webhook_events.raw_payload`.

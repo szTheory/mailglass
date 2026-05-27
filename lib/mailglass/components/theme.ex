@@ -3,7 +3,7 @@ defmodule Mailglass.Components.Theme do
   Theme-token resolver backed by `:persistent_term`.
 
   Reads the brand theme cached by `Mailglass.Config.validate_at_boot!/0`
-  (D-19). The theme map shape:
+  (). The theme map shape:
 
       [
         colors: %{ink: "#0D1B2A", glass: "#277B96", ...},

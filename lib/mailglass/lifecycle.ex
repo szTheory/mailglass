@@ -2,8 +2,8 @@ defmodule Mailglass.Lifecycle do
   @moduledoc """
   Transaction lifecycle seam for adopter-side event composition.
 
-  Phase 11 introduces the contract only. The unsubscribe controller's
-  `Ecto.Multi` integration lands in 11-03 per D-02, where this callback
+   introduces the contract only. The unsubscribe controller's
+  `Ecto.Multi` integration lands in 11-03 per , where this callback
   will be invoked inside the durable unsubscribe transaction.
   """
 

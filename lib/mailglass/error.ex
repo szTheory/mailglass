@@ -15,8 +15,8 @@ defmodule Mailglass.Error do
   - `Mailglass.SuppressedError` — delivery blocked by suppression list
   - `Mailglass.RateLimitError` — rate limit exceeded (domain, tenant, stream)
   - `Mailglass.ConfigError` — configuration missing, invalid, conflicting, optional-dep absent
-  - `Mailglass.EventLedgerImmutableError` — SQLSTATE 45A01 translation (D-06, Phase 2)
-  - `Mailglass.TenancyError` — tenant context not stamped on the current process (Phase 2)
+  - `Mailglass.EventLedgerImmutableError` — SQLSTATE 45A01 translation (, )
+  - `Mailglass.TenancyError` — tenant context not stamped on the current process ()
 
   ## Pattern Matching
 
@@ -82,7 +82,7 @@ defmodule Mailglass.Error do
   """
   @doc since: "0.1.0"
   @spec is_error?(term()) :: boolean()
-  # Tracking: Phase 9 rename to error?/1 (D-08-20 — do not rename in Phase 8)
+  # Tracking:  rename to error?/1 (-20 — do not rename in )
   # credo:disable-for-next-line Credo.Check.Readability.PredicateFunctionNames
   def is_error?(%{__struct__: s}) when s in @error_modules, do: true
   # credo:disable-for-next-line Credo.Check.Readability.PredicateFunctionNames

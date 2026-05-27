@@ -1,5 +1,5 @@
 defmodule Mailglass.SuppressionStore.ETS.Supervisor do
-  @moduledoc "Supervises `Mailglass.SuppressionStore.ETS.TableOwner` (D-22)."
+  @moduledoc "Supervises `Mailglass.SuppressionStore.ETS.TableOwner` ()."
   use Supervisor
 
   def start_link(opts) do

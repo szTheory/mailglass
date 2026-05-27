@@ -1,17 +1,17 @@
 defmodule Mailglass.Webhook.Telemetry do
   @moduledoc """
-  Co-located span helpers for the webhook ingest surface (CONTEXT D-22).
+  Co-located span helpers for the webhook ingest surface (CONTEXT ).
 
   Mirrors `Mailglass.Telemetry.send_span/2` placement convention
-  (Phase 3 D-26): per-domain helpers live in their own module under
+  ( ): per-domain helpers live in their own module under
   the domain's `lib/` directory. The helpers in this module are the
   single-module surface for the webhook telemetry contract, which
-  means Phase 6 `LINT-02` (`NoPiiInTelemetryMeta`) has exactly one
+  means  `LINT-02` (`NoPiiInTelemetryMeta`) has exactly one
   module to lint (plus the call sites).
 
   ## Events emitted
 
-  | Event | Type | Stop metadata keys (D-23 whitelist) |
+  | Event | Type | Stop metadata keys ( whitelist) |
   |-------|------|--------------------------------------|
   | `[:mailglass, :webhook, :ingest, :start \\| :stop \\| :exception]` | full span | `provider, tenant_id, status, event_count, duplicate, failure_reason, delivery_id_matched` |
   | `[:mailglass, :webhook, :signature, :verify, :start \\| :stop \\| :exception]` | full span | `provider, status, failure_reason` |
@@ -21,12 +21,12 @@ defmodule Mailglass.Webhook.Telemetry do
   | `[:mailglass, :webhook, :reconcile, :start \\| :stop \\| :exception]` | full span | `tenant_id, scanned_count, linked_count, remaining_orphan_count, status` |
 
   Single-emit helpers delegate to `Mailglass.Telemetry.execute/3`
-  (Phase 1). Full-span helpers call `:telemetry.span/3` directly
+  (). Full-span helpers call `:telemetry.span/3` directly
   because the Plug needs per-request stop metadata enrichment
   (`status`, `failure_reason`, `event_count`, `duplicate`) — the
   `Mailglass.Telemetry.span/3` wrapper closes metadata at call time,
   which cannot express "I know the status once the inner function
-  returns." `:telemetry.span/3` itself provides D-27 handler
+  returns." `:telemetry.span/3` itself provides  handler
   isolation: handlers that raise are auto-detached and
   `[:telemetry, :handler, :failure]` fires — a handler crash cannot
   propagate into the webhook pipeline. Callers MUST NOT reach for
@@ -48,7 +48,7 @@ defmodule Mailglass.Webhook.Telemetry do
   Start metadata is always the `metadata` argument at call time
   (before outcome is known).
 
-  ## Whitelist discipline (D-23)
+  ## Whitelist discipline ()
 
   **NEVER include in any metadata map:**
 
@@ -62,7 +62,7 @@ defmodule Mailglass.Webhook.Telemetry do
   `conn.remote_ip` from their own plug lineage (see
   `guides/webhooks.md`).
 
-  Phase 6 `LINT-02` (`NoPiiInTelemetryMeta`) lints THIS module plus
+   `LINT-02` (`NoPiiInTelemetryMeta`) lints THIS module plus
   every caller against the forbidden-key set.
 
   ## `LINT-10` single-emit exception
@@ -74,7 +74,7 @@ defmodule Mailglass.Webhook.Telemetry do
   but skip the start/exception pair because they fire from INSIDE the
   larger `[:mailglass, :webhook, :ingest, *]` span (which IS a full
   span) and represent per-event signals inside a wrapped operation.
-  Phase 6 `LINT-10` whitelists these three event paths.
+   `LINT-10` whitelists these three event paths.
   """
 
   alias Mailglass.Telemetry
@@ -113,7 +113,7 @@ defmodule Mailglass.Webhook.Telemetry do
   (`[:mailglass, :webhook, :normalize, :stop]`).
 
   Metadata SHOULD include `:provider`, `:event_type`, `:mapped`.
-  Alertable on sustained `mapped: false` rate (D-22).
+  Alertable on sustained `mapped: false` rate ().
   """
   @doc since: "0.1.0"
   @spec normalize_emit(map()) :: :ok
@@ -127,7 +127,7 @@ defmodule Mailglass.Webhook.Telemetry do
 
   Metadata SHOULD include `:provider`, `:event_type`, `:tenant_id`,
   `:age_seconds`. Fires once per normalized event that lands without
-  a matching Delivery. Plan 07 Reconciler closes the race by
+  a matching Delivery.  Reconciler closes the race by
   appending a `:reconciled` event when the matching Delivery surfaces.
   """
   @doc since: "0.1.0"
@@ -142,7 +142,7 @@ defmodule Mailglass.Webhook.Telemetry do
 
   Metadata SHOULD include `:provider`, `:event_type`. Lets adopters
   distinguish provider retry storms from real traffic cheaply via
-  Grafana panels on the emit rate (D-24 alternative to log-scraping).
+  Grafana panels on the emit rate ( alternative to log-scraping).
   """
   @doc since: "0.1.0"
   @spec duplicate_emit(map()) :: :ok
@@ -172,7 +172,7 @@ defmodule Mailglass.Webhook.Telemetry do
   # classified `:status`, `:failure_reason`, `:event_count`, `:duplicate`
   # values, which the fixed-at-call-time wrapper cannot express.
   #
-  # D-27 handler isolation is still preserved: `:telemetry.span/3` wraps
+  #  handler isolation is still preserved: `:telemetry.span/3` wraps
   # each attached handler in a try/catch; a handler that raises is
   # auto-detached and emits `[:telemetry, :handler, :failure]` — a handler
   # crash cannot propagate into the webhook pipeline.

@@ -15,7 +15,7 @@ defmodule Mailglass.Tenancy do
   `scope/2` and a `"default"` literal tenant_id from `current/0` when
   no stamping has occurred.
 
-  ## Process-dict convention (D-30)
+  ## Process-dict convention ()
 
   `put_current/1` writes `tenant_id :: String.t()` under the
   namespaced key `:mailglass_tenant_id`. `current/0` reads it. The
@@ -23,7 +23,7 @@ defmodule Mailglass.Tenancy do
   `Mailglass.TenancyError` when the key is unset — the fail-loud
   variant for callers that assert they hold context.
 
-  ## Phoenix 1.8 `%Scope{}` interop (D-32)
+  ## Phoenix 1.8 `%Scope{}` interop ()
 
   Core does NOT pattern-match `%Phoenix.Scope{}`. Adopters write a
   two-line Plug / on_mount callback:
@@ -34,7 +34,7 @@ defmodule Mailglass.Tenancy do
         {:cont, socket}
       end
 
-  Documented in `guides/multi-tenancy.md` (Phase 7 DOCS-02).
+  Documented in `guides/multi-tenancy.md` ( DOCS-02).
   """
 
   @callback scope(queryable :: Ecto.Queryable.t(), context :: term()) :: Ecto.Queryable.t()
@@ -47,7 +47,7 @@ defmodule Mailglass.Tenancy do
                       resolve_outbound_adapter_ref: 1
 
   @doc """
-  Optional: return a per-tenant tracking host override (D-32).
+  Optional: return a per-tenant tracking host override ().
 
   Default adopter resolution: `:default` (use the global
   `config :mailglass, :tracking, host:` value). Adopters returning
@@ -87,10 +87,10 @@ defmodule Mailglass.Tenancy do
             ) :: {:ok, outbound_adapter_ref()} | :default
 
   @doc """
-  Optional: resolve the tenant from a verified webhook context (D-12).
+  Optional: resolve the tenant from a verified webhook context ().
 
   Called by `Mailglass.Webhook.Plug` AFTER `Provider.verify!/3` returns
-  `:ok` — D-13's "verify-first, tenant-second" ordering closes the
+  `:ok` — 's "verify-first, tenant-second" ordering closes the
   Stripe-Connect chicken-and-egg trap (a forged request cannot spoof its
   way into a tenant's suppression list because the signature gate runs
   on the global key material before any tenant-scoped work).
@@ -247,7 +247,7 @@ defmodule Mailglass.Tenancy do
   stamped in the current process. Returns `:ok` otherwise.
 
   Unlike `current/0`, does NOT fall back to the `SingleTenant` default.
-  This is the SEND-01 precondition (D-18) — ensures
+  This is the SEN precondition () — ensures
   `Events.append_multi/3` auto-capture via `Tenancy.current/0` does not
   silently default to `"default"` in a multi-tenant adopter.
   """
@@ -296,14 +296,14 @@ defmodule Mailglass.Tenancy do
 
   @doc """
   Dispatch to the configured tenancy module's `resolve_webhook_tenant/1`
-  callback (Phase 4 D-12 — the optional callback Plan 05 formally declares).
+  callback (  — the optional callback  formally declares).
 
   Returns `{:ok, tenant_id}` on success or `{:error, reason}` when the
   adopter's tenancy module cannot map the verified webhook context to a
   known tenant. `Mailglass.Webhook.Plug` rescues the latter as a 422 via
   `%Mailglass.TenancyError{type: :webhook_tenant_unresolved}`.
 
-  The `context` map shape is documented in CONTEXT D-12:
+  The `context` map shape is documented in CONTEXT :
 
       %{
         provider: :postmark | :sendgrid,

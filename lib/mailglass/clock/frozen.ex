@@ -4,7 +4,7 @@ defmodule Mailglass.Clock.Frozen do
   process. Per-process isolation makes it `async: true`-safe.
 
   `Mailglass.Adapters.Fake.advance_time/1` delegates to `advance/1` — one
-  mechanism, not two (D-03 + D-07).
+  mechanism, not two ( + ).
   """
 
   @key :mailglass_clock_frozen_at

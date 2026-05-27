@@ -21,9 +21,9 @@ defmodule Mailglass.OptionalDeps do
   ## Gateway Modules
 
   - `Mailglass.OptionalDeps.Oban` — gates `{:oban, "~> 2.21"}`. Fallback for
-    `deliver_later/2` is `Task.Supervisor` (lands Phase 3).
+    `deliver_later/2` is `Task.Supervisor` (lands ).
   - `Mailglass.OptionalDeps.OpenTelemetry` — gates `{:opentelemetry, "~> 1.7"}`.
-    Adopter-owned bridge via `opentelemetry_telemetry` (D-32).
+    Adopter-owned bridge via `opentelemetry_telemetry` ().
   - `Mailglass.OptionalDeps.Mjml` — gates `{:mjml, "~> 5.3"}` (Rust NIF). Used
     by `Mailglass.TemplateEngine.MJML` when adopters opt into MJML (AUTHOR-05).
   - `Mailglass.OptionalDeps.GenSmtp` — gates `{:gen_smtp, "~> 1.3"}`. Used by
@@ -34,7 +34,7 @@ defmodule Mailglass.OptionalDeps do
 
   ## Lint Enforcement
 
-  Phase 6 ships a custom Credo check (`NoBareOptionalDepReference`) that flags
+   ships a custom Credo check (`NoBareOptionalDepReference`) that flags
   any direct reference to the gated modules outside their corresponding
   gateway module. The gateway is the single authorized callsite.
   """

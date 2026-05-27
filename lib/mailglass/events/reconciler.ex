@@ -1,32 +1,32 @@
 defmodule Mailglass.Events.Reconciler do
   @moduledoc """
-  Pure Ecto query functions for orphan-webhook reconciliation (D-19).
+  Pure Ecto query functions for orphan-webhook reconciliation ().
 
-  Phase 2 scope: query functions only. Phase 4 wraps these in
+   scope: query functions only.  wraps these in
   `Mailglass.Oban.Reconciler` at `{:cron, "*/15 * * * *"}` cadence
-  (D-20). Phase 2 has no Oban dep.
+  ().  has no Oban dep.
 
   ## What "orphan" means
 
   A webhook event arrives for a `provider_message_id` before the
   delivery row has committed its `provider_message_id` field
   (empirical: SendGrid + Postmark p99 webhook latency is 5-30s;
-  dispatch commits are ms-scale but the window is real). Phase 4's
+  dispatch commits are ms-scale but the window is real). 's
   webhook plug inserts the event with `delivery_id = nil` and
   `needs_reconciliation = true` rather than failing.
 
   ## Reconciliation semantics (research §6.1 note)
 
   `needs_reconciliation` lives on the event row, not the delivery,
-  and the immutability trigger prevents UPDATE on events. The Phase 4
+  and the immutability trigger prevents UPDATE on events. The 
   worker's exact mechanic (emit a `:reconciled` event + update
-  delivery projection vs. only update projection) is Phase 4's call.
-  Phase 2 exposes the primitives either approach needs:
+  delivery projection vs. only update projection) is 's call.
+   exposes the primitives either approach needs:
 
   - `find_orphans/1` — query events awaiting reconciliation
   - `attempt_link/2` — look up the matching delivery (by `provider`
     + `provider_message_id` in `:metadata` / `:normalized_payload`;
-    Phase 4 V02 migration dropped `raw_payload` from the ledger per D-15)
+     V02 migration dropped `raw_payload` from the ledger per )
   """
 
   alias Mailglass.Clock
@@ -52,7 +52,7 @@ defmodule Mailglass.Events.Reconciler do
     Default: 10_080 (7 days).
 
   Uses the partial index `mailglass_events_needs_reconcile_idx`
-  (Plan 02) for efficient scans.
+  () for efficient scans.
   """
   @doc since: "0.1.0"
   @spec find_orphans(keyword()) :: [Event.t()]
@@ -93,21 +93,21 @@ defmodule Mailglass.Events.Reconciler do
   Attempts to locate the matching `%Delivery{}` for an orphan event
   via `(provider, provider_message_id)`. The provider + message id are
   extracted from the event's `:metadata` first, then `:normalized_payload`
-  (Phase 4 V02 migration dropped `raw_payload` from the ledger per D-15;
+  ( V02 migration dropped `raw_payload` from the ledger per ;
   provider bytes now live in `mailglass_webhook_events.raw_payload`, and
-  Plan 06 Ingest writes identifying fields into the ledger's `:metadata`
+   Ingest writes identifying fields into the ledger's `:metadata`
   at insert time).
 
   Returns `{:ok, {delivery, event}}` when matched;
   `{:error, :delivery_not_found}` when no delivery with the
   (provider, provider_message_id) pair exists.
 
-  Pure query — does NOT mutate anything. Phase 4's Oban worker
+  Pure query — does NOT mutate anything. 's Oban worker
   decides whether to emit a `:reconciled` event and/or update the
   delivery projection after this returns success.
 
   Emits `[:mailglass, :persist, :reconcile, :link, :*]` with
-  `tenant_id` metadata (PII-free per D-31 whitelist).
+  `tenant_id` metadata (PII-free per  whitelist).
   """
   @doc since: "0.1.0"
   @spec attempt_link(Event.t()) ::
@@ -148,13 +148,13 @@ defmodule Mailglass.Events.Reconciler do
   end
 
   defp extract(%Event{metadata: md, normalized_payload: np}, key) when is_binary(key) do
-    # Phase 4 V02 migration dropped `raw_payload` from the ledger (D-15).
+    #  V02 migration dropped `raw_payload` from the ledger ().
     # Orphan reconciliation now reads `:metadata` first (preserved write
     # path for ingest-time context) and falls back to `:normalized_payload`
     # (provider-normalized Anymail fields like `sg_message_id` or
     # `MessageID`). Raw provider evidence lives in
     # `mailglass_webhook_events.raw_payload` — reconcile doesn't need it
-    # because Plan 06 Ingest writes `provider_message_id` into the
+    # because  Ingest writes `provider_message_id` into the
     # ledger's `:metadata` at insert time.
     extract_from(md, key) || extract_from(np, key)
   end

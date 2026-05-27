@@ -2,7 +2,7 @@ defmodule Mailglass.Compliance do
   @moduledoc """
   Injects RFC-required and mailglass-specific headers into outbound messages.
 
-  Phase 1 ships functional stubs for the v0.1 RFC floor:
+   ships functional stubs for the v0.1 RFC floor:
 
     * `Date` — RFC 2822 format; injected if absent.
     * `Message-ID` — RFC 5322 unique identifier; injected if absent.
@@ -11,7 +11,7 @@ defmodule Mailglass.Compliance do
 
   Full RFC 8058 `List-Unsubscribe` + `List-Unsubscribe-Post` lands in v0.5
   (DELIV-01). `Feedback-ID` gets its full shape once tenant-scoped streams land
-  in Phase 2.
+  in .
 
   ## Invariant
 
@@ -175,7 +175,7 @@ defmodule Mailglass.Compliance do
 
   # Adds a placeholder Mailglass-Mailable header when no mailable is known.
   # Adopters who know the mailable should call add_mailable_header/4 explicitly
-  # (typically threaded through the Outbound pipeline in Phase 3).
+  # (typically threaded through the Outbound pipeline in ).
   defp maybe_add_default_mailable_header(%Swoosh.Email{} = email) do
     put_header_if_absent(email, "Mailglass-Mailable", "unknown")
   end

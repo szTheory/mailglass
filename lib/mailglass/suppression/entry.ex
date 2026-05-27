@@ -2,7 +2,7 @@ defmodule Mailglass.Suppression.Entry do
   @moduledoc """
   Ecto schema for a row in `mailglass_suppressions`.
 
-  ## Atom Sets (D-07, D-10, D-11)
+  ## Atom Sets (, , )
 
   - `:scope` — `:address | :domain | :address_stream`. NO default;
     changeset `validate_required` enforces (MAIL-07 prevention).
@@ -11,14 +11,14 @@ defmodule Mailglass.Suppression.Entry do
   - `:reason` — `:hard_bounce | :complaint | :unsubscribe | :manual |
     :policy | :invalid_recipient`.
 
-  ## Coupling invariants (D-07)
+  ## Coupling invariants ()
 
   - `scope = :address_stream` REQUIRES `stream`.
   - `scope IN (:address, :domain)` REJECTS `stream`.
 
   Enforced both at the changeset layer (`validate_scope_stream_coupling/1`)
   and at the DB layer (`mailglass_suppressions_stream_scope_check`
-  CHECK constraint — Plan 02). Belt-and-suspenders: either layer alone
+  CHECK constraint — ). Belt-and-suspenders: either layer alone
   would suffice, but lint-time errors (changeset) are cheaper than
   runtime errors (Postgres).
 
@@ -53,9 +53,9 @@ defmodule Mailglass.Suppression.Entry do
     field(:tenant_id, :string)
     # DB is citext; Ecto sees string
     field(:address, :string)
-    # NO default — D-11
+    # NO default — 
     field(:scope, Ecto.Enum, values: @scopes)
-    # nullable — D-07
+    # nullable — 
     field(:stream, Ecto.Enum, values: @streams)
     field(:reason, Ecto.Enum, values: @reasons)
     field(:source, :string)
@@ -72,8 +72,8 @@ defmodule Mailglass.Suppression.Entry do
 
   Enforces three invariants at the Elixir layer:
 
-  1. `:scope` is required with no default (MAIL-07 prevention — D-11).
-  2. Scope/stream coupling (D-07) via `validate_scope_stream_coupling/1`.
+  1. `:scope` is required with no default (MAIL-07 prevention — ).
+  2. Scope/stream coupling () via `validate_scope_stream_coupling/1`.
   3. Address normalization via `downcase_address/1` — belt-and-suspenders
      with the underlying `CITEXT` column.
   """

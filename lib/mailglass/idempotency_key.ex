@@ -52,11 +52,10 @@ defmodule Mailglass.IdempotencyKey do
 
   Each event in a batch gets `"\#{provider}:\#{provider_event_id}:\#{index}"`
   so duplicate inserts of the same batch event collapse via the
-  `mailglass_events.idempotency_key` partial UNIQUE index (Phase 2 Plan
-  05 DDL). Single-event Postmark payloads use `for_webhook_event/2`
+  `mailglass_events.idempotency_key` partial UNIQUE index (  DDL). Single-event Postmark payloads use `for_webhook_event/2`
   without the index suffix.
 
-  Phase 4 extension per CONTEXT line 343 (Plan 04-06).
+   extension per CONTEXT line 343 (-06).
 
   ## Examples
 

@@ -1,20 +1,20 @@
 defmodule Mailglass.Tracking do
   @moduledoc """
-  Tracking public facade. Off by default per TRACK-01 / D-08.
+  Tracking public facade. Off by default per TRACK-01 / .
 
   Adopters opt in per-mailable at compile time:
 
       use Mailglass.Mailable, tracking: [opens: true, clicks: true]
 
-  `opens` and `clicks` are independent booleans (D-31). Apple Mail Privacy
+  `opens` and `clicks` are independent booleans (). Apple Mail Privacy
   Protection neuters opens but not clicks — `opens: false, clicks: true` is
   a real configuration adopters will want once they understand the ecosystem.
 
-  ## Enforcement layers (D-30 + D-38)
+  ## Enforcement layers ( + )
 
   1. NimbleOptions default `false` in `use` opts.
-  2. Phase 6 `TRACK-02 NoTrackingOnAuthStream` Credo check at compile time.
-  3. Phase 3 `Mailglass.Tracking.Guard.assert_safe!/1` at runtime (D-38).
+  2.  `TRACK-02 NoTrackingOnAuthStream` Credo check at compile time.
+  3.  `Mailglass.Tracking.Guard.assert_safe!/1` at runtime ().
 
   Adopters CAN disable tracking at runtime per-call via `tracking: false` opt
   on `deliver/2` — but they CANNOT enable it at runtime. This keeps compile-time
@@ -31,8 +31,8 @@ defmodule Mailglass.Tracking do
 
   Reads tracking flags for the message's mailable and calls
   `Mailglass.Tracking.Rewriter.rewrite/2` when any flag is true. Returns
-  the message unchanged when tracking is disabled (D-10). Never touches
-  `text_body` (D-36).
+  the message unchanged when tracking is disabled (). Never touches
+  `text_body` ().
   """
 
   @type tracking_flags :: %{opens: boolean(), clicks: boolean()}
@@ -66,7 +66,7 @@ defmodule Mailglass.Tracking do
   (or adopters invoking manually) after `Mailglass.Renderer.render/1`.
 
   When no flags are set, returns the message unchanged. Never touches
-  `text_body` (D-36).
+  `text_body` ().
 
   `delivery_id` is read from `message.metadata[:delivery_id]`; falls back
   to `"pre-delivery"` when not yet stamped (render-preview mode).

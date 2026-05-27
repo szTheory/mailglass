@@ -4,11 +4,11 @@ defmodule Mailglass.Renderer do
 
   All functions are side-effect free. No processes, no DB, no HTTP calls.
 
-  ## Pipeline (D-15 — plaintext runs BEFORE CSS inlining)
+  ## Pipeline ( — plaintext runs BEFORE CSS inlining)
 
   1. `render_html/2` — calls `Mailglass.TemplateEngine.HEEx.render/3`, returns HTML iodata
   2. `to_plaintext/1` — custom Floki walker on the pre-VML logical HTML
-  3. `inline_css/1` — `Premailex.to_inline_css/2` (preserves MSO conditionals per D-14)
+  3. `inline_css/1` — `Premailex.to_inline_css/2` (preserves MSO conditionals per )
   4. `strip_mg_attributes/1` — removes all `data-mg-*` from the final HTML wire
 
   Plaintext MUST run on step-1 output (pre-CSS-inlining HTML), NOT on step-3 output.
@@ -47,7 +47,7 @@ defmodule Mailglass.Renderer do
   with the auto-generated plaintext.
 
   The entire pipeline is wrapped in `Mailglass.Telemetry.render_span/2`.
-  Metadata is whitelisted to `%{tenant_id, mailable}` — no PII per D-31.
+  Metadata is whitelisted to `%{tenant_id, mailable}` — no PII per .
 
   ## Examples
 
@@ -106,12 +106,12 @@ defmodule Mailglass.Renderer do
      )}
   end
 
-  # --- Step 2: custom Floki walker for plaintext (D-15, D-22) ---
+  # --- Step 2: custom Floki walker for plaintext (, ) ---
 
   @doc """
   Extracts plaintext from HTML using `data-mg-plaintext` strategy attributes.
 
-  Strategies (D-22):
+  Strategies ():
     * `"skip"` — excludes the element and its children (preheader)
     * `"link_pair"` — emits `"Label (url)"` (button, link)
     * `"divider"` — emits `"\\n---\\n"` (hr)

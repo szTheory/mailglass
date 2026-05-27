@@ -21,7 +21,7 @@ defmodule Mailglass.Webhook.CachingBodyReader do
   Bytes land in `conn.private[:raw_body]`. The `conn.private` map is
   library-reserved (off the adopter `assigns` contract), matching
   `LatticeStripe.Webhook.CacheBodyReader` convention. Mailglass
-  diverges from accrue's `conn.assigns` cons-list per CONTEXT D-09
+  diverges from accrue's `conn.assigns` cons-list per CONTEXT 
   — `private` is the right boundary for library-reserved data.
 
   ## Adopter-side wiring

@@ -1,6 +1,6 @@
 defmodule Mailglass.Tenancy.ResolveFromPath do
   @moduledoc """
-  Opt-in URL-prefix tenant resolver (D-12 sugar).
+  Opt-in URL-prefix tenant resolver ( sugar).
 
   Reads `context.path_params["tenant_id"]` and returns `{:ok, tid}` when
   present and non-empty, or `{:error, :missing_path_param}` otherwise.

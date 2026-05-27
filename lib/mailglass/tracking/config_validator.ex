@@ -1,6 +1,6 @@
 defmodule Mailglass.Tracking.ConfigValidator do
   @moduledoc """
-  Boot-time validator for TRACK-03 configuration (D-32).
+  Boot-time validator for TRACK-03 configuration ().
 
   When ANY loaded mailable module has `tracking: [opens: true]` or
   `tracking: [clicks: true]` in its `@mailglass_opts`, the

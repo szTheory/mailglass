@@ -2,7 +2,7 @@ if Code.ensure_loaded?(Oban.Worker) do
   defmodule Mailglass.Webhook.Pruner do
     @moduledoc """
     Oban cron worker that prunes `mailglass_webhook_events` rows by
-    status + age (CONTEXT D-16).
+    status + age (CONTEXT ).
 
     Three retention knobs (per `Mailglass.Config :webhook_retention`):
 
@@ -21,7 +21,7 @@ if Code.ensure_loaded?(Oban.Worker) do
     Daily is sufficient — retention is days-scale, so running hourly adds
     DB churn without changing outcomes. Adopters wire the cron in their
     own Oban config (`0 3 * * *` — 3 AM UTC is the recommended default;
-    lands with Plan 04-09 guides/webhooks.md).
+    lands with -09 guides/webhooks.md).
 
     ## Optional-dep gating
 
@@ -29,13 +29,13 @@ if Code.ensure_loaded?(Oban.Worker) do
     `if Code.ensure_loaded?(Oban.Worker)`. When Oban is absent, a stub
     module is defined that exposes `available?/0 → false`;
     `Mailglass.Application` emits a consolidated `Logger.warning` at boot
-    (D-20) directing operators to run `mix mailglass.webhooks.prune` from
+    () directing operators to run `mix mailglass.webhooks.prune` from
     their own cron infrastructure.
 
     ## GDPR erasure
 
     Targeted DELETE on `mailglass_webhook_events.raw_payload->>'to' = ?`
-    is the GDPR path (D-15) — handled by adopter ad-hoc via
+    is the GDPR path () — handled by adopter ad-hoc via
     `Mailglass.Repo.delete_all/2`, NOT this Pruner. The Pruner's
     DELETEs are retention-policy-driven (status + age), not identity-driven.
 
@@ -43,7 +43,7 @@ if Code.ensure_loaded?(Oban.Worker) do
 
     Emits `[:mailglass, :webhook, :prune, :stop]` with measurements
     `%{succeeded_deleted: n, dead_deleted: m}` and metadata
-    `%{status: :ok}` per CONTEXT D-22 + D-23 whitelist.
+    `%{status: :ok}` per CONTEXT  +  whitelist.
     """
 
     use Oban.Worker, queue: :mailglass_maintenance

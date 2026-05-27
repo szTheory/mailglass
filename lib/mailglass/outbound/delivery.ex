@@ -1,7 +1,7 @@
 defmodule Mailglass.Outbound.Delivery do
   @moduledoc """
   One row per (Message, recipient, provider) tuple. Mutable: projection
-  columns are updated by `Mailglass.Outbound.Projector` (Plan 06).
+  columns are updated by `Mailglass.Outbound.Projector` ().
 
   Field order per CONTEXT.md "Claude's Discretion":
   id → tenant_id → foreign keys → state → metadata/flags → timestamps.
@@ -10,19 +10,19 @@ defmodule Mailglass.Outbound.Delivery do
 
   ## Atom Sets
 
-  - `:stream` — `:transactional | :operational | :bulk` (D-10)
+  - `:stream` — `:transactional | :operational | :bulk` ()
   - `:last_event_type` — full Anymail event taxonomy + mailglass
-    internal `:dispatched` / `:suppressed` (D-14 project-level)
+    internal `:dispatched` / `:suppressed` ( project-level)
 
-  ## Projection columns (D-13)
+  ## Projection columns ()
 
   `dispatched_at`, `delivered_at`, `bounced_at`, `complained_at`,
   `suppressed_at`, `terminal`, `last_event_type`, `last_event_at` are the
-  only Elixir-modifiable facts. `Mailglass.Outbound.Projector` (Plan 06)
+  only Elixir-modifiable facts. `Mailglass.Outbound.Projector` ()
   owns writes to these columns; `metadata` is a free-form jsonb bag for
   adopter-supplied non-PII extras.
 
-  ## Optimistic locking (D-18)
+  ## Optimistic locking ()
 
   `:lock_version` defaults to `1`. Consumers chain
   `Ecto.Changeset.optimistic_lock(:lock_version)` onto the changeset when
@@ -103,7 +103,7 @@ defmodule Mailglass.Outbound.Delivery do
     field(:metadata, :map, default: %{})
     field(:lock_version, :integer, default: 1)
 
-    # Phase 3 Plan 05 — I-01: public-API snapshot fields.
+    #   — I-01: public-API snapshot fields.
     # :status is the stable snapshot adopters pattern-match on
     # (`%Delivery{status: :sent}` is ROADMAP success criterion 1).
     # :last_event_type tracks the most recent ledger event.
@@ -134,7 +134,7 @@ defmodule Mailglass.Outbound.Delivery do
   Builds a changeset for a new `%Delivery{}` from an attr map.
 
   Auto-populates `:recipient_domain` from `:recipient` (denormalization
-  per D-13) — a cheap cast-time computation that saves a `SPLIT_PART()`
+  per ) — a cheap cast-time computation that saves a `SPLIT_PART()`
   at query time for rate-limit and analytics reads.
   """
   @doc since: "0.1.0"
@@ -171,7 +171,7 @@ defmodule Mailglass.Outbound.Delivery do
     end
   end
 
-  @doc "Closed event-type atom set. Tested against api_stability.md (Phase 6 check)."
+  @doc "Closed event-type atom set. Tested against api_stability.md ( check)."
   @doc since: "0.1.0"
   def __event_types__, do: @event_types
 

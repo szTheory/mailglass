@@ -4,7 +4,7 @@ defmodule Mailglass.Webhook.Providers.SES.CertCache do
 
   Caches RSA public key terms extracted from AWS SNS signing certificates,
   keyed by `SigningCertURL`. Prevents repeated `:httpc` network calls for the
-  same certificate (D-10, D-12).
+  same certificate (, ).
 
   Cache entries expire after a configurable TTL (default 24 hours). Expiry is
   checked lazily during `fetch_public_key/1` — no background timer or sweep.
