@@ -27,23 +27,23 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
     end)
   end
 
-  test "JOUR-03 and JOUR-04 remain explicitly deferred to Phase 58" do
+  test "JOUR-03 and JOUR-04 completed proof language is pinned" do
     readme = File.read!(@readme_path)
 
     required_tokens = [
       "mix verify.reference_host.journey",
-      "signed-negative webhook proof",
-      "non-happy-path operator diagnosis",
+      "signed Postmark webhook verification",
+      "no-match operator diagnosis",
       "JOUR-03",
-      "JOUR-04",
-      "deferred to Phase 58",
-      "Phase 58"
+      "JOUR-04"
     ]
 
     Enum.each(required_tokens, fn token ->
       assert String.contains?(readme, token),
              "Phase boundary drift: required token missing #{inspect(token)}"
     end)
+
+    refute String.contains?(readme, "deferred to Phase 58")
   end
 
   defp token_present?(files_with_content, token) do

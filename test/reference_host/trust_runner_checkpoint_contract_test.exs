@@ -1,9 +1,12 @@
 defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
   use ExUnit.Case, async: false
 
+  alias Mailglass.ReferenceHost.TrustCheckpoint
   alias Mailglass.ReferenceHost.TrustRunnerFixtures
 
   @project_root Path.expand("../..", __DIR__)
+  @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
+  @stage_order ["install", "preview", "send", "webhook_ingest", "operator_troubleshooting"]
 
   test "two dry runs emit deterministic equivalent checkpoints with stable hash" do
     checkpoint_dir = Path.join(@project_root, "tmp/mailglass_trust_runner")
@@ -37,12 +40,41 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     assert normalize(payload_1) == normalize(payload_2)
     assert payload_1["checkpoint_sha256"] == payload_2["checkpoint_sha256"]
     assert payload_1["schema_version"] == "trust_runner.v1"
-    assert payload_1["claim_boundary"] =~ "deferred to Phase 58"
+    assert payload_1["claim_boundary"] == @claim_boundary
+    assert Enum.map(payload_1["checkpoints"], & &1["stage"]) == @stage_order
   end
 
-  test "webhook ingest checkpoint includes route-level Postmark proof evidence" do
+  test "checkpoint hash is based only on ordered stage status fixture_id rows" do
+    rows = [
+      %{
+        "stage_key" => "webhook_ingest",
+        "status" => "completed",
+        "fixture_id" => "trust.webhook_ingest.001",
+        "evidence" => %{"b" => 2, "a" => 1}
+      },
+      %{
+        "stage_key" => "operator_troubleshooting",
+        "status" => "completed",
+        "fixture_id" => "trust.operator_troubleshooting.001",
+        "evidence" => %{"a" => 1, "b" => 2}
+      }
+    ]
+
+    reordered_evidence_rows = [
+      put_in(Enum.at(rows, 0), ["evidence"], %{"a" => 1, "b" => 2}),
+      put_in(Enum.at(rows, 1), ["evidence"], %{"b" => 2, "a" => 1})
+    ]
+
+    payload = TrustCheckpoint.encode(rows)
+    reordered_payload = TrustCheckpoint.encode(reordered_evidence_rows)
+
+    assert payload["checkpoint_sha256"] == reordered_payload["checkpoint_sha256"]
+    assert payload["checkpoint_sha256"] == expected_row_hash(payload["checkpoints"])
+  end
+
+  test "non-dry-run checkpoint includes completed Phase 58 evidence" do
     checkpoint_dir = Path.join(@project_root, "tmp/mailglass_trust_runner")
-    checkpoint = Path.join(checkpoint_dir, "phase58-plan01-webhook.json")
+    checkpoint = Path.join(checkpoint_dir, "phase58-plan02-evidence.json")
 
     File.rm_rf!(checkpoint_dir)
     File.mkdir_p!(checkpoint_dir)
@@ -58,11 +90,64 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
 
     payload = decode!(checkpoint)
     webhook = checkpoint_for_stage(payload, "webhook_ingest")
+    operator = checkpoint_for_stage(payload, "operator_troubleshooting")
 
     assert webhook["status"] == "completed"
     assert webhook["fixture_id"] == "trust.webhook_ingest.001"
-
     assert webhook["evidence"] == TrustRunnerFixtures.webhook_ingest_evidence()
+
+    assert webhook["evidence"]["negative_reason"] == "bad_credentials"
+    assert webhook["evidence"]["verified_before_tenant"] == true
+    assert operator["evidence"]["scenario"] == "no_match"
+    assert operator["evidence"]["raw_payload_included"] == false
+  end
+
+  test "checkpoint validator rejects malformed Phase 58 evidence" do
+    checkpoint_dir = Path.join(@project_root, "tmp/mailglass_trust_runner")
+    valid_checkpoint = Path.join(checkpoint_dir, "phase58-plan02-validator-valid.json")
+    invalid_checkpoint = Path.join(checkpoint_dir, "phase58-plan02-validator-invalid.json")
+
+    File.rm_rf!(checkpoint_dir)
+    File.mkdir_p!(checkpoint_dir)
+
+    assert {_, 0} =
+             System.cmd(
+               "mix",
+               ["verify.reference_host.journey", "--checkpoint-out", valid_checkpoint],
+               cd: @project_root,
+               stderr_to_stdout: true,
+               env: [{"MIX_ENV", "test"}]
+             )
+
+    payload =
+      valid_checkpoint
+      |> decode!()
+      |> update_in(["checkpoints"], fn rows ->
+        Enum.map(rows, fn
+          %{"stage" => "operator_troubleshooting"} = row ->
+            put_in(row, ["evidence", "raw_payload"], "must be rejected")
+
+          row ->
+            row
+        end)
+      end)
+
+    File.write!(invalid_checkpoint, Jason.encode_to_iodata!(payload, pretty: true))
+
+    assert {_, 0} =
+             System.cmd("bash", ["scripts/check_trust_runner_checkpoint.sh", "--checkpoint", valid_checkpoint],
+               cd: @project_root,
+               stderr_to_stdout: true
+             )
+
+    assert {output, exit_code} =
+             System.cmd("bash", ["scripts/check_trust_runner_checkpoint.sh", "--checkpoint", invalid_checkpoint],
+               cd: @project_root,
+               stderr_to_stdout: true
+             )
+
+    assert exit_code != 0
+    assert output =~ "forbidden evidence key"
   end
 
   defp decode!(path), do: path |> File.read!() |> Jason.decode!()
@@ -79,5 +164,13 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
       "checkpoint_sha256" => payload["checkpoint_sha256"],
       "checkpoints" => payload["checkpoints"]
     }
+  end
+
+  defp expected_row_hash(rows) do
+    rows
+    |> Enum.map(fn row -> "#{row["stage"]}|#{row["status"]}|#{row["fixture_id"]}" end)
+    |> Enum.join("\n")
+    |> then(&:crypto.hash(:sha256, &1))
+    |> Base.encode16(case: :lower)
   end
 end
