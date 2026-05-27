@@ -35,3 +35,14 @@ Stable seams used by this reference host:
 - `MailglassAdmin.Router.mailglass_admin_routes/2`
 - `MailglassAdmin.Router.mailglass_operator_routes/2`
 - `MailglassInbound.Ingress.Plug`
+
+## Canonical trust runner command
+
+Use one command as the trust-journey entrypoint for local verification and CI:
+
+```bash
+mix verify.reference_host.journey
+```
+
+Phase boundary: signed-negative webhook proof (`JOUR-03`) and scripted
+non-happy-path operator diagnosis (`JOUR-04`) are deferred to Phase 58.
