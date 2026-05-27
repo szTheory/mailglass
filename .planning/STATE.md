@@ -1,90 +1,50 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Inbound Production Confidence
+milestone: v1.3
+milestone_name: Release Discipline & Repo Truth
 status: executing
-last_updated: "2026-05-25T16:15:40Z"
-last_activity: 2026-05-25 -- Phase 50.5 Plan 01 complete (Commit A: version force + allowlist refresh)
+last_updated: "2026-05-27T00:00:00Z"
+last_activity: 2026-05-27 -- Phase 52/53 implementation started from clean origin/main after preserving local state
 progress:
-  total_phases: 11
-  completed_phases: 7
-  total_plans: 36
-  completed_plans: 36
-  percent: 64
+  total_phases: 3
+  completed_phases: 2
+  total_plans: 3
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-06 after v1.2 milestone open)
+See: `.planning/PROJECT.md`.
 
-**Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 50 — inbound-documentation-pass
+**Core value:** Email you can see, audit, and trust before it ships.
+**Current focus:** v1.3 Release Discipline & Repo Truth.
 
 ## Current Position
 
-Phase: 50.5
-Plan: 01 — COMPLETE (2026-05-25); Commit A at 5421b14 (not yet pushed)
-Status: Executing — Wave 2 (Commit B: CHANGELOG curation) is next
-Last activity: 2026-05-25 -- Phase 50.5 Plan 01 complete (Commit A: version force + allowlist refresh)
+Phase: 53 — release fan-out and publish ordering
+Plan: inline recovery implementation after interrupted session
+Status: executing
+Last activity: 2026-05-27 -- current dirty/ahead state preserved on `preserve/release-discipline-preclean-20260527`; implementation branch `work/v1.3-release-discipline` created from `origin/main`.
 
-## v1.2 Phase Plan
+## v1.3 Phase Plan
 
-| Phase | Name | REQ Count | Plans (est.) | Depends |
-|-------|------|-----------|--------------|---------|
-| **44.5** | **v1.0/1.1 Release Ceremony** | **1 (CLOSE-06)** | **1-2** | Phase 44 |
-| 45 | Inbound Telemetry + Idempotency Foundation | 11 | 3 | 44.5 |
-| 46 | Mailgun + SES Inbound Ingress | 9 | 3 | 45 |
-| 47 | Inbound Test Helpers + Generators | 11 | 3 | 45 |
-| 48 | Inbound Admin LiveView | 7 | 3 | 45 |
-| 49 | Inbound Runtime Operator Tooling | 6 | 3 | 45, 46 |
-| 50 | Inbound Documentation Pass | 8 | 3 | 46, 47, 48, 49 |
-| **50.5** | **v1.2 Release Ceremony** | **0** (release-eng only) | **1-2** | 50 |
-| 51 | Stability Closeout | 5 (CLOSE-01..05) | 2 | none (parallel-safe with 45-50) |
-| **Total** | | **58** | **~22-24** | |
+| Phase | Name | Requirements | Status |
+|-------|------|--------------|--------|
+| 52 | Clean-State Quarantine + Hygiene Automation | RH-01..06, TRUTH-03 | complete in current work |
+| 53 | Release Fan-out + Publish Ordering | RELH-01..05, TRUTH-02 | complete in current work |
+| 54 | PR/Branch Triage + Green Main Proof | TRUTH-01 plus final CI evidence | pending |
 
-Plan counts are estimates per SYNTHESIS.md + 2 release ceremonies. Final plan counts are set during `/gsd-plan-phase <N>`.
+## Open Work
 
-**Release-cadence rule (added 2026-05-06):** Each milestone closes with a release ceremony (Phase X.5 by convention). Don't start the next milestone implementation while previous-milestone work is unreleased. The 4-milestone-deep gap between v0.3.2 and 1.0.0 is the failure mode this rule prevents.
-
-## Performance Metrics
-
-**Velocity:**
-
-- v1.1 plans completed: 17 (12 product across Phases 39-42, 5 audit-gap closure across Phases 43-44)
-- v1.0 plans completed: 12 (across Phases 35-38)
-- Total v1.1 milestone duration: single-day blitz on 2026-05-06 (audit re-pass on 2026-05-07)
-
-## Open Carry-Forward Items (Bundled into v1.2 Phase 51 Closeout)
-
-The following v1.0 carry-forward debt is being closed in v1.2 Phase 51 rather than slipping further:
-
-- Live `v1.0` Hex publish closeout and external GitHub branch-protection verification.
-- v1.0 partial Nyquist bookkeeping for Phase 35 (`wave_0_complete: false` despite verification passing).
-- Non-blocking boundary warnings in support-summary and admin probe verification paths.
-- Bare `mix test` citext-OID-cache race (test environment sharp edge).
-- Phase 4 standard-depth review WR-01..WR-06 (tracked, non-blocking).
-
-## Pre-existing Cleanup Backlog (Not v1.2 Scope)
-
-`.planning/phases/` still contains 14 leftover phase directories from earlier milestones (28-38 from v0.5/v0.6/v1.0, plus `999.1-*` and `999.2-*` artifact-cleanup phases). These should have been moved into `.planning/milestones/v0.X-phases/` during their respective `/gsd-complete-milestone` runs but were not. Run `/gsd-cleanup` before starting v1.2 phase 45 to avoid name-collision risk.
+- Refresh or close open PRs #17, #27, #28, #29, #30, #37, #38, and #39.
+- Capture final `main` CI and branch-protection evidence after the hygiene branch lands.
+- Run the repo hygiene workflow after merge so the JSON artifact becomes the recurring readiness proof.
 
 ## Session Continuity
 
-- v0.1 through v1.0 archived in `.planning/milestones/v0.1-*` through `.planning/milestones/v1.0-*`.
-- v1.1 archived in `.planning/milestones/v1.1-ROADMAP.md`, `.planning/milestones/v1.1-REQUIREMENTS.md`, `.planning/milestones/v1.1-MILESTONE-AUDIT.md`, `.planning/milestones/v1.1-MILESTONE-AUDIT-CLOSEOUT.md`, and the per-phase tree under `.planning/milestones/v1.1-phases/`.
-- v1.1 product behavior shipped on 2026-05-06: `mailglass_inbound` opened with canonical `%InboundMessage{}`, narrow router DSL, mailbox behaviour with locked outcomes, first-party Postmark + SendGrid ingress, tenant-safe replayable persistence of normalized + raw provider source, Oban-backed async execution with bounded `Task.Supervisor` fallback, canonical adoption docs, and repo-root release-proof coverage.
-- v1.1 audit chain restored on 2026-05-06 across Phase 43 (recovered 39/40/41 verification, added 41 validation) and Phase 44 (recovered 42 verification, reconciled bookkeeping); audit re-ran with `status: passed`.
-- v1.2 milestone opened on 2026-05-06 with 5-agent parallel research and synthesis at `.planning/research/milestone-candidates/SYNTHESIS.md`. Milestone shape: 7 phases (45-51), goal of bringing `mailglass_inbound` to outbound-equivalent production maturity — Mailgun + SES ingress, admin LiveView, DX parity (TestAssertions/MailboxCase/generators), runtime tooling (`mailglass.inbound.{doctor,replay,prune}` + ingress rate limiting + telemetry foundation), documentation, and v1.0 carry-forward debt closeout. Cloudflare Email Routing and `gen_smtp` listener deferred to v1.3 / own milestone (different transport class).
-- v1.2 roadmap drafted on 2026-05-07 by `gsd-roadmapper`. All 58 v1.2 REQ-IDs mapped to exactly one phase. Note: REQUIREMENTS.md previously stated "53 total" — that was a counting error in the source; actual checkbox count is 58, now corrected.
-- Conductor-style synthetic-inbound dev tool deferred to v1.2.1 (security design pass needed for dev-only enforcement and tenant-scoping on synthetic stamps).
-- Next step: `/gsd-cleanup` to archive leftover `.planning/phases/` directories, then **`/gsd-plan-phase 44.5`** (or `/gsd-quick` for the small ceremony scope) to ship `mailglass` 1.0.0 + `mailglass_admin` 1.0.0 + `mailglass_inbound` 0.1.0 to Hex.pm. Phase 45 (Inbound Telemetry Foundation) is BLOCKED on Phase 44.5 — release ceremony first, then v1.2 implementation. Phase 50.5 (v1.2 release ceremony) follows Phase 50 docs to ship `1.2.0` / `0.2.0`.
-
-## Performance Metrics
-
-| Phase | Plan | Duration | Notes |
-|-------|------|----------|-------|
-| Phase 50 P02 | 3 | 2 tasks | 2 files |
-| Phase 50 P03 | 5 | 3 tasks | 4 files |
-| Phase 50.5 P01 | 15min | 3 tasks | 8 files | Commit A: version force + allowlist refresh |
+- v1.2 live publish succeeded on 2026-05-26.
+- The release-discipline milestone was selected because the repo was locally ahead/dirty and the release flow still depended on manual fan-out fallback.
+- Current implementation deliberately started from `origin/main`; pre-existing local work is preserved separately and not mixed into this milestone branch.

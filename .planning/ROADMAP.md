@@ -12,7 +12,8 @@
 - ✅ **v0.6 Production Maturity** — Phases 32-34 (shipped 2026-05-05) — see [milestones/v0.6-ROADMAP.md](milestones/v0.6-ROADMAP.md)
 - ✅ **v1.0 Stability Lock** — Phases 35-38 (shipped 2026-05-06) — see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Inbound Core Slice** — Phases 39-44 (shipped 2026-05-06) — see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
-- 🚧 **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 51 (in progress, opened 2026-05-06; Phases 44.5 + 45 complete, **Phase 46 next**; v1.0 release ceremony bracketing v1.2 implementation)
+- ✅ **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26)
+- 🚧 **v1.3 Release Discipline & Repo Truth** — Phases 52-54 (opened 2026-05-27)
 
 ## Phases
 
@@ -30,7 +31,8 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 
 </details>
 
-### v1.2 Inbound Production Confidence
+<details>
+<summary>✅ v1.2 Inbound Production Confidence — SHIPPED 2026-05-26</summary>
 
 - [x] **Phase 44.5: v1.0/1.1 Release Ceremony** — Single linked-version cut: `mailglass` 0.3.2 → **1.0.0**, `mailglass_admin` 0.3.2 → **1.0.0**, `mailglass_inbound` first Hex publish at **0.1.0**. Bundles 4 unreleased milestones (v0.5/v0.6/v1.0/v1.1, 169 commits since v0.3.0 tag). Resolves CLOSE-06. — completed 2026-05-07
 - [x] **Phase 45: Inbound Telemetry + Idempotency Foundation** — 4-level telemetry spans across all inbound stages, shared MIME module, and 1000-replay convergence proof (12 plans: 4 functional + 8 gap-closure across 2 rounds) — completed 2026-05-23
@@ -39,8 +41,17 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 - [x] **Phase 48: Inbound Admin LiveView** — `InboundLive` master/detail with evidence/timeline cards, replay modal, routing-trace card (3 plans, 3 waves) (completed 2026-05-24)
 - [x] **Phase 49: Inbound Runtime Operator Tooling** — `mix mailglass.inbound.{doctor,replay,prune}`, ingress rate limit, suppression flag-only (completed 2026-05-25)
 - [x] **Phase 50: Inbound Documentation Pass** — Install / testing / operator / Mailgun + SES setup / routing-debug guides (completed 2026-05-25)
-- [ ] **Phase 50.5: v1.2 Release Ceremony** — Linked-version cut: `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** (inbound stays on 0.x version line until Conductor + relay providers land). Ships all v1.2 inbound work to adopters.
-- [ ] **Phase 51: Stability Closeout** — v1.0 carry-forward debt: Phase 35 Nyquist (CLOSE-01), branch-protection automation (CLOSE-02), citext race (CLOSE-03), boundary warnings (CLOSE-04), WR-01..06 (CLOSE-05). CLOSE-06 resolved by Phase 44.5.
+- [x] **Phase 50.5: v1.2 Release Ceremony** — Linked-version cut: `mailglass` 1.0.0 → **1.2.0**, `mailglass_admin` 1.0.0 → **1.2.0**, `mailglass_inbound` 0.1.0 → **0.2.0** (completed 2026-05-26).
+- [x] **Phase 50.7: v1.2 Repo Hygiene Pass** — Release-state documentation and branch/PR backlog triage (completed 2026-05-26).
+- [x] **Phase 51: Stability Closeout** — v1.0 carry-forward debt retired inside the v1.2 archive (completed 2026-05-26).
+
+</details>
+
+### v1.3 Release Discipline & Repo Truth
+
+- [x] **Phase 52: Clean-State Quarantine + Hygiene Automation** — Preserve current local state, open v1.3 planning truth, add `mix mailglass.repo.hygiene`, and add scheduled/manual hygiene workflow.
+- [x] **Phase 53: Release Fan-out + Publish Ordering** — Use `RELEASE_PLEASE_PAT`, preserve tag-pinned fallback, and serialize package publish order as core → inbound → admin.
+- [ ] **Phase 54: PR/Branch Triage + Green Main Proof** — Refresh or close open PRs, prune/document stale branches, and capture final green-main evidence.
 
 ## Phase Details
 

@@ -45,6 +45,7 @@ defmodule Mailglass.StabilityContractTest do
       assert_module_since(Mix.Tasks.Mailglass.Publish.Check, "0.2.0")
       assert_module_since(Mix.Tasks.Mailglass.Docs.Check, "0.3.0")
       assert_module_since(Mix.Tasks.Mailglass.Stability.Check, "0.3.0")
+      assert_module_since(Mix.Tasks.Mailglass.Repo.Hygiene, "1.3.0")
     end
   end
 
