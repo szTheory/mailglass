@@ -2,6 +2,7 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
   use Boundary, classify_to: Mailglass
 
   use Mix.Task
+  alias Mailglass.ReferenceHost.OperatorDiagnosisProof
   alias Mailglass.ReferenceHost.TrustCheckpoint
   alias Mailglass.ReferenceHost.WebhookOperatorProof
 
@@ -136,7 +137,7 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
 
   defp stage_signal(:operator_troubleshooting, host_root, false) do
     require_file!(host_root, "SCOPE.md", :operator_troubleshooting)
-    :verified
+    {:verified, OperatorDiagnosisProof.run()}
   end
 
   defp stage_signal(_stage_key, _host_root, false), do: nil
