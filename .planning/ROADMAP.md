@@ -59,7 +59,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 **Requirements coverage:** 16/16 mapped from `.planning/REQUIREMENTS.md` (HOST/JOUR/EVID/DOCB/OPS categories).
 
 - [x] Phase 52: Trust Scope Lock + Reference Host Baseline (0/3 plans) (completed 2026-05-27)
-- [ ] Phase 57: Deterministic Trust Runner + Fixtures (0/0 plans)
+- [x] Phase 57: Deterministic Trust Runner + Fixtures (0/0 plans) (completed 2026-05-27)
 - [ ] Phase 58: Verify-First Webhook + Operator Path (0/0 plans)
 - [ ] Phase 59: CI Trust Lanes + Checkpoint Evidence (0/0 plans)
 - [ ] Phase 60: Release Trust Gate + Drift Prevention (0/0 plans)
