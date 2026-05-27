@@ -1,4 +1,4 @@
-defmodule Mailglass.Credo.StreamPolicyConsistentTest do
+defmodule Mailglass.Credo.LegacyStreamPolicyConsistentTest do
   use Credo.Test.Case
 
   alias Mailglass.Credo.StreamPolicyConsistent
@@ -14,7 +14,7 @@ defmodule Mailglass.Credo.StreamPolicyConsistentTest do
       use Mailglass.Mailable, tracking: [opens: true]
     end
     """
-    |> to_source_file()
+    |> to_source_file("lib/mailglass/legacy_tracked_no_stream.ex")
     |> run_check(StreamPolicyConsistent)
     |> assert_issue()
   end
@@ -25,7 +25,7 @@ defmodule Mailglass.Credo.StreamPolicyConsistentTest do
       use Mailglass.Mailable, stream: :transactional, tracking: true
     end
     """
-    |> to_source_file()
+    |> to_source_file("lib/mailglass/legacy_tracked_transactional.ex")
     |> run_check(StreamPolicyConsistent)
     |> assert_issue()
   end

@@ -46,6 +46,23 @@ defmodule Mailglass.Credo.CredoConfigSentinelTest do
            "WR-02 regression: .credo.exs TelemetryEventConvention required_root is missing :mailglass_inbound"
   end
 
+  test "NoPlanningArtifactComments is registered with exact source prefixes", %{checks: checks} do
+    params = find_check(checks, Mailglass.Credo.NoPlanningArtifactComments)
+
+    assert is_list(params),
+           "NoPlanningArtifactComments is not configured in .credo.exs"
+
+    assert Keyword.get(params, :included_path_prefixes) == [
+             "lib/mailglass/",
+             "mailglass_admin/lib/",
+             "mailglass_inbound/lib/"
+           ],
+           "NoPlanningArtifactComments included_path_prefixes must exactly match core/admin/inbound source roots"
+
+    assert Keyword.get(params, :allowed_literals) == [],
+           "NoPlanningArtifactComments allowed_literals must default to an explicit empty list"
+  end
+
   # Normalize the first config's :checks into a flat list of {module, params} tuples.
   # The value may be a flat keyword-style list or grouped under
   # :enabled / :extra / :disabled keys — handle both.

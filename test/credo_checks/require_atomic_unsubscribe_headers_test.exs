@@ -1,4 +1,4 @@
-defmodule Mailglass.Credo.RequireAtomicUnsubscribeHeadersTest do
+defmodule Mailglass.Credo.LegacyRequireAtomicUnsubscribeHeadersTest do
   use Credo.Test.Case
 
   alias Mailglass.Credo.RequireAtomicUnsubscribeHeaders
