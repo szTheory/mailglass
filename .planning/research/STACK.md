@@ -1,196 +1,124 @@
 # Technology Stack
 
 **Project:** mailglass  
-**Researched:** 2026-05-05  
-**Scope:** v1.0 Stability Lock stack additions and deliberate non-additions
+**Researched:** 2026-05-27  
+**Milestone scope:** v1.3 Adopter Trust Proof (maintained Phoenix reference host app + clean-baseline CI journey)
 
 ## Recommendation
 
-For `v1.0`, **do not add new runtime dependencies**. The right move is to lock the public contract using Elixir/Hex/ExDoc primitives already in the repo and add a small amount of **internal release-contract tooling**:
+For v1.3, keep the shipped `mailglass`/`mailglass_admin`/`mailglass_inbound`
+runtime stack intact and add a thin, maintained **reference host app proof
+layer** around it.
 
-- `@since`, `@deprecated`, and `@doc deprecated:` metadata on every public module/function/type/callback that is part of the `1.x` contract
-- ExDoc extras and grouping for a first-class stability/deprecation/upgrade story
-- public API contract tests driven from compiled docs (`Code.fetch_docs/1`) plus explicit allowlists
-- release-contract CI aliases covering docs, tarball contents, upgrade smoke, and deprecated-call detection
-- compatibility policy docs that clearly separate:
-  - stable public API
-  - internal/private modules
-  - optional integration seams
-  - provider-specific behavior that is best-effort rather than guaranteed
+This milestone should add:
 
-This is the least-surprising, most idiomatic Elixir path. Phoenix/Ecto/Plug/Elixir itself all rely on SemVer, changelogs, deprecations, and docs-driven upgrade guidance rather than extra compatibility frameworks. `mailglass` should do the same.
+1. one committed Phoenix reference host app artifact (maintained, not throwaway),
+2. one required CI lane proving the full adopter journey in-repo, and
+3. one clean-baseline CI lane proving the same journey from a fresh host app.
 
-## Keep As-Is
+This milestone should **not** add new transport classes, broad provider
+expansion, or product-like UI scope.
 
-### Core Runtime
-| Technology | Version/Range | Decision | Why |
-|------------|---------------|----------|-----|
-| Elixir | `~> 1.18` floor | Keep | Already aligned with current repo and avoids a late pre-`v1.0` floor change. |
-| OTP | `27+` floor | Keep | Same reason; stability milestone should reduce variables, not add them. |
-| Phoenix / Plug / LiveView | current repo ranges | Keep | No architecture change is needed to promise API stability. |
-| Ecto / Ecto SQL / Postgrex | current repo ranges | Keep | Existing persistence stack is already part of the intended stable core. |
-| Swoosh | current repo range | Keep | `mailglass` composes on Swoosh; the milestone is about contract clarity, not replacing the transport layer. |
-| Boundary / Credo / Dialyzer / ExDoc / Hex | existing tooling | Keep | These are already the right primitives for public-surface discipline and release proof. |
+## Keep As-Is (No New Foundational Research)
 
-### Deliberate Non-Change
-| Area | Decision | Why |
-|------|----------|-----|
-| Runtime deps | Add none | Stability lock should shrink uncertainty, not expand it. |
-| Optional deps | Add none | Oban/OpenTelemetry/MJML/gen_smtp/sigra are already enough variability. |
-| Supported DBs | Stay Postgres-only | A support-matrix expansion right before `v1.0` weakens the promise. |
-| Supported frameworks | Stay Phoenix-first | Do not dilute the contract with “framework-agnostic” ambitions now. |
+- Elixir floor: `~> 1.18`
+- OTP floor: `27+`
+- Phoenix stack: `phoenix ~> 1.8`, `phoenix_live_view ~> 1.1`, `plug ~> 1.18`
+- Persistence: Postgres-only (`ecto_sql ~> 3.13`, `postgrex ~> 0.22`)
+- Core mail layer: `swoosh ~> 1.25`
+- Optional dependency gateway policy remains unchanged (`Mailglass.OptionalDeps.*`)
+- CI realism posture remains: required lanes for deterministic proof, advisory
+  lanes for broader ecosystem drift detection
 
-## Additions Needed
+These are already shipped and validated; v1.3 work is integration proof, not
+stack re-foundation.
 
-### 1. Documentation Contract
-Use existing `ex_doc ~> 0.40` and Elixir doc metadata rather than new doc tooling.
+## v1.3 Stack Additions and Changes (New Work Only)
 
-| Addition | Type | Integration Point | Why |
-|----------|------|-------------------|-----|
-| `guides/stability-policy.md` | new guide | `mix.exs` docs extras | One canonical promise for SemVer, support window, and what counts as public API. |
-| `guides/deprecations.md` | new guide | `mix.exs` docs extras | Track active deprecations with version introduced, replacement, and earliest removal. |
-| `guides/upgrading-to-v1.md` or `guides/upgrading.md` refresh | guide | existing guides set | Make `0.x -> 1.0` adoption boring. |
-| `guides/support-matrix.md` | guide | docs extras | Declare required/advisory environment coverage and optional-dependency guarantees. |
-| ExDoc grouping | docs config | root + `mailglass_admin/mix.exs` | Separate stable API, extension points, and internal/admin-only surfaces. |
+| Tool / Library / Service | Version awareness | Why it matters | Integration points |
+|---|---|---|---|
+| Phoenix reference host app (committed artifact in repo) | Generate with Phoenix 1.8 toolchain; keep Elixir/OTP floors aligned with core | Creates a durable, inspectable adopter-proof app instead of fixture snapshots only | New `examples/` (or equivalent) app wired with `mailglass`, `mailglass_admin`, and optional `mailglass_inbound` seams |
+| `phx_new` archive in CI for clean-baseline generation | Pin to vetted `1.8.x` patch in required lane; run latest `1.8.x` in advisory lane | Proves "fresh adopter can install and run" against current Phoenix generator behavior | Clean-baseline workflow step: generate app -> add deps -> run install -> execute proof scenario |
+| `mix mailglass.install` as canonical integration entrypoint | Use shipped installer; no forked install script | Keeps trust proof coupled to real adoption path and catches installer regressions | Both committed reference app refresh process and clean-baseline lane run installer directly |
+| Outbound send proof via `Mailglass.Adapters.Fake` + `config :swoosh, :api_client, false` | No new provider SDK versions required | Proves send path and event persistence without external network/provider flakiness | Reference scenario triggers send and asserts persisted delivery/event behavior locally |
+| Webhook ingest proof via signed fixture payloads (single representative provider path) | Reuse existing provider verifier stack; no provider matrix expansion in v1.3 | Demonstrates ingest + normalization + troubleshooting loop deterministically | Scenario posts signed webhook payload to host app webhook endpoint and verifies ledger/admin visibility |
+| Postgres service container in CI (`postgres:16-alpine`) | Match existing CI service version to avoid environment skew | Full trust path (send + webhook + operator troubleshooting) needs real DB-backed state | Required CI lane boots Postgres, runs migrations, executes end-to-end scenario |
+| ExUnit + ConnTest/LiveView assertions for operator troubleshooting proof | Stay on current Phoenix testing stack; do not introduce browser-E2E requirement | Gives stable operator-proof checks without adding Node/browser flake to required lane | Scenario asserts key operator surfaces (events timeline/evidence/replayability) through server-side tests |
+| Dedicated trust-proof verify alias (e.g. `mix verify.reference_host`) | Keep preferred env explicit (`:test`) like existing `verify.*` aliases | Makes the milestone proof repeatable locally and in CI with one command | Root mix aliases + CI job invoke single trust-proof gate |
 
-**Required doc rules**
+## CI Shape for Trust Proof
 
-- Every public module/function/type/callback in the `1.x` contract gets `@since`.
-- Every deprecated API gets both `@deprecated` and `@doc deprecated:`.
-- Internal modules should prefer `@moduledoc false`; do not rely on `@doc false` to simulate privacy on otherwise public modules.
-- `docs/api_stability.md` should evolve from “freeze-until-vNext” into a true `1.x` contract, not a pre-`1.0` note.
+### Required lane (new)
 
-### 2. Public API Contract Testing
-Add internal test/script tooling, not external packages.
+Add one required CI job that proves:
 
-| Addition | Type | Integration Point | Why |
-|----------|------|-------------------|-----|
-| Public API snapshot test | ExUnit | `test/` in root and admin | Detect accidental new public modules/functions/types/callbacks before release. |
-| Stable-surface allowlist | repo file | `test/support` or `docs/` data file | Make contract drift explicit in PRs. |
-| Deprecation inventory test | ExUnit/script | CI alias | Ensure every deprecated item has docs, replacement, and removal policy text. |
-| Package contents smoke | Mix task/script | release CI | Verify tarballs contain all required docs/assets and no accidental internals. |
-| Previous-version upgrade fixture | fixture app test | CI | Prove `0.x -> 1.0` install/compile/docs path on a clean adopter app. |
+1. install (`mix mailglass.install`)
+2. preview route boots
+3. send persists evidence
+4. webhook ingest appends normalized event(s)
+5. operator troubleshooting surface can inspect that evidence
 
-**Implementation pattern**
+Use a real Postgres service container and deterministic fixtures; do not call
+external provider APIs.
 
-- Build the contract from `Code.fetch_docs/1`, not from AST scraping.
-- Assert on:
-  - public modules
-  - public functions/macros
-  - public types/callbacks
-  - `@since` presence on stable API
-  - deprecation metadata completeness
-- Keep optional-deps adapters and internal plumbing out of the stable snapshot unless explicitly promised.
+### Clean-baseline lane (new or expanded from existing smoke)
 
-This is idiomatic for Elixir because docs are part of the compiled artifact and HexDocs is already the public source of truth.
+Keep the existing "fresh host" posture, but expand from preview-only smoke into
+the full trust journey. The lane should still generate a brand-new Phoenix app
+instead of relying only on committed app files.
 
-### 3. Release-Contract CI
-Add aliases/jobs, not more CI vendors.
+### Advisory lane (optional but recommended)
 
-| Addition | Type | Integration Point | Why |
-|----------|------|-------------------|-----|
-| `mix verify.stability` | alias | root `mix.exs` | Single gate for the milestone. |
-| `mix verify.stability_admin` | alias | `mailglass_admin/mix.exs` | Keep sibling-package contract explicit. |
-| `mix xref deprecated` check | script/alias | CI | Fail when library code still calls APIs it marked deprecated. |
-| `mix hex.build --unpack` smoke | release CI | existing publish flow | Verify exact tarball contents before Hex publish. |
-| `mix hex.package diff` against last release | release checklist/script | release flow | Produce a human-reviewable package delta for every release. |
-| advisory latest-version lane | CI job | existing advisory matrix | Detect future Elixir/OTP breakage without widening required support prematurely. |
+Run the same clean-baseline flow on a schedule with latest compatible generator
+patches to detect ecosystem drift early without blocking every PR.
 
-**Recommended gate composition**
+## Version and Currentness Verification Strategy
 
-`verify.stability` should cover:
+Use a lightweight, explicit verification loop so stack guidance stays current:
 
-1. docs build with warnings treated as failures
-2. public API contract tests
-3. docs/deprecation contract tests
-4. tarball unpack smoke
-5. upgrade fixture smoke
-6. provider/support-contract tests already considered release-critical
+1. **Milestone-open snapshot:** record current versions for Phoenix stack,
+   `phx_new`, Elixir/OTP, and CI action SHAs.
+2. **Required-lane pinning:** keep required trust-proof lane pinned to vetted
+   Elixir/OTP and `phx_new` patch versions for deterministic gating.
+3. **Advisory drift checks:** schedule a non-blocking run using latest allowed
+   patch versions in the same major/minor compatibility window.
+4. **Dependency audits:** run `mix hex.outdated` and `mix hex.audit` on cadence;
+   promote upgrades only when trust-proof lanes stay green.
+5. **Workflow pin hygiene:** continue SHA-pinning third-party GitHub Actions and
+   refresh pins deliberately (not ad hoc) with rerun evidence.
 
-## Policy Recommendations For `mailglass`
+## What Not To Add In v1.3
 
-### Versioning
+- No new foundational runtime dependencies in core packages.
+- No transport-class expansion (`gen_smtp` listener work stays out of this milestone).
+- No broad provider matrix expansion for reference proof (one representative
+  webhook ingest path is enough).
+- No Cloudflare forwarding slice in this milestone.
+- No synthetic inbound composer/devtool expansion here.
+- No second-product UI ambition for the reference app; keep it a proof host, not
+  a polished demo app.
+- No browser/Playwright-only required gate for v1.3 trust proof (keep required
+  lane server-side deterministic; browser checks can remain advisory).
 
-- Adopt strict SemVer for `mailglass` and `mailglass_admin` `1.x`.
-- In `1.x`:
-  - patch = bug fixes and doc fixes only
-  - minor = additive features, new extension points, new stable atoms only
-  - major = removals, contract rewrites, changed semantics that require adopter code changes
+## Maintainer Sustainability Notes
 
-### Deprecation
-
-- For `mailglass`, the least-surprise policy is:
-  - deprecations may be introduced in `1.x`
-  - deprecated APIs remain available for all of `1.x`
-  - removals wait for `2.0`
-- If an old shim is too risky to keep forever, mark it deprecated in docs and changelog, but do not remove it before `2.0`.
-- Use compile-time warnings via `@deprecated`; do **not** invent a runtime deprecation warning system.
-
-### Upgrade Guarantees
-
-- Guarantee that a project on `1.x` can upgrade to later `1.y` without schema rewrites caused solely by `mailglass` API churn.
-- Guarantee that documented stable structs/errors/event atoms remain additive-only within `1.x`.
-- Do **not** guarantee undocumented internal modules, admin implementation details, or optional-dependency internals.
-
-## What Successful Libraries Did Right
-
-| Library | What they did right | Mailglass takeaway |
-|---------|---------------------|--------------------|
-| Elixir | Explicit soft/hard/remove deprecation stages and major-only removals | Publish a real deprecation lifecycle, not “we’ll figure it out later.” |
-| Phoenix / Ecto / Plug | Changelog-led evolution with warnings and additive minors | Keep the contract doc + changelog as the truth, not scattered comments. |
-| Rails | Breaking changes are paired with prior deprecations | Never surprise adopters with a `1.x` behavior break hidden in release notes. |
-| Django | Deprecation timelines name the replacement and expected removal window | Every mailglass deprecation should name replacement and earliest removal version. |
-| Anymail | Strong SemVer language, explicit support-drop notices, concrete version pin guidance | When support posture changes, say it directly and give adopters a pin/escape hatch. |
-| Swoosh | Good test ergonomics and improved docs discoverability | Production adoption proof is not just runtime correctness; it is easy-to-trust docs and tests. |
-
-## Footguns To Avoid
-
-| Footgun | Why it is bad | Do instead |
-|---------|---------------|-----------|
-| Adding an API-diff dependency/toolchain | More maintenance, little leverage versus docs-driven tests | Build a small internal contract test around `Code.fetch_docs/1`. |
-| Treating all public modules as stable by default | Freezes accidental surface forever | Explicitly whitelist the `1.x` stable surface. |
-| Using `@doc false` on random functions in public modules | Hidden docs are still callable API in Elixir | Move internals into `@moduledoc false` modules. |
-| Emitting runtime deprecation logs | Noisy, harder to test, non-idiomatic | Use compile-time `@deprecated` and docs metadata. |
-| Promising optional-dependency behavior as fully stable | Explodes the matrix for a one-maintainer project | Promise stable core behavior; treat optional integrations as bounded extension seams. |
-| Expanding support matrix now | Multiplies risk right before `v1.0` | Freeze the matrix and document it clearly. |
-| Shipping `v1.0` without proof artifacts | “Stable” becomes marketing instead of engineering | Require upgrade smoke, tarball smoke, docs contract, and API contract in CI. |
-
-## Explicit Non-Recommendations
-
-- **Do not add** a new runtime compatibility layer, plugin system, or behavior abstraction solely for future-proofing.
-- **Do not add** OpenAPI/JSON-schema style contract tooling; the public contract is Elixir API + guides, not HTTP.
-- **Do not add** external changelog SaaS, doc-hosting replacements, or versioned-doc infra beyond HexDocs.
-- **Do not add** more optional adapters/providers in this milestone.
-- **Do not add** a formal LTS branch or backport policy for pre-`1.0` lines; for a one-maintainer library, that is promise inflation.
-- **Do not add** automatic codemod machinery unless a real `1.x -> 2.0` break eventually forces it.
-- **Do not change** the version floors in this milestone unless a dependency forces it for security or correctness.
-
-## Cohesive Recommendation Set For mailglass
-
-1. Keep the runtime stack exactly as it is.
-2. Upgrade the docs stack, not the dependency stack: stability policy, deprecations, support matrix, and `v1.0` upgrade guide.
-3. Add public API contract tests based on compiled docs and explicit allowlists for both `mailglass` and `mailglass_admin`.
-4. Add a release-contract CI gate that proves docs quality, tarball contents, upgrade path, and stable-surface discipline.
-5. Promise a conservative `1.x` policy: additive minors, compile-time deprecations, no removals before `2.0`.
-6. Explicitly keep optional integrations, internal modules, and future inbound work outside the `v1.0` stability promise.
-
-This is the most idiomatic Elixir/Phoenix direction and the best fit for mailglass’s stated values: principle of least surprise, strong architecture, maintainable scope, and production-trustworthy adoption.
+- Keep the reference host app thin and contract-oriented so it remains
+  maintainable by one maintainer.
+- Prefer fixture-driven deterministic tests over live-provider integration for
+  required CI.
+- Keep "API contract truth" in core docs and contract tests; reference app is
+  usage/operations proof, not a replacement contract source.
 
 ## Sources
 
-- Elixir compatibility and deprecations: https://hexdocs.pm/elixir/1.18.4/compatibility-and-deprecations.html
-- Elixir writing documentation (`@since`, `@deprecated`, `@doc false`, `Code.fetch_docs/1`): https://hexdocs.pm/elixir/writing-documentation.html
-- ExDoc `mix docs` grouping/extras behavior: https://hexdocs.pm/ex_doc/0.38.0/Mix.Tasks.Docs.html
-- Hex `mix hex.build --unpack`: https://hexdocs.pm/hex/Mix.Tasks.Hex.Build.html
-- Hex `mix hex.publish`: https://hexdocs.pm/hex/Mix.Tasks.Hex.Publish.html
-- Hex `mix hex.package diff`: https://hexdocs.pm/hex/Mix.Tasks.Hex.Package.html
-- SemVer 2.0.0: https://semver.org/
-- Rails maintenance policy: https://guides.rubyonrails.org/maintenance_policy.html
-- Django release process and deprecation policy: https://docs.djangoproject.com/en/4.2/internals/release-process/
-- Django deprecation timeline: https://docs.djangoproject.com/en/dev/internals/deprecation/
-- Swoosh testing docs: https://hexdocs.pm/swoosh/Swoosh.html
-- Swoosh sandbox adapter docs: https://hexdocs.pm/swoosh/Swoosh.Adapters.Sandbox.html
-- Swoosh changelog: https://hexdocs.pm/swoosh/changelog.html
-- Anymail SemVer/release notes: https://anymail.dev/en/v2.2/release_notes/
-- Anymail changelog and deprecation examples: https://anymail.dev/en/latest/changelog/
-- Anymail SendGrid support-status warning example: https://anymail.dev/en/stable/esps/sendgrid/
+- `.planning/PROJECT.md`
+- `.planning/STATE.md`
+- `.planning/MILESTONE-ARC.md`
+- `.planning/research/milestone-candidates/06-adopter-trust-proof.md`
+- `.planning/research/milestone-candidates/SYNTHESIS.md`
+- `.planning/threads/next-milestone-adopter-trust-proof.md`
+- `.github/workflows/ci.yml`
+- `.github/workflows/post-publish-smoke.yml`
+- `mix.exs`
+- `mailglass_admin/mix.exs`
+- `mailglass_inbound/mix.exs`
