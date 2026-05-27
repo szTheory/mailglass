@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Adopter Trust Proof
-status: defining_requirements
-last_updated: "2026-05-27T08:23:00Z"
-last_activity: 2026-05-27 -- milestone v1.3 started for golden reference host-app trust proof
+status: roadmap_defined
+last_updated: "2026-05-27T08:53:00Z"
+last_activity: 2026-05-27 -- v1.3 preflight locked, requirements defined, roadmap created
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,24 +17,42 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-27 after opening v1.3)
+See: .planning/PROJECT.md (updated 2026-05-27 after v1.3 preflight lock)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Defining v1.3 Adopter Trust Proof requirements and roadmap for the maintained golden reference host app
+**Current focus:** Execute v1.3 trust-proof phases 52-56 for reference-host adoption evidence and CI/release trust gates
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 52 (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-27 -- Milestone v1.3 started
+Status: Roadmap defined; ready for discuss/plan
+Last activity: 2026-05-27 -- v1.3 preflight convergence accepted and roadmap written
 
 ## v1.3 Milestone Intent
 
 - Establish one maintained Phoenix reference host app demonstrating install -> preview -> send -> webhook ingest -> operator troubleshooting
-- Add a clean-baseline CI journey proving that flow
+- Add a clean-baseline CI journey plus published-version trust proof that validates that flow
 - Keep docs explicit that the reference app demonstrates usage, while API contract truth remains in core contract docs/tests
-- Preserve release-cadence rule for milestone closeout
+- Require one deterministic trust runner and checkpoint artifacts shared by local, CI, and release proof paths
+- Preserve release-cadence rule for milestone closeout and block trust claims if smoke reliability debt remains unresolved
+
+## v1.3 Preflight Locks
+
+- Hybrid trust model locked: one thin committed reference host app + one clean-baseline generated trust lane
+- Out-of-scope lock: no provider-matrix broadening, no `gen_smtp` transport expansion, no `SEED-003` auto-promotion in v1.3
+- Deterministic ingress/operator proof lock: signed verify-first webhook path + one scripted non-happy-path diagnosis
+- Risk carry-forward lock: active post-publish smoke hackney dependency failure is an explicit milestone prerequisite, not deferred cleanup
+
+## Roadmap Snapshot
+
+| Phase | Name | Focus |
+|-------|------|-------|
+| 52 | Trust Scope Lock + Reference Host Baseline | Thin maintained host app and strict non-goals |
+| 53 | Deterministic End-to-End Trust Journey | One reproducible runner with signed ingress + operator path |
+| 54 | CI Trust Lanes + Checkpoint Artifacts | Required repo-head + clean-baseline trust gates |
+| 55 | Docs Boundary + Contract Positioning | Usage proof vs contract truth enforcement |
+| 56 | Drift Prevention + Release-Gate Integration | Published-version trust proof + smoke debt closure |
 
 ## Performance Metrics
 

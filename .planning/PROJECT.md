@@ -51,6 +51,12 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - CI lane that validates the reference journey on a clean host-app baseline
 - Docs positioning that the reference app is usage proof, while API contract truth remains in core docs and contract tests
 
+**Preflight locks (2026-05-27):**
+- Hybrid trust proof model: one thin committed reference host app plus one clean-baseline generated trust lane
+- One deterministic trust runner powers local verification, CI gating, and release evidence
+- Trust proof must include one verify-first signed webhook path plus one deterministic non-happy-path operator diagnosis
+- Published-version trust proof and post-publish smoke reliability are required before v1.3 closeout claims
+
 ## Latest Completed Milestone
 
 <details>
@@ -163,6 +169,8 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 - [ ] Prove install -> preview -> send -> webhook ingest -> operator troubleshooting inside one maintained Phoenix reference host app
 - [ ] Add a clean-baseline CI lane that runs and verifies the reference journey end to end
 - [ ] Position reference-app docs as adoption proof artifacts while preserving core docs/tests as the API contract source of truth
+- [ ] Lock and enforce one deterministic trust runner and trust-checkpoint artifact across local + CI + release proof paths
+- [ ] Resolve the post-publish smoke hackney dependency failure before claiming v1.3 trust proof completion
 
 ## Out of Scope
 
@@ -183,6 +191,9 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 - **Hosted SaaS Pro tier** — same as standalone ops console; we mount, never host.
 - **Conductor-style inbound dev UI in `v1.1`** — the first inbound milestone proves routing, storage, and execution before adding a synthetic/replay LiveView surface.
 - **Mailgun / SES / `gen_smtp` relay ingress in `v1.1`** — the first inbound milestone proves the package on Postmark + SendGrid before broadening provider or transport scope.
+- **Provider-matrix broadening in `v1.3`** — trust proof is a single representative journey, not a breadth expansion milestone.
+- **`SEED-003-ecosystem-integrations` auto-promotion in `v1.3`** — remains deferred until trust proof and inbound stability lock are complete.
+- **Transport-class expansion (`gen_smtp` listener) in `v1.3`** — requires a dedicated milestone with separate threat model and ops burden review.
 
 ## Context
 
@@ -275,4 +286,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-27 — opened v1.3 Adopter Trust Proof milestone, set active trust-proof scope, and moved inbound stability lock to the next queue after v1.3.*
+*Last updated: 2026-05-27 — locked v1.3 Adopter Trust Proof preflight shape (hybrid proof model, deterministic trust runner, strict non-goals, and post-publish smoke prerequisite).*
