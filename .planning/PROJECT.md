@@ -14,6 +14,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 - Milestone archive complete: 10 phases (`44.5`, `45-50`, `50.5`, `50.7`, `51`), 42 plans, 58/58 requirements satisfied, final audit `status: passed`
 - **Current package versions on Hex: `mailglass` 1.2.0 / `mailglass_admin` 1.2.0 / `mailglass_inbound` 0.2.0** (live on 2026-05-26 via Phase 50.5; archive finalized the same day)
+- v1.3 Phase 52 completed on 2026-05-27: the maintained `reference/host_app` baseline, public-seam boundary guardrails, and scope lock contract are now in place for the trust-proof milestone
 - `mailglass_inbound` now has production-credible telemetry, Mailgun + SES ingress, test helpers + generators, admin observability, operator tooling, and six first-party inbound guides
 - Phase 51 retired the remaining v1.0 carry-forward debt inside the same milestone: Phase 35 Nyquist bookkeeping, branch-protection repo truth, bare `mix test` citext race, boundary warnings, and WR-01..WR-06 dispositions
 - `v1.1` remains the previous shipped slice: `mailglass` 1.0.0 / `mailglass_admin` 1.0.0 / `mailglass_inbound` 0.1.0 published on 2026-05-07 via Phase 44.5
@@ -38,7 +39,7 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Release-workflow fanout still relies on the documented `workflow_dispatch` fallback because GitHub `GITHUB_TOKEN` anti-recursion blocks downstream publish workflows from release-created releases.
 - Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
 - `SEED-003-ecosystem-integrations` is intentionally deferred and remains dormant for later milestone selection.
-- The highest remaining adopter-trust gap is still the absence of a maintained, runnable golden reference host app proving install -> preview -> send -> webhook -> operator journey end to end.
+- The maintained reference host baseline now exists; the remaining adopter-trust gap is proving the full deterministic end-to-end journey and published-version trust evidence across CI/release gates.
 - `mailglass_inbound` runtime capability is stronger than its contract framing in some docs; `mailglass_inbound` still sits outside the `1.x` compatibility promise and needs a dedicated stability-lock milestone after trust proof work.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
@@ -129,6 +130,9 @@ If everything else fails, the preview dashboard, normalized event ledger, and on
 ## Validated Requirements (v0.1, v0.2, v1.1 — SHIPPED)
 
 All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
+
+**By category (v1.3 Phase 52 — trust baseline):**
+- ✓ HOST-01..03 — Maintained reference host baseline, public-seam-only integration boundary, and fail-closed scope lock artifact/test contracts validated in Phase 52
 
 **By category (v1.1 — Inbound Core Slice):**
 - ✓ MODEL-01 — Canonical `%MailglassInbound.InboundMessage{}` value object with stable fields for routing, tenancy, and provider provenance — v1.1
@@ -286,4 +290,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-27 — locked v1.3 Adopter Trust Proof preflight shape (hybrid proof model, deterministic trust runner, strict non-goals, and post-publish smoke prerequisite).*
+*Last updated: 2026-05-27 — Phase 52 completed for v1.3 trust baseline (reference host + seam boundary + scope lock) and preflight locks remain in force for the remaining trust-proof phases.*
