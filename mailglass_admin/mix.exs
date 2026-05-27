@@ -33,6 +33,7 @@ defmodule MailglassAdmin.MixProject do
   def cli do
     [
       preferred_envs: [
+        "mailglass_admin.preview.capture": :test,
         "verify.preview": :test,
         "verify.phase_05": :test,
         "verify.support_contract.admin": :test
