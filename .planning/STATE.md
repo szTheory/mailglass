@@ -54,6 +54,12 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
 
+## Accumulated Context
+
+### Pending Todos
+
+- Resolve post-publish smoke hackney dependency failure (`#25` captured to `.planning/todos/pending/2026-05-27-resolve-post-publish-smoke-hackney-dependency-failure.md`; active CI signal remains `#32`)
+
 ## Pre-existing Cleanup Backlog (Not v1.2 Scope)
 
 `.planning/phases/` still contains 14 leftover phase directories from earlier milestones (28-38 from v0.5/v0.6/v1.0, plus `999.1-*` and `999.2-*` artifact-cleanup phases). These should have been moved into `.planning/milestones/v0.X-phases/` during their respective `/gsd-complete-milestone` runs but were not. Run `/gsd-cleanup` before active v1.3 phase execution to avoid name-collision risk.
