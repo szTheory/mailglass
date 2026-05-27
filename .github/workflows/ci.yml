@@ -781,6 +781,12 @@ jobs:
             --output-dir tmp/preview_capture_advisory/screenshots \
             --manifest-out tmp/preview_capture_advisory/manifest.json \
             --checkpoint-out tmp/preview_capture_advisory/checkpoint.json
+      - name: Validate preview capture checkpoint contract
+        run: |
+          bash scripts/check_preview_capture_checkpoint.sh \
+            --manifest "${{ env.PREVIEW_CAPTURE_ROOT }}/manifest.json" \
+            --checkpoint "${{ env.PREVIEW_CAPTURE_ROOT }}/checkpoint.json" \
+            --screenshots-dir "${{ env.PREVIEW_CAPTURE_ROOT }}/screenshots"
       - name: Upload preview capture advisory artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
