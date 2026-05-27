@@ -16,6 +16,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - **Current package versions on Hex: `mailglass` 1.2.0 / `mailglass_admin` 1.2.0 / `mailglass_inbound` 0.2.0** (live on 2026-05-26 via Phase 50.5; archive finalized the same day)
 - v1.3 Phase 52 completed on 2026-05-27: the maintained `reference/host_app` baseline, public-seam boundary guardrails, and scope lock contract are now in place for the trust-proof milestone
 - Backlog phase 999.1 completed on 2026-05-27: planning-artifact comment cleanup now covers scoped core/admin/inbound source paths, with Credo drift prevention (`Mailglass.Credo.NoPlanningArtifactComments`) and guard tests added
+- Backlog phase 999.2 completed on 2026-05-27: deterministic preview URL/capture matrix foundations, mix screenshot capture workflow, advisory CI artifact lane, and docs claim-boundary contract checks are now in place
 - `mailglass_inbound` now has production-credible telemetry, Mailgun + SES ingress, test helpers + generators, admin observability, operator tooling, and six first-party inbound guides
 - Phase 51 retired the remaining v1.0 carry-forward debt inside the same milestone: Phase 35 Nyquist bookkeeping, branch-protection repo truth, bare `mix test` citext race, boundary warnings, and WR-01..WR-06 dispositions
 - `v1.1` remains the previous shipped slice: `mailglass` 1.0.0 / `mailglass_admin` 1.0.0 / `mailglass_inbound` 0.1.0 published on 2026-05-07 via Phase 44.5
@@ -291,4 +292,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-27 — Phase 52 trust baseline and backlog phase 999.1 comment-guard cleanup are complete; v1.3 preflight locks remain in force for remaining trust-proof phases.*
+*Last updated: 2026-05-27 — Phase 52 trust baseline plus backlog phases 999.1/999.2 cleanup and preview-capture trust scaffolding are complete; v1.3 preflight locks remain in force for remaining trust-proof phases.*
