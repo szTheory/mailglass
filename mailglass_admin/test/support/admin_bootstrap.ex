@@ -55,6 +55,7 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
   end
 
   def build_conn do
+    ensure_endpoint_config_table!()
     Phoenix.ConnTest.build_conn()
   end
 
