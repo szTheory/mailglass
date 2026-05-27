@@ -2,6 +2,7 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
   use Boundary, classify_to: Mailglass
 
   use Mix.Task
+  alias Mailglass.ReferenceHost.TrustCheckpoint
 
   @shortdoc "Run deterministic reference-host trust stages"
 
@@ -21,11 +22,12 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
 
   ## Options
 
-    * `--checkpoint-out` - optional JSON output path for deterministic stage records.
+    * `--checkpoint-out` - JSON output path for deterministic checkpoint records.
     * `--host-root` - reference host app root (defaults to `reference/host_app`).
     * `--dry-run` - emits deterministic stage records without running stage checks.
   """
 
+  @default_checkpoint_out "tmp/mailglass_trust_runner/checkpoint.json"
   @stage_pipeline [:install, :preview, :send, :webhook_ingest, :operator_troubleshooting]
   @allowed_statuses ["completed", "dry_run"]
 
@@ -45,8 +47,8 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
 
     checkpoint_out =
       opts
-      |> Keyword.get(:checkpoint_out)
-      |> resolve_optional_path()
+      |> Keyword.get(:checkpoint_out, @default_checkpoint_out)
+      |> Path.expand(File.cwd!())
 
     dry_run? = opts[:dry_run] == true
 
@@ -84,9 +86,6 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
     :ok
   end
 
-  defp resolve_optional_path(nil), do: nil
-  defp resolve_optional_path(path), do: Path.expand(path, File.cwd!())
-
   defp ensure_host_root!(host_root) do
     unless File.dir?(host_root) do
       runner_error!("host root not found at #{host_root}")
@@ -101,9 +100,12 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
         runner_error!("missing required stage signal #{inspect(stage_key)}")
       end
 
+      stage_name = Atom.to_string(stage_key)
+
       %{
-        "stage_key" => Atom.to_string(stage_key),
-        "status" => signal_to_status(signal)
+        "stage_key" => stage_name,
+        "status" => signal_to_status(signal),
+        "fixture_id" => "trust.#{stage_name}.001"
       }
     end)
   end
@@ -178,16 +180,8 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
     end
   end
 
-  defp write_checkpoint(nil, _host_root, _dry_run?, _stage_records), do: :ok
-
-  defp write_checkpoint(checkpoint_out, host_root, dry_run?, stage_records) do
-    payload = %{
-      "generated_by" => "mailglass.trust.run",
-      "host_root" => host_root,
-      "dry_run" => dry_run?,
-      "stage_count" => length(stage_records),
-      "stages" => stage_records
-    }
+  defp write_checkpoint(checkpoint_out, _host_root, _dry_run?, stage_records) do
+    payload = TrustCheckpoint.encode(stage_records)
 
     checkpoint_out
     |> Path.dirname()
@@ -203,9 +197,7 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
       )
     end)
 
-    if checkpoint_out do
-      Mix.shell().info("trust_runner checkpoint_out=#{checkpoint_out}")
-    end
+    Mix.shell().info("trust_runner checkpoint_out=#{checkpoint_out}")
   end
 
   defp runner_error!(message), do: Mix.raise("Trust runner blocked: #{message}")
