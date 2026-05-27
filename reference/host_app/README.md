@@ -23,3 +23,13 @@ mix phx.server
 
 This host intentionally uses published package constraints for Mailglass sibling
 packages and does not rely on local path dependencies.
+
+Public seam boundary: this host does not call Mailglass internal modules or provider internals.
+
+Stable seams used by this reference host:
+- `Mailglass.deliver/2`
+- `Mailglass.deliver!/2`
+- `Mailglass.deliver_later/2`
+- `MailglassAdmin.Router.mailglass_admin_routes/2`
+- `MailglassAdmin.Router.mailglass_operator_routes/2`
+- `MailglassInbound.Ingress.Plug`

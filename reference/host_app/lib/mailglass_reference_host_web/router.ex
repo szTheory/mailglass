@@ -2,7 +2,6 @@ defmodule MailglassReferenceHostWeb.Router do
   use Phoenix.Router
 
   import Phoenix.LiveView.Router
-  import Mailglass.Webhook.Router
   import MailglassAdmin.Router
 
   pipeline :browser do
@@ -13,15 +12,30 @@ defmodule MailglassReferenceHostWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/" do
+  # HOST-02 stable seam references:
+  # - MailglassAdmin.Router.mailglass_admin_routes/2
+  # - MailglassAdmin.Router.mailglass_operator_routes/2
+  # - MailglassInbound.Ingress.Plug
+  scope "/inbound/:tenant_id" do
     pipe_through :mailglass_webhooks
-    mailglass_webhook_routes "/webhooks"
+    forward "/postmark", MailglassInbound.Ingress.Plug, provider: :postmark
+    forward "/sendgrid", MailglassInbound.Ingress.Plug, provider: :sendgrid
   end
 
   if Application.compile_env(:mailglass_reference_host, :dev_routes, false) do
     scope "/dev" do
       pipe_through :browser
       mailglass_admin_routes "/mail"
+
+      mailglass_operator_routes "/mail-ops",
+        auth: MailglassReferenceHostWeb.AdminAuth,
+        session: [
+          subject_id: "current_user_id",
+          tenant_id: "current_tenant_id",
+          auth_method: "current_auth_method",
+          recent_auth_at: "recent_auth_at"
+        ],
+        unauthorized_path: "/"
     end
   end
 end

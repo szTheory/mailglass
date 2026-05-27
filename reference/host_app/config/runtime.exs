@@ -1,5 +1,9 @@
 import Config
 
+# HOST-02 stable delivery seam references:
+# - Mailglass.deliver/2
+# - Mailglass.deliver!/2
+# - Mailglass.deliver_later/2
 if config_env() == :dev do
   database_url =
     System.get_env("DATABASE_URL") || "ecto://postgres:postgres@localhost/mailglass_reference_host_dev"
