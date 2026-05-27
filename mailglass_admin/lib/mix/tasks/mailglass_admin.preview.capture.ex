@@ -2,7 +2,7 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
   use Boundary, classify_to: MailglassAdmin
   use Mix.Task
 
-  alias MailglassAdmin.Preview.{CaptureMatrix, CaptureState, Chromium, Discovery}
+  alias MailglassAdmin.Preview.{CaptureManifest, CaptureMatrix, CaptureState, Chromium, Discovery}
 
   @shortdoc "Capture deterministic preview screenshots across scenario/width/theme matrix"
 
@@ -28,8 +28,8 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
     * `--widths` - comma-separated allowed widths from `375,768,1024`
     * `--mailables` - comma-separated explicit mailable module list
     * `--dry-run` - print deterministic plan without running Chromium
-    * `--manifest-out` - reserved path for deterministic manifest output (written in follow-up contract step)
-    * `--checkpoint-out` - reserved path for deterministic checkpoint output (written in follow-up contract step)
+    * `--manifest-out` - path for deterministic `manifest.json` output
+    * `--checkpoint-out` - path for deterministic `checkpoint.json` output
   """
 
   @default_base_url "http://localhost:4000/dev/mail"
@@ -68,6 +68,7 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
       )
 
     if config.dry_run do
+      _ = write_contract_artifacts(matrix, config, :identity)
       print_dry_run(matrix, config)
     else
       run_capture(matrix, config)
@@ -122,7 +123,7 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
     end
 
     Enum.each(entries, fn state ->
-      output_path = Path.join(config.output_dir, screenshot_name(state))
+      output_path = Path.join(config.output_dir, CaptureManifest.screenshot_name(state))
 
       case Chromium.capture(state.url, output_path, state.width) do
         :ok ->
@@ -143,8 +144,10 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
       end
     end)
 
+    _ = write_contract_artifacts(matrix, config, :files)
+
     Mix.shell().info(
-      "Captured #{Enum.count(entries)} screenshots to #{config.output_dir} (manifest target: #{config.manifest_out}, checkpoint target: #{config.checkpoint_out})"
+      "Captured #{Enum.count(entries)} screenshots to #{config.output_dir}. Wrote manifest/checkpoint: #{config.manifest_out}, #{config.checkpoint_out}"
     )
 
     print_skipped(matrix.skipped)
@@ -161,6 +164,7 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
     Mix.shell().info("  matrix entries: #{Enum.count(entries)}")
     Mix.shell().info("  manifest-out: #{config.manifest_out}")
     Mix.shell().info("  checkpoint-out: #{config.checkpoint_out}")
+    Mix.shell().info("  wrote deterministic manifest/checkpoint artifacts")
 
     Enum.each(entries, fn state ->
       Mix.shell().info(
@@ -180,19 +184,6 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
       detail_suffix = if is_binary(entry.details), do: " (#{entry.details})", else: ""
       Mix.shell().info("    * #{inspect(entry.mailable)} -> #{entry.reason}#{detail_suffix}")
     end)
-  end
-
-  defp screenshot_name(%CaptureState{} = state) do
-    module_slug =
-      state.mailable
-      |> inspect()
-      |> String.replace_prefix("Elixir.", "")
-      |> String.replace(".", "__")
-
-    scenario = Atom.to_string(state.scenario)
-    theme = Atom.to_string(state.theme)
-
-    "#{module_slug}--#{scenario}--w#{state.width}--#{theme}.png"
   end
 
   defp parse_mailable_modules!(nil), do: :auto_scan
@@ -319,6 +310,15 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.Capture do
 
     Mix.raise(
       "Preview capture blocked: unsupported widths #{unsupported_widths}. Allowed widths: #{allowed}."
+    )
+  end
+
+  defp write_contract_artifacts(matrix, config, sha_mode) do
+    CaptureManifest.write_from_states!(matrix.entries, matrix.skipped,
+      output_dir: config.output_dir,
+      sha_mode: sha_mode,
+      manifest_path: config.manifest_out,
+      checkpoint_path: config.checkpoint_out
     )
   end
 end

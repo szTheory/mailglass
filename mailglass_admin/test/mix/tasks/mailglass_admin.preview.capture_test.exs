@@ -32,7 +32,8 @@ defmodule Mix.Tasks.MailglassAdmin.Preview.CaptureTest do
       assert output =~ "MailglassAdmin.Fixtures.HappyMailer:welcome_enterprise width=768 theme=dark"
       assert output =~ "skipped: 1"
       assert output =~ "MailglassAdmin.Fixtures.StubMailer -> no_previews"
-      refute File.exists?(output_dir)
+      assert File.exists?(Path.join(output_dir, "manifest.json"))
+      assert File.exists?(Path.join(output_dir, "checkpoint.json"))
     end
 
     test "rejects unknown flags loudly" do
