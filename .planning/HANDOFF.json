@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-05-28T18:56:32.892Z",
+  "context": "release-ceremony",
+  "phase": "v1.3-release",
+  "phase_name": "v1.3 Adopter Trust Proof — 1.3.0 release (between phases 59 and 60)",
+  "phase_dir": ".planning",
+  "status": "paused-release-in-flight",
+  "completed_tasks": [
+    {"id": 1, "name": "Phase 59 complete; Trust Lane Repo Head enforced (4/4 branch-protection checks); main fully green", "status": "done"},
+    {"id": 2, "name": "RELEASE_PLEASE_TOKEN wired into release-please.yml (was RELEASE_PLEASE_PAT)", "status": "done", "commit": "8fa3025"},
+    {"id": 3, "name": "release-as bumped to 1.3.0 (core+admin) in release-please-config.json", "status": "done", "commit": "184d393"},
+    {"id": 4, "name": "Release Please PR #42 opened (1.3.0 core/admin linked, 0.3.0 inbound)", "status": "done"},
+    {"id": 5, "name": "Auto-merge ARMED (squash) on PR #42 + repo allow_auto_merge enabled + CI dispatched on release branch (run 26595500746)", "status": "done"}
+  ],
+  "remaining_tasks": [
+    {"id": 6, "name": "PR #42 auto-merges when its 4 required checks go green → triggers publish-hex fan-out", "status": "in_progress-automated"},
+    {"id": 7, "name": "Approve hex-publish env deployment if it has required reviewers (else auto-publishes)", "status": "not_started"},
+    {"id": 8, "name": "Verify 1.3.0 (+ admin 1.3.0, inbound 0.3.0) live on Hex + post-publish smoke green", "status": "not_started"},
+    {"id": 9, "name": "Build the going-forward auto-merge workflow: auto-arm --auto + auto-dispatch CI on every Release-Please PR (beats the GITHUB_TOKEN-push/anti-recursion gotcha)", "status": "not_started"},
+    {"id": 10, "name": "Phase 60 (Release Trust Gate / EVID-03 + OPS smoke debt) → Phase 61 (Docs Boundary)", "status": "not_started"},
+    {"id": 11, "name": "Green-main cleanup GM-03..06 (drop inbound --seed 0 pin; narrow dialyzer specs; FUTR traceability; branch-protection tooling dedup)", "status": "not_started"}
+  ],
+  "blockers": [],
+  "human_actions_pending": [
+    {"action": "Approve the hex-publish GitHub Environment deployment when publish-hex runs", "context": "Locked CLAUDE.md guardrail protecting HEX_API_KEY; only fires if the env has required reviewers", "blocking": false}
+  ],
+  "decisions": [
+    {"decision": "Armed auto-merge on the release PR (shift-left) but left the hex-publish env approval intact", "rationale": "User wants release automation; publishing to a public registry is irreversible and CLAUDE.md locks it behind human approval — automate the merge, keep the publish blessing"},
+    {"decision": "Local main's v1.3 = 'Adopter Trust Proof' is canonical; origin's divergent v1.3 'Release Discipline & Repo Truth' (fd4f3c9) was reconciled in and re-filed as the v1.4 backlog", "rationale": "Two parallel v1.3 definitions; user chose local as canonical, nothing lost"}
+  ],
+  "uncommitted_files": [".planning/STATE.md (GSD tracking auto-update), this HANDOFF.json, .continue-here.md"],
+  "next_action": "gh pr view 42 (likely merged) → gh run list --workflow publish-hex.yml → approve hex-publish env if prompted → confirm 1.3.0/0.3.0 on Hex + smoke green. Then build the auto-merge workflow (task 9), then Phase 60.",
+  "context_notes": "1.3.0 release is shipping itself: PR #42 auto-merge armed + CI dispatched. The only human gate left is the hex-publish env approval (intentional, locked). KEY GOTCHA for the future auto-merge workflow: release-please's custom dep-pin sync pushes the PR branch with GITHUB_TOKEN, which (anti-recursion) does NOT trigger ci.yml — so release PRs show 'no checks reported' + BLOCKED until you dispatch ci.yml on the PR head ref. Resume pointers: .planning/backlog/v1.4-release-discipline-repo-truth.md (GM-01..06 + RH/RELH/TRUTH), memory project_v1_3_release_and_milestone_state.md."
+}
