@@ -14,6 +14,12 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     array_set = parse_required_checks(source)
     bullet_set = parse_print_expected_bullets(source)
 
+    # Guard against a vacuous pass: if the script's structure changes so a parser
+    # returns nothing, both sets would be empty and the difference check below
+    # would pass while detecting no drift at all.
+    assert MapSet.size(array_set) > 0, "parsed no REQUIRED_CHECKS entries — parser or script format changed"
+    assert MapSet.size(bullet_set) > 0, "parsed no print_expected_text bullets — parser or script format changed"
+
     only_in_array = MapSet.difference(array_set, bullet_set)
     only_in_bullets = MapSet.difference(bullet_set, array_set)
 
