@@ -14,6 +14,7 @@
 - ✅ **v1.1 Inbound Core Slice** — Phases 39-44 (shipped 2026-05-06) — see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26) — see [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 - 🚧 **v1.3 Adopter Trust Proof** — Phases 52, 57-61 (planned 2026-05-27)
+- 📋 **v1.4 Release Discipline & Repo Truth** (backlog seed) — repo-hygiene tooling already landed via the `fd4f3c9` reconciliation merge; requirements parked in [backlog/v1.4-release-discipline-repo-truth.md](backlog/v1.4-release-discipline-repo-truth.md)
 
 ## Phases
 

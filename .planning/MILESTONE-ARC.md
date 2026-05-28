@@ -302,6 +302,15 @@ Keep visible but uncommitted until user pull justifies them:
 - BIMI tooling beyond `mail.doctor`
 - A/B testing or automation surfaces
 
+## Candidate — `v1.4` Release Discipline & Repo Truth
+
+Surfaced 2026-05-28 during the v1.3 reconciliation merge. Origin's `fd4f3c9`
+defined a parallel "release discipline / repo truth" milestone; its tooling
+(`mix mailglass.repo.hygiene`, `verify-branch-protection.sh`, `repo-hygiene.yml`,
+release/publish workflow fixes) merged into `main`, and its requirement set is
+parked at `.planning/backlog/v1.4-release-discipline-repo-truth.md`. Strong
+candidate to open after `v1.3 Adopter Trust Proof` ships.
+
 ## Workflow Contract
 
 Future milestone creation and closeout should treat this file as the strategic

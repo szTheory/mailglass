@@ -7,9 +7,11 @@ defmodule Mailglass.ObanHelpers do
   and `@tag oban: :inline` tests to function, the `oban_jobs` table must exist.
   Both lanes require `async: false`.
 
-  `maybe_create_oban_jobs/0` is called from `test_helper.exs` after the mailglass
-  migrations run. It delegates to `Oban.Migrations.up/1` (IF NOT EXISTS semantics),
-  so repeated calls on a warmed DB are a no-op.
+  `maybe_create_oban_jobs/0` is called from `test_helper.exs` after the core
+  migrations and repo startup. It runs a tiny test-only migration that delegates
+  to `Oban.Migrations.up/1`, so Oban's migration code executes inside Ecto's
+  migration runner instead of failing with "could not find migration runner
+  process".
 
   ## Requirements for `@tag oban: :manual` tests
 
@@ -33,16 +35,25 @@ defmodule Mailglass.ObanHelpers do
   @doc """
   Ensures the `oban_jobs` table exists in the test DB.
 
-  No-op when Oban is not loaded or when the table already exists (Oban migrations
-  use CREATE TABLE IF NOT EXISTS semantics). Safe to call on every test run.
+  No-op when Oban is not loaded or when the Ecto migration version has already
+  been recorded. Safe to call on every test run.
   """
   def maybe_create_oban_jobs do
     if Code.ensure_loaded?(Oban.Migrations) do
-      Ecto.Migrator.with_repo(Mailglass.TestRepo, fn _repo ->
-        Oban.Migrations.up()
-      end)
+      Ecto.Migrator.up(
+        Mailglass.TestRepo,
+        20_260_527_000_001,
+        Mailglass.ObanHelpers.TestObanMigration,
+        log: false
+      )
     end
-  rescue
-    _ -> :ok
+  end
+
+  defmodule TestObanMigration do
+    @moduledoc false
+    use Ecto.Migration
+
+    def up, do: Oban.Migrations.up()
+    def down, do: Oban.Migrations.down()
   end
 end

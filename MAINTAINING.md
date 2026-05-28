@@ -6,10 +6,19 @@ This document covers the release flow and maintenance protocols for Mailglass.
 
 Mailglass uses [Release Please](https://github.com/googleapis/release-please) to automate versioning and changelogs.
 
+Before release work starts, run:
+
+    mix mailglass.repo.hygiene --check
+
+The release branch must start from a clean worktree with no local ahead/behind
+drift from `origin/main`. If local work exists, preserve it on a named
+`preserve/*` branch before release work continues.
+
 1. Merge feature branches into `main` using Conventional Commits.
 2. Release Please will open a "Release PR" with the version bump and updated `CHANGELOG.md`.
-3. Merging the Release PR should trigger the `publish-hex` workflow from the
-   published GitHub Release. If downstream workflow fan-out does not happen,
+3. Merging the Release PR creates the GitHub Release with `RELEASE_PLEASE_PAT`
+   so `release: published` fan-out can trigger publish and smoke workflows.
+   If downstream workflow fan-out does not happen,
    `workflow_dispatch` with the core release tag (`mailglass-v<version>`) is the canonical maintainer
    fallback.
 4. The `publish-hex` workflow is environment-gated and requires manual approval in the GitHub Actions UI.
@@ -255,7 +264,7 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    expectations.
    Record the tag, publish workflow run URL, approver identity, and approval
    timestamp in `38-03-RELEASE-RECORD.md`.
-   - **Package order:** The workflow guarantees `mailglass` (core) publishes first; once core is indexed, `mailglass_admin` and `mailglass_inbound` publish in parallel against the newly live core.
+   - **Package order:** The workflow guarantees `mailglass` (core) publishes first, then `mailglass_inbound`, then `mailglass_admin`. Admin waits on inbound to avoid sibling-package Hex indexing races.
    - **Idempotency:** All three publish steps check `mix hex.info` first and skip the publish command if the version is already live, making the workflow safe to retry.
    - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag (for `1.0.0`: `mailglass-v1.0.0`) so the publish run is pinned to the exact commit Release Please tagged.
 4. **Within 60 minutes of publish: smoke-install in a fresh Phoenix app.**
