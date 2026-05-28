@@ -27,9 +27,19 @@ defmodule Mailglass.ReferenceHost.OperatorDiagnosisProof do
       mailbox = Mailglass.ReferenceHost.OperatorDiagnosisProof.NoMatchMailbox
 
       [
-        struct(route, mailbox: mailbox, recipient: "support@example.com", subject: nil, headers: []),
+        struct(route,
+          mailbox: mailbox,
+          recipient: "support@example.com",
+          subject: nil,
+          headers: []
+        ),
         struct(route, mailbox: mailbox, recipient: nil, subject: ~r/^\[billing\]/, headers: []),
-        struct(route, mailbox: mailbox, recipient: nil, subject: nil, headers: [{"x-priority", "high"}])
+        struct(route,
+          mailbox: mailbox,
+          recipient: nil,
+          subject: nil,
+          headers: [{"x-priority", "high"}]
+        )
       ]
     end
   end

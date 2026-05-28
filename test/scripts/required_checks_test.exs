@@ -17,8 +17,11 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     # Guard against a vacuous pass: if the script's structure changes so a parser
     # returns nothing, both sets would be empty and the difference check below
     # would pass while detecting no drift at all.
-    assert MapSet.size(array_set) > 0, "parsed no REQUIRED_CHECKS entries — parser or script format changed"
-    assert MapSet.size(bullet_set) > 0, "parsed no print_expected_text bullets — parser or script format changed"
+    assert MapSet.size(array_set) > 0,
+           "parsed no REQUIRED_CHECKS entries — parser or script format changed"
+
+    assert MapSet.size(bullet_set) > 0,
+           "parsed no print_expected_text bullets — parser or script format changed"
 
     only_in_array = MapSet.difference(array_set, bullet_set)
     only_in_bullets = MapSet.difference(bullet_set, array_set)
@@ -49,7 +52,9 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
   end
 
   defp parse_print_expected_bullets(source) do
-    [_before, rest] = String.split(source, "cat <<'TEXT'\nExpected required status checks:\n", parts: 2)
+    [_before, rest] =
+      String.split(source, "cat <<'TEXT'\nExpected required status checks:\n", parts: 2)
+
     [chunk | _] = String.split(rest, "\n\nExpected non-context branch protection fields:", parts: 2)
 
     Regex.scan(~r/^  - (.+)$/m, chunk)

@@ -228,5 +228,6 @@ defmodule Mix.Tasks.Mailglass.Trust.Run do
     Mix.shell().info("trust_runner checkpoint_out=#{checkpoint_out}")
   end
 
+  @spec runner_error!(String.t()) :: no_return()
   defp runner_error!(message), do: Mix.raise("Trust runner blocked: #{message}")
 end

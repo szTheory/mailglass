@@ -187,6 +187,7 @@ defmodule Mailglass.DocsContractTest do
       assert Regex.match?(~r/preview-pipeline confidence\s+only/i, admin)
       refute preview_guide =~ "guaranteed client parity"
       refute admin =~ "guaranteed client parity"
+
       assert Regex.match?(
                ~r/(?:does(?:\s+\*\*not\*\*|\s+not)\s+claim|not)\s+cross-client parity/i,
                preview_guide

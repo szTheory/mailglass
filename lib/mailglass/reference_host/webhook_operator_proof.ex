@@ -209,6 +209,8 @@ defmodule Mailglass.ReferenceHost.WebhookOperatorProof do
   defp with_saved_env(fun) do
     saved = %{
       tenancy: Application.get_env(:mailglass, :tenancy),
+      # Reference-host proof snapshots the inbound sibling's env to restore it after the run.
+      # credo:disable-for-lines:3 Mailglass.Credo.NoOtherAppEnvReads
       postmark: Application.get_env(:mailglass_inbound, :postmark),
       persistence: Application.get_env(:mailglass_inbound, :ingress_persistence),
       execution: Application.get_env(:mailglass_inbound, :ingress_execution),

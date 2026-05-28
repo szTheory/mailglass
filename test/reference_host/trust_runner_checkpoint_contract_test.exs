@@ -138,13 +138,17 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     File.write!(invalid_checkpoint, Jason.encode_to_iodata!(payload, pretty: true))
 
     assert {_, 0} =
-             System.cmd("bash", ["scripts/check_trust_runner_checkpoint.sh", "--checkpoint", valid_checkpoint],
+             System.cmd(
+               "bash",
+               ["scripts/check_trust_runner_checkpoint.sh", "--checkpoint", valid_checkpoint],
                cd: @project_root,
                stderr_to_stdout: true
              )
 
     assert {output, exit_code} =
-             System.cmd("bash", ["scripts/check_trust_runner_checkpoint.sh", "--checkpoint", invalid_checkpoint],
+             System.cmd(
+               "bash",
+               ["scripts/check_trust_runner_checkpoint.sh", "--checkpoint", invalid_checkpoint],
                cd: @project_root,
                stderr_to_stdout: true
              )

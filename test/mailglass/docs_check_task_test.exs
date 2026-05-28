@@ -36,7 +36,11 @@ defmodule Mailglass.DocsCheckTaskTest do
 
   test "blocks parity-overreach wording in guides/preview.md" do
     preview_path = "guides/preview.md"
-    File.write!(preview_path, File.read!(preview_path) <> "\n\nThis workflow offers guaranteed client parity.\n")
+
+    File.write!(
+      preview_path,
+      File.read!(preview_path) <> "\n\nThis workflow offers guaranteed client parity.\n"
+    )
 
     assert_raise Mix.Error, ~r/Delivery blocked/, fn ->
       capture_io(:stderr, fn ->
