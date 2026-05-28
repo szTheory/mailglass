@@ -1,8 +1,8 @@
 ---
 phase: 59
 slug: ci-trust-lanes-checkpoint-evidence
-status: draft
-nyquist_compliant: false
+status: complete
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-05-27
 ---
@@ -38,15 +38,15 @@ created: 2026-05-27
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 59-XX-XX | TBD by planner | 1 | EVID-01 | T-59-A (workflow-bypass) | New required job present in `REQUIRED_CHECKS`; lane exits non-zero on missing checkpoint | static + CI smoke | `grep -Fq 'Reference Host Trust Journey (Elixir 1.18 / OTP 27)' scripts/setup_branch_protection.sh && (rm -f tmp/mailglass_trust_runner/checkpoint.json && bash scripts/check_trust_runner_checkpoint.sh; test $? -eq 1)` | ✅ (script exists) | ⬜ pending |
-| 59-XX-XX | TBD by planner | 1 | EVID-02 | T-59-B (path-dep leakage) | Clean-baseline lane fails when any sibling resolves via `:path` source in `reference/host_app/mix.lock` | script unit | `(cd reference/host_app && mix deps.get && bash ../../scripts/check_clean_baseline_hex_only.sh)` exits 0; with synthetic `path:` override in throwaway copy of `reference/host_app/mix.exs`, exits 1 | ❌ W0 (new script) | ⬜ pending |
-| 59-XX-XX | TBD by planner | 1 | EVID-04 | T-59-C (artifact integrity) | Both lanes upload `trust_runner.v1` checkpoint JSON via `actions/upload-artifact@<pinned-v4-SHA>` with `if-no-files-found: error`, `retention-days: 90`, stable `${{ github.run_id }}`-suffixed names | CI smoke + download verify | After CI run on Phase 59 PR: `gh run download <id> -n trust-runner-repo-head-<id> && bash scripts/check_trust_runner_checkpoint.sh --checkpoint checkpoint.json` exits 0; same for clean-baseline artifact | Will exist after Wave 1 first run | ⬜ pending |
-| 59-XX-XX | TBD by planner | 1 | EVID-01 (enforcement proof) | T-59-A | `gate-self-test.yml` synthetic-failure run reports the new required check in FAILURE status, not just SKIPPED | extended self-test | `gh workflow run gate-self-test.yml -f check_name='Reference Host Trust Journey (Elixir 1.18 / OTP 27)'` observes FAILURE on the synthetic-failing PR | ❌ W0 (gate-self-test extension) | ⬜ pending |
-| 59-XX-XX | TBD by planner | 1 | EVID-01/EVID-02 (publish gate) | T-59-D (publish bypass) | Neither new lane in `ADVISORY_LANES`; `publish-hex.yml::gate-ci-green` enumerates them as blocking on a synthetic-red CI run | publish-gate smoke | `gh workflow run publish-hex.yml -f tag=<existing> -f dry_run=true -f package=mailglass` on a SHA where one trust lane is red → `gate-ci-green` setFailed lists the trust lane | ✅ (workflow exists) | ⬜ pending |
+| 59-02 Task 1 | 59-02 | 2 | EVID-01 | T-59-A (workflow-bypass) | New required job present in `REQUIRED_CHECKS`; lane exits non-zero on missing checkpoint | static + CI smoke | `grep -Fq 'Trust Lane Repo Head (Elixir 1.18 / OTP 27)' scripts/setup_branch_protection.sh && (rm -f tmp/mailglass_trust_runner/checkpoint.json && bash scripts/check_trust_runner_checkpoint.sh; test $? -eq 1)` | ✅ (script exists) | ⬜ pending |
+| 59-02 Task 1 + 59-01 Task 1 | 59-02 / 59-01 | 2 / 1 | EVID-02 | T-59-B (path-dep leakage) | Clean-baseline lane fails when any sibling resolves via `:path` source in `reference/host_app/mix.lock` | script unit | `(cd reference/host_app && mix deps.get && bash ../../scripts/check_clean_baseline_hex_only.sh)` exits 0; with synthetic `path:` override in throwaway copy of `reference/host_app/mix.exs`, exits 1 | ❌ W0 (new script lands in 59-01 Task 1) | ⬜ pending |
+| 59-02 Task 1 | 59-02 | 2 | EVID-04 | T-59-C (artifact integrity) | Both lanes upload `trust_runner.v1` checkpoint JSON via `actions/upload-artifact@<pinned-v4-SHA>` with `if-no-files-found: error`, `retention-days: 90`, stable `${{ github.run_id }}`-suffixed names | CI smoke + download verify | After CI run on Phase 59 PR: `gh run download <id> -n trust-runner-repo-head-<id> && bash scripts/check_trust_runner_checkpoint.sh --checkpoint checkpoint.json` exits 0; same for clean-baseline artifact | Will exist after Wave 2 first CI run | ⬜ pending |
+| 59-01 Task 2 + 59-02 Task 2 Step 6 | 59-01 / 59-02 | 1 / 2 | EVID-01 (enforcement proof) | T-59-A | `gate-self-test.yml` synthetic-failure run reports the new required check in FAILURE status, not just SKIPPED | extended self-test | `gh workflow run gate-self-test.yml -f check_name='Trust Lane Repo Head (Elixir 1.18 / OTP 27)'` observes FAILURE on the synthetic-failing PR | ❌ W0 (gate-self-test parameterization lands in 59-01 Task 2) | ⬜ pending |
+| 59-02 Task 1 | 59-02 | 2 | EVID-01/EVID-02 (publish gate) | T-59-D (publish bypass) | Neither new lane in `ADVISORY_LANES`; `publish-hex.yml::gate-ci-green` enumerates them as blocking on a synthetic-red CI run | publish-gate smoke | `gh workflow run publish-hex.yml -f tag=<existing> -f dry_run=true -f package=mailglass` on a SHA where one trust lane is red → `gate-ci-green` setFailed lists the trust lane | ✅ (workflow exists) | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
-*Note: Task IDs will be assigned by the planner. This table maps requirements to verification surfaces; the planner will bind each row to a specific PLAN task.*
+*Note: Task IDs bound by planner on 2026-05-27 after Plan 01 + Plan 02 finalization. Each row maps a verification surface to the concrete plan/task that lands it.*
 
 ---
 
@@ -78,4 +78,4 @@ created: 2026-05-27
 - [ ] Feedback latency < 60s (quick path) / 5 min (full CI path)
 - [ ] `nyquist_compliant: true` set in frontmatter after plan binds task IDs
 
-**Approval:** pending
+**Approval:** granted 2026-05-27 (planner)
