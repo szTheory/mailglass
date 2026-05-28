@@ -82,6 +82,12 @@ defmodule MailglassAdmin.Preview.Chromium do
              virtual_time_budget > 0 do
     [
       "--headless",
+      # CI containers (Ubuntu 23.10+ / GitHub runners) restrict unprivileged user
+      # namespaces, so Chromium's sandbox aborts (FATAL "No usable sandbox", exit 134).
+      # This is a headless screenshot of the app's own preview pages — no untrusted
+      # content — so disabling the sandbox is the standard, safe CI workaround.
+      "--no-sandbox",
+      "--disable-dev-shm-usage",
       "--disable-gpu",
       "--hide-scrollbars",
       "--run-all-compositor-stages-before-draw",
