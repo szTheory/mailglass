@@ -17,6 +17,10 @@ on:
         description: "Only clean up stale gate-self-test branches/PRs (no new run)"
         type: boolean
         default: false
+      check_name:
+        description: "Required-check name prefix to poll (e.g., 'Tests (' for the test gate or 'Trust Lane Repo Head (' for the v1.3 trust gate)"
+        type: string
+        default: "Tests ("
 
 permissions:
   contents: write
@@ -112,31 +116,31 @@ jobs:
           PR: ${{ steps.open-pr.outputs.pr }}
           BRANCH: ${{ steps.create-branch.outputs.branch }}
         run: |
-          # Wait up to 25 minutes for the Tests check to finish on this PR.
+          # Wait up to 25 minutes for the required check to finish on this PR.
           DEADLINE=$((SECONDS + 1500))
           while [ $SECONDS -lt $DEADLINE ]; do
             STATUS=$(gh pr checks "$PR" --required --json name,state \
-              --jq '.[] | select(.name | startswith("Tests (")) | .state' \
+              --jq '.[] | select(.name | startswith("${{ inputs.check_name }}")) | .state' \
               | head -1)
             case "$STATUS" in
               FAILURE|FAILED|CANCELLED|TIMED_OUT)
-                echo "Tests check returned ${STATUS} — gate is enforcing halt-on-failure"
+                echo "${{ inputs.check_name }}check returned ${STATUS} — gate is enforcing halt-on-failure"
                 echo "result=blocked" >> "$GITHUB_OUTPUT"
                 exit 0
                 ;;
               SUCCESS)
-                echo "ERROR: Tests check returned SUCCESS on a synthetic-failure PR"
+                echo "ERROR: ${{ inputs.check_name }}check returned SUCCESS on a synthetic-failure PR"
                 echo "The gate is NOT enforcing halt-on-failure."
                 echo "result=leaked" >> "$GITHUB_OUTPUT"
                 exit 1
                 ;;
               *)
-                echo "Tests check still running (status=${STATUS:-pending})..."
+                echo "${{ inputs.check_name }}check still running (status=${STATUS:-pending})..."
                 sleep 30
                 ;;
             esac
           done
-          echo "ERROR: Tests check did not complete within 25 minutes"
+          echo "ERROR: ${{ inputs.check_name }}check did not complete within 25 minutes"
           echo "result=timeout" >> "$GITHUB_OUTPUT"
           exit 1
 
@@ -159,7 +163,7 @@ jobs:
             echo ""
             echo "- PR: #${{ steps.open-pr.outputs.pr }}"
             echo "- Branch: ${{ steps.create-branch.outputs.branch }}"
-            echo "- Tests check result: ${{ steps.poll.outputs.result }}"
+            echo "- ${{ inputs.check_name }}check result: ${{ steps.poll.outputs.result }}"
             echo ""
             if [ "${{ steps.poll.outputs.result }}" = "blocked" ]; then
               echo "Gate enforces halt-on-failure (intended)."
