@@ -2,7 +2,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
   use ExUnit.Case, async: true
 
   @mix_path Path.expand("../../mix.exs", __DIR__)
-  @task_path Path.expand("../../lib/mix/tasks/mailglass.trust.run.ex", __DIR__)
+  @task_path Path.expand("../../dev/mix/tasks/mailglass.trust.run.ex", __DIR__)
   @readme_path Path.expand("../../reference/host_app/README.md", __DIR__)
   @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
 
