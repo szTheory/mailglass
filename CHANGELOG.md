@@ -14,6 +14,46 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.3.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.2.0...mailglass-v1.3.0) (2026-05-28)
+
+
+### Features
+
+* **51-02:** add branch protection verifier ([c6c71cf](https://github.com/szTheory/mailglass/commit/c6c71cfcd8f4763fd7ca83aa8fff03ac078c3b58))
+* **52-01:** enforce reference host boot contract ([0e2ce52](https://github.com/szTheory/mailglass/commit/0e2ce520e509356baefb6b951833ddde440180a1))
+* **52-01:** scaffold maintained reference host baseline ([a56796b](https://github.com/szTheory/mailglass/commit/a56796be6af909539f5537ea064c86f9d7762c5f))
+* **52-02:** lock reference host to public seams ([e3b17a0](https://github.com/szTheory/mailglass/commit/e3b17a0a0c4c0fd07c3f9aab6c96c66a5efd9fb4))
+* **52-03:** lock reference host proof scope boundaries ([76c996e](https://github.com/szTheory/mailglass/commit/76c996e5e7700c2ae2fb3e854305bda282975239))
+* **57-01:** add canonical deterministic trust runner command ([293cd74](https://github.com/szTheory/mailglass/commit/293cd742e9bb5e7df9ea4e11b79bf9fe06b15bd0))
+* **57-02:** add deterministic fixtures and trust checkpoint encoder ([8ed47eb](https://github.com/szTheory/mailglass/commit/8ed47ebf21ee5faf0080d4b65e416b0cf9dcf65d))
+* **57-02:** add trust checkpoint validator and repeatability tests ([7030022](https://github.com/szTheory/mailglass/commit/703002298da98245d4ad83187de548f49274dc50))
+* **58-01:** emit webhook ingest proof evidence ([1bb707a](https://github.com/szTheory/mailglass/commit/1bb707a7c5c36d254460e01e19e5258bf7f31f8c))
+* **58-01:** implement webhook route proof helper ([67b0706](https://github.com/szTheory/mailglass/commit/67b0706efb8cc767ef0f2311208b2c8845d0c571))
+* **58-02:** add no-match operator diagnosis evidence ([3b276ab](https://github.com/szTheory/mailglass/commit/3b276ab7f53691f22148f36770ca7a7165a5ae45))
+* **58-02:** validate completed Phase 58 checkpoint evidence ([8ac4593](https://github.com/szTheory/mailglass/commit/8ac4593e9dc14809b59af979dd64dc7b92492c28))
+* **59-01:** add check_clean_baseline_hex_only.sh Hex-source guard ([584541a](https://github.com/szTheory/mailglass/commit/584541a968ece1abeeab5b66b101b75ae56e0fce))
+* **59-01:** parameterize gate-self-test.yml with check_name input ([6a0aa79](https://github.com/szTheory/mailglass/commit/6a0aa791a6a8710195d5604fce586d49668b10b1))
+* **999.1-03:** add planning artifact comment drift guard ([c9624f2](https://github.com/szTheory/mailglass/commit/c9624f2438938811ed60f33f0e1b7c02d726a363))
+* **999.2-01:** add deterministic capture matrix helpers ([b89b140](https://github.com/szTheory/mailglass/commit/b89b14056248d23edb6fe81e35cdd1a3a0c6a3b5))
+* **999.2-01:** canonicalize preview width/theme capture state ([738a6af](https://github.com/szTheory/mailglass/commit/738a6afe03b07077f560c127572db2e61902b03d))
+* **999.2-02:** add deterministic preview capture manifest contract ([3a29b76](https://github.com/szTheory/mailglass/commit/3a29b76e4096afab574cc8d9f825c9384d489e7e))
+* **999.2-02:** add deterministic preview capture mix task ([80259ac](https://github.com/szTheory/mailglass/commit/80259acd7dc238f320878efc95e2b4313438c582))
+* **999.2-03:** add advisory preview capture CI lane ([26696c4](https://github.com/szTheory/mailglass/commit/26696c4d9cbe62de42dc698d2970e25fe8048396))
+* **999.2-03:** enforce preview docs boundary language contracts ([f58b080](https://github.com/szTheory/mailglass/commit/f58b08001d0676356f189bbfd4045cbe716cb0e5))
+* **999.2-03:** validate preview capture checkpoint contract ([b54d7d8](https://github.com/szTheory/mailglass/commit/b54d7d84d45e4765a86fa0fe9450c8ef035680cf))
+
+
+### Bug Fixes
+
+* **52:** harden reference host routing and auth baseline ([93354d2](https://github.com/szTheory/mailglass/commit/93354d2691cfe2af98d7dd3a8353fb464e9c182a))
+* **58:** revise webhook operator path plans .planning/phases/58-verify-first-webhook-operator-path/58-01-PLAN.md .planning/phases/58-verify-first-webhook-operator-path/58-02-PLAN.md ([22ab39f](https://github.com/szTheory/mailglass/commit/22ab39f3fd0191905ee48380b552a01341ea2d26))
+* **59:** harden trust-lane scripts against injection (code review) ([544415f](https://github.com/szTheory/mailglass/commit/544415f41fa5751fde2ff87126dc536ee0874e71))
+* **999.1-01:** unblock verification gates for execution run ([8c622ea](https://github.com/szTheory/mailglass/commit/8c622ea1acdf9d7c13b1773086b685abbe5ab915))
+* **admin:** add --no-sandbox to preview Chromium for CI containers ([bcf787c](https://github.com/szTheory/mailglass/commit/bcf787cd076590252135ff16acb939429bf94aab))
+* **admin:** preview Chromium capture passed invalid :timeout to System.cmd ([abc54c9](https://github.com/szTheory/mailglass/commit/abc54c9b31305aa714f31c14af4ddd445d3c2be0))
+* **ci:** de-matrix required checks and automate release-PR merge ([#43](https://github.com/szTheory/mailglass/issues/43)) ([3a74bf2](https://github.com/szTheory/mailglass/commit/3a74bf2ecc5b812ee0273d2612d11729c912c291))
+* **ci:** green main — format, credo, dialyzer, trust lane, inbound seed ([102ff7e](https://github.com/szTheory/mailglass/commit/102ff7e4dcaca2110c09592288a92f521ef98a18))
+
 ## [1.2.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.0.0...mailglass-v1.2.0) (2026-05-25)
 
 

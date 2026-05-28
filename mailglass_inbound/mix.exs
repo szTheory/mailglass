@@ -1,7 +1,7 @@
 defmodule MailglassInbound.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.3.0"
   @source_url "https://github.com/szTheory/mailglass"
   @description "Inbound routing contract package for mailglass"
 
@@ -93,7 +93,7 @@ defmodule MailglassInbound.MixProject do
 
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 1.2.0"}
+      {:mailglass, "== 1.3.0"}
     else
       {:mailglass, path: "..", override: true}
     end
