@@ -16,7 +16,7 @@ drift from `origin/main`. If local work exists, preserve it on a named
 
 1. Merge feature branches into `main` using Conventional Commits.
 2. Release Please will open a "Release PR" with the version bump and updated `CHANGELOG.md`.
-3. Merging the Release PR creates the GitHub Release with `RELEASE_PLEASE_PAT`
+3. Merging the Release PR creates the GitHub Release with `RELEASE_PLEASE_TOKEN`
    so `release: published` fan-out can trigger publish and smoke workflows.
    If downstream workflow fan-out does not happen,
    `workflow_dispatch` with the core release tag (`mailglass-v<version>`) is the canonical maintainer
