@@ -38,16 +38,21 @@ defmodule MailglassAdmin.Preview.Chromium do
             Keyword.get(opts, :virtual_time_budget, @default_virtual_time_budget)
           )
 
-        {output, exit_code} =
-          System.cmd(binary, args,
-            stderr_to_stdout: true,
-            timeout: Keyword.get(opts, :timeout, @default_timeout)
-          )
+        # System.cmd/3 has no :timeout option; enforce the bound ourselves so a
+        # hung Chromium is killed (closing the port SIGKILLs the child process).
+        timeout = Keyword.get(opts, :timeout, @default_timeout)
+        task = Task.async(fn -> System.cmd(binary, args, stderr_to_stdout: true) end)
 
-        if exit_code == 0 do
-          :ok
-        else
-          {:error, {:command_failed, exit_code, String.trim(output)}}
+        case Task.yield(task, timeout) || Task.shutdown(task, :brutal_kill) do
+          {:ok, {output, exit_code}} ->
+            if exit_code == 0 do
+              :ok
+            else
+              {:error, {:command_failed, exit_code, String.trim(output)}}
+            end
+
+          nil ->
+            {:error, {:command_failed, 124, "chromium capture timed out after #{timeout}ms"}}
         end
     end
   end
