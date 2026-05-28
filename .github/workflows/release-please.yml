@@ -104,17 +104,23 @@ jobs:
       # gets rewritten. We sync it ourselves on the release-please PR branch
       # after the action runs. Idempotent — exits clean if the pin is already
       # correct or if there's no release-please PR pending.
-      # Ceremony rule: review this generated PR diff before merge. The repo's
+      # Note: the release PR auto-merges on green (see "Arm auto-merge" below),
+      # so review the generated diff during the CI window if needed. The repo's
       # linked-version dep pin is custom, so the release PR is not a vanilla
       # release-please artifact.
       #
-      # Recursion-safe: pushes authenticated with GITHUB_TOKEN do NOT trigger
-      # further workflow runs (GitHub anti-recursion guarantee).
+      # CI trigger: this checkout uses RELEASE_PLEASE_TOKEN (a PAT) so the sync
+      # commit pushed below is authored by a non-GITHUB_TOKEN identity. That makes
+      # GitHub fire `pull_request: synchronize` -> ci.yml on the synced head, so the
+      # release PR's required checks actually report. A GITHUB_TOKEN push would be
+      # suppressed by anti-recursion, leaving the PR with "no checks reported" and
+      # auto-merge unable to fire.
       - name: Checkout main for sync step
         if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
       - name: Sync sibling package -> mailglass dep pin on release-please branch
         if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}
@@ -205,3 +211,22 @@ jobs:
           git add "${SYNC_PATHS[@]}"
           git commit -m "chore(release-please): sync sibling mailglass dep pins to == $CORE_VERSION + inbound README pin"
           git push origin "$BRANCH"
+
+      # Hands-free release: arm squash auto-merge so the release PR ships the
+      # moment its required checks go green. The Hex publish itself has no
+      # environment gate (intentional — see CLAUDE.md), so this completes the
+      # automated path. Idempotent: re-arming an already-armed PR is a no-op.
+      - name: Arm auto-merge on the release PR
+        if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH=release-please--branches--main
+          number=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+          if [ -z "$number" ] || [ "$number" = "null" ]; then
+            echo "No open release PR to arm — nothing to do."
+            exit 0
+          fi
+          echo "Arming squash auto-merge on release PR #${number}"
+          gh pr merge "$number" --auto --squash --repo "$GITHUB_REPOSITORY"

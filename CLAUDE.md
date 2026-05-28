@@ -106,7 +106,7 @@ Encoded for GSD in `~/.claude/get-shit-done/USER-PROFILE.md` (advisor mode, `ven
 
 - **Conventional Commits enforced** (PR title check). Squash-merge workflow.
 - `docs(state):` commit type for `.planning/STATE.md` updates — CI path filters skip them.
-- **Hex publish only from protected ref** + GitHub Environment with required reviewers. `HEX_API_KEY` is never visible to PR jobs.
+- **Hex publish only from a protected ref**, via the `hex-publish` GitHub Environment so `HEX_API_KEY` is never visible to PR jobs. Releases are **fully hands-free**: a Release Please PR auto-merges on green (see `release-please.yml` "Arm auto-merge") and the publish fan-out runs with no human approval gate (the `hex-publish` environment intentionally has no required reviewers). Tightening this back to a required-reviewer gate is a deliberate policy change, not the current default.
 - **All third-party GitHub Actions pinned to commit SHA.** Dependabot watches both `mix.lock` and `.github/workflows/`.
 
 ## Things Not To Do (the short list — full list in PITFALLS.md)
