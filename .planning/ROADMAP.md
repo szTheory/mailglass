@@ -62,7 +62,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 - [x] Phase 52: Trust Scope Lock + Reference Host Baseline (0/3 plans) (completed 2026-05-27)
 - [x] Phase 57: Deterministic Trust Runner + Fixtures (0/0 plans) (completed 2026-05-27)
 - [x] Phase 58: Verify-First Webhook + Operator Path (2/2 plans) (completed 2026-05-27)
-- [ ] Phase 59: CI Trust Lanes + Checkpoint Evidence (0/2 plans)
+- [x] Phase 59: CI Trust Lanes + Checkpoint Evidence (0/2 plans) (completed 2026-05-28)
 - [ ] Phase 60: Release Trust Gate + Drift Prevention (0/0 plans)
 - [ ] Phase 61: Docs Contract Boundary Enforcement (0/0 plans)
 
@@ -107,7 +107,7 @@ Requirements: EVID-01, EVID-02, EVID-04
 Plans:
 
 - [x] 59-01-PLAN.md — Wave 0 preconditions: reusable Hex-first guard script, parameterize gate-self-test, REQUIRED_CHECKS array/heredoc drift contract test
-- [ ] 59-02-PLAN.md — Add repo-head + clean-baseline trust lanes to ci.yml, register repo-head in REQUIRED_CHECKS atomically, post-merge branch-protection re-assertion
+- [x] 59-02-PLAN.md — Add repo-head + clean-baseline trust lanes to ci.yml, register repo-head in REQUIRED_CHECKS atomically, post-merge branch-protection re-assertion
 
 Success criteria:
 
