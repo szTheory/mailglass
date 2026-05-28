@@ -4,6 +4,22 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.3.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.2.0...mailglass_admin-v1.3.0) (2026-05-28)
+
+
+### Features
+
+* **999.2-01:** add deterministic capture matrix helpers ([b89b140](https://github.com/szTheory/mailglass/commit/b89b14056248d23edb6fe81e35cdd1a3a0c6a3b5))
+* **999.2-01:** canonicalize preview width/theme capture state ([738a6af](https://github.com/szTheory/mailglass/commit/738a6afe03b07077f560c127572db2e61902b03d))
+* **999.2-02:** add deterministic preview capture manifest contract ([3a29b76](https://github.com/szTheory/mailglass/commit/3a29b76e4096afab574cc8d9f825c9384d489e7e))
+* **999.2-02:** add deterministic preview capture mix task ([80259ac](https://github.com/szTheory/mailglass/commit/80259acd7dc238f320878efc95e2b4313438c582))
+
+
+### Bug Fixes
+
+* **admin:** add --no-sandbox to preview Chromium for CI containers ([bcf787c](https://github.com/szTheory/mailglass/commit/bcf787cd076590252135ff16acb939429bf94aab))
+* **admin:** preview Chromium capture passed invalid :timeout to System.cmd ([abc54c9](https://github.com/szTheory/mailglass/commit/abc54c9b31305aa714f31c14af4ddd445d3c2be0))
+
 ## [1.2.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.0.0...mailglass_admin-v1.2.0) (2026-05-25)
 
 
