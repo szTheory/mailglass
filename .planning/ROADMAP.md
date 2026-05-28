@@ -89,8 +89,10 @@ Success criteria:
 Goal: complete trust journey proof for signed webhook verification and one deterministic non-happy-path diagnosis scenario.  
 Requirements: JOUR-03, JOUR-04  
 Plans:
+
 - [x] 58-01-PLAN.md — Route-level Postmark verify-first proof and webhook_ingest runner evidence
 - [x] 58-02-PLAN.md — Deterministic no-match operator evidence and checkpoint validator semantics
+
 Success criteria:
 
 1. Webhook proof executes the real verify-first signed payload route path.
@@ -102,8 +104,10 @@ Success criteria:
 Goal: enforce trust proof in required CI lanes and publish machine-readable checkpoint evidence artifacts.  
 Requirements: EVID-01, EVID-02, EVID-04  
 Plans:
-- [ ] 59-01-PLAN.md — Wave 0 preconditions: reusable Hex-first guard script, parameterize gate-self-test, REQUIRED_CHECKS array/heredoc drift contract test
+
+- [x] 59-01-PLAN.md — Wave 0 preconditions: reusable Hex-first guard script, parameterize gate-self-test, REQUIRED_CHECKS array/heredoc drift contract test
 - [ ] 59-02-PLAN.md — Add repo-head + clean-baseline trust lanes to ci.yml, register repo-head in REQUIRED_CHECKS atomically, post-merge branch-protection re-assertion
+
 Success criteria:
 
 1. Repo-head trust lane is required and fails on missing trust checkpoints.
