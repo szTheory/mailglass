@@ -1,5 +1,23 @@
 # Milestones
 
+## v0.4 Roadmap: mailglass (Backfilled: 2026-05-29)
+
+**Note:** Synthesized from archive snapshot by `/gsd-health --backfill`. Original completion date unknown.
+
+---
+
+## v0.3 : Webhook Coverage Complete (Backfilled: 2026-05-29)
+
+**Note:** Synthesized from archive snapshot by `/gsd-health --backfill`. Original completion date unknown.
+
+---
+
+## v0.1 : Validation Release (Backfilled: 2026-05-29)
+
+**Note:** Synthesized from archive snapshot by `/gsd-health --backfill`. Original completion date unknown.
+
+---
+
 ## v0.2 Production-Credible Core (Shipped: 2026-04-28)
 
 **Phases completed:** 5 phases, 29 plans, 41 tasks
@@ -113,6 +131,7 @@
 **Known deferred items at close:** 1 (see `STATE.md` Deferred Items)
 
 **Residual follow-up (non-blocking):**
+
 - release-please-action v5 + `GITHUB_TOKEN` anti-recursion still forces `workflow_dispatch` for downstream publish fanout.
 - Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
 - `SEED-003-ecosystem-integrations` remains dormant for a future milestone rather than being treated as partial `v1.2` scope.
