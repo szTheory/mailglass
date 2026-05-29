@@ -5,15 +5,13 @@
       "package-name": "mailglass",
       "release-type": "elixir",
       "component": "mailglass",
-      "changelog-path": "CHANGELOG.md",
-      "release-as": "1.3.0"
+      "changelog-path": "CHANGELOG.md"
     },
     "mailglass_admin": {
       "package-name": "mailglass_admin",
       "release-type": "elixir",
       "component": "mailglass_admin",
-      "changelog-path": "CHANGELOG.md",
-      "release-as": "1.3.0"
+      "changelog-path": "CHANGELOG.md"
     },
     "mailglass_inbound": {
       "package-name": "mailglass_inbound",

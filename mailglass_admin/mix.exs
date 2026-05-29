@@ -62,7 +62,12 @@ defmodule MailglassAdmin.MixProject do
     ]
   end
 
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  # "dev/" holds internal CI-only preview-capture tooling (Chromium screenshot
+  # driver + mix mailglass_admin.preview.capture). Compiled in :dev and :test for
+  # CI/local use, but kept out of "lib" so it never ships in the Hex package
+  # (mix.exs :package :files lists "lib", not "dev").
+  defp elixirc_paths(:dev), do: ["lib", "dev"]
+  defp elixirc_paths(:test), do: ["lib", "test/support", "dev"]
   defp elixirc_paths(_), do: ["lib"]
 
   # CONTEXT D-24: phoenix_live_reload is dev-only optional; declare here so

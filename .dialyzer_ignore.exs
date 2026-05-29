@@ -21,15 +21,15 @@
   # Reason: GenSmtp.decode/2 spec widens the ok branch to {:ok, tuple()} on purpose — the :mimemail 5-tuple shape varies across gen_smtp versions and callers pattern-match the tuple themselves; with :underspecs dialyzer flags {:ok, tuple()} as an extra range (same intentional-supertype pattern as the BIMI entry above).
   {"lib/mailglass/optional_deps/gen_smtp.ex", "@spec for decode has more types than are returned by the function."},
   # Reason: OperatorDiagnosisProof.run/0 returns a deterministic evidence map; map() is intentionally broad for forward-compat as evidence keys evolve (reference-host proof, Phase 57/58). v1.4 green-main may narrow it.
-  {"lib/mailglass/reference_host/operator_diagnosis_proof.ex", "Type specification for run is a supertype of the success typing."},
+  {"dev/mailglass/reference_host/operator_diagnosis_proof.ex", "Type specification for run is a supertype of the success typing."},
   # Reason: MailglassAdmin.OptionalDeps.MailglassInbound.explain_routes/2 is an optional-dep call resolved at runtime via Code.prepend_path; dialyzer cannot see the soft-loaded sibling module.
-  {"lib/mailglass/reference_host/operator_diagnosis_proof.ex", "Function MailglassAdmin.OptionalDeps.MailglassInbound.explain_routes/2 does not exist."},
+  {"dev/mailglass/reference_host/operator_diagnosis_proof.ex", "Function MailglassAdmin.OptionalDeps.MailglassInbound.explain_routes/2 does not exist."},
   # Reason: MailglassAdmin.Components.mask_recipient/1 is an optional-dep (mailglass_admin) call resolved at runtime; dialyzer cannot see the soft-loaded sibling module.
-  {"lib/mailglass/reference_host/operator_diagnosis_proof.ex", "Function MailglassAdmin.Components.mask_recipient/1 does not exist."},
+  {"dev/mailglass/reference_host/operator_diagnosis_proof.ex", "Function MailglassAdmin.Components.mask_recipient/1 does not exist."},
   # Reason: WebhookOperatorProof.run/0 returns the proof struct; %__MODULE__{} is intentionally broad over the field success-typing (reference-host proof, Phase 57/58). v1.4 green-main may narrow it.
-  {"lib/mailglass/reference_host/webhook_operator_proof.ex", "Type specification for run is a supertype of the success typing."},
+  {"dev/mailglass/reference_host/webhook_operator_proof.ex", "Type specification for run is a supertype of the success typing."},
   # Reason: MailglassReferenceHostWeb.Router.call/2 is a reference-host router loaded at runtime via Code.require_file; dialyzer cannot see the soft-loaded module.
-  {"lib/mailglass/reference_host/webhook_operator_proof.ex", "Function MailglassReferenceHostWeb.Router.call/2 does not exist."},
+  {"dev/mailglass/reference_host/webhook_operator_proof.ex", "Function MailglassReferenceHostWeb.Router.call/2 does not exist."},
   # Reason: TrustRunnerFixtures.webhook_ingest_evidence/0 returns a deterministic evidence map; map() is intentionally broad for forward-compat (test-support fixture, Phase 57).
   {"test/support/reference_host/trust_runner_fixtures.ex", "Type specification for webhook_ingest_evidence is a supertype of the success typing."}
 ]

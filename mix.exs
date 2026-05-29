@@ -93,8 +93,12 @@ defmodule Mailglass.MixProject do
     ]
   end
 
-  defp elixirc_paths(:dev), do: ["lib", "credo_checks"]
-  defp elixirc_paths(:test), do: ["lib", "credo_checks", "test/support"]
+  # "dev/" holds maintainer-only tooling (reference-host trust journey modules,
+  # mix mailglass.trust.run / mailglass.repo.hygiene). Compiled in :dev and :test
+  # for CI/local use, but kept out of "lib" so it never ships in the Hex package
+  # (mix.exs :package :files lists "lib", not "dev").
+  defp elixirc_paths(:dev), do: ["lib", "credo_checks", "dev"]
+  defp elixirc_paths(:test), do: ["lib", "credo_checks", "test/support", "dev"]
   defp elixirc_paths(_), do: ["lib"]
 
   # CORE-06: suppress optional-dep compile warnings so `mix compile --no-optional-deps`
