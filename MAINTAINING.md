@@ -31,6 +31,13 @@ Use `mix verify.reference_host.journey` as the canonical trust-runner command.
 By default it writes the checkpoint artifact to
 `tmp/mailglass_trust_runner/checkpoint.json`.
 
+This trust-runner flow and reference-host evidence are usage-proof artifacts,
+not API-contract truth. Stable guarantee semantics are defined by the canonical
+stability inventories in [`docs/api_stability.md`](docs/api_stability.md) and
+[`mailglass_inbound/docs/api_stability.md`](mailglass_inbound/docs/api_stability.md),
+with executable contract truth enforced through
+`mix verify.stability_contract`.
+
 Checkpoint consumers should require these keys exactly:
 
 - `schema_version`

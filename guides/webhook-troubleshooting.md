@@ -2,6 +2,11 @@
 
 Use [operator-incident-support.md](./operator-incident-support.md) as the
 canonical incident guide. This page is only the webhook-specific entry shim.
+Canonical contract truth for stability and guarantee semantics lives in
+[`docs/api_stability.md`](../docs/api_stability.md),
+[`mailglass_inbound/docs/api_stability.md`](../mailglass_inbound/docs/api_stability.md),
+and the executable contract lane `mix verify.stability_contract`, not in local
+shim reachability.
 
 ## Start from the real support symptom
 
@@ -30,6 +35,8 @@ canonical incident guide. This page is only the webhook-specific entry shim.
   webhook row.
 - reconcile facts come from the background-first orphan sweep and appended
   `:reconciled` audit events.
+- module names and trust-runner plumbing are implementation detail; treat them
+  as troubleshooting context unless the canonical inventories mark them stable.
 
 If you need the full "mailglass can tell you this / cannot tell you this"
 checklists, use the canonical incident guide instead of this shim.

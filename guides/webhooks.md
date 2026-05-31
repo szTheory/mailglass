@@ -7,6 +7,15 @@ body's `signature.timestamp <> signature.token`). SES (RSA-signed SNS)
 and Resend (Svix-style HMAC) are also shipped providers behind the same
 `Mailglass.Webhook.Provider` behaviour.
 
+Trust boundary: this page is operational usage guidance, not canonical
+contract truth. Stable guarantee semantics live in
+[`docs/api_stability.md`](../docs/api_stability.md),
+[`mailglass_inbound/docs/api_stability.md`](../mailglass_inbound/docs/api_stability.md),
+and the executable contract lane `mix verify.stability_contract`.
+Provider modules, checkpoint internals, and trust-runner implementation notes
+here are implementation detail unless those canonical inventories say
+otherwise.
+
 ## 1. Install + endpoint wiring
 
 ### Step 1 — Configure `Plug.Parsers` with mailglass's `CachingBodyReader`
