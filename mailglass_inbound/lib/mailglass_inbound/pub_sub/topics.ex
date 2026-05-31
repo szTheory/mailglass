@@ -1,4 +1,5 @@
 defmodule MailglassInbound.PubSub.Topics do
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Typed topic builder for `mailglass_inbound` PubSub broadcasts (TELE-07, the design contract).
 

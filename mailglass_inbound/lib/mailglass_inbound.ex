@@ -1,5 +1,5 @@
 defmodule MailglassInbound do
-  @moduledoc since: "0.5.0"
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Public contract root for the `mailglass_inbound` sibling package.
 
@@ -22,7 +22,7 @@ defmodule MailglassInbound do
 
   @version Mix.Project.config()[:version]
 
-  @doc since: "0.5.0"
+  @doc since: "0.1.0"
   @spec version() :: String.t()
   def version, do: @version
 end

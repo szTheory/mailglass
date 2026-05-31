@@ -1,4 +1,5 @@
 defmodule MailglassInbound.InboundMessage do
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Canonical normalized inbound message passed to routing and mailbox code.
 
@@ -115,7 +116,7 @@ defmodule MailglassInbound.InboundMessage do
   struct; read other signals via dot-access or pattern-matching. Safe on any
   `%InboundMessage{}` — the `:signals` default guarantees no `KeyError`.
   """
-  @doc since: "1.2.0"
+  @doc since: "0.2.0"
   @spec suppression_flagged?(t()) :: boolean()
   def suppression_flagged?(%__MODULE__{signals: %Signals{suppression_flagged: flagged}}),
     do: flagged
