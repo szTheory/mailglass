@@ -400,6 +400,27 @@ jobs:
       - name: Run mix mailglass.install
         working-directory: ${{ runner.temp }}/sandbox
         run: mix mailglass.install
+      - name: Guard against hackney/api_client regression on published install
+        working-directory: ${{ runner.temp }}/sandbox
+        run: |
+          set -euo pipefail
+
+          if ! grep -F "config :swoosh, :api_client, false" config/runtime.exs; then
+            echo "OPS-01 failed: generated runtime.exs is missing config :swoosh, :api_client, false."
+            exit 1
+          fi
+
+          if grep -Eq '^[[:space:]]*config :swoosh, :api_client, Swoosh\.ApiClient\.Finch([[:space:]]|$)' config/runtime.exs; then
+            echo "OPS-01 failed: generated runtime.exs contains an uncommented Swoosh.ApiClient.Finch line."
+            exit 1
+          fi
+
+          if grep -Eq '"(hackney|finch)":' mix.lock; then
+            echo "OPS-01 failed: fresh --no-mailer published install resolved hackney or finch in mix.lock."
+            exit 1
+          fi
+
+          echo "OPS-01 guard passed."
       - name: Compile, fail on warnings
         working-directory: ${{ runner.temp }}/sandbox
         run: |
