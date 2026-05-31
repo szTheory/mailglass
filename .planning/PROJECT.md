@@ -17,6 +17,9 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - v1.3 Phase 52 completed on 2026-05-27: the maintained `reference/host_app` baseline, public-seam boundary guardrails, and scope lock contract are now in place for the trust-proof milestone
 - v1.3 Phase 57 completed on 2026-05-27: canonical deterministic trust-runner command, fixture stability contract, and schema-versioned trust checkpoint evidence are now enforced for local/CI trust lanes
 - v1.3 Phase 58 completed on 2026-05-27: signed Postmark webhook verification and deterministic no-match operator diagnosis are proven through the maintained reference-host trust runner and validated checkpoint evidence
+- v1.3 Phase 59 completed on 2026-05-28: repo-head and clean-baseline trust lanes are wired into CI with checkpoint evidence expectations and branch-protection reassertion
+- v1.3 Phase 60 completed on 2026-05-31: release trust gates and drift-prevention checks now protect published-version trust proof and smoke reliability claims
+- v1.3 Phase 61 completed on 2026-05-31: reference-host and trust-entry docs now route guarantee truth to canonical `api_stability.md` inventories and `mix verify.stability_contract`, with deterministic docs-check enforcement against contract-boundary drift
 - Backlog phase 999.1 completed on 2026-05-27: planning-artifact comment cleanup now covers scoped core/admin/inbound source paths, with Credo drift prevention (`Mailglass.Credo.NoPlanningArtifactComments`) and guard tests added
 - Backlog phase 999.2 completed on 2026-05-27: deterministic preview URL/capture matrix foundations, mix screenshot capture workflow, advisory CI artifact lane, and docs claim-boundary contract checks are now in place
 - `mailglass_inbound` now has production-credible telemetry, Mailgun + SES ingress, test helpers + generators, admin observability, operator tooling, and six first-party inbound guides
@@ -43,7 +46,7 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Release-workflow fanout still relies on the documented `workflow_dispatch` fallback because GitHub `GITHUB_TOKEN` anti-recursion blocks downstream publish workflows from release-created releases.
 - Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
 - `SEED-003-ecosystem-integrations` is intentionally deferred and remains dormant for later milestone selection.
-- The maintained reference host baseline now exists; the remaining adopter-trust gap is proving the full deterministic end-to-end journey and published-version trust evidence across CI/release gates.
+- The maintained reference host baseline, deterministic journey, CI trust lanes, release trust gate, and docs-contract boundary enforcement are complete; v1.3 is ready for milestone audit/closeout.
 - `mailglass_inbound` runtime capability is stronger than its contract framing in some docs; `mailglass_inbound` still sits outside the `1.x` compatibility promise and needs a dedicated stability-lock milestone after trust proof work.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
@@ -138,6 +141,9 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 **By category (v1.3 Phase 52 — trust baseline):**
 - ✓ HOST-01..03 — Maintained reference host baseline, public-seam-only integration boundary, and fail-closed scope lock artifact/test contracts validated in Phase 52
 - ✓ JOUR-01..02 — Canonical deterministic trust-runner command plus deterministic fixture/checkpoint schema and validator contract validated in Phase 57
+- ✓ EVID-02, EVID-03 — Clean-baseline trust lane and published-version trust evidence gates validated in Phases 59-60
+- ✓ OPS-01..02 — Release-gate drift prevention and smoke reliability guardrails validated in Phase 60
+- ✓ DOCB-01..03 — Reference-host usage-proof boundary, canonical stability routing, and deterministic docs-contract enforcement validated in Phase 61
 
 **By category (v1.1 — Inbound Core Slice):**
 - ✓ MODEL-01 — Canonical `%MailglassInbound.InboundMessage{}` value object with stable fields for routing, tenancy, and provider provenance — v1.1
@@ -295,4 +301,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-27 — Phase 58 verify-first webhook/operator proof is complete, Phase 57 deterministic runner evidence remains the shared checkpoint foundation, and the remaining v1.3 trust-proof work is centered on CI trust lanes, docs boundary enforcement, and release-gate reliability closure.*
+*Last updated: 2026-05-31 — Phase 61 docs-contract boundary enforcement is complete; v1.3 now has the maintained reference host, deterministic trust journey, CI/release trust gates, and canonical contract-routing docs needed for milestone audit and closeout.*
