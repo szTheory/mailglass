@@ -120,10 +120,10 @@ Goal: gate release trust claims on published-version trust evidence and close th
 Requirements: EVID-02 (folded from Phase 59), EVID-03, OPS-01, OPS-02  
 Plans:
 
-- [ ] 60-01-PLAN.md — Bump reference host siblings to Hex ~> 1.3 / ~> 0.3 (Wave-1 enabler for both Hex-baseline lanes)
-- [ ] 60-02-PLAN.md — Add the clean-baseline trust lane to ci.yml (EVID-02; publish-gate-only via gate-ci-green, D-04)
+- [x] 60-01-PLAN.md — Bump reference host siblings to Hex ~> 1.3 / ~> 0.3 (Wave-1 enabler for both Hex-baseline lanes)
+- [x] 60-02-PLAN.md — Add the clean-baseline trust lane to ci.yml (EVID-02; publish-gate-only via gate-ci-green, D-04)
 - [ ] 60-03-PLAN.md — Published-version trust journey + OPS-01 hackney guard in post-publish-smoke.yml; issue #32 close checkpoint
-- [ ] 60-04-PLAN.md — MAINTAINING.md green-trust-evidence release gate + hands-free reconcile + OPS-02/D-04 doc-contract tests
+- [x] 60-04-PLAN.md — MAINTAINING.md green-trust-evidence release gate + hands-free reconcile + OPS-02/D-04 doc-contract tests
 
 Success criteria:
 
