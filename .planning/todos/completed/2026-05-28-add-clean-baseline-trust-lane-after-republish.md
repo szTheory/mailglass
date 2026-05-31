@@ -1,11 +1,11 @@
 ---
 id: add-clean-baseline-trust-lane-after-republish
 created: 2026-05-28
-status: pending
+status: completed
 priority: high
 origin: Phase 59 (ci-trust-lanes-checkpoint-evidence) execution
 requirement: EVID-02
-resolves_phase: null
+resolves_phase: 62
 ---
 
 # Add the clean-baseline trust lane (EVID-02) after a mailglass release contains the trust runner
