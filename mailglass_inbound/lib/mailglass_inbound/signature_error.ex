@@ -1,4 +1,5 @@
 defmodule MailglassInbound.SignatureError do
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Structured, **no-recovery** error for inbound provider signature failures
   (Mailgun HMAC, AWS SES SNS X.509, and SNS `SubscribeURL` trust-policy checks).

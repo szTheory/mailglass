@@ -1,4 +1,5 @@
 defmodule MailglassInbound.MIMEError do
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Structured error for raw RFC 5322 MIME parse failures (`MailglassInbound.MIME`).
 

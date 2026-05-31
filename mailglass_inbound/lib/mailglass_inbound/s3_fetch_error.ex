@@ -1,4 +1,5 @@
 defmodule MailglassInbound.S3FetchError do
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Structured error for AWS SES inbound S3-object fetch failures.
 
