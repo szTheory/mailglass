@@ -50,6 +50,8 @@ Stable means adopters may rely on:
 - duplicate acknowledgement from durable receive truth rather than mailbox
   outcomes
 - replay remaining distinct from fresh provider receipt semantics
+- replay remaining distinct from fresh receive semantics
+- Task.Supervisor fallback being bounded best-effort only when Oban is absent
 - router matching by recipient, subject, and header only
 - one mailbox callback, `process/1`, with the documented outcomes only
 - operator tasks at the command-behavior level only
