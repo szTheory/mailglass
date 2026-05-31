@@ -100,6 +100,31 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
     assert output =~ "unsupported lock literal"
   end
 
+  test "clean-baseline guard reports non-tuple sibling lock entries" do
+    tmp_dir = Path.join(System.tmp_dir!(), "mailglass-clean-baseline-#{System.unique_integer([:positive])}")
+    invalid_lock_path = Path.join(tmp_dir, "mix.lock")
+
+    on_exit(fn -> File.rm_rf!(tmp_dir) end)
+
+    File.mkdir_p!(tmp_dir)
+
+    invalid_lock =
+      @reference_lock_path
+      |> File.read!()
+      |> String.replace(
+        ~r/"mailglass": \{:hex, :mailglass, "1\.3\.0".*/,
+        ~s("mailglass": "bad",),
+        global: false
+      )
+
+    File.write!(invalid_lock_path, invalid_lock)
+
+    {output, status} = System.cmd("bash", [@guard_script_path, invalid_lock_path], stderr_to_stdout: true)
+
+    assert status == 1
+    assert output =~ ~s(Hex-first violation: mailglass lock entry has invalid type: "bad")
+  end
+
   defp extract_job!(workflow, start_key, next_key) do
     [_before, rest] = String.split(workflow, "\n  #{start_key}:\n", parts: 2)
     [job | _after] = String.split(rest, "\n  #{next_key}:\n", parts: 2)

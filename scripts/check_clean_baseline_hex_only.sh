@@ -80,6 +80,9 @@ MAILGLASS_LOCK_PATH="$LOCK_PATH" elixir -e '
       nil ->
         IO.puts(:stderr, "Hex-first violation: #{name} missing from #{lock_path}")
         System.halt(1)
+      other ->
+        IO.puts(:stderr, "Hex-first violation: #{name} lock entry has invalid type: #{inspect(other)}")
+        System.halt(1)
     end
   end)
 '
