@@ -4,6 +4,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
   @mix_path Path.expand("../../mix.exs", __DIR__)
   @task_path Path.expand("../../dev/mix/tasks/mailglass.trust.run.ex", __DIR__)
   @readme_path Path.expand("../../reference/host_app/README.md", __DIR__)
+  @scope_path Path.expand("../../reference/host_app/SCOPE.md", __DIR__)
   @claim_boundary "reference-host trust-journey confidence only; signed Postmark webhook verification and no-match operator diagnosis proven by deterministic runner evidence"
 
   test "JOUR-01 canonical command and deterministic stages are pinned" do
@@ -47,6 +48,38 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
 
     retired_phrase = Enum.join(["deferred", " to Phase 58"])
     refute String.contains?(readme, retired_phrase)
+  end
+
+  test "Phase 61 boundary language is pinned for reference host docs" do
+    readme = File.read!(@readme_path)
+    scope = File.read!(@scope_path)
+
+    readme_required_tokens = [
+      "usage-proof evidence only",
+      "mix verify.stability_contract",
+      "docs/api_stability.md",
+      "mailglass_admin/docs/api_stability.md",
+      "mailglass_inbound/docs/api_stability.md"
+    ]
+
+    Enum.each(readme_required_tokens, fn token ->
+      assert String.contains?(readme, token),
+             "Phase boundary drift: required README token missing #{inspect(token)}"
+    end)
+
+    scope_required_tokens = [
+      "not API-contract truth",
+      "second product surface",
+      "fixture seed"
+    ]
+
+    Enum.each(scope_required_tokens, fn token ->
+      assert String.contains?(scope, token),
+             "Phase boundary drift: required SCOPE token missing #{inspect(token)}"
+    end)
+
+    refute String.contains?(readme, "fixture seed"),
+           "Phase boundary drift: README must not frame the host as fixture seed"
   end
 
   defp token_present?(files_with_content, token) do
