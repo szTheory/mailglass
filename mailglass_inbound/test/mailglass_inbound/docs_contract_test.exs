@@ -10,6 +10,7 @@ defmodule MailglassInbound.DocsContractTest do
   test "docs inventory names the stable public modules for the inbound slice" do
     readme = File.read!(@readme_path)
     stability = File.read!(@stability_path)
+    stable = contract_section!(stability, "stable")
 
     for module_name <- [
           "MailglassInbound.InboundMessage",
@@ -19,7 +20,7 @@ defmodule MailglassInbound.DocsContractTest do
           "MailglassInbound.Mailbox"
         ] do
       assert readme =~ module_name
-      assert stability =~ module_name
+      assert stable =~ module_name
     end
 
     assert stability =~ "stable"
@@ -30,6 +31,10 @@ defmodule MailglassInbound.DocsContractTest do
   test "docs inventory names the four Testing helpers shipped for adopters (ITEST-05)" do
     readme = File.read!(@readme_path)
     stability = File.read!(@stability_path)
+    testing = contract_section!(stability, "testing")
+    stable = contract_section!(stability, "stable")
+    internal = contract_section!(stability, "internal")
+    deferred = contract_section!(stability, "deferred")
 
     for module_name <- [
           "MailglassInbound.TestAssertions",
@@ -38,7 +43,10 @@ defmodule MailglassInbound.DocsContractTest do
           "MailglassInbound.Fixtures"
         ] do
       assert readme =~ module_name
-      assert stability =~ module_name
+      assert testing =~ module_name
+      refute stable =~ module_name
+      refute internal =~ module_name
+      refute deferred =~ module_name
     end
 
     # The helpers ship as a distinct adopter-facing Testing surface, kept out of
@@ -133,18 +141,27 @@ defmodule MailglassInbound.DocsContractTest do
 
   test "stability docs keep workers, queue details, and replay orchestration internal" do
     stability = File.read!(@stability_path)
+    stable = contract_section!(stability, "stable")
+    internal = contract_section!(stability, "internal")
+    deferred = contract_section!(stability, "deferred")
 
-    assert stability =~ "MailglassInbound.Execution.Worker"
-    assert stability =~ "queue names"
+    assert internal =~ "MailglassInbound.Execution.Worker"
+    assert internal =~ "queue names"
     assert stability =~ "internal"
-    assert stability =~ "public replay API"
+    assert deferred =~ "public replay API"
 
-    refute stability =~ "stable public replay API"
-    refute stability =~ "public worker contract"
+    refute stable =~ "MailglassInbound.Execution.Worker"
+    refute stable =~ "queue names"
+    refute stable =~ "public replay API"
+    refute stable =~ "public worker contract"
   end
 
   test "stability docs pin the Phase 63 semantics-first inbound inventory" do
     stability = File.read!(@stability_path)
+    stable = contract_section!(stability, "stable")
+    testing = contract_section!(stability, "testing")
+    internal = contract_section!(stability, "internal")
+    deferred = contract_section!(stability, "deferred")
 
     for token <- [
           "## Contract Posture",
@@ -154,12 +171,17 @@ defmodule MailglassInbound.DocsContractTest do
           "### `deferred`",
           "ExDoc visibility",
           "module reachability",
-          "do not define the contract",
+          "do not define the contract"
+        ] do
+      assert stability =~ token
+    end
+
+    for token <- [
           "MailglassInbound.Ingress.Plug",
-          "provider: :postmark",
-          "provider: :sendgrid",
-          "provider: :mailgun",
-          "provider: :ses",
+          ":postmark",
+          ":sendgrid",
+          ":mailgun",
+          ":ses",
           "verify before tenant",
           "canonical normalized row plus raw evidence row persisted before mailbox execution",
           "duplicate acknowledgement from durable receive truth",
@@ -171,7 +193,16 @@ defmodule MailglassInbound.DocsContractTest do
           "MailglassInbound.SignatureError",
           "MailglassInbound.S3FetchError"
         ] do
-      assert stability =~ token
+      assert stable =~ token
+    end
+
+    for testing_token <- [
+          "MailglassInbound.Fixtures",
+          "MailglassInbound.Test.Ingress",
+          "MailglassInbound.TestAssertions",
+          "MailglassInbound.MailboxCase"
+        ] do
+      assert testing =~ testing_token
     end
 
     for telemetry_family <- [
@@ -203,7 +234,8 @@ defmodule MailglassInbound.DocsContractTest do
           "direct Oban job shapes",
           "admin or operator UI implementation details"
         ] do
-      assert stability =~ internal_token
+      assert internal =~ internal_token
+      refute stable =~ internal_token
     end
 
     for deferred_token <- [
@@ -218,7 +250,8 @@ defmodule MailglassInbound.DocsContractTest do
           "gen_smtp",
           "ecosystem integrations"
         ] do
-      assert stability =~ deferred_token
+      assert deferred =~ deferred_token
+      refute stable =~ deferred_token
     end
 
     for forbidden_claim <- [
@@ -231,6 +264,11 @@ defmodule MailglassInbound.DocsContractTest do
         ] do
       refute stability =~ forbidden_claim
     end
+
+    refute Regex.match?(~r/provider\s+module(s)?\s+(are|is)\s+(public|stable)\s+api/i, stable)
+    refute Regex.match?(~r/(worker|queue).*(public|stable).*(contract|api)/i, stable)
+    refute Regex.match?(~r/replay\s+(as|is|becomes)\s+fresh/i, stable)
+    refute Regex.match?(~r/exdoc visibility.*(defines|is).*(stability|contract)/i, stability)
   end
 
   test "operator trust docs keep replay separate from fresh receive and public ui claims" do
@@ -313,6 +351,16 @@ defmodule MailglassInbound.DocsContractTest do
 
     assert major_minor == "#{major}.#{minor}",
            "README pins mailglass_inbound to ~> #{major_minor} but the package " <>
-             "version is #{version} (expected ~> #{major}.#{minor})"
+           "version is #{version} (expected ~> #{major}.#{minor})"
+  end
+
+  defp contract_section!(document, section_name) do
+    escaped = Regex.escape(section_name)
+    pattern = ~r/^### `#{escaped}`\n([\s\S]*?)(?=^### `|^## |\z)/m
+
+    case Regex.run(pattern, document) do
+      [_, section] -> section
+      _ -> flunk("Missing #{section_name} contract section")
+    end
   end
 end
