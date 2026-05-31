@@ -52,7 +52,7 @@ defmodule MailglassInbound.DocsContractTest do
     postmark = File.read!(@postmark_ingress_path)
     sendgrid = File.read!(@sendgrid_ingress_path)
 
-    for doc <- [readme, stability, postmark, sendgrid] do
+    for doc <- [readme, postmark, sendgrid] do
       assert doc =~ "canonical"
       assert doc =~ "raw evidence"
       assert doc =~ "replay"
@@ -60,6 +60,13 @@ defmodule MailglassInbound.DocsContractTest do
       refute doc =~ "public provider extension API"
       refute doc =~ "Conductor UI"
     end
+
+    assert stability =~ "canonical"
+    assert stability =~ "raw evidence"
+    assert stability =~ "replay"
+    assert stability =~ "public provider extension API"
+    refute stability =~ "public provider behaviour"
+    refute stability =~ "Conductor UI"
   end
 
   test "postmark docs describe the body_reader requirement and explicit duplicate semantics" do
