@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Inbound Stability Lock
-status: ready_to_plan
-last_updated: "2026-05-31T18:30:28.015Z"
-last_activity: 2026-05-31 -- Phase 64 context gathered
+status: executing
+last_updated: "2026-05-31T20:17:18.787Z"
+last_activity: 2026-05-31
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  total_plans: 6
+  completed_plans: 5
   percent: 25
 ---
 
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31 after opening v1.4 Inbound Stability Lock)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 64 — contract verification hardening
+**Current focus:** Phase 64 — contract-verification-hardening
 
 ## Current Position
 
-Phase: 64
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-05-31 -- Phase 64 context gathered
+Phase: 64 (contract-verification-hardening) — EXECUTING
+Plan: 3 of 5
+Status: Ready to execute
+Last activity: 2026-05-31
 
 ## v1.4 Milestone Intent
 
@@ -60,6 +60,8 @@ Last activity: 2026-05-31 -- Phase 64 context gathered
 - [Phase 61]: Allow internal names only with explicit non-contract framing in trust docs — Preserves troubleshooting value while preventing contract-overreach wording.
 - [Phase 62]: Kept workflow topology unchanged; only corrected release-line truth and guard strictness. — Preserves Phase 60 clean-baseline and published-trust topology while closing the EVID-02/EVID-03 current-release proof gap.
 - [Phase 62]: Accepted resolver-required lock churn for decimal, phoenix_live_view, and swoosh after scoped sibling update. — The scoped sibling update required these transitive lock updates; no workflow or product topology changed.
+- [Phase 64]: Pinned inbound runtime since metadata to package release history (0.1.0/0.2.0) for compiled-doc proof truth.
+- [Phase 64]: Scoped runtime seam metadata to direct adopter entrypoints only (read_body/2, __using__/1, route/2, process/1).
 
 ## Roadmap Snapshot
 
@@ -95,6 +97,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 61 P02 | 3min | 2 tasks | 4 files |
 | Phase 61 P03 | 6 min | 2 tasks | 3 files |
 | Phase 62 P01 | 21 min | 2 tasks | 4 files |
+| Phase 64 P01 | 2min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
