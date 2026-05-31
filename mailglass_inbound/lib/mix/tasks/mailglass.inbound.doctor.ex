@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Doctor do
 
   @shortdoc "Run DNS-free inbound config checks (routes, mailboxes, signing keys, MIME)"
 
-  @moduledoc since: "1.2.0"
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Run DNS-free pre-deploy configuration checks for inbound mail (IOPS-01).
 

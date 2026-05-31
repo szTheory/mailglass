@@ -9,7 +9,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
 
   @shortdoc "Run the inbound retention sweep on demand (batched, advisory-locked)"
 
-  @moduledoc since: "1.2.0"
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Manually run the inbound retention sweep (IOPS-03).
 

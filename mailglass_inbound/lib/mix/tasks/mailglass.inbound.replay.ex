@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
 
   @shortdoc "Replay inbound records selected by --record-id/--since/--tenant"
 
-  @moduledoc since: "1.2.0"
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Replay previously-received inbound records through their mailboxes (IOPS-02).
 
