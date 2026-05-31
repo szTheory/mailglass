@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Adopter Trust Proof
 status: executing
-last_updated: "2026-05-31T14:41:55.088Z"
+last_updated: "2026-05-31T14:44:37.010Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 16
-  completed_plans: 14
+  completed_plans: 15
   percent: 83
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-05-27 after v1.3 preflight lock)
 ## Current Position
 
 Phase: 61 (docs-contract-boundary-enforcement) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-05-31
 
@@ -52,6 +52,8 @@ Last activity: 2026-05-31
 - [Phase 58]: Phase 58 Plan 02 uses the admin inbound optional gateway explain_routes/2 path to derive no-match operator evidence.
 - [Phase 58]: Phase 58 Plan 02 keeps checkpoint_sha256 scoped to ordered stage/status/fixture_id rows while validating evidence separately.
 - [Phase 58]: Phase 58 Plan 02 retires deferred wording after signed Postmark and no-match operator evidence are deterministic.
+- [Phase 61]: Route trust-entry guarantee semantics to canonical api_stability inventories and mix verify.stability_contract. — Keep contract truth in canonical inventories and executable verification lanes.
+- [Phase 61]: Allow internal names only with explicit implementation-detail framing in trust docs. — Preserves troubleshooting value without widening public API contract.
 
 ## Roadmap Snapshot
 
@@ -85,6 +87,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 58 P02 | 7min | 2 tasks | 8 files |
 | Phase 60 P04 | 1 min | 2 tasks | 3 files |
 | Phase 60 P03 | 9 min | 3 tasks | 3 files |
+| Phase 61 P02 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
