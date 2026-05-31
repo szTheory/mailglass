@@ -21,7 +21,9 @@ drift from `origin/main`. If local work exists, preserve it on a named
    If downstream workflow fan-out does not happen,
    `workflow_dispatch` with the core release tag (`mailglass-v<version>`) is the canonical maintainer
    fallback.
-4. The `publish-hex` workflow is environment-gated and requires manual approval in the GitHub Actions UI.
+4. Publishing is hands-free after CI is green: `release-please` auto-merges the
+   release PR, `gate-ci-green` is the publish gate, and the `hex-publish`
+   environment has no required reviewers.
 
 ## Trust runner checkpoint handoff
 
@@ -145,6 +147,13 @@ The exact required contexts are:
 - `Support Contract Core (Elixir 1.18 / OTP 27)`
 - `Support Contract Admin (Elixir 1.18 / OTP 27)`
 - `Compile No Optional Deps (Elixir 1.18 / OTP 27)`
+- `Trust Lane Repo Head (Elixir 1.18 / OTP 27)`
+
+Release trust claims also require green trust evidence beyond the required
+branch-protection contexts: the clean-baseline and published-version trust
+journeys must complete, and the `trust-runner-repo-head`,
+`trust-runner-clean-baseline`, and `trust-runner-published` checkpoint artifacts
+must be present and valid.
 
 Owner-applied branch protection:
 - `GH_TOKEN=<admin-pat> ./scripts/setup_branch_protection.sh main`
@@ -177,15 +186,14 @@ The following checks are advisory signal, not branch-protection truth:
 
 ## Bus Factor & Continuity
 
-Mailglass is single-maintainer at v0.1. The release pipeline is gated on a GitHub
-Environment (`hex-publish`) with a single required reviewer (`szTheory`). When a
-GitHub Environment has only one reviewer, GitHub silently disables the
-`prevent_self_review` setting — the gate is effectively a one-eye pause, not a
-two-eyes review. This is documented honestly here rather than presented as a
-stronger control than it is. Multi-owner Hex transition is deferred to v0.5,
-when production adopters exist (D-26 rationale: at v0.1 the asymmetry of a
-co-owner being able to `mix hex.publish` from their own machine bypassing
-GitHub governance is a worse footgun than the bus-factor risk it solves).
+Mailglass is single-maintainer at v0.1. The release pipeline is intentionally
+hands-free after the repo-proved gates pass: `gate-ci-green` checks the release
+SHA and the `hex-publish` environment has no required reviewers. This is
+documented honestly here rather than presented as a stronger human approval
+control than it is. Multi-owner Hex transition is deferred to v0.5, when
+production adopters exist (D-26 rationale: at v0.1 the asymmetry of a co-owner
+being able to `mix hex.publish` from their own machine bypassing GitHub
+governance is a worse footgun than the bus-factor risk it solves).
 
 If `szTheory` is unreachable for more than 30 days, the community can request a
 Hex.pm package transfer by opening a public issue titled
@@ -245,8 +253,15 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    - `Support Contract Core (Elixir 1.18 / OTP 27)`
    - `Support Contract Admin (Elixir 1.18 / OTP 27)`
    - `Compile No Optional Deps (Elixir 1.18 / OTP 27)`
+   - `Trust Lane Repo Head (Elixir 1.18 / OTP 27)`
    - Phase 38 prepublish proof/export bundle (`38-01-PREPUBLISH-PROOF.md`)
    - Phase 38 install/upgrade rehearsal artifact (`38-02-REHEARSAL-EVIDENCE.md`)
+   - Trust-runner checkpoint artifacts:
+     `trust-runner-repo-head`, `trust-runner-clean-baseline`, and
+     `trust-runner-published`
+
+   The post-publish trust journey is the EVID-03 sentinel. It must be green
+   before milestone trust claims or v1.3 closeout language is accepted.
 2. **Merge the release-please PR.**
    Squash-merge keeps the changelog history linear.
    Review the release PR diff before merge. This repo uses a custom
@@ -257,13 +272,13 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    and release-please skips the cut, recover with a tiny follow-up commit that
    carries a `Release-As: <intended-version>` footer. Do not hand-edit
    `.release-please-manifest.json` to force the version.
-3. **Approve the `hex-publish` deployment in the GitHub Environment UI.**
+3. **Monitor the hands-free publish fan-out.**
    Review the pre-publish summary in the workflow run page (rendered by the
-   `prepublish-summary` job per D-15) BEFORE clicking Approve. Verify the
-   file count, total size, CHANGELOG excerpt, and top files all match
-   expectations.
-   Record the tag, publish workflow run URL, approver identity, and approval
-   timestamp in `38-03-RELEASE-RECORD.md`.
+   `prepublish-summary` job per D-15) after `gate-ci-green` passes and the
+   publish jobs fan out. Verify the file count, total size, CHANGELOG excerpt,
+   and top files all match expectations.
+   Record the tag, publish workflow run URL, `gate-ci-green` result, and publish
+   fan-out status in `38-03-RELEASE-RECORD.md`.
    - **Package order:** The workflow guarantees `mailglass` (core) publishes first, then `mailglass_inbound`, then `mailglass_admin`. Admin waits on inbound to avoid sibling-package Hex indexing races.
    - **Idempotency:** All three publish steps check `mix hex.info` first and skip the publish command if the version is already live, making the workflow safe to retry.
    - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag (for `1.0.0`: `mailglass-v1.0.0`) so the publish run is pinned to the exact commit Release Please tagged.
@@ -274,7 +289,7 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
        mix archive.install hex phx_new --force
        mix phx.new sandbox --no-ecto --no-mailer --install
        cd sandbox
-       # add {:mailglass, "~> 1.2"}, {:mailglass_admin, "~> 1.2"}, {:mailglass_inbound, "~> 0.2"} to deps
+      # add {:mailglass, "~> 1.3"}, {:mailglass_admin, "~> 1.3"}, {:mailglass_inbound, "~> 0.3"} to deps
        mix deps.get && mix mailglass.install && mix compile --warnings-as-errors
        mix phx.server  # visit http://localhost:4000/dev/mail/
 
