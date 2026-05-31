@@ -35,7 +35,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 <details open>
 <summary>◆ v1.4 Inbound Stability Lock (Phases 63-66) — PLANNING</summary>
 
-- [ ] Phase 63: Inbound Contract Inventory Reconciliation — canonical stable/testing/internal/deferred inventory
+- [x] Phase 63: Inbound Contract Inventory Reconciliation — canonical stable/testing/internal/deferred inventory (completed 2026-05-31)
 - [ ] Phase 64: Contract Verification Hardening — compiled-doc, docs-contract, and root stability proof gates
 - [ ] Phase 65: Compatibility, Docs, and DX Lock — adoption path, operator wording, testing docs, and compatibility/deprecation posture
 - [ ] Phase 66: Release Position Decision — evidence-backed `1.0.0` vs final `0.x` decision and release notes
@@ -60,7 +60,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 3. Internal and deferred lists explicitly include replay internals, worker/queue details, route structs, provider modules, matcher expansion, lifecycle callbacks, fan-out, synthetic UI, `gen_smtp`, and ecosystem integrations.
 4. The inventory aligns with core/admin language: stable means semantic contract, not ExDoc visibility or module reachability.
 
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] `63-01-PLAN.md` — Reconcile the canonical inbound stability inventory and tighten the package-local docs-contract test around stable, internal, and deferred semantics.

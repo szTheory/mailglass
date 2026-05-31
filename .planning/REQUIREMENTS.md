@@ -9,9 +9,9 @@ Requirements for the inbound stability-lock milestone. Each requirement maps to 
 
 ### Contract Lock
 
-- [ ] **LOCK-01**: Adopter can identify every stable inbound runtime, testing, and operator seam from one canonical inventory.
-- [ ] **LOCK-02**: Adopter can distinguish stable semantics from reachable/internal modules.
-- [ ] **LOCK-03**: Deferred inbound capabilities are explicitly named so later sessions do not promote them accidentally.
+- [x] **LOCK-01**: Adopter can identify every stable inbound runtime, testing, and operator seam from one canonical inventory.
+- [x] **LOCK-02**: Adopter can distinguish stable semantics from reachable/internal modules.
+- [x] **LOCK-03**: Deferred inbound capabilities are explicitly named so later sessions do not promote them accidentally.
 
 ### Verification Proof
 
@@ -69,9 +69,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOCK-01 | Phase 63 | Pending |
-| LOCK-02 | Phase 63 | Pending |
-| LOCK-03 | Phase 63 | Pending |
+| LOCK-01 | Phase 63 | Complete |
+| LOCK-02 | Phase 63 | Complete |
+| LOCK-03 | Phase 63 | Complete |
 | PROOF-01 | Phase 64 | Pending |
 | PROOF-02 | Phase 64 | Pending |
 | PROOF-03 | Phase 64 | Pending |
