@@ -40,6 +40,10 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     "guides/unsubscribe.md",
     "guides/dkim-setup.md",
     "guides/webhooks.md",
+    "guides/webhook-troubleshooting.md",
+    "MAINTAINING.md",
+    "reference/host_app/README.md",
+    "reference/host_app/SCOPE.md",
     "mailglass_inbound/docs/inbound-install.md",
     "mailglass_inbound/docs/inbound-testing.md",
     "mailglass_inbound/docs/inbound-operator.md",
@@ -51,6 +55,17 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   @preview_confidence_regex ~r/preview-pipeline confidence\s+only/i
   @cross_client_parity_regex ~r/cross-client parity/i
   @allowed_cross_client_parity_regex ~r/(?:does(?:\s+\*\*not\*\*|\s+not)\s+claim|not)\s+cross-client parity/i
+  @trust_entry_paths [
+    "reference/host_app/README.md",
+    "reference/host_app/SCOPE.md",
+    "MAINTAINING.md",
+    "guides/webhooks.md",
+    "guides/webhook-troubleshooting.md",
+    "mailglass_admin/docs/operator-trust.md"
+  ]
+  @trust_internal_detail_regex ~r/(?:Mix\.Tasks\.Mailglass\.Trust\.Run|trust-runner|checkpoint internals|provider modules)/i
+  @trust_contract_claim_regex ~r/(?:stable public API(?: guarantee)?|public API guarantee|is API-contract truth|canonical contract truth)/i
+  @allowed_non_contract_framing_regex ~r/(?:implementation detail|usage-proof evidence only|not API-contract truth|not canonical contract truth)/i
   @tier1_surface_rules %{
     "README.md" => %{
       required: [
@@ -141,9 +156,54 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         ":destructive_action",
         "new work",
         "no change",
-        "Replay and reconcile are intentionally distinct"
+        "Replay and reconcile are intentionally distinct",
+        "docs/api_stability.md",
+        "mailglass_inbound/docs/api_stability.md",
+        "mix verify.stability_contract",
+        "implementation detail"
       ],
       forbidden: []
+    },
+    "reference/host_app/README.md" => %{
+      required: [
+        "usage-proof evidence only",
+        "not API-contract truth",
+        "docs/api_stability.md",
+        "mailglass_admin/docs/api_stability.md",
+        "mailglass_inbound/docs/api_stability.md",
+        "mix verify.stability_contract",
+        "implementation details"
+      ],
+      forbidden: [
+        "stable public API guarantee"
+      ]
+    },
+    "reference/host_app/SCOPE.md" => %{
+      required: [
+        "usage-proof evidence only",
+        "not API-contract truth",
+        "second product surface",
+        "fixture seed",
+        "docs/api_stability.md",
+        "mailglass_admin/docs/api_stability.md",
+        "mailglass_inbound/docs/api_stability.md",
+        "mix verify.stability_contract"
+      ],
+      forbidden: [
+        "is API-contract truth"
+      ]
+    },
+    "MAINTAINING.md" => %{
+      required: [
+        "usage-proof artifacts",
+        "not API-contract truth",
+        "docs/api_stability.md",
+        "mailglass_inbound/docs/api_stability.md",
+        "mix verify.stability_contract"
+      ],
+      forbidden: [
+        "stable public API guarantee"
+      ]
     },
     "mailglass_inbound/docs/api_stability.md" => %{
       required: [
@@ -248,13 +308,26 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     },
     "guides/webhooks.md" => %{
       required: [
-        "Mailglass v0.3 projects suppressions automatically",
-        "[:mailglass, :suppression, :auto_added, :stop]",
-        "mix mailglass.suppressions.resync --tenant-id <tenant>"
+        "Trust boundary: this page is operational usage guidance, not canonical",
+        "docs/api_stability.md",
+        "mailglass_inbound/docs/api_stability.md",
+        "mix verify.stability_contract",
+        "implementation detail"
       ],
       forbidden: [
-        "Until v0.5 ships first-class auto-suppression",
-        "MyApp.Suppressions.maybe_add(provider, type)"
+        "stable public API guarantee"
+      ]
+    },
+    "guides/webhook-troubleshooting.md" => %{
+      required: [
+        "This page is only the webhook-specific entry shim",
+        "docs/api_stability.md",
+        "mailglass_inbound/docs/api_stability.md",
+        "mix verify.stability_contract",
+        "implementation detail"
+      ],
+      forbidden: [
+        "stable public API guarantee"
       ]
     },
     "mailglass_inbound/docs/inbound-install.md" => %{
@@ -327,6 +400,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
       leak_issues(paths)
       |> Kernel.++(tier1_surface_issues())
       |> Kernel.++(preview_boundary_issues())
+      |> Kernel.++(trust_boundary_issues())
 
     if issues == [] do
       Mix.shell().info("[mailglass.docs.check] OK — Tier 1 docs match the stability contract.")
@@ -414,6 +488,34 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     end)
   end
 
+  defp trust_boundary_issues do
+    Enum.flat_map(@trust_entry_paths, fn path ->
+      path
+      |> File.read!()
+      |> String.split("\n")
+      |> Enum.with_index(1)
+      |> Enum.flat_map(fn {line, line_number} ->
+        if Regex.match?(@trust_internal_detail_regex, line) and
+             Regex.match?(@trust_contract_claim_regex, line) and
+             not nearby_non_contract_framing?(path, line_number) do
+          [{:trust_overreach, path, line_number, String.trim(line)}]
+        else
+          []
+        end
+      end)
+    end)
+  end
+
+  defp nearby_non_contract_framing?(path, line_number) do
+    lines = path |> File.read!() |> String.split("\n")
+    first_line = max(line_number - 1, 1)
+    last_line = min(line_number + 1, length(lines))
+
+    lines
+    |> Enum.slice((first_line - 1)..(last_line - 1))
+    |> Enum.any?(&Regex.match?(@allowed_non_contract_framing_regex, &1))
+  end
+
   defp emit_issue({:internal_id, path, token}) do
     Mix.shell().error("[mailglass.docs.check] internal ID #{inspect(token)} found in #{path}")
   end
@@ -439,6 +541,12 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   defp emit_issue({:missing_boundary, path, token}) do
     Mix.shell().error(
       "[mailglass.docs.check] preview-boundary wording missing in #{path}: #{inspect(token)}"
+    )
+  end
+
+  defp emit_issue({:trust_overreach, path, line_number, line}) do
+    Mix.shell().error(
+      "[mailglass.docs.check] trust-boundary overreach in #{path}:#{line_number}: #{inspect(line)}"
     )
   end
 end
