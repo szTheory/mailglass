@@ -77,6 +77,15 @@ Plans:
 3. Inbound docs-contract tests fail on public replay API claims, stable worker/queue claims, provider-module extension claims, replay-as-fresh wording, and stale release-line claims.
 4. Root `mix verify.stability_contract` includes the inbound contract lane and fails closed on drift.
 
+**Plans:** 0/5 plans complete
+
+Plans:
+- [ ] `64-01-PLAN.md` — Correct package-line `since` metadata on the stable inbound runtime seams.
+- [ ] `64-02-PLAN.md` — Correct package-line `since` metadata on the stable structured-error and operator task modules.
+- [ ] `64-03-PLAN.md` — Correct package-line `since` metadata on the adopter-facing inbound testing helpers.
+- [ ] `64-04-PLAN.md` — Tighten the inbound docs-contract lane around closed error sets, release pins, and over-claim drift.
+- [ ] `64-05-PLAN.md` — Create the package-local inbound compiled-doc proof and delegate root stability verification to it.
+
 #### Phase 65: Compatibility, Docs, and DX Lock
 
 **Goal:** Give adopters one coherent inbound adoption, compatibility, testing, and operator-trust story.
