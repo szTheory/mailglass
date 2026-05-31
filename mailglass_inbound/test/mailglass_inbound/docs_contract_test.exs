@@ -354,6 +354,14 @@ defmodule MailglassInbound.DocsContractTest do
            "version is #{version} (expected ~> #{major}.#{minor})"
   end
 
+  test "stable error docs lock the closed type sets to code in exact order" do
+    stability = File.read!(@stability_path)
+
+    assert_closed_type_set_matches_docs!(stability, MailglassInbound.MIMEError)
+    assert_closed_type_set_matches_docs!(stability, MailglassInbound.SignatureError)
+    assert_closed_type_set_matches_docs!(stability, MailglassInbound.S3FetchError)
+  end
+
   defp contract_section!(document, section_name) do
     escaped = Regex.escape(section_name)
     pattern = ~r/^### `#{escaped}`\n([\s\S]*?)(?=^### `|^## |\z)/m
@@ -362,5 +370,25 @@ defmodule MailglassInbound.DocsContractTest do
       [_, section] -> section
       _ -> flunk("Missing #{section_name} contract section")
     end
+  end
+
+  defp assert_closed_type_set_matches_docs!(document, module) do
+    section = contract_section!(document, inspect(module))
+    expected = Enum.map(module.__types__(), &"`#{inspect(&1)}`")
+
+    assert [_, closed_set] =
+             Regex.run(~r/Closed `:type` set:\n\n([\s\S]*?)\n\nDocumented guarantees:/, section),
+             "Missing closed :type set list for #{inspect(module)}"
+
+    documented =
+      Regex.scan(~r/^- (`:[a-z0-9_]+`)/m, closed_set)
+      |> Enum.map(fn [_, token] -> token end)
+
+    assert documented == expected,
+           """
+           Closed `:type` set drift for #{inspect(module)}
+           docs: #{inspect(documented)}
+           code: #{inspect(expected)}
+           """
   end
 end

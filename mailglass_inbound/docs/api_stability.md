@@ -304,6 +304,11 @@ lines, or other PII.
 Stable structured error for raw MIME parse failures, matched by struct and
 `:type`, never by message string.
 
+Closed `:type` set:
+
+- `:inbound_mime_invalid`
+- `:gen_smtp_unavailable`
+
 Documented guarantees:
 
 - raised or returned when raw MIME source cannot be parsed into a canonical
