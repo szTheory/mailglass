@@ -84,7 +84,7 @@ Plans:
 - [ ] `64-02-PLAN.md` — Correct package-line `since` metadata on the stable structured-error and operator task modules.
 - [ ] `64-03-PLAN.md` — Correct package-line `since` metadata on the adopter-facing inbound testing helpers.
 - [ ] `64-04-PLAN.md` — Tighten the inbound docs-contract lane around closed error sets, release pins, and over-claim drift.
-- [ ] `64-05-PLAN.md` — Create the package-local inbound compiled-doc proof and delegate root stability verification to it.
+- [x] `64-05-PLAN.md` — Create the package-local inbound compiled-doc proof and delegate root stability verification to it.
 
 #### Phase 65: Compatibility, Docs, and DX Lock
 
