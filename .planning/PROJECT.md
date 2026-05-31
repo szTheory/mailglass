@@ -128,10 +128,14 @@ No active milestone. Next milestone definition should start from `$gsd-new-miles
 ## Next Milestone Queue (after v1.3)
 
 - **Recommended next milestone after Adopter Trust Proof:** inbound stability lock (`mailglass_inbound` contract + compatibility/deprecation posture hardening).
+- **Convergence posture:** Mailglass is no longer in broad feature-growth mode. Core `mailglass` and `mailglass_admin` are effectively product-complete for the original transactional-email framework thesis; `mailglass_inbound` is feature-credible but needs one dedicated stability-lock milestone before it should carry the same long-lived compatibility posture.
+- **Done-enough target:** After inbound stability lock, default future posture should be maintenance, release hygiene, docs accuracy, and narrow adopter-pull work. Do not keep asking whether the project is "done" at every milestone boundary; assume the library is approaching done unless a concrete adopter need or contract gap says otherwise.
 - Follow-on ordering:
-  1) synthetic inbound dev tooling (dev-only, tenant-safe, provenance-stamped),
-  2) Cloudflare forwarding recipe docs or narrow pull-driven ecosystem integration slices,
-  3) re-evaluate `gen_smtp` listener only with strong adopter pull.
+  1) cut the release line that follows inbound stability lock (`mailglass_inbound` `1.0.0` if contract lock is real; otherwise one final explicit `0.x` confidence release),
+  2) enter quiet maintenance / "silence on the wire" mode by default,
+  3) consider synthetic inbound dev tooling only if it has clear adopter pull and strict dev-only tenant/provenance safety,
+  4) consider Cloudflare forwarding recipe docs or narrow ecosystem integration slices only as pull-driven strategic work,
+  5) re-evaluate `gen_smtp` listener only with strong adopter pull and a separate threat/ops model.
 - Guardrail remains: do not auto-promote `SEED-003-ecosystem-integrations` or transport-expansion tails as default next work.
 
 ## Core Value
@@ -281,6 +285,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-20 | Domain vocabulary locked to `prompts/mailer-domain-language-deep-research.md` | Borrowed from battle-tested libs; avoid "Email" or "Status" as ambiguous primitives | ✓ Held v0.1 |
 | D-21 | Adapter call between Multi#1 and Multi#2 (never inside transaction) | Postgres pool starvation prevention | ✓ Held v0.1 — Phase 3 Outbound enforces |
 | D-22 | The first `mailglass_inbound` milestone stays narrow: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional execution; Conductor/Mailgun/SES/SMTP are deferred | Protect the locked `v1.x` core and make the first sibling-package expansion supportable for a one-person maintainer | ✓ Validated v1.1 — narrow scope held; Conductor / Mailgun / SES / `gen_smtp` remained deliberately deferred |
+| D-23 | Post-v1.3 project posture shifts from broad capability expansion to convergence, stability, and maintenance by default | Core/admin have crossed the original product-complete threshold; endless polish or provider breadth has diminishing returns unless tied to adopter pull | — Pending v1.4 — next milestone should lock inbound contract posture, then cut an appropriate release and treat future work as maintenance or deliberately strategic |
 
 ## Evolution
 

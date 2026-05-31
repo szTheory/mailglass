@@ -100,6 +100,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 ### Roadmap Evolution
 
 - Phase 62 added: Close gap: EVID-02/EVID-03 — current-release trust proof
+- 2026-05-31 convergence posture recorded: after the recommended inbound stability lock, default future planning should move toward maintenance / quiet release hygiene rather than broad feature expansion. See `.planning/threads/project-convergence-posture.md`.
 
 ### Pending Todos
 
@@ -126,6 +127,11 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
   - **single next milestone pick:** Adopter Trust Proof (golden reference host app)
   - **ranking after that:** inbound stability lock -> synthetic inbound dev tooling -> Cloudflare forwarding recipe docs / narrow ecosystem slice -> re-evaluate `gen_smtp` listener only with clear adopter pull
   - **diminishing-returns read:** major expansion should slow after trust proof + inbound contract posture hardening
+- 2026-05-31 post-v1.3 convergence decision:
+  - **current read:** core/admin are effectively product-complete for the original thesis; inbound is feature-credible but not yet contract-stable enough for the same compatibility posture.
+  - **next milestone pick:** inbound stability lock, scoped to public/internal API inventory, compatibility/deprecation posture, docs guarantees, and executable stability checks.
+  - **after that:** make a release-position decision (`mailglass_inbound` `1.0.0` if the contract lock is real, otherwise one final explicit `0.x` confidence release) and default to maintenance / "silence on the wire" rather than more broad roadmap growth.
+  - **guardrail:** do not reopen "are we done?" every milestone; future sessions should assume convergence unless a concrete adopter need or contract gap says otherwise.
 - Next step: `/gsd-new-milestone` to open the post-v1.2 planning cycle using the recommended ordering above.
 
 ## Performance Metrics
@@ -139,4 +145,4 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Start the next milestone with /gsd-new-milestone, using the convergence posture in `.planning/threads/project-convergence-posture.md`.
