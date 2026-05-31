@@ -4,6 +4,13 @@
 the stable operator surface. It documents the semantic seams adopters can rely
 on without treating LiveView, component, or DOM details as stable.
 
+Stable guarantees for this package are inventory-defined in
+[`mailglass_admin/docs/api_stability.md`](./api_stability.md). When this page
+references core or inbound-adjacent semantics, canonical contract truth lives
+in [`docs/api_stability.md`](../../docs/api_stability.md) and
+[`mailglass_inbound/docs/api_stability.md`](../../mailglass_inbound/docs/api_stability.md),
+with executable contract enforcement in `mix verify.stability_contract`.
+
 ## Stable seams
 
 The stable admin seams are:
@@ -86,7 +93,7 @@ for records that predate execution-lineage capture.
 
 ## Intentionally internal
 
-The following remain intentionally internal for `v1.x`:
+The following remain intentionally internal implementation detail for `v1.x`:
 
 - LiveView modules
 - component modules
