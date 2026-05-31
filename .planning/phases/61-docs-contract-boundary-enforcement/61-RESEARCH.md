@@ -216,17 +216,15 @@ issues =
 | A1 | Adding explicit “implementation detail” framing token near internal names is the lowest-noise exception strategy. | Common Pitfalls | Could over/under-block until tuned. |
 | A2 | CI false positives are likely if token checks expand without staged calibration. | Common Pitfalls | Planner may underestimate stabilization wave. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **How broad should new trust-doc path coverage be in first cut?**
    - What we know: D-04 explicitly prefers broader trust-entry coverage and names likely docs. [VERIFIED: codebase grep]
-   - What's unclear: Whether to include all named candidates immediately or stage in two waves for noise control. [ASSUMED]
-   - Recommendation: Wave 1 include all D-04 named files, Wave 2 tune tokens based on first CI pass outcomes. [ASSUMED]
+   - Resolution: Include all D-04 named candidates in the first implementation cut: `reference/host_app/README.md`, `reference/host_app/SCOPE.md`, `MAINTAINING.md`, `guides/webhooks.md`, `guides/webhook-troubleshooting.md`, and `mailglass_admin/docs/operator-trust.md`. Stage them as two Wave 1 doc-update plans (`reference/host_app` and broader trust-entry docs), then enforce the complete surface in the Wave 2 checker plan. [RESOLVED]
 
 2. **Where should non-contract internal-name allowance be encoded?**
    - What we know: D-08 requires allowance with explicit non-contract framing and canonical links. [VERIFIED: codebase grep]
-   - What's unclear: Whether allowance should be in Mix task token list only, ExUnit regex assertions only, or both. [ASSUMED]
-   - Recommendation: Encode minimum policy in Mix task and pin exemplar phrasing in ExUnit tests. [ASSUMED]
+   - Resolution: Encode the minimum deterministic policy in `mix mailglass.docs.check` with path-specific required/forbidden tokens and trust-boundary overreach detection, then pin exemplar canonical-link and non-contract phrasing in ExUnit docs-contract tests. This keeps broad enforcement in the existing Mix task while preserving precise regression examples in tests. [RESOLVED]
 
 ## Environment Availability
 
