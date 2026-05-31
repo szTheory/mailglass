@@ -6,6 +6,14 @@ Maintained trust-proof host artifact (not a fixture seed)
 trust journey. It exists to prove clean-checkout bootstrap behavior and public
 Mailglass integration shape.
 
+This reference host is usage-proof evidence only. It is not API-contract truth.
+Stable guarantees route to `docs/api_stability.md`,
+`mailglass_admin/docs/api_stability.md`, `mailglass_inbound/docs/api_stability.md`,
+and `mix verify.stability_contract`.
+
+Route names, checkpoint details, and trust-runner implementation reachability
+are implementation details unless those stability inventories say otherwise.
+
 Scope contract: see reference/host_app/SCOPE.md
 
 `test/example remains fixture-only`
