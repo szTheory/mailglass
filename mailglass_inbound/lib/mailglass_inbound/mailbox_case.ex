@@ -1,4 +1,5 @@
 defmodule MailglassInbound.MailboxCase do
+  @moduledoc since: "0.2.0"
   @moduledoc """
   The shipped `ExUnit.CaseTemplate` adopters `use` to test inbound mailboxes
   (ITEST-05) — the inbound analog of outbound's `Mailglass.MailerCase`, and the

@@ -1,4 +1,5 @@
 defmodule MailglassInbound.TestAssertions do
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Inbound test assertions (ITEST-01..04) — the inbound mirror of
   `Mailglass.TestAssertions`.
@@ -80,7 +81,7 @@ defmodule MailglassInbound.TestAssertions do
 
       assert_inbound_received()
   """
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_received do
     quote do
       assert_received {:inbound, _msg, _outcome, _route},
@@ -104,7 +105,7 @@ defmodule MailglassInbound.TestAssertions do
 
       assert_inbound_received(fn msg -> msg.tenant_id == "acme" end)
   """
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_received({:%{}, _, _} = pattern) do
     # Style 3: struct/map pattern — caller passes `%{subject: X}` without quoting.
     quote do
@@ -113,7 +114,7 @@ defmodule MailglassInbound.TestAssertions do
     end
   end
 
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_received({:fn, _, _} = fun_ast) do
     # Style 4: predicate — `fn msg -> ... end`.
     quote do
@@ -127,7 +128,7 @@ defmodule MailglassInbound.TestAssertions do
     end
   end
 
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_received({:&, _, _} = fun_ast) do
     # Style 4 (capture form): predicate — `&pred/1`. Mirrors the `fn` clause so a
     # captured function does not fall through to the keyword clause and crash its
@@ -143,7 +144,7 @@ defmodule MailglassInbound.TestAssertions do
     end
   end
 
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_received(params) do
     # Style 2: keyword list. Matched at runtime by __match_keyword__/2.
     quote do
@@ -219,7 +220,7 @@ defmodule MailglassInbound.TestAssertions do
   Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
   the matched tuple), so drive one message per outcome assertion.
   """
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_accepted do
     quote do: MailglassInbound.TestAssertions.__assert_outcome__(:accept)
   end
@@ -230,7 +231,7 @@ defmodule MailglassInbound.TestAssertions do
   Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
   the matched tuple), so drive one message per outcome assertion.
   """
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_ignored do
     quote do: MailglassInbound.TestAssertions.__assert_outcome__(:ignore)
   end
@@ -241,7 +242,7 @@ defmodule MailglassInbound.TestAssertions do
   Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
   the matched tuple), so drive one message per outcome assertion.
   """
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_rejected do
     quote do: MailglassInbound.TestAssertions.__assert_outcome__(:reject)
   end
@@ -252,7 +253,7 @@ defmodule MailglassInbound.TestAssertions do
   Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
   the matched tuple), so drive one message per outcome assertion.
   """
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_bounced do
     quote do: MailglassInbound.TestAssertions.__assert_outcome__(:bounce)
   end
@@ -280,7 +281,7 @@ defmodule MailglassInbound.TestAssertions do
   Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
   the matched tuple), so drive one message per routing assertion.
   """
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_routed_to(expected_mailbox) do
     quote do
       expected = unquote(expected_mailbox)
@@ -300,7 +301,7 @@ defmodule MailglassInbound.TestAssertions do
   Reads the oldest unconsumed capture (`assert_received` is FIFO and consumes
   the matched tuple), so drive one message per routing assertion.
   """
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_inbound_no_match do
     quote do
       assert_received {:inbound, _msg, _outcome, route},
@@ -316,7 +317,7 @@ defmodule MailglassInbound.TestAssertions do
   @doc """
   Asserts that NO inbound message was captured in the current test process.
   """
-  @doc since: "0.1.0"
+  @doc since: "0.2.0"
   defmacro assert_no_inbound_received do
     quote do
       refute_received {:inbound, _msg, _outcome, _route}
