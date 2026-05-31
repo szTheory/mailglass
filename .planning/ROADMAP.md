@@ -99,6 +99,14 @@ Plans:
 4. Testing docs make `MailboxCase`, `Test.Ingress`, process-local assertions, and one-assertion-per-drive behavior clear.
 5. Admin/operator trust docs do not imply replay as fresh receive, silent reroute, UI contract, or stable DOM/component APIs.
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] `65-01-PLAN.md` — Keep the inbound README as the canonical adoption lane and route compatibility posture through the active guide topology.
+- [ ] `65-02-PLAN.md` — Tighten operator, testing, and admin trust docs around shipped semantics and explicit non-contract boundaries.
+- [ ] `65-03-PLAN.md` — Extend inbound docs-contract and Tier 1 docs checks to lock the adoption and compatibility story.
+- [ ] `65-04-PLAN.md` — Extend inbound docs-contract and Tier 1 docs checks to lock operator, testing, and admin trust wording.
+
 #### Phase 66: Release Position Decision
 
 **Goal:** Decide and document whether `mailglass_inbound` is ready for `1.0.0` or needs one final explicit `0.x` confidence release.
