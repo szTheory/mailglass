@@ -5,7 +5,8 @@ defmodule Mailglass.DocsCheckTaskTest do
   @tracked_paths [
     "README.md",
     "guides/preview.md",
-    "mailglass_admin/README.md"
+    "mailglass_admin/README.md",
+    "MAINTAINING.md"
   ]
 
   setup do
@@ -52,6 +53,22 @@ defmodule Mailglass.DocsCheckTaskTest do
   test "blocks unqualified cross-client parity wording in admin README" do
     admin_path = "mailglass_admin/README.md"
     File.write!(admin_path, File.read!(admin_path) <> "\n\nCross-client parity for every client.\n")
+
+    assert_raise Mix.Error, ~r/Delivery blocked/, fn ->
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Mailglass.Docs.Check.run([])
+      end)
+    end
+  end
+
+  test "blocks trust-runner internals being presented as stable public contract" do
+    maintaining_path = "MAINTAINING.md"
+
+    File.write!(
+      maintaining_path,
+      File.read!(maintaining_path) <>
+        "\n\nMix.Tasks.Mailglass.Trust.Run is a stable public API guarantee.\n"
+    )
 
     assert_raise Mix.Error, ~r/Delivery blocked/, fn ->
       capture_io(:stderr, fn ->
