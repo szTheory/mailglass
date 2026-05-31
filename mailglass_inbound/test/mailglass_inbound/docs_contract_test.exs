@@ -143,6 +143,96 @@ defmodule MailglassInbound.DocsContractTest do
     refute stability =~ "public worker contract"
   end
 
+  test "stability docs pin the Phase 63 semantics-first inbound inventory" do
+    stability = File.read!(@stability_path)
+
+    for token <- [
+          "## Contract Posture",
+          "### `stable`",
+          "### `testing`",
+          "### `internal`",
+          "### `deferred`",
+          "ExDoc visibility",
+          "module reachability",
+          "do not define the contract",
+          "MailglassInbound.Ingress.Plug",
+          "provider: :postmark",
+          "provider: :sendgrid",
+          "provider: :mailgun",
+          "provider: :ses",
+          "verify before tenant",
+          "canonical normalized row plus raw evidence row persisted before mailbox execution",
+          "duplicate acknowledgement from durable receive truth",
+          "replay remaining distinct from fresh provider receipt",
+          "mix mailglass.inbound.doctor",
+          "mix mailglass.inbound.replay",
+          "mix mailglass.inbound.prune",
+          "MailglassInbound.MIMEError",
+          "MailglassInbound.SignatureError",
+          "MailglassInbound.S3FetchError"
+        ] do
+      assert stability =~ token
+    end
+
+    for telemetry_family <- [
+          "[:mailglass_inbound, :ingress, :request",
+          "[:mailglass_inbound, :route, :match",
+          "[:mailglass_inbound, :persist, :record",
+          "[:mailglass_inbound, :execution, :run",
+          "[:mailglass_inbound, :ingress, :rate_limit",
+          "[:mailglass_inbound, :ingress, :suppression_flag",
+          "[:mailglass_inbound, :prune, :sweep"
+        ] do
+      assert stability =~ telemetry_family
+    end
+
+    for internal_token <- [
+          "MailglassInbound.Ingress.Provider",
+          "MailglassInbound.Ingress.Providers.Postmark",
+          "MailglassInbound.Ingress.Providers.Sendgrid",
+          "MailglassInbound.Ingress.Providers.Mailgun",
+          "MailglassInbound.Ingress.Providers.SES",
+          "MailglassInbound.Internal.Doctor",
+          "MailglassInbound.Internal.Replay",
+          "MailglassInbound.Internal.Prune",
+          "MailglassInbound.Execution.Worker",
+          "MailglassInbound.Prune.Worker",
+          "MailglassInbound.Router.Route",
+          "queue names",
+          "worker args",
+          "direct Oban job shapes",
+          "admin or operator UI implementation details"
+        ] do
+      assert stability =~ internal_token
+    end
+
+    for deferred_token <- [
+          "public replay API",
+          "public replay rerouting controls",
+          "public provider extension API",
+          "public worker or queue contracts",
+          "matcher expansion",
+          "lifecycle callbacks",
+          "multi-route fan-out",
+          "synthetic inbound development UI",
+          "gen_smtp",
+          "ecosystem integrations"
+        ] do
+      assert stability =~ deferred_token
+    end
+
+    for forbidden_claim <- [
+          "stable provider module APIs",
+          "public provider behaviour",
+          "stable worker or queue contracts",
+          "replay as fresh receive",
+          "ExDoc visibility defines stability",
+          "ExDoc visibility defines the contract"
+        ] do
+      refute stability =~ forbidden_claim
+    end
+  end
+
   test "operator trust docs keep replay separate from fresh receive and public ui claims" do
     operator_trust = File.read!(@operator_trust_path)
 
