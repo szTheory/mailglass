@@ -1,4 +1,5 @@
 defmodule MailglassInbound.Mailbox do
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Behaviour for adopter-defined inbound mailboxes.
 
@@ -21,6 +22,7 @@ defmodule MailglassInbound.Mailbox do
   @type outcome_reason :: term()
   @type outcome :: :accept | :ignore | {:reject, outcome_reason()} | {:bounce, outcome_reason()}
 
+  @doc since: "0.1.0"
   @callback process(InboundMessage.t()) :: outcome()
 
   @spec valid_outcome?(term()) :: boolean()

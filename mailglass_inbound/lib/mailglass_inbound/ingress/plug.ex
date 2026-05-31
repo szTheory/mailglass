@@ -1,4 +1,5 @@
 defmodule MailglassInbound.Ingress.Plug do
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Public inbound ingress plug for `mailglass_inbound`.
 

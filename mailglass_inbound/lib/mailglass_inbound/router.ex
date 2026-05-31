@@ -1,4 +1,5 @@
 defmodule MailglassInbound.Router do
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Thin router DSL for compiling inbound mailbox routes into pure route data.
 
@@ -36,6 +37,7 @@ defmodule MailglassInbound.Router do
     ]
   ]
 
+  @doc since: "0.1.0"
   defmacro __using__(_opts) do
     quote do
       import MailglassInbound.Router, only: [route: 2]
@@ -45,6 +47,7 @@ defmodule MailglassInbound.Router do
     end
   end
 
+  @doc since: "0.1.0"
   defmacro route(mailbox, opts) do
     expanded_mailbox = Macro.expand(mailbox, __CALLER__)
     {evaluated_opts, _binding} = Code.eval_quoted(opts, [], __CALLER__)

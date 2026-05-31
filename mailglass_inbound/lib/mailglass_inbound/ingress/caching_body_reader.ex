@@ -1,4 +1,5 @@
 defmodule MailglassInbound.Ingress.CachingBodyReader do
+  @moduledoc since: "0.1.0"
   @moduledoc """
   Package-local `Plug.Parsers` body reader for inbound provider verification.
 
@@ -6,6 +7,7 @@ defmodule MailglassInbound.Ingress.CachingBodyReader do
   can verify provider authenticity before any tenant or persistence work runs.
   """
 
+  @doc since: "0.1.0"
   @spec read_body(Plug.Conn.t(), keyword()) ::
           {:ok, binary(), Plug.Conn.t()}
           | {:more, binary(), Plug.Conn.t()}
