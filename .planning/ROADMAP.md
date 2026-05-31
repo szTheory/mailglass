@@ -65,7 +65,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 - [x] Phase 59: CI Trust Lanes + Checkpoint Evidence (0/2 plans) (completed 2026-05-28)
 - [x] Phase 60: Release Trust Gate + Drift Prevention (4/4 plans) (completed 2026-05-31)
 - [x] Phase 61: Docs Contract Boundary Enforcement (0/3 plans) (completed 2026-05-31)
-- [ ] Phase 62: Close gap: EVID-02/EVID-03 — current-release trust proof (0/1 plans) (INSERTED)
+- [x] Phase 62: Close gap: EVID-02/EVID-03 — current-release trust proof (0/1 plans) (INSERTED) (completed 2026-05-31)
 
 ### Phase Details
 
@@ -152,10 +152,10 @@ Success criteria:
 **Goal:** Make the clean-baseline and published-version trust proof validate the current sibling Hex release line in `reference/host_app` instead of the stale 1.2.0/0.2.0 lock.
 **Requirements**: EVID-02, EVID-03, OPS-02
 **Depends on:** Phase 61
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 62-01-PLAN.md — Align reference-host release-line truth and harden the version-specific clean-baseline guard
+- [x] 62-01-PLAN.md — Align reference-host release-line truth and harden the version-specific clean-baseline guard
 
 </details>
 
