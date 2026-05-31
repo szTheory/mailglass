@@ -56,9 +56,7 @@ defmodule Mailglass.StabilityContractTest do
       assert mixfile =~ "\"verify.stability_contract\""
       assert mixfile =~ "\"verify.support_contract.core\""
       assert mixfile =~ "cmd --cd mailglass_admin mix verify.support_contract.admin"
-
-      assert mixfile =~
-               "cmd --cd mailglass_inbound mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
+      assert mixfile =~ "cmd --cd mailglass_inbound mix verify.support_contract.inbound"
 
       assert mixfile =~ "compile --no-optional-deps --warnings-as-errors"
     end

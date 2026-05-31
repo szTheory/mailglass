@@ -276,7 +276,7 @@ defmodule Mailglass.MixProject do
       "verify.stability_contract": [
         "verify.support_contract.core",
         "cmd --cd mailglass_admin mix verify.support_contract.admin",
-        "cmd --cd mailglass_inbound mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors",
+        "cmd --cd mailglass_inbound mix verify.support_contract.inbound",
         "mailglass.docs.check",
         "compile --no-optional-deps --warnings-as-errors"
       ],

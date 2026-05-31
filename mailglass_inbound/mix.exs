@@ -31,9 +31,25 @@ defmodule MailglassInbound.MixProject do
     ]
   end
 
+  def cli do
+    [
+      preferred_envs: [
+        "verify.support_contract.inbound": :test,
+        "verify.stability_contract": :test
+      ]
+    ]
+  end
+
   defp aliases do
     [
-      test: [&configure_test_swoosh/1, "test"]
+      test: [&configure_test_swoosh/1, "test"],
+      "verify.docs.contract.inbound": [
+        "test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
+      ],
+      "verify.support_contract.inbound": [
+        "test test/mailglass_inbound/docs_contract_test.exs test/mailglass_inbound/stability_contract_test.exs --warnings-as-errors"
+      ],
+      "verify.stability_contract": ["verify.support_contract.inbound"]
     ]
   end
 
