@@ -13,7 +13,7 @@
 - ✅ **v1.0 Stability Lock** — Phases 35-38 (shipped 2026-05-06) — see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Inbound Core Slice** — Phases 39-44 (shipped 2026-05-06) — see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26) — see [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
-- 🚧 **v1.3 Adopter Trust Proof** — Phases 52, 57-61 (planned 2026-05-27)
+- 🚧 **v1.3 Adopter Trust Proof** — Phases 52, 57-62 (planned 2026-05-27)
 - 📋 **v1.4 Release Discipline & Repo Truth** (backlog seed) — repo-hygiene tooling already landed via the `fd4f3c9` reconciliation merge; requirements parked in [backlog/v1.4-release-discipline-repo-truth.md](backlog/v1.4-release-discipline-repo-truth.md)
 
 ## Phases
@@ -51,7 +51,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 </details>
 
 <details>
-<summary>🚧 v1.3 Adopter Trust Proof (Phases 52, 57-61) — PLANNED 2026-05-27</summary>
+<summary>🚧 v1.3 Adopter Trust Proof (Phases 52, 57-62) — PLANNED 2026-05-27</summary>
 
 **Goal:** Prove adoption confidence with one maintained Phoenix reference host app and deterministic trust evidence across local, CI, and published-version release checks.
 
@@ -65,6 +65,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 - [x] Phase 59: CI Trust Lanes + Checkpoint Evidence (0/2 plans) (completed 2026-05-28)
 - [x] Phase 60: Release Trust Gate + Drift Prevention (4/4 plans) (completed 2026-05-31)
 - [x] Phase 61: Docs Contract Boundary Enforcement (0/3 plans) (completed 2026-05-31)
+- [ ] Phase 62: Close gap: EVID-02/EVID-03 — current-release trust proof (0/1 plans) (INSERTED)
 
 ### Phase Details
 
@@ -145,6 +146,16 @@ Success criteria:
 1. Reference docs explicitly state usage-proof-only boundary.
 2. Canonical stability contract documents and tests are linked at each trust-journey surface.
 3. Docs contract verification blocks language that implies reference internals are public API guarantees.
+
+### Phase 62: Close gap: EVID-02/EVID-03 — current-release trust proof
+
+**Goal:** Make the clean-baseline and published-version trust proof validate the current sibling Hex release line in `reference/host_app` instead of the stale 1.2.0/0.2.0 lock.
+**Requirements**: EVID-02, EVID-03, OPS-02
+**Depends on:** Phase 61
+**Plans:** 1 plan
+
+Plans:
+- [ ] 62-01-PLAN.md — Align reference-host release-line truth and harden the version-specific clean-baseline guard
 
 </details>
 
