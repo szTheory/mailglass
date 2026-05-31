@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Adopter Trust Proof
-status: milestone_complete
-last_updated: 2026-05-31T14:57:32.697Z
+status: Not planned
+last_updated: "2026-05-31T16:24:39.313Z"
 last_activity: 2026-05-31
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 16
-  completed_plans: 22
-  percent: 100
-stopped_at: Milestone complete (Phase 61 was final phase)
+  total_phases: 7
+  completed_phases: 5
+  total_plans: 17
+  completed_plans: 16
+  percent: 71
 ---
 
 # Project State
@@ -21,13 +20,13 @@ stopped_at: Milestone complete (Phase 61 was final phase)
 See: .planning/PROJECT.md (updated 2026-05-31 after Phase 61 completion)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Milestone complete
+**Current focus:** Phase 62 closure planning
 
 ## Current Position
 
-Phase: 61
+Phase: 62
 Plan: Not started
-Status: Milestone complete
+Status: Not planned
 Last activity: 2026-05-31
 
 ## v1.3 Milestone Intent
@@ -95,6 +94,10 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 62 added: Close gap: EVID-02/EVID-03 — current-release trust proof
+
 ### Pending Todos
 
 - Resolve post-publish smoke hackney dependency failure (`#25` captured to `.planning/todos/pending/2026-05-27-resolve-post-publish-smoke-hackney-dependency-failure.md`; active CI signal remains `#32`)
@@ -105,6 +108,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Session Continuity
 
+- Phase 62 context gathered on 2026-05-31 in assumptions mode. Resume from `.planning/phases/62-close-gap-evid-02-evid-03-current-release-trust-proof/62-CONTEXT.md`; next step is `$gsd-plan-phase 62`.
 - Phase 61 completed on 2026-05-31. Plans `61-01`, `61-02`, and `61-03` executed; `61-VERIFICATION.md` passed with 9/9 must-haves verified. v1.3 is now marked milestone_complete; next step is milestone audit/closeout, not re-executing Phase 61.
 - v0.1 through v1.0 archived in `.planning/milestones/v0.1-*` through `.planning/milestones/v1.0-*`.
 - v1.1 archived in `.planning/milestones/v1.1-ROADMAP.md`, `.planning/milestones/v1.1-REQUIREMENTS.md`, `.planning/milestones/v1.1-MILESTONE-AUDIT.md`, `.planning/milestones/v1.1-MILESTONE-AUDIT-CLOSEOUT.md`, and the per-phase tree under `.planning/milestones/v1.1-phases/`.
