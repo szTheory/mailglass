@@ -1,48 +1,50 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.3
-milestone_name: Adopter Trust Proof
-status: Awaiting next milestone
-last_updated: "2026-05-31T17:13:23.367Z"
-last_activity: 2026-05-31 — Milestone v1.3 completed and archived
+milestone: v1.4
+milestone_name: Inbound Stability Lock
+status: planning
+last_updated: "2026-05-31T17:28:20.946Z"
+last_activity: 2026-05-31
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 18
-  completed_plans: 18
-  percent: 100
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-31 after v1.3 milestone closeout)
+See: .planning/PROJECT.md (updated 2026-05-31 after opening v1.4 Inbound Stability Lock)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Planning next milestone
+**Current focus:** v1.4 Inbound Stability Lock
 
 ## Current Position
 
-Phase: Milestone v1.3 complete
+Phase: 63 — Inbound Contract Inventory Reconciliation (not planned)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-05-31 — Milestone v1.3 completed and archived
+Status: Roadmap defined; ready for phase discussion/planning
+Last activity: 2026-05-31 — Milestone v1.4 requirements and roadmap defined
 
-## v1.3 Milestone Intent
+## v1.4 Milestone Intent
 
-- Establish one maintained Phoenix reference host app demonstrating install -> preview -> send -> webhook ingest -> operator troubleshooting
-- Add a clean-baseline CI journey plus published-version trust proof that validates that flow
-- Keep docs explicit that the reference app demonstrates usage, while API contract truth remains in core contract docs/tests
-- Require one deterministic trust runner and checkpoint artifacts shared by local, CI, and release proof paths
-- Preserve release-cadence rule for milestone closeout and block trust claims if smoke reliability debt remains unresolved
+- Lock `mailglass_inbound` into the same adopter-safe contract posture as core/admin without expanding feature scope.
+- Reconcile the stable/testing/internal/deferred inbound inventory against shipped behavior.
+- Harden contract verification through compiled-doc metadata, docs drift checks, closed atom/type proof, and root `verify.stability_contract`.
+- Align inbound adoption, compatibility/deprecation, operator, testing, and admin trust docs around one precise release-ready story.
+- Make an explicit release-position decision: `mailglass_inbound` `1.0.0` if the lock is real; otherwise one final explicit `0.x` confidence release.
 
-## v1.3 Preflight Locks
+## v1.4 Preflight Locks
 
-- Hybrid trust model locked: one thin committed reference host app + one clean-baseline generated trust lane
-- Out-of-scope lock: no provider-matrix broadening, no `gen_smtp` transport expansion, no `SEED-003` auto-promotion in v1.3
-- Deterministic ingress/operator proof lock: signed verify-first webhook path + one scripted non-happy-path diagnosis
-- Risk carry-forward lock: active post-publish smoke hackney dependency failure is an explicit milestone prerequisite, not deferred cleanup
+- This is a stability/release-position milestone, not a feature-growth milestone.
+- No matcher expansion, lifecycle callbacks, public replay API, provider extension API, worker/queue contract, synthetic inbound dev UI, ecosystem integrations, or `gen_smtp` listener work.
+- Stable provider posture is documented through `MailglassInbound.Ingress.Plug` semantics/options, not public provider module APIs.
+- Operator CLI semantics may be stable; internal replay/prune/doctor modules stay internal.
+- Admin UI semantics may be stable; DOM, LiveView modules, components, and CSS remain internal.
+- Future sessions should assume convergence after this milestone unless a concrete adopter need or contract gap says otherwise.
 
 ## Decisions
 
@@ -63,11 +65,10 @@ Last activity: 2026-05-31 — Milestone v1.3 completed and archived
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 52 | Trust Scope Lock + Reference Host Baseline | Thin maintained host app and strict non-goals |
-| 53 | Deterministic End-to-End Trust Journey | One reproducible runner with signed ingress + operator path |
-| 54 | CI Trust Lanes + Checkpoint Artifacts | Required repo-head + clean-baseline trust gates |
-| 55 | Docs Boundary + Contract Positioning | Usage proof vs contract truth enforcement |
-| 56 | Drift Prevention + Release-Gate Integration | Published-version trust proof + smoke debt closure |
+| 63 | Inbound Contract Inventory Reconciliation | Canonical stable/testing/internal/deferred inventory |
+| 64 | Contract Verification Hardening | Compiled-doc, docs-contract, and root stability proof gates |
+| 65 | Compatibility, Docs, and DX Lock | Adoption path, operator wording, testing docs, and compatibility/deprecation posture |
+| 66 | Release Position Decision | Evidence-backed `1.0.0` vs final `0.x` decision and release notes |
 
 ## Performance Metrics
 
@@ -132,7 +133,11 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
   - **next milestone pick:** inbound stability lock, scoped to public/internal API inventory, compatibility/deprecation posture, docs guarantees, and executable stability checks.
   - **after that:** make a release-position decision (`mailglass_inbound` `1.0.0` if the contract lock is real, otherwise one final explicit `0.x` confidence release) and default to maintenance / "silence on the wire" rather than more broad roadmap growth.
   - **guardrail:** do not reopen "are we done?" every milestone; future sessions should assume convergence unless a concrete adopter need or contract gap says otherwise.
-- Next step: `/gsd-new-milestone` to open the post-v1.2 planning cycle using the recommended ordering above.
+- 2026-05-31 v1.4 milestone opened:
+  - **milestone:** Inbound Stability Lock
+  - **requirements:** LOCK-01..03, PROOF-01..03, DX-01..04, REL-01..03
+  - **phases:** 63-66
+  - **next step:** discuss/plan Phase 63 before editing inbound source/docs.
 
 ## Performance Metrics
 
@@ -145,4 +150,5 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone, using the convergence posture in `.planning/threads/project-convergence-posture.md`.
+- `$gsd-discuss-phase 63` — clarify the inbound contract inventory reconciliation approach.
+- `$gsd-plan-phase 63` — skip discussion and plan Phase 63 directly.

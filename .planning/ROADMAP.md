@@ -14,7 +14,7 @@
 - ✅ **v1.1 Inbound Core Slice** — Phases 39-44 (shipped 2026-05-06) — see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26) — see [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 - ✅ **v1.3 Adopter Trust Proof** — Phases 52, 57-62 (shipped 2026-05-31) — see [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
-- 📋 **v1.4 Release Discipline & Repo Truth** (backlog seed) — repo-hygiene tooling already landed via the `fd4f3c9` reconciliation merge; requirements parked in [backlog/v1.4-release-discipline-repo-truth.md](backlog/v1.4-release-discipline-repo-truth.md)
+- ◆ **v1.4 Inbound Stability Lock** — Phases 63-66 (planning) — lock `mailglass_inbound` contract posture and make the release-position decision.
 
 ## Phases
 
@@ -29,6 +29,73 @@
 - [x] Phase 44: Async Adoption Closeout Reconciliation (2/2 plans) — completed 2026-05-06
 
 Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md).
+
+</details>
+
+<details open>
+<summary>◆ v1.4 Inbound Stability Lock (Phases 63-66) — PLANNING</summary>
+
+- [ ] Phase 63: Inbound Contract Inventory Reconciliation — canonical stable/testing/internal/deferred inventory
+- [ ] Phase 64: Contract Verification Hardening — compiled-doc, docs-contract, and root stability proof gates
+- [ ] Phase 65: Compatibility, Docs, and DX Lock — adoption path, operator wording, testing docs, and compatibility/deprecation posture
+- [ ] Phase 66: Release Position Decision — evidence-backed `1.0.0` vs final `0.x` decision and release notes
+
+**Goal:** Lock `mailglass_inbound` into a stable adopter contract by defining its public API, compatibility policy, docs guarantees, and executable stability checks without expanding feature scope.
+
+**Requirements:** LOCK-01..03, PROOF-01..03, DX-01..04, REL-01..03
+
+**Non-goals:** No matcher expansion, lifecycle callbacks, public replay API, provider extension API, worker/queue contract, synthetic inbound dev UI, ecosystem integrations, or `gen_smtp` listener work.
+
+### Phase Details
+
+#### Phase 63: Inbound Contract Inventory Reconciliation
+
+**Goal:** Reconcile `mailglass_inbound/docs/api_stability.md` against shipped behavior so adopters can tell stable semantics from reachable implementation details.
+
+**Requirements:** LOCK-01, LOCK-02, LOCK-03
+
+**Success criteria:**
+1. `mailglass_inbound/docs/api_stability.md` names stable runtime, testing, operator, telemetry, and error-contract seams without promoting internal modules.
+2. Existing provider support is documented through `MailglassInbound.Ingress.Plug` behavior/options, not as public provider module APIs.
+3. Internal and deferred lists explicitly include replay internals, worker/queue details, route structs, provider modules, matcher expansion, lifecycle callbacks, fan-out, synthetic UI, `gen_smtp`, and ecosystem integrations.
+4. The inventory aligns with core/admin language: stable means semantic contract, not ExDoc visibility or module reachability.
+
+#### Phase 64: Contract Verification Hardening
+
+**Goal:** Make the inbound stability contract executable through compiled-doc metadata, docs drift checks, and root verification wiring.
+
+**Requirements:** PROOF-01, PROOF-02, PROOF-03
+
+**Success criteria:**
+1. A package-local inbound stability contract test asserts `@moduledoc since:` / `@doc since:` metadata for stable modules and public functions/macros/callbacks.
+2. Closed inbound atom/type sets remain locked to docs through explicit tests.
+3. Inbound docs-contract tests fail on public replay API claims, stable worker/queue claims, provider-module extension claims, replay-as-fresh wording, and stale release-line claims.
+4. Root `mix verify.stability_contract` includes the inbound contract lane and fails closed on drift.
+
+#### Phase 65: Compatibility, Docs, and DX Lock
+
+**Goal:** Give adopters one coherent inbound adoption, compatibility, testing, and operator-trust story.
+
+**Requirements:** DX-01, DX-02, DX-03, DX-04
+
+**Success criteria:**
+1. `mailglass_inbound/README.md` is the canonical adoption path and stays consistent with the install/provider/operator guides.
+2. Compatibility/deprecation guidance states stable inbound surfaces require deprecation bridge or major-version change, while internal/deferred surfaces may change without deprecation.
+3. Operator docs explain doctor/replay/prune commands, exit semantics, tenant guards, destructive confirmations, and replay-over-stored-truth semantics.
+4. Testing docs make `MailboxCase`, `Test.Ingress`, process-local assertions, and one-assertion-per-drive behavior clear.
+5. Admin/operator trust docs do not imply replay as fresh receive, silent reroute, UI contract, or stable DOM/component APIs.
+
+#### Phase 66: Release Position Decision
+
+**Goal:** Decide and document whether `mailglass_inbound` is ready for `1.0.0` or needs one final explicit `0.x` confidence release.
+
+**Requirements:** REL-01, REL-02, REL-03
+
+**Success criteria:**
+1. Full stability and release-blocking verification evidence exists for the inbound lock.
+2. The release decision is explicit: promote `mailglass_inbound` to `1.0.0` if the lock is real, otherwise cut one final `0.x` confidence release with "next is 1.0" framing.
+3. Changelog/release notes include adopter action required, verification commands, behavior changes, operator-impacting changes, and docs/stability posture.
+4. Project planning state records that broad feature-growth work remains blocked until the release-position decision is complete.
 
 </details>
 
@@ -90,3 +157,5 @@ Plans:
 ## Notes
 
 **Release-cadence rule (added 2026-05-06):** Each milestone closes with a release ceremony (Phase X.5 by convention). Don't start the next milestone implementation while previous-milestone work is unreleased. The 4-milestone-deep gap between v0.3.2 and 1.0.0 is the failure mode this rule prevents.
+
+**v1.4 convergence rule:** After inbound stability lock, default future planning to maintenance, release hygiene, docs truth, and narrow adopter-pull work. Do not open broad feature-growth work before the v1.4 release-position decision.
