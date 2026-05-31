@@ -66,16 +66,16 @@ MAILGLASS_LOCK_PATH="$LOCK_PATH" elixir -e '
 
   Enum.each(required, fn {name, expected_source, expected_version} ->
     case Map.get(lock, String.to_atom(name)) do
+      tuple when is_tuple(tuple) and tuple_size(tuple) < 3 ->
+        IO.puts(:stderr, "Hex-first violation: #{name} lock tuple malformed")
+        System.halt(1)
       tuple when is_tuple(tuple) and tuple_size(tuple) > 2 and elem(tuple, 0) == expected_source and elem(tuple, 2) == expected_version ->
         IO.puts("Hex-first OK: #{name} resolved via :hex (version: #{expected_version})")
       tuple when is_tuple(tuple) and tuple_size(tuple) > 2 and elem(tuple, 0) == expected_source ->
         IO.puts(:stderr, "Hex-first violation: #{name} expected #{expected_version}, got #{elem(tuple, 2)}")
         System.halt(1)
-      tuple when is_tuple(tuple) and tuple_size(tuple) > 0 ->
-        IO.puts(:stderr, "Hex-first violation: #{name} resolved via #{inspect(elem(tuple, 0))}, expected :hex")
-        System.halt(1)
       tuple when is_tuple(tuple) ->
-        IO.puts(:stderr, "Hex-first violation: #{name} lock tuple malformed")
+        IO.puts(:stderr, "Hex-first violation: #{name} resolved via #{inspect(elem(tuple, 0))}, expected :hex")
         System.halt(1)
       nil ->
         IO.puts(:stderr, "Hex-first violation: #{name} missing from #{lock_path}")

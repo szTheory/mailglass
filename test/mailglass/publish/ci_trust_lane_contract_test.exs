@@ -61,7 +61,7 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
       |> File.read!()
       |> String.replace(
         ~r/"mailglass": \{:hex, :mailglass, "1\.3\.0".*/,
-        ~s("mailglass": {},),
+        ~s("mailglass": {:hex},),
         global: false
       )
 
