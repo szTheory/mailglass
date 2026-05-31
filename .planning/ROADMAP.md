@@ -63,7 +63,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 **Plans:** 1/1 plans complete
 
 Plans:
-- [ ] `63-01-PLAN.md` — Reconcile the canonical inbound stability inventory and tighten the package-local docs-contract test around stable, internal, and deferred semantics.
+- [x] `63-01-PLAN.md` — Reconcile the canonical inbound stability inventory and tighten the package-local docs-contract test around stable, internal, and deferred semantics.
 
 #### Phase 64: Contract Verification Hardening
 

@@ -10,6 +10,13 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
+**`v1.4 Inbound Stability Lock` is in progress. Phase 63 completed on 2026-05-31.**
+
+- Phase 63 reconciled `mailglass_inbound/docs/api_stability.md` into the canonical stable/testing/internal/deferred inbound inventory.
+- Provider support is now documented through `MailglassInbound.Ingress.Plug` semantics, while provider modules, replay internals, route structs, workers, queues, and UI details stay internal.
+- Deferred inbound capabilities are explicitly named: public replay API, provider extension API, matcher expansion, lifecycle callbacks, fan-out, synthetic UI, `gen_smtp`, and ecosystem integrations.
+- Package-local docs-contract assertions now pin those section boundaries and over-claim guards.
+
 **`v1.3 Adopter Trust Proof` shipped on 2026-05-31.**
 
 - Milestone archive complete: 7 phases (`52`, `57-62`), 18 plans, 16/16 requirements satisfied, final audit `status: passed`
@@ -201,9 +208,9 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 
 ## Active
 
-- [ ] **LOCK-01**: Adopter can identify every stable inbound runtime, testing, and operator seam from one canonical inventory.
-- [ ] **LOCK-02**: Adopter can distinguish stable semantics from reachable/internal modules.
-- [ ] **LOCK-03**: Deferred inbound capabilities are explicitly named so later sessions do not promote them accidentally.
+- [x] **LOCK-01**: Adopter can identify every stable inbound runtime, testing, and operator seam from one canonical inventory. Validated in Phase 63.
+- [x] **LOCK-02**: Adopter can distinguish stable semantics from reachable/internal modules. Validated in Phase 63.
+- [x] **LOCK-03**: Deferred inbound capabilities are explicitly named so later sessions do not promote them accidentally. Validated in Phase 63.
 - [ ] **PROOF-01**: `mix verify.stability_contract` proves inbound contract docs and compiled-doc metadata.
 - [ ] **PROOF-02**: Inbound closed atom/type sets stay locked to docs.
 - [ ] **PROOF-03**: Docs checks block over-claims and stale release-line claims.
