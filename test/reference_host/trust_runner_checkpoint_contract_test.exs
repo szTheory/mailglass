@@ -43,6 +43,14 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
     assert payload_1["schema_version"] == "trust_runner.v1"
     assert payload_1["claim_boundary"] == @claim_boundary
     assert Enum.map(payload_1["checkpoints"], & &1["stage"]) == @stage_order
+
+    assert {_, 0} =
+             System.cmd(
+               "bash",
+               ["scripts/check_trust_runner_checkpoint.sh", "--checkpoint", checkpoint_1],
+               cd: @project_root,
+               stderr_to_stdout: true
+             )
   end
 
   test "checkpoint hash is based only on ordered stage status fixture_id rows" do

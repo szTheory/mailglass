@@ -140,6 +140,8 @@ forbidden_evidence_keys = {"raw_payload", "payload", "headers", "recipient", "se
 def evidence_for(stage):
     row = rows_by_stage.get(stage, {})
     evidence = row.get("evidence")
+    if evidence is None and row.get("status") == "dry_run":
+        return {}
     if not isinstance(evidence, dict):
         errors.append(f"{stage}.evidence must be an object")
         return {}
