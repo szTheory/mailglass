@@ -36,7 +36,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 <summary>◆ v1.4 Inbound Stability Lock (Phases 63-66) — PLANNING</summary>
 
 - [x] Phase 63: Inbound Contract Inventory Reconciliation — canonical stable/testing/internal/deferred inventory (completed 2026-05-31)
-- [ ] Phase 64: Contract Verification Hardening — compiled-doc, docs-contract, and root stability proof gates
+- [x] Phase 64: Contract Verification Hardening — compiled-doc, docs-contract, and root stability proof gates (completed 2026-05-31)
 - [ ] Phase 65: Compatibility, Docs, and DX Lock — adoption path, operator wording, testing docs, and compatibility/deprecation posture
 - [ ] Phase 66: Release Position Decision — evidence-backed `1.0.0` vs final `0.x` decision and release notes
 
@@ -77,13 +77,13 @@ Plans:
 3. Inbound docs-contract tests fail on public replay API claims, stable worker/queue claims, provider-module extension claims, replay-as-fresh wording, and stale release-line claims.
 4. Root `mix verify.stability_contract` includes the inbound contract lane and fails closed on drift.
 
-**Plans:** 0/5 plans complete
+**Plans:** 5/5 plans complete
 
 Plans:
-- [ ] `64-01-PLAN.md` — Correct package-line `since` metadata on the stable inbound runtime seams.
-- [ ] `64-02-PLAN.md` — Correct package-line `since` metadata on the stable structured-error and operator task modules.
-- [ ] `64-03-PLAN.md` — Correct package-line `since` metadata on the adopter-facing inbound testing helpers.
-- [ ] `64-04-PLAN.md` — Tighten the inbound docs-contract lane around closed error sets, release pins, and over-claim drift.
+- [x] `64-01-PLAN.md` — Correct package-line `since` metadata on the stable inbound runtime seams.
+- [x] `64-02-PLAN.md` — Correct package-line `since` metadata on the stable structured-error and operator task modules.
+- [x] `64-03-PLAN.md` — Correct package-line `since` metadata on the adopter-facing inbound testing helpers.
+- [x] `64-04-PLAN.md` — Tighten the inbound docs-contract lane around closed error sets, release pins, and over-claim drift.
 - [x] `64-05-PLAN.md` — Create the package-local inbound compiled-doc proof and delegate root stability verification to it.
 
 #### Phase 65: Compatibility, Docs, and DX Lock
