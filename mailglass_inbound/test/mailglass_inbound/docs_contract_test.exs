@@ -354,7 +354,7 @@ defmodule MailglassInbound.DocsContractTest do
 
     assert major_minor == "#{major}.#{minor}",
            "README pins mailglass_inbound to ~> #{major_minor} but the package " <>
-           "version is #{version} (expected ~> #{major}.#{minor})"
+             "version is #{version} (expected ~> #{major}.#{minor})"
   end
 
   test "stable error docs lock the closed type sets to code in exact order" do
@@ -402,9 +402,11 @@ defmodule MailglassInbound.DocsContractTest do
 
     stable = contract_section!(stability, "stable")
     deferred = contract_section!(stability, "deferred")
-    readme_active = String.split(readme, "## Deferred Beyond This Slice") |> hd()
-    readme_deferred = String.split(readme, "## Deferred Beyond This Slice") |> List.last()
-    install_active = String.split(install, "## What's next") |> hd()
+
+    [readme_active, readme_deferred] =
+      split_once!(readme, "## Deferred Beyond This Slice", "README")
+
+    [install_active, _install_next] = split_once!(install, "## What's next", "install guide")
     changelog_unreleased = changelog_section!(changelog, "Unreleased")
 
     for blocked <- [
@@ -420,11 +422,7 @@ defmodule MailglassInbound.DocsContractTest do
     end
 
     for doc <- [stable, readme_active, install_active, changelog_unreleased] do
-      refute Regex.match?(~r/replay\s+(as|is|becomes)\s+fresh/i, doc)
-      refute Regex.match?(~r/(worker|queue).*(stable|public).*(contract|api)/i, doc)
-      refute Regex.match?(~r/provider.*module.*(stable|public).*(api|extension)/i, doc)
-      refute Regex.match?(~r/operator\s+ui.*(ships|shipped|stable|public)/i, doc)
-      refute Regex.match?(~r/mailglass_inbound.*1\.x.*(stability|stable|compatibility)/i, doc)
+      refute_over_claims!(doc)
     end
 
     assert deferred =~ "public replay API"
@@ -442,13 +440,47 @@ defmodule MailglassInbound.DocsContractTest do
     end
   end
 
+  defp split_once!(document, delimiter, doc_name) do
+    parts = String.split(document, delimiter)
+
+    assert length(parts) == 2,
+           "#{doc_name} missing expected section delimiter #{inspect(delimiter)}"
+
+    parts
+  end
+
+  defp refute_over_claims!(document) do
+    document
+    |> String.split(~r/\n\s*\n/)
+    |> Enum.each(fn paragraph ->
+      paragraph = Regex.replace(~r/\s+/, paragraph, " ")
+
+      claim_scope =
+        String.replace(
+          paragraph,
+          "the 1.x stability promise applies to `mailglass` + `mailglass_admin` only",
+          ""
+        )
+
+      refute Regex.match?(~r/replay\s+(as|is|becomes)\s+fresh/i, paragraph)
+      refute Regex.match?(~r/(worker|queue).*(stable|public).*(contract|api)/i, paragraph)
+      refute Regex.match?(~r/provider.*module.*(stable|public).*(api|extension)/i, paragraph)
+      refute Regex.match?(~r/operator\s+ui.*(ships|shipped|stable|public)/i, paragraph)
+
+      refute Regex.match?(
+               ~r/mailglass_inbound.*1\.x.*(stability|stable|compatibility)/i,
+               claim_scope
+             )
+    end)
+  end
+
   defp assert_closed_type_set_matches_docs!(document, module) do
     section = contract_section!(document, inspect(module))
     expected = Enum.map(module.__types__(), &"`#{inspect(&1)}`")
 
     assert [_, closed_set] =
              Regex.run(~r/Closed `:type` set:\n\n([\s\S]*?)\n\nDocumented guarantees:/, section),
-             "Missing closed :type set list for #{inspect(module)}"
+           "Missing closed :type set list for #{inspect(module)}"
 
     documented =
       Regex.scan(~r/^- (`:[a-z0-9_]+`)/m, closed_set)

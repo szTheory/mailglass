@@ -127,7 +127,9 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
         datetime
 
       {:error, _reason} ->
-        Mix.raise("Inbound replay blocked: --since must be an ISO 8601 datetime, got #{inspect(value)}")
+        Mix.raise(
+          "Inbound replay blocked: --since must be an ISO 8601 datetime, got #{inspect(value)}"
+        )
     end
   end
 
@@ -174,5 +176,9 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
       end)
 
     Mix.shell().info("Inbound replay complete: replayed=#{ok} failed=#{errors}")
+
+    if errors > 0 do
+      exit({:shutdown, 1})
+    end
   end
 end

@@ -28,6 +28,14 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
     end
   end
 
+  defmodule FailingReplay do
+    def replay(id, _opts \\ []) do
+      ids = Process.get(:stub_replay_ids, [])
+      Process.put(:stub_replay_ids, ids ++ [id])
+      {:error, :boom}
+    end
+  end
+
   setup do
     :ok = Sandbox.checkout(TestRepo)
     Process.delete(:stub_replay_ids)
@@ -137,6 +145,19 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
       assert output =~ "1 record"
       assert Process.get(:stub_replay_ids, []) == []
     end
+
+    test "failed replays exit non-zero after reporting the failure count" do
+      {:ok, r} = insert_record("tenant-a")
+
+      assert {1, output} =
+               run_with_exit(["--tenant", "tenant-a", "--record-id", r.id, "--yes"],
+                 replay: FailingReplay
+               )
+
+      assert output =~ "replay failed for #{r.id}: :boom"
+      assert output =~ "Inbound replay complete: replayed=0 failed=1"
+      assert Process.get(:stub_replay_ids, []) == [r.id]
+    end
   end
 
   describe "append-only lineage (real replay)" do
@@ -193,14 +214,16 @@ defmodule Mix.Tasks.Mailglass.Inbound.ReplayTest do
   end
 
   defp run_with_exit(argv) do
+    run_with_exit(argv, replay: StubReplay)
+  end
+
+  defp run_with_exit(argv, opts) do
     Mix.Task.reenable("mailglass.inbound.replay")
+    opts = Keyword.put_new(opts, :repo, TestRepo)
 
     code =
       try do
-        Mix.Tasks.Mailglass.Inbound.Replay.run(argv ++ ["--no-start"],
-          replay: StubReplay,
-          repo: TestRepo
-        )
+        Mix.Tasks.Mailglass.Inbound.Replay.run(argv ++ ["--no-start"], opts)
         0
       catch
         :exit, {:shutdown, n} -> n
