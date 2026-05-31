@@ -660,3 +660,71 @@ jobs:
                 labels: [label]
               });
             }
+
+  close-publish-smoke-tracker-on-success:
+    name: Close issue on smoke success
+    runs-on: ubuntu-latest
+    needs: [cron-guard, wait-for-index, wait-for-hexdocs, consumer-install, published-trust-journey, retracted-check]
+    if: >-
+      ${{
+        needs.cron-guard.outputs.should_run == 'true' &&
+        needs.wait-for-index.result == 'success' &&
+        needs.wait-for-hexdocs.result == 'success' &&
+        needs.consumer-install.result == 'success' &&
+        needs.published-trust-journey.result == 'success' &&
+        needs.retracted-check.result == 'success'
+      }}
+    continue-on-error: true
+    steps:
+      - name: Close post-publish-smoke failure issue
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const label = "publish-smoke-failed";
+            const issueTitle = "publish-smoke failure tracker";
+            const version = "${{ needs.cron-guard.outputs.version }}";
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const artifactName = `trust-runner-published-${context.runId}`;
+
+            const {data: openIssues} = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: "open",
+              labels: label,
+              per_page: 100
+            });
+
+            const existing = openIssues.find((issue) => issue.title === issueTitle);
+
+            if (!existing) {
+              core.info("No open post-publish-smoke failure tracker found; nothing to close.");
+              return;
+            }
+
+            const body = [
+              `Resolved: post-publish-smoke green for v${version}.`,
+              "",
+              `- Workflow run: ${runUrl}`,
+              `- Ref: \`${context.ref}\``,
+              `- SHA: \`${context.sha}\``,
+              `- OPS-01 guard: \`consumer-install\` succeeded`,
+              `- EVID-03 journey: \`published-trust-journey\` succeeded`,
+              `- Evidence artifact: \`${artifactName}\``
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: existing.number,
+              body
+            });
+
+            await github.rest.issues.update({
+              owner,
+              repo,
+              issue_number: existing.number,
+              state: "closed",
+              state_reason: "completed"
+            });
