@@ -92,7 +92,7 @@ The current repo already has two enforcement seams: package-local inbound docs c
 | Capability | Primary Tier | Secondary Tier | Rationale |
 |------------|-------------|----------------|-----------|
 | Canonical adoption path coherence across README + guides | Package docs (`mailglass_inbound/docs` + README) | Root Tier-1 docs check task | Source-of-truth is docs content; enforcement belongs in existing docs-check automation. [VERIFIED: codebase grep] |
-| Compatibility/deprecation posture for stable vs internal/deferred | `mailglass_inbound/docs/api_stability.md` | `guides/compatibility-and-deprecations.md`, `docs/compatibility-and-deprecations.md` | Stable-surface taxonomy is already canonical in inbound `api_stability.md`; compatibility docs should point to it. [VERIFIED: codebase grep] |
+| Compatibility/deprecation posture for stable vs internal/deferred | `mailglass_inbound/docs/api_stability.md` | `guides/compatibility-and-deprecations.md` | Stable-surface taxonomy is already canonical in inbound `api_stability.md`; the active repo-root compatibility guide should point to it. [VERIFIED: codebase grep + live topology check] |
 | Operator trust semantics for doctor/replay/prune | Inbound operator docs + mix task docs | Mix task modules as semantic source | Command behavior is user-facing at CLI level; implementation modules remain internal. [VERIFIED: codebase grep] |
 | Testing DX clarity (`MailboxCase`, `Test.Ingress`, assertion consumption) | Inbound testing docs + helper moduledocs | Docs-contract tests | User trust comes from examples and explicit warning text, then locked by tests. [VERIFIED: codebase grep] |
 | Anti-overclaim admin/operator trust boundaries | `mailglass_admin/docs/operator-trust.md` | Inbound docs-contract + root docs check | Admin trust wording must stay aligned with inbound replay semantics and UI non-contract boundaries. [VERIFIED: codebase grep] |
@@ -144,7 +144,6 @@ mailglass_inbound/
 mailglass_admin/docs/operator-trust.md
 lib/mix/tasks/mailglass.docs.check.ex
 guides/compatibility-and-deprecations.md
-docs/compatibility-and-deprecations.md
 ```
 
 ### Pattern 1: Canonical-Path-First Docs
@@ -229,14 +228,13 @@ Source: `mailglass_inbound/README.md`, `mailglass_inbound/docs/inbound-install.m
 
 | # | Claim | Section | Risk if Wrong |
 |---|-------|---------|---------------|
-| A1 | `docs/compatibility-and-deprecations.md` is present in active docs topology for this phase, not only `guides/compatibility-and-deprecations.md`. [ASSUMED] | Architecture Patterns | Planner may schedule edits/checks against a file not used in final docs flow. |
+| A1 | Resolved: the active repo-root compatibility guide for Phase 65 is `guides/compatibility-and-deprecations.md`; `docs/compatibility-and-deprecations.md` is not present in the live topology and should not be created by this phase. [VERIFIED: `rg --files guides docs | rg 'compatibility-and-deprecations\\.md$'`] | Architecture Patterns | Planning must keep edits and checks anchored to the live guide path so docs topology does not fork. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Which compatibility file is canonical for Phase 65 wording edits (`guides/...` vs `docs/...`)?**
-   - What we know: Root docs checks include compatibility phrasing requirements and both compatibility paths are referenced in context material. [VERIFIED: codebase grep]
-   - What's unclear: Whether planner should edit one file, both files, or one with strict redirect language.
-   - Recommendation: Decide in Plan wave 0 and add explicit parity check if both remain active.
+   - Resolution: Keep `guides/compatibility-and-deprecations.md` as the active repo-root compatibility guide and do not create `docs/compatibility-and-deprecations.md`, because the live docs topology contains only the `guides/...` file. [VERIFIED: `rg --files guides docs | rg 'compatibility-and-deprecations\\.md$'`]
+   - Planning impact: Phase 65 wording edits and Tier-1 drift checks should target `guides/compatibility-and-deprecations.md` only, while routing stable-surface guarantees back to `mailglass_inbound/docs/api_stability.md`.
 
 ## Environment Availability
 
