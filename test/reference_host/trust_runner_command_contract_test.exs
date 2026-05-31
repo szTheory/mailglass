@@ -53,6 +53,7 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
   test "Phase 61 boundary language is pinned for reference host docs" do
     readme = File.read!(@readme_path)
     scope = File.read!(@scope_path)
+    docs_with_content = [{@readme_path, readme}, {@scope_path, scope}]
 
     readme_required_tokens = [
       "usage-proof evidence only",
@@ -78,8 +79,17 @@ defmodule Mailglass.ReferenceHost.TrustRunnerCommandContractTest do
              "Phase boundary drift: required SCOPE token missing #{inspect(token)}"
     end)
 
-    refute String.contains?(readme, "fixture seed"),
-           "Phase boundary drift: README must not frame the host as fixture seed"
+    overreach_phrases = [
+      "is API-contract truth",
+      "are API-contract truth",
+      "is a fixture seed",
+      "are fixture seeds"
+    ]
+
+    Enum.each(overreach_phrases, fn phrase ->
+      refute token_present?(docs_with_content, phrase),
+             "Phase boundary drift: overreach phrase present #{inspect(phrase)}"
+    end)
   end
 
   defp token_present?(files_with_content, token) do
