@@ -60,6 +60,11 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 3. Internal and deferred lists explicitly include replay internals, worker/queue details, route structs, provider modules, matcher expansion, lifecycle callbacks, fan-out, synthetic UI, `gen_smtp`, and ecosystem integrations.
 4. The inventory aligns with core/admin language: stable means semantic contract, not ExDoc visibility or module reachability.
 
+**Plans:** 1 plan
+
+Plans:
+- [ ] `63-01-PLAN.md` — Reconcile the canonical inbound stability inventory and tighten the package-local docs-contract test around stable, internal, and deferred semantics.
+
 #### Phase 64: Contract Verification Hardening
 
 **Goal:** Make the inbound stability contract executable through compiled-doc metadata, docs drift checks, and root verification wiring.
