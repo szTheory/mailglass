@@ -1,10 +1,11 @@
 ---
 phase: 52
 slug: trust-scope-lock-reference-host-baseline
-status: draft
-nyquist_compliant: false
+status: audited
+nyquist_compliant: true
 wave_0_complete: true
 created: 2026-05-27
+validated: 2026-05-31
 ---
 
 # Phase 52 — Validation Strategy
@@ -39,12 +40,12 @@ created: 2026-05-27
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 52-01-01 | 01 | 1 | HOST-01 | T-52-01 | Maintained host app boots from clean checkout with documented setup | integration + contract | `cd reference/host_app && mix deps.get && mix ecto.create && mix ecto.migrate && mix compile --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| 52-01-02 | 01 | 1 | HOST-01 | T-52-01 | Boot contract test asserts canonical setup path and expected files | unit/contract | `mix test test/reference_host/boot_contract_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| 52-02-01 | 02 | 1 | HOST-02 | T-52-02 | Reference host wiring only uses documented stable seams | contract | `mix test test/reference_host/public_seams_contract_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| 52-02-02 | 02 | 1 | HOST-02 | T-52-02 | Forbidden internal module/provider-internal patterns are absent | grep | `! rg -n "Mailglass\\.(Repo|Outbound\\.Projector|OptionalDeps)|MailglassInbound\\.Ingress\\.Providers|MailglassAdmin\\.Operator\\.Mount" reference/host_app` | ❌ W0 | ⬜ pending |
-| 52-03-01 | 03 | 2 | HOST-03 | T-52-03 | Scope allowlist + non-goals are explicit and complete | contract | `mix test test/reference_host/scope_lock_contract_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| 52-03-02 | 03 | 2 | HOST-03 | T-52-03 | SCOPE document contains milestone-locked non-goals verbatim | grep | `rg -n "Provider-matrix broadening|SEED-003|gen_smtp|second product" reference/host_app/SCOPE.md` | ❌ W0 | ⬜ pending |
+| 52-01-01 | 01 | 1 | HOST-01 | T-52-01 | Maintained host app boots from clean checkout with documented setup | integration + contract | `cd reference/host_app && mix deps.get && mix ecto.create && mix ecto.migrate && mix compile --warnings-as-errors` | ✅ | ✅ green |
+| 52-01-02 | 01 | 1 | HOST-01 | T-52-01 | Boot contract test asserts canonical setup path and expected files | unit/contract | `mix test test/reference_host/boot_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 52-02-01 | 02 | 1 | HOST-02 | T-52-02 | Reference host wiring only uses documented stable seams | contract | `mix test test/reference_host/public_seams_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 52-02-02 | 02 | 1 | HOST-02 | T-52-02 | Forbidden internal module/provider-internal patterns are absent | grep | `! rg -n "Mailglass\\.(Repo|Outbound\\.Projector|OptionalDeps)|MailglassInbound\\.Ingress\\.Providers|MailglassAdmin\\.Operator\\.Mount" reference/host_app` | ✅ | ✅ green |
+| 52-03-01 | 03 | 2 | HOST-03 | T-52-03 | Scope allowlist + non-goals are explicit and complete | contract | `mix test test/reference_host/scope_lock_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 52-03-02 | 03 | 2 | HOST-03 | T-52-03 | SCOPE document contains milestone-locked non-goals verbatim | grep | `rg -n "Provider-matrix broadening|SEED-003|gen_smtp|second product" reference/host_app/SCOPE.md` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -52,11 +53,11 @@ created: 2026-05-27
 
 ## Wave 0 Requirements
 
-- [ ] `reference/host_app/` — maintained host artifact scaffolded and committed
-- [ ] `reference/host_app/mix.exs` and host app bootstrap docs
-- [ ] `test/reference_host/boot_contract_test.exs`
-- [ ] `test/reference_host/public_seams_contract_test.exs`
-- [ ] `test/reference_host/scope_lock_contract_test.exs`
+- [x] `reference/host_app/` — maintained host artifact scaffolded and committed
+- [x] `reference/host_app/mix.exs` and host app bootstrap docs
+- [x] `test/reference_host/boot_contract_test.exs`
+- [x] `test/reference_host/public_seams_contract_test.exs`
+- [x] `test/reference_host/scope_lock_contract_test.exs`
 
 ---
 
@@ -72,11 +73,32 @@ created: 2026-05-27
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 120s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 120s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** audited 2026-05-31
+
+## Validation Audit 2026-05-31
+
+| Metric | Count |
+|--------|-------|
+| Automated coverage gaps found | 0 |
+| Resolved by existing tests | 6 |
+| New test files generated | 0 |
+| Escalated manual-only | 0 |
+
+### Evidence
+
+- `mix test test/reference_host/boot_contract_test.exs test/reference_host/public_seams_contract_test.exs test/reference_host/scope_lock_contract_test.exs --warnings-as-errors` — 4 tests, 0 failures
+- `mix test test/reference_host/boot_contract_test.exs --warnings-as-errors` — 1 test, 0 failures
+- `mix test test/reference_host/public_seams_contract_test.exs --warnings-as-errors` — 1 test, 0 failures
+- `mix test test/reference_host/scope_lock_contract_test.exs --warnings-as-errors` — 2 tests, 0 failures
+- `cd reference/host_app && mix deps.get && mix ecto.create && mix ecto.migrate && mix compile --warnings-as-errors` — passed
+- `! rg -n "Mailglass\\.(Repo|Outbound\\.Projector|OptionalDeps)|MailglassInbound\\.Ingress\\.Providers|MailglassAdmin\\.Operator\\.Mount" reference/host_app` — no forbidden matches
+- `rg -n "Provider-matrix broadening|SEED-003|gen_smtp|second product" reference/host_app/SCOPE.md` — required non-goal tokens present
+- `rg -n -F "{:mailglass, \"~> 1.2\"}" reference/host_app/mix.exs`, `rg -n -F "{:mailglass_admin, \"~> 1.2\"}" reference/host_app/mix.exs`, and `rg -n -F "{:mailglass_inbound, \"~> 0.2\"}" reference/host_app/mix.exs` — published constraints present
+- `rg -n "path:" reference/host_app/mix.exs` — no local path dependency matches
