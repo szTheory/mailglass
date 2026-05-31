@@ -42,6 +42,13 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     end)
   end
 
+  test "clean-baseline lane is NOT a required branch-protection check (D-04)" do
+    source = File.read!(@script_path)
+    array_set = parse_required_checks(source)
+
+    refute MapSet.member?(array_set, "Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)")
+  end
+
   defp parse_required_checks(source) do
     [_before, rest] = String.split(source, "REQUIRED_CHECKS=(\n", parts: 2)
     [chunk | _] = String.split(rest, "\n)", parts: 2)
