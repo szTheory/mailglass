@@ -216,12 +216,12 @@ rg -n "check_clean_baseline_hex_only|verify.reference_host.journey --host-root r
 |---|-------|---------|---------------|
 | A1 | Unrelated lockfile diff lines are always suspicious unless explained | Common Pitfalls | Could overconstrain acceptable resolver churn and slow valid updates. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Where to pin version-specific guard contract assertions?**
-   - What we know: Existing `ci_trust_lane_contract_test.exs` already covers clean-baseline job seam. [VERIFIED: codebase grep]
-   - What's unclear: Whether to extend this file or create a focused script-behavior test.
-   - Recommendation: Extend existing publish contract test file first for minimal churn; add script-focused test only if assertion readability suffers. [ASSUMED]
+   - Resolution: Extend the existing publish trust-lane contract seam in `test/mailglass/publish/ci_trust_lane_contract_test.exs` first, because it already proves the clean-baseline job contract and keeps the regression coverage colocated with the workflow seam. [RESOLVED]
+   - Follow-up rule: Add a separate script-focused test only if the assertion becomes materially harder to read or maintain inside the existing contract file. [RESOLVED]
+   - Traceability: This matches the Phase 62 planning recommendation and keeps D-07 minimal-scope without introducing a parallel test seam unless readability requires it. [VERIFIED: context + plan]
 
 ## Environment Availability
 
