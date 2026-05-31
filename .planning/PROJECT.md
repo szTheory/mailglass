@@ -10,17 +10,15 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**`v1.2 Inbound Production Confidence` shipped on 2026-05-26.**
+**`v1.3 Adopter Trust Proof` shipped on 2026-05-31.**
 
-- Milestone archive complete: 10 phases (`44.5`, `45-50`, `50.5`, `50.7`, `51`), 42 plans, 58/58 requirements satisfied, final audit `status: passed`
+- Milestone archive complete: 7 phases (`52`, `57-62`), 18 plans, 16/16 requirements satisfied, final audit `status: passed`
 - **Current package versions on Hex: `mailglass` 1.3.0 / `mailglass_admin` 1.3.0 / `mailglass_inbound` 0.3.0** (live on 2026-05-29; reference-host trust proof aligned in Phase 62)
-- v1.3 Phase 52 completed on 2026-05-27: the maintained `reference/host_app` baseline, public-seam boundary guardrails, and scope lock contract are now in place for the trust-proof milestone
-- v1.3 Phase 57 completed on 2026-05-27: canonical deterministic trust-runner command, fixture stability contract, and schema-versioned trust checkpoint evidence are now enforced for local/CI trust lanes
-- v1.3 Phase 58 completed on 2026-05-27: signed Postmark webhook verification and deterministic no-match operator diagnosis are proven through the maintained reference-host trust runner and validated checkpoint evidence
-- v1.3 Phase 59 completed on 2026-05-28: repo-head and clean-baseline trust lanes are wired into CI with checkpoint evidence expectations and branch-protection reassertion
-- v1.3 Phase 60 completed on 2026-05-31: release trust gates and drift-prevention checks now protect published-version trust proof and smoke reliability claims
-- v1.3 Phase 61 completed on 2026-05-31: reference-host and trust-entry docs now route guarantee truth to canonical `api_stability.md` inventories and `mix verify.stability_contract`, with deterministic docs-check enforcement against contract-boundary drift
-- v1.3 Phase 62 completed on 2026-05-31: the clean-baseline and published-version trust proof now validate the current sibling Hex line (`mailglass` 1.3.0 / `mailglass_admin` 1.3.0 / `mailglass_inbound` 0.3.0), with a non-evaluating source+version guard and stale-lock contract coverage
+- The maintained `reference/host_app` now proves a narrow, public-seam-only adopter path with an explicit scope contract and non-goals.
+- One canonical deterministic trust runner now covers install -> preview -> send -> signed webhook ingest -> operator troubleshooting, with stable `trust_runner.v1` checkpoint evidence.
+- Required repo-head and clean-baseline trust lanes enforce checkpoint evidence, Hex-first dependency resolution, and branch-protection/release-gate expectations.
+- Post-publish smoke now runs a published-version trust journey and guards the current release line against stale-lock and hackney dependency regressions.
+- Reference-host and trust-entry docs now route guarantee truth to canonical `api_stability.md` inventories and `mix verify.stability_contract`, with deterministic docs-check enforcement against contract-boundary drift.
 - Backlog phase 999.1 completed on 2026-05-27: planning-artifact comment cleanup now covers scoped core/admin/inbound source paths, with Credo drift prevention (`Mailglass.Credo.NoPlanningArtifactComments`) and guard tests added
 - Backlog phase 999.2 completed on 2026-05-27: deterministic preview URL/capture matrix foundations, mix screenshot capture workflow, advisory CI artifact lane, and docs claim-boundary contract checks are now in place
 - `mailglass_inbound` now has production-credible telemetry, Mailgun + SES ingress, test helpers + generators, admin observability, operator tooling, and six first-party inbound guides
@@ -47,26 +45,33 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Release-workflow fanout still relies on the documented `workflow_dispatch` fallback because GitHub `GITHUB_TOKEN` anti-recursion blocks downstream publish workflows from release-created releases.
 - Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
 - `SEED-003-ecosystem-integrations` is intentionally deferred and remains dormant for later milestone selection.
-- The maintained reference host baseline, deterministic journey, CI trust lanes, release trust gate, and docs-contract boundary enforcement are complete; v1.3 is ready for milestone audit/closeout.
+- v1.3 trust proof is archived; the next recommended milestone is an inbound stability lock for `mailglass_inbound` contract and compatibility posture.
 - `mailglass_inbound` runtime capability is stronger than its contract framing in some docs; `mailglass_inbound` still sits outside the `1.x` compatibility promise and needs a dedicated stability-lock milestone after trust proof work.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
-## Current Milestone: v1.3 Adopter Trust Proof
+## Current Milestone
 
-**Goal:** Prove real-world adoption confidence with one maintained Phoenix reference host app that demonstrates the end-to-end Mailglass journey.
-
-**Target features:**
-- Maintained reference app proving install -> preview -> send -> webhook ingest -> operator troubleshooting in one runnable flow
-- CI lane that validates the reference journey on a clean host-app baseline
-- Docs positioning that the reference app is usage proof, while API contract truth remains in core docs and contract tests
-
-**Preflight locks (2026-05-27):**
-- Hybrid trust proof model: one thin committed reference host app plus one clean-baseline generated trust lane
-- One deterministic trust runner powers local verification, CI gating, and release evidence
-- Trust proof must include one verify-first signed webhook path plus one deterministic non-happy-path operator diagnosis
-- Published-version trust proof and post-publish smoke reliability are required before v1.3 closeout claims
+No active milestone. Next milestone definition should start from `$gsd-new-milestone`.
 
 ## Latest Completed Milestone
+
+<details>
+<summary>v1.3 Adopter Trust Proof — milestone closed 2026-05-31</summary>
+
+**Goal:** Prove real-world adoption confidence with one maintained Phoenix reference host app and deterministic trust evidence across local, CI, and published-version release checks.
+
+- **Reference host baseline** — shipped a maintained Phoenix host app with clean-checkout setup, public-seam-only integration, and a fail-closed scope contract. ✓
+- **Deterministic trust journey** — shipped `mix verify.reference_host.journey` and stable `trust_runner.v1` checkpoint evidence for install, preview, send, webhook ingest, and operator troubleshooting. ✓
+- **CI/release trust evidence** — required repo-head and clean-baseline lanes now publish checkpoint artifacts and guard Hex-first dependency resolution. ✓
+- **Published-version proof** — post-publish smoke now runs the current-release trust journey and blocks stale release-line claims. ✓
+- **Contract-boundary docs** — reference docs are usage proof only; public guarantee truth routes to canonical stability inventories and executable contract checks. ✓
+
+**Accepted residual debt:**
+
+- Advisory review notes remain for docs checker path-scoping consistency, async mutation flake risk, and broad assertion granularity.
+- `mailglass_inbound` still needs a dedicated stability-lock milestone before it carries the same compatibility posture as the core/admin `1.x` surface.
+
+</details>
 
 <details>
 <summary>v1.2 Inbound Production Confidence — milestone closed 2026-05-26</summary>
@@ -135,7 +140,7 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (v0.1, v0.2, v1.1 — SHIPPED)
+## Validated Requirements (v0.1, v0.2, v1.1, v1.3 — SHIPPED)
 
 All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 
@@ -182,11 +187,7 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 
 ## Active
 
-- [ ] Prove install -> preview -> send -> webhook ingest -> operator troubleshooting inside one maintained Phoenix reference host app
-- [ ] Add a clean-baseline CI lane that runs and verifies the reference journey end to end
-- [ ] Position reference-app docs as adoption proof artifacts while preserving core docs/tests as the API contract source of truth
-- [x] Lock and enforce one deterministic trust runner and trust-checkpoint artifact across local + CI + release proof paths (Phase 57 complete)
-- [ ] Resolve the post-publish smoke hackney dependency failure before claiming v1.3 trust proof completion
+- [ ] Define the next milestone requirements, likely an inbound stability lock for `mailglass_inbound` contract and compatibility/deprecation posture.
 
 ## Out of Scope
 
@@ -302,4 +303,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-31 — Phase 61 docs-contract boundary enforcement is complete; v1.3 now has the maintained reference host, deterministic trust journey, CI/release trust gates, and canonical contract-routing docs needed for milestone audit and closeout.*
+*Last updated: 2026-05-31 after v1.3 milestone closeout*

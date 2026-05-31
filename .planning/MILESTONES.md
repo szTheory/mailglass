@@ -1,5 +1,28 @@
 # Milestones
 
+## v1.3 Adopter Trust Proof (Shipped: 2026-05-31)
+
+**Phases completed:** 7 phases, 18 plans, 29 tasks
+
+**Key accomplishments:**
+
+- A committed maintained Phoenix host baseline now boots with Ecto wiring and a deterministic README-backed boot contract for HOST-01.
+- HOST-02 is now mechanically enforced by locking the reference host to stable public seams and adding a fail-closed contract test for forbidden internal coupling.
+- HOST-03 is now enforced by a committed scope contract plus deterministic required/forbidden token tests that prevent trust-proof drift into second-product expansion.
+- Shipped one canonical `mix verify.reference_host.journey` entrypoint backed by a deterministic stage runner and fail-closed contract tests that preserve the Phase 57/58 trust boundary.
+- Delivered deterministic fixture/checkpoint evidence for the trust runner, including `trust_runner.v1` schema output, stable ordering/hash semantics, and fail-closed checkpoint validation for downstream trust lanes.
+- Postmark webhook evidence now proves the maintained reference-host route verifies before tenant, persistence, or execution work.
+- No-match routing diagnosis evidence now completes the verify-first webhook plus operator troubleshooting trust checkpoint.
+- Added `trust_lane_repo_head` and clean-baseline trust lanes, registered repo-head in branch-protection `REQUIRED_CHECKS`, and uploaded 90-day `trust_runner.v1` checkpoint artifacts for release evidence.
+- Post-publish smoke now runs the published-version trust journey, guards fresh published installs against hackney regressions, and closes the smoke tracker automatically after green CI evidence.
+- Maintainer release docs now require green trust evidence, describe hands-free publish accurately, and have deterministic tests preventing stale gate drift.
+- Reference-host docs now explicitly state a usage-proof-only boundary and route stable guarantees to canonical api_stability inventories, with deterministic Phase 61 token checks enforced in the existing trust-runner contract test.
+- Maintainer, webhook, troubleshooting, and operator trust-entry docs now route guarantee semantics to canonical stability inventories and executable contract lanes without widening public contract scope.
+- Phase 61 trust-entry docs are now fail-closed under deterministic checker and ExUnit contract assertions for canonical stability routing, non-contract framing, and internals-as-guarantee overreach.
+- Reference host release-line proof now resolves the v1.3 sibling packages from Hex and fails closed on stale Hex versions.
+
+---
+
 ## v0.4 Roadmap: mailglass (Backfilled: 2026-05-29)
 
 **Note:** Synthesized from archive snapshot by `/gsd-health --backfill`. Original completion date unknown.

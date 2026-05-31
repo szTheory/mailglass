@@ -4,6 +4,44 @@
 
 ---
 
+## Milestone: v1.3 — Adopter Trust Proof
+
+**Shipped:** 2026-05-31
+**Phases:** 7 | **Plans:** 18
+**Coverage:** 16/16 v1.3 requirements
+
+### What Was Built
+
+- Maintained Phoenix reference host app with clean-checkout setup, public-seam-only integration, and explicit proof-scope contract.
+- Deterministic `mix verify.reference_host.journey` runner with stable `trust_runner.v1` checkpoint evidence.
+- Required repo-head and clean-baseline trust lanes, plus post-publish published-version trust proof for the current Hex release line.
+- Reference-host and trust-entry documentation that routes guarantee semantics to canonical stability inventories and executable contract checks.
+
+### What Worked
+
+- The narrow proof-scope lock prevented reference-host work from expanding into a second product.
+- Shared checkpoint semantics let local, CI, and release proof paths converge on one evidence contract.
+- The Phase 62 gap closure was small and targeted because the previous phases had already isolated release-line truth from the rest of the workflow.
+
+### What Was Inefficient
+
+- Phase numbering had drifted from the original 53-56 roadmap snapshot, leaving STATE.md stale until closeout.
+- Clean-baseline/published-version proof initially validated an older release line, which required an inserted closure phase before archive.
+
+### Patterns Established
+
+- Treat reference apps as usage proof artifacts, not public API contract sources.
+- Version-specific Hex guards should be non-evaluating and fail closed on stale lock entries.
+- Trust claims need both repo-head and published-version evidence before milestone close.
+
+### Key Lessons
+
+1. Release-line truth belongs in an executable guard, not prose or lockfile inspection by convention.
+2. Documentation boundary enforcement is valuable when a reference app could otherwise imply accidental API guarantees.
+3. Branch-protection trust lanes need live verification in the audit, not just workflow-file inspection.
+
+---
+
 ## Milestone: v0.1 — Validation Release
 
 **Shipped:** 2026-04-26 (v0.1.0 + v0.1.1 on Hex.pm)
