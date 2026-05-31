@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Adopter Trust Proof
-status: executing
-last_updated: "2026-05-31T14:44:37.010Z"
+status: verifying
+last_updated: "2026-05-31T14:49:46.612Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 16
-  completed_plans: 15
-  percent: 83
+  completed_plans: 16
+  percent: 100
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-27 after v1.3 preflight lock)
 
 Phase: 61 (docs-contract-boundary-enforcement) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-31
 
 ## v1.3 Milestone Intent
@@ -54,6 +54,8 @@ Last activity: 2026-05-31
 - [Phase 58]: Phase 58 Plan 02 retires deferred wording after signed Postmark and no-match operator evidence are deterministic.
 - [Phase 61]: Route trust-entry guarantee semantics to canonical api_stability inventories and mix verify.stability_contract. — Keep contract truth in canonical inventories and executable verification lanes.
 - [Phase 61]: Allow internal names only with explicit implementation-detail framing in trust docs. — Preserves troubleshooting value without widening public API contract.
+- [Phase 61]: Keep trust-entry docs enforcement in mailglass.docs.check with ExUnit pinning — Single deterministic seam for boundary drift.
+- [Phase 61]: Allow internal names only with explicit non-contract framing in trust docs — Preserves troubleshooting value while preventing contract-overreach wording.
 
 ## Roadmap Snapshot
 
@@ -88,6 +90,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 60 P04 | 1 min | 2 tasks | 3 files |
 | Phase 60 P03 | 9 min | 3 tasks | 3 files |
 | Phase 61 P02 | 3min | 2 tasks | 4 files |
+| Phase 61 P03 | 6 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 

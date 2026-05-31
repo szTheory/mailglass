@@ -64,7 +64,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 - [x] Phase 58: Verify-First Webhook + Operator Path (2/2 plans) (completed 2026-05-27)
 - [x] Phase 59: CI Trust Lanes + Checkpoint Evidence (0/2 plans) (completed 2026-05-28)
 - [x] Phase 60: Release Trust Gate + Drift Prevention (4/4 plans) (completed 2026-05-31)
-- [ ] Phase 61: Docs Contract Boundary Enforcement (0/3 plans)
+- [x] Phase 61: Docs Contract Boundary Enforcement (0/3 plans) (completed 2026-05-31)
 
 ### Phase Details
 
@@ -138,7 +138,7 @@ Plans:
 
 - [x] 61-01-PLAN.md — Reference-host usage-proof boundary and reference-host contract pins
 - [x] 61-02-PLAN.md — Canonical stability routing across trust-entry docs
-- [ ] 61-03-PLAN.md — Deterministic docs checker and docs-contract enforcement for trust surfaces
+- [x] 61-03-PLAN.md — Deterministic docs checker and docs-contract enforcement for trust surfaces
 
 Success criteria:
 
