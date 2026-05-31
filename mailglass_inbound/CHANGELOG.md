@@ -91,13 +91,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-`mailglass_inbound` 0.2.0 ships five phases of production-confidence work:
-telemetry instrumentation, MIME parsing, the Mailgun provider, a full test
-helper suite with generators, admin LiveView integration, and operator tooling.
-`mailglass_inbound` remains on the **0.x version line** — the 1.x stability
-promise applies to `mailglass` + `mailglass_admin` only. Conductor-style
-synthetic inbound dev tool, Cloudflare Email Routing, and `gen_smtp` listener
-are the pre-1.0 expansion targets. See
+`mailglass_inbound` `0.3.0` is the current shipped line. The package remains on
+the **0.x version line** — the 1.x stability promise applies to `mailglass` +
+`mailglass_admin` only. Unreleased entries below track follow-on hardening and
+verification work against that current `0.x` posture. Deferred capabilities
+such as a synthetic inbound dev tool, Cloudflare Email Routing, and
+`gen_smtp` listener support remain explicitly non-promised in this line. See
 [`guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md).
 
 ### Phase 45 — Telemetry + MIME (TELE-01..08, MIME-01..02, MIME-04)

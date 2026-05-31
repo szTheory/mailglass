@@ -2,7 +2,10 @@ defmodule MailglassInbound.DocsContractTest do
   use ExUnit.Case, async: true
 
   @readme_path Path.expand("../../README.md", __DIR__)
+  @install_path Path.expand("../../docs/inbound-install.md", __DIR__)
   @stability_path Path.expand("../../docs/api_stability.md", __DIR__)
+  @changelog_path Path.expand("../../CHANGELOG.md", __DIR__)
+  @mixfile_path Path.expand("../../mix.exs", __DIR__)
   @postmark_ingress_path Path.expand("../../docs/postmark_ingress.md", __DIR__)
   @sendgrid_ingress_path Path.expand("../../docs/sendgrid_ingress.md", __DIR__)
   @operator_trust_path Path.expand("../../../mailglass_admin/docs/operator-trust.md", __DIR__)
@@ -362,6 +365,73 @@ defmodule MailglassInbound.DocsContractTest do
     assert_closed_type_set_matches_docs!(stability, MailglassInbound.S3FetchError)
   end
 
+  test "README and install guide pins match current inbound and mailglass release lines" do
+    readme = File.read!(@readme_path)
+    install = File.read!(@install_path)
+    mixfile = File.read!(@mixfile_path)
+
+    expected_inbound_pin =
+      Mix.Project.config()[:version]
+      |> String.split(".")
+      |> Enum.take(2)
+      |> Enum.join(".")
+
+    [_, expected_mailglass_pin] =
+      Regex.run(~r/\{:mailglass,\s*"==\s*(\d+\.\d+)\.\d+"/, mixfile) ||
+        flunk("mailglass_inbound/mix.exs is missing the MIX_PUBLISH mailglass pin")
+
+    for {doc_name, doc} <- [{"README", readme}, {"install guide", install}] do
+      [_, inbound_pin] =
+        Regex.run(~r/\{:mailglass_inbound,\s*"~>\s*(\d+\.\d+)"/, doc) ||
+          flunk("#{doc_name} is missing a mailglass_inbound ~> X.Y pin")
+
+      [_, mailglass_pin] =
+        Regex.run(~r/\{:mailglass,\s*"~>\s*(\d+\.\d+)"/, doc) ||
+          flunk("#{doc_name} is missing a mailglass ~> X.Y pin")
+
+      assert inbound_pin == expected_inbound_pin
+      assert mailglass_pin == expected_mailglass_pin
+    end
+  end
+
+  test "stable/adoption prose forbids over-claims while deferred sections may name them" do
+    stability = File.read!(@stability_path)
+    readme = File.read!(@readme_path)
+    install = File.read!(@install_path)
+    changelog = File.read!(@changelog_path)
+
+    stable = contract_section!(stability, "stable")
+    deferred = contract_section!(stability, "deferred")
+    readme_active = String.split(readme, "## Deferred Beyond This Slice") |> hd()
+    readme_deferred = String.split(readme, "## Deferred Beyond This Slice") |> List.last()
+    install_active = String.split(install, "## What's next") |> hd()
+    changelog_unreleased = changelog_section!(changelog, "Unreleased")
+
+    for blocked <- [
+          "public replay API",
+          "public replay rerouting controls",
+          "public provider extension API",
+          "public worker or queue contracts"
+        ] do
+      refute stable =~ blocked
+      refute readme_active =~ blocked
+      refute install_active =~ blocked
+      refute changelog_unreleased =~ blocked
+    end
+
+    for doc <- [stable, readme_active, install_active, changelog_unreleased] do
+      refute Regex.match?(~r/replay\s+(as|is|becomes)\s+fresh/i, doc)
+      refute Regex.match?(~r/(worker|queue).*(stable|public).*(contract|api)/i, doc)
+      refute Regex.match?(~r/provider.*module.*(stable|public).*(api|extension)/i, doc)
+      refute Regex.match?(~r/operator\s+ui.*(ships|shipped|stable|public)/i, doc)
+      refute Regex.match?(~r/mailglass_inbound.*1\.x.*(stability|stable|compatibility)/i, doc)
+    end
+
+    assert deferred =~ "public replay API"
+    assert deferred =~ "public provider extension API"
+    assert readme_deferred =~ "publicly stable replay/command-surface API"
+  end
+
   defp contract_section!(document, section_name) do
     escaped = Regex.escape(section_name)
     pattern = ~r/^### `#{escaped}`\n([\s\S]*?)(?=^### `|^## |\z)/m
@@ -390,5 +460,15 @@ defmodule MailglassInbound.DocsContractTest do
            docs: #{inspect(documented)}
            code: #{inspect(expected)}
            """
+  end
+
+  defp changelog_section!(document, name) do
+    escaped = Regex.escape(name)
+    pattern = ~r/^## \[#{escaped}\]\n\n([\s\S]*?)(?=^## \[|\z)/m
+
+    case Regex.run(pattern, document) do
+      [_, section] -> section
+      _ -> flunk("Missing changelog section #{name}")
+    end
   end
 end
