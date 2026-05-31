@@ -24,7 +24,7 @@ Requirements for the Adopter Trust Proof milestone. Scope is intentionally narro
 
 - [ ] **EVID-01**: CI has a required repo-head trust lane that fails on missing journey checkpoints.
 - [x] **EVID-02**: CI has a clean-baseline trust lane that enforces Hex-first dependency resolution and blocks path-dependency leakage.
-- [ ] **EVID-03**: Release/post-publish workflow executes a published-version trust journey before milestone trust claims are accepted.
+- [x] **EVID-03**: Release/post-publish workflow executes a published-version trust journey before milestone trust claims are accepted.
 - [ ] **EVID-04**: Trust lanes emit machine-readable checkpoint artifacts used as release evidence.
 
 ### Docs and Contract Boundary
@@ -35,7 +35,7 @@ Requirements for the Adopter Trust Proof milestone. Scope is intentionally narro
 
 ### Operational Risk and Drift Prevention
 
-- [ ] **OPS-01**: Active post-publish smoke hackney dependency failure is resolved and regression-protected as part of trust-proof reliability.
+- [x] **OPS-01**: Active post-publish smoke hackney dependency failure is resolved and regression-protected as part of trust-proof reliability.
 - [x] **OPS-02**: Release checklist and maintenance cadence require green trust evidence before v1.3 closeout.
 
 ## Future Requirements
@@ -79,8 +79,8 @@ Each v1.3 requirement maps to exactly one phase.
 | DOCB-01 | Phase 61 | Pending |
 | DOCB-02 | Phase 61 | Pending |
 | DOCB-03 | Phase 61 | Pending |
-| EVID-03 | Phase 60 | Pending |
-| OPS-01 | Phase 60 | Pending |
+| EVID-03 | Phase 60 | Complete |
+| OPS-01 | Phase 60 | Complete |
 | OPS-02 | Phase 60 | Complete |
 
 **Coverage:**

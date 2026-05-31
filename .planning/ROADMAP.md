@@ -63,7 +63,7 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 - [x] Phase 57: Deterministic Trust Runner + Fixtures (0/0 plans) (completed 2026-05-27)
 - [x] Phase 58: Verify-First Webhook + Operator Path (2/2 plans) (completed 2026-05-27)
 - [x] Phase 59: CI Trust Lanes + Checkpoint Evidence (0/2 plans) (completed 2026-05-28)
-- [ ] Phase 60: Release Trust Gate + Drift Prevention (0/4 plans)
+- [x] Phase 60: Release Trust Gate + Drift Prevention (4/4 plans) (completed 2026-05-31)
 - [ ] Phase 61: Docs Contract Boundary Enforcement (0/0 plans)
 
 ### Phase Details
@@ -122,7 +122,7 @@ Plans:
 
 - [x] 60-01-PLAN.md — Bump reference host siblings to Hex ~> 1.3 / ~> 0.3 (Wave-1 enabler for both Hex-baseline lanes)
 - [x] 60-02-PLAN.md — Add the clean-baseline trust lane to ci.yml (EVID-02; publish-gate-only via gate-ci-green, D-04)
-- [ ] 60-03-PLAN.md — Published-version trust journey + OPS-01 hackney guard in post-publish-smoke.yml; issue #32 close checkpoint
+- [x] 60-03-PLAN.md — Published-version trust journey + OPS-01 hackney guard in post-publish-smoke.yml; automated issue #32 closeout
 - [x] 60-04-PLAN.md — MAINTAINING.md green-trust-evidence release gate + hands-free reconcile + OPS-02/D-04 doc-contract tests
 
 Success criteria:
