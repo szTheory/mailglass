@@ -21,7 +21,7 @@ created: 2026-05-31
 | **Config file** | `mix.exs` aliases plus `mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs` |
 | **Quick run command** | `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors` |
 | **Full suite command** | `mix verify.stability_contract` |
-| **Estimated runtime** | ~60 seconds |
+| **Estimated runtime** | ~30 seconds |
 
 ---
 
@@ -30,7 +30,7 @@ created: 2026-05-31
 - **After every task commit:** Run `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors`
 - **After every plan wave:** Run `mix verify.stability_contract`
 - **Before `$gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** 60 seconds
+- **Max feedback latency:** 30 seconds
 
 ---
 
@@ -64,7 +64,7 @@ All phase behaviors have automated verification through the docs contract lane.
 - [x] Sampling continuity: no 3 consecutive tasks without automated verify
 - [x] Wave 0 covers all MISSING references
 - [x] No watch-mode flags
-- [x] Feedback latency < 60s
+- [x] Feedback latency <= 30s
 - [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending

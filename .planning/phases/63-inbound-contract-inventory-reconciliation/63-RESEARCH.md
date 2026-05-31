@@ -197,12 +197,12 @@ end
 |---|-------|---------|---------------|
 | A1 | Exact "when changed" date for current inventory posture is v1.3-v1.4 transition. | State of the Art | Low; affects chronology wording, not implementation plan quality. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should Phase 63 update docs-contract assertions now or defer all assertion broadening to Phase 64?**
+1. **RESOLVED: Should Phase 63 update docs-contract assertions now or defer all assertion broadening to Phase 64?**
    - What we know: Existing inbound docs-contract tests already guard many over-claim vectors. [VERIFIED: codebase grep]
-   - What's unclear: Whether Phase 63 wording changes require immediate assertion edits for drift prevention.
-   - Recommendation: Plan an explicit checkpoint; apply only minimal assertion updates in Phase 63 if needed for same-PR safety, keep larger compiled-doc/closed-set proof work in Phase 64.
+   - Resolution: Phase 63 should update focused docs-contract assertions for the reconciled inventory in the same phase, limited to stable/testing/internal/deferred wording and over-claim prevention. Larger compiled-doc and closed-set proof hardening remains deferred to Phase 64.
+   - Planning impact: Include one implementation task for `mailglass_inbound/docs/api_stability.md` and one assertion task for `mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs`.
 
 ## Environment Availability
 
