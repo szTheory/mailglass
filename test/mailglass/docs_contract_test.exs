@@ -237,6 +237,25 @@ defmodule Mailglass.DocsContractTest do
     end
   end
 
+  describe "Phase 61 trust-entry docs contract" do
+    test "trust-entry docs route guarantees to canonical stability lanes with non-contract framing" do
+      maintaining = File.read!("MAINTAINING.md")
+      webhooks = File.read!("guides/webhooks.md")
+      troubleshooting = File.read!("guides/webhook-troubleshooting.md")
+      operator_trust = File.read!("mailglass_admin/docs/operator-trust.md")
+
+      for doc <- [maintaining, webhooks, troubleshooting, operator_trust] do
+        assert doc =~ "api_stability.md"
+        assert doc =~ "mix verify.stability_contract"
+      end
+
+      assert maintaining =~ "not API-contract truth"
+      assert webhooks =~ "implementation detail"
+      assert troubleshooting =~ "implementation detail"
+      assert operator_trust =~ "implementation detail"
+    end
+  end
+
   describe "inbound doc contracts" do
     test "inbound install guide covers the canonical setup steps" do
       doc = File.read!("mailglass_inbound/docs/inbound-install.md")

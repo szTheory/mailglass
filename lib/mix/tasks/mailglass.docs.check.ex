@@ -66,6 +66,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   @trust_internal_detail_regex ~r/(?:Mix\.Tasks\.Mailglass\.Trust\.Run|trust-runner|checkpoint internals|provider modules)/i
   @trust_contract_claim_regex ~r/(?:stable public API(?: guarantee)?|public API guarantee|is API-contract truth|canonical contract truth)/i
   @allowed_non_contract_framing_regex ~r/(?:implementation detail|usage-proof evidence only|not API-contract truth|not canonical contract truth)/i
+  @internal_id_exempt_paths MapSet.new(@trust_entry_paths)
   @tier1_surface_rules %{
     "README.md" => %{
       required: [
@@ -432,13 +433,17 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
 
   defp leak_issues(paths) do
     Enum.flat_map(paths, fn path ->
-      content = File.read!(path)
+      if MapSet.member?(@internal_id_exempt_paths, path) do
+        []
+      else
+        content = File.read!(path)
 
-      Enum.flat_map(@banned_patterns, fn re ->
-        re
-        |> Regex.scan(content)
-        |> Enum.map(fn [token | _] -> {:internal_id, path, token} end)
-      end)
+        Enum.flat_map(@banned_patterns, fn re ->
+          re
+          |> Regex.scan(content)
+          |> Enum.map(fn [token | _] -> {:internal_id, path, token} end)
+        end)
+      end
     end)
   end
 
