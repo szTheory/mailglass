@@ -136,7 +136,7 @@ Goal: enforce reference-host docs as usage proof while directing contract guaran
 Requirements: DOCB-01, DOCB-02, DOCB-03  
 Plans:
 
-- [ ] 61-01-PLAN.md — Reference-host usage-proof boundary and reference-host contract pins
+- [x] 61-01-PLAN.md — Reference-host usage-proof boundary and reference-host contract pins
 - [ ] 61-02-PLAN.md — Canonical stability routing across trust-entry docs
 - [ ] 61-03-PLAN.md — Deterministic docs checker and docs-contract enforcement for trust surfaces
 

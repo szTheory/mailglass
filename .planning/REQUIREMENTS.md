@@ -29,8 +29,8 @@ Requirements for the Adopter Trust Proof milestone. Scope is intentionally narro
 
 ### Docs and Contract Boundary
 
-- [ ] **DOCB-01**: Reference-app docs clearly state they are usage proof artifacts, not API-contract truth.
-- [ ] **DOCB-02**: Reference journey docs link to canonical stability contract documents and tests for guarantee semantics.
+- [x] **DOCB-01**: Reference-app docs clearly state they are usage proof artifacts, not API-contract truth.
+- [x] **DOCB-02**: Reference journey docs link to canonical stability contract documents and tests for guarantee semantics.
 - [ ] **DOCB-03**: Docs contract verification enforces boundary language so reference internals are not presented as public API.
 
 ### Operational Risk and Drift Prevention
@@ -76,8 +76,8 @@ Each v1.3 requirement maps to exactly one phase.
 | EVID-01 | Phase 59 | Pending |
 | EVID-02 | Phase 59 | Complete |
 | EVID-04 | Phase 59 | Pending |
-| DOCB-01 | Phase 61 | Pending |
-| DOCB-02 | Phase 61 | Pending |
+| DOCB-01 | Phase 61 | Complete |
+| DOCB-02 | Phase 61 | Complete |
 | DOCB-03 | Phase 61 | Pending |
 | EVID-03 | Phase 60 | Complete |
 | OPS-01 | Phase 60 | Complete |
