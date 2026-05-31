@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Inbound Stability Lock
 status: executing
-last_updated: "2026-05-31T20:17:18.787Z"
+last_updated: "2026-05-31T20:17:43.279Z"
 last_activity: 2026-05-31
 progress:
   total_phases: 4
@@ -62,6 +62,8 @@ Last activity: 2026-05-31
 - [Phase 62]: Accepted resolver-required lock churn for decimal, phoenix_live_view, and swoosh after scoped sibling update. — The scoped sibling update required these transitive lock updates; no workflow or product topology changed.
 - [Phase 64]: Pinned inbound runtime since metadata to package release history (0.1.0/0.2.0) for compiled-doc proof truth.
 - [Phase 64]: Scoped runtime seam metadata to direct adopter entrypoints only (read_body/2, __using__/1, route/2, process/1).
+- [Phase 64]: Plan 64-04 enforces exact docs-to-code closed type-set parity for inbound MIME, Signature, and S3 errors.
+- [Phase 64]: Plan 64-04 scopes over-claim checks to stable/adoption/unreleased prose while keeping deferred references explicitly allowed.
 
 ## Roadmap Snapshot
 
@@ -98,6 +100,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 61 P03 | 6 min | 2 tasks | 3 files |
 | Phase 62 P01 | 21 min | 2 tasks | 4 files |
 | Phase 64 P01 | 2min | 2 tasks | 7 files |
+| Phase 64 P04 | 18min | 2 tasks | 5 files |
 
 ## Accumulated Context
 

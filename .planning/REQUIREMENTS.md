@@ -16,8 +16,8 @@ Requirements for the inbound stability-lock milestone. Each requirement maps to 
 ### Verification Proof
 
 - [x] **PROOF-01**: `mix verify.stability_contract` proves inbound contract docs and compiled-doc metadata.
-- [ ] **PROOF-02**: Inbound closed atom/type sets stay locked to docs.
-- [ ] **PROOF-03**: Docs checks block over-claims and stale release-line claims.
+- [x] **PROOF-02**: Inbound closed atom/type sets stay locked to docs.
+- [x] **PROOF-03**: Docs checks block over-claims and stale release-line claims.
 
 ### Adopter DX
 
@@ -73,8 +73,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOCK-02 | Phase 63 | Complete |
 | LOCK-03 | Phase 63 | Complete |
 | PROOF-01 | Phase 64 | Complete |
-| PROOF-02 | Phase 64 | Pending |
-| PROOF-03 | Phase 64 | Pending |
+| PROOF-02 | Phase 64 | Complete |
+| PROOF-03 | Phase 64 | Complete |
 | DX-01 | Phase 65 | Pending |
 | DX-02 | Phase 65 | Pending |
 | DX-03 | Phase 65 | Pending |
