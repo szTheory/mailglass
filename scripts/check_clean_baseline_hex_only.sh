@@ -19,15 +19,18 @@ MAILGLASS_LOCK_PATH="$LOCK_PATH" elixir -e '
   lock = File.read!(lock_path) |> Code.eval_string() |> elem(0)
 
   required = [
-    {"mailglass", :hex},
-    {"mailglass_admin", :hex},
-    {"mailglass_inbound", :hex}
+    {"mailglass", :hex, "1.3.0"},
+    {"mailglass_admin", :hex, "1.3.0"},
+    {"mailglass_inbound", :hex, "0.3.0"}
   ]
 
-  Enum.each(required, fn {name, expected_source} ->
+  Enum.each(required, fn {name, expected_source, expected_version} ->
     case Map.get(lock, String.to_atom(name)) do
+      tuple when is_tuple(tuple) and elem(tuple, 0) == expected_source and elem(tuple, 2) == expected_version ->
+        IO.puts("Hex-first OK: #{name} resolved via :hex (version: #{expected_version})")
       tuple when is_tuple(tuple) and elem(tuple, 0) == expected_source ->
-        IO.puts("Hex-first OK: #{name} resolved via :hex (version: #{elem(tuple, 2)})")
+        IO.puts(:stderr, "Hex-first violation: #{name} expected #{expected_version}, got #{elem(tuple, 2)}")
+        System.halt(1)
       tuple when is_tuple(tuple) ->
         IO.puts(:stderr, "Hex-first violation: #{name} resolved via #{inspect(elem(tuple, 0))}, expected :hex")
         System.halt(1)
