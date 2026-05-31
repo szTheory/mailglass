@@ -1,4 +1,5 @@
 defmodule MailglassInbound.Test.Ingress do
+  @moduledoc since: "0.2.0"
   @moduledoc """
   The inbound test driver (ITEST-06): drives the **real** synchronous
   persist + route + execute write path and captures the outcome in the
@@ -127,6 +128,7 @@ defmodule MailglassInbound.Test.Ingress do
   The message carries its own `:tenant_id` and `:provider`.
   """
   @spec receive_inbound(InboundMessage.t(), keyword()) :: {:ok, result()} | {:error, term()}
+  @doc since: "0.2.0"
   def receive_inbound(%InboundMessage{} = message, opts \\ []) when is_list(opts) do
     handoff = %{
       tenant_id: message.tenant_id,
@@ -184,6 +186,7 @@ defmodule MailglassInbound.Test.Ingress do
   """
   @spec receive_provider_payload(atom(), term(), keyword()) ::
           {:ok, result()} | {:error, term()}
+  @doc since: "0.2.0"
   def receive_provider_payload(provider, payload, opts \\ [])
       when is_atom(provider) and is_list(opts) do
     tenant_id = Keyword.get(opts, :tenant_id, @default_tenant_id)

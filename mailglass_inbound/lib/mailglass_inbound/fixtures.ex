@@ -1,4 +1,5 @@
 defmodule MailglassInbound.Fixtures do
+  @moduledoc since: "0.2.0"
   @moduledoc """
   Code-built inbound payload fixtures for adopter tests (ITEST-07).
 
@@ -89,6 +90,7 @@ defmodule MailglassInbound.Fixtures do
   - `:subject`, `:text_body`, `:html_body`, `:envelope_recipient`
   """
   @spec build_inbound_message(keyword()) :: InboundMessage.t()
+  @doc since: "0.2.0"
   def build_inbound_message(opts \\ []) do
     provider_message_id = Keyword.get(opts, :provider_message_id, generate_id("msg"))
     from = Keyword.get(opts, :from, @default_from)
@@ -124,6 +126,7 @@ defmodule MailglassInbound.Fixtures do
   - `:provider_message_id` / `:subject` / `:from` / `:recipient` / `:text_body`
   """
   @spec build_postmark_payload(keyword()) :: binary()
+  @doc since: "0.2.0"
   def build_postmark_payload(opts \\ []) do
     message_id = Keyword.get(opts, :provider_message_id, generate_id("postmark"))
     from = Keyword.get(opts, :from, @default_from)
@@ -186,6 +189,7 @@ defmodule MailglassInbound.Fixtures do
           params: map(),
           config: map()
         }
+  @doc since: "0.2.0"
   def build_sendgrid_payload(opts \\ []) do
     from = Keyword.get(opts, :from, @default_from)
     recipient = Keyword.get(opts, :recipient, @default_to)
@@ -224,6 +228,7 @@ defmodule MailglassInbound.Fixtures do
   …)` defaults its config to this so the fixture verifies out of the box.
   """
   @spec sendgrid_fixture_config() :: %{basic_auth: {String.t(), String.t()}}
+  @doc since: "0.2.0"
   def sendgrid_fixture_config, do: %{basic_auth: @default_sendgrid_basic_auth}
 
   # --------------------------------------------------------------------------
@@ -262,6 +267,7 @@ defmodule MailglassInbound.Fixtures do
           headers: [{String.t(), String.t()}],
           config: map()
         }
+  @doc since: "0.2.0"
   def build_mailgun_payload(opts \\ []) do
     from = Keyword.get(opts, :from, @default_from)
     recipient = Keyword.get(opts, :recipient, @default_to)
@@ -313,6 +319,7 @@ defmodule MailglassInbound.Fixtures do
   defaults its config to this so the fixture verifies out of the box.
   """
   @spec mailgun_fixture_config() :: %{signing_key: String.t()}
+  @doc since: "0.2.0"
   def mailgun_fixture_config, do: %{signing_key: @default_mailgun_signing_key}
 
   # --------------------------------------------------------------------------
@@ -368,6 +375,7 @@ defmodule MailglassInbound.Fixtures do
           headers: [{String.t(), String.t()}],
           config: map()
         }
+  @doc since: "0.2.0"
   def build_ses_sns_payload(opts \\ []) do
     from = Keyword.get(opts, :from, @default_from)
     recipient = Keyword.get(opts, :recipient, @default_to)
