@@ -458,6 +458,76 @@ jobs:
           fi
           echo "Endpoint smoke passed."
 
+  published-trust-journey:
+    name: Published-version trust journey
+    runs-on: ubuntu-latest
+    needs: [cron-guard, consumer-install]
+    if: ${{ needs.cron-guard.outputs.should_run == 'true' }}
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - name: Checkout release ref
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          ref: ${{ needs.cron-guard.outputs.release_ref }}
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - name: Cache deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        run: mix deps.get
+      - name: Wait for postgres + create test DB
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres; do sleep 1; done
+          mix ecto.create -r Mailglass.TestRepo --quiet
+      - name: Build reference host (dev) so the journey can load sibling beams
+        working-directory: reference/host_app
+        env:
+          MIX_ENV: dev
+        run: mix deps.get && mix compile
+      - name: Guard reference host resolves siblings from Hex
+        working-directory: reference/host_app
+        run: bash ../../scripts/check_clean_baseline_hex_only.sh
+      - name: Run published reference-host trust journey
+        run: mix verify.reference_host.journey --host-root reference/host_app
+      - name: Validate trust checkpoint contract
+        run: bash scripts/check_trust_runner_checkpoint.sh
+      - name: Upload trust-runner published artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: trust-runner-published-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 90
+          path: tmp/mailglass_trust_runner/checkpoint.json
+
   retracted-check:
     name: Verify package not retracted
     runs-on: ubuntu-latest
@@ -516,7 +586,7 @@ jobs:
   notify-on-failure:
     name: Open issue on smoke failure
     runs-on: ubuntu-latest
-    needs: [cron-guard, wait-for-index, wait-for-hexdocs, consumer-install, retracted-check]
+    needs: [cron-guard, wait-for-index, wait-for-hexdocs, consumer-install, published-trust-journey, retracted-check]
     if: failure() && needs.cron-guard.outputs.should_run == 'true'
     continue-on-error: true
     steps:
