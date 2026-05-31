@@ -13,13 +13,14 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 **`v1.2 Inbound Production Confidence` shipped on 2026-05-26.**
 
 - Milestone archive complete: 10 phases (`44.5`, `45-50`, `50.5`, `50.7`, `51`), 42 plans, 58/58 requirements satisfied, final audit `status: passed`
-- **Current package versions on Hex: `mailglass` 1.2.0 / `mailglass_admin` 1.2.0 / `mailglass_inbound` 0.2.0** (live on 2026-05-26 via Phase 50.5; archive finalized the same day)
+- **Current package versions on Hex: `mailglass` 1.3.0 / `mailglass_admin` 1.3.0 / `mailglass_inbound` 0.3.0** (live on 2026-05-29; reference-host trust proof aligned in Phase 62)
 - v1.3 Phase 52 completed on 2026-05-27: the maintained `reference/host_app` baseline, public-seam boundary guardrails, and scope lock contract are now in place for the trust-proof milestone
 - v1.3 Phase 57 completed on 2026-05-27: canonical deterministic trust-runner command, fixture stability contract, and schema-versioned trust checkpoint evidence are now enforced for local/CI trust lanes
 - v1.3 Phase 58 completed on 2026-05-27: signed Postmark webhook verification and deterministic no-match operator diagnosis are proven through the maintained reference-host trust runner and validated checkpoint evidence
 - v1.3 Phase 59 completed on 2026-05-28: repo-head and clean-baseline trust lanes are wired into CI with checkpoint evidence expectations and branch-protection reassertion
 - v1.3 Phase 60 completed on 2026-05-31: release trust gates and drift-prevention checks now protect published-version trust proof and smoke reliability claims
 - v1.3 Phase 61 completed on 2026-05-31: reference-host and trust-entry docs now route guarantee truth to canonical `api_stability.md` inventories and `mix verify.stability_contract`, with deterministic docs-check enforcement against contract-boundary drift
+- v1.3 Phase 62 completed on 2026-05-31: the clean-baseline and published-version trust proof now validate the current sibling Hex line (`mailglass` 1.3.0 / `mailglass_admin` 1.3.0 / `mailglass_inbound` 0.3.0), with a non-evaluating source+version guard and stale-lock contract coverage
 - Backlog phase 999.1 completed on 2026-05-27: planning-artifact comment cleanup now covers scoped core/admin/inbound source paths, with Credo drift prevention (`Mailglass.Credo.NoPlanningArtifactComments`) and guard tests added
 - Backlog phase 999.2 completed on 2026-05-27: deterministic preview URL/capture matrix foundations, mix screenshot capture workflow, advisory CI artifact lane, and docs claim-boundary contract checks are now in place
 - `mailglass_inbound` now has production-credible telemetry, Mailgun + SES ingress, test helpers + generators, admin observability, operator tooling, and six first-party inbound guides
@@ -141,7 +142,7 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 **By category (v1.3 Phase 52 — trust baseline):**
 - ✓ HOST-01..03 — Maintained reference host baseline, public-seam-only integration boundary, and fail-closed scope lock artifact/test contracts validated in Phase 52
 - ✓ JOUR-01..02 — Canonical deterministic trust-runner command plus deterministic fixture/checkpoint schema and validator contract validated in Phase 57
-- ✓ EVID-02, EVID-03 — Clean-baseline trust lane and published-version trust evidence gates validated in Phases 59-60
+- ✓ EVID-02, EVID-03 — Clean-baseline trust lane and published-version trust evidence gates validated in Phases 59-60, with current-release Hex proof closed in Phase 62
 - ✓ OPS-01..02 — Release-gate drift prevention and smoke reliability guardrails validated in Phase 60
 - ✓ DOCB-01..03 — Reference-host usage-proof boundary, canonical stability routing, and deterministic docs-contract enforcement validated in Phase 61
 
