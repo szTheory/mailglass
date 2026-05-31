@@ -1,10 +1,11 @@
 ---
 phase: 57
 slug: deterministic-trust-runner-fixtures
-status: draft
-nyquist_compliant: false
+status: validated
+nyquist_compliant: true
 wave_0_complete: true
 created: 2026-05-27
+updated: 2026-05-31T15:42:11Z
 ---
 
 # Phase 57 — Validation Strategy
@@ -21,7 +22,7 @@ created: 2026-05-27
 | **Framework** | ExUnit integration/contract tests + deterministic checkpoint validation script |
 | **Config file** | root `mix.exs`, `.planning/REQUIREMENTS.md`, `.planning/phases/57-deterministic-trust-runner-fixtures/57-CONTEXT.md` |
 | **Quick run command** | `mix test test/reference_host/trust_runner_checkpoint_contract_test.exs --warnings-as-errors` |
-| **Full suite command** | `mix verify.reference_host.journey` |
+| **Full suite command** | `mix verify.reference_host.journey --dry-run && bash scripts/check_trust_runner_checkpoint.sh --checkpoint tmp/mailglass_trust_runner/checkpoint.json` |
 | **Estimated runtime** | ~90-180 seconds |
 
 ---
@@ -39,12 +40,12 @@ created: 2026-05-27
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 57-01-01 | 01 | 1 | JOUR-01 | T-57-01 | Single deterministic runner entrypoint executes all stage checkpoints | integration | `mix verify.reference_host.journey` | ❌ W0 | ⬜ pending |
-| 57-01-02 | 01 | 1 | JOUR-01 | T-57-02 | Runner stage names and ordering remain stable | contract | `mix test test/reference_host/trust_runner_command_contract_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| 57-02-01 | 02 | 1 | JOUR-02 | T-57-03 | Fixture IDs/payloads are deterministic and stable | contract | `mix test test/reference_host/trust_runner_fixture_contract_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| 57-02-02 | 02 | 1 | JOUR-02 | T-57-04 | Checkpoint schema/boundary/hash are deterministic across reruns | contract + script | `mix test test/reference_host/trust_runner_checkpoint_contract_test.exs --warnings-as-errors` and `bash scripts/check_trust_runner_checkpoint.sh --checkpoint tmp/mailglass_trust_runner/checkpoint.json` | ❌ W0 | ⬜ pending |
-| 57-03-01 | 03 | 2 | JOUR-01 | T-57-05 | Local and CI wrappers call canonical runner entrypoint only | grep + contract | `rg -n "verify.reference_host.journey|mailglass\\.trust\\.run" .github/workflows/ci.yml MAINTAINING.md` | ❌ W0 | ⬜ pending |
-| 57-03-02 | 03 | 2 | JOUR-02 | T-57-06 | Deferred Phase 58 concerns remain explicit and not silently claimed complete | docs contract | `rg -n "Phase 58|JOUR-03|JOUR-04|deferred" .planning/phases/57-deterministic-trust-runner-fixtures/*-PLAN.md` | ✅ | ⬜ pending |
+| 57-01-01 | 01 | 1 | JOUR-01 | T-57-01 | Single deterministic runner entrypoint executes all stage checkpoints | integration | `mix verify.reference_host.journey --dry-run` | ✅ | ✅ green |
+| 57-01-02 | 01 | 1 | JOUR-01 | T-57-02 | Runner stage names and ordering remain stable | contract | `mix test test/reference_host/trust_runner_command_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 57-02-01 | 02 | 1 | JOUR-02 | T-57-03 | Fixture IDs/payloads are deterministic and stable | contract | `mix test test/reference_host/trust_runner_fixture_contract_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| 57-02-02 | 02 | 1 | JOUR-02 | T-57-04 | Checkpoint schema/boundary/hash are deterministic across reruns | contract + script | `mix test test/reference_host/trust_runner_checkpoint_contract_test.exs --warnings-as-errors` and `bash scripts/check_trust_runner_checkpoint.sh --checkpoint tmp/mailglass_trust_runner/checkpoint.json` | ✅ | ✅ green |
+| 57-03-01 | 02 | 2 | JOUR-01 | T-57-05 | Local and CI wrappers call canonical runner entrypoint only | grep + contract | `rg -n "verify.reference_host.journey|mailglass\\.trust\\.run" .github/workflows/ci.yml MAINTAINING.md` | ✅ | ✅ green |
+| 57-03-02 | 02 | 2 | JOUR-02 | T-57-06 | Deferred Phase 58 concerns remain explicit and not silently claimed complete | docs contract | `rg -n "Phase 58|JOUR-03|JOUR-04|signed Postmark webhook verification|no-match operator diagnosis" .planning/phases/57-deterministic-trust-runner-fixtures/*-PLAN.md reference/host_app/README.md` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -52,10 +53,10 @@ created: 2026-05-27
 
 ## Wave 0 Requirements
 
-- [ ] `test/reference_host/trust_runner_command_contract_test.exs` — canonical runner command contract
-- [ ] `test/reference_host/trust_runner_fixture_contract_test.exs` — deterministic fixture identity contract
-- [ ] `test/reference_host/trust_runner_checkpoint_contract_test.exs` — checkpoint schema/determinism contract
-- [ ] `scripts/check_trust_runner_checkpoint.sh` — executable checkpoint validation gate
+- [x] `test/reference_host/trust_runner_command_contract_test.exs` — canonical runner command contract
+- [x] `test/reference_host/trust_runner_fixture_contract_test.exs` — deterministic fixture identity contract
+- [x] `test/reference_host/trust_runner_checkpoint_contract_test.exs` — checkpoint schema/determinism contract
+- [x] `scripts/check_trust_runner_checkpoint.sh` — executable checkpoint validation gate
 
 ---
 
@@ -71,11 +72,36 @@ created: 2026-05-27
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 180s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 180s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated 2026-05-31
+
+---
+
+## Validation Audit 2026-05-31
+
+| Metric | Count |
+|--------|-------|
+| Requirements audited | 2 |
+| Gaps found | 1 |
+| Resolved | 1 |
+| Escalated | 0 |
+
+### Gap Resolution
+
+- `scripts/check_trust_runner_checkpoint.sh` now accepts evidence-free `dry_run` rows for Phase 57 deterministic checkpoint validation while preserving strict Phase 58 evidence checks for completed webhook/operator rows.
+- `test/reference_host/trust_runner_checkpoint_contract_test.exs` now exercises the validator against a generated dry-run checkpoint, closing the missing automated coverage path.
+
+### Verification Evidence
+
+- PASS: `mix help mailglass.trust.run`
+- PASS: `mix verify.reference_host.journey --dry-run`
+- PASS: `mix test test/reference_host/trust_runner_command_contract_test.exs --warnings-as-errors` (3 tests, 0 failures)
+- PASS: `mix test test/reference_host/trust_runner_fixture_contract_test.exs --warnings-as-errors` (1 test, 0 failures)
+- PASS: `mix test test/reference_host/trust_runner_checkpoint_contract_test.exs --warnings-as-errors` (4 tests, 0 failures)
+- PASS: `mix verify.reference_host.journey --dry-run && bash scripts/check_trust_runner_checkpoint.sh --checkpoint tmp/mailglass_trust_runner/checkpoint.json`
