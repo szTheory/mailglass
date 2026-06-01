@@ -163,6 +163,9 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "new work",
         "no change",
         "Replay and reconcile are intentionally distinct",
+        "it is not",
+        "does not silently reroute",
+        "public replay runtime API",
         "docs/api_stability.md",
         "mailglass_inbound/docs/api_stability.md",
         "mix verify.stability_contract",
@@ -356,10 +359,14 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     },
     "mailglass_inbound/docs/inbound-testing.md" => %{
       required: [
-        "use MailglassInbound.MailboxCase",
+        "use MailglassInbound.MailboxCase, async: false",
         "assert_inbound_received",
         "Test.Ingress.receive_inbound",
         "async: false",
+        "Process-local capture contract",
+        "one-assertion-per-drive rule",
+        "consumes",
+        "drive two messages to make two assertions",
         "StreamData"
       ],
       forbidden: []
@@ -369,7 +376,16 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "mix mailglass.inbound.doctor",
         "mix mailglass.inbound.replay",
         "mix mailglass.inbound.prune",
-        "--tenant",
+        "--tenant <id>",
+        "--dry-run",
+        "--yes",
+        "Exit codes",
+        "cross-tenant replay guard",
+        "full word `yes`",
+        "Type 'yes' to continue",
+        "not a fresh provider receipt",
+        "not silently reroute to another mailbox",
+        "not a public replay runtime",
         "retention:"
       ],
       forbidden: []
