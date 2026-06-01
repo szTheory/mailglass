@@ -8,7 +8,7 @@ requires:
     provides: canonical scope and language decisions for click-around UX/docs
 provides:
   - Canonical demo README quickstart, persona/JTBD, seeded stories, click path, and boundary language
-  - Executable docs contract test that fails closed on wording and route drift
+  - Executable docs contract test that fails closed on wording and route drift without stale compile-time README reads
 affects: [phase-70-browser-evidence, demo-docs]
 tech-stack:
   added: []
@@ -41,16 +41,18 @@ completed: 2026-06-01
 ## Accomplishments
 - Expanded `reference/demo_app/README.md` into the canonical Phase 69 quickstart and click guide with required sections and exact boundary/reset sentences.
 - Added `reference/demo_app/test/mailglass_demo/docs_contract_test.exs` as a fail-closed textual contract for sections, commands, routes, stories, reset wording, and boundary language.
+- Resolved the code-review warning by reading README content at assertion time instead of module compile time.
 - Verified targeted and full demo-app test suites pass with warnings-as-errors.
 
 ## Task Commits
 
 1. **Task 1: Expand the demo README into the canonical quickstart and what-to-click guide** - `5d154a1b` (docs)
 2. **Task 2: Add a docs contract test that fails closed on quickstart, route, and boundary drift** - `1f96a27f` (test)
+3. **Code review follow-up: Read README at assertion time to avoid stale contract assertions** - `352d4b5a` (test)
 
 ## Files Created/Modified
 - `reference/demo_app/README.md` - Canonical quickstart, persona/JTBD, seeded data, click flow, dependency mode, and strict demo boundary wording.
-- `reference/demo_app/test/mailglass_demo/docs_contract_test.exs` - ExUnit text assertions over README contract tokens.
+- `reference/demo_app/test/mailglass_demo/docs_contract_test.exs` - ExUnit text assertions over README contract tokens, read at assertion time.
 
 ## Decisions Made
 - None - followed plan as specified.
@@ -88,9 +90,12 @@ None.
 
 - `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/docs_contract_test.exs --warnings-as-errors` -> PASS (2 tests, 0 failures)
 - `cd reference/demo_app && MIX_ENV=test mix test --warnings-as-errors` -> PASS (17 tests, 0 failures)
+- After code-review follow-up: `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/docs_contract_test.exs --warnings-as-errors` -> PASS (2 tests, 0 failures)
+- After code-review follow-up: `cd reference/demo_app && MIX_ENV=test mix test --warnings-as-errors` -> PASS (17 tests, 0 failures)
 
 ## Self-Check: PASSED
 
 - Found file: `.planning/phases/69-click/69-02-SUMMARY.md`
 - Found commit: `5d154a1b`
 - Found commit: `1f96a27f`
+- Found follow-up commit: `352d4b5a`
