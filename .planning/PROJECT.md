@@ -10,13 +10,14 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**`v1.4 Inbound Stability Lock` is in progress. Phases 63-64 completed on 2026-05-31.**
+**`v1.4 Inbound Stability Lock` is in progress. Phases 63-65 are complete; Phase 66 is next for the release-position decision.**
 
 - Phase 63 reconciled `mailglass_inbound/docs/api_stability.md` into the canonical stable/testing/internal/deferred inbound inventory.
 - Provider support is now documented through `MailglassInbound.Ingress.Plug` semantics, while provider modules, replay internals, route structs, workers, queues, and UI details stay internal.
 - Deferred inbound capabilities are explicitly named: public replay API, provider extension API, matcher expansion, lifecycle callbacks, fan-out, synthetic UI, `gen_smtp`, and ecosystem integrations.
 - Package-local docs-contract assertions now pin those section boundaries and over-claim guards.
 - Phase 64 made the inbound contract executable: compiled-doc metadata is verified package-locally, closed error/type sets are locked to docs, release-line/over-claim checks fail closed, and root `mix verify.stability_contract` delegates to the inbound support-contract lane.
+- Phase 65 locked the adopter-facing DX story: the inbound README is the canonical adoption lane, install/compatibility/operator/testing/admin trust docs agree on stable versus internal boundaries, and docs-contract plus Tier 1 checks now fail closed on drift.
 
 **`v1.3 Adopter Trust Proof` shipped on 2026-05-31.**
 
@@ -215,10 +216,10 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 - [x] **PROOF-01**: `mix verify.stability_contract` proves inbound contract docs and compiled-doc metadata. Validated in Phase 64.
 - [x] **PROOF-02**: Inbound closed atom/type sets stay locked to docs. Validated in Phase 64.
 - [x] **PROOF-03**: Docs checks block over-claims and stale release-line claims. Validated in Phase 64.
-- [ ] **DX-01**: Adopter can follow one canonical install/adoption path without contradictory docs.
-- [ ] **DX-02**: Operator can understand doctor/replay/prune commands, exit semantics, tenant guards, and destructive confirmations.
-- [ ] **DX-03**: Testing docs clearly explain process-local assertions and one-assertion-per-drive behavior.
-- [ ] **DX-04**: Admin/operator trust wording does not confuse replay, reroute, fresh receipt, or UI guarantees.
+- [x] **DX-01**: Adopter can follow one canonical install/adoption path without contradictory docs. Validated in Phase 65.
+- [x] **DX-02**: Operator can understand doctor/replay/prune commands, exit semantics, tenant guards, and destructive confirmations. Validated in Phase 65.
+- [x] **DX-03**: Testing docs clearly explain process-local assertions and one-assertion-per-drive behavior. Validated in Phase 65.
+- [x] **DX-04**: Admin/operator trust wording does not confuse replay, reroute, fresh receipt, or UI guarantees. Validated in Phase 65.
 - [ ] **REL-01**: Maintainer can make an explicit inbound `1.0.0` vs final `0.x` release decision from committed evidence.
 - [ ] **REL-02**: Release notes explain the contract posture without hype or ambiguity.
 - [ ] **REL-03**: No broad feature-growth milestone opens before the release-position decision.
@@ -338,4 +339,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-05-31 after completing Phase 64 Contract Verification Hardening*
+*Last updated: 2026-06-01 after completing Phase 65 Compatibility, Docs, and DX Lock*
