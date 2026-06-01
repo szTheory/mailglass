@@ -102,7 +102,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] `65-01-PLAN.md` — Keep the inbound README as the canonical adoption lane and route compatibility posture through the active guide topology.
+- [x] `65-01-PLAN.md` — Keep the inbound README as the canonical adoption lane and route compatibility posture through the active guide topology.
 - [ ] `65-02-PLAN.md` — Tighten operator, testing, and admin trust docs around shipped semantics and explicit non-contract boundaries.
 - [ ] `65-03-PLAN.md` — Extend inbound docs-contract and Tier 1 docs checks to lock the adoption and compatibility story.
 - [ ] `65-04-PLAN.md` — Extend inbound docs-contract and Tier 1 docs checks to lock operator, testing, and admin trust wording.

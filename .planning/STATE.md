@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Inbound Stability Lock
-status: planning
-last_updated: "2026-05-31T21:14:57.637Z"
-last_activity: 2026-05-31
+status: executing
+last_updated: "2026-06-01T00:36:00.000Z"
+last_activity: 2026-06-01 -- Completed 65-01 (canonical inbound adoption + compatibility routing)
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 10
+  completed_plans: 7
   percent: 50
 ---
 
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31 after opening v1.4 Inbound Stability Lock)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 65 — compatibility, docs, and dx lock
+**Current focus:** Phase 65 — compatibility-docs-and-dx-lock
 
 ## Current Position
 
-Phase: 65
-Plan: Not started
-Status: Context gathered; ready to plan
-Last activity: 2026-05-31
+Phase: 65 (compatibility-docs-and-dx-lock) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-06-01
 
 ## v1.4 Milestone Intent
 
@@ -64,6 +64,8 @@ Last activity: 2026-05-31
 - [Phase 64]: Scoped runtime seam metadata to direct adopter entrypoints only (read_body/2, __using__/1, route/2, process/1).
 - [Phase 64]: Plan 64-04 enforces exact docs-to-code closed type-set parity for inbound MIME, Signature, and S3 errors.
 - [Phase 64]: Plan 64-04 scopes over-claim checks to stable/adoption/unreleased prose while keeping deferred references explicitly allowed.
+- [Phase 65]: README remains the canonical inbound adoption lane; inbound-install is explicitly subordinate.
+- [Phase 65]: Inbound compatibility claims route through `mailglass_inbound/docs/api_stability.md` with explicit deprecation-DX inventory.
 
 ## Roadmap Snapshot
 

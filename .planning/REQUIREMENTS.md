@@ -21,7 +21,7 @@ Requirements for the inbound stability-lock milestone. Each requirement maps to 
 
 ### Adopter DX
 
-- [ ] **DX-01**: Adopter can follow one canonical install/adoption path without contradictory docs.
+- [x] **DX-01**: Adopter can follow one canonical install/adoption path without contradictory docs.
 - [ ] **DX-02**: Operator can understand doctor/replay/prune commands, exit semantics, tenant guards, and destructive confirmations.
 - [ ] **DX-03**: Testing docs clearly explain process-local assertions and one-assertion-per-drive behavior.
 - [ ] **DX-04**: Admin/operator trust wording does not confuse replay, reroute, fresh receipt, or UI guarantees.
@@ -75,7 +75,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROOF-01 | Phase 64 | Complete |
 | PROOF-02 | Phase 64 | Complete |
 | PROOF-03 | Phase 64 | Complete |
-| DX-01 | Phase 65 | Pending |
+| DX-01 | Phase 65 | Complete |
 | DX-02 | Phase 65 | Pending |
 | DX-03 | Phase 65 | Pending |
 | DX-04 | Phase 65 | Pending |
