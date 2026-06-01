@@ -20,6 +20,7 @@ key-files:
   created:
     - .planning/phases/54-pr-branch-triage-green-main-proof/54-01-SUMMARY.md
   modified:
+    - .github/workflows/release-please.yml
     - .planning/phases/54-pr-branch-triage-green-main-proof/54-TRIAGE-RECORD.md
     - .planning/phases/54-pr-branch-triage-green-main-proof/54-GREEN-MAIN-EVIDENCE.md
 key-decisions:
@@ -50,6 +51,7 @@ completed: 2026-06-01
 - Confirmed PR #41 merged on 2026-05-27 with final head SHA `265a6f299c88ebebaa69aa8375de9af77a60ff7f` and merge commit `fd4f3c98fe1d67aac8a57593c588b6748914b441`.
 - Confirmed original Phase 54 PR backlog #17, #27, #28, #29, #30, #37, #38, and #39 each has an explicit closed disposition.
 - Re-ran local verification commands and captured current hygiene JSON, including current blockers.
+- Updated `.github/workflows/release-please.yml` to use `secrets.RELEASE_PLEASE_PAT` instead of the obsolete `secrets.RELEASE_PLEASE_TOKEN`.
 - Verified branch protection for `main` with `scripts/verify-branch-protection.sh`.
 
 ## Task Commits
@@ -58,6 +60,7 @@ This retrospective closeout is committed as a single documentation/evidence comm
 
 ## Files Created/Modified
 
+- `.github/workflows/release-please.yml` - Updated release-please and checkout token references to `secrets.RELEASE_PLEASE_PAT`.
 - `.planning/phases/54-pr-branch-triage-green-main-proof/54-TRIAGE-RECORD.md` - Updated PR and branch disposition record with post-merge facts.
 - `.planning/phases/54-pr-branch-triage-green-main-proof/54-GREEN-MAIN-EVIDENCE.md` - Updated CI, branch protection, local verification, and hygiene JSON evidence.
 - `.planning/phases/54-pr-branch-triage-green-main-proof/54-01-SUMMARY.md` - This execution summary.
@@ -66,7 +69,7 @@ This retrospective closeout is committed as a single documentation/evidence comm
 
 - PR #41 is the canonical v1.3 hygiene PR because it merged the `work/v1.3-release-discipline` branch.
 - Current Dependabot PRs #45 through #50 are current release-hygiene blockers but were opened after the original Phase 54 backlog window.
-- Current local `main` being 163 commits ahead of `origin/main` prevents claiming a current green remote `main` proof for HEAD.
+- Current local `main` being 165 commits ahead of `origin/main` prevents claiming a current green remote `main` proof for HEAD.
 - No local branches were pruned because the remaining branches are either explicit archives or not safe to delete during a retrospective closeout.
 
 ## Deviations from Plan
@@ -84,10 +87,9 @@ The plan expected live v1.3 PR mutation and final release-clean hygiene JSON. By
 
 Current hygiene command result is blocked:
 
-- local `main` is ahead of `origin/main` by 163 commits;
+- local `main` is ahead of `origin/main` by 165 commits;
 - current local HEAD has no successful remote `ci.yml` run;
 - PRs #45 through #50 are open;
-- release workflow readiness reports `release-please uses RELEASE_PLEASE_PAT` as false.
 
 ## User Setup Required
 

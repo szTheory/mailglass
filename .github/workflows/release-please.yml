@@ -87,14 +87,14 @@ jobs:
       - id: release
         # DO NOT bump to v5 until Phase 13 release ceremony (per .planning/phases/08-release-engineering-hardening/08-CONTEXT.md D-08-26)
         # Rehearsed 2026-04-28: stay on the pinned v4 path for the v0.2.0 cut.
-        # Release creation uses RELEASE_PLEASE_TOKEN so the downstream
+        # Release creation uses RELEASE_PLEASE_PAT so the downstream
         # release/published fan-out can trigger publish/smoke workflows.
         # Maintainers must still treat tag-pinned workflow_dispatch from the
         # release tag as the canonical fallback if downstream fan-out fails.
         if: ${{ steps.release-preflight.outputs.should_run == 'true' }}
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_PAT }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -109,7 +109,7 @@ jobs:
       # linked-version dep pin is custom, so the release PR is not a vanilla
       # release-please artifact.
       #
-      # CI trigger: this checkout uses RELEASE_PLEASE_TOKEN (a PAT) so the sync
+      # CI trigger: this checkout uses RELEASE_PLEASE_PAT so the sync
       # commit pushed below is authored by a non-GITHUB_TOKEN identity. That makes
       # GitHub fire `pull_request: synchronize` -> ci.yml on the synced head, so the
       # release PR's required checks actually report. A GITHUB_TOKEN push would be
@@ -120,7 +120,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_PAT }}
 
       - name: Sync sibling package -> mailglass dep pin on release-please branch
         if: ${{ steps.release-preflight.outputs.should_run == 'true' && steps.release.outputs.prs_created == 'true' }}

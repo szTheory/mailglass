@@ -1,6 +1,6 @@
 # Phase 54 Green Main Evidence
 
-Generated: 2026-06-01T17:08:50Z
+Generated: 2026-06-01T17:14:34Z
 
 ## Local Verification
 
@@ -10,6 +10,7 @@ Passed on current checkout:
 - `git diff --check`
 - `mix compile --warnings-as-errors`
 - `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs test/mailglass/stability_contract_test.exs --warnings-as-errors` - 8 tests, 0 failures.
+- `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs --warnings-as-errors` - 3 tests, 0 failures after renaming the release-please secret reference.
 - `GH_TOKEN="$(gh auth token)" scripts/verify-branch-protection.sh main`
 
 Branch protection result:
@@ -76,7 +77,7 @@ Result on 2026-06-01:
       "details": {
         "dirty": false,
         "branch": "main",
-        "ahead": 163,
+        "ahead": 165,
         "behind": 0,
         "upstream": "ok"
       }
@@ -87,7 +88,7 @@ Result on 2026-06-01:
       "message": "No successful ci.yml run was found on this SHA.",
       "details": {
         "branch": "main",
-        "sha": "ff7e89ded05e692086e6582dd94c65723f15891f",
+        "sha": "4cf605cc951b84f208aa7a3d306fbeb0e044e603",
         "latest": {
           "conclusion": "success",
           "headSha": "796ca141a3c780e5a274bfa13ce0f3bc1c50a2cc",
@@ -117,14 +118,29 @@ Result on 2026-06-01:
     },
     {
       "name": "release_workflows",
-      "status": "blocked",
+      "status": "pass",
       "message": "Release workflow readiness checked.",
       "details": {
-        "release-please uses RELEASE_PLEASE_PAT": false
+        "release-please uses RELEASE_PLEASE_PAT": true
       }
     }
   ],
-  "generated_at": "2026-06-01T17:08:50Z"
+  "generated_at": "2026-06-01T17:14:34Z"
+}
+```
+
+After updating `.github/workflows/release-please.yml` from `secrets.RELEASE_PLEASE_TOKEN` to `secrets.RELEASE_PLEASE_PAT`, the release workflow readiness check now passes:
+
+```json
+{
+  "name": "release_workflows",
+  "status": "pass",
+  "findings": [
+    {"label": "post-publish smoke checks inbound package", "pass": true},
+    {"label": "admin waits on inbound publish", "pass": true},
+    {"label": "publish-hex keeps fallback dispatch", "pass": true},
+    {"label": "release-please uses RELEASE_PLEASE_PAT", "pass": true}
+  ]
 }
 ```
 
@@ -132,8 +148,7 @@ Result on 2026-06-01:
 
 The original Phase 54 backlog was disposed and PR #41 merged green. Current repo hygiene is blocked by newer post-v1.3 state:
 
-- local `main` is ahead of `origin/main` by 163 commits, so current HEAD has no matching remote CI run;
+- local `main` is ahead of `origin/main` by 165 commits, so current HEAD has no matching remote CI run;
 - Dependabot PRs #45 through #50 are open;
-- the release workflow readiness check still reports `release-please uses RELEASE_PLEASE_PAT` as false.
 
 These blockers prevent claiming current release-clean `main` from this retrospective Phase 54 execution.
