@@ -150,6 +150,11 @@ the forwarding or subdomain setup is the cause.
 
 ## CLI Inspection
 
+For stable command semantics (flags, confirmations, tenant guards, and
+exit/outcome behavior), use the canonical operator contract:
+[inbound-operator.md](inbound-operator.md). This guide is troubleshooting help,
+not a second command-spec source.
+
 Before deploying, you can inspect the compiled route list without a database:
 
 ```bash
@@ -293,7 +298,7 @@ All records replay as `:accept`.
 
 - [inbound-install.md](inbound-install.md) — initial router setup, body reader config,
   and provider mount paths
-- [inbound-operator.md](inbound-operator.md) — `mix mailglass.inbound.doctor`, replay,
-  and prune operations in detail
+- [inbound-operator.md](inbound-operator.md) — canonical `mix mailglass.inbound.doctor`,
+  replay, and prune command semantics
 - [inbound-mailgun.md](inbound-mailgun.md) — Mailgun subdomain setup, MX records, and
   the sending subdomain vs primary domain distinction

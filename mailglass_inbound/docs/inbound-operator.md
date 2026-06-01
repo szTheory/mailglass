@@ -5,6 +5,17 @@ three mix tasks for config verification, replay, and data retention; the
 retention and rate-limit configuration schema; and how suppression flagging
 works.
 
+## Contract boundary for operators
+
+The stable operator contract is the command-level behavior documented in this
+guide: CLI flags, confirmation tiers, tenant guards, destructive behavior, and
+exit/outcome semantics for `mix mailglass.inbound.doctor`,
+`mix mailglass.inbound.replay`, and `mix mailglass.inbound.prune`.
+
+Everything else is implementation detail and may change without deprecation:
+internal `MailglassInbound.Internal.*` modules, worker modules, queue/retry
+internals, and admin UI implementation details.
+
 ## mix mailglass.inbound.doctor
 
 `mix mailglass.inbound.doctor` runs DNS-free pre-deploy validation of your
@@ -242,6 +253,9 @@ If you do not use Oban, run the prune task from system cron:
 
 `mix mailglass.inbound.prune` runs the sweep synchronously regardless of
 whether Oban is installed — only *scheduling* needs Oban.
+
+The worker module and scheduling topology above are operational examples, not a
+public worker/queue API contract.
 
 ## Retention policy configuration
 
