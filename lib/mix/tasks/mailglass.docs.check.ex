@@ -109,15 +109,20 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     "mailglass_inbound/README.md" => %{
       required: [
         "canonical adoption lane",
+        "subordinate to this README path",
         "MailglassInbound.Ingress.CachingBodyReader",
         "Oban-backed execution is the durable path",
         "Task.Supervisor fallback is bounded best-effort only",
-        "mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
+        "mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors",
+        "docs/inbound-operator.md",
+        "docs/inbound-testing.md",
+        "../guides/compatibility-and-deprecations.md"
       ],
       forbidden: [
         "mix mailglass.install",
         "public replay API",
-        "operator UI"
+        "operator UI",
+        "docs/compatibility-and-deprecations.md"
       ]
     },
     "guides/testing.md" => %{
@@ -245,7 +250,12 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "stable lane",
         "compatibility lane",
         "warnings-as-errors",
-        "mailglass_inbound"
+        "mailglass_inbound",
+        "mailglass_inbound/docs/api_stability.md",
+        "Reachability is not a compatibility promise.",
+        "## Inbound deprecation-DX inventory",
+        "Support-until horizon",
+        "Proof artifact"
       ],
       forbidden: ["Phase 37", "v0.1 in development"]
     },
@@ -333,13 +343,16 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     },
     "mailglass_inbound/docs/inbound-install.md" => %{
       required: [
+        "canonical inbound adoption lane",
+        "that README path",
         "body_reader: {MailglassInbound.Ingress.CachingBodyReader, :read_body, []}",
         "use MailglassInbound.Router",
         "@behaviour MailglassInbound.Mailbox",
         "mix ecto.migrate",
-        "async: false"
+        "async: false",
+        "../../guides/compatibility-and-deprecations.md"
       ],
-      forbidden: ["mix mailglass.install"]
+      forbidden: ["mix mailglass.install", "docs/compatibility-and-deprecations.md"]
     },
     "mailglass_inbound/docs/inbound-testing.md" => %{
       required: [
