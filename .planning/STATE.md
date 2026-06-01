@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Inbound Stability Lock
-status: executing
-last_updated: "2026-06-01T00:28:26.432Z"
+status: verifying
+last_updated: "2026-06-01T00:33:47.466Z"
 last_activity: 2026-06-01
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 10
-  completed_plans: 9
-  percent: 50
+  completed_plans: 10
+  percent: 75
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-31 after opening v1.4 Inbound Stabili
 
 Phase: 65 (compatibility-docs-and-dx-lock) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-01
 
 ## v1.4 Milestone Intent
@@ -70,6 +70,8 @@ Last activity: 2026-06-01
 - [Phase 65]: Inbound test assertions are process-local and one-assertion-per-drive by contract wording.
 - [Phase 65]: Phase 65 Plan 03 anchors compatibility routing at guides/compatibility-and-deprecations.md with inbound api_stability as stable claim source.
 - [Phase 65]: Phase 65 Plan 03 keeps README as canonical inbound adoption authority and enforces install-guide subordination via docs checks.
+- [Phase 65]: Plan 65-04 keeps trust-boundary enforcement in existing docs-contract and Tier 1 checker seams. — Avoids checker sprawl and preserves canonical enforcement seams.
+- [Phase 65]: Plan 65-04 requires explicit replay negative-boundary wording for stored-truth/non-reroute/non-public semantics. — Prevents operator wording drift toward fresh-receive or public replay API claims.
 
 ## Roadmap Snapshot
 
@@ -109,6 +111,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 64 P04 | 18min | 2 tasks | 5 files |
 | Phase 65 P02 | 24min | 2 tasks | 4 files |
 | Phase 65 P03 | 26min | 2 tasks | 3 files |
+| Phase 65 P04 | 13 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
