@@ -1,33 +1,41 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.4
-milestone_name: Inbound Stability Lock
-status: Awaiting next milestone
-last_updated: "2026-06-01T17:00:19.027Z"
-last_activity: 2026-06-01 — Milestone v1.4 completed and archived
+milestone: v1.5
+milestone_name: Demo Evidence and Click-Around Confidence
+status: milestone_complete
+last_updated: 2026-06-01T19:16:04.358Z
+last_activity: 2026-06-01 -- Phase 67 execution started
 progress:
   total_phases: 4
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
-  percent: 100
+  completed_phases: 0
+  total_plans: 3
+  completed_plans: 10
+  percent: 0
+stopped_at: Milestone complete (Phase 67 was final phase)
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-01 after v1.4 milestone completion)
+See: .planning/PROJECT.md (updated 2026-06-01 after v1.5 milestone open)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Awaiting next milestone; recommended next step is the `mailglass_inbound` `1.0.0` release ceremony.
+**Current focus:** Milestone complete
 
 ## Current Position
 
-Phase: Milestone v1.4 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-01 — Milestone v1.4 completed and archived
+Phase: 67
+Plan: Not started
+Status: Milestone complete
+Last activity: 2026-06-01
+
+## v1.5 Milestone Intent
+
+- Keep the existing `reference/host_app` narrow and create a separate realistic demo app.
+- Prove pre-adopter confidence through seeded B2B SaaS Ops scenarios and browser-driven evidence.
+- Make local click-around setup easy through Docker Compose and short quickstart docs.
+- Treat the demo as adoption evidence, not a new stable Mailglass API surface.
 
 ## v1.4 Milestone Intent
 

@@ -15,6 +15,7 @@
 - ✅ **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26) — see [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 - ✅ **v1.3 Adopter Trust Proof** — Phases 52, 57-62 (shipped 2026-05-31) — see [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - ✅ **v1.4 Inbound Stability Lock** — Phases 63-66 (shipped 2026-06-01) — see [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
+- ◆ **v1.5 Demo Evidence and Click-Around Confidence** — Phases 67-70 (active)
 
 ## Phases
 
@@ -74,6 +75,22 @@ Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.
 - [x] Phase 62: Close gap: EVID-02/EVID-03 — current-release trust proof (1/1 plan) — completed 2026-05-31
 
 Audit passed 2026-05-31 after Phase 62 closeout. Full archive at [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
+
+</details>
+
+<details open>
+<summary>◆ v1.5 Demo Evidence and Click-Around Confidence (Phases 67-70) — ACTIVE</summary>
+
+- [x] Phase 67: Demo App Foundation — separate demo app, dual dependency mode, Compose DX, cache-aware setup (completed 2026-06-01)
+- [ ] Phase 68: Realistic B2B SaaS Fixtures — deterministic outbound, inbound, suppression, replay, and mailer scenarios
+- [ ] Phase 69: Click-Around UX and Docs — demo dashboard, navigation, persona/JTBD docs, quickstart, admin docs drift cleanup
+- [ ] Phase 70: Browser Evidence Gate — Playwright coverage for preview, outbound operator, inbound operator, replay, screenshots/checkpoints
+
+Success criteria:
+1. `reference/demo_app` is runnable without changing `reference/host_app`.
+2. One command starts the demo stack for local click-around.
+3. Deterministic seed/reset produces realistic B2B SaaS Ops data.
+4. Browser evidence exercises the main happy-path and recovery journeys.
 
 </details>
 
