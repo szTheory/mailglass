@@ -74,10 +74,11 @@ defmodule MailglassDemoWeb.PageController do
           <section class="mast">
             <div>
               <p class="kicker">Northstar Ops · B2B SaaS demo</p>
-              <h1>Email you can inspect before real adopters arrive.</h1>
+              <h1>Northstar Ops</h1>
             </div>
             <div class="panel">
-              <p class="sub">Tenant <strong>#{summary.tenant_id}</strong> carries invite, receipt, usage alert, support inbound, suppression, and replay evidence.</p>
+              <p class="sub">Tenant <strong>northstar</strong> contains deterministic preview, delivery, suppression, inbound record, routing trace, and replay evidence.</p>
+              <p class="sub">What to inspect: invite and sign-in, receipt and payment failure, usage alert and suppression, support reply, refund request, spam reject, no-match routing, and stored-truth replay.</p>
             </div>
           </section>
 
@@ -91,25 +92,25 @@ defmodule MailglassDemoWeb.PageController do
           <section class="grid">
             <a class="card" href="/dev/mail">
               <span class="kicker">Preview</span>
-              <h2>Mailables</h2>
+              <h2>Preview mailables</h2>
               <p>Invite, magic link, receipt, payment failure, usage alert, and incident scenarios.</p>
             </a>
             <a class="card" href="/demo/login?return_to=/ops/mail?tenant_id=#{summary.tenant_id}">
               <span class="kicker">Outbound</span>
-              <h2>Operator deliveries</h2>
+              <h2>Outbound operator</h2>
               <p>Delivery detail, timeline, suppression state, and exact webhook replay evidence.</p>
             </a>
             <a class="card" href="/demo/login?return_to=/ops/mail/inbound?tenant_id=#{summary.tenant_id}">
               <span class="kicker">Inbound</span>
-              <h2>Support mailbox</h2>
+              <h2>Inbound operator</h2>
               <p>Stored source evidence, routing trace, fresh execution, and replay lineage.</p>
             </a>
             <form method="post" action="/demo/reset">
               <input type="hidden" name="_csrf_token" value="#{Plug.CSRFProtection.get_csrf_token()}">
               <button class="card" type="submit">
                 <span class="kicker">Reset</span>
-                <h2>Seed data</h2>
-                <p>Return the demo database to its deterministic baseline.</p>
+                <h2>Reset seed data</h2>
+                <p>Destructive: truncates and reseeds deterministic demo evidence tables for tenant northstar.</p>
               </button>
             </form>
           </section>
