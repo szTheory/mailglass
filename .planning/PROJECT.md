@@ -61,21 +61,26 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 ## Current Milestone
 
-## Current Milestone: v1.4 Inbound Stability Lock
+No active milestone is open. v1.4 is archived; the next recommended planning move is a release ceremony for the selected `mailglass_inbound` `1.0.0` candidate, then maintenance / quiet release hygiene by default.
 
-**Status:** Complete as of 2026-06-01. Phase 66 selected the `mailglass_inbound` `1.0.0` candidate.
+## Latest Completed Milestone
+
+<details>
+<summary>v1.4 Inbound Stability Lock — milestone closed 2026-06-01</summary>
 
 **Goal:** Lock `mailglass_inbound` into a stable adopter contract by defining its public API, compatibility policy, docs guarantees, and executable stability checks without expanding feature scope.
 
-**Target features:**
-- Reconcile the inbound stable/testing/internal/deferred contract inventory against shipped behavior.
-- Harden inbound contract verification through compiled-doc metadata checks, docs drift checks, and root `verify.stability_contract` wiring.
-- Align inbound compatibility, deprecation, operator, adoption, and testing docs around one precise `1.0`-ready story.
-- Make an explicit release-position decision: promote `mailglass_inbound` to `1.0.0` if the lock is real, otherwise cut one final explicit `0.x` confidence release. ✓
+- **Stable inventory** — reconciled `mailglass_inbound/docs/api_stability.md` around stable runtime, testing, operator, telemetry, error, internal, and deferred seams. ✓
+- **Executable proof** — root `mix verify.stability_contract` now delegates to the package-owned inbound support-contract lane with compiled-doc and docs-contract proof. ✓
+- **Adopter DX lock** — README, install, compatibility, operator, testing, and admin trust docs now agree on stable semantics and internal boundaries. ✓
+- **Release position** — Phase 66 selected the `mailglass_inbound` `1.0.0` candidate and refreshed source/manifest/docs/publish-proof truth. ✓
 
-**Scope lock:** No matcher expansion, lifecycle callbacks, public replay API, provider extension API, worker/queue contract, synthetic inbound dev UI, ecosystem integrations, or `gen_smtp` listener work belongs in this milestone.
+**Accepted residual debt:**
 
-## Latest Completed Milestone
+- The live Hex release ceremony for `mailglass_inbound` `1.0.0` remains the next release-governance step.
+- Broad feature-growth remains blocked unless concrete adopter pull or contract gaps justify new scope.
+
+</details>
 
 <details>
 <summary>v1.3 Adopter Trust Proof — milestone closed 2026-05-31</summary>
@@ -166,9 +171,15 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (v0.1, v0.2, v1.1, v1.3 — SHIPPED)
+## Validated Requirements (v0.1, v0.2, v1.1, v1.3, v1.4 — SHIPPED)
 
-All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
+All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, and 13 v1.4 REQ-IDs satisfied.
+
+**By category (v1.4 — Inbound Stability Lock):**
+- ✓ LOCK-01..03 — Canonical stable/testing/operator inventory, stable-vs-internal distinction, and explicit deferred inbound capability list validated in Phase 63
+- ✓ PROOF-01..03 — Inbound compiled-doc proof, closed atom/type set docs locks, and over-claim/stale-release docs guards validated in Phase 64
+- ✓ DX-01..04 — Canonical adoption path, operator semantics, testing semantics, and admin/operator trust boundaries validated in Phase 65
+- ✓ REL-01..03 — Explicit `mailglass_inbound` `1.0.0` candidate decision, operational release notes, and feature-growth gate validated in Phase 66
 
 **By category (v1.3 Phase 52 — trust baseline):**
 - ✓ HOST-01..03 — Maintained reference host baseline, public-seam-only integration boundary, and fail-closed scope lock artifact/test contracts validated in Phase 52
@@ -213,19 +224,7 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 
 ## Active
 
-- [x] **LOCK-01**: Adopter can identify every stable inbound runtime, testing, and operator seam from one canonical inventory. Validated in Phase 63.
-- [x] **LOCK-02**: Adopter can distinguish stable semantics from reachable/internal modules. Validated in Phase 63.
-- [x] **LOCK-03**: Deferred inbound capabilities are explicitly named so later sessions do not promote them accidentally. Validated in Phase 63.
-- [x] **PROOF-01**: `mix verify.stability_contract` proves inbound contract docs and compiled-doc metadata. Validated in Phase 64.
-- [x] **PROOF-02**: Inbound closed atom/type sets stay locked to docs. Validated in Phase 64.
-- [x] **PROOF-03**: Docs checks block over-claims and stale release-line claims. Validated in Phase 64.
-- [x] **DX-01**: Adopter can follow one canonical install/adoption path without contradictory docs. Validated in Phase 65.
-- [x] **DX-02**: Operator can understand doctor/replay/prune commands, exit semantics, tenant guards, and destructive confirmations. Validated in Phase 65.
-- [x] **DX-03**: Testing docs clearly explain process-local assertions and one-assertion-per-drive behavior. Validated in Phase 65.
-- [x] **DX-04**: Admin/operator trust wording does not confuse replay, reroute, fresh receipt, or UI guarantees. Validated in Phase 65.
-- [x] **REL-01**: Maintainer can make an explicit inbound `1.0.0` vs final `0.x` release decision from committed evidence. Validated in Phase 66.
-- [x] **REL-02**: Release notes explain the contract posture without hype or ambiguity. Validated in Phase 66.
-- [x] **REL-03**: No broad feature-growth milestone opens before the release-position decision. Validated in Phase 66.
+No active requirements. The next requirements file should be created by `$gsd-new-milestone` when a new milestone is opened.
 
 ## Out of Scope
 
@@ -319,7 +318,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-20 | Domain vocabulary locked to `prompts/mailer-domain-language-deep-research.md` | Borrowed from battle-tested libs; avoid "Email" or "Status" as ambiguous primitives | ✓ Held v0.1 |
 | D-21 | Adapter call between Multi#1 and Multi#2 (never inside transaction) | Postgres pool starvation prevention | ✓ Held v0.1 — Phase 3 Outbound enforces |
 | D-22 | The first `mailglass_inbound` milestone stays narrow: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional execution; Conductor/Mailgun/SES/SMTP are deferred | Protect the locked `v1.x` core and make the first sibling-package expansion supportable for a one-person maintainer | ✓ Validated v1.1 — narrow scope held; Conductor / Mailgun / SES / `gen_smtp` remained deliberately deferred |
-| D-23 | Post-v1.3 project posture shifts from broad capability expansion to convergence, stability, and maintenance by default | Core/admin have crossed the original product-complete threshold; endless polish or provider breadth has diminishing returns unless tied to adopter pull | — Pending v1.4 — next milestone should lock inbound contract posture, then cut an appropriate release and treat future work as maintenance or deliberately strategic |
+| D-23 | Post-v1.3 project posture shifts from broad capability expansion to convergence, stability, and maintenance by default | Core/admin have crossed the original product-complete threshold; endless polish or provider breadth has diminishing returns unless tied to adopter pull | ✓ Validated v1.4 — inbound contract posture is locked, `mailglass_inbound` has a `1.0.0` candidate, and future work defaults to release ceremony / maintenance unless adopter pull or contract gaps justify scope |
 
 ## Evolution
 
@@ -342,4 +341,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-01 after completing Phase 65 Compatibility, Docs, and DX Lock*
+*Last updated: 2026-06-01 after v1.4 milestone completion*

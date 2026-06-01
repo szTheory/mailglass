@@ -1,5 +1,25 @@
 # Milestones
 
+## v1.4 Inbound Stability Lock (Shipped: 2026-06-01)
+
+**Phases completed:** 4 phases, 12 plans, 22 tasks
+
+**Key accomplishments:**
+
+- Semantics-first inbound stability inventory with package-local docs-contract guards for stable, testing, internal, and deferred seams
+- Inbound runtime seam metadata now reflects package-line truth (`0.1.0` and `0.2.0`) for compiled-doc contract proofing.
+- Stable inbound structured-error and operator task modules now expose truthful `0.2.0` `since` metadata without widening direct invocation guarantees.
+- Aligned inbound testing helper compiled-doc metadata to the truthful `0.2.0` package line across fixtures, ingress drivers, assertions, and mailbox case template.
+- Inbound docs contract now fails closed on structured-error type-set drift, stale dep pins, and stable-surface over-claims while preserving explicit deferred-language mentions.
+- Inbound now owns one authoritative compiled-doc stability proof lane, and root `verify.stability_contract` delegates to that package-owned support-contract alias.
+- Canonical inbound adoption and compatibility flow now routes all stability guarantees through the inbound API stability inventory.
+- Inbound operator, testing, and admin trust docs now explicitly lock command semantics, process-local assertion behavior, and replay trust boundaries without promoting internal APIs.
+- Inbound adoption and compatibility wording is now executable: docs-contract and Tier 1 checks fail closed on canonical-path or compatibility-topology drift.
+- Operator/testing/admin trust semantics are now fail-closed in both package-local docs-contract tests and root Tier 1 docs checks.
+- Promoted `mailglass_inbound` to `1.0.0` with aligned source/manifest/README truth, operational release notes, and refreshed candidate-version publish evidence.
+
+---
+
 ## v1.3 Adopter Trust Proof (Shipped: 2026-05-31)
 
 **Phases completed:** 7 phases, 18 plans, 29 tasks

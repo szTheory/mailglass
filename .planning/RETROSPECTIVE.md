@@ -4,6 +4,44 @@
 
 ---
 
+## Milestone: v1.4 — Inbound Stability Lock
+
+**Shipped:** 2026-06-01
+**Phases:** 4 | **Plans:** 12
+**Coverage:** 13/13 v1.4 requirements
+
+### What Was Built
+
+- Semantics-first `mailglass_inbound` stable/testing/internal/deferred contract inventory.
+- Package-owned inbound compiled-doc and docs-contract proof lane, delegated by root `mix verify.stability_contract`.
+- Canonical inbound adoption, compatibility, operator, testing, and admin trust documentation with fail-closed drift checks.
+- Explicit `mailglass_inbound` `1.0.0` candidate decision with aligned source, manifest, README/install pins, release notes, and publish-proof evidence.
+
+### What Worked
+
+- Keeping the milestone scoped to contract stability prevented provider, matcher, replay API, and synthetic UI expansion.
+- The Phase 63 inventory gave Phase 64 and 65 a concrete contract taxonomy to enforce rather than re-litigating public surface boundaries.
+- Phase 66 converted release posture from a judgment call into a binary evidence-backed decision.
+
+### What Was Inefficient
+
+- The first milestone audit was run before Phase 66 existed, so closeout needed a fresh inline audit after the phase landed.
+- ROADMAP detail checkboxes for Phase 65 drifted from the executed summaries and had to be reconciled during archival.
+
+### Patterns Established
+
+- Stable means semantic contract, not module reachability or ExDoc visibility.
+- Package-local support-contract lanes should own package-specific compiled-doc proof, with the root alias delegating.
+- Candidate-version release truth must align across source, release manifest, README/install docs, changelog, and publish summary before closeout.
+
+### Key Lessons
+
+1. Run the milestone audit after the final release-position phase, not before it.
+2. Public provider support should be documented through the stable plug/options seam, not provider module APIs.
+3. Release-position decisions are clearer when they include both the selected path and the fallback path if a late blocker appears.
+
+---
+
 ## Milestone: v1.3 — Adopter Trust Proof
 
 **Shipped:** 2026-05-31
