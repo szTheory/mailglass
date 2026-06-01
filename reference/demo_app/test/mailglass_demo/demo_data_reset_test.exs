@@ -19,12 +19,12 @@ defmodule MailglassDemo.DemoDataResetTest do
     rerun = snapshot()
 
     assert Map.take(rerun, deterministic_keys()) == Map.take(baseline, deterministic_keys())
-    assert rerun.deliveries == 3
-    assert rerun.events == 6
-    assert rerun.inbound == 2
+    assert rerun.deliveries == 6
+    assert rerun.events == 11
+    assert rerun.inbound == 4
     assert rerun.suppressions == 1
-    assert rerun.inbound_evidence == 2
-    assert rerun.inbound_replay_runs == 3
+    assert rerun.inbound_evidence == 4
+    assert rerun.inbound_replay_runs == 6
   end
 
   defp snapshot do
