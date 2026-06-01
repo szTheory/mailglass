@@ -82,7 +82,10 @@ Audit passed 2026-05-31 after Phase 62 closeout. Full archive at [milestones/v1.
 <summary>◆ v1.5 Demo Evidence and Click-Around Confidence (Phases 67-70) — ACTIVE</summary>
 
 - [x] Phase 67: Demo App Foundation — separate demo app, dual dependency mode, Compose DX, cache-aware setup (completed 2026-06-01)
-- [ ] Phase 68: Realistic B2B SaaS Fixtures — deterministic outbound, inbound, suppression, replay, and mailer scenarios
+- [ ] Phase 68: Realistic B2B SaaS Fixtures — deterministic outbound, inbound, suppression, replay, and mailer scenarios (2 plans)
+  Plans:
+  - [ ] 68-01-PLAN.md — Expand deterministic outbound/inbound fixture corpus and add the repo-root quick validation gate.
+  - [ ] 68-02-PLAN.md — Deepen preview scenarios and add public-message contract tests.
 - [ ] Phase 69: Click-Around UX and Docs — demo dashboard, navigation, persona/JTBD docs, quickstart, admin docs drift cleanup
 - [ ] Phase 70: Browser Evidence Gate — Playwright coverage for preview, outbound operator, inbound operator, replay, screenshots/checkpoints
 
