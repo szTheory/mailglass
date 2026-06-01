@@ -25,6 +25,39 @@ defmodule MailglassDemo.DemoDataResetTest do
     assert rerun.suppressions == 1
     assert rerun.inbound_evidence == 4
     assert rerun.inbound_replay_runs == 6
+    assert rerun.delivery_message_ids == [
+             "pm-demo-invite-001",
+             "pm-demo-magic-link-001",
+             "pm-demo-payment-failed-001",
+             "pm-demo-receipt-001",
+             "sg-demo-incident-001",
+             "sg-demo-usage-001"
+           ]
+
+    assert rerun.webhook_provider_event_ids == [
+             "demo-receipt-delivery",
+             "demo-usage-bounce"
+           ]
+
+    assert rerun.suppression_tuples == [
+             {"ops@northstar-ops.example", "manual", "support-case:1842", "incident_update"}
+           ]
+
+    assert rerun.inbound_provider_message_ids == [
+             "mg-demo-refund-001",
+             "mg-demo-support-001",
+             "pm-demo-spam-001",
+             "pm-inbound-demo-nomatch-001"
+           ]
+
+    assert rerun.inbound_execution_matrix == [
+             {"mg-demo-refund-001", "fresh", "bounce", "mailbox_full"},
+             {"mg-demo-refund-001", "replay", "bounce", "mailbox_full"},
+             {"mg-demo-support-001", "fresh", "accept", nil},
+             {"mg-demo-support-001", "replay", "accept", nil},
+             {"pm-demo-spam-001", "fresh", "reject", "spam"},
+             {"pm-inbound-demo-nomatch-001", "fresh", "no_match", nil}
+           ]
   end
 
   defp snapshot do
@@ -37,9 +70,12 @@ defmodule MailglassDemo.DemoDataResetTest do
       inbound_replay_runs: count_table!("mailglass_inbound_replay_runs"),
       delivery_message_ids: delivery_message_ids(),
       event_types: event_types(),
+      webhook_provider_event_ids: webhook_provider_event_ids(),
       inbound_provider_message_ids: inbound_provider_message_ids(),
       suppression_addresses: suppression_addresses(),
-      replay_sources: replay_sources()
+      replay_sources: replay_sources(),
+      suppression_tuples: suppression_tuples(),
+      inbound_execution_matrix: inbound_execution_matrix()
     }
   end
 
@@ -62,9 +98,12 @@ defmodule MailglassDemo.DemoDataResetTest do
       :inbound_replay_runs,
       :delivery_message_ids,
       :event_types,
+      :webhook_provider_event_ids,
       :inbound_provider_message_ids,
       :suppression_addresses,
-      :replay_sources
+      :replay_sources,
+      :suppression_tuples,
+      :inbound_execution_matrix
     ]
   end
 
@@ -103,4 +142,49 @@ defmodule MailglassDemo.DemoDataResetTest do
     Enum.map(rows, &hd/1)
   end
 
+  defp webhook_provider_event_ids do
+    %{rows: rows} =
+      Repo.query!("SELECT provider_event_id FROM mailglass_webhook_events ORDER BY provider_event_id")
+
+    Enum.map(rows, &hd/1)
+  end
+
+  defp suppression_tuples do
+    %{rows: rows} =
+      Repo.query!(
+        """
+        SELECT
+          address,
+          reason::text,
+          source,
+          metadata->>'scenario'
+        FROM mailglass_suppressions
+        ORDER BY address
+        """
+      )
+
+    Enum.map(rows, fn [address, reason, source, scenario] ->
+      {address, reason, source, scenario}
+    end)
+  end
+
+  defp inbound_execution_matrix do
+    %{rows: rows} =
+      Repo.query!(
+        """
+        SELECT
+          r.provider_message_id,
+          run.source::text,
+          run.outcome::text,
+          run.outcome_reason
+        FROM mailglass_inbound_replay_runs run
+        JOIN mailglass_inbound_records r ON r.id = run.inbound_record_id
+        ORDER BY r.provider_message_id, run.source::text
+        """
+      )
+
+    Enum.map(rows, fn [provider_message_id, source, outcome, outcome_reason] ->
+      {provider_message_id, source, outcome, outcome_reason}
+    end)
+  end
 end
