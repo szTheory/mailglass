@@ -14,7 +14,9 @@ defmodule MailglassDemoWeb.Mailers.AccountMailer do
       magic_link: %{
         recipient: "mira.chen@northstar-ops.example",
         workspace: "Northstar Ops",
-        expires_in: "15 minutes"
+        expires_in: "15 minutes",
+        requested_by: "Chrome on macOS",
+        requested_at: "2026-06-01 14:48 UTC"
       }
     ]
   end
@@ -23,7 +25,7 @@ defmodule MailglassDemoWeb.Mailers.AccountMailer do
     new()
     |> Message.from({"Northstar Ops", "notify@demo.mailglass.local"})
     |> Message.to(assigns.recipient)
-    |> Message.subject("#{assigns.inviter} invited you to #{assigns.workspace}")
+    |> Message.subject("Sam Rivera invited you to Northstar Ops")
     |> Message.html_body("""
     <h1>Join #{assigns.workspace}</h1>
     <p>#{assigns.inviter} invited you as #{assigns.role}.</p>
@@ -39,13 +41,14 @@ defmodule MailglassDemoWeb.Mailers.AccountMailer do
     new()
     |> Message.from({"Northstar Ops", "security@demo.mailglass.local"})
     |> Message.to(assigns.recipient)
-    |> Message.subject("Your #{assigns.workspace} sign-in link")
+    |> Message.subject("Your Northstar Ops sign-in link")
     |> Message.html_body("""
     <h1>Sign in to #{assigns.workspace}</h1>
     <p>This link expires in #{assigns.expires_in}. If you did not request it, ignore this email.</p>
+    <p>Request context: #{assigns.requested_by} at #{assigns.requested_at}.</p>
     """)
     |> Message.text_body(
-      "Sign in to #{assigns.workspace}. This link expires in #{assigns.expires_in}."
+      "Sign in to #{assigns.workspace}. This link expires in #{assigns.expires_in}. Request context: #{assigns.requested_by} at #{assigns.requested_at}."
     )
     |> Message.put_function(:magic_link)
   end
