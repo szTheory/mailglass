@@ -19,6 +19,9 @@ The stable inbound package contract is intentionally narrow:
 
 Use [`docs/api_stability.md`](docs/api_stability.md) as the canonical inventory
 for what is stable, what is internal, and what is still deferred.
+Stable inventoried surfaces require a deprecation bridge or major-version
+change before semantic breakage; internal/deferred surfaces may change without
+deprecation even when reachable or documented for troubleshooting.
 
 ## Testing Helpers
 
