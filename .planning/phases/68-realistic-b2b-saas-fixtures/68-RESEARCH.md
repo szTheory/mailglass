@@ -249,12 +249,12 @@ Source: `reference/demo_app/test/mailglass_demo/demo_data_reset_test.exs` [VERIF
 
 All substantive claims above are verified against this repository context.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Exact scenario corpus size**
-   - What we know: Scope mandates realistic coverage for outbound/inbound/suppression/replay/no-match. [VERIFIED: codebase grep]
-   - What's unclear: Final row counts and naming taxonomy are discretionary. [VERIFIED: codebase grep]
-   - Recommendation: Lock a small named scenario list first, then derive expected row counts from it. [ASSUMED]
+   - RESOLVED: Lock the corpus to ten named business scenarios: six outbound stories (`invite_admin`, `magic_link`, `receipt_paid`, `payment_failed`, `usage_alert`, `incident_update`) and four inbound stories (`support_reply`, `refund_request`, `spam_reject`, `inbound_no_match`). [RESOLVED]
+   - RESOLVED: Derive fixed coverage counts from that scenario list: six deliveries, two webhook evidence rows, one suppression row, four inbound records, four inbound evidence rows, and six inbound execution rows with explicit `:fresh`/`:replay` lineage where applicable. [RESOLVED]
+   - RESOLVED: Keep the naming taxonomy scenario-first and operator-readable, with exact provider/message IDs pinned in Plan `68-01` so downstream tests can assert scenario identity instead of counts alone. [RESOLVED]
 
 ## Environment Availability
 
@@ -278,21 +278,25 @@ All substantive claims above are verified against this repository context.
 | Property | Value |
 |----------|-------|
 | Framework | ExUnit (Phoenix/Ecto test stack) |
-| Config file | `reference/demo_app/config/test.exs` |
-| Quick run command | `cd reference/demo_app && mix test test/mailglass_demo/demo_data_reset_test.exs` |
-| Full suite command | `cd reference/demo_app && mix test` |
+| Repo-root config file | `mix.exs` |
+| Demo-app local config file | `reference/demo_app/mix.exs` |
+| Canonical quick run command | `mix test test/mailglass/demo_data_test.exs` (repo root, after Plan `68-01` Task 2 creates the wrapper) |
+| Bootstrap fallback command | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors` (inside `reference/demo_app`, while implementing Plan `68-01` Task 1 before the root wrapper exists) |
+| Demo-app targeted fallback | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/*.exs --warnings-as-errors` |
+| Full suite command | `mix test` (repo root) |
 
 ### Phase Requirements → Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| DATA-01 | Deterministic one-command reset | unit/integration | `cd reference/demo_app && mix test test/mailglass_demo/demo_data_reset_test.exs` | ✅ |
-| DATA-02 | Realistic outbound/events/suppression/webhook fixtures | integration | `cd reference/demo_app && mix test test/mailglass_demo/demo_data_reset_test.exs` (extend assertions) | ✅ |
-| DATA-03 | Realistic inbound/evidence/routing/replay/no-match fixtures | integration | `cd reference/demo_app && mix test test/mailglass_demo/demo_data_reset_test.exs` (extend assertions) | ✅ |
-| DATA-04 | Realistic preview scenarios by family | unit | `cd reference/demo_app && mix test` (add/extend mailer scenario tests) | ❌ Wave 0 |
+| DATA-01 | Deterministic one-command reset | unit/integration | `mix test test/mailglass/demo_data_test.exs` (repo root canonical quick gate once created; bootstrap with the demo-app fallback above during Plan `68-01` Task 1) | ❌ Wave 0 |
+| DATA-02 | Realistic outbound/events/suppression/webhook fixtures | integration | `mix test test/mailglass/demo_data_test.exs` (repo root canonical quick gate once created; bootstrap with the demo-app fallback above during Plan `68-01` Task 1) | ❌ Wave 0 |
+| DATA-03 | Realistic inbound/evidence/routing/replay/no-match fixtures | integration | `mix test test/mailglass/demo_data_test.exs` (repo root canonical quick gate once created; bootstrap with the demo-app fallback above during Plan `68-01` Task 1) | ❌ Wave 0 |
+| DATA-04 | Realistic preview scenarios by family | unit | `mix test test/mailglass/demo_data_test.exs` (repo root canonical quick gate after Plan `68-02` adds preview tests; demo-app fallback remains `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/*.exs --warnings-as-errors`) | ❌ Wave 0 |
 
 ### Sampling Rate
-- **Per task commit:** `cd reference/demo_app && mix test test/mailglass_demo/demo_data_reset_test.exs`
-- **Per wave merge:** `cd reference/demo_app && mix test`
+- **Bootstrap during Plan `68-01` Task 1:** `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors`
+- **Per task commit after the root wrapper exists:** `mix test test/mailglass/demo_data_test.exs`
+- **Per wave merge:** `mix test`
 - **Phase gate:** Full suite green before `$gsd-verify-work`
 
 ### Wave 0 Gaps
