@@ -7,8 +7,8 @@
 
 ### Demo App
 
-- [ ] **DEMO-01**: Maintainer can run a separate B2B SaaS Ops demo app without changing the existing narrow reference host.
-- [ ] **DEMO-02**: Maintainer can switch the demo between local path dependencies and published Hex package constraints.
+- [x] **DEMO-01**: Maintainer can run a separate B2B SaaS Ops demo app without changing the existing narrow reference host.
+- [x] **DEMO-02**: Maintainer can switch the demo between local path dependencies and published Hex package constraints.
 - [ ] **DEMO-03**: Demo app exposes a click-around dashboard that links to Mailglass preview, outbound operator, and inbound operator surfaces.
 
 ### Demo Data
@@ -20,8 +20,8 @@
 
 ### Developer Experience
 
-- [ ] **DX-01**: Maintainer can start Postgres plus the demo app through Docker Compose.
-- [ ] **DX-02**: Docker/Compose setup preserves Mix deps, build artifacts, npm deps, and browser caches across style or code iterations.
+- [x] **DX-01**: Maintainer can start Postgres plus the demo app through Docker Compose.
+- [x] **DX-02**: Docker/Compose setup preserves Mix deps, build artifacts, npm deps, and browser caches across style or code iterations.
 - [ ] **DX-03**: Demo docs start with a short quickstart and explain the persona, JTBD, seeded data, and what to click.
 
 ### Evidence
@@ -51,20 +51,23 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEMO-01 | Phase 67 | Pending |
-| DEMO-02 | Phase 67 | Pending |
+| DEMO-01 | Phase 67 | Complete |
+| DEMO-02 | Phase 67 | Complete |
 | DEMO-03 | Phase 69 | Pending |
 | DATA-01 | Phase 68 | Pending |
 | DATA-02 | Phase 68 | Pending |
 | DATA-03 | Phase 68 | Pending |
 | DATA-04 | Phase 68 | Pending |
-| DX-01 | Phase 67 | Pending |
-| DX-02 | Phase 67 | Pending |
+| DX-01 | Phase 67 | Complete |
+| DX-02 | Phase 67 | Complete |
 | DX-03 | Phase 69 | Pending |
 | EVID-01 | Phase 70 | Pending |
 | EVID-02 | Phase 70 | Pending |
 | EVID-03 | Phase 70 | Pending |
 | EVID-04 | Phase 70 | Pending |
+| FUTR-01 | Future | Deferred |
+| FUTR-02 | Future | Deferred |
+| FUTR-03 | Future | Deferred |
 
 **Coverage:**
 - v1.5 requirements: 14 total
@@ -73,4 +76,4 @@
 
 ---
 *Requirements defined: 2026-06-01*
-*Last updated: 2026-06-01 after v1.5 milestone open*
+*Last updated: 2026-06-01 after Phase 67 completion*
