@@ -70,8 +70,8 @@ services:
       demo:
         condition: service_healthy
     command: >
-      sh -lc "npm --prefix assets install --no-audit --no-fund
-      && npx --prefix assets playwright install chromium
+      sh -lc "npm --prefix assets ci --no-audit --no-fund
+      && npx --prefix assets playwright install --with-deps chromium
       && npm --prefix assets run test:e2e"
     volumes:
       - .:/workspace
