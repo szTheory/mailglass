@@ -2,79 +2,54 @@
 phase: 65-compatibility-docs-and-dx-lock
 reviewed: 2026-06-01T00:00:00Z
 depth: standard
-files_reviewed: 9
+files_reviewed: 11
 files_reviewed_list:
   - guides/compatibility-and-deprecations.md
   - lib/mix/tasks/mailglass.docs.check.ex
   - mailglass_admin/docs/operator-trust.md
+  - mailglass_inbound/mix.exs
   - mailglass_inbound/README.md
   - mailglass_inbound/docs/inbound-install.md
   - mailglass_inbound/docs/inbound-operator.md
   - mailglass_inbound/docs/inbound-routing-debug.md
   - mailglass_inbound/docs/inbound-testing.md
   - mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs
+  - test/mailglass/docs_check_task_test.exs
 findings:
-  critical: 1
-  warning: 2
+  critical: 0
+  warning: 0
   info: 0
-  total: 3
-status: issues_found
+  total: 0
+status: clean
 ---
+
 # Phase 65: Code Review Report
 
-**Reviewed:** 2026-06-01T00:00:00Z  
-**Depth:** standard  
-**Files Reviewed:** 9  
-**Status:** issues_found
+**Reviewed:** 2026-06-01T00:00:00Z
+**Depth:** standard
+**Files Reviewed:** 11
+**Status:** clean
 
 ## Summary
 
-Reviewed the listed docs, docs-check task, and docs contract test for correctness, security posture, and drift-check reliability. Found one contract contradiction in inbound provider support claims and two checker robustness defects that create false-positive/false-negative risk.
+Reviewed all scoped files after remediation commits `42ceef2` and `1e0f20a` with adversarial checks for bugs, security defects, and quality risks. No actionable defects were found in the current scope.
+
+Re-check results for requested evidence points:
+- Provider-contract wording is aligned: install/readme docs keep stable lanes at `:postmark` and `:sendgrid`, with Mailgun/SES framed as non-stable integration references.
+- `--path` scoping is resolved: `Mix.Tasks.Mailglass.Docs.Check` scopes checks to selected wildcard matches (`docs_paths/1`), and task test coverage asserts this behavior.
+- Empty `--path` handling is resolved: no-match path raises a clear blocking error (`Delivery blocked: --path matched no files: ...`) and test coverage asserts it.
+- Inbound version pin concern is resolved against inbound package truth: `mailglass_inbound/mix.exs` sets `@version "0.3.0"` and docs-contract tests derive expected `~> 0.3` from `Mix.Project.config()[:version]` in the inbound package tests.
+
+Validation evidence run during review:
+- `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors` passed (`22 tests, 0 failures`).
+- `mix test test/mailglass/docs_check_task_test.exs --warnings-as-errors` passed (`7 tests, 0 failures`).
 
 ## Narrative Findings (AI reviewer)
 
-## Critical Issues
-
-### CR-01: Inbound provider support contract is internally contradictory
-
-**Classification:** BLOCKER  
-**File:** `mailglass_inbound/docs/inbound-install.md:159`  
-**Issue:** The install guide states “The four supported providers are `:postmark`, `:sendgrid`, `:mailgun`, and `:ses`”, while canonical docs in the same reviewed scope declare providers beyond Postmark/SendGrid as deferred (for example [mailglass_inbound/README.md](/Users/jon/projects/mailglass/mailglass_inbound/README.md):259). This creates a behavioral/docs regression in the published support contract and can mislead adopters into relying on unsupported lanes.  
-**Fix:** Align install guide wording with the canonical contract. Example:
-```md
-The stable provider lanes in this slice are `:postmark` and `:sendgrid`.
-Mailgun and SES guides are integration references and not part of the current stable provider contract.
-```
-
-## Warnings
-
-### WR-01: `--path` CLI scope is not honored by Tier-1 contract checks
-
-**Classification:** WARNING  
-**File:** `lib/mix/tasks/mailglass.docs.check.ex:427`  
-**Issue:** `docs_paths(opts)` is computed, but `tier1_surface_issues/0`, `preview_boundary_issues/0`, and `trust_boundary_issues/0` ignore that scope and always evaluate hardcoded paths. This makes `mix mailglass.docs.check --path ...` behavior inconsistent with task usage docs and increases false-positive failures for targeted checks.  
-**Fix:** Thread selected paths through all check functions and filter rule/path lists accordingly.
-```elixir
-issues =
-  leak_issues(paths)
-  |> Kernel.++(tier1_surface_issues(paths))
-  |> Kernel.++(preview_boundary_issues(paths))
-  |> Kernel.++(trust_boundary_issues(paths))
-```
-
-### WR-02: Exact token matching in docs checker is brittle and prone to false failures
-
-**Classification:** WARNING  
-**File:** `lib/mix/tasks/mailglass.docs.check.ex:485`  
-**Issue:** `String.contains?/2` on exact required tokens (including punctuation/casing-sensitive phrases) makes CI fail on benign editorial changes that preserve semantics. This is a maintainability risk and weak signal-to-noise for release-gating checks.  
-**Fix:** Use regex-based semantic checks for unstable prose, normalize whitespace/case for token checks, and reserve exact literals for truly invariant command/module names.
-```elixir
-normalized = content |> String.downcase() |> String.replace(~r/\s+/, " ")
-# then match resilient regex tokens for prose clauses
-```
+No BLOCKER or WARNING findings in reviewed scope.
 
 ---
 
-_Reviewed: 2026-06-01T00:00:00Z_  
-_Reviewer: the agent (gsd-code-reviewer)_  
+_Reviewed: 2026-06-01T00:00:00Z_
+_Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
