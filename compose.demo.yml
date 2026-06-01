@@ -32,6 +32,7 @@ services:
       MIX_HOME: /cache/mix
       npm_config_cache: /cache/npm
       PLAYWRIGHT_BROWSERS_PATH: /cache/playwright
+      DEMO_EVIDENCE_RESET_TOKEN: ${DEMO_EVIDENCE_RESET_TOKEN:-mailglass-demo-reset}
     ports:
       - "4015:4015"
     depends_on:
@@ -66,6 +67,7 @@ services:
       DEMO_BASE_URL: http://demo:4015
       PLAYWRIGHT_BROWSERS_PATH: /cache/playwright
       npm_config_cache: /cache/npm
+      DEMO_EVIDENCE_RESET_TOKEN: ${DEMO_EVIDENCE_RESET_TOKEN:-mailglass-demo-reset}
     depends_on:
       demo:
         condition: service_healthy

@@ -120,7 +120,7 @@ defmodule MailglassDemoWeb.PageController do
   end
 
   def login(conn, params) do
-    return_to = Map.get(params, "return_to", "/ops/mail?tenant_id=#{DemoData.tenant_id()}")
+    return_to = safe_return_to(Map.get(params, "return_to"))
 
     conn
     |> put_session("demo_subject_id", "demo-operator")
@@ -139,14 +139,59 @@ defmodule MailglassDemoWeb.PageController do
   end
 
   def evidence_reset(conn, _params) do
-    DemoData.reset!()
+    if authorized_evidence_reset?(conn) do
+      DemoData.reset!()
 
-    conn
-    |> put_status(:ok)
-    |> json(%{
-      status: "ok",
-      warning: "Destructive demo reset endpoint: truncates and reseeds demo evidence tables.",
-      summary: DemoData.summary()
-    })
+      conn
+      |> put_status(:ok)
+      |> json(%{
+        status: "ok",
+        warning: "Destructive demo reset endpoint: truncates and reseeds demo evidence tables.",
+        summary: DemoData.summary()
+      })
+    else
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "forbidden"})
+    end
   end
+
+  defp safe_return_to(nil), do: default_operator_path()
+
+  defp safe_return_to(return_to) when is_binary(return_to) do
+    uri = URI.parse(return_to)
+
+    if is_nil(uri.scheme) and is_nil(uri.host) and operator_path?(uri.path) do
+      return_to
+    else
+      default_operator_path()
+    end
+  end
+
+  defp safe_return_to(_return_to), do: default_operator_path()
+
+  defp operator_path?("/ops/mail"), do: true
+  defp operator_path?("/ops/mail/" <> _rest), do: true
+  defp operator_path?(_path), do: false
+
+  defp default_operator_path, do: "/ops/mail?tenant_id=#{DemoData.tenant_id()}"
+
+  defp authorized_evidence_reset?(conn) do
+    expected_token = System.get_env("DEMO_EVIDENCE_RESET_TOKEN")
+
+    provided_token =
+      conn
+      |> Plug.Conn.get_req_header("x-mailglass-demo-reset-token")
+      |> List.first()
+
+    secure_token_match?(provided_token, expected_token)
+  end
+
+  defp secure_token_match?(provided_token, expected_token)
+       when is_binary(provided_token) and is_binary(expected_token) and expected_token != "" do
+    byte_size(provided_token) == byte_size(expected_token) and
+      Plug.Crypto.secure_compare(provided_token, expected_token)
+  end
+
+  defp secure_token_match?(_provided_token, _expected_token), do: false
 end

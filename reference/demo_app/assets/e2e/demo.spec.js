@@ -2,7 +2,11 @@ const { test, expect } = require("@playwright/test");
 
 test.describe("mailglass demo evidence", () => {
   test.beforeEach(async ({ request }) => {
-    const response = await request.post("/demo/evidence/reset");
+    const response = await request.post("/demo/evidence/reset", {
+      headers: {
+        "x-mailglass-demo-reset-token": process.env.DEMO_EVIDENCE_RESET_TOKEN || "",
+      },
+    });
     expect(response.ok()).toBeTruthy();
   });
 
