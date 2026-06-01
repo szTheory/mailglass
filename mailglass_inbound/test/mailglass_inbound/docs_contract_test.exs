@@ -4,6 +4,8 @@ defmodule MailglassInbound.DocsContractTest do
   @readme_path Path.expand("../../README.md", __DIR__)
   @install_path Path.expand("../../docs/inbound-install.md", __DIR__)
   @stability_path Path.expand("../../docs/api_stability.md", __DIR__)
+  @operator_path Path.expand("../../docs/inbound-operator.md", __DIR__)
+  @testing_path Path.expand("../../docs/inbound-testing.md", __DIR__)
   @compatibility_path Path.expand("../../../guides/compatibility-and-deprecations.md", __DIR__)
   @changelog_path Path.expand("../../CHANGELOG.md", __DIR__)
   @mixfile_path Path.expand("../../mix.exs", __DIR__)
@@ -287,6 +289,71 @@ defmodule MailglassInbound.DocsContractTest do
     refute operator_trust =~ "public replay API"
     refute operator_trust =~ "operator UI already ships"
     refute operator_trust =~ "silent reroute"
+  end
+
+  test "operator docs lock command semantics, tenant guards, confirmations, and replay framing" do
+    operator = File.read!(@operator_path)
+
+    for token <- [
+          "mix mailglass.inbound.doctor",
+          "mix mailglass.inbound.replay",
+          "mix mailglass.inbound.prune",
+          "--tenant <id>",
+          "--dry-run",
+          "--yes",
+          "Exit codes",
+          "cross-tenant replay guard",
+          "full word `yes`",
+          "Type 'yes' to continue",
+          "append-only lineage table",
+          "it is not a fresh provider receipt",
+          "not silently reroute to another mailbox"
+        ] do
+      assert operator =~ token
+    end
+
+    refute Regex.match?(~r/replay\s+(as|is|becomes)\s+fresh/i, operator)
+    assert Regex.match?(~r/not\s+a\s+public\s+replay\s+runtime\s+api/i, operator)
+  end
+
+  test "testing docs lock MailboxCase harness and process-local one-assertion-per-drive semantics" do
+    testing = File.read!(@testing_path)
+
+    for token <- [
+          "MailglassInbound.MailboxCase",
+          "use MailglassInbound.MailboxCase, async: false",
+          "always `use MailglassInbound.MailboxCase, async: false`",
+          "Test.Ingress.receive_inbound",
+          "Process-local capture contract",
+          "capture tuple to the current test process",
+          "that process mailbox",
+          "one-assertion-per-drive rule",
+          "consumes",
+          "drive two messages to make two assertions"
+        ] do
+      assert testing =~ token
+    end
+  end
+
+  test "admin operator trust docs lock replay boundaries, canonical routing, and internal-ui framing" do
+    operator_trust = File.read!(@operator_trust_path)
+
+    for token <- [
+          "new work",
+          "no change",
+          "mix verify.stability_contract",
+          "docs/api_stability.md",
+          "mailglass_inbound/docs/api_stability.md",
+          "implementation detail",
+          "does not silently reroute",
+          "it is not",
+          "public replay runtime API"
+        ] do
+      assert operator_trust =~ token
+    end
+
+    refute Regex.match?(~r/stable\s+(dom|component|liveview)/i, operator_trust)
+    refute Regex.match?(~r/public\s+(dom|component|liveview)/i, operator_trust)
   end
 
   test "docs reject replay-as-fresh and unshipped verification claims" do

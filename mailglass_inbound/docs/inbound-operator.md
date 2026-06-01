@@ -153,6 +153,10 @@ Replay 12 inbound record(s)? [y/N]
 `--yes`/`-y` skips the prompt for automation. `--dry-run` reports scope without
 prompting or replaying.
 
+Replay is stored-truth recovery: it is not a fresh provider receipt, it does
+not silently reroute to another mailbox, and it is not a public replay runtime
+API contract.
+
 ### Zero matches
 
 When no records match the selectors, the task exits `0` with:
