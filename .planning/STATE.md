@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Inbound Stability Lock
 status: executing
-last_updated: "2026-06-01T00:36:00.000Z"
-last_activity: 2026-06-01 -- Completed 65-01 (canonical inbound adoption + compatibility routing)
+last_updated: "2026-06-01T00:22:54Z"
+last_activity: 2026-06-01 -- Completed 65-02 (operator/testing/admin trust boundary lock)
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
   percent: 50
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-05-31 after opening v1.4 Inbound Stabili
 ## Current Position
 
 Phase: 65 (compatibility-docs-and-dx-lock) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-01
 
@@ -66,6 +66,8 @@ Last activity: 2026-06-01
 - [Phase 64]: Plan 64-04 scopes over-claim checks to stable/adoption/unreleased prose while keeping deferred references explicitly allowed.
 - [Phase 65]: README remains the canonical inbound adoption lane; inbound-install is explicitly subordinate.
 - [Phase 65]: Inbound compatibility claims route through `mailglass_inbound/docs/api_stability.md` with explicit deprecation-DX inventory.
+- [Phase 65]: Operator docs contract is command-semantics-only; worker/queue internals remain non-contract.
+- [Phase 65]: Inbound test assertions are process-local and one-assertion-per-drive by contract wording.
 
 ## Roadmap Snapshot
 
@@ -103,6 +105,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 62 P01 | 21 min | 2 tasks | 4 files |
 | Phase 64 P01 | 2min | 2 tasks | 7 files |
 | Phase 64 P04 | 18min | 2 tasks | 5 files |
+| Phase 65 P02 | 24min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -161,5 +164,5 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Operator Next Steps
 
-- `$gsd-plan-phase 65` — plan compatibility, docs, and DX lock work from the captured context.
-- `$gsd-plan-phase 65 --skip-research` — plan without a separate research pass if the context is sufficient.
+- Execute `65-03-PLAN.md` — extend inbound docs-contract and Tier 1 docs checks for adoption/compatibility lock wording.
+- Execute `65-04-PLAN.md` — extend docs-contract/Tier 1 checks for operator/testing/admin trust wording.
