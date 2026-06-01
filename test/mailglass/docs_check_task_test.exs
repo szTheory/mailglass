@@ -86,6 +86,12 @@ defmodule Mailglass.DocsCheckTaskTest do
            end) =~ "[mailglass.docs.check] OK"
   end
 
+  test "--path fails when no files match" do
+    assert_raise Mix.Error, ~r/--path matched no files/, fn ->
+      Mix.Tasks.Mailglass.Docs.Check.run(["--path", "guides/not-a-real-doc.md"])
+    end
+  end
+
   test "blocks install docs from promoting deferred providers into the stable provider contract" do
     install_path = "mailglass_inbound/docs/inbound-install.md"
 

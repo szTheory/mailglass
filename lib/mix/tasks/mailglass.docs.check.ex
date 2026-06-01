@@ -462,7 +462,15 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
   defp docs_paths(opts) do
     case opts[:path] do
       nil -> @tier1_paths
-      path -> Path.wildcard(path)
+
+      path ->
+        paths = Path.wildcard(path)
+
+        if paths == [] do
+          Mix.raise("Delivery blocked: --path matched no files: #{inspect(path)}.")
+        end
+
+        paths
     end
   end
 
