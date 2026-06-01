@@ -119,6 +119,12 @@ Plans:
 3. Changelog/release notes include adopter action required, verification commands, behavior changes, operator-impacting changes, and docs/stability posture.
 4. Project planning state records that broad feature-growth work remains blocked until the release-position decision is complete.
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] `66-01-PLAN.md` — Capture fresh Phase 66 release evidence and write the canonical binary release-position record.
+- [ ] `66-02-PLAN.md` — Apply the chosen release truth, release notes, final publish proof, and feature-growth gate updates.
+
 </details>
 
 <details>
