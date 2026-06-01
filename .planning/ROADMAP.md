@@ -37,7 +37,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 
 - [x] Phase 63: Inbound Contract Inventory Reconciliation — canonical stable/testing/internal/deferred inventory (completed 2026-05-31)
 - [x] Phase 64: Contract Verification Hardening — compiled-doc, docs-contract, and root stability proof gates (completed 2026-05-31)
-- [ ] Phase 65: Compatibility, Docs, and DX Lock — adoption path, operator wording, testing docs, and compatibility/deprecation posture
+- [x] Phase 65: Compatibility, Docs, and DX Lock — adoption path, operator wording, testing docs, and compatibility/deprecation posture (completed 2026-06-01)
 - [ ] Phase 66: Release Position Decision — evidence-backed `1.0.0` vs final `0.x` decision and release notes
 
 **Goal:** Lock `mailglass_inbound` into a stable adopter contract by defining its public API, compatibility policy, docs guarantees, and executable stability checks without expanding feature scope.
@@ -99,7 +99,7 @@ Plans:
 4. Testing docs make `MailboxCase`, `Test.Ingress`, process-local assertions, and one-assertion-per-drive behavior clear.
 5. Admin/operator trust docs do not imply replay as fresh receive, silent reroute, UI contract, or stable DOM/component APIs.
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] `65-01-PLAN.md` — Keep the inbound README as the canonical adoption lane and route compatibility posture through the active guide topology.
