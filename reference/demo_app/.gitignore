@@ -1,0 +1,7 @@
+/_build/
+/deps/
+/assets/node_modules/
+/assets/test-results/
+/assets/playwright-report/
+/tmp/
+.env

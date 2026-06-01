@@ -1,0 +1,10 @@
+{
+  "name": "mailglass-demo-browser-evidence",
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test --config=playwright.config.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}
