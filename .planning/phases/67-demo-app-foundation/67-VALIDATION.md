@@ -1,10 +1,11 @@
 ---
 phase: 67
 slug: demo-app-foundation
-status: draft
+status: complete
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-06-01
+audited: 2026-06-01
 ---
 
 # Phase 67 - Validation Strategy
@@ -32,12 +33,12 @@ created: 2026-06-01
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 67-01-01 | 01 | 1 | DEMO-01 | T-67-01 | Rich demo stays outside `reference/host_app` | contract | `mix test test/reference_host/scope_lock_contract_test.exs` | yes | pending |
-| 67-01-02 | 01 | 1 | DEMO-02 | T-67-02 | Hex mode resolves published package constraints | smoke | `cd reference/demo_app && MAILGLASS_DEMO_DEPS=hex mix deps.get --only prod` | yes | pending |
-| 67-02-01 | 02 | 1 | DX-01 | T-67-03 | Demo readiness is health-gated before evidence starts | config/runtime | `docker compose -f compose.demo.yml config` | yes | pending |
-| 67-02-02 | 02 | 1 | DX-02 | T-67-04 | Browser deps are installed from lockfile and cache volumes remain | source/config | `rg -n "npm ci|service_healthy|health" compose.demo.yml reference/demo_app` | yes | pending |
-| 67-03-01 | 03 | 2 | DX-01 | T-67-05 | Reset path is deterministic and explicitly destructive | unit/source | `cd reference/demo_app && mix test` | yes | pending |
-| 67-03-02 | 03 | 2 | DX-02 | T-67-06 | Phase 67 proof is runnable as one command | alias | `mix verify.phase67` | no | pending |
+| 67-01-01 | 01 | 1 | DEMO-01 | T-67-01 | Rich demo stays outside `reference/host_app` | contract | `mix test test/reference_host/scope_lock_contract_test.exs` | yes | covered |
+| 67-01-02 | 01 | 1 | DEMO-02 | T-67-02 | Hex mode resolves published package constraints | smoke | `cd reference/demo_app && MAILGLASS_DEMO_DEPS=hex mix deps.get --only prod` | yes | covered |
+| 67-02-01 | 02 | 1 | DX-01 | T-67-03 | Demo readiness is health-gated before evidence starts | config/runtime | `DEMO_EVIDENCE_RESET_TOKEN=phase67-verify docker compose -f compose.demo.yml config` | yes | covered |
+| 67-02-02 | 02 | 1 | DX-02 | T-67-04 | Browser deps are installed from lockfile and cache volumes remain | source/config | `rg -n "health\|service_healthy\|npm --prefix assets ci\|playwright install.*chromium\|PLAYWRIGHT_BROWSERS_PATH\|mailglass_demo_playwright" compose.demo.yml reference/demo_app/Dockerfile reference/demo_app/lib/mailglass_demo_web` | yes | covered |
+| 67-03-01 | 03 | 2 | DX-01 | T-67-05 | Reset path is deterministic and explicitly destructive | unit/source | `cd reference/demo_app && mix test` | yes | covered |
+| 67-03-02 | 03 | 2 | DX-02 | T-67-06 | Phase 67 proof is runnable as one command | alias | `mix verify.phase67` | yes | covered |
 
 ## Wave 0 Requirements
 
@@ -57,4 +58,23 @@ created: 2026-06-01
 - [x] No watch-mode flags are required.
 - [x] `nyquist_compliant: true` set in frontmatter.
 
-**Approval:** pending
+**Approval:** validated 2026-06-01
+
+## Validation Audit 2026-06-01
+
+| Metric | Count |
+|--------|-------|
+| Requirements audited | 4 |
+| Task checks audited | 6 |
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+Fresh evidence:
+
+- `mix test test/reference_host/scope_lock_contract_test.exs` passed: 3 tests, 0 failures.
+- `cd reference/demo_app && MAILGLASS_DEMO_DEPS=hex mix deps.get --only prod` passed and resolved `mailglass 1.3.0`, `mailglass_admin 1.3.0`, and `mailglass_inbound 0.3.0`.
+- `DEMO_EVIDENCE_RESET_TOKEN=phase67-verify docker compose -f compose.demo.yml config` passed.
+- Compose/source assertions for health gating, `npm ci`, Playwright Chromium install, and cache volumes passed.
+- `cd reference/demo_app && mix test` passed: 5 tests, 0 failures.
+- `mix verify.phase67` passed, including scope-lock tests, demo-app tests, Compose config validation, and source assertions.
