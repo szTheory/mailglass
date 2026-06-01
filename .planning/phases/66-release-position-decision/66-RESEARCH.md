@@ -234,12 +234,18 @@ mix hex.info mailglass_inbound 0.3.0
 |---|-------|---------|---------------|
 | A1 | Recommended optional artifact name `66-RELEASE-POSITION.md` is acceptable if planner chooses it | Architecture Patterns | Low; can be replaced by changelog section + verification file |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Where should the final binary decision be canonicalized?**
    - What we know: CONTEXT allows dedicated artifact, changelog section, or both.
-   - What's unclear: Team preference for audit/readability.
-   - Recommendation: Planner should pick one canonical source plus cross-links.
+   - Resolution: Use `.planning/phases/66-release-position-decision/66-RELEASE-POSITION.md`
+     as the single canonical Phase 66 binary decision record.
+   - Changelog role: `mailglass_inbound/CHANGELOG.md` summarizes the chosen
+     candidate, adopter action, verification commands, and compatibility posture,
+     then links back to the canonical decision and compatibility sources rather
+     than becoming a second release-position contract.
+   - Reason: This preserves one auditable decision source for REL-01 while still
+     satisfying REL-02's release-note requirements.
 
 ## Environment Availability
 
@@ -260,7 +266,7 @@ mix hex.info mailglass_inbound 0.3.0
 |----------|-------|
 | Framework | ExUnit (built into Elixir) [VERIFIED: codebase grep] |
 | Config file | `mix.exs` aliases and test paths [VERIFIED: codebase grep] |
-| Quick run command | `mix verify.stability_contract` |
+| Quick run command | `rg -n "1\\.0\\.0|0\\.4\\.0|mix verify\\.stability_contract|mix mailglass\\.publish\\.check --package mailglass_inbound" .planning/phases/66-release-position-decision mailglass_inbound/CHANGELOG.md` |
 | Full suite command | `mix test --warnings-as-errors` |
 
 ### Phase Requirements → Test Map
@@ -271,7 +277,10 @@ mix hex.info mailglass_inbound 0.3.0
 | REL-03 | Feature-growth block remains until decision complete | governance/manual | `rg -n "release-position decision|feature-growth" .planning/STATE.md .planning/ROADMAP.md` | ✅ |
 
 ### Sampling Rate
-- **Per task commit:** `mix verify.stability_contract`
+- **Per task commit:** quick `rg` smoke checks for release-position, changelog,
+  planning-state, and verification-command references; run
+  `mix verify.stability_contract` when the task changes contract, docs, version,
+  release, or planning-state truth.
 - **Per wave merge:** `mix verify.stability_contract && mix mailglass.publish.check --package mailglass_inbound`
 - **Phase gate:** both required commands green with captured output
 

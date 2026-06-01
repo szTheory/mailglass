@@ -19,7 +19,7 @@ created: 2026-06-01
 |----------|-------|
 | **Framework** | ExUnit (Elixir built-in) |
 | **Config file** | `mix.exs`, `mailglass_inbound/mix.exs` |
-| **Quick run command** | `mix verify.stability_contract` |
+| **Quick run command** | `rg -n "1\\.0\\.0|0\\.4\\.0|mix verify\\.stability_contract|mix mailglass\\.publish\\.check --package mailglass_inbound" .planning/phases/66-release-position-decision mailglass_inbound/CHANGELOG.md` |
 | **Full suite command** | `mix test --warnings-as-errors` |
 | **Estimated runtime** | ~120 seconds |
 
@@ -27,7 +27,7 @@ created: 2026-06-01
 
 ## Sampling Rate
 
-- **After every task commit:** Run `mix verify.stability_contract` when the task touches contract, docs, version, release, or planning-state truth.
+- **After every task commit:** Run the quick `rg` smoke command for release-position, changelog, and verification-command references; run `mix verify.stability_contract` when the task touches contract, docs, version, release, or planning-state truth.
 - **After every plan wave:** Run `mix verify.stability_contract && mix mailglass.publish.check --package mailglass_inbound`.
 - **Before `$gsd-verify-work`:** Both release-blocking lanes must be green and their outputs captured in phase artifacts.
 - **Max feedback latency:** 180 seconds for the core stability/publish gate pair.
@@ -38,7 +38,7 @@ created: 2026-06-01
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 66-01-01 | 01 | 1 | REL-01 | T-66-01 | Release decision is based on fresh green stability and publish evidence, not stale assumptions. | integration/process | `mix verify.stability_contract && mix mailglass.publish.check --package mailglass_inbound` | yes | pending |
+| 66-01-01 | 01 | 1 | REL-01 | T-66-01 | Release decision is based on fresh green stability and publish evidence, not stale assumptions. | integration/process | `rg -n "mix verify\\.stability_contract|mix mailglass\\.publish\\.check --package mailglass_inbound|0\\.3\\.0" .planning/phases/66-release-position-decision/66-VERIFICATION.md && mix verify.stability_contract && mix mailglass.publish.check --package mailglass_inbound` | yes | pending |
 | 66-01-02 | 01 | 1 | REL-02 | T-66-02 | Release notes summarize compatibility posture without duplicating or contradicting canonical contract docs. | docs contract | `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors` | yes | pending |
 | 66-01-03 | 01 | 1 | REL-03 | T-66-03 | Planning state continues blocking broad feature-growth until the release-position decision is closed. | governance/manual | `rg -n "release-position decision|feature-growth|broad feature-growth" .planning/STATE.md .planning/ROADMAP.md` | yes | pending |
 
@@ -67,7 +67,7 @@ Existing infrastructure covers all phase requirements.
 - [x] Sampling continuity: no 3 consecutive tasks without automated verify.
 - [x] Wave 0 covers all missing references.
 - [x] No watch-mode flags.
-- [x] Feedback latency < 180s.
+- [x] Fast smoke feedback latency < 30s; full release-gate feedback latency < 180s.
 - [x] `nyquist_compliant: true` set in frontmatter.
 
 **Approval:** pending
