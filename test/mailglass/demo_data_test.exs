@@ -24,8 +24,15 @@ defmodule Mailglass.DemoDataTest do
     assert migrate_exit == 0,
            "reference demo app ecto.migrate failed:\n#{migrate_output}"
 
+    demo_tests =
+      @demo_app
+      |> Path.join("test/mailglass_demo/*.exs")
+      |> Path.wildcard()
+      |> Enum.map(&Path.relative_to(&1, @demo_app))
+      |> Enum.sort()
+
     {test_output, test_exit} =
-      System.cmd("sh", ["-lc", "mix test test/mailglass_demo/*.exs --warnings-as-errors"],
+      System.cmd("mix", ["test" | demo_tests] ++ ["--warnings-as-errors"],
         cd: @demo_app,
         env: [{"MIX_ENV", "test"}],
         stderr_to_stdout: true

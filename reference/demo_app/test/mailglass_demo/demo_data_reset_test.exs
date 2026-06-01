@@ -25,6 +25,7 @@ defmodule MailglassDemo.DemoDataResetTest do
     assert rerun.suppressions == 1
     assert rerun.inbound_evidence == 4
     assert rerun.inbound_replay_runs == 6
+
     assert rerun.delivery_message_ids == [
              "pm-demo-invite-001",
              "pm-demo-magic-link-001",
@@ -37,6 +38,11 @@ defmodule MailglassDemo.DemoDataResetTest do
     assert rerun.webhook_provider_event_ids == [
              "demo-receipt-delivery",
              "demo-usage-bounce"
+           ]
+
+    assert rerun.webhook_provider_matrix == [
+             {"demo-receipt-delivery", "postmark"},
+             {"demo-usage-bounce", "sendgrid"}
            ]
 
     assert rerun.suppression_tuples == [
@@ -71,6 +77,7 @@ defmodule MailglassDemo.DemoDataResetTest do
       delivery_message_ids: delivery_message_ids(),
       event_types: event_types(),
       webhook_provider_event_ids: webhook_provider_event_ids(),
+      webhook_provider_matrix: webhook_provider_matrix(),
       inbound_provider_message_ids: inbound_provider_message_ids(),
       suppression_addresses: suppression_addresses(),
       replay_sources: replay_sources(),
@@ -99,6 +106,7 @@ defmodule MailglassDemo.DemoDataResetTest do
       :delivery_message_ids,
       :event_types,
       :webhook_provider_event_ids,
+      :webhook_provider_matrix,
       :inbound_provider_message_ids,
       :suppression_addresses,
       :replay_sources,
@@ -130,7 +138,9 @@ defmodule MailglassDemo.DemoDataResetTest do
 
   defp inbound_provider_message_ids do
     %{rows: rows} =
-      Repo.query!("SELECT provider_message_id FROM mailglass_inbound_records ORDER BY provider_message_id")
+      Repo.query!(
+        "SELECT provider_message_id FROM mailglass_inbound_records ORDER BY provider_message_id"
+      )
 
     Enum.map(rows, &hd/1)
   end
@@ -144,24 +154,37 @@ defmodule MailglassDemo.DemoDataResetTest do
 
   defp webhook_provider_event_ids do
     %{rows: rows} =
-      Repo.query!("SELECT provider_event_id FROM mailglass_webhook_events ORDER BY provider_event_id")
+      Repo.query!(
+        "SELECT provider_event_id FROM mailglass_webhook_events ORDER BY provider_event_id"
+      )
 
     Enum.map(rows, &hd/1)
   end
 
+  defp webhook_provider_matrix do
+    %{rows: rows} =
+      Repo.query!("""
+      SELECT provider_event_id, provider
+      FROM mailglass_webhook_events
+      ORDER BY provider_event_id
+      """)
+
+    Enum.map(rows, fn [provider_event_id, provider] ->
+      {provider_event_id, provider}
+    end)
+  end
+
   defp suppression_tuples do
     %{rows: rows} =
-      Repo.query!(
-        """
-        SELECT
-          address,
-          reason::text,
-          source,
-          metadata->>'scenario'
-        FROM mailglass_suppressions
-        ORDER BY address
-        """
-      )
+      Repo.query!("""
+      SELECT
+        address,
+        reason::text,
+        source,
+        metadata->>'scenario'
+      FROM mailglass_suppressions
+      ORDER BY address
+      """)
 
     Enum.map(rows, fn [address, reason, source, scenario] ->
       {address, reason, source, scenario}
@@ -170,18 +193,16 @@ defmodule MailglassDemo.DemoDataResetTest do
 
   defp inbound_execution_matrix do
     %{rows: rows} =
-      Repo.query!(
-        """
-        SELECT
-          r.provider_message_id,
-          run.source::text,
-          run.outcome::text,
-          run.outcome_reason
-        FROM mailglass_inbound_replay_runs run
-        JOIN mailglass_inbound_records r ON r.id = run.inbound_record_id
-        ORDER BY r.provider_message_id, run.source::text
-        """
-      )
+      Repo.query!("""
+      SELECT
+        r.provider_message_id,
+        run.source::text,
+        run.outcome::text,
+        run.outcome_reason
+      FROM mailglass_inbound_replay_runs run
+      JOIN mailglass_inbound_records r ON r.id = run.inbound_record_id
+      ORDER BY r.provider_message_id, run.source::text
+      """)
 
     Enum.map(rows, fn [provider_message_id, source, outcome, outcome_reason] ->
       {provider_message_id, source, outcome, outcome_reason}

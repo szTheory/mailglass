@@ -69,7 +69,11 @@ defmodule MailglassDemo.DemoData do
       })
 
     event!(magic_link, :sent, minutes_ago(22), %{"provider" => "postmark", "source" => "api"})
-    event!(magic_link, :delivered, minutes_ago(16), %{"provider" => "postmark", "source" => "webhook"})
+
+    event!(magic_link, :delivered, minutes_ago(16), %{
+      "provider" => "postmark",
+      "source" => "webhook"
+    })
 
     receipt =
       delivery!(%{
@@ -81,10 +85,14 @@ defmodule MailglassDemo.DemoData do
         status: :sent,
         last_event_type: :delivered,
         last_event_at: minutes_ago(44),
-        metadata: %{"invoice_id" => "INV-2026-0601", "plan" => "scale", "scenario" => "receipt_paid"}
+        metadata: %{
+          "invoice_id" => "INV-2026-0601",
+          "plan" => "scale",
+          "scenario" => "receipt_paid"
+        }
       })
 
-    receipt_webhook = webhook!("pm-demo-receipt-001", "demo-receipt-delivery", 7101)
+    receipt_webhook = webhook!("postmark", "pm-demo-receipt-001", "demo-receipt-delivery", 7101)
     event!(receipt, :sent, minutes_ago(50), replay_metadata(receipt_webhook, receipt))
     event!(receipt, :delivered, minutes_ago(44), %{"provider" => "postmark", "source" => "webhook"})
 
@@ -122,10 +130,23 @@ defmodule MailglassDemo.DemoData do
         status: :failed,
         last_event_type: :bounced,
         last_event_at: minutes_ago(8),
-        metadata: %{"threshold" => "85%", "support_case" => "CASE-1842", "scenario" => "usage_alert"}
+        metadata: %{
+          "threshold" => "85%",
+          "support_case" => "CASE-1842",
+          "scenario" => "usage_alert"
+        }
       })
 
-    usage_webhook = webhook!("sg-demo-usage-001", "demo-usage-bounce", 7102, "Bounce", "bounced")
+    usage_webhook =
+      webhook!(
+        "sendgrid",
+        "sg-demo-usage-001",
+        "demo-usage-bounce",
+        7102,
+        "Bounce",
+        "bounced"
+      )
+
     event!(usage_alert, :sent, minutes_ago(12), replay_metadata(usage_webhook, usage_alert))
 
     event!(usage_alert, :bounced, minutes_ago(8), %{
@@ -195,7 +216,8 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "refund_request"}
       })
 
-    refund_evidence = inbound_evidence!(refund, %{"provider" => "mailgun", "signature" => "verified"})
+    refund_evidence =
+      inbound_evidence!(refund, %{"provider" => "mailgun", "signature" => "verified"})
 
     inbound_run!(
       refund,
@@ -245,7 +267,7 @@ defmodule MailglassDemo.DemoData do
         provider: "postmark",
         provider_message_id: "pm-inbound-demo-nomatch-001",
         envelope_recipient: "unknown@demo.mailglass.local",
-        from: [%{"address" => "vendor@example.net"}],
+        from: [%{"address" => "vendor@partners.example"}],
         to: [%{"address" => "unknown@demo.mailglass.local"}],
         subject: "Unrouted vendor notice",
         text_body: "This recipient intentionally does not match a route.",
@@ -288,10 +310,17 @@ defmodule MailglassDemo.DemoData do
     |> Repo.insert!()
   end
 
-  defp webhook!(message_id, provider_event_id, event_id, event_type_raw \\ "Delivery", event_type_normalized \\ "delivered") do
+  defp webhook!(
+         provider,
+         message_id,
+         provider_event_id,
+         event_id,
+         event_type_raw \\ "Delivery",
+         event_type_normalized \\ "delivered"
+       ) do
     %{
       tenant_id: @tenant,
-      provider: "postmark",
+      provider: provider,
       provider_event_id: provider_event_id,
       event_type_raw: event_type_raw,
       event_type_normalized: event_type_normalized,
@@ -365,7 +394,7 @@ defmodule MailglassDemo.DemoData do
 
   defp replay_metadata(webhook, delivery) do
     %{
-      "provider" => "postmark",
+      "provider" => delivery.provider,
       "provider_event_id" => "demo-receipt-child",
       "webhook_event_id" => webhook.id,
       "webhook_provider_event_id" => webhook.provider_event_id,
