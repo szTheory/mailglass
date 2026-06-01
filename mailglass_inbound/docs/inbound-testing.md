@@ -65,6 +65,14 @@ Test.Ingress.receive_inbound(message, router: MyApp.MailglassInboundRouter)
 the inbound analog of outbound's `Fake.Storage` → `{:mail, _}` → assertion
 triangle.
 
+## Process-local capture contract
+
+Inbound assertion captures are process-local by design: `Test.Ingress` sends the
+capture tuple to the current test process, and `assert_inbound_*` reads from
+that process mailbox. This is why `MailboxCase` requires `async: false` for the
+default harness and why each consuming assertion must be paired with a fresh
+drive in the same test process.
+
 ### receive_inbound/2
 
 Use this entry point when you have a code-built `%InboundMessage{}` (typically

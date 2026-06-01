@@ -79,6 +79,10 @@ inbound target through local semantics and does not silently reroute to a
 different mailbox. Reconcile is background-first backlog maintenance for
 unmatched webhook rows and is not a delivery-detail replay tool.
 
+Replay command semantics are stable at the operator level, but this does not
+create a public replay runtime API. Internal replay orchestration modules,
+worker/queue internals, and admin execution wiring remain implementation detail.
+
 Known replay failure cases are also part of the honest operator story:
 
 - `no_prior_match` means fresh execution history only proves `:no_match`, so
