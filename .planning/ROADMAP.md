@@ -86,7 +86,10 @@ Audit passed 2026-05-31 after Phase 62 closeout. Full archive at [milestones/v1.
   Plans:
   - [x] 68-01-PLAN.md — Expand deterministic outbound/inbound fixture corpus and add the repo-root quick validation gate.
   - [x] 68-02-PLAN.md — Deepen preview scenarios and add public-message contract tests.
-- [ ] Phase 69: Click-Around UX and Docs — demo dashboard, navigation, persona/JTBD docs, quickstart, admin docs drift cleanup
+- [ ] Phase 69: Click-Around UX and Docs — demo dashboard, navigation, persona/JTBD docs, quickstart, admin docs drift cleanup (2 plans)
+  Plans:
+  - [ ] 69-01-PLAN.md — Refine the controller-rendered dashboard hub and add focused route/content coverage.
+  - [ ] 69-02-PLAN.md — Make the demo README canonical for quickstart/click-path guidance and add docs contract proof.
 - [ ] Phase 70: Browser Evidence Gate — Playwright coverage for preview, outbound operator, inbound operator, replay, screenshots/checkpoints
 
 Success criteria:
