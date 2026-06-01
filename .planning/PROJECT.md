@@ -10,7 +10,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**`v1.4 Inbound Stability Lock` is in progress. Phases 63-65 are complete; Phase 66 is next for the release-position decision.**
+**`v1.4 Inbound Stability Lock` is complete as of 2026-06-01. Phase 66 recorded the release-position decision: promote `mailglass_inbound` to the `1.0.0` candidate, with release ceremony / maintenance posture next.**
 
 - Phase 63 reconciled `mailglass_inbound/docs/api_stability.md` into the canonical stable/testing/internal/deferred inbound inventory.
 - Provider support is now documented through `MailglassInbound.Ingress.Plug` semantics, while provider modules, replay internals, route structs, workers, queues, and UI details stay internal.
@@ -18,6 +18,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - Package-local docs-contract assertions now pin those section boundaries and over-claim guards.
 - Phase 64 made the inbound contract executable: compiled-doc metadata is verified package-locally, closed error/type sets are locked to docs, release-line/over-claim checks fail closed, and root `mix verify.stability_contract` delegates to the inbound support-contract lane.
 - Phase 65 locked the adopter-facing DX story: the inbound README is the canonical adoption lane, install/compatibility/operator/testing/admin trust docs agree on stable versus internal boundaries, and docs-contract plus Tier 1 checks now fail closed on drift.
+- Phase 66 promoted the source-of-truth candidate to `mailglass_inbound` `1.0.0`, aligned release notes / README pins / publish proof, and kept broad feature-growth gated until explicit adopter pull or contract gaps justify new scope.
 
 **`v1.3 Adopter Trust Proof` shipped on 2026-05-31.**
 
@@ -55,12 +56,14 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
 - `SEED-003-ecosystem-integrations` is intentionally deferred and remains dormant for later milestone selection.
 - v1.3 trust proof is archived; the next recommended milestone is an inbound stability lock for `mailglass_inbound` contract and compatibility posture.
-- `mailglass_inbound` runtime capability is stronger than its contract framing in some docs; `mailglass_inbound` still sits outside the `1.x` compatibility promise and needs a dedicated stability-lock milestone after trust proof work.
+- `mailglass_inbound` has completed its stability-lock milestone and now has a `1.0.0` source candidate; the live release ceremony remains the next release-governance step.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
 ## Current Milestone
 
 ## Current Milestone: v1.4 Inbound Stability Lock
+
+**Status:** Complete as of 2026-06-01. Phase 66 selected the `mailglass_inbound` `1.0.0` candidate.
 
 **Goal:** Lock `mailglass_inbound` into a stable adopter contract by defining its public API, compatibility policy, docs guarantees, and executable stability checks without expanding feature scope.
 
@@ -68,7 +71,7 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Reconcile the inbound stable/testing/internal/deferred contract inventory against shipped behavior.
 - Harden inbound contract verification through compiled-doc metadata checks, docs drift checks, and root `verify.stability_contract` wiring.
 - Align inbound compatibility, deprecation, operator, adoption, and testing docs around one precise `1.0`-ready story.
-- Make an explicit release-position decision: promote `mailglass_inbound` to `1.0.0` if the lock is real, otherwise cut one final explicit `0.x` confidence release.
+- Make an explicit release-position decision: promote `mailglass_inbound` to `1.0.0` if the lock is real, otherwise cut one final explicit `0.x` confidence release. ✓
 
 **Scope lock:** No matcher expansion, lifecycle callbacks, public replay API, provider extension API, worker/queue contract, synthetic inbound dev UI, ecosystem integrations, or `gen_smtp` listener work belongs in this milestone.
 
@@ -144,13 +147,13 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 </details>
 
-## Next Milestone Queue (after v1.3)
+## Next Milestone Queue (after v1.4)
 
-- **Recommended next milestone after Adopter Trust Proof:** inbound stability lock (`mailglass_inbound` contract + compatibility/deprecation posture hardening).
-- **Convergence posture:** Mailglass is no longer in broad feature-growth mode. Core `mailglass` and `mailglass_admin` are effectively product-complete for the original transactional-email framework thesis; `mailglass_inbound` is feature-credible but needs one dedicated stability-lock milestone before it should carry the same long-lived compatibility posture.
+- **Recommended next step after Inbound Stability Lock:** release ceremony for the selected `mailglass_inbound` `1.0.0` candidate, then maintenance / quiet release hygiene by default.
+- **Convergence posture:** Mailglass is no longer in broad feature-growth mode. Core `mailglass`, `mailglass_admin`, and the inbound source candidate are effectively product-complete for the original transactional-email framework thesis unless concrete adopter pull or a contract gap says otherwise.
 - **Done-enough target:** After inbound stability lock, default future posture should be maintenance, release hygiene, docs accuracy, and narrow adopter-pull work. Do not keep asking whether the project is "done" at every milestone boundary; assume the library is approaching done unless a concrete adopter need or contract gap says otherwise.
 - Follow-on ordering:
-  1) cut the release line that follows inbound stability lock (`mailglass_inbound` `1.0.0` if contract lock is real; otherwise one final explicit `0.x` confidence release),
+  1) cut the selected `mailglass_inbound` `1.0.0` release line,
   2) enter quiet maintenance / "silence on the wire" mode by default,
   3) consider synthetic inbound dev tooling only if it has clear adopter pull and strict dev-only tenant/provenance safety,
   4) consider Cloudflare forwarding recipe docs or narrow ecosystem integration slices only as pull-driven strategic work,
@@ -220,9 +223,9 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, and 10 v1.1 REQ-IDs satisfied.
 - [x] **DX-02**: Operator can understand doctor/replay/prune commands, exit semantics, tenant guards, and destructive confirmations. Validated in Phase 65.
 - [x] **DX-03**: Testing docs clearly explain process-local assertions and one-assertion-per-drive behavior. Validated in Phase 65.
 - [x] **DX-04**: Admin/operator trust wording does not confuse replay, reroute, fresh receipt, or UI guarantees. Validated in Phase 65.
-- [ ] **REL-01**: Maintainer can make an explicit inbound `1.0.0` vs final `0.x` release decision from committed evidence.
-- [ ] **REL-02**: Release notes explain the contract posture without hype or ambiguity.
-- [ ] **REL-03**: No broad feature-growth milestone opens before the release-position decision.
+- [x] **REL-01**: Maintainer can make an explicit inbound `1.0.0` vs final `0.x` release decision from committed evidence. Validated in Phase 66.
+- [x] **REL-02**: Release notes explain the contract posture without hype or ambiguity. Validated in Phase 66.
+- [x] **REL-03**: No broad feature-growth milestone opens before the release-position decision. Validated in Phase 66.
 
 ## Out of Scope
 
