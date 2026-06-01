@@ -1,0 +1,94 @@
+services:
+  demo_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5415:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - mailglass_demo_pg:/var/lib/postgresql/data
+
+  demo:
+    build:
+      context: .
+      dockerfile: reference/demo_app/Dockerfile
+    working_dir: /workspace/reference/demo_app
+    environment:
+      MIX_ENV: dev
+      PGHOST: demo_db
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: mailglass_demo_dev
+      PORT: "4015"
+      HEX_HOME: /cache/hex
+      MIX_HOME: /cache/mix
+      npm_config_cache: /cache/npm
+      PLAYWRIGHT_BROWSERS_PATH: /cache/playwright
+    ports:
+      - "4015:4015"
+    depends_on:
+      demo_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:4015/health | grep -q ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - .:/workspace
+      - mailglass_demo_mix:/cache/mix
+      - mailglass_demo_hex:/cache/hex
+      - mailglass_demo_npm:/cache/npm
+      - mailglass_demo_playwright:/cache/playwright
+      - mailglass_demo_root_deps:/workspace/deps
+      - mailglass_demo_root_build:/workspace/_build
+      - mailglass_demo_app_deps:/workspace/reference/demo_app/deps
+      - mailglass_demo_app_build:/workspace/reference/demo_app/_build
+      - mailglass_demo_admin_deps:/workspace/mailglass_admin/deps
+      - mailglass_demo_admin_build:/workspace/mailglass_admin/_build
+      - mailglass_demo_inbound_deps:/workspace/mailglass_inbound/deps
+      - mailglass_demo_inbound_build:/workspace/mailglass_inbound/_build
+
+  demo_e2e:
+    build:
+      context: .
+      dockerfile: reference/demo_app/Dockerfile
+    working_dir: /workspace/reference/demo_app
+    environment:
+      DEMO_BASE_URL: http://demo:4015
+      PLAYWRIGHT_BROWSERS_PATH: /cache/playwright
+      npm_config_cache: /cache/npm
+    depends_on:
+      demo:
+        condition: service_healthy
+    command: >
+      sh -lc "npm --prefix assets install --no-audit --no-fund
+      && npx --prefix assets playwright install chromium
+      && npm --prefix assets run test:e2e"
+    volumes:
+      - .:/workspace
+      - mailglass_demo_npm:/cache/npm
+      - mailglass_demo_playwright:/cache/playwright
+
+volumes:
+  mailglass_demo_pg:
+  mailglass_demo_mix:
+  mailglass_demo_hex:
+  mailglass_demo_npm:
+  mailglass_demo_playwright:
+  mailglass_demo_root_deps:
+  mailglass_demo_root_build:
+  mailglass_demo_app_deps:
+  mailglass_demo_app_build:
+  mailglass_demo_admin_deps:
+  mailglass_demo_admin_build:
+  mailglass_demo_inbound_deps:
+  mailglass_demo_inbound_build:

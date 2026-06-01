@@ -1,0 +1,65 @@
+defmodule MailglassDemoWeb.Router do
+  use Phoenix.Router
+
+  import Phoenix.Controller
+  import Phoenix.LiveView.Router
+  import Plug.Conn
+  import MailglassAdmin.Router
+
+  pipeline :browser do
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_live_flash)
+    plug(:put_root_layout, false)
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
+  end
+
+  pipeline :webhooks do
+    plug(:accepts, ["json"])
+  end
+
+  scope "/", MailglassDemoWeb do
+    pipe_through(:browser)
+
+    get("/", PageController, :home)
+    get("/health", PageController, :health)
+    get("/demo/login", PageController, :login)
+    post("/demo/reset", PageController, :reset)
+  end
+
+  scope "/dev" do
+    pipe_through(:browser)
+
+    mailglass_admin_routes("/mail",
+      mailables: [
+        MailglassDemoWeb.Mailers.AccountMailer,
+        MailglassDemoWeb.Mailers.BillingMailer,
+        MailglassDemoWeb.Mailers.OperationsMailer
+      ]
+    )
+  end
+
+  scope "/ops" do
+    pipe_through(:browser)
+
+    mailglass_operator_routes("/mail",
+      auth: MailglassDemoWeb.AdminAuth,
+      inbound_router: MailglassDemoWeb.InboundRouter,
+      session: [
+        subject_id: "demo_subject_id",
+        tenant_id: "demo_tenant_id",
+        auth_method: "demo_auth_method",
+        recent_auth_at: "demo_recent_auth_at"
+      ],
+      unauthorized_path: "/"
+    )
+  end
+
+  scope "/inbound" do
+    pipe_through(:webhooks)
+
+    post("/:tenant_id/postmark", MailglassInbound.Ingress.Plug, provider: :postmark)
+    post("/:tenant_id/sendgrid", MailglassInbound.Ingress.Plug, provider: :sendgrid)
+  end
+end
