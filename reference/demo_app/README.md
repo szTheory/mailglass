@@ -7,7 +7,7 @@ Realistic B2B SaaS Ops click-around demo for Mailglass adoption evidence.
 From the repo root:
 
 ```bash
-docker compose -f compose.demo.yml up demo
+DEMO_EVIDENCE_RESET_TOKEN=$(openssl rand -hex 24) docker compose -f compose.demo.yml up demo
 ```
 
 Then open:
@@ -20,7 +20,7 @@ Then open:
 Reset deterministic data:
 
 ```bash
-docker compose -f compose.demo.yml exec demo mix demo.reset
+DEMO_EVIDENCE_RESET_TOKEN=<same-token> docker compose -f compose.demo.yml exec demo mix demo.reset
 ```
 
 Destructive note: this reset truncates seeded demo tables before reseeding
@@ -30,7 +30,7 @@ replay data for tenant `northstar`.
 Run browser evidence against the running demo:
 
 ```bash
-docker compose -f compose.demo.yml run --rm demo_e2e
+DEMO_EVIDENCE_RESET_TOKEN=<same-token> docker compose -f compose.demo.yml run --rm demo_e2e
 ```
 
 Future artifact label: `demo_browser_evidence.v1`. This is adoption evidence

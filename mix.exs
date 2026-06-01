@@ -233,7 +233,7 @@ defmodule Mailglass.MixProject do
       "verify.phase67": [
         "test test/reference_host/scope_lock_contract_test.exs --warnings-as-errors",
         "cmd --cd reference/demo_app sh -c \"MIX_ENV=test mix ecto.create && MIX_ENV=test mix ecto.migrate && mix test --warnings-as-errors\"",
-        "cmd docker compose -f compose.demo.yml config",
+        "cmd sh -c \"DEMO_EVIDENCE_RESET_TOKEN=phase67-verify docker compose -f compose.demo.yml config\"",
         "cmd rg -n 'MAILGLASS_DEMO_DEPS|service_healthy|npm ci|playwright install --with-deps chromium|cache' compose.demo.yml"
       ],
 
