@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Inbound Stability Lock
 status: executing
-last_updated: "2026-06-01T00:22:54Z"
-last_activity: 2026-06-01 -- Completed 65-02 (operator/testing/admin trust boundary lock)
+last_updated: "2026-06-01T00:28:26.432Z"
+last_activity: 2026-06-01
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 50
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-05-31 after opening v1.4 Inbound Stabili
 ## Current Position
 
 Phase: 65 (compatibility-docs-and-dx-lock) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-01
 
@@ -68,6 +68,8 @@ Last activity: 2026-06-01
 - [Phase 65]: Inbound compatibility claims route through `mailglass_inbound/docs/api_stability.md` with explicit deprecation-DX inventory.
 - [Phase 65]: Operator docs contract is command-semantics-only; worker/queue internals remain non-contract.
 - [Phase 65]: Inbound test assertions are process-local and one-assertion-per-drive by contract wording.
+- [Phase 65]: Phase 65 Plan 03 anchors compatibility routing at guides/compatibility-and-deprecations.md with inbound api_stability as stable claim source.
+- [Phase 65]: Phase 65 Plan 03 keeps README as canonical inbound adoption authority and enforces install-guide subordination via docs checks.
 
 ## Roadmap Snapshot
 
@@ -106,6 +108,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 64 P01 | 2min | 2 tasks | 7 files |
 | Phase 64 P04 | 18min | 2 tasks | 5 files |
 | Phase 65 P02 | 24min | 2 tasks | 4 files |
+| Phase 65 P03 | 26min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
