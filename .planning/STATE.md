@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Demo Evidence and Click-Around Confidence
-status: executing
-last_updated: "2026-06-01T21:43:41.221Z"
+status: verifying
+last_updated: "2026-06-01T21:49:29.028Z"
 last_activity: 2026-06-01
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
-  percent: 25
+  completed_plans: 5
+  percent: 50
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-01 after v1.5 milestone open)
 
 Phase: 68 (realistic-b2b-saas-fixtures) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-01
 
 ## v1.5 Milestone Intent

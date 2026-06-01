@@ -16,7 +16,7 @@
 - [x] **DATA-01**: Maintainer can reset deterministic demo data with one command.
 - [x] **DATA-02**: Demo data includes realistic outbound deliveries, timeline events, suppressions, and replayable webhook targets.
 - [x] **DATA-03**: Demo data includes realistic inbound records, evidence, routing outcomes, replay lineage, and no-match cases.
-- [ ] **DATA-04**: Demo mailables provide realistic preview scenarios for invite/auth, receipt, and operational alert use cases.
+- [x] **DATA-04**: Demo mailables provide realistic preview scenarios for invite/auth, receipt, and operational alert use cases.
 
 ### Developer Experience
 
@@ -57,7 +57,7 @@
 | DATA-01 | Phase 68 | Complete |
 | DATA-02 | Phase 68 | Complete |
 | DATA-03 | Phase 68 | Complete |
-| DATA-04 | Phase 68 | Pending |
+| DATA-04 | Phase 68 | Complete |
 | DX-01 | Phase 67 | Complete |
 | DX-02 | Phase 67 | Complete |
 | DX-03 | Phase 69 | Pending |
