@@ -28,7 +28,7 @@ Requirements for the inbound stability-lock milestone. Each requirement maps to 
 
 ### Release Position
 
-- [ ] **REL-01**: Maintainer can make an explicit inbound `1.0.0` vs final `0.x` release decision from committed evidence.
+- [x] **REL-01**: Maintainer can make an explicit inbound `1.0.0` vs final `0.x` release decision from committed evidence.
 - [ ] **REL-02**: Release notes explain the contract posture without hype or ambiguity.
 - [ ] **REL-03**: No broad feature-growth milestone opens before the release-position decision.
 
@@ -79,7 +79,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DX-02 | Phase 65 | Complete |
 | DX-03 | Phase 65 | Complete |
 | DX-04 | Phase 65 | Complete |
-| REL-01 | Phase 66 | Pending |
+| REL-01 | Phase 66 | Complete |
 | REL-02 | Phase 66 | Pending |
 | REL-03 | Phase 66 | Pending |
 
