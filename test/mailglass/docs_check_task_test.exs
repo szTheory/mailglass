@@ -6,7 +6,8 @@ defmodule Mailglass.DocsCheckTaskTest do
     "README.md",
     "guides/preview.md",
     "mailglass_admin/README.md",
-    "MAINTAINING.md"
+    "MAINTAINING.md",
+    "mailglass_inbound/docs/inbound-install.md"
   ]
 
   setup do
@@ -73,6 +74,30 @@ defmodule Mailglass.DocsCheckTaskTest do
     assert_raise Mix.Error, ~r/Delivery blocked/, fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Mailglass.Docs.Check.run([])
+      end)
+    end
+  end
+
+  test "--path scopes Tier 1 surface checks to selected docs" do
+    File.write!("README.md", File.read!("README.md") <> "\n\nmix verify.phase_07\n")
+
+    assert capture_io(fn ->
+             Mix.Tasks.Mailglass.Docs.Check.run(["--path", "guides/preview.md"])
+           end) =~ "[mailglass.docs.check] OK"
+  end
+
+  test "blocks install docs from promoting deferred providers into the stable provider contract" do
+    install_path = "mailglass_inbound/docs/inbound-install.md"
+
+    File.write!(
+      install_path,
+      File.read!(install_path) <>
+        "\n\nThe four supported providers are `:postmark`, `:sendgrid`, `:mailgun`, and `:ses`.\n"
+    )
+
+    assert_raise Mix.Error, ~r/Delivery blocked/, fn ->
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Mailglass.Docs.Check.run(["--path", install_path])
       end)
     end
   end

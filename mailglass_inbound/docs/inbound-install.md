@@ -156,9 +156,8 @@ forward "/inbound/:tenant_id/sendgrid",
   router: MyApp.MailglassInboundRouter
 ```
 
-The four supported providers are `:postmark`, `:sendgrid`, `:mailgun`, and
-`:ses`. See `inbound-mailgun.md` and `inbound-ses.md` for Mailgun and SES
-setup.
+The stable provider lanes in this slice are `:postmark` and `:sendgrid`.
+Mailgun and SES guides are integration references and are not part of the current stable provider contract.
 
 ## 8. Configure your provider
 

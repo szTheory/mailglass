@@ -335,6 +335,16 @@ defmodule MailglassInbound.DocsContractTest do
     end
   end
 
+  test "install docs keep Mailgun and SES outside the current stable provider contract" do
+    install = File.read!(@install_path)
+
+    assert install =~ "The stable provider lanes in this slice are `:postmark` and `:sendgrid`."
+    assert install =~ "Mailgun and SES guides are integration references"
+    assert install =~ "not part of the current stable provider contract"
+
+    refute install =~ "The four supported providers are `:postmark`, `:sendgrid`, `:mailgun`, and"
+  end
+
   test "admin operator trust docs lock replay boundaries, canonical routing, and internal-ui framing" do
     operator_trust = File.read!(@operator_trust_path)
 

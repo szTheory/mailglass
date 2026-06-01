@@ -353,9 +353,15 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "@behaviour MailglassInbound.Mailbox",
         "mix ecto.migrate",
         "async: false",
+        "The stable provider lanes in this slice are `:postmark` and `:sendgrid`.",
+        "not part of the current stable provider contract",
         "../../guides/compatibility-and-deprecations.md"
       ],
-      forbidden: ["mix mailglass.install", "docs/compatibility-and-deprecations.md"]
+      forbidden: [
+        "mix mailglass.install",
+        "docs/compatibility-and-deprecations.md",
+        "The four supported providers are `:postmark`, `:sendgrid`, `:mailgun`, and"
+      ]
     },
     "mailglass_inbound/docs/inbound-testing.md" => %{
       required: [
@@ -428,9 +434,9 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
 
     issues =
       leak_issues(paths)
-      |> Kernel.++(tier1_surface_issues())
-      |> Kernel.++(preview_boundary_issues())
-      |> Kernel.++(trust_boundary_issues())
+      |> Kernel.++(tier1_surface_issues(paths))
+      |> Kernel.++(preview_boundary_issues(paths))
+      |> Kernel.++(trust_boundary_issues(paths))
 
     if issues == [] do
       Mix.shell().info("[mailglass.docs.check] OK — Tier 1 docs match the stability contract.")
@@ -476,8 +482,12 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     end)
   end
 
-  defp tier1_surface_issues do
-    Enum.flat_map(@tier1_surface_rules, fn {path, rules} ->
+  defp tier1_surface_issues(paths) do
+    selected_paths = MapSet.new(paths)
+
+    @tier1_surface_rules
+    |> Enum.filter(fn {path, _rules} -> MapSet.member?(selected_paths, path) end)
+    |> Enum.flat_map(fn {path, rules} ->
       content = File.read!(path)
 
       required_issues =
@@ -494,8 +504,12 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     end)
   end
 
-  defp preview_boundary_issues do
-    Enum.flat_map(@preview_boundary_paths, fn path ->
+  defp preview_boundary_issues(paths) do
+    selected_paths = MapSet.new(paths)
+
+    @preview_boundary_paths
+    |> Enum.filter(&MapSet.member?(selected_paths, &1))
+    |> Enum.flat_map(fn path ->
       content = File.read!(path)
 
       confidence_issues =
@@ -522,8 +536,12 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     end)
   end
 
-  defp trust_boundary_issues do
-    Enum.flat_map(@trust_entry_paths, fn path ->
+  defp trust_boundary_issues(paths) do
+    selected_paths = MapSet.new(paths)
+
+    @trust_entry_paths
+    |> Enum.filter(&MapSet.member?(selected_paths, &1))
+    |> Enum.flat_map(fn path ->
       path
       |> File.read!()
       |> String.split("\n")
