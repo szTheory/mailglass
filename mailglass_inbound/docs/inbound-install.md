@@ -264,6 +264,8 @@ tenant.
 - **See [inbound-testing.md](inbound-testing.md) for full test coverage
   patterns**: all four assertion matcher styles, outcome and routing assertions,
   Fixtures for every provider, and the idempotency property pattern.
+- **Compatibility/deprecation posture for inbound stable versus internal/deferred
+  surfaces:** [../../guides/compatibility-and-deprecations.md](../../guides/compatibility-and-deprecations.md)
 - **Provider-specific setup guides:**
   - [inbound-mailgun.md](inbound-mailgun.md) — Mailgun HTTP route URL, signing
     key config, and HMAC verification

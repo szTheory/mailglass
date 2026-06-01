@@ -4,6 +4,7 @@ defmodule MailglassInbound.DocsContractTest do
   @readme_path Path.expand("../../README.md", __DIR__)
   @install_path Path.expand("../../docs/inbound-install.md", __DIR__)
   @stability_path Path.expand("../../docs/api_stability.md", __DIR__)
+  @compatibility_path Path.expand("../../../guides/compatibility-and-deprecations.md", __DIR__)
   @changelog_path Path.expand("../../CHANGELOG.md", __DIR__)
   @mixfile_path Path.expand("../../mix.exs", __DIR__)
   @postmark_ingress_path Path.expand("../../docs/postmark_ingress.md", __DIR__)
@@ -391,6 +392,57 @@ defmodule MailglassInbound.DocsContractTest do
 
       assert inbound_pin == expected_inbound_pin
       assert mailglass_pin == expected_mailglass_pin
+    end
+  end
+
+  test "adoption path and compatibility routing stay canonical across README, install, and guide" do
+    readme = File.read!(@readme_path)
+    install = File.read!(@install_path)
+    compatibility = File.read!(@compatibility_path)
+
+    for doc <- [readme, install] do
+      assert doc =~ "{MailglassInbound.Ingress.CachingBodyReader, :read_body, []}"
+      assert doc =~ "mix deps.get"
+      assert doc =~ "mix ecto.migrate"
+      assert doc =~ "Oban"
+      assert doc =~ "Task.Supervisor fallback"
+    end
+
+    assert readme =~ "canonical adoption lane"
+    assert readme =~ "subordinate to this README path"
+    assert readme =~ "docs/inbound-operator.md"
+    assert readme =~ "docs/inbound-testing.md"
+    assert readme =~ "../guides/compatibility-and-deprecations.md"
+
+    assert install =~ "canonical inbound adoption lane"
+    assert install =~ "Follow this sequence only as an expansion of"
+    assert install =~ "that README path"
+    assert install =~ "single authority"
+    assert install =~ "inbound-testing.md"
+    assert install =~ "inbound-operator.md"
+    assert install =~ "../../guides/compatibility-and-deprecations.md"
+
+    assert compatibility =~ "mailglass_inbound/docs/api_stability.md"
+    assert compatibility =~ "stable/internal/deferred source"
+    assert compatibility =~ "Reachability is not a compatibility promise."
+    assert compatibility =~ "## mailglass_inbound compatibility"
+    assert compatibility =~ "## Inbound deprecation-DX inventory"
+
+    for required_heading <- [
+          "| Surface | Bridge or replacement | Warning or migration channel | `--warnings-as-errors` impact | Support-until horizon | Proof artifact |"
+        ] do
+      assert compatibility =~ required_heading
+    end
+
+    for forbidden <- [
+          "../docs/compatibility-and-deprecations.md",
+          "docs/compatibility-and-deprecations.md",
+          "mix mailglass.install",
+          "installer path",
+          "second canonical inbound adoption lane"
+        ] do
+      refute readme =~ forbidden
+      refute install =~ forbidden
     end
   end
 
