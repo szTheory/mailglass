@@ -1,6 +1,7 @@
 defmodule Mailglass.ReferenceHost.ScopeLockContractTest do
   use ExUnit.Case, async: true
 
+  @host_app_root Path.expand("../../reference/host_app", __DIR__)
   @scope_path Path.expand("../../reference/host_app/SCOPE.md", __DIR__)
   @readme_path Path.expand("../../reference/host_app/README.md", __DIR__)
 
@@ -48,5 +49,24 @@ defmodule Mailglass.ReferenceHost.ScopeLockContractTest do
 
     assert String.contains?(readme, "Scope contract: see reference/host_app/SCOPE.md"),
            "HOST-03 scope drift: README scope pointer missing"
+  end
+
+  test "HOST-03 blocks rich demo markers from reference host app sources" do
+    forbidden_tokens = ["MailglassDemo", "Northstar Ops", "demo dashboard"]
+
+    files =
+      Path.wildcard(Path.join(@host_app_root, "**/*"))
+      |> Enum.filter(&File.regular?/1)
+
+    hits =
+      for file <- files,
+          content = File.read!(file),
+          token <- forbidden_tokens,
+          String.contains?(content, token) do
+        {file, token}
+      end
+
+    assert hits == [],
+           "HOST-03 scope drift: reference/host_app contains rich-demo markers #{inspect(hits)}"
   end
 end

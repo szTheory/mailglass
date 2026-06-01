@@ -18,6 +18,7 @@ Boundary posture: this maintained reference host is usage-proof evidence only,
 not API-contract truth.
 
 It is not a second product surface and not a fixture seed.
+The rich click-around demo lives in `reference/demo_app`, not in `reference/host_app`.
 
 Stable guarantee semantics route to `docs/api_stability.md`,
 `mailglass_admin/docs/api_stability.md`, `mailglass_inbound/docs/api_stability.md`,
