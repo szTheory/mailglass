@@ -19,18 +19,19 @@ created: 2026-06-01
 |----------|-------|
 | **Framework** | ExUnit (Phoenix ConnCase) plus existing Playwright smoke seed |
 | **Config file** | `reference/demo_app/test/test_helper.exs`; `reference/demo_app/assets/playwright.config.cjs` |
-| **Quick run command** | `cd reference/demo_app && mix test test/mailglass_demo_web/page_controller_security_test.exs` |
+| **Quick run command** | `cd reference/demo_app && mix test test/mailglass_demo_web/page_controller_dashboard_test.exs` or `cd reference/demo_app && mix test test/mailglass_demo/docs_contract_test.exs` |
 | **Full suite command** | `cd reference/demo_app && mix test --warnings-as-errors` |
-| **Estimated runtime** | ~60 seconds |
+| **Estimated runtime** | Targeted per-task commands: <30 seconds each; full suite gate: ~60 seconds |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `cd reference/demo_app && mix test test/mailglass_demo_web/page_controller_security_test.exs`
+- **After dashboard task commits:** Run `cd reference/demo_app && mix test test/mailglass_demo_web/page_controller_dashboard_test.exs test/mailglass_demo_web/page_controller_security_test.exs`
+- **After docs task commits:** Run `cd reference/demo_app && mix test test/mailglass_demo/docs_contract_test.exs`
 - **After every plan wave:** Run `cd reference/demo_app && mix test --warnings-as-errors`
 - **Before `$gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** 60 seconds
+- **Max feedback latency:** <30 seconds for targeted per-task feedback; the ~60 second full suite is retained only for wave and phase gates because this phase intentionally keeps verification inside existing Mix/ExUnit lanes instead of adding new tooling.
 
 ---
 
@@ -65,7 +66,7 @@ All Phase 69 behaviors have automated verification. Full browser screenshots, de
 - [ ] Sampling continuity: no 3 consecutive tasks without automated verify
 - [ ] Wave 0 covers all MISSING references
 - [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
+- [ ] Targeted per-task feedback latency < 30s; full suite may remain ~60s at wave and phase gates
 - [ ] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending

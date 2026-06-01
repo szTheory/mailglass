@@ -235,12 +235,12 @@ json(%{
 |---|-------|---------|---------------|
 | A1 | No additional external package installs are needed for this phase. [ASSUMED] | Standard Stack / Package Legitimacy Audit | Planner may miss an install step if new tooling is later introduced. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should root README pointer text be adjusted now or left as-is?**
+1. **RESOLVED: Should root README pointer text be adjusted now or left as-is?**
    - What we know: Root README already points to `reference/demo_app` demo path. [VERIFIED: codebase grep]
-   - What's unclear: Whether wording drift exists relative to updated demo README language.
-   - Recommendation: Treat as discretionary micro-task with no canonical truth moved out of demo README.
+   - Decision: Leave root README and admin package docs out of Phase 69 unless execution discovers a broken or misleading pointer. The canonical quickstart and click-path truth stays in `reference/demo_app/README.md` per D-07 and D-08.
+   - Planning impact: `69-02-PLAN.md` intentionally updates only `reference/demo_app/README.md` and its docs contract test; this resolves the roadmap's admin-docs drift concern by preventing canonical truth from being scattered across admin docs.
 
 ## Environment Availability
 
