@@ -2,7 +2,6 @@ defmodule MailglassDemoWeb.PageController do
   use Phoenix.Controller, formats: [:html]
 
   alias MailglassDemo.DemoData
-
   def health(conn, _params), do: text(conn, "ok")
 
   def home(conn, _params) do
@@ -137,5 +136,17 @@ defmodule MailglassDemoWeb.PageController do
     conn
     |> put_flash(:info, "Demo data reset.")
     |> redirect(to: "/")
+  end
+
+  def evidence_reset(conn, _params) do
+    DemoData.reset!()
+
+    conn
+    |> put_status(:ok)
+    |> json(%{
+      status: "ok",
+      warning: "Destructive demo reset endpoint: truncates and reseeds demo evidence tables.",
+      summary: DemoData.summary()
+    })
   end
 end

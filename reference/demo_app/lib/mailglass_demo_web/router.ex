@@ -28,6 +28,12 @@ defmodule MailglassDemoWeb.Router do
     post("/demo/reset", PageController, :reset)
   end
 
+  scope "/demo", MailglassDemoWeb do
+    pipe_through(:webhooks)
+
+    post("/evidence/reset", PageController, :evidence_reset)
+  end
+
   scope "/dev" do
     pipe_through(:browser)
 
