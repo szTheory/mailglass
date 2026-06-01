@@ -89,6 +89,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **docs:** WR-03 clarify test.exs repo config is optional override, not a duplicate ([dab4f72](https://github.com/szTheory/mailglass/commit/dab4f72c0016c249413270a9ec92e651fa05afd9))
 * **docs:** WR-04 remove TODO comment from inbound-mailgun.md configuration block ([6c39049](https://github.com/szTheory/mailglass/commit/6c390495644d496f927aee64296570e5944ea01b))
 
+## [1.0.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v0.3.0...mailglass_inbound-v1.0.0) (2026-06-01)
+
+### Adopter action required
+
+- Upgrade to `{:mailglass_inbound, "~> 1.0"}` and keep sibling dependency posture unchanged (`{:mailglass, "== 1.3.0"}` for publish).
+- Re-run release and contract checks in your release lane:
+  - `mix verify.stability_contract`
+  - `mix mailglass.publish.check --package mailglass_inbound`
+
+### Behavior changes since 0.3.0
+
+- `mailglass_inbound` moves from `0.3.0` to `1.0.0` after the inbound stability-lock proof lane was completed and verified.
+- The release-position decision now records inbound as release-ready without widening feature scope or introducing new runtime APIs.
+
+### Operator-impacting changes
+
+- No new operator commands were introduced in this release.
+- Existing `mailglass.inbound.doctor`, `mailglass.inbound.replay`, and `mailglass.inbound.prune` command semantics are unchanged.
+
+### Compatibility posture and boundaries
+
+- Stable runtime/testing/operator seams remain the same; this release is a version-line promotion backed by proof, not a feature expansion.
+- Stable vs internal vs deferred contract truth is canonical in [`docs/api_stability.md`](docs/api_stability.md).
+- Compatibility/deprecation lifecycle policy is canonical in [`../guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md).
+- Stable boundaries: `MailglassInbound`, `InboundMessage`, ingress plug + body reader, router, mailbox contract, documented operator command semantics, telemetry families, and closed inbound error type sets.
+- Internal boundaries: provider modules, replay/doctor/prune internals, worker/queue details, and UI implementation details remain non-contract.
+- Deferred boundaries: no matcher expansion, lifecycle callbacks, public replay/provider APIs, worker/queue public contracts, synthetic UI, `gen_smtp` listener, or ecosystem integrations are promised by this release.
+
 ## [Unreleased]
 
 `mailglass_inbound` `0.3.0` is the current shipped line. The package remains on
