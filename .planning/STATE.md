@@ -20,13 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-31 after opening v1.4 Inbound Stability Lock)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 66 — release-position-decision
+**Current focus:** Phase 66 — release-position-decision (completed; release ceremony/maintenance posture next)
 
 ## Current Position
 
-Phase: 66 (release-position-decision) — EXECUTING
+Phase: 66 (release-position-decision) — COMPLETE
 Plan: 2 of 2
-Status: Ready to execute
+Status: Release position recorded (`mailglass_inbound` `1.0.0`), broad feature-growth remains gated
 Last activity: 2026-06-01
 
 ## v1.4 Milestone Intent

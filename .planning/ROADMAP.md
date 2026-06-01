@@ -38,7 +38,7 @@ Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milest
 - [x] Phase 63: Inbound Contract Inventory Reconciliation — canonical stable/testing/internal/deferred inventory (completed 2026-05-31)
 - [x] Phase 64: Contract Verification Hardening — compiled-doc, docs-contract, and root stability proof gates (completed 2026-05-31)
 - [x] Phase 65: Compatibility, Docs, and DX Lock — adoption path, operator wording, testing docs, and compatibility/deprecation posture (completed 2026-06-01)
-- [ ] Phase 66: Release Position Decision — evidence-backed `1.0.0` vs final `0.x` decision and release notes
+- [x] Phase 66: Release Position Decision — evidence-backed `1.0.0` decision recorded with release notes and final candidate-version proof (completed 2026-06-01)
 
 **Goal:** Lock `mailglass_inbound` into a stable adopter contract by defining its public API, compatibility policy, docs guarantees, and executable stability checks without expanding feature scope.
 
@@ -122,8 +122,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] `66-01-PLAN.md` — Capture fresh Phase 66 release evidence and write the canonical binary release-position record.
-- [ ] `66-02-PLAN.md` — Apply the chosen release truth, release notes, final publish proof, and feature-growth gate updates.
+- [x] `66-01-PLAN.md` — Capture fresh Phase 66 release evidence and write the canonical binary release-position record.
+- [x] `66-02-PLAN.md` — Apply the chosen release truth, release notes, final publish proof, and feature-growth gate updates.
 
 </details>
 
@@ -186,4 +186,4 @@ Plans:
 
 **Release-cadence rule (added 2026-05-06):** Each milestone closes with a release ceremony (Phase X.5 by convention). Don't start the next milestone implementation while previous-milestone work is unreleased. The 4-milestone-deep gap between v0.3.2 and 1.0.0 is the failure mode this rule prevents.
 
-**v1.4 convergence rule:** After inbound stability lock, default future planning to maintenance, release hygiene, docs truth, and narrow adopter-pull work. Do not open broad feature-growth work before the v1.4 release-position decision.
+**v1.4 convergence rule:** After inbound stability lock, default future planning to release ceremony, maintenance, release hygiene, docs truth, and narrow adopter-pull work. Broad feature-growth remains blocked until the release-position decision is complete (now satisfied by Phase 66 artifacts).
