@@ -51,6 +51,7 @@ defmodule Mailglass.MixProject do
         "verify.installer": :test,
         "verify.mix_tasks": :test,
         "verify.reference_host.journey": :test,
+        "verify.phase67": :test,
         # Deprecated pass-throughs — remove after one release cycle
         "verify.phase01": :test,
         "verify.phase_01": :test,
@@ -228,6 +229,12 @@ defmodule Mailglass.MixProject do
       # reference-host journey verification across local and CI surfaces.
       "verify.reference_host.journey": [
         "mailglass.trust.run"
+      ],
+      "verify.phase67": [
+        "test test/reference_host/scope_lock_contract_test.exs --warnings-as-errors",
+        "cmd --cd reference/demo_app sh -c \"MIX_ENV=test mix ecto.create && MIX_ENV=test mix ecto.migrate && mix test --warnings-as-errors\"",
+        "cmd docker compose -f compose.demo.yml config",
+        "cmd rg -n 'MAILGLASS_DEMO_DEPS|service_healthy|npm ci|playwright install --with-deps chromium|cache' compose.demo.yml"
       ],
 
       # --- Deprecated pass-throughs (REL-03, one cycle) ---

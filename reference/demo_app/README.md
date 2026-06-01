@@ -23,11 +23,18 @@ Reset deterministic data:
 docker compose -f compose.demo.yml exec demo mix demo.reset
 ```
 
+Destructive note: this reset truncates seeded demo tables before reseeding
+preview, delivery, suppression, inbound record, evidence, routing trace, and
+replay data for tenant `northstar`.
+
 Run browser evidence against the running demo:
 
 ```bash
 docker compose -f compose.demo.yml run --rm demo_e2e
 ```
+
+Future artifact label: `demo_browser_evidence.v1`. This is adoption evidence
+only; demo DOM, selectors, routes, and copy are not stable public API.
 
 ## Dependency Mode
 
