@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Demo Evidence and Click-Around Confidence
-status: verifying
-last_updated: "2026-06-01T21:49:29.028Z"
+status: Ready to discuss
+last_updated: 2026-06-01T21:58:46.351Z
 last_activity: 2026-06-01
 progress:
   total_phases: 4
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-01 after v1.5 milestone open)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 68 — realistic-b2b-saas-fixtures
+**Current focus:** Phase 69 — Click-Around UX and Docs
 
 ## Current Position
 
-Phase: 68 (realistic-b2b-saas-fixtures) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-06-01
+Phase: 69
+Plan: —
+Status: Ready to discuss
+Last activity: 2026-06-01 -- Phase 68 verified complete
 
 ## v1.5 Milestone Intent
 
