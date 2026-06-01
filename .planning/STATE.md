@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Demo Evidence and Click-Around Confidence
-status: ready
-last_updated: 2026-06-01T20:08:00Z
-last_activity: 2026-06-01 -- Phase 67 completed and verified
+status: Ready to plan
+last_updated: "2026-06-01T21:03:01Z"
+last_activity: 2026-06-01 -- Phase 68 context gathered in assumptions mode
 progress:
   total_phases: 4
   completed_phases: 1
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-06-01 after v1.5 milestone open)
 
 Phase: 68
 Plan: —
-Status: Ready to discuss
-Last activity: 2026-06-01 -- Phase 67 completed and verified
+Status: Ready to plan
+Last activity: 2026-06-01 -- Phase 68 context gathered in assumptions mode
 
 ## v1.5 Milestone Intent
 
@@ -137,6 +137,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Session Continuity
 
+- Phase 68 context gathered on 2026-06-01 in assumptions mode. Resume from `.planning/phases/68-realistic-b2b-saas-fixtures/68-CONTEXT.md`; next step is `$gsd-plan-phase 68`.
 - Phase 65 context gathered on 2026-05-31 in assumptions mode. Resume from `.planning/phases/65-compatibility-docs-and-dx-lock/65-CONTEXT.md`; next step is `$gsd-plan-phase 65`.
 - Phase 64 completed and verified on 2026-05-31. Plans `64-01` through `64-05` executed; `64-VERIFICATION.md` passed with 10/10 must-haves verified. Next step is `$gsd-discuss-phase 65` before planning compatibility/docs/DX lock work.
 - Phase 63 context gathered on 2026-05-31 in assumptions mode. Resume from `.planning/phases/63-inbound-contract-inventory-reconciliation/63-CONTEXT.md`; next step is `$gsd-plan-phase 63`.
