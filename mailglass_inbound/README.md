@@ -189,6 +189,19 @@ config :mailglass_inbound, :async_adapter, :task_supervisor
 The public contract does not include Oban job shapes, queue names, worker
 modules, or replay orchestration details.
 
+### 8. Follow the same canonical path into operations, testing, and compatibility
+
+After wiring inbound, continue through the matching deep-dive guides that stay
+subordinate to this README path:
+
+- operator command semantics:
+  [`docs/inbound-operator.md`](docs/inbound-operator.md)
+- testing harness, process-local assertion behavior, and one-assertion-per-drive:
+  [`docs/inbound-testing.md`](docs/inbound-testing.md)
+- compatibility and deprecation posture for stable versus internal/deferred
+  inbound surfaces:
+  [`../guides/compatibility-and-deprecations.md`](../guides/compatibility-and-deprecations.md)
+
 ## Provider Notes
 
 Keep the README as the primary setup path, then use the focused provider guides

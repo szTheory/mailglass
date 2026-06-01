@@ -1,10 +1,14 @@
 # mailglass_inbound Installation Guide
 
-This guide walks you from zero to a passing sandboxed test for
-`mailglass_inbound`. Follow the steps in order — by the end you will have
-inbound email flowing from a provider webhook into a mailbox function you
-control, with a repeatable test that verifies the path without a live HTTP
-request.
+This guide is the deeper setup detail for the canonical inbound adoption lane
+in [`../README.md`](../README.md). Follow this sequence only as an expansion of
+that README path — dependency pinning, `mix deps.get`, `mix ecto.migrate`,
+`Plug.Parsers` `body_reader`, router + mailbox wiring, provider mount points,
+and async mode choice remain identical here.
+
+By the end you will have inbound email flowing from a provider webhook into a
+mailbox function you control, with a repeatable test that verifies the path
+without a live HTTP request.
 
 > Before starting: this guide assumes your Phoenix application already has
 > `mailglass` wired (Repo, Config, Tenancy). If not, install
@@ -255,6 +259,8 @@ tenant.
 
 ## What's next
 
+- Return to the canonical path in [`../README.md`](../README.md) whenever setup
+  and troubleshooting wording differ; the README remains the single authority.
 - **See [inbound-testing.md](inbound-testing.md) for full test coverage
   patterns**: all four assertion matcher styles, outcome and routing assertions,
   Fixtures for every provider, and the idempotency property pattern.
