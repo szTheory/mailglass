@@ -5,6 +5,32 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.0.0...mailglass_inbound-v1.1.0) (2026-06-02)
+
+
+### Features
+
+* **64-05:** delegate root stability lane to inbound support contract alias ([37388f4](https://github.com/szTheory/mailglass/commit/37388f44f5197e655bf6a285f008f9a5ef608fbc))
+* **66-02:** apply inbound 1.0.0 candidate and release notes ([7c5d77e](https://github.com/szTheory/mailglass/commit/7c5d77ef06f1baa052408d51b0607fbb8dac9369))
+
+
+### Bug Fixes
+
+* **63-01:** restore inbound docs check tokens ([650b379](https://github.com/szTheory/mailglass/commit/650b3799030072c0c026930d030d5613f245d745))
+* **64-01:** annotate direct runtime seams with 0.1.0 since metadata ([f2edf58](https://github.com/szTheory/mailglass/commit/f2edf5800da4e36aa88c0f0f36b0b6d0e5f38b5c))
+* **64-01:** normalize inbound package-line since metadata ([445f23a](https://github.com/szTheory/mailglass/commit/445f23a41e3576f62bfcca17ec6e0ef9671b73be))
+* **64-03:** align test assertion and case metadata to 0.2.0 ([cf54dd7](https://github.com/szTheory/mailglass/commit/cf54dd79ab9afa486e233282d5cf24687021bb94))
+* **64-03:** tag fixtures and ingress testing helpers as 0.2.0 ([891e269](https://github.com/szTheory/mailglass/commit/891e2692475db16b021a5dd6ac8bde8ac4e8381a))
+* **64-review:** close contract review findings ([b1abd77](https://github.com/szTheory/mailglass/commit/b1abd77290798139eeb6068dcf1c54ee566d61ec))
+* **65:** resolve provider contract review findings ([42ceef2](https://github.com/szTheory/mailglass/commit/42ceef254ea45aa3214febfc1a3aa4dcf725ed6f))
+* **66-02:** refresh publish proof and lock phase 66 governance state ([ce26a56](https://github.com/szTheory/mailglass/commit/ce26a566331293b97cf8fd77e8ffb237447dbb26))
+* **66:** clean inbound changelog release truth ([eab4312](https://github.com/szTheory/mailglass/commit/eab431260f85f11f39399cd885e5789df002c575))
+* **72-03:** correct source_ref_pattern to mailglass_inbound-v%{version} ([0e1f65b](https://github.com/szTheory/mailglass/commit/0e1f65b9a818ddd033577a634adc0d61df44c107))
+* **72:** WR-01 make inbound changelog over-claim guard meaningful ([ab116f4](https://github.com/szTheory/mailglass/commit/ab116f4fece2519961f2bdee9dd29ba15da67e02))
+* **73:** WR-01 gate pending-marker asserts behind staged-posture check ([cfcf055](https://github.com/szTheory/mailglass/commit/cfcf055c11939cbcba642afb1602e2a1b78ba4bd))
+* **73:** WR-02 bind REL-03 field asserts to exact labels (folds IN-02) ([cfaae1d](https://github.com/szTheory/mailglass/commit/cfaae1dad38fe01765764c8e04aefad0665f5a9e))
+* **73:** WR-03 guard inbound release-record path against archival with readable flunk ([adaa0d7](https://github.com/szTheory/mailglass/commit/adaa0d7780e231e1aff2f34ed97c1371f7fc64a7))
+
 ## [Unreleased]
 
 No unreleased changes yet.
