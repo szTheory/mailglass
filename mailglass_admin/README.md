@@ -45,8 +45,8 @@ Add `mailglass_admin` to your adopter app's `mix.exs`:
 
     def deps do
       [
-        {:mailglass, "~> 1.3"},
-        {:mailglass_admin, "~> 1.3", only: :dev}
+        {:mailglass, "~> 1.4"},
+        {:mailglass_admin, "~> 1.4", only: :dev}
       ]
     end
 
