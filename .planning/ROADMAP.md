@@ -114,7 +114,10 @@ Audit passed 2026-06-02 after Phase 70 closeout. Full archive at [milestones/v1.
   - [x] 72-01-PLAN.md — Correct stale prose in guides/jobs.md, guides/compatibility-and-deprecations.md, and MAINTAINING.md; flip docs.check and docs_contract_test guards.
   - [x] 72-02-PLAN.md — Add DX inventory horizon guards to inbound docs-contract test.
   - [x] 72-03-PLAN.md — Fix source_ref_pattern in mailglass_inbound/mix.exs, regenerate publish summary, add stability_contract_test assertion.
-- [ ] Phase 73: Inbound 1.0 Publish Evidence — run or prepare the inbound-only publish path and record Hex, HexDocs, smoke, fallback, and 60-minute decision evidence.
+- [ ] Phase 73: Inbound 1.0 Publish Evidence — prepare and stage the inbound-only publish path and record Hex, HexDocs, smoke, fallback, and 60-minute decision evidence. (2 plans)
+  Plans:
+  - [ ] 73-01-PLAN.md — Author the inbound RELEASE-RECORD + RELEASE-CHECKLIST (full REL-03 field set, approver fields dropped, post-publish fields pending) and run the deterministic publish.check + inbound-preflight-consistency lanes.
+  - [ ] 73-02-PLAN.md — Fix the stale Phase 38 runbook path, refine inbound-only publish/fallback wording, stage/capture the dry-run dispatch rehearsal, and add the field-presence + stale-path-regression guard.
 
 Success criteria:
 1. `mailglass_inbound` `1.0.0` source, manifest, changelog, publish pin, package allowlist, and publish-summary truth agree.
