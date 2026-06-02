@@ -667,6 +667,41 @@ defmodule MailglassInbound.DocsContractTest do
     end
   end
 
+  test "inbound release record exists, carries REL-03 field headers, and reads pending honestly" do
+    record =
+      File.read!(
+        Path.expand(
+          "../../../.planning/phases/73-inbound-1-0-publish-evidence/73-01-RELEASE-RECORD.md",
+          __DIR__
+        )
+      )
+
+    for header <- [
+          "Tag",
+          "Publish workflow run URL",
+          "Fallback",
+          "Hex index",
+          "HexDocs",
+          "smoke",
+          "60-minute"
+        ] do
+      assert record =~ header,
+             "Expected 73-01-RELEASE-RECORD.md to contain REL-03 header: #{inspect(header)}"
+    end
+
+    assert record =~ "not run",
+           "Expected 73-01-RELEASE-RECORD.md to carry 'not run' pending markers (Honest Surface Area)"
+
+    assert record =~ "pending",
+           "Expected 73-01-RELEASE-RECORD.md to carry 'pending' markers for post-publish fields"
+
+    maintaining =
+      File.read!(Path.expand("../../../MAINTAINING.md", __DIR__))
+
+    refute maintaining =~ ".planning/phases/38-",
+           "MAINTAINING.md must not contain the stale .planning/phases/38- path (D-10 regression guard)"
+  end
+
   # True when the `## [Unreleased]` section is the default between-releases
   # stub. Detecting it explicitly lets the over-claim guard skip the section
   # (vacuous to refute) instead of silently passing against an empty stub.
