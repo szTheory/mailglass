@@ -31,7 +31,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 **`v1.3 Adopter Trust Proof` shipped on 2026-05-31.**
 
 - Milestone archive complete: 7 phases (`52`, `57-62`), 18 plans, 16/16 requirements satisfied, final audit `status: passed`
-- **Current package versions on Hex: `mailglass` 1.3.0 / `mailglass_admin` 1.3.0 / `mailglass_inbound` 0.3.0** (live on 2026-05-29; reference-host trust proof aligned in Phase 62)
+- **Current package versions on Hex: `mailglass` 1.3.0 / `mailglass_admin` 1.3.0 / `mailglass_inbound` 1.0.0** (`mailglass_inbound` 1.0.0 shipped 2026-06-02 via v1.6, inbound-only — core/admin held at 1.3.0; `mailglass`/`mailglass_admin` 1.3.0 live since 2026-05-29)
 - The maintained `reference/host_app` now proves a narrow, public-seam-only adopter path with an explicit scope contract and non-goals.
 - One canonical deterministic trust runner now covers install -> preview -> send -> signed webhook ingest -> operator troubleshooting, with stable `trust_runner.v1` checkpoint evidence.
 - Required repo-head and clean-baseline trust lanes enforce checkpoint evidence, Hex-first dependency resolution, and branch-protection/release-gate expectations.
@@ -63,7 +63,7 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Release-workflow fanout still relies on the documented `workflow_dispatch` fallback because GitHub `GITHUB_TOKEN` anti-recursion blocks downstream publish workflows from release-created releases.
 - Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
 - `SEED-003-ecosystem-integrations` is intentionally deferred and remains dormant for later milestone selection.
-- `mailglass_inbound` has completed its stability-lock milestone and now has a `1.0.0` source candidate; v1.6 is the active release-governance milestone to publish and prove that line. All v1.6 planning phases (71 preflight, 72 contract-docs, 73 publish-evidence) are now complete: the inbound-only `1.0.0` publish path is documented, dry-run-staged, and the release evidence is recorded honestly (post-publish fields pending) — the live `mailglass_inbound 1.0.0` Hex publish is the deferred maintainer trigger (D-01), so the milestone is planning-complete but not yet Hex-shipped.
+- **`v1.6 Inbound 1.0 Release and Truth Lock` SHIPPED 2026-06-02: `mailglass_inbound` 1.0.0 is live on Hex (inserted 17:42:31Z, HexDocs up, release-triggered smoke green).** Cut via the canonical `release: published` path at `50bc4b82`; publish-core/publish-admin idempotency-skipped so no core/admin release was forced. Two release-readiness fixes were made at publish time: dropped 7 untracked draft files from the inbound publish allowlist (the package had been building from a dirty working tree, incl. a duplicate `suppression_flagged` migration), and greened `main` (mix format + a stale compatibility-contract assertion — `main` had been silently red since 2026-05-29 because phases 66–73 landed via `paths-ignore`d commits that never ran `ci.yml`). Posture now: quiet maintenance / adopter-pull, no feature-growth milestone queued.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
 ## Current Milestone: v1.6 Inbound 1.0 Release and Truth Lock

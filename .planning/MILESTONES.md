@@ -1,5 +1,16 @@
 # Milestones
 
+## v1.6 Inbound 1.0 Release and Truth Lock (Shipped: 2026-06-02)
+
+**Phases completed:** 3 phases, 6 plans, 5 tasks
+
+**Key accomplishments:**
+
+- Exact inbound 1.0.0 release-truth proof with blocker-only root docs/runbook corrections
+- Inbound RELEASE-RECORD and RELEASE-CHECKLIST authored under prepare-and-stage posture: mix mailglass.publish.check (exit 0) and stability_contract test (6/0) captured; all post-publish fields (Hex, HexDocs, smoke, 60-minute) marked pending/not run
+
+---
+
 ## v1.5 Demo Evidence and Click-Around Confidence (Shipped: 2026-06-02)
 
 **Phases completed:** 4 phases, 8 plans, 14 tasks

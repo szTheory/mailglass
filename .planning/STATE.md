@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
-status: milestone_complete
-last_updated: 2026-06-02T15:44:07.578Z
-last_activity: 2026-06-02
+status: Awaiting next milestone
+last_updated: "2026-06-02T17:45:51.738Z"
+last_activity: 2026-06-02 — Milestone v1.6 completed and archived
 progress:
   total_phases: 3
   completed_phases: 3
   total_plans: 6
-  completed_plans: 21
+  completed_plans: 6
   percent: 100
-stopped_at: Milestone complete (Phase 73 was final phase)
 ---
 
 # Project State
@@ -25,12 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initializatio
 
 ## Current Position
 
-Phase: 73
-Plan: Not started
-Status: Milestone complete
-Next step: $gsd-plan-phase 73 — Inbound 1.0 Publish Evidence
-Last activity: 2026-06-02
-Resume file: None
+Phase: Milestone v1.6 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-02 — Milestone v1.6 completed and archived
 
 ## v1.6 Milestone Intent
 
