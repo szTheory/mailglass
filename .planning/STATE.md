@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
-status: verifying
-last_updated: "2026-06-02T08:26:53.086Z"
+status: ready_for_next_phase
+last_updated: 2026-06-02T14:40:01.919Z
 last_activity: 2026-06-02
 progress:
   total_phases: 3
@@ -20,13 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initialization)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 72 — contract-docs-and-stale
+**Current focus:** Phase 72 complete + verified — next is Phase 73 (Inbound 1.0 Publish Evidence)
 
 ## Current Position
 
-Phase: 72 (contract-docs-and-stale) — EXECUTING
-Plan: 3 of 3
-Status: Phase complete — ready for verification
+Phase: 72 (contract-docs-and-stale) — COMPLETE + VERIFIED (20/20 must-haves)
+Plan: 3 of 3 complete
+Status: Phase 72 verified passed; milestone v1.6 still ACTIVE — Phase 73 pending (no phase dir yet)
+Next step: $gsd-discuss-phase 73 (or $gsd-plan-phase 73) — Inbound 1.0 Publish Evidence
 Last activity: 2026-06-02
 
 ## v1.6 Milestone Intent
@@ -157,6 +158,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Session Continuity
 
+- Phase 72 completed and verified on 2026-06-02. Plans `72-01`/`72-02`/`72-03` executed; code review (`72-REVIEW.md`) found 0 critical / 4 warning / 4 info, all 4 warnings (WR-01..WR-04) fixed and committed (`ab116f4f`, `fcdf5b45`, `5a367d8a`); `72-VERIFICATION.md` passed with 20/20 must-haves. v1.6 is still ACTIVE — next step is `$gsd-discuss-phase 73` (or `$gsd-plan-phase 73`) for Inbound 1.0 Publish Evidence. NOTE: `gsd-sdk query phase.complete 72` wrongly reported `is_last_phase: true` / set `milestone_complete` because Phase 73 has no phase directory yet (it's only in ROADMAP text); STATE was hand-corrected back to `ready_for_next_phase`. Scaffold Phase 73 via discuss/plan rather than re-running phase.complete.
 - Phase 72 context gathered on 2026-06-02 in assumptions mode with subagent research. Resume from `.planning/phases/72-contract-docs-and-stale/72-CONTEXT.md`; next step is `$gsd-plan-phase 72`.
 - Phase 71 context gathered on 2026-06-02 in assumptions mode. Resume from `.planning/phases/71-inbound-release-truth-preflight/71-CONTEXT.md`; next step is `$gsd-plan-phase 71`.
 - Phase 69 context gathered on 2026-06-01 in assumptions mode. Resume from `.planning/phases/69-click/69-CONTEXT.md`; next step is `$gsd-plan-phase 69`.
