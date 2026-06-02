@@ -138,6 +138,7 @@ defmodule Mailglass.StabilityContractTest do
       assert summary["version"] == expected_version
       assert summary["manifest_version"] == expected_version
       assert summary["source_ref"] == "v#{expected_version}"
+      assert summary["source_ref_pattern"] == "mailglass_inbound-v%{version}"
       assert summary["mailglass_inbound_publish_pin"] == "== #{expected_core_version}"
       assert summary["linked_versions"]["mailglass"] == expected_core_version
       assert summary["linked_versions"]["mailglass_admin"] == expected_core_version

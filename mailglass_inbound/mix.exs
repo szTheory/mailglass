@@ -120,7 +120,7 @@ defmodule MailglassInbound.MixProject do
       name: "mailglass_inbound",
       licenses: ["MIT"],
       description: @description,
-      source_ref_pattern: "mailglass-sibling-group-v%{version}",
+      source_ref_pattern: "mailglass_inbound-v%{version}",
       links: %{
         "GitHub" => @source_url,
         "HexDocs" => "https://hexdocs.pm/mailglass_inbound"
