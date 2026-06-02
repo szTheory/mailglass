@@ -20,7 +20,7 @@ defmodule MailglassDemo.DemoDataResetTest do
 
     assert Map.take(rerun, deterministic_keys()) == Map.take(baseline, deterministic_keys())
     assert rerun.deliveries == 6
-    assert rerun.events == 11
+    assert rerun.events == 12
     assert rerun.inbound == 4
     assert rerun.suppressions == 1
     assert rerun.inbound_evidence == 4

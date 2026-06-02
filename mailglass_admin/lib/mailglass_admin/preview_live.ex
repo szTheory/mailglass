@@ -5,9 +5,10 @@ defmodule MailglassAdmin.PreviewLive do
   Mounted by `MailglassAdmin.Router.mailglass_admin_routes/2`. Two live
   actions:
 
-    * `:index` at `/` — no scenario selected. Renders the empty-state
-      card with copy `"Select a scenario from the sidebar to preview it."`
-      per 05-UI-SPEC Copywriting Contract line 465.
+    * `:index` at `/` — no scenario selected. Renders the start page: a
+      value statement, a "Preview the first one" deep link, and a legend of
+      the tool's affordances. When auto-scan finds zero mailables, renders the
+      actionable "No mailables discovered" empty state instead.
     * `:show` at `/:mailable/:scenario` — renders the full preview:
       sidebar, main pane header, device + dark toggles, assigns form,
       HTML/Text/Raw/Headers tab strip.
@@ -287,16 +288,73 @@ defmodule MailglassAdmin.PreviewLive do
                 render_nonce={@render_nonce}
               />
             </div>
-          <% true -> %>
-            <div class="card bg-base-200 p-8 rounded-box text-center max-w-prose mx-auto">
-              <Components.icon
-                name="hero-envelope"
-                class="w-10 h-10 text-secondary mx-auto mb-3"
-              />
-              <h2 class="text-base font-bold text-base-content mb-2">Select a scenario</h2>
-              <p class="text-sm text-secondary">
-                Select a scenario from the sidebar to preview it.
+          <% @mailables == [] -> %>
+            <div
+              data-testid="preview-empty-mailables"
+              class="card mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-8"
+            >
+              <Components.icon name="hero-magnifying-glass" class="mb-3 h-10 w-10 text-secondary" />
+              <h2 class="mb-2 text-heading font-bold text-base-content">No mailables discovered</h2>
+              <p class="text-body text-secondary">
+                Preview scans loaded modules that <code class="mono text-xs">use Mailglass.Mailable</code>.
+                Nothing was found yet.
               </p>
+              <ul class="mt-4 grid gap-2 text-sm text-secondary">
+                <li class="flex items-start gap-2">
+                  <Components.icon
+                    name="hero-check-circle"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                  />
+                  <span>
+                    Confirm the module calls <code class="mono text-xs">use Mailglass.Mailable</code>
+                    and is compiled and loaded.
+                  </span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <Components.icon
+                    name="hero-check-circle"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                  />
+                  <span>
+                    Or pass an explicit list to the router: <code class="mono text-xs">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
+                  </span>
+                </li>
+              </ul>
+            </div>
+          <% true -> %>
+            <div class="mx-auto max-w-prose space-y-6">
+              <div class="card rounded-box border border-base-300 bg-base-200 p-8">
+                <Components.icon name="hero-envelope-open" class="mb-3 h-10 w-10 text-primary" />
+                <h2 class="mb-2 text-heading font-bold text-base-content">
+                  Render a real message before you send it
+                </h2>
+                <p class="text-body text-secondary">
+                  Pick a mailer from the sidebar to render it through the same pipeline your
+                  production sends use — then inspect every part of the result.
+                </p>
+                <.link
+                  :if={first_previewable(@mailables)}
+                  patch={first_scenario_path(@mailables)}
+                  class="btn btn-primary mt-5 min-h-11"
+                >
+                  Preview the first one
+                </.link>
+              </div>
+
+              <dl class="grid gap-3 sm:grid-cols-2">
+                <.legend_item icon="hero-window" title="HTML, Text, Raw & Headers">
+                  Switch tabs to inspect each part of the rendered message.
+                </.legend_item>
+                <.legend_item icon="hero-device-phone-mobile" title="Device widths">
+                  Check mobile, tablet, and desktop rendering at 375 / 768 / 1024px.
+                </.legend_item>
+                <.legend_item icon="hero-moon" title="Light & dark">
+                  Toggle the theme to see how the message reads either way.
+                </.legend_item>
+                <.legend_item icon="hero-pencil-square" title="Editable assigns">
+                  Edit the scenario's assigns inline and re-render instantly.
+                </.legend_item>
+              </dl>
             </div>
         <% end %>
       </main>
@@ -308,9 +366,45 @@ defmodule MailglassAdmin.PreviewLive do
     """
   end
 
+  attr :icon, :string, required: true
+  attr :title, :string, required: true
+  slot :inner_block, required: true
+
+  # Start-page legend tile: one affordance of the preview tool, explained.
+  defp legend_item(assigns) do
+    ~H"""
+    <div class="flex items-start gap-3 rounded-box border border-base-300 bg-base-100 p-4">
+      <Components.icon name={@icon} class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+      <div class="min-w-0">
+        <dt class="text-sm font-bold text-base-content">{@title}</dt>
+        <dd class="mt-1 text-sm text-secondary">{render_slot(@inner_block)}</dd>
+      </div>
+    </div>
+    """
+  end
+
   # ---------------------------------------------------------------------------
   # Private helpers
   # ---------------------------------------------------------------------------
+
+  # First mailable that exposes at least one previewable scenario (healthy
+  # reflection = keyword list of {scenario, defaults}). Used to fast-path the
+  # start page's "Preview the first one" deep link.
+  defp first_previewable(mailables) do
+    Enum.find_value(mailables, fn
+      {mod, [{scenario, _defaults} | _]} -> {mod, scenario}
+      _ -> nil
+    end)
+  end
+
+  # Relative path matching the sidebar's scenario links, so it resolves under
+  # any adopter mount path without needing base_path (which is nil on :index).
+  defp first_scenario_path(mailables) do
+    case first_previewable(mailables) do
+      {mod, scenario} -> "./" <> inspect(mod) <> "/" <> Atom.to_string(scenario)
+      nil -> "#"
+    end
+  end
 
   defp live_reload_available? do
     Code.ensure_loaded?(MailglassAdmin.OptionalDeps.PhoenixLiveReload)
@@ -570,7 +664,11 @@ defmodule MailglassAdmin.PreviewLive do
         _ -> []
       end
 
-    ensure_header(ensure_header(base, "Message-ID", generate_message_id()), "Date", rfc2822_date())
+    ensure_header(
+      ensure_header(base, "Message-ID", generate_message_id()),
+      "Date",
+      rfc2822_date()
+    )
   end
 
   defp swoosh_headers(_), do: []

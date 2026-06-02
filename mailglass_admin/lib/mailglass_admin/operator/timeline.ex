@@ -12,7 +12,10 @@ defmodule MailglassAdmin.Operator.Timeline do
 
   def timeline(assigns) do
     ~H"""
-    <article data-testid="operator-timeline" class="card rounded-box border border-base-300 bg-base-200 p-6">
+    <article
+      data-testid="operator-timeline"
+      class="card rounded-box border border-base-300 bg-base-200 p-6"
+    >
       <div class="mb-4 flex items-center justify-between gap-3">
         <h3 class="text-base font-bold text-base-content">Event timeline</h3>
         <span class="text-xs text-secondary">Chronological order</span>
@@ -23,17 +26,20 @@ defmodule MailglassAdmin.Operator.Timeline do
           No delivery events have been recorded for this item yet.
         </p>
       <% else %>
-        <ol class="space-y-4">
+        <ol class="motion-timeline space-y-4">
           <%= for {event, index} <- Enum.with_index(@timeline_events) do %>
             <li
               data-testid="operator-timeline-event"
               data-event-id={event.id}
-              data-highlighted={if highlighted?(@highlight_event_id, event.id), do: "true", else: "false"}
+              data-highlighted={
+                if highlighted?(@highlight_event_id, event.id), do: "true", else: "false"
+              }
               class="flex gap-3"
             >
               <div class="mt-1 flex flex-col items-center">
                 <span class={["h-3 w-3 rounded-full", event_dot_class(event.type)]}></span>
-                <span :if={index < length(@timeline_events) - 1} class="mt-2 h-full w-px bg-base-300"></span>
+                <span :if={index < length(@timeline_events) - 1} class="mt-2 h-full w-px bg-base-300">
+                </span>
               </div>
               <div class={[
                 "min-w-0 flex-1 rounded-box border bg-base-100 p-4",
@@ -47,7 +53,9 @@ defmodule MailglassAdmin.Operator.Timeline do
                         {event_badge(event.type)}
                       </span>
                     </div>
-                    <p class="text-xs text-secondary">{metadata_summary(event.type, event.metadata)}</p>
+                    <p class="text-xs text-secondary">
+                      {metadata_summary(event.type, event.metadata)}
+                    </p>
                     <p class="mono text-xs text-secondary">{event.id}</p>
                     <p :if={event.reject_reason} class="text-sm text-secondary">
                       Reason: {label(event.reject_reason)}
@@ -119,8 +127,9 @@ defmodule MailglassAdmin.Operator.Timeline do
 
   defp highlighted?(highlight_event_id, event_id), do: highlight_event_id == event_id
 
-  defp badge_class(type) when type in [:webhook_replay_requested, :webhook_replay_succeeded, :webhook_replay_failed],
-    do: "badge badge-outline badge-error"
+  defp badge_class(type)
+       when type in [:webhook_replay_requested, :webhook_replay_succeeded, :webhook_replay_failed],
+       do: "badge badge-outline badge-error"
 
   defp badge_class(:reconciled), do: "badge badge-outline badge-warning"
   defp badge_class(_type), do: "badge badge-outline"

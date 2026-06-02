@@ -79,6 +79,8 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:detail_error, nil)
      |> assign(:replay_modal_open?, false)
      |> assign(:base_path, "/inbound")
+     |> assign(:page_uri, "/inbound")
+     |> assign(:dark_chrome, false)
      |> assign(:outcome_values, @outcome_values)
      |> assign(:window_options, @window_options)
      |> assign(:filter_params, default_filter_params())
@@ -101,6 +103,8 @@ defmodule MailglassAdmin.InboundLive do
     {:noreply,
      socket
      |> assign(:base_path, URI.parse(uri).path || "/inbound")
+     |> assign(:page_uri, uri)
+     |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params))
      |> assign(:filter_params, filter_params)
      |> assign(:filter_form, to_form(filter_params, as: :filters))
      |> assign_inbound_state(filter_params, blank_to_nil(params["inbound_id"]))
@@ -112,7 +116,20 @@ defmodule MailglassAdmin.InboundLive do
     normalized = normalize_filter_params(filters)
 
     {:noreply,
-     push_patch(socket, to: build_path(socket.assigns.base_path, normalized, nil))}
+     push_patch(socket,
+       to: build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
+     )}
+  end
+
+  def handle_event("toggle_theme", _params, socket) do
+    {:noreply,
+     push_patch(socket,
+       to:
+         MailglassAdmin.Operator.Shell.toggle_theme_path(
+           socket.assigns.page_uri,
+           socket.assigns.dark_chrome
+         )
+     )}
   end
 
   def handle_event("validate_filters", %{"filters" => filters}, socket) do
@@ -123,12 +140,19 @@ defmodule MailglassAdmin.InboundLive do
   def handle_event("select_inbound", %{"id" => inbound_id}, socket) do
     {:noreply,
      push_patch(socket,
-       to: build_path(socket.assigns.base_path, socket.assigns.filter_params, inbound_id)
+       to:
+         build_path(
+           socket.assigns.base_path,
+           socket.assigns.filter_params,
+           inbound_id,
+           socket.assigns.dark_chrome
+         )
      )}
   end
 
   def handle_event("clear_filters", _params, socket) do
-    {:noreply, push_patch(socket, to: socket.assigns.base_path)}
+    {:noreply,
+     push_patch(socket, to: socket.assigns.base_path <> theme_query(socket.assigns.dark_chrome))}
   end
 
   def handle_event("open_replay", _params, socket) do
@@ -222,112 +246,115 @@ defmodule MailglassAdmin.InboundLive do
 
   @impl true
   def render(assigns) do
+    paths =
+      MailglassAdmin.Operator.Shell.surface_paths(
+        assigns.base_path,
+        :inbound,
+        assigns.dark_chrome
+      )
+
+    assigns =
+      assign(assigns,
+        deliveries_path: paths.deliveries,
+        inbound_path: paths.inbound,
+        inbound_available?: MailglassAdmin.Operator.Shell.inbound_available?()
+      )
+
     ~H"""
-    <div data-theme="mailglass-light" class="min-h-screen bg-base-100">
-      <main class="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
-        <header class="mb-6 flex flex-col gap-2">
-          <h1 class="text-xl font-bold text-base-content tracking-tight">Inbound records</h1>
-          <p class="text-sm text-secondary">
-            Browse tenant-scoped inbound mail, inspect its execution timeline, and review routing outcomes.
-          </p>
-        </header>
-
-        <div class="space-y-3">
-          <div
-            :if={Phoenix.Flash.get(@flash, :info)}
-            class="rounded-box border border-success bg-success/10 px-4 py-3 text-sm text-base-content"
-          >
-            {Phoenix.Flash.get(@flash, :info)}
-          </div>
-          <div
-            :if={Phoenix.Flash.get(@flash, :error)}
-            class="rounded-box border border-error bg-error/10 px-4 py-3 text-sm text-base-content"
-          >
-            {Phoenix.Flash.get(@flash, :error)}
-          </div>
-        </div>
-
-        <section class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5">
-          <.form
-            for={@filter_form}
-            id="inbound-filters"
-            phx-change="validate_filters"
-            phx-submit="apply_filters"
-            class="grid gap-3"
-          >
-            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-              <FiltersForm.fields
-                form={@filter_form}
-                outcome_values={@outcome_values}
-                window_options={@window_options}
-              />
-            </div>
-
-            <div class="flex flex-wrap gap-2">
-              <button type="submit" class="btn btn-primary min-h-11 px-5">Open record</button>
-              <button type="button" phx-click="clear_filters" class="btn btn-ghost min-h-11 px-5">
-                Clear filters
-              </button>
-            </div>
-          </.form>
-        </section>
-
-        <section
-          data-testid="inbound-master-detail"
-          class="mt-6 grid gap-6 lg:grid-cols-[minmax(22rem,28rem)_1fr]"
+    <MailglassAdmin.Operator.Shell.shell
+      active={:inbound}
+      deliveries_path={@deliveries_path}
+      inbound_path={@inbound_path}
+      inbound_available?={@inbound_available?}
+      dark_chrome={@dark_chrome}
+      tenant={blank_to_nil(@filter_params["tenant_id"])}
+      title="Inbound records"
+      subtitle="See why a received message routed the way it did — execution timeline, routing trace, and raw evidence."
+      flash={@flash}
+    >
+      <section class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5">
+        <.form
+          for={@filter_form}
+          id="inbound-filters"
+          phx-change="validate_filters"
+          phx-submit="apply_filters"
+          class="grid gap-3"
         >
-          <aside
-            data-testid="inbound-records-list-card"
-            class="card rounded-box border border-base-300 bg-base-200 p-0"
-          >
-            <div class="border-b border-base-300 px-4 py-3">
-              <h2 class="text-sm font-bold uppercase tracking-[0.08em] text-secondary">
-                Recent inbound records
-              </h2>
-            </div>
-            <RecordsList.records_list records={@records} selected_record={@selected_record} />
-          </aside>
+          <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <FiltersForm.fields
+              form={@filter_form}
+              outcome_values={@outcome_values}
+              window_options={@window_options}
+            />
+          </div>
 
-          <section data-testid="inbound-detail-column" class="space-y-4">
-            <%= cond do %>
-              <% @detail_error -> %>
-                <div
-                  data-testid="inbound-detail-error"
-                  class="card rounded-box border border-error bg-base-100 p-6"
-                >
-                  <div class="flex items-center gap-2">
-                    <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
-                    <h2 class="text-base font-bold text-base-content">
-                      Inbound data could not be loaded. Refresh the page or adjust the filters, then try again.
-                    </h2>
-                  </div>
-                </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary min-h-11 px-5">Open record</button>
+            <button type="button" phx-click="clear_filters" class="btn btn-ghost min-h-11 px-5">
+              Clear filters
+            </button>
+          </div>
+        </.form>
+      </section>
 
-              <% is_nil(@detail) -> %>
-                <div
-                  data-testid="inbound-empty-detail"
-                  class="card rounded-box border border-base-300 bg-base-200 p-6"
-                >
+      <section
+        data-testid="inbound-master-detail"
+        class="mt-6 grid gap-6 lg:grid-cols-[minmax(22rem,28rem)_1fr]"
+      >
+        <aside
+          data-testid="inbound-records-list-card"
+          class="card rounded-box border border-base-300 bg-base-200 p-0"
+        >
+          <div class="border-b border-base-300 px-4 py-3">
+            <h2 class="text-sm font-bold uppercase tracking-[0.08em] text-secondary">
+              Recent inbound records
+            </h2>
+          </div>
+          <RecordsList.records_list records={@records} selected_record={@selected_record} />
+        </aside>
+
+        <section data-testid="inbound-detail-column" class="space-y-4">
+          <%= cond do %>
+            <% @detail_error -> %>
+              <div
+                data-testid="inbound-detail-error"
+                class="card rounded-box border border-error bg-base-100 p-6"
+              >
+                <div class="flex items-center gap-2">
+                  <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
                   <h2 class="text-base font-bold text-base-content">
-                    Select an inbound record to inspect its routing, execution timeline, and raw source.
+                    Inbound data could not be loaded. Refresh the page or adjust the filters, then try again.
                   </h2>
                 </div>
-
-              <% true -> %>
+              </div>
+            <% is_nil(@detail) -> %>
+              <div
+                data-testid="inbound-empty-detail"
+                class="card rounded-box border border-base-300 bg-base-200 p-6"
+              >
+                <h2 class="text-base font-bold text-base-content">
+                  Select an inbound record to inspect its routing, execution timeline, and raw source.
+                </h2>
+              </div>
+            <% true -> %>
+              <div class="motion-reveal space-y-4">
                 <DetailHeader.detail_header detail={@detail} />
                 <Timeline.timeline runs={@runs} />
                 <RoutingTrace.routing_trace
                   :if={@detail[:outcome] == :no_match}
                   trace={@routing_trace}
                 />
-                <EvidenceCard.evidence_card evidence={@detail[:evidence]} reveal_state={@reveal_state} />
-            <% end %>
-          </section>
+                <EvidenceCard.evidence_card
+                  evidence={@detail[:evidence]}
+                  reveal_state={@reveal_state}
+                />
+              </div>
+          <% end %>
         </section>
-      </main>
+      </section>
 
       <ReplayModal.replay_modal open?={@replay_modal_open?} record={selected_record_struct(@detail)} />
-    </div>
+    </MailglassAdmin.Operator.Shell.shell>
     """
   end
 
@@ -415,13 +442,15 @@ defmodule MailglassAdmin.InboundLive do
     do: "Replay blocked: mailbox module not found."
 
   defp replay_error_copy(:not_found),
-    do: "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
+    do:
+      "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
 
   defp replay_error_copy(:unavailable),
     do: "Replay blocked: the inbound package is not available."
 
   defp replay_error_copy(_reason),
-    do: "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
+    do:
+      "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
 
   # ---------------------------------------------------------------------------
   # Live-update prepend (IADM-05) — tenant-scoped re-fetch, no selection/filter theft.
@@ -569,10 +598,11 @@ defmodule MailglassAdmin.InboundLive do
 
   defp close_replay_modal(socket), do: assign(socket, :replay_modal_open?, false)
 
-  defp build_path(base_path, filter_params, inbound_id) do
+  defp build_path(base_path, filter_params, inbound_id, dark_chrome) do
     params =
       filter_params
       |> Map.put("inbound_id", inbound_id)
+      |> maybe_put_theme(dark_chrome)
       |> Enum.reject(fn {_key, value} -> is_nil(blank_to_nil(value)) end)
       |> Map.new()
 
@@ -581,6 +611,12 @@ defmodule MailglassAdmin.InboundLive do
       query -> base_path <> "?" <> query
     end
   end
+
+  defp maybe_put_theme(params, true), do: Map.put(params, "theme", "dark")
+  defp maybe_put_theme(params, false), do: params
+
+  defp theme_query(true), do: "?theme=dark"
+  defp theme_query(false), do: ""
 
   # V5 input-validation allow-list: an outcome outside the closed set casts to nil
   # (the filter is dropped) and never reaches SQL.
