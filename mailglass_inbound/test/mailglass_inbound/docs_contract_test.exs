@@ -697,17 +697,21 @@ defmodule MailglassInbound.DocsContractTest do
 
     record = File.read!(record_path)
 
+    # WR-02/IN-02: assert on the exact field labels as they appear in the record
+    # (trailing colon included) so the guard fails if a REL-03 field is renamed
+    # or dropped. Bare substrings like "smoke"/"Fallback"/"60-minute" matched
+    # prose anywhere and would pass even if the labeled field were removed.
     for header <- [
-          "Tag",
-          "Publish workflow run URL",
-          "Fallback",
-          "Hex index",
-          "HexDocs",
-          "smoke",
-          "60-minute"
+          "Tag:",
+          "Publish workflow run URL:",
+          "Fallback path used:",
+          "Hex index confirmation:",
+          "HexDocs URLs:",
+          "Post-publish smoke run URL:",
+          "60-minute outcome:"
         ] do
       assert record =~ header,
-             "Expected 73-01-RELEASE-RECORD.md to contain REL-03 header: #{inspect(header)}"
+             "Expected 73-01-RELEASE-RECORD.md to contain REL-03 field label: #{inspect(header)}"
     end
 
     assert record =~ "not run",
