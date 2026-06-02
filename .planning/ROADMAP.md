@@ -16,6 +16,7 @@
 - ✅ **v1.3 Adopter Trust Proof** — Phases 52, 57-62 (shipped 2026-05-31) — see [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - ✅ **v1.4 Inbound Stability Lock** — Phases 63-66 (shipped 2026-06-01) — see [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
 - ✅ **v1.5 Demo Evidence and Click-Around Confidence** — Phases 67-70 (shipped 2026-06-02) — see [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md)
+- 🔄 **v1.6 Inbound 1.0 Release and Truth Lock** — Phases 71-73 (active)
 
 ## Phases
 
@@ -101,6 +102,33 @@ Success criteria:
 4. Browser evidence exercises the main happy-path and recovery journeys.
 
 Audit passed 2026-06-02 after Phase 70 closeout. Full archive at [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md).
+
+</details>
+
+<details open>
+<summary>🔄 v1.6 Inbound 1.0 Release and Truth Lock (Phases 71-73) — ACTIVE</summary>
+
+- [ ] Phase 71: Inbound Release Truth Preflight — reconcile source/package truth and required-vs-advisory proof boundaries.
+- [ ] Phase 72: Contract Docs and Stale-Claim Guards — update public wording and executable docs/release checks for inbound's own stable `1.0` contract.
+- [ ] Phase 73: Inbound 1.0 Publish Evidence — run or prepare the inbound-only publish path and record Hex, HexDocs, smoke, fallback, and 60-minute decision evidence.
+
+Success criteria:
+1. `mailglass_inbound` `1.0.0` source, manifest, changelog, publish pin, package allowlist, and publish-summary truth agree.
+2. Public docs describe inbound as its own stable `1.0` contract without folding it into the matched core/admin `1.x` sibling line.
+3. The maintainer runbook and release checks explain the inbound-only publish/fallback path without forcing a core/admin release.
+4. Release evidence records Hex index, HexDocs, workflow URL, install/smoke proof, fallback usage, and the 60-minute revert/retire decision.
+
+Requirement coverage:
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| REL-01 | Phase 71 | Pending |
+| REL-02 | Phase 73 | Pending |
+| REL-03 | Phase 73 | Pending |
+| DOC-01 | Phase 72 | Pending |
+| DOC-02 | Phase 72 | Pending |
+| PROOF-01 | Phase 71 | Pending |
+| PROOF-02 | Phase 72 | Pending |
 
 </details>
 

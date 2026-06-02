@@ -63,13 +63,23 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Release-workflow fanout still relies on the documented `workflow_dispatch` fallback because GitHub `GITHUB_TOKEN` anti-recursion blocks downstream publish workflows from release-created releases.
 - Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
 - `SEED-003-ecosystem-integrations` is intentionally deferred and remains dormant for later milestone selection.
-- v1.3 trust proof is archived; the next recommended milestone is an inbound stability lock for `mailglass_inbound` contract and compatibility posture.
-- `mailglass_inbound` has completed its stability-lock milestone and now has a `1.0.0` source candidate; the live release ceremony remains the next release-governance step.
+- `mailglass_inbound` has completed its stability-lock milestone and now has a `1.0.0` source candidate; v1.6 is the active release-governance milestone to publish and prove that line.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
-## Current Milestone
+## Current Milestone: v1.6 Inbound 1.0 Release and Truth Lock
 
-No active milestone is open. v1.5 is archived; the next requirements file should be created by `$gsd-new-milestone`.
+**Goal:** Publish and prove the selected `mailglass_inbound` `1.0.0` release line, reconcile public docs with that contract truth, and leave Mailglass in a quiet maintenance / adopter-pull posture without adding new product surface.
+
+**Target features:**
+- **Inbound-only release proof** — prove `mailglass_inbound` `1.0.0` source, manifest, changelog, publish pin, package allowlist, and publish-summary truth before release.
+- **Own 1.0 contract wording** — describe inbound as its own stable `1.0` package contract routed through `mailglass_inbound/docs/api_stability.md`, while keeping core/admin as the matched `1.x` sibling line.
+- **Release-runbook truth** — update stale maintainer and adopter-facing release docs so inbound `1.0` install, fallback, smoke, Hex, and HexDocs claims match the actual workflow.
+- **Published artifact evidence** — capture Hex index, HexDocs, install/smoke, workflow, fallback, and release-record evidence for the inbound release.
+
+**Scope guardrails:**
+- No matcher expansion, lifecycle callbacks, public replay API, provider extension API, synthetic inbound UI, `gen_smtp` listener, Cloudflare recipe docs, ecosystem integrations, demo app enhancements, screenshot workflow expansion, planning-directory cleanup, or broad source hygiene.
+- Provider-live checks remain advisory unless a release claim explicitly depends on them.
+- `mailglass` and `mailglass_admin` remain at their current matched line unless release tooling proves a core/admin release is required.
 
 ## Latest Completed Milestone
 
@@ -249,7 +259,12 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, and 13 v1.4 REQ-IDs satisfi
 
 ## Active
 
-No active requirements. The next requirements file should be created by `$gsd-new-milestone` when a new milestone is opened.
+Active requirements for `v1.6 Inbound 1.0 Release and Truth Lock` are defined in `.planning/REQUIREMENTS.md`.
+
+**By category (v1.6 — Inbound 1.0 Release and Truth Lock):**
+- `REL-01..03` — inbound source/package/publish truth, inbound-only release path, and release evidence record.
+- `DOC-01..02` — inbound's own stable `1.0` contract wording and compatibility-guide separation from the core/admin matched line.
+- `PROOF-01..02` — deterministic release-proof boundary and executable stale-claim guards.
 
 ## Out of Scope
 
@@ -366,4 +381,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-02 after v1.5 milestone completion*
+*Last updated: 2026-06-02 after v1.6 milestone initialization*

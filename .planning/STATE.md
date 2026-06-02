@@ -1,33 +1,47 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5
-milestone_name: Demo Evidence and Click-Around Confidence
-status: Awaiting next milestone
-last_updated: "2026-06-02T05:58:22.899Z"
-last_activity: 2026-06-02 — Milestone v1.5 completed and archived
+milestone: v1.6
+milestone_name: Inbound 1.0 Release and Truth Lock
+status: planning
+last_updated: "2026-06-02T06:25:19.006Z"
+last_activity: 2026-06-02
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_phases: 3
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-02 after v1.5 milestone completion)
+See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initialization)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Awaiting next milestone requirements
+**Current focus:** v1.6 Inbound 1.0 Release and Truth Lock
 
 ## Current Position
 
-Phase: Milestone v1.5 complete
+Phase: 71 — Inbound Release Truth Preflight
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-02 — Milestone v1.5 completed and archived
+Status: Ready for phase discussion/planning
+Last activity: 2026-06-02 — Milestone v1.6 requirements and roadmap created
+
+## v1.6 Milestone Intent
+
+- Publish and prove the selected `mailglass_inbound` `1.0.0` release line.
+- Keep inbound on its own stable `1.0` contract through `mailglass_inbound/docs/api_stability.md`.
+- Preserve the matched `mailglass` / `mailglass_admin` `1.x` sibling line without forcing a core/admin release.
+- Reconcile stale public release wording around inbound version, install pins, compatibility posture, fallback path, smoke evidence, Hex, and HexDocs.
+- End the milestone in quiet maintenance / adopter-pull posture, not feature-growth posture.
+
+## v1.6 Scope Locks
+
+- No matcher expansion, lifecycle callbacks, public replay API, provider extension API, synthetic inbound UI, `gen_smtp` listener, Cloudflare recipe docs, ecosystem integrations, demo app enhancements, screenshot workflow expansion, planning-directory cleanup, or broad source hygiene.
+- Provider-live checks remain advisory unless a release claim explicitly depends on them.
+- Release proof must be deterministic and tied to actual package/docs/workflow evidence.
 
 ## v1.5 Milestone Intent
 
@@ -84,10 +98,9 @@ Last activity: 2026-06-02 — Milestone v1.5 completed and archived
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 67 | Demo App Foundation | Separate demo app, dependency modes, Compose DX, reset proof |
-| 68 | Realistic B2B SaaS Fixtures | Deterministic outbound/inbound/suppression/replay/mailer scenarios |
-| 69 | Click-Around UX and Docs | Dashboard hub, canonical quickstart, docs contracts, automated UAT closure |
-| 70 | Browser Evidence Gate | Reconciled browser evidence checkpoint gate |
+| 71 | Inbound Release Truth Preflight | Source/package truth and required-vs-advisory proof boundaries |
+| 72 | Contract Docs and Stale-Claim Guards | Public wording and executable guards for inbound's own stable `1.0` contract |
+| 73 | Inbound 1.0 Publish Evidence | Inbound-only publish path and Hex/HexDocs/smoke/release evidence |
 
 ## Performance Metrics
 
