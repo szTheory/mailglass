@@ -35,9 +35,15 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
     assert consumer_install =~ "OPS-01 guard passed."
 
     assert index_of(consumer_install, "Run mix mailglass.install") <
-             index_of(consumer_install, "Guard against hackney/api_client regression on published install")
+             index_of(
+               consumer_install,
+               "Guard against hackney/api_client regression on published install"
+             )
 
-    assert index_of(consumer_install, "Guard against hackney/api_client regression on published install") <
+    assert index_of(
+             consumer_install,
+             "Guard against hackney/api_client regression on published install"
+           ) <
              index_of(consumer_install, "Compile, fail on warnings")
   end
 
@@ -46,6 +52,7 @@ defmodule Mailglass.Publish.PostPublishSmokeContractTest do
 
     assert(workflow =~ "close-publish-smoke-tracker-on-success:")
     assert(workflow =~ "name: Close issue on smoke success")
+
     assert workflow =~
              "needs: [cron-guard, wait-for-index, wait-for-hexdocs, consumer-install, published-trust-journey, retracted-check]"
 

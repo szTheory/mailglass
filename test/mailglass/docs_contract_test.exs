@@ -178,6 +178,7 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "Core Full Suite Advisory"
       assert maintaining =~ "Provider Compatibility Advisory"
       assert maintaining =~ "Provider Live Advisory"
+
       assert maintaining =~
                "Required inbound release proof is deterministic repo/package/workflow evidence"
 

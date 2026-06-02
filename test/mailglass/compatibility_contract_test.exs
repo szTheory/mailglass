@@ -58,7 +58,7 @@ defmodule Mailglass.CompatibilityContractTest do
     assert guide =~ "| Phoenix LiveView | `~> 1.1` |"
     assert guide =~ "| Ecto / Ecto SQL | `~> 3.13` |"
     assert guide =~ "| PostgreSQL | 14+"
-    assert guide =~ "`mailglass_inbound` | excluded from the `1.x` compatibility promise"
+    assert guide =~ "`mailglass_inbound` | independent `1.0` contract"
   end
 
   test "retained compatibility inventory names replacement warning strict-ci horizon and proof" do

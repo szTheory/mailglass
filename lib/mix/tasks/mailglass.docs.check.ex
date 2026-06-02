@@ -263,7 +263,11 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "Proof artifact",
         "independent `1.0` contract"
       ],
-      forbidden: ["Phase 37", "v0.1 in development", "excluded from the `1.x` compatibility promise"]
+      forbidden: [
+        "Phase 37",
+        "v0.1 in development",
+        "excluded from the `1.x` compatibility promise"
+      ]
     },
     "guides/upgrading-to-v1_0.md" => %{
       required: [
@@ -466,7 +470,8 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
 
   defp docs_paths(opts) do
     case opts[:path] do
-      nil -> @tier1_paths
+      nil ->
+        @tier1_paths
 
       path ->
         paths = Path.wildcard(path)
