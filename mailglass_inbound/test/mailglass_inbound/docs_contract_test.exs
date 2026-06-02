@@ -714,11 +714,25 @@ defmodule MailglassInbound.DocsContractTest do
              "Expected 73-01-RELEASE-RECORD.md to contain REL-03 field label: #{inspect(header)}"
     end
 
-    assert record =~ "not run",
-           "Expected 73-01-RELEASE-RECORD.md to carry 'not run' pending markers (Honest Surface Area)"
+    # WR-01: the pending-marker asserts are only an invariant while the record
+    # is in its prepare-and-stage posture. The record is explicitly designed to
+    # be filled in later (post-publish maintainer trigger replaces
+    # `pending`/`not run` with real values). Gating the markers on the staged
+    # posture — the way the `## [Unreleased]` over-claim guard above gates on
+    # the empty-stub state — keeps this guard honest for the staging moment
+    # without pinning the document to its empty state forever. Once the
+    # maintainer cuts the tag and completes the record, the staged marker is
+    # gone and these asserts correctly stand down instead of blocking the very
+    # release-evidence update they certify.
+    record_staged? = record =~ "Tag: mailglass_inbound-v1.0.0 (staged, not cut)"
 
-    assert record =~ "pending",
-           "Expected 73-01-RELEASE-RECORD.md to carry 'pending' markers for post-publish fields"
+    if record_staged? do
+      assert record =~ "not run",
+             "Expected staged 73-01-RELEASE-RECORD.md to carry 'not run' pending markers (Honest Surface Area)"
+
+      assert record =~ "pending",
+             "Expected staged 73-01-RELEASE-RECORD.md to carry 'pending' markers for post-publish fields"
+    end
 
     maintaining =
       File.read!(Path.expand("../../../MAINTAINING.md", __DIR__))
