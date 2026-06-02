@@ -72,13 +72,16 @@ defmodule MailglassAdmin.Preview.Tabs do
           phx-click="set_tab"
           phx-value-tab="headers"
           aria-selected={to_string(@active_tab == :headers)}
-          class={["px-4 py-2 min-h-10 text-sm transition-colors", tab_classes(@active_tab == :headers)]}
+          class={[
+            "px-4 py-2 min-h-10 text-sm transition-colors",
+            tab_classes(@active_tab == :headers)
+          ]}
         >
           Headers
         </button>
       </div>
 
-      <div>
+      <div id={"preview-tab-" <> Atom.to_string(@active_tab)} class="motion-tab-swap">
         <.tab_content
           active_tab={@active_tab}
           html_body={@html_body}
@@ -141,7 +144,9 @@ defmodule MailglassAdmin.Preview.Tabs do
         <tbody>
           <%= for {name, value} <- @headers do %>
             <tr class="hover:bg-base-200">
-              <td class="font-mono text-xs font-bold text-base-content align-top">{to_string(name)}</td>
+              <td class="font-mono text-xs font-bold text-base-content align-top">
+                {to_string(name)}
+              </td>
               <td class="font-mono text-xs text-base-content break-all">{to_string(value)}</td>
             </tr>
           <% end %>
