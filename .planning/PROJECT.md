@@ -63,7 +63,7 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - Release-workflow fanout still relies on the documented `workflow_dispatch` fallback because GitHub `GITHUB_TOKEN` anti-recursion blocks downstream publish workflows from release-created releases.
 - Admin publish still needs an explicit Hex-index wait on inbound when sibling packages release in parallel.
 - `SEED-003-ecosystem-integrations` is intentionally deferred and remains dormant for later milestone selection.
-- `mailglass_inbound` has completed its stability-lock milestone and now has a `1.0.0` source candidate; v1.6 is the active release-governance milestone to publish and prove that line.
+- `mailglass_inbound` has completed its stability-lock milestone and now has a `1.0.0` source candidate; v1.6 is the active release-governance milestone to publish and prove that line. All v1.6 planning phases (71 preflight, 72 contract-docs, 73 publish-evidence) are now complete: the inbound-only `1.0.0` publish path is documented, dry-run-staged, and the release evidence is recorded honestly (post-publish fields pending) — the live `mailglass_inbound 1.0.0` Hex publish is the deferred maintainer trigger (D-01), so the milestone is planning-complete but not yet Hex-shipped.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
 ## Current Milestone: v1.6 Inbound 1.0 Release and Truth Lock
@@ -381,4 +381,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-02 after v1.6 milestone initialization*
+*Last updated: 2026-06-02 after Phase 73 (Inbound 1.0 Publish Evidence) completion — v1.6 planning phases all complete; live inbound publish deferred to maintainer trigger*
