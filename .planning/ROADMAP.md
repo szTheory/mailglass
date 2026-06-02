@@ -130,12 +130,12 @@ Requirement coverage:
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | REL-01 | Phase 71 | Complete |
-| REL-02 | Phase 73 | Pending |
-| REL-03 | Phase 73 | Pending |
-| DOC-01 | Phase 72 | Pending |
-| DOC-02 | Phase 72 | Pending |
+| REL-02 | Phase 73 | Complete |
+| REL-03 | Phase 73 | Complete |
+| DOC-01 | Phase 72 | Complete |
+| DOC-02 | Phase 72 | Complete |
 | PROOF-01 | Phase 71 | Complete |
-| PROOF-02 | Phase 72 | Pending |
+| PROOF-02 | Phase 72 | Complete |
 
 </details>
 
