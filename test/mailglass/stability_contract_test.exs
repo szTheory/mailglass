@@ -113,27 +113,59 @@ defmodule Mailglass.StabilityContractTest do
       assert summary =~ ~r/"mailglass_inbound": "\d+\.\d+\.\d+"/
     end
 
-    test "inbound 1.0 release preflight truth is exact across source and publish evidence" do
+    test "inbound release preflight truth is internally consistent across source and publish evidence" do
+      # WR-03 / WR-04: assert *internal consistency* across the artifacts
+      # rather than hardcoding the literals (`1.0.0` / `1.3.0`) the artifacts
+      # themselves carry. Every linked-version bump (core 1.3.0 -> 1.4.0,
+      # inbound 1.0.0 -> 1.1.0) updates these files in lockstep on the
+      # release-please ceremony branch; pinning literals here would red this
+      # test on every ceremony even though nothing is wrong (the
+      # per-release-toil pattern the neighboring SemVer-pattern tests at
+      # lines ~94/105 deliberately avoid). Deriving the expected values from
+      # the manifest (inbound version) and the *core* mix.exs @version
+      # (publish pin) makes the test catch the real failure mode — one file
+      # drifting out of step with the others — without ceremony maintenance.
       manifest = json!(".release-please-manifest.json")
       summary = json!(".planning/publish/mailglass_inbound-publish-summary.json")
       inbound_mix = File.read!("mailglass_inbound/mix.exs")
       inbound_changelog = File.read!("mailglass_inbound/CHANGELOG.md")
       inbound_readme = File.read!("mailglass_inbound/README.md")
       root_readme = File.read!("README.md")
-      expected_version = "1.0.0"
-      expected_core_version = "1.3.0"
 
-      assert manifest["mailglass_inbound"] == expected_version
-      assert Regex.match?(~r/@version "#{expected_version}"/, inbound_mix)
-      assert inbound_changelog =~ "## [#{expected_version}]"
-      assert inbound_readme =~ ~s({:mailglass_inbound, "~> 1.0"})
-      assert root_readme =~ "`mailglass_inbound` | Stable `1.0`"
+      # Source-of-truth values, read from the artifacts (not hardcoded):
+      #   * inbound package version  -> release-please manifest entry
+      #   * core release line        -> core mix.exs @version (the value the
+      #     inbound publish pin must track so a published inbound can resolve
+      #     its sibling)
+      expected_version = manifest["mailglass_inbound"]
+      expected_core_version = read_at_version!("mix.exs")
 
+      assert Regex.match?(~r/^\d+\.\d+\.\d+$/, expected_version),
+             "manifest mailglass_inbound entry is not SemVer-shaped: #{inspect(expected_version)}"
+
+      assert Regex.match?(~r/^\d+\.\d+\.\d+$/, expected_core_version),
+             "core mix.exs @version is not SemVer-shaped: #{inspect(expected_core_version)}"
+
+      # Inbound @version agrees with the manifest entry.
+      assert read_at_version!("mailglass_inbound/mix.exs") == expected_version
+
+      # WR-04: the inbound MIX_PUBLISH pin (`{:mailglass, "== X.Y.Z"}` in
+      # mailglass_dep/0) tracks the *core* @version — derived, not a literal.
       assert Regex.match?(
                ~r/\{:mailglass, "== #{Regex.escape(expected_core_version)}"\}/,
                inbound_mix
-             )
+             ),
+             "inbound publish pin in mailglass_dep/0 does not match core @version " <>
+               "(#{expected_core_version}); update the `== X.Y.Z` pin in mailglass_inbound/mix.exs"
 
+      # Changelog, READMEs reflect the same inbound version (major-line for
+      # the human-facing dependency hint and stable-row markers).
+      inbound_major = expected_version |> String.split(".") |> hd()
+      assert inbound_changelog =~ "## [#{expected_version}]"
+      assert inbound_readme =~ ~s({:mailglass_inbound, "~> #{inbound_major}.0"})
+      assert root_readme =~ "`mailglass_inbound` | Stable `#{inbound_major}."
+
+      # Publish summary is internally consistent with the derived values.
       assert summary["package"] == "mailglass_inbound"
       assert summary["version"] == expected_version
       assert summary["manifest_version"] == expected_version
@@ -144,6 +176,15 @@ defmodule Mailglass.StabilityContractTest do
       assert summary["linked_versions"]["mailglass_admin"] == expected_core_version
       assert summary["linked_versions"]["mailglass_inbound"] == expected_version
       assert "docs/api_stability.md" in summary["extras"]
+    end
+  end
+
+  # Reads the `@version "X.Y.Z"` module attribute literal out of a mix.exs so
+  # tests can derive the source-of-truth version instead of hardcoding it.
+  defp read_at_version!(path) do
+    case Regex.run(~r/@version "(\d+\.\d+\.\d+)"/, File.read!(path)) do
+      [_, version] -> version
+      _ -> flunk("could not read @version from #{path}")
     end
   end
 end
