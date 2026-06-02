@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
-status: executing
-last_updated: "2026-06-02T08:19:45.097Z"
+status: verifying
+last_updated: "2026-06-02T08:26:53.086Z"
 last_activity: 2026-06-02
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
-  percent: 33
+  completed_plans: 4
+  percent: 67
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initializatio
 
 Phase: 72 (contract-docs-and-stale) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-02
 
 ## v1.6 Milestone Intent
@@ -95,6 +95,7 @@ Last activity: 2026-06-02
 - [Phase 65]: Plan 65-04 requires explicit replay negative-boundary wording for stored-truth/non-reroute/non-public semantics. — Prevents operator wording drift toward fresh-receive or public replay API claims.
 - [Phase ?]: [Phase 72]: Use 1.0 not 1.x for inbound's own contract. — Avoids triggering refute_over_claims! regex guard while correctly describing inbound's stable contract.
 - [Phase ?]: [Phase 72]: Move stale README token from required to forbidden in docs.check.ex. — Prevents regression while keeping mix mailglass.docs.check green on corrected README.
+- [Phase 72]: source_ref_pattern corrected to mailglass_inbound-v%{version} per D-09. — HexDocs source links now resolve to inbound-specific tag, not sibling-group tag.
 
 ## Roadmap Snapshot
 
@@ -137,6 +138,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 71 P01 | 5 min | 3 tasks | 5 files |
 | Phase 72 P01 | 2min | 2 tasks | 5 files |
 | Phase 72 P02 | 3 min | 1 tasks | 1 files |
+| Phase 72 P03 | 8 min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
