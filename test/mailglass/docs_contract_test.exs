@@ -199,6 +199,8 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "Anymail"
       assert maintaining =~ "Laravel Mail"
       assert maintaining =~ "Resend inbound docs"
+      refute maintaining =~ "while it remains outside the `v1.x`"
+      assert maintaining =~ "independent `1.0` contract"
     end
 
     test "preview docs stay within bounded preview-pipeline confidence language" do
@@ -356,10 +358,11 @@ defmodule Mailglass.DocsContractTest do
     test "freshness stamp and inbound stability boundary are present" do
       jobs = File.read!("guides/jobs.md")
 
-      assert jobs =~ "Current as of 2026-05-23"
+      assert jobs =~ "Current as of 2026-06-02"
       assert jobs =~ "mailglass` and `mailglass_admin`"
-      assert jobs =~ "outside the"
-      assert jobs =~ "`v1.x` stability promise"
+      assert jobs =~ "independent stable `1.0` contract"
+      assert jobs =~ "mailglass_inbound/docs/api_stability.md"
+      refute jobs =~ "outside the `v1.x` stability promise"
     end
 
     test "every documented job snippet parses to a valid quoted form" do

@@ -114,8 +114,8 @@ the public guide.
 5. Update `guides/jobs.md` from that map:
    - stable shipped jobs only
    - keep the narrative, adopter-facing framing
-   - keep inbound summarized separately, noting its own independent `1.0`
-     contract and routing readers to `mailglass_inbound/docs/api_stability.md`
+   - keep inbound summarized separately, noting its own independent `1.0` contract
+     and routing readers to `mailglass_inbound/docs/api_stability.md`
 6. Refresh dates in both files with exact calendar dates.
 7. Update README or docs navigation only if the JTBD docs became harder to
    discover.

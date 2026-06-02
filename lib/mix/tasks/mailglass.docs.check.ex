@@ -74,14 +74,16 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "guides/compatibility-and-deprecations.md",
         "guides/upgrading-to-v1_0.md",
         "mix mailglass.install",
-        "mailglass_inbound` is outside the `v1.x` stability promise"
+        "**`mailglass_inbound`** (inbound routing; stable 1.0)",
+        "`mailglass_inbound` has its own stable `1.0` contract inventory"
       ],
       forbidden: [
         "~> 0.1",
         "~> 0.2",
         "verify.phase_07",
         "v0.1 in development",
-        "v0.3 public surface"
+        "v0.3 public surface",
+        "mailglass_inbound` is outside the `v1.x` stability promise"
       ]
     },
     "mailglass_admin/README.md" => %{
@@ -258,9 +260,10 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "Reachability is not a compatibility promise.",
         "## Inbound deprecation-DX inventory",
         "Support-until horizon",
-        "Proof artifact"
+        "Proof artifact",
+        "independent `1.0` contract"
       ],
-      forbidden: ["Phase 37", "v0.1 in development"]
+      forbidden: ["Phase 37", "v0.1 in development", "excluded from the `1.x` compatibility promise"]
     },
     "guides/upgrading-to-v1_0.md" => %{
       required: [
