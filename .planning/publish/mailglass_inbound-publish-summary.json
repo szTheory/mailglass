@@ -30,9 +30,6 @@
     "lib/mailglass_inbound.ex",
     "lib/mailglass_inbound/application.ex",
     "lib/mailglass_inbound/config.ex",
-    "lib/mailglass_inbound/doctor.ex",
-    "lib/mailglass_inbound/doctor/formatter.ex",
-    "lib/mailglass_inbound/doctor/result.ex",
     "lib/mailglass_inbound/execution.ex",
     "lib/mailglass_inbound/execution/worker.ex",
     "lib/mailglass_inbound/fixtures.ex",
@@ -44,7 +41,6 @@
     "lib/mailglass_inbound/inbound_records/inbound_record.ex",
     "lib/mailglass_inbound/inbound_records/replay_run.ex",
     "lib/mailglass_inbound/ingress/caching_body_reader.ex",
-    "lib/mailglass_inbound/ingress/controls.ex",
     "lib/mailglass_inbound/ingress/persist.ex",
     "lib/mailglass_inbound/ingress/plug.ex",
     "lib/mailglass_inbound/ingress/provider.ex",
@@ -66,8 +62,6 @@
     "lib/mailglass_inbound/operator/formatter.ex",
     "lib/mailglass_inbound/optional_deps.ex",
     "lib/mailglass_inbound/prune/worker.ex",
-    "lib/mailglass_inbound/pruner.ex",
-    "lib/mailglass_inbound/pruner/worker.ex",
     "lib/mailglass_inbound/pub_sub/topics.ex",
     "lib/mailglass_inbound/rate_limiter.ex",
     "lib/mailglass_inbound/rate_limiter/table_owner.ex",
@@ -93,7 +87,6 @@
     "priv/repo/migrations/20260506180000_add_postmark_ingress_idempotency.exs",
     "priv/repo/migrations/20260506210000_generalize_replay_runs_to_execution_lineage.exs",
     "priv/repo/migrations/20260506220000_add_sendgrid_fingerprint_and_replay_contract_fields.exs",
-    "priv/repo/migrations/20260508130000_add_suppression_flagged_to_inbound_records.exs",
     "priv/repo/migrations/20260523120000_add_mailgun_fingerprint_index.exs",
     "priv/repo/migrations/20260523130000_add_ses_fingerprint_index.exs",
     "priv/repo/migrations/20260525000000_add_suppression_flagged_to_inbound_records.exs"
@@ -200,6 +193,6 @@
   "source_ref": "v1.0.0",
   "source_ref_pattern": "mailglass_inbound-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 513168,
+  "tarball_size": 475631,
   "version": "1.0.0"
 }
