@@ -2,7 +2,7 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
-status: verifying
+status: ready_for_next_phase
 last_updated: "2026-06-02T14:55:47.899Z"
 last_activity: 2026-06-02
 progress:
@@ -20,15 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initialization)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 72 complete + verified — next is Phase 73 (Inbound 1.0 Publish Evidence)
+**Current focus:** Phase 73 context gathered (assumptions mode) — next is $gsd-plan-phase 73 (Inbound 1.0 Publish Evidence)
 
 ## Current Position
 
-Phase: 72 (contract-docs-and-stale) — COMPLETE + VERIFIED (20/20 must-haves)
-Plan: 3 of 3 complete
-Status: Phase 72 verified passed; milestone v1.6 still ACTIVE — Phase 73 pending (no phase dir yet)
-Next step: $gsd-discuss-phase 73 (or $gsd-plan-phase 73) — Inbound 1.0 Publish Evidence
+Phase: 73 (inbound-1-0-publish-evidence) — CONTEXT GATHERED (assumptions mode)
+Plan: not yet planned
+Status: Phase 73 context captured; milestone v1.6 still ACTIVE — posture locked to PREPARE-AND-STAGE (no irreversible Hex publish this phase)
+Next step: $gsd-plan-phase 73 — Inbound 1.0 Publish Evidence
 Last activity: 2026-06-02
+Resume file: .planning/phases/73-inbound-1-0-publish-evidence/73-CONTEXT.md
 
 ## v1.6 Milestone Intent
 
