@@ -511,6 +511,9 @@ defmodule MailglassInbound.DocsContractTest do
       assert compatibility =~ required_heading
     end
 
+    refute compatibility =~ "Through `mailglass_inbound` `0.x`"
+    assert compatibility =~ "Through `mailglass_inbound` `1.x`"
+
     for forbidden <- [
           "../docs/compatibility-and-deprecations.md",
           "docs/compatibility-and-deprecations.md",
