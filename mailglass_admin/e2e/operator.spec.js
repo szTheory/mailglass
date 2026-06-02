@@ -16,7 +16,7 @@ async function openOperator(page) {
 
   const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${returnTo}`);
-  await expect(page.getByRole("heading", { name: "Operator deliveries" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Deliveries", exact: true })).toBeVisible();
   await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
 }
 

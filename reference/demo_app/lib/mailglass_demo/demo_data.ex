@@ -149,6 +149,14 @@ defmodule MailglassDemo.DemoData do
 
     event!(usage_alert, :sent, minutes_ago(12), replay_metadata(usage_webhook, usage_alert))
 
+    # A transient deferral before the hard bounce — exercises the amber
+    # `deferred` timeline state and gives this delivery a richer multi-step
+    # lifecycle (sent -> deferred -> bounced).
+    event!(usage_alert, :deferred, minutes_ago(10), %{
+      "provider" => "sendgrid",
+      "classification" => "temporary_failure"
+    })
+
     event!(usage_alert, :bounced, minutes_ago(8), %{
       "provider" => "sendgrid",
       "classification" => "mailbox_full"
