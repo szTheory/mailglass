@@ -13,13 +13,13 @@
 
 ### Contract Documentation
 
-- [ ] **DOC-01**: Adopter-facing docs describe `mailglass_inbound` as its own stable `1.0` package contract routed through `mailglass_inbound/docs/api_stability.md`, not as `v0.5+`, `0.3`, or outside stability truth.
-- [ ] **DOC-02**: Compatibility docs preserve the matched `mailglass` / `mailglass_admin` `1.x` sibling line while explaining that inbound has a separate `1.0` contract and does not widen core/admin compatibility promises.
+- [x] **DOC-01**: Adopter-facing docs describe `mailglass_inbound` as its own stable `1.0` package contract routed through `mailglass_inbound/docs/api_stability.md`, not as `v0.5+`, `0.3`, or outside stability truth.
+- [x] **DOC-02**: Compatibility docs preserve the matched `mailglass` / `mailglass_admin` `1.x` sibling line while explaining that inbound has a separate `1.0` contract and does not widen core/admin compatibility promises.
 
 ### Release Proof
 
 - [x] **PROOF-01**: Release docs and checks clearly distinguish deterministic required release proof from advisory provider/live checks.
-- [ ] **PROOF-02**: Executable docs-contract or release-contract checks pin the highest-risk stale claims: inbound install version, package table status, maintainer runbook smoke dependencies, and inbound-only release wording.
+- [x] **PROOF-02**: Executable docs-contract or release-contract checks pin the highest-risk stale claims: inbound install version, package table status, maintainer runbook smoke dependencies, and inbound-only release wording.
 
 ## Future Requirements
 
@@ -52,10 +52,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REL-01 | Phase 71 | Complete |
 | REL-02 | Phase 73 | Pending |
 | REL-03 | Phase 73 | Pending |
-| DOC-01 | Phase 72 | Pending |
-| DOC-02 | Phase 72 | Pending |
+| DOC-01 | Phase 72 | Complete |
+| DOC-02 | Phase 72 | Complete |
 | PROOF-01 | Phase 71 | Complete |
-| PROOF-02 | Phase 72 | Pending |
+| PROOF-02 | Phase 72 | Complete |
 
 **Coverage:**
 - v1.6 requirements: 7 total

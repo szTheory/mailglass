@@ -111,7 +111,7 @@ Audit passed 2026-06-02 after Phase 70 closeout. Full archive at [milestones/v1.
 - [x] Phase 71: Inbound Release Truth Preflight — reconcile source/package truth and required-vs-advisory proof boundaries. (completed 2026-06-02)
 - [ ] Phase 72: Contract Docs and Stale-Claim Guards — update public wording and executable docs/release checks for inbound's own stable `1.0` contract. (3 plans)
   Plans:
-  - [ ] 72-01-PLAN.md — Correct stale prose in guides/jobs.md, guides/compatibility-and-deprecations.md, and MAINTAINING.md; flip docs.check and docs_contract_test guards.
+  - [x] 72-01-PLAN.md — Correct stale prose in guides/jobs.md, guides/compatibility-and-deprecations.md, and MAINTAINING.md; flip docs.check and docs_contract_test guards.
   - [ ] 72-02-PLAN.md — Add DX inventory horizon guards to inbound docs-contract test.
   - [ ] 72-03-PLAN.md — Fix source_ref_pattern in mailglass_inbound/mix.exs, regenerate publish summary, add stability_contract_test assertion.
 - [ ] Phase 73: Inbound 1.0 Publish Evidence — run or prepare the inbound-only publish path and record Hex, HexDocs, smoke, fallback, and 60-minute decision evidence.

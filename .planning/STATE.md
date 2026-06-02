@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
 status: executing
-last_updated: "2026-06-02T08:08:09.120Z"
-last_activity: 2026-06-02 -- Phase 72 planning complete
+last_updated: "2026-06-02T08:17:14.084Z"
+last_activity: 2026-06-02
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 4
-  completed_plans: 1
-  percent: 25
+  completed_plans: 2
+  percent: 33
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initialization)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 72 — Contract Docs and Stale-Claim Guards
+**Current focus:** Phase 72 — contract-docs-and-stale
 
 ## Current Position
 
-Phase: 72 — Contract Docs and Stale-Claim Guards
-Plan: —
+Phase: 72 (contract-docs-and-stale) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-06-02 -- Phase 72 planning complete
+Last activity: 2026-06-02
 
 ## v1.6 Milestone Intent
 
@@ -93,6 +93,8 @@ Last activity: 2026-06-02 -- Phase 72 planning complete
 - [Phase 65]: Phase 65 Plan 03 keeps README as canonical inbound adoption authority and enforces install-guide subordination via docs checks.
 - [Phase 65]: Plan 65-04 keeps trust-boundary enforcement in existing docs-contract and Tier 1 checker seams. — Avoids checker sprawl and preserves canonical enforcement seams.
 - [Phase 65]: Plan 65-04 requires explicit replay negative-boundary wording for stored-truth/non-reroute/non-public semantics. — Prevents operator wording drift toward fresh-receive or public replay API claims.
+- [Phase ?]: [Phase 72]: Use 1.0 not 1.x for inbound's own contract. — Avoids triggering refute_over_claims! regex guard while correctly describing inbound's stable contract.
+- [Phase ?]: [Phase 72]: Move stale README token from required to forbidden in docs.check.ex. — Prevents regression while keeping mix mailglass.docs.check green on corrected README.
 
 ## Roadmap Snapshot
 
@@ -133,6 +135,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 65 P03 | 26min | 2 tasks | 3 files |
 | Phase 65 P04 | 13 min | 2 tasks | 3 files |
 | Phase 71 P01 | 5 min | 3 tasks | 5 files |
+| Phase 72 P01 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
