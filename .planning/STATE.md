@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
-status: executing
-last_updated: "2026-06-02T15:29:24.159Z"
+status: verifying
+last_updated: "2026-06-02T15:35:34.234Z"
 last_activity: 2026-06-02
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 5
-  percent: 67
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initializatio
 
 Phase: 73 (inbound-1-0-publish-evidence) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Next step: $gsd-plan-phase 73 — Inbound 1.0 Publish Evidence
 Last activity: 2026-06-02
 Resume file: None
@@ -101,6 +101,8 @@ Resume file: None
 - [Phase ?]: [Phase 73-01]: Post-publish-only fields (Hex index, HexDocs, install/smoke, 60-minute) marked pending/not run under prepare-and-stage posture (D-05 Honest Surface Area)
 - [Phase ?]: [Phase 73-01]: GitHub Environment approver and Approval timestamp fields dropped from inbound release artifacts (D-04, hands-free publish)
 - [Phase ?]: [Phase 73-01]: Tag recorded as staged-not-cut: mailglass_inbound-v1.0.0 (staged, not cut) — no live publish-triggering tag created (D-01/D-02)
+- [Phase ?]: [Phase 73-02]: Staged-as-command dry-run rehearsal is equally honest under D-05/D-07; no dispatch fired under prepare posture.
+- [Phase ?]: [Phase 73-02]: Single test covers 7 REL-03 headers + pending markers + stale-path regression guard; string-presence only, no live HTTP (D-08).
 
 ## Roadmap Snapshot
 
@@ -145,6 +147,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 72 P02 | 3 min | 1 tasks | 1 files |
 | Phase 72 P03 | 8 min | 1 tasks | 4 files |
 | Phase 73 P01 | 226 | 2 tasks | 2 files |
+| Phase 73 P02 | 3min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
