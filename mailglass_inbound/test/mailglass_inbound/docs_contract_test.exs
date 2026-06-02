@@ -541,19 +541,50 @@ defmodule MailglassInbound.DocsContractTest do
     [install_active, _install_next] = split_once!(install, "## What's next", "install guide")
     changelog_unreleased = changelog_section!(changelog, "Unreleased")
 
+    # The `## [Unreleased]` section is the empty stub ("No unreleased changes
+    # yet.") between releases, so a `refute ... =~` against it is vacuously
+    # true and gives zero protection in the normal state (WR-01). We make that
+    # explicit rather than silent: when the section is the stub, the test
+    # records (via an explicit assertion) that the over-claim guard is dormant;
+    # the moment a release-prep edit populates the section, the full guard
+    # below runs against real content. This keeps the suite green in the
+    # default empty state without pretending the refutes protect anything.
+    #
+    # Note: we deliberately do NOT fold *released* changelog sections into this
+    # guard — released sections legitimately enumerate deferred boundaries in
+    # negated form (e.g. "no ... worker/queue public contracts ... are
+    # promised"), which the broad `refute_over_claims!/1` heuristics would
+    # flag as false positives. The `stable`/`readme_active`/`install_active`
+    # prose are the always-populated surfaces that must stay clean.
+    changelog_unreleased_populated? = not changelog_unreleased_empty_stub?(changelog_unreleased)
+
+    always_guarded = [stable, readme_active, install_active]
+
+    guarded_docs =
+      if changelog_unreleased_populated? do
+        always_guarded ++ [changelog_unreleased]
+      else
+        # Visible record that the Unreleased over-claim guard is dormant
+        # because the section is the default stub (WR-01: not a silent skip).
+        assert changelog_unreleased_empty_stub?(changelog_unreleased),
+               "Expected the Unreleased changelog section to be the empty stub; " <>
+                 "populate it to engage the over-claim guard."
+
+        always_guarded
+      end
+
     for blocked <- [
           "public replay API",
           "public replay rerouting controls",
           "public provider extension API",
           "public worker or queue contracts"
         ] do
-      refute stable =~ blocked
-      refute readme_active =~ blocked
-      refute install_active =~ blocked
-      refute changelog_unreleased =~ blocked
+      for doc <- guarded_docs do
+        refute doc =~ blocked
+      end
     end
 
-    for doc <- [stable, readme_active, install_active, changelog_unreleased] do
+    for doc <- guarded_docs do
       refute_over_claims!(doc)
     end
 
@@ -634,5 +665,12 @@ defmodule MailglassInbound.DocsContractTest do
       [_, section] -> section
       _ -> flunk("Missing changelog section #{name}")
     end
+  end
+
+  # True when the `## [Unreleased]` section is the default between-releases
+  # stub. Detecting it explicitly lets the over-claim guard skip the section
+  # (vacuous to refute) instead of silently passing against an empty stub.
+  defp changelog_unreleased_empty_stub?(section) do
+    String.trim(section) == "No unreleased changes yet."
   end
 end
