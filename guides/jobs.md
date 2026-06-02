@@ -1,9 +1,9 @@
 # What you can do with mailglass
 
-> **Current as of 2026-05-23.** This guide covers the shipped, `v1.x`-stable
-> jobs in `mailglass` and `mailglass_admin`. Inbound mail
-> (`mailglass_inbound`) is summarized near the end, but it remains **outside the
-> `v1.x` stability promise** for now.
+> **Current as of 2026-06-02.** This guide covers the shipped, `v1.x`-stable
+> jobs in `mailglass` and `mailglass_admin`. `mailglass_inbound` is summarized
+> near the end; it has its own independent stable `1.0` contract documented in
+> `mailglass_inbound/docs/api_stability.md`.
 
 Most docs answer *"how does this feature work?"* This one answers *"what job am
 I hiring this library to do in my SaaS?"* Read it once straight through if
@@ -413,10 +413,9 @@ If your SaaS also needs to *receive* email, `mailglass_inbound` is the sibling
 package for that job: inbound router DSL, `Mailbox` behaviour, verified ingress,
 replayable storage, and async execution.
 
-Today it ships verified ingress for Postmark and SendGrid, and the repo's v1.2
-work is expanding that surface with more provider, operator, testing, and docs
-maturity. It is real, useful, and shipping, but it is still **outside the
-`v1.x` stability promise**. Treat it as production-capable and still hardening.
+`mailglass_inbound` `1.0.0` ships its own independent stable `1.0` contract —
+verified ingress, replayable storage, async execution, and operator tooling —
+documented in [`mailglass_inbound/docs/api_stability.md`](../mailglass_inbound/docs/api_stability.md).
 
 ## What mailglass deliberately does not do
 

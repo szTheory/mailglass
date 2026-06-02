@@ -163,7 +163,7 @@ proves it today through `mix.exs`, `mailglass_admin/mix.exs`,
 | Ecto / Ecto SQL | `~> 3.13` | `mix.exs` |
 | PostgreSQL | 14+ for the documented contract; CI proves Postgres 16 and the repo requires trigger support | `README.md`, `mix.exs`, `.github/workflows/ci.yml` |
 | `mailglass_admin` | matched release line with the core package | `mailglass_admin/mix.exs` |
-| `mailglass_inbound` | excluded from the `1.x` compatibility promise in this milestone | `README.md`, `docs/api_stability.md` |
+| `mailglass_inbound` | independent `1.0` contract; see `mailglass_inbound/docs/api_stability.md` | `mailglass_inbound/docs/api_stability.md` |
 
 ### Optional dependency lanes
 
@@ -214,15 +214,15 @@ tests. Reachability is not a compatibility promise.
 
 | Surface | Bridge or replacement | Warning or migration channel | `--warnings-as-errors` impact | Support-until horizon | Proof artifact |
 | --- | --- | --- | --- | --- | --- |
-| `MailglassInbound.Ingress.CachingBodyReader` + required endpoint `body_reader` wiring | Keep stable path and preserve `MailglassInbound.Ingress.CachingBodyReader` semantics | Release notes + docs updates in README/install/operator guides | Missing or changed wiring can fail strict docs/support lanes; no silent compatibility fallback is promised | Through `mailglass_inbound` `0.x`; semantic break requires a major release position decision | `mailglass_inbound/docs/api_stability.md`, `mailglass_inbound/README.md`, `mailglass_inbound/docs/inbound-install.md`, `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors` |
-| `MailglassInbound.Router` + `MailglassInbound.Mailbox` contract (`process/1` outcomes) | Keep stable callback and documented matcher/outcome semantics; any narrowing requires a deprecation bridge or major change | Release notes + contract docs; docs-contract drift checks | Strict adopters fail on drift in docs-contract/support-contract lanes | Through `mailglass_inbound` `0.x`; semantic break requires a major release position decision | `mailglass_inbound/docs/api_stability.md`, `mix verify.stability_contract` |
-| `mix mailglass.inbound.doctor`, `mix mailglass.inbound.replay`, `mix mailglass.inbound.prune` command semantics | Preserve documented flags, tenant guards, confirmations, and exit semantics; internal modules remain non-contract | Operator guide updates + release notes | Strict adopters can fail docs lanes if command-semantics contract wording drifts | Through `mailglass_inbound` `0.x`; semantic break requires a major release position decision | `mailglass_inbound/docs/inbound-operator.md`, `mailglass_inbound/docs/api_stability.md`, `mix mailglass.docs.check` |
+| `MailglassInbound.Ingress.CachingBodyReader` + required endpoint `body_reader` wiring | Keep stable path and preserve `MailglassInbound.Ingress.CachingBodyReader` semantics | Release notes + docs updates in README/install/operator guides | Missing or changed wiring can fail strict docs/support lanes; no silent compatibility fallback is promised | Through `mailglass_inbound` `1.x`; semantic break requires a deprecation bridge or a `mailglass_inbound` major-version change | `mailglass_inbound/docs/api_stability.md`, `mailglass_inbound/README.md`, `mailglass_inbound/docs/inbound-install.md`, `cd mailglass_inbound && mix test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors` |
+| `MailglassInbound.Router` + `MailglassInbound.Mailbox` contract (`process/1` outcomes) | Keep stable callback and documented matcher/outcome semantics; any narrowing requires a deprecation bridge or major change | Release notes + contract docs; docs-contract drift checks | Strict adopters fail on drift in docs-contract/support-contract lanes | Through `mailglass_inbound` `1.x`; semantic break requires a deprecation bridge or a `mailglass_inbound` major-version change | `mailglass_inbound/docs/api_stability.md`, `mix verify.stability_contract` |
+| `mix mailglass.inbound.doctor`, `mix mailglass.inbound.replay`, `mix mailglass.inbound.prune` command semantics | Preserve documented flags, tenant guards, confirmations, and exit semantics; internal modules remain non-contract | Operator guide updates + release notes | Strict adopters can fail docs lanes if command-semantics contract wording drifts | Through `mailglass_inbound` `1.x`; semantic break requires a deprecation bridge or a `mailglass_inbound` major-version change | `mailglass_inbound/docs/inbound-operator.md`, `mailglass_inbound/docs/api_stability.md`, `mix mailglass.docs.check` |
 
 ## What this guide does not promise
 
 This guide does not promise:
 
-- support for `mailglass_inbound` within the `1.x` contract covered here
+- `mailglass_inbound`'s contract within the `mailglass` / `mailglass_admin` `1.x` line covered here; `mailglass_inbound` has its own independent contract documented in `mailglass_inbound/docs/api_stability.md`
 - broader Elixir, OTP, Phoenix, LiveView, Ecto, or Postgres ranges than the
   repository currently proves
 - that every exported or reachable function is stable
