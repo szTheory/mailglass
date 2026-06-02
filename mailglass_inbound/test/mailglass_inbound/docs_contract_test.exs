@@ -668,13 +668,34 @@ defmodule MailglassInbound.DocsContractTest do
   end
 
   test "inbound release record exists, carries REL-03 field headers, and reads pending honestly" do
-    record =
-      File.read!(
-        Path.expand(
-          "../../../.planning/phases/73-inbound-1-0-publish-evidence/73-01-RELEASE-RECORD.md",
-          __DIR__
-        )
+    # WR-03: the release record lives in repo-root `.planning/`, which is
+    # excluded from the published package and embeds the dated phase number in
+    # its path. When phase 73 is archived/moved (as the Phase 38 forms in this
+    # same milestone were), a raw `File.read!` would raise an opaque
+    # `File.Error` and turn the required stability-contract lane red. Resolve
+    # the path defensively and, if it is missing, flunk with a readable message
+    # that tells the maintainer to update this guard alongside the move — the
+    # same stale-path failure mode the `.planning/phases/38-` refute below
+    # exists to catch.
+    record_path =
+      Path.expand(
+        "../../../.planning/phases/73-inbound-1-0-publish-evidence/73-01-RELEASE-RECORD.md",
+        __DIR__
       )
+
+    unless File.exists?(record_path) do
+      flunk("""
+      Inbound release record not found at:
+        #{record_path}
+
+      This path embeds the literal phase dir `73-inbound-1-0-publish-evidence`.
+      If phase 73 was archived/moved (e.g. into `.planning/milestones/`), update
+      this test's `record_path` to the new location so the REL-03 field-presence
+      guard keeps running. Do not delete the guard.
+      """)
+    end
+
+    record = File.read!(record_path)
 
     for header <- [
           "Tag",
