@@ -108,7 +108,7 @@ Audit passed 2026-06-02 after Phase 70 closeout. Full archive at [milestones/v1.
 <details open>
 <summary>🔄 v1.6 Inbound 1.0 Release and Truth Lock (Phases 71-73) — ACTIVE</summary>
 
-- [ ] Phase 71: Inbound Release Truth Preflight — reconcile source/package truth and required-vs-advisory proof boundaries.
+- [x] Phase 71: Inbound Release Truth Preflight — reconcile source/package truth and required-vs-advisory proof boundaries. (completed 2026-06-02)
 - [ ] Phase 72: Contract Docs and Stale-Claim Guards — update public wording and executable docs/release checks for inbound's own stable `1.0` contract.
 - [ ] Phase 73: Inbound 1.0 Publish Evidence — run or prepare the inbound-only publish path and record Hex, HexDocs, smoke, fallback, and 60-minute decision evidence.
 
@@ -122,12 +122,12 @@ Requirement coverage:
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REL-01 | Phase 71 | Pending |
+| REL-01 | Phase 71 | Complete |
 | REL-02 | Phase 73 | Pending |
 | REL-03 | Phase 73 | Pending |
 | DOC-01 | Phase 72 | Pending |
 | DOC-02 | Phase 72 | Pending |
-| PROOF-01 | Phase 71 | Pending |
+| PROOF-01 | Phase 71 | Complete |
 | PROOF-02 | Phase 72 | Pending |
 
 </details>

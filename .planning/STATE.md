@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
-status: executing
-last_updated: "2026-06-02T07:04:58.448Z"
-last_activity: 2026-06-02 -- Phase 71 planning complete
+status: ready_for_next_phase
+last_updated: 2026-06-02T07:24:56.936Z
+last_activity: 2026-06-02
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 1
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 33
+stopped_at: Completed 71-01-PLAN.md; next phase is 72
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initialization)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v1.6 Inbound 1.0 Release and Truth Lock
+**Current focus:** Phase 72 — Contract Docs and Stale-Claim Guards
 
 ## Current Position
 
-Phase: 71 — Inbound Release Truth Preflight
+Phase: 72 — Contract Docs and Stale-Claim Guards
 Plan: —
-Status: Ready to execute
-Last activity: 2026-06-02 -- Phase 71 planning complete
+Status: Ready to discuss
+Last activity: 2026-06-02
 
 ## v1.6 Milestone Intent
 
@@ -132,6 +133,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 65 P02 | 24min | 2 tasks | 4 files |
 | Phase 65 P03 | 26min | 2 tasks | 3 files |
 | Phase 65 P04 | 13 min | 2 tasks | 3 files |
+| Phase 71 P01 | 5 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
