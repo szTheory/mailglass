@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
-status: ready_for_next_phase
-last_updated: 2026-06-02T14:40:01.919Z
+status: verifying
+last_updated: "2026-06-02T14:55:47.899Z"
 last_activity: 2026-06-02
 progress:
   total_phases: 3
