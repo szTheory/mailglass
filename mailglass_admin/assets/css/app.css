@@ -78,7 +78,7 @@
    The daisyUI theme blocks above own COLOR + radius (the only things that
    differ light vs dark). This @theme owns SIZE / TYPE / ELEVATION / EASING —
    one definition becomes both a CSS var and a Tailwind utility, so there is a
-   single source of truth and no override war. See guides/DESIGN-SYSTEM.md.
+   single source of truth and no override war. See docs/design-system.md.
 
    Rules: no brand hex here (color lives once, in the theme blocks); spacing
    stays on the 4px grid; type weights are 400/700 only (500/600 not loaded);
@@ -163,7 +163,7 @@
 
 /* Typography + motion defaults. These are plain custom properties (always
    emitted), consumed by the hand-authored motion rules below and documented
-   in guides/DESIGN-SYSTEM.md. */
+   in docs/design-system.md. */
 :root {
   --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Inter Tight', var(--font-ui);

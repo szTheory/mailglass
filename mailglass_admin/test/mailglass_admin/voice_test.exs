@@ -23,10 +23,13 @@ defmodule MailglassAdmin.VoiceTest do
 
       refute lower =~ "oops",
              "brand voice: 'Oops' must never appear in admin UI"
+
       refute lower =~ "something went wrong",
              "brand voice: 'Something went wrong' is a banned generic error phrase"
+
       refute lower =~ "whoops",
              "brand voice: 'Whoops' must never appear in admin UI"
+
       refute lower =~ "uh oh",
              "brand voice: 'Uh oh' must never appear in admin UI"
     end
@@ -44,8 +47,8 @@ defmodule MailglassAdmin.VoiceTest do
       # Sidebar heading
       assert html =~ "Mailers"
 
-      # Main pane placeholder when nothing selected
-      assert html =~ "Select a scenario from the sidebar to preview it."
+      # Start page shown when nothing is selected (mailables present)
+      assert html =~ "Render a real message before you send it"
 
       # Stub-mailable empty-state copy
       assert html =~ "No previews defined"

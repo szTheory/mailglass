@@ -216,12 +216,14 @@ defmodule MailglassAdmin.MixProject do
       source_ref: "v" <> @version,
       extras: [
         "README.md",
+        "docs/design-system.md",
         "docs/operator-trust.md",
         "docs/api_stability.md",
         "docs/compatibility-and-deprecations.md"
       ],
       groups_for_extras: [
         Overview: ["README.md"],
+        Design: ["docs/design-system.md"],
         Contract: [
           "docs/operator-trust.md",
           "docs/api_stability.md",

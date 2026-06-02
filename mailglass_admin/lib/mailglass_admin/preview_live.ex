@@ -5,9 +5,10 @@ defmodule MailglassAdmin.PreviewLive do
   Mounted by `MailglassAdmin.Router.mailglass_admin_routes/2`. Two live
   actions:
 
-    * `:index` at `/` — no scenario selected. Renders the empty-state
-      card with copy `"Select a scenario from the sidebar to preview it."`
-      per 05-UI-SPEC Copywriting Contract line 465.
+    * `:index` at `/` — no scenario selected. Renders the start page: a
+      value statement, a "Preview the first one" deep link, and a legend of
+      the tool's affordances. When auto-scan finds zero mailables, renders the
+      actionable "No mailables discovered" empty state instead.
     * `:show` at `/:mailable/:scenario` — renders the full preview:
       sidebar, main pane header, device + dark toggles, assigns form,
       HTML/Text/Raw/Headers tab strip.
