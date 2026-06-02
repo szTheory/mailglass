@@ -18,7 +18,7 @@ webhook-driven auto-suppression.
 
 It is shipped as three sibling packages: **`mailglass`** (core),
 **`mailglass_admin`** (mountable LiveView dashboard), and
-**`mailglass_inbound`** (inbound routing; v0.5+). It is for senior
+**`mailglass_inbound`** (inbound routing; stable 1.0). It is for senior
 Phoenix teams building production transactional email — welcome flows,
 password resets, magic links, receipts, notifications — who today
 rebuild the same 40% of framework plumbing on every project.
@@ -156,8 +156,10 @@ Use that document, not root-module reachability, as the source of truth for:
 - which hooks exist only for first-party sibling-package integration
 
 `mailglass_admin` has its own narrow contract inventory, and
-`mailglass_inbound` is outside the `v1.x` stability promise for this
-milestone.
+`mailglass_inbound` has its own stable `1.0` contract inventory in
+[`mailglass_inbound/docs/api_stability.md`](mailglass_inbound/docs/api_stability.md);
+it remains an independent package release line rather than part of the linked
+core/admin `v1.x` group.
 
 For release posture, support floors, retained legacy bridges, and upgrade
 expectations, use the compatibility guide rather than inferring policy from the
@@ -218,7 +220,7 @@ stability inventory alone.
 |---------------------|--------------------------|------------|
 | `mailglass`         | `v1.x` contract inventory documented in `docs/api_stability.md` | Core library: mailables, rendering, delivery pipeline, event ledger, webhook ingest, streams, unsubscribe, suppressions, tenancy. |
 | `mailglass_admin`   | Narrow `v1.x` admin contract documented separately | Mountable LiveView dashboard with stable router/auth/operator seams and internal UI implementation details. |
-| `mailglass_inbound` | v0.5+                    | Inbound routing (Action Mailbox equivalent): recipient/subject/header matchers, ingress plugs per provider, storage adapters, Oban routing. |
+| `mailglass_inbound` | Stable `1.0` contract documented separately | Inbound routing (Action Mailbox equivalent): recipient/subject/header matchers, ingress plugs per provider, storage adapters, Oban routing. |
 
 ## Roadmap
 

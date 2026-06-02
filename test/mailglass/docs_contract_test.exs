@@ -40,9 +40,15 @@ defmodule Mailglass.DocsContractTest do
       assert readme =~ "reference/demo_app"
       assert readme =~ "reference/host_app"
       assert readme =~ "maintained trust-proof baseline"
-      assert readme =~ "`mailglass_inbound` is outside the `v1.x` stability promise"
+      assert readme =~ "**`mailglass_inbound`** (inbound routing; stable 1.0)"
+      assert readme =~ "`mailglass_inbound` has its own stable `1.0` contract inventory"
+      assert readme =~ "mailglass_inbound/docs/api_stability.md"
+      assert readme =~ "independent package release line"
+      assert readme =~ "`mailglass_inbound` | Stable `1.0` contract documented separately"
       refute readme =~ "v0.1 in development"
       refute readme =~ "v0.3 public surface"
+      refute readme =~ "inbound routing; v0.5+"
+      refute readme =~ "`mailglass_inbound` is outside the `v1.x` stability promise"
     end
 
     test "Quickstart snippet compiles" do
@@ -172,8 +178,17 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "Core Full Suite Advisory"
       assert maintaining =~ "Provider Compatibility Advisory"
       assert maintaining =~ "Provider Live Advisory"
+      assert maintaining =~
+               "Required inbound release proof is deterministic repo/package/workflow evidence"
+
+      assert maintaining =~ "mix mailglass.publish.check --package mailglass_inbound"
+      assert maintaining =~ "Provider-live checks and ecosystem canaries remain advisory"
       assert maintaining =~ "cron and `workflow_dispatch` canary"
       assert maintaining =~ "not a merge blocker"
+      assert maintaining =~ ~s({:mailglass_inbound, "~> 1.0"})
+      assert maintaining =~ "mailglass_inbound-v1.0.0"
+      refute maintaining =~ ~s({:mailglass_inbound, "~> 0.3"})
+      refute maintaining =~ "for `1.0.0`: `mailglass-v1.0.0`"
       assert maintaining =~ "guides/compatibility-and-deprecations.md"
       assert maintaining =~ "JTBD Docs Refresh Protocol"
       assert maintaining =~ "guides/jobs.md"

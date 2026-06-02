@@ -189,6 +189,13 @@ The following checks are advisory signal, not branch-protection truth:
 - `Branch Protection Advisory`
 - `Provider Live Advisory`
 
+Required inbound release proof is deterministic repo/package/workflow evidence:
+source and manifest parity, `mix mailglass.publish.check --package mailglass_inbound`,
+publish-summary output, release workflow tag/package selection, and post-publish
+Hex/HexDocs/smoke evidence when that publish phase runs.
+Provider-live checks and ecosystem canaries remain advisory unless a specific
+release claim explicitly depends on them.
+
 `Provider Live Advisory` remains a cron and `workflow_dispatch` canary. It is not a merge blocker.
 
 ## Bus Factor & Continuity
@@ -288,7 +295,7 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    fan-out status in `38-03-RELEASE-RECORD.md`.
    - **Package order:** The workflow guarantees `mailglass` (core) publishes first, then `mailglass_inbound`, then `mailglass_admin`. Admin waits on inbound to avoid sibling-package Hex indexing races.
    - **Idempotency:** All three publish steps check `mix hex.info` first and skip the publish command if the version is already live, making the workflow safe to retry.
-   - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag (for `1.0.0`: `mailglass-v1.0.0`) so the publish run is pinned to the exact commit Release Please tagged.
+   - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag for the package being recovered so the publish run is pinned to the exact commit Release Please tagged. For an inbound-only `1.0.0` recovery, dispatch `package=mailglass_inbound` from `mailglass_inbound-v1.0.0`.
 4. **Within 60 minutes of publish: smoke-install in a fresh Phoenix app.**
    Set a literal timer when approving the deployment.
    Run:
@@ -296,7 +303,7 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
        mix archive.install hex phx_new --force
        mix phx.new sandbox --no-ecto --no-mailer --install
        cd sandbox
-      # add {:mailglass, "~> 1.3"}, {:mailglass_admin, "~> 1.3"}, {:mailglass_inbound, "~> 0.3"} to deps
+      # add {:mailglass, "~> 1.3"}, {:mailglass_admin, "~> 1.3"}, {:mailglass_inbound, "~> 1.0"} to deps
        mix deps.get && mix mailglass.install && mix compile --warnings-as-errors
        mix phx.server  # visit http://localhost:4000/dev/mail/
 
