@@ -1,15 +1,23 @@
+const path = require("path");
 const { defineConfig } = require("@playwright/test");
 
 const port = process.env.PORT || "4015";
 const baseURL = process.env.DEMO_BASE_URL || `http://127.0.0.1:${port}`;
 const externalServer = Boolean(process.env.DEMO_BASE_URL);
+const evidenceDir = path.join(__dirname, "..", "tmp", "demo_browser_evidence");
 
 module.exports = defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
   expect: { timeout: 5_000 },
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? [["github"], ["list"]] : "list",
+  reporter: process.env.CI
+    ? [
+        ["github"],
+        ["list"],
+        ["json", { outputFile: path.join(evidenceDir, "playwright-report.json") }]
+      ]
+    : "list",
   use: {
     baseURL,
     trace: "on-first-retry"

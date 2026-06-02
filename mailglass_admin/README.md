@@ -225,8 +225,9 @@ before you write any scenarios.
 - Suppression removal flows. The recent-auth seam exists, but suppression
   reversal remains a later phase.
 - Search, filter, or pagination over mailables. v0.5.
-- Inbound-mail (`mailglass_inbound`) Conductor LiveView — separate sibling
-  package, v0.5+.
+- A synthetic inbound development console. The shipped inbound operator view
+  inspects stored inbound records, evidence, routing traces, and replay lineage
+  from `mailglass_inbound`; it does not fabricate new inbound messages.
 - Stable DOM/component/LiveView implementation APIs. Those remain internal even
   when they are visible in generated docs or reachable in source.
 

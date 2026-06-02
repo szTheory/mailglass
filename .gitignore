@@ -15,6 +15,9 @@ erl_crash.dump
 /mailglass_admin/node_modules/
 /mailglass_admin/test-results/
 /mailglass_admin/playwright-report/
+/reference/demo_app/tmp/
+/reference/demo_app/assets/test-results/
+/reference/demo_app/assets/playwright-report/
 /mailglass-*.tar
 /mailglass_admin/*.tar
 

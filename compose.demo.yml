@@ -39,10 +39,10 @@ services:
       demo_db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://localhost:4015/health | grep -q ok"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4015/health | grep -q ok"]
       interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 90
     volumes:
       - .:/workspace
       - mailglass_demo_mix:/cache/mix
@@ -64,6 +64,7 @@ services:
       dockerfile: reference/demo_app/Dockerfile
     working_dir: /workspace/reference/demo_app
     environment:
+      CI: ${CI:-true}
       DEMO_BASE_URL: http://demo:4015
       PLAYWRIGHT_BROWSERS_PATH: /cache/playwright
       npm_config_cache: /cache/npm
@@ -73,8 +74,8 @@ services:
         condition: service_healthy
     command: >
       sh -lc "npm --prefix assets ci --no-audit --no-fund
-      && npx --prefix assets playwright install --with-deps chromium
-      && npm --prefix assets run test:e2e"
+      && npx --prefix assets playwright install chromium
+      && npm --prefix assets run test:e2e:ci"
     volumes:
       - .:/workspace
       - mailglass_demo_npm:/cache/npm

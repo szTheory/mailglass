@@ -51,6 +51,8 @@ defmodule Mailglass.MixProject do
         "verify.installer": :test,
         "verify.mix_tasks": :test,
         "verify.reference_host.journey": :test,
+        "verify.demo_browser_evidence": :test,
+        "verify.phase69": :test,
         "verify.phase67": :test,
         # Deprecated pass-throughs — remove after one release cycle
         "verify.phase01": :test,
@@ -229,6 +231,14 @@ defmodule Mailglass.MixProject do
       # reference-host journey verification across local and CI surfaces.
       "verify.reference_host.journey": [
         "mailglass.trust.run"
+      ],
+      "verify.demo_browser_evidence": [
+        "cmd sh scripts/run_demo_browser_evidence.sh"
+      ],
+      "verify.phase69": [
+        "test test/mailglass/docs_contract_test.exs --warnings-as-errors",
+        "cmd --cd reference/demo_app sh -c \"MIX_ENV=test mix test test/mailglass_demo_web/page_controller_dashboard_test.exs test/mailglass_demo/docs_contract_test.exs --warnings-as-errors\"",
+        "verify.demo_browser_evidence"
       ],
       "verify.phase67": [
         "test test/reference_host/scope_lock_contract_test.exs --warnings-as-errors",

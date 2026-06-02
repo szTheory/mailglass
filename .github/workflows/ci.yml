@@ -669,6 +669,30 @@ jobs:
         working-directory: mailglass_admin
         run: npm run test:operator-browser
 
+  demo_browser_evidence:
+    name: Demo Browser Evidence (Docker Compose / Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: true
+      DEMO_EVIDENCE_RESET_TOKEN: phase69-ci-evidence
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Run demo browser evidence
+        run: bash scripts/run_demo_browser_evidence.sh
+      - name: Upload demo browser evidence artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: demo-browser-evidence-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            reference/demo_app/tmp/demo_browser_evidence/checkpoint.json
+            reference/demo_app/tmp/demo_browser_evidence/playwright-report.json
+            reference/demo_app/assets/test-results
+
   preview_capture_advisory:
     name: Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)
     runs-on: ubuntu-latest

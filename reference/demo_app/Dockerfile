@@ -6,6 +6,11 @@ RUN apt-get update \
 
 RUN mix local.hex --force && mix local.rebar --force
 
+COPY reference/demo_app/assets/package*.json /tmp/mailglass-demo-assets/
+RUN npm --prefix /tmp/mailglass-demo-assets ci --no-audit --no-fund \
+  && npx --prefix /tmp/mailglass-demo-assets playwright install --with-deps chromium \
+  && rm -rf /tmp/mailglass-demo-assets
+
 WORKDIR /workspace/reference/demo_app
 
 CMD ["sh", "-lc", "mix deps.get && mix ecto.setup && mix phx.server"]

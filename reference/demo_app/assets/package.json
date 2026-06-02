@@ -2,7 +2,8 @@
   "name": "mailglass-demo-browser-evidence",
   "private": true,
   "scripts": {
-    "test:e2e": "playwright test --config=playwright.config.cjs"
+    "test:e2e": "playwright test --config=playwright.config.cjs",
+    "test:e2e:ci": "playwright test --config=playwright.config.cjs && node scripts/check-demo-browser-evidence.cjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1"
