@@ -158,11 +158,16 @@ defmodule Mailglass.StabilityContractTest do
              "inbound publish pin in mailglass_dep/0 does not match core @version " <>
                "(#{expected_core_version}); update the `== X.Y.Z` pin in mailglass_inbound/mix.exs"
 
-      # Changelog, READMEs reflect the same inbound version (major-line for
-      # the human-facing dependency hint and stable-row markers).
-      inbound_major = expected_version |> String.split(".") |> hd()
+      # Changelog and READMEs reflect the same inbound version. The install
+      # hint tracks the current MINOR line (`~> major.minor`), which is what the
+      # `release-type: "elixir"` releaser writes into the README on each bump;
+      # the root-README stable-row marker tracks the MAJOR line. Both are derived
+      # from the manifest version (no hardcoded literals) so this stays green
+      # across linked-version ceremonies while still catching a drifting file.
+      [inbound_major, inbound_minor | _] = String.split(expected_version, ".")
+      inbound_minor_line = "#{inbound_major}.#{inbound_minor}"
       assert inbound_changelog =~ "## [#{expected_version}]"
-      assert inbound_readme =~ ~s({:mailglass_inbound, "~> #{inbound_major}.0"})
+      assert inbound_readme =~ ~s({:mailglass_inbound, "~> #{inbound_minor_line}"})
       assert root_readme =~ "`mailglass_inbound` | Stable `#{inbound_major}."
 
       # Publish summary is internally consistent with the derived values.
