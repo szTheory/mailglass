@@ -253,8 +253,15 @@ Five steps. Step 4 has a literal 60-minute timer — that is the last revert
 window before the published artifact becomes permanent.
 
 Use the Phase 38 release-day proof forms while running these steps:
-- `.planning/phases/38-release-rehearsal-and-proof-artifacts/38-03-RELEASE-CHECKLIST.md`
-- `.planning/phases/38-release-rehearsal-and-proof-artifacts/38-03-RELEASE-RECORD.md`
+- `.planning/milestones/v1.0-phases/38-release-rehearsal-and-proof-artifacts/38-03-RELEASE-CHECKLIST.md`
+- `.planning/milestones/v1.0-phases/38-release-rehearsal-and-proof-artifacts/38-03-RELEASE-RECORD.md`
+
+For the inbound-only `mailglass_inbound 1.0.0` slice, use the inbound-specific companion forms:
+- `.planning/phases/73-inbound-1-0-publish-evidence/73-01-RELEASE-RECORD.md`
+- `.planning/phases/73-inbound-1-0-publish-evidence/73-01-RELEASE-CHECKLIST.md`
+
+The archived Phase 38 forms remain the linked core/admin v1.0 record; the Phase 73 forms cover
+the inbound-only slice.
 
 The checklist separates repo-proved gates from manual/external proof and forces
 explicit capture of the tag, workflow run URLs, approver identity, fallback
@@ -295,7 +302,7 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    fan-out status in `38-03-RELEASE-RECORD.md`.
    - **Package order:** The workflow guarantees `mailglass` (core) publishes first, then `mailglass_inbound`, then `mailglass_admin`. Admin waits on inbound to avoid sibling-package Hex indexing races.
    - **Idempotency:** All three publish steps check `mix hex.info` first and skip the publish command if the version is already live, making the workflow safe to retry.
-   - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag for the package being recovered so the publish run is pinned to the exact commit Release Please tagged. For an inbound-only `1.0.0` recovery, dispatch `package=mailglass_inbound` from `mailglass_inbound-v1.0.0`.
+   - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag for the package being recovered so the publish run is pinned to the exact commit Release Please tagged. For an inbound-only `mailglass_inbound-v1.0.0` publish or recovery, dispatch `package=mailglass_inbound` pinned to the `mailglass_inbound-v1.0.0` tag; the fan-out skips `publish-core` and does NOT trigger `publish-admin`, so no `mailglass`/`mailglass_admin` release is forced. The `publish-inbound`/`publish-admin` success/skipped gating is a security control — do not loosen it.
 4. **Within 60 minutes of publish: smoke-install in a fresh Phoenix app.**
    Set a literal timer when approving the deployment.
    Run:
