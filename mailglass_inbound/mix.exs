@@ -109,7 +109,7 @@ defmodule MailglassInbound.MixProject do
 
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 1.4.0"}
+      {:mailglass, "== 1.4.1"}
     else
       {:mailglass, path: "..", override: true}
     end
