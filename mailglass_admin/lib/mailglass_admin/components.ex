@@ -75,7 +75,7 @@ defmodule MailglassAdmin.Components do
   def flash(assigns) do
     ~H"""
     <div class="toast toast-top toast-end z-50" role="status" aria-live="polite">
-      <div class={["alert text-sm gap-2 py-2 px-3", alert_class(@kind)]}>
+      <div class={["motion-reveal alert text-sm gap-2 py-2 px-3", alert_class(@kind)]}>
         <.icon name="hero-arrow-path" class="w-4 h-4" />
         <span>{@message}</span>
       </div>
@@ -102,8 +102,7 @@ defmodule MailglassAdmin.Components do
   def badge(%{variant: :warning} = assigns) do
     ~H"""
     <span class="badge badge-warning badge-sm gap-1">
-      <.icon name="hero-exclamation-triangle" class="w-3 h-3" />
-      Error
+      <.icon name="hero-exclamation-triangle" class="w-3 h-3" /> Error
     </span>
     """
   end

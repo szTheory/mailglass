@@ -19,10 +19,12 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
   def replay_modal(assigns) do
     ~H"""
     <%= if @open? and @record do %>
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-base-content/40 p-4">
+      <div class="motion-tab-swap fixed inset-0 z-40 flex items-center justify-center bg-base-content/40 p-4">
         <div
           data-testid="inbound-replay-modal"
-          class="w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-2xl"
+          role="dialog"
+          aria-modal="true"
+          class="motion-overlay w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
         >
           <div class="flex items-start justify-between gap-4">
             <div class="space-y-1">

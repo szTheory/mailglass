@@ -230,15 +230,26 @@ code, pre, .mono {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+@keyframes mg-overlay {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}
 
 /* reveal — detail pane / header / cards become visible after a selection. */
 .motion-reveal {
   animation: mg-reveal var(--duration-reveal) var(--ease-out) both;
 }
 
-/* tab-swap — crossfade a panel whose content swapped in place (tabs, frame). */
+/* tab-swap — crossfade a panel whose content swapped in place (tabs, frame).
+   Also used for the modal backdrop fade. */
 .motion-tab-swap {
   animation: mg-fade-in var(--duration-fast) var(--ease-out) both;
+}
+
+/* overlay — modal/popover panel enters with a faint scale-up from 0.98 (never
+   from 0 — great-animations). Exit stays instant (server-side :if removal). */
+.motion-overlay {
+  animation: mg-overlay var(--duration-reveal) var(--ease-out) both;
 }
 
 /* timeline-in — staggered entrance for chronological event lists. Stagger is

@@ -29,7 +29,7 @@ defmodule MailglassAdmin.Inbound.Timeline do
           No execution runs have been recorded for this message yet.
         </p>
       <% else %>
-        <ol class="space-y-4">
+        <ol class="motion-timeline space-y-4">
           <%= for {run, index} <- Enum.with_index(@runs) do %>
             <li
               data-testid="inbound-timeline-run"
