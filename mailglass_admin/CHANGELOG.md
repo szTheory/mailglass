@@ -4,6 +4,14 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.4.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.3.0...mailglass_admin-v1.4.0) (2026-06-02)
+
+
+### Features
+
+* **61-02:** tighten operator trust boundary routing ([1b40cf5](https://github.com/szTheory/mailglass/commit/1b40cf574a00b36201db480c75fe7c150adac3fb))
+* **admin-ui:** design-system tokens, operator shell IA, motion, and visual audit ([#52](https://github.com/szTheory/mailglass/issues/52)) ([f1c17d8](https://github.com/szTheory/mailglass/commit/f1c17d8cbee3558b32988185223e34eb0f21b7b0))
+
 ## [1.3.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.2.0...mailglass_admin-v1.3.0) (2026-05-28)
 
 

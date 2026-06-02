@@ -14,6 +14,59 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.4.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.3.0...mailglass-v1.4.0) (2026-06-02)
+
+
+### Features
+
+* **61-01:** enforce phase 61 reference-host boundary tokens in contract test ([f568e16](https://github.com/szTheory/mailglass/commit/f568e16a8d3a2239e72f04cf02c1e8498949a271))
+* **61-01:** enforce usage-proof boundary in reference host docs ([fad0227](https://github.com/szTheory/mailglass/commit/fad0227f4235ae27b509dd15a0060e2fd3bc2826))
+* **61-02:** route maintainer and webhook docs to canonical contract truth ([d226877](https://github.com/szTheory/mailglass/commit/d22687739f25061f4af504a018aeead489da13d7))
+* **61-02:** tighten operator trust boundary routing ([1b40cf5](https://github.com/szTheory/mailglass/commit/1b40cf574a00b36201db480c75fe7c150adac3fb))
+* **61-03:** extend docs checker for trust-entry boundary enforcement ([c22eff9](https://github.com/szTheory/mailglass/commit/c22eff907178b7a35b3ce39ff803cf6464885a56))
+* **61-03:** pin trust-entry docs contract routing in ExUnit ([3f685eb](https://github.com/szTheory/mailglass/commit/3f685eba8d22e8b7779d56d16e9a26a8511cdbdd))
+* **64-05:** delegate root stability lane to inbound support contract alias ([37388f4](https://github.com/szTheory/mailglass/commit/37388f44f5197e655bf6a285f008f9a5ef608fbc))
+* **66-02:** apply inbound 1.0.0 candidate and release notes ([7c5d77e](https://github.com/szTheory/mailglass/commit/7c5d77ef06f1baa052408d51b0607fbb8dac9369))
+* **67-03:** add deterministic demo reset proof and evidence reset endpoint ([7a24342](https://github.com/szTheory/mailglass/commit/7a24342ecabc6321158d84dcf465dd89a87299ac))
+* **67-03:** add phase-67 verification lane and evidence boundary wording ([af68014](https://github.com/szTheory/mailglass/commit/af680149a9a83b636f2db0c77ad8e1b6913d02d4))
+* **67-demo-app-foundation-02:** add demo health route and compose health gating ([4141ea3](https://github.com/szTheory/mailglass/commit/4141ea388077411263455f2c9603362e6b19bec5))
+* **67:** track demo app scaffold artifacts ([1a31989](https://github.com/szTheory/mailglass/commit/1a3198931d472b837cdb30275e2c2e6608fd7f7b))
+* **68-01:** expand deterministic demo fixture corpus ([71ef999](https://github.com/szTheory/mailglass/commit/71ef99948e95cdcb7d3c483885acd5efb2d96bcf))
+* **68-02:** enrich deterministic preview mailer scenarios ([73721f8](https://github.com/szTheory/mailglass/commit/73721f8cc94587e9f00e5a2f59b01d4afe4a7c02))
+* **69-01:** refine northstar dashboard hub copy and labels ([485792d](https://github.com/szTheory/mailglass/commit/485792d25067b1104e0d7921a844543529c8b9d2))
+* **72-01:** flip executable guards for inbound stable 1.0 posture ([8b96cee](https://github.com/szTheory/mailglass/commit/8b96ceef9553a40c5087bc86b34143c3dbe269be))
+* **admin-ui:** design-system tokens, operator shell IA, motion, and visual audit ([#52](https://github.com/szTheory/mailglass/issues/52)) ([f1c17d8](https://github.com/szTheory/mailglass/commit/f1c17d8cbee3558b32988185223e34eb0f21b7b0))
+
+
+### Bug Fixes
+
+* **62-01:** classify short lock tuples as malformed ([1d93b26](https://github.com/szTheory/mailglass/commit/1d93b26a11d8ecd729fdbb5b25982fa2af93d60d))
+* **62-01:** parse clean-baseline lock without evaluation ([b4b13aa](https://github.com/szTheory/mailglass/commit/b4b13aaa377c6df3925435235fc6e12f008dc589))
+* **62-01:** report invalid lock entry types ([8d5dcda](https://github.com/szTheory/mailglass/commit/8d5dcdac1df74a78f97c5d270affc066d25d4e8b))
+* **63-01:** restore inbound docs check tokens ([650b379](https://github.com/szTheory/mailglass/commit/650b3799030072c0c026930d030d5613f245d745))
+* **64-01:** annotate direct runtime seams with 0.1.0 since metadata ([f2edf58](https://github.com/szTheory/mailglass/commit/f2edf5800da4e36aa88c0f0f36b0b6d0e5f38b5c))
+* **64-01:** normalize inbound package-line since metadata ([445f23a](https://github.com/szTheory/mailglass/commit/445f23a41e3576f62bfcca17ec6e0ef9671b73be))
+* **64-03:** align test assertion and case metadata to 0.2.0 ([cf54dd7](https://github.com/szTheory/mailglass/commit/cf54dd79ab9afa486e233282d5cf24687021bb94))
+* **64-03:** tag fixtures and ingress testing helpers as 0.2.0 ([891e269](https://github.com/szTheory/mailglass/commit/891e2692475db16b021a5dd6ac8bde8ac4e8381a))
+* **64-review:** close contract review findings ([b1abd77](https://github.com/szTheory/mailglass/commit/b1abd77290798139eeb6068dcf1c54ee566d61ec))
+* **65:** fail docs check on empty path scope ([1e0f20a](https://github.com/szTheory/mailglass/commit/1e0f20a38721fe51cc459fbbd46e2e9a7cda347f))
+* **65:** resolve provider contract review findings ([42ceef2](https://github.com/szTheory/mailglass/commit/42ceef254ea45aa3214febfc1a3aa4dcf725ed6f))
+* **66-02:** refresh publish proof and lock phase 66 governance state ([ce26a56](https://github.com/szTheory/mailglass/commit/ce26a566331293b97cf8fd77e8ffb237447dbb26))
+* **66:** clean inbound changelog release truth ([eab4312](https://github.com/szTheory/mailglass/commit/eab431260f85f11f39399cd885e5789df002c575))
+* **67-01:** tighten demo hex dependency mode\n\n- pin demo hex inbound dep to ~&gt; 0.3.0\n- clarify README dependency modes and non-contract boundary\n ([703a9ae](https://github.com/szTheory/mailglass/commit/703a9ae912cbe44b5018b0f63efdff8130fd5092))
+* **67-demo-app-foundation-02:** make demo e2e browser deps deterministic ([2a8d01b](https://github.com/szTheory/mailglass/commit/2a8d01b7debc56b56d56d11d7de81a6de5282876))
+* **67:** require explicit demo reset token ([a959dbd](https://github.com/szTheory/mailglass/commit/a959dbd7ddfadf36bd0674e751d3b8f6b4d85c41))
+* **67:** secure demo reset and login redirects ([ec2dfdf](https://github.com/szTheory/mailglass/commit/ec2dfdf45bbbfd95e4cd540ee197fcbafbf5edc8))
+* **68:** close demo fixture review findings ([c44a88f](https://github.com/szTheory/mailglass/commit/c44a88f54f2c51bc969cdbb804c613dd7f3fdf54))
+* **68:** revise plans based on checker feedback ([8009076](https://github.com/szTheory/mailglass/commit/8009076cabdb7c0007f08335131268016fcd9a1b))
+* **72-03:** correct source_ref_pattern to mailglass_inbound-v%{version} ([0e1f65b](https://github.com/szTheory/mailglass/commit/0e1f65b9a818ddd033577a634adc0d61df44c107))
+* **72:** WR-01 make inbound changelog over-claim guard meaningful ([ab116f4](https://github.com/szTheory/mailglass/commit/ab116f4fece2519961f2bdee9dd29ba15da67e02))
+* **72:** WR-02 surface leak-only docs.check runs and normalize --path ([fcdf5b4](https://github.com/szTheory/mailglass/commit/fcdf5b45d37637209b1a8e14b6849668a95565a1))
+* **72:** WR-03/WR-04 assert inbound release consistency, not literals ([5a367d8](https://github.com/szTheory/mailglass/commit/5a367d8ab9457071b0481314c17b985cad6346f7))
+* **73:** WR-01 gate pending-marker asserts behind staged-posture check ([cfcf055](https://github.com/szTheory/mailglass/commit/cfcf055c11939cbcba642afb1602e2a1b78ba4bd))
+* **73:** WR-02 bind REL-03 field asserts to exact labels (folds IN-02) ([cfaae1d](https://github.com/szTheory/mailglass/commit/cfaae1dad38fe01765764c8e04aefad0665f5a9e))
+* **73:** WR-03 guard inbound release-record path against archival with readable flunk ([adaa0d7](https://github.com/szTheory/mailglass/commit/adaa0d7780e231e1aff2f34ed97c1371f7fc64a7))
+
 ## [1.3.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.2.0...mailglass-v1.3.0) (2026-05-28)
 
 
