@@ -74,6 +74,50 @@
   --noise: 0;
 }
 
+/* ── Formal design-system scales (structural / theme-independent) ──────────
+   The daisyUI theme blocks above own COLOR + radius (the only things that
+   differ light vs dark). This @theme owns SIZE / TYPE / ELEVATION / EASING —
+   one definition becomes both a CSS var and a Tailwind utility, so there is a
+   single source of truth and no override war. See guides/DESIGN-SYSTEM.md.
+
+   Rules: no brand hex here (color lives once, in the theme blocks); spacing
+   stays on the 4px grid; type weights are 400/700 only (500/600 not loaded);
+   elevation is borders-first + faint Ink-tinted shadows (brand --depth:0 = flat,
+   no glassmorphism/bevels). */
+@theme {
+  /* Spacing — semantic names aliasing the 22-UI-SPEC scale (spec == CSS).
+     Numeric Tailwind spacing (p-4 = 16px) still works; these add intent. */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* Type sizes — paired with line-heights. Weight is set per-element (400/700). */
+  --text-label: 12px;
+  --text-label--line-height: 1.5;
+  --text-body: 14px;
+  --text-body--line-height: 1.5;
+  --text-heading: 20px;
+  --text-heading--line-height: 1.2;
+  --text-display: 28px;
+  --text-display--line-height: 1.2;
+
+  /* Elevation — borders-first. Ink (#0D1B2A) tinted so shadow reads as
+     "ink through glass", not generic gray. `overlay` is for modals/popovers
+     ONLY; default surfaces use a border + `shadow-flat`. */
+  --shadow-flat: none;
+  --shadow-raised: 0 1px 2px 0 rgb(13 27 42 / 0.06);
+  --shadow-overlay: 0 8px 24px -8px rgb(13 27 42 / 0.18);
+
+  /* Easing — ease-OUT only for enter/exit (never ease-in); in-out for on-screen
+     movement. Overrides Tailwind's default ease-out / ease-in-out curves. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
 /* Self-hosted typography — brand book §8.
    Exactly 2 weights per family per 05-UI-SPEC lines 71-79.
    Weights 500 / 600 NOT loaded.
@@ -117,11 +161,36 @@
   src: url('./fonts/ibm-plex-mono-700.woff2') format('woff2');
 }
 
-/* Typography defaults */
+/* Typography + motion defaults. These are plain custom properties (always
+   emitted), consumed by the hand-authored motion rules below and documented
+   in guides/DESIGN-SYSTEM.md. */
 :root {
   --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Inter Tight', var(--font-ui);
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Motion durations — all ≤300ms (great-animations ceiling). Exits use a
+     shorter step than entries. Consumed by the .motion-* rules and by
+     duration-(--duration-*) utilities in HEEx. */
+  --duration-instant: 90ms;   /* press feedback, hover color */
+  --duration-fast: 150ms;     /* tab/row state, modal/flash exits */
+  --duration-reveal: 220ms;   /* detail-pane reveal, modal enter, timeline item */
+  --duration-flash: 200ms;    /* toast enter */
+
+  /* Control-size tiers — map to standard Tailwind min-h utilities so HEEx stays
+     least-surprise: sm = min-h-9 (36px) tab strips; md = min-h-11 (44px) the
+     a11y touch-target floor for rows/inputs/buttons; lg = min-h-13 (52px) primary. */
+  --size-control-sm: 36px;
+  --size-control-md: 44px;
+  --size-control-lg: 52px;
+
+  /* Z-index tiers — map to standard Tailwind z utilities (z-10/20/30/40/50).
+     Replaces the previous ad-hoc z-50-everywhere. */
+  --z-sticky: 10;
+  --z-dropdown: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-toast: 50;
 }
 
 body {
@@ -133,4 +202,68 @@ h1, h2, h3 {
 }
 code, pre, .mono {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* ── Motion vocabulary ─────────────────────────────────────────────────────
+   Brand metaphor "clarity through panes": content ARRIVES by becoming visible
+   (opacity) and settling a few px into place (small translateY) — never sliding
+   across the screen, never bouncing. Six named motions, deliberately restrained.
+
+   Principles applied (emilkowal.ski/ui/great-animations): ease-out only,
+   ≤300ms, animate transform/opacity ONLY (never height/width/padding), exits
+   shorter than entries, no springs/overshoot (also a brand ban), and never
+   animate keyboard-repeatable actions. `reveal` is fired on mount (phx-mounted),
+   not on every patch, so filter keystrokes don't re-trigger it.
+
+   Modal (overlay-in/out) and flash motion are driven inline via
+   Phoenix.LiveView.JS show/hide + phx-mounted/phx-remove using these same
+   tokens; only the keyframe-based motions need classes here. */
+@keyframes mg-reveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes mg-timeline-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes mg-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* reveal — detail pane / header / cards become visible after a selection. */
+.motion-reveal {
+  animation: mg-reveal var(--duration-reveal) var(--ease-out) both;
+}
+
+/* tab-swap — crossfade a panel whose content swapped in place (tabs, frame). */
+.motion-tab-swap {
+  animation: mg-fade-in var(--duration-fast) var(--ease-out) both;
+}
+
+/* timeline-in — staggered entrance for chronological event lists. Stagger is
+   pure CSS (predetermined sequence → keyframes, per great-animations). Capped
+   at 8 steps; later items appear without added delay. */
+.motion-timeline > * {
+  animation: mg-timeline-in var(--duration-reveal) var(--ease-out) both;
+}
+.motion-timeline > *:nth-child(1) { animation-delay: 0ms; }
+.motion-timeline > *:nth-child(2) { animation-delay: 40ms; }
+.motion-timeline > *:nth-child(3) { animation-delay: 80ms; }
+.motion-timeline > *:nth-child(4) { animation-delay: 120ms; }
+.motion-timeline > *:nth-child(5) { animation-delay: 160ms; }
+.motion-timeline > *:nth-child(6) { animation-delay: 200ms; }
+.motion-timeline > *:nth-child(7) { animation-delay: 240ms; }
+.motion-timeline > *:nth-child(8) { animation-delay: 280ms; }
+
+/* Reduced motion — neutralize movement (vestibular safety) while letting
+   opacity crossfades effectively snap. The safe global default. */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
