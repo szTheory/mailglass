@@ -1,16 +1,29 @@
 # Phase 73 — Inbound Release Record
 
+Release type: PUBLISHED (canonical release: published path) — 2026-06-02
+Tag: mailglass_inbound-v1.0.0 (CUT @ 50bc4b825cc2a2c75ba152b6d1b5cf1a50db0d37)
+Release-vs-dispatch path: canonical release: published — GitHub release fired publish-hex.yml; publish-core/publish-admin idempotency-skipped (mailglass/mailglass_admin stayed 1.3.0), publish-inbound published 1.0.0. No core/admin release forced.
+Publish workflow run URL: https://github.com/szTheory/mailglass/actions/runs/26836825278 (all jobs success: prepublish-summary, gate-ci-green, publish-core[skip], publish-inbound[PUBLISH], publish-admin[skip])
+Post-publish smoke run URL: https://github.com/szTheory/mailglass/actions/runs/26836825313 (release-triggered, success)
+Proof bundle path: .planning/publish/mailglass_inbound-publish-summary.json (mix mailglass.publish.check --package mailglass_inbound, exit 0, conflict=0)
+Install/upgrade rehearsal path: covered by post-publish-smoke (release-triggered, success)
+Hex index confirmation: mailglass_inbound 1.0.0 LIVE — inserted 2026-06-02T17:42:31.640432Z, has_docs=true (https://hex.pm/packages/mailglass_inbound/1.0.0)
+HexDocs URLs: https://hexdocs.pm/mailglass_inbound/1.0.0/ (live)
+Fallback path used: not needed (canonical release path succeeded first attempt)
+60-minute outcome: publish window opened 2026-06-02T17:42:31Z; release-triggered smoke green; no revert needed.
+
+> NOTE: cut at main HEAD 50bc4b82 (not the original staged ref 88155d3e). HEAD advanced
+> with Phase-73 code-review fixes plus two release-readiness fixes made at publish time:
+> (1) chore(release-engineering) 5a28545c — dropped 7 untracked draft files from the inbound
+> publish allowlist so the package builds reproducibly from clean source (removed a duplicate
+> suppression_flagged migration that would have broken adopters' mix ecto.migrate);
+> (2) ci 50bc4b82 — mix format + fixed a stale compatibility-contract test (main had been
+> silently red since 2026-05-29 because phases 66–73 landed via paths-ignored commits that
+> never ran ci.yml). gate-ci-green required a green ci.yml run on the tagged SHA.
+
+--- Original prepare-and-stage record (pre-publish, retained for history) ---
 Release type: prepare-and-stage
 Tag: mailglass_inbound-v1.0.0 (staged, not cut)
-Release-vs-dispatch path: workflow_dispatch fallback rehearsal (package=mailglass_inbound), tag-pinned — canonical path is release: published, deferred to maintainer
-Publish workflow run URL: pending; see 73-02 rehearsal evidence
-Post-publish smoke run URL: not run
-Proof bundle path: .planning/publish/mailglass_inbound-publish-summary.json (mix mailglass.publish.check --package mailglass_inbound)
-Install/upgrade rehearsal path: pending; deferred to post-publish maintainer trigger
-Hex index confirmation: not run; rehearsal stayed repo-local
-HexDocs URLs: pending; not published under prepare posture
-Fallback path used: not run
-60-minute outcome: not run; no live publish window started
 
 ## Dry-run rehearsal
 
