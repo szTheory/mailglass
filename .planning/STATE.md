@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
-status: ready_for_next_phase
-last_updated: 2026-06-02T07:24:56.936Z
+status: Ready to plan
+last_updated: "2026-06-02T07:39:46.128Z"
 last_activity: 2026-06-02
 progress:
   total_phases: 3
@@ -11,7 +11,6 @@ progress:
   total_plans: 1
   completed_plans: 1
   percent: 33
-stopped_at: Completed 71-01-PLAN.md; next phase is 72
 ---
 
 # Project State
@@ -27,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initializatio
 
 Phase: 72 — Contract Docs and Stale-Claim Guards
 Plan: —
-Status: Ready to discuss
+Status: Ready to plan
 Last activity: 2026-06-02
 
 ## v1.6 Milestone Intent
@@ -152,6 +151,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Session Continuity
 
+- Phase 72 context gathered on 2026-06-02 in assumptions mode with subagent research. Resume from `.planning/phases/72-contract-docs-and-stale/72-CONTEXT.md`; next step is `$gsd-plan-phase 72`.
 - Phase 71 context gathered on 2026-06-02 in assumptions mode. Resume from `.planning/phases/71-inbound-release-truth-preflight/71-CONTEXT.md`; next step is `$gsd-plan-phase 71`.
 - Phase 69 context gathered on 2026-06-01 in assumptions mode. Resume from `.planning/phases/69-click/69-CONTEXT.md`; next step is `$gsd-plan-phase 69`.
 - Phase 68 context gathered on 2026-06-01 in assumptions mode. Resume from `.planning/phases/68-realistic-b2b-saas-fixtures/68-CONTEXT.md`; next step is `$gsd-plan-phase 68`.
