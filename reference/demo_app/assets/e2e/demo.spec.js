@@ -24,7 +24,7 @@ test.describe("mailglass demo evidence", () => {
     await page.goto("/");
     await page.getByRole("link", { name: /outbound operator/i }).click();
     await expect(page).toHaveURL(/\/ops\/mail\?tenant_id=northstar/);
-    await expect(page.getByRole("heading", { name: /operator deliveries/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Deliveries", exact: true })).toBeVisible();
     await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
 
     const deliveryId = await page.getByTestId("operator-delivery-row").first().getAttribute("phx-value-id");
