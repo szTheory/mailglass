@@ -23,6 +23,8 @@ defmodule Mailglass.StabilityContractTest do
     assert metadata[:since] == since, "#{inspect(module)} missing moduledoc since metadata"
   end
 
+  defp json!(path), do: path |> File.read!() |> Jason.decode!()
+
   describe "stable core entrypoints expose since metadata" do
     test "Mailglass root delegates are annotated" do
       assert_module_since(Mailglass, "0.1.0")
@@ -109,6 +111,38 @@ defmodule Mailglass.StabilityContractTest do
       # `mix mailglass.publish.check` each run; assert it exists with any
       # SemVer-shaped value (ceremony-agnostic).
       assert summary =~ ~r/"mailglass_inbound": "\d+\.\d+\.\d+"/
+    end
+
+    test "inbound 1.0 release preflight truth is exact across source and publish evidence" do
+      manifest = json!(".release-please-manifest.json")
+      summary = json!(".planning/publish/mailglass_inbound-publish-summary.json")
+      inbound_mix = File.read!("mailglass_inbound/mix.exs")
+      inbound_changelog = File.read!("mailglass_inbound/CHANGELOG.md")
+      inbound_readme = File.read!("mailglass_inbound/README.md")
+      root_readme = File.read!("README.md")
+      expected_version = "1.0.0"
+      expected_core_version = "1.3.0"
+
+      assert manifest["mailglass_inbound"] == expected_version
+      assert Regex.match?(~r/@version "#{expected_version}"/, inbound_mix)
+      assert inbound_changelog =~ "## [#{expected_version}]"
+      assert inbound_readme =~ ~s({:mailglass_inbound, "~> 1.0"})
+      assert root_readme =~ "`mailglass_inbound` | Stable `1.0`"
+
+      assert Regex.match?(
+               ~r/\{:mailglass, "== #{Regex.escape(expected_core_version)}"\}/,
+               inbound_mix
+             )
+
+      assert summary["package"] == "mailglass_inbound"
+      assert summary["version"] == expected_version
+      assert summary["manifest_version"] == expected_version
+      assert summary["source_ref"] == "v#{expected_version}"
+      assert summary["mailglass_inbound_publish_pin"] == "== #{expected_core_version}"
+      assert summary["linked_versions"]["mailglass"] == expected_core_version
+      assert summary["linked_versions"]["mailglass_admin"] == expected_core_version
+      assert summary["linked_versions"]["mailglass_inbound"] == expected_version
+      assert "docs/api_stability.md" in summary["extras"]
     end
   end
 end
