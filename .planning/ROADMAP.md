@@ -15,7 +15,7 @@
 - ✅ **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26) — see [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 - ✅ **v1.3 Adopter Trust Proof** — Phases 52, 57-62 (shipped 2026-05-31) — see [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - ✅ **v1.4 Inbound Stability Lock** — Phases 63-66 (shipped 2026-06-01) — see [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
-- ◆ **v1.5 Demo Evidence and Click-Around Confidence** — Phases 67-70 (active)
+- ◆ **v1.5 Demo Evidence and Click-Around Confidence** — Phases 67-70 (complete; pending milestone closeout)
 
 ## Phases
 
@@ -79,7 +79,7 @@ Audit passed 2026-05-31 after Phase 62 closeout. Full archive at [milestones/v1.
 </details>
 
 <details open>
-<summary>◆ v1.5 Demo Evidence and Click-Around Confidence (Phases 67-70) — ACTIVE</summary>
+<summary>◆ v1.5 Demo Evidence and Click-Around Confidence (Phases 67-70) — COMPLETE; PENDING CLOSEOUT</summary>
 
 - [x] Phase 67: Demo App Foundation — separate demo app, dual dependency mode, Compose DX, cache-aware setup (completed 2026-06-01)
 - [x] Phase 68: Realistic B2B SaaS Fixtures — deterministic outbound, inbound, suppression, replay, and mailer scenarios (2 plans) (completed 2026-06-01)
@@ -90,7 +90,9 @@ Audit passed 2026-05-31 after Phase 62 closeout. Full archive at [milestones/v1.
   Plans:
   - [x] 69-01-PLAN.md — Refine the controller-rendered dashboard hub and add focused route/content coverage.
   - [x] 69-02-PLAN.md — Make the demo README canonical for quickstart/click-path guidance and add docs contract proof.
-- [ ] Phase 70: Browser Evidence Gate — Playwright coverage for preview, outbound operator, inbound operator, replay, screenshots/checkpoints
+- [x] Phase 70: Browser Evidence Gate — automated Playwright coverage and checkpoint evidence for preview, outbound operator, and inbound operator paths (1 plan; closed by Phase 69 automation pass; completed 2026-06-02)
+  Plans:
+  - [x] 70-01-PLAN.md — Reconcile the browser evidence gate to the automated Phase 69 verification lane.
 
 Success criteria:
 1. `reference/demo_app` is runnable without changing `reference/host_app`.

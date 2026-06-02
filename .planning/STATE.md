@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Demo Evidence and Click-Around Confidence
 status: milestone_complete
-last_updated: 2026-06-02T01:15:35.592Z
+last_updated: 2026-06-02T05:37:48Z
 last_activity: 2026-06-01 -- Phase 69 execution started
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 14
-  percent: 50
-stopped_at: Milestone complete (Phase 69 was final phase)
+  completed_phases: 4
+  total_plans: 8
+  completed_plans: 8
+  percent: 100
+stopped_at: Milestone complete; Phase 70 browser-evidence gate reconciled to Phase 69 automation work
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-01 after v1.5 milestone open)
 
 ## Current Position
 
-Phase: 69
+Phase: 70
 Plan: Not started
 Status: Milestone complete
 Last activity: 2026-06-02
@@ -180,4 +180,4 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Run /gsd-complete-milestone to archive v1.5 now that Phase 70 is reconciled.
