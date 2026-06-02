@@ -1,7 +1,7 @@
 ---
 phase: 68
 slug: realistic-b2b-saas-fixtures
-status: draft
+status: complete
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-06-01
@@ -41,11 +41,11 @@ created: 2026-06-01
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 68-01-01 | 01 | 0 | Phase goal | T-68-01 | Fixture reset remains deterministic and scoped to demo data | integration | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors` | yes | pending |
-| 68-01-02 | 01 | 1 | Phase goal | T-68-02 | Outbound/inbound/webhook/replay scenarios use sanctioned schema states only | integration | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors` | yes | pending |
-| 68-01-03 | 01 | 1 | Phase goal | T-68-03 | Suppression scenarios model B2B SaaS risk without leaking real tenant/user data | integration | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors` | yes | pending |
-| 68-01-04 | 01 | 2 | Phase goal | T-68-04 | Replay lineage preserves stored-truth evidence semantics | integration | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors` | yes | pending |
-| 68-01-05 | 01 | 2 | Phase goal | T-68-05 | Demo reset remains callable through `mix demo.reset` and does not require new fixture infra | integration | `mix test test/mailglass/demo_data_test.exs` | no — created by Plan `68-01` Task 2 | pending |
+| 68-01-01 | 01 | 0 | Phase goal | T-68-01 | Fixture reset remains deterministic and scoped to demo data | integration | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors` | yes | covered |
+| 68-01-02 | 01 | 1 | Phase goal | T-68-02 | Outbound/inbound/webhook/replay scenarios use sanctioned schema states only | integration | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors` | yes | covered |
+| 68-01-03 | 01 | 1 | Phase goal | T-68-03 | Suppression scenarios model B2B SaaS risk without leaking real tenant/user data | integration | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors` | yes | covered |
+| 68-01-04 | 01 | 2 | Phase goal | T-68-04 | Replay lineage preserves stored-truth evidence semantics | integration | `cd reference/demo_app && MIX_ENV=test mix test test/mailglass_demo/demo_data_reset_test.exs --warnings-as-errors` | yes | covered |
+| 68-01-05 | 01 | 2 | Phase goal | T-68-05 | Demo reset remains callable through `mix demo.reset` and does not require new fixture infra | integration | `mix test test/mailglass/demo_data_test.exs` | yes | covered |
 
 *Status: pending / green / red / flaky*
 
@@ -74,4 +74,4 @@ All phase behaviors have automated verification.
 - [x] Feedback latency < 90s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated 2026-06-02

@@ -4,6 +4,45 @@
 
 ---
 
+## Milestone: v1.5 — Demo Evidence and Click-Around Confidence
+
+**Shipped:** 2026-06-02
+**Phases:** 4 | **Plans:** 8
+**Coverage:** 14/14 v1.5 requirements
+
+### What Was Built
+
+- Separate `reference/demo_app` with local-path and published-Hex dependency modes, health-gated Compose startup, cache-aware browser setup, and deterministic reset proof.
+- Deterministic Northstar B2B SaaS Ops corpus covering outbound deliveries, inbound records, suppressions, webhook targets, replay lineage, and six realistic preview mailer scenarios.
+- Guided dashboard hub and canonical demo README that point maintainers into real preview, outbound operator, and inbound operator surfaces.
+- Automated browser evidence lane: `mix verify.phase69` drives Playwright through the dashboard/preview/outbound/inbound paths and writes bounded `demo_browser_evidence.v1` checkpoint evidence.
+
+### What Worked
+
+- Keeping `reference/host_app` narrow while adding `reference/demo_app` avoided turning trust proof into a second product.
+- The Phase 68 fixture corpus gave Phase 69 and 70 stable, realistic data to exercise instead of superficial route checks.
+- Replacing human UAT with browser/docs automation closed subjective click-around checks without treating DOM shape as stable API.
+
+### What Was Inefficient
+
+- The milestone audit was run too early and went stale after Phases 68-70 landed, so closeout needed a manual audit refresh.
+- Phase 70 became bookkeeping because its implementation work landed during Phase 69 automation, which required explicit reconciliation to avoid a phantom future phase.
+- Validation files for Phases 68 and 69 stayed in draft wording after verification passed and had to be cleaned up during closeout.
+
+### Patterns Established
+
+- Rich demo apps should be adoption evidence artifacts with explicit non-contract boundaries.
+- Browser evidence should click real mounted surfaces and emit bounded checkpoint artifacts, not promote selectors, routes, or copy as public API.
+- A retained `HUMAN-UAT.md` can be closed as history when automated replacement evidence is recorded and passing.
+
+### Key Lessons
+
+1. Rerun the milestone audit after the last phase is reconciled, especially when a later phase closes work that landed in an earlier phase.
+2. Keep demo proof tied to realistic domain stories; route-only smoke tests are not enough for adopter confidence.
+3. If a phase becomes reconciliation-only, say so in the summary and verification artifact so closeout can distinguish it from missing implementation.
+
+---
+
 ## Milestone: v1.4 — Inbound Stability Lock
 
 **Shipped:** 2026-06-01

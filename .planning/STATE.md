@@ -2,33 +2,32 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Demo Evidence and Click-Around Confidence
-status: milestone_complete
-last_updated: 2026-06-02T05:37:48Z
-last_activity: 2026-06-01 -- Phase 69 execution started
+status: Awaiting next milestone
+last_updated: "2026-06-02T05:58:22.899Z"
+last_activity: 2026-06-02 — Milestone v1.5 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 8
   completed_plans: 8
   percent: 100
-stopped_at: Milestone complete; Phase 70 browser-evidence gate reconciled to Phase 69 automation work
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-01 after v1.5 milestone open)
+See: .planning/PROJECT.md (updated 2026-06-02 after v1.5 milestone completion)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Milestone complete
+**Current focus:** Awaiting next milestone requirements
 
 ## Current Position
 
-Phase: 70
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-06-02
+Phase: Milestone v1.5 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-02 — Milestone v1.5 completed and archived
 
 ## v1.5 Milestone Intent
 
@@ -85,10 +84,10 @@ Last activity: 2026-06-02
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 63 | Inbound Contract Inventory Reconciliation | Canonical stable/testing/internal/deferred inventory |
-| 64 | Contract Verification Hardening | Compiled-doc, docs-contract, and root stability proof gates |
-| 65 | Compatibility, Docs, and DX Lock | Adoption path, operator wording, testing docs, and compatibility/deprecation posture |
-| 66 | Release Position Decision | Evidence-backed `1.0.0` vs final `0.x` decision and release notes |
+| 67 | Demo App Foundation | Separate demo app, dependency modes, Compose DX, reset proof |
+| 68 | Realistic B2B SaaS Fixtures | Deterministic outbound/inbound/suppression/replay/mailer scenarios |
+| 69 | Click-Around UX and Docs | Dashboard hub, canonical quickstart, docs contracts, automated UAT closure |
+| 70 | Browser Evidence Gate | Reconciled browser evidence checkpoint gate |
 
 ## Performance Metrics
 
@@ -180,4 +179,4 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 
 ## Operator Next Steps
 
-- Run /gsd-complete-milestone to archive v1.5 now that Phase 70 is reconciled.
+- Start the next milestone with /gsd-new-milestone

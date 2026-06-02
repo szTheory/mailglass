@@ -1,9 +1,9 @@
 ---
 phase: 69
 slug: click
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-01
 ---
 
@@ -39,18 +39,18 @@ created: 2026-06-01
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 69-01-01 | 01 | 0 | DEMO-03 | T-69-01 | Dashboard route renders safe links to `/dev/mail`, `/demo/login?return_to=/ops/mail?tenant_id=northstar`, and `/demo/login?return_to=/ops/mail/inbound?tenant_id=northstar`. | controller | `cd reference/demo_app && mix test test/mailglass_demo_web/page_controller_dashboard_test.exs` | No - Wave 0 | pending |
-| 69-01-02 | 01 | 0 | DX-03 | T-69-02 | Canonical demo docs describe quickstart, persona/JTBD, seeded data, reset semantics, dependency mode, and demo-vs-contract boundary. | docs contract | `cd reference/demo_app && mix test test/mailglass_demo/docs_contract_test.exs` | No - Wave 0 | pending |
-| 69-02-01 | 02 | 1 | DEMO-03 | T-69-01 | Safe `return_to` filtering remains restricted to local operator paths and rejects external redirects. | controller | `cd reference/demo_app && mix test test/mailglass_demo_web/page_controller_security_test.exs` | Yes | pending |
-| 69-02-02 | 02 | 1 | DX-03 | T-69-03 | Reset wording remains explicit that demo evidence tables are truncated and reseeded. | controller + docs | `cd reference/demo_app && mix test --warnings-as-errors` | Partial - Wave 0 docs assertion needed | pending |
+| 69-01-01 | 01 | 0 | DEMO-03 | T-69-01 | Dashboard route renders safe links to `/dev/mail`, `/demo/login?return_to=/ops/mail?tenant_id=northstar`, and `/demo/login?return_to=/ops/mail/inbound?tenant_id=northstar`. | controller | `cd reference/demo_app && mix test test/mailglass_demo_web/page_controller_dashboard_test.exs` | yes | covered |
+| 69-01-02 | 01 | 0 | DX-03 | T-69-02 | Canonical demo docs describe quickstart, persona/JTBD, seeded data, reset semantics, dependency mode, and demo-vs-contract boundary. | docs contract | `cd reference/demo_app && mix test test/mailglass_demo/docs_contract_test.exs` | yes | covered |
+| 69-02-01 | 02 | 1 | DEMO-03 | T-69-01 | Safe `return_to` filtering remains restricted to local operator paths and rejects external redirects. | controller | `cd reference/demo_app && mix test test/mailglass_demo_web/page_controller_security_test.exs` | yes | covered |
+| 69-02-02 | 02 | 1 | DX-03 | T-69-03 | Reset wording remains explicit that demo evidence tables are truncated and reseeded. | controller + docs | `cd reference/demo_app && mix test --warnings-as-errors` | yes | covered |
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `reference/demo_app/test/mailglass_demo_web/page_controller_dashboard_test.exs` - route, dashboard content, link, reset warning, and Northstar summary assertions for DEMO-03.
-- [ ] `reference/demo_app/test/mailglass_demo/docs_contract_test.exs` - static assertions for DX-03 terms in `reference/demo_app/README.md`.
-- [ ] Keep `reference/demo_app/test/mailglass_demo_web/page_controller_security_test.exs` green while changing dashboard/login/reset code.
+- [x] `reference/demo_app/test/mailglass_demo_web/page_controller_dashboard_test.exs` - route, dashboard content, link, reset warning, and Northstar summary assertions for DEMO-03.
+- [x] `reference/demo_app/test/mailglass_demo/docs_contract_test.exs` - static assertions for DX-03 terms in `reference/demo_app/README.md`.
+- [x] Keep `reference/demo_app/test/mailglass_demo_web/page_controller_security_test.exs` green while changing dashboard/login/reset code.
 
 ---
 
@@ -62,11 +62,11 @@ All Phase 69 behaviors have automated verification. Full browser screenshots, de
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Targeted per-task feedback latency < 30s; full suite may remain ~60s at wave and phase gates
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Targeted per-task feedback latency < 30s; full suite may remain ~60s at wave and phase gates
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated 2026-06-02

@@ -1,5 +1,21 @@
 # Milestones
 
+## v1.5 Demo Evidence and Click-Around Confidence (Shipped: 2026-06-02)
+
+**Phases completed:** 4 phases, 8 plans, 14 tasks
+
+**Key accomplishments:**
+
+- Demo app now has executable local-vs-Hex dependency modes with current published constraints, and reference-host scope lock blocks rich-demo drift.
+- Compose demo now enforces Phoenix health readiness and deterministic Playwright dependency setup for reliable click-around and browser evidence runs.
+- Phase 67 now has executable deterministic reset proof plus a one-command `verify.phase67` lane and bounded `demo_browser_evidence.v1` wording for demo-only adoption evidence.
+- Deterministic Northstar fixture corpus now seeds six outbound and four inbound named stories with replay lineage plus a repo-root quick gate.
+- Preview mailers now expose deterministic, realistic scenario props and copy, and six scenario contracts are pinned at the public `Mailglass.Message` seam.
+- Guided Northstar dashboard hub copy now points maintainers into real preview/outbound/inbound surfaces with explicit destructive reset wording and focused controller proof.
+- Canonical demo docs now pin quickstart, click-path, seeded stories, reset semantics, and boundary claims with executable ExUnit contract checks.
+
+---
+
 ## v1.4 Inbound Stability Lock (Shipped: 2026-06-01)
 
 **Phases completed:** 4 phases, 12 plans, 22 tasks

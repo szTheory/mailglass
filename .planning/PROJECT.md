@@ -10,7 +10,15 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
-**`v1.4 Inbound Stability Lock` is complete as of 2026-06-01. Phase 66 recorded the release-position decision: promote `mailglass_inbound` to the `1.0.0` candidate, with release ceremony / maintenance posture next.**
+**`v1.5 Demo Evidence and Click-Around Confidence` is complete as of 2026-06-02. Phases 67-70 shipped a separate realistic demo app, deterministic B2B SaaS Ops data, short click-around docs, and browser-driven evidence across preview, outbound operator, and inbound operator journeys.**
+
+- Phase 67 established `reference/demo_app` as the rich demo surface separate from the narrow `reference/host_app`, with local-path and published-Hex dependency modes, health-gated Compose startup, cache-aware browser setup, deterministic reset proof, and `verify.phase67`.
+- Phase 68 expanded deterministic Northstar fixture data with six outbound and four inbound stories, suppression/webhook/replay lineage, realistic preview mailers, and repo-root demo data tests.
+- Phase 69 made the dashboard a guided hub into the real mounted preview/outbound/inbound surfaces, made `reference/demo_app/README.md` the canonical quickstart and click-path guide, and replaced human UAT with automated browser/docs evidence.
+- Phase 70 reconciled the browser evidence gate to the Phase 69 automation lane: `mix verify.phase69` drives Playwright through the demo dashboard and writes `demo_browser_evidence.v1` checkpoint evidence.
+- v1.5 is archived in `.planning/milestones/v1.5-ROADMAP.md`, `.planning/milestones/v1.5-REQUIREMENTS.md`, and `.planning/milestones/v1.5-MILESTONE-AUDIT.md`.
+
+**`v1.4 Inbound Stability Lock` shipped on 2026-06-01. Phase 66 recorded the release-position decision: promote `mailglass_inbound` to the `1.0.0` candidate, with release ceremony / maintenance posture next.**
 
 - Phase 63 reconciled `mailglass_inbound/docs/api_stability.md` into the canonical stable/testing/internal/deferred inbound inventory.
 - Provider support is now documented through `MailglassInbound.Ingress.Plug` semantics, while provider modules, replay internals, route structs, workers, queues, and UI details stay internal.
@@ -61,9 +69,26 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 ## Current Milestone
 
-No active milestone is open. v1.4 is archived; the next recommended planning move is a release ceremony for the selected `mailglass_inbound` `1.0.0` candidate, then maintenance / quiet release hygiene by default.
+No active milestone is open. v1.5 is archived; the next requirements file should be created by `$gsd-new-milestone`.
 
 ## Latest Completed Milestone
+
+<details>
+<summary>v1.5 Demo Evidence and Click-Around Confidence — milestone closed 2026-06-02</summary>
+
+**Goal:** Prove Mailglass is done enough for pre-adopter confidence by shipping a realistic B2B SaaS Ops demo app with rich deterministic data, one-command Docker DX, and browser-driven adoption evidence across preview, outbound operator, and inbound operator journeys.
+
+- **Separate demo app** — `reference/demo_app` stays distinct from `reference/host_app`, supports local-path and published-Hex dependency modes, and starts through health-gated Compose. ✓
+- **Realistic fixture corpus** — deterministic Northstar outbound, inbound, suppression, webhook, replay, and preview-mailer scenarios reset from one command. ✓
+- **Guided click-around** — dashboard and docs route maintainers into real preview, outbound operator, and inbound operator surfaces with explicit destructive reset wording. ✓
+- **Browser evidence** — Playwright drives the dashboard/preview/outbound/inbound paths and writes bounded `demo_browser_evidence.v1` checkpoint evidence. ✓
+
+**Accepted residual debt:**
+
+- Phase directories remain in `.planning/phases/` for now; use `$gsd-cleanup` later if you want to move execution history under the milestone archive.
+- The next milestone still needs fresh requirements; `REQUIREMENTS.md` is removed during closeout by design.
+
+</details>
 
 <details>
 <summary>v1.4 Inbound Stability Lock — milestone closed 2026-06-01</summary>
@@ -152,9 +177,9 @@ No active milestone is open. v1.4 is archived; the next recommended planning mov
 
 </details>
 
-## Next Milestone Queue (after v1.4)
+## Next Milestone Queue (after v1.5)
 
-- **Recommended next step after Inbound Stability Lock:** release ceremony for the selected `mailglass_inbound` `1.0.0` candidate, then maintenance / quiet release hygiene by default.
+- **Recommended next step after Demo Evidence:** define a fresh milestone with `$gsd-new-milestone`, biased toward release ceremony for the selected `mailglass_inbound` `1.0.0` candidate, maintenance, release hygiene, docs truth, or narrow adopter-pull work.
 - **Convergence posture:** Mailglass is no longer in broad feature-growth mode. Core `mailglass`, `mailglass_admin`, and the inbound source candidate are effectively product-complete for the original transactional-email framework thesis unless concrete adopter pull or a contract gap says otherwise.
 - **Done-enough target:** After inbound stability lock, default future posture should be maintenance, release hygiene, docs accuracy, and narrow adopter-pull work. Do not keep asking whether the project is "done" at every milestone boundary; assume the library is approaching done unless a concrete adopter need or contract gap says otherwise.
 - Follow-on ordering:
@@ -341,4 +366,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-01 after v1.4 milestone completion*
+*Last updated: 2026-06-02 after v1.5 milestone completion*
