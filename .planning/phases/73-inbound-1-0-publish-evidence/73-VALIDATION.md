@@ -1,9 +1,9 @@
 ---
 phase: 73
 slug: inbound-1-0-publish-evidence
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: ratified
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-02
 ---
 
@@ -71,12 +71,12 @@ created: 2026-06-02
 
 ## Validation Sign-Off
 
-- [ ] All tasks have automated verify or Wave 0 dependencies (record field-presence + publish.check + stability_contract + docs.contract.inbound)
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references (optional D-08 record test)
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] No validation asserts live external Hex/HexDocs state (prepare posture)
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have automated verify or Wave 0 dependencies (record field-presence + publish.check + stability_contract + docs.contract.inbound)
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (record authored in 73-01 before 73-02 Task 3 reads it — no MISSING reference)
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] No validation asserts live external Hex/HexDocs state (prepare posture)
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-06-02

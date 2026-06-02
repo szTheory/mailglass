@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
-status: ready_for_next_phase
-last_updated: "2026-06-02T14:55:47.899Z"
-last_activity: 2026-06-02
+status: executing
+last_updated: "2026-06-02T15:15:36.115Z"
+last_activity: 2026-06-02 -- Phase 73 planning complete
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 4
+  total_plans: 6
   completed_plans: 4
   percent: 67
 ---
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initializatio
 
 Phase: 73 (inbound-1-0-publish-evidence) — CONTEXT GATHERED (assumptions mode)
 Plan: not yet planned
-Status: Phase 73 context captured; milestone v1.6 still ACTIVE — posture locked to PREPARE-AND-STAGE (no irreversible Hex publish this phase)
+Status: Ready to execute
 Next step: $gsd-plan-phase 73 — Inbound 1.0 Publish Evidence
-Last activity: 2026-06-02
+Last activity: 2026-06-02 -- Phase 73 planning complete
 Resume file: .planning/phases/73-inbound-1-0-publish-evidence/73-CONTEXT.md
 
 ## v1.6 Milestone Intent
