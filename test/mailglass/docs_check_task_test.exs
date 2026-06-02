@@ -92,6 +92,44 @@ defmodule Mailglass.DocsCheckTaskTest do
     end
   end
 
+  test "--path emits a leak-only notice for selected docs with no surface rule (WR-02)" do
+    # guides/jobs.md is a real doc with no surface/preview/trust rule, so a
+    # --path run only leak-checks it. The notice makes that visible instead of
+    # reporting a misleading full "OK".
+    output =
+      capture_io(fn ->
+        Mix.Tasks.Mailglass.Docs.Check.run(["--path", "guides/jobs.md"])
+      end)
+
+    assert output =~ "guides/jobs.md has no surface/preview/trust rule"
+    assert output =~ "checked for internal-ID leaks only"
+    assert output =~ "[mailglass.docs.check] OK"
+  end
+
+  test "--path normalizes non-canonical path forms so surface rules still match (WR-02)" do
+    # A leading ./ would previously dodge the exact MapSet.member? rule-key
+    # comparison and silently run leak-only. After normalization with
+    # Path.relative_to_cwd/1 the surface rule for README.md still applies and
+    # the stale marker is caught.
+    File.write!("README.md", File.read!("README.md") <> "\n\nmix verify.phase_07\n")
+
+    assert_raise Mix.Error, ~r/Delivery blocked/, fn ->
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Mailglass.Docs.Check.run(["--path", "./README.md"])
+      end)
+    end
+  end
+
+  test "--path with a canonical surface-rule doc emits no leak-only notice (WR-02)" do
+    output =
+      capture_io(fn ->
+        Mix.Tasks.Mailglass.Docs.Check.run(["--path", "guides/preview.md"])
+      end)
+
+    refute output =~ "has no surface/preview/trust rule"
+    assert output =~ "[mailglass.docs.check] OK"
+  end
+
   test "blocks install docs from promoting deferred providers into the stable provider contract" do
     install_path = "mailglass_inbound/docs/inbound-install.md"
 

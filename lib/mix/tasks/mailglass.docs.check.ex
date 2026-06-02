@@ -435,6 +435,8 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
 
     paths = docs_paths(opts)
 
+    warn_leak_only_paths(opts, paths)
+
     issues =
       leak_issues(paths)
       |> Kernel.++(tier1_surface_issues(paths))
@@ -473,8 +475,44 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
           Mix.raise("Delivery blocked: --path matched no files: #{inspect(path)}.")
         end
 
-        paths
+        # Normalize each glob result to a cwd-relative path so it can match the
+        # `@tier1_*`/surface rule keys (which are stored cwd-relative). Without
+        # this, a glob that yields `./guides/preview.md` or an absolute path
+        # would silently match no surface rule and run leak-only (WR-02).
+        Enum.map(paths, &Path.relative_to_cwd/1)
     end
+  end
+
+  # Surface/preview/trust rules are keyed on exact cwd-relative paths. When a
+  # `--path` run selects files that have NO matching surface rule, those files
+  # are only leak-checked — not contract-checked. Surface that explicitly so a
+  # leak-only run is visible instead of being reported as a full "OK" (WR-02).
+  # The default (no `--path`) run covers every rule key, so there is nothing to
+  # warn about there.
+  defp warn_leak_only_paths(opts, paths) do
+    if opts[:path] do
+      rule_keyed_paths =
+        @tier1_surface_rules
+        |> Map.keys()
+        |> Kernel.++(@preview_boundary_paths)
+        |> Kernel.++(@trust_entry_paths)
+        |> MapSet.new()
+
+      leak_only =
+        paths
+        |> Enum.reject(&MapSet.member?(rule_keyed_paths, &1))
+        |> Enum.sort()
+        |> Enum.uniq()
+
+      Enum.each(leak_only, fn path ->
+        Mix.shell().info(
+          "[mailglass.docs.check] notice: #{path} has no surface/preview/trust rule; " <>
+            "checked for internal-ID leaks only."
+        )
+      end)
+    end
+
+    :ok
   end
 
   defp leak_issues(paths) do
