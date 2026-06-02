@@ -2,6 +2,7 @@
   "expected_file": ".planning/publish/mailglass_admin-files.expected",
   "extras": [
     "README.md",
+    "docs/design-system.md",
     "docs/operator-trust.md",
     "docs/api_stability.md",
     "docs/compatibility-and-deprecations.md"
@@ -13,6 +14,7 @@
     "README.md",
     "docs/api_stability.md",
     "docs/compatibility-and-deprecations.md",
+    "docs/design-system.md",
     "docs/operator-trust.md",
     "hex_metadata.config",
     "lib/mailglass_admin.ex",
@@ -38,6 +40,7 @@
     "lib/mailglass_admin/operator/mount.ex",
     "lib/mailglass_admin/operator/repair_state.ex",
     "lib/mailglass_admin/operator/replay_modal.ex",
+    "lib/mailglass_admin/operator/shell.ex",
     "lib/mailglass_admin/operator/support_cards.ex",
     "lib/mailglass_admin/operator/suppression_card.ex",
     "lib/mailglass_admin/operator/timeline.ex",
@@ -72,17 +75,20 @@
       "docs/api_stability.md",
       "docs/compatibility-and-deprecations.md"
     ],
+    "Design": [
+      "docs/design-system.md"
+    ],
     "Overview": [
       "README.md"
     ]
   },
   "linked_versions": {
-    "mailglass": "1.2.0",
-    "mailglass_admin": "1.2.0",
-    "mailglass_inbound": "0.2.0"
+    "mailglass": "1.4.0",
+    "mailglass_admin": "1.4.0",
+    "mailglass_inbound": "1.1.0"
   },
-  "mailglass_admin_publish_pin": "== 1.2.0",
-  "manifest_version": "1.2.0",
+  "mailglass_admin_publish_pin": "== 1.4.0",
+  "manifest_version": "1.4.0",
   "package": "mailglass_admin",
   "package_files": [
     "lib",
@@ -128,9 +134,9 @@
     "status": "ok",
     "woff2_count": 6
   },
-  "source_ref": "v1.2.0",
+  "source_ref": "v1.4.0",
   "source_ref_pattern": "mailglass-sibling-group-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 447693,
-  "version": "1.2.0"
+  "tarball_size": 486161,
+  "version": "1.4.0"
 }

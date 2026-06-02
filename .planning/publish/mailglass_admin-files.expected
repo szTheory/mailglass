@@ -4,6 +4,7 @@ LICENSE
 README.md
 docs/api_stability.md
 docs/compatibility-and-deprecations.md
+docs/design-system.md
 docs/operator-trust.md
 hex_metadata.config
 lib/mailglass_admin.ex
@@ -29,6 +30,7 @@ lib/mailglass_admin/operator/filters_form.ex
 lib/mailglass_admin/operator/mount.ex
 lib/mailglass_admin/operator/repair_state.ex
 lib/mailglass_admin/operator/replay_modal.ex
+lib/mailglass_admin/operator/shell.ex
 lib/mailglass_admin/operator/support_cards.ex
 lib/mailglass_admin/operator/suppression_card.ex
 lib/mailglass_admin/operator/timeline.ex
