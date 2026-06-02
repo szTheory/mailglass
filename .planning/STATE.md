@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Inbound 1.0 Release and Truth Lock
 status: executing
-last_updated: "2026-06-02T15:15:36.115Z"
-last_activity: 2026-06-02 -- Phase 73 planning complete
+last_updated: "2026-06-02T15:29:24.159Z"
+last_activity: 2026-06-02
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 67
 ---
 
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initialization)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 73 context gathered (assumptions mode) — next is $gsd-plan-phase 73 (Inbound 1.0 Publish Evidence)
+**Current focus:** Phase 73 — inbound-1-0-publish-evidence
 
 ## Current Position
 
-Phase: 73 (inbound-1-0-publish-evidence) — CONTEXT GATHERED (assumptions mode)
-Plan: not yet planned
+Phase: 73 (inbound-1-0-publish-evidence) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
 Next step: $gsd-plan-phase 73 — Inbound 1.0 Publish Evidence
-Last activity: 2026-06-02 -- Phase 73 planning complete
-Resume file: .planning/phases/73-inbound-1-0-publish-evidence/73-CONTEXT.md
+Last activity: 2026-06-02
+Resume file: None
 
 ## v1.6 Milestone Intent
 
@@ -98,6 +98,9 @@ Resume file: .planning/phases/73-inbound-1-0-publish-evidence/73-CONTEXT.md
 - [Phase ?]: [Phase 72]: Use 1.0 not 1.x for inbound's own contract. — Avoids triggering refute_over_claims! regex guard while correctly describing inbound's stable contract.
 - [Phase ?]: [Phase 72]: Move stale README token from required to forbidden in docs.check.ex. — Prevents regression while keeping mix mailglass.docs.check green on corrected README.
 - [Phase 72]: source_ref_pattern corrected to mailglass_inbound-v%{version} per D-09. — HexDocs source links now resolve to inbound-specific tag, not sibling-group tag.
+- [Phase ?]: [Phase 73-01]: Post-publish-only fields (Hex index, HexDocs, install/smoke, 60-minute) marked pending/not run under prepare-and-stage posture (D-05 Honest Surface Area)
+- [Phase ?]: [Phase 73-01]: GitHub Environment approver and Approval timestamp fields dropped from inbound release artifacts (D-04, hands-free publish)
+- [Phase ?]: [Phase 73-01]: Tag recorded as staged-not-cut: mailglass_inbound-v1.0.0 (staged, not cut) — no live publish-triggering tag created (D-01/D-02)
 
 ## Roadmap Snapshot
 
@@ -141,6 +144,7 @@ Items acknowledged and deferred at milestone close on 2026-05-26:
 | Phase 72 P01 | 2min | 2 tasks | 5 files |
 | Phase 72 P02 | 3 min | 1 tasks | 1 files |
 | Phase 72 P03 | 8 min | 1 tasks | 4 files |
+| Phase 73 P01 | 226 | 2 tasks | 2 files |
 
 ## Accumulated Context
 

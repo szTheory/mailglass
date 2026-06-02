@@ -9,7 +9,7 @@
 
 - [x] **REL-01**: Maintainer can prove `mailglass_inbound` `1.0.0` source truth across `.release-please-manifest.json`, `mailglass_inbound/mix.exs`, `mailglass_inbound/CHANGELOG.md`, README install pins, `MIX_PUBLISH=true` core dependency pin, package allowlist, and `.planning/publish/mailglass_inbound-publish-summary.json`.
 - [ ] **REL-02**: Maintainer can execute or prepare the inbound-only publish path from the reviewed tag/ref without forcing a `mailglass` or `mailglass_admin` release.
-- [ ] **REL-03**: Maintainer can record inbound release evidence including tag/ref, release or dispatch path, publish workflow URL, fallback usage, Hex index URL, HexDocs URL, smoke/install proof, and the 60-minute revert/retire decision.
+- [x] **REL-03**: Maintainer can record inbound release evidence including tag/ref, release or dispatch path, publish workflow URL, fallback usage, Hex index URL, HexDocs URL, smoke/install proof, and the 60-minute revert/retire decision.
 
 ### Contract Documentation
 
@@ -51,7 +51,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | REL-01 | Phase 71 | Complete |
 | REL-02 | Phase 73 | Pending |
-| REL-03 | Phase 73 | Pending |
+| REL-03 | Phase 73 | Complete |
 | DOC-01 | Phase 72 | Complete |
 | DOC-02 | Phase 72 | Complete |
 | PROOF-01 | Phase 71 | Complete |
