@@ -83,12 +83,12 @@
     ]
   },
   "linked_versions": {
-    "mailglass": "1.4.4",
-    "mailglass_admin": "1.4.4",
-    "mailglass_inbound": "1.1.4"
+    "mailglass": "1.4.5",
+    "mailglass_admin": "1.4.5",
+    "mailglass_inbound": "1.1.5"
   },
-  "mailglass_admin_publish_pin": "== 1.4.4",
-  "manifest_version": "1.4.4",
+  "mailglass_admin_publish_pin": "== 1.4.5",
+  "manifest_version": "1.4.5",
   "package": "mailglass_admin",
   "package_files": [
     "lib",
@@ -134,9 +134,9 @@
     "status": "ok",
     "woff2_count": 6
   },
-  "source_ref": "v1.4.4",
+  "source_ref": "v1.4.5",
   "source_ref_pattern": "mailglass-sibling-group-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 487228,
-  "version": "1.4.4"
+  "tarball_size": 487444,
+  "version": "1.4.5"
 }
