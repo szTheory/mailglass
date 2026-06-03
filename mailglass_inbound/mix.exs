@@ -27,7 +27,11 @@ defmodule MailglassInbound.MixProject do
   def application do
     [
       mod: {MailglassInbound.Application, []},
-      extra_applications: [:logger]
+      # :inets/:ssl back the SES SigningCertURL fetch (`:httpc` GET over HTTPS in
+      # ingress/providers/ses.ex). Declared explicitly rather than relying on a
+      # transitive load (core's Igniter chain provided :inets before it became
+      # an optional dep).
+      extra_applications: [:logger, :inets, :ssl]
     ]
   end
 
