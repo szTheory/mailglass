@@ -42,18 +42,18 @@ defmodule MailglassDemo.MixProject do
   end
 
   defp mailglass_dep do
-    if hex_deps?(), do: {:mailglass, "~> 1.3"}, else: {:mailglass, path: "../..", override: true}
+    if hex_deps?(), do: {:mailglass, "~> 1.4"}, else: {:mailglass, path: "../..", override: true}
   end
 
   defp mailglass_admin_dep do
     if hex_deps?(),
-      do: {:mailglass_admin, "~> 1.3"},
+      do: {:mailglass_admin, "~> 1.4"},
       else: {:mailglass_admin, path: "../../mailglass_admin", override: true}
   end
 
   defp mailglass_inbound_dep do
     if hex_deps?(),
-      do: {:mailglass_inbound, "~> 0.3.0"},
+      do: {:mailglass_inbound, "~> 1.1"},
       else: {:mailglass_inbound, path: "../../mailglass_inbound", override: true}
   end
 

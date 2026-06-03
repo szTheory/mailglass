@@ -31,7 +31,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 **`v1.3 Adopter Trust Proof` shipped on 2026-05-31.**
 
 - Milestone archive complete: 7 phases (`52`, `57-62`), 18 plans, 16/16 requirements satisfied, final audit `status: passed`
-- **Current package versions on Hex: `mailglass` 1.3.0 / `mailglass_admin` 1.3.0 / `mailglass_inbound` 1.0.0** (`mailglass_inbound` 1.0.0 shipped 2026-06-02 via v1.6, inbound-only — core/admin held at 1.3.0; `mailglass`/`mailglass_admin` 1.3.0 live since 2026-05-29)
+- **Current package versions on Hex: `mailglass` 1.4.5 / `mailglass_admin` 1.4.5 / `mailglass_inbound` 1.1.5** (as of 2026-06-03). The 1.4.x line shipped as quiet maintenance **outside** GSD milestone planning: 1.4.2 unstuck a stranded linked release (admin pinned `mailglass == 1.3.0`); 1.4.3–1.4.5 fixed a stack of latent `mix mailglass.install` bugs the long-red consumer-install smoke had masked (swoosh-1.26 boot crash, OPS-01 finch-in-lock, installer codegen). Inbound was force-bumped to 1.1.5 to track each core release. Earlier line for reference: v1.3 shipped `mailglass`/`mailglass_admin` 1.3.0 (2026-05-29) and v1.6 shipped `mailglass_inbound` 1.0.0 inbound-only (2026-06-02).
 - The maintained `reference/host_app` now proves a narrow, public-seam-only adopter path with an explicit scope contract and non-goals.
 - One canonical deterministic trust runner now covers install -> preview -> send -> signed webhook ingest -> operator troubleshooting, with stable `trust_runner.v1` checkpoint evidence.
 - Required repo-head and clean-baseline trust lanes enforce checkpoint evidence, Hex-first dependency resolution, and branch-protection/release-gate expectations.

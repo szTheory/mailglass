@@ -37,8 +37,8 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
       @reference_lock_path
       |> File.read!()
       |> String.replace(
+        ~s("mailglass": {:hex, :mailglass, "1.4.5"),
         ~s("mailglass": {:hex, :mailglass, "1.3.0"),
-        ~s("mailglass": {:hex, :mailglass, "1.2.0"),
         global: false
       )
 
@@ -48,7 +48,7 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
       System.cmd("bash", [@guard_script_path, stale_lock_path], stderr_to_stdout: true)
 
     assert status == 1
-    assert output =~ "Hex-first violation: mailglass expected 1.3.0, got 1.2.0"
+    assert output =~ "Hex-first violation: mailglass expected 1.4.5, got 1.3.0"
   end
 
   test "clean-baseline guard reports malformed sibling lock tuples" do
@@ -65,7 +65,7 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
       @reference_lock_path
       |> File.read!()
       |> String.replace(
-        ~r/"mailglass": \{:hex, :mailglass, "1\.3\.0".*/,
+        ~r/"mailglass": \{:hex, :mailglass, "1\.4\.5".*/,
         ~s("mailglass": {:hex},),
         global: false
       )
@@ -92,9 +92,9 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
 
     malicious_lock = """
     %{
-      "mailglass": (File.write!(#{inspect(marker_path)}, "executed"); {:hex, :mailglass, "1.3.0"}),
-      "mailglass_admin": {:hex, :mailglass_admin, "1.3.0"},
-      "mailglass_inbound": {:hex, :mailglass_inbound, "0.3.0"}
+      "mailglass": (File.write!(#{inspect(marker_path)}, "executed"); {:hex, :mailglass, "1.4.5"}),
+      "mailglass_admin": {:hex, :mailglass_admin, "1.4.5"},
+      "mailglass_inbound": {:hex, :mailglass_inbound, "1.1.5"}
     }
     """
 
@@ -123,7 +123,7 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
       @reference_lock_path
       |> File.read!()
       |> String.replace(
-        ~r/"mailglass": \{:hex, :mailglass, "1\.3\.0".*/,
+        ~r/"mailglass": \{:hex, :mailglass, "1\.4\.5".*/,
         ~s("mailglass": "bad",),
         global: false
       )

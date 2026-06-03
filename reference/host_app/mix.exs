@@ -29,9 +29,9 @@ defmodule MailglassReferenceHost.MixProject do
       {:postgrex, "~> 0.22"},
       {:jason, "~> 1.4"},
       {:plug_cowboy, "~> 2.7"},
-      {:mailglass, "~> 1.3"},
-      {:mailglass_admin, "~> 1.3"},
-      {:mailglass_inbound, "~> 0.3"}
+      {:mailglass, "~> 1.4"},
+      {:mailglass_admin, "~> 1.4"},
+      {:mailglass_inbound, "~> 1.1"}
     ]
   end
 

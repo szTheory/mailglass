@@ -10,11 +10,11 @@
 Three sibling Hex packages, MIT, no Node toolchain anywhere:
 - **`mailglass`** — core lib (Phoenix + Ecto + Postgres required, Oban optional)
 - **`mailglass_admin`** — mountable LiveView dashboard (dev preview shipped v0.1, prod admin shipped v0.5)
-- **`mailglass_inbound`** — Action Mailbox equivalent (opened v1.1; outside the `v1.x` stability promise for now)
+- **`mailglass_inbound`** — Action Mailbox equivalent (opened v1.1; now on its own stable `1.0` contract — see `mailglass_inbound/docs/api_stability.md`)
 
 **Marketing email and multi-channel notifications are permanently out of scope.** See `.planning/PROJECT.md` Out of Scope for the full list with reasoning.
 
-**Current state (as of 2026-05-22):** v0.1 → v1.1 shipped to Hex (`mailglass` 1.0.0 / `mailglass_admin` 1.0.0 / `mailglass_inbound` 0.1.0); **v1.2 Inbound Production Confidence** is in flight. `.planning/STATE.md` is the live source of truth for milestone/phase status — read it rather than trusting any milestone number hardcoded in this file.
+**Current state (as of 2026-06-03):** v0.1 → v1.6 shipped to Hex; current versions `mailglass` 1.4.5 / `mailglass_admin` 1.4.5 / `mailglass_inbound` 1.1.5. The 1.4.x line (1.4.2 unstuck a stranded linked release; 1.4.3–1.4.5 fixed a stack of `mix mailglass.install` bugs) shipped as quiet maintenance **outside** GSD milestone planning, so version numbers hardcoded in older `.planning/` artifacts may lag. Posture is quiet maintenance / adopter-pull — no milestone in flight. `.planning/STATE.md` is the live source of truth for milestone/phase status — read it rather than trusting any milestone number hardcoded in this file.
 
 ## Where to Look
 
