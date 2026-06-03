@@ -66,7 +66,9 @@ if Code.ensure_loaded?(Igniter.Mix.Task) do
 
       fun = fn z ->
         node = Sourceror.Zipper.node(z)
-        {{:., meta1, [{:__aliases__, _meta2, [:Swoosh, :Email]}, function_name]}, _meta3, args} = node
+
+        {{:., meta1, [{:__aliases__, _meta2, [:Swoosh, :Email]}, function_name]}, _meta3, args} =
+          node
 
         new_node =
           case function_name do
