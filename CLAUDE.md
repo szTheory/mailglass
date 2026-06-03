@@ -127,4 +127,4 @@ Encoded for GSD in `~/.claude/get-shit-done/USER-PROFILE.md` (advisor mode, `ven
 MIT across all sibling packages. Forever. (See PROJECT.md D-02.)
 
 ---
-*Generated: 2026-04-21 from `.planning/` artifacts. "What This Is" + "Where to Look" refreshed 2026-05-22 (v0.1→v1.1 shipped, v1.2 in flight; added `guides/jobs.md` + `.planning/research/JTBD-COVERAGE.md`).*
+*Generated: 2026-04-21 from `.planning/` artifacts. "What This Is" + "Where to Look" refreshed 2026-05-22; current-state reconciled 2026-06-03 to live `mailglass` 1.4.5 / `mailglass_admin` 1.4.5 / `mailglass_inbound` 1.1.5 (v1.6 shipped, quiet-maintenance posture).*
