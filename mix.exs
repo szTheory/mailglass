@@ -28,7 +28,11 @@ defmodule Mailglass.MixProject do
 
   def application do
     [
-      extra_applications: [:logger, :crypto, :public_key],
+      # :inets/:ssl back the SES SNS SigningCertURL fetch (`:httpc` GET over
+      # HTTPS in webhook/providers/ses.ex). Declared explicitly rather than
+      # relying on a transitive load — Igniter is now an optional dep, so it no
+      # longer drags :inets into a consumer's app tree.
+      extra_applications: [:logger, :crypto, :public_key, :inets, :ssl],
       mod: {Mailglass.Application, []}
     ]
   end
