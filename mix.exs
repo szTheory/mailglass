@@ -167,9 +167,13 @@ defmodule Mailglass.MixProject do
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_reload, "~> 1.6", optional: true, only: [:dev, :test]},
       # Dev/test
-      # Public upgrade codemod task ships in the package, so Igniter must be
-      # available when consumer apps compile mailglass as a dependency.
-      {:igniter, "~> 0.7", runtime: false},
+      # Optional: the public `mix mailglass.upgrade.v0_2` codemod is built on
+      # Igniter, but the module is compile-guarded with
+      # `Code.ensure_loaded?(Igniter.Mix.Task)`, so consumers who don't run it
+      # don't carry Igniter (and its `req`/`finch`/`mint` chain) in their lock —
+      # keeping a fresh install HTTP-client-agnostic (OPS-01). Adopters running
+      # the codemod add Igniter themselves (`mix igniter.install` / deps entry).
+      {:igniter, "~> 0.7", optional: true, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
