@@ -12,13 +12,13 @@ Refresh both snapshots with:
 <!-- GOLDEN_FRESH_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:be0be8021f4e35dab53e29d4f8aee03aa3d44585802a1d207169c9eaa7ad6e0a
+- .mailglass.toml sha256:a682f43cb08d9c29c18265dc945a40b475df445d84eb3283b786dfb1fafbd85a
 - config/runtime.exs sha256:56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
 - lib/example/mail_context.ex sha256:0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec
-- lib/example_web/components/layouts/mailglass.html.heex sha256:60ab5acdfdba875c680090dd5d8b571766da9236a7276a662adc338ca1f878c8
-- lib/example_web/endpoint.ex sha256:79d5ce677921a2940250d88838add81306c780ec3466df64343ba5fd011dcaa9
+- lib/example_web/components/layouts/mailglass.html.heex sha256:9cf3cc4bffeaaf93052aeac48b6a659ec257fd21b508653610bcaa4439eedc87
+- lib/example_web/endpoint.ex sha256:c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f
 - lib/example_web/router.ex sha256:4747d09df93dec9ea6a3188ba8c62ad218c8ecbe80337428c56361252fa10e83
 - mix.exs sha256:bac6a815dfa817a388e07ad7c2325f4ffa993e970f09c2471b61b3dfd8055ddc
 - priv/repo/migrations/<MIGRATION_TS>_mailglass_install.exs sha256:fb5ea9dcdef2d6c1724f20e136cfa04ddfb7b9f2c130d6b0e6ce79ecf1eba80d
@@ -39,8 +39,8 @@ last_run_at = "<LAST_RUN_AT>"
 "lib/example/mail/default_mailable.ex" = "f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b"
 "lib/example/mail/worker.ex" = "fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7"
 "lib/example/mail_context.ex" = "0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec"
-"lib/example_web/components/layouts/mailglass.html.heex" = "60ab5acdfdba875c680090dd5d8b571766da9236a7276a662adc338ca1f878c8"
-"lib/example_web/endpoint.ex" = "79d5ce677921a2940250d88838add81306c780ec3466df64343ba5fd011dcaa9"
+"lib/example_web/components/layouts/mailglass.html.heex" = "9cf3cc4bffeaaf93052aeac48b6a659ec257fd21b508653610bcaa4439eedc87"
+"lib/example_web/endpoint.ex" = "c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f"
 "lib/example_web/router.ex" = "4747d09df93dec9ea6a3188ba8c62ad218c8ecbe80337428c56361252fa10e83"
 
 
@@ -95,7 +95,7 @@ end
 <html>
   <body>
     <main>
-      <%%= @inner_content %>
+      <%= @inner_content %>
     </main>
   </body>
 </html>
@@ -103,7 +103,7 @@ end
 
 @@ lib/example_web/endpoint.ex
 defmodule ExampleWeb.Endpoint do
-  use Phoenix.Endpoint
+  use Phoenix.Endpoint, otp_app: :example
 # mailglass:start endpoint_webhook_parser
 plug Plug.Parsers,
   parsers: [:json],
@@ -112,7 +112,6 @@ plug Plug.Parsers,
   body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []},
   length: 10_000_000
 # mailglass:end endpoint_webhook_parser
-, otp_app: :example
 end
 
 
@@ -176,13 +175,13 @@ end
 <!-- GOLDEN_NO_ADMIN_START -->
 # tree
 - .gitignore sha256:aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c
-- .mailglass.toml sha256:9512f34fb7fcd628a66f11b1b0dd5ee672aa1a3e8814dfa746617ad363007254
+- .mailglass.toml sha256:ffc9d37b84b8e81fc819d6b0b9a7ba9a4be4b78ec50842b2755869d9219c3889
 - config/runtime.exs sha256:56f129957195d505e0bef49e74b6cd7288088ebf8f528bf68b8265aa54728900
 - lib/example/mail/default_mailable.ex sha256:f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b
 - lib/example/mail/worker.ex sha256:fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7
 - lib/example/mail_context.ex sha256:0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec
-- lib/example_web/components/layouts/mailglass.html.heex sha256:60ab5acdfdba875c680090dd5d8b571766da9236a7276a662adc338ca1f878c8
-- lib/example_web/endpoint.ex sha256:79d5ce677921a2940250d88838add81306c780ec3466df64343ba5fd011dcaa9
+- lib/example_web/components/layouts/mailglass.html.heex sha256:9cf3cc4bffeaaf93052aeac48b6a659ec257fd21b508653610bcaa4439eedc87
+- lib/example_web/endpoint.ex sha256:c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f
 - lib/example_web/router.ex sha256:c8c755dcbde7313b2a7e5eaec6655794be62d69cc403dc35eabf2c1e381c6675
 - mix.exs sha256:bac6a815dfa817a388e07ad7c2325f4ffa993e970f09c2471b61b3dfd8055ddc
 - priv/repo/migrations/<MIGRATION_TS>_mailglass_install.exs sha256:fb5ea9dcdef2d6c1724f20e136cfa04ddfb7b9f2c130d6b0e6ce79ecf1eba80d
@@ -203,8 +202,8 @@ last_run_at = "<LAST_RUN_AT>"
 "lib/example/mail/default_mailable.ex" = "f49e7723d7476bb2e321483a52e4bbe331b8895ae6407ce48e5f6d3673be971b"
 "lib/example/mail/worker.ex" = "fa1970e47ea9b544e2f8fa99595880d02af26793561415b89b8e98439ea301a7"
 "lib/example/mail_context.ex" = "0b63161ff29dc14d1e508288ac03476d309cebf4ada834ba27dda8ba12ff9fec"
-"lib/example_web/components/layouts/mailglass.html.heex" = "60ab5acdfdba875c680090dd5d8b571766da9236a7276a662adc338ca1f878c8"
-"lib/example_web/endpoint.ex" = "79d5ce677921a2940250d88838add81306c780ec3466df64343ba5fd011dcaa9"
+"lib/example_web/components/layouts/mailglass.html.heex" = "9cf3cc4bffeaaf93052aeac48b6a659ec257fd21b508653610bcaa4439eedc87"
+"lib/example_web/endpoint.ex" = "c22dda34967f59a6d76ded38751f70486f44aff9d57b31d9a4ec5c6ceedc7a4f"
 "lib/example_web/router.ex" = "c8c755dcbde7313b2a7e5eaec6655794be62d69cc403dc35eabf2c1e381c6675"
 
 
@@ -259,7 +258,7 @@ end
 <html>
   <body>
     <main>
-      <%%= @inner_content %>
+      <%= @inner_content %>
     </main>
   </body>
 </html>
@@ -267,7 +266,7 @@ end
 
 @@ lib/example_web/endpoint.ex
 defmodule ExampleWeb.Endpoint do
-  use Phoenix.Endpoint
+  use Phoenix.Endpoint, otp_app: :example
 # mailglass:start endpoint_webhook_parser
 plug Plug.Parsers,
   parsers: [:json],
@@ -276,7 +275,6 @@ plug Plug.Parsers,
   body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []},
   length: 10_000_000
 # mailglass:end endpoint_webhook_parser
-, otp_app: :example
 end
 
 

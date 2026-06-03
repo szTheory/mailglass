@@ -342,13 +342,26 @@ defmodule Mailglass.Installer.Apply do
   defp insert_after_anchor(contents, anchor, insertion) do
     case String.split(contents, anchor, parts: 2) do
       [before, after_part] ->
+        # Keep the remainder of the anchor's own line attached before inserting.
+        # The anchor is a substring (e.g. "use Phoenix.Endpoint"); real Phoenix
+        # 1.8 writes it as `use Phoenix.Endpoint, otp_app: :app` on one line, so
+        # splitting on the bare substring and inserting after it would orphan
+        # `, otp_app: :app` onto its own line and break compilation. Insert after
+        # the full anchor LINE instead.
+        {anchor_line_rest, remainder} =
+          case String.split(after_part, "\n", parts: 2) do
+            [line_rest, tail] -> {line_rest, tail}
+            [line_rest] -> {line_rest, ""}
+          end
+
         updated =
           before <>
             anchor <>
+            anchor_line_rest <>
             "\n" <>
             String.trim_trailing(insertion) <>
             "\n" <>
-            String.trim_leading(after_part, "\n")
+            String.trim_leading(remainder, "\n")
 
         {:ok, updated}
 
