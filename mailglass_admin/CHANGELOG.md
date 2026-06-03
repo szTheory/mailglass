@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.4.2](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.4.1...mailglass_admin-v1.4.2) (2026-06-03)
+
+
+### Bug Fixes
+
+* **admin:** float optional mailglass_inbound dep to ~&gt; 1.1 (was stale ~&gt; 0.2) ([f27dff1](https://github.com/szTheory/mailglass/commit/f27dff12e19644593b5507406730f2c3631b5066))
+
 ## [1.4.1](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.4.0...mailglass_admin-v1.4.1) (2026-06-02)
 
 

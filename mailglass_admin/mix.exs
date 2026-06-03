@@ -1,7 +1,7 @@
 defmodule MailglassAdmin.MixProject do
   use Mix.Project
 
-  @version "1.4.1"
+  @version "1.4.2"
   @source_url "https://github.com/szTheory/mailglass"
   @description "Mountable LiveView dashboard for mailglass — dev preview + admin"
 
