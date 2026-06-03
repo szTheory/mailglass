@@ -59,9 +59,9 @@ MAILGLASS_LOCK_PATH="$LOCK_PATH" elixir -e '
   lock = MailglassCleanBaselineLock.read!(lock_path)
 
   required = [
-    {"mailglass", :hex, "1.3.0"},
-    {"mailglass_admin", :hex, "1.3.0"},
-    {"mailglass_inbound", :hex, "0.3.0"}
+    {"mailglass", :hex, "1.4.5"},
+    {"mailglass_admin", :hex, "1.4.5"},
+    {"mailglass_inbound", :hex, "1.1.5"}
   ]
 
   Enum.each(required, fn {name, expected_source, expected_version} ->
