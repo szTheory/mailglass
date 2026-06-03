@@ -161,7 +161,7 @@ defmodule Mailglass.MixProject do
       # Optional (gated by Code.ensure_loaded?/1 in Mailglass.OptionalDeps.*)
       {:oban, "~> 2.21", optional: true},
       {:opentelemetry, "~> 1.7", optional: true},
-      {:mjml, "~> 5.3", optional: true},
+      {:mjml, "~> 6.0", optional: true},
       {:gen_smtp, "~> 1.3", optional: true},
       {:sigra, "~> 1.0", optional: true},
       # Test only
