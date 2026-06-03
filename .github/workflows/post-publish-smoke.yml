@@ -338,10 +338,6 @@ jobs:
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-      - name: Install hex + rebar
-        run: |
-          mix local.hex --force
-          mix local.rebar --force
       - name: Check published inbound compatibility
         id: inbound-compat
         env:
@@ -364,99 +360,17 @@ jobs:
             echo "include_inbound=false" >> "$GITHUB_OUTPUT"
             echo "Skipping inbound consumer dependency: mailglass_inbound ${VERSION_INBOUND} is not compatible with mailglass ${VERSION}."
           fi
-      - name: Install phx_new archive
-        run: mix archive.install hex phx_new --force
-      - name: Generate Phoenix host project
-        working-directory: ${{ runner.temp }}
-        run: |
-          mix phx.new sandbox --module Sandbox --app sandbox --no-ecto --no-mailer --install
-      - name: Add mailglass deps
-        working-directory: ${{ runner.temp }}/sandbox
+      - name: Run consumer-install smoke (published Hex versions)
+        # Shared body with the PR-time `Installer Host Smoke` job in ci.yml —
+        # phx.new -> install -> OPS-01 guard -> compile --warnings-as-errors ->
+        # boot -> GET /dev/mail/. Here DEP_MODE=hex pins the published versions.
         env:
+          DEP_MODE: hex
+          WORK_DIR: ${{ runner.temp }}
           VERSION: ${{ needs.cron-guard.outputs.version }}
           VERSION_INBOUND: ${{ needs.cron-guard.outputs.version_inbound }}
           INCLUDE_INBOUND: ${{ steps.inbound-compat.outputs.include_inbound }}
-        run: |
-          elixir -e '
-            version = System.get_env("VERSION")
-            version_inbound = System.get_env("VERSION_INBOUND")
-            include_inbound = System.get_env("INCLUDE_INBOUND") == "true"
-            mix_path = "mix.exs"
-            content = File.read!(mix_path)
-            inbound_entry =
-              if include_inbound && version_inbound && version_inbound != "" do
-                "      {:mailglass_inbound, \"== #{version_inbound}\"},\n"
-              else
-                ""
-              end
-            entries = "      {:mailglass, \"== #{version}\"},\n      {:mailglass_admin, \"== #{version}\"},\n" <> inbound_entry
-            updated = String.replace(content, ~r/(defp deps do\n\s*\[\n)/, "\\1" <> entries, global: false)
-            File.write!(mix_path, updated)
-          '
-          grep -F "mailglass" mix.exs
-      - name: mix deps.get
-        working-directory: ${{ runner.temp }}/sandbox
-        run: mix deps.get
-      - name: Run mix mailglass.install
-        working-directory: ${{ runner.temp }}/sandbox
-        run: mix mailglass.install
-      - name: Guard against hackney/api_client regression on published install
-        working-directory: ${{ runner.temp }}/sandbox
-        run: |
-          set -euo pipefail
-
-          if ! grep -F "config :swoosh, :api_client, false" config/runtime.exs; then
-            echo "OPS-01 failed: generated runtime.exs is missing config :swoosh, :api_client, false."
-            exit 1
-          fi
-
-          if grep -Eq '^[[:space:]]*config :swoosh, :api_client, Swoosh\.ApiClient\.Finch([[:space:]]|$)' config/runtime.exs; then
-            echo "OPS-01 failed: generated runtime.exs contains an uncommented Swoosh.ApiClient.Finch line."
-            exit 1
-          fi
-
-          if grep -Eq '"(hackney|finch)":' mix.lock; then
-            echo "OPS-01 failed: fresh --no-mailer published install resolved hackney or finch in mix.lock."
-            exit 1
-          fi
-
-          echo "OPS-01 guard passed."
-      - name: Compile, fail on warnings
-        working-directory: ${{ runner.temp }}/sandbox
-        run: |
-          set -o pipefail
-          mix compile --warnings-as-errors 2>&1 | tee compile.log
-          if grep -F "UndefinedFunctionError" compile.log; then
-            echo "Smoke failed: UndefinedFunctionError detected in compile output (literal G-1 regression on published artifact)."
-            exit 1
-          fi
-      - name: Boot endpoint and curl /dev/mail/
-        working-directory: ${{ runner.temp }}/sandbox
-        env:
-          MIX_ENV: dev
-        run: |
-          mix phx.server &
-          SERVER_PID=$!
-          # shellcheck disable=SC2064
-          trap "kill $SERVER_PID 2>/dev/null || true" EXIT
-
-          DEADLINE=$(( SECONDS + 30 ))
-          until curl -fsI http://localhost:4000/dev/mail/ >/dev/null 2>&1; do
-            if [ $SECONDS -ge $DEADLINE ]; then
-              echo "Smoke failed: endpoint did not respond on /dev/mail/ within 30s."
-              kill $SERVER_PID 2>/dev/null || true
-              exit 1
-            fi
-            sleep 2
-          done
-
-          STATUS=$(curl -fs -o /dev/null -w "%{http_code}" http://localhost:4000/dev/mail/)
-          echo "GET /dev/mail/ → HTTP ${STATUS}"
-          if [ "${STATUS}" != "200" ]; then
-            echo "Smoke failed: /dev/mail/ returned ${STATUS}, expected 200."
-            exit 1
-          fi
-          echo "Endpoint smoke passed."
+        run: bash scripts/consumer_install_smoke.sh
 
   published-trust-journey:
     name: Published-version trust journey

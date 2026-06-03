@@ -46,6 +46,77 @@ defmodule Mailglass.Test.InstallerFixtureHelpers do
     :ok
   end
 
+  @doc """
+  Compile-validates every generated/edited artifact in an installed fixture.
+
+  The other installer tests only assert that snippets were inserted or that a
+  golden hash matches — they never compile the output, which is how a corrupted
+  `endpoint.ex` (anchor split mid-`use Phoenix.Endpoint, otp_app:`) and an
+  escaped `<%%=` HEEx layout both shipped undetected. This walks the installed
+  tree and fails loudly, naming the offending file:
+
+    * `.ex` / `.exs` → parsed with `Code.string_to_quoted!/2` (syntax only;
+      NOT full compile — host files expand `use Phoenix.Endpoint`/router macros
+      that need the whole app, which is the PR-time host smoke's job).
+    * `.heex` → run through the Phoenix HEEx tag engine so template-syntax
+      errors raise.
+  """
+  def assert_generated_artifacts_compile!(fixture_root) when is_binary(fixture_root) do
+    fixture_root
+    |> Path.join("**/*")
+    |> Path.wildcard(match_dot: true)
+    |> Enum.filter(&File.regular?/1)
+    |> Enum.each(&assert_artifact_compiles!(&1, fixture_root))
+
+    :ok
+  end
+
+  defp assert_artifact_compiles!(path, fixture_root) do
+    case Path.extname(path) do
+      ext when ext in [".ex", ".exs"] -> assert_elixir_parses!(path, fixture_root)
+      ".heex" -> assert_heex_compiles!(path, fixture_root)
+      _ -> :ok
+    end
+  end
+
+  defp assert_elixir_parses!(path, fixture_root) do
+    Code.string_to_quoted!(File.read!(path), file: path)
+    :ok
+  rescue
+    error in [SyntaxError, TokenMissingError, MismatchedDelimiterError] ->
+      reraise(
+        """
+        Generated Elixir artifact does not parse: #{Path.relative_to(path, fixture_root)}
+        #{Exception.message(error)}
+        """,
+        __STACKTRACE__
+      )
+  end
+
+  defp assert_heex_compiles!(path, fixture_root) do
+    source = File.read!(path)
+
+    EEx.compile_string(source,
+      engine: Phoenix.LiveView.TagEngine,
+      tag_handler: Phoenix.LiveView.HTMLEngine,
+      file: path,
+      line: 1,
+      caller: __ENV__,
+      source: source
+    )
+
+    :ok
+  rescue
+    error ->
+      reraise(
+        """
+        Generated HEEx artifact does not compile: #{Path.relative_to(path, fixture_root)}
+        #{Exception.message(error)}
+        """,
+        __STACKTRACE__
+      )
+  end
+
   def snapshot_tree!(fixture_root) when is_binary(fixture_root) do
     files =
       fixture_root

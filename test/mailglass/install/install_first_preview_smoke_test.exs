@@ -22,20 +22,27 @@ defmodule Mailglass.Install.FirstPreviewSmokeTest do
     router_path = Path.join(fixture_root, "lib/example_web/router.ex")
     layout_path = Path.join(fixture_root, "lib/example_web/components/layouts/mailglass.html.heex")
     workflow_path = Path.expand("../../../.github/workflows/post-publish-smoke.yml", __DIR__)
+    script_path = Path.expand("../../../scripts/consumer_install_smoke.sh", __DIR__)
 
     assert File.read!(router_path) =~ ~s(mailglass_admin_routes "/mail")
     assert File.exists?(layout_path)
     assert File.exists?(mailable_path)
 
-    workflow = File.read!(workflow_path)
+    # The release-window gate flow (phx.new -> install -> compile -> boot ->
+    # GET /dev/mail/) lives in the shared script; the post-publish workflow and
+    # the PR-time ci.yml `Installer Host Smoke` job both call it.
+    script = File.read!(script_path)
 
-    assert workflow =~
+    assert script =~
              "mix phx.new sandbox --module Sandbox --app sandbox --no-ecto --no-mailer --install"
 
-    assert workflow =~ "Run mix mailglass.install"
-    assert workflow =~ "Compile, fail on warnings"
-    assert workflow =~ "Boot endpoint and curl /dev/mail/"
-    assert workflow =~ "GET /dev/mail/ → HTTP ${STATUS}"
+    assert script =~ "mix mailglass.install"
+    assert script =~ "mix compile --warnings-as-errors"
+    assert script =~ "OPS-01 guard passed."
+    assert script =~ "GET /dev/mail/ -> HTTP ${STATUS}"
+
+    workflow = File.read!(workflow_path)
+    assert workflow =~ "bash scripts/consumer_install_smoke.sh"
     assert workflow =~ "canonical release-window gate"
 
     elapsed_ms = System.monotonic_time(:millisecond) - started_ms

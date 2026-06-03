@@ -108,6 +108,38 @@ jobs:
       - name: Compile without optional deps
         run: mix compile --no-optional-deps --warnings-as-errors
 
+  installer_host_smoke:
+    name: Installer Host Smoke (Advisory)
+    runs-on: ubuntu-latest
+    # Shift-left of the post-publish consumer-install smoke: runs the SAME
+    # scripts/consumer_install_smoke.sh against the WORKING TREE (local path
+    # deps) — phx.new -> install -> OPS-01 guard -> compile --warnings-as-errors
+    # -> boot -> GET /dev/mail/. Catches installer codegen / compile / runtime /
+    # boot regressions on the PR instead of after publishing (the gap that let
+    # the 1.4.3-1.4.5 install bug stack ship). The fast in-process counterpart is
+    # test/mailglass/install/install_compile_test.exs.
+    #
+    # Advisory for now: phx.new + the sandbox's own deps.get + server boot are
+    # network-dependent and slower than the required lanes. Promote to a required
+    # context (drop continue-on-error; add to scripts/setup_branch_protection.sh)
+    # once it has proven stable.
+    continue-on-error: true
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - name: Consumer install smoke (working tree, local path deps)
+        env:
+          DEP_MODE: path
+          MAILGLASS_PATH: ${{ github.workspace }}
+          WORK_DIR: ${{ runner.temp }}
+        run: bash scripts/consumer_install_smoke.sh
+
   support_contract_core:
     name: Support Contract Core (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
