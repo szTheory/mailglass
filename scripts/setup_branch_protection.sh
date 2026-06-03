@@ -19,6 +19,7 @@ REQUIRED_CHECKS=(
   "Support Contract Admin (Elixir 1.18 / OTP 27)"
   "Compile No Optional Deps (Elixir 1.18 / OTP 27)"
   "Trust Lane Repo Head (Elixir 1.18 / OTP 27)"
+  "Installer Host Smoke"
 )
 
 print_expected_text() {
@@ -28,6 +29,7 @@ Expected required status checks:
   - Support Contract Admin (Elixir 1.18 / OTP 27)
   - Compile No Optional Deps (Elixir 1.18 / OTP 27)
   - Trust Lane Repo Head (Elixir 1.18 / OTP 27)
+  - Installer Host Smoke
 
 Expected non-context branch protection fields:
   - required_status_checks.strict: true

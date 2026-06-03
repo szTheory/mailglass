@@ -155,6 +155,7 @@ The exact required contexts are:
 - `Support Contract Admin (Elixir 1.18 / OTP 27)`
 - `Compile No Optional Deps (Elixir 1.18 / OTP 27)`
 - `Trust Lane Repo Head (Elixir 1.18 / OTP 27)`
+- `Installer Host Smoke` (shift-left consumer-install smoke; promoted from advisory)
 
 Release trust claims also require green trust evidence beyond the required
 branch-protection contexts: the clean-baseline and published-version trust
@@ -275,6 +276,7 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    - `Support Contract Admin (Elixir 1.18 / OTP 27)`
    - `Compile No Optional Deps (Elixir 1.18 / OTP 27)`
    - `Trust Lane Repo Head (Elixir 1.18 / OTP 27)`
+   - `Installer Host Smoke` (shift-left consumer-install smoke; promoted from advisory)
    - Phase 38 prepublish proof/export bundle (`38-01-PREPUBLISH-PROOF.md`)
    - Phase 38 install/upgrade rehearsal artifact (`38-02-REHEARSAL-EVIDENCE.md`)
    - Trust-runner checkpoint artifacts:
