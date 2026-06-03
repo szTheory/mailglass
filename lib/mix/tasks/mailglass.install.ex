@@ -33,6 +33,18 @@ defmodule Mix.Tasks.Mailglass.Install do
       OptionParser.parse(argv, strict: [dry_run: :boolean, no_admin: :boolean, force: :boolean])
 
     validate_cli!(rest, invalid)
+
+    # Swoosh 1.26.0 made `Swoosh.Application.start/2` eagerly call
+    # `Swoosh.ApiClient.init/0`, which raises "missing hackney dependency" when
+    # `:api_client` is unset and no HTTP client dep is present. A fresh
+    # `--no-mailer` host has neither yet — the installer writes
+    # `config :swoosh, :api_client, false` into runtime.exs (see
+    # Mailglass.Installer.Templates), but that only lands *after* this
+    # `app.start`. Set it for the install process here so booting the host app
+    # to probe optional deps doesn't crash before we can persist the config.
+    # `persistent: true` keeps an adopter's own swoosh config (loaded during
+    # `app.config`) authoritative — this only fills the unconfigured window.
+    Application.put_env(:swoosh, :api_client, false, persistent: true)
     Mix.Task.run("app.start")
 
     plan =
