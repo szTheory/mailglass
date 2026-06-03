@@ -14,6 +14,14 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.4.3](https://github.com/szTheory/mailglass/compare/mailglass-v1.4.2...mailglass-v1.4.3) (2026-06-03)
+
+
+### Bug Fixes
+
+* **inbound:** track mailglass core pin to == 1.4.3 for the 1.4.3 linked release ([1bd1291](https://github.com/szTheory/mailglass/commit/1bd12915e3d97ecd976ea97ed6c91654edabb03e))
+* **installer:** prevent swoosh 1.26 hackney crash during mix mailglass.install ([#55](https://github.com/szTheory/mailglass/issues/55)) ([ddab80b](https://github.com/szTheory/mailglass/commit/ddab80b503162d2a7417ad44c66660a4ef228158))
+
 ## [1.4.2](https://github.com/szTheory/mailglass/compare/mailglass-v1.4.1...mailglass-v1.4.2) (2026-06-03)
 
 
