@@ -1,6 +1,6 @@
 defmodule Mailglass.OptionalDeps.Mjml do
   @moduledoc """
-  Gateway for the optional MJML NIF dependency (`{:mjml, "~> 5.3"}`).
+  Gateway for the optional MJML NIF dependency (`{:mjml, "~> 6.0"}`).
 
   `:mjml` is the Hex package name (a Rust NIF binding to the `mrml` crate).
   The Elixir module it provides is `Mjml` — note the `:mjml` vs `:mrml`

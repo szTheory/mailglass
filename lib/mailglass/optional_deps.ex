@@ -24,7 +24,7 @@ defmodule Mailglass.OptionalDeps do
     `deliver_later/2` is `Task.Supervisor` (lands ).
   - `Mailglass.OptionalDeps.OpenTelemetry` — gates `{:opentelemetry, "~> 1.7"}`.
     Adopter-owned bridge via `opentelemetry_telemetry` ().
-  - `Mailglass.OptionalDeps.Mjml` — gates `{:mjml, "~> 5.3"}` (Rust NIF). Used
+  - `Mailglass.OptionalDeps.Mjml` — gates `{:mjml, "~> 6.0"}` (Rust NIF). Used
     by `Mailglass.TemplateEngine.MJML` when adopters opt into MJML (AUTHOR-05).
   - `Mailglass.OptionalDeps.GenSmtp` — gates `{:gen_smtp, "~> 1.3"}`. Used by
     `mailglass_inbound` for SMTP relay ingress (v0.5+).

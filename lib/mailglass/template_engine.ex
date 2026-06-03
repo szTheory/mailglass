@@ -5,7 +5,7 @@ defmodule Mailglass.TemplateEngine do
   The default implementation is `Mailglass.TemplateEngine.HEEx`, which renders
   function components compiled by the Phoenix tag engine at build time.
 
-  To use MJML as an alternate rendering path, add `{:mjml, "~> 5.3"}` to your
+  To use MJML as an alternate rendering path, add `{:mjml, "~> 6.0"}` to your
   deps and configure:
 
       config :mailglass, renderer: [engine: Mailglass.TemplateEngine.MJML]
