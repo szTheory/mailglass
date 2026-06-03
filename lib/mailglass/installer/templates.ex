@@ -195,7 +195,7 @@ defmodule Mailglass.Installer.Templates do
     <html>
       <body>
         <main>
-          <%%= @inner_content %>
+          <%= @inner_content %>
         </main>
       </body>
     </html>
