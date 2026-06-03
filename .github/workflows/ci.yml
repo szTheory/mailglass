@@ -109,7 +109,7 @@ jobs:
         run: mix compile --no-optional-deps --warnings-as-errors
 
   installer_host_smoke:
-    name: Installer Host Smoke (Advisory)
+    name: Installer Host Smoke
     runs-on: ubuntu-latest
     # Shift-left of the post-publish consumer-install smoke: runs the SAME
     # scripts/consumer_install_smoke.sh against the WORKING TREE (local path
@@ -119,11 +119,11 @@ jobs:
     # the 1.4.3-1.4.5 install bug stack ship). The fast in-process counterpart is
     # test/mailglass/install/install_compile_test.exs.
     #
-    # Advisory for now: phx.new + the sandbox's own deps.get + server boot are
-    # network-dependent and slower than the required lanes. Promote to a required
-    # context (drop continue-on-error; add to scripts/setup_branch_protection.sh)
-    # once it has proven stable.
-    continue-on-error: true
+    # Required (promoted from advisory once proven stable): this is a
+    # branch-protection context in scripts/setup_branch_protection.sh. It is
+    # network-dependent (phx.new + the sandbox's own deps.get + server boot)
+    # and slower than the other required lanes, but guards the install path
+    # that the 1.4.3-1.4.5 bug stack shipped through.
     timeout-minutes: 20
     steps:
       - name: Checkout
