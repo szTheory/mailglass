@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6
-milestone_name: Inbound 1.0 Release and Truth Lock
-status: Awaiting next milestone
-last_updated: "2026-06-03T00:00:00.000Z"
-last_activity: 2026-06-03 — Quiet-maintenance hygiene: docs/pins reconciled to live 1.4.5/1.4.5/1.1.5
+milestone: v1.7
+milestone_name: Admin UI — IA & Design-System Polish v2
+status: planning
+last_updated: "2026-06-03T23:01:27.292Z"
+last_activity: 2026-06-03
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -24,13 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-02 after v1.6 milestone initializatio
 
 ## Current Position
 
-Phase: Milestone v1.6 complete — quiet-maintenance posture
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone (no milestone in flight)
-Last activity: 2026-06-03 — Quiet-maintenance hygiene sprint (docs/pin reconciliation, Dependabot sweep)
-
-**Live Hex versions (as of 2026-06-03):** `mailglass` 1.4.5 / `mailglass_admin` 1.4.5 / `mailglass_inbound` 1.1.5.
-The 1.4.x line shipped as quiet maintenance **outside** GSD milestone planning, so the v1.6 milestone metadata above predates it: 1.4.2 unstuck a stranded linked release (admin pinned `mailglass == 1.3.0`); 1.4.3–1.4.5 fixed a stack of latent `mix mailglass.install` bugs (swoosh-1.26 boot crash, OPS-01 finch-in-lock, installer codegen); inbound force-bumped to 1.1.5 to track each core release. Consumer-install smoke is green end-to-end (#32 closed). Posture: quiet maintenance / adopter-pull — start the next milestone only on adopter pull.
+Status: Defining requirements
+Last activity: 2026-06-03 — Milestone v1.7 started
 
 ## v1.6 Milestone Intent
 
