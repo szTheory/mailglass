@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.4.5](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.4.4...mailglass_admin-v1.4.5) (2026-06-03)
+
+
+### Miscellaneous Chores
+
+* **mailglass_admin:** Synchronize mailglass-sibling-group versions
+
 ## [1.4.4](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.4.3...mailglass_admin-v1.4.4) (2026-06-03)
 
 

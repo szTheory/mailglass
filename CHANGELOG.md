@@ -14,6 +14,14 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.4.5](https://github.com/szTheory/mailglass/compare/mailglass-v1.4.4...mailglass-v1.4.5) (2026-06-03)
+
+
+### Bug Fixes
+
+* **inbound:** track mailglass core pin to == 1.4.5 for the 1.4.5 linked release ([2f52710](https://github.com/szTheory/mailglass/commit/2f52710e9050a236af3986e439a5acd0f9511f21))
+* **installer:** repair endpoint anchor split and escaped heex in generated code ([#59](https://github.com/szTheory/mailglass/issues/59)) ([f28e381](https://github.com/szTheory/mailglass/commit/f28e381f15764f57b5ffa779e088d88b4f6841db))
+
 ## [1.4.4](https://github.com/szTheory/mailglass/compare/mailglass-v1.4.3...mailglass-v1.4.4) (2026-06-03)
 
 
