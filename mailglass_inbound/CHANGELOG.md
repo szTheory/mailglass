@@ -5,6 +5,14 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.1.3...mailglass_inbound-v1.1.4) (2026-06-03)
+
+
+### Bug Fixes
+
+* **deps:** make igniter optional so a fresh install stays HTTP-client-agnostic ([#57](https://github.com/szTheory/mailglass/issues/57)) ([65710fc](https://github.com/szTheory/mailglass/commit/65710fc560801c83ef94b0330ecf57e9c2ca8e6d))
+* **inbound:** track mailglass core pin to == 1.4.4 for the 1.4.4 linked release ([949cdee](https://github.com/szTheory/mailglass/commit/949cdee6f6a3ad32790440a49c1c4071941e8a7c))
+
 ## [1.1.3](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.1.2...mailglass_inbound-v1.1.3) (2026-06-03)
 
 
