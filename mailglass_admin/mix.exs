@@ -147,13 +147,15 @@ defmodule MailglassAdmin.MixProject do
 
   # CONTEXT D-48-01: the optional inbound sibling. Mirrors `mailglass_dep/0`'s
   # MIX_PUBLISH branch STRUCTURE (path dep for local-dev, version constraint when
-  # publishing) but is FLOATING (`~> 0.2`, NEVER `== X.Y.Z`) and `optional: true`.
+  # publishing) but is FLOATING (`~> 1.1`, NEVER `== X.Y.Z`) and `optional: true`.
   #
-  # Why floating, not pinned: `mailglass_inbound` is a 0.2.x package whose own
-  # version is NOT linked to the core `mailglass` group version. A `==` pin (the
-  # shape release-please's sed step writes for the linked siblings) would write an
-  # unsatisfiable cross-line version. This dep is therefore deliberately ABSENT
-  # from the release-please PINS array in `.github/workflows/release-please.yml`.
+  # Why floating, not pinned: `mailglass_inbound` is on its own version line
+  # (1.1.x) NOT linked to the core `mailglass` group version (1.4.x). A `==` pin
+  # (the shape release-please's sed step writes for the linked siblings) would
+  # write an unsatisfiable cross-line version. This dep is therefore deliberately
+  # ABSENT from the release-please PINS array in
+  # `.github/workflows/release-please.yml`. Bump the floating line by hand when
+  # inbound's minor line advances (0.2 -> 1.0 -> 1.1).
   #
   # The admin reads inbound rows exclusively through the
   # `MailglassAdmin.OptionalDeps.MailglassInbound` runtime gateway
@@ -161,7 +163,7 @@ defmodule MailglassAdmin.MixProject do
   # keeps the `--no-optional-deps` compile lane green with inbound stripped.
   defp mailglass_inbound_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass_inbound, "~> 0.2", optional: true}
+      {:mailglass_inbound, "~> 1.1", optional: true}
     else
       {:mailglass_inbound, path: "../mailglass_inbound", optional: true}
     end
