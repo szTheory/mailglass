@@ -55,7 +55,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload hygiene artifact
         if: always()
-        uses: actions/upload-artifact@44c2f75f8c36362987c4ac663f4347d1ebd7723c  # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: repo-hygiene
           path: repo-hygiene.json
