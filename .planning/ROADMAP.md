@@ -204,7 +204,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-  - [ ] 76-03-PLAN.md — Restructure support_cards.ex into Tier1/Tier2 hierarchy with semantic count colors and token-clean markup. (Wave 3)
+  - [x] 76-03-PLAN.md — Restructure support_cards.ex into Tier1/Tier2 hierarchy with semantic count colors and token-clean markup. (Wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -270,7 +270,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 |-------|----------------|--------|-----------|
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
-| 76. Component-Library and Design-System Hardening | 3/6 | In Progress|  |
+| 76. Component-Library and Design-System Hardening | 4/6 | In Progress|  |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
