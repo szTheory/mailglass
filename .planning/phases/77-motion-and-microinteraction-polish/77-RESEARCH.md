@@ -747,23 +747,25 @@ No missing blocking dependencies.
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Are inbound records seeded in the browser scenario?**
+1. **Are inbound records seeded in the browser scenario?** — **RESOLVED: NOT seeded.**
    - What we know: `OperatorFixtures.seed_browser_scenario!()` seeds delivery rows; the
      e2e spec tests delivery-only flows; no inbound-specific browser tests exist yet.
-   - What's unclear: Whether the browser scenario includes any `inbound_id`-navigable records.
-   - Recommendation: The planner should read `operator_fixtures.ex` fully and confirm. If
-     inbound is not seeded, the inbound id-presence e2e test requires either extending the
-     seed or checking at implementation time and adding a comment explaining the gap.
+   - **Resolution (confirmed by pattern-mapper grep of `operator_fixtures.ex` — zero inbound
+     hits):** the browser scenario seeds ZERO inbound records. Disposition adopted in
+     `77-03-PLAN.md`: the inbound HEEx id-key fix still ships in `77-01` (Task 2), but its
+     `#inbound-detail-<id>` Playwright assertion is `test.skip`-ed with a comment documenting
+     the seed dependency; remove the skip once Phase 78 seeds an inbound record.
 
-2. **`ease-in\b` grep pattern — avoidance of false positive on `ease-in-out`**
+2. **`ease-in\b` grep pattern — avoidance of false positive on `ease-in-out`** —
+   **RESOLVED: use `ease-in[^-]`.**
    - What we know: bash `grep -E` on macOS and Linux handles `\b` differently; `ease-in\b`
      may or may not correctly exclude `ease-in-out` depending on the grep variant.
-   - What's unclear: The safest regex form across macOS (BSD grep) and Ubuntu (GNU grep).
-   - Recommendation: The planner should specify a grep pattern that is tested; e.g.,
-     `ease-in[^-]` or `ease-in$` may be safer than `\b`. The script example above uses
-     `[^-]ease-in[^-]` — verify this does not produce false positives.
+   - **Resolution adopted in `77-02-PLAN.md` (Task 1):** the conformance gate uses
+     `ease-in[^-]` (BSD/GNU-portable), NOT `\b`, and scopes the banned-easing Pass B to
+     `lib/` ONLY — `app.css:120` legitimately defines `--ease-in-out` as a CSS custom
+     property and would otherwise be a false positive.
 
 ---
 
