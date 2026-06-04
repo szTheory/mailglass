@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
 status: executing
-last_updated: "2026-06-04T16:05:59.330Z"
-last_activity: 2026-06-04 -- Phase 77 execution started
+last_updated: "2026-06-04T16:30:51.507Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 22
-  completed_plans: 18
-  percent: 63
+  completed_plans: 22
+  percent: 75
 ---
 
 # Project State
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-03 after v1.7 milestone opened)
 
 ## Current Position
 
-Phase: 77 (motion-and-microinteraction-polish) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 77
-Last activity: 2026-06-04 -- Phase 77 execution started
+Phase: 77 (motion-and-microinteraction-polish) — COMPLETE
+Plan: 4 of 4 (all plans done)
+Status: Phase 77 complete — ready for Phase 78 (seed-data) and Phase 79 (verification closeout)
+Last activity: 2026-06-04 -- Phase 77 Plan 04 executed; verify.preview exits 0; bundle clean gate (D-08) satisfied
 
 **Progress bar:** ░░░░░░░░░░ 0% (0/6 phases)
 
@@ -74,6 +74,7 @@ Last activity: 2026-06-04 -- Phase 77 execution started
 - [76-01] status_badge/1 renders icon+label with literal-string-only defp helpers for JIT safety; normalize_inbound_outcome/1 is public for cross-module import (admin-side adapter, never touches mailglass_inbound locked 1.0 schema)
 - [Phase ?]: Fallback clauses added to status helpers for phantom atoms (suppressed, nil) — badge-outline per UI-SPEC Conflict 1
 - [76-06] heroicons-inline.js: self-contained standalone-binary-compatible Tailwind plugin replaces Node.js-dependent heroicons.js; 12 outline SVGs embedded inline; wired via @plugin in app.css
+- [77-04] Bundle-clean gate (D-08, GAP-19): mix verify.preview exits 0; priv/static/ confirmed no-op / bit-identical after Phase 77 HEEx id-attribute changes; citext_probe.ex Boundary declaration + voice_test script-strip fixed pre-existing verify.preview blockers
 
 ## Performance Metrics
 
@@ -94,6 +95,7 @@ Items acknowledged and deferred at previous milestone close:
 
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
 | Phase 76-component-library-and-design-system-hardening P02 | 20 | 2 tasks | 7 files |
+| Phase 77 P04 | 7 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -114,6 +116,7 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Session Continuity
 
+- 2026-06-04: Phase 77 Plan 04 (last plan) executed. mix verify.preview exits 0 (189 tests, 0 failures, 2 excluded). Bundle rebuild confirmed no-op — priv/static/ bit-identical to Phase 76-06 baseline. Two pre-existing test blockers fixed: citext_probe.ex Boundary declaration, voice_test script-strip. check_motion_conformance.sh exits 0. Commit: 3390b8fe. Phase 77 complete.
 - 2026-06-04: Phase 76 Plan 06 executed (awaiting human verification). All 5 conformance grep gates pass (zero real violations). heroicons-inline.js created as standalone-binary-compatible plugin; @plugin wired in app.css. Bundle rebuilt at 81780 bytes; badge-primary + all 12 hero-* icons confirmed present. 187 tests, 1 pre-existing voice_test failure. Commit: 232b4ead.
 - 2026-06-04: Phase 76 Plan 03 executed. support_cards.ex Tier1/Tier2 restructure — flat xl:grid-cols-2 eliminated; Tier 1 full cards for failed_ingest (text-error), orphan_backlog (text-warning), replay outcomes (nonzero); Tier 2 compact border-t row for zero-state and suppression count. attr :suppression_count wired. Test assertions updated for new labels. 1174 tests, 1 pre-existing failure. Commits: 08c4b403, ca9c393a.
 - 2026-06-04: Phase 76 Plan 05 executed. Token migration of 15 remaining admin HEEx files (components.ex, 5 inbound sub-components, inbound_live.ex, 3 operator sub-components, operator_live.ex lines 363+, 3 preview files, preview_live.ex). Hex #ffffff in preview/tabs.ex:113 replaced with var(--color-base-100). D-09 boundary enforced (operator_live.ex:279-362 untouched). 187 tests, 1 pre-existing failure. Commits: bfff1f1c, 439cc16d.
@@ -128,5 +131,5 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Operator Next Steps
 
-- Approve Phase 76 checkpoint: run verification commands listed in 76-06-PLAN.md and type "approved" to mark Phase 76 complete
-- After Phase 76 checkpoint approval: Phase 77 (motion, parallel), Phase 78 (seed-data, parallel), then Phase 79 (verification + closeout)
+- Phase 77 complete — all 4 plans executed; verify.preview exits 0; bundle clean
+- Next: Phase 78 (seed-data expressiveness) and Phase 79 (verification + visual-regression hardening + release ceremony)
