@@ -243,7 +243,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 77-03-PLAN.md — Extend operator.spec.js with delivery id-presence, reduced-motion, and skipped inbound tests (D-07). (Wave 2)
+- [x] 77-03-PLAN.md — Extend operator.spec.js with delivery id-presence, reduced-motion, and skipped inbound tests (D-07). (Wave 2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -286,7 +286,7 @@ Plans:
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
 | 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
-| 77. Motion and Microinteraction Polish | 2/4 | In Progress|  |
+| 77. Motion and Microinteraction Polish | 3/4 | In Progress|  |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
 
