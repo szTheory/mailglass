@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
-status: ready_to_plan
-last_updated: 2026-06-04T15:09:15.264Z
+status: planning
+last_updated: "2026-06-04T15:17:53.810Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 18
-  completed_plans: 24
+  completed_plans: 18
   percent: 63
-stopped_at: Phase 76 complete (6/6) — ready to discuss Phase 77
 ---
 
 # Project State
