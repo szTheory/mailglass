@@ -233,7 +233,13 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
   3. Playwright run under `reducedMotion: 'reduce'` shows no visible movement; all new motion uses only the six named vocabulary classes.
   4. Zero `transition-height`, `transition-max-height`, `transition-padding`, or `transition-all` in admin HEEx or CSS; zero `duration-300+`, zero `ease-in-out`, zero `ease-linear` in any animated element.
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 77-01-PLAN.md — Add record-keyed id attributes to delivery and inbound detail pane motion-reveal divs (D-01/D-02, GAP-19). (Wave 1)
+- [ ] 77-02-PLAN.md — Author scripts/check_motion_conformance.sh grep gate and wire into credo_strict CI job (D-06, GAP-19). (Wave 1)
+- [ ] 77-03-PLAN.md — Extend operator.spec.js with delivery id-presence, reduced-motion, and skipped inbound tests (D-07). (Wave 2)
+- [ ] 77-04-PLAN.md — Rebuild admin asset bundle; run mix verify.preview; confirm git diff --exit-code priv/static/ clean (D-08). (Wave 3)
 **UI hint**: yes
 
 ### Phase 78: Seed-Data Expressiveness
@@ -271,7 +277,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
 | 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
-| 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
+| 77. Motion and Microinteraction Polish | 0/4 | Not started | - |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
 
