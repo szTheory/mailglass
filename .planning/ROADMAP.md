@@ -306,7 +306,7 @@ Plans:
 | 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
 | 77. Motion and Microinteraction Polish | 4/4 | Complete    | 2026-06-04 |
 | 78. Seed-Data Expressiveness | 2/2 | Complete    | 2026-06-04 |
-| 79. Verification and Visual-Regression Hardening | 4/4 | Complete   | 2026-06-04 |
+| 79. Verification and Visual-Regression Hardening | 4/4 | Complete    | 2026-06-04 |
 
 ## Backlog
 
