@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
 status: executing
-last_updated: "2026-06-04T09:43:01.670Z"
+last_updated: "2026-06-04T10:06:56.264Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 18
-  completed_plans: 16
-  percent: 50
+  completed_plans: 18
+  percent: 63
 ---
 
 # Project State
@@ -20,13 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-03 after v1.7 milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 76 — component-library-and-design-system-hardening
+**Current focus:** Phase 76 — component-library-and-design-system-hardening (AWAITING HUMAN VERIFICATION)
 
 ## Current Position
 
-Phase: 76 (component-library-and-design-system-hardening) — EXECUTING
-Plan: 5 of 6
-Status: Ready to execute
+Phase: 76 (component-library-and-design-system-hardening) — AWAITING CHECKPOINT
+Plan: 6 of 6
+Status: Checkpoint human-verify — Tasks 1 and 2 complete; awaiting human approval
 Last activity: 2026-06-04
 
 **Progress bar:** ░░░░░░░░░░ 0% (0/6 phases)
@@ -73,12 +73,13 @@ Last activity: 2026-06-04
 - [v1.7] Fork B locked: pop/joy via consistent motion + expressive seed data + sharper hierarchy within the current brand book. No brand-book amendment. No new visual loudness.
 - [76-01] status_badge/1 renders icon+label with literal-string-only defp helpers for JIT safety; normalize_inbound_outcome/1 is public for cross-module import (admin-side adapter, never touches mailglass_inbound locked 1.0 schema)
 - [Phase ?]: Fallback clauses added to status helpers for phantom atoms (suppressed, nil) — badge-outline per UI-SPEC Conflict 1
+- [76-06] heroicons-inline.js: self-contained standalone-binary-compatible Tailwind plugin replaces Node.js-dependent heroicons.js; 12 outline SVGs embedded inline; wired via @plugin in app.css
 
 ## Performance Metrics
 
 **Velocity:**
 
-- v1.7 phases in progress: Phase 76 Plans 01-02 complete (badge component + rewire); Plan 03 complete (support-card Tier1/Tier2 restructure); Plan 05 complete (token migration of 15 remaining admin HEEx files + hex fix)
+- v1.7 phases in progress: Phase 76 all 6 plans complete (awaiting human verification checkpoint); Plans 01-06: badge component, rewire, support-card Tier1/Tier2, token migration (5 files), token migration (15 files + hex fix), bundle rebuild + heroicons-inline plugin
 - v1.6 phases completed: 3 (71-73), 6 plans, 5 tasks
 - v1.5 phases completed: 4 (67-70), 8 plans, 14 tasks
 - v1.4 phases completed: 4 (63-66), 12 plans, 22 tasks
@@ -113,8 +114,8 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Session Continuity
 
+- 2026-06-04: Phase 76 Plan 06 executed (awaiting human verification). All 5 conformance grep gates pass (zero real violations). heroicons-inline.js created as standalone-binary-compatible plugin; @plugin wired in app.css. Bundle rebuilt at 81780 bytes; badge-primary + all 12 hero-* icons confirmed present. 187 tests, 1 pre-existing voice_test failure. Commit: 232b4ead.
 - 2026-06-04: Phase 76 Plan 03 executed. support_cards.ex Tier1/Tier2 restructure — flat xl:grid-cols-2 eliminated; Tier 1 full cards for failed_ingest (text-error), orphan_backlog (text-warning), replay outcomes (nonzero); Tier 2 compact border-t row for zero-state and suppression count. attr :suppression_count wired. Test assertions updated for new labels. 1174 tests, 1 pre-existing failure. Commits: 08c4b403, ca9c393a.
-- Next: Execute Phase 76 Plan 04.
 - 2026-06-04: Phase 76 Plan 05 executed. Token migration of 15 remaining admin HEEx files (components.ex, 5 inbound sub-components, inbound_live.ex, 3 operator sub-components, operator_live.ex lines 363+, 3 preview files, preview_live.ex). Hex #ffffff in preview/tabs.ex:113 replaced with var(--color-base-100). D-09 boundary enforced (operator_live.ex:279-362 untouched). 187 tests, 1 pre-existing failure. Commits: bfff1f1c, 439cc16d.
 - 2026-06-04: Phase 76 Plan 01 executed. Components.status_badge/1 and Components.normalize_inbound_outcome/1 added to components.ex; 24-atom regression test created at test/mailglass_admin/components_test.exs. 30 tests, 0 failures.
 - 2026-06-03: v1.7 roadmap created. Phase 74 is the next step. Run `/gsd-plan-phase 74` (or `/gsd-discuss-phase 74` first) to begin the audit + UI-SPEC evidence gate.
@@ -127,6 +128,5 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Operator Next Steps
 
-- Start Phase 74 with `/gsd-plan-phase 74`
-- Phase 74 produces the gap register and frozen UI-SPEC that gates all build phases. Consider using `/gsd-ui-phase` within Phase 74 to produce the UI-SPEC.
-- After Phase 74: plan Phases 75 (critical path), then 76 (critical path), then 77 and 78 can be planned in parallel, then 79 (closeout).
+- Approve Phase 76 checkpoint: run verification commands listed in 76-06-PLAN.md and type "approved" to mark Phase 76 complete
+- After Phase 76 checkpoint approval: Phase 77 (motion, parallel), Phase 78 (seed-data, parallel), then Phase 79 (verification + closeout)

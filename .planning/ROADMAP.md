@@ -131,7 +131,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 - [x] **Phase 74: Systematic Audit and UI-SPEC** — Evidence gate; no code changes. Produces the scored gap register, frozen UI-SPEC with canonical status-badge taxonomy, before-baseline screenshots, and assertion inventory that blocks all build phases. (completed 2026-06-04)
 - [x] **Phase 75: Information Architecture, Navigation and Orientation** — Shell-level orientation strip on all 3 surfaces; in-library Operator Overview landing; IA vocabulary; explicit deep-link-fix decision. (completed 2026-06-04)
-- [ ] **Phase 76: Component-Library and Design-System Hardening** — Unified `status_badge` atom replacing 3 private copies; token migration off raw scale; support-card hierarchy redesign; committed bundle.
+- [x] **Phase 76: Component-Library and Design-System Hardening** — Unified `status_badge` atom replacing 3 private copies; token migration off raw scale; support-card hierarchy redesign; committed bundle. (completed 2026-06-04)
 - [ ] **Phase 77: Motion and Microinteraction Polish** — Six-motion vocabulary applied per UI-SPEC; motion-reveal re-fire fix; reduced-motion discipline.
 - [ ] **Phase 78: Seed-Data Expressiveness** — Demo seeds covering every screen state; e2e count assertions updated in same change.
 - [ ] **Phase 79: Verification and Visual-Regression Hardening** — Full audit-matrix re-run vs baseline; extended e2e; conformance + bundle gates; deep-link resolution; release ceremony acknowledgment.
@@ -213,7 +213,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-  - [ ] 76-06-PLAN.md — [BLOCKING] Conformance grep gates (all five); bundle rebuild; git diff --exit-code priv/static/ clean; human approval. (Wave 5)
+  - [x] 76-06-PLAN.md — [BLOCKING] Conformance grep gates (all five); bundle rebuild; git diff --exit-code priv/static/ clean; human approval. (Wave 5)
 
 **Cross-cutting constraints:**
 
@@ -270,7 +270,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 |-------|----------------|--------|-----------|
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
-| 76. Component-Library and Design-System Hardening | 5/6 | In Progress|  |
+| 76. Component-Library and Design-System Hardening | 6/6 | Complete   | 2026-06-04 |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
