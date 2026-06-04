@@ -25,7 +25,7 @@
 
 ### Design-System Hardening (Phase 76)
 
-- [ ] **DS-01**: One unified **`status_badge` atom** in `components.ex` renders every delivery/event/inbound status from the canonical taxonomy (icon + label, never color alone); the three private `badge_class/1` copies are deleted and all call sites route through it with no unintended color change.
+- [x] **DS-01**: One unified **`status_badge` atom** in `components.ex` renders every delivery/event/inbound status from the canonical taxonomy (icon + label, never color alone); the three private `badge_class/1` copies are deleted and all call sites route through it with no unintended color change.
 - [ ] **DS-02**: `support_cards.ex` and the operator/inbound render bodies use **only the v1 token scale** — zero raw `text-sm/base/xs`, zero faux-bold (`font-medium/semibold`), zero off-grid gaps in admin HEEx (grep-enforced).
 - [ ] **DS-03**: The dense 2×2 support-card grid is **restructured into a primary/secondary hierarchy** (actionable/non-zero cards prominent; zero-state demoted to a compact summary row) — restructure first, then tokenize.
 - [ ] **DS-04**: The admin asset bundle is **rebuilt and committed** so `git diff --exit-code priv/static/` is clean.
@@ -86,7 +86,7 @@ Phase mapping derived from the locked blueprint; the roadmapper validates 100% c
 | IA-02 | Phase 75 | Complete |
 | IA-03 | Phase 75 | Complete |
 | IA-04 | Phase 75 | Complete |
-| DS-01 | Phase 76 | Pending |
+| DS-01 | Phase 76 | Complete |
 | DS-02 | Phase 76 | Pending |
 | DS-03 | Phase 76 | Pending |
 | DS-04 | Phase 76 | Pending |

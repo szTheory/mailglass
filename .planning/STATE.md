@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
 status: executing
-last_updated: "2026-06-04T09:00:19.715Z"
-last_activity: 2026-06-04 -- Phase 76 planning complete
+last_updated: "2026-06-04T10:00:00.000Z"
+last_activity: 2026-06-04 -- Phase 76 Plan 01 executed
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 18
-  completed_plans: 12
+  completed_plans: 13
   percent: 50
 ---
 
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-03 after v1.7 milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 76 — component library and design system hardening
+**Current focus:** Phase 76 — component-library-and-design-system-hardening
 
 ## Current Position
 
-Phase: 76
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-04 -- Phase 76 planning complete
+Phase: 76 (component-library-and-design-system-hardening) — EXECUTING
+Plan: 2 of 6
+Status: Executing Phase 76
+Last activity: 2026-06-04 -- Plan 01 complete
 
 **Progress bar:** ░░░░░░░░░░ 0% (0/6 phases)
 
@@ -71,11 +71,13 @@ Last activity: 2026-06-04 -- Phase 76 planning complete
 - [v1.7] Linked-version release mechanics: admin minor bump mechanically produces matched releases for core + inbound (no API change — administrative only). Acknowledged in milestone scope, not a surprise.
 - [v1.7] Fork A locked: Operator Overview as a `:overview` action on existing `OperatorLive` (zero router-macro change), not a sibling LiveView. Orientation strip generalized into `Shell.orientation_strip/1`.
 - [v1.7] Fork B locked: pop/joy via consistent motion + expressive seed data + sharper hierarchy within the current brand book. No brand-book amendment. No new visual loudness.
+- [76-01] status_badge/1 renders icon+label with literal-string-only defp helpers for JIT safety; normalize_inbound_outcome/1 is public for cross-module import (admin-side adapter, never touches mailglass_inbound locked 1.0 schema)
 
 ## Performance Metrics
 
 **Velocity:**
 
+- v1.7 phases in progress: Phase 76 Plan 01 complete (status_badge/1 component + 24-atom regression test)
 - v1.6 phases completed: 3 (71-73), 6 plans, 5 tasks
 - v1.5 phases completed: 4 (67-70), 8 plans, 14 tasks
 - v1.4 phases completed: 4 (63-66), 12 plans, 22 tasks
@@ -109,6 +111,8 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Session Continuity
 
+- 2026-06-04: Phase 76 Plan 01 executed. Components.status_badge/1 and Components.normalize_inbound_outcome/1 added to components.ex; 24-atom regression test created at test/mailglass_admin/components_test.exs. 30 tests, 0 failures.
+- Next: Execute Phase 76 Plan 02 (badge call-site rewire — delete 5 badge_class/1 copies, route all call sites through status_badge/1).
 - 2026-06-03: v1.7 roadmap created. Phase 74 is the next step. Run `/gsd-plan-phase 74` (or `/gsd-discuss-phase 74` first) to begin the audit + UI-SPEC evidence gate.
 - NOTE: Phase 74 should consider using `/gsd-ui-phase` to produce the UI-SPEC deliverable inside the phase. The `workflow.ui_phase: true` config flag is set.
 - Phase 73 completed and verified on 2026-06-02. v1.6 milestone complete. `mailglass_inbound` 1.0.0 live on Hex.
