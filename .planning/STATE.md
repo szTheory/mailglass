@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
-status: executing
-last_updated: "2026-06-04T22:11:01.665Z"
+status: verifying
+last_updated: "2026-06-04T22:15:53.784Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 28
-  completed_plans: 27
-  percent: 88
+  completed_plans: 28
+  percent: 100
 ---
 
 # Project State
@@ -24,9 +24,9 @@ See: .planning/PROJECT.md (updated 2026-06-03 after v1.7 milestone opened)
 
 ## Current Position
 
-Phase: 79 (verification-and-visual-regression-hardening) — EXECUTING
+Phase: 79 (verification-and-visual-regression-hardening) — COMPLETE
 Plan: 4 of 4
-Status: Ready to execute
+Status: All plans complete — v1.7 milestone ready for /gsd-complete-milestone
 Last activity: 2026-06-04
 
 **Progress bar:** ░░░░░░░░░░ 0% (0/6 phases)
@@ -104,6 +104,7 @@ Items acknowledged and deferred at previous milestone close:
 | Phase 77 P04 | 7 | 1 tasks | 2 files |
 | Phase 79 P01 | 8 | 2 tasks | 2 files |
 | Phase 79-verification-and-visual-regression-hardening P03 | 420 | 1 tasks | 1 files |
+| Phase 79 P04 | 10min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -142,5 +143,5 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Operator Next Steps
 
-- Phase 79 Plan 03 complete — VERIF-01 and VERIF-04 satisfied; 79-GAP-CLOSEOUT.md authored; all five sev-4 rows CLOSED; GAP-22 deferred sev-3
-- Next: Phase 79 Plan 04 (release ceremony preparation — inbound exact-pin re-pin)
+- 2026-06-04: Phase 79 Plan 04 executed. mailglass_inbound exact-pin updated == 1.4.5 → == 1.5.0 in mix.exs MIX_PUBLISH branch; all four Phase 79 gates confirmed green simultaneously (check-conformance.sh exits 0, Playwright 10/10, GAP-CLOSEOUT has 9 CLOSED rows, mix verify.preview 189/0/2excluded); release-ceremony posture: prepare-only, pipeline owns hex.publish. Commit: 144e037d. VERIF-04 satisfied.
+- Phase 79 ALL PLANS COMPLETE. v1.7 milestone ready for /gsd-complete-milestone.

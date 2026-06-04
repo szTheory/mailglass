@@ -134,7 +134,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 - [x] **Phase 76: Component-Library and Design-System Hardening** — Unified `status_badge` atom replacing 3 private copies; token migration off raw scale; support-card hierarchy redesign; committed bundle. (completed 2026-06-04)
 - [x] **Phase 77: Motion and Microinteraction Polish** — Six-motion vocabulary applied per UI-SPEC; motion-reveal re-fire fix; reduced-motion discipline. (completed 2026-06-04)
 - [x] **Phase 78: Seed-Data Expressiveness** — Demo seeds covering every screen state; e2e count assertions updated in same change. (completed 2026-06-04)
-- [ ] **Phase 79: Verification and Visual-Regression Hardening** — Full audit-matrix re-run vs baseline; extended e2e; conformance + bundle gates; deep-link resolution; release ceremony acknowledgment.
+- [x] **Phase 79: Verification and Visual-Regression Hardening** — Full audit-matrix re-run vs baseline; extended e2e; conformance + bundle gates; deep-link resolution; release ceremony acknowledgment. (completed 2026-06-04)
 
 ## Phase Details
 
@@ -293,7 +293,7 @@ Plans:
 
 **Wave 2** *(depends on Wave 1 gates green)*
 
-  - [ ] 79-04-PLAN.md — Release ceremony prep: inbound exact-pin 1.4.5 → 1.5.0; full verify.preview gate; release-readiness confirmation. (Wave 2)
+  - [x] 79-04-PLAN.md — Release ceremony prep: inbound exact-pin 1.4.5 → 1.5.0; full verify.preview gate; release-readiness confirmation. (Wave 2)
 
 **UI hint**: yes
 
@@ -306,7 +306,7 @@ Plans:
 | 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
 | 77. Motion and Microinteraction Polish | 4/4 | Complete    | 2026-06-04 |
 | 78. Seed-Data Expressiveness | 2/2 | Complete    | 2026-06-04 |
-| 79. Verification and Visual-Regression Hardening | 3/4 | In Progress|  |
+| 79. Verification and Visual-Regression Hardening | 4/4 | Complete   | 2026-06-04 |
 
 ## Backlog
 
