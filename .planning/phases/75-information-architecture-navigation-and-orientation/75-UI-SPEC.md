@@ -1,10 +1,11 @@
 ---
 phase: 75
 slug: information-architecture-navigation-and-orientation
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-04
+reviewed_at: 2026-06-04
 derives_from: .planning/phases/74-systematic-audit-and-ui-spec/74-UI-SPEC.md
 ---
 
