@@ -52,9 +52,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   </p>
                   <p class="mono mt-1 text-xs text-secondary">{record.id}</p>
                 </div>
-                <span class={["badge badge-sm", badge_class(record_outcome(record))]}>
-                  {outcome_label(record_outcome(record))}
-                </span>
+                <Components.status_badge status={Components.normalize_inbound_outcome(record_outcome(record))} size={:sm} />
               </div>
 
               <div class="flex flex-wrap items-center gap-2 text-xs text-secondary">
@@ -92,21 +90,6 @@ defmodule MailglassAdmin.Inbound.RecordsList do
       mailbox when is_binary(mailbox) and mailbox != "" -> mailbox
       _ -> "no match"
     end
-  end
-
-  defp badge_class(:accept), do: "badge-success"
-  defp badge_class(:no_match), do: "badge-warning"
-  defp badge_class(outcome) when outcome in [:reject, :bounce, :failed], do: "badge-error"
-  defp badge_class(:ignore), do: "badge-outline"
-  defp badge_class(_outcome), do: "badge-outline"
-
-  defp outcome_label(nil), do: "Pending"
-
-  defp outcome_label(value) do
-    value
-    |> Atom.to_string()
-    |> String.replace("_", " ")
-    |> String.capitalize()
   end
 
   defp format_datetime(nil), do: "Pending"

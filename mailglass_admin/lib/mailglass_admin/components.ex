@@ -199,6 +199,8 @@ defmodule MailglassAdmin.Components do
   defp status_class(:webhook_replay_succeeded), do: "badge-success"
   defp status_class(:webhook_replay_failed), do: "badge-error"
   defp status_class(:reconciled), do: "badge-warning"
+  # Fallback for phantom atoms (e.g. :suppressed) and nil — render neutral outline per UI-SPEC Conflict 1
+  defp status_class(_status), do: "badge-outline"
 
   defp status_icon(:dispatched), do: "hero-paper-airplane"
   defp status_icon(:queued), do: "hero-arrow-path"
@@ -222,6 +224,8 @@ defmodule MailglassAdmin.Components do
   defp status_icon(:webhook_replay_succeeded), do: "hero-check-circle"
   defp status_icon(:webhook_replay_failed), do: "hero-x-circle"
   defp status_icon(:reconciled), do: "hero-exclamation-triangle"
+  # Fallback for phantom atoms (e.g. :suppressed) and nil — render question mark per UI-SPEC Conflict 1
+  defp status_icon(_status), do: "hero-question-mark-circle"
 
   defp status_label(:dispatched), do: "Dispatched"
   defp status_label(:queued), do: "Queued"
@@ -245,6 +249,8 @@ defmodule MailglassAdmin.Components do
   defp status_label(:webhook_replay_succeeded), do: "Replay succeeded"
   defp status_label(:webhook_replay_failed), do: "Replay failed"
   defp status_label(:reconciled), do: "Reconciled"
+  # Fallback for phantom atoms (e.g. :suppressed) and nil — render "Unknown" per UI-SPEC Conflict 1
+  defp status_label(_status), do: "Unknown"
 
   @doc """
   Masks a recipient email for operator display (PII minimization, the design contract).

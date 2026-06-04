@@ -91,7 +91,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "no match"
     end
 
-    test "renders the neutral Pending badge for a record with no run yet (nil outcome)" do
+    test "renders the neutral Unknown badge for a record with no run yet (nil outcome)" do
       record = %{
         id: "rec-4",
         tenant_id: "tenant-a",
@@ -105,7 +105,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
-      assert html =~ "Pending"
+      assert html =~ "Unknown"
       assert html =~ "badge-outline"
       assert html =~ "no match"
     end

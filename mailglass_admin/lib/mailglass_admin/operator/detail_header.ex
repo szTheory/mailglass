@@ -5,6 +5,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
 
   use Phoenix.Component
 
+  alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.RepairState
 
   attr(:delivery, :map, required: true)
@@ -18,9 +19,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
         <div class="space-y-2">
           <div class="flex flex-wrap items-center gap-2">
             <h2 class="text-xl font-bold text-base-content">{@delivery.recipient}</h2>
-            <span class={["badge", badge_class(@delivery.status)]}>
-              {label(@delivery.status)}
-            </span>
+            <Components.status_badge status={@delivery.status} />
           </div>
           <p class="mono text-xs text-secondary">{@delivery.id}</p>
           <p :if={present?(@delivery.mailable)} class="text-sm text-secondary">
@@ -77,12 +76,6 @@ defmodule MailglassAdmin.Operator.DetailHeader do
     </article>
     """
   end
-
-  defp badge_class(status) when status in [:delivered, :sent, :dispatched], do: "badge-success"
-  defp badge_class(:deferred), do: "badge-warning"
-  defp badge_class(status) when status in [:failed, :bounced, :complained], do: "badge-error"
-  defp badge_class(:suppressed), do: "badge-warning"
-  defp badge_class(_status), do: "badge-outline"
 
   defp label(nil), do: "Unknown"
 

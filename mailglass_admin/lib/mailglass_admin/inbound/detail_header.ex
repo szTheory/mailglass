@@ -37,9 +37,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
             <h2 class="text-xl font-bold text-base-content">
               {Components.mask_recipient(@record.envelope_recipient)}
             </h2>
-            <span class={["badge", badge_class(@outcome)]}>
-              {outcome_label(@outcome)}
-            </span>
+            <Components.status_badge status={Components.normalize_inbound_outcome(@outcome)} />
           </div>
           <p class="mono text-xs text-secondary">{@record.id}</p>
           <p
@@ -138,21 +136,6 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
 
   defp matched_mailbox(mailbox) when is_binary(mailbox) and mailbox != "", do: mailbox
   defp matched_mailbox(_mailbox), do: "No match"
-
-  defp badge_class(:accept), do: "badge-success"
-  defp badge_class(:no_match), do: "badge-warning"
-  defp badge_class(outcome) when outcome in [:reject, :bounce, :failed], do: "badge-error"
-  defp badge_class(:ignore), do: "badge-outline"
-  defp badge_class(_outcome), do: "badge-outline"
-
-  defp outcome_label(nil), do: "Pending"
-
-  defp outcome_label(value) do
-    value
-    |> Atom.to_string()
-    |> String.replace("_", " ")
-    |> String.capitalize()
-  end
 
   defp format_datetime(nil), do: "Pending"
 
