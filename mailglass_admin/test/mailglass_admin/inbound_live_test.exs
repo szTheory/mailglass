@@ -838,4 +838,18 @@ defmodule MailglassAdmin.InboundLiveTest do
       "recent_auth_at" => Plug.Conn.get_session(conn, "recent_auth_at")
     }
   end
+
+  describe "motion-reveal re-fire fix (GAP-19 / MOTION-01)" do
+    test "inbound detail pane motion-reveal div carries a record-keyed id (D-02)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "motion@example.com")
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      assert html =~ ~s(id="inbound-detail-#{record.id}")
+    end
+  end
 end

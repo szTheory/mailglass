@@ -916,5 +916,27 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end
   end
 
+  describe "motion-reveal re-fire fix (GAP-19 / MOTION-01)" do
+    test "delivery detail pane motion-reveal div carries a record-keyed id (D-01)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      delivery =
+        insert_delivery!(
+          recipient: "motion@example.com",
+          provider: "postmark",
+          status: :sent,
+          last_event_type: :delivered
+        )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id})
+        )
+
+      assert html =~ ~s(id="delivery-detail-#{delivery.id}")
+    end
+  end
+
   defp minutes_ago(minutes), do: DateTime.add(DateTime.utc_now(), -minutes, :minute)
 end
