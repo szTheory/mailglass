@@ -17,9 +17,15 @@ async function openOperator(page) {
   const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${returnTo}`);
   await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
-  // Navigate to Deliveries view before delivery-centric assertions
+  // Navigate to Deliveries view before delivery-centric assertions.
+  // Target the page h1 (level 1) explicitly: the Deliveries surface now also
+  // renders the orientation strip's <h2>Deliveries</h2> section heading, so an
+  // unqualified heading query is ambiguous under Playwright strict mode at the
+  // viewports where the strip is visible.
   await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
-  await expect(page.getByRole("heading", { name: "Deliveries", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+  ).toBeVisible();
   await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
 }
 
