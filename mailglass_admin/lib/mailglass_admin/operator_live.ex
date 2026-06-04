@@ -439,7 +439,7 @@ defmodule MailglassAdmin.OperatorLive do
                   </p>
                 </div>
               <% true -> %>
-                <div class="motion-reveal space-y-4">
+                <div id={"delivery-detail-#{@selected_delivery.id}"} class="motion-reveal space-y-4">
                   <DetailHeader.detail_header
                     delivery={@selected_delivery}
                     replay_targets={@replay_targets}

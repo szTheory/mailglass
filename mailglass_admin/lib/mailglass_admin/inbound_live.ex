@@ -338,7 +338,7 @@ defmodule MailglassAdmin.InboundLive do
                 </h2>
               </div>
             <% true -> %>
-              <div class="motion-reveal space-y-4">
+              <div id={"inbound-detail-#{@detail.record.id}"} class="motion-reveal space-y-4">
                 <DetailHeader.detail_header detail={@detail} />
                 <Timeline.timeline runs={@runs} />
                 <RoutingTrace.routing_trace
