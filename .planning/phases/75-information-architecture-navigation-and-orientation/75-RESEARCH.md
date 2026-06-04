@@ -605,17 +605,19 @@ This phase introduces no new authentication surfaces, no new data inputs from un
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+Both questions are resolved by the Phase 75 plans (75-03). Recorded here for Dimension 11 closure.
 
 1. **`openOperator` helper strategy for `demo.spec.js:26`**
-   - What we know: The demo test clicks an "outbound operator" link which navigates to `/ops/mail?tenant_id=northstar`. After Phase 75, this lands on the Overview.
-   - What's unclear: Does the demo app dashboard have a direct "outbound operator → deliveries" link (passing `?view=deliveries`) or a plain `/ops/mail` link?
-   - Recommendation: In the same-commit e2e update, navigate explicitly to `?view=deliveries` in the test (or update the demo dashboard link to include `?view=deliveries`). The plan should specify which approach to take.
+   - What we knew: The demo test clicks an "outbound operator" link which navigates to `/ops/mail?tenant_id=northstar`. After Phase 75, this lands on the Overview.
+   - What was unclear: Does the demo app dashboard have a direct "outbound operator → deliveries" link (passing `?view=deliveries`) or a plain `/ops/mail` link?
+   - **RESOLVED (75-03 Task 2):** Option A adopted — the `openOperator` helper asserts the "Operator overview" h1 on landing, then navigates explicitly to `?view=deliveries` before any delivery-centric assertions, reflecting the real user journey and keeping all 5 operator.spec.js tests valid without restructuring. `demo.spec.js` updated in the same commit by the same strategy.
 
 2. **`load_support_summary/2` refactor for Overview**
-   - What we know: The existing `load_support_summary(filter_params, nil)` returns `nil` (no selected delivery). For the Overview, we need the summary even without a selected delivery.
-   - What's unclear: Should the planner add a new `load_overview_health/1` or extend the existing `load_support_summary/2` with a third-clause?
-   - Recommendation: Add `defp load_overview_health(filter_params)` calling `summarize_tenant` directly, and a separate function for the suppression count. Keeps concerns separate from the delivery-scoped load.
+   - What we knew: The existing `load_support_summary(filter_params, nil)` returns `nil` (no selected delivery). For the Overview, we need the summary even without a selected delivery.
+   - What was unclear: Should the planner add a new `load_overview_health/1` or extend the existing `load_support_summary/2` with a third clause?
+   - **RESOLVED (75-03 Task 1):** A separate `assign_overview_state/2` calls `summarize_tenant` directly for the health row (and reads the suppression count through the runtime-indirection seam), keeping the Overview health load distinct from the delivery-scoped `load_support_summary/2`. No third clause added to the existing function.
 
 ---
 
