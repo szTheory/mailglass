@@ -552,19 +552,19 @@ This is a seed-data phase, not a rename/migration phase. No runtime state is ren
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **OperatorFixtures inbound insert: which repo?**
+1. **RESOLVED — OperatorFixtures inbound insert: which repo?** Use raw SQL against `mailglass_inbound_records` via `TestRepo.query!/2`, matching the existing `insert_webhook_event!` pattern; planner directs the executor to read the inbound migrations to assemble the exact column set first.
    - What we know: `InboundRecords.*` functions use `MailglassInbound.Repo` internally. `operator_fixtures.ex` uses `MailglassAdmin.TestRepo` for its outbound inserts and raw SQL for webhook events.
    - What's unclear: Whether `InboundRecords.insert_inbound_record/1` can be called in the admin test env, or whether raw SQL against `mailglass_inbound_records` via `TestRepo.query!/2` is the safer pattern.
    - Recommendation: Use raw SQL inserts for the inbound record, evidence, and run in operator_fixtures.ex, matching the `insert_webhook_event!` pattern. If `MailglassInbound.InboundRecords` exports repo-injection opts, use those. Planner should check `mailglass_admin/test/support/endpoint_case.ex` for sandbox setup to confirm table availability.
 
-2. **`subscribed` event type badge rendering**
+2. **RESOLVED — `subscribed` event type badge rendering.** Seed a `:subscribed` event for completeness; it renders via the `badge-outline` fallback (correct per UI-SPEC Conflict 1). Details below.
    - What we know: `:subscribed` is in `Event.__types__` (event.ex:52) and can be inserted. It is NOT in the `status_badge/1` `attr :status, :atom, values:` list (components.ex:132-155). Passing `:subscribed` to `status_badge/1` will fall through to the `badge-outline` fallback.
    - What's unclear: Whether the timeline renders `:subscribed` events at all (there may be a guard like `event_badge(event.type)` that suppresses them).
    - Recommendation: Seed a `:subscribed` event for completeness; document in plan comments that it renders as fallback `badge-outline`. This is correct per UI-SPEC Conflict 1.
 
-3. **`demo.spec.js` heading assertions after Phase 75**
+3. **RESOLVED — `demo.spec.js` heading assertions after Phase 75.** The spec files already reflect Phase 75 changes; Phase 78 does NOT need to update these heading assertions. Details below.
    - What we know: Phase 75 already shipped (or is co-parallel). Current `demo.spec.js:27` asserts `"Operator overview"` (already updated from Phase 75 work — confirmed in spec file). `operator.spec.js:19` also asserts `"Operator overview"`.
    - What's unclear: Whether Phase 75's heading changes are already committed to the spec files.
    - Recommendation: The spec files already reflect Phase 75 changes (the actual spec files read show the Phase-75-era assertions, not the ASSERTION-INVENTORY baseline). Phase 78 does NOT need to update these heading assertions.
