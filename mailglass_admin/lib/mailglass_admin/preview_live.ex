@@ -289,6 +289,7 @@ defmodule MailglassAdmin.PreviewLive do
               />
             </div>
           <% @mailables == [] -> %>
+            <MailglassAdmin.Operator.Shell.orientation_strip surface={:preview} />
             <div
               data-testid="preview-empty-mailables"
               class="card mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-8"

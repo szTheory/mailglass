@@ -1,27 +1,40 @@
 defmodule MailglassAdmin.Operator.ShellTest do
   @moduledoc """
-  Wave 0 structural stubs for Shell.orientation_strip/1 and aria-current nav
-  resolution. Tests are tagged @tag :skip and will be un-skipped in Plans 75-02
-  and 75-03 when the components and Overview branch are implemented.
+  Tests for Shell.orientation_strip/1 and aria-current nav resolution.
   """
 
   use MailglassAdmin.LiveViewCase, async: false
 
+  alias MailglassAdmin.Operator.Shell
+
   describe "orientation_strip/1" do
-    @tag :skip
     test "renders deliveries-orientation testid with frozen copy" do
+      html = render_component(&Shell.orientation_strip/1, surface: :deliveries)
+
+      assert html =~ ~s(data-testid="deliveries-orientation")
+      assert html =~ "Email never arrived? Start here."
     end
 
-    @tag :skip
     test "renders inbound-orientation testid with frozen copy" do
+      html = render_component(&Shell.orientation_strip/1, surface: :inbound)
+
+      assert html =~ ~s(data-testid="inbound-orientation")
+      assert html =~ "Message didn"
+      assert html =~ "t route as expected? Inspect the routing trace."
     end
 
-    @tag :skip
     test "renders preview-orientation testid with frozen copy" do
+      html = render_component(&Shell.orientation_strip/1, surface: :preview)
+
+      assert html =~ ~s(data-testid="preview-orientation")
+      assert html =~ "No mailables found? Define a mailable module in your app."
     end
 
-    @tag :skip
     test "uses text-label not text-sm for bullet list" do
+      html = render_component(&Shell.orientation_strip/1, surface: :deliveries)
+
+      assert html =~ "text-label"
+      refute html =~ ~r/class="[^"]*text-sm/
     end
   end
 

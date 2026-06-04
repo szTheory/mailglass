@@ -328,6 +328,7 @@ defmodule MailglassAdmin.InboundLive do
                 </div>
               </div>
             <% is_nil(@detail) -> %>
+              <MailglassAdmin.Operator.Shell.orientation_strip surface={:inbound} />
               <div
                 data-testid="inbound-empty-detail"
                 class="card rounded-box border border-base-300 bg-base-200 p-6"

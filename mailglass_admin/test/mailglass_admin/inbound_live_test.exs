@@ -41,6 +41,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "Execution timeline"
       # Record id IS rendered (it is not PII) so selection works.
       assert html =~ record.id
+      # Orientation strip: present when no detail is selected (GAP-09)
+      assert html =~ ~s(data-testid="inbound-orientation")
     end
 
     test "blank tenant renders the empty state and leaks no other-tenant id or recipient (V1)", %{
