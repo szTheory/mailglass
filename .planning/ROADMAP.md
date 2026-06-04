@@ -160,7 +160,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
   4. The deep-link unstyled-CSS bug carries a recorded explicit in-scope / deferred decision with rationale — not left ambiguous entering Phase 79.
   5. No router macro (`mailglass_operator_routes/2`) is modified; the Overview is handled entirely in `OperatorLive.handle_params/3`.
 **Plans**: 3 plans
-  - [ ] 75-01-PLAN.md — Add core count_active_suppressions/1 + Wave 0 test stubs for shell_test.exs and operator_live_test.exs Overview blocks. (Wave 1)
+  - [x] 75-01-PLAN.md — Add core count_active_suppressions/1 + Wave 0 test stubs for shell_test.exs and operator_live_test.exs Overview blocks. (Wave 1)
   - [ ] 75-02-PLAN.md — Extract Shell.orientation_strip/1 public component, wire all three surfaces, un-skip shell tests, rebuild admin bundle. (Wave 2)
   - [ ] 75-03-PLAN.md — Operator Overview branch in handle_params/3; same-commit e2e heading-assertion updates + 390px extension; GAP-22 disposition record. (Wave 3)
 **UI hint**: yes
@@ -216,7 +216,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
-| 75. Information Architecture, Navigation and Orientation | 0/3 | Not started | - |
+| 75. Information Architecture, Navigation and Orientation | 1/3 | In Progress|  |
 | 76. Component-Library and Design-System Hardening | 0/TBD | Not started | - |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
