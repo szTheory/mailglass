@@ -191,16 +191,25 @@ test.describe("operator browser gate", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    // Click the first delivery row and read the delivery_id from the URL
+    // Click the first delivery row and read the delivery_id from the URL.
+    // LiveView pushes the delivery_id param asynchronously, so wait for the
+    // URL to settle before reading it (mirrors the existing selection tests).
     await deliveryRow(page, 0).click();
+    await expect(page).toHaveURL(/delivery_id=/);
     const deliveryId = new URL(page.url()).searchParams.get("delivery_id");
     expect(deliveryId).toBeTruthy();
 
     // The detail pane must carry the record-keyed id
     await expect(page.locator(`#delivery-detail-${deliveryId}`)).toBeVisible();
 
-    // Switch to a second delivery and verify the id changes (element replaced, not patched)
+    // Switch to a second delivery and verify the id changes (element replaced, not patched).
+    // Wait until the delivery_id param actually changes — toHaveURL(/delivery_id=/) is
+    // already true from the first selection and would not gate the transition.
     await deliveryRow(page, 1).click();
+    await page.waitForURL((url) => {
+      const id = new URL(url).searchParams.get("delivery_id");
+      return Boolean(id) && id !== deliveryId;
+    });
     const deliveryId2 = new URL(page.url()).searchParams.get("delivery_id");
     expect(deliveryId2).not.toEqual(deliveryId);
 
@@ -221,6 +230,7 @@ test.describe("operator browser gate", () => {
     await openOperator(page);
 
     await deliveryRow(page, 0).click();
+    await expect(page).toHaveURL(/delivery_id=/);
     const deliveryId = new URL(page.url()).searchParams.get("delivery_id");
     expect(deliveryId).toBeTruthy();
 
