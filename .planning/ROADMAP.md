@@ -286,7 +286,7 @@ Plans:
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
 | 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
-| 77. Motion and Microinteraction Polish | 4/4 | Complete   | 2026-06-04 |
+| 77. Motion and Microinteraction Polish | 4/4 | Complete    | 2026-06-04 |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
 

@@ -32,7 +32,7 @@
 
 ### Motion & Microinteraction (Phase 77)
 
-- [ ] **MOTION-01**: The existing six-motion vocabulary is applied **only where the UI-SPEC assigns it**, with entrances firing on mount (record-keyed ids — fixes the `motion-reveal` re-fire on `operator_live.ex`) not on every LiveView patch.
+- [x] **MOTION-01**: The existing six-motion vocabulary is applied **only where the UI-SPEC assigns it**, with entrances firing on mount (record-keyed ids — fixes the `motion-reveal` re-fire on `operator_live.ex`) not on every LiveView patch.
 - [x] **MOTION-02**: Motion respects `prefers-reduced-motion`, animates **transform/opacity only** (no height/width), and stays **≤ 300ms** with exits faster than entrances.
 
 ### Seed-Data Expressiveness (Phase 78)
@@ -90,7 +90,7 @@ Phase mapping derived from the locked blueprint; the roadmapper validates 100% c
 | DS-02 | Phase 76 | Complete |
 | DS-03 | Phase 76 | Complete |
 | DS-04 | Phase 76 | Complete |
-| MOTION-01 | Phase 77 | Pending |
+| MOTION-01 | Phase 77 | Complete |
 | MOTION-02 | Phase 77 | Complete |
 | SEED-01 | Phase 78 | Pending |
 | SEED-02 | Phase 78 | Pending |
