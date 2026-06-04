@@ -19,7 +19,7 @@ dependency_graph:
       provides: token migration of 15 remaining admin files + hex fix
   provides:
     - Committed priv/static/app.css with badge-primary/success/warning/error/outline CSS rules
-    - All 12 hero-* icon masks in bundle (paper-airplane, arrow-path, check-circle, exclamation-triangle, x-circle, exclamation-circle, bell-slash, envelope-open, hand-thumb-up, arrow-uturn-left, question-mark-circle, minus-circle)
+    - All 23 hero-* icon masks in bundle (all admin-referenced icons via Components.icon/1 + status_badge/1)
     - DS-01 and DS-04 production-complete
   affects:
     - mailglass_admin/assets/css/app.css
@@ -39,7 +39,8 @@ key_files:
     - mailglass_admin/assets/css/app.css
     - mailglass_admin/priv/static/app.css
 key_decisions:
-  - "[Rule 1 - Bug] heroicons.js was vendor-copied but never wired; it uses Node.js require/fs/path which the standalone binary cannot load. Created heroicons-inline.js as a self-contained replacement that embeds the 12 needed SVGs as inline strings."
+  - "[Rule 1 - Bug] heroicons.js was vendor-copied but never wired; it uses Node.js require/fs/path which the standalone binary cannot load. Created heroicons-inline.js as a self-contained replacement. Initial fix embedded only 12 icons (status_badge/1 scope); completed to all 23 admin-referenced icons after user-approved continuation."
+  - "[D-11/Pitfall-2 latent bug] Components.icon/1 renders <span class={[@name]}> — a pure CSS-mask class. ALL 23 hero-* icons referenced by the admin were invisible before this fix because heroicons was never a runtime dependency and the inline plugin was incomplete."
   - "heroicons-inline.js uses module.exports + matchComponents API (same pattern as daisyUI) — no external dependencies"
   - "All 5 conformance grep gates passed with zero real violations; text-base-content matches are DaisyUI semantic color classes (false positives per Footgun 6)"
 requirements_completed:
@@ -48,20 +49,20 @@ requirements_completed:
   - DS-03
   - DS-04
 metrics:
-  duration: ~8 minutes
+  duration: ~12 minutes
   completed: "2026-06-04"
-  tasks_completed: 2
+  tasks_completed: 3
   files_modified: 3
 ---
 
 # Phase 76 Plan 06: Final Asset Bundle Gate Summary
 
-Rebuilt the admin asset bundle with all new badge classes and hero-* icon masks. All five conformance grep gates pass. Bundle committed and clean. Full test suite green (1 pre-existing voice_test failure unchanged).
+Rebuilt the admin asset bundle with all new badge classes and all 23 hero-* icon masks. All five conformance grep gates pass. Bundle committed and clean. Full test suite green (1 pre-existing voice_test failure unchanged).
 
 ## Performance
 
-- **Duration:** ~8 minutes
-- **Tasks:** 2 (conformance verification + bundle rebuild)
+- **Duration:** ~12 minutes
+- **Tasks:** 3 (conformance verification + bundle rebuild + icon coverage completion)
 - **Files modified/created:** 3 (app.css source, heroicons-inline.js, priv/static/app.css)
 
 ## Accomplishments
@@ -75,28 +76,39 @@ Rebuilt the admin asset bundle with all new badge classes and hero-* icon masks.
 - Gate 5 — hex colors: HEX-GATE-PASS (zero results)
 - Gate 6 — bundle_test pre-check: 4/4 tests passed; bundle was 70,789 bytes pre-rebuild
 
-### Task 2: Bundle Rebuild
+### Task 2: Bundle Rebuild (initial — 12 icons)
 
 - Rebuilt `priv/static/app.css` via `mix mailglass_admin.assets.build`
-- All 5 badge classes present: `badge-primary`, `badge-success`, `badge-warning`, `badge-error`, `badge-outline`
-- All 12 hero-* icon masks present: `hero-paper-airplane`, `hero-arrow-path`, `hero-check-circle`, `hero-exclamation-triangle`, `hero-x-circle`, `hero-exclamation-circle`, `hero-bell-slash`, `hero-envelope-open`, `hero-hand-thumb-up`, `hero-arrow-uturn-left`, `hero-question-mark-circle`, `hero-minus-circle`
-- Bundle size: 81,780 bytes (< 150,000 byte ceiling; +11KB from icon SVG masks)
-- `git diff --exit-code mailglass_admin/priv/static/` exits 0 — bundle committed and clean
+- All 5 badge classes present
+- Initial 12 hero-* icon masks (status_badge/1 scope)
+- Bundle size: 81,780 bytes
+
+### Task 3: Icon Coverage Completion (11 additional icons — user-approved)
+
+- Fetched 11 missing SVGs from heroicons v2.2.0 (24/outline set) authoritative source
+- Added to heroicons-inline.js: `building-office-2`, `device-phone-mobile`, `envelope`, `inbox-arrow-down`, `inbox-stack`, `lifebuoy`, `magnifying-glass`, `moon`, `pencil-square`, `sun`, `window`
+- Updated plugin header comment to reflect all 23 admin-referenced icons
+- Rebuilt bundle: all 23 `.hero-*` classes confirmed present (count: 1 each)
+- Bundle size: 94,054 bytes (< 150,000 byte ceiling)
 - Test suite: 187 tests, 1 pre-existing failure (voice_test "Oops" from Phoenix dep JS)
+- `git diff --exit-code mailglass_admin/priv/static/` exits 0 after commit — bundle clean
 
 ## Task Commits
 
-1. **Task 2: Bundle rebuild + heroicons-inline plugin** — `232b4ead` (feat)
+1. **Task 2: Bundle rebuild + heroicons-inline plugin (12 icons)** — `232b4ead` (feat)
+2. **Task 3: Complete icon coverage to all 23 admin hero-* icons** — (see commit below)
 
 ## Files Created/Modified
 
-- `mailglass_admin/assets/vendor/heroicons-inline.js` — NEW: standalone-binary-compatible Heroicons plugin with 12 inline SVGs
+- `mailglass_admin/assets/vendor/heroicons-inline.js` — standalone-binary-compatible Heroicons plugin with all 23 inline SVGs (23 icons: 12 initial + 11 added in continuation)
 - `mailglass_admin/assets/css/app.css` — Added `@plugin "../vendor/heroicons-inline"` directive
-- `mailglass_admin/priv/static/app.css` — Rebuilt bundle: badge classes + hero-* icon masks + all token migrations from Plans 76-01..76-05
+- `mailglass_admin/priv/static/app.css` — Rebuilt bundle: badge classes + all 23 hero-* icon masks + all token migrations from Plans 76-01..76-05
 
 ## Decisions Made
 
-- `heroicons-inline.js` is the standalone-binary-compatible replacement for `heroicons.js` — same `matchComponents("hero", ...)` pattern but without Node.js `require`/`fs`/`path` dependencies. The original `heroicons.js` template was vendor-copied but never wired (because it cannot work with the standalone binary). `heroicons-inline.js` is self-contained and works identically to daisyUI's plugin structure.
+- `heroicons-inline.js` is the standalone-binary-compatible replacement for `heroicons.js` — same `matchComponents("hero", ...)` pattern but without Node.js `require`/`fs`/`path` dependencies. The original `heroicons.js` template was vendor-copied but never wired (because it cannot work with the standalone binary).
+- heroicons is NOT a runtime dependency of this repo (not in mix.lock, no `deps/heroicons`). All SVG data must be embedded inline. The complete set of 23 icons is required because `Components.icon/1` renders `<span class={[@name]}>` — any icon NOT in the bundle is invisible (pure CSS-mask approach).
+- Initial fix in `232b4ead` embedded only the 12 icons needed by `status_badge/1`. The user approved completing coverage to all 23 admin-referenced icons (D-11/Pitfall-2 latent bug — all hero icons were invisible before this plan).
 
 ## Deviations from Plan
 
@@ -108,11 +120,17 @@ Rebuilt the admin asset bundle with all new badge classes and hero-* icon masks.
 - **Issue:** The vendored `heroicons.js` plugin uses Node.js `require("tailwindcss/plugin")`, `require("fs")`, and `require("path")` — none of which are available in the Tailwind v4 standalone binary. Adding `@plugin "../vendor/heroicons"` to app.css caused the build to exit with error code 1. The research assumption "no additional configuration required" was incorrect — the plugin had never been wired and cannot be wired with the standalone binary as-is.
 - **Fix:** Created `mailglass_admin/assets/vendor/heroicons-inline.js` — a self-contained plugin that:
   - Uses `module.exports` + direct `matchComponents` API (same pattern as daisyUI.js — no external `require()`)
-  - Embeds the 12 needed Heroicon SVGs directly as inline strings (MIT-licensed; sourced from heroicons v2.2.0, 24/outline set)
+  - Embeds all 23 admin-referenced Heroicon SVGs directly as inline strings (MIT-licensed; sourced from heroicons v2.2.0, 24/outline set)
   - Uses `mask`/`-webkit-mask` CSS properties with `data:image/svg+xml;utf8,` encoded URLs — identical to the original plugin output
   - Wire: `@plugin "../vendor/heroicons-inline"` added to assets/css/app.css
 - **Files modified:** `mailglass_admin/assets/vendor/heroicons-inline.js` (created), `mailglass_admin/assets/css/app.css`
-- **Committed in:** `232b4ead`
+- **Initial commit:** `232b4ead` (12 icons); **completion commit:** see below (all 23 icons)
+
+**2. [D-11/Pitfall-2 latent bug] All 23 hero-* icons referenced by admin were invisible pre-bundle**
+
+- **Root cause:** heroicons is NOT a dependency (not in mix.lock). `Components.icon/1` renders `<span class={[@name]}>` — a pure CSS-mask class that resolves to invisible if the `.hero-*` rule is absent. The initial fix covered only 12 icons (status_badge/1 scope); the remaining 11 icons used by other admin components (nav, dark-mode toggle, search, detail views) were still invisible.
+- **Fix:** Fetched all 11 missing SVGs from heroicons v2.2.0 authoritative source (verified non-empty, starts with `<svg`); added to heroicons-inline.js in single-line escaped format consistent with existing entries. User approved completing coverage.
+- **All 23 icons now embedded:** arrow-path, arrow-uturn-left, bell-slash, building-office-2, check-circle, device-phone-mobile, envelope, envelope-open, exclamation-circle, exclamation-triangle, hand-thumb-up, inbox-arrow-down, inbox-stack, lifebuoy, magnifying-glass, minus-circle, moon, paper-airplane, pencil-square, question-mark-circle, sun, window, x-circle
 
 ## Known Stubs
 
@@ -130,15 +148,27 @@ Files created/modified:
 - [x] `mailglass_admin/priv/static/app.css` — FOUND
 
 Commits:
-- [x] `232b4ead` — FOUND
+- [x] `232b4ead` — FOUND (12-icon initial bundle)
 
-Bundle verification:
+Bundle verification (all 23 icons):
 - [x] `badge-primary` in bundle — FOUND (count: 1)
+- [x] `hero-arrow-path` in bundle — FOUND (count: 1)
+- [x] `hero-building-office-2` in bundle — FOUND (count: 1)
+- [x] `hero-device-phone-mobile` in bundle — FOUND (count: 1)
+- [x] `hero-envelope` in bundle — FOUND (count: 1)
+- [x] `hero-inbox-arrow-down` in bundle — FOUND (count: 1)
+- [x] `hero-inbox-stack` in bundle — FOUND (count: 1)
+- [x] `hero-lifebuoy` in bundle — FOUND (count: 1)
+- [x] `hero-magnifying-glass` in bundle — FOUND (count: 1)
+- [x] `hero-moon` in bundle — FOUND (count: 1)
+- [x] `hero-pencil-square` in bundle — FOUND (count: 1)
+- [x] `hero-sun` in bundle — FOUND (count: 1)
+- [x] `hero-window` in bundle — FOUND (count: 1)
 - [x] `hero-paper-airplane` in bundle — FOUND (count: 1)
 - [x] `hero-check-circle` in bundle — FOUND (count: 1)
 - [x] `hero-question-mark-circle` in bundle — FOUND (count: 1)
-- [x] Bundle size 81780 bytes < 150000 — PASS
-- [x] `git diff --exit-code priv/static/` exits 0 — BUNDLE-CLEAN
+- [x] Bundle size 94054 bytes < 150000 — PASS
+- [x] `git diff --exit-code priv/static/` exits 0 after commit — BUNDLE-CLEAN
 
 ## Self-Check: PASSED
 
