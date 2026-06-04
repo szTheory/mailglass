@@ -148,3 +148,12 @@ rather than on driving clicks.
   this is invisible in normal use — but a **hard refresh on a deep URL can load
   unstyled**. This is the asset-serving strategy (a stable seam), independent of
   the design system; fixing it robustly is a separate change.
+
+  **GAP-22 disposition (Phase 75 / IA-04):** The deep-link-unstyled-CSS behavior
+  described above is tracked as GAP-22 and deferred to Phase 79 (VERIF-04). A
+  robust fix touches the stable asset-serving seam (the relative `css-<md5>` URL
+  resolves against the deep path on hard refresh, not the mount root). This seam
+  is out of churn scope for v1.7. The bug affects only hard refreshes on deep
+  URLs; normal in-app live navigation is unaffected because live navigation keeps
+  the stylesheet loaded. GAP-22 is held at severity 3 — it does not block Phase
+  79 closeout before the decision is reconfirmed there.
