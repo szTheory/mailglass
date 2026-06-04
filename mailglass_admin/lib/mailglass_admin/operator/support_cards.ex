@@ -1,6 +1,10 @@
 defmodule MailglassAdmin.Operator.SupportCards do
   @moduledoc """
   Read-only tenant-scoped support cues for the selected delivery context.
+
+  Two-tier hierarchy per 74-UI-SPEC.md Support-Card Primary/Secondary Hierarchy Layout:
+  - Tier 1: full card containers for non-zero/actionable counts (failed ingest, orphan backlog)
+  - Tier 2: compact horizontal row for zero-state items and the always-informational suppression count
   """
 
   use Phoenix.Component
@@ -9,39 +13,38 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
   attr(:support_summary, :map, required: true)
   attr(:support_state, :map, required: true)
+  attr(:suppression_count, :integer, default: nil)
 
   def support_cards(assigns) do
     ~H"""
     <section
       data-testid="operator-support-cards"
-      class="card rounded-box border border-base-300 bg-base-200 p-6"
+      class="card rounded-box border border-base-300 bg-base-200 p-md"
     >
-      <div class="flex flex-wrap items-start justify-between gap-3">
+      <div class="flex flex-wrap items-start justify-between gap-sm">
         <div class="space-y-1">
-          <h3 class="text-base font-bold text-base-content">Support cards</h3>
-          <p class="text-sm text-secondary">
+          <h3 class="text-body font-bold text-base-content">Support cards</h3>
+          <p class="text-label text-secondary">
             Tenant-scoped facts from the current support window.
           </p>
         </div>
         <span class="badge badge-outline">Read-only</span>
       </div>
 
-      <div class="mt-4 grid gap-4 xl:grid-cols-2">
-        <article class="rounded-box border border-base-300 bg-base-100 p-4">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h4 class="text-sm font-bold text-base-content">Failed ingest</h4>
-              <p class="mt-1 text-sm text-secondary">
-                Recent webhook rows that failed before mailglass could project durable delivery facts.
-              </p>
-            </div>
-            <span class="badge badge-error badge-outline">
-              {@support_summary.failed_ingest.count}
-            </span>
+      <%!-- Tier 1: non-zero/actionable counts — full card containers --%>
+      <div class="flex flex-col gap-lg mt-md">
+        <article
+          :if={@support_summary && @support_summary.failed_ingest.count > 0}
+          class="card bg-base-200 border border-base-300 rounded-box p-lg"
+          data-testid="support-card-failed-ingest-tier1"
+        >
+          <div class="text-display font-bold text-error">
+            {@support_summary.failed_ingest.count}
           </div>
+          <p class="text-body text-secondary">Recent failures (last 24h)</p>
 
-          <div :if={@support_summary.failed_ingest.latest} class="mt-4 space-y-2">
-            <p class="text-xs text-secondary">
+          <div :if={@support_summary.failed_ingest.latest} class="mt-sm space-y-2">
+            <p class="text-label text-secondary">
               Exemplar webhook row: {@support_summary.failed_ingest.latest.provider_event_id}
             </p>
             <button
@@ -50,24 +53,24 @@ defmodule MailglassAdmin.Operator.SupportCards do
               phx-value-focus="failed_ingest"
               phx-value-webhook_event_id={@support_summary.failed_ingest.latest.webhook_event_id}
               data-testid="support-card-failed-ingest-drilldown"
-              class="btn btn-ghost btn-sm px-3"
+              class="btn btn-sm btn-primary mt-sm"
             >
-              Open webhook row
+              View failures
             </button>
 
             <dl
               :if={focused?(@support_state, :failed_ingest)}
               data-testid="support-card-failed-ingest-detail"
-              class="grid gap-2 text-sm text-secondary"
+              class="grid gap-sm text-body text-secondary"
             >
               <div>
-                <dt class="text-xs font-bold uppercase tracking-[0.08em]">Webhook row ID</dt>
+                <dt class="text-label font-bold uppercase tracking-[0.08em]">Webhook row ID</dt>
                 <dd class="mono mt-1 text-base-content">
                   {@support_summary.failed_ingest.latest.webhook_event_id}
                 </dd>
               </div>
               <div>
-                <dt class="text-xs font-bold uppercase tracking-[0.08em]">Provider event</dt>
+                <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider event</dt>
                 <dd class="mt-1 text-base-content">
                   {@support_summary.failed_ingest.latest.provider_event_id}
                 </dd>
@@ -76,21 +79,18 @@ defmodule MailglassAdmin.Operator.SupportCards do
           </div>
         </article>
 
-        <article class="rounded-box border border-base-300 bg-base-100 p-4">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h4 class="text-sm font-bold text-base-content">Orphan backlog</h4>
-              <p class="mt-1 text-sm text-secondary">
-                Current unmatched webhook facts waiting on reconcile linkage.
-              </p>
-            </div>
-            <span class="badge badge-warning badge-outline">
-              {@support_summary.orphan_backlog.count}
-            </span>
+        <article
+          :if={@support_summary && @support_summary.orphan_backlog.count > 0}
+          class="card bg-base-200 border border-base-300 rounded-box p-lg"
+          data-testid="support-card-orphan-backlog-tier1"
+        >
+          <div class="text-display font-bold text-warning">
+            {@support_summary.orphan_backlog.count}
           </div>
+          <p class="text-body text-secondary">Orphan backlog</p>
 
-          <div :if={@support_summary.orphan_backlog.oldest} class="mt-4 space-y-2">
-            <p class="text-xs text-secondary">
+          <div :if={@support_summary.orphan_backlog.oldest} class="mt-sm space-y-2">
+            <p class="text-label text-secondary">
               Oldest unmatched fact: {@support_summary.orphan_backlog.oldest.provider_event_id}
             </p>
             <button
@@ -99,24 +99,24 @@ defmodule MailglassAdmin.Operator.SupportCards do
               phx-value-focus="orphan_backlog"
               phx-value-event_id={@support_summary.orphan_backlog.oldest.event_id}
               data-testid="support-card-orphan-backlog-drilldown"
-              class="btn btn-ghost btn-sm px-3"
+              class="btn btn-sm btn-primary mt-sm"
             >
-              Open unmatched fact
+              View backlog
             </button>
 
             <dl
               :if={focused?(@support_state, :orphan_backlog)}
               data-testid="support-card-orphan-backlog-detail"
-              class="grid gap-2 text-sm text-secondary"
+              class="grid gap-sm text-body text-secondary"
             >
               <div>
-                <dt class="text-xs font-bold uppercase tracking-[0.08em]">Event ID</dt>
+                <dt class="text-label font-bold uppercase tracking-[0.08em]">Event ID</dt>
                 <dd class="mono mt-1 text-base-content">
                   {@support_summary.orphan_backlog.oldest.event_id}
                 </dd>
               </div>
               <div>
-                <dt class="text-xs font-bold uppercase tracking-[0.08em]">Provider event</dt>
+                <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider event</dt>
                 <dd class="mt-1 text-base-content">
                   {@support_summary.orphan_backlog.oldest.provider_event_id}
                 </dd>
@@ -125,21 +125,20 @@ defmodule MailglassAdmin.Operator.SupportCards do
           </div>
         </article>
 
-        <article class="rounded-box border border-base-300 bg-base-100 p-4">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h4 class="text-sm font-bold text-base-content">Replay outcomes</h4>
-              <p class="mt-1 text-sm text-secondary">
-                Replay audit facts stay separate from provider lifecycle facts.
-              </p>
-            </div>
-            <span class="badge badge-outline">
-              {replay_count_summary(@support_summary.replay_outcomes.counts)}
-            </span>
+        <article
+          :if={@support_summary && replay_any_nonzero?(@support_summary.replay_outcomes.counts)}
+          class="card bg-base-200 border border-base-300 rounded-box p-lg"
+          data-testid="support-card-replay-outcomes-tier1"
+        >
+          <div class="text-display font-bold text-error">
+            {@support_summary.replay_outcomes.counts.failed}
           </div>
+          <p class="text-body text-secondary">
+            Replay outcomes: {replay_count_summary(@support_summary.replay_outcomes.counts)}
+          </p>
 
-          <div :if={@support_summary.replay_outcomes.latest} class="mt-4 space-y-2">
-            <p class="text-xs text-secondary">
+          <div :if={@support_summary.replay_outcomes.latest} class="mt-sm space-y-2">
+            <p class="text-label text-secondary">
               Exemplar replay audit: {RepairState.effect_label(@support_summary.replay_outcomes.latest.outcome) ||
                 @support_summary.replay_outcomes.latest.outcome}
             </p>
@@ -150,60 +149,80 @@ defmodule MailglassAdmin.Operator.SupportCards do
               phx-value-event_id={@support_summary.replay_outcomes.latest.event_id}
               phx-value-delivery_id={@support_summary.replay_outcomes.latest.delivery_id}
               data-testid="support-card-replay-outcomes-drilldown"
-              class="btn btn-ghost btn-sm px-3"
+              class="btn btn-sm btn-primary mt-sm"
             >
               Open replay audit
             </button>
-            <p class="mono text-xs text-secondary">
+            <p class="mono text-label text-secondary">
               {@support_summary.replay_outcomes.latest.event_id}
             </p>
           </div>
         </article>
+      </div>
 
-        <article class="rounded-box border border-base-300 bg-base-100 p-4">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h4 class="text-sm font-bold text-base-content">Reconcile facts</h4>
-              <p class="mt-1 text-sm text-secondary">
-                Linked facts and still unmatched pressure stay separate from replay audit.
-              </p>
-            </div>
-            <span class="badge badge-outline">
-              linked {@support_summary.reconcile_facts.reconciled_count} · pressure {@support_summary.reconcile_facts.still_unmatched_count}
-            </span>
-          </div>
-
-          <div :if={@support_summary.reconcile_facts.latest_reconciled} class="mt-4 space-y-2">
-            <p class="text-xs text-secondary">
-              Exemplar linked fact: {@support_summary.reconcile_facts.latest_reconciled.reconciled_provider_event_id}
-            </p>
-            <button
-              type="button"
-              phx-click="open_support_exemplar"
-              phx-value-focus="reconcile_facts"
-              phx-value-event_id={@support_summary.reconcile_facts.latest_reconciled.event_id}
-              phx-value-delivery_id={@support_summary.reconcile_facts.latest_reconciled.delivery_id}
-              data-testid="support-card-reconcile-facts-drilldown"
-              class="btn btn-ghost btn-sm px-3"
-            >
-              Open linked fact
-            </button>
-            <p class="mono text-xs text-secondary">
-              {@support_summary.reconcile_facts.latest_reconciled.event_id}
-            </p>
-          </div>
-        </article>
+      <%!-- Tier 2: zero-state compact row — informational items always visible --%>
+      <div class="border-t border-base-300 flex flex-wrap gap-md items-center py-sm text-label text-secondary mt-md">
+        <span :if={not (@support_summary && @support_summary.failed_ingest.count > 0)}>
+          No failures
+        </span>
+        <span
+          :if={not (@support_summary && @support_summary.failed_ingest.count > 0) and not (@support_summary && @support_summary.orphan_backlog.count > 0)}
+          aria-hidden="true"
+        >·</span>
+        <span :if={not (@support_summary && @support_summary.orphan_backlog.count > 0)}>
+          No orphan backlog
+        </span>
+        <span aria-hidden="true">·</span>
+        <span data-testid="support-card-suppression-count">
+          Active suppressions: {if @suppression_count, do: @suppression_count, else: "—"}
+        </span>
+        <span
+          :if={@support_summary && @support_summary.reconcile_facts.reconciled_count > 0}
+          aria-hidden="true"
+        >·</span>
+        <span :if={@support_summary && @support_summary.reconcile_facts.reconciled_count > 0}>
+          Reconciled: {@support_summary.reconcile_facts.reconciled_count}
+        </span>
+        <span
+          :if={@support_summary && @support_summary.reconcile_facts.still_unmatched_count > 0}
+          aria-hidden="true"
+        >·</span>
+        <span
+          :if={@support_summary && @support_summary.reconcile_facts.still_unmatched_count > 0}
+          data-testid="support-card-reconcile-facts-drilldown"
+        >
+          <button
+            type="button"
+            phx-click="open_support_exemplar"
+            phx-value-focus="reconcile_facts"
+            phx-value-event_id={
+              @support_summary.reconcile_facts.latest_reconciled &&
+                @support_summary.reconcile_facts.latest_reconciled.event_id
+            }
+            phx-value-delivery_id={
+              @support_summary.reconcile_facts.latest_reconciled &&
+                @support_summary.reconcile_facts.latest_reconciled.delivery_id
+            }
+            class="btn btn-ghost btn-sm px-3"
+          >
+            Unmatched pressure: {@support_summary.reconcile_facts.still_unmatched_count}
+          </button>
+        </span>
       </div>
 
       <div
         :if={drilldown_banner(@support_state)}
         data-testid="support-card-drilldown-banner"
-        class="mt-4 rounded-box border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-base-content"
+        class="mt-md rounded-box border border-primary/30 bg-primary/5 px-md py-sm text-body text-base-content"
       >
         {drilldown_banner(@support_state)}
       </div>
     </section>
     """
+  end
+
+  defp replay_any_nonzero?(counts) do
+    counts.failed > 0 or counts.noop > 0 or counts.replayed > 0
   end
 
   defp replay_count_summary(counts) do

@@ -448,6 +448,7 @@ defmodule MailglassAdmin.OperatorLive do
                   <SupportCards.support_cards
                     support_summary={@support_summary}
                     support_state={@support_state}
+                    suppression_count={@suppression_count}
                   />
                   <OperatorTimeline.timeline
                     timeline_events={@timeline_events}
