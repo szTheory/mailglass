@@ -396,6 +396,10 @@ jobs:
         # Fails CI if any {Credo.Check..., false} entry is missing
         # a `# Reason:` + `# Tracking:` comment block (D-08-18/D-08-19).
         run: bash scripts/check_credo_suppressions.sh
+      - name: Verify motion conformance (shell gate)
+        # Fails CI if any banned layout-thrashing or easing token appears
+        # in lib/ or app.css per UI-SPEC Motion Rules (Phase 74 FROZEN contract, GAP-19 sev 3).
+        run: bash scripts/check_motion_conformance.sh
       - name: Run Credo strict
         run: mix credo --strict
 
