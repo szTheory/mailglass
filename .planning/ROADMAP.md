@@ -282,7 +282,19 @@ Plans:
   4. The deep-link bug is either resolved or explicitly deferred with recorded rationale — the gap-register row is closed so no open sev-4/5 item blocks milestone closeout.
   5. Release ceremony is acknowledged: matched version bump across `mailglass`, `mailglass_admin`, and `mailglass_inbound`; administrative CHANGELOG entries for core and inbound prepared.
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+**Wave 1** *(parallel)*
+
+  - [ ] 79-01-PLAN.md — Committed check-conformance.sh script (5 gates) + design-system.md audit-loop prose expansion. (Wave 1)
+  - [ ] 79-02-PLAN.md — e2e extension: Operator Overview structural coverage + inbound/preview orientation-strip testids; fix pre-existing replay-flow failure. (Wave 1)
+  - [ ] 79-03-PLAN.md — 79-GAP-CLOSEOUT.md: sev-4/5 row closure evidence + GAP-22 deferral reconfirmation + audit-matrix before/after finding. (Wave 1)
+
+**Wave 2** *(depends on Wave 1 gates green)*
+
+  - [ ] 79-04-PLAN.md — Release ceremony prep: inbound exact-pin 1.4.5 → 1.5.0; full verify.preview gate; release-readiness confirmation. (Wave 2)
+
 **UI hint**: yes
 
 ## Progress
@@ -294,7 +306,7 @@ Plans:
 | 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
 | 77. Motion and Microinteraction Polish | 4/4 | Complete    | 2026-06-04 |
 | 78. Seed-Data Expressiveness | 2/2 | Complete    | 2026-06-04 |
-| 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
+| 79. Verification and Visual-Regression Hardening | 0/4 | Not started | - |
 
 ## Backlog
 
