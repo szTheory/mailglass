@@ -12,9 +12,9 @@
 
 ### Audit & UI-SPEC (Phase 74 — evidence gate, no code)
 
-- [ ] **AUDIT-01**: Maintainer can review a scored **gap register** covering the full surface × theme (light/dark) × viewport (390 / 768 / 1440) × state matrix, each row recording `{surface, component:line, pillar, severity 1–5, evidence PNG, fix sketch}` — including an explicit **390px mobile** pass.
-- [ ] **AUDIT-02**: A **frozen UI-SPEC** defines per-surface target end-state: the **canonical status→color taxonomy table** (resolving the three-way `badge_class/1` conflict, notably `:suppressed`), the support-card hierarchy redesign, the empty/error/loading state inventory, motion assignments, and per-surface acceptance checklists.
-- [ ] **AUDIT-03**: A committed **before-baseline** exists — gitignored screenshot set + an inventory of every demo/e2e heading and seed-count assertion later phases will ripple — so Phase 79 can diff against it.
+- [x] **AUDIT-01**: Maintainer can review a scored **gap register** covering the full surface × theme (light/dark) × viewport (390 / 768 / 1440) × state matrix, each row recording `{surface, component:line, pillar, severity 1–5, evidence PNG, fix sketch}` — including an explicit **390px mobile** pass.
+- [x] **AUDIT-02**: A **frozen UI-SPEC** defines per-surface target end-state: the **canonical status→color taxonomy table** (resolving the three-way `badge_class/1` conflict, notably `:suppressed`), the support-card hierarchy redesign, the empty/error/loading state inventory, motion assignments, and per-surface acceptance checklists.
+- [x] **AUDIT-03**: A committed **before-baseline** exists — gitignored screenshot set + an inventory of every demo/e2e heading and seed-count assertion later phases will ripple — so Phase 79 can diff against it.
 
 ### Information Architecture & Orientation (Phase 75)
 
@@ -79,9 +79,9 @@ Phase mapping derived from the locked blueprint; the roadmapper validates 100% c
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUDIT-01 | Phase 74 | Pending |
-| AUDIT-02 | Phase 74 | Pending |
-| AUDIT-03 | Phase 74 | Pending |
+| AUDIT-01 | Phase 74 | Complete |
+| AUDIT-02 | Phase 74 | Complete |
+| AUDIT-03 | Phase 74 | Complete |
 | IA-01 | Phase 75 | Pending |
 | IA-02 | Phase 75 | Pending |
 | IA-03 | Phase 75 | Pending |

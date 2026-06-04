@@ -212,7 +212,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 74. Systematic Audit and UI-SPEC | 3/3 | Complete   | 2026-06-04 |
+| 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 0/TBD | Not started | - |
 | 76. Component-Library and Design-System Hardening | 0/TBD | Not started | - |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
