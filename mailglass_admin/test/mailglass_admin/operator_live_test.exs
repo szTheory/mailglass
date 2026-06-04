@@ -846,5 +846,31 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end)
   end
 
+  describe "Operator Overview branch" do
+    @tag :skip
+    test "bare /ops/mail/ renders h1 Operator overview (no selected delivery, no tenant)", %{
+      conn: _conn
+    } do
+    end
+
+    @tag :skip
+    test "no-tenant Overview shows nudge copy not health row", %{conn: _conn} do
+    end
+
+    @tag :skip
+    test "with-tenant Overview renders 4 health-count cards", %{conn: _conn} do
+    end
+
+    @tag :skip
+    test "suppression count degradation renders em-dash in text-secondary when count errors", %{
+      conn: _conn
+    } do
+    end
+
+    @tag :skip
+    test "?view=deliveries param shows Deliveries list not Overview", %{conn: _conn} do
+    end
+  end
+
   defp minutes_ago(minutes), do: DateTime.add(DateTime.utc_now(), -minutes, :minute)
 end
