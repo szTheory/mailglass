@@ -278,9 +278,9 @@ defmodule MailglassAdmin.InboundLive do
           id="inbound-filters"
           phx-change="validate_filters"
           phx-submit="apply_filters"
-          class="grid gap-3"
+          class="grid gap-sm"
         >
-          <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <div class="grid gap-sm md:grid-cols-2 xl:grid-cols-5">
             <FiltersForm.fields
               form={@filter_form}
               outcome_values={@outcome_values}
@@ -299,14 +299,14 @@ defmodule MailglassAdmin.InboundLive do
 
       <section
         data-testid="inbound-master-detail"
-        class="mt-6 grid gap-6 lg:grid-cols-[minmax(22rem,28rem)_1fr]"
+        class="mt-6 grid gap-lg lg:grid-cols-[minmax(22rem,28rem)_1fr]"
       >
         <aside
           data-testid="inbound-records-list-card"
           class="card rounded-box border border-base-300 bg-base-200 p-0"
         >
           <div class="border-b border-base-300 px-4 py-3">
-            <h2 class="text-sm font-bold uppercase tracking-[0.08em] text-secondary">
+            <h2 class="text-body font-bold uppercase tracking-[0.08em] text-secondary">
               Recent inbound records
             </h2>
           </div>
@@ -322,7 +322,7 @@ defmodule MailglassAdmin.InboundLive do
               >
                 <div class="flex items-center gap-2">
                   <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
-                  <h2 class="text-base font-bold text-base-content">
+                  <h2 class="text-body font-bold text-base-content">
                     Inbound data could not be loaded. Refresh the page or adjust the filters, then try again.
                   </h2>
                 </div>
@@ -333,7 +333,7 @@ defmodule MailglassAdmin.InboundLive do
                 data-testid="inbound-empty-detail"
                 class="card rounded-box border border-base-300 bg-base-200 p-6"
               >
-                <h2 class="text-base font-bold text-base-content">
+                <h2 class="text-body font-bold text-base-content">
                   Select an inbound record to inspect its routing, execution timeline, and raw source.
                 </h2>
               </div>

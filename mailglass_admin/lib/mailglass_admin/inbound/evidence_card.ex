@@ -14,7 +14,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
 
     - `:redacted` — default; raw bytes absent, redacted placeholder shown.
     - `:revealed` — capability granted; raw payload rendered in a read-only
-      `<pre class="mono text-xs">` scroll region.
+      `<pre class="mono text-label">` scroll region.
     - `:denied` — reveal attempted and denied; placeholder stays + brand-voice line.
 
   Raw source, once revealed, is read-only and never editable.
@@ -32,8 +32,8 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
       data-testid="inbound-evidence-card"
       class="card rounded-box border border-base-300 bg-base-200 p-6"
     >
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h3 class="text-base font-bold text-base-content">Raw provider source</h3>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-sm">
+        <h3 class="text-body font-bold text-base-content">Raw provider source</h3>
         <button
           :if={@evidence && @reveal_state != :revealed}
           type="button"
@@ -46,34 +46,34 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
       </div>
 
       <%= if is_nil(@evidence) do %>
-        <p class="text-sm text-secondary">
+        <p class="text-body text-secondary">
           No raw provider source has been stored for this message.
         </p>
       <% else %>
-        <dl class="mb-4 grid gap-3 text-sm text-secondary sm:grid-cols-2">
+        <dl class="mb-4 grid gap-sm text-body text-secondary sm:grid-cols-2">
           <div>
-            <dt class="text-xs font-bold uppercase tracking-[0.08em]">Provider</dt>
+            <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider</dt>
             <dd class="mt-1 text-base-content">{String.upcase(@evidence.provider || "unknown")}</dd>
           </div>
           <div>
-            <dt class="text-xs font-bold uppercase tracking-[0.08em]">Payload size</dt>
+            <dt class="text-label font-bold uppercase tracking-[0.08em]">Payload size</dt>
             <dd class="mono mt-1 text-base-content">{payload_byte_size(@evidence)} bytes</dd>
           </div>
           <div>
-            <dt class="text-xs font-bold uppercase tracking-[0.08em]">Header count</dt>
+            <dt class="text-label font-bold uppercase tracking-[0.08em]">Header count</dt>
             <dd class="mono mt-1 text-base-content">{header_count(@evidence)}</dd>
           </div>
         </dl>
 
         <div :if={map_size(@evidence.verification_facts || %{}) > 0} class="mb-4 space-y-1">
-          <p class="text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+          <p class="text-label font-bold uppercase tracking-[0.08em] text-secondary">
             Verification facts
           </p>
-          <dl class="grid gap-1 text-sm sm:grid-cols-2">
+          <dl class="grid gap-1 text-body sm:grid-cols-2">
             <%= for {key, value} <- @evidence.verification_facts do %>
               <div class="flex items-center gap-2">
-                <dt class="mono text-xs text-secondary">{key}</dt>
-                <dd class="mono text-xs text-base-content">{inspect_value(value)}</dd>
+                <dt class="mono text-label text-secondary">{key}</dt>
+                <dd class="mono text-label text-base-content">{inspect_value(value)}</dd>
               </div>
             <% end %>
           </dl>
@@ -82,19 +82,19 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
         <%= case @reveal_state do %>
           <% :revealed -> %>
             <div class="space-y-1">
-              <p class="text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+              <p class="text-label font-bold uppercase tracking-[0.08em] text-secondary">
                 Raw payload (read-only)
               </p>
               <pre
                 data-testid="inbound-evidence-raw"
-                class="mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-3 text-xs text-base-content"
+                class="mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-3 text-label text-base-content"
               ><%= raw_payload_text(@evidence) %></pre>
             </div>
 
           <% :denied -> %>
             <p
               data-testid="inbound-evidence-denied"
-              class="rounded-box border border-warning bg-warning/10 p-3 text-sm text-base-content"
+              class="rounded-box border border-warning bg-warning/10 p-3 text-body text-base-content"
             >
               Raw source not revealed: the reveal_raw capability is not granted for this operator.
             </p>
@@ -102,7 +102,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           <% _redacted -> %>
             <p
               data-testid="inbound-evidence-redacted"
-              class="mono rounded-box border border-base-300 bg-base-100 p-3 text-xs text-secondary"
+              class="mono rounded-box border border-base-300 bg-base-100 p-3 text-label text-secondary"
             >
               Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability.
             </p>

@@ -75,7 +75,7 @@ defmodule MailglassAdmin.Components do
   def flash(assigns) do
     ~H"""
     <div class="toast toast-top toast-end z-50" role="status" aria-live="polite">
-      <div class={["motion-reveal alert text-sm gap-2 py-2 px-3", alert_class(@kind)]}>
+      <div class={["motion-reveal alert text-body gap-2 py-2 px-3", alert_class(@kind)]}>
         <.icon name="hero-arrow-path" class="w-4 h-4" />
         <span>{@message}</span>
       </div>
@@ -109,7 +109,7 @@ defmodule MailglassAdmin.Components do
 
   def badge(%{variant: :stub} = assigns) do
     ~H"""
-    <span class="text-secondary text-xs">—</span>
+    <span class="text-secondary text-label">—</span>
     """
   end
 
