@@ -15,7 +15,7 @@ errors=0
 
 # Pass A: layout-thrashing + duration tokens
 # Covers both mailglass_admin/lib/ and app.css (no false-positive risk for these tokens).
-THRASH_PATTERN='transition-height|transition-max-height|transition-padding|transition-all|duration-300|duration-[4-9][0-9][0-9]|duration-[0-9]{4,}'
+THRASH_PATTERN='transition-height|transition-max-height|transition-padding|transition-all|duration-[3-9][0-9][0-9]|duration-[0-9]{4,}'
 if grep -rE "$THRASH_PATTERN" "$LIB" "$CSS" 2>/dev/null; then
   echo "FAIL: banned layout-thrashing or duration token found (see above)" >&2
   errors=$((errors + 1))

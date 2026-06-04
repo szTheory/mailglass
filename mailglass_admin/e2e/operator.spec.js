@@ -237,7 +237,7 @@ test.describe("operator browser gate", () => {
   //
   // To enable this test: Phase 78 must seed at least one InboundRecord in the browser scenario.
   // Once that seed is added, remove the skip wrapper and implement the assertion:
-  //   1. Navigate to /ops/inbound?tenant_id=browser-tenant
+  //   1. Navigate to /ops/mail/inbound?tenant_id=browser-tenant
   //   2. Click the first inbound row
   //   3. Read inbound_id from new URL(page.url()).searchParams.get("inbound_id")
   //   4. Assert page.locator(`#inbound-detail-${inboundId}`) toBeVisible()
@@ -246,7 +246,7 @@ test.describe("operator browser gate", () => {
     // See OperatorFixtures.seed_browser_scenario!() — zero inbound records are seeded.
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
-    await page.goto(`/ops/inbound?tenant_id=${tenantId}`);
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
 
     // Click the first inbound row (requires Phase 78 to seed at least one inbound record)
     await page.getByTestId("operator-inbound-row").nth(0).click();
