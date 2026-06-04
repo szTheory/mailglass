@@ -593,15 +593,13 @@ No new auth, network, or data surfaces are introduced in Phase 79. The conforman
 
 ## Open Questions
 
-1. **`agent-browser` CLI availability on the executing machine**
+1. **`agent-browser` CLI availability on the executing machine — RESOLVED**
    - What we know: The script requires it; it is unversioned and local-only per D-07
-   - What's unclear: Whether it is installed on the machine where Phase 79 will run
-   - Recommendation: Attempt `which agent-browser` at execution start; if absent, skip the audit matrix re-run step and note it as human-delegated in the closeout artifact. The before/after finding can be synthesized from code review of Phase 76-78 commits.
+   - Resolution: Confirmed AVAILABLE on this machine (`command -v agent-browser` succeeds during plan-phase, 2026-06-04). The audit-matrix re-run is autonomous; no human delegation needed. Plan 79-03 still carries the sanctioned D-01 fallback (synthesize finding from Phase 76-78 commit review) should the CLI be absent on a different executor machine.
 
-2. **Root cause of the "Replay audit" timeline failure**
+2. **Root cause of the "Replay audit" timeline failure — RESOLVED (approach encoded in plan)**
    - What we know: The replay executes (line 125 assertion passes), the delivery reloads, but `containText("Replay audit")` at line 128 fails
-   - What's unclear: Whether the timeline events are truly loaded (DB write + re-query succeeds) but the DOM update is async, or whether the timeline data genuinely lacks the replay event
-   - Recommendation: Add `await expect(page.getByTestId("operator-timeline")).toContainText("Replay audit", { timeout: 10000 })` with an extended timeout as the first fix attempt. If it still fails, add a `console.log` of the timeline's inner HTML to diagnose whether the event row is present but the text format differs.
+   - Resolution: Plan 79-02 encodes the two-step fix — (i) add `{ timeout: 10000 }` to the timeline `toContainText("Replay audit")` assertion (primary: async LiveView re-render timing), and (ii) anchor delivery selection to a stable seed attribute rather than the positional `nth`-index (secondary: post-Phase-78 seed drift). The plan includes a diagnostic step (log timeline inner HTML) if the timeout fix alone does not green the test, so a genuinely-missing replay event is not masked as a timing issue.
 
 ---
 
