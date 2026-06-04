@@ -19,7 +19,13 @@ defmodule MailglassAdmin.VoiceTest do
     test "are absent from rendered UI", %{conn: conn} do
       conn = Plug.Test.init_test_session(conn, %{"mailables" => [HappyMailer]})
       {:ok, _view, html} = live(conn, "/dev/mail")
-      lower = String.downcase(html)
+      # Strip inlined <script>…</script> blocks before checking brand voice.
+      # Phoenix inlines phoenix.mjs which contains "noops" (a logger no-op utility).
+      # Checking the full HTML produces a false positive on that dep-JS token.
+      # The brand-voice rule applies to the rendered UI markup, not embedded scripts.
+      # See project memory: voice_test "Oops" is dep-JS noise.
+      html_without_scripts = Regex.replace(~r/<script\b[^>]*>.*?<\/script>/si, html, "")
+      lower = String.downcase(html_without_scripts)
 
       refute lower =~ "oops",
              "brand voice: 'Oops' must never appear in admin UI"

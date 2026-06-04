@@ -1,6 +1,13 @@
 defmodule MailglassAdmin.TestSupport.CitextProbe do
   @moduledoc false
 
+  # Boundary: declared as a top-level ignored boundary so that cross-boundary calls to
+  # Mailglass internal modules (SuppressionStore.Ecto, Suppression.Entry) are not checked.
+  # Test support legitimately needs internal Mailglass access for real DB round-trip probes;
+  # `check: [in: false, out: false]` is the Boundary-idiomatic pattern for test support
+  # (see Boundary docs §"Ignoring checks can be useful for test support modules").
+  use Boundary, top_level?: true, check: [in: false, out: false]
+
   import Ecto.Query
 
   alias Mailglass.Suppression.Entry
