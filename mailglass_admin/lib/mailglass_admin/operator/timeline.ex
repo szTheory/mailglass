@@ -17,13 +17,13 @@ defmodule MailglassAdmin.Operator.Timeline do
       data-testid="operator-timeline"
       class="card rounded-box border border-base-300 bg-base-200 p-6"
     >
-      <div class="mb-4 flex items-center justify-between gap-3">
-        <h3 class="text-base font-bold text-base-content">Event timeline</h3>
-        <span class="text-xs text-secondary">Chronological order</span>
+      <div class="mb-4 flex items-center justify-between gap-sm">
+        <h3 class="text-body font-bold text-base-content">Event timeline</h3>
+        <span class="text-label text-secondary">Chronological order</span>
       </div>
 
       <%= if @timeline_events == [] do %>
-        <p class="text-sm text-secondary">
+        <p class="text-body text-secondary">
           No delivery events have been recorded for this item yet.
         </p>
       <% else %>
@@ -35,7 +35,7 @@ defmodule MailglassAdmin.Operator.Timeline do
               data-highlighted={
                 if highlighted?(@highlight_event_id, event.id), do: "true", else: "false"
               }
-              class="flex gap-3"
+              class="flex gap-sm"
             >
               <div class="mt-1 flex flex-col items-center">
                 <span class={["h-3 w-3 rounded-full", event_dot_class(event.type)]}></span>
@@ -46,21 +46,21 @@ defmodule MailglassAdmin.Operator.Timeline do
                 "min-w-0 flex-1 rounded-box border bg-base-100 p-4",
                 event_container_class(@highlight_event_id, event.id)
               ]}>
-                <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="flex flex-wrap items-start justify-between gap-sm">
                   <div class="space-y-1">
                     <div class="flex flex-wrap items-center gap-2">
-                      <p class="text-sm font-bold text-base-content">{event_label(event.type)}</p>
+                      <p class="text-body font-bold text-base-content">{event_label(event.type)}</p>
                       <Components.status_badge :if={event_badge(event.type)} status={event.type} size={:sm} />
                     </div>
-                    <p class="text-xs text-secondary">
+                    <p class="text-label text-secondary">
                       {metadata_summary(event.type, event.metadata)}
                     </p>
-                    <p class="mono text-xs text-secondary">{event.id}</p>
-                    <p :if={event.reject_reason} class="text-sm text-secondary">
+                    <p class="mono text-label text-secondary">{event.id}</p>
+                    <p :if={event.reject_reason} class="text-body text-secondary">
                       Reason: {label(event.reject_reason)}
                     </p>
                   </div>
-                  <p class="mono text-xs text-secondary">{format_datetime(event.occurred_at)}</p>
+                  <p class="mono text-label text-secondary">{format_datetime(event.occurred_at)}</p>
                 </div>
               </div>
             </li>
