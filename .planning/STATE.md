@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
 status: planning
-last_updated: "2026-06-04T06:19:37.443Z"
+last_updated: "2026-06-04T06:29:37.456Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 8
