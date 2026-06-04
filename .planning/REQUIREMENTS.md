@@ -18,10 +18,10 @@
 
 ### Information Architecture & Orientation (Phase 75)
 
-- [ ] **IA-01**: Deliveries, Inbound, and Preview each render the **shared shell-level orientation strip** with per-surface content (generalized from the Deliveries-only original at `operator_live.ex`).
-- [ ] **IA-02**: An operator landing on `/ops/mail/` reaches a task-oriented **Operator Overview** (a new `:overview` action on the existing OperatorLive, no router-macro change) that routes to Deliveries/Inbound and surfaces at-a-glance health (orphan backlog, recent failures, suppression count).
-- [ ] **IA-03**: Page titles, subtitles, and headings follow **one deliberate IA vocabulary** across surfaces, with `operator.spec.js` + demo specs updated in the same change.
-- [ ] **IA-04**: The deep-link-unstyled-CSS asset fix carries an **explicit, recorded in-scope / deferred decision** (it touches a stable asset-serving seam → gated decision).
+- [x] **IA-01**: Deliveries, Inbound, and Preview each render the **shared shell-level orientation strip** with per-surface content (generalized from the Deliveries-only original at `operator_live.ex`).
+- [x] **IA-02**: An operator landing on `/ops/mail/` reaches a task-oriented **Operator Overview** (a new `:overview` action on the existing OperatorLive, no router-macro change) that routes to Deliveries/Inbound and surfaces at-a-glance health (orphan backlog, recent failures, suppression count).
+- [x] **IA-03**: Page titles, subtitles, and headings follow **one deliberate IA vocabulary** across surfaces, with `operator.spec.js` + demo specs updated in the same change.
+- [x] **IA-04**: The deep-link-unstyled-CSS asset fix carries an **explicit, recorded in-scope / deferred decision** (it touches a stable asset-serving seam → gated decision).
 
 ### Design-System Hardening (Phase 76)
 
@@ -82,10 +82,10 @@ Phase mapping derived from the locked blueprint; the roadmapper validates 100% c
 | AUDIT-01 | Phase 74 | Complete |
 | AUDIT-02 | Phase 74 | Complete |
 | AUDIT-03 | Phase 74 | Complete |
-| IA-01 | Phase 75 | Pending |
-| IA-02 | Phase 75 | Pending |
-| IA-03 | Phase 75 | Pending |
-| IA-04 | Phase 75 | Pending |
+| IA-01 | Phase 75 | Complete |
+| IA-02 | Phase 75 | Complete |
+| IA-03 | Phase 75 | Complete |
+| IA-04 | Phase 75 | Complete |
 | DS-01 | Phase 76 | Pending |
 | DS-02 | Phase 76 | Pending |
 | DS-03 | Phase 76 | Pending |
