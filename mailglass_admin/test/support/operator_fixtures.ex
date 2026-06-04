@@ -129,6 +129,23 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       mailable: "Mailglass.Example.BrowserMailer"
     })
 
+    # GAP-13: seed one inbound record for the browser scenario so the MOTION-02
+    # regression gate (operator.spec.js) can navigate the inbound detail pane.
+    # received_at: hours_ago(10) keeps this record older than all delivery rows
+    # (oldest delivery is hours_ago(6)) — D-07 row-index stability preserved.
+    inbound_record =
+      insert_inbound_record!(%{
+        provider_message_id: "pm_browser_inbound_001",
+        envelope_recipient: "support@browser-scenario.example",
+        subject: "Browser scenario support request",
+        from: [%{"address" => "user@browser-test.example"}],
+        to: [%{"address" => "support@browser-scenario.example"}],
+        received_at: hours_ago(10)
+      })
+
+    inbound_evidence = insert_inbound_evidence!(inbound_record.id)
+    insert_inbound_run!(inbound_record.id, inbound_evidence.id)
+
     %{
       tenant_id: @tenant_id,
       selected_recipient: selected_delivery.recipient
@@ -137,7 +154,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   def reset! do
     TestRepo.query!(
-      "TRUNCATE TABLE mailglass_webhook_events, mailglass_events, mailglass_suppressions, mailglass_deliveries RESTART IDENTITY CASCADE"
+      "TRUNCATE TABLE mailglass_inbound_replay_runs, mailglass_inbound_evidence, mailglass_inbound_records, mailglass_webhook_events, mailglass_events, mailglass_suppressions, mailglass_deliveries RESTART IDENTITY CASCADE"
     )
 
     :ok
@@ -288,6 +305,143 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
           row.inserted_at
         ]
       )
+  end
+
+  defp insert_inbound_record!(attrs) do
+    defaults = %{
+      id: Ecto.UUID.generate(),
+      tenant_id: @tenant_id,
+      provider: "postmark",
+      provider_message_id: nil,
+      message_id: nil,
+      envelope_recipient: nil,
+      subject: nil,
+      from: [],
+      to: [],
+      cc: [],
+      bcc: [],
+      reply_to: [],
+      headers: %{},
+      sent_at: nil,
+      text_body: nil,
+      html_body: nil,
+      attachments: [],
+      suppression_flagged: false,
+      received_at: DateTime.utc_now(),
+      inserted_at: DateTime.utc_now(),
+      updated_at: DateTime.utc_now()
+    }
+
+    row = Enum.into(attrs, defaults)
+
+    _ =
+      Ecto.Adapters.SQL.query!(
+        TestRepo,
+        """
+        INSERT INTO mailglass_inbound_records
+          (id, tenant_id, provider, provider_message_id, message_id, envelope_recipient,
+           subject, "from", "to", cc, bcc, reply_to, headers, sent_at, received_at,
+           text_body, html_body, attachments, suppression_flagged, inserted_at, updated_at)
+        VALUES
+          ($1::uuid, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11::jsonb,
+           $12::jsonb, $13, $14, $15, $16, $17, $18::jsonb, $19, $20, $21)
+        """,
+        [
+          Ecto.UUID.dump!(row.id),
+          row.tenant_id,
+          row.provider,
+          row.provider_message_id,
+          row.message_id,
+          row.envelope_recipient,
+          row.subject,
+          Jason.encode!(row.from),
+          Jason.encode!(row.to),
+          Jason.encode!(row.cc),
+          Jason.encode!(row.bcc),
+          Jason.encode!(row.reply_to),
+          row.headers,
+          row.sent_at,
+          row.received_at,
+          row.text_body,
+          row.html_body,
+          Jason.encode!(row.attachments),
+          row.suppression_flagged,
+          row.inserted_at,
+          row.updated_at
+        ]
+      )
+
+    %{id: row.id, tenant_id: row.tenant_id, subject: row.subject}
+  end
+
+  defp insert_inbound_evidence!(inbound_record_id) do
+    id = Ecto.UUID.generate()
+    now = DateTime.utc_now()
+
+    _ =
+      Ecto.Adapters.SQL.query!(
+        TestRepo,
+        """
+        INSERT INTO mailglass_inbound_evidence
+          (id, tenant_id, provider, inbound_record_id, raw_payload, raw_headers,
+           raw_mime, verification_facts, parse_warnings, attachment_blobs,
+           inserted_at, updated_at)
+        VALUES
+          ($1::uuid, $2, $3, $4::uuid, $5, $6, $7, $8, $9, $10, $11, $12)
+        """,
+        [
+          Ecto.UUID.dump!(id),
+          @tenant_id,
+          "postmark",
+          Ecto.UUID.dump!(inbound_record_id),
+          %{},
+          %{},
+          nil,
+          %{},
+          %{},
+          %{},
+          now,
+          now
+        ]
+      )
+
+    %{id: id}
+  end
+
+  defp insert_inbound_run!(inbound_record_id, inbound_evidence_id) do
+    id = Ecto.UUID.generate()
+    now = DateTime.utc_now()
+
+    _ =
+      Ecto.Adapters.SQL.query!(
+        TestRepo,
+        """
+        INSERT INTO mailglass_inbound_replay_runs
+          (id, tenant_id, replay_id, mailbox, outcome, outcome_reason, failure,
+           executed_at, metadata, inbound_record_id, inbound_evidence_id, source,
+           inserted_at, updated_at)
+        VALUES
+          ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10::uuid, $11::uuid, $12, $13, $14)
+        """,
+        [
+          Ecto.UUID.dump!(id),
+          @tenant_id,
+          nil,
+          "Mailglass.Example.BrowserMailbox",
+          "accept",
+          nil,
+          %{},
+          now,
+          %{},
+          Ecto.UUID.dump!(inbound_record_id),
+          Ecto.UUID.dump!(inbound_evidence_id),
+          "fresh",
+          now,
+          now
+        ]
+      )
+
+    %{id: id}
   end
 
   defp hours_ago(hours), do: DateTime.add(DateTime.utc_now(), -hours, :hour)

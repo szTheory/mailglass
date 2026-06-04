@@ -239,30 +239,24 @@ test.describe("operator browser gate", () => {
     await expect(page.locator(`#delivery-detail-${deliveryId}`)).toBeVisible();
   });
 
-  // SKIPPED: inbound id-presence assertion (seed dependency — Phase 78)
-  //
-  // The inbound detail pane HEEx fix (id={"inbound-detail-#{@detail.record.id}"}) ships in
-  // Plan 01 (Phase 77). This e2e assertion is skipped because OperatorFixtures.seed_browser_scenario!()
-  // seeds zero inbound records — there is no navigable inbound row in the browser scenario.
-  //
-  // To enable this test: Phase 78 must seed at least one InboundRecord in the browser scenario.
-  // Once that seed is added, remove the skip wrapper and implement the assertion:
-  //   1. Navigate to /ops/mail/inbound?tenant_id=browser-tenant
-  //   2. Click the first inbound row
-  //   3. Read inbound_id from new URL(page.url()).searchParams.get("inbound_id")
-  //   4. Assert page.locator(`#inbound-detail-${inboundId}`) toBeVisible()
-  test.skip("inbound detail pane carries record-keyed id [SKIP: requires inbound seed in browser scenario]", async ({ page }) => {
-    // Phase 78 seed expansion is the gate to enable this test.
-    // See OperatorFixtures.seed_browser_scenario!() — zero inbound records are seeded.
+  // MOTION-02 regression gate (D-07 / GAP-13):
+  // Asserts the inbound detail pane carries a record-keyed id attribute
+  // (#inbound-detail-<uuid>) that is visible after clicking an inbound row.
+  // Requires Phase 78 seed: one InboundRecord in the browser scenario.
+  test("inbound detail pane carries record-keyed id", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
     await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
 
-    // Click the first inbound row (requires Phase 78 to seed at least one inbound record)
-    await page.getByTestId("operator-inbound-row").nth(0).click();
+    // Click the first inbound row — testid matches DOM: data-testid="inbound-record-row"
+    await page.getByTestId("inbound-record-row").nth(0).click();
+
+    // LiveView pushes inbound_id param; wait for URL to settle
+    await expect(page).toHaveURL(/inbound_id=/);
     const inboundId = new URL(page.url()).searchParams.get("inbound_id");
     expect(inboundId).toBeTruthy();
 
+    // The detail pane must carry the record-keyed id
     await expect(page.locator(`#inbound-detail-${inboundId}`)).toBeVisible();
   });
 });
