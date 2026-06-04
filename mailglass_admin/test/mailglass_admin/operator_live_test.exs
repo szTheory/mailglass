@@ -192,8 +192,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Replay outcomes"
       assert html =~ "Reconciled:"
       assert html =~ "Tenant-scoped facts from the current support window."
-      assert html =~ "Replay audit"
-      assert html =~ "Reconcile fact"
+      assert html =~ "Replay succeeded"
+      assert html =~ "Reconciled"
       assert html =~ replay_event.id
       assert html =~ reconcile_event.id
       refute html =~ "real-time"
