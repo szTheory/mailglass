@@ -22,12 +22,12 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           aria-modal="true"
           class="motion-overlay w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
         >
-          <div class="flex items-start justify-between gap-4">
+          <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
               <h2 class="text-lg font-bold text-base-content">
                 Replay webhook for {@delivery.recipient}
               </h2>
-              <p class="text-sm text-secondary">
+              <p class="text-body text-secondary">
                 Replay is delivery-detail initiated, tenant-scoped, and recorded in the append-only ledger.
               </p>
             </div>
@@ -40,7 +40,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           <%= case @replay_targets do %>
             <% %{status: :exact, candidate: candidate} -> %>
               <div class="mt-6 space-y-4">
-                <p class="text-sm text-base-content">
+                <p class="text-body text-base-content">
                   Replay is <span class="font-bold">{RepairState.availability_label(:exact)}</span>.
                   Confirm to replay that stored request.
                 </p>
@@ -48,7 +48,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               </div>
             <% %{status: :ambiguous, candidates: candidates} -> %>
               <div class="mt-6 space-y-4">
-                <p class="text-sm text-base-content">
+                <p class="text-body text-base-content">
                   Replay is <span class="font-bold">{RepairState.availability_label(:ambiguous)}</span>.
                   Choose one webhook target. The operator UI will not guess across multiple replayable webhook rows.
                 </p>
@@ -73,7 +73,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               </div>
             <% %{status: :unavailable, reason: reason} -> %>
               <div class="mt-6 space-y-4">
-                <div class="rounded-box border border-warning bg-warning/10 p-4 text-sm text-base-content">
+                <div class="rounded-box border border-warning bg-warning/10 p-4 text-body text-base-content">
                   <p class="font-bold">Replay unavailable</p>
                   <p class="mt-1">
                     Replay is <span class="font-bold">{RepairState.availability_label(:unavailable)}</span>. {RepairState.unavailable_reason_copy(
@@ -83,12 +83,12 @@ defmodule MailglassAdmin.Operator.ReplayModal do
                 </div>
               </div>
             <% _ -> %>
-              <div class="mt-6 rounded-box border border-warning bg-warning/10 p-4 text-sm text-base-content">
+              <div class="mt-6 rounded-box border border-warning bg-warning/10 p-4 text-body text-base-content">
                 Replay target resolution is still loading for this delivery.
               </div>
           <% end %>
 
-          <div class="mt-6 flex flex-wrap justify-end gap-3">
+          <div class="mt-6 flex flex-wrap justify-end gap-sm">
             <button type="button" phx-click="close_replay" class="btn btn-ghost min-h-11 px-5">
               Cancel
             </button>
@@ -118,23 +118,23 @@ defmodule MailglassAdmin.Operator.ReplayModal do
       @selected && "border-error bg-error/5",
       !@selected && "border-base-300 bg-base-200"
     ]}>
-      <div class="flex flex-wrap items-start justify-between gap-3">
+      <div class="flex flex-wrap items-start justify-between gap-sm">
         <div class="space-y-1">
-          <p class="text-sm font-bold text-base-content">
+          <p class="text-body font-bold text-base-content">
             {String.upcase(@candidate.provider || "unknown")}
           </p>
-          <p class="mono text-xs text-secondary">{@candidate.webhook_event_id}</p>
+          <p class="mono text-label text-secondary">{@candidate.webhook_event_id}</p>
         </div>
-        <p class="mono text-xs text-secondary">{format_datetime(@candidate.webhook_timestamp)}</p>
+        <p class="mono text-label text-secondary">{format_datetime(@candidate.webhook_timestamp)}</p>
       </div>
 
-      <dl class="mt-4 grid gap-3 text-sm text-secondary sm:grid-cols-2">
+      <dl class="mt-4 grid gap-sm text-body text-secondary sm:grid-cols-2">
         <div>
-          <dt class="text-xs font-bold uppercase tracking-[0.08em]">Provider event</dt>
+          <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider event</dt>
           <dd class="mt-1 text-base-content">{present(@candidate.provider_event_id)}</dd>
         </div>
         <div>
-          <dt class="text-xs font-bold uppercase tracking-[0.08em]">Delivery linkage</dt>
+          <dt class="text-label font-bold uppercase tracking-[0.08em]">Delivery linkage</dt>
           <dd class="mt-1 text-base-content">{present(@candidate.delivery_provider_message_id)}</dd>
         </div>
       </dl>

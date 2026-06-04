@@ -241,23 +241,23 @@ defmodule MailglassAdmin.PreviewLive do
             <div class="card border-2 border-error bg-base-100 p-6 rounded-box max-w-prose mx-auto">
               <div class="flex items-center gap-2 mb-3">
                 <Components.icon name="hero-exclamation-circle" class="w-5 h-5 text-error" />
-                <h2 class="text-base font-bold text-base-content">
+                <h2 class="text-body font-bold text-base-content">
                   preview_props/0 raised an error
                 </h2>
               </div>
-              <pre class="font-mono text-xs text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-200 p-3 rounded">{@render_error}</pre>
-              <p class="mt-3 text-sm text-secondary">
-                Fix the error in <code class="font-mono text-xs">{inspect(@current_mailable)}</code>
+              <pre class="font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-200 p-3 rounded">{@render_error}</pre>
+              <p class="mt-3 text-body text-secondary">
+                Fix the error in <code class="font-mono text-label">{inspect(@current_mailable)}</code>
                 and save the file to reload.
               </p>
             </div>
           <% @current_scenario -> %>
-            <header class="flex items-center justify-between mb-6 gap-4 flex-wrap">
+            <header class="flex items-center justify-between mb-6 gap-md flex-wrap">
               <h1 class="text-xl font-bold text-base-content tracking-tight">
                 {inspect(@current_mailable)}
                 <span class="text-secondary font-normal">· {@current_scenario}</span>
               </h1>
-              <div class="flex gap-4 items-center">
+              <div class="flex gap-md items-center">
                 <DeviceFrame.device_frame device_width={@device_width} />
                 <button
                   type="button"
@@ -297,17 +297,17 @@ defmodule MailglassAdmin.PreviewLive do
               <Components.icon name="hero-magnifying-glass" class="mb-3 h-10 w-10 text-secondary" />
               <h2 class="mb-2 text-heading font-bold text-base-content">No mailables discovered</h2>
               <p class="text-body text-secondary">
-                Preview scans loaded modules that <code class="mono text-xs">use Mailglass.Mailable</code>.
+                Preview scans loaded modules that <code class="mono text-label">use Mailglass.Mailable</code>.
                 Nothing was found yet.
               </p>
-              <ul class="mt-4 grid gap-2 text-sm text-secondary">
+              <ul class="mt-4 grid gap-2 text-body text-secondary">
                 <li class="flex items-start gap-2">
                   <Components.icon
                     name="hero-check-circle"
                     class="mt-0.5 h-4 w-4 shrink-0 text-primary"
                   />
                   <span>
-                    Confirm the module calls <code class="mono text-xs">use Mailglass.Mailable</code>
+                    Confirm the module calls <code class="mono text-label">use Mailglass.Mailable</code>
                     and is compiled and loaded.
                   </span>
                 </li>
@@ -317,7 +317,7 @@ defmodule MailglassAdmin.PreviewLive do
                     class="mt-0.5 h-4 w-4 shrink-0 text-primary"
                   />
                   <span>
-                    Or pass an explicit list to the router: <code class="mono text-xs">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
+                    Or pass an explicit list to the router: <code class="mono text-label">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
                   </span>
                 </li>
               </ul>
@@ -342,7 +342,7 @@ defmodule MailglassAdmin.PreviewLive do
                 </.link>
               </div>
 
-              <dl class="grid gap-3 sm:grid-cols-2">
+              <dl class="grid gap-sm sm:grid-cols-2">
                 <.legend_item icon="hero-window" title="HTML, Text, Raw & Headers">
                   Switch tabs to inspect each part of the rendered message.
                 </.legend_item>
@@ -374,11 +374,11 @@ defmodule MailglassAdmin.PreviewLive do
   # Start-page legend tile: one affordance of the preview tool, explained.
   defp legend_item(assigns) do
     ~H"""
-    <div class="flex items-start gap-3 rounded-box border border-base-300 bg-base-100 p-4">
+    <div class="flex items-start gap-sm rounded-box border border-base-300 bg-base-100 p-4">
       <Components.icon name={@icon} class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
       <div class="min-w-0">
-        <dt class="text-sm font-bold text-base-content">{@title}</dt>
-        <dd class="mt-1 text-sm text-secondary">{render_slot(@inner_block)}</dd>
+        <dt class="text-body font-bold text-base-content">{@title}</dt>
+        <dd class="mt-1 text-body text-secondary">{render_slot(@inner_block)}</dd>
       </div>
     </div>
     """

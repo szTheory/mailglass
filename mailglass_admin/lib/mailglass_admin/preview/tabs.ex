@@ -7,7 +7,7 @@ defmodule MailglassAdmin.Preview.Tabs do
       Width driven by `@device_width` (375 / 768 / 1024). `phx-update="ignore"`
       + nonce-based `id` forces a fresh iframe on every re-render so email
       CSS never bleeds between scenarios.
-    * **Text** — `<pre class="font-mono text-xs">` with `@text_body`.
+    * **Text** — `<pre class="font-mono text-label">` with `@text_body`.
     * **Raw** — `<pre>` with the RFC 5322 envelope string.
     * **Headers** — two-column table: header name (mono, bold) + value.
 
@@ -42,7 +42,7 @@ defmodule MailglassAdmin.Preview.Tabs do
           phx-click="set_tab"
           phx-value-tab="html"
           aria-selected={to_string(@active_tab == :html)}
-          class={["px-4 py-2 min-h-10 text-sm transition-colors", tab_classes(@active_tab == :html)]}
+          class={["px-4 py-2 min-h-10 text-body transition-colors", tab_classes(@active_tab == :html)]}
         >
           HTML
         </button>
@@ -52,7 +52,7 @@ defmodule MailglassAdmin.Preview.Tabs do
           phx-click="set_tab"
           phx-value-tab="text"
           aria-selected={to_string(@active_tab == :text)}
-          class={["px-4 py-2 min-h-10 text-sm transition-colors", tab_classes(@active_tab == :text)]}
+          class={["px-4 py-2 min-h-10 text-body transition-colors", tab_classes(@active_tab == :text)]}
         >
           Text
         </button>
@@ -62,7 +62,7 @@ defmodule MailglassAdmin.Preview.Tabs do
           phx-click="set_tab"
           phx-value-tab="raw"
           aria-selected={to_string(@active_tab == :raw)}
-          class={["px-4 py-2 min-h-10 text-sm transition-colors", tab_classes(@active_tab == :raw)]}
+          class={["px-4 py-2 min-h-10 text-body transition-colors", tab_classes(@active_tab == :raw)]}
         >
           Raw
         </button>
@@ -73,7 +73,7 @@ defmodule MailglassAdmin.Preview.Tabs do
           phx-value-tab="headers"
           aria-selected={to_string(@active_tab == :headers)}
           class={[
-            "px-4 py-2 min-h-10 text-sm transition-colors",
+            "px-4 py-2 min-h-10 text-body transition-colors",
             tab_classes(@active_tab == :headers)
           ]}
         >
@@ -110,7 +110,7 @@ defmodule MailglassAdmin.Preview.Tabs do
       <iframe
         srcdoc={@html_body}
         sandbox="allow-same-origin"
-        style={"width: #{@device_width}px; height: 600px; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: #ffffff;"}
+        style={"width: #{@device_width}px; height: 600px; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100);"}
         phx-update="ignore"
         id={"preview-iframe-" <> Integer.to_string(@render_nonce)}
         title="Email HTML preview"
@@ -121,13 +121,13 @@ defmodule MailglassAdmin.Preview.Tabs do
 
   def tab_content(%{active_tab: :text} = assigns) do
     ~H"""
-    <pre class="font-mono text-xs leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto h-[600px] whitespace-pre-wrap">{@text_body}</pre>
+    <pre class="font-mono text-label leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto h-[600px] whitespace-pre-wrap">{@text_body}</pre>
     """
   end
 
   def tab_content(%{active_tab: :raw} = assigns) do
     ~H"""
-    <pre class="font-mono text-xs leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto h-[600px] whitespace-pre">{@raw_envelope}</pre>
+    <pre class="font-mono text-label leading-relaxed text-base-content bg-base-200 p-4 rounded-box overflow-auto h-[600px] whitespace-pre">{@raw_envelope}</pre>
     """
   end
 
@@ -137,17 +137,17 @@ defmodule MailglassAdmin.Preview.Tabs do
       <table class="table table-sm w-full">
         <thead>
           <tr>
-            <th class="font-mono text-xs text-secondary w-48">Header</th>
-            <th class="font-mono text-xs text-secondary">Value</th>
+            <th class="font-mono text-label text-secondary w-48">Header</th>
+            <th class="font-mono text-label text-secondary">Value</th>
           </tr>
         </thead>
         <tbody>
           <%= for {name, value} <- @headers do %>
             <tr class="hover:bg-base-200">
-              <td class="font-mono text-xs font-bold text-base-content align-top">
+              <td class="font-mono text-label font-bold text-base-content align-top">
                 {to_string(name)}
               </td>
-              <td class="font-mono text-xs text-base-content break-all">{to_string(value)}</td>
+              <td class="font-mono text-label text-base-content break-all">{to_string(value)}</td>
             </tr>
           <% end %>
         </tbody>

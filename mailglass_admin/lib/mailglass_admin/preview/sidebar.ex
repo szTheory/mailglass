@@ -40,7 +40,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   def sidebar(assigns) do
     ~H"""
     <div class="space-y-4">
-      <h1 class="text-base font-bold text-base-content tracking-tight">Mailers</h1>
+      <h1 class="text-body font-bold text-base-content tracking-tight">Mailers</h1>
 
       <ul class="space-y-1">
         <%= for {mod, reflection} <- @mailables do %>
@@ -72,7 +72,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   def mailable_entry(%{reflection: list} = assigns) when is_list(list) do
     ~H"""
     <details open={@current_mailable == @mod}>
-      <summary class="flex items-center gap-2 px-3 py-2 min-h-11 text-sm font-bold text-base-content cursor-pointer hover:bg-base-200 rounded transition-colors">
+      <summary class="flex items-center gap-2 px-3 py-2 min-h-11 text-body font-bold text-base-content cursor-pointer hover:bg-base-200 rounded transition-colors">
         <span class="truncate">{inspect(@mod)}</span>
       </summary>
       <ul class="mt-1 ml-2">
@@ -81,7 +81,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
             <.link
               patch={scenario_path(@mod, scenario_name, @device_width, @dark_chrome)}
               class={[
-                "flex items-center gap-2 px-3 py-2 min-h-11 text-sm truncate transition-colors",
+                "flex items-center gap-2 px-3 py-2 min-h-11 text-body truncate transition-colors",
                 scenario_classes(@current_mailable, @current_scenario, @mod, scenario_name)
               ]}
             >
@@ -96,7 +96,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
 
   def mailable_entry(%{reflection: :no_previews} = assigns) do
     ~H"""
-    <div class="flex items-center gap-2 px-3 py-2 min-h-11 text-sm text-secondary">
+    <div class="flex items-center gap-2 px-3 py-2 min-h-11 text-body text-secondary">
       <span class="truncate">{inspect(@mod)}</span>
       <Components.badge variant={:stub} />
       <span class="sr-only">No previews defined</span>
@@ -109,7 +109,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     <.link
       patch={broken_path(@mod)}
       title="preview_props/0 raised an error"
-      class="flex items-center gap-2 px-3 py-2 min-h-11 text-sm text-base-content hover:bg-base-200 rounded transition-colors"
+      class="flex items-center gap-2 px-3 py-2 min-h-11 text-body text-base-content hover:bg-base-200 rounded transition-colors"
     >
       <span class="truncate">{inspect(@mod)}</span>
       <Components.badge variant={:warning} />

@@ -371,9 +371,9 @@ defmodule MailglassAdmin.OperatorLive do
             id="operator-filters"
             phx-change="validate_filters"
             phx-submit="apply_filters"
-            class="grid gap-3"
+            class="grid gap-sm"
           >
-            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div class="grid gap-sm md:grid-cols-2 xl:grid-cols-5">
               <FiltersForm.fields
                 form={@filter_form}
                 status_values={@status_values}
@@ -393,14 +393,14 @@ defmodule MailglassAdmin.OperatorLive do
 
         <section
           data-testid="operator-master-detail"
-          class="mt-6 grid gap-6 lg:grid-cols-[minmax(22rem,28rem)_1fr]"
+          class="mt-6 grid gap-lg lg:grid-cols-[minmax(22rem,28rem)_1fr]"
         >
           <aside
             data-testid="operator-deliveries-list-card"
             class="card rounded-box border border-base-300 bg-base-200 p-0"
           >
             <div class="border-b border-base-300 px-4 py-3">
-              <h2 class="text-sm font-bold uppercase tracking-[0.08em] text-secondary">
+              <h2 class="text-body font-bold uppercase tracking-[0.08em] text-secondary">
                 Recent deliveries
               </h2>
             </div>
@@ -419,7 +419,7 @@ defmodule MailglassAdmin.OperatorLive do
                 >
                   <div class="flex items-center gap-2">
                     <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
-                    <h2 class="text-base font-bold text-base-content">
+                    <h2 class="text-body font-bold text-base-content">
                       Delivery data could not be loaded. Refresh the page or adjust the filters, then try again.
                     </h2>
                   </div>
@@ -429,10 +429,10 @@ defmodule MailglassAdmin.OperatorLive do
                   data-testid="operator-empty-detail"
                   class="card rounded-box border border-base-300 bg-base-200 p-6"
                 >
-                  <h2 class="text-base font-bold text-base-content">
+                  <h2 class="text-body font-bold text-base-content">
                     Select a delivery to inspect its event timeline and suppression state.
                   </h2>
-                  <p class="mt-2 text-sm text-secondary">
+                  <p class="mt-2 text-body text-secondary">
                     The timeline shows provider lifecycle facts (dispatched, delivered, bounced).
                     Replay history is recorded separately — replaying a webhook does not create
                     new provider truth.
