@@ -174,7 +174,14 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
   2. Token conformance grep returns zero raw `text-sm`, `text-base`, `text-xs`, `font-medium`, `font-semibold`, off-grid `gap-3/4/6`, ad-hoc `z-[0-9]+`, or hex colors in admin HEEx files.
   3. The support-card grid is restructured into a primary/secondary hierarchy (non-zero/actionable cards prominent as full cards; zero-state cards demoted to a compact summary row) before any token migration of those lines — restructure-first order maintained.
   4. `git diff --exit-code priv/static/` is clean — the admin asset bundle is rebuilt and committed in the same PR as every HEEx change.
-**Plans**: TBD
+**Plans**: 6 plans
+  Plans:
+  - [ ] 76-01-PLAN.md — Define Components.status_badge/1 (icon + label, 24 atoms), status_class/1, status_icon/1, status_label/1, normalize_inbound_outcome/1; create 72-assertion regression test. (Wave 1)
+  - [ ] 76-02-PLAN.md — Delete all five badge_class/1 private copies; rewire every call site through Components.status_badge/1; normalize inbound outcomes. (Wave 2)
+  - [ ] 76-03-PLAN.md — Restructure support_cards.ex into Tier1/Tier2 hierarchy with semantic count colors and token-clean markup. (Wave 3)
+  - [ ] 76-04-PLAN.md — Token migration (text-sm/xs/base → text-body/text-label; gap-3/4/6 → gap-sm/md/lg) on the five badge-rewired files. (Wave 4, parallel with 76-05)
+  - [ ] 76-05-PLAN.md — Token migration on all remaining admin HEEx files; hex #ffffff → var(--color-base-100) in preview/tabs.ex. (Wave 4, parallel with 76-04)
+  - [ ] 76-06-PLAN.md — [BLOCKING] Conformance grep gates (all five); bundle rebuild; git diff --exit-code priv/static/ clean; human approval. (Wave 5)
 **UI hint**: yes
 
 ### Phase 77: Motion and Microinteraction Polish
@@ -217,7 +224,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 |-------|----------------|--------|-----------|
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
-| 76. Component-Library and Design-System Hardening | 0/TBD | Not started | - |
+| 76. Component-Library and Design-System Hardening | 0/6 | Not started | - |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
