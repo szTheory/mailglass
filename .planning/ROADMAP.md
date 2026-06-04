@@ -208,7 +208,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-  - [ ] 76-04-PLAN.md — Token migration (text-sm/xs/base → text-body/text-label; gap-3/4/6 → gap-sm/md/lg) on the five badge-rewired files. (Wave 4, parallel with 76-05)
+  - [x] 76-04-PLAN.md — Token migration (text-sm/xs/base → text-body/text-label; gap-3/4/6 → gap-sm/md/lg) on the five badge-rewired files. (Wave 4, parallel with 76-05)
   - [x] 76-05-PLAN.md — Token migration on all remaining admin HEEx files; hex #ffffff → var(--color-base-100) in preview/tabs.ex. (Wave 4, parallel with 76-04)
 
 **Wave 5** *(blocked on Wave 4 completion)*
@@ -270,7 +270,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 |-------|----------------|--------|-----------|
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
-| 76. Component-Library and Design-System Hardening | 4/6 | In Progress|  |
+| 76. Component-Library and Design-System Hardening | 5/6 | In Progress|  |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
