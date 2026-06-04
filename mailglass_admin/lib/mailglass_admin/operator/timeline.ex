@@ -5,6 +5,7 @@ defmodule MailglassAdmin.Operator.Timeline do
 
   use Phoenix.Component
 
+  alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.RepairState
 
   attr(:timeline_events, :list, required: true)
@@ -49,9 +50,7 @@ defmodule MailglassAdmin.Operator.Timeline do
                   <div class="space-y-1">
                     <div class="flex flex-wrap items-center gap-2">
                       <p class="text-sm font-bold text-base-content">{event_label(event.type)}</p>
-                      <span :if={event_badge(event.type)} class={badge_class(event.type)}>
-                        {event_badge(event.type)}
-                      </span>
+                      <Components.status_badge :if={event_badge(event.type)} status={event.type} size={:sm} />
                     </div>
                     <p class="text-xs text-secondary">
                       {metadata_summary(event.type, event.metadata)}
@@ -126,13 +125,6 @@ defmodule MailglassAdmin.Operator.Timeline do
   defp event_container_class(_highlight_event_id, _event_id), do: "border-base-300"
 
   defp highlighted?(highlight_event_id, event_id), do: highlight_event_id == event_id
-
-  defp badge_class(type)
-       when type in [:webhook_replay_requested, :webhook_replay_succeeded, :webhook_replay_failed],
-       do: "badge badge-outline badge-error"
-
-  defp badge_class(:reconciled), do: "badge badge-outline badge-warning"
-  defp badge_class(_type), do: "badge badge-outline"
 
   defp replay_metadata?(metadata), do: is_binary(Map.get(metadata, "webhook_event_id"))
 

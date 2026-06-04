@@ -46,9 +46,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                   </p>
                   <p class="mono mt-1 text-xs text-secondary">{delivery.id}</p>
                 </div>
-                <span class={["badge badge-sm", badge_class(delivery.status)]}>
-                  {label(delivery.status)}
-                </span>
+                <Components.status_badge status={delivery.status} size={:sm} />
               </div>
 
               <div class="flex flex-wrap items-center gap-2 text-xs text-secondary">
@@ -76,12 +74,6 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   defp row_classes(_selected_delivery, _delivery),
     do: "border-l-4 border-transparent bg-base-200 text-base-content hover:bg-base-100"
-
-  defp badge_class(status) when status in [:delivered, :sent, :dispatched], do: "badge-success"
-  defp badge_class(:deferred), do: "badge-warning"
-  defp badge_class(status) when status in [:failed, :bounced, :complained], do: "badge-error"
-  defp badge_class(:suppressed), do: "badge-warning"
-  defp badge_class(_status), do: "badge-outline"
 
   defp label(nil), do: "Unknown"
 
