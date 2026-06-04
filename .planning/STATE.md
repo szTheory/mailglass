@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
 status: executing
-last_updated: "2026-06-04T10:00:00.000Z"
-last_activity: 2026-06-04 -- Phase 76 Plan 01 executed
+last_updated: "2026-06-04T09:19:11.629Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 18
-  completed_plans: 13
+  completed_plans: 14
   percent: 50
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-06-03 after v1.7 milestone opened)
 ## Current Position
 
 Phase: 76 (component-library-and-design-system-hardening) — EXECUTING
-Plan: 2 of 6
-Status: Executing Phase 76
-Last activity: 2026-06-04 -- Plan 01 complete
+Plan: 3 of 6
+Status: Ready to execute
+Last activity: 2026-06-04
 
 **Progress bar:** ░░░░░░░░░░ 0% (0/6 phases)
 
@@ -72,6 +72,7 @@ Last activity: 2026-06-04 -- Plan 01 complete
 - [v1.7] Fork A locked: Operator Overview as a `:overview` action on existing `OperatorLive` (zero router-macro change), not a sibling LiveView. Orientation strip generalized into `Shell.orientation_strip/1`.
 - [v1.7] Fork B locked: pop/joy via consistent motion + expressive seed data + sharper hierarchy within the current brand book. No brand-book amendment. No new visual loudness.
 - [76-01] status_badge/1 renders icon+label with literal-string-only defp helpers for JIT safety; normalize_inbound_outcome/1 is public for cross-module import (admin-side adapter, never touches mailglass_inbound locked 1.0 schema)
+- [Phase ?]: Fallback clauses added to status helpers for phantom atoms (suppressed, nil) — badge-outline per UI-SPEC Conflict 1
 
 ## Performance Metrics
 
@@ -91,6 +92,7 @@ Items acknowledged and deferred at previous milestone close:
 | seed | 003-ecosystem-integrations | dormant |
 
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
+| Phase 76-component-library-and-design-system-hardening P02 | 20 | 2 tasks | 7 files |
 
 ## Accumulated Context
 

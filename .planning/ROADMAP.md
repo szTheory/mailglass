@@ -200,7 +200,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-  - [ ] 76-02-PLAN.md — Delete all five badge_class/1 private copies; rewire every call site through Components.status_badge/1; normalize inbound outcomes. (Wave 2)
+  - [x] 76-02-PLAN.md — Delete all five badge_class/1 private copies; rewire every call site through Components.status_badge/1; normalize inbound outcomes. (Wave 2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -270,7 +270,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 |-------|----------------|--------|-----------|
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
-| 76. Component-Library and Design-System Hardening | 1/6 | In Progress|  |
+| 76. Component-Library and Design-System Hardening | 2/6 | In Progress|  |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
