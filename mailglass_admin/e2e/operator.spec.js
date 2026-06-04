@@ -16,6 +16,9 @@ async function openOperator(page) {
 
   const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${returnTo}`);
+  await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+  // Navigate to Deliveries view before delivery-centric assertions
+  await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
   await expect(page.getByRole("heading", { name: "Deliveries", exact: true })).toBeVisible();
   await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
 }
@@ -86,6 +89,10 @@ test.describe("operator browser gate", () => {
     expect(suppressionBox).not.toBeNull();
     expect(headerBox.y).toBeLessThan(timelineBox.y);
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
+
+    // Acceptance check for GAP-07 at 390px: orientation strip must be visible (deliveries-orientation)
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+    await expect(page.getByTestId("deliveries-orientation")).toBeVisible();
   });
 
   test("exact replay flow shows ready copy and records a new-work outcome", async ({ page }) => {

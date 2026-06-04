@@ -17,7 +17,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       delivery = insert_delivery!(recipient: "selected@example.com")
       conn = operator_conn(conn)
 
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+      {:ok, _view, html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
       assert html =~ "Recent deliveries"
       assert html =~ ~s(data-testid="operator-master-detail")
@@ -31,7 +32,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
     test "renders the recent deliveries empty state", %{conn: conn} do
       conn = operator_conn(conn)
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      {:ok, _view, html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
       assert html =~ "No recent deliveries"
 
@@ -60,7 +63,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           last_event_type: :failed
         )
 
-      {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
       view
       |> form("#operator-filters",
@@ -81,7 +85,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           "provider" => "postmark",
           "status" => "sent",
           "event" => "delivered",
-          "window_hours" => "168"
+          "window_hours" => "168",
+          "view" => "deliveries"
         })
       )
 
@@ -129,7 +134,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
         source: "ops:review"
       })
 
-      {:ok, view, _html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
       view
       |> element("button[phx-value-id='#{delivery.id}']")
@@ -301,7 +307,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
       delivery = insert_delivery!(recipient: "cta@example.com", provider_message_id: "pm-cta")
 
-      {:ok, view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+      {:ok, view, html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
       refute html =~ "Replay webhook"
 
@@ -858,7 +865,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Operator overview"
       assert html =~ ~s(data-testid="operator-overview")
       refute html =~ ~s(data-testid="operator-master-detail")
-      refute html =~ "Deliveries"
+      refute html =~ ~s(data-testid="operator-deliveries-list")
     end
 
     test "no-tenant Overview shows nudge copy not health row", %{conn: conn} do
@@ -898,6 +905,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
     test "?view=deliveries param shows Deliveries list not Overview", %{conn: conn} do
       conn = operator_conn(conn)
+      _delivery = insert_delivery!(recipient: "view-test@example.com")
 
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
