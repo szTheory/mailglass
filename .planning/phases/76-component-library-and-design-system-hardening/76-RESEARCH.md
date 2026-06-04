@@ -615,16 +615,18 @@ The existing `record_outcome/1` at `records_list.ex:88` should be updated to nor
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+Both questions were resolved during planning and are reflected in the plans (76-02 Task 1 and 76-03 Task 1). No open questions remain for execution.
 
 1. **`status_badge/1` — timeline call site guard function name**
    - What we know: `timeline.ex:52` uses `:if={event_badge(event.type)}` as the guard; `event_badge/1` returns a string label or `nil` (from `repair_state.ex:84-88`). The `badge_class/1` private function at `timeline.ex:130` will be deleted.
    - What's unclear: Should the existing `event_badge/1` guard be renamed/replaced with a dedicated `timeline_badge_atom?/1` predicate that checks atom membership, or should it continue using the label-returning function as a boolean?
-   - Recommendation: Keep `event_badge/1` as-is for the guard (the planner can decide); replace only `badge_class/1` with `Components.status_badge/1`.
+   - **RESOLVED:** Keep `event_badge/1` as-is for the guard; replace only `badge_class/1` with `Components.status_badge/1`. Locked into 76-02 Task 1 ("event_badge/1 guard retained, call site replaced with Components.status_badge :if={...}").
 
 2. **Support card: `@suppression_count` in Tier1/Tier2 threshold**
    - What we know: `@suppression_count` feeds the suppression card; `count_active_suppressions/1` was shipped in Phase 75. The UI-SPEC Health Count Colors assigns `text-secondary` (not `text-warning` or `text-error`) to active suppressions — it is informational.
-   - Recommendation: Suppression count always renders in Tier 2 (compact row) regardless of count, because it is informational/secondary by design (not actionable in the same way as failures or orphan backlog). Only `failed_ingest.count > 0` and `orphan_backlog.count > 0` trigger Tier 1 cards.
+   - **RESOLVED:** Suppression count always renders in Tier 2 (compact row) regardless of count, because it is informational/secondary by design (not actionable in the same way as failures or orphan backlog). Only `failed_ingest.count > 0` and `orphan_backlog.count > 0` trigger Tier 1 cards. Locked into 76-03 Task 1.
 
 ---
 

@@ -1,8 +1,8 @@
 ---
 phase: 76
 slug: component-library-and-design-system-hardening
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-06-04
 ---
@@ -77,11 +77,12 @@ created: 2026-06-04
 
 ## Validation Sign-Off
 
-- [ ] All tasks have an automated verify command or a Wave 0 dependency
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers the MISSING `components_test.exs` reference
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter (set by planner once task map is bound)
+- [x] All tasks have an automated verify command or a Wave 0 dependency
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers the MISSING `components_test.exs` reference (planned in 76-01 Task 2)
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
+- [ ] `wave_0_complete` — flips true during /gsd:execute-phase once 76-01 Task 2 writes the test file
 
-**Approval:** pending
+**Approval:** approved 2026-06-04 (plan-phase verification loop)
