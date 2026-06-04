@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
-status: planning
-last_updated: "2026-06-04T21:02:32.340Z"
+status: executing
+last_updated: "2026-06-04T21:53:52.025Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 24
-  completed_plans: 24
+  total_plans: 28
+  completed_plans: 25
   percent: 88
 ---
 
@@ -20,13 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-03 after v1.7 milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 79 — verification and visual regression hardening
+**Current focus:** Phase 79 — verification-and-visual-regression-hardening
 
 ## Current Position
 
-Phase: 79
-Plan: Not started
-Status: Ready to plan
+Phase: 79 (verification-and-visual-regression-hardening) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
 Last activity: 2026-06-04
 
 **Progress bar:** ░░░░░░░░░░ 0% (0/6 phases)
@@ -75,6 +75,7 @@ Last activity: 2026-06-04
 - [Phase ?]: Fallback clauses added to status helpers for phantom atoms (suppressed, nil) — badge-outline per UI-SPEC Conflict 1
 - [76-06] heroicons-inline.js: self-contained standalone-binary-compatible Tailwind plugin replaces Node.js-dependent heroicons.js; 12 outline SVGs embedded inline; wired via @plugin in app.css
 - [77-04] Bundle-clean gate (D-08, GAP-19): mix verify.preview exits 0; priv/static/ confirmed no-op / bit-identical after Phase 77 HEEx id-attribute changes; citext_probe.ex Boundary declaration + voice_test script-strip fixed pre-existing verify.preview blockers
+- [79-01] check-conformance.sh TYPE-GATE requires grep -v text-base-content (Footgun-6: DaisyUI semantic color token, not a type-scale violation; without exclusion every file using text-base-content produces a false failure)
 
 ## Performance Metrics
 
@@ -96,6 +97,7 @@ Items acknowledged and deferred at previous milestone close:
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
 | Phase 76-component-library-and-design-system-hardening P02 | 20 | 2 tasks | 7 files |
 | Phase 77 P04 | 7 | 1 tasks | 2 files |
+| Phase 79 P01 | 8 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -116,6 +118,7 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Session Continuity
 
+- 2026-06-04: Phase 79 Plan 01 executed. check-conformance.sh (5-gate: BADGE/TYPE/BOLD/GAP/HEX) created at mailglass_admin/scripts/; exits 0 on current codebase. design-system.md audit-loop section expanded with explicit before/after LLM-critique ritual (Phase 74 baseline, 4 GAP rows, 6-pillar rubric, /ops/mail/ IA note). 189 tests, 0 failures. Commits: 8c28352a, ef660f27. VERIF-03 satisfied.
 - 2026-06-04: Phase 77 Plan 04 (last plan) executed. mix verify.preview exits 0 (189 tests, 0 failures, 2 excluded). Bundle rebuild confirmed no-op — priv/static/ bit-identical to Phase 76-06 baseline. Two pre-existing test blockers fixed: citext_probe.ex Boundary declaration, voice_test script-strip. check_motion_conformance.sh exits 0. Commit: 3390b8fe. Phase 77 complete.
 - 2026-06-04: Phase 76 Plan 06 executed (awaiting human verification). All 5 conformance grep gates pass (zero real violations). heroicons-inline.js created as standalone-binary-compatible plugin; @plugin wired in app.css. Bundle rebuilt at 81780 bytes; badge-primary + all 12 hero-* icons confirmed present. 187 tests, 1 pre-existing voice_test failure. Commit: 232b4ead.
 - 2026-06-04: Phase 76 Plan 03 executed. support_cards.ex Tier1/Tier2 restructure — flat xl:grid-cols-2 eliminated; Tier 1 full cards for failed_ingest (text-error), orphan_backlog (text-warning), replay outcomes (nonzero); Tier 2 compact border-t row for zero-state and suppression count. attr :suppression_count wired. Test assertions updated for new labels. 1174 tests, 1 pre-existing failure. Commits: 08c4b403, ca9c393a.
@@ -131,5 +134,5 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Operator Next Steps
 
-- Phase 77 complete — all 4 plans executed; verify.preview exits 0; bundle clean
-- Next: Phase 78 (seed-data expressiveness) and Phase 79 (verification + visual-regression hardening + release ceremony)
+- Phase 79 Plan 01 complete — check-conformance.sh committed (VERIF-03 satisfied); design-system.md audit-loop expanded
+- Next: Phase 79 Plan 02 (extended e2e — orientation strip + operator overview structural tests + replay-flow fix)
