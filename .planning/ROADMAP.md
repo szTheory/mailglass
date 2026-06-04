@@ -261,7 +261,13 @@ Plans:
   1. Every screen state is reachable by a seeded URL: all 14 Anymail outbound delivery statuses, all inbound outcomes (`:accepted`, `:no_match`, `:rejected`, `:bounced`, `:ignore`, `:failed_ingest`), an orphan-backlog row, a failed-ingest row, each replay outcome (`:replayed`, `:replay_noop`, `:replay_failed`), reconciled and unmatched facts covering both support-card branches, an empty-result tenant, and long recipient/subject truncation stress rows.
   2. `demo.spec.js` and `operator.spec.js` seed-count assertions are updated in the same commit as the seed expansion — Playwright passes without a follow-up fixup; `reference/demo_app/mix.exs` and `reference/host_app/mix.exs` version pins are unchanged.
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+**Wave 1** *(parallel)*
+
+  - [ ] 78-01-PLAN.md — Expand demo_data.ex northstar breadth: 8 missing event-type deliveries, 2 missing inbound outcomes, support-card branches (orphan/failed-ingest/replay/reconcile), truncation stress rows, empty-tenant constant. (Wave 1)
+  - [ ] 78-02-PLAN.md — Seed one inbound record in operator_fixtures.ex (browser-tenant) + remove test.skip from operator.spec.js:254 inbound detail pane id-presence test. (Wave 1)
 
 ### Phase 79: Verification and Visual-Regression Hardening
 
@@ -287,7 +293,7 @@ Plans:
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
 | 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
 | 77. Motion and Microinteraction Polish | 4/4 | Complete    | 2026-06-04 |
-| 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
+| 78. Seed-Data Expressiveness | 0/2 | Not started | - |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
 
 ## Backlog
