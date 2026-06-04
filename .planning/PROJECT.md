@@ -282,7 +282,7 @@ Active requirements for `v1.7 Admin UI — IA & Design-System Polish v2` are def
 
 **By category (v1.7 — Admin UI IA & Design-System Polish v2):**
 - `AUDIT-01..03` — scored gap register, frozen UI-SPEC (incl. canonical status-badge taxonomy table), and screenshot/assertion-ripple baseline (Phase 74 evidence gate).
-- `IA-01..04` — shell-level orientation-strip parity across all 3 surfaces, in-library Operator Overview landing route, deliberate IA vocabulary, and an explicit deep-link-fix scope decision (Phase 75).
+- `IA-01..04` — shell-level orientation-strip parity across all 3 surfaces, in-library Operator Overview landing route, deliberate IA vocabulary, and an explicit deep-link-fix scope decision (Phase 75). ✓ **Validated in Phase 75 (2026-06-04)** — `Shell.orientation_strip/1` on all 3 surfaces, Overview landing via `handle_params/3` (no router change), same-commit e2e update (5/5 operator Playwright green), GAP-22 deferred to Phase 79.
 - `DS-01..04` — unified `status_badge` atom replacing 3 private copies, token migration off the raw scale, support-card hierarchy redesign, and committed bundle (Phase 76).
 - `MOTION-01..02` — six-motion vocabulary applied per UI-SPEC (mount-not-patch) and reduced-motion/duration discipline (Phase 77).
 - `SEED-01..02` — seed data expressing every screen state, with demo/e2e assertion ripple absorbed in the same change (Phase 78).
