@@ -252,7 +252,7 @@ defmodule MailglassAdmin.OperatorLive do
       flash={@flash}
     >
       <div :if={is_nil(@selected_delivery)} class="mb-lg">
-        <.orientation_strip />
+        <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
       </div>
 
       <section class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5">
@@ -356,38 +356,6 @@ defmodule MailglassAdmin.OperatorLive do
         selected_target_id={@replay_selected_target_id}
       />
     </MailglassAdmin.Operator.Shell.shell>
-    """
-  end
-
-  defp orientation_strip(assigns) do
-    ~H"""
-    <div
-      class="rounded-box border border-base-300 bg-base-200 p-md"
-      data-testid="operator-orientation"
-    >
-      <div class="flex items-start gap-sm">
-        <Components.icon name="hero-lifebuoy" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-        <div class="min-w-0">
-          <h2 class="text-body font-bold text-base-content">Start from the customer symptom</h2>
-          <ul class="mt-2 grid gap-1 text-sm text-secondary">
-            <li>
-              <span class="font-bold text-base-content">Email never arrived?</span>
-              Filter by tenant, then open the delivery to read its timeline.
-            </li>
-            <li>
-              <span class="font-bold text-base-content">Replay changed nothing?</span>
-              Check whether the outcome was <span class="mono">new work</span>
-              or <span class="mono">no change</span>
-              on the selected delivery.
-            </li>
-            <li>
-              <span class="font-bold text-base-content">Address keeps getting blocked?</span>
-              Open the delivery and review its suppression state.
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
     """
   end
 

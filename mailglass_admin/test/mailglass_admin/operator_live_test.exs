@@ -25,6 +25,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ delivery.recipient
       assert html =~ "Select a delivery to inspect its event timeline and suppression state."
       refute html =~ "Event timeline"
+      # Orientation strip: present when no delivery is selected (GAP-07)
+      assert html =~ ~s(data-testid="deliveries-orientation")
     end
 
     test "renders the recent deliveries empty state", %{conn: conn} do
