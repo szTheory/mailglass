@@ -115,6 +115,85 @@ defmodule Mailglass.Operator.SuppressionsTest do
     end
   end
 
+  describe "count_active_suppressions/1" do
+    test "returns 0 for a tenant with no suppression entries" do
+      assert Suppressions.count_active_suppressions("tenant-empty") == 0
+    end
+
+    test "returns correct count for a tenant with N active entries where expires_at is nil" do
+      for i <- 1..3 do
+        insert_entry(%{
+          tenant_id: "tenant-count",
+          address: "user#{i}@example.com",
+          scope: :address,
+          reason: :manual,
+          source: "ops:review"
+        })
+      end
+
+      assert Suppressions.count_active_suppressions("tenant-count") == 3
+    end
+
+    test "excludes expired entries where expires_at is in the past" do
+      past = DateTime.add(DateTime.utc_now(), -3600, :second)
+
+      insert_entry(%{
+        tenant_id: "tenant-expired",
+        address: "active@example.com",
+        scope: :address,
+        reason: :manual,
+        source: "ops:review"
+      })
+
+      insert_entry(%{
+        tenant_id: "tenant-expired",
+        address: "expired@example.com",
+        scope: :address,
+        reason: :manual,
+        source: "ops:review",
+        expires_at: past
+      })
+
+      assert Suppressions.count_active_suppressions("tenant-expired") == 1
+    end
+
+    test "excludes entries belonging to a different tenant_id" do
+      insert_entry(%{
+        tenant_id: "tenant-alpha",
+        address: "alpha@example.com",
+        scope: :address,
+        reason: :manual,
+        source: "ops:review"
+      })
+
+      insert_entry(%{
+        tenant_id: "tenant-beta",
+        address: "beta@example.com",
+        scope: :address,
+        reason: :manual,
+        source: "ops:review"
+      })
+
+      assert Suppressions.count_active_suppressions("tenant-alpha") == 1
+      assert Suppressions.count_active_suppressions("tenant-beta") == 1
+    end
+
+    test "counts entries with non-nil expires_at in the future as active" do
+      future = DateTime.add(DateTime.utc_now(), 3600, :second)
+
+      insert_entry(%{
+        tenant_id: "tenant-future",
+        address: "future@example.com",
+        scope: :address,
+        reason: :manual,
+        source: "ops:review",
+        expires_at: future
+      })
+
+      assert Suppressions.count_active_suppressions("tenant-future") == 1
+    end
+  end
+
   defp insert_entry(attrs) do
     {:ok, entry} =
       attrs
