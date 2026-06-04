@@ -125,7 +125,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 **Release note:** This milestone touches only `mailglass_admin` source, but linked-version mechanics mean the release ceremony will produce matched version bumps across all three packages (`mailglass`, `mailglass_admin`, `mailglass_inbound`). Core and inbound CHANGELOG entries will be administrative version-bump entries only — this is expected and correct per D-01.
 
 - [x] **Phase 74: Systematic Audit and UI-SPEC** — Evidence gate; no code changes. Produces the scored gap register, frozen UI-SPEC with canonical status-badge taxonomy, before-baseline screenshots, and assertion inventory that blocks all build phases. (completed 2026-06-04)
-- [ ] **Phase 75: Information Architecture, Navigation and Orientation** — Shell-level orientation strip on all 3 surfaces; in-library Operator Overview landing; IA vocabulary; explicit deep-link-fix decision.
+- [x] **Phase 75: Information Architecture, Navigation and Orientation** — Shell-level orientation strip on all 3 surfaces; in-library Operator Overview landing; IA vocabulary; explicit deep-link-fix decision. (completed 2026-06-04)
 - [ ] **Phase 76: Component-Library and Design-System Hardening** — Unified `status_badge` atom replacing 3 private copies; token migration off raw scale; support-card hierarchy redesign; committed bundle.
 - [ ] **Phase 77: Motion and Microinteraction Polish** — Six-motion vocabulary applied per UI-SPEC; motion-reveal re-fire fix; reduced-motion discipline.
 - [ ] **Phase 78: Seed-Data Expressiveness** — Demo seeds covering every screen state; e2e count assertions updated in same change.
@@ -162,7 +162,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 **Plans**: 3 plans
   - [x] 75-01-PLAN.md — Add core count_active_suppressions/1 + Wave 0 test stubs for shell_test.exs and operator_live_test.exs Overview blocks. (Wave 1)
   - [x] 75-02-PLAN.md — Extract Shell.orientation_strip/1 public component, wire all three surfaces, un-skip shell tests, rebuild admin bundle. (Wave 2)
-  - [ ] 75-03-PLAN.md — Operator Overview branch in handle_params/3; same-commit e2e heading-assertion updates + 390px extension; GAP-22 disposition record. (Wave 3)
+  - [x] 75-03-PLAN.md — Operator Overview branch in handle_params/3; same-commit e2e heading-assertion updates + 390px extension; GAP-22 disposition record. (Wave 3)
 **UI hint**: yes
 
 ### Phase 76: Component-Library and Design-System Hardening
@@ -216,7 +216,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
-| 75. Information Architecture, Navigation and Orientation | 2/3 | In Progress|  |
+| 75. Information Architecture, Navigation and Orientation | 3/3 | Complete   | 2026-06-04 |
 | 76. Component-Library and Design-System Hardening | 0/TBD | Not started | - |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
 | 78. Seed-Data Expressiveness | 0/TBD | Not started | - |
