@@ -289,7 +289,7 @@ Plans:
 
   - [x] 79-01-PLAN.md — Committed check-conformance.sh script (5 gates) + design-system.md audit-loop prose expansion. (Wave 1)
   - [x] 79-02-PLAN.md — e2e extension: Operator Overview structural coverage + inbound/preview orientation-strip testids; fix pre-existing replay-flow failure. (Wave 1)
-  - [ ] 79-03-PLAN.md — 79-GAP-CLOSEOUT.md: sev-4/5 row closure evidence + GAP-22 deferral reconfirmation + audit-matrix before/after finding. (Wave 1)
+  - [x] 79-03-PLAN.md — 79-GAP-CLOSEOUT.md: sev-4/5 row closure evidence + GAP-22 deferral reconfirmation + audit-matrix before/after finding. (Wave 1)
 
 **Wave 2** *(depends on Wave 1 gates green)*
 
@@ -306,7 +306,7 @@ Plans:
 | 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
 | 77. Motion and Microinteraction Polish | 4/4 | Complete    | 2026-06-04 |
 | 78. Seed-Data Expressiveness | 2/2 | Complete    | 2026-06-04 |
-| 79. Verification and Visual-Regression Hardening | 2/4 | In Progress|  |
+| 79. Verification and Visual-Regression Hardening | 3/4 | In Progress|  |
 
 ## Backlog
 

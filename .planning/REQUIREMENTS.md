@@ -42,10 +42,10 @@
 
 ### Verification & Visual-Regression (Phase 79 — closeout)
 
-- [ ] **VERIF-01**: The full audit matrix is re-run with a **before/after PNG diff vs the Phase-74 baseline**, leaving **zero open severity-4/5 gap rows**.
+- [x] **VERIF-01**: The full audit matrix is re-run with a **before/after PNG diff vs the Phase-74 baseline**, leaving **zero open severity-4/5 gap rows**.
 - [x] **VERIF-02**: `operator.spec.js` is extended and **inbound/preview structural coverage** added for new IA/testids; e2e is green (structural, not pixel-based).
 - [x] **VERIF-03**: The final **conformance grep gate** (zero raw type tokens; exactly one status→color definition) and **bundle-clean gate** pass, and the screenshot→LLM-critique loop is documented as a repeatable local ritual.
-- [ ] **VERIF-04**: The deep-link bug is **resolved or explicitly deferred** with recorded rationale (closes the AUDIT-01 row so closeout's zero-sev-4/5 criterion holds).
+- [x] **VERIF-04**: The deep-link bug is **resolved or explicitly deferred** with recorded rationale (closes the AUDIT-01 row so closeout's zero-sev-4/5 criterion holds).
 
 ## v2 Requirements
 
@@ -94,7 +94,7 @@ Phase mapping derived from the locked blueprint; the roadmapper validates 100% c
 | MOTION-02 | Phase 77 | Complete |
 | SEED-01 | Phase 78 | Complete |
 | SEED-02 | Phase 78 | Complete |
-| VERIF-01 | Phase 79 | Pending |
+| VERIF-01 | Phase 79 | Complete |
 | VERIF-02 | Phase 79 | Complete |
 | VERIF-03 | Phase 79 | Complete |
-| VERIF-04 | Phase 79 | Pending |
+| VERIF-04 | Phase 79 | Complete |

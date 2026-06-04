@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
 status: executing
-last_updated: "2026-06-04T22:05:34.929Z"
+last_updated: "2026-06-04T22:11:01.665Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 28
-  completed_plans: 26
+  completed_plans: 27
   percent: 88
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-03 after v1.7 milestone opened)
 ## Current Position
 
 Phase: 79 (verification-and-visual-regression-hardening) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-04
 
@@ -78,6 +78,9 @@ Last activity: 2026-06-04
 - [79-01] check-conformance.sh TYPE-GATE requires grep -v text-base-content (Footgun-6: DaisyUI semantic color token, not a type-scale violation; without exclusion every file using text-base-content produces a false failure)
 - [79-02] replay timeline badge text: event_badge/1 returns "Replay audit" as a truthy sentinel (controls badge rendering), not the visible text; status_label(:webhook_replay_succeeded) = "Replay succeeded" is what the DOM contains; replay_event_label(:webhook_replay_succeeded) = "Webhook replay completed" is the row title
 - [79-02] preview-orientation e2e: preview-orientation only renders when @mailables == []; use /ops/browser-preview-empty test route (sets mailables=[] in session) to reach this state in a test server that has explicit fixture mailables configured
+- [79-03-A] Textual audit finding derived from code review; agent-browser available but demo boot causes swoosh lock drift (Pitfall 5); durable artifact is textual per D-01
+- [79-03-B] GAP-22 reconfirmed permanent v1.7 DEFERRED at severity 3 per design-system.md lines 152-159; no code change
+- [79-03-C] 74-GAP-REGISTER.md NOT modified; all closure evidence in 79-GAP-CLOSEOUT.md per frozen-artifact pattern
 
 ## Performance Metrics
 
@@ -100,6 +103,7 @@ Items acknowledged and deferred at previous milestone close:
 | Phase 76-component-library-and-design-system-hardening P02 | 20 | 2 tasks | 7 files |
 | Phase 77 P04 | 7 | 1 tasks | 2 files |
 | Phase 79 P01 | 8 | 2 tasks | 2 files |
+| Phase 79-verification-and-visual-regression-hardening P03 | 420 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -120,6 +124,7 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Session Continuity
 
+- 2026-06-04: Phase 79 Plan 03 executed. 79-GAP-CLOSEOUT.md created — all five sev-4 rows (GAP-01/03/05/06/13) CLOSED with resolving commit SHAs; GAP-22 reconfirmed DEFERRED at severity 3; textual 6-pillar before/after audit finding; zero-open-sev-4/5 declaration. 74-GAP-REGISTER.md NOT modified. Commit: f202f1e0. VERIF-01 and VERIF-04 satisfied.
 - 2026-06-04: Phase 79 Plan 02 executed. operator.spec.js extended to 10 tests (all green): fixed pre-existing "exact replay flow" failure (wrong badge text "Replay audit" → "Webhook replay completed"/"Replay succeeded" + { timeout: 10000 }); fixed operator_fixtures.ex jsonb[] cast bug blocking server boot; added operator-overview-health, operator-overview-nav, inbound-orientation, preview-orientation structural coverage; added /ops/browser-preview-empty test route for preview empty-mailables state. Commits: 629c91b0, ab14422e. VERIF-02 satisfied.
 - 2026-06-04: Phase 79 Plan 01 executed. check-conformance.sh (5-gate: BADGE/TYPE/BOLD/GAP/HEX) created at mailglass_admin/scripts/; exits 0 on current codebase. design-system.md audit-loop section expanded with explicit before/after LLM-critique ritual (Phase 74 baseline, 4 GAP rows, 6-pillar rubric, /ops/mail/ IA note). 189 tests, 0 failures. Commits: 8c28352a, ef660f27. VERIF-03 satisfied.
 - 2026-06-04: Phase 77 Plan 04 (last plan) executed. mix verify.preview exits 0 (189 tests, 0 failures, 2 excluded). Bundle rebuild confirmed no-op — priv/static/ bit-identical to Phase 76-06 baseline. Two pre-existing test blockers fixed: citext_probe.ex Boundary declaration, voice_test script-strip. check_motion_conformance.sh exits 0. Commit: 3390b8fe. Phase 77 complete.
@@ -137,5 +142,5 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Operator Next Steps
 
-- Phase 79 Plan 02 complete — VERIF-02 satisfied; 10 Playwright tests green; replay-flow fixed
-- Next: Phase 79 Plan 03 (audit-matrix re-run and gap-register closeout)
+- Phase 79 Plan 03 complete — VERIF-01 and VERIF-04 satisfied; 79-GAP-CLOSEOUT.md authored; all five sev-4 rows CLOSED; GAP-22 deferred sev-3
+- Next: Phase 79 Plan 04 (release ceremony preparation — inbound exact-pin re-pin)
