@@ -130,6 +130,25 @@ Matrix: **screen × theme (light/dark) × viewport (390/768/1440) × state
   (never `priv/static/` — must not trip the bundle gate). Review the PNGs (or
   hand them to a multimodal model with this checklist as the rubric: accent
   overuse? faux-bold? non-flat shadow? off-grid spacing? contrast ≥ 4.5:1?).
+- **Before/after LLM-critique ritual:** The Phase 74 baseline represents the
+  pre-v1.7 state (PNG set captured to the maintainer's local `tmp/ui-audit/` at
+  baseline time, or regenerated from the Phase 74 git state — do not commit
+  either set). To run a comparison: open the Phase 74 baseline PNGs alongside the
+  current `tmp/ui-audit/` run, then supply both sets to a multimodal model with
+  the 6-pillar rubric above (Spacing/size, Radius, Color, Type, Elevation,
+  Motion/A11y) as the scoring framework. Ask for a per-pillar before/after score
+  and a list of remaining issues if any. The following GAP rows should show
+  visible improvement in the comparison:
+  - **GAP-01/03/05/06** — badge color consistency: colors now come from
+    `Components.status_badge/1`; phantom `:suppressed` and blanket `:badge-error`
+    for all replay types should be absent.
+  - **GAP-13** — support-card hierarchy: Tier 1 full cards for non-zero/actionable
+    states; Tier 2 compact border-t row for zero states.
+  - **GAP-07** — 390px orientation strip visible on the deliveries surface.
+  - **GAP-21** — single `h1` "Operator overview" heading on the landing screen.
+  - **IA note:** `/ops/mail/` now lands on the Operator Overview, not the
+    Deliveries list. A reviewer comparing deliveries-at-landing screenshots
+    should expect a different page — this is intentional, not a regression.
 - **CI regression net (Playwright):** `e2e/operator.spec.js` is the committed
   gate. Because relative asset URLs leave direct loads unstyled (see below), the
   e2e asserts structure/order/`data-testid`/text — not pixels.
