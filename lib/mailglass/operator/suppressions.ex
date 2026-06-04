@@ -52,6 +52,17 @@ defmodule Mailglass.Operator.Suppressions do
     |> project_state()
   end
 
+  @spec count_active_suppressions(String.t()) :: non_neg_integer()
+  def count_active_suppressions(tenant_id) when is_binary(tenant_id) and tenant_id != "" do
+    now = Clock.utc_now()
+
+    Entry
+    |> where([entry], entry.tenant_id == ^tenant_id)
+    |> where([entry], is_nil(entry.expires_at) or entry.expires_at > ^now)
+    |> Tenancy.scope(tenant_id)
+    |> Repo.aggregate(:count, :id)
+  end
+
   defp normalize_context(context) when is_list(context), do: Map.new(context)
   defp normalize_context(context) when is_map(context), do: Map.new(context)
 
