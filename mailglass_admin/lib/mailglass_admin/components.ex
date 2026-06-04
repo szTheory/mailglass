@@ -114,6 +114,139 @@ defmodule MailglassAdmin.Components do
   end
 
   @doc """
+  Normalizes inbound @outcomes singular atoms to the canonical past-tense atoms expected by
+  status_badge/1. The mailglass_inbound @outcomes schema (locked 1.0 contract) is never modified;
+  normalization is admin-side only.
+
+  Maps: `:accept` → `:accepted`, `:reject` → `:rejected`, `:bounce` → `:bounced`.
+  All other atoms (including nil) pass through unchanged.
+  """
+  @doc since: "1.5.0"
+  @spec normalize_inbound_outcome(atom() | nil) :: atom() | nil
+  def normalize_inbound_outcome(:accept), do: :accepted
+  def normalize_inbound_outcome(:reject), do: :rejected
+  def normalize_inbound_outcome(:bounce), do: :bounced
+  def normalize_inbound_outcome(atom), do: atom
+
+  attr :status, :atom,
+    values: [
+      :dispatched,
+      :queued,
+      :sent,
+      :delivered,
+      :deferred,
+      :bounced,
+      :failed,
+      :rejected,
+      :complained,
+      :unsubscribed,
+      :opened,
+      :clicked,
+      :autoresponded,
+      :unknown,
+      :accepted,
+      :no_match,
+      :ignore,
+      :failed_ingest,
+      :webhook_replay_requested,
+      :webhook_replay_succeeded,
+      :webhook_replay_failed,
+      :reconciled
+    ],
+    required: true
+
+  attr :size, :atom, values: [:sm, :md], default: :sm
+
+  @doc """
+  Unified delivery, inbound, and timeline status badge. Renders an outline Heroicon
+  (decorative, aria-hidden) and a text label inside a daisyUI badge container.
+
+  The base badge class is always emitted by this component — call sites must NOT
+  prepend 'badge' or 'badge badge-sm'. Use size: :sm (default) for list rows;
+  size: :md for detail headers.
+  """
+  @doc since: "1.5.0"
+  def status_badge(assigns) do
+    ~H"""
+    <span class={["badge", size_class(@size), status_class(@status)]}>
+      <span class={[status_icon(@status), "w-3 h-3"]} aria-hidden="true"></span>{status_label(@status)}
+    </span>
+    """
+  end
+
+  defp size_class(:sm), do: "badge-sm"
+  defp size_class(:md), do: "badge-md"
+
+  defp status_class(:dispatched), do: "badge-primary"
+  defp status_class(:queued), do: "badge-primary"
+  defp status_class(:sent), do: "badge-primary"
+  defp status_class(:delivered), do: "badge-success"
+  defp status_class(:deferred), do: "badge-warning"
+  defp status_class(:bounced), do: "badge-error"
+  defp status_class(:failed), do: "badge-error"
+  defp status_class(:rejected), do: "badge-error"
+  defp status_class(:complained), do: "badge-error"
+  defp status_class(:unsubscribed), do: "badge-warning"
+  defp status_class(:opened), do: "badge-success"
+  defp status_class(:clicked), do: "badge-success"
+  defp status_class(:autoresponded), do: "badge-outline"
+  defp status_class(:unknown), do: "badge-outline"
+  defp status_class(:accepted), do: "badge-success"
+  defp status_class(:no_match), do: "badge-warning"
+  defp status_class(:ignore), do: "badge-outline"
+  defp status_class(:failed_ingest), do: "badge-error"
+  defp status_class(:webhook_replay_requested), do: "badge-outline"
+  defp status_class(:webhook_replay_succeeded), do: "badge-success"
+  defp status_class(:webhook_replay_failed), do: "badge-error"
+  defp status_class(:reconciled), do: "badge-warning"
+
+  defp status_icon(:dispatched), do: "hero-paper-airplane"
+  defp status_icon(:queued), do: "hero-arrow-path"
+  defp status_icon(:sent), do: "hero-paper-airplane"
+  defp status_icon(:delivered), do: "hero-check-circle"
+  defp status_icon(:deferred), do: "hero-exclamation-triangle"
+  defp status_icon(:bounced), do: "hero-x-circle"
+  defp status_icon(:failed), do: "hero-x-circle"
+  defp status_icon(:rejected), do: "hero-x-circle"
+  defp status_icon(:complained), do: "hero-exclamation-circle"
+  defp status_icon(:unsubscribed), do: "hero-bell-slash"
+  defp status_icon(:opened), do: "hero-envelope-open"
+  defp status_icon(:clicked), do: "hero-hand-thumb-up"
+  defp status_icon(:autoresponded), do: "hero-arrow-uturn-left"
+  defp status_icon(:unknown), do: "hero-question-mark-circle"
+  defp status_icon(:accepted), do: "hero-check-circle"
+  defp status_icon(:no_match), do: "hero-exclamation-triangle"
+  defp status_icon(:ignore), do: "hero-minus-circle"
+  defp status_icon(:failed_ingest), do: "hero-exclamation-circle"
+  defp status_icon(:webhook_replay_requested), do: "hero-arrow-path"
+  defp status_icon(:webhook_replay_succeeded), do: "hero-check-circle"
+  defp status_icon(:webhook_replay_failed), do: "hero-x-circle"
+  defp status_icon(:reconciled), do: "hero-exclamation-triangle"
+
+  defp status_label(:dispatched), do: "Dispatched"
+  defp status_label(:queued), do: "Queued"
+  defp status_label(:sent), do: "Sent"
+  defp status_label(:delivered), do: "Delivered"
+  defp status_label(:deferred), do: "Deferred"
+  defp status_label(:bounced), do: "Bounced"
+  defp status_label(:failed), do: "Failed"
+  defp status_label(:rejected), do: "Rejected"
+  defp status_label(:complained), do: "Complained"
+  defp status_label(:unsubscribed), do: "Unsubscribed"
+  defp status_label(:opened), do: "Opened"
+  defp status_label(:clicked), do: "Clicked"
+  defp status_label(:autoresponded), do: "Autoresponded"
+  defp status_label(:unknown), do: "Unknown"
+  defp status_label(:accepted), do: "Accepted"
+  defp status_label(:no_match), do: "No match"
+  defp status_label(:ignore), do: "Ignored"
+  defp status_label(:failed_ingest), do: "Ingest failed"
+  defp status_label(:webhook_replay_requested), do: "Replay requested"
+  defp status_label(:webhook_replay_succeeded), do: "Replay succeeded"
+  defp status_label(:webhook_replay_failed), do: "Replay failed"
+  defp status_label(:reconciled), do: "Reconciled"
+
+  @doc """
   Masks a recipient email for operator display (PII minimization, the design contract).
 
   The ONE audited masking definition in the admin package: both
