@@ -343,8 +343,8 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
            subject, "from", "to", cc, bcc, reply_to, headers, sent_at, received_at,
            text_body, html_body, attachments, suppression_flagged, inserted_at, updated_at)
         VALUES
-          ($1::uuid, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11::jsonb,
-           $12::jsonb, $13, $14, $15, $16, $17, $18::jsonb, $19, $20, $21)
+          ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+           $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
         """,
         [
           Ecto.UUID.dump!(row.id),
@@ -354,17 +354,17 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
           row.message_id,
           row.envelope_recipient,
           row.subject,
-          Jason.encode!(row.from),
-          Jason.encode!(row.to),
-          Jason.encode!(row.cc),
-          Jason.encode!(row.bcc),
-          Jason.encode!(row.reply_to),
+          row.from,
+          row.to,
+          row.cc,
+          row.bcc,
+          row.reply_to,
           row.headers,
           row.sent_at,
           row.received_at,
           row.text_body,
           row.html_body,
-          Jason.encode!(row.attachments),
+          row.attachments,
           row.suppression_flagged,
           row.inserted_at,
           row.updated_at

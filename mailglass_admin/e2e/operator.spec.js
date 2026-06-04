@@ -125,7 +125,8 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-detail-header")).toContainText(
       "Last replay: completed · new work"
     );
-    await expect(page.getByTestId("operator-timeline")).toContainText("Replay audit");
+    await expect(page.getByTestId("operator-timeline")).toContainText("Webhook replay completed", { timeout: 10000 });
+    await expect(page.getByTestId("operator-timeline")).toContainText("Replay succeeded");
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("new work");
   });
