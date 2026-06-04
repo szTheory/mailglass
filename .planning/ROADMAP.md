@@ -124,7 +124,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 **Release note:** This milestone touches only `mailglass_admin` source, but linked-version mechanics mean the release ceremony will produce matched version bumps across all three packages (`mailglass`, `mailglass_admin`, `mailglass_inbound`). Core and inbound CHANGELOG entries will be administrative version-bump entries only — this is expected and correct per D-01.
 
-- [ ] **Phase 74: Systematic Audit and UI-SPEC** — Evidence gate; no code changes. Produces the scored gap register, frozen UI-SPEC with canonical status-badge taxonomy, before-baseline screenshots, and assertion inventory that blocks all build phases.
+- [x] **Phase 74: Systematic Audit and UI-SPEC** — Evidence gate; no code changes. Produces the scored gap register, frozen UI-SPEC with canonical status-badge taxonomy, before-baseline screenshots, and assertion inventory that blocks all build phases. (completed 2026-06-04)
 - [ ] **Phase 75: Information Architecture, Navigation and Orientation** — Shell-level orientation strip on all 3 surfaces; in-library Operator Overview landing; IA vocabulary; explicit deep-link-fix decision.
 - [ ] **Phase 76: Component-Library and Design-System Hardening** — Unified `status_badge` atom replacing 3 private copies; token migration off raw scale; support-card hierarchy redesign; committed bundle.
 - [ ] **Phase 77: Motion and Microinteraction Polish** — Six-motion vocabulary applied per UI-SPEC; motion-reveal re-fire fix; reduced-motion discipline.
@@ -146,7 +146,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 **Plans**: 3 plans
   - [x] 74-01-PLAN.md — Extend ui-audit.sh for the 390/768/1440 × light/dark × 3-surface matrix; capture the before-baseline; verify the frozen UI-SPEC satisfies AUDIT-02. (Wave 1)
   - [x] 74-02-PLAN.md — Author 74-ASSERTION-INVENTORY.md: every e2e heading/seed-count assertion baseline + gitignored PNG path references (AUDIT-03). (Wave 1)
-  - [ ] 74-03-PLAN.md — Author 74-GAP-REGISTER.md: scored GAP-NN register covering all 5 badge_class copies, the 390px pass per surface, and the deep-link defer-to-Phase-79 row (AUDIT-01). (Wave 2, depends on 74-01)
+  - [x] 74-03-PLAN.md — Author 74-GAP-REGISTER.md: scored GAP-NN register covering all 5 badge_class copies, the 390px pass per surface, and the deep-link defer-to-Phase-79 row (AUDIT-01). (Wave 2, depends on 74-01)
 **UI hint**: yes
 
 ### Phase 75: Information Architecture, Navigation and Orientation
@@ -212,7 +212,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 74. Systematic Audit and UI-SPEC | 2/3 | In Progress|  |
+| 74. Systematic Audit and UI-SPEC | 3/3 | Complete   | 2026-06-04 |
 | 75. Information Architecture, Navigation and Orientation | 0/TBD | Not started | - |
 | 76. Component-Library and Design-System Hardening | 0/TBD | Not started | - |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
