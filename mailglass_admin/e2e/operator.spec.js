@@ -180,4 +180,79 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("no change");
   });
+
+  // MOTION-01 regression gate (D-07 / GAP-19):
+  // Asserts the delivery detail pane carries a record-keyed id attribute
+  // (#delivery-detail-<uuid>) that changes when a different delivery is selected.
+  // LiveView's element-replace (rather than in-place patch) re-fires the mg-reveal
+  // keyframe animation on each selection. ExUnit substring tests cannot catch a
+  // missing or static id attribute — this Playwright DOM-layer test is the Nyquist gate.
+  test("delivery detail pane carries record-keyed id for animation re-fire", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    // Click the first delivery row and read the delivery_id from the URL
+    await deliveryRow(page, 0).click();
+    const deliveryId = new URL(page.url()).searchParams.get("delivery_id");
+    expect(deliveryId).toBeTruthy();
+
+    // The detail pane must carry the record-keyed id
+    await expect(page.locator(`#delivery-detail-${deliveryId}`)).toBeVisible();
+
+    // Switch to a second delivery and verify the id changes (element replaced, not patched)
+    await deliveryRow(page, 1).click();
+    const deliveryId2 = new URL(page.url()).searchParams.get("delivery_id");
+    expect(deliveryId2).not.toEqual(deliveryId);
+
+    // New id visible; old id absent — confirms LiveView performed element replace
+    await expect(page.locator(`#delivery-detail-${deliveryId2}`)).toBeVisible();
+    await expect(page.locator(`#delivery-detail-${deliveryId}`)).toHaveCount(0);
+  });
+
+  // MOTION-02 regression gate (D-07 / GAP-19):
+  // Asserts that the detail element remains visible (not stuck at opacity: 0)
+  // under prefers-reduced-motion: reduce. The global app.css reduced-motion block
+  // sets animation-duration: 0.01ms !important so the element is immediately visible.
+  // Media emulation MUST precede page.goto (which happens inside openOperator).
+  test("motion-reveal is suppressed under prefers-reduced-motion", async ({ page }) => {
+    // Emulate reduced-motion BEFORE navigation so the media query is active on initial load
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    await deliveryRow(page, 0).click();
+    const deliveryId = new URL(page.url()).searchParams.get("delivery_id");
+    expect(deliveryId).toBeTruthy();
+
+    // Under reduced-motion the animation resolves at 0.01ms — element must not be
+    // stuck invisible at opacity: 0
+    await expect(page.locator(`#delivery-detail-${deliveryId}`)).toBeVisible();
+  });
+
+  // SKIPPED: inbound id-presence assertion (seed dependency — Phase 78)
+  //
+  // The inbound detail pane HEEx fix (id={"inbound-detail-#{@detail.record.id}"}) ships in
+  // Plan 01 (Phase 77). This e2e assertion is skipped because OperatorFixtures.seed_browser_scenario!()
+  // seeds zero inbound records — there is no navigable inbound row in the browser scenario.
+  //
+  // To enable this test: Phase 78 must seed at least one InboundRecord in the browser scenario.
+  // Once that seed is added, remove the skip wrapper and implement the assertion:
+  //   1. Navigate to /ops/inbound?tenant_id=browser-tenant
+  //   2. Click the first inbound row
+  //   3. Read inbound_id from new URL(page.url()).searchParams.get("inbound_id")
+  //   4. Assert page.locator(`#inbound-detail-${inboundId}`) toBeVisible()
+  test.skip("inbound detail pane carries record-keyed id [SKIP: requires inbound seed in browser scenario]", async ({ page }) => {
+    // Phase 78 seed expansion is the gate to enable this test.
+    // See OperatorFixtures.seed_browser_scenario!() — zero inbound records are seeded.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+    await page.goto(`/ops/inbound?tenant_id=${tenantId}`);
+
+    // Click the first inbound row (requires Phase 78 to seed at least one inbound record)
+    await page.getByTestId("operator-inbound-row").nth(0).click();
+    const inboundId = new URL(page.url()).searchParams.get("inbound_id");
+    expect(inboundId).toBeTruthy();
+
+    await expect(page.locator(`#inbound-detail-${inboundId}`)).toBeVisible();
+  });
 });
