@@ -187,10 +187,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       detail_html = view |> element("[data-testid='operator-detail-header']") |> render()
 
       assert html =~ ~s(data-testid="operator-support-cards")
-      assert html =~ "Failed ingest"
+      assert html =~ "Recent failures"
       assert html =~ "Orphan backlog"
       assert html =~ "Replay outcomes"
-      assert html =~ "Reconcile facts"
+      assert html =~ "Reconciled:"
       assert html =~ "Tenant-scoped facts from the current support window."
       assert html =~ "Replay audit"
       assert html =~ "Reconcile fact"

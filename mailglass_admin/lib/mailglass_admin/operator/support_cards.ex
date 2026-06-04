@@ -187,27 +187,24 @@ defmodule MailglassAdmin.Operator.SupportCards do
           :if={@support_summary && @support_summary.reconcile_facts.still_unmatched_count > 0}
           aria-hidden="true"
         >·</span>
-        <span
+        <button
           :if={@support_summary && @support_summary.reconcile_facts.still_unmatched_count > 0}
+          type="button"
+          phx-click="open_support_exemplar"
+          phx-value-focus="reconcile_facts"
+          phx-value-event_id={
+            @support_summary.reconcile_facts.latest_reconciled &&
+              @support_summary.reconcile_facts.latest_reconciled.event_id
+          }
+          phx-value-delivery_id={
+            @support_summary.reconcile_facts.latest_reconciled &&
+              @support_summary.reconcile_facts.latest_reconciled.delivery_id
+          }
           data-testid="support-card-reconcile-facts-drilldown"
+          class="btn btn-ghost btn-sm px-3"
         >
-          <button
-            type="button"
-            phx-click="open_support_exemplar"
-            phx-value-focus="reconcile_facts"
-            phx-value-event_id={
-              @support_summary.reconcile_facts.latest_reconciled &&
-                @support_summary.reconcile_facts.latest_reconciled.event_id
-            }
-            phx-value-delivery_id={
-              @support_summary.reconcile_facts.latest_reconciled &&
-                @support_summary.reconcile_facts.latest_reconciled.delivery_id
-            }
-            class="btn btn-ghost btn-sm px-3"
-          >
-            Unmatched pressure: {@support_summary.reconcile_facts.still_unmatched_count}
-          </button>
-        </span>
+          Unmatched pressure: {@support_summary.reconcile_facts.still_unmatched_count}
+        </button>
       </div>
 
       <div
