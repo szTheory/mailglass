@@ -236,10 +236,19 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 **Plans**: 4 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 77-01-PLAN.md — Add record-keyed id attributes to delivery and inbound detail pane motion-reveal divs (D-01/D-02, GAP-19). (Wave 1)
 - [ ] 77-02-PLAN.md — Author scripts/check_motion_conformance.sh grep gate and wire into credo_strict CI job (D-06, GAP-19). (Wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 77-03-PLAN.md — Extend operator.spec.js with delivery id-presence, reduced-motion, and skipped inbound tests (D-07). (Wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 77-04-PLAN.md — Rebuild admin asset bundle; run mix verify.preview; confirm git diff --exit-code priv/static/ clean (D-08). (Wave 3)
+
 **UI hint**: yes
 
 ### Phase 78: Seed-Data Expressiveness
