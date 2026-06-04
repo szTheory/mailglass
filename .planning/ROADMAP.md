@@ -143,7 +143,10 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
   3. A committed before-baseline exists (gitignored screenshot set in `tmp/ui-audit/` + assertion inventory of every demo/e2e heading and seed-count assertion that phases 75-78 will ripple).
   4. An explicit in-scope / explicitly-deferred decision is recorded for the deep-link unstyled-CSS bug (it touches a stable asset-serving seam).
   5. Zero build-phase code is written — this phase is evidence-only.
-**Plans**: TBD
+**Plans**: 3 plans
+  - [ ] 74-01-PLAN.md — Extend ui-audit.sh for the 390/768/1440 × light/dark × 3-surface matrix; capture the before-baseline; verify the frozen UI-SPEC satisfies AUDIT-02. (Wave 1)
+  - [ ] 74-02-PLAN.md — Author 74-ASSERTION-INVENTORY.md: every e2e heading/seed-count assertion baseline + gitignored PNG path references (AUDIT-03). (Wave 1)
+  - [ ] 74-03-PLAN.md — Author 74-GAP-REGISTER.md: scored GAP-NN register covering all 5 badge_class copies, the 390px pass per surface, and the deep-link defer-to-Phase-79 row (AUDIT-01). (Wave 2, depends on 74-01)
 **UI hint**: yes
 
 ### Phase 75: Information Architecture, Navigation and Orientation
@@ -209,7 +212,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 74. Systematic Audit and UI-SPEC | 0/TBD | Not started | - |
+| 74. Systematic Audit and UI-SPEC | 0/3 | Not started | - |
 | 75. Information Architecture, Navigation and Orientation | 0/TBD | Not started | - |
 | 76. Component-Library and Design-System Hardening | 0/TBD | Not started | - |
 | 77. Motion and Microinteraction Polish | 0/TBD | Not started | - |
