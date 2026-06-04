@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
 status: executing
-last_updated: "2026-06-04T09:19:11.629Z"
+last_updated: "2026-06-04T09:31:12.235Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 18
-  completed_plans: 14
+  completed_plans: 15
   percent: 50
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-03 after v1.7 milestone opened)
 ## Current Position
 
 Phase: 76 (component-library-and-design-system-hardening) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-06-04
 
@@ -78,7 +78,7 @@ Last activity: 2026-06-04
 
 **Velocity:**
 
-- v1.7 phases in progress: Phase 76 Plan 01 complete (status_badge/1 component + 24-atom regression test)
+- v1.7 phases in progress: Phase 76 Plans 01-02 complete (badge component + rewire); Plan 05 complete (token migration of 15 remaining admin HEEx files + hex fix)
 - v1.6 phases completed: 3 (71-73), 6 plans, 5 tasks
 - v1.5 phases completed: 4 (67-70), 8 plans, 14 tasks
 - v1.4 phases completed: 4 (63-66), 12 plans, 22 tasks
@@ -113,8 +113,9 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Session Continuity
 
+- 2026-06-04: Phase 76 Plan 05 executed. Token migration of 15 remaining admin HEEx files (components.ex, 5 inbound sub-components, inbound_live.ex, 3 operator sub-components, operator_live.ex lines 363+, 3 preview files, preview_live.ex). Hex #ffffff in preview/tabs.ex:113 replaced with var(--color-base-100). D-09 boundary enforced (operator_live.ex:279-362 untouched). 187 tests, 1 pre-existing failure. Commits: bfff1f1c, 439cc16d.
+- Next: Execute Phase 76 Plans 03 and 04 (support-card restructure and remaining token migration files).
 - 2026-06-04: Phase 76 Plan 01 executed. Components.status_badge/1 and Components.normalize_inbound_outcome/1 added to components.ex; 24-atom regression test created at test/mailglass_admin/components_test.exs. 30 tests, 0 failures.
-- Next: Execute Phase 76 Plan 02 (badge call-site rewire — delete 5 badge_class/1 copies, route all call sites through status_badge/1).
 - 2026-06-03: v1.7 roadmap created. Phase 74 is the next step. Run `/gsd-plan-phase 74` (or `/gsd-discuss-phase 74` first) to begin the audit + UI-SPEC evidence gate.
 - NOTE: Phase 74 should consider using `/gsd-ui-phase` to produce the UI-SPEC deliverable inside the phase. The `workflow.ui_phase: true` config flag is set.
 - Phase 73 completed and verified on 2026-06-02. v1.6 milestone complete. `mailglass_inbound` 1.0.0 live on Hex.
