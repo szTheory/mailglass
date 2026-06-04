@@ -56,6 +56,7 @@ defmodule MailglassAdmin.TestAdopter.Router do
     get "/browser-ready", MailglassAdmin.TestAdopter.BrowserSessionController, :ready
     get "/browser-reset", MailglassAdmin.TestAdopter.BrowserSessionController, :reset
     get "/browser-login", MailglassAdmin.TestAdopter.BrowserSessionController, :create
+    get "/browser-preview-empty", MailglassAdmin.TestAdopter.BrowserSessionController, :preview_empty
 
     mailglass_operator_routes "/mail",
       auth: MailglassAdmin.TestOperatorAuth,
@@ -98,6 +99,15 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
     |> Plug.Conn.put_session("auth_method", "password")
     |> Plug.Conn.put_session("recent_auth_at", now)
     |> Phoenix.Controller.redirect(to: return_to)
+  end
+
+  # Sets the preview mailables session key to [] so the preview surface renders its
+  # orientation strip (the empty-mailables state). Used by the VERIF-02 orientation
+  # strip e2e test, which must reach preview-orientation without real mailables in scope.
+  def preview_empty(conn, _params) do
+    conn
+    |> Plug.Conn.put_session("mailables", [])
+    |> Phoenix.Controller.redirect(to: "/dev/mail/")
   end
 end
 

@@ -260,4 +260,45 @@ test.describe("operator browser gate", () => {
     // The detail pane must carry the record-keyed id
     await expect(page.locator(`#inbound-detail-${inboundId}`)).toBeVisible();
   });
+
+  // VERIF-02: structural coverage for Operator Overview landing (D-05 / GAP-register sev-4 closeout)
+  // Asserts the health-count cards container and navigation CTAs container are visible
+  // when the tenant is scoped. Uses getByTestId for structural assertions (not pixel-based).
+  test("operator overview landing has health cards and navigation CTAs", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    // Navigate back to the Overview landing (openOperator navigates to Deliveries view)
+    await page.goto(`/ops/mail?tenant_id=${tenantId}`);
+    await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+
+    // Overview container
+    await expect(page.getByTestId("operator-overview")).toBeVisible();
+
+    // Health-count cards container (all four sub-cards always render; colors vary by seed state)
+    await expect(page.getByTestId("operator-overview-health")).toBeVisible();
+
+    // Navigation CTAs container (View Deliveries + View Inbound links)
+    await expect(page.getByTestId("operator-overview-nav")).toBeVisible();
+  });
+
+  // VERIF-02: structural coverage for inbound and preview orientation strips (D-05)
+  // Asserts inbound-orientation and preview-orientation testids are visible on
+  // their respective surfaces. Mirrors the existing deliveries-orientation check
+  // in the mobile test (line 101).
+  test("inbound and preview surfaces render their orientation strips", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    // Inbound surface orientation strip
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+    await expect(page.getByTestId("inbound-orientation")).toBeVisible();
+
+    // Preview surface orientation strip (renders when @mailables == []).
+    // Navigate via /ops/browser-preview-empty which sets mailables=[] in the session
+    // before redirecting to /dev/mail/ — the test router is configured with explicit
+    // mailables so a direct goto would show the landing card instead of the strip.
+    await page.goto("/ops/browser-preview-empty");
+    await expect(page.getByTestId("preview-orientation")).toBeVisible();
+  });
 });
