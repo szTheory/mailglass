@@ -37,8 +37,8 @@
 
 ### Seed-Data Expressiveness (Phase 78)
 
-- [ ] **SEED-01**: Demo seed data makes **every screen state reachable by a seeded URL** — each delivery status, each inbound outcome (accept/no_match/reject/bounce/ignore), a failed-ingest row, an orphan-backlog row, each replay outcome (failed/noop/replayed), reconciled + unmatched facts (both support-card branches), an empty-result tenant, and long recipient/subject truncation stress.
-- [ ] **SEED-02**: Demo reset tests + `demo.spec.js` seed-count assertions are updated in the **same change** as the seed expansion (no broken specs across the commit boundary).
+- [x] **SEED-01**: Demo seed data makes **every screen state reachable by a seeded URL** — each delivery status, each inbound outcome (accept/no_match/reject/bounce/ignore), a failed-ingest row, an orphan-backlog row, each replay outcome (failed/noop/replayed), reconciled + unmatched facts (both support-card branches), an empty-result tenant, and long recipient/subject truncation stress.
+- [x] **SEED-02**: Demo reset tests + `demo.spec.js` seed-count assertions are updated in the **same change** as the seed expansion (no broken specs across the commit boundary).
 
 ### Verification & Visual-Regression (Phase 79 — closeout)
 
@@ -92,8 +92,8 @@ Phase mapping derived from the locked blueprint; the roadmapper validates 100% c
 | DS-04 | Phase 76 | Complete |
 | MOTION-01 | Phase 77 | Complete |
 | MOTION-02 | Phase 77 | Complete |
-| SEED-01 | Phase 78 | Pending |
-| SEED-02 | Phase 78 | Pending |
+| SEED-01 | Phase 78 | Complete |
+| SEED-02 | Phase 78 | Complete |
 | VERIF-01 | Phase 79 | Pending |
 | VERIF-02 | Phase 79 | Pending |
 | VERIF-03 | Phase 79 | Pending |

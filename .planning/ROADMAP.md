@@ -133,7 +133,7 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 - [x] **Phase 75: Information Architecture, Navigation and Orientation** — Shell-level orientation strip on all 3 surfaces; in-library Operator Overview landing; IA vocabulary; explicit deep-link-fix decision. (completed 2026-06-04)
 - [x] **Phase 76: Component-Library and Design-System Hardening** — Unified `status_badge` atom replacing 3 private copies; token migration off raw scale; support-card hierarchy redesign; committed bundle. (completed 2026-06-04)
 - [x] **Phase 77: Motion and Microinteraction Polish** — Six-motion vocabulary applied per UI-SPEC; motion-reveal re-fire fix; reduced-motion discipline. (completed 2026-06-04)
-- [ ] **Phase 78: Seed-Data Expressiveness** — Demo seeds covering every screen state; e2e count assertions updated in same change.
+- [x] **Phase 78: Seed-Data Expressiveness** — Demo seeds covering every screen state; e2e count assertions updated in same change. (completed 2026-06-04)
 - [ ] **Phase 79: Verification and Visual-Regression Hardening** — Full audit-matrix re-run vs baseline; extended e2e; conformance + bundle gates; deep-link resolution; release ceremony acknowledgment.
 
 ## Phase Details
@@ -266,8 +266,8 @@ Plans:
 Plans:
 **Wave 1** *(parallel)*
 
-  - [ ] 78-01-PLAN.md — Expand demo_data.ex northstar breadth: 8 missing event-type deliveries, 2 missing inbound outcomes, support-card branches (orphan/failed-ingest/replay/reconcile), truncation stress rows, empty-tenant constant. (Wave 1)
-  - [ ] 78-02-PLAN.md — Seed one inbound record in operator_fixtures.ex (browser-tenant) + remove test.skip from operator.spec.js:254 inbound detail pane id-presence test. (Wave 1)
+  - [x] 78-01-PLAN.md — Expand demo_data.ex northstar breadth: 8 missing event-type deliveries, 2 missing inbound outcomes, support-card branches (orphan/failed-ingest/replay/reconcile), truncation stress rows, empty-tenant constant. (Wave 1)
+  - [x] 78-02-PLAN.md — Seed one inbound record in operator_fixtures.ex (browser-tenant) + remove test.skip from operator.spec.js:254 inbound detail pane id-presence test. (Wave 1)
 
 ### Phase 79: Verification and Visual-Regression Hardening
 
@@ -293,7 +293,7 @@ Plans:
 | 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
 | 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
 | 77. Motion and Microinteraction Polish | 4/4 | Complete    | 2026-06-04 |
-| 78. Seed-Data Expressiveness | 0/2 | Not started | - |
+| 78. Seed-Data Expressiveness | 2/2 | Complete    | 2026-06-04 |
 | 79. Verification and Visual-Regression Hardening | 0/TBD | Not started | - |
 
 ## Backlog
