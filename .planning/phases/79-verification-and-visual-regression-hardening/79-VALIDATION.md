@@ -1,10 +1,11 @@
 ---
 phase: 79
 slug: verification-and-visual-regression-hardening
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-04
+validated: 2026-06-04
 ---
 
 # Phase 79 — Validation Strategy
@@ -40,15 +41,15 @@ created: 2026-06-04
 
 | Plan | Wave | Requirement | Behavior | Test Type | Automated Command | File Exists | Status |
 |------|------|-------------|----------|-----------|-------------------|-------------|--------|
-| conformance script | 1 | VERIF-03 | 5 conformance greps + bundle-clean gate run as committed script | shell | `bash mailglass_admin/scripts/check-conformance.sh` | ❌ W1 | ⬜ pending |
-| e2e extension | 1 | VERIF-02 | Operator Overview + inbound/preview orientation structural coverage | e2e | `npx playwright test --config=playwright.config.cjs operator.spec.js` | ✅ (tests added) | ⬜ pending |
-| e2e replay fix | 1 | VERIF-02 | "exact replay flow" test green (timeout + stable anchor) | e2e | `npx playwright test --config=playwright.config.cjs -g "exact replay flow"` | ✅ (fix needed) | ⬜ pending |
-| audit matrix | 1 | VERIF-01 | 18-cell before/after matrix re-run vs Phase 74 baseline | manual (agent-browser) | `bash mailglass_admin/scripts/ui-audit.sh` | ✅ | ⬜ pending |
-| gap closeout | 1 | VERIF-01, VERIF-04 | zero open sev-4/5 rows; GAP-22 deferral recorded | evidence artifact | review `79-GAP-CLOSEOUT.md` | ❌ W1 | ⬜ pending |
-| design-system docs | 1 | VERIF-03 | screenshot→LLM-critique loop documented as repeatable ritual | prose review | review `design-system.md` audit-loop section | ✅ (expansion) | ⬜ pending |
-| release prep | 2 | VERIF-04 (SC-5) | inbound exact-pin → 1.5.0; CHANGELOG readiness; matched bump | grep + commit history | `grep '== 1.5.0' mailglass_inbound/mix.exs` | ✅ (update needed) | ⬜ pending |
+| conformance script | 1 | VERIF-03 | 5 conformance greps + bundle-clean gate run as committed script | shell | `bash mailglass_admin/scripts/check-conformance.sh` | ✅ | ✅ green |
+| e2e extension | 1 | VERIF-02 | Operator Overview + inbound/preview orientation structural coverage | e2e | `npx playwright test --config=playwright.config.cjs operator.spec.js` | ✅ | ✅ green |
+| e2e replay fix | 1 | VERIF-02 | "exact replay flow" test green (timeout + stable anchor) | e2e | `npx playwright test --config=playwright.config.cjs -g "exact replay flow"` | ✅ | ✅ green |
+| audit matrix | 1 | VERIF-01 | 18-cell before/after matrix re-run vs Phase 74 baseline | manual (agent-browser) | `bash mailglass_admin/scripts/ui-audit.sh` | ✅ | 🖐 manual-only |
+| gap closeout | 1 | VERIF-01, VERIF-04 | zero open sev-4/5 rows; GAP-22 deferral recorded | evidence artifact | review `79-GAP-CLOSEOUT.md` | ✅ | ✅ green |
+| design-system docs | 1 | VERIF-03 | screenshot→LLM-critique loop documented as repeatable ritual | prose review | review `design-system.md` audit-loop section | ✅ | ✅ green |
+| release prep | 2 | VERIF-04 (SC-5) | inbound exact-pin → 1.5.0; CHANGELOG readiness; matched bump | grep + commit history | `grep '== 1.5.0' mailglass_inbound/mix.exs` | ✅ | ✅ green |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky · 🖐 manual-only*
 
 ---
 
@@ -74,11 +75,42 @@ New verification *assets* the phase itself creates (not pre-execution stubs):
 
 ## Validation Sign-Off
 
-- [ ] All tasks have an automated verify command OR a documented manual-only justification
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references (N/A — existing infra covers all)
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 120s
-- [ ] `nyquist_compliant: true` set in frontmatter (planner/executor to set once map is complete)
+- [x] All tasks have an automated verify command OR a documented manual-only justification
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (N/A — existing infra covers all)
+- [x] No watch-mode flags
+- [x] Feedback latency < 120s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated 2026-06-04 — all automated gates re-run green during retroactive Nyquist audit.
+
+---
+
+## Validation Audit 2026-06-04
+
+Retroactive Nyquist audit (`/gsd-validate-phase 79`). State A — audited existing VALIDATION.md against live artifacts; re-ran every automated gate.
+
+| Metric | Count |
+|--------|-------|
+| Requirements (VERIF-01..04) | 4 |
+| Tasks classified | 7 |
+| COVERED (automated, green) | 6 |
+| Manual-only (justified) | 1 (audit-matrix visual, VERIF-01) |
+| Gaps found | 0 |
+| Resolved | 0 (none needed) |
+| Escalated | 0 |
+
+**Re-run evidence (all live, this audit):**
+
+| Gate | Command | Result |
+|------|---------|--------|
+| VERIF-03 conformance | `bash mailglass_admin/scripts/check-conformance.sh` | exit 0 — "OK: design-system conformance clean." |
+| VERIF-03 bundle-clean | `git diff --exit-code mailglass_admin/priv/static/` | exit 0 |
+| VERIF-03 docs | `grep -c "Phase 74 baseline" mailglass_admin/docs/design-system.md` | 2 |
+| VERIF-02 e2e | `npx playwright test --config=playwright.config.cjs operator.spec.js` | 10 passed (incl. exact replay flow + 2 new structural tests) |
+| VERIF-02 testids | `grep -cE "operator-overview-health|operator-overview-nav|inbound-orientation|preview-orientation"` | 5 references / 4 testids present |
+| VERIF-01 closeout | `grep -c "CLOSED" 79-GAP-CLOSEOUT.md` | 9 (≥5; zero open sev-4/5) |
+| VERIF-04 inbound pin | `grep '== 1.5.0' mailglass_inbound/mix.exs` | `{:mailglass, "== 1.5.0"}` |
+| Unit/integration | `cd mailglass_admin && mix test --seed 0 --warnings-as-errors` | 189 tests, 0 failures (2 excluded) |
+
+No new test files generated — phase is fully covered by existing committed infrastructure. The single manual-only item (before/after visual audit-matrix) carries a documented justification (non-deterministic PNGs, no CI promotion per D-01/D-07) and is not a coverage gap.
