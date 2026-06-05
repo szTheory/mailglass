@@ -1,3 +1,8 @@
+# Project name isolates containers/networks/volumes (stable `mailglass-demo_*`
+# prefix). It does NOT prevent host-port clashes on its own — the env-overridable,
+# loopback-bound port mappings below do that. See guides/run-the-demo.md.
+name: mailglass-demo
+
 services:
   demo_db:
     image: postgres:16-alpine
@@ -6,7 +11,9 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "5415:5432"
+      # Loopback-bound + override the HOST port to run alongside sibling demos:
+      #   MAILGLASS_DEMO_DB_PORT=5425 make demo
+      - "127.0.0.1:${MAILGLASS_DEMO_DB_PORT:-5415}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -32,9 +39,15 @@ services:
       MIX_HOME: /cache/mix
       npm_config_cache: /cache/npm
       PLAYWRIGHT_BROWSERS_PATH: /cache/playwright
-      DEMO_EVIDENCE_RESET_TOKEN: ${DEMO_EVIDENCE_RESET_TOKEN:?Set DEMO_EVIDENCE_RESET_TOKEN for demo evidence reset}
+      # Soft dev default so `make demo` runs with zero setup. CI and
+      # scripts/run_demo_browser_evidence.sh still pass an explicit strong token;
+      # the destructive reset endpoint stays off the network via loopback binding.
+      DEMO_EVIDENCE_RESET_TOKEN: ${DEMO_EVIDENCE_RESET_TOKEN:-mailglass-dev-demo}
     ports:
-      - "4015:4015"
+      # Container port stays 4015 (PORT env + healthcheck unchanged); only the
+      # HOST port is configurable + loopback-bound:
+      #   MAILGLASS_DEMO_HTTP_PORT=4025 make demo
+      - "127.0.0.1:${MAILGLASS_DEMO_HTTP_PORT:-4015}:4015"
     depends_on:
       demo_db:
         condition: service_healthy
@@ -68,7 +81,7 @@ services:
       DEMO_BASE_URL: http://demo:4015
       PLAYWRIGHT_BROWSERS_PATH: /cache/playwright
       npm_config_cache: /cache/npm
-      DEMO_EVIDENCE_RESET_TOKEN: ${DEMO_EVIDENCE_RESET_TOKEN:?Set DEMO_EVIDENCE_RESET_TOKEN for demo evidence reset}
+      DEMO_EVIDENCE_RESET_TOKEN: ${DEMO_EVIDENCE_RESET_TOKEN:-mailglass-dev-demo}
     depends_on:
       demo:
         condition: service_healthy
