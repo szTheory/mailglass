@@ -36,8 +36,13 @@ fi
 # Use semantic tokens instead: text-label (12px), text-body (14px), text-heading (20px),
 # text-display (28px) — defined in the @theme block.
 # Exclusion: text-base-content is a DaisyUI semantic color class (Footgun-6), not a size
-# utility. Piping through grep -v ensures it is never flagged as a violation.
-if grep -rE 'text-(sm|base|xs)' "$LIB" --include="*.ex" 2>/dev/null | grep -v 'text-base-content'; then
+# utility. The old implementation piped through `grep -v 'text-base-content'`, which
+# filters at the LINE level — so a genuine violation sharing a line with the (very common)
+# base-content color class, e.g. class="text-sm text-base-content", was silently dropped
+# (WR-01). Instead, anchor the size match so text-base-content can never match the pattern
+# in the first place: text-sm/text-xs as whole tokens, and text-base only when NOT followed
+# by a hyphen (which excludes text-base-content while still catching the raw text-base size).
+if grep -rEn 'text-(sm|xs)\b|text-base($|[^-])' "$LIB" --include="*.ex" 2>/dev/null; then
   echo "FAIL: TYPE-GATE — raw text-scale utility found (use text-label/body/heading/display)" >&2
   errors=$((errors + 1))
 fi
