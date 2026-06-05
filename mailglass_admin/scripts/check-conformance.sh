@@ -12,7 +12,16 @@
 
 set -euo pipefail
 
-LIB="mailglass_admin/lib"
+# Resolve LIB relative to this script's own location, not the caller's cwd.
+# mailglass_admin is its own Hex package; its CI lane may run with cwd at the
+# package root (mailglass_admin/) rather than the monorepo root. A cwd-relative
+# path would resolve to a non-existent dir, grep would print to the swallowed
+# stderr and exit non-zero, no error would be counted, and the script would
+# print "clean" while scanning zero files (WR-02). Anchoring to BASH_SOURCE and
+# asserting the dir exists makes the gate cwd-independent and fail-loud.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB="${SCRIPT_DIR}/../lib"
+[[ -d "$LIB" ]] || { echo "FAIL: lib dir not found at $LIB" >&2; exit 2; }
 errors=0
 
 # BADGE-GATE: defp badge_class must not exist anywhere in lib/.
