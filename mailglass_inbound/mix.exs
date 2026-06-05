@@ -118,7 +118,7 @@ defmodule MailglassInbound.MixProject do
   # core advances. Dev/test resolves the sibling via the local path dep.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 1.4.5"}
+      {:mailglass, "== 1.5.0"}
     else
       {:mailglass, path: "..", override: true}
     end
