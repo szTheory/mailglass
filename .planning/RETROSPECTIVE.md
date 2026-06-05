@@ -4,6 +4,46 @@
 
 ---
 
+## Milestone: v1.7 — Admin UI: IA & Design-System Polish v2
+
+**Shipped:** 2026-06-05
+**Phases:** 6 (74-79) | **Plans:** 22
+**Coverage:** 19/19 v1.7 requirements | **Audit:** passed (7/7 seams, 3/3 flows)
+
+### What Was Built
+
+- A Phase 74 evidence-only gate (scored gap register, frozen UI-SPEC with a canonical status-badge taxonomy, before-baseline screenshots, assertion inventory) that every build phase had to cite before merging.
+- Shell-level `Shell.orientation_strip/1` parity across Deliveries/Inbound/Preview plus an in-library Operator Overview landing added entirely within `OperatorLive.handle_params/3` — no router-macro change.
+- One unified `Components.status_badge/1` atom replacing five divergent `badge_class/1` copies, a full token migration of every admin HEEx file, and a Tier1/Tier2 support-card triage hierarchy, with the rebuilt bundle committed behind a self-contained `heroicons-inline.js` plugin.
+- Motion discipline (record-keyed ids fixing the `motion-reveal` re-fire, reduced-motion / ≤300ms enforced by a grep gate), fully-expressive seed data reaching every screen state, and a self-verified closeout (10 green Playwright tests + conformance/bundle gates, no human UAT).
+
+### What Worked
+
+- The anti-churn contract (no build task without a sev≥3 gap-register citation) kept a "polish" milestone from sprawling — every change traced to a scored, evidenced defect.
+- Front-loading a frozen UI-SPEC + taxonomy table in Phase 74 made the five-way `badge_class/1` conflict a mechanical consolidation in Phase 76 instead of a design argument mid-build.
+- Shift-left self-verification (Phases 75/77/79 ran the e2e/conformance suites themselves and fixed defects in-phase) meant closeout had no human-UAT backlog to drain.
+- Grep-enforceable conformance (token scale, motion vocabulary, bundle-clean diff) turned brand-discipline guardrails into CI gates rather than review opinions.
+
+### What Was Inefficient
+
+- Phase 76 left its human-UAT/verification artifacts in `partial`/`human_needed` state even though Phases 77 and 79 actually exercised the deferred checks; the pre-close audit then flagged them as "open," needing an explicit acknowledge-and-document step at close.
+- The `gsd-sdk milestone.complete` CLI scanned all of `.planning/phases/` (including leftover 999.x backlog dirs from v1.3) and miscounted the milestone as 8 phases / 28 plans / 40 tasks with 6 non-v1.7 accomplishments — MILESTONES.md and STATE.md needed manual correction to the real 6 phases / 22 plans.
+- Two VALIDATION records (Phases 75, 78) stayed in draft after verification passed — the same draft-Nyquist-bookkeeping drift seen in v1.5.
+
+### Patterns Established
+
+- Treat a frozen spec + scored gap register as the merge gate for any "quality/polish" milestone, so subjective UI work becomes evidence-backed and bounded.
+- When a downstream phase subsumes an upstream phase's deferred human checks, record the closure explicitly in the later phase's artifact so the upstream status isn't mistaken for open work at close.
+- For admin-only milestones under linked-version releases, keep the release ceremony prepare-only (bump the inbound exact-pin, let the pipeline own publish) and label core/inbound CHANGELOG entries administrative.
+
+### Key Lessons
+
+1. Flip a phase's verification/UAT status when downstream work closes its deferred checks — don't leave `human_needed` as a trailing artifact for the milestone-close audit to trip over.
+2. The leftover-phase-dir cleanup debt is now actively harming closeout accuracy (inflated CLI counts) — run `/gsd-cleanup` before the next milestone, not "later."
+3. Anti-churn citation gates are worth the overhead on polish milestones; they are the difference between bounded design-system hardening and open-ended redesign.
+
+---
+
 ## Milestone: v1.5 — Demo Evidence and Click-Around Confidence
 
 **Shipped:** 2026-06-02

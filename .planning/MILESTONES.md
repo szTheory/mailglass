@@ -1,5 +1,24 @@
 # Milestones
 
+## v1.7 Admin UI — IA & Design-System Polish v2 (Shipped: 2026-06-05)
+
+**Phases completed:** 6 phases (74-79), 22 plans
+
+**Milestone audit:** `status: passed` — 19/19 requirements satisfied, 7/7 cross-phase seams wired, 3/3 E2E operator flows complete (`.planning/milestones/v1.7-MILESTONE-AUDIT.md`).
+
+**Key accomplishments:**
+
+- **Phase 74 evidence gate (zero code):** produced a scored gap register (surface × light/dark × 390/768/1440 × state), a frozen UI-SPEC with the canonical status-badge taxonomy table resolving the five-way `badge_class/1` conflict, a committed before-baseline screenshot set, and a full demo/e2e assertion-ripple inventory keyed to Phases 75-78.
+- **Phase 75 IA & orientation:** generalized `Shell.orientation_strip/1` onto all three surfaces (Deliveries, Inbound, Preview) and added an in-library task-oriented Operator Overview landing at `/ops/mail/` via a `:overview` action in `OperatorLive.handle_params/3` — surfacing orphan-backlog / recent-failure / suppression-count health with **zero router-macro change**.
+- **Phase 76 design-system hardening:** replaced all five divergent `badge_class/1` private copies with one unified `Components.status_badge/1` atom (icon+label, GAP-01..06 collapsed); migrated every admin HEEx file off the raw type/spacing scale onto v1 tokens; restructured the flat 2×2 support-card grid into a Tier 1/Tier 2 triage hierarchy; rebuilt+committed the bundle behind a self-contained `heroicons-inline.js` plugin.
+- **Phase 77 motion polish:** fixed the `motion-reveal` re-fire bug with record-keyed detail-pane ids (GAP-19) so entrances fire once per selection not per patch; enforced `prefers-reduced-motion`, transform/opacity-only, ≤300ms discipline via a `check_motion_conformance.sh` grep gate.
+- **Phase 78 seed expressiveness:** made every screen state reachable by a seeded URL — all 14 outbound statuses, every inbound outcome, each replay/reconcile state, orphan/failed-ingest rows, empty-tenant, and truncation-stress rows — with demo/e2e count assertions updated in the same commit and frozen baseline pins untouched.
+- **Phase 79 closeout & release prep:** re-ran the full audit matrix vs the Phase 74 baseline, extended the Playwright suite to 10 green structural tests, passed conformance + bundle-clean gates, CLOSED all sev-4/5 gap-register rows (`79-GAP-CLOSEOUT.md`), and staged the linked-version release ceremony (inbound exact-pin `== 1.4.5` → `== 1.5.0`, prepare-only — pipeline owns publish).
+
+**Known deferred items at close:** 2 (Phase 76 human-UAT/verification artifacts left in `partial`/`human_needed` state — both resolved downstream by Phases 77 + 79 and the milestone audit; see STATE.md Deferred Items).
+
+---
+
 ## v1.6 Inbound 1.0 Release and Truth Lock (Shipped: 2026-06-02)
 
 **Phases completed:** 3 phases, 6 plans, 5 tasks

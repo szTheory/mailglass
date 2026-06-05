@@ -17,7 +17,7 @@
 - ✅ **v1.4 Inbound Stability Lock** — Phases 63-66 (shipped 2026-06-01) — see [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
 - ✅ **v1.5 Demo Evidence and Click-Around Confidence** — Phases 67-70 (shipped 2026-06-02) — see [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md)
 - ✅ **v1.6 Inbound 1.0 Release and Truth Lock** — Phases 71-73 (shipped 2026-06-02) — see [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
-- 🔄 **v1.7 Admin UI — IA & Design-System Polish v2** — Phases 74-79 (in progress)
+- ✅ **v1.7 Admin UI — IA & Design-System Polish v2** — Phases 74-79 (shipped 2026-06-05) — see [milestones/v1.7-ROADMAP.md](milestones/v1.7-ROADMAP.md)
 
 ## Phases
 
@@ -123,190 +123,31 @@ Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.
 
 </details>
 
-### v1.7 Admin UI — IA & Design-System Polish v2 (Phases 74-79) — IN PROGRESS
+<details>
+<summary>✅ v1.7 Admin UI — IA & Design-System Polish v2 (Phases 74-79) — SHIPPED 2026-06-05</summary>
 
-**Cross-cutting constraint:** Every build task (Phases 75-78) must cite a Phase 74 gap-register row at severity ≥ 3. No gap-register citation = no merge. The gap register is the anti-churn gate.
+**Anti-churn contract:** every build task (Phases 75-78) cited a Phase 74 gap-register row at severity ≥ 3 — the gap register was the merge gate. Linked-version release mechanics produced matched bumps across all three packages (core + inbound CHANGELOG entries administrative per D-01).
 
-**Release note:** This milestone touches only `mailglass_admin` source, but linked-version mechanics mean the release ceremony will produce matched version bumps across all three packages (`mailglass`, `mailglass_admin`, `mailglass_inbound`). Core and inbound CHANGELOG entries will be administrative version-bump entries only — this is expected and correct per D-01.
+- [x] **Phase 74: Systematic Audit and UI-SPEC** — Evidence gate; no code. Scored gap register, frozen UI-SPEC + canonical status-badge taxonomy, before-baseline screenshots, assertion inventory. (completed 2026-06-04)
+- [x] **Phase 75: Information Architecture, Navigation and Orientation** — `Shell.orientation_strip/1` on all 3 surfaces; in-library Operator Overview landing via `handle_params/3`; IA vocabulary; deep-link-fix decision. (completed 2026-06-04)
+- [x] **Phase 76: Component-Library and Design-System Hardening** — Unified `status_badge` atom replacing 5 private `badge_class/1` copies; token migration off raw scale; support-card Tier1/Tier2 hierarchy; committed bundle. (completed 2026-06-04)
+- [x] **Phase 77: Motion and Microinteraction Polish** — Six-motion vocabulary per UI-SPEC; motion-reveal re-fire fix (record-keyed ids); reduced-motion discipline + conformance gate. (completed 2026-06-04)
+- [x] **Phase 78: Seed-Data Expressiveness** — Demo seeds covering every screen state; e2e count assertions updated in same change; frozen baselines unchanged. (completed 2026-06-04)
+- [x] **Phase 79: Verification and Visual-Regression Hardening** — Full audit-matrix re-run vs baseline; Playwright extended to 10 green tests; conformance + bundle gates; all sev-4/5 gap rows closed; release ceremony prep. (completed 2026-06-04)
 
-- [x] **Phase 74: Systematic Audit and UI-SPEC** — Evidence gate; no code changes. Produces the scored gap register, frozen UI-SPEC with canonical status-badge taxonomy, before-baseline screenshots, and assertion inventory that blocks all build phases. (completed 2026-06-04)
-- [x] **Phase 75: Information Architecture, Navigation and Orientation** — Shell-level orientation strip on all 3 surfaces; in-library Operator Overview landing; IA vocabulary; explicit deep-link-fix decision. (completed 2026-06-04)
-- [x] **Phase 76: Component-Library and Design-System Hardening** — Unified `status_badge` atom replacing 3 private copies; token migration off raw scale; support-card hierarchy redesign; committed bundle. (completed 2026-06-04)
-- [x] **Phase 77: Motion and Microinteraction Polish** — Six-motion vocabulary applied per UI-SPEC; motion-reveal re-fire fix; reduced-motion discipline. (completed 2026-06-04)
-- [x] **Phase 78: Seed-Data Expressiveness** — Demo seeds covering every screen state; e2e count assertions updated in same change. (completed 2026-06-04)
-- [x] **Phase 79: Verification and Visual-Regression Hardening** — Full audit-matrix re-run vs baseline; extended e2e; conformance + bundle gates; deep-link resolution; release ceremony acknowledgment. (completed 2026-06-04)
+Audit passed 2026-06-04 (19/19 reqs, 7/7 seams, 3/3 flows). Full archive at [milestones/v1.7-ROADMAP.md](milestones/v1.7-ROADMAP.md).
 
-## Phase Details
-
-### Phase 74: Systematic Audit and UI-SPEC
-
-**Goal**: A scored gap register, frozen UI-SPEC (with canonical status-badge taxonomy), before-baseline screenshots, and assertion inventory are produced — with zero lines of code changed — so every subsequent build phase has an unambiguous specification and gate.
-**Depends on**: Nothing (first phase of milestone)
-**Requirements**: AUDIT-01, AUDIT-02, AUDIT-03
-**Success Criteria** (what must be TRUE):
-
-  1. A scored gap register exists covering surface × light/dark × viewport (390/768/1440) × state, each row with `{surface, component:line, pillar, severity 1–5, evidence PNG, fix sketch}` — including an explicit 390px mobile pass.
-  2. A frozen UI-SPEC defines the canonical status-badge taxonomy table (all three `badge_class/1` copies compared side-by-side, every conflict explicitly resolved), the support-card primary/secondary hierarchy layout, the empty/error/loading state inventory, and the motion assignment matrix.
-  3. A committed before-baseline exists (gitignored screenshot set in `tmp/ui-audit/` + assertion inventory of every demo/e2e heading and seed-count assertion that phases 75-78 will ripple).
-  4. An explicit in-scope / explicitly-deferred decision is recorded for the deep-link unstyled-CSS bug (it touches a stable asset-serving seam).
-  5. Zero build-phase code is written — this phase is evidence-only.
-
-**Plans**: 3 plans
-
-  - [x] 74-01-PLAN.md — Extend ui-audit.sh for the 390/768/1440 × light/dark × 3-surface matrix; capture the before-baseline; verify the frozen UI-SPEC satisfies AUDIT-02. (Wave 1)
-  - [x] 74-02-PLAN.md — Author 74-ASSERTION-INVENTORY.md: every e2e heading/seed-count assertion baseline + gitignored PNG path references (AUDIT-03). (Wave 1)
-  - [x] 74-03-PLAN.md — Author 74-GAP-REGISTER.md: scored GAP-NN register covering all 5 badge_class copies, the 390px pass per surface, and the deep-link defer-to-Phase-79 row (AUDIT-01). (Wave 2, depends on 74-01)
-
-**UI hint**: yes
-
-### Phase 75: Information Architecture, Navigation and Orientation
-
-**Goal**: Every operator surface orients users on landing; a cold operator at `/ops/mail/` knows within one screen what to do and where to go; IA vocabulary is deliberate and consistent across all three surfaces.
-**Depends on**: Phase 74 (gap register + frozen IA vocabulary + assertion inventory)
-**Requirements**: IA-01, IA-02, IA-03, IA-04
-**Success Criteria** (what must be TRUE):
-
-  1. Deliveries, Inbound, and Preview each render the shared `Shell.orientation_strip/1` component (generalized from the Deliveries-only private defp) with surface-specific symptom-first copy and appropriate testids.
-  2. An operator landing on `/ops/mail/` reaches a task-oriented Operator Overview (`:overview` action on existing `OperatorLive`, zero router-macro change) that surfaces at-a-glance health (orphan backlog, recent failures, suppression count) and routes to Deliveries and Inbound.
-  3. Page titles, subtitles, and headings follow one deliberate IA vocabulary across all surfaces; `operator.spec.js` and `demo.spec.js` heading assertions are updated in the same commit (no Playwright failures after the change).
-  4. The deep-link unstyled-CSS bug carries a recorded explicit in-scope / deferred decision with rationale — not left ambiguous entering Phase 79.
-  5. No router macro (`mailglass_operator_routes/2`) is modified; the Overview is handled entirely in `OperatorLive.handle_params/3`.
-
-**Plans**: 3 plans
-
-  - [x] 75-01-PLAN.md — Add core count_active_suppressions/1 + Wave 0 test stubs for shell_test.exs and operator_live_test.exs Overview blocks. (Wave 1)
-  - [x] 75-02-PLAN.md — Extract Shell.orientation_strip/1 public component, wire all three surfaces, un-skip shell tests, rebuild admin bundle. (Wave 2)
-  - [x] 75-03-PLAN.md — Operator Overview branch in handle_params/3; same-commit e2e heading-assertion updates + 390px extension; GAP-22 disposition record. (Wave 3)
-
-**UI hint**: yes
-
-### Phase 76: Component-Library and Design-System Hardening
-
-**Goal**: The admin design system applies its own token scale and component vocabulary consistently — one status-badge definition replaces three disagreeing copies, support cards have a primary/secondary hierarchy that communicates triage signal, and the token conformance grep returns zero violations.
-**Depends on**: Phase 74 (canonical taxonomy table + support-card hierarchy spec); Phase 75 merged (IA headings and route paths locked before badge atom and support-card links finalize Inbound orientation)
-**Requirements**: DS-01, DS-02, DS-03, DS-04
-**Success Criteria** (what must be TRUE):
-
-  1. One unified `Components.status_badge/1` atom in `components.ex` renders every delivery/event/inbound status from the Phase 74 taxonomy; all **five** private `badge_class/1` copies — `deliveries_list.ex`, `timeline.ex`, `records_list.ex`, plus the two latent duplicates the Phase 74 audit surfaced in `operator/detail_header.ex` and `inbound/detail_header.ex` (per CONTEXT D-01; the original "three" predates the audit) — are deleted and all call sites route through it with no unintended color change (verified by a regression test asserting the exact CSS class for every atom in the taxonomy).
-  2. Token conformance grep returns zero raw `text-sm`, `text-base`, `text-xs`, `font-medium`, `font-semibold`, off-grid `gap-3/4/6`, ad-hoc `z-[0-9]+`, or hex colors in admin HEEx files.
-  3. The support-card grid is restructured into a primary/secondary hierarchy (non-zero/actionable cards prominent as full cards; zero-state cards demoted to a compact summary row) before any token migration of those lines — restructure-first order maintained.
-  4. `git diff --exit-code priv/static/` is clean — the admin asset bundle is rebuilt and committed in the same PR as every HEEx change.
-
-**Plans**: 6 plans
-  Plans:
-**Wave 1**
-
-  - [x] 76-01-PLAN.md — Define Components.status_badge/1 (icon + label, 24 atoms), status_class/1, status_icon/1, status_label/1, normalize_inbound_outcome/1; create 72-assertion regression test. (Wave 1)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-  - [x] 76-02-PLAN.md — Delete all five badge_class/1 private copies; rewire every call site through Components.status_badge/1; normalize inbound outcomes. (Wave 2)
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-  - [x] 76-03-PLAN.md — Restructure support_cards.ex into Tier1/Tier2 hierarchy with semantic count colors and token-clean markup. (Wave 3)
-
-**Wave 4** *(blocked on Wave 3 completion)*
-
-  - [x] 76-04-PLAN.md — Token migration (text-sm/xs/base → text-body/text-label; gap-3/4/6 → gap-sm/md/lg) on the five badge-rewired files. (Wave 4, parallel with 76-05)
-  - [x] 76-05-PLAN.md — Token migration on all remaining admin HEEx files; hex #ffffff → var(--color-base-100) in preview/tabs.ex. (Wave 4, parallel with 76-04)
-
-**Wave 5** *(blocked on Wave 4 completion)*
-
-  - [x] 76-06-PLAN.md — [BLOCKING] Conformance grep gates (all five); bundle rebuild; git diff --exit-code priv/static/ clean; human approval. (Wave 5)
-
-**Cross-cutting constraints:**
-
-- mix compile and mix test --seed 0 both exit 0
-
-**UI hint**: yes
-
-### Phase 77: Motion and Microinteraction Polish
-
-**Goal**: The six-motion vocabulary is applied consistently and correctly — entrance animations fire exactly once per record selection (not on every filter patch), all motion respects `prefers-reduced-motion`, and no animation uses layout-thrashing properties or exceeds 300ms.
-**Depends on**: Phase 76 (structural changes settled before motion fires on correctly-structured elements; delivery detail pane has record-keyed id before motion is considered correct)
-**Requirements**: MOTION-01, MOTION-02
-**Success Criteria** (what must be TRUE):
-
-  1. The `motion-reveal` re-fire bug is fixed: the delivery detail pane div carries `id={"delivery-detail-#{@selected_delivery.id}"}` so selecting a new record causes LiveView to replace (not patch) the element, firing the entrance animation exactly once per selection.
-  2. Entrance motion fires on mount per the Phase 74 motion assignment matrix — not on filter changes, pagination, or periodic data updates; verified by the operator workflow: filter → select → filter again → confirm no repeated entrance animation.
-  3. Playwright run under `reducedMotion: 'reduce'` shows no visible movement; all new motion uses only the six named vocabulary classes.
-  4. Zero `transition-height`, `transition-max-height`, `transition-padding`, or `transition-all` in admin HEEx or CSS; zero `duration-300+`, zero `ease-in-out`, zero `ease-linear` in any animated element.
-
-**Plans**: 4 plans
-
-Plans:
-**Wave 1**
-
-- [x] 77-01-PLAN.md — Add record-keyed id attributes to delivery and inbound detail pane motion-reveal divs (D-01/D-02, GAP-19). (Wave 1)
-- [x] 77-02-PLAN.md — Author scripts/check_motion_conformance.sh grep gate and wire into credo_strict CI job (D-06, GAP-19). (Wave 1)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 77-03-PLAN.md — Extend operator.spec.js with delivery id-presence, reduced-motion, and skipped inbound tests (D-07). (Wave 2)
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [x] 77-04-PLAN.md — Rebuild admin asset bundle; run mix verify.preview; confirm git diff --exit-code priv/static/ clean (D-08). (Wave 3)
-
-**UI hint**: yes
-
-### Phase 78: Seed-Data Expressiveness
-
-**Goal**: Every screen state in the admin dashboard is reachable by a seeded URL — every badge color, every support-card branch, every empty/error state is exercisable from the demo seed data.
-**Depends on**: Phase 74 (state inventory and assertion inventory); can run in parallel with Phases 75-77 (no blocking dependency on IA or design-system changes)
-**Requirements**: SEED-01, SEED-02
-**Success Criteria** (what must be TRUE):
-
-  1. Every screen state is reachable by a seeded URL: all 14 Anymail outbound delivery statuses, all inbound outcomes (`:accepted`, `:no_match`, `:rejected`, `:bounced`, `:ignore`, `:failed_ingest`), an orphan-backlog row, a failed-ingest row, each replay outcome (`:replayed`, `:replay_noop`, `:replay_failed`), reconciled and unmatched facts covering both support-card branches, an empty-result tenant, and long recipient/subject truncation stress rows.
-  2. `demo.spec.js` and `operator.spec.js` seed-count assertions are updated in the same commit as the seed expansion — Playwright passes without a follow-up fixup; `reference/demo_app/mix.exs` and `reference/host_app/mix.exs` version pins are unchanged.
-
-**Plans**: 2 plans
-
-Plans:
-**Wave 1** *(parallel)*
-
-  - [x] 78-01-PLAN.md — Expand demo_data.ex northstar breadth: 8 missing event-type deliveries, 2 missing inbound outcomes, support-card branches (orphan/failed-ingest/replay/reconcile), truncation stress rows, empty-tenant constant. (Wave 1)
-  - [x] 78-02-PLAN.md — Seed one inbound record in operator_fixtures.ex (browser-tenant) + remove test.skip from operator.spec.js:254 inbound detail pane id-presence test. (Wave 1)
-
-### Phase 79: Verification and Visual-Regression Hardening
-
-**Goal**: The full admin surface meets the Phase 74 gap register's acceptance criteria — zero open severity-4/5 rows, all conformance gates pass, the before/after diff demonstrates genuine improvement, and the milestone is ready for the linked-version release ceremony.
-**Depends on**: Phases 74, 75, 76, 77, 78 (validates the complete system; needs the Phase 74 baseline to diff against)
-**Requirements**: VERIF-01, VERIF-02, VERIF-03, VERIF-04
-**Success Criteria** (what must be TRUE):
-
-  1. Full `scripts/ui-audit.sh` matrix re-run at 390px / 768px / 1440px across all three surfaces, light and dark — before/after PNG comparison vs Phase 74 baseline shows visible improvement; zero open severity-4/5 gap-register rows remain.
-  2. `operator.spec.js` is extended with structural coverage for the new Operator Overview and orientation strips; new inbound/preview structural coverage is added for new IA testids; e2e suite is green.
-  3. Token conformance grep gate passes (zero raw `text-sm/base/xs`, `font-medium/semibold`, off-grid gaps, ad-hoc z-index, hex colors in HEEx); motion conformance grep passes (zero `duration-300+`, `ease-in-out`, `ease-linear`, `transition-height/max-height/padding/all`); `git diff --exit-code priv/static/` bundle clean gate passes.
-  4. The deep-link bug is either resolved or explicitly deferred with recorded rationale — the gap-register row is closed so no open sev-4/5 item blocks milestone closeout.
-  5. Release ceremony is acknowledged: matched version bump across `mailglass`, `mailglass_admin`, and `mailglass_inbound`; administrative CHANGELOG entries for core and inbound prepared.
-
-**Plans**: 4 plans
-
-Plans:
-**Wave 1** *(parallel)*
-
-  - [x] 79-01-PLAN.md — Committed check-conformance.sh script (5 gates) + design-system.md audit-loop prose expansion. (Wave 1)
-  - [x] 79-02-PLAN.md — e2e extension: Operator Overview structural coverage + inbound/preview orientation-strip testids; fix pre-existing replay-flow failure. (Wave 1)
-  - [x] 79-03-PLAN.md — 79-GAP-CLOSEOUT.md: sev-4/5 row closure evidence + GAP-22 deferral reconfirmation + audit-matrix before/after finding. (Wave 1)
-
-**Wave 2** *(depends on Wave 1 gates green)*
-
-  - [x] 79-04-PLAN.md — Release ceremony prep: inbound exact-pin 1.4.5 → 1.5.0; full verify.preview gate; release-readiness confirmation. (Wave 2)
-
-**UI hint**: yes
+</details>
 
 ## Progress
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 74. Systematic Audit and UI-SPEC | 3/3 | Complete    | 2026-06-04 |
-| 75. Information Architecture, Navigation and Orientation | 3/3 | Complete    | 2026-06-04 |
-| 76. Component-Library and Design-System Hardening | 6/6 | Complete    | 2026-06-04 |
-| 77. Motion and Microinteraction Polish | 4/4 | Complete    | 2026-06-04 |
-| 78. Seed-Data Expressiveness | 2/2 | Complete    | 2026-06-04 |
-| 79. Verification and Visual-Regression Hardening | 4/4 | Complete    | 2026-06-04 |
+All milestones through **v1.7** are shipped and archived. Per-phase detail lives in each milestone's archive under `.planning/milestones/`. No milestone is currently in flight — posture is quiet maintenance / adopter-pull.
+
+| Milestone | Phases | Status | Shipped |
+|-----------|--------|--------|---------|
+| v1.5 Demo Evidence and Click-Around Confidence | 67-70 | ✅ Shipped | 2026-06-02 |
+| v1.6 Inbound 1.0 Release and Truth Lock | 71-73 | ✅ Shipped | 2026-06-02 |
+| v1.7 Admin UI — IA & Design-System Polish v2 | 74-79 | ✅ Shipped | 2026-06-05 |
 
 ## Backlog
 

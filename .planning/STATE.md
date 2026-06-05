@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Admin UI — IA & Design-System Polish v2
-status: ready_to_plan
-last_updated: 2026-06-04T22:29:57.404Z
-last_activity: 2026-06-04
+status: Awaiting next milestone
+last_updated: "2026-06-05T16:50:25.925Z"
+last_activity: 2026-06-05 — Milestone v1.7 completed and archived
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 28
-  completed_plans: 34
+  total_phases: 6
+  completed_phases: 6
+  total_plans: 22
+  completed_plans: 22
   percent: 100
-stopped_at: Phase 79 complete (4/4) — ready to discuss Phase 999.1
 ---
 
 # Project State
@@ -21,16 +20,14 @@ stopped_at: Phase 79 complete (4/4) — ready to discuss Phase 999.1
 See: .planning/PROJECT.md (updated 2026-06-03 after v1.7 milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 999.1 — human readable code comments + gsd artifact cleanup (backlog)
+**Current focus:** Planning next milestone (v1.7 shipped; quiet-maintenance / adopter-pull posture)
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-06-04
-
-**Progress bar:** ░░░░░░░░░░ 0% (0/6 phases)
+Phase: Milestone v1.7 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-05 — Milestone v1.7 completed and archived
 
 ## v1.7 Milestone Intent
 
@@ -87,25 +84,24 @@ Last activity: 2026-06-04
 
 **Velocity:**
 
-- v1.7 phases in progress: Phase 76 all 6 plans complete (awaiting human verification checkpoint); Plans 01-06: badge component, rewire, support-card Tier1/Tier2, token migration (5 files), token migration (15 files + hex fix), bundle rebuild + heroicons-inline plugin
+- v1.7 phases completed: 6 (74-79), 22 plans — admin UI IA & design-system polish v2; audit passed (19/19 reqs, 7/7 seams, 3/3 flows); shipped 2026-06-05
 - v1.6 phases completed: 3 (71-73), 6 plans, 5 tasks
 - v1.5 phases completed: 4 (67-70), 8 plans, 14 tasks
 - v1.4 phases completed: 4 (63-66), 12 plans, 22 tasks
 
 ## Deferred Items
 
-Items acknowledged and deferred at previous milestone close:
+Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
 
 | Category | Item | Status |
 |----------|------|--------|
 | seed | 003-ecosystem-integrations | dormant |
+| uat | Phase 76 — 76-HUMAN-UAT.md (4 browser-visual scenarios) | resolved-downstream |
+| verification | Phase 76 — 76-VERIFICATION.md | resolved-downstream |
+
+**On the Phase 76 items:** the four deferred browser-visual checks (badge color/icon, inbound normalization labels, Tier1/Tier2 hierarchy, 390px badge overflow) and the `human_needed` verification status were closed by later work in the same milestone — Phase 77 ran the Playwright motion suite against the seeded server, Phase 79 closed all sev-4/5 gap-register rows (`79-GAP-CLOSEOUT.md`), and a UAT pass is recorded in git (`32ab6643 test(79): complete UAT - 6 passed, 0 issues`). The v1.7 milestone audit (`status: passed`) confirms no Phase 76 success criterion is unmet. The artifacts were left in `partial`/`human_needed` state only as bookkeeping.
 
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
-| Phase 76-component-library-and-design-system-hardening P02 | 20 | 2 tasks | 7 files |
-| Phase 77 P04 | 7 | 1 tasks | 2 files |
-| Phase 79 P01 | 8 | 2 tasks | 2 files |
-| Phase 79-verification-and-visual-regression-hardening P03 | 420 | 1 tasks | 1 files |
-| Phase 79 P04 | 10min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -144,5 +140,4 @@ Items acknowledged and deferred at previous milestone close:
 
 ## Operator Next Steps
 
-- 2026-06-04: Phase 79 Plan 04 executed. mailglass_inbound exact-pin updated == 1.4.5 → == 1.5.0 in mix.exs MIX_PUBLISH branch; all four Phase 79 gates confirmed green simultaneously (check-conformance.sh exits 0, Playwright 10/10, GAP-CLOSEOUT has 9 CLOSED rows, mix verify.preview 189/0/2excluded); release-ceremony posture: prepare-only, pipeline owns hex.publish. Commit: 144e037d. VERIF-04 satisfied.
-- Phase 79 ALL PLANS COMPLETE. v1.7 milestone ready for /gsd-complete-milestone.
+- Start the next milestone with /gsd-new-milestone

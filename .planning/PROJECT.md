@@ -10,6 +10,16 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
+**`v1.7 Admin UI — IA & Design-System Polish v2` is complete and archived as of 2026-06-05. Phases 74-79 took `mailglass_admin` to "v2 polish" by applying the shipped design system more completely — a frozen UI-SPEC + scored gap register evidence gate, shell-level orientation parity across all 3 surfaces, an in-library Operator Overview landing, one unified `status_badge` atom replacing five divergent copies, full token migration, motion discipline, fully-expressive seed data, and a self-verified closeout (structural e2e + conformance/bundle grep gates, no human UAT). Milestone audit `status: passed` (19/19 requirements, 7/7 seams, 3/3 flows). No new dependencies, no brand-book amendment, stable seams untouched.**
+
+- Phase 74 produced the evidence gate (gap register, frozen UI-SPEC with canonical status-badge taxonomy, before-baseline screenshots, assertion inventory) with zero code changed.
+- Phase 75 generalized `Shell.orientation_strip/1` to Deliveries/Inbound/Preview and added the `:overview` Operator Overview landing via `OperatorLive.handle_params/3` — no router-macro change.
+- Phase 76 collapsed five `badge_class/1` copies into `Components.status_badge/1`, migrated every admin HEEx file onto the v1 token scale, restructured support cards into a Tier1/Tier2 triage hierarchy, and committed the rebuilt bundle behind a self-contained `heroicons-inline.js` plugin.
+- Phase 77 fixed the `motion-reveal` re-fire with record-keyed ids and enforced reduced-motion / transform-opacity-only / ≤300ms via a motion conformance gate.
+- Phase 78 made every screen state reachable by a seeded URL with same-commit e2e count-assertion updates and untouched baseline pins.
+- Phase 79 re-ran the full audit matrix vs the Phase 74 baseline, extended Playwright to 10 green tests, closed all sev-4/5 gap rows, and staged the linked-version release ceremony prepare-only (inbound exact-pin `== 1.4.5` → `== 1.5.0`; the publish pipeline owns the actual Hex cut — admin-minor bump mechanically drags matched core/inbound versions per D-01).
+- v1.7 is archived in `.planning/milestones/v1.7-ROADMAP.md`, `.planning/milestones/v1.7-REQUIREMENTS.md`, and `.planning/milestones/v1.7-MILESTONE-AUDIT.md`.
+
 **`v1.5 Demo Evidence and Click-Around Confidence` is complete as of 2026-06-02. Phases 67-70 shipped a separate realistic demo app, deterministic B2B SaaS Ops data, short click-around docs, and browser-driven evidence across preview, outbound operator, and inbound operator journeys.**
 
 - Phase 67 established `reference/demo_app` as the rich demo surface separate from the narrow `reference/host_app`, with local-path and published-Hex dependency modes, health-gated Compose startup, cache-aware browser setup, deterministic reset proof, and `verify.phase67`.
@@ -66,24 +76,29 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - **`v1.6 Inbound 1.0 Release and Truth Lock` SHIPPED 2026-06-02: `mailglass_inbound` 1.0.0 is live on Hex (inserted 17:42:31Z, HexDocs up, release-triggered smoke green).** Cut via the canonical `release: published` path at `50bc4b82`; publish-core/publish-admin idempotency-skipped so no core/admin release was forced. Two release-readiness fixes were made at publish time: dropped 7 untracked draft files from the inbound publish allowlist (the package had been building from a dirty working tree, incl. a duplicate `suppression_flagged` migration), and greened `main` (mix format + a stale compatibility-contract assertion — `main` had been silently red since 2026-05-29 because phases 66–73 landed via `paths-ignore`d commits that never ran `ci.yml`). Posture now: quiet maintenance / adopter-pull, no feature-growth milestone queued.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
-## Current Milestone: v1.7 Admin UI — IA & Design-System Polish v2
+## Latest Completed Milestone
+
+<details>
+<summary>v1.7 Admin UI — IA & Design-System Polish v2 — milestone closed 2026-06-05</summary>
 
 **Goal:** Take `mailglass_admin` to "v2 polish" — a consistent, brand-distinct, intuitive, joy-to-use design system where each reused component pays dividends, information architecture that orients every persona on landing, and seed data that fully expresses every screen state — all by applying the existing shipped design system more completely (no new dependencies, no brand-book amendment).
 
-**Target features:**
-- **Orientation parity + Operator Overview (Fork A)** — generalize the `orientation_strip` (today only on Deliveries) into a shell-level component used by Deliveries, Inbound, and Preview; add a real task-oriented Operator Overview landing route *inside the library* that routes to Deliveries/Inbound and surfaces at-a-glance health (orphan backlog, recent failures, suppression count). Keep the demo's Northstar Ops home.
-- **Design-system hardening (reuse dividends)** — add one unified `status_badge` atom in `components.ex` consuming a canonical status→color taxonomy; delete the three disagreeing private `badge_class/1` copies; token-migrate `support_cards.ex` + the operator/inbound render bodies off raw `text-sm/base/xs` + off-grid gaps onto the v1 token scale; redesign the dense 2×2 support-card grid into a primary/secondary hierarchy.
-- **Motion & expressiveness within the brand book (Fork B)** — deliver "pop/joy" via consistent application of the existing six-motion vocabulary (entrances on mount not every patch; `prefers-reduced-motion` respected; ≤300ms transform/opacity only) and fully-expressive seed data covering every delivery status, inbound outcome, replay state, reconciled/unmatched fact, empty-result tenant, and truncation-stress row — NOT new visual loudness.
-- **Self-verification + visual-regression hardening** — screenshot→LLM-critique loop (local/ad-hoc), structural e2e (`operator.spec.js` + new inbound/preview coverage), conformance grep gate (zero raw type tokens, one status→color definition), and `git diff --exit-code priv/static/` bundle gate; resolve-or-explicitly-defer the deep-link-unstyled-CSS bug.
+- **Orientation parity + Operator Overview (Fork A)** — generalized `orientation_strip` into shell-level `Shell.orientation_strip/1` on Deliveries/Inbound/Preview; added an in-library task-oriented Operator Overview landing (`:overview` action in `OperatorLive.handle_params/3`, zero router-macro change) surfacing orphan-backlog / recent-failure / suppression-count health. ✓
+- **Design-system hardening** — one unified `Components.status_badge/1` atom replaced five divergent `badge_class/1` copies (GAP-01..06); every admin HEEx file migrated onto the v1 token scale; the flat 2×2 support-card grid became a Tier1/Tier2 triage hierarchy; rebuilt bundle committed behind a self-contained `heroicons-inline.js` plugin. ✓
+- **Motion & expressiveness within the brand book (Fork B)** — `motion-reveal` re-fire fixed with record-keyed ids (GAP-19); reduced-motion / transform-opacity-only / ≤300ms enforced by a motion conformance gate; seed data made every screen state reachable by a seeded URL. ✓
+- **Self-verification + visual-regression hardening** — full audit-matrix re-run vs the Phase 74 baseline, Playwright extended to 10 green structural tests, conformance + bundle-clean grep gates, all sev-4/5 gap rows closed; no human UAT. ✓
+- **Audit:** `status: passed` — 19/19 requirements, 7/7 cross-phase seams, 3/3 E2E flows.
 
-**Scope guardrails:**
-- **Within the current brand book — no amendment.** Flat (no glassmorphism/bevels/shadows beyond `shadow-overlay`), Glass-accent ≤ ~10%, type weights 400/700 only. Hardening stays grep-enforceable conformance work, not redesign.
-- **Anti-churn contract:** no build task ships without citing a Phase-74 gap-register row (severity ≥ 3). The gap register is the gate.
-- **Stable seams untouchable:** router macros, `MailglassAdmin.Auth` behaviour, replay semantics, operator session contract. Admin DOM/CSS/LiveView internals are non-stable and free to churn. The deep-link/asset-URL fix is the one item touching a stable (asset-serving) seam → gated behind an explicit decision.
-- **No new dependencies** — this is application of the existing Tailwind v4 / daisyUI 5 / LiveView design system, not a system extension.
-- **Frozen baselines untouched** — edit demo seed *data* freely, but do NOT bump `mailglass` version pins in `reference/host_app` / `demo_app` (that's the separate coordinated 5-file change). Linked-version releases mean an admin minor bump mechanically drags `mailglass` + `mailglass_inbound` to the same version — note in the milestone audit, no API change.
+**Release posture:** prepare-only — the inbound exact-pin was bumped `== 1.4.5` → `== 1.5.0` and the linked-version pipeline owns the Hex publish (admin-minor bump mechanically drags matched core/inbound versions; CHANGELOG entries administrative per D-01).
 
-## Latest Completed Milestone
+**Accepted residual debt:**
+
+- Phase 76 human-UAT/verification artifacts left in `partial`/`human_needed` state — resolved downstream by Phases 77 + 79 and confirmed by the milestone audit; recorded as deferred in STATE.md.
+- Two draft Nyquist VALIDATION records (Phases 75, 78) — coverage-bookkeeping only; both phases fully verified with green e2e.
+- Pre-existing `operator_live.ex` / `suppression_card.ex` nil-guard tech debt (CR-01/02/03, predate v1.7) — candidates for a future maintenance pass.
+- Leftover phase directories (71-79, 999.x) still in `.planning/phases/`; run `/gsd-cleanup` to archive execution history retroactively.
+
+</details>
 
 <details>
 <summary>v1.6 Inbound 1.0 Release and Truth Lock — milestone closed 2026-06-02</summary>
@@ -225,9 +240,17 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (v0.1, v0.2, v1.1, v1.3, v1.4 — SHIPPED)
+## Validated Requirements (v0.1, v0.2, v1.1, v1.3, v1.4, v1.7 — SHIPPED)
 
-All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, and 13 v1.4 REQ-IDs satisfied.
+All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, and 19 v1.7 REQ-IDs satisfied.
+
+**By category (v1.7 — Admin UI IA & Design-System Polish v2):**
+- ✓ AUDIT-01..03 — scored gap register, frozen UI-SPEC with canonical status-badge taxonomy, and before-baseline screenshot + assertion-ripple inventory validated in Phase 74 (evidence-only gate, zero code)
+- ✓ IA-01..04 — shell-level orientation-strip parity on all 3 surfaces, in-library Operator Overview landing (`handle_params/3`, no router change), deliberate IA vocabulary, and explicit deep-link-fix decision validated in Phase 75
+- ✓ DS-01..04 — unified `status_badge` atom replacing five `badge_class/1` copies, token migration off the raw scale, support-card Tier1/Tier2 hierarchy, and committed bundle validated in Phase 76
+- ✓ MOTION-01..02 — six-motion vocabulary applied per UI-SPEC (mount-not-patch, record-keyed ids) and reduced-motion / ≤300ms / transform-opacity discipline validated in Phase 77
+- ✓ SEED-01..02 — seed data making every screen state reachable by URL with same-commit demo/e2e assertion ripple and unchanged baseline pins validated in Phase 78
+- ✓ VERIF-01..04 — full audit-matrix re-run vs baseline, extended structural e2e, conformance + bundle gates, and deep-link resolution/deferral validated in Phase 79
 
 **By category (v1.4 — Inbound Stability Lock):**
 - ✓ LOCK-01..03 — Canonical stable/testing/operator inventory, stable-vs-internal distinction, and explicit deferred inbound capability list validated in Phase 63
@@ -278,15 +301,12 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, and 13 v1.4 REQ-IDs satisfi
 
 ## Active
 
-Active requirements for `v1.7 Admin UI — IA & Design-System Polish v2` are defined in `.planning/REQUIREMENTS.md`. Milestone research (scoped, founding research preserved): `.planning/research/v1.7-admin-ui-polish/`.
+**No milestone in flight as of 2026-06-05.** v1.7 shipped and `.planning/REQUIREMENTS.md` was removed at milestone close (a fresh one is created by `/gsd-new-milestone`). Posture is **quiet maintenance / adopter-pull** per D-23 — the original transactional-email framework thesis is product-complete across core, admin, and inbound. The next milestone should be defined with `/gsd-new-milestone`, biased toward release hygiene, docs truth, maintenance, or narrow adopter-pull work unless a concrete adopter need or contract gap justifies new scope.
 
-**By category (v1.7 — Admin UI IA & Design-System Polish v2):**
-- `AUDIT-01..03` — scored gap register, frozen UI-SPEC (incl. canonical status-badge taxonomy table), and screenshot/assertion-ripple baseline (Phase 74 evidence gate).
-- `IA-01..04` — shell-level orientation-strip parity across all 3 surfaces, in-library Operator Overview landing route, deliberate IA vocabulary, and an explicit deep-link-fix scope decision (Phase 75). ✓ **Validated in Phase 75 (2026-06-04)** — `Shell.orientation_strip/1` on all 3 surfaces, Overview landing via `handle_params/3` (no router change), same-commit e2e update (5/5 operator Playwright green), GAP-22 deferred to Phase 79.
-- `DS-01..04` — unified `status_badge` atom replacing 3 private copies, token migration off the raw scale, support-card hierarchy redesign, and committed bundle (Phase 76).
-- `MOTION-01..02` — six-motion vocabulary applied per UI-SPEC (mount-not-patch) and reduced-motion/duration discipline (Phase 77).
-- `SEED-01..02` — seed data expressing every screen state, with demo/e2e assertion ripple absorbed in the same change (Phase 78).
-- `VERIF-01..04` — full audit-matrix re-run vs baseline, extended structural e2e, conformance + bundle gates, and deep-link resolution/deferral (Phase 79).
+Candidate carry-forward work (none committed):
+- `/gsd-cleanup` to archive the leftover `.planning/phases/` execution history (71-79, 999.x) into milestone phase-archives.
+- Pre-existing nil-guard tech debt in `operator_live.ex` / `suppression_card.ex` (CR-01/02/03) if an admin maintenance pass is opened.
+- Promote backlog Phase 999.1 / 999.2 only via `/gsd-review-backlog` if adopter-pull justifies it.
 
 ## Out of Scope
 
@@ -381,7 +401,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-21 | Adapter call between Multi#1 and Multi#2 (never inside transaction) | Postgres pool starvation prevention | ✓ Held v0.1 — Phase 3 Outbound enforces |
 | D-22 | The first `mailglass_inbound` milestone stays narrow: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional execution; Conductor/Mailgun/SES/SMTP are deferred | Protect the locked `v1.x` core and make the first sibling-package expansion supportable for a one-person maintainer | ✓ Validated v1.1 — narrow scope held; Conductor / Mailgun / SES / `gen_smtp` remained deliberately deferred |
 | D-23 | Post-v1.3 project posture shifts from broad capability expansion to convergence, stability, and maintenance by default | Core/admin have crossed the original product-complete threshold; endless polish or provider breadth has diminishing returns unless tied to adopter pull | ✓ Validated v1.4 — inbound contract posture is locked, `mailglass_inbound` has a `1.0.0` candidate, and future work defaults to release ceremony / maintenance unless adopter pull or contract gaps justify scope |
-| D-24 | v1.7 admin UI polish is a sanctioned **adopter-visible-quality** investment under the D-23 convergence rule (not feature growth); delivered **within** the brand book (Fork B) by *applying* the shipped design system more completely, with a real in-library Operator Overview landing + generalized orientation (Fork A) | First-run/forensic UX quality is the highest-leverage remaining adopter lever now that the product surface is complete; restraint (no brand amendment, no new deps, grep-enforceable conformance) keeps it convergence-aligned, not scope creep | ◻ Pending v1.7 — anti-churn gate (sev≥3 gap-register row per task), stable seams untouched, linked-version admin bump noted as mechanical |
+| D-24 | v1.7 admin UI polish is a sanctioned **adopter-visible-quality** investment under the D-23 convergence rule (not feature growth); delivered **within** the brand book (Fork B) by *applying* the shipped design system more completely, with a real in-library Operator Overview landing + generalized orientation (Fork A) | First-run/forensic UX quality is the highest-leverage remaining adopter lever now that the product surface is complete; restraint (no brand amendment, no new deps, grep-enforceable conformance) keeps it convergence-aligned, not scope creep | ✓ Validated v1.7 — anti-churn gate held (every build task cited a sev≥3 gap-register row), stable seams untouched, no new deps, conformance grep-enforced; audit passed 19/19; linked-version admin bump confirmed mechanical |
 
 ## Evolution
 
@@ -404,4 +424,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-03 — opened milestone **v1.7 Admin UI — IA & Design-System Polish v2** (phases 74–79; Fork A library overview + strips, Fork B within brand book; D-24 logged). v1.6 (inbound 1.0 release/truth-lock) moved to Latest Completed; live versions remain `mailglass` 1.4.5 / `mailglass_admin` 1.4.5 / `mailglass_inbound` 1.1.5.*
+*Last updated: 2026-06-05 after **v1.7 Admin UI — IA & Design-System Polish v2** milestone (phases 74–79; 19/19 reqs validated; D-24 validated). Full evolution review done: v1.7 moved to Latest Completed + Validated Requirements, Active cleared (quiet-maintenance posture, no milestone in flight). Release is pipeline-driven (prepare-only); inbound exact-pin bumped to `== 1.5.0`.*
