@@ -58,7 +58,11 @@ fi
 # GAP-GATE: off-grid gap tokens gap-3, gap-4, gap-6.
 # The 4px spacing grid uses semantic tokens: gap-sm (8px), gap-md (16px), gap-lg (24px).
 # Bare numeric Tailwind gap utilities land off-grid and bypass the theme contract.
-if grep -rE 'gap-(3|4|6)' "$LIB" --include="*.ex" 2>/dev/null; then
+# The trailing boundary [^0-9a-z-]|$ is required (WR-04): without it the pattern matched
+# gap-32, gap-64, and gap-3xl, all of which are valid documented spacing tokens
+# (--spacing-...3xl / 32 / 48 / 64). The boundary restricts the gate to the standalone
+# off-grid tokens gap-3, gap-4, gap-6.
+if grep -rEn 'gap-(3|4|6)([^0-9a-z-]|$)' "$LIB" --include="*.ex" 2>/dev/null; then
   echo "FAIL: GAP-GATE — off-grid gap token found (use gap-sm/md/lg)" >&2
   errors=$((errors + 1))
 fi
@@ -66,7 +70,13 @@ fi
 # HEX-GATE: hard-coded hex color values in HEEx.
 # All colors must flow through daisyUI semantic tokens or @theme CSS variables.
 # A literal #RRGGBB or #RGB in a template is a design-system violation.
-if grep -rE '#[0-9a-fA-F]{3,6}' "$LIB" --include="*.ex" 2>/dev/null; then
+# The old pattern `#[0-9a-fA-F]{3,6}` was over-broad (WR-04): it matched HTML anchor
+# fragments and DOM id refs (href="#abc123", phx-value-id="#deadbeef"), 4-/5-char runs that
+# are not valid CSS hex, and brand-palette hexes quoted in a @moduledoc (#0D1B2A). Scope to
+# a color context (require `color` before the hash) and to valid CSS hex lengths (exactly 3
+# or 6 digits) with a trailing word boundary, so only genuine hard-coded color literals trip
+# the gate.
+if grep -rEn 'color[^#]*#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b' "$LIB" --include="*.ex" 2>/dev/null; then
   echo "FAIL: HEX-GATE — hard-coded hex color found (use semantic tokens)" >&2
   errors=$((errors + 1))
 fi
