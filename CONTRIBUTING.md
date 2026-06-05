@@ -59,6 +59,26 @@ regex (in `release-please.yml`) and this section together.
 **Pointer:** see `.planning/todos/pending/2026-04-26-release-please-extra-files-no-op-on-managed-mix-exs.md`
 for the empirical observation history.
 
+## If a release publishes but the tags/publish never fire
+
+`release-please.yml` runs only `on: push: main`. When the **release PR**
+(`chore: release main`) is merged by GitHub-native **auto-merge**, the resulting
+push is authored by `GITHUB_TOKEN`, and GitHub's anti-recursion guarantee
+suppresses the `push` event — so release-please does **not** re-run to tag the
+release, and the `release: published` fan-out in `publish-hex.yml` never starts.
+Symptom: the manifest on `main` is at the new version and the release PR is
+merged with label `autorelease: pending`, but no `mailglass-vX.Y.Z` GitHub
+release exists and Hex still shows the prior version.
+
+**Recovery:** land any subsequent commit on `main` via a **non-`GITHUB_TOKEN`
+identity** (e.g. a maintainer merging a small PR with `gh pr merge` rather than
+arming auto-merge). That push wakes release-please; its preflight sees the
+`pending`, untagged release PR, creates the `vX.Y.Z` releases (via
+`RELEASE_PLEASE_PAT`), and the `release: published` events drive `publish-hex`.
+The publish jobs are idempotent (`mix hex.info` guards), so a re-trigger is
+always safe. Manually creating the releases with `gh release create <tag>` is an
+equivalent fallback — `release: published` is the canonical publish trigger.
+
 ## One-time setup: branch protection automation
 
 `main` is protected with required status checks (`Tests`, `Credo Strict`,
