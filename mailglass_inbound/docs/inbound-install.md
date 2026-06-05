@@ -22,7 +22,7 @@ Add `mailglass_inbound` to your `mix.exs` dependencies:
 defp deps do
   [
     {:mailglass,         "~> 1.5"},
-    {:mailglass_inbound, "~> 1.2"},
+    {:mailglass_inbound, "~> 1.3"},
     {:oban,              "~> 2.21"}  # optional — see section 6
   ]
 end
