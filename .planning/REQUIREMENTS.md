@@ -16,63 +16,65 @@ required unless a future claim needs verification.
 
 ### Brand Audit
 
-- [x] **BRAND-01**: Maintainer can review a critical brand audit that classifies
+- [ ] **BRAND-01**: Maintainer can review a critical brand audit that classifies
   existing material as `KEEP`, `TIGHTEN`, `REWORK`, `ADD`, or `REMOVE`, with a
   direct judgment on distinctiveness, implementation readiness, accessibility,
   and repo fit.
-- [x] **BRAND-02**: The audit pressure-tests real surfaces: GitHub, README,
+- [ ] **BRAND-02**: The audit pressure-tests real surfaces: GitHub, README,
   Hex.pm, HexDocs, docs UI, code/terminal snippets, landing page, social preview,
   favicon, small monochrome mark, dark/light mode, diagrams, and UI states.
 
 ### Source Brandbook
 
-- [x] **BOOK-01**: Maintainer can open a static HTML brandbook directly from the
+- [ ] **BOOK-01**: Maintainer can open a static HTML brandbook directly from the
   repo without a build step, PDF, external asset service, or vendor design tool.
-- [x] **BOOK-02**: Maintainer can read a concise Markdown source brand book that
+- [ ] **BOOK-02**: Maintainer can read a concise Markdown source brand book that
   preserves the strong existing concept while removing prompt-only friction.
-- [x] **BOOK-03**: The brandbook explicitly preserves the current conceptual
+- [ ] **BOOK-03**: The brandbook explicitly preserves the current conceptual
   center: "Mailglass makes email visible" and "glass is a metaphor, not a visual
   excuse."
 
 ### Tokens and UI Buildout
 
-- [x] **TOKEN-01**: Designers and engineers can consume raw palette tokens and
+- [ ] **TOKEN-01**: Designers and engineers can consume raw palette tokens and
   semantic color roles for light, dark, state, callout, and code-block contexts.
-- [x] **TOKEN-02**: Token artifacts include practical typography, spacing,
+- [ ] **TOKEN-02**: Token artifacts include practical typography, spacing,
   radius, border, shadow, focus, and motion primitives without becoming a giant
   design-system framework.
-- [x] **TOKEN-03**: Token guidance aligns with the implemented admin UI
+- [ ] **TOKEN-03**: Token guidance aligns with the implemented admin UI
   discipline: semantic roles over raw hex, restrained Glass accent, flat panes,
   visible focus, and no glassmorphism.
 
 ### Logo and Visual Assets
 
-- [x] **LOGO-01**: The repo contains editable SVG assets for a primary lockup,
+- [ ] **LOGO-01**: The repo contains editable SVG assets for a primary lockup,
   icon-only mark, monochrome mark, favicon, and social avatar.
-- [x] **LOGO-02**: The mark works as a pane/message-fold metaphor and avoids
+- [ ] **LOGO-02**: Maintainer can compare multiple credible logo directions
+  before selecting or refining the final mark system.
+- [ ] **LOGO-03**: The mark works as a pane/message-fold metaphor and avoids
   paper planes, mailbox-on-post imagery, chat bubbles, send arrows, glossy app
   icon treatment, mascot language, and unnecessary path complexity.
-- [x] **LOGO-03**: The assets include accessible SVG title/description metadata,
+- [ ] **LOGO-04**: The assets include accessible SVG title/description metadata,
   transparent-background-friendly construction where appropriate, and no embedded
   raster images or font files.
 
 ### Visual Examples and Copy
 
-- [x] **EXAMPLE-01**: The repo contains small SVG specimens for palette,
+- [ ] **EXAMPLE-01**: The repo contains small SVG specimens for palette,
   typography, UI primitives, README header framing, and docs-page framing.
-- [x] **EXAMPLE-02**: The examples are implementation aids, not fake product UI
+- [ ] **EXAMPLE-02**: The examples are implementation aids, not fake product UI
   screenshots or decorative marketing art.
-- [x] **VOICE-01**: The brandbook includes voice principles, vocabulary to use
+- [ ] **VOICE-01**: The brandbook includes voice principles, vocabulary to use
   and avoid, README/docs/error/success/warning/release-note style, and concrete
   copy blocks for GitHub, Hex.pm, README, landing, social, and launch use.
 
 ### Repo Hygiene and Maintenance
 
-- [x] **REPO-01**: All new brand artifacts live under a self-contained
+- [ ] **REPO-01**: All new brand artifacts live under a self-contained
   `brandbook/` directory.
-- [x] **REPO-02**: The committed artifact set avoids heavy binaries, embedded
+- [ ] **REPO-02**: The committed artifact set avoids heavy binaries, embedded
   fonts, PDF exports, vendor design files, and large screenshot sets.
-- [x] **REPO-03**: The directory documents what should be committed, generated
+- [ ] **REPO-03**: The directory documents what should be committed, generated
   locally, or avoided by default.
 
 ## Future Requirements
@@ -104,20 +106,21 @@ Deferred deliberately:
 
 | Requirement | Phase | Status |
 |---|---:|---|
-| BRAND-01 | 80 | Complete |
-| BRAND-02 | 80 | Complete |
-| BOOK-01 | 81 | Complete |
-| BOOK-02 | 81 | Complete |
-| BOOK-03 | 81 | Complete |
-| TOKEN-01 | 81 | Complete |
-| TOKEN-02 | 81 | Complete |
-| TOKEN-03 | 81 | Complete |
-| LOGO-01 | 82 | Complete |
-| LOGO-02 | 82 | Complete |
-| LOGO-03 | 82 | Complete |
-| EXAMPLE-01 | 83 | Complete |
-| EXAMPLE-02 | 83 | Complete |
-| VOICE-01 | 83 | Complete |
-| REPO-01 | 84 | Complete |
-| REPO-02 | 84 | Complete |
-| REPO-03 | 84 | Complete |
+| BRAND-01 | 80 | Planned |
+| BRAND-02 | 80 | Planned |
+| BOOK-01 | 81 | Planned |
+| BOOK-02 | 81 | Planned |
+| BOOK-03 | 81 | Planned |
+| TOKEN-01 | 81 | Planned |
+| TOKEN-02 | 81 | Planned |
+| TOKEN-03 | 81 | Planned |
+| LOGO-01 | 82 | Planned |
+| LOGO-02 | 82 | Planned |
+| LOGO-03 | 82 | Planned |
+| LOGO-04 | 82 | Planned |
+| EXAMPLE-01 | 83 | Planned |
+| EXAMPLE-02 | 83 | Planned |
+| VOICE-01 | 83 | Planned |
+| REPO-01 | 84 | Planned |
+| REPO-02 | 84 | Planned |
+| REPO-03 | 84 | Planned |

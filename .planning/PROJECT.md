@@ -12,11 +12,9 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 **`v1.8 Brand System and Repo-Ready Brandbook` is active as of 2026-06-05. The milestone pressure-tests the prompt-era Mailglass brand book and turns it into a self-contained `brandbook/` system: static HTML, critical audit, source brand book, JSON/CSS tokens, editable SVG logos, SVG specimens, copy/microcopy guidance, and artifact hygiene rules. This is not product-feature growth and does not change public APIs, package code, or the implemented admin design system.**
 
-- Phase 80 produced a critical brand audit using KEEP/TIGHTEN/REWORK/ADD/REMOVE, scorecard, surface stress tests, gap/risk severity, and final quality gate.
-- Phase 81 created the static HTML brandbook, concise Markdown source brand book, and token JSON/CSS for docs, marketing, and future UI buildout.
-- Phase 82 added source-control-friendly SVG logo assets: primary lockup, icon mark, monochrome mark, favicon, and social avatar.
-- Phase 83 added SVG visual specimens for palette, typography, UI primitives, README header framing, and docs-page framing, plus ready-to-use voice/copy guidance.
-- Phase 84 verifies the artifact set is self-contained, small, source-control friendly, and aligned with `mailglass_admin/docs/design-system.md`.
+- Commit `572f3eb2` created a useful draft brandbook artifact set, but it did **not** complete v1.8 because the normal GSD discussion/phase/execute/verify lifecycle did not run.
+- Phase 80 is the next correct step: critical audit discussion and gap-register framing before accepting or revising the draft artifact set.
+- Phase 82 explicitly needs logo-option review; the current SVGs are one draft direction, not an approved final logo system.
 
 **`v1.7 Admin UI — IA & Design-System Polish v2` is complete and archived as of 2026-06-05. Phases 74-79 took `mailglass_admin` to "v2 polish" by applying the shipped design system more completely — a frozen UI-SPEC + scored gap register evidence gate, shell-level orientation parity across all 3 surfaces, an in-library Operator Overview landing, one unified `status_badge` atom replacing five divergent copies, full token migration, motion discipline, fully-expressive seed data, and a self-verified closeout (structural e2e + conformance/bundle grep gates, no human UAT). Milestone audit `status: passed` (19/19 requirements, 7/7 seams, 3/3 flows). No new dependencies, no brand-book amendment, stable seams untouched.**
 
@@ -309,11 +307,11 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, and 19 v1.
 
 ## Active
 
-**v1.8 Brand System and Repo-Ready Brandbook is active as of 2026-06-05.** The
-artifact pass is implemented and ready for maintainer review: `brandbook/`
-contains the static HTML brandbook, critical audit, source brand book, JSON/CSS
-tokens, editable SVG logo set, SVG specimens, and repo hygiene guidance. This is
-a source-controlled brand-system milestone, not a product-feature milestone.
+**v1.8 Brand System and Repo-Ready Brandbook is active as of 2026-06-05.**
+Commit `572f3eb2` created draft `brandbook/` artifacts, but the milestone is not
+complete. The next correct step is Phase 80 discussion/audit, followed by normal
+planning and execution. This is a source-controlled brand-system milestone, not a
+product-feature milestone.
 Post-v1.8 feature posture remains **quiet maintenance / adopter-pull** per D-23
 unless a concrete adopter need or contract gap justifies new scope.
 

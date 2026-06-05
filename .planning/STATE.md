@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Brand System and Repo-Ready Brandbook
-status: Complete; ready for maintainer review
-last_updated: "2026-06-05T17:45:00.000Z"
-last_activity: 2026-06-05 - v1.8 brandbook artifacts implemented and verified
+status: Active - needs normal GSD phase workflow
+last_updated: "2026-06-05T18:05:00.000Z"
+last_activity: 2026-06-05 - corrected v1.8 status; draft brandbook commit exists but milestone is not complete
 progress:
   total_phases: 5
-  completed_phases: 5
+  completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 100
+  percent: 0
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05 after v1.8 brand-system milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Brand-system artifacts for repo-ready docs, marketing, logo, and token use.
+**Current focus:** v1.8 brand-system milestone setup and Phase 80 discussion/audit.
 
 ## Current Position
 
-Phase: 84 - Quality Gate and Repo Hygiene
+Phase: 80 - Brand Audit and Gap Register
 Plan: —
-Status: Complete; ready for maintainer review
-Last activity: 2026-06-05 - v1.8 brandbook artifacts implemented and verified
+Status: Active - needs normal GSD phase workflow
+Last activity: 2026-06-05 - corrected v1.8 status; draft brandbook commit exists but milestone is not complete
 
 ## v1.8 Milestone Intent
 
@@ -41,6 +41,16 @@ Last activity: 2026-06-05 - v1.8 brandbook artifacts implemented and verified
   hygiene rules.
 - Keep the artifact set lean and durable: no PDFs, font binaries, Figma files,
   raster screenshot packs, or decorative collateral.
+
+## v1.8 Correction
+
+The commit `572f3eb2 docs: add mailglass brandbook` created useful draft
+brandbook artifacts, but it did not satisfy the normal GSD milestone lifecycle.
+The milestone is therefore **not complete** until phases 80-84 have gone through
+the expected discussion, planning, execution, review, and verification path.
+
+Concrete gap: Phase 82 still needs actual logo-option review. The current SVG
+set is one draft direction, not an approved logo system.
 
 ## v1.8 Scope Locks
 
@@ -100,7 +110,7 @@ Last activity: 2026-06-05 - v1.8 brandbook artifacts implemented and verified
 
 ## Decisions
 
-- [D-25] v1.8 brand-system work is a repo-artifact milestone, not product expansion: all artifacts stay under `brandbook/`, no API/package code changes, no binary-heavy collateral, and prompt-era brand strategy is preserved.
+- [D-25] v1.8 brand-system work is a repo-artifact milestone, not product expansion: all artifacts stay under `brandbook/`, no API/package code changes, no binary-heavy collateral, and prompt-era brand strategy is preserved. `572f3eb2` is a draft artifact commit, not milestone completion evidence.
 - [D-24] v1.7 admin UI polish is a sanctioned adopter-visible-quality investment under D-23 convergence rule; delivered within the brand book (Fork B) by applying the shipped design system more completely, with a real in-library Operator Overview landing + generalized orientation (Fork A).
 - [v1.7] Anti-churn contract: no build task ships without citing a Phase 74 gap-register row at severity ≥ 3. The gap register is the gate.
 - [v1.7] Linked-version release mechanics: admin minor bump mechanically produces matched releases for core + inbound (no API change — administrative only). Acknowledged in milestone scope, not a surprise.
@@ -159,7 +169,8 @@ Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
 
 ## Session Continuity
 
-- 2026-06-05: v1.8 brand-system artifacts created under `brandbook/`: static HTML brandbook, Markdown audit/source book, JSON/CSS tokens, SVG logo system, SVG specimens, and artifact hygiene README. `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` updated for phases 80-84.
+- 2026-06-05: Corrected v1.8 status after maintainer challenge. `572f3eb2` created draft `brandbook/` artifacts, but v1.8 is not complete because phases 80-84 did not run through normal GSD discussion/planning/execution/review. Next correct step is Phase 80 discussion/audit.
+- 2026-06-05: Draft v1.8 brand-system artifacts created under `brandbook/`: static HTML brandbook, Markdown audit/source book, JSON/CSS tokens, one draft SVG logo direction, SVG specimens, and artifact hygiene README. `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` updated for phases 80-84.
 - 2026-06-04: Phase 79 Plan 03 executed. 79-GAP-CLOSEOUT.md created — all five sev-4 rows (GAP-01/03/05/06/13) CLOSED with resolving commit SHAs; GAP-22 reconfirmed DEFERRED at severity 3; textual 6-pillar before/after audit finding; zero-open-sev-4/5 declaration. 74-GAP-REGISTER.md NOT modified. Commit: f202f1e0. VERIF-01 and VERIF-04 satisfied.
 - 2026-06-04: Phase 79 Plan 02 executed. operator.spec.js extended to 10 tests (all green): fixed pre-existing "exact replay flow" failure (wrong badge text "Replay audit" → "Webhook replay completed"/"Replay succeeded" + { timeout: 10000 }); fixed operator_fixtures.ex jsonb[] cast bug blocking server boot; added operator-overview-health, operator-overview-nav, inbound-orientation, preview-orientation structural coverage; added /ops/browser-preview-empty test route for preview empty-mailables state. Commits: 629c91b0, ab14422e. VERIF-02 satisfied.
 - 2026-06-04: Phase 79 Plan 01 executed. check-conformance.sh (5-gate: BADGE/TYPE/BOLD/GAP/HEX) created at mailglass_admin/scripts/; exits 0 on current codebase. design-system.md audit-loop section expanded with explicit before/after LLM-critique ritual (Phase 74 baseline, 4 GAP rows, 6-pillar rubric, /ops/mail/ IA note). 189 tests, 0 failures. Commits: 8c28352a, ef660f27. VERIF-03 satisfied.
@@ -178,4 +189,4 @@ Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Run `$gsd-discuss-phase 80` to start the brand audit properly.

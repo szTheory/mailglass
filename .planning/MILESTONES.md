@@ -13,6 +13,11 @@ maintainer-safe marketing collateral.
 change public APIs, Hex package code, release workflows, or the implemented
 admin design system.
 
+**Status correction:** Commit `572f3eb2` created draft brandbook artifacts, but
+v1.8 is not complete. The normal GSD discussion/phase/execute/verify lifecycle
+still needs to run, starting at Phase 80. The draft logo SVGs are one direction,
+not reviewed logo options.
+
 **Target artifacts:**
 
 - Static HTML brandbook

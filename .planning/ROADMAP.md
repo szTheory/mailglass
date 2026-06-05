@@ -40,7 +40,7 @@ maintainer-safe marketing copy.
 
 ### Phase 80: Brand Audit and Gap Register
 
-**Status:** Complete
+**Status:** Planned
 **Requirements:** BRAND-01, BRAND-02
 
 **Goal:** Produce a critical pressure test that decides what to keep, tighten,
@@ -55,7 +55,7 @@ rework, add, or remove before generating assets.
 
 ### Phase 81: Brandbook Source and Token System
 
-**Status:** Complete
+**Status:** Planned
 **Requirements:** BOOK-01, BOOK-02, BOOK-03, TOKEN-01, TOKEN-02, TOKEN-03
 
 **Goal:** Create the source brandbook and implementation tokens that designers,
@@ -72,21 +72,23 @@ engineers, and future agents can use without reopening prompt history.
 
 ### Phase 82: Logo and SVG Asset System
 
-**Status:** Complete
-**Requirements:** LOGO-01, LOGO-02, LOGO-03
+**Status:** Planned
+**Requirements:** LOGO-01, LOGO-02, LOGO-03, LOGO-04
 
 **Goal:** Add a simple, editable, source-control-friendly logo system.
 
 **Success criteria:**
 
 1. Primary logo, mark, monochrome mark, favicon, and social avatar SVGs exist.
-2. Assets include accessible title/description metadata.
-3. Assets avoid raster images, embedded fonts, glossy effects, paper-plane
+2. Maintainer reviews multiple credible logo directions before selecting or
+   refining the final system.
+3. Assets include accessible title/description metadata.
+4. Assets avoid raster images, embedded fonts, glossy effects, paper-plane
    metaphors, mascot logic, and unnecessary path complexity.
 
 ### Phase 83: Visual Specimens and Copy Blocks
 
-**Status:** Complete
+**Status:** Planned
 **Requirements:** EXAMPLE-01, EXAMPLE-02, VOICE-01
 
 **Goal:** Add high-signal examples and copy that make the brand buildable for
@@ -103,7 +105,7 @@ README, docs, Hex.pm, landing, and launch surfaces.
 
 ### Phase 84: Quality Gate and Repo Hygiene
 
-**Status:** Complete
+**Status:** Planned
 **Requirements:** REPO-01, REPO-02, REPO-03
 
 **Goal:** Ensure the brand system is source-control-ready, self-contained, and
@@ -120,11 +122,11 @@ safe to maintain.
 
 | Phase | Name | Status |
 |---:|---|---|
-| 80 | Brand Audit and Gap Register | Complete |
-| 81 | Brandbook Source and Token System | Complete |
-| 82 | Logo and SVG Asset System | Complete |
-| 83 | Visual Specimens and Copy Blocks | Complete |
-| 84 | Quality Gate and Repo Hygiene | Complete |
+| 80 | Brand Audit and Gap Register | Planned |
+| 81 | Brandbook Source and Token System | Planned |
+| 82 | Logo and SVG Asset System | Planned |
+| 83 | Visual Specimens and Copy Blocks | Planned |
+| 84 | Quality Gate and Repo Hygiene | Planned |
 
 ## Backlog
 
@@ -142,3 +144,8 @@ committing generated screenshot sets by design.
 
 **v1.8 artifact rule:** Brand collateral belongs in `brandbook/`. Product code
 should import or copy from that system only when a real surface needs it.
+
+**Correction note:** Commit `572f3eb2` created a useful draft brandbook artifact
+set, but it did not complete v1.8 because the normal GSD phase lifecycle did not
+run. Treat those files as draft inputs to Phase 80+, not approved milestone
+closeout.
