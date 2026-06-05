@@ -10,6 +10,14 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current State
 
+**`v1.8 Brand System and Repo-Ready Brandbook` is active as of 2026-06-05. The milestone pressure-tests the prompt-era Mailglass brand book and turns it into a self-contained `brandbook/` system: static HTML, critical audit, source brand book, JSON/CSS tokens, editable SVG logos, SVG specimens, copy/microcopy guidance, and artifact hygiene rules. This is not product-feature growth and does not change public APIs, package code, or the implemented admin design system.**
+
+- Phase 80 produced a critical brand audit using KEEP/TIGHTEN/REWORK/ADD/REMOVE, scorecard, surface stress tests, gap/risk severity, and final quality gate.
+- Phase 81 created the static HTML brandbook, concise Markdown source brand book, and token JSON/CSS for docs, marketing, and future UI buildout.
+- Phase 82 added source-control-friendly SVG logo assets: primary lockup, icon mark, monochrome mark, favicon, and social avatar.
+- Phase 83 added SVG visual specimens for palette, typography, UI primitives, README header framing, and docs-page framing, plus ready-to-use voice/copy guidance.
+- Phase 84 verifies the artifact set is self-contained, small, source-control friendly, and aligned with `mailglass_admin/docs/design-system.md`.
+
 **`v1.7 Admin UI — IA & Design-System Polish v2` is complete and archived as of 2026-06-05. Phases 74-79 took `mailglass_admin` to "v2 polish" by applying the shipped design system more completely — a frozen UI-SPEC + scored gap register evidence gate, shell-level orientation parity across all 3 surfaces, an in-library Operator Overview landing, one unified `status_badge` atom replacing five divergent copies, full token migration, motion discipline, fully-expressive seed data, and a self-verified closeout (structural e2e + conformance/bundle grep gates, no human UAT). Milestone audit `status: passed` (19/19 requirements, 7/7 seams, 3/3 flows). No new dependencies, no brand-book amendment, stable seams untouched.**
 
 - Phase 74 produced the evidence gate (gap register, frozen UI-SPEC with canonical status-badge taxonomy, before-baseline screenshots, assertion inventory) with zero code changed.
@@ -301,7 +309,13 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, and 19 v1.
 
 ## Active
 
-**No milestone in flight as of 2026-06-05.** v1.7 shipped and `.planning/REQUIREMENTS.md` was removed at milestone close (a fresh one is created by `/gsd-new-milestone`). Posture is **quiet maintenance / adopter-pull** per D-23 — the original transactional-email framework thesis is product-complete across core, admin, and inbound. The next milestone should be defined with `/gsd-new-milestone`, biased toward release hygiene, docs truth, maintenance, or narrow adopter-pull work unless a concrete adopter need or contract gap justifies new scope.
+**v1.8 Brand System and Repo-Ready Brandbook is active as of 2026-06-05.** The
+artifact pass is implemented and ready for maintainer review: `brandbook/`
+contains the static HTML brandbook, critical audit, source brand book, JSON/CSS
+tokens, editable SVG logo set, SVG specimens, and repo hygiene guidance. This is
+a source-controlled brand-system milestone, not a product-feature milestone.
+Post-v1.8 feature posture remains **quiet maintenance / adopter-pull** per D-23
+unless a concrete adopter need or contract gap justifies new scope.
 
 Candidate carry-forward work (none committed):
 - `/gsd-cleanup` to archive the leftover `.planning/phases/` execution history (71-79, 999.x) into milestone phase-archives.
@@ -402,6 +416,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-22 | The first `mailglass_inbound` milestone stays narrow: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional execution; Conductor/Mailgun/SES/SMTP are deferred | Protect the locked `v1.x` core and make the first sibling-package expansion supportable for a one-person maintainer | ✓ Validated v1.1 — narrow scope held; Conductor / Mailgun / SES / `gen_smtp` remained deliberately deferred |
 | D-23 | Post-v1.3 project posture shifts from broad capability expansion to convergence, stability, and maintenance by default | Core/admin have crossed the original product-complete threshold; endless polish or provider breadth has diminishing returns unless tied to adopter pull | ✓ Validated v1.4 — inbound contract posture is locked, `mailglass_inbound` has a `1.0.0` candidate, and future work defaults to release ceremony / maintenance unless adopter pull or contract gaps justify scope |
 | D-24 | v1.7 admin UI polish is a sanctioned **adopter-visible-quality** investment under the D-23 convergence rule (not feature growth); delivered **within** the brand book (Fork B) by *applying* the shipped design system more completely, with a real in-library Operator Overview landing + generalized orientation (Fork A) | First-run/forensic UX quality is the highest-leverage remaining adopter lever now that the product surface is complete; restraint (no brand amendment, no new deps, grep-enforceable conformance) keeps it convergence-aligned, not scope creep | ✓ Validated v1.7 — anti-churn gate held (every build task cited a sev≥3 gap-register row), stable seams untouched, no new deps, conformance grep-enforced; audit passed 19/19; linked-version admin bump confirmed mechanical |
+| D-25 | v1.8 brand-system work is a repo-artifact milestone, not product expansion | Mailglass had strong prompt-era brand direction but lacked source-controlled, buildable collateral for maintainers, future agents, docs, landing pages, tokens, logos, and marketing copy | Active v1.8 — all artifacts stay under `brandbook/`; no public API/package code changes; no binary-heavy collateral; prompt-era brand strategy preserved |
 
 ## Evolution
 
@@ -424,4 +439,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-05 after **v1.7 Admin UI — IA & Design-System Polish v2** milestone (phases 74–79; 19/19 reqs validated; D-24 validated). Full evolution review done: v1.7 moved to Latest Completed + Validated Requirements, Active cleared (quiet-maintenance posture, no milestone in flight). Release is pipeline-driven (prepare-only); inbound exact-pin bumped to `== 1.5.0`.*
+*Last updated: 2026-06-05 after opening **v1.8 Brand System and Repo-Ready Brandbook** (phases 80–84; D-25 recorded). v1.8 is a self-contained brand-artifact milestone under `brandbook/`, not product-feature growth.*

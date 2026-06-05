@@ -4,179 +4,141 @@
 
 ## Milestones
 
-- ✅ **v0.1 Validation Release** — Phases 1-7 + 07.1 (shipped 2026-04-26) — see [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md)
-- ✅ **v0.2 Production-Credible Core** — Phases 8-13 (shipped 2026-04-28) — see [milestones/v0.2-ROADMAP.md](milestones/v0.2-ROADMAP.md)
-- ✅ **v0.3 Webhook Coverage Complete** — Phases 14-21 (shipped 2026-04-30) — see [milestones/v0.3-ROADMAP.md](milestones/v0.3-ROADMAP.md)
-- ✅ **v0.4 Operator Confidence** — Phases 22-27 (shipped 2026-05-02) — see [milestones/v0.4-ROADMAP.md](milestones/v0.4-ROADMAP.md)
-- ✅ **v0.5 Adoption Hardening** — Phases 28-31 (shipped 2026-05-03) — see [milestones/v0.5-ROADMAP.md](milestones/v0.5-ROADMAP.md)
-- ✅ **v0.6 Production Maturity** — Phases 32-34 (shipped 2026-05-05) — see [milestones/v0.6-ROADMAP.md](milestones/v0.6-ROADMAP.md)
-- ✅ **v1.0 Stability Lock** — Phases 35-38 (shipped 2026-05-06) — see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
-- ✅ **v1.1 Inbound Core Slice** — Phases 39-44 (shipped 2026-05-06) — see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
-- ✅ **v1.2 Inbound Production Confidence** — Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26) — see [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
-- ✅ **v1.3 Adopter Trust Proof** — Phases 52, 57-62 (shipped 2026-05-31) — see [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
-- ✅ **v1.4 Inbound Stability Lock** — Phases 63-66 (shipped 2026-06-01) — see [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
-- ✅ **v1.5 Demo Evidence and Click-Around Confidence** — Phases 67-70 (shipped 2026-06-02) — see [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md)
-- ✅ **v1.6 Inbound 1.0 Release and Truth Lock** — Phases 71-73 (shipped 2026-06-02) — see [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
-- ✅ **v1.7 Admin UI — IA & Design-System Polish v2** — Phases 74-79 (shipped 2026-06-05) — see [milestones/v1.7-ROADMAP.md](milestones/v1.7-ROADMAP.md)
+- ✅ **v0.1 Validation Release** - Phases 1-7 + 07.1 (shipped 2026-04-26) - see [milestones/v0.1-ROADMAP.md](milestones/v0.1-ROADMAP.md)
+- ✅ **v0.2 Production-Credible Core** - Phases 8-13 (shipped 2026-04-28) - see [milestones/v0.2-ROADMAP.md](milestones/v0.2-ROADMAP.md)
+- ✅ **v0.3 Webhook Coverage Complete** - Phases 14-21 (shipped 2026-04-30) - see [milestones/v0.3-ROADMAP.md](milestones/v0.3-ROADMAP.md)
+- ✅ **v0.4 Operator Confidence** - Phases 22-27 (shipped 2026-05-02) - see [milestones/v0.4-ROADMAP.md](milestones/v0.4-ROADMAP.md)
+- ✅ **v0.5 Adoption Hardening** - Phases 28-31 (shipped 2026-05-03) - see [milestones/v0.5-ROADMAP.md](milestones/v0.5-ROADMAP.md)
+- ✅ **v0.6 Production Maturity** - Phases 32-34 (shipped 2026-05-05) - see [milestones/v0.6-ROADMAP.md](milestones/v0.6-ROADMAP.md)
+- ✅ **v1.0 Stability Lock** - Phases 35-38 (shipped 2026-05-06) - see [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
+- ✅ **v1.1 Inbound Core Slice** - Phases 39-44 (shipped 2026-05-06) - see [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
+- ✅ **v1.2 Inbound Production Confidence** - Phases 44.5, 45-50, 50.5, 50.7, 51 (shipped 2026-05-26) - see [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
+- ✅ **v1.3 Adopter Trust Proof** - Phases 52, 57-62 (shipped 2026-05-31) - see [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
+- ✅ **v1.4 Inbound Stability Lock** - Phases 63-66 (shipped 2026-06-01) - see [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
+- ✅ **v1.5 Demo Evidence and Click-Around Confidence** - Phases 67-70 (shipped 2026-06-02) - see [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md)
+- ✅ **v1.6 Inbound 1.0 Release and Truth Lock** - Phases 71-73 (shipped 2026-06-02) - see [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
+- ✅ **v1.7 Admin UI - IA & Design-System Polish v2** - Phases 74-79 (shipped 2026-06-05) - see [milestones/v1.7-ROADMAP.md](milestones/v1.7-ROADMAP.md)
+- 🔄 **v1.8 Brand System and Repo-Ready Brandbook** - Phases 80-84 (active)
+
+## v1.8 Brand System and Repo-Ready Brandbook
+
+**Goal:** Pressure-test the existing Mailglass brand book and turn it into a
+self-contained, source-control-friendly brand system for OSS docs, README
+presentation, landing pages, design tokens, SVG logos, visual specimens, and
+maintainer-safe marketing copy.
+
+**Scope locks:**
+
+- Preserve the current brand center; do not redesign for novelty.
+- Keep all new collateral under `brandbook/`.
+- Commit only durable text assets: Markdown, HTML, JSON, CSS, and SVG.
+- Do not add font binaries, PDFs, Figma files, generated screenshot sets, or
+  large raster exports.
+- Keep the artifact set lean: all killer, no filler.
 
 ## Phases
 
-<details>
-<summary>✅ v1.1 Inbound Core Slice (Phases 39-44) — SHIPPED 2026-05-06</summary>
+### Phase 80: Brand Audit and Gap Register
 
-- [x] Phase 39: Inbound Package Foundation (3/3 plans) — completed 2026-05-06
-- [x] Phase 40: Postmark Ingress And Replayable Persistence (3/3 plans) — completed 2026-05-06
-- [x] Phase 41: SendGrid Ingress And Mailbox Routing (3/3 plans) — completed 2026-05-06
-- [x] Phase 42: Async Execution And Adopter Proof (3/3 plans) — completed 2026-05-06
-- [x] Phase 43: Execution Verification Recovery (3/3 plans) — completed 2026-05-06
-- [x] Phase 44: Async Adoption Closeout Reconciliation (2/2 plans) — completed 2026-05-06
+**Status:** Complete
+**Requirements:** BRAND-01, BRAND-02
 
-Audit re-passed 2026-05-07 after Phase 43 + 44 closeout. Full archive at [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md).
+**Goal:** Produce a critical pressure test that decides what to keep, tighten,
+rework, add, or remove before generating assets.
 
-</details>
+**Success criteria:**
 
-<details>
-<summary>✅ v1.4 Inbound Stability Lock (Phases 63-66) — SHIPPED 2026-06-01</summary>
+1. `brandbook/brand-audit.md` gives a candid executive judgment.
+2. Audit includes DNA extraction, scorecard, surface stress tests, gaps/risks,
+   artifact plan, prioritized actions, and final quality gate.
+3. Recommendations preserve the strong existing brand and avoid churn.
 
-- [x] Phase 63: Inbound Contract Inventory Reconciliation — canonical stable/testing/internal/deferred inventory (completed 2026-05-31)
-- [x] Phase 64: Contract Verification Hardening — compiled-doc, docs-contract, and root stability proof gates (completed 2026-05-31)
-- [x] Phase 65: Compatibility, Docs, and DX Lock — adoption path, operator wording, testing docs, and compatibility/deprecation posture (completed 2026-06-01)
-- [x] Phase 66: Release Position Decision — evidence-backed `1.0.0` decision recorded with release notes and final candidate-version proof (completed 2026-06-01)
+### Phase 81: Brandbook Source and Token System
 
-Audit passed 2026-06-01 after Phase 66 closeout. Full archive at [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md).
+**Status:** Complete
+**Requirements:** BOOK-01, BOOK-02, BOOK-03, TOKEN-01, TOKEN-02, TOKEN-03
 
-</details>
+**Goal:** Create the source brandbook and implementation tokens that designers,
+engineers, and future agents can use without reopening prompt history.
 
-<details>
-<summary>✅ v1.2 Inbound Production Confidence (Phases 44.5, 45-50, 50.5, 50.7, 51) — SHIPPED 2026-05-26</summary>
+**Success criteria:**
 
-- [x] Phase 44.5: v1.0/1.1 Release Ceremony (5/5 plans) — completed 2026-05-07
-- [x] Phase 45: Inbound Telemetry + Idempotency Foundation (12/12 plans) — completed 2026-05-23
-- [x] Phase 46: Mailgun + SES Inbound Ingress (3/3 plans) — completed 2026-05-23
-- [x] Phase 47: Inbound Test Helpers + Generators (4/4 plans) — completed 2026-05-24
-- [x] Phase 48: Inbound Admin LiveView (3/3 plans) — completed 2026-05-24
-- [x] Phase 49: Inbound Runtime Operator Tooling (3/3 plans) — completed 2026-05-25
-- [x] Phase 50: Inbound Documentation Pass (3/3 plans) — completed 2026-05-25
-- [x] Phase 50.5: v1.2 Release Ceremony (3/3 plans) — completed 2026-05-26
-- [x] Phase 50.7: v1.2 Repo Hygiene Pass (1/1 plan) — completed 2026-05-26
-- [x] Phase 51: Stability Closeout (4/4 plans) — completed 2026-05-26
+1. `brandbook/index.html` opens directly from disk.
+2. `brandbook/brand-book.md` captures the source-of-truth brand guidance.
+3. `brandbook/tokens.json` and `brandbook/tokens.css` define raw, semantic,
+   state, callout, code, type, space, radius, border, shadow, focus, and motion
+   tokens.
+4. Token language aligns with `mailglass_admin/docs/design-system.md`.
 
-Audit passed 2026-05-26 after Phase 51 closeout. Full archive at [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md).
+### Phase 82: Logo and SVG Asset System
 
-</details>
+**Status:** Complete
+**Requirements:** LOGO-01, LOGO-02, LOGO-03
 
-<details>
-<summary>✅ v1.3 Adopter Trust Proof (Phases 52, 57-62) — SHIPPED 2026-05-31</summary>
+**Goal:** Add a simple, editable, source-control-friendly logo system.
 
-- [x] Phase 52: Trust Scope Lock + Reference Host Baseline (3/3 plans) — completed 2026-05-27
-- [x] Phase 57: Deterministic Trust Runner + Fixtures (2/2 plans) — completed 2026-05-27
-- [x] Phase 58: Verify-First Webhook + Operator Path (2/2 plans) — completed 2026-05-27
-- [x] Phase 59: CI Trust Lanes + Checkpoint Evidence (2/2 plans) — completed 2026-05-28
-- [x] Phase 60: Release Trust Gate + Drift Prevention (5/5 plans) — completed 2026-05-31
-- [x] Phase 61: Docs Contract Boundary Enforcement (3/3 plans) — completed 2026-05-31
-- [x] Phase 62: Close gap: EVID-02/EVID-03 — current-release trust proof (1/1 plan) — completed 2026-05-31
+**Success criteria:**
 
-Audit passed 2026-05-31 after Phase 62 closeout. Full archive at [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md).
+1. Primary logo, mark, monochrome mark, favicon, and social avatar SVGs exist.
+2. Assets include accessible title/description metadata.
+3. Assets avoid raster images, embedded fonts, glossy effects, paper-plane
+   metaphors, mascot logic, and unnecessary path complexity.
 
-</details>
+### Phase 83: Visual Specimens and Copy Blocks
 
-<details>
-<summary>✅ v1.5 Demo Evidence and Click-Around Confidence (Phases 67-70) — SHIPPED 2026-06-02</summary>
+**Status:** Complete
+**Requirements:** EXAMPLE-01, EXAMPLE-02, VOICE-01
 
-- [x] Phase 67: Demo App Foundation — separate demo app, dual dependency mode, Compose DX, cache-aware setup (completed 2026-06-01)
-- [x] Phase 68: Realistic B2B SaaS Fixtures — deterministic outbound, inbound, suppression, replay, and mailer scenarios (2 plans) (completed 2026-06-01)
-  Plans:
+**Goal:** Add high-signal examples and copy that make the brand buildable for
+README, docs, Hex.pm, landing, and launch surfaces.
 
-  - [x] 68-01-PLAN.md — Expand deterministic outbound/inbound fixture corpus and add the repo-root quick validation gate.
-  - [x] 68-02-PLAN.md — Deepen preview scenarios and add public-message contract tests.
-- [x] Phase 69: Click-Around UX and Docs — demo dashboard, navigation, persona/JTBD docs, quickstart, admin docs drift cleanup (2 plans) (completed 2026-06-02)
-  Plans:
+**Success criteria:**
 
-  - [x] 69-01-PLAN.md — Refine the controller-rendered dashboard hub and add focused route/content coverage.
-  - [x] 69-02-PLAN.md — Make the demo README canonical for quickstart/click-path guidance and add docs contract proof.
-- [x] Phase 70: Browser Evidence Gate — automated Playwright coverage and checkpoint evidence for preview, outbound operator, and inbound operator paths (1 plan; closed by Phase 69 automation pass; completed 2026-06-02)
-  Plans:
+1. SVG specimens cover palette, typography, UI primitives, README framing, and
+   docs-page framing.
+2. The audit/brandbook include concrete copy blocks for package descriptions,
+   README intro, landing hero, feature blurbs, errors, empty states, success,
+   warnings, and release notes.
+3. Examples do not pretend to be product screenshots.
 
-  - [x] 70-01-PLAN.md — Reconcile the browser evidence gate to the automated Phase 69 verification lane.
+### Phase 84: Quality Gate and Repo Hygiene
 
-Audit passed 2026-06-02 after Phase 70 closeout. Full archive at [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md).
+**Status:** Complete
+**Requirements:** REPO-01, REPO-02, REPO-03
 
-</details>
+**Goal:** Ensure the brand system is source-control-ready, self-contained, and
+safe to maintain.
 
-<details>
-<summary>✅ v1.6 Inbound 1.0 Release and Truth Lock (Phases 71-73) — SHIPPED 2026-06-02 (mailglass_inbound 1.0.0 live on Hex)</summary>
+**Success criteria:**
 
-- [x] Phase 71: Inbound Release Truth Preflight — reconcile source/package truth and required-vs-advisory proof boundaries. (completed 2026-06-02)
-- [x] Phase 72: Contract Docs and Stale-Claim Guards — update public wording and executable docs/release checks for inbound's own stable `1.0` contract. (3 plans) (completed 2026-06-02)
-  Plans:
-
-  - [x] 72-01-PLAN.md — Correct stale prose in guides/jobs.md, guides/compatibility-and-deprecations.md, and MAINTAINING.md; flip docs.check and docs_contract_test guards.
-  - [x] 72-02-PLAN.md — Add DX inventory horizon guards to inbound docs-contract test.
-  - [x] 72-03-PLAN.md — Fix source_ref_pattern in mailglass_inbound/mix.exs, regenerate publish summary, add stability_contract_test assertion.
-- [x] Phase 73: Inbound 1.0 Publish Evidence — prepare and stage the inbound-only publish path and record Hex, HexDocs, smoke, fallback, and 60-minute decision evidence. (2 plans) (completed 2026-06-02)
-  Plans:
-
-  - [x] 73-01-PLAN.md — Author the inbound RELEASE-RECORD + RELEASE-CHECKLIST (full REL-03 field set, approver fields dropped, post-publish fields pending) and run the deterministic publish.check + inbound-preflight-consistency lanes.
-  - [x] 73-02-PLAN.md — Fix the stale Phase 38 runbook path, refine inbound-only publish/fallback wording, stage/capture the dry-run dispatch rehearsal, and add the field-presence + stale-path-regression guard.
-
-Audit passed 2026-06-02 after Phase 73 closeout. Full archive at [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md).
-
-</details>
-
-<details>
-<summary>✅ v1.7 Admin UI — IA & Design-System Polish v2 (Phases 74-79) — SHIPPED 2026-06-05</summary>
-
-**Anti-churn contract:** every build task (Phases 75-78) cited a Phase 74 gap-register row at severity ≥ 3 — the gap register was the merge gate. Linked-version release mechanics produced matched bumps across all three packages (core + inbound CHANGELOG entries administrative per D-01).
-
-- [x] **Phase 74: Systematic Audit and UI-SPEC** — Evidence gate; no code. Scored gap register, frozen UI-SPEC + canonical status-badge taxonomy, before-baseline screenshots, assertion inventory. (completed 2026-06-04)
-- [x] **Phase 75: Information Architecture, Navigation and Orientation** — `Shell.orientation_strip/1` on all 3 surfaces; in-library Operator Overview landing via `handle_params/3`; IA vocabulary; deep-link-fix decision. (completed 2026-06-04)
-- [x] **Phase 76: Component-Library and Design-System Hardening** — Unified `status_badge` atom replacing 5 private `badge_class/1` copies; token migration off raw scale; support-card Tier1/Tier2 hierarchy; committed bundle. (completed 2026-06-04)
-- [x] **Phase 77: Motion and Microinteraction Polish** — Six-motion vocabulary per UI-SPEC; motion-reveal re-fire fix (record-keyed ids); reduced-motion discipline + conformance gate. (completed 2026-06-04)
-- [x] **Phase 78: Seed-Data Expressiveness** — Demo seeds covering every screen state; e2e count assertions updated in same change; frozen baselines unchanged. (completed 2026-06-04)
-- [x] **Phase 79: Verification and Visual-Regression Hardening** — Full audit-matrix re-run vs baseline; Playwright extended to 10 green tests; conformance + bundle gates; all sev-4/5 gap rows closed; release ceremony prep. (completed 2026-06-04)
-
-Audit passed 2026-06-04 (19/19 reqs, 7/7 seams, 3/3 flows). Full archive at [milestones/v1.7-ROADMAP.md](milestones/v1.7-ROADMAP.md).
-
-</details>
+1. All artifacts live under `brandbook/`.
+2. The folder documents commit/generate/avoid rules.
+3. Validation checks cover JSON parsing, SVG parsing, local HTML references,
+   file sizes, and git cleanliness.
 
 ## Progress
 
-All milestones through **v1.7** are shipped and archived. Per-phase detail lives in each milestone's archive under `.planning/milestones/`. No milestone is currently in flight — posture is quiet maintenance / adopter-pull.
-
-| Milestone | Phases | Status | Shipped |
-|-----------|--------|--------|---------|
-| v1.5 Demo Evidence and Click-Around Confidence | 67-70 | ✅ Shipped | 2026-06-02 |
-| v1.6 Inbound 1.0 Release and Truth Lock | 71-73 | ✅ Shipped | 2026-06-02 |
-| v1.7 Admin UI — IA & Design-System Polish v2 | 74-79 | ✅ Shipped | 2026-06-05 |
+| Phase | Name | Status |
+|---:|---|---|
+| 80 | Brand Audit and Gap Register | Complete |
+| 81 | Brandbook Source and Token System | Complete |
+| 82 | Logo and SVG Asset System | Complete |
+| 83 | Visual Specimens and Copy Blocks | Complete |
+| 84 | Quality Gate and Repo Hygiene | Complete |
 
 ## Backlog
 
-### Phase 999.1: Human-Readable Code Comments + GSD Artifact Cleanup (BACKLOG)
+### Phase 999.1: Human-Readable Code Comments + GSD Artifact Cleanup
 
-**Goal:** Reduce distracting internal planning references such as `D-20`, phase-plan IDs, and similar GSD artifacting in source comments so the code reads cleanly for humans while preserving the intent behind important architectural notes
-**Requirements:** TBD
-**Plans:** 3/3 plans complete
+Retained from previous milestones. Promote separately when worth the maintenance
+pass.
 
-Plans:
+### Phase 999.2: Shift-Left Email Screenshot + Responsive Preview Workflow
 
-- [ ] TBD (promote with $gsd-review-backlog when ready)
-
-### Phase 999.2: Shift-Left Email Screenshot + Responsive Preview Workflow (BACKLOG)
-
-**Goal:** Make it easy at any time to see realistic rendered example emails across themes and mobile/responsive layouts, ideally through an idiomatic low-friction workflow such as a mix task, preview pipeline, or CI-generated screenshots
-**Requirements:** TBD
-**Plans:** 3/3 plans complete
-
-Plans:
-
-- [ ] TBD (promote with $gsd-review-backlog when ready)
+Retained from previous milestones. Do not fold into v1.8; this brandbook avoids
+committing generated screenshot sets by design.
 
 ## Notes
 
-**Release-cadence rule (added 2026-05-06):** Each milestone closes with a release ceremony (Phase X.5 by convention). Don't start the next milestone implementation while previous-milestone work is unreleased. The 4-milestone-deep gap between v0.3.2 and 1.0.0 is the failure mode this rule prevents.
-
-**v1.4 convergence rule:** After inbound stability lock, default future planning to release ceremony, maintenance, release hygiene, docs truth, and narrow adopter-pull work. Broad feature-growth remains blocked until the release-position decision is complete (now satisfied by Phase 66 artifacts).
-
-**v1.7 anti-churn contract:** Every build task in Phases 75-78 must cite a Phase 74 gap-register row at severity ≥ 3. The gap register is the only gate. Scope expansion without a gap-register citation is a merge block.
-
-**v1.7 linked-version release note:** This milestone touches only `mailglass_admin` admin source (DOM/CSS/LiveView internals, which are non-stable and free to churn per D-24). The linked-version release ceremony will mechanically produce matched version bumps across all three packages — this is correct and expected, not a mistake.
+**v1.8 artifact rule:** Brand collateral belongs in `brandbook/`. Product code
+should import or copy from that system only when a real surface needs it.

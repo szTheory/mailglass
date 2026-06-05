@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Mailglass social avatar</title>
+  <desc id="desc">Mailglass pane mark on an Ink background.</desc>
+  <rect width="512" height="512" rx="96" fill="#0D1B2A"/>
+  <g transform="translate(112 80) scale(3)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="18" y="16" width="60" height="64" rx="10" fill="#F8FBFD" stroke="#A6EAF2" stroke-width="5"/>
+    <path d="M28 32h40" stroke="#277B96" stroke-width="5"/>
+    <path d="M28 46h26" stroke="#5C6B7A" stroke-width="4"/>
+    <path d="M28 60h18" stroke="#5C6B7A" stroke-width="4"/>
+    <path d="M48 80V58l30 22" fill="#EAF6FB" stroke="#A6EAF2" stroke-width="5"/>
+    <path d="M50 59l14 10" stroke="#277B96" stroke-width="4"/>
+  </g>
+</svg>

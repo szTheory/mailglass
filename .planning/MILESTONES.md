@@ -1,5 +1,30 @@
 # Milestones
 
+## v1.8 Brand System and Repo-Ready Brandbook (Active: 2026-06-05)
+
+**Phases:** 5 phases (80-84)
+
+**Goal:** Pressure-test the prompt-era Mailglass brand book and commit a
+self-contained, source-control-friendly `brandbook/` system for docs, README
+presentation, landing pages, tokens, SVG logos, visual specimens, voice, and
+maintainer-safe marketing collateral.
+
+**Scope:** This is a repo-artifact milestone, not product expansion. It does not
+change public APIs, Hex package code, release workflows, or the implemented
+admin design system.
+
+**Target artifacts:**
+
+- Static HTML brandbook
+- Critical Markdown brand audit
+- Concise source brand book
+- JSON/CSS design tokens
+- Editable SVG logo system
+- SVG visual specimens
+- Artifact hygiene and export policy
+
+---
+
 ## v1.7 Admin UI — IA & Design-System Polish v2 (Shipped: 2026-06-05)
 
 **Phases completed:** 6 phases (74-79), 22 plans

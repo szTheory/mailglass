@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Mailglass README header specimen</title>
+  <desc id="desc">A restrained README header composition for Mailglass.</desc>
+  <rect width="1280" height="640" fill="#F8FBFD"/>
+  <rect x="72" y="72" width="1136" height="496" rx="12" fill="#FFFFFF" stroke="#C7DCE5"/>
+  <g transform="translate(112 116)">
+    <rect x="0" y="0" width="72" height="80" rx="12" fill="#F8FBFD" stroke="#0D1B2A" stroke-width="5"/>
+    <path d="M14 21h44" stroke="#277B96" stroke-width="5" stroke-linecap="round"/>
+    <path d="M14 38h30" stroke="#5C6B7A" stroke-width="4" stroke-linecap="round"/>
+    <path d="M36 80V54l36 26" fill="#EAF6FB" stroke="#0D1B2A" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <text x="210" y="162" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="56" font-weight="700">Mailglass</text>
+  <text x="214" y="202" fill="#277B96" font-family="Inter Tight, Inter, sans-serif" font-size="30" font-weight="700">Email, made visible.</text>
+  <text x="112" y="292" fill="#0D1B2A" font-family="Inter, sans-serif" font-size="22">A Phoenix-native framework for composing, previewing, delivering, routing,</text>
+  <text x="112" y="326" fill="#0D1B2A" font-family="Inter, sans-serif" font-size="22">and observing email with production-grade feedback.</text>
+  <g transform="translate(112 382)" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="15">
+    <rect width="440" height="74" rx="8" fill="#0D1B2A"/>
+    <text x="24" y="44" fill="#A6EAF2">mix archive.install hex phx_new</text>
+  </g>
+  <g transform="translate(600 382)" font-family="Inter, sans-serif">
+    <rect width="188" height="48" rx="6" fill="#277B96"/>
+    <text x="52" y="31" fill="#F8FBFD" font-size="16" font-weight="700">Read docs</text>
+    <rect x="208" width="184" height="48" rx="6" fill="#FFFFFF" stroke="#C7DCE5"/>
+    <text x="253" y="31" fill="#0D1B2A" font-size="16" font-weight="700">GitHub</text>
+  </g>
+  <text x="112" y="514" fill="#5C6B7A" font-family="Inter, sans-serif" font-size="16">Use this framing for README and package visuals: name first, promise second, concrete capability third.</text>
+</svg>

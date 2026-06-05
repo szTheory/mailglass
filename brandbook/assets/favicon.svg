@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" role="img" aria-labelledby="title desc">
+  <title id="title">Mailglass favicon</title>
+  <desc id="desc">Compact pane mark for Mailglass.</desc>
+  <rect x="5" y="4" width="22" height="24" rx="4" fill="#F8FBFD" stroke="#0D1B2A" stroke-width="2"/>
+  <path d="M10 11h12" stroke="#277B96" stroke-width="2" stroke-linecap="round"/>
+  <path d="M10 16h8" stroke="#5C6B7A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M16 28v-8l11 8" fill="#EAF6FB" stroke="#0D1B2A" stroke-width="2" stroke-linejoin="round"/>
+</svg>

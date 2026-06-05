@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="112" viewBox="0 0 420 112" role="img" aria-labelledby="title desc">
+  <title id="title">Mailglass primary logo</title>
+  <desc id="desc">Mailglass wordmark with a pane mark that implies visible email.</desc>
+  <g transform="translate(8 8)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="10" y="8" width="72" height="80" rx="12" fill="#F8FBFD" stroke="#0D1B2A" stroke-width="5"/>
+    <path d="M24 28h44" stroke="#277B96" stroke-width="5"/>
+    <path d="M24 44h30" stroke="#5C6B7A" stroke-width="4"/>
+    <path d="M24 60h20" stroke="#5C6B7A" stroke-width="4"/>
+    <path d="M46 88V62l36 26" fill="#EAF6FB" stroke="#0D1B2A" stroke-width="5"/>
+    <path d="M48 64l17 12" stroke="#277B96" stroke-width="4"/>
+  </g>
+  <text x="116" y="68" fill="#0D1B2A" font-family="Inter Tight, Inter, system-ui, -apple-system, sans-serif" font-size="46" font-weight="700" letter-spacing="0">mailglass</text>
+  <text x="119" y="91" fill="#5C6B7A" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="13" font-weight="400" letter-spacing="0">email, made visible</text>
+</svg>

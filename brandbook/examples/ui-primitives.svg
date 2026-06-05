@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Mailglass UI primitives specimen</title>
+  <desc id="desc">Buttons, cards, callouts, badges, code, and state examples for Mailglass.</desc>
+  <rect width="1200" height="760" fill="#F8FBFD"/>
+  <text x="64" y="82" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="42" font-weight="700">UI primitives</text>
+  <text x="64" y="116" fill="#5C6B7A" font-family="Inter, sans-serif" font-size="18">Flat panes, clear states, visible focus, restrained accent.</text>
+
+  <g transform="translate(64 170)">
+    <rect width="320" height="180" rx="8" fill="#FFFFFF" stroke="#C7DCE5"/>
+    <text x="24" y="42" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="24" font-weight="700">Delivery timeline</text>
+    <text x="24" y="74" fill="#5C6B7A" font-family="Inter, sans-serif" font-size="15">One place for rendered output, provider events, and operator action.</text>
+    <rect x="24" y="112" width="136" height="44" rx="6" fill="#277B96"/>
+    <text x="48" y="139" fill="#F8FBFD" font-family="Inter, sans-serif" font-size="15" font-weight="700">Inspect</text>
+    <rect x="176" y="112" width="112" height="44" rx="6" fill="#F8FBFD" stroke="#C7DCE5"/>
+    <text x="203" y="139" fill="#0D1B2A" font-family="Inter, sans-serif" font-size="15" font-weight="700">Docs</text>
+  </g>
+
+  <g transform="translate(424 170)">
+    <rect width="320" height="180" rx="8" fill="#EAF6FB" stroke="#C7DCE5"/>
+    <text x="24" y="42" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="24" font-weight="700">Callout</text>
+    <text x="24" y="74" fill="#0D1B2A" font-family="Inter, sans-serif" font-size="15">This route matched the inbound recipient pattern.</text>
+    <rect x="24" y="112" width="160" height="34" rx="17" fill="#DDF2F7" stroke="#277B96"/>
+    <text x="44" y="134" fill="#0D1B2A" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="13">route: accepted</text>
+  </g>
+
+  <g transform="translate(784 170)">
+    <rect width="320" height="180" rx="8" fill="#0D1B2A"/>
+    <text x="24" y="42" fill="#EAF6FB" font-family="Inter Tight, Inter, sans-serif" font-size="24" font-weight="700">Code block</text>
+    <text x="24" y="82" fill="#A6EAF2" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="14">def welcome(user) do</text>
+    <text x="24" y="112" fill="#EAF6FB" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="14">  props = %{user: user}</text>
+    <text x="24" y="142" fill="#8BB77F" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="14">  render(props)</text>
+  </g>
+
+  <g transform="translate(64 430)" font-family="Inter, sans-serif">
+    <text x="0" y="0" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="28" font-weight="700">State row examples</text>
+    <g transform="translate(0 40)">
+      <rect width="1040" height="68" rx="8" fill="#FFFFFF" stroke="#C7DCE5"/>
+      <circle cx="34" cy="34" r="7" fill="#166534"/>
+      <text x="58" y="29" fill="#0D1B2A" font-size="16" font-weight="700">Delivered</text>
+      <text x="58" y="51" fill="#5C6B7A" font-size="14">Provider accepted the message and returned a terminal success event.</text>
+      <rect x="862" y="18" width="136" height="32" rx="16" fill="#E8F3EA" stroke="#166534"/>
+      <text x="891" y="39" fill="#166534" font-size="13" font-weight="700">success</text>
+    </g>
+    <g transform="translate(0 124)">
+      <rect width="1040" height="68" rx="8" fill="#FFFFFF" stroke="#C7DCE5"/>
+      <circle cx="34" cy="34" r="7" fill="#A95F10"/>
+      <text x="58" y="29" fill="#0D1B2A" font-size="16" font-weight="700">Suppressed</text>
+      <text x="58" y="51" fill="#5C6B7A" font-size="14">Recipient previously unsubscribed; delivery was intentionally blocked.</text>
+      <rect x="862" y="18" width="136" height="32" rx="16" fill="#FFF8F0" stroke="#A95F10"/>
+      <text x="892" y="39" fill="#A95F10" font-size="13" font-weight="700">warning</text>
+    </g>
+  </g>
+</svg>
