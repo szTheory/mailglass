@@ -19,11 +19,11 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   def records_list(assigns) do
     ~H"""
     <%= if @records == [] do %>
-      <div class="flex min-h-64 flex-col items-center justify-center gap-3 p-6 text-center">
+      <div class="flex min-h-64 flex-col items-center justify-center gap-sm p-6 text-center">
         <Components.icon name="hero-inbox-stack" class="h-8 w-8 text-secondary" />
         <div class="space-y-1">
-          <h3 class="text-base font-bold text-base-content">No inbound records</h3>
-          <p class="text-sm text-secondary">
+          <h3 class="text-body font-bold text-base-content">No inbound records</h3>
+          <p class="text-body text-secondary">
             No inbound records match these filters. Clear the filters or wait for the next inbound message.
           </p>
         </div>
@@ -41,23 +41,21 @@ defmodule MailglassAdmin.Inbound.RecordsList do
               aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
               aria-selected={if selected?(@selected_record, record), do: "true", else: "false"}
               class={[
-                "flex min-h-11 w-full flex-col gap-3 px-4 py-4 text-left transition-colors",
+                "flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
                 row_classes(@selected_record, record)
               ]}
             >
-              <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start justify-between gap-sm">
                 <div class="min-w-0">
-                  <p class="truncate text-sm font-bold text-base-content">
+                  <p class="truncate text-body font-bold text-base-content">
                     {Components.mask_recipient(record.envelope_recipient)}
                   </p>
-                  <p class="mono mt-1 text-xs text-secondary">{record.id}</p>
+                  <p class="mono mt-1 text-label text-secondary">{record.id}</p>
                 </div>
-                <span class={["badge badge-sm", badge_class(record_outcome(record))]}>
-                  {outcome_label(record_outcome(record))}
-                </span>
+                <Components.status_badge status={Components.normalize_inbound_outcome(record_outcome(record))} size={:sm} />
               </div>
 
-              <div class="flex flex-wrap items-center gap-2 text-xs text-secondary">
+              <div class="flex flex-wrap items-center gap-2 text-label text-secondary">
                 <span>{record.tenant_id}</span>
                 <span>&middot;</span>
                 <span>{String.upcase(record.provider || "unknown")}</span>
@@ -92,21 +90,6 @@ defmodule MailglassAdmin.Inbound.RecordsList do
       mailbox when is_binary(mailbox) and mailbox != "" -> mailbox
       _ -> "no match"
     end
-  end
-
-  defp badge_class(:accept), do: "badge-success"
-  defp badge_class(:no_match), do: "badge-warning"
-  defp badge_class(outcome) when outcome in [:reject, :bounce, :failed], do: "badge-error"
-  defp badge_class(:ignore), do: "badge-outline"
-  defp badge_class(_outcome), do: "badge-outline"
-
-  defp outcome_label(nil), do: "Pending"
-
-  defp outcome_label(value) do
-    value
-    |> Atom.to_string()
-    |> String.replace("_", " ")
-    |> String.capitalize()
   end
 
   defp format_datetime(nil), do: "Pending"

@@ -1,0 +1,49 @@
+# Keep the Docker build context small and safe. The demo container gets its
+# source from a live bind mount (.:/workspace) and its deps/_build from named
+# volumes — so excluding these here costs nothing at runtime and saves a large
+# context transfer on every build.
+
+# VCS + planning
+.git
+.gitignore
+.planning
+.claude
+.gsd
+.cursor
+
+# Elixir build artifacts (come from named volumes at runtime, not the image)
+_build
+deps
+**/_build
+**/deps
+*.ez
+*.beam
+erl_crash.dump
+.elixir_ls
+**/.elixir_ls
+cover
+**/cover
+
+# Node / Playwright (installed in the image from package*.json, not copied in)
+**/node_modules
+**/test-results
+**/playwright-report
+
+# Compiled asset output (rebuilt in-container by the tailwind Hex binary)
+**/priv/static/cache_manifest.json
+
+# Platform-specific tailwind binaries must NEVER enter a Linux image — the Hex
+# `tailwind` package auto-downloads the correct linux-<arch> binary in-container.
+**/tailwind-macos-*
+**/tailwind-darwin-*
+**/tailwind-windows-*
+
+# Scratch
+tmp
+**/tmp
+test/tmp
+.DS_Store
+**/.DS_Store
+
+# Local env overrides (never bake secrets/ports into the image)
+.env

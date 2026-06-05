@@ -13,11 +13,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   def deliveries_list(assigns) do
     ~H"""
     <%= if @deliveries == [] do %>
-      <div class="flex min-h-64 flex-col items-center justify-center gap-3 p-6 text-center">
+      <div class="flex min-h-64 flex-col items-center justify-center gap-sm p-6 text-center">
         <Components.icon name="hero-inbox-stack" class="h-8 w-8 text-secondary" />
         <div class="space-y-1">
-          <h3 class="text-base font-bold text-base-content">No recent deliveries</h3>
-          <p class="text-sm text-secondary">
+          <h3 class="text-body font-bold text-base-content">No recent deliveries</h3>
+          <p class="text-body text-secondary">
             No recent deliveries match these filters. Clear the filters or wait for the next send.
           </p>
         </div>
@@ -35,23 +35,21 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
               aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
               aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
               class={[
-                "flex min-h-11 w-full flex-col gap-3 px-4 py-4 text-left transition-colors",
+                "flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
                 row_classes(@selected_delivery, delivery)
               ]}
             >
-              <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start justify-between gap-sm">
                 <div class="min-w-0">
-                  <p class="truncate text-sm font-bold text-base-content">
+                  <p class="truncate text-body font-bold text-base-content">
                     {Components.mask_recipient(delivery.recipient)}
                   </p>
-                  <p class="mono mt-1 text-xs text-secondary">{delivery.id}</p>
+                  <p class="mono mt-1 text-label text-secondary">{delivery.id}</p>
                 </div>
-                <span class={["badge badge-sm", badge_class(delivery.status)]}>
-                  {label(delivery.status)}
-                </span>
+                <Components.status_badge status={delivery.status} size={:sm} />
               </div>
 
-              <div class="flex flex-wrap items-center gap-2 text-xs text-secondary">
+              <div class="flex flex-wrap items-center gap-2 text-label text-secondary">
                 <span>{delivery.tenant_id}</span>
                 <span>&middot;</span>
                 <span>{String.upcase(delivery.provider || "unknown")}</span>
@@ -76,12 +74,6 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   defp row_classes(_selected_delivery, _delivery),
     do: "border-l-4 border-transparent bg-base-200 text-base-content hover:bg-base-100"
-
-  defp badge_class(status) when status in [:delivered, :sent, :dispatched], do: "badge-success"
-  defp badge_class(:deferred), do: "badge-warning"
-  defp badge_class(status) when status in [:failed, :bounced, :complained], do: "badge-error"
-  defp badge_class(:suppressed), do: "badge-warning"
-  defp badge_class(_status), do: "badge-outline"
 
   defp label(nil), do: "Unknown"
 

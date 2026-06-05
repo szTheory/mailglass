@@ -26,6 +26,21 @@ defmodule MailglassAdmin.PreviewLiveTest do
     {:ok, conn: conn}
   end
 
+  describe "orientation strip" do
+    test "renders preview-orientation and preserves preview-empty-mailables when mailables is empty",
+         %{conn: _conn} do
+      # Use a conn with empty mailables (no session key) to trigger the zero-mailables branch
+      empty_conn =
+        Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{"mailables" => []})
+
+      {:ok, _view, html} = live(empty_conn, "/dev/mail")
+
+      # Both testids must be present simultaneously (GAP-11)
+      assert html =~ ~s(data-testid="preview-orientation")
+      assert html =~ ~s(data-testid="preview-empty-mailables")
+    end
+  end
+
   describe "sidebar" do
     @tag :sidebar
     test "renders discovered mailables with scenarios, no-previews, and error states",

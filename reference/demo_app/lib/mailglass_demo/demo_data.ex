@@ -9,9 +9,11 @@ defmodule MailglassDemo.DemoData do
   alias MailglassInbound.InboundRecords
 
   @tenant "northstar"
+  @empty_tenant "empty-tenant"
   @now ~U[2026-06-01 15:00:00Z]
 
   def tenant_id, do: @tenant
+  def empty_tenant_id, do: @empty_tenant
 
   def reset! do
     truncate!()
@@ -191,6 +193,295 @@ defmodule MailglassDemo.DemoData do
       "support-case:1842",
       %{"scenario" => "incident_update", "reason" => "manual suppression"}
     )
+
+    # --- Breadth seed: 9 missing event-type deliveries (GAP-16) ---
+
+    queued_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
+        stream: :transactional,
+        recipient: "queued@northstar-ops.example",
+        provider: "postmark",
+        provider_message_id: "pm-demo-badge-queued-001",
+        status: :sent,
+        last_event_type: :queued,
+        last_event_at: minutes_ago(132),
+        metadata: %{"scenario" => "badge_queued"}
+      })
+
+    event!(queued_d, :queued, minutes_ago(133), %{"provider" => "postmark", "source" => "api"})
+
+    rejected_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
+        stream: :transactional,
+        recipient: "rejected@northstar-ops.example",
+        provider: "postmark",
+        provider_message_id: "pm-demo-badge-rejected-001",
+        status: :failed,
+        last_event_type: :rejected,
+        last_event_at: minutes_ago(134),
+        metadata: %{"scenario" => "badge_rejected"}
+      })
+
+    event!(rejected_d, :sent, minutes_ago(135), %{"provider" => "postmark", "source" => "api"})
+
+    event!(rejected_d, :rejected, minutes_ago(134), %{
+      "provider" => "postmark",
+      "classification" => "domain_block"
+    })
+
+    autoresponded_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
+        stream: :transactional,
+        recipient: "autoresponded@northstar-ops.example",
+        provider: "sendgrid",
+        provider_message_id: "sg-demo-badge-autoresponded-001",
+        status: :sent,
+        last_event_type: :autoresponded,
+        last_event_at: minutes_ago(136),
+        metadata: %{"scenario" => "badge_autoresponded"}
+      })
+
+    event!(autoresponded_d, :sent, minutes_ago(137), %{"provider" => "sendgrid", "source" => "api"})
+
+    event!(autoresponded_d, :autoresponded, minutes_ago(136), %{
+      "provider" => "sendgrid",
+      "classification" => "out_of_office"
+    })
+
+    opened_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.BillingMailer.receipt_paid",
+        stream: :operational,
+        recipient: "opened@northstar-ops.example",
+        provider: "postmark",
+        provider_message_id: "pm-demo-badge-opened-001",
+        status: :sent,
+        last_event_type: :opened,
+        last_event_at: minutes_ago(138),
+        metadata: %{"scenario" => "badge_opened"}
+      })
+
+    event!(opened_d, :delivered, minutes_ago(139), %{"provider" => "postmark", "source" => "webhook"})
+
+    event!(opened_d, :opened, minutes_ago(138), %{
+      "provider" => "postmark",
+      "user_agent" => "Outlook/16.0"
+    })
+
+    clicked_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.BillingMailer.receipt_paid",
+        stream: :operational,
+        recipient: "clicked@northstar-ops.example",
+        provider: "postmark",
+        provider_message_id: "pm-demo-badge-clicked-001",
+        status: :sent,
+        last_event_type: :clicked,
+        last_event_at: minutes_ago(140),
+        metadata: %{"scenario" => "badge_clicked"}
+      })
+
+    event!(clicked_d, :delivered, minutes_ago(141), %{"provider" => "postmark", "source" => "webhook"})
+
+    event!(clicked_d, :clicked, minutes_ago(140), %{
+      "provider" => "postmark",
+      "url" => "https://demo.example/cta"
+    })
+
+    complained_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert",
+        stream: :operational,
+        recipient: "complained@northstar-ops.example",
+        provider: "sendgrid",
+        provider_message_id: "sg-demo-badge-complained-001",
+        status: :failed,
+        last_event_type: :complained,
+        last_event_at: minutes_ago(142),
+        metadata: %{"scenario" => "badge_complained"}
+      })
+
+    event!(complained_d, :delivered, minutes_ago(143), %{"provider" => "sendgrid", "source" => "webhook"})
+
+    event!(complained_d, :complained, minutes_ago(142), %{
+      "provider" => "sendgrid",
+      "classification" => "spam_complaint"
+    })
+
+    unsubscribed_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert",
+        stream: :operational,
+        recipient: "unsubscribed@northstar-ops.example",
+        provider: "sendgrid",
+        provider_message_id: "sg-demo-badge-unsubscribed-001",
+        status: :sent,
+        last_event_type: :unsubscribed,
+        last_event_at: minutes_ago(144),
+        metadata: %{"scenario" => "badge_unsubscribed"}
+      })
+
+    event!(unsubscribed_d, :delivered, minutes_ago(145), %{"provider" => "sendgrid", "source" => "webhook"})
+
+    event!(unsubscribed_d, :unsubscribed, minutes_ago(144), %{
+      "provider" => "sendgrid",
+      "classification" => "list_unsubscribe"
+    })
+
+    subscribed_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
+        stream: :transactional,
+        recipient: "subscribed@northstar-ops.example",
+        provider: "sendgrid",
+        provider_message_id: "sg-demo-badge-subscribed-001",
+        status: :sent,
+        last_event_type: :subscribed,
+        last_event_at: minutes_ago(146),
+        metadata: %{"scenario" => "badge_subscribed"}
+      })
+
+    event!(subscribed_d, :subscribed, minutes_ago(146), %{
+      "provider" => "sendgrid",
+      "classification" => "list_subscribe"
+    })
+
+    unknown_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
+        stream: :transactional,
+        recipient: "unknown@northstar-ops.example",
+        provider: "postmark",
+        provider_message_id: "pm-demo-badge-unknown-001",
+        status: :sent,
+        last_event_type: :unknown,
+        last_event_at: minutes_ago(148),
+        metadata: %{"scenario" => "badge_unknown"}
+      })
+
+    event!(unknown_d, :unknown, minutes_ago(148), %{
+      "provider" => "postmark",
+      "raw_type" => "ProprietaryEvent"
+    })
+
+    # --- Truncation stress delivery: recipient local-part >= 80 chars (D-08 / GAP-16) ---
+
+    stress_d =
+      delivery!(%{
+        mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
+        stream: :transactional,
+        recipient:
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@northstar-stress.example",
+        provider: "postmark",
+        provider_message_id: "pm-demo-truncation-stress-001",
+        status: :sent,
+        last_event_type: :delivered,
+        last_event_at: minutes_ago(150),
+        metadata: %{"scenario" => "truncation_stress"}
+      })
+
+    event!(stress_d, :sent, minutes_ago(151), %{"provider" => "postmark", "source" => "api"})
+
+    event!(stress_d, :delivered, minutes_ago(150), %{
+      "provider" => "postmark",
+      "source" => "webhook"
+    })
+
+    # --- Replay-outcome events: all 3 branches (D-05 / GAP-13) ---
+
+    event!(receipt, :webhook_replay_succeeded, minutes_ago(121), %{
+      "provider" => "postmark",
+      "outcome" => "replayed",
+      "webhook_event_id" => "demo-replay-wh-001"
+    })
+
+    event!(receipt, :webhook_replay_succeeded, minutes_ago(122), %{
+      "provider" => "postmark",
+      "outcome" => "noop",
+      "webhook_event_id" => "demo-replay-wh-002"
+    })
+
+    event!(usage_alert, :webhook_replay_failed, minutes_ago(123), %{
+      "provider" => "sendgrid",
+      "failure_reason" => "webhook_event_not_found"
+    })
+
+    # --- Orphan events: both reconcile-facts branches (D-06 / GAP-13) ---
+
+    # Orphan A: will be pointed to by a :reconciled event (reconciled_count > 0)
+    {:ok, orphan_a} =
+      %{
+        tenant_id: @tenant,
+        delivery_id: nil,
+        type: :sent,
+        occurred_at: minutes_ago(128),
+        needs_reconciliation: true,
+        idempotency_key: "demo-orphan-reconciled-001",
+        metadata: %{
+          "provider" => "sendgrid",
+          "provider_event_id" => "sg-orphan-a",
+          "webhook_event_id" => "00000000-0000-0000-0000-000000000001",
+          "provider_message_id" => "sg-orphan-msg-001"
+        },
+        normalized_payload: %{}
+      }
+      |> Event.changeset()
+      |> Repo.insert()
+
+    # Orphan B: no :reconciled event points to it (still_unmatched_count > 0)
+    %{
+      tenant_id: @tenant,
+      delivery_id: nil,
+      type: :sent,
+      occurred_at: minutes_ago(129),
+      needs_reconciliation: true,
+      idempotency_key: "demo-orphan-unmatched-001",
+      metadata: %{
+        "provider" => "sendgrid",
+        "provider_event_id" => "sg-orphan-b",
+        "webhook_event_id" => "00000000-0000-0000-0000-000000000002",
+        "provider_message_id" => "sg-orphan-msg-002"
+      },
+      normalized_payload: %{}
+    }
+    |> Event.changeset()
+    |> Repo.insert!()
+
+    # :reconciled event — links orphan_a to the invite delivery
+    %{
+      tenant_id: @tenant,
+      delivery_id: invite.id,
+      type: :reconciled,
+      occurred_at: minutes_ago(127),
+      idempotency_key: "reconciled:" <> to_string(orphan_a.id),
+      metadata: %{
+        "reconciled_from_event_id" => to_string(orphan_a.id),
+        "reconciled_provider" => "sendgrid",
+        "reconciled_provider_event_id" => "sg-demo-reconciled-event-001"
+      },
+      normalized_payload: %{}
+    }
+    |> Event.changeset()
+    |> Repo.insert!()
+
+    # --- Failed-ingest WebhookEvent: triggers Tier-1 failed_ingest support card (GAP-13) ---
+
+    %{
+      tenant_id: @tenant,
+      provider: "sendgrid",
+      provider_event_id: "sg-demo-failed-ingest-001",
+      event_type_raw: "Bounce",
+      event_type_normalized: "bounced",
+      status: :failed,
+      raw_payload: %{"RecordType" => "Bounce", "error" => "parse_failure"},
+      received_at: minutes_ago(124),
+      processed_at: minutes_ago(124)
+    }
+    |> WebhookEvent.changeset()
+    |> Repo.insert!()
   end
 
   defp seed_inbound! do
@@ -287,6 +578,69 @@ defmodule MailglassDemo.DemoData do
       inbound_evidence!(no_match, %{"provider" => "postmark", "signature" => "verified"})
 
     inbound_run!(no_match, no_match_evidence, :fresh, :no_match, nil)
+
+    # --- :ignore inbound outcome (D-04 / GAP-16) ---
+    # inbound_record!/1 hardcodes received_at: minutes_ago(5), so call InboundRecords API directly.
+    {:ok, ignore_record} =
+      InboundRecords.insert_inbound_record(%{
+        tenant_id: @tenant,
+        provider: "postmark",
+        provider_message_id: "pm-demo-inbound-ignore-001",
+        envelope_recipient: "support@demo.mailglass.local",
+        from: [%{"address" => "autoresponder@partner-crm.example"}],
+        to: [%{"address" => "support@demo.mailglass.local"}],
+        subject: "RE: Your request has been noted",
+        text_body: "This is an automated acknowledgement. No action is required.",
+        headers: %{"x-demo-scenario" => "inbound_ignore"},
+        metadata: %{"scenario" => "inbound_ignore"},
+        attachments: [],
+        received_at: minutes_ago(30)
+      })
+
+    ignore_evidence =
+      inbound_evidence!(ignore_record, %{"provider" => "postmark", "signature" => "verified"})
+
+    # :ignore requires mailbox present + failure: %{} — pass outcome: :ignore directly
+    inbound_run!(
+      ignore_record,
+      ignore_evidence,
+      :fresh,
+      :ignore,
+      "MailglassDemoWeb.Inbound.SpamMailbox"
+    )
+
+    # --- :failed inbound outcome + truncation stress subject >= 150 chars (D-04 / D-08 / GAP-16) ---
+    {:ok, failed_record} =
+      InboundRecords.insert_inbound_record(%{
+        tenant_id: @tenant,
+        provider: "mailgun",
+        provider_message_id: "mg-demo-inbound-failed-001",
+        envelope_recipient: "support@demo.mailglass.local",
+        from: [%{"address" => "noreply@vendor-platform.example"}],
+        to: [%{"address" => "support@demo.mailglass.local"}],
+        subject:
+          "This is a very long subject line for a vendor notification that was not expected and has exceeded the maximum subject line length that the truncation column can display without ellipsis overflow occurring here",
+        text_body: "Automated vendor notification that failed to be parsed by the mailbox router.",
+        headers: %{"x-demo-scenario" => "inbound_failed"},
+        metadata: %{"scenario" => "inbound_failed"},
+        attachments: [],
+        received_at: minutes_ago(35)
+      })
+
+    failed_evidence =
+      inbound_evidence!(failed_record, %{"provider" => "mailgun", "signature" => "verified"})
+
+    # :failed outcome requires execution_failure with non-empty map — call insert_execution_run directly
+    {:ok, _failed_run} =
+      InboundRecords.insert_execution_run(%{
+        tenant_id: @tenant,
+        inbound_record_id: failed_record.id,
+        inbound_evidence_id: failed_evidence.id,
+        source: :fresh,
+        executed_at: minutes_ago(36),
+        metadata: %{"demo" => true},
+        execution_failure: %{"reason" => "parse_error", "provider" => "mailgun"}
+      })
   end
 
   defp delivery!(attrs) do

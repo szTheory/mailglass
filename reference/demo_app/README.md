@@ -4,34 +4,28 @@ Realistic B2B SaaS Ops click-around demo for Mailglass adoption evidence.
 
 ## Quickstart
 
-From the repo root:
+From the repo root (needs Docker):
 
 ```bash
-DEMO_EVIDENCE_RESET_TOKEN=$(openssl rand -hex 24) docker compose -f compose.demo.yml up demo
+make demo
 ```
 
-Then open:
+It builds, starts, waits until healthy, then prints the URLs to open (default
+http://localhost:4015). The full walkthrough — running several library demos at
+once, configurable ports, troubleshooting — is in
+[`guides/run-the-demo.md`](../../guides/run-the-demo.md).
 
-- Demo dashboard: http://localhost:4015
-- Preview: http://localhost:4015/dev/mail
-- Outbound operator: http://localhost:4015/demo/login?return_to=/ops/mail?tenant_id=northstar
-- Inbound operator: http://localhost:4015/demo/login?return_to=/ops/mail/inbound?tenant_id=northstar
-
-Reset deterministic data:
+Everyday commands:
 
 ```bash
-DEMO_EVIDENCE_RESET_TOKEN=<same-token> docker compose -f compose.demo.yml exec demo mix demo.reset
+make demo-reset   # reseed the deterministic northstar data
+make demo-e2e     # run browser evidence against the running demo
+make demo-down    # stop the demo
 ```
 
-Destructive note: this reset truncates seeded demo tables before reseeding
+Destructive note: `make demo-reset` truncates seeded demo tables before reseeding
 preview, delivery, suppression, inbound record, evidence, routing trace, and
 replay data for tenant `northstar`.
-
-Run browser evidence against the running demo:
-
-```bash
-DEMO_EVIDENCE_RESET_TOKEN=<same-token> docker compose -f compose.demo.yml run --rm demo_e2e
-```
 
 Future artifact label: `demo_browser_evidence.v1`.
 

@@ -17,7 +17,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
   def fields(assigns) do
     ~H"""
     <label class="form-control">
-      <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
         Tenant
       </span>
       <input
@@ -30,7 +30,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
         Provider
       </span>
       <input
@@ -43,7 +43,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
         Mailbox outcome
       </span>
       <select
@@ -60,7 +60,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
         Window
       </span>
       <select
@@ -76,7 +76,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
         Search
       </span>
       <input

@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# Fail CI if any design-system violation appears in mailglass_admin/lib/*.ex files.
+# Five-gate design-system conformance check — gate definitions committed at Phase 76-06.
+# Sources: VERIF-03 (Phase 79), D-07 (single source of truth for visual decisions).
+# Gate patterns from 76-06-SUMMARY.md: five greps that confirmed zero violations on
+# the Phase 76 codebase. All gates scope to .ex files only (HEEx lives in LiveView modules;
+# no .heex partials exist in this codebase).
+#
+# Footgun-6 exclusion (TYPE-GATE): text-base-content is a DaisyUI semantic color token
+# (base-content text color), not a raw type-scale utility. Without the exclusion, every
+# file using text-base-content produces a false failure on the text-base pattern.
+
+set -euo pipefail
+
+# Resolve LIB relative to this script's own location, not the caller's cwd.
+# mailglass_admin is its own Hex package; its CI lane may run with cwd at the
+# package root (mailglass_admin/) rather than the monorepo root. A cwd-relative
+# path would resolve to a non-existent dir, grep would print to the swallowed
+# stderr and exit non-zero, no error would be counted, and the script would
+# print "clean" while scanning zero files (WR-02). Anchoring to BASH_SOURCE and
+# asserting the dir exists makes the gate cwd-independent and fail-loud.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB="${SCRIPT_DIR}/../lib"
+[[ -d "$LIB" ]] || { echo "FAIL: lib dir not found at $LIB" >&2; exit 2; }
+errors=0
+
+# BADGE-GATE: defp badge_class must not exist anywhere in lib/.
+# Components.status_badge/1 is the single canonical status→color definition (Phase 76-02).
+# Any private badge_class helper is a divergence point and must be routed through it.
+if grep -rE 'defp badge_class' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: BADGE-GATE — defp badge_class found; route through Components.status_badge/1" >&2
+  errors=$((errors + 1))
+fi
+
+# TYPE-GATE: raw Tailwind type-scale utilities in HEEx (text-sm, text-base, text-xs).
+# Use semantic tokens instead: text-label (12px), text-body (14px), text-heading (20px),
+# text-display (28px) — defined in the @theme block.
+# Exclusion: text-base-content is a DaisyUI semantic color class (Footgun-6), not a size
+# utility. The old implementation piped through `grep -v 'text-base-content'`, which
+# filters at the LINE level — so a genuine violation sharing a line with the (very common)
+# base-content color class, e.g. class="text-sm text-base-content", was silently dropped
+# (WR-01). Instead, anchor the size match so text-base-content can never match the pattern
+# in the first place: text-sm/text-xs as whole tokens, and text-base only when NOT followed
+# by a hyphen (which excludes text-base-content while still catching the raw text-base size).
+if grep -rEn 'text-(sm|xs)\b|text-base($|[^-])' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: TYPE-GATE — raw text-scale utility found (use text-label/body/heading/display)" >&2
+  errors=$((errors + 1))
+fi
+
+# BOLD-GATE: faux-bold tokens font-medium and font-semibold.
+# Only weights 400 and 700 are loaded; font-medium (500) and font-semibold (600) trigger
+# browser synthesis. Use font-bold or the default weight only.
+if grep -rE 'font-(medium|semibold)' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: BOLD-GATE — faux-bold token found (use font-bold or default only)" >&2
+  errors=$((errors + 1))
+fi
+
+# GAP-GATE: off-grid gap tokens gap-3, gap-4, gap-6.
+# The 4px spacing grid uses semantic tokens: gap-sm (8px), gap-md (16px), gap-lg (24px).
+# Bare numeric Tailwind gap utilities land off-grid and bypass the theme contract.
+# The trailing boundary [^0-9a-z-]|$ is required (WR-04): without it the pattern matched
+# gap-32, gap-64, and gap-3xl, all of which are valid documented spacing tokens
+# (--spacing-...3xl / 32 / 48 / 64). The boundary restricts the gate to the standalone
+# off-grid tokens gap-3, gap-4, gap-6.
+if grep -rEn 'gap-(3|4|6)([^0-9a-z-]|$)' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: GAP-GATE — off-grid gap token found (use gap-sm/md/lg)" >&2
+  errors=$((errors + 1))
+fi
+
+# HEX-GATE: hard-coded hex color values in HEEx.
+# All colors must flow through daisyUI semantic tokens or @theme CSS variables.
+# A literal #RRGGBB or #RGB in a template is a design-system violation.
+# The old pattern `#[0-9a-fA-F]{3,6}` was over-broad (WR-04): it matched HTML anchor
+# fragments and DOM id refs (href="#abc123", phx-value-id="#deadbeef"), 4-/5-char runs that
+# are not valid CSS hex, and brand-palette hexes quoted in a @moduledoc (#0D1B2A). Scope to
+# a color context (require `color` before the hash) and to valid CSS hex lengths (exactly 3
+# or 6 digits) with a trailing word boundary, so only genuine hard-coded color literals trip
+# the gate.
+if grep -rEn 'color[^#]*#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: HEX-GATE — hard-coded hex color found (use semantic tokens)" >&2
+  errors=$((errors + 1))
+fi
+
+if [[ $errors -gt 0 ]]; then
+  echo "FAIL: design-system conformance violations found ($errors gate(s) failed)" >&2
+  exit 1
+fi
+
+echo "OK: design-system conformance clean."

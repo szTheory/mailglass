@@ -111,6 +111,11 @@ defmodule MailglassInbound.MixProject do
     ]
   end
 
+  # Published builds pin the exact core version this inbound release was cut
+  # against (linked-release tracking). Bumping this pin must land as a
+  # `fix(inbound):` commit — chore/docs commits do NOT trigger a Release Please
+  # inbound bump, which would leave adopters on a stale `== <prev>` pin while
+  # core advances. Dev/test resolves the sibling via the local path dep.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
       {:mailglass, "== 1.4.5"}

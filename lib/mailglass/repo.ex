@@ -133,6 +133,11 @@ defmodule Mailglass.Repo do
   @spec delete_all(Ecto.Queryable.t(), keyword()) :: {non_neg_integer(), nil | [term()]}
   def delete_all(queryable, opts \\ []), do: repo().delete_all(queryable, opts)
 
+  @doc "Delegates to the host Repo's `aggregate/3`."
+  @doc since: "1.4.5"
+  @spec aggregate(Ecto.Queryable.t(), atom(), atom()) :: term() | nil
+  def aggregate(queryable, aggregate, field), do: repo().aggregate(queryable, aggregate, field)
+
   @doc "Delegates to the host Repo's `get/3`."
   @doc since: "0.1.0"
   @spec get(Ecto.Queryable.t(), term(), keyword()) :: struct() | nil

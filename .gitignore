@@ -21,6 +21,16 @@ erl_crash.dump
 /mailglass-*.tar
 /mailglass_admin/*.tar
 
+# Local env overrides for the demo (see .env.example)
+/.env
+
+# Platform-specific standalone tailwind binaries — the Hex `tailwind` package
+# downloads these into _build per-arch; they must never be committed.
+/mailglass_admin/tailwind-macos-*
+/mailglass_admin/tailwind-darwin-*
+/mailglass_admin/tailwind-linux-*
+/mailglass_admin/tailwind-windows-*
+
 # macOS
 .DS_Store
 **/.DS_Store

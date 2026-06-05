@@ -65,7 +65,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def field(%{value: v} = assigns) when is_binary(v) do
     ~H"""
     <label class="form-control w-full">
-      <span class="label-text text-sm font-normal">{humanize(@key)}</span>
+      <span class="label-text text-body font-normal">{humanize(@key)}</span>
       <input
         type="text"
         name={"assigns[" <> Atom.to_string(@key) <> "]"}
@@ -80,7 +80,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def field(%{value: v} = assigns) when is_integer(v) do
     ~H"""
     <label class="form-control w-full">
-      <span class="label-text text-sm font-normal">{humanize(@key)}</span>
+      <span class="label-text text-body font-normal">{humanize(@key)}</span>
       <input
         type="number"
         step="1"
@@ -96,7 +96,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def field(%{value: v} = assigns) when is_float(v) do
     ~H"""
     <label class="form-control w-full">
-      <span class="label-text text-sm font-normal">{humanize(@key)}</span>
+      <span class="label-text text-body font-normal">{humanize(@key)}</span>
       <input
         type="number"
         step="any"
@@ -111,7 +111,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   # boolean -> checkbox
   def field(%{value: v} = assigns) when is_boolean(v) do
     ~H"""
-    <label class="label cursor-pointer justify-start gap-3">
+    <label class="label cursor-pointer justify-start gap-sm">
       <input
         type="checkbox"
         name={"assigns[" <> Atom.to_string(@key) <> "]"}
@@ -119,7 +119,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         checked={@value}
         class="checkbox checkbox-sm"
       />
-      <span class="label-text text-sm font-normal">{humanize(@key)}</span>
+      <span class="label-text text-body font-normal">{humanize(@key)}</span>
     </label>
     """
   end
@@ -128,7 +128,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def field(%{value: %DateTime{}} = assigns) do
     ~H"""
     <label class="form-control w-full">
-      <span class="label-text text-sm font-normal">{humanize(@key)}</span>
+      <span class="label-text text-body font-normal">{humanize(@key)}</span>
       <input
         type="datetime-local"
         name={"assigns[" <> Atom.to_string(@key) <> "]"}
@@ -143,7 +143,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def field(%{value: %Date{}} = assigns) do
     ~H"""
     <label class="form-control w-full">
-      <span class="label-text text-sm font-normal">{humanize(@key)}</span>
+      <span class="label-text text-body font-normal">{humanize(@key)}</span>
       <input
         type="date"
         name={"assigns[" <> Atom.to_string(@key) <> "]"}
@@ -158,12 +158,12 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def field(%{value: %{__struct__: _}} = assigns) do
     ~H"""
     <label class="form-control w-full">
-      <span class="label-text text-sm font-normal">
-        {humanize(@key)} <span class="text-xs text-secondary font-mono">({inspect(@value.__struct__)})</span>
+      <span class="label-text text-body font-normal">
+        {humanize(@key)} <span class="text-label text-secondary font-mono">({inspect(@value.__struct__)})</span>
       </span>
       <textarea
         name={"assigns[" <> Atom.to_string(@key) <> "]"}
-        class="textarea textarea-bordered textarea-sm w-full font-mono text-xs"
+        class="textarea textarea-bordered textarea-sm w-full font-mono text-label"
         rows="3"
       >{inspect(@value, pretty: true, limit: :infinity)}</textarea>
     </label>
@@ -174,8 +174,8 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def field(%{value: v} = assigns) when is_atom(v) do
     ~H"""
     <label class="form-control w-full">
-      <span class="label-text text-sm font-normal">
-        {humanize(@key)} <span class="text-xs text-secondary">(atom)</span>
+      <span class="label-text text-body font-normal">
+        {humanize(@key)} <span class="text-label text-secondary">(atom)</span>
       </span>
       <input
         type="text"
@@ -192,10 +192,10 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def field(%{value: v} = assigns) when is_map(v) do
     ~H"""
     <label class="form-control w-full">
-      <span class="label-text text-sm font-normal">{humanize(@key)} <span class="text-xs text-secondary font-mono">(map)</span></span>
+      <span class="label-text text-body font-normal">{humanize(@key)} <span class="text-label text-secondary font-mono">(map)</span></span>
       <textarea
         name={"assigns[" <> Atom.to_string(@key) <> "]"}
-        class="textarea textarea-bordered textarea-sm w-full font-mono text-xs"
+        class="textarea textarea-bordered textarea-sm w-full font-mono text-label"
         rows="3"
       >{inspect(@value, pretty: true, limit: :infinity)}</textarea>
     </label>
@@ -206,8 +206,8 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   def field(assigns) do
     ~H"""
     <label class="form-control w-full">
-      <span class="label-text text-sm font-normal">
-        {humanize(@key)} <span class="text-xs text-secondary">(unsupported type)</span>
+      <span class="label-text text-body font-normal">
+        {humanize(@key)} <span class="text-label text-secondary">(unsupported type)</span>
       </span>
       <input
         type="text"

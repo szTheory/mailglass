@@ -300,4 +300,68 @@ defmodule MailglassAdmin.Operator.Shell do
     </div>
     """
   end
+
+  @doc """
+  Renders the orientation strip for an operator surface — a persistent, symptom-first
+  guidance panel that appears when no record is selected. Each surface has frozen
+  per-surface copy keyed on the most common operator questions for that surface.
+
+  Placed after `defp flash_region/1` as the last function component in the module.
+  No motion classes — born token-clean.
+  """
+  attr :surface, :atom, values: [:deliveries, :inbound, :preview], required: true
+
+  def orientation_strip(assigns) do
+    assigns = assign(assigns, :copy, copy_for(assigns.surface))
+
+    ~H"""
+    <div
+      class="rounded-box border border-base-300 bg-base-200 p-md"
+      data-testid={"#{@surface}-orientation"}
+    >
+      <div class="flex items-start gap-sm">
+        <Components.icon name="hero-lifebuoy" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <div class="min-w-0">
+          <h2 class="text-body font-bold text-base-content">{@copy.heading}</h2>
+          <ul class="mt-2 grid gap-1 text-label text-secondary">
+            <li :for={tip <- @copy.tips}>{tip}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp copy_for(:deliveries) do
+    %{
+      heading: "Deliveries",
+      tips: [
+        "Email never arrived? Start here.",
+        "Replay changed nothing? View the event timeline.",
+        "Address keeps getting blocked? Check suppressions."
+      ]
+    }
+  end
+
+  defp copy_for(:inbound) do
+    %{
+      heading: "Inbound",
+      tips: [
+        "Message didn't route as expected? Inspect the routing trace.",
+        "No mailbox matched? Check the no-match record.",
+        "Failed ingest? Review the provider signature log."
+      ]
+    }
+  end
+
+  defp copy_for(:preview) do
+    %{
+      heading: "Preview",
+      tips: [
+        "No mailables found? Define a mailable module in your app.",
+        "Mailable not showing? Ensure it's compiled.",
+        "Preview not rendering? Check your template syntax."
+      ]
+    }
+  end
 end

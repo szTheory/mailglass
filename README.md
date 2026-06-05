@@ -35,15 +35,20 @@ rebuild the same 40% of framework plumbing on every project.
 
 ## Demo App
 
-For a realistic local click-around, run the B2B SaaS Ops demo:
+For a realistic local click-around, run the B2B SaaS Ops demo (needs Docker):
 
 ```bash
-docker compose -f compose.demo.yml up demo
+make demo
 ```
 
-Open http://localhost:4015 to inspect seeded preview, outbound operator, and
-inbound operator journeys. The demo lives in `reference/demo_app`; the narrower
-`reference/host_app` remains the maintained trust-proof baseline.
+It builds, starts, waits until healthy, then **prints the URLs** for the
+dashboard, preview, and outbound/inbound operator journeys (default
+http://localhost:4015) over seeded data. Stop with `make demo-down`. Ports are
+configurable so the demo runs alongside other library demos without collisions —
+see [`guides/run-the-demo.md`](guides/run-the-demo.md) for the full walkthrough.
+
+The demo lives in `reference/demo_app`; the narrower `reference/host_app` remains
+the maintained trust-proof baseline.
 
 ## Installation
 
@@ -241,6 +246,8 @@ Full trajectory in [`.planning/ROADMAP.md`](.planning/ROADMAP.md) and
 
 - [`guides/getting-started.md`](guides/getting-started.md) — install,
   route mounting, and first delivery
+- [`guides/run-the-demo.md`](guides/run-the-demo.md) — see mailglass
+  working locally in one command (`make demo`)
 - [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)
   — canonical `1.x` compatibility, deprecation, and support-matrix policy
 - [`guides/upgrading-to-v1_0.md`](guides/upgrading-to-v1_0.md) — canonical

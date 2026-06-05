@@ -35,12 +35,12 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
       class="card rounded-box border border-base-300 bg-base-200 p-6"
     >
       <div class="mb-4 space-y-1">
-        <h3 class="text-base font-bold text-base-content">Routing trace</h3>
-        <p class="text-xs text-secondary">Why this message did not match</p>
+        <h3 class="text-body font-bold text-base-content">Routing trace</h3>
+        <p class="text-label text-secondary">Why this message did not match</p>
       </div>
 
       <%= if @trace == [] do %>
-        <p class="text-sm text-secondary">
+        <p class="text-body text-secondary">
           No inbound routes are declared, so there is nothing to trace.
         </p>
       <% else %>
@@ -51,7 +51,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
               class="rounded-box border border-base-300 bg-base-100 p-4"
             >
               <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p class="mono text-sm text-base-content">{route.mailbox}</p>
+                <p class="mono text-body text-base-content">{route.mailbox}</p>
                 <span class="badge badge-outline badge-error">No match</span>
               </div>
 
@@ -64,7 +64,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                       verdict.first_failing? && "border-l-4 border-error px-3"
                     ]}
                   >
-                    <span class="text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+                    <span class="text-label font-bold uppercase tracking-[0.08em] text-secondary">
                       {verdict.dimension}
                     </span>
 
@@ -76,13 +76,13 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                           if(verdict.pass?, do: "text-success", else: "text-error")
                         ]}
                       />
-                      <span class="text-xs text-secondary">Expected:</span>
+                      <span class="text-label text-secondary">Expected:</span>
                       {expected_markup(assigns, verdict)}
-                      <span class="text-xs text-secondary">Actual:</span>
-                      <span class="mono text-xs text-base-content">{verdict.actual}</span>
+                      <span class="text-label text-secondary">Actual:</span>
+                      <span class="mono text-label text-base-content">{verdict.actual}</span>
                     </div>
 
-                    <p :if={verdict.first_failing?} class="text-sm text-secondary">
+                    <p :if={verdict.first_failing?} class="text-body text-secondary">
                       {verdict.reason}
                     </p>
                   </li>
@@ -92,7 +92,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
           <% end %>
         </div>
 
-        <p class="mt-4 text-xs text-secondary">
+        <p class="mt-4 text-label text-secondary">
           Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and ~r/…/ matches by regular expression.
         </p>
       <% end %>
@@ -104,7 +104,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
   # exact string verbatim — all wrapped so the test can assert ">any<".
   defp expected_markup(assigns, %{matcher_kind: :wildcard}) do
     ~H"""
-    <span class="mono text-xs text-secondary">any</span>
+    <span class="mono text-label text-secondary">any</span>
     """
   end
 
@@ -112,7 +112,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     assigns = Phoenix.Component.assign(assigns, :expected, verdict.expected)
 
     ~H"""
-    <span class="mono text-xs text-base-content">{@expected}</span>
+    <span class="mono text-label text-base-content">{@expected}</span>
     """
   end
 

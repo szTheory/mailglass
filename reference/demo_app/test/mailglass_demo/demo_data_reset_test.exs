@@ -19,30 +19,42 @@ defmodule MailglassDemo.DemoDataResetTest do
     rerun = snapshot()
 
     assert Map.take(rerun, deterministic_keys()) == Map.take(baseline, deterministic_keys())
-    assert rerun.deliveries == 6
-    assert rerun.events == 12
-    assert rerun.inbound == 4
+    assert rerun.deliveries == 16
+    assert rerun.events == 35
+    assert rerun.inbound == 6
     assert rerun.suppressions == 1
-    assert rerun.inbound_evidence == 4
-    assert rerun.inbound_replay_runs == 6
+    assert rerun.inbound_evidence == 6
+    assert rerun.inbound_replay_runs == 8
 
     assert rerun.delivery_message_ids == [
+             "pm-demo-badge-clicked-001",
+             "pm-demo-badge-opened-001",
+             "pm-demo-badge-queued-001",
+             "pm-demo-badge-rejected-001",
+             "pm-demo-badge-unknown-001",
              "pm-demo-invite-001",
              "pm-demo-magic-link-001",
              "pm-demo-payment-failed-001",
              "pm-demo-receipt-001",
+             "pm-demo-truncation-stress-001",
+             "sg-demo-badge-autoresponded-001",
+             "sg-demo-badge-complained-001",
+             "sg-demo-badge-subscribed-001",
+             "sg-demo-badge-unsubscribed-001",
              "sg-demo-incident-001",
              "sg-demo-usage-001"
            ]
 
     assert rerun.webhook_provider_event_ids == [
              "demo-receipt-delivery",
-             "demo-usage-bounce"
+             "demo-usage-bounce",
+             "sg-demo-failed-ingest-001"
            ]
 
     assert rerun.webhook_provider_matrix == [
              {"demo-receipt-delivery", "postmark"},
-             {"demo-usage-bounce", "sendgrid"}
+             {"demo-usage-bounce", "sendgrid"},
+             {"sg-demo-failed-ingest-001", "sendgrid"}
            ]
 
     assert rerun.suppression_tuples == [
@@ -50,17 +62,21 @@ defmodule MailglassDemo.DemoDataResetTest do
            ]
 
     assert rerun.inbound_provider_message_ids == [
+             "mg-demo-inbound-failed-001",
              "mg-demo-refund-001",
              "mg-demo-support-001",
+             "pm-demo-inbound-ignore-001",
              "pm-demo-spam-001",
              "pm-inbound-demo-nomatch-001"
            ]
 
     assert rerun.inbound_execution_matrix == [
+             {"mg-demo-inbound-failed-001", "fresh", "failed", nil},
              {"mg-demo-refund-001", "fresh", "bounce", "mailbox_full"},
              {"mg-demo-refund-001", "replay", "bounce", "mailbox_full"},
              {"mg-demo-support-001", "fresh", "accept", nil},
              {"mg-demo-support-001", "replay", "accept", nil},
+             {"pm-demo-inbound-ignore-001", "fresh", "ignore", nil},
              {"pm-demo-spam-001", "fresh", "reject", "spam"},
              {"pm-inbound-demo-nomatch-001", "fresh", "no_match", nil}
            ]

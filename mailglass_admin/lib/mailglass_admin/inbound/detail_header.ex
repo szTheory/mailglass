@@ -31,58 +31,56 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
       data-testid="inbound-detail-header"
       class="card rounded-box border border-base-300 bg-base-200 p-6"
     >
-      <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="flex flex-wrap items-start justify-between gap-md">
         <div class="space-y-2">
           <div class="flex flex-wrap items-center gap-2">
             <h2 class="text-xl font-bold text-base-content">
               {Components.mask_recipient(@record.envelope_recipient)}
             </h2>
-            <span class={["badge", badge_class(@outcome)]}>
-              {outcome_label(@outcome)}
-            </span>
+            <Components.status_badge status={Components.normalize_inbound_outcome(@outcome)} />
           </div>
-          <p class="mono text-xs text-secondary">{@record.id}</p>
+          <p class="mono text-label text-secondary">{@record.id}</p>
           <p
             :if={suppression_flagged?(@record)}
             data-testid="inbound-suppression-flag"
-            class="text-sm text-warning"
+            class="text-body text-warning"
           >
             Sender suppressed: this message was flagged, not bounced, to preserve diagnostic signal.
           </p>
         </div>
 
-        <dl class="grid gap-3 text-sm text-secondary sm:grid-cols-2">
+        <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
           <div>
-            <dt class="text-xs font-bold uppercase tracking-[0.08em]">Tenant</dt>
+            <dt class="text-label font-bold uppercase tracking-[0.08em]">Tenant</dt>
             <dd class="mt-1 text-base-content">{@record.tenant_id}</dd>
           </div>
           <div>
-            <dt class="text-xs font-bold uppercase tracking-[0.08em]">Provider</dt>
+            <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider</dt>
             <dd class="mt-1 text-base-content">{String.upcase(@record.provider || "unknown")}</dd>
           </div>
           <div>
-            <dt class="text-xs font-bold uppercase tracking-[0.08em]">From</dt>
+            <dt class="text-label font-bold uppercase tracking-[0.08em]">From</dt>
             <dd class="mt-1 text-base-content">{sender_display(@record)}</dd>
           </div>
           <div>
-            <dt class="text-xs font-bold uppercase tracking-[0.08em]">Subject</dt>
+            <dt class="text-label font-bold uppercase tracking-[0.08em]">Subject</dt>
             <dd class="mt-1 text-base-content">{present(@record.subject)}</dd>
           </div>
           <div>
-            <dt class="text-xs font-bold uppercase tracking-[0.08em]">Received</dt>
+            <dt class="text-label font-bold uppercase tracking-[0.08em]">Received</dt>
             <dd class="mono mt-1 text-base-content">{format_datetime(@record.received_at)}</dd>
           </div>
           <div>
-            <dt class="text-xs font-bold uppercase tracking-[0.08em]">Matched mailbox</dt>
+            <dt class="text-label font-bold uppercase tracking-[0.08em]">Matched mailbox</dt>
             <dd class="mt-1 text-base-content">{matched_mailbox(@mailbox)}</dd>
           </div>
         </dl>
       </div>
 
-      <div class="mt-6 flex flex-wrap items-start justify-between gap-4 border-t border-base-300 pt-4">
+      <div class="mt-6 flex flex-wrap items-start justify-between gap-md border-t border-base-300 pt-4">
         <div class="space-y-1">
-          <h3 class="text-sm font-bold uppercase tracking-[0.08em] text-secondary">Replay</h3>
-          <p class="text-sm text-base-content">{replay_hint(@outcome)}</p>
+          <h3 class="text-body font-bold uppercase tracking-[0.08em] text-secondary">Replay</h3>
+          <p class="text-body text-base-content">{replay_hint(@outcome)}</p>
         </div>
 
         <button
@@ -138,21 +136,6 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
 
   defp matched_mailbox(mailbox) when is_binary(mailbox) and mailbox != "", do: mailbox
   defp matched_mailbox(_mailbox), do: "No match"
-
-  defp badge_class(:accept), do: "badge-success"
-  defp badge_class(:no_match), do: "badge-warning"
-  defp badge_class(outcome) when outcome in [:reject, :bounce, :failed], do: "badge-error"
-  defp badge_class(:ignore), do: "badge-outline"
-  defp badge_class(_outcome), do: "badge-outline"
-
-  defp outcome_label(nil), do: "Pending"
-
-  defp outcome_label(value) do
-    value
-    |> Atom.to_string()
-    |> String.replace("_", " ")
-    |> String.capitalize()
-  end
 
   defp format_datetime(nil), do: "Pending"
 

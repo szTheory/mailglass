@@ -66,22 +66,41 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 - **`v1.6 Inbound 1.0 Release and Truth Lock` SHIPPED 2026-06-02: `mailglass_inbound` 1.0.0 is live on Hex (inserted 17:42:31Z, HexDocs up, release-triggered smoke green).** Cut via the canonical `release: published` path at `50bc4b82`; publish-core/publish-admin idempotency-skipped so no core/admin release was forced. Two release-readiness fixes were made at publish time: dropped 7 untracked draft files from the inbound publish allowlist (the package had been building from a dirty working tree, incl. a duplicate `suppression_flagged` migration), and greened `main` (mix format + a stale compatibility-contract assertion — `main` had been silently red since 2026-05-29 because phases 66–73 landed via `paths-ignore`d commits that never ran `ci.yml`). Posture now: quiet maintenance / adopter-pull, no feature-growth milestone queued.
 - A few latent hardening notes remain in per-phase review artifacts, but none block the shipped `v1.2` surface.
 
-## Current Milestone: v1.6 Inbound 1.0 Release and Truth Lock
+## Current Milestone: v1.7 Admin UI — IA & Design-System Polish v2
+
+**Goal:** Take `mailglass_admin` to "v2 polish" — a consistent, brand-distinct, intuitive, joy-to-use design system where each reused component pays dividends, information architecture that orients every persona on landing, and seed data that fully expresses every screen state — all by applying the existing shipped design system more completely (no new dependencies, no brand-book amendment).
+
+**Target features:**
+- **Orientation parity + Operator Overview (Fork A)** — generalize the `orientation_strip` (today only on Deliveries) into a shell-level component used by Deliveries, Inbound, and Preview; add a real task-oriented Operator Overview landing route *inside the library* that routes to Deliveries/Inbound and surfaces at-a-glance health (orphan backlog, recent failures, suppression count). Keep the demo's Northstar Ops home.
+- **Design-system hardening (reuse dividends)** — add one unified `status_badge` atom in `components.ex` consuming a canonical status→color taxonomy; delete the three disagreeing private `badge_class/1` copies; token-migrate `support_cards.ex` + the operator/inbound render bodies off raw `text-sm/base/xs` + off-grid gaps onto the v1 token scale; redesign the dense 2×2 support-card grid into a primary/secondary hierarchy.
+- **Motion & expressiveness within the brand book (Fork B)** — deliver "pop/joy" via consistent application of the existing six-motion vocabulary (entrances on mount not every patch; `prefers-reduced-motion` respected; ≤300ms transform/opacity only) and fully-expressive seed data covering every delivery status, inbound outcome, replay state, reconciled/unmatched fact, empty-result tenant, and truncation-stress row — NOT new visual loudness.
+- **Self-verification + visual-regression hardening** — screenshot→LLM-critique loop (local/ad-hoc), structural e2e (`operator.spec.js` + new inbound/preview coverage), conformance grep gate (zero raw type tokens, one status→color definition), and `git diff --exit-code priv/static/` bundle gate; resolve-or-explicitly-defer the deep-link-unstyled-CSS bug.
+
+**Scope guardrails:**
+- **Within the current brand book — no amendment.** Flat (no glassmorphism/bevels/shadows beyond `shadow-overlay`), Glass-accent ≤ ~10%, type weights 400/700 only. Hardening stays grep-enforceable conformance work, not redesign.
+- **Anti-churn contract:** no build task ships without citing a Phase-74 gap-register row (severity ≥ 3). The gap register is the gate.
+- **Stable seams untouchable:** router macros, `MailglassAdmin.Auth` behaviour, replay semantics, operator session contract. Admin DOM/CSS/LiveView internals are non-stable and free to churn. The deep-link/asset-URL fix is the one item touching a stable (asset-serving) seam → gated behind an explicit decision.
+- **No new dependencies** — this is application of the existing Tailwind v4 / daisyUI 5 / LiveView design system, not a system extension.
+- **Frozen baselines untouched** — edit demo seed *data* freely, but do NOT bump `mailglass` version pins in `reference/host_app` / `demo_app` (that's the separate coordinated 5-file change). Linked-version releases mean an admin minor bump mechanically drags `mailglass` + `mailglass_inbound` to the same version — note in the milestone audit, no API change.
+
+## Latest Completed Milestone
+
+<details>
+<summary>v1.6 Inbound 1.0 Release and Truth Lock — milestone closed 2026-06-02</summary>
 
 **Goal:** Publish and prove the selected `mailglass_inbound` `1.0.0` release line, reconcile public docs with that contract truth, and leave Mailglass in a quiet maintenance / adopter-pull posture without adding new product surface.
 
-**Target features:**
-- **Inbound-only release proof** — prove `mailglass_inbound` `1.0.0` source, manifest, changelog, publish pin, package allowlist, and publish-summary truth before release.
-- **Own 1.0 contract wording** — describe inbound as its own stable `1.0` package contract routed through `mailglass_inbound/docs/api_stability.md`, while keeping core/admin as the matched `1.x` sibling line.
-- **Release-runbook truth** — update stale maintainer and adopter-facing release docs so inbound `1.0` install, fallback, smoke, Hex, and HexDocs claims match the actual workflow.
-- **Published artifact evidence** — capture Hex index, HexDocs, install/smoke, workflow, fallback, and release-record evidence for the inbound release.
+- **Inbound-only release proof** — `mailglass_inbound` `1.0.0` shipped live on Hex 2026-06-02 (inserted 17:42:31Z, HexDocs up, release-triggered smoke green) via the canonical `release: published` path at `50bc4b82`; publish-core/publish-admin idempotency-skipped so no core/admin release was forced. ✓
+- **Own 1.0 contract wording** — inbound described as its own stable `1.0` package contract routed through `mailglass_inbound/docs/api_stability.md`, with core/admin kept on the matched `1.x` sibling line. ✓
+- **Release-runbook + published-artifact truth** — stale inbound `1.0` install/fallback/smoke/Hex/HexDocs claims reconciled; release evidence captured. ✓
 
-**Scope guardrails:**
-- No matcher expansion, lifecycle callbacks, public replay API, provider extension API, synthetic inbound UI, `gen_smtp` listener, Cloudflare recipe docs, ecosystem integrations, demo app enhancements, screenshot workflow expansion, planning-directory cleanup, or broad source hygiene.
-- Provider-live checks remain advisory unless a release claim explicitly depends on them.
-- `mailglass` and `mailglass_admin` remain at their current matched line unless release tooling proves a core/admin release is required.
+**Note on subsequent maintenance line:** after v1.6 closed, the `1.4.x` quiet-maintenance line (1.4.2 unstuck a stranded linked release; 1.4.3–1.4.5 fixed `mix mailglass.install` bugs) shipped **outside** GSD milestone planning, bringing live versions to `mailglass` 1.4.5 / `mailglass_admin` 1.4.5 / `mailglass_inbound` 1.1.5 by 2026-06-03.
 
-## Latest Completed Milestone
+**Accepted residual debt:**
+
+- Quiet-maintenance posture held; no feature-growth milestone was queued until this v1.7 adopter-visible-quality investment.
+
+</details>
 
 <details>
 <summary>v1.5 Demo Evidence and Click-Around Confidence — milestone closed 2026-06-02</summary>
@@ -259,12 +278,15 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, and 13 v1.4 REQ-IDs satisfi
 
 ## Active
 
-Active requirements for `v1.6 Inbound 1.0 Release and Truth Lock` are defined in `.planning/REQUIREMENTS.md`.
+Active requirements for `v1.7 Admin UI — IA & Design-System Polish v2` are defined in `.planning/REQUIREMENTS.md`. Milestone research (scoped, founding research preserved): `.planning/research/v1.7-admin-ui-polish/`.
 
-**By category (v1.6 — Inbound 1.0 Release and Truth Lock):**
-- `REL-01..03` — inbound source/package/publish truth, inbound-only release path, and release evidence record.
-- `DOC-01..02` — inbound's own stable `1.0` contract wording and compatibility-guide separation from the core/admin matched line.
-- `PROOF-01..02` — deterministic release-proof boundary and executable stale-claim guards.
+**By category (v1.7 — Admin UI IA & Design-System Polish v2):**
+- `AUDIT-01..03` — scored gap register, frozen UI-SPEC (incl. canonical status-badge taxonomy table), and screenshot/assertion-ripple baseline (Phase 74 evidence gate).
+- `IA-01..04` — shell-level orientation-strip parity across all 3 surfaces, in-library Operator Overview landing route, deliberate IA vocabulary, and an explicit deep-link-fix scope decision (Phase 75). ✓ **Validated in Phase 75 (2026-06-04)** — `Shell.orientation_strip/1` on all 3 surfaces, Overview landing via `handle_params/3` (no router change), same-commit e2e update (5/5 operator Playwright green), GAP-22 deferred to Phase 79.
+- `DS-01..04` — unified `status_badge` atom replacing 3 private copies, token migration off the raw scale, support-card hierarchy redesign, and committed bundle (Phase 76).
+- `MOTION-01..02` — six-motion vocabulary applied per UI-SPEC (mount-not-patch) and reduced-motion/duration discipline (Phase 77).
+- `SEED-01..02` — seed data expressing every screen state, with demo/e2e assertion ripple absorbed in the same change (Phase 78).
+- `VERIF-01..04` — full audit-matrix re-run vs baseline, extended structural e2e, conformance + bundle gates, and deep-link resolution/deferral (Phase 79).
 
 ## Out of Scope
 
@@ -359,6 +381,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-21 | Adapter call between Multi#1 and Multi#2 (never inside transaction) | Postgres pool starvation prevention | ✓ Held v0.1 — Phase 3 Outbound enforces |
 | D-22 | The first `mailglass_inbound` milestone stays narrow: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional execution; Conductor/Mailgun/SES/SMTP are deferred | Protect the locked `v1.x` core and make the first sibling-package expansion supportable for a one-person maintainer | ✓ Validated v1.1 — narrow scope held; Conductor / Mailgun / SES / `gen_smtp` remained deliberately deferred |
 | D-23 | Post-v1.3 project posture shifts from broad capability expansion to convergence, stability, and maintenance by default | Core/admin have crossed the original product-complete threshold; endless polish or provider breadth has diminishing returns unless tied to adopter pull | ✓ Validated v1.4 — inbound contract posture is locked, `mailglass_inbound` has a `1.0.0` candidate, and future work defaults to release ceremony / maintenance unless adopter pull or contract gaps justify scope |
+| D-24 | v1.7 admin UI polish is a sanctioned **adopter-visible-quality** investment under the D-23 convergence rule (not feature growth); delivered **within** the brand book (Fork B) by *applying* the shipped design system more completely, with a real in-library Operator Overview landing + generalized orientation (Fork A) | First-run/forensic UX quality is the highest-leverage remaining adopter lever now that the product surface is complete; restraint (no brand amendment, no new deps, grep-enforceable conformance) keeps it convergence-aligned, not scope creep | ◻ Pending v1.7 — anti-churn gate (sev≥3 gap-register row per task), stable seams untouched, linked-version admin bump noted as mechanical |
 
 ## Evolution
 
@@ -381,4 +404,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-02 after Phase 73 (Inbound 1.0 Publish Evidence) completion — v1.6 planning phases all complete; live inbound publish deferred to maintainer trigger*
+*Last updated: 2026-06-03 — opened milestone **v1.7 Admin UI — IA & Design-System Polish v2** (phases 74–79; Fork A library overview + strips, Fork B within brand book; D-24 logged). v1.6 (inbound 1.0 release/truth-lock) moved to Latest Completed; live versions remain `mailglass` 1.4.5 / `mailglass_admin` 1.4.5 / `mailglass_inbound` 1.1.5.*

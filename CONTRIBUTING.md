@@ -9,6 +9,10 @@ We welcome contributions! Mailglass is developed using a phase-based roadmap fou
 3. Setup the test database: `mix ecto.setup` (or `mix ecto.create -r Mailglass.TestRepo`).
 4. Run tests: `mix test`.
 
+To see the admin UI working against seeded data — the fastest way to iterate on
+`mailglass_admin` — run the click-around demo with Docker: `make demo` (see
+[`guides/run-the-demo.md`](guides/run-the-demo.md)).
+
 ## Development Workflow
 
 1. Create a branch.

@@ -16,7 +16,16 @@ async function openOperator(page) {
 
   const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${returnTo}`);
-  await expect(page.getByRole("heading", { name: "Deliveries", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+  // Navigate to Deliveries view before delivery-centric assertions.
+  // Target the page h1 (level 1) explicitly: the Deliveries surface now also
+  // renders the orientation strip's <h2>Deliveries</h2> section heading, so an
+  // unqualified heading query is ambiguous under Playwright strict mode at the
+  // viewports where the strip is visible.
+  await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+  await expect(
+    page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+  ).toBeVisible();
   await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
 }
 
@@ -86,6 +95,10 @@ test.describe("operator browser gate", () => {
     expect(suppressionBox).not.toBeNull();
     expect(headerBox.y).toBeLessThan(timelineBox.y);
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
+
+    // Acceptance check for GAP-07 at 390px: orientation strip must be visible (deliveries-orientation)
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+    await expect(page.getByTestId("deliveries-orientation")).toBeVisible();
   });
 
   test("exact replay flow shows ready copy and records a new-work outcome", async ({ page }) => {
@@ -112,7 +125,8 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-detail-header")).toContainText(
       "Last replay: completed · new work"
     );
-    await expect(page.getByTestId("operator-timeline")).toContainText("Replay audit");
+    await expect(page.getByTestId("operator-timeline")).toContainText("Webhook replay completed", { timeout: 10000 });
+    await expect(page.getByTestId("operator-timeline")).toContainText("Replay succeeded");
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("new work");
   });
@@ -166,5 +180,125 @@ test.describe("operator browser gate", () => {
     );
     await expect(page.getByTestId("operator-timeline")).toContainText("completed");
     await expect(page.getByTestId("operator-timeline")).toContainText("no change");
+  });
+
+  // MOTION-01 regression gate (D-07 / GAP-19):
+  // Asserts the delivery detail pane carries a record-keyed id attribute
+  // (#delivery-detail-<uuid>) that changes when a different delivery is selected.
+  // LiveView's element-replace (rather than in-place patch) re-fires the mg-reveal
+  // keyframe animation on each selection. ExUnit substring tests cannot catch a
+  // missing or static id attribute — this Playwright DOM-layer test is the Nyquist gate.
+  test("delivery detail pane carries record-keyed id for animation re-fire", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    // Click the first delivery row and read the delivery_id from the URL.
+    // LiveView pushes the delivery_id param asynchronously, so wait for the
+    // URL to settle before reading it (mirrors the existing selection tests).
+    await deliveryRow(page, 0).click();
+    await expect(page).toHaveURL(/delivery_id=/);
+    const deliveryId = new URL(page.url()).searchParams.get("delivery_id");
+    expect(deliveryId).toBeTruthy();
+
+    // The detail pane must carry the record-keyed id
+    await expect(page.locator(`#delivery-detail-${deliveryId}`)).toBeVisible();
+
+    // Switch to a second delivery and verify the id changes (element replaced, not patched).
+    // Wait until the delivery_id param actually changes — toHaveURL(/delivery_id=/) is
+    // already true from the first selection and would not gate the transition.
+    await deliveryRow(page, 1).click();
+    await page.waitForURL((url) => {
+      const id = new URL(url).searchParams.get("delivery_id");
+      return Boolean(id) && id !== deliveryId;
+    });
+    const deliveryId2 = new URL(page.url()).searchParams.get("delivery_id");
+    expect(deliveryId2).not.toEqual(deliveryId);
+
+    // New id visible; old id absent — confirms LiveView performed element replace
+    await expect(page.locator(`#delivery-detail-${deliveryId2}`)).toBeVisible();
+    await expect(page.locator(`#delivery-detail-${deliveryId}`)).toHaveCount(0);
+  });
+
+  // MOTION-02 regression gate (D-07 / GAP-19):
+  // Asserts that the detail element remains visible (not stuck at opacity: 0)
+  // under prefers-reduced-motion: reduce. The global app.css reduced-motion block
+  // sets animation-duration: 0.01ms !important so the element is immediately visible.
+  // Media emulation MUST precede page.goto (which happens inside openOperator).
+  test("motion-reveal is suppressed under prefers-reduced-motion", async ({ page }) => {
+    // Emulate reduced-motion BEFORE navigation so the media query is active on initial load
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    await deliveryRow(page, 0).click();
+    await expect(page).toHaveURL(/delivery_id=/);
+    const deliveryId = new URL(page.url()).searchParams.get("delivery_id");
+    expect(deliveryId).toBeTruthy();
+
+    // Under reduced-motion the animation resolves at 0.01ms — element must not be
+    // stuck invisible at opacity: 0
+    await expect(page.locator(`#delivery-detail-${deliveryId}`)).toBeVisible();
+  });
+
+  // MOTION-02 regression gate (D-07 / GAP-13):
+  // Asserts the inbound detail pane carries a record-keyed id attribute
+  // (#inbound-detail-<uuid>) that is visible after clicking an inbound row.
+  // Requires Phase 78 seed: one InboundRecord in the browser scenario.
+  test("inbound detail pane carries record-keyed id", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+
+    // Click the first inbound row — testid matches DOM: data-testid="inbound-record-row"
+    await page.getByTestId("inbound-record-row").nth(0).click();
+
+    // LiveView pushes inbound_id param; wait for URL to settle
+    await expect(page).toHaveURL(/inbound_id=/);
+    const inboundId = new URL(page.url()).searchParams.get("inbound_id");
+    expect(inboundId).toBeTruthy();
+
+    // The detail pane must carry the record-keyed id
+    await expect(page.locator(`#inbound-detail-${inboundId}`)).toBeVisible();
+  });
+
+  // VERIF-02: structural coverage for Operator Overview landing (D-05 / GAP-register sev-4 closeout)
+  // Asserts the health-count cards container and navigation CTAs container are visible
+  // when the tenant is scoped. Uses getByTestId for structural assertions (not pixel-based).
+  test("operator overview landing has health cards and navigation CTAs", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    // Navigate back to the Overview landing (openOperator navigates to Deliveries view)
+    await page.goto(`/ops/mail?tenant_id=${tenantId}`);
+    await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+
+    // Overview container
+    await expect(page.getByTestId("operator-overview")).toBeVisible();
+
+    // Health-count cards container (all four sub-cards always render; colors vary by seed state)
+    await expect(page.getByTestId("operator-overview-health")).toBeVisible();
+
+    // Navigation CTAs container (View Deliveries + View Inbound links)
+    await expect(page.getByTestId("operator-overview-nav")).toBeVisible();
+  });
+
+  // VERIF-02: structural coverage for inbound and preview orientation strips (D-05)
+  // Asserts inbound-orientation and preview-orientation testids are visible on
+  // their respective surfaces. Mirrors the existing deliveries-orientation check
+  // in the mobile test (line 101).
+  test("inbound and preview surfaces render their orientation strips", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    // Inbound surface orientation strip
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+    await expect(page.getByTestId("inbound-orientation")).toBeVisible();
+
+    // Preview surface orientation strip (renders when @mailables == []).
+    // Navigate via /ops/browser-preview-empty which sets mailables=[] in the session
+    // before redirecting to /dev/mail/ — the test router is configured with explicit
+    // mailables so a direct goto would show the landing card instead of the strip.
+    await page.goto("/ops/browser-preview-empty");
+    await expect(page.getByTestId("preview-orientation")).toBeVisible();
   });
 });
