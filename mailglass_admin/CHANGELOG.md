@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.5.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.4.5...mailglass_admin-v1.5.0) (2026-06-05)
+
+
+### Features
+
+* **demo:** one-command Docker DX with collision-free ports ([#65](https://github.com/szTheory/mailglass/issues/65)) ([466544f](https://github.com/szTheory/mailglass/commit/466544f3d011fd95bc888abda9e81cedf24e966c))
+
 ## [1.4.5](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.4.4...mailglass_admin-v1.4.5) (2026-06-03)
 
 

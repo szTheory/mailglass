@@ -14,6 +14,13 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.5.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.4.5...mailglass-v1.5.0) (2026-06-05)
+
+
+### Features
+
+* **demo:** one-command Docker DX with collision-free ports ([#65](https://github.com/szTheory/mailglass/issues/65)) ([466544f](https://github.com/szTheory/mailglass/commit/466544f3d011fd95bc888abda9e81cedf24e966c))
+
 ## [1.4.5](https://github.com/szTheory/mailglass/compare/mailglass-v1.4.4...mailglass-v1.4.5) (2026-06-03)
 
 

@@ -1,5 +1,5 @@
 {
-  ".": "1.4.5",
-  "mailglass_admin": "1.4.5",
-  "mailglass_inbound": "1.1.5"
+  ".": "1.5.0",
+  "mailglass_admin": "1.5.0",
+  "mailglass_inbound": "1.2.0"
 }
