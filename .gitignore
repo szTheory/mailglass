@@ -12,6 +12,7 @@ erl_crash.dump
 
 # Mix
 /tmp/
+/test/tmp/
 /mailglass_admin/node_modules/
 /mailglass_admin/test-results/
 /mailglass_admin/playwright-report/
