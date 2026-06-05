@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.5.1](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.5.0...mailglass_admin-v1.5.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* **admin-test:** run inbound migrations in the browser-server DB bootstrap ([#71](https://github.com/szTheory/mailglass/issues/71)) ([615beb0](https://github.com/szTheory/mailglass/commit/615beb06445c2c2b4cbc13a28780f0995a91a58c))
+
 ## [1.5.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.4.5...mailglass_admin-v1.5.0) (2026-06-05)
 
 

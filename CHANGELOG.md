@@ -14,6 +14,13 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.5.1](https://github.com/szTheory/mailglass/compare/mailglass-v1.5.0...mailglass-v1.5.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* **admin-test:** run inbound migrations in the browser-server DB bootstrap ([#71](https://github.com/szTheory/mailglass/issues/71)) ([615beb0](https://github.com/szTheory/mailglass/commit/615beb06445c2c2b4cbc13a28780f0995a91a58c))
+
 ## [1.5.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.4.5...mailglass-v1.5.0) (2026-06-05)
 
 
