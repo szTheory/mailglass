@@ -5,6 +5,54 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.2.1...mailglass_inbound-v1.3.0) (2026-06-05)
+
+
+### Features
+
+* **50-03:** add inbound docs to mix.exs extras and extend docs_contract_test ([d0fc831](https://github.com/szTheory/mailglass/commit/d0fc831755aa37f40d696564b8521f81c6969da1))
+* **58-01:** implement webhook route proof helper ([67b0706](https://github.com/szTheory/mailglass/commit/67b0706efb8cc767ef0f2311208b2c8845d0c571))
+* **64-05:** delegate root stability lane to inbound support contract alias ([37388f4](https://github.com/szTheory/mailglass/commit/37388f44f5197e655bf6a285f008f9a5ef608fbc))
+* **66-02:** apply inbound 1.0.0 candidate and release notes ([7c5d77e](https://github.com/szTheory/mailglass/commit/7c5d77ef06f1baa052408d51b0607fbb8dac9369))
+* **demo:** one-command Docker DX with collision-free ports ([#65](https://github.com/szTheory/mailglass/issues/65)) ([466544f](https://github.com/szTheory/mailglass/commit/466544f3d011fd95bc888abda9e81cedf24e966c))
+
+
+### Bug Fixes
+
+* **49:** CR-01 pin advisory lock to one connection via Repo.checkout ([ae2e755](https://github.com/szTheory/mailglass/commit/ae2e75573044c4989cc2c75eb240e39e3865c939))
+* **49:** CR-02 clamp retention windows to FK lineage so prune never trips on_delete: :nothing ([0911211](https://github.com/szTheory/mailglass/commit/0911211ee75f46fe57e644a0fe13e0c569aa9224))
+* **49:** neutralize inbound ingress rate limiter in test env ([79272e4](https://github.com/szTheory/mailglass/commit/79272e4cbd0d5767abc1aca42abb45373afff9cc))
+* **49:** T-49-17 tenant-scope inbound replay to prevent cross-tenant replay ([3f92c1d](https://github.com/szTheory/mailglass/commit/3f92c1d391fa1e40391db777819f5045aef6fb9b))
+* **49:** WR-01 set rate-limit per_minute == capacity so advertised N/min is the sustained rate ([9dbcad3](https://github.com/szTheory/mailglass/commit/9dbcad393936253a363a5607cc0ce8d46e69d49b))
+* **49:** WR-02 declare --no-start in doctor task strict option spec ([7d676ac](https://github.com/szTheory/mailglass/commit/7d676ac891dcd0ad75206d351db3e5183f140173))
+* **49:** WR-03 compute suppression flag before the inbound write transaction ([4cde2ed](https://github.com/szTheory/mailglass/commit/4cde2ed8ab4922f38f141340009258e2d98b3de0))
+* **49:** WR-04 count cannot-diagnose findings separately from fail in doctor summary ([e38f602](https://github.com/szTheory/mailglass/commit/e38f602710d141caee9bdfc7530e82a7f2798526))
+* **63-01:** restore inbound docs check tokens ([650b379](https://github.com/szTheory/mailglass/commit/650b3799030072c0c026930d030d5613f245d745))
+* **64-01:** annotate direct runtime seams with 0.1.0 since metadata ([f2edf58](https://github.com/szTheory/mailglass/commit/f2edf5800da4e36aa88c0f0f36b0b6d0e5f38b5c))
+* **64-01:** normalize inbound package-line since metadata ([445f23a](https://github.com/szTheory/mailglass/commit/445f23a41e3576f62bfcca17ec6e0ef9671b73be))
+* **64-03:** align test assertion and case metadata to 0.2.0 ([cf54dd7](https://github.com/szTheory/mailglass/commit/cf54dd79ab9afa486e233282d5cf24687021bb94))
+* **64-03:** tag fixtures and ingress testing helpers as 0.2.0 ([891e269](https://github.com/szTheory/mailglass/commit/891e2692475db16b021a5dd6ac8bde8ac4e8381a))
+* **64-review:** close contract review findings ([b1abd77](https://github.com/szTheory/mailglass/commit/b1abd77290798139eeb6068dcf1c54ee566d61ec))
+* **65:** resolve provider contract review findings ([42ceef2](https://github.com/szTheory/mailglass/commit/42ceef254ea45aa3214febfc1a3aa4dcf725ed6f))
+* **66-02:** refresh publish proof and lock phase 66 governance state ([ce26a56](https://github.com/szTheory/mailglass/commit/ce26a566331293b97cf8fd77e8ffb237447dbb26))
+* **66:** clean inbound changelog release truth ([eab4312](https://github.com/szTheory/mailglass/commit/eab431260f85f11f39399cd885e5789df002c575))
+* **72-03:** correct source_ref_pattern to mailglass_inbound-v%{version} ([0e1f65b](https://github.com/szTheory/mailglass/commit/0e1f65b9a818ddd033577a634adc0d61df44c107))
+* **72:** WR-01 make inbound changelog over-claim guard meaningful ([ab116f4](https://github.com/szTheory/mailglass/commit/ab116f4fece2519961f2bdee9dd29ba15da67e02))
+* **73:** WR-01 gate pending-marker asserts behind staged-posture check ([cfcf055](https://github.com/szTheory/mailglass/commit/cfcf055c11939cbcba642afb1602e2a1b78ba4bd))
+* **73:** WR-02 bind REL-03 field asserts to exact labels (folds IN-02) ([cfaae1d](https://github.com/szTheory/mailglass/commit/cfaae1dad38fe01765764c8e04aefad0665f5a9e))
+* **73:** WR-03 guard inbound release-record path against archival with readable flunk ([adaa0d7](https://github.com/szTheory/mailglass/commit/adaa0d7780e231e1aff2f34ed97c1371f7fc64a7))
+* **deps:** make igniter optional so a fresh install stays HTTP-client-agnostic ([#57](https://github.com/szTheory/mailglass/issues/57)) ([65710fc](https://github.com/szTheory/mailglass/commit/65710fc560801c83ef94b0330ecf57e9c2ca8e6d))
+* **docs:** CR-01 use signals.suppression_flagged instead of metadata[:suppression_flagged] ([f53e486](https://github.com/szTheory/mailglass/commit/f53e48698e4e5478423fb011b772602d080c586c))
+* **docs:** CR-02 CR-03 fix SES subscription confirmation and fixture API docs ([1043d54](https://github.com/szTheory/mailglass/commit/1043d5466e810a11284a690e4181198615992e55))
+* **docs:** WR-01 correct mailglass_inbound version pin from ~&gt; 0.2 to ~&gt; 0.1 ([5467669](https://github.com/szTheory/mailglass/commit/546766914179602b43b3231c63304c3ffa565ef8))
+* **docs:** WR-03 clarify test.exs repo config is optional override, not a duplicate ([dab4f72](https://github.com/szTheory/mailglass/commit/dab4f72c0016c249413270a9ec92e651fa05afd9))
+* **docs:** WR-04 remove TODO comment from inbound-mailgun.md configuration block ([6c39049](https://github.com/szTheory/mailglass/commit/6c390495644d496f927aee64296570e5944ea01b))
+* **inbound:** bump README/install dep pins to mailglass ~&gt; 1.4, inbound ~&gt; 1.1 ([bd64c9c](https://github.com/szTheory/mailglass/commit/bd64c9c790bfe1b1917f0683c1953a7f88cb56a3))
+* **inbound:** track mailglass core pin to == 1.4.2 for the 1.4.2 linked release ([fae6dd1](https://github.com/szTheory/mailglass/commit/fae6dd1673ad589b390b34396eb9bb64516fbecd))
+* **inbound:** track mailglass core pin to == 1.4.3 for the 1.4.3 linked release ([1bd1291](https://github.com/szTheory/mailglass/commit/1bd12915e3d97ecd976ea97ed6c91654edabb03e))
+* **inbound:** track mailglass core pin to == 1.4.4 for the 1.4.4 linked release ([949cdee](https://github.com/szTheory/mailglass/commit/949cdee6f6a3ad32790440a49c1c4071941e8a7c))
+* **inbound:** track mailglass core pin to == 1.4.5 for the 1.4.5 linked release ([2f52710](https://github.com/szTheory/mailglass/commit/2f52710e9050a236af3986e439a5acd0f9511f21))
+
 ## [1.2.1](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.2.0...mailglass_inbound-v1.2.1) (2026-06-05)
 
 
