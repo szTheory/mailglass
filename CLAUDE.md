@@ -14,7 +14,7 @@ Three sibling Hex packages, MIT, no Node toolchain anywhere:
 
 **Marketing email and multi-channel notifications are permanently out of scope.** See `.planning/PROJECT.md` Out of Scope for the full list with reasoning.
 
-**Current state (as of 2026-06-03):** v0.1 → v1.6 shipped to Hex; current versions `mailglass` 1.4.5 / `mailglass_admin` 1.4.5 / `mailglass_inbound` 1.1.5. The 1.4.x line (1.4.2 unstuck a stranded linked release; 1.4.3–1.4.5 fixed a stack of `mix mailglass.install` bugs) shipped as quiet maintenance **outside** GSD milestone planning, so version numbers hardcoded in older `.planning/` artifacts may lag. Posture is quiet maintenance / adopter-pull — no milestone in flight. `.planning/STATE.md` is the live source of truth for milestone/phase status — read it rather than trusting any milestone number hardcoded in this file.
+**Current state (as of 2026-06-05):** v0.1 → v1.7 shipped to Hex; current versions `mailglass` 1.5.1 / `mailglass_admin` 1.5.1 / `mailglass_inbound` 1.3.0 (core+admin linked; inbound on its own version line). v1.7 (Admin UI — IA & Design-System Polish v2) shipped + archived 2026-06-05; v1.5.0 added one-command Docker DX. The 1.5.1 linked release was finished by hand after a release-pipeline snag: a release-please **bot-merged** release SHA gets no `ci.yml` run (GitHub anti-recursion), so `publish-hex`'s `gate-ci-green` blocks with "no ci.yml runs found for SHA" — recover by dispatching `ci.yml` on the release tag (or pushing the release commit under a human identity) so a green run exists, then publish. Inbound's exact `{:mailglass, "== <core>"}` pin forces a **paired inbound release on every core bump** (that pin-drag is why core 1.5.1 dragged inbound to 1.3.0). Posture is quiet maintenance / adopter-pull — no milestone in flight. `.planning/STATE.md` is the live source of truth for milestone/phase status — read it rather than trusting any milestone number hardcoded in this file.
 
 ## Where to Look
 
@@ -127,4 +127,4 @@ Encoded for GSD in `~/.claude/get-shit-done/USER-PROFILE.md` (advisor mode, `ven
 MIT across all sibling packages. Forever. (See PROJECT.md D-02.)
 
 ---
-*Generated: 2026-04-21 from `.planning/` artifacts. "What This Is" + "Where to Look" refreshed 2026-05-22; current-state reconciled 2026-06-03 to live `mailglass` 1.4.5 / `mailglass_admin` 1.4.5 / `mailglass_inbound` 1.1.5 (v1.6 shipped, quiet-maintenance posture).*
+*Generated: 2026-04-21 from `.planning/` artifacts. "What This Is" + "Where to Look" refreshed 2026-05-22; current-state reconciled 2026-06-05 to live `mailglass` 1.5.1 / `mailglass_admin` 1.5.1 / `mailglass_inbound` 1.3.0 (v1.7 shipped, quiet-maintenance posture).*
