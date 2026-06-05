@@ -60,8 +60,18 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
   end
 
   def ensure_repo_started!(opts \\ []) do
-    migrations_path =
+    core_migrations_path =
       :code.priv_dir(:mailglass)
+      |> Path.join("repo/migrations")
+
+    # Inbound migrations land in the SAME admin test DB so the operator/preview
+    # browser surface can query inbound rows (InboundRecord/ExecutionRun/replay)
+    # against MailglassAdmin.TestRepo — config :mailglass_inbound, :repo,
+    # MailglassAdmin.TestRepo (config/test.exs). Mirrors test/test_helper.exs;
+    # without it the OperatorBrowserServer crashes on the first inbound query
+    # (relation "mailglass_inbound_replay_runs" does not exist).
+    inbound_migrations_path =
+      :code.priv_dir(:mailglass_inbound)
       |> Path.join("repo/migrations")
 
     test_repo_config = Application.get_env(:mailglass, MailglassAdmin.TestRepo)
@@ -81,7 +91,8 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
 
     {:ok, _, _} =
       Ecto.Migrator.with_repo(MailglassAdmin.TestRepo, fn repo ->
-        Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+        Ecto.Migrator.run(repo, core_migrations_path, :up, all: true, log: false)
+        Ecto.Migrator.run(repo, inbound_migrations_path, :up, all: true, log: false)
       end)
 
     Application.put_env(:mailglass, MailglassAdmin.TestRepo, test_repo_config)
