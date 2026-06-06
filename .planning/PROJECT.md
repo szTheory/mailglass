@@ -14,7 +14,8 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 - Commit `572f3eb2` created a useful draft brandbook artifact set, but it did **not** complete v1.8 because the normal GSD discussion/phase/execute/verify lifecycle did not run.
 - Phase 80 is complete as of 2026-06-06: `brandbook/brand-audit.md` is now a row-addressable audit/register gate with stable `BRAND-GAP-*` rows and explicit Phase 81-84 handoff.
-- Phase 81 is the next step: revise the source brandbook and token language from the frozen Phase 80 audit/register.
+- Phase 81 is complete as of 2026-06-06: the source brandbook and token language now preserve the approved brand center, cite `BRAND-GAP-01`, `BRAND-GAP-08`, and `BRAND-GAP-12`, label current assets as draft evidence, and keep `mailglass_admin/docs/design-system.md` as the implemented admin UI source of truth.
+- Phase 82 is the next step: logo-option review and SVG asset-system hardening.
 - Phase 82 explicitly needs logo-option review; the current SVGs are one draft direction, not an approved final logo system.
 
 **`v1.7 Admin UI — IA & Design-System Polish v2` is complete and archived as of 2026-06-05. Phases 74-79 took `mailglass_admin` to "v2 polish" by applying the shipped design system more completely — a frozen UI-SPEC + scored gap register evidence gate, shell-level orientation parity across all 3 surfaces, an in-library Operator Overview landing, one unified `status_badge` atom replacing five divergent copies, full token migration, motion discipline, fully-expressive seed data, and a self-verified closeout (structural e2e + conformance/bundle grep gates, no human UAT). Milestone audit `status: passed` (19/19 requirements, 7/7 seams, 3/3 flows). No new dependencies, no brand-book amendment, stable seams untouched.**
