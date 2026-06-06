@@ -40,7 +40,7 @@ maintainer-safe marketing copy.
 
 ### Phase 80: Brand Audit and Gap Register
 
-**Status:** Planned
+**Status:** Complete — 2026-06-06
 **Requirements:** BRAND-01, BRAND-02
 
 **Goal:** Produce a critical pressure test that decides what to keep, tighten,
@@ -127,7 +127,7 @@ safe to maintain.
 
 | Phase | Name | Status |
 |---:|---|---|
-| 80 | Brand Audit and Gap Register | Planned |
+| 80 | Brand Audit and Gap Register | Complete — 2026-06-06 |
 | 81 | Brandbook Source and Token System | Planned |
 | 82 | Logo and SVG Asset System | Planned |
 | 83 | Visual Specimens and Copy Blocks | Planned |
