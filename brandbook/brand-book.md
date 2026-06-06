@@ -8,6 +8,18 @@ Core idea: **Mailglass makes email visible.**
 
 Not louder. Not shinier. Clearer.
 
+## Source Status
+
+Phase 80 treats the current `brandbook/` files as draft inputs from commit
+`572f3eb2`, not approved final Phase 81-84 outputs. This source book closes the
+Phase 81 source-language part of `BRAND-GAP-01` by preserving what is already
+strong, removing overclaims, and leaving final logo, specimen, copy, and proof
+work to their assigned phases.
+
+The brand center is intentionally stable per `BRAND-GAP-12`: Mailglass makes
+email visible, mail you can see through, and Glass is a metaphor, not a visual
+excuse.
+
 ## Brand In One Breath
 
 Mailglass turns email from a black box into a visible system.
@@ -150,11 +162,29 @@ Core components to keep aligned:
 Component rules:
 
 - use semantic tokens over raw hex
+- treat raw palette values as source values; implementation examples should use
+  semantic roles for background, surface, border, text, link, focus, state,
+  callout, and code
 - never rely on color alone for state
+- per `BRAND-GAP-08`, state and callout colors must distinguish text use from
+  non-text, border, and background use; do not promote a border/background pair
+  into normal body text until contrast validation proves it
 - keep focus rings obvious
 - keep borders flat
 - reserve shadows for overlays
 - keep motion under 300ms and reduced-motion friendly
+
+## Product UI Boundary
+
+`mailglass_admin/docs/design-system.md` remains the implemented product UI
+source of truth for the admin surface. This brandbook guides source brand,
+docs, collateral, lightweight examples, and deliberate future mapping, but it
+does not replace the admin Tailwind/daisyUI mechanics and is not a second admin
+UI framework.
+
+If product UI later needs these brand tokens, map them intentionally into the
+existing admin token layers. Do not require `brandbook/tokens.css` to be
+consumed directly by `mailglass_admin`.
 
 ## Voice
 
