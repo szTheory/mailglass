@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="128" viewBox="0 0 160 128" role="img" aria-labelledby="mg-option-d-title mg-option-d-desc">
+  <title id="mg-option-d-title">Mailglass option D wordmark aperture draft</title>
+  <desc id="mg-option-d-desc">Draft evidence for a wordmark-derived glass aperture mark with compact email header cues.</desc>
+  <rect width="160" height="128" rx="8" fill="#F8FBFD"/>
+  <g transform="translate(36 6)">
+    <text x="0" y="86" fill="#0D1B2A" font-family="Inter Tight, Inter, system-ui, -apple-system, sans-serif" font-size="92" font-weight="700" letter-spacing="0">g</text>
+    <g transform="translate(40 29)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="0" y="0" width="42" height="38" rx="16" fill="#FFFFFF" stroke="#A6EAF2" stroke-width="3"/>
+      <path d="M12 12h20" stroke="#277B96" stroke-width="4"/>
+      <path d="M12 24h16" stroke="#5C6B7A" stroke-width="3"/>
+      <circle cx="6" cy="12" r="2.5" fill="#277B96" stroke="none"/>
+      <circle cx="6" cy="24" r="2.5" fill="#C7DCE5" stroke="none"/>
+    </g>
+  </g>
+  <text x="80" y="118" text-anchor="middle" fill="#5C6B7A" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" font-weight="400" letter-spacing="0">Option D</text>
+</svg>

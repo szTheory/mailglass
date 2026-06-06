@@ -99,7 +99,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 82-02-PLAN.md — Run maintainer logo-direction review checkpoint.
+- [ ] 82-02-PLAN.md — Run maintainer logo-direction review checkpoint. Fresh D/E/F options pending selection.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 

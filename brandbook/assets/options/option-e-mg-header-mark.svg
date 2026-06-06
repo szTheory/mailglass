@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="128" viewBox="0 0 160 128" role="img" aria-labelledby="mg-option-e-title mg-option-e-desc">
+  <title id="mg-option-e-title">Mailglass option E mg header mark draft</title>
+  <desc id="mg-option-e-desc">Draft evidence for an mg monogram mark with email header lines inside the glass counter.</desc>
+  <rect width="160" height="128" rx="8" fill="#F8FBFD"/>
+  <g transform="translate(20 20)">
+    <text x="0" y="67" fill="#0D1B2A" font-family="Inter Tight, Inter, system-ui, -apple-system, sans-serif" font-size="70" font-weight="700" letter-spacing="0">mg</text>
+    <g transform="translate(78 21)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="0" y="0" width="38" height="36" rx="14" fill="#FFFFFF" stroke="#A6EAF2" stroke-width="3"/>
+      <path d="M10 12h19" stroke="#277B96" stroke-width="4"/>
+      <path d="M10 23h15" stroke="#5C6B7A" stroke-width="3"/>
+      <circle cx="5" cy="12" r="2.5" fill="#277B96" stroke="none"/>
+      <circle cx="5" cy="23" r="2.5" fill="#C7DCE5" stroke="none"/>
+    </g>
+  </g>
+  <text x="80" y="118" text-anchor="middle" fill="#5C6B7A" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" font-weight="400" letter-spacing="0">Option E</text>
+</svg>

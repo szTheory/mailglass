@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="128" viewBox="0 0 160 128" role="img" aria-labelledby="mg-option-f-title mg-option-f-desc">
+  <title id="mg-option-f-title">Mailglass option F wordmark trace draft</title>
+  <desc id="mg-option-f-desc">Draft evidence for a wordmark-adjacent mark where the g carries an inspectable email header trace.</desc>
+  <rect width="160" height="128" rx="8" fill="#F8FBFD"/>
+  <g transform="translate(12 31)">
+    <text x="0" y="39" fill="#0D1B2A" font-family="Inter Tight, Inter, system-ui, -apple-system, sans-serif" font-size="31" font-weight="700" letter-spacing="0">mailglass</text>
+    <g transform="translate(82 4)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 18h27" stroke="#277B96" stroke-width="4"/>
+      <path d="M10 30h21" stroke="#5C6B7A" stroke-width="3"/>
+      <path d="M10 42h15" stroke="#5C6B7A" stroke-width="3"/>
+      <path d="M2 18h-7c-8 0-13 5-13 13s5 13 13 13h7" stroke="#C7DCE5" stroke-width="3"/>
+      <circle cx="3" cy="18" r="3" fill="#277B96" stroke="none"/>
+      <circle cx="3" cy="30" r="3" fill="#C7DCE5" stroke="none"/>
+      <circle cx="3" cy="42" r="3" fill="#C7DCE5" stroke="none"/>
+    </g>
+  </g>
+  <text x="80" y="118" text-anchor="middle" fill="#5C6B7A" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" font-weight="400" letter-spacing="0">Option F</text>
+</svg>
