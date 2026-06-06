@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Brand System and Repo-Ready Brandbook
-status: ready_to_plan
-last_updated: 2026-06-06T01:47:15.905Z
+status: planning
+last_updated: "2026-06-06T04:41:50.000Z"
 last_activity: 2026-06-06
 progress:
   total_phases: 7
@@ -11,7 +11,7 @@ progress:
   total_plans: 7
   completed_plans: 7
   percent: 43
-stopped_at: Phase 80 complete (1/1) — ready to discuss Phase 81
+stopped_at: Phase 81 context gathered (assumptions mode)
 ---
 
 # Project State
@@ -178,6 +178,14 @@ Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
 
 ## Session Continuity
 
+- 2026-06-06: Phase 81 context gathered in assumptions mode. Created
+  `.planning/phases/81-brandbook-source-and-token-system/81-CONTEXT.md` and
+  `81-DISCUSSION-LOG.md`; context locks Phase 81 to source brandbook and token
+  artifacts only, preserves the Phase 80 brand center, routes overclaim cleanup
+  through `BRAND-GAP-01`, token contrast/text-vs-non-text guidance through
+  `BRAND-GAP-08`, and brand-center preservation through `BRAND-GAP-12`. Ready
+  to run `$gsd-plan-phase 81`.
+
 - 2026-06-05: Phase 80 context gathered in assumptions mode after user-requested
   subagent/web research. Created
   `.planning/phases/80-brand-audit-and-gap-register/80-CONTEXT.md` and
@@ -207,4 +215,4 @@ Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
 
 ## Operator Next Steps
 
-- Run `$gsd-plan-phase 80` to plan the brand audit and gap-register execution.
+- Run `$gsd-plan-phase 81` to plan the source brandbook and token-system work.
