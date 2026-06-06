@@ -111,96 +111,61 @@ Classification vocabulary:
 | Repo readiness | Source-native `brandbook/` direction is right. | Future binary exports, screenshots, or broad package inclusion could bloat the repo or Hex tarballs. | TIGHTEN | Phase 84 implements package/file-size/git-cleanliness proof. |
 | Maintainability | The small, restrained system is maintainable. | It could grow into a design-system side quest. | KEEP | Keep artifacts lean and route expansion only to real surface needs. |
 
-## Section 4 - Stress Tests
+## Section 4 - Required Surface Stress Matrix
 
-| Surface | Enough guidance? | Needed addition |
-|---|---|---|
-| GitHub repo header | Mostly | Primary lockup, one-line description, social avatar. |
-| README hero section | Mostly | README header specimen and restrained CTA pattern. |
-| README badges | Partial | Use monochrome/Ink badges with sparse Glass accent. |
-| Hex.pm package page | Partial | Short and long package blurbs. |
-| HexDocs page | Partial | Docs intro and code/callout tokens. |
-| Docs sidebar | Partial | Active/hover/focus token roles. |
-| Code block styling | Partial | Code block token group. |
-| Terminal snippet | Partial | Terminal copy and color guidance. |
-| API reference page | Yes | Keep examples before slogans. |
-| Landing page hero | Partial | Hero architecture and copy blocks. |
-| Feature section | Partial | Feature blurbs tied to real technical value. |
-| Comparison section | Partial | "Why not just Swoosh?" framing without dunking. |
-| Blog post header | Partial | Social/blog specimen and headline style. |
-| Release announcement | Partial | Release-note style and example. |
-| Social preview card | No | SVG social framing added. |
-| Favicon | No | Simple mark added. |
-| App icon | No | Mark can scale, but do not over-polish into SaaS icon. |
-| Small monochrome logo | No | Monochrome SVG added. |
-| Dark-mode page | Partial | Dark semantic tokens added. |
-| Light-mode page | Yes | Palette already supports it. |
-| Conference slide | Partial | Use large wordmark + pane diagram, no gradient hero. |
-| Diagram/architecture illustration | Partial | Diagram style rules added. |
-| Error/empty/success states | Partial | Microcopy and semantic state tokens added. |
-| Example UI component library | Partial | Specimen covers primitives, not full component system. |
-| Mobile landing page | Partial | HTML must be responsive and text must not overlap. |
-| Printed sticker/swag | Nice-to-have | Monochrome mark only; defer physical artwork. |
+This matrix is the BRAND-02 coverage gate. Each required surface appears at
+least once. The draft evidence is read-only in Phase 80; implementation belongs
+to the target phase named in the row.
 
-## Section 5 - Gaps And Risks
+| Surface | Current Evidence | Brand Risk | Classification | Target Phase | Closeout Cue |
+|---|---|---|---|---|---|
+| GitHub | Root `README.md`, badge set, draft GitHub description copy in this audit | Repo header and social avatar could imply final brand approval before Phases 82-83 | TIGHTEN | Phase 83 | GitHub description/header copy cites the final Phase 83 copy block and approved Phase 82 mark. |
+| README | Root `README.md`; `brandbook/examples/readme-header.svg` | README specimen uses generic Phoenix setup instead of a Mailglass flow | REWORK | Phase 83 | README/specimen install snippet uses a real Mailglass onboarding or preview/send flow. |
+| Hex.pm | Root/admin `mix.exs` package descriptions; draft Hex.pm copy block | Package copy can drift from Phoenix-native transactional infrastructure into marketing-tool language | TIGHTEN | Phase 83 | Hex.pm short/long copy is reviewed against the approved voice and product scope. |
+| HexDocs | ExDoc configuration in package files; draft docs-page specimen | Future logo/favicon or docs copy could accidentally pull broad `brandbook/` assets into packages | TIGHTEN | Phase 84 | Package/docs validation proves no broad `brandbook/` inclusion and deliberate exact asset use only. |
+| docs UI | `brandbook/examples/docs-page.svg`; `mailglass_admin/docs/design-system.md` | Brandbook could fork admin UI mechanics or conflict with semantic-token discipline | TIGHTEN | Phase 81 | Brandbook source says admin design-system remains product UI source of truth. |
+| code/terminal snippets | Root README quickstart; `brandbook/examples/readme-header.svg:16-19` | Generic `mix archive.install hex phx_new` weakens the Mailglass-specific story | REWORK | Phase 83 | Specimens and copy blocks use real Mailglass commands and domain examples. |
+| landing page | Draft landing/docs blueprint in this audit | Useful architecture exists, but final copy and media are not approved | TIGHTEN | Phase 83 | Landing copy is generated from approved Phase 83 blocks without adding new asset types. |
+| social preview | `brandbook/assets/social-avatar.svg`; README header specimen | Avatar exists as one draft direction; PNG card exports are not justified by Phase 80 | TIGHTEN | Phase 82 / Future | Phase 82 approves mark direction; PNG exports stay future-only until launch/release need. |
+| favicon | `brandbook/assets/favicon.svg` | Lower fold at 32px may read as document corner, envelope, or send arrow | REWORK | Phase 82 | Phase 82 includes small-size review and resolves favicon fold ambiguity. |
+| small monochrome mark | `brandbook/assets/logo-monochrome.svg` | Monochrome construction is promising but not proven at tiny sizes or reversed contexts | REWORK | Phase 82 | Phase 82 records small monochrome, reversed, and dark-background disposition. |
+| dark/light mode | `brandbook/tokens.css`; `brandbook/tokens.json` | Token roles exist, but contrast and system-mode guidance need proof | TIGHTEN | Phase 81 / Phase 84 | Phase 81 documents role usage; Phase 84 validates key text and non-text pairs. |
+| diagrams | `brandbook/examples/docs-page.svg`; `brandbook/examples/ui-primitives.svg` | Diagram language could become decorative or a new illustration system | TIGHTEN | Phase 83 / Future | Phase 83 keeps diagrams as implementation aids; reusable diagram library stays future-only. |
+| UI states | `brandbook/tokens.json` state group; `brandbook/examples/ui-primitives.svg` | State meaning may rely too heavily on color, especially success/warning examples | TIGHTEN | Phase 83 / Phase 84 | Specimens use text/icon/label cues; Phase 84 checks non-color state indicators where practical. |
 
-Critical:
+## Section 5 - BRAND-GAP Register
 
-- No source-controlled brand artifacts existed outside prompt history.
-- No committed logo system existed.
-- No semantic token file existed for non-admin surfaces.
+Stable `BRAND-GAP-NN` IDs are the anti-churn citation gate for Phases 81-84.
+Do not renumber rows after publication. Severity uses a 1-5 scale; severity
+4-5 rows require explicit closure or documented deferral before Phase 84
+closeout. Phase 80 follows the Phase 74 stable-register precedent and the
+Phase 79 frozen-register plus separate-closeout precedent.
 
-Important:
+| BRAND-GAP-NN | Classification | Severity | Surface | Evidence | Rationale | Target Phase | Acceptance / Closeout Cue |
+|---|---|---:|---|---|---|---|---|
+| BRAND-GAP-01 | REWORK | 5 | Cross-surface audit | `brandbook/brand-audit.md` previously treated committed tokens/SVG/specimens as complete outputs | Draft overclaims would let downstream agents skip required Phase 81-84 review. | Phase 81 | Audit and source brandbook clearly say current `brandbook/` files are draft inputs, not approved outputs. |
+| BRAND-GAP-02 | ADD | 5 | Gap register | Current audit had prose gaps but no stable row IDs or closeout schema | BRAND-01 needs row-addressable judgment with severity, evidence, rationale, target phase, and closeout cue. | Phase 80 / Phase 84 | This register exists; Phase 84 can cite each row without editing the frozen audit. |
+| BRAND-GAP-03 | ADD | 4 | Required surfaces | Current stress test was broad but not a strict BRAND-02 coverage contract | Missing a named surface would make BRAND-02 unverifiable. | Phase 80 / Phase 84 | Required Surface Stress Matrix covers GitHub, README, Hex.pm, HexDocs, docs UI, code/terminal snippets, landing page, social preview, favicon, small monochrome mark, dark/light mode, diagrams, and UI states. |
+| BRAND-GAP-04 | ADD | 4 | Logo system | `brandbook/assets/*.svg` is one credible draft direction; D-11 requires multiple-option review | Avoid premature final logo approval and brand churn. | Phase 82 | Phase 82 compares multiple credible mark directions before selecting or refining the final system. |
+| BRAND-GAP-05 | REWORK | 4 | Favicon / small mark | `brandbook/assets/favicon.svg` uses a compact lower triangular fold at 32x32 | The fold may read as document corner, envelope, or send-arrow ambiguity at small sizes. | Phase 82 | Phase 82 records small-size visual review and final disposition for fold ambiguity. |
+| BRAND-GAP-06 | TIGHTEN | 4 | SVG accessibility / safety | Draft SVGs use repeated `id="title"` and `id="desc"` with `aria-labelledby` | Standalone SVGs are valid, but repeated IDs collide if multiple assets are inlined in one document. | Phase 82 / Phase 84 | Phase 82 decides unique-ID or distribution strategy; Phase 84 validates IDs or documents non-inline usage. |
+| BRAND-GAP-07 | REWORK | 4 | README / terminal snippet | `brandbook/examples/readme-header.svg:16-19` shows `mix archive.install hex phx_new` | Generic Phoenix setup weakens the Mailglass-specific developer story. | Phase 83 | Specimen/copy uses a real Mailglass flow such as `mix deps.get`, `mix mailglass.install`, or preview/send commands. |
+| BRAND-GAP-08 | TIGHTEN | 3 | Tokens / callouts | `brandbook/tokens.json` has `state.info` on `callout.infoBackground`; research calculated 4.37:1 | Pair may be acceptable for non-text/border usage but should not be used for normal body text without guidance. | Phase 81 / Phase 84 | Token guidance distinguishes text from non-text uses; Phase 84 contrast checks encode allowed pairs. |
+| BRAND-GAP-09 | TIGHTEN | 3 | UI states | `brandbook/examples/ui-primitives.svg` shows success/warning state examples with colored dots and labels | Accessibility requires state not be conveyed by color alone. | Phase 83 / Phase 84 | Specimens include text/icon/label cues and Phase 84 checks or documents non-color indicators. |
+| BRAND-GAP-10 | TIGHTEN | 3 | Hex package hygiene | Root `mix.exs` and `mailglass_admin/mix.exs` package allowlists exclude broad `brandbook/` | Prevent accidental package bloat and unintended docs asset leakage. | Phase 84 | Executable package proof confirms broad `brandbook/` assets stay out of Hex tarballs by default. |
+| BRAND-GAP-11 | ADD | 3 | Name risk | Phase 80 context records `Mailglass Lite` as a public naming/collision signal | This is a brand risk note, not legal clearance or rename work. | Future/deferred | Audit records the risk and deferral; legal/name strategy starts only for major launch collateral or legal review. |
+| BRAND-GAP-12 | KEEP | 2 | Brand center | `brandbook/brand-book.md` and project context align on "Mailglass makes email visible" and "glass is a metaphor, not a visual excuse" | Preserve the strong existing strategy and avoid churn. | Phase 81-83 | Later source book, copy, and specimens cite this row when preserving the core concept. |
 
-- Marketing copy needed ready-to-use technical phrasing.
-- The logo direction needed scale and monochrome constraints.
-- Palette needed explicit dark/light roles beyond raw colors.
-- Repo artifact policy needed to prevent binary bloat.
+## Section 6 - Register Summary By Target
 
-Nice-to-have:
-
-- PNG exports for social cards.
-- Conference slide template.
-- Additional diagram library.
-- Automated contrast report.
-
-## Section 6 - Recommended Brand Book Upgrades
-
-Keep:
-
-- Mailglass makes email visible.
-- The clear email framework for Phoenix.
-- The Ink/Glass/Ice/Mist/Paper/Slate palette.
-- Inter, Inter Tight, IBM Plex Mono.
-- Thoughtful-maintainer voice.
-- "Glass is a metaphor, not a visual excuse."
-
-Tighten:
-
-- Define semantic token roles, not only raw colors.
-- Add component-state guidance.
-- Add concrete logo usage rules.
-- Add ready-to-use copy blocks.
-
-Rework:
-
-- Any future use of heavy glass effects.
-- Any logo that reads as a paper plane or generic envelope.
-- Any marketing line that could belong to an ESP or outbound sales tool.
-
-Add:
-
-- Static HTML brandbook.
-- Token JSON/CSS.
-- SVG logo set.
-- SVG specimens.
-- Repo artifact policy.
-- QA checklist.
-
-Remove:
-
-- Prompt artifacts from the canonical use path. Preserve them historically, but
-  do not make future maintainers mine prompts for production guidance.
+| Target | Rows | Minimum severity | Build requirement |
+|---|---|---:|---|
+| Phase 80 / Phase 84 closeout | BRAND-GAP-02, BRAND-GAP-03 | 4 | Keep the register and surface matrix stable so Phase 84 can close or defer rows without rewriting the audit. |
+| Phase 81 | BRAND-GAP-01, BRAND-GAP-08, BRAND-GAP-12 | 2 | Source brandbook and token language remove overclaims, preserve the center, and clarify role/contrast guidance. |
+| Phase 82 | BRAND-GAP-04, BRAND-GAP-05, BRAND-GAP-06 | 4 | Logo and SVG work compares options and resolves small-size, monochrome, reversed, ID, and distribution questions. |
+| Phase 83 | BRAND-GAP-07, BRAND-GAP-09, BRAND-GAP-12 | 2 | Specimens and copy use real Mailglass flows, approved domain language, and non-color state cues. |
+| Phase 84 | BRAND-GAP-06, BRAND-GAP-08, BRAND-GAP-09, BRAND-GAP-10 | 3 | Validation proves SVG safety, contrast policy, package allowlists, and repo hygiene. |
+| Future/deferred | BRAND-GAP-11 | 3 | Name/legal work stays out unless a major launch or legal review justifies it. |
 
 ## Section 7 - Design Token Specification
 
