@@ -60,11 +60,18 @@ Plans:
 
 ### Phase 81: Brandbook Source and Token System
 
-**Status:** Planned
+**Status:** Complete — 2026-06-06
 **Requirements:** BOOK-01, BOOK-02, BOOK-03, TOKEN-01, TOKEN-02, TOKEN-03
 
 **Goal:** Create the source brandbook and implementation tokens that designers,
 engineers, and future agents can use without reopening prompt history.
+
+**Plans:** 1/1 plans complete
+
+Plans:
+- [x] 81-01-PLAN.md — Revise the source brandbook and token system to remove
+  overclaims, preserve the brand center, clarify semantic token usage, and keep
+  the admin UI boundary explicit.
 
 **Success criteria:**
 
@@ -128,7 +135,7 @@ safe to maintain.
 | Phase | Name | Status |
 |---:|---|---|
 | 80 | Brand Audit and Gap Register | Complete — 2026-06-06 |
-| 81 | Brandbook Source and Token System | Planned |
+| 81 | Brandbook Source and Token System | Complete — 2026-06-06 |
 | 82 | Logo and SVG Asset System | Planned |
 | 83 | Visual Specimens and Copy Blocks | Planned |
 | 84 | Quality Gate and Repo Hygiene | Planned |

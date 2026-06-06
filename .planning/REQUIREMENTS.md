@@ -108,12 +108,12 @@ Deferred deliberately:
 |---|---:|---|
 | BRAND-01 | 80 | Complete — 2026-06-06 |
 | BRAND-02 | 80 | Complete — 2026-06-06 |
-| BOOK-01 | 81 | Planned |
-| BOOK-02 | 81 | Planned |
-| BOOK-03 | 81 | Planned |
-| TOKEN-01 | 81 | Planned |
-| TOKEN-02 | 81 | Planned |
-| TOKEN-03 | 81 | Planned |
+| BOOK-01 | 81 | Complete — 2026-06-06 |
+| BOOK-02 | 81 | Complete — 2026-06-06 |
+| BOOK-03 | 81 | Complete — 2026-06-06 |
+| TOKEN-01 | 81 | Complete — 2026-06-06 |
+| TOKEN-02 | 81 | Complete — 2026-06-06 |
+| TOKEN-03 | 81 | Complete — 2026-06-06 |
 | LOGO-01 | 82 | Planned |
 | LOGO-02 | 82 | Planned |
 | LOGO-03 | 82 | Planned |
