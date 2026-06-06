@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Brand System and Repo-Ready Brandbook
-status: executing
-last_updated: "2026-06-06T04:57:34.568Z"
-last_activity: 2026-06-06 -- Phase 81 planning complete
+status: verifying
+last_updated: "2026-06-06T05:05:49.364Z"
+last_activity: 2026-06-06
 progress:
   total_phases: 7
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 8
-  completed_plans: 7
-  percent: 43
+  completed_plans: 8
+  percent: 57
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05 after v1.8 brand-system milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 81 — brandbook source and token system
+**Current focus:** Phase 81 — brandbook-source-and-token-system
 
 ## Current Position
 
-Phase: 81
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-06 -- Phase 81 planning complete
+Phase: 81 (brandbook-source-and-token-system) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
+Last activity: 2026-06-06
 
 ## v1.8 Milestone Intent
 
@@ -157,6 +157,7 @@ Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
 **On the Phase 76 items:** the four deferred browser-visual checks (badge color/icon, inbound normalization labels, Tier1/Tier2 hierarchy, 390px badge overflow) and the `human_needed` verification status were closed by later work in the same milestone — Phase 77 ran the Playwright motion suite against the seeded server, Phase 79 closed all sev-4/5 gap-register rows (`79-GAP-CLOSEOUT.md`), and a UAT pass is recorded in git (`32ab6643 test(79): complete UAT - 6 passed, 0 issues`). The v1.7 milestone audit (`status: passed`) confirms no Phase 76 success criterion is unmet. The artifacts were left in `partial`/`human_needed` state only as bookkeeping.
 
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
+| Phase 81 P01 | 4 min | 4 tasks | 4 files |
 
 ## Accumulated Context
 

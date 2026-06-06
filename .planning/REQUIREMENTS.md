@@ -26,22 +26,22 @@ required unless a future claim needs verification.
 
 ### Source Brandbook
 
-- [ ] **BOOK-01**: Maintainer can open a static HTML brandbook directly from the
+- [x] **BOOK-01**: Maintainer can open a static HTML brandbook directly from the
   repo without a build step, PDF, external asset service, or vendor design tool.
-- [ ] **BOOK-02**: Maintainer can read a concise Markdown source brand book that
+- [x] **BOOK-02**: Maintainer can read a concise Markdown source brand book that
   preserves the strong existing concept while removing prompt-only friction.
-- [ ] **BOOK-03**: The brandbook explicitly preserves the current conceptual
+- [x] **BOOK-03**: The brandbook explicitly preserves the current conceptual
   center: "Mailglass makes email visible" and "glass is a metaphor, not a visual
   excuse."
 
 ### Tokens and UI Buildout
 
-- [ ] **TOKEN-01**: Designers and engineers can consume raw palette tokens and
+- [x] **TOKEN-01**: Designers and engineers can consume raw palette tokens and
   semantic color roles for light, dark, state, callout, and code-block contexts.
-- [ ] **TOKEN-02**: Token artifacts include practical typography, spacing,
+- [x] **TOKEN-02**: Token artifacts include practical typography, spacing,
   radius, border, shadow, focus, and motion primitives without becoming a giant
   design-system framework.
-- [ ] **TOKEN-03**: Token guidance aligns with the implemented admin UI
+- [x] **TOKEN-03**: Token guidance aligns with the implemented admin UI
   discipline: semantic roles over raw hex, restrained Glass accent, flat panes,
   visible focus, and no glassmorphism.
 
