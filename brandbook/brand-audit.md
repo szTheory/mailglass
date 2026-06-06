@@ -2,48 +2,73 @@
 
 Date: 2026-06-05
 
+Phase 80 scope: this file is the audit and gap-register gate for v1.8.
+The existing `brandbook/` files are draft inputs from commit `572f3eb2`,
+not approved Phase 81-84 outputs. Phase 80 approves only a candid,
+row-addressable audit in `brandbook/brand-audit.md`; it does not approve
+final tokens, logos, copy, specimens, package hygiene proof, or validation
+scripts.
+
 Sources reviewed:
 
 - Existing Mailglass brand book in `prompts/`
 - Project positioning and planning context in `.planning/`
-- Implemented admin design-system guidance
+- Implemented admin design-system guidance in `mailglass_admin/docs/design-system.md`
 - Current README/package-family posture
+- Draft `brandbook/` Markdown, HTML, token, SVG, and specimen files as evidence
+- Phase 74 gap-register and Phase 79 separate-closeout precedents
 
 ## Section 1 - Executive Judgment
 
-The current brand book is strong enough to build from. It has a real conceptual
-center: **Mailglass makes email visible**. That center is specific to the
-product, easy to remember, and useful for both visual and UX decisions.
+The brand center is strong enough to build from: **Mailglass makes email
+visible**. The supporting line **Mail you can see through** is memorable,
+specific to the product, and useful for both interface and documentation
+decisions. Preserve the governing rule: **glass is a metaphor, not a visual
+excuse**.
 
-It is distinct enough from common email/devtool tropes because it avoids paper
-planes, delivery-company metaphors, outbound-sales language, mascot energy,
-purple gradients, fake futurism, and generic "powerful/simple" positioning.
+The current draft direction is strategically sound, but it is not an approved
+v1.8 brand system. Draft files exist under `brandbook/`, including tokens,
+SVGs, specimens, HTML, and source Markdown; that is evidence for this audit,
+not proof that Phases 81-84 are complete. Any claim like "assets are committed,
+therefore the brand system is done" is rejected.
 
-It was not fully implementation-ready. The prompt-era brand book named good raw
-colors, voice, and visual instincts, but it lacked repo-ready tokens, component
-state roles, concrete SVG assets, artifact policy, and enough ready-to-use copy
-for README, Hex.pm, landing pages, and social previews.
+Keep the product story Phoenix-native, transactional, and operational. Mailglass
+is infrastructure built on Swoosh and shipped as `mailglass`,
+`mailglass_admin`, and `mailglass_inbound`. It must not drift into marketing
+email, campaigns, newsletters, drip automation, outreach workflows, growth
+language, or "Swoosh replacement" framing.
 
-It is slightly under-specified for buildout, but not strategically weak.
+Keep the thoughtful-maintainer voice: exact, calm, technical, and helpful under
+failure. Preserve the domain nouns that make the product feel real: Mailable,
+Message, Delivery, Event, InboundMessage, Mailbox, Suppression, timeline,
+provider, adapter, stream, headers, route, render, preview, observe, inspect,
+and verify.
 
-Highest-leverage improvement: convert the strong strategy into a small
-source-controlled system: HTML brandbook, audit, semantic tokens, logo SVGs,
-specimens, and copy blocks.
+Keep the visual center restrained: Ink, Glass, Ice, Mist, Paper, and Slate;
+Inter / Inter Tight / IBM Plex Mono; flat panes; restrained borders; semantic
+state color; visible focus; and motion restraint. Reject glassmorphism, bevels,
+glossy highlights, heavy shadows, decorative gradients, blobs, and one-note
+Glass/cyan flooding.
 
-Do not change the core idea, palette direction, restrained tone, Inter/Inter
-Tight/IBM Plex Mono stack, or "glass is a metaphor, not a visual excuse."
+`mailglass_admin/docs/design-system.md` remains the implemented product UI
+constraint source. The brandbook may guide docs, marketing, lightweight
+prototypes, and future collateral, but it must not become a second admin UI
+framework or contradict the shipped Tailwind/daisyUI mechanics.
 
 ## Section 2 - Brand DNA Extraction
 
-- Brand essence: mail you can see through
-- Audience: senior Phoenix and Elixir teams building production transactional email
-- Emotional tone: calm, clear, technical, composed
-- Technical promise: email becomes inspectable application infrastructure
-- Visual metaphor: clarity through panes
-- Personality traits: precise, warm, confident, quiet, useful, maintainer-like
-- Anti-traits: flashy, salesy, cute, glossy, vague, mascot-driven, corporate
-- Design principles: flat panes, readable hierarchy, limited Glass accent, semantic state color, no ornament for its own sake
-- Voice principles: explain plainly, recover helpfully, avoid hype, use exact domain nouns
+| Element | Phase 80 judgment | Classification |
+|---|---|---|
+| Brand essence | Mail you can see through. | KEEP |
+| Core promise | Email becomes inspectable application infrastructure. | KEEP |
+| Audience | Senior Phoenix and Elixir teams building production transactional email. | KEEP |
+| Emotional tone | Calm, clear, technical, composed, useful. | KEEP |
+| Product category | Phoenix-native email framework on top of Swoosh. | KEEP |
+| Visual metaphor | Clarity through panes, boundaries, timelines, headers, and inspection surfaces. | KEEP |
+| Voice | Thoughtful maintainer: direct recovery guidance, exact nouns, low hype. | KEEP |
+| Anti-traits | Salesy, cute, glossy, mascot-driven, generic SaaS, growth-marketing-coded. | KEEP |
+| Admin UI boundary | `mailglass_admin/docs/design-system.md` governs implemented product UI mechanics. | TIGHTEN |
+| Current `brandbook/` assets | Useful draft evidence, not approved v1.8 completion evidence. | REWORK |
 
 This should feel like:
 
@@ -60,25 +85,31 @@ This should never feel like:
 - an AI launch page
 - a literal glass-effect UI kit
 
-## Section 3 - Pressure-Test Scorecard
+## Section 3 - Classification Vocabulary And Pressure-Test Scorecard
 
-| Dimension | Score | Why | Risk | Recommended fix |
-|---|---:|---|---|---|
-| Distinctiveness | 8 | "Email made visible" is memorable and ownable in this category. | Pane/glass metaphor could become generic if overused. | Keep glass conceptual, not decorative. |
-| Developer credibility | 9 | Maintainer voice and low-hype language fit OSS. | Marketing pages could still drift into SaaS tone. | Use approved copy blocks and banned vocabulary. |
-| Elixir ecosystem fit | 9 | Understated, technical, Phoenix-native. | Too much launch collateral could feel commercial. | Keep docs/examples before slogans. |
-| Visual coherence | 8 | Palette and metaphor are coherent. | Prompt had few concrete layout/component constraints. | Token and specimen files now fill this. |
-| Logo readiness | 6 -> 8 | Direction was good, but no assets existed. | Mark could look like a generic envelope. | Use pane-first mark with implied fold only. |
-| Color-system readiness | 6 -> 8 | Raw palette existed and admin mapped it. | Missing semantic roles for marketing/docs. | Commit `tokens.json` and `tokens.css`. |
-| Typography readiness | 8 | Practical OSS-safe type choices. | Font binaries should not be committed. | Recommend stacks only; use fallbacks. |
-| Design-token readiness | 5 -> 8 | Admin had product tokens; brand book did not. | Divergence between product UI and marketing. | Align brand tokens with admin semantics. |
-| UI component readiness | 5 -> 7 | General component direction existed. | Not enough state/component examples. | Add specimens and component rules. |
-| Docs/README usefulness | 7 -> 8 | Messaging is strong. | Needed ready-to-use blocks. | Add copy library. |
-| Marketing usefulness | 6 -> 8 | Strong promise, light on page architecture. | Could under-sell value. | Add landing/docs blueprint. |
-| Voice/microcopy usefulness | 7 -> 8 | Good "say/not" examples. | Needed more state-specific examples. | Add UX microcopy patterns. |
-| Accessibility | 6 -> 8 | WCAG intent was present. | Need explicit semantic states and contrast checks. | Token roles and QA checklist. |
-| Repo readiness | 4 -> 9 | Prompt file was not a build artifact. | Random future assets could bloat repo. | Self-contained `brandbook/` and export policy. |
-| Maintainability | 8 | Small, restrained system. | Could grow into a design-system side quest. | Keep artifacts lean; do not add binary packs. |
+Classification vocabulary:
+
+- `KEEP` - preserve as-is or preserve as a governing principle.
+- `TIGHTEN` - keep the direction, but add constraints, wording, proof, or validation pressure.
+- `REWORK` - the draft direction is useful, but it must materially change before approval.
+- `ADD` - missing structure, asset, evidence, or validation expectation.
+- `REMOVE` - delete from the canonical path or explicitly reject.
+
+| Dimension | Current audit judgment | Risk | Classification | Required handoff |
+|---|---|---|---|---|
+| Distinctiveness | "Email made visible" is memorable and ownable in this category. | Pane/glass metaphor could become generic if overused. | KEEP | Later copy/specimens cite `BRAND-GAP-12`. |
+| Developer credibility | Maintainer voice and low-hype language fit OSS. | README, Hex.pm, or launch copy could drift into SaaS tone. | TIGHTEN | Phase 83 prepares copy blocks and banned-vocabulary guidance. |
+| Elixir ecosystem fit | Understated, technical, Phoenix-native, and Swoosh-composed. | Too much collateral could feel commercial or like a Swoosh replacement. | KEEP | Keep examples and docs before slogans. |
+| Visual coherence | Palette, type, panes, and motion restraint are coherent. | Draft assets may over-imply final approval. | TIGHTEN | Phase 81/82 refine tokens and SVG system with proof. |
+| Logo readiness | One credible draft SVG direction exists. | No multiple-option review; small mark may read as a document corner, envelope, or send arrow. | REWORK | Phase 82 compares options and resolves favicon/monochrome/reversed variants. |
+| Color-system readiness | Draft role tokens exist for brand/docs examples. | Token pairs and admin-product boundary need explicit guidance. | TIGHTEN | Phase 81 owns final token language; Phase 84 owns contrast checks. |
+| Typography readiness | Inter, Inter Tight, and IBM Plex Mono are practical OSS-safe choices. | Font binaries or tight marketing typography would create repo and readability risk. | KEEP | Recommend stacks only; do not commit font files. |
+| Design-token readiness | Draft JSON/CSS tokens exist as evidence. | Product UI and brandbook tokens can diverge if the admin design-system boundary is vague. | TIGHTEN | Phase 81 aligns wording with `mailglass_admin/docs/design-system.md`. |
+| UI state readiness | Draft examples include state colors and labels. | Color-only state meaning would violate accessibility intent. | TIGHTEN | Phase 83/84 add non-color state cues and validation. |
+| Docs/README usefulness | Messaging is strong and concrete. | Current specimen includes generic Phoenix setup instead of Mailglass flow. | REWORK | Phase 83 replaces generic snippets and prepares public-surface copy. |
+| Accessibility | WCAG intent is present. | Contrast, focus, SVG IDs, keyboard, reduced motion, and dark/light behavior need closure proof. | TIGHTEN | Phase 84 validates or documents every gate. |
+| Repo readiness | Source-native `brandbook/` direction is right. | Future binary exports, screenshots, or broad package inclusion could bloat the repo or Hex tarballs. | TIGHTEN | Phase 84 implements package/file-size/git-cleanliness proof. |
+| Maintainability | The small, restrained system is maintainable. | It could grow into a design-system side quest. | KEEP | Keep artifacts lean and route expansion only to real surface needs. |
 
 ## Section 4 - Stress Tests
 
