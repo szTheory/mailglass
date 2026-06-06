@@ -167,217 +167,100 @@ Phase 79 frozen-register plus separate-closeout precedent.
 | Phase 84 | BRAND-GAP-06, BRAND-GAP-08, BRAND-GAP-09, BRAND-GAP-10 | 3 | Validation proves SVG safety, contrast policy, package allowlists, and repo hygiene. |
 | Future/deferred | BRAND-GAP-11 | 3 | Name/legal work stays out unless a major launch or legal review justifies it. |
 
-## Section 7 - Design Token Specification
+## Section 7 - Handoff Map For Phases 81-84
 
-Implemented in:
+Phase 80 produces the audit gate. Phases 81-84 own implementation and proof.
 
-- `tokens.json`
-- `tokens.css`
+| Phase | Owns | Must cite |
+|---|---|---|
+| Phase 81 | Source brandbook and token system: remove completion overclaims, refine role-token guidance, document dark/light/system behavior, distinguish text from non-text contrast use, and preserve the admin-design-system boundary. | BRAND-GAP-01, BRAND-GAP-08, BRAND-GAP-12 |
+| Phase 82 | Logo and SVG asset system: compare multiple credible directions; resolve favicon, monochrome, dark/reversed variants, duplicate `title`/`desc` IDs, live text versus outlined distribution, and fold ambiguity. | BRAND-GAP-04, BRAND-GAP-05, BRAND-GAP-06 |
+| Phase 83 | Visual specimens and copy blocks: replace generic `phx_new`; align domain wording such as "Delivered"; prepare README, Hex.pm, HexDocs, landing, social, launch, error, empty, success, warning, and release-note copy. | BRAND-GAP-07, BRAND-GAP-09, BRAND-GAP-12 |
+| Phase 84 | Quality gate and repo hygiene: implement executable validation for JSON, CSS/token groups, SVG XML/metadata/safety, local HTML refs, file sizes, contrast gates, package allowlists, and git cleanliness. | BRAND-GAP-02, BRAND-GAP-03, BRAND-GAP-06, BRAND-GAP-08, BRAND-GAP-09, BRAND-GAP-10 |
 
-The token model is intentionally small:
+## Section 8 - Deferred / Future / Legal Notes
 
-- raw palette
-- semantic color roles for light and dark
-- state colors
-- type scale
-- spacing scale
-- radius/border/focus
-- code block/callout roles
-- modest shadows only where useful
+These items are explicitly out of Phase 80 execution:
 
-Do not expand into a full design-system framework unless a real surface needs it.
+- Final token edits and contrast automation: Phase 81 / Phase 84.
+- Final logo choice, outlined-vs-live-text distribution, and dark/reversed variants: Phase 82.
+- README, Hex.pm, HexDocs, landing, launch copy, and microcopy library implementation: Phase 83.
+- JSON, SVG, HTML, file-size, package-hygiene, and git-cleanliness validation scripts: Phase 84.
+- PNG social cards, conference slide template, diagram component library, and automated contrast-report script: future only if a real launch, repeated diagram need, or token churn justifies them.
+- Trademark/legal clearance or rename strategy for Mailglass or Mailglass Lite: deferred unless major launch collateral or legal review requires it.
 
-## Section 8 - Logo And Mark System
+`Mailglass Lite` is recorded as a name-risk signal only. This audit does not
+start legal work, trademark clearance, rename strategy, or package identity
+changes.
 
-Recommended identity:
+## Section 9 - Phase 84 Validation Expectations
 
-- Primary: wordmark + pane mark lockup
-- Secondary: icon-only pane mark
-- Monochrome: single-color pane mark
-- No mascot
-- No abstract mark without mail/pane meaning
-- No logotype-only strategy, because favicon/social avatar need a mark
+Phase 80 names these gates without implementing scripts or checks early:
 
-The SVGs are deliberately flat and simple. The mark suggests a pane with an
-implied message fold. The wordmark uses live text with open-source font
-fallbacks instead of embedded font outlines.
+- JSON: parse `brandbook/tokens.json`.
+- CSS/token groups: check semantic groups and value shapes.
+- SVG XML/accessibility/safety: parse SVGs; require title, desc, role, viewBox,
+  and size metadata; reject script, image, foreignObject, data/base64, and unsafe
+  external href or xlink:href usage.
+- HTML: parse direct-open `brandbook/index.html` and verify local references.
+- Package: confirm broad `brandbook/` assets stay out of Hex package tarballs by default.
+- File-size: cap committed assets and prevent binary/raster creep.
+- Contrast: check key token pairs and distinguish text from non-text or border usage.
+- Git cleanliness: fail if generated exports, screenshots, PNG batches,
+  contrast reports, vendor files, font binaries, PDFs, or raster packs are
+  accidentally committed.
 
-## Section 9 - Visual Examples And Screenshot Guidance
+Expected Phase 84 command posture: existing CLI tools, deterministic output,
+fail-loud checks, and no watch mode. The precise commands belong in Phase 84,
+not here.
 
-Create only specimens that help implementation:
+## Section 10 - Artifact Plan And Prioritized Actions
 
-- `examples/palette.svg` - verify palette and semantic roles.
-- `examples/typography.svg` - verify type hierarchy.
-- `examples/ui-primitives.svg` - buttons, cards, callouts, code, states.
-- `examples/readme-header.svg` - README/social header framing.
-- `examples/docs-page.svg` - docs layout direction.
+Phase 80 artifact plan:
 
-Do not commit decorative fake product screenshots. Use screenshots only when a
-real UI state, release artifact, or docs example needs proof.
+- Commit only `brandbook/brand-audit.md` changes for this phase.
+- Treat `brandbook/index.html`, `brandbook/brand-book.md`,
+  `brandbook/tokens.json`, `brandbook/tokens.css`, `brandbook/README.md`,
+  `brandbook/assets/*.svg`, and `brandbook/examples/*.svg` as draft evidence.
+- Do not edit README, Hex.pm package metadata, HexDocs config, SVGs, tokens,
+  examples, package files, product UI code, release workflow, or public API.
 
-## Section 10 - Brand Voice And Microcopy
+Prioritized actions:
 
-Voice principles:
-
-- concise
-- exact
-- technically literate
-- calm under failure
-- generous with recovery context
-
-Tone sliders:
-
-- slightly formal over casual
-- human but technical
-- quiet over loud
-- serious with a light hand
-- utility with taste
-
-Use:
-
-- compose
-- render
-- preview
-- route
-- deliver
-- observe
-- inspect
-- suppress
-- normalize
-- verify
-- stream
-- mailbox
-- timeline
-- event
-- headers
-- provider
-- adapter
-- scenario
-
-Avoid:
-
-- supercharge
-- next-gen
-- effortless magic
-- crush
-- growth
-- blast
-- AI-powered everything
-
-Ready copy:
-
-- One-line project description: Mailglass is a Phoenix-native framework for composing, previewing, delivering, routing, and observing email.
-- 140-character description: Email made visible for Phoenix apps: mailables, previews, delivery workflows, inbound routing, events, and operator clarity.
-- GitHub repo description: Phoenix-native email infrastructure: compose, preview, deliver, route, and observe messages with clear production feedback.
-- Hex.pm package description: A Phoenix-native transactional email framework with mailables, previews, delivery workflows, normalized events, and operator support.
-- README opening paragraph: Mailglass brings structure and visibility to email in Elixir apps: typed mailables, component-based templates, previews, delivery workflows, inbound routing, normalized events, and operator-friendly feedback.
-- Landing hero headline: Mailglass
-- Landing hero subheadline: Email, made visible for Phoenix apps.
-- Primary CTA: Read the docs
-- Secondary CTA: View on GitHub
-- Feature blurb 1: Preview real messages with realistic props before they ship.
-- Feature blurb 2: Follow delivery, webhook, suppression, and replay events in one timeline.
-- Feature blurb 3: Route inbound mail with application code instead of provider glue.
-- Why this exists 1: Phoenix has mailer primitives; production apps need an email layer.
-- Why this exists 2: Transactional email fails in operational ways, not just template ways.
-- Why this exists 3: Teams should inspect message state before customers report it.
-- Error: Delivery blocked: recipient is on the suppression list.
-- Empty: No deliveries match this filter.
-- Success: Preview rendered with realistic props.
-- Release note: Mailglass now exposes a clearer operator overview and a tighter design-token path for future admin surfaces.
-
-## Section 11 - Landing Page And Docs Blueprint
-
-Landing page:
-
-1. Hero: name, promise, install/docs CTA, restrained pane visual.
-2. Problem: email becomes invisible after render/send.
-3. Solution: compose, preview, deliver, observe, route.
-4. Install snippet: shortest real install path.
-5. Minimal example: one mailer or inbound route.
-6. Core benefits: preview, event timeline, suppression, inbound, admin.
-7. How it works: mailable -> message -> delivery -> event timeline.
-8. Use cases: welcome flows, password resets, receipts, notifications, inbound workflows.
-9. Why not just Swoosh: Swoosh sends; Mailglass adds framework-level visibility.
-10. Docs/GitHub/contribution CTAs.
-
-Docs/README:
-
-1. Opening promise
-2. Installation
-3. Quickstart
-4. Example
-5. Concepts
-6. API overview
-7. Recipes
-8. Troubleshooting
-9. Design rationale
-10. Contribution
-11. License
-
-## Section 12 - Repo-Ready Artifact Plan
-
-Commit:
-
-- `brandbook/index.html`
-- `brandbook/brand-audit.md`
-- `brandbook/brand-book.md`
-- `brandbook/tokens.json`
-- `brandbook/tokens.css`
-- `brandbook/README.md`
-- `brandbook/assets/*.svg`
-- `brandbook/examples/*.svg`
-
-Generate locally:
-
-- PNG exports for package/social surfaces.
-- Temporary browser screenshots.
-- Contrast reports.
-
-Do not commit by default:
-
-- font binaries
-- PDF exports
-- Figma files
-- large raster screenshot sets
-- generated visual diff folders
-
-## Section 13 - Prioritized Action Plan
-
-Do now:
-
-- Commit the `brandbook/` source artifacts.
-- Use the HTML brandbook and tokens for future docs/landing work.
-- Keep admin UI implementation aligned with the token semantics already shipped.
-
-Do next:
-
-- Use `readme-header.svg` when refreshing README presentation.
-- Export PNG social cards only for actual launch/release use.
-- Add a small contrast script only if repeated token changes begin.
-
-Defer:
-
-- Conference slide system.
-- Physical sticker artwork.
-- Full diagram component library.
-- CI visual-regression for brand examples.
+1. Phase 81: make the source brandbook and token language match this audit and remove overclaims.
+2. Phase 82: review multiple logo directions before approving the mark system.
+3. Phase 83: produce real Mailglass copy/specimens for README, Hex.pm, HexDocs, landing, social, and UI states.
+4. Phase 84: add executable repo-hygiene validation and close or explicitly defer every severity 4-5 row.
 
 Do not do:
 
 - Do not redesign the palette for novelty.
 - Do not add a mascot.
 - Do not add glassmorphism.
-- Do not commit font binaries or screenshots without a real release need.
+- Do not commit font binaries, screenshots, PNG batches, PDFs, Figma/vendor files, or large raster packs without a concrete release need.
 - Do not turn this into a second product UI framework.
+- Do not claim Phase 81-84 work is done from Phase 80 evidence.
 
-## Section 14 - Final Quality Gate
+## Section 11 - Final Quality Gate
 
-- Could a designer build from this? Yes: concept, colors, type, logo, examples, and layout rules are concrete.
-- Could an engineer implement from this? Yes: tokens JSON/CSS and SVG assets are committed.
-- Could a maintainer keep it consistent? Yes: artifact policy and anti-traits are clear.
-- Could a contributor understand it? Yes: the system is self-contained and low-jargon.
-- Could it support marketing without becoming cheesy? Yes, if copy blocks and banned vocabulary are followed.
-- Could it survive dark mode, small sizes, docs pages, and social previews? Yes, with the provided token and mark variants.
-- Does it feel specific to this library? Yes: visibility, previews, timelines, headers, routing, and Phoenix-native email infrastructure.
-- Does it avoid unnecessary brand thrash? Yes: it preserves the strong core and adds implementation scaffolding only.
+Phase 80 can pass if all of these are true:
+
+- The brand center is strong enough to build from.
+- Existing `brandbook/` assets are labeled as draft inputs, not approved outputs.
+- The audit classifies material as KEEP, TIGHTEN, REWORK, ADD, or REMOVE.
+- The required-surface matrix covers GitHub, README, Hex.pm, HexDocs, docs UI,
+  code/terminal snippets, landing page, social preview, favicon, small
+  monochrome mark, dark/light mode, diagrams, and UI states.
+- Every actionable `BRAND-GAP-*` row has classification, severity, surface,
+  evidence, rationale, target phase, and acceptance/closeout cue.
+- Phase 81-84 handoff is explicit.
+- Deferred/future/legal/name-risk work stays out of execution scope.
+
+Phase 80 is not complete if the audit claims final tokens, logos, copy,
+specimens, SVG distribution policy, README/Hex/HexDocs copy, package hygiene
+proof, validation scripts, or generated exports are complete before Phases 81-84
+run.
+
+This audit approves the audit/register gate only. It does not approve final
+assets. Phase 80 is complete only when `brandbook/brand-audit.md` is candid,
+row-addressable, closeout-ready, and scoped to this one source artifact.
