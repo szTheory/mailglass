@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Brand System and Repo-Ready Brandbook
-status: Active - needs normal GSD phase workflow
-last_updated: "2026-06-05T22:17:11.324Z"
-last_activity: 2026-06-05 - Phase 80 context gathered in assumptions mode
+status: executing
+last_updated: "2026-06-06T01:24:12.785Z"
+last_activity: 2026-06-06 -- Phase 80 planning complete
 progress:
-  total_phases: 5
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 7
+  completed_phases: 2
+  total_plans: 7
+  completed_plans: 6
+  percent: 29
 ---
 
 # Project State
@@ -26,19 +26,22 @@ See: .planning/PROJECT.md (updated 2026-06-05 after v1.8 brand-system milestone 
 
 Phase: 80 - Brand Audit and Gap Register
 Plan: —
-Status: Context gathered - ready for planning
-Last activity: 2026-06-05 - Phase 80 context gathered in assumptions mode
+Status: Ready to execute
+Last activity: 2026-06-06 -- Phase 80 planning complete
 
 ## v1.8 Milestone Intent
 
 - Pressure-test the prompt-era Mailglass brand book from a graphic design,
   UI/UX buildout, developer-credibility, accessibility, and repo-maintenance
   lens.
+
 - Preserve the strong current brand center: "Mailglass makes email visible" and
   "glass is a metaphor, not a visual excuse."
+
 - Create a self-contained `brandbook/` directory with static HTML, Markdown
   guidance, token JSON/CSS, SVG logo assets, SVG specimens, and source-control
   hygiene rules.
+
 - Keep the artifact set lean and durable: no PDFs, font binaries, Figma files,
   raster screenshot packs, or decorative collateral.
 
@@ -59,6 +62,7 @@ set is one draft direction, not an approved logo system.
 - No changes to Hex package code, release workflow, or public API.
 - `mailglass_admin/docs/design-system.md` remains the product UI constraint
   source; the brandbook must not contradict it.
+
 - Any PNG export or social-card raster is generated locally only when a real
   launch/release needs it.
 
@@ -177,6 +181,7 @@ Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
   KEEP/TIGHTEN/REWORK/ADD/REMOVE audit register, treats current SVGs as one
   draft logo direction, keeps brandbook work source-native under `brandbook/`,
   and routes implementation to Phases 81-84.
+
 - 2026-06-05: Corrected v1.8 status after maintainer challenge. `572f3eb2` created draft `brandbook/` artifacts, but v1.8 is not complete because phases 80-84 did not run through normal GSD discussion/planning/execution/review. Next correct step is Phase 80 discussion/audit.
 - 2026-06-05: Draft v1.8 brand-system artifacts created under `brandbook/`: static HTML brandbook, Markdown audit/source book, JSON/CSS tokens, one draft SVG logo direction, SVG specimens, and artifact hygiene README. `.planning/REQUIREMENTS.md` and `.planning/ROADMAP.md` updated for phases 80-84.
 - 2026-06-04: Phase 79 Plan 03 executed. 79-GAP-CLOSEOUT.md created — all five sev-4 rows (GAP-01/03/05/06/13) CLOSED with resolving commit SHAs; GAP-22 reconfirmed DEFERRED at severity 3; textual 6-pillar before/after audit finding; zero-open-sev-4/5 declaration. 74-GAP-REGISTER.md NOT modified. Commit: f202f1e0. VERIF-01 and VERIF-04 satisfied.
