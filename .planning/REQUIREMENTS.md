@@ -106,8 +106,8 @@ Deferred deliberately:
 
 | Requirement | Phase | Status |
 |---|---:|---|
-| BRAND-01 | 80 | Planned |
-| BRAND-02 | 80 | Planned |
+| BRAND-01 | 80 | Complete — 2026-06-06 |
+| BRAND-02 | 80 | Complete — 2026-06-06 |
 | BOOK-01 | 81 | Planned |
 | BOOK-02 | 81 | Planned |
 | BOOK-03 | 81 | Planned |
