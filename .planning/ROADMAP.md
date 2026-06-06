@@ -89,6 +89,13 @@ Plans:
 
 **Goal:** Add a simple, editable, source-control-friendly logo system.
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 82-01-PLAN.md — Create source-native logo option evidence and comparison.
+- [ ] 82-02-PLAN.md — Run maintainer logo-direction review checkpoint.
+- [ ] 82-03-PLAN.md — Finalize approved SVG assets and logo guidance.
+
 **Success criteria:**
 
 1. Primary logo, mark, monochrome mark, favicon, and social avatar SVGs exist.
