@@ -13,7 +13,8 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 **`v1.8 Brand System and Repo-Ready Brandbook` is active as of 2026-06-05. The milestone pressure-tests the prompt-era Mailglass brand book and turns it into a self-contained `brandbook/` system: static HTML, critical audit, source brand book, JSON/CSS tokens, editable SVG logos, SVG specimens, copy/microcopy guidance, and artifact hygiene rules. This is not product-feature growth and does not change public APIs, package code, or the implemented admin design system.**
 
 - Commit `572f3eb2` created a useful draft brandbook artifact set, but it did **not** complete v1.8 because the normal GSD discussion/phase/execute/verify lifecycle did not run.
-- Phase 80 is the next correct step: critical audit discussion and gap-register framing before accepting or revising the draft artifact set.
+- Phase 80 is complete as of 2026-06-06: `brandbook/brand-audit.md` is now a row-addressable audit/register gate with stable `BRAND-GAP-*` rows and explicit Phase 81-84 handoff.
+- Phase 81 is the next step: revise the source brandbook and token language from the frozen Phase 80 audit/register.
 - Phase 82 explicitly needs logo-option review; the current SVGs are one draft direction, not an approved final logo system.
 
 **`v1.7 Admin UI — IA & Design-System Polish v2` is complete and archived as of 2026-06-05. Phases 74-79 took `mailglass_admin` to "v2 polish" by applying the shipped design system more completely — a frozen UI-SPEC + scored gap register evidence gate, shell-level orientation parity across all 3 surfaces, an in-library Operator Overview landing, one unified `status_badge` atom replacing five divergent copies, full token migration, motion discipline, fully-expressive seed data, and a self-verified closeout (structural e2e + conformance/bundle grep gates, no human UAT). Milestone audit `status: passed` (19/19 requirements, 7/7 seams, 3/3 flows). No new dependencies, no brand-book amendment, stable seams untouched.**
@@ -248,7 +249,10 @@ If everything else fails, the preview dashboard, normalized event ledger, and on
 
 ## Validated Requirements (v0.1, v0.2, v1.1, v1.3, v1.4, v1.7 — SHIPPED)
 
-All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, and 19 v1.7 REQ-IDs satisfied.
+All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, and 19 v1.7 REQ-IDs satisfied. v1.8 validated so far: 2 brand-audit requirements.
+
+**By category (v1.8 in progress — Brand System and Repo-Ready Brandbook):**
+- ✓ BRAND-01..02 — critical KEEP/TIGHTEN/REWORK/ADD/REMOVE brand audit and required-surface stress matrix validated in Phase 80.
 
 **By category (v1.7 — Admin UI IA & Design-System Polish v2):**
 - ✓ AUDIT-01..03 — scored gap register, frozen UI-SPEC with canonical status-badge taxonomy, and before-baseline screenshot + assertion-ripple inventory validated in Phase 74 (evidence-only gate, zero code)
@@ -437,4 +441,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-05 after opening **v1.8 Brand System and Repo-Ready Brandbook** (phases 80–84; D-25 recorded). v1.8 is a self-contained brand-artifact milestone under `brandbook/`, not product-feature growth.*
+*Last updated: 2026-06-06 after completing Phase 80 of **v1.8 Brand System and Repo-Ready Brandbook**. Phase 80 validated BRAND-01/02 and established the stable `BRAND-GAP-*` audit/register gate for Phases 81-84.*
