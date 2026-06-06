@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Brand System and Repo-Ready Brandbook
-status: executing
-last_updated: "2026-06-06T01:24:12.785Z"
-last_activity: 2026-06-06 -- Phase 80 planning complete
+status: verifying
+last_updated: "2026-06-06T01:43:54.410Z"
+last_activity: 2026-06-06
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
-  percent: 29
+  completed_plans: 7
+  percent: 43
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05 after v1.8 brand-system milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v1.8 brand-system milestone setup and Phase 80 discussion/audit.
+**Current focus:** Phase 80 — brand-audit-and-gap-register
 
 ## Current Position
 
-Phase: 80 - Brand Audit and Gap Register
-Plan: —
-Status: Ready to execute
-Last activity: 2026-06-06 -- Phase 80 planning complete
+Phase: 80 (brand-audit-and-gap-register) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
+Last activity: 2026-06-06
 
 ## v1.8 Milestone Intent
 
@@ -130,12 +130,16 @@ set is one draft direction, not an approved logo system.
 - [79-03-A] Textual audit finding derived from code review; agent-browser available but demo boot causes swoosh lock drift (Pitfall 5); durable artifact is textual per D-01
 - [79-03-B] GAP-22 reconfirmed permanent v1.7 DEFERRED at severity 3 per design-system.md lines 152-159; no code change
 - [79-03-C] 74-GAP-REGISTER.md NOT modified; all closure evidence in 79-GAP-CLOSEOUT.md per frozen-artifact pattern
+- [80-01] Existing `brandbook/` assets are draft inputs from commit `572f3eb2`, not approved Phase 81-84 outputs.
+- [80-01] `BRAND-GAP-NN` rows are stable downstream citation anchors; severity 4-5 rows require explicit closure or documented deferral before Phase 84 closeout.
+- [80-01] Phase 80 approves only the audit/register gate in `brandbook/brand-audit.md`; final tokens, logos, copy, specimens, package proof, and validation scripts remain downstream work.
 
 ## Performance Metrics
 
 **Velocity:**
 
 - v1.7 phases completed: 6 (74-79), 22 plans — admin UI IA & design-system polish v2; audit passed (19/19 reqs, 7/7 seams, 3/3 flows); shipped 2026-06-05
+- Phase 80 plan completed: 1 plan, 3 tasks, 8 min — brand audit/register gate ready for verification
 - v1.6 phases completed: 3 (71-73), 6 plans, 5 tasks
 - v1.5 phases completed: 4 (67-70), 8 plans, 14 tasks
 - v1.4 phases completed: 4 (63-66), 12 plans, 22 tasks

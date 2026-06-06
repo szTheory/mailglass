@@ -46,10 +46,10 @@ maintainer-safe marketing copy.
 **Goal:** Produce a critical pressure test that decides what to keep, tighten,
 rework, add, or remove before generating assets.
 
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 80-01-PLAN.md — Convert `brandbook/brand-audit.md` into a row-addressable brand audit and gap register.
+- [x] 80-01-PLAN.md — Convert `brandbook/brand-audit.md` into a row-addressable brand audit and gap register.
 
 **Success criteria:**
 

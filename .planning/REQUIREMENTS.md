@@ -16,11 +16,11 @@ required unless a future claim needs verification.
 
 ### Brand Audit
 
-- [ ] **BRAND-01**: Maintainer can review a critical brand audit that classifies
+- [x] **BRAND-01**: Maintainer can review a critical brand audit that classifies
   existing material as `KEEP`, `TIGHTEN`, `REWORK`, `ADD`, or `REMOVE`, with a
   direct judgment on distinctiveness, implementation readiness, accessibility,
   and repo fit.
-- [ ] **BRAND-02**: The audit pressure-tests real surfaces: GitHub, README,
+- [x] **BRAND-02**: The audit pressure-tests real surfaces: GitHub, README,
   Hex.pm, HexDocs, docs UI, code/terminal snippets, landing page, social preview,
   favicon, small monochrome mark, dark/light mode, diagrams, and UI states.
 
