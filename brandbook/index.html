@@ -351,6 +351,7 @@
           <p class="eyebrow">Mailglass brand system</p>
           <h1>Email, made visible.</h1>
           <p class="lead">A source-controlled brandbook for a Phoenix-native email framework that should feel clear, inspectable, calm, and technically credible.</p>
+          <p class="lead">Source status: this static brandbook is a Phase 81 source artifact. Per BRAND-GAP-01, current logo, specimen, copy, and validation proof remain draft evidence until Phase 82, Phase 83, and Phase 84 close their assigned work.</p>
         </header>
 
         <div class="content">
@@ -358,7 +359,7 @@
             <h2>Executive Judgment</h2>
             <div class="callout">
               <strong>The brand is strong enough to build from.</strong>
-              The current system has a useful conceptual center: Mailglass turns email from a black box into a visible system. The job of this brandbook is not reinvention. It is making the system executable.
+              The current system has a useful conceptual center: Mailglass makes email visible. Mail you can see through is the durable idea preserved by BRAND-GAP-12. The job of this brandbook is not reinvention. It is making the system executable without pretending draft assets are final.
             </div>
             <div class="grid" style="margin-top: 16px">
               <div class="card">
@@ -413,19 +414,20 @@
 
           <section class="section" id="tokens">
             <h2>Token System</h2>
-            <p>The source tokens are intentionally small. Use semantic roles in docs and marketing surfaces; do not copy raw hex into components unless creating the token file itself.</p>
+            <p>The source tokens are intentionally small. Use semantic roles in docs and marketing surfaces; do not copy raw hex into components unless creating the token file itself. BRAND-GAP-08 keeps callout and state color guidance explicit: text use is different from non-text, border, and background structure.</p>
             <pre><code>--mg-bg: var(--mg-paper);
 --mg-text: var(--mg-ink);
 --mg-link: var(--mg-glass);
 --mg-state-success: var(--mg-pine);
 --mg-code-bg: #0a1521;
 --mg-focus-ring: var(--mg-glass);</code></pre>
+            <p>The implemented admin UI remains governed by <code>mailglass_admin/docs/design-system.md</code>. This brandbook is not a second admin UI framework; future product mapping should go through the existing Tailwind/daisyUI mechanics deliberately.</p>
             <p>Files: <a href="tokens.json">tokens.json</a> and <a href="tokens.css">tokens.css</a>.</p>
           </section>
 
           <section class="section" id="logo">
             <h2>Logo System</h2>
-            <p>Mailglass is wordmark-first. The mark is secondary and should suggest a pane with an implied message fold. It must not become a paper plane, mailbox, send arrow, or glossy app icon.</p>
+            <p>Mailglass is wordmark-first. The mark is secondary and should suggest a pane with an implied message fold. It must not become a paper plane, mailbox, send arrow, or glossy app icon. These local SVGs are useful draft evidence until Phase 82 completes logo review.</p>
             <div class="logo-row">
               <div class="logo-box"><img src="assets/logo-primary.svg" alt="Mailglass primary logo"></div>
               <div class="logo-box"><img src="assets/logo-mark.svg" alt="Mailglass mark"></div>
@@ -453,6 +455,7 @@
 
           <section class="section" id="surfaces">
             <h2>Surface Specimens</h2>
+            <p>Specimens remain local, browser-readable drafts. Phase 83 owns final specimen and copy work, including public copy blocks and real Mailglass flow examples.</p>
             <div class="grid">
               <a class="specimen" href="examples/palette.svg"><img src="examples/palette.svg" alt="Palette specimen"></a>
               <a class="specimen" href="examples/typography.svg"><img src="examples/typography.svg" alt="Typography specimen"></a>
@@ -477,7 +480,8 @@
           </section>
 
           <section class="section" id="qa">
-            <h2>Final Quality Gate</h2>
+            <h2>Quality Gate Targets</h2>
+            <p>Phase 84 owns executable validation proof for local references, contrast policy, package hygiene, and repo cleanliness. This page names the target posture without claiming that proof is complete.</p>
             <div class="grid">
               <div class="card"><h3>Designer</h3><p>Can build from concept, palette, type, SVGs, and specimens.</p></div>
               <div class="card"><h3>Engineer</h3><p>Can consume tokens and assets without a build step or vendor tool.</p></div>
