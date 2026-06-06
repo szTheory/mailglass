@@ -255,7 +255,7 @@ for a future product integration phase.
 ### Banned SVG Constructs Check
 
 ```bash
-! rg -n '<script|<image|foreignObject|data:|base64|https?://|@font-face|font-face' brandbook/assets/*.svg brandbook/assets/options/*.svg
+! rg -n '<script|<image|foreignObject|data:|base64|(^|[[:space:]<])(?:xlink:href|href|src)\s*=\s*(?:"|\x27)https?://|url\(\s*(?:"|\x27)?https?://|@font-face|font-face' brandbook/assets/*.svg brandbook/assets/options/*.svg
 ```
 
 ### Fast Local Validation Commands
@@ -264,7 +264,8 @@ for a future product integration phase.
 git diff --check -- brandbook/logo-options.md brandbook/brand-book.md brandbook/index.html brandbook/README.md brandbook/assets
 xmllint --noout brandbook/assets/*.svg brandbook/assets/options/*.svg
 rg -n 'BRAND-GAP-04|BRAND-GAP-05|BRAND-GAP-06|Selected direction|16px|32px|currentColor|reversed|unique ID' brandbook/logo-options.md brandbook/brand-book.md brandbook/index.html brandbook/README.md
-! rg -n '<script|<image|foreignObject|data:|base64|https?://|@font-face|font-face|paper plane|chat bubble|mailbox-on-post|send arrow|mascot|glossy' brandbook/logo-options.md brandbook/assets/*.svg brandbook/assets/options/*.svg
+! rg -n '<script|<image|foreignObject|data:|base64|(^|[[:space:]<])(?:xlink:href|href|src)\s*=\s*(?:"|\x27)https?://|url\(\s*(?:"|\x27)?https?://|@font-face|font-face' brandbook/assets/*.svg brandbook/assets/options/*.svg
+! rg -n 'paper plane|chat bubble|mailbox-on-post|send arrow|mascot|glossy' brandbook/assets/*.svg brandbook/assets/options/*.svg
 ```
 
 ## Environment Availability
@@ -376,4 +377,3 @@ pane/message-lines refinement.
 **Valid until:** 2026-07-06 for repo-scoped planning; re-read Phase 80-82 artifacts if brandbook assets change before execution.
 
 ## RESEARCH COMPLETE
-

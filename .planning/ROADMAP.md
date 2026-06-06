@@ -92,8 +92,17 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
+
+**Wave 1**
+
 - [ ] 82-01-PLAN.md — Create source-native logo option evidence and comparison.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 82-02-PLAN.md — Run maintainer logo-direction review checkpoint.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 82-03-PLAN.md — Finalize approved SVG assets and logo guidance.
 
 **Success criteria:**
@@ -117,9 +126,11 @@ README, docs, Hex.pm, landing, and launch surfaces.
 
 1. SVG specimens cover palette, typography, UI primitives, README framing, and
    docs-page framing.
+
 2. The audit/brandbook include concrete copy blocks for package descriptions,
    README intro, landing hero, feature blurbs, errors, empty states, success,
    warnings, and release notes.
+
 3. Examples do not pretend to be product screenshots.
 
 ### Phase 84: Quality Gate and Repo Hygiene
