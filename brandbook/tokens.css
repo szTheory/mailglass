@@ -26,6 +26,7 @@
   --mg-accent: var(--mg-glass);
   --mg-accent-subtle: var(--mg-mist);
 
+  /* State roles require text, icon, label, or structural cues; color alone is not enough. */
   --mg-state-default: var(--mg-glass);
   --mg-state-hover: #1d637a;
   --mg-state-active: #174e61;
@@ -39,6 +40,7 @@
   --mg-state-subtle: var(--mg-mist);
   --mg-state-muted: var(--mg-slate);
 
+  /* Callout backgrounds and borders are structure roles; validate text pairs before body copy use. */
   --mg-callout-info-bg: #eaf6fb;
   --mg-callout-info-border: var(--mg-glass);
   --mg-callout-success-bg: #e8f3ea;
