@@ -449,22 +449,22 @@ OWASP ASVS 5.0 is the current stable version as of May 2025, and OWASP's ASVS in
 | A2 | The quick grep commands are adequate as Phase 80 feedback, with real executable checks deferred to Phase 84. | Validation Architecture | Medium; if planner wants stricter verification in Phase 80, it must still avoid installing packages or implementing Phase 84. |
 | A3 | Existing GSD security templates may still refer to ASVS v4-style V5 categories, so the Security Domain includes both current ASVS 5 category mapping and a compatibility note. | Security Domain | Low; it only affects terminology, not the phase's concrete controls. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. Should `brandbook/brand-audit.md` embed the register or link to a companion section/file?
    - What we know: Context allows either shape if success criteria and citations are reliable. [VERIFIED: CONTEXT the agent's Discretion]
    - What's unclear: The planner's preferred artifact organization. [ASSUMED]
-   - Recommendation: Keep it embedded in `brandbook/brand-audit.md` for Phase 80 unless the file becomes too hard to scan; use anchors and stable IDs either way. [ASSUMED]
+   - RESOLVED: Keep it embedded in `brandbook/brand-audit.md` for Phase 80; `80-01-PLAN.md` makes `brandbook/brand-audit.md` the only source artifact modified and requires stable `BRAND-GAP-NN` IDs. [VERIFIED: `.planning/phases/80-brand-audit-and-gap-register/80-01-PLAN.md`]
 
 2. What severity threshold should block later phase closeout?
    - What we know: Phase 74/79 used severity 4-5 as closeout blockers, with severity 3 requiring explicit disposition. [VERIFIED: `.planning/phases/74-systematic-audit-and-ui-spec/74-GAP-REGISTER.md`; VERIFIED: `.planning/phases/79-verification-and-visual-regression-hardening/79-GAP-CLOSEOUT.md`]
    - What's unclear: Whether brand rows should use the same exact closeout threshold. [ASSUMED]
-   - Recommendation: Reuse the Phase 74 semantics to keep GSD behavior predictable. [VERIFIED: `.planning/phases/74-systematic-audit-and-ui-spec/74-GAP-REGISTER.md`]
+   - RESOLVED: Reuse the Phase 74/79 semantics; `80-01-PLAN.md` requires severity 4-5 rows to have explicit closure or documented deferral before Phase 84 closeout. [VERIFIED: `.planning/phases/80-brand-audit-and-gap-register/80-01-PLAN.md`]
 
 3. Should current SVG live text be allowed in distribution assets?
    - What we know: Current primary SVG uses live `<text>`; context defers live-text vs outlined distribution files to Phase 82. [VERIFIED: `brandbook/assets/logo-primary.svg`; VERIFIED: CONTEXT D-13]
    - What's unclear: Final distribution policy. [VERIFIED: CONTEXT D-13]
-   - Recommendation: Phase 80 should register the decision, not resolve it. [VERIFIED: CONTEXT D-13]
+   - RESOLVED: Phase 80 registers this as a Phase 82/84 decision and does not resolve distribution policy; `80-01-PLAN.md` includes `BRAND-GAP-06` and Phase 82/84 handoff coverage. [VERIFIED: `.planning/phases/80-brand-audit-and-gap-register/80-01-PLAN.md`]
 
 ## Sources
 
