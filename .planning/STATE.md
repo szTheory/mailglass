@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Brand System and Repo-Ready Brandbook
 status: ready_to_plan
-last_updated: 2026-06-06T05:59:51.571Z
+last_updated: "2026-06-06T06:13:44.403Z"
 last_activity: 2026-06-06
 progress:
   total_phases: 7
@@ -11,7 +11,8 @@ progress:
   total_plans: 8
   completed_plans: 8
   percent: 57
-stopped_at: Phase 82 context gathered (assumptions mode) - ready to plan Phase 82
+stopped_at: Phase 82 UI-SPEC approved - ready to plan Phase 82
+resume_file: .planning/phases/82-logo-and-svg-asset-system/82-UI-SPEC.md
 ---
 
 # Project State
@@ -178,6 +179,14 @@ Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
 `.planning/phases/` still contains leftover phase directories from earlier milestones. These should have been moved into `.planning/milestones/vX.X-phases/` during their respective `/gsd-complete-milestone` runs but were not. Run `/gsd-cleanup` before active phase execution to avoid name-collision risk.
 
 ## Session Continuity
+
+- 2026-06-06: Phase 82 UI-SPEC approved and committed. Created
+  `.planning/phases/82-logo-and-svg-asset-system/82-UI-SPEC.md` with the
+  source-native SVG/logo design contract, manual brandbook-token design system,
+  three required logo directions, simplified pane/message-lines default
+  refinement, unique SVG accessibility ID defaults, small-size/dark/monochrome
+  disposition requirements, and registry-safety pass. Ready to run
+  `$gsd-plan-phase 82`.
 
 - 2026-06-06: Phase 82 context gathered in assumptions mode. Created
   `.planning/phases/82-logo-and-svg-asset-system/82-CONTEXT.md` and
