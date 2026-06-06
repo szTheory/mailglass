@@ -89,13 +89,13 @@ Plans:
 
 **Goal:** Add a simple, editable, source-control-friendly logo system.
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 
 **Wave 1**
 
-- [ ] 82-01-PLAN.md — Create source-native logo option evidence and comparison.
+- [x] 82-01-PLAN.md — Create source-native logo option evidence and comparison.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
