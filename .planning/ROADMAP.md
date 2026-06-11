@@ -152,7 +152,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 85. Research and Differentiation Brief | 1/1 | Complete    | 2026-06-11 |
-| 86. Foundations — Palette, Type, Voice, Tokens | 1/1 | Complete   | 2026-06-11 |
+| 86. Foundations — Palette, Type, Voice, Tokens | 1/1 | Complete    | 2026-06-11 |
 | 87. Logo Tournament | 0/? | Not started | - |
 | 88. Brand Book Assembly | 0/? | Not started | - |
 | 89. Collateral, Specimens, and Copy Library | 0/? | Not started | - |
