@@ -91,8 +91,11 @@ Plans:
   2. `brandbook-fable/tokens.json` (DTCG-2025.10 style, two tiers) and `tokens.css` define raw palette → semantic roles → interaction states (default/hover/active/focus/disabled/selected) → feedback states (success/warning/error/info), plus type scale, space, radius, and focus tokens — for light AND dark themes
   3. A computed WCAG contrast matrix covers every text-role/surface-role pair in both themes with AA/AAA pass-fail and a usage rule per pair (Glass #277B96 stays AA-valid on white at 4.82:1; text-accent on tinted surfaces routes through `glass-deep`)
   4. No token name or description references planning, phases, milestones, the old brandbook, or any process vocabulary
-**Plans**: TBD
+**Plans**: 1 plan
 **UI hint**: yes
+
+Plans:
+- [ ] 86-01-PLAN.md — Token foundation: tokens.json + tokens.css (light+dark, full parity), computed WCAG matrix + foundations decision record, in-phase hygiene gate
 
 ### Phase 87: Logo Tournament
 **Goal**: The maintainer selects the fable logo from a constraint-screened, evidence-rendered field, and the winner ships as a complete outlined-path asset system
