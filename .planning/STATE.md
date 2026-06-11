@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.8
-milestone_name: Brand System and Repo-Ready Brandbook
-status: Awaiting next milestone
-last_updated: "2026-06-11T14:56:24.097Z"
-last_activity: 2026-06-11 — Milestone v1.8 completed and archived
+milestone: v1.9
+milestone_name: Brand Book Fable — A/B Brand System
+status: planning
+last_updated: "2026-06-11T15:02:36.232Z"
+last_activity: 2026-06-11
 progress:
-  total_phases: 5
-  completed_phases: 3
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
-closure_note: closed superseded 2026-06-11 — phases 83-84 superseded out-of-band, audit gaps_found accepted
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-05 after v1.8 brand-system milestone 
 
 ## Current Position
 
-Phase: Milestone v1.8 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-11 — Milestone v1.8 completed and archived
+Status: Defining requirements
+Last activity: 2026-06-11 — Milestone v1.9 started
 
 ## v1.8 Milestone Intent
 

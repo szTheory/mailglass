@@ -8,9 +8,21 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current State
+## Current Milestone: v1.9 Brand Book Fable — A/B Brand System
 
-**Next milestone: `v1.9 Brand Book Fable — A/B Brand System` (planning as of 2026-06-11).** A second, fully self-contained brand book at `brandbook-fable/` built fresh to A/B against the frozen `brandbook/` baseline: foundations (semantic tokens with state roles, light+dark, computed WCAG contrast matrix), a bounded logo tournament with a maintainer hard-pause (including integrated custom-typemark options; no rectangular background plates, no subtitle in the main lockup), a standalone HTML brand book with a live component gallery, landing/email/social specimens, and a per-surface copy library. Only `brandbook-fable/` is written; `brandbook/`, `mailglass_admin`, guides, and README are out of scope.
+**Goal:** Build a second, fully self-contained brand book at `brandbook-fable/` to A/B against the frozen codex `brandbook/` baseline (commit `09a84dd4`) — and beat it on craft, buildability, and standalone polish.
+
+**Target features:**
+- Research-grounded differentiation brief (forensic codex audit + world-class OSS/devtools brand-system research)
+- Foundations: semantic design tokens with interaction/feedback state roles, light AND dark, computed WCAG contrast matrix
+- Bounded logo tournament with a maintainer hard-pause: 8 diverse-by-axis options including integrated custom typemarks; no rectangular background plates, boundary-breaking marks, tight logotype proximity, no subtitle in the main lockup; refinement rounds on the pick(s); winner shipped as outlined-path SVGs (zero `font-family` in assets)
+- Standalone HTML brand book (`index.html`): self-contained, light/dark toggle, live component gallery with real hover/focus/disabled states, rendered contrast matrix, logo system section
+- Collateral: landing-page and transactional-email HTML specimens, README/docs/OG/diagram-language SVGs, per-surface copy library and domain-noun microcopy
+- Scripted quality gate: no planning-language leakage, no font dependencies, size budgets, local-only references, dark/16px render checks
+
+**Scope locks:** Only `brandbook-fable/` is written. `brandbook/` (frozen baseline), `mailglass_admin`, guides, and README are out of scope. Text artifacts only (SVG/MD/JSON/CSS/HTML); no Node toolchain, no binaries, no embedded fonts, no external network requests. Creative latitude on palette/type/logo where justified; locked essence: "mail you can see through," thoughtful-maintainer voice, glass-as-metaphor-not-gimmick.
+
+## Current State
 
 **`v1.8 Brand System and Repo-Ready Brandbook` is closed superseded as of 2026-06-11.** Phases 80-82 completed through GSD (brand audit/gap register, source brandbook + tokens, logo option evidence); the logo selection checkpoint and phases 83-84 were resolved out-of-band in a separate working session that selected `concept-07r-no-idot-02-tighter-gap` and finished the brandbook around it (frozen at commit `09a84dd4`). Milestone audit verdict `gaps_found` — accepted at close because v1.9 supersedes the remaining work.
 
