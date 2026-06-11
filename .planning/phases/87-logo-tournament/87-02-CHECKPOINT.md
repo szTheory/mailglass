@@ -8,7 +8,7 @@ parent_pick: variant-8F1-color
 fallback_winner: 8F-1-color
 round: 4
 rejection_count: 0
-blocks: [task-3-promotion]
+blocks: []
 ---
 
 # Phase 87 Plan 02 Checkpoint — FINAL Winner Decision (pick or stop)
@@ -237,3 +237,17 @@ in this plan.
 
 - *(awaiting maintainer — record the response verbatim here and in
   87-decision-record.md before Task 3 starts)*
+
+## FINAL SELECTION (resolves the tournament)
+
+- **Winner:** **4D — the sealed flap** (landscape envelope pane + flap of
+  light + lens-as-seal through the bottom edge; drawn entirely in shared
+  light). Maintainer: "i like 4D, run with that."
+- **Color program:** light = pane Ink #0D1B2A + seal outer half Glass
+  #277B96; dark = pane Mist #EAF6FB + seal Ice #A6EAF2. Mono master =
+  single even-odd path, currentColor.
+- **Selection history:** option 8 (round 1) → 8F synthesis (round 2) →
+  8F-1 color program (round 3) → 4D sealed flap (round 4, maintainer-directed
+  envelope exploration). rejection_count: 0 throughout.
+- **Date:** 2026-06-11
+- **Unblocks:** 87-02 Task 3 — promotion to brandbook-fable/assets/.
