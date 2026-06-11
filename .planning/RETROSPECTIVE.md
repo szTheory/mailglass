@@ -4,6 +4,61 @@
 
 ---
 
+## Milestone: v1.8 — Brand System and Repo-Ready Brandbook
+
+**Closed superseded:** 2026-06-11 (audit `gaps_found`, accepted)
+**Phases:** 3 of 5 through GSD (80-82) | **Plans:** 5
+
+### What Was Built
+
+- Row-addressable brand audit and `BRAND-GAP-*` register (Phase 80).
+- Source brandbook + JSON/CSS token system preserving the brand center (Phase 81).
+- Logo option evidence and review artifact (Phase 82-01); the selection
+  checkpoint and final-asset promotion resolved out-of-band when a separate
+  session selected `concept-07r-no-idot-02-tighter-gap` and finished the
+  brandbook around it (frozen at `09a84dd4`). Phases 83-84 superseded.
+
+### What Worked
+
+- Phases 80-81 ran clean through discuss/plan/execute/verify with small,
+  auditable plans.
+- Freezing the out-of-band result as an explicit baseline commit kept the
+  audit trail honest instead of retro-claiming GSD completion.
+
+### What Was Inefficient
+
+- The logo phase thrashed badly: 18 option SVGs (A-R) plus 10 concept variants
+  rejected across unbounded regeneration rounds before an out-of-band session
+  landed the selection. Options were not diverse by construction, were not
+  pre-screened against small-size/mono/dark renders, and rounds had no cap.
+- Milestone-blocking human checkpoints with open-ended option sets stall
+  indefinitely; the work escaped GSD entirely to resolve.
+
+### Patterns Established
+
+- Out-of-band resolution protocol: record the decision in the open
+  CHECKPOINT.md, write SUMMARY.md files marking plans resolved-out-of-band,
+  freeze the result as a baseline commit, close the milestone as superseded
+  with the audit attached.
+
+### Key Lessons
+
+- Structure human creative-selection checkpoints as bounded tournaments:
+  diverse-by-axis option sets, pre-flight constraint screening, rendered
+  evidence (16px/32px/mono/dark/in-context), capped refinement rounds, and a
+  circuit breaker to discussion after consecutive full rejections. This is
+  encoded in the v1.9 plan.
+- Shipped artifacts must be grepped for planning-language leakage; v1.8's
+  `tokens.json` shipped "Phase 84" references.
+
+### Cost Observations
+
+- Sessions: ~4 (phases 80-82 GSD, plus the out-of-band brandbook session).
+- Notable: the unbounded logo checkpoint consumed more iterations than all
+  other v1.8 work combined.
+
+---
+
 ## Milestone: v1.7 — Admin UI: IA & Design-System Polish v2
 
 **Shipped:** 2026-06-05

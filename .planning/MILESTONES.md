@@ -1,5 +1,39 @@
 # Milestones
 
+## v1.8 Brand System and Repo-Ready Brandbook (Closed superseded: 2026-06-11)
+
+**Phases completed:** 3 of 5 phases (80-82), 5 plans; phases 83-84 superseded
+(intent substantially satisfied out-of-band, residual gaps accepted)
+
+**Closure mode:** Closed as **superseded**, not cleanly shipped. The milestone
+audit verdict is `gaps_found` (`.planning/milestones/v1.8-MILESTONE-AUDIT.md`);
+the gaps were accepted because an out-of-band session (frozen at commit
+`09a84dd4`) completed the brandbook around the selected concept-07r identity,
+and the v1.9 milestone ("Brand Book Fable — A/B Brand System") supersedes the
+remaining work with a competing brand book at `brandbook-fable/`.
+
+**Key accomplishments:**
+
+- Row-addressable brand audit with required-surface stress matrix, stable BRAND-GAP register, and Phase 81-84 handoff gates
+- Source brandbook and token guidance now preserve the Mailglass brand center, label draft assets honestly, and keep product admin UI mechanics separate from brandbook tokens.
+- Three source-native logo directions and a criteria-based review artifact now give the maintainer visual evidence before final SVG approval.
+- The maintainer checkpoint resolved out-of-band: concept-07r-no-idot-02-tighter-gap is the selected canonical identity.
+- The selected 07r identity was promoted into the canonical asset set and the active brand docs were rewritten around it, out-of-band.
+
+**Known gaps (accepted at close):**
+
+- EXAMPLE-01/02, VOICE-01, REPO-01..03 never verified through GSD phases 83-84;
+  partial out-of-band coverage only.
+- `brandbook/assets/logo-primary.svg` wordmark is live `<text>` in macOS-only
+  Avenir Next; degrades off-macOS.
+- `brandbook/tokens.json` retains planning-language references to a contrast
+  validation that never ran; dark tokens exist but are never demonstrated.
+
+Known deferred items at close: 2 (pre-existing v1.7 bookkeeping artifacts for
+Phase 76, already documented as resolved-downstream in STATE.md Deferred Items).
+
+---
+
 ## v1.8 Brand System and Repo-Ready Brandbook (Active: 2026-06-05)
 
 **Phases:** 5 phases (80-84)

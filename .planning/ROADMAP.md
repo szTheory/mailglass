@@ -18,145 +18,25 @@
 - ✅ **v1.5 Demo Evidence and Click-Around Confidence** - Phases 67-70 (shipped 2026-06-02) - see [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md)
 - ✅ **v1.6 Inbound 1.0 Release and Truth Lock** - Phases 71-73 (shipped 2026-06-02) - see [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 - ✅ **v1.7 Admin UI - IA & Design-System Polish v2** - Phases 74-79 (shipped 2026-06-05) - see [milestones/v1.7-ROADMAP.md](milestones/v1.7-ROADMAP.md)
-- 🔄 **v1.8 Brand System and Repo-Ready Brandbook** - Phases 80-84 (active)
-
-## v1.8 Brand System and Repo-Ready Brandbook
-
-**Goal:** Pressure-test the existing Mailglass brand book and turn it into a
-self-contained, source-control-friendly brand system for OSS docs, README
-presentation, landing pages, design tokens, SVG logos, visual specimens, and
-maintainer-safe marketing copy.
-
-**Scope locks:**
-
-- Preserve the current brand center; do not redesign for novelty.
-- Keep all new collateral under `brandbook/`.
-- Commit only durable text assets: Markdown, HTML, JSON, CSS, and SVG.
-- Do not add font binaries, PDFs, Figma files, generated screenshot sets, or
-  large raster exports.
-- Keep the artifact set lean: all killer, no filler.
+- ✅ **v1.8 Brand System and Repo-Ready Brandbook** - Phases 80-84 (closed superseded 2026-06-11; audit verdict gaps_found, accepted) - see [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md) and [milestones/v1.8-MILESTONE-AUDIT.md](milestones/v1.8-MILESTONE-AUDIT.md)
 
 ## Phases
 
-### Phase 80: Brand Audit and Gap Register
+<details>
+<summary>✅ v1.8 Brand System and Repo-Ready Brandbook (Phases 80-84) — CLOSED SUPERSEDED 2026-06-11</summary>
 
-**Status:** Complete — 2026-06-06
-**Requirements:** BRAND-01, BRAND-02
+- [x] Phase 80: Brand Audit and Gap Register (1/1 plans) — completed 2026-06-06
+- [x] Phase 81: Brandbook Source and Token System (1/1 plans) — completed 2026-06-06
+- [x] Phase 82: Logo and SVG Asset System (3/3 plans) — completed 2026-06-10; plans 02/03 resolved out-of-band, maintainer selected `concept-07r-no-idot-02-tighter-gap`, frozen at commit `09a84dd4`
+- [~] Phase 83: Visual Specimens and Copy Blocks — superseded 2026-06-10 (intent substantially satisfied out-of-band; residual gaps inherited by v1.9)
+- [~] Phase 84: Quality Gate and Repo Hygiene — superseded 2026-06-10 (partial out-of-band coverage; contrast validation never ran; residual gaps inherited by v1.9)
 
-**Goal:** Produce a critical pressure test that decides what to keep, tighten,
-rework, add, or remove before generating assets.
+Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
 
-**Plans:** 1/1 plans complete
+</details>
 
-Plans:
-- [x] 80-01-PLAN.md — Convert `brandbook/brand-audit.md` into a row-addressable brand audit and gap register.
-
-**Success criteria:**
-
-1. `brandbook/brand-audit.md` gives a candid executive judgment.
-2. Audit includes DNA extraction, scorecard, surface stress tests, gaps/risks,
-   artifact plan, prioritized actions, and final quality gate.
-3. Recommendations preserve the strong existing brand and avoid churn.
-
-### Phase 81: Brandbook Source and Token System
-
-**Status:** Complete — 2026-06-06
-**Requirements:** BOOK-01, BOOK-02, BOOK-03, TOKEN-01, TOKEN-02, TOKEN-03
-
-**Goal:** Create the source brandbook and implementation tokens that designers,
-engineers, and future agents can use without reopening prompt history.
-
-**Plans:** 1/1 plans complete
-
-Plans:
-- [x] 81-01-PLAN.md — Revise the source brandbook and token system to remove
-  overclaims, preserve the brand center, clarify semantic token usage, and keep
-  the admin UI boundary explicit.
-
-**Success criteria:**
-
-1. `brandbook/index.html` opens directly from disk.
-2. `brandbook/brand-book.md` captures the source-of-truth brand guidance.
-3. `brandbook/tokens.json` and `brandbook/tokens.css` define raw, semantic,
-   state, callout, code, type, space, radius, border, shadow, focus, and motion
-   tokens.
-4. Token language aligns with `mailglass_admin/docs/design-system.md`.
-
-### Phase 82: Logo and SVG Asset System
-
-**Status:** Planned
-**Requirements:** LOGO-01, LOGO-02, LOGO-03, LOGO-04
-
-**Goal:** Add a simple, editable, source-control-friendly logo system.
-
-**Plans:** 1/3 plans executed
-
-Plans:
-
-**Wave 1**
-
-- [x] 82-01-PLAN.md — Create source-native logo option evidence and comparison.
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [ ] 82-02-PLAN.md — Run maintainer logo-direction review checkpoint. Fresh G-R first-principles options pending selection.
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [ ] 82-03-PLAN.md — Finalize approved SVG assets and logo guidance.
-
-**Success criteria:**
-
-1. Primary logo, mark, monochrome mark, favicon, and social avatar SVGs exist.
-2. Maintainer reviews multiple credible logo directions before selecting or
-   refining the final system.
-3. Assets include accessible title/description metadata.
-4. Assets avoid raster images, embedded fonts, glossy effects, paper-plane
-   metaphors, mascot logic, and unnecessary path complexity.
-
-### Phase 83: Visual Specimens and Copy Blocks
-
-**Status:** Planned
-**Requirements:** EXAMPLE-01, EXAMPLE-02, VOICE-01
-
-**Goal:** Add high-signal examples and copy that make the brand buildable for
-README, docs, Hex.pm, landing, and launch surfaces.
-
-**Success criteria:**
-
-1. SVG specimens cover palette, typography, UI primitives, README framing, and
-   docs-page framing.
-
-2. The audit/brandbook include concrete copy blocks for package descriptions,
-   README intro, landing hero, feature blurbs, errors, empty states, success,
-   warnings, and release notes.
-
-3. Examples do not pretend to be product screenshots.
-
-### Phase 84: Quality Gate and Repo Hygiene
-
-**Status:** Planned
-**Requirements:** REPO-01, REPO-02, REPO-03
-
-**Goal:** Ensure the brand system is source-control-ready, self-contained, and
-safe to maintain.
-
-**Success criteria:**
-
-1. All artifacts live under `brandbook/`.
-2. The folder documents commit/generate/avoid rules.
-3. Validation checks cover JSON parsing, SVG parsing, local HTML references,
-   file sizes, and git cleanliness.
-
-## Progress
-
-| Phase | Name | Status |
-|---:|---|---|
-| 80 | Brand Audit and Gap Register | Complete — 2026-06-06 |
-| 81 | Brandbook Source and Token System | Complete — 2026-06-06 |
-| 82 | Logo and SVG Asset System | Planned |
-| 83 | Visual Specimens and Copy Blocks | Planned |
-| 84 | Quality Gate and Repo Hygiene | Planned |
+*Next milestone (v1.9 "Brand Book Fable — A/B Brand System") will be roadmapped
+by `/gsd-new-milestone`; its phases continue numbering at 85.*
 
 ## Backlog
 
@@ -167,15 +47,5 @@ pass.
 
 ### Phase 999.2: Shift-Left Email Screenshot + Responsive Preview Workflow
 
-Retained from previous milestones. Do not fold into v1.8; this brandbook avoids
-committing generated screenshot sets by design.
-
-## Notes
-
-**v1.8 artifact rule:** Brand collateral belongs in `brandbook/`. Product code
-should import or copy from that system only when a real surface needs it.
-
-**Correction note:** Commit `572f3eb2` created a useful draft brandbook artifact
-set, but it did not complete v1.8 because the normal GSD phase lifecycle did not
-run. Treat those files as draft inputs to Phase 80+, not approved milestone
-closeout.
+Retained from previous milestones. Do not fold into brandbook milestones; the
+brandbooks avoid committing generated screenshot sets by design.

@@ -1,15 +1,27 @@
 ---
 phase: 82-logo-and-svg-asset-system
 plan: 02
-status: awaiting-maintainer-selection
-blocks: [82-03]
+status: resolved-out-of-band
+blocks: []
 created: 2026-06-06T20:16:29Z
-updated: 2026-06-06T20:22:19Z
+updated: 2026-06-10T00:00:00Z
+resolution: concept-07r-no-idot-02-tighter-gap selected out-of-band
 ---
 
 # Phase 82 Plan 02 Checkpoint
 
-Plan 82-02 remains open. Do not create `82-02-SUMMARY.md` until the maintainer chooses one active G-R direction or provides refinement notes.
+**RESOLVED 2026-06-10 (out-of-band).** The maintainer did not select any G-R
+option. In a separate working session the exploration continued past G-R into a
+literal-mail + glass-pane concept family (07r), and the maintainer selected
+`brandbook/assets/concepts/concept-07r-no-idot-02-tighter-gap.svg` as the
+canonical identity. That session promoted the selection into the canonical
+assets (`logo-primary.svg`, `logo-mark.svg`, `logo-monochrome.svg`,
+`favicon.svg`, `social-avatar.svg`) and rewrote the active brand docs around
+it. The full result is frozen at commit `09a84dd4`
+(`docs(brand): freeze codex brandbook baseline for A/B`). The G-R set is
+rejected evidence; do not revive it.
+
+Original checkpoint state preserved below for the audit trail.
 
 ## Maintainer Feedback
 

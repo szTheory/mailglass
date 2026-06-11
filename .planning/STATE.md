@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Brand System and Repo-Ready Brandbook
-status: executing
-last_updated: "2026-06-06T20:22:19Z"
-last_activity: 2026-06-06 -- Phase 82 first-principles logo options reset to G-R after maintainer feedback
+status: Awaiting next milestone
+last_updated: "2026-06-11T14:56:24.097Z"
+last_activity: 2026-06-11 — Milestone v1.8 completed and archived
 progress:
-  total_phases: 7
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 8
-  percent: 57
+  total_phases: 5
+  completed_phases: 3
+  total_plans: 5
+  completed_plans: 5
+  percent: 100
+closure_note: closed superseded 2026-06-11 — phases 83-84 superseded out-of-band, audit gaps_found accepted
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05 after v1.8 brand-system milestone opened)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 82 — logo-and-svg-asset-system
+**Current focus:** Planning next milestone — v1.9 "Brand Book Fable — A/B Brand System"
 
 ## Current Position
 
-Phase: 82 (logo-and-svg-asset-system) — EXECUTING
-Plan: 82-02 checkpoint awaiting fresh G-R selection
-Status: Executing Phase 82
-Last activity: 2026-06-06 -- Phase 82 first-principles logo options reset to G-R after maintainer feedback
+Phase: Milestone v1.8 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-11 — Milestone v1.8 completed and archived
 
 ## v1.8 Milestone Intent
 
@@ -231,4 +232,4 @@ Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
 
 ## Operator Next Steps
 
-- Run `$gsd-plan-phase 82` to plan the logo and SVG asset-system work.
+- Start the next milestone with /gsd-new-milestone
