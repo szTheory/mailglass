@@ -94,6 +94,20 @@ untouched.
 
 ## Selection
 
-- **Winner:** _(awaiting maintainer)_
-- **Rationale / notes:** _(awaiting maintainer)_
-- **Date:** _(awaiting maintainer)_
+- **Round-2 outcome:** `round 3` requested (the protocol's final round, ≤4
+  candidates, hard cap). Direction locked: **8F — the synthesis** (portrait
+  pane 84×100 + corner lens r36 + gap 40) is the maintainer's favorite.
+- **Round-3 directive:** variations on the actual IMAGE in the mark
+  (pictorial content, not just parameters), plus COLOR versions — the
+  maintainer asked whether the identity is pure monochrome; answer recorded:
+  mono was a constraint test, round 3 introduces the token-only color
+  program (Ink / Glass / glass-deep / Ice / Mist, no gradients).
+- **Standing constraints carry:** C-01..C-15 including no-broken-reads; mono
+  single-path even-odd master remains a required deliverable per candidate.
+- **Date:** 2026-06-11
+
+Round-3 candidates (per the approved plan): 8F-1 as-is-in-color (control),
+8F-2 the lit lens (Ice-filled void), 8F-3 imagery variation A (message made
+visible in the light), 8F-4 imagery variation B (executor's design-exam
+pick, same shared-light language). Final pause after round 3 is
+**pick-or-stop** — no round 4.
