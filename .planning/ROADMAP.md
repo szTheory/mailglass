@@ -60,7 +60,7 @@ Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
 </details>
 
 - [x] **Phase 85: Research and Differentiation Brief** - Forensic codex-brandbook audit + differentiation brief (≤12 differentiators, book outline, kill-list); planning artifacts only (completed 2026-06-11)
-- [ ] **Phase 86: Foundations — Palette, Type, Voice, Tokens** - Evolve-vs-keep records, DTCG tokens.json/tokens.css (light+dark, interaction+feedback states), computed WCAG contrast matrix
+- [x] **Phase 86: Foundations — Palette, Type, Voice, Tokens** - Evolve-vs-keep records, DTCG tokens.json/tokens.css (light+dark, interaction+feedback states), computed WCAG contrast matrix (completed 2026-06-11)
 - [ ] **Phase 87: Logo Tournament** - 8 pre-screened options across 4 axes, rendered-evidence gallery, maintainer hard pause, ≤2 refinement rounds, winner promoted to outlined-path assets
 - [ ] **Phase 88: Brand Book Assembly** - Self-contained index.html (light/dark toggle, live component gallery, contrast matrix, logo section), brand-book.md, README.md
 - [ ] **Phase 89: Collateral, Specimens, and Copy Library** - landing-page/email-template HTML, README/docs/OG/diagram SVG specimens, copy-blocks.md, microcopy.md
@@ -95,7 +95,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 86-01-PLAN.md — Token foundation: tokens.json + tokens.css (light+dark, full parity), computed WCAG matrix + foundations decision record, in-phase hygiene gate
+- [x] 86-01-PLAN.md — Token foundation: tokens.json + tokens.css (light+dark, full parity), computed WCAG matrix + foundations decision record, in-phase hygiene gate
 
 ### Phase 87: Logo Tournament
 **Goal**: The maintainer selects the fable logo from a constraint-screened, evidence-rendered field, and the winner ships as a complete outlined-path asset system
@@ -152,7 +152,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 85. Research and Differentiation Brief | 1/1 | Complete    | 2026-06-11 |
-| 86. Foundations — Palette, Type, Voice, Tokens | 0/? | Not started | - |
+| 86. Foundations — Palette, Type, Voice, Tokens | 1/1 | Complete   | 2026-06-11 |
 | 87. Logo Tournament | 0/? | Not started | - |
 | 88. Brand Book Assembly | 0/? | Not started | - |
 | 89. Collateral, Specimens, and Copy Library | 0/? | Not started | - |

@@ -31,16 +31,16 @@ proof, and standalone polish.
 
 ### FOUND — Foundations and Tokens
 
-- [ ] **FOUND-01**: Every seed palette/typography decision has an explicit
+- [x] **FOUND-01**: Every seed palette/typography decision has an explicit
   evolve-vs-keep record with contrast math justifying any deviation.
-- [ ] **FOUND-02**: `brandbook-fable/tokens.json` and `tokens.css` define raw
+- [x] **FOUND-02**: `brandbook-fable/tokens.json` and `tokens.css` define raw
   palette → semantic roles → interaction states (default/hover/active/focus/
   disabled/selected) → feedback states (success/warning/error/info), plus
   type scale, space, radius, and focus tokens — for light AND dark themes.
-- [ ] **FOUND-03**: A computed WCAG contrast matrix covers every text-role/
+- [x] **FOUND-03**: A computed WCAG contrast matrix covers every text-role/
   surface-role pair in both themes with AA/AAA pass-fail and a usage rule per
   pair.
-- [ ] **FOUND-04**: No token name or description references planning, phases,
+- [x] **FOUND-04**: No token name or description references planning, phases,
   milestones, the old brandbook, or any process vocabulary.
 
 ### LOGO — Logo Tournament and Asset System
@@ -145,10 +145,10 @@ Mapped: 22/22 v1.9 requirements → Phases 85-90 (roadmapped 2026-06-11).
 |--------|-------|--------|
 | BRIEF-01 | Phase 85 | Complete |
 | BRIEF-02 | Phase 85 | Complete |
-| FOUND-01 | Phase 86 | Pending |
-| FOUND-02 | Phase 86 | Pending |
-| FOUND-03 | Phase 86 | Pending |
-| FOUND-04 | Phase 86 | Pending |
+| FOUND-01 | Phase 86 | Complete |
+| FOUND-02 | Phase 86 | Complete |
+| FOUND-03 | Phase 86 | Complete |
+| FOUND-04 | Phase 86 | Complete |
 | LOGO-05 | Phase 87 | Pending |
 | LOGO-06 | Phase 87 | Pending |
 | LOGO-07 | Phase 87 | Pending |

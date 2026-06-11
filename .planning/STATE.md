@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Brand Book Fable — A/B Brand System
 status: ready_to_plan
-last_updated: 2026-06-11T15:44:01.852Z
+last_updated: "2026-06-11T16:20:00.000Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 7
-  percent: 0
-stopped_at: Phase 85 complete (1/1) — ready to discuss Phase 86
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
+  percent: 33
+stopped_at: Phase 86 complete (1/1) — ready to plan Phase 87 (logo tournament)
 ---
 
 # Project State
@@ -21,27 +21,30 @@ stopped_at: Phase 85 complete (1/1) — ready to discuss Phase 86
 See: .planning/PROJECT.md (updated 2026-06-11 — v1.9 "Brand Book Fable" milestone section)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 86 — foundations — palette, type, voice, tokens
+**Current focus:** Phase 87 — logo tournament (Phase 86 foundations complete)
 
 ## Current Position
 
-Phase: 86 of 85 (foundations — palette, type, voice, tokens)
-Plan: Not started
-Status: Ready to plan
+Phase: 86 of 90 (foundations — palette, type, voice, tokens) — COMPLETE
+Plan: 01 of 01 (complete)
+Status: Phase 86 complete — ready to plan Phase 87
 Last activity: 2026-06-11
 
-Progress: [░░░░░░] 0/6 phases
+Progress: [██░░░░] 2/6 phases (v1.9: 85-90)
 
 ## v1.9 Milestone Intent
 
 - Build a second, fully self-contained brand book at `brandbook-fable/` to A/B
   against the frozen codex `brandbook/` baseline (commit `09a84dd4`) — and
   beat it on craft, buildability, accessibility proof, and standalone polish.
+
 - Research-grounded: forensic codex audit + differentiation brief before any
   fable artifact is authored.
+
 - Bounded logo tournament with a maintainer hard pause (8 options, 4 axes,
   rendered evidence, ≤2 refinement rounds, circuit breaker after two
   consecutive full-set rejections).
+
 - Fix the v1.8 root failures: live `<text>` wordmarks (outlined paths only),
   planning-language leakage (denylist grep), dark tokens undemonstrated
   (page-level toggle re-skins every specimen), contrast never validated
@@ -51,10 +54,13 @@ Progress: [░░░░░░] 0/6 phases
 
 - Only `brandbook-fable/` is written. `brandbook/` is the frozen A/B baseline;
   `mailglass_admin`, `guides/`, and the root README are untouched.
+
 - Text artifacts only: SVG, MD, JSON, CSS, HTML. No Node toolchain, no
   binaries, no embedded fonts, no external network requests in any HTML.
+
 - Tournament galleries, audits, and decision records live in `.planning/`,
   never inside `brandbook-fable/`.
+
 - Locked essence: "mail you can see through", thoughtful-maintainer voice,
   glass-as-metaphor-not-gimmick. Palette/typography/logo open to justified
   evolution.
@@ -75,6 +81,8 @@ Progress: [░░░░░░] 0/6 phases
 
 ## Decisions
 
+- [86-01] Dark feedback backgrounds decided and verified at first candidates: success-bg #142B22 (6.56), warning-bg #2B2314 (7.37), error-bg #2E1B1E (6.65), info-bg #11293A (11.18) — each `{kind}-text` >= 4.5:1 on its bg.
+- [86-01] Worst-surface contrast figures recomputed against the SHIPPED surface set: `surface-selected` is the worst surface in both themes (dark text-muted 6.66 = AA there, AAA elsewhere); the 86-foundations-decisions.md matrix is authoritative over research worst-case quotes. border-input <3:1 on selected surfaces resolved as a usage rule (form controls never sit on selected rows).
 - [v1.9] Research pre-settled (see `.planning/research/v1.9-brandbook-fable/SUMMARY.md`): DTCG-2025.10 token format (two tiers, hex strings), `--mg-*` CSS naming with `[data-theme="dark"]` reassignment, Glass #277B96 passes AA on white (4.82:1), six computed fix hexes for the four contrast failures, codex dark ramp adopted, font stacks honest about system-ui fallback, GitHub SVG rules (outlined paths, explicit hex fills, no bare currentColor in file assets).
 - [D-25] v1.8 brand-system work is a repo-artifact milestone, not product expansion: all artifacts stay under `brandbook/`, no API/package code changes, no binary-heavy collateral, and prompt-era brand strategy is preserved. `572f3eb2` is a draft artifact commit, not milestone completion evidence.
 - [D-24] v1.7 admin UI polish is a sanctioned adopter-visible-quality investment under D-23 convergence rule; delivered within the brand book (Fork B) by applying the shipped design system more completely, with a real in-library Operator Overview landing + generalized orientation (Fork A).
@@ -100,6 +108,7 @@ Progress: [░░░░░░] 0/6 phases
 
 **Velocity:**
 
+- v1.9 phases completed: 2 (85-86), 2 plans; 86-01: 3 tasks, ~25min, 3 files
 - v1.8 phases completed: 3 through GSD (80-82), 5 plans; phases 83-84 closed superseded 2026-06-11
 - v1.7 phases completed: 6 (74-79), 22 plans — admin UI IA & design-system polish v2; audit passed (19/19 reqs, 7/7 seams, 3/3 flows); shipped 2026-06-05
 - v1.6 phases completed: 3 (71-73), 6 plans, 5 tasks
