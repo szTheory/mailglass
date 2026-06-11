@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -16 953 212" role="img" aria-labelledby="r38f1d-title r38f1d-desc">
+  <title id="r38f1d-title">mailglass lockup, candidate 8F-1, color on dark</title>
+  <desc id="r38f1d-desc">The 8F mark unchanged: a portrait pane and a corner lens sharing a lit corner, in the two-tone brand color program beside the mailglass wordmark. Brand-token fills for dark surfaces; same geometry as the mono master.</desc>
+  <g>
+    <!-- color layers over the mono master's exact geometry; 8F verbatim; pane 84x100 at (0,40); lens r36 on the bottom-right corner (84,140); lit quarter voided (even-odd) -->
+    <!-- pane (lit quarter open) -->
+    <path data-part="mark" fill="#EAF6FB" d="M 0 40 L 84 40 L 84 104 A 36 36 0 0 0 48 140 L 0 140 Z"/>
+    <!-- lens, solid outer three-quarter -->
+    <path data-part="mark" fill="#A6EAF2" d="M 84 104 A 36 36 0 1 1 48 140 L 84 140 Z"/>
+  </g>
+  <g transform="translate(160 0)">
+    <!-- m advance 126 -->
+    <g transform="translate(0 0)"><path data-glyph="m" fill="#EAF6FB" d="M 0 140 L 0 40 L 30 40 C 54.5 40 70 47 74 58 C 78 47 83 40 90 40 C 110 40 126 51.5 126 66 L 126 140 L 104 140 L 104 78 C 104 68 98.5 60 92 60 C 84 60 77 63 74 72 L 74 140 L 52 140 L 52 78 C 52 68 46.5 60 40 60 C 32 60 26.5 60.5 22 62 L 22 140 Z"/></g>
+    <!-- a advance 72 -->
+    <g transform="translate(154 0)"><path data-glyph="a" fill="#EAF6FB" d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"/></g>
+    <!-- i advance 22 -->
+    <g transform="translate(257 0)"><path data-glyph="i" fill="#EAF6FB" d="M 0 40 L 22 40 L 22 140 L 0 140 Z M 11 -7 C 18 -7 23.5 -1.5 23.5 5.5 C 23.5 12.5 18 18 11 18 C 4 18 -1.5 12.5 -1.5 5.5 C -1.5 -1.5 4 -7 11 -7 Z"/></g>
+    <!-- l advance 22 -->
+    <g transform="translate(310 0)"><path data-glyph="l" fill="#EAF6FB" d="M 0 0 L 22 0 L 22 140 L 0 140 Z"/></g>
+    <!-- g advance 74 -->
+    <g transform="translate(360 0)"><path data-glyph="g" fill="#EAF6FB" d="M 0 90 C 0 60.5 13.5 37 33 37 C 42 37 47.5 38.5 52 40 L 74 40 L 74 152 C 74 165.5 63 177 46 177 L 30 177 L 30 157 C 41 157 52 153 52 141 L 52 127 C 49 136 43 143 33 143 C 14.5 143 0 119.5 0 90 Z M 37 57 C 28.5 57 22 71.5 22 90 C 22 108.5 28.5 123 37 123 C 45.5 123 52 108.5 52 90 C 52 71.5 45.5 57 37 57 Z"/></g>
+    <!-- l advance 22 -->
+    <g transform="translate(465 0)"><path data-glyph="l" fill="#EAF6FB" d="M 0 0 L 22 0 L 22 140 L 0 140 Z"/></g>
+    <!-- a advance 72 -->
+    <g transform="translate(515 0)"><path data-glyph="a" fill="#EAF6FB" d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"/></g>
+    <!-- s advance 64 -->
+    <g transform="translate(615 0)"><path data-glyph="s" fill="#EAF6FB" d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"/></g>
+    <!-- s advance 64 -->
+    <g transform="translate(705 0)"><path data-glyph="s" fill="#EAF6FB" d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"/></g>
+  </g>
+</svg>
