@@ -268,3 +268,98 @@ a solid rounded square enters badge/plate vocabulary (C-01 adjacency).
 
 90 rows, 90 PASS. Variants presented in `tournament/round-2.html` after the
 round-1 baseline.
+
+## Round 3 (final — pick or stop)
+
+Four candidates on the locked 8F direction (portrait pane 84x100 at (0,40),
+lens r36 on the bottom-right corner (84,140), gap 40, wordmark verbatim),
+screened against C-01..C-15. Per the round-2 directive the round varies the
+IMAGERY in the mark and introduces the COLOR PROGRAM; mono was a constraint
+test, not the identity.
+
+Color rules screened in addition to the constraint table: fills are Phase 86
+tokens ONLY (Ink #0D1B2A, Glass #277B96, Ice #A6EAF2, Mist #EAF6FB; glass-deep
+#1D637A permitted but unused) — verified by hex extraction over all 12 files;
+zero gradients, masks, filters, url() refs, or opacity anywhere; every
+candidate ships a mono single-path even-odd master (currentColor, root
+fallback color="#0D1B2A") as the canonical fallback, and both color versions
+are layered paths over the mono master's EXACT geometry (the color union
+reproduces the mono silhouette identically).
+
+4 candidates x 15 constraints = 60 rows. Verdicts for C-05..C-08 and C-15 were
+back-filled from the browser visual audit (screenshots under
+`tmp/87-logo-tournament/round-3/`: pre-draw design-exam closeups
+`exam-8F[1-4].png` at 280px in mono + color-light + color-dark, gallery strips,
+favicon zooms at 16/32px in color AND mono, full-page light + dark, darkland).
+
+Shared facts (every candidate): wordmark is the round-1 option-8 glyph paths
+VERBATIM at translate(160 0); ids prefixed r38f[1-4][mcd]-, unique per file and
+across the gallery; files named variant-8F{N}-{name}-{mono,color-light,
+color-dark}.svg in `tournament/round-3/`.
+
+| Candidate | Constraint | Verdict | Evidence |
+|--------|------------|---------|----------|
+| 8F-1 as-is | C-01 | PASS | zero <rect>; mono is one even-odd path; color is two layered paths (notched pane + three-quarter lens) on raw background |
+| 8F-1 as-is | C-02 | PASS | 8F verbatim: lens breaks two pane edges, 36u right and 36u below to y176 beside the g descender's y177 |
+| 8F-1 as-is | C-03 | PASS | gap 40u: <= 0.4 x mark width (0.4x120=48) and <= 75; pane center y=90 |
+| 8F-1 as-is | C-04 | PASS | mark + word only; no subtitle |
+| 8F-1 as-is | C-05 | PASS | 16px tab in COLOR and mono: pane/lens split read holds, Ink + Glass distinct — cand-8F1-favicon-zoom.png |
+| 8F-1 as-is | C-06 | PASS | 32px header in color crisp; the two-tone split makes lens-vs-pane read FASTER than mono — same zoom file |
+| 8F-1 as-is | C-07 | PASS | mono master is the canonical fallback, all currentColor, single even-odd path — cand-8F1-strip.png |
+| 8F-1 as-is | C-08 | PASS | dark mono in Mist; dark color expression pane Mist + lens Ice — cand-8F1-strip.png, darkland.png, full-dark.png |
+| 8F-1 as-is | C-09 | PASS | i dot is the round-1 literal path, untouched, same color as its word in every version |
+| 8F-1 as-is | C-10 | PASS | flat token fills only; transparency stays geometric (even-odd void), zero opacity/gradient/glassmorphism |
+| 8F-1 as-is | C-11 | PASS | geometry is round-2 8F verbatim; no A-R or 07r shape |
+| 8F-1 as-is | C-12 | PASS | xmllint pass x3 files; viewBox -12 -16 953 212; role=img; title+desc; r38f1m-/r38f1c-/r38f1d- ids unique |
+| 8F-1 as-is | C-13 | PASS | filled outline paths only; zero <text>/font-family; <= 2 decimals |
+| 8F-1 as-is | C-14 | PASS | same exclusions as 8F (not Mastercard/Linear/Glassdoor/Gmail/envelope); color pair Ink+Glass is the brand palette, not a category collision |
+| 8F-1 as-is | C-15 | PASS | judged at 280px in exam-8F1.png (mono + both color expressions): lit corner bounded by both shapes' edges; in color the Glass lens completes the circle even more explicitly — no cut/bite read |
+| 8F-2 lit lens | C-01 | PASS | zero <rect>; mono one even-odd path; color is three layered paths (notched pane + three-quarter lens + lit quarter) on raw background |
+| 8F-2 lit lens | C-02 | PASS | geometry unchanged from 8F: two-edge corner break to y176 |
+| 8F-2 lit lens | C-03 | PASS | gap 40u: <= 0.4 x mark width (48) and <= 75 |
+| 8F-2 lit lens | C-04 | PASS | mark + word only; no subtitle |
+| 8F-2 lit lens | C-05 | PASS | 16px color tab: silhouette holds, Ice quarter reads as a bright corner glint — cand-8F2-favicon-zoom.png |
+| 8F-2 lit lens | C-06 | PASS | 32px header: Ice light clearly visible between Ink pane and Glass lens — same zoom file |
+| 8F-2 lit lens | C-07 | PASS | mono collapse verified: the Ice light collapses back to the even-odd void; mono master byte-identical geometry to 8F — cand-8F2-strip.png |
+| 8F-2 lit lens | C-08 | PASS | works on Paper, Mist-adjacent surfaces and dark: dark expression pane Mist + lens Glass + light Ice; Glass lens recedes on Ink by design (noted in the gallery exam) — darkland.png |
+| 8F-2 lit lens | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 8F-2 lit lens | C-10 | PASS | the light is a flat Ice fill, not a gradient/glow/flare; zero opacity tricks |
+| 8F-2 lit lens | C-11 | PASS | geometry is 8F verbatim; only the fill program differs; no A-R or 07r shape |
+| 8F-2 lit lens | C-12 | PASS | xmllint pass x3; viewBox -12 -16 953 212; role=img; title+desc; r38f2m-/r38f2c-/r38f2d- ids unique |
+| 8F-2 lit lens | C-13 | PASS | filled outline paths only; zero <text>/font-family |
+| 8F-2 lit lens | C-14 | PASS | filled-overlap two-circle-family check: NOT Mastercard (square+circle, single overlap, corner placement) |
+| 8F-2 lit lens | C-15 | PASS | judged at 280px in exam-8F2.png: with the quarter filled Ice nothing is voided at all in color — the strongest possible no-bite read; mono identical to 8F's passing geometry |
+| 8F-3 message line | C-01 | PASS | zero <rect>; bar is a path subpath voided from the pane (mono) / a layered path (color); no plate behind anything |
+| 8F-3 message line | C-02 | PASS | corner lens break unchanged (two edges, to y176); bar is internal and breaks nothing |
+| 8F-3 message line | C-03 | PASS | gap 40u: <= 0.4 x mark width (48) and <= 75 |
+| 8F-3 message line | C-04 | PASS | the bar is abstract content, not text: no subtitle, no glyphs |
+| 8F-3 message line | C-05 | PASS | 16px tab: bar simplifies toward a notch BY DESIGN (documented in the gallery); silhouette + lens still read — cand-8F3-favicon-zoom.png |
+| 8F-3 message line | C-06 | PASS | 32px header: bar visible as a line of content; not clutter (one bar, 42x14u, margins >= 14u) — same zoom file |
+| 8F-3 message line | C-07 | PASS | mono master: bar void via even-odd in the single path; reads as light through the pane — cand-8F3-strip.png |
+| 8F-3 message line | C-08 | PASS | dark mono in Mist; dark color pane Mist + line Glass + lens Ice — darkland.png, full-dark.png |
+| 8F-3 message line | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 8F-3 message line | C-10 | PASS | abstract bar, not an envelope flap/plane/arrow; flat fills only |
+| 8F-3 message line | C-11 | PASS | derives only from 8F; bar-in-pane is not the v1.8 option-k header-stack nor option-h console-row (single bar, no stack, no chrome) |
+| 8F-3 message line | C-12 | PASS | xmllint pass x3; viewBox -12 -16 953 212; role=img; title+desc; r38f3m-/r38f3c-/r38f3d- ids unique |
+| 8F-3 message line | C-13 | PASS | filled outline paths only; zero <text>/font-family |
+| 8F-3 message line | C-14 | PASS | screened against minus/remove-badge vocabulary: bar is left-aligned (x 14-56 in an 84-wide pane), not centered, and paired with the corner lens; document-icon adjacency noted in the exam and anchored by the lens |
+| 8F-3 message line | C-15 | PASS | judged at 280px in exam-8F3.png: bar is fully internal (margins 14/28/24/26u), reads as a lit line of content, never as a cut — no severed read; corner light unchanged from 8F's pass |
+| 8F-4 through-light | C-01 | PASS | zero <rect>; mono one even-odd path (pane + lens + echo); color is three layered paths on raw background |
+| 8F-4 through-light | C-02 | PASS | strongest break of the field: lens breaks two edges at the bottom-right corner AND the echo r20 breaks two edges at the top-left corner (to x-20, y20) |
+| 8F-4 through-light | C-03 | PASS | gap 40u: <= 0.4 x mark width (0.4x140=56, width now includes the echo) and <= 75 |
+| 8F-4 through-light | C-04 | PASS | mark + word only; no subtitle |
+| 8F-4 through-light | C-05 | PASS | 16px tab: echo simplifies to a corner dot BY DESIGN; main pane/lens read intact — cand-8F4-favicon-zoom.png |
+| 8F-4 through-light | C-06 | PASS | 32px header: both lights read; diagonal in-out axis visible — same zoom file |
+| 8F-4 through-light | C-07 | PASS | mono master single even-odd path; both lit corners void — cand-8F4-strip.png |
+| 8F-4 through-light | C-08 | PASS | dark mono in Mist; dark color pane Mist + entry lens Ice + exit light Glass — darkland.png, full-dark.png |
+| 8F-4 through-light | C-09 | PASS | i dot is the round-1 literal path, untouched (echo sits at the MARK's corner, 160u left of the wordmark) |
+| 8F-4 through-light | C-10 | PASS | two circles + rectangle, flat fills; no banned motif family |
+| 8F-4 through-light | C-11 | PASS | derives only from 8F; twin corner lights are not any A-R or 07r geometry |
+| 8F-4 through-light | C-12 | PASS | xmllint pass x3; viewBox -24 -16 965 212 (widened for the echo); role=img; title+desc; r38f4m-/r38f4c-/r38f4d- ids unique |
+| 8F-4 through-light | C-13 | PASS | filled outline paths only; zero <text>/font-family |
+| 8F-4 through-light | C-14 | PASS | hierarchy r36:r20 keeps it off Mastercard's two equal circles; not Linear/Glassdoor/Gmail/envelope |
+| 8F-4 through-light | C-15 | PASS | judged at 280px in exam-8F4.png: each lit corner is bounded by both shapes' edges and wrapped by its circle's solid three-quarter from outside — both read as light passing through, neither as a bite |
+
+60 rows, 60 PASS. Candidates presented in `tournament/round-3.html` after the
+8F mono baseline. This is the protocol's final round: the next pause is
+pick-or-stop, no round 4.
