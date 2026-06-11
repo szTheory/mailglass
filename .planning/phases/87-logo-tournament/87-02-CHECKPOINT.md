@@ -1,10 +1,11 @@
 ---
 phase: 87-logo-tournament
 plan: 02
-status: round-4-maintainer-extension
+status: awaiting-final-winner-r4
 created: 2026-06-11
-gallery: .planning/phases/87-logo-tournament/tournament/round-3.html
-parent_pick: variant-8F
+gallery: .planning/phases/87-logo-tournament/tournament/round-4.html
+parent_pick: variant-8F1-color
+fallback_winner: 8F-1-color
 round: 4
 rejection_count: 0
 blocks: [task-3-promotion]
@@ -180,3 +181,59 @@ this plan — round 3 is the protocol's hard cap.
   LIGHT (flap-as-light, seal-position lens, envelope proportion) — never a
   drawn literal envelope — to protect the fable brand's ownable axis.
 - **Date:** 2026-06-11
+
+## Round 4 — what to review (FINAL, pick-or-default)
+
+Open the rendered-evidence gallery from disk (no network needed):
+
+```
+.planning/phases/87-logo-tournament/tournament/round-4.html
+```
+
+The 8F-1 COLOR baseline — the recorded fallback winner — is shown first; the
+four candidates follow. Each candidate keeps the standard six evidence cells
+(large light, large dark, actual-size 16/32 px favicon row in color + mono,
+single-color, repository context, one-line rationale), the color row (large
+color on light and on dark), and a NEW tiny in-situ row: 16 px browser tab,
+20 px dependency-list item, and 32 px header at actual size, each captioned
+with the HONEST envelope-read verdict from the design exam. A whole-page dark
+section closes the gallery. Candidate files (mono master + color-light +
+color-dark each) live in `tournament/round-4/`.
+
+### The field (unranked, after the baseline)
+
+| ID | Envelope cue | Honest envelope read | One line |
+|----|--------------|----------------------|----------|
+| 4A | the flap as a lit inset region in the upper pane | envelope at 20 px and up; mail-ish notch at 16 px | 8F unchanged + the fold rendered as light, not lines; keeps the corner lens energy. |
+| 4B | composition alone — the lens moves to the wax-seal position on the bottom edge | does NOT read envelope at any size; reads pane-over-rising-light | Zero new elements; the boundary break moves through the baseline. |
+| 4C | proportion alone — landscape pane 140x96 (1.46:1), corner lens as 8F | envelope-adjacent, ambiguous alone ("card" first) | The pane lies down like mail on a desk; no folder/credit-card regression. |
+| 4D | SPINOFF: proportion + flap light + lens-as-seal at the flap point | envelope at EVERY size incl. 16 px — the only one | The full envelope-back composition, every cue made of light, nothing drawn. |
+
+Design-exam notes: the flap-as-crease-BAND alternative for 4A was rejected in
+render (reads as a download chevron, not a fold — exam-4A-alt.png). 4B's and
+4D's lockup gaps tightened to hold C-03's 0.4 x mark-width ratio as the marks
+narrowed (constraint-driven). Standing constraints C-01..C-15 plus the new
+C-16 (envelope suggested without literal drawing; no codex convergence) all
+hold: 64/64 PASS in 87-pre-flight.md Round 4. Every mono master is a single
+even-odd path; color fills are Phase 86 tokens only; the wordmark paths and
+i dot are the round-1 originals verbatim.
+
+## Valid resume signals (verbatim protocol — PICK OR DEFAULT)
+
+1. **`winner 8F-1`** — promotes the recorded fallback winner (8F-1 in color).
+2. **`winner 4X`** — a round-4 candidate (4A–4D), with optional notes.
+3. **`winner {id}`** — any earlier candidate still on the table: a round-3 id
+   (8F-2..8F-4), a round-2 variant (8A–8F), or the round-1 baseline (option 8).
+
+Any of the above is recorded verbatim in 87-decision-record.md under
+`## Round 4 Decision` and unblocks Task 3 (promotion to the canonical asset
+system in `brandbook-fable/assets/`). All candidates passed every hard
+constraint, so best-available is a safe pick. **This round is genuinely
+final:** a fallback winner exists, so if no signal names a candidate, 8F-1
+color is promoted by default — there is no round 5 and no further generation
+in this plan.
+
+## Round 4 Final Selection
+
+- *(awaiting maintainer — record the response verbatim here and in
+  87-decision-record.md before Task 3 starts)*

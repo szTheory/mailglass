@@ -363,3 +363,111 @@ color-dark}.svg in `tournament/round-3/`.
 60 rows, 60 PASS. Candidates presented in `tournament/round-3.html` after the
 8F mono baseline. This is the protocol's final round: the next pause is
 pick-or-stop, no round 4.
+
+## Round 4 (maintainer-directed extension — the envelope in light)
+
+Four candidates on the 8F-1 color program, screened against C-01..C-15 plus a
+new constraint from the round-4 directive and convergence guard:
+
+C-16 — the envelope is SUGGESTED through composition and light only: no drawn
+envelope outlines, no zigzag or stroke flap lines, no mailbox/paper-plane; no
+convergence on codex's literal envelope+pane mark (stroke rectangle + stroke
+V flap + rotated gradient pane). An envelope read may be weak — weakness is
+recorded honestly in the gallery — but a LITERAL drawing fails.
+
+4 candidates x 16 constraints = 64 rows. Verdicts for C-05..C-08, C-15, and
+C-16 were back-filled from the browser visual audit (screenshots under
+`tmp/87-logo-tournament/round-4/`: pre-draw design-exam closeups
+`exam-{8F1,4A,4B,4C,4D,4A-alt}.png` at 280px in mono + color-light +
+color-dark, gallery strips, favicon zooms at 16/32px, NEW tiny in-situ zooms
+at 16/20/32px, full-page light + dark, darkland).
+
+Design-exam-driven decisions (documented, not silent): the 4A flap was drawn
+two ways before shipping — a V crease BAND of light reads as a download
+chevron, not a fold (exam-4A-alt.png), so the flap ships as a lit inset
+REGION (triangle) instead. 4B's wordmark moves to translate(116) and 4D's to
+translate(180) because C-03's 0.4 x mark-width bound tightens as the mark
+narrows (84u and 140u wide respectively) — constraint-driven, not a second
+design parameter. 4D is the sanctioned spinoff of the round-4 brief
+(flap-as-light + landscape + seal position combined) and is labeled as such.
+
+Shared facts (every candidate): wordmark is the round-1 option-8 glyph paths
+VERBATIM (only the group translate-x changes); mono master is ONE even-odd
+path, currentColor, root fallback color="#0D1B2A"; color fills are Phase 86
+tokens ONLY (verified by hex extraction over all 12 files: Ink #0D1B2A,
+Glass #277B96, Ice #A6EAF2, Mist #EAF6FB; glass-deep #1D637A permitted but
+unused); zero gradients, masks, filters, url() refs, or opacity; ids prefixed
+r44[a-d][mcd]-, unique per file and across the gallery; files named
+variant-4{A-D}-{name}-{mono,color-light,color-dark}.svg in
+`tournament/round-4/`.
+
+| Candidate | Constraint | Verdict | Evidence |
+|--------|------------|---------|----------|
+| 4A flap light | C-01 | PASS | zero <rect>; mono one even-odd path; color is two layered paths (notched+flapped pane, three-quarter lens) on raw background |
+| 4A flap light | C-02 | PASS | 8F break unchanged: lens crosses two pane edges, 36u right (x120) and 36u below (y176) beside the g descender's y177 |
+| 4A flap light | C-03 | PASS | gap 40u: <= 0.4 x mark width (0.4x120=48) and <= 75; pane center y=90 |
+| 4A flap light | C-04 | PASS | mark + word only; no subtitle |
+| 4A flap light | C-05 | PASS | 16px tab: silhouette holds; flap survives as a small notch of light — cand-4A-favicon-zoom.png, cand-4A-insitu-zoom.png |
+| 4A flap light | C-06 | PASS | 32px header: flap + lit corner both read; envelope read arrives — same zoom files |
+| 4A flap light | C-07 | PASS | mono master single even-odd path, all currentColor — cand-4A-strip.png |
+| 4A flap light | C-08 | PASS | dark mono in Mist; dark color pane Mist + lens Ice, flap void shows Ink — darkland.png, full-dark.png |
+| 4A flap light | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 4A flap light | C-10 | PASS | flat token fills; the flap is voided geometry, not a gradient/glow; no banned motif family |
+| 4A flap light | C-11 | PASS | derives only from 8F; the lit-region flap is NOT the 07r envelope (no stroke outline, no tilt, no gradient) |
+| 4A flap light | C-12 | PASS | xmllint pass x3; viewBox -12 -16 953 212; role=img; title+desc; r44a[mcd]- ids unique |
+| 4A flap light | C-13 | PASS | filled outline paths only; zero <text>/font-family; <= 2 decimals |
+| 4A flap light | C-14 | PASS | not Gmail M (no M strokes), not Linear/Glassdoor; checked against generic mail icons: flap inset + made of light, never corner-to-corner drawn lines |
+| 4A flap light | C-15 | PASS | judged at 280px in exam-4A.png: flap void fully internal (12u side, 14u top, 26u below-apex margins), bounded by pane mass on all sides — reads as light where the fold sits, never a crack; crease-BAND alternative rejected for chevron read (exam-4A-alt.png) |
+| 4A flap light | C-16 | PASS | envelope suggested by one lit region + composition; zero drawn lines; honest in-situ verdict recorded (envelope at 20px+) |
+| 4B sealed light | C-01 | PASS | zero <rect>; mono one even-odd path; color is two layered paths (seal-notched pane, solid lower-half lens) on raw background |
+| 4B sealed light | C-02 | PASS | lens r36 at the seal position (42,140) dips 36u below the bottom edge, through the y=140 baseline, to y176 |
+| 4B sealed light | C-03 | PASS | gap 32u at translate(116): <= 0.4 x mark width (0.4x84=33.6, ratio bound binds) and <= 75 |
+| 4B sealed light | C-04 | PASS | mark + word only; no subtitle |
+| 4B sealed light | C-05 | PASS | 16px tab: pane + seal-bump silhouette distinct — cand-4B-favicon-zoom.png, cand-4B-insitu-zoom.png |
+| 4B sealed light | C-06 | PASS | 32px header: lit upper half + Glass lower half both read — same zoom files |
+| 4B sealed light | C-07 | PASS | mono master single even-odd path, all currentColor — cand-4B-strip.png |
+| 4B sealed light | C-08 | PASS | dark mono in Mist; dark color pane Mist + seal Ice — darkland.png, full-dark.png |
+| 4B sealed light | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 4B sealed light | C-10 | PASS | square+circle geometry only; no banned motif family |
+| 4B sealed light | C-11 | PASS | derives only from 8F (lens repositioned); no A-R or 07r shape |
+| 4B sealed light | C-12 | PASS | xmllint pass x3; viewBox -12 -16 909 212; role=img; title+desc; r44b[mcd]- ids unique |
+| 4B sealed light | C-13 | PASS | filled outline paths only; zero <text>/font-family; <= 2 decimals |
+| 4B sealed light | C-14 | PASS | not a drawn seal/badge (no ring), not Mastercard/Linear/Glassdoor/Gmail/envelope-icon |
+| 4B sealed light | C-15 | PASS | judged at 280px in exam-4B.png: upper half voids, solid lower half completes the circle (the round-1 option-8 edge-straddle precedent); the pane edge reads as a chord, not a cut |
+| 4B sealed light | C-16 | PASS | composition only, zero new elements; the honest verdict (does NOT read envelope without flap context) is recorded in the gallery in-situ row — weak read, no literal drawing |
+| 4C landscape | C-01 | PASS | zero <rect>; pane is a 140x96 path (the mark figure, 13.9% of the 1009u viewBox), nothing sits on it |
+| 4C landscape | C-02 | PASS | lens r36 at (140,140) breaks two edges: 36u right (x176) and 36u below (y176), crossing the baseline |
+| 4C landscape | C-03 | PASS | gap 40u at translate(216): <= 0.4 x mark width (0.4x176=70.4) and <= 75; lockup total 985u stays within one strip cell |
+| 4C landscape | C-04 | PASS | mark + word only; no subtitle |
+| 4C landscape | C-05 | PASS | 16px tab: landscape silhouette + corner dot read — cand-4C-favicon-zoom.png, cand-4C-insitu-zoom.png |
+| 4C landscape | C-06 | PASS | 32px header: lit quarter visible, proportion reads — same zoom files |
+| 4C landscape | C-07 | PASS | mono master single even-odd path, all currentColor — cand-4C-strip.png |
+| 4C landscape | C-08 | PASS | dark mono in Mist; dark color pane Mist + lens Ice — darkland.png, full-dark.png |
+| 4C landscape | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 4C landscape | C-10 | PASS | rectangle+circle geometry only; no banned motif family |
+| 4C landscape | C-11 | PASS | derives only from 8F (proportion changed); not 07r (no flap, no tilt, no gradient, no strokes) |
+| 4C landscape | C-12 | PASS | xmllint pass x3; viewBox -12 -16 1009 212; role=img; title+desc; r44c[mcd]- ids unique |
+| 4C landscape | C-13 | PASS | filled outline paths only; zero <text>/font-family; <= 2 decimals |
+| 4C landscape | C-14 | PASS | no folder regression (no tab), no credit-card read (no chip; lens breaks the frame); not Linear/Glassdoor/Gmail |
+| 4C landscape | C-15 | PASS | judged at 280px in exam-4C.png: lit corner bounded by both shapes' edges, three quarters of the lens solid — identical pass condition to 8F |
+| 4C landscape | C-16 | PASS | proportion alone; nothing drawn; the honest verdict (envelope-adjacent, ambiguous alone) is recorded in the gallery in-situ row |
+| 4D sealed flap | C-01 | PASS | zero <rect>; mono one even-odd path (pane + flap + seal); color is two layered paths on raw background |
+| 4D sealed flap | C-02 | PASS | lens r36 at the seal position (70,140) dips 36u below the bottom edge, through the y=140 baseline, to y176 |
+| 4D sealed flap | C-03 | PASS | gap 40u at translate(180): <= 0.4 x mark width (0.4x140=56) and <= 75 |
+| 4D sealed flap | C-04 | PASS | mark + word only; no subtitle |
+| 4D sealed flap | C-05 | PASS | 16px tab: flap AND seal both survive — the only candidate reading envelope at favicon size — cand-4D-favicon-zoom.png, cand-4D-insitu-zoom.png |
+| 4D sealed flap | C-06 | PASS | 32px header: unambiguous sealed-envelope read — same zoom files |
+| 4D sealed flap | C-07 | PASS | mono master single even-odd path, all currentColor — cand-4D-strip.png |
+| 4D sealed flap | C-08 | PASS | dark mono in Mist; dark color pane Mist + seal Ice, flap void shows Ink — darkland.png, full-dark.png |
+| 4D sealed flap | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 4D sealed flap | C-10 | PASS | flat token fills; flap and seal are voided geometry, not gradients/glows; no banned motif family |
+| 4D sealed flap | C-11 | PASS | spinoff of the round-4 brief on 8F geometry; NOT 07r: zero strokes, zero tilt, zero gradient — every envelope cue is a void or a proportion |
+| 4D sealed flap | C-12 | PASS | xmllint pass x3; viewBox -12 -16 973 212; role=img; title+desc; r44d[mcd]- ids unique |
+| 4D sealed flap | C-13 | PASS | filled outline paths only; zero <text>/font-family; <= 2 decimals |
+| 4D sealed flap | C-14 | PASS | screened against generic sealed-envelope icons: those draw flap LINES corner-to-corner and a solid seal ON the body; here the flap is an inset lit region and the seal is the brand lens straddling the edge |
+| 4D sealed flap | C-15 | PASS | judged at 280px in exam-4D.png: flap void fully internal (14u margins, 12u solid between apex y92 and seal void top y104); seal's solid lower half completes the circle — nothing severs, both voids read as light |
+| 4D sealed flap | C-16 | PASS | the closest candidate to literal, held on the right side of the line: composition + light only, no drawn outline or flap stroke; explicitly compared against codex's stroke-drawn mark — zero shared construction |
+
+64 rows, 64 PASS. Candidates presented in `tournament/round-4.html` after the
+8F-1 color baseline (the recorded fallback winner). The next pause is the
+genuinely final pick-or-default: `winner 8F-1` promotes the fallback.
