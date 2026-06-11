@@ -107,8 +107,12 @@ Plans:
   3. The maintainer explicitly selects from a rendered-evidence gallery (light/dark/32px/16px/mono/in-context per option) in `.planning/phases/87-*/tournament/` at a hard pause, and the selection plus rationale are recorded
   4. At most 2 refinement rounds (parameter-named variants) run on the pick(s) before promotion
   5. Canonical assets ship in `brandbook-fable/assets/`: primary lockup, standalone typemark, mark, monochrome/currentColor mark, with-tagline variant (the only one carrying a subtitle), favicon, light/dark social avatars — all logotype glyphs outlined to paths, zero `font-family` in any asset SVG, each with accessible title/desc and unique IDs
-**Plans**: TBD
+**Plans**: 2 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 87-01-PLAN.md — Author 8 options (2 per axis), pre-flight screen, evidence gallery, browser audit; ends at the hard pause (87-01-CHECKPOINT.md)
+- [ ] 87-02-PLAN.md — Refinement rounds (<=2) on the pick(s), winner promotion to brandbook-fable/assets/ (8 outlined-path assets), decision record
 
 **Checkpoint**: maintainer selection — **hard pause** at round 1. This phase BLOCKS on the maintainer picking from the rendered-evidence gallery by design; no auto-advance past selection. **Circuit breaker:** two consecutive full-set rejections halt the tournament and escalate (re-brief before generating more options).
 
