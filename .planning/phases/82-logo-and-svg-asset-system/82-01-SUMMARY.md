@@ -105,7 +105,7 @@ None - no external service configuration required.
 
 Plan 02 can now present `brandbook/logo-options.md` and the option SVGs to the maintainer. Plan 03 remains blocked until Plan 02 records one explicit resume signal.
 
-Post-checkpoint update, 2026-06-06: the maintainer rejected the original A/B/C options as too paper-like. Active fresh options are D/E/F, recorded in `82-02-CHECKPOINT.md` and `brandbook/logo-options.md`.
+Post-checkpoint update, 2026-06-06: the maintainer rejected the original A/B/C options as too paper-like, then rejected D/E/F as insufficiently radical variations. Active first-principles options are G-R, recorded in `82-02-CHECKPOINT.md` and `brandbook/logo-options.md`.
 
 ## Self-Check: PASSED
 

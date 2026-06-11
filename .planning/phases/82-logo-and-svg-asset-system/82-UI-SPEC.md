@@ -30,7 +30,7 @@ Out of scope:
 - Root README, Hex.pm, HexDocs, landing copy, launch copy, social copy blocks, and specimen work.
 - Product/admin implementation code, public APIs, release workflow, package allowlists, validation scripts, PDFs, raster exports, font binaries, vendor design files, and broad trademark/legal/name strategy.
 
-Primary visual goal: preserve "Mailglass makes email visible" through a wordmark-first logo system and the simplest small-size-safe pane mark.
+Primary visual goal: preserve "Mailglass makes email visible" through a wordmark-first logo system and a small-size-safe source-native mark. The active reset prioritizes email-source primitives over pane/card geometry.
 
 ---
 
@@ -50,13 +50,13 @@ Primary visual goal: preserve "Mailglass makes email visible" through a wordmark
 
 ## Logo Direction Contract
 
-The review artifact must compare at least three credible directions before final asset approval.
+The review artifact must compare multiple credible directions before final asset approval. The original A/B/C pane set and D/E/F wordmark-header set remain rejected evidence; the active review set is G-R.
 
 | Direction | Visual Idea | Required Disposition |
 |-----------|-------------|----------------------|
-| A - Folded pane draft | Current pane/message-fold mark in `brandbook/assets/*.svg`. | Include as credible draft evidence, not final by default. Evaluate whether the fold reads as document corner, envelope, or send arrow at 16px and 32px. |
-| B - Simplified pane/message-lines | Flat pane with message-line structure and no triangular fold. | Default strongest final refinement unless maintainer chooses otherwise. Prefer this if it improves small-size clarity. |
-| C - Inspection/pane-forward | Pane-forward mark that emphasizes visible/inspectable email. | Compare for brand-center fit. Reject if it becomes too abstract or loses message affordance. |
+| A-F - rejected prior evidence | Pane/card drafts and wordmark/header variations. | Preserve as rejected evidence only unless the maintainer explicitly overrides the reset. |
+| G-L - email-source family | Header checksum, console row, inline source cursor, at lens, header stack, and source diff. | Active priority family selected by the maintainer. Prefer the primitive that feels most ownable at 16px/32px and beside the wordmark. |
+| M-R - inspection/infrastructure outliers | Protocol brackets, routing node, delivery timeline, normalized event pulse, caliper, and refraction line. | Active contrast set to avoid another narrow variant round. Accept only if it remains source-native and avoids generic devtool or send-arrow readings. |
 
 Forbidden visual logic: paper planes, mailbox-on-post imagery, chat bubbles, send arrows, glossy app-icon treatment, mascots, bevels, glassmorphism, decorative gradients, blobs, and unnecessary path complexity.
 
@@ -64,8 +64,8 @@ Final posture:
 
 - Wordmark-first. The primary lockup is the main logo.
 - Mark-secondary. Use the mark for favicon, avatar, compact badges, and small surfaces.
-- Small-size simplicity beats detail. If ambiguity remains, remove or simplify the fold rather than adding ornament.
-- Glass is a metaphor, not a visual excuse. Keep panes flat, restrained, and border-first.
+- Small-size simplicity beats detail. If ambiguity remains, simplify the primitive rather than adding ornament.
+- Glass is a metaphor, not a visual excuse. Keep marks flat, restrained, and border-first where a boundary is needed.
 
 ---
 
@@ -177,7 +177,7 @@ SVG safety bans:
 |---------|------|
 | Primary CTA | Approve logo system |
 | Empty state heading | Logo options are not drafted yet |
-| Empty state body | Add three source-native SVG directions before selecting the final Mailglass mark. |
+| Empty state body | Add source-native SVG directions before selecting the final Mailglass mark. |
 | Error state | Logo asset check failed. Review the flagged SVG metadata, safety, or small-size issue, then update the affected brandbook asset. |
 | Destructive confirmation | No user-facing destructive action in this phase. Replacing draft SVG assets is source editing, not a destructive UI flow. |
 
@@ -206,7 +206,7 @@ Registry rule: do not add shadcn, third-party UI registries, npm icon packs, des
 - Create the logo-option review before final asset edits so LOGO-02 is auditable.
 - Prefer separate option SVGs if they make the review easier to inspect, but keep option assets clearly labeled as draft evidence.
 - Include explicit comparison criteria: 16px clarity, 32px clarity, wordmark-first fit, brand-center alignment, forbidden trope avoidance, monochrome/currentColor viability, reversed/dark-background viability, path complexity, editability, accessible metadata, and unique ID strategy.
-- The default final direction is the simplified pane/message-lines mark. Ask for maintainer selection only if the reviewed options expose a meaningful tradeoff that cannot be resolved from the existing context.
+- No default final direction exists after the G-R reset. A maintainer must select one G-R option or provide a named refinement before final assets change.
 - Update draft-status wording only for logo-specific surfaces touched by Phase 82. Leave Phase 83 and Phase 84 status language intact.
 - Validation scripts are out of scope, but the plan should use local parse/grep checks during execution.
 

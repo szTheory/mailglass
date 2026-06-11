@@ -45,19 +45,20 @@ Phases 83-84 or future launch-specific work.
 
 ### Logo Direction
 
-- **D-04:** Treat the current pane/message-fold mark as one credible draft
-  direction, not final approval.
-- **D-05:** Phase 82 must compare at least three compact, credible logo
-  directions before selecting or refining the final system: the current folded
-  pane, a simplified pane/message-lines mark with no triangular fold, and a
-  more inspection/pane-forward mark.
-- **D-06:** The default final posture should stay wordmark-first and refine
-  toward the simplest small-size-safe pane mark that still supports the approved
+- **D-04:** Treat the current pane/message-fold mark and all A-F option assets
+  as rejected draft evidence, not final approval.
+- **D-05:** Phase 82 must compare the active G-R first-principles option set
+  before selecting or refining the final system. The maintainer-selected
+  priority family is email source, with infrastructure and inspection-tool
+  outliers included to avoid another narrow variant round.
+- **D-06:** The final posture should stay wordmark-first and refine toward the
+  simplest small-size-safe source-native mark that still supports the approved
   "Mailglass makes email visible" brand center.
-- **D-07:** The mark may suggest a pane, message fold, inspection surface, or
-  visible-email structure, but must avoid paper planes, mailbox-on-post imagery,
-  chat bubbles, send arrows, glossy app-icon treatment, mascot logic, and
-  unnecessary path complexity.
+- **D-07:** The mark may suggest source headers, message lifecycle, inspection
+  boundaries, routing, normalization, or visible-email structure, but must avoid
+  paper planes, mailbox-on-post imagery, chat bubbles, send arrows, glossy
+  app-icon treatment, mascot logic, pane/card/document geometry, and unnecessary
+  path complexity.
 
 ### SVG Accessibility And Distribution
 
@@ -193,13 +194,13 @@ The assumptions were presented to the maintainer and confirmed with option 1:
 
 Recommended implementation posture:
 
-- Keep the current pane/message-fold draft as option A.
-- Add or sketch two additional source-native SVG directions for comparison:
-  one simplified pane/message-lines mark with no triangular fold, and one
-  inspection/pane-forward mark.
-- Select or refine the final direction based on small-size clarity,
-  wordmark-first fit, brand-center alignment, and avoidance of forbidden email
-  tropes.
+- Keep A-F as rejected option evidence.
+- Use G-R as the active first-principles option set, prioritizing email-source
+  cues such as headers, source rows, cursor/diff notation, and source-native
+  verification.
+- Select or refine the final G-R direction based on small-size clarity,
+  wordmark-first fit, brand-center alignment, ownability, and avoidance of
+  forbidden email tropes.
 - Update final SVG assets with unique accessible IDs and keep the final file set
   lightweight.
 - Record the logo-option review in a durable brandbook artifact so LOGO-02 is
