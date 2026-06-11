@@ -139,30 +139,32 @@ proof, and standalone polish.
 
 ## Traceability
 
+Mapped: 22/22 v1.9 requirements → Phases 85-90 (roadmapped 2026-06-11).
+
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| BRIEF-01 | — | Pending |
-| BRIEF-02 | — | Pending |
-| FOUND-01 | — | Pending |
-| FOUND-02 | — | Pending |
-| FOUND-03 | — | Pending |
-| FOUND-04 | — | Pending |
-| LOGO-05 | — | Pending |
-| LOGO-06 | — | Pending |
-| LOGO-07 | — | Pending |
-| LOGO-08 | — | Pending |
-| BOOK-04 | — | Pending |
-| BOOK-05 | — | Pending |
-| BOOK-06 | — | Pending |
-| BOOK-07 | — | Pending |
-| COLL-01 | — | Pending |
-| COLL-02 | — | Pending |
-| COLL-03 | — | Pending |
-| COPY-01 | — | Pending |
-| COPY-02 | — | Pending |
-| GATE-01 | — | Pending |
-| GATE-02 | — | Pending |
-| GATE-03 | — | Pending |
+| BRIEF-01 | Phase 85 | Pending |
+| BRIEF-02 | Phase 85 | Pending |
+| FOUND-01 | Phase 86 | Pending |
+| FOUND-02 | Phase 86 | Pending |
+| FOUND-03 | Phase 86 | Pending |
+| FOUND-04 | Phase 86 | Pending |
+| LOGO-05 | Phase 87 | Pending |
+| LOGO-06 | Phase 87 | Pending |
+| LOGO-07 | Phase 87 | Pending |
+| LOGO-08 | Phase 87 | Pending |
+| BOOK-04 | Phase 88 | Pending |
+| BOOK-05 | Phase 88 | Pending |
+| BOOK-06 | Phase 88 | Pending |
+| BOOK-07 | Phase 88 | Pending |
+| COLL-01 | Phase 89 | Pending |
+| COLL-02 | Phase 89 | Pending |
+| COLL-03 | Phase 89 | Pending |
+| COPY-01 | Phase 89 | Pending |
+| COPY-02 | Phase 89 | Pending |
+| GATE-01 | Phase 90 | Pending |
+| GATE-02 | Phase 90 | Pending |
+| GATE-03 | Phase 90 | Pending |
 
 *REQ-ID numbering continues from v1.8 (LOGO-01..04 and BOOK-01..03 were v1.8
 IDs, archived in `.planning/milestones/v1.8-REQUIREMENTS.md`).*
