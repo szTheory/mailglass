@@ -1,11 +1,11 @@
 ---
 phase: 87-logo-tournament
 plan: 02
-status: awaiting-final-winner
+status: round-4-maintainer-extension
 created: 2026-06-11
 gallery: .planning/phases/87-logo-tournament/tournament/round-3.html
 parent_pick: variant-8F
-round: 3
+round: 4
 rejection_count: 0
 blocks: [task-3-promotion]
 ---
@@ -162,3 +162,21 @@ this plan — round 3 is the protocol's hard cap.
 
 - *(awaiting maintainer — record the response verbatim here and in
   87-decision-record.md before Task 3 starts)*
+
+## Round 3 outcome + maintainer-directed Round 4 (protocol extension)
+
+- **Round-3 leader:** **8F-1 in color** ("i like the 8F-1 color") — recorded as
+  the standing winner-by-default: if round 4 produces nothing better, 8F-1
+  color is promoted.
+- **Round-4 directive (maintainer):** explore variations where the square
+  reads more like an ENVELOPE for email — "that might read well... go above
+  and beyond here plz 4th round."
+- **Protocol note:** the round-3 hard cap existed to stop rejection thrash.
+  This is not a rejection — it is a maintainer-directed exploration with a
+  recorded fallback winner, so the extension is authorized and logged here.
+  `rejection_count` remains 0.
+- **Convergence guard:** codex's baseline mark is a literal envelope + glass
+  pane. Round-4 candidates must suggest envelope through COMPOSITION and
+  LIGHT (flap-as-light, seal-position lens, envelope proportion) — never a
+  drawn literal envelope — to protect the fable brand's ownable axis.
+- **Date:** 2026-06-11
