@@ -111,7 +111,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 87-01-PLAN.md — Author 8 options (2 per axis), pre-flight screen, evidence gallery, browser audit; ends at the hard pause (87-01-CHECKPOINT.md)
+- [x] 87-01-PLAN.md — Author 8 options (2 per axis), pre-flight screen, evidence gallery, browser audit; ends at the hard pause (87-01-CHECKPOINT.md)
 - [ ] 87-02-PLAN.md — Refinement rounds (<=2) on the pick(s), winner promotion to brandbook-fable/assets/ (8 outlined-path assets), decision record
 
 **Checkpoint**: maintainer selection — **hard pause** at round 1. This phase BLOCKS on the maintainer picking from the rendered-evidence gallery by design; no auto-advance past selection. **Circuit breaker:** two consecutive full-set rejections halt the tournament and escalate (re-brief before generating more options).
@@ -157,7 +157,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 85. Research and Differentiation Brief | 1/1 | Complete    | 2026-06-11 |
 | 86. Foundations — Palette, Type, Voice, Tokens | 1/1 | Complete    | 2026-06-11 |
-| 87. Logo Tournament | 0/? | Not started | - |
+| 87. Logo Tournament | 1/2 | In Progress|  |
 | 88. Brand Book Assembly | 0/? | Not started | - |
 | 89. Collateral, Specimens, and Copy Library | 0/? | Not started | - |
 | 90. Quality Gate and Maintainer UAT | 0/? | Not started | - |

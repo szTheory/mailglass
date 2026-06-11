@@ -45,11 +45,11 @@ proof, and standalone polish.
 
 ### LOGO — Logo Tournament and Asset System
 
-- [ ] **LOGO-05**: Round 1 presents exactly 8 logo options, 2 per axis (pure
+- [x] **LOGO-05**: Round 1 presents exactly 8 logo options, 2 per axis (pure
   custom typemark with motif worked into letterforms / mark + tight wordmark
   lockup / monogram-glyph / negative-space), each pre-screened against the
   constraint checklist before being shown.
-- [ ] **LOGO-06**: Every presented option passes: no rectangular background
+- [x] **LOGO-06**: Every presented option passes: no rectangular background
   plate, visible boundary-break, tight mark-to-wordmark proximity, no subtitle
   in the main lockup, legible at 16px and 32px, works in mono/currentColor and
   on dark, no i-dot manipulation, no glassmorphism/paper-plane/mailbox/
@@ -149,8 +149,8 @@ Mapped: 22/22 v1.9 requirements → Phases 85-90 (roadmapped 2026-06-11).
 | FOUND-02 | Phase 86 | Complete |
 | FOUND-03 | Phase 86 | Complete |
 | FOUND-04 | Phase 86 | Complete |
-| LOGO-05 | Phase 87 | Pending |
-| LOGO-06 | Phase 87 | Pending |
+| LOGO-05 | Phase 87 | Complete |
+| LOGO-06 | Phase 87 | Complete |
 | LOGO-07 | Phase 87 | Pending |
 | LOGO-08 | Phase 87 | Pending |
 | BOOK-04 | Phase 88 | Pending |

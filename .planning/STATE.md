@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Brand Book Fable — A/B Brand System
-status: ready_to_plan
-last_updated: 2026-06-11T16:12:28.808Z
+status: planning
+last_updated: "2026-06-11T17:46:20.348Z"
 last_activity: 2026-06-11
 progress:
-  total_phases: 6
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 8
-  percent: 33
-stopped_at: Phase 86 complete (1/1) — ready to discuss Phase 87
+  total_phases: 11
+  completed_phases: 4
+  total_plans: 10
+  completed_plans: 9
+  percent: 36
 ---
 
 # Project State
@@ -26,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-06-11 — v1.9 "Brand Book Fable" milest
 ## Current Position
 
 Phase: 87 of 90 (logo tournament)
-Plan: Not started
-Status: Ready to plan
+Plan: 1 of 2 complete (87-01 executed)
+Status: PAUSED — awaiting maintainer selection (87-01-CHECKPOINT.md); 87-02 blocked
 Last activity: 2026-06-11
 
-Progress: [██░░░░] 2/6 phases (v1.9: 85-90)
+Progress: [█████████░] 90%
 
 ## v1.9 Milestone Intent
 
@@ -103,6 +102,7 @@ Progress: [██░░░░] 2/6 phases (v1.9: 85-90)
 - [80-01] Existing `brandbook/` assets are draft inputs from commit `572f3eb2`, not approved Phase 81-84 outputs.
 - [80-01] `BRAND-GAP-NN` rows are stable downstream citation anchors; severity 4-5 rows require explicit closure or documented deferral before Phase 84 closeout.
 - [80-01] Phase 80 approves only the audit/register gate in `brandbook/brand-audit.md`; final tokens, logos, copy, specimens, package proof, and validation scripts remain downstream work.
+- [Phase 87]: 87-01: one shared LOGO-CRAFT glyph library underpins all round-1 wordmarks; the eight concepts are independent
 
 ## Performance Metrics
 
@@ -135,6 +135,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 | dark | dark tokens exist but undemonstrated | superseded-by-v1.9 (BOOK-04 toggle re-skins every specimen) |
 
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
+| Phase 87 P01 | 49 minutes | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -155,6 +156,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Session Continuity
 
+- 2026-06-11: Phase 87 plan 01 executed — round-1 logo tournament field built (8 options, 2 per axis; 112/112 pre-flight PASS; browser-audited gallery at `.planning/phases/87-logo-tournament/tournament/round-1.html`). Phase HARD-PAUSED at `87-01-CHECKPOINT.md` (status awaiting-maintainer-selection, rejection_count 0). 87-02 must not start until a selection is recorded. Resume: maintainer replies `pick N`, `pick N and M`, or `reject all` + notes.
 - 2026-06-11: v1.9 roadmap created (Phases 85-90). `.planning/ROADMAP.md` rewritten for v1.9 (milestone history + 999.x backlog preserved), `.planning/REQUIREMENTS.md` traceability filled (22/22 → Phases 85-90), STATE updated. Next: `/gsd-plan-phase 85` (or `/gsd-discuss-phase 85` first).
 - 2026-06-11: v1.8 closed superseded; milestone audit `gaps_found` accepted. Archives at `.planning/milestones/v1.8-*`. `brandbook/` frozen at `09a84dd4` as the codex A/B baseline. v1.9 "Brand Book Fable" opened; requirements defined (22 REQ-IDs); research synthesized under `.planning/research/v1.9-brandbook-fable/`.
 - 2026-06-10: Phase 82 completed; maintainer selected `concept-07r-no-idot-02-tighter-gap` out-of-band; canonical assets promoted and brand docs rewritten around it.
@@ -163,4 +165,4 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Operator Next Steps
 
-- Plan the first v1.9 phase: `/gsd-plan-phase 85` (or `/gsd-discuss-phase 85` first for context-gathering)
+- Review the round-1 logo gallery: open `.planning/phases/87-logo-tournament/tournament/round-1.html` from disk and reply `pick N`, `pick N and M`, or `reject all` with notes (recorded in `87-01-CHECKPOINT.md`; unblocks 87-02)
