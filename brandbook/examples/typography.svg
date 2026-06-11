@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
-  <title id="title">Mailglass typography specimen</title>
-  <desc id="desc">Mailglass typography hierarchy using Inter Tight, Inter, and IBM Plex Mono fallbacks.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="mg-typography-title mg-typography-desc">
+  <title id="mg-typography-title">Mailglass typography specimen</title>
+  <desc id="mg-typography-desc">Mailglass typography hierarchy using Inter Tight, Inter, and IBM Plex Mono fallbacks.</desc>
   <rect width="1200" height="760" fill="#F8FBFD"/>
   <g transform="translate(72 86)">
     <text x="0" y="0" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="52" font-weight="700" letter-spacing="0">Mailglass</text>

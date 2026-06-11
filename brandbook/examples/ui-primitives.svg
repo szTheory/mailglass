@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
-  <title id="title">Mailglass UI primitives specimen</title>
-  <desc id="desc">Buttons, cards, callouts, badges, code, and state examples for Mailglass.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="mg-ui-primitives-title mg-ui-primitives-desc">
+  <title id="mg-ui-primitives-title">Mailglass UI primitives specimen</title>
+  <desc id="mg-ui-primitives-desc">Buttons, cards, callouts, badges, code, and state examples for Mailglass.</desc>
   <rect width="1200" height="760" fill="#F8FBFD"/>
   <text x="64" y="82" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="42" font-weight="700">UI primitives</text>
   <text x="64" y="116" fill="#5C6B7A" font-family="Inter, sans-serif" font-size="18">Flat panes, clear states, visible focus, restrained accent.</text>

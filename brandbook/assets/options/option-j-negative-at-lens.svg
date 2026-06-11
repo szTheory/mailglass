@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="128" viewBox="0 0 160 128" role="img" aria-labelledby="mg-option-j-title mg-option-j-desc">
+  <title id="mg-option-j-title">Mailglass option J negative at lens draft</title>
+  <desc id="mg-option-j-desc">Draft evidence for an at-sign-adjacent email mark with a clear inspection counter and header traces.</desc>
+  <rect width="160" height="128" rx="8" fill="#F8FBFD"/>
+  <g transform="translate(36 17)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="42" cy="42" r="34" stroke="#0D1B2A" stroke-width="5"/>
+    <circle cx="42" cy="42" r="14" fill="#FFFFFF" stroke="#277B96" stroke-width="5"/>
+    <path d="M56 42c0 13 12 20 25 11" stroke="#0D1B2A" stroke-width="5"/>
+    <path d="M28 39h24" stroke="#277B96" stroke-width="4"/>
+    <path d="M31 51h17" stroke="#5C6B7A" stroke-width="3"/>
+    <path d="M66 23h18" stroke="#A6EAF2" stroke-width="4"/>
+  </g>
+  <text x="80" y="118" text-anchor="middle" fill="#5C6B7A" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" font-weight="400" letter-spacing="0">Option J</text>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="128" viewBox="0 0 160 128" role="img" aria-labelledby="mg-option-p-title mg-option-p-desc">
+  <title id="mg-option-p-title">Mailglass option P normalized event pulse draft</title>
+  <desc id="mg-option-p-desc">Draft evidence for an event-pulse mark where one message signal becomes normalized observable events.</desc>
+  <rect width="160" height="128" rx="8" fill="#F8FBFD"/>
+  <g transform="translate(22 28)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 38h26l10-24 17 50 12-26h22" stroke="#0D1B2A" stroke-width="5"/>
+    <path d="M88 38h28" stroke="#277B96" stroke-width="5"/>
+    <circle cx="95" cy="20" r="5" fill="#277B96" stroke="none"/>
+    <circle cx="109" cy="38" r="5" fill="#A6EAF2" stroke="#277B96" stroke-width="2"/>
+    <circle cx="95" cy="56" r="5" fill="#C7DCE5" stroke="none"/>
+    <path d="M78 20h9" stroke="#5C6B7A" stroke-width="4"/>
+    <path d="M78 56h9" stroke="#5C6B7A" stroke-width="4"/>
+  </g>
+  <text x="80" y="118" text-anchor="middle" fill="#5C6B7A" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" font-weight="400" letter-spacing="0">Option P</text>
+</svg>

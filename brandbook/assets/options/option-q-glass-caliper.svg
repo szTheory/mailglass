@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="128" viewBox="0 0 160 128" role="img" aria-labelledby="mg-option-q-title mg-option-q-desc">
+  <title id="mg-option-q-title">Mailglass option Q glass caliper draft</title>
+  <desc id="mg-option-q-desc">Draft evidence for a precision-caliper mark measuring a visible email header line.</desc>
+  <rect width="160" height="128" rx="8" fill="#F8FBFD"/>
+  <g transform="translate(30 21)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 0v76" stroke="#0D1B2A" stroke-width="6"/>
+    <path d="M0 0h28" stroke="#0D1B2A" stroke-width="6"/>
+    <path d="M0 76h28" stroke="#0D1B2A" stroke-width="6"/>
+    <path d="M88 0v76" stroke="#0D1B2A" stroke-width="6"/>
+    <path d="M72 0h28" stroke="#0D1B2A" stroke-width="6"/>
+    <path d="M72 76h28" stroke="#0D1B2A" stroke-width="6"/>
+    <path d="M32 31h48" stroke="#277B96" stroke-width="5"/>
+    <path d="M40 49h32" stroke="#5C6B7A" stroke-width="4"/>
+    <circle cx="32" cy="31" r="4" fill="#A6EAF2" stroke="#277B96" stroke-width="2"/>
+  </g>
+  <text x="80" y="118" text-anchor="middle" fill="#5C6B7A" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" font-weight="400" letter-spacing="0">Option Q</text>
+</svg>

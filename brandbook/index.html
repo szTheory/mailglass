@@ -276,6 +276,21 @@
         max-height: 112px;
       }
 
+      .logo-box.small img {
+        max-height: 56px;
+      }
+
+      .logo-box.avatar img {
+        width: 112px;
+        max-height: 112px;
+      }
+
+      .logo-caption {
+        margin: var(--mg-space-sm) 0 0;
+        color: var(--mg-text-muted);
+        font-size: var(--mg-text-small);
+      }
+
       pre {
         max-width: 100%;
         overflow: auto;
@@ -351,28 +366,28 @@
           <p class="eyebrow">Mailglass brand system</p>
           <h1>Email, made visible.</h1>
           <p class="lead">A source-controlled brandbook for a Phoenix-native email framework that should feel clear, inspectable, calm, and technically credible.</p>
-          <p class="lead">Source status: this static brandbook is a Phase 81 source artifact. Per BRAND-GAP-01, current logo, specimen, copy, and validation proof remain draft evidence until Phase 82, Phase 83, and Phase 84 close their assigned work.</p>
+          <p class="lead">The selected identity is the 07r no-i-dot 02 lockup: existing mark, tighter proximity, and one untouched full <span class="mono">mailglass</span> wordmark.</p>
         </header>
 
         <div class="content">
           <section class="section" id="judgment">
-            <h2>Executive Judgment</h2>
+            <h2>Identity Judgment</h2>
             <div class="callout">
-              <strong>The brand is strong enough to build from.</strong>
-              The current system has a useful conceptual center: Mailglass makes email visible. Mail you can see through is the durable idea preserved by BRAND-GAP-12. The job of this brandbook is not reinvention. It is making the system executable without pretending draft assets are final.
+              <strong>The logo direction is selected.</strong>
+              Mailglass makes email visible. Mail you can see through. The mark supports that idea, while the full wordmark does the identity work.
             </div>
             <div class="grid" style="margin-top: 16px">
               <div class="card">
                 <h3>Keep</h3>
-                <p>Mailglass makes email visible. Calm, precise, Phoenix-native, and maintainer-led.</p>
+                <p>Mailglass makes email visible. Calm, precise, Phoenix-native, maintainer-led.</p>
               </div>
               <div class="card">
                 <h3>Tighten</h3>
-                <p>Semantic tokens, component state roles, logo usage, and repo artifact rules.</p>
+                <p>Use the selected tighter lockup and keep practical docs/header examples aligned.</p>
               </div>
               <div class="card">
                 <h3>Avoid</h3>
-                <p>Glassmorphism, paper planes, AI-futurism, growth language, mascots, and decorative screenshot packs.</p>
+                <p>I-dot variants, word surgery, glassmorphism, paper planes, send arrows, mascots, and hype copy.</p>
               </div>
             </div>
           </section>
@@ -414,7 +429,7 @@
 
           <section class="section" id="tokens">
             <h2>Token System</h2>
-            <p>The source tokens are intentionally small. Use semantic roles in docs and marketing surfaces; do not copy raw hex into components unless creating the token file itself. BRAND-GAP-08 keeps callout and state color guidance explicit: text use is different from non-text, border, and background structure.</p>
+            <p>The source tokens are intentionally small. Use semantic roles in docs and marketing surfaces; do not copy raw hex into components unless creating the token file itself. Text, border, background, focus, and state roles are separate decisions.</p>
             <pre><code>--mg-bg: var(--mg-paper);
 --mg-text: var(--mg-ink);
 --mg-link: var(--mg-glass);
@@ -427,11 +442,31 @@
 
           <section class="section" id="logo">
             <h2>Logo System</h2>
-            <p>Mailglass is wordmark-first. The mark is secondary and should suggest a pane with an implied message fold. It must not become a paper plane, mailbox, send arrow, or glossy app icon. These local SVGs are useful draft evidence until Phase 82 completes logo review.</p>
+            <p>Use the selected 07r no-i-dot 02 direction: mark plus one untouched full <span class="mono">mailglass</span> wordmark. The tighter gap makes the lockup read as one cohesive identity.</p>
             <div class="logo-row">
-              <div class="logo-box"><img src="assets/logo-primary.svg" alt="Mailglass primary logo"></div>
-              <div class="logo-box"><img src="assets/logo-mark.svg" alt="Mailglass mark"></div>
-              <div class="logo-box dark"><img src="assets/social-avatar.svg" alt="Mailglass social avatar"></div>
+              <div>
+                <div class="logo-box"><img src="assets/logo-primary.svg" alt="Mailglass primary logo"></div>
+                <p class="logo-caption">Primary lockup for README, docs, packages, and page headers.</p>
+              </div>
+              <div>
+                <div class="logo-box small"><img src="assets/logo-mark.svg" alt="Mailglass mark"></div>
+                <p class="logo-caption">Mark for compact brand surfaces and UI-adjacent use.</p>
+              </div>
+              <div>
+                <div class="logo-box small"><img src="assets/logo-monochrome.svg" alt="Mailglass monochrome mark"></div>
+                <p class="logo-caption">CurrentColor mark for mono, print, stamps, and single-color contexts.</p>
+              </div>
+              <div>
+                <div class="logo-box dark avatar"><img src="assets/social-avatar.svg" alt="Mailglass social avatar"></div>
+                <p class="logo-caption">Dark square avatar for social and profile surfaces.</p>
+              </div>
+              <div>
+                <div class="logo-box small"><img src="assets/favicon.svg" alt="Mailglass favicon"></div>
+                <p class="logo-caption">Small browser/package mark; preserve the selected primitive.</p>
+              </div>
+            </div>
+            <div class="callout" style="margin-top: 16px">
+              Do not reintroduce i-dot variants, masks, dot cuts, dotless glyphs, split words, tspans, fake stems, or panes over the wordmark.
             </div>
           </section>
 
@@ -455,7 +490,7 @@
 
           <section class="section" id="surfaces">
             <h2>Surface Specimens</h2>
-            <p>Specimens remain local, browser-readable drafts. Phase 83 owns final specimen and copy work, including public copy blocks and real Mailglass flow examples.</p>
+            <p>Specimens are local, browser-readable examples for practical surfaces: README headers, docs pages, UI primitives, code blocks, palette, and type.</p>
             <div class="grid">
               <a class="specimen" href="examples/palette.svg"><img src="examples/palette.svg" alt="Palette specimen"></a>
               <a class="specimen" href="examples/typography.svg"><img src="examples/typography.svg" alt="Typography specimen"></a>
@@ -481,7 +516,7 @@
 
           <section class="section" id="qa">
             <h2>Quality Gate Targets</h2>
-            <p>Phase 84 owns executable validation proof for local references, contrast policy, package hygiene, and repo cleanliness. This page names the target posture without claiming that proof is complete.</p>
+            <p>Every change should preserve local references, valid SVG/XML, source-native assets, clear text contrast, package hygiene, and repo cleanliness.</p>
             <div class="grid">
               <div class="card"><h3>Designer</h3><p>Can build from concept, palette, type, SVGs, and specimens.</p></div>
               <div class="card"><h3>Engineer</h3><p>Can consume tokens and assets without a build step or vendor tool.</p></div>

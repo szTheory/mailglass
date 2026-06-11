@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
-  <title id="title">Mailglass docs page specimen</title>
-  <desc id="desc">A docs page layout specimen using Mailglass brand tokens.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="mg-docs-page-title mg-docs-page-desc">
+  <title id="mg-docs-page-title">Mailglass docs page specimen</title>
+  <desc id="mg-docs-page-desc">A docs page layout specimen using Mailglass brand tokens.</desc>
   <rect width="1280" height="760" fill="#F8FBFD"/>
   <rect x="0" y="0" width="280" height="760" fill="#EAF6FB"/>
   <rect x="280" y="0" width="1" height="760" fill="#C7DCE5"/>

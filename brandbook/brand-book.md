@@ -8,18 +8,6 @@ Core idea: **Mailglass makes email visible.**
 
 Not louder. Not shinier. Clearer.
 
-## Source Status
-
-Phase 80 treats the current `brandbook/` files as draft inputs from commit
-`572f3eb2`, not approved final Phase 81-84 outputs. This source book closes the
-Phase 81 source-language part of `BRAND-GAP-01` by preserving what is already
-strong, removing overclaims, and leaving final logo, specimen, copy, and proof
-work to their assigned phases.
-
-The brand center is intentionally stable per `BRAND-GAP-12`: Mailglass makes
-email visible, mail you can see through, and Glass is a metaphor, not a visual
-excuse.
-
 ## Brand In One Breath
 
 Mailglass turns email from a black box into a visible system.
@@ -83,7 +71,7 @@ README opening:
 ## Visual Principles
 
 - Use panes, boundaries, layers, timelines, headers, and inspection surfaces.
-- Use translucency sparingly and only where it helps explain layering.
+- Use translucency only where it clarifies layering.
 - Prefer flat color, strong type, restrained borders, and clear hierarchy.
 - Keep surfaces readable before they are atmospheric.
 - Avoid decorative gradients, blobs, lens flares, bevels, chrome, and fake depth.
@@ -128,16 +116,26 @@ Rules:
 
 ## Logo System
 
-Mailglass is wordmark-first. The mark is secondary.
-
-The mark should suggest a pane with an implied message fold. It should not look
-like a paper plane, mailbox, chat bubble, send arrow, or glossy app icon.
+The active logo direction is the 07r no-i-dot 02 lockup: existing mark,
+tighter mark-to-wordmark proximity, and one untouched full `mailglass` wordmark.
 
 Use:
 
-- primary lockup for README, landing pages, docs, and social cards
-- mark for favicon, avatar, compact badges, and small UI surfaces
-- monochrome mark for stamps, stickers, print, and single-color contexts
+- `assets/logo-primary.svg` for README, landing pages, docs, packages, and
+  normal header lockups
+- `assets/logo-mark.svg` for compact brand marks and UI surfaces
+- `assets/logo-monochrome.svg` for currentColor, print, stamps, and single-color
+  contexts
+- `assets/favicon.svg` for browser and package favicon use
+- `assets/social-avatar.svg` for square social/profile contexts
+
+Do not:
+
+- manipulate the i dot
+- split the wordmark
+- use masks, cuts, dotless glyphs, fake stems, or panes over letters
+- turn the mark into a paper document, mail plane, mailbox, chat bubble, send
+  arrow, glossy app icon, mascot, or decorative glass effect
 
 ## UI Guidance
 
@@ -166,9 +164,6 @@ Component rules:
   semantic roles for background, surface, border, text, link, focus, state,
   callout, and code
 - never rely on color alone for state
-- per `BRAND-GAP-08`, state and callout colors must distinguish text use from
-  non-text, border, and background use; do not promote a border/background pair
-  into normal body text until contrast validation proves it
 - keep focus rings obvious
 - keep borders flat
 - reserve shadows for overlays

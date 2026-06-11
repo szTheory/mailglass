@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mailglass Selected Logo Direction</title>
+    <link rel="stylesheet" href="tokens.css">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      body {
+        margin: 0;
+        background: var(--mg-bg);
+        color: var(--mg-text);
+        font-family: var(--mg-font-ui);
+        font-size: var(--mg-text-body);
+        line-height: var(--mg-line-body);
+      }
+
+      a {
+        color: var(--mg-link);
+        text-underline-offset: 3px;
+      }
+
+      code {
+        font-family: var(--mg-font-mono);
+        font-size: 0.92em;
+      }
+
+      .page {
+        width: 100%;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: clamp(24px, 4vw, 56px);
+      }
+
+      .header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 24px;
+        align-items: end;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--mg-border);
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        font-family: var(--mg-font-display);
+        letter-spacing: 0;
+        line-height: var(--mg-line-tight);
+      }
+
+      h1 {
+        max-width: 980px;
+        font-size: clamp(34px, 4.8vw, 56px);
+      }
+
+      .summary {
+        max-width: 940px;
+        margin: 16px 0 0;
+        color: var(--mg-text-muted);
+        font-size: var(--mg-text-lead);
+      }
+
+      .links {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        font-family: var(--mg-font-mono);
+        font-size: var(--mg-text-small);
+      }
+
+      .rules {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin: 24px 0 32px;
+      }
+
+      .rule {
+        min-height: 96px;
+        padding: 14px 16px;
+        border: 1px solid var(--mg-border);
+        border-radius: 8px;
+        background: var(--mg-surface-raised);
+      }
+
+      .rule strong {
+        display: block;
+        margin-bottom: 4px;
+        font-family: var(--mg-font-display);
+      }
+
+      .rule span {
+        color: var(--mg-text-muted);
+        font-size: var(--mg-text-small);
+      }
+
+      .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .concept {
+        min-width: 0;
+        overflow: hidden;
+        padding: 16px;
+        border: 1px solid var(--mg-border);
+        border-radius: 8px;
+        background: var(--mg-surface-raised);
+      }
+
+      .concept.seed {
+        border-color: var(--mg-border-strong);
+      }
+
+      .concept.recommend {
+        border-color: var(--mg-glass);
+        border-width: 2px;
+      }
+
+      .concept img {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border: 1px solid var(--mg-border);
+        border-radius: 8px;
+        background: var(--mg-paper);
+      }
+
+      .concept h2 {
+        margin-top: 14px;
+        font-size: 20px;
+      }
+
+      .concept p {
+        margin: 8px 0 0;
+        color: var(--mg-text-muted);
+        font-size: var(--mg-text-small);
+      }
+
+      .verdict {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 3px 8px;
+        border: 1px solid var(--mg-border);
+        border-radius: 6px;
+        color: var(--mg-text);
+        font-family: var(--mg-font-mono);
+        font-size: 12px;
+      }
+
+      .verdict.strong {
+        border-color: var(--mg-border-strong);
+        color: var(--mg-glass);
+      }
+
+      @media (max-width: 980px) {
+        .rules {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .page {
+          width: 100vw;
+          max-width: 100vw;
+          padding: 16px;
+        }
+
+        .header,
+        .rules,
+        .concept-grid {
+          display: block;
+          width: 100%;
+          max-width: 100%;
+        }
+
+        .links {
+          justify-content: flex-start;
+        }
+
+        .rule + .rule,
+        .concept + .concept {
+          margin-top: 12px;
+        }
+
+        .concept {
+          padding: 10px;
+        }
+
+        h1,
+        .summary,
+        .rule span,
+        .concept p {
+          overflow-wrap: anywhere;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <div>
+          <h1>Mailglass selected logo direction</h1>
+          <p class="summary">The active identity is <code>concept-07r-no-idot-02-tighter-gap.svg</code>: existing mark, tighter proximity, and one untouched full <code>mailglass</code> wordmark. The other files on this board are archived comparisons.</p>
+        </div>
+        <nav class="links" aria-label="Brandbook links">
+          <a href="logo-creative-brief.md">decision record</a>
+          <a href="logo-concepts.md">selection notes</a>
+          <a href="logo-options.md">rejected A-R</a>
+        </nav>
+      </header>
+
+      <section class="rules" aria-label="Review rules">
+        <div class="rule">
+          <strong>Selected lockup</strong>
+          <span>Use no-idot 02 as the active direction and canonical source.</span>
+        </div>
+        <div class="rule">
+          <strong>No word surgery</strong>
+          <span>No masks, dot cuts, dotless glyphs, split words, or fake stems.</span>
+        </div>
+        <div class="rule">
+          <strong>Wordmark intact</strong>
+          <span>The wordmark remains one full <code>mailglass</code> text node.</span>
+        </div>
+        <div class="rule">
+          <strong>Practical modes</strong>
+          <span>Review light, dark, mono, mark-only, wordmark, 32px, and 16px views.</span>
+        </div>
+      </section>
+
+      <section class="concept-grid" aria-label="Concept 07r no i dot logo variants">
+        <article class="concept recommend">
+          <img src="assets/concepts/concept-07r-no-idot-02-tighter-gap.svg" alt="Selected Mailglass no-idot 02 tighter gap SVG specimen">
+          <h2>Selected. 07r no-idot 02 tighter gap</h2>
+          <p>The preferred lockup: selected mark, tighter mark-to-wordmark proximity, and one untouched full wordmark.</p>
+          <span class="verdict strong">selected</span>
+        </article>
+
+        <article class="concept seed">
+          <img src="assets/concepts/concept-07r-pane-rhythm-bold-type.svg" alt="Concept 07r pane rhythm bold type SVG specimen">
+          <h2>07r. Rejected reference</h2>
+          <p>Useful only as scale history. Rejected for split text, cramped a-to-i spacing, and pane-over-i decoration.</p>
+          <span class="verdict">do not extend</span>
+        </article>
+
+        <article class="concept">
+          <img src="assets/concepts/concept-07r-no-idot-01-natural-lockup.svg" alt="Concept 07r no-idot 01 natural lockup SVG specimen">
+          <h2>07r no-idot 01. Natural lockup</h2>
+          <p>The clean control: full wordmark, current mark scale, and a calmer gap.</p>
+          <span class="verdict strong">natural control</span>
+        </article>
+
+        <article class="concept">
+          <img src="assets/concepts/concept-07r-no-idot-03-larger-mark.svg" alt="Concept 07r no-idot 03 larger mark SVG specimen">
+          <h2>07r no-idot 03. Larger mark</h2>
+          <p>Gives the symbol more presence while keeping the name unmodified.</p>
+          <span class="verdict">mark weight</span>
+        </article>
+
+        <article class="concept">
+          <img src="assets/concepts/concept-07r-no-idot-04-larger-wordmark.svg" alt="Concept 07r no-idot 04 larger wordmark SVG specimen">
+          <h2>07r no-idot 04. Larger wordmark</h2>
+          <p>Lets the name lead through size and tracking only.</p>
+          <span class="verdict strong">name-led</span>
+        </article>
+
+        <article class="concept">
+          <img src="assets/concepts/concept-07r-no-idot-05-raised-baseline.svg" alt="Concept 07r no-idot 05 raised baseline SVG specimen">
+          <h2>07r no-idot 05. Raised baseline</h2>
+          <p>Raises the wordmark slightly to test a tighter optical centerline.</p>
+          <span class="verdict">higher type</span>
+        </article>
+
+        <article class="concept">
+          <img src="assets/concepts/concept-07r-no-idot-06-lower-baseline.svg" alt="Concept 07r no-idot 06 lower baseline SVG specimen">
+          <h2>07r no-idot 06. Lower baseline</h2>
+          <p>Lowers the wordmark slightly for a sturdier docs-header posture.</p>
+          <span class="verdict">lower type</span>
+        </article>
+
+        <article class="concept">
+          <img src="assets/concepts/concept-07r-no-idot-07-mono-first.svg" alt="Concept 07r no-idot 07 mono first SVG specimen">
+          <h2>07r no-idot 07. Mono first</h2>
+          <p>Reduces reliance on color and tests the logo as one-color structure.</p>
+          <span class="verdict strong">structure test</span>
+        </article>
+
+        <article class="concept">
+          <img src="assets/concepts/concept-07r-no-idot-08-black-bg-native.svg" alt="Concept 07r no-idot 08 black background native SVG specimen">
+          <h2>07r no-idot 08. Black bg native</h2>
+          <p>Tunes the black-background lockup directly instead of simply inverting it.</p>
+          <span class="verdict strong">black surface</span>
+        </article>
+
+        <article class="concept">
+          <img src="assets/concepts/concept-07r-no-idot-09-small-header.svg" alt="Concept 07r no-idot 09 small header SVG specimen">
+          <h2>07r no-idot 09. Small header</h2>
+          <p>Optimizes the same untouched wordmark for compact docs and package headers.</p>
+          <span class="verdict">header use</span>
+        </article>
+
+        <article class="concept">
+          <img src="assets/concepts/concept-07r-no-idot-10-final-synthesis.svg" alt="Concept 07r no-idot 10 final synthesis SVG specimen">
+          <h2>07r no-idot 10. Final synthesis</h2>
+          <p>Archived comparison. Balanced, but the selected 02 gap reads as a more cohesive lockup.</p>
+          <span class="verdict">not selected</span>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,74 +1,117 @@
 # Mailglass Logo Options
 
-Status: Phase 82 review evidence. Final asset work is blocked until Plan 02 records a selection from the fresh option round.
+Status: historical review evidence. The selected logo direction now lives in
+`logo-creative-brief.md` and `logo-concepts.md`.
 
-This artifact closes the evidence gap named by `BRAND-GAP-04`, `BRAND-GAP-05`, and `BRAND-GAP-06`: one folded pane draft is not enough to approve a logo system, the favicon fold needs small-size review, and inline SVG use needs unique ID discipline.
+This artifact records why the early folded-pane, wordmark-header, and UI-fragment
+rounds were rejected. It also preserves the small-size and inline-SVG concerns
+that shaped the final logo constraints.
 
-The stable brand center stays unchanged: Mailglass makes email visible, mail you can see through, and glass is a metaphor, not a visual excuse. The mark should support that idea with inspectable email header cues, source-native geometry, and restrained Glass accent. It should not become a piece of paper, paper plane, mailbox, chat bubble, send arrow, glossy app icon, mascot, decorative gradient, blob, bevel, glassmorphism, or path-complexity exercise.
+The stable brand center stays unchanged: Mailglass makes email visible, mail you
+can see through, and glass is a metaphor, not a visual excuse. This artifact is
+now historical evidence of failed routes, not an active option set.
+
+The active source of truth is the 07r no-i-dot 02 lockup:
+`assets/concepts/concept-07r-no-idot-02-tighter-gap.svg`. Do not resume from
+any A-R shape.
 
 ## Maintainer Reset
 
-The first option round did not pass maintainer review. The critique was direct: A/B/C all read more like a piece of paper than email or glass. That rejects the folded-pane and pane-card territories as final candidates, even where the SVG source was technically valid.
+The option rounds did not pass maintainer review:
 
-The fresh direction is wordmark-native: make the mark feel owned by Mailglass, and make "email" read through compact header cues rather than document or envelope geometry.
+- A/B/C were rejected because the folded pane, simplified pane, and inspection pane all read too much like paper or a document card.
+- D/E/F were rejected because they were still too narrow: wordmark aperture, `mg` header mark, and wordmark trace variations explored the same typographic-header territory rather than rethinking the mark from first principles.
+- G-R were rejected because they became low-quality source snippets, UI fragments, infrastructure diagrams, or generic devtool marks rather than proper logos.
 
-## Rejected First Round
+Do not continue iterating from these shapes. They are kept only to show what
+was evaluated and rejected.
+
+## Rejected Prior Rounds
 
 | Direction | SVG evidence | Short read | Review status |
 |---|---|---|---|
 | Direction A - folded pane | `assets/options/option-a-folded-pane.svg` | Current folded pane draft with message lines and a lower fold. | Rejected: too close to paper/document geometry. |
 | Direction B - simplified pane/message-lines | `assets/options/option-b-pane-lines.svg` | Flat pane and message-lines mark with no triangular fold. | Rejected: clearer than A, but still reads as a paper-like pane/card. |
 | Direction C - inspection pane | `assets/options/option-c-inspection-pane.svg` | Pane-forward visible-email mark with an inspection edge and message lines. | Rejected: more inspectable, but still too object/card-like. |
+| Direction D - wordmark aperture | `assets/options/option-d-wordmark-aperture.svg` | A custom `g`-like glass aperture with tiny email header cues inside the counter. | Rejected: too close to a typographic variation of the same idea. |
+| Direction E - mg header mark | `assets/options/option-e-mg-header-mark.svg` | An `mg` monogram where the `g` counter becomes a glass inspection pocket with header lines. | Rejected: still a wordmark-header variant, not a first-principles mark. |
+| Direction F - wordmark trace | `assets/options/option-f-wordmark-trace.svg` | A wordmark-adjacent treatment where the terminal `g` carries an inspectable header trace. | Rejected: lockup-led and insufficiently distinct as a standalone mark. |
 
-## Fresh Visual Evidence
+## Superseded G-R Visual Evidence
 
-| Direction | SVG evidence | Short read | Review status |
-|---|---|---|---|
-| Direction D - wordmark aperture | `assets/options/option-d-wordmark-aperture.svg` | A custom `g`-like glass aperture with tiny email header cues inside the counter. | Recommended default fresh candidate. |
-| Direction E - mg header mark | `assets/options/option-e-mg-header-mark.svg` | An `mg` monogram where the `g` counter becomes a glass inspection pocket with header lines. | Strong owned-mark candidate, but less compact than D. |
-| Direction F - wordmark trace | `assets/options/option-f-wordmark-trace.svg` | A wordmark-adjacent treatment where the terminal `g` carries an inspectable header trace. | Useful if the final system should stay lockup-led rather than icon-led. |
+| Direction | Family | SVG evidence | Short read | Review status |
+|---|---|---|---|---|
+| Direction G - header checksum | Email source | `assets/options/option-g-header-checksum.svg` | Header fields reduced to aligned source bars and verification ticks. | Rejected: reads as a small source/UI fragment, not an ownable logo. |
+| Direction H - console row | Email source | `assets/options/option-h-console-row.svg` | A compact operator-console row with status, header token, and route tick. | Rejected: reads as interface chrome rather than a mark. |
+| Direction I - inline source cursor | Email source | `assets/options/option-i-inline-source-cursor.svg` | A source cursor and `to:` token make email visible as editable infrastructure. | Rejected: too literal and text-dependent. |
+| Direction J - negative at lens | Email source | `assets/options/option-j-negative-at-lens.svg` | An at-sign-adjacent loop with a clear inspection counter and header traces. | Rejected: generic `@`/lens risk and not distinctive enough. |
+| Direction K - header stack | Email source | `assets/options/option-k-header-stack-mark.svg` | `from`, `to`, and `subj` source labels become the mark structure. | Rejected: source labels are product explanation, not logo identity. |
+| Direction L - source diff | Email source | `assets/options/option-l-source-diff.svg` | Hidden versus visible message state becomes a small diff/alignment mark. | Rejected: generic code/diff notation. |
+| Direction M - protocol brackets | Inspection tool | `assets/options/option-m-protocol-brackets.svg` | Parser-like brackets inspect a header token without using a pane. | Rejected: generic devtool syntax. |
+| Direction N - transparent routing node | Infrastructure | `assets/options/option-n-transparent-routing-node.svg` | Inbound and outbound message flow passes through an observable center. | Rejected: diagrammatic and too close to routing/send logic. |
+| Direction O - delivery timeline | Infrastructure | `assets/options/option-o-delivery-timeline.svg` | Render, deliver, and event lifecycle ticks form a small system mark. | Rejected: timeline/status diagram rather than a brand mark. |
+| Direction P - normalized event pulse | Infrastructure | `assets/options/option-p-normalized-event-pulse.svg` | One message signal becomes normalized observable event ticks. | Rejected: observability icon, not Mailglass identity. |
+| Direction Q - glass caliper | Inspection tool | `assets/options/option-q-glass-caliper.svg` | A precision instrument measures a visible email header line. | Rejected: tool illustration and not ownable enough. |
+| Direction R - refraction line | Inspection tool | `assets/options/option-r-refraction-line.svg` | A flat source line changes alignment through a clear center. | Rejected: abstract effect sketch, not a proper logo. |
 
 ## Comparison
 
-| Criteria | Direction D - wordmark aperture | Direction E - mg header mark | Direction F - wordmark trace |
-|---|---|---|---|
-| 16px clarity | Strongest fresh candidate: the `g` aperture can collapse to a recognizable mark plus one header line. | Moderate: the `mg` idea may need simplification to avoid tiny letter clutter. | Weakest as a favicon because the full wordmark relationship is too wide. |
-| 32px clarity | Strong: aperture, descender, and header cues remain readable. | Good: monogram reads, but header pocket needs careful spacing. | Good for lockup preview, less useful as a standalone mark. |
-| wordmark-first fit | Strong: the mark can sit before the wordmark and feel derived from the `g`. | Strong: explicitly wordmark-native through the `mg` monogram. | Strongest lockup fit because it keeps the wordmark as the primary visual. |
-| Brand-center alignment | Best match for visible email through a glass aperture containing header cues. | Strong owned identity, with email visible inside the counter. | Strong for source lockups; less independent as a mark. |
-| forbidden trope avoidance | Passes: no paper, envelope, plane, mailbox, chat bubble, send arrow, mascot, or glossy app-icon logic. | Passes if the monogram stays typographic and not badge-like. | Passes, though the trace must stay header-like rather than decorative circuitry. |
-| monochrome/currentColor viability | Strong: one aperture outline, descender, and a small set of header strokes. | Moderate: monogram text may require path refinement later for compact assets. | Moderate: wordmark-led use is less useful for single-color stamps. |
-| reversed/dark-background viability | Strong: aperture outline can use Ice on Ink with header cues in Glass/Mist. | Good: monogram can reverse, but needs breathing room. | Good for primary lockup contexts, not the best social avatar seed. |
-| Path complexity and editability | Low: simple circle, descender, and header strokes. | Moderate: live `mg` text is editable but future compact conversion may need hand tuning. | Moderate: live wordmark plus trace is easy to edit, but not icon-minimal. |
-| Accessible metadata and unique ID strategy | Option SVG uses `mg-option-d-title` and `mg-option-d-desc`. | Option SVG uses `mg-option-e-title` and `mg-option-e-desc`. | Option SVG uses `mg-option-f-title` and `mg-option-f-desc`. |
+This comparison is retained only to show what was evaluated. Apparent strengths
+in this table are superseded by the maintainer reset above; none of these rows
+are active candidates.
 
-## Small-Size Notes
+| Direction | 16px / 32px clarity | Wordmark-first fit | Brand-center alignment | Forbidden trope risk | Monochrome / reversed viability | Path complexity and editability | Accessible metadata and unique ID strategy |
+|---|---|---|---|---|---|---|---|
+| G - header checksum | Strong: bars and ticks can collapse to a compact source verifier. | Strong as a mark before the wordmark; does not depend on lettering. | Strong: email headers become inspectable proof. | Low: no paper, envelope, pane, or card outline. | Strong: simple strokes and dots can become `currentColor`; reversed works on Ink. | Low: mostly strokes and circles. | Uses `mg-option-g-title` and `mg-option-g-desc`. |
+| H - console row | Moderate: dense row details may need reduction for favicon use. | Strong for developer-facing lockups. | Strong: reads as operational email infrastructure. | Low: console row avoids mail-object tropes. | Strong if reduced to dot, row, and tick. | Low to moderate: several source-row strokes. | Uses `mg-option-h-title` and `mg-option-h-desc`. |
+| I - inline source cursor | Moderate: `to:` may disappear at 16px, but cursor and line survive. | Strong for docs and source-native surfaces. | Strong: email is shown as editable source. | Low, though it may skew code-first instead of brand-first. | Moderate: live text should be converted for compact final assets. | Moderate because the source token uses text in draft form. | Uses `mg-option-i-title` and `mg-option-i-desc`. |
+| J - negative at lens | Strong silhouette, moderate originality. | Good as a standalone mark, less wordmark-derived. | Moderate: email-native through at-sign, inspectable through counter. | Medium: `@` can feel generic. | Strong: loop and counter can reverse cleanly. | Moderate: circle/arc geometry needs tuning. | Uses `mg-option-j-title` and `mg-option-j-desc`. |
+| K - header stack | Moderate: labels may not survive small sizes. | Strong beside wordmark if simplified to label rhythm. | Strong: direct source headers. | Low: no object metaphor. | Moderate: final compact version should reduce text labels to bars. | Moderate because draft uses live text. | Uses `mg-option-k-title` and `mg-option-k-desc`. |
+| L - source diff | Strong: plus/minus and aligned bars survive. | Good for developer README/docs contexts. | Strong: makes before/after visibility explicit. | Low, but diff notation may feel too code-specific. | Strong: simple strokes and symbols. | Low to moderate: final compact version should shape-convert symbols. | Uses `mg-option-l-title` and `mg-option-l-desc`. |
+| M - protocol brackets | Strong: bracket silhouette is compact. | Good: mark can prefix the wordmark without depending on it. | Strong: inspection boundary around source. | Low, unless brackets become generic devtool syntax. | Strong: currentColor-friendly strokes. | Low: simple bracket and header strokes. | Uses `mg-option-m-title` and `mg-option-m-desc`. |
+| N - transparent routing node | Strong: node and route arrows survive. | Good for product/infrastructure story. | Strong: visible flow through a clear center. | Medium: arrows must not become send-arrow logic. | Strong with simplified route lines. | Moderate: arrowheads and center need tuning. | Uses `mg-option-n-title` and `mg-option-n-desc`. |
+| O - delivery timeline | Strong as ticks; weaker as a unique favicon. | Good for lifecycle copy and docs. | Strong: render, deliver, event are visible states. | Low: no mail object, but timeline can feel generic. | Strong: circles and line are easy to reverse. | Low: simple line and ticks. | Uses `mg-option-o-title` and `mg-option-o-desc`. |
+| P - normalized event pulse | Strong: waveform silhouette is distinctive. | Moderate: more observability than email. | Strong for normalized events and operator confidence. | Low: avoids email tropes completely. | Strong: stroke-only mark. | Moderate: pulse geometry needs exact simplification. | Uses `mg-option-p-title` and `mg-option-p-desc`. |
+| Q - glass caliper | Strong: opposing bracket silhouette survives. | Good if paired with the wordmark as an inspection instrument. | Strong: inspect before sending. | Low, but can read as measurement tool more than email. | Strong: stroke-only, currentColor-friendly. | Low: caliper and header lines are simple. | Uses `mg-option-q-title` and `mg-option-q-desc`. |
+| R - refraction line | Strong: offset line and center survive. | Good as abstract brand mark. | Strong for "see through" without visual glass effects. | Low, but may become too abstract. | Strong: line and center reverse cleanly. | Low: flat strokes and one center. | Uses `mg-option-r-title` and `mg-option-r-desc`. |
 
-`BRAND-GAP-05` is about the triangular fold reading poorly at favicon sizes. The reset removes fold geometry entirely from the active candidates. The review rule remains conservative: if any active mark reads like a document, envelope, paper plane, or generic app card at 16px or 32px, simplify the mark rather than adding detail.
+## Small-Size Notes From Failed Rounds
 
-Direction D is the cleanest small-size candidate because the aperture and descender can survive as a compact wordmark-derived mark while a single header stroke keeps the email cue. Direction E is promising if the monogram remains legible. Direction F is best treated as lockup exploration, not a favicon-first mark.
+Small-mark ambiguity remains the review rule. If any mark reads like a
+document, envelope, paper plane, send
+arrow, mailbox, chat bubble, generic app card, UI fragment, or generic devtool
+icon at 16px or 32px, reject the direction rather than adding detail.
+
+Earlier notes treated G, M, Q, R, and P as relatively stronger small-size
+candidates because they relied on clear stroke silhouettes rather than text
+labels. That judgment is superseded. The maintainer review rejected the whole
+G-R set as insufficiently logo-quality.
 
 ## Recommended Final Refinement
 
-Recommended final refinement: Direction D, the wordmark aperture mark with header cues.
+Recommended final refinement: none from A-R.
 
-Rationale:
-
-- It moves the mark away from paper/card geometry while preserving "Mailglass makes email visible."
-- It makes the logo feel owned by the Mailglass wordmark rather than generic email iconography.
-- It uses email header cues as the email signal, avoiding envelopes, paper planes, mailboxes, chat bubbles, and send arrows.
-- It should produce the cleanest 16px/32px favicon, monochrome/currentColor mark, and reversed/dark-background avatar among the fresh options.
-- It follows Phase 81 token guidance without implying product admin UI consumption of `brandbook/tokens.json` or `brandbook/tokens.css`.
+Use the selected 07r no-i-dot 02 lockup recorded in `logo-concepts.md`.
 
 ## Maintainer Review
 
-Selected direction: pending Plan 02 fresh-option review.
+Selected direction: `assets/concepts/concept-07r-no-idot-02-tighter-gap.svg`.
+A-R are rejected evidence. Do not accept any of the old signals below as
+sufficient:
 
-Plan 02 should record one explicit resume signal before final SVG files change:
+- `select option-g`
+- `select option-h`
+- `select option-i`
+- `select option-j`
+- `select option-k`
+- `select option-l`
+- `select option-m`
+- `select option-n`
+- `select option-o`
+- `select option-p`
+- `select option-q`
+- `select option-r`
+- `revise option-<letter>: ...`
 
-- `approved option-d`
-- `select option-e`
-- `select option-f`
-- `revise option-d: ...`
-
-If the response is only `approved`, treat it as `approved option-d` because Direction D is the documented fresh recommendation.
+If the response is only `approved`, do not treat it as approval for any A-R
+option. The selected direction is already recorded in `logo-concepts.md`.

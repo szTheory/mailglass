@@ -1,8 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" role="img" aria-labelledby="title desc">
-  <title id="title">Mailglass favicon</title>
-  <desc id="desc">Compact pane mark for Mailglass.</desc>
-  <rect x="5" y="4" width="22" height="24" rx="4" fill="#F8FBFD" stroke="#0D1B2A" stroke-width="2"/>
-  <path d="M10 11h12" stroke="#277B96" stroke-width="2" stroke-linecap="round"/>
-  <path d="M10 16h8" stroke="#5C6B7A" stroke-width="2" stroke-linecap="round"/>
-  <path d="M16 28v-8l11 8" fill="#EAF6FB" stroke="#0D1B2A" stroke-width="2" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 80 80" role="img" aria-labelledby="mg-favicon-title mg-favicon-desc">
+  <title id="mg-favicon-title">Mailglass favicon</title>
+  <desc id="mg-favicon-desc">Compact Mailglass mark.</desc>
+  <defs>
+    <linearGradient id="mg-favicon-pane" x1="14" y1="8" x2="72" y2="74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.94"/>
+      <stop offset="0.54" stop-color="#EAF6FB" stop-opacity="0.68"/>
+      <stop offset="1" stop-color="#A6EAF2" stop-opacity="0.5"/>
+    </linearGradient>
+  </defs>
+  <g color="#0D1B2A" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 32h51v33H15z" stroke="currentColor" stroke-width="5"/>
+    <path d="M18 36l22.5 15L63 36" stroke="currentColor" stroke-width="4.2"/>
+    <path d="M25 9h38c7.2 0 12.5 5.3 12.5 12.5v38c0 7.2-5.3 12.5-12.5 12.5H25c-7.2 0-12.5-5.3-12.5-12.5v-38C12.5 14.3 17.8 9 25 9z" fill="url(#mg-favicon-pane)" stroke="#277B96" stroke-width="4.2" transform="rotate(-7 44 40.5)"/>
+    <path d="M62 16L31 69" stroke="#A6EAF2" stroke-width="4"/>
+  </g>
 </svg>

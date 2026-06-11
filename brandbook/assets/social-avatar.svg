@@ -1,13 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Mailglass social avatar</title>
-  <desc id="desc">Mailglass pane mark on an Ink background.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="mg-social-avatar-title mg-social-avatar-desc">
+  <title id="mg-social-avatar-title">Mailglass social avatar</title>
+  <desc id="mg-social-avatar-desc">Mailglass mark on an Ink background.</desc>
+  <defs>
+    <linearGradient id="mg-social-avatar-pane" x1="14" y1="8" x2="72" y2="74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FBFD" stop-opacity="0.36"/>
+      <stop offset="0.58" stop-color="#A6EAF2" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#277B96" stop-opacity="0.34"/>
+    </linearGradient>
+  </defs>
   <rect width="512" height="512" rx="96" fill="#0D1B2A"/>
-  <g transform="translate(112 80) scale(3)" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="18" y="16" width="60" height="64" rx="10" fill="#F8FBFD" stroke="#A6EAF2" stroke-width="5"/>
-    <path d="M28 32h40" stroke="#277B96" stroke-width="5"/>
-    <path d="M28 46h26" stroke="#5C6B7A" stroke-width="4"/>
-    <path d="M28 60h18" stroke="#5C6B7A" stroke-width="4"/>
-    <path d="M48 80V58l30 22" fill="#EAF6FB" stroke="#A6EAF2" stroke-width="5"/>
-    <path d="M50 59l14 10" stroke="#277B96" stroke-width="4"/>
+  <g transform="translate(96 96) scale(4)" color="#EAF6FB" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 32h51v33H15z" stroke="currentColor" stroke-width="5"/>
+    <path d="M18 36l22.5 15L63 36" stroke="currentColor" stroke-width="4.2"/>
+    <path d="M25 9h38c7.2 0 12.5 5.3 12.5 12.5v38c0 7.2-5.3 12.5-12.5 12.5H25c-7.2 0-12.5-5.3-12.5-12.5v-38C12.5 14.3 17.8 9 25 9z" fill="url(#mg-social-avatar-pane)" stroke="#A6EAF2" stroke-width="4.2" transform="rotate(-7 44 40.5)"/>
+    <path d="M62 16L31 69" stroke="#EAF6FB" stroke-width="4"/>
   </g>
 </svg>

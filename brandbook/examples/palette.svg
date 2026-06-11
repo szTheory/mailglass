@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
-  <title id="title">Mailglass palette specimen</title>
-  <desc id="desc">Mailglass color palette and semantic state examples.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="mg-palette-title mg-palette-desc">
+  <title id="mg-palette-title">Mailglass palette specimen</title>
+  <desc id="mg-palette-desc">Mailglass color palette and semantic state examples.</desc>
   <rect width="1200" height="760" fill="#F8FBFD"/>
   <text x="64" y="82" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="42" font-weight="700">Mailglass palette</text>
   <text x="64" y="116" fill="#5C6B7A" font-family="Inter, sans-serif" font-size="18">Ink, glass, frost, paper, and signal. Glass is an accent, not the whole room.</text>
