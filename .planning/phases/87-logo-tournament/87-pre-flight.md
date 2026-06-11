@@ -139,3 +139,132 @@ openness; option-6 lockup gap tightened 57->30u. No option needed replacement.
 | option-8 | C-14 | PASS | square+circle exclusion: not two-circle Mastercard, not copy-icon (mixed shapes), not envelope/Linear/Glassdoor/Gmail |
 
 112 rows, 112 PASS. Options presented in `tournament/round-1.html`.
+
+## Round 2
+
+Six variants of the round-1 pick (option 8, "the shared light") screened against
+C-01..C-14 plus a new standing constraint recorded at the round-1 checkpoint:
+
+C-15 — no broken read: nothing may read as broken, severed, fractured, or
+bitten; voids must read as LIGHT passing through (the option-2 rejection rule).
+A lens position whose void reads as a bite out of the pane fails.
+
+6 variants x 15 constraints = 90 rows. Verdicts for C-05..C-08 and C-15 were
+back-filled from the browser visual audit (screenshots under
+`tmp/87-logo-tournament/round-2/`, rendered with Playwright from
+`tournament/round-2.html` and read by eye before the checkpoint; corner-straddle
+variants additionally judged at 280px in `marks-closeup.png`).
+
+Shared facts (every variant): wordmark is the round-1 option-8 glyph paths
+VERBATIM (only the group translate-x changes); mark is ONE even-odd path
+(pane subpath + lens-circle subpath), all currentColor with root fallback
+color="#0D1B2A"; ids prefixed v8a-..v8f-, unique per file and across the
+gallery page.
+
+Design-exam-driven deviations (documented, not silent): 8C and 8E hold the
+lockup gap at the baseline's 0.40 x mark-width RATIO (47u and 45u) because the
+absolute 52u gap would exceed the C-03 bound once the mark narrows —
+constraint-driven, not a second design parameter. 8F is the sanctioned SPINOFF
+(maintainer: "variations AND spinoffs... improve it significantly") and
+combines three families; it is labeled as such everywhere. One explored
+construction was REJECTED before drawing: pane-as-outline-frame with a solid
+lens — under even-odd geometry a solid lens crossing a solid frame bar always
+voids at the crossing, splitting the lens into disconnected solid fragments
+(a guaranteed C-15 severed read). Rounded pane corners were also rejected:
+a solid rounded square enters badge/plate vocabulary (C-01 adjacency).
+
+| Variant | Constraint | Verdict | Evidence |
+|--------|------------|---------|----------|
+| 8A lens40 | C-01 | PASS | zero <rect>; one even-odd mark path + 9 glyph paths on raw background; nothing sits on the pane |
+| 8A lens40 | C-02 | PASS | lens r40 at (96,118) crosses the pane's right edge and dips 20u below pane bottom (158 vs 138); clearly visible at presentation size |
+| 8A lens40 | C-03 | PASS | gap 52u: <= 0.4 x mark width (0.4x136=54.4) and <= 0.75 x x-height (75); mark optical center y=90 |
+| 8A lens40 | C-04 | PASS | mark + word only; no subtitle |
+| 8A lens40 | C-05 | PASS | 16px tab: void half-lens still subtends ~4px and reads — tmp/87-logo-tournament/round-2/variant-8A-favicon-zoom.png |
+| 8A lens40 | C-06 | PASS | 32px header crisp; the larger lens is the best small-size survivor of the field — same zoom file |
+| 8A lens40 | C-07 | PASS | all paths currentColor; mono cell single-color — variant-8A-strip.png |
+| 8A lens40 | C-08 | PASS | dark cell + dark section render in Mist text token — variant-8A-strip.png, full-dark.png |
+| 8A lens40 | C-09 | PASS | i dot is the round-1 literal path, untouched (d=24.5 circle at (11,5.5), 22u above stem) |
+| 8A lens40 | C-10 | PASS | square+circle geometry; no glassmorphism/gradient/plane/mailbox/arrow/bubble/mascot/node motif |
+| 8A lens40 | C-11 | PASS | derives only from round-1 option 8; no A-R or 07r shape |
+| 8A lens40 | C-12 | PASS | xmllint pass; viewBox -12 -16 981 212; role=img; title+desc; v8a- ids unique |
+| 8A lens40 | C-13 | PASS | filled outline paths only; zero <text>/font-family/live strokes |
+| 8A lens40 | C-14 | PASS | not Mastercard (one circle), not Linear slats, not Glassdoor/Gmail/envelope |
+| 8A lens40 | C-15 | PASS | void = pane-lens overlap only; solid outer half completes the circle gestalt; pane edge reads as a chord through the lens, not a cut — marks-closeup.png |
+| 8B corner | C-01 | PASS | zero <rect>; one even-odd mark path + 9 glyph paths on raw background |
+| 8B corner | C-02 | PASS | lens r34 centered ON the bottom-right corner (96,138) breaks TWO edges: 34u right and 34u below; the strongest boundary-break in the field |
+| 8B corner | C-03 | PASS | gap 52u: <= 0.4 x mark width (0.4x130=52, exact bound) and <= 75; mark optical center y=90 |
+| 8B corner | C-04 | PASS | mark + word only; no subtitle |
+| 8B corner | C-05 | PASS | 16px tab: square + corner-dot silhouette distinct; void quarter visible — variant-8B-favicon-zoom.png |
+| 8B corner | C-06 | PASS | 32px header: quarter-light read clear — same zoom file |
+| 8B corner | C-07 | PASS | all currentColor; mono cell single-color — variant-8B-strip.png |
+| 8B corner | C-08 | PASS | dark cell + dark section legible — variant-8B-strip.png, full-dark.png |
+| 8B corner | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 8B corner | C-10 | PASS | square+circle geometry only; no banned motif family |
+| 8B corner | C-11 | PASS | derives only from round-1 option 8; no A-R or 07r shape |
+| 8B corner | C-12 | PASS | xmllint pass; viewBox -12 -16 975 212; role=img; title+desc; v8b- ids unique |
+| 8B corner | C-13 | PASS | filled outline paths only; zero <text>/font-family |
+| 8B corner | C-14 | PASS | not Mastercard/Linear/Glassdoor/Gmail/envelope; corner-overlap composition is distinct |
+| 8B corner | C-15 | PASS | judged at 280px in marks-closeup.png: three quarters of the lens stay solid so the circle never reads cut; the pane corner reads LIT (bounded by both shapes' edges), not bitten — the solid circle mass wraps the corner from outside |
+| 8C portrait | C-01 | PASS | zero <rect>; one even-odd mark path + 9 glyph paths on raw background |
+| 8C portrait | C-02 | PASS | lens r34 at (84,120) crosses the right edge and dips 14u below pane bottom (154 vs 140); visible at presentation size |
+| 8C portrait | C-03 | PASS | gap 47u: <= 0.4 x mark width (0.4x118=47.2, ratio held from baseline) and <= 75; pane center y=90 |
+| 8C portrait | C-04 | PASS | mark + word only; no subtitle |
+| 8C portrait | C-05 | PASS | 16px tab: portrait silhouette + lens bump read — variant-8C-favicon-zoom.png |
+| 8C portrait | C-06 | PASS | 32px header crisp; window read (taller than wide) survives — same zoom file |
+| 8C portrait | C-07 | PASS | all currentColor; mono cell single-color — variant-8C-strip.png |
+| 8C portrait | C-08 | PASS | dark cell + dark section legible — variant-8C-strip.png, full-dark.png |
+| 8C portrait | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 8C portrait | C-10 | PASS | rectangle+circle geometry only; no banned motif family |
+| 8C portrait | C-11 | PASS | derives only from round-1 option 8; portrait pane is NOT the 07r envelope (no flap, no tilt, no gradient) |
+| 8C portrait | C-12 | PASS | xmllint pass; viewBox -12 -16 958 212; role=img; title+desc; v8c- ids unique |
+| 8C portrait | C-13 | PASS | filled outline paths only; zero <text>/font-family |
+| 8C portrait | C-14 | PASS | portrait pane flush to type band: not a folder tab, not Linear/Glassdoor/Gmail/envelope |
+| 8C portrait | C-15 | PASS | void = overlap only; solid outer half completes the circle; pane edges flush to x-height line (y40) and baseline (y140) read as registration, not cropping — marks-closeup.png |
+| 8D gap40 | C-01 | PASS | zero <rect>; mark identical to the approved baseline |
+| 8D gap40 | C-02 | PASS | identical to baseline: lens dips 14u below pane bottom (152 vs 138) |
+| 8D gap40 | C-03 | PASS | gap 40u: <= 0.4 x mark width (52) with margin and <= 75; tightest legal lockup of the field |
+| 8D gap40 | C-04 | PASS | mark + word only; no subtitle |
+| 8D gap40 | C-05 | PASS | 16px tab identical to approved baseline mark — variant-8D-favicon-zoom.png |
+| 8D gap40 | C-06 | PASS | 32px header identical to approved baseline mark — same zoom file |
+| 8D gap40 | C-07 | PASS | all currentColor; mono cell single-color — variant-8D-strip.png |
+| 8D gap40 | C-08 | PASS | dark cell + dark section legible — variant-8D-strip.png, full-dark.png |
+| 8D gap40 | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 8D gap40 | C-10 | PASS | square+circle geometry only; no banned motif family |
+| 8D gap40 | C-11 | PASS | mark is round-1 option 8 verbatim; only the lockup gap changed |
+| 8D gap40 | C-12 | PASS | xmllint pass; viewBox -12 -16 963 212; role=img; title+desc; v8d- ids unique |
+| 8D gap40 | C-13 | PASS | filled outline paths only; zero <text>/font-family |
+| 8D gap40 | C-14 | PASS | same exclusions as the approved baseline |
+| 8D gap40 | C-15 | PASS | mark geometry unchanged from the approved baseline; no new void introduced |
+| 8E pane80 | C-01 | PASS | zero <rect>; one even-odd mark path + 9 glyph paths on raw background |
+| 8E pane80 | C-02 | PASS | lens r34 at (80,110) crosses the right edge and dips 14u below pane bottom (144 vs 130); visible at presentation size |
+| 8E pane80 | C-03 | PASS | gap 45u: <= 0.4 x mark width (0.4x114=45.6, ratio held from baseline) and <= 75; pane center y=90 |
+| 8E pane80 | C-04 | PASS | mark + word only; no subtitle |
+| 8E pane80 | C-05 | PASS | 16px tab: near-equal square and lens both read; best mass balance at small size — variant-8E-favicon-zoom.png |
+| 8E pane80 | C-06 | PASS | 32px header: lens reads as co-star, void wide open — same zoom file |
+| 8E pane80 | C-07 | PASS | all currentColor; mono cell single-color — variant-8E-strip.png |
+| 8E pane80 | C-08 | PASS | dark cell + dark section legible — variant-8E-strip.png, full-dark.png |
+| 8E pane80 | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 8E pane80 | C-10 | PASS | square+circle geometry only; no banned motif family |
+| 8E pane80 | C-11 | PASS | derives only from round-1 option 8; no A-R or 07r shape |
+| 8E pane80 | C-12 | PASS | xmllint pass; viewBox -12 -16 952 212; role=img; title+desc; v8e- ids unique |
+| 8E pane80 | C-13 | PASS | filled outline paths only; zero <text>/font-family |
+| 8E pane80 | C-14 | PASS | lens/pane = 85% approaches two-equal-shapes: checked against Mastercard (two circles — not this) and copy-icon (two same shapes — not this, mixed square+circle) |
+| 8E pane80 | C-15 | PASS | void = overlap only; solid outer half completes the circle gestalt — marks-closeup.png |
+| 8F synthesis | C-01 | PASS | zero <rect>; one even-odd mark path + 9 glyph paths on raw background |
+| 8F synthesis | C-02 | PASS | lens r36 ON the bottom-right corner (84,140) breaks two edges: 36u right and 36u below to y176, landing beside the g descender's y177 |
+| 8F synthesis | C-03 | PASS | gap 40u: <= 0.4 x mark width (0.4x120=48) and <= 75; pane center y=90 |
+| 8F synthesis | C-04 | PASS | mark + word only; no subtitle |
+| 8F synthesis | C-05 | PASS | 16px tab: portrait pane + corner lens silhouette distinct — variant-8F-favicon-zoom.png |
+| 8F synthesis | C-06 | PASS | 32px header: quarter-light read clear, descender echo visible — same zoom file |
+| 8F synthesis | C-07 | PASS | all currentColor; mono cell single-color — variant-8F-strip.png |
+| 8F synthesis | C-08 | PASS | dark cell + dark section legible — variant-8F-strip.png, full-dark.png |
+| 8F synthesis | C-09 | PASS | i dot is the round-1 literal path, untouched |
+| 8F synthesis | C-10 | PASS | rectangle+circle geometry only; no banned motif family |
+| 8F synthesis | C-11 | PASS | derives only from round-1 option 8; not 07r (no flap/tilt/gradient) |
+| 8F synthesis | C-12 | PASS | xmllint pass; viewBox -12 -16 953 212; role=img; title+desc; v8f- ids unique |
+| 8F synthesis | C-13 | PASS | filled outline paths only; zero <text>/font-family |
+| 8F synthesis | C-14 | PASS | not Mastercard/Linear/Glassdoor/Gmail/envelope; corner-overlap on a portrait pane is distinct |
+| 8F synthesis | C-15 | PASS | judged at 280px in marks-closeup.png: three quarters of the lens solid, circle never reads cut; the lit corner is bounded by both shapes' edges and reads as shared light, not a bite |
+
+90 rows, 90 PASS. Variants presented in `tournament/round-2.html` after the
+round-1 baseline.
