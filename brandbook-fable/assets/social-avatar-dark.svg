@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="mg-fable-avatar-dark-title mg-fable-avatar-dark-desc">
+  <title id="mg-fable-avatar-dark-title">mailglass avatar, dark</title>
+  <desc id="mg-fable-avatar-dark-desc">The mailglass mark centered on an ink square for dark-surface profile images.</desc>
+  <rect width="240" height="240" fill="#0D1B2A"/>
+  <g transform="translate(50 12)">
+    <!-- pane 140x96 at (0,44); fold (14,58)-(126,58)-(70,92) voided; seal r36 centered on the lower edge at (70,140) -->
+    <path data-part="mark" fill="#EAF6FB" fill-rule="evenodd" d="M 0 44 L 140 44 L 140 140 L 106 140 A 36 36 0 0 0 34 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z"/>
+    <path data-part="mark" fill="#A6EAF2" d="M 106 140 A 36 36 0 0 1 34 140 Z"/>
+  </g>
+</svg>
