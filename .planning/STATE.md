@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Brand Book Fable — A/B Brand System
-status: planning
-last_updated: "2026-06-11T00:00:00.000Z"
+status: ready_to_plan
+last_updated: 2026-06-11T15:44:01.852Z
 last_activity: 2026-06-11
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 0
-  completed_plans: 0
+  completed_plans: 7
   percent: 0
+stopped_at: Phase 85 complete (1/1) — ready to discuss Phase 86
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-11 — v1.9 "Brand Book Fable" milestone section)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v1.9 "Brand Book Fable — A/B Brand System" — roadmap created (Phases 85-90); Phase 85 is next.
+**Current focus:** Phase 86 — foundations — palette, type, voice, tokens
 
 ## Current Position
 
-Phase: 85 of 85-90 (Research and Differentiation Brief) — not started
-Plan: —
-Status: Roadmap created — ready to plan Phase 85
-Last activity: 2026-06-11 — v1.9 roadmap created (Phases 85-90, 22/22 requirements mapped)
+Phase: 86 of 85 (foundations — palette, type, voice, tokens)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-11
 
 Progress: [░░░░░░] 0/6 phases
 

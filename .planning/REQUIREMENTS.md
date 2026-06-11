@@ -22,10 +22,10 @@ proof, and standalone polish.
 
 ### BRIEF — Research and Differentiation
 
-- [ ] **BRIEF-01**: A forensic audit of the codex `brandbook/` exists as a
+- [x] **BRIEF-01**: A forensic audit of the codex `brandbook/` exists as a
   row-addressable defect/gap register, with every claimed weakness verified
   against actual file contents.
-- [ ] **BRIEF-02**: A differentiation brief locks ≤12 differentiators (each
+- [x] **BRIEF-02**: A differentiation brief locks ≤12 differentiators (each
   with a one-line "why it earns its bytes"), the brand-book section outline,
   and an explicit kill-list of artifacts deliberately not shipped.
 
@@ -143,8 +143,8 @@ Mapped: 22/22 v1.9 requirements → Phases 85-90 (roadmapped 2026-06-11).
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| BRIEF-01 | Phase 85 | Pending |
-| BRIEF-02 | Phase 85 | Pending |
+| BRIEF-01 | Phase 85 | Complete |
+| BRIEF-02 | Phase 85 | Complete |
 | FOUND-01 | Phase 86 | Pending |
 | FOUND-02 | Phase 86 | Pending |
 | FOUND-03 | Phase 86 | Pending |

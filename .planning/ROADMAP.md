@@ -59,7 +59,7 @@ Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
 
 </details>
 
-- [ ] **Phase 85: Research and Differentiation Brief** - Forensic codex-brandbook audit + differentiation brief (≤12 differentiators, book outline, kill-list); planning artifacts only
+- [x] **Phase 85: Research and Differentiation Brief** - Forensic codex-brandbook audit + differentiation brief (≤12 differentiators, book outline, kill-list); planning artifacts only (completed 2026-06-11)
 - [ ] **Phase 86: Foundations — Palette, Type, Voice, Tokens** - Evolve-vs-keep records, DTCG tokens.json/tokens.css (light+dark, interaction+feedback states), computed WCAG contrast matrix
 - [ ] **Phase 87: Logo Tournament** - 8 pre-screened options across 4 axes, rendered-evidence gallery, maintainer hard pause, ≤2 refinement rounds, winner promoted to outlined-path assets
 - [ ] **Phase 88: Brand Book Assembly** - Self-contained index.html (light/dark toggle, live component gallery, contrast matrix, logo section), brand-book.md, README.md
@@ -80,7 +80,7 @@ Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
 **Plans**: 1 plan
 
 Plans:
-- [ ] 85-01-PLAN.md — Forensic codex audit register (BRIEF-01) + locked differentiation brief (BRIEF-02)
+- [x] 85-01-PLAN.md — Forensic codex audit register (BRIEF-01) + locked differentiation brief (BRIEF-02)
 
 ### Phase 86: Foundations — Palette, Type, Voice, Tokens
 **Goal**: The fable brand has a complete, contrast-proven token foundation for light and dark themes that every later artifact consumes
@@ -148,7 +148,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 85. Research and Differentiation Brief | 0/1 | Planned | - |
+| 85. Research and Differentiation Brief | 1/1 | Complete    | 2026-06-11 |
 | 86. Foundations — Palette, Type, Voice, Tokens | 0/? | Not started | - |
 | 87. Logo Tournament | 0/? | Not started | - |
 | 88. Brand Book Assembly | 0/? | Not started | - |
