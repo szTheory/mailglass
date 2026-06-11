@@ -1,11 +1,13 @@
 ---
 phase: 87-logo-tournament
 plan: 01
-status: awaiting-maintainer-selection
+status: selection-recorded
 created: 2026-06-11
+resolved: 2026-06-11
 gallery: .planning/phases/87-logo-tournament/tournament/round-1.html
 rejection_count: 0
-blocks: [87-02]
+blocks: []
+selection: option-8
 ---
 
 # Phase 87 Plan 01 Checkpoint — Round-1 Hard Pause
@@ -60,8 +62,13 @@ All 8 options passed the 14-constraint pre-flight (112/112 PASS — see
 
 ## Selection
 
-<!-- Filled in by/with the maintainer. 87-02 is blocked until this is complete. -->
-
-- **Pick(s):**
-- **Rationale / directional notes:**
-- **Date:**
+- **Pick(s):** Option 8 — "the shared light" (axis D, negative space)
+- **Rationale / directional notes:** Maintainer likes option 8 the most. Round
+  2 should focus on it: variations AND spinoffs are welcome — "tighten it up
+  and even improve it significantly some more." Multimodal image examination
+  of the mark with a graphic-design eye is requested as part of refinement.
+- **Standing constraint (from the option-2 rejection):** Option 2 was rejected
+  because "the l is broken — gives off bad vibes." Nothing in any variant may
+  read as broken, severed, fractured, or bitten. Voids must always read as
+  light passing through, never as damage or a missing piece.
+- **Date:** 2026-06-11
