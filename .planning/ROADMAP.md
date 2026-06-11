@@ -77,7 +77,10 @@ Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
   2. The differentiation brief locks at most 12 differentiators, each with a one-line "why it earns its bytes"
   3. The brief contains the brand-book section outline and an explicit kill-list of artifacts deliberately not shipped
   4. Nothing exists under `brandbook-fable/` yet — all Phase 85 artifacts live in `.planning/`
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 85-01-PLAN.md — Forensic codex audit register (BRIEF-01) + locked differentiation brief (BRIEF-02)
 
 ### Phase 86: Foundations — Palette, Type, Voice, Tokens
 **Goal**: The fable brand has a complete, contrast-proven token foundation for light and dark themes that every later artifact consumes
@@ -145,7 +148,7 @@ Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 85. Research and Differentiation Brief | 0/? | Not started | - |
+| 85. Research and Differentiation Brief | 0/1 | Planned | - |
 | 86. Foundations — Palette, Type, Voice, Tokens | 0/? | Not started | - |
 | 87. Logo Tournament | 0/? | Not started | - |
 | 88. Brand Book Assembly | 0/? | Not started | - |
