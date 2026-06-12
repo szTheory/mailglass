@@ -74,9 +74,12 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 
 **Plans**: 4 plans
 Plans:
-**Wave 1**
+**Wave 0**
 
 - [ ] 91-01-PLAN.md - Create the phase-local adoption gate and evidence contract
+
+**Wave 1** *(blocked on Wave 0 completion)*
+
 - [ ] 91-02-PLAN.md - Replace the active brandbook folder via Git
 
 **Wave 2** *(blocked on Wave 1 completion)*
