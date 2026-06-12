@@ -413,12 +413,13 @@ Expected sentinel after adoption: `GATE-PASS`. [VERIFIED: Phase 90 gate conventi
 |---|-------|---------|---------------|
 | A1 | No external live service outside the repository stores the brandbook path. [ASSUMED] | Runtime State Inventory | A manually configured external dashboard could retain old path prose, but no repo evidence points to one. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should gate Check 9 inspect commit titles locally or leave release verification outside the script?**
+1. **RESOLVED: Should gate Check 9 inspect commit titles locally or leave release verification outside the script?**
    - What we know: D-14/D-15 require non-release-triggering commit types and no Release Please PR. [VERIFIED: 91-CONTEXT.md]
    - What's unclear: The local gate can inspect local Git log only after commits exist; pre-commit execution cannot prove future PR behavior. [VERIFIED: Git workflow constraints]
    - Recommendation: Put path/adoption invariants in `gate.sh`; put commit-title and no-release-PR proof in `91-gate-evidence.md` / verification. [VERIFIED: phase workflow fit]
+   - Final decision: Check 9 stays scoped to folder adoption/path invariants; release-safety evidence stays outside the script and is recorded by Plan 91-04 in `91-gate-evidence.md`. [RESOLVED: 2026-06-12]
 
 ## Environment Availability
 
