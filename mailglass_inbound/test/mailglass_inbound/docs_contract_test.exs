@@ -679,7 +679,7 @@ defmodule MailglassInbound.DocsContractTest do
     # exists to catch.
     record_path =
       Path.expand(
-        "../../../.planning/phases/73-inbound-1-0-publish-evidence/73-01-RELEASE-RECORD.md",
+        "../../../.planning/milestones/v1.6-phases/73-inbound-1-0-publish-evidence/73-01-RELEASE-RECORD.md",
         __DIR__
       )
 
