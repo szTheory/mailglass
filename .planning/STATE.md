@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: Brand Adoption
-status: roadmap_created
-last_updated: "2026-06-12T15:15:21.363Z"
-last_activity: 2026-06-12
+status: context_gathered
+last_updated: "2026-06-12T21:05:47Z"
+last_activity: 2026-06-12 — Phase 91 context gathered (assumptions mode)
 progress:
   total_phases: 3
   completed_phases: 0
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-06-12 — v1.10 "Brand Adoption" milesto
 
 Phase: 91 — Folder Adoption and Reference Reconciliation (next up, not started)
 Plan: —
-Status: Roadmap created — ready to plan Phase 91
-Last activity: 2026-06-12 — v1.10 roadmap created (Phases 91-93, 10/10 requirements mapped)
+Status: Context gathered — ready to plan Phase 91
+Last activity: 2026-06-12 — Phase 91 context gathered (assumptions mode)
 
 Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (0/3 phases)
 
@@ -161,6 +161,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Session Continuity
 
+- 2026-06-12: Phase 91 context gathered in assumptions mode with explicit subagent research. Decisions captured in `.planning/phases/91-folder-adoption-and-reference-reconciliation/91-CONTEXT.md`; discussion audit in `.planning/phases/91-folder-adoption-and-reference-reconciliation/91-DISCUSSION-LOG.md`. Next: `/gsd-plan-phase 91`.
 - 2026-06-12: v1.10 roadmap created (Phases 91-93). `.planning/ROADMAP.md` rewritten for v1.10 (milestone history, v1.9 collapsed details, and 999.x backlog preserved), `.planning/REQUIREMENTS.md` traceability filled (10/10 → Phases 91-93), STATE updated. Next: `/gsd-plan-phase 91` (or `/gsd-discuss-phase 91` first).
 - 2026-06-12: v1.9 shipped (Phases 85-90; gate 9/9 first run, maintainer A/B sign-off). v1.10 "Brand Adoption" opened; requirements defined (10 REQ-IDs); adoption mechanics researched under `.planning/research/v1.10-brand-adoption/`.
 - 2026-06-11: v1.8 closed superseded; milestone audit `gaps_found` accepted. Archives at `.planning/milestones/v1.8-*`. `brandbook/` frozen at `09a84dd4` as the codex A/B baseline. v1.9 "Brand Book Fable" opened; requirements defined (22 REQ-IDs); research synthesized under `.planning/research/v1.9-brandbook-fable/`.
@@ -170,4 +171,4 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Operator Next Steps
 
-- Plan the first phase: `/gsd-plan-phase 91` (or `/gsd-discuss-phase 91` first)
+- Plan Phase 91: `/gsd-plan-phase 91`
