@@ -1,6 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-labelledby="mg-fable-favicon-title mg-fable-favicon-desc">
   <title id="mg-fable-favicon-title">mailglass</title>
   <desc id="mg-fable-favicon-desc">The mailglass mark redrawn for a 16-unit grid: pane, lit fold, and seal of light, sized to stay legible in a browser tab.</desc>
-  <path fill="#0D1B2A" fill-rule="evenodd" d="M 1 1 H 15 V 11 H 11 A 3 3 0 0 0 5 11 H 1 Z M 3 3 H 13 L 8 6 Z"/>
+  <style>
+    .mg-fable-favicon-pane { fill: #0D1B2A; }
+    @media (prefers-color-scheme: dark) {
+      .mg-fable-favicon-pane { fill: #EAF6FB; }
+    }
+  </style>
+  <path class="mg-fable-favicon-pane" fill-rule="evenodd" d="M 1 1 H 15 V 11 H 11 A 3 3 0 0 0 5 11 H 1 Z M 3 3 H 13 L 8 6 Z"/>
   <path fill="#277B96" d="M 11 11 A 3 3 0 0 1 5 11 Z"/>
 </svg>
