@@ -82,23 +82,23 @@ proof, and standalone polish.
 
 ### COLL — Collateral and Specimens
 
-- [ ] **COLL-01**: `examples/landing-page.html` is a full self-contained
+- [x] **COLL-01**: `examples/landing-page.html` is a full self-contained
   landing blueprint (hero, install snippet, feature grid, code block,
   comparison row, footer) deployable with a find-and-replace.
-- [ ] **COLL-02**: `examples/email-template.html` is an email-client-safe
+- [x] **COLL-02**: `examples/email-template.html` is an email-client-safe
   branded transactional email specimen (table-based layout, inline styles).
-- [ ] **COLL-03**: SVG specimens cover README header, docs-page framing, a
+- [x] **COLL-03**: SVG specimens cover README header, docs-page framing, a
   1200×630 social-card template (with documented local PNG export policy),
   and a worked diagram-language spec (node shapes, stroke weights, arrowheads,
   pane motif).
 
 ### COPY — Voice and Copy Library
 
-- [ ] **COPY-01**: `copy/copy-blocks.md` ships paste-ready copy for GitHub
+- [x] **COPY-01**: `copy/copy-blocks.md` ships paste-ready copy for GitHub
   About (within char limit), Hex.pm description, HexDocs intro, landing hero +
   feature blurbs, social/launch posts, and a release-note voice template — no
   placeholders, no lorem.
-- [ ] **COPY-02**: `copy/microcopy.md` ships UX strings keyed to the seven
+- [x] **COPY-02**: `copy/microcopy.md` ships UX strings keyed to the seven
   domain nouns (Mailable, Message, Delivery, Event, InboundMessage, Mailbox,
   Suppression) across error/empty/success/warning states, consistent with the
   Anymail event taxonomy.
@@ -157,11 +157,11 @@ Mapped: 22/22 v1.9 requirements → Phases 85-90 (roadmapped 2026-06-11).
 | BOOK-05 | Phase 88 | Complete |
 | BOOK-06 | Phase 88 | Complete |
 | BOOK-07 | Phase 88 | Complete |
-| COLL-01 | Phase 89 | Pending |
-| COLL-02 | Phase 89 | Pending |
-| COLL-03 | Phase 89 | Pending |
-| COPY-01 | Phase 89 | Pending |
-| COPY-02 | Phase 89 | Pending |
+| COLL-01 | Phase 89 | Complete |
+| COLL-02 | Phase 89 | Complete |
+| COLL-03 | Phase 89 | Complete |
+| COPY-01 | Phase 89 | Complete |
+| COPY-02 | Phase 89 | Complete |
 | GATE-01 | Phase 90 | Pending |
 | GATE-02 | Phase 90 | Pending |
 | GATE-03 | Phase 90 | Pending |

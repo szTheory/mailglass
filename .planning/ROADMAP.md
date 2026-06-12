@@ -63,7 +63,7 @@ Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
 - [x] **Phase 86: Foundations — Palette, Type, Voice, Tokens** - Evolve-vs-keep records, DTCG tokens.json/tokens.css (light+dark, interaction+feedback states), computed WCAG contrast matrix (completed 2026-06-11)
 - [x] **Phase 87: Logo Tournament** - 8 pre-screened options across 4 axes, rendered-evidence gallery, maintainer hard pause, ≤2 refinement rounds, winner promoted to outlined-path assets (completed 2026-06-12)
 - [x] **Phase 88: Brand Book Assembly** - Self-contained index.html (light/dark toggle, live component gallery, contrast matrix, logo section), brand-book.md, README.md (completed 2026-06-12)
-- [ ] **Phase 89: Collateral, Specimens, and Copy Library** - landing-page/email-template HTML, README/docs/OG/diagram SVG specimens, copy-blocks.md, microcopy.md
+- [x] **Phase 89: Collateral, Specimens, and Copy Library** - landing-page/email-template HTML, README/docs/OG/diagram SVG specimens, copy-blocks.md, microcopy.md (completed 2026-06-12)
 - [ ] **Phase 90: Quality Gate and Maintainer UAT** - Scripted gate (parse/link/grep/size/render checks), browser evidence, A/B walkthrough sign-off
 
 ## Phase Details
@@ -162,7 +162,7 @@ Plans:
 | 86. Foundations — Palette, Type, Voice, Tokens | 1/1 | Complete    | 2026-06-11 |
 | 87. Logo Tournament | 2/2 | Complete    | 2026-06-12 |
 | 88. Brand Book Assembly | 1/1 | Complete    | 2026-06-12 |
-| 89. Collateral, Specimens, and Copy Library | 0/? | Not started | - |
+| 89. Collateral, Specimens, and Copy Library | 1/1 | Complete   | 2026-06-12 |
 | 90. Quality Gate and Maintainer UAT | 0/? | Not started | - |
 
 ## Backlog

@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Brand Book Fable — A/B Brand System
-status: ready_to_plan
-last_updated: 2026-06-12T01:50:28.772Z
+status: planning
+last_updated: "2026-06-12T02:37:39.056Z"
 last_activity: 2026-06-12
 progress:
   total_phases: 11
   completed_phases: 7
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 12
+  completed_plans: 12
   percent: 64
-stopped_at: Phase 88 complete (1/1) — ready to discuss Phase 89
 ---
 
 # Project State
@@ -26,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-06-11 — v1.9 "Brand Book Fable" milest
 ## Current Position
 
 Phase: 89 of 90 (collateral, specimens, and copy library)
-Plan: Not started
-Status: Ready to plan
+Plan: 01 of 01 (complete)
+Status: Phase 89 executed — ready to verify
 Last activity: 2026-06-12
 
-Progress: [██████░░░░] 64% (7 of 11 v1.9 phases complete)
+Progress: [██████████] 100%
 
 ## v1.9 Milestone Intent
 
@@ -106,6 +105,8 @@ Progress: [██████░░░░] 64% (7 of 11 v1.9 phases complete)
 - [Phase 87]: 87-01: one shared LOGO-CRAFT glyph library underpins all round-1 wordmarks; the eight concepts are independent
 - [88-01]: favicon scale chips drawn inline with explicit fills — img obeys OS prefers-color-scheme, not the page toggle
 - [88-01]: page marks drawn from live tokens (pane=text, seal=accent) reproducing the logo color program in both themes
+- [Phase 89]: readme-header fills restricted to Glass+Slate — the only token pair >=3:1 on both GitHub grounds (computed 4.82/3.93, 5.47/3.46)
+- [Phase 89]: Diagram labels use a purpose-built 14-glyph stencil set, not wordmark glyphs — label craft kept distinct from wordmark craft
 
 ## Performance Metrics
 
@@ -140,6 +141,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
 | Phase 87 P01 | 49 minutes | 3 tasks | 12 files |
 | Phase 88 P01 | 27min | 3 tasks | 4 files |
+| Phase 89 P01 | 28min | 4 tasks | 10 files |
 
 ## Accumulated Context
 
