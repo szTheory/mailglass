@@ -21,7 +21,7 @@ Add `mailglass_inbound` to your `mix.exs` dependencies:
 ```elixir
 defp deps do
   [
-    {:mailglass,         "~> 1.5"},
+    {:mailglass,         "~> 1.6"},
     {:mailglass_inbound, "~> 1.3"},
     {:oban,              "~> 2.21"}  # optional — see section 6
   ]
