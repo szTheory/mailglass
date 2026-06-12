@@ -10,12 +10,19 @@ defmodule MailglassDemo.DemoData do
 
   @tenant "northstar"
   @empty_tenant "empty-tenant"
-  @now ~U[2026-06-01 15:00:00Z]
+
+  # The seed anchor is resolved at reset! time, not compile time: a fixed
+  # date ages the seeded evidence out of the operator surfaces' recency
+  # windows (every list renders its empty state once the hardcoded day falls
+  # out of range). Determinism is carried by IDs/counts/offsets — see
+  # DemoDataResetTest.deterministic_keys/0 — never by absolute timestamps.
+  @anchor_key :mailglass_demo_seed_anchor
 
   def tenant_id, do: @tenant
   def empty_tenant_id, do: @empty_tenant
 
   def reset! do
+    Process.put(@anchor_key, DateTime.truncate(DateTime.utc_now(), :second))
     truncate!()
     seed_outbound!()
     seed_inbound!()
@@ -783,5 +790,9 @@ defmodule MailglassDemo.DemoData do
     count
   end
 
-  defp minutes_ago(minutes), do: DateTime.add(@now, -minutes, :minute)
+  defp minutes_ago(minutes), do: DateTime.add(seed_anchor(), -minutes, :minute)
+
+  defp seed_anchor do
+    Process.get(@anchor_key) || DateTime.truncate(DateTime.utc_now(), :second)
+  end
 end
