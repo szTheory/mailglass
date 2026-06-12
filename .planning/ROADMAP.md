@@ -67,7 +67,12 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
   2. No tracked file outside `.planning/milestones/` archives references `brandbook-fable/`; the CLAUDE.md Brand & Voice source-of-truth pointer and `mailglass_admin/docs/design-system.md:5` both point at `brandbook/brand-book.md` (the v1.9 sweep proved these are the only tracked consumers)
   3. The v1.9 quality gate (`gate.sh`, re-pathed) passes on the folder at its new location
   4. Every commit in the phase uses a non-release-triggering type (`chore:`/`docs:`) and no release-please PR is created
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 91-01-PLAN.md - Create the phase-local adoption gate and evidence contract
+- [ ] 91-02-PLAN.md - Replace the active brandbook folder via Git
+- [ ] 91-03-PLAN.md - Reconcile active source-of-truth pointers and live planning memory
+- [ ] 91-04-PLAN.md - Run the re-pathed gate and record release-safety evidence
 
 ### Phase 92: Surface Propagation
 **Goal**: Anyone who encounters the repo — README, link unfurl, or the running admin dashboard — sees the sealed-flap identity (or a recorded reason why a surface was deferred)
@@ -101,7 +106,7 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 91. Folder Adoption and Reference Reconciliation | 0/? | Not started | - |
+| 91. Folder Adoption and Reference Reconciliation | 0/4 | Not started | - |
 | 92. Surface Propagation | 0/? | Not started | - |
 | 93. HexDocs Wiring and Release Hardening | 0/? | Not started | - |
 
