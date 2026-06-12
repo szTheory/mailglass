@@ -8,7 +8,22 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: (none — quiet maintenance; next decision is A/B winner adoption)
+## Current Milestone: v1.10 Brand Adoption
+
+**Goal:** Make the A/B-winning fable brand the project's one canonical identity everywhere it shows: fold `brandbook-fable/` into `brandbook/` (deleting the codex book), propagate the sealed-flap identity to the root README and the repo social preview, and wire HexDocs/ex_doc logos for all three packages.
+
+**Target features:**
+- Folder adoption: `brandbook-fable/` becomes canonical `brandbook/` via git mv; codex book removed (history preserves it at the frozen baseline `09a84dd4`); all internal references (CLAUDE.md brand pointers, planning intel) reconciled; the v1.9 quality gate re-passes on the new path.
+- Repo surfaces: root README adopts `brandbook/examples/readme-header.svg`; og-card exported to PNG (1200×630) with documented GitHub social-preview upload steps; favicon adopted where the repo serves one.
+- HexDocs wiring: ex_doc logo/assets config for `mailglass`, `mailglass_admin`, `mailglass_inbound` — verified with local `mix docs` renders; committed as non-release-triggering types so the brand ships with the next natural release (no forced release train in this milestone).
+- CLAUDE.md "Brand & Voice" source-of-truth pointer moves from `prompts/mailglass-brand-book.md` to `brandbook/brand-book.md`.
+
+**Scope locks:**
+- No Hex release is cut in this milestone; mix.exs changes are docs-config only, commit types must not trigger release-please.
+- The sealed-flap usage rules and constraints C-15/C-16 (in the v1.9 decision record) are binding on every propagated surface.
+- Binary additions limited to the single og-card PNG export.
+
+**v1.9 context (shipped):**
 
 **`v1.9 Brand Book Fable — A/B Brand System` SHIPPED 2026-06-12.** The
 competing brand book at `brandbook-fable/` is complete and maintainer-approved

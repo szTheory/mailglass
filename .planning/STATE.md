@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.9
-milestone_name: Brand Book Fable — A/B Brand System
-status: Awaiting next milestone
-last_updated: "2026-06-12T14:58:19.482Z"
-last_activity: 2026-06-12 — Milestone v1.9 completed and archived
+milestone: v1.10
+milestone_name: Brand Adoption
+status: planning
+last_updated: "2026-06-12T15:15:21.363Z"
+last_activity: 2026-06-12
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 7
-  completed_plans: 7
-  percent: 100
-closure_note: shipped 2026-06-12 — 22/22 requirements verified, gate 9/9 first run, maintainer A/B sign-off
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-11 — v1.9 "Brand Book Fable" milest
 
 ## Current Position
 
-Phase: Milestone v1.9 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-12 — Milestone v1.9 completed and archived
+Status: Defining requirements
+Last activity: 2026-06-12 — Milestone v1.10 started
 
 ## v1.9 Milestone Intent
 
