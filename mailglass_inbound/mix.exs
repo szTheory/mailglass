@@ -116,6 +116,12 @@ defmodule MailglassInbound.MixProject do
   # `fix(inbound):` commit — chore/docs commits do NOT trigger a Release Please
   # inbound bump, which would leave adopters on a stale `== <prev>` pin while
   # core advances. Dev/test resolves the sibling via the local path dep.
+  #
+  # Note: the release workflow's sed step may pre-sync this pin line inside a
+  # core/admin release commit (a `chore`), which updates the pin in git WITHOUT
+  # cutting an inbound release — the published inbound then still carries the
+  # previous pin and blocks dependency resolution beside the new core. A
+  # `fix(inbound):` release is required either way to ship the new pin to Hex.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
       {:mailglass, "== 1.6.1"}
