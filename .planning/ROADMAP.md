@@ -76,7 +76,7 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 Plans:
 **Wave 0**
 
-- [ ] 91-01-PLAN.md - Create the phase-local adoption gate and evidence contract
+- [x] 91-01-PLAN.md - Create the phase-local adoption gate and evidence contract
 
 **Wave 1** *(blocked on Wave 0 completion)*
 
@@ -128,7 +128,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 91. Folder Adoption and Reference Reconciliation | 0/4 | Not started | - |
+| 91. Folder Adoption and Reference Reconciliation | 1/4 | In Progress|  |
 | 92. Surface Propagation | 0/? | Not started | - |
 | 93. HexDocs Wiring and Release Hardening | 0/? | Not started | - |
 
