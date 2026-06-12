@@ -1,7 +1,7 @@
 defmodule Mailglass.MixProject do
   use Mix.Project
 
-  @version "1.6.0"
+  @version "1.6.1"
   @source_url "https://github.com/szTheory/mailglass"
 
   def project do
