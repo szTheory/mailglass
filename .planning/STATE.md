@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: Brand Adoption
-status: context_gathered
-last_updated: "2026-06-12T21:05:47Z"
-last_activity: 2026-06-12 — Phase 91 context gathered (assumptions mode)
+status: executing
+last_updated: "2026-06-12T21:51:30.640Z"
+last_activity: 2026-06-12 -- Phase 91 planning complete
 progress:
-  total_phases: 3
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 11
+  completed_phases: 2
+  total_plans: 10
+  completed_plans: 6
+  percent: 18
 ---
 
 # Project State
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-12 — v1.10 "Brand Adoption" milesto
 
 ## Current Position
 
-Phase: 91 — Folder Adoption and Reference Reconciliation (next up, not started)
-Plan: —
-Status: Context gathered — ready to plan Phase 91
-Last activity: 2026-06-12 — Phase 91 context gathered (assumptions mode)
+Phase: 91 — Folder Adoption and Reference Reconciliation (planned, ready to execute)
+Plan: 4 plans (91-01 through 91-04)
+Status: Ready to execute
+Last activity: 2026-06-12 -- Phase 91 planning complete
 
 Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (0/3 phases)
 
@@ -161,6 +161,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Session Continuity
 
+- 2026-06-12: Phase 91 planning complete. Research, validation, pattern map, and four executable plans were created under `.planning/phases/91-folder-adoption-and-reference-reconciliation/`; plan-checker passed after revisions for research resolution, validation map alignment, pattern references, and D-10 diff-scope proof. Next: `/gsd-execute-phase 91`.
 - 2026-06-12: Phase 91 context gathered in assumptions mode with explicit subagent research. Decisions captured in `.planning/phases/91-folder-adoption-and-reference-reconciliation/91-CONTEXT.md`; discussion audit in `.planning/phases/91-folder-adoption-and-reference-reconciliation/91-DISCUSSION-LOG.md`. Next: `/gsd-plan-phase 91`.
 - 2026-06-12: v1.10 roadmap created (Phases 91-93). `.planning/ROADMAP.md` rewritten for v1.10 (milestone history, v1.9 collapsed details, and 999.x backlog preserved), `.planning/REQUIREMENTS.md` traceability filled (10/10 → Phases 91-93), STATE updated. Next: `/gsd-plan-phase 91` (or `/gsd-discuss-phase 91` first).
 - 2026-06-12: v1.9 shipped (Phases 85-90; gate 9/9 first run, maintainer A/B sign-off). v1.10 "Brand Adoption" opened; requirements defined (10 REQ-IDs); adoption mechanics researched under `.planning/research/v1.10-brand-adoption/`.
@@ -171,4 +172,4 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Operator Next Steps
 
-- Plan Phase 91: `/gsd-plan-phase 91`
+- Execute Phase 91: `/gsd-execute-phase 91`
