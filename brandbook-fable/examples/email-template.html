@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>Your sign-in link</title>
+<!-- Branded transactional specimen: a magic-link sign-in email.
+     Deploy by replacing every "#" href with a real destination.
+     The masthead is intentionally type-only; if production mail needs a
+     logo, host a PNG or JPG and reference it with alt text and explicit
+     width and height attributes. Auth mail carries nothing else. -->
+<style>
+  :root { color-scheme: light dark; }
+  body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+  table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+  /* Honored by Apple Mail and iOS Mail; Gmail applies its own transform.
+     The light palette below is mid-tone by design so it survives both. */
+  @media (prefers-color-scheme: dark) {
+    .mg-ground { background-color: #0D1B2A !important; }
+    .mg-card { background-color: #152538 !important; border-color: #315069 !important; }
+    .mg-rule { background-color: #315069 !important; }
+    .mg-text { color: #EAF6FB !important; }
+    .mg-muted { color: #B8CAD4 !important; }
+    .mg-wordmark { color: #EAF6FB !important; }
+  }
+</style>
+</head>
+<body class="mg-ground" style="margin:0; padding:0; background-color:#EAF6FB;">
+
+<!-- hidden preheader -->
+<div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#EAF6FB;">
+  Your sign-in link for mailglass &mdash; it works once and expires in 15 minutes.
+</div>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="mg-ground" style="background-color:#EAF6FB;">
+  <tr>
+    <td align="center" style="padding:24px 12px;">
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%; max-width:600px;">
+
+        <!-- masthead: type-only by rule -->
+        <tr>
+          <td style="padding:8px 8px 16px;">
+            <span class="mg-wordmark" style="font-family:Helvetica, Arial, sans-serif; font-size:22px; font-weight:bold; letter-spacing:-0.2px; color:#0D1B2A;">mailglass</span>
+          </td>
+        </tr>
+
+        <!-- card -->
+        <tr>
+          <td class="mg-card" style="background-color:#F8FBFD; border:1px solid #C7DCE5; border-radius:8px; padding:32px 32px 28px;">
+
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="mg-text" style="font-family:Helvetica, Arial, sans-serif; font-size:16px; line-height:24px; color:#0D1B2A; padding-bottom:12px;">
+                  Hi Ada,
+                </td>
+              </tr>
+              <tr>
+                <td class="mg-text" style="font-family:Helvetica, Arial, sans-serif; font-size:16px; line-height:24px; color:#0D1B2A; padding-bottom:24px;">
+                  Here&rsquo;s your sign-in link for mailglass. It works once and expires in 15&nbsp;minutes.
+                </td>
+              </tr>
+
+              <!-- bulletproof button -->
+              <tr>
+                <td style="padding-bottom:24px;">
+                  <!--[if mso]>
+                  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="#" style="height:46px;v-text-anchor:middle;width:230px;" arcsize="13%" strokecolor="#277B96" fillcolor="#277B96">
+                    <w:anchorlock/>
+                    <center style="color:#F8FBFD;font-family:Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;">Sign in to mailglass</center>
+                  </v:roundrect>
+                  <![endif]-->
+                  <!--[if !mso]><!-->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="background-color:#277B96; border-radius:6px;">
+                        <a href="#" style="display:inline-block; padding:13px 30px; font-family:Helvetica, Arial, sans-serif; font-size:16px; font-weight:bold; color:#F8FBFD; text-decoration:none;">Sign in to mailglass</a>
+                      </td>
+                    </tr>
+                  </table>
+                  <!--<![endif]-->
+                </td>
+              </tr>
+
+              <tr>
+                <td class="mg-muted" style="font-family:Helvetica, Arial, sans-serif; font-size:14px; line-height:22px; color:#5C6B7A; padding-bottom:8px;">
+                  Didn&rsquo;t request this email? You can ignore it &mdash; no one can sign in without the link above, and your account stays exactly as it was.
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- footer -->
+        <tr>
+          <td style="padding:20px 8px 8px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="mg-rule" style="background-color:#C7DCE5; height:1px; line-height:1px; font-size:0;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="mg-muted" style="font-family:Helvetica, Arial, sans-serif; font-size:12px; line-height:19px; color:#5C6B7A; padding-top:14px;">
+                  You&rsquo;re receiving this because a sign-in was requested for this address a moment ago. If that wasn&rsquo;t you, nothing further is needed.
+                  <br><br>
+                  Sent by mailglass &middot; <a href="#" style="color:#5C6B7A;">Help</a> &middot; <a href="#" style="color:#5C6B7A;">Security</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

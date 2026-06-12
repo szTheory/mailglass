@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mailglass — transactional email framework for Phoenix</title>
+<meta name="description" content="mailglass composes on Swoosh and ships the framework layer Phoenix teams rebuild by hand: HEEx components, a preview dashboard, normalized webhook events, suppressions, and an append-only event ledger.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../tokens.css">
+<script>
+try{var t=localStorage.getItem("mg-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}
+</script>
+<style>
+/* Landing blueprint — every color routes through the tokens; deploy by
+   replacing the "#" hrefs with real destinations. */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--mg-color-background);
+  color: var(--mg-color-text);
+  font-family: var(--mg-font-ui);
+  font-size: var(--mg-text-body);
+  line-height: 1.65;
+}
+a { color: var(--mg-color-link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--mg-color-link-hover); }
+:focus-visible {
+  outline: var(--mg-focus-ring-width) solid var(--mg-color-focus-ring);
+  outline-offset: var(--mg-focus-ring-offset);
+  border-radius: 2px;
+}
+
+/* header */
+.site-header {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: var(--mg-space-lg);
+  padding: 0 clamp(16px, 4vw, 48px); height: 58px;
+  background: var(--mg-color-background);
+  border-bottom: 1px solid var(--mg-color-border);
+}
+.site-header .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; color: var(--mg-color-text); text-decoration: none; flex: none; }
+.site-header .brand svg { display: block; }
+.site-header nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin-right: auto; font-family: var(--mg-font-mono); font-size: 12.5px; }
+.site-header nav::-webkit-scrollbar { display: none; }
+.site-header nav a { color: var(--mg-color-text-muted); text-decoration: none; white-space: nowrap; padding: 6px 9px; border-radius: var(--mg-radius-sm); }
+.site-header nav a:hover { color: var(--mg-color-link-hover); background: var(--mg-color-surface-sunken); }
+#theme-toggle {
+  flex: none; cursor: pointer;
+  font-family: var(--mg-font-mono); font-size: 12.5px;
+  color: var(--mg-color-text); background: var(--mg-color-surface);
+  border: 1px solid var(--mg-color-border-input); border-radius: var(--mg-radius-full);
+  padding: 6px 14px;
+}
+#theme-toggle:hover { background: var(--mg-color-surface-sunken); }
+
+/* left-anchored documentation column */
+main {
+  max-width: 1040px;
+  padding-left: clamp(20px, 7vw, 110px);
+  padding-right: clamp(16px, 3vw, 40px);
+  padding-bottom: var(--mg-space-2xl);
+}
+section { border-top: 1px solid var(--mg-color-border); padding: var(--mg-space-xl) 0 var(--mg-space-2xl); scroll-margin-top: 76px; }
+h2 { font-family: var(--mg-font-display); font-size: var(--mg-text-h2); font-weight: 640; letter-spacing: -0.01em; margin: 0 0 var(--mg-space-md); line-height: 1.15; }
+p, ul { max-width: 64ch; }
+.muted { color: var(--mg-color-text-muted); }
+code { font-family: var(--mg-font-mono); font-size: 0.92em; }
+
+/* hero */
+.hero { padding: var(--mg-space-2xl) 0 var(--mg-space-xl); }
+.hero .mark-row { display: flex; align-items: flex-end; gap: var(--mg-space-lg); flex-wrap: wrap; margin-bottom: var(--mg-space-lg); }
+.hero h1 {
+  font-family: var(--mg-font-display); font-size: var(--mg-text-display);
+  font-weight: 650; letter-spacing: -0.015em; line-height: 1.08;
+  margin: 0; max-width: 22ch;
+}
+.hero .subhead { color: var(--mg-color-text-muted); font-size: 17.5px; max-width: 58ch; margin: var(--mg-space-md) 0 var(--mg-space-lg); }
+.hero .cta-row { display: flex; gap: var(--mg-space-md); flex-wrap: wrap; align-items: center; margin: var(--mg-space-lg) 0; }
+.btn-primary {
+  display: inline-block; text-decoration: none;
+  background: var(--mg-color-accent); color: var(--mg-color-background);
+  font-weight: 600; padding: 10px 22px; border-radius: var(--mg-radius-md);
+}
+.btn-primary:hover { color: var(--mg-color-background); filter: brightness(1.08); }
+.btn-secondary {
+  display: inline-block; text-decoration: none;
+  color: var(--mg-color-accent-text); font-weight: 600;
+  padding: 10px 18px; border-radius: var(--mg-radius-md);
+  border: 1px solid var(--mg-color-border-input);
+}
+
+/* code blocks */
+pre {
+  background: var(--mg-color-surface-sunken);
+  border: 1px solid var(--mg-color-border);
+  border-radius: var(--mg-radius-md);
+  padding: var(--mg-space-md) var(--mg-space-lg);
+  overflow-x: auto; max-width: 720px;
+  font-family: var(--mg-font-mono); font-size: var(--mg-text-code); line-height: 1.6;
+  margin: var(--mg-space-md) 0;
+}
+pre .c { color: var(--mg-color-text-muted); }
+pre .k { color: var(--mg-color-accent-text); }
+
+/* feature list: asymmetric two-track grid, ragged by design */
+.features { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 4fr); gap: var(--mg-space-md) var(--mg-space-xl); }
+.feature { border-left: 2px solid var(--mg-color-border-strong); padding: 2px 0 2px var(--mg-space-md); }
+.feature b { display: block; font-family: var(--mg-font-display); font-size: 18px; font-weight: 620; }
+.feature p { margin: 6px 0 0; color: var(--mg-color-text-muted); font-size: 15px; }
+
+/* comparison */
+.compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--mg-space-md); max-width: 860px; }
+.compare .col { border: 1px solid var(--mg-color-border); border-radius: var(--mg-radius-md); background: var(--mg-color-surface); padding: var(--mg-space-md) var(--mg-space-lg); }
+.compare .col h3 { font-family: var(--mg-font-display); font-size: 18px; font-weight: 620; margin: 0 0 var(--mg-space-sm); }
+.compare .col ul { margin: 0; padding-left: 18px; }
+.compare .col li { margin: 6px 0; font-size: 15px; }
+
+/* footer */
+.site-footer { border-top: 1px solid var(--mg-color-border); padding: var(--mg-space-lg) 0; color: var(--mg-color-text-muted); font-size: var(--mg-text-small); }
+.site-footer nav { display: flex; gap: var(--mg-space-md); flex-wrap: wrap; margin-bottom: var(--mg-space-sm); }
+
+@media (max-width: 720px) {
+  .hero h1 { font-size: var(--mg-text-h1); }
+  .features, .compare { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="#top" aria-label="mailglass, back to top">
+    <svg viewBox="-6 38 152 144" width="30" height="28" aria-hidden="true">
+      <path fill="var(--mg-color-text)" fill-rule="evenodd" d="M 0 44 L 140 44 L 140 140 L 106 140 A 36 36 0 0 0 34 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z"/>
+      <path fill="var(--mg-color-accent)" d="M 106 140 A 36 36 0 0 1 34 140 Z"/>
+    </svg>
+    mailglass
+  </a>
+  <nav aria-label="Sections">
+    <a href="#install">Install</a>
+    <a href="#features">What ships</a>
+    <a href="#code">Code</a>
+    <a href="#compare">Why not just Swoosh</a>
+  </nav>
+  <button id="theme-toggle" type="button" aria-label="Switch theme">Theme</button>
+</header>
+
+<main id="top">
+
+<div class="hero" id="install">
+  <div class="mark-row">
+    <svg viewBox="-12 32 164 156" width="86" height="82" role="img" aria-label="The mailglass mark, drawn from the live theme tokens">
+      <path fill="var(--mg-color-text)" fill-rule="evenodd" d="M 0 44 L 140 44 L 140 140 L 106 140 A 36 36 0 0 0 34 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z"/>
+      <path fill="var(--mg-color-accent)" d="M 106 140 A 36 36 0 0 1 34 140 Z"/>
+    </svg>
+    <h1>Transactional email for Phoenix, made visible.</h1>
+  </div>
+  <p class="subhead">mailglass composes on Swoosh and ships the framework layer teams rebuild by hand: HEEx-native components, a LiveView preview dashboard, normalized webhook events, suppression lists, and an append-only event ledger.</p>
+  <pre><code><span class="c"># mix.exs</span>
+{:mailglass, "~> 1.5"},
+{:mailglass_admin, "~> 1.5", only: [:dev]}</code></pre>
+  <pre><code>mix deps.get
+mix mailglass.install
+mix ecto.migrate</code></pre>
+  <p class="muted" style="font-size:14px">The installer generates a mailing context, the three-table migration with its immutability trigger, router mounts for the dev preview and webhook plug, and a default mailable and layout.</p>
+  <div class="cta-row">
+    <a class="btn-primary" href="#">Install mailglass</a>
+    <a class="btn-secondary" href="#">Read the guides</a>
+  </div>
+</div>
+
+<section id="features">
+  <h2>What ships in the box</h2>
+  <div class="features">
+    <div class="feature"><b>Preview before you send</b>
+      <p>Every Mailable renders in a dev dashboard: device widths, dark mode, HTML, text, raw source, and headers, with live-editable assigns.</p></div>
+    <div class="feature"><b>One event vocabulary</b>
+      <p>Provider webhooks normalize into a single stream — queued, sent, bounced, deferred, delivered, complained — the same names whichever provider reported them.</p></div>
+    <div class="feature"><b>Suppressions that hold</b>
+      <p>Hard bounces and complaints project Suppression records automatically. A suppressed recipient is blocked before dispatch, and the error names the cause.</p></div>
+    <div class="feature"><b>One-click unsubscribe</b>
+      <p>RFC 8058 List-Unsubscribe headers with signed tokens — the unsubscribe mechanics inbox providers now expect, generated for you.</p></div>
+    <div class="feature"><b>An audit trail you can trust</b>
+      <p>Deliveries and Events land in an append-only Postgres ledger. A trigger raises on UPDATE or DELETE — history is evidence, not state.</p></div>
+    <div class="feature"><b>Deliverability, diagnosed</b>
+      <p><code>mix mail.doctor</code> checks SPF, DKIM, DMARC, MX, and BIMI against DNS, and answers cannot_verify when DNS alone cannot prove a claim.</p></div>
+  </div>
+</section>
+
+<section id="code">
+  <h2>A mailable is just a module</h2>
+  <p>Define the email next to the code that triggers it. The same definition renders in the preview dashboard, in tests against the fake adapter, and in production through whichever Swoosh adapter you configure.</p>
+  <pre><code><span class="k">defmodule</span> MyApp.UserMailer <span class="k">do</span>
+  <span class="k">use</span> Mailglass.Mailable, stream: :transactional
+
+  <span class="k">def</span> welcome(user) <span class="k">do</span>
+    new()
+    |&gt; to(user.email)
+    |&gt; from({"MyApp", "support@example.com"})
+    |&gt; subject("Welcome to MyApp")
+    |&gt; html_body("&lt;h1&gt;Welcome to MyApp&lt;/h1&gt;")
+    |&gt; text_body("Welcome to MyApp")
+    |&gt; Mailglass.Message.put_function(:welcome)
+  <span class="k">end</span>
+<span class="k">end</span></code></pre>
+  <p>Send it synchronously, in the background, or as a batch:</p>
+  <pre><code>MyApp.UserMailer.welcome(user) |&gt; Mailglass.deliver()
+MyApp.UserMailer.welcome(user) |&gt; Mailglass.deliver_later()
+Mailglass.deliver_many(Enum.map(users, &amp;MyApp.UserMailer.welcome/1))</code></pre>
+  <p class="muted" style="font-size:14px">Dispatch is not delivery: dispatched means handed to the provider; delivered means the destination accepted it. mailglass records both as separate Events, so "did it really go out?" has an answer.</p>
+</section>
+
+<section id="compare">
+  <h2>Why not just Swoosh?</h2>
+  <p>Keep Swoosh. mailglass composes on it — it does not replace it. Swoosh is the transport: you still choose its adapter for your provider. mailglass is the framework layer above the transport, the part teams end up writing by hand on every project.</p>
+  <div class="compare">
+    <div class="col">
+      <h3>Swoosh, kept</h3>
+      <ul>
+        <li>Adapters for the major providers</li>
+        <li>The mailer and its delivery path</li>
+        <li>Local development mailbox</li>
+        <li>Test assertions for sent mail</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>mailglass, added</h3>
+      <ul>
+        <li>Mailables with HEEx components and Outlook fallbacks</li>
+        <li>The LiveView preview and admin dashboard</li>
+        <li>Delivery records and provider-normalized Events</li>
+        <li>Suppression lists and signed one-click unsubscribe</li>
+        <li>Multi-tenant routing and an append-only ledger</li>
+      </ul>
+    </div>
+  </div>
+  <p class="muted" style="font-size:14px;margin-top:16px">If Swoosh alone already covers your needs, use Swoosh alone. mailglass is for the teams who keep rebuilding the layer above it.</p>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div style="padding-left:clamp(20px,7vw,110px);padding-right:clamp(16px,3vw,40px)">
+    <nav aria-label="Project links">
+      <a href="#">GitHub</a>
+      <a href="#">Hex.pm</a>
+      <a href="#">HexDocs</a>
+    </nav>
+    <p style="margin:0">mailglass is MIT licensed. Requires Elixir ~> 1.18, OTP 27+, Phoenix ~> 1.8, PostgreSQL 14+, and Swoosh ~> 1.25.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  var toggle = document.getElementById("theme-toggle");
+  function effectiveTheme() {
+    return root.getAttribute("data-theme") || (mq.matches ? "dark" : "light");
+  }
+  function reflect() {
+    var t = effectiveTheme();
+    toggle.textContent = t === "dark" ? "Light theme" : "Dark theme";
+    toggle.setAttribute("aria-label", "Switch to the " + (t === "dark" ? "light" : "dark") + " theme");
+  }
+  toggle.addEventListener("click", function () {
+    var next = effectiveTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("mg-theme", next); } catch (e) { /* session-only on strict file systems */ }
+    reflect();
+  });
+  mq.addEventListener("change", reflect);
+  reflect();
+})();
+</script>
+
+</body>
+</html>
