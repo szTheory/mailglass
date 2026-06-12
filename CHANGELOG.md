@@ -14,6 +14,13 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.6.2](https://github.com/szTheory/mailglass/compare/mailglass-v1.6.1...mailglass-v1.6.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **inbound:** release the mailglass == 1.6.1 pin to restore resolution ([8dfc26a](https://github.com/szTheory/mailglass/commit/8dfc26abbefd1a207c084363063ca8fc3678d8c2))
+
 ## [1.6.1](https://github.com/szTheory/mailglass/compare/mailglass-v1.6.0...mailglass-v1.6.1) (2026-06-12)
 
 
