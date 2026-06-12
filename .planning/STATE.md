@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: Brand Adoption
 status: executing
-last_updated: "2026-06-12T21:51:30.640Z"
-last_activity: 2026-06-12 -- Phase 91 planning complete
+last_updated: "2026-06-12T22:06:21.169Z"
+last_activity: 2026-06-12
 progress:
   total_phases: 11
   completed_phases: 2
   total_plans: 10
-  completed_plans: 6
+  completed_plans: 7
   percent: 18
 ---
 
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12 — v1.10 "Brand Adoption" milestone section)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v1.10 Brand Adoption — fold the A/B-winning fable brand into canonical `brandbook/` and propagate it to README, social preview, and HexDocs.
+**Current focus:** Phase 91 — folder-adoption-and-reference-reconciliation
 
 ## Current Position
 
-Phase: 91 — Folder Adoption and Reference Reconciliation (planned, ready to execute)
-Plan: 4 plans (91-01 through 91-04)
+Phase: 91 (folder-adoption-and-reference-reconciliation) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-12 -- Phase 91 planning complete
+Last activity: 2026-06-12
 
-Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (0/3 phases)
+Progress: [███████░░░] 70%
 
 ## v1.10 Milestone Intent
 
@@ -140,6 +140,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 | Phase 87 P01 | 49 minutes | 3 tasks | 12 files |
 | Phase 88 P01 | 27min | 3 tasks | 4 files |
 | Phase 89 P01 | 28min | 4 tasks | 10 files |
+| Phase 91 P01 | 10 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
