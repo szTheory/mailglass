@@ -28,9 +28,11 @@
   non-release-triggering types (`docs:`, `chore:`, `test:`); the HexDocs wiring
   ships with the next natural release. Research-verified: release-please
   defaults make `docs:`/`chore:` non-bumping (ADOPTION-MECHANICS.md §2).
+
 - **Sealed-flap usage rules and constraints C-15/C-16 are binding** on every
   propagated surface
   (`.planning/milestones/v1.9-phases/87-logo-tournament/87-decision-record.md`).
+
 - **Binary additions limited to the single og-card PNG export.**
 - **Planning archives (`.planning/milestones/`) are never edited.**
 
@@ -59,40 +61,57 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 ## Phase Details
 
 ### Phase 91: Folder Adoption and Reference Reconciliation
+
 **Goal**: The fable brand book is the project's one canonical `brandbook/` — the old codex book exists only in history, every tracked reference points at the new location, and the v1.9 quality gate proves nothing broke in the move
 **Depends on**: Nothing (first phase of v1.10; v1.9 shipped)
 **Requirements**: FOLD-01, FOLD-02, FOLD-03
 **Success Criteria** (what must be TRUE):
+
   1. `brandbook/` at the repo root contains the fable book (moved via `git mv` with the codex files removed in the same commit; history preserves the codex baseline at `09a84dd4`), and `brandbook-fable/` no longer exists
   2. No tracked file outside `.planning/milestones/` archives references `brandbook-fable/`; the CLAUDE.md Brand & Voice source-of-truth pointer and `mailglass_admin/docs/design-system.md:5` both point at `brandbook/brand-book.md` (the v1.9 sweep proved these are the only tracked consumers)
   3. The v1.9 quality gate (`gate.sh`, re-pathed) passes on the folder at its new location
   4. Every commit in the phase uses a non-release-triggering type (`chore:`/`docs:`) and no release-please PR is created
+
 **Plans**: 4 plans
 Plans:
+**Wave 1**
+
 - [ ] 91-01-PLAN.md - Create the phase-local adoption gate and evidence contract
 - [ ] 91-02-PLAN.md - Replace the active brandbook folder via Git
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 91-03-PLAN.md - Reconcile active source-of-truth pointers and live planning memory
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 91-04-PLAN.md - Run the re-pathed gate and record release-safety evidence
 
 ### Phase 92: Surface Propagation
+
 **Goal**: Anyone who encounters the repo — README, link unfurl, or the running admin dashboard — sees the sealed-flap identity (or a recorded reason why a surface was deferred)
 **Depends on**: Phase 91 (all asset paths reference the post-rename `brandbook/`)
 **Requirements**: SURF-01, SURF-02, SURF-03
 **Success Criteria** (what must be TRUE):
+
   1. The root README displays `brandbook/examples/readme-header.svg` and renders correctly on both GitHub light and dark themes (C-15/C-16 binding; SVG rules pre-settled in v1.9)
   2. `brandbook/examples/og-card.png` (2400×1260 export via the verified Playwright command, under GitHub's 1 MB limit) is committed — the milestone's only binary addition — with the Settings-UI-only social-preview upload steps documented (no write API exists)
   3. The shipped admin wordmark (`mailglass_admin/priv/static/mailglass-logo.svg`) is explicitly dispositioned: replaced with the sealed-flap identity (with rebuilt committed bundle passing the `verify.preview` bundle-clean gate) or deferred with a recorded reason — not silently dropped
+
 **Plans**: TBD
 
 ### Phase 93: HexDocs Wiring and Release Hardening
+
 **Goal**: All three packages are wired to ship the brand on HexDocs with the next natural release, and the release pipeline can never again cut a release from brand/planning-only commits
 **Depends on**: Phase 92 (Phase 91 transitively — wiring references post-rename `brandbook/` asset paths; 92 settles asset disposition first)
 **Requirements**: HEXD-01, HEXD-02, RELH-01, RELH-02
 **Success Criteria** (what must be TRUE):
+
   1. The referenced SVGs (`logo-mark.svg`, `favicon.svg`) carry explicit `width`/`height` attributes (ex_doc 0.40.x requirement — current assets are viewBox-only) and all three packages' `docs:` config gains `logo:` (and `favicon:` where supported) pointing at the canonical `brandbook/` assets via relative paths
   2. `mix docs` renders locally for all three packages with the logo/favicon visible and no new warnings; the mix.exs changes land as non-release-triggering commit types and ride the next natural release
   3. release-please can no longer cut a release from commits touching only brand/planning paths — either the root `"."` package path stops claiming `brandbook/` + `.planning/` (mechanism verified against the manifest schema) or an enforced CI commit-type lint covers those paths
   4. The 1.6.x release aftermath is reconciled: unpublished stale tags dispositioned (deleted or documented), the inbound exact-pin bumped to the released core version via the established `fix(inbound)` dance, and `.planning` release-state memory/docs reflect the final version truth
+
 **Plans**: TBD
 
 > **External dependency note (RELH-02):** reconciliation depends on the in-flight
