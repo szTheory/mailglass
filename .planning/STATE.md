@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Brand Book Fable — A/B Brand System
-status: ready_to_plan
-last_updated: 2026-06-12T00:52:49.159Z
-last_activity: 2026-06-11
+status: planning
+last_updated: "2026-06-12T01:37:07.805Z"
+last_activity: 2026-06-12
 progress:
   total_phases: 11
-  completed_phases: 4
-  total_plans: 10
-  completed_plans: 10
-  percent: 36
-stopped_at: Phase 87 complete (2/2) — ready to discuss Phase 88
+  completed_phases: 7
+  total_plans: 11
+  completed_plans: 11
+  percent: 64
 ---
 
 # Project State
@@ -26,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-06-11 — v1.9 "Brand Book Fable" milest
 ## Current Position
 
 Phase: 88 of 90 (brand book assembly)
-Plan: Not started
-Status: Ready to plan
+Plan: 01 of 01 (complete)
+Status: Phase 88 executed — 88-01 SUMMARY on disk
 Last activity: 2026-06-12
 
-Progress: [█████████░] 90%
+Progress: [██████░░░░] 64% (7 of 11 v1.9 phases complete)
 
 ## v1.9 Milestone Intent
 
@@ -104,6 +103,8 @@ Progress: [█████████░] 90%
 - [80-01] `BRAND-GAP-NN` rows are stable downstream citation anchors; severity 4-5 rows require explicit closure or documented deferral before Phase 84 closeout.
 - [80-01] Phase 80 approves only the audit/register gate in `brandbook/brand-audit.md`; final tokens, logos, copy, specimens, package proof, and validation scripts remain downstream work.
 - [Phase 87]: 87-01: one shared LOGO-CRAFT glyph library underpins all round-1 wordmarks; the eight concepts are independent
+- [88-01]: favicon scale chips drawn inline with explicit fills — img obeys OS prefers-color-scheme, not the page toggle
+- [88-01]: page marks drawn from live tokens (pane=text, seal=accent) reproducing the logo color program in both themes
 
 ## Performance Metrics
 
@@ -137,6 +138,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 **Guardrail:** do not auto-promote `SEED-003-ecosystem-integrations` at milestone open. Re-rank against adopter-impact wedges first.
 | Phase 87 P01 | 49 minutes | 3 tasks | 12 files |
+| Phase 88 P01 | 27min | 3 tasks | 4 files |
 
 ## Accumulated Context
 

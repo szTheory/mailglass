@@ -62,7 +62,7 @@ Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
 - [x] **Phase 85: Research and Differentiation Brief** - Forensic codex-brandbook audit + differentiation brief (≤12 differentiators, book outline, kill-list); planning artifacts only (completed 2026-06-11)
 - [x] **Phase 86: Foundations — Palette, Type, Voice, Tokens** - Evolve-vs-keep records, DTCG tokens.json/tokens.css (light+dark, interaction+feedback states), computed WCAG contrast matrix (completed 2026-06-11)
 - [x] **Phase 87: Logo Tournament** - 8 pre-screened options across 4 axes, rendered-evidence gallery, maintainer hard pause, ≤2 refinement rounds, winner promoted to outlined-path assets (completed 2026-06-12)
-- [ ] **Phase 88: Brand Book Assembly** - Self-contained index.html (light/dark toggle, live component gallery, contrast matrix, logo section), brand-book.md, README.md
+- [x] **Phase 88: Brand Book Assembly** - Self-contained index.html (light/dark toggle, live component gallery, contrast matrix, logo section), brand-book.md, README.md (completed 2026-06-12)
 - [ ] **Phase 89: Collateral, Specimens, and Copy Library** - landing-page/email-template HTML, README/docs/OG/diagram SVG specimens, copy-blocks.md, microcopy.md
 - [ ] **Phase 90: Quality Gate and Maintainer UAT** - Scripted gate (parse/link/grep/size/render checks), browser evidence, A/B walkthrough sign-off
 
@@ -129,7 +129,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 88-01-PLAN.md — Self-contained index.html (9 verbatim brief sections, theme toggle, live component gallery, runtime getComputedStyle contrast matrix, logo system per usage rules) + brand-book.md/README.md + Playwright visual audit loop with in-phase gates
+- [x] 88-01-PLAN.md — Self-contained index.html (9 verbatim brief sections, theme toggle, live component gallery, runtime getComputedStyle contrast matrix, logo system per usage rules) + brand-book.md/README.md + Playwright visual audit loop with in-phase gates
 
 ### Phase 89: Collateral, Specimens, and Copy Library
 **Goal**: Every real launch surface — landing page, transactional email, README, docs, social card, diagrams, and per-surface copy — has a deployable, brand-true specimen in the fable system
@@ -161,7 +161,7 @@ Plans:
 | 85. Research and Differentiation Brief | 1/1 | Complete    | 2026-06-11 |
 | 86. Foundations — Palette, Type, Voice, Tokens | 1/1 | Complete    | 2026-06-11 |
 | 87. Logo Tournament | 2/2 | Complete    | 2026-06-12 |
-| 88. Brand Book Assembly | 0/1 | Planned     | - |
+| 88. Brand Book Assembly | 1/1 | Complete   | 2026-06-12 |
 | 89. Collateral, Specimens, and Copy Library | 0/? | Not started | - |
 | 90. Quality Gate and Maintainer UAT | 0/? | Not started | - |
 

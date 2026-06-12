@@ -67,15 +67,15 @@ proof, and standalone polish.
 
 ### BOOK — Standalone HTML Brand Book
 
-- [ ] **BOOK-04**: `brandbook-fable/index.html` opens from disk with zero
+- [x] **BOOK-04**: `brandbook-fable/index.html` opens from disk with zero
   network requests and renders correctly in light and dark via a manual toggle
   plus `prefers-color-scheme` default.
-- [ ] **BOOK-05**: The book includes a live HTML component gallery (buttons,
+- [x] **BOOK-05**: The book includes a live HTML component gallery (buttons,
   inputs, badges, alerts, tabs, code blocks) built from tokens.css with
   working hover/focus/disabled states — not static pictures of components.
-- [ ] **BOOK-06**: The book renders the computed contrast matrix and shows
+- [x] **BOOK-06**: The book renders the computed contrast matrix and shows
   the logo system at light/dark/16px/32px/mono scales.
-- [ ] **BOOK-07**: `brandbook-fable/brand-book.md` is a parallel
+- [x] **BOOK-07**: `brandbook-fable/brand-book.md` is a parallel
   source-of-truth document structured for human and LLM scanning (consistent
   heading grammar, exact hex/px values inline, tables), and
   `brandbook-fable/README.md` documents orientation, usage, and export policy.
@@ -153,10 +153,10 @@ Mapped: 22/22 v1.9 requirements → Phases 85-90 (roadmapped 2026-06-11).
 | LOGO-06 | Phase 87 | Complete |
 | LOGO-07 | Phase 87 | Complete |
 | LOGO-08 | Phase 87 | Complete |
-| BOOK-04 | Phase 88 | Pending |
-| BOOK-05 | Phase 88 | Pending |
-| BOOK-06 | Phase 88 | Pending |
-| BOOK-07 | Phase 88 | Pending |
+| BOOK-04 | Phase 88 | Complete |
+| BOOK-05 | Phase 88 | Complete |
+| BOOK-06 | Phase 88 | Complete |
+| BOOK-07 | Phase 88 | Complete |
 | COLL-01 | Phase 89 | Pending |
 | COLL-02 | Phase 89 | Pending |
 | COLL-03 | Phase 89 | Pending |
