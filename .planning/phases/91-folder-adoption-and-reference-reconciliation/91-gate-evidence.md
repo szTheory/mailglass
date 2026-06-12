@@ -32,7 +32,36 @@ adoption task relies on it.
 
 ## Ignored File Preflight
 
-Pending - recorded during Plan 91-02 before the Git folder adoption.
+Command:
+
+```bash
+git status --ignored --short --untracked-files=all -- brandbook brandbook-fable
+```
+
+Output before cleanup:
+
+```text
+!! brandbook-fable/.DS_Store
+!! brandbook/.DS_Store
+!! brandbook/assets/.DS_Store
+```
+
+Cleanup command:
+
+```bash
+rm -f brandbook-fable/.DS_Store brandbook/.DS_Store brandbook/assets/.DS_Store
+```
+
+Post-clean verification:
+
+```bash
+git status --ignored --short --untracked-files=all -- brandbook brandbook-fable | grep -E '^[?!]' | grep -v '\.DS_Store$'
+git status --short -- brandbook brandbook-fable | grep '\.DS_Store'
+```
+
+Both verification commands printed no lines. Only the known ignored `.DS_Store`
+leftovers were removed; no unexpected untracked or ignored brandbook files
+were present.
 
 ## Git Folder Adoption
 
