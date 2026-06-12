@@ -2,8 +2,8 @@
 phase: 91
 slug: folder-adoption-and-reference-reconciliation
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-12
 ---
 
