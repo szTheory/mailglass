@@ -1,6 +1,6 @@
 # Phase 90 Checkpoint — Maintainer A/B Walkthrough + Sign-off (GATE-03)
 
-**status: awaiting-maintainer-signoff**
+**status: approved**
 **Presented:** 2026-06-11
 
 ## Open these two side by side
@@ -49,3 +49,12 @@ milestone per REQUIREMENTS — this sign-off only closes v1.9.
 Reply **"approve"**, or **"punch list:"** followed by numbered items (recorded
 here; fixes happen in-phase — fix in `brandbook-fable/`, full gate.sh re-run
 recorded in `90-gate-evidence.md`, evidence refreshed — before close).
+
+## Maintainer Sign-off (closes GATE-03)
+
+- **Verdict:** APPROVED — "I LOVE THE NEW BRANDBOOK"
+- **Punch list:** none
+- **Date:** 2026-06-12
+- **Effect:** GATE-03 satisfied; Phase 90 complete; v1.9 milestone ready to close.
+  Winner adoption (folder rename, README/HexDocs propagation) remains deferred
+  to a future milestone per REQUIREMENTS.
