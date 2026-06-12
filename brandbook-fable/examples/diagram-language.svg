@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="mg-fable-diagram-title mg-fable-diagram-desc">
+  <title id="mg-fable-diagram-title">mailglass diagram language &#8212; Mailable to Message to Delivery to Event</title>
+  <desc id="mg-fable-diagram-desc">The mailglass diagram vocabulary, specified by drawn example. Legend, top row: a node is a pane &#8212; a rounded rectangle, radius four, flat Mist fill, Ink content bars, one two-pixel stroke in Slate, or in Glass when the node is active; connections use a single stroke weight and one arrowhead, a small filled triangle; a void in a pane reads as light passing through the structure, never as damage. The worked flow below reads left to right: a Mailable renders into a Message, sending the Message creates a Delivery, and providers report Events about that Delivery. Dispatch is not delivery; the Event stream records both.</desc>
+
+  <!-- ground -->
+  <rect width="960" height="540" fill="#F8FBFD"/>
+
+  <!-- ===== legend: the vocabulary, by example ===== -->
+  <!-- caption tick -->
+  <rect x="40" y="36" width="34" height="6" rx="3" fill="#277B96"/>
+
+  <!-- 1. the node: pane, radius 4, Mist fill, Ink content bars, one 2px Slate stroke -->
+  <rect x="40" y="64" width="150" height="90" rx="4" fill="#EAF6FB" stroke="#5C6B7A" stroke-width="2"/>
+  <rect x="56" y="80" width="78" height="9" rx="4.5" fill="#0D1B2A"/>
+  <rect x="56" y="100" width="110" height="7" rx="3.5" fill="#5C6B7A"/>
+  <rect x="56" y="116" width="92" height="7" rx="3.5" fill="#5C6B7A"/>
+
+  <!-- 2. the active node: same pane, the stroke flips to Glass -->
+  <rect x="230" y="64" width="150" height="90" rx="4" fill="#EAF6FB" stroke="#277B96" stroke-width="2"/>
+  <rect x="246" y="80" width="78" height="9" rx="4.5" fill="#0D1B2A"/>
+  <rect x="246" y="100" width="104" height="7" rx="3.5" fill="#5C6B7A"/>
+  <rect x="246" y="116" width="84" height="7" rx="3.5" fill="#5C6B7A"/>
+
+  <!-- 3. the connection: one stroke weight, one arrowhead -->
+  <path d="M420 109H540" stroke="#277B96" stroke-width="2"/>
+  <path d="M540 103L552 109L540 115Z" fill="#277B96"/>
+  <path d="M420 134H488" stroke="#5C6B7A" stroke-width="2"/>
+  <path d="M488 128L500 134L488 140Z" fill="#5C6B7A"/>
+
+  <!-- 4. the pane and light motif: a void reads as light passing through -->
+  <path fill="#0D1B2A" fill-rule="evenodd" d="M600 64H750V154H600Z M614 76L736 76L675 113Z"/>
+
+  <!-- ===== worked flow: the lifecycle, left to right ===== -->
+  <rect x="40" y="284" width="34" height="6" rx="3" fill="#277B96"/>
+  <rect x="40" y="330" width="170" height="90" rx="4" fill="#EAF6FB" stroke="#5C6B7A" stroke-width="2"/>
+  <g transform="translate(71.1 367.5) scale(1.4)"><g transform="translate(0 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M8 0H10V10H8Z M0 0H10V2H0Z M4 2H6V6H4Z"/></g><g transform="translate(13 0)"><path fill="#0D1B2A" d="M0 0H7V2H0Z M0 2H2V10H0Z M5 2H7V10H5Z M2 5H5V7H2Z"/></g><g transform="translate(23 0)"><path fill="#0D1B2A" d="M0 0H4V2H0Z M1 2H3V8H1Z M0 8H4V10H0Z"/></g><g transform="translate(30 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 8H7V10H0Z"/></g><g transform="translate(40 0)"><path fill="#0D1B2A" d="M0 0H7V2H0Z M0 2H2V10H0Z M5 2H7V10H5Z M2 5H5V7H2Z"/></g><g transform="translate(50 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M2 0H7V2H2Z M2 4H7V6H2Z M2 8H7V10H2Z M5 0H7V10H5Z"/></g><g transform="translate(60 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 8H7V10H0Z"/></g><g transform="translate(70 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g></g>
+  <rect x="270" y="330" width="170" height="90" rx="4" fill="#EAF6FB" stroke="#5C6B7A" stroke-width="2"/>
+  <g transform="translate(306.0 367.5) scale(1.4)"><g transform="translate(0 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M8 0H10V10H8Z M0 0H10V2H0Z M4 2H6V6H4Z"/></g><g transform="translate(13 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g><g transform="translate(23 0)"><path fill="#0D1B2A" d="M0 0H7V2H0Z M0 2H2V4H0Z M0 4H7V6H0Z M5 6H7V8H5Z M0 8H7V10H0Z"/></g><g transform="translate(33 0)"><path fill="#0D1B2A" d="M0 0H7V2H0Z M0 2H2V4H0Z M0 4H7V6H0Z M5 6H7V8H5Z M0 8H7V10H0Z"/></g><g transform="translate(43 0)"><path fill="#0D1B2A" d="M0 0H7V2H0Z M0 2H2V10H0Z M5 2H7V10H5Z M2 5H5V7H2Z"/></g><g transform="translate(53 0)"><path fill="#0D1B2A" d="M0 0H7V2H0Z M0 2H2V10H0Z M0 8H7V10H0Z M5 5H7V8H5Z M4 5H7V7H4Z"/></g><g transform="translate(63 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g></g>
+  <rect x="500" y="330" width="170" height="90" rx="4" fill="#EAF6FB" stroke="#5C6B7A" stroke-width="2"/>
+  <g transform="translate(531.8 367.5) scale(1.4)"><g transform="translate(0 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H6V2H0Z M0 8H6V10H0Z M5 1H7V9H5Z"/></g><g transform="translate(10 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g><g transform="translate(20 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 8H7V10H0Z"/></g><g transform="translate(30 0)"><path fill="#0D1B2A" d="M0 0H4V2H0Z M1 2H3V8H1Z M0 8H4V10H0Z"/></g><g transform="translate(37 0)"><path fill="#0D1B2A" d="M0 0L2 0L5 10L3 10Z M6 0L8 0L5 10L3 10Z"/></g><g transform="translate(48 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g><g transform="translate(58 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H7V6H0Z M5 0H7V6H5Z M4 6L6 6L7 10L5 10Z"/></g><g transform="translate(68 0)"><path fill="#0D1B2A" d="M0 0L2 0L5 5L3 5Z M6 0L8 0L5 5L3 5Z M3 5H5V10H3Z"/></g></g>
+  <rect x="730" y="330" width="170" height="90" rx="4" fill="#EAF6FB" stroke="#5C6B7A" stroke-width="2"/>
+  <g transform="translate(779.3 367.5) scale(1.4)"><g transform="translate(0 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g><g transform="translate(10 0)"><path fill="#0D1B2A" d="M0 0L2 0L5 10L3 10Z M6 0L8 0L5 10L3 10Z"/></g><g transform="translate(21 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g><g transform="translate(31 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M7 0H9V10H7Z M2 0L4 0L9 10L7 10Z"/></g><g transform="translate(43 0)"><path fill="#0D1B2A" d="M0 0H8V2H0Z M3 2H5V10H3Z"/></g></g>
+  <path d="M216 375.0H298" stroke="#277B96" stroke-width="2"/>
+  <path d="M298 369.0L310 375.0L298 381.0Z" fill="#277B96"/>
+  <path d="M446 375.0H528" stroke="#277B96" stroke-width="2"/>
+  <path d="M528 369.0L540 375.0L528 381.0Z" fill="#277B96"/>
+  <path d="M676 375.0H758" stroke="#277B96" stroke-width="2"/>
+  <path d="M758 369.0L770 375.0L758 381.0Z" fill="#277B96"/>
+
+  <!-- the observed-fact trail under the Event node: Events are append-only -->
+  <rect x="730" y="446" width="9" height="9" rx="2" fill="#5C6B7A"/>
+  <rect x="747" y="446" width="9" height="9" rx="2" fill="#5C6B7A"/>
+  <rect x="764" y="446" width="9" height="9" rx="2" fill="#277B96"/>
+</svg>
