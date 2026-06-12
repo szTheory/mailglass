@@ -105,16 +105,16 @@ proof, and standalone polish.
 
 ### GATE — Quality Gate and A/B Readiness
 
-- [ ] **GATE-01**: A scripted gate passes: all SVGs XML-parse, tokens.json
+- [x] **GATE-01**: A scripted gate passes: all SVGs XML-parse, tokens.json
   JSON-parses, every href/src resolves locally, zero external URLs, zero
   planning-process vocabulary in the folder, zero `font-family` in
   `assets/*.svg`, no background plate behind any mark (documented square
   social-avatar exception), size budgets hold (folder ≤ 500 KB, index.html
   ≤ 150 KB, no file > 100 KB).
-- [ ] **GATE-02**: Browser-rendered evidence (screenshots to an ignored tmp
+- [x] **GATE-02**: Browser-rendered evidence (screenshots to an ignored tmp
   dir) confirms light/dark rendering and 16px favicon legibility; nothing
   outside `brandbook-fable/` and `.planning/` changed.
-- [ ] **GATE-03**: The maintainer completes an A/B walkthrough
+- [x] **GATE-03**: The maintainer completes an A/B walkthrough
   (`brandbook/index.html` vs `brandbook-fable/index.html`) and signs off the
   milestone.
 
@@ -162,9 +162,9 @@ Mapped: 22/22 v1.9 requirements → Phases 85-90 (roadmapped 2026-06-11).
 | COLL-03 | Phase 89 | Complete |
 | COPY-01 | Phase 89 | Complete |
 | COPY-02 | Phase 89 | Complete |
-| GATE-01 | Phase 90 | Pending |
-| GATE-02 | Phase 90 | Pending |
-| GATE-03 | Phase 90 | Pending |
+| GATE-01 | Phase 90 | Complete |
+| GATE-02 | Phase 90 | Complete |
+| GATE-03 | Phase 90 | Complete |
 
 *REQ-ID numbering continues from v1.8 (LOGO-01..04 and BOOK-01..03 were v1.8
 IDs, archived in `.planning/milestones/v1.8-REQUIREMENTS.md`).*
