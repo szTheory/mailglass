@@ -14,6 +14,29 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.6.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.5.1...mailglass-v1.6.0) (2026-06-12)
+
+
+### Features
+
+* **82-01:** add logo option SVGs ([8f216d7](https://github.com/szTheory/mailglass/commit/8f216d72fbea0585330c3a37163fc0f24bbcd940))
+* **86-01:** add fable brand tokens (light+dark, DTCG json + css) ([e5a67a7](https://github.com/szTheory/mailglass/commit/e5a67a7d126c98dd0f2903a8746ef90dabe96e8f))
+* **87-01:** add round-1 logo options 1-4 (axis A typemarks, axis B lockups) ([33022db](https://github.com/szTheory/mailglass/commit/33022db18282d924ce5f0737165bcd8c8725fa79))
+* **87-01:** add round-1 logo options 5-8 (axis C monograms, axis D negative space) ([8768e0b](https://github.com/szTheory/mailglass/commit/8768e0b7f470b144ec8cacdfdfbcff47d55ff793))
+* **87-01:** add round-1 rendered-evidence gallery ([86add0a](https://github.com/szTheory/mailglass/commit/86add0a96293b94913912e8b449f0ac1f330d81b))
+* **87-02:** add round-2 variant field for option 8 with evidence gallery ([5ea4732](https://github.com/szTheory/mailglass/commit/5ea4732be1f63fba6327f14893972b21d5e860a0))
+* **87-02:** add round-3 final candidate field with color program ([b1e0beb](https://github.com/szTheory/mailglass/commit/b1e0beb864ec144b464ff172e10581be415e6f10))
+* **87-02:** add round-4 envelope-in-light candidates + gallery ([45c6aef](https://github.com/szTheory/mailglass/commit/45c6aeffa78de0890833d4ea0f430852057dc2b5))
+* **87-02:** favicon adapts pane color to OS dark mode ([7f07706](https://github.com/szTheory/mailglass/commit/7f0770673f86cdb1988c94f2bd0f8f56a31993af))
+* **87-02:** promote the sealed-flap mark to the canonical asset system ([b65335a](https://github.com/szTheory/mailglass/commit/b65335ac373f3041350338fb0a2a3d2f61152a00))
+* **88-01:** add brand-book.md text master and folder README ([26c5af4](https://github.com/szTheory/mailglass/commit/26c5af433869569063f57919685a68212464a041))
+* **88-01:** build the standalone fable brand book page ([39570f6](https://github.com/szTheory/mailglass/commit/39570f6340fdf18449afe5b31db444efdecd7e28))
+* **88-01:** polish the brand book from the visual audit ([0bfd455](https://github.com/szTheory/mailglass/commit/0bfd455195c38a53fc354eccf29c75bb4b90ac43))
+* **89-01:** add copy library — per-surface copy blocks and seven-noun microcopy ([0708c69](https://github.com/szTheory/mailglass/commit/0708c6962a67d4fc0911ab83669409cf1d6b87ef))
+* **89-01:** add four SVG specimens — readme header, docs page, og card, diagram language ([a2919b5](https://github.com/szTheory/mailglass/commit/a2919b58fc8f7fd7d994d114196068a11fdd8571))
+* **89-01:** add landing page and transactional email specimens ([64f1d09](https://github.com/szTheory/mailglass/commit/64f1d09991b41cbed934f27a17cafbb3ff4815cb))
+* **89-01:** slot rendered specimens into the book's section 08 grid ([e2d47b5](https://github.com/szTheory/mailglass/commit/e2d47b5772611dd490d8b68e953cd83fb66c33af))
+
 ## [1.5.1](https://github.com/szTheory/mailglass/compare/mailglass-v1.5.0...mailglass-v1.5.1) (2026-06-05)
 
 
