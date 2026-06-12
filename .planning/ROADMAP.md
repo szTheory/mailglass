@@ -162,7 +162,7 @@ Plans:
 | 86. Foundations — Palette, Type, Voice, Tokens | 1/1 | Complete    | 2026-06-11 |
 | 87. Logo Tournament | 2/2 | Complete    | 2026-06-12 |
 | 88. Brand Book Assembly | 1/1 | Complete    | 2026-06-12 |
-| 89. Collateral, Specimens, and Copy Library | 1/1 | Complete   | 2026-06-12 |
+| 89. Collateral, Specimens, and Copy Library | 1/1 | Complete    | 2026-06-12 |
 | 90. Quality Gate and Maintainer UAT | 0/? | Not started | - |
 
 ## Backlog
