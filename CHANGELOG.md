@@ -14,6 +14,13 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.6.1](https://github.com/szTheory/mailglass/compare/mailglass-v1.6.0...mailglass-v1.6.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **demo:** resolve seed anchor at reset time so evidence never ages out ([bfd010f](https://github.com/szTheory/mailglass/commit/bfd010f7560e6cd1b96be42aaa982a492a8c0ce5))
+
 ## [1.6.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.5.1...mailglass-v1.6.0) (2026-06-12)
 
 
