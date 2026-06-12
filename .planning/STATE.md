@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: Brand Adoption
-status: planning
+status: roadmap_created
 last_updated: "2026-06-12T15:15:21.363Z"
 last_activity: 2026-06-12
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,67 +17,67 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-11 — v1.9 "Brand Book Fable" milestone section)
+See: .planning/PROJECT.md (updated 2026-06-12 — v1.10 "Brand Adoption" milestone section)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 999.1 — human readable code comments + gsd artifact cleanup
+**Current focus:** v1.10 Brand Adoption — fold the A/B-winning fable brand into canonical `brandbook/` and propagate it to README, social preview, and HexDocs.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 91 — Folder Adoption and Reference Reconciliation (next up, not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-12 — Milestone v1.10 started
+Status: Roadmap created — ready to plan Phase 91
+Last activity: 2026-06-12 — v1.10 roadmap created (Phases 91-93, 10/10 requirements mapped)
 
-## v1.9 Milestone Intent
+Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (0/3 phases)
 
-- Build a second, fully self-contained brand book at `brandbook-fable/` to A/B
-  against the frozen codex `brandbook/` baseline (commit `09a84dd4`) — and
-  beat it on craft, buildability, accessibility proof, and standalone polish.
+## v1.10 Milestone Intent
 
-- Research-grounded: forensic codex audit + differentiation brief before any
-  fable artifact is authored.
+- Make the A/B-winning fable brand the project's one canonical identity
+  everywhere it shows: fold `brandbook-fable/` into `brandbook/` (deleting the
+  codex book; history preserves it at frozen baseline `09a84dd4`), propagate
+  the sealed-flap identity to the root README and the repo social preview, and
+  wire HexDocs/ex_doc logos for all three packages.
 
-- Bounded logo tournament with a maintainer hard pause (8 options, 4 axes,
-  rendered evidence, ≤2 refinement rounds, circuit breaker after two
-  consecutive full-set rejections).
+- Mostly mechanical adoption work — research pre-settled the mechanics
+  (`.planning/research/v1.10-brand-adoption/ADOPTION-MECHANICS.md`): ex_doc
+  0.40.1 logo/favicon semantics, release-please trigger safety, the Playwright
+  og-card export command, and an exhaustive reference sweep (CLAUDE.md +
+  `mailglass_admin/docs/design-system.md` are the only tracked pointers).
 
-- Fix the v1.8 root failures: live `<text>` wordmarks (outlined paths only),
-  planning-language leakage (denylist grep), dark tokens undemonstrated
-  (page-level toggle re-skins every specimen), contrast never validated
-  (computed WCAG matrix, rendered + scripted).
+- Release hardening rides along (RELH): release-please must never again cut a
+  release from brand/planning-only commits, and the 1.6.x release aftermath
+  gets reconciled to final version truth.
 
-## v1.9 Scope Locks
+## v1.10 Scope Locks
 
-- Only `brandbook-fable/` is written. `brandbook/` is the frozen A/B baseline;
-  `mailglass_admin`, `guides/`, and the root README are untouched.
+- No Hex release is cut by this milestone's commits: brand/docs commits use
+  non-release-triggering types (`docs:`, `chore:`, `test:`); the HexDocs
+  wiring ships with the next natural release.
 
-- Text artifacts only: SVG, MD, JSON, CSS, HTML. No Node toolchain, no
-  binaries, no embedded fonts, no external network requests in any HTML.
+- The sealed-flap usage rules and constraints C-15/C-16
+  (`.planning/milestones/v1.9-phases/87-logo-tournament/87-decision-record.md`)
+  are binding on every propagated surface.
 
-- Tournament galleries, audits, and decision records live in `.planning/`,
-  never inside `brandbook-fable/`.
+- Binary additions limited to the single og-card PNG export.
 
-- Locked essence: "mail you can see through", thoughtful-maintainer voice,
-  glass-as-metaphor-not-gimmick. Palette/typography/logo open to justified
-  evolution.
+- Planning archives (`.planning/milestones/`) are never edited.
 
 ## Roadmap Snapshot
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 85 | Research and Differentiation Brief | Forensic codex audit + differentiation brief (≤12 differentiators, outline, kill-list); planning artifacts only |
-| 86 | Foundations — Palette, Type, Voice, Tokens | Evolve-vs-keep records, DTCG tokens.json/tokens.css (light+dark), computed WCAG contrast matrix |
-| 87 | Logo Tournament | 8 pre-screened options / 4 axes, evidence gallery, HARD MAINTAINER PAUSE, ≤2 refinement rounds, outlined-path assets |
-| 88 | Brand Book Assembly | Self-contained index.html (light/dark toggle, live component gallery, contrast matrix, logo section), brand-book.md, README.md |
-| 89 | Collateral, Specimens, and Copy Library | landing-page/email-template HTML, README/docs/OG/diagram SVGs, copy-blocks.md, microcopy.md |
-| 90 | Quality Gate and Maintainer UAT | Scripted gate (parse/link/grep/size/render), browser evidence, A/B walkthrough sign-off |
+| 91 | Folder Adoption and Reference Reconciliation | git mv `brandbook-fable/` → `brandbook/`, codex removal, CLAUDE.md + design-system.md pointer updates, gate.sh re-pass on the new path (FOLD-01..03) |
+| 92 | Surface Propagation | README brand header, og-card PNG export (2400×1260) + Settings-UI upload doc, admin wordmark swap-or-defer disposition (SURF-01..03) |
+| 93 | HexDocs Wiring and Release Hardening | SVG width/height attrs, ex_doc logo/favicon config ×3 + local `mix docs` proof, release-please path hardening, 1.6.x aftermath reconciliation (HEXD-01..02, RELH-01..02) |
 
-**Critical path:** 85 → 86 → 87 → 88 → 89 → 90 (strictly linear)
-**Sequencing notes:** Phase 87 needs Phase 86's locked palette/type; Phase 88 needs Phase 87's promoted assets; Phase 89 slots into Phase 88's shell. Phase 87 BLOCKS on maintainer selection by design (no auto-advance past the round-1 gallery).
+**Critical path:** 91 → 92 → 93 (strictly linear)
+**Sequencing notes:** Phases 92/93 reference the post-rename `brandbook/` paths, so 91 must land first. RELH-02 (1.6.x aftermath reconciliation) depends on the in-flight release train settling — potentially blocked-on-external at Phase 93 execution time; record the blocker rather than guessing final version truth.
 
 ## Decisions
 
+- [v1.10] Research pre-settled (see `.planning/research/v1.10-brand-adoption/ADOPTION-MECHANICS.md`): ex_doc 0.40.1 supports SVG logo/favicon but requires explicit width/height attrs (fable SVGs are viewBox-only — must add); use relative paths into canonical `brandbook/` (no per-package copies, no `files:` allowlist change); `docs:`/`chore:` commits are release-safe under release-please defaults; GitHub social preview is Settings-UI-only (no write API); og-card export via `npx playwright screenshot --viewport-size=2400,1260`; CLAUDE.md + `mailglass_admin/docs/design-system.md:5` are the only tracked reference-sweep targets.
+- [v1.10] HexDocs latency accepted: `logo:`/`favicon:` wiring is inert on hexdocs.pm until the next natural release of each package — this milestone does not force a release to make logos visible.
 - [86-01] Dark feedback backgrounds decided and verified at first candidates: success-bg #142B22 (6.56), warning-bg #2B2314 (7.37), error-bg #2E1B1E (6.65), info-bg #11293A (11.18) — each `{kind}-text` >= 4.5:1 on its bg.
 - [86-01] Worst-surface contrast figures recomputed against the SHIPPED surface set: `surface-selected` is the worst surface in both themes (dark text-muted 6.66 = AA there, AAA elsewhere); the 86-foundations-decisions.md matrix is authoritative over research worst-case quotes. border-input <3:1 on selected surfaces resolved as a usage rule (form controls never sit on selected rows).
 - [v1.9] Research pre-settled (see `.planning/research/v1.9-brandbook-fable/SUMMARY.md`): DTCG-2025.10 token format (two tiers, hex strings), `--mg-*` CSS naming with `[data-theme="dark"]` reassignment, Glass #277B96 passes AA on white (4.82:1), six computed fix hexes for the four contrast failures, codex dark ramp adopted, font stacks honest about system-ui fallback, GitHub SVG rules (outlined paths, explicit hex fills, no bare currentColor in file assets).
@@ -110,7 +110,7 @@ Last activity: 2026-06-12 — Milestone v1.10 started
 
 **Velocity:**
 
-- v1.9 phases completed: 2 (85-86), 2 plans; 86-01: 3 tasks, ~25min, 3 files
+- v1.9 phases completed: 6 (85-90), 7 plans — shipped 2026-06-12, gate 9/9 first run, maintainer A/B sign-off
 - v1.8 phases completed: 3 through GSD (80-82), 5 plans; phases 83-84 closed superseded 2026-06-11
 - v1.7 phases completed: 6 (74-79), 22 plans — admin UI IA & design-system polish v2; audit passed (19/19 reqs, 7/7 seams, 3/3 flows); shipped 2026-06-05
 - v1.6 phases completed: 3 (71-73), 6 plans, 5 tasks
@@ -145,6 +145,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ### Roadmap Evolution
 
+- 2026-06-12: v1.10 roadmap created. Phases 91-93, numbering continues from v1.9 (last phase 90). All 10 REQ-IDs (FOLD-01..03 → 91, SURF-01..03 → 92, HEXD-01..02 + RELH-01..02 → 93) mapped to exactly one phase, 100% coverage. Strictly linear critical path 91 → 92 → 93. RELH-02 flagged potentially blocked-on-external (in-flight release train must settle). Adoption mechanics pre-settled in `.planning/research/v1.10-brand-adoption/ADOPTION-MECHANICS.md`.
 - 2026-06-11: v1.9 roadmap created. Phases 85-90, numbering continues from v1.8 (last phase 84). All 22 REQ-IDs (BRIEF/FOUND/LOGO-05..08/BOOK-04..07/COLL/COPY/GATE) mapped to exactly one phase, 100% coverage. Strictly linear critical path. Phase 87 carries a hard maintainer-selection pause with a two-rejection circuit breaker. Research pre-settled token format, contrast fixes, and SVG portability rules (`.planning/research/v1.9-brandbook-fable/SUMMARY.md`).
 - 2026-06-11: v1.8 closed superseded (audit verdict gaps_found, accepted). Residual gaps inherited by v1.9; `brandbook/` frozen at `09a84dd4` as the A/B baseline.
 - 2026-06-03: v1.7 milestone opened. Roadmap created for Phases 74-79. Phase numbering continues from v1.6 (last phase 73). All 19 REQ-IDs mapped to exactly one phase with 100% coverage.
@@ -154,14 +155,14 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 - Resolve post-publish smoke hackney dependency failure (`#25` captured to `.planning/todos/pending/2026-05-27-resolve-post-publish-smoke-hackney-dependency-failure.md`; active CI signal remains `#32`)
 
-## Pre-existing Cleanup Backlog (Not v1.9 Scope)
+## Pre-existing Cleanup Backlog (Not v1.10 Scope)
 
-`.planning/phases/` still contains leftover phase directories from earlier milestones. These should have been moved into `.planning/milestones/vX.X-phases/` during their respective `/gsd-complete-milestone` runs but were not. Run `/gsd-cleanup` before active phase execution to avoid name-collision risk.
+`.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
 
-- 2026-06-11: Phase 87 plan 01 executed — round-1 logo tournament field built (8 options, 2 per axis; 112/112 pre-flight PASS; browser-audited gallery at `.planning/phases/87-logo-tournament/tournament/round-1.html`). Phase HARD-PAUSED at `87-01-CHECKPOINT.md` (status awaiting-maintainer-selection, rejection_count 0). 87-02 must not start until a selection is recorded. Resume: maintainer replies `pick N`, `pick N and M`, or `reject all` + notes.
-- 2026-06-11: v1.9 roadmap created (Phases 85-90). `.planning/ROADMAP.md` rewritten for v1.9 (milestone history + 999.x backlog preserved), `.planning/REQUIREMENTS.md` traceability filled (22/22 → Phases 85-90), STATE updated. Next: `/gsd-plan-phase 85` (or `/gsd-discuss-phase 85` first).
+- 2026-06-12: v1.10 roadmap created (Phases 91-93). `.planning/ROADMAP.md` rewritten for v1.10 (milestone history, v1.9 collapsed details, and 999.x backlog preserved), `.planning/REQUIREMENTS.md` traceability filled (10/10 → Phases 91-93), STATE updated. Next: `/gsd-plan-phase 91` (or `/gsd-discuss-phase 91` first).
+- 2026-06-12: v1.9 shipped (Phases 85-90; gate 9/9 first run, maintainer A/B sign-off). v1.10 "Brand Adoption" opened; requirements defined (10 REQ-IDs); adoption mechanics researched under `.planning/research/v1.10-brand-adoption/`.
 - 2026-06-11: v1.8 closed superseded; milestone audit `gaps_found` accepted. Archives at `.planning/milestones/v1.8-*`. `brandbook/` frozen at `09a84dd4` as the codex A/B baseline. v1.9 "Brand Book Fable" opened; requirements defined (22 REQ-IDs); research synthesized under `.planning/research/v1.9-brandbook-fable/`.
 - 2026-06-10: Phase 82 completed; maintainer selected `concept-07r-no-idot-02-tighter-gap` out-of-band; canonical assets promoted and brand docs rewritten around it.
 - 2026-06-05: v1.7 shipped and archived (Phases 74-79, audit passed). Live versions as of 2026-06-05: `mailglass` 1.5.1 / `mailglass_admin` 1.5.1 / `mailglass_inbound` 1.3.0.
@@ -169,4 +170,4 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Plan the first phase: `/gsd-plan-phase 91` (or `/gsd-discuss-phase 91` first)

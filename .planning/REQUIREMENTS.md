@@ -89,13 +89,15 @@ release again.
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| FOLD-01 | — | Pending |
-| FOLD-02 | — | Pending |
-| FOLD-03 | — | Pending |
-| SURF-01 | — | Pending |
-| SURF-02 | — | Pending |
-| SURF-03 | — | Pending |
-| HEXD-01 | — | Pending |
-| HEXD-02 | — | Pending |
-| RELH-01 | — | Pending |
-| RELH-02 | — | Pending |
+| FOLD-01 | Phase 91 | Pending |
+| FOLD-02 | Phase 91 | Pending |
+| FOLD-03 | Phase 91 | Pending |
+| SURF-01 | Phase 92 | Pending |
+| SURF-02 | Phase 92 | Pending |
+| SURF-03 | Phase 92 | Pending |
+| HEXD-01 | Phase 93 | Pending |
+| HEXD-02 | Phase 93 | Pending |
+| RELH-01 | Phase 93 | Pending |
+| RELH-02 | Phase 93 | Pending |
+
+**Coverage:** 10/10 v1.10 requirements mapped (roadmap created 2026-06-12).
