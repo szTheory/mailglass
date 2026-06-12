@@ -125,8 +125,11 @@ Plans:
   2. The book includes a live HTML component gallery (buttons, inputs, badges, alerts, tabs, code blocks) built from tokens.css with working hover/focus/disabled states — not static pictures of components
   3. The book renders the computed contrast matrix and shows the logo system at light/dark/16px/32px/mono scales
   4. `brandbook-fable/brand-book.md` is a parallel source-of-truth document structured for human and LLM scanning (consistent heading grammar, exact hex/px values inline, tables), and `brandbook-fable/README.md` documents orientation, usage, and export policy
-**Plans**: TBD
+**Plans**: 1 plan
 **UI hint**: yes
+
+Plans:
+- [ ] 88-01-PLAN.md — Self-contained index.html (9 verbatim brief sections, theme toggle, live component gallery, runtime getComputedStyle contrast matrix, logo system per usage rules) + brand-book.md/README.md + Playwright visual audit loop with in-phase gates
 
 ### Phase 89: Collateral, Specimens, and Copy Library
 **Goal**: Every real launch surface — landing page, transactional email, README, docs, social card, diagrams, and per-surface copy — has a deployable, brand-true specimen in the fable system
@@ -158,7 +161,7 @@ Plans:
 | 85. Research and Differentiation Brief | 1/1 | Complete    | 2026-06-11 |
 | 86. Foundations — Palette, Type, Voice, Tokens | 1/1 | Complete    | 2026-06-11 |
 | 87. Logo Tournament | 2/2 | Complete    | 2026-06-12 |
-| 88. Brand Book Assembly | 0/? | Not started | - |
+| 88. Brand Book Assembly | 0/1 | Planned     | - |
 | 89. Collateral, Specimens, and Copy Library | 0/? | Not started | - |
 | 90. Quality Gate and Maintainer UAT | 0/? | Not started | - |
 
