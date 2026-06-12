@@ -54,11 +54,11 @@ proof, and standalone polish.
   in the main lockup, legible at 16px and 32px, works in mono/currentColor and
   on dark, no i-dot manipulation, no glassmorphism/paper-plane/mailbox/
   send-arrow/mascot tropes.
-- [ ] **LOGO-07**: The maintainer explicitly selects from a rendered-evidence
+- [x] **LOGO-07**: The maintainer explicitly selects from a rendered-evidence
   gallery (light/dark/32px/16px/mono/in-context per option) at a hard pause;
   refinement rounds (≤2, parameter-named variants) run on the pick(s) before
   promotion. The selection and rationale are recorded.
-- [ ] **LOGO-08**: Canonical assets ship in `brandbook-fable/assets/`:
+- [x] **LOGO-08**: Canonical assets ship in `brandbook-fable/assets/`:
   primary lockup, standalone typemark, mark, monochrome/currentColor mark,
   with-tagline variant (the only one carrying a subtitle), favicon, and
   light/dark social avatars — all logotype glyphs outlined to paths, zero
@@ -151,8 +151,8 @@ Mapped: 22/22 v1.9 requirements → Phases 85-90 (roadmapped 2026-06-11).
 | FOUND-04 | Phase 86 | Complete |
 | LOGO-05 | Phase 87 | Complete |
 | LOGO-06 | Phase 87 | Complete |
-| LOGO-07 | Phase 87 | Pending |
-| LOGO-08 | Phase 87 | Pending |
+| LOGO-07 | Phase 87 | Complete |
+| LOGO-08 | Phase 87 | Complete |
 | BOOK-04 | Phase 88 | Pending |
 | BOOK-05 | Phase 88 | Pending |
 | BOOK-06 | Phase 88 | Pending |

@@ -61,7 +61,7 @@ Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
 
 - [x] **Phase 85: Research and Differentiation Brief** - Forensic codex-brandbook audit + differentiation brief (≤12 differentiators, book outline, kill-list); planning artifacts only (completed 2026-06-11)
 - [x] **Phase 86: Foundations — Palette, Type, Voice, Tokens** - Evolve-vs-keep records, DTCG tokens.json/tokens.css (light+dark, interaction+feedback states), computed WCAG contrast matrix (completed 2026-06-11)
-- [ ] **Phase 87: Logo Tournament** - 8 pre-screened options across 4 axes, rendered-evidence gallery, maintainer hard pause, ≤2 refinement rounds, winner promoted to outlined-path assets
+- [x] **Phase 87: Logo Tournament** - 8 pre-screened options across 4 axes, rendered-evidence gallery, maintainer hard pause, ≤2 refinement rounds, winner promoted to outlined-path assets (completed 2026-06-12)
 - [ ] **Phase 88: Brand Book Assembly** - Self-contained index.html (light/dark toggle, live component gallery, contrast matrix, logo section), brand-book.md, README.md
 - [ ] **Phase 89: Collateral, Specimens, and Copy Library** - landing-page/email-template HTML, README/docs/OG/diagram SVG specimens, copy-blocks.md, microcopy.md
 - [ ] **Phase 90: Quality Gate and Maintainer UAT** - Scripted gate (parse/link/grep/size/render checks), browser evidence, A/B walkthrough sign-off
@@ -112,7 +112,7 @@ Plans:
 
 Plans:
 - [x] 87-01-PLAN.md — Author 8 options (2 per axis), pre-flight screen, evidence gallery, browser audit; ends at the hard pause (87-01-CHECKPOINT.md)
-- [ ] 87-02-PLAN.md — Refinement rounds (<=2) on the pick(s), winner promotion to brandbook-fable/assets/ (8 outlined-path assets), decision record
+- [x] 87-02-PLAN.md — Refinement rounds (<=2) on the pick(s), winner promotion to brandbook-fable/assets/ (8 outlined-path assets), decision record
 
 **Checkpoint**: maintainer selection — **hard pause** at round 1. This phase BLOCKS on the maintainer picking from the rendered-evidence gallery by design; no auto-advance past selection. **Circuit breaker:** two consecutive full-set rejections halt the tournament and escalate (re-brief before generating more options).
 
@@ -157,7 +157,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 85. Research and Differentiation Brief | 1/1 | Complete    | 2026-06-11 |
 | 86. Foundations — Palette, Type, Voice, Tokens | 1/1 | Complete    | 2026-06-11 |
-| 87. Logo Tournament | 1/2 | In Progress|  |
+| 87. Logo Tournament | 2/2 | Complete    | 2026-06-12 |
 | 88. Brand Book Assembly | 0/? | Not started | - |
 | 89. Collateral, Specimens, and Copy Library | 0/? | Not started | - |
 | 90. Quality Gate and Maintainer UAT | 0/? | Not started | - |
