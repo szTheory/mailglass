@@ -8,7 +8,21 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v1.9 Brand Book Fable — A/B Brand System
+## Current Milestone: (none — quiet maintenance; next decision is A/B winner adoption)
+
+**`v1.9 Brand Book Fable — A/B Brand System` SHIPPED 2026-06-12.** The
+competing brand book at `brandbook-fable/` is complete and maintainer-approved
+("I LOVE THE NEW BRANDBOOK"): the sealed-flap identity (4-round tournament
+winner) as an 8-asset two-expression logo system, contrast-proven two-tier
+tokens with full light/dark parity, a self-contained 77.7 KB HTML book with
+live theme toggle / keyboard-operable gallery / runtime-computed WCAG matrix,
+landing + email specimens, four portable SVGs, and a domain-noun copy library.
+22/22 requirements verified; the Phase 90 gate passed 9/9 on its first run.
+**Deferred to the next milestone:** adopting the winner as canonical
+`brandbook/` (folder rename, README/HexDocs/social propagation, PNG exports).
+
+<details>
+<summary>v1.9 original goal and targets (shipped)</summary>
 
 **Goal:** Build a second, fully self-contained brand book at `brandbook-fable/` to A/B against the frozen codex `brandbook/` baseline (commit `09a84dd4`) — and beat it on craft, buildability, and standalone polish.
 
@@ -21,6 +35,8 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 - Scripted quality gate: no planning-language leakage, no font dependencies, size budgets, local-only references, dark/16px render checks
 
 **Scope locks:** Only `brandbook-fable/` is written. `brandbook/` (frozen baseline), `mailglass_admin`, guides, and README are out of scope. Text artifacts only (SVG/MD/JSON/CSS/HTML); no Node toolchain, no binaries, no embedded fonts, no external network requests. Creative latitude on palette/type/logo where justified; locked essence: "mail you can see through," thoughtful-maintainer voice, glass-as-metaphor-not-gimmick.
+
+</details>
 
 ## Current State
 
@@ -453,4 +469,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-11 after closing **v1.8 Brand System and Repo-Ready Brandbook** as superseded (audit `gaps_found` accepted; brandbook finished out-of-band at `09a84dd4`). Next: **v1.9 Brand Book Fable — A/B Brand System**.*
+*Last updated: 2026-06-12 after shipping **v1.9 Brand Book Fable — A/B Brand System** (22/22 requirements verified, maintainer A/B sign-off). Next decision: adopt the fable book as canonical `brandbook/` in a future milestone.*

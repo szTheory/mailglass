@@ -1,5 +1,30 @@
 # Milestones
 
+## v1.9 Brand Book Fable — A/B Brand System (Shipped: 2026-06-12)
+
+**Phases completed:** 6 phases (85-90), 7 plans
+
+**Milestone verification:** 22/22 requirements verified through per-phase
+goal-backward verification (every phase has a `passed` VERIFICATION.md), the
+Phase 90 consolidated gate re-proved every constraint on the final folder
+state (9/9 checks, first run), and the maintainer approved the A/B
+walkthrough with no punch list — the audit function was fulfilled by this
+chain rather than a separate retroactive audit document.
+
+**Key accomplishments:**
+
+- Research-grounded differentiation brief: forensic codex audit (20 verified defect rows, 9 strengths, 6 killed false differentiators) locking 12 differentiators, the book outline, kill-list, and 21-file manifest before any artifact was authored.
+- Contrast-proven two-tier token foundation (tokens.json + tokens.css) with complete 39-role light/dark parity, six computed fix hexes, four newly decided dark feedback backgrounds, and a 192-row script-computed WCAG matrix.
+- The maintainer selected 4D "the sealed flap" through a four-round evidence-rendered tournament (8 options → 6 variants → color program → envelope-in-light exploration); the winner ships as a complete 8-asset, two-expression, mono-safe logo system in `brandbook-fable/assets/` with an OS-dark-adaptive favicon.
+- Self-contained fable brand book: a 77.7 KB file:// page whose theme toggle re-skins every specimen, whose 45-pair WCAG matrix is computed from the live tokens at runtime, with a fully keyboard-operable component gallery and a usage-rule-honoring logo system — plus the brand-book.md text master and README.
+- All eight remaining manifest files shipped — landing + email HTML specimens, four portable SVGs, two copy libraries keyed to the seven domain nouns — slotted into the book's Specimens grid and proven with a three-iteration visual audit ending zero-defect.
+- The complete brandbook-fable/ folder (256 KB) passed all 9 scripted gate checks on the first run; maintainer sign-off: "I LOVE THE NEW BRANDBOOK."
+
+**Deferred to a future milestone:** A/B winner adoption (folder rename,
+README/HexDocs/social propagation, PNG export pipeline).
+
+---
+
 ## v1.8 Brand System and Repo-Ready Brandbook (Closed superseded: 2026-06-11)
 
 **Phases completed:** 3 of 5 phases (80-82), 5 plans; phases 83-84 superseded
@@ -24,8 +49,10 @@ remaining work with a competing brand book at `brandbook-fable/`.
 
 - EXAMPLE-01/02, VOICE-01, REPO-01..03 never verified through GSD phases 83-84;
   partial out-of-band coverage only.
+
 - `brandbook/assets/logo-primary.svg` wordmark is live `<text>` in macOS-only
   Avenir Next; degrades off-macOS.
+
 - `brandbook/tokens.json` retains planning-language references to a contrast
   validation that never ran; dark tokens exist but are never demonstrated.
 

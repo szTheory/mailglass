@@ -4,6 +4,71 @@
 
 ---
 
+## Milestone: v1.9 — Brand Book Fable (A/B Brand System)
+
+**Shipped:** 2026-06-12
+**Phases:** 6 (85-90) | **Plans:** 7
+
+### What Was Built
+
+A complete competing brand book at `brandbook-fable/` (256 KB, all text
+artifacts): forensic differentiation brief, contrast-proven two-tier tokens
+(light+dark parity, computed WCAG matrix), the sealed-flap logo system (8
+assets, color program + mono master, OS-dark-adaptive favicon), a
+self-contained HTML book with live theme toggle / keyboard gallery /
+runtime-computed contrast matrix, landing + email specimens, four portable
+SVGs, and a domain-noun copy library. Maintainer A/B verdict vs the codex
+baseline: "I LOVE THE NEW BRANDBOOK."
+
+### What Worked
+
+- The bounded tournament fixed v1.8's thrash: diverse-by-axis option sets,
+  pre-flight constraint screening, rendered evidence strips, and
+  single-parameter variant rounds kept every maintainer touchpoint decisive.
+  rejection_count stayed 0 across four rounds.
+- Multimodal self-audit (Playwright render → read → fix → re-render) before
+  every presentation caught ~10 real craft defects the maintainer never saw.
+- Differentiation brief before any artifact: verified codex defects only,
+  killed six false differentiators early, kept the A/B honest.
+- Express-path CONTEXT.md from the approved plan kept the full GSD cycle
+  fast without skipping gates.
+
+### What Was Inefficient
+
+- Two subagent crashes (529 overload, socket close) — both recovered cleanly
+  from committed state because executors commit per task; the promotion
+  crash cost one re-verification pass.
+- The maintainer-directed round 4 exceeded the round-3 hard cap; the
+  protocol needed a documented extension path (recorded fallback winner)
+  rather than treating direction as rejection.
+
+### Patterns Established
+
+- Tournament protocol with hard pauses, pre-flight tables, evidence strips,
+  circuit breaker, and maintainer-extension clause.
+- Standing brand constraints C-15 (no broken reads) and C-16 (envelope by
+  light only) are binding on future brand work.
+- Gate phases re-prove all upstream in-phase gates on final state in one
+  scripted run.
+
+### Key Lessons
+
+- Maintainers respond to renders, not descriptions — every creative decision
+  point shipped with actual-size, both-theme, in-context renders, and every
+  selection round converged in one reply.
+- Honest verdicts build trust: round 4's "4B does NOT read envelope at any
+  size" and the codex strengths register cost nothing and kept the A/B
+  credible.
+
+### Cost Observations
+
+- Sessions: 1 (plus the maintainer's async picks); ~15 subagents across
+  research/plan/check/execute/verify.
+- Notable: known gsd-sdk count-inflation gotchas hit at both phase.complete
+  and milestone.complete; corrected manually per the established playbook.
+
+---
+
 ## Milestone: v1.8 — Brand System and Repo-Ready Brandbook
 
 **Closed superseded:** 2026-06-11 (audit `gaps_found`, accepted)

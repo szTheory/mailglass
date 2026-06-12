@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Brand Book Fable — A/B Brand System
-status: ready_to_plan
-last_updated: 2026-06-12T14:57:53.397Z
-last_activity: 2026-06-12
+status: Awaiting next milestone
+last_updated: "2026-06-12T14:58:19.482Z"
+last_activity: 2026-06-12 — Milestone v1.9 completed and archived
 progress:
-  total_phases: 11
-  completed_phases: 7
-  total_plans: 12
-  completed_plans: 13
-  percent: 64
-stopped_at: Phase 90 complete (1/1) — ready to discuss Phase 999.1
+  total_phases: 6
+  completed_phases: 6
+  total_plans: 7
+  completed_plans: 7
+  percent: 100
+closure_note: shipped 2026-06-12 — 22/22 requirements verified, gate 9/9 first run, maintainer A/B sign-off
 ---
 
 # Project State
@@ -25,12 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-11 — v1.9 "Brand Book Fable" milest
 
 ## Current Position
 
-Phase: 999.1 of 90 (human readable code comments + gsd artifact cleanup)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-06-12
-
-Progress: [██████████] 100%
+Phase: Milestone v1.9 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-12 — Milestone v1.9 completed and archived
 
 ## v1.9 Milestone Intent
 
@@ -172,4 +170,4 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Operator Next Steps
 
-- Review the round-1 logo gallery: open `.planning/phases/87-logo-tournament/tournament/round-1.html` from disk and reply `pick N`, `pick N and M`, or `reject all` with notes (recorded in `87-01-CHECKPOINT.md`; unblocks 87-02)
+- Start the next milestone with /gsd-new-milestone
