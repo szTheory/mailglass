@@ -40,12 +40,12 @@
   <g transform="translate(531.8 367.5) scale(1.4)"><g transform="translate(0 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H6V2H0Z M0 8H6V10H0Z M5 1H7V9H5Z"/></g><g transform="translate(10 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g><g transform="translate(20 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 8H7V10H0Z"/></g><g transform="translate(30 0)"><path fill="#0D1B2A" d="M0 0H4V2H0Z M1 2H3V8H1Z M0 8H4V10H0Z"/></g><g transform="translate(37 0)"><path fill="#0D1B2A" d="M0 0L2 0L5 10L3 10Z M6 0L8 0L5 10L3 10Z"/></g><g transform="translate(48 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g><g transform="translate(58 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H7V6H0Z M5 0H7V6H5Z M4 6L6 6L7 10L5 10Z"/></g><g transform="translate(68 0)"><path fill="#0D1B2A" d="M0 0L2 0L5 5L3 5Z M6 0L8 0L5 5L3 5Z M3 5H5V10H3Z"/></g></g>
   <rect x="730" y="330" width="170" height="90" rx="4" fill="#EAF6FB" stroke="#5C6B7A" stroke-width="2"/>
   <g transform="translate(779.3 367.5) scale(1.4)"><g transform="translate(0 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g><g transform="translate(10 0)"><path fill="#0D1B2A" d="M0 0L2 0L5 10L3 10Z M6 0L8 0L5 10L3 10Z"/></g><g transform="translate(21 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M0 0H7V2H0Z M0 4H5V6H0Z M0 8H7V10H0Z"/></g><g transform="translate(31 0)"><path fill="#0D1B2A" d="M0 0H2V10H0Z M7 0H9V10H7Z M2 0L4 0L9 10L7 10Z"/></g><g transform="translate(43 0)"><path fill="#0D1B2A" d="M0 0H8V2H0Z M3 2H5V10H3Z"/></g></g>
-  <path d="M216 375.0H298" stroke="#277B96" stroke-width="2"/>
-  <path d="M298 369.0L310 375.0L298 381.0Z" fill="#277B96"/>
-  <path d="M446 375.0H528" stroke="#277B96" stroke-width="2"/>
-  <path d="M528 369.0L540 375.0L528 381.0Z" fill="#277B96"/>
-  <path d="M676 375.0H758" stroke="#277B96" stroke-width="2"/>
-  <path d="M758 369.0L770 375.0L758 381.0Z" fill="#277B96"/>
+  <path d="M216 375H254" stroke="#277B96" stroke-width="2"/>
+  <path d="M254 369L266 375L254 381Z" fill="#277B96"/>
+  <path d="M446 375H484" stroke="#277B96" stroke-width="2"/>
+  <path d="M484 369L496 375L484 381Z" fill="#277B96"/>
+  <path d="M676 375H714" stroke="#277B96" stroke-width="2"/>
+  <path d="M714 369L726 375L714 381Z" fill="#277B96"/>
 
   <!-- the observed-fact trail under the Event node: Events are append-only -->
   <rect x="730" y="446" width="9" height="9" rx="2" fill="#5C6B7A"/>
