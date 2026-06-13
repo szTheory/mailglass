@@ -345,6 +345,8 @@ Output:
 
 ```text
 BASE=63701373af556a6c4fbc9d48f0d1a2d7c31782fb
+docs(91-04): complete final evidence plan
+docs(91-04): record release safety proof
 docs(91-04): record final adoption gate evidence
 docs(91-03): complete reference reconciliation plan
 docs(91-03): reconcile live brand planning memory
