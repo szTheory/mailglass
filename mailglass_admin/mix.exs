@@ -187,7 +187,7 @@ defmodule MailglassAdmin.MixProject do
         "cmd git diff --exit-code priv/static/"
       ],
       "verify.support_contract.admin": [
-        "test test/mailglass_admin/post_installer_smoke_test.exs test/mailglass_admin/operator_live_test.exs test/mailglass_admin/operator_trust_doc_test.exs test/mailglass_admin/stability_contract_test.exs test/mailglass_admin/router_test.exs test/mailglass_admin/auth_test.exs --warnings-as-errors"
+        "test test/mailglass_admin/post_installer_smoke_test.exs test/mailglass_admin/operator_live_test.exs test/mailglass_admin/operator_trust_doc_test.exs test/mailglass_admin/stability_contract_test.exs test/mailglass_admin/router_test.exs test/mailglass_admin/auth_test.exs test/mailglass_admin/token_parity_test.exs --warnings-as-errors"
       ],
       # Deprecated pass-through (REL-03, one cycle) — use verify.preview instead
       "verify.phase_05": ["verify.preview"]

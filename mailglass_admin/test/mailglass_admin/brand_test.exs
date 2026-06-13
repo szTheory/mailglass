@@ -39,17 +39,31 @@ defmodule MailglassAdmin.BrandTest do
 
   describe "mailglass-light theme" do
     test "defines canonical daisyUI tokens", %{css: css} do
-      lowered = String.downcase(css)
+      # After var-rewrite: assert the var reference in the theme block
+      assert css =~ "--color-base-100: var(--mg-color-background)" or
+               css =~ "--color-base-100:var(--mg-color-background)",
+             "mailglass-light --color-base-100 must reference --mg-color-background"
 
-      assert lowered =~ "--color-base-100: #f8fbfd" or lowered =~ "--color-base-100:#f8fbfd",
-             "mailglass-light --color-base-100 must map to Paper"
+      # And: assert the token value is inlined from brandbook/tokens.css
+      assert String.downcase(css) =~ "--mg-color-background: #f8fbfd" or
+               String.downcase(css) =~ "--mg-color-background:#f8fbfd",
+             "--mg-color-background token (#F8FBFD Paper) must be inlined in compiled CSS"
 
-      assert lowered =~ "--color-primary: #277b96" or lowered =~ "--color-primary:#277b96",
-             "mailglass-light --color-primary must map to Glass"
+      assert css =~ "--color-primary: var(--mg-color-accent)" or
+               css =~ "--color-primary:var(--mg-color-accent)",
+             "mailglass-light --color-primary must reference --mg-color-accent"
 
-      assert lowered =~ "--color-base-content: #0d1b2a" or
-               lowered =~ "--color-base-content:#0d1b2a",
-             "mailglass-light --color-base-content must map to Ink"
+      assert String.downcase(css) =~ "--mg-color-accent: #277b96" or
+               String.downcase(css) =~ "--mg-color-accent:#277b96",
+             "--mg-color-accent token (#277B96 Glass) must be inlined in compiled CSS"
+
+      assert css =~ "--color-base-content: var(--mg-color-text)" or
+               css =~ "--color-base-content:var(--mg-color-text)",
+             "mailglass-light --color-base-content must reference --mg-color-text"
+
+      assert String.downcase(css) =~ "--mg-color-text: #0d1b2a" or
+               String.downcase(css) =~ "--mg-color-text:#0d1b2a",
+             "--mg-color-text token (#0D1B2A Ink) must be inlined in compiled CSS"
     end
   end
 

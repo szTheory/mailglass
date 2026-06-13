@@ -2,6 +2,12 @@
    Brand: brandbook/brand-book.md (Ink/Glass/Ice/Mist/Paper/Slate).
    Built by: mix mailglass_admin.assets.build  (zero Node toolchain). */
 
+/* Resolves to: <monorepo-root>/brandbook/tokens.css (build cwd = mailglass_admin/) */
+/* The standalone Tailwind v4.1.12 binary inlines all --mg-* declarations into      */
+/* priv/static/app.css at build time. Adopted apps only consume the pre-resolved     */
+/* bundle; brandbook/ is excluded from the Hex tarball (mix.exs :files).             */
+@import "../../../brandbook/tokens.css";
+
 @import "tailwindcss" source(none);
 
 @source "../css";
@@ -19,23 +25,29 @@
   prefersdark: false;
   color-scheme: "light";
 
-  /* Brand book §7.3 — canonical palette mapped to daisyUI semantic tokens */
-  --color-base-100: #F8FBFD;   /* Paper — surface */
-  --color-base-200: #EAF6FB;   /* Mist — elevated surface */
-  --color-base-300: #A6EAF2;   /* Ice — active/hover */
-  --color-base-content: #0D1B2A; /* Ink — primary text */
-  --color-primary: #277B96;     /* Glass — primary action */
-  --color-primary-content: #F8FBFD;
-  --color-secondary: #5C6B7A;   /* Slate — secondary text/border */
-  --color-secondary-content: #F8FBFD;
-  --color-accent: #0D1B2A;      /* Ink — accent (buttons, headers) */
-  --color-accent-content: #F8FBFD;
-  --color-neutral: #5C6B7A;
-  --color-neutral-content: #F8FBFD;
-  --color-info: #277B96;
-  --color-success: #166534;     /* Success Pine (brand book §7.3) */
-  --color-warning: #A95F10;     /* Signal Amber (brand book §7.3) */
-  --color-error: #B42318;       /* Error Crimson (brand book §7.3) */
+  /* Brand book §7.3 — canonical palette mapped to daisyUI semantic tokens.
+     All --color-* values reference brandbook/tokens.css --mg-* custom properties;
+     no raw hex literals in theme selectors (TOKEN-01). */
+  --color-base-100: var(--mg-color-background);          /* Paper #F8FBFD — no value change */
+  --color-base-200: var(--mg-color-surface-raised);      /* White #FFFFFF — CORRECTED from Mist */
+  --color-base-300: var(--mg-color-border);              /* Mist-edge #C7DCE5 — CORRECTED from Ice */
+  --color-base-content: var(--mg-color-text);            /* Ink #0D1B2A — no value change */
+  --color-primary: var(--mg-color-accent);               /* Glass #277B96 — no value change */
+  --color-primary-content: var(--mg-color-background);   /* Paper #F8FBFD — no value change */
+  --color-secondary: var(--mg-color-text-muted);         /* Slate #5C6B7A — no value change */
+  --color-secondary-content: var(--mg-color-background); /* Paper #F8FBFD — no value change */
+  --color-accent: var(--mg-color-accent);                /* Glass #277B96 — CORRECTED from Ink */
+  --color-accent-content: var(--mg-color-text-inverse);  /* White #FFFFFF — reclassified */
+  --color-neutral: var(--mg-color-text-muted);           /* Slate #5C6B7A — no value change */
+  --color-neutral-content: var(--mg-color-background);   /* Paper #F8FBFD — no value change */
+  --color-info: var(--mg-color-info-solid);              /* Glass-deep #1D637A — CORRECTED from Glass */
+  --color-info-content: var(--mg-color-text-inverse);    /* White #FFFFFF — added */
+  --color-success: var(--mg-color-success-solid);        /* Pine #166534 — no value change */
+  --color-success-content: var(--mg-color-success-on-solid); /* White #FFFFFF — added */
+  --color-warning: var(--mg-color-warning-solid);        /* Amber #A95F10 — no value change */
+  --color-warning-content: var(--mg-color-warning-on-solid); /* White #FFFFFF — added */
+  --color-error: var(--mg-color-error-solid);            /* Crimson #B42318 — no value change */
+  --color-error-content: var(--mg-color-error-on-solid); /* White #FFFFFF — added */
 
   --radius-selector: 0.25rem;
   --radius-field: 0.25rem;
@@ -51,22 +63,28 @@
   prefersdark: true;
   color-scheme: "dark";
 
-  --color-base-100: #0D1B2A;   /* Ink — surface */
-  --color-base-200: #152538;   /* Ink elevated */
-  --color-base-300: #1F3049;   /* Ink pressed */
-  --color-base-content: #EAF6FB; /* Mist — primary text */
-  --color-primary: #A6EAF2;     /* Ice — primary action on dark */
-  --color-primary-content: #0D1B2A;
-  --color-secondary: #5C6B7A;
-  --color-secondary-content: #F8FBFD;
-  --color-accent: #277B96;      /* Glass on dark */
-  --color-accent-content: #F8FBFD;
-  --color-neutral: #5C6B7A;
-  --color-neutral-content: #F8FBFD;
-  --color-info: #A6EAF2;
-  --color-success: #8BB77F;     /* Success Pine dark-surface legibility (UI-SPEC §Color) */
-  --color-warning: #E0A955;     /* Signal Amber dark-surface legibility */
-  --color-error: #D47368;       /* Error Crimson dark-surface legibility */
+  /* All --color-* values reference brandbook/tokens.css --mg-* custom properties;
+     no raw hex literals in theme selectors (TOKEN-01). */
+  --color-base-100: var(--mg-color-background);          /* Ink #0D1B2A — no value change */
+  --color-base-200: var(--mg-color-surface-raised);      /* Ink-raised #152538 — no value change */
+  --color-base-300: var(--mg-color-border);              /* Ink-edge #315069 — CORRECTED from Ink-overlay */
+  --color-base-content: var(--mg-color-text);            /* Mist #EAF6FB — no value change */
+  --color-primary: var(--mg-color-accent);               /* Ice #A6EAF2 — no value change */
+  --color-primary-content: var(--mg-color-text-inverse); /* Ink #0D1B2A — already passes AA 12.98:1 */
+  --color-secondary: var(--mg-color-text-muted);         /* Mist-soft #B8CAD4 — CORRECTED from Slate */
+  --color-secondary-content: var(--mg-color-text-inverse); /* Ink #0D1B2A — CORRECTED on dark fills */
+  --color-accent: var(--mg-color-accent);                /* Ice #A6EAF2 — CORRECTED from Glass */
+  --color-accent-content: var(--mg-color-text-inverse);  /* Ink #0D1B2A — CORRECTED */
+  --color-neutral: var(--mg-color-text-muted);           /* Mist-soft #B8CAD4 — CORRECTED from Slate */
+  --color-neutral-content: var(--mg-color-text-inverse); /* Ink #0D1B2A — CORRECTED */
+  --color-info: var(--mg-color-info-solid);              /* Ice #A6EAF2 — no value change for dark */
+  --color-info-content: var(--mg-color-info-on-solid);   /* Ink #0D1B2A — added */
+  --color-success: var(--mg-color-success-solid);        /* Pine-bright #8BB77F — no value change */
+  --color-success-content: var(--mg-color-success-on-solid); /* Ink #0D1B2A — added */
+  --color-warning: var(--mg-color-warning-solid);        /* Amber-bright #E0A955 — no value change */
+  --color-warning-content: var(--mg-color-warning-on-solid); /* Ink #0D1B2A — added */
+  --color-error: var(--mg-color-error-solid);            /* Crimson-bright #E29089 — CORRECTED from off-palette */
+  --color-error-content: var(--mg-color-error-on-solid); /* Ink #0D1B2A — added */
 
   --radius-selector: 0.25rem;
   --radius-field: 0.25rem;
