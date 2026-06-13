@@ -1,0 +1,84 @@
+name: Guard Release Trigger
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  guard_release_trigger:
+    name: Guard Release Trigger
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title type vs changed-file set
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          GUARDED=( "brandbook/" ".planning/" "prompts/" )
+
+          # 1. Extract the conventional-commit type from the PR title.
+          #    Matches: "feat:", "fix:", "feat(scope):", "feat!:", "fix(scope)!:", etc.
+          #    Capture: $type (feat|fix|docs|...) and whether a "!" bang is present.
+          if [[ "$PR_TITLE" =~ ^([a-z]+)(\([^\)]*\))?(!)?: ]]; then
+            type="${BASH_REMATCH[1]}"
+            bang="${BASH_REMATCH[3]}"   # "!" if breaking-change marker present
+          else
+            echo "PR title is not a conventional commit — pr-title.yml owns that failure; pass here."
+            exit 0
+          fi
+
+          # 2. Is this a BUMP-TRIGGERING title?
+          #    release-please defaults: feat -> minor, fix -> patch, any "!" -> major.
+          #    Also honor a BREAKING CHANGE footer if the project ever adds one to titles
+          #    (titles normally won't carry it, but cheap to check).
+          is_bump="false"
+          case "$type" in
+            feat|fix) is_bump="true" ;;
+          esac
+          [[ -n "$bang" ]] && is_bump="true"
+          [[ "$PR_TITLE" == *"BREAKING CHANGE"* ]] && is_bump="true"
+
+          if [[ "$is_bump" != "true" ]]; then
+            echo "Non-bumping type '$type' — release-please will not cut a release. PASS."
+            exit 0
+          fi
+
+          # 3. Get the PR's changed files (PR-level aggregate = the squash commit content).
+          mapfile -t files < <(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')
+
+          if [[ "${#files[@]}" -eq 0 ]]; then
+            echo "No changed files reported — nothing to guard. PASS."
+            exit 0
+          fi
+
+          # 4. Are ALL changed files inside the guarded path set? (subset test)
+          all_guarded="true"
+          for f in "${files[@]}"; do
+            in_guard="false"
+            for g in "${GUARDED[@]}"; do
+              if [[ "$f" == "$g"* ]]; then in_guard="true"; break; fi
+            done
+            if [[ "$in_guard" != "true" ]]; then all_guarded="false"; break; fi
+          done
+
+          # 5. Decision: bump-triggering type AND every file is brand/planning-only -> FAIL.
+          if [[ "$all_guarded" == "true" ]]; then
+            echo "::error::PR title type '${type}${bang}' triggers a release-please bump, but every"
+            echo "::error::changed file is under brand/planning paths (${GUARDED[*]})."
+            echo "::error::This is the 1.6.x accidental-release pattern. Use a non-bumping type"
+            echo "::error::(docs:/chore:/test:) for brand/planning-only changes, or include real"
+            echo "::error::package code if a release is genuinely intended."
+            exit 1
+          fi
+
+          echo "Bump-triggering type touches real package code (not exclusively brand/planning). PASS."
+          exit 0
