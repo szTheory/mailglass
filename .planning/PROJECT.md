@@ -10,13 +10,13 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current Milestone: v1.10 Brand Adoption
 
-**Goal:** Make the A/B-winning fable brand the project's one canonical identity everywhere it shows: fold `brandbook-fable/` into `brandbook/` (deleting the codex book), propagate the sealed-flap identity to the root README and the repo social preview, and wire HexDocs/ex_doc logos for all three packages.
+**Goal:** Make the A/B-winning fable brand the project's one canonical identity everywhere it shows: adopt it as canonical `brandbook/` (deleting the codex book from the active tree), propagate the sealed-flap identity to the root README and the repo social preview, and wire HexDocs/ex_doc logos for all three packages.
 
 **Target features:**
-- Folder adoption: `brandbook-fable/` becomes canonical `brandbook/` via git mv; codex book removed (history preserves it at the frozen baseline `09a84dd4`); all internal references (CLAUDE.md brand pointers, planning intel) reconciled; the v1.9 quality gate re-passes on the new path.
+- Folder adoption: the v1.9 fable book becomes canonical `brandbook/` via git mv; codex book removed (history preserves it at the frozen baseline `09a84dd4`); all internal references (CLAUDE.md brand pointers, planning intel) reconciled; the v1.9 quality gate re-passes on the new path.
 - Repo surfaces: root README adopts `brandbook/examples/readme-header.svg`; og-card exported to PNG (1200×630) with documented GitHub social-preview upload steps; favicon adopted where the repo serves one.
 - HexDocs wiring: ex_doc logo/assets config for `mailglass`, `mailglass_admin`, `mailglass_inbound` — verified with local `mix docs` renders; committed as non-release-triggering types so the brand ships with the next natural release (no forced release train in this milestone).
-- CLAUDE.md "Brand & Voice" source-of-truth pointer moves from `prompts/mailglass-brand-book.md` to `brandbook/brand-book.md`.
+- CLAUDE.md "Brand & Voice" source-of-truth pointer moves to `brandbook/brand-book.md`.
 
 **Scope locks:**
 - No Hex release is cut in this milestone; mix.exs changes are docs-config only, commit types must not trigger release-please.
@@ -26,7 +26,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 **v1.9 context (shipped):**
 
 **`v1.9 Brand Book Fable — A/B Brand System` SHIPPED 2026-06-12.** The
-competing brand book at `brandbook-fable/` is complete and maintainer-approved
+competing fable brand book is complete and maintainer-approved
 ("I LOVE THE NEW BRANDBOOK"): the sealed-flap identity (4-round tournament
 winner) as an 8-asset two-expression logo system, contrast-proven two-tier
 tokens with full light/dark parity, a self-contained 77.7 KB HTML book with
@@ -39,7 +39,7 @@ landing + email specimens, four portable SVGs, and a domain-noun copy library.
 <details>
 <summary>v1.9 original goal and targets (shipped)</summary>
 
-**Goal:** Build a second, fully self-contained brand book at `brandbook-fable/` to A/B against the frozen codex `brandbook/` baseline (commit `09a84dd4`) — and beat it on craft, buildability, and standalone polish.
+**Goal:** Build a second, fully self-contained fable brand book to A/B against the frozen codex `brandbook/` baseline (commit `09a84dd4`) — and beat it on craft, buildability, and standalone polish.
 
 **Target features:**
 - Research-grounded differentiation brief (forensic codex audit + world-class OSS/devtools brand-system research)
@@ -49,7 +49,7 @@ landing + email specimens, four portable SVGs, and a domain-noun copy library.
 - Collateral: landing-page and transactional-email HTML specimens, README/docs/OG/diagram-language SVGs, per-surface copy library and domain-noun microcopy
 - Scripted quality gate: no planning-language leakage, no font dependencies, size budgets, local-only references, dark/16px render checks
 
-**Scope locks:** Only `brandbook-fable/` is written. `brandbook/` (frozen baseline), `mailglass_admin`, guides, and README are out of scope. Text artifacts only (SVG/MD/JSON/CSS/HTML); no Node toolchain, no binaries, no embedded fonts, no external network requests. Creative latitude on palette/type/logo where justified; locked essence: "mail you can see through," thoughtful-maintainer voice, glass-as-metaphor-not-gimmick.
+**Scope locks:** Only the fable staging folder is written. `brandbook/` (frozen baseline), `mailglass_admin`, guides, and README are out of scope. Text artifacts only (SVG/MD/JSON/CSS/HTML); no Node toolchain, no binaries, no embedded fonts, no external network requests. Creative latitude on palette/type/logo where justified; locked essence: "mail you can see through," thoughtful-maintainer voice, glass-as-metaphor-not-gimmick.
 
 </details>
 
@@ -455,7 +455,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-16 | Conventional Commits + Release Please + sibling-linked-version automation; Hex publish from protected ref only | Per OSS CI/CD best practices; squash-merge workflow keeps casual contributor UX low-friction | ✓ Validated v0.1 — release-please extra-files no-op surfaced; mitigated with workflow sed step |
 | D-17 | Custom Credo checks enforce domain rules | Per engineering DNA — invariants caught at lint time, not just runtime | ✓ Validated v0.1 — 12 checks operational |
 | D-18 | Renderer default is HEEx + `Phoenix.Component` with MSO VML fallbacks; MJML opt-in via `:mjml` Hex package (NOT `:mrml`) | Native composition, no Node, killer differentiator vs React Email + Mailing | ✓ Held v0.1 |
-| D-19 | Brand voice & visual identity locked to `prompts/mailglass-brand-book.md` | Brand discipline prevents drift toward generic SaaS or growth-marketing aesthetic | ✓ Held v0.1 |
+| D-19 | Brand voice & visual identity locked to `brandbook/brand-book.md` | Brand discipline prevents drift toward generic SaaS or growth-marketing aesthetic; prompt-era research remains preserved as provenance | Superseded by v1.10 canonical adoption |
 | D-20 | Domain vocabulary locked to `prompts/mailer-domain-language-deep-research.md` | Borrowed from battle-tested libs; avoid "Email" or "Status" as ambiguous primitives | ✓ Held v0.1 |
 | D-21 | Adapter call between Multi#1 and Multi#2 (never inside transaction) | Postgres pool starvation prevention | ✓ Held v0.1 — Phase 3 Outbound enforces |
 | D-22 | The first `mailglass_inbound` milestone stays narrow: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional execution; Conductor/Mailgun/SES/SMTP are deferred | Protect the locked `v1.x` core and make the first sibling-package expansion supportable for a one-person maintainer | ✓ Validated v1.1 — narrow scope held; Conductor / Mailgun / SES / `gen_smtp` remained deliberately deferred |

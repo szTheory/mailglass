@@ -54,7 +54,7 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 
 ### v1.10 Brand Adoption (Phases 91-93)
 
-- [ ] **Phase 91: Folder Adoption and Reference Reconciliation** - `brandbook-fable/` becomes canonical `brandbook/` via git mv, codex book removed, all tracked pointers reconciled, quality gate re-passes on the new path
+- [ ] **Phase 91: Folder Adoption and Reference Reconciliation** - the fable book becomes canonical `brandbook/` via git mv, codex book removed, all tracked pointers reconciled, quality gate re-passes on the new path
 - [ ] **Phase 92: Surface Propagation** - Root README adopts the brand header, og-card PNG exported and committed with upload steps documented, admin wordmark explicitly dispositioned
 - [ ] **Phase 93: HexDocs Wiring and Release Hardening** - ex_doc logo/favicon config for all three packages verified with local `mix docs`, release-please hardened against brand/planning-only commits, 1.6.x aftermath reconciled
 
@@ -67,8 +67,8 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 **Requirements**: FOLD-01, FOLD-02, FOLD-03
 **Success Criteria** (what must be TRUE):
 
-  1. `brandbook/` at the repo root contains the fable book (moved via `git mv` with the codex files removed in the same commit; history preserves the codex baseline at `09a84dd4`), and `brandbook-fable/` no longer exists
-  2. No tracked file outside `.planning/milestones/` archives references `brandbook-fable/`; the CLAUDE.md Brand & Voice source-of-truth pointer and `mailglass_admin/docs/design-system.md:5` both point at `brandbook/brand-book.md` (the v1.9 sweep proved these are the only tracked consumers)
+  1. `brandbook/` at the repo root contains the fable book (moved via `git mv` with the codex files removed in the same commit; history preserves the codex baseline at `09a84dd4`), and the former fable staging folder no longer exists
+  2. No active tracked file outside provenance archives references the former fable staging path; the CLAUDE.md Brand & Voice source-of-truth pointer and `mailglass_admin/docs/design-system.md:5` both point at `brandbook/brand-book.md` (the v1.9 sweep proved these are the only tracked consumers)
   3. The v1.9 quality gate (`gate.sh`, re-pathed) passes on the folder at its new location
   4. Every commit in the phase uses a non-release-triggering type (`chore:`/`docs:`) and no release-please PR is created
 

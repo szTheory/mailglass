@@ -101,7 +101,70 @@ brandbook paths.
 
 ## Active Reference Sweep
 
-Pending - recorded during Plan 91-03 and re-run during Plan 91-04.
+Plan 91-03 active pointer verification:
+
+```bash
+grep -n 'Source of truth: `brandbook/brand-book.md`\.' CLAUDE.md
+grep -n 'brandbook/brand-book.md' mailglass_admin/docs/design-system.md
+grep -n 'Brand: brandbook/brand-book.md (Ink/Glass/Ice/Mist/Paper/Slate).' mailglass_admin/assets/css/app.css
+```
+
+Output:
+
+```text
+CLAUDE.md:62:Source of truth: `brandbook/brand-book.md`.
+mailglass_admin/docs/design-system.md:5:`brandbook/brand-book.md`; this doc covers the *mechanics* — tokens, motion,
+mailglass_admin/assets/css/app.css:2:   Brand: brandbook/brand-book.md (Ink/Glass/Ice/Mist/Paper/Slate).
+```
+
+Active stale pointer sweep:
+
+```bash
+grep -n 'brandbook/brand-book.md' \
+  .planning/PROJECT.md \
+  .planning/STATE.md \
+  .planning/ROADMAP.md \
+  .planning/REQUIREMENTS.md
+
+rg -n 'brandbook-fable/|prompts/mailglass-brand-book\.md' \
+  CLAUDE.md \
+  mailglass_admin/docs/design-system.md \
+  mailglass_admin/assets/css/app.css \
+  .planning/PROJECT.md \
+  .planning/STATE.md \
+  .planning/ROADMAP.md \
+  .planning/REQUIREMENTS.md \
+  .planning/MILESTONES.md \
+  .planning/RETROSPECTIVE.md
+```
+
+Output:
+
+```text
+.planning/PROJECT.md:19:- CLAUDE.md "Brand & Voice" source-of-truth pointer moves to `brandbook/brand-book.md`.
+.planning/PROJECT.md:458:| D-19 | Brand voice & visual identity locked to `brandbook/brand-book.md` | Brand discipline prevents drift toward generic SaaS or growth-marketing aesthetic; prompt-era research remains preserved as provenance | Superseded by v1.10 canonical adoption |
+.planning/STATE.md:79:- [v1.10] Active brand voice and visual identity source is now `brandbook/brand-book.md`; prompt-era brand research remains preserved as provenance, not as an active source pointer.
+.planning/ROADMAP.md:71:  2. No active tracked file outside provenance archives references the former fable staging path; the CLAUDE.md Brand & Voice source-of-truth pointer and `mailglass_admin/docs/design-system.md:5` both point at `brandbook/brand-book.md` (the v1.9 sweep proved these are the only tracked consumers)
+.planning/REQUIREMENTS.md:30:  names `brandbook/brand-book.md`) and `mailglass_admin/docs/design-system.md:5`'s
+```
+
+The stale-pointer `rg` command printed no lines.
+
+Protected provenance status check:
+
+```bash
+git status --short -- .planning/milestones .planning/research .planning/todos prompts/mailglass-brand-book.md
+git status --short -- mailglass_admin/priv/static
+```
+
+Output:
+
+```text
+```
+
+No active stale source pointer remains in the checked active files, and the
+prompt-era brand book, planning archives, research records, todos, generated
+admin static bundle, and milestone archives were left untouched.
 
 ## Adoption Diff Scope
 
