@@ -2,6 +2,7 @@
 created: 2026-06-13T06:35:12.755Z
 title: Refresh outbound admin UI look and feel
 area: ui
+resolves_phase: 98
 files:
   - mailglass_admin/lib/mailglass_admin/operator_live.ex
   - mailglass_admin/lib/mailglass_admin/operator/shell.ex
