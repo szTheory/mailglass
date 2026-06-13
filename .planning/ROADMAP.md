@@ -59,7 +59,11 @@ prepare-only.
   2. Admin cards sit on `surface-raised` and dark-mode muted text, error, and primary-content all pass WCAG AA on their actual surface (computed and shown).
   3. A fail-closed token-parity ExUnit test breaks the build if any admin theme value drifts from the brandbook token value; the conformance + motion grep gates now fail on `text-lg/xl/2xl`, arbitrary `tracking-[…]`, `ease-in`, and layout-property transitions and run in CI.
   4. `git diff --exit-code priv/static/` is clean after the rebuilt bundle is committed; no admin HEEx markup changed in this phase.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 94-01-PLAN.md — Wire + tighten design-system conformance gates (gates-first, Wave 1)
+- [ ] 94-02-PLAN.md — Add fail-closed token-parity test + extend accessibility/brand tests (Wave 1, parallel with 94-01)
+- [ ] 94-03-PLAN.md — Re-baseline app.css onto brandbook tokens + rebuild + commit bundle (Wave 2)
 **UI hint**: yes
 
 ### Phase 95: Audit Apparatus + Quality-Ratchet v2
@@ -171,7 +175,7 @@ prepare-only.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 94. Token Re-Baseline onto Canonical Brand | 0/? | Not started | - |
+| 94. Token Re-Baseline onto Canonical Brand | 0/3 | Not started | - |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 0/? | Not started | - |
 | 96. Research Dossier | 0/? | Not started | - |
 | 97. Cross-Surface Component Layer | 0/? | Not started | - |
