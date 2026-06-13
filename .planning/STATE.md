@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-06-12 — v1.10 "Brand Adoption" milesto
 ## Current Position
 
 Phase: 93 (hexdocs-wiring-and-release-hardening) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 93
-Last activity: 2026-06-13 -- Phase 93 execution started
+Plan: 3 of 3
+Status: Executing Phase 93 — Plan 3 (RELH-02 reconciliation)
+Last activity: 2026-06-13 -- Phase 93 Plan 3 RELH-02 version reconciliation
 
 Progress: [████------] 36%
 
@@ -173,6 +173,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Session Continuity
 
+- 2026-06-13: RELH-02 reconciliation complete (93-03). Live Hex was authoritative at 1.6.2/1.6.2/1.3.1 (published 2026-06-12); the release-state memory was CORRECT; the in-repo state (1.6.1/1.6.1/1.3.0) was STALE. In-repo manifest + @version + dep pins advanced to 1.6.2/1.6.2/1.3.1 via non-bumping chore(release): commit. Remote 1.6.x tags fetched and kept (fetch+KEEP disposition; these are real published releases, do NOT delete). Harmless linked-version quirk: mailglass_admin-v1.6.1 tag exists on origin but admin 1.6.1 was never published to Hex (linked-version release PR tagged both; admin Hex publish failed/skipped; admin jumped 1.5.1 → 1.6.2). Current confirmed versions: mailglass 1.6.2 / mailglass_admin 1.6.2 / mailglass_inbound 1.3.1.
 - 2026-06-13: Phase 93 context gathered in assumptions mode. Decisions captured in `.planning/phases/93-hexdocs-wiring-and-release-hardening/93-CONTEXT.md`; audit in the sibling `93-DISCUSSION-LOG.md`. Two judgment calls confirmed at recommended: RELH-01 hardens via an enforced CI commit-type lint (guarding `brandbook/`/`.planning/`/`prompts/`), RELH-02 investigates Hex live before reconciling (version truth contradictory: in-repo manifest+mix.exs+pin say 1.6.1/1.6.1/1.3.0, memory says 1.6.2/1.6.2/1.3.1, no local 1.6.x package tags). Mechanics pre-settled in ADOPTION-MECHANICS.md. Next: `/gsd-plan-phase 93`.
 - 2026-06-13: Plan 92-02 completed. The admin placeholder wordmark is replaced with the sealed-flap outlined `currentColor` asset, `Components.logo/1` renders the lockup inline for theme-safe admin chrome, logo bundle tests ban live text/font dependencies, and `cd mailglass_admin && mix verify.preview` passed. Phase 92 is complete; next: plan/execute Phase 93 for HexDocs wiring and release hardening.
 - 2026-06-13: Plan 92-01 completed. README now displays `brandbook/examples/readme-header.svg`, `brandbook/examples/og-card.png` is committed at 2400x1260 and 59,562 bytes, and `brandbook/README.md` documents the manual GitHub Settings > Social preview upload path. Next: execute 92-02 for the admin wordmark surface.
