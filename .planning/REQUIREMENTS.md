@@ -49,17 +49,17 @@ release again.
 
 ### HEXD — HexDocs Wiring
 
-- [ ] **HEXD-01**: All three packages' `docs:` config gains `logo:` (and
+- [x] **HEXD-01**: All three packages' `docs:` config gains `logo:` (and
   `favicon:` where supported) pointing at brand assets — with `width`/
   `height` attributes added to the referenced SVGs first (ex_doc 0.40.x
   requires them; the current assets are viewBox-only).
-- [ ] **HEXD-02**: `mix docs` renders locally for all three packages with
+- [x] **HEXD-02**: `mix docs` renders locally for all three packages with
   the logo/favicon visible and no new warnings; committed as
   non-release-triggering types.
 
 ### RELH — Release Hardening (incident follow-through, 2026-06-12)
 
-- [ ] **RELH-01**: release-please can no longer cut a release from commits
+- [x] **RELH-01**: release-please can no longer cut a release from commits
   that touch only brand/planning paths: either the root package's `"."`
   path stops claiming `brandbook/`+`.planning/` (config mechanism researched
   and verified against release-please's manifest schema), or an equivalent
@@ -94,9 +94,9 @@ release again.
 | SURF-01 | Phase 92 | Complete |
 | SURF-02 | Phase 92 | Complete |
 | SURF-03 | Phase 92 | Complete |
-| HEXD-01 | Phase 93 | Pending |
-| HEXD-02 | Phase 93 | Pending |
-| RELH-01 | Phase 93 | Pending |
+| HEXD-01 | Phase 93 | Complete |
+| HEXD-02 | Phase 93 | Complete |
+| RELH-01 | Phase 93 | Complete |
 | RELH-02 | Phase 93 | Complete |
 
 **Coverage:** 10/10 v1.10 requirements mapped (roadmap created 2026-06-12).
