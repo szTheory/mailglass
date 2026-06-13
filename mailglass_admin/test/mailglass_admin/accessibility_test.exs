@@ -66,6 +66,39 @@ defmodule MailglassAdmin.AccessibilityTest do
     end
   end
 
+  describe "dark-mode token fixes (TOKEN-03)" do
+    test "dark muted text #B8CAD4 on Ink #0D1B2A passes AA (≥4.5:1)" do
+      # --mg-color-text-muted in dark theme; was #5C6B7A (3.18:1 — FAILED AA)
+      assert contrast_ratio("#B8CAD4", "#0D1B2A") >= 4.5
+    end
+
+    test "dark error #E29089 on Ink #0D1B2A passes AA (≥4.5:1)" do
+      # --mg-color-error-solid in dark theme; was off-palette #D47368
+      assert contrast_ratio("#E29089", "#0D1B2A") >= 4.5
+    end
+
+    test "dark primary-content Ink #0D1B2A on Ice #A6EAF2 passes AA (≥4.5:1)" do
+      # --color-primary-content in dark; already passes at 12.98:1 — pinned against regression
+      assert contrast_ratio("#0D1B2A", "#A6EAF2") >= 4.5
+    end
+  end
+
+  describe "border role is intentionally sub-3:1 (WCAG 1.4.11 decorative exemption)" do
+    # Brand classifies base-300 as decorative hairlines/dividers only.
+    # WCAG 1.4.11 (Non-text Contrast) only requires 3:1 for CONTROL BOUNDARIES.
+    # Input borders use --color-input (border-input var, independent of base-300).
+    # These assertions are intentionally <3.0 — do NOT raise the value to "fix" them.
+    test "light border #C7DCE5 on Paper #F8FBFD is sub-3:1 (decorative hairline)" do
+      # Do NOT raise this value — WCAG 1.4.11 exempts decorative dividers.
+      assert contrast_ratio("#C7DCE5", "#F8FBFD") < 3.0
+    end
+
+    test "dark border #315069 on Ink #0D1B2A is sub-3:1 (decorative hairline)" do
+      # Do NOT raise this value — WCAG 1.4.11 exempts decorative dividers.
+      assert contrast_ratio("#315069", "#0D1B2A") < 3.0
+    end
+  end
+
   # WCAG 2.1 contrast ratio = (lighter + 0.05) / (darker + 0.05)
   # with relative luminance L = 0.2126*R + 0.7152*G + 0.0722*B after
   # sRGB gamma expansion.
