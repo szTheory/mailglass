@@ -55,7 +55,7 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 ### v1.10 Brand Adoption (Phases 91-93)
 
 - [x] **Phase 91: Folder Adoption and Reference Reconciliation** - the fable book becomes canonical `brandbook/` via git mv, codex book removed, all tracked pointers reconciled, quality gate re-passes on the new path (completed 2026-06-13)
-- [ ] **Phase 92: Surface Propagation** - Root README adopts the brand header, og-card PNG exported and committed with upload steps documented, admin wordmark explicitly dispositioned
+- [x] **Phase 92: Surface Propagation** - Root README adopts the brand header, og-card PNG exported and committed with upload steps documented, admin wordmark explicitly dispositioned (completed 2026-06-13)
 - [ ] **Phase 93: HexDocs Wiring and Release Hardening** - ex_doc logo/favicon config for all three packages verified with local `mix docs`, release-please hardened against brand/planning-only commits, 1.6.x aftermath reconciled
 
 ## Phase Details
@@ -106,7 +106,7 @@ Plans:
 **Wave 1**
 
 - [x] 92-01-PLAN.md - Propagate the sealed-flap identity to README and GitHub social-preview surfaces
-- [ ] 92-02-PLAN.md - Replace the admin wordmark placeholder with a theme-safe sealed-flap logo
+- [x] 92-02-PLAN.md - Replace the admin wordmark placeholder with a theme-safe sealed-flap logo
 
 Cross-cutting constraints:
 
@@ -138,7 +138,7 @@ Cross-cutting constraints:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 91. Folder Adoption and Reference Reconciliation | 4/4 | Complete   | 2026-06-13 |
-| 92. Surface Propagation | 1/2 | In Progress|  |
+| 92. Surface Propagation | 2/2 | Complete   | 2026-06-13 |
 | 93. HexDocs Wiring and Release Hardening | 0/? | Not started | - |
 
 ## Backlog
