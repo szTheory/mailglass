@@ -216,6 +216,8 @@ defmodule MailglassAdmin.MixProject do
       main: "MailglassAdmin",
       source_url: @source_url,
       source_ref: "v" <> @version,
+      logo: "../brandbook/assets/logo-mark.svg",
+      favicon: "../brandbook/assets/favicon.svg",
       extras: [
         "README.md",
         "docs/design-system.md",

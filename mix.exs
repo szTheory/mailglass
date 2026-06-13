@@ -358,6 +358,8 @@ defmodule Mailglass.MixProject do
       homepage_url: @source_url,
       source_url: @source_url,
       source_ref: "v#{@version}",
+      logo: "brandbook/assets/logo-mark.svg",
+      favicon: "brandbook/assets/favicon.svg",
       skip_undefined_reference_warnings_on: [
         "README.md",
         "CONTRIBUTING.md",

@@ -149,6 +149,8 @@ defmodule MailglassInbound.MixProject do
       main: "MailglassInbound",
       source_url: @source_url,
       source_ref: "v" <> @version,
+      logo: "../brandbook/assets/logo-mark.svg",
+      favicon: "../brandbook/assets/favicon.svg",
       extras: [
         "README.md",
         "docs/api_stability.md",
