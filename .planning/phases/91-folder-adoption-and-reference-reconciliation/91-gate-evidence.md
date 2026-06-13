@@ -334,7 +334,50 @@ Both final stale-reference sweeps printed no lines.
 
 ## Release Safety
 
-Pending - recorded during Plan 91-04 after Phase 91 commits exist.
+Command:
+
+```bash
+BASE=$(sed -n 's/.*Phase base: `\([0-9a-f][0-9a-f]*\)`.*/\1/p' .planning/phases/91-folder-adoption-and-reference-reconciliation/91-gate-evidence.md | head -1)
+git log --no-merges --format=%s "$BASE"..HEAD
+```
+
+Output:
+
+```text
+BASE=63701373af556a6c4fbc9d48f0d1a2d7c31782fb
+docs(91-04): record final adoption gate evidence
+docs(91-03): complete reference reconciliation plan
+docs(91-03): reconcile live brand planning memory
+docs(91-03): point active brand docs at canonical brandbook
+docs(91-02): complete brandbook folder adoption plan
+chore(91-02): adopt fable brandbook folder
+chore(91-02): record brandbook preflight cleanup
+docs(91-01): complete adoption gate plan
+chore(91-01): record phase gate evidence contract
+```
+
+Validation:
+
+```bash
+git log --no-merges --format=%s "$BASE"..HEAD | awk 'NF && $0 !~ /^(chore|docs)(\([^)]*\))?: / {print; bad=1} END {exit bad}'
+git log --no-merges --format=%s "$BASE"..HEAD | grep -E '^(feat|fix|deps)(\(|:)|!|BREAKING CHANGE|Release-As'
+```
+
+The `awk` validation exited 0. The forbidden-subject grep printed no lines.
+
+GitHub Release Please PR check:
+
+```bash
+gh pr list --state open --search 'release-please in:title' --limit 20 --json number,title --template '{{len .}}'
+```
+
+Output:
+
+```text
+0
+```
+
+No open Release Please PR exists for these Phase 91 commits.
 
 ## Result
 
