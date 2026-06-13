@@ -211,7 +211,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete   | 2026-06-13 |
+| 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 0/? | Not started | - |
 | 96. Research Dossier | 0/? | Not started | - |
 | 97. Cross-Surface Component Layer | 0/? | Not started | - |
