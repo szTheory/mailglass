@@ -1,23 +1,25 @@
 ---
 phase: 92-surface-propagation
 verified: 2026-06-13T06:00:37Z
-status: human_needed
+status: passed
 score: 16/16 must-haves verified
 overrides_applied: 0
 human_verification:
   - test: "Open README.md on GitHub and toggle/check light and dark themes."
     expected: "The first visible surface is brandbook/examples/readme-header.svg, centered above the H1 and badges, and the outlined lockup remains legible on both themes."
     why_human: "GitHub Markdown/SVG rendering and theme appearance are visual external-surface checks."
+    result: "passed - GitHub dark-mode preview rendering was accepted for Phase 92; optional size/color polish is deferred."
   - test: "Open the admin dashboard in light and dark chrome and inspect the header logo."
     expected: "The admin header shows the sealed-flap mailglass lockup, not the old text placeholder, and the inline currentColor SVG remains visible in both themes."
     why_human: "Actual theme contrast and rendered dashboard appearance require visual confirmation."
+    result: "passed - Logo visible on inbound and outbound admin surfaces; broader outbound UI/UX polish is deferred."
 ---
 
 # Phase 92: Surface Propagation Verification Report
 
 **Phase Goal:** Anyone who encounters the repo - README, link unfurl, or the running admin dashboard - sees the sealed-flap identity (or a recorded reason why a surface was deferred)
 **Verified:** 2026-06-13T06:00:37Z
-**Status:** human_needed
+**Status:** passed
 **Re-verification:** No - initial verification
 
 ## Goal Achievement
@@ -119,9 +121,13 @@ No orphaned Phase 92 requirements found: `.planning/REQUIREMENTS.md` maps SURF-0
 **Expected:** The admin header shows the sealed-flap mailglass lockup, not the old text placeholder, and the inline currentColor SVG remains visible in both themes.
 **Why human:** Actual theme contrast and rendered dashboard appearance require visual confirmation.
 
+### Human Verification Result
+
+Human visual verification passed on 2026-06-13. GitHub README dark-mode rendering was accepted for Phase 92, and the admin logo was visible on inbound and outbound admin surfaces. The broader outbound admin UI/UX quality concern is not a Phase 92 logo-adoption blocker and was captured as a follow-up design-system todo.
+
 ### Gaps Summary
 
-No automated gaps were found. All codebase/source must-haves and SURF-01/SURF-02/SURF-03 traceability checks are satisfied. Status is `human_needed` because the remaining checks are visual rendering confirmation on GitHub and in the running admin dashboard.
+No automated or human-verification gaps were found. All codebase/source must-haves and SURF-01/SURF-02/SURF-03 traceability checks are satisfied.
 
 ---
 

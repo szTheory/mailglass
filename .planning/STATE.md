@@ -165,7 +165,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ### Pending Todos
 
-- Resolve post-publish smoke hackney dependency failure (`#25` captured to `.planning/todos/pending/2026-05-27-resolve-post-publish-smoke-hackney-dependency-failure.md`; active CI signal remains `#32`)
+- Refresh outbound admin UI look and feel (`.planning/todos/pending/2026-06-13-refresh-outbound-admin-ui-look-and-feel.md`) — follow-up design-system milestone candidate from Phase 92 human UAT.
 
 ## Pre-existing Cleanup Backlog (Not v1.10 Scope)
 
