@@ -149,7 +149,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 91. Folder Adoption and Reference Reconciliation | 4/4 | Complete   | 2026-06-13 |
 | 92. Surface Propagation | 2/2 | Complete    | 2026-06-13 |
-| 93. HexDocs Wiring and Release Hardening | 3/3 | Complete   | 2026-06-13 |
+| 93. HexDocs Wiring and Release Hardening | 3/3 | Complete    | 2026-06-13 |
 
 ## Backlog
 
