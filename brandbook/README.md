@@ -45,9 +45,24 @@ host.
 
 ## Export policy
 
-SVG-first, always. PNG exports are generated locally, only when a launch
-surface needs them — the social card (1200×630) and avatars at platform
-sizes — and are never committed. The social-card SVG is a template, not a
-direct preview image: link-preview crawlers do not render SVG, so the
-published image is always a local PNG export of it. No binaries, font
-files, or rasters ever ship in this folder.
+SVG-first, always. PNG exports are generated locally only when a launch
+surface requires a raster image. By default, generated PNGs, avatars, favicons,
+screenshots, alternate social sizes, font files, and other rasters are not
+committed.
+
+The single v1.10 binary exception is `brandbook/examples/og-card.png`, exported
+from `brandbook/examples/og-card.svg` for the GitHub repository social preview.
+Regenerate it from the repo root with:
+
+```bash
+npx playwright screenshot --viewport-size=2400,1260 "file://$PWD/brandbook/examples/og-card.svg" brandbook/examples/og-card.png
+```
+
+Before upload, validate that `brandbook/examples/og-card.png` is exactly
+2400x1260 and under 1 MB.
+
+GitHub social-preview upload is a manual Settings UI step. Open the repository
+Settings, find Social preview, choose Edit, choose Upload an image, and select
+`brandbook/examples/og-card.png`. GitHub provides no documented write API for
+this surface, so the repository keeps the source SVG plus the one committed PNG
+and leaves the upload itself as a maintainer action.
