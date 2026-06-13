@@ -124,7 +124,17 @@ Cross-cutting constraints:
   3. release-please can no longer cut a release from commits touching only brand/planning paths — either the root `"."` package path stops claiming `brandbook/` + `.planning/` (mechanism verified against the manifest schema) or an enforced CI commit-type lint covers those paths
   4. The 1.6.x release aftermath is reconciled: unpublished stale tags dispositioned (deleted or documented), the inbound exact-pin bumped to the released core version via the established `fix(inbound)` dance, and `.planning` release-state memory/docs reflect the final version truth
 
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+
+**Wave 1**
+
+- [ ] 93-01-PLAN.md — Wire ex_doc logo/favicon for all three packages + local mix docs proof (HEXD-01, HEXD-02)
+- [ ] 93-02-PLAN.md — Harden release-please via exclude-paths + a required guard-release-trigger CI lint with offline fixture test (RELH-01)
+
+**Wave 2** *(blocked on 93-01 — shares mix.exs)*
+
+- [ ] 93-03-PLAN.md — Reconcile the 1.6.x aftermath to released 1.6.2/1.6.2/1.3.1 (D-13 guard first) (RELH-02)
 
 > **External dependency note (RELH-02):** reconciliation depends on the in-flight
 > release train settling first — if it has not settled when Phase 93 executes,
@@ -139,7 +149,7 @@ Cross-cutting constraints:
 |-------|----------------|--------|-----------|
 | 91. Folder Adoption and Reference Reconciliation | 4/4 | Complete   | 2026-06-13 |
 | 92. Surface Propagation | 2/2 | Complete    | 2026-06-13 |
-| 93. HexDocs Wiring and Release Hardening | 0/? | Not started | - |
+| 93. HexDocs Wiring and Release Hardening | 0/3 | Planned | - |
 
 ## Backlog
 
