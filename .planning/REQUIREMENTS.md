@@ -52,7 +52,7 @@ quality forward.
 - [ ] **RATCHET-02**: One carried-forward GAP register with stable `GAP-NN` IDs (status
   open/fixed/downgraded + run_id); re-runs reopen regressed IDs and skip settled rows
   (idempotent pick-up-where-left-off), with the anti-churn sev≥3 citation gate.
-- [ ] **RATCHET-03**: The conformance + motion grep gates are tightened to close current
+- [x] **RATCHET-03**: The conformance + motion grep gates are tightened to close current
   escapes (`text-lg/xl/2xl`, arbitrary `tracking-[…]`, `ease-in`, layout-property
   transitions) and run in CI.
 - [ ] **RATCHET-04**: Playwright structural assertions enforce machine-checkable pillar facts
@@ -187,7 +187,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | TOKEN-03 | Phase 94 | Pending |
 | TOKEN-04 | Phase 94 | Pending |
 | TOKEN-05 | Phase 94 | Pending |
-| RATCHET-03 | Phase 94 | Pending |
+| RATCHET-03 | Phase 94 | Complete |
 | RATCHET-01 | Phase 95 | Pending |
 | RATCHET-02 | Phase 95 | Pending |
 | RATCHET-04 | Phase 95 | Pending |

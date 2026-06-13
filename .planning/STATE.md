@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-13T19:11:45.674Z"
-last_activity: 2026-06-13 -- Phase 94 planning complete
+last_updated: "2026-06-13T19:22:34.919Z"
+last_activity: 2026-06-13
 progress:
   total_phases: 12
   completed_phases: 2
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 7
   percent: 17
 ---
 
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v1.11 mailglass_admin Design-System Uplift — defining requirements, then roadmap (Phases 94–103). Re-baseline admin UI onto canonical brand tokens + fractal idempotent component/group/page uplift across the 3 admin surfaces. Adopter-visible-quality investment under D-23 (D-27); release prepare-only.
+**Current focus:** Phase 94 — token-re-baseline-onto-canonical-brand
 
 ## Current Position
 
-Phase: 94 (Token Re-Baseline onto Canonical Brand) — not started
-Plan: —
+Phase: 94 (token-re-baseline-onto-canonical-brand) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-06-13 -- Phase 94 planning complete
+Last activity: 2026-06-13
 
 ## v1.11 Milestone Intent
 
@@ -136,6 +136,7 @@ single closeout gate.
 - [88-01]: page marks drawn from live tokens (pane=text, seal=accent) reproducing the logo color program in both themes
 - [Phase 89]: readme-header fills restricted to Glass+Slate — the only token pair >=3:1 on both GitHub grounds (computed 4.82/3.93, 5.47/3.46)
 - [Phase 89]: Diagram labels use a purpose-built 14-glyph stencil set, not wordmark glyphs — label craft kept distinct from wordmark craft
+- [Phase ?]: [94-01] Advisory TYPE-lg/xl and TRACK-[ gates run in CI with continue-on-error until Phase 98/99 cleans known violations (D-08, RATCHET-03)
 
 ## Performance Metrics
 
@@ -184,6 +185,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 91 P04 | 1 min | 2 tasks | 1 files |
 | Phase 92 P01 | 10 min | 3 tasks | 3 files |
 | Phase 92 P02 | 38 min | 3 tasks | 4 files |
+| Phase 94 P01 | 10 minutes | 2 tasks | 3 files |
 
 ## Accumulated Context
 
