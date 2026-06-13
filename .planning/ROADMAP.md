@@ -35,7 +35,7 @@ width — enforced by an idempotent, research-grounded quality ratchet. Admin UI
 No new product features or routes (except the dev-only gallery). Release posture:
 prepare-only.
 
-- [ ] **Phase 94: Token Re-Baseline onto Canonical Brand** - app.css consumes `brandbook/tokens.css --mg-*` as single source of truth; correct surface/border role mappings + dark fixes; tighten conformance gates FIRST so the re-baseline can't regress silently; rebuild + commit bundle; re-verify contrast.
+- [x] **Phase 94: Token Re-Baseline onto Canonical Brand** - app.css consumes `brandbook/tokens.css --mg-*` as single source of truth; correct surface/border role mappings + dark fixes; tighten conformance gates FIRST so the re-baseline can't regress silently; rebuild + commit bundle; re-verify contrast. (completed 2026-06-13)
 - [ ] **Phase 95: Audit Apparatus + Quality-Ratchet v2** - stand up the idempotent ratchet (score baseline, carried-forward GAP-NN register, token-parity gate, structural-assertion + LLM-score layers); run the 18-cell matrix to produce a fresh baseline gap register against the now-correct brand.
 - [ ] **Phase 96: Research Dossier** - parallel-subagent dossiers → locked decisions for motion (Emil Kowalski), IA (gov.uk), component states, dark mode, microcopy.
 - [ ] **Phase 97: Cross-Surface Component Layer** - Level-1 uplift of SHARED components + dev-only component gallery (`/dev/mail/gallery`). UI-SPEC before, UI-REVIEW after.
@@ -71,7 +71,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 94-03-PLAN.md — Re-baseline app.css onto brandbook tokens + rebuild + commit bundle (Wave 2)
+- [x] 94-03-PLAN.md — Re-baseline app.css onto brandbook tokens + rebuild + commit bundle (Wave 2)
 
 **UI hint**: yes
 
@@ -211,7 +211,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 94. Token Re-Baseline onto Canonical Brand | 2/3 | In Progress|  |
+| 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete   | 2026-06-13 |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 0/? | Not started | - |
 | 96. Research Dossier | 0/? | Not started | - |
 | 97. Cross-Surface Component Layer | 0/? | Not started | - |

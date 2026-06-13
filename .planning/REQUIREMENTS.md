@@ -31,17 +31,17 @@ quality forward.
 
 ### TOKEN — Re-baseline onto Canonical Brand
 
-- [ ] **TOKEN-01**: `mailglass_admin` `assets/css/app.css` consumes the canonical
+- [x] **TOKEN-01**: `mailglass_admin` `assets/css/app.css` consumes the canonical
   `brandbook/tokens.css` `--mg-*` two-tier tokens as the single source of truth — daisyUI
   theme vars reference `var(--mg-*)`, with no duplicate hex literals.
-- [ ] **TOKEN-02**: The surface/border role mapping is corrected so the accent (Glass/Ice)
+- [x] **TOKEN-02**: The surface/border role mapping is corrected so the accent (Glass/Ice)
   appears only on the 10%-accent surfaces — borders use the border role (not the accent),
   cards use `surface-raised` (not Mist/`surface-sunken`).
 - [x] **TOKEN-03**: Dark-mode token values are corrected and every changed value's contrast
   re-verified to WCAG AA on its actual surface (muted text, error, primary-content).
-- [ ] **TOKEN-04**: A fail-closed token-parity check (ExUnit) asserts the admin theme values
+- [x] **TOKEN-04**: A fail-closed token-parity check (ExUnit) asserts the admin theme values
   equal the brandbook token values, so brand-token drift breaks the build.
-- [ ] **TOKEN-05**: The standalone-binary CSS bundle is rebuilt and committed bit-for-bit
+- [x] **TOKEN-05**: The standalone-binary CSS bundle is rebuilt and committed bit-for-bit
   (`git diff --exit-code priv/static/` clean) after the re-baseline.
 
 ### RATCHET — Idempotent Quality Ratchet
@@ -182,11 +182,11 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TOKEN-01 | Phase 94 | Pending |
-| TOKEN-02 | Phase 94 | Pending |
+| TOKEN-01 | Phase 94 | Complete |
+| TOKEN-02 | Phase 94 | Complete |
 | TOKEN-03 | Phase 94 | Complete |
-| TOKEN-04 | Phase 94 | Pending |
-| TOKEN-05 | Phase 94 | Pending |
+| TOKEN-04 | Phase 94 | Complete |
+| TOKEN-05 | Phase 94 | Complete |
 | RATCHET-03 | Phase 94 | Complete |
 | RATCHET-01 | Phase 95 | Pending |
 | RATCHET-02 | Phase 95 | Pending |
