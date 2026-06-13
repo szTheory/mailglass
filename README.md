@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="brandbook/examples/readme-header.svg" alt="mailglass - Email, made visible." width="580">
+</p>
+
 # Mailglass
 
 > *Mail you can see through.*
