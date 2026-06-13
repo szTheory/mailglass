@@ -38,14 +38,17 @@ jobs:
 
           # 2. Is this a BUMP-TRIGGERING title?
           #    release-please defaults: feat -> minor, fix -> patch, any "!" -> major.
-          #    Also honor a BREAKING CHANGE footer if the project ever adds one to titles
-          #    (titles normally won't carry it, but cheap to check).
+          #    A title-level breaking change is the "!" marker (Conventional Commits).
+          #    "BREAKING CHANGE:" is a commit-BODY footer that release-please reads from
+          #    the squash-commit body, NOT the PR title, so it is not matched here: a title
+          #    substring match would false-positive any title merely mentioning the phrase
+          #    (e.g. "docs: document our BREAKING CHANGE policy"). The "!" bang is the
+          #    correct, unambiguous title-level signal.
           is_bump="false"
           case "$type" in
             feat|fix) is_bump="true" ;;
           esac
           [[ -n "$bang" ]] && is_bump="true"
-          [[ "$PR_TITLE" == *"BREAKING CHANGE"* ]] && is_bump="true"
 
           if [[ "$is_bump" != "true" ]]; then
             echo "Non-bumping type '$type' — release-please will not cut a release. PASS."

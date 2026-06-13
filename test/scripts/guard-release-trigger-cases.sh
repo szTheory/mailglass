@@ -28,20 +28,26 @@ guard_decision() {
   fi
 
   # 2. Is this a bump-triggering title?
+  #    Title-level breaking change is the "!" marker; "BREAKING CHANGE:" is a body
+  #    footer release-please reads from the commit body, not the PR title (mirrors
+  #    the workflow — see guard-release-trigger.yml step 2).
   local is_bump="false"
   case "$type" in
     feat|fix) is_bump="true" ;;
   esac
   [[ -n "$bang" ]] && is_bump="true"
-  [[ "$pr_title" == *"BREAKING CHANGE"* ]] && is_bump="true"
 
   if [[ "$is_bump" != "true" ]]; then
     # Non-bumping type — short-circuit PASS.
     return 0
   fi
 
-  # 3. Parse the file list.
-  mapfile -t files < <(echo "$file_list")
+  # 3. Parse the file list. Use printf '%s' (not echo) so an empty string yields
+  #    ZERO bytes -> a 0-element array, faithfully matching the workflow's
+  #    `gh pr view --json files --jq` (which emits nothing for an empty file set).
+  #    `echo ""` would emit a lone newline -> a 1-element array of "", making the
+  #    0-element branch below unreachable and silently untested (WR-01).
+  mapfile -t files < <(printf '%s' "$file_list")
 
   if [[ "${#files[@]}" -eq 0 ]]; then
     return 0
@@ -129,6 +135,13 @@ assert_case "4: chore!: .planning-only (bang)" "FAIL" \
 assert_case "5: non-conventional title" "PASS" \
   "Update the README" \
   "$(printf 'README.md')"
+
+# Case 6: Bumping type with an EMPTY file list -> PASS (the "no files reported"
+# branch; proves the 0-element array path the workflow relies on is reachable —
+# guards against the WR-01 echo/printf drift).
+assert_case "6: feat: empty file list" "PASS" \
+  "feat: nothing changed" \
+  ""
 
 echo "------------------------------------------"
 if [[ "$FAILURES" -eq 0 ]]; then
