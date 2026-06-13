@@ -1,75 +1,53 @@
-# Mailglass Brandbook
+# mailglass brand system
 
-This directory is the source-controlled brand system for Mailglass.
+The complete mailglass brand: identity, voice, color tokens, typography,
+contrast data, component recipes, and the logo assets. Everything here is a
+text artifact — SVG, Markdown, JSON, CSS, HTML — so every change reads in a
+diff.
 
-It exists so maintainers can build docs pages, README headers, package visuals,
-social cards, UI prototypes, and release material without reopening prompt
-history. The brand center is stable: Mailglass makes email visible.
+**Essence:** Email, made visible. Mail you can see through.
 
-## Use This First
+## What's in this folder
 
-- `index.html` - static HTML brandbook. Open directly in a browser.
-- `brand-book.md` - concise source-of-truth brand guidance.
-- `logo-concepts.html` - selected logo board and archived 07r variants.
-- `logo-concepts.md` - logo selection notes and constraints.
-- `logo-creative-brief.md` - decision record for the selected logo direction.
-- `logo-options.md` - historical rejected A-R evidence.
-- `tokens.json` - implementation tokens for tooling.
-- `tokens.css` - CSS custom properties for docs and marketing prototypes.
-- `assets/` - canonical SVG logo and mark files.
-- `examples/` - small SVG specimens for palette, type, UI, README/docs, and social framing.
+| File | What it is |
+|---|---|
+| `index.html` | The brand book, rendered live: theme toggle, computed contrast matrix, real component gallery, logo system |
+| `brand-book.md` | The text master — same nine sections, exact values, static contrast tables for both themes |
+| `tokens.css` | The design tokens as CSS custom properties (`:root` light, `[data-theme="dark"]`, OS-preference media block) |
+| `tokens.json` | The same values with raw palette names, for tooling |
+| `assets/` | The eight logo assets — outlined paths, no live text, no font dependencies |
 
-## Selected Logo Direction
+## How to view
 
-Use `assets/logo-primary.svg` as the primary lockup. It is derived from
-`assets/concepts/concept-07r-no-idot-02-tighter-gap.svg`: the existing mark,
-a tighter mark-to-wordmark gap, and one untouched full `mailglass` wordmark.
+Open `index.html` in any browser, straight from disk. There is no server, no
+build step, and no network request — the page is complete over `file://`.
+The theme follows your OS setting by default; the toggle in the header
+forces light or dark and re-skins every specimen on the page, including the
+contrast matrix, which is recomputed from the live token values.
 
-Do not revive the rejected i-dot work. The wordmark stays one full text node:
-no masks, dot cuts, dotless glyphs, split words, tspans, fake i stems, or panes
-over the text.
+`brand-book.md` opens as plain text locally and renders on any Markdown
+host.
 
-## Operating Rules
+## The rules in brief
 
-- Keep the brand self-contained in this directory unless product code needs a
-  specific token or asset.
-- Prefer SVG, Markdown, JSON, CSS, and plain HTML.
-- Keep Glass (`#277B96`) as an accent, not a background flood.
-- Treat Glass as a metaphor for clarity and visibility, not as glassmorphism.
-- Do not introduce glossy reflections, decorative gradients, mascots, paper
-  planes, mailboxes, chat bubbles, send arrows, or SaaS-hype visuals.
-- Treat `mailglass_admin/docs/design-system.md` as the implemented product UI
-  constraint source. This brandbook is broader, but it should not contradict
-  the admin design system.
+- **The primary lockup lives on light grounds only.** On Ink or any dark
+  ground, use `logo-monochrome.svg` (it inherits the surrounding text color)
+  or the dark expression — Mist pane, Ice seal.
+- **`favicon.svg` adapts on its own** — the pane flips for OS dark mode; the
+  Glass seal holds in both themes.
+- **Tokens are the only color source.** Components reference roles
+  (`--mg-color-*`), never raw hex. Role names hold across themes.
+- **Assets are outlined paths only** — no live text, no font references.
+  The wordmark renders identically everywhere, including font-less image
+  sandboxes.
+- **No background plate behind the mark.** The square social avatars are the
+  sole exception.
 
-## Export Policy
+## Export policy
 
-Commit:
-
-- SVG logos and specimens.
-- JSON/CSS tokens.
-- Markdown and HTML guidance.
-
-Generate locally when needed:
-
-- PNG exports of logos or social cards.
-- Browser screenshots of HTML examples.
-- Temporary contrast reports.
-
-Do not commit unless there is a concrete release need:
-
-- Raster screenshot sets.
-- Large social-card PNG variants.
-- Font files.
-- Vendor design files.
-
-## Quality Gate
-
-Before changing this directory, check:
-
-- Does the change preserve "Mailglass makes email visible"?
-- Does it help a maintainer build something real?
-- Does it keep the selected no-i-dot logo direction intact?
-- Does it avoid generic SaaS/devtool visual tropes?
-- Does it still work in dark mode, light mode, small sizes, and monochrome?
-- Is it source-control friendly?
+SVG-first, always. PNG exports are generated locally, only when a launch
+surface needs them — the social card (1200×630) and avatars at platform
+sizes — and are never committed. The social-card SVG is a template, not a
+direct preview image: link-preview crawlers do not render SVG, so the
+published image is always a local PNG export of it. No binaries, font
+files, or rasters ever ship in this folder.

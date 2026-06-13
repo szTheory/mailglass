@@ -1,17 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 80 80" role="img" aria-labelledby="mg-favicon-title mg-favicon-desc">
-  <title id="mg-favicon-title">Mailglass favicon</title>
-  <desc id="mg-favicon-desc">Compact Mailglass mark.</desc>
-  <defs>
-    <linearGradient id="mg-favicon-pane" x1="14" y1="8" x2="72" y2="74" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.94"/>
-      <stop offset="0.54" stop-color="#EAF6FB" stop-opacity="0.68"/>
-      <stop offset="1" stop-color="#A6EAF2" stop-opacity="0.5"/>
-    </linearGradient>
-  </defs>
-  <g color="#0D1B2A" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M15 32h51v33H15z" stroke="currentColor" stroke-width="5"/>
-    <path d="M18 36l22.5 15L63 36" stroke="currentColor" stroke-width="4.2"/>
-    <path d="M25 9h38c7.2 0 12.5 5.3 12.5 12.5v38c0 7.2-5.3 12.5-12.5 12.5H25c-7.2 0-12.5-5.3-12.5-12.5v-38C12.5 14.3 17.8 9 25 9z" fill="url(#mg-favicon-pane)" stroke="#277B96" stroke-width="4.2" transform="rotate(-7 44 40.5)"/>
-    <path d="M62 16L31 69" stroke="#A6EAF2" stroke-width="4"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-labelledby="mg-fable-favicon-title mg-fable-favicon-desc">
+  <title id="mg-fable-favicon-title">mailglass</title>
+  <desc id="mg-fable-favicon-desc">The mailglass mark redrawn for a 16-unit grid: pane, lit fold, and seal of light, sized to stay legible in a browser tab.</desc>
+  <style>
+    .mg-fable-favicon-pane { fill: #0D1B2A; }
+    @media (prefers-color-scheme: dark) {
+      .mg-fable-favicon-pane { fill: #EAF6FB; }
+    }
+  </style>
+  <path class="mg-fable-favicon-pane" fill-rule="evenodd" d="M 1 1 H 15 V 11 H 11 A 3 3 0 0 0 5 11 H 1 Z M 3 3 H 13 L 8 6 Z"/>
+  <path fill="#277B96" d="M 11 11 A 3 3 0 0 1 5 11 Z"/>
 </svg>
