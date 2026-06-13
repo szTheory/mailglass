@@ -14,7 +14,7 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 **Target features:**
 - Folder adoption: the v1.9 fable book becomes canonical `brandbook/` via git mv; codex book removed (history preserves it at the frozen baseline `09a84dd4`); all internal references (CLAUDE.md brand pointers, planning intel) reconciled; the v1.9 quality gate re-passes on the new path.
-- Repo surfaces: root README adopts `brandbook/examples/readme-header.svg`; og-card exported to PNG (1200×630) with documented GitHub social-preview upload steps; favicon adopted where the repo serves one.
+- Repo surfaces: root README adopts `brandbook/examples/readme-header.svg`; og-card exported to PNG (2400×1260) with documented GitHub social-preview upload steps; admin logo surfaces use the sealed-flap identity.
 - HexDocs wiring: ex_doc logo/assets config for `mailglass`, `mailglass_admin`, `mailglass_inbound` — verified with local `mix docs` renders; committed as non-release-triggering types so the brand ships with the next natural release (no forced release train in this milestone).
 - CLAUDE.md "Brand & Voice" source-of-truth pointer moves to `brandbook/brand-book.md`.
 
@@ -54,6 +54,13 @@ landing + email specimens, four portable SVGs, and a domain-noun copy library.
 </details>
 
 ## Current State
+
+**v1.10 progress:** Phases 91 and 92 are complete. The fable brand is canonical
+under `brandbook/`, the root README now starts with the canonical README header
+SVG, `brandbook/examples/og-card.png` is committed at 2400×1260 for manual GitHub
+social-preview upload, and the admin placeholder wordmark has been replaced by a
+sealed-flap `currentColor` lockup. Phase 93 remains: HexDocs logo/favicon wiring
+and release hardening.
 
 **`v1.8 Brand System and Repo-Ready Brandbook` is closed superseded as of 2026-06-11.** Phases 80-82 completed through GSD (brand audit/gap register, source brandbook + tokens, logo option evidence); the logo selection checkpoint and phases 83-84 were resolved out-of-band in a separate working session that selected `concept-07r-no-idot-02-tighter-gap` and finished the brandbook around it (frozen at commit `09a84dd4`). Milestone audit verdict `gaps_found` — accepted at close because v1.9 supersedes the remaining work.
 
