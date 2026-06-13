@@ -56,7 +56,7 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 
 - [x] **Phase 91: Folder Adoption and Reference Reconciliation** - the fable book becomes canonical `brandbook/` via git mv, codex book removed, all tracked pointers reconciled, quality gate re-passes on the new path (completed 2026-06-13)
 - [x] **Phase 92: Surface Propagation** - Root README adopts the brand header, og-card PNG exported and committed with upload steps documented, admin wordmark explicitly dispositioned (completed 2026-06-13)
-- [ ] **Phase 93: HexDocs Wiring and Release Hardening** - ex_doc logo/favicon config for all three packages verified with local `mix docs`, release-please hardened against brand/planning-only commits, 1.6.x aftermath reconciled
+- [x] **Phase 93: HexDocs Wiring and Release Hardening** - ex_doc logo/favicon config for all three packages verified with local `mix docs`, release-please hardened against brand/planning-only commits, 1.6.x aftermath reconciled (completed 2026-06-13)
 
 ## Phase Details
 
@@ -134,7 +134,7 @@ Plans:
 
 **Wave 2** *(blocked on 93-01 — shares mix.exs)*
 
-- [ ] 93-03-PLAN.md — Reconcile the 1.6.x aftermath to released 1.6.2/1.6.2/1.3.1 (D-13 guard first) (RELH-02)
+- [x] 93-03-PLAN.md — Reconcile the 1.6.x aftermath to released 1.6.2/1.6.2/1.3.1 (D-13 guard first) (RELH-02)
 
 > **External dependency note (RELH-02):** reconciliation depends on the in-flight
 > release train settling first — if it has not settled when Phase 93 executes,
@@ -149,7 +149,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 91. Folder Adoption and Reference Reconciliation | 4/4 | Complete   | 2026-06-13 |
 | 92. Surface Propagation | 2/2 | Complete    | 2026-06-13 |
-| 93. HexDocs Wiring and Release Hardening | 2/3 | In Progress|  |
+| 93. HexDocs Wiring and Release Hardening | 3/3 | Complete   | 2026-06-13 |
 
 ## Backlog
 
