@@ -2,8 +2,8 @@
 
 The reference for how the admin UI is built, so each component compounds the
 same polish rather than re-deciding it. The voice and palette come from
-`prompts/mailglass-brand-book.md`; this doc covers the *mechanics* — tokens,
-motion, conformance, and how to audit them.
+`brandbook/brand-book.md`; this doc covers the *mechanics* — tokens, motion,
+conformance, and how to audit them.
 
 > **One rule above all:** there is a single source of truth for every visual
 > decision. Color lives in the daisyUI theme blocks; size / type / elevation /
