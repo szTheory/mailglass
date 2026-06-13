@@ -26,7 +26,7 @@ under the latency budget.
 | **Framework** | Shell assertions + `mix docs` (ex_doc 0.40.1) + `gh`/`act`-free CI-logic shell test |
 | **Config file** | `mix.exs` / `mailglass_admin/mix.exs` / `mailglass_inbound/mix.exs` (`docs/0`); `release-please-config.json`; `.release-please-manifest.json`; new `.github/workflows/guard-release-trigger.yml` |
 | **Quick run command** | `mix docs 2>&1 \| tee /tmp/d.log && ls doc/assets/logo.svg doc/assets/favicon.svg && ! grep -i warning /tmp/d.log` |
-| **Full suite command** | per-package `mix docs` ×3 + lint-logic table run (`bash test/guard-release-trigger-cases.sh`) + `diff <(mix hex.info ...) manifest` version-truth check |
+| **Full suite command** | per-package `mix docs` ×3 + lint-logic table run (`bash test/scripts/guard-release-trigger-cases.sh`) + `diff <(mix hex.info ...) manifest` version-truth check |
 | **Estimated runtime** | ~120 seconds (3× `mix docs` builds dominate) |
 
 ---
@@ -56,7 +56,7 @@ assertion mapping below is the binding contract each task's
 | ex_doc `logo:`/`favicon:` ×3 | 1 | HEXD-01 | All three `docs/0` reference canonical `brandbook/` via relative path, no per-package copy, no `:files` change | source | `grep -c 'logo:.*brandbook/assets/logo-mark.svg' mix.exs && grep -c '../brandbook/assets/logo-mark.svg' mailglass_admin/mix.exs mailglass_inbound/mix.exs` |
 | Local `mix docs` proof ×3 | 2 | HEXD-02 | Logo+favicon copied to `doc/assets/`, no new warnings, non-bumping commit type | behavior | per-package `mix docs` then `ls doc/assets/logo.svg doc/assets/favicon.svg` + `! grep -i warning` on build log |
 | `exclude-paths` config add | 1 | RELH-01 | Root `.` package excludes guarded paths so brand/planning/sibling-only commits never bump core | source | `jq -e '.packages["."]["exclude-paths"] \| index("brandbook") and index(".planning") and index("prompts")' release-please-config.json` |
-| guard-lint workflow | 1 | RELH-01 | New required workflow fires on every PR (no `paths-ignore`); FAILs brand-only-bump, PASSes mixed + non-bumping | behavior | `bash test/guard-release-trigger-cases.sh` (exits 0 only if all 5 edge cases assert correctly) |
+| guard-lint workflow | 1 | RELH-01 | New required workflow fires on every PR (no `paths-ignore`); FAILs brand-only-bump, PASSes mixed + non-bumping | behavior | `bash test/scripts/guard-release-trigger-cases.sh` (exits 0 only if all 5 edge cases assert correctly) |
 | Version reconciliation | 2 | RELH-02 | In-repo manifest/@version/pins == live Hex (1.6.2/1.6.2/1.3.1); inbound pin `== 1.6.2` (published → no red main) | source | `jq -r '."."' .release-please-manifest.json \| grep -qx 1.6.2 && grep -q '@version "1.6.2"' mix.exs && grep -q '{:mailglass, "== 1.6.2"}' mailglass_inbound/mix.exs` |
 | `.planning` memory correction | 2 | RELH-02 | STATE/CLAUDE/release-memory assert 1.6.2/1.6.2/1.3.1; tags fetched + kept (not deleted) | source | `! grep -rn '1.6.1/1.6.1/1.3.0' .planning/STATE.md CLAUDE.md && git tag --list 'mailglass-v1.6.2' \| grep -q .` |
 
@@ -72,7 +72,7 @@ Existing infrastructure covers all phase requirements:
 - `jq` and `grep`/`rg` available locally for config/source assertions.
 - `gh` CLI available for the guard-lint's `gh pr view --json files` query; the
   lint's pure decision logic is unit-testable offline via a fixture-driven shell
-  test (`test/guard-release-trigger-cases.sh`) with no GitHub round-trip.
+  test (`test/scripts/guard-release-trigger-cases.sh`) with no GitHub round-trip.
 - `mix hex.info` provides live version truth for the RELH-02 reconciliation check.
 
 *No new test framework install required.*
