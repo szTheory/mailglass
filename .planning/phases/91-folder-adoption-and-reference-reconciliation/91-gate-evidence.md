@@ -65,8 +65,39 @@ were present.
 
 ## Git Folder Adoption
 
-Pending - recorded during Plan 91-02 when `brandbook-fable/` is moved to
-canonical `brandbook/`.
+Commands:
+
+```bash
+git rm -r brandbook
+rm -rf brandbook
+git mv brandbook-fable brandbook
+```
+
+Result: all three commands exited 0. The old tracked codex-era `brandbook/`
+tree was staged for removal, the destination directory was cleared, and the
+approved fable artifact tree was moved into canonical `brandbook/` using Git.
+
+Verification:
+
+```bash
+test -f brandbook/brand-book.md
+test -f brandbook/index.html
+test -f brandbook/assets/logo-primary.svg
+test ! -e brandbook-fable
+test -z "$(git ls-files brandbook-fable)"
+test ! -e brandbook/assets/concepts
+test ! -e brandbook/assets/options
+test ! -e brandbook/brand-audit.md
+test ! -e brandbook/logo-concepts.html
+test ! -e brandbook/logo-concepts.md
+test ! -e brandbook/logo-creative-brief.md
+test ! -e brandbook/logo-options.md
+git status --short -- brandbook brandbook-fable | grep '\.DS_Store'
+```
+
+All `test` commands exited 0. The `.DS_Store` grep printed no lines, which
+confirms no `.DS_Store` file is tracked, staged, or untracked under the moved
+brandbook paths.
 
 ## Active Reference Sweep
 

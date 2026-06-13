@@ -1,34 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="mg-docs-page-title mg-docs-page-desc">
-  <title id="mg-docs-page-title">Mailglass docs page specimen</title>
-  <desc id="mg-docs-page-desc">A docs page layout specimen using Mailglass brand tokens.</desc>
-  <rect width="1280" height="760" fill="#F8FBFD"/>
-  <rect x="0" y="0" width="280" height="760" fill="#EAF6FB"/>
-  <rect x="280" y="0" width="1" height="760" fill="#C7DCE5"/>
-  <text x="48" y="64" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="28" font-weight="700">mailglass</text>
-  <g font-family="Inter, sans-serif" font-size="15">
-    <text x="48" y="132" fill="#277B96" font-weight="700">Getting started</text>
-    <text x="48" y="176" fill="#0D1B2A">Compose a message</text>
-    <text x="48" y="220" fill="#0D1B2A">Preview locally</text>
-    <text x="48" y="264" fill="#0D1B2A">Delivery events</text>
-    <text x="48" y="308" fill="#0D1B2A">Inbound routing</text>
-    <text x="48" y="352" fill="#0D1B2A">Troubleshooting</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 560" role="img" aria-labelledby="mg-fable-docspage-title mg-fable-docspage-desc">
+  <title id="mg-fable-docspage-title">mailglass documentation page framing</title>
+  <desc id="mg-fable-docspage-desc">A documentation page framing specimen in the hex docs style: a Mist sidebar carrying the mailglass mark and greeked navigation, and a content column on Paper with an Ink heading, Slate body bars, inline links in deep glass, and a code block on the sunken Mist surface. The bars are deliberately greeked: this specimen demonstrates layout hierarchy and color roles, not readable prose.</desc>
+
+  <!-- page ground -->
+  <rect x="0.5" y="0.5" width="879" height="559" fill="#F8FBFD" stroke="#C7DCE5"/>
+
+  <!-- sidebar on Mist -->
+  <rect x="0.5" y="0.5" width="220" height="559" fill="#EAF6FB" stroke="#C7DCE5"/>
+  <!-- the mark, light expression: Ink pane, Glass seal -->
+  <g transform="translate(26 4) scale(0.42)">
+    <path fill="#0D1B2A" fill-rule="evenodd" d="M 0 44 L 140 44 L 140 140 L 106 140 A 36 36 0 0 0 34 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z"/>
+    <path fill="#277B96" d="M 106 140 A 36 36 0 0 1 34 140 Z"/>
   </g>
-  <g transform="translate(344 72)">
-    <text x="0" y="0" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="44" font-weight="700">Preview a message locally</text>
-    <text x="0" y="44" fill="#5C6B7A" font-family="Inter, sans-serif" font-size="18">Render the actual HTML and text parts before they reach a provider.</text>
-    <rect x="0" y="96" width="760" height="160" rx="8" fill="#0D1B2A"/>
-    <text x="28" y="140" fill="#A6EAF2" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="15">def preview(assigns) do</text>
-    <text x="28" y="176" fill="#EAF6FB" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="15">  user = fixture_user()</text>
-    <text x="28" y="212" fill="#8BB77F" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="15">  welcome(user)</text>
-    <rect x="0" y="300" width="760" height="92" rx="8" fill="#EAF6FB" stroke="#277B96"/>
-    <text x="28" y="334" fill="#0D1B2A" font-family="Inter, sans-serif" font-size="16" font-weight="700">Why this matters</text>
-    <text x="28" y="364" fill="#0D1B2A" font-family="Inter, sans-serif" font-size="16">A preview should show the message that will actually ship, not a fake marketing mock.</text>
-    <text x="0" y="466" fill="#0D1B2A" font-family="Inter Tight, Inter, sans-serif" font-size="28" font-weight="700">Next steps</text>
-    <rect x="0" y="500" width="232" height="80" rx="8" fill="#FFFFFF" stroke="#C7DCE5"/>
-    <text x="24" y="536" fill="#0D1B2A" font-family="Inter, sans-serif" font-size="16" font-weight="700">Inspect headers</text>
-    <text x="24" y="562" fill="#5C6B7A" font-family="Inter, sans-serif" font-size="14">Verify provider output.</text>
-    <rect x="264" y="500" width="232" height="80" rx="8" fill="#FFFFFF" stroke="#C7DCE5"/>
-    <text x="288" y="536" fill="#0D1B2A" font-family="Inter, sans-serif" font-size="16" font-weight="700">Send safely</text>
-    <text x="288" y="562" fill="#5C6B7A" font-family="Inter, sans-serif" font-size="14">Respect suppression state.</text>
-  </g>
+  <!-- search field -->
+  <rect x="20" y="96" width="180" height="28" rx="4" fill="#F8FBFD" stroke="#C7DCE5"/>
+  <rect x="30" y="106" width="64" height="8" rx="4" fill="#5C6B7A"/>
+  <!-- greeked navigation: Slate items, the active one in Ink -->
+  <rect x="20" y="148" width="58" height="7" rx="3.5" fill="#5C6B7A"/>
+  <rect x="20" y="172" width="120" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="20" y="194" width="96" height="9" rx="4.5" fill="#0D1B2A"/>
+  <rect x="20" y="216" width="132" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="20" y="238" width="104" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="20" y="276" width="48" height="7" rx="3.5" fill="#5C6B7A"/>
+  <rect x="20" y="300" width="118" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="20" y="322" width="88" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="20" y="344" width="126" height="9" rx="4.5" fill="#5C6B7A"/>
+
+  <!-- content column -->
+  <!-- breadcrumb link bar: deep glass for body-size accent copy -->
+  <rect x="260" y="34" width="56" height="8" rx="4" fill="#1D637A"/>
+  <rect x="330" y="34" width="8" height="8" rx="4" fill="#5C6B7A"/>
+  <rect x="352" y="34" width="84" height="8" rx="4" fill="#1D637A"/>
+
+  <!-- page heading in Ink -->
+  <rect x="260" y="72" width="312" height="22" rx="5" fill="#0D1B2A"/>
+
+  <!-- body paragraph, greeked in Slate with an inline link segment in deep glass -->
+  <rect x="260" y="124" width="560" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="260" y="144" width="318" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="588" y="144" width="98" height="9" rx="4.5" fill="#1D637A"/>
+  <rect x="696" y="144" width="124" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="260" y="164" width="430" height="9" rx="4.5" fill="#5C6B7A"/>
+
+  <!-- code block on the sunken Mist surface -->
+  <rect x="260" y="200" width="560" height="128" rx="8" fill="#EAF6FB"/>
+  <rect x="284" y="222" width="136" height="9" rx="4.5" fill="#1D637A"/>
+  <rect x="284" y="244" width="248" height="9" rx="4.5" fill="#0D1B2A"/>
+  <rect x="308" y="266" width="204" height="9" rx="4.5" fill="#0D1B2A"/>
+  <rect x="308" y="288" width="262" height="9" rx="4.5" fill="#0D1B2A"/>
+  <rect x="284" y="310" width="64" height="9" rx="4.5" fill="#1D637A"/>
+
+  <!-- section heading and more body -->
+  <rect x="260" y="368" width="228" height="16" rx="5" fill="#0D1B2A"/>
+  <rect x="260" y="408" width="548" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="260" y="428" width="496" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="260" y="448" width="186" height="9" rx="4.5" fill="#5C6B7A"/>
+  <rect x="456" y="448" width="112" height="9" rx="4.5" fill="#1D637A"/>
+  <rect x="260" y="468" width="372" height="9" rx="4.5" fill="#5C6B7A"/>
+
+  <!-- footer pager links -->
+  <rect x="260" y="516" width="92" height="8" rx="4" fill="#1D637A"/>
+  <rect x="728" y="516" width="92" height="8" rx="4" fill="#1D637A"/>
 </svg>

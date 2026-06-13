@@ -1,535 +1,1135 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mailglass Brandbook</title>
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="tokens.css">
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
-        margin: 0;
-        background: var(--mg-bg);
-        color: var(--mg-text);
-        font-family: var(--mg-font-ui);
-        font-size: var(--mg-text-body);
-        line-height: var(--mg-line-body);
-        letter-spacing: var(--mg-letter-normal);
-      }
-
-      a {
-        color: var(--mg-link);
-        text-decoration-thickness: 1px;
-        text-underline-offset: 3px;
-      }
-
-      a:hover {
-        color: var(--mg-link-hover);
-      }
-
-      img {
-        max-width: 100%;
-        height: auto;
-      }
-
-      code,
-      pre,
-      .mono {
-        font-family: var(--mg-font-mono);
-      }
-
-      .shell {
-        display: grid;
-        grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
-        min-height: 100vh;
-      }
-
-      .side {
-        position: sticky;
-        top: 0;
-        height: 100vh;
-        padding: var(--mg-space-xl);
-        overflow: auto;
-        background: var(--mg-surface-subtle);
-        border-right: 1px solid var(--mg-border);
-      }
-
-      .side img {
-        width: 190px;
-        margin-bottom: var(--mg-space-xl);
-      }
-
-      .nav {
-        display: grid;
-        gap: var(--mg-space-xs);
-      }
-
-      .nav a {
-        display: block;
-        padding: 8px 10px;
-        border-radius: var(--mg-radius-md);
-        color: var(--mg-text);
-        text-decoration: none;
-      }
-
-      .nav a:hover,
-      .nav a:focus-visible {
-        background: var(--mg-surface-selected);
-        outline: none;
-      }
-
-      main {
-        min-width: 0;
-      }
-
-      .hero {
-        padding: clamp(48px, 7vw, 96px);
-        border-bottom: 1px solid var(--mg-border);
-        background:
-          linear-gradient(180deg, rgb(234 246 251 / 0.8), rgb(248 251 253 / 0)),
-          var(--mg-bg);
-      }
-
-      .eyebrow {
-        margin: 0 0 var(--mg-space-md);
-        color: var(--mg-glass);
-        font-family: var(--mg-font-mono);
-        font-size: var(--mg-text-label);
-        font-weight: var(--mg-weight-bold);
-        text-transform: uppercase;
-      }
-
-      h1,
-      h2,
-      h3 {
-        margin: 0;
-        font-family: var(--mg-font-display);
-        letter-spacing: 0;
-        line-height: var(--mg-line-tight);
-      }
-
-      h1 {
-        max-width: 780px;
-        font-size: clamp(40px, 7vw, 72px);
-      }
-
-      h2 {
-        margin-bottom: var(--mg-space-md);
-        font-size: clamp(28px, 4vw, 42px);
-      }
-
-      h3 {
-        margin-bottom: var(--mg-space-sm);
-        font-size: 22px;
-      }
-
-      .lead {
-        max-width: 760px;
-        margin: var(--mg-space-lg) 0 0;
-        color: var(--mg-text-muted);
-        font-size: clamp(18px, 2vw, 22px);
-      }
-
-      .content {
-        display: grid;
-        gap: var(--mg-space-3xl);
-        padding: clamp(32px, 6vw, 72px);
-      }
-
-      .section {
-        max-width: 1040px;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: var(--mg-space-md);
-      }
-
-      .card {
-        padding: var(--mg-space-lg);
-        background: var(--mg-surface-raised);
-        border: 1px solid var(--mg-border);
-        border-radius: var(--mg-radius-lg);
-        box-shadow: var(--mg-shadow-flat);
-      }
-
-      .card.subtle {
-        background: var(--mg-surface-subtle);
-      }
-
-      .swatch {
-        min-height: 148px;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-      }
-
-      .swatch strong,
-      .swatch span {
-        display: block;
-        font-family: var(--mg-font-mono);
-      }
-
-      .swatch span {
-        color: currentColor;
-        opacity: 0.82;
-      }
-
-      .ink { background: var(--mg-ink); color: var(--mg-paper); }
-      .glass { background: var(--mg-glass); color: var(--mg-paper); }
-      .ice { background: var(--mg-ice); color: var(--mg-ink); }
-      .mist { background: var(--mg-mist); color: var(--mg-ink); }
-      .paper { background: var(--mg-paper); color: var(--mg-ink); }
-      .slate { background: var(--mg-slate); color: var(--mg-paper); }
-
-      .table {
-        width: 100%;
-        border-collapse: collapse;
-        overflow: hidden;
-        border: 1px solid var(--mg-border);
-        border-radius: var(--mg-radius-lg);
-      }
-
-      .table th,
-      .table td {
-        padding: 12px 14px;
-        border-bottom: 1px solid var(--mg-border);
-        text-align: left;
-        vertical-align: top;
-      }
-
-      .table th {
-        background: var(--mg-surface-subtle);
-        font-size: var(--mg-text-small);
-      }
-
-      .table tr:last-child td {
-        border-bottom: 0;
-      }
-
-      .callout {
-        padding: var(--mg-space-lg);
-        border-left: 4px solid var(--mg-callout-info-border);
-        border-radius: var(--mg-radius-md);
-        background: var(--mg-callout-info-bg);
-      }
-
-      .do-dont {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: var(--mg-space-md);
-      }
-
-      .do {
-        border-color: var(--mg-state-success);
-      }
-
-      .dont {
-        border-color: var(--mg-state-error);
-      }
-
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        min-height: 30px;
-        padding: 0 12px;
-        border: 1px solid var(--mg-border);
-        border-radius: var(--mg-radius-pill);
-        background: var(--mg-surface);
-        color: var(--mg-text);
-        font-family: var(--mg-font-mono);
-        font-size: var(--mg-text-label);
-      }
-
-      .logo-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: var(--mg-space-md);
-        align-items: stretch;
-      }
-
-      .logo-box {
-        display: grid;
-        min-height: 180px;
-        place-items: center;
-        padding: var(--mg-space-lg);
-        border: 1px solid var(--mg-border);
-        border-radius: var(--mg-radius-lg);
-        background: var(--mg-surface-raised);
-      }
-
-      .logo-box.dark {
-        background: var(--mg-ink);
-        color: var(--mg-paper);
-      }
-
-      .logo-box img {
-        max-height: 112px;
-      }
-
-      .logo-box.small img {
-        max-height: 56px;
-      }
-
-      .logo-box.avatar img {
-        width: 112px;
-        max-height: 112px;
-      }
-
-      .logo-caption {
-        margin: var(--mg-space-sm) 0 0;
-        color: var(--mg-text-muted);
-        font-size: var(--mg-text-small);
-      }
-
-      pre {
-        max-width: 100%;
-        overflow: auto;
-        padding: var(--mg-space-lg);
-        border: 1px solid var(--mg-code-border);
-        border-radius: var(--mg-radius-lg);
-        background: var(--mg-code-bg);
-        color: var(--mg-code-text);
-        font-size: 14px;
-      }
-
-      .specimen {
-        display: block;
-        padding: var(--mg-space-md);
-        border: 1px solid var(--mg-border);
-        border-radius: var(--mg-radius-lg);
-        background: var(--mg-surface-raised);
-      }
-
-      .specimen img {
-        display: block;
-        border-radius: var(--mg-radius-md);
-      }
-
-      .footer {
-        padding: var(--mg-space-xl) clamp(32px, 6vw, 72px);
-        border-top: 1px solid var(--mg-border);
-        color: var(--mg-text-muted);
-      }
-
-      @media (max-width: 860px) {
-        .shell {
-          display: block;
-        }
-
-        .side {
-          position: static;
-          height: auto;
-          padding: var(--mg-space-lg);
-        }
-
-        .side img {
-          width: 170px;
-          margin-bottom: var(--mg-space-md);
-        }
-
-        .nav {
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="shell">
-      <aside class="side">
-        <img src="assets/logo-primary.svg" alt="Mailglass">
-        <nav class="nav" aria-label="Brandbook sections">
-          <a href="#judgment">Judgment</a>
-          <a href="#dna">DNA</a>
-          <a href="#color">Color</a>
-          <a href="#type">Typography</a>
-          <a href="#tokens">Tokens</a>
-          <a href="#logo">Logo</a>
-          <a href="#voice">Voice</a>
-          <a href="#surfaces">Surfaces</a>
-          <a href="#artifacts">Artifacts</a>
-          <a href="#qa">QA</a>
-        </nav>
-      </aside>
-
-      <main>
-        <header class="hero">
-          <p class="eyebrow">Mailglass brand system</p>
-          <h1>Email, made visible.</h1>
-          <p class="lead">A source-controlled brandbook for a Phoenix-native email framework that should feel clear, inspectable, calm, and technically credible.</p>
-          <p class="lead">The selected identity is the 07r no-i-dot 02 lockup: existing mark, tighter proximity, and one untouched full <span class="mono">mailglass</span> wordmark.</p>
-        </header>
-
-        <div class="content">
-          <section class="section" id="judgment">
-            <h2>Identity Judgment</h2>
-            <div class="callout">
-              <strong>The logo direction is selected.</strong>
-              Mailglass makes email visible. Mail you can see through. The mark supports that idea, while the full wordmark does the identity work.
-            </div>
-            <div class="grid" style="margin-top: 16px">
-              <div class="card">
-                <h3>Keep</h3>
-                <p>Mailglass makes email visible. Calm, precise, Phoenix-native, maintainer-led.</p>
-              </div>
-              <div class="card">
-                <h3>Tighten</h3>
-                <p>Use the selected tighter lockup and keep practical docs/header examples aligned.</p>
-              </div>
-              <div class="card">
-                <h3>Avoid</h3>
-                <p>I-dot variants, word surgery, glassmorphism, paper planes, send arrows, mascots, and hype copy.</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="section" id="dna">
-            <h2>Brand DNA</h2>
-            <div class="grid">
-              <div class="card subtle"><span class="pill">essence</span><h3>Mail you can see through</h3><p>Email workflows become inspectable application infrastructure.</p></div>
-              <div class="card subtle"><span class="pill">audience</span><h3>Phoenix teams</h3><p>Senior engineers shipping transactional email, previews, webhooks, inbound routes, and operator flows.</p></div>
-              <div class="card subtle"><span class="pill">metaphor</span><h3>Clarity through panes</h3><p>Panes, layers, headers, timelines, and routing diagrams. Not literal glass effects.</p></div>
-              <div class="card subtle"><span class="pill">tone</span><h3>Thoughtful maintainer</h3><p>Exact, generous, calm under failure, technically literate, and low-BS.</p></div>
-            </div>
-          </section>
-
-          <section class="section" id="color">
-            <h2>Color</h2>
-            <p>Ink + Paper is the reading pair. Glass is the accent. Mist creates quiet surface depth. Semantic colors are for state, not decoration.</p>
-            <div class="grid">
-              <div class="card swatch ink"><strong>Ink</strong><span>#0D1B2A</span></div>
-              <div class="card swatch glass"><strong>Glass</strong><span>#277B96</span></div>
-              <div class="card swatch ice"><strong>Ice</strong><span>#A6EAF2</span></div>
-              <div class="card swatch mist"><strong>Mist</strong><span>#EAF6FB</span></div>
-              <div class="card swatch paper"><strong>Paper</strong><span>#F8FBFD</span></div>
-              <div class="card swatch slate"><strong>Slate</strong><span>#5C6B7A</span></div>
-            </div>
-          </section>
-
-          <section class="section" id="type">
-            <h2>Typography</h2>
-            <table class="table">
-              <thead><tr><th>Role</th><th>Family</th><th>Use</th></tr></thead>
-              <tbody>
-                <tr><td>Display</td><td class="mono">Inter Tight</td><td>Wordmark-adjacent headings, landing pages, README headers.</td></tr>
-                <tr><td>UI/body</td><td class="mono">Inter</td><td>Docs, UI labels, body copy, forms, component text.</td></tr>
-                <tr><td>Code</td><td class="mono">IBM Plex Mono</td><td>Code, CLI output, tokens, adapters, statuses, env vars, RFC references.</td></tr>
-              </tbody>
-            </table>
-          </section>
-
-          <section class="section" id="tokens">
-            <h2>Token System</h2>
-            <p>The source tokens are intentionally small. Use semantic roles in docs and marketing surfaces; do not copy raw hex into components unless creating the token file itself. Text, border, background, focus, and state roles are separate decisions.</p>
-            <pre><code>--mg-bg: var(--mg-paper);
---mg-text: var(--mg-ink);
---mg-link: var(--mg-glass);
---mg-state-success: var(--mg-pine);
---mg-code-bg: #0a1521;
---mg-focus-ring: var(--mg-glass);</code></pre>
-            <p>The implemented admin UI remains governed by <code>mailglass_admin/docs/design-system.md</code>. This brandbook is not a second admin UI framework; future product mapping should go through the existing Tailwind/daisyUI mechanics deliberately.</p>
-            <p>Files: <a href="tokens.json">tokens.json</a> and <a href="tokens.css">tokens.css</a>.</p>
-          </section>
-
-          <section class="section" id="logo">
-            <h2>Logo System</h2>
-            <p>Use the selected 07r no-i-dot 02 direction: mark plus one untouched full <span class="mono">mailglass</span> wordmark. The tighter gap makes the lockup read as one cohesive identity.</p>
-            <div class="logo-row">
-              <div>
-                <div class="logo-box"><img src="assets/logo-primary.svg" alt="Mailglass primary logo"></div>
-                <p class="logo-caption">Primary lockup for README, docs, packages, and page headers.</p>
-              </div>
-              <div>
-                <div class="logo-box small"><img src="assets/logo-mark.svg" alt="Mailglass mark"></div>
-                <p class="logo-caption">Mark for compact brand surfaces and UI-adjacent use.</p>
-              </div>
-              <div>
-                <div class="logo-box small"><img src="assets/logo-monochrome.svg" alt="Mailglass monochrome mark"></div>
-                <p class="logo-caption">CurrentColor mark for mono, print, stamps, and single-color contexts.</p>
-              </div>
-              <div>
-                <div class="logo-box dark avatar"><img src="assets/social-avatar.svg" alt="Mailglass social avatar"></div>
-                <p class="logo-caption">Dark square avatar for social and profile surfaces.</p>
-              </div>
-              <div>
-                <div class="logo-box small"><img src="assets/favicon.svg" alt="Mailglass favicon"></div>
-                <p class="logo-caption">Small browser/package mark; preserve the selected primitive.</p>
-              </div>
-            </div>
-            <div class="callout" style="margin-top: 16px">
-              Do not reintroduce i-dot variants, masks, dot cuts, dotless glyphs, split words, tspans, fake stems, or panes over the wordmark.
-            </div>
-          </section>
-
-          <section class="section" id="voice">
-            <h2>Voice And Microcopy</h2>
-            <div class="do-dont">
-              <div class="card do">
-                <h3>Say this</h3>
-                <p>"Render a real message before you send it."</p>
-                <p>"Delivery blocked: recipient is on the suppression list."</p>
-                <p>"This route matched the inbound recipient pattern."</p>
-              </div>
-              <div class="card dont">
-                <h3>Not this</h3>
-                <p>"Supercharge your email growth."</p>
-                <p>"Oops! Something went wrong."</p>
-                <p>"AI-powered communication magic."</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="section" id="surfaces">
-            <h2>Surface Specimens</h2>
-            <p>Specimens are local, browser-readable examples for practical surfaces: README headers, docs pages, UI primitives, code blocks, palette, and type.</p>
-            <div class="grid">
-              <a class="specimen" href="examples/palette.svg"><img src="examples/palette.svg" alt="Palette specimen"></a>
-              <a class="specimen" href="examples/typography.svg"><img src="examples/typography.svg" alt="Typography specimen"></a>
-              <a class="specimen" href="examples/ui-primitives.svg"><img src="examples/ui-primitives.svg" alt="UI primitives specimen"></a>
-              <a class="specimen" href="examples/readme-header.svg"><img src="examples/readme-header.svg" alt="README header specimen"></a>
-              <a class="specimen" href="examples/docs-page.svg"><img src="examples/docs-page.svg" alt="Docs page specimen"></a>
-            </div>
-          </section>
-
-          <section class="section" id="artifacts">
-            <h2>Repo Artifact Policy</h2>
-            <table class="table">
-              <thead><tr><th>Commit</th><th>Generate locally</th><th>Avoid by default</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td>Markdown, HTML, SVG, JSON, CSS</td>
-                  <td>PNG exports, screenshots, contrast reports</td>
-                  <td>Font binaries, PDFs, Figma files, raster packs</td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-
-          <section class="section" id="qa">
-            <h2>Quality Gate Targets</h2>
-            <p>Every change should preserve local references, valid SVG/XML, source-native assets, clear text contrast, package hygiene, and repo cleanliness.</p>
-            <div class="grid">
-              <div class="card"><h3>Designer</h3><p>Can build from concept, palette, type, SVGs, and specimens.</p></div>
-              <div class="card"><h3>Engineer</h3><p>Can consume tokens and assets without a build step or vendor tool.</p></div>
-              <div class="card"><h3>Maintainer</h3><p>Can keep the system consistent without growing a heavy asset pipeline.</p></div>
-              <div class="card"><h3>Contributor</h3><p>Can tell what is on-brand and what is not without reading prompts.</p></div>
-            </div>
-          </section>
-        </div>
-
-        <footer class="footer">
-          <p>Mailglass brandbook. Static, source-controlled, and intentionally small.</p>
-        </footer>
-      </main>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mailglass — brand book</title>
+<meta name="description" content="The mailglass brand system: voice, color tokens, typography, a computed contrast matrix, a live component gallery, and the logo system.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="tokens.css">
+<script>
+try{var t=localStorage.getItem("mg-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}
+</script>
+<style>
+/* ——— page chrome, built entirely from the tokens ——— */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--mg-color-background);
+  color: var(--mg-color-text);
+  font-family: var(--mg-font-ui);
+  font-size: var(--mg-text-body);
+  line-height: 1.65;
+}
+a { color: var(--mg-color-link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--mg-color-link-hover); }
+a:active { color: var(--mg-color-link-active); }
+:focus-visible {
+  outline: var(--mg-focus-ring-width) solid var(--mg-color-focus-ring);
+  outline-offset: var(--mg-focus-ring-offset);
+  border-radius: 2px;
+}
+.skip-link {
+  position: absolute; left: -999px; top: 8px;
+  background: var(--mg-color-surface); color: var(--mg-color-text);
+  padding: var(--mg-space-sm) var(--mg-space-md); border-radius: var(--mg-radius-sm);
+  border: 1px solid var(--mg-color-border-input); z-index: 30;
+}
+.skip-link:focus-visible { left: 8px; }
+
+/* sticky header: wordmark, anchor rail, theme toggle */
+.book-header {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: var(--mg-space-lg);
+  padding: 0 clamp(16px, 4vw, 48px);
+  height: 58px;
+  background: var(--mg-color-background);
+  border-bottom: 1px solid var(--mg-color-border);
+}
+.book-header .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--mg-color-text); flex: none; }
+.book-header .brand svg { display: block; }
+.anchor-rail {
+  display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none;
+  font-family: var(--mg-font-mono); font-size: 12.5px;
+  margin-right: auto;
+}
+.anchor-rail::-webkit-scrollbar { display: none; }
+.anchor-rail a {
+  color: var(--mg-color-text-muted); text-decoration: none; white-space: nowrap;
+  padding: 6px 9px; border-radius: var(--mg-radius-sm);
+}
+.anchor-rail a:hover { color: var(--mg-color-link-hover); background: var(--mg-color-surface-sunken); }
+.anchor-rail a b { color: var(--mg-color-accent-text); font-weight: 500; margin-right: 4px; }
+#theme-toggle {
+  flex: none; cursor: pointer;
+  font-family: var(--mg-font-mono); font-size: 12.5px;
+  color: var(--mg-color-text); background: var(--mg-color-surface);
+  border: 1px solid var(--mg-color-border-input); border-radius: var(--mg-radius-full);
+  padding: 6px 14px;
+}
+#theme-toggle:hover { background: var(--mg-color-surface-sunken); }
+
+/* left-anchored documentation column */
+main {
+  max-width: 1120px;
+  padding-left: clamp(20px, 7vw, 120px);
+  padding-right: clamp(16px, 3vw, 40px);
+  padding-bottom: var(--mg-space-2xl);
+}
+.masthead { padding: var(--mg-space-2xl) 0 var(--mg-space-xl); }
+.masthead .mark-row { display: flex; align-items: flex-end; gap: var(--mg-space-lg); flex-wrap: wrap; }
+.masthead h1 {
+  font-family: var(--mg-font-display); font-size: var(--mg-text-display);
+  font-weight: 650; letter-spacing: -0.015em; line-height: 1.05; margin: 0;
+}
+.masthead .essence {
+  font-family: var(--mg-font-display); font-size: var(--mg-text-h3);
+  color: var(--mg-color-accent-text); margin: var(--mg-space-md) 0 0; max-width: 46ch; line-height: 1.3;
+}
+.masthead .lede { color: var(--mg-color-text-muted); max-width: 58ch; margin: var(--mg-space-md) 0 0; }
+
+section { border-top: 1px solid var(--mg-color-border); padding: var(--mg-space-xl) 0 var(--mg-space-2xl); scroll-margin-top: 76px; }
+.sec-head { display: flex; align-items: baseline; gap: var(--mg-space-md); margin-bottom: var(--mg-space-lg); }
+.sec-num { font-family: var(--mg-font-mono); font-size: var(--mg-text-small); color: var(--mg-color-accent-text); }
+h2 { font-family: var(--mg-font-display); font-size: var(--mg-text-h2); font-weight: 640; letter-spacing: -0.01em; margin: 0; line-height: 1.15; }
+h3 { font-family: var(--mg-font-display); font-size: 20px; font-weight: 620; margin: var(--mg-space-xl) 0 var(--mg-space-sm); letter-spacing: -0.005em; }
+p, ul, ol { max-width: 68ch; }
+.lede { font-size: 17.5px; }
+small, .small { font-size: var(--mg-text-small); }
+.muted { color: var(--mg-color-text-muted); }
+code { font-family: var(--mg-font-mono); font-size: 0.92em; }
+
+/* tables */
+.table-scroll { overflow-x: auto; max-width: 100%; margin: var(--mg-space-md) 0; border: 1px solid var(--mg-color-border); border-radius: var(--mg-radius-md); }
+table { border-collapse: collapse; width: 100%; font-size: var(--mg-text-small); }
+caption { text-align: left; padding: var(--mg-space-sm) var(--mg-space-md); color: var(--mg-color-text-muted); caption-side: top; }
+th {
+  font-family: var(--mg-font-mono); font-weight: 500; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--mg-color-text-muted);
+  text-align: left; padding: 10px var(--mg-space-md);
+  border-bottom: 1px solid var(--mg-color-border-strong);
+  background: var(--mg-color-surface-sunken);
+  white-space: nowrap;
+}
+td { padding: 8px var(--mg-space-md); border-bottom: 1px solid var(--mg-color-border); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.num { font-family: var(--mg-font-mono); text-align: right; white-space: nowrap; }
+td code { white-space: nowrap; }
+
+/* rule cards (section 1) */
+.rules { display: grid; gap: var(--mg-space-sm); padding: 0; margin: var(--mg-space-lg) 0 0; list-style: none; max-width: 76ch; }
+.rules li {
+  border-left: 2px solid var(--mg-color-accent);
+  background: var(--mg-color-surface);
+  border-top: 1px solid var(--mg-color-border); border-right: 1px solid var(--mg-color-border); border-bottom: 1px solid var(--mg-color-border);
+  border-radius: 0 var(--mg-radius-md) var(--mg-radius-md) 0;
+  padding: var(--mg-space-md) var(--mg-space-lg);
+}
+.rules b { display: block; margin-bottom: 2px; }
+.rules p { margin: 0; color: var(--mg-color-text-muted); font-size: var(--mg-text-small); }
+
+/* swatches */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--mg-space-md); margin: var(--mg-space-md) 0; }
+.swatch { border: 1px solid var(--mg-color-border); border-radius: var(--mg-radius-md); overflow: hidden; background: var(--mg-color-surface); }
+.swatch .chip { height: 64px; border-bottom: 1px solid var(--mg-color-border); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.swatch .meta { padding: 10px var(--mg-space-md) var(--mg-space-md); }
+.swatch .meta b { display: block; font-size: var(--mg-text-small); }
+.swatch .meta code { color: var(--mg-color-text-muted); font-size: 12px; }
+.swatch .meta p { margin: 4px 0 0; font-size: 12.5px; color: var(--mg-color-text-muted); line-height: 1.45; }
+
+/* code blocks */
+pre {
+  background: var(--mg-color-surface-sunken);
+  border: 1px solid var(--mg-color-border);
+  border-radius: var(--mg-radius-md);
+  padding: var(--mg-space-lg);
+  overflow-x: auto;
+  font-family: var(--mg-font-mono); font-size: var(--mg-text-code); line-height: 1.6;
+  max-width: 100%;
+}
+
+/* type specimen */
+.type-specimen { border: 1px solid var(--mg-color-border); border-radius: var(--mg-radius-md); background: var(--mg-color-surface); margin: var(--mg-space-md) 0; }
+.type-specimen > div { display: flex; align-items: baseline; gap: var(--mg-space-lg); padding: var(--mg-space-md) var(--mg-space-lg); border-bottom: 1px solid var(--mg-color-border); }
+.type-specimen > div:last-child { border-bottom: 0; }
+.type-specimen .tag { font-family: var(--mg-font-mono); font-size: 12px; color: var(--mg-color-text-muted); flex: none; width: 96px; }
+
+/* contrast matrix */
+.matrix-meta { font-family: var(--mg-font-mono); font-size: var(--mg-text-small); color: var(--mg-color-text-muted); }
+.matrix-meta b { color: var(--mg-color-accent-text); font-weight: 500; }
+.verdict {
+  display: inline-block; font-family: var(--mg-font-mono); font-size: 11px;
+  padding: 1px 8px; border-radius: var(--mg-radius-full); border: 1px solid;
+  print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+.verdict.pass { color: var(--mg-color-success-text); background: var(--mg-color-success-bg); border-color: var(--mg-color-success-border); }
+.verdict.fail { color: var(--mg-color-error-text); background: var(--mg-color-error-bg); border-color: var(--mg-color-error-border); }
+.anchor-note { font-size: var(--mg-text-small); color: var(--mg-color-text-muted); max-width: 76ch; }
+noscript .note {
+  border: 1px solid var(--mg-color-info-border); border-left-width: 3px;
+  background: var(--mg-color-info-bg); color: var(--mg-color-info-text);
+  border-radius: var(--mg-radius-md); padding: var(--mg-space-md) var(--mg-space-lg);
+  margin: var(--mg-space-md) 0; max-width: 76ch;
+}
+
+/* component gallery */
+.demo {
+  border: 1px solid var(--mg-color-border); border-radius: var(--mg-radius-md);
+  background: var(--mg-color-surface); padding: var(--mg-space-lg);
+  margin: var(--mg-space-sm) 0 var(--mg-space-md);
+}
+.demo-row { display: flex; flex-wrap: wrap; gap: var(--mg-space-md); align-items: center; }
+.state-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--mg-space-md); margin-top: var(--mg-space-lg); padding-top: var(--mg-space-lg); border-top: 1px dashed var(--mg-color-border); }
+.state-grid .state { display: grid; gap: 6px; justify-items: start; }
+.state-label { font-family: var(--mg-font-mono); font-size: 10.5px; color: var(--mg-color-text-muted); letter-spacing: 0.04em; white-space: nowrap; }
+
+.btn {
+  font-family: var(--mg-font-ui); font-size: var(--mg-text-small); font-weight: 550;
+  padding: 9px 18px; border-radius: var(--mg-radius-md); border: 1px solid transparent;
+  cursor: pointer; line-height: 1.2;
+}
+.btn-primary { background: var(--mg-color-accent); color: var(--mg-color-text-inverse); }
+.btn-primary:hover, .btn-primary.is-hover { background: var(--mg-color-link-hover); }
+.btn-primary:active, .btn-primary.is-active { background: var(--mg-color-link-active); transform: translateY(1px); }
+.btn-secondary { background: var(--mg-color-surface); color: var(--mg-color-text); border-color: var(--mg-color-border-input); }
+.btn-secondary:hover, .btn-secondary.is-hover { background: var(--mg-color-surface-sunken); }
+.btn-secondary:active, .btn-secondary.is-active { background: var(--mg-color-surface-selected); transform: translateY(1px); }
+.btn-quiet { background: transparent; color: var(--mg-color-link); }
+.btn-quiet:hover, .btn-quiet.is-hover { color: var(--mg-color-link-hover); background: var(--mg-color-surface-sunken); }
+.btn-quiet:active, .btn-quiet.is-active { color: var(--mg-color-link-active); background: var(--mg-color-surface-selected); }
+.btn:focus-visible, .btn.is-focus { outline: var(--mg-focus-ring-width) solid var(--mg-color-focus-ring); outline-offset: var(--mg-focus-ring-offset); }
+.btn:disabled { background: var(--mg-color-surface-sunken); color: var(--mg-color-text-disabled); border-color: var(--mg-color-border); cursor: not-allowed; transform: none; }
+
+.field { display: grid; gap: 5px; max-width: 340px; }
+.field label { font-size: var(--mg-text-small); font-weight: 550; }
+.field .help { margin: 0; font-size: 12.5px; color: var(--mg-color-text-muted); }
+.input, select.input {
+  font-family: var(--mg-font-ui); font-size: var(--mg-text-small);
+  background: var(--mg-color-surface); color: var(--mg-color-text);
+  border: 1px solid var(--mg-color-border-input); border-radius: var(--mg-radius-sm);
+  padding: 8px 11px; width: 100%;
+}
+.input:focus-visible, .input.is-focus {
+  outline: var(--mg-focus-ring-width) solid var(--mg-color-focus-ring);
+  outline-offset: 1px; border-color: var(--mg-color-accent);
+}
+.input:disabled { background: var(--mg-color-surface-sunken); color: var(--mg-color-text-disabled); border-color: var(--mg-color-border); cursor: not-allowed; }
+.check { display: flex; gap: 9px; align-items: flex-start; max-width: 48ch; }
+.check input { width: 16px; height: 16px; margin-top: 3px; accent-color: var(--mg-color-accent); }
+.check input:focus-visible { outline: var(--mg-focus-ring-width) solid var(--mg-color-focus-ring); outline-offset: var(--mg-focus-ring-offset); }
+.check span { font-size: var(--mg-text-small); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mg-font-mono); font-size: 12px;
+  padding: 2px 11px; border-radius: var(--mg-radius-full); border: 1px solid;
+  print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+.badge-success { color: var(--mg-color-success-text); background: var(--mg-color-success-bg); border-color: var(--mg-color-success-border); }
+.badge-warning { color: var(--mg-color-warning-text); background: var(--mg-color-warning-bg); border-color: var(--mg-color-warning-border); }
+.badge-error { color: var(--mg-color-error-text); background: var(--mg-color-error-bg); border-color: var(--mg-color-error-border); }
+.badge-info { color: var(--mg-color-info-text); background: var(--mg-color-info-bg); border-color: var(--mg-color-info-border); }
+.badge-solid-success { color: var(--mg-color-success-on-solid); background: var(--mg-color-success-solid); border-color: var(--mg-color-success-solid); }
+.badge-solid-warning { color: var(--mg-color-warning-on-solid); background: var(--mg-color-warning-solid); border-color: var(--mg-color-warning-solid); }
+.badge-solid-error { color: var(--mg-color-error-on-solid); background: var(--mg-color-error-solid); border-color: var(--mg-color-error-solid); }
+.badge-solid-info { color: var(--mg-color-info-on-solid); background: var(--mg-color-info-solid); border-color: var(--mg-color-info-solid); }
+
+.alert {
+  border: 1px solid; border-left-width: 3px; border-radius: var(--mg-radius-md);
+  padding: var(--mg-space-md) var(--mg-space-lg); max-width: 64ch;
+}
+.alert + .alert { margin-top: var(--mg-space-md); }
+.alert b { display: block; margin-bottom: 2px; }
+.alert p { margin: 0; font-size: var(--mg-text-small); }
+.alert-success { background: var(--mg-color-success-bg); border-color: var(--mg-color-success-border); color: var(--mg-color-success-text); }
+.alert-warning { background: var(--mg-color-warning-bg); border-color: var(--mg-color-warning-border); color: var(--mg-color-warning-text); }
+.alert-error { background: var(--mg-color-error-bg); border-color: var(--mg-color-error-border); color: var(--mg-color-error-text); }
+.alert-info { background: var(--mg-color-info-bg); border-color: var(--mg-color-info-border); color: var(--mg-color-info-text); }
+
+.tabs [role="tablist"] { display: flex; gap: 2px; border-bottom: 1px solid var(--mg-color-border); }
+.tab {
+  font-family: var(--mg-font-ui); font-size: var(--mg-text-small); font-weight: 550;
+  background: transparent; color: var(--mg-color-text-muted);
+  border: 0; border-bottom: 2px solid transparent;
+  padding: 9px 16px; cursor: pointer; margin-bottom: -1px;
+  border-radius: var(--mg-radius-sm) var(--mg-radius-sm) 0 0;
+}
+.tab:hover { color: var(--mg-color-text); background: var(--mg-color-surface-sunken); }
+.tab[aria-selected="true"] { color: var(--mg-color-text); background: var(--mg-color-surface-selected); border-bottom-color: var(--mg-color-accent); }
+.tabs [role="tabpanel"] { padding: var(--mg-space-md) 4px; font-size: var(--mg-text-small); max-width: 64ch; }
+
+/* logo system */
+.logo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: var(--mg-space-md); margin: var(--mg-space-md) 0; }
+.logo-cell b { display: block; font-family: var(--mg-font-mono); font-size: 12px; font-weight: 500; margin-top: 8px; }
+.logo-cell .why { margin: 2px 0 0; font-size: 12.5px; color: var(--mg-color-text-muted); line-height: 1.45; }
+.logo-chip {
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--mg-radius-md); border: 1px solid var(--mg-color-border);
+  min-height: 132px; padding: var(--mg-space-lg);
+  print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+.logo-chip img, .logo-chip svg { max-width: 100%; height: auto; display: block; }
+.chip-paper { background: #F8FBFD; }
+.chip-mist { background: #EAF6FB; }
+.chip-ink { background: #0D1B2A; color: #EAF6FB; }
+.chip-glass { background: #277B96; color: #FFFFFF; }
+.scale-row { display: flex; gap: var(--mg-space-xl); flex-wrap: wrap; align-items: flex-end; }
+.scale-row .logo-cell { text-align: left; }
+.scale-row .logo-chip { min-height: 0; padding: var(--mg-space-md) var(--mg-space-lg); }
+
+.dd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--mg-space-md); max-width: 76ch; }
+.dd { border: 1px solid var(--mg-color-border); border-radius: var(--mg-radius-md); background: var(--mg-color-surface); padding: var(--mg-space-md) var(--mg-space-lg); }
+.dd ul { margin: var(--mg-space-sm) 0 0; padding-left: 20px; }
+.dd li { font-size: var(--mg-text-small); margin: 5px 0; }
+.dd .dd-tag { font-family: var(--mg-font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+.dd-do .dd-tag { color: var(--mg-color-success-text); }
+.dd-dont .dd-tag { color: var(--mg-color-error-text); }
+
+/* specimen grid: each card is a surface; rendered collateral slots into the figure */
+.specimen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--mg-space-md); margin: var(--mg-space-md) 0; }
+.specimen-card { border: 1px solid var(--mg-color-border); border-radius: var(--mg-radius-md); background: var(--mg-color-surface); overflow: hidden; }
+.specimen-card figure { margin: 0; }
+.specimen-card figcaption { padding: var(--mg-space-md) var(--mg-space-lg); }
+.specimen-card figcaption b { font-size: var(--mg-text-small); display: block; }
+.specimen-card figcaption p { margin: 4px 0 0; font-size: 12.5px; color: var(--mg-color-text-muted); line-height: 1.5; }
+.specimen-card .rule { display: block; margin-top: 8px; font-family: var(--mg-font-mono); font-size: 11.5px; color: var(--mg-color-accent-text); }
+
+@media (max-width: 720px) {
+  .book-header { gap: var(--mg-space-md); }
+  .book-header .brand .brand-word { display: none; }
+  .masthead h1 { font-size: var(--mg-text-h1); }
+  h2 { font-size: var(--mg-text-h3); }
+  main { padding-left: 16px; padding-right: 16px; }
+}
+@media print {
+  .book-header { position: static; }
+  .swatch .chip, .logo-chip, .verdict, .badge { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  pre, .demo, .table-scroll { border-color: var(--mg-color-border-strong); }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#essence">Skip to content</a>
+
+<header class="book-header">
+  <a class="brand" href="#top" aria-label="mailglass — top of page">
+    <svg viewBox="-12 32 164 156" width="26" height="25" aria-hidden="true">
+      <path fill="var(--mg-color-text)" fill-rule="evenodd" d="M 0 44 L 140 44 L 140 140 L 106 140 A 36 36 0 0 0 34 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z"/>
+      <path fill="var(--mg-color-accent)" d="M 106 140 A 36 36 0 0 1 34 140 Z"/>
+    </svg>
+    <svg class="brand-word" viewBox="-12 -19 793 208" height="15" width="52" aria-hidden="true" style="width:auto">
+      <g fill="currentColor">
+        <path d="M 0 140 L 0 40 L 30 40 C 54.5 40 70 47 74 58 C 78 47 83 40 90 40 C 110 40 126 51.5 126 66 L 126 140 L 104 140 L 104 78 C 104 68 98.5 60 92 60 C 84 60 77 63 74 72 L 74 140 L 52 140 L 52 78 C 52 68 46.5 60 40 60 C 32 60 26.5 60.5 22 62 L 22 140 Z"/>
+        <path transform="translate(154 0)" d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"/>
+        <path transform="translate(257 0)" d="M 0 40 L 22 40 L 22 140 L 0 140 Z M 11 -7 C 18 -7 23.5 -1.5 23.5 5.5 C 23.5 12.5 18 18 11 18 C 4 18 -1.5 12.5 -1.5 5.5 C -1.5 -1.5 4 -7 11 -7 Z"/>
+        <path transform="translate(310 0)" d="M 0 0 L 22 0 L 22 140 L 0 140 Z"/>
+        <path transform="translate(360 0)" d="M 0 90 C 0 60.5 13.5 37 33 37 C 42 37 47.5 38.5 52 40 L 74 40 L 74 152 C 74 165.5 63 177 46 177 L 30 177 L 30 157 C 41 157 52 153 52 141 L 52 127 C 49 136 43 143 33 143 C 14.5 143 0 119.5 0 90 Z M 37 57 C 28.5 57 22 71.5 22 90 C 22 108.5 28.5 123 37 123 C 45.5 123 52 108.5 52 90 C 52 71.5 45.5 57 37 57 Z"/>
+        <path transform="translate(465 0)" d="M 0 0 L 22 0 L 22 140 L 0 140 Z"/>
+        <path transform="translate(515 0)" d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"/>
+        <path transform="translate(615 0)" d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"/>
+        <path transform="translate(705 0)" d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"/>
+      </g>
+    </svg>
+  </a>
+  <nav class="anchor-rail" aria-label="Sections">
+    <a href="#essence"><b>01</b>Essence</a>
+    <a href="#voice"><b>02</b>Voice</a>
+    <a href="#color"><b>03</b>Color</a>
+    <a href="#type"><b>04</b>Type</a>
+    <a href="#contrast"><b>05</b>Contrast</a>
+    <a href="#components"><b>06</b>Components</a>
+    <a href="#logo"><b>07</b>Logo</a>
+    <a href="#applications"><b>08</b>Surfaces</a>
+    <a href="#usage"><b>09</b>Usage</a>
+  </nav>
+  <button id="theme-toggle" type="button" aria-label="Switch theme">Theme</button>
+</header>
+
+<main id="top">
+
+<div class="masthead">
+  <div class="mark-row">
+    <svg viewBox="-12 32 164 156" width="92" height="88" role="img" aria-label="The mailglass mark, drawn from the live theme tokens">
+      <path fill="var(--mg-color-text)" fill-rule="evenodd" d="M 0 44 L 140 44 L 140 140 L 106 140 A 36 36 0 0 0 34 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z"/>
+      <path fill="var(--mg-color-accent)" d="M 106 140 A 36 36 0 0 1 34 140 Z"/>
+    </svg>
+    <h1>mailglass<br><span class="muted" style="font-size:0.55em;font-weight:500">brand book</span></h1>
+  </div>
+  <p class="essence">Email, made visible. Mail you can see through.</p>
+  <p class="lede">mailglass is a Phoenix-native framework for composing, previewing, delivering, and observing email. This book is the brand system itself: the voice, the tokens, the type, the mark — every claim demonstrated on this page, in both themes, with nothing fetched from anywhere. The mark above is drawn from the live tokens; flip the theme and watch the whole book follow.</p>
+</div>
+
+<section id="essence">
+  <header class="sec-head"><span class="sec-num">01</span><h2>Orientation &amp; Essence</h2></header>
+  <p class="lede">mailglass brings structure and visibility to transactional email in Phoenix applications: typed mailables, component templates, previews, delivery records, normalized events, and suppression handling. The brand carries the same promise as the library — <strong>clarity you can verify</strong>. Glass is the metaphor: panes, preview surfaces, light passing through structure. Never frosted blur, never gloss, never literal broken glass.</p>
+  <p>The voice is a thoughtful maintainer's. The composition is a well-lit workbench: left-aligned, documentation-like, generous whitespace around exact content. Every section of this book ends in something you can use — a table, a CSS block, a rendered specimen.</p>
+  <h3>The rules, up front</h3>
+  <ul class="rules">
+    <li><b>Assets are outlined paths only.</b><p>No live text and no font dependencies inside any SVG. The wordmark renders identically on every OS and inside font-less image sandboxes.</p></li>
+    <li><b>Dark mode is demonstrated, not asserted.</b><p>The toggle in the header re-skins every specimen on this page. A dark value no specimen renders does not exist.</p></li>
+    <li><b>Every contrast claim is computed.</b><p>The matrix in section 05 is calculated from the live token values when the page loads, and recalculated when the theme flips. No ratio on this page is typed in by hand.</p></li>
+    <li><b>Flat color first; transparency carries meaning.</b><p>Translucency appears only where it expresses layered visibility — a pane you can see through to something real beneath. It is never atmosphere. Gradients come nowhere near the identity.</p></li>
+    <li><b>No glassmorphism.</b><p>No frosted blur, no transparency stacks, no lens flares — doubly tempting given the name, and banned for exactly that reason. Crisp first, glassy second.</p></li>
+    <li><b>No background plate behind the mark.</b><p>The mark sits directly on its surface. The single documented exception is the inherently square social avatar.</p></li>
+    <li><b>This page asks the network for nothing.</b><p>No webfonts, no scripts from elsewhere, no remote images. Open it from disk and it is complete.</p></li>
+  </ul>
+</section>
+
+<section id="voice">
+  <header class="sec-head"><span class="sec-num">02</span><h2>Voice</h2></header>
+  <p class="lede">mailglass speaks like a thoughtful maintainer: plain English, exact nouns, strong verbs, short sentences. Clear, exact, confident without being cocky, warm without being cute, modern without being trendy, technical without being intimidating.</p>
+  <h3>Four principles</h3>
+  <ul>
+    <li><strong>Clear first.</strong> Prefer the direct word over the clever one.</li>
+    <li><strong>Explain, don't hype.</strong> Confident understatement beats inflation.</li>
+    <li><strong>Calm under failure.</strong> Errors are specific and composed.</li>
+    <li><strong>Generous with context.</strong> Copy helps the reader recover quickly.</li>
+  </ul>
+  <h3>Say this, not that</h3>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Say</th><th>Not</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>preview</td><td>experience the full rendering lifecycle</td><td>The direct word respects the reader's time.</td></tr>
+      <tr><td>provider-normalized events</td><td>revolutionary observability</td><td>Explain what it is; never market-speak.</td></tr>
+      <tr><td>Delivery blocked: recipient is on the suppression list</td><td>Oops! Something went wrong</td><td>Errors name the cause and stay composed.</td></tr>
+      <tr><td>This message was skipped because the recipient previously unsubscribed</td><td>Suppressed</td><td>One extra clause saves the reader a search.</td></tr>
+      <tr><td>Render a real message before you send it</td><td>Beautifully effortless email magic</td><td>Utility with taste; no enterprise theater.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">The seven domain nouns the copy is built on: <strong>Mailable</strong> (source-level definition), <strong>Message</strong> (rendered email), <strong>Delivery</strong> (per-recipient send record), <strong>Event</strong> (observed fact, past tense), <strong>InboundMessage</strong> (received email), <strong>Mailbox</strong> (inbound handler), <strong>Suppression</strong> (policy record blocking future sends). Dispatch is not delivery: dispatched means handed to the provider; delivered means the destination accepted it.</p>
+</section>
+
+<section id="color">
+  <header class="sec-head"><span class="sec-num">03</span><h2>Color &amp; Tokens</h2></header>
+  <p class="lede">Twelve named colors do all the work. The first six are the core palette; the next six exist because a computed contrast check demanded them — each one fixes a measured shortfall, and each carries its job in its name.</p>
+  <div class="swatch-grid">
+    <div class="swatch"><div class="chip" style="background:#0D1B2A"></div><div class="meta"><b>Ink</b> <code>#0D1B2A</code><p>Text on light surfaces; the ground of every dark surface.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#277B96"></div><div class="meta"><b>Glass</b> <code>#277B96</code><p>The light-theme accent: icons, focus rings, solid fills with white text, large text.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#A6EAF2"></div><div class="meta"><b>Ice</b> <code>#A6EAF2</code><p>The dark-theme accent and link color — AAA on every dark surface.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#EAF6FB"></div><div class="meta"><b>Mist</b> <code>#EAF6FB</code><p>Sunken surfaces in light; body text in dark.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#F8FBFD"></div><div class="meta"><b>Paper</b> <code>#F8FBFD</code><p>The light-theme page background.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#5C6B7A"></div><div class="meta"><b>Slate</b> <code>#5C6B7A</code><p>Muted text and strong borders in light.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#1D637A"></div><div class="meta"><b>glass-deep</b> <code>#1D637A</code><p>Light links and body-size accent copy — Glass itself falls short on tinted surfaces.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#174E61"></div><div class="meta"><b>glass-deepest</b> <code>#174E61</code><p>Light link hover and active — contrast rises on interaction.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#96520E"></div><div class="meta"><b>amber-deep</b> <code>#96520E</code><p>Light warning text — one value that passes on every light surface.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#74909F"></div><div class="meta"><b>slate-soft</b> <code>#74909F</code><p>Light input borders — a control boundary you can actually see.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#E29089"></div><div class="meta"><b>crimson-bright</b> <code>#E29089</code><p>The dark error family — readable on every dark surface.</p></div></div>
+    <div class="swatch"><div class="chip" style="background:#62809A"></div><div class="meta"><b>slate-bright</b> <code>#62809A</code><p>Dark input borders and strong borders.</p></div></div>
+  </div>
+
+  <h3>Semantic roles, both themes side by side</h3>
+  <p>Components never reference a palette color directly — they reference a role. The role names hold across themes; only the values change. That one property is what lets a single toggle re-skin this entire page.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Token</th><th>Light</th><th>Dark</th><th>Job</th></tr></thead>
+    <tbody>
+      <tr><td><code>--mg-color-background</code></td><td><code>#F8FBFD</code></td><td><code>#0D1B2A</code></td><td>Page ground</td></tr>
+      <tr><td><code>--mg-color-surface</code></td><td><code>#FFFFFF</code></td><td><code>#0D1B2A</code></td><td>Default component surface</td></tr>
+      <tr><td><code>--mg-color-surface-raised</code></td><td><code>#FFFFFF</code></td><td><code>#152538</code></td><td>Cards, raised panels</td></tr>
+      <tr><td><code>--mg-color-surface-overlay</code></td><td><code>#FFFFFF</code></td><td><code>#1F3049</code></td><td>Menus, dialogs</td></tr>
+      <tr><td><code>--mg-color-surface-sunken</code></td><td><code>#EAF6FB</code></td><td><code>#0A1521</code></td><td>Code blocks, wells</td></tr>
+      <tr><td><code>--mg-color-surface-selected</code></td><td><code>#DDF2F7</code></td><td><code>#1B3E55</code></td><td>Selected rows — highlights content, never hosts form controls</td></tr>
+      <tr><td><code>--mg-color-border</code></td><td><code>#C7DCE5</code></td><td><code>#315069</code></td><td>Decorative hairlines only</td></tr>
+      <tr><td><code>--mg-color-border-input</code></td><td><code>#74909F</code></td><td><code>#62809A</code></td><td>Control boundaries — at least 3:1 on every input-bearing surface</td></tr>
+      <tr><td><code>--mg-color-border-strong</code></td><td><code>#5C6B7A</code></td><td><code>#62809A</code></td><td>Emphatic separation</td></tr>
+      <tr><td><code>--mg-color-text</code></td><td><code>#0D1B2A</code></td><td><code>#EAF6FB</code></td><td>Body text — safe at any size</td></tr>
+      <tr><td><code>--mg-color-text-muted</code></td><td><code>#5C6B7A</code></td><td><code>#B8CAD4</code></td><td>Secondary text (AA) — use text where AAA matters</td></tr>
+      <tr><td><code>--mg-color-text-disabled</code></td><td><code>#9AA8B4</code></td><td><code>#6B7E8F</code></td><td>Disabled labels — a courtesy, never the only signal</td></tr>
+      <tr><td><code>--mg-color-text-inverse</code></td><td><code>#FFFFFF</code></td><td><code>#0D1B2A</code></td><td>Text on accent fills</td></tr>
+      <tr><td><code>--mg-color-accent</code></td><td><code>#277B96</code></td><td><code>#A6EAF2</code></td><td>Icons, rings, solid fills, large text</td></tr>
+      <tr><td><code>--mg-color-accent-text</code></td><td><code>#1D637A</code></td><td><code>#A6EAF2</code></td><td>Body-size accent copy</td></tr>
+      <tr><td><code>--mg-color-link</code></td><td><code>#1D637A</code></td><td><code>#A6EAF2</code></td><td>Links at rest</td></tr>
+      <tr><td><code>--mg-color-link-hover</code></td><td><code>#174E61</code></td><td><code>#D6F7FB</code></td><td>Hover — contrast rises on interaction</td></tr>
+      <tr><td><code>--mg-color-link-active</code></td><td><code>#174E61</code></td><td><code>#D6F7FB</code></td><td>Active press</td></tr>
+      <tr><td><code>--mg-color-focus-ring</code></td><td><code>#277B96</code></td><td><code>#A6EAF2</code></td><td>One ring value per theme, visible on every surface</td></tr>
+      <tr><td><code>--mg-color-success-text / -bg / -border / -solid / -on-solid</code></td><td><code>#166534</code> / <code>#E8F3EA</code> / <code>#166534</code> / <code>#166534</code> / <code>#FFFFFF</code></td><td><code>#8BB77F</code> / <code>#142B22</code> / <code>#8BB77F</code> / <code>#8BB77F</code> / <code>#0D1B2A</code></td><td>Delivered, verified, healthy</td></tr>
+      <tr><td><code>--mg-color-warning-text / -bg / -border / -solid / -on-solid</code></td><td><code>#96520E</code> / <code>#FFF8F0</code> / <code>#A95F10</code> / <code>#A95F10</code> / <code>#FFFFFF</code></td><td><code>#E0A955</code> / <code>#2B2314</code> / <code>#E0A955</code> / <code>#E0A955</code> / <code>#0D1B2A</code></td><td>Deferred, retrying, attention</td></tr>
+      <tr><td><code>--mg-color-error-text / -bg / -border / -solid / -on-solid</code></td><td><code>#B42318</code> / <code>#FAE7E5</code> / <code>#B42318</code> / <code>#B42318</code> / <code>#FFFFFF</code></td><td><code>#E29089</code> / <code>#2E1B1E</code> / <code>#E29089</code> / <code>#E29089</code> / <code>#0D1B2A</code></td><td>Bounced, blocked, failed</td></tr>
+      <tr><td><code>--mg-color-info-text / -bg / -border / -solid / -on-solid</code></td><td><code>#1D637A</code> / <code>#EAF6FB</code> / <code>#277B96</code> / <code>#1D637A</code> / <code>#FFFFFF</code></td><td><code>#A6EAF2</code> / <code>#11293A</code> / <code>#A6EAF2</code> / <code>#A6EAF2</code> / <code>#0D1B2A</code></td><td>Queued, notices, neutral status</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>The complete token sheet</h3>
+  <p>This is the entire system as working CSS — the same file this page links (<code>tokens.css</code>, with the raw palette names recorded in <code>tokens.json</code>). Copy it whole; the role names are the contract.</p>
+  <pre><code>/* mailglass brand tokens — CSS custom properties.
+   Light values live under :root. Dark values are reassigned under
+   [data-theme="dark"] and, for viewers whose OS prefers dark, under the
+   media block at the end. Pages follow the OS setting by default; set
+   data-theme="light" or data-theme="dark" on the root element to force a
+   theme. tokens.json records the same values with the raw palette names. */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --mg-color-background: #F8FBFD;
+  --mg-color-surface: #FFFFFF;
+  --mg-color-surface-raised: #FFFFFF;
+  --mg-color-surface-overlay: #FFFFFF;
+  --mg-color-surface-sunken: #EAF6FB;
+  --mg-color-surface-selected: #DDF2F7;
+
+  --mg-color-border: #C7DCE5;
+  --mg-color-border-input: #74909F;
+  --mg-color-border-strong: #5C6B7A;
+
+  --mg-color-text: #0D1B2A;
+  --mg-color-text-muted: #5C6B7A;
+  --mg-color-text-disabled: #9AA8B4;
+  --mg-color-text-inverse: #FFFFFF;
+
+  --mg-color-accent: #277B96;
+  --mg-color-accent-text: #1D637A;
+  --mg-color-link: #1D637A;
+  --mg-color-link-hover: #174E61;
+  --mg-color-link-active: #174E61;
+  --mg-color-focus-ring: #277B96;
+
+  --mg-color-success-text: #166534;
+  --mg-color-success-bg: #E8F3EA;
+  --mg-color-success-border: #166534;
+  --mg-color-success-solid: #166534;
+  --mg-color-success-on-solid: #FFFFFF;
+
+  --mg-color-warning-text: #96520E;
+  --mg-color-warning-bg: #FFF8F0;
+  --mg-color-warning-border: #A95F10;
+  --mg-color-warning-solid: #A95F10;
+  --mg-color-warning-on-solid: #FFFFFF;
+
+  --mg-color-error-text: #B42318;
+  --mg-color-error-bg: #FAE7E5;
+  --mg-color-error-border: #B42318;
+  --mg-color-error-solid: #B42318;
+  --mg-color-error-on-solid: #FFFFFF;
+
+  --mg-color-info-text: #1D637A;
+  --mg-color-info-bg: #EAF6FB;
+  --mg-color-info-border: #277B96;
+  --mg-color-info-solid: #1D637A;
+  --mg-color-info-on-solid: #FFFFFF;
+
+  /* Theme-invariant tokens. Inter and IBM Plex Mono are the brand faces
+     when installed; the chains below are the honest everyday rendering. */
+  --mg-font-display: "Inter Tight", Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mg-font-ui: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mg-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --mg-text-display: 44px;
+  --mg-text-h1: 36px;
+  --mg-text-h2: 30px;
+  --mg-text-h3: 24px;
+  --mg-text-body: 16px;
+  --mg-text-small: 14px;
+  --mg-text-code: 14px;
+
+  --mg-space-xs: 4px;
+  --mg-space-sm: 8px;
+  --mg-space-md: 16px;
+  --mg-space-lg: 24px;
+  --mg-space-xl: 40px;
+  --mg-space-2xl: 64px;
+
+  --mg-radius-sm: 4px;
+  --mg-radius-md: 8px;
+  --mg-radius-lg: 12px;
+  --mg-radius-full: 9999px;
+
+  --mg-focus-ring-width: 2px;
+  --mg-focus-ring-offset: 2px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --mg-color-background: #0D1B2A;
+  --mg-color-surface: #0D1B2A;
+  --mg-color-surface-raised: #152538;
+  --mg-color-surface-overlay: #1F3049;
+  --mg-color-surface-sunken: #0A1521;
+  --mg-color-surface-selected: #1B3E55;
+
+  --mg-color-border: #315069;
+  --mg-color-border-input: #62809A;
+  --mg-color-border-strong: #62809A;
+
+  --mg-color-text: #EAF6FB;
+  --mg-color-text-muted: #B8CAD4;
+  --mg-color-text-disabled: #6B7E8F;
+  --mg-color-text-inverse: #0D1B2A;
+
+  --mg-color-accent: #A6EAF2;
+  --mg-color-accent-text: #A6EAF2;
+  --mg-color-link: #A6EAF2;
+  --mg-color-link-hover: #D6F7FB;
+  --mg-color-link-active: #D6F7FB;
+  --mg-color-focus-ring: #A6EAF2;
+
+  --mg-color-success-text: #8BB77F;
+  --mg-color-success-bg: #142B22;
+  --mg-color-success-border: #8BB77F;
+  --mg-color-success-solid: #8BB77F;
+  --mg-color-success-on-solid: #0D1B2A;
+
+  --mg-color-warning-text: #E0A955;
+  --mg-color-warning-bg: #2B2314;
+  --mg-color-warning-border: #E0A955;
+  --mg-color-warning-solid: #E0A955;
+  --mg-color-warning-on-solid: #0D1B2A;
+
+  --mg-color-error-text: #E29089;
+  --mg-color-error-bg: #2E1B1E;
+  --mg-color-error-border: #E29089;
+  --mg-color-error-solid: #E29089;
+  --mg-color-error-on-solid: #0D1B2A;
+
+  --mg-color-info-text: #A6EAF2;
+  --mg-color-info-bg: #11293A;
+  --mg-color-info-border: #A6EAF2;
+  --mg-color-info-solid: #A6EAF2;
+  --mg-color-info-on-solid: #0D1B2A;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --mg-color-background: #0D1B2A;
+    --mg-color-surface: #0D1B2A;
+    --mg-color-surface-raised: #152538;
+    --mg-color-surface-overlay: #1F3049;
+    --mg-color-surface-sunken: #0A1521;
+    --mg-color-surface-selected: #1B3E55;
+
+    --mg-color-border: #315069;
+    --mg-color-border-input: #62809A;
+    --mg-color-border-strong: #62809A;
+
+    --mg-color-text: #EAF6FB;
+    --mg-color-text-muted: #B8CAD4;
+    --mg-color-text-disabled: #6B7E8F;
+    --mg-color-text-inverse: #0D1B2A;
+
+    --mg-color-accent: #A6EAF2;
+    --mg-color-accent-text: #A6EAF2;
+    --mg-color-link: #A6EAF2;
+    --mg-color-link-hover: #D6F7FB;
+    --mg-color-link-active: #D6F7FB;
+    --mg-color-focus-ring: #A6EAF2;
+
+    --mg-color-success-text: #8BB77F;
+    --mg-color-success-bg: #142B22;
+    --mg-color-success-border: #8BB77F;
+    --mg-color-success-solid: #8BB77F;
+    --mg-color-success-on-solid: #0D1B2A;
+
+    --mg-color-warning-text: #E0A955;
+    --mg-color-warning-bg: #2B2314;
+    --mg-color-warning-border: #E0A955;
+    --mg-color-warning-solid: #E0A955;
+    --mg-color-warning-on-solid: #0D1B2A;
+
+    --mg-color-error-text: #E29089;
+    --mg-color-error-bg: #2E1B1E;
+    --mg-color-error-border: #E29089;
+    --mg-color-error-solid: #E29089;
+    --mg-color-error-on-solid: #0D1B2A;
+
+    --mg-color-info-text: #A6EAF2;
+    --mg-color-info-bg: #11293A;
+    --mg-color-info-border: #A6EAF2;
+    --mg-color-info-solid: #A6EAF2;
+    --mg-color-info-on-solid: #0D1B2A;
+  }
+}</code></pre>
+</section>
+
+<section id="type">
+  <header class="sec-head"><span class="sec-num">04</span><h2>Typography</h2></header>
+  <p class="lede">Three faces, three jobs: <strong>Inter Tight</strong> for display, <strong>Inter</strong> for UI and body, <strong>IBM Plex Mono</strong> for code and exact values.</p>
+  <p>An honest note about rendering: Inter is preinstalled on no major operating system, and this brand ships no font files and loads none from the network. The stacks below are therefore the everyday truth — Inter and IBM Plex Mono when installed, the system face otherwise. The one place type may never fall back is the wordmark, which is why every logo asset is outlined paths.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Role</th><th>Stack</th></tr></thead>
+    <tbody>
+      <tr><td>Display</td><td><code>"Inter Tight", Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif</code></td></tr>
+      <tr><td>UI / body</td><td><code>Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif</code></td></tr>
+      <tr><td>Mono</td><td><code>"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace</code></td></tr>
+    </tbody>
+  </table></div>
+  <h3>Scale</h3>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Token</th><th>Size</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><code>--mg-text-display</code></td><td class="num">44px</td><td>Mastheads only — one per page</td></tr>
+      <tr><td><code>--mg-text-h1</code></td><td class="num">36px</td><td>Page titles</td></tr>
+      <tr><td><code>--mg-text-h2</code></td><td class="num">30px</td><td>Section headings</td></tr>
+      <tr><td><code>--mg-text-h3</code></td><td class="num">24px</td><td>Subsection headings</td></tr>
+      <tr><td><code>--mg-text-body</code></td><td class="num">16px</td><td>Body copy — never smaller for running text</td></tr>
+      <tr><td><code>--mg-text-small</code></td><td class="num">14px</td><td>Captions, labels, table cells</td></tr>
+      <tr><td><code>--mg-text-code</code></td><td class="num">14px</td><td>Code, values, identifiers</td></tr>
+    </tbody>
+  </table></div>
+  <h3>The scale, rendered</h3>
+  <div class="type-specimen">
+    <div><span class="tag">display 44</span><span style="font-family:var(--mg-font-display);font-size:var(--mg-text-display);font-weight:650;letter-spacing:-0.015em;line-height:1.1">Email, made visible.</span></div>
+    <div><span class="tag">h1 36</span><span style="font-family:var(--mg-font-display);font-size:var(--mg-text-h1);font-weight:640;line-height:1.15">Render a real message</span></div>
+    <div><span class="tag">h2 30</span><span style="font-family:var(--mg-font-display);font-size:var(--mg-text-h2);font-weight:640;line-height:1.15">before you send it</span></div>
+    <div><span class="tag">h3 24</span><span style="font-family:var(--mg-font-display);font-size:var(--mg-text-h3);font-weight:620">Inspect headers, parts, and events</span></div>
+    <div><span class="tag">body 16</span><span>Previews, inspectable output, understandable flows, observable outcomes.</span></div>
+    <div><span class="tag">small 14</span><span class="small muted">This route matched the inbound recipient pattern.</span></div>
+    <div><span class="tag">code 14</span><code>mix mail.doctor</code></div>
+  </div>
+  <h3>Usage rules</h3>
+  <ul>
+    <li>Display size appears once per page. Headings step down without skipping levels.</li>
+    <li>Mono carries every exact value: hexes, sizes, tokens, module names, headers.</li>
+    <li>Body text never drops below 16px; 14px is for captions and dense tables only.</li>
+    <li>Letter-spacing tightens slightly at display sizes (−0.015em) and never spreads.</li>
+  </ul>
+</section>
+
+<section id="contrast">
+  <header class="sec-head"><span class="sec-num">05</span><h2>Contrast Matrix</h2></header>
+  <p class="lede">Every ratio below is computed from the live token values the moment this page loads, and recomputed when the theme flips — the table can never drift from the tokens, because it is read out of them. The math is WCAG 2.x relative luminance; verdicts use the normal-text thresholds (AA at 4.5, AAA at 7.0).</p>
+  <p class="matrix-meta">Showing the <b id="matrix-theme">current</b> theme — 45 pairs: six text roles across six surfaces, feedback text on its tint, and text on solid fills.</p>
+  <noscript>
+    <div class="note">Scripts are off, so this table is not computed live. The page itself still renders — with no explicit theme set, the colors follow your operating system's light or dark preference. The full matrix for both themes ships as static tables in <code>brand-book.md</code>. Two anchor values for checking any recomputation: Ink <code>#0D1B2A</code> on Paper <code>#F8FBFD</code> is 16.74; Glass <code>#277B96</code> on white <code>#FFFFFF</code> is 4.82.</div>
+  </noscript>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Text role</th><th>Surface</th><th>Foreground</th><th>Background</th><th>Ratio</th><th>AA</th><th>AAA</th></tr></thead>
+    <tbody id="matrix-body"></tbody>
+  </table></div>
+  <p class="anchor-note">Anchors against the recorded matrix: Ink on Paper = 16.74, Glass on white = 4.82. Two roles fail by design and are documented as such: <code>text-disabled</code> is exempt under SC 1.4.3 and is never the only signal of a disabled state, and <code>accent</code> at body size on tinted surfaces routes through <code>accent-text</code> instead.</p>
+</section>
+
+<section id="components">
+  <header class="sec-head"><span class="sec-num">06</span><h2>Component Gallery</h2></header>
+  <p class="lede">Everything below is real HTML driven by the tokens — hover it, press it, Tab to it. Beneath each live row, the same states are pinned with classes that share the exact declarations the real pseudo-classes use, so nothing here can drift from what you would actually ship.</p>
+
+  <h3>Buttons</h3>
+  <div class="demo">
+    <div class="demo-row">
+      <button class="btn btn-primary" type="button">Send preview</button>
+      <button class="btn btn-secondary" type="button">Inspect headers</button>
+      <button class="btn btn-quiet" type="button">View events</button>
+      <button class="btn btn-primary" type="button" disabled>Send preview</button>
     </div>
-  </body>
+    <div class="state-grid">
+      <div class="state"><span class="state-label">primary · default</span><button class="btn btn-primary" type="button" tabindex="-1">Send preview</button></div>
+      <div class="state"><span class="state-label">primary · hover</span><button class="btn btn-primary is-hover" type="button" tabindex="-1">Send preview</button></div>
+      <div class="state"><span class="state-label">primary · active</span><button class="btn btn-primary is-active" type="button" tabindex="-1">Send preview</button></div>
+      <div class="state"><span class="state-label">primary · focus-visible</span><button class="btn btn-primary is-focus" type="button" tabindex="-1">Send preview</button></div>
+      <div class="state"><span class="state-label">primary · disabled</span><button class="btn btn-primary" type="button" disabled>Send preview</button></div>
+      <div class="state"><span class="state-label">secondary · default</span><button class="btn btn-secondary" type="button" tabindex="-1">Inspect headers</button></div>
+      <div class="state"><span class="state-label">secondary · hover</span><button class="btn btn-secondary is-hover" type="button" tabindex="-1">Inspect headers</button></div>
+      <div class="state"><span class="state-label">secondary · active</span><button class="btn btn-secondary is-active" type="button" tabindex="-1">Inspect headers</button></div>
+      <div class="state"><span class="state-label">secondary · focus-visible</span><button class="btn btn-secondary is-focus" type="button" tabindex="-1">Inspect headers</button></div>
+      <div class="state"><span class="state-label">secondary · disabled</span><button class="btn btn-secondary" type="button" disabled>Inspect headers</button></div>
+      <div class="state"><span class="state-label">quiet · default</span><button class="btn btn-quiet" type="button" tabindex="-1">View events</button></div>
+      <div class="state"><span class="state-label">quiet · hover</span><button class="btn btn-quiet is-hover" type="button" tabindex="-1">View events</button></div>
+      <div class="state"><span class="state-label">quiet · active</span><button class="btn btn-quiet is-active" type="button" tabindex="-1">View events</button></div>
+      <div class="state"><span class="state-label">quiet · focus-visible</span><button class="btn btn-quiet is-focus" type="button" tabindex="-1">View events</button></div>
+      <div class="state"><span class="state-label">quiet · disabled</span><button class="btn btn-quiet" type="button" disabled>View events</button></div>
+    </div>
+  </div>
+
+  <h3>Inputs</h3>
+  <div class="demo">
+    <div class="demo-row" style="align-items:flex-start;gap:var(--mg-space-xl)">
+      <div class="field">
+        <label for="recipient">Recipient</label>
+        <input class="input" id="recipient" type="email" value="ada@example.com" autocomplete="off">
+        <p class="help">Suppressed recipients are blocked before dispatch.</p>
+      </div>
+      <div class="field">
+        <label for="adapter">Adapter</label>
+        <select class="input" id="adapter">
+          <option>Fake (development)</option>
+          <option>SMTP</option>
+          <option>Provider API</option>
+        </select>
+        <p class="help">The fake adapter records deliveries without sending.</p>
+      </div>
+      <label class="check" for="sandbox">
+        <input type="checkbox" id="sandbox" checked>
+        <span>Route this tenant through the sandbox<br><span class="muted">No mail leaves the building.</span></span>
+      </label>
+    </div>
+    <div class="state-grid">
+      <div class="state" style="min-width:200px"><span class="state-label">input · default</span><input class="input" type="text" value="order-1207" aria-label="Reference, default" tabindex="-1"></div>
+      <div class="state" style="min-width:200px"><span class="state-label">input · focus-visible</span><input class="input is-focus" type="text" value="order-1207" aria-label="Reference, focused" tabindex="-1"></div>
+      <div class="state" style="min-width:200px"><span class="state-label">input · disabled</span><input class="input" type="text" value="order-1207" aria-label="Reference, disabled" disabled></div>
+    </div>
+  </div>
+
+  <h3>Badges</h3>
+  <div class="demo">
+    <div class="demo-row">
+      <span class="badge badge-success">delivered</span>
+      <span class="badge badge-warning">deferred</span>
+      <span class="badge badge-error">bounced</span>
+      <span class="badge badge-info">queued</span>
+      <span class="badge badge-solid-success">delivered</span>
+      <span class="badge badge-solid-warning">deferred</span>
+      <span class="badge badge-solid-error">bounced</span>
+      <span class="badge badge-solid-info">queued</span>
+    </div>
+    <p class="small muted" style="margin-bottom:0">Tinted badges for rows and lists; solid badges where one status must dominate. Labels are past-tense event names — facts, not promises.</p>
+  </div>
+
+  <h3>Alerts</h3>
+  <div class="demo">
+    <div class="alert alert-success" role="status"><b>Message delivered</b><p>The provider confirmed downstream acceptance for this recipient.</p></div>
+    <div class="alert alert-warning" role="status"><b>Delivery deferred</b><p>The provider postponed this delivery and will retry. No action is needed yet.</p></div>
+    <div class="alert alert-error" role="alert"><b>Delivery blocked</b><p>Recipient is on the suppression list. Clear the suppression to send again.</p></div>
+    <div class="alert alert-info" role="status"><b>Signature verified</b><p>The webhook event checked out; the delivery timeline is up to date.</p></div>
+  </div>
+
+  <h3>Tabs</h3>
+  <div class="demo tabs">
+    <div role="tablist" aria-label="Message detail">
+      <button class="tab" role="tab" id="tab-deliveries" aria-controls="panel-deliveries" aria-selected="true" type="button">Deliveries</button>
+      <button class="tab" role="tab" id="tab-events" aria-controls="panel-events" aria-selected="false" tabindex="-1" type="button">Events</button>
+      <button class="tab" role="tab" id="tab-source" aria-controls="panel-source" aria-selected="false" tabindex="-1" type="button">Source</button>
+    </div>
+    <div role="tabpanel" id="panel-deliveries" aria-labelledby="tab-deliveries">One delivery per recipient and provider. Each carries its own status summary, derived from the event ledger — never stored as a mutable flag.</div>
+    <div role="tabpanel" id="panel-events" aria-labelledby="tab-events" hidden>Observed facts in past tense: queued, dispatched, delivered, bounced. Append-only; replays are safe no-ops.</div>
+    <div role="tabpanel" id="panel-source" aria-labelledby="tab-source" hidden>The rendered message: headers, HTML part, text part — exactly what the provider received.</div>
+  </div>
+
+  <h3>Code blocks</h3>
+  <div class="demo">
+    <pre><code>defmodule MyApp.Mailables.ReceiptMailable do
+  use Mailglass.Mailable
+
+  @impl true
+  def build(%{order: order, customer: customer}) do
+    new()
+    |&gt; to(customer)
+    |&gt; subject("Receipt for order #{order.number}")
+    |&gt; assign(:order, order)
+  end
+end</code></pre>
+    <pre style="margin-bottom:0"><code>$ mix mail.doctor
+Checking SPF............ ok
+Checking DKIM........... ok
+Checking List-Unsubscribe ok</code></pre>
+  </div>
+</section>
+
+<section id="logo">
+  <header class="sec-head"><span class="sec-num">07</span><h2>Logo System</h2></header>
+  <p class="lede">The mark is the back of an envelope drawn entirely in light: a landscape pane, a lit fold descending from the top edge, and a round seal straddling the bottom edge. The envelope is never outlined — light does all the drawing. Every opening is a void in the path, so whatever sits behind the mark shows through; that transparency is the brand's one literal use of glass.</p>
+
+  <h3>Asset manifest</h3>
+  <div class="table-scroll"><table>
+    <thead><tr><th>File</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td><code>assets/logo-primary.svg</code></td><td>Mark + wordmark tight lockup, light color expression — the flagship</td></tr>
+      <tr><td><code>assets/logo-typemark.svg</code></td><td>The hand-drawn wordmark alone, currentColor-friendly</td></tr>
+      <tr><td><code>assets/logo-mark.svg</code></td><td>The mark alone, light color expression</td></tr>
+      <tr><td><code>assets/logo-monochrome.svg</code></td><td>The lockup as pure currentColor — one even-odd path for dark or hostile contexts</td></tr>
+      <tr><td><code>assets/logo-with-tagline.svg</code></td><td>Primary lockup plus the tagline — the only asset that carries the subtitle</td></tr>
+      <tr><td><code>assets/favicon.svg</code></td><td>A 16-grid redraw in two shapes; the pane flips for OS dark mode on its own</td></tr>
+      <tr><td><code>assets/social-avatar.svg</code></td><td>Square avatar, light expression — the documented plate exception</td></tr>
+      <tr><td><code>assets/social-avatar-dark.svg</code></td><td>Square avatar, dark expression (Mist pane, Ice seal, Ink ground)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Lockups on their surfaces</h3>
+  <p>The light expression — Ink pane, Glass seal — belongs on light grounds only. On Ink or any dark ground the Ink pane vanishes, so dark surfaces get the monochrome lockup (which inherits the surrounding text color) or the dark expression. The chips below hold their colors in both themes; flip the toggle and notice the marks don't flinch.</p>
+  <div class="logo-grid">
+    <div class="logo-cell">
+      <div class="logo-chip chip-paper"><img src="assets/logo-primary.svg" alt="The primary mailglass lockup on Paper" width="200"></div>
+      <b>logo-primary.svg · Paper #F8FBFD</b>
+      <p class="why">The flagship. Light grounds only.</p>
+    </div>
+    <div class="logo-cell">
+      <div class="logo-chip chip-mist"><img src="assets/logo-with-tagline.svg" alt="The mailglass lockup with its tagline on Mist" width="200"></div>
+      <b>logo-with-tagline.svg · Mist #EAF6FB</b>
+      <p class="why">"Email, made visible." appears here and nowhere else.</p>
+    </div>
+    <div class="logo-cell">
+      <div class="logo-chip chip-paper"><img src="assets/logo-typemark.svg" alt="The mailglass wordmark on Paper" width="180"></div>
+      <b>logo-typemark.svg · Paper #F8FBFD</b>
+      <p class="why">The wordmark alone — outlined paths, never typed text.</p>
+    </div>
+    <div class="logo-cell">
+      <div class="logo-chip chip-paper"><img src="assets/logo-mark.svg" alt="The mailglass mark on Paper" width="84"></div>
+      <b>logo-mark.svg · Paper #F8FBFD</b>
+      <p class="why">The mark alone, for tight spots that still read light.</p>
+    </div>
+    <div class="logo-cell">
+      <div class="logo-chip chip-ink">
+        <svg viewBox="-12 -16 973 212" width="220" role="img" aria-label="The monochrome mailglass lockup inheriting the chip's light text color">
+          <g fill="currentColor">
+            <path fill-rule="evenodd" d="M 0 44 L 140 44 L 140 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z M 70 104 A 36 36 0 1 1 70 176 A 36 36 0 1 1 70 104 Z"/>
+            <g transform="translate(180 0)">
+              <path d="M 0 140 L 0 40 L 30 40 C 54.5 40 70 47 74 58 C 78 47 83 40 90 40 C 110 40 126 51.5 126 66 L 126 140 L 104 140 L 104 78 C 104 68 98.5 60 92 60 C 84 60 77 63 74 72 L 74 140 L 52 140 L 52 78 C 52 68 46.5 60 40 60 C 32 60 26.5 60.5 22 62 L 22 140 Z"/>
+              <path transform="translate(154 0)" d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"/>
+              <path transform="translate(257 0)" d="M 0 40 L 22 40 L 22 140 L 0 140 Z M 11 -7 C 18 -7 23.5 -1.5 23.5 5.5 C 23.5 12.5 18 18 11 18 C 4 18 -1.5 12.5 -1.5 5.5 C -1.5 -1.5 4 -7 11 -7 Z"/>
+              <path transform="translate(310 0)" d="M 0 0 L 22 0 L 22 140 L 0 140 Z"/>
+              <path transform="translate(360 0)" d="M 0 90 C 0 60.5 13.5 37 33 37 C 42 37 47.5 38.5 52 40 L 74 40 L 74 152 C 74 165.5 63 177 46 177 L 30 177 L 30 157 C 41 157 52 153 52 141 L 52 127 C 49 136 43 143 33 143 C 14.5 143 0 119.5 0 90 Z M 37 57 C 28.5 57 22 71.5 22 90 C 22 108.5 28.5 123 37 123 C 45.5 123 52 108.5 52 90 C 52 71.5 45.5 57 37 57 Z"/>
+              <path transform="translate(465 0)" d="M 0 0 L 22 0 L 22 140 L 0 140 Z"/>
+              <path transform="translate(515 0)" d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"/>
+              <path transform="translate(615 0)" d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"/>
+              <path transform="translate(705 0)" d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <b>logo-monochrome.svg · Ink #0D1B2A</b>
+      <p class="why">Inlined here as currentColor — it inherits this chip's Mist text color. One even-odd path; every void reads as light passing through.</p>
+    </div>
+    <div class="logo-cell">
+      <div class="logo-chip chip-glass">
+        <svg viewBox="-12 32 164 156" width="84" role="img" aria-label="The monochrome mark inheriting white on a Glass chip">
+          <path fill="currentColor" fill-rule="evenodd" d="M 0 44 L 140 44 L 140 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z M 70 104 A 36 36 0 1 1 70 176 A 36 36 0 1 1 70 104 Z"/>
+        </svg>
+      </div>
+      <b>monochrome mark · Glass #277B96</b>
+      <p class="why">The same path inheriting white. currentColor means one asset survives any ground.</p>
+    </div>
+    <div class="logo-cell">
+      <div class="logo-chip chip-paper"><img src="assets/social-avatar.svg" alt="The square mailglass avatar, light expression" width="96" height="96" style="box-shadow: 0 0 0 1px #C7DCE5"></div>
+      <b>social-avatar.svg</b>
+      <p class="why">The one sanctioned square plate — profile images only.</p>
+    </div>
+    <div class="logo-cell">
+      <div class="logo-chip chip-ink"><img src="assets/social-avatar-dark.svg" alt="The square mailglass avatar, dark expression" width="96" height="96" style="box-shadow: 0 0 0 1px #315069"></div>
+      <b>social-avatar-dark.svg</b>
+      <p class="why">Mist pane, Ice seal, Ink ground — the dark expression in avatar form.</p>
+    </div>
+  </div>
+
+  <h3>True-size proof: 32px and 16px</h3>
+  <p>Rendered at actual pixel size — not decoration scaled down. The favicon is a separate two-shape redraw on a 16-unit grid, because the full mark carries more drawing than 16 pixels can hold. The shipped <code>favicon.svg</code> adapts on its own — the pane flips Ink to Mist under the OS dark preference while the Glass seal holds — so both of its expressions are drawn here explicitly, each on its home ground. The live file is doing the same job in this page's browser tab right now.</p>
+  <div class="scale-row">
+    <div class="logo-cell">
+      <div class="logo-chip chip-paper" style="gap:24px"><img src="assets/logo-mark.svg" alt="The mark at 32 pixels" width="32" height="32"><img src="assets/logo-mark.svg" alt="The mark at 16 pixels" width="16" height="16"></div>
+      <b>logo-mark.svg · 32 / 16</b>
+    </div>
+    <div class="logo-cell">
+      <div class="logo-chip chip-paper" style="gap:24px">
+        <svg viewBox="0 0 16 16" width="32" height="32" role="img" aria-label="The favicon's light expression at 32 pixels"><path fill="#0D1B2A" fill-rule="evenodd" d="M 1 1 H 15 V 11 H 11 A 3 3 0 0 0 5 11 H 1 Z M 3 3 H 13 L 8 6 Z"/><path fill="#277B96" d="M 11 11 A 3 3 0 0 1 5 11 Z"/></svg>
+        <svg viewBox="0 0 16 16" width="16" height="16" role="img" aria-label="The favicon's light expression at 16 pixels"><path fill="#0D1B2A" fill-rule="evenodd" d="M 1 1 H 15 V 11 H 11 A 3 3 0 0 0 5 11 H 1 Z M 3 3 H 13 L 8 6 Z"/><path fill="#277B96" d="M 11 11 A 3 3 0 0 1 5 11 Z"/></svg>
+      </div>
+      <b>favicon.svg · 32 / 16 · Paper</b>
+    </div>
+    <div class="logo-cell">
+      <div class="logo-chip chip-ink" style="gap:24px">
+        <svg viewBox="0 0 16 16" width="32" height="32" role="img" aria-label="The favicon's dark expression at 32 pixels"><path fill="#EAF6FB" fill-rule="evenodd" d="M 1 1 H 15 V 11 H 11 A 3 3 0 0 0 5 11 H 1 Z M 3 3 H 13 L 8 6 Z"/><path fill="#277B96" d="M 11 11 A 3 3 0 0 1 5 11 Z"/></svg>
+        <svg viewBox="0 0 16 16" width="16" height="16" role="img" aria-label="The favicon's dark expression at 16 pixels"><path fill="#EAF6FB" fill-rule="evenodd" d="M 1 1 H 15 V 11 H 11 A 3 3 0 0 0 5 11 H 1 Z M 3 3 H 13 L 8 6 Z"/><path fill="#277B96" d="M 11 11 A 3 3 0 0 1 5 11 Z"/></svg>
+      </div>
+      <b>favicon.svg · 32 / 16 · Ink</b>
+    </div>
+  </div>
+
+  <h3>Color program</h3>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Context</th><th>Pane</th><th>Seal (outer half)</th><th>Light regions</th></tr></thead>
+    <tbody>
+      <tr><td>Light surfaces</td><td>Ink <code>#0D1B2A</code></td><td>Glass <code>#277B96</code></td><td>background shows through</td></tr>
+      <tr><td>Dark surfaces</td><td>Mist <code>#EAF6FB</code></td><td>Ice <code>#A6EAF2</code></td><td>background shows through</td></tr>
+      <tr><td>Mono / hostile contexts</td><td colspan="2">currentColor, one even-odd path</td><td>voids</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Minimum size and clear space</h3>
+  <p>The full mark holds down to 24px; below that, use the favicon redraw. Lockups hold down to 20px of wordmark height. Clear space on every side is the height of the seal's visible half (one quarter of the mark's height) — give it room or give it the favicon.</p>
+  <div class="dd-grid">
+    <div class="dd dd-do"><span class="dd-tag">Do</span>
+      <ul>
+        <li>Use the light expression on Paper, Mist, white, and other light grounds.</li>
+        <li>Use the monochrome lockup or the dark expression on Ink and dark grounds.</li>
+        <li>Let the background show through the fold and the seal — the voids are the point.</li>
+        <li>Use <code>logo-with-tagline.svg</code> when the subtitle must appear; it is the only asset that carries it.</li>
+      </ul>
+    </div>
+    <div class="dd dd-dont"><span class="dd-tag">Don't</span>
+      <ul>
+        <li>Never place the light-expression primary on a dark ground — the Ink pane vanishes.</li>
+        <li>Never add a background plate behind the mark; the square social avatars are the sole exception.</li>
+        <li>Never outline the envelope — light does the drawing.</li>
+        <li>Nothing may read as broken, severed, or fractured. Voids always read as light passing through.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="applications">
+  <header class="sec-head"><span class="sec-num">08</span><h2>Specimens &amp; Applications</h2></header>
+  <p class="lede">One brand, six surfaces. Each surface gets the same calm treatment — left-aligned, token-colored, light expression on light grounds — with one load-bearing rule apiece. Rendered collateral slots into this grid as it ships.</p>
+  <div class="specimen-grid">
+    <div class="specimen-card"><figure>
+      <div style="background:#F8FBFD;border-bottom:1px solid #C7DCE5;padding:20px 16px">
+        <img src="examples/readme-header.svg" alt="The README header banner: the mailglass lockup in Glass with the tagline, Email, made visible, in Slate" style="display:block;width:100%;height:auto">
+      </div>
+      <figcaption>
+      <b>README header</b>
+      <p>A width-bounded SVG banner: the lockup, the essence line, nothing else. Fills are Glass and Slate only, so the one file reads on both repository themes. <a href="examples/readme-header.svg">Open the file</a>.</p>
+      <span class="rule">rule: outlined paths only — no live text in assets</span>
+    </figcaption></figure></div>
+    <div class="specimen-card"><figure>
+      <div style="background:#F8FBFD;border-bottom:1px solid #C7DCE5;padding:12px">
+        <img src="examples/docs-page.svg" alt="A docs page framing specimen: Mist sidebar with the mark, Ink heading, greeked Slate body bars, a code block on the sunken surface, links in deep glass" style="display:block;width:100%;height:auto">
+      </div>
+      <figcaption>
+      <b>Docs page</b>
+      <p>Body text in Ink on Paper, code on the sunken surface, links in glass-deep. The hex docs theme does most of the work; the brand shows up as restraint. <a href="examples/docs-page.svg">Open the file</a>.</p>
+      <span class="rule">rule: body-size accent copy uses #1D637A, not Glass</span>
+    </figcaption></figure></div>
+    <div class="specimen-card"><figure>
+      <iframe src="examples/landing-page.html" loading="lazy" title="Landing page specimen" style="display:block;width:100%;height:340px;border:0;border-bottom:1px solid var(--mg-color-border);background:#F8FBFD"></iframe>
+      <figcaption>
+      <b>Landing page</b>
+      <p>Reads like well-made documentation: content anchored to a left column, ragged-right text, a working code sample above the fold. No centered hero, no marketing symmetry. <a href="examples/landing-page.html">Open the file</a>.</p>
+      <span class="rule">rule: left-aligned composition; tokens are the only colors</span>
+    </figcaption></figure></div>
+    <div class="specimen-card"><figure>
+      <iframe src="examples/email-template.html" loading="lazy" title="Transactional email specimen" style="display:block;width:100%;height:340px;border:0;border-bottom:1px solid var(--mg-color-border);background:#EAF6FB"></iframe>
+      <figcaption>
+      <b>Transactional email</b>
+      <p>Table layout, inline styles, the light expression on a light ground, and copy in the maintainer's voice. Built to survive dark-mode inversion in mail clients. <a href="examples/email-template.html">Open the file</a>.</p>
+      <span class="rule">rule: open and click tracking stay off auth mail, always</span>
+    </figcaption></figure></div>
+    <div class="specimen-card"><figure>
+      <div style="background:#F8FBFD;border-bottom:1px solid #C7DCE5;padding:12px">
+        <img src="examples/og-card.svg" alt="The 1200 by 630 social card template: the mailglass lockup and tagline, left-anchored on Paper" style="display:block;width:100%;height:auto">
+      </div>
+      <figcaption>
+      <b>Social card</b>
+      <p>A 1200×630 source template: mark, wordmark, essence line on Paper. The SVG is the source of truth; the published image is a local PNG export of it. <a href="examples/og-card.svg">Open the file</a>.</p>
+      <span class="rule">rule: the SVG is a template — crawlers don't render SVG</span>
+    </figcaption></figure></div>
+    <div class="specimen-card"><figure>
+      <div style="background:#F8FBFD;border-bottom:1px solid #C7DCE5;padding:12px">
+        <img src="examples/diagram-language.svg" alt="The diagram language spec: a legend of pane nodes, one stroke weight, one arrowhead, and the light-void motif, above the worked flow Mailable to Message to Delivery to Event" style="display:block;width:100%;height:auto">
+      </div>
+      <figcaption>
+      <b>Diagram language</b>
+      <p>Panes as nodes, flat token fills, single stroke weight, voids for openings. Architecture drawings inherit the mark's logic: light passes through structure. <a href="examples/diagram-language.svg">Open the file</a>.</p>
+      <span class="rule">rule: no gradients; voids read as light, never damage</span>
+    </figcaption></figure></div>
+  </div>
+  <h3>Per-surface reference</h3>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Surface</th><th>Assets</th><th>Tokens that matter most</th><th>The rule it must honor</th></tr></thead>
+    <tbody>
+      <tr><td>README header</td><td><code>logo-primary.svg</code> or a drawn banner</td><td>Ink, Glass, Paper</td><td>Outlined paths; renders without any installed font</td></tr>
+      <tr><td>Docs page</td><td><code>logo-mark.svg</code> in the sidebar</td><td>text, link, surface-sunken</td><td>Accent text routes through <code>accent-text</code> on tinted grounds</td></tr>
+      <tr><td>Landing page</td><td><code>logo-primary.svg</code>, <code>logo-typemark.svg</code></td><td>the full role set, both themes</td><td>Left-aligned; dark mode demonstrated, not promised</td></tr>
+      <tr><td>Transactional email</td><td><code>logo-primary.svg</code> (light ground)</td><td>explicit hex equivalents, inlined</td><td>No tracking on auth mail; calm, specific copy</td></tr>
+      <tr><td>Social card</td><td><code>social-avatar.svg</code>, card template</td><td>Ink, Glass, Paper</td><td>Export to PNG locally; never publish the SVG directly</td></tr>
+      <tr><td>Diagram language</td><td>pane motif, mark geometry</td><td>accent, border-strong, surface roles</td><td>Flat fills, one stroke weight, no gradients</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="usage">
+  <header class="sec-head"><span class="sec-num">09</span><h2>Usage &amp; Export Policy</h2></header>
+  <p class="lede">The brand ships as text. Everything committed is reviewable in a diff: SVG, Markdown, JSON, CSS, HTML. Anything rasterized is generated locally, used where needed, and never committed.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Category</th><th>What</th><th>Policy</th></tr></thead>
+    <tbody>
+      <tr><td>Committed</td><td>SVG assets, <code>tokens.json</code>, <code>tokens.css</code>, this page, <code>brand-book.md</code>, <code>README.md</code></td><td>Text artifacts only — every change reads in review</td></tr>
+      <tr><td>Generated locally</td><td>PNG exports of the social card (1200×630) and avatars at platform sizes; <code>.ico</code> if a host demands one</td><td>Produce when a launch surface needs them; regenerate from the SVG sources at will</td></tr>
+      <tr><td>Never ships</td><td>Binaries, font files, rasters, screenshots</td><td>If it can't be diffed, it doesn't belong in the folder</td></tr>
+    </tbody>
+  </table></div>
+  <p>One trap worth naming twice: the social-card SVG is a <em>template</em>. Link-preview crawlers do not render SVG, so the published preview image is always a local PNG export of it — the SVG itself is never wired up as the page's preview image.</p>
+  <p class="small muted">Fonts follow the same logic. Inter and IBM Plex Mono are the brand faces when installed; nothing here embeds or downloads them. The wordmark — the one place type may never fall back — is already outlined inside every asset.</p>
+</section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  var toggle = document.getElementById("theme-toggle");
+  function effectiveTheme() {
+    return root.getAttribute("data-theme") || (mq.matches ? "dark" : "light");
+  }
+  function reflect() {
+    var t = effectiveTheme();
+    toggle.textContent = t === "dark" ? "Light theme" : "Dark theme";
+    toggle.setAttribute("aria-label", "Switch to the " + (t === "dark" ? "light" : "dark") + " theme");
+  }
+  toggle.addEventListener("click", function () {
+    var next = effectiveTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("mg-theme", next); } catch (e) { /* session-only on strict file systems */ }
+    reflect();
+    dispatchEvent(new CustomEvent("mg-theme-change"));
+  });
+  mq.addEventListener("change", function () { reflect(); renderMatrix(); });
+
+  /* WCAG 2.x relative luminance and ratio, computed from the live tokens */
+  function lum(hex) {
+    var n = parseInt(hex.slice(1), 16);
+    var c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(function (v) {
+      v = v / 255;
+      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(fg, bg) {
+    var a = lum(fg), b = lum(bg);
+    var hi = Math.max(a, b), lo = Math.min(a, b);
+    return Math.round(((hi + 0.05) / (lo + 0.05)) * 100) / 100;
+  }
+  function token(name) {
+    return getComputedStyle(root).getPropertyValue("--mg-color-" + name).trim().toUpperCase();
+  }
+  var textRoles = ["text", "text-muted", "text-disabled", "accent", "accent-text", "link"];
+  var surfaces = ["background", "surface", "surface-raised", "surface-overlay", "surface-sunken", "surface-selected"];
+  var kinds = ["success", "warning", "error", "info"];
+  function verdict(pass) {
+    return '<span class="verdict ' + (pass ? "pass" : "fail") + '">' + (pass ? "pass" : "fail") + "</span>";
+  }
+  function row(fgName, bgName, fg, bg) {
+    var r = ratio(fg, bg);
+    return "<tr><td>" + fgName + "</td><td>" + bgName + "</td><td><code>" + fg + "</code></td><td><code>" + bg +
+      '</code></td><td class="num">' + r.toFixed(2) + "</td><td>" + verdict(r >= 4.5) + "</td><td>" + verdict(r >= 7) + "</td></tr>";
+  }
+  function renderMatrix() {
+    var out = [];
+    textRoles.forEach(function (f) {
+      surfaces.forEach(function (s) { out.push(row(f, s, token(f), token(s))); });
+    });
+    kinds.forEach(function (k) { out.push(row(k + "-text", k + "-bg", token(k + "-text"), token(k + "-bg"))); });
+    kinds.forEach(function (k) { out.push(row(k + "-on-solid", k + "-solid", token(k + "-on-solid"), token(k + "-solid"))); });
+    out.push(row("text-inverse", "accent", token("text-inverse"), token("accent")));
+    document.getElementById("matrix-body").innerHTML = out.join("");
+    document.getElementById("matrix-theme").textContent = effectiveTheme();
+  }
+  addEventListener("mg-theme-change", renderMatrix);
+  reflect();
+  renderMatrix();
+
+  /* tab strip: click + arrow keys, roving tabindex */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function selectTab(tab) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+  }
+  tabs.forEach(function (tab) {
+    tab.addEventListener("click", function () { selectTab(tab); });
+    tab.addEventListener("keydown", function (e) {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      var i = tabs.indexOf(tab) + (e.key === "ArrowRight" ? 1 : tabs.length - 1);
+      var next = tabs[i % tabs.length];
+      next.focus();
+      selectTab(next);
+    });
+  });
+})();
+</script>
+</body>
 </html>
