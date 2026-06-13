@@ -168,16 +168,169 @@ admin static bundle, and milestone archives were left untouched.
 
 ## Adoption Diff Scope
 
-Pending - recorded during Plan 91-04 using:
+Command:
 
 ```bash
+PHASE_BASE=$(sed -n 's/.*Phase base: `\([0-9a-f][0-9a-f]*\)`.*/\1/p' .planning/phases/91-folder-adoption-and-reference-reconciliation/91-gate-evidence.md | head -1)
 git diff --name-status "$PHASE_BASE" --
 ```
 
+Output:
+
+```text
+PHASE_BASE=63701373af556a6c4fbc9d48f0d1a2d7c31782fb
+M	.planning/MILESTONES.md
+M	.planning/PROJECT.md
+M	.planning/REQUIREMENTS.md
+M	.planning/RETROSPECTIVE.md
+M	.planning/ROADMAP.md
+M	.planning/STATE.md
+A	.planning/phases/91-folder-adoption-and-reference-reconciliation/91-01-SUMMARY.md
+A	.planning/phases/91-folder-adoption-and-reference-reconciliation/91-02-SUMMARY.md
+A	.planning/phases/91-folder-adoption-and-reference-reconciliation/91-03-SUMMARY.md
+M	.planning/phases/91-folder-adoption-and-reference-reconciliation/91-VALIDATION.md
+A	.planning/phases/91-folder-adoption-and-reference-reconciliation/91-gate-evidence.md
+M	CLAUDE.md
+D	brandbook-fable/README.md
+D	brandbook-fable/assets/favicon.svg
+D	brandbook-fable/assets/logo-mark.svg
+D	brandbook-fable/assets/logo-monochrome.svg
+D	brandbook-fable/assets/logo-primary.svg
+D	brandbook-fable/assets/social-avatar.svg
+D	brandbook-fable/brand-book.md
+D	brandbook-fable/examples/docs-page.svg
+D	brandbook-fable/examples/readme-header.svg
+D	brandbook-fable/index.html
+D	brandbook-fable/tokens.css
+D	brandbook-fable/tokens.json
+M	brandbook/README.md
+D	brandbook/assets/concepts/concept-07r-no-idot-01-natural-lockup.svg
+D	brandbook/assets/concepts/concept-07r-no-idot-02-tighter-gap.svg
+D	brandbook/assets/concepts/concept-07r-no-idot-03-larger-mark.svg
+D	brandbook/assets/concepts/concept-07r-no-idot-04-larger-wordmark.svg
+D	brandbook/assets/concepts/concept-07r-no-idot-05-raised-baseline.svg
+D	brandbook/assets/concepts/concept-07r-no-idot-06-lower-baseline.svg
+D	brandbook/assets/concepts/concept-07r-no-idot-07-mono-first.svg
+D	brandbook/assets/concepts/concept-07r-no-idot-08-black-bg-native.svg
+D	brandbook/assets/concepts/concept-07r-no-idot-09-small-header.svg
+D	brandbook/assets/concepts/concept-07r-no-idot-10-final-synthesis.svg
+D	brandbook/assets/concepts/concept-07r-pane-rhythm-bold-type.svg
+M	brandbook/assets/favicon.svg
+M	brandbook/assets/logo-mark.svg
+M	brandbook/assets/logo-monochrome.svg
+M	brandbook/assets/logo-primary.svg
+R100	brandbook-fable/assets/logo-typemark.svg	brandbook/assets/logo-typemark.svg
+R100	brandbook-fable/assets/logo-with-tagline.svg	brandbook/assets/logo-with-tagline.svg
+D	brandbook/assets/options/option-a-folded-pane.svg
+D	brandbook/assets/options/option-b-pane-lines.svg
+D	brandbook/assets/options/option-c-inspection-pane.svg
+D	brandbook/assets/options/option-d-wordmark-aperture.svg
+D	brandbook/assets/options/option-e-mg-header-mark.svg
+D	brandbook/assets/options/option-f-wordmark-trace.svg
+D	brandbook/assets/options/option-g-header-checksum.svg
+D	brandbook/assets/options/option-h-console-row.svg
+D	brandbook/assets/options/option-i-inline-source-cursor.svg
+D	brandbook/assets/options/option-j-negative-at-lens.svg
+D	brandbook/assets/options/option-k-header-stack-mark.svg
+D	brandbook/assets/options/option-l-source-diff.svg
+D	brandbook/assets/options/option-m-protocol-brackets.svg
+D	brandbook/assets/options/option-n-transparent-routing-node.svg
+D	brandbook/assets/options/option-o-delivery-timeline.svg
+D	brandbook/assets/options/option-p-normalized-event-pulse.svg
+D	brandbook/assets/options/option-q-glass-caliper.svg
+D	brandbook/assets/options/option-r-refraction-line.svg
+R100	brandbook-fable/assets/social-avatar-dark.svg	brandbook/assets/social-avatar-dark.svg
+M	brandbook/assets/social-avatar.svg
+D	brandbook/brand-audit.md
+M	brandbook/brand-book.md
+R100	brandbook-fable/copy/copy-blocks.md	brandbook/copy/copy-blocks.md
+R100	brandbook-fable/copy/microcopy.md	brandbook/copy/microcopy.md
+R100	brandbook-fable/examples/diagram-language.svg	brandbook/examples/diagram-language.svg
+M	brandbook/examples/docs-page.svg
+R100	brandbook-fable/examples/email-template.html	brandbook/examples/email-template.html
+R100	brandbook-fable/examples/landing-page.html	brandbook/examples/landing-page.html
+R100	brandbook-fable/examples/og-card.svg	brandbook/examples/og-card.svg
+D	brandbook/examples/palette.svg
+M	brandbook/examples/readme-header.svg
+D	brandbook/examples/typography.svg
+D	brandbook/examples/ui-primitives.svg
+M	brandbook/index.html
+D	brandbook/logo-concepts.html
+D	brandbook/logo-concepts.md
+D	brandbook/logo-creative-brief.md
+D	brandbook/logo-options.md
+M	brandbook/tokens.css
+M	brandbook/tokens.json
+M	mailglass_admin/assets/css/app.css
+M	mailglass_admin/docs/design-system.md
+```
+
+The diff is limited to the approved Phase 91 scope: canonical `brandbook/`
+replacement, deleted/renamed former fable source paths, active pointer files,
+live planning memory, and Phase 91 planning/evidence artifacts.
+
 ## Gate Run
 
-Pending - recorded during Plan 91-04 after folder adoption and reference
-reconciliation.
+Command:
+
+```bash
+bash .planning/phases/91-folder-adoption-and-reference-reconciliation/gate.sh
+```
+
+Output:
+
+```text
+CHECK-1 PASS
+CHECK-2 PASS
+CHECK-3 PASS
+CHECK-4 PASS
+CHECK-5 PASS
+CHECK-6 PASS
+CHECK-7 PASS (folder 248 KB, index.html 79789 B)
+CHECK-8 PASS (2 shape elements, 16x16 viewBox)
+CHECK-9 PASS
+GATE-PASS
+```
+
+Exit code: 0
+
+Final active stale-reference sweeps:
+
+```bash
+rg --hidden -n 'brandbook-fable/' \
+  --glob '!.git/**' \
+  --glob '!.planning/milestones/**' \
+  --glob '!.planning/research/**' \
+  --glob '!.planning/phases/91-folder-adoption-and-reference-reconciliation/**' \
+  --glob '!.planning/todos/**' \
+  --glob '!prompts/**' \
+  --glob '!_build/**' \
+  --glob '!doc/**' \
+  --glob '!mailglass_admin/_build/**' \
+  --glob '!mailglass_admin/doc/**' \
+  --glob '!mailglass_inbound/_build/**' \
+  --glob '!mailglass_inbound/doc/**' \
+  --glob '!reference/**/_build/**' \
+  --glob '!reference/**/doc/**'
+
+rg -n 'prompts/mailglass-brand-book\.md' \
+  CLAUDE.md \
+  mailglass_admin/docs/design-system.md \
+  mailglass_admin/assets/css/app.css \
+  .planning/PROJECT.md \
+  .planning/STATE.md \
+  .planning/ROADMAP.md \
+  .planning/REQUIREMENTS.md \
+  .planning/MILESTONES.md \
+  .planning/RETROSPECTIVE.md
+```
+
+Output:
+
+```text
+```
+
+Both final stale-reference sweeps printed no lines.
 
 ## Release Safety
 
