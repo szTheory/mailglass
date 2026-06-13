@@ -64,7 +64,7 @@ release again.
   path stops claiming `brandbook/`+`.planning/` (config mechanism researched
   and verified against release-please's manifest schema), or an equivalent
   enforced convention (commit-type lint for those paths) is added to CI.
-- [ ] **RELH-02**: The 1.6.x release aftermath is reconciled: unpublished
+- [x] **RELH-02**: The 1.6.x release aftermath is reconciled: unpublished
   stale tags dispositioned (deleted or documented), the inbound exact-pin
   bumped to the released core version via the established `fix(inbound)`
   dance, and `.planning` release-state memory/docs updated to the final
@@ -97,6 +97,6 @@ release again.
 | HEXD-01 | Phase 93 | Pending |
 | HEXD-02 | Phase 93 | Pending |
 | RELH-01 | Phase 93 | Pending |
-| RELH-02 | Phase 93 | Pending |
+| RELH-02 | Phase 93 | Complete |
 
 **Coverage:** 10/10 v1.10 requirements mapped (roadmap created 2026-06-12).
