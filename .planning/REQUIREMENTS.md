@@ -41,7 +41,7 @@ release again.
   at 2400×1260 via the verified Playwright command) is committed, with
   GitHub social-preview upload steps documented (Settings-UI-only — no API
   exists).
-- [ ] **SURF-03**: The shipped admin wordmark
+- [x] **SURF-03**: The shipped admin wordmark
   (`mailglass_admin/priv/static/mailglass-logo.svg`, served via
   `controllers/assets.ex:85-87`) is explicitly dispositioned: replaced with
   the sealed-flap identity (with rebuilt committed bundle if required) or
@@ -93,7 +93,7 @@ release again.
 | FOLD-03 | Phase 91 | Complete |
 | SURF-01 | Phase 92 | Complete |
 | SURF-02 | Phase 92 | Complete |
-| SURF-03 | Phase 92 | Pending |
+| SURF-03 | Phase 92 | Complete |
 | HEXD-01 | Phase 93 | Pending |
 | HEXD-02 | Phase 93 | Pending |
 | RELH-01 | Phase 93 | Pending |

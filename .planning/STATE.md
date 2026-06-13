@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: Brand Adoption
 status: executing
-last_updated: "2026-06-13T05:41:08.686Z"
+last_updated: "2026-06-13T05:50:27.775Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 11
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 12
-  completed_plans: 11
-  percent: 92
+  completed_plans: 12
+  percent: 100
 ---
 
 # Project State
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12 — v1.10 "Brand Adoption" milestone section)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 92 - surface-propagation
+**Current focus:** Phase 93 - HexDocs Wiring and Release Hardening
 
 ## Current Position
 
-Phase: 92 (surface-propagation) - DISCUSSED
-Plan: 1 of 2
-Status: In progress
-Last activity: 2026-06-13 -- Plan 92-01 completed
+Phase: 93 (HexDocs Wiring and Release Hardening) - next
+Plan: TBD
+Status: Ready to plan
+Last activity: 2026-06-13 -- Plan 92-02 completed; Phase 92 complete
 
-Progress: [█████████░] 92%
+Progress: [██████████] 100%
 
 ## v1.10 Milestone Intent
 
@@ -79,6 +79,8 @@ Progress: [█████████░] 92%
 - [92-01] Root README uses `brandbook/examples/readme-header.svg` directly as the first visible brand surface.
 - [92-01] `brandbook/examples/og-card.png` is the only committed v1.10 binary exception for GitHub social preview upload.
 - [92-01] GitHub social-preview upload remains manual because no documented write API exists.
+- [92-02] Admin logo rendering uses inline `currentColor` SVG so the sealed-flap lockup inherits light/dark admin chrome color while the stable `logo.svg` route remains served.
+- [92-02] The admin CSS bundle is committed when `mix verify.preview` rebuilds `priv/static/app.css`, because the gate requires bundle-clean output.
 - [v1.10] Active brand voice and visual identity source is now `brandbook/brand-book.md`; prompt-era brand research remains preserved as provenance, not as an active source pointer.
 - [v1.10] Research pre-settled (see `.planning/research/v1.10-brand-adoption/ADOPTION-MECHANICS.md`): ex_doc 0.40.1 supports SVG logo/favicon but requires explicit width/height attrs (fable SVGs are viewBox-only — must add); use relative paths into canonical `brandbook/` (no per-package copies, no `files:` allowlist change); `docs:`/`chore:` commits are release-safe under release-please defaults; GitHub social preview is Settings-UI-only (no write API); og-card export via `npx playwright screenshot --viewport-size=2400,1260`; CLAUDE.md + `mailglass_admin/docs/design-system.md:5` are the only tracked reference-sweep targets.
 - [v1.10] HexDocs latency accepted: `logo:`/`favicon:` wiring is inert on hexdocs.pm until the next natural release of each package — this milestone does not force a release to make logos visible.
@@ -149,6 +151,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 | Phase 91 P03 | 2 min | 2 tasks | 10 files |
 | Phase 91 P04 | 1 min | 2 tasks | 1 files |
 | Phase 92 P01 | 10 min | 3 tasks | 3 files |
+| Phase 92 P02 | 38 min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -170,6 +173,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Session Continuity
 
+- 2026-06-13: Plan 92-02 completed. The admin placeholder wordmark is replaced with the sealed-flap outlined `currentColor` asset, `Components.logo/1` renders the lockup inline for theme-safe admin chrome, logo bundle tests ban live text/font dependencies, and `cd mailglass_admin && mix verify.preview` passed. Phase 92 is complete; next: plan/execute Phase 93 for HexDocs wiring and release hardening.
 - 2026-06-13: Plan 92-01 completed. README now displays `brandbook/examples/readme-header.svg`, `brandbook/examples/og-card.png` is committed at 2400x1260 and 59,562 bytes, and `brandbook/README.md` documents the manual GitHub Settings > Social preview upload path. Next: execute 92-02 for the admin wordmark surface.
 - 2026-06-13: Phase 92 UI-SPEC approved in `.planning/phases/92-surface-propagation/92-UI-SPEC.md`; 6/6 UI checker dimensions passed with no recommendations. Next: `/gsd-plan-phase 92`.
 - 2026-06-12: Phase 92 context gathered in assumptions mode. Decisions captured in `.planning/phases/92-surface-propagation/92-CONTEXT.md`; discussion audit in `.planning/phases/92-surface-propagation/92-DISCUSSION-LOG.md`. Next: `/gsd-plan-phase 92`.
@@ -184,6 +188,4 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Operator Next Steps
 
-- Execute plan 92-02 for SURF-03 admin wordmark disposition.
-
-- Plan Phase 92: `/gsd-plan-phase 92`
+- Plan or execute Phase 93 for HEXD-01, HEXD-02, RELH-01, and RELH-02.
