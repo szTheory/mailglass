@@ -54,7 +54,7 @@ Full details: [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 
 ### v1.10 Brand Adoption (Phases 91-93)
 
-- [ ] **Phase 91: Folder Adoption and Reference Reconciliation** - the fable book becomes canonical `brandbook/` via git mv, codex book removed, all tracked pointers reconciled, quality gate re-passes on the new path
+- [x] **Phase 91: Folder Adoption and Reference Reconciliation** - the fable book becomes canonical `brandbook/` via git mv, codex book removed, all tracked pointers reconciled, quality gate re-passes on the new path (completed 2026-06-13)
 - [ ] **Phase 92: Surface Propagation** - Root README adopts the brand header, og-card PNG exported and committed with upload steps documented, admin wordmark explicitly dispositioned
 - [ ] **Phase 93: HexDocs Wiring and Release Hardening** - ex_doc logo/favicon config for all three packages verified with local `mix docs`, release-please hardened against brand/planning-only commits, 1.6.x aftermath reconciled
 
@@ -88,7 +88,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 91-04-PLAN.md - Run the re-pathed gate and record release-safety evidence
+- [x] 91-04-PLAN.md - Run the re-pathed gate and record release-safety evidence
 
 ### Phase 92: Surface Propagation
 
@@ -128,7 +128,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 91. Folder Adoption and Reference Reconciliation | 3/4 | In Progress|  |
+| 91. Folder Adoption and Reference Reconciliation | 4/4 | Complete   | 2026-06-13 |
 | 92. Surface Propagation | 0/? | Not started | - |
 | 93. HexDocs Wiring and Release Hardening | 0/? | Not started | - |
 
