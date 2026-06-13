@@ -5,7 +5,8 @@
       "package-name": "mailglass",
       "release-type": "elixir",
       "component": "mailglass",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "exclude-paths": ["brandbook", ".planning", "prompts", "mailglass_admin", "mailglass_inbound"]
     },
     "mailglass_admin": {
       "package-name": "mailglass_admin",
