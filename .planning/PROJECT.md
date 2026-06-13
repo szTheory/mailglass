@@ -8,20 +8,19 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v1.10 Brand Adoption
+## Current Status: Between Milestones
 
-**Goal:** Make the A/B-winning fable brand the project's one canonical identity everywhere it shows: adopt it as canonical `brandbook/` (deleting the codex book from the active tree), propagate the sealed-flap identity to the root README and the repo social preview, and wire HexDocs/ex_doc logos for all three packages.
+**`v1.10 Brand Adoption` shipped 2026-06-13** (Phases 91-93; audit `status: passed`,
+10/10 requirements). The A/B-winning fable brand is now the project's one canonical
+identity — canonical `brandbook/`, README brand header, committed social-preview
+PNG, and ex_doc logo/favicon wiring on all three packages — with the release
+pipeline hardened so brand/planning-only commits can never cut a release again.
+See **Current State** below for the full shipped summary.
 
-**Target features:**
-- Folder adoption: the v1.9 fable book becomes canonical `brandbook/` via git mv; codex book removed (history preserves it at the frozen baseline `09a84dd4`); all internal references (CLAUDE.md brand pointers, planning intel) reconciled; the v1.9 quality gate re-passes on the new path.
-- Repo surfaces: root README adopts `brandbook/examples/readme-header.svg`; og-card exported to PNG (2400×1260) with documented GitHub social-preview upload steps; admin logo surfaces use the sealed-flap identity.
-- HexDocs wiring: ex_doc logo/assets config for `mailglass`, `mailglass_admin`, `mailglass_inbound` — verified with local `mix docs` renders; committed as non-release-triggering types so the brand ships with the next natural release (no forced release train in this milestone).
-- CLAUDE.md "Brand & Voice" source-of-truth pointer moves to `brandbook/brand-book.md`.
-
-**Scope locks:**
-- No Hex release is cut in this milestone; mix.exs changes are docs-config only, commit types must not trigger release-please.
-- The sealed-flap usage rules and constraints C-15/C-16 (in the v1.9 decision record) are binding on every propagated surface.
-- Binary additions limited to the single og-card PNG export.
+**No active milestone.** Posture is quiet maintenance / adopter-pull per D-23.
+Define the next milestone with `/gsd-new-milestone`; the dormant 999.x backlog
+(human-readable comments cleanup; shift-left preview-screenshot workflow) is
+promoted separately only if a maintenance pass or adopter pull justifies it.
 
 **v1.9 context (shipped):**
 
@@ -307,11 +306,17 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (v0.1, v0.2, v1.1, v1.3, v1.4, v1.7 — SHIPPED)
+## Validated Requirements (v0.1, v0.2, v1.1, v1.3, v1.4, v1.7, v1.10 — SHIPPED)
 
-All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, and 19 v1.7 REQ-IDs satisfied. v1.8 validated so far: 2 brand-audit requirements.
+All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 REQ-IDs, and 10 v1.10 REQ-IDs satisfied. The v1.9 brand book shipped its 22 REQ-IDs (archived in `milestones/v1.9-REQUIREMENTS.md`); v1.8 validated 2 brand-audit requirements before closing superseded.
 
-**By category (v1.8 in progress — Brand System and Repo-Ready Brandbook):**
+**By category (v1.10 — Brand Adoption, SHIPPED 2026-06-13):**
+- ✓ FOLD-01..03 — fable book adopted as canonical `brandbook/` via `git mv` (codex removed, history at `09a84dd4`), CLAUDE.md + `design-system.md` pointers reconciled to `brandbook/brand-book.md`, v1.9 gate re-passed on the new path — validated in Phase 91
+- ✓ SURF-01..03 — root README brand header, committed 2400×1260 og-card.png with documented social-preview upload, theme-safe sealed-flap admin wordmark with bundle-clean proof — validated in Phase 92
+- ✓ HEXD-01..02 — ex_doc `logo:`/`favicon:` wired into all three packages pointing at canonical `brandbook/` assets (SVG width/height added for ex_doc 0.40.x), local `mix docs` renders verified — validated in Phase 93
+- ✓ RELH-01..02 — release-please hardened (`exclude-paths` + required `guard-release-trigger` PR lint with offline fixture) so brand/planning-only commits can't cut a release; 1.6.x aftermath reconciled to released truth 1.6.2/1.6.2/1.3.1 — validated in Phase 93
+
+**By category (v1.8 closed superseded — Brand System and Repo-Ready Brandbook):**
 - ✓ BRAND-01..02 — critical KEEP/TIGHTEN/REWORK/ADD/REMOVE brand audit and required-surface stress matrix validated in Phase 80.
 
 **By category (v1.7 — Admin UI IA & Design-System Polish v2):**
@@ -371,18 +376,16 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, and 19 v1.
 
 ## Active
 
-**v1.8 Brand System and Repo-Ready Brandbook is active as of 2026-06-05.**
-Commit `572f3eb2` created draft `brandbook/` artifacts, but the milestone is not
-complete. The next correct step is Phase 80 discussion/audit, followed by normal
-planning and execution. This is a source-controlled brand-system milestone, not a
-product-feature milestone.
-Post-v1.8 feature posture remains **quiet maintenance / adopter-pull** per D-23
-unless a concrete adopter need or contract gap justifies new scope.
+**No active milestone as of 2026-06-13.** v1.10 Brand Adoption shipped; the brand
+system (v1.8 → v1.9 → v1.10) is complete and adopted. Posture is **quiet
+maintenance / adopter-pull** per D-23 unless a concrete adopter need or contract
+gap justifies new scope. Define the next milestone with `/gsd-new-milestone`.
 
 Candidate carry-forward work (none committed):
-- `/gsd-cleanup` to archive the leftover `.planning/phases/` execution history (71-79, 999.x) into milestone phase-archives.
+- Promote backlog Phase 999.1 (human-readable code comments + GSD artifact cleanup) or 999.2 (shift-left email screenshot + responsive preview workflow) via `/gsd-review-backlog` only if a maintenance pass or adopter pull justifies it.
+- Register `guard-release-trigger` as a required branch-protection check once a PR has exercised it (documented v1.10 follow-up — GitHub API can't register a check name until it runs once).
 - Pre-existing nil-guard tech debt in `operator_live.ex` / `suppression_card.ex` (CR-01/02/03) if an admin maintenance pass is opened.
-- Promote backlog Phase 999.1 / 999.2 only via `/gsd-review-backlog` if adopter-pull justifies it.
+- Follow-up design-system milestone candidate: refresh outbound admin UI look and feel (surfaced by Phase 92 human UAT; see STATE.md Deferred Items).
 
 ## Out of Scope
 
@@ -478,7 +481,8 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-22 | The first `mailglass_inbound` milestone stays narrow: Postmark + SendGrid ingress, normalized plus raw replayable storage, and Oban-optional execution; Conductor/Mailgun/SES/SMTP are deferred | Protect the locked `v1.x` core and make the first sibling-package expansion supportable for a one-person maintainer | ✓ Validated v1.1 — narrow scope held; Conductor / Mailgun / SES / `gen_smtp` remained deliberately deferred |
 | D-23 | Post-v1.3 project posture shifts from broad capability expansion to convergence, stability, and maintenance by default | Core/admin have crossed the original product-complete threshold; endless polish or provider breadth has diminishing returns unless tied to adopter pull | ✓ Validated v1.4 — inbound contract posture is locked, `mailglass_inbound` has a `1.0.0` candidate, and future work defaults to release ceremony / maintenance unless adopter pull or contract gaps justify scope |
 | D-24 | v1.7 admin UI polish is a sanctioned **adopter-visible-quality** investment under the D-23 convergence rule (not feature growth); delivered **within** the brand book (Fork B) by *applying* the shipped design system more completely, with a real in-library Operator Overview landing + generalized orientation (Fork A) | First-run/forensic UX quality is the highest-leverage remaining adopter lever now that the product surface is complete; restraint (no brand amendment, no new deps, grep-enforceable conformance) keeps it convergence-aligned, not scope creep | ✓ Validated v1.7 — anti-churn gate held (every build task cited a sev≥3 gap-register row), stable seams untouched, no new deps, conformance grep-enforced; audit passed 19/19; linked-version admin bump confirmed mechanical |
-| D-25 | v1.8 brand-system work is a repo-artifact milestone, not product expansion | Mailglass had strong prompt-era brand direction but lacked source-controlled, buildable collateral for maintainers, future agents, docs, landing pages, tokens, logos, and marketing copy | Active v1.8 — all artifacts stay under `brandbook/`; no public API/package code changes; no binary-heavy collateral; prompt-era brand strategy preserved |
+| D-25 | v1.8 brand-system work is a repo-artifact milestone, not product expansion | Mailglass had strong prompt-era brand direction but lacked source-controlled, buildable collateral for maintainers, future agents, docs, landing pages, tokens, logos, and marketing copy | ✓ Held through v1.8→v1.9→v1.10 — all artifacts stayed under `brandbook/`; no public API/package code changes; brand strategy preserved as provenance |
+| D-26 | v1.10 adopts the A/B-winning fable brand as the project's one canonical identity and hardens the release pipeline against accidental brand/planning-only releases | The v1.9 A/B winner needed to actually become the repo's identity (folder, README, social, HexDocs), and the 1.6.x accidental-release incident proved release-please could cut a release from non-code commits | ✓ Validated v1.10 — canonical `brandbook/` adopted (codex removed), README/og-card/admin/HexDocs surfaces propagated, `exclude-paths` + required `guard-release-trigger` lint added, 1.6.x aftermath reconciled to 1.6.2/1.6.2/1.3.1; audit passed 10/10; no Hex release cut |
 
 ## Evolution
 
@@ -501,4 +505,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-13 after completing **v1.10 Brand Adoption** Phase 93 (HexDocs Wiring and Release Hardening) — HEXD-01/02 + RELH-01/02 verified 10/10; all three v1.10 phases (91, 92, 93) complete. In-repo version truth reconciled to 1.6.2 / 1.6.2 / 1.3.1. No Hex release cut this milestone.*
+*Last updated: 2026-06-13 after **v1.10 Brand Adoption** milestone close — Phases 91-93 archived to `milestones/v1.10-*`, all 10 requirements moved to Validated, D-26 logged, milestone tagged `v1.10`. Audit passed 10/10. In-repo version truth at 1.6.2 / 1.6.2 / 1.3.1; no Hex release cut this milestone. Posture: between milestones, quiet maintenance / adopter-pull.*

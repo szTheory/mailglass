@@ -1,5 +1,32 @@
 # Milestones
 
+## v1.10 Brand Adoption (Shipped: 2026-06-13)
+
+**Phases completed:** 3 phases (91-93), 9 plans
+
+> Repo-artifact milestone — no Hex release cut by these commits (brand/docs use
+> non-release-triggering types; HexDocs wiring ships with the next natural release).
+> Milestone audit `status: passed` — 10/10 requirements, 3/3 phases, 5/5 integration
+> seams, 4/4 E2E flows, Nyquist compliant on all phases.
+>
+> (Stats note: `milestone.complete` over-counted by including the dormant 999.x backlog
+> dirs; true v1.10 scope is 3 phases / 9 plans, corrected here per the known CLI inflation.)
+
+**Key accomplishments:**
+
+- **Phase 91 — Folder adoption:** the v1.9 fable brand book became canonical `brandbook/` via `git mv`; the codex book was removed from the active tree (history preserves it at frozen baseline `09a84dd4`); CLAUDE.md + `mailglass_admin/docs/design-system.md` brand pointers reconciled to `brandbook/brand-book.md`; the v1.9 quality gate re-passed 9/9 on the new path with scoped-diff and release-safety evidence.
+- **Phase 92 — README + social surfaces:** the root README now opens with `brandbook/examples/readme-header.svg` (sealed-flap header, GitHub light/dark safe); `brandbook/examples/og-card.png` (2400×1260, under GitHub's 1 MB limit) committed as the milestone's only binary, with Settings-UI-only social-preview upload steps documented.
+- **Phase 92 — Admin wordmark:** the admin placeholder wordmark was replaced with a font-free, theme-safe sealed-flap `currentColor` lockup rendered inline by `Components.logo/1`; the rebuilt bundle passed the `verify.preview` bundle-clean gate with logo-asset regression tests banning live text/font dependencies.
+- **Phase 93 — HexDocs wiring (HEXD-01/02):** ex_doc `logo:`/`favicon:` wired into all three packages' `docs/0`, pointing at canonical `brandbook/` assets via relative paths, with explicit `width`/`height` added to the SVGs for ex_doc 0.40.x; `mix docs` renders verified locally for all three (inert on hexdocs.pm until each package's next natural release).
+- **Phase 93 — Release hardening (RELH-01):** belt-and-suspenders guard against the 1.6.x accidental-release pattern — `exclude-paths` on the root `.` package plus a new required `guard-release-trigger` PR lint (with an offline 6-case fixture) that fails any bump-triggering PR whose changes are entirely under brand/planning paths.
+- **Phase 93 — Version reconciliation (RELH-02):** the 1.6.x aftermath reconciled to released truth **1.6.2 / 1.6.2 / 1.3.1** — in-repo manifest/`@version`/dep pins advanced from stale 1.6.1/1.6.1/1.3.0, remote 1.6.x tags fetched and kept, inbound exact-pin bumped via the `fix(inbound)` dance, CLAUDE.md + STATE.md corrected.
+
+**Accepted follow-ups (documented, not blockers):** register `guard-release-trigger` as a required branch-protection check once a PR has exercised it (GitHub API can't register a check name until it has run once); HexDocs logo/favicon latency is by design (no forced release).
+
+**Known deferred items at close:** 1 — `refresh-outbound-admin-ui-look-and-feel` todo (follow-up design-system milestone candidate, out of v1.10 scope). See STATE.md Deferred Items.
+
+---
+
 ## v1.9 Brand Book Fable — A/B Brand System (Shipped: 2026-06-12)
 
 **Phases completed:** 6 phases (85-90), 7 plans
