@@ -84,7 +84,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 91-03-PLAN.md - Reconcile active source-of-truth pointers and live planning memory
+- [x] 91-03-PLAN.md - Reconcile active source-of-truth pointers and live planning memory
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -128,7 +128,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 91. Folder Adoption and Reference Reconciliation | 2/4 | In Progress|  |
+| 91. Folder Adoption and Reference Reconciliation | 3/4 | In Progress|  |
 | 92. Surface Propagation | 0/? | Not started | - |
 | 93. HexDocs Wiring and Release Hardening | 0/? | Not started | - |
 
