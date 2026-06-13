@@ -129,8 +129,8 @@ Plans:
 
 **Wave 1**
 
-- [ ] 93-01-PLAN.md — Wire ex_doc logo/favicon for all three packages + local mix docs proof (HEXD-01, HEXD-02)
-- [ ] 93-02-PLAN.md — Harden release-please via exclude-paths + a required guard-release-trigger CI lint with offline fixture test (RELH-01)
+- [x] 93-01-PLAN.md — Wire ex_doc logo/favicon for all three packages + local mix docs proof (HEXD-01, HEXD-02)
+- [x] 93-02-PLAN.md — Harden release-please via exclude-paths + a required guard-release-trigger CI lint with offline fixture test (RELH-01)
 
 **Wave 2** *(blocked on 93-01 — shares mix.exs)*
 
@@ -149,7 +149,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 91. Folder Adoption and Reference Reconciliation | 4/4 | Complete   | 2026-06-13 |
 | 92. Surface Propagation | 2/2 | Complete    | 2026-06-13 |
-| 93. HexDocs Wiring and Release Hardening | 0/3 | Planned | - |
+| 93. HexDocs Wiring and Release Hardening | 2/3 | In Progress|  |
 
 ## Backlog
 
