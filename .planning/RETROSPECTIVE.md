@@ -4,6 +4,77 @@
 
 ---
 
+## Milestone: v1.10 — Brand Adoption
+
+**Shipped:** 2026-06-13
+**Phases:** 3 (91-93) | **Plans:** 9
+
+### What Was Built
+
+The A/B-winning fable brand became the project's one canonical identity. The
+v1.9 book was adopted as canonical `brandbook/` via `git mv` (codex removed from
+the active tree, history preserving it at `09a84dd4`); the root README gained the
+sealed-flap brand header; a 2400×1260 og-card.png was committed for GitHub social
+preview; ex_doc `logo:`/`favicon:` was wired into all three packages pointing at
+canonical `brandbook/` assets (with SVG width/height added for ex_doc 0.40.x);
+the admin placeholder wordmark was replaced with a theme-safe `currentColor`
+lockup. Release hardening rode along: `exclude-paths` on the root `.` package plus
+a required `guard-release-trigger` PR lint (offline 6-case fixture) so
+brand/planning-only commits can never cut a release again, and the 1.6.x
+accidental-release aftermath was reconciled to released truth 1.6.2/1.6.2/1.3.1.
+No Hex release was cut by this milestone.
+
+### What Worked
+
+- **Research pre-settled the mechanics.** `ADOPTION-MECHANICS.md` nailed ex_doc
+  0.40.1 logo/favicon semantics, the viewBox→width/height requirement, the
+  Playwright og-card command, release-please trigger safety, and an exhaustive
+  reference sweep (only CLAUDE.md + design-system.md were tracked consumers)
+  before any phase planned. Execution was mostly mechanical as a result.
+- **Strictly linear 91→92→93** matched the real dependency (every later surface
+  references the post-rename `brandbook/` path), so no wave thrash.
+- **Incident-driven hardening.** RELH-01/02 turned the 1.6.x accidental-release
+  pain into durable guardrails (belt-and-suspenders: config exclude-paths +
+  CI lint) rather than a one-off fix.
+
+### What Was Inefficient
+
+- `milestone.complete` over-counted scope again — it swept the dormant 999.x
+  backlog dirs into phase/plan/task stats (5/15/35) and bled their
+  accomplishments (comment cleanup, preview-capture) plus two empty `One-liner:`
+  lines into the MILESTONES.md entry. Corrected by hand to true scope (3/9).
+  This is a recurring CLI footgun documented in user memory.
+- A couple of Phase 92/93 SUMMARY files lacked the parseable `**One-liner:**`
+  field, so auto-extraction produced blanks — curated accomplishments by hand.
+
+### Patterns Established
+
+- **Required CI commit-type guard for non-code paths** (`guard-release-trigger`):
+  any bump-triggering PR whose changed files are entirely under brand/planning
+  paths fails the lint — a reusable defense for repo-artifact milestones.
+- **Canonical-folder adoption via `git mv` + same-commit codex removal**, with a
+  re-pathed quality gate proving nothing broke in the move.
+
+### Key Lessons
+
+- For repo-artifact milestones, lean on non-release-triggering commit types
+  (`docs:`/`chore:`/`test:`) and verify the guard with an offline fixture — don't
+  trust release-please defaults implicitly when an incident already proved them
+  insufficient under a root `.` package path.
+- Trust live Hex over in-repo manifests for version truth: RELH-02 confirmed the
+  release-state memory (1.6.2) was correct and the in-repo manifest (1.6.1) was
+  stale. Reconcile to what actually published.
+- Keep correcting `milestone.complete` output to true milestone scope until the
+  999.x backlog dirs are archived out of `.planning/phases/`.
+
+### Cost Observations
+
+- Two-day milestone (2026-06-12 → 2026-06-13), 9 plans across 3 phases.
+- Mostly mechanical adoption + reconciliation; research front-loaded into one
+  pre-settled mechanics doc kept per-phase planning light.
+
+---
+
 ## Milestone: v1.9 — Brand Book Fable (A/B Brand System)
 
 **Shipped:** 2026-06-12
