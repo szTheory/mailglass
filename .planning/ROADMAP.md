@@ -101,7 +101,16 @@ Plans:
   2. `brandbook/examples/og-card.png` (2400×1260 export via the verified Playwright command, under GitHub's 1 MB limit) is committed — the milestone's only binary addition — with the Settings-UI-only social-preview upload steps documented (no write API exists)
   3. The shipped admin wordmark (`mailglass_admin/priv/static/mailglass-logo.svg`) is explicitly dispositioned: replaced with the sealed-flap identity (with rebuilt committed bundle passing the `verify.preview` bundle-clean gate) or deferred with a recorded reason — not silently dropped
 
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+**Wave 1**
+
+- [ ] 92-01-PLAN.md - Propagate the sealed-flap identity to README and GitHub social-preview surfaces
+- [ ] 92-02-PLAN.md - Replace the admin wordmark placeholder with a theme-safe sealed-flap logo
+
+Cross-cutting constraints:
+
+- Keep HexDocs logo/favicon wiring, ex_doc SVG width/height preparation, and release hardening out of Phase 92; Phase 93 owns HEXD-01, HEXD-02, RELH-01, and RELH-02.
 
 ### Phase 93: HexDocs Wiring and Release Hardening
 
@@ -129,7 +138,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 91. Folder Adoption and Reference Reconciliation | 4/4 | Complete   | 2026-06-13 |
-| 92. Surface Propagation | 0/? | Not started | - |
+| 92. Surface Propagation | 0/2 | Ready to execute | - |
 | 93. HexDocs Wiring and Release Hardening | 0/? | Not started | - |
 
 ## Backlog
