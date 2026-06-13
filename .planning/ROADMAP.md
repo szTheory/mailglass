@@ -51,123 +51,159 @@ prepare-only.
 ## Phase Details
 
 ### Phase 94: Token Re-Baseline onto Canonical Brand
+
 **Goal**: `mailglass_admin/assets/css/app.css` consumes the canonical `brandbook/tokens.css` `--mg-*` two-tier system as the single source of truth, with the surface/border role mapping corrected (`base-300`→border not accent, `base-200`→`surface-raised` not Mist) and dark-mode values fixed (muted/error/primary-content) — all behind tightened conformance gates landed FIRST so the re-baseline cannot regress silently. No component markup changes; bundle rebuilt + committed; contrast re-verified.
 **Depends on**: Nothing (critical-path root)
 **Requirements**: TOKEN-01, TOKEN-02, TOKEN-03, TOKEN-04, TOKEN-05, RATCHET-03
 **Success Criteria** (what must be TRUE):
+
   1. Every admin border draws in the border role and the accent (Glass/Ice) appears only on the 10%-accent allowlist surfaces — no border or card is rendered in the accent color.
   2. Admin cards sit on `surface-raised` and dark-mode muted text, error, and primary-content all pass WCAG AA on their actual surface (computed and shown).
   3. A fail-closed token-parity ExUnit test breaks the build if any admin theme value drifts from the brandbook token value; the conformance + motion grep gates now fail on `text-lg/xl/2xl`, arbitrary `tracking-[…]`, `ease-in`, and layout-property transitions and run in CI.
   4. `git diff --exit-code priv/static/` is clean after the rebuilt bundle is committed; no admin HEEx markup changed in this phase.
+
 **Plans**: 3 plans
 Plans:
+**Wave 1**
+
 - [ ] 94-01-PLAN.md — Wire + tighten design-system conformance gates (gates-first, Wave 1)
 - [ ] 94-02-PLAN.md — Add fail-closed token-parity test + extend accessibility/brand tests (Wave 1, parallel with 94-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 94-03-PLAN.md — Re-baseline app.css onto brandbook tokens + rebuild + commit bundle (Wave 2)
+
 **UI hint**: yes
 
 ### Phase 95: Audit Apparatus + Quality-Ratchet v2
+
 **Goal**: Stand up the idempotent quality ratchet — committed per-`component × pillar × theme` score baseline (meet-or-beat), a single carried-forward `GAP-NN` register with stable IDs and run-ids, Playwright structural-assertion layer, and the LLM-scored PNG matrix — then run the 18-cell matrix once to produce a fresh baseline gap register against the now-correct brand.
 **Depends on**: Phase 94
 **Requirements**: RATCHET-01, RATCHET-02, RATCHET-04, RATCHET-05
 **Success Criteria** (what must be TRUE):
+
   1. A committed `component × pillar × theme` score baseline exists and a closeout assertion can confirm every cell meets-or-beats its prior committed value (only-forward).
   2. One carried-forward GAP register with stable `GAP-NN` IDs records open/fixed/downgraded + run_id; re-runs reopen regressed IDs, skip settled rows, and enforce the sev≥3 citation gate.
   3. Playwright structural assertions pass/fail on machine-checkable pillar facts (visible focus rings, ARIA roles/states, ≥44px touch targets, `font-weight ∈ {400,700}`, accent-only-on-allowlist, reduced-motion collapses durations).
   4. An LLM-scored 18-cell PNG matrix against the 6-pillar rubric writes committed baseline scores to `docs/ui-baseline-scores.json` with PNGs gitignored (no pixel-diff).
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 96: Research Dossier
+
 **Goal**: Produce parallel-subagent research dossiers under `.planning/research/v1.11/`, each ending in an adversarially-synthesized LOCKED DECISION block the main thread consumes — covering motion (Emil Kowalski + platform HIG), IA (gov.uk / Nielsen), component-state matrices, dark-mode pitfalls, and "thoughtful maintainer" microcopy — all bounded by the hard design constraints.
 **Depends on**: Phase 95
 **Requirements**: RESEARCH-01, RESEARCH-02, RESEARCH-03, RESEARCH-04, RESEARCH-05
 **Success Criteria** (what must be TRUE):
+
   1. A motion dossier locks an easing/duration/property decision table within the ≤300ms / ease-out / transform-opacity-only constraints.
   2. An IA dossier locks per-surface IA decisions (master-detail / filter / triage) with loved-vs-hated evidence; a component-state dossier locks the canonical state matrix per archetype.
   3. A dark-mode dossier locks elevation/desaturation/focus-ring-contrast decisions and a microcopy dossier locks voice patterns mapped to each surface's JTBD.
   4. Every dossier ends in a self-contained LOCKED DECISION block; downstream phases can cite a locked decision without re-reading the research body.
+
 **Plans**: TBD
 
 ### Phase 97: Cross-Surface Component Layer
+
 **Goal**: Level-1 uplift of the SHARED components (`components.ex`, `operator/shell.ex`, shared modal + timeline patterns) so every shared component is on-brand in light + dark across color/type/spacing/radius/shadow and renders the full locked interaction-state matrix — and stand up the dev-only component gallery LiveView (`/dev/mail/gallery`, dev live_session only) as the exhaustive audit + visual-regression surface. UI-SPEC before, UI-REVIEW after.
 **Depends on**: Phase 96
 **Requirements**: COMP-01, COMP-02, COMP-03, GALLERY-01, GALLERY-02
 **Success Criteria** (what must be TRUE):
+
   1. Every shared component (icon, logo, flash, badge, status_badge, shell, orientation_strip, nav_link, theme_toggle, tenant_chip) is on-brand in both themes for color, type, spacing, radius, and shadow.
   2. Every shared component renders correct, on-brand rest/hover/focus/active/disabled/loading/empty/error states per the locked state matrix, and `status_badge`/`badge` color+icon mappings are deterministic, on-token, and legible in both themes for every status/outcome atom.
   3. A dev-only gallery at `/dev/mail/gallery` (never `/ops`) renders every component × every state × light/dark from an in-code specimen list with no DB access.
   4. Each gallery cell carries a stable `data-testid` so it can be screenshotted/scored and structurally asserted by the ratchet layers.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 98: Operator / Deliveries Surface
+
 **Goal**: Group + page/IA + responsive + flow uplift of `/ops/mail` (OperatorLive) — composing the uplifted components into coherent, on-brand groups, an IA that orients first-time and advanced operators on landing, full happy/error/boundary state coverage, mobile-first 390/768/1440 responsiveness, accessibility, and seed data tuned for every state. This phase anchors the cross-surface GROUP/PAGE/RESP/FLOW/A11Y requirements introduced here and re-applied on Phases 99 and 100. Folds in the pre-existing CR-01/02/03 nil-guard tech debt.
 **Depends on**: Phase 97
 **Requirements**: GROUP-01, PAGE-01, PAGE-02, RESP-01, FLOW-01, FLOW-02, A11Y-01, A11Y-02
 **Success Criteria** (what must be TRUE):
+
   1. Operator component groups (filter cards, master-detail split, support-card triage grid, timeline, detail pane, modal) compose with consistent, on-brand inter-group spacing and visual rhythm; the IA orients both first-time and advanced operators on landing (gov.uk-style least surprise).
   2. The Operator surface lays out its happy path, primary error states, and boundary/edge states coherently and on-brand, and is legible/usable at 390/768/1440 (master-detail stacks cleanly).
   3. Deterministic seed/fixture data exercises every operator state (all statuses, suppression-flagged, long-content truncation, empty tenant, many-item lists) reachable by seeded URL, and the audit-why-a-delivery-failed JTBD flow validates end-to-end.
   4. Interactive elements have visible focus rings, correct ARIA roles/states, one `h1` per page, ≥44px touch targets, and all text meets WCAG AA contrast in both themes on its actual surface.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 99: Inbound Surface
+
 **Goal**: Apply the same group + page/IA + responsive + flow + a11y treatment to `/ops/mail/inbound` (InboundLive) — the heaviest lift because the surface is structurally thin: add an inbound overview / at-a-glance tier mirroring the operator triage pattern, rework `RoutingTrace` and `EvidenceCard` into scannable on-token group layouts (aligned clause grid + mono chips on `surface-sunken`, clear locked/info reveal affordance), add empty/loading states, and fix `text-xl`→token violations. Also satisfies the cross-cutting GROUP-01/PAGE-01/02/RESP-01/FLOW-01/02/A11Y-01/02 requirements for the inbound surface (re-applied from Phase 98).
 **Depends on**: Phase 97
 **Requirements**: GROUP-02, GROUP-03
 **Success Criteria** (what must be TRUE):
+
   1. An inbound overview / at-a-glance tier exists, mirroring the operator support-card triage pattern, closing the inbound "structurally thin" gap.
   2. `RoutingTrace` and `EvidenceCard` are reworked into scannable, on-token group layouts (aligned clause grid + mono chips on `surface-sunken`) with a clear locked/info reveal affordance, and stay scannable at 390px.
   3. The inbound surface gains coherent empty/loading/error states, all `text-xl` and off-token type are fixed, and the why-did-inbound-not-route JTBD flow validates end-to-end (happy/error/boundary/missing-evidence reachable by seeded URL).
   4. The inbound surface meets the same a11y + responsive + WCAG-AA bar as the operator surface in both themes at 390/768/1440.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 100: Preview Surface
+
 **Goal**: Group + page/IA + responsive uplift of `/dev/mail` (PreviewLive) and — the headline addition — full dark-mode support for the preview chrome at parity with Operator and Inbound, while the previewed email retains its own independent dark-chrome toggle. Also satisfies the cross-cutting GROUP-01/PAGE-01/02/RESP-01/FLOW-02/A11Y-01/02 requirements for the preview surface (re-applied from Phase 98).
 **Depends on**: Phase 97
 **Requirements**: PAGE-03
 **Success Criteria** (what must be TRUE):
+
   1. The Preview chrome gains full dark-mode support at parity with Operator and Inbound; toggling the admin theme re-skins the preview chrome correctly in both themes.
   2. The previewed email keeps its own independent dark-chrome toggle, distinct from the admin chrome theme (no coupling).
   3. The Preview surface composes its component groups with consistent on-brand rhythm, follows least-surprise IA on landing, and is legible/usable at 390/768/1440.
   4. The preview-a-message-before-send JTBD flow validates end-to-end, with empty/loading states on-brand and a11y + WCAG-AA met in both themes.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 101: Microcopy Pass
+
 **Goal**: A global "thoughtful maintainer" microcopy pass across all three settled surfaces — empty, error, loading, and confirmation copy in plain language that names the cause and serves each surface's JTBD, never "Oops".
 **Depends on**: Phase 98, Phase 99, Phase 100
 **Requirements**: COPY-01
 **Success Criteria** (what must be TRUE):
+
   1. Every empty/error/loading/confirmation string across Operator, Inbound, and Preview is in the "thoughtful maintainer" voice and serves the surface's JTBD.
   2. No surface shows "Oops" or generic placeholder copy; error states name the cause specifically (e.g. "Delivery blocked: recipient is on the suppression list").
   3. The microcopy decisions trace to the Phase 96 microcopy LOCKED DECISION block, and a conformance/voice check stays green.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 102: Motion + Micro-interaction Pass
+
 **Goal**: A global motion uplift within the hard constraints, sourced from the Phase 96 motion dossier — token-named easing, real enter/exit asymmetry, first-mount stagger, loading skeletons, focus transitions, and View-Transitions progressive enhancement — with no springs/overshoot, no layout-property animation, no client JS hook, and `prefers-reduced-motion` collapsing all motion.
 **Depends on**: Phase 98, Phase 99, Phase 100
 **Requirements**: MOTION-01, MOTION-02
 **Success Criteria** (what must be TRUE):
+
   1. Micro-animations across all three surfaces use token-named easing with real enter/exit asymmetry, first-mount stagger, loading skeletons, focus transitions, and View-Transitions progressive enhancement — all CSS + LiveView.JS only (no client JS hook).
   2. No motion uses springs/overshoot, layout-property transitions, or exceeds 300ms ease-out, and the tightened motion conformance gate stays green in CI.
   3. `prefers-reduced-motion` collapses all motion to no-ops and the structural reduced-motion assertion passes.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 103: Verification + Idempotent Closeout
+
 **Goal**: Re-run the full 18-cell matrix, close all sev-4/5 GAP rows, assert the score baseline meets-or-beats its prior committed value across every cell, confirm all gates (token-parity, conformance, motion, structural, bundle-clean) are green, produce the committed baseline the next run must beat, stage the linked-version release ceremony prepare-only, and run the milestone audit.
 **Depends on**: Phase 101, Phase 102
 **Requirements**: (closeout — verifies all v1.11 REQ-IDs; no net-new requirement anchored here)
 **Success Criteria** (what must be TRUE):
+
   1. The full audit matrix re-runs and every `component × pillar × theme` score cell meets-or-beats its prior committed baseline (only-forward); the committed baseline is updated to the new floor the next run must beat.
   2. Every sev-4/5 GAP row is closed (fixed or documented-downgraded with citation) and the carried-forward register is left in a clean idempotent state.
   3. All gates are green in CI — token-parity, tightened conformance + motion grep, Playwright structural assertions, LLM-score floor, and `git diff --exit-code priv/static/` bundle-clean.
   4. The linked-version release ceremony is staged prepare-only (admin minor bump mechanically drags matched core + inbound) and the milestone audit passes.
+
 **Plans**: TBD
 **UI hint**: yes
 
