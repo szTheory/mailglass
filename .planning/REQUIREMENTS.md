@@ -37,7 +37,7 @@ quality forward.
 - [ ] **TOKEN-02**: The surface/border role mapping is corrected so the accent (Glass/Ice)
   appears only on the 10%-accent surfaces — borders use the border role (not the accent),
   cards use `surface-raised` (not Mist/`surface-sunken`).
-- [ ] **TOKEN-03**: Dark-mode token values are corrected and every changed value's contrast
+- [x] **TOKEN-03**: Dark-mode token values are corrected and every changed value's contrast
   re-verified to WCAG AA on its actual surface (muted text, error, primary-content).
 - [ ] **TOKEN-04**: A fail-closed token-parity check (ExUnit) asserts the admin theme values
   equal the brandbook token values, so brand-token drift breaks the build.
@@ -184,7 +184,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 |-------------|-------|--------|
 | TOKEN-01 | Phase 94 | Pending |
 | TOKEN-02 | Phase 94 | Pending |
-| TOKEN-03 | Phase 94 | Pending |
+| TOKEN-03 | Phase 94 | Complete |
 | TOKEN-04 | Phase 94 | Pending |
 | TOKEN-05 | Phase 94 | Pending |
 | RATCHET-03 | Phase 94 | Complete |
