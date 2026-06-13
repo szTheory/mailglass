@@ -24,7 +24,7 @@ release again.
 - [x] **FOLD-01**: The v1.9 fable brand book becomes canonical `brandbook/`
   via `git mv`; the codex book's files are removed in the same commit
   (history preserves them at the frozen baseline `09a84dd4`).
-- [ ] **FOLD-02**: Every active tracked reference to the former fable staging
+- [x] **FOLD-02**: Every active tracked reference to the former fable staging
   path or to the old brandbook's contents is reconciled: CLAUDE.md (lines
   referencing the brandbook and the brand source-of-truth pointer, which now
   names `brandbook/brand-book.md`) and `mailglass_admin/docs/design-system.md:5`'s
@@ -89,7 +89,7 @@ release again.
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
 | FOLD-01 | Phase 91 | Complete |
-| FOLD-02 | Phase 91 | Pending |
+| FOLD-02 | Phase 91 | Complete |
 | FOLD-03 | Phase 91 | Complete |
 | SURF-01 | Phase 92 | Pending |
 | SURF-02 | Phase 92 | Pending |
