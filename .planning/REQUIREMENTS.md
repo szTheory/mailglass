@@ -34,10 +34,10 @@ release again.
 
 ### SURF — Repo Surface Propagation
 
-- [ ] **SURF-01**: The root README adopts the brand header
+- [x] **SURF-01**: The root README adopts the brand header
   (`brandbook/examples/readme-header.svg`), rendering correctly on GitHub
   light and dark themes.
-- [ ] **SURF-02**: `brandbook/examples/og-card.png` (1200×630-class export
+- [x] **SURF-02**: `brandbook/examples/og-card.png` (1200×630-class export
   at 2400×1260 via the verified Playwright command) is committed, with
   GitHub social-preview upload steps documented (Settings-UI-only — no API
   exists).
@@ -91,8 +91,8 @@ release again.
 | FOLD-01 | Phase 91 | Complete |
 | FOLD-02 | Phase 91 | Complete |
 | FOLD-03 | Phase 91 | Complete |
-| SURF-01 | Phase 92 | Pending |
-| SURF-02 | Phase 92 | Pending |
+| SURF-01 | Phase 92 | Complete |
+| SURF-02 | Phase 92 | Complete |
 | SURF-03 | Phase 92 | Pending |
 | HEXD-01 | Phase 93 | Pending |
 | HEXD-02 | Phase 93 | Pending |

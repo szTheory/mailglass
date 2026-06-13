@@ -105,7 +105,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 92-01-PLAN.md - Propagate the sealed-flap identity to README and GitHub social-preview surfaces
+- [x] 92-01-PLAN.md - Propagate the sealed-flap identity to README and GitHub social-preview surfaces
 - [ ] 92-02-PLAN.md - Replace the admin wordmark placeholder with a theme-safe sealed-flap logo
 
 Cross-cutting constraints:
@@ -138,7 +138,7 @@ Cross-cutting constraints:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 91. Folder Adoption and Reference Reconciliation | 4/4 | Complete   | 2026-06-13 |
-| 92. Surface Propagation | 0/2 | Ready to execute | - |
+| 92. Surface Propagation | 1/2 | In Progress|  |
 | 93. HexDocs Wiring and Release Hardening | 0/? | Not started | - |
 
 ## Backlog

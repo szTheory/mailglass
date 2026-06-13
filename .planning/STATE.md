@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: Brand Adoption
 status: executing
-last_updated: "2026-06-13T02:29:18.871Z"
-last_activity: 2026-06-13 -- Phase 92 planning complete
+last_updated: "2026-06-13T05:41:08.686Z"
+last_activity: 2026-06-13
 progress:
   total_phases: 11
   completed_phases: 3
   total_plans: 12
-  completed_plans: 10
-  percent: 27
+  completed_plans: 11
+  percent: 92
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-06-12 — v1.10 "Brand Adoption" milesto
 ## Current Position
 
 Phase: 92 (surface-propagation) - DISCUSSED
-Plan: 0 of 0
-Status: Ready to execute
-Last activity: 2026-06-13 -- Phase 92 planning complete
+Plan: 1 of 2
+Status: In progress
+Last activity: 2026-06-13 -- Plan 92-01 completed
 
-Progress: [----------] 0%
+Progress: [█████████░] 92%
 
 ## v1.10 Milestone Intent
 
@@ -76,6 +76,9 @@ Progress: [----------] 0%
 
 ## Decisions
 
+- [92-01] Root README uses `brandbook/examples/readme-header.svg` directly as the first visible brand surface.
+- [92-01] `brandbook/examples/og-card.png` is the only committed v1.10 binary exception for GitHub social preview upload.
+- [92-01] GitHub social-preview upload remains manual because no documented write API exists.
 - [v1.10] Active brand voice and visual identity source is now `brandbook/brand-book.md`; prompt-era brand research remains preserved as provenance, not as an active source pointer.
 - [v1.10] Research pre-settled (see `.planning/research/v1.10-brand-adoption/ADOPTION-MECHANICS.md`): ex_doc 0.40.1 supports SVG logo/favicon but requires explicit width/height attrs (fable SVGs are viewBox-only — must add); use relative paths into canonical `brandbook/` (no per-package copies, no `files:` allowlist change); `docs:`/`chore:` commits are release-safe under release-please defaults; GitHub social preview is Settings-UI-only (no write API); og-card export via `npx playwright screenshot --viewport-size=2400,1260`; CLAUDE.md + `mailglass_admin/docs/design-system.md:5` are the only tracked reference-sweep targets.
 - [v1.10] HexDocs latency accepted: `logo:`/`favicon:` wiring is inert on hexdocs.pm until the next natural release of each package — this milestone does not force a release to make logos visible.
@@ -145,6 +148,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 | Phase 91 P02 | 3h 9m | 2 tasks | 71 files |
 | Phase 91 P03 | 2 min | 2 tasks | 10 files |
 | Phase 91 P04 | 1 min | 2 tasks | 1 files |
+| Phase 92 P01 | 10 min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -166,6 +170,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 
 ## Session Continuity
 
+- 2026-06-13: Plan 92-01 completed. README now displays `brandbook/examples/readme-header.svg`, `brandbook/examples/og-card.png` is committed at 2400x1260 and 59,562 bytes, and `brandbook/README.md` documents the manual GitHub Settings > Social preview upload path. Next: execute 92-02 for the admin wordmark surface.
 - 2026-06-13: Phase 92 UI-SPEC approved in `.planning/phases/92-surface-propagation/92-UI-SPEC.md`; 6/6 UI checker dimensions passed with no recommendations. Next: `/gsd-plan-phase 92`.
 - 2026-06-12: Phase 92 context gathered in assumptions mode. Decisions captured in `.planning/phases/92-surface-propagation/92-CONTEXT.md`; discussion audit in `.planning/phases/92-surface-propagation/92-DISCUSSION-LOG.md`. Next: `/gsd-plan-phase 92`.
 - 2026-06-12: Phase 91 planning complete. Research, validation, pattern map, and four executable plans were created under `.planning/phases/91-folder-adoption-and-reference-reconciliation/`; plan-checker passed after revisions for research resolution, validation map alignment, pattern references, and D-10 diff-scope proof. Next: `/gsd-execute-phase 91`.
@@ -178,5 +183,7 @@ Items inherited at the v1.8 close-superseded on 2026-06-11 (now owned by v1.9):
 - v0.1 through v1.0 archived in `.planning/milestones/v0.1-*` through `.planning/milestones/v1.0-*`; v1.1-v1.8 likewise archived under `.planning/milestones/`.
 
 ## Operator Next Steps
+
+- Execute plan 92-02 for SURF-03 admin wordmark disposition.
 
 - Plan Phase 92: `/gsd-plan-phase 92`
