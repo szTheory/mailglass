@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.10
-milestone_name: Brand Adoption
-status: Awaiting next milestone
-last_updated: "2026-06-13T15:18:17.192Z"
-last_activity: 2026-06-13 — Milestone v1.10 completed and archived
+milestone: v1.11
+milestone_name: mailglass_admin Design-System Uplift
+status: planning
+last_updated: "2026-06-13T15:46:13.481Z"
+last_activity: 2026-06-13
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Planning next milestone (v1.10 shipped 2026-06-13). Quiet-maintenance / adopter-pull posture; 999.x backlog promoted separately only if adopter pull justifies.
+**Current focus:** v1.11 mailglass_admin Design-System Uplift — defining requirements, then roadmap (Phases 94–103). Re-baseline admin UI onto canonical brand tokens + fractal idempotent component/group/page uplift across the 3 admin surfaces. Adopter-visible-quality investment under D-23 (D-27); release prepare-only.
 
 ## Current Position
 
-Phase: Milestone v1.10 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-13 — Milestone v1.10 completed and archived
+Status: Defining requirements
+Last activity: 2026-06-13 — Milestone v1.11 started
 
 ## v1.10 Milestone Intent
 
