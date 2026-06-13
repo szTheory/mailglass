@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-06-13T15:46:13.481Z"
 last_activity: 2026-06-13
 progress:
-  total_phases: 0
+  total_phases: 10
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -24,53 +24,80 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 94 (Token Re-Baseline onto Canonical Brand) — not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-13 — Milestone v1.11 started
+Status: Roadmap created (Phases 94–103); ready to plan Phase 94
+Last activity: 2026-06-13 — v1.11 roadmap created (Phases 94–103, 34/34 reqs mapped)
 
-## v1.10 Milestone Intent
+## v1.11 Milestone Intent
 
-- Make the A/B-winning fable brand the project's one canonical identity
-  everywhere it shows: adopt it as canonical `brandbook/` (deleting the codex
-  book from the active tree; history preserves it at frozen baseline `09a84dd4`), propagate
-  the sealed-flap identity to the root README and the repo social preview, and
-  wire HexDocs/ex_doc logos for all three packages.
+- Re-baseline the `mailglass_admin` UI onto the canonical fable brand tokens, then
+  fractally audit-and-uplift every component, component-group, and page across the
+  Operator, Inbound, and Preview surfaces to award-winning quality in light + dark and
+  at every width (390/768/1440) — enforced by an idempotent, research-grounded quality
+  ratchet that only moves quality forward.
 
-- Mostly mechanical adoption work — research pre-settled the mechanics
-  (`.planning/research/v1.10-brand-adoption/ADOPTION-MECHANICS.md`): ex_doc
-  0.40.1 logo/favicon semantics, release-please trigger safety, the Playwright
-  og-card export command, and an exhaustive reference sweep (CLAUDE.md +
-  `mailglass_admin/docs/design-system.md` are the only tracked pointers).
+- Root cause being fixed: the admin's `app.css` never consumes `brandbook/tokens.css`,
+  every admin border is drawn in the *accent* color (`base-300`→Ice), cards sit one
+  brand-role off (`base-200`→Mist instead of `surface-raised`), and dark muted text is
+  below WCAG AA. This is the "UI feels off-brand / inbound looks ugly" perception.
 
-- Release hardening rides along (RELH): release-please must never again cut a
-  release from brand/planning-only commits, and the 1.6.x release aftermath
-  gets reconciled to final version truth.
+- Adopter-visible-quality investment under the D-23 convergence rule (like v1.7, recorded
+  as D-27) — NOT feature growth. The sanctioned follow-up to the Phase 92 human-UAT todo
+  "refresh outbound admin UI look and feel," broadened to all three admin surfaces.
 
-## v1.10 Scope Locks
+- Front-loaded research dossier (Phase 96): Emil Kowalski motion, gov.uk IA, component-state
+  matrices, dark-mode pitfalls, "thoughtful maintainer" microcopy — each ending in an
+  adversarially-synthesized LOCKED DECISION block the build phases consume.
 
-- No Hex release is cut by this milestone's commits: brand/docs commits use
-  non-release-triggering types (`docs:`, `chore:`, `test:`); the HexDocs
-  wiring ships with the next natural release.
+## v1.11 Scope Locks
 
-- The sealed-flap usage rules and constraints C-15/C-16
-  (`.planning/milestones/v1.9-phases/87-logo-tournament/87-decision-record.md`)
-  are binding on every propagated surface.
+- **Admin UI only — 3 surfaces.** Core mailglass email-template HEEx components (what
+  recipients see) and `brandbook/` HTML specimens are OUT. This milestone *consumes* the
+  brand book; it does not edit it. `brandbook/tokens.css` is the source of truth.
 
-- Binary additions limited to the single og-card PNG export.
+- **No new product features / operator capabilities / routes** beyond the dev-only
+  component gallery (`/dev/mail/gallery`, dev live_session only — never `/ops`).
 
-- Planning archives (`.planning/milestones/`) are never edited.
+- **No core/inbound *functional* code changes.** A `mailglass_admin` minor bump
+  mechanically drags matched core + inbound version bumps via linked-version releases —
+  expected, administrative.
+
+- **Release posture: prepare-only** — stage the ceremony; decide whether to cut a real
+  Hex release at milestone close (v1.7 precedent).
+
+- **Hard design constraints bind every phase:** zero Node toolchain; standalone-binary
+  Tailwind v4 + vendored daisyUI/heroicons; CSS bundle rebuilt + committed
+  (`git diff --exit-code priv/static/`); motion ≤300ms, ease-out, transform/opacity only,
+  `prefers-reduced-motion` respected, no springs/overshoot, CSS+LiveView.JS only (no client
+  JS hook); type weights only 400/700; flat elevation (border-first, no glassmorphism/bevels);
+  10%-accent rule; semantic tokens only; brand constraints C-15/C-16; PII minimization
+  (`mask_recipient/1`) and multi-tenant safety preserved in seed/fixture work.
+
+- **No pixel-diff visual regression** (D-07 banned). Structural assertions gate CI; LLM
+  scores gate the milestone. The "Storybook lens" is a thin dev-only LiveView (no Node Storybook).
 
 ## Roadmap Snapshot
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 91 | Folder Adoption and Reference Reconciliation | fable artifacts adopted as canonical `brandbook/`, codex removal, CLAUDE.md + design-system.md pointer updates, gate.sh re-pass on the new path (FOLD-01..03) |
-| 92 | Surface Propagation | README brand header, og-card PNG export (2400×1260) + Settings-UI upload doc, admin wordmark swap-or-defer disposition (SURF-01..03) |
-| 93 | HexDocs Wiring and Release Hardening | SVG width/height attrs, ex_doc logo/favicon config ×3 + local `mix docs` proof, release-please path hardening, 1.6.x aftermath reconciliation (HEXD-01..02, RELH-01..02) |
+| 94 | Token Re-Baseline onto Canonical Brand | app.css consumes `brandbook/tokens.css --mg-*` as single source of truth; fix base-300→border + base-200→surface-raised + dark muted/error/primary-content; tighten conformance gates FIRST; rebuild+commit bundle; re-verify contrast (TOKEN-01..05, RATCHET-03) |
+| 95 | Audit Apparatus + Quality-Ratchet v2 | idempotent ratchet: score baseline (meet-or-beat), carried-forward GAP-NN register, structural-assertion + LLM-score layers; run 18-cell matrix for fresh baseline (RATCHET-01/02/04/05) |
+| 96 | Research Dossier | parallel-subagent dossiers → LOCKED DECISIONS for motion (Emil Kowalski), IA (gov.uk), component states, dark mode, microcopy (RESEARCH-01..05) |
+| 97 | Cross-Surface Component Layer | Level-1 uplift of SHARED components + dev-only gallery `/dev/mail/gallery`; UI-SPEC before, UI-REVIEW after (COMP-01..03, GALLERY-01/02) |
+| 98 | Operator / Deliveries Surface | group+page/IA+responsive+flow+a11y uplift of `/ops/mail`; seed data tuned; anchors cross-surface GROUP/PAGE/RESP/FLOW/A11Y; folds CR-01/02/03 (GROUP-01, PAGE-01/02, RESP-01, FLOW-01/02, A11Y-01/02) |
+| 99 | Inbound Surface | heaviest lift: inbound overview tier + RoutingTrace/EvidenceCard rework + empty/loading + text-xl→token; re-applies cross-cutting reqs to `/ops/mail/inbound` (GROUP-02/03) |
+| 100 | Preview Surface | group+page/IA+responsive uplift of `/dev/mail`; dark-mode for the preview chrome (independent of previewed-email toggle); re-applies cross-cutting reqs (PAGE-03) |
+| 101 | Microcopy Pass | global "thoughtful maintainer" empty/error/loading/confirmation copy across all 3 surfaces (COPY-01) |
+| 102 | Motion + Micro-interaction Pass | global motion uplift within hard constraints, sourced from the 96 dossier (MOTION-01/02) |
+| 103 | Verification + Idempotent Closeout | re-run matrix; close sev-4/5 GAPs; assert score baseline meets-or-beats; all gates green; produce next-run baseline; stage release prepare-only; milestone audit |
 
-**Critical path:** 91 → 92 → 93 (strictly linear)
-**Sequencing notes:** Phases 92/93 reference the post-rename `brandbook/` paths, so 91 must land first. RELH-02 (1.6.x aftermath reconciliation) depends on the in-flight release train settling — potentially blocked-on-external at Phase 93 execution time; record the blocker rather than guessing final version truth.
+**Critical path:** 94 → 95 → 96 → 97 → {98, 99, 100 parallel} → {101, 102 parallel} → 103
+**Sequencing notes:** Phase 94 tightens conformance gates FIRST so the token re-baseline can't
+regress silently. Phases 98/99/100 are independent per-surface uplifts that can run in parallel
+once 97 lands the shared component layer + gallery. 101 (microcopy) and 102 (motion) are global
+passes that both depend on all three surfaces being settled, and can run in parallel. 103 is the
+single closeout gate.
 
 ## Decisions
 
@@ -162,6 +189,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Roadmap Evolution
 
+- 2026-06-13: v1.11 roadmap created. Phases 94-103, numbering continues from v1.10 (last phase 93). All 34 REQ-IDs mapped to exactly one phase, 100% coverage (TOKEN-01..05 + RATCHET-03 → 94; RATCHET-01/02/04/05 → 95; RESEARCH-01..05 → 96; COMP-01..03 + GALLERY-01/02 → 97; cross-surface GROUP-01/PAGE-01/02/RESP-01/FLOW-01/02/A11Y-01/02 anchored on operator → 98; GROUP-02/03 → 99; PAGE-03 → 100; COPY-01 → 101; MOTION-01/02 → 102; 103 is closeout-only). Critical path 94 → 95 → 96 → 97 → {98,99,100 parallel} → {101,102 parallel} → 103. Cross-cutting GROUP/PAGE/RESP/FLOW/A11Y reqs counted once at their operator anchor (98) and re-applied per-surface on 99/100. Phase 94 tightens conformance gates FIRST (tighten-then-re-baseline) so the token re-baseline can't regress silently. Release prepare-only; admin-minor bump drags matched core+inbound via linked-version releases.
 - 2026-06-12: v1.10 roadmap created. Phases 91-93, numbering continues from v1.9 (last phase 90). All 10 REQ-IDs (FOLD-01..03 → 91, SURF-01..03 → 92, HEXD-01..02 + RELH-01..02 → 93) mapped to exactly one phase, 100% coverage. Strictly linear critical path 91 → 92 → 93. RELH-02 flagged potentially blocked-on-external (in-flight release train must settle). Adoption mechanics pre-settled in `.planning/research/v1.10-brand-adoption/ADOPTION-MECHANICS.md`.
 - 2026-06-11: v1.9 roadmap created. Phases 85-90, numbering continues from v1.8 (last phase 84). All 22 REQ-IDs (BRIEF/FOUND/LOGO-05..08/BOOK-04..07/COLL/COPY/GATE) mapped to exactly one phase, 100% coverage. Strictly linear critical path. Phase 87 carries a hard maintainer-selection pause with a two-rejection circuit breaker. Research pre-settled token format, contrast fixes, and SVG portability rules in the fable brandbook research summary.
 - 2026-06-11: v1.8 closed superseded (audit verdict gaps_found, accepted). Residual gaps inherited by v1.9; `brandbook/` frozen at `09a84dd4` as the A/B baseline.

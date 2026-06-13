@@ -177,5 +177,52 @@ quality forward.
 
 ## Traceability
 
-*(Filled by the roadmap — REQ-ID → Phase mapping. Phases continue from v1.10: this milestone
-runs Phases 94–103.)*
+REQ-ID → Phase mapping for v1.11 (Phases 94–103). All 34 v1.11 requirements map to
+exactly one phase — 100% coverage, no orphans, no double-maps.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| TOKEN-01 | Phase 94 | Pending |
+| TOKEN-02 | Phase 94 | Pending |
+| TOKEN-03 | Phase 94 | Pending |
+| TOKEN-04 | Phase 94 | Pending |
+| TOKEN-05 | Phase 94 | Pending |
+| RATCHET-03 | Phase 94 | Pending |
+| RATCHET-01 | Phase 95 | Pending |
+| RATCHET-02 | Phase 95 | Pending |
+| RATCHET-04 | Phase 95 | Pending |
+| RATCHET-05 | Phase 95 | Pending |
+| RESEARCH-01 | Phase 96 | Pending |
+| RESEARCH-02 | Phase 96 | Pending |
+| RESEARCH-03 | Phase 96 | Pending |
+| RESEARCH-04 | Phase 96 | Pending |
+| RESEARCH-05 | Phase 96 | Pending |
+| COMP-01 | Phase 97 | Pending |
+| COMP-02 | Phase 97 | Pending |
+| COMP-03 | Phase 97 | Pending |
+| GALLERY-01 | Phase 97 | Pending |
+| GALLERY-02 | Phase 97 | Pending |
+| GROUP-01 | Phase 98 | Pending |
+| PAGE-01 | Phase 98 | Pending |
+| PAGE-02 | Phase 98 | Pending |
+| RESP-01 | Phase 98 | Pending |
+| FLOW-01 | Phase 98 | Pending |
+| FLOW-02 | Phase 98 | Pending |
+| A11Y-01 | Phase 98 | Pending |
+| A11Y-02 | Phase 98 | Pending |
+| GROUP-02 | Phase 99 | Pending |
+| GROUP-03 | Phase 99 | Pending |
+| PAGE-03 | Phase 100 | Pending |
+| COPY-01 | Phase 101 | Pending |
+| MOTION-01 | Phase 102 | Pending |
+| MOTION-02 | Phase 102 | Pending |
+
+**Coverage:** 34/34 v1.11 requirements mapped to exactly one phase ✓
+
+**Cross-cutting note:** GROUP-01, PAGE-01, PAGE-02, RESP-01, FLOW-01, FLOW-02, A11Y-01,
+and A11Y-02 are introduced and anchored on the Operator surface (Phase 98) and then
+**re-applied per-surface** on the Inbound surface (Phase 99) and Preview surface
+(Phase 100). For single-phase traceability they are counted once at their anchor
+(Phase 98); Phases 99 and 100 satisfy these same cross-cutting requirements for their
+own surfaces as stated in their phase goals. Phase 103 (closeout) verifies all 34
+REQ-IDs but anchors no net-new requirement.
