@@ -52,6 +52,14 @@ defmodule MailglassAdmin.BundleTest do
       assert size > 0
       assert size < 20_000, "logo.svg is #{size} bytes; budget is <20KB"
     end
+
+    test "is an outlined lockup with no live text or font dependency" do
+      logo = File.read!(@logo_path)
+
+      refute logo =~ "<text"
+      refute logo =~ "font-family"
+      refute logo =~ "letter-spacing"
+    end
   end
 
   describe "total priv/static/ size" do
