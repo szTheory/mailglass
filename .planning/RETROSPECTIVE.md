@@ -11,8 +11,8 @@
 
 ### What Was Built
 
-A complete competing brand book at `brandbook-fable/` (256 KB, all text
-artifacts): forensic differentiation brief, contrast-proven two-tier tokens
+A complete competing fable brand book (256 KB, all text artifacts): forensic
+differentiation brief, contrast-proven two-tier tokens
 (light+dark parity, computed WCAG matrix), the sealed-flap logo system (8
 assets, color program + mono master, OS-dark-adaptive favicon), a
 self-contained HTML book with live theme toggle / keyboard gallery /

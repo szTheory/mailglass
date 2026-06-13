@@ -15,10 +15,10 @@ chain rather than a separate retroactive audit document.
 
 - Research-grounded differentiation brief: forensic codex audit (20 verified defect rows, 9 strengths, 6 killed false differentiators) locking 12 differentiators, the book outline, kill-list, and 21-file manifest before any artifact was authored.
 - Contrast-proven two-tier token foundation (tokens.json + tokens.css) with complete 39-role light/dark parity, six computed fix hexes, four newly decided dark feedback backgrounds, and a 192-row script-computed WCAG matrix.
-- The maintainer selected 4D "the sealed flap" through a four-round evidence-rendered tournament (8 options → 6 variants → color program → envelope-in-light exploration); the winner ships as a complete 8-asset, two-expression, mono-safe logo system in `brandbook-fable/assets/` with an OS-dark-adaptive favicon.
+- The maintainer selected 4D "the sealed flap" through a four-round evidence-rendered tournament (8 options → 6 variants → color program → envelope-in-light exploration); the winner ships as a complete 8-asset, two-expression, mono-safe logo system with an OS-dark-adaptive favicon, now adopted under canonical `brandbook/assets/`.
 - Self-contained fable brand book: a 77.7 KB file:// page whose theme toggle re-skins every specimen, whose 45-pair WCAG matrix is computed from the live tokens at runtime, with a fully keyboard-operable component gallery and a usage-rule-honoring logo system — plus the brand-book.md text master and README.
 - All eight remaining manifest files shipped — landing + email HTML specimens, four portable SVGs, two copy libraries keyed to the seven domain nouns — slotted into the book's Specimens grid and proven with a three-iteration visual audit ending zero-defect.
-- The complete brandbook-fable/ folder (256 KB) passed all 9 scripted gate checks on the first run; maintainer sign-off: "I LOVE THE NEW BRANDBOOK."
+- The complete fable brandbook folder (256 KB) passed all 9 scripted gate checks on the first run; maintainer sign-off: "I LOVE THE NEW BRANDBOOK."
 
 **Deferred to a future milestone:** A/B winner adoption (folder rename,
 README/HexDocs/social propagation, PNG export pipeline).
@@ -35,7 +35,8 @@ audit verdict is `gaps_found` (`.planning/milestones/v1.8-MILESTONE-AUDIT.md`);
 the gaps were accepted because an out-of-band session (frozen at commit
 `09a84dd4`) completed the brandbook around the selected concept-07r identity,
 and the v1.9 milestone ("Brand Book Fable — A/B Brand System") supersedes the
-remaining work with a competing brand book at `brandbook-fable/`.
+remaining work with a competing fable brand book, now adopted as canonical
+`brandbook/`.
 
 **Key accomplishments:**
 
