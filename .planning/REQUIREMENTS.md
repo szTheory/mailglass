@@ -21,7 +21,7 @@ release again.
 
 ### FOLD — Folder Adoption
 
-- [ ] **FOLD-01**: `brandbook-fable/` becomes canonical `brandbook/` via
+- [x] **FOLD-01**: `brandbook-fable/` becomes canonical `brandbook/` via
   `git mv`; the codex book's files are removed in the same commit (history
   preserves them at the frozen baseline `09a84dd4`).
 - [ ] **FOLD-02**: Every tracked reference to `brandbook-fable/` or to the
@@ -30,7 +30,7 @@ release again.
   `prompts/mailglass-brand-book.md` to `brandbook/brand-book.md`) and
   `mailglass_admin/docs/design-system.md:5`'s prompts pointer. The v1.9
   reference sweep found no other tracked consumers.
-- [ ] **FOLD-03**: The v1.9 quality gate (gate.sh, re-pathed) passes on the
+- [x] **FOLD-03**: The v1.9 quality gate (gate.sh, re-pathed) passes on the
   folder at its new location.
 
 ### SURF — Repo Surface Propagation
@@ -89,9 +89,9 @@ release again.
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| FOLD-01 | Phase 91 | Pending |
+| FOLD-01 | Phase 91 | Complete |
 | FOLD-02 | Phase 91 | Pending |
-| FOLD-03 | Phase 91 | Pending |
+| FOLD-03 | Phase 91 | Complete |
 | SURF-01 | Phase 92 | Pending |
 | SURF-02 | Phase 92 | Pending |
 | SURF-03 | Phase 92 | Pending |

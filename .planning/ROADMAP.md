@@ -80,7 +80,7 @@ Plans:
 
 **Wave 1** *(blocked on Wave 0 completion)*
 
-- [ ] 91-02-PLAN.md - Replace the active brandbook folder via Git
+- [x] 91-02-PLAN.md - Replace the active brandbook folder via Git
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -128,7 +128,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 91. Folder Adoption and Reference Reconciliation | 1/4 | In Progress|  |
+| 91. Folder Adoption and Reference Reconciliation | 2/4 | In Progress|  |
 | 92. Surface Propagation | 0/? | Not started | - |
 | 93. HexDocs Wiring and Release Hardening | 0/? | Not started | - |
 
