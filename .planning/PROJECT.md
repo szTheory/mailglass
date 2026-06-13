@@ -55,12 +55,22 @@ landing + email specimens, four portable SVGs, and a domain-noun copy library.
 
 ## Current State
 
-**v1.10 progress:** Phases 91 and 92 are complete. The fable brand is canonical
-under `brandbook/`, the root README now starts with the canonical README header
-SVG, `brandbook/examples/og-card.png` is committed at 2400×1260 for manual GitHub
-social-preview upload, and the admin placeholder wordmark has been replaced by a
-sealed-flap `currentColor` lockup. Phase 93 remains: HexDocs logo/favicon wiring
-and release hardening.
+**v1.10 progress:** All three phases (91, 92, 93) are complete — v1.10's active
+scope is finished (999.1/999.2 remain backlog, promoted separately). The fable
+brand is canonical under `brandbook/`, the root README now starts with the
+canonical README header SVG, `brandbook/examples/og-card.png` is committed at
+2400×1260 for manual GitHub social-preview upload, and the admin placeholder
+wordmark has been replaced by a sealed-flap `currentColor` lockup. Phase 93 wired
+ex_doc `logo:`/`favicon:` into all three packages' `docs/0` (pointing at the
+canonical `brandbook/` assets, inert on hexdocs.pm until each package's next
+natural release) and hardened the release pipeline: `exclude-paths` on the root
+`.` package plus a new required `guard-release-trigger.yml` PR lint (with an
+offline 6-case fixture) so a brand/planning-only commit can never again cut a
+release. The 1.6.x aftermath is reconciled — in-repo manifest/`@version`/pins
+advanced to the released truth **1.6.2 / 1.6.2 / 1.3.1**, remote 1.6.x tags
+fetched and kept. No Hex release was cut by this milestone's commits. One
+documented manual follow-up: register `guard-release-trigger` as a required
+branch-protection check once a PR has exercised it.
 
 **`v1.8 Brand System and Repo-Ready Brandbook` is closed superseded as of 2026-06-11.** Phases 80-82 completed through GSD (brand audit/gap register, source brandbook + tokens, logo option evidence); the logo selection checkpoint and phases 83-84 were resolved out-of-band in a separate working session that selected `concept-07r-no-idot-02-tighter-gap` and finished the brandbook around it (frozen at commit `09a84dd4`). Milestone audit verdict `gaps_found` — accepted at close because v1.9 supersedes the remaining work.
 
@@ -491,4 +501,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-12 after shipping **v1.9 Brand Book Fable — A/B Brand System** (22/22 requirements verified, maintainer A/B sign-off). Next decision: adopt the fable book as canonical `brandbook/` in a future milestone.*
+*Last updated: 2026-06-13 after completing **v1.10 Brand Adoption** Phase 93 (HexDocs Wiring and Release Hardening) — HEXD-01/02 + RELH-01/02 verified 10/10; all three v1.10 phases (91, 92, 93) complete. In-repo version truth reconciled to 1.6.2 / 1.6.2 / 1.3.1. No Hex release cut this milestone.*
