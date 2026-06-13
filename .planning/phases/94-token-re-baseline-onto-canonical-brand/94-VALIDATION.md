@@ -1,8 +1,8 @@
 ---
 phase: 94
 slug: token-re-baseline-onto-canonical-brand
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-06-13
 ---
@@ -85,6 +85,6 @@ Gate scripts (run from repo root): `bash mailglass_admin/scripts/check-conforman
 - [ ] Wave 0 covers all MISSING references (8 files above)
 - [ ] No watch-mode flags
 - [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter (after plan-checker pass)
+- [x] `nyquist_compliant: true` set in frontmatter (after plan-checker pass)
 
-**Approval:** pending
+**Approval:** approved 2026-06-13 (plan-checker PASS after revision)
