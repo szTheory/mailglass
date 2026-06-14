@@ -66,7 +66,7 @@ quality forward.
 
 - [x] **RESEARCH-01**: A motion dossier distills Emil Kowalski (emilkowal.ski) + platform HIG
   into a locked easing/duration/property decision table within the hard constraints.
-- [ ] **RESEARCH-02**: An IA dossier distills gov.uk Design System / Nielsen patterns into
+- [x] **RESEARCH-02**: An IA dossier distills gov.uk Design System / Nielsen patterns into
   locked per-surface IA decisions (master-detail / filter / triage), with loved-vs-hated evidence.
 - [ ] **RESEARCH-03**: A component-state dossier locks the canonical state matrix per component
   archetype.
@@ -193,7 +193,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | RATCHET-04 | Phase 95 | Complete |
 | RATCHET-05 | Phase 95 | Complete |
 | RESEARCH-01 | Phase 96 | Complete |
-| RESEARCH-02 | Phase 96 | Pending |
+| RESEARCH-02 | Phase 96 | Complete |
 | RESEARCH-03 | Phase 96 | Pending |
 | RESEARCH-04 | Phase 96 | Pending |
 | RESEARCH-05 | Phase 96 | Pending |

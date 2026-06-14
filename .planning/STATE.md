@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-14T06:37:01.120Z"
+last_updated: "2026-06-14T06:43:59.069Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 12
   completed_phases: 4
   total_plans: 19
-  completed_plans: 14
+  completed_plans: 15
   percent: 33
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 ## Current Position
 
 Phase: 96 (research-dossier) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-06-14
 
@@ -140,6 +140,7 @@ single closeout gate.
 - [Phase ?]: [95-02] D-08 commit 2 satisfied: ExUnit shape/range baseline assertion green in verify.support_contract.admin before Playwright structural spec (95-03). if-false guard pattern used to keep compare_baselines/2 as defp without triggering --warnings-as-errors
 - [Phase ?]: Phase 95 baseline: Radius/Color/Elevation all score 4 across all surfaces — token discipline from Phase 94 holding
 - [Phase ?]: Phase 95 baseline: Preview Motion+A11y scored 2 — dark-mode absence (theme param ignored) tracked as GAP-03 sev=3
+- [96-02] IA-LD-01..09 locked: master-detail viewport split (390px stacked, 768px 40-60, 1440px 33-67), filter-label token class (GAP-04 close via IA-LD-04 — text-label uppercase font-bold text-secondary, no tracking-[0.08em]), filter disclosure mobile-only toggle, orientation strip placement, inbound overview tier spec (GROUP-02 IA layer via IA-LD-09), Preview <details>/<summary> sidebar, empty-state placement rules (GAP-02 reference via IA-LD-07)
 - [Phase ?]: MOTION-LD-01..14 locked: ease-out only ≤300ms per element transform/opacity only prefers-reduced-motion snaps to instant GAP-02 closes via MOTION-LD-12 focusable CTA
 
 ## Performance Metrics
@@ -196,6 +197,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 95 P03 | 15 minutes | 1 tasks | 1 files |
 | Phase 95 P04 | 600 | 3 tasks | 3 files |
 | Phase 96 P01 | 18 | 1 tasks | 1 files |
+| Phase 96 P02 | 22 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -218,6 +220,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-14: Phase 96 Plan 02 completed. IA.md dossier created at `.planning/research/v1.11/IA.md` with 9 LOCKED DECISIONS (IA-LD-01..09). Decisions lock: master-detail split by viewport (390px stacked/768px 40-60/1440px 33-67), filter disclosure mobile-only toggle (LiveView.JS), filter labels use text-label token (GAP-04 close signal via IA-LD-04), orientation strip placement per viewport and surface, inbound overview/at-a-glance tier spec (GROUP-02 IA layer via IA-LD-09), Preview sidebar uses native <details>/<summary>, empty/loading state placement rules (GAP-02 reference via IA-LD-07). RESEARCH-02 complete. Next: execute 96-03 (Component-state matrices).
 - 2026-06-14: Phase 96 Plan 01 completed. MOTION.md dossier created at `.planning/research/v1.11/MOTION.md` with 14 MOTION-LD-NN locked decisions (MOTION-LD-01..14). Decisions lock: ease-out only for unidirectional transitions, ≤300ms per element, transform/opacity only (color permitted at fast token for state layers), prefers-reduced-motion snaps all transitions to instant, mount-trigger via phx-mounted/LiveView.JS only. MOTION-LD-12 provides the GAP-02 downstream close signal (preview empty-state focusable CTA). RESEARCH-01 marked complete. Next: execute 96-02 (IA dossier).
 - 2026-06-13: RELH-02 reconciliation complete (93-03). Live Hex was authoritative at 1.6.2/1.6.2/1.3.1 (published 2026-06-12); the release-state memory was CORRECT; the in-repo state (1.6.1/1.6.1/1.3.0) was STALE. In-repo manifest + @version + dep pins advanced to 1.6.2/1.6.2/1.3.1 via non-bumping chore(release): commit. Remote 1.6.x tags fetched and kept (fetch+KEEP disposition; these are real published releases, do NOT delete). Harmless linked-version quirk: mailglass_admin-v1.6.1 tag exists on origin but admin 1.6.1 was never published to Hex (linked-version release PR tagged both; admin Hex publish failed/skipped; admin jumped 1.5.1 → 1.6.2). Current confirmed versions: mailglass 1.6.2 / mailglass_admin 1.6.2 / mailglass_inbound 1.3.1.
 - 2026-06-13: Phase 93 context gathered in assumptions mode. Decisions captured in `.planning/phases/93-hexdocs-wiring-and-release-hardening/93-CONTEXT.md`; audit in the sibling `93-DISCUSSION-LOG.md`. Two judgment calls confirmed at recommended: RELH-01 hardens via an enforced CI commit-type lint (guarding `brandbook/`/`.planning/`/`prompts/`), RELH-02 investigates Hex live before reconciling (version truth contradictory: in-repo manifest+mix.exs+pin say 1.6.1/1.6.1/1.3.0, memory says 1.6.2/1.6.2/1.3.1, no local 1.6.x package tags). Mechanics pre-settled in ADOPTION-MECHANICS.md. Next: `/gsd-plan-phase 93`.
