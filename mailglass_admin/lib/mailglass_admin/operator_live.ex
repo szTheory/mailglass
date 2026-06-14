@@ -372,7 +372,7 @@ defmodule MailglassAdmin.OperatorLive do
             type="button"
             phx-click={JS.toggle(to: "#operator-filter-panel")}
             data-testid="operator-filters-toggle"
-            class="btn btn-ghost min-h-11 md:hidden"
+            class="btn btn-ghost !h-11 min-h-11 md:hidden"
           >
             Filters <span aria-hidden="true">v</span>
           </button>
@@ -406,7 +406,7 @@ defmodule MailglassAdmin.OperatorLive do
 
         <section
           data-testid="operator-master-detail"
-          class="mt-6 grid gap-lg md:grid-cols-[40%_60%] min-[1440px]:grid-cols-[33%_67%]"
+          class="mt-6 grid gap-lg md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]"
         >
           <aside
             data-testid="operator-deliveries-list-card"
@@ -431,7 +431,7 @@ defmodule MailglassAdmin.OperatorLive do
             data-testid="operator-detail-column"
             class={[
               "space-y-4",
-              is_nil(@selected_delivery) && "max-md:order-first"
+              is_nil(@selected_delivery) && "order-first md:order-none"
             ]}
           >
             <%= cond do %>
@@ -467,7 +467,7 @@ defmodule MailglassAdmin.OperatorLive do
                   <.link
                     patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
                     data-testid="operator-detail-back"
-                    class="btn btn-ghost min-h-11 md:hidden"
+                    class="btn btn-ghost !h-11 min-h-11 md:hidden"
                   >
                     Back to deliveries
                   </.link>

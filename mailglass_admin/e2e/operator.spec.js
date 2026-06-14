@@ -70,21 +70,24 @@ test.describe("operator browser gate", () => {
     await expect(page.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
   });
 
-  test("mobile stacks list before detail and preserves detail section order", async ({ page }) => {
+  test("mobile shows orientation before list and preserves detail section order", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openOperator(page);
 
     const deliveriesCard = page.getByTestId("operator-deliveries-list-card");
-    const detailColumn = page.getByTestId("operator-detail-column");
+    const orientation = page.getByTestId("deliveries-orientation");
 
     const deliveriesBox = await deliveriesCard.boundingBox();
-    const detailBox = await detailColumn.boundingBox();
+    const orientationBox = await orientation.boundingBox();
 
     expect(deliveriesBox).not.toBeNull();
-    expect(detailBox).not.toBeNull();
-    expect(deliveriesBox.y).toBeLessThan(detailBox.y);
+    expect(orientationBox).not.toBeNull();
+    expect(orientationBox.y).toBeLessThan(deliveriesBox.y);
 
     await deliveryRow(page, 0).click();
+
+    await expect(deliveriesCard).toBeHidden();
+    await expect(page.getByTestId("operator-detail-back")).toBeVisible();
 
     const headerBox = await page.getByTestId("operator-detail-header").boundingBox();
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
@@ -99,6 +102,22 @@ test.describe("operator browser gate", () => {
     // Acceptance check for GAP-07 at 390px: orientation strip must be visible (deliveries-orientation)
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
     await expect(page.getByTestId("deliveries-orientation")).toBeVisible();
+  });
+
+  test("failed SendGrid row remains index-pinned for failure audit", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    const failedRow = deliveryRow(page, 4);
+
+    await expect(failedRow).toContainText("Failed");
+    await failedRow.click();
+
+    const detailHeader = page.getByTestId("operator-detail-header");
+    await expect(detailHeader).toContainText("browser-other@example.com");
+    await expect(detailHeader).toContainText("Failed");
+    await expect(detailHeader).toContainText("SENDGRID");
+    await expect(detailHeader).toContainText("sg_browser_other");
   });
 
   test("exact replay flow shows ready copy and records a new-work outcome", async ({ page }) => {
@@ -157,7 +176,10 @@ test.describe("operator browser gate", () => {
     await expect(modal).toContainText("browser-ambiguous-delivery-2");
     await expect(page.getByTestId("operator-replay-confirm")).toHaveCount(0);
 
-    await page.getByRole("radio", { name: /browser-ambiguous-delivery-2/i }).check();
+    const secondTarget = page.getByRole("radio", { name: /browser-ambiguous-delivery-2/i });
+    await secondTarget.focus();
+    await page.keyboard.press("Space");
+    await expect(secondTarget).toBeChecked();
     await expect(page.getByTestId("operator-replay-confirm")).toBeVisible();
   });
 

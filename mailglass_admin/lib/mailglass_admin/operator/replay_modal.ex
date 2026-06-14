@@ -15,7 +15,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   def replay_modal(assigns) do
     ~H"""
     <%= if @open? and @delivery do %>
-      <div class="motion-tab-swap fixed inset-0 z-40 flex items-center justify-center bg-base-content/40 p-4">
+      <div class="motion-tab-swap fixed inset-0 z-40 overflow-y-auto bg-base-content/40 p-4">
         <div
           data-testid="operator-replay-modal"
           role="dialog"
@@ -23,7 +23,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           aria-labelledby="replay-modal-title"
           phx-key="Escape"
           phx-window-keydown="close_replay"
-          class="motion-overlay w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
+          class="motion-overlay mx-auto my-4 w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
         >
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">

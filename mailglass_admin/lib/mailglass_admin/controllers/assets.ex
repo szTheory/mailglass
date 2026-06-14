@@ -46,7 +46,7 @@ defmodule MailglassAdmin.Controllers.Assets do
   import Plug.Conn
 
   # ---- CSS bundle (compile-time embedded) ----
-  @css_path Path.join([:code.priv_dir(:mailglass_admin), "static", "app.css"])
+  @css_path Path.expand("../../../priv/static/app.css", __DIR__)
   @external_resource @css_path
   @css File.read!(@css_path)
   @css_hash Base.encode16(:crypto.hash(:md5, @css), case: :lower)

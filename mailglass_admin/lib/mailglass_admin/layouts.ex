@@ -22,16 +22,46 @@ defmodule MailglassAdmin.Layouts do
   # at RENDER time via `<%= css_url() %>`, so the function_exported?/3
   # guard picks up the real hash automatically once this plan lands.
   #
-  # Per 05-RESEARCH.md line 940, asset hrefs are RELATIVE ("css-:md5.css"
-  # without leading slash) so the browser resolves them against whatever
-  # mount path the adopter chose (e.g. /dev/mail -> /dev/mail/css-XX.css).
-  defp css_url do
+  defp css_url(assigns) do
     if Code.ensure_loaded?(MailglassAdmin.Controllers.Assets) and
          function_exported?(MailglassAdmin.Controllers.Assets, :css_hash, 0) do
-      "css-" <> MailglassAdmin.Controllers.Assets.css_hash()
+      mounted_asset_url(assigns, "css-" <> MailglassAdmin.Controllers.Assets.css_hash())
     else
-      "css-pending.css"
+      mounted_asset_url(assigns, "css-pending.css")
     end
+  end
+
+  defp mounted_asset_url(%{conn: %Plug.Conn{request_path: request_path}}, filename) do
+    request_path
+    |> asset_mount_path()
+    |> Path.join(filename)
+  end
+
+  defp mounted_asset_url(_assigns, filename), do: filename
+
+  defp asset_mount_path(request_path) do
+    segments =
+      request_path
+      |> String.trim("/")
+      |> String.split("/", trim: true)
+
+    segments =
+      case segments do
+        [] ->
+          []
+
+        segments ->
+          last = List.last(segments)
+          preview_mailable? = segments |> Enum.at(-2, "") |> String.contains?(".")
+
+          cond do
+            last in ["gallery", "inbound"] -> Enum.drop(segments, -1)
+            preview_mailable? -> Enum.drop(segments, -2)
+            true -> segments
+          end
+      end
+
+    "/" <> Enum.join(segments, "/")
   end
 
   defp js_inline do

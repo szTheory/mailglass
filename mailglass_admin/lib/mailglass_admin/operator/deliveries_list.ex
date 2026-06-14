@@ -14,7 +14,10 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   def deliveries_list(assigns) do
     ~H"""
     <%= if @deliveries == [] do %>
-      <div class="flex min-h-64 flex-col items-center justify-center gap-sm p-6 text-center">
+      <div
+        data-testid={if @filters_active?, do: "operator-empty-filtered", else: "operator-empty-truly"}
+        class="flex min-h-64 flex-col items-center justify-center gap-sm p-6 text-center"
+      >
         <Components.icon name="hero-inbox-stack" class="h-8 w-8 text-secondary" />
         <div class="space-y-1">
           <%= if @filters_active? do %>
@@ -33,14 +36,11 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
           :if={@filters_active?}
           type="button"
           phx-click="clear_filters"
-          data-testid="operator-empty-filtered"
+          data-testid="operator-empty-reset"
           class="btn btn-ghost min-h-11"
         >
           Clear filters
         </button>
-        <div :if={!@filters_active?} data-testid="operator-empty-truly" class="sr-only">
-          No reset action
-        </div>
       </div>
     <% else %>
       <ul data-testid="operator-deliveries-list" class="divide-y divide-base-300">

@@ -7,7 +7,7 @@
     <.live_title suffix=" · mailglass">
       <%= assigns[:page_title] || "Preview" %>
     </.live_title>
-    <link rel="stylesheet" href={css_url()} />
+    <link rel="stylesheet" href={css_url(assigns)} />
     <script><%= Phoenix.HTML.raw(js_inline()) %></script>
   </head>
   <body>

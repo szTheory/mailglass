@@ -68,6 +68,21 @@ async function isAccentAllowlisted(page, locator) {
   return false;
 }
 
+function parseGridColumns(value) {
+  return value
+    .split(" ")
+    .map(part => Number.parseFloat(part))
+    .filter(Number.isFinite);
+}
+
+function expectRatio(columns, expected, tolerance = 0.05) {
+  expect(columns.length).toBe(2);
+  const total = columns[0] + columns[1];
+  expect(total).toBeGreaterThan(0);
+  expect(columns[0] / total).toBeGreaterThanOrEqual(expected - tolerance);
+  expect(columns[0] / total).toBeLessThanOrEqual(expected + tolerance);
+}
+
 test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   // =========================================================================
@@ -147,6 +162,24 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // (expected >= 44px). Surface: deliveries. Pillar: Spacing. Severity: 3.
       // Fix sketch: remove btn-sm from the filter-form submit button or ensure min-h-11 wins.
       expect(typeof box.height).toBe("number"); // structural shape assertion always passes
+    });
+
+    test("Operator: filter toggle and detail back controls meet touch target floor", async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await openOperator(page);
+
+      const filterToggle = page.getByTestId("operator-filters-toggle");
+      await expect(filterToggle).toBeVisible();
+      const filterBox = await filterToggle.boundingBox();
+      expect(filterBox).not.toBeNull();
+      expect(filterBox.height).toBeGreaterThanOrEqual(44);
+
+      await page.getByTestId("operator-delivery-row").first().click();
+      const back = page.getByTestId("operator-detail-back");
+      await expect(back).toBeVisible();
+      const backBox = await back.boundingBox();
+      expect(backBox).not.toBeNull();
+      expect(backBox.height).toBeGreaterThanOrEqual(44);
     });
 
     test("Inbound: first nav link height >= 44px at 390px viewport", async ({ page }) => {
@@ -233,6 +266,72 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         el => getComputedStyle(el).fontWeight
       );
       expect(bodyWeight).toBe("400");
+    });
+
+  });
+
+  // =========================================================================
+  // OPERATOR PHASE 98 — per-state, responsive-grid, and heading assertions
+  // These assertions extend the structural layer without adding LLM baseline cells.
+  // =========================================================================
+  test.describe("operator state coverage and responsive grid", () => {
+
+    test("Operator: deliveries page exposes exactly one h1", async ({ page }) => {
+      await openOperator(page);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    });
+
+    test("Operator: per-state delivery cells are reachable by URL", async ({ page }) => {
+      await openOperator(page);
+
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
+      await expect(page.getByTestId("operator-detail-error")).toBeVisible();
+
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&status=queued`);
+      const filteredEmpty = page.getByTestId("operator-empty-filtered");
+      await expect(filteredEmpty).toBeVisible();
+      await expect(filteredEmpty.getByRole("button", { name: "Clear filters" })).toBeVisible();
+
+      await page.goto(`/ops/mail?tenant_id=browser-empty&view=deliveries`);
+      const trulyEmpty = page.getByTestId("operator-empty-truly");
+      await expect(trulyEmpty).toBeVisible();
+      await expect(trulyEmpty.getByRole("button", { name: "Clear filters" })).toHaveCount(0);
+
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&status=suppressed`);
+      const suppressedRow = page.getByTestId("operator-delivery-row").first();
+      await expect(suppressedRow).toContainText("Unknown");
+      await expect(suppressedRow.locator(".badge-outline")).toContainText("Unknown");
+    });
+
+    test("Operator: master-detail grid follows 390/768/1440 responsive contract", async ({ page }) => {
+      await page.setViewportSize({ width: 768, height: 900 });
+      await openOperator(page);
+      let columns = parseGridColumns(
+        await page.getByTestId("operator-master-detail").evaluate(
+          el => getComputedStyle(el).getPropertyValue("grid-template-columns")
+        )
+      );
+      expectRatio(columns, 0.4);
+
+      await page.setViewportSize({ width: 1440, height: 900 });
+      columns = parseGridColumns(
+        await page.getByTestId("operator-master-detail").evaluate(
+          el => getComputedStyle(el).getPropertyValue("grid-template-columns")
+        )
+      );
+      expectRatio(columns, 0.33);
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+      const gridBox = await page.getByTestId("operator-master-detail").boundingBox();
+      const listBox = await page.getByTestId("operator-deliveries-list-card").boundingBox();
+      expect(gridBox).not.toBeNull();
+      expect(listBox).not.toBeNull();
+      expect(listBox.width / gridBox.width).toBeGreaterThan(0.95);
+
+      await page.getByTestId("operator-delivery-row").first().click();
+      await expect(page.getByTestId("operator-deliveries-list-card")).toBeHidden();
+      await expect(page.getByTestId("operator-detail-back")).toBeVisible();
     });
 
   });
