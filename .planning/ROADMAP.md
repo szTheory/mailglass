@@ -119,7 +119,19 @@ Plans:
   3. A dark-mode dossier locks elevation/desaturation/focus-ring-contrast decisions and a microcopy dossier locks voice patterns mapped to each surface's JTBD.
   4. Every dossier ends in a self-contained LOCKED DECISION block; downstream phases can cite a locked decision without re-reading the research body.
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+**Wave 1** *(all parallel — fan-out)*
+
+- [ ] 96-01-PLAN.md — MOTION.md dossier: Emil Kowalski + platform HIG → locked easing/duration/property table (RESEARCH-01)
+- [ ] 96-02-PLAN.md — IA.md dossier: gov.uk Design System / Nielsen → locked per-surface IA decisions (RESEARCH-02)
+- [ ] 96-03-PLAN.md — COMPONENT-STATES.md dossier: full D-09 archetype inventory → locked state matrix (RESEARCH-03)
+- [ ] 96-04-PLAN.md — DARK-MODE.md dossier: existing dark tokens + Phase 86 figures → locked elevation/focus/preview-chrome decisions (RESEARCH-04)
+- [ ] 96-05-PLAN.md — MICROCOPY.md dossier: thoughtful-maintainer voice → per-surface JTBD copy patterns (RESEARCH-05)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 96-06-PLAN.md — SUMMARY.md: axis-ownership reconciliation + verbatim hoist of all five LOCKED DECISION blocks (RESEARCH-01..05)
 
 ### Phase 97: Cross-Surface Component Layer
 
