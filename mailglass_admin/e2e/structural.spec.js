@@ -41,6 +41,12 @@ async function openPreview(page) {
   await expect(page.getByTestId("preview-orientation")).toBeVisible();
 }
 
+// Opens the Gallery surface (dev-only, no auth required)
+async function openGallery(page) {
+  await page.goto("/dev/mail/gallery");
+  await expect(page.getByRole("heading", { name: "Component Gallery", level: 1 })).toBeVisible();
+}
+
 // Returns true if any of the ACCENT_ALLOWLIST selectors match the element
 async function isAccentAllowlisted(page, locator) {
   for (const selector of ACCENT_ALLOWLIST) {
@@ -414,17 +420,52 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   });
 
   // =========================================================================
-  // GALLERY SURFACE — deferred to Phase 97
-  // The gallery at /dev/mail/gallery does not exist yet.
-  // A GAP row in RATCHET-GAP-REGISTER.md tracks this deferred assertion scope.
+  // GALLERY SURFACE — Phase 97
+  // The gallery at /dev/mail/gallery is a dev-only LiveView with stable
+  // data-testid="gallery-{component}-{state}" cells and twin data-theme wrappers.
+  // GAP-05 closed by Phase 97 plan 08 (RATCHET-GAP-REGISTER.md).
   // =========================================================================
-  test.describe.skip("gallery surface — deferred to Phase 97", () => {
-    test("gallery structural assertions", async () => {
-      test.skip(
-        true,
-        "gallery at /dev/mail/gallery does not exist yet; RATCHET-GAP-REGISTER.md GAP row tracks this"
-      );
+  test.describe("gallery surface — Phase 97", () => {
+
+    test("gallery renders status_badge specimens for all 5 badge groups", async ({ page }) => {
+      await openGallery(page);
+      // badge-success group
+      await expect(page.getByTestId("gallery-status_badge-delivered")).toBeVisible();
+      // badge-primary group
+      await expect(page.getByTestId("gallery-status_badge-dispatched")).toBeVisible();
+      // badge-error group
+      await expect(page.getByTestId("gallery-status_badge-bounced")).toBeVisible();
+      // badge-warning group
+      await expect(page.getByTestId("gallery-status_badge-deferred")).toBeVisible();
+      // badge-outline group
+      await expect(page.getByTestId("gallery-status_badge-autoresponded")).toBeVisible();
     });
+
+    test("gallery renders nav_link active and inactive states", async ({ page }) => {
+      await openGallery(page);
+      await expect(page.getByTestId("gallery-nav_link-active")).toBeVisible();
+      await expect(page.getByTestId("gallery-nav_link-inactive")).toBeVisible();
+    });
+
+    test("gallery renders flash states", async ({ page }) => {
+      await openGallery(page);
+      await expect(page.getByTestId("gallery-flash-error-kind")).toBeVisible();
+      await expect(page.getByTestId("gallery-flash-success-kind")).toBeVisible();
+    });
+
+    test("gallery twin-theme wrappers present per cell", async ({ page }) => {
+      await openGallery(page);
+      const cell = page.getByTestId("gallery-status_badge-delivered");
+      await expect(cell.locator('[data-theme="mailglass-light"]')).toBeVisible();
+      await expect(cell.locator('[data-theme="mailglass-dark"]')).toBeVisible();
+    });
+
+    test("gallery renders routing_trace and evidence_card inbound specimens", async ({ page }) => {
+      await openGallery(page);
+      await expect(page.getByTestId("gallery-routing_trace-empty")).toBeVisible();
+      await expect(page.getByTestId("gallery-evidence_card-redacted")).toBeVisible();
+    });
+
   });
 
 });
