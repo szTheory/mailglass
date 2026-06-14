@@ -145,7 +145,28 @@ Plans:
   3. A dev-only gallery at `/dev/mail/gallery` (never `/ops`) renders every component × every state × light/dark from an in-code specimen list with no DB access.
   4. Each gallery cell carries a stable `data-testid` so it can be screenshotted/scored and structurally asserted by the ratchet layers.
 
-**Plans**: TBD
+**Plans**: 8 plans
+
+**Wave 1** *(plans 01-05 parallel — no file overlap)*
+
+- [ ] 97-01-PLAN.md — shell.ex uplift: nav_link/nav_pill focus rings, theme_toggle verify, orientation_strip copy (COMP-01/02, COPY-LD-11/12)
+- [ ] 97-02-PLAN.md — Operator component fixes: deliveries_list focus ring, detail_headers text-xl, filters_form tracking removal, support_cards btn-sm (COMP-01/02)
+- [ ] 97-03-PLAN.md — replay_modal a11y: aria-labelledby, Escape dismiss, focus trap, h2 text-heading, COPY-LD-13 sub-copy (COMP-02)
+- [ ] 97-04-PLAN.md — components.ex verify (icon/logo/flash/badge/status_badge) + timeline/routing_trace/evidence_card verify+fix (COMP-01/02/03)
+- [ ] 97-05-PLAN.md — Preview components: device_frame min-h-11, tabs ARIA+focus+empty-pane, sidebar focus ring+border-l-2 (COMP-01/02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 97-06-PLAN.md — GalleryLive + router: new gallery_live.ex, live "/gallery" route in preview live_session (GALLERY-01/02)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 97-07-PLAN.md — Bundle rebuild + commit + verify.preview gate + ratchet test guards (COMP-01)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 97-08-PLAN.md — Structural spec un-skip: openGallery helper + 5 real gallery assertions + GAP-05 flip to fixed (GALLERY-02)
+
 **UI hint**: yes
 
 ### Phase 98: Operator / Deliveries Surface
@@ -243,7 +264,7 @@ Plans:
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
-| 97. Cross-Surface Component Layer | 0/? | Not started | - |
+| 97. Cross-Surface Component Layer | 0/8 | Not started | - |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |
 | 99. Inbound Surface | 0/? | Not started | - |
 | 100. Preview Surface | 0/? | Not started | - |
