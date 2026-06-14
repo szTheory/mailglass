@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
-status: executing
-last_updated: "2026-06-14T04:42:41.669Z"
+status: verifying
+last_updated: "2026-06-14T04:57:04.418Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 12
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 13
-  completed_plans: 12
-  percent: 25
+  completed_plans: 13
+  percent: 33
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 
 Phase: 95 (audit-apparatus-quality-ratchet-v2) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-14
 
 ## v1.11 Milestone Intent
@@ -138,6 +138,8 @@ single closeout gate.
 - [Phase 89]: Diagram labels use a purpose-built 14-glyph stencil set, not wordmark glyphs — label craft kept distinct from wordmark craft
 - [Phase ?]: [94-01] Advisory TYPE-lg/xl and TRACK-[ gates run in CI with continue-on-error until Phase 98/99 cleans known violations (D-08, RATCHET-03)
 - [Phase ?]: [95-02] D-08 commit 2 satisfied: ExUnit shape/range baseline assertion green in verify.support_contract.admin before Playwright structural spec (95-03). if-false guard pattern used to keep compare_baselines/2 as defp without triggering --warnings-as-errors
+- [Phase ?]: Phase 95 baseline: Radius/Color/Elevation all score 4 across all surfaces — token discipline from Phase 94 holding
+- [Phase ?]: Phase 95 baseline: Preview Motion+A11y scored 2 — dark-mode absence (theme param ignored) tracked as GAP-03 sev=3
 
 ## Performance Metrics
 
@@ -191,6 +193,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 94 P03 | 6 | 3 tasks | 5 files |
 | Phase 95 P02 | 10 minutes | 2 tasks | 3 files |
 | Phase 95 P03 | 15 minutes | 1 tasks | 1 files |
+| Phase 95 P04 | 600 | 3 tasks | 3 files |
 
 ## Accumulated Context
 

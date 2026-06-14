@@ -36,7 +36,7 @@ No new product features or routes (except the dev-only gallery). Release posture
 prepare-only.
 
 - [x] **Phase 94: Token Re-Baseline onto Canonical Brand** - app.css consumes `brandbook/tokens.css --mg-*` as single source of truth; correct surface/border role mappings + dark fixes; tighten conformance gates FIRST so the re-baseline can't regress silently; rebuild + commit bundle; re-verify contrast. (completed 2026-06-13)
-- [ ] **Phase 95: Audit Apparatus + Quality-Ratchet v2** - stand up the idempotent ratchet (score baseline, carried-forward GAP-NN register, token-parity gate, structural-assertion + LLM-score layers); run the 18-cell matrix to produce a fresh baseline gap register against the now-correct brand.
+- [x] **Phase 95: Audit Apparatus + Quality-Ratchet v2** - stand up the idempotent ratchet (score baseline, carried-forward GAP-NN register, token-parity gate, structural-assertion + LLM-score layers); run the 18-cell matrix to produce a fresh baseline gap register against the now-correct brand. (completed 2026-06-14)
 - [ ] **Phase 96: Research Dossier** - parallel-subagent dossiers → locked decisions for motion (Emil Kowalski), IA (gov.uk), component states, dark mode, microcopy.
 - [ ] **Phase 97: Cross-Surface Component Layer** - Level-1 uplift of SHARED components + dev-only component gallery (`/dev/mail/gallery`). UI-SPEC before, UI-REVIEW after.
 - [ ] **Phase 98: Operator / Deliveries Surface** - group + page/IA + responsive + flow uplift of `/ops/mail`; seed data tuned for happy/error/boundary; anchors the cross-surface GROUP/PAGE/RESP/FLOW/A11Y requirements.
@@ -103,7 +103,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 95-04-PLAN.md — Seed run: capture PNGs via ui-audit.sh, LLM-score, commit real baseline JSON, populate initial GAP-NN rows (Wave 4)
+- [x] 95-04-PLAN.md — Seed run: capture PNGs via ui-audit.sh, LLM-score, commit real baseline JSON, populate initial GAP-NN rows (Wave 4)
 
 **UI hint**: yes
 
@@ -229,7 +229,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
-| 95. Audit Apparatus + Quality-Ratchet v2 | 3/4 | In Progress|  |
+| 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete   | 2026-06-14 |
 | 96. Research Dossier | 0/? | Not started | - |
 | 97. Cross-Surface Component Layer | 0/? | Not started | - |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |

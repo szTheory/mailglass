@@ -58,7 +58,7 @@ quality forward.
 - [x] **RATCHET-04**: Playwright structural assertions enforce machine-checkable pillar facts
   (visible focus rings, ARIA roles/states, ≥44px touch targets, `font-weight ∈ {400,700}`,
   accent-only-on-allowlist, reduced-motion collapses durations).
-- [ ] **RATCHET-05**: An LLM-scored PNG matrix (18-cell live surfaces + gallery) against the
+- [x] **RATCHET-05**: An LLM-scored PNG matrix (18-cell live surfaces + gallery) against the
   6-pillar rubric produces committed baseline scores (`docs/ui-baseline-scores.json`); PNGs
   remain gitignored (no pixel-diff).
 
@@ -191,7 +191,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | RATCHET-01 | Phase 95 | Complete |
 | RATCHET-02 | Phase 95 | Complete |
 | RATCHET-04 | Phase 95 | Complete |
-| RATCHET-05 | Phase 95 | Pending |
+| RATCHET-05 | Phase 95 | Complete |
 | RESEARCH-01 | Phase 96 | Pending |
 | RESEARCH-02 | Phase 96 | Pending |
 | RESEARCH-03 | Phase 96 | Pending |
