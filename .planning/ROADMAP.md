@@ -211,7 +211,25 @@ Plans:
   3. The inbound surface gains coherent empty/loading/error states, all `text-xl` and off-token type are fixed, and the why-did-inbound-not-route JTBD flow validates end-to-end (happy/error/boundary/missing-evidence reachable by seeded URL).
   4. The inbound surface meets the same a11y + responsive + WCAG-AA bar as the operator surface in both themes at 390/768/1440.
 
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+
+**Wave 1**
+
+- [ ] 99-01-PLAN.md - Internal inbound summary seam + optional gateway.
+- [ ] 99-03-PLAN.md - RoutingTrace/EvidenceCard group layout and token cleanup.
+
+**Wave 2** *(blocked on 99-01 completion)*
+
+- [ ] 99-02-PLAN.md - Summary-backed overview tier, responsive inbound IA, and empty states.
+
+**Wave 3** *(blocked on 99-02 and 99-03 completion)*
+
+- [ ] 99-04-PLAN.md - Single-seed inbound browser reachability plus responsive/JTBD assertions.
+
+**Wave 4** *(blocked on 99-04 completion)*
+
+- [ ] 99-05-PLAN.md - Fail-closed type/tracking conformance gate and rebuilt bundle.
 **UI hint**: yes
 
 ### Phase 100: Preview Surface
