@@ -52,7 +52,10 @@ defmodule MailglassAdmin.Layouts do
 
         segments ->
           last = List.last(segments)
-          preview_mailable? = segments |> Enum.at(-2, "") |> String.contains?(".")
+          preview_mailable? =
+            segments
+            |> Enum.at(-2, "")
+            |> module_segment?()
 
           cond do
             last in ["gallery", "inbound"] -> Enum.drop(segments, -1)
@@ -63,6 +66,9 @@ defmodule MailglassAdmin.Layouts do
 
     "/" <> Enum.join(segments, "/")
   end
+
+  defp module_segment?(segment),
+    do: String.contains?(segment, ".") and String.match?(segment, ~r/^(Elixir\.)?[A-Z]/)
 
   defp js_inline do
     if Code.ensure_loaded?(MailglassAdmin.Controllers.Assets) and
