@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
-status: completed
+status: executing
 last_updated: "2026-06-14T15:10:08.352Z"
-last_activity: "2026-06-14 -- Phase 96 complete: 5 research dossiers + canonical SUMMARY.md (69 LOCKED decisions across MOTION/IA/COMPONENT-STATES/DARK-MODE/MICROCOPY); verification 15/15"
+last_activity: "2026-06-14 -- Phase 97 context gathered (assumptions mode); ready for UI-SPEC then plan"
 progress:
   total_phases: 12
   completed_phases: 5
@@ -20,14 +20,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 96 — research-dossier
+**Current focus:** Phase 97 — Cross-Surface Component Layer
 
 ## Current Position
 
-Phase: 96 (research-dossier) — COMPLETE (verification passed 15/15)
-Plan: 6 of 6 complete
-Status: Phase complete — next is Phase 97 (Cross-Surface Component Layer)
-Last activity: 2026-06-14 -- Phase 96 complete: 5 research dossiers + canonical SUMMARY.md (69 LOCKED decisions across MOTION/IA/COMPONENT-STATES/DARK-MODE/MICROCOPY); verification 15/15
+Phase: 97 (cross-surface-component-layer) — context gathered (assumptions mode)
+Plan: Not yet planned
+Status: Ready for UI-SPEC, then plan-phase
+Last activity: 2026-06-14 -- Phase 97 context gathered: gallery in dev preview live_session, in-code specimens, twin data-theme cells, in-place component uplift per SUMMARY.md LDs, un-skip structural gallery spec + flip GAP-05
+Resume file: .planning/phases/97-cross-surface-component-layer/97-CONTEXT.md
 
 ## v1.11 Milestone Intent
 
