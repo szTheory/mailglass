@@ -157,7 +157,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 97-06-PLAN.md — GalleryLive + router: new gallery_live.ex, live "/gallery" route in preview live_session (GALLERY-01/02)
+- [x] 97-06-PLAN.md — GalleryLive + router: new gallery_live.ex, live "/gallery" route in preview live_session (GALLERY-01/02)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -264,7 +264,7 @@ Plans:
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
-| 97. Cross-Surface Component Layer | 5/8 | In Progress|  |
+| 97. Cross-Surface Component Layer | 6/8 | In Progress|  |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |
 | 99. Inbound Surface | 0/? | Not started | - |
 | 100. Preview Surface | 0/? | Not started | - |

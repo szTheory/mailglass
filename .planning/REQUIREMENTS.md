@@ -90,10 +90,10 @@ quality forward.
 
 ### GALLERY — Storybook-lens Audit Surface
 
-- [ ] **GALLERY-01**: A dev-only component gallery LiveView (`/dev/mail/gallery`, in the dev
+- [x] **GALLERY-01**: A dev-only component gallery LiveView (`/dev/mail/gallery`, in the dev
   live_session only — never `/ops`) renders every component × every state × light/dark from an
   in-code specimen list (no DB).
-- [ ] **GALLERY-02**: Each gallery cell carries a stable `data-testid` so it can be
+- [x] **GALLERY-02**: Each gallery cell carries a stable `data-testid` so it can be
   screenshotted/scored and structurally asserted (feeds the RATCHET layers).
 
 ### GROUP — Meta-component Composition
@@ -200,8 +200,8 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | COMP-01 | Phase 97 | Complete |
 | COMP-02 | Phase 97 | Complete |
 | COMP-03 | Phase 97 | Complete |
-| GALLERY-01 | Phase 97 | Pending |
-| GALLERY-02 | Phase 97 | Pending |
+| GALLERY-01 | Phase 97 | Complete |
+| GALLERY-02 | Phase 97 | Complete |
 | GROUP-01 | Phase 98 | Pending |
 | PAGE-01 | Phase 98 | Pending |
 | PAGE-02 | Phase 98 | Pending |
