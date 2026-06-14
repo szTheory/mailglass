@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
-status: executing
-last_updated: "2026-06-14T15:10:08.352Z"
-last_activity: "2026-06-14 -- Phase 97 context gathered (assumptions mode); ready for UI-SPEC then plan"
+status: Ready for UI-SPEC, then plan-phase
+last_updated: "2026-06-14T15:24:02.085Z"
+last_activity: "2026-06-14 -- Phase 97 context gathered: gallery in dev preview live_session, in-code specimens, twin data-theme cells, in-place component uplift per SUMMARY.md LDs, un-skip structural gallery spec + flip GAP-05"
 progress:
   total_phases: 12
   completed_phases: 5
@@ -28,7 +28,7 @@ Phase: 97 (cross-surface-component-layer) — context gathered (assumptions mode
 Plan: Not yet planned
 Status: Ready for UI-SPEC, then plan-phase
 Last activity: 2026-06-14 -- Phase 97 context gathered: gallery in dev preview live_session, in-code specimens, twin data-theme cells, in-place component uplift per SUMMARY.md LDs, un-skip structural gallery spec + flip GAP-05
-Resume file: .planning/phases/97-cross-surface-component-layer/97-CONTEXT.md
+Resume file: .planning/phases/97-cross-surface-component-layer/97-UI-SPEC.md
 
 ## v1.11 Milestone Intent
 
