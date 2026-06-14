@@ -14,15 +14,14 @@ defmodule MailglassAdmin.Operator.ShellTest do
       html = render_component(&Shell.orientation_strip/1, surface: :deliveries)
 
       assert html =~ ~s(data-testid="deliveries-orientation")
-      assert html =~ "Email never arrived? Start here."
+      assert html =~ "Delivery never arrived? Start here."
     end
 
     test "renders inbound-orientation testid with frozen copy" do
       html = render_component(&Shell.orientation_strip/1, surface: :inbound)
 
       assert html =~ ~s(data-testid="inbound-orientation")
-      assert html =~ "Message didn"
-      assert html =~ "t route as expected? Inspect the routing trace."
+      assert html =~ "InboundMessage didn&#39;t route as expected? Inspect the routing trace."
     end
 
     test "renders preview-orientation testid with frozen copy" do
