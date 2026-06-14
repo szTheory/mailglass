@@ -37,7 +37,7 @@ prepare-only.
 
 - [x] **Phase 94: Token Re-Baseline onto Canonical Brand** - app.css consumes `brandbook/tokens.css --mg-*` as single source of truth; correct surface/border role mappings + dark fixes; tighten conformance gates FIRST so the re-baseline can't regress silently; rebuild + commit bundle; re-verify contrast. (completed 2026-06-13)
 - [x] **Phase 95: Audit Apparatus + Quality-Ratchet v2** - stand up the idempotent ratchet (score baseline, carried-forward GAP-NN register, token-parity gate, structural-assertion + LLM-score layers); run the 18-cell matrix to produce a fresh baseline gap register against the now-correct brand. (completed 2026-06-14)
-- [ ] **Phase 96: Research Dossier** - parallel-subagent dossiers → locked decisions for motion (Emil Kowalski), IA (gov.uk), component states, dark mode, microcopy.
+- [x] **Phase 96: Research Dossier** - parallel-subagent dossiers → locked decisions for motion (Emil Kowalski), IA (gov.uk), component states, dark mode, microcopy. (completed 2026-06-14)
 - [ ] **Phase 97: Cross-Surface Component Layer** - Level-1 uplift of SHARED components + dev-only component gallery (`/dev/mail/gallery`). UI-SPEC before, UI-REVIEW after.
 - [ ] **Phase 98: Operator / Deliveries Surface** - group + page/IA + responsive + flow uplift of `/ops/mail`; seed data tuned for happy/error/boundary; anchors the cross-surface GROUP/PAGE/RESP/FLOW/A11Y requirements.
 - [ ] **Phase 99: Inbound Surface** - heaviest lift: add inbound overview tier, rework RoutingTrace + EvidenceCard, empty/loading states, text-xl→token fixes; re-applies cross-surface uplift to `/ops/mail/inbound`.
@@ -131,7 +131,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 96-06-PLAN.md — SUMMARY.md: axis-ownership reconciliation + verbatim hoist of all five LOCKED DECISION blocks (RESEARCH-01..05)
+- [x] 96-06-PLAN.md — SUMMARY.md: axis-ownership reconciliation + verbatim hoist of all five LOCKED DECISION blocks (RESEARCH-01..05)
 
 ### Phase 97: Cross-Surface Component Layer
 
@@ -242,7 +242,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
-| 96. Research Dossier | 5/6 | In Progress|  |
+| 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
 | 97. Cross-Surface Component Layer | 0/? | Not started | - |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |
 | 99. Inbound Surface | 0/? | Not started | - |
