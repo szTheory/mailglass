@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-14T07:04:11.224Z"
+last_updated: "2026-06-14T07:13:45.116Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 12
   completed_phases: 4
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 18
   percent: 33
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 ## Current Position
 
 Phase: 96 (research-dossier) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-06-14
 
@@ -144,6 +144,7 @@ single closeout gate.
 - [Phase ?]: MOTION-LD-01..14 locked: ease-out only ≤300ms per element transform/opacity only prefers-reduced-motion snaps to instant GAP-02 closes via MOTION-LD-12 focusable CTA
 - [Phase ?]: [STATE-LD-05..22] 22 component-state locked decisions; focus gaps in nav_link/deliveries_list/sidebar; GAP-01 fixed in support_cards; GAP-04 fixed in filters_form; routing_trace/evidence_card reveal models correctly partitioned; MOTION-LD-01..14 locked (Phase 96-03)
 - [Phase ?]: DARK-LD-01..08 locked: dark elevation tier order, border-input upgrade for WCAG 1.4.11, focus-ring Ice confirmed, GAP-03 prescription for Phase 100
+- [Phase ?]: [96-05] COPY-LD-01..16 locked: 16 microcopy decisions mapping thoughtful-maintainer voice to per-surface JTBDs; error pattern '[Noun] [past-tense verb]: [specific cause]'; 'Oops' named canonical anti-pattern; GAP-02 copy close via COPY-LD-05 (Preview CTA 'Preview the first Mailable'); GAP-04 copy close via COPY-LD-10 ('Window' to 'Time window')
 
 ## Performance Metrics
 
@@ -202,6 +203,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 96 P02 | 22 | 1 tasks | 1 files |
 | Phase 96 P03 | 35 | 1 tasks | 1 files |
 | Phase 96 P04 | 45 | 1 tasks | 1 files |
+| Phase 96 P05 | 35 | 1 tasks | 1 files |
 
 ## Accumulated Context
 

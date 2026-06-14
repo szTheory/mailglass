@@ -72,7 +72,7 @@ quality forward.
   archetype.
 - [x] **RESEARCH-04**: A dark-mode dossier locks dark-mode pitfalls and decisions (elevation,
   desaturation, focus-ring contrast).
-- [ ] **RESEARCH-05**: A microcopy dossier locks "thoughtful maintainer" voice patterns mapped
+- [x] **RESEARCH-05**: A microcopy dossier locks "thoughtful maintainer" voice patterns mapped
   to each surface's JTBD.
 
   *(Each dossier ends in an adversarially-synthesized LOCKED DECISION block; the main thread
@@ -196,7 +196,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | RESEARCH-02 | Phase 96 | Complete |
 | RESEARCH-03 | Phase 96 | Complete |
 | RESEARCH-04 | Phase 96 | Complete |
-| RESEARCH-05 | Phase 96 | Pending |
+| RESEARCH-05 | Phase 96 | Complete |
 | COMP-01 | Phase 97 | Pending |
 | COMP-02 | Phase 97 | Pending |
 | COMP-03 | Phase 97 | Pending |
