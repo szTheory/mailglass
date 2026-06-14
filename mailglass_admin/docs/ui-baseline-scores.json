@@ -1,0 +1,32 @@
+{
+  "run_id": "2026-06-13-phase-95-placeholder",
+  "schema_version": 1,
+  "pillar_rubric": "design-system.md:104-121",
+  "grade_scale": "1-4 (1=non-conformant, 2=significant-gaps, 3=mostly-conformant, 4=excellent)",
+  "surfaces": {
+    "deliveries": {
+      "Spacing": { "light": 1, "dark": 1 },
+      "Radius": { "light": 1, "dark": 1 },
+      "Color": { "light": 1, "dark": 1 },
+      "Type": { "light": 1, "dark": 1 },
+      "Elevation": { "light": 1, "dark": 1 },
+      "Motion+A11y": { "light": 1, "dark": 1 }
+    },
+    "inbound": {
+      "Spacing": { "light": 1, "dark": 1 },
+      "Radius": { "light": 1, "dark": 1 },
+      "Color": { "light": 1, "dark": 1 },
+      "Type": { "light": 1, "dark": 1 },
+      "Elevation": { "light": 1, "dark": 1 },
+      "Motion+A11y": { "light": 1, "dark": 1 }
+    },
+    "preview": {
+      "Spacing": { "light": 1, "dark": 1 },
+      "Radius": { "light": 1, "dark": 1 },
+      "Color": { "light": 1, "dark": 1 },
+      "Type": { "light": 1, "dark": 1 },
+      "Elevation": { "light": 1, "dark": 1 },
+      "Motion+A11y": { "light": 1, "dark": 1 }
+    }
+  }
+}
