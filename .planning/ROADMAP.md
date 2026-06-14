@@ -38,7 +38,7 @@ prepare-only.
 - [x] **Phase 94: Token Re-Baseline onto Canonical Brand** - app.css consumes `brandbook/tokens.css --mg-*` as single source of truth; correct surface/border role mappings + dark fixes; tighten conformance gates FIRST so the re-baseline can't regress silently; rebuild + commit bundle; re-verify contrast. (completed 2026-06-13)
 - [x] **Phase 95: Audit Apparatus + Quality-Ratchet v2** - stand up the idempotent ratchet (score baseline, carried-forward GAP-NN register, token-parity gate, structural-assertion + LLM-score layers); run the 18-cell matrix to produce a fresh baseline gap register against the now-correct brand. (completed 2026-06-14)
 - [x] **Phase 96: Research Dossier** - parallel-subagent dossiers → locked decisions for motion (Emil Kowalski), IA (gov.uk), component states, dark mode, microcopy. (completed 2026-06-14)
-- [ ] **Phase 97: Cross-Surface Component Layer** - Level-1 uplift of SHARED components + dev-only component gallery (`/dev/mail/gallery`). UI-SPEC before, UI-REVIEW after.
+- [x] **Phase 97: Cross-Surface Component Layer** - Level-1 uplift of SHARED components + dev-only component gallery (`/dev/mail/gallery`). UI-SPEC before, UI-REVIEW after. (completed 2026-06-14)
 - [ ] **Phase 98: Operator / Deliveries Surface** - group + page/IA + responsive + flow uplift of `/ops/mail`; seed data tuned for happy/error/boundary; anchors the cross-surface GROUP/PAGE/RESP/FLOW/A11Y requirements.
 - [ ] **Phase 99: Inbound Surface** - heaviest lift: add inbound overview tier, rework RoutingTrace + EvidenceCard, empty/loading states, text-xl→token fixes; re-applies cross-surface uplift to `/ops/mail/inbound`.
 - [ ] **Phase 100: Preview Surface** - group + page/IA + responsive uplift of `/dev/mail`; add dark-mode support to the preview chrome.
@@ -165,7 +165,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 97-08-PLAN.md — Structural spec un-skip: openGallery helper + 5 real gallery assertions + GAP-05 flip to fixed (GALLERY-02)
+- [x] 97-08-PLAN.md — Structural spec un-skip: openGallery helper + 5 real gallery assertions + GAP-05 flip to fixed (GALLERY-02)
 
 **UI hint**: yes
 
@@ -264,7 +264,7 @@ Plans:
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
-| 97. Cross-Surface Component Layer | 7/8 | In Progress|  |
+| 97. Cross-Surface Component Layer | 8/8 | Complete   | 2026-06-14 |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |
 | 99. Inbound Surface | 0/? | Not started | - |
 | 100. Preview Surface | 0/? | Not started | - |

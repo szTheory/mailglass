@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
-status: executing
-last_updated: "2026-06-14T16:35:33.767Z"
+status: verifying
+last_updated: "2026-06-14T16:48:34.455Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 12
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 27
-  completed_plans: 26
-  percent: 42
+  completed_plans: 27
+  percent: 50
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 
 Phase: 97 (cross-surface-component-layer) — EXECUTING
 Plan: 8 of 8
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-14
 Resume file: None
 
@@ -158,6 +158,7 @@ single closeout gate.
 - [97-05]: ring-inset used on tabs tab buttons (inline inside tablist — offset ring would clip at tablist boundary; same rationale as deliveries_list row) (STATE-LD-21)
 - [97-05]: border-l-2 replaces border-l-[3px] in both sidebar scenario_classes clauses — nearest Tailwind scale value, aligns with nav_link border-l-2 at shell.ex:207, arbitrary value removed (STATE-LD-22)
 - [Phase ?]: Phase 97 Plan 06: GalleryLive with complete specimen matrix
+- [97-08]: Flash testids use exact gallery state names (gallery-flash-error-kind not gallery-flash-error) — matched from gallery_live.ex @specimens; sidebar scenario keys must be atoms not strings for Atom.to_string/1; NaiveDateTime specimens must use UTC DateTime for format_datetime/1
 
 ## Performance Metrics
 
@@ -224,6 +225,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 97 P05 | 175 | 3 tasks | 3 files |
 | Phase 97 P06 | 323 | 2 tasks | 2 files |
 | Phase 97 P07 | 3min | 2 tasks | 1 files |
+| Phase 97 P08 | 420 | 2 tasks | 3 files |
+| Phase 97 P08 | 420 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -245,6 +248,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-14: Phase 97 Plan 08 completed. structural.spec.js gallery describe block un-skipped with 5 real getByTestId + twin-theme assertions; GAP-05 flipped to fixed in RATCHET-GAP-REGISTER.md; 3 gallery_live.ex specimen data bugs fixed (NaiveDateTime→DateTime, missing occurred_at, string→atom sidebar scenario keys) — Playwright gallery tests 5/5 green. Phase 97 is complete (8/8 plans done); next: Phase 97 verification then Phase 98.
+
 
 - 2026-06-14: Phase 96 Plan 04 completed. DARK-MODE.md dossier created at `.planning/research/v1.11/DARK-MODE.md` with 8 DARK-LD-NN locked decisions. Codebase-grounded: extracted all [data-theme="dark"] tokens from brandbook/tokens.css with computed WCAG contrast ratios. Critical finding: --mg-color-border #315069 fails WCAG 1.4.11 (2.06:1 on dark surface) — DARK-LD-02 locks mandatory upgrade to border-input #62809A in app.css mailglass-dark theme block. Focus-ring Ice #A6EAF2 confirmed (12.98:1 min on base, 8.40:1 worst-case on selected — all pass). Phase 86 dark-feedback figures confirmed verbatim (DARK-LD-05). GAP-03 (preview ignores dark theme) prescription locked: preview_live.ex data-theme already wired at line 225; Phase 100 must confirm handle_params path and produce visual diff (DARK-LD-06). OS dark-mode integration: do not force dark_chrome:false at mount; defer to daisyUI prefersdark:true (DARK-LD-08). RESEARCH-04 marked complete. Next: execute 96-05 (Microcopy dossier).
 - 2026-06-14: Phase 96 Plan 03 completed. COMPONENT-STATES.md dossier created at `.planning/research/v1.11/COMPONENT-STATES.md` with 22 STATE-LD-NN locked decisions. Full D-09 archetype inventory (22 archetypes) enumerated from real codebase with file:line citations. Key decisions: STATE-LD-05 status_badge display-only with all 22 atoms locked; STATE-LD-06 nav_link/nav_pill focus-ring addition (WCAG 2.4.7); STATE-LD-13 filters_form drops tracking-[0.08em] (GAP-04); STATE-LD-14 support_cards removes btn-sm from CTA buttons (GAP-01); STATE-LD-17 replay_modal a11y additions (aria-labelledby + Escape + focus trap); STATE-LD-18/19 corrects D-09 conflation (routing_trace has no reveal; evidence_card owns redacted/revealed/denied). RESEARCH-03 marked complete. Next: execute 96-04 (Dark-mode pitfalls dossier).
