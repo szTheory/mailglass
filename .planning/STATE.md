@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-14T15:57:43.293Z"
+last_updated: "2026-06-14T16:02:11.137Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 27
-  completed_plans: 20
+  completed_plans: 21
   percent: 42
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 ## Current Position
 
 Phase: 97 (cross-surface-component-layer) — EXECUTING
-Plan: 2 of 8
+Plan: 3 of 8
 Status: Ready to execute
 Last activity: 2026-06-14
 Resume file: None
@@ -148,6 +148,10 @@ single closeout gate.
 - [Phase ?]: [96-05] COPY-LD-01..16 locked: 16 microcopy decisions mapping thoughtful-maintainer voice to per-surface JTBDs; error pattern '[Noun] [past-tense verb]: [specific cause]'; 'Oops' named canonical anti-pattern; GAP-02 copy close via COPY-LD-05 (Preview CTA 'Preview the first Mailable'); GAP-04 copy close via COPY-LD-10 ('Window' to 'Time window')
 - [Phase ?]: ring-primary semantic token used for focus rings (nav_link/nav_pill) — resolves Glass in light, Ice in dark per DARK-LD-03
 - [Phase ?]: theme_toggle btn-sm retained: btn-sm sets height via --size CSS var; min-h-11 sets min-height — different properties, effective 44px touch target confirmed
+- [Phase ?]: ring-inset used on deliveries_list row button (not ring-offset) — button spans full list item width, offset ring would clip at li boundary
+- [Phase ?]: text-heading token replaces banned text-xl in both detail_header h2 elements (STATE-LD-12, UI-SPEC Typography)
+- [Phase ?]: tracking-[0.08em] removed from all five filters_form label spans — heading letter-spacing handled by global h1/h2/h3 rule (STATE-LD-13, GAP-04)
+- [Phase ?]: btn-sm removed from support_cards CTA buttons; tier-1 gets px-md + min-h-11, tier-2 ghost gets px-sm + min-h-11 for 44px touch-target floor (STATE-LD-14, GAP-01)
 
 ## Performance Metrics
 
@@ -208,6 +212,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 96 P04 | 45 | 1 tasks | 1 files |
 | Phase 96 P05 | 35 | 1 tasks | 1 files |
 | Phase 97 P01 | 5min | 3 tasks | 1 files |
+| Phase 97 P02 | 104 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
