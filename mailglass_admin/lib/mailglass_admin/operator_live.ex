@@ -150,7 +150,9 @@ defmodule MailglassAdmin.OperatorLive do
 
   def handle_event("open_support_exemplar", params, socket) do
     support_state = support_state_from_event(params)
-    delivery_id = blank_to_nil(params["delivery_id"]) || socket.assigns.selected_delivery.id
+    delivery_id =
+      blank_to_nil(params["delivery_id"]) ||
+        get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)])
 
     {:noreply,
      push_patch(socket,
@@ -192,8 +194,8 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("confirm_replay", _params, socket) do
-    with %{selected_delivery: %{id: delivery_id, tenant_id: tenant_id} = delivery} <-
-           socket.assigns,
+    with %{id: delivery_id, tenant_id: tenant_id} = delivery <-
+           socket.assigns.selected_delivery || {:error, :no_selected_delivery},
          {:ok, target} <-
            selected_replay_target(
              socket.assigns.replay_targets,
@@ -237,7 +239,7 @@ defmodule MailglassAdmin.OperatorLive do
          socket
          |> assign_delivery_state(
            socket.assigns.filter_params,
-           socket.assigns.selected_delivery.id
+           get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)])
          )
          |> put_flash(:error, RepairState.flash_failure(reason))}
     end

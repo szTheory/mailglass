@@ -6,6 +6,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
   alias Mailglass.Events.Event
   alias Mailglass.IdempotencyKey
   alias Mailglass.Outbound.Delivery
+  alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.SuppressionCard
   alias MailglassAdmin.TestRepo
   alias Mailglass.Webhook.WebhookEvent
 
@@ -500,6 +502,52 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Webhook replay completed"
       assert html =~ "no change"
       assert html =~ "Last replay: completed · no change"
+    end
+  end
+
+  describe "CR-01/02/03 nil-guards" do
+    test "suppression card renders novel-shape fallback copy" do
+      html = render_component(&SuppressionCard.suppression_card/1, suppression_state: %{})
+
+      assert html =~ "No suppression"
+      assert html =~ "No active Suppression for this Delivery."
+    end
+
+    test "suppressed status badge uses the neutral fallback without warnings" do
+      html = render_component(&Components.status_badge/1, status: :suppressed, size: :sm)
+
+      assert html =~ "badge-outline"
+      assert html =~ "Unknown"
+      refute html =~ "status_class(:suppressed)"
+    end
+
+    test "support exemplar event tolerates missing selected delivery", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+
+      render_hook(view, "open_support_exemplar", %{"focus" => "failed_ingest"})
+
+      assert_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "window_hours" => "168",
+          "support_focus" => "failed_ingest"
+        })
+      )
+    end
+
+    test "confirm replay event tolerates missing selected delivery", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+
+      html = render_hook(view, "confirm_replay", %{})
+
+      assert html =~ "Select a delivery before replaying a webhook."
     end
   end
 
