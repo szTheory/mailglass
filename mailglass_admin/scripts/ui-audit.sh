@@ -36,6 +36,9 @@ BASE="http://localhost:${PORT}"
 TENANT="${TENANT:-northstar}"
 OUT="${AGENT_BROWSER_SCREENSHOT_DIR:-tmp/ui-audit}"
 mkdir -p "$OUT"
+# agent-browser resolves screenshot paths against the browser daemon's cwd, not
+# the shell's — so the output dir must be absolute or captures fail with ENOENT.
+OUT="$(cd "$OUT" && pwd)"
 
 # Viewports: 390 (mobile), 768 (tablet), 1440 (desktop). Heights are generous
 # enough for --full page capture; agent-browser scrolls automatically.
@@ -43,7 +46,8 @@ VIEWPORTS="390 768 1440"
 VIEWPORT_HEIGHT=900
 
 set_viewport() { # width
-  agent-browser viewport --width "$1" --height "$VIEWPORT_HEIGHT" >/dev/null 2>&1
+  # agent-browser >=0.27: viewport is a positional `set` subcommand, not flags.
+  agent-browser set viewport "$1" "$VIEWPORT_HEIGHT" >/dev/null 2>&1
 }
 
 shot() { # url, name
