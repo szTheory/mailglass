@@ -161,7 +161,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 97-07-PLAN.md — Bundle rebuild + commit + verify.preview gate + ratchet test guards (COMP-01)
+- [x] 97-07-PLAN.md — Bundle rebuild + commit + verify.preview gate + ratchet test guards (COMP-01)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -264,7 +264,7 @@ Plans:
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
-| 97. Cross-Surface Component Layer | 6/8 | In Progress|  |
+| 97. Cross-Surface Component Layer | 7/8 | In Progress|  |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |
 | 99. Inbound Surface | 0/? | Not started | - |
 | 100. Preview Surface | 0/? | Not started | - |
