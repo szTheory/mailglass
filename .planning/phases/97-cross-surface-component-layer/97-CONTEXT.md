@@ -71,7 +71,7 @@ This phase does NOT re-decide any design choice already locked in
 
 ### UI-SPEC / UI-REVIEW Gate & Ratchet Integration
 
-- **D-08:** Generate the **UI-SPEC before** planning/implementation and run **UI-REVIEW after**
+- **D-08 [informational]:** Generate the **UI-SPEC before** planning/implementation and run **UI-REVIEW after**
   (roadmap "UI hint: yes"). The UI-SPEC consumes SUMMARY.md LD-IDs as its design contract.
 - **D-09:** Un-skip the reserved gallery block in `e2e/structural.spec.js:421-428` — replace
   `test.describe.skip` with real `getByTestId("gallery-{component}-{state}")` visibility/accent
