@@ -35,7 +35,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
               aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
               aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
               class={[
-                "flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
+                "flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
                 row_classes(@selected_delivery, delivery)
               ]}
             >

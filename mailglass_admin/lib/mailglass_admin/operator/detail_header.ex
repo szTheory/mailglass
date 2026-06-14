@@ -18,7 +18,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
       <div class="flex flex-wrap items-start justify-between gap-md">
         <div class="space-y-2">
           <div class="flex flex-wrap items-center gap-2">
-            <h2 class="text-xl font-bold text-base-content">{@delivery.recipient}</h2>
+            <h2 class="text-heading font-bold text-base-content">{@delivery.recipient}</h2>
             <Components.status_badge status={@delivery.status} />
           </div>
           <p class="mono text-label text-secondary">{@delivery.id}</p>
