@@ -64,13 +64,13 @@ defmodule MailglassAdmin.Operator.SupportCards do
               class="grid gap-sm text-body text-secondary"
             >
               <div>
-                <dt class="text-label font-bold uppercase tracking-[0.08em]">Webhook row ID</dt>
+                <dt class="text-label uppercase font-bold">Webhook row ID</dt>
                 <dd class="mono mt-1 text-base-content">
                   {@support_summary.failed_ingest.latest.webhook_event_id}
                 </dd>
               </div>
               <div>
-                <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider event</dt>
+                <dt class="text-label uppercase font-bold">Provider event</dt>
                 <dd class="mt-1 text-base-content">
                   {@support_summary.failed_ingest.latest.provider_event_id}
                 </dd>
@@ -110,13 +110,13 @@ defmodule MailglassAdmin.Operator.SupportCards do
               class="grid gap-sm text-body text-secondary"
             >
               <div>
-                <dt class="text-label font-bold uppercase tracking-[0.08em]">Event ID</dt>
+                <dt class="text-label uppercase font-bold">Event ID</dt>
                 <dd class="mono mt-1 text-base-content">
                   {@support_summary.orphan_backlog.oldest.event_id}
                 </dd>
               </div>
               <div>
-                <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider event</dt>
+                <dt class="text-label uppercase font-bold">Provider event</dt>
                 <dd class="mt-1 text-base-content">
                   {@support_summary.orphan_backlog.oldest.provider_event_id}
                 </dd>

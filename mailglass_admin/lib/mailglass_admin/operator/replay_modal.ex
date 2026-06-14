@@ -133,11 +133,11 @@ defmodule MailglassAdmin.Operator.ReplayModal do
 
       <dl class="mt-4 grid gap-sm text-body text-secondary sm:grid-cols-2">
         <div>
-          <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider event</dt>
+          <dt class="text-label uppercase font-bold">Provider event</dt>
           <dd class="mt-1 text-base-content">{present(@candidate.provider_event_id)}</dd>
         </div>
         <div>
-          <dt class="text-label font-bold uppercase tracking-[0.08em]">Delivery linkage</dt>
+          <dt class="text-label uppercase font-bold">Delivery linkage</dt>
           <dd class="mt-1 text-base-content">{present(@candidate.delivery_provider_message_id)}</dd>
         </div>
       </dl>

@@ -163,9 +163,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-suppression-card")
       assert html =~ "Mailglass.Example.WelcomeMailer"
       assert html =~ "pm_123"
-      assert html =~ "Suppression state"
+      assert html =~ "Suppression"
       assert html =~ "Reversible in a later phase"
-      assert html =~ "This suppression is reversible in a later phase."
+      assert html =~
+               "This Suppression is reversible. Remove via the suppressions API or contact support."
       assert html =~ ~s(aria-selected="true")
       assert html =~ "Sent"
       assert html =~ "Delivered"
@@ -291,7 +292,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "No delivery events have been recorded for this item yet."
       assert html =~ "Immutable by policy"
-      assert html =~ "This suppression is immutable by policy."
+      assert html =~
+               "This Suppression is permanent. Future sends to this address will be blocked."
     end
 
     test "rejects operator mounts without an authorized actor", %{conn: conn} do
@@ -579,6 +581,29 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Deliveries appear here once your application sends its first Message."
       assert html =~ ~s(data-testid="operator-empty-truly")
       refute html =~ ~s(phx-click="clear_filters")
+    end
+  end
+
+  describe "operator tracking-clean" do
+    test "operator source files do not use arbitrary tracking utilities" do
+      files = [
+        "lib/mailglass_admin/operator_live.ex",
+        "lib/mailglass_admin/operator/suppression_card.ex",
+        "lib/mailglass_admin/operator/support_cards.ex",
+        "lib/mailglass_admin/operator/replay_modal.ex",
+        "lib/mailglass_admin/operator/filters_form.ex",
+        "lib/mailglass_admin/operator/deliveries_list.ex",
+        "lib/mailglass_admin/operator/detail_header.ex"
+      ]
+
+      offenders =
+        for file <- files,
+            {line, index} <- file |> File.read!() |> String.split("\n") |> Enum.with_index(1),
+            not String.match?(line, ~r/^\s*#/),
+            String.contains?(line, "tracking-["),
+            do: "#{file}:#{index}:#{line}"
+
+      assert offenders == []
     end
   end
 
