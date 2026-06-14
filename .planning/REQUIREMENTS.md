@@ -80,10 +80,10 @@ quality forward.
 
 ### COMP — Individual Component Quality
 
-- [ ] **COMP-01**: Every shared component (icon, logo, flash, badge, status_badge, shell,
+- [x] **COMP-01**: Every shared component (icon, logo, flash, badge, status_badge, shell,
   orientation_strip, nav_link, theme_toggle, tenant_chip) is on-brand in light + dark for
   color, type, spacing, radius, and shadow.
-- [ ] **COMP-02**: Every component renders correct, on-brand interaction states
+- [x] **COMP-02**: Every component renders correct, on-brand interaction states
   (rest/hover/focus/active/disabled/loading/empty/error) per the locked state matrix.
 - [ ] **COMP-03**: `status_badge`/`badge` color + icon mappings are deterministic, on-token,
   and legible in both themes across every status/outcome atom.
@@ -197,8 +197,8 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | RESEARCH-03 | Phase 96 | Complete |
 | RESEARCH-04 | Phase 96 | Complete |
 | RESEARCH-05 | Phase 96 | Complete |
-| COMP-01 | Phase 97 | Pending |
-| COMP-02 | Phase 97 | Pending |
+| COMP-01 | Phase 97 | Complete |
+| COMP-02 | Phase 97 | Complete |
 | COMP-03 | Phase 97 | Pending |
 | GALLERY-01 | Phase 97 | Pending |
 | GALLERY-02 | Phase 97 | Pending |

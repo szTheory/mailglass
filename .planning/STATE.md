@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-14T15:51:31.287Z"
-last_activity: 2026-06-14 -- Phase 97 planning complete
+last_updated: "2026-06-14T15:57:43.293Z"
+last_activity: 2026-06-14
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 27
-  completed_plans: 19
+  completed_plans: 20
   percent: 42
 ---
 
@@ -20,15 +20,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 97 — Cross-Surface Component Layer
+**Current focus:** Phase 97 — cross-surface-component-layer
 
 ## Current Position
 
-Phase: 97 (cross-surface-component-layer) — context gathered (assumptions mode)
-Plan: Not yet planned
+Phase: 97 (cross-surface-component-layer) — EXECUTING
+Plan: 2 of 8
 Status: Ready to execute
-Last activity: 2026-06-14 -- Phase 97 planning complete
-Resume file: .planning/phases/97-cross-surface-component-layer/97-UI-SPEC.md
+Last activity: 2026-06-14
+Resume file: None
 
 ## v1.11 Milestone Intent
 
@@ -146,6 +146,8 @@ single closeout gate.
 - [Phase ?]: [STATE-LD-05..22] 22 component-state locked decisions; focus gaps in nav_link/deliveries_list/sidebar; GAP-01 fixed in support_cards; GAP-04 fixed in filters_form; routing_trace/evidence_card reveal models correctly partitioned; MOTION-LD-01..14 locked (Phase 96-03)
 - [Phase ?]: DARK-LD-01..08 locked: dark elevation tier order, border-input upgrade for WCAG 1.4.11, focus-ring Ice confirmed, GAP-03 prescription for Phase 100
 - [Phase ?]: [96-05] COPY-LD-01..16 locked: 16 microcopy decisions mapping thoughtful-maintainer voice to per-surface JTBDs; error pattern '[Noun] [past-tense verb]: [specific cause]'; 'Oops' named canonical anti-pattern; GAP-02 copy close via COPY-LD-05 (Preview CTA 'Preview the first Mailable'); GAP-04 copy close via COPY-LD-10 ('Window' to 'Time window')
+- [Phase ?]: ring-primary semantic token used for focus rings (nav_link/nav_pill) — resolves Glass in light, Ice in dark per DARK-LD-03
+- [Phase ?]: theme_toggle btn-sm retained: btn-sm sets height via --size CSS var; min-h-11 sets min-height — different properties, effective 44px touch target confirmed
 
 ## Performance Metrics
 
@@ -205,6 +207,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 96 P03 | 35 | 1 tasks | 1 files |
 | Phase 96 P04 | 45 | 1 tasks | 1 files |
 | Phase 96 P05 | 35 | 1 tasks | 1 files |
+| Phase 97 P01 | 5min | 3 tasks | 1 files |
 
 ## Accumulated Context
 
