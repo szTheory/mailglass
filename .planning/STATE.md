@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-14T04:26:23.174Z"
+last_updated: "2026-06-14T04:34:27.731Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 12
   completed_phases: 3
   total_plans: 13
-  completed_plans: 10
+  completed_plans: 11
   percent: 25
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 ## Current Position
 
 Phase: 95 (audit-apparatus-quality-ratchet-v2) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-14
 
@@ -137,6 +137,7 @@ single closeout gate.
 - [Phase 89]: readme-header fills restricted to Glass+Slate — the only token pair >=3:1 on both GitHub grounds (computed 4.82/3.93, 5.47/3.46)
 - [Phase 89]: Diagram labels use a purpose-built 14-glyph stencil set, not wordmark glyphs — label craft kept distinct from wordmark craft
 - [Phase ?]: [94-01] Advisory TYPE-lg/xl and TRACK-[ gates run in CI with continue-on-error until Phase 98/99 cleans known violations (D-08, RATCHET-03)
+- [Phase ?]: [95-02] D-08 commit 2 satisfied: ExUnit shape/range baseline assertion green in verify.support_contract.admin before Playwright structural spec (95-03). if-false guard pattern used to keep compare_baselines/2 as defp without triggering --warnings-as-errors
 
 ## Performance Metrics
 
@@ -188,6 +189,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 94 P01 | 10 minutes | 2 tasks | 3 files |
 | Phase 94 P02 | 5min | 1 tasks | 1 files |
 | Phase 94 P03 | 6 | 3 tasks | 5 files |
+| Phase 95 P02 | 10 minutes | 2 tasks | 3 files |
 
 ## Accumulated Context
 

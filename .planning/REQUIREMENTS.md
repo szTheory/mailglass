@@ -46,7 +46,7 @@ quality forward.
 
 ### RATCHET — Idempotent Quality Ratchet
 
-- [ ] **RATCHET-01**: A committed score baseline keyed by `component × pillar × theme` records
+- [x] **RATCHET-01**: A committed score baseline keyed by `component × pillar × theme` records
   the `gsd-ui-review` grade per cell; closeout asserts every cell meets-or-beats its prior
   committed value (only-forward, no regression).
 - [x] **RATCHET-02**: One carried-forward GAP register with stable `GAP-NN` IDs (status
@@ -188,7 +188,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | TOKEN-04 | Phase 94 | Complete |
 | TOKEN-05 | Phase 94 | Complete |
 | RATCHET-03 | Phase 94 | Complete |
-| RATCHET-01 | Phase 95 | Pending |
+| RATCHET-01 | Phase 95 | Complete |
 | RATCHET-02 | Phase 95 | Complete |
 | RATCHET-04 | Phase 95 | Pending |
 | RATCHET-05 | Phase 95 | Pending |
