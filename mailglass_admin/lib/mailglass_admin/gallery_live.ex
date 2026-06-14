@@ -69,6 +69,14 @@ defmodule MailglassAdmin.GalleryLive do
     {:ok, socket}
   end
 
+  # The gallery is a static, dev-only audit surface: it renders live components
+  # (deliveries_list rows, evidence_card reveal, replay_modal close, etc.) purely
+  # for visual inspection. Those components emit their own phx-click handlers, so a
+  # human clicking a specimen would otherwise raise and tear down the LiveView. This
+  # catch-all absorbs every specimen interaction as an intentional no-op.
+  @impl true
+  def handle_event(_event, _params, socket), do: {:noreply, socket}
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -318,7 +326,7 @@ defmodule MailglassAdmin.GalleryLive do
     <EvidenceCard.evidence_card
       evidence={@assigns_map[:evidence]}
       reveal_state={@assigns_map[:reveal_state]}
-      can_reveal?={@assigns_map[:can_reveal?] || true}
+      can_reveal?={Map.get(@assigns_map, :can_reveal?, true)}
     />
     """
   end
