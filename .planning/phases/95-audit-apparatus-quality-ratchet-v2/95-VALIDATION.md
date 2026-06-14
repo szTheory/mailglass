@@ -3,7 +3,7 @@ phase: 95
 slug: audit-apparatus-quality-ratchet-v2
 status: planning-complete
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-06-13
 ---
 
@@ -40,14 +40,14 @@ created: 2026-06-13
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| GAP register schema (Task 1) | 95-01 | 1 | RATCHET-02 | — / — | N/A (planning artifact) | doc-review | `grep -c "stable_ids: true" .planning/RATCHET-GAP-REGISTER.md && grep -c "first_seen_run" .planning/RATCHET-GAP-REGISTER.md` | ❌ W0 | ⬜ pending |
-| Baseline ExUnit assertion + placeholder JSON (Task 1) | 95-02 | 2 | RATCHET-01 | T-95-V5 / V5 | JSON parsed + schema-asserted before use | unit | `cd mailglass_admin && mix test test/mailglass_admin/ratchet_baseline_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| `compare_baselines/2` defined-but-unused Phase 103 hook (Task 1) | 95-02 | 2 | RATCHET-01 | — / — | N/A | unit | same (function compiles; no call site) | ❌ W0 | ⬜ pending |
-| Wire verify.support_contract.admin alias (Task 2) | 95-02 | 2 | RATCHET-01 | — / — | N/A | unit | `cd mailglass_admin && mix verify.support_contract.admin` | ❌ W0 | ⬜ pending |
-| Playwright `structural.spec.js` — 6 pillar facts × 3 surfaces (Task 1) | 95-03 | 3 | RATCHET-04 | T-95-PW1 / — | test fixture non-PII browser-tenant@example.com | structural (browser) | `cd mailglass_admin && npm run test:operator-browser -- --grep "structural assertions"` | ❌ W0 | ⬜ pending |
-| Seed run: LLM scores → `ui-baseline-scores.json` committed; PNGs gitignored (Task 2) | 95-04 | 4 | RATCHET-05 | T-95-V5 / V5 | only JSON committed; PNGs under `/tmp` gitignored | unit + manual | `cd mailglass_admin && mix test test/mailglass_admin/ratchet_baseline_test.exs --warnings-as-errors` + `git status tmp/ui-audit/` (empty = gitignored) | ❌ W0 | ⬜ pending |
-| Seed run: populate initial `GAP-NN` rows in register (Task 3) | 95-04 | 4 | RATCHET-02 | — / — | N/A | doc-review | `grep -c "GAP-0" .planning/RATCHET-GAP-REGISTER.md && grep -c "2026-06-13-phase-95-baseline" .planning/RATCHET-GAP-REGISTER.md` | ❌ W0 | ⬜ pending |
-| Phase gate — both required CI lanes green (Task 4) | 95-04 | 4 | RATCHET-01, RATCHET-04, RATCHET-05 | T-95-V5 / V5 | both lanes green confirms all apparatus layers | full suite | `cd mailglass_admin && mix verify.support_contract.admin && npm run test:operator-browser && git status tmp/ui-audit/ && echo "PHASE_95_APPARATUS_GREEN"` | ❌ W0 | ⬜ pending |
+| GAP register schema (Task 1) | 95-01 | 1 | RATCHET-02 | — / — | N/A (planning artifact) | doc-review | `grep -c "stable_ids: true" .planning/RATCHET-GAP-REGISTER.md && grep -c "first_seen_run" .planning/RATCHET-GAP-REGISTER.md` | ✅ | ✅ green |
+| Baseline ExUnit assertion + placeholder JSON (Task 1) | 95-02 | 2 | RATCHET-01 | T-95-V5 / V5 | JSON parsed + schema-asserted before use | unit | `cd mailglass_admin && mix test test/mailglass_admin/ratchet_baseline_test.exs --warnings-as-errors` | ✅ | ✅ green |
+| `compare_baselines/2` defined-but-unused Phase 103 hook (Task 1) | 95-02 | 2 | RATCHET-01 | — / — | N/A | unit | same (function compiles; no call site) | ✅ | ✅ green |
+| Wire verify.support_contract.admin alias (Task 2) | 95-02 | 2 | RATCHET-01 | — / — | N/A | unit | `cd mailglass_admin && mix verify.support_contract.admin` | ✅ | ✅ green |
+| Playwright `structural.spec.js` — 6 pillar facts × 3 surfaces (Task 1) | 95-03 | 3 | RATCHET-04 | T-95-PW1 / — | test fixture non-PII browser-tenant@example.com | structural (browser) | `cd mailglass_admin && npm run test:operator-browser -- --grep "structural assertions"` | ✅ | ✅ green |
+| Seed run: LLM scores → `ui-baseline-scores.json` committed; PNGs gitignored (Task 2) | 95-04 | 4 | RATCHET-05 | T-95-V5 / V5 | only JSON committed; PNGs under `/tmp` gitignored | unit + manual | `cd mailglass_admin && mix test test/mailglass_admin/ratchet_baseline_test.exs --warnings-as-errors` + `git status tmp/ui-audit/` (empty = gitignored) | ✅ | ✅ green |
+| Seed run: populate initial `GAP-NN` rows in register (Task 3) | 95-04 | 4 | RATCHET-02 | — / — | N/A | doc-review | `grep -c "GAP-0" .planning/RATCHET-GAP-REGISTER.md && grep -c "2026-06-13-phase-95-baseline" .planning/RATCHET-GAP-REGISTER.md` | ✅ | ✅ green |
+| Phase gate — both required CI lanes green (Task 4) | 95-04 | 4 | RATCHET-01, RATCHET-04, RATCHET-05 | T-95-V5 / V5 | both lanes green confirms all apparatus layers | full suite | `cd mailglass_admin && mix verify.support_contract.admin && npm run test:operator-browser && git status tmp/ui-audit/ && echo "PHASE_95_APPARATUS_GREEN"` | ✅ | ✅ green (--workers=1) |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
