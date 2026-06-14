@@ -91,7 +91,8 @@ defmodule MailglassAdmin.Router do
               MailglassAdmin.OperatorLive,
               MailglassAdmin.Operator.Mount,
               MailglassAdmin.InboundLive,
-              MailglassAdmin.Controllers.Assets
+              MailglassAdmin.Controllers.Assets,
+              MailglassAdmin.GalleryLive
             ]}
 
   @on_mount_hook_type {:or, [:atom, {:tuple, [:atom, :atom]}]}
@@ -222,6 +223,7 @@ defmodule MailglassAdmin.Router do
           root_layout: {MailglassAdmin.Layouts, :root} do
           live "/", MailglassAdmin.PreviewLive, :index
           live "/:mailable/:scenario", MailglassAdmin.PreviewLive, :show
+          live "/gallery", MailglassAdmin.GalleryLive, :index
         end
       end
     end
