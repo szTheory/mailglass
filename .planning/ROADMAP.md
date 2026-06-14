@@ -87,7 +87,24 @@ Plans:
   3. Playwright structural assertions pass/fail on machine-checkable pillar facts (visible focus rings, ARIA roles/states, ≥44px touch targets, `font-weight ∈ {400,700}`, accent-only-on-allowlist, reduced-motion collapses durations).
   4. An LLM-scored 18-cell PNG matrix against the 6-pillar rubric writes committed baseline scores to `docs/ui-baseline-scores.json` with PNGs gitignored (no pixel-diff).
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+**Wave 1**
+
+- [ ] 95-01-PLAN.md — Create RATCHET-GAP-REGISTER.md schema + anti-churn contract (header-only, Wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 95-02-PLAN.md — Add ratchet_baseline_test.exs + placeholder ui-baseline-scores.json + wire verify.support_contract.admin (Wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 95-03-PLAN.md — Add structural.spec.js to operator_browser_gate lane — 6 pillar facts × 3 surfaces (Wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 95-04-PLAN.md — Seed run: capture PNGs via ui-audit.sh, LLM-score, commit real baseline JSON, populate initial GAP-NN rows (Wave 4)
+
 **UI hint**: yes
 
 ### Phase 96: Research Dossier
@@ -212,7 +229,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
-| 95. Audit Apparatus + Quality-Ratchet v2 | 0/? | Not started | - |
+| 95. Audit Apparatus + Quality-Ratchet v2 | 0/4 | Not started | - |
 | 96. Research Dossier | 0/? | Not started | - |
 | 97. Cross-Surface Component Layer | 0/? | Not started | - |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |

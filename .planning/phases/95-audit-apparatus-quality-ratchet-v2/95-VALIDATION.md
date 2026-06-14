@@ -1,8 +1,8 @@
 ---
 phase: 95
 slug: audit-apparatus-quality-ratchet-v2
-status: draft
-nyquist_compliant: false
+status: planning-complete
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-06-13
 ---
@@ -36,16 +36,18 @@ created: 2026-06-13
 
 ---
 
-## Per-Task Verification Map
+## Per-Task Verification Map (wired to PLAN.md `<automated>` blocks)
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| GAP register schema | 01 | 1 | RATCHET-02 | — / — | N/A (planning artifact) | doc-review | reviewer confirms PR cites a GAP row at sev≥3 | ❌ W0 | ⬜ pending |
-| Baseline ExUnit assertion (shape/range/36-cell coverage) | 02 | 2 | RATCHET-01 | T-95 / V5 | JSON parsed + schema-asserted before use | unit | `cd mailglass_admin && mix test test/mailglass_admin/ratchet_baseline_test.exs` | ❌ W0 | ⬜ pending |
-| `compare_baselines/2` defined-but-unused (Phase 103 hook) | 02 | 2 | RATCHET-01 | — / — | N/A | unit | same (function compiles; no call site) | ❌ W0 | ⬜ pending |
-| Playwright `structural.spec.js` — 6 pillar facts × 3 surfaces | 03 | 2 | RATCHET-04 | — / — | N/A | structural (browser) | `cd mailglass_admin && npm run test:operator-browser` | ❌ W0 | ⬜ pending |
-| Seed run: LLM scores → `ui-baseline-scores.json` committed; PNGs gitignored | 04 | 3 | RATCHET-05 | T-95 / V5 | only JSON committed; PNGs under `/tmp` | unit + manual | `mix test ...ratchet_baseline_test.exs` (shape) + `git status tmp/ui-audit/` (gitignore) | ❌ W0 | ⬜ pending |
-| Seed run: populate initial `GAP-NN` rows in register | 04 | 3 | RATCHET-02 | — / — | N/A | doc-review | reviewer confirms rows have status/run_id/first_seen_run | ❌ W0 | ⬜ pending |
+| GAP register schema (Task 1) | 95-01 | 1 | RATCHET-02 | — / — | N/A (planning artifact) | doc-review | `grep -c "stable_ids: true" .planning/RATCHET-GAP-REGISTER.md && grep -c "first_seen_run" .planning/RATCHET-GAP-REGISTER.md` | ❌ W0 | ⬜ pending |
+| Baseline ExUnit assertion + placeholder JSON (Task 1) | 95-02 | 2 | RATCHET-01 | T-95-V5 / V5 | JSON parsed + schema-asserted before use | unit | `cd mailglass_admin && mix test test/mailglass_admin/ratchet_baseline_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
+| `compare_baselines/2` defined-but-unused Phase 103 hook (Task 1) | 95-02 | 2 | RATCHET-01 | — / — | N/A | unit | same (function compiles; no call site) | ❌ W0 | ⬜ pending |
+| Wire verify.support_contract.admin alias (Task 2) | 95-02 | 2 | RATCHET-01 | — / — | N/A | unit | `cd mailglass_admin && mix verify.support_contract.admin` | ❌ W0 | ⬜ pending |
+| Playwright `structural.spec.js` — 6 pillar facts × 3 surfaces (Task 1) | 95-03 | 3 | RATCHET-04 | T-95-PW1 / — | test fixture non-PII browser-tenant@example.com | structural (browser) | `cd mailglass_admin && npm run test:operator-browser -- --grep "structural assertions"` | ❌ W0 | ⬜ pending |
+| Seed run: LLM scores → `ui-baseline-scores.json` committed; PNGs gitignored (Task 2) | 95-04 | 4 | RATCHET-05 | T-95-V5 / V5 | only JSON committed; PNGs under `/tmp` gitignored | unit + manual | `cd mailglass_admin && mix test test/mailglass_admin/ratchet_baseline_test.exs --warnings-as-errors` + `git status tmp/ui-audit/` (empty = gitignored) | ❌ W0 | ⬜ pending |
+| Seed run: populate initial `GAP-NN` rows in register (Task 3) | 95-04 | 4 | RATCHET-02 | — / — | N/A | doc-review | `grep -c "GAP-0" .planning/RATCHET-GAP-REGISTER.md && grep -c "2026-06-13-phase-95-baseline" .planning/RATCHET-GAP-REGISTER.md` | ❌ W0 | ⬜ pending |
+| Phase gate — both required CI lanes green (Task 4) | 95-04 | 4 | RATCHET-01, RATCHET-04, RATCHET-05 | T-95-V5 / V5 | both lanes green confirms all apparatus layers | full suite | `cd mailglass_admin && mix verify.support_contract.admin && npm run test:operator-browser && git status tmp/ui-audit/ && echo "PHASE_95_APPARATUS_GREEN"` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -62,10 +64,10 @@ created: 2026-06-13
 
 ## Wave 0 Requirements
 
-- [ ] `mailglass_admin/test/mailglass_admin/ratchet_baseline_test.exs` — stubs for RATCHET-01/05 (shape/range/36-cell coverage + `compare_baselines/2` hook)
-- [ ] `mailglass_admin/e2e/structural.spec.js` — stubs for RATCHET-04 (6 facts × 3 live surfaces), auto-picked-up by `testDir: "./e2e"`
-- [ ] `mailglass_admin/docs/ui-baseline-scores.json` — initial valid-JSON placeholder (all 36 cells present) so the ExUnit test compiles; real scores land in commit 4 (D-08)
-- [ ] `.planning/RATCHET-GAP-REGISTER.md` — header + schema (v1.7 columns + `status`/`run_id`/`first_seen_run`); rows populated in commit 4
+- [ ] `mailglass_admin/test/mailglass_admin/ratchet_baseline_test.exs` — created by 95-02 (RATCHET-01/05: shape/range/36-cell coverage + `compare_baselines/2` hook)
+- [ ] `mailglass_admin/docs/ui-baseline-scores.json` — placeholder created by 95-02 (all 36 cells, scores=1); real scores land in 95-04
+- [ ] `mailglass_admin/e2e/structural.spec.js` — created by 95-03 (RATCHET-04: 6 facts × 3 live surfaces), auto-picked-up by `testDir: "./e2e"`
+- [ ] `.planning/RATCHET-GAP-REGISTER.md` — header + schema created by 95-01; rows populated by 95-04
 
 *Framework install: none — Playwright and ExUnit already configured in the admin dev harness.*
 
@@ -75,21 +77,22 @@ created: 2026-06-13
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| LLM scores reflect the D-01 6-pillar rubric (subjective grading) | RATCHET-05 | Visual/judgment grading of PNGs against the rubric is inherently human/subagent | Run `scripts/ui-audit.sh`, score each cell 1–4 per pillar against `design-system.md:104-121`, write to JSON |
-| GAP register rows are correctly classified (surface/component:line/pillar/sev) | RATCHET-02 | Markdown planning artifact; correctness is a review judgment | Reviewer cross-checks each GAP row against the cited evidence cell |
+| PNG capture via ui-audit.sh (Task 1, Plan 95-04) | RATCHET-05 | Requires human to boot demo server and run agent-browser CLI locally | Boot reference/demo_app, run `bash mailglass_admin/scripts/ui-audit.sh`, confirm 18 PNGs in tmp/ui-audit/ |
+| LLM scores reflect the D-01 6-pillar rubric (Task 2, Plan 95-04) | RATCHET-05 | Visual/judgment grading of PNGs against the rubric is inherently human/subagent | Score each surface×theme pair 1–4 per pillar against `design-system.md:104-121`; write to JSON |
+| GAP register rows correctly classified (Task 3, Plan 95-04) | RATCHET-02 | Markdown planning artifact; correctness is a review judgment | Reviewer cross-checks each GAP row against the cited evidence cell |
 | Anti-churn sev≥3 citation gate honored by downstream phases | RATCHET-02 | Process/review rule, not machine-checkable in this phase | PR reviewers reject build tasks (Phases 98–103) that don't cite a sev≥3 register row |
 
-*The structural pillar-fact contract (RATCHET-04) and the JSON shape/range (RATCHET-01) ARE automated; only the subjective grading and register-classification are manual.*
+*The structural pillar-fact contract (RATCHET-04) and the JSON shape/range (RATCHET-01) ARE automated; only the PNG capture, subjective grading, and register-classification are manual.*
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have an `<automated>` verify (ExUnit/Playwright) or a documented manual-review rule + Wave 0 dependency
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify (manual doc-review tasks are bracketed by automated ones)
-- [ ] Wave 0 covers all MISSING references (4 new files)
-- [ ] No watch-mode flags (ExUnit + Playwright run once, CI-mode)
-- [ ] Feedback latency < 120s
-- [ ] `nyquist_compliant: true` set in frontmatter (set by planner once the per-task map is wired into PLAN.md `<automated>` blocks)
+- [x] All tasks have an `<automated>` verify (ExUnit/Playwright) or a documented manual-review rule + Wave 0 dependency
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify (manual tasks in 95-01 and 95-04 Task 3 are bracketed by automated ones)
+- [x] Wave 0 covers all MISSING references (4 new files across plans 95-01, 95-02, 95-03)
+- [x] No watch-mode flags (ExUnit + Playwright run once, CI-mode)
+- [x] Feedback latency < 120s
+- [x] `nyquist_compliant: true` set in frontmatter (per-task map wired into PLAN.md `<automated>` blocks)
 
-**Approval:** pending
+**Approval:** planning-complete (set by planner 2026-06-13)
