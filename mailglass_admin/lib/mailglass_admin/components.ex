@@ -178,7 +178,8 @@ defmodule MailglassAdmin.Components do
       :webhook_replay_requested,
       :webhook_replay_succeeded,
       :webhook_replay_failed,
-      :reconciled
+      :reconciled,
+      :suppressed
     ],
     required: true
 
