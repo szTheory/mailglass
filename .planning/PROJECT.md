@@ -75,6 +75,13 @@ landing + email specimens, four portable SVGs, and a domain-noun copy library.
 
 ## Current State
 
+**v1.11 progress:** Phases 94-98 are complete. Phase 98 verified the Operator /
+Deliveries surface uplift for `/ops/mail`: responsive master-detail IA, state-rich
+seed coverage, failed-delivery audit/replay browser flows, operator a11y/touch-target
+coverage, and bundle-clean/static-asset mounting fixes are now in place. Next active
+work is Phase 99 (Inbound Surface), which reapplies the cross-cutting GROUP/PAGE/RESP/
+FLOW/A11Y requirements to `/ops/mail/inbound`.
+
 **v1.10 progress:** All three phases (91, 92, 93) are complete — v1.10's active
 scope is finished (999.1/999.2 remain backlog, promoted separately). The fable
 brand is canonical under `brandbook/`, the root README now starts with the
@@ -534,4 +541,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-13 — **v1.11 mailglass_admin Design-System Uplift** milestone opened (Phases 94–103). D-27 logged. Scope: admin UI only (3 surfaces), token re-baseline onto canonical brand + fractal idempotent uplift; release prepare-only. Prior line: v1.10 Brand Adoption shipped (audit 10/10); in-repo version truth at 1.6.2 / 1.6.2 / 1.3.1, no Hex release cut.*
+*Last updated: 2026-06-14 — **v1.11 mailglass_admin Design-System Uplift** has completed Phases 94-98. Operator / Deliveries Surface verified passed; next active work is Phase 99 Inbound Surface. Scope remains admin UI only (3 surfaces), token re-baseline onto canonical brand + fractal idempotent uplift; release prepare-only. Prior line: v1.10 Brand Adoption shipped (audit 10/10); in-repo version truth at 1.6.2 / 1.6.2 / 1.3.1, no Hex release cut.*
