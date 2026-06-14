@@ -70,7 +70,7 @@ quality forward.
   locked per-surface IA decisions (master-detail / filter / triage), with loved-vs-hated evidence.
 - [x] **RESEARCH-03**: A component-state dossier locks the canonical state matrix per component
   archetype.
-- [ ] **RESEARCH-04**: A dark-mode dossier locks dark-mode pitfalls and decisions (elevation,
+- [x] **RESEARCH-04**: A dark-mode dossier locks dark-mode pitfalls and decisions (elevation,
   desaturation, focus-ring contrast).
 - [ ] **RESEARCH-05**: A microcopy dossier locks "thoughtful maintainer" voice patterns mapped
   to each surface's JTBD.
@@ -195,7 +195,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | RESEARCH-01 | Phase 96 | Complete |
 | RESEARCH-02 | Phase 96 | Complete |
 | RESEARCH-03 | Phase 96 | Complete |
-| RESEARCH-04 | Phase 96 | Pending |
+| RESEARCH-04 | Phase 96 | Complete |
 | RESEARCH-05 | Phase 96 | Pending |
 | COMP-01 | Phase 97 | Pending |
 | COMP-02 | Phase 97 | Pending |

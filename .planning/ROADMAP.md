@@ -126,7 +126,7 @@ Plans:
 - [x] 96-01-PLAN.md — MOTION.md dossier: Emil Kowalski + platform HIG → locked easing/duration/property table (RESEARCH-01)
 - [x] 96-02-PLAN.md — IA.md dossier: gov.uk Design System / Nielsen → locked per-surface IA decisions (RESEARCH-02)
 - [x] 96-03-PLAN.md — COMPONENT-STATES.md dossier: full D-09 archetype inventory → locked state matrix (RESEARCH-03)
-- [ ] 96-04-PLAN.md — DARK-MODE.md dossier: existing dark tokens + Phase 86 figures → locked elevation/focus/preview-chrome decisions (RESEARCH-04)
+- [x] 96-04-PLAN.md — DARK-MODE.md dossier: existing dark tokens + Phase 86 figures → locked elevation/focus/preview-chrome decisions (RESEARCH-04)
 - [ ] 96-05-PLAN.md — MICROCOPY.md dossier: thoughtful-maintainer voice → per-surface JTBD copy patterns (RESEARCH-05)
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -242,7 +242,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
-| 96. Research Dossier | 3/6 | In Progress|  |
+| 96. Research Dossier | 4/6 | In Progress|  |
 | 97. Cross-Surface Component Layer | 0/? | Not started | - |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |
 | 99. Inbound Surface | 0/? | Not started | - |

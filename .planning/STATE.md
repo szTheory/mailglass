@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-14T06:54:45.836Z"
+last_updated: "2026-06-14T07:04:11.224Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 12
   completed_phases: 4
   total_plans: 19
-  completed_plans: 16
+  completed_plans: 17
   percent: 33
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 ## Current Position
 
 Phase: 96 (research-dossier) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-06-14
 
@@ -143,6 +143,7 @@ single closeout gate.
 - [96-02] IA-LD-01..09 locked: master-detail viewport split (390px stacked, 768px 40-60, 1440px 33-67), filter-label token class (GAP-04 close via IA-LD-04 — text-label uppercase font-bold text-secondary, no tracking-[0.08em]), filter disclosure mobile-only toggle, orientation strip placement, inbound overview tier spec (GROUP-02 IA layer via IA-LD-09), Preview <details>/<summary> sidebar, empty-state placement rules (GAP-02 reference via IA-LD-07)
 - [Phase ?]: MOTION-LD-01..14 locked: ease-out only ≤300ms per element transform/opacity only prefers-reduced-motion snaps to instant GAP-02 closes via MOTION-LD-12 focusable CTA
 - [Phase ?]: [STATE-LD-05..22] 22 component-state locked decisions; focus gaps in nav_link/deliveries_list/sidebar; GAP-01 fixed in support_cards; GAP-04 fixed in filters_form; routing_trace/evidence_card reveal models correctly partitioned; MOTION-LD-01..14 locked (Phase 96-03)
+- [Phase ?]: DARK-LD-01..08 locked: dark elevation tier order, border-input upgrade for WCAG 1.4.11, focus-ring Ice confirmed, GAP-03 prescription for Phase 100
 
 ## Performance Metrics
 
@@ -200,6 +201,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 96 P01 | 18 | 1 tasks | 1 files |
 | Phase 96 P02 | 22 | 1 tasks | 1 files |
 | Phase 96 P03 | 35 | 1 tasks | 1 files |
+| Phase 96 P04 | 45 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -222,6 +224,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-14: Phase 96 Plan 04 completed. DARK-MODE.md dossier created at `.planning/research/v1.11/DARK-MODE.md` with 8 DARK-LD-NN locked decisions. Codebase-grounded: extracted all [data-theme="dark"] tokens from brandbook/tokens.css with computed WCAG contrast ratios. Critical finding: --mg-color-border #315069 fails WCAG 1.4.11 (2.06:1 on dark surface) — DARK-LD-02 locks mandatory upgrade to border-input #62809A in app.css mailglass-dark theme block. Focus-ring Ice #A6EAF2 confirmed (12.98:1 min on base, 8.40:1 worst-case on selected — all pass). Phase 86 dark-feedback figures confirmed verbatim (DARK-LD-05). GAP-03 (preview ignores dark theme) prescription locked: preview_live.ex data-theme already wired at line 225; Phase 100 must confirm handle_params path and produce visual diff (DARK-LD-06). OS dark-mode integration: do not force dark_chrome:false at mount; defer to daisyUI prefersdark:true (DARK-LD-08). RESEARCH-04 marked complete. Next: execute 96-05 (Microcopy dossier).
 - 2026-06-14: Phase 96 Plan 03 completed. COMPONENT-STATES.md dossier created at `.planning/research/v1.11/COMPONENT-STATES.md` with 22 STATE-LD-NN locked decisions. Full D-09 archetype inventory (22 archetypes) enumerated from real codebase with file:line citations. Key decisions: STATE-LD-05 status_badge display-only with all 22 atoms locked; STATE-LD-06 nav_link/nav_pill focus-ring addition (WCAG 2.4.7); STATE-LD-13 filters_form drops tracking-[0.08em] (GAP-04); STATE-LD-14 support_cards removes btn-sm from CTA buttons (GAP-01); STATE-LD-17 replay_modal a11y additions (aria-labelledby + Escape + focus trap); STATE-LD-18/19 corrects D-09 conflation (routing_trace has no reveal; evidence_card owns redacted/revealed/denied). RESEARCH-03 marked complete. Next: execute 96-04 (Dark-mode pitfalls dossier).
 - 2026-06-14: Phase 96 Plan 02 completed. IA.md dossier created at `.planning/research/v1.11/IA.md` with 9 LOCKED DECISIONS (IA-LD-01..09). Decisions lock: master-detail split by viewport (390px stacked/768px 40-60/1440px 33-67), filter disclosure mobile-only toggle (LiveView.JS), filter labels use text-label token (GAP-04 close signal via IA-LD-04), orientation strip placement per viewport and surface, inbound overview/at-a-glance tier spec (GROUP-02 IA layer via IA-LD-09), Preview sidebar uses native <details>/<summary>, empty/loading state placement rules (GAP-02 reference via IA-LD-07). RESEARCH-02 complete. Next: execute 96-03 (Component-state matrices).
 - 2026-06-14: Phase 96 Plan 01 completed. MOTION.md dossier created at `.planning/research/v1.11/MOTION.md` with 14 MOTION-LD-NN locked decisions (MOTION-LD-01..14). Decisions lock: ease-out only for unidirectional transitions, ≤300ms per element, transform/opacity only (color permitted at fast token for state layers), prefers-reduced-motion snaps all transitions to instant, mount-trigger via phx-mounted/LiveView.JS only. MOTION-LD-12 provides the GAP-02 downstream close signal (preview empty-state focusable CTA). RESEARCH-01 marked complete. Next: execute 96-02 (IA dossier).
