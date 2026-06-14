@@ -162,7 +162,7 @@ Each entry maps STATE-LD-IDs to what Phase 97 must implement or verify. "Add" = 
 | nav_link | `shell.ex:201-219` | rest-inactive, rest-active, hover, focus, active-press | **ADD** `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1` — currently absent (STATE-LD-06) |
 | nav_pill | `shell.ex:225-241` | rest-inactive, rest-active, hover, focus, active-press | **ADD** `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1` — currently absent (STATE-LD-06) |
 | tenant_chip | `shell.ex:245-256` | rest-with-tenant, rest-no-tenant | No action; display-only read-only span (STATE-LD-07) |
-| theme_toggle | `shell.ex:260-274` | rest-light-mode, rest-dark-mode, hover, focus, active-press | **Verify** `btn-sm` + `min-h-11` compiled height; if `min-h-11` loses to `btn-sm`, drop `btn-sm` (STATE-LD-08). daisyUI `btn` provides hover/active/focus ring |
+| theme_toggle | `shell.ex:260-274` | rest-light-mode, rest-dark-mode, hover, focus, active-press | **Verify** `btn-sm` + `min-h-11` compiled height; if `min-h-11` loses to `btn-sm`, drop `btn-sm` (STATE-LD-08). daisyUI `btn` provides hover/active/focus ring. Icon-only control (`hero-sun`/`hero-moon`): label fallback is the dynamic `aria-label={if @dark_chrome, do: "Switch to light theme", else: "Switch to dark theme"}` — **present and verified** at `shell.ex:265`; no visible text label needed |
 | orientation_strip | `shell.ex:314-367` | rest only (one per surface) | No interactive states; verify `text-primary` on lifebuoy icon stays within 10%-accent rule (STATE-LD-09) |
 | shell | `shell.ex:116-193` | rest-light, rest-dark | No action; theme driven by `data-theme` on root div (STATE-LD-10) |
 | deliveries_list | `operator/deliveries_list.ex` | rest-populated-unselected, rest-populated-selected, hover, focus, empty | **ADD** `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset` to row buttons — currently missing (STATE-LD-11) |
@@ -222,6 +222,7 @@ Source: CONTEXT D-01..D-04, CONTEXT D-09, D-10.
 - Group specimens by component (one section per component), then by state within the component section.
 - Each specimen cell renders **both themes side-by-side**: twin `data-theme="mailglass-light"` and `data-theme="mailglass-dark"` wrappers inside each cell container.
 - The cell container background uses `bg-base-200 border border-base-300 rounded-box` with a visible label showing component name + state.
+- **Focal point:** the per-component section headings (`text-heading`, the gallery page title at `text-display`) are the page's visual anchors and the navigational skeleton; within each section the **twin-theme cell pair is the primary unit of attention** (light + dark of one component×state, read as a single comparison). No accent draws the eye on this dev utility surface beyond whatever accent the rendered specimens themselves carry — the page chrome stays neutral (60/30 surface) so the specimens are the figure.
 - Specimens must cover every state/atom enumerated in STATE-LD-01..22. Notably: 22 status atoms for `status_badge` (STATE-LD-05); both states for `suppression_card` (STATE-LD-15); all three states for `routing_trace` (STATE-LD-18); all four states for `evidence_card` (STATE-LD-19).
 
 ### data-testid Scheme
@@ -255,6 +256,7 @@ Error pattern: `[Noun] [past-tense verb]: [specific cause]` (COPY-LD-07).
 | Gallery heading | (new) | — | "Components" or "Component Gallery" (section headings per component name) | thoughtful-maintainer voice; not "Storybook" |
 | Gallery cell labels | (new) | — | `{ComponentName} — {state label}` using exact domain nouns (e.g. "status_badge — delivered", not "Email Status") | domain nouns; no "Email" standalone |
 | Replay modal sub-copy (Operator) | `operator/replay_modal.ex:29` | (current text) | "Re-dispatches the stored webhook request through Mailbox routing and records a new Event in the append-only ledger. Confirm to replay." | COPY-LD-13 |
+| Replay modal **confirm-button label** (Operator) | `operator/replay_modal.ex:102` | "Confirm replay" | "Confirm replay" — **keep** (specific verb + domain noun, matches COPY-LD-07 pattern; the destructive `btn btn-error` confirm in the two-step flow). Label is present in code and is the canonical contract value — do NOT regress to generic "Confirm"/"OK" | COPY-LD-07, COPY-LD-13 |
 | tabs empty pane | `preview/tabs.ex` | (absent) | "No HTML body — this Mailable's template returned empty content." | COPY-LD-08 pattern; domain noun Mailable |
 | flash component | `components.ex:102-111` | (current — no "Oops") | Already compliant | COPY-LD-09 confirmed |
 
@@ -273,7 +275,7 @@ One destructive action in Phase 97 scope: the **replay** button.
 
 | Action | Element | Confirmation approach |
 |--------|---------|----------------------|
-| Replay webhook | Replay button (`btn btn-error`) in `detail_header`; replay modal confirm | Two-step: button opens modal (`replay_modal`); modal confirm button executes. Modal dialog with `aria-labelledby` required. `phx-key="Escape"` dismisses. No additional confirmation text beyond `replay_modal` sub-copy (COPY-LD-13). |
+| Replay webhook | Replay button (`btn btn-error`) in `detail_header`; replay modal confirm | Two-step: button opens modal (`replay_modal`); the **"Confirm replay"** button (`btn btn-error`, `replay_modal.ex:102`) executes. Modal dialog with `aria-labelledby` required. `phx-key="Escape"` dismisses. No additional confirmation text beyond `replay_modal` sub-copy (COPY-LD-13). |
 
 ---
 
