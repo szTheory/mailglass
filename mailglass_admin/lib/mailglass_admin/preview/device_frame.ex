@@ -31,7 +31,7 @@ defmodule MailglassAdmin.Preview.DeviceFrame do
         phx-click="set_device"
         phx-value-width="375"
         aria-pressed={to_string(@device_width == 375)}
-        class={["btn btn-sm join-item", button_classes(@device_width == 375)]}
+        class={["btn btn-sm min-h-11 join-item", button_classes(@device_width == 375)]}
       >
         375
       </button>
@@ -40,7 +40,7 @@ defmodule MailglassAdmin.Preview.DeviceFrame do
         phx-click="set_device"
         phx-value-width="768"
         aria-pressed={to_string(@device_width == 768)}
-        class={["btn btn-sm join-item", button_classes(@device_width == 768)]}
+        class={["btn btn-sm min-h-11 join-item", button_classes(@device_width == 768)]}
       >
         768
       </button>
@@ -49,7 +49,7 @@ defmodule MailglassAdmin.Preview.DeviceFrame do
         phx-click="set_device"
         phx-value-width="1024"
         aria-pressed={to_string(@device_width == 1024)}
-        class={["btn btn-sm join-item", button_classes(@device_width == 1024)]}
+        class={["btn btn-sm min-h-11 join-item", button_classes(@device_width == 1024)]}
       >
         1024
       </button>
