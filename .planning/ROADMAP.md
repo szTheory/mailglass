@@ -181,7 +181,22 @@ Plans:
   3. Deterministic seed/fixture data exercises every operator state (all statuses, suppression-flagged, long-content truncation, empty tenant, many-item lists) reachable by seeded URL, and the audit-why-a-delivery-failed JTBD flow validates end-to-end.
   4. Interactive elements have visible focus rings, correct ARIA roles/states, one `h1` per page, ≥44px touch targets, and all text meets WCAG AA contrast in both themes on its actual surface.
 
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+
+**Wave 1**
+
+- [ ] 98-01-PLAN.md — Seed sev>=3 GAP anchors (GAP-06..09) + fold CR-01/02/03 nil-guards (minimal in-place idiom)
+
+**Wave 2** *(blocked on Wave 1; 02 and 03 parallel — no file overlap)*
+
+- [ ] 98-02-PLAN.md — IA-LD-03 master-detail grid + 390px reveal-with-back + JS.toggle filter disclosure + COPY-LD-01/02 empty-state signal + group testids
+- [ ] 98-03-PLAN.md — Token-clean the operator in-pane components (drop tracking-[0.08em] from suppression_card/support_cards/replay_modal) + COPY-LD-14 copy
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 98-04-PLAN.md — Extend single seed for all states (URL-reachable, row-index stable) + Playwright per-state/responsive/a11y assertions + rebuild & commit bundle
+
 **UI hint**: yes
 
 ### Phase 99: Inbound Surface
@@ -265,7 +280,7 @@ Plans:
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
-| 98. Operator / Deliveries Surface | 0/? | Not started | - |
+| 98. Operator / Deliveries Surface | 0/4 | Not started | - |
 | 99. Inbound Surface | 0/? | Not started | - |
 | 100. Preview Surface | 0/? | Not started | - |
 | 101. Microcopy Pass | 0/? | Not started | - |
