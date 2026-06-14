@@ -336,9 +336,9 @@ defmodule MailglassAdmin.Operator.Shell do
     %{
       heading: "Deliveries",
       tips: [
-        "Email never arrived? Start here.",
+        "Delivery never arrived? Start here.",
         "Replay changed nothing? View the event timeline.",
-        "Address keeps getting blocked? Check suppressions."
+        "Address keeps getting blocked? Review the Suppression list."
       ]
     }
   end
@@ -347,7 +347,7 @@ defmodule MailglassAdmin.Operator.Shell do
     %{
       heading: "Inbound",
       tips: [
-        "Message didn't route as expected? Inspect the routing trace.",
+        "InboundMessage didn't route as expected? Inspect the routing trace.",
         "No mailbox matched? Check the no-match record.",
         "Failed ingest? Review the provider signature log."
       ]
