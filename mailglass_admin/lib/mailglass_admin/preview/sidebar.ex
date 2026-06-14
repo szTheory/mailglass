@@ -72,7 +72,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   def mailable_entry(%{reflection: list} = assigns) when is_list(list) do
     ~H"""
     <details open={@current_mailable == @mod}>
-      <summary class="flex items-center gap-2 px-3 py-2 min-h-11 text-body font-bold text-base-content cursor-pointer hover:bg-base-200 rounded transition-colors">
+      <summary class="flex items-center gap-2 px-3 py-2 min-h-11 text-body font-bold text-base-content cursor-pointer hover:bg-base-200 rounded transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1">
         <span class="truncate">{inspect(@mod)}</span>
       </summary>
       <ul class="mt-1 ml-2">
@@ -81,7 +81,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
             <.link
               patch={scenario_path(@mod, scenario_name, @device_width, @dark_chrome)}
               class={[
-                "flex items-center gap-2 px-3 py-2 min-h-11 text-body truncate transition-colors",
+                "flex items-center gap-2 px-3 py-2 min-h-11 text-body truncate transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                 scenario_classes(@current_mailable, @current_scenario, @mod, scenario_name)
               ]}
             >
@@ -139,11 +139,11 @@ defmodule MailglassAdmin.Preview.Sidebar do
   # Active-item highlight: matches current mailable AND scenario.
   defp scenario_classes(current_mod, current_scenario, mod, scenario)
        when current_mod == mod and current_scenario == scenario do
-    "border-l-[3px] border-primary bg-base-200 text-base-content font-normal"
+    "border-l-2 border-primary bg-base-200 text-base-content font-normal"
   end
 
   defp scenario_classes(_current_mod, _current_scenario, _mod, _scenario) do
-    "border-l-[3px] border-transparent text-secondary hover:bg-base-200"
+    "border-l-2 border-transparent text-secondary hover:bg-base-200"
   end
 
   defp theme_param(true), do: "dark"
