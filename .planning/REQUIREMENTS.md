@@ -123,11 +123,11 @@ quality forward.
 
 ### FLOW — Flow-grounded Validation
 
-- [ ] **FLOW-01**: Deterministic seed/fixture data exercises happy, error, boundary, and edge
+- [x] **FLOW-01**: Deterministic seed/fixture data exercises happy, error, boundary, and edge
   states for both operator and inbound surfaces (all statuses/outcomes, suppression-flagged,
   long-content truncation, empty tenant, many-item lists, missing evidence) — reachable by
   seeded URL.
-- [ ] **FLOW-02**: Each uplifted surface is validated end-to-end against its real JTBD flow
+- [x] **FLOW-02**: Each uplifted surface is validated end-to-end against its real JTBD flow
   (audit-why-a-delivery-failed; why-did-inbound-not-route; preview-a-message-before-send).
 
 ### COPY — Microcopy
@@ -206,8 +206,8 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | PAGE-01 | Phase 98 | Complete |
 | PAGE-02 | Phase 98 | Complete |
 | RESP-01 | Phase 98 | Complete |
-| FLOW-01 | Phase 98 | Pending |
-| FLOW-02 | Phase 98 | Pending |
+| FLOW-01 | Phase 98 | Complete |
+| FLOW-02 | Phase 98 | Complete |
 | A11Y-01 | Phase 98 | Complete |
 | A11Y-02 | Phase 98 | Complete |
 | GROUP-02 | Phase 99 | Pending |
