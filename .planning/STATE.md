@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 
 ## Current Position
 
-Phase: 96 (research-dossier) — EXECUTED (6/6 plans complete)
+Phase: 96 (research-dossier) — COMPLETE (verification passed 15/15)
 Plan: 6 of 6 complete
-Status: Ready for phase verification
-Last activity: 2026-06-14 -- Phase 96 executed: 5 research dossiers + canonical SUMMARY.md (69 LOCKED decisions across MOTION/IA/COMPONENT-STATES/DARK-MODE/MICROCOPY)
+Status: Phase complete — next is Phase 97 (Cross-Surface Component Layer)
+Last activity: 2026-06-14 -- Phase 96 complete: 5 research dossiers + canonical SUMMARY.md (69 LOCKED decisions across MOTION/IA/COMPONENT-STATES/DARK-MODE/MICROCOPY); verification 15/15
 
 ## v1.11 Milestone Intent
 
