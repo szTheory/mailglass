@@ -434,7 +434,7 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "postmark",
            last_event_type: :delivered,
-           last_event_at: ~N[2026-06-14 12:00:00]
+           last_event_at: ~U[2026-06-14 12:00:00Z]
          },
          %{
            id: "del_01JXGHIJKL",
@@ -443,7 +443,7 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "sendgrid",
            last_event_type: :bounced,
-           last_event_at: ~N[2026-06-14 11:45:00]
+           last_event_at: ~U[2026-06-14 11:45:00Z]
          }
        ],
        selected_delivery: nil
@@ -458,7 +458,7 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "postmark",
            last_event_type: :delivered,
-           last_event_at: ~N[2026-06-14 12:00:00]
+           last_event_at: ~U[2026-06-14 12:00:00Z]
          },
          %{
            id: "del_01JXGHIJKL",
@@ -467,7 +467,7 @@ defmodule MailglassAdmin.GalleryLive do
            tenant_id: "acme-corp",
            provider: "sendgrid",
            last_event_type: :bounced,
-           last_event_at: ~N[2026-06-14 11:45:00]
+           last_event_at: ~U[2026-06-14 11:45:00Z]
          }
        ],
        selected_delivery: %{id: "del_01JXABCDEF"}
@@ -486,7 +486,7 @@ defmodule MailglassAdmin.GalleryLive do
          provider: "postmark",
          stream: :transactional,
          last_event_type: :delivered,
-         last_event_at: ~N[2026-06-14 12:00:00],
+         last_event_at: ~U[2026-06-14 12:00:00Z],
          provider_message_id: "msg_abc123"
        },
        replay_targets: %{status: :unavailable, reason: :no_webhook},
@@ -581,12 +581,14 @@ defmodule MailglassAdmin.GalleryLive do
          %{
            id: "evt_01JXABC",
            type: :queued,
+           occurred_at: ~U[2026-06-14 11:59:00Z],
            metadata: %{},
            reject_reason: nil
          },
          %{
            id: "evt_01JXDEF",
            type: :delivered,
+           occurred_at: ~U[2026-06-14 12:00:00Z],
            metadata: %{},
            reject_reason: nil
          }
@@ -599,12 +601,14 @@ defmodule MailglassAdmin.GalleryLive do
          %{
            id: "evt_01JXABC",
            type: :queued,
+           occurred_at: ~U[2026-06-14 11:59:00Z],
            metadata: %{},
            reject_reason: nil
          },
          %{
            id: "evt_01JXDEF",
            type: :delivered,
+           occurred_at: ~U[2026-06-14 12:00:00Z],
            metadata: %{},
            reject_reason: nil
          }
@@ -704,8 +708,8 @@ defmodule MailglassAdmin.GalleryLive do
     {:sidebar, "mailable-collapsed",
      %{
        mailables: [
-         {MyApp.WelcomeMailer, [{"default", %{}}]},
-         {MyApp.PasswordResetMailer, [{"reset", %{}}]}
+         {MyApp.WelcomeMailer, [{:default, %{}}]},
+         {MyApp.PasswordResetMailer, [{:reset, %{}}]}
        ],
        current_mailable: nil,
        current_scenario: nil
@@ -713,8 +717,8 @@ defmodule MailglassAdmin.GalleryLive do
     {:sidebar, "mailable-expanded",
      %{
        mailables: [
-         {MyApp.WelcomeMailer, [{"default", %{}}, {"with-name", %{name: "Ada"}}]},
-         {MyApp.PasswordResetMailer, [{"reset", %{}}]}
+         {MyApp.WelcomeMailer, [{:default, %{}}, {:"with-name", %{name: "Ada"}}]},
+         {MyApp.PasswordResetMailer, [{:reset, %{}}]}
        ],
        current_mailable: MyApp.WelcomeMailer,
        current_scenario: nil
@@ -722,11 +726,11 @@ defmodule MailglassAdmin.GalleryLive do
     {:sidebar, "scenario-active",
      %{
        mailables: [
-         {MyApp.WelcomeMailer, [{"default", %{}}, {"with-name", %{name: "Ada"}}]},
-         {MyApp.PasswordResetMailer, [{"reset", %{}}]}
+         {MyApp.WelcomeMailer, [{:default, %{}}, {:"with-name", %{name: "Ada"}}]},
+         {MyApp.PasswordResetMailer, [{:reset, %{}}]}
        ],
        current_mailable: MyApp.WelcomeMailer,
-       current_scenario: "with-name"
+       current_scenario: :"with-name"
      }}
   ]
 
