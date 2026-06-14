@@ -55,7 +55,7 @@ quality forward.
 - [x] **RATCHET-03**: The conformance + motion grep gates are tightened to close current
   escapes (`text-lg/xl/2xl`, arbitrary `tracking-[…]`, `ease-in`, layout-property
   transitions) and run in CI.
-- [ ] **RATCHET-04**: Playwright structural assertions enforce machine-checkable pillar facts
+- [x] **RATCHET-04**: Playwright structural assertions enforce machine-checkable pillar facts
   (visible focus rings, ARIA roles/states, ≥44px touch targets, `font-weight ∈ {400,700}`,
   accent-only-on-allowlist, reduced-motion collapses durations).
 - [ ] **RATCHET-05**: An LLM-scored PNG matrix (18-cell live surfaces + gallery) against the
@@ -190,7 +190,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | RATCHET-03 | Phase 94 | Complete |
 | RATCHET-01 | Phase 95 | Complete |
 | RATCHET-02 | Phase 95 | Complete |
-| RATCHET-04 | Phase 95 | Pending |
+| RATCHET-04 | Phase 95 | Complete |
 | RATCHET-05 | Phase 95 | Pending |
 | RESEARCH-01 | Phase 96 | Pending |
 | RESEARCH-02 | Phase 96 | Pending |

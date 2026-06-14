@@ -99,7 +99,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 95-03-PLAN.md — Add structural.spec.js to operator_browser_gate lane — 6 pillar facts × 3 surfaces (Wave 3)
+- [x] 95-03-PLAN.md — Add structural.spec.js to operator_browser_gate lane — 6 pillar facts × 3 surfaces (Wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -229,7 +229,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
-| 95. Audit Apparatus + Quality-Ratchet v2 | 2/4 | In Progress|  |
+| 95. Audit Apparatus + Quality-Ratchet v2 | 3/4 | In Progress|  |
 | 96. Research Dossier | 0/? | Not started | - |
 | 97. Cross-Surface Component Layer | 0/? | Not started | - |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |
