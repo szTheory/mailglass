@@ -186,7 +186,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 98-01-PLAN.md — Seed sev>=3 GAP anchors (GAP-06..09) + fold CR-01/02/03 nil-guards (minimal in-place idiom)
+- [x] 98-01-PLAN.md — Seed sev>=3 GAP anchors (GAP-06..09) + fold CR-01/02/03 nil-guards (minimal in-place idiom)
 
 **Wave 2** *(blocked on Wave 1; 02 and 03 parallel — no file overlap)*
 
@@ -280,7 +280,7 @@ Plans:
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
-| 98. Operator / Deliveries Surface | 0/4 | Not started | - |
+| 98. Operator / Deliveries Surface | 1/4 | In Progress|  |
 | 99. Inbound Surface | 0/? | Not started | - |
 | 100. Preview Surface | 0/? | Not started | - |
 | 101. Microcopy Pass | 0/? | Not started | - |

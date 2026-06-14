@@ -147,7 +147,7 @@ quality forward.
 
 ### A11Y — Accessibility (cross-cutting)
 
-- [ ] **A11Y-01**: Interactive elements have visible focus rings, correct ARIA roles/states
+- [x] **A11Y-01**: Interactive elements have visible focus rings, correct ARIA roles/states
   (`aria-current`, `aria-selected`, `role="dialog"` + `aria-modal`), semantic heading hierarchy
   (one `h1` per page), and ≥44px touch targets.
 - [ ] **A11Y-02**: All text meets WCAG AA contrast in both themes on its *actual* surface
@@ -208,7 +208,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | RESP-01 | Phase 98 | Pending |
 | FLOW-01 | Phase 98 | Pending |
 | FLOW-02 | Phase 98 | Pending |
-| A11Y-01 | Phase 98 | Pending |
+| A11Y-01 | Phase 98 | Complete |
 | A11Y-02 | Phase 98 | Pending |
 | GROUP-02 | Phase 99 | Pending |
 | GROUP-03 | Phase 99 | Pending |
