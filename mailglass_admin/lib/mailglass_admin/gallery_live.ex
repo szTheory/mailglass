@@ -1,0 +1,773 @@
+defmodule MailglassAdmin.GalleryLive do
+  @moduledoc """
+  Dev-only component gallery at /dev/mail/gallery.
+
+  Renders every shared component × every state × both themes side-by-side
+  from an in-code specimen list. No DB access. No mailable scan. No
+  __preview_session__ assigns.
+
+  Each specimen cell is anchored with a stable `data-testid="gallery-{component}-{state}"`
+  and contains twin `data-theme="mailglass-light"` and `data-theme="mailglass-dark"` wrappers
+  so a single structural assertion covers both themes.
+
+  Route: /dev/mail/gallery (mounted inside the preview live_session — dev-only by
+  the adopter's `if dev_routes` wrapping).
+
+  ## Coverage
+
+  STATE-LD-01: icon
+  STATE-LD-02: logo
+  STATE-LD-03: flash (error, info, success, warning kinds)
+  STATE-LD-04: badge (warning, stub)
+  STATE-LD-05: status_badge (22 atoms + phantom nil)
+  STATE-LD-06: nav_link, nav_pill (active, inactive)
+  STATE-LD-07: tenant_chip (with-tenant, no-tenant)
+  STATE-LD-08: theme_toggle (light-mode, dark-mode)
+  STATE-LD-09: orientation_strip (deliveries, inbound, preview)
+  STATE-LD-10: shell is the full page layout — not a gallery specimen
+  STATE-LD-11: deliveries_list (populated-unselected, populated-selected, empty)
+  STATE-LD-12: detail_header (shown, absent) — operator variant only
+  STATE-LD-13: filters_form (empty, filled) — static assigns, no phx-submit
+  STATE-LD-14: support_cards (tier1-shown, tier1-hidden)
+  STATE-LD-15: suppression_card (present, absent)
+  STATE-LD-16: timeline (populated, highlighted-event, empty)
+  STATE-LD-17: replay_modal (closed) — open states require live event
+  STATE-LD-18: routing_trace (empty, all-passing, first-failing)
+  STATE-LD-19: evidence_card (no-evidence, redacted, revealed, denied)
+  STATE-LD-20: device_frame (inactive-btn)
+  STATE-LD-21: tabs (inactive-tab)
+  STATE-LD-22: sidebar (mailable-collapsed, mailable-expanded, scenario-active)
+
+  Boundary classification: submodule auto-classifies into the
+  `MailglassAdmin` root boundary.
+  """
+
+  use Phoenix.LiveView
+
+  alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.Shell
+  alias MailglassAdmin.Operator.DeliveriesList
+  alias MailglassAdmin.Operator.DetailHeader
+  alias MailglassAdmin.Operator.FiltersForm
+  alias MailglassAdmin.Operator.SupportCards
+  alias MailglassAdmin.Operator.SuppressionCard
+  alias MailglassAdmin.Operator.Timeline
+  alias MailglassAdmin.Operator.ReplayModal
+  alias MailglassAdmin.Inbound.RoutingTrace
+  alias MailglassAdmin.Inbound.EvidenceCard
+  alias MailglassAdmin.Preview.DeviceFrame
+  alias MailglassAdmin.Preview.Tabs
+  alias MailglassAdmin.Preview.Sidebar
+
+  @impl true
+  def mount(_params, _session, socket) do
+    socket =
+      socket
+      |> assign(:page_title, "mailglass — Component Gallery")
+      |> assign(:specimens, specimens())
+
+    {:ok, socket}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <div class="min-h-screen bg-base-100 text-base-content px-md py-xl">
+      <h1 class="text-display font-bold tracking-tight text-base-content mb-lg">
+        Component Gallery
+      </h1>
+
+      <div class="space-y-3xl">
+        <%= for {component, states} <- grouped_specimens(@specimens) do %>
+          <section>
+            <h2 class="text-heading font-bold tracking-tight text-base-content mb-lg">
+              {component_label(component)}
+            </h2>
+            <div class="grid gap-lg">
+              <%= for {state, assigns_map} <- states do %>
+                <div
+                  data-testid={"gallery-#{component}-#{state}"}
+                  class="rounded-box border border-base-300 bg-base-200 p-md space-y-sm"
+                >
+                  <p class="text-label font-bold text-secondary">
+                    {component_label(component)} — {state}
+                  </p>
+                  <div class="flex gap-md flex-wrap">
+                    <div
+                      data-theme="mailglass-light"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 flex-1"
+                    >
+                      <.render_specimen component={component} assigns_map={assigns_map} />
+                    </div>
+                    <div
+                      data-theme="mailglass-dark"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 flex-1"
+                    >
+                      <.render_specimen component={component} assigns_map={assigns_map} />
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+      </div>
+    </div>
+    """
+  end
+
+  # ---------------------------------------------------------------------------
+  # Specimen rendering dispatcher
+  # ---------------------------------------------------------------------------
+
+  defp render_specimen(%{component: :icon} = assigns) do
+    ~H"""
+    <Components.icon name={@assigns_map[:name]} class={@assigns_map[:class] || "w-5 h-5"} />
+    """
+  end
+
+  defp render_specimen(%{component: :logo} = assigns) do
+    ~H"""
+    <Components.logo class={@assigns_map[:class]} />
+    """
+  end
+
+  defp render_specimen(%{component: :flash} = assigns) do
+    ~H"""
+    <Components.flash kind={@assigns_map[:kind]} message={@assigns_map[:message]} />
+    """
+  end
+
+  defp render_specimen(%{component: :badge} = assigns) do
+    ~H"""
+    <Components.badge variant={@assigns_map[:variant]} />
+    """
+  end
+
+  defp render_specimen(%{component: :status_badge} = assigns) do
+    ~H"""
+    <Components.status_badge status={@assigns_map[:status]} size={@assigns_map[:size] || :sm} />
+    """
+  end
+
+  # nav_link and nav_pill are defp in Shell — inline the equivalent HEEx
+  defp render_specimen(%{component: :nav_link} = assigns) do
+    active = assigns.assigns_map[:active]
+    label = assigns.assigns_map[:label]
+    icon = assigns.assigns_map[:icon]
+    href = assigns.assigns_map[:href]
+    assigns = Map.merge(assigns, %{active: active, label: label, icon: icon, href: href})
+
+    ~H"""
+    <.link
+      navigate={@href}
+      aria-current={@active && "page"}
+      class={[
+        "flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+        "duration-(--duration-fast)",
+        if(@active,
+          do: "border-primary bg-base-100 font-bold text-base-content",
+          else: "border-transparent text-secondary hover:bg-base-100/60 hover:text-base-content"
+        )
+      ]}
+    >
+      <Components.icon name={@icon} class="h-5 w-5 shrink-0" />
+      <span>{@label}</span>
+    </.link>
+    """
+  end
+
+  defp render_specimen(%{component: :nav_pill} = assigns) do
+    active = assigns.assigns_map[:active]
+    label = assigns.assigns_map[:label]
+    href = assigns.assigns_map[:href]
+    assigns = Map.merge(assigns, %{active: active, label: label, href: href})
+
+    ~H"""
+    <.link
+      navigate={@href}
+      aria-current={@active && "page"}
+      class={[
+        "flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast) focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+        if(@active,
+          do: "bg-primary/10 font-bold text-base-content",
+          else: "text-secondary hover:text-base-content"
+        )
+      ]}
+    >
+      {@label}
+    </.link>
+    """
+  end
+
+  # tenant_chip and theme_toggle are also defp in Shell — inline the equivalent HEEx
+  defp render_specimen(%{component: :tenant_chip} = assigns) do
+    tenant = assigns.assigns_map[:tenant]
+    assigns = Map.put(assigns, :tenant, tenant)
+
+    ~H"""
+    <span
+      class="inline-flex min-h-11 items-center gap-xs rounded-field border border-base-300 px-sm text-label text-secondary"
+      title="Tenant currently in view"
+    >
+      <Components.icon name="hero-building-office-2" class="h-4 w-4 shrink-0" />
+      <span :if={@tenant} class="mono font-bold text-base-content">{@tenant}</span>
+      <span :if={!@tenant}>No tenant selected</span>
+    </span>
+    """
+  end
+
+  defp render_specimen(%{component: :theme_toggle} = assigns) do
+    dark_chrome = assigns.assigns_map[:dark_chrome]
+    assigns = Map.put(assigns, :dark_chrome, dark_chrome)
+
+    ~H"""
+    <button
+      type="button"
+      aria-label={if @dark_chrome, do: "Switch to light theme", else: "Switch to dark theme"}
+      class="btn btn-ghost btn-sm btn-square min-h-11"
+    >
+      <Components.icon
+        name={if @dark_chrome, do: "hero-sun", else: "hero-moon"}
+        class="h-5 w-5"
+      />
+    </button>
+    """
+  end
+
+  defp render_specimen(%{component: :orientation_strip} = assigns) do
+    ~H"""
+    <Shell.orientation_strip surface={@assigns_map[:surface]} />
+    """
+  end
+
+  defp render_specimen(%{component: :deliveries_list} = assigns) do
+    ~H"""
+    <DeliveriesList.deliveries_list
+      deliveries={@assigns_map[:deliveries]}
+      selected_delivery={@assigns_map[:selected_delivery]}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :detail_header} = assigns) do
+    ~H"""
+    <DetailHeader.detail_header
+      delivery={@assigns_map[:delivery]}
+      replay_targets={@assigns_map[:replay_targets]}
+      latest_replay={@assigns_map[:latest_replay]}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :filters_form} = assigns) do
+    ~H"""
+    <FiltersForm.fields
+      form={@assigns_map[:form]}
+      status_values={@assigns_map[:status_values]}
+      event_values={@assigns_map[:event_values]}
+      window_options={@assigns_map[:window_options]}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :support_cards} = assigns) do
+    ~H"""
+    <SupportCards.support_cards
+      support_summary={@assigns_map[:support_summary]}
+      support_state={@assigns_map[:support_state]}
+      suppression_count={@assigns_map[:suppression_count]}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :suppression_card} = assigns) do
+    ~H"""
+    <SuppressionCard.suppression_card suppression_state={@assigns_map[:suppression_state]} />
+    """
+  end
+
+  defp render_specimen(%{component: :timeline} = assigns) do
+    ~H"""
+    <Timeline.timeline
+      timeline_events={@assigns_map[:timeline_events]}
+      highlight_event_id={@assigns_map[:highlight_event_id]}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :replay_modal} = assigns) do
+    ~H"""
+    <ReplayModal.replay_modal
+      open?={@assigns_map[:open?]}
+      delivery={@assigns_map[:delivery]}
+      replay_targets={@assigns_map[:replay_targets]}
+      selected_target_id={@assigns_map[:selected_target_id]}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :routing_trace} = assigns) do
+    ~H"""
+    <RoutingTrace.routing_trace trace={@assigns_map[:trace]} />
+    """
+  end
+
+  defp render_specimen(%{component: :evidence_card} = assigns) do
+    ~H"""
+    <EvidenceCard.evidence_card
+      evidence={@assigns_map[:evidence]}
+      reveal_state={@assigns_map[:reveal_state]}
+      can_reveal?={@assigns_map[:can_reveal?] || true}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :device_frame} = assigns) do
+    ~H"""
+    <DeviceFrame.device_frame device_width={@assigns_map[:device_width]} />
+    """
+  end
+
+  defp render_specimen(%{component: :tabs} = assigns) do
+    ~H"""
+    <Tabs.tabs
+      active_tab={@assigns_map[:active_tab]}
+      html_body={@assigns_map[:html_body] || ""}
+      text_body={@assigns_map[:text_body] || ""}
+      raw_envelope={@assigns_map[:raw_envelope] || ""}
+      headers={@assigns_map[:headers] || []}
+      device_width={@assigns_map[:device_width] || 768}
+      render_nonce={@assigns_map[:render_nonce] || 1}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :sidebar} = assigns) do
+    ~H"""
+    <Sidebar.sidebar
+      mailables={@assigns_map[:mailables]}
+      current_mailable={@assigns_map[:current_mailable]}
+      current_scenario={@assigns_map[:current_scenario]}
+      device_width={@assigns_map[:device_width] || 768}
+      dark_chrome={@assigns_map[:dark_chrome] || false}
+    />
+    """
+  end
+
+  # ---------------------------------------------------------------------------
+  # Specimen list — one entry per STATE-LD row × state atom
+  # ---------------------------------------------------------------------------
+
+  @specimens [
+    # STATE-LD-01: icon — rest (aria-hidden always)
+    {:icon, "rest", %{name: "hero-envelope", class: "w-5 h-5"}},
+
+    # STATE-LD-02: logo — rest (role="img" aria-label="mailglass")
+    {:logo, "rest", %{class: nil}},
+
+    # STATE-LD-03: flash — four kinds
+    {:flash, "error-kind", %{kind: :error, message: "Delivery blocked: recipient is on the suppression list"}},
+    {:flash, "info-kind", %{kind: :info, message: "Reloaded: WelcomeMailer.ex"}},
+    {:flash, "success-kind", %{kind: :success, message: "Webhook replayed: event recorded in the ledger"}},
+    {:flash, "warning-kind", %{kind: :warning, message: "Draft only — Mailable has no preview_props/0 defined"}},
+
+    # STATE-LD-04: badge — warning and stub
+    {:badge, "warning", %{variant: :warning}},
+    {:badge, "stub", %{variant: :stub}},
+
+    # STATE-LD-05: status_badge — 22 atoms + phantom nil
+    {:status_badge, "dispatched", %{status: :dispatched, size: :sm}},
+    {:status_badge, "queued", %{status: :queued, size: :sm}},
+    {:status_badge, "sent", %{status: :sent, size: :sm}},
+    {:status_badge, "delivered", %{status: :delivered, size: :sm}},
+    {:status_badge, "deferred", %{status: :deferred, size: :sm}},
+    {:status_badge, "bounced", %{status: :bounced, size: :sm}},
+    {:status_badge, "failed", %{status: :failed, size: :sm}},
+    {:status_badge, "rejected", %{status: :rejected, size: :sm}},
+    {:status_badge, "complained", %{status: :complained, size: :sm}},
+    {:status_badge, "unsubscribed", %{status: :unsubscribed, size: :sm}},
+    {:status_badge, "opened", %{status: :opened, size: :sm}},
+    {:status_badge, "clicked", %{status: :clicked, size: :sm}},
+    {:status_badge, "autoresponded", %{status: :autoresponded, size: :sm}},
+    {:status_badge, "unknown", %{status: :unknown, size: :sm}},
+    {:status_badge, "accepted", %{status: :accepted, size: :sm}},
+    {:status_badge, "no_match", %{status: :no_match, size: :sm}},
+    {:status_badge, "ignore", %{status: :ignore, size: :sm}},
+    {:status_badge, "failed_ingest", %{status: :failed_ingest, size: :sm}},
+    {:status_badge, "webhook_replay_requested", %{status: :webhook_replay_requested, size: :sm}},
+    {:status_badge, "webhook_replay_succeeded", %{status: :webhook_replay_succeeded, size: :sm}},
+    {:status_badge, "webhook_replay_failed", %{status: :webhook_replay_failed, size: :sm}},
+    {:status_badge, "reconciled", %{status: :reconciled, size: :sm}},
+    # phantom nil fallback — badge-outline
+    {:status_badge, "phantom-nil", %{status: nil, size: :sm}},
+
+    # STATE-LD-06: nav_link — active and inactive
+    {:nav_link, "active", %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: true}},
+    {:nav_link, "inactive", %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: false}},
+
+    # STATE-LD-06: nav_pill — active and inactive
+    {:nav_pill, "active", %{label: "All", href: "#", active: true}},
+    {:nav_pill, "inactive", %{label: "All", href: "#", active: false}},
+
+    # STATE-LD-07: tenant_chip — with-tenant and no-tenant
+    {:tenant_chip, "with-tenant", %{tenant: "acme-corp"}},
+    {:tenant_chip, "no-tenant", %{tenant: nil}},
+
+    # STATE-LD-08: theme_toggle — light-mode and dark-mode
+    {:theme_toggle, "light-mode", %{dark_chrome: false}},
+    {:theme_toggle, "dark-mode", %{dark_chrome: true}},
+
+    # STATE-LD-09: orientation_strip — deliveries, inbound, preview
+    {:orientation_strip, "deliveries", %{surface: :deliveries}},
+    {:orientation_strip, "inbound", %{surface: :inbound}},
+    {:orientation_strip, "preview", %{surface: :preview}},
+
+    # STATE-LD-11: deliveries_list — populated-unselected, populated-selected, empty
+    {:deliveries_list, "populated-unselected",
+     %{
+       deliveries: [
+         %{
+           id: "del_01JXABCDEF",
+           recipient: "j*@e******.com",
+           status: :delivered,
+           tenant_id: "acme-corp",
+           provider: "postmark",
+           last_event_type: :delivered,
+           last_event_at: ~N[2026-06-14 12:00:00]
+         },
+         %{
+           id: "del_01JXGHIJKL",
+           recipient: "a*@m****.io",
+           status: :bounced,
+           tenant_id: "acme-corp",
+           provider: "sendgrid",
+           last_event_type: :bounced,
+           last_event_at: ~N[2026-06-14 11:45:00]
+         }
+       ],
+       selected_delivery: nil
+     }},
+    {:deliveries_list, "populated-selected",
+     %{
+       deliveries: [
+         %{
+           id: "del_01JXABCDEF",
+           recipient: "j*@e******.com",
+           status: :delivered,
+           tenant_id: "acme-corp",
+           provider: "postmark",
+           last_event_type: :delivered,
+           last_event_at: ~N[2026-06-14 12:00:00]
+         },
+         %{
+           id: "del_01JXGHIJKL",
+           recipient: "a*@m****.io",
+           status: :bounced,
+           tenant_id: "acme-corp",
+           provider: "sendgrid",
+           last_event_type: :bounced,
+           last_event_at: ~N[2026-06-14 11:45:00]
+         }
+       ],
+       selected_delivery: %{id: "del_01JXABCDEF"}
+     }},
+    {:deliveries_list, "empty", %{deliveries: [], selected_delivery: nil}},
+
+    # STATE-LD-12: detail_header — shown (operator variant only for gallery)
+    {:detail_header, "shown",
+     %{
+       delivery: %{
+         id: "del_01JXABCDEF",
+         recipient: "j*@e******.com",
+         status: :delivered,
+         mailable: "MyApp.WelcomeMailer",
+         tenant_id: "acme-corp",
+         provider: "postmark",
+         stream: :transactional,
+         last_event_type: :delivered,
+         last_event_at: ~N[2026-06-14 12:00:00],
+         provider_message_id: "msg_abc123"
+       },
+       replay_targets: %{status: :unavailable, reason: :no_webhook},
+       latest_replay: nil
+     }},
+
+    # STATE-LD-13: filters_form — empty and filled (static assigns, no phx-submit)
+    {:filters_form, "empty",
+     %{
+       form: Phoenix.HTML.FormData.to_form(
+         %{"tenant_id" => "", "provider" => "", "status" => "", "event" => "", "window_hours" => "24"},
+         as: :filters,
+         id: "gallery-filters-empty"
+       ),
+       status_values: [:delivered, :bounced, :deferred],
+       event_values: [:delivered, :bounced],
+       window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}]
+     }},
+    {:filters_form, "filled",
+     %{
+       form: Phoenix.HTML.FormData.to_form(
+         %{"tenant_id" => "acme-corp", "provider" => "postmark", "status" => "delivered", "event" => "", "window_hours" => "168"},
+         as: :filters,
+         id: "gallery-filters-filled"
+       ),
+       status_values: [:delivered, :bounced, :deferred],
+       event_values: [:delivered, :bounced],
+       window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}]
+     }},
+
+    # STATE-LD-14: support_cards — tier1-shown and tier1-hidden
+    {:support_cards, "tier1-shown",
+     %{
+       support_summary: %{
+         failed_ingest: %{
+           count: 3,
+           latest: %{
+             provider_event_id: "evt_abc123",
+             webhook_event_id: "whe_xyz789"
+           }
+         },
+         orphan_backlog: %{count: 0, oldest: nil},
+         replay_outcomes: %{
+           counts: %{failed: 0, noop: 0, replayed: 0},
+           latest: nil
+         },
+         reconcile_facts: %{
+           reconciled_count: 0,
+           still_unmatched_count: 0,
+           latest_reconciled: nil
+         }
+       },
+       support_state: %{focused_card: nil, drilldown_banner: nil},
+       suppression_count: 2
+     }},
+    {:support_cards, "tier1-hidden",
+     %{
+       support_summary: %{
+         failed_ingest: %{count: 0, latest: nil},
+         orphan_backlog: %{count: 0, oldest: nil},
+         replay_outcomes: %{
+           counts: %{failed: 0, noop: 0, replayed: 0},
+           latest: nil
+         },
+         reconcile_facts: %{
+           reconciled_count: 0,
+           still_unmatched_count: 0,
+           latest_reconciled: nil
+         }
+       },
+       support_state: %{focused_card: nil, drilldown_banner: nil},
+       suppression_count: 0
+     }},
+
+    # STATE-LD-15: suppression_card — present and absent
+    {:suppression_card, "present",
+     %{
+       suppression_state: %{
+         scope: :global,
+         reason: :bounced,
+         stream: :transactional,
+         source: "provider:postmark",
+         reversibility: :immutable
+       }
+     }},
+    {:suppression_card, "absent", %{suppression_state: nil}},
+
+    # STATE-LD-16: timeline — populated, highlighted-event, empty
+    {:timeline, "populated",
+     %{
+       timeline_events: [
+         %{
+           id: "evt_01JXABC",
+           type: :queued,
+           metadata: %{},
+           reject_reason: nil
+         },
+         %{
+           id: "evt_01JXDEF",
+           type: :delivered,
+           metadata: %{},
+           reject_reason: nil
+         }
+       ],
+       highlight_event_id: nil
+     }},
+    {:timeline, "highlighted-event",
+     %{
+       timeline_events: [
+         %{
+           id: "evt_01JXABC",
+           type: :queued,
+           metadata: %{},
+           reject_reason: nil
+         },
+         %{
+           id: "evt_01JXDEF",
+           type: :delivered,
+           metadata: %{},
+           reject_reason: nil
+         }
+       ],
+       highlight_event_id: "evt_01JXDEF"
+     }},
+    {:timeline, "empty", %{timeline_events: [], highlight_event_id: nil}},
+
+    # STATE-LD-17: replay_modal — closed (open states require live event)
+    {:replay_modal, "closed",
+     %{
+       open?: false,
+       delivery: nil,
+       replay_targets: nil,
+       selected_target_id: nil
+     }},
+
+    # STATE-LD-18: routing_trace — empty, all-passing, first-failing
+    {:routing_trace, "empty", %{trace: []}},
+    {:routing_trace, "all-passing",
+     %{
+       trace: [
+         %{
+           mailbox: "MyApp.SupportMailbox",
+           verdicts: [
+             {:recipient, "support@myapp.com", "support@myapp.com", true},
+             {:subject, nil, "Re: your order", true}
+           ]
+         }
+       ]
+     }},
+    {:routing_trace, "first-failing",
+     %{
+       trace: [
+         %{
+           mailbox: "MyApp.SupportMailbox",
+           verdicts: [
+             {:recipient, "support@myapp.com", "b*****@e******.com", false},
+             {:subject, nil, "Re: your order", true}
+           ]
+         }
+       ]
+     }},
+
+    # STATE-LD-19: evidence_card — no-evidence, redacted, revealed, denied
+    {:evidence_card, "no-evidence", %{evidence: nil, reveal_state: :redacted, can_reveal?: true}},
+    {:evidence_card, "redacted",
+     %{
+       evidence: %{
+         provider: "sendgrid",
+         raw_payload: nil,
+         raw_mime: nil,
+         verification_facts: %{"dkim" => true, "spf" => :pass}
+       },
+       reveal_state: :redacted,
+       can_reveal?: true
+     }},
+    {:evidence_card, "revealed",
+     %{
+       evidence: %{
+         provider: "sendgrid",
+         raw_payload: "Received: from mail.sendgrid.net\r\nFrom: sender@example.com\r\nTo: recipient@example.com\r\n\r\nBody here.",
+         raw_mime: nil,
+         verification_facts: %{"dkim" => true, "spf" => :pass}
+       },
+       reveal_state: :revealed,
+       can_reveal?: true
+     }},
+    {:evidence_card, "denied",
+     %{
+       evidence: %{
+         provider: "sendgrid",
+         raw_payload: nil,
+         raw_mime: nil,
+         verification_facts: %{"dkim" => true}
+       },
+       reveal_state: :denied,
+       can_reveal?: false
+     }},
+
+    # STATE-LD-20: device_frame — inactive-btn (static assigns, no phx-click)
+    {:device_frame, "inactive-btn", %{device_width: 768}},
+
+    # STATE-LD-21: tabs — inactive-tab (static assigns showing the tab strip)
+    {:tabs, "inactive-tab",
+     %{
+       active_tab: :text,
+       html_body: "",
+       text_body: "Plain text preview of the Mailable.",
+       raw_envelope: "",
+       headers: [],
+       device_width: 768,
+       render_nonce: 1
+     }},
+
+    # STATE-LD-22: sidebar — mailable-collapsed, mailable-expanded, scenario-active
+    {:sidebar, "mailable-collapsed",
+     %{
+       mailables: [
+         {MyApp.WelcomeMailer, [{"default", %{}}]},
+         {MyApp.PasswordResetMailer, [{"reset", %{}}]}
+       ],
+       current_mailable: nil,
+       current_scenario: nil
+     }},
+    {:sidebar, "mailable-expanded",
+     %{
+       mailables: [
+         {MyApp.WelcomeMailer, [{"default", %{}}, {"with-name", %{name: "Ada"}}]},
+         {MyApp.PasswordResetMailer, [{"reset", %{}}]}
+       ],
+       current_mailable: MyApp.WelcomeMailer,
+       current_scenario: nil
+     }},
+    {:sidebar, "scenario-active",
+     %{
+       mailables: [
+         {MyApp.WelcomeMailer, [{"default", %{}}, {"with-name", %{name: "Ada"}}]},
+         {MyApp.PasswordResetMailer, [{"reset", %{}}]}
+       ],
+       current_mailable: MyApp.WelcomeMailer,
+       current_scenario: "with-name"
+     }}
+  ]
+
+  defp specimens, do: @specimens
+
+  # ---------------------------------------------------------------------------
+  # Helpers
+  # ---------------------------------------------------------------------------
+
+  # Group the flat specimen list into [{component, [{state, assigns_map}]}]
+  defp grouped_specimens(specimens) do
+    specimens
+    |> Enum.reduce([], fn {component, state, assigns_map}, acc ->
+      case List.keyfind(acc, component, 0) do
+        nil -> acc ++ [{component, [{state, assigns_map}]}]
+        {^component, states} -> List.keyreplace(acc, component, 0, {component, states ++ [{state, assigns_map}]})
+      end
+    end)
+  end
+
+  # Human-readable label for component atoms — domain nouns verbatim
+  defp component_label(:icon), do: "icon"
+  defp component_label(:logo), do: "logo"
+  defp component_label(:flash), do: "flash"
+  defp component_label(:badge), do: "badge"
+  defp component_label(:status_badge), do: "status_badge"
+  defp component_label(:nav_link), do: "nav_link"
+  defp component_label(:nav_pill), do: "nav_pill"
+  defp component_label(:tenant_chip), do: "tenant_chip"
+  defp component_label(:theme_toggle), do: "theme_toggle"
+  defp component_label(:orientation_strip), do: "orientation_strip"
+  defp component_label(:deliveries_list), do: "deliveries_list"
+  defp component_label(:detail_header), do: "detail_header"
+  defp component_label(:filters_form), do: "filters_form"
+  defp component_label(:support_cards), do: "support_cards"
+  defp component_label(:suppression_card), do: "suppression_card"
+  defp component_label(:timeline), do: "timeline"
+  defp component_label(:replay_modal), do: "replay_modal"
+  defp component_label(:routing_trace), do: "routing_trace"
+  defp component_label(:evidence_card), do: "evidence_card"
+  defp component_label(:device_frame), do: "device_frame"
+  defp component_label(:tabs), do: "tabs"
+  defp component_label(:sidebar), do: "sidebar"
+end
