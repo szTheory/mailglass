@@ -28,6 +28,7 @@ defmodule MailglassAdmin.OperatorLive do
   }
 
   alias MailglassAdmin.Operator.Timeline, as: OperatorTimeline
+  alias Phoenix.LiveView.JS
 
   @status_values [:queued, :sent, :dispatched, :failed, :suppressed]
   @event_values Mailglass.Outbound.Delivery.__event_types__()
@@ -460,6 +461,12 @@ defmodule MailglassAdmin.OperatorLive do
           </section>
         </section>
 
+        <%!-- Focus trap: phx-mounted moves focus into the modal on open; phx-remove returns focus to trigger on close --%>
+        <span
+          :if={@replay_modal_open?}
+          phx-mounted={JS.focus_first(to: "#operator-replay-modal")}
+          phx-remove={JS.focus(to: "#replay-open-btn")}
+        />
         <ReplayModal.replay_modal
           open?={@replay_modal_open?}
           delivery={@selected_delivery}

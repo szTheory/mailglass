@@ -65,6 +65,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
         </div>
 
         <button
+          id="replay-open-btn"
           type="button"
           phx-click="open_replay"
           data-testid="operator-replay-open"
