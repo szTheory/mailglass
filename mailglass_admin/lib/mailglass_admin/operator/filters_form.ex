@@ -13,7 +13,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
   def fields(assigns) do
     ~H"""
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase text-secondary">
         Tenant
       </span>
       <input
@@ -26,7 +26,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase text-secondary">
         Provider
       </span>
       <input
@@ -39,7 +39,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase text-secondary">
         Status
       </span>
       <select
@@ -56,7 +56,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase text-secondary">
         Event
       </span>
       <select
@@ -73,7 +73,7 @@ defmodule MailglassAdmin.Operator.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label font-bold uppercase text-secondary">
         Window
       </span>
       <select
