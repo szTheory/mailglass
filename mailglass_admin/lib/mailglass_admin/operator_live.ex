@@ -364,56 +364,76 @@ defmodule MailglassAdmin.OperatorLive do
           <% end %>
         </div>
       <% else %>
-        <div :if={is_nil(@selected_delivery)} class="mb-lg">
-          <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
-        </div>
-
-        <section class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5">
-          <.form
-            for={@filter_form}
-            id="operator-filters"
-            phx-change="validate_filters"
-            phx-submit="apply_filters"
-            class="grid gap-sm"
+        <section
+          data-testid="operator-filters"
+          class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
+        >
+          <button
+            type="button"
+            phx-click={JS.toggle(to: "#operator-filter-panel")}
+            data-testid="operator-filters-toggle"
+            class="btn btn-ghost min-h-11 md:hidden"
           >
-            <div class="grid gap-sm md:grid-cols-2 xl:grid-cols-5">
-              <FiltersForm.fields
-                form={@filter_form}
-                status_values={@status_values}
-                event_values={@event_values}
-                window_options={@window_options}
-              />
-            </div>
+            Filters <span aria-hidden="true">v</span>
+          </button>
 
-            <div class="flex flex-wrap gap-2">
-              <button type="submit" class="btn btn-primary min-h-11 px-5">Open delivery</button>
-              <button type="button" phx-click="clear_filters" class="btn btn-ghost min-h-11 px-5">
-                Clear filters
-              </button>
-            </div>
-          </.form>
+          <div id="operator-filter-panel" class="hidden md:block">
+            <.form
+              for={@filter_form}
+              id="operator-filters"
+              phx-change="validate_filters"
+              phx-submit="apply_filters"
+              class="mt-4 grid gap-sm md:mt-0"
+            >
+              <div class="grid gap-sm md:grid-cols-2 xl:grid-cols-5">
+                <FiltersForm.fields
+                  form={@filter_form}
+                  status_values={@status_values}
+                  event_values={@event_values}
+                  window_options={@window_options}
+                />
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary min-h-11 px-5">Open delivery</button>
+                <button type="button" phx-click="clear_filters" class="btn btn-ghost min-h-11 px-5">
+                  Clear filters
+                </button>
+              </div>
+            </.form>
+          </div>
         </section>
 
         <section
           data-testid="operator-master-detail"
-          class="mt-6 grid gap-lg lg:grid-cols-[minmax(22rem,28rem)_1fr]"
+          class="mt-6 grid gap-lg md:grid-cols-[40%_60%] min-[1440px]:grid-cols-[33%_67%]"
         >
           <aside
             data-testid="operator-deliveries-list-card"
-            class="card rounded-box border border-base-300 bg-base-200 p-0"
+            class={[
+              "card rounded-box border border-base-300 bg-base-200 p-0 md:block",
+              @selected_delivery && "max-md:hidden"
+            ]}
           >
             <div class="border-b border-base-300 px-4 py-3">
-              <h2 class="text-body font-bold uppercase tracking-[0.08em] text-secondary">
+              <h2 class="text-label uppercase font-bold text-secondary">
                 Recent deliveries
               </h2>
             </div>
             <DeliveriesList.deliveries_list
               deliveries={@deliveries}
               selected_delivery={@selected_delivery}
+              filters_active?={filters_active?(@filter_params)}
             />
           </aside>
 
-          <section data-testid="operator-detail-column" class="space-y-4">
+          <section
+            data-testid="operator-detail-column"
+            class={[
+              "space-y-4",
+              is_nil(@selected_delivery) && "max-md:order-first"
+            ]}
+          >
             <%= cond do %>
               <% @detail_error -> %>
                 <div
@@ -428,9 +448,10 @@ defmodule MailglassAdmin.OperatorLive do
                   </div>
                 </div>
               <% is_nil(@selected_delivery) -> %>
+                <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
                 <div
                   data-testid="operator-empty-detail"
-                  class="card rounded-box border border-base-300 bg-base-200 p-6"
+                  class="card hidden rounded-box border border-base-300 bg-base-200 p-6 md:block"
                 >
                   <h2 class="text-body font-bold text-base-content">
                     Select a delivery to inspect its event timeline and suppression state.
@@ -443,6 +464,13 @@ defmodule MailglassAdmin.OperatorLive do
                 </div>
               <% true -> %>
                 <div id={"delivery-detail-#{@selected_delivery.id}"} class="motion-reveal space-y-4">
+                  <.link
+                    patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
+                    data-testid="operator-detail-back"
+                    class="btn btn-ghost min-h-11 md:hidden"
+                  >
+                    Back to deliveries
+                  </.link>
                   <DetailHeader.detail_header
                     delivery={@selected_delivery}
                     replay_targets={@replay_targets}
@@ -488,6 +516,11 @@ defmodule MailglassAdmin.OperatorLive do
       "event" => "",
       "window_hours" => Integer.to_string(@default_window_hours)
     }
+  end
+
+  defp filters_active?(filter_params) do
+    Map.drop(filter_params, ["tenant_id", "window_hours"]) !=
+      Map.drop(default_filter_params(), ["tenant_id", "window_hours"])
   end
 
   defp normalize_filter_params(params) do

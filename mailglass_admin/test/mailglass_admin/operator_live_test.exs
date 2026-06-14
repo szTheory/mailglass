@@ -7,6 +7,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
   alias Mailglass.IdempotencyKey
   alias Mailglass.Outbound.Delivery
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.DeliveriesList
   alias MailglassAdmin.Operator.SuppressionCard
   alias MailglassAdmin.TestRepo
   alias Mailglass.Webhook.WebhookEvent
@@ -38,10 +39,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "No recent deliveries"
+      assert html =~ "No Deliveries yet"
 
       assert html =~
-               "No recent deliveries match these filters. Clear the filters or wait for the next send."
+               "Deliveries appear here once your application sends its first Message."
 
       assert html =~ "Select a delivery to inspect its event timeline and suppression state."
     end
@@ -548,6 +549,36 @@ defmodule MailglassAdmin.OperatorLiveTest do
       html = render_hook(view, "confirm_replay", %{})
 
       assert html =~ "Select a delivery before replaying a webhook."
+    end
+  end
+
+  describe "filters_active? empty states" do
+    test "filtered empty state names the active filters and offers reset" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: true
+        )
+
+      assert html =~ "No Deliveries match your filters"
+      assert html =~ "Adjust the filters or wait for the next send."
+      assert html =~ ~s(phx-click="clear_filters")
+      assert html =~ ~s(data-testid="operator-empty-filtered")
+    end
+
+    test "truly empty state avoids reset action" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false
+        )
+
+      assert html =~ "No Deliveries yet"
+      assert html =~ "Deliveries appear here once your application sends its first Message."
+      assert html =~ ~s(data-testid="operator-empty-truly")
+      refute html =~ ~s(phx-click="clear_filters")
     end
   end
 

@@ -9,6 +9,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   attr :deliveries, :list, required: true
   attr :selected_delivery, :map, default: nil
+  attr :filters_active?, :boolean, default: false
 
   def deliveries_list(assigns) do
     ~H"""
@@ -16,10 +17,29 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
       <div class="flex min-h-64 flex-col items-center justify-center gap-sm p-6 text-center">
         <Components.icon name="hero-inbox-stack" class="h-8 w-8 text-secondary" />
         <div class="space-y-1">
-          <h3 class="text-body font-bold text-base-content">No recent deliveries</h3>
-          <p class="text-body text-secondary">
-            No recent deliveries match these filters. Clear the filters or wait for the next send.
-          </p>
+          <%= if @filters_active? do %>
+            <h3 class="text-body font-bold text-base-content">No Deliveries match your filters</h3>
+            <p class="text-body text-secondary">
+              Adjust the filters or wait for the next send.
+            </p>
+          <% else %>
+            <h3 class="text-body font-bold text-base-content">No Deliveries yet</h3>
+            <p class="text-body text-secondary">
+              Deliveries appear here once your application sends its first Message.
+            </p>
+          <% end %>
+        </div>
+        <button
+          :if={@filters_active?}
+          type="button"
+          phx-click="clear_filters"
+          data-testid="operator-empty-filtered"
+          class="btn btn-ghost min-h-11"
+        >
+          Clear filters
+        </button>
+        <div :if={!@filters_active?} data-testid="operator-empty-truly" class="sr-only">
+          No reset action
         </div>
       </div>
     <% else %>
