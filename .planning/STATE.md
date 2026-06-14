@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-14T16:12:50.096Z"
+last_updated: "2026-06-14T16:17:37.205Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 27
-  completed_plans: 23
+  completed_plans: 24
   percent: 42
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 ## Current Position
 
 Phase: 97 (cross-surface-component-layer) — EXECUTING
-Plan: 5 of 8
+Plan: 6 of 8
 Status: Ready to execute
 Last activity: 2026-06-14
 Resume file: None
@@ -154,6 +154,9 @@ single closeout gate.
 - [Phase ?]: btn-sm removed from support_cards CTA buttons; tier-1 gets px-md + min-h-11, tier-2 ghost gets px-sm + min-h-11 for 44px touch-target floor (STATE-LD-14, GAP-01)
 - [Phase ?]: Focus trap for assign-controlled modal uses phx-mounted/phx-remove on :if conditional span in operator_live.ex render template — no client JS hook needed
 - [Phase ?]: id=replay-open-btn added to detail_header trigger button as JS.focus return target for modal close
+- [97-05]: device_frame min-h-11 added alongside btn-sm — btn-sm uses --size CSS var, min-h-11 sets min-height independently; both coexist, effective 44px touch target (STATE-LD-20)
+- [97-05]: ring-inset used on tabs tab buttons (inline inside tablist — offset ring would clip at tablist boundary; same rationale as deliveries_list row) (STATE-LD-21)
+- [97-05]: border-l-2 replaces border-l-[3px] in both sidebar scenario_classes clauses — nearest Tailwind scale value, aligns with nav_link border-l-2 at shell.ex:207, arbitrary value removed (STATE-LD-22)
 
 ## Performance Metrics
 
@@ -217,6 +220,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 97 P02 | 104 | 3 tasks | 5 files |
 | Phase 97 P03 | 236 | 2 tasks | 3 files |
 | Phase 97 P04 | 7min | 3 tasks | 0 files |
+| Phase 97 P05 | 175 | 3 tasks | 3 files |
 
 ## Accumulated Context
 

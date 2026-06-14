@@ -153,7 +153,7 @@ Plans:
 - [x] 97-02-PLAN.md — Operator component fixes: deliveries_list focus ring, detail_headers text-xl, filters_form tracking removal, support_cards btn-sm (COMP-01/02)
 - [x] 97-03-PLAN.md — replay_modal a11y: aria-labelledby, Escape dismiss, focus trap, h2 text-heading, COPY-LD-13 sub-copy (COMP-02)
 - [x] 97-04-PLAN.md — components.ex verify (icon/logo/flash/badge/status_badge) + timeline/routing_trace/evidence_card verify+fix (COMP-01/02/03)
-- [ ] 97-05-PLAN.md — Preview components: device_frame min-h-11, tabs ARIA+focus+empty-pane, sidebar focus ring+border-l-2 (COMP-01/02)
+- [x] 97-05-PLAN.md — Preview components: device_frame min-h-11, tabs ARIA+focus+empty-pane, sidebar focus ring+border-l-2 (COMP-01/02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -264,7 +264,7 @@ Plans:
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
-| 97. Cross-Surface Component Layer | 4/8 | In Progress|  |
+| 97. Cross-Surface Component Layer | 5/8 | In Progress|  |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |
 | 99. Inbound Surface | 0/? | Not started | - |
 | 100. Preview Surface | 0/? | Not started | - |
