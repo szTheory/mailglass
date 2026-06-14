@@ -51,27 +51,27 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
 
         <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Tenant</dt>
+            <dt class="text-label font-bold uppercase">Tenant</dt>
             <dd class="mt-1 text-base-content">{@record.tenant_id}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider</dt>
+            <dt class="text-label font-bold uppercase">Provider</dt>
             <dd class="mt-1 text-base-content">{String.upcase(@record.provider || "unknown")}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">From</dt>
+            <dt class="text-label font-bold uppercase">From</dt>
             <dd class="mt-1 text-base-content">{sender_display(@record)}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Subject</dt>
+            <dt class="text-label font-bold uppercase">Subject</dt>
             <dd class="mt-1 text-base-content">{present(@record.subject)}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Received</dt>
+            <dt class="text-label font-bold uppercase">Received</dt>
             <dd class="mono mt-1 text-base-content">{format_datetime(@record.received_at)}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Matched mailbox</dt>
+            <dt class="text-label font-bold uppercase">Matched mailbox</dt>
             <dd class="mt-1 text-base-content">{matched_mailbox(@mailbox)}</dd>
           </div>
         </dl>
@@ -79,7 +79,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
 
       <div class="mt-6 flex flex-wrap items-start justify-between gap-md border-t border-base-300 pt-4">
         <div class="space-y-1">
-          <h3 class="text-body font-bold uppercase tracking-[0.08em] text-secondary">Replay</h3>
+          <h3 class="text-body font-bold uppercase text-secondary">Replay</h3>
           <p class="text-body text-base-content">{replay_hint(@outcome)}</p>
         </div>
 
@@ -88,7 +88,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           phx-click="open_replay"
           data-testid="inbound-replay-open"
           disabled={replay_disabled?(@outcome)}
-          class={["btn btn-error min-h-11 px-5", replay_disabled?(@outcome) && "btn-disabled"]}
+          class={["btn btn-error min-h-11 px-md", replay_disabled?(@outcome) && "btn-disabled"]}
         >
           Replay inbound
         </button>

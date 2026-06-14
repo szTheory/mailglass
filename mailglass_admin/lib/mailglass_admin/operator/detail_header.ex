@@ -29,27 +29,27 @@ defmodule MailglassAdmin.Operator.DetailHeader do
 
         <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Tenant</dt>
+            <dt class="text-label font-bold uppercase">Tenant</dt>
             <dd class="mt-1 text-base-content">{@delivery.tenant_id}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider</dt>
+            <dt class="text-label font-bold uppercase">Provider</dt>
             <dd class="mt-1 text-base-content">{String.upcase(@delivery.provider || "unknown")}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Stream</dt>
+            <dt class="text-label font-bold uppercase">Stream</dt>
             <dd class="mt-1 text-base-content">{label(@delivery.stream)}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Latest event</dt>
+            <dt class="text-label font-bold uppercase">Latest event</dt>
             <dd class="mt-1 text-base-content">{label(@delivery.last_event_type)}</dd>
           </div>
           <div>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Updated</dt>
+            <dt class="text-label font-bold uppercase">Updated</dt>
             <dd class="mono mt-1 text-base-content">{format_datetime(@delivery.last_event_at)}</dd>
           </div>
           <div :if={present?(@delivery.provider_message_id)}>
-            <dt class="text-label font-bold uppercase tracking-[0.08em]">Provider message</dt>
+            <dt class="text-label font-bold uppercase">Provider message</dt>
             <dd class="mono mt-1 text-base-content">{@delivery.provider_message_id}</dd>
           </div>
         </dl>
@@ -57,7 +57,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
 
       <div class="mt-6 flex flex-wrap items-start justify-between gap-md border-t border-base-300 pt-4">
         <div class="space-y-1">
-          <h3 class="text-body font-bold uppercase tracking-[0.08em] text-secondary">Webhook replay</h3>
+          <h3 class="text-body font-bold uppercase text-secondary">Webhook replay</h3>
           <p class="text-body text-base-content">{RepairState.availability_hint(@replay_targets)}</p>
           <p :if={@latest_replay} class="text-label text-secondary">
             Last replay: {RepairState.latest_replay_summary(@latest_replay)} at {format_datetime(@latest_replay.occurred_at)}
@@ -69,7 +69,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           type="button"
           phx-click="open_replay"
           data-testid="operator-replay-open"
-          class="btn btn-error min-h-11 px-5"
+          class="btn btn-error min-h-11 px-md"
         >
           Replay webhook
         </button>

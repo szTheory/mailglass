@@ -122,7 +122,7 @@ defmodule MailglassAdmin.Operator.Shell do
       <aside class="hidden w-60 shrink-0 flex-col border-r border-base-300 bg-base-200 md:flex">
         <div class="flex items-center gap-sm border-b border-base-300 px-md py-md">
           <Components.logo class="h-6 w-auto" />
-          <span class="text-label font-bold uppercase tracking-[0.12em] text-secondary">
+          <span class="text-label font-bold uppercase text-secondary">
             Operator
           </span>
         </div>
