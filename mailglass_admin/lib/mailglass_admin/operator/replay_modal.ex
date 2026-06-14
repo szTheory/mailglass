@@ -20,15 +20,18 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           data-testid="operator-replay-modal"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="replay-modal-title"
+          phx-key="Escape"
+          phx-window-keydown="close_replay"
           class="motion-overlay w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
         >
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
-              <h2 class="text-lg font-bold text-base-content">
+              <h2 id="replay-modal-title" class="text-heading font-bold text-base-content">
                 Replay webhook for {@delivery.recipient}
               </h2>
               <p class="text-body text-secondary">
-                Replay is delivery-detail initiated, tenant-scoped, and recorded in the append-only ledger.
+                Re-dispatches the stored webhook request through Mailbox routing and records a new Event in the append-only ledger. Confirm to replay.
               </p>
             </div>
 
