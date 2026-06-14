@@ -85,7 +85,7 @@ quality forward.
   color, type, spacing, radius, and shadow.
 - [x] **COMP-02**: Every component renders correct, on-brand interaction states
   (rest/hover/focus/active/disabled/loading/empty/error) per the locked state matrix.
-- [ ] **COMP-03**: `status_badge`/`badge` color + icon mappings are deterministic, on-token,
+- [x] **COMP-03**: `status_badge`/`badge` color + icon mappings are deterministic, on-token,
   and legible in both themes across every status/outcome atom.
 
 ### GALLERY — Storybook-lens Audit Surface
@@ -199,7 +199,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | RESEARCH-05 | Phase 96 | Complete |
 | COMP-01 | Phase 97 | Complete |
 | COMP-02 | Phase 97 | Complete |
-| COMP-03 | Phase 97 | Pending |
+| COMP-03 | Phase 97 | Complete |
 | GALLERY-01 | Phase 97 | Pending |
 | GALLERY-02 | Phase 97 | Pending |
 | GROUP-01 | Phase 98 | Pending |
