@@ -98,7 +98,7 @@ quality forward.
 
 ### GROUP — Meta-component Composition
 
-- [ ] **GROUP-01**: Component groups (filter cards, master-detail split, support-card triage
+- [x] **GROUP-01**: Component groups (filter cards, master-detail split, support-card triage
   grid, timeline, detail pane, modal) compose with consistent, on-brand inter-group spacing
   and visual rhythm on every surface.
 - [ ] **GROUP-02**: An inbound overview / at-a-glance tier exists, mirroring the operator
@@ -109,16 +109,16 @@ quality forward.
 
 ### PAGE — Page-level Information Architecture
 
-- [ ] **PAGE-01**: Each surface's information architecture follows principle-of-least-surprise
+- [x] **PAGE-01**: Each surface's information architecture follows principle-of-least-surprise
   (gov.uk-style), orienting both first-time and advanced operators on landing.
-- [ ] **PAGE-02**: Each page lays out its happy path, primary error states, and boundary/edge
+- [x] **PAGE-02**: Each page lays out its happy path, primary error states, and boundary/edge
   states coherently and on-brand.
 - [ ] **PAGE-03**: The Preview chrome gains full dark-mode support at parity with Operator and
   Inbound (the previewed email keeps its own independent dark-chrome toggle).
 
 ### RESP — Responsive
 
-- [ ] **RESP-01**: Every surface is mobile-first responsive and legible/usable at 390/768/1440
+- [x] **RESP-01**: Every surface is mobile-first responsive and legible/usable at 390/768/1440
   (master-detail stacks cleanly; dense layouts such as RoutingTrace stay scannable at 390px).
 
 ### FLOW — Flow-grounded Validation
@@ -150,7 +150,7 @@ quality forward.
 - [x] **A11Y-01**: Interactive elements have visible focus rings, correct ARIA roles/states
   (`aria-current`, `aria-selected`, `role="dialog"` + `aria-modal`), semantic heading hierarchy
   (one `h1` per page), and ≥44px touch targets.
-- [ ] **A11Y-02**: All text meets WCAG AA contrast in both themes on its *actual* surface
+- [x] **A11Y-02**: All text meets WCAG AA contrast in both themes on its *actual* surface
   (computed and verified).
 
 ## Future Requirements (deferred)
@@ -202,14 +202,14 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | COMP-03 | Phase 97 | Complete |
 | GALLERY-01 | Phase 97 | Complete |
 | GALLERY-02 | Phase 97 | Complete |
-| GROUP-01 | Phase 98 | Pending |
-| PAGE-01 | Phase 98 | Pending |
-| PAGE-02 | Phase 98 | Pending |
-| RESP-01 | Phase 98 | Pending |
+| GROUP-01 | Phase 98 | Complete |
+| PAGE-01 | Phase 98 | Complete |
+| PAGE-02 | Phase 98 | Complete |
+| RESP-01 | Phase 98 | Complete |
 | FLOW-01 | Phase 98 | Pending |
 | FLOW-02 | Phase 98 | Pending |
 | A11Y-01 | Phase 98 | Complete |
-| A11Y-02 | Phase 98 | Pending |
+| A11Y-02 | Phase 98 | Complete |
 | GROUP-02 | Phase 99 | Pending |
 | GROUP-03 | Phase 99 | Pending |
 | PAGE-03 | Phase 100 | Pending |

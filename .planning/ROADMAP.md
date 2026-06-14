@@ -190,7 +190,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1; 02 and 03 parallel — no file overlap)*
 
-- [ ] 98-02-PLAN.md — IA-LD-03 master-detail grid + 390px reveal-with-back + JS.toggle filter disclosure + COPY-LD-01/02 empty-state signal + group testids
+- [x] 98-02-PLAN.md — IA-LD-03 master-detail grid + 390px reveal-with-back + JS.toggle filter disclosure + COPY-LD-01/02 empty-state signal + group testids
 - [ ] 98-03-PLAN.md — Token-clean the operator in-pane components (drop tracking-[0.08em] from suppression_card/support_cards/replay_modal) + COPY-LD-14 copy
 
 **Wave 3** *(blocked on Wave 2 completion)*
@@ -280,7 +280,7 @@ Plans:
 | 95. Audit Apparatus + Quality-Ratchet v2 | 4/4 | Complete    | 2026-06-14 |
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
-| 98. Operator / Deliveries Surface | 1/4 | In Progress|  |
+| 98. Operator / Deliveries Surface | 2/4 | In Progress|  |
 | 99. Inbound Surface | 0/? | Not started | - |
 | 100. Preview Surface | 0/? | Not started | - |
 | 101. Microcopy Pass | 0/? | Not started | - |
