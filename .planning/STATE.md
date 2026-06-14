@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: planning
-last_updated: "2026-06-14T22:13:52.929Z"
+last_updated: "2026-06-14T22:25:26.157Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 12
@@ -11,7 +11,7 @@ progress:
   total_plans: 31
   completed_plans: 31
   percent: 58
-stopped_at: Phase 99 context gathered (assumptions mode)
+stopped_at: Phase 99 UI-SPEC approved
 ---
 
 # Project State
@@ -29,7 +29,7 @@ Phase: 99
 Plan: Not started
 Status: Ready to plan
 Last activity: 2026-06-14
-Resume file: .planning/phases/99-inbound-surface/99-CONTEXT.md
+Resume file: .planning/phases/99-inbound-surface/99-UI-SPEC.md
 
 ## v1.11 Milestone Intent
 
