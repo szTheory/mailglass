@@ -53,7 +53,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
               phx-value-focus="failed_ingest"
               phx-value-webhook_event_id={@support_summary.failed_ingest.latest.webhook_event_id}
               data-testid="support-card-failed-ingest-drilldown"
-              class="btn btn-sm btn-primary mt-sm"
+              class="btn btn-primary px-md mt-sm min-h-11"
             >
               View failures
             </button>
@@ -99,7 +99,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
               phx-value-focus="orphan_backlog"
               phx-value-event_id={@support_summary.orphan_backlog.oldest.event_id}
               data-testid="support-card-orphan-backlog-drilldown"
-              class="btn btn-sm btn-primary mt-sm"
+              class="btn btn-primary px-md mt-sm min-h-11"
             >
               View backlog
             </button>
@@ -149,7 +149,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
               phx-value-event_id={@support_summary.replay_outcomes.latest.event_id}
               phx-value-delivery_id={@support_summary.replay_outcomes.latest.delivery_id}
               data-testid="support-card-replay-outcomes-drilldown"
-              class="btn btn-sm btn-primary mt-sm"
+              class="btn btn-primary px-md mt-sm min-h-11"
             >
               Open replay audit
             </button>
@@ -201,7 +201,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
               @support_summary.reconcile_facts.latest_reconciled.delivery_id
           }
           data-testid="support-card-reconcile-facts-drilldown"
-          class="btn btn-ghost btn-sm px-3"
+          class="btn btn-ghost px-sm min-h-11"
         >
           Unmatched pressure: {@support_summary.reconcile_facts.still_unmatched_count}
         </button>
