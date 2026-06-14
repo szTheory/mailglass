@@ -49,7 +49,7 @@ quality forward.
 - [ ] **RATCHET-01**: A committed score baseline keyed by `component × pillar × theme` records
   the `gsd-ui-review` grade per cell; closeout asserts every cell meets-or-beats its prior
   committed value (only-forward, no regression).
-- [ ] **RATCHET-02**: One carried-forward GAP register with stable `GAP-NN` IDs (status
+- [x] **RATCHET-02**: One carried-forward GAP register with stable `GAP-NN` IDs (status
   open/fixed/downgraded + run_id); re-runs reopen regressed IDs and skip settled rows
   (idempotent pick-up-where-left-off), with the anti-churn sev≥3 citation gate.
 - [x] **RATCHET-03**: The conformance + motion grep gates are tightened to close current
@@ -189,7 +189,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | TOKEN-05 | Phase 94 | Complete |
 | RATCHET-03 | Phase 94 | Complete |
 | RATCHET-01 | Phase 95 | Pending |
-| RATCHET-02 | Phase 95 | Pending |
+| RATCHET-02 | Phase 95 | Complete |
 | RATCHET-04 | Phase 95 | Pending |
 | RATCHET-05 | Phase 95 | Pending |
 | RESEARCH-01 | Phase 96 | Pending |

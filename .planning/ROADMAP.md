@@ -91,7 +91,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 95-01-PLAN.md — Create RATCHET-GAP-REGISTER.md schema + anti-churn contract (header-only, Wave 1)
+- [x] 95-01-PLAN.md — Create RATCHET-GAP-REGISTER.md schema + anti-churn contract (header-only, Wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -229,7 +229,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 94. Token Re-Baseline onto Canonical Brand | 3/3 | Complete    | 2026-06-13 |
-| 95. Audit Apparatus + Quality-Ratchet v2 | 0/4 | Not started | - |
+| 95. Audit Apparatus + Quality-Ratchet v2 | 1/4 | In Progress|  |
 | 96. Research Dossier | 0/? | Not started | - |
 | 97. Cross-Surface Component Layer | 0/? | Not started | - |
 | 98. Operator / Deliveries Surface | 0/? | Not started | - |
