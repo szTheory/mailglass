@@ -9,6 +9,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.DeliveriesList
   alias MailglassAdmin.Operator.SuppressionCard
+  alias MailglassAdmin.TestSupport.OperatorFixtures
   alias MailglassAdmin.TestRepo
   alias Mailglass.Webhook.WebhookEvent
 
@@ -604,6 +605,24 @@ defmodule MailglassAdmin.OperatorLiveTest do
             do: "#{file}:#{index}:#{line}"
 
       assert offenders == []
+    end
+  end
+
+  describe "browser seed ordering" do
+    test "suppressed browser seed appends after existing index-pinned rows" do
+      %{tenant_id: tenant_id} = OperatorFixtures.seed_browser_scenario!()
+
+      deliveries =
+        TestRepo.all(
+          from(delivery in Delivery,
+            where: delivery.tenant_id == ^tenant_id,
+            order_by: [desc: delivery.last_event_at]
+          )
+        )
+
+      assert List.first(deliveries).recipient == "browser-selected@example.com"
+      assert List.last(deliveries).recipient == "browser-suppressed@example.com"
+      assert List.last(deliveries).status == :suppressed
     end
   end
 

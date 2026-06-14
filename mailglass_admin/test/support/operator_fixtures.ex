@@ -129,6 +129,16 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       mailable: "Mailglass.Example.BrowserMailer"
     })
 
+    insert_delivery!(%{
+      recipient: "browser-suppressed@example.com",
+      provider: "postmark",
+      provider_message_id: "pm_browser_suppressed",
+      status: :suppressed,
+      last_event_type: :suppressed,
+      last_event_at: hours_ago(8),
+      mailable: "Mailglass.Example.BrowserMailer"
+    })
+
     # GAP-13: seed one inbound record for the browser scenario so the MOTION-02
     # regression gate (operator.spec.js) can navigate the inbound detail pane.
     # received_at: hours_ago(10) keeps this record older than all delivery rows
