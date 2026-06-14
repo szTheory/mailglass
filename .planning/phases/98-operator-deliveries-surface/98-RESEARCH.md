@@ -326,19 +326,22 @@ attr :status, :atom,
 | A4 | COPY-LD-01/02 split requires a new `filters_active?`/`empty_kind` signal into `DeliveriesList` | Architecture Patterns / Pitfall 4 | If the planner assumes the component already distinguishes, only one empty copy ships |
 | A5 | `headline/1` in suppression_card also lacks a true catch-all (CR-01 may need to extend to it) | Pitfall 5 | Novel-shape suppression seed row raises FunctionClauseError in the heading |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Which breakpoint utility for the 1440 tier?** (A1)
    - Known: IA-LD-03 says 33/67 "at 1440," bans `lg:`. App uses Tailwind v4 defaults (`md`768/`lg`1024/`xl`1280/`2xl`1536).
    - Unclear: exact utility. Recommendation: `xl:grid-cols-[33%_67%]` (closest standard tier ≥ the `md` 40/60), OR arbitrary `min-[1440px]:` for literal fidelity. Let the UI-checker pick; assert via computed `grid-template-columns`.
+   — RESOLVED: use the arbitrary variant `min-[1440px]:grid-cols-[33%_67%]` for literal-1440 fidelity (full grid class `grid gap-lg md:grid-cols-[40%_60%] min-[1440px]:grid-cols-[33%_67%]`); confirmed safe against check-conformance.sh GAP-GATE/HEX-GATE. Locked in Plan 98-02 (resolved_decisions + Task 1).
 
 2. **Scope of `tracking-[0.08em]` cleanup + advisory-gate flip** (A2)
    - Known: 11 sites; D-03 says "whole operator template." `operator_live.ex:404` is clearly 98. `suppression_card`/`support_cards`/`replay_modal` render in-pane.
    - Unclear: whether flipping `check-conformance-advisory.sh` to hard-fail is 98 or 99 (the script header says 99). Recommendation: Phase 98 cleans ALL operator-surface sites (so the surface is genuinely token-clean) but defers the global gate-flip to Phase 99 unless the planner adds an operator-scoped hard gate.
+   — RESOLVED: Phase 98 cleans ALL operator-surface tracking sites (operator_live.ex:404 in Plan 02; suppression_card/support_cards/replay_modal in Plan 03) and guards regression with an operator-scoped ExUnit assertion; the global advisory-gate hard-fail FLIP is deferred to Phase 99 (the script header's stated owner). Locked in Plan 98-03 (objective + Task 3).
 
 3. **COPY-LD-01 vs COPY-LD-02 distinction mechanism** (A4)
    - Known: component renders one generic empty copy today.
    - Unclear: exact signal shape. Recommendation: pass `filters_active?` (compare `@filter_params` to `default_filter_params/0`, excluding `window_hours`) from `operator_live.ex` into `DeliveriesList`.
+   — RESOLVED: add a `defp filters_active?/1` helper in operator_live.ex (`Map.drop(filter_params, ["window_hours"]) != Map.drop(default_filter_params(), ["window_hours"])`) and pass `filters_active?={filters_active?(@filter_params)}` into DeliveriesList, which branches COPY-LD-01 (filtered-empty + reset) vs COPY-LD-02 (truly-empty, no reset). Locked in Plan 98-02 Task 3.
 
 ## Environment Availability
 
