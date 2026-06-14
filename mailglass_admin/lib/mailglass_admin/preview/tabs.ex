@@ -41,8 +41,10 @@ defmodule MailglassAdmin.Preview.Tabs do
           type="button"
           phx-click="set_tab"
           phx-value-tab="html"
+          id="tab-btn-html"
           aria-selected={to_string(@active_tab == :html)}
-          class={["px-4 py-2 min-h-10 text-body transition-colors", tab_classes(@active_tab == :html)]}
+          aria-controls="tab-panel-html"
+          class={["px-4 py-2 min-h-11 text-body transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset", tab_classes(@active_tab == :html)]}
         >
           HTML
         </button>
@@ -51,8 +53,10 @@ defmodule MailglassAdmin.Preview.Tabs do
           type="button"
           phx-click="set_tab"
           phx-value-tab="text"
+          id="tab-btn-text"
           aria-selected={to_string(@active_tab == :text)}
-          class={["px-4 py-2 min-h-10 text-body transition-colors", tab_classes(@active_tab == :text)]}
+          aria-controls="tab-panel-text"
+          class={["px-4 py-2 min-h-11 text-body transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset", tab_classes(@active_tab == :text)]}
         >
           Text
         </button>
@@ -61,8 +65,10 @@ defmodule MailglassAdmin.Preview.Tabs do
           type="button"
           phx-click="set_tab"
           phx-value-tab="raw"
+          id="tab-btn-raw"
           aria-selected={to_string(@active_tab == :raw)}
-          class={["px-4 py-2 min-h-10 text-body transition-colors", tab_classes(@active_tab == :raw)]}
+          aria-controls="tab-panel-raw"
+          class={["px-4 py-2 min-h-11 text-body transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset", tab_classes(@active_tab == :raw)]}
         >
           Raw
         </button>
@@ -71,9 +77,11 @@ defmodule MailglassAdmin.Preview.Tabs do
           type="button"
           phx-click="set_tab"
           phx-value-tab="headers"
+          id="tab-btn-headers"
           aria-selected={to_string(@active_tab == :headers)}
+          aria-controls="tab-panel-headers"
           class={[
-            "px-4 py-2 min-h-10 text-body transition-colors",
+            "px-4 py-2 min-h-11 text-body transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
             tab_classes(@active_tab == :headers)
           ]}
         >
@@ -81,7 +89,12 @@ defmodule MailglassAdmin.Preview.Tabs do
         </button>
       </div>
 
-      <div id={"preview-tab-" <> Atom.to_string(@active_tab)} class="motion-tab-swap">
+      <div
+        id={"tab-panel-" <> Atom.to_string(@active_tab)}
+        role="tabpanel"
+        aria-labelledby={"tab-btn-" <> Atom.to_string(@active_tab)}
+        class="motion-tab-swap"
+      >
         <.tab_content
           active_tab={@active_tab}
           html_body={@html_body}
@@ -107,14 +120,20 @@ defmodule MailglassAdmin.Preview.Tabs do
   def tab_content(%{active_tab: :html} = assigns) do
     ~H"""
     <div class="overflow-auto">
-      <iframe
-        srcdoc={@html_body}
-        sandbox="allow-same-origin"
-        style={"width: #{@device_width}px; height: 600px; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100);"}
-        phx-update="ignore"
-        id={"preview-iframe-" <> Integer.to_string(@render_nonce)}
-        title="Email HTML preview"
-      />
+      <%= if @html_body == "" do %>
+        <p class="text-body text-secondary py-lg text-center">
+          No HTML body — this Mailable's template returned empty content.
+        </p>
+      <% else %>
+        <iframe
+          srcdoc={@html_body}
+          sandbox="allow-same-origin"
+          style={"width: #{@device_width}px; height: 600px; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100);"}
+          phx-update="ignore"
+          id={"preview-iframe-" <> Integer.to_string(@render_nonce)}
+          title="Email HTML preview"
+        />
+      <% end %>
     </div>
     """
   end
