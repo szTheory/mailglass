@@ -221,7 +221,7 @@ Plans:
 
 **Wave 2** *(blocked on 99-01 completion)*
 
-- [ ] 99-02-PLAN.md - Summary-backed overview tier, responsive inbound IA, and empty states.
+- [x] 99-02-PLAN.md - Summary-backed overview tier, responsive inbound IA, and empty states.
 
 **Wave 3** *(blocked on 99-02 and 99-03 completion)*
 
@@ -299,7 +299,7 @@ Plans:
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
-| 99. Inbound Surface | 2/5 | In Progress|  |
+| 99. Inbound Surface | 3/5 | In Progress|  |
 | 100. Preview Surface | 0/? | Not started | - |
 | 101. Microcopy Pass | 0/? | Not started | - |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
