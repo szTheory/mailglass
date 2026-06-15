@@ -51,10 +51,10 @@ defmodule MailglassAdmin.VoiceTest do
       {:ok, _view, html} = live(conn, "/dev/mail")
 
       # Sidebar heading
-      assert html =~ "Mailers"
+      assert html =~ "Mailables"
 
       # Start page shown when nothing is selected (mailables present)
-      assert html =~ "Render a real message before you send it"
+      assert html =~ "Render a real Message before you send it"
 
       # Stub-mailable empty-state copy
       assert html =~ "No previews defined"
