@@ -434,17 +434,17 @@ const viewports = [
 | A2 | Root/inner computed-style disagreement can be detected by comparing CSS variables/backgrounds. | Common Pitfalls | Test may need adjustment to actual DOM shape. |
 | A3 | The cleanest H1 fix may require a Sidebar API/wrapper strategy. | Common Pitfalls | Planner must inspect exact component tradeoff before editing. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **What exact assign names should replace `dark_chrome`?**
    - What we know: `?theme=` must remain admin chrome, and message/frame theme must be separate. [VERIFIED: Phase 100 context]
-   - What's unclear: Whether to rename the existing event `toggle_dark` or keep it for the independent message/frame toggle. [ASSUMED]
-   - Recommendation: Planner should allocate an early task to rename/split assigns and update tests before layout work. [ASSUMED]
+   - RESOLVED: Use `admin_chrome_theme`, `admin_chrome_dark?`, and `admin_chrome_data_theme` for the page/root theme derived from `?theme=dark|light`; use `preview_frame_dark_chrome` for the independent previewed Message/frame state. Rename the existing frame toggle event to `toggle_preview_frame_theme` and reserve `toggle_theme` for URL-backed admin chrome parity with Operator/Inbound. [RESOLVED: Phase 100 plan-checker gate]
+   - Recommendation: Plan 100-01 owns the assign/event split and URL-state tests before layout work. [RESOLVED]
 
 2. **Should mobile Mailables navigation be duplicated DOM or a shared component with heading-level control?**
    - What we know: Desktop Sidebar currently includes an `h1`, and D-16 requires exactly one `h1`. [VERIFIED: codebase grep + Phase 100 context]
-   - What's unclear: The smallest clean API to preserve semantics across desktop/mobile without duplicate page `h1`s. [ASSUMED]
-   - Recommendation: Add a `heading_level`/`heading_tag` or `labelled_by` option to `Sidebar.sidebar/1` if direct reuse creates H1 duplication. [ASSUMED]
+   - RESOLVED: Preserve a shared `Sidebar.sidebar/1` component and change its visible `Mailables` heading to `h2`, leaving the Preview page/start state as the sole `h1`. Reuse the same component in desktop and mobile placements; do not add a custom accordion or route. [RESOLVED: Phase 100 plan-checker gate]
+   - Recommendation: Plan 100-02 owns the Sidebar heading demotion, mobile placement, native details/summary preservation, and one-`h1` verification. [RESOLVED]
 
 ## Environment Availability
 
