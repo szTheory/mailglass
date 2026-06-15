@@ -25,7 +25,9 @@ defmodule MailglassAdmin.InboundLiveTest do
   describe "inbound surface" do
     test "renders the no-selection prompt and masks recipients by default (V5)", %{conn: conn} do
       conn = operator_conn(conn)
-      %{record: record} = InboundFixtures.seed_matched!(@tenant_id, recipient: "alice@example.com")
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "alice@example.com")
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
@@ -71,7 +73,9 @@ defmodule MailglassAdmin.InboundLiveTest do
       conn = operator_conn(conn)
 
       %{record: mine} = InboundFixtures.seed_matched!(@tenant_id, recipient: "mine@example.com")
-      %{record: theirs} = InboundFixtures.seed_matched!(@other_tenant, recipient: "theirs@example.com")
+
+      %{record: theirs} =
+        InboundFixtures.seed_matched!(@other_tenant, recipient: "theirs@example.com")
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
@@ -468,7 +472,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       # Regex subject matcher rendered as ~r/ form (route 2: ~r/^\[billing\]/).
       assert html =~ "~r/"
       # Wildcard clauses (nil matchers, e.g. the subject on route 1) render "any".
-      assert html =~ ">any<"
+      assert html =~ ~r/>\s*any\s*</
       # The recipient ACTUAL is masked, never raw.
       assert html =~ "n******@e******.com"
       refute html =~ "nomatch@example.com"
@@ -509,7 +513,9 @@ defmodule MailglassAdmin.InboundLiveTest do
   end
 
   describe "replay confirm flow (IADM-03)" do
-    test "confirming replay on a matched record appends a :replay ExecutionRun (V2)", %{conn: conn} do
+    test "confirming replay on a matched record appends a :replay ExecutionRun (V2)", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
 
       %{record: record} =
@@ -616,7 +622,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id,
+         %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)
@@ -655,7 +662,9 @@ defmodule MailglassAdmin.InboundLiveTest do
   end
 
   describe "brand-voice + PII sweep (IADM-06, V10/V5)" do
-    test "empty + no-selection states carry verbatim copy and no banned words (V10)", %{conn: conn} do
+    test "empty + no-selection states carry verbatim copy and no banned words (V10)", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
@@ -733,7 +742,10 @@ defmodule MailglassAdmin.InboundLiveTest do
         live(conn3, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => denied.id}))
 
       denied_html = render_click(view3, "confirm_replay", %{})
-      assert denied_html =~ "Replay blocked: this action is not authorized for the current operator."
+
+      assert denied_html =~
+               "Replay blocked: this action is not authorized for the current operator."
+
       refute_banned(denied_html)
     end
 

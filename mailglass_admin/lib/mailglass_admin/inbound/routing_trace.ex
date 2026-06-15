@@ -111,7 +111,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
   end
 
   # Renders the Expected matcher: nil → "any" (text-secondary), regex → ~r/.../,
-  # exact string verbatim — all wrapped so the test can assert ">any<".
+  # exact string verbatim — all wrapped in a mono chip.
   defp expected_markup(assigns, %{matcher_kind: :wildcard}) do
     ~H"""
     <span class="mono rounded-box border border-base-300 bg-base-100 px-2 py-1 text-label text-secondary">

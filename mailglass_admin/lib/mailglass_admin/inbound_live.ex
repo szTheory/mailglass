@@ -28,6 +28,7 @@ defmodule MailglassAdmin.InboundLive do
   alias MailglassAdmin.Inbound.DetailHeader
   alias MailglassAdmin.Inbound.EvidenceCard
   alias MailglassAdmin.Inbound.FiltersForm
+  alias MailglassAdmin.Inbound.Overview
   alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.Inbound.ReplayModal
   alias MailglassAdmin.Inbound.RoutingTrace
@@ -45,6 +46,19 @@ defmodule MailglassAdmin.InboundLive do
     {"Last 7 days", "168"},
     {"Last 30 days", "720"}
   ]
+  @zero_summary %{
+    total: 0,
+    outcomes: %{
+      no_match: 0,
+      accept: 0,
+      ignore: 0,
+      reject: 0,
+      bounce: 0,
+      failed: 0
+    },
+    unclassified: 0,
+    no_match_rate: 0.0
+  }
 
   @impl true
   def mount(_params, session, socket) do
@@ -70,6 +84,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign_new(:operator_actor, fn -> nil end)
      |> assign_new(:operator_auth, fn -> %{status: :unknown, recent_auth?: false} end)
      |> assign(:records, [])
+     |> assign(:inbound_summary, @zero_summary)
      |> assign(:selected_record, nil)
      |> assign(:detail, nil)
      |> assign(:runs, [])
@@ -297,6 +312,8 @@ defmodule MailglassAdmin.InboundLive do
         </.form>
       </section>
 
+      <Overview.overview summary={@inbound_summary} />
+
       <section
         data-testid="inbound-master-detail"
         class="mt-6 grid gap-lg lg:grid-cols-[minmax(22rem,28rem)_1fr]"
@@ -371,6 +388,7 @@ defmodule MailglassAdmin.InboundLive do
 
     socket
     |> assign(:records, records)
+    |> assign(:inbound_summary, load_inbound_summary(filter_params))
     |> assign(:selected_record, selected_record)
     |> assign(:detail, detail)
     |> assign(:runs, load_timeline(filter_params, selected_inbound_id))
@@ -508,6 +526,26 @@ defmodule MailglassAdmin.InboundLive do
     end
   end
 
+  defp load_inbound_summary(%{"tenant_id" => tenant_id})
+       when tenant_id in [nil, ""],
+       do: @zero_summary
+
+  defp load_inbound_summary(filter_params) do
+    if gateway_available?() do
+      summary_filters = %{
+        tenant_id: filter_params["tenant_id"],
+        provider: blank_to_nil(filter_params["provider"]),
+        window_hours:
+          parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
+        search: blank_to_nil(filter_params["search"])
+      }
+
+      apply(@gateway, :summary, [summary_filters, []])
+    else
+      @zero_summary
+    end
+  end
+
   defp load_detail(%{"tenant_id" => ""}, _selected_inbound_id), do: nil
   defp load_detail(_filter_params, nil), do: nil
 
@@ -549,7 +587,11 @@ defmodule MailglassAdmin.InboundLive do
   defp selected_record_struct(%{record: record}), do: record
 
   defp gateway_available? do
-    Code.ensure_loaded?(@gateway) and @gateway.available?()
+    inbound_gateway_enabled?() and Code.ensure_loaded?(@gateway) and @gateway.available?()
+  end
+
+  defp inbound_gateway_enabled? do
+    Application.get_env(:mailglass_admin, :inbound_gateway_available?, true)
   end
 
   # Rides the existing Auth.authorize/3 atom() action type with :reveal_raw — no
