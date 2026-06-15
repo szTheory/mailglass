@@ -17,7 +17,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
   def fields(assigns) do
     ~H"""
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label uppercase font-bold text-secondary">
         Tenant
       </span>
       <input
@@ -30,7 +30,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label uppercase font-bold text-secondary">
         Provider
       </span>
       <input
@@ -43,7 +43,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label uppercase font-bold text-secondary">
         Mailbox outcome
       </span>
       <select
@@ -52,7 +52,10 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
       >
         <option value="">Any outcome</option>
         <%= for outcome <- @outcome_values do %>
-          <option value={Atom.to_string(outcome)} selected={@form[:outcome].value == Atom.to_string(outcome)}>
+          <option
+            value={Atom.to_string(outcome)}
+            selected={@form[:outcome].value == Atom.to_string(outcome)}
+          >
             {label(outcome)}
           </option>
         <% end %>
@@ -60,8 +63,8 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
-        Window
+      <span class="mb-1 text-label uppercase font-bold text-secondary">
+        Time window
       </span>
       <select
         name={@form[:window_hours].name}
@@ -76,7 +79,7 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     </label>
 
     <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase tracking-[0.08em] text-secondary">
+      <span class="mb-1 text-label uppercase font-bold text-secondary">
         Search
       </span>
       <input

@@ -28,15 +28,15 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
         >
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
-              <h2 class="text-lg font-bold text-base-content">
+              <h2 class="text-heading font-bold text-base-content">
                 Replay inbound for {Components.mask_recipient(@record.envelope_recipient)}
               </h2>
               <p class="text-body text-secondary">
-                Replay inbound: This re-runs mailbox routing against the stored message and records a new replay run in the append-only ledger. Confirm to replay.
+                Re-runs Mailbox routing against the stored InboundMessage and records a new replay run in the append-only ledger. Confirm to replay.
               </p>
             </div>
 
-            <button type="button" phx-click="close_replay" class="btn btn-ghost btn-sm">
+            <button type="button" phx-click="close_replay" class="btn btn-ghost min-h-11 px-4">
               Close
             </button>
           </div>

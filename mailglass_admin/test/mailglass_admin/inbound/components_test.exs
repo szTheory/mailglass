@@ -428,7 +428,14 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
     test "uses token-clean labels and Time window copy" do
       form =
-        to_form(%{"tenant_id" => "", "provider" => "", "outcome" => "", "window_hours" => "168", "search" => ""},
+        to_form(
+          %{
+            "tenant_id" => "",
+            "provider" => "",
+            "outcome" => "",
+            "window_hours" => "168",
+            "search" => ""
+          },
           as: :filters
         )
 
@@ -436,7 +443,11 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         render_component(&FiltersForm.fields/1,
           form: form,
           outcome_values: ExecutionRun.__outcomes__(),
-          window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}, {"Last 30 days", "720"}]
+          window_options: [
+            {"Last 24 hours", "24"},
+            {"Last 7 days", "168"},
+            {"Last 30 days", "720"}
+          ]
         )
 
       assert html =~ "Time window"
