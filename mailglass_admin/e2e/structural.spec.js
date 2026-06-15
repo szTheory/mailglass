@@ -2,6 +2,8 @@ const { test, expect } = require("@playwright/test");
 
 // Mirrors operator.spec.js tenantId exactly
 const tenantId = "browser-tenant";
+const denyRevealTenantId = "deny-reveal";
+const baseURL = process.env.OPERATOR_BASE_URL || `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
 
 // Glass #277B96 in RGB form — the accent color that must only appear on allowlisted elements
 const ACCENT_LIGHT_RGB = "rgb(39, 123, 150)";
@@ -24,23 +26,34 @@ async function openOperator(page) {
   await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
 }
 
-async function loginOperator(page, returnTo, subjectId = "operator-1") {
+async function loginOperator(page, returnTo, subjectId = "operator-1", sessionTenantId = tenantId) {
   await page.context().clearCookies();
   const resetResponse = await page.request.get("/ops/browser-reset");
   expect(resetResponse.ok()).toBeTruthy();
 
-  const encodedReturnTo = encodeURIComponent(returnTo);
-  await page.goto(
-    `/ops/browser-login?tenant_id=${tenantId}&return_to=${encodedReturnTo}&subject_id=${subjectId}`
-  );
+  const loginParams = new URLSearchParams({
+    tenant_id: sessionTenantId,
+    return_to: returnTo,
+    subject_id: subjectId
+  });
+
+  const loginPath = `/ops/browser-login?${loginParams.toString()}`;
+  const loginURL = new URL(loginPath, baseURL).toString();
+  await page.goto(loginURL);
   await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`tenant_id=${sessionTenantId}`));
 }
 
 // Opens the Inbound surface (requires authenticated session from openOperator)
-async function openInbound(page, query = `tenant_id=${tenantId}`, subjectId = "operator-1") {
+async function openInbound(
+  page,
+  query = `tenant_id=${tenantId}`,
+  subjectId = "operator-1",
+  sessionTenantId = tenantId
+) {
   const path = query ? `/ops/mail/inbound?${query}` : "/ops/mail/inbound";
-  await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`, subjectId);
-  await page.goto(path);
+  await loginOperator(page, `/ops/mail?tenant_id=${sessionTenantId}`, subjectId, sessionTenantId);
+  await page.goto(new URL(path, baseURL).toString());
   await expect(page.getByRole("heading", { name: "Inbound records", level: 1 })).toBeVisible();
 }
 
@@ -93,6 +106,20 @@ function expectRatio(columns, expected, tolerance = 0.05) {
 }
 
 function parseRgbColor(value) {
+  const hex = String(value).trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hex) {
+    const digits = hex[1].length === 3
+      ? hex[1].split("").map(char => char + char).join("")
+      : hex[1];
+
+    return {
+      r: Number.parseInt(digits.slice(0, 2), 16) / 255,
+      g: Number.parseInt(digits.slice(2, 4), 16) / 255,
+      b: Number.parseInt(digits.slice(4, 6), 16) / 255,
+      a: 1
+    };
+  }
+
   const match = String(value).match(/rgba?\(([^)]+)\)/);
   if (!match) return null;
   const parts = match[1].split(",").map(part => Number.parseFloat(part.trim()));
@@ -122,6 +149,17 @@ function contrastRatio(foreground, background) {
 
 async function resolvedColors(locator) {
   return locator.first().evaluate(el => {
+    const normalizeColor = value => {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      if (!context) return value;
+
+      context.fillStyle = "#000000";
+      context.fillStyle = value;
+      return context.fillStyle;
+    };
+
     const transparent = value => {
       const match = String(value).match(/rgba?\(([^)]+)\)/);
       if (!match) return false;
@@ -139,10 +177,10 @@ async function resolvedColors(locator) {
     }
 
     return {
-      color: style.color,
-      backgroundColor,
-      borderColor: style.borderTopColor,
-      outlineColor: style.outlineColor
+      color: normalizeColor(style.color),
+      backgroundColor: normalizeColor(backgroundColor),
+      borderColor: normalizeColor(style.borderTopColor),
+      outlineColor: normalizeColor(style.outlineColor)
     };
   });
 }
@@ -492,7 +530,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     });
 
     test("Inbound: WCAG AA contrast matrix covers light/dark themes at 390/768/1440", async ({
-      page
+      page,
+      browser
     }) => {
       const themes = [
         { name: "light", query: "", expectedTheme: "mailglass-light" },
@@ -530,20 +569,20 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await page.getByTestId("inbound-evidence-reveal").click();
           await assertTextContrastAA(page.getByTestId("inbound-evidence-raw"), `${theme.name} ${viewport.width} inbound-evidence-raw`);
 
-          const deniedQuery = `tenant_id=${tenantId}${theme.query ? `&${theme.query}` : ""}`;
-          const deniedReturnTo = encodeURIComponent(`/ops/mail/inbound?${deniedQuery}`);
-          await page.context().clearCookies();
-          await page.goto(
-            `/ops/browser-login?tenant_id=deny-reveal&return_to=${deniedReturnTo}&subject_id=deny-reveal`
-          );
-          await page.goto(`/ops/mail/inbound?${deniedQuery}`);
-          await expect(page.getByRole("heading", { name: "Inbound records", level: 1 })).toBeVisible();
-          await noMatchRow(page).click();
-          await page.getByTestId("inbound-evidence-reveal").click();
-          if ((await page.getByTestId("inbound-evidence-denied").count()) > 0) {
-            await assertTextContrastAA(page.getByTestId("inbound-evidence-denied"), `${theme.name} ${viewport.width} inbound-evidence-denied`);
-          } else {
-            await assertTextContrastAA(page.getByTestId("inbound-evidence-raw"), `${theme.name} ${viewport.width} inbound-evidence-denied fallback raw`);
+          const deniedQuery = `tenant_id=${denyRevealTenantId}${theme.query ? `&${theme.query}` : ""}`;
+          const deniedContext = await browser.newContext();
+          const deniedPage = await deniedContext.newPage();
+
+          try {
+            await deniedPage.setViewportSize(viewport);
+            await openInbound(deniedPage, deniedQuery, "deny-reveal", denyRevealTenantId);
+            await noMatchRow(deniedPage).click();
+            await deniedPage.getByTestId("inbound-evidence-reveal").click();
+            await expect(deniedPage.getByTestId("inbound-evidence-denied")).toBeVisible();
+            await expect(deniedPage.getByTestId("inbound-evidence-raw")).toHaveCount(0);
+            await assertTextContrastAA(deniedPage.getByTestId("inbound-evidence-denied"), `${theme.name} ${viewport.width} inbound-evidence-denied`);
+          } finally {
+            await deniedContext.close();
           }
 
           await openInbound(page, theme.query, "operator-1");

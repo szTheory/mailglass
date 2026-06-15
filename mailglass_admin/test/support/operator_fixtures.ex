@@ -140,6 +140,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     })
 
     seed_inbound_matrix!()
+    seed_deny_reveal_inbound!()
 
     %{
       tenant_id: @tenant_id,
@@ -411,17 +412,34 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     %{accept: accept, no_match: no_match}
   end
 
+  defp seed_deny_reveal_inbound! do
+    seed_inbound_run_record!(
+      %{
+        tenant_id: "deny-reveal",
+        provider_message_id: "pm_deny_reveal_inbound_no_match",
+        envelope_recipient: "nomatch@deny-reveal.example",
+        subject: "denied reveal route question",
+        from: [%{"address" => "nomatch-sender@deny-reveal.example"}],
+        to: [%{"address" => "nomatch@deny-reveal.example"}],
+        headers: %{},
+        received_at: hours_ago(11)
+      },
+      outcome: :no_match,
+      mailbox: nil
+    )
+  end
+
   defp seed_inbound_run_record!(record_attrs, run_opts) do
     record = insert_inbound_record!(record_attrs)
-    evidence = insert_inbound_evidence!(record.id)
-    insert_inbound_run!(record.id, evidence.id, run_opts)
+    evidence = insert_inbound_evidence!(record.tenant_id, record.id)
+    insert_inbound_run!(record.tenant_id, record.id, evidence.id, run_opts)
     record
   end
 
   defp seed_inbound_run_record!(record_attrs) do
     record = insert_inbound_record!(record_attrs)
-    evidence = insert_inbound_evidence!(record.id)
-    insert_inbound_run!(record.id, evidence.id)
+    evidence = insert_inbound_evidence!(record.tenant_id, record.id)
+    insert_inbound_run!(record.tenant_id, record.id, evidence.id)
     record
   end
 
@@ -492,7 +510,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     %{id: row.id, tenant_id: row.tenant_id, subject: row.subject}
   end
 
-  defp insert_inbound_evidence!(inbound_record_id) do
+  defp insert_inbound_evidence!(tenant_id, inbound_record_id) do
     id = Ecto.UUID.generate()
     now = DateTime.utc_now()
 
@@ -509,7 +527,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
         """,
         [
           Ecto.UUID.dump!(id),
-          @tenant_id,
+          tenant_id,
           "postmark",
           Ecto.UUID.dump!(inbound_record_id),
           %{},
@@ -526,10 +544,10 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     %{id: id}
   end
 
-  defp insert_inbound_run!(inbound_record_id, inbound_evidence_id),
-    do: insert_inbound_run!(inbound_record_id, inbound_evidence_id, [])
+  defp insert_inbound_run!(tenant_id, inbound_record_id, inbound_evidence_id),
+    do: insert_inbound_run!(tenant_id, inbound_record_id, inbound_evidence_id, [])
 
-  defp insert_inbound_run!(inbound_record_id, inbound_evidence_id, opts) do
+  defp insert_inbound_run!(tenant_id, inbound_record_id, inbound_evidence_id, opts) do
     id = Ecto.UUID.generate()
     now = DateTime.utc_now()
     outcome = opts |> Keyword.get(:outcome, :accept) |> Atom.to_string()
@@ -549,7 +567,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
         """,
         [
           Ecto.UUID.dump!(id),
-          @tenant_id,
+          tenant_id,
           nil,
           mailbox,
           outcome,
@@ -589,7 +607,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       "provider_event_id" => child_provider_event_id,
       "webhook_event_id" => webhook_event.id,
       "webhook_provider_event_id" => webhook_event.provider_event_id,
-      "message_id" => provider_message_id,
+      "message_id" => provider_message_id
     }
   end
 

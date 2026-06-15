@@ -32,33 +32,40 @@ defmodule MailglassAdmin.TestAdopter.Router do
   Code.ensure_compiled!(MailglassAdmin.OptionalDeps.MailglassInbound)
 
   pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {MailglassAdmin.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_live_flash)
+    plug(:put_root_layout, html: {MailglassAdmin.Layouts, :root})
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
   end
 
   scope "/dev" do
-    pipe_through :browser
-    mailglass_admin_routes "/mail",
+    pipe_through(:browser)
+
+    mailglass_admin_routes("/mail",
       mailables: [
         :"Elixir.MailglassAdmin.Fixtures.HappyMailer",
         :"Elixir.MailglassAdmin.Fixtures.StubMailer",
         :"Elixir.MailglassAdmin.Fixtures.BrokenMailer"
       ]
+    )
   end
 
   scope "/ops" do
-    pipe_through :browser
+    pipe_through(:browser)
 
-    get "/browser-ready", MailglassAdmin.TestAdopter.BrowserSessionController, :ready
-    get "/browser-reset", MailglassAdmin.TestAdopter.BrowserSessionController, :reset
-    get "/browser-login", MailglassAdmin.TestAdopter.BrowserSessionController, :create
-    get "/browser-preview-empty", MailglassAdmin.TestAdopter.BrowserSessionController, :preview_empty
+    get("/browser-ready", MailglassAdmin.TestAdopter.BrowserSessionController, :ready)
+    get("/browser-reset", MailglassAdmin.TestAdopter.BrowserSessionController, :reset)
+    get("/browser-login", MailglassAdmin.TestAdopter.BrowserSessionController, :create)
 
-    mailglass_operator_routes "/mail",
+    get(
+      "/browser-preview-empty",
+      MailglassAdmin.TestAdopter.BrowserSessionController,
+      :preview_empty
+    )
+
+    mailglass_operator_routes("/mail",
       auth: MailglassAdmin.TestOperatorAuth,
       session: [
         subject_id: "current_user_id",
@@ -71,6 +78,7 @@ defmodule MailglassAdmin.TestAdopter.Router do
       # CONTEXT D-48-07: thread the synthetic inbound router so Wave 2's
       # routing-trace card has declared inbound routes to reflect.
       inbound_router: MailglassAdmin.TestSupport.InboundTestRouter
+    )
   end
 end
 
@@ -89,6 +97,9 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
   end
 
   def create(conn, params) do
+    conn = Plug.Conn.fetch_query_params(conn)
+    params = Map.merge(conn.query_params, params)
+
     tenant_id = Map.get(params, "tenant_id", "browser-tenant")
     return_to = Map.get(params, "return_to", "/ops/mail?tenant_id=#{tenant_id}")
     subject_id = Map.get(params, "subject_id", "operator-1")
@@ -100,6 +111,7 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
     |> Plug.Conn.put_session("tenant_id", tenant_id)
     |> Plug.Conn.put_session("auth_method", "password")
     |> Plug.Conn.put_session("recent_auth_at", now)
+    |> Plug.Conn.put_resp_header("cache-control", "no-store")
     |> Phoenix.Controller.redirect(to: return_to)
   end
 
@@ -222,12 +234,13 @@ defmodule MailglassAdmin.TestAdopter.Endpoint do
     same_site: "Lax"
   ]
 
-  socket "/live", Phoenix.LiveView.Socket,
+  socket("/live", Phoenix.LiveView.Socket,
     websocket: [connect_info: [session: @session_options], check_origin: false]
+  )
 
-  plug Plug.Session, @session_options
+  plug(Plug.Session, @session_options)
 
-  plug MailglassAdmin.TestAdopter.Router
+  plug(MailglassAdmin.TestAdopter.Router)
 end
 
 defmodule MailglassAdmin.TestAdopter.ErrorHTML do

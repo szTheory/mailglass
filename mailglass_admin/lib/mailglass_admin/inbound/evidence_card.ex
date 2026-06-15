@@ -22,9 +22,9 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
 
   use Phoenix.Component
 
-  attr :evidence, :map, default: nil
-  attr :reveal_state, :atom, default: :redacted
-  attr :can_reveal?, :boolean, default: true
+  attr(:evidence, :map, default: nil)
+  attr(:reveal_state, :atom, default: :redacted)
+  attr(:can_reveal?, :boolean, default: true)
 
   def evidence_card(assigns) do
     ~H"""
@@ -97,7 +97,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
           <% :denied -> %>
             <p
               data-testid="inbound-evidence-denied"
-              class="rounded-box border border-warning bg-warning/10 p-3 text-body text-base-content"
+              class="rounded-box border border-warning bg-base-100 p-3 text-body text-base-content"
             >
               Raw source not revealed: the reveal_raw capability is not granted for this operator.
             </p>
