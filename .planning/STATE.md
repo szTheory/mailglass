@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-15T03:02:14.544Z"
+last_updated: "2026-06-15T03:10:24.067Z"
 last_activity: 2026-06-15
 progress:
   total_phases: 12
   completed_phases: 7
   total_plans: 36
-  completed_plans: 32
+  completed_plans: 33
   percent: 58
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 ## Current Position
 
 Phase: 99 (inbound-surface) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-06-15
 Resume file: None
@@ -162,6 +162,9 @@ single closeout gate.
 - [Phase 99-01]: Summary totals are computed from tenant-scoped inbound records, not the capped list read model. — Phase 99 Plan 01 established the internal inbound summary seam required for GROUP-02.
 - [Phase 99-01]: The selected outcome filter is ignored for summary denominator and breakdown. — Phase 99 Plan 01 established the internal inbound summary seam required for GROUP-02.
 - [Phase 99-01]: Admin access to the summary stays behind the existing optional-dependency apply/3 gateway. — Phase 99 Plan 01 established the internal inbound summary seam required for GROUP-02.
+- [Phase 99]: [99-03] Admin CSS bundle is committed after class changes to preserve the bundle-clean gate.
+- [Phase 99]: [99-03] RoutingTrace keeps matcher verdict truth upstream and only changes presentation.
+- [Phase 99]: [99-03] EvidenceCard keeps raw payload bytes absent in redacted and denied states; :revealed is the only raw-rendering state.
 
 ## Performance Metrics
 
@@ -235,6 +238,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 98 P03 | 7 min | 3 tasks | 4 files |
 | Phase 98 P04 | 23 min | 3 tasks | 11 files |
 | Phase 99 P01 | 5 min | 2 tasks | 3 files |
+| Phase 99 P03 | 5 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
