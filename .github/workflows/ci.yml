@@ -406,9 +406,7 @@ jobs:
         # Script is BASH_SOURCE-anchored — cwd-independent, run from repo root.
         run: bash mailglass_admin/scripts/check-conformance.sh
       - name: Verify design-system conformance (advisory arms — TYPE-lg/xl + TRACK)
-        # Advisory until Phases 98/99 clean the 5 text-xl/lg and ~43 tracking-[0.08em] sites.
-        # continue-on-error keeps main green; flip to hard-fail in Phase 99 plan.
-        continue-on-error: true
+        # Phase 99 hard-fail gate for large type-scale and arbitrary tracking regressions.
         run: bash mailglass_admin/scripts/check-conformance-advisory.sh
       - name: Run Credo strict
         run: mix credo --strict
