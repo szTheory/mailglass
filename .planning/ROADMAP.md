@@ -253,7 +253,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 100-02-PLAN.md — Compose responsive Preview IA/groups, locked copy, hooks, touch targets, and rebuilt CSS.
+- [x] 100-02-PLAN.md — Compose responsive Preview IA/groups, locked copy, hooks, touch targets, and rebuilt CSS.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -313,7 +313,7 @@ Plans:
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
 | 99. Inbound Surface | 5/5 | Complete    | 2026-06-15 |
-| 100. Preview Surface | 1/3 | In Progress|  |
+| 100. Preview Surface | 2/3 | In Progress|  |
 | 101. Microcopy Pass | 0/? | Not started | - |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
 | 103. Verification + Idempotent Closeout | 0/? | Not started | - |
