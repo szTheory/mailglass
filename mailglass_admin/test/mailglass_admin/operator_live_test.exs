@@ -5,6 +5,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
   alias Mailglass.Events.Event
   alias Mailglass.IdempotencyKey
+  alias MailglassInbound.InboundRecords.ExecutionRun
+  alias MailglassInbound.InboundRecords.InboundRecord
   alias Mailglass.Outbound.Delivery
   alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.DeliveriesList
@@ -623,6 +625,75 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert List.first(deliveries).recipient == "browser-selected@example.com"
       assert List.last(deliveries).recipient == "browser-suppressed@example.com"
       assert List.last(deliveries).status == :suppressed
+    end
+
+    test "browser reset seeds the inbound outcome and missing-state matrix" do
+      %{tenant_id: tenant_id} = OperatorFixtures.seed_browser_scenario!()
+
+      records =
+        TestRepo.all(
+          from(record in InboundRecord,
+            where: record.tenant_id == ^tenant_id,
+            order_by: [desc: record.received_at]
+          )
+        )
+
+      assert Enum.count(records) >= 9
+      assert Enum.any?(records, &(&1.envelope_recipient == "nomatch@browser-scenario.example"))
+      assert Enum.any?(records, &(&1.subject == "general route question"))
+      assert Enum.any?(records, &(&1.suppression_flagged == true))
+      assert Enum.any?(records, &String.contains?(&1.subject || "", "extended context"))
+
+      outcomes =
+        TestRepo.all(
+          from(run in ExecutionRun,
+            where: run.tenant_id == ^tenant_id and run.source == :fresh,
+            select: run.outcome
+          )
+        )
+
+      assert :accept in outcomes
+      assert :no_match in outcomes
+      assert :reject in outcomes
+      assert :bounce in outcomes
+      assert :failed in outcomes
+
+      no_match_run =
+        TestRepo.one!(
+          from(run in ExecutionRun,
+            join: record in InboundRecord,
+            on: record.id == run.inbound_record_id,
+            where:
+              run.tenant_id == ^tenant_id and
+                record.envelope_recipient == "nomatch@browser-scenario.example",
+            select: run
+          )
+        )
+
+      assert no_match_run.outcome == :no_match
+      assert is_nil(no_match_run.mailbox)
+
+      assert TestRepo.exists?(
+               from(record in InboundRecord,
+                 where:
+                   record.tenant_id == ^tenant_id and
+                     record.provider_message_id == "pm_browser_inbound_no_run",
+                 left_join: run in ExecutionRun,
+                 on: run.inbound_record_id == record.id,
+                 where: is_nil(run.id)
+               )
+             )
+
+      assert TestRepo.exists?(
+               from(record in InboundRecord,
+                 where:
+                   record.tenant_id == ^tenant_id and
+                     record.provider_message_id == "pm_browser_inbound_missing_evidence",
+                 left_join: run in ExecutionRun,
+                 on: run.inbound_record_id == record.id,
+                 where: is_nil(run.inbound_evidence_id)
+               )
+             )
     end
   end
 
