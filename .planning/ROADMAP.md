@@ -216,7 +216,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 99-01-PLAN.md - Internal inbound summary seam + optional gateway.
+- [x] 99-01-PLAN.md - Internal inbound summary seam + optional gateway.
 - [ ] 99-03-PLAN.md - RoutingTrace/EvidenceCard group layout and token cleanup.
 
 **Wave 2** *(blocked on 99-01 completion)*
@@ -299,7 +299,7 @@ Plans:
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
-| 99. Inbound Surface | 0/? | Not started | - |
+| 99. Inbound Surface | 1/5 | In Progress|  |
 | 100. Preview Surface | 0/? | Not started | - |
 | 101. Microcopy Pass | 0/? | Not started | - |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |

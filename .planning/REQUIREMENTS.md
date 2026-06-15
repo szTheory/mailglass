@@ -101,7 +101,7 @@ quality forward.
 - [x] **GROUP-01**: Component groups (filter cards, master-detail split, support-card triage
   grid, timeline, detail pane, modal) compose with consistent, on-brand inter-group spacing
   and visual rhythm on every surface.
-- [ ] **GROUP-02**: An inbound overview / at-a-glance tier exists, mirroring the operator
+- [x] **GROUP-02**: An inbound overview / at-a-glance tier exists, mirroring the operator
   support-card triage pattern (closing the inbound "structurally thin" gap).
 - [ ] **GROUP-03**: The inbound `RoutingTrace` and `EvidenceCard` are reworked into scannable,
   on-token group layouts (aligned clause grid + mono chips on `surface-sunken`; a clear
@@ -210,7 +210,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | FLOW-02 | Phase 98 | Complete |
 | A11Y-01 | Phase 98 | Complete |
 | A11Y-02 | Phase 98 | Complete |
-| GROUP-02 | Phase 99 | Pending |
+| GROUP-02 | Phase 99 | Complete |
 | GROUP-03 | Phase 99 | Pending |
 | PAGE-03 | Phase 100 | Pending |
 | COPY-01 | Phase 101 | Pending |

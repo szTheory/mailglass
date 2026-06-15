@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-15T02:46:25.722Z"
-last_activity: 2026-06-15 -- Phase 99 planning complete
+last_updated: "2026-06-15T03:02:14.544Z"
+last_activity: 2026-06-15
 progress:
   total_phases: 12
   completed_phases: 7
   total_plans: 36
-  completed_plans: 31
+  completed_plans: 32
   percent: 58
 ---
 
@@ -20,15 +20,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 99 — inbound surface
+**Current focus:** Phase 99 — inbound-surface
 
 ## Current Position
 
-Phase: 99
-Plan: Not started
+Phase: 99 (inbound-surface) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-06-15 -- Phase 99 planning complete
-Resume file: .planning/phases/99-inbound-surface/99-UI-SPEC.md
+Last activity: 2026-06-15
+Resume file: None
 
 ## v1.11 Milestone Intent
 
@@ -159,6 +159,9 @@ single closeout gate.
 - [97-05]: border-l-2 replaces border-l-[3px] in both sidebar scenario_classes clauses — nearest Tailwind scale value, aligns with nav_link border-l-2 at shell.ex:207, arbitrary value removed (STATE-LD-22)
 - [Phase ?]: Phase 97 Plan 06: GalleryLive with complete specimen matrix
 - [97-08]: Flash testids use exact gallery state names (gallery-flash-error-kind not gallery-flash-error) — matched from gallery_live.ex @specimens; sidebar scenario keys must be atoms not strings for Atom.to_string/1; NaiveDateTime specimens must use UTC DateTime for format_datetime/1
+- [Phase 99-01]: Summary totals are computed from tenant-scoped inbound records, not the capped list read model. — Phase 99 Plan 01 established the internal inbound summary seam required for GROUP-02.
+- [Phase 99-01]: The selected outcome filter is ignored for summary denominator and breakdown. — Phase 99 Plan 01 established the internal inbound summary seam required for GROUP-02.
+- [Phase 99-01]: Admin access to the summary stays behind the existing optional-dependency apply/3 gateway. — Phase 99 Plan 01 established the internal inbound summary seam required for GROUP-02.
 
 ## Performance Metrics
 
@@ -231,6 +234,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 98 P02 | 8 min | 3 tasks | 3 files |
 | Phase 98 P03 | 7 min | 3 tasks | 4 files |
 | Phase 98 P04 | 23 min | 3 tasks | 11 files |
+| Phase 99 P01 | 5 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
