@@ -283,6 +283,58 @@ test.describe("operator browser gate", () => {
     await expect(page.locator(`#inbound-detail-${inboundId}`)).toBeVisible();
   });
 
+  test("why-did-inbound-not-route desktop exposes overview, routing trace, and redacted evidence", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+
+    const overview = page.getByTestId("inbound-overview");
+    await expect(overview).toBeVisible();
+    await expect(overview).toContainText("No-match rate");
+
+    const noMatchRow = page
+      .getByTestId("inbound-record-row")
+      .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+      .first();
+
+    await expect(noMatchRow).toContainText("No match");
+    await noMatchRow.click();
+
+    await expect(page).toHaveURL(/inbound_id=/);
+    await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
+    await expect(page.getByTestId("inbound-trace-clause")).not.toHaveCount(0);
+    await expect(page.getByTestId("inbound-evidence-card")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
+  });
+
+  test("why-did-inbound-not-route mobile selection swaps list for detail and back", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openOperator(page);
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+
+    const recordsCard = page.getByTestId("inbound-records-list-card");
+    await expect(recordsCard).toBeVisible();
+
+    await page
+      .getByTestId("inbound-record-row")
+      .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+      .first()
+      .click();
+
+    await expect(page).toHaveURL(/inbound_id=/);
+    await expect(recordsCard).toBeHidden();
+    await expect(page.getByTestId("inbound-detail-back")).toBeVisible();
+
+    await page.getByTestId("inbound-detail-back").click();
+    await expect(recordsCard).toBeVisible();
+    await expect(page).not.toHaveURL(/inbound_id=/);
+  });
+
   // VERIF-02: structural coverage for Operator Overview landing (D-05 / GAP-register sev-4 closeout)
   // Asserts the health-count cards container and navigation CTAs container are visible
   // when the tenant is scoped. Uses getByTestId for structural assertions (not pixel-based).
