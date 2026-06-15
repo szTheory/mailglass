@@ -113,7 +113,7 @@ quality forward.
   (gov.uk-style), orienting both first-time and advanced operators on landing.
 - [x] **PAGE-02**: Each page lays out its happy path, primary error states, and boundary/edge
   states coherently and on-brand.
-- [ ] **PAGE-03**: The Preview chrome gains full dark-mode support at parity with Operator and
+- [x] **PAGE-03**: The Preview chrome gains full dark-mode support at parity with Operator and
   Inbound (the previewed email keeps its own independent dark-chrome toggle).
 
 ### RESP — Responsive
@@ -212,7 +212,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | A11Y-02 | Phase 98 | Complete |
 | GROUP-02 | Phase 99 | Complete |
 | GROUP-03 | Phase 99 | Complete |
-| PAGE-03 | Phase 100 | Pending |
+| PAGE-03 | Phase 100 | Complete |
 | COPY-01 | Phase 101 | Pending |
 | MOTION-01 | Phase 102 | Pending |
 | MOTION-02 | Phase 102 | Pending |
