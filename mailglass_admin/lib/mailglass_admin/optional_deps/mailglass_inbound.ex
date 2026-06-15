@@ -38,6 +38,7 @@ if Code.ensure_loaded?(MailglassInbound) do
               [
                 MailglassInbound,
                 MailglassInbound.Internal.Operator.Records,
+                MailglassInbound.Internal.Operator.Summary,
                 MailglassInbound.Internal.Operator.Timeline,
                 MailglassInbound.Internal.Operator.Detail,
                 MailglassInbound.Router.Matcher,
@@ -59,6 +60,13 @@ if Code.ensure_loaded?(MailglassInbound) do
     @spec list_records(map() | keyword(), keyword()) :: [map()]
     def list_records(filters, opts \\ []) do
       apply(MailglassInbound.Internal.Operator.Records, :list_records, [filters, opts])
+    end
+
+    @doc "Tenant-scoped inbound overview summary for a tenant — routes to the inbound read-model."
+    @doc since: "0.2.0"
+    @spec summary(map() | keyword(), keyword()) :: map()
+    def summary(filters, opts \\ []) do
+      apply(MailglassInbound.Internal.Operator.Summary, :summarize, [filters, opts])
     end
 
     @doc "Execution-lineage timeline for one inbound record."
@@ -98,7 +106,9 @@ if Code.ensure_loaded?(MailglassInbound) do
     `router_module` is `nil` or does not export the reflection function.
     """
     @doc since: "0.2.0"
-    @spec explain_routes(module() | nil, struct()) :: [%{mailbox: String.t(), verdicts: [tuple()]}]
+    @spec explain_routes(module() | nil, struct()) :: [
+            %{mailbox: String.t(), verdicts: [tuple()]}
+          ]
     def explain_routes(nil, _record), do: []
 
     def explain_routes(router_module, record)
