@@ -68,8 +68,10 @@ defmodule MailglassAdmin.PreviewLive do
       |> assign(:current_scenario, nil)
       |> assign(:current_assigns, %{})
       |> assign(:device_width, 768)
-      |> assign(:dark_chrome, false)
+      |> assign(:admin_chrome_theme, nil)
+      |> assign(:preview_frame_dark_chrome, false)
       |> assign(:base_path, nil)
+      |> assign(:page_uri, nil)
       |> assign(:active_tab, :html)
       |> assign(:render_nonce, System.unique_integer([:positive]))
       |> assign(:html_body, "")
@@ -84,7 +86,7 @@ defmodule MailglassAdmin.PreviewLive do
 
   @impl true
   def handle_params(%{"mailable" => mod_str, "scenario" => name_str} = params, uri, socket) do
-    {device_width, theme} = normalize_capture_url_state(params, socket)
+    {device_width, admin_chrome_theme} = normalize_capture_url_state(params, socket)
     base_path = uri_path(uri)
 
     with {:ok, mailable} <- safe_mailable_atom(mod_str),
@@ -105,8 +107,9 @@ defmodule MailglassAdmin.PreviewLive do
         |> assign(:current_scenario, scenario)
         |> assign(:current_assigns, current_assigns)
         |> assign(:device_width, device_width)
-        |> assign(:dark_chrome, theme == "dark")
+        |> assign(:admin_chrome_theme, admin_chrome_theme)
         |> assign(:base_path, base_path)
+        |> assign(:page_uri, uri)
         |> assign(:page_title, "mailglass — " <> to_string(scenario))
         |> rerender()
 
@@ -120,8 +123,9 @@ defmodule MailglassAdmin.PreviewLive do
          |> assign(:current_mailable, mailable)
          |> assign(:current_scenario, :__error__)
          |> assign(:device_width, device_width)
-         |> assign(:dark_chrome, theme == "dark")
+         |> assign(:admin_chrome_theme, admin_chrome_theme)
          |> assign(:base_path, base_path)
+         |> assign(:page_uri, uri)
          |> assign(:render_error, msg)
          |> assign(:page_title, "mailglass — error")}
 
@@ -131,16 +135,19 @@ defmodule MailglassAdmin.PreviewLive do
          |> assign(:current_mailable, nil)
          |> assign(:current_scenario, nil)
          |> assign(:base_path, nil)
+         |> assign(:page_uri, uri)
          |> put_flash(:error, "Scenario not found")}
     end
   end
 
-  def handle_params(_params, _uri, socket) do
+  def handle_params(params, uri, socket) do
     {:noreply,
      socket
      |> assign(:current_mailable, nil)
      |> assign(:current_scenario, nil)
      |> assign(:base_path, nil)
+     |> assign(:admin_chrome_theme, parse_admin_chrome_theme(params["theme"]))
+     |> assign(:page_uri, uri)
      |> assign(:page_title, "mailglass — Preview")}
   end
 
@@ -164,11 +171,25 @@ defmodule MailglassAdmin.PreviewLive do
      |> sync_patch_capture_url_state()}
   end
 
-  def handle_event("toggle_dark", _params, socket) do
+  def handle_event("toggle_preview_frame_theme", _params, socket) do
     {:noreply,
-     socket
-     |> assign(:dark_chrome, not socket.assigns.dark_chrome)
-     |> sync_patch_capture_url_state()}
+     assign(
+       socket,
+       :preview_frame_dark_chrome,
+       not socket.assigns.preview_frame_dark_chrome
+     )}
+  end
+
+  def handle_event("toggle_theme", _params, socket) do
+    {:noreply,
+     push_patch(
+       socket,
+       to:
+         MailglassAdmin.Operator.Shell.toggle_theme_path(
+           socket.assigns.page_uri || "/dev/mail",
+           admin_chrome_dark?(socket.assigns.admin_chrome_theme)
+         )
+     )}
   end
 
   def handle_event("set_tab", %{"tab" => t}, socket) do
@@ -222,7 +243,8 @@ defmodule MailglassAdmin.PreviewLive do
   def render(assigns) do
     ~H"""
     <div
-      data-theme={if @dark_chrome, do: "mailglass-dark", else: "mailglass-light"}
+      data-testid="preview-shell"
+      data-theme={admin_theme_attr(@admin_chrome_theme)}
       class="min-h-screen bg-base-100 flex"
     >
       <aside class="w-80 bg-base-200 border-r border-base-300 p-6 hidden md:block">
@@ -231,7 +253,7 @@ defmodule MailglassAdmin.PreviewLive do
           current_mailable={@current_mailable}
           current_scenario={@current_scenario}
           device_width={@device_width}
-          dark_chrome={@dark_chrome}
+          admin_chrome_theme={@admin_chrome_theme}
         />
       </aside>
 
@@ -261,14 +283,31 @@ defmodule MailglassAdmin.PreviewLive do
                 <DeviceFrame.device_frame device_width={@device_width} />
                 <button
                   type="button"
-                  phx-click="toggle_dark"
+                  phx-click="toggle_theme"
                   aria-label={
-                    if @dark_chrome, do: "Switch to light mode", else: "Switch to dark mode"
+                    if admin_chrome_dark?(@admin_chrome_theme),
+                      do: "Switch admin chrome to light theme",
+                      else: "Switch admin chrome to dark theme"
                   }
                   class="btn btn-ghost btn-sm btn-square"
                 >
                   <Components.icon
-                    name={if @dark_chrome, do: "hero-sun", else: "hero-moon"}
+                    name={if admin_chrome_dark?(@admin_chrome_theme), do: "hero-sun", else: "hero-moon"}
+                    class="w-5 h-5"
+                  />
+                </button>
+                <button
+                  type="button"
+                  phx-click="toggle_preview_frame_theme"
+                  aria-label={
+                    if @preview_frame_dark_chrome,
+                      do: "Switch preview frame to light chrome",
+                      else: "Switch preview frame to dark chrome"
+                  }
+                  class="btn btn-ghost btn-sm btn-square"
+                >
+                  <Components.icon
+                    name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
                     class="w-5 h-5"
                   />
                 </button>
@@ -286,6 +325,7 @@ defmodule MailglassAdmin.PreviewLive do
                 headers={@headers}
                 device_width={@device_width}
                 render_nonce={@render_nonce}
+                preview_frame_dark_chrome={@preview_frame_dark_chrome}
               />
             </div>
           <% @mailables == [] -> %>
@@ -447,11 +487,18 @@ defmodule MailglassAdmin.PreviewLive do
 
   defp parse_device_width_param(_), do: 768
 
-  defp parse_theme_param("dark"), do: "dark"
-  defp parse_theme_param("light"), do: "light"
-  defp parse_theme_param("mailglass-dark"), do: "dark"
-  defp parse_theme_param("mailglass-light"), do: "light"
-  defp parse_theme_param(_), do: "light"
+  defp parse_admin_chrome_theme("dark"), do: :dark
+  defp parse_admin_chrome_theme("mailglass-dark"), do: :dark
+  defp parse_admin_chrome_theme("light"), do: :light
+  defp parse_admin_chrome_theme("mailglass-light"), do: :light
+  defp parse_admin_chrome_theme(_), do: nil
+
+  defp admin_theme_attr(:dark), do: "mailglass-dark"
+  defp admin_theme_attr(:light), do: "mailglass-light"
+  defp admin_theme_attr(_theme), do: nil
+
+  defp admin_chrome_dark?(:dark), do: true
+  defp admin_chrome_dark?(_theme), do: false
 
   defp normalize_capture_url_state(params, socket) do
     width =
@@ -460,13 +507,13 @@ defmodule MailglassAdmin.PreviewLive do
         :error -> socket.assigns.device_width
       end
 
-    theme =
+    admin_chrome_theme =
       case Map.fetch(params, "theme") do
-        {:ok, theme_param} -> parse_theme_param(theme_param)
-        :error -> theme_param(socket.assigns.dark_chrome)
+        {:ok, theme_param} -> parse_admin_chrome_theme(theme_param)
+        :error -> socket.assigns.admin_chrome_theme
       end
 
-    {width, theme}
+    {width, admin_chrome_theme}
   end
 
   defp sync_patch_capture_url_state(socket) do
@@ -481,7 +528,7 @@ defmodule MailglassAdmin.PreviewLive do
           build_capture_url(
             socket.assigns.base_path,
             Integer.to_string(socket.assigns.device_width),
-            theme_param(socket.assigns.dark_chrome)
+            theme_query_param(socket.assigns.admin_chrome_theme)
           )
       )
     else
@@ -489,11 +536,14 @@ defmodule MailglassAdmin.PreviewLive do
     end
   end
 
+  defp build_capture_url(base_path, width, nil), do: base_path <> "?width=" <> width
+
   defp build_capture_url(base_path, width, theme),
     do: base_path <> "?width=" <> width <> "&theme=" <> theme
 
-  defp theme_param(true), do: "dark"
-  defp theme_param(false), do: "light"
+  defp theme_query_param(:dark), do: "dark"
+  defp theme_query_param(:light), do: "light"
+  defp theme_query_param(_theme), do: nil
 
   defp uri_path(uri) when is_binary(uri) do
     case URI.parse(uri) do

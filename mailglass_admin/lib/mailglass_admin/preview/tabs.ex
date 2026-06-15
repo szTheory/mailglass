@@ -27,6 +27,7 @@ defmodule MailglassAdmin.Preview.Tabs do
   attr :headers, :list, default: []
   attr :device_width, :integer, default: 768
   attr :render_nonce, :integer, required: true
+  attr :preview_frame_dark_chrome, :boolean, default: false
 
   @doc """
   Renders the tab strip + the active tab's content pane.
@@ -91,6 +92,7 @@ defmodule MailglassAdmin.Preview.Tabs do
 
       <div
         id={"tab-panel-" <> Atom.to_string(@active_tab)}
+        data-preview-frame-theme={if @preview_frame_dark_chrome, do: "dark", else: "light"}
         role="tabpanel"
         aria-labelledby={"tab-btn-" <> Atom.to_string(@active_tab)}
         class="motion-tab-swap"

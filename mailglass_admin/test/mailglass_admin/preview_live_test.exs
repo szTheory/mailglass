@@ -146,7 +146,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
     end
 
     @tag :url_state
-    test "invalid width and invalid theme params fallback to deterministic defaults",
+    test "invalid width falls back and invalid theme leaves admin chrome unset",
          %{conn: conn} do
       invalid_path =
         "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=999&theme=unknown"
@@ -154,11 +154,12 @@ defmodule MailglassAdmin.PreviewLiveTest do
       {:ok, _view, html} = live(conn, invalid_path)
 
       assert html =~ "width: 768px"
-      assert html =~ ~s|data-theme="mailglass-light"|
+      refute html =~ ~s|data-theme="mailglass-light"|
+      refute html =~ ~s|data-theme="mailglass-dark"|
     end
 
     @tag :url_state
-    test "set_device and toggle_dark keep canonical width/theme URL params",
+    test "set_device and toggle_theme keep canonical width/theme URL params",
          %{conn: conn} do
       base_path = "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default"
       {:ok, view, _html} = live(conn, base_path <> "?width=768&theme=light")
@@ -166,8 +167,8 @@ defmodule MailglassAdmin.PreviewLiveTest do
       render_click(view, "set_device", %{"width" => "375"})
       assert_patch(view, base_path <> "?width=375&theme=light")
 
-      render_click(view, "toggle_dark", %{})
-      assert_patch(view, base_path <> "?width=375&theme=dark")
+      render_click(view, "toggle_theme", %{})
+      assert_patch(view, base_path <> "?theme=dark&width=375")
     end
   end
 

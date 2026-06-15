@@ -78,4 +78,21 @@ defmodule MailglassAdmin.Layouts do
       ""
     end
   end
+
+  defp root_theme(assigns) do
+    case assigns do
+      %{conn: %Plug.Conn{query_string: query_string}} ->
+        query_string
+        |> URI.decode_query()
+        |> Map.get("theme")
+        |> explicit_theme_attr()
+
+      _ ->
+        nil
+    end
+  end
+
+  defp explicit_theme_attr(theme) when theme in ["dark", "mailglass-dark"], do: "mailglass-dark"
+  defp explicit_theme_attr(theme) when theme in ["light", "mailglass-light"], do: "mailglass-light"
+  defp explicit_theme_attr(_theme), do: nil
 end

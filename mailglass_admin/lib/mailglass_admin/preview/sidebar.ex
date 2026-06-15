@@ -28,6 +28,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:current_scenario, :atom, default: nil)
   attr(:device_width, :integer, default: 768)
   attr(:dark_chrome, :boolean, default: false)
+  attr(:admin_chrome_theme, :atom, default: nil)
 
   @doc """
   Renders the mailable sidebar.
@@ -52,6 +53,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
               current_scenario={@current_scenario}
               device_width={@device_width}
               dark_chrome={@dark_chrome}
+              admin_chrome_theme={@admin_chrome_theme}
             />
           </li>
         <% end %>
@@ -66,6 +68,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:current_scenario, :atom, default: nil)
   attr(:device_width, :integer, default: 768)
   attr(:dark_chrome, :boolean, default: false)
+  attr(:admin_chrome_theme, :atom, default: nil)
 
   # Function component dispatched by reflection shape. Phoenix.Component
   # requires `def` (not `defp`) for `<.mailable_entry ... />` invocation.
@@ -79,7 +82,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
         <%= for {scenario_name, _defaults} <- @reflection do %>
           <li>
             <.link
-              patch={scenario_path(@mod, scenario_name, @device_width, @dark_chrome)}
+              patch={scenario_path(@mod, scenario_name, @device_width, @admin_chrome_theme)}
               class={[
                 "flex items-center gap-2 px-3 py-2 min-h-11 text-body truncate transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                 scenario_classes(@current_mailable, @current_scenario, @mod, scenario_name)
@@ -121,15 +124,19 @@ defmodule MailglassAdmin.Preview.Sidebar do
   # Relative path helpers — browser resolves against the current LiveView's
   # document URL, so these work under any adopter mount path (`/dev/mail`,
   # `/admin/preview`, etc.).
-  defp scenario_path(mod, scenario, width, dark_chrome) do
-    "./" <>
-      inspect(mod) <>
-      "/" <>
-      Atom.to_string(scenario) <>
-      "?width=" <>
-      Integer.to_string(width) <>
-      "&theme=" <>
-      theme_param(dark_chrome)
+  defp scenario_path(mod, scenario, width, admin_chrome_theme) do
+    path =
+      "./" <>
+        inspect(mod) <>
+        "/" <>
+        Atom.to_string(scenario) <>
+        "?width=" <>
+        Integer.to_string(width)
+
+    case theme_param(admin_chrome_theme) do
+      nil -> path
+      theme -> path <> "&theme=" <> theme
+    end
   end
 
   defp broken_path(mod) do
@@ -146,6 +153,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     "border-l-2 border-transparent text-secondary hover:bg-base-200"
   end
 
-  defp theme_param(true), do: "dark"
-  defp theme_param(false), do: "light"
+  defp theme_param(:dark), do: "dark"
+  defp theme_param(:light), do: "light"
+  defp theme_param(_theme), do: nil
 end
