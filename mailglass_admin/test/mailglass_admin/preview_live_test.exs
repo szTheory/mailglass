@@ -121,6 +121,21 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
   describe "URL capture state" do
     @tag :url_state
+    test "index route applies explicit admin chrome theme without forcing absent theme",
+         %{conn: conn} do
+      {:ok, _view, dark_html} = live(conn, "/dev/mail?theme=dark")
+      assert dark_html =~ ~s(data-testid="preview-shell")
+      assert dark_html =~ ~s|data-theme="mailglass-dark"|
+
+      {:ok, _view, light_html} = live(conn, "/dev/mail?theme=light")
+      assert light_html =~ ~s|data-theme="mailglass-light"|
+
+      {:ok, _view, default_html} = live(conn, "/dev/mail")
+      assert default_html =~ ~s(data-testid="preview-shell")
+      refute default_html =~ ~s|data-theme="mailglass-light"|
+    end
+
+    @tag :url_state
     test "width= and theme= URL params are applied on mount for scenario routes",
          %{conn: conn} do
       path = "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=375&theme=dark"
@@ -158,18 +173,18 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
   describe "dark toggle" do
     @tag :dark_toggle
-    test "dark chrome toggle flips data-theme on wrapper",
+    test "preview frame theme toggle does not mutate admin shell data-theme",
          %{conn: conn} do
       {:ok, view, html} =
-        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?theme=dark")
 
-      assert html =~ ~s|data-theme="mailglass-light"|,
-             "initial data-theme must be mailglass-light"
+      assert html =~ ~s|data-theme="mailglass-dark"|
+      assert html =~ ~s|data-preview-frame-theme="light"|
 
-      after_toggle = render_click(view, "toggle_dark", %{})
+      after_toggle = render_click(view, "toggle_preview_frame_theme", %{})
 
-      assert after_toggle =~ ~s|data-theme="mailglass-dark"|,
-             "data-theme must flip to mailglass-dark after toggle_dark event"
+      assert after_toggle =~ ~s|data-theme="mailglass-dark"|
+      assert after_toggle =~ ~s|data-preview-frame-theme="dark"|
     end
   end
 
