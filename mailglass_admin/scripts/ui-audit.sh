@@ -65,9 +65,9 @@ echo ""
 # ---------------------------------------------------------------------------
 # Preview surface (dev surface) — /dev/mail/
 # Trailing slash keeps relative stylesheet resolving correctly.
-# Preview has no theme param in the current routing contract; capture light
-# only (the theme param has no effect on this surface). Dark is included so
-# the gap register can note the absence if the surface ever gains dark support.
+# Preview admin chrome uses the same ?theme=dark|light URL contract as
+# Operator and Inbound. The previewed Message/frame theme remains independent
+# from this admin chrome capture state.
 # ---------------------------------------------------------------------------
 for vp in $VIEWPORTS; do
   for theme in light dark; do
@@ -75,7 +75,7 @@ for vp in $VIEWPORTS; do
     if [ "$theme" = "dark" ]; then
       shot "$BASE/dev/mail/?theme=dark" "preview-${vp}-dark"
     else
-      shot "$BASE/dev/mail/" "preview-${vp}-light"
+      shot "$BASE/dev/mail/?theme=light" "preview-${vp}-light"
     fi
   done
 done

@@ -58,9 +58,43 @@ async function openInbound(
 }
 
 // Opens the Preview surface via the test route that sets mailables=[] in the session
-async function openPreview(page) {
+async function openPreviewEmpty(page) {
   await page.goto("/ops/browser-preview-empty");
   await expect(page.getByTestId("preview-orientation")).toBeVisible();
+  await expect(page.getByTestId("preview-shell")).toBeVisible();
+  await expect(page.getByTestId("preview-empty-mailables")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No Mailables discovered", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Read preview setup", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Preview the first Mailable", exact: true })).toHaveCount(0);
+}
+
+async function openPreviewIndex(page, query = "") {
+  await page.context().clearCookies();
+  await page.goto(`/dev/mail/${query ? "?" + query : ""}`);
+  await expect(page.getByTestId("preview-shell")).toBeVisible();
+}
+
+async function openPreviewScenario(page, query = "theme=light") {
+  await page.context().clearCookies();
+  await page.goto(`/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default${query ? "?" + query : ""}`);
+  await expect(page.getByTestId("preview-shell")).toBeVisible();
+  await expect(page.getByTestId("preview-header-controls")).toBeVisible();
+  await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
+  await expect(page.getByTestId("preview-tab-strip")).toBeVisible();
+  await expect(page.getByTestId("preview-pane")).toBeVisible();
+}
+
+async function openPreviewError(page, query = "theme=light") {
+  await page.context().clearCookies();
+  await page.goto(`/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__${query ? "?" + query : ""}`);
+  await expect(page.getByTestId("preview-shell")).toBeVisible();
+  await expect(page.getByTestId("preview-render-error")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "preview_props/0 raised an error", exact: true })).toBeVisible();
+  await expect(page.getByText("Fix the error in")).toBeVisible();
+  await expect(
+    page.getByTestId("preview-render-error").getByText("MailglassAdmin.Fixtures.BrokenMailer", { exact: true })
+  ).toBeVisible();
+  await expect(page.getByText("and save the file to reload.")).toBeVisible();
 }
 
 // Opens the Gallery surface (dev-only, no auth required)
@@ -242,7 +276,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
     test("Preview: preview-orientation testId exists on browser-preview-empty route", async ({ page }) => {
       // openPreview already asserts preview-orientation is visible
-      await openPreview(page);
+      await openPreviewEmpty(page);
       await expect(page.getByTestId("preview-orientation")).toBeVisible();
     });
 
@@ -370,7 +404,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     });
 
     test("Preview: body text is 400", async ({ page }) => {
-      await openPreview(page);
+      await openPreviewEmpty(page);
 
       const bodyWeight = await page.locator("body").evaluate(
         el => getComputedStyle(el).fontWeight
@@ -599,6 +633,114 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   });
 
+  test.describe("preview state coverage, responsive theme matrix, and contrast", () => {
+
+    test("Preview: explicit light and dark index and scenario themes apply to shell", async ({ page }) => {
+      await openPreviewIndex(page, "theme=light");
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+
+      await openPreviewIndex(page, "theme=dark");
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+
+      await openPreviewScenario(page, "theme=light");
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+
+      await openPreviewScenario(page, "theme=dark");
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    });
+
+    test("Preview: 390px mobile Mailables navigation reaches a real scenario link", async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await openPreviewIndex(page, "theme=dark");
+
+      const mobileMailables = page.getByTestId("preview-mobile-mailables");
+      await expect(mobileMailables).toBeVisible();
+      await expect(mobileMailables.getByText("Mailables", { exact: true })).toBeVisible();
+      await expect(
+        mobileMailables.locator("a[href*='MailglassAdmin.Fixtures.HappyMailer/welcome_default']")
+      ).toHaveAttribute("href", /theme=dark/);
+    });
+
+    test("Preview: no-Mailables empty branch exposes setup action only", async ({ page }) => {
+      await openPreviewEmpty(page);
+      await expect(page.getByTestId("preview-empty-mailables")).toBeVisible();
+      await expect(page.getByRole("link", { name: "Read preview setup", exact: true })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Preview the first Mailable", exact: true })).toHaveCount(0);
+    });
+
+    test("Preview: BrokenMailer render-error branch names recovery target", async ({ page }) => {
+      await openPreviewError(page);
+      await expect(page.getByTestId("preview-render-error")).toBeVisible();
+      await expect(page.getByText("Something went wrong")).toHaveCount(0);
+    });
+
+    test("Preview: start, empty, scenario, and render-error branches expose exactly one h1", async ({ page }) => {
+      await openPreviewIndex(page, "theme=light");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+
+      await openPreviewEmpty(page);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+
+      await openPreviewScenario(page, "theme=light");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+
+      await openPreviewError(page, "theme=light");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    });
+
+    test("Preview: admin chrome and preview frame toggles are independent", async ({ page }) => {
+      await openPreviewScenario(page, "theme=light");
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "light");
+
+      await page.getByTestId("preview-frame-theme-toggle").click();
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
+      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
+
+      await page.getByTestId("preview-admin-theme-toggle").click();
+      await expect(page).toHaveURL(/theme=dark/);
+      await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
+    });
+
+    test("Preview: WCAG AA contrast matrix covers light/dark themes at 390/768/1440", async ({ page }) => {
+      const themes = [
+        { name: "light", query: "theme=light", expectedTheme: "mailglass-light" },
+        { name: "dark", query: "theme=dark", expectedTheme: "mailglass-dark" }
+      ];
+      const viewports = [
+        { width: 390, height: 844 },
+        { width: 768, height: 900 },
+        { width: 1440, height: 1000 }
+      ];
+
+      for (const theme of themes) {
+        for (const viewport of viewports) {
+          await page.setViewportSize(viewport);
+          await openPreviewScenario(page, theme.query);
+          await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", theme.expectedTheme);
+          await assertTextContrastAA(page.getByTestId("preview-shell"), `${theme.name} ${viewport.width} preview-shell`);
+
+          const nav =
+            viewport.width < 768
+              ? page.getByTestId("preview-mobile-mailables")
+              : page.getByTestId("preview-sidebar-desktop");
+
+          await assertTextContrastAA(nav, `${theme.name} ${viewport.width} preview-mailables`);
+          await assertTextContrastAA(page.getByTestId("preview-header-controls"), `${theme.name} ${viewport.width} preview-header-controls`);
+          await assertTextContrastAA(page.getByTestId("preview-assigns-form"), `${theme.name} ${viewport.width} preview-assigns-form`);
+          await assertTextContrastAA(page.getByTestId("preview-tab-strip"), `${theme.name} ${viewport.width} preview-tab-strip`);
+          await assertTextContrastAA(page.getByTestId("preview-pane"), `${theme.name} ${viewport.width} preview-pane`);
+
+          const frameToggle = page.getByTestId("preview-frame-theme-toggle");
+          await frameToggle.focus();
+          await assertNonTextContrastAA(frameToggle, `${theme.name} ${viewport.width} preview-frame-toggle-focus`);
+        }
+      }
+    });
+
+  });
+
   // =========================================================================
   // FACT 4 — Reduced-motion suppresses animation (Motion+A11y pillar)
   // Gate: fail-on-any-violation (a11y requirement)
@@ -659,7 +801,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     });
 
     test("Preview: first link or button has non-zero outlineWidth on focus", async ({ page }) => {
-      await openPreview(page);
+      await openPreviewEmpty(page);
 
       const links = page.getByRole("link");
       const buttons = page.getByRole("button");
@@ -739,7 +881,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     });
 
     test("Preview: non-allowlisted elements do not carry the accent color", async ({ page }) => {
-      await openPreview(page);
+      await openPreviewEmpty(page);
 
       const elementLocators = [
         page.locator("body"),
