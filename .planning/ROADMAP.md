@@ -225,7 +225,7 @@ Plans:
 
 **Wave 3** *(blocked on 99-02 and 99-03 completion)*
 
-- [ ] 99-04-PLAN.md - Single-seed inbound browser reachability plus responsive/JTBD assertions.
+- [x] 99-04-PLAN.md - Single-seed inbound browser reachability plus responsive/JTBD assertions.
 
 **Wave 4** *(blocked on 99-04 completion)*
 
@@ -299,7 +299,7 @@ Plans:
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
-| 99. Inbound Surface | 3/5 | In Progress|  |
+| 99. Inbound Surface | 4/5 | In Progress|  |
 | 100. Preview Surface | 0/? | Not started | - |
 | 101. Microcopy Pass | 0/? | Not started | - |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |

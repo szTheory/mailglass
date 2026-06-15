@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-15T03:24:00.184Z"
+last_updated: "2026-06-15T04:19:09.660Z"
 last_activity: 2026-06-15
 progress:
   total_phases: 12
   completed_phases: 7
   total_plans: 36
-  completed_plans: 34
+  completed_plans: 35
   percent: 58
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-13 — after v1.10 "Brand Adoption" c
 ## Current Position
 
 Phase: 99 (inbound-surface) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-06-15
 Resume file: None
@@ -165,6 +165,9 @@ single closeout gate.
 - [Phase 99]: [99-03] Admin CSS bundle is committed after class changes to preserve the bundle-clean gate.
 - [Phase 99]: [99-03] RoutingTrace keeps matcher verdict truth upstream and only changes presentation.
 - [Phase 99]: [99-03] EvidenceCard keeps raw payload bytes absent in redacted and denied states; :revealed is the only raw-rendering state.
+- [Phase 99]: [99-04] Inbound browser state coverage stays on the existing `/ops/browser-reset` path; no second seed endpoint was added.
+- [Phase 99]: [99-04] No-match browser row selection uses the visible `No match` status badge because the list intentionally omits subject text.
+- [Phase 99]: [99-04] Malformed inbound IDs now render the existing detail-error state instead of reaching the UUID-cast query path.
 
 ## Performance Metrics
 
@@ -240,6 +243,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 99 P01 | 5 min | 2 tasks | 3 files |
 | Phase 99 P03 | 5 min | 3 tasks | 6 files |
 | Phase 99 P02 | 10 min | 3 tasks | 5 files |
+| Phase 99 P04 | 51 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
