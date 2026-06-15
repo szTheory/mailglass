@@ -244,7 +244,20 @@ Plans:
   3. The Preview surface composes its component groups with consistent on-brand rhythm, follows least-surprise IA on landing, and is legible/usable at 390/768/1440.
   4. The preview-a-message-before-send JTBD flow validates end-to-end, with empty/loading states on-brand and a11y + WCAG-AA met in both themes.
 
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+
+**Wave 1**
+
+- [ ] 100-01-PLAN.md — Split Preview admin chrome theme from previewed Message/frame theme.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 100-02-PLAN.md — Compose responsive Preview IA/groups, locked copy, hooks, touch targets, and rebuilt CSS.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 100-03-PLAN.md — Add Preview structural/audit proof and close GAP-02/GAP-03.
 **UI hint**: yes
 
 ### Phase 101: Microcopy Pass
@@ -300,7 +313,7 @@ Plans:
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
 | 99. Inbound Surface | 5/5 | Complete    | 2026-06-15 |
-| 100. Preview Surface | 0/? | Not started | - |
+| 100. Preview Surface | 0/3 | Not started | - |
 | 101. Microcopy Pass | 0/? | Not started | - |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
 | 103. Verification + Idempotent Closeout | 0/? | Not started | - |
