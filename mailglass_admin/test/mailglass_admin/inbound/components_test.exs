@@ -15,6 +15,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   import Phoenix.Component, only: [to_form: 2]
 
   alias MailglassAdmin.Inbound.DetailHeader
+  alias MailglassAdmin.Inbound.EvidenceCard
   alias MailglassAdmin.Inbound.FiltersForm
   alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.Inbound.ReplayModal
@@ -344,6 +345,54 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Actual"
       refute html =~ "nomatch@example.com"
       assert html =~ "n******@e******.com"
+    end
+  end
+
+  describe "EvidenceCard.evidence_card/1" do
+    test "redacted and denied states keep raw payload absent while revealed shows it" do
+      evidence = %{
+        provider: "mailgun",
+        raw_payload: %{"body" => "secret-raw-payload-99-03"},
+        raw_headers: %{"x-mailglass-signature" => "ok"},
+        verification_facts: %{"signature" => "verified", "dkim" => true}
+      }
+
+      redacted_html =
+        render_component(&EvidenceCard.evidence_card/1,
+          evidence: evidence,
+          reveal_state: :redacted
+        )
+
+      assert redacted_html =~ ~s(data-testid="inbound-evidence-redacted")
+      assert redacted_html =~ ~s(data-testid="inbound-evidence-reveal")
+      assert redacted_html =~ "Raw source locked"
+      assert redacted_html =~ "Provider"
+      assert redacted_html =~ "Payload size"
+      assert redacted_html =~ "Header count"
+      assert redacted_html =~ "Verification facts"
+      assert redacted_html =~ "bg-base-100"
+      assert redacted_html =~ "min-h-11"
+      refute redacted_html =~ ~s(data-testid="inbound-evidence-raw")
+      refute redacted_html =~ "secret-raw-payload-99-03"
+
+      denied_html =
+        render_component(&EvidenceCard.evidence_card/1,
+          evidence: evidence,
+          reveal_state: :denied
+        )
+
+      assert denied_html =~ ~s(data-testid="inbound-evidence-denied")
+      refute denied_html =~ ~s(data-testid="inbound-evidence-raw")
+      refute denied_html =~ "secret-raw-payload-99-03"
+
+      revealed_html =
+        render_component(&EvidenceCard.evidence_card/1,
+          evidence: evidence,
+          reveal_state: :revealed
+        )
+
+      assert revealed_html =~ ~s(data-testid="inbound-evidence-raw")
+      assert revealed_html =~ "secret-raw-payload-99-03"
     end
   end
 
