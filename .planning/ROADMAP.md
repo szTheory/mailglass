@@ -40,7 +40,7 @@ prepare-only.
 - [x] **Phase 96: Research Dossier** - parallel-subagent dossiers → locked decisions for motion (Emil Kowalski), IA (gov.uk), component states, dark mode, microcopy. (completed 2026-06-14)
 - [x] **Phase 97: Cross-Surface Component Layer** - Level-1 uplift of SHARED components + dev-only component gallery (`/dev/mail/gallery`). UI-SPEC before, UI-REVIEW after. (completed 2026-06-14)
 - [x] **Phase 98: Operator / Deliveries Surface** - group + page/IA + responsive + flow uplift of `/ops/mail`; seed data tuned for happy/error/boundary; anchors the cross-surface GROUP/PAGE/RESP/FLOW/A11Y requirements. (completed 2026-06-14)
-- [ ] **Phase 99: Inbound Surface** - heaviest lift: add inbound overview tier, rework RoutingTrace + EvidenceCard, empty/loading states, text-xl→token fixes; re-applies cross-surface uplift to `/ops/mail/inbound`.
+- [x] **Phase 99: Inbound Surface** - heaviest lift: add inbound overview tier, rework RoutingTrace + EvidenceCard, empty/loading states, text-xl→token fixes; re-applies cross-surface uplift to `/ops/mail/inbound`. (completed 2026-06-15)
 - [ ] **Phase 100: Preview Surface** - group + page/IA + responsive uplift of `/dev/mail`; add dark-mode support to the preview chrome.
 - [ ] **Phase 101: Microcopy Pass** - global "thoughtful maintainer" microcopy across all 3 settled surfaces.
 - [ ] **Phase 102: Motion + Micro-interaction Pass** - global motion uplift within hard constraints, sourced from the Phase 96 dossier.
@@ -229,7 +229,7 @@ Plans:
 
 **Wave 4** *(blocked on 99-04 completion)*
 
-- [ ] 99-05-PLAN.md - Fail-closed type/tracking conformance gate and rebuilt bundle.
+- [x] 99-05-PLAN.md - Fail-closed type/tracking conformance gate and rebuilt bundle.
 **UI hint**: yes
 
 ### Phase 100: Preview Surface
@@ -299,7 +299,7 @@ Plans:
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
-| 99. Inbound Surface | 4/5 | In Progress|  |
+| 99. Inbound Surface | 5/5 | Complete   | 2026-06-15 |
 | 100. Preview Surface | 0/? | Not started | - |
 | 101. Microcopy Pass | 0/? | Not started | - |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
