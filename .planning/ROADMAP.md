@@ -299,7 +299,7 @@ Plans:
 | 96. Research Dossier | 6/6 | Complete   | 2026-06-14 |
 | 97. Cross-Surface Component Layer | 8/8 | Complete    | 2026-06-14 |
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
-| 99. Inbound Surface | 5/5 | Complete   | 2026-06-15 |
+| 99. Inbound Surface | 5/5 | Complete    | 2026-06-15 |
 | 100. Preview Surface | 0/? | Not started | - |
 | 101. Microcopy Pass | 0/? | Not started | - |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
