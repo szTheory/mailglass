@@ -75,12 +75,13 @@ landing + email specimens, four portable SVGs, and a domain-noun copy library.
 
 ## Current State
 
-**v1.11 progress:** Phases 94-99 are complete. Phase 99 verified the Inbound
-surface uplift for `/ops/mail/inbound`: summary-backed overview tier, responsive
-master-detail IA, RoutingTrace/EvidenceCard group layouts, deterministic denied
-raw-source coverage, empty/error/loading state coverage, and fail-closed type/tracking
-conformance are now in place. Next active work is Phase 100 (Preview Surface), which
-reapplies the cross-cutting page/IA/responsive/a11y requirements to `/dev/mail`.
+**v1.11 progress:** Phases 94-100 are complete. Phase 100 verified the Preview
+surface uplift for `/dev/mail`: URL-owned light/dark admin chrome, independent
+preview-frame theme state, mobile-reachable Mailables navigation, locked Preview
+copy, responsive structural hooks, WCAG-AA browser proof, updated audit captures,
+and GAP-02/GAP-03 closure are now in place. Next active work is Phase 101
+(Microcopy Pass), which applies the global "thoughtful maintainer" voice pass
+across the settled Operator, Inbound, and Preview surfaces.
 
 **v1.10 progress:** All three phases (91, 92, 93) are complete — v1.10's active
 scope is finished (999.1/999.2 remain backlog, promoted separately). The fable
