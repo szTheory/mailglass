@@ -41,7 +41,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   def sidebar(assigns) do
     ~H"""
     <div class="space-y-4">
-      <h1 class="text-body font-bold text-base-content tracking-tight">Mailers</h1>
+      <h2 class="text-body font-bold text-base-content">Mailables</h2>
 
       <ul class="space-y-1">
         <%= for {mod, reflection} <- @mailables do %>

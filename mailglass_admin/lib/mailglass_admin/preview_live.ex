@@ -6,9 +6,9 @@ defmodule MailglassAdmin.PreviewLive do
   actions:
 
     * `:index` at `/` — no scenario selected. Renders the start page: a
-      value statement, a "Preview the first one" deep link, and a legend of
+      value statement, a "Preview the first Mailable" deep link, and a legend of
       the tool's affordances. When auto-scan finds zero mailables, renders the
-      actionable "No mailables discovered" empty state instead.
+      actionable "No Mailables discovered" empty state instead.
     * `:show` at `/:mailable/:scenario` — renders the full preview:
       sidebar, main pane header, device + dark toggles, assigns form,
       HTML/Text/Raw/Headers tab strip.
@@ -245,78 +245,99 @@ defmodule MailglassAdmin.PreviewLive do
     <div
       data-testid="preview-shell"
       data-theme={admin_theme_attr(@admin_chrome_theme)}
-      class="min-h-screen bg-base-100 flex"
+      class="min-h-screen bg-base-100 text-base-content px-md py-lg md:px-lg md:py-xl"
     >
-      <aside class="w-80 bg-base-200 border-r border-base-300 p-6 hidden md:block">
-        <Sidebar.sidebar
-          mailables={@mailables}
-          current_mailable={@current_mailable}
-          current_scenario={@current_scenario}
-          device_width={@device_width}
-          admin_chrome_theme={@admin_chrome_theme}
-        />
-      </aside>
+      <div class="grid gap-lg md:grid-cols-[20rem_1fr]">
+        <aside
+          data-testid="preview-sidebar-desktop"
+          class="hidden md:block rounded-box border border-base-300 bg-base-200 p-md"
+        >
+          <Sidebar.sidebar
+            mailables={@mailables}
+            current_mailable={@current_mailable}
+            current_scenario={@current_scenario}
+            device_width={@device_width}
+            admin_chrome_theme={@admin_chrome_theme}
+          />
+        </aside>
 
-      <main class="flex-1 p-8">
-        <%= cond do %>
-          <% @render_error -> %>
-            <div class="card border-2 border-error bg-base-100 p-6 rounded-box max-w-prose mx-auto">
-              <div class="flex items-center gap-2 mb-3">
-                <Components.icon name="hero-exclamation-circle" class="w-5 h-5 text-error" />
-                <h2 class="text-body font-bold text-base-content">
-                  preview_props/0 raised an error
-                </h2>
+        <main class="min-w-0 space-y-lg">
+          <section
+            data-testid="preview-mobile-mailables"
+            class="md:hidden rounded-box border border-base-300 bg-base-200 p-md"
+          >
+            <Sidebar.sidebar
+              mailables={@mailables}
+              current_mailable={@current_mailable}
+              current_scenario={@current_scenario}
+              device_width={@device_width}
+              admin_chrome_theme={@admin_chrome_theme}
+            />
+          </section>
+
+          <%= cond do %>
+            <% @render_error -> %>
+              <div
+                data-testid="preview-render-error"
+                class="rounded-box border-2 border-error bg-base-200 p-lg"
+              >
+                <div class="flex items-center gap-sm mb-md">
+                  <Components.icon name="hero-exclamation-circle" class="w-5 h-5 text-error" />
+                  <h1 class="text-heading font-bold text-base-content">
+                    preview_props/0 raised an error
+                  </h1>
+                </div>
+                <p class="text-body text-secondary">
+                  Fix the error in <code class="font-mono text-label">{inspect(@current_mailable)}</code>
+                  and save the file to reload.
+                </p>
+                <pre class="mt-md font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
               </div>
-              <pre class="font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-200 p-3 rounded">{@render_error}</pre>
-              <p class="mt-3 text-body text-secondary">
-                Fix the error in <code class="font-mono text-label">{inspect(@current_mailable)}</code>
-                and save the file to reload.
-              </p>
-            </div>
-          <% @current_scenario -> %>
-            <header class="flex items-center justify-between mb-6 gap-md flex-wrap">
-              <h1 class="text-heading font-bold text-base-content tracking-tight">
-                {inspect(@current_mailable)}
-                <span class="text-secondary font-normal">· {@current_scenario}</span>
-              </h1>
-              <div class="flex gap-md items-center">
-                <DeviceFrame.device_frame device_width={@device_width} />
-                <button
-                  type="button"
-                  phx-click="toggle_theme"
-                  aria-label={
-                    if admin_chrome_dark?(@admin_chrome_theme),
-                      do: "Switch admin chrome to light theme",
-                      else: "Switch admin chrome to dark theme"
-                  }
-                  class="btn btn-ghost btn-sm btn-square"
-                >
-                  <Components.icon
-                    name={if admin_chrome_dark?(@admin_chrome_theme), do: "hero-sun", else: "hero-moon"}
-                    class="w-5 h-5"
-                  />
-                </button>
-                <button
-                  type="button"
-                  phx-click="toggle_preview_frame_theme"
-                  aria-label={
-                    if @preview_frame_dark_chrome,
-                      do: "Switch preview frame to light chrome",
-                      else: "Switch preview frame to dark chrome"
-                  }
-                  class="btn btn-ghost btn-sm btn-square"
-                >
-                  <Components.icon
-                    name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
-                    class="w-5 h-5"
-                  />
-                </button>
-              </div>
-            </header>
+            <% @current_scenario -> %>
+              <header class="flex items-start justify-between gap-md flex-wrap">
+                <h1 class="text-heading font-bold text-base-content">
+                  {inspect(@current_mailable)}
+                  <span class="text-secondary font-normal">· {@current_scenario}</span>
+                </h1>
+                <div data-testid="preview-header-controls" class="flex gap-sm items-center">
+                  <DeviceFrame.device_frame device_width={@device_width} />
+                  <button
+                    type="button"
+                    data-testid="preview-admin-theme-toggle"
+                    phx-click="toggle_theme"
+                    aria-label={
+                      if admin_chrome_dark?(@admin_chrome_theme),
+                        do: "Switch admin chrome to light theme",
+                        else: "Switch admin chrome to dark theme"
+                    }
+                    class="btn btn-ghost btn-sm btn-square min-h-11 focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <Components.icon
+                      name={if admin_chrome_dark?(@admin_chrome_theme), do: "hero-sun", else: "hero-moon"}
+                      class="w-5 h-5"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="preview-frame-theme-toggle"
+                    phx-click="toggle_preview_frame_theme"
+                    aria-label={
+                      if @preview_frame_dark_chrome,
+                        do: "Switch preview frame to light chrome",
+                        else: "Switch preview frame to dark chrome"
+                    }
+                    class="btn btn-ghost btn-sm btn-square min-h-11 focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <Components.icon
+                      name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
+                      class="w-5 h-5"
+                    />
+                  </button>
+                </div>
+              </header>
 
-            <AssignsForm.assigns_form scenario_assigns={@current_assigns} />
+              <AssignsForm.assigns_form scenario_assigns={@current_assigns} />
 
-            <div class="mt-6">
               <Tabs.tabs
                 active_tab={@active_tab}
                 html_body={@html_body}
@@ -327,84 +348,85 @@ defmodule MailglassAdmin.PreviewLive do
                 render_nonce={@render_nonce}
                 preview_frame_dark_chrome={@preview_frame_dark_chrome}
               />
-            </div>
-          <% @mailables == [] -> %>
-            <MailglassAdmin.Operator.Shell.orientation_strip surface={:preview} />
-            <div
-              data-testid="preview-empty-mailables"
-              class="card mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-8"
-            >
-              <Components.icon name="hero-magnifying-glass" class="mb-3 h-10 w-10 text-secondary" />
-              <h2 class="mb-2 text-heading font-bold text-base-content">No mailables discovered</h2>
-              <p class="text-body text-secondary">
-                Preview scans loaded modules that <code class="mono text-label">use Mailglass.Mailable</code>.
-                Nothing was found yet.
-              </p>
-              <ul class="mt-4 grid gap-2 text-body text-secondary">
-                <li class="flex items-start gap-2">
-                  <Components.icon
-                    name="hero-check-circle"
-                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                  />
-                  <span>
-                    Confirm the module calls <code class="mono text-label">use Mailglass.Mailable</code>
-                    and is compiled and loaded.
-                  </span>
-                </li>
-                <li class="flex items-start gap-2">
-                  <Components.icon
-                    name="hero-check-circle"
-                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                  />
-                  <span>
-                    Or pass an explicit list to the router: <code class="mono text-label">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
-                  </span>
-                </li>
-              </ul>
-              <a
-                href="https://hexdocs.pm/mailglass_admin/MailglassAdmin.Router.html"
-                class="btn btn-ghost mt-5 min-h-11 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+            <% @mailables == [] -> %>
+              <MailglassAdmin.Operator.Shell.orientation_strip surface={:preview} />
+              <div
+                data-testid="preview-empty-mailables"
+                class="mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-lg"
               >
-                Read preview setup
-              </a>
-            </div>
-          <% true -> %>
-            <div class="mx-auto max-w-prose space-y-6">
-              <div class="card rounded-box border border-base-300 bg-base-200 p-8">
-                <Components.icon name="hero-envelope-open" class="mb-3 h-10 w-10 text-primary" />
-                <h2 class="mb-2 text-heading font-bold text-base-content">
-                  Render a real message before you send it
-                </h2>
+                <Components.icon name="hero-magnifying-glass" class="mb-md h-10 w-10 text-secondary" />
+                <h1 class="mb-sm text-heading font-bold text-base-content">No Mailables discovered</h1>
                 <p class="text-body text-secondary">
-                  Pick a mailer from the sidebar to render it through the same pipeline your
-                  production sends use — then inspect every part of the result.
+                  Preview scans loaded modules that use Mailglass.Mailable. Nothing was found yet.
                 </p>
-                <.link
-                  :if={first_previewable(@mailables)}
-                  patch={first_scenario_path(@mailables)}
-                  class="btn btn-primary mt-5 min-h-11"
+                <ul class="mt-md grid gap-sm text-body text-secondary">
+                  <li class="flex items-start gap-sm">
+                    <Components.icon
+                      name="hero-check-circle"
+                      class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                    />
+                    <span>
+                      Confirm the module calls <code class="mono text-label">use Mailglass.Mailable</code>
+                      and is compiled and loaded.
+                    </span>
+                  </li>
+                  <li class="flex items-start gap-sm">
+                    <Components.icon
+                      name="hero-check-circle"
+                      class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                    />
+                    <span>
+                      Or pass an explicit list to the router: <code class="mono text-label">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
+                    </span>
+                  </li>
+                </ul>
+                <a
+                  href="https://hexdocs.pm/mailglass_admin/MailglassAdmin.Router.html"
+                  class="btn btn-ghost mt-md min-h-11 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
                 >
-                  Preview the first one
-                </.link>
+                  Read preview setup
+                </a>
               </div>
+            <% true -> %>
+              <div
+                data-testid="preview-start"
+                class="mx-auto max-w-prose space-y-lg"
+              >
+                <div class="rounded-box border border-base-300 bg-base-200 p-lg">
+                  <Components.icon name="hero-envelope-open" class="mb-md h-10 w-10 text-primary" />
+                  <h1 class="mb-sm text-heading font-bold text-base-content">
+                    Render a real Message before you send it
+                  </h1>
+                  <p class="text-body text-secondary">
+                    Pick a Mailable from the sidebar to render it through the same pipeline your production sends use.
+                  </p>
+                  <.link
+                    :if={first_previewable(@mailables)}
+                    patch={first_scenario_path(@mailables, @admin_chrome_theme)}
+                    class="btn btn-primary mt-md min-h-11 focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    Preview the first Mailable
+                  </.link>
+                </div>
 
-              <dl class="grid gap-sm sm:grid-cols-2">
-                <.legend_item icon="hero-window" title="HTML, Text, Raw & Headers">
-                  Switch tabs to inspect each part of the rendered message.
-                </.legend_item>
-                <.legend_item icon="hero-device-phone-mobile" title="Device widths">
-                  Check mobile, tablet, and desktop rendering at 375 / 768 / 1024px.
-                </.legend_item>
-                <.legend_item icon="hero-moon" title="Light & dark">
-                  Toggle the theme to see how the message reads either way.
-                </.legend_item>
-                <.legend_item icon="hero-pencil-square" title="Editable assigns">
-                  Edit the scenario's assigns inline and re-render instantly.
-                </.legend_item>
-              </dl>
-            </div>
-        <% end %>
-      </main>
+                <dl class="grid gap-sm sm:grid-cols-2">
+                  <.legend_item icon="hero-window" title="HTML, Text, Raw & Headers">
+                    Switch tabs to inspect each part of the rendered Message.
+                  </.legend_item>
+                  <.legend_item icon="hero-device-phone-mobile" title="Device widths">
+                    Check mobile, tablet, and desktop rendering at 375 / 768 / 1024px.
+                  </.legend_item>
+                  <.legend_item icon="hero-moon" title="Light & dark">
+                    Toggle admin chrome and the preview frame independently.
+                  </.legend_item>
+                  <.legend_item icon="hero-pencil-square" title="Editable assigns">
+                    Edit the scenario's assigns inline and re-render instantly.
+                  </.legend_item>
+                </dl>
+              </div>
+          <% end %>
+        </main>
+      </div>
 
       <%= if Phoenix.Flash.get(@flash, :info) do %>
         <Components.flash kind={:success} message={Phoenix.Flash.get(@flash, :info)} />
@@ -436,7 +458,7 @@ defmodule MailglassAdmin.PreviewLive do
 
   # First mailable that exposes at least one previewable scenario (healthy
   # reflection = keyword list of {scenario, defaults}). Used to fast-path the
-  # start page's "Preview the first one" deep link.
+  # start page's "Preview the first Mailable" deep link.
   defp first_previewable(mailables) do
     Enum.find_value(mailables, fn
       {mod, [{scenario, _defaults} | _]} -> {mod, scenario}
@@ -446,9 +468,16 @@ defmodule MailglassAdmin.PreviewLive do
 
   # Relative path matching the sidebar's scenario links, so it resolves under
   # any adopter mount path without needing base_path (which is nil on :index).
-  defp first_scenario_path(mailables) do
+  defp first_scenario_path(mailables, admin_chrome_theme) do
     case first_previewable(mailables) do
-      {mod, scenario} -> "./" <> inspect(mod) <> "/" <> Atom.to_string(scenario)
+      {mod, scenario} ->
+        path = "./" <> inspect(mod) <> "/" <> Atom.to_string(scenario)
+
+        case theme_query_param(admin_chrome_theme) do
+          nil -> path
+          theme -> path <> "?theme=" <> theme
+        end
+
       nil -> "#"
     end
   end

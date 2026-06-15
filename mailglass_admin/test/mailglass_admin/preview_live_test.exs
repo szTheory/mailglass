@@ -47,6 +47,11 @@ defmodule MailglassAdmin.PreviewLiveTest do
          %{conn: conn} do
       {:ok, _view, html} = live(conn, "/dev/mail")
 
+      assert html =~ ~s(data-testid="preview-mobile-mailables")
+      assert html =~ ~s(data-testid="preview-sidebar-desktop")
+      assert html =~ "<h2"
+      assert html =~ "Mailables"
+
       # HappyMailer module + scenarios rendered
       assert html =~ "HappyMailer"
       assert html =~ "welcome_default"
@@ -61,6 +66,71 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert html =~ "badge-warning" or html =~ "Error",
              "expected BrokenMailer to render with warning badge (badge-warning or 'Error' label)"
+    end
+  end
+
+  describe "preview page groups" do
+    @tag :page_groups
+    test "start branch renders locked copy and focusable first Mailable CTA",
+         %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/dev/mail?theme=dark")
+
+      assert html =~ ~s(data-testid="preview-start")
+      assert html =~ "Render a real Message before you send it"
+
+      assert html =~
+               "Pick a Mailable from the sidebar to render it through the same pipeline your production sends use."
+
+      assert html =~ "Preview the first Mailable"
+      assert html =~ ~s|href="./MailglassAdmin.Fixtures.HappyMailer/welcome_default?theme=dark"|
+    end
+
+    @tag :page_groups
+    test "empty branch renders locked copy and setup action without first Mailable CTA",
+         %{conn: _conn} do
+      empty_conn =
+        Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{"mailables" => []})
+
+      {:ok, _view, html} = live(empty_conn, "/dev/mail")
+
+      assert html =~ ~s(data-testid="preview-empty-mailables")
+      assert html =~ "No Mailables discovered"
+
+      assert html =~
+               "Preview scans loaded modules that use Mailglass.Mailable. Nothing was found yet."
+
+      assert html =~ "Read preview setup"
+      refute html =~ "Preview the first Mailable"
+    end
+
+    @tag :page_groups
+    test "scenario branch exposes header controls, assigns form, tab strip, and pane hooks",
+         %{conn: conn} do
+      {:ok, _view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+
+      assert html =~ ~s(data-testid="preview-header-controls")
+      assert html =~ ~s(data-testid="preview-admin-theme-toggle")
+      assert html =~ ~s(phx-click="toggle_theme")
+      assert html =~ ~s(data-testid="preview-frame-theme-toggle")
+      assert html =~ ~s(phx-click="toggle_preview_frame_theme")
+      assert html =~ ~s(data-testid="preview-assigns-form")
+      assert html =~ ~s(data-testid="preview-tab-strip")
+      assert html =~ ~s(data-testid="preview-pane")
+    end
+
+    @tag :page_groups
+    test "render error branch names preview_props failure and recovery target",
+         %{conn: conn} do
+      {:ok, _view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__")
+
+      assert html =~ ~s(data-testid="preview-render-error")
+      assert html =~ "preview_props/0 raised an error"
+      assert html =~ "Fix the error in"
+      assert html =~ "MailglassAdmin.Fixtures.BrokenMailer"
+      assert html =~ "and save the file to reload."
+      refute html =~ "Something went wrong"
     end
   end
 

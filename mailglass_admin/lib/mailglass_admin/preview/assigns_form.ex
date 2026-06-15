@@ -41,16 +41,20 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   @doc since: "0.1.0"
   def assigns_form(assigns) do
     ~H"""
-    <form phx-change="assigns_changed" class="assigns-form space-y-4">
+    <form
+      phx-change="assigns_changed"
+      data-testid="preview-assigns-form"
+      class="assigns-form space-y-4 rounded-box border border-base-300 bg-base-200 p-md"
+    >
       <%= for {key, value} <- Enum.sort_by(@scenario_assigns, fn {k, _} -> Atom.to_string(k) end) do %>
         <.field key={key} value={value} />
       <% end %>
 
       <div class="flex gap-2">
-        <button type="button" class="btn btn-primary btn-sm" phx-click="render_preview">
+        <button type="button" class="btn btn-primary min-h-11 px-5" phx-click="render_preview">
           Render preview
         </button>
-        <button type="button" class="btn btn-ghost btn-sm" phx-click="reset_assigns">
+        <button type="button" class="btn btn-ghost min-h-11 px-5" phx-click="reset_assigns">
           Reset assigns
         </button>
       </div>

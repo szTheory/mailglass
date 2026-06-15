@@ -36,7 +36,12 @@ defmodule MailglassAdmin.Preview.Tabs do
   def tabs(assigns) do
     ~H"""
     <div class="space-y-4">
-      <div role="tablist" class="flex border-b border-base-300" aria-label="Preview format">
+      <div
+        role="tablist"
+        data-testid="preview-tab-strip"
+        class="flex border-b border-base-300"
+        aria-label="Preview format"
+      >
         <button
           role="tab"
           type="button"
@@ -93,9 +98,10 @@ defmodule MailglassAdmin.Preview.Tabs do
       <div
         id={"tab-panel-" <> Atom.to_string(@active_tab)}
         data-preview-frame-theme={if @preview_frame_dark_chrome, do: "dark", else: "light"}
+        data-testid="preview-pane"
         role="tabpanel"
         aria-labelledby={"tab-btn-" <> Atom.to_string(@active_tab)}
-        class="motion-tab-swap"
+        class="motion-tab-swap rounded-box border border-base-300 bg-base-200 p-md"
       >
         <.tab_content
           active_tab={@active_tab}
