@@ -153,7 +153,9 @@ defmodule MailglassInbound.Internal.Operator.SummaryTest do
       {:ok, record} = insert_record("tenant-a")
       {:ok, evidence} = insert_evidence("tenant-a", record.id)
       {:ok, _fresh} = insert_run("tenant-a", record.id, evidence.id, outcome: :no_match)
-      {:ok, _replay} = insert_run("tenant-a", record.id, evidence.id, source: :replay, outcome: :accept)
+
+      {:ok, _replay} =
+        insert_run("tenant-a", record.id, evidence.id, source: :replay, outcome: :accept)
 
       assert %{
                total: 1,
@@ -210,7 +212,10 @@ defmodule MailglassInbound.Internal.Operator.SummaryTest do
     attrs =
       base
       |> maybe_put(:mailbox, Keyword.get(opts, :mailbox, default_mailbox(base.outcome)))
-      |> maybe_put(:outcome_reason, Keyword.get(opts, :outcome_reason, default_reason(base.outcome)))
+      |> maybe_put(
+        :outcome_reason,
+        Keyword.get(opts, :outcome_reason, default_reason(base.outcome))
+      )
       |> maybe_put(:failure, Keyword.get(opts, :failure, default_failure(base.outcome)))
 
     InboundRecords.insert_execution_run(attrs)
