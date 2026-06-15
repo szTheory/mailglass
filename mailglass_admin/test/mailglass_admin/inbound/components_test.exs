@@ -43,7 +43,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         mailbox: nil
       }
 
-      html = render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+      html =
+        render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
       refute html =~ "alice@example.com"
       assert html =~ "a****@e******.com"
@@ -64,7 +65,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         mailbox: "MyApp.SupportMailbox"
       }
 
-      html = render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+      html =
+        render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
       assert html =~ "Accept"
       assert html =~ "badge-success"
@@ -85,7 +87,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         mailbox: nil
       }
 
-      html = render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+      html =
+        render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
       assert html =~ "No match"
       assert html =~ "badge-warning"
@@ -104,7 +107,8 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         mailbox: nil
       }
 
-      html = render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
+      html =
+        render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
       assert html =~ "Unknown"
       assert html =~ "badge-outline"
@@ -346,7 +350,14 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   describe "FiltersForm.fields/1" do
     test "the outcome select offers exactly ExecutionRun.__outcomes__/0 options" do
       form =
-        to_form(%{"tenant_id" => "", "provider" => "", "outcome" => "", "window_hours" => "168", "search" => ""},
+        to_form(
+          %{
+            "tenant_id" => "",
+            "provider" => "",
+            "outcome" => "",
+            "window_hours" => "168",
+            "search" => ""
+          },
           as: :filters
         )
 
@@ -354,7 +365,11 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         render_component(&FiltersForm.fields/1,
           form: form,
           outcome_values: ExecutionRun.__outcomes__(),
-          window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}, {"Last 30 days", "720"}]
+          window_options: [
+            {"Last 24 hours", "24"},
+            {"Last 7 days", "168"},
+            {"Last 30 days", "720"}
+          ]
         )
 
       for outcome <- ExecutionRun.__outcomes__() do

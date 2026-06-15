@@ -60,26 +60,36 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                   <li
                     data-testid="inbound-trace-clause"
                     class={[
-                      "space-y-1 rounded-box",
+                      "rounded-box",
                       verdict.first_failing? && "border-l-4 border-error px-3"
                     ]}
                   >
-                    <span class="text-label font-bold uppercase tracking-[0.08em] text-secondary">
-                      {verdict.dimension}
-                    </span>
+                    <div class="grid gap-sm sm:grid-cols-[minmax(7rem,10rem)_1fr_1fr]">
+                      <div class="space-y-1">
+                        <span class="text-label uppercase font-bold text-secondary">Dimension</span>
+                        <div class="flex items-center gap-2">
+                          <Components.icon
+                            name={if verdict.pass?, do: "hero-check-circle", else: "hero-x-circle"}
+                            class={[
+                              "h-4 w-4",
+                              if(verdict.pass?, do: "text-success", else: "text-error")
+                            ]}
+                          />
+                          <span class="text-body text-base-content">{verdict.dimension}</span>
+                        </div>
+                      </div>
 
-                    <div class="flex flex-wrap items-center gap-2">
-                      <Components.icon
-                        name={if verdict.pass?, do: "hero-check-circle", else: "hero-x-circle"}
-                        class={[
-                          "h-4 w-4",
-                          if(verdict.pass?, do: "text-success", else: "text-error")
-                        ]}
-                      />
-                      <span class="text-label text-secondary">Expected:</span>
-                      {expected_markup(assigns, verdict)}
-                      <span class="text-label text-secondary">Actual:</span>
-                      <span class="mono text-label text-base-content">{verdict.actual}</span>
+                      <div class="space-y-1">
+                        <span class="text-label uppercase font-bold text-secondary">Expected</span>
+                        {expected_markup(assigns, verdict)}
+                      </div>
+
+                      <div class="space-y-1">
+                        <span class="text-label uppercase font-bold text-secondary">Actual</span>
+                        <span class="mono rounded-box border border-base-300 bg-base-100 px-2 py-1 text-label text-base-content">
+                          {verdict.actual}
+                        </span>
+                      </div>
                     </div>
 
                     <p :if={verdict.first_failing?} class="text-body text-secondary">
@@ -104,7 +114,9 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
   # exact string verbatim — all wrapped so the test can assert ">any<".
   defp expected_markup(assigns, %{matcher_kind: :wildcard}) do
     ~H"""
-    <span class="mono text-label text-secondary">any</span>
+    <span class="mono rounded-box border border-base-300 bg-base-100 px-2 py-1 text-label text-secondary">
+      any
+    </span>
     """
   end
 
@@ -112,7 +124,9 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     assigns = Phoenix.Component.assign(assigns, :expected, verdict.expected)
 
     ~H"""
-    <span class="mono text-label text-base-content">{@expected}</span>
+    <span class="mono rounded-box border border-base-300 bg-base-100 px-2 py-1 text-label text-base-content">
+      {@expected}
+    </span>
     """
   end
 
