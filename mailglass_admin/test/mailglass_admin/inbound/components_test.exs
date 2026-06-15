@@ -425,6 +425,24 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         assert html =~ ~s(value="#{Atom.to_string(outcome)}")
       end
     end
+
+    test "uses token-clean labels and Time window copy" do
+      form =
+        to_form(%{"tenant_id" => "", "provider" => "", "outcome" => "", "window_hours" => "168", "search" => ""},
+          as: :filters
+        )
+
+      html =
+        render_component(&FiltersForm.fields/1,
+          form: form,
+          outcome_values: ExecutionRun.__outcomes__(),
+          window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}, {"Last 30 days", "720"}]
+        )
+
+      assert html =~ "Time window"
+      assert html =~ "text-label uppercase font-bold text-secondary"
+      refute html =~ "tracking-["
+    end
   end
 
   describe "ReplayModal.replay_modal/1" do
@@ -440,8 +458,11 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ ~s(data-testid="inbound-replay-modal")
 
       assert html =~
-               "Replay inbound: This re-runs mailbox routing against the stored message and records a new replay run in the append-only ledger. Confirm to replay."
+               "Re-runs Mailbox routing against the stored InboundMessage and records a new replay run in the append-only ledger. Confirm to replay."
 
+      assert html =~ "text-heading"
+      assert html =~ "min-h-11"
+      refute html =~ "text-lg"
       assert html =~ ~s(data-testid="inbound-replay-confirm")
     end
 
