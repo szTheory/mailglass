@@ -18,6 +18,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   alias MailglassAdmin.Inbound.FiltersForm
   alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.Inbound.ReplayModal
+  alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.Timeline
   alias MailglassInbound.InboundRecords.ExecutionRun
 
@@ -310,6 +311,35 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html = render_component(&Timeline.timeline/1, runs: [])
 
       assert html =~ "No execution runs have been recorded for this message yet."
+    end
+  end
+
+  describe "RoutingTrace.routing_trace/1" do
+    test "renders a responsive clause grid with masked recipient actuals" do
+      trace = [
+        %{
+          mailbox: "MyApp.SupportMailbox",
+          verdicts: [
+            {:recipient, "support@example.com", "nomatch@example.com", false},
+            {:subject, ~r/help/i, "Need help", true},
+            {:header, "x-mailglass-topic", nil, ["billing"], true}
+          ]
+        }
+      ]
+
+      html = render_component(&RoutingTrace.routing_trace/1, trace: trace)
+
+      assert html =~ ~s(data-testid="inbound-routing-trace")
+      assert html =~ ~s(data-testid="inbound-route-card")
+      assert html =~ ~s(data-testid="inbound-trace-clause")
+      assert html =~ "sm:grid-cols"
+      assert html =~ "bg-base-100"
+      assert html =~ "border-l-4 border-error"
+      assert html =~ "Dimension"
+      assert html =~ "Expected"
+      assert html =~ "Actual"
+      refute html =~ "nomatch@example.com"
+      assert html =~ "n******@e******.com"
     end
   end
 
