@@ -38,7 +38,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "alice@example.com"
       # No-selection copy verbatim.
       assert html =~
-               "Select an inbound record to inspect its routing, execution timeline, and raw source."
+               "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."
 
       refute html =~ "Execution timeline"
       # Record id IS rendered (it is not PII) so selection works.
@@ -58,15 +58,33 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => ""}))
 
-      assert html =~ "No inbound records"
+      assert html =~ "No tenant selected"
 
       assert html =~
-               "No inbound records match these filters. Clear the filters or wait for the next inbound message."
+               "Enter a tenant ID to inspect inbound routing for one workspace."
+
+      assert clear_filters_count(html) == 1
 
       # No cross-tenant leak — neither the foreign id nor the foreign recipient.
       refute html =~ other.id
       refute html =~ "secret@elsewhere.com"
       refute html =~ "s*****@e*******.com"
+    end
+
+    test "tenant with no inbound history renders truly-empty copy without empty reset", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ "No InboundMessages yet"
+
+      assert html =~
+               "InboundMessages appear here once this tenant receives its first message."
+
+      assert clear_filters_count(html) == 1
+      refute html =~ "No InboundMessages match these filters"
     end
 
     test "a tenant query returns only that tenant's rows (V1 isolation)", %{conn: conn} do
@@ -140,6 +158,30 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "No-match rate"
       assert html =~ "0.0%"
       refute html =~ "hidden@example.com"
+    end
+
+    test "active filters with no matching records render filtered empty and reset action", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      InboundFixtures.seed_matched!(@tenant_id, provider: "mailgun", subject: "Welcome")
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "provider" => "ses",
+            "search" => "impossible",
+            "window_hours" => "24"
+          })
+        )
+
+      assert html =~ "No InboundMessages match these filters"
+      assert html =~ "Adjust the filters or wait for the next inbound message."
+      assert clear_filters_count(html) == 2
+      refute html =~ "No InboundMessages yet"
     end
 
     test "renders inbound responsive IA hooks and percentage grid contract", %{conn: conn} do
@@ -283,7 +325,9 @@ defmodule MailglassAdmin.InboundLiveTest do
         live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
 
       assert html =~ ~s(data-testid="inbound-detail-error")
-      assert html =~ "Inbound data could not be loaded."
+
+      assert html =~
+               "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
     end
 
     test "rejects mounts without an authorized actor (operator Auth gate)", %{conn: conn} do
@@ -701,13 +745,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "No inbound records"
+      assert html =~
+               "No InboundMessages yet"
 
       assert html =~
-               "No inbound records match these filters. Clear the filters or wait for the next inbound message."
-
-      assert html =~
-               "Select an inbound record to inspect its routing, execution timeline, and raw source."
+               "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."
 
       refute_banned(html)
     end
@@ -720,7 +762,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
 
       assert html =~
-               "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
+               "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
 
       refute_banned(html)
     end
@@ -888,6 +930,13 @@ defmodule MailglassAdmin.InboundLiveTest do
       "" -> @base_path
       query -> @base_path <> "?" <> query
     end
+  end
+
+  defp clear_filters_count(html) do
+    html
+    |> String.split("Clear filters")
+    |> length()
+    |> Kernel.-(1)
   end
 
   # HEEx HTML-escapes text nodes, so verbatim UI-SPEC copy with an apostrophe
