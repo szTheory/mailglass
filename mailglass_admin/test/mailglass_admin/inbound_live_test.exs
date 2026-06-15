@@ -142,6 +142,23 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "hidden@example.com"
     end
 
+    test "renders inbound responsive IA hooks and percentage grid contract", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="inbound-filters")
+      assert html =~ ~s(data-testid="inbound-filters-toggle")
+      assert html =~ ~s(phx-click="{[[&quot;toggle&quot;)
+      assert html =~ ~s(to&quot;:&quot;#inbound-filter-panel&quot;)
+      assert html =~ ~s(id="inbound-filter-panel")
+      assert html =~ "hidden md:block"
+      assert html =~ "md:grid-cols-[40%_60%]"
+      assert html =~ "min-[1440px]:!grid-cols-[33%_67%]"
+      assert html =~ "Recent InboundMessages"
+      refute html =~ "tracking-[0.08em]"
+    end
+
     test "selecting a record renders the detail header + timeline in place with URL state", %{
       conn: conn
     } do
@@ -168,6 +185,9 @@ defmodule MailglassAdmin.InboundLiveTest do
       html = render(view)
 
       assert html =~ ~s(data-testid="inbound-detail-header")
+      assert html =~ ~s(data-testid="inbound-detail-back")
+      assert html =~ "Back to inbound records"
+      assert html =~ "max-md:hidden"
       assert html =~ ~s(data-testid="inbound-timeline")
       assert html =~ "Execution timeline"
       assert html =~ "MyApp.Mailboxes.SupportMailbox"
@@ -178,6 +198,18 @@ defmodule MailglassAdmin.InboundLiveTest do
       # Detail still masks the recipient.
       assert html =~ "s*******@e******.com"
       refute html =~ "selected@example.com"
+
+      view
+      |> element(~s(a[data-testid="inbound-detail-back"]))
+      |> render_click()
+
+      assert_patch(
+        view,
+        inbound_path(%{
+          "tenant_id" => @tenant_id,
+          "window_hours" => "168"
+        })
+      )
     end
 
     test "filters live in the URL and survive a re-mount", %{conn: conn} do
