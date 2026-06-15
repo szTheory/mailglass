@@ -363,6 +363,41 @@ defmodule MailglassAdmin.InboundLiveTest do
                "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
     end
 
+    test "a valid selected record outside the capped recent list still loads detail", %{conn: conn} do
+      conn = operator_conn(conn)
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      %{record: selected} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          provider: "mailgun",
+          recipient: "deep-link@example.com",
+          received_at: DateTime.add(now, -10, :hour)
+        )
+
+      for index <- 1..55 do
+        InboundFixtures.seed_matched!(@tenant_id,
+          provider: "mailgun",
+          recipient: "newer-#{index}@example.com",
+          provider_message_id: "deep-link-cap-#{index}",
+          received_at: DateTime.add(now, -index, :minute)
+        )
+      end
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "provider" => "mailgun",
+            "inbound_id" => selected.id
+          })
+        )
+
+      assert html =~ ~s(id="inbound-detail-#{selected.id}")
+      assert html =~ ~s(data-testid="inbound-detail-header")
+      refute html =~ ~s(data-testid="inbound-detail-error")
+    end
+
     test "rejects mounts without an authorized actor (operator Auth gate)", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/login"}}} =
                live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
@@ -731,8 +766,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id,
-         %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)

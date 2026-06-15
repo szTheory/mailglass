@@ -421,9 +421,12 @@ defmodule MailglassAdmin.InboundLive do
 
   defp assign_inbound_state(socket, filter_params, selected_inbound_id) do
     records = load_inbound_records(filter_params)
-    selected_record = find_selected_record(records, selected_inbound_id)
-    detail = load_selected_detail(filter_params, selected_inbound_id, selected_record)
-    runs = load_selected_timeline(filter_params, selected_inbound_id, selected_record)
+    detail = load_selected_detail(filter_params, selected_inbound_id)
+    runs = load_selected_timeline(filter_params, selected_inbound_id, detail)
+    {detail, runs} = filter_selected_detail(detail, runs, filter_params)
+
+    selected_record =
+      find_selected_record(records, selected_inbound_id) || list_projection_from_detail(detail)
 
     socket
     |> assign(:records, records)
@@ -662,17 +665,103 @@ defmodule MailglassAdmin.InboundLive do
   defp find_selected_record(_records, nil), do: nil
   defp find_selected_record(records, inbound_id), do: Enum.find(records, &(&1.id == inbound_id))
 
-  defp load_selected_detail(_filter_params, nil, _selected_record), do: nil
-  defp load_selected_detail(_filter_params, _selected_inbound_id, nil), do: nil
+  defp load_selected_detail(_filter_params, nil), do: nil
 
-  defp load_selected_detail(filter_params, selected_inbound_id, _selected_record),
+  defp load_selected_detail(filter_params, selected_inbound_id),
     do: load_detail(filter_params, selected_inbound_id)
 
-  defp load_selected_timeline(_filter_params, nil, _selected_record), do: []
+  defp load_selected_timeline(_filter_params, nil, _detail), do: []
   defp load_selected_timeline(_filter_params, _selected_inbound_id, nil), do: []
 
-  defp load_selected_timeline(filter_params, selected_inbound_id, _selected_record),
+  defp load_selected_timeline(filter_params, selected_inbound_id, _detail),
     do: load_timeline(filter_params, selected_inbound_id)
+
+  defp filter_selected_detail(nil, _runs, _filter_params), do: {nil, []}
+
+  defp filter_selected_detail(detail, runs, filter_params) do
+    if detail_matches_active_filters?(detail, runs, filter_params) do
+      {detail, runs}
+    else
+      {nil, []}
+    end
+  end
+
+  defp detail_matches_active_filters?(%{record: record}, runs, filter_params) do
+    detail_matches_provider?(record, filter_params) and
+      detail_matches_search?(record, filter_params) and
+      detail_matches_window?(record, filter_params) and
+      detail_matches_outcome?(runs, filter_params)
+  end
+
+  defp detail_matches_provider?(record, filter_params) do
+    case blank_to_nil(Map.get(filter_params, "provider")) do
+      nil -> true
+      provider -> Map.get(record, :provider) == provider
+    end
+  end
+
+  defp detail_matches_search?(record, filter_params) do
+    case blank_to_nil(Map.get(filter_params, "search")) do
+      nil ->
+        true
+
+      search ->
+        needle = String.downcase(search)
+
+        [
+          Map.get(record, :subject),
+          Map.get(record, :envelope_recipient),
+          Map.get(record, :provider_message_id)
+        ]
+        |> Enum.any?(&case_insensitive_contains?(&1, needle))
+    end
+  end
+
+  defp detail_matches_window?(record, filter_params) do
+    window_hours =
+      parse_positive_integer(Map.get(filter_params, "window_hours")) || @default_window_hours
+
+    since = DateTime.add(DateTime.utc_now(), -window_hours, :hour)
+
+    case Map.get(record, :received_at) do
+      %DateTime{} = received_at -> DateTime.compare(received_at, since) != :lt
+      _received_at -> false
+    end
+  end
+
+  defp detail_matches_outcome?(runs, filter_params) do
+    case cast_enum(Map.get(filter_params, "outcome"), @outcome_values) do
+      nil -> true
+      outcome -> Enum.any?(runs, &(&1.outcome == outcome))
+    end
+  end
+
+  defp case_insensitive_contains?(value, needle) when is_binary(value) do
+    value
+    |> String.downcase()
+    |> String.contains?(needle)
+  end
+
+  defp case_insensitive_contains?(_value, _needle), do: false
+
+  defp list_projection_from_detail(nil), do: nil
+
+  defp list_projection_from_detail(%{record: record} = detail) do
+    %{
+      id: Map.get(record, :id),
+      tenant_id: Map.get(record, :tenant_id),
+      provider: Map.get(record, :provider),
+      provider_message_id: Map.get(record, :provider_message_id),
+      message_id: Map.get(record, :message_id),
+      envelope_recipient: Map.get(record, :envelope_recipient),
+      subject: Map.get(record, :subject),
+      received_at: Map.get(record, :received_at),
+      inserted_at: Map.get(record, :inserted_at),
+      suppression_flagged: Map.get(record, :suppression_flagged),
+      outcome: Map.get(detail, :outcome),
+      mailbox: Map.get(detail, :mailbox)
+    }
+  end
 
   defp valid_uuid?(value) when is_binary(value) do
     match?({:ok, _uuid}, Ecto.UUID.cast(value))
@@ -736,8 +825,7 @@ defmodule MailglassAdmin.InboundLive do
       "tenant_id" => normalize_string(Map.get(params, "tenant_id", defaults["tenant_id"])),
       "provider" => normalize_string(Map.get(params, "provider", defaults["provider"])),
       "outcome" => normalize_string(Map.get(params, "outcome", defaults["outcome"])),
-      "window_hours" =>
-        normalize_window(Map.get(params, "window_hours", defaults["window_hours"])),
+      "window_hours" => normalize_window(Map.get(params, "window_hours", defaults["window_hours"])),
       "search" => normalize_string(Map.get(params, "search", defaults["search"]))
     }
   end
