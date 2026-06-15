@@ -91,10 +91,12 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
   def create(conn, params) do
     tenant_id = Map.get(params, "tenant_id", "browser-tenant")
     return_to = Map.get(params, "return_to", "/ops/mail?tenant_id=#{tenant_id}")
+    subject_id = Map.get(params, "subject_id", "operator-1")
     now = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
 
     conn
-    |> Plug.Conn.put_session("current_user_id", "operator-1")
+    |> Plug.Conn.put_session("current_user_id", subject_id)
+    |> Plug.Conn.put_session("subject_id", subject_id)
     |> Plug.Conn.put_session("tenant_id", tenant_id)
     |> Plug.Conn.put_session("auth_method", "password")
     |> Plug.Conn.put_session("recent_auth_at", now)
@@ -176,6 +178,14 @@ defmodule MailglassAdmin.TestOperatorAuth do
   # Evidence reveal capability (D-48-09). Denied for the sentinel actor; granted
   # otherwise.
   def authorize(:reveal_raw, %{actor: %{subject_id: "deny-reveal"}}) do
+    {:error, :unauthorized,
+     %{
+       message:
+         "Raw source not revealed: the reveal_raw capability is not granted for this operator."
+     }}
+  end
+
+  def authorize(:reveal_raw, %{actor: %{tenant_id: "deny-reveal"}}) do
     {:error, :unauthorized,
      %{
        message:

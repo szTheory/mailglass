@@ -634,7 +634,7 @@ defmodule MailglassAdmin.InboundLive do
   defp load_detail(_filter_params, nil), do: nil
 
   defp load_detail(filter_params, selected_inbound_id) do
-    if gateway_available?() do
+    if valid_uuid?(selected_inbound_id) and gateway_available?() do
       apply(@gateway, :detail, [
         %{tenant_id: filter_params["tenant_id"], inbound_record_id: selected_inbound_id},
         []
@@ -648,7 +648,7 @@ defmodule MailglassAdmin.InboundLive do
   defp load_timeline(_filter_params, nil), do: []
 
   defp load_timeline(filter_params, selected_inbound_id) do
-    if gateway_available?() do
+    if valid_uuid?(selected_inbound_id) and gateway_available?() do
       apply(@gateway, :timeline, [
         %{tenant_id: filter_params["tenant_id"], inbound_record_id: selected_inbound_id},
         []
@@ -660,6 +660,12 @@ defmodule MailglassAdmin.InboundLive do
 
   defp find_selected_record(_records, nil), do: nil
   defp find_selected_record(records, inbound_id), do: Enum.find(records, &(&1.id == inbound_id))
+
+  defp valid_uuid?(value) when is_binary(value) do
+    match?({:ok, _uuid}, Ecto.UUID.cast(value))
+  end
+
+  defp valid_uuid?(_value), do: false
 
   # A selected id with no resolvable detail (wrong tenant, deleted, never existed)
   # surfaces the bordered detail-error band rather than a silent blank pane.
