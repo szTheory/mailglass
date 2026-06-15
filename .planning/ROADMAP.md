@@ -271,7 +271,17 @@ Plans:
   2. No surface shows "Oops" or generic placeholder copy; error states name the cause specifically (e.g. "Delivery blocked: recipient is on the suppression list").
   3. The microcopy decisions trace to the Phase 96 microcopy LOCKED DECISION block, and a conformance/voice check stays green.
 
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+
+**Wave 1**
+
+- [ ] 101-01-PLAN.md — Apply three residual COPY-LD string fixes in inbound_live.ex + D-07 source sweep (COPY-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 101-02-PLAN.md — Extend voice_test.exs with data-driven 3-surface conformance check (COPY-01)
+
 **UI hint**: yes
 
 ### Phase 102: Motion + Micro-interaction Pass
@@ -314,7 +324,7 @@ Plans:
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
 | 99. Inbound Surface | 5/5 | Complete    | 2026-06-15 |
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
-| 101. Microcopy Pass | 0/? | Not started | - |
+| 101. Microcopy Pass | 0/2 | Not started | - |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
 | 103. Verification + Idempotent Closeout | 0/? | Not started | - |
 
