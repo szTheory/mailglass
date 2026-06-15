@@ -27,10 +27,9 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
     test "renders the empty-state copy for []" do
       html = render_component(&RecordsList.records_list/1, records: [], selected_record: nil)
 
-      assert html =~ "No inbound records"
-
-      assert html =~
-               "No inbound records match these filters. Clear the filters or wait for the next inbound message."
+      assert html =~ "No InboundMessages match these filters"
+      assert html =~ "Adjust the filters or wait for the next inbound message."
+      assert html =~ "Clear filters"
     end
 
     test "masks the recipient and renders the record id + meta line" do
