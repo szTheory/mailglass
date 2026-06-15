@@ -79,6 +79,65 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ theirs.id
     end
 
+    test "renders a tenant-scoped summary-backed overview", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "accepted@example.com")
+      InboundFixtures.seed_no_match!(@tenant_id, recipient: "nomatch@example.com")
+      InboundFixtures.seed_matched!(@other_tenant, recipient: "foreign@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="inbound-overview")
+      assert html =~ "InboundMessages"
+      assert html =~ "No match"
+      assert html =~ "Accepted"
+      assert html =~ "No-match rate"
+      assert html =~ "2"
+      assert html =~ "1"
+      assert html =~ "50.0%"
+      refute html =~ "foreign@example.com"
+    end
+
+    test "overview summary is not derived from the capped records list", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      for index <- 1..101 do
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "accepted-#{index}@example.com",
+          provider_message_id: "overview-cap-#{index}"
+        )
+      end
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="inbound-overview")
+      assert html =~ "InboundMessages"
+      assert html =~ "101"
+      refute html =~ "accepted-101@example.com"
+    end
+
+    test "gateway-unavailable runtime path renders exact zero summary for tenant query", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      Application.put_env(:mailglass_admin, :inbound_gateway_available?, false)
+      on_exit(fn -> Application.delete_env(:mailglass_admin, :inbound_gateway_available?) end)
+
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "hidden@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="inbound-overview")
+      assert html =~ "InboundMessages"
+      assert html =~ "No match"
+      assert html =~ "Accepted"
+      assert html =~ "No-match rate"
+      assert html =~ "0.0%"
+      refute html =~ "hidden@example.com"
+    end
+
     test "selecting a record renders the detail header + timeline in place with URL state", %{
       conn: conn
     } do
