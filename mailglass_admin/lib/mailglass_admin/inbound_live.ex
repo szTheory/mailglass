@@ -86,6 +86,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign_new(:operator_auth, fn -> %{status: :unknown, recent_auth?: false} end)
      |> assign(:records, [])
      |> assign(:inbound_summary, @zero_summary)
+     |> assign(:empty_state, :no_tenant)
      |> assign(:selected_record, nil)
      |> assign(:detail, nil)
      |> assign(:runs, [])
@@ -346,7 +347,11 @@ defmodule MailglassAdmin.InboundLive do
                 Recent InboundMessages
               </h2>
             </div>
-            <RecordsList.records_list records={@records} selected_record={@selected_record} />
+            <RecordsList.records_list
+              records={@records}
+              selected_record={@selected_record}
+              empty_state={@empty_state}
+            />
           </aside>
         </div>
 
@@ -366,7 +371,7 @@ defmodule MailglassAdmin.InboundLive do
                 <div class="flex items-center gap-2">
                   <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
                   <h2 class="text-body font-bold text-base-content">
-                    Inbound data could not be loaded. Refresh the page or adjust the filters, then try again.
+                    InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again.
                   </h2>
                 </div>
               </div>
@@ -377,7 +382,7 @@ defmodule MailglassAdmin.InboundLive do
                 class="card rounded-box border border-base-300 bg-base-200 p-6"
               >
                 <h2 class="text-body font-bold text-base-content">
-                  Select an inbound record to inspect its routing, execution timeline, and raw source.
+                  Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence.
                 </h2>
               </div>
             <% true -> %>
@@ -422,6 +427,7 @@ defmodule MailglassAdmin.InboundLive do
     socket
     |> assign(:records, records)
     |> assign(:inbound_summary, load_inbound_summary(filter_params))
+    |> assign(:empty_state, empty_state_for(filter_params, records))
     |> assign(:selected_record, selected_record)
     |> assign(:detail, detail)
     |> assign(:runs, load_timeline(filter_params, selected_inbound_id))
@@ -495,14 +501,59 @@ defmodule MailglassAdmin.InboundLive do
 
   defp replay_error_copy(:not_found),
     do:
-      "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
+      "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
 
   defp replay_error_copy(:unavailable),
     do: "Replay blocked: the inbound package is not available."
 
   defp replay_error_copy(_reason),
     do:
-      "Inbound data could not be loaded. Refresh the page or adjust the filters, then try again."
+      "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
+
+  defp empty_state_for(%{"tenant_id" => tenant_id}, _records) when tenant_id in [nil, ""],
+    do: :no_tenant
+
+  defp empty_state_for(filter_params, []) do
+    cond do
+      filters_active?(filter_params) -> :filtered
+      tenant_has_inbound_history?(filter_params) -> :filtered
+      true -> :truly_empty
+    end
+  end
+
+  defp empty_state_for(_filter_params, _records), do: :filtered
+
+  defp filters_active?(filter_params) do
+    Enum.any?(["provider", "search", "outcome"], fn key ->
+      not is_nil(blank_to_nil(Map.get(filter_params, key)))
+    end) or
+      non_default_window?(Map.get(filter_params, "window_hours")) or
+      non_default_window?(Map.get(filter_params, "recent_window_hours"))
+  end
+
+  defp non_default_window?(nil), do: false
+  defp non_default_window?(""), do: false
+
+  defp non_default_window?(value) do
+    parse_positive_integer(value) != @default_window_hours
+  end
+
+  defp tenant_has_inbound_history?(filter_params) do
+    filter_params
+    |> tenant_history_params()
+    |> load_inbound_records()
+    |> Enum.any?()
+  end
+
+  defp tenant_history_params(filter_params) do
+    %{
+      "tenant_id" => filter_params["tenant_id"],
+      "provider" => "",
+      "outcome" => "",
+      "window_hours" => Integer.to_string(@default_window_hours * 5200),
+      "search" => ""
+    }
+  end
 
   # ---------------------------------------------------------------------------
   # Live-update prepend (IADM-05) — tenant-scoped re-fetch, no selection/filter theft.

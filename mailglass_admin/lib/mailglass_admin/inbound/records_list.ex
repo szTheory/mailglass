@@ -16,17 +16,27 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   attr :records, :list, required: true
   attr :selected_record, :map, default: nil
 
+  attr :empty_state, :atom,
+    values: [:no_tenant, :truly_empty, :filtered],
+    default: :filtered
+
   def records_list(assigns) do
     ~H"""
     <%= if @records == [] do %>
       <div class="flex min-h-64 flex-col items-center justify-center gap-sm p-6 text-center">
         <Components.icon name="hero-inbox-stack" class="h-8 w-8 text-secondary" />
         <div class="space-y-1">
-          <h3 class="text-body font-bold text-base-content">No inbound records</h3>
-          <p class="text-body text-secondary">
-            No inbound records match these filters. Clear the filters or wait for the next inbound message.
-          </p>
+          <h3 class="text-body font-bold text-base-content">{empty_heading(@empty_state)}</h3>
+          <p class="text-body text-secondary">{empty_body(@empty_state)}</p>
         </div>
+        <button
+          :if={@empty_state == :filtered}
+          type="button"
+          phx-click="clear_filters"
+          class="btn btn-ghost min-h-11"
+        >
+          Clear filters
+        </button>
       </div>
     <% else %>
       <ul data-testid="inbound-records-list" class="divide-y divide-base-300">
@@ -52,7 +62,10 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   </p>
                   <p class="mono mt-1 text-label text-secondary">{record.id}</p>
                 </div>
-                <Components.status_badge status={Components.normalize_inbound_outcome(record_outcome(record))} size={:sm} />
+                <Components.status_badge
+                  status={Components.normalize_inbound_outcome(record_outcome(record))}
+                  size={:sm}
+                />
               </div>
 
               <div class="flex flex-wrap items-center gap-2 text-label text-secondary">
@@ -74,6 +87,18 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_record, _record), do: false
+
+  defp empty_heading(:no_tenant), do: "No tenant selected"
+  defp empty_heading(:truly_empty), do: "No InboundMessages yet"
+  defp empty_heading(:filtered), do: "No InboundMessages match these filters"
+
+  defp empty_body(:no_tenant),
+    do: "Enter a tenant ID to inspect inbound routing for one workspace."
+
+  defp empty_body(:truly_empty),
+    do: "InboundMessages appear here once this tenant receives its first message."
+
+  defp empty_body(:filtered), do: "Adjust the filters or wait for the next inbound message."
 
   defp row_classes(%{id: id}, %{id: id}),
     do: "border-l-4 border-primary bg-base-100 text-base-content"
