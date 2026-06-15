@@ -139,22 +139,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       mailable: "Mailglass.Example.BrowserMailer"
     })
 
-    # GAP-13: seed one inbound record for the browser scenario so the MOTION-02
-    # regression gate (operator.spec.js) can navigate the inbound detail pane.
-    # received_at: hours_ago(10) keeps this record older than all delivery rows
-    # (oldest delivery is hours_ago(6)) — D-07 row-index stability preserved.
-    inbound_record =
-      insert_inbound_record!(%{
-        provider_message_id: "pm_browser_inbound_001",
-        envelope_recipient: "support@browser-scenario.example",
-        subject: "Browser scenario support request",
-        from: [%{"address" => "user@browser-test.example"}],
-        to: [%{"address" => "support@browser-scenario.example"}],
-        received_at: hours_ago(10)
-      })
-
-    inbound_evidence = insert_inbound_evidence!(inbound_record.id)
-    insert_inbound_run!(inbound_record.id, inbound_evidence.id)
+    seed_inbound_matrix!()
 
     %{
       tenant_id: @tenant_id,
@@ -317,6 +302,129 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
       )
   end
 
+  defp seed_inbound_matrix! do
+    accept =
+      seed_inbound_run_record!(%{
+        provider_message_id: "pm_browser_inbound_accept",
+        envelope_recipient: "support@browser-scenario.example",
+        subject: "Browser scenario support request",
+        from: [%{"address" => "user@browser-test.example"}],
+        to: [%{"address" => "support@browser-scenario.example"}],
+        received_at: hours_ago(10)
+      })
+
+    no_match =
+      seed_inbound_run_record!(
+        %{
+          provider_message_id: "pm_browser_inbound_no_match",
+          envelope_recipient: "nomatch@browser-scenario.example",
+          subject: "general route question",
+          from: [%{"address" => "nomatch-sender@browser-test.example"}],
+          to: [%{"address" => "nomatch@browser-scenario.example"}],
+          headers: %{},
+          received_at: hours_ago(11)
+        },
+        outcome: :no_match,
+        mailbox: nil
+      )
+
+    seed_inbound_run_record!(
+      %{
+        provider_message_id: "pm_browser_inbound_reject",
+        envelope_recipient: "reject@browser-scenario.example",
+        subject: "Reject this inbound message",
+        from: [%{"address" => "reject-sender@browser-test.example"}],
+        to: [%{"address" => "reject@browser-scenario.example"}],
+        received_at: hours_ago(12)
+      },
+      outcome: :reject,
+      outcome_reason: "mailbox rejected the message"
+    )
+
+    seed_inbound_run_record!(
+      %{
+        provider_message_id: "pm_browser_inbound_bounce",
+        envelope_recipient: "bounce@browser-scenario.example",
+        subject: "Bounce this inbound message",
+        from: [%{"address" => "bounce-sender@browser-test.example"}],
+        to: [%{"address" => "bounce@browser-scenario.example"}],
+        received_at: hours_ago(13)
+      },
+      outcome: :bounce,
+      outcome_reason: "mailbox requested a provider bounce"
+    )
+
+    seed_inbound_run_record!(
+      %{
+        provider_message_id: "pm_browser_inbound_failed",
+        envelope_recipient: "failed@browser-scenario.example",
+        subject: "Failed inbound execution",
+        from: [%{"address" => "failed-sender@browser-test.example"}],
+        to: [%{"address" => "failed@browser-scenario.example"}],
+        received_at: hours_ago(14)
+      },
+      outcome: :failed,
+      mailbox: nil,
+      failure: %{"kind" => "raise", "reason" => "fixture execution failure"}
+    )
+
+    insert_inbound_record!(%{
+      provider_message_id: "pm_browser_inbound_no_run",
+      envelope_recipient: "norun@browser-scenario.example",
+      subject: "Inbound with no execution run",
+      from: [%{"address" => "norun-sender@browser-test.example"}],
+      to: [%{"address" => "norun@browser-scenario.example"}],
+      received_at: hours_ago(15)
+    })
+
+    insert_inbound_record!(%{
+      provider_message_id: "pm_browser_inbound_missing_evidence",
+      envelope_recipient: "missing-evidence@browser-scenario.example",
+      subject: "Inbound with no stored evidence",
+      from: [%{"address" => "missing-evidence-sender@browser-test.example"}],
+      to: [%{"address" => "missing-evidence@browser-scenario.example"}],
+      received_at: hours_ago(16)
+    })
+
+    seed_inbound_run_record!(%{
+      provider_message_id: "pm_browser_inbound_suppression_flagged",
+      envelope_recipient: "suppressed-inbound@browser-scenario.example",
+      subject: "Suppression flagged inbound",
+      from: [%{"address" => "suppressed-inbound@browser-test.example"}],
+      to: [%{"address" => "suppressed-inbound@browser-scenario.example"}],
+      suppression_flagged: true,
+      received_at: hours_ago(17)
+    })
+
+    seed_inbound_run_record!(%{
+      provider_message_id: "pm_browser_inbound_long_content",
+      envelope_recipient: "long-content@browser-scenario.example",
+      subject:
+        "Browser scenario extended context message with a deliberately long subject for wrapping checks",
+      text_body:
+        "This inbound message carries enough body copy to exercise the detail panel's long-content branch without adding a second browser seed path.",
+      from: [%{"address" => "long-content-sender@browser-test.example"}],
+      to: [%{"address" => "long-content@browser-scenario.example"}],
+      received_at: hours_ago(18)
+    })
+
+    %{accept: accept, no_match: no_match}
+  end
+
+  defp seed_inbound_run_record!(record_attrs, run_opts) do
+    record = insert_inbound_record!(record_attrs)
+    evidence = insert_inbound_evidence!(record.id)
+    insert_inbound_run!(record.id, evidence.id, run_opts)
+    record
+  end
+
+  defp seed_inbound_run_record!(record_attrs) do
+    record = insert_inbound_record!(record_attrs)
+    evidence = insert_inbound_evidence!(record.id)
+    insert_inbound_run!(record.id, evidence.id)
+    record
+  end
+
   defp insert_inbound_record!(attrs) do
     defaults = %{
       id: Ecto.UUID.generate(),
@@ -418,9 +526,15 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     %{id: id}
   end
 
-  defp insert_inbound_run!(inbound_record_id, inbound_evidence_id) do
+  defp insert_inbound_run!(inbound_record_id, inbound_evidence_id),
+    do: insert_inbound_run!(inbound_record_id, inbound_evidence_id, [])
+
+  defp insert_inbound_run!(inbound_record_id, inbound_evidence_id, opts) do
     id = Ecto.UUID.generate()
     now = DateTime.utc_now()
+    outcome = opts |> Keyword.get(:outcome, :accept) |> Atom.to_string()
+    source = opts |> Keyword.get(:source, :fresh) |> Atom.to_string()
+    mailbox = Keyword.get(opts, :mailbox, default_inbound_mailbox(outcome))
 
     _ =
       Ecto.Adapters.SQL.query!(
@@ -437,15 +551,15 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
           Ecto.UUID.dump!(id),
           @tenant_id,
           nil,
-          "Mailglass.Example.BrowserMailbox",
-          "accept",
-          nil,
-          %{},
+          mailbox,
+          outcome,
+          Keyword.get(opts, :outcome_reason),
+          Keyword.get(opts, :failure, %{}),
           now,
           %{},
           Ecto.UUID.dump!(inbound_record_id),
           Ecto.UUID.dump!(inbound_evidence_id),
-          "fresh",
+          source,
           now,
           now
         ]
@@ -453,6 +567,10 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
     %{id: id}
   end
+
+  defp default_inbound_mailbox("no_match"), do: nil
+  defp default_inbound_mailbox("failed"), do: nil
+  defp default_inbound_mailbox(_outcome), do: "Mailglass.Example.BrowserMailbox"
 
   defp hours_ago(hours), do: DateTime.add(DateTime.utc_now(), -hours, :hour)
 

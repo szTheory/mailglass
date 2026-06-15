@@ -5,6 +5,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
   alias Mailglass.Events.Event
   alias Mailglass.IdempotencyKey
+  alias MailglassInbound.InboundRecords.InboundEvidence
   alias MailglassInbound.InboundRecords.ExecutionRun
   alias MailglassInbound.InboundRecords.InboundRecord
   alias Mailglass.Outbound.Delivery
@@ -689,9 +690,9 @@ defmodule MailglassAdmin.OperatorLiveTest do
                  where:
                    record.tenant_id == ^tenant_id and
                      record.provider_message_id == "pm_browser_inbound_missing_evidence",
-                 left_join: run in ExecutionRun,
-                 on: run.inbound_record_id == record.id,
-                 where: is_nil(run.inbound_evidence_id)
+                 left_join: evidence in InboundEvidence,
+                 on: evidence.inbound_record_id == record.id,
+                 where: is_nil(evidence.id)
                )
              )
     end
