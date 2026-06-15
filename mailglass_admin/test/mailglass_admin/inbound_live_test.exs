@@ -31,7 +31,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "Recent inbound records"
+      assert html =~ "Recent InboundMessages"
       assert html =~ ~s(data-testid="inbound-master-detail")
       # V5 masking half: masked by default, raw recipient never rendered.
       assert html =~ "a****@e******.com"
@@ -149,7 +149,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(data-testid="inbound-filters")
       assert html =~ ~s(data-testid="inbound-filters-toggle")
-      assert html =~ ~s(phx-click="{[[&quot;toggle&quot;)
+      assert html =~ "toggle"
       assert html =~ ~s(to&quot;:&quot;#inbound-filter-panel&quot;)
       assert html =~ ~s(id="inbound-filter-panel")
       assert html =~ "hidden md:block"

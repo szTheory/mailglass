@@ -33,6 +33,7 @@ defmodule MailglassAdmin.InboundLive do
   alias MailglassAdmin.Inbound.ReplayModal
   alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.Timeline
+  alias Phoenix.LiveView.JS
 
   @gateway MailglassAdmin.OptionalDeps.MailglassInbound
 
@@ -287,50 +288,75 @@ defmodule MailglassAdmin.InboundLive do
       subtitle="See why a received message routed the way it did — execution timeline, routing trace, and raw evidence."
       flash={@flash}
     >
-      <section class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5">
-        <.form
-          for={@filter_form}
-          id="inbound-filters"
-          phx-change="validate_filters"
-          phx-submit="apply_filters"
-          class="grid gap-sm"
+      <section
+        data-testid="inbound-filters"
+        class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
+      >
+        <button
+          type="button"
+          phx-click={JS.toggle(to: "#inbound-filter-panel")}
+          data-testid="inbound-filters-toggle"
+          class="btn btn-ghost !h-11 min-h-11 md:hidden"
         >
-          <div class="grid gap-sm md:grid-cols-2 xl:grid-cols-5">
-            <FiltersForm.fields
-              form={@filter_form}
-              outcome_values={@outcome_values}
-              window_options={@window_options}
-            />
-          </div>
+          Filters <span aria-hidden="true">v</span>
+        </button>
 
-          <div class="flex flex-wrap gap-2">
-            <button type="submit" class="btn btn-primary min-h-11 px-5">Open record</button>
-            <button type="button" phx-click="clear_filters" class="btn btn-ghost min-h-11 px-5">
-              Clear filters
-            </button>
-          </div>
-        </.form>
+        <div id="inbound-filter-panel" class="hidden md:block">
+          <.form
+            for={@filter_form}
+            id="inbound-filters"
+            phx-change="validate_filters"
+            phx-submit="apply_filters"
+            class="mt-4 grid gap-sm md:mt-0"
+          >
+            <div class="grid gap-sm md:grid-cols-2 xl:grid-cols-5">
+              <FiltersForm.fields
+                form={@filter_form}
+                outcome_values={@outcome_values}
+                window_options={@window_options}
+              />
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button type="submit" class="btn btn-primary min-h-11 px-5">Open record</button>
+              <button type="button" phx-click="clear_filters" class="btn btn-ghost min-h-11 px-5">
+                Clear filters
+              </button>
+            </div>
+          </.form>
+        </div>
       </section>
-
-      <Overview.overview summary={@inbound_summary} />
 
       <section
         data-testid="inbound-master-detail"
-        class="mt-6 grid gap-lg lg:grid-cols-[minmax(22rem,28rem)_1fr]"
+        class="mt-6 grid gap-lg md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]"
       >
-        <aside
-          data-testid="inbound-records-list-card"
-          class="card rounded-box border border-base-300 bg-base-200 p-0"
-        >
-          <div class="border-b border-base-300 px-4 py-3">
-            <h2 class="text-body font-bold uppercase tracking-[0.08em] text-secondary">
-              Recent inbound records
-            </h2>
-          </div>
-          <RecordsList.records_list records={@records} selected_record={@selected_record} />
-        </aside>
+        <div class={["space-y-4", @selected_record && "max-md:hidden"]}>
+          <Overview.overview summary={@inbound_summary} />
 
-        <section data-testid="inbound-detail-column" class="space-y-4">
+          <aside
+            data-testid="inbound-records-list-card"
+            class={[
+              "card rounded-box border border-base-300 bg-base-200 p-0 md:block",
+              @selected_record && "max-md:hidden"
+            ]}
+          >
+            <div class="border-b border-base-300 px-4 py-3">
+              <h2 class="text-label uppercase font-bold text-secondary">
+                Recent InboundMessages
+              </h2>
+            </div>
+            <RecordsList.records_list records={@records} selected_record={@selected_record} />
+          </aside>
+        </div>
+
+        <section
+          data-testid="inbound-detail-column"
+          class={[
+            "space-y-4",
+            is_nil(@selected_record) && "order-first md:order-none"
+          ]}
+        >
           <%= cond do %>
             <% @detail_error -> %>
               <div
@@ -356,6 +382,13 @@ defmodule MailglassAdmin.InboundLive do
               </div>
             <% true -> %>
               <div id={"inbound-detail-#{@detail.record.id}"} class="motion-reveal space-y-4">
+                <.link
+                  patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
+                  data-testid="inbound-detail-back"
+                  class="btn btn-ghost !h-11 min-h-11 md:hidden"
+                >
+                  Back to inbound records
+                </.link>
                 <DetailHeader.detail_header detail={@detail} />
                 <Timeline.timeline runs={@runs} />
                 <RoutingTrace.routing_trace
