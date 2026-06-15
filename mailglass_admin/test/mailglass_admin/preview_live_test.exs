@@ -187,6 +187,35 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert after_toggle =~ ~s|data-theme="mailglass-dark"|
       assert after_toggle =~ ~s|data-preview-frame-theme="dark"|
     end
+
+    @tag :dark_toggle
+    test "admin chrome toggle patches theme without changing preview frame theme",
+         %{conn: conn} do
+      base_path = "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default"
+      {:ok, view, _html} = live(conn, base_path)
+
+      render_click(view, "toggle_preview_frame_theme", %{})
+      after_admin_toggle = render_click(view, "toggle_theme", %{})
+
+      assert_patch(view, base_path <> "?theme=dark")
+      assert after_admin_toggle =~ ~s|data-preview-frame-theme="dark"|
+    end
+
+    @tag :dark_toggle
+    test "sidebar scenario links preserve only explicit admin chrome theme",
+         %{conn: conn} do
+      {:ok, _view, explicit_html} = live(conn, "/dev/mail?theme=dark")
+
+      assert explicit_html =~
+               ~s|./MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=768&amp;theme=dark|
+
+      {:ok, _view, default_html} = live(conn, "/dev/mail")
+
+      assert default_html =~
+               ~s|./MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=768"|
+
+      refute default_html =~ ~s|width=768&amp;theme=light|
+    end
   end
 
   describe "assigns form" do
