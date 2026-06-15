@@ -321,6 +321,12 @@ defmodule MailglassAdmin.PreviewLive do
                   </span>
                 </li>
               </ul>
+              <a
+                href="https://hexdocs.pm/mailglass_admin/MailglassAdmin.Router.html"
+                class="btn btn-ghost mt-5 min-h-11 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+              >
+                Read preview setup
+              </a>
             </div>
           <% true -> %>
             <div class="mx-auto max-w-prose space-y-6">

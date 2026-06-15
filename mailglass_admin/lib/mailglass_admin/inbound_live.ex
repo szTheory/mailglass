@@ -422,7 +422,8 @@ defmodule MailglassAdmin.InboundLive do
   defp assign_inbound_state(socket, filter_params, selected_inbound_id) do
     records = load_inbound_records(filter_params)
     selected_record = find_selected_record(records, selected_inbound_id)
-    detail = load_detail(filter_params, selected_inbound_id)
+    detail = load_selected_detail(filter_params, selected_inbound_id, selected_record)
+    runs = load_selected_timeline(filter_params, selected_inbound_id, selected_record)
 
     socket
     |> assign(:records, records)
@@ -430,7 +431,7 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:empty_state, empty_state_for(filter_params, records))
     |> assign(:selected_record, selected_record)
     |> assign(:detail, detail)
-    |> assign(:runs, load_timeline(filter_params, selected_inbound_id))
+    |> assign(:runs, runs)
     |> assign(:routing_trace, routing_trace_for(socket.assigns.inbound_router, detail))
     # Selecting (or re-selecting) a record collapses the evidence card back to
     # redacted — reveal is a per-view capability action, never sticky across
@@ -660,6 +661,18 @@ defmodule MailglassAdmin.InboundLive do
 
   defp find_selected_record(_records, nil), do: nil
   defp find_selected_record(records, inbound_id), do: Enum.find(records, &(&1.id == inbound_id))
+
+  defp load_selected_detail(_filter_params, nil, _selected_record), do: nil
+  defp load_selected_detail(_filter_params, _selected_inbound_id, nil), do: nil
+
+  defp load_selected_detail(filter_params, selected_inbound_id, _selected_record),
+    do: load_detail(filter_params, selected_inbound_id)
+
+  defp load_selected_timeline(_filter_params, nil, _selected_record), do: []
+  defp load_selected_timeline(_filter_params, _selected_inbound_id, nil), do: []
+
+  defp load_selected_timeline(filter_params, selected_inbound_id, _selected_record),
+    do: load_timeline(filter_params, selected_inbound_id)
 
   defp valid_uuid?(value) when is_binary(value) do
     match?({:ok, _uuid}, Ecto.UUID.cast(value))

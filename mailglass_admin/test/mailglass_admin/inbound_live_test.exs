@@ -330,6 +330,39 @@ defmodule MailglassAdmin.InboundLiveTest do
                "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
     end
 
+    test "a selected record outside active filters surfaces the detail-error band", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: mailgun_record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "mailgun-filtered@example.com",
+          provider: "mailgun"
+        )
+
+      %{record: ses_record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "ses-visible@example.com",
+          provider: "ses"
+        )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "provider" => "ses",
+            "inbound_id" => mailgun_record.id
+          })
+        )
+
+      assert html =~ ses_record.id
+      refute html =~ mailgun_record.id
+      assert html =~ ~s(data-testid="inbound-detail-error")
+
+      assert html =~
+               "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
+    end
+
     test "rejects mounts without an authorized actor (operator Auth gate)", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/login"}}} =
                live(conn, inbound_path(%{"tenant_id" => @tenant_id}))

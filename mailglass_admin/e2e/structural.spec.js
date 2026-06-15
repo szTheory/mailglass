@@ -227,32 +227,13 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // candidates (those are tracked as GAP rows in RATCHET-GAP-REGISTER.md, not as test
       // failures here — per the plan's gate-now vs record-as-GAP split).
       //
-      // NOTE: Phase 95 RESEARCH documents that the deliveries-view filter form uses
-      // `btn btn-primary btn-sm` which computes to ~21px (below 44px threshold). This is a
-      // known violation recorded as a candidate GAP row for RATCHET-GAP-REGISTER.md (Phase
-      // 95-04). The btn-sm modifier overrides min-h-11 — fix is to remove btn-sm on this CTA
-      // or replace it with min-h-11 inline. The test passes with a GAP note (measuring posture,
-      // not fix posture) per Phase 95 plan gate-now-vs-record-as-GAP split.
-      const primaryBtn = page.locator(".btn-primary").first();
-      const count = await primaryBtn.count();
-      if (count === 0) {
-        // No primary button visible at deliveries view — candidate GAP row
-        return;
-      }
+      // The primary filter CTA is inside the mobile disclosure; open it before measuring.
+      await page.getByTestId("operator-filters-toggle").click();
+      const primaryBtn = page.locator(".btn-primary:visible").first();
+      await expect(primaryBtn).toBeVisible();
       const box = await primaryBtn.boundingBox();
-      if (box === null) {
-        // Element not visible — candidate GAP row
-        return;
-      }
-      // Record the measurement; Phase 95 is MEASURING not FIXING.
-      // If box.height < 44 this is a real touch-target gap tracked in RATCHET-GAP-REGISTER.md.
-      // The assertion is written to pass (GAP posture) so the structural spec stays green while
-      // the violation is captured for Phase 98 remediation.
-      //
-      // GAP candidate: Operator deliveries .btn-primary with btn-sm modifier is ${box.height}px
-      // (expected >= 44px). Surface: deliveries. Pillar: Spacing. Severity: 3.
-      // Fix sketch: remove btn-sm from the filter-form submit button or ensure min-h-11 wins.
-      expect(typeof box.height).toBe("number"); // structural shape assertion always passes
+      expect(box).not.toBeNull();
+      expect(box.height).toBeGreaterThanOrEqual(44);
     });
 
     test("Operator: filter toggle and detail back controls meet touch target floor", async ({ page }) => {
@@ -641,35 +622,17 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("Preview: first link or button has non-zero outlineWidth on focus", async ({ page }) => {
       await openPreview(page);
 
-      // The preview-orientation surface (empty state) may have no focusable interactive
-      // elements. If none exist, this is a candidate GAP row for RATCHET-GAP-REGISTER.md
-      // (a11y requirement: empty states must have at least one focusable CTA). Per the
-      // plan's gate-now vs record-as-GAP split: the structural spec passes (recording the
-      // absence as a GAP) rather than failing with a timeout.
       const links = page.getByRole("link");
       const buttons = page.getByRole("button");
 
       const linkCount = await links.count();
       const buttonCount = await buttons.count();
 
-      if (linkCount === 0 && buttonCount === 0) {
-        // No focusable elements — structural gap noted; test passes (violation tracked in GAP register)
-        // GAP candidate: preview-orientation empty state has no focusable interactive element
-        return;
-      }
+      expect(linkCount + buttonCount).toBeGreaterThan(0);
 
       // Try a link first; fall back to a button if no links exist
       const focusable = linkCount > 0 ? links.first() : buttons.first();
-
-      // Use a short timeout for focus — if the element is not focusable (e.g. rendered but
-      // not keyboard-reachable), treat as a GAP rather than a timeout failure
-      try {
-        await focusable.focus({ timeout: 5000 });
-      } catch (_) {
-        // Element not focusable — structural gap noted; test passes (violation in GAP register)
-        // GAP candidate: preview surface interactive element is not keyboard-focusable
-        return;
-      }
+      await focusable.focus({ timeout: 5000 });
 
       const outlineWidth = await focusable.evaluate(
         el => getComputedStyle(el).outlineWidth
