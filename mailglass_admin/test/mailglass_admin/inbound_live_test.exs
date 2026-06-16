@@ -678,7 +678,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         |> render_click()
 
       assert unescape(html) =~
-               "Replay recorded. A new replay run was appended to this message's timeline."
+               "Replay recorded. A new replay run was appended to this InboundMessage's timeline."
 
       after_count = run_count(record.id)
       assert after_count == before_count + 1
@@ -860,7 +860,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       success_html = render_click(view1, "confirm_replay", %{})
 
       assert unescape(success_html) =~
-               "Replay recorded. A new replay run was appended to this message's timeline."
+               "Replay recorded. A new replay run was appended to this InboundMessage's timeline."
 
       refute_banned(success_html)
 
