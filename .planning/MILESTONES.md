@@ -1,5 +1,35 @@
 # Milestones
 
+## v1.11 mailglass_admin Design-System Uplift (Shipped: 2026-06-16)
+
+**Phases completed:** 10 phases (94-103), 42 plans
+
+> Adopter-visible-quality milestone under the D-23 convergence rule (recorded as
+> D-27) — NOT feature growth. Admin UI only (3 surfaces). **Release posture:
+> prepare-only — no Hex release cut**; versions remain 1.6.2 / 1.6.2 / 1.3.1.
+> Milestone audit `status: passed` — 34/34 requirements, 10/10 phases, 16/16
+> integration paths, 7/7 E2E flows. Nyquist coverage `partial` (informational; all
+> 10 VERIFICATION.md files passed).
+>
+> (Stats note: true v1.11 scope is 10 phases / 42 plans, counted directly from
+> phases 94-103 to avoid the known `milestone.complete` CLI inflation that also
+> counts the leftover v1.10 91-93 dirs and the 999.x backlog.)
+
+**Key accomplishments:**
+
+- **Phase 94 — Token re-baseline (TOKEN-01..05, RATCHET-03):** `mailglass_admin/assets/css/app.css` now consumes the canonical `brandbook/tokens.css` `--mg-*` two-tier tokens as the single source of truth — daisyUI theme vars reference `var(--mg-*)` with no duplicate hex literals; borders draw in the border role (not the accent), cards sit on `surface-raised`, and dark muted/error/primary-content were fixed to WCAG AA on their actual surface. A fail-closed ExUnit token-parity test breaks the build on any brand-token drift, and the tightened conformance + motion grep gates (`text-lg/xl/2xl`, arbitrary `tracking-[…]`, `ease-in`, layout-property transitions) landed FIRST so the swap couldn't regress silently.
+- **Phase 95 — Idempotent quality ratchet v2 (RATCHET-01/02/04/05):** stood up a committed per-`component × pillar × theme` score baseline (meet-or-beat), one carried-forward `GAP-NN` register with stable IDs + run-ids and a sev≥3 anti-churn citation gate, a Playwright structural-assertion layer (focus rings, ARIA, ≥44px touch targets, font-weight ∈ {400,700}, accent-on-allowlist, reduced-motion), and an LLM-scored 18-cell PNG matrix writing `docs/ui-baseline-scores.json` (PNGs gitignored — no pixel-diff).
+- **Phase 96 — Research dossier (RESEARCH-01..05):** five parallel-subagent dossiers under `.planning/research/v1.11/`, each ending in an adversarially-synthesized LOCKED DECISION block the build phases consumed without re-reading the body — 14 MOTION-LD, 9 IA-LD, 22 STATE-LD, 8 DARK-LD, and 16 COPY-LD locked decisions (Emil Kowalski motion, gov.uk IA, component-state matrices, dark-mode pitfalls, thoughtful-maintainer microcopy).
+- **Phase 97 — Cross-surface component layer + gallery (COMP-01..03, GALLERY-01/02):** Level-1 uplift of every shared component (icon/logo/flash/badge/status_badge/shell/orientation_strip/nav_link/theme_toggle/tenant_chip) on-brand in both themes across the full locked interaction-state matrix, plus a dev-only component gallery LiveView (`/dev/mail/gallery`, dev live_session only) with stable `data-testid` cells feeding the ratchet's structural layer.
+- **Phases 98-100 — Three-surface fractal uplift (GROUP/PAGE/RESP/FLOW/A11Y + GROUP-02/03 + PAGE-03):** Operator `/ops/mail` got master-detail IA, full happy/error/boundary seed coverage, and 390/768/1440 responsiveness (CR-01/02/03 nil-guards folded in); Inbound `/ops/mail/inbound` — the heaviest lift — gained a summary-backed overview tier and scannable token-clean RoutingTrace/EvidenceCard layouts that preserve PII/raw-payload boundaries by default; Preview `/dev/mail` gained full dark-mode chrome at parity (the previewed email keeps its own independent dark toggle). Every surface validated end-to-end against its real JTBD flow.
+- **Phases 101-103 — Global passes + idempotent closeout (COPY-01, MOTION-01/02, CLOSE):** a global "thoughtful maintainer" microcopy pass (data-driven voice_test, "Oops" banned across all 3 surfaces); a motion uplift within the hard constraints (`--ease-symmetric` token, real enter/exit asymmetry via `phx-remove`, connection-state `.mg-skeleton`, CSS-only `@view-transition` PE, `prefers-reduced-motion` collapsing all motion); and a closeout that flipped all open GAP rows to fixed, armed the meet-or-beat ratchet (36/36 cells, 15 improved, zero regressions), confirmed all 6 CI gates green (56 + 236 + conformance + conformance-advisory + motion + 54/54 Playwright), and staged the linked-version release ceremony prepare-only.
+
+**Release posture:** prepare-only — no Hex release cut by this milestone. One PENDING ceremony action documented: inbound exact-pin re-pin (`{:mailglass, "== <NEW_CORE_VERSION>"}`) after the Release Please PR merges, the only manual action before a real publish (D-13, deliberate divergence from the Phase 79 precedent because the target version is unknowable pre-PR).
+
+**Accepted tech debt (non-blocking, advisory):** conformance grep forward-fragility + token_parity dark-theme regex fragility (Phase 94 WR-01/02); ease-in gate same-line pathological case, stale `structural.spec.js:943-944` comment, inbound replay modal missing operator-style focus-trap + Escape handler (highest-priority follow-up), `phx-remove` exit literal `duration-150` vs token (Phase 102 WR-01..04).
+
+---
+
 ## v1.10 Brand Adoption (Shipped: 2026-06-13)
 
 **Phases completed:** 3 phases (91-93), 9 plans

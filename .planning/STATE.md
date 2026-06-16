@@ -2,32 +2,32 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
-status: ready_to_plan
-last_updated: 2026-06-16T21:23:34.594Z
+status: shipped
+last_updated: 2026-06-16T22:00:00.000Z
 last_activity: 2026-06-16
 progress:
-  total_phases: 12
-  completed_phases: 12
-  total_plans: 48
-  completed_plans: 57
+  total_phases: 10
+  completed_phases: 10
+  total_plans: 42
+  completed_plans: 42
   percent: 100
-stopped_at: Phase 103 complete (4/4) — ready to discuss Phase 999.1
+stopped_at: v1.11 SHIPPED + archived (audit passed 34/34) — no active milestone; next /gsd-new-milestone
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-15 — after Phase 99 Inbound Surface close)
+See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 999.1 — human readable code comments + gsd artifact cleanup
+**Current focus:** No active milestone — v1.11 shipped 2026-06-16. Next: `/gsd-new-milestone` (quiet-maintenance / adopter-pull posture per D-23).
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
-Status: Ready to plan
+Phase: — (between milestones)
+Plan: —
+Status: v1.11 shipped + archived; no active milestone
 Last activity: 2026-06-16
 Resume file: None
 
@@ -285,6 +285,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-16: **v1.11 mailglass_admin Design-System Uplift SHIPPED + archived.** Milestone audit `status: passed` (34/34 requirements, 10/10 phases, 16/16 integration, 7/7 flows). Archived `milestones/v1.11-ROADMAP.md` + `v1.11-REQUIREMENTS.md` + `v1.11-MILESTONE-AUDIT.md`; MILESTONES.md/PROJECT.md/ROADMAP.md/RETROSPECTIVE.md evolved; `REQUIREMENTS.md` removed (fresh for next milestone); tagged `v1.11`. Stats corrected to true scope (10 phases / 42 plans) — the `milestone.complete` CLI inflation was avoided by archiving manually. Release prepare-only (no Hex cut); PENDING inbound exact-pin re-pin (D-13) deferred until a real release. Next: `/gsd-new-milestone`.
 - 2026-06-16: Phase 103 Plan 03 completed. Full 6-gate battery confirmed green (2026-06-16-phase-103): support_contract.admin 56/56, verify.preview 236/236 (bundle-clean), conformance OK, conformance-advisory OK, motion OK, Playwright structural 54/54 (0 skips — Phase 102-03 fixme completed). Release posture 1.6.2/1.6.2/1.3.1 verified read-only; RELH-01 intact; inbound re-pin recorded as single PENDING ceremony action (D-13, deliberately not performed). Prepare-only readiness note written as 103-03-SUMMARY.md. Next: execute Phase 103 Plan 04 (milestone audit regeneration — D-14/D-15 LAST step).
 - 2026-06-16: Phase 102 Plan 02 completed. --ease-symmetric: var(--ease-in-out) token added to @theme; .motion-tab-swap switched to var(--ease-symmetric) (MOTION-LD-05); MOTION-LD-06 resolution documented in :root duration block (focus rings → --duration-instant 90ms, hover → --duration-fast 150ms). .mg-skeleton connection-state placeholder (opacity-only, .phx-loading/.phx-connected CSS class selectors — confirmed against LV 1.1.28 runtime). @view-transition PE inside @media (prefers-reduced-motion: no-preference). priv/static/app.css rebuilt bit-clean. Both conformance gates clean; Playwright reduced-motion 4/4 pass. Next: execute Phase 102 Plan 03 (phx-remove exit attribute on operator/inbound).
 - 2026-06-16: Phase 102 Plan 01 completed. MOTION-GATE added to check-conformance.sh (two grep passes: layout-property transitions MOTION-LD-10, stray ease-in MOTION-LD-01); exits 0 on clean tree, exits 1 on both probes. structural.spec.js extended: computed-duration assertion (animationDuration/transitionDuration ≤ 0.05s under emulateMedia reduced-motion — MOTION-02 proof) + FACT 7 enter/exit asymmetry describe block with test.fixme pending 102-03. 40/41 structural tests pass, 1 skipped (fixme). Next: execute Phase 102 Plan 02 (CSS/HEEx motion uplift).

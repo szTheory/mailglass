@@ -8,7 +8,16 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v1.11 mailglass_admin Design-System Uplift
+## Current Position: between milestones (v1.11 shipped 2026-06-16)
+
+**No active milestone.** `v1.11 mailglass_admin Design-System Uplift` shipped
+2026-06-16 (audit `status: passed` — 34/34 requirements, 10/10 phases). Next step is
+`/gsd-new-milestone` to define the next cycle. Posture remains quiet maintenance /
+adopter-pull per the D-23 convergence rule; in-repo version truth holds at
+1.6.2 / 1.6.2 / 1.3.1 (v1.11 was release prepare-only — no Hex release cut).
+
+<details>
+<summary>v1.11 mailglass_admin Design-System Uplift — original goal and targets (shipped)</summary>
 
 **Goal:** Re-baseline the admin UI onto the canonical brand tokens, then fractally
 audit-and-uplift every component, component-group, and page across the Operator,
@@ -43,6 +52,8 @@ ceremony, decide whether to cut a real Hex release at milestone close (v1.7 prec
 (human-readable comments cleanup; shift-left preview-screenshot workflow) remains
 promoted separately only if a maintenance pass or adopter pull justifies it.
 
+</details>
+
 **v1.9 context (shipped):**
 
 **`v1.9 Brand Book Fable — A/B Brand System` SHIPPED 2026-06-12.** The
@@ -75,13 +86,19 @@ landing + email specimens, four portable SVGs, and a domain-noun copy library.
 
 ## Current State
 
-**v1.11 progress:** Phases 94-100 are complete. Phase 100 verified the Preview
-surface uplift for `/dev/mail`: URL-owned light/dark admin chrome, independent
-preview-frame theme state, mobile-reachable Mailables navigation, locked Preview
-copy, responsive structural hooks, WCAG-AA browser proof, updated audit captures,
-and GAP-02/GAP-03 closure are now in place. Next active work is Phase 101
-(Microcopy Pass), which applies the global "thoughtful maintainer" voice pass
-across the settled Operator, Inbound, and Preview surfaces.
+**v1.11 SHIPPED 2026-06-16 (audit `status: passed` — 34/34 requirements, 10/10
+phases, 16/16 integration paths, 7/7 E2E flows).** All ten phases (94-103) closed:
+the admin `app.css` now consumes the canonical `brandbook/tokens.css` `--mg-*` tokens
+as single source of truth behind a fail-closed token-parity gate; an idempotent
+quality ratchet (committed per-`component × pillar × theme` baseline + carried-forward
+`GAP-NN` register) is armed (36/36 cells meet-or-beat, 15 improved, zero regressions);
+five LOCKED-DECISION research dossiers fed a fractal component → group → page uplift of
+all three surfaces (Operator, Inbound, Preview) in light + dark at 390/768/1440, plus a
+dev-only component gallery LiveView, global microcopy + motion passes, and all 6 CI
+gates green. **Release prepare-only — no Hex release cut**; one PENDING ceremony action
+(inbound exact-pin re-pin, D-13) is documented and deliberately deferred. v1.11 is
+archived in `.planning/milestones/v1.11-ROADMAP.md`, `v1.11-REQUIREMENTS.md`, and
+`v1.11-MILESTONE-AUDIT.md`. Next: `/gsd-new-milestone`.
 
 **v1.10 progress:** All three phases (91, 92, 93) are complete — v1.10's active
 scope is finished (999.1/999.2 remain backlog, promoted separately). The fable
@@ -335,9 +352,19 @@ v0.5 milestone closed 2026-05-03. 4 phases (28-31), 7 plans, Adoption Hardening 
 
 If everything else fails, the preview dashboard, normalized event ledger, and one-line `Mailglass.deliver/2 → deliver_later/2` ergonomics must work flawlessly.
 
-## Validated Requirements (v0.1, v0.2, v1.1, v1.3, v1.4, v1.7, v1.10 — SHIPPED)
+## Validated Requirements (v0.1, v0.2, v1.1, v1.3, v1.4, v1.7, v1.10, v1.11 — SHIPPED)
 
-All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 REQ-IDs, and 10 v1.10 REQ-IDs satisfied. The v1.9 brand book shipped its 22 REQ-IDs (archived in `milestones/v1.9-REQUIREMENTS.md`); v1.8 validated 2 brand-audit requirements before closing superseded.
+All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 REQ-IDs, 10 v1.10 REQ-IDs, and 34 v1.11 REQ-IDs satisfied. The v1.9 brand book shipped its 22 REQ-IDs (archived in `milestones/v1.9-REQUIREMENTS.md`); v1.8 validated 2 brand-audit requirements before closing superseded.
+
+**By category (v1.11 — mailglass_admin Design-System Uplift, SHIPPED 2026-06-16):**
+- ✓ TOKEN-01..05 — admin `app.css` consumes canonical `brandbook/tokens.css` `--mg-*` tokens (no duplicate hex), corrected surface/border roles, dark-mode AA fixes, fail-closed token-parity gate, bit-clean rebuilt bundle — validated in Phase 94
+- ✓ RATCHET-01..05 — committed meet-or-beat score baseline, carried-forward `GAP-NN` register with sev≥3 citation gate, tightened conformance/motion grep gates, Playwright structural assertions, LLM-scored 18-cell PNG matrix (PNGs gitignored) — validated in Phases 94-95 (RATCHET-03 in 94)
+- ✓ RESEARCH-01..05 — five adversarially-synthesized LOCKED-DECISION dossiers (motion/IA/component-states/dark-mode/microcopy) — validated in Phase 96
+- ✓ COMP-01..03, GALLERY-01..02 — all shared components on-brand in light+dark across the locked state matrix; deterministic on-token status_badge/badge mappings; dev-only `/dev/mail/gallery` with stable `data-testid` cells — validated in Phase 97
+- ✓ GROUP-01/02/03, PAGE-01/02/03, RESP-01, FLOW-01/02, A11Y-01/02 — three-surface group/IA/responsive/flow/a11y uplift (Operator anchor Phase 98; Inbound overview tier + RoutingTrace/EvidenceCard rework Phase 99; Preview dark chrome Phase 100) — validated in Phases 98-100
+- ✓ COPY-01 — global "thoughtful maintainer" microcopy pass, "Oops" banned across all 3 surfaces, data-driven voice_test — validated in Phase 101
+- ✓ MOTION-01..02 — token-named easing, enter/exit asymmetry, skeletons, View-Transitions PE; `prefers-reduced-motion` collapses all motion; motion gate green — validated in Phase 102
+- (Phase 103 closeout verified all 34 REQ-IDs: ratchet armed, zero open GAP rows, 6 CI gates green, release staged prepare-only)
 
 **By category (v1.10 — Brand Adoption, SHIPPED 2026-06-13):**
 - ✓ FOLD-01..03 — fable book adopted as canonical `brandbook/` via `git mv` (codex removed, history at `09a84dd4`), CLAUDE.md + `design-system.md` pointers reconciled to `brandbook/brand-book.md`, v1.9 gate re-passed on the new path — validated in Phase 91
@@ -405,23 +432,18 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 RE
 
 ## Active
 
-**Active milestone: v1.11 mailglass_admin Design-System Uplift** (opened 2026-06-13;
-Phases 94–103). This is the sanctioned design-system milestone the Phase 92 human-UAT
-follow-up ("refresh outbound admin UI look and feel") pointed to — now broadened to a
-brand-grounded, fractal, idempotent uplift of all three admin surfaces. It is an
-**adopter-visible-quality** investment under the D-23 convergence rule (like v1.7), not
-feature growth. See Current Milestone above and D-27 below.
+**No active milestone.** v1.11 shipped 2026-06-16; next step is `/gsd-new-milestone`.
+Posture remains quiet maintenance / adopter-pull per D-23: Mailglass core, admin, and
+inbound are product-complete for the original transactional-email thesis, and the admin
+UI is now fully on the canonical brand. Define the next milestone only against concrete
+adopter pull, a contract gap, or a deliberately-promoted backlog item.
 
-Requirement categories (mapped to phases by the roadmap): `TOKEN` · `RATCHET` · `RESEARCH` ·
-`COMP` · `GROUP` · `PAGE`/`IA` · `RESP` · `FLOW` · `COPY` · `MOTION` · `A11Y` (cross-cutting) · `GALLERY`.
-
-Folded into this milestone's scope where cheap:
-- Pre-existing nil-guard tech debt in `operator_live.ex` / `suppression_card.ex` (CR-01/02/03) — candidate for the Operator surface phase (98).
-
-Carry-forward work NOT in this milestone (none committed):
-- Promote backlog Phase 999.1 / 999.2 via `/gsd-review-backlog` only if a maintenance pass or adopter pull justifies it.
+Candidate next-milestone work (none committed):
+- Promote backlog Phase 999.1 (human-readable code comments + GSD artifact cleanup) / 999.2 (shift-left email screenshot + responsive preview workflow) via `/gsd-review-backlog` if a maintenance pass justifies it.
 - Register `guard-release-trigger` as a required branch-protection check once a PR has exercised it (documented v1.10 follow-up).
-- Core mailglass email-template HEEx component uplift (different audience/constraints) — candidate future milestone.
+- Core mailglass **email-template HEEx component** design-system uplift (recipients' inboxes; email-client CSS constraints — different audience/constraints than the admin UI) — candidate future milestone.
+- Inbound replay modal a11y parity (operator-style focus-trap + Escape handler) — highest-priority deferred quality item from v1.11 (Phase 102 WR-03).
+- If/when a real Hex release is cut: perform the PENDING inbound exact-pin re-pin (D-13) after the Release Please PR merges.
 
 ## Out of Scope
 
@@ -519,7 +541,7 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-24 | v1.7 admin UI polish is a sanctioned **adopter-visible-quality** investment under the D-23 convergence rule (not feature growth); delivered **within** the brand book (Fork B) by *applying* the shipped design system more completely, with a real in-library Operator Overview landing + generalized orientation (Fork A) | First-run/forensic UX quality is the highest-leverage remaining adopter lever now that the product surface is complete; restraint (no brand amendment, no new deps, grep-enforceable conformance) keeps it convergence-aligned, not scope creep | ✓ Validated v1.7 — anti-churn gate held (every build task cited a sev≥3 gap-register row), stable seams untouched, no new deps, conformance grep-enforced; audit passed 19/19; linked-version admin bump confirmed mechanical |
 | D-25 | v1.8 brand-system work is a repo-artifact milestone, not product expansion | Mailglass had strong prompt-era brand direction but lacked source-controlled, buildable collateral for maintainers, future agents, docs, landing pages, tokens, logos, and marketing copy | ✓ Held through v1.8→v1.9→v1.10 — all artifacts stayed under `brandbook/`; no public API/package code changes; brand strategy preserved as provenance |
 | D-26 | v1.10 adopts the A/B-winning fable brand as the project's one canonical identity and hardens the release pipeline against accidental brand/planning-only releases | The v1.9 A/B winner needed to actually become the repo's identity (folder, README, social, HexDocs), and the 1.6.x accidental-release incident proved release-please could cut a release from non-code commits | ✓ Validated v1.10 — canonical `brandbook/` adopted (codex removed), README/og-card/admin/HexDocs surfaces propagated, `exclude-paths` + required `guard-release-trigger` lint added, 1.6.x aftermath reconciled to 1.6.2/1.6.2/1.3.1; audit passed 10/10; no Hex release cut |
-| D-27 | v1.11 re-baselines `mailglass_admin` onto the canonical fable brand tokens and runs a fractal (component → group → page), idempotent, research-grounded design-system uplift of all three admin surfaces — an adopter-visible-quality investment under D-23, not feature growth | The admin UI was last polished (v1.7) against the *old codex-era* brand; v1.9→v1.10 brand work never touched the admin's `app.css`, leaving it drifted (borders drawn in the accent color, cards one brand-role off, dark muted text below AA, no consumption of `brandbook/tokens.css`). The "Storybook lens" is realized as a thin dev-only gallery (zero-Node forbids real Storybook); "only-forward" is enforced by a committed score baseline + carried-forward GAP register. Scope fenced to admin UI; release prepare-only | ⏳ Active v1.11 — Phases 94–103 |
+| D-27 | v1.11 re-baselines `mailglass_admin` onto the canonical fable brand tokens and runs a fractal (component → group → page), idempotent, research-grounded design-system uplift of all three admin surfaces — an adopter-visible-quality investment under D-23, not feature growth | The admin UI was last polished (v1.7) against the *old codex-era* brand; v1.9→v1.10 brand work never touched the admin's `app.css`, leaving it drifted (borders drawn in the accent color, cards one brand-role off, dark muted text below AA, no consumption of `brandbook/tokens.css`). The "Storybook lens" is realized as a thin dev-only gallery (zero-Node forbids real Storybook); "only-forward" is enforced by a committed score baseline + carried-forward GAP register. Scope fenced to admin UI; release prepare-only | ✓ Validated v1.11 — all 3 admin surfaces re-baselined onto `brandbook/tokens.css`; idempotent ratchet armed (36/36 cells meet-or-beat, zero regressions); dev-only gallery shipped; audit passed 34/34 reqs across 10 phases; release prepare-only held (no Hex cut); fenced scope held (no functional core/inbound changes) |
 
 ## Evolution
 
@@ -542,4 +564,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-15 — **v1.11 mailglass_admin Design-System Uplift** has completed Phases 94-99. Inbound Surface verified passed; next active work is Phase 100 Preview Surface. Scope remains admin UI only (3 surfaces), token re-baseline onto canonical brand + fractal idempotent uplift; release prepare-only. Prior line: v1.10 Brand Adoption shipped (audit 10/10); in-repo version truth at 1.6.2 / 1.6.2 / 1.3.1, no Hex release cut.*
+*Last updated: 2026-06-16 after v1.11 milestone — **v1.11 mailglass_admin Design-System Uplift SHIPPED** (Phases 94-103; audit `status: passed`, 34/34 requirements, 10/10 phases). All three admin surfaces re-baselined onto canonical `brandbook/tokens.css` and fractally uplifted under an idempotent quality ratchet; release prepare-only (no Hex cut), version truth at 1.6.2 / 1.6.2 / 1.3.1. No active milestone — next step `/gsd-new-milestone`.*

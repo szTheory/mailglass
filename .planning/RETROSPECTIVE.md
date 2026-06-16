@@ -4,6 +4,85 @@
 
 ---
 
+## Milestone: v1.11 — mailglass_admin Design-System Uplift
+
+**Shipped:** 2026-06-16
+**Phases:** 10 (94-103) | **Plans:** 42
+
+### What Was Built
+
+The `mailglass_admin` UI was re-baselined onto the canonical fable brand tokens and
+then fractally uplifted — component → group → page — across all three surfaces
+(Operator, Inbound, Preview) to award-winning quality in light + dark at every width.
+The root cause was concrete and measurable: the admin's `app.css` never consumed
+`brandbook/tokens.css`, so every border drew in the accent color, cards sat one
+brand-role off, and dark muted text was sub-AA. Phase 94 fixed the token foundation
+behind a fail-closed token-parity gate; Phases 95-96 stood up an idempotent
+quality ratchet and a five-dossier research layer of adversarially-synthesized LOCKED
+DECISIONS; Phase 97 uplifted the shared components and shipped a dev-only gallery
+LiveView; Phases 98-100 uplifted each surface (the structurally-thin Inbound surface
+was the heaviest lift, gaining an overview tier and reworked RoutingTrace/EvidenceCard);
+Phases 101-102 ran global microcopy and motion passes; Phase 103 closed out with the
+meet-or-beat ratchet armed (36/36 cells, 15 improved, zero regressions), all 6 CI
+gates green, and the release ceremony staged prepare-only.
+
+### What Worked
+
+- **Gates-first (tighten-then-re-baseline).** Landing the tightened conformance + motion
+  grep gates and the fail-closed token-parity test BEFORE the token swap meant the
+  re-baseline literally could not regress silently — the build broke on drift.
+- **Front-loaded research dossier → LOCKED DECISION blocks.** Phase 96's five dossiers
+  let every downstream build phase cite a stable `MOTION-LD`/`IA-LD`/`STATE-LD`/`DARK-LD`/
+  `COPY-LD` decision ID without re-reading the research body — clean decision provenance.
+- **The idempotent GAP register + meet-or-beat ratchet.** A single carried-forward
+  `GAP-NN` register with run-ids and a sev≥3 citation gate, plus a committed score
+  baseline, made the milestone's "only-forward" guarantee mechanical rather than aspirational.
+- **Dev-only gallery as the audit surface.** The Storybook-lens LiveView with stable
+  `data-testid` cells gave the structural-assertion and LLM-score layers an exhaustive,
+  DB-free target — satisfying the zero-Node hard rule without a real Storybook.
+- **Self-verifying close.** Every phase produced a `passed` VERIFICATION.md and the audit
+  cross-referenced three sources (REQUIREMENTS traceability, VERIFICATION tables, SUMMARY
+  frontmatter) — zero human UAT needed.
+
+### What Was Inefficient
+
+- **A stale 2026-06-15 audit** reported three unsatisfied requirements (COPY-01,
+  MOTION-01/02) and three missing phases (101/102/103) that were in fact complete;
+  Phase 103-04 had to regenerate the audit (`gaps_found` → `passed`) as the explicit
+  D-15-ordered last step. Audit currency is fragile when phases land fast.
+- **Nyquist validation lagged** — 96/97/101 have no VALIDATION.md and 102/103 are draft.
+  Non-blocking (all VERIFICATION.md passed) but it leaves the Nyquist layer `partial`.
+- **Leftover phase dirs** (v1.10 91-93 + 999.x backlog) still in `.planning/phases/`
+  keep inflating `milestone.complete` counts, forcing manual stat correction every close.
+
+### Patterns Established
+
+- **Tighten-then-re-baseline** as the safe order for any foundational token/CSS swap.
+- **Adversarially-synthesized LOCKED DECISION blocks** as the consumable interface between
+  a research phase and the build phases that cite it.
+- **Schema-2 `{prior, current}` score baseline with an anti-vacuity guard** as the
+  meet-or-beat ratchet shape (activated only at closeout to avoid mid-milestone churn).
+- **PENDING ceremony action documented in the audit** when a release step (inbound
+  exact-pin re-pin) is unknowable until the Release Please PR merges — deferred, not skipped.
+
+### Key Lessons
+
+- Regenerate the milestone audit as the *last* closeout step (D-15 ordering); a
+  fast-moving milestone will outrun any earlier audit snapshot.
+- A measurable root cause ("every border draws in the accent color") makes a
+  design-system milestone falsifiable and gate-able — far stronger than "feels off-brand."
+- Prepare-only release posture (v1.7 precedent) cleanly decouples adopter-visible-quality
+  work from the Hex release decision; the linked-version bump can wait for a real cut.
+
+### Cost Observations
+
+- Model mix: predominantly the balanced profile (config `model_profile: balanced`).
+- Phases: 10 (94-103) across 2026-06-13 → 2026-06-16 (≈4 days).
+- Notable: Phase 96's five-dossier research fanned out to parallel subagents; the heaviest
+  single build lift was Phase 99 (Inbound), the structurally-thinnest surface.
+
+---
+
 ## Milestone: v1.10 — Brand Adoption
 
 **Shipped:** 2026-06-13
