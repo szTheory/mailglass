@@ -43,7 +43,7 @@ prepare-only.
 - [x] **Phase 99: Inbound Surface** - heaviest lift: add inbound overview tier, rework RoutingTrace + EvidenceCard, empty/loading states, text-xl→token fixes; re-applies cross-surface uplift to `/ops/mail/inbound`. (completed 2026-06-15)
 - [x] **Phase 100: Preview Surface** - group + page/IA + responsive uplift of `/dev/mail`; add dark-mode support to the preview chrome. (completed 2026-06-15)
 - [x] **Phase 101: Microcopy Pass** - global "thoughtful maintainer" microcopy across all 3 settled surfaces. (completed 2026-06-16)
-- [ ] **Phase 102: Motion + Micro-interaction Pass** - global motion uplift within hard constraints, sourced from the Phase 96 dossier.
+- [x] **Phase 102: Motion + Micro-interaction Pass** - global motion uplift within hard constraints, sourced from the Phase 96 dossier. (completed 2026-06-16)
 - [ ] **Phase 103: Verification + Idempotent Closeout** - re-run matrix; close sev-4/5 GAP rows; assert score baseline meets-or-beats; all gates green; produce the baseline the next run must beat; milestone audit.
 
 **Critical path:** 94 → 95 → 96 → 97 → {98, 99, 100 parallel} → {101, 102 parallel} → 103
@@ -299,7 +299,7 @@ Plans:
 
 - [x] 102-01-PLAN.md — Gates-first: MOTION-GATE (ban layout-property transitions + stray ease-in) + structural reduced-motion duration assertion + enter/exit asymmetry scaffold (MOTION-01, MOTION-02)
 - [x] 102-02-PLAN.md — app.css uplift: --ease-symmetric token + tab-swap, focus --duration-instant resolution, connection-state .mg-skeleton, CSS-only @view-transition PE; rebuild bundle (MOTION-01, MOTION-02)
-- [ ] 102-03-PLAN.md — HEEx exit asymmetry (phx-remove on detail panes + modal overlays), MOTION-LD-12 preview-CTA reveal, focus transition, un-skip asymmetry assertion; closing mix verify.preview gate (MOTION-01, MOTION-02)
+- [x] 102-03-PLAN.md — HEEx exit asymmetry (phx-remove on detail panes + modal overlays), MOTION-LD-12 preview-CTA reveal, focus transition, un-skip asymmetry assertion; closing mix verify.preview gate (MOTION-01, MOTION-02)
 **UI hint**: yes
 
 ### Phase 103: Verification + Idempotent Closeout
@@ -329,7 +329,7 @@ Plans:
 | 99. Inbound Surface | 5/5 | Complete    | 2026-06-15 |
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
 | 101. Microcopy Pass | 2/2 | Complete    | 2026-06-16 |
-| 102. Motion + Micro-interaction Pass | 2/3 | In Progress|  |
+| 102. Motion + Micro-interaction Pass | 3/3 | Complete   | 2026-06-16 |
 | 103. Verification + Idempotent Closeout | 0/? | Not started | - |
 
 ## Backlog
