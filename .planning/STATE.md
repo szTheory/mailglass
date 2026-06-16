@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-16T17:04:26.022Z"
+last_updated: "2026-06-16T17:12:37.488Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 12
   completed_phases: 10
   total_plans: 44
-  completed_plans: 42
+  completed_plans: 43
   percent: 83
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-06-15 — after Phase 99 Inbound Surface
 ## Current Position
 
 Phase: 102 (motion-micro-interaction-pass) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Executing Phase 102
-Last activity: 2026-06-16 -- Phase 102 Plan 01 complete (MOTION-GATE + structural reduced-motion assertion)
+Last activity: 2026-06-16 -- Phase 102 Plan 02 complete (ease-symmetric token, mg-skeleton, view-transitions PE, bundle rebuilt)
 Resume file: None
 
 ## v1.11 Milestone Intent
@@ -173,6 +173,7 @@ single closeout gate.
 - [Phase ?]: @banned_words module attribute makes banned-word list data-driven across all three surfaces
 - [Phase ?]: LD-12 asserted using HTML-entity form (HEEx escapes apostrophes in text nodes as &#39;)
 - [102-01] MOTION-GATE added to check-conformance.sh: two grep passes ban layout-property transitions (MOTION-LD-10) and stray ease-in (MOTION-LD-01); piped grep -v exclusions for ease-in-out + --ease-symmetric used instead of POSIX-incompatible lookahead. Reduced-motion Playwright test clicks first delivery row to bring .motion-reveal into DOM before asserting computed animationDuration/transitionDuration ≤ 0.05s. Enter/exit asymmetry test.fixme scaffold pending Plan 102-03.
+- [102-02] --ease-symmetric: var(--ease-in-out) added to @theme; .motion-tab-swap switched to var(--ease-symmetric) (MOTION-LD-05). MOTION-LD-06 resolution: focus rings → --duration-instant (90ms, ≤100ms); row hover → --duration-fast (150ms). phx-connected/phx-loading are CSS classes on the LiveView container element (not body attributes) — confirmed against LV 1.1.28 runtime; .mg-skeleton uses .phx-loading/.phx-connected class selectors. @view-transition PE inside @media (prefers-reduced-motion: no-preference) — required wrapper because global reduce block does not cover VT pseudo-elements. Bundle rebuilt bit-clean.
 
 ## Performance Metrics
 
@@ -277,6 +278,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-16: Phase 102 Plan 02 completed. --ease-symmetric: var(--ease-in-out) token added to @theme; .motion-tab-swap switched to var(--ease-symmetric) (MOTION-LD-05); MOTION-LD-06 resolution documented in :root duration block (focus rings → --duration-instant 90ms, hover → --duration-fast 150ms). .mg-skeleton connection-state placeholder (opacity-only, .phx-loading/.phx-connected CSS class selectors — confirmed against LV 1.1.28 runtime). @view-transition PE inside @media (prefers-reduced-motion: no-preference). priv/static/app.css rebuilt bit-clean. Both conformance gates clean; Playwright reduced-motion 4/4 pass. Next: execute Phase 102 Plan 03 (phx-remove exit attribute on operator/inbound).
 - 2026-06-16: Phase 102 Plan 01 completed. MOTION-GATE added to check-conformance.sh (two grep passes: layout-property transitions MOTION-LD-10, stray ease-in MOTION-LD-01); exits 0 on clean tree, exits 1 on both probes. structural.spec.js extended: computed-duration assertion (animationDuration/transitionDuration ≤ 0.05s under emulateMedia reduced-motion — MOTION-02 proof) + FACT 7 enter/exit asymmetry describe block with test.fixme pending 102-03. 40/41 structural tests pass, 1 skipped (fixme). Next: execute Phase 102 Plan 02 (CSS/HEEx motion uplift).
 
 - 2026-06-14: Phase 97 Plan 08 completed. structural.spec.js gallery describe block un-skipped with 5 real getByTestId + twin-theme assertions; GAP-05 flipped to fixed in RATCHET-GAP-REGISTER.md; 3 gallery_live.ex specimen data bugs fixed (NaiveDateTime→DateTime, missing occurred_at, string→atom sidebar scenario keys) — Playwright gallery tests 5/5 green. Phase 97 is complete (8/8 plans done); next: Phase 97 verification then Phase 98.
