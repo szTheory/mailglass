@@ -324,7 +324,7 @@ Plans:
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
 | 99. Inbound Surface | 5/5 | Complete    | 2026-06-15 |
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
-| 101. Microcopy Pass | 2/2 | Complete   | 2026-06-16 |
+| 101. Microcopy Pass | 2/2 | Complete    | 2026-06-16 |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
 | 103. Verification + Idempotent Closeout | 0/? | Not started | - |
 
