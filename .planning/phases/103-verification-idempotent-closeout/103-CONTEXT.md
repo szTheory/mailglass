@@ -49,7 +49,7 @@ publish, no version-number / CHANGELOG / manifest hand-edits.
   so a forgotten promotion (prior copied verbatim into current) fails loudly instead of passing
   as a trivial 36-cell self-comparison. This is the mechanical defense against the vacuous-gate
   footgun Phase 95 D-05 forbids.
-- **D-05:** REJECTED — `git show HEAD:.../ui-baseline-scores.json` as the prior source. Unsafe:
+- **D-05:** [informational] REJECTED — `git show HEAD:.../ui-baseline-scores.json` as the prior source. Unsafe:
   `docs/` ships inside the Hex tarball but `.git` does not, so `mix test` from an unpacked
   package or a shallow/sandboxed CI checkout would read empty → vacuous pass. Also violates the
   zero-process-dep, pure-`File`+`Jason` test DNA. (Ecosystem precedent: Betterer, Rust `insta`,
