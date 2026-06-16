@@ -463,7 +463,11 @@ defmodule MailglassAdmin.OperatorLive do
                   </p>
                 </div>
               <% true -> %>
-                <div id={"delivery-detail-#{@selected_delivery.id}"} class="motion-reveal space-y-4">
+                <div
+                  id={"delivery-detail-#{@selected_delivery.id}"}
+                  class="motion-reveal space-y-4"
+                  phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0 translate-y-1"})}
+                >
                   <.link
                     patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
                     data-testid="operator-detail-back"

@@ -6,6 +6,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   use Phoenix.Component
 
   alias MailglassAdmin.Operator.RepairState
+  alias Phoenix.LiveView.JS
 
   attr(:open?, :boolean, required: true)
   attr(:delivery, :map, default: nil)
@@ -15,7 +16,10 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   def replay_modal(assigns) do
     ~H"""
     <%= if @open? and @delivery do %>
-      <div class="motion-tab-swap fixed inset-0 z-40 overflow-y-auto bg-base-content/40 p-4">
+      <div
+        class="motion-tab-swap fixed inset-0 z-40 overflow-y-auto bg-base-content/40 p-4"
+        phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})}
+      >
         <div
           data-testid="operator-replay-modal"
           role="dialog"
@@ -24,6 +28,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           phx-key="Escape"
           phx-window-keydown="close_replay"
           class="motion-overlay mx-auto my-4 w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
+          phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"})}
         >
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
