@@ -132,7 +132,7 @@ quality forward.
 
 ### COPY — Microcopy
 
-- [ ] **COPY-01**: Empty / error / loading / confirmation microcopy across all three surfaces
+- [x] **COPY-01**: Empty / error / loading / confirmation microcopy across all three surfaces
   is in the "thoughtful maintainer" voice and serves the surface's JTBD (plain language, names
   the cause, never "Oops").
 
@@ -213,7 +213,7 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | GROUP-02 | Phase 99 | Complete |
 | GROUP-03 | Phase 99 | Complete |
 | PAGE-03 | Phase 100 | Complete |
-| COPY-01 | Phase 101 | Pending |
+| COPY-01 | Phase 101 | Complete |
 | MOTION-01 | Phase 102 | Pending |
 | MOTION-02 | Phase 102 | Pending |
 

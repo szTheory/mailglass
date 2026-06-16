@@ -276,7 +276,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 101-01-PLAN.md — Apply three residual COPY-LD string fixes in inbound_live.ex + D-07 source sweep (COPY-01)
+- [x] 101-01-PLAN.md — Apply three residual COPY-LD string fixes in inbound_live.ex + D-07 source sweep (COPY-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -324,7 +324,7 @@ Plans:
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
 | 99. Inbound Surface | 5/5 | Complete    | 2026-06-15 |
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
-| 101. Microcopy Pass | 0/2 | Not started | - |
+| 101. Microcopy Pass | 1/2 | In Progress|  |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
 | 103. Verification + Idempotent Closeout | 0/? | Not started | - |
 
