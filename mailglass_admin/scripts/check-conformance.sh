@@ -81,6 +81,39 @@ if grep -rEn 'color[^#]*#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b' "$LIB" --include="*.
   errors=$((errors + 1))
 fi
 
+# MOTION-GATE: banned animation properties and stray ease-in tokens (MOTION-LD-01/10).
+#
+# Part 1 — layout-property transition utilities.
+# Animating height/width/padding/margin/top/left/right/bottom/max-height triggers
+# layout thrash and is banned by MOTION-LD-10. Only transform/opacity (and fast-token
+# color) are permitted. Ban:
+#   - Named Tailwind utilities:  transition-height, transition-width, transition-padding,
+#     transition-margin, transition-top, transition-left, transition-right,
+#     transition-bottom, transition-max-height
+#   - Arbitrary JIT utilities:   transition-[height], transition-[max-height], etc.
+# Anchor with a leading non-word character or start-of-token so transition-colors,
+# transition-all, transition-transform, transition-opacity are NOT matched.
+#
+# Part 2 — stray ease-in token (MOTION-LD-01 — ease-out only).
+# Ban `ease-in` as a whole token (word boundary on both sides) while allowing:
+#   - ease-in-out  (standard CSS function — boundary suffix -out means it won't match)
+#   - var(--ease-symmetric)  (the one documented exception for the tab-swap crossfade;
+#     the grep-E pattern (?!var\() uses a POSIX-incompatible lookahead so we instead
+#     exclude the literal construction "(--ease-" with a second -v pass at the pipe)
+#
+# Running both greps: the first flags layout-property violations, the second flags
+# ease-in violations. Each increments `errors` independently so a file with both
+# defects is counted only once per gate.
+if grep -rEn '(^|[^a-zA-Z0-9-])transition-(height|width|padding|margin|top|left|right|bottom|max-height)\b|transition-\[([^]]*\b(height|width|padding|margin|top|left|right|bottom|max-height)\b[^]]*)\]' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: MOTION-GATE — layout-property transition found (animate transform/opacity only, MOTION-LD-10)" >&2
+  errors=$((errors + 1))
+fi
+if grep -rEn '\bease-in\b' "$LIB" --include="*.ex" 2>/dev/null | grep -v -- '--ease-symmetric' | grep -v 'ease-in-out' | grep -q .; then
+  grep -rEn '\bease-in\b' "$LIB" --include="*.ex" 2>/dev/null | grep -v -- '--ease-symmetric' | grep -v 'ease-in-out'
+  echo "FAIL: MOTION-GATE — stray ease-in found (ease-out only except --ease-symmetric, MOTION-LD-01)" >&2
+  errors=$((errors + 1))
+fi
+
 if [[ $errors -gt 0 ]]; then
   echo "FAIL: design-system conformance violations found ($errors gate(s) failed)" >&2
   exit 1
