@@ -133,9 +133,14 @@
   --shadow-overlay: 0 8px 24px -8px rgb(13 27 42 / 0.18);
 
   /* Easing — ease-OUT only for enter/exit (never ease-in); in-out for on-screen
-     movement. Overrides Tailwind's default ease-out / ease-in-out curves. */
+     movement. Overrides Tailwind's default ease-out / ease-in-out curves.
+     --ease-symmetric aliases --ease-in-out and is the ONLY non-ease-out curve
+     permitted, scoped exclusively to symmetric crossfades (MOTION-LD-05: the
+     tab-swap crossfade exception). ease-in and ease-in-out must not appear
+     except through this token. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-symmetric: var(--ease-in-out); /* MOTION-LD-05: tab-swap crossfade only */
 }
 
 /* Self-hosted typography — brand book §8.
@@ -191,9 +196,13 @@
 
   /* Motion durations — all ≤300ms (great-animations ceiling). Exits use a
      shorter step than entries. Consumed by the .motion-* rules and by
-     duration-(--duration-*) utilities in HEEx. */
-  --duration-instant: 90ms;   /* press feedback, hover color */
-  --duration-fast: 150ms;     /* tab/row state, modal/flash exits */
+     duration-(--duration-*) utilities in HEEx.
+     MOTION-LD-06 resolution: focus rings use --duration-instant (90ms, satisfies
+     the ≤100ms ceiling); row background/color hover uses --duration-fast (150ms).
+     These are different signals — focus is an accessibility indicator (snap-to-
+     visible), hover is a state affordance — so different timing is correct. */
+  --duration-instant: 90ms;   /* press feedback, focus-ring color (MOTION-LD-06 ≤100ms) */
+  --duration-fast: 150ms;     /* tab/row state hover, modal/flash exits */
   --duration-reveal: 220ms;   /* detail-pane reveal, modal enter, timeline item */
   --duration-flash: 200ms;    /* toast enter */
 
@@ -261,9 +270,12 @@ code, pre, .mono {
 }
 
 /* tab-swap — crossfade a panel whose content swapped in place (tabs, frame).
-   Also used for the modal backdrop fade. */
+   Also used for the modal backdrop fade. Uses --ease-symmetric (aliasing
+   --ease-in-out) because a symmetric in-out curve reads as "content swapping"
+   not "content arriving" — the single documented exception to ease-out-only
+   (MOTION-LD-05). ease-in and ease-in-out must not appear outside this rule. */
 .motion-tab-swap {
-  animation: mg-fade-in var(--duration-fast) var(--ease-out) both;
+  animation: mg-fade-in var(--duration-fast) var(--ease-symmetric) both;
 }
 
 /* overlay — modal/popover panel enters with a faint scale-up from 0.98 (never
