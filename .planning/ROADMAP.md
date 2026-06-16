@@ -314,7 +314,25 @@ Plans:
   3. All gates are green in CI — token-parity, tightened conformance + motion grep, Playwright structural assertions, LLM-score floor, and `git diff --exit-code priv/static/` bundle-clean.
   4. The linked-version release ceremony is staged prepare-only (admin minor bump mechanically drags matched core + inbound) and the milestone audit passes.
 
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+
+**Wave 1**
+
+- [ ] 103-01-PLAN.md — Reconcile GAP register: flip GAP-01/04/06/07/08/09 open→fixed against live code (RATCHET-02)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 103-02-PLAN.md — Activate ratchet: schema-2 {prior,current} restructure + fresh re-score + anti-vacuity guard + Pitfall-1 coverage-test fix (RATCHET-01)
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 103-03-PLAN.md — All-gates verification battery + prepare-only release readiness note (RATCHET-01, RATCHET-02, CLOSE)
+
+**Wave 4** *(blocked on Wave 3 + 103 VERIFICATION.md)*
+
+- [ ] 103-04-PLAN.md — Regenerate v1.11 milestone audit LAST via gsd-audit-milestone (CLOSE)
+
 **UI hint**: yes
 
 ## Progress
