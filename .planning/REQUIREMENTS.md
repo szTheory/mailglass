@@ -138,11 +138,11 @@ quality forward.
 
 ### MOTION — Micro-interaction
 
-- [ ] **MOTION-01**: Micro-animations are upgraded within the hard constraints (token-named
+- [x] **MOTION-01**: Micro-animations are upgraded within the hard constraints (token-named
   easing, real enter/exit asymmetry, first-mount stagger, loading skeletons, focus transitions,
   View-Transitions progressive enhancement) — no springs/overshoot, no layout-property
   animation, no client JS hook.
-- [ ] **MOTION-02**: `prefers-reduced-motion` collapses all motion and the motion conformance
+- [x] **MOTION-02**: `prefers-reduced-motion` collapses all motion and the motion conformance
   gate stays green.
 
 ### A11Y — Accessibility (cross-cutting)
@@ -214,8 +214,8 @@ exactly one phase — 100% coverage, no orphans, no double-maps.
 | GROUP-03 | Phase 99 | Complete |
 | PAGE-03 | Phase 100 | Complete |
 | COPY-01 | Phase 101 | Complete |
-| MOTION-01 | Phase 102 | Pending |
-| MOTION-02 | Phase 102 | Pending |
+| MOTION-01 | Phase 102 | Complete |
+| MOTION-02 | Phase 102 | Complete |
 
 **Coverage:** 34/34 v1.11 requirements mapped to exactly one phase ✓
 

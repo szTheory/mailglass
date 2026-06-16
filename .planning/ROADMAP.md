@@ -297,7 +297,7 @@ Plans:
 
 **Plans**: 3 plans
 
-- [ ] 102-01-PLAN.md — Gates-first: MOTION-GATE (ban layout-property transitions + stray ease-in) + structural reduced-motion duration assertion + enter/exit asymmetry scaffold (MOTION-01, MOTION-02)
+- [x] 102-01-PLAN.md — Gates-first: MOTION-GATE (ban layout-property transitions + stray ease-in) + structural reduced-motion duration assertion + enter/exit asymmetry scaffold (MOTION-01, MOTION-02)
 - [ ] 102-02-PLAN.md — app.css uplift: --ease-symmetric token + tab-swap, focus --duration-instant resolution, connection-state .mg-skeleton, CSS-only @view-transition PE; rebuild bundle (MOTION-01, MOTION-02)
 - [ ] 102-03-PLAN.md — HEEx exit asymmetry (phx-remove on detail panes + modal overlays), MOTION-LD-12 preview-CTA reveal, focus transition, un-skip asymmetry assertion; closing mix verify.preview gate (MOTION-01, MOTION-02)
 **UI hint**: yes
@@ -329,7 +329,7 @@ Plans:
 | 99. Inbound Surface | 5/5 | Complete    | 2026-06-15 |
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
 | 101. Microcopy Pass | 2/2 | Complete    | 2026-06-16 |
-| 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
+| 102. Motion + Micro-interaction Pass | 1/3 | In Progress|  |
 | 103. Verification + Idempotent Closeout | 0/? | Not started | - |
 
 ## Backlog

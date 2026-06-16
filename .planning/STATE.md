@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-16T16:04:04.217Z"
-last_activity: 2026-06-16 -- Phase 102 planning complete
+last_updated: "2026-06-16T17:04:26.022Z"
+last_activity: 2026-06-16
 progress:
   total_phases: 12
   completed_phases: 10
   total_plans: 44
-  completed_plans: 41
+  completed_plans: 42
   percent: 83
 ---
 
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-15 — after Phase 99 Inbound Surface close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 102 — motion + micro interaction pass
+**Current focus:** Phase 102 — motion-micro-interaction-pass
 
 ## Current Position
 
-Phase: 102
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-16 -- Phase 102 planning complete
+Phase: 102 (motion-micro-interaction-pass) — EXECUTING
+Plan: 2 of 3
+Status: Executing Phase 102
+Last activity: 2026-06-16 -- Phase 102 Plan 01 complete (MOTION-GATE + structural reduced-motion assertion)
 Resume file: None
 
 ## v1.11 Milestone Intent
@@ -172,6 +172,7 @@ single closeout gate.
 - [Phase 99]: [99-05] Operator browser gate runs with --workers=1 because /ops/browser-reset uses shared deterministic seed state. — The broad gate failed under concurrent resets and passed 45/45 after serialization, matching the focused 99-04 shared-seed evidence.
 - [Phase ?]: @banned_words module attribute makes banned-word list data-driven across all three surfaces
 - [Phase ?]: LD-12 asserted using HTML-entity form (HEEx escapes apostrophes in text nodes as &#39;)
+- [102-01] MOTION-GATE added to check-conformance.sh: two grep passes ban layout-property transitions (MOTION-LD-10) and stray ease-in (MOTION-LD-01); piped grep -v exclusions for ease-in-out + --ease-symmetric used instead of POSIX-incompatible lookahead. Reduced-motion Playwright test clicks first delivery row to bring .motion-reveal into DOM before asserting computed animationDuration/transitionDuration ≤ 0.05s. Enter/exit asymmetry test.fixme scaffold pending Plan 102-03.
 
 ## Performance Metrics
 
@@ -275,6 +276,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-16: Phase 102 Plan 01 completed. MOTION-GATE added to check-conformance.sh (two grep passes: layout-property transitions MOTION-LD-10, stray ease-in MOTION-LD-01); exits 0 on clean tree, exits 1 on both probes. structural.spec.js extended: computed-duration assertion (animationDuration/transitionDuration ≤ 0.05s under emulateMedia reduced-motion — MOTION-02 proof) + FACT 7 enter/exit asymmetry describe block with test.fixme pending 102-03. 40/41 structural tests pass, 1 skipped (fixme). Next: execute Phase 102 Plan 02 (CSS/HEEx motion uplift).
 
 - 2026-06-14: Phase 97 Plan 08 completed. structural.spec.js gallery describe block un-skipped with 5 real getByTestId + twin-theme assertions; GAP-05 flipped to fixed in RATCHET-GAP-REGISTER.md; 3 gallery_live.ex specimen data bugs fixed (NaiveDateTime→DateTime, missing occurred_at, string→atom sidebar scenario keys) — Playwright gallery tests 5/5 green. Phase 97 is complete (8/8 plans done); next: Phase 97 verification then Phase 98.
 
