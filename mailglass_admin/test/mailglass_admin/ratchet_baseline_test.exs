@@ -34,41 +34,36 @@ defmodule MailglassAdmin.RatchetBaselineTest do
              "run the LLM scoring step (D-07) first to populate " <>
              "mailglass_admin/docs/ui-baseline-scores.json"
 
-    # Phase 103 hook: reference compare_baselines/2 so --warnings-as-errors passes
-    # in Phase 95. Phase 103 replaces this line with the real call site that loads
-    # the prior committed baseline and asserts meet-or-beat regression.
-    if false, do: compare_baselines(%{}, %{})
-
     {:ok, baseline: Jason.decode!(File.read!(@scores_path))}
   end
 
   test "schema_version is present and supported", %{baseline: b} do
-    assert b["schema_version"] == 1,
-           "Expected schema_version 1, got #{inspect(b["schema_version"])}. " <>
+    assert b["schema_version"] == 2,
+           "Expected schema_version 2, got #{inspect(b["schema_version"])}. " <>
              "If upgrading the JSON format, bump schema_version and update this assertion."
   end
 
-  test "all 36 graded cells are present (3 surfaces × 6 pillars × 2 themes)", %{baseline: b} do
+  test "all 36 graded cells are present in both prior and current blocks (3 surfaces × 6 pillars × 2 themes × 2 blocks)", %{baseline: b} do
     missing =
-      for surface <- @surfaces, pillar <- @pillars, theme <- @themes do
-        score = get_in(b, ["surfaces", surface, pillar, theme])
-        if score == nil, do: "#{surface}.#{pillar}.#{theme}", else: nil
+      for block <- ["prior", "current"], surface <- @surfaces, pillar <- @pillars, theme <- @themes do
+        score = get_in(b, [block, "surfaces", surface, pillar, theme])
+        if score == nil, do: "#{block}.#{surface}.#{pillar}.#{theme}", else: nil
       end
       |> Enum.reject(&is_nil/1)
 
     assert missing == [],
            "Missing cells (#{length(missing)}) in ui-baseline-scores.json:\n" <>
              Enum.join(missing, "\n") <>
-             "\nRun the LLM scoring step (D-07) to fill all 36 cells."
+             "\nRun the LLM scoring step (D-07) to fill all 36 cells in each block."
   end
 
-  test "all 36 scores are in the valid range 1-4", %{baseline: b} do
+  test "all 36 scores are in the valid range 1-4 in both prior and current blocks", %{baseline: b} do
     out_of_range =
-      for surface <- @surfaces, pillar <- @pillars, theme <- @themes do
-        score = get_in(b, ["surfaces", surface, pillar, theme])
+      for block <- ["prior", "current"], surface <- @surfaces, pillar <- @pillars, theme <- @themes do
+        score = get_in(b, [block, "surfaces", surface, pillar, theme])
 
         if score not in @valid_scores,
-          do: "#{surface}.#{pillar}.#{theme}: #{inspect(score)}",
+          do: "#{block}.#{surface}.#{pillar}.#{theme}: #{inspect(score)}",
           else: nil
       end
       |> Enum.reject(&is_nil/1)
@@ -78,6 +73,15 @@ defmodule MailglassAdmin.RatchetBaselineTest do
              Enum.join(out_of_range, "\n") <>
              "\nAll scores must be integers 1–4 " <>
              "(1=non-conformant, 2=significant-gaps, 3=mostly-conformant, 4=excellent)."
+  end
+
+  test "only-forward ratchet: no cell regresses prior committed baseline", %{baseline: b} do
+    # D-04 anti-vacuity guard — a forgotten promotion fails loudly here.
+    assert b["prior"]["run_id"] != b["current"]["run_id"],
+           "prior and current share run_id #{inspect(b["prior"]["run_id"])} — " <>
+             "the re-score was not promoted; this would be a vacuous self-comparison."
+
+    compare_baselines(b["prior"], b["current"])
   end
 
   # Phase 103 hook point — called by the closeout re-run assertion.
