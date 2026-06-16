@@ -82,6 +82,22 @@ theme`, 36 cells); these are two intentionally different keyings — keep them d
 
 The `run_id` format is `YYYY-MM-DD-phase-NN` (example: `2026-06-13-phase-95-baseline`).
 
+### Promotion step (D-06)
+
+On each future re-run (e.g. at the next milestone closeout), advance the floor as follows:
+
+1. Copy the **entire `current` block** from `ui-baseline-scores.json` verbatim into the
+   `prior` block — including its `run_id` and all 36 cells. This freezes the new floor.
+2. Write the **fresh measured run** into the `current` block: use a new `run_id` in the
+   format `YYYY-MM-DD-phase-NN` (e.g. `2026-06-30-phase-115`), and populate `surfaces`
+   with the 36 cells from Step 3 of this procedure.
+3. `prior.run_id` **MUST differ** from `current.run_id`. The anti-vacuity guard
+   (`assert b["prior"]["run_id"] != b["current"]["run_id"]`) in `ratchet_baseline_test.exs`
+   enforces this and will fail loudly if a promotion was forgotten — preventing a vacuous
+   self-comparison from passing as a meaningful ratchet check.
+4. PNGs remain gitignored and are **never committed** (D-07). Only `ui-baseline-scores.json`
+   is committed after each re-run.
+
 ---
 
 ## Column Schema
