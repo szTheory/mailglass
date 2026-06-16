@@ -319,7 +319,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 103-01-PLAN.md — Reconcile GAP register: flip GAP-01/04/06/07/08/09 open→fixed against live code (RATCHET-02)
+- [x] 103-01-PLAN.md — Reconcile GAP register: flip GAP-01/04/06/07/08/09 open→fixed against live code (RATCHET-02)
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -348,7 +348,7 @@ Plans:
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
 | 101. Microcopy Pass | 2/2 | Complete    | 2026-06-16 |
 | 102. Motion + Micro-interaction Pass | 3/3 | Complete    | 2026-06-16 |
-| 103. Verification + Idempotent Closeout | 0/? | Not started | - |
+| 103. Verification + Idempotent Closeout | 1/4 | In Progress|  |
 
 ## Backlog
 
