@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
-status: executing
-last_updated: "2026-06-16T01:57:59.152Z"
+status: verifying
+last_updated: "2026-06-16T02:06:30.025Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 12
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 41
-  completed_plans: 40
-  percent: 75
+  completed_plans: 41
+  percent: 83
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-15 — after Phase 99 Inbound Surface
 
 Phase: 101 (microcopy-pass) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-16
 Resume file: None
 
@@ -170,6 +170,8 @@ single closeout gate.
 - [Phase 99]: [99-04] Malformed inbound IDs now render the existing detail-error state instead of reaching the UUID-cast query path.
 - [Phase 99]: [99-05] Advisory TYPE-lg/xl and TRACK gates now fail closed in CI; Preview cleanup was limited to text-xl -> text-heading. — Phase 99 D-14 required the former advisory gate to block regressions after cleanup.
 - [Phase 99]: [99-05] Operator browser gate runs with --workers=1 because /ops/browser-reset uses shared deterministic seed state. — The broad gate failed under concurrent resets and passed 45/45 after serialization, matching the focused 99-04 shared-seed evidence.
+- [Phase ?]: @banned_words module attribute makes banned-word list data-driven across all three surfaces
+- [Phase ?]: LD-12 asserted using HTML-entity form (HEEx escapes apostrophes in text nodes as &#39;)
 
 ## Performance Metrics
 
@@ -251,6 +253,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 100 P02 | 5 min | 3 tasks | 6 files |
 | Phase 100 P03 | 9 min | 3 tasks | 4 files |
 | Phase 101-microcopy-pass P01 | 85 | 1 tasks | 1 files |
+| Phase 101 P02 | 6 minutes | 1 tasks | 1 files |
 
 ## Accumulated Context
 

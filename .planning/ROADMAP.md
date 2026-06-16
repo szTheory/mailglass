@@ -42,7 +42,7 @@ prepare-only.
 - [x] **Phase 98: Operator / Deliveries Surface** - group + page/IA + responsive + flow uplift of `/ops/mail`; seed data tuned for happy/error/boundary; anchors the cross-surface GROUP/PAGE/RESP/FLOW/A11Y requirements. (completed 2026-06-14)
 - [x] **Phase 99: Inbound Surface** - heaviest lift: add inbound overview tier, rework RoutingTrace + EvidenceCard, empty/loading states, text-xl→token fixes; re-applies cross-surface uplift to `/ops/mail/inbound`. (completed 2026-06-15)
 - [x] **Phase 100: Preview Surface** - group + page/IA + responsive uplift of `/dev/mail`; add dark-mode support to the preview chrome. (completed 2026-06-15)
-- [ ] **Phase 101: Microcopy Pass** - global "thoughtful maintainer" microcopy across all 3 settled surfaces.
+- [x] **Phase 101: Microcopy Pass** - global "thoughtful maintainer" microcopy across all 3 settled surfaces. (completed 2026-06-16)
 - [ ] **Phase 102: Motion + Micro-interaction Pass** - global motion uplift within hard constraints, sourced from the Phase 96 dossier.
 - [ ] **Phase 103: Verification + Idempotent Closeout** - re-run matrix; close sev-4/5 GAP rows; assert score baseline meets-or-beats; all gates green; produce the baseline the next run must beat; milestone audit.
 
@@ -280,7 +280,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 101-02-PLAN.md — Extend voice_test.exs with data-driven 3-surface conformance check (COPY-01)
+- [x] 101-02-PLAN.md — Extend voice_test.exs with data-driven 3-surface conformance check (COPY-01)
 
 **UI hint**: yes
 
@@ -324,7 +324,7 @@ Plans:
 | 98. Operator / Deliveries Surface | 4/4 | Complete    | 2026-06-14 |
 | 99. Inbound Surface | 5/5 | Complete    | 2026-06-15 |
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
-| 101. Microcopy Pass | 1/2 | In Progress|  |
+| 101. Microcopy Pass | 2/2 | Complete   | 2026-06-16 |
 | 102. Motion + Micro-interaction Pass | 0/? | Not started | - |
 | 103. Verification + Idempotent Closeout | 0/? | Not started | - |
 
