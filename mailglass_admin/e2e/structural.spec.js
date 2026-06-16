@@ -945,9 +945,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("enter/exit asymmetry", () => {
 
-    // TODO(102-03): Un-skip this test once phx-remove is added to the
-    // #delivery-detail-* element in operator_live.ex:466.
-    test.fixme("Operator: detail pane carries phx-remove exit attribute (MOTION-LD-13)", async ({ page }) => {
+    test("Operator: detail pane carries phx-remove exit attribute (MOTION-LD-13)", async ({ page }) => {
       await openOperator(page);
 
       // Select the first delivery by clicking the first row button in the list

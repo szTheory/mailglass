@@ -403,7 +403,7 @@ defmodule MailglassAdmin.PreviewLive do
                   <.link
                     :if={first_previewable(@mailables)}
                     patch={first_scenario_path(@mailables, @admin_chrome_theme)}
-                    class="btn btn-primary mt-md min-h-11 focus-visible:ring-2 focus-visible:ring-primary"
+                    class="motion-reveal btn btn-primary mt-md min-h-11 focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     Preview the first Mailable
                   </.link>

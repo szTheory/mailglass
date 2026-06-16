@@ -81,8 +81,14 @@ defmodule MailglassAdmin.BrandTest do
 
   describe "visual DON'Ts (05-UI-SPEC §Visual DON'Ts)" do
     test "compiled CSS bans glassmorphism primitives", %{css: css} do
-      refute css =~ "backdrop-filter",
-             "compiled CSS must NOT contain `backdrop-filter` (no glassmorphism)"
+      # Check for actual glassmorphism USE, not Tailwind @layer properties registration.
+      # Tailwind v4 registers backdrop-filter in a comma-separated property list inside
+      # @layer properties (e.g. `filter,-webkit-backdrop-filter,backdrop-filter,display`).
+      # That is NOT glassmorphism; it is Tailwind's CSS property initialization. The real
+      # signal is backdrop-filter used as a CSS property: `backdrop-filter:` or
+      # `backdrop-filter: ` followed by a value such as `blur(...)`.
+      refute css =~ ~r/backdrop-filter\s*:/,
+             "compiled CSS must NOT use `backdrop-filter:` as a property (no glassmorphism)"
       refute css =~ "box-shadow: inset",
              "compiled CSS must NOT contain `box-shadow: inset` (no bevels)"
     end
