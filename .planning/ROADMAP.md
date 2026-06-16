@@ -327,7 +327,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 103-03-PLAN.md — All-gates verification battery + prepare-only release readiness note (RATCHET-01, RATCHET-02, CLOSE)
+- [x] 103-03-PLAN.md — All-gates verification battery + prepare-only release readiness note (RATCHET-01, RATCHET-02, CLOSE)
 
 **Wave 4** *(blocked on Wave 3 + 103 VERIFICATION.md)*
 
@@ -348,7 +348,7 @@ Plans:
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
 | 101. Microcopy Pass | 2/2 | Complete    | 2026-06-16 |
 | 102. Motion + Micro-interaction Pass | 3/3 | Complete    | 2026-06-16 |
-| 103. Verification + Idempotent Closeout | 2/4 | In Progress|  |
+| 103. Verification + Idempotent Closeout | 3/4 | In Progress|  |
 
 ## Backlog
 

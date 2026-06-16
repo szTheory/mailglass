@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-16T20:54:26.196Z"
+last_updated: "2026-06-16T21:00:25.699Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 12
   completed_phases: 11
   total_plans: 48
-  completed_plans: 46
+  completed_plans: 47
   percent: 92
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-15 — after Phase 99 Inbound Surface
 ## Current Position
 
 Phase: 103 (verification-idempotent-closeout) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-16
 Resume file: None
@@ -175,6 +175,7 @@ single closeout gate.
 - [102-01] MOTION-GATE added to check-conformance.sh: two grep passes ban layout-property transitions (MOTION-LD-10) and stray ease-in (MOTION-LD-01); piped grep -v exclusions for ease-in-out + --ease-symmetric used instead of POSIX-incompatible lookahead. Reduced-motion Playwright test clicks first delivery row to bring .motion-reveal into DOM before asserting computed animationDuration/transitionDuration ≤ 0.05s. Enter/exit asymmetry test.fixme scaffold pending Plan 102-03.
 - [102-02] --ease-symmetric: var(--ease-in-out) added to @theme; .motion-tab-swap switched to var(--ease-symmetric) (MOTION-LD-05). MOTION-LD-06 resolution: focus rings → --duration-instant (90ms, ≤100ms); row hover → --duration-fast (150ms). phx-connected/phx-loading are CSS classes on the LiveView container element (not body attributes) — confirmed against LV 1.1.28 runtime; .mg-skeleton uses .phx-loading/.phx-connected class selectors. @view-transition PE inside @media (prefers-reduced-motion: no-preference) — required wrapper because global reduce block does not cover VT pseudo-elements. Bundle rebuilt bit-clean.
 - [Phase ?]: [103-02] Schema-2 baseline armed: compare_baselines activated, anti-vacuity guard enforced, preview Motion+A11y rose 2→3
+- [103-03] All 6 CI gates confirmed green (2026-06-16-phase-103): support_contract.admin 56/56, verify.preview 236/236 (bundle-clean), conformance OK, conformance-advisory OK, motion OK, Playwright structural 54/54 (0 skips — Phase 102-03 fixme completed). Release posture 1.6.2/1.6.2/1.3.1 verified read-only; RELH-01 intact; inbound re-pin PENDING/deferred (D-13, DISC-2 divergence from Phase-79 precedent).
 
 ## Performance Metrics
 
@@ -259,6 +260,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 101 P02 | 6 minutes | 1 tasks | 1 files |
 | Phase 103 P01 | 8 minutes | 2 tasks | 1 files |
 | Phase 103 P02 | 11 minutes | 3 tasks | 3 files |
+| Phase 103 P03 | 4min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -281,6 +283,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-16: Phase 103 Plan 03 completed. Full 6-gate battery confirmed green (2026-06-16-phase-103): support_contract.admin 56/56, verify.preview 236/236 (bundle-clean), conformance OK, conformance-advisory OK, motion OK, Playwright structural 54/54 (0 skips — Phase 102-03 fixme completed). Release posture 1.6.2/1.6.2/1.3.1 verified read-only; RELH-01 intact; inbound re-pin recorded as single PENDING ceremony action (D-13, deliberately not performed). Prepare-only readiness note written as 103-03-SUMMARY.md. Next: execute Phase 103 Plan 04 (milestone audit regeneration — D-14/D-15 LAST step).
 - 2026-06-16: Phase 102 Plan 02 completed. --ease-symmetric: var(--ease-in-out) token added to @theme; .motion-tab-swap switched to var(--ease-symmetric) (MOTION-LD-05); MOTION-LD-06 resolution documented in :root duration block (focus rings → --duration-instant 90ms, hover → --duration-fast 150ms). .mg-skeleton connection-state placeholder (opacity-only, .phx-loading/.phx-connected CSS class selectors — confirmed against LV 1.1.28 runtime). @view-transition PE inside @media (prefers-reduced-motion: no-preference). priv/static/app.css rebuilt bit-clean. Both conformance gates clean; Playwright reduced-motion 4/4 pass. Next: execute Phase 102 Plan 03 (phx-remove exit attribute on operator/inbound).
 - 2026-06-16: Phase 102 Plan 01 completed. MOTION-GATE added to check-conformance.sh (two grep passes: layout-property transitions MOTION-LD-10, stray ease-in MOTION-LD-01); exits 0 on clean tree, exits 1 on both probes. structural.spec.js extended: computed-duration assertion (animationDuration/transitionDuration ≤ 0.05s under emulateMedia reduced-motion — MOTION-02 proof) + FACT 7 enter/exit asymmetry describe block with test.fixme pending 102-03. 40/41 structural tests pass, 1 skipped (fixme). Next: execute Phase 102 Plan 02 (CSS/HEEx motion uplift).
 
