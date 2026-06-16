@@ -299,6 +299,44 @@ code, pre, .mono {
 .motion-timeline > *:nth-child(7) { animation-delay: 240ms; }
 .motion-timeline > *:nth-child(8) { animation-delay: 280ms; }
 
+/* connection-state skeleton — a deliberately minimal placeholder shown while
+   the LiveView socket is connecting. LiveView sets class "phx-loading" on the
+   container element while connecting, then replaces it with "phx-connected"
+   once the socket handshake completes. These are CSS classes, not attributes
+   (confirmed against phoenix_live_view.js: PHX_LOADING_CLASS / PHX_CONNECTED_CLASS
+   at lines 83/82 in LiveView 1.1.28 — setContainerClasses toggles classList).
+   The placeholder is opacity-only (MOTION-LD-10: no height/width/layout animation);
+   NO shimmer/pulse keyframe — a static placeholder is honest because LiveViews
+   render synchronously (mount/3 assigns inline, no assign_async). The real
+   "content settled into place" signal is .motion-reveal on content arrival. */
+.mg-skeleton {
+  opacity: 1;
+}
+.phx-connected .mg-skeleton {
+  display: none;
+}
+.phx-loading .mg-skeleton {
+  opacity: 1;
+}
+
+/* Cross-document View Transitions — CSS-only progressive enhancement.
+   @view-transition { navigation: auto } fires only on full same-origin document
+   navigations (hard loads / full reloads into the admin). It is inert for
+   LiveView WebSocket patches (live_patch/live_navigate do not trigger it —
+   those are DOM diffs over WS, not document navigations). Unsupported browsers
+   (pre-Chrome 126, pre-Safari 18.2, Firefox unflagged) gracefully no-op.
+   The @media (prefers-reduced-motion: no-preference) wrapper is REQUIRED (not
+   optional) because the global reduce block below does not cover VT pseudo-elements
+   (MOTION-LD-09 / MOTION-02). Under reduced-motion this entire block is skipped
+   so VT never fires. The visible VT surface is small: cross-fades full-document
+   entry into /ops/mail or /dev/mail. In-app navigation cannot use VT without a
+   banned client JS hook (same-document VT requires startViewTransition()). */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
 /* Reduced motion — neutralize movement (vestibular safety) while letting
    opacity crossfades effectively snap. The safe global default. */
 @media (prefers-reduced-motion: reduce) {
