@@ -295,7 +295,11 @@ Plans:
   2. No motion uses springs/overshoot, layout-property transitions, or exceeds 300ms ease-out, and the tightened motion conformance gate stays green in CI.
   3. `prefers-reduced-motion` collapses all motion to no-ops and the structural reduced-motion assertion passes.
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+- [ ] 102-01-PLAN.md — Gates-first: MOTION-GATE (ban layout-property transitions + stray ease-in) + structural reduced-motion duration assertion + enter/exit asymmetry scaffold (MOTION-01, MOTION-02)
+- [ ] 102-02-PLAN.md — app.css uplift: --ease-symmetric token + tab-swap, focus --duration-instant resolution, connection-state .mg-skeleton, CSS-only @view-transition PE; rebuild bundle (MOTION-01, MOTION-02)
+- [ ] 102-03-PLAN.md — HEEx exit asymmetry (phx-remove on detail panes + modal overlays), MOTION-LD-12 preview-CTA reveal, focus transition, un-skip asymmetry assertion; closing mix verify.preview gate (MOTION-01, MOTION-02)
 **UI hint**: yes
 
 ### Phase 103: Verification + Idempotent Closeout
