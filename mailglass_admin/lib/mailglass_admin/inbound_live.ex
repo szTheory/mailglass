@@ -216,7 +216,7 @@ defmodule MailglassAdmin.InboundLive do
        |> close_replay_modal()
        |> put_flash(
          :info,
-         "Replay recorded. A new replay run was appended to this message's timeline."
+         "Replay recorded. A new replay run was appended to this InboundMessage's timeline."
        )}
     else
       {:error, :no_selection} ->
@@ -224,7 +224,7 @@ defmodule MailglassAdmin.InboundLive do
          put_flash(
            socket,
            :error,
-           "Select an inbound record to inspect its routing, execution timeline, and raw source."
+           "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."
          )}
 
       {:error, :cross_tenant} ->
@@ -286,7 +286,7 @@ defmodule MailglassAdmin.InboundLive do
       dark_chrome={@dark_chrome}
       tenant={blank_to_nil(@filter_params["tenant_id"])}
       title="Inbound records"
-      subtitle="See why a received message routed the way it did — execution timeline, routing trace, and raw evidence."
+      subtitle="See why an InboundMessage routed the way it did — execution timeline, routing trace, and raw evidence."
       flash={@flash}
     >
       <section
