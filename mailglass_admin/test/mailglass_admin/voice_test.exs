@@ -9,11 +9,20 @@ defmodule MailglassAdmin.VoiceTest do
   Plan 06 renders the PreviewLive HEEx with the exact strings from 05-UI-SPEC
   Component Inventory and Copywriting Contract and turns these RED tests
   green.
+
+  Plan 101-02 extends coverage to all three admin surfaces: Preview, Operator,
+  and Inbound. Banned-word assertions run script-stripped to avoid the
+  phoenix.mjs "noops" false positive. Flash-only strings are covered by
+  source-level grep guards (D-11).
   """
 
   use MailglassAdmin.LiveViewCase, async: false
 
   alias MailglassAdmin.Fixtures.{HappyMailer, StubMailer, BrokenMailer}
+
+  # Data-driven banned-word list (D-09, COPY-LD-09). Each entry is checked
+  # case-insensitively against script-stripped HTML on every surface.
+  @banned_words ~w[oops whoops "uh oh" "something went wrong"]
 
   describe "banned exclamations (05-UI-SPEC §Copywriting Contract)" do
     test "are absent from rendered UI", %{conn: conn} do
@@ -24,20 +33,12 @@ defmodule MailglassAdmin.VoiceTest do
       # Checking the full HTML produces a false positive on that dep-JS token.
       # The brand-voice rule applies to the rendered UI markup, not embedded scripts.
       # See project memory: voice_test "Oops" is dep-JS noise.
-      html_without_scripts = Regex.replace(~r/<script\b[^>]*>.*?<\/script>/si, html, "")
-      lower = String.downcase(html_without_scripts)
+      lower = html |> strip_scripts() |> String.downcase()
 
-      refute lower =~ "oops",
-             "brand voice: 'Oops' must never appear in admin UI"
-
-      refute lower =~ "something went wrong",
-             "brand voice: 'Something went wrong' is a banned generic error phrase"
-
-      refute lower =~ "whoops",
-             "brand voice: 'Whoops' must never appear in admin UI"
-
-      refute lower =~ "uh oh",
-             "brand voice: 'Uh oh' must never appear in admin UI"
+      Enum.each(@banned_words, fn word ->
+        refute lower =~ word,
+               "brand voice: #{inspect(word)} must never appear in admin UI (Preview surface)"
+      end)
     end
   end
 
@@ -85,5 +86,114 @@ defmodule MailglassAdmin.VoiceTest do
     test "LiveReload topic subscription info log fires exactly once per boot" do
       flunk("skipped until Plan 06 lands persistent_term-gated info log")
     end
+  end
+
+  describe "Operator surface (/ops/mail)" do
+    test "banned words absent from Operator surface", %{conn: conn} do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, "/ops/mail")
+      lower = html |> strip_scripts() |> String.downcase()
+
+      Enum.each(@banned_words, fn word ->
+        refute lower =~ word,
+               "brand voice: #{inspect(word)} must never appear in admin UI (Operator surface)"
+      end)
+    end
+
+    test "canonical COPY-LD strings present in Operator surface initial render", %{conn: conn} do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, "/ops/mail")
+
+      # LD-11: orientation tip — "Delivery never arrived? Start here."
+      # Rendered via Shell.orientation_strip surface={:deliveries} in the overview branch.
+      assert html =~ "Delivery never arrived? Start here.",
+             "LD-11: orientation tip must use domain noun Delivery (not Email)"
+
+      # Spot-check: overview heading confirming operator surface renders correctly.
+      assert html =~ "Operator overview",
+             "Operator surface must render the overview heading on initial mount"
+    end
+  end
+
+  describe "Inbound surface (/ops/mail/inbound)" do
+    test "banned words absent from Inbound surface", %{conn: conn} do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, "/ops/mail/inbound")
+      lower = html |> strip_scripts() |> String.downcase()
+
+      Enum.each(@banned_words, fn word ->
+        refute lower =~ word,
+               "brand voice: #{inspect(word)} must never appear in admin UI (Inbound surface)"
+      end)
+    end
+
+    test "canonical COPY-LD strings present in Inbound surface initial render", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      # Mount with a provider filter that can never match — forces the :filtered empty state
+      # so LD-03 "No InboundMessages match these filters" is present in the first render.
+      # Shell.orientation_strip surface={:inbound} renders in the is_nil(@detail) branch
+      # (no record selected), so LD-12 and LD-16 are also present.
+      {:ok, _view, html} =
+        live(conn, "/ops/mail/inbound?tenant_id=voice-test-tenant&provider=no-such-provider")
+
+      # LD-12: orientation tip — inbound surface.
+      # HEEx HTML-escapes the apostrophe in "didn't" as &#39;.
+      # Assert the HTML-entity form to match what the rendered output actually contains.
+      assert html =~ "InboundMessage didn&#39;t route as expected? Inspect the routing trace.",
+             "LD-12: orientation tip must use InboundMessage domain noun"
+
+      # LD-16: rendered-pane select prompt (inbound-empty-detail div, always rendered
+      # when no record is selected).
+      assert html =~
+               "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence.",
+             "LD-16: no-selection prompt must use InboundMessage and Mailbox domain nouns"
+
+      # LD-03: filtered empty-state heading (present because provider filter is active
+      # with no matching records).
+      assert html =~ "No InboundMessages match these filters",
+             "LD-03: filtered empty state must use InboundMessage domain noun"
+    end
+  end
+
+  describe "Flash string source guards (action-only strings)" do
+    # Flash strings only render after a user action (put_flash/3 in event handlers),
+    # so they cannot be asserted against a first-render. Assert at source level (D-11).
+
+    test "inbound replay-success flash uses InboundMessage domain noun" do
+      source = File.read!("lib/mailglass_admin/inbound_live.ex")
+
+      assert source =~ "InboundMessage's timeline",
+             "LD-13: replay flash must use InboundMessage not generic 'message'"
+    end
+
+    test "inbound no-selection flash matches LD-16 locked string" do
+      source = File.read!("lib/mailglass_admin/inbound_live.ex")
+
+      assert source =~
+               ~s|"Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."|,
+             "LD-16: no-selection put_flash must use the locked LD-16 string"
+    end
+  end
+
+  # Strips inlined <script>…</script> blocks from HTML before brand-voice checks.
+  # Phoenix inlines phoenix.mjs which contains "noops" (a logger no-op utility).
+  # Without stripping, the banned-word check produces a false positive on that token.
+  # See project memory: voice_test "Oops" is dep-JS noise.
+  defp strip_scripts(html) do
+    Regex.replace(~r/<script\b[^>]*>.*?<\/script>/si, html, "")
+  end
+
+  # Builds an authenticated operator connection using the same session shape as
+  # OperatorLive and InboundLive tests (operator Auth gate).
+  defp operator_conn(conn) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+
+    Plug.Test.init_test_session(conn, %{
+      "current_user_id" => "operator-1",
+      "tenant_id" => "test-tenant",
+      "auth_method" => "password",
+      "recent_auth_at" => now
+    })
   end
 end
