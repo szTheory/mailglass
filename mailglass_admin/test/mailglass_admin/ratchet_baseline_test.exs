@@ -84,20 +84,29 @@ defmodule MailglassAdmin.RatchetBaselineTest do
     compare_baselines(b["prior"], b["current"])
   end
 
-  # Phase 103 hook point — called by the closeout re-run assertion.
-  # In Phase 95 this function exists but is never called.
-  # Phase 103 only ADDS the call site: compare_baselines(prior_baseline, current_baseline).
-  # It does NOT rewrite this function.
+  # Live as of Phase 103 — called by the only-forward ratchet test above via
+  # compare_baselines(b["prior"], b["current"]). Introduced (uncalled) in Phase 95;
+  # Phase 103 added the call site and made it fail-closed on missing cells.
   defp compare_baselines(prior, current) do
     regressions =
       for surface <- @surfaces, pillar <- @pillars, theme <- @themes do
-        prior_score = get_in(prior, ["surfaces", surface, pillar, theme]) || 0
-        current_score = get_in(current, ["surfaces", surface, pillar, theme]) || 0
+        prior_score = get_in(prior, ["surfaces", surface, pillar, theme])
+        current_score = get_in(current, ["surfaces", surface, pillar, theme])
 
-        if current_score < prior_score,
-          do:
-            "#{surface}.#{pillar}.#{theme}: #{prior_score} → #{current_score} (REGRESSION)",
-          else: nil
+        cond do
+          # Fail closed on a missing cell rather than coercing to 0 — keeps the
+          # ratchet self-contained so it cannot silently compare nothing if the
+          # coverage test is ever bypassed (e.g. run via --only) or weakened.
+          is_nil(prior_score) or is_nil(current_score) ->
+            "#{surface}.#{pillar}.#{theme}: missing cell " <>
+              "(prior=#{inspect(prior_score)}, current=#{inspect(current_score)})"
+
+          current_score < prior_score ->
+            "#{surface}.#{pillar}.#{theme}: #{prior_score} → #{current_score} (REGRESSION)"
+
+          true ->
+            nil
+        end
       end
       |> Enum.reject(&is_nil/1)
 
