@@ -44,7 +44,7 @@ prepare-only.
 - [x] **Phase 100: Preview Surface** - group + page/IA + responsive uplift of `/dev/mail`; add dark-mode support to the preview chrome. (completed 2026-06-15)
 - [x] **Phase 101: Microcopy Pass** - global "thoughtful maintainer" microcopy across all 3 settled surfaces. (completed 2026-06-16)
 - [x] **Phase 102: Motion + Micro-interaction Pass** - global motion uplift within hard constraints, sourced from the Phase 96 dossier. (completed 2026-06-16)
-- [ ] **Phase 103: Verification + Idempotent Closeout** - re-run matrix; close sev-4/5 GAP rows; assert score baseline meets-or-beats; all gates green; produce the baseline the next run must beat; milestone audit.
+- [x] **Phase 103: Verification + Idempotent Closeout** - re-run matrix; close sev-4/5 GAP rows; assert score baseline meets-or-beats; all gates green; produce the baseline the next run must beat; milestone audit. (completed 2026-06-16)
 
 **Critical path:** 94 → 95 → 96 → 97 → {98, 99, 100 parallel} → {101, 102 parallel} → 103
 
@@ -331,7 +331,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 + 103 VERIFICATION.md)*
 
-- [ ] 103-04-PLAN.md — Regenerate v1.11 milestone audit LAST via gsd-audit-milestone (CLOSE)
+- [x] 103-04-PLAN.md — Regenerate v1.11 milestone audit LAST via gsd-audit-milestone (CLOSE)
 
 **UI hint**: yes
 
@@ -348,7 +348,7 @@ Plans:
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
 | 101. Microcopy Pass | 2/2 | Complete    | 2026-06-16 |
 | 102. Motion + Micro-interaction Pass | 3/3 | Complete    | 2026-06-16 |
-| 103. Verification + Idempotent Closeout | 3/4 | In Progress|  |
+| 103. Verification + Idempotent Closeout | 4/4 | Complete   | 2026-06-16 |
 
 ## Backlog
 
