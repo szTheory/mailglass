@@ -323,7 +323,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 103-02-PLAN.md — Activate ratchet: schema-2 {prior,current} restructure + fresh re-score + anti-vacuity guard + Pitfall-1 coverage-test fix (RATCHET-01)
+- [x] 103-02-PLAN.md — Activate ratchet: schema-2 {prior,current} restructure + fresh re-score + anti-vacuity guard + Pitfall-1 coverage-test fix (RATCHET-01)
 
 **Wave 3** *(blocked on Wave 2)*
 
@@ -348,7 +348,7 @@ Plans:
 | 100. Preview Surface | 3/3 | Complete    | 2026-06-15 |
 | 101. Microcopy Pass | 2/2 | Complete    | 2026-06-16 |
 | 102. Motion + Micro-interaction Pass | 3/3 | Complete    | 2026-06-16 |
-| 103. Verification + Idempotent Closeout | 1/4 | In Progress|  |
+| 103. Verification + Idempotent Closeout | 2/4 | In Progress|  |
 
 ## Backlog
 

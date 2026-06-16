@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: mailglass_admin Design-System Uplift
 status: executing
-last_updated: "2026-06-16T20:40:48.652Z"
+last_updated: "2026-06-16T20:54:26.196Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 12
   completed_phases: 11
   total_plans: 48
-  completed_plans: 45
+  completed_plans: 46
   percent: 92
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-15 — after Phase 99 Inbound Surface
 ## Current Position
 
 Phase: 103 (verification-idempotent-closeout) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-16
 Resume file: None
@@ -174,6 +174,7 @@ single closeout gate.
 - [Phase ?]: LD-12 asserted using HTML-entity form (HEEx escapes apostrophes in text nodes as &#39;)
 - [102-01] MOTION-GATE added to check-conformance.sh: two grep passes ban layout-property transitions (MOTION-LD-10) and stray ease-in (MOTION-LD-01); piped grep -v exclusions for ease-in-out + --ease-symmetric used instead of POSIX-incompatible lookahead. Reduced-motion Playwright test clicks first delivery row to bring .motion-reveal into DOM before asserting computed animationDuration/transitionDuration ≤ 0.05s. Enter/exit asymmetry test.fixme scaffold pending Plan 102-03.
 - [102-02] --ease-symmetric: var(--ease-in-out) added to @theme; .motion-tab-swap switched to var(--ease-symmetric) (MOTION-LD-05). MOTION-LD-06 resolution: focus rings → --duration-instant (90ms, ≤100ms); row hover → --duration-fast (150ms). phx-connected/phx-loading are CSS classes on the LiveView container element (not body attributes) — confirmed against LV 1.1.28 runtime; .mg-skeleton uses .phx-loading/.phx-connected class selectors. @view-transition PE inside @media (prefers-reduced-motion: no-preference) — required wrapper because global reduce block does not cover VT pseudo-elements. Bundle rebuilt bit-clean.
+- [Phase ?]: [103-02] Schema-2 baseline armed: compare_baselines activated, anti-vacuity guard enforced, preview Motion+A11y rose 2→3
 
 ## Performance Metrics
 
@@ -257,6 +258,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 101-microcopy-pass P01 | 85 | 1 tasks | 1 files |
 | Phase 101 P02 | 6 minutes | 1 tasks | 1 files |
 | Phase 103 P01 | 8 minutes | 2 tasks | 1 files |
+| Phase 103 P02 | 11 minutes | 3 tasks | 3 files |
 
 ## Accumulated Context
 
