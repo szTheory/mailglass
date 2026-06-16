@@ -769,6 +769,35 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("preview-orientation")).toBeVisible();
     });
 
+    // MOTION-02 structural proof: under prefers-reduced-motion, computed
+    // animation-duration and transition-duration must collapse to effectively
+    // zero. app.css:292-300 uses 0.01ms !important (not 0ms), so assert ≤ 0.05
+    // (50ms) — never === 0. emulateMedia MUST precede navigation (done above
+    // per the FACT 4 pattern — each test fixture runs emulateMedia first).
+    test("Operator: motion-reveal computed duration effectively zero under reduced-motion", async ({ page }) => {
+      // emulateMedia MUST precede page navigation
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await openOperator(page);
+
+      // .motion-reveal on the detail pane is conditional (renders only after
+      // delivery selection). Click the first row to bring it into the DOM.
+      const firstRow = page.getByTestId("operator-deliveries-list").getByRole("button").first();
+      await firstRow.click();
+
+      // Wait for the detail pane to appear
+      const el = page.locator(".motion-reveal").first();
+      await expect(el).toBeVisible();
+
+      // app.css:294 sets animation-duration: 0.01ms !important under reduce.
+      // app.css:297 sets transition-duration: 0.01ms !important under reduce.
+      // Assert ≤ 0.05s (50ms) — near-instant, never strict 0.
+      const animDur = await el.evaluate(e => getComputedStyle(e).animationDuration);
+      expect(parseFloat(animDur)).toBeLessThanOrEqual(0.05);
+
+      const transDur = await el.evaluate(e => getComputedStyle(e).transitionDuration);
+      expect(parseFloat(transDur)).toBeLessThanOrEqual(0.05);
+    });
+
   });
 
   // =========================================================================
@@ -901,6 +930,37 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           expect(color).not.toBe(ACCENT_LIGHT_RGB);
         }
       }
+    });
+
+  });
+
+  // =========================================================================
+  // FACT 7 — enter/exit asymmetry (Motion pillar, MOTION-LD-02/04/13)
+  // Gate: fail-on-any-violation once un-skipped by Plan 102-03
+  // Pattern: open operator surface, select delivery, assert phx-remove attribute
+  //   or computed exit transitionDuration ≈ 0.15s on the detail pane element.
+  //
+  // This test is marked fixme pending Plan 102-03 (which adds phx-remove to the
+  // detail pane — operator_live.ex:466). Un-skip in 102-03's closing task.
+  // =========================================================================
+  test.describe("enter/exit asymmetry", () => {
+
+    // TODO(102-03): Un-skip this test once phx-remove is added to the
+    // #delivery-detail-* element in operator_live.ex:466.
+    test.fixme("Operator: detail pane carries phx-remove exit attribute (MOTION-LD-13)", async ({ page }) => {
+      await openOperator(page);
+
+      // Select the first delivery by clicking the first row button in the list
+      const firstRow = page.getByTestId("operator-deliveries-list").getByRole("button").first();
+      await firstRow.click();
+
+      // The detail pane element ID is delivery-detail-{id}; locate by id prefix pattern
+      const detailPane = page.locator('[id^="delivery-detail-"]').first();
+      await expect(detailPane).toBeVisible();
+
+      // Presence proof: phx-remove attribute must be non-null (set by Plan 102-03)
+      const phxRemove = await detailPane.getAttribute("phx-remove");
+      expect(phxRemove).not.toBeNull();
     });
 
   });
