@@ -95,10 +95,40 @@ mix compile --warnings-as-errors
 
 ### Webhooks return 401 after installation
 
-- The installer adds `Mailglass.Webhook.CachingBodyReader` to your `Plug.Parsers` configuration.
-- Check `lib/my_app_web/endpoint.ex` and ensure that your existing `Plug.Parsers` block was either updated or that the Mailglass-specific parser appears **above** your application's default JSON parser.
-- If multiple `Plug.Parsers` are present, the first one that matches the request path will consume the body.
+`mix mailglass.install` now fails closed when it detects an unmanaged `Plug.Parsers` plug
+(one that lacks a `body_reader` option) in your `endpoint.ex`. It exits non-zero via
+`Mix.raise` and prints an actionable error — this prevents the silent production webhook
+401 that occurred with earlier versions.
 
----
+**If the installer stopped with a conflict error:**
 
-*Last updated: 2026-05-03 (Phase 31 ships at v0.1).*
+- Re-run with `--force` to bypass the check and proceed: `mix mailglass.install --force`.
+  The installer will insert the managed `Plug.Parsers` block (with
+  `body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}`) **above** your
+  existing parser. Use `--force` only if you understand the parser ordering implications.
+- After a successful install, run `mix mailglass.doctor` to confirm the
+  `Mailglass.Webhook.CachingBodyReader` wiring is present in your endpoint parser. The
+  command exits non-zero if the wiring is absent.
+
+**If you installed mailglass before version 1.7:**
+
+The earlier installer warned instead of failing closed on this conflict. Check
+`lib/my_app_web/endpoint.ex` manually: if your `Plug.Parsers` block lacks a `body_reader`
+option, add the `CachingBodyReader` wiring as shown in the [Webhooks guide](webhooks.md),
+then run `mix mailglass.doctor` to verify.
+
+## Next steps
+
+The first hour is behind you. Here is a natural week-one path:
+
+1. [What you can do with mailglass](jobs.md) — the JTBD map; read once straight through
+   when evaluating.
+2. [Authoring mailables](authoring-mailables.md) — native setter API, HEEx layouts,
+   reusable components.
+3. [Preview](preview.md) — dev preview at `/dev/mail`; device-width and dark-mode toggles.
+4. [Webhooks](webhooks.md) — webhook ingest, verification, and suppression wiring.
+5. [Testing](testing.md) — Fake adapter, TestAssertions, and the `deliver/2` baseline.
+6. [Telemetry and operating](telemetry.md) — `[:mailglass, :outbound, :dispatch, ...]`
+   events and alerting.
+
+For a fuller ordered index, see the [learning path](learning-path.md).
