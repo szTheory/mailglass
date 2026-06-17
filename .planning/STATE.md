@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
-status: planning
-last_updated: "2026-06-17T15:33:26.845Z"
+status: executing
+last_updated: "2026-06-17T16:06:25.547Z"
 last_activity: 2026-06-17
 progress:
   total_phases: 17
   completed_phases: 14
-  total_plans: 53
+  total_plans: 55
   completed_plans: 53
   percent: 82
 ---
@@ -20,13 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 106 — day 2 guides — go live checklist + error/troubleshooting map
+**Current focus:** Phase 106 — day-2-guides-go-live-checklist-error-troubleshooting-map
 
 ## Current Position
 
-Phase: 106
-Plan: Not started
-Status: Ready to plan
+Phase: 106 (day-2-guides-go-live-checklist-error-troubleshooting-map) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-06-17
 
 ## v1.12 Milestone Intent
@@ -245,6 +245,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 103 P02 | 11 minutes | 3 tasks | 3 files |
 | Phase 103 P03 | 4min | 2 tasks | 1 files |
 | Phase 103 P04 | 5min | 1 tasks | 2 files |
+| Phase 106 P01 | 144 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -266,6 +267,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-17: **Phase 106 Plan 01 completed.** Created `guides/production-go-live-checklist.md` (7-section go-live checklist: deliverability/mail.doctor, webhook wiring/mailglass.doctor, secret provisioning, Oban queue sizing, per-tenant adapter routing, suppression strategy, telemetry) and `guides/errors-and-troubleshooting.md` (10-section unified error struct map in @error_modules order, StreamPolicyError sourced from module, all sections routing to api_stability.md) — OPS-01/OPS-02. Commits: fdace05a (checklist) + 146bec54 (errors guide). Next: execute Phase 106 Plan 02 (mix.exs registration + docs-contract assertions).
 
 - 2026-06-17: **Phase 105 Plan 03 completed.** Reordered `guides/getting-started.md` to end on `## Next steps` — updated 401 troubleshooting entry to reflect Phase 104 fail-closed behavior (`Mix.raise`, `--force` escape hatch, `mix mailglass.doctor` verification) — DOCS-02. Added `## Next steps` section with 6-step week-one arc (jobs → authoring-mailables → preview → webhooks → testing → telemetry) and link to `learning-path.md`. Added `"Getting Started ends on a Next steps section"` contract assertion to `docs_contract_test.exs` (Regex.scan `~r/^## (.+)$/m` + List.last + link/doctor checks). 28 tests, 0 failures, 1 skip. Commits: d5658a27 (guide reorder) + 7591cfbd (contract assertion). Phase 105 complete. Next: execute Phase 106 (Day-2 Guides).
 

@@ -60,11 +60,11 @@ body of work (admin polish, brand, design-system uplift, onboarding fixes) final
 
 ### OPS — Day-2 Production Confidence
 
-- [ ] **OPS-01**: A new `guides/production-go-live-checklist.md` surfaces the pre-production
+- [x] **OPS-01**: A new `guides/production-go-live-checklist.md` surfaces the pre-production
   verification surface: `mix mail.doctor` (DKIM/SPF/DMARC) + the INSTALL-03 webhook-wiring check,
   webhook secret provisioning/rotation, Oban queue sizing, per-tenant adapter routing, suppression
   strategy, and telemetry/alerting wiring. Registered in `mix.exs` docs and docs-contract gated.
-- [ ] **OPS-02**: A new `guides/errors-and-troubleshooting.md` provides a unified map of every
+- [x] **OPS-02**: A new `guides/errors-and-troubleshooting.md` provides a unified map of every
   `Mailglass.Error` struct (SendError, TemplateError, SignatureError, SuppressedError,
   RateLimitError, ConfigError, EventLedgerImmutableError, TenancyError, StreamPolicyError,
   PublishError) → cause → fix → remediation, routing canonical truth to `docs/api_stability.md`.
@@ -120,8 +120,8 @@ phase — 100% coverage, no orphans, no double-maps.
 | DOCS-02 | Phase 105 | Complete |
 | DOCS-03 | Phase 105 | Complete |
 | DOCS-04 | Phase 105 | Complete |
-| OPS-01 | Phase 106 | Pending |
-| OPS-02 | Phase 106 | Pending |
+| OPS-01 | Phase 106 | Complete |
+| OPS-02 | Phase 106 | Complete |
 | A11Y-01 | Phase 107 | Pending |
 | REL-01 | Phase 108 | Pending |
 | REL-02 | Phase 108 | Pending |
