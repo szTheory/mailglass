@@ -1,5 +1,10 @@
 # Migration from raw Swoosh
 
+Swoosh handles transport; mailglass adds the framework layer you'd otherwise rebuild —
+preview, webhooks, audit ledger, suppressions, and multi-tenancy. It composes on top of
+Swoosh rather than replacing it: your existing adapter credentials stay in place, and you
+gain an observable, replayable, auditable delivery pipeline without switching transports.
+
 This guide is now a subordinate raw-Swoosh migration reference.
 
 The canonical latest-`0.x` to `1.0` path lives in
@@ -23,8 +28,8 @@ Add mailglass to your dependencies:
 ```elixir
 def deps do
   [
-    {:mailglass, "~> 0.3"},
-    {:mailglass_admin, "~> 0.3", only: [:dev]}
+    {:mailglass, "~> 1.6"},
+    {:mailglass_admin, "~> 1.6", only: [:dev]}
   ]
 end
 ```
