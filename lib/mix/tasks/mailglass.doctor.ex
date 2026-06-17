@@ -30,6 +30,10 @@ defmodule Mix.Tasks.Mailglass.Doctor do
   harness and in CI without a running database.
   """
 
+  # run/1 always terminates via `exit({:shutdown, code})` to set the Mix
+  # three-state exit code (0/1/2), so it has no local return. This is by
+  # design (matches the publish.check fail_step no_return pattern).
+  @dialyzer {:nowarn_function, run: 1}
   @impl Mix.Task
   def run(argv) do
     {opts, rest, invalid} =
