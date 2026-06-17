@@ -148,7 +148,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 102. Motion + Micro-interaction Pass | v1.11 | 3/3 | Complete | 2026-06-16 |
 | 103. Verification + Idempotent Closeout | v1.11 | 4/4 | Complete | 2026-06-16 |
 | 104. Installer Fail-Closed + Webhook-Wiring Doctor | v1.12 | 2/2 | Complete    | 2026-06-17 |
-| 105. Onboarding Docs: Quickstart Fix + Learning Arc | v1.12 | 3/3 | Complete   | 2026-06-17 |
+| 105. Onboarding Docs: Quickstart Fix + Learning Arc | v1.12 | 3/3 | Complete    | 2026-06-17 |
 | 106. Day-2 Guides: Go-Live Checklist + Error/Troubleshooting Map | v1.12 | 0/? | Planned | — |
 | 107. Inbound Replay-Modal A11y Parity (WR-03) | v1.12 | 0/? | Planned | — |
 | 108. Release Cut + Milestone Closeout | v1.12 | 0/? | Planned | — |
