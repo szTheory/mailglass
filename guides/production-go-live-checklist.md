@@ -48,7 +48,7 @@ To rotate a webhook secret:
 3. Redeploy.
 4. Run `mix mailglass.doctor` to confirm the wiring is intact.
 
-For setup details and provider-specific config keys, see [Webhooks](./webhooks.md). For incident recovery when webhooks stop verifying after a rotation, see [Webhook Troubleshooting](./webhook-troubleshooting.md).
+For setup details and provider-specific config keys, see [Webhooks](./webhooks.md). For incident recovery when webhooks stop verifying after a rotation, see the `guides/webhook-troubleshooting.md` runbook in the repository.
 
 ## Oban queue sizing
 
@@ -67,14 +67,14 @@ For authoring mailables and choosing between `deliver/2` and `deliver_later/2`, 
 
 ## Per-tenant adapter routing
 
-If your application routes email through different ESPs per tenant — for example, one tenant on Postmark and another on SendGrid — implement `Mailglass.Tenancy.resolve_outbound_adapter_ref/2` in your tenancy module:
+If your application routes email through different ESPs per tenant — for example, one tenant on Postmark and another on SendGrid — implement the `c:Mailglass.Tenancy.resolve_outbound_adapter_ref/1` callback in your tenancy module. It receives a context map (`%{tenant_id, message, mode}`) and returns `{:ok, adapter_ref}` or `:default`:
 
 ```elixir
 defmodule MyApp.Tenancy do
   @behaviour Mailglass.Tenancy
 
   @impl true
-  def resolve_outbound_adapter_ref(tenant_id, _mailable) do
+  def resolve_outbound_adapter_ref(%{tenant_id: tenant_id}) do
     {:ok, adapter_ref_for(tenant_id)}
   end
 end

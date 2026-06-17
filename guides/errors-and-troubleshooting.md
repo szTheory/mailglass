@@ -12,7 +12,7 @@ end
 
 Message strings are a presentation concern. The closed `:type` atom set is the stable contract. Canonical closed atom sets and Retryable values for each struct are documented in [docs/api_stability.md](../docs/api_stability.md).
 
-For symptom-first incident runbooks — where you start from what went wrong in production rather than which struct appeared — use [operator-incident-support.md](./operator-incident-support.md). For webhook-specific incidents, see [webhook-troubleshooting.md](./webhook-troubleshooting.md).
+For symptom-first incident runbooks — where you start from what went wrong in production rather than which struct appeared — use the `guides/operator-incident-support.md` runbook in the repository. For webhook-specific incidents, see the `guides/webhook-troubleshooting.md` runbook.
 
 ## SendError
 
@@ -50,7 +50,7 @@ The current type atoms are `:missing_header`, `:malformed_header`, `:bad_credent
 
 To fix most signature errors: verify the secret in your deployment environment matches the credential in the provider dashboard, run `mix mailglass.doctor` to confirm `CachingBodyReader` is wired, and redeploy. For `:malformed_key`, check the PEM/DER format of the key you have configured.
 
-For webhook-specific incident recovery, see [webhook-troubleshooting.md](./webhook-troubleshooting.md).
+For webhook-specific incident recovery, see the `guides/webhook-troubleshooting.md` runbook in the repository.
 
 For the canonical closed `:type` atom set and Retryable policy, see [docs/api_stability.md](../docs/api_stability.md).
 
