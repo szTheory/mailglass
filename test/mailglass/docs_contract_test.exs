@@ -60,6 +60,22 @@ defmodule Mailglass.DocsContractTest do
       assert {:ok, _quoted} = Code.string_to_quoted(mailable_code)
     end
 
+    test "Quickstart contains a config-first block before the deliver() example" do
+      readme = File.read!("README.md")
+      config_pos = :binary.match(readme, "config :mailglass")
+      deliver_pos = :binary.match(readme, "Mailglass.deliver()")
+      assert config_pos != :nomatch, "README Quickstart is missing a config :mailglass block"
+      assert deliver_pos != :nomatch, "README Quickstart is missing a Mailglass.deliver() call"
+      {config_offset, _} = config_pos
+      {deliver_offset, _} = deliver_pos
+
+      assert config_offset < deliver_offset,
+             "config :mailglass block must appear before Mailglass.deliver() in the README"
+
+      assert readme =~ "repo:"
+      assert readme =~ "adapter:"
+    end
+
     test "README mentions the shipped runtime routing terms without deferred-scope promises" do
       readme = File.read!("README.md")
 
@@ -123,6 +139,42 @@ defmodule Mailglass.DocsContractTest do
 
       assert File.exists?("guides/learning-path.md"),
              "guides/learning-path.md does not exist on disk"
+    end
+
+    test "migration-from-swoosh opens with the value-prop pitch before subordinate framing" do
+      migration = File.read!("guides/migration-from-swoosh.md")
+
+      value_prop_keywords = [
+        "transport",
+        "framework layer",
+        "preview",
+        "webhooks",
+        "audit",
+        "suppressions",
+        "multi-tenancy"
+      ]
+
+      for kw <- value_prop_keywords do
+        assert migration =~ kw,
+               "migration-from-swoosh.md is missing value-prop keyword: #{inspect(kw)}"
+      end
+
+      # Opener must appear before the subordinate-reference framing
+      opener_pos = :binary.match(migration, "framework layer")
+      subordinate_pos = :binary.match(migration, "subordinate")
+      assert opener_pos != :nomatch, "migration-from-swoosh.md is missing 'framework layer' opener"
+
+      assert subordinate_pos != :nomatch,
+             "migration-from-swoosh.md is missing 'subordinate' reference"
+
+      {opener_offset, _} = opener_pos
+      {subordinate_offset, _} = subordinate_pos
+
+      assert opener_offset < subordinate_offset,
+             "value-prop opener must appear before 'subordinate' framing"
+
+      # Stale pins are fixed
+      refute migration =~ "~> 0.3", "migration-from-swoosh.md still contains stale ~> 0.3 pin"
     end
 
     test "Multi-tenancy routing example parses and documents the shipped adapter_ref surface" do
