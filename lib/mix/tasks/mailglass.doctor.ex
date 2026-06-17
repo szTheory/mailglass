@@ -67,7 +67,9 @@ defmodule Mix.Tasks.Mailglass.Doctor do
 
     lines =
       Enum.flat_map(findings, fn finding ->
-        status_label = status_label(finding.status, Map.get(finding[:evidence] || %{}, :cannot_diagnose))
+        status_label =
+          status_label(finding.status, Map.get(finding[:evidence] || %{}, :cannot_diagnose))
+
         base = ["#{status_label} #{finding.title}"]
 
         if verbose? or finding.status != :pass do

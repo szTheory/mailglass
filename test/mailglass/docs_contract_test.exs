@@ -398,9 +398,16 @@ defmodule Mailglass.DocsContractTest do
       guide = File.read!("guides/errors-and-troubleshooting.md")
 
       error_names = [
-        "SendError", "TemplateError", "SignatureError", "SuppressedError",
-        "RateLimitError", "ConfigError", "EventLedgerImmutableError",
-        "TenancyError", "StreamPolicyError", "PublishError"
+        "SendError",
+        "TemplateError",
+        "SignatureError",
+        "SuppressedError",
+        "RateLimitError",
+        "ConfigError",
+        "EventLedgerImmutableError",
+        "TenancyError",
+        "StreamPolicyError",
+        "PublishError"
       ]
 
       for name <- error_names do

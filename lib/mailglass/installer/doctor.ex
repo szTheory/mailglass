@@ -74,7 +74,8 @@ defmodule Mailglass.Installer.Doctor do
       check: :caching_body_reader_wired,
       status: :pass,
       title: "Webhook body reader is wired",
-      observed: "#{endpoint_path} contains `body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}`",
+      observed:
+        "#{endpoint_path} contains `body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}`",
       remediation: "",
       evidence: %{endpoint_path: endpoint_path}
     }
@@ -89,9 +90,10 @@ defmodule Mailglass.Installer.Doctor do
       check: :caching_body_reader_wired,
       status: :fail,
       title: "Webhook body reader is NOT wired",
-      observed: "#{endpoint_path} is missing `body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}`. " <>
-                "Without it, an unmanaged Plug.Parsers will consume the raw request body before Mailglass can verify " <>
-                "webhook signatures, causing every inbound webhook to silently return 401 in production.",
+      observed:
+        "#{endpoint_path} is missing `body_reader: {Mailglass.Webhook.CachingBodyReader, :read_body, []}`. " <>
+          "Without it, an unmanaged Plug.Parsers will consume the raw request body before Mailglass can verify " <>
+          "webhook signatures, causing every inbound webhook to silently return 401 in production.",
       remediation:
         "Run `mix mailglass.install` (or `mix mailglass.install --force` if there is an existing " <>
           "`plug Plug.Parsers`). The installer inserts the managed parser block between " <>

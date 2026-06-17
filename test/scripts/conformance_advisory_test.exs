@@ -35,7 +35,9 @@ defmodule Mailglass.Scripts.ConformanceAdvisoryTest do
   end
 
   test "advisory conformance script exits clean with no violations" do
-    tmp = Path.join(System.tmp_dir!(), "mailglass-advisory-clean-#{System.unique_integer([:positive])}")
+    tmp =
+      Path.join(System.tmp_dir!(), "mailglass-advisory-clean-#{System.unique_integer([:positive])}")
+
     script_dir = Path.join(tmp, "scripts")
     lib_dir = Path.join(tmp, "lib")
     on_exit(fn -> File.rm_rf!(tmp) end)
