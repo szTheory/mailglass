@@ -17,7 +17,13 @@ test.describe("mailglass demo evidence", () => {
 
     await page.getByRole("link", { name: /preview mailables/i }).click();
     await expect(page).toHaveURL(/\/dev\/mail/);
-    await expect(page.getByText("AccountMailer")).toBeVisible();
+    // The responsive preview renders the mailable list in both a desktop sidebar
+    // and a mobile list (both in the DOM), so a bare getByText is a strict-mode
+    // violation. Scope to the desktop sidebar — the visible container at the
+    // default Playwright viewport (1280px).
+    await expect(
+      page.getByTestId("preview-sidebar-desktop").getByText("AccountMailer"),
+    ).toBeVisible();
   });
 
   test("outbound operator opens with seeded delivery evidence", async ({ page }) => {
