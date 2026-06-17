@@ -25,9 +25,12 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
         phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})}
       >
         <div
+          id="inbound-replay-modal"
           data-testid="inbound-replay-modal"
           role="dialog"
           aria-modal="true"
+          phx-key="Escape"
+          phx-window-keydown="close_replay"
           class="motion-overlay w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
           phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"})}
         >

@@ -84,6 +84,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
         </div>
 
         <button
+          id="inbound-replay-open-btn"
           type="button"
           phx-click="open_replay"
           data-testid="inbound-replay-open"
