@@ -113,6 +113,18 @@ defmodule Mailglass.DocsContractTest do
       assert code =~ "adapter:"
     end
 
+    test "learning-path is registered in both mix.exs docs lists" do
+      mix_exs = File.read!("mix.exs")
+      matches = Regex.scan(~r/"guides\/learning-path\.md"/, mix_exs)
+
+      assert length(matches) >= 2,
+             "expected \"guides/learning-path.md\" to appear in both extras: and " <>
+               "groups_for_extras: [Guides: ...] in mix.exs, but found #{length(matches)} occurrence(s)"
+
+      assert File.exists?("guides/learning-path.md"),
+             "guides/learning-path.md does not exist on disk"
+    end
+
     test "Multi-tenancy routing example parses and documents the shipped adapter_ref surface" do
       blocks = extract_code_blocks("guides/multi-tenancy.md")
       tenancy_code = Enum.find(blocks, &String.contains?(&1, "resolve_outbound_adapter_ref"))
