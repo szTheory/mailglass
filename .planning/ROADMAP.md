@@ -86,12 +86,16 @@ docs-contract suite (including new section/error-coverage assertions) is green.
 
 ### Phase 107: Inbound Replay-Modal A11y Parity (WR-03)
 
-**Goal**: Bring the admin inbound replay modal to operator-modal accessibility parity — focus trap
-+ Escape-to-close — with a structural Playwright assertion and a clean committed CSS bundle.
+**Goal**: Bring the admin inbound replay modal to operator-modal accessibility parity — focus
+management (focus-on-open + return-focus-on-close) + Escape-to-close — with a structural Playwright
+assertion and a clean committed CSS bundle. Honest framing: focus-management parity, not WCAG
+dialog conformance / not a cyclic Tab focus trap (pure LiveView JS, no custom JS).
 **Depends on**: Nothing (admin-UI; runs in parallel with 104–106)
 **Requirements**: A11Y-01
-**Success criteria**: modal traps focus, Escape closes it, Playwright structural assertion passes,
-`git diff --exit-code priv/static/` clean.
+**Plans:** 1 plan
+- [ ] 107-01-PLAN.md — Escape-to-close + focus-management span + real ids + structural Playwright assertion + bundle-clean verify
+**Success criteria**: focus moves into the modal on open and returns to the trigger on close, Escape
+closes it, Playwright structural assertion passes, `git diff --exit-code priv/static/` clean.
 
 ### Phase 108: Release Cut + Milestone Closeout
 
