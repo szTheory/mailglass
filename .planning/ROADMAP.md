@@ -107,6 +107,8 @@ milestone audit.
 **Requirements**: REL-01, REL-02
 **Success criteria**: all three packages published to Hex; inbound re-pinned to the new core
 version; `mix deps.get` resolves from Hex; post-publish smoke green; milestone audit passed.
+**Plans**: 1 plan
+- [ ] 108-01-PLAN.md — Wave 0 allowlist hygiene + Wave 1 verify PR #84 + Wave 2 maintainer merge checkpoint + Wave 3 Hex live confirm + Wave 4 consumer smoke + Wave 5 milestone closeout
 
 **Critical path:** 104 → 105 → 106 → 108, with 107 in parallel and 108 gated on all.
 
@@ -158,7 +160,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 105. Onboarding Docs: Quickstart Fix + Learning Arc | v1.12 | 3/3 | Complete    | 2026-06-17 |
 | 106. Day-2 Guides: Go-Live Checklist + Error/Troubleshooting Map | v1.12 | 2/2 | Complete    | 2026-06-17 |
 | 107. Inbound Replay-Modal A11y Parity (WR-03) | v1.12 | 1/1 | Complete    | 2026-06-17 |
-| 108. Release Cut + Milestone Closeout | v1.12 | 0/? | Planned | — |
+| 108. Release Cut + Milestone Closeout | v1.12 | 0/1 | Planned | — |
 
 ## Backlog
 
