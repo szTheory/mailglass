@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
-status: verifying
-last_updated: "2026-06-17T16:10:46.614Z"
+status: ready_to_plan
+last_updated: 2026-06-17T16:14:25.979Z
 last_activity: 2026-06-17
 progress:
   total_phases: 17
   completed_phases: 15
   total_plans: 55
-  completed_plans: 55
+  completed_plans: 64
   percent: 88
+stopped_at: Phase 106 complete (2/2) — ready to discuss Phase 107
 ---
 
 # Project State
@@ -20,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 106 — day-2-guides-go-live-checklist-error-troubleshooting-map
+**Current focus:** Phase 107 — inbound replay modal a11y parity (wr 03)
 
 ## Current Position
 
-Phase: 106 (day-2-guides-go-live-checklist-error-troubleshooting-map) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
+Phase: 107
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-06-17
 
 ## v1.12 Milestone Intent
