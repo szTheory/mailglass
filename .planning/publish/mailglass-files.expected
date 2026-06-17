@@ -9,12 +9,15 @@ guides/authoring-mailables.md
 guides/compatibility-and-deprecations.md
 guides/components.md
 guides/dkim-setup.md
+guides/errors-and-troubleshooting.md
 guides/getting-started.md
 guides/jobs.md
+guides/learning-path.md
 guides/migration-from-swoosh.md
 guides/multi-tenancy.md
 guides/operator-incident-support.md
 guides/preview.md
+guides/production-go-live-checklist.md
 guides/rate-limiting.md
 guides/run-the-demo.md
 guides/telemetry.md
@@ -73,6 +76,7 @@ lib/mailglass/gettext.ex
 lib/mailglass/idempotency_key.ex
 lib/mailglass/installer/apply.ex
 lib/mailglass/installer/conflict.ex
+lib/mailglass/installer/doctor.ex
 lib/mailglass/installer/manifest.ex
 lib/mailglass/installer/operation.ex
 lib/mailglass/installer/plan.ex
@@ -164,10 +168,11 @@ lib/mailglass/webhook/telemetry.ex
 lib/mailglass/webhook/webhook_event.ex
 lib/mix/tasks/mail.doctor.ex
 lib/mix/tasks/mailglass.docs.check.ex
+lib/mix/tasks/mailglass.doctor.ex
 lib/mix/tasks/mailglass.gen.inbound_route.ex
 lib/mix/tasks/mailglass.gen.inbound_router.ex
-lib/mix/tasks/mailglass.gen.mailbox.ex
 lib/mix/tasks/mailglass.gen.mailable.ex
+lib/mix/tasks/mailglass.gen.mailbox.ex
 lib/mix/tasks/mailglass.gen.migration.ex
 lib/mix/tasks/mailglass.gen.unsubscribe.ex
 lib/mix/tasks/mailglass.install.ex

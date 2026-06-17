@@ -16,15 +16,18 @@
     "docs/compatibility-and-deprecations.md",
     "docs/design-system.md",
     "docs/operator-trust.md",
+    "docs/ui-baseline-scores.json",
     "hex_metadata.config",
     "lib/mailglass_admin.ex",
     "lib/mailglass_admin/auth.ex",
     "lib/mailglass_admin/components.ex",
     "lib/mailglass_admin/controllers/assets.ex",
+    "lib/mailglass_admin/gallery_live.ex",
     "lib/mailglass_admin/inbound/destructive_action.ex",
     "lib/mailglass_admin/inbound/detail_header.ex",
     "lib/mailglass_admin/inbound/evidence_card.ex",
     "lib/mailglass_admin/inbound/filters_form.ex",
+    "lib/mailglass_admin/inbound/overview.ex",
     "lib/mailglass_admin/inbound/records_list.ex",
     "lib/mailglass_admin/inbound/replay_modal.ex",
     "lib/mailglass_admin/inbound/routing_trace.ex",
@@ -83,12 +86,12 @@
     ]
   },
   "linked_versions": {
-    "mailglass": "1.4.5",
-    "mailglass_admin": "1.4.5",
-    "mailglass_inbound": "1.1.5"
+    "mailglass": "1.6.2",
+    "mailglass_admin": "1.6.2",
+    "mailglass_inbound": "1.3.1"
   },
-  "mailglass_admin_publish_pin": "== 1.4.5",
-  "manifest_version": "1.4.5",
+  "mailglass_admin_publish_pin": "== 1.6.2",
+  "manifest_version": "1.6.2",
   "package": "mailglass_admin",
   "package_files": [
     "lib",
@@ -134,9 +137,9 @@
     "status": "ok",
     "woff2_count": 6
   },
-  "source_ref": "v1.4.5",
+  "source_ref": "v1.6.2",
   "source_ref_pattern": "mailglass-sibling-group-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 487444,
-  "version": "1.4.5"
+  "tarball_size": 598299,
+  "version": "1.6.2"
 }

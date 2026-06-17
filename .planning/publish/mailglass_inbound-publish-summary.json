@@ -52,6 +52,7 @@
     "lib/mailglass_inbound/internal/doctor.ex",
     "lib/mailglass_inbound/internal/operator/detail.ex",
     "lib/mailglass_inbound/internal/operator/records.ex",
+    "lib/mailglass_inbound/internal/operator/summary.ex",
     "lib/mailglass_inbound/internal/operator/timeline.ex",
     "lib/mailglass_inbound/internal/prune.ex",
     "lib/mailglass_inbound/internal/replay.ex",
@@ -193,6 +194,6 @@
   "source_ref": "v1.3.1",
   "source_ref_pattern": "mailglass_inbound-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 481261,
+  "tarball_size": 494120,
   "version": "1.3.1"
 }

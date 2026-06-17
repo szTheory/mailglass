@@ -37,6 +37,7 @@ lib/mailglass_inbound/ingress/request.ex
 lib/mailglass_inbound/internal/doctor.ex
 lib/mailglass_inbound/internal/operator/detail.ex
 lib/mailglass_inbound/internal/operator/records.ex
+lib/mailglass_inbound/internal/operator/summary.ex
 lib/mailglass_inbound/internal/operator/timeline.ex
 lib/mailglass_inbound/internal/prune.ex
 lib/mailglass_inbound/internal/replay.ex
