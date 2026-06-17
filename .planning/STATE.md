@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
 status: executing
-last_updated: "2026-06-17T11:15:00.000Z"
-last_activity: 2026-06-17 -- Phase 105 Plan 01 completed
+last_updated: "2026-06-17T15:01:13.277Z"
+last_activity: 2026-06-17 -- Phase 105 Plan 02 completed
 progress:
   total_phases: 17
   completed_phases: 13
   total_plans: 53
-  completed_plans: 51
+  completed_plans: 52
   percent: 76
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 ## Current Position
 
 Phase: 105
-Plan: 01 complete
-Status: Executing — Plan 01 done, Plans 02/03 pending
-Last activity: 2026-06-17 -- Phase 105 Plan 01 completed
+Plan: 02 complete
+Status: Executing — Plans 01/02 done, Plan 03 pending
+Last activity: 2026-06-17 -- Phase 105 Plan 02 completed
 
 ## v1.12 Milestone Intent
 
@@ -266,6 +266,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-17: **Phase 105 Plan 02 completed.** Fixed README Quickstart with config-first `config :mailglass` block (verbatim from getting-started.md, repo: + adapter: + telemetry:, framed as installer-generated confirmation) — DOCS-01. Added `guides/learning-path.md` bullet to README Documentation index. Updated `guides/migration-from-swoosh.md` with value-prop opener paragraph ("Swoosh handles transport; mailglass adds the framework layer…" with all 7 keywords) before subordinate-reference framing; bumped stale `~> 0.3` dep pins to `~> 1.6` — DOCS-04. Added two new docs_contract_test.exs assertions: "Quickstart contains a config-first block before the deliver() example" (byte-offset ordering) and "migration-from-swoosh opens with the value-prop pitch before subordinate framing" (7 keywords + refute ~> 0.3). 27 tests, 0 failures, 1 skip. Commits: dbc906d9 (README) + 7375be20 (migration guide) + 7dc19714 (test assertions). Next: execute Phase 105 Plan 03.
 
 - 2026-06-17: **Phase 105 Plan 01 completed.** Created `guides/learning-path.md` (49-line ordered week-1 arc: getting-started → jobs → authoring-mailables → preview → webhooks → testing → telemetry; plus going-deeper section). Registered `"guides/learning-path.md"` in both `mix.exs` `extras:` and `groups_for_extras: [Guides: ...]` immediately after getting-started. Added `"learning-path is registered in both mix.exs docs lists"` test to `docs_contract_test.exs` (Regex.scan count >= 2 + File.exists? assertions). All 25 docs-contract tests green (1 pre-existing skip). Commits: 1830b79a (guide) + 309d0584 (registration + test). Next: execute Phase 105 Plan 02.
 

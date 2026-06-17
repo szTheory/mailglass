@@ -46,7 +46,7 @@ body of work (admin polish, brand, design-system uplift, onboarding fixes) final
 
 ### DOCS — Quickstart Fix + Learning Arc
 
-- [ ] **DOCS-01**: The README quickstart copy-pastes and runs cleanly — a config-first block (reuse
+- [x] **DOCS-01**: The README quickstart copy-pastes and runs cleanly — a config-first block (reuse
   the working snippet from `guides/getting-started.md`) is added so the `Mailglass.deliver()`
   example cannot `ConfigError`; validated by `docs_contract_test.exs`.
 - [ ] **DOCS-02**: `guides/getting-started.md` ends with a "Next steps" section sequencing the
@@ -54,7 +54,7 @@ body of work (admin polish, brand, design-system uplift, onboarding fixes) final
   instead of ending on installer troubleshooting.
 - [x] **DOCS-03**: A discoverable learning-path / index (a new `guides/learning-path.md` and/or a
   restructured README documentation index) gives the existing guides a clear, ordered first-week arc.
-- [ ] **DOCS-04**: `guides/migration-from-swoosh.md` opens with the value-proposition pitch
+- [x] **DOCS-04**: `guides/migration-from-swoosh.md` opens with the value-proposition pitch
   ("Swoosh handles transport; mailglass adds the framework layer you'd otherwise rebuild — preview,
   webhooks, audit ledger, suppressions, multi-tenancy") before the incremental-adoption mechanics.
 
@@ -116,10 +116,10 @@ phase — 100% coverage, no orphans, no double-maps.
 | INSTALL-02 | Phase 104 | Complete |
 | INSTALL-03 | Phase 104 | Complete |
 | INSTALL-04 | Phase 104 | Complete |
-| DOCS-01 | Phase 105 | Pending |
+| DOCS-01 | Phase 105 | Complete |
 | DOCS-02 | Phase 105 | Pending |
 | DOCS-03 | Phase 105 | Complete |
-| DOCS-04 | Phase 105 | Pending |
+| DOCS-04 | Phase 105 | Complete |
 | OPS-01 | Phase 106 | Pending |
 | OPS-02 | Phase 106 | Pending |
 | A11Y-01 | Phase 107 | Pending |
