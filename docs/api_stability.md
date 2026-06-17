@@ -56,8 +56,8 @@ them requires a major-version change.
   `Mailglass.Error`, `Mailglass.SendError`, `Mailglass.TemplateError`,
   `Mailglass.SignatureError`, `Mailglass.SuppressedError`,
   `Mailglass.RateLimitError`, `Mailglass.ConfigError`,
-  `Mailglass.EventLedgerImmutableError`, `Mailglass.TenancyError`, and
-  `Mailglass.PublishError`.
+  `Mailglass.EventLedgerImmutableError`, `Mailglass.TenancyError`,
+  `Mailglass.StreamPolicyError`, and `Mailglass.PublishError`.
 
 ### `internal`
 
@@ -211,7 +211,7 @@ on these admin-facing truths:
 
 Namespace + behaviour module. Not a struct.
 
-- `@type t` — union of the six error structs
+- `@type t` — union of ten error structs
 - `@callback type(t()) :: atom()`
 - `@callback retryable?(t()) :: boolean()`
 - Helpers: `is_error?/1`, `kind/1`, `retryable?/1`, `root_cause/1`
