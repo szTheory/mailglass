@@ -79,7 +79,12 @@ grep -F "mailglass" mix.exs
 mix deps.get
 
 # --- install -------------------------------------------------------------------
-mix mailglass.install
+# A stock `phx.new` endpoint ships `plug Plug.Parsers` without a :body_reader, so
+# the v1.12 fail-closed installer (INSTALL-01/02) correctly blocks a bare install.
+# --force is the documented adopter path: it inserts Mailglass's managed parser
+# block ABOVE the existing one so the CachingBodyReader wins (Plug runs parsers in
+# source order). The post-install doctor/compile steps below verify the wiring.
+mix mailglass.install --force
 
 # --- OPS-01 guard: a fresh --no-mailer install must stay HTTP-client-agnostic --
 if ! grep -F "config :swoosh, :api_client, false" config/runtime.exs; then
