@@ -124,7 +124,7 @@ defmodule MailglassInbound.MixProject do
   # `fix(inbound):` release is required either way to ship the new pin to Hex.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 1.6.2"}
+      {:mailglass, "== 1.7.0"}
     else
       {:mailglass, path: "..", override: true}
     end
