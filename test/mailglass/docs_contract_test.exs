@@ -129,6 +129,25 @@ defmodule Mailglass.DocsContractTest do
       assert code =~ "adapter:"
     end
 
+    test "Getting Started ends on a Next steps section" do
+      getting_started = File.read!("guides/getting-started.md")
+      # Collect all ## headings in document order
+      headings = Regex.scan(~r/^## (.+)$/m, getting_started) |> Enum.map(fn [_, h] -> h end)
+      assert headings != [], "getting-started.md has no ## headings"
+      last_heading = List.last(headings)
+
+      assert last_heading == "Next steps",
+             "getting-started.md must end on '## Next steps' but last heading is '## #{last_heading}'"
+
+      # Guide links to learning-path.md in the Next steps section
+      assert getting_started =~ "learning-path.md",
+             "getting-started.md Next steps must link to learning-path.md"
+
+      # Updated troubleshooting entry mentions mix mailglass.doctor
+      assert getting_started =~ "mix mailglass.doctor",
+             "getting-started.md Troubleshooting must describe mix mailglass.doctor"
+    end
+
     test "learning-path is registered in both mix.exs docs lists" do
       mix_exs = File.read!("mix.exs")
       matches = Regex.scan(~r/"guides\/learning-path\.md"/, mix_exs)
