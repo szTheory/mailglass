@@ -143,9 +143,16 @@ defmodule Mailglass.DocsContractTest do
       assert getting_started =~ "learning-path.md",
              "getting-started.md Next steps must link to learning-path.md"
 
-      # Updated troubleshooting entry mentions mix mailglass.doctor
+      # Updated troubleshooting entry reflects Phase 104 fail-closed behavior:
+      # Mix.raise on the conflict, the --force escape hatch, and the doctor check.
       assert getting_started =~ "mix mailglass.doctor",
              "getting-started.md Troubleshooting must describe mix mailglass.doctor"
+
+      assert getting_started =~ "--force",
+             "getting-started.md Troubleshooting must describe the --force escape hatch"
+
+      assert getting_started =~ "Mix.raise",
+             "getting-started.md Troubleshooting must describe the Mix.raise fail-closed behavior"
     end
 
     test "learning-path is registered in both mix.exs docs lists" do
@@ -192,8 +199,12 @@ defmodule Mailglass.DocsContractTest do
       assert opener_offset < subordinate_offset,
              "value-prop opener must appear before 'subordinate' framing"
 
-      # Stale pins are fixed
+      # Stale pins are fixed and the current 1.x pin is present (positive assertion so
+      # deleting the dep block or pinning to some other wrong version cannot pass).
       refute migration =~ "~> 0.3", "migration-from-swoosh.md still contains stale ~> 0.3 pin"
+
+      assert migration =~ ~r/~>\s*1\.6/,
+             "migration-from-swoosh.md must pin the current ~> 1.6 series"
     end
 
     test "Multi-tenancy routing example parses and documents the shipped adapter_ref surface" do

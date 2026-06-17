@@ -110,9 +110,9 @@ mix compile --warnings-as-errors
   `Mailglass.Webhook.CachingBodyReader` wiring is present in your endpoint parser. The
   command exits non-zero if the wiring is absent.
 
-**If you installed mailglass before version 1.7:**
+**If you installed mailglass with an older installer:**
 
-The earlier installer warned instead of failing closed on this conflict. Check
+Earlier installer versions warned instead of failing closed on this conflict. Check
 `lib/my_app_web/endpoint.ex` manually: if your `Plug.Parsers` block lacks a `body_reader`
 option, add the `CachingBodyReader` wiring as shown in the [Webhooks guide](webhooks.md),
 then run `mix mailglass.doctor` to verify.
