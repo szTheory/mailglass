@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
-status: executing
-last_updated: "2026-06-17T18:30:39.083Z"
-last_activity: 2026-06-17 -- Phase 108 execution started
+status: shipped
+last_updated: "2026-06-17T20:55:00.000Z"
+last_activity: 2026-06-17 -- v1.12 SHIPPED (1.7.0/1.7.0/1.4.0 live on Hex); Phase 108 complete; milestone closed
 progress:
   total_phases: 17
-  completed_phases: 16
+  completed_phases: 17
   total_plans: 57
-  completed_plans: 56
-  percent: 94
+  completed_plans: 57
+  percent: 100
 ---
 
 # Project State
@@ -20,14 +20,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 108 — release-cut-milestone-closeout
+**Current focus:** None — v1.12 shipped; next step `/gsd-new-milestone`.
 
 ## Current Position
 
-Phase: 108 (release-cut-milestone-closeout) — EXECUTING
-Plan: 1 of 1
-Status: Executing Phase 108
-Last activity: 2026-06-17 -- Phase 108 execution started
+Phase: 108 (release-cut-milestone-closeout) — COMPLETE
+Plan: 1 of 1 complete
+Status: v1.12 SHIPPED — no active milestone
+Last activity: 2026-06-17 -- v1.12 shipped (1.7.0/1.7.0/1.4.0 on Hex); milestone closed
+Live Hex versions: mailglass 1.7.0 / mailglass_admin 1.7.0 / mailglass_inbound 1.4.0 (inbound pinned mailglass == 1.7.0)
 
 ## v1.12 Milestone Intent
 
@@ -269,6 +270,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-17: **v1.12 SHIPPED — Phase 108 complete, milestone closed.** Cut the first real linked-version Hex release since 1.6.2: **mailglass 1.7.0 / mailglass_admin 1.7.0 / mailglass_inbound 1.4.0 live on Hex**, inbound + admin re-pinned `{:mailglass, "== 1.7.0"}` (D-13 / REL-02). Release commit `0411d485`, PR #84. The v1.7–v1.12 body had never hit full CI (local phase execution only); pushing it before merging surfaced + fixed **six pre-flight CI regressions**: format (doctor/test files), Installer Host Smoke (fail-closed installer correctly blocked stock endpoint → smoke uses `--force`), Dialyzer (`mailglass.doctor` `run/1` no_return suppressed), ex_doc (guides linked unregistered files + wrong `resolve_outbound_adapter_ref` arity), `mix mailglass.docs.check` (stale `~> 0.3` token vs phase-105 `~> 1.6`), and Demo Browser Evidence (v1.11 responsive split → Playwright strict-mode locator). Publish fan-out raced (one run/release-event; two `publish-core` race-losers + a post-publish-smoke index-timeout — all disproven against Hex; re-dispatched smoke green). Hands-free auto-merge didn't fire (advisory lanes red + RP cron churn); merged via maintainer admin-override after explicit go/no-go, all required checks green. Consumer smoke proved Hex resolution + `install --force`. Milestone archived (`v1.12-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`); MILESTONES/PROJECT/ROADMAP/RETROSPECTIVE updated; REQUIREMENTS.md removed; tag `v1.12`. **Follow-up:** harden `publish-hex.yml` `gate-ci-green` `isAdvisory()` to classify "Demo Browser Evidence" advisory by name. Next: `/gsd-new-milestone`.
 
 - 2026-06-17: **Phase 106 Plan 02 completed.** Registered both day-2 guides in `mix.exs` `extras:` and `Guides:` group (2 occurrences each). Added 4 new OPS-01/OPS-02 docs-contract assertions to `docs_contract_test.exs` (registration x2, section-presence checklist, error-coverage all-ten). Corrected `docs/api_stability.md`: "six" → "ten" error structs + `Mailglass.StreamPolicyError` added to stable list. 32 tests, 0 failures, 1 pre-existing skip. Commits: 90c7f562 (mix.exs) + ec6a834b (contract tests) + 6c7c51f3 (api_stability.md). **Phase 106 complete.** Next: execute Phase 107 (Inbound Replay-Modal A11y Parity).
 

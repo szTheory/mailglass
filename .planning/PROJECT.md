@@ -10,11 +10,13 @@ It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admi
 
 ## Current Position: between milestones (v1.11 shipped 2026-06-16)
 
-**No active milestone.** `v1.11 mailglass_admin Design-System Uplift` shipped
-2026-06-16 (audit `status: passed` — 34/34 requirements, 10/10 phases). Next step is
+**No active milestone.** `v1.12 Adopter Onboarding & Day-2 Confidence` shipped
+2026-06-17 (audit `status: passed` — 13/13 requirements, 5/5 phases) and **cut the first
+real linked-version Hex release since 1.6.2**: in-repo and Hex version truth is now
+**1.7.0 / 1.7.0 / 1.4.0** (mailglass / mailglass_admin / mailglass_inbound), with
+mailglass_inbound re-pinned to `{:mailglass, "== 1.7.0"}` (D-13 / REL-02). Next step is
 `/gsd-new-milestone` to define the next cycle. Posture remains quiet maintenance /
-adopter-pull per the D-23 convergence rule; in-repo version truth holds at
-1.6.2 / 1.6.2 / 1.3.1 (v1.11 was release prepare-only — no Hex release cut).
+adopter-pull per the D-23 convergence rule.
 
 <details>
 <summary>v1.11 mailglass_admin Design-System Uplift — original goal and targets (shipped)</summary>
@@ -430,7 +432,12 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 RE
 - ✓ DOCS-01..05 — ExDoc with 9 guides, migration-from-swoosh, doc-contract tests, governance files
 - ✓ BRAND-01..03 — Brand-conformant UI + voice + docs
 
-## Current Milestone: v1.12 Adopter Onboarding & Day-2 Confidence
+## Most Recent Milestone: v1.12 Adopter Onboarding & Day-2 Confidence (SHIPPED 2026-06-17)
+
+**Opened 2026-06-16; shipped 2026-06-17** — audit `status: passed` (13/13 requirements, 5/5 phases);
+**cut the first real linked-version Hex release since 1.6.2** → live at 1.7.0 / 1.7.0 / 1.4.0,
+mailglass_inbound re-pinned `{:mailglass, "== 1.7.0"}` (D-13 / REL-02). Detail archived in
+`.planning/milestones/v1.12-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 
 **Opened 2026-06-16.** Phases 104–108, 13 requirements (`.planning/REQUIREMENTS.md`); roadmap in
 `.planning/ROADMAP.md`. Selected from the 2026-06-16 next-step assessment: mailglass is
@@ -586,4 +593,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-16 after v1.11 milestone — **v1.11 mailglass_admin Design-System Uplift SHIPPED** (Phases 94-103; audit `status: passed`, 34/34 requirements, 10/10 phases). All three admin surfaces re-baselined onto canonical `brandbook/tokens.css` and fractally uplifted under an idempotent quality ratchet; release prepare-only (no Hex cut), version truth at 1.6.2 / 1.6.2 / 1.3.1. No active milestone — next step `/gsd-new-milestone`.*
+*Last updated: 2026-06-17 after v1.12 milestone — **v1.12 Adopter Onboarding & Day-2 Confidence SHIPPED** (Phases 104-108; audit `status: passed`, 13/13 requirements, 5/5 phases). Installer fails closed on the webhook-`Plug.Parsers` footgun (+`--force` + `mix mailglass.doctor`), onboarding/day-2 docs landed, inbound replay-modal a11y parity, and the **first real linked-version Hex release since 1.6.2** was cut — live at 1.7.0 / 1.7.0 / 1.4.0, mailglass_inbound re-pinned `{:mailglass, "== 1.7.0"}`. No active milestone — next step `/gsd-new-milestone`.*

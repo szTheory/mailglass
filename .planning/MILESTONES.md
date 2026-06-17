@@ -1,5 +1,33 @@
 # Milestones
 
+## v1.12 Adopter Onboarding & Day-2 Confidence (Shipped: 2026-06-17)
+
+**Phases completed:** 5 phases (104–108), 11 plans — **mailglass 1.7.0 / mailglass_admin 1.7.0 / mailglass_inbound 1.4.0 live on Hex**
+
+> Friction-removal + the first real linked-version Hex release since 1.6.2 (2026-06-12),
+> NOT feature growth (D-23 convergence holds; D-28 actually cut the release vs. prepare-only).
+> Moves the accumulated v1.7–v1.12 polish (admin IA/design-system, brand adoption, installer
+> DX hardening, onboarding docs, inbound replay-modal a11y) from `main` to Hex adopters.
+> Milestone audit `status: passed` — 13/13 requirements, 5/5 phases. Inbound exact-pin re-pinned
+> to `{:mailglass, "== 1.7.0"}` (D-13 / REL-02).
+>
+> (Stats note: true v1.12 scope is 5 phases / 13 requirements, counted directly from phases
+> 104–108 to avoid the known `milestone.complete` CLI inflation that also counts the 999.x backlog.)
+
+**Key accomplishments:**
+
+- **Phase 104 — Installer fail-closed + webhook doctor (INSTALL-01..04):** `mix mailglass.install` now fails closed (`Mix.raise`, non-zero exit) on an unmanaged `Plug.Parsers` conflict — closing the silent-production-401 footgun — with a `--force` escape hatch that inserts Mailglass's managed parser block above the existing one, plus a new `Mailglass.Installer.Doctor` / `mix mailglass.doctor` static three-state webhook-wiring scan. Tests-first (RED → GREEN).
+- **Phase 105 — Onboarding docs (DOCS-01..04):** config-first README quickstart that copy-pastes and runs; `getting-started.md` ends on a `## Next steps` arc; new `guides/learning-path.md` first-week index; `migration-from-swoosh.md` opens with the value-prop pitch (and the stale `~> 0.3` pins bumped to `~> 1.6`). All docs-contract gated.
+- **Phase 106 — Day-2 guides (OPS-01/02):** `guides/production-go-live-checklist.md` (deliverability/`mail.doctor`, webhook wiring, secrets, Oban sizing, per-tenant routing, suppression, telemetry) and `guides/errors-and-troubleshooting.md` (unified map of all ten error structs). Registered in `mix.exs` extras + Guides and docs-contract gated.
+- **Phase 107 — Inbound replay-modal a11y parity (A11Y-01, ex-v1.11 WR-03):** operator-style focus-trap + Escape-to-close on the admin inbound replay modal, with a Playwright structural assertion and a bundle-clean gate.
+- **Phase 108 — Release cut + milestone closeout (REL-01/02):** cut the real linked-version Hex release (1.7.0/1.7.0/1.4.0), re-pinned inbound + admin to `{:mailglass, "== 1.7.0"}`, confirmed Hex resolution + post-publish-smoke green, and archived the milestone. Pushing the never-CI'd v1.12 body before merging surfaced and fixed six genuine pre-flight CI regressions (format, installer-smoke-vs-fail-closed, dialyzer no_return, two ex_doc/docs.check doc issues, a responsive-split Playwright strict-mode locator).
+
+**Release posture:** SHIPPED (D-28). Release commit `0411d485`; PR #84. Publish fan-out raced (one run per release event); all three packages verified live on Hex; post-publish-smoke green on re-dispatch.
+
+**Follow-up (non-blocking):** harden `publish-hex.yml` `gate-ci-green` `isAdvisory()` so "Demo Browser Evidence" (a non-required lane) is classified advisory by name like the other advisory lanes — see `milestones/v1.12-MILESTONE-AUDIT.md`.
+
+---
+
 ## v1.11 mailglass_admin Design-System Uplift (Shipped: 2026-06-16)
 
 **Phases completed:** 10 phases (94-103), 42 plans
