@@ -4,6 +4,74 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.7.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.6.2...mailglass_admin-v1.7.0) (2026-06-17)
+
+
+### Features
+
+* **100-01:** split preview admin chrome theme ([5542fdb](https://github.com/szTheory/mailglass/commit/5542fdbea85302e9d2fd2da354640b4758e785dd))
+* **100-02:** compose responsive preview surface ([bd61aab](https://github.com/szTheory/mailglass/commit/bd61aab37366ca94de674e87f46bd229ba5aa8a5))
+* **101-02:** extend voice_test.exs to cover all 3 admin surfaces ([7f5d767](https://github.com/szTheory/mailglass/commit/7f5d767e42fc0a80a4400f8921e65784812b13d2))
+* **102-01:** add MOTION-GATE to check-conformance.sh ([f9e6c7e](https://github.com/szTheory/mailglass/commit/f9e6c7e15528624b7a5fc34c2e037302a04fe433))
+* **102-01:** extend structural.spec.js with reduced-motion duration + enter/exit asymmetry assertions ([d8e9f52](https://github.com/szTheory/mailglass/commit/d8e9f52dfa366eee08059b077232c481a3579cd6))
+* **102-02:** add --ease-symmetric token; point tab-swap at it; document MOTION-LD-06 resolution ([efea4cd](https://github.com/szTheory/mailglass/commit/efea4cd74697bed44c9728e876682646461ab7ae))
+* **102-02:** add .mg-skeleton connection placeholder + [@view-transition](https://github.com/view-transition) PE; rebuild bundle ([5f8cbb8](https://github.com/szTheory/mailglass/commit/5f8cbb8ec03d75bf03f83851203624fc8f96c01d))
+* **102-03:** add phx-remove exit transitions to detail panes and modals; standardize focus duration ([768dc7f](https://github.com/szTheory/mailglass/commit/768dc7f65ae59106c9b2b93bb78176551bec7ba5))
+* **102-03:** MOTION-LD-12 reveal on preview CTA; un-skip enter/exit asymmetry; rebuild bundle ([eb6e150](https://github.com/szTheory/mailglass/commit/eb6e15081a05c5801629a965ced6b7bef41aa1ee))
+* **103-02:** activate only-forward ratchet with schema-2 baseline and fresh re-score ([81db7e5](https://github.com/szTheory/mailglass/commit/81db7e509ee2d89ae5b1a84f16a4f7aa3ebe18cd))
+* **107-01:** add Escape-to-close + real ids on inbound replay modal ([8feb0b1](https://github.com/szTheory/mailglass/commit/8feb0b1d2c93e2faa3321ffe8c5b766b644769f9))
+* **107-01:** add focus-management sibling span to inbound_live.ex ([b9bfbfd](https://github.com/szTheory/mailglass/commit/b9bfbfd55e46bd62acf5696c12029833415c3f51))
+* **95-02:** add ratchet_baseline_test.exs and placeholder ui-baseline-scores.json ([e886b81](https://github.com/szTheory/mailglass/commit/e886b816f3db06cc7c16e321b24a1d46525bf1a0))
+* **95-03:** add structural.spec.js — 6 D-01 pillar facts × 3 surfaces ([6d1e7dc](https://github.com/szTheory/mailglass/commit/6d1e7dc30500286342d46a6386e225d0602e7c2b))
+* **95-04:** seed LLM-scored baseline in ui-baseline-scores.json ([71e9817](https://github.com/szTheory/mailglass/commit/71e9817ef19846df1f28ef63e2d944ef345cf8f6))
+* **97-01:** add focus-visible rings to nav_link and nav_pill ([9240691](https://github.com/szTheory/mailglass/commit/9240691b6154760d65082fb32f020a44e4553631))
+* **97-01:** replace orientation_strip copy with domain-noun strings ([526aa68](https://github.com/szTheory/mailglass/commit/526aa68782c39e4ea4604e7a4ef5c624225f5271))
+* **97-02:** add row focus ring + fix text-xl → text-heading on both detail_headers ([72eb261](https://github.com/szTheory/mailglass/commit/72eb261bf2f997cc783f6bd46563c73264764887))
+* **97-02:** remove btn-sm from support_cards CTA buttons, add min-h-11 ([b5ee6cf](https://github.com/szTheory/mailglass/commit/b5ee6cf06bd725aee45ba44cd6a0c663430b949f))
+* **97-02:** remove tracking-[0.08em] from all five filters_form label spans ([4548aa2](https://github.com/szTheory/mailglass/commit/4548aa28f862d7ca0efbd37b535ac7a207115293))
+* **97-03:** add WCAG a11y attributes to replay_modal dialog ([7692507](https://github.com/szTheory/mailglass/commit/7692507312f6efb2958a32387d391b89063dfccb))
+* **97-03:** wire JS focus trap for replay modal open/close ([b41b7bc](https://github.com/szTheory/mailglass/commit/b41b7bc8fa621aa18208fe937184de7d6f1bd5cd))
+* **97-05:** add ARIA tab contract, focus rings, and empty HTML placeholder to tabs ([2e18d6e](https://github.com/szTheory/mailglass/commit/2e18d6e600cc250a63494dbcddbb021191c4adc1))
+* **97-05:** add focus rings and replace border-l-[3px] with border-l-2 in sidebar ([741a91b](https://github.com/szTheory/mailglass/commit/741a91bf1c439eb3e54b4a3bfb76391d1b6b0aeb))
+* **97-05:** add min-h-11 to all three device_frame segmented control buttons ([4a6e7fb](https://github.com/szTheory/mailglass/commit/4a6e7fbf9b02ab898f9535b285cc166dfe463e2a))
+* **97-06:** add GalleryLive route and [@compile](https://github.com/compile) no_warn_undefined entry ([52cc61a](https://github.com/szTheory/mailglass/commit/52cc61acb680cc2b62b10d627d4ef849cd31b44c))
+* **97-06:** create GalleryLive with complete in-code specimen list and twin-theme render ([07694c8](https://github.com/szTheory/mailglass/commit/07694c86680eeeb1590b44cbb1b56eee7640de1c))
+* **97-08:** un-skip gallery describe block with real structural assertions ([f605382](https://github.com/szTheory/mailglass/commit/f6053822cbdb8d151e0a887b361589af7c1d0140))
+* **98-02:** reshape operator deliveries IA ([0c4a958](https://github.com/szTheory/mailglass/commit/0c4a9589d68a297995f115c3ef4cc515a00eb852))
+* **99-01:** expose inbound summary through admin gateway ([d0ef911](https://github.com/szTheory/mailglass/commit/d0ef911042f7eba2c8fa1d39e259f77786cbec48))
+* **99-02:** add summary-backed inbound overview ([2ed8622](https://github.com/szTheory/mailglass/commit/2ed8622d0cb2fb2b159d845a7e8e624ff629ffe3))
+* **99-02:** apply inbound responsive IA ([dc2f56f](https://github.com/szTheory/mailglass/commit/dc2f56f12dd2474a0b1be837ce973ca26eaabc1a))
+* **99-02:** split inbound empty states ([ff16b4a](https://github.com/szTheory/mailglass/commit/ff16b4ad8e0d087cdd10109febbe73c16c5b6fd8))
+* **99-03:** clean inbound filter and replay tokens ([da0e57d](https://github.com/szTheory/mailglass/commit/da0e57d736c760789a6cd82dcf541f2400e438d2))
+* **99-03:** implement locked evidence card affordance ([e4d0334](https://github.com/szTheory/mailglass/commit/e4d0334043bf5aa59bcbd2c92c0dc9093c01266b))
+* **99-03:** implement routing trace clause grid ([25b0275](https://github.com/szTheory/mailglass/commit/25b0275b493e188893103307d6fff6cee5c2c8d3))
+* **99-04:** seed inbound browser state matrix ([85c37ee](https://github.com/szTheory/mailglass/commit/85c37ee3403bf1d46d2ccc28a3886a795cf8bcfd))
+* **99-05:** harden advisory conformance gate ([733222f](https://github.com/szTheory/mailglass/commit/733222fa4fb97df6ae86d7838a60576037ec59de))
+* **admin:** re-baseline app.css onto brandbook tokens ([ba8c8f5](https://github.com/szTheory/mailglass/commit/ba8c8f539904b3a60439dfd3caa76ab82e9a8cbb))
+
+
+### Bug Fixes
+
+* **100-03:** close preview ratchet gaps ([69f3912](https://github.com/szTheory/mailglass/commit/69f39126421024068b9ba765579ab9322f233b7b))
+* **101-01:** apply three residual COPY-LD string fixes in inbound_live.ex ([5f9ae32](https://github.com/szTheory/mailglass/commit/5f9ae324d114a4719a75dd2efb3bde63f2acaaf2))
+* **102-03:** align stale inbound replay-success test copy to locked COPY-LD-13 ([1b0c697](https://github.com/szTheory/mailglass/commit/1b0c69797da127abffac60c79fe3d436d6bc49bd))
+* **103:** harden ratchet to fail-closed on missing cells (CR-01) ([151b064](https://github.com/szTheory/mailglass/commit/151b0641cdef0f885819508b329b78d03e7039f3))
+* **95-04:** repair ui-audit.sh for agent-browser &gt;=0.27 CLI ([c6d804c](https://github.com/szTheory/mailglass/commit/c6d804c33876c34a12b6561cea8b7d8487a9c012))
+* **97-01:** update orientation_strip frozen-copy tests to domain-noun strings ([36249bc](https://github.com/szTheory/mailglass/commit/36249bc03d8039db13cd55d7d6ef25080e3ae2a2))
+* **97-02:** remove banned arbitrary tracking + px-5 from detail_headers and shell ([5eda726](https://github.com/szTheory/mailglass/commit/5eda726cff3c466c9bfc468a4ff355a6db0318d9))
+* **97-06:** correct can_reveal? specimen default and absorb gallery specimen clicks ([56ba927](https://github.com/szTheory/mailglass/commit/56ba927267294a7136d11b05d4ffdc89492c820b))
+* **97-08:** fix gallery_live.ex specimen data bugs causing Playwright failures ([9f8e4a8](https://github.com/szTheory/mailglass/commit/9f8e4a8348c8c617e542fff296a46f2295d955ae))
+* **98-01:** allow suppressed status badge fallback ([b95872f](https://github.com/szTheory/mailglass/commit/b95872f2a7a3a97538472ccf9ea54a771267b88c))
+* **98-01:** harden operator nil guard paths ([dbac1ad](https://github.com/szTheory/mailglass/commit/dbac1adbd725c1d4be68b069e3e60ecdcc7646f8))
+* **98-03:** clean operator in-pane tracking tokens ([9b53679](https://github.com/szTheory/mailglass/commit/9b53679fae5e1d263bfd86a86f53b146b8ecafa1))
+* **98-04:** harden mounted asset path detection ([eb3bcaa](https://github.com/szTheory/mailglass/commit/eb3bcaa81890571d73fdf5347309ce1a69a4af25))
+* **99-05:** remove preview raw heading scale ([3de35f3](https://github.com/szTheory/mailglass/commit/3de35f3114fdff9f8dd630fac8473d164e65bf07))
+* **99-05:** serialize operator browser gate ([af5e83b](https://github.com/szTheory/mailglass/commit/af5e83bba65cf80f6cfacdddee717318045e9d14))
+* **99:** address inbound review findings ([75bf1f8](https://github.com/szTheory/mailglass/commit/75bf1f84c0480d5b9e666eb8c7e3782eafa265b2))
+* **99:** cover denied inbound evidence contrast ([699270f](https://github.com/szTheory/mailglass/commit/699270f73c672b20f9bf0d96769e526d8d09a122))
+* **99:** preserve inbound deep links beyond list cap ([2d2fe24](https://github.com/szTheory/mailglass/commit/2d2fe2430eb15452206edf97cd20c7ce3df5076d))
+* **99:** resolve wave 2 component empty-state test ([2af0c22](https://github.com/szTheory/mailglass/commit/2af0c2235d7176da2cbba0b469db99a11ec3a1aa))
+
 ## [1.6.2](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.6.1...mailglass_admin-v1.6.2) (2026-06-12)
 
 
