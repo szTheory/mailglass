@@ -94,6 +94,19 @@ mix ecto.migrate
 mix compile
 ```
 
+The installer generates a config block in `config/runtime.exs`. Confirm your repo and
+adapter are wired:
+
+```elixir
+# config/runtime.exs
+config :mailglass,
+  repo: MyApp.Repo,
+  adapter:
+    {Mailglass.Adapters.Swoosh,
+     swoosh_adapter: {Swoosh.Adapters.Postmark, api_key: System.fetch_env!("POSTMARK_API_KEY")}},
+  telemetry: [default_logger: true]
+```
+
 Define a mailable:
 
 ```elixir
@@ -250,6 +263,8 @@ Full trajectory in [`.planning/ROADMAP.md`](.planning/ROADMAP.md) and
 
 - [`guides/getting-started.md`](guides/getting-started.md) — install,
   route mounting, and first delivery
+- [`guides/learning-path.md`](guides/learning-path.md) — first-week
+  learning arc: ordered sequence from install to production
 - [`guides/run-the-demo.md`](guides/run-the-demo.md) — see mailglass
   working locally in one command (`make demo`)
 - [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)
