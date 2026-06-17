@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
-status: executing
-last_updated: "2026-06-17T16:06:25.547Z"
+status: verifying
+last_updated: "2026-06-17T16:10:46.614Z"
 last_activity: 2026-06-17
 progress:
   total_phases: 17
-  completed_phases: 14
+  completed_phases: 15
   total_plans: 55
-  completed_plans: 53
-  percent: 82
+  completed_plans: 55
+  percent: 88
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 
 Phase: 106 (day-2-guides-go-live-checklist-error-troubleshooting-map) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-17
 
 ## v1.12 Milestone Intent
@@ -246,6 +246,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 103 P03 | 4min | 2 tasks | 1 files |
 | Phase 103 P04 | 5min | 1 tasks | 2 files |
 | Phase 106 P01 | 144 | 2 tasks | 2 files |
+| Phase 106 P02 | 8 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -267,6 +268,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-17: **Phase 106 Plan 02 completed.** Registered both day-2 guides in `mix.exs` `extras:` and `Guides:` group (2 occurrences each). Added 4 new OPS-01/OPS-02 docs-contract assertions to `docs_contract_test.exs` (registration x2, section-presence checklist, error-coverage all-ten). Corrected `docs/api_stability.md`: "six" → "ten" error structs + `Mailglass.StreamPolicyError` added to stable list. 32 tests, 0 failures, 1 pre-existing skip. Commits: 90c7f562 (mix.exs) + ec6a834b (contract tests) + 6c7c51f3 (api_stability.md). **Phase 106 complete.** Next: execute Phase 107 (Inbound Replay-Modal A11y Parity).
 
 - 2026-06-17: **Phase 106 Plan 01 completed.** Created `guides/production-go-live-checklist.md` (7-section go-live checklist: deliverability/mail.doctor, webhook wiring/mailglass.doctor, secret provisioning, Oban queue sizing, per-tenant adapter routing, suppression strategy, telemetry) and `guides/errors-and-troubleshooting.md` (10-section unified error struct map in @error_modules order, StreamPolicyError sourced from module, all sections routing to api_stability.md) — OPS-01/OPS-02. Commits: fdace05a (checklist) + 146bec54 (errors guide). Next: execute Phase 106 Plan 02 (mix.exs registration + docs-contract assertions).
 
