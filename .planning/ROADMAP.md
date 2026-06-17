@@ -63,6 +63,10 @@ with the "Swoosh = transport; mailglass = the framework layer" value pitch. All 
 **Success criteria**: README example parses via the docs-contract gate; getting-started has a
 Next-steps section; the learning path is discoverable; the swoosh "why" opener is present;
 docs-contract suite green.
+**Plans**: 3 plans (Wave 1: 105-01 · Wave 2: 105-02 · Wave 3: 105-03)
+- [ ] 105-01-PLAN.md — New guides/learning-path.md + mix.exs dual registration + contract assertion (DOCS-03)
+- [ ] 105-02-PLAN.md — README config-first fix + migration-from-swoosh opener + stale pins + two contract assertions (DOCS-01, DOCS-04)
+- [ ] 105-03-PLAN.md — getting-started reorder + ## Next steps + 104 troubleshooting prose + contract assertion (DOCS-02)
 
 ### Phase 106: Day-2 Guides — Go-Live Checklist + Error/Troubleshooting Map
 
@@ -144,7 +148,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 102. Motion + Micro-interaction Pass | v1.11 | 3/3 | Complete | 2026-06-16 |
 | 103. Verification + Idempotent Closeout | v1.11 | 4/4 | Complete | 2026-06-16 |
 | 104. Installer Fail-Closed + Webhook-Wiring Doctor | v1.12 | 2/2 | Complete    | 2026-06-17 |
-| 105. Onboarding Docs: Quickstart Fix + Learning Arc | v1.12 | 0/? | Planned | — |
+| 105. Onboarding Docs: Quickstart Fix + Learning Arc | v1.12 | 0/3 | Planned | — |
 | 106. Day-2 Guides: Go-Live Checklist + Error/Troubleshooting Map | v1.12 | 0/? | Planned | — |
 | 107. Inbound Replay-Modal A11y Parity (WR-03) | v1.12 | 0/? | Planned | — |
 | 108. Release Cut + Milestone Closeout | v1.12 | 0/? | Planned | — |
