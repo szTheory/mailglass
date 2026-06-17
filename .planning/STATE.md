@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
 status: executing
-last_updated: "2026-06-17T14:51:57.122Z"
-last_activity: 2026-06-17 -- Phase 105 planning complete
+last_updated: "2026-06-17T11:15:00.000Z"
+last_activity: 2026-06-17 -- Phase 105 Plan 01 completed
 progress:
   total_phases: 17
   completed_phases: 13
   total_plans: 53
-  completed_plans: 50
+  completed_plans: 51
   percent: 76
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 ## Current Position
 
 Phase: 105
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-17 -- Phase 105 planning complete
+Plan: 01 complete
+Status: Executing — Plan 01 done, Plans 02/03 pending
+Last activity: 2026-06-17 -- Phase 105 Plan 01 completed
 
 ## v1.12 Milestone Intent
 
@@ -266,6 +266,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-17: **Phase 105 Plan 01 completed.** Created `guides/learning-path.md` (49-line ordered week-1 arc: getting-started → jobs → authoring-mailables → preview → webhooks → testing → telemetry; plus going-deeper section). Registered `"guides/learning-path.md"` in both `mix.exs` `extras:` and `groups_for_extras: [Guides: ...]` immediately after getting-started. Added `"learning-path is registered in both mix.exs docs lists"` test to `docs_contract_test.exs` (Regex.scan count >= 2 + File.exists? assertions). All 25 docs-contract tests green (1 pre-existing skip). Commits: 1830b79a (guide) + 309d0584 (registration + test). Next: execute Phase 105 Plan 02.
 
 - 2026-06-17: **Phase 104 Plan 02 completed.** All 104-01 RED tests turned GREEN: fail-closed `validate_preflight/1` in `apply.ex` (returns `{:error, {:unmanaged_parser_conflict, path}}` without `--force`, `:ok` with `--force` or no conflict); threaded as first `with :ok <-` link in `Apply.run/2`; `format_error/1` clause added with actionable message naming endpoint path, silent-401 risk, `CachingBodyReader` fix, and `--force`. `Mailglass.Installer.Doctor` created (static `File.read!` scan, no app boot, three-state exit mapping); `Mix.Tasks.Mailglass.Doctor` created (Boundary-classified, thin CLI shell). 17 installer lane tests green; `mix compile --warnings-as-errors` clean; `mix credo --strict` clean. Commits: 194fc8b2 (apply.ex + mailglass.install.ex) + 29ae7bc4 (doctor.ex + mailglass.doctor.ex). Phase 104 complete. Next: execute Phase 105 (Onboarding Docs: Quickstart Fix + Learning Arc).
 - 2026-06-17: **Phase 104 Plan 01 completed.** RED test files for INSTALL-01/02/03 created: `install_fail_closed_test.exs` (3 tests, 2 failures — tuple and task-level non-zero-exit assertions; INSTALL-02 `--force` ordering passes as expected) and `mailglass_doctor_test.exs` (3 tests, 3 failures — `UndefinedFunctionError` for `Mailglass.Installer.Doctor` module). Both files compile, run, and are RED for the right reasons. Commits: d631b56d (fail-closed test) + fa78adff (doctor test). INSTALL-01..04 requirements marked complete. Next: execute Phase 104 Plan 02 (implementation).

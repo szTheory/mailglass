@@ -52,7 +52,7 @@ body of work (admin polish, brand, design-system uplift, onboarding fixes) final
 - [ ] **DOCS-02**: `guides/getting-started.md` ends with a "Next steps" section sequencing the
   natural first-week path (jobs → authoring-mailables → preview → webhooks → testing → operate),
   instead of ending on installer troubleshooting.
-- [ ] **DOCS-03**: A discoverable learning-path / index (a new `guides/learning-path.md` and/or a
+- [x] **DOCS-03**: A discoverable learning-path / index (a new `guides/learning-path.md` and/or a
   restructured README documentation index) gives the existing guides a clear, ordered first-week arc.
 - [ ] **DOCS-04**: `guides/migration-from-swoosh.md` opens with the value-proposition pitch
   ("Swoosh handles transport; mailglass adds the framework layer you'd otherwise rebuild — preview,
@@ -118,7 +118,7 @@ phase — 100% coverage, no orphans, no double-maps.
 | INSTALL-04 | Phase 104 | Complete |
 | DOCS-01 | Phase 105 | Pending |
 | DOCS-02 | Phase 105 | Pending |
-| DOCS-03 | Phase 105 | Pending |
+| DOCS-03 | Phase 105 | Complete |
 | DOCS-04 | Phase 105 | Pending |
 | OPS-01 | Phase 106 | Pending |
 | OPS-02 | Phase 106 | Pending |
