@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
-status: planning
-last_updated: "2026-06-17T02:02:40.800Z"
-last_activity: 2026-06-17
+status: Defining requirements
+last_updated: "2026-06-17T02:12:37.810Z"
+last_activity: 2026-06-17 — Milestone v1.12 started
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 17
+  completed_phases: 12
+  total_plans: 48
+  completed_plans: 48
+  percent: 71
 ---
 
 # Project State
@@ -52,11 +52,14 @@ Last activity: 2026-06-17 — Milestone v1.12 started
 - **Code changes confined to** the installer (`mailglass/lib/mailglass/installer/*` + install/doctor
   mix tasks) and the admin inbound replay modal. No outbound/webhook/inbound runtime-contract,
   schema, or public-error-set changes. A11Y-01 is a quality-parity item, not a feature.
+
 - **Docs guardrails:** every guide code block must parse (`docs_contract_test.exs`); canonical
   telemetry/error vocabulary (`docs/api_stability.md`); no over-claims; new guides registered in
   BOTH `mix.exs` `extras:` and `groups_for_extras: [Guides: …]`.
+
 - **Zero Node toolchain;** admin CSS bundle rebuilt + committed if classes change
   (`git diff --exit-code priv/static/`) for the a11y phase.
+
 - **Release posture: ACTUALLY CUT** (D-28) — the deliberate change from v1.7/v1.11 prepare-only.
   Admin-minor bump drags matched core+inbound; D-13 inbound exact-pin re-pin after the PR merges.
 
@@ -310,9 +313,11 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
   + ROADMAP.md written 2026-06-16). Next: `/gsd-plan-phase 104` (or `/gsd-discuss-phase 104` first).
 - Decisions locked this session: D-28 actually cut the Hex release at close (not prepare-only);
   D-29 fold inbound replay-modal a11y (ex-WR-03) into v1.12 as Phase 107.
+
 - Phase 108 release-cut checklist is recorded in the milestone plan / thread — confirm staged
   versions, land feat/fix commits so Release Please proposes the bump, then D-13 inbound re-pin
   after merge.
+
 - Before any *feature-discovery* pass (not needed for this milestone): refresh
   `.planning/research/JTBD-COVERAGE.md` (5 milestones stale) or formally adopt the convergence
   verdict in its place.
