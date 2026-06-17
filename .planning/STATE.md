@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
 status: executing
-last_updated: "2026-06-17T15:01:13.277Z"
-last_activity: 2026-06-17 -- Phase 105 Plan 02 completed
+last_updated: "2026-06-17T15:30:00.000Z"
+last_activity: 2026-06-17 -- Phase 105 Plan 03 completed
 progress:
   total_phases: 17
-  completed_phases: 13
+  completed_phases: 14
   total_plans: 53
-  completed_plans: 52
-  percent: 76
+  completed_plans: 53
+  percent: 82
 ---
 
 # Project State
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 ## Current Position
 
 Phase: 105
-Plan: 02 complete
-Status: Executing — Plans 01/02 done, Plan 03 pending
-Last activity: 2026-06-17 -- Phase 105 Plan 02 completed
+Plan: 03 complete
+Status: Executing — Plans 01/02/03 done, Phase 105 complete
+Last activity: 2026-06-17 -- Phase 105 Plan 03 completed
 
 ## v1.12 Milestone Intent
 
@@ -266,6 +266,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-17: **Phase 105 Plan 03 completed.** Reordered `guides/getting-started.md` to end on `## Next steps` — updated 401 troubleshooting entry to reflect Phase 104 fail-closed behavior (`Mix.raise`, `--force` escape hatch, `mix mailglass.doctor` verification) — DOCS-02. Added `## Next steps` section with 6-step week-one arc (jobs → authoring-mailables → preview → webhooks → testing → telemetry) and link to `learning-path.md`. Added `"Getting Started ends on a Next steps section"` contract assertion to `docs_contract_test.exs` (Regex.scan `~r/^## (.+)$/m` + List.last + link/doctor checks). 28 tests, 0 failures, 1 skip. Commits: d5658a27 (guide reorder) + 7591cfbd (contract assertion). Phase 105 complete. Next: execute Phase 106 (Day-2 Guides).
 
 - 2026-06-17: **Phase 105 Plan 02 completed.** Fixed README Quickstart with config-first `config :mailglass` block (verbatim from getting-started.md, repo: + adapter: + telemetry:, framed as installer-generated confirmation) — DOCS-01. Added `guides/learning-path.md` bullet to README Documentation index. Updated `guides/migration-from-swoosh.md` with value-prop opener paragraph ("Swoosh handles transport; mailglass adds the framework layer…" with all 7 keywords) before subordinate-reference framing; bumped stale `~> 0.3` dep pins to `~> 1.6` — DOCS-04. Added two new docs_contract_test.exs assertions: "Quickstart contains a config-first block before the deliver() example" (byte-offset ordering) and "migration-from-swoosh opens with the value-prop pitch before subordinate framing" (7 keywords + refute ~> 0.3). 27 tests, 0 failures, 1 skip. Commits: dbc906d9 (README) + 7375be20 (migration guide) + 7dc19714 (test assertions). Next: execute Phase 105 Plan 03.
 

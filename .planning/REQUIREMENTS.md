@@ -49,7 +49,7 @@ body of work (admin polish, brand, design-system uplift, onboarding fixes) final
 - [x] **DOCS-01**: The README quickstart copy-pastes and runs cleanly — a config-first block (reuse
   the working snippet from `guides/getting-started.md`) is added so the `Mailglass.deliver()`
   example cannot `ConfigError`; validated by `docs_contract_test.exs`.
-- [ ] **DOCS-02**: `guides/getting-started.md` ends with a "Next steps" section sequencing the
+- [x] **DOCS-02**: `guides/getting-started.md` ends with a "Next steps" section sequencing the
   natural first-week path (jobs → authoring-mailables → preview → webhooks → testing → operate),
   instead of ending on installer troubleshooting.
 - [x] **DOCS-03**: A discoverable learning-path / index (a new `guides/learning-path.md` and/or a
@@ -117,7 +117,7 @@ phase — 100% coverage, no orphans, no double-maps.
 | INSTALL-03 | Phase 104 | Complete |
 | INSTALL-04 | Phase 104 | Complete |
 | DOCS-01 | Phase 105 | Complete |
-| DOCS-02 | Phase 105 | Pending |
+| DOCS-02 | Phase 105 | Complete |
 | DOCS-03 | Phase 105 | Complete |
 | DOCS-04 | Phase 105 | Complete |
 | OPS-01 | Phase 106 | Pending |
