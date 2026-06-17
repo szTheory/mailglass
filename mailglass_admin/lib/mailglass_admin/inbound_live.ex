@@ -413,6 +413,12 @@ defmodule MailglassAdmin.InboundLive do
         </section>
       </section>
 
+      <%!-- Focus-management parity with the operator modal: phx-mounted moves focus into the modal on open; phx-remove returns focus to the trigger on close. Not a focus trap — pure LiveView JS. --%>
+      <span
+        :if={@replay_modal_open?}
+        phx-mounted={JS.focus_first(to: "#inbound-replay-modal")}
+        phx-remove={JS.focus(to: "#inbound-replay-open-btn")}
+      />
       <ReplayModal.replay_modal open?={@replay_modal_open?} record={selected_record_struct(@detail)} />
     </MailglassAdmin.Operator.Shell.shell>
     """
