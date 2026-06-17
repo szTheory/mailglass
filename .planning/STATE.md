@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
-status: Defining requirements
-last_updated: "2026-06-17T02:12:37.810Z"
-last_activity: 2026-06-17 — Milestone v1.12 started
+status: executing
+last_updated: "2026-06-17T02:44:21.407Z"
+last_activity: 2026-06-17 -- Phase 104 planning complete
 progress:
   total_phases: 17
   completed_phases: 12
-  total_plans: 48
+  total_plans: 50
   completed_plans: 48
   percent: 71
 ---
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 
 Phase: Not started (defining requirements)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-17 — Milestone v1.12 started
+Status: Ready to execute
+Last activity: 2026-06-17 -- Phase 104 planning complete
 
 ## v1.12 Milestone Intent
 
