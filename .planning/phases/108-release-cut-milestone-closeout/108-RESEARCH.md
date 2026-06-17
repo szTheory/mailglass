@@ -472,17 +472,19 @@ Phase 108 is a release ceremony. "Validation" here means verifiable release-gate
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Is there an open Release Please PR already?**
-   - What we know: The last RP trigger was the `fix(inbound):` commit at `8dfc26ab` ("fix(inbound): release the mailglass == 1.6.1 pin") — but that was for the 1.3.1 ceremony. The current HEAD has no RP PR open (the 1.6.2 ceremony is closed).
-   - What's unclear: Whether the RP action already ran on the Phase 107 `feat(107-01):` commits and created a draft PR. Check with: `gh pr list --head release-please--branches--main --state open`
-   - Recommendation: Check before running Wave 1. If a PR already exists, the `fix(inbound):` commit on `main` will trigger the RP sync step to update the existing PR (idempotent).
+1. **Is there an open Release Please PR already?** — **RESOLVED: YES.** Verified this session:
+   **PR #84 ("chore: release main") is OPEN and proposes mailglass 1.7.0 / mailglass_admin 1.7.0 /
+   mailglass_inbound 1.4.0.** Inbound is 1.4.0 (MINOR, driven by `feat(99-01)` — NOT the 1.3.2 patch
+   this doc assumed elsewhere) and the RP sed step has already re-synced the inbound pin to
+   `{:mailglass, "== 1.7.0"}` in the PR. REL-02 is therefore already encoded — the plan VERIFIES it,
+   it does not author a new `fix(inbound):` commit. See `108-VALIDATION.md` Assumptions Log.
 
 2. **Should the admin `mailglass_inbound_dep()` floating pin (`~> 1.1`) be updated to `~> 1.3`?**
    - What we know: `mailglass_admin/mix.exs:164-169` has `{:mailglass_inbound, "~> 1.1", optional: true}` — deliberately floating (not `==`), deliberately absent from the PINS array. The `1.1` lower floor satisfies `1.3.x` so no resolution failure.
    - What's unclear: Whether the floor should be advanced for documentation accuracy.
-   - Recommendation: This is cosmetic at 1.7.0. Leave at `~> 1.1` unless a specific inbound API that only exists in `>= 1.3` is being depended on. [VERIFIED: `mailglass_admin/mix.exs:153-170` — "deliberately ABSENT from the release-please PINS array"]
+   - **RESOLVED: Leave at `~> 1.1`** (cosmetic at 1.7.0; deliberately ABSENT from the release-please PINS array; `1.1` floor satisfies `1.4.x`). Out of scope for Phase 108. [VERIFIED: `mailglass_admin/mix.exs:153-170`]
 
 ---
 

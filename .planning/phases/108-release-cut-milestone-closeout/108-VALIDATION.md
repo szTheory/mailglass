@@ -52,7 +52,7 @@ created: 2026-06-17
 
 - **After every task commit:** Run that wave's gate checks (see table).
 - **After every wave:** Re-confirm the prior wave's gates still hold (idempotent re-checks).
-- **Before closing Phase 108:** REG-08 through REG-12 all green.
+- **Before closing Phase 108:** REG-01 through REG-15 all green (REG-08..12 are the publish/Hex-live core; the pre-flight REG-01..07 and closeout REG-13..15 gates are equally required).
 - **Max feedback latency:** post-publish smoke ≤ 5 min; RP merge→publish ≤ 1 h (hourly cron self-heal).
 
 ---
