@@ -164,6 +164,12 @@ closeout gate and the actual Hex publish.
 - [ASSESS-2026-06-17] **Only remaining concrete work is maintenance-tier (no milestone):** (a) harden `publish-hex.yml` `gate-ci-green` `isAdvisory()` to classify "Demo Browser Evidence" advisory by name; (b) deferred reference baseline pin bump `~> 1.4` → `~> 1.7` (coordinated 5-file change). Tracked in new thread `release-pipeline-maintenance.md`. Use `/gsd-quick`, not `/gsd-new-milestone`.
 - [ASSESS-2026-06-17] **Expansion tail re-confirmed flat:** SEED-003 ecosystem integrations, Cloudflare Email Routing, synthetic inbound dev UI, `gen_smtp` listener, more providers, core HEEx email-template uplift — all pull-gated / diminishing-returns, no signal through v1.12. Risk remains **overbuilding, not underbuilding**. Pending todo "refresh outbound admin UI look and feel" (2026-06-13) is effectively **subsumed by v1.11's fractal three-surface uplift** — the `.planning/todos/pending/` dir is now empty; STATE "Pending Todos" reference is stale and should be treated as resolved.
 
+## Quick Tasks Completed
+
+| Date | Task | Files |
+|---|---|---|
+| 2026-06-17 | Classify "Demo Browser Evidence" as advisory in `publish-hex.yml` `gate-ci-green` (added to `ADVISORY_LANES` — non-required browser lane predates the `<name> Advisory (...)` convention, would have wrongly blocked a release) | `.github/workflows/publish-hex.yml` |
+
 ## Performance Metrics
 
 **Velocity:**

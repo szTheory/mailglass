@@ -194,15 +194,17 @@ jobs:
             // Advisory lanes are non-blocking for publish — they are NOT
             // branch-protection required checks (the required set is Compile No
             // Optional Deps, Installer Host Smoke, Support Contract Core/Admin,
-            // Trust Lane Repo Head). "Operator Browser Gate" predates the naming
-            // convention and is listed explicitly; every other advisory lane
-            // follows the "<name> Advisory (...)" convention and is matched by
-            // isAdvisory() below — so a red advisory lane (e.g. Preview Capture
-            // Advisory, whose CI harness is independently broken on a missing
-            // inbound migration) never blocks a release. Rule of thumb: if a lane
-            // is not required by branch protection, it is advisory here too.
+            // Trust Lane Repo Head). "Operator Browser Gate" and "Demo Browser
+            // Evidence" predate the naming convention and are listed explicitly;
+            // every other advisory lane follows the "<name> Advisory (...)"
+            // convention and is matched by isAdvisory() below — so a red advisory
+            // lane (e.g. Preview Capture Advisory, whose CI harness is
+            // independently broken on a missing inbound migration) never blocks a
+            // release. Rule of thumb: if a lane is not required by branch
+            // protection, it is advisory here too.
             const ADVISORY_LANES = [
-              'Operator Browser Gate'
+              'Operator Browser Gate',
+              'Demo Browser Evidence'
             ];
 
             const sha = '${{ steps.resolve-sha.outputs.sha }}';
