@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
-status: executing
-last_updated: "2026-06-17T02:51:06.070Z"
+status: verifying
+last_updated: "2026-06-17T02:56:41.417Z"
 last_activity: 2026-06-17
 progress:
   total_phases: 17
-  completed_phases: 12
+  completed_phases: 13
   total_plans: 50
-  completed_plans: 49
-  percent: 71
+  completed_plans: 50
+  percent: 76
 ---
 
 # Project State
@@ -24,9 +24,9 @@ See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 
 ## Current Position
 
-Phase: 104 (installer-fail-closed-webhook-wiring-doctor) — EXECUTING
+Phase: 104 (installer-fail-closed-webhook-wiring-doctor) — COMPLETE
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — all plans executed, implementation verified
 Last activity: 2026-06-17
 
 ## v1.12 Milestone Intent
@@ -267,6 +267,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-17: **Phase 104 Plan 02 completed.** All 104-01 RED tests turned GREEN: fail-closed `validate_preflight/1` in `apply.ex` (returns `{:error, {:unmanaged_parser_conflict, path}}` without `--force`, `:ok` with `--force` or no conflict); threaded as first `with :ok <-` link in `Apply.run/2`; `format_error/1` clause added with actionable message naming endpoint path, silent-401 risk, `CachingBodyReader` fix, and `--force`. `Mailglass.Installer.Doctor` created (static `File.read!` scan, no app boot, three-state exit mapping); `Mix.Tasks.Mailglass.Doctor` created (Boundary-classified, thin CLI shell). 17 installer lane tests green; `mix compile --warnings-as-errors` clean; `mix credo --strict` clean. Commits: 194fc8b2 (apply.ex + mailglass.install.ex) + 29ae7bc4 (doctor.ex + mailglass.doctor.ex). Phase 104 complete. Next: execute Phase 105 (Onboarding Docs: Quickstart Fix + Learning Arc).
 - 2026-06-17: **Phase 104 Plan 01 completed.** RED test files for INSTALL-01/02/03 created: `install_fail_closed_test.exs` (3 tests, 2 failures — tuple and task-level non-zero-exit assertions; INSTALL-02 `--force` ordering passes as expected) and `mailglass_doctor_test.exs` (3 tests, 3 failures — `UndefinedFunctionError` for `Mailglass.Installer.Doctor` module). Both files compile, run, and are RED for the right reasons. Commits: d631b56d (fail-closed test) + fa78adff (doctor test). INSTALL-01..04 requirements marked complete. Next: execute Phase 104 Plan 02 (implementation).
 
 - 2026-06-16: **Next-milestone-step assessment run (no milestone opened).** Repo-local, 3 parallel
