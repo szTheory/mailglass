@@ -160,6 +160,9 @@ closeout gate and the actual Hex publish.
 - [ASSESS-2026-06-16] **Recommended next milestone: "Adopter Onboarding & Day-2 Confidence" (suggest v1.12)** — convert the one weak axis (onboarding/day-2 DX). Done-enough: installer fails closed on the webhook-`Plug.Parsers` conflict (silent prod 401 today, `apply.ex:64-74`); fix broken README quickstart; "week 1" guide arc; production go-live checklist (surface `mix mail.doctor`); unified error/troubleshooting guide; sharpen migration-from-swoosh "why". Then **cut the staged Hex release** (v1.7–v1.11 are prepare-only, not on Hex) + inbound exact-pin re-pin (D-13). Then replay-modal a11y (WR-03). Full wedge spec: `.planning/threads/adopter-onboarding-day2-confidence.md`.
 - [ASSESS-2026-06-16] **Diminishing-returns / DO-NOT-build-without-pull:** core email-template HEEx component uplift (recipient-facing polish, not an adopter wedge), SEED-003 ecosystem integrations, synthetic inbound dev UI, Cloudflare routing, gen_smtp, more providers. Risk here is **overbuilding, not underbuilding**.
 - [ASSESS-2026-06-16] **Doc-drift flagged:** `.planning/research/JTBD-COVERAGE.md` is 5 milestones stale (dated 2026-05-23, covers up to inbound 0.1.0 / v1.2). Its *curve/conclusion* ("after v1.2 inbound + golden example, diminishing returns — wait for pull") has been **borne out** by v1.4–v1.11; only its status tables are stale. Staleness banner added; full refresh is a precondition before any *feature-discovery* pass (not needed for the onboarding wedge). Stale threads inbound-stability-lock-prep + next-milestone-adopter-trust-proof marked resolved.
+- [ASSESS-2026-06-17] **Post-v1.12 next-step assessment verdict (repo-local, 1 thorough source-sweep agent + direct reads):** the last identified adopter wedge (onboarding/day-2 DX) is **CLOSED** and the prepare-only release backlog is **drained** — v1.12 shipped both. Repo source confirms no foundational or important-but-narrow gap remains. **Done-% ≈ 93–95% (near-done / diminishing returns).** **There is NO recommended next feature milestone.** Honest next move = **explicit quiet maintenance** (D-23 posture). `adopter-onboarding-day2-confidence.md` closed (exit signal met). Source-sweep caveat: agent flagged the SQLSTATE 45A01 ledger trigger as "app-code only" — false alarm; the trigger lives in the `mailglass.gen.migration` template (not `lib/`), D-15 validated.
+- [ASSESS-2026-06-17] **Only remaining concrete work is maintenance-tier (no milestone):** (a) harden `publish-hex.yml` `gate-ci-green` `isAdvisory()` to classify "Demo Browser Evidence" advisory by name; (b) deferred reference baseline pin bump `~> 1.4` → `~> 1.7` (coordinated 5-file change). Tracked in new thread `release-pipeline-maintenance.md`. Use `/gsd-quick`, not `/gsd-new-milestone`.
+- [ASSESS-2026-06-17] **Expansion tail re-confirmed flat:** SEED-003 ecosystem integrations, Cloudflare Email Routing, synthetic inbound dev UI, `gen_smtp` listener, more providers, core HEEx email-template uplift — all pull-gated / diminishing-returns, no signal through v1.12. Risk remains **overbuilding, not underbuilding**. Pending todo "refresh outbound admin UI look and feel" (2026-06-13) is effectively **subsumed by v1.11's fractal three-surface uplift** — the `.planning/todos/pending/` dir is now empty; STATE "Pending Todos" reference is stale and should be treated as resolved.
 
 ## Performance Metrics
 
@@ -271,6 +274,17 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-17: **Post-v1.12 next-step assessment run (NO milestone opened).** Repo-local: one thorough
+  source-sweep agent across all 3 packages + direct reads of PROJECT/ROADMAP/STATE/threads/v1.12 audit.
+  **Verdict: the last adopter wedge (onboarding/day-2) is closed and the release is cut; ~93–95% done;
+  no recommended next feature milestone; default to quiet maintenance.** Bookkeeping written: closed
+  `adopter-onboarding-day2-confidence.md` (exit signal met); refreshed `project-convergence-posture.md`
+  (post-v1.12 read + release implication RESOLVED) and `transport-expansion-watchlist.md` (review
+  date); opened `release-pipeline-maintenance.md` for the two maintenance-tier follow-ups; added three
+  ASSESS-2026-06-17 decisions + refreshed Operator Next Steps. Shift-left: added
+  `preferences.milestone_discovery.research_lens` to config.json (low-risk). No feature code touched.
+  Next: maintainer's call — quiet maintenance, or `/gsd-quick` one of the pipeline-maintenance items.
+
 - 2026-06-17: **v1.12 SHIPPED — Phase 108 complete, milestone closed.** Cut the first real linked-version Hex release since 1.6.2: **mailglass 1.7.0 / mailglass_admin 1.7.0 / mailglass_inbound 1.4.0 live on Hex**, inbound + admin re-pinned `{:mailglass, "== 1.7.0"}` (D-13 / REL-02). Release commit `0411d485`, PR #84. The v1.7–v1.12 body had never hit full CI (local phase execution only); pushing it before merging surfaced + fixed **six pre-flight CI regressions**: format (doctor/test files), Installer Host Smoke (fail-closed installer correctly blocked stock endpoint → smoke uses `--force`), Dialyzer (`mailglass.doctor` `run/1` no_return suppressed), ex_doc (guides linked unregistered files + wrong `resolve_outbound_adapter_ref` arity), `mix mailglass.docs.check` (stale `~> 0.3` token vs phase-105 `~> 1.6`), and Demo Browser Evidence (v1.11 responsive split → Playwright strict-mode locator). Publish fan-out raced (one run/release-event; two `publish-core` race-losers + a post-publish-smoke index-timeout — all disproven against Hex; re-dispatched smoke green). Hands-free auto-merge didn't fire (advisory lanes red + RP cron churn); merged via maintainer admin-override after explicit go/no-go, all required checks green. Consumer smoke proved Hex resolution + `install --force`. Milestone archived (`v1.12-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`); MILESTONES/PROJECT/ROADMAP/RETROSPECTIVE updated; REQUIREMENTS.md removed; tag `v1.12`. **Follow-up:** harden `publish-hex.yml` `gate-ci-green` `isAdvisory()` to classify "Demo Browser Evidence" advisory by name. Next: `/gsd-new-milestone`.
 
 - 2026-06-17: **Phase 106 Plan 02 completed.** Registered both day-2 guides in `mix.exs` `extras:` and `Guides:` group (2 occurrences each). Added 4 new OPS-01/OPS-02 docs-contract assertions to `docs_contract_test.exs` (registration x2, section-presence checklist, error-coverage all-ten). Corrected `docs/api_stability.md`: "six" → "ten" error structs + `Mailglass.StreamPolicyError` added to stable list. 32 tests, 0 failures, 1 pre-existing skip. Commits: 90c7f562 (mix.exs) + ec6a834b (contract tests) + 6c7c51f3 (api_stability.md). **Phase 106 complete.** Next: execute Phase 107 (Inbound Replay-Modal A11y Parity).
@@ -328,15 +342,14 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- **v1.12 Adopter Onboarding & Day-2 Confidence is OPEN** (Phases 104–108, 13 REQ-IDs; REQUIREMENTS.md
-  + ROADMAP.md written 2026-06-16). Next: `/gsd-plan-phase 104` (or `/gsd-discuss-phase 104` first).
-- Decisions locked this session: D-28 actually cut the Hex release at close (not prepare-only);
-  D-29 fold inbound replay-modal a11y (ex-WR-03) into v1.12 as Phase 107.
-
-- Phase 108 release-cut checklist is recorded in the milestone plan / thread — confirm staged
-  versions, land feat/fix commits so Release Please proposes the bump, then D-13 inbound re-pin
-  after merge.
-
-- Before any *feature-discovery* pass (not needed for this milestone): refresh
-  `.planning/research/JTBD-COVERAGE.md` (5 milestones stale) or formally adopt the convergence
-  verdict in its place.
+- **No active milestone. No recommended next feature milestone** (post-v1.12 assessment 2026-06-17).
+  The library is ~93–95% done for its scope; the last wedge shipped. **Default to quiet maintenance.**
+  Do NOT run `/gsd-new-milestone` for feature work unless a concrete adopter pull surfaces.
+- **If you want to do *something*,** the only concrete items are maintenance-tier (thread
+  `release-pipeline-maintenance.md`): (1) `gate-ci-green` advisory-classifier fix for "Demo Browser
+  Evidence"; (2) reference baseline pin bump `~> 1.4` → `~> 1.7`. Use `/gsd-quick`.
+- **Before any *feature-discovery* pass** (only if reconsidering expansion): refresh
+  `.planning/research/JTBD-COVERAGE.md` (now 6 milestones stale) — its conclusion still holds, only
+  its status tables are stale. Not needed for maintenance work.
+- Expansion candidates remain pull-gated (watchlist `transport-expansion-watchlist.md`): SEED-003,
+  Cloudflare Email Routing, synthetic inbound dev UI, `gen_smtp` listener, more providers.

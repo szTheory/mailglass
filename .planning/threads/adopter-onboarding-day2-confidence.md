@@ -1,11 +1,26 @@
 # Thread: Adopter Onboarding & Day-2 Confidence
 
 **Opened:** 2026-06-16
-**Status:** open — **milestone v1.12 OPENED 2026-06-16** (Phases 104–108, 13 REQ-IDs mapped:
-INSTALL-01..04 → 104, DOCS-01..04 → 105, OPS-01/02 → 106, A11Y-01 → 107, REL-01/02 → 108).
-Maintainer locked: actually cut the Hex release (D-28); fold in replay-modal a11y (D-29).
-**Priority:** high (active milestone)
+**Status:** ✅ CLOSED 2026-06-17 — exit signal met. **v1.12 SHIPPED** (Phases 104–108, audit
+`status: passed`, 13/13 reqs): all done-enough criteria below delivered AND the first real
+linked-version Hex release since 1.6.2 was cut (1.7.0 / 1.7.0 / 1.4.0 live). Every "newly surfaced
+durable finding" and "open investigation" below was consumed by the milestone — see resolution notes.
+**Priority:** ~~high~~ resolved
 **Owner:** maintainer
+
+## Resolution (2026-06-17)
+
+- Silent webhook `Plug.Parsers` 401 → **fixed closed** (Phase 104): `validate_preflight/1` in
+  `installer/apply.ex` returns `{:error, {:unmanaged_parser_conflict, _}}` (Mix.raise) without
+  `--force`; `mix mailglass.doctor` added as the post-install verifiable check.
+- README quickstart → **fixed** (Phase 105): config-first block; learning-path index + getting-started
+  Next-steps arc; migration-from-swoosh value-prop opener.
+- Go-live checklist + unified errors/troubleshooting guides → **shipped** (Phase 106).
+- Inbound replay-modal a11y parity (ex-WR-03) → **shipped** (Phase 107).
+- Staged release → **cut** (Phase 108); inbound re-pinned `{:mailglass, "== 1.7.0"}` (D-13).
+
+Re-confirmed at the 2026-06-17 next-step assessment: no remaining onboarding/day-2 gap. Post-v1.12
+posture is pure quiet maintenance (see `project-convergence-posture.md`).
 
 ## Question
 
