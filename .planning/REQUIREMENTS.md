@@ -30,18 +30,18 @@ body of work (admin polish, brand, design-system uplift, onboarding fixes) final
 
 ### INSTALL — Fail-Closed Installer + Verifiable Wiring
 
-- [ ] **INSTALL-01**: `mix mailglass.install` fails closed (`Mix.raise`, non-zero exit) with an
+- [x] **INSTALL-01**: `mix mailglass.install` fails closed (`Mix.raise`, non-zero exit) with an
   actionable message when `endpoint.ex` contains an unmanaged `plug Plug.Parsers` lacking a
   `:body_reader`, instead of printing a yellow warning and continuing (today
   `installer/apply.ex:47-76` warns and the result is never propagated).
-- [ ] **INSTALL-02**: A `--force` escape hatch lets advanced adopters proceed past the conflict
+- [x] **INSTALL-02**: A `--force` escape hatch lets advanced adopters proceed past the conflict
   (insert the managed parser above the existing one — preserving today's behavior), documented in
   both the error message and the getting-started troubleshooting section.
-- [ ] **INSTALL-03**: A verifiable post-install webhook-wiring check (extend `mix mail.doctor` with
+- [x] **INSTALL-03**: A verifiable post-install webhook-wiring check (extend `mix mail.doctor` with
   an endpoint/webhook lane, or a focused `mix mailglass.doctor`) confirms
   `Mailglass.Webhook.CachingBodyReader` is wired into the endpoint parser and exits non-zero when
   it is not (`mail.doctor` is DNS-only today).
-- [ ] **INSTALL-04**: The fail-closed, `--force`, and doctor paths are covered by tests following
+- [x] **INSTALL-04**: The fail-closed, `--force`, and doctor paths are covered by tests following
   the `test/mailglass/install/install_idempotency_test.exs` fixture pattern.
 
 ### DOCS — Quickstart Fix + Learning Arc
@@ -112,10 +112,10 @@ phase — 100% coverage, no orphans, no double-maps.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INSTALL-01 | Phase 104 | Pending |
-| INSTALL-02 | Phase 104 | Pending |
-| INSTALL-03 | Phase 104 | Pending |
-| INSTALL-04 | Phase 104 | Pending |
+| INSTALL-01 | Phase 104 | Complete |
+| INSTALL-02 | Phase 104 | Complete |
+| INSTALL-03 | Phase 104 | Complete |
+| INSTALL-04 | Phase 104 | Complete |
 | DOCS-01 | Phase 105 | Pending |
 | DOCS-02 | Phase 105 | Pending |
 | DOCS-03 | Phase 105 | Pending |

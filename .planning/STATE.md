@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
 status: executing
-last_updated: "2026-06-17T02:44:21.407Z"
-last_activity: 2026-06-17 -- Phase 104 planning complete
+last_updated: "2026-06-17T02:51:06.070Z"
+last_activity: 2026-06-17
 progress:
   total_phases: 17
   completed_phases: 12
   total_plans: 50
-  completed_plans: 48
+  completed_plans: 49
   percent: 71
 ---
 
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v1.12 Adopter Onboarding & Day-2 Confidence (opened 2026-06-16) — convert the one remaining adopter wedge (onboarding/day-2 DX) and cut the staged Hex release. Friction-removal + publish, not feature growth (D-23 holds). Next: `/gsd-plan-phase 104`.
+**Current focus:** Phase 104 — installer-fail-closed-webhook-wiring-doctor
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
+Phase: 104 (installer-fail-closed-webhook-wiring-doctor) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-06-17 -- Phase 104 planning complete
+Last activity: 2026-06-17
 
 ## v1.12 Milestone Intent
 
@@ -266,6 +266,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-17: **Phase 104 Plan 01 completed.** RED test files for INSTALL-01/02/03 created: `install_fail_closed_test.exs` (3 tests, 2 failures — tuple and task-level non-zero-exit assertions; INSTALL-02 `--force` ordering passes as expected) and `mailglass_doctor_test.exs` (3 tests, 3 failures — `UndefinedFunctionError` for `Mailglass.Installer.Doctor` module). Both files compile, run, and are RED for the right reasons. Commits: d631b56d (fail-closed test) + fa78adff (doctor test). INSTALL-01..04 requirements marked complete. Next: execute Phase 104 Plan 02 (implementation).
 
 - 2026-06-16: **Next-milestone-step assessment run (no milestone opened).** Repo-local, 3 parallel
   Explore agents (adopter onboarding / real shipped surface / strategic frontier) + direct reads.

@@ -48,7 +48,7 @@ mailglass.doctor`). Tests-first, following the `install_idempotency_test.exs` fi
 `--force` proceeds and wires the managed parser; the doctor check exits non-zero when
 CachingBodyReader is absent; fail-closed/force/doctor paths are tested and green.
 **Plans**: 2 plans (Wave 1: 104-01 tests-first · Wave 2: 104-02 implementation)
-- [ ] 104-01-PLAN.md — Wave 0 tests-first: failing install_fail_closed_test.exs + mailglass_doctor_test.exs
+- [x] 104-01-PLAN.md — Wave 0 tests-first: failing install_fail_closed_test.exs + mailglass_doctor_test.exs
 - [ ] 104-02-PLAN.md — Fail-closed validate_preflight/Apply.run/format_error + new mix mailglass.doctor + Doctor runner
 
 ### Phase 105: Onboarding Docs — Quickstart Fix + Learning Arc
@@ -143,7 +143,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 101. Microcopy Pass | v1.11 | 2/2 | Complete | 2026-06-16 |
 | 102. Motion + Micro-interaction Pass | v1.11 | 3/3 | Complete | 2026-06-16 |
 | 103. Verification + Idempotent Closeout | v1.11 | 4/4 | Complete | 2026-06-16 |
-| 104. Installer Fail-Closed + Webhook-Wiring Doctor | v1.12 | 0/2 | Planned | — |
+| 104. Installer Fail-Closed + Webhook-Wiring Doctor | v1.12 | 1/2 | In Progress|  |
 | 105. Onboarding Docs: Quickstart Fix + Learning Arc | v1.12 | 0/? | Planned | — |
 | 106. Day-2 Guides: Go-Live Checklist + Error/Troubleshooting Map | v1.12 | 0/? | Planned | — |
 | 107. Inbound Replay-Modal A11y Parity (WR-03) | v1.12 | 0/? | Planned | — |
