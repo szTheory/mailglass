@@ -14,6 +14,16 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.7.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.6.2...mailglass-v1.7.0) (2026-06-17)
+
+
+### Features
+
+* **104-02:** add Mailglass.Installer.Doctor + mix mailglass.doctor static scan (INSTALL-03) ([29ae7bc](https://github.com/szTheory/mailglass/commit/29ae7bc4a976e5ee78f76476066f7acfe66bc22f))
+* **104-02:** fail-closed validate_preflight/1 + format_error/1 clause (INSTALL-01/02) ([194fc8b](https://github.com/szTheory/mailglass/commit/194fc8b2813c9a439aaba00dca99307246b5886d))
+* **106-02:** register production-go-live-checklist and errors-and-troubleshooting in mix.exs docs ([90c7f56](https://github.com/szTheory/mailglass/commit/90c7f562e146a8bd6bd061af41328d3a27a39ae8))
+* **99-05:** harden advisory conformance gate ([733222f](https://github.com/szTheory/mailglass/commit/733222fa4fb97df6ae86d7838a60576037ec59de))
+
 ## [1.6.2](https://github.com/szTheory/mailglass/compare/mailglass-v1.6.1...mailglass-v1.6.2) (2026-06-12)
 
 
