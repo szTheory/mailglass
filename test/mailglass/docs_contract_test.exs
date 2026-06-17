@@ -354,6 +354,64 @@ defmodule Mailglass.DocsContractTest do
       # should re-pin these assertions to the v1.0/1.1 release-record format.
       :ok
     end
+
+    test "production-go-live-checklist is registered in both mix.exs docs lists" do
+      mix_exs = File.read!("mix.exs")
+      matches = Regex.scan(~r/"guides\/production-go-live-checklist\.md"/, mix_exs)
+
+      assert length(matches) >= 2,
+             "expected \"guides/production-go-live-checklist.md\" to appear in both extras: and " <>
+               "groups_for_extras: [Guides: ...] in mix.exs, but found #{length(matches)} occurrence(s)"
+
+      assert File.exists?("guides/production-go-live-checklist.md"),
+             "guides/production-go-live-checklist.md does not exist on disk"
+    end
+
+    test "errors-and-troubleshooting is registered in both mix.exs docs lists" do
+      mix_exs = File.read!("mix.exs")
+      matches = Regex.scan(~r/"guides\/errors-and-troubleshooting\.md"/, mix_exs)
+
+      assert length(matches) >= 2,
+             "expected \"guides/errors-and-troubleshooting.md\" to appear in both extras: and " <>
+               "groups_for_extras: [Guides: ...] in mix.exs, but found #{length(matches)} occurrence(s)"
+
+      assert File.exists?("guides/errors-and-troubleshooting.md"),
+             "guides/errors-and-troubleshooting.md does not exist on disk"
+    end
+
+    test "production-go-live-checklist covers required go-live topics" do
+      checklist = File.read!("guides/production-go-live-checklist.md")
+      # Both distinct doctor commands must appear literally
+      assert checklist =~ "mix mail.doctor"
+      assert checklist =~ "mix mailglass.doctor"
+      # Oban queue sizing section marker
+      assert checklist =~ "Oban"
+      # Suppression section marker
+      assert checklist =~ "suppression"
+      # Telemetry section marker
+      assert checklist =~ "telemetry"
+      # Webhook secret rotation section marker
+      assert checklist =~ "rotation"
+    end
+
+    test "errors-and-troubleshooting covers all ten error structs and routes to api_stability.md" do
+      guide = File.read!("guides/errors-and-troubleshooting.md")
+
+      error_names = [
+        "SendError", "TemplateError", "SignatureError", "SuppressedError",
+        "RateLimitError", "ConfigError", "EventLedgerImmutableError",
+        "TenancyError", "StreamPolicyError", "PublishError"
+      ]
+
+      for name <- error_names do
+        assert guide =~ name,
+               "errors-and-troubleshooting.md is missing error struct: #{name}"
+      end
+
+      # The guide must route canonical atom-set truth to api_stability.md (D-03)
+      assert guide =~ "api_stability.md",
+             "errors-and-troubleshooting.md must cross-link to docs/api_stability.md"
+    end
   end
 
   describe "Phase 61 trust-entry docs contract" do
