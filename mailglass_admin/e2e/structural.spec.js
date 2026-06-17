@@ -631,6 +631,33 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       }
     });
 
+    test("Inbound: replay modal has focus-management parity with the operator modal (role/aria + Escape-to-close)", async ({ page }) => {
+      await openInbound(page);
+
+      // Select a replayable (non-no-match) row — the matched :accept row has an enabled replay button
+      const replayableRow = page
+        .getByTestId("inbound-record-row")
+        .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+        .first();
+      await replayableRow.click();
+      await page.waitForURL(/inbound_id=/);
+
+      // Open the replay modal via the trigger button
+      await page.getByTestId("inbound-replay-open").click();
+
+      // Assert DOM contract matches operator modal parity: role, aria-modal, Escape wiring
+      const modal = page.getByTestId("inbound-replay-modal");
+      await expect(modal).toBeVisible();
+      expect(await modal.getAttribute("role")).toBe("dialog");
+      expect(await modal.getAttribute("aria-modal")).toBe("true");
+      expect(await modal.getAttribute("phx-window-keydown")).toBe("close_replay");
+      expect(await modal.getAttribute("phx-key")).toBe("Escape");
+
+      // Assert Escape-to-close closes the modal (routes to existing close_replay handler)
+      await page.keyboard.press("Escape");
+      await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+    });
+
   });
 
   test.describe("preview state coverage, responsive theme matrix, and contrast", () => {
