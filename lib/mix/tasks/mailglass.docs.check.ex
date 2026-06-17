@@ -299,7 +299,7 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
       required: [
         "subordinate raw-Swoosh migration reference",
         "upgrading-to-v1_0.md",
-        "{:mailglass, \"~> 0.3\"}",
+        "{:mailglass, \"~> 1.6\"}",
         "Mailglass still accepts a plain `%Swoosh.Email{}`",
         "assert {:ok, _delivery} = Mailglass.deliver(email)"
       ],
