@@ -45,10 +45,12 @@
       "research_first": true,
       "parallel_candidate_analysis": true,
       "ranking_lens": "adopter-jtbd-first",
+      "done_lens": "adopter-value-not-perfectionism",
       "writeback_checklist": [
         "STATE.md",
         "threads",
-        "milestone-candidate-note"
+        "milestone-candidate-note",
+        "refresh-jtbd-coverage-if-stale"
       ]
     }
   },

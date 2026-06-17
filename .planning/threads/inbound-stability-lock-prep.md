@@ -1,9 +1,18 @@
 # Thread: Inbound Stability Lock Prep
 
-**Opened:** 2026-05-27  
-**Status:** open  
-**Priority:** high (next after trust-proof milestone)  
+**Opened:** 2026-05-27
+**Status:** resolved (2026-06-16)
+**Priority:** —
 **Owner:** maintainer
+
+## Resolution (2026-06-16)
+
+Closed by shipped milestones. **v1.4 Inbound Stability Lock** (2026-06-01) reconciled
+`mailglass_inbound/docs/api_stability.md` into a canonical stable/testing/internal/deferred
+inventory with executable docs-contract guards and selected the `1.0.0` candidate; **v1.6**
+(2026-06-02) published `mailglass_inbound` `1.0.0` live on Hex on its own stable `1.0` contract
+line. Inbound is now at **1.3.1**, carrying the same long-lived compatibility posture as
+core/admin. The drift and exit-signal conditions below are all satisfied. No further action.
 
 ## Question
 

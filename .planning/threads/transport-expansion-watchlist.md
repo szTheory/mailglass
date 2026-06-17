@@ -1,9 +1,13 @@
 # Thread: Transport Expansion Watchlist
 
-**Opened:** 2026-05-27  
-**Status:** open  
-**Priority:** watchlist (not next)  
+**Opened:** 2026-05-27
+**Status:** open
+**Priority:** watchlist (not next)
 **Owner:** maintainer
+**Last reviewed:** 2026-06-16 — all three items remain correctly UNPROMOTED. No adopter pull has
+surfaced through v1.11 for Cloudflare Email Routing, synthetic inbound dev tooling, or a `gen_smtp`
+listener. The 2026-06-16 next-step assessment reaffirms these as flat-tail / diminishing-returns.
+Keep deferred; revisit only on explicit adopter pull. Next review: next milestone-discovery pass.
 
 ## Question
 

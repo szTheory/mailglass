@@ -1,11 +1,24 @@
 # JTBD Coverage, Gaps, and Diminishing Returns
 
+> ⚠️ **STALENESS BANNER (added 2026-06-16).** This file is **5 milestones stale** — it covers up to
+> `mailglass_inbound` 0.1.0 / v1.2-still-executing, but the project has since shipped v1.4 (inbound
+> stability lock), v1.5 (demo evidence), **v1.6 (inbound `1.0.0` live on Hex)**, v1.7 + v1.11 (admin
+> design-system polish), and v1.8–v1.10 (brand). Live versions are now **1.6.2 / 1.6.2 / 1.3.1**.
+> The **status tables and gap rows below are out of date** — treat them as historical. However, the
+> file's **central conclusion has been borne out**: "after completed v1.2 inbound plus a golden
+> example app, further JTBD expansion is mostly diminishing returns — slow down and wait for pull"
+> (§5). Every milestone since has been flat-tail polish, exactly as predicted. The 2026-06-16
+> next-step assessment confirms the project is feature-complete for its scope; the one remaining
+> adopter wedge is onboarding / day-2 DX (see `.planning/threads/adopter-onboarding-day2-confidence.md`),
+> which is friction-removal, not a new JTBD category. **Full refresh of this file is deferred to the
+> next feature-discovery pass** (a milestone-sized task); it is not a precondition for the onboarding wedge.
+
 **Domain:** Phoenix transactional email framework
 **Project:** mailglass (`mailglass` + `mailglass_admin` + `mailglass_inbound`)
 **Researched:** 2026-05-23
 **Refresh:** #2
 **Covers up to:** `mailglass` 1.0.0 / `mailglass_admin` 1.0.0 / `mailglass_inbound` 0.1.0 shipped; Phase 45 complete; v1.2 still executing
-**Overall confidence:** HIGH
+**Overall confidence:** HIGH *(as of 2026-05-23; see staleness banner above)*
 
 ---
 

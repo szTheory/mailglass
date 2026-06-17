@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.11
-milestone_name: mailglass_admin Design-System Uplift
-status: shipped
-last_updated: 2026-06-16T22:00:00.000Z
-last_activity: 2026-06-16
+milestone: v1.12
+milestone_name: Adopter Onboarding & Day-2 Confidence
+status: planning
+last_updated: "2026-06-17T02:02:40.800Z"
+last_activity: 2026-06-17
 progress:
-  total_phases: 10
-  completed_phases: 10
-  total_plans: 42
-  completed_plans: 42
-  percent: 100
-stopped_at: v1.11 SHIPPED + archived (audit passed 34/34) — no active milestone; next /gsd-new-milestone
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,85 +20,61 @@ stopped_at: v1.11 SHIPPED + archived (audit passed 34/34) — no active mileston
 See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** No active milestone — v1.11 shipped 2026-06-16. Next: `/gsd-new-milestone` (quiet-maintenance / adopter-pull posture per D-23).
+**Current focus:** v1.12 Adopter Onboarding & Day-2 Confidence (opened 2026-06-16) — convert the one remaining adopter wedge (onboarding/day-2 DX) and cut the staged Hex release. Friction-removal + publish, not feature growth (D-23 holds). Next: `/gsd-plan-phase 104`.
 
 ## Current Position
 
-Phase: — (between milestones)
+Phase: Not started (defining requirements)
 Plan: —
-Status: v1.11 shipped + archived; no active milestone
-Last activity: 2026-06-16
-Resume file: None
+Status: Defining requirements
+Last activity: 2026-06-17 — Milestone v1.12 started
 
-## v1.11 Milestone Intent
+## v1.12 Milestone Intent
 
-- Re-baseline the `mailglass_admin` UI onto the canonical fable brand tokens, then
-  fractally audit-and-uplift every component, component-group, and page across the
-  Operator, Inbound, and Preview surfaces to award-winning quality in light + dark and
-  at every width (390/768/1440) — enforced by an idempotent, research-grounded quality
-  ratchet that only moves quality forward.
+- Convert the one remaining adopter wedge from the 2026-06-16 next-step assessment: onboarding /
+  day-2 DX. mailglass is feature-complete for its scope (~92% code axis) — this milestone removes
+  the friction/footguns between "evaluating" and "in production," then **publishes** the accumulated
+  v1.7–v1.12 polish to Hex. Friction-removal + release, NOT feature growth (D-23 convergence holds).
 
-- Root cause being fixed: the admin's `app.css` never consumes `brandbook/tokens.css`,
-  every admin border is drawn in the *accent* color (`base-300`→Ice), cards sit one
-  brand-role off (`base-200`→Mist instead of `surface-raised`), and dark muted text is
-  below WCAG AA. This is the "UI feels off-brand / inbound looks ugly" perception.
+- Headline fix (the dangerous gap): `mix mailglass.install` warns-then-continues on an unmanaged
+  `Plug.Parsers` conflict (`installer/apply.ex:47-76`), producing a silent production webhook 401.
+  Make it fail closed (route through the `Mix.raise` path the task already uses) with a `--force`
+  escape hatch + a verifiable post-install webhook-wiring doctor check.
 
-- Adopter-visible-quality investment under the D-23 convergence rule (like v1.7, recorded
-  as D-27) — NOT feature growth. The sanctioned follow-up to the Phase 92 human-UAT todo
-  "refresh outbound admin UI look and feel," broadened to all three admin surfaces.
+- Plus: fix the broken README quickstart, add a first-week learning arc + go-live checklist +
+  unified error/troubleshooting guide, sharpen migration-from-swoosh's "why"; fold in the inbound
+  replay-modal a11y parity (ex-v1.11 WR-03); then cut the real linked-version Hex release + D-13
+  inbound exact-pin re-pin.
 
-- Front-loaded research dossier (Phase 96): Emil Kowalski motion, gov.uk IA, component-state
-  matrices, dark-mode pitfalls, "thoughtful maintainer" microcopy — each ending in an
-  adversarially-synthesized LOCKED DECISION block the build phases consume.
+## v1.12 Scope Locks
 
-## v1.11 Scope Locks
-
-- **Admin UI only — 3 surfaces.** Core mailglass email-template HEEx components (what
-  recipients see) and `brandbook/` HTML specimens are OUT. This milestone *consumes* the
-  brand book; it does not edit it. `brandbook/tokens.css` is the source of truth.
-
-- **No new product features / operator capabilities / routes** beyond the dev-only
-  component gallery (`/dev/mail/gallery`, dev live_session only — never `/ops`).
-
-- **No core/inbound *functional* code changes.** A `mailglass_admin` minor bump
-  mechanically drags matched core + inbound version bumps via linked-version releases —
-  expected, administrative.
-
-- **Release posture: prepare-only** — stage the ceremony; decide whether to cut a real
-  Hex release at milestone close (v1.7 precedent).
-
-- **Hard design constraints bind every phase:** zero Node toolchain; standalone-binary
-  Tailwind v4 + vendored daisyUI/heroicons; CSS bundle rebuilt + committed
-  (`git diff --exit-code priv/static/`); motion ≤300ms, ease-out, transform/opacity only,
-  `prefers-reduced-motion` respected, no springs/overshoot, CSS+LiveView.JS only (no client
-  JS hook); type weights only 400/700; flat elevation (border-first, no glassmorphism/bevels);
-  10%-accent rule; semantic tokens only; brand constraints C-15/C-16; PII minimization
-  (`mask_recipient/1`) and multi-tenant safety preserved in seed/fixture work.
-
-- **No pixel-diff visual regression** (D-07 banned). Structural assertions gate CI; LLM
-  scores gate the milestone. The "Storybook lens" is a thin dev-only LiveView (no Node Storybook).
+- **Onboarding / DX + release only.** No new product capability, providers, transports, or routes.
+- **Code changes confined to** the installer (`mailglass/lib/mailglass/installer/*` + install/doctor
+  mix tasks) and the admin inbound replay modal. No outbound/webhook/inbound runtime-contract,
+  schema, or public-error-set changes. A11Y-01 is a quality-parity item, not a feature.
+- **Docs guardrails:** every guide code block must parse (`docs_contract_test.exs`); canonical
+  telemetry/error vocabulary (`docs/api_stability.md`); no over-claims; new guides registered in
+  BOTH `mix.exs` `extras:` and `groups_for_extras: [Guides: …]`.
+- **Zero Node toolchain;** admin CSS bundle rebuilt + committed if classes change
+  (`git diff --exit-code priv/static/`) for the a11y phase.
+- **Release posture: ACTUALLY CUT** (D-28) — the deliberate change from v1.7/v1.11 prepare-only.
+  Admin-minor bump drags matched core+inbound; D-13 inbound exact-pin re-pin after the PR merges.
 
 ## Roadmap Snapshot
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 94 | Token Re-Baseline onto Canonical Brand | app.css consumes `brandbook/tokens.css --mg-*` as single source of truth; fix base-300→border + base-200→surface-raised + dark muted/error/primary-content; tighten conformance gates FIRST; rebuild+commit bundle; re-verify contrast (TOKEN-01..05, RATCHET-03) |
-| 95 | Audit Apparatus + Quality-Ratchet v2 | idempotent ratchet: score baseline (meet-or-beat), carried-forward GAP-NN register, structural-assertion + LLM-score layers; run 18-cell matrix for fresh baseline (RATCHET-01/02/04/05) |
-| 96 | Research Dossier | parallel-subagent dossiers → LOCKED DECISIONS for motion (Emil Kowalski), IA (gov.uk), component states, dark mode, microcopy (RESEARCH-01..05) |
-| 97 | Cross-Surface Component Layer | Level-1 uplift of SHARED components + dev-only gallery `/dev/mail/gallery`; UI-SPEC before, UI-REVIEW after (COMP-01..03, GALLERY-01/02) |
-| 98 | Operator / Deliveries Surface | group+page/IA+responsive+flow+a11y uplift of `/ops/mail`; seed data tuned; anchors cross-surface GROUP/PAGE/RESP/FLOW/A11Y; folds CR-01/02/03 (GROUP-01, PAGE-01/02, RESP-01, FLOW-01/02, A11Y-01/02) |
-| 99 | Inbound Surface | heaviest lift: inbound overview tier + RoutingTrace/EvidenceCard rework + empty/loading + text-xl→token; re-applies cross-cutting reqs to `/ops/mail/inbound` (GROUP-02/03) |
-| 100 | Preview Surface | group+page/IA+responsive uplift of `/dev/mail`; dark-mode for the preview chrome (independent of previewed-email toggle); re-applies cross-cutting reqs (PAGE-03) |
-| 101 | Microcopy Pass | global "thoughtful maintainer" empty/error/loading/confirmation copy across all 3 surfaces (COPY-01) |
-| 102 | Motion + Micro-interaction Pass | global motion uplift within hard constraints, sourced from the 96 dossier (MOTION-01/02) |
-| 103 | Verification + Idempotent Closeout | re-run matrix; close sev-4/5 GAPs; assert score baseline meets-or-beats; all gates green; produce next-run baseline; stage release prepare-only; milestone audit |
+| 104 | Installer Fail-Closed + Webhook-Wiring Doctor | Fail closed (Mix.raise) on unmanaged `Plug.Parsers` conflict + `--force` escape hatch + verifiable webhook-wiring doctor check; tests-first (INSTALL-01..04) |
+| 105 | Onboarding Docs: Quickstart Fix + Learning Arc | Config-first README quickstart, getting-started "Next steps", learning-path index, migration-from-swoosh "why" opener; docs-contract gated (DOCS-01..04) |
+| 106 | Day-2 Guides: Go-Live Checklist + Error/Troubleshooting | New production-go-live-checklist.md + unified errors-and-troubleshooting.md; registered in mix.exs docs + docs-contract gated (OPS-01/02) |
+| 107 | Inbound Replay-Modal A11y Parity (WR-03) | Operator-style focus-trap + Escape on admin inbound replay modal; Playwright structural assertion; bundle clean (A11Y-01) |
+| 108 | Release Cut + Milestone Closeout | Cut real linked-version Hex release (CHANGELOG, admin-minor drags core+inbound); D-13 inbound re-pin; Hex resolution + post-publish smoke; milestone audit (REL-01/02) |
 
-**Critical path:** 94 → 95 → 96 → 97 → {98, 99, 100 parallel} → {101, 102 parallel} → 103
-**Sequencing notes:** Phase 94 tightens conformance gates FIRST so the token re-baseline can't
-regress silently. Phases 98/99/100 are independent per-surface uplifts that can run in parallel
-once 97 lands the shared component layer + gallery. 101 (microcopy) and 102 (motion) are global
-passes that both depend on all three surfaces being settled, and can run in parallel. 103 is the
-single closeout gate.
+**Critical path:** 104 → 105 → 106 → 108, with 107 in parallel and 108 gated on all.
+**Sequencing notes:** 105/106 both touch `mix.exs` docs `extras:`/`groups_for_extras:` and
+`docs_contract_test.exs`, so they serialize (105 first, so the day-2 guides can reference the new
+fail-closed behavior + doctor from 104). 107 is admin-UI and independent. 108 is the single
+closeout gate and the actual Hex publish.
 
 ## Decisions
 
@@ -177,6 +152,10 @@ single closeout gate.
 - [102-02] --ease-symmetric: var(--ease-in-out) added to @theme; .motion-tab-swap switched to var(--ease-symmetric) (MOTION-LD-05). MOTION-LD-06 resolution: focus rings → --duration-instant (90ms, ≤100ms); row hover → --duration-fast (150ms). phx-connected/phx-loading are CSS classes on the LiveView container element (not body attributes) — confirmed against LV 1.1.28 runtime; .mg-skeleton uses .phx-loading/.phx-connected class selectors. @view-transition PE inside @media (prefers-reduced-motion: no-preference) — required wrapper because global reduce block does not cover VT pseudo-elements. Bundle rebuilt bit-clean.
 - [Phase ?]: [103-02] Schema-2 baseline armed: compare_baselines activated, anti-vacuity guard enforced, preview Motion+A11y rose 2→3
 - [103-03] All 6 CI gates confirmed green (2026-06-16-phase-103): support_contract.admin 56/56, verify.preview 236/236 (bundle-clean), conformance OK, conformance-advisory OK, motion OK, Playwright structural 54/54 (0 skips — Phase 102-03 fixme completed). Release posture 1.6.2/1.6.2/1.3.1 verified read-only; RELH-01 intact; inbound re-pin PENDING/deferred (D-13, DISC-2 divergence from Phase-79 precedent).
+- [ASSESS-2026-06-16] **Next-step done-assessment verdict (repo-local, 3-agent exploration):** mailglass is **~88–90% done** — band "strong; ONE meaningful adopter wedge remains, rest is diminishing returns." Code surface alone is ~92% (all 10 `guides/jobs.md` jobs map to shipped/tested code; ~243 test files; 6 webhook + 4 inbound providers real). The library is feature-complete for its scope — **stop adding capability.**
+- [ASSESS-2026-06-16] **Recommended next milestone: "Adopter Onboarding & Day-2 Confidence" (suggest v1.12)** — convert the one weak axis (onboarding/day-2 DX). Done-enough: installer fails closed on the webhook-`Plug.Parsers` conflict (silent prod 401 today, `apply.ex:64-74`); fix broken README quickstart; "week 1" guide arc; production go-live checklist (surface `mix mail.doctor`); unified error/troubleshooting guide; sharpen migration-from-swoosh "why". Then **cut the staged Hex release** (v1.7–v1.11 are prepare-only, not on Hex) + inbound exact-pin re-pin (D-13). Then replay-modal a11y (WR-03). Full wedge spec: `.planning/threads/adopter-onboarding-day2-confidence.md`.
+- [ASSESS-2026-06-16] **Diminishing-returns / DO-NOT-build-without-pull:** core email-template HEEx component uplift (recipient-facing polish, not an adopter wedge), SEED-003 ecosystem integrations, synthetic inbound dev UI, Cloudflare routing, gen_smtp, more providers. Risk here is **overbuilding, not underbuilding**.
+- [ASSESS-2026-06-16] **Doc-drift flagged:** `.planning/research/JTBD-COVERAGE.md` is 5 milestones stale (dated 2026-05-23, covers up to inbound 0.1.0 / v1.2). Its *curve/conclusion* ("after v1.2 inbound + golden example, diminishing returns — wait for pull") has been **borne out** by v1.4–v1.11; only its status tables are stale. Staleness banner added; full refresh is a precondition before any *feature-discovery* pass (not needed for the onboarding wedge). Stale threads inbound-stability-lock-prep + next-milestone-adopter-trust-proof marked resolved.
 
 ## Performance Metrics
 
@@ -285,6 +264,20 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-16: **Next-milestone-step assessment run (no milestone opened).** Repo-local, 3 parallel
+  Explore agents (adopter onboarding / real shipped surface / strategic frontier) + direct reads.
+  Verdict: mailglass is feature-complete for its scope (~88–90% overall, ~92% code axis); the single
+  highest-leverage remaining wedge is **adopter onboarding / day-2 DX** (broken README quickstart,
+  silent webhook-`Plug.Parsers` 401 footgun, no week-1 arc, no go-live checklist, scattered error
+  docs) + **cutting the staged release** (v1.7–v1.11 prepare-only, not on Hex). Everything else
+  (core-component uplift, SEED-003, transport expansion, more providers) is diminishing-returns /
+  pull-gated. Bookkeeping written: new thread `adopter-onboarding-day2-confidence.md`; resolved
+  stale threads `inbound-stability-lock-prep` + `next-milestone-adopter-trust-proof`; review-stamped
+  `transport-expansion-watchlist`; refreshed `project-convergence-posture` to post-v1.11; STATE
+  Decisions + PROJECT candidate-list re-ranked; JTBD-COVERAGE.md staleness banner added; two
+  low-risk config prefs added (writeback `refresh-jtbd-coverage-if-stale`, `done_lens`). No feature
+  code touched. Next: maintainer kicks off `/gsd-new-milestone` with the onboarding/day-2 wedge.
+
 - 2026-06-16: **v1.11 mailglass_admin Design-System Uplift SHIPPED + archived.** Milestone audit `status: passed` (34/34 requirements, 10/10 phases, 16/16 integration, 7/7 flows). Archived `milestones/v1.11-ROADMAP.md` + `v1.11-REQUIREMENTS.md` + `v1.11-MILESTONE-AUDIT.md`; MILESTONES.md/PROJECT.md/ROADMAP.md/RETROSPECTIVE.md evolved; `REQUIREMENTS.md` removed (fresh for next milestone); tagged `v1.11`. Stats corrected to true scope (10 phases / 42 plans) — the `milestone.complete` CLI inflation was avoided by archiving manually. Release prepare-only (no Hex cut); PENDING inbound exact-pin re-pin (D-13) deferred until a real release. Next: `/gsd-new-milestone`.
 - 2026-06-16: Phase 103 Plan 03 completed. Full 6-gate battery confirmed green (2026-06-16-phase-103): support_contract.admin 56/56, verify.preview 236/236 (bundle-clean), conformance OK, conformance-advisory OK, motion OK, Playwright structural 54/54 (0 skips — Phase 102-03 fixme completed). Release posture 1.6.2/1.6.2/1.3.1 verified read-only; RELH-01 intact; inbound re-pin recorded as single PENDING ceremony action (D-13, deliberately not performed). Prepare-only readiness note written as 103-03-SUMMARY.md. Next: execute Phase 103 Plan 04 (milestone audit regeneration — D-14/D-15 LAST step).
 - 2026-06-16: Phase 102 Plan 02 completed. --ease-symmetric: var(--ease-in-out) token added to @theme; .motion-tab-swap switched to var(--ease-symmetric) (MOTION-LD-05); MOTION-LD-06 resolution documented in :root duration block (focus rings → --duration-instant 90ms, hover → --duration-fast 150ms). .mg-skeleton connection-state placeholder (opacity-only, .phx-loading/.phx-connected CSS class selectors — confirmed against LV 1.1.28 runtime). @view-transition PE inside @media (prefers-reduced-motion: no-preference). priv/static/app.css rebuilt bit-clean. Both conformance gates clean; Playwright reduced-motion 4/4 pass. Next: execute Phase 102 Plan 03 (phx-remove exit attribute on operator/inbound).
@@ -313,4 +306,13 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- **v1.12 Adopter Onboarding & Day-2 Confidence is OPEN** (Phases 104–108, 13 REQ-IDs; REQUIREMENTS.md
+  + ROADMAP.md written 2026-06-16). Next: `/gsd-plan-phase 104` (or `/gsd-discuss-phase 104` first).
+- Decisions locked this session: D-28 actually cut the Hex release at close (not prepare-only);
+  D-29 fold inbound replay-modal a11y (ex-WR-03) into v1.12 as Phase 107.
+- Phase 108 release-cut checklist is recorded in the milestone plan / thread — confirm staged
+  versions, land feat/fix commits so Release Please proposes the bump, then D-13 inbound re-pin
+  after merge.
+- Before any *feature-discovery* pass (not needed for this milestone): refresh
+  `.planning/research/JTBD-COVERAGE.md` (5 milestones stale) or formally adopt the convergence
+  verdict in its place.

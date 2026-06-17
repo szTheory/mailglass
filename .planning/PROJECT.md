@@ -430,20 +430,42 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 RE
 - ✓ DOCS-01..05 — ExDoc with 9 guides, migration-from-swoosh, doc-contract tests, governance files
 - ✓ BRAND-01..03 — Brand-conformant UI + voice + docs
 
-## Active
+## Current Milestone: v1.12 Adopter Onboarding & Day-2 Confidence
 
-**No active milestone.** v1.11 shipped 2026-06-16; next step is `/gsd-new-milestone`.
-Posture remains quiet maintenance / adopter-pull per D-23: Mailglass core, admin, and
-inbound are product-complete for the original transactional-email thesis, and the admin
-UI is now fully on the canonical brand. Define the next milestone only against concrete
-adopter pull, a contract gap, or a deliberately-promoted backlog item.
+**Opened 2026-06-16.** Phases 104–108, 13 requirements (`.planning/REQUIREMENTS.md`); roadmap in
+`.planning/ROADMAP.md`. Selected from the 2026-06-16 next-step assessment: mailglass is
+feature-complete for its scope (~88–90% done; the risk is overbuilding, not underbuilding), and the
+one remaining adopter wedge is onboarding / day-2 DX. This milestone removes adoption friction and
+**publishes** — it is friction-removal + release, not feature growth (D-23 convergence posture holds).
 
-Candidate next-milestone work (none committed):
-- Promote backlog Phase 999.1 (human-readable code comments + GSD artifact cleanup) / 999.2 (shift-left email screenshot + responsive preview workflow) via `/gsd-review-backlog` if a maintenance pass justifies it.
-- Register `guard-release-trigger` as a required branch-protection check once a PR has exercised it (documented v1.10 follow-up).
-- Core mailglass **email-template HEEx component** design-system uplift (recipients' inboxes; email-client CSS constraints — different audience/constraints than the admin UI) — candidate future milestone.
-- Inbound replay modal a11y parity (operator-style focus-trap + Escape handler) — highest-priority deferred quality item from v1.11 (Phase 102 WR-03).
-- If/when a real Hex release is cut: perform the PENDING inbound exact-pin re-pin (D-13) after the Release Please PR merges.
+**Goal:** A Phoenix dev goes from `mix mailglass.install` to a correctly-wired, production-ready
+integration without a silent webhook failure, a broken copy-paste example, or a missing day-2
+runbook — and the accumulated v1.7–v1.12 polish finally ships to Hex.
+
+**Target features:**
+- **Installer fails closed** on the webhook-`Plug.Parsers` conflict (today a silent prod 401), with
+  a `--force` escape hatch + a verifiable post-install webhook-wiring doctor check (Phase 104).
+- **Onboarding fixes**: working README quickstart, a "next steps"/learning-path arc, a sharpened
+  migration-from-swoosh "why" (Phase 105).
+- **Day-2 runbooks**: production go-live checklist + a unified error/troubleshooting map (Phase 106).
+- **Inbound replay-modal a11y parity** (focus-trap + Escape; folded-in v1.11 WR-03) (Phase 107).
+- **Cut the real Hex release** for the staged v1.7–v1.12 work + D-13 inbound exact-pin re-pin
+  (Phase 108). **Release posture: actually cut** (the deliberate change from v1.7/v1.11 prepare-only).
+
+**Decided this session:** (D-28) v1.12 actually cuts the Hex release rather than staging
+prepare-only — the staged polish must reach adopters. (D-29) the inbound replay-modal a11y fix
+(ex-v1.11 WR-03) is folded into v1.12 as a quality-parity item.
+
+**Diminishing-returns — explicitly NOT in scope (do NOT build without concrete adopter pull):**
+- Core mailglass **email-template HEEx component** design-system uplift — components are real and
+  VML/MSO-complete; recipient-facing polish, not an adopter wedge.
+- `SEED-003` ecosystem integrations — no adopter signal; needs a narrow spike + real pull first.
+- Synthetic inbound dev UI, Cloudflare Email Routing, `gen_smtp` listener, more providers — all
+  flat-tail (see `.planning/threads/transport-expansion-watchlist.md`).
+
+> Note: `.planning/research/JTBD-COVERAGE.md` (the internal frontier map) is 5 milestones stale; its
+> *curve/conclusion* holds (wait for pull) but its status tables don't. Refresh it before any
+> *feature-discovery* pass — not needed for this onboarding/release milestone.
 
 ## Out of Scope
 

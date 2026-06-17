@@ -22,6 +22,79 @@
 - ✅ **v1.9 Brand Book Fable — A/B Brand System** - Phases 85-90 (shipped 2026-06-12) - see [milestones/v1.9-ROADMAP.md](milestones/v1.9-ROADMAP.md)
 - ✅ **v1.10 Brand Adoption** - Phases 91-93 (shipped 2026-06-13) - see [milestones/v1.10-ROADMAP.md](milestones/v1.10-ROADMAP.md) and [milestones/v1.10-MILESTONE-AUDIT.md](milestones/v1.10-MILESTONE-AUDIT.md)
 - ✅ **v1.11 mailglass_admin Design-System Uplift** - Phases 94-103 (shipped 2026-06-16) - see [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md) and [milestones/v1.11-MILESTONE-AUDIT.md](milestones/v1.11-MILESTONE-AUDIT.md)
+- 🚧 **v1.12 Adopter Onboarding & Day-2 Confidence** - Phases 104-108 (planned 2026-06-16) - see below
+
+## Active Milestone — v1.12 Adopter Onboarding & Day-2 Confidence
+
+**Status:** 🚧 PLANNED · **Phases:** 104–108 · **Requirements:** 13 (see `.planning/REQUIREMENTS.md`)
+
+**Core outcome:** A Phoenix dev goes from `mix mailglass.install` to a correctly-wired,
+production-ready integration without a silent webhook failure, a broken copy-paste example, or a
+missing day-2 runbook — and the accumulated v1.7–v1.12 polish finally ships to Hex. Friction-removal
++ publish, not feature growth (D-23 convergence posture). Release posture: **actually cut** (not
+prepare-only).
+
+### Phase 104: Installer Fail-Closed + Webhook-Wiring Doctor
+
+**Goal**: Make `mix mailglass.install` fail closed with an actionable error (+ `--force` escape
+hatch) when it can't safely wire the webhook body_reader — routing the already-detected
+`Plug.Parsers` conflict (`installer/apply.ex:47-76`) through the `Mix.raise` path the task already
+uses (`mailglass.install.ex:108-112`), so silent production webhook 401s become impossible. Add a
+verifiable post-install webhook-wiring check (`mix mail.doctor` endpoint lane or `mix
+mailglass.doctor`). Tests-first, following the `install_idempotency_test.exs` fixture pattern.
+**Depends on**: Nothing (critical-path root)
+**Requirements**: INSTALL-01, INSTALL-02, INSTALL-03, INSTALL-04
+**Success criteria**: install aborts with an actionable error on an unmanaged-parser conflict;
+`--force` proceeds and wires the managed parser; the doctor check exits non-zero when
+CachingBodyReader is absent; fail-closed/force/doctor paths are tested and green.
+
+### Phase 105: Onboarding Docs — Quickstart Fix + Learning Arc
+
+**Goal**: Make the first hour frictionless — fix the broken README quickstart (config-first so
+`Mailglass.deliver()` can't `ConfigError`), end `getting-started.md` with a "Next steps" arc, add a
+discoverable learning-path/index over the existing guides, and reopen `migration-from-swoosh.md`
+with the "Swoosh = transport; mailglass = the framework layer" value pitch. All gated by
+`docs_contract_test.exs`.
+**Depends on**: Phase 104 (docs reference the new fail-closed behavior + doctor)
+**Requirements**: DOCS-01, DOCS-02, DOCS-03, DOCS-04
+**Success criteria**: README example parses via the docs-contract gate; getting-started has a
+Next-steps section; the learning path is discoverable; the swoosh "why" opener is present;
+docs-contract suite green.
+
+### Phase 106: Day-2 Guides — Go-Live Checklist + Error/Troubleshooting Map
+
+**Goal**: Give adopters the day-2 runbooks they expect — a `production-go-live-checklist.md`
+(surfaces `mix mail.doctor` + the 104 webhook-wiring check, webhook secret rotation, Oban queue
+sizing, per-tenant routing, suppression strategy, telemetry/alerting) and a unified
+`errors-and-troubleshooting.md` mapping every `Mailglass.Error` struct → cause → fix. Both
+registered in `mix.exs` docs and docs-contract gated.
+**Depends on**: Phase 105 (shares `mix.exs` docs `extras:`/`groups_for_extras:` +
+`docs_contract_test.exs`; serialized to avoid collisions)
+**Requirements**: OPS-01, OPS-02
+**Success criteria**: both new guides exist, are registered in both docs lists, and the
+docs-contract suite (including new section/error-coverage assertions) is green.
+
+### Phase 107: Inbound Replay-Modal A11y Parity (WR-03)
+
+**Goal**: Bring the admin inbound replay modal to operator-modal accessibility parity — focus trap
++ Escape-to-close — with a structural Playwright assertion and a clean committed CSS bundle.
+**Depends on**: Nothing (admin-UI; runs in parallel with 104–106)
+**Requirements**: A11Y-01
+**Success criteria**: modal traps focus, Escape closes it, Playwright structural assertion passes,
+`git diff --exit-code priv/static/` clean.
+
+### Phase 108: Release Cut + Milestone Closeout
+
+**Goal**: Cut the real linked-version Hex release for the accumulated v1.7–v1.12 work (CHANGELOG,
+admin-minor drags matched core+inbound, Release Please PR merges + publishes), perform the D-13
+inbound exact-pin re-pin after merge, verify Hex resolution + post-publish smoke, and run the
+milestone audit.
+**Depends on**: Phases 104, 105, 106, 107
+**Requirements**: REL-01, REL-02
+**Success criteria**: all three packages published to Hex; inbound re-pinned to the new core
+version; `mix deps.get` resolves from Hex; post-publish smoke green; milestone audit passed.
+
+**Critical path:** 104 → 105 → 106 → 108, with 107 in parallel and 108 gated on all.
 
 ## Phases
 
@@ -67,6 +140,11 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 101. Microcopy Pass | v1.11 | 2/2 | Complete | 2026-06-16 |
 | 102. Motion + Micro-interaction Pass | v1.11 | 3/3 | Complete | 2026-06-16 |
 | 103. Verification + Idempotent Closeout | v1.11 | 4/4 | Complete | 2026-06-16 |
+| 104. Installer Fail-Closed + Webhook-Wiring Doctor | v1.12 | 0/? | Planned | — |
+| 105. Onboarding Docs: Quickstart Fix + Learning Arc | v1.12 | 0/? | Planned | — |
+| 106. Day-2 Guides: Go-Live Checklist + Error/Troubleshooting Map | v1.12 | 0/? | Planned | — |
+| 107. Inbound Replay-Modal A11y Parity (WR-03) | v1.12 | 0/? | Planned | — |
+| 108. Release Cut + Milestone Closeout | v1.12 | 0/? | Planned | — |
 
 ## Backlog
 
