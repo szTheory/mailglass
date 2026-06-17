@@ -72,7 +72,7 @@ body of work (admin polish, brand, design-system uplift, onboarding fixes) final
 
 ### A11Y — Inbound Replay-Modal Parity (folded-in v1.11 WR-03)
 
-- [ ] **A11Y-01**: The admin inbound replay modal gains operator-style accessibility parity — a
+- [x] **A11Y-01**: The admin inbound replay modal gains operator-style accessibility parity — a
   focus trap and Escape-to-close handler matching the operator replay modal — with a structural
   Playwright assertion added and the CSS bundle rebuilt + committed if any classes change.
 
@@ -122,7 +122,7 @@ phase — 100% coverage, no orphans, no double-maps.
 | DOCS-04 | Phase 105 | Complete |
 | OPS-01 | Phase 106 | Complete |
 | OPS-02 | Phase 106 | Complete |
-| A11Y-01 | Phase 107 | Pending |
+| A11Y-01 | Phase 107 | Complete |
 | REL-01 | Phase 108 | Pending |
 | REL-02 | Phase 108 | Pending |
 

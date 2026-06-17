@@ -93,7 +93,7 @@ dialog conformance / not a cyclic Tab focus trap (pure LiveView JS, no custom JS
 **Depends on**: Nothing (admin-UI; runs in parallel with 104–106)
 **Requirements**: A11Y-01
 **Plans:** 1 plan
-- [ ] 107-01-PLAN.md — Escape-to-close + focus-management span + real ids + structural Playwright assertion + bundle-clean verify
+- [x] 107-01-PLAN.md — Escape-to-close + focus-management span + real ids + structural Playwright assertion + bundle-clean verify
 **Success criteria**: focus moves into the modal on open and returns to the trigger on close, Escape
 closes it, Playwright structural assertion passes, `git diff --exit-code priv/static/` clean.
 
@@ -157,7 +157,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 104. Installer Fail-Closed + Webhook-Wiring Doctor | v1.12 | 2/2 | Complete    | 2026-06-17 |
 | 105. Onboarding Docs: Quickstart Fix + Learning Arc | v1.12 | 3/3 | Complete    | 2026-06-17 |
 | 106. Day-2 Guides: Go-Live Checklist + Error/Troubleshooting Map | v1.12 | 2/2 | Complete    | 2026-06-17 |
-| 107. Inbound Replay-Modal A11y Parity (WR-03) | v1.12 | 0/? | Planned | — |
+| 107. Inbound Replay-Modal A11y Parity (WR-03) | v1.12 | 1/1 | Complete   | 2026-06-17 |
 | 108. Release Cut + Milestone Closeout | v1.12 | 0/? | Planned | — |
 
 ## Backlog
