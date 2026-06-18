@@ -4,7 +4,7 @@ milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
 status: shipped
 last_updated: "2026-06-17T20:55:00.000Z"
-last_activity: 2026-06-18 -- quick 260617-tgw: fixed Core Full Suite Advisory lane (now green); held dep PRs #76/#75 merged. release-pipeline-maintenance items 4+5 done
+last_activity: 2026-06-18 -- quick 260618-1qj: de-hardcoded trust-lane baseline (zero-touch, refreshed to 1.7.0); release-pipeline-maintenance thread fully CLOSED (all items done)
 progress:
   total_phases: 17
   completed_phases: 17
@@ -171,6 +171,7 @@ closeout gate and the actual Hex publish.
 | 2026-06-17 | Classify "Demo Browser Evidence" as advisory in `publish-hex.yml` `gate-ci-green` (added to `ADVISORY_LANES` — non-required browser lane predates the `<name> Advisory (...)` convention, would have wrongly blocked a release) | `.github/workflows/publish-hex.yml` |
 | 2026-06-18 | Triage + merge held dep PRs (thread item 4): #76 premailex 0.3.20→**1.0.0** (major — validated `to_inline_css/1` unaffected, renderer suite 20/20 green locally; `9c3bbfea`) + #75 swoosh 1.26.0→**1.26.1** (root-lock-only patch, NOT trust-lane-coupled; `50b49206`). Both stale `Compile No Optional Deps` reds were a transient ex_doc dep-cache race, cleared by update-branch + rerun. | `mix.exs`, `mix.lock` (via PR merges) |
 | 2026-06-18 | Fix-or-retire `Core Full Suite Advisory` (thread item 5) → **FIX**. Permanently-red lane's 9 failures were all workspace-only dev tooling (reference-host/demo/post-publish-smoke needing sibling MailglassInbound + reference-app deps), NOT lib regressions. Tagged 5 modules `@moduletag :requires_workspace` + `--exclude` in the lane (it's the ONLY lane running the full core `mix test` — ~120 lib files no required lane covers, so retiring was wrong). Lane now **green** (`abadbb32`). | 5 test files, `.github/workflows/advisory-matrix.yml` |
+| 2026-06-18 | De-hardcode trust-lane baseline (thread item 2) so dep/version bumps are **zero-touch**. Clean-baseline guard + contract test were version-coupled (hardcoded `1.4.5` literals → 5-file hand-edit every release). Made guard assert `:hex` source + well-formed version (no literal), test version-agnostic, widened pins `~> 1.4`→`~> 1.0`, refreshed both reference locks 1.4.5/1.4.5/1.1.5 → **1.7.0/1.7.0/1.4.0**. host_app compiles clean; both Trust Lane CI jobs green (`7cbef50b`). | 2 mix.exs, 2 mix.lock, `check_clean_baseline_hex_only.sh`, `ci_trust_lane_contract_test.exs` |
 
 ## Performance Metrics
 
@@ -367,14 +368,12 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 - **No active milestone. No recommended next feature milestone** (post-v1.12 assessment 2026-06-17).
   The library is ~93–95% done for its scope; the last wedge shipped. **Default to quiet maintenance.**
   Do NOT run `/gsd-new-milestone` for feature work unless a concrete adopter pull surfaces.
-- **Maintenance items (thread `release-pipeline-maintenance.md`) — nearly all cleared.**
-  ✅ Item (1) `gate-ci-green` advisory-classifier fix (2026-06-17, `1e0e60b1`).
-  ✅ Item (4) held dep PRs #76 premailex 1.0.0 + #75 swoosh 1.26.1 both merged (2026-06-18, quick
-  `260617-syd`; `9c3bbfea`/`50b49206`).
-  ✅ Item (5) `Core Full Suite Advisory` lane fixed → now green (2026-06-18, quick `260617-tgw`;
-  `abadbb32` — quarantined 5 workspace-only dev-tooling modules via `@moduletag :requires_workspace`).
-  **Only item (2) remains:** the reference baseline `~> 1.4` → `~> 1.7` mailglass-pin bump —
-  deliberately deferred (coordinated 5-file change; do it when next cutting a release).
+- **Maintenance thread `release-pipeline-maintenance.md` — ✅ FULLY CLOSED (2026-06-18).** All items done:
+  ✅ (1) `gate-ci-green` advisory-classifier fix (`1e0e60b1`).
+  ✅ (4) held dep PRs #76 premailex 1.0.0 + #75 swoosh 1.26.1 merged (quick `260617-syd`; `9c3bbfea`/`50b49206`).
+  ✅ (5) `Core Full Suite Advisory` lane fixed → green (quick `260617-tgw`; `abadbb32`).
+  ✅ (2) trust-lane baseline de-hardcoded + refreshed to 1.7.0 → dep/version bumps are now **zero-touch**
+  (quick `260618-1qj`; `7cbef50b`). No remaining maintenance work; release pipeline is clean + low-maintenance.
 - **Before any *feature-discovery* pass** (only if reconsidering expansion): refresh
   `.planning/research/JTBD-COVERAGE.md` (now 6 milestones stale) — its conclusion still holds, only
   its status tables are stale. Not needed for maintenance work.

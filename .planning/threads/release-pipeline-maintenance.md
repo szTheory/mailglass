@@ -1,7 +1,7 @@
 # Thread: Release-Pipeline Maintenance (post-v1.12)
 
 **Opened:** 2026-06-17
-**Status:** open — small, concrete maintenance items (NOT a milestone)
+**Status:** ✅ closed 2026-06-18 — all items resolved (see Exit Signal)
 **Priority:** low/medium (release-robustness; no adopter-facing functional gap)
 **Owner:** maintainer
 
@@ -22,11 +22,26 @@ maintenance-tier; handle with `/gsd-quick` or a todo, not a feature milestone.
    Verified: yaml parses; `isAdvisory()` classifies it advisory while required lanes still block.
    Quick-task artifacts: `.planning/quick/260617-oj1-harden-publish-hex-yml-gate-ci-green-isa/`.
 
-2. **Reference baseline pin bump (deferred).** `reference/host_app` + `reference/demo_app` pin
-   `{:mailglass, "~> 1.4"}`; `~> 1.4` already resolves 1.7.0 so nothing is broken, but a bump to
-   `~> 1.7` would keep the baseline honest. NOTE: this is a coordinated multi-file change (2 mix.exs
-   + 2 mix.lock + `check_clean_baseline_hex_only.sh` + `ci_trust_lane_contract_test.exs`), and any
-   `mix` run in `demo_app` re-bumps the swoosh lock — see the two relevant user memories before doing it.
+2. **✅ DONE (2026-06-18) — reference baseline de-hardcoded + refreshed to 1.7.0.** Resolved via
+   `/gsd-quick` (task `260618-1qj`); commit `7cbef50b`; CI green (both Trust Lane jobs success).
+   Instead of just bumping `~> 1.4` → `~> 1.7` (which would have to be redone every release), made
+   the whole baseline **version-agnostic** so it never needs coordinated edits again:
+   - `check_clean_baseline_hex_only.sh` now asserts each sibling resolves via `:hex` with a
+     well-formed version string — dropped the hardcoded `{"mailglass", :hex, "1.4.5"}` list. The
+     committed `mix.lock` is the reproducible pin; the guard enforces "real Hex consumer, not
+     `path:`/`git:`," which is the property that mattered.
+   - `ci_trust_lane_contract_test.exs` made version-agnostic (regexes + repurposed the stale-version
+     test into a non-Hex-source-rejection test).
+   - Pins widened `~> 1.4`/`~> 1.1` → `~> 1.0`; both locks refreshed 1.4.5/1.4.5/1.1.5 →
+     **1.7.0/1.7.0/1.4.0** (the baseline was silently frozen at 1.4.5, exercising stale code).
+   - **The swoosh-lock-drift footgun is now moot** for the baseline (nothing asserts an exact
+     version; swoosh→1.26.1 is intentional). Supersedes the old "coordinated 5-file change" warning
+     in [[project_reference_baseline_coupling]] / [[project_demo_app_swoosh_lock_drift]].
+   - **Future refresh = one command, no edits:** `mix deps.update mailglass mailglass_admin
+     mailglass_inbound` in each reference app (demo_app needs `MAILGLASS_DEMO_DEPS=hex`).
+
+3. **`guard-release-trigger`** — exercised + passed + already the single required branch-protection
+   check. No action needed; recorded for completeness.
 
 3. **`guard-release-trigger`** — exercised + passed + already the single required branch-protection
    check. No action needed; recorded for completeness.
@@ -102,8 +117,7 @@ clean) left exactly two tracked items. Both are `/gsd-quick`-sized — start a f
 
 ## Exit Signal
 
-Closes when: item 1 ✅ done; item 2 done or formally deferred with a review date; item 4 ✅ done
-(held PRs #75/#76 both merged 2026-06-18); item 5 ✅ done (`Core Full Suite Advisory` fixed
-2026-06-18, commit `abadbb32`). **Remaining: only item 2** — the reference baseline `~> 1.4` → `~> 1.7`
-mailglass-pin bump, deliberately deferred (separate coordinated 5-file change; review when next
-cutting a release). Everything else in this thread is closed.
+**✅ CLOSED 2026-06-18.** All items resolved: item 1 (`1e0e60b1`), item 2 (`7cbef50b` — baseline
+de-hardcoded + refreshed to 1.7.0), item 3 (no-op), item 4 (held PRs #75/#76 merged), item 5
+(`abadbb32` — advisory lane fixed). No remaining work; the release pipeline is in a clean, low-
+maintenance state and future releases need no baseline babysitting.
