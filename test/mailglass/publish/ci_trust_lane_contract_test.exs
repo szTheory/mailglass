@@ -23,32 +23,35 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
     refute job =~ ~r/^    needs:/m
   end
 
-  test "clean-baseline guard rejects stale Hex-sourced sibling versions" do
+  test "clean-baseline guard rejects a sibling resolved via a non-Hex source" do
     tmp_dir =
       Path.join(System.tmp_dir!(), "mailglass-clean-baseline-#{System.unique_integer([:positive])}")
 
-    stale_lock_path = Path.join(tmp_dir, "mix.lock")
+    non_hex_lock_path = Path.join(tmp_dir, "mix.lock")
 
     on_exit(fn -> File.rm_rf!(tmp_dir) end)
 
     File.mkdir_p!(tmp_dir)
 
-    stale_lock =
+    # Flip the mailglass source atom :hex -> :git to simulate a non-published
+    # (path/git) sibling sneaking into the baseline. Version-agnostic on purpose:
+    # the guard enforces the Hex source, not a frozen version literal.
+    non_hex_lock =
       @reference_lock_path
       |> File.read!()
       |> String.replace(
-        ~s("mailglass": {:hex, :mailglass, "1.4.5"),
-        ~s("mailglass": {:hex, :mailglass, "1.3.0"),
+        ~s("mailglass": {:hex,),
+        ~s("mailglass": {:git,),
         global: false
       )
 
-    File.write!(stale_lock_path, stale_lock)
+    File.write!(non_hex_lock_path, non_hex_lock)
 
     {output, status} =
-      System.cmd("bash", [@guard_script_path, stale_lock_path], stderr_to_stdout: true)
+      System.cmd("bash", [@guard_script_path, non_hex_lock_path], stderr_to_stdout: true)
 
     assert status == 1
-    assert output =~ "Hex-first violation: mailglass expected 1.4.5, got 1.3.0"
+    assert output =~ "Hex-first violation: mailglass resolved via :git, expected :hex"
   end
 
   test "clean-baseline guard reports malformed sibling lock tuples" do
@@ -65,7 +68,7 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
       @reference_lock_path
       |> File.read!()
       |> String.replace(
-        ~r/"mailglass": \{:hex, :mailglass, "1\.4\.5".*/,
+        ~r/"mailglass": \{:hex, :mailglass, "[^"]+".*/,
         ~s("mailglass": {:hex},),
         global: false
       )
@@ -123,7 +126,7 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
       @reference_lock_path
       |> File.read!()
       |> String.replace(
-        ~r/"mailglass": \{:hex, :mailglass, "1\.4\.5".*/,
+        ~r/"mailglass": \{:hex, :mailglass, "[^"]+".*/,
         ~s("mailglass": "bad",),
         global: false
       )

@@ -41,19 +41,21 @@ defmodule MailglassDemo.MixProject do
     ]
   end
 
+  # Wide 1.x floor in hex mode on purpose: the exact baseline version is pinned by
+  # mix.lock, so these requirements never need editing on a release.
   defp mailglass_dep do
-    if hex_deps?(), do: {:mailglass, "~> 1.4"}, else: {:mailglass, path: "../..", override: true}
+    if hex_deps?(), do: {:mailglass, "~> 1.0"}, else: {:mailglass, path: "../..", override: true}
   end
 
   defp mailglass_admin_dep do
     if hex_deps?(),
-      do: {:mailglass_admin, "~> 1.4"},
+      do: {:mailglass_admin, "~> 1.0"},
       else: {:mailglass_admin, path: "../../mailglass_admin", override: true}
   end
 
   defp mailglass_inbound_dep do
     if hex_deps?(),
-      do: {:mailglass_inbound, "~> 1.1"},
+      do: {:mailglass_inbound, "~> 1.0"},
       else: {:mailglass_inbound, path: "../../mailglass_inbound", override: true}
   end
 

@@ -58,21 +58,26 @@ MAILGLASS_LOCK_PATH="$LOCK_PATH" elixir -e '
   lock_path = System.fetch_env!("MAILGLASS_LOCK_PATH")
   lock = MailglassCleanBaselineLock.read!(lock_path)
 
-  required = [
-    {"mailglass", :hex, "1.4.5"},
-    {"mailglass_admin", :hex, "1.4.5"},
-    {"mailglass_inbound", :hex, "1.1.5"}
-  ]
+  # Version-agnostic by design: the baseline guarantee is "siblings resolve from
+  # :hex (a real published consumer), never a path:/git: dep" — NOT a frozen
+  # version literal. Asserting an exact version here forced a coordinated hand-edit
+  # of this script on every release; the committed mix.lock is the reproducible
+  # pin, and `elem(tuple, 2)` must merely be a well-formed (non-empty) version
+  # string. To refresh the baseline to a newer release, just regenerate the lock
+  # (`mix deps.update mailglass mailglass_admin mailglass_inbound`); no edits here.
+  required = ["mailglass", "mailglass_admin", "mailglass_inbound"]
 
-  Enum.each(required, fn {name, expected_source, expected_version} ->
+  Enum.each(required, fn name ->
     case Map.get(lock, String.to_atom(name)) do
       tuple when is_tuple(tuple) and tuple_size(tuple) < 3 ->
         IO.puts(:stderr, "Hex-first violation: #{name} lock tuple malformed")
         System.halt(1)
-      tuple when is_tuple(tuple) and tuple_size(tuple) > 2 and elem(tuple, 0) == expected_source and elem(tuple, 2) == expected_version ->
-        IO.puts("Hex-first OK: #{name} resolved via :hex (version: #{expected_version})")
-      tuple when is_tuple(tuple) and tuple_size(tuple) > 2 and elem(tuple, 0) == expected_source ->
-        IO.puts(:stderr, "Hex-first violation: #{name} expected #{expected_version}, got #{elem(tuple, 2)}")
+      tuple
+      when is_tuple(tuple) and tuple_size(tuple) > 2 and elem(tuple, 0) == :hex and
+             is_binary(elem(tuple, 2)) and elem(tuple, 2) != "" ->
+        IO.puts("Hex-first OK: #{name} resolved via :hex (version: #{elem(tuple, 2)})")
+      tuple when is_tuple(tuple) and tuple_size(tuple) > 2 and elem(tuple, 0) == :hex ->
+        IO.puts(:stderr, "Hex-first violation: #{name} version is not a well-formed string: #{inspect(elem(tuple, 2))}")
         System.halt(1)
       tuple when is_tuple(tuple) ->
         IO.puts(:stderr, "Hex-first violation: #{name} resolved via #{inspect(elem(tuple, 0))}, expected :hex")

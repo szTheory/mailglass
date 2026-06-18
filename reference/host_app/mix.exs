@@ -29,9 +29,12 @@ defmodule MailglassReferenceHost.MixProject do
       {:postgrex, "~> 0.22"},
       {:jason, "~> 1.4"},
       {:plug_cowboy, "~> 2.7"},
-      {:mailglass, "~> 1.4"},
-      {:mailglass_admin, "~> 1.4"},
-      {:mailglass_inbound, "~> 1.1"}
+      # Wide 1.x floor on purpose: this reference app just needs to prove a real
+      # Hex consumer compiles against the published siblings. The exact baseline
+      # version is pinned by mix.lock, so these never need editing on a release.
+      {:mailglass, "~> 1.0"},
+      {:mailglass_admin, "~> 1.0"},
+      {:mailglass_inbound, "~> 1.0"}
     ]
   end
 
