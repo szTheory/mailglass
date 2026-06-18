@@ -246,7 +246,7 @@ defmodule MailglassAdmin.PreviewLive do
     <div
       data-testid="preview-shell"
       data-theme={admin_theme_attr(@admin_chrome_theme)}
-      class="min-h-screen bg-base-100 text-base-content px-md py-lg md:px-lg md:py-xl"
+      class="mg-admin-root min-h-screen bg-base-100 text-base-content px-md py-lg md:px-lg md:py-xl"
     >
       <div class="grid gap-lg md:grid-cols-[20rem_1fr]">
         <aside

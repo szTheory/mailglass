@@ -139,7 +139,7 @@ defmodule MailglassAdmin.Operator.Shell do
     ~H"""
     <div
       data-theme={if @dark_chrome, do: "mailglass-dark", else: "mailglass-light"}
-      class="flex min-h-screen bg-base-100 text-base-content"
+      class="mg-admin-root flex min-h-screen bg-base-100 text-base-content"
     >
       <aside class="hidden w-60 shrink-0 flex-col border-r border-base-300 bg-base-200 md:flex">
         <div class="flex items-center gap-sm border-b border-base-300 px-md py-md">

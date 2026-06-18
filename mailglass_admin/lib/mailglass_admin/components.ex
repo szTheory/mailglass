@@ -101,7 +101,7 @@ defmodule MailglassAdmin.Components do
   @doc since: "0.1.0"
   def flash(assigns) do
     ~H"""
-    <div class="toast toast-top toast-end z-50" role="status" aria-live="polite">
+    <div class="toast toast-top toast-end mg-layer-toast" role="status" aria-live="polite">
       <div class={["motion-reveal alert text-body gap-2 py-2 px-3", alert_class(@kind)]}>
         <.icon name="hero-arrow-path" class="w-4 h-4" />
         <span>{@message}</span>

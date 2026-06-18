@@ -17,7 +17,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
     ~H"""
     <%= if @open? and @delivery do %>
       <div
-        class="motion-tab-swap fixed inset-0 z-40 overflow-y-auto bg-base-content/40 p-4"
+        class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim fixed inset-0 overflow-y-auto p-4"
         phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})}
       >
         <div
@@ -27,7 +27,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           aria-labelledby="replay-modal-title"
           phx-key="Escape"
           phx-window-keydown="close_replay"
-          class="motion-overlay mx-auto my-4 w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
+          class="motion-overlay mg-layer-overlay-panel mx-auto my-4 w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
           phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"})}
         >
           <div class="flex items-start justify-between gap-md">
