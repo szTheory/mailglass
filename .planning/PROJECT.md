@@ -143,6 +143,17 @@ landing + email specimens, four portable SVGs, and a domain-noun copy library.
 
 ## Current State
 
+**v1.13 IN PROGRESS 2026-06-18 (Phases 109-110 complete).** The admin stress-test
+milestone has completed the foundation and primitive layers: Phase 109 merged the
+PR #86 baseline, established system-theme plumbing and semantic z-index/focus/motion
+gates, and Phase 110 promoted the shared admin atoms into public primitives
+(`nav_link`, `nav_pill`, `tenant_chip`, `theme_picker`, `stat_card`). The real shell,
+operator overview, inbound overview, and dev gallery now consume those primitives; the
+gallery certifies light/dark/system primitive states; fail-closed primitive drift,
+stat-card, and icon-inventory gates are armed; and verifier status is `passed` with
+PRIM-01..07 at 7/7. Next intended v1.13 slice is Phase 111 Forms, despite the generic
+GSD backlog pointer currently surfacing Phase 999.1.
+
 **v1.11 SHIPPED 2026-06-16 (audit `status: passed` — 34/34 requirements, 10/10
 phases, 16/16 integration paths, 7/7 E2E flows).** All ten phases (94-103) closed:
 the admin `app.css` now consumes the canonical `brandbook/tokens.css` `--mg-*` tokens
@@ -413,6 +424,12 @@ If everything else fails, the preview dashboard, normalized event ledger, and on
 
 All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 REQ-IDs, 10 v1.10 REQ-IDs, and 34 v1.11 REQ-IDs satisfied. The v1.9 brand book shipped its 22 REQ-IDs (archived in `milestones/v1.9-REQUIREMENTS.md`); v1.8 validated 2 brand-audit requirements before closing superseded.
 
+**By category (v1.13 in progress — Phase 110 validated 2026-06-18):**
+- ✓ PRIM-01..07 — public primitive API (`nav_link`, `nav_pill`, `tenant_chip`,
+  `theme_picker`, `stat_card`), real shell/overview/gallery consumers, native
+  system/light/dark picker semantics, canonical stat cards, 44x44 compiled target
+  proof, icon-exists guard, and no-copy-drift/stat-card gates — validated in Phase 110.
+
 **By category (v1.11 — mailglass_admin Design-System Uplift, SHIPPED 2026-06-16):**
 - ✓ TOKEN-01..05 — admin `app.css` consumes canonical `brandbook/tokens.css` `--mg-*` tokens (no duplicate hex), corrected surface/border roles, dark-mode AA fixes, fail-closed token-parity gate, bit-clean rebuilt bundle — validated in Phase 94
 - ✓ RATCHET-01..05 — committed meet-or-beat score baseline, carried-forward `GAP-NN` register with sev≥3 citation gate, tightened conformance/motion grep gates, Playwright structural assertions, LLM-scored 18-cell PNG matrix (PNGs gitignored) — validated in Phases 94-95 (RATCHET-03 in 94)
@@ -650,4 +667,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-18 after opening **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** — a lived-experience / real-demo-driven, fractal, research-per-decision, WCAG-2.2-AA, light/dark/system, idempotent design-system stress-test of `mailglass_admin` plus a tangible multi-tenant demo (D-29); admin + demo only, ships to Hex at close bundling PR #86 (D-28). Phases continue from 108 → 109+. Previously: v1.12 Adopter Onboarding & Day-2 Confidence SHIPPED 2026-06-17 (live at 1.7.0 / 1.7.0 / 1.4.0).*
+*Last updated: 2026-06-18 after Phase 110 completed in **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** — foundation and primitive layers are now verified; next intended milestone slice is Phase 111 Forms. Previously: v1.12 Adopter Onboarding & Day-2 Confidence SHIPPED 2026-06-17 (live at 1.7.0 / 1.7.0 / 1.4.0).*
