@@ -279,7 +279,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert_patch(view, base_path <> "?width=375&theme=light")
 
       render_click(view, "toggle_theme", %{})
-      assert_patch(view, base_path <> "?theme=dark&width=375")
+      assert_patch(view, base_path <> "?width=375&theme=dark")
     end
   end
 
