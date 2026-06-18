@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
 status: planning
-last_updated: "2026-06-18T14:35:33.301Z"
-last_activity: 2026-06-18
+last_updated: "2026-06-18T15:11:58.230Z"
+last_activity: 2026-06-18 — v1.13 roadmap created (Phases 109-117, 36 reqs mapped 100%)
 progress:
-  total_phases: 9
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 11
+  completed_phases: 2
+  total_plans: 6
+  completed_plans: 6
+  percent: 18
 ---
 
 # Project State
@@ -53,16 +53,20 @@ Progress: [░░░░░░░░░░] 0% (0/9 phases)
 
 - **Admin + demo only.** Recipient-facing email HEEx templates and `brandbook/` tokens are OUT —
   the brand book is the source of truth. No new product capability/providers/transports/routes.
+
 - **Host-app-friendly** (mountable library): no hijacking host auth/theme/assets/Repo; no global
   CSS/JS collisions. Tenant listing in the **core read model** scoped via `Mailglass.Tenancy.scope/2`
   through the authenticated actor, never raw admin Repo.
+
 - **Zero-Node asset pipeline** (committed `priv/static/app.css`, rebuilt + committed on class
   changes). The only net-new dependency is one **test-only** npm devDep `@axe-core/playwright`;
   zero new Hex deps. No pixel-diff regression — ever (structural + axe-JSON + score-baseline).
+
 - **Two binding sequencing constraints:** (1) merge PR #86 BEFORE Phase 109 (REL-01 precondition);
   (2) tighten gates BEFORE re-baselining — gates tightened inside each phase, full pillar re-score
   ONLY in the final ratchet-arm phase (116). The multi-tenant stress-fixture cohort (RATCHET-01) is
   the keystone dependency — lands late, gates the final score.
+
 - **Release posture: ACTUALLY CUT** (D-28) — admin-minor bump drags matched core+inbound via
   linked-version releases; D-13 inbound exact-pin re-pin after the PR merges.
 
