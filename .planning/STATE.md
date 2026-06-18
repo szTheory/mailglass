@@ -4,7 +4,7 @@ milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
 status: shipped
 last_updated: "2026-06-17T20:55:00.000Z"
-last_activity: 2026-06-17 -- v1.12 SHIPPED (1.7.0/1.7.0/1.4.0 live on Hex); Phase 108 complete; milestone closed
+last_activity: 2026-06-18 -- quick 260617-syd: merged held dep PRs #76 premailex 1.0.0 + #75 swoosh 1.26.1 (thread item 4 done)
 progress:
   total_phases: 17
   completed_phases: 17
@@ -169,6 +169,7 @@ closeout gate and the actual Hex publish.
 | Date | Task | Files |
 |---|---|---|
 | 2026-06-17 | Classify "Demo Browser Evidence" as advisory in `publish-hex.yml` `gate-ci-green` (added to `ADVISORY_LANES` — non-required browser lane predates the `<name> Advisory (...)` convention, would have wrongly blocked a release) | `.github/workflows/publish-hex.yml` |
+| 2026-06-18 | Triage + merge held dep PRs (thread item 4): #76 premailex 0.3.20→**1.0.0** (major — validated `to_inline_css/1` unaffected, renderer suite 20/20 green locally; `9c3bbfea`) + #75 swoosh 1.26.0→**1.26.1** (root-lock-only patch, NOT trust-lane-coupled; `50b49206`). Both stale `Compile No Optional Deps` reds were a transient ex_doc dep-cache race, cleared by update-branch + rerun. | `mix.exs`, `mix.lock` (via PR merges) |
 
 ## Performance Metrics
 

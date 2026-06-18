@@ -38,23 +38,35 @@ maintenance-tier; handle with `/gsd-quick` or a todo, not a feature milestone.
 The repo-hygiene pass (pushed `main`, triaged PRs 6→2, deleted preserve branches, confirmed CI/GSD
 clean) left exactly two tracked items. Both are `/gsd-quick`-sized — start a fresh session, pick either.
 
-4. **Held dependency PRs #75 (swoosh) + #76 (premailex) — dependency/baseline review.**
-   Suggested entry: `/gsd-quick` (one focused dependency-review task, or one per PR).
-   - **#76 `premailex` 0.3.20 → 1.0.0** is a **major** version bump (potential breaking changes).
-     Needs: read the 1.0.0 changelog/migration notes, check mailglass's premailex usage surface,
-     run the targeted suite, then merge or close. Held OPEN with a hold comment on GitHub.
-   - **#75 `swoosh` 1.26.0 → 1.26.1** collides with the **frozen trust-lane baseline**:
-     `reference/demo_app/mix.lock` + `reference/host_app/mix.lock` pin swoosh at *exactly* 1.26.0.
-     A lone root-lock bump risks the trust-lane contract; do it as the coordinated baseline change
-     (same machinery as item 2 above — 2 mix.exs + 2 mix.lock + `check_clean_baseline_hex_only.sh`
-     + `ci_trust_lane_contract_test.exs`), and beware `demo_app` re-bumping the swoosh lock on any
-     `mix` run. **Cross-ref item 2** — bundle #75 with the `~> 1.7` baseline bump if doing both.
-   - Both PRs are MERGEABLE/up-to-date and were left OPEN deliberately, each with a hold comment.
-   - **Merge-mechanics gotcha (durable):** branch protection requires 1 approving review; dependabot
-     PRs sit `BLOCKED` until approved, and even post-approval GitHub auto-merge can stay sticky. The
-     repo runs `enforce_admins: false`, so the normal path is `gh pr review --approve` then
-     `gh pr merge <N> --admin --squash --delete-branch` (confirm only the known advisory lane is red
-     first). The only *required* status check is `guard-release-trigger`.
+4. **✅ DONE (2026-06-18) — Held dependency PRs #75 (swoosh) + #76 (premailex) merged.**
+   Resolved via `/gsd-quick` (task `260617-syd`). Both merged to main; branches deleted.
+   - **#76 `premailex` 0.3.20 → 1.0.0** (major) — **MERGED** (`9c3bbfea`). Reviewed safe:
+     mailglass's only call site is the bare `Premailex.to_inline_css/1` (`renderer.ex:239`); the
+     1.0.0 breaking changes are confined to the `/2` options API + the now-optional pluggable
+     parser, neither of which we touch (mailglass declares `{:floki, "~> 0.38"}` directly,
+     satisfying premailex's new `~> 0.24` optional floki). Validated locally:
+     `mix test test/mailglass/renderer_test.exs` = 20/20 green against 1.0.0, compiles
+     warnings-clean. The PR's `Compile No Optional Deps` red was a **false alarm** — the 11-day-old
+     branch was BEHIND main's #77 ex_doc bump (stale `ex_doc`/`earmark_parser`/`makeup_erlang`
+     lock); cleared by `gh pr update-branch`.
+   - **#75 `swoosh` 1.26.0 → 1.26.1** (patch) — **MERGED** (`50b49206`). The "coordinated
+     baseline change" caution was **over-stated**: the trust-lane guard
+     (`ci_trust_lane_contract_test.exs` + `check_clean_baseline_hex_only.sh`) validates the
+     **mailglass** sibling-pin Hex-cleanliness in `reference/host_app/mix.lock` — it is **NOT
+     coupled to swoosh versions**. #75 touches only the **root** `mix.lock`; reference apps stay
+     frozen at 1.26.0 (untouched). Both Trust Lane checks passed. Durable correction: a root-lock
+     swoosh patch bump is a one-PR merge, not a 5-file baseline change. (The 5-file machinery is
+     only for the *mailglass pin* bump — item 2.) Its `Compile No Optional Deps` failed once on the
+     same transient ex_doc dep-cache race; passed on rerun.
+   - **Merge-mechanics confirmed (durable):** dependabot PRs sit `BLOCKED` until approved;
+     `enforce_admins: false`, so `gh pr review --approve` → `gh pr merge <N> --admin --squash
+     --delete-branch` is the path. Only required status check is `guard-release-trigger`. The
+     persistently-red `Core Full Suite Advisory` lane (item 5) is non-blocking and was accepted.
+   - **New durable gotcha:** the `Compile No Optional Deps` CI lane does NOT run `mix deps.get` and
+     relies on a lock-hash-keyed deps cache; a dependabot PR created before an unrelated dev-dep
+     bump (e.g. ex_doc) lands on main will show a spurious `lock mismatch` on ex_doc/earmark/makeup
+     until the branch is updated and/or the job is re-run against the current cache. Not a real
+     incompatibility — `gh pr update-branch` + rerun clears it.
 
 5. **`Core Full Suite Advisory` lane is *persistently* red — fix-or-retire decision.**
    Suggested entry: `/gsd-quick` (or `/gsd-debug` if root-causing the failures).
@@ -84,6 +96,6 @@ clean) left exactly two tracked items. Both are `/gsd-quick`-sized — start a f
 
 ## Exit Signal
 
-Closes when: item 1 ✅ done; item 2 done or formally deferred with a review date; item 4 (held PRs
-#75/#76) each merged or closed; item 5 (`Core Full Suite Advisory`) fixed or formally retired from
-the advisory lane.
+Closes when: item 1 ✅ done; item 2 done or formally deferred with a review date; item 4 ✅ done
+(held PRs #75/#76 both merged 2026-06-18); item 5 (`Core Full Suite Advisory`) fixed or formally
+retired from the advisory lane. **Remaining:** item 2 (deferred) + item 5 (next `/gsd-quick`).
