@@ -83,7 +83,12 @@ inbound exact-pin re-pin. Phases continue from 108 → 109+.
   3. Motion, elevation, focus-ring, overlay, type-scale, spacing, radius, shadow, and border values are all semantic tokens resolving correctly in light/dark/system — the FOCUS-RING and type/spacing gates fail on any one-off hex or size literal in admin HEEx.
   4. System-theme plumbing exists at the token/CSS layer (daisyUI `prefersdark`; `system` emits no `data-theme`) with no client JS hook and no host-global CSS.
   5. The tightened gates (z-index, focus-ring, scope/isolation, WCAG 2.2 SC in the structural spec, ratchet schema bumped to include `system`) prove green on the current code BEFORE any pillar re-baseline.
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 109-01-PLAN.md - REL-01 admin merge and post-merge main CI proof.
+- [ ] 109-02-PLAN.md - Semantic token/class consolidation for z layers, focus rings, isolation, and compiled CSS.
+- [ ] 109-03-PLAN.md - Hard conformance gates plus ratchet schema version 3 system cells.
+- [ ] 109-04-PLAN.md - Structural WCAG/system assertions and final no-scope-creep proof.
 **UI hint**: yes
 
 ### Phase 110: Primitives
@@ -235,7 +240,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 109. Foundations + Gate-Tightening | v1.13 | 0/TBD | Not started | - |
+| 109. Foundations + Gate-Tightening | v1.13 | 0/4 | Not started | - |
 | 110. Primitives | v1.13 | 0/TBD | Not started | - |
 | 111. Forms | v1.13 | 0/TBD | Not started | - |
 | 112. App-Shell, Nav & Tenant Seam | v1.13 | 0/TBD | Not started | - |
