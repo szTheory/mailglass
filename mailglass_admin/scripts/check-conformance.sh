@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fail CI if any design-system violation appears in mailglass_admin/lib/*.ex files.
-# Five-gate design-system conformance check — gate definitions committed at Phase 76-06.
+# Design-system conformance check — initial gate definitions committed at Phase 76-06.
 # Sources: VERIF-03 (Phase 79), D-07 (single source of truth for visual decisions).
 # Gate patterns from 76-06-SUMMARY.md: five greps that confirmed zero violations on
 # the Phase 76 codebase. All gates scope to .ex files only (HEEx lives in LiveView modules;
@@ -32,7 +32,8 @@ if grep -rE 'defp badge_class' "$LIB" --include="*.ex" 2>/dev/null; then
   errors=$((errors + 1))
 fi
 
-# TYPE-GATE: raw Tailwind type-scale utilities in HEEx (text-sm, text-base, text-xs).
+# TYPE-GATE: raw Tailwind type-scale utilities in HEEx
+# (text-sm, text-base, text-xs, text-xl, text-2xl, text-3xl).
 # Use semantic tokens instead: text-label (12px), text-body (14px), text-heading (20px),
 # text-display (28px) — defined in the @theme block.
 # Exclusion: text-base-content is a DaisyUI semantic color class (Footgun-6), not a size
@@ -42,7 +43,7 @@ fi
 # (WR-01). Instead, anchor the size match so text-base-content can never match the pattern
 # in the first place: text-sm/text-xs as whole tokens, and text-base only when NOT followed
 # by a hyphen (which excludes text-base-content while still catching the raw text-base size).
-if grep -rEn 'text-(sm|xs)\b|text-base($|[^-])' "$LIB" --include="*.ex" 2>/dev/null; then
+if grep -rEn 'text-(sm|xs|xl|2xl|3xl)\b|text-base($|[^-])' "$LIB" --include="*.ex" 2>/dev/null; then
   echo "FAIL: TYPE-GATE — raw text-scale utility found (use text-label/body/heading/display)" >&2
   errors=$((errors + 1))
 fi
@@ -78,6 +79,76 @@ fi
 # the gate.
 if grep -rEn 'color[^#]*#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b' "$LIB" --include="*.ex" 2>/dev/null; then
   echo "FAIL: HEX-GATE — hard-coded hex color found (use semantic tokens)" >&2
+  errors=$((errors + 1))
+fi
+
+# Z-INDEX-GATE: raw numeric/arbitrary z-index utilities in HEEx.
+# Stacking contexts must consume the semantic .mg-layer-* utilities backed by
+# --z-base/dropdown/overlay-scrim/overlay-panel/toast in app.css.
+if grep -rEn '\bz-([0-9]+|\[[^]]+\])\b' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: Z-INDEX-GATE — raw z-index utility found (use mg-layer-* utilities)" >&2
+  errors=$((errors + 1))
+fi
+
+# FOCUS-RING-GATE: pre-consolidation focus-ring idioms.
+# All visible focus affordances in admin HEEx should use .mg-focus-ring or
+# .mg-focus-ring-inset so width, color, offset, and timing stay centralized.
+if grep -rEn 'focus-visible:ring-2 focus-visible:ring-primary|focus:outline|focus:outline-2|focus:outline-primary' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: FOCUS-RING-GATE — raw focus-ring idiom found (use mg-focus-ring utilities)" >&2
+  errors=$((errors + 1))
+fi
+
+# SCOPE-GATE: host-safe admin roots.
+# The operator shell and preview shell are mountable inside host apps; each
+# root must own an isolated stacking context so host CSS/z-index values cannot
+# accidentally interleave with admin overlays.
+if ! grep -q 'mg-admin-root' "${LIB}/mailglass_admin/operator/shell.ex" 2>/dev/null; then
+  echo "FAIL: SCOPE-GATE — operator shell root missing mg-admin-root isolation" >&2
+  errors=$((errors + 1))
+fi
+if ! grep -q 'mg-admin-root' "${LIB}/mailglass_admin/preview_live.ex" 2>/dev/null; then
+  echo "FAIL: SCOPE-GATE — preview shell root missing mg-admin-root isolation" >&2
+  errors=$((errors + 1))
+fi
+
+# TOKEN-SCOPE-GATE: Phase 109 must not pull forward later theme-picker work.
+# System theme remains CSS/root-layer behavior only: no JS storage, client hook,
+# theme-controller input, matchMedia script, or explicit "system" data-theme.
+if grep -rEn 'phx-hook=.*theme|localStorage|sessionStorage|document\.documentElement|window\.matchMedia|theme-controller|data-theme="system"|data-theme=\{[^}]*system|system[/-]light[/-]dark|light[/-]dark[/-]system' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: TOKEN-SCOPE-GATE — theme hook/storage/system picker creep found" >&2
+  errors=$((errors + 1))
+fi
+
+# RADIUS-GATE: raw radius scale or arbitrary radius utilities.
+# Allow semantic rounded-box / rounded-field and intentional rounded-full
+# indicators; reject Tailwind scale/arbitrary radius values.
+if grep -rEn '\brounded-(none|sm|md|lg|xl|2xl|3xl|\[[^]]+\])\b' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: RADIUS-GATE — raw radius utility found (use rounded-box/field/full contract)" >&2
+  errors=$((errors + 1))
+fi
+
+# SHADOW-GATE: raw shadow utilities.
+# Only semantic elevation tokens are allowed: shadow-flat, shadow-raised,
+# and shadow-overlay.
+if grep -rEn '\bshadow($|-(sm|md|lg|xl|2xl|inner|\[[^]]+\]))' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: SHADOW-GATE — raw shadow utility found (use shadow-flat/raised/overlay)" >&2
+  errors=$((errors + 1))
+fi
+
+# BORDER-GATE: raw border width/style/palette/arbitrary utilities.
+# Preserve semantic default edges and semantic colors such as border-base-*,
+# border-primary, border-secondary, border-error, border-warning/success, and
+# border-transparent. Reject palette-scale colors and arbitrary border values.
+if grep -rEn '\bborder-(0|2|4|8|\[[^]]+\]|solid|dashed|dotted|double|none|(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-[0-9]{2,3})\b' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: BORDER-GATE — raw border utility found (use semantic border contract)" >&2
+  errors=$((errors + 1))
+fi
+
+# SIZE-GATE: arbitrary size and spacing utilities.
+# Fixed sizes and spacing must use the 4px grid or semantic tokens; arbitrary
+# bracket utilities make the gate unable to reason about token discipline.
+if grep -rEn '\b(?:w|h|min-w|max-w|min-h|max-h|p[trblxy]?|m[trblxy]?|gap|space-[xy])-\[[^]]+\]' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: SIZE-GATE — arbitrary size/spacing utility found (use token/grid utilities)" >&2
   errors=$((errors + 1))
 fi
 
