@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
-status: executing
-last_updated: "2026-06-18T20:40:16.639Z"
+status: verifying
+last_updated: "2026-06-18T23:21:15.388Z"
 last_activity: 2026-06-18
 progress:
   total_phases: 11
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 13
-  percent: 27
+  completed_plans: 14
+  percent: 36
 ---
 
 # Project State
@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 110 (primitives) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-18
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## v1.13 Milestone Intent
 
@@ -187,6 +187,10 @@ convergent + adversarially judged).
 - [Phase 110-primitives]: Theme `system` remains absence of an explicit query value; `Shell.set_theme_path/2` removes `theme` while preserving unrelated query params. — This preserves the Phase 110/112 boundary: Plan 110-02 wires selection semantics without adding storage, cookies, hooks, or no-FOUC root ownership.
 - [Phase 110-03]: GalleryLive renders public primitive components for nav_link, nav_pill, tenant_chip, theme_picker, and stat_card. — This makes the gallery certify the same component API used by shell and overview surfaces.
 - [Phase 110-03]: Gallery system specimens are inherited-theme wrappers with stable test ids and no data-theme attribute. — System remains absence of explicit theme choice while preserving light and dark specimen coverage.
+- [Phase 110-primitives]: 110-04: Primitive conformance now fails closed on copy drift, non-canonical stat cards, and missing vendored Heroicons.
+- [Phase 110-primitives]: 110-04: Primitive structural proof uses computed styles and DOM semantics, not screenshots, pixel diffs, axe, storage, matchMedia, or theme hooks.
+- [Phase 110-primitives]: 110-04: Repeated gallery theme_picker specimens use unique native radio group names so per-cell checked state remains real.
+- [Phase 110-primitives]: 110-04: Preview URL assertions follow the existing canonical width/theme ordering.
 
 ## Quick Tasks Completed
 
@@ -290,6 +294,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 110 P01 | 8 min | 2 tasks | 3 files |
 | Phase 110-primitives P02 | 8 min | 3 tasks | 6 files |
 | Phase 110-primitives P03 | 8 min | 2 tasks | 1 files |
+| Phase 110-primitives P04 | 45min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
