@@ -461,22 +461,16 @@ expect(topElementTestId).toBe("inbound-replay-modal");
 |---|-------|---------|---------------|
 | A1 | The local GSD `research-plan` and `classify-confidence` seams are unavailable, so confidence is assigned from direct source hierarchy rather than seam output. [ASSUMED after tool failure] | Sources / Metadata | Low; official docs and repo-local evidence still support implementation planning, but the GSD cache was not populated. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Post-merge main CI definition for REL-01**
-   - What we know: PR #86 is currently open and mergeable with successful PR checks; main has a scheduled `repo-hygiene` failure, and the required branch-protection check is `guard-release-trigger`. [VERIFIED: `gh pr view 86`; VERIFIED: `gh run list`; VERIFIED: `gh api branches/main`]
-   - What's unclear: Which exact non-required main lanes the executor should treat as "main CI green" after the admin merge if scheduled advisory/hygiene lanes remain red. [ASSUMED]
-   - Recommendation: Planner should add an explicit REL-01 checkpoint: merge PR #86, then verify required branch protection plus the latest `CI` workflow run for the merge SHA; document any scheduled advisory failure separately before uplift. [VERIFIED: `.planning/REQUIREMENTS.md`]
+   - RESOLVED: Treat REL-01 as satisfied when PR #86 is merged, the merge commit is reachable from `origin/main`, required branch-protection status is green for that SHA, and the latest `CI` workflow run for the merge SHA is recorded. Non-required scheduled/advisory failures are not blockers when the executor records the workflow name, SHA, URL, and why they are unrelated before uplift. [VERIFIED: `.planning/REQUIREMENTS.md`; VERIFIED: `109-CONTEXT.md`; VERIFIED: `109-01-PLAN.md`]
 
 2. **Exact focus utility implementation**
-   - What we know: raw focus strings and one outline idiom must converge before the FOCUS-RING gate. [VERIFIED: `rg focus-visible`]
-   - What's unclear: Whether the final utility should be outline-based plain CSS or Tailwind `@utility`.
-   - Recommendation: Use plain CSS classes in `app.css` unless implementation proves Tailwind `@utility` is cleaner; either way, HEEx consumes one semantic class plus a documented inset variant. [VERIFIED: `109-CONTEXT.md`]
+   - RESOLVED: Implement the focus contract as plain CSS utilities in `mailglass_admin/assets/css/app.css`: `.mg-focus-ring` for the default 2px visible outline/offset path and `.mg-focus-ring-inset` only where the existing component boundary would clip an offset ring. HEEx consumes those semantic classes; no Tailwind `@utility` requirement remains. [VERIFIED: `109-CONTEXT.md`; VERIFIED: `109-02-PLAN.md`]
 
 3. **Local dependency state before ExUnit verification**
-   - What we know: `bash check-conformance.sh` and advisory gate are clean; `mix test test/mailglass_admin/ratchet_baseline_test.exs` did not start because local `floki` and `premailex` deps are stale against the lock. [VERIFIED: local command]
-   - What's unclear: Whether the executor will run after PR #86 merge and `mix deps.get`, which should refresh local dependency state.
-   - Recommendation: Planner should put dependency refresh before ExUnit verification, without treating it as a Phase 109 product change. [VERIFIED: local command]
+   - RESOLVED: Executors refresh local Mix deps with `cd mailglass_admin && mix deps.get` only if ExUnit reports stale locked deps, then rerun the focused ExUnit command. Dependency refresh is execution-environment readiness, not a Phase 109 product change, and package manifests must remain unchanged by the final proof. [VERIFIED: `109-VALIDATION.md`; VERIFIED: `109-04-PLAN.md`]
 
 ## Environment Availability
 
