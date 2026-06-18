@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
 status: executing
-last_updated: "2026-06-18T20:28:16.498Z"
+last_updated: "2026-06-18T20:40:16.639Z"
 last_activity: 2026-06-18
 progress:
   total_phases: 11
   completed_phases: 3
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
   percent: 27
 ---
 
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 110 (primitives) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-18
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 93%
 
 ## v1.13 Milestone Intent
 
@@ -185,6 +185,8 @@ convergent + adversarially judged).
 - [Phase 110]: Stat-card severity uses the existing vendored Heroicons inventory rather than adding new icons in Plan 110-01.
 - [Phase 110-primitives]: The shell passes `event="set_theme"` into the public `Components.theme_picker/1` and relies on component-rendered `phx-value-theme` values. — Plan 110-02 kept theme option rendering owned by the public primitive while shell LiveViews handle only URL patch semantics.
 - [Phase 110-primitives]: Theme `system` remains absence of an explicit query value; `Shell.set_theme_path/2` removes `theme` while preserving unrelated query params. — This preserves the Phase 110/112 boundary: Plan 110-02 wires selection semantics without adding storage, cookies, hooks, or no-FOUC root ownership.
+- [Phase 110-03]: GalleryLive renders public primitive components for nav_link, nav_pill, tenant_chip, theme_picker, and stat_card. — This makes the gallery certify the same component API used by shell and overview surfaces.
+- [Phase 110-03]: Gallery system specimens are inherited-theme wrappers with stable test ids and no data-theme attribute. — System remains absence of explicit theme choice while preserving light and dark specimen coverage.
 
 ## Quick Tasks Completed
 
@@ -287,6 +289,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 109 P04 | 9 min | 2 tasks | 3 files |
 | Phase 110 P01 | 8 min | 2 tasks | 3 files |
 | Phase 110-primitives P02 | 8 min | 3 tasks | 6 files |
+| Phase 110-primitives P03 | 8 min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
