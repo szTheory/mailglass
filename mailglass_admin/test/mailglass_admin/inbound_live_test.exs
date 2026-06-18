@@ -61,7 +61,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "No tenant selected"
 
       assert html =~
-               "Enter a tenant ID to inspect inbound routing for one workspace."
+               "Inbound views are scoped to one tenant. Pick a tenant with the filters above, " <>
+                 "or add a tenant_id to the URL, to inspect its inbound routing."
 
       assert clear_filters_count(html) == 1
 
@@ -989,6 +990,24 @@ defmodule MailglassAdmin.InboundLiveTest do
   defp refute_banned(html) do
     for word <- @banned do
       refute html =~ word, "banned brand-voice word #{inspect(word)} found in rendered HTML"
+    end
+  end
+
+  describe "root layout theme (MountPathHook)" do
+    test "?theme=dark themes the inbound ROOT <html>, not just the shell", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "theme" => "dark"}))
+
+      assert html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
+    end
+
+    test "no theme param leaves the inbound root <html> un-themed", %{conn: conn} do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      refute html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
     end
   end
 

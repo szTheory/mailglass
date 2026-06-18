@@ -39,6 +39,43 @@ defmodule MailglassAdmin.Operator.ShellTest do
     end
   end
 
+  describe "surface_paths/4" do
+    test "carries tenant_id across surfaces so nav preserves scope" do
+      paths = Shell.surface_paths("/ops/mail", :deliveries, false, "northstar")
+
+      assert paths.deliveries == "/ops/mail?tenant_id=northstar"
+      assert paths.inbound == "/ops/mail/inbound?tenant_id=northstar"
+    end
+
+    test "carries tenant_id AND theme together (tenant first, deterministic)" do
+      paths = Shell.surface_paths("/ops/mail/inbound", :inbound, true, "northstar")
+
+      assert paths.deliveries == "/ops/mail?tenant_id=northstar&theme=dark"
+      assert paths.inbound == "/ops/mail/inbound?tenant_id=northstar&theme=dark"
+    end
+
+    test "omits tenant_id when blank, keeping theme-only behavior" do
+      assert Shell.surface_paths("/ops/mail", :deliveries, true, nil).deliveries ==
+               "/ops/mail?theme=dark"
+
+      assert Shell.surface_paths("/ops/mail", :deliveries, true, "").deliveries ==
+               "/ops/mail?theme=dark"
+    end
+
+    test "no query when neither tenant nor dark theme is set" do
+      paths = Shell.surface_paths("/ops/mail", :deliveries, false, nil)
+
+      assert paths.deliveries == "/ops/mail"
+      assert paths.inbound == "/ops/mail/inbound"
+    end
+
+    test "recovers the operator root from the inbound base_path" do
+      paths = Shell.surface_paths("/ops/mail/inbound", :inbound, false, "northstar")
+
+      assert paths.deliveries == "/ops/mail?tenant_id=northstar"
+    end
+  end
+
   describe "aria-current nav resolution" do
     # Collect the visible text of every element carrying aria-current="page".
     defp current_nav_labels(html) do

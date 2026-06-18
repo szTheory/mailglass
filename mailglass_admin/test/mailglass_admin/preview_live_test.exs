@@ -67,6 +67,42 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert html =~ "badge-warning" or html =~ "Error",
              "expected BrokenMailer to render with warning badge (badge-warning or 'Error' label)"
     end
+
+    @tag :sidebar
+    test "dead-render <head> stylesheet href is absolute under the mount path",
+         %{conn: conn} do
+      # Full page (root layout) dead render — the LiveView client never
+      # rewrites the <head>, so a relative `css-<hash>` href would 404.
+      html = conn |> get("/dev/mail") |> html_response(200)
+
+      assert html =~ ~r|<link[^>]*rel="stylesheet"[^>]*href="/dev/mail/css-[0-9a-f]+"|
+      refute html =~ ~s(href="css-)
+    end
+
+    @tag :sidebar
+    test "a sidebar scenario link is an absolute mount-path URL that resolves to :show",
+         %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/dev/mail")
+
+      # Grab the first scenario link the sidebar actually rendered.
+      href =
+        Regex.run(~r/href="(\/dev\/mail\/[^"]+welcome_default[^"]*)"/, html)
+        |> case do
+          [_, href] -> href
+          _ -> flunk("no absolute /dev/mail sidebar scenario link found in:\n#{html}")
+        end
+
+      # Absolute (mount-aware), never a relative `./` ref.
+      assert String.starts_with?(href, "/dev/mail/")
+      refute String.contains?(href, "./")
+
+      # Following that link must land on the :show route — no NoRouteError.
+      target = href |> String.split("?") |> hd()
+      {:ok, _show_view, show_html} = live(conn, target)
+
+      assert show_html =~ "welcome_default"
+      assert show_html =~ ~s(data-testid="preview-header-controls")
+    end
   end
 
   describe "preview page groups" do
@@ -82,7 +118,12 @@ defmodule MailglassAdmin.PreviewLiveTest do
                "Pick a Mailable from the sidebar to render it through the same pipeline your production sends use."
 
       assert html =~ "Preview the first Mailable"
-      assert html =~ ~s|href="./MailglassAdmin.Fixtures.HappyMailer/welcome_default?theme=dark"|
+      # Absolute, mount-aware URL — NOT a relative `./` ref (which the browser
+      # resolves against `/dev` and 404s, since `/dev/mail` has no trailing slash).
+      assert html =~
+               ~s|href="/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?theme=dark"|
+
+      refute html =~ ~s|href="./MailglassAdmin|
     end
 
     @tag :page_groups
@@ -277,14 +318,16 @@ defmodule MailglassAdmin.PreviewLiveTest do
       {:ok, _view, explicit_html} = live(conn, "/dev/mail?theme=dark")
 
       assert explicit_html =~
-               ~s|./MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=768&amp;theme=dark|
+               ~s|/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=768&amp;theme=dark|
 
       {:ok, _view, default_html} = live(conn, "/dev/mail")
 
       assert default_html =~
-               ~s|./MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=768"|
+               ~s|/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=768"|
 
       refute default_html =~ ~s|width=768&amp;theme=light|
+      # Sidebar links are absolute, not relative `./` refs.
+      refute default_html =~ ~s|href="./MailglassAdmin|
     end
   end
 

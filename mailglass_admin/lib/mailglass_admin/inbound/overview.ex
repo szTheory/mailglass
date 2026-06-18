@@ -47,9 +47,9 @@ defmodule MailglassAdmin.Inbound.Overview do
 
   defp stat(assigns) do
     ~H"""
-    <div class="rounded-box border border-base-300 bg-base-100 p-4">
-      <p class="text-label uppercase font-bold text-secondary">{@label}</p>
-      <p class="mono mt-2 text-display text-base-content">{@value}</p>
+    <div class="min-w-0 rounded-box border border-base-300 bg-base-100 p-4">
+      <p class="text-label uppercase font-bold text-secondary break-words">{@label}</p>
+      <p class="mono mt-2 text-display text-base-content break-words">{@value}</p>
     </div>
     """
   end

@@ -71,6 +71,7 @@ defmodule MailglassAdmin.PreviewLive do
       |> assign(:admin_chrome_theme, nil)
       |> assign(:preview_frame_dark_chrome, false)
       |> assign(:base_path, nil)
+      |> assign(:mount_path, nil)
       |> assign(:page_uri, nil)
       |> assign(:active_tab, :html)
       |> assign(:render_nonce, System.unique_integer([:positive]))
@@ -258,6 +259,7 @@ defmodule MailglassAdmin.PreviewLive do
             current_scenario={@current_scenario}
             device_width={@device_width}
             admin_chrome_theme={@admin_chrome_theme}
+            mount_path={@mount_path}
           />
         </aside>
 
@@ -272,6 +274,7 @@ defmodule MailglassAdmin.PreviewLive do
               current_scenario={@current_scenario}
               device_width={@device_width}
               admin_chrome_theme={@admin_chrome_theme}
+              mount_path={@mount_path}
             />
           </section>
 
@@ -402,7 +405,7 @@ defmodule MailglassAdmin.PreviewLive do
                   </p>
                   <.link
                     :if={first_previewable(@mailables)}
-                    patch={first_scenario_path(@mailables, @admin_chrome_theme)}
+                    patch={first_scenario_path(@mount_path, @mailables, @admin_chrome_theme)}
                     class="motion-reveal btn btn-primary mt-md min-h-11 focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     Preview the first Mailable
@@ -466,12 +469,15 @@ defmodule MailglassAdmin.PreviewLive do
     end)
   end
 
-  # Relative path matching the sidebar's scenario links, so it resolves under
-  # any adopter mount path without needing base_path (which is nil on :index).
-  defp first_scenario_path(mailables, admin_chrome_theme) do
+  # Absolute path matching the sidebar's scenario links. Built from the
+  # known mount path (`/dev/mail`, `/admin/preview`, …) rather than a relative
+  # `./` reference — the mount path has no trailing slash, so a relative URL
+  # would resolve against the parent and drop the final segment.
+  defp first_scenario_path(mount_path, mailables, admin_chrome_theme) do
     case first_previewable(mailables) do
       {mod, scenario} ->
-        path = "./" <> inspect(mod) <> "/" <> Atom.to_string(scenario)
+        path =
+          MailglassAdmin.Preview.Sidebar.scenario_base_path(mount_path, mod, scenario)
 
         case theme_query_param(admin_chrome_theme) do
           nil -> path
