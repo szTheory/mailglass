@@ -2,7 +2,7 @@ defmodule MailglassAdmin.GalleryLive do
   @moduledoc """
   Dev-only component gallery at /dev/mail/gallery.
 
-  Renders every shared component × every state × light/dark/system side-by-side
+  Renders every shared component × every state × light, dark, and inherited-theme side-by-side
   from an in-code specimen list. No DB access. No mailable scan. No
   __preview_session__ assigns.
 
@@ -20,9 +20,14 @@ defmodule MailglassAdmin.GalleryLive do
   STATE-LD-03: flash (error, info, success, warning kinds)
   STATE-LD-04: badge (warning, stub)
   STATE-LD-05: status_badge (22 atoms + phantom nil)
-  STATE-LD-06: nav_link, nav_pill (active, inactive)
-  STATE-LD-07: tenant_chip (with-tenant, no-tenant)
-  STATE-LD-08: theme_picker (light-mode, dark-mode)
+  STATE-LD-06: nav_link, nav_pill (active, inactive, hover-ready,
+  focus-visible, disabled, long-label)
+  STATE-LD-07: tenant_chip (with-tenant, no-tenant, long-tenant,
+  non-ascii-tenant)
+  STATE-LD-08: theme_picker (system-selected, light-selected, dark-selected,
+  hover-ready, focus-visible, disabled)
+  Phase 110: stat_card (neutral, info, success, warning, error, empty,
+  loading, unavailable, long-label, long-value)
   STATE-LD-09: orientation_strip (deliveries, inbound, preview)
   STATE-LD-10: shell is the full page layout — not a gallery specimen
   STATE-LD-11: deliveries_list (populated-unselected, populated-selected, empty)
@@ -389,23 +394,88 @@ defmodule MailglassAdmin.GalleryLive do
     # phantom nil fallback — badge-outline
     {:status_badge, "phantom-nil", %{status: nil, size: :sm}},
 
-    # STATE-LD-06: nav_link — active and inactive
+    # STATE-LD-06: nav_link — active, inactive, hover-ready, focus-visible, disabled, long-label
+    # loading not applicable: nav_link is immediate navigation; disabled covers unavailable navigation.
     {:nav_link, "active",
      %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: true}},
     {:nav_link, "inactive",
      %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: false}},
+    {:nav_link, "hover-ready",
+     %{label: "Inbound", icon: "hero-inbox-arrow-down", href: "#", active: false}},
+    {:nav_link, "focus-visible", %{label: "Preview", icon: "hero-eye", href: "#", active: false}},
+    {:nav_link, "disabled",
+     %{label: "Analytics unavailable", icon: "hero-chart-bar", href: "#", disabled: true}},
+    {:nav_link, "long-label",
+     %{
+       label: "Deliveries needing operator review before the tenant handoff",
+       icon: "hero-paper-airplane",
+       href: "#",
+       active: false
+     }},
 
-    # STATE-LD-06: nav_pill — active and inactive
+    # STATE-LD-06: nav_pill — active, inactive, hover-ready, focus-visible, disabled, long-label
+    # loading not applicable: nav_pill is immediate navigation; disabled covers unavailable navigation.
     {:nav_pill, "active", %{label: "All", href: "#", active: true}},
     {:nav_pill, "inactive", %{label: "All", href: "#", active: false}},
+    {:nav_pill, "hover-ready", %{label: "Bounced", href: "#", active: false}},
+    {:nav_pill, "focus-visible", %{label: "Deferred", href: "#", active: false}},
+    {:nav_pill, "disabled", %{label: "Archived", href: "#", disabled: true}},
+    {:nav_pill, "long-label",
+     %{label: "Needs attention before retry window closes", href: "#", active: false}},
 
-    # STATE-LD-07: tenant_chip — with-tenant and no-tenant
+    # STATE-LD-07: tenant_chip — read-only with-tenant, no-tenant, long-tenant, non-ascii-tenant
+    # hover/focus/disabled/loading not applicable: tenant_chip is non-interactive in Phase 110.
     {:tenant_chip, "with-tenant", %{tenant: "acme-corp"}},
     {:tenant_chip, "no-tenant", %{tenant: nil}},
+    {:tenant_chip, "long-tenant",
+     %{tenant: "tenant_01JXWIDEVALUE000000000000000000000000000000000000"}},
+    {:tenant_chip, "non-ascii-tenant", %{tenant: "Muenchen-Tokyo-テナント"}},
 
-    # STATE-LD-08: theme_picker — light-mode and dark-mode
-    {:theme_picker, "light-mode", %{selected: :light}},
-    {:theme_picker, "dark-mode", %{selected: :dark}},
+    # STATE-LD-08: theme_picker — selected, hover-ready, focus-visible, disabled
+    # loading not applicable: theme_picker is immediate; Phase 112 owns async persistence/no-FOUC.
+    {:theme_picker, "system-selected", %{selected: :system}},
+    {:theme_picker, "light-selected", %{selected: :light}},
+    {:theme_picker, "dark-selected", %{selected: :dark}},
+    {:theme_picker, "hover-ready", %{selected: :system}},
+    {:theme_picker, "focus-visible", %{selected: :light}},
+    {:theme_picker, "disabled", %{selected: :system, disabled: true}},
+
+    # Phase 110: stat_card — severity, placeholder, loading, unavailable, and long-content states
+    # hover/focus not applicable: stat_card remains non-interactive unless a future consumer makes it actionable.
+    {:stat_card, "neutral", %{label: "All clear", value: "0", severity: :neutral}},
+    {:stat_card, "info", %{label: "Queued", value: "12", severity: :info}},
+    {:stat_card, "success", %{label: "Delivered", value: "98%", severity: :success}},
+    {:stat_card, "warning", %{label: "Needs attention", value: "3", severity: :warning}},
+    {:stat_card, "error", %{label: "Failed", value: "2", severity: :error}},
+    {:stat_card, "empty", %{label: "Events", value: nil, state: :empty, severity: :neutral}},
+    {:stat_card, "loading",
+     %{
+       label: "Delivery rate",
+       value: nil,
+       state: :loading,
+       loading_text: "Loading",
+       severity: :info
+     }},
+    {:stat_card, "unavailable",
+     %{
+       label: "Provider health",
+       value: nil,
+       state: :unavailable,
+       unavailable_text: "Unavailable",
+       severity: :error
+     }},
+    {:stat_card, "long-label",
+     %{
+       label: "Deliveries requiring operator review before the retry window closes",
+       value: "42",
+       severity: :success
+     }},
+    {:stat_card, "long-value",
+     %{
+       label: "Trace ID",
+       value: "trace_01JXWIDEVALUE000000000000000000000000000000000000",
+       severity: :warning
+     }},
 
     # STATE-LD-09: orientation_strip — deliveries, inbound, preview
     {:orientation_strip, "deliveries", %{surface: :deliveries}},
