@@ -71,18 +71,69 @@ defmodule MailglassAdmin.Components do
       class={@class}
     >
       <g>
-        <path data-part="mark" fill="currentColor" fill-rule="evenodd" d="M 0 44 L 140 44 L 140 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z M 70 104 A 36 36 0 1 1 70 176 A 36 36 0 1 1 70 104 Z"/>
+        <path
+          data-part="mark"
+          fill="currentColor"
+          fill-rule="evenodd"
+          d="M 0 44 L 140 44 L 140 140 L 0 140 Z M 14 58 L 126 58 L 70 92 Z M 70 104 A 36 36 0 1 1 70 176 A 36 36 0 1 1 70 104 Z"
+        />
       </g>
       <g transform="translate(180 0)">
-        <g transform="translate(0 0)"><path data-glyph="m" fill="currentColor" d="M 0 140 L 0 40 L 30 40 C 54.5 40 70 47 74 58 C 78 47 83 40 90 40 C 110 40 126 51.5 126 66 L 126 140 L 104 140 L 104 78 C 104 68 98.5 60 92 60 C 84 60 77 63 74 72 L 74 140 L 52 140 L 52 78 C 52 68 46.5 60 40 60 C 32 60 26.5 60.5 22 62 L 22 140 Z"/></g>
-        <g transform="translate(154 0)"><path data-glyph="a" fill="currentColor" d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"/></g>
-        <g transform="translate(257 0)"><path data-glyph="i" fill="currentColor" d="M 0 40 L 22 40 L 22 140 L 0 140 Z M 11 -7 C 18 -7 23.5 -1.5 23.5 5.5 C 23.5 12.5 18 18 11 18 C 4 18 -1.5 12.5 -1.5 5.5 C -1.5 -1.5 4 -7 11 -7 Z"/></g>
-        <g transform="translate(310 0)"><path data-glyph="l" fill="currentColor" d="M 0 0 L 22 0 L 22 140 L 0 140 Z"/></g>
-        <g transform="translate(360 0)"><path data-glyph="g" fill="currentColor" d="M 0 90 C 0 60.5 13.5 37 33 37 C 42 37 47.5 38.5 52 40 L 74 40 L 74 152 C 74 165.5 63 177 46 177 L 30 177 L 30 157 C 41 157 52 153 52 141 L 52 127 C 49 136 43 143 33 143 C 14.5 143 0 119.5 0 90 Z M 37 57 C 28.5 57 22 71.5 22 90 C 22 108.5 28.5 123 37 123 C 45.5 123 52 108.5 52 90 C 52 71.5 45.5 57 37 57 Z"/></g>
-        <g transform="translate(465 0)"><path data-glyph="l" fill="currentColor" d="M 0 0 L 22 0 L 22 140 L 0 140 Z"/></g>
-        <g transform="translate(515 0)"><path data-glyph="a" fill="currentColor" d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"/></g>
-        <g transform="translate(615 0)"><path data-glyph="s" fill="currentColor" d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"/></g>
-        <g transform="translate(705 0)"><path data-glyph="s" fill="currentColor" d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"/></g>
+        <g transform="translate(0 0)">
+          <path
+            data-glyph="m"
+            fill="currentColor"
+            d="M 0 140 L 0 40 L 30 40 C 54.5 40 70 47 74 58 C 78 47 83 40 90 40 C 110 40 126 51.5 126 66 L 126 140 L 104 140 L 104 78 C 104 68 98.5 60 92 60 C 84 60 77 63 74 72 L 74 140 L 52 140 L 52 78 C 52 68 46.5 60 40 60 C 32 60 26.5 60.5 22 62 L 22 140 Z"
+          />
+        </g>
+        <g transform="translate(154 0)">
+          <path
+            data-glyph="a"
+            fill="currentColor"
+            d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"
+          />
+        </g>
+        <g transform="translate(257 0)">
+          <path
+            data-glyph="i"
+            fill="currentColor"
+            d="M 0 40 L 22 40 L 22 140 L 0 140 Z M 11 -7 C 18 -7 23.5 -1.5 23.5 5.5 C 23.5 12.5 18 18 11 18 C 4 18 -1.5 12.5 -1.5 5.5 C -1.5 -1.5 4 -7 11 -7 Z"
+          />
+        </g>
+        <g transform="translate(310 0)">
+          <path data-glyph="l" fill="currentColor" d="M 0 0 L 22 0 L 22 140 L 0 140 Z" />
+        </g>
+        <g transform="translate(360 0)">
+          <path
+            data-glyph="g"
+            fill="currentColor"
+            d="M 0 90 C 0 60.5 13.5 37 33 37 C 42 37 47.5 38.5 52 40 L 74 40 L 74 152 C 74 165.5 63 177 46 177 L 30 177 L 30 157 C 41 157 52 153 52 141 L 52 127 C 49 136 43 143 33 143 C 14.5 143 0 119.5 0 90 Z M 37 57 C 28.5 57 22 71.5 22 90 C 22 108.5 28.5 123 37 123 C 45.5 123 52 108.5 52 90 C 52 71.5 45.5 57 37 57 Z"
+          />
+        </g>
+        <g transform="translate(465 0)">
+          <path data-glyph="l" fill="currentColor" d="M 0 0 L 22 0 L 22 140 L 0 140 Z" />
+        </g>
+        <g transform="translate(515 0)">
+          <path
+            data-glyph="a"
+            fill="currentColor"
+            d="M 38 37 C 57 37 72 46 72 57 L 72 140 L 50 140 L 50 128 C 46.5 135 40 143 29 143 C 13 143 0 129 0 112 C 0 99 4 88 14 84 C 24 81 38 82 50 88 L 50 62 C 43 59 37 57 31 57 C 22 57 15 63 12 70 L 12 46 C 17 41 26 37 38 37 Z M 50 105 C 47 102.5 43 101 36 101 C 27.5 101 22 106 22 112.5 C 22 119.5 27.5 124 36 124 C 43 124 47 122 50 119 L 50 105 Z"
+          />
+        </g>
+        <g transform="translate(615 0)">
+          <path
+            data-glyph="s"
+            fill="currentColor"
+            d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"
+          />
+        </g>
+        <g transform="translate(705 0)">
+          <path
+            data-glyph="s"
+            fill="currentColor"
+            d="M 58 43 C 49.5 39 41 37 31 37 C 16 37 0 47 0 59 C 0 71 7 88 16 94 C 24 99.5 32 103 40 107.5 C 44.5 110 46.5 113.5 45.5 117 C 43.5 121.5 38 124 30.5 124 C 22 124 15 121.5 9.5 118 L 9.5 137 C 16 141 24 143 32 143 C 49.5 143 64 130 64 114 C 64 100 57 90.5 51 87 C 41.5 81.5 32 76.5 23 72 C 20.5 70.5 19.5 67.5 20 63 C 21.5 58.5 25 57 30 57 C 40 57.5 50 59 58 62 Z"
+          />
+        </g>
       </g>
     </svg>
     """
@@ -139,6 +190,276 @@ defmodule MailglassAdmin.Components do
     <span class="text-secondary text-label">—</span>
     """
   end
+
+  attr :label, :string, required: true
+  attr :icon, :string, required: true
+  attr :href, :string, required: true
+  attr :active, :boolean, default: false
+  attr :disabled, :boolean, default: false
+  attr :rest, :global, default: %{}
+
+  @doc """
+  Renders the desktop operator navigation link primitive.
+
+  Disabled links are rendered as inert text with link semantics, `aria-disabled`,
+  and no LiveView navigation attribute.
+  """
+  @doc since: "1.8.0"
+  def nav_link(%{disabled: true} = assigns) do
+    ~H"""
+    <span
+      role="link"
+      aria-disabled="true"
+      tabindex="-1"
+      class={[
+        "flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body",
+        "border-transparent text-secondary opacity-100"
+      ]}
+      {@rest}
+    >
+      <.icon name={@icon} class="h-5 w-5 shrink-0" />
+      <span class="truncate" title={@label}>{@label}</span>
+    </span>
+    """
+  end
+
+  def nav_link(assigns) do
+    ~H"""
+    <.link
+      navigate={@href}
+      aria-current={@active && "page"}
+      class={[
+        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out",
+        "duration-(--duration-fast)",
+        nav_link_class(@active)
+      ]}
+      {@rest}
+    >
+      <.icon name={@icon} class="h-5 w-5 shrink-0" />
+      <span class="truncate" title={@label}>{@label}</span>
+    </.link>
+    """
+  end
+
+  attr :label, :string, required: true
+  attr :href, :string, required: true
+  attr :active, :boolean, default: false
+  attr :disabled, :boolean, default: false
+  attr :rest, :global, default: %{}
+
+  @doc """
+  Renders the compact operator navigation pill primitive.
+
+  Disabled pills are visibly inactive and expose `aria-disabled` without a
+  LiveView navigation attribute.
+  """
+  @doc since: "1.8.0"
+  def nav_pill(%{disabled: true} = assigns) do
+    ~H"""
+    <span
+      role="link"
+      aria-disabled="true"
+      tabindex="-1"
+      class="flex min-h-11 items-center rounded-field px-sm text-body text-secondary opacity-100"
+      {@rest}
+    >
+      <span class="truncate" title={@label}>{@label}</span>
+    </span>
+    """
+  end
+
+  def nav_pill(assigns) do
+    ~H"""
+    <.link
+      navigate={@href}
+      aria-current={@active && "page"}
+      class={[
+        "mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast)",
+        nav_pill_class(@active)
+      ]}
+      {@rest}
+    >
+      <span class="truncate" title={@label}>{@label}</span>
+    </.link>
+    """
+  end
+
+  attr :tenant, :string, default: nil
+  attr :rest, :global, default: %{}
+
+  @doc """
+  Renders the read-only tenant context chip.
+
+  The chip intentionally does not expose switching, loading, or navigation
+  behavior in Phase 110.
+  """
+  @doc since: "1.8.0"
+  def tenant_chip(assigns) do
+    ~H"""
+    <span
+      class="inline-flex min-h-11 max-w-full items-center gap-xs rounded-field border border-base-300 px-sm text-label text-secondary"
+      title={tenant_chip_title(@tenant)}
+      {@rest}
+    >
+      <.icon name="hero-building-office-2" class="h-4 w-4 shrink-0" />
+      <span :if={@tenant} class="mono min-w-0 truncate font-bold text-base-content">{@tenant}</span>
+      <span :if={!@tenant}>No tenant selected</span>
+    </span>
+    """
+  end
+
+  attr :selected, :atom, values: [:system, :light, :dark], default: :system
+  attr :name, :string, default: "theme"
+  attr :disabled, :boolean, default: false
+  attr :event, :string, default: nil
+  attr :target, :any, default: nil
+  attr :rest, :global, default: %{}
+
+  @doc """
+  Renders the three-choice theme picker primitive.
+
+  The primitive owns radio semantics only. Persistence, cookie naming, root
+  theme resolution, browser storage, and first-paint behavior are downstream
+  shell concerns.
+  """
+  @doc since: "1.8.0"
+  def theme_picker(assigns) do
+    ~H"""
+    <fieldset
+      class="inline-flex min-h-11 items-stretch gap-xs rounded-field border border-base-300 bg-base-200 p-xs text-body"
+      disabled={@disabled}
+      {@rest}
+    >
+      <legend class="sr-only">Theme</legend>
+      <label
+        :for={option <- theme_options()}
+        class={[
+          "mg-focus-ring flex min-h-11 min-w-11 cursor-pointer items-center gap-xs rounded-field px-sm transition-colors ease-out duration-(--duration-fast)",
+          theme_option_class(@selected == option.theme, @disabled)
+        ]}
+      >
+        <input
+          type="radio"
+          name={@name}
+          value={option.value}
+          checked={@selected == option.theme}
+          disabled={@disabled}
+          phx-click={@event}
+          phx-target={@target}
+          phx-value-theme={if @event, do: option.value}
+          class="mg-focus-ring h-4 w-4"
+        />
+        <span class="whitespace-nowrap">{option.label}</span>
+      </label>
+    </fieldset>
+    """
+  end
+
+  attr :id, :string, default: nil
+  attr :label, :string, required: true
+  attr :value, :any, default: nil
+  attr :severity, :atom, values: [:neutral, :info, :success, :warning, :error], default: :neutral
+  attr :severity_label, :string, default: nil
+  attr :state, :atom, values: [:ready, :empty, :loading, :unavailable], default: :ready
+  attr :empty_text, :string, default: "No data yet"
+  attr :loading_text, :string, default: "Resolving"
+  attr :unavailable_text, :string, default: "Unavailable"
+  attr :rest, :global, default: %{}
+
+  @doc """
+  Renders a canonical stat card with label, no-wrap value, and severity.
+
+  Severity is a closed set and always renders as icon plus visible label plus
+  semantic color.
+  """
+  @doc since: "1.8.0"
+  def stat_card(assigns) do
+    assigns =
+      assigns
+      |> assign(:display_value, stat_display_value(assigns))
+      |> assign(
+        :display_severity_label,
+        assigns.severity_label || stat_severity_label(assigns.severity)
+      )
+
+    ~H"""
+    <article
+      id={@id}
+      class="min-w-0 rounded-box border border-base-300 bg-base-200 p-md"
+      aria-busy={@state == :loading}
+      {@rest}
+    >
+      <p class="truncate text-label font-bold uppercase text-secondary" title={@label}>{@label}</p>
+      <p
+        class="mono mt-xs truncate text-display font-bold tabular-nums whitespace-nowrap text-base-content"
+        title={@display_value}
+      >
+        {@display_value}
+      </p>
+      <p class={[
+        "mt-sm inline-flex items-center gap-xs text-label font-bold",
+        stat_severity_class(@severity)
+      ]}>
+        <.icon name={stat_severity_icon(@severity)} class="h-4 w-4 shrink-0" />
+        <span>{@display_severity_label}</span>
+      </p>
+    </article>
+    """
+  end
+
+  defp nav_link_class(true), do: "border-primary bg-base-100 font-bold text-base-content"
+
+  defp nav_link_class(false),
+    do: "border-transparent text-secondary hover:bg-base-100/60 hover:text-base-content"
+
+  defp nav_pill_class(true), do: "bg-primary/10 font-bold text-base-content"
+  defp nav_pill_class(false), do: "text-secondary hover:text-base-content"
+
+  defp tenant_chip_title(nil), do: "Tenant currently in view"
+  defp tenant_chip_title(tenant), do: "Tenant currently in view: " <> tenant
+
+  defp theme_options do
+    [
+      %{theme: :system, value: "system", label: "System"},
+      %{theme: :light, value: "light", label: "Light"},
+      %{theme: :dark, value: "dark", label: "Dark"}
+    ]
+  end
+
+  defp theme_option_class(_selected, true), do: "text-secondary opacity-100"
+
+  defp theme_option_class(true, false),
+    do: "border border-primary bg-base-100 font-bold text-base-content"
+
+  defp theme_option_class(false, false),
+    do: "border border-transparent text-secondary hover:bg-base-100 hover:text-base-content"
+
+  defp stat_display_value(%{state: :empty, empty_text: empty_text}), do: empty_text
+  defp stat_display_value(%{state: :loading, loading_text: loading_text}), do: loading_text
+
+  defp stat_display_value(%{state: :unavailable, unavailable_text: unavailable_text}),
+    do: unavailable_text
+
+  defp stat_display_value(%{value: nil, empty_text: empty_text}), do: empty_text
+  defp stat_display_value(%{value: value}), do: to_string(value)
+
+  defp stat_severity_icon(:neutral), do: "hero-minus-circle"
+  defp stat_severity_icon(:info), do: "hero-question-mark-circle"
+  defp stat_severity_icon(:success), do: "hero-check-circle"
+  defp stat_severity_icon(:warning), do: "hero-exclamation-triangle"
+  defp stat_severity_icon(:error), do: "hero-x-circle"
+
+  defp stat_severity_label(:neutral), do: "All clear"
+  defp stat_severity_label(:info), do: "Info"
+  defp stat_severity_label(:success), do: "Healthy"
+  defp stat_severity_label(:warning), do: "Needs attention"
+  defp stat_severity_label(:error), do: "Problem"
+
+  defp stat_severity_class(:neutral), do: "text-secondary"
+  defp stat_severity_class(:info), do: "text-primary"
+  defp stat_severity_class(:success), do: "text-success"
+  defp stat_severity_class(:warning), do: "text-warning"
+  defp stat_severity_class(:error), do: "text-error"
 
   @doc """
   Normalizes inbound @outcomes singular atoms to the canonical past-tense atoms expected by
@@ -227,6 +548,7 @@ defmodule MailglassAdmin.Components do
   defp status_class(:webhook_replay_succeeded), do: "badge-success"
   defp status_class(:webhook_replay_failed), do: "badge-error"
   defp status_class(:reconciled), do: "badge-warning"
+
   # Fallback for phantom atoms (e.g. :suppressed) and nil — render neutral outline per UI-SPEC Conflict 1
   defp status_class(_status), do: "badge-outline"
 
@@ -252,6 +574,7 @@ defmodule MailglassAdmin.Components do
   defp status_icon(:webhook_replay_succeeded), do: "hero-check-circle"
   defp status_icon(:webhook_replay_failed), do: "hero-x-circle"
   defp status_icon(:reconciled), do: "hero-exclamation-triangle"
+
   # Fallback for phantom atoms (e.g. :suppressed) and nil — render question mark per UI-SPEC Conflict 1
   defp status_icon(_status), do: "hero-question-mark-circle"
 
@@ -277,6 +600,7 @@ defmodule MailglassAdmin.Components do
   defp status_label(:webhook_replay_succeeded), do: "Replay succeeded"
   defp status_label(:webhook_replay_failed), do: "Replay failed"
   defp status_label(:reconciled), do: "Reconciled"
+
   # Fallback for phantom atoms (e.g. :suppressed) and nil — render "Unknown" per UI-SPEC Conflict 1
   defp status_label(_status), do: "Unknown"
 
