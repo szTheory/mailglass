@@ -280,6 +280,20 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-17: **Repo-hygiene pass (no milestone, no Hex publish).** Got local git + GitHub + CI + GSD
+  into a clean known-good state. Pushed the 3 unpushed `main` commits (incl. the `/gsd-quick` Demo
+  Browser Evidence classifier fix `1e0e60b1`); main CI green. Triaged open PRs **6 → 2**: merged the
+  4 safe patch bumps via maintainer admin-override (#74 actions/checkout 6.0.3, #77 ex_doc 0.40.3,
+  #78 credo 1.7.19, #83 phoenix_live_view 1.1.32 — squash; final combined HEAD `cba0351d` CI green);
+  **held #75 swoosh + #76 premailex OPEN** with hold comments (baseline coupling / major bump).
+  Deleted both obsolete local `preserve/*` branches (local-only). Confirmed clean: working tree, 0
+  stashes, single worktree, 0 open issues, GSD `status: shipped`. **Durable gotcha:** dependabot PRs
+  stay `BLOCKED` pending the 1 required review even with all checks green; `enforce_admins: false` so
+  approve + `gh pr merge --admin --squash` is the path (only required status check is
+  `guard-release-trigger`). **Two open follow-ups parked** in `release-pipeline-maintenance.md`
+  "NEXT-SESSION FOCUS": (A) held PRs #75/#76 dependency review; (B) `Core Full Suite Advisory`
+  fix-or-retire. Next: fresh session, `/gsd-quick` either item.
+
 - 2026-06-17: **Post-v1.12 next-step assessment run (NO milestone opened).** Repo-local: one thorough
   source-sweep agent across all 3 packages + direct reads of PROJECT/ROADMAP/STATE/threads/v1.12 audit.
   **Verdict: the last adopter wedge (onboarding/day-2) is closed and the release is cut; ~93–95% done;
@@ -351,9 +365,14 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 - **No active milestone. No recommended next feature milestone** (post-v1.12 assessment 2026-06-17).
   The library is ~93–95% done for its scope; the last wedge shipped. **Default to quiet maintenance.**
   Do NOT run `/gsd-new-milestone` for feature work unless a concrete adopter pull surfaces.
-- **If you want to do *something*,** the only concrete items are maintenance-tier (thread
-  `release-pipeline-maintenance.md`): (1) `gate-ci-green` advisory-classifier fix for "Demo Browser
-  Evidence"; (2) reference baseline pin bump `~> 1.4` → `~> 1.7`. Use `/gsd-quick`.
+- **If you want to do *something*,** the concrete items are all maintenance-tier (thread
+  `release-pipeline-maintenance.md`). ✅ Item (1) `gate-ci-green` advisory-classifier fix for "Demo
+  Browser Evidence" is **DONE** (2026-06-17, commit `1e0e60b1`). **Two open NEXT-SESSION-FOCUS items
+  remain** (see the thread's "NEXT-SESSION FOCUS" section for full pickup context): **(A)** triage the
+  two held dependency PRs — **#76 premailex 0.3.20→1.0.0** (major bump, changelog review) and **#75
+  swoosh 1.26.0→1.26.1** (coordinated trust-lane baseline change; bundle with item 2's `~> 1.7` pin
+  bump); **(B)** decide **fix-or-retire** for the persistently-red `Core Full Suite Advisory` lane
+  (~57 Oban flakes; non-blocking but permanently red). Both are `/gsd-quick`-sized.
 - **Before any *feature-discovery* pass** (only if reconsidering expansion): refresh
   `.planning/research/JTBD-COVERAGE.md` (now 6 milestones stale) — its conclusion still holds, only
   its status tables are stale. Not needed for maintenance work.
