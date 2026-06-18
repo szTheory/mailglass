@@ -303,6 +303,14 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
+- 2026-06-18: **Phase 110 context gathered in assumptions mode.** Decisions captured in
+  `.planning/phases/110-primitives/110-CONTEXT.md`; audit trail in
+  `.planning/phases/110-primitives/110-DISCUSSION-LOG.md`. Locked: public primitive ownership in
+  `MailglassAdmin.Components`; 3-way theme picker as radio-group/segmented semantics with `system`
+  as absence of explicit theme; canonical `stat_card` plus STATCARD/icon-exists gates; WCAG 2.2
+  AA 24x24 target-size gate with the roadmap's 44x44 floor preserved unless a documented dense
+  exception/GAP is recorded. Next: `/gsd-plan-phase 110`.
+
 - 2026-06-18: **Phase 109 complete.** Plan 04 added structural system/default theme proof, WCAG-style focus/target-size assertions, operator+inbound replay modal `elementFromPoint` hit-tests, and final no-scope-creep validation. Auto-fixed preview theme/frame icon buttons with `min-w-11` to satisfy the 44px target floor; CSS bundle rebuilt and clean. Final proof green: PR #86 merged, conformance OK, ratchet 4/4, support contract 59/59, verify.preview 256/256 with 1 excluded, browser 58/58, package manifests unchanged, no axe/screenshot/theme-hook creep. Next: Phase 110 primitives ready to plan.
 
 - 2026-06-18: **Phase 109 Plan 03 completed.** Tightened `check-conformance.sh` with z-index, focus-ring, root-isolation, token-scope, radius, shadow, border, and arbitrary-size gates; bumped the ratchet baseline to schema v3 with light/dark/system cells seeded from existing light scores. Verification green: root/package conformance, focused ratchet ExUnit, and JSON run-id/system-shape assertion. Next: execute Phase 109 Plan 04 structural WCAG/system proof and final validation.
