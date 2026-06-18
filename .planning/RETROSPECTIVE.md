@@ -4,6 +4,64 @@
 
 ---
 
+## Milestone: v1.12 — Adopter Onboarding & Day-2 Confidence
+
+**Shipped 2026-06-17** — 5 phases (104–108), 13 requirements, audit `status: passed`.
+**The first real linked-version Hex release since 1.6.2:** mailglass 1.7.0 / mailglass_admin
+1.7.0 / mailglass_inbound 1.4.0, with inbound re-pinned `{:mailglass, "== 1.7.0"}` (D-13).
+
+### What shipped
+
+Installer now fails closed (`Mix.raise`) on an unmanaged `Plug.Parsers` conflict — closing the
+silent-prod-401 footgun — with a `--force` escape hatch and a `mix mailglass.doctor` static
+webhook-wiring check; a config-first README quickstart + week-1 learning arc; go-live and
+errors/troubleshooting day-2 guides; inbound replay-modal a11y parity; then the release cut.
+
+### What worked
+
+- **Push-before-merge caught real bugs.** The v1.7–v1.12 body had never run through full CI
+  (phases executed locally, gated on targeted commands). Pushing it to `main` *before* merging the
+  release PR surfaced six genuine regressions that would otherwise have shipped or stalled the
+  publish. This sequencing is the single biggest lesson — see below.
+- **Allowlist-first publish hygiene.** Regenerating `*-files.expected` for all three packages
+  before the release PR merged caught 9 unpublished file additions (core +5, admin +3, inbound +1).
+- **The fail-closed installer worked exactly as designed** — it (correctly) blocked the consumer
+  smoke, which is what flagged that the smoke needed `--force`.
+- **Hands-free pipeline mostly held;** tags + GitHub Releases + publish fan-out fired automatically
+  off the merge.
+
+### Key lessons / friction
+
+- **Lesson: run full CI on milestone work before the release ceremony, not just targeted gates.**
+  Local phase execution (`execute-phase` on main with targeted commands) never exercised Format
+  Check, Dialyzer, `mix docs --warnings-as-errors`, `mix mailglass.docs.check`, Installer Host
+  Smoke, or the demo Playwright lane. All six were red on first real CI. A "full-CI dry run" before
+  the release phase would move these left.
+- **Lesson: validate the WHOLE lane, not one step.** I fixed `mix docs --warnings-as-errors`,
+  re-pushed, and the Docs lane *still* failed — on its second step `mix mailglass.docs.check`
+  (a stale `~> 0.3` required token contradicting phase 105's `~> 1.6` bump). Run every step a CI
+  lane runs.
+- **Lesson: cross-artifact reconciliation gaps.** Phase 105 bumped the migration-guide pin and the
+  contract test but missed `mix mailglass.docs.check`'s required-token list. When a doc value is
+  asserted in more than one place, grep for ALL of them.
+- **Racing fan-outs are still noisy.** Three `publish-hex` runs fired (one per release event); two
+  `publish-core` jobs failed as already-published race-losers, and the first post-publish-smoke
+  false-negatived on a Hex-index timeout. None were real; all disproven directly against Hex. A
+  re-dispatched post-publish-smoke went fully green.
+- **Hands-free auto-merge did not fire.** Non-required advisory lanes (Core Full Suite, Provider
+  Compatibility) were red and Release Please's hourly cron kept regenerating the PR head, so
+  auto-merge never caught a settled-green window. Resolved with a maintainer admin-override merge
+  after explicit go/no-go, with all branch-protection-required checks green.
+
+### Follow-up (non-blocking)
+
+- Harden `publish-hex.yml` `gate-ci-green` `isAdvisory()`: "Demo Browser Evidence" matches neither
+  the `ADVISORY_LANES` list nor the `" Advisory ("` naming convention, so a red Demo Browser
+  Evidence lane would block publish despite not being a branch-protection required check. Fixing the
+  test green sidestepped it this release; classify it advisory by name to match the documented rule.
+
+---
+
 ## Milestone: v1.11 — mailglass_admin Design-System Uplift
 
 **Shipped:** 2026-06-16

@@ -61,7 +61,7 @@ jobs:
       POSTGRES_PASSWORD: postgres
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
         with:
           # Rehearsed fallback contract: checkout the known release tag when
           # using workflow_dispatch so publish runs against the reviewed release
@@ -194,15 +194,17 @@ jobs:
             // Advisory lanes are non-blocking for publish — they are NOT
             // branch-protection required checks (the required set is Compile No
             // Optional Deps, Installer Host Smoke, Support Contract Core/Admin,
-            // Trust Lane Repo Head). "Operator Browser Gate" predates the naming
-            // convention and is listed explicitly; every other advisory lane
-            // follows the "<name> Advisory (...)" convention and is matched by
-            // isAdvisory() below — so a red advisory lane (e.g. Preview Capture
-            // Advisory, whose CI harness is independently broken on a missing
-            // inbound migration) never blocks a release. Rule of thumb: if a lane
-            // is not required by branch protection, it is advisory here too.
+            // Trust Lane Repo Head). "Operator Browser Gate" and "Demo Browser
+            // Evidence" predate the naming convention and are listed explicitly;
+            // every other advisory lane follows the "<name> Advisory (...)"
+            // convention and is matched by isAdvisory() below — so a red advisory
+            // lane (e.g. Preview Capture Advisory, whose CI harness is
+            // independently broken on a missing inbound migration) never blocks a
+            // release. Rule of thumb: if a lane is not required by branch
+            // protection, it is advisory here too.
             const ADVISORY_LANES = [
-              'Operator Browser Gate'
+              'Operator Browser Gate',
+              'Demo Browser Evidence'
             ];
 
             const sha = '${{ steps.resolve-sha.outputs.sha }}';
@@ -267,7 +269,7 @@ jobs:
     environment: hex-publish
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
         with:
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
       - name: Set up OTP + Elixir
@@ -348,7 +350,7 @@ jobs:
     environment: hex-publish
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
         with:
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
       - name: Set up OTP + Elixir
@@ -433,7 +435,7 @@ jobs:
     environment: hex-publish
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
         with:
           ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
       - name: Set up OTP + Elixir

@@ -46,6 +46,8 @@
       "parallel_candidate_analysis": true,
       "ranking_lens": "adopter-jtbd-first",
       "done_lens": "adopter-value-not-perfectionism",
+      "research_lens": "idiomatic-elixir-phoenix-ecto-plug; steal-from-successful-libs; DX/least-surprise-first",
+      "repo_local_truth_first": true,
       "writeback_checklist": [
         "STATE.md",
         "threads",

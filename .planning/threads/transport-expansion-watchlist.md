@@ -4,10 +4,12 @@
 **Status:** open
 **Priority:** watchlist (not next)
 **Owner:** maintainer
-**Last reviewed:** 2026-06-16 — all three items remain correctly UNPROMOTED. No adopter pull has
-surfaced through v1.11 for Cloudflare Email Routing, synthetic inbound dev tooling, or a `gen_smtp`
-listener. The 2026-06-16 next-step assessment reaffirms these as flat-tail / diminishing-returns.
-Keep deferred; revisit only on explicit adopter pull. Next review: next milestone-discovery pass.
+**Last reviewed:** 2026-06-17 — all three items remain correctly UNPROMOTED. No adopter pull has
+surfaced through v1.12 for Cloudflare Email Routing, synthetic inbound dev tooling, or a `gen_smtp`
+listener. The 2026-06-17 post-v1.12 next-step assessment reaffirms these as flat-tail /
+diminishing-returns and (with the onboarding wedge now closed) confirms they are the *only* remaining
+expansion candidates — all pull-gated. Keep deferred; revisit only on explicit adopter pull.
+Next review: next milestone-discovery pass.
 
 ## Question
 
