@@ -16,6 +16,33 @@ const ACCENT_ALLOWLIST = [
   ":focus-visible"
 ];
 
+const PRIMITIVE_VIEWPORTS = [
+  { width: 320, height: 900 },
+  { width: 768, height: 900 },
+  { width: 1280, height: 900 }
+];
+
+const PRIMITIVE_STATES = {
+  nav_link: ["active", "inactive", "hover-ready", "focus-visible", "disabled", "long-label"],
+  nav_pill: ["active", "inactive", "hover-ready", "focus-visible", "disabled", "long-label"],
+  tenant_chip: ["with-tenant", "no-tenant", "long-tenant", "non-ascii-tenant"],
+  theme_picker: ["system-selected", "light-selected", "dark-selected", "hover-ready", "focus-visible", "disabled"],
+  stat_card: [
+    "neutral",
+    "info",
+    "success",
+    "warning",
+    "error",
+    "empty",
+    "loading",
+    "unavailable",
+    "long-label",
+    "long-value"
+  ]
+};
+
+const LOADING_NOT_APPLICABLE_PRIMITIVES = ["nav_link", "nav_pill", "tenant_chip", "theme_picker"];
+
 // Mirrors openOperator from operator.spec.js exactly (browser-reset + browser-login)
 async function openOperator(page) {
   await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
@@ -154,9 +181,25 @@ function parseRgbColor(value) {
     };
   }
 
+  const srgb = String(value).trim().match(/^color\(srgb\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)(?:\s*\/\s*([0-9.]+))?\)$/i);
+  if (srgb) {
+    return {
+      r: Number.parseFloat(srgb[1]),
+      g: Number.parseFloat(srgb[2]),
+      b: Number.parseFloat(srgb[3]),
+      a: srgb[4] ? Number.parseFloat(srgb[4]) : 1
+    };
+  }
+
   const match = String(value).match(/rgba?\(([^)]+)\)/);
   if (!match) return null;
-  const parts = match[1].split(",").map(part => Number.parseFloat(part.trim()));
+  const parts = match[1]
+    .replace(/\//g, " ")
+    .split(/[,\s]+/)
+    .filter(Boolean)
+    .map(part => part.trim().endsWith("%")
+      ? (Number.parseFloat(part) / 100) * 255
+      : Number.parseFloat(part));
   if (parts.length < 3 || parts.slice(0, 3).some(part => !Number.isFinite(part))) return null;
   return {
     r: parts[0] / 255,
@@ -197,7 +240,11 @@ async function resolvedColors(locator) {
     const transparent = value => {
       const match = String(value).match(/rgba?\(([^)]+)\)/);
       if (!match) return false;
-      const parts = match[1].split(",").map(part => Number.parseFloat(part.trim()));
+      const parts = match[1]
+        .replace(/\//g, " ")
+        .split(/[,\s]+/)
+        .filter(Boolean)
+        .map(part => Number.parseFloat(part.trim()));
       return parts.length >= 4 && parts[3] === 0;
     };
 
@@ -233,7 +280,16 @@ async function assertNonTextContrastAA(locator, label) {
   await expect(locator.first(), label).toBeVisible();
   const colors = await resolvedColors(locator);
   const stroke = parseRgbColor(colors.outlineColor) || parseRgbColor(colors.borderColor);
-  const background = parseRgbColor(colors.backgroundColor);
+  let background = parseRgbColor(colors.backgroundColor);
+
+  if (!background) {
+    const parentBackground = await locator.first().evaluate(el => {
+      const parent = el.parentElement;
+      return parent ? getComputedStyle(parent).backgroundColor : "rgb(255, 255, 255)";
+    });
+    background = parseRgbColor(parentBackground);
+  }
+
   expect(stroke, `${label} non-text color parses`).not.toBeNull();
   expect(background, `${label} background color parses`).not.toBeNull();
   expect(contrastRatio(stroke, background), `${label} non-text contrast`).toBeGreaterThanOrEqual(3);
@@ -277,6 +333,145 @@ async function assertFocusAppearanceAndNotObscured(page, locator, label) {
 
 async function expectNoDataTheme(locator, label) {
   expect(await locator.first().getAttribute("data-theme"), label).toBeNull();
+}
+
+function primitiveCell(page, component, state) {
+  return page.getByTestId(`gallery-${component}-${state}`);
+}
+
+function primitiveWrapper(page, component, state, theme) {
+  const cell = primitiveCell(page, component, state);
+  if (theme === "system") return page.getByTestId(`gallery-${component}-${state}-system`);
+  return cell.locator(`[data-theme="mailglass-${theme}"]`).first();
+}
+
+async function assertPrimitiveThemeWrappers(page, component, state) {
+  const light = primitiveWrapper(page, component, state, "light");
+  const dark = primitiveWrapper(page, component, state, "dark");
+  const system = primitiveWrapper(page, component, state, "system");
+
+  await expect(light, `${component}/${state} light wrapper`).toBeVisible();
+  await expect(dark, `${component}/${state} dark wrapper`).toBeVisible();
+  await expect(system, `${component}/${state} system wrapper`).toBeVisible();
+  await expectNoDataTheme(system, `${component}/${state} system wrapper`);
+}
+
+function primitiveTarget(wrapper, component) {
+  switch (component) {
+    case "nav_link":
+    case "nav_pill":
+      return wrapper.locator("a, [role='link']").first();
+    case "tenant_chip":
+      return wrapper.locator("span[title]").first();
+    case "theme_picker":
+      return wrapper.locator("fieldset").first();
+    case "stat_card":
+      return wrapper.locator("article").first();
+    default:
+      return wrapper;
+  }
+}
+
+function themeOptionLabels(wrapper) {
+  return wrapper.locator("fieldset label");
+}
+
+async function assertThemePickerSemantics(wrapper, selectedValue, label) {
+  const radios = wrapper.locator('input[type="radio"]');
+  await expect(radios, `${label} radio count`).toHaveCount(3);
+
+  for (const text of ["System", "Light", "Dark"]) {
+    await expect(wrapper.getByText(text, { exact: true }), `${label} ${text} label`).toBeVisible();
+  }
+
+  await expect(wrapper.locator(`input[type="radio"][value="${selectedValue}"]`), `${label} checked option`).toBeChecked();
+  await expect(wrapper.locator("[aria-pressed]"), `${label} no pressed-button semantics`).toHaveCount(0);
+  await expect(wrapper.getByRole("button"), `${label} no button-mode options`).toHaveCount(0);
+}
+
+async function assertHoverReady(locator, label) {
+  await expect(locator.first(), label).toBeVisible();
+  await locator.first().hover();
+  const cursor = await locator.first().evaluate(el => getComputedStyle(el).cursor);
+  expect(["pointer", "auto"].includes(cursor), `${label} hover cursor`).toBeTruthy();
+}
+
+async function assertProgrammaticDisabled(locator, enabledLocator, label) {
+  await expect(locator.first(), label).toBeVisible();
+
+  const disabledState = await locator.first().evaluate(el => {
+    const style = getComputedStyle(el);
+    return {
+      tag: el.tagName,
+      disabled: el.disabled === true,
+      ariaDisabled: el.getAttribute("aria-disabled"),
+      href: el.getAttribute("href"),
+      tabIndex: el.getAttribute("tabindex"),
+      color: style.color,
+      backgroundColor: style.backgroundColor,
+      cursor: style.cursor,
+      opacity: Number.parseFloat(style.opacity),
+      pointerEvents: style.pointerEvents
+    };
+  });
+  const enabledState = await enabledLocator.first().evaluate(el => {
+    const style = getComputedStyle(el);
+    return {
+      color: style.color,
+      backgroundColor: style.backgroundColor,
+      cursor: style.cursor,
+      opacity: Number.parseFloat(style.opacity),
+      pointerEvents: style.pointerEvents
+    };
+  });
+
+  expect(
+    disabledState.disabled ||
+      disabledState.ariaDisabled === "true" ||
+      disabledState.tabIndex === "-1",
+    `${label} programmatic disabled evidence`
+  ).toBeTruthy();
+  expect(disabledState.href, `${label} removes navigation href`).toBeNull();
+  expect(
+    disabledState.color !== enabledState.color ||
+      disabledState.backgroundColor !== enabledState.backgroundColor ||
+      disabledState.cursor !== enabledState.cursor ||
+      disabledState.opacity !== enabledState.opacity ||
+      disabledState.pointerEvents !== enabledState.pointerEvents,
+    `${label} visually distinct from enabled state`
+  ).toBeTruthy();
+}
+
+async function assertNoElementHorizontalOverflow(locator, label) {
+  const overflow = await locator.first().evaluate(el => {
+    return el.scrollWidth - el.clientWidth;
+  });
+  expect(overflow, `${label} horizontal overflow`).toBeLessThanOrEqual(1);
+}
+
+async function assertStatCardShape(wrapper, label) {
+  const card = wrapper.locator("article").first();
+  await expect(card, label).toBeVisible();
+
+  const labelEl = card.locator("p").first();
+  const valueEl = card.locator("p").nth(1);
+  const severityEl = card.locator("p").nth(2);
+
+  await expect(labelEl, `${label} label`).toHaveAttribute("title", /.+/);
+  await expect(valueEl, `${label} value`).toHaveText(/.+/);
+  await expect(severityEl.locator('[class*="hero-"]'), `${label} severity icon`).toBeVisible();
+  await expect(severityEl.locator("span").last(), `${label} severity text`).toHaveText(/.+/);
+
+  const valueStyle = await valueEl.evaluate(el => {
+    const style = getComputedStyle(el);
+    return {
+      whiteSpace: style.whiteSpace,
+      fontVariantNumeric: style.fontVariantNumeric,
+      overflowWrap: style.overflowWrap
+    };
+  });
+  expect(valueStyle.whiteSpace, `${label} value nowrap`).toBe("nowrap");
+  expect(valueStyle.fontVariantNumeric, `${label} tabular numeric treatment`).toContain("tabular-nums");
 }
 
 async function assertPanelAboveScrim(modal, label) {
@@ -1167,6 +1362,221 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await openGallery(page);
       await expect(page.getByTestId("gallery-routing_trace-empty")).toBeVisible();
       await expect(page.getByTestId("gallery-evidence_card-redacted")).toBeVisible();
+    });
+
+  });
+
+  // =========================================================================
+  // PRIMITIVE STRUCTURAL MATRIX — Phase 110
+  // Named primitives are proved against rendered, compiled CSS output across
+  // exact 320/768/1280 widths and light/dark/system gallery wrappers.
+  // =========================================================================
+  test.describe("primitive gallery structural proof — Phase 110", () => {
+
+    test("primitive cells render every planned state in light, dark, and system wrappers", async ({
+      page
+    }) => {
+      await openGallery(page);
+
+      const source = require("fs").readFileSync("lib/mailglass_admin/gallery_live.ex", "utf8");
+
+      for (const viewport of PRIMITIVE_VIEWPORTS) {
+        await page.setViewportSize(viewport);
+
+        for (const [component, states] of Object.entries(PRIMITIVE_STATES)) {
+          for (const state of states) {
+            const cell = primitiveCell(page, component, state);
+            await expect(cell, `${component}/${state} cell at ${viewport.width}`).toBeVisible();
+            await assertPrimitiveThemeWrappers(page, component, state);
+
+            for (const theme of ["light", "dark", "system"]) {
+              const wrapper = primitiveWrapper(page, component, state, theme);
+              await assertTextContrastAA(
+                wrapper,
+                `${theme} ${viewport.width} ${component}/${state}`
+              );
+            }
+          }
+        }
+
+        await expect(primitiveCell(page, "stat_card", "loading"), `stat_card loading ${viewport.width}`).toBeVisible();
+
+        for (const component of LOADING_NOT_APPLICABLE_PRIMITIVES) {
+          await expect(
+            primitiveCell(page, component, "loading"),
+            `${component} loading intentionally absent at ${viewport.width}`
+          ).toHaveCount(0);
+          expect(source, `${component} source records loading non-applicability`).toContain(
+            `loading not applicable: ${component}`
+          );
+        }
+      }
+    });
+
+    test("theme_picker keeps native three-radio semantics without pressed-button state", async ({
+      page
+    }) => {
+      await openGallery(page);
+
+      const selectedStates = [
+        ["system-selected", "system"],
+        ["light-selected", "light"],
+        ["dark-selected", "dark"]
+      ];
+
+      for (const viewport of PRIMITIVE_VIEWPORTS) {
+        await page.setViewportSize(viewport);
+
+        for (const [state, selected] of selectedStates) {
+          for (const theme of ["light", "dark", "system"]) {
+            const wrapper = primitiveWrapper(page, "theme_picker", state, theme);
+            await assertThemePickerSemantics(
+              wrapper,
+              selected,
+              `${theme} ${viewport.width} theme_picker/${state}`
+            );
+            await assertNonTextContrastAA(
+              wrapper.locator(`label:has(input[value="${selected}"])`).first(),
+              `${theme} ${viewport.width} theme_picker/${state} selected cue`
+            );
+          }
+        }
+      }
+    });
+
+    test("interactive primitive hover, focus, disabled, and target-size contracts hold", async ({
+      page
+    }) => {
+      await openGallery(page);
+
+      for (const viewport of PRIMITIVE_VIEWPORTS) {
+        await page.setViewportSize(viewport);
+
+        for (const theme of ["light", "dark", "system"]) {
+          const navLinkActive = primitiveWrapper(page, "nav_link", "active", theme).locator("a").first();
+          const navPillActive = primitiveWrapper(page, "nav_pill", "active", theme).locator("a").first();
+          await assertTouchTarget(navLinkActive, `${theme} ${viewport.width} nav_link target`);
+          await assertTouchTarget(navPillActive, `${theme} ${viewport.width} nav_pill target`);
+          await assertNonTextContrastAA(navLinkActive, `${theme} ${viewport.width} nav_link active cue`);
+
+          for (const option of await themeOptionLabels(primitiveWrapper(page, "theme_picker", "system-selected", theme)).all()) {
+            await assertTouchTarget(option, `${theme} ${viewport.width} theme_picker option target`);
+          }
+
+          await assertHoverReady(
+            primitiveWrapper(page, "nav_link", "hover-ready", theme).locator("a"),
+            `${theme} ${viewport.width} nav_link hover`
+          );
+          await assertHoverReady(
+            primitiveWrapper(page, "nav_pill", "hover-ready", theme).locator("a"),
+            `${theme} ${viewport.width} nav_pill hover`
+          );
+          await assertHoverReady(
+            themeOptionLabels(primitiveWrapper(page, "theme_picker", "hover-ready", theme)).first(),
+            `${theme} ${viewport.width} theme_picker hover`
+          );
+
+          await assertFocusAppearanceAndNotObscured(
+            page,
+            primitiveWrapper(page, "nav_link", "focus-visible", theme).locator("a"),
+            `${theme} ${viewport.width} nav_link focus ring`
+          );
+          await assertFocusAppearanceAndNotObscured(
+            page,
+            primitiveWrapper(page, "nav_pill", "focus-visible", theme).locator("a"),
+            `${theme} ${viewport.width} nav_pill focus ring`
+          );
+          await assertFocusAppearanceAndNotObscured(
+            page,
+            primitiveWrapper(page, "theme_picker", "focus-visible", theme).locator('input[type="radio"]').first(),
+            `${theme} ${viewport.width} theme_picker focus ring`
+          );
+
+          await assertProgrammaticDisabled(
+            primitiveWrapper(page, "nav_link", "disabled", theme).locator("[role='link']"),
+            navLinkActive,
+            `${theme} ${viewport.width} nav_link disabled`
+          );
+          await assertProgrammaticDisabled(
+            primitiveWrapper(page, "nav_pill", "disabled", theme).locator("[role='link']"),
+            navPillActive,
+            `${theme} ${viewport.width} nav_pill disabled`
+          );
+
+          const disabledPicker = primitiveWrapper(page, "theme_picker", "disabled", theme);
+          await expect(disabledPicker.locator("fieldset")).toHaveAttribute("disabled", "");
+          await expect(disabledPicker.locator('input[type="radio"]').first()).toBeDisabled();
+        }
+      }
+    });
+
+    test("stat_card shape, icon meaning, and overflow contracts hold at primitive widths", async ({
+      page
+    }) => {
+      await openGallery(page);
+
+      for (const viewport of PRIMITIVE_VIEWPORTS) {
+        await page.setViewportSize(viewport);
+
+        for (const theme of ["light", "dark", "system"]) {
+          for (const state of ["neutral", "info", "success", "warning", "error", "empty", "loading", "unavailable", "long-label", "long-value"]) {
+            const wrapper = primitiveWrapper(page, "stat_card", state, theme);
+            await assertStatCardShape(wrapper, `${theme} ${viewport.width} stat_card/${state}`);
+            await assertTextContrastAA(wrapper.locator("article"), `${theme} ${viewport.width} stat_card/${state}`);
+          }
+
+          const loadingCard = primitiveWrapper(page, "stat_card", "loading", theme).locator("article");
+          await expect(loadingCard, `${theme} ${viewport.width} loading aria-busy`).toHaveAttribute("aria-busy", "true");
+          await expect(loadingCard.getByText("Loading", { exact: true })).toBeVisible();
+
+          const longLabel = primitiveWrapper(page, "stat_card", "long-label", theme).locator("article p").first();
+          await expect(longLabel).toHaveAttribute("title", /Deliveries requiring operator review/);
+
+          const longValue = primitiveWrapper(page, "stat_card", "long-value", theme).locator("article p").nth(1);
+          await expect(longValue).toHaveAttribute("title", /trace_01JXWIDEVALUE/);
+        }
+
+        await assertNoElementHorizontalOverflow(
+          primitiveCell(page, "stat_card", "long-value"),
+          `gallery stat_card ${viewport.width}`
+        );
+      }
+    });
+
+    test("meaningful primitive icons have adjacent visible text or accessible names", async ({
+      page
+    }) => {
+      await openGallery(page);
+
+      for (const viewport of PRIMITIVE_VIEWPORTS) {
+        await page.setViewportSize(viewport);
+
+        for (const theme of ["light", "dark", "system"]) {
+          await expect(
+            primitiveWrapper(page, "nav_link", "active", theme).locator('[class*="hero-"]')
+          ).toBeVisible();
+          await expect(
+            primitiveWrapper(page, "nav_link", "active", theme).getByText("Deliveries", { exact: true })
+          ).toBeVisible();
+
+          await expect(
+            primitiveWrapper(page, "tenant_chip", "with-tenant", theme).locator('[class*="hero-"]')
+          ).toBeVisible();
+          await expect(
+            primitiveWrapper(page, "tenant_chip", "with-tenant", theme).getByText("acme-corp", { exact: true })
+          ).toBeVisible();
+
+          await expect(
+            primitiveWrapper(page, "stat_card", "warning", theme).locator('[class*="hero-"]')
+          ).toBeVisible();
+          await expect(
+            primitiveWrapper(page, "stat_card", "warning", theme)
+              .locator("article p")
+              .nth(2)
+              .getByText("Needs attention", { exact: true })
+          ).toBeVisible();
+        }
+      }
     });
 
   });

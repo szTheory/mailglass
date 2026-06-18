@@ -110,19 +110,31 @@ defmodule MailglassAdmin.GalleryLive do
                       data-theme="mailglass-light"
                       class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 flex-1"
                     >
-                      <.render_specimen component={component} assigns_map={assigns_map} />
+                      <.render_specimen
+                        component={component}
+                        assigns_map={assigns_map}
+                        specimen_id={"#{component}-#{state}-light"}
+                      />
                     </div>
                     <div
                       data-theme="mailglass-dark"
                       class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 flex-1"
                     >
-                      <.render_specimen component={component} assigns_map={assigns_map} />
+                      <.render_specimen
+                        component={component}
+                        assigns_map={assigns_map}
+                        specimen_id={"#{component}-#{state}-dark"}
+                      />
                     </div>
                     <div
                       data-testid={"gallery-#{component}-#{state}-system"}
                       class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 flex-1"
                     >
-                      <.render_specimen component={component} assigns_map={assigns_map} />
+                      <.render_specimen
+                        component={component}
+                        assigns_map={assigns_map}
+                        specimen_id={"#{component}-#{state}-system"}
+                      />
                     </div>
                   </div>
                 </div>
@@ -204,7 +216,7 @@ defmodule MailglassAdmin.GalleryLive do
       selected={@assigns_map[:selected] || :system}
       disabled={@assigns_map[:disabled] || false}
       event={@assigns_map[:event]}
-      name={@assigns_map[:name] || "gallery_theme"}
+      name={@assigns_map[:name] || "gallery_theme_#{@specimen_id}"}
     />
     """
   end
