@@ -386,7 +386,7 @@ defmodule MailglassAdmin.Components do
     <article
       id={@id}
       class="min-w-0 rounded-box border border-base-300 bg-base-200 p-md"
-      aria-busy={@state == :loading}
+      aria-busy={if @state == :loading, do: "true"}
       {@rest}
     >
       <p class="truncate text-label font-bold uppercase text-secondary" title={@label}>{@label}</p>
