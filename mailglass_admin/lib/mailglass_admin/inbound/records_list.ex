@@ -93,7 +93,9 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   defp empty_heading(:filtered), do: "No InboundMessages match these filters"
 
   defp empty_body(:no_tenant),
-    do: "Enter a tenant ID to inspect inbound routing for one workspace."
+    do:
+      "Inbound views are scoped to one tenant. Pick a tenant with the filters above, " <>
+        "or add a tenant_id to the URL, to inspect its inbound routing."
 
   defp empty_body(:truly_empty),
     do: "InboundMessages appear here once this tenant receives its first message."
