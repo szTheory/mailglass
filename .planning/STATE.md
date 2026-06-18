@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-06-18T14:35:33.301Z"
 last_activity: 2026-06-18
 progress:
-  total_phases: 0
+  total_phases: 9
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,64 +20,74 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v1.13 Admin Design-System Stress Test & UX Uplift — defining requirements.
+**Current focus:** v1.13 Admin Design-System Stress Test & UX Uplift — Phase 109 (Foundations + Gate-Tightening), ready to plan.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 109 of 117 (Foundations + Gate-Tightening) — first phase of v1.13
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-18 — Milestone v1.13 started
+Status: Roadmap created — ready to plan Phase 109 (gated on REL-01 / PR #86 merge)
+Last activity: 2026-06-18 — v1.13 roadmap created (Phases 109-117, 36 reqs mapped 100%)
 
-## v1.12 Milestone Intent
+Progress: [░░░░░░░░░░] 0% (0/9 phases)
 
-- Convert the one remaining adopter wedge from the 2026-06-16 next-step assessment: onboarding /
-  day-2 DX. mailglass is feature-complete for its scope (~92% code axis) — this milestone removes
-  the friction/footguns between "evaluating" and "in production," then **publishes** the accumulated
-  v1.7–v1.12 polish to Hex. Friction-removal + release, NOT feature growth (D-23 convergence holds).
+## v1.13 Milestone Intent
 
-- Headline fix (the dangerous gap): `mix mailglass.install` warns-then-continues on an unmanaged
-  `Plug.Parsers` conflict (`installer/apply.ex:47-76`), producing a silent production webhook 401.
-  Make it fail closed (route through the `Mix.raise` path the task already uses) with a `--force`
-  escape hatch + a verifiable post-install webhook-wiring doctor check.
+- Third adopter-visible-quality admin pass (after v1.7/v1.11) under D-23, distinguished as
+  **lived-experience / real-demo-driven** (D-29): the v1.11 ratchet passed in the lab yet clicking
+  the real `make demo` app still surfaced usability traps (tenant-scoping dead-end, pointless
+  single-tenant picker, clipped stat-card labels, modal-behind-scrim, "kind of ugly" rough edges).
+  Systematically audit + uplift the `mailglass_admin` design system **fractally** to award-winning,
+  coherent, on-brand quality in **light / dark / system** at every width, **WCAG 2.2 AA**, proven
+  against multi-tenant stress fixtures along real JTBD paths — then **ship to Hex** (D-28). NOT
+  product-capability growth.
 
-- Plus: fix the broken README quickstart, add a first-week learning arc + go-live checklist +
-  unified error/troubleshooting guide, sharpen migration-from-swoosh's "why"; fold in the inbound
-  replay-modal a11y parity (ex-v1.11 WR-03); then cut the real linked-version Hex release + D-13
-  inbound exact-pin re-pin.
+- Headline fixes: theme picker system/light/dark (system default); auto-select sole tenant +
+  tenant listing/switcher from the **core read model** (kills "No tenant selected"); canonical
+  `stat_card`; row-to-card responsive tables; honest pagination; z-index layer system
+  (modal-behind-scrim); 44×44 targets; the 24-bug usability sweep; multi-tenant stress-fixture
+  cohort; extended idempotent ratchet (system theme + WCAG 2.2 AA + axe-JSON baseline + interaction
+  pillar). Then the linked-version Hex release + D-13 inbound exact-pin re-pin.
 
-## v1.12 Scope Locks
+## v1.13 Scope Locks
 
-- **Onboarding / DX + release only.** No new product capability, providers, transports, or routes.
-- **Code changes confined to** the installer (`mailglass/lib/mailglass/installer/*` + install/doctor
-  mix tasks) and the admin inbound replay modal. No outbound/webhook/inbound runtime-contract,
-  schema, or public-error-set changes. A11Y-01 is a quality-parity item, not a feature.
-
-- **Docs guardrails:** every guide code block must parse (`docs_contract_test.exs`); canonical
-  telemetry/error vocabulary (`docs/api_stability.md`); no over-claims; new guides registered in
-  BOTH `mix.exs` `extras:` and `groups_for_extras: [Guides: …]`.
-
-- **Zero Node toolchain;** admin CSS bundle rebuilt + committed if classes change
-  (`git diff --exit-code priv/static/`) for the a11y phase.
-
-- **Release posture: ACTUALLY CUT** (D-28) — the deliberate change from v1.7/v1.11 prepare-only.
-  Admin-minor bump drags matched core+inbound; D-13 inbound exact-pin re-pin after the PR merges.
+- **Admin + demo only.** Recipient-facing email HEEx templates and `brandbook/` tokens are OUT —
+  the brand book is the source of truth. No new product capability/providers/transports/routes.
+- **Host-app-friendly** (mountable library): no hijacking host auth/theme/assets/Repo; no global
+  CSS/JS collisions. Tenant listing in the **core read model** scoped via `Mailglass.Tenancy.scope/2`
+  through the authenticated actor, never raw admin Repo.
+- **Zero-Node asset pipeline** (committed `priv/static/app.css`, rebuilt + committed on class
+  changes). The only net-new dependency is one **test-only** npm devDep `@axe-core/playwright`;
+  zero new Hex deps. No pixel-diff regression — ever (structural + axe-JSON + score-baseline).
+- **Two binding sequencing constraints:** (1) merge PR #86 BEFORE Phase 109 (REL-01 precondition);
+  (2) tighten gates BEFORE re-baselining — gates tightened inside each phase, full pillar re-score
+  ONLY in the final ratchet-arm phase (116). The multi-tenant stress-fixture cohort (RATCHET-01) is
+  the keystone dependency — lands late, gates the final score.
+- **Release posture: ACTUALLY CUT** (D-28) — admin-minor bump drags matched core+inbound via
+  linked-version releases; D-13 inbound exact-pin re-pin after the PR merges.
 
 ## Roadmap Snapshot
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 104 | Installer Fail-Closed + Webhook-Wiring Doctor | Fail closed (Mix.raise) on unmanaged `Plug.Parsers` conflict + `--force` escape hatch + verifiable webhook-wiring doctor check; tests-first (INSTALL-01..04) |
-| 105 | Onboarding Docs: Quickstart Fix + Learning Arc | Config-first README quickstart, getting-started "Next steps", learning-path index, migration-from-swoosh "why" opener; docs-contract gated (DOCS-01..04) |
-| 106 | Day-2 Guides: Go-Live Checklist + Error/Troubleshooting | New production-go-live-checklist.md + unified errors-and-troubleshooting.md; registered in mix.exs docs + docs-contract gated (OPS-01/02) |
-| 107 | Inbound Replay-Modal A11y Parity (WR-03) | Operator-style focus-trap + Escape on admin inbound replay modal; Playwright structural assertion; bundle clean (A11Y-01) |
-| 108 | Release Cut + Milestone Closeout | Cut real linked-version Hex release (CHANGELOG, admin-minor drags core+inbound); D-13 inbound re-pin; Hex resolution + post-publish smoke; milestone audit (REL-01/02) |
+| 109 | Foundations + Gate-Tightening | Merge PR #86 (REL-01 precondition); z-index/motion/elevation/focus/overlay tokens + system-theme plumbing in light/dark/system; tighten gates FIRST, prove green before any re-score (FND-01..05) |
+| 110 | Primitives | Promote inlined atoms to public components; canonical `stat_card` + 3-way theme-picker primitive; every primitive in every state, WCAG 2.2 AA + APG, 320→wide, 44×44, icon-exists guard (PRIM-01..07) |
+| 111 | Forms | Unify the two `filters_form` copies into shared `filter_field`/`filter_section`; labeled, recoverable, never color-alone, focus-preserved (FORM-01..03) |
+| 112 | App-Shell, Nav & Tenant Seam | Auto-select sole tenant + listing/switcher from core read model; tenant scope persists; theme picker no-FOUC; honest pagination; non-color active nav (SHELL-01..06) |
+| 113 | Data-Display | Tables ≥768→cards <768; all KPIs on `stat_card`; distinct empty/error/permission/stale templates; severity icon+label+color; long-value handling (DATA-01..05) |
+| 114 | Component Groups | Coherent spacing/hierarchy across composed groups; box-nesting ≤2; x/y alignment (GROUP-01..03) |
+| 115 | Pages/Flows + Motion + Microcopy | GOV.UK-style IA per surface; happy/error/boundary/edge/advanced paths in light/dark/system at every width; Emil Kowalski micro-animation; permission/stale/tenant microcopy ("Oops" banned) (FLOW-01..04) |
+| 116 | Fixtures + Ratchet-Arm | 2-3-persona stress cohort + gallery widened to component×state×theme×viewport; interaction pillar + axe-JSON baseline; full matrix incl. one run vs demo_app data; promote current→prior, re-score; close 24 usability defects (RATCHET-01..05) |
+| 117 | Release Cut + Milestone Closeout | Cut linked-version Hex release (admin-minor drags core+inbound); D-13 inbound re-pin; Hex resolution + post-publish smoke; milestone audit + archive (REL-02/03) |
 
-**Critical path:** 104 → 105 → 106 → 108, with 107 in parallel and 108 gated on all.
-**Sequencing notes:** 105/106 both touch `mix.exs` docs `extras:`/`groups_for_extras:` and
-`docs_contract_test.exs`, so they serialize (105 first, so the day-2 guides can reference the new
-fail-closed behavior + doctor from 104). 107 is admin-UI and independent. 108 is the single
-closeout gate and the actual Hex publish.
+**Execution order:** 109 → 110 → 111 → 112 → 113 → 114 → 115 → 116 → 117 (strictly sequential;
+bottom-up fractal so each level inherits a fixed lower level). REL-01 / PR #86 merge gates the
+start of 109. Gates tightened per-phase; full re-score only in 116.
+
+**Research flags:** Phase 112 (tenant seam — core `list_tenants` projection shape + `Tenancy.scope/2`
+composition) and Phase 116 (axe-JSON baseline format + ratchet schema-v3 cell-count) likely need
+light `/gsd-plan-phase` research. 109/110/111/113/114/115 plan directly (research already
+convergent + adversarially judged).
 
 ## Decisions
 
@@ -265,6 +275,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Roadmap Evolution
 
+- 2026-06-18: v1.13 roadmap created. Phases 109-117, numbering continues from v1.12 (last phase 108). All 36 REQ-IDs mapped to exactly one phase, 100% coverage (REL-01 precondition + FND-01..05 → 109; PRIM-01..07 → 110; FORM-01..03 → 111; SHELL-01..06 → 112; DATA-01..05 → 113; GROUP-01..03 → 114; FLOW-01..04 → 115; RATCHET-01..05 → 116; REL-02..03 → 117). Adopts the research-converged, adversarially-grounded dependency-ordered fractal build order A–H from `.planning/research/v1.13/SUMMARY.md`, mapped to 109–116, with H's release reqs split into a dedicated closeout phase 117 (v1.12 precedent) for cleaner success criteria. Strictly sequential critical path 109 → … → 117. Two binding sequencing constraints encoded as explicit dependencies: (1) merge PR #86 (REL-01) BEFORE Phase 109; (2) tighten gates BEFORE re-baselining — gates tightened inside each phase, full pillar re-score ONLY in Phase 116. RATCHET-01 multi-tenant stress cohort is the keystone dependency: lands late (116) but gates the final score. Research flags: Phase 112 (core `list_tenants` projection shape) + Phase 116 (axe-JSON baseline format + ratchet schema-v3 cell-count) need light `/gsd-plan-phase` research; 109/110/111/113/114/115 plan directly. Release ACTUALLY CUT at close (D-28): admin-minor drags matched core+inbound via linked-version releases; D-13 inbound exact-pin re-pin.
 - 2026-06-13: v1.11 roadmap created. Phases 94-103, numbering continues from v1.10 (last phase 93). All 34 REQ-IDs mapped to exactly one phase, 100% coverage (TOKEN-01..05 + RATCHET-03 → 94; RATCHET-01/02/04/05 → 95; RESEARCH-01..05 → 96; COMP-01..03 + GALLERY-01/02 → 97; cross-surface GROUP-01/PAGE-01/02/RESP-01/FLOW-01/02/A11Y-01/02 anchored on operator → 98; GROUP-02/03 → 99; PAGE-03 → 100; COPY-01 → 101; MOTION-01/02 → 102; 103 is closeout-only). Critical path 94 → 95 → 96 → 97 → {98,99,100 parallel} → {101,102 parallel} → 103. Cross-cutting GROUP/PAGE/RESP/FLOW/A11Y reqs counted once at their operator anchor (98) and re-applied per-surface on 99/100. Phase 94 tightens conformance gates FIRST (tighten-then-re-baseline) so the token re-baseline can't regress silently. Release prepare-only; admin-minor bump drags matched core+inbound via linked-version releases.
 - 2026-06-12: v1.10 roadmap created. Phases 91-93, numbering continues from v1.9 (last phase 90). All 10 REQ-IDs (FOLD-01..03 → 91, SURF-01..03 → 92, HEXD-01..02 + RELH-01..02 → 93) mapped to exactly one phase, 100% coverage. Strictly linear critical path 91 → 92 → 93. RELH-02 flagged potentially blocked-on-external (in-flight release train must settle). Adoption mechanics pre-settled in `.planning/research/v1.10-brand-adoption/ADOPTION-MECHANICS.md`.
 - 2026-06-11: v1.9 roadmap created. Phases 85-90, numbering continues from v1.8 (last phase 84). All 22 REQ-IDs (BRIEF/FOUND/LOGO-05..08/BOOK-04..07/COLL/COPY/GATE) mapped to exactly one phase, 100% coverage. Strictly linear critical path. Phase 87 carries a hard maintainer-selection pause with a two-rejection circuit breaker. Research pre-settled token format, contrast fixes, and SVG portability rules in the fable brandbook research summary.
@@ -281,6 +292,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-18: **v1.13 "Admin Design-System Stress Test & UX Uplift (v3)" roadmap created.** `.planning/ROADMAP.md` rewritten with v1.13 as the active milestone (Phases 109-117 full detail; v1.11/v1.12 collapsed into archived `<details>`), `.planning/REQUIREMENTS.md` traceability finalized to phase numbers (36/36 mapped 109–117, 0 unmapped), STATE.md updated (frontmatter total_phases=9, position at Phase 109 ready-to-plan, v1.13 intent/scope-locks/roadmap-snapshot). Numbering continues from v1.12's last phase 108. Next: merge PR #86 (REL-01 binding precondition), then `/gsd-plan-phase 109` (or `/gsd-discuss-phase 109` first).
 
 - 2026-06-17: **Repo-hygiene pass (no milestone, no Hex publish).** Got local git + GitHub + CI + GSD
   into a clean known-good state. Pushed the 3 unpushed `main` commits (incl. the `/gsd-quick` Demo

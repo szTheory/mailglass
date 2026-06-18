@@ -108,28 +108,68 @@ Explicitly excluded — documented to prevent scope creep (anti-features surface
 
 ## Traceability
 
-Suggested fractal phase grouping (the roadmapper assigns final phase **numbers** continuing from 108 → 109+). Each requirement maps to exactly one phase.
+Final phase-number assignment (phases continue from v1.12's last phase 108 → 109+). Each requirement maps to exactly one phase.
 
-| Requirement | Suggested Phase (fractal level) | Status |
-|-------------|---------------------------------|--------|
-| REL-01 | A — precondition (merge PR #86) | Pending |
-| FND-01..05 | A — Foundations + Gate-Tightening | Pending |
-| PRIM-01..07 | B — Primitives | Pending |
-| FORM-01..03 | C — Forms | Pending |
-| SHELL-01..06 | D — App-Shell, Nav & Tenant Seam | Pending |
-| DATA-01..05 | E — Data-Display | Pending |
-| GROUP-01..03 | F — Component Groups | Pending |
-| FLOW-01..04 | G — Pages/Flows + Motion + Microcopy | Pending |
-| RATCHET-01..05 | H — Fixtures + Ratchet-Arm | Pending |
-| REL-02..03 | H (or dedicated closeout) — Release | Pending |
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| REL-01 | Phase 109 (precondition — merge PR #86) | Pending |
+| FND-01 | Phase 109 | Pending |
+| FND-02 | Phase 109 | Pending |
+| FND-03 | Phase 109 | Pending |
+| FND-04 | Phase 109 | Pending |
+| FND-05 | Phase 109 | Pending |
+| PRIM-01 | Phase 110 | Pending |
+| PRIM-02 | Phase 110 | Pending |
+| PRIM-03 | Phase 110 | Pending |
+| PRIM-04 | Phase 110 | Pending |
+| PRIM-05 | Phase 110 | Pending |
+| PRIM-06 | Phase 110 | Pending |
+| PRIM-07 | Phase 110 | Pending |
+| FORM-01 | Phase 111 | Pending |
+| FORM-02 | Phase 111 | Pending |
+| FORM-03 | Phase 111 | Pending |
+| SHELL-01 | Phase 112 | Pending |
+| SHELL-02 | Phase 112 | Pending |
+| SHELL-03 | Phase 112 | Pending |
+| SHELL-04 | Phase 112 | Pending |
+| SHELL-05 | Phase 112 | Pending |
+| SHELL-06 | Phase 112 | Pending |
+| DATA-01 | Phase 113 | Pending |
+| DATA-02 | Phase 113 | Pending |
+| DATA-03 | Phase 113 | Pending |
+| DATA-04 | Phase 113 | Pending |
+| DATA-05 | Phase 113 | Pending |
+| GROUP-01 | Phase 114 | Pending |
+| GROUP-02 | Phase 114 | Pending |
+| GROUP-03 | Phase 114 | Pending |
+| FLOW-01 | Phase 115 | Pending |
+| FLOW-02 | Phase 115 | Pending |
+| FLOW-03 | Phase 115 | Pending |
+| FLOW-04 | Phase 115 | Pending |
+| RATCHET-01 | Phase 116 | Pending |
+| RATCHET-02 | Phase 116 | Pending |
+| RATCHET-03 | Phase 116 | Pending |
+| RATCHET-04 | Phase 116 | Pending |
+| RATCHET-05 | Phase 116 | Pending |
+| REL-02 | Phase 117 | Pending |
+| REL-03 | Phase 117 | Pending |
 
 **Coverage:**
-- v1 requirements: 36 total (FND 5, PRIM 7, FORM 3, SHELL 6, DATA 5, GROUP 3, FLOW 4, RATCHET 5, REL 3 — minus REL-01 counted as a precondition within A)
-- Mapped to suggested phases: 36
-- Unmapped: 0 ✓ (final phase-number assignment by roadmapper)
+- v1 requirements: 36 total (FND 5, PRIM 7, FORM 3, SHELL 6, DATA 5, GROUP 3, FLOW 4, RATCHET 5, REL 3 — REL-01 mapped to Phase 109 as the precondition gating its start)
+- Mapped to phases 109–117: 36
+- Unmapped: 0 ✓
+
+**Phase grouping (fractal level → phase number):**
+- A → Phase 109 (Foundations + Gate-Tightening): REL-01 precondition + FND-01..05
+- B → Phase 110 (Primitives): PRIM-01..07
+- C → Phase 111 (Forms): FORM-01..03
+- D → Phase 112 (App-Shell, Nav & Tenant Seam): SHELL-01..06
+- E → Phase 113 (Data-Display): DATA-01..05
+- F → Phase 114 (Component Groups): GROUP-01..03
+- G → Phase 115 (Pages/Flows + Motion + Microcopy): FLOW-01..04
+- H → Phase 116 (Fixtures + Ratchet-Arm): RATCHET-01..05
+- Closeout → Phase 117 (Release Cut + Milestone Closeout): REL-02..03
 
 ---
 *Requirements defined: 2026-06-18*
-*Last updated: 2026-06-18 after v1.13 requirements definition*
-</content>
-</invoke>
+*Last updated: 2026-06-18 — traceability finalized to phase numbers 109–117 (v1.13 roadmap created)*
