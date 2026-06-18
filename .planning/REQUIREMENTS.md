@@ -21,13 +21,13 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 
 ### Primitive Components (PRIM)
 
-- [ ] **PRIM-01**: The gallery-inlined atoms (`nav_link` / `nav_pill` / `tenant_chip` / `theme_toggle`) are promoted to single public components rendered identically in the shell and the gallery — no copy-drift.
-- [ ] **PRIM-02**: Every primitive renders correctly in every interaction state (hover/focus/active/pressed/disabled/loading/selected/error/empty/long-content) in light/dark/system at 320→wide, meeting WCAG 2.2 AA + WAI-ARIA APG patterns.
-- [ ] **PRIM-03**: Disabled controls are visually and programmatically distinct from enabled ones (no disabled-looking-enabled, no enabled-looking-disabled).
-- [ ] **PRIM-04**: A canonical `stat_card` primitive exists — label truncates with tooltip, value is `tabular-nums` and never wraps, severity is icon+label+color (never color alone).
-- [ ] **PRIM-05**: A 3-way system / light / dark theme-picker primitive exists (tri-state; `system` = absence of explicit choice).
+- [x] **PRIM-01**: The gallery-inlined atoms (`nav_link` / `nav_pill` / `tenant_chip` / `theme_toggle`) are promoted to single public components rendered identically in the shell and the gallery — no copy-drift.
+- [x] **PRIM-02**: Every primitive renders correctly in every interaction state (hover/focus/active/pressed/disabled/loading/selected/error/empty/long-content) in light/dark/system at 320→wide, meeting WCAG 2.2 AA + WAI-ARIA APG patterns.
+- [x] **PRIM-03**: Disabled controls are visually and programmatically distinct from enabled ones (no disabled-looking-enabled, no enabled-looking-disabled).
+- [x] **PRIM-04**: A canonical `stat_card` primitive exists — label truncates with tooltip, value is `tabular-nums` and never wraps, severity is icon+label+color (never color alone).
+- [x] **PRIM-05**: A 3-way system / light / dark theme-picker primitive exists (tri-state; `system` = absence of explicit choice).
 - [ ] **PRIM-06**: Interactive targets meet the 44×44 floor (the `btn-sm`/`min-h-11` tension resolved and verified in the **compiled bundle**); dense-control 24px exceptions are explicitly decided (gate-now vs GAP-record).
-- [ ] **PRIM-07**: Every `<.icon name="...">` in use renders a real embedded SVG (icon-exists guard), is semantically appropriate, and is never the sole carrier of meaning.
+- [x] **PRIM-07**: Every `<.icon name="...">` in use renders a real embedded SVG (icon-exists guard), is semantically appropriate, and is never the sole carrier of meaning.
 
 ### Form Controls (FORM)
 
@@ -118,13 +118,13 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | FND-03 | Phase 109 | Complete |
 | FND-04 | Phase 109 | Complete |
 | FND-05 | Phase 109 | Complete |
-| PRIM-01 | Phase 110 | Pending |
-| PRIM-02 | Phase 110 | Pending |
-| PRIM-03 | Phase 110 | Pending |
-| PRIM-04 | Phase 110 | Pending |
-| PRIM-05 | Phase 110 | Pending |
+| PRIM-01 | Phase 110 | Complete |
+| PRIM-02 | Phase 110 | Complete |
+| PRIM-03 | Phase 110 | Complete |
+| PRIM-04 | Phase 110 | Complete |
+| PRIM-05 | Phase 110 | Complete |
 | PRIM-06 | Phase 110 | Pending |
-| PRIM-07 | Phase 110 | Pending |
+| PRIM-07 | Phase 110 | Complete |
 | FORM-01 | Phase 111 | Pending |
 | FORM-02 | Phase 111 | Pending |
 | FORM-03 | Phase 111 | Pending |

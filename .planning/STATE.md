@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
 status: executing
-last_updated: "2026-06-18T19:58:21.356Z"
-last_activity: 2026-06-18 -- Phase 110 planning complete
+last_updated: "2026-06-18T20:14:24.479Z"
+last_activity: 2026-06-18
 progress:
   total_phases: 11
   completed_phases: 3
   total_plans: 14
-  completed_plans: 10
+  completed_plans: 11
   percent: 27
 ---
 
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 ## Current Position
 
-Phase: 110 (primitives) — READY TO EXECUTE
-Plan: 4 planned
+Phase: 110 (primitives) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-18 -- Phase 110 planning complete
+Last activity: 2026-06-18
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [████████░░] 79%
 
 ## v1.13 Milestone Intent
 
@@ -180,6 +180,9 @@ convergent + adversarially judged).
 - [ASSESS-2026-06-17] **Post-v1.12 next-step assessment verdict (repo-local, 1 thorough source-sweep agent + direct reads):** the last identified adopter wedge (onboarding/day-2 DX) is **CLOSED** and the prepare-only release backlog is **drained** — v1.12 shipped both. Repo source confirms no foundational or important-but-narrow gap remains. **Done-% ≈ 93–95% (near-done / diminishing returns).** **There is NO recommended next feature milestone.** Honest next move = **explicit quiet maintenance** (D-23 posture). `adopter-onboarding-day2-confidence.md` closed (exit signal met). Source-sweep caveat: agent flagged the SQLSTATE 45A01 ledger trigger as "app-code only" — false alarm; the trigger lives in the `mailglass.gen.migration` template (not `lib/`), D-15 validated.
 - [ASSESS-2026-06-17] **Only remaining concrete work is maintenance-tier (no milestone):** (a) harden `publish-hex.yml` `gate-ci-green` `isAdvisory()` to classify "Demo Browser Evidence" advisory by name; (b) deferred reference baseline pin bump `~> 1.4` → `~> 1.7` (coordinated 5-file change). Tracked in new thread `release-pipeline-maintenance.md`. Use `/gsd-quick`, not `/gsd-new-milestone`.
 - [ASSESS-2026-06-17] **Expansion tail re-confirmed flat:** SEED-003 ecosystem integrations, Cloudflare Email Routing, synthetic inbound dev UI, `gen_smtp` listener, more providers, core HEEx email-template uplift — all pull-gated / diminishing-returns, no signal through v1.12. Risk remains **overbuilding, not underbuilding**. Pending todo "refresh outbound admin UI look and feel" (2026-06-13) is effectively **subsumed by v1.11's fractal three-surface uplift** — the `.planning/todos/pending/` dir is now empty; STATE "Pending Todos" reference is stale and should be treated as resolved.
+- [Phase 110]: Theme picker exposes an event attr that renders per-option phx-click plus phx-value-theme values; persistence and no-FOUC remain downstream scope.
+- [Phase 110]: Theme choices are native radios with closed atom values :system, :light, and :dark; no aria-pressed, storage, hook, or explicit data-theme=system behavior was introduced.
+- [Phase 110]: Stat-card severity uses the existing vendored Heroicons inventory rather than adding new icons in Plan 110-01.
 
 ## Quick Tasks Completed
 
@@ -280,6 +283,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 107 P01 | 2min | 3 tasks | 4 files |
 | Phase 109 P03 | 8 min | 2 tasks | 3 files |
 | Phase 109 P04 | 9 min | 2 tasks | 3 files |
+| Phase 110 P01 | 8 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
