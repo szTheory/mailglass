@@ -154,7 +154,7 @@ defmodule Mailglass.MixProject do
       {:nimble_options, "~> 1.1"},
       {:telemetry, "~> 1.4"},
       {:gettext, "~> 1.0"},
-      {:premailex, "~> 0.3"},
+      {:premailex, "~> 1.0"},
       {:floki, "~> 0.38"},
       {:boundary, "~> 0.10"},
       {:jason, "~> 1.4"},
