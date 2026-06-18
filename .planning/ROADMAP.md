@@ -64,7 +64,7 @@ inbound exact-pin re-pin. Phases continue from 108 → 109+.
 ### Phases
 
 - [x] **Phase 109: Foundations + Gate-Tightening** - Merge PR #86 precondition; semantic z-index/motion/elevation/focus/overlay tokens + system-theme plumbing in light/dark/system; tighten gates FIRST and prove green before any pillar re-score
-- [ ] **Phase 110: Primitives** - Promote inlined atoms to public components; canonical `stat_card` + 3-way theme-picker primitive; every primitive in every state, WCAG 2.2 AA + APG, 320→wide, 44×44 targets, icon-exists guard
+- [x] **Phase 110: Primitives** - Promote inlined atoms to public components; canonical `stat_card` + 3-way theme-picker primitive; every primitive in every state, WCAG 2.2 AA + APG, 320→wide, 44×44 targets, icon-exists guard
 - [ ] **Phase 111: Forms** - Unify the two `filters_form` copies into shared `filter_field`/`filter_section`; every control labeled, error-recoverable, never color-alone, focus-preserved across patches
 - [ ] **Phase 112: App-Shell, Navigation & Tenant Seam** - Auto-select sole tenant + listing/switcher from the core read model (kills "No tenant selected"); tenant scope persists across surfaces; theme picker wired no-FOUC; honest pagination; non-color active nav
 - [ ] **Phase 113: Data-Display** - Tables ≥768px → cards <768px; all KPIs on canonical `stat_card`; distinct empty/error/permission/stale templates; severity icon+label+color; long-value handling
@@ -121,7 +121,24 @@ Plans:
   4. A 3-way system / light / dark theme-picker primitive exists (tri-state; `system` = absence of explicit choice), and interactive targets meet the 44×44 floor verified in the **compiled bundle** (the `btn-sm`/`min-h-11` tension resolved; dense-control 24px exceptions explicitly gate-now-or-GAP-recorded).
   5. Every `<.icon name="...">` in use renders a real embedded SVG (icon-exists guard), is semantically appropriate, and is never the sole carrier of meaning.
 
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+**Wave 1**
+
+- [x] 110-01-PLAN.md - Public primitive API for nav_link, nav_pill, tenant_chip, theme_picker, and stat_card.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 110-02-PLAN.md - Real shell and overview consumers migrated to the public primitives.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 110-03-PLAN.md - Gallery primitive certification and expanded state matrix.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [x] 110-04-PLAN.md - Primitive drift/stat-card/icon gates and compiled-browser structural proof.
+
 **UI hint**: yes
 
 ### Phase 111: Forms
@@ -281,7 +298,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 109. Foundations + Gate-Tightening | v1.13 | 2/4 | In Progress|  |
+| 109. Foundations + Gate-Tightening | v1.13 | 4/4 | Complete    | 2026-06-18 |
 | 110. Primitives | v1.13 | 4/4 | Complete    | 2026-06-18 |
 | 111. Forms | v1.13 | 0/TBD | Not started | - |
 | 112. App-Shell, Nav & Tenant Seam | v1.13 | 0/TBD | Not started | - |
