@@ -75,7 +75,7 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 
 ### Release & Closeout (REL)
 
-- [ ] **REL-01**: PR #86 (held adopter-facing fixes: operator/inbound theme repair, cross-surface tenant scope) is merged into `main` before uplift work begins — the binding precondition the rest builds on.
+- [x] **REL-01**: PR #86 (held adopter-facing fixes: operator/inbound theme repair, cross-surface tenant scope) is merged into `main` before uplift work begins — the binding precondition the rest builds on.
 - [ ] **REL-02**: A linked-version Hex release is cut at close (admin-minor drags matched core + inbound), with the D-13 inbound exact-pin re-pinned to the new core version.
 - [ ] **REL-03**: Hex resolution + post-publish smoke are verified green and the milestone is audited and archived.
 
@@ -112,7 +112,7 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REL-01 | Phase 109 (precondition — merge PR #86) | Pending |
+| REL-01 | Phase 109 (precondition — merge PR #86) | Complete |
 | FND-01 | Phase 109 | Pending |
 | FND-02 | Phase 109 | Pending |
 | FND-03 | Phase 109 | Pending |
