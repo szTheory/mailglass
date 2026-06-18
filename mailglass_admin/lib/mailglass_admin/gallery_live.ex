@@ -2,13 +2,13 @@ defmodule MailglassAdmin.GalleryLive do
   @moduledoc """
   Dev-only component gallery at /dev/mail/gallery.
 
-  Renders every shared component × every state × both themes side-by-side
+  Renders every shared component × every state × light/dark/system side-by-side
   from an in-code specimen list. No DB access. No mailable scan. No
   __preview_session__ assigns.
 
   Each specimen cell is anchored with a stable `data-testid="gallery-{component}-{state}"`
-  and contains twin `data-theme="mailglass-light"` and `data-theme="mailglass-dark"` wrappers
-  so a single structural assertion covers both themes.
+  and contains `data-theme="mailglass-light"`, `data-theme="mailglass-dark"`, and
+  no-explicit-theme system wrappers so a single structural assertion covers all theme modes.
 
   Route: /dev/mail/gallery (mounted inside the preview live_session — dev-only by
   the adopter's `if dev_routes` wrapping).
@@ -22,7 +22,7 @@ defmodule MailglassAdmin.GalleryLive do
   STATE-LD-05: status_badge (22 atoms + phantom nil)
   STATE-LD-06: nav_link, nav_pill (active, inactive)
   STATE-LD-07: tenant_chip (with-tenant, no-tenant)
-  STATE-LD-08: theme_toggle (light-mode, dark-mode)
+  STATE-LD-08: theme_picker (light-mode, dark-mode)
   STATE-LD-09: orientation_strip (deliveries, inbound, preview)
   STATE-LD-10: shell is the full page layout — not a gallery specimen
   STATE-LD-11: deliveries_list (populated-unselected, populated-selected, empty)
@@ -113,6 +113,12 @@ defmodule MailglassAdmin.GalleryLive do
                     >
                       <.render_specimen component={component} assigns_map={assigns_map} />
                     </div>
+                    <div
+                      data-testid={"gallery-#{component}-#{state}-system"}
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 flex-1"
+                    >
+                      <.render_specimen component={component} assigns_map={assigns_map} />
+                    </div>
                   </div>
                 </div>
               <% end %>
@@ -158,87 +164,58 @@ defmodule MailglassAdmin.GalleryLive do
     """
   end
 
-  # nav_link and nav_pill are defp in Shell — inline the equivalent HEEx
   defp render_specimen(%{component: :nav_link} = assigns) do
-    active = assigns.assigns_map[:active]
-    label = assigns.assigns_map[:label]
-    icon = assigns.assigns_map[:icon]
-    href = assigns.assigns_map[:href]
-    assigns = Map.merge(assigns, %{active: active, label: label, icon: icon, href: href})
-
     ~H"""
-    <.link
-      navigate={@href}
-      aria-current={@active && "page"}
-      class={[
-        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out duration-(--duration-fast)",
-        if(@active,
-          do: "border-primary bg-base-100 font-bold text-base-content",
-          else: "border-transparent text-secondary hover:bg-base-100/60 hover:text-base-content"
-        )
-      ]}
-    >
-      <Components.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span>{@label}</span>
-    </.link>
+    <Components.nav_link
+      label={@assigns_map[:label]}
+      icon={@assigns_map[:icon]}
+      href={@assigns_map[:href]}
+      active={@assigns_map[:active] || false}
+      disabled={@assigns_map[:disabled] || false}
+    />
     """
   end
 
   defp render_specimen(%{component: :nav_pill} = assigns) do
-    active = assigns.assigns_map[:active]
-    label = assigns.assigns_map[:label]
-    href = assigns.assigns_map[:href]
-    assigns = Map.merge(assigns, %{active: active, label: label, href: href})
-
     ~H"""
-    <.link
-      navigate={@href}
-      aria-current={@active && "page"}
-      class={[
-        "mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast)",
-        if(@active,
-          do: "bg-primary/10 font-bold text-base-content",
-          else: "text-secondary hover:text-base-content"
-        )
-      ]}
-    >
-      {@label}
-    </.link>
+    <Components.nav_pill
+      label={@assigns_map[:label]}
+      href={@assigns_map[:href]}
+      active={@assigns_map[:active] || false}
+      disabled={@assigns_map[:disabled] || false}
+    />
     """
   end
 
-  # tenant_chip and theme_toggle are also defp in Shell — inline the equivalent HEEx
   defp render_specimen(%{component: :tenant_chip} = assigns) do
-    tenant = assigns.assigns_map[:tenant]
-    assigns = Map.put(assigns, :tenant, tenant)
-
     ~H"""
-    <span
-      class="inline-flex min-h-11 items-center gap-xs rounded-field border border-base-300 px-sm text-label text-secondary"
-      title="Tenant currently in view"
-    >
-      <Components.icon name="hero-building-office-2" class="h-4 w-4 shrink-0" />
-      <span :if={@tenant} class="mono font-bold text-base-content">{@tenant}</span>
-      <span :if={!@tenant}>No tenant selected</span>
-    </span>
+    <Components.tenant_chip tenant={@assigns_map[:tenant]} />
     """
   end
 
-  defp render_specimen(%{component: :theme_toggle} = assigns) do
-    dark_chrome = assigns.assigns_map[:dark_chrome]
-    assigns = Map.put(assigns, :dark_chrome, dark_chrome)
-
+  defp render_specimen(%{component: :theme_picker} = assigns) do
     ~H"""
-    <button
-      type="button"
-      aria-label={if @dark_chrome, do: "Switch to light theme", else: "Switch to dark theme"}
-      class="btn btn-ghost btn-sm btn-square min-h-11"
-    >
-      <Components.icon
-        name={if @dark_chrome, do: "hero-sun", else: "hero-moon"}
-        class="h-5 w-5"
-      />
-    </button>
+    <Components.theme_picker
+      selected={@assigns_map[:selected] || :system}
+      disabled={@assigns_map[:disabled] || false}
+      event={@assigns_map[:event]}
+      name={@assigns_map[:name] || "gallery_theme"}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :stat_card} = assigns) do
+    ~H"""
+    <Components.stat_card
+      label={@assigns_map[:label]}
+      value={@assigns_map[:value]}
+      severity={@assigns_map[:severity] || :neutral}
+      severity_label={@assigns_map[:severity_label]}
+      state={@assigns_map[:state] || :ready}
+      empty_text={@assigns_map[:empty_text] || "No data yet"}
+      loading_text={@assigns_map[:loading_text] || "Resolving"}
+      unavailable_text={@assigns_map[:unavailable_text] || "Unavailable"}
+    />
     """
   end
 
@@ -374,10 +351,13 @@ defmodule MailglassAdmin.GalleryLive do
     {:logo, "rest", %{class: nil}},
 
     # STATE-LD-03: flash — four kinds
-    {:flash, "error-kind", %{kind: :error, message: "Delivery blocked: recipient is on the suppression list"}},
+    {:flash, "error-kind",
+     %{kind: :error, message: "Delivery blocked: recipient is on the suppression list"}},
     {:flash, "info-kind", %{kind: :info, message: "Reloaded: WelcomeMailer.ex"}},
-    {:flash, "success-kind", %{kind: :success, message: "Webhook replayed: event recorded in the ledger"}},
-    {:flash, "warning-kind", %{kind: :warning, message: "Draft only — Mailable has no preview_props/0 defined"}},
+    {:flash, "success-kind",
+     %{kind: :success, message: "Webhook replayed: event recorded in the ledger"}},
+    {:flash, "warning-kind",
+     %{kind: :warning, message: "Draft only — Mailable has no preview_props/0 defined"}},
 
     # STATE-LD-04: badge — warning and stub
     {:badge, "warning", %{variant: :warning}},
@@ -410,8 +390,10 @@ defmodule MailglassAdmin.GalleryLive do
     {:status_badge, "phantom-nil", %{status: nil, size: :sm}},
 
     # STATE-LD-06: nav_link — active and inactive
-    {:nav_link, "active", %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: true}},
-    {:nav_link, "inactive", %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: false}},
+    {:nav_link, "active",
+     %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: true}},
+    {:nav_link, "inactive",
+     %{label: "Deliveries", icon: "hero-paper-airplane", href: "#", active: false}},
 
     # STATE-LD-06: nav_pill — active and inactive
     {:nav_pill, "active", %{label: "All", href: "#", active: true}},
@@ -421,9 +403,9 @@ defmodule MailglassAdmin.GalleryLive do
     {:tenant_chip, "with-tenant", %{tenant: "acme-corp"}},
     {:tenant_chip, "no-tenant", %{tenant: nil}},
 
-    # STATE-LD-08: theme_toggle — light-mode and dark-mode
-    {:theme_toggle, "light-mode", %{dark_chrome: false}},
-    {:theme_toggle, "dark-mode", %{dark_chrome: true}},
+    # STATE-LD-08: theme_picker — light-mode and dark-mode
+    {:theme_picker, "light-mode", %{selected: :light}},
+    {:theme_picker, "dark-mode", %{selected: :dark}},
 
     # STATE-LD-09: orientation_strip — deliveries, inbound, preview
     {:orientation_strip, "deliveries", %{surface: :deliveries}},
@@ -503,22 +485,36 @@ defmodule MailglassAdmin.GalleryLive do
     # STATE-LD-13: filters_form — empty and filled (static assigns, no phx-submit)
     {:filters_form, "empty",
      %{
-       form: Phoenix.HTML.FormData.to_form(
-         %{"tenant_id" => "", "provider" => "", "status" => "", "event" => "", "window_hours" => "24"},
-         as: :filters,
-         id: "gallery-filters-empty"
-       ),
+       form:
+         Phoenix.HTML.FormData.to_form(
+           %{
+             "tenant_id" => "",
+             "provider" => "",
+             "status" => "",
+             "event" => "",
+             "window_hours" => "24"
+           },
+           as: :filters,
+           id: "gallery-filters-empty"
+         ),
        status_values: [:delivered, :bounced, :deferred],
        event_values: [:delivered, :bounced],
        window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}]
      }},
     {:filters_form, "filled",
      %{
-       form: Phoenix.HTML.FormData.to_form(
-         %{"tenant_id" => "acme-corp", "provider" => "postmark", "status" => "delivered", "event" => "", "window_hours" => "168"},
-         as: :filters,
-         id: "gallery-filters-filled"
-       ),
+       form:
+         Phoenix.HTML.FormData.to_form(
+           %{
+             "tenant_id" => "acme-corp",
+             "provider" => "postmark",
+             "status" => "delivered",
+             "event" => "",
+             "window_hours" => "168"
+           },
+           as: :filters,
+           id: "gallery-filters-filled"
+         ),
        status_values: [:delivered, :bounced, :deferred],
        event_values: [:delivered, :bounced],
        window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}]
@@ -677,7 +673,8 @@ defmodule MailglassAdmin.GalleryLive do
      %{
        evidence: %{
          provider: "sendgrid",
-         raw_payload: "Received: from mail.sendgrid.net\r\nFrom: sender@example.com\r\nTo: recipient@example.com\r\n\r\nBody here.",
+         raw_payload:
+           "Received: from mail.sendgrid.net\r\nFrom: sender@example.com\r\nTo: recipient@example.com\r\n\r\nBody here.",
          raw_mime: nil,
          verification_facts: %{"dkim" => true, "spf" => :pass}
        },
@@ -752,8 +749,11 @@ defmodule MailglassAdmin.GalleryLive do
     specimens
     |> Enum.reduce([], fn {component, state, assigns_map}, acc ->
       case List.keyfind(acc, component, 0) do
-        nil -> acc ++ [{component, [{state, assigns_map}]}]
-        {^component, states} -> List.keyreplace(acc, component, 0, {component, states ++ [{state, assigns_map}]})
+        nil ->
+          acc ++ [{component, [{state, assigns_map}]}]
+
+        {^component, states} ->
+          List.keyreplace(acc, component, 0, {component, states ++ [{state, assigns_map}]})
       end
     end)
   end
@@ -767,7 +767,8 @@ defmodule MailglassAdmin.GalleryLive do
   defp component_label(:nav_link), do: "nav_link"
   defp component_label(:nav_pill), do: "nav_pill"
   defp component_label(:tenant_chip), do: "tenant_chip"
-  defp component_label(:theme_toggle), do: "theme_toggle"
+  defp component_label(:theme_picker), do: "theme_picker"
+  defp component_label(:stat_card), do: "stat_card"
   defp component_label(:orientation_strip), do: "orientation_strip"
   defp component_label(:deliveries_list), do: "deliveries_list"
   defp component_label(:detail_header), do: "detail_header"
