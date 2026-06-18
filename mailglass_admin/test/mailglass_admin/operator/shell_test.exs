@@ -76,6 +76,38 @@ defmodule MailglassAdmin.Operator.ShellTest do
     end
   end
 
+  describe "theme_choice/1" do
+    test "maps explicit dark values to :dark" do
+      assert Shell.theme_choice(%{"theme" => "dark"}) == :dark
+      assert Shell.theme_choice(%{"theme" => "mailglass-dark"}) == :dark
+    end
+
+    test "maps explicit light values to :light" do
+      assert Shell.theme_choice(%{"theme" => "light"}) == :light
+      assert Shell.theme_choice(%{"theme" => "mailglass-light"}) == :light
+    end
+
+    test "defaults absent or unknown values to :system" do
+      assert Shell.theme_choice(%{}) == :system
+      assert Shell.theme_choice(%{"theme" => "sepia"}) == :system
+    end
+  end
+
+  describe "set_theme_path/2" do
+    test "removes the explicit theme query value for system" do
+      assert Shell.set_theme_path("/ops/mail?tenant_id=acme&theme=dark", "system") ==
+               "/ops/mail?tenant_id=acme"
+    end
+
+    test "preserves unrelated query params when setting light or dark" do
+      assert Shell.set_theme_path("/ops/mail?tenant_id=acme&filter=failed&theme=dark", "light") ==
+               "/ops/mail?tenant_id=acme&filter=failed&theme=light"
+
+      assert Shell.set_theme_path("/ops/mail?tenant_id=acme&filter=failed", "dark") ==
+               "/ops/mail?tenant_id=acme&filter=failed&theme=dark"
+    end
+  end
+
   describe "aria-current nav resolution" do
     # Collect the visible text of every element carrying aria-current="page".
     defp current_nav_labels(html) do
@@ -107,6 +139,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
 
       # Sidebar nav_link + mobile nav_pill both flip on -> at least two.
       assert current != [], "expected at least one aria-current=page nav item"
+
       assert Enum.all?(current, &(&1 =~ "Deliveries")),
              "expected every aria-current nav item to be Deliveries, got: #{inspect(current)}"
 
@@ -133,11 +166,41 @@ defmodule MailglassAdmin.Operator.ShellTest do
       current = current_nav_labels(html)
 
       assert current != [], "expected at least one aria-current=page nav item"
+
       assert Enum.all?(current, &(&1 =~ "Inbound")),
              "expected every aria-current nav item to be Inbound, got: #{inspect(current)}"
 
       refute Enum.any?(current, &(&1 =~ "Deliveries")),
              "Deliveries must never carry aria-current when active is :inbound, got: #{inspect(current)}"
+    end
+  end
+
+  describe "theme picker rendering" do
+    test "renders public radio primitive labels and set_theme values" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <Shell.shell
+          active={:deliveries}
+          deliveries_path="/operator"
+          inbound_path="/operator/inbound"
+          inbound_available?={true}
+          theme_choice={:light}
+          title="Deliveries"
+        >
+          body
+        </Shell.shell>
+        """)
+
+      assert html =~ "System"
+      assert html =~ "Light"
+      assert html =~ "Dark"
+      assert html =~ ~s(phx-click="set_theme")
+      assert html =~ ~s(phx-value-theme="system")
+      assert html =~ ~s(phx-value-theme="light")
+      assert html =~ ~s(phx-value-theme="dark")
+      refute html =~ "aria-pressed"
     end
   end
 end

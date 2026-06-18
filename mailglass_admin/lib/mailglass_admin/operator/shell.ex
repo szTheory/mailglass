@@ -64,30 +64,59 @@ defmodule MailglassAdmin.Operator.Shell do
 
   @doc "True when the request carries an explicit dark-theme selection."
   def dark_chrome?(params) when is_map(params),
-    do: Map.get(params, "theme") in ["dark", "mailglass-dark"]
+    do: theme_choice(params) == :dark
 
   def dark_chrome?(_params), do: false
 
   @doc """
-  Builds the push_patch target for the theme toggle: flips the `theme` param on
-  the CURRENT url, preserving every other filter/selection param.
+  Normalizes the URL theme query value into the shell's three-choice picker state.
+
+  `:system` is represented by absence of an explicit theme query value.
   """
-  def toggle_theme_path(uri, currently_dark?) when is_binary(uri) do
+  def theme_choice(params) when is_map(params) do
+    case Map.get(params, "theme") do
+      value when value in ["dark", "mailglass-dark"] -> :dark
+      value when value in ["light", "mailglass-light"] -> :light
+      _value -> :system
+    end
+  end
+
+  def theme_choice(_params), do: :system
+
+  @doc """
+  Builds the push_patch target for setting the theme picker value on the current
+  URL while preserving unrelated query params.
+
+  The `system` choice removes the explicit `theme` query key.
+  """
+  def set_theme_path(uri, theme) when is_binary(uri) and is_binary(theme) do
     parsed = URI.parse(uri)
-    query = URI.decode_query(parsed.query || "")
+    path = parsed.path || "/"
 
     query =
-      if currently_dark?,
-        do: Map.delete(query, "theme"),
-        else: Map.put(query, "theme", "dark")
-
-    path = parsed.path || "/"
+      (parsed.query || "")
+      |> URI.query_decoder()
+      |> Enum.reject(fn {key, _value} -> key == "theme" end)
+      |> maybe_append_theme(theme)
 
     case URI.encode_query(query) do
       "" -> path
       encoded -> path <> "?" <> encoded
     end
   end
+
+  @doc """
+  Builds the push_patch target for the theme toggle: flips the `theme` param on
+  the CURRENT url, preserving every other filter/selection param.
+  """
+  def toggle_theme_path(uri, currently_dark?) when is_binary(uri) do
+    set_theme_path(uri, if(currently_dark?, do: "system", else: "dark"))
+  end
+
+  defp maybe_append_theme(query, theme) when theme in ["light", "dark"],
+    do: query ++ [{"theme", theme}]
+
+  defp maybe_append_theme(query, _theme), do: query
 
   defp operator_root(base_path, :inbound), do: trim_inbound(base_path)
   defp operator_root(base_path, :deliveries), do: base_path
@@ -126,6 +155,7 @@ defmodule MailglassAdmin.Operator.Shell do
   attr :inbound_path, :string, required: true
   attr :inbound_available?, :boolean, default: false
   attr :dark_chrome, :boolean, default: false
+  attr :theme_choice, :atom, values: [:system, :light, :dark], default: :system
   attr :tenant, :string, default: nil
   attr :title, :string, required: true
   attr :subtitle, :string, default: nil
@@ -150,13 +180,13 @@ defmodule MailglassAdmin.Operator.Shell do
         </div>
 
         <nav class="flex flex-col gap-xs p-sm" aria-label="Operator sections">
-          <.nav_link
+          <Components.nav_link
             label="Deliveries"
             icon="hero-paper-airplane"
             href={@deliveries_path}
             active={@active == :deliveries}
           />
-          <.nav_link
+          <Components.nav_link
             :if={@inbound_available?}
             label="Inbound"
             icon="hero-inbox-arrow-down"
@@ -166,7 +196,7 @@ defmodule MailglassAdmin.Operator.Shell do
         </nav>
 
         <div class="mt-auto border-t border-base-300 p-sm">
-          <.theme_toggle dark_chrome={@dark_chrome} />
+          <Components.theme_picker selected={@theme_choice} event="set_theme" />
         </div>
       </aside>
 
@@ -177,12 +207,12 @@ defmodule MailglassAdmin.Operator.Shell do
           </div>
 
           <nav class="flex items-center gap-xs md:hidden" aria-label="Operator sections">
-            <.nav_pill
+            <Components.nav_pill
               label="Deliveries"
               href={@deliveries_path}
               active={@active == :deliveries}
             />
-            <.nav_pill
+            <Components.nav_pill
               :if={@inbound_available?}
               label="Inbound"
               href={@inbound_path}
@@ -191,9 +221,9 @@ defmodule MailglassAdmin.Operator.Shell do
           </nav>
 
           <div class="flex items-center gap-sm">
-            <.tenant_chip tenant={@tenant} />
+            <Components.tenant_chip tenant={@tenant} />
             <span class="md:hidden">
-              <.theme_toggle dark_chrome={@dark_chrome} />
+              <Components.theme_picker selected={@theme_choice} event="set_theme" />
             </span>
           </div>
         </header>
@@ -212,86 +242,6 @@ defmodule MailglassAdmin.Operator.Shell do
         </main>
       </div>
     </div>
-    """
-  end
-
-  attr :label, :string, required: true
-  attr :icon, :string, required: true
-  attr :href, :string, required: true
-  attr :active, :boolean, required: true
-
-  defp nav_link(assigns) do
-    ~H"""
-    <.link
-      navigate={@href}
-      aria-current={@active && "page"}
-      class={[
-        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out",
-        "duration-(--duration-fast)",
-        if(@active,
-          do: "border-primary bg-base-100 font-bold text-base-content",
-          else: "border-transparent text-secondary hover:bg-base-100/60 hover:text-base-content"
-        )
-      ]}
-    >
-      <Components.icon name={@icon} class="h-5 w-5 shrink-0" />
-      <span>{@label}</span>
-    </.link>
-    """
-  end
-
-  attr :label, :string, required: true
-  attr :href, :string, required: true
-  attr :active, :boolean, required: true
-
-  defp nav_pill(assigns) do
-    ~H"""
-    <.link
-      navigate={@href}
-      aria-current={@active && "page"}
-      class={[
-        "mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast)",
-        if(@active,
-          do: "bg-primary/10 font-bold text-base-content",
-          else: "text-secondary hover:text-base-content"
-        )
-      ]}
-    >
-      {@label}
-    </.link>
-    """
-  end
-
-  attr :tenant, :string, default: nil
-
-  defp tenant_chip(assigns) do
-    ~H"""
-    <span
-      class="inline-flex min-h-11 items-center gap-xs rounded-field border border-base-300 px-sm text-label text-secondary"
-      title="Tenant currently in view"
-    >
-      <Components.icon name="hero-building-office-2" class="h-4 w-4 shrink-0" />
-      <span :if={@tenant} class="mono font-bold text-base-content">{@tenant}</span>
-      <span :if={!@tenant}>No tenant selected</span>
-    </span>
-    """
-  end
-
-  attr :dark_chrome, :boolean, required: true
-
-  defp theme_toggle(assigns) do
-    ~H"""
-    <button
-      type="button"
-      phx-click="toggle_theme"
-      aria-label={if @dark_chrome, do: "Switch to light theme", else: "Switch to dark theme"}
-      class="btn btn-ghost btn-sm btn-square min-h-11"
-    >
-      <Components.icon
-        name={if @dark_chrome, do: "hero-sun", else: "hero-moon"}
-        class="h-5 w-5"
-      />
-    </button>
     """
   end
 
