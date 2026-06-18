@@ -282,7 +282,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 109. Foundations + Gate-Tightening | v1.13 | 2/4 | In Progress|  |
-| 110. Primitives | v1.13 | 1/4 | In Progress|  |
+| 110. Primitives | v1.13 | 2/4 | In Progress|  |
 | 111. Forms | v1.13 | 0/TBD | Not started | - |
 | 112. App-Shell, Nav & Tenant Seam | v1.13 | 0/TBD | Not started | - |
 | 113. Data-Display | v1.13 | 0/TBD | Not started | - |
