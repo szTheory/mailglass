@@ -68,18 +68,24 @@ clean) left exactly two tracked items. Both are `/gsd-quick`-sized — start a f
      until the branch is updated and/or the job is re-run against the current cache. Not a real
      incompatibility — `gh pr update-branch` + rerun clears it.
 
-5. **`Core Full Suite Advisory` lane is *persistently* red — fix-or-retire decision.**
-   Suggested entry: `/gsd-quick` (or `/gsd-debug` if root-causing the failures).
-   - The `Core Full Suite Advisory (Elixir 1.18 / OTP 27)` lane fails on essentially every main push
-     AND every PR — not intermittently. It's correctly **non-blocking** (advisory, not a
-     branch-protection-required check), which is why releases/merges still go through. But a
-     *permanently* red lane is noise that masks real regressions and keeps the `Advisory Matrix`
-     workflow red on main.
-   - Likely cause per user memory: the full core suite includes ~57 unrelated Oban failures under
-     non-deterministic conditions (see the bare-`mix test` / inbound-suite-flake memories).
-   - Decision to make: **fix** the failing tests (deterministic seed / isolate the Oban tests) **or
-     formally retire/quarantine** them out of the advisory lane so the lane can go green and mean
-     something. Either way the lane should stop being permanently red.
+5. **✅ DONE (2026-06-18) — `Core Full Suite Advisory` lane fixed (decision: FIX, quarantine).**
+   Resolved via `/gsd-quick` (task `260617-tgw`); commit `abadbb32`. Advisory Matrix run on the fix
+   SHA = **both jobs green** (Core Full Suite + Provider Compatibility).
+   - **Real cause (memory's "~57 Oban failures" was stale):** the latest red run was
+     `1191 tests, 9 failures`, and all 9 were in **5 maintainer dev-tooling modules** (zero in
+     `lib/`): `ReferenceHost.{CompileSmoke,WebhookOperatorPath,TrustRunnerCheckpointContract}Test`,
+     `DemoDataTest`, `Publish.PostPublishSmokeContractTest`. They fail **structurally** — they need
+     the full repo workspace (sibling `MailglassInbound` compiled, reference/host_app + demo_app with
+     fetched deps) which the isolated-core `mix deps.get && mix test` lane never sets up. They fail
+     identically locally; they had **never** been green in CI.
+   - **Why FIX not RETIRE:** the required green lanes run only narrow curated file lists
+     (`verify.support_contract.core` = 11 files, provider-compat ≈ 11). Of 157 core test files, the
+     bulk (renderer, outbound, most of `test/mailglass/**`) run **only** in this advisory lane —
+     retiring would drop the only CI coverage of ~120 lib test files.
+   - **Fix:** tagged the 5 modules `@moduletag :requires_workspace` + added
+     `--exclude requires_workspace` to the advisory lane. Their behaviors are already covered by the
+     Trust Lane / Demo Browser Evidence / publish-hex post-publish-smoke lanes, so no real coverage
+     lost; the lane now runs the ~1180 real lib tests as a meaningful green canary.
 
 ## Durable release-ceremony lessons (graduation candidates → cross-milestone trends)
 
@@ -97,5 +103,7 @@ clean) left exactly two tracked items. Both are `/gsd-quick`-sized — start a f
 ## Exit Signal
 
 Closes when: item 1 ✅ done; item 2 done or formally deferred with a review date; item 4 ✅ done
-(held PRs #75/#76 both merged 2026-06-18); item 5 (`Core Full Suite Advisory`) fixed or formally
-retired from the advisory lane. **Remaining:** item 2 (deferred) + item 5 (next `/gsd-quick`).
+(held PRs #75/#76 both merged 2026-06-18); item 5 ✅ done (`Core Full Suite Advisory` fixed
+2026-06-18, commit `abadbb32`). **Remaining: only item 2** — the reference baseline `~> 1.4` → `~> 1.7`
+mailglass-pin bump, deliberately deferred (separate coordinated 5-file change; review when next
+cutting a release). Everything else in this thread is closed.

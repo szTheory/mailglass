@@ -4,7 +4,7 @@ milestone: v1.12
 milestone_name: Adopter Onboarding & Day-2 Confidence
 status: shipped
 last_updated: "2026-06-17T20:55:00.000Z"
-last_activity: 2026-06-18 -- quick 260617-syd: merged held dep PRs #76 premailex 1.0.0 + #75 swoosh 1.26.1 (thread item 4 done)
+last_activity: 2026-06-18 -- quick 260617-tgw: fixed Core Full Suite Advisory lane (now green); held dep PRs #76/#75 merged. release-pipeline-maintenance items 4+5 done
 progress:
   total_phases: 17
   completed_phases: 17
@@ -170,6 +170,7 @@ closeout gate and the actual Hex publish.
 |---|---|---|
 | 2026-06-17 | Classify "Demo Browser Evidence" as advisory in `publish-hex.yml` `gate-ci-green` (added to `ADVISORY_LANES` — non-required browser lane predates the `<name> Advisory (...)` convention, would have wrongly blocked a release) | `.github/workflows/publish-hex.yml` |
 | 2026-06-18 | Triage + merge held dep PRs (thread item 4): #76 premailex 0.3.20→**1.0.0** (major — validated `to_inline_css/1` unaffected, renderer suite 20/20 green locally; `9c3bbfea`) + #75 swoosh 1.26.0→**1.26.1** (root-lock-only patch, NOT trust-lane-coupled; `50b49206`). Both stale `Compile No Optional Deps` reds were a transient ex_doc dep-cache race, cleared by update-branch + rerun. | `mix.exs`, `mix.lock` (via PR merges) |
+| 2026-06-18 | Fix-or-retire `Core Full Suite Advisory` (thread item 5) → **FIX**. Permanently-red lane's 9 failures were all workspace-only dev tooling (reference-host/demo/post-publish-smoke needing sibling MailglassInbound + reference-app deps), NOT lib regressions. Tagged 5 modules `@moduletag :requires_workspace` + `--exclude` in the lane (it's the ONLY lane running the full core `mix test` — ~120 lib files no required lane covers, so retiring was wrong). Lane now **green** (`abadbb32`). | 5 test files, `.github/workflows/advisory-matrix.yml` |
 
 ## Performance Metrics
 
@@ -366,14 +367,14 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 - **No active milestone. No recommended next feature milestone** (post-v1.12 assessment 2026-06-17).
   The library is ~93–95% done for its scope; the last wedge shipped. **Default to quiet maintenance.**
   Do NOT run `/gsd-new-milestone` for feature work unless a concrete adopter pull surfaces.
-- **If you want to do *something*,** the concrete items are all maintenance-tier (thread
-  `release-pipeline-maintenance.md`). ✅ Item (1) `gate-ci-green` advisory-classifier fix for "Demo
-  Browser Evidence" is **DONE** (2026-06-17, commit `1e0e60b1`). **Two open NEXT-SESSION-FOCUS items
-  remain** (see the thread's "NEXT-SESSION FOCUS" section for full pickup context): **(A)** triage the
-  two held dependency PRs — **#76 premailex 0.3.20→1.0.0** (major bump, changelog review) and **#75
-  swoosh 1.26.0→1.26.1** (coordinated trust-lane baseline change; bundle with item 2's `~> 1.7` pin
-  bump); **(B)** decide **fix-or-retire** for the persistently-red `Core Full Suite Advisory` lane
-  (~57 Oban flakes; non-blocking but permanently red). Both are `/gsd-quick`-sized.
+- **Maintenance items (thread `release-pipeline-maintenance.md`) — nearly all cleared.**
+  ✅ Item (1) `gate-ci-green` advisory-classifier fix (2026-06-17, `1e0e60b1`).
+  ✅ Item (4) held dep PRs #76 premailex 1.0.0 + #75 swoosh 1.26.1 both merged (2026-06-18, quick
+  `260617-syd`; `9c3bbfea`/`50b49206`).
+  ✅ Item (5) `Core Full Suite Advisory` lane fixed → now green (2026-06-18, quick `260617-tgw`;
+  `abadbb32` — quarantined 5 workspace-only dev-tooling modules via `@moduletag :requires_workspace`).
+  **Only item (2) remains:** the reference baseline `~> 1.4` → `~> 1.7` mailglass-pin bump —
+  deliberately deferred (coordinated 5-file change; do it when next cutting a release).
 - **Before any *feature-discovery* pass** (only if reconsidering expansion): refresh
   `.planning/research/JTBD-COVERAGE.md` (now 6 milestones stale) — its conclusion still holds, only
   its status tables are stale. Not needed for maintenance work.
