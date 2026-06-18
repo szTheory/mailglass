@@ -438,22 +438,25 @@ Current inventory result: `missing: []` across all 23 used icons. [VERIFIED: nod
 
 All claims in this research are sourced from repo-local artifacts, commands run in this session, npm/Hex registry checks for existing tools, or official W3C documentation; no `[ASSUMED]` claims are intentionally present. [VERIFIED: research process]
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Exact public component attr names**
    - What we know: The context grants discretion on attr/helper names as long as shell and gallery call the same public functions. [VERIFIED: `110-CONTEXT.md`]
    - What's unclear: Whether planner wants `theme_picker` to emit `patch`, `href`, or `event` attrs. [VERIFIED: code inspection]
    - Recommendation: Keep attrs close to current shell needs: `label`, `icon`, `href`, `active`; `tenant`; `theme`, `options`, and path/event assigns. [VERIFIED: repo]
+   - RESOLVED: Plans 110-01 through 110-03 use attr-declared public Phoenix components in `MailglassAdmin.Components`; shell and gallery call the same public functions, `theme_picker` emits the selected value through the public component API, and Phase 112 remains responsible for persistence/no-FOUC wiring. [VERIFIED: PLAN.md alignment]
 
 2. **Dense-control exceptions**
    - What we know: Normal admin primitives should meet 44px; WCAG 2.2 AA minimum is 24px with exceptions. [VERIFIED: `110-CONTEXT.md`] [CITED: https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html]
    - What's unclear: Whether any Phase 110 primitive needs a dense exception. [VERIFIED: code inspection]
    - Recommendation: Plan for no dense exceptions in Phase 110; document any exception as a GAP if discovered by structural tests. [VERIFIED: phase scope]
+   - RESOLVED: Phase 110 plans require zero dense-control exceptions; normal interactive primitives must meet the 44px by 44px default in the compiled bundle, and any failure is fixed in the primitive rather than weakening the contract. [VERIFIED: PLAN.md alignment]
 
 3. **STATCARD severity taxonomy**
    - What we know: Shape requires icon+label+color and meaningful placeholders. [VERIFIED: `110-CONTEXT.md`]
    - What's unclear: Exact severity atoms and icon mapping for neutral/success/warning/error/info stat cards. [VERIFIED: code inspection]
    - Recommendation: Define a small closed atom set in `Components.stat_card/1`, and test each atom like `status_badge/1`. [VERIFIED: repo pattern]
+   - RESOLVED: Plans 110-01 and 110-02 lock `stat_card` to the closed severity atom set `:neutral`, `:info`, `:success`, `:warning`, and `:error`; every state requires a visible severity label, semantic color, and adjacent icon, with empty/loading/unavailable states using meaningful text. [VERIFIED: PLAN.md alignment]
 
 ## Environment Availability
 
