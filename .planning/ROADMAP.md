@@ -63,7 +63,7 @@ inbound exact-pin re-pin. Phases continue from 108 → 109+.
 
 ### Phases
 
-- [ ] **Phase 109: Foundations + Gate-Tightening** - Merge PR #86 precondition; semantic z-index/motion/elevation/focus/overlay tokens + system-theme plumbing in light/dark/system; tighten gates FIRST and prove green before any pillar re-score
+- [x] **Phase 109: Foundations + Gate-Tightening** - Merge PR #86 precondition; semantic z-index/motion/elevation/focus/overlay tokens + system-theme plumbing in light/dark/system; tighten gates FIRST and prove green before any pillar re-score
 - [ ] **Phase 110: Primitives** - Promote inlined atoms to public components; canonical `stat_card` + 3-way theme-picker primitive; every primitive in every state, WCAG 2.2 AA + APG, 320→wide, 44×44 targets, icon-exists guard
 - [ ] **Phase 111: Forms** - Unify the two `filters_form` copies into shared `filter_field`/`filter_section`; every control labeled, error-recoverable, never color-alone, focus-preserved across patches
 - [ ] **Phase 112: App-Shell, Navigation & Tenant Seam** - Auto-select sole tenant + listing/switcher from the core read model (kills "No tenant selected"); tenant scope persists across surfaces; theme picker wired no-FOUC; honest pagination; non-color active nav
@@ -104,7 +104,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 109-04-PLAN.md - Structural WCAG/system assertions and final no-scope-creep proof.
+- [x] 109-04-PLAN.md - Structural WCAG/system assertions and final no-scope-creep proof.
 
 **UI hint**: yes
 

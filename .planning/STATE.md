@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
 status: executing
-last_updated: "2026-06-18T17:13:19.000Z"
+last_updated: "2026-06-18T17:22:46.000Z"
 last_activity: 2026-06-18
 progress:
   total_phases: 11
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 10
-  completed_plans: 9
-  percent: 18
+  completed_plans: 10
+  percent: 27
 ---
 
 # Project State
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 109 — foundations-gate-tightening
+**Current focus:** Phase 110 — primitives
 
 ## Current Position
 
-Phase: 109 (foundations-gate-tightening) — EXECUTING
-Plan: 4 of 4
-Status: Ready to execute
+Phase: 110 (primitives) — READY TO PLAN
+Plan: Not planned
+Status: Ready to plan
 Last activity: 2026-06-18
 
-Progress: [█████████░] 90%
+Progress: [░░░░░░░░░░] 0%
 
 ## v1.13 Milestone Intent
 
@@ -97,6 +97,8 @@ convergent + adversarially judged).
 
 - [109-03] BORDER-GATE uses an explicit raw Tailwind palette list rather than a generic `[a-z]+-[0-9]` suffix so semantic DaisyUI tokens like `border-base-300` remain valid.
 - [109-03] Ratchet schema v3 seeds the `system` axis from each block's existing light score and preserves prior/current run IDs; Phase 109 does not perform a pillar re-score.
+- [109-04] System/default theme proof remains structural: no explicit `data-theme` under OS light/dark emulation, no JS hook/storage/picker, and no `data-theme="system"`.
+- [109-04] Icon-only controls subject to the 44px target floor need both `min-h-11` and `min-w-11`; `btn-square btn-sm` alone is only 32px wide.
 - [92-01] Root README uses `brandbook/examples/readme-header.svg` directly as the first visible brand surface.
 - [92-01] `brandbook/examples/og-card.png` is the only committed v1.10 binary exception for GitHub social preview upload.
 - [92-01] GitHub social-preview upload remains manual because no documented write API exists.
@@ -277,6 +279,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 106 P02 | 8 | 3 tasks | 3 files |
 | Phase 107 P01 | 2min | 3 tasks | 4 files |
 | Phase 109 P03 | 8 min | 2 tasks | 3 files |
+| Phase 109 P04 | 9 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -299,6 +302,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-18: **Phase 109 complete.** Plan 04 added structural system/default theme proof, WCAG-style focus/target-size assertions, operator+inbound replay modal `elementFromPoint` hit-tests, and final no-scope-creep validation. Auto-fixed preview theme/frame icon buttons with `min-w-11` to satisfy the 44px target floor; CSS bundle rebuilt and clean. Final proof green: PR #86 merged, conformance OK, ratchet 4/4, support contract 59/59, verify.preview 256/256 with 1 excluded, browser 58/58, package manifests unchanged, no axe/screenshot/theme-hook creep. Next: Phase 110 primitives ready to plan.
 
 - 2026-06-18: **Phase 109 Plan 03 completed.** Tightened `check-conformance.sh` with z-index, focus-ring, root-isolation, token-scope, radius, shadow, border, and arbitrary-size gates; bumped the ratchet baseline to schema v3 with light/dark/system cells seeded from existing light scores. Verification green: root/package conformance, focused ratchet ExUnit, and JSON run-id/system-shape assertion. Next: execute Phase 109 Plan 04 structural WCAG/system proof and final validation.
 
