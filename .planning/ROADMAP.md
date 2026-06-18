@@ -100,7 +100,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 109-03-PLAN.md - Hard conformance gates plus ratchet schema version 3 system cells.
+- [x] 109-03-PLAN.md - Hard conformance gates plus ratchet schema version 3 system cells.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 

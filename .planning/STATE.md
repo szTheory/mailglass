@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
 status: executing
-last_updated: "2026-06-18T17:07:04.201Z"
+last_updated: "2026-06-18T17:13:19.000Z"
 last_activity: 2026-06-18
 progress:
   total_phases: 11
   completed_phases: 2
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 18
 ---
 
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 109 (foundations-gate-tightening) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-18
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 90%
 
 ## v1.13 Milestone Intent
 
@@ -95,6 +95,8 @@ convergent + adversarially judged).
 
 ## Decisions
 
+- [109-03] BORDER-GATE uses an explicit raw Tailwind palette list rather than a generic `[a-z]+-[0-9]` suffix so semantic DaisyUI tokens like `border-base-300` remain valid.
+- [109-03] Ratchet schema v3 seeds the `system` axis from each block's existing light score and preserves prior/current run IDs; Phase 109 does not perform a pillar re-score.
 - [92-01] Root README uses `brandbook/examples/readme-header.svg` directly as the first visible brand surface.
 - [92-01] `brandbook/examples/og-card.png` is the only committed v1.10 binary exception for GitHub social preview upload.
 - [92-01] GitHub social-preview upload remains manual because no documented write API exists.
@@ -274,6 +276,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 106 P01 | 144 | 2 tasks | 2 files |
 | Phase 106 P02 | 8 | 3 tasks | 3 files |
 | Phase 107 P01 | 2min | 3 tasks | 4 files |
+| Phase 109 P03 | 8 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -296,6 +299,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+- 2026-06-18: **Phase 109 Plan 03 completed.** Tightened `check-conformance.sh` with z-index, focus-ring, root-isolation, token-scope, radius, shadow, border, and arbitrary-size gates; bumped the ratchet baseline to schema v3 with light/dark/system cells seeded from existing light scores. Verification green: root/package conformance, focused ratchet ExUnit, and JSON run-id/system-shape assertion. Next: execute Phase 109 Plan 04 structural WCAG/system proof and final validation.
 
 - 2026-06-18: **v1.13 "Admin Design-System Stress Test & UX Uplift (v3)" roadmap created.** `.planning/ROADMAP.md` rewritten with v1.13 as the active milestone (Phases 109-117 full detail; v1.11/v1.12 collapsed into archived `<details>`), `.planning/REQUIREMENTS.md` traceability finalized to phase numbers (36/36 mapped 109–117, 0 unmapped), STATE.md updated (frontmatter total_phases=9, position at Phase 109 ready-to-plan, v1.13 intent/scope-locks/roadmap-snapshot). Numbering continues from v1.12's last phase 108. Next: merge PR #86 (REL-01 binding precondition), then `/gsd-plan-phase 109` (or `/gsd-discuss-phase 109` first).
 
