@@ -23,6 +23,100 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB="${SCRIPT_DIR}/../lib"
 [[ -d "$LIB" ]] || { echo "FAIL: lib dir not found at $LIB" >&2; exit 2; }
 errors=0
+COMPONENTS="${LIB}/mailglass_admin/components.ex"
+GALLERY="${LIB}/mailglass_admin/gallery_live.ex"
+OPERATOR_LIVE="${LIB}/mailglass_admin/operator_live.ex"
+INBOUND_OVERVIEW="${LIB}/mailglass_admin/inbound/overview.ex"
+HEROICONS="${SCRIPT_DIR}/../assets/vendor/heroicons-inline.js"
+
+# PRIMITIVE-DRIFT-GATE: the named Phase 110 primitives have exactly one public
+# implementation in Components. Shell and GalleryLive must consume those public
+# functions instead of restoring private helpers or copied HEEx bodies.
+private_primitive_hits="$(
+  grep -rEn 'defp[[:space:]]+(nav_link|nav_pill|tenant_chip|theme_toggle|theme_picker|stat_card)([[:space:]]|\()|def[[:space:]]+(theme_toggle)([[:space:]]|\()' "$LIB" --include="*.ex" 2>/dev/null |
+    grep -vF "${COMPONENTS}:" || true
+)"
+if [[ -n "$private_primitive_hits" ]]; then
+  echo "$private_primitive_hits"
+  echo "FAIL: PRIMITIVE-DRIFT-GATE — private primitive helper found; route through MailglassAdmin.Components" >&2
+  errors=$((errors + 1))
+fi
+
+if grep -rEn 'theme_toggle|component: :theme_toggle|gallery-theme_toggle' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: PRIMITIVE-DRIFT-GATE — old binary theme_toggle identity found; use theme_picker" >&2
+  errors=$((errors + 1))
+fi
+
+for primitive in nav_link nav_pill tenant_chip theme_picker stat_card; do
+  if ! grep -qE "^[[:space:]]*def[[:space:]]+${primitive}\\(" "$COMPONENTS" 2>/dev/null; then
+    echo "FAIL: PRIMITIVE-DRIFT-GATE — Components.${primitive}/1 public definition missing" >&2
+    errors=$((errors + 1))
+  fi
+
+  if ! awk -v primitive="$primitive" '
+    $0 ~ ("defp render_specimen\\(%\\{component: :" primitive "\\}") { in_block=1; seen=0; next }
+    in_block && $0 ~ ("Components\\." primitive) { seen=1 }
+    in_block && /^  defp render_specimen/ { exit seen ? 0 : 1 }
+    END { exit seen ? 0 : 1 }
+  ' "$GALLERY"; then
+    echo "FAIL: PRIMITIVE-DRIFT-GATE — GalleryLive ${primitive} dispatcher must call Components.${primitive}/1" >&2
+    errors=$((errors + 1))
+  fi
+done
+
+old_primitive_signature_hits="$(
+  grep -rEn 'mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out duration-\(--duration-fast\)|mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-\(--duration-fast\)|inline-flex min-h-11 items-center gap-xs rounded-field border border-base-300 px-sm text-label text-secondary|btn btn-ghost btn-sm btn-square min-h-11"' "$LIB" --include="*.ex" 2>/dev/null |
+    grep -vF "${COMPONENTS}:" || true
+)"
+if [[ -n "$old_primitive_signature_hits" ]]; then
+  echo "$old_primitive_signature_hits"
+  echo "FAIL: PRIMITIVE-DRIFT-GATE — old copied primitive class signature found outside Components" >&2
+  errors=$((errors + 1))
+fi
+
+# STATCARD-GATE: overview KPI/stat cards must consume Components.stat_card/1.
+# This catches page-local stat helpers and the old raw card shapes that allowed
+# wrapped values or bare dash placeholders.
+if ! grep -q 'Components.stat_card' "$OPERATOR_LIVE" 2>/dev/null; then
+  echo "FAIL: STATCARD-GATE — operator overview must use Components.stat_card/1" >&2
+  errors=$((errors + 1))
+fi
+if ! grep -q 'Components.stat_card' "$INBOUND_OVERVIEW" 2>/dev/null; then
+  echo "FAIL: STATCARD-GATE — inbound overview must use Components.stat_card/1" >&2
+  errors=$((errors + 1))
+fi
+if grep -rEn 'defp[[:space:]]+stat\(' "$LIB" --include="*.ex" 2>/dev/null; then
+  echo "FAIL: STATCARD-GATE — private defp stat helper found; route through Components.stat_card/1" >&2
+  errors=$((errors + 1))
+fi
+if grep -En 'class="card bg-base-200 border border-base-300 rounded-box p-md">|text-display font-bold|do: "—"|break-words|<\.stat' "$OPERATOR_LIVE" "$INBOUND_OVERVIEW" 2>/dev/null; then
+  echo "FAIL: STATCARD-GATE — old raw stat-card shape found in overview source" >&2
+  errors=$((errors + 1))
+fi
+
+# ICON-EXISTS-GATE: every hero-* class referenced from admin lib sources must
+# have a matching key in the vendored standalone Heroicons plugin.
+[[ -f "$HEROICONS" ]] || { echo "FAIL: ICON-EXISTS-GATE — heroicons-inline.js missing at $HEROICONS" >&2; exit 2; }
+used_icons="$(mktemp)"
+available_icons="$(mktemp)"
+missing_icons="$(mktemp)"
+trap 'rm -f "$used_icons" "$available_icons" "$missing_icons"' EXIT
+
+grep -rhoE 'hero-[a-z0-9-]+' "$LIB" --include="*.ex" 2>/dev/null |
+  sed 's/^hero-//' |
+  sort -u > "$used_icons"
+
+grep -E '^[[:space:]]*"[-a-z0-9]+":' "$HEROICONS" 2>/dev/null |
+  sed -E 's/^[[:space:]]*"([-a-z0-9]+)".*/\1/' |
+  sort -u > "$available_icons"
+
+comm -23 "$used_icons" "$available_icons" > "$missing_icons"
+if [[ -s "$missing_icons" ]]; then
+  echo "Missing vendored Heroicons:"
+  sed 's/^/  hero-/' "$missing_icons"
+  echo "FAIL: ICON-EXISTS-GATE — admin hero-* usage is absent from heroicons-inline.js" >&2
+  errors=$((errors + 1))
+fi
 
 # BADGE-GATE: defp badge_class must not exist anywhere in lib/.
 # Components.status_badge/1 is the single canonical status→color definition (Phase 76-02).
