@@ -13,10 +13,10 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 
 ### Foundations & Gate-Tightening (FND)
 
-- [ ] **FND-01**: A formal z-index layer system (base / dropdown / overlay-scrim / overlay-panel / toast) exists as semantic tokens and is consumed by every stacking context; no literal `z-*` values remain in admin `lib/` (fixes modal-behind-scrim).
-- [ ] **FND-02**: Motion, elevation, focus-ring, and overlay values are defined as semantic tokens (zero one-off values) with correct light / dark / system resolution.
-- [ ] **FND-03**: Type-scale, spacing, radius, shadow, and border token coverage is audited complete across admin HEEx — no one-off hex or size literals remain.
-- [ ] **FND-04**: System-theme plumbing exists at the token/CSS layer (daisyUI `prefersdark`; `system` emits no `data-theme`) with no client JS hook and no host-global CSS.
+- [x] **FND-01**: A formal z-index layer system (base / dropdown / overlay-scrim / overlay-panel / toast) exists as semantic tokens and is consumed by every stacking context; no literal `z-*` values remain in admin `lib/` (fixes modal-behind-scrim).
+- [x] **FND-02**: Motion, elevation, focus-ring, and overlay values are defined as semantic tokens (zero one-off values) with correct light / dark / system resolution.
+- [x] **FND-03**: Type-scale, spacing, radius, shadow, and border token coverage is audited complete across admin HEEx — no one-off hex or size literals remain.
+- [x] **FND-04**: System-theme plumbing exists at the token/CSS layer (daisyUI `prefersdark`; `system` emits no `data-theme`) with no client JS hook and no host-global CSS.
 - [ ] **FND-05**: Conformance/structural gates are tightened FIRST (z-index gate, focus-ring gate, scope/isolation gate, WCAG 2.2 success criteria in the structural spec, ratchet schema bumped to include `system`) and prove green on current code before any pillar re-baseline.
 
 ### Primitive Components (PRIM)
@@ -113,10 +113,10 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | REL-01 | Phase 109 (precondition — merge PR #86) | Complete |
-| FND-01 | Phase 109 | Pending |
-| FND-02 | Phase 109 | Pending |
-| FND-03 | Phase 109 | Pending |
-| FND-04 | Phase 109 | Pending |
+| FND-01 | Phase 109 | Complete |
+| FND-02 | Phase 109 | Complete |
+| FND-03 | Phase 109 | Complete |
+| FND-04 | Phase 109 | Complete |
 | FND-05 | Phase 109 | Pending |
 | PRIM-01 | Phase 110 | Pending |
 | PRIM-02 | Phase 110 | Pending |

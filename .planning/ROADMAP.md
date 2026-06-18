@@ -96,7 +96,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 109-02-PLAN.md - Semantic token/class consolidation for z layers, focus rings, isolation, and compiled CSS.
+- [x] 109-02-PLAN.md - Semantic token/class consolidation for z layers, focus rings, isolation, and compiled CSS.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -281,7 +281,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 109. Foundations + Gate-Tightening | v1.13 | 1/4 | In Progress|  |
+| 109. Foundations + Gate-Tightening | v1.13 | 2/4 | In Progress|  |
 | 110. Primitives | v1.13 | 0/TBD | Not started | - |
 | 111. Forms | v1.13 | 0/TBD | Not started | - |
 | 112. App-Shell, Nav & Tenant Seam | v1.13 | 0/TBD | Not started | - |
