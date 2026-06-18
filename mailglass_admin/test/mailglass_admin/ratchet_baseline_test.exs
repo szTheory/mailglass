@@ -2,15 +2,15 @@ defmodule MailglassAdmin.RatchetBaselineTest do
   @moduledoc """
   Fail-closed score-baseline assertion (RATCHET-01).
 
-  Phase 95: establishes and validates shape/range/coverage of the 36-cell
-  score baseline (3 surfaces × 6 pillars × 2 themes).
+  Phase 95: establishes and validates shape/range/coverage of the 54-cell
+  score baseline (3 surfaces × 6 pillars × 3 themes).
 
   Phase 103 adds: load prior baseline, assert no cell regresses (only-forward).
   The `compare_baselines/2` private function below is the Phase 103 hook point —
   it exists in Phase 95 but is never called until Phase 103 enables it.
 
   If this test fails with "missing cell", the scoring step was incomplete. Run the
-  LLM scoring step (D-07 procedure) to fill all 36 surface × pillar × theme cells
+  LLM scoring step (D-07 procedure) to fill all 54 surface × pillar × theme cells
   in `mailglass_admin/docs/ui-baseline-scores.json`.
 
   If it fails with "score out of range", the LLM scored outside 1–4. All scores
@@ -25,7 +25,7 @@ defmodule MailglassAdmin.RatchetBaselineTest do
 
   @surfaces ["deliveries", "inbound", "preview"]
   @pillars ["Spacing", "Radius", "Color", "Type", "Elevation", "Motion+A11y"]
-  @themes ["light", "dark"]
+  @themes ["light", "dark", "system"]
   @valid_scores 1..4
 
   setup_all do
@@ -38,14 +38,18 @@ defmodule MailglassAdmin.RatchetBaselineTest do
   end
 
   test "schema_version is present and supported", %{baseline: b} do
-    assert b["schema_version"] == 2,
-           "Expected schema_version 2, got #{inspect(b["schema_version"])}. " <>
+    assert b["schema_version"] == 3,
+           "Expected schema_version 3, got #{inspect(b["schema_version"])}. " <>
              "If upgrading the JSON format, bump schema_version and update this assertion."
   end
 
-  test "all 36 graded cells are present in both prior and current blocks (3 surfaces × 6 pillars × 2 themes × 2 blocks)", %{baseline: b} do
+  test "all 54 graded cells are present in both prior and current blocks (3 surfaces × 6 pillars × 3 themes × 2 blocks)",
+       %{baseline: b} do
     missing =
-      for block <- ["prior", "current"], surface <- @surfaces, pillar <- @pillars, theme <- @themes do
+      for block <- ["prior", "current"],
+          surface <- @surfaces,
+          pillar <- @pillars,
+          theme <- @themes do
         score = get_in(b, [block, "surfaces", surface, pillar, theme])
         if score == nil, do: "#{block}.#{surface}.#{pillar}.#{theme}", else: nil
       end
@@ -54,12 +58,15 @@ defmodule MailglassAdmin.RatchetBaselineTest do
     assert missing == [],
            "Missing cells (#{length(missing)}) in ui-baseline-scores.json:\n" <>
              Enum.join(missing, "\n") <>
-             "\nRun the LLM scoring step (D-07) to fill all 36 cells in each block."
+             "\nRun the LLM scoring step (D-07) to fill all 54 cells in each block."
   end
 
-  test "all 36 scores are in the valid range 1-4 in both prior and current blocks", %{baseline: b} do
+  test "all 54 scores are in the valid range 1-4 in both prior and current blocks", %{baseline: b} do
     out_of_range =
-      for block <- ["prior", "current"], surface <- @surfaces, pillar <- @pillars, theme <- @themes do
+      for block <- ["prior", "current"],
+          surface <- @surfaces,
+          pillar <- @pillars,
+          theme <- @themes do
         score = get_in(b, [block, "surfaces", surface, pillar, theme])
 
         if score not in @valid_scores,
