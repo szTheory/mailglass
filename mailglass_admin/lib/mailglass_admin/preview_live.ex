@@ -313,7 +313,7 @@ defmodule MailglassAdmin.PreviewLive do
                         do: "Switch admin chrome to light theme",
                         else: "Switch admin chrome to dark theme"
                     }
-                    class="mg-focus-ring btn btn-ghost btn-sm btn-square min-h-11"
+                    class="mg-focus-ring btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
                   >
                     <Components.icon
                       name={if admin_chrome_dark?(@admin_chrome_theme), do: "hero-sun", else: "hero-moon"}
@@ -329,7 +329,7 @@ defmodule MailglassAdmin.PreviewLive do
                         do: "Switch preview frame to light chrome",
                         else: "Switch preview frame to dark chrome"
                     }
-                    class="mg-focus-ring btn btn-ghost btn-sm btn-square min-h-11"
+                    class="mg-focus-ring btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
                   >
                     <Components.icon
                       name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}

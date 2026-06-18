@@ -239,11 +239,100 @@ async function assertNonTextContrastAA(locator, label) {
   expect(contrastRatio(stroke, background), `${label} non-text contrast`).toBeGreaterThanOrEqual(3);
 }
 
+async function assertTouchTarget(locator, label) {
+  await expect(locator.first(), label).toBeVisible();
+  const box = await locator.first().boundingBox();
+  expect(box, `${label} target-size box`).not.toBeNull();
+  // Chromium can report 44px CSS floors as 43.89px after subpixel layout.
+  // Round to the rendered pixel for the structural target-size assertion.
+  expect(Math.round(box.width), `${label} target-size width`).toBeGreaterThanOrEqual(44);
+  expect(Math.round(box.height), `${label} target-size height`).toBeGreaterThanOrEqual(44);
+}
+
+async function assertFocusAppearanceAndNotObscured(page, locator, label) {
+  const target = locator.first();
+  await expect(target, label).toBeVisible();
+  await target.focus();
+
+  const focusState = await target.evaluate(el => {
+    const style = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(x, y);
+
+    return {
+      outlineWidth: Number.parseFloat(style.outlineWidth),
+      outlineStyle: style.outlineStyle,
+      notObscured: hit === el || el.contains(hit)
+    };
+  });
+
+  expect(focusState.outlineWidth, `${label} focus indicator width`).toBeGreaterThanOrEqual(2);
+  expect(focusState.outlineStyle, `${label} focus indicator style`).not.toBe("none");
+  expect(focusState.notObscured, `${label} Focus Not Obscured`).toBeTruthy();
+
+  await assertNonTextContrastAA(target, label);
+}
+
+async function expectNoDataTheme(locator, label) {
+  expect(await locator.first().getAttribute("data-theme"), label).toBeNull();
+}
+
+async function assertPanelAboveScrim(modal, label) {
+  await expect(modal, label).toBeVisible();
+
+  const hitTest = await modal.evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    const nearestTestId = hit && hit.closest ? hit.closest("[data-testid]") : null;
+
+    return {
+      ok: hit === el || el.contains(hit),
+      hitTag: hit ? hit.tagName : null,
+      hitTestId: nearestTestId ? nearestTestId.getAttribute("data-testid") : null
+    };
+  });
+
+  expect(
+    hitTest.ok,
+    `${label} panel is above scrim at centroid; hit=${hitTest.hitTestId || hitTest.hitTag}`
+  ).toBeTruthy();
+}
+
 function noMatchRow(page) {
   return page
     .getByTestId("inbound-record-row")
     .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
     .first();
+}
+
+async function openOperatorReplayModal(page) {
+  await openOperator(page);
+  await page.getByTestId("operator-delivery-row").first().click();
+  await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+  await page.getByTestId("operator-replay-open").click();
+  const modal = page.getByTestId("operator-replay-modal");
+  await expect(modal).toBeVisible();
+  return modal;
+}
+
+async function openInboundReplayModal(page) {
+  await openInbound(page);
+
+  const replayableRow = page
+    .getByTestId("inbound-record-row")
+    .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+    .first();
+  await replayableRow.click();
+  await page.waitForURL(/inbound_id=/);
+  await page.getByTestId("inbound-replay-open").click();
+
+  const modal = page.getByTestId("inbound-replay-modal");
+  await expect(modal).toBeVisible();
+  return modal;
 }
 
 test.describe("structural assertions — 6 D-01 pillar facts", () => {
@@ -313,17 +402,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await openOperator(page);
 
       const filterToggle = page.getByTestId("operator-filters-toggle");
-      await expect(filterToggle).toBeVisible();
-      const filterBox = await filterToggle.boundingBox();
-      expect(filterBox).not.toBeNull();
-      expect(filterBox.height).toBeGreaterThanOrEqual(44);
+      await assertTouchTarget(filterToggle, "operator filter toggle");
 
       await page.getByTestId("operator-delivery-row").first().click();
       const back = page.getByTestId("operator-detail-back");
-      await expect(back).toBeVisible();
-      const backBox = await back.boundingBox();
-      expect(backBox).not.toBeNull();
-      expect(backBox.height).toBeGreaterThanOrEqual(44);
+      await assertTouchTarget(back, "operator detail back");
     });
 
     test("Inbound: first nav link height >= 44px at 390px viewport", async ({ page }) => {
@@ -331,9 +414,37 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await openInbound(page);
 
       const navLink = page.getByRole("navigation").getByRole("link").first();
-      const box = await navLink.boundingBox();
-      expect(box).not.toBeNull();
-      expect(box.height).toBeGreaterThanOrEqual(44);
+      await assertTouchTarget(navLink, "inbound first nav link");
+    });
+
+    test("Operator replay modal, nav, preview theme controls, and preview summary controls meet target-size floor", async ({
+      page
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await openOperator(page);
+      await assertTouchTarget(page.getByRole("navigation").getByRole("link").first(), "operator nav link");
+
+      const operatorModal = await openOperatorReplayModal(page);
+      await assertTouchTarget(
+        operatorModal.getByRole("button", { name: "Cancel", exact: true }),
+        "operator replay modal cancel"
+      );
+
+      const inboundModal = await openInboundReplayModal(page);
+      await assertTouchTarget(
+        inboundModal.getByRole("button", { name: "Cancel", exact: true }),
+        "inbound replay modal cancel"
+      );
+      await assertTouchTarget(page.getByTestId("inbound-replay-confirm"), "inbound replay modal confirm");
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await openPreviewScenario(page, "theme=light");
+      await assertTouchTarget(page.getByTestId("preview-admin-theme-toggle"), "preview admin theme control");
+      await assertTouchTarget(page.getByTestId("preview-frame-theme-toggle"), "preview frame theme control");
+      await assertTouchTarget(
+        page.getByTestId("preview-mobile-mailables").locator("summary").first(),
+        "preview sidebar summary control"
+      );
     });
 
     test("Preview: any visible button or link >= 44px at 390px viewport", async ({ page }) => {
@@ -660,20 +771,53 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   });
 
+  test.describe("replay modal overlay stacking", () => {
+
+    test("Operator and Inbound replay modal panels are top hit-test targets above their scrims", async ({
+      page
+    }) => {
+      const operatorModal = await openOperatorReplayModal(page);
+      await assertPanelAboveScrim(operatorModal, "operator-replay-modal");
+
+      const inboundModal = await openInboundReplayModal(page);
+      await assertPanelAboveScrim(inboundModal, "inbound-replay-modal");
+    });
+
+  });
+
   test.describe("preview state coverage, responsive theme matrix, and contrast", () => {
 
     test("Preview: explicit light and dark index and scenario themes apply to shell", async ({ page }) => {
       await openPreviewIndex(page, "theme=light");
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-light");
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
 
       await openPreviewIndex(page, "theme=dark");
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-dark");
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
 
       await openPreviewScenario(page, "theme=light");
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-light");
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
 
       await openPreviewScenario(page, "theme=dark");
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-dark");
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    });
+
+    test("Preview: system/default root emits no explicit data-theme under light and dark OS schemes", async ({ page }) => {
+      for (const colorScheme of ["light", "dark"]) {
+        await page.emulateMedia({ colorScheme });
+
+        await openPreviewIndex(page);
+        await expectNoDataTheme(page.locator("html"), `${colorScheme} system root html`);
+        await expectNoDataTheme(page.getByTestId("preview-shell"), `${colorScheme} system preview shell`);
+
+        await page.emulateMedia({ colorScheme });
+        await openPreviewScenario(page, "theme=system");
+        await expectNoDataTheme(page.locator("html"), `${colorScheme} explicit system root html`);
+        await expectNoDataTheme(page.getByTestId("preview-shell"), `${colorScheme} explicit system preview shell`);
+      }
     });
 
     test("Preview: 390px mobile Mailables navigation reaches a real scenario link", async ({ page }) => {
@@ -834,47 +978,35 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("visible focus rings", () => {
 
-    test("Operator: first link has non-zero outlineWidth on focus", async ({ page }) => {
+    test("Operator: first link has visible >=2px focus indicator and non-text contrast", async ({ page }) => {
       await openOperator(page);
 
       const link = page.getByRole("link").first();
-      await link.focus();
-      const outlineWidth = await link.evaluate(
-        el => getComputedStyle(el).outlineWidth
-      );
-      expect(parseFloat(outlineWidth)).toBeGreaterThan(0);
+      await assertFocusAppearanceAndNotObscured(page, link, "operator first link focus");
     });
 
-    test("Inbound: first link has non-zero outlineWidth on focus", async ({ page }) => {
+    test("Inbound: first link has visible >=2px focus indicator and non-text contrast", async ({ page }) => {
       await openInbound(page);
 
       const link = page.getByRole("link").first();
-      await link.focus();
-      const outlineWidth = await link.evaluate(
-        el => getComputedStyle(el).outlineWidth
-      );
-      expect(parseFloat(outlineWidth)).toBeGreaterThan(0);
+      await assertFocusAppearanceAndNotObscured(page, link, "inbound first link focus");
     });
 
-    test("Preview: first link or button has non-zero outlineWidth on focus", async ({ page }) => {
-      await openPreviewEmpty(page);
+    test("Preview: theme and frame controls have visible >=2px focus indicators and non-text contrast", async ({
+      page
+    }) => {
+      await openPreviewScenario(page, "theme=light");
 
-      const links = page.getByRole("link");
-      const buttons = page.getByRole("button");
-
-      const linkCount = await links.count();
-      const buttonCount = await buttons.count();
-
-      expect(linkCount + buttonCount).toBeGreaterThan(0);
-
-      // Try a link first; fall back to a button if no links exist
-      const focusable = linkCount > 0 ? links.first() : buttons.first();
-      await focusable.focus({ timeout: 5000 });
-
-      const outlineWidth = await focusable.evaluate(
-        el => getComputedStyle(el).outlineWidth
+      await assertFocusAppearanceAndNotObscured(
+        page,
+        page.getByTestId("preview-admin-theme-toggle"),
+        "preview admin theme focus"
       );
-      expect(parseFloat(outlineWidth)).toBeGreaterThan(0);
+      await assertFocusAppearanceAndNotObscured(
+        page,
+        page.getByTestId("preview-frame-theme-toggle"),
+        "preview frame theme focus"
+      );
     });
 
   });
