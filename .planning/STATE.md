@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
 status: planning
-last_updated: "2026-06-18T15:11:58.230Z"
-last_activity: 2026-06-18 — v1.13 roadmap created (Phases 109-117, 36 reqs mapped 100%)
+last_updated: "2026-06-18T15:32:52.509Z"
+last_activity: 2026-06-18 — Phase 109 UI-SPEC approved; ready to plan from `.planning/phases/109-foundations-gate-tightening/109-UI-SPEC.md`
 progress:
   total_phases: 11
   completed_phases: 2
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v1.13 Admin Design-System Stress Test & UX Uplift — Phase 109 (Foundations + Gate-Tightening), ready to plan.
+**Current focus:** v1.13 Admin Design-System Stress Test & UX Uplift — Phase 109 (Foundations + Gate-Tightening), UI-SPEC approved and ready to plan.
 
 ## Current Position
 
 Phase: 109 of 117 (Foundations + Gate-Tightening) — first phase of v1.13
 Plan: —
-Status: Roadmap created — ready to plan Phase 109 (gated on REL-01 / PR #86 merge)
-Last activity: 2026-06-18 — v1.13 roadmap created (Phases 109-117, 36 reqs mapped 100%)
+Status: UI-SPEC approved — ready to plan Phase 109 (gated on REL-01 / PR #86 merge)
+Last activity: 2026-06-18 — Phase 109 UI-SPEC approved; resume from `.planning/phases/109-foundations-gate-tightening/109-UI-SPEC.md`
 
 Progress: [░░░░░░░░░░] 0% (0/9 phases)
 
