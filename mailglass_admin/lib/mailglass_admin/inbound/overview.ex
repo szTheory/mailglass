@@ -5,6 +5,8 @@ defmodule MailglassAdmin.Inbound.Overview do
 
   use Phoenix.Component
 
+  alias MailglassAdmin.Components
+
   attr :summary, :map, required: true
 
   def overview(assigns) do
@@ -18,15 +20,36 @@ defmodule MailglassAdmin.Inbound.Overview do
       )
 
     ~H"""
-    <section
-      data-testid="inbound-overview"
-      class="rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
-    >
+    <section data-testid="inbound-overview" class="grid gap-md">
       <div class="grid gap-sm sm:grid-cols-2 xl:grid-cols-4">
-        <.stat label="InboundMessages" value={@total} />
-        <.stat label="No match" value={@no_match} />
-        <.stat label="Accepted" value={@accepted} />
-        <.stat label="No-match rate" value={"#{@no_match_rate}%"} />
+        <Components.stat_card
+          label="InboundMessages"
+          value={@total}
+          severity={:info}
+          severity_label="Tracked"
+          data-testid="inbound-overview-total"
+        />
+        <Components.stat_card
+          label="No match"
+          value={@no_match}
+          severity={attention_severity(@no_match)}
+          severity_label={attention_label(@no_match)}
+          data-testid="inbound-overview-no-match"
+        />
+        <Components.stat_card
+          label="Accepted"
+          value={@accepted}
+          severity={accepted_severity(@accepted)}
+          severity_label={accepted_label(@accepted)}
+          data-testid="inbound-overview-accepted"
+        />
+        <Components.stat_card
+          label="No-match rate"
+          value={"#{@no_match_rate}%"}
+          severity={rate_severity(@no_match_rate)}
+          severity_label={rate_label(@no_match_rate)}
+          data-testid="inbound-overview-no-match-rate"
+        />
       </div>
 
       <div :if={@secondary != []} class="mt-4 flex flex-wrap gap-2">
@@ -39,18 +62,6 @@ defmodule MailglassAdmin.Inbound.Overview do
         </span>
       </div>
     </section>
-    """
-  end
-
-  attr :label, :string, required: true
-  attr :value, :any, required: true
-
-  defp stat(assigns) do
-    ~H"""
-    <div class="min-w-0 rounded-box border border-base-300 bg-base-100 p-4">
-      <p class="text-label uppercase font-bold text-secondary break-words">{@label}</p>
-      <p class="mono mt-2 text-display text-base-content break-words">{@value}</p>
-    </div>
     """
   end
 
@@ -102,4 +113,22 @@ defmodule MailglassAdmin.Inbound.Overview do
 
   defp normalize_count(value) when is_integer(value) and value >= 0, do: value
   defp normalize_count(_value), do: 0
+
+  defp attention_severity(count) when is_integer(count) and count > 0, do: :warning
+  defp attention_severity(_count), do: :success
+
+  defp attention_label(count) when is_integer(count) and count > 0, do: "Needs attention"
+  defp attention_label(_count), do: "All clear"
+
+  defp accepted_severity(count) when is_integer(count) and count > 0, do: :success
+  defp accepted_severity(_count), do: :neutral
+
+  defp accepted_label(count) when is_integer(count) and count > 0, do: "Healthy"
+  defp accepted_label(_count), do: "No accepted mail yet"
+
+  defp rate_severity(rate) when is_number(rate) and rate > 0, do: :warning
+  defp rate_severity(_rate), do: :success
+
+  defp rate_label(rate) when is_number(rate) and rate > 0, do: "Needs attention"
+  defp rate_label(_rate), do: "All clear"
 end

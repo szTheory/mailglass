@@ -299,42 +299,38 @@ defmodule MailglassAdmin.OperatorLive do
             <div data-testid="operator-overview-health" class="grid gap-md">
               <h2 class="text-heading font-bold text-base-content">Health</h2>
               <div class="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
-                <div class="card bg-base-200 border border-base-300 rounded-box p-md">
-                  <div
-                    class={"text-display font-bold #{if(@support_summary && @support_summary.failed_ingest.count > 0, do: "text-error", else: "text-success")}"}
-                    data-testid="operator-overview-health-failures"
-                  >
-                    {if @support_summary, do: @support_summary.failed_ingest.count, else: "—"}
-                  </div>
-                  <div class="text-label text-secondary">Recent failures</div>
-                </div>
-                <div class="card bg-base-200 border border-base-300 rounded-box p-md">
-                  <div
-                    class={"text-display font-bold #{if(@support_summary && @support_summary.orphan_backlog.count > 0, do: "text-warning", else: "text-success")}"}
-                    data-testid="operator-overview-health-orphans"
-                  >
-                    {if @support_summary, do: @support_summary.orphan_backlog.count, else: "—"}
-                  </div>
-                  <div class="text-label text-secondary">Orphan backlog</div>
-                </div>
-                <div class="card bg-base-200 border border-base-300 rounded-box p-md">
-                  <div
-                    class="text-display font-bold text-secondary"
-                    data-testid="operator-overview-health-suppressions"
-                  >
-                    {if is_nil(@suppression_count), do: "—", else: @suppression_count}
-                  </div>
-                  <div class="text-label text-secondary">Active suppressions</div>
-                </div>
-                <div class="card bg-base-200 border border-base-300 rounded-box p-md min-w-0">
-                  <div
-                    class={"text-display font-bold break-words #{all_clear_color(@support_summary)}"}
-                    data-testid="operator-overview-health-allclear"
-                  >
-                    {all_clear_label(@support_summary)}
-                  </div>
-                  <div class="text-label text-secondary">All-clear status</div>
-                </div>
+                <Components.stat_card
+                  label="Recent failures"
+                  value={support_metric_count(@support_summary, :failed_ingest)}
+                  state={support_metric_state(@support_summary, :failed_ingest)}
+                  severity={support_metric_severity(@support_summary, :failed_ingest, :error)}
+                  severity_label={support_metric_severity_label(@support_summary, :failed_ingest)}
+                  data-testid="operator-overview-health-failures"
+                />
+                <Components.stat_card
+                  label="Orphan backlog"
+                  value={support_metric_count(@support_summary, :orphan_backlog)}
+                  state={support_metric_state(@support_summary, :orphan_backlog)}
+                  severity={support_metric_severity(@support_summary, :orphan_backlog, :warning)}
+                  severity_label={support_metric_severity_label(@support_summary, :orphan_backlog)}
+                  data-testid="operator-overview-health-orphans"
+                />
+                <Components.stat_card
+                  label="Active suppressions"
+                  value={@suppression_count}
+                  state={count_state(@suppression_count)}
+                  severity={suppression_severity(@suppression_count)}
+                  severity_label={suppression_severity_label(@suppression_count)}
+                  data-testid="operator-overview-health-suppressions"
+                />
+                <Components.stat_card
+                  label="All-clear status"
+                  value={all_clear_label(@support_summary)}
+                  state={all_clear_state(@support_summary)}
+                  severity={all_clear_severity(@support_summary)}
+                  severity_label={all_clear_label(@support_summary)}
+                  data-testid="operator-overview-health-allclear"
+                />
               </div>
             </div>
 
@@ -887,19 +883,57 @@ defmodule MailglassAdmin.OperatorLive do
   defp support_summary_module, do: :"Elixir.Mailglass.Operator.SupportSummary"
   defp suppression_count_module, do: :"Elixir.Mailglass.Operator.Suppressions"
 
-  # Three-state copy/color for the All-clear health card: a bare "—" only while
-  # the summary is still loading; a meaningful label once it resolves.
-  defp all_clear_label(nil), do: "—"
+  defp support_metric_count(nil, _metric), do: nil
+
+  defp support_metric_count(summary, metric) do
+    summary
+    |> Map.get(metric, %{})
+    |> Map.get(:count)
+    |> normalize_stat_count()
+  end
+
+  defp support_metric_state(summary, metric),
+    do: count_state(support_metric_count(summary, metric))
+
+  defp support_metric_severity(summary, metric, attention_severity) do
+    case support_metric_count(summary, metric) do
+      count when is_integer(count) and count > 0 -> attention_severity
+      count when is_integer(count) -> :success
+      _count -> :neutral
+    end
+  end
+
+  defp support_metric_severity_label(summary, metric) do
+    case support_metric_count(summary, metric) do
+      count when is_integer(count) and count > 0 -> "Needs attention"
+      count when is_integer(count) -> "All clear"
+      _count -> "Unavailable"
+    end
+  end
+
+  defp count_state(count) when is_integer(count), do: :ready
+  defp count_state(_count), do: :unavailable
+
+  defp suppression_severity(count) when is_integer(count), do: :info
+  defp suppression_severity(_count), do: :neutral
+
+  defp suppression_severity_label(count) when is_integer(count), do: "Tracked"
+  defp suppression_severity_label(_count), do: "Unavailable"
+
+  defp normalize_stat_count(count) when is_integer(count), do: count
+  defp normalize_stat_count(_count), do: nil
+
+  defp all_clear_state(nil), do: :unavailable
+  defp all_clear_state(_summary), do: :ready
+
+  defp all_clear_label(nil), do: "Unavailable"
 
   defp all_clear_label(summary) do
     if all_clear?(summary), do: "All clear", else: "Needs attention"
   end
 
-  defp all_clear_color(nil), do: "text-secondary"
-
-  defp all_clear_color(summary) do
-    if all_clear?(summary), do: "text-success", else: "text-warning"
-  end
+  defp all_clear_severity(nil), do: :neutral
+  defp all_clear_severity(summary), do: if(all_clear?(summary), do: :success, else: :warning)
 
   defp all_clear?(summary) do
     summary.failed_ingest.count == 0 and summary.orphan_backlog.count == 0
