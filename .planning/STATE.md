@@ -20,7 +20,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v1.13 Admin Design-System Stress Test & UX Uplift — Phase 109 (Foundations + Gate-Tightening), UI-SPEC approved and ready to plan.
+**Current focus:** v1.13 Admin Design-System Stress Test & UX Uplift — Phase 109 (Foundations + Gate-Tightening), planned and ready to execute.
 
 ## Current Position
 
