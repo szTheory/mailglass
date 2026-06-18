@@ -226,7 +226,7 @@ defmodule MailglassAdmin.Operator.Shell do
       navigate={@href}
       aria-current={@active && "page"}
       class={[
-        "flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out",
         "duration-(--duration-fast)",
         if(@active,
           do: "border-primary bg-base-100 font-bold text-base-content",
@@ -250,7 +250,7 @@ defmodule MailglassAdmin.Operator.Shell do
       navigate={@href}
       aria-current={@active && "page"}
       class={[
-        "flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast) focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+        "mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast)",
         if(@active,
           do: "bg-primary/10 font-bold text-base-content",
           else: "text-secondary hover:text-base-content"

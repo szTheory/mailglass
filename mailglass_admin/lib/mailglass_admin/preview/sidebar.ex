@@ -78,7 +78,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   def mailable_entry(%{reflection: list} = assigns) when is_list(list) do
     ~H"""
     <details open={@current_mailable == @mod}>
-      <summary class="flex items-center gap-2 px-3 py-2 min-h-11 text-body font-bold text-base-content cursor-pointer hover:bg-base-200 rounded transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1">
+      <summary class="mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body font-bold text-base-content cursor-pointer hover:bg-base-200 rounded transition-colors">
         <span class="truncate">{inspect(@mod)}</span>
       </summary>
       <ul class="mt-1 ml-2">
@@ -87,7 +87,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
             <.link
               patch={scenario_path(@mount_path, @mod, scenario_name, @device_width, @admin_chrome_theme)}
               class={[
-                "flex items-center gap-2 px-3 py-2 min-h-11 text-body truncate transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                "mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body truncate transition-colors",
                 scenario_classes(@current_mailable, @current_scenario, @mod, scenario_name)
               ]}
             >
@@ -115,7 +115,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     <.link
       patch={broken_path(@mount_path, @mod)}
       title="preview_props/0 raised an error"
-      class="flex items-center gap-2 px-3 py-2 min-h-11 text-body text-base-content hover:bg-base-200 rounded transition-colors"
+      class="mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body text-base-content hover:bg-base-200 rounded transition-colors"
     >
       <span class="truncate">{inspect(@mod)}</span>
       <Components.badge variant={:warning} />

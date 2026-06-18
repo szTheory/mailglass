@@ -282,7 +282,7 @@ defmodule MailglassAdmin.PreviewLive do
             <% @render_error -> %>
               <div
                 data-testid="preview-render-error"
-                class="rounded-box border-2 border-error bg-base-200 p-lg"
+                class="rounded-box border border-error bg-base-200 p-lg"
               >
                 <div class="flex items-center gap-sm mb-md">
                   <Components.icon name="hero-exclamation-circle" class="w-5 h-5 text-error" />
@@ -313,7 +313,7 @@ defmodule MailglassAdmin.PreviewLive do
                         do: "Switch admin chrome to light theme",
                         else: "Switch admin chrome to dark theme"
                     }
-                    class="btn btn-ghost btn-sm btn-square min-h-11 focus-visible:ring-2 focus-visible:ring-primary"
+                    class="mg-focus-ring btn btn-ghost btn-sm btn-square min-h-11"
                   >
                     <Components.icon
                       name={if admin_chrome_dark?(@admin_chrome_theme), do: "hero-sun", else: "hero-moon"}
@@ -329,7 +329,7 @@ defmodule MailglassAdmin.PreviewLive do
                         do: "Switch preview frame to light chrome",
                         else: "Switch preview frame to dark chrome"
                     }
-                    class="btn btn-ghost btn-sm btn-square min-h-11 focus-visible:ring-2 focus-visible:ring-primary"
+                    class="mg-focus-ring btn btn-ghost btn-sm btn-square min-h-11"
                   >
                     <Components.icon
                       name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
@@ -385,7 +385,7 @@ defmodule MailglassAdmin.PreviewLive do
                 </ul>
                 <a
                   href="https://hexdocs.pm/mailglass_admin/MailglassAdmin.Router.html"
-                  class="btn btn-ghost mt-md min-h-11 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+                  class="mg-focus-ring btn btn-ghost mt-md min-h-11"
                 >
                   Read preview setup
                 </a>
@@ -406,7 +406,7 @@ defmodule MailglassAdmin.PreviewLive do
                   <.link
                     :if={first_previewable(@mailables)}
                     patch={first_scenario_path(@mount_path, @mailables, @admin_chrome_theme)}
-                    class="motion-reveal btn btn-primary mt-md min-h-11 focus-visible:ring-2 focus-visible:ring-primary"
+                    class="motion-reveal mg-focus-ring btn btn-primary mt-md min-h-11"
                   >
                     Preview the first Mailable
                   </.link>
