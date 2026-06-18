@@ -1,6 +1,12 @@
 defmodule Mailglass.ReferenceHost.TrustRunnerCheckpointContractTest do
   use ExUnit.Case, async: false
 
+  # Requires the full repo workspace (reference-host trust runner + sibling
+  # MailglassInbound), unavailable in the isolated-core Core Full Suite Advisory
+  # lane. Excluded there via `--exclude requires_workspace`; covered in CI by the
+  # dedicated Trust Lane lanes.
+  @moduletag :requires_workspace
+
   alias Mailglass.ReferenceHost.TrustCheckpoint
   alias Mailglass.ReferenceHost.TrustRunnerFixtures
 

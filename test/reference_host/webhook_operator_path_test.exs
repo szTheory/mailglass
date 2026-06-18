@@ -1,6 +1,12 @@
 defmodule Mailglass.ReferenceHost.WebhookOperatorPathTest do
   use ExUnit.Case, async: false
 
+  # Requires the full repo workspace (sibling MailglassInbound compiled for the
+  # reference-host router), unavailable in the isolated-core Core Full Suite
+  # Advisory lane. Excluded there via `--exclude requires_workspace`; covered in
+  # CI by the dedicated Trust Lane lanes.
+  @moduletag :requires_workspace
+
   alias Mailglass.ReferenceHost.OperatorDiagnosisProof
   alias Mailglass.ReferenceHost.WebhookOperatorProof
 

@@ -1,6 +1,12 @@
 defmodule Mailglass.DemoDataTest do
   use ExUnit.Case, async: false
 
+  # Shells out to reference/demo_app (needs its deps fetched), unavailable in the
+  # isolated-core Core Full Suite Advisory lane. Excluded there via
+  # `--exclude requires_workspace`; demo fixtures are covered in CI by the
+  # Demo Browser Evidence lane.
+  @moduletag :requires_workspace
+
   @demo_app Path.expand("../../reference/demo_app", __DIR__)
 
   test "demo app fixture suite passes from repo root" do

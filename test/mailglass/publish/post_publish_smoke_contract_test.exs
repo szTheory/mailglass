@@ -1,6 +1,12 @@
 defmodule Mailglass.Publish.PostPublishSmokeContractTest do
   use ExUnit.Case, async: true
 
+  # Exercises the published post-publish-smoke trust journey (reference-host proof
+  # + sibling MailglassInbound), unavailable in the isolated-core Core Full Suite
+  # Advisory lane. Excluded there via `--exclude requires_workspace`; the
+  # post-publish smoke runs for real in the publish-hex pipeline.
+  @moduletag :requires_workspace
+
   @workflow_path Path.expand("../../../.github/workflows/post-publish-smoke.yml", __DIR__)
 
   test "published trust journey runs full reference-host proof and uploads checkpoint" do

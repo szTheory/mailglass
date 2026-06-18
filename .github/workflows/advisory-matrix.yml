@@ -75,7 +75,18 @@ jobs:
           until pg_isready -h localhost -U postgres -d postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run advisory full suite
-        run: mix test --warnings-as-errors
+        # Runs the complete core `lib/` test suite (the ~120 core test files no
+        # required lane covers — only the narrow verify.support_contract.core /
+        # provider-compat file lists run as required checks).
+        # `--exclude requires_workspace`: a handful of maintainer dev-tooling tests
+        # (reference-host trust journey, demo_app fixtures, post-publish smoke)
+        # need the full multi-package workspace (sibling MailglassInbound compiled,
+        # reference/demo apps with fetched deps) which this isolated-core lane does
+        # not set up. They fail here structurally — not real lib regressions — and
+        # are covered by the dedicated Trust Lane / Demo Browser Evidence /
+        # publish-hex post-publish-smoke lanes. Excluding them lets this lane be a
+        # meaningful green canary instead of permanently red.
+        run: mix test --warnings-as-errors --exclude requires_workspace
 
   provider_compatibility_advisory:
     name: Provider Compatibility Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }})
