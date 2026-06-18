@@ -215,7 +215,8 @@ defmodule MailglassAdmin.Router do
       scope path, alias: false, as: false do
         MailglassAdmin.Router.__asset_routes__()
 
-        on_mount_hooks = opts[:on_mount] ++ [MailglassAdmin.Preview.Mount]
+        on_mount_hooks =
+          opts[:on_mount] ++ [MailglassAdmin.Preview.Mount, MailglassAdmin.MountPathHook]
 
         live_session session_name,
           session: {MailglassAdmin.Router, :__preview_session__, [opts]},
@@ -254,7 +255,9 @@ defmodule MailglassAdmin.Router do
       scope path, alias: false, as: false do
         MailglassAdmin.Router.__asset_routes__()
 
-        on_mount_hooks = opts[:on_mount] ++ [{MailglassAdmin.Operator.Mount, opts}]
+        on_mount_hooks =
+          opts[:on_mount] ++
+            [{MailglassAdmin.Operator.Mount, opts}, MailglassAdmin.MountPathHook]
 
         live_session session_name,
           session: {MailglassAdmin.Router, :__operator_session__, [opts]},

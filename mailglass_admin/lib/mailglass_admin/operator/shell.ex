@@ -43,16 +43,22 @@ defmodule MailglassAdmin.Operator.Shell do
 
   @doc """
   Derives the `{deliveries, inbound}` nav paths from a screen's `base_path`,
-  carrying the `?theme=` param so the active theme survives navigation. `active`
-  tells us which surface we're on so we can recover the operator root (the
-  inbound screen's `base_path` has a trailing `/inbound` to strip).
+  carrying the `?tenant_id=` and `?theme=` params so the tenant scope AND the
+  active theme survive cross-surface navigation. `active` tells us which surface
+  we're on so we can recover the operator root (the inbound screen's `base_path`
+  has a trailing `/inbound` to strip).
+
+  Only `tenant_id` is carried across surfaces — it is the shared scoping
+  dimension. Surface-specific filters (delivery vs inbound status sets) are
+  intentionally left behind, since they don't translate between surfaces.
   """
-  def surface_paths(base_path, active, dark_chrome) do
+  def surface_paths(base_path, active, dark_chrome, tenant_id \\ nil) do
     root = operator_root(base_path, active)
+    query = build_query(tenant_id, dark_chrome)
 
     %{
-      deliveries: with_theme(root, dark_chrome),
-      inbound: with_theme(path_join(root, "inbound"), dark_chrome)
+      deliveries: root <> query,
+      inbound: path_join(root, "inbound") <> query
     }
   end
 
@@ -96,8 +102,24 @@ defmodule MailglassAdmin.Operator.Shell do
   defp path_join("/", segment), do: "/" <> segment
   defp path_join(root, segment), do: String.trim_trailing(root, "/") <> "/" <> segment
 
-  defp with_theme(path, true), do: path <> "?theme=dark"
-  defp with_theme(path, false), do: path
+  # Builds the shared query string for cross-surface nav. Order is fixed
+  # (tenant_id then theme) so paths are deterministic for tests.
+  defp build_query(tenant_id, dark_chrome) do
+    pairs =
+      [
+        {"tenant_id", blank_to_nil(tenant_id)},
+        {"theme", if(dark_chrome, do: "dark", else: nil)}
+      ]
+      |> Enum.reject(fn {_key, value} -> is_nil(value) end)
+
+    case pairs do
+      [] -> ""
+      pairs -> "?" <> URI.encode_query(pairs)
+    end
+  end
+
+  defp blank_to_nil(value) when value in [nil, ""], do: nil
+  defp blank_to_nil(value), do: value
 
   attr :active, :atom, values: [:deliveries, :inbound], required: true
   attr :deliveries_path, :string, required: true

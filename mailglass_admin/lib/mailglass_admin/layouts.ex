@@ -31,6 +31,15 @@ defmodule MailglassAdmin.Layouts do
     end
   end
 
+  # `:mount_path` is seeded on every admin socket by
+  # `MailglassAdmin.MountPathHook` and flows into the root layout as a socket
+  # assign — the only mount-aware value reliably available here as of
+  # phoenix_live_view 1.2, where the root layout no longer receives `@conn`.
+  defp mounted_asset_url(%{mount_path: mount_path}, filename) when is_binary(mount_path) do
+    Path.join(mount_path, filename)
+  end
+
+  # Fallback for older LiveView (1.1.x) renders that still pass `@conn`.
   defp mounted_asset_url(%{conn: %Plug.Conn{request_path: request_path}}, filename) do
     request_path
     |> asset_mount_path()
@@ -39,36 +48,7 @@ defmodule MailglassAdmin.Layouts do
 
   defp mounted_asset_url(_assigns, filename), do: filename
 
-  defp asset_mount_path(request_path) do
-    segments =
-      request_path
-      |> String.trim("/")
-      |> String.split("/", trim: true)
-
-    segments =
-      case segments do
-        [] ->
-          []
-
-        segments ->
-          last = List.last(segments)
-          preview_mailable? =
-            segments
-            |> Enum.at(-2, "")
-            |> module_segment?()
-
-          cond do
-            last in ["gallery", "inbound"] -> Enum.drop(segments, -1)
-            preview_mailable? -> Enum.drop(segments, -2)
-            true -> segments
-          end
-      end
-
-    "/" <> Enum.join(segments, "/")
-  end
-
-  defp module_segment?(segment),
-    do: String.contains?(segment, ".") and String.match?(segment, ~r/^(Elixir\.)?[A-Z]/)
+  defp asset_mount_path(request_path), do: MailglassAdmin.MountPath.base(request_path)
 
   defp js_inline do
     if Code.ensure_loaded?(MailglassAdmin.Controllers.Assets) and
@@ -79,18 +59,20 @@ defmodule MailglassAdmin.Layouts do
     end
   end
 
-  defp root_theme(assigns) do
-    case assigns do
-      %{conn: %Plug.Conn{query_string: query_string}} ->
-        query_string
-        |> URI.decode_query()
-        |> Map.get("theme")
-        |> explicit_theme_attr()
+  # Prefer the LiveView's parsed theme socket assign (set by PreviewLive and
+  # flowing into the root layout in every LiveView version); fall back to the
+  # conn query string on older (1.1.x) renders that still expose `@conn`.
+  defp root_theme(%{admin_chrome_theme: theme}) when theme in [:dark, :light],
+    do: explicit_theme_attr(Atom.to_string(theme))
 
-      _ ->
-        nil
-    end
+  defp root_theme(%{conn: %Plug.Conn{query_string: query_string}}) do
+    query_string
+    |> URI.decode_query()
+    |> Map.get("theme")
+    |> explicit_theme_attr()
   end
+
+  defp root_theme(_assigns), do: nil
 
   defp explicit_theme_attr(theme) when theme in ["dark", "mailglass-dark"], do: "mailglass-dark"
   defp explicit_theme_attr(theme) when theme in ["light", "mailglass-light"], do: "mailglass-light"

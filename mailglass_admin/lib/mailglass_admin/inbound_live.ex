@@ -267,7 +267,8 @@ defmodule MailglassAdmin.InboundLive do
       MailglassAdmin.Operator.Shell.surface_paths(
         assigns.base_path,
         :inbound,
-        assigns.dark_chrome
+        assigns.dark_chrome,
+        blank_to_nil(assigns.filter_params["tenant_id"])
       )
 
     assigns =

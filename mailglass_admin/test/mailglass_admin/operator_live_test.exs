@@ -698,6 +698,33 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end
   end
 
+  describe "cross-surface tenant scope" do
+    test "rendered Inbound nav target preserves the current tenant", %{conn: conn} do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ "/ops/mail/inbound?tenant_id=#{@tenant_id}"
+    end
+  end
+
+  describe "root layout theme (MountPathHook)" do
+    test "?theme=dark themes the operator ROOT <html>, not just the shell", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "theme" => "dark"}))
+
+      assert html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
+    end
+
+    test "no theme param leaves the operator root <html> un-themed", %{conn: conn} do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      refute html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
+    end
+  end
+
   defp operator_path(params) do
     @base_path <> "?" <> URI.encode_query(params)
   end
@@ -1067,7 +1094,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, @base_path)
 
-      assert html =~ "Select a tenant to see health at a glance."
+      assert html =~ "Select a tenant to begin"
+      assert html =~ ~s(data-testid="operator-overview-no-tenant")
       refute html =~ ~s(data-testid="operator-overview-health")
     end
 

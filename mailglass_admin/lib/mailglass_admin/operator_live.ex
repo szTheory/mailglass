@@ -251,7 +251,8 @@ defmodule MailglassAdmin.OperatorLive do
       MailglassAdmin.Operator.Shell.surface_paths(
         assigns.base_path,
         :deliveries,
-        assigns.dark_chrome
+        assigns.dark_chrome,
+        blank_to_nil(assigns.filter_params["tenant_id"])
       )
 
     assigns =
@@ -314,14 +315,12 @@ defmodule MailglassAdmin.OperatorLive do
                   </div>
                   <div class="text-label text-secondary">Active suppressions</div>
                 </div>
-                <div class="card bg-base-200 border border-base-300 rounded-box p-md">
+                <div class="card bg-base-200 border border-base-300 rounded-box p-md min-w-0">
                   <div
-                    class={"text-display font-bold #{if(@support_summary && @support_summary.failed_ingest.count == 0 && @support_summary.orphan_backlog.count == 0, do: "text-success", else: "text-secondary")}"}
+                    class={"text-display font-bold break-words #{all_clear_color(@support_summary)}"}
                     data-testid="operator-overview-health-allclear"
                   >
-                    <%= if @support_summary && @support_summary.failed_ingest.count == 0 && @support_summary.orphan_backlog.count == 0,
-                          do: "All clear",
-                          else: "—" %>
+                    {all_clear_label(@support_summary)}
                   </div>
                   <div class="text-label text-secondary">All-clear status</div>
                 </div>
@@ -360,7 +359,21 @@ defmodule MailglassAdmin.OperatorLive do
               </div>
             </div>
           <% else %>
-            <p class="text-body text-secondary">Select a tenant to see health at a glance.</p>
+            <div
+              data-testid="operator-overview-no-tenant"
+              class="card bg-base-200 border border-base-300 rounded-box p-md flex flex-col gap-sm"
+            >
+              <div class="text-body font-bold text-base-content">Select a tenant to begin</div>
+              <div class="text-body text-secondary">
+                Operator views are scoped to one tenant at a time. Pick a tenant with the filters
+                on the Deliveries screen, or add <code class="mono">?tenant_id=…</code> to the URL.
+              </div>
+              <div>
+                <.link navigate={@deliveries_path} class="btn btn-primary btn-sm min-h-11">
+                  Go to Deliveries
+                </.link>
+              </div>
+            </div>
           <% end %>
         </div>
       <% else %>
@@ -671,7 +684,8 @@ defmodule MailglassAdmin.OperatorLive do
       MailglassAdmin.Operator.Shell.surface_paths(
         socket.assigns.base_path,
         :deliveries,
-        socket.assigns.dark_chrome
+        socket.assigns.dark_chrome,
+        blank_to_nil(socket.assigns.filter_params["tenant_id"])
       )
 
     socket
@@ -854,6 +868,24 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp support_summary_module, do: :"Elixir.Mailglass.Operator.SupportSummary"
   defp suppression_count_module, do: :"Elixir.Mailglass.Operator.Suppressions"
+
+  # Three-state copy/color for the All-clear health card: a bare "—" only while
+  # the summary is still loading; a meaningful label once it resolves.
+  defp all_clear_label(nil), do: "—"
+
+  defp all_clear_label(summary) do
+    if all_clear?(summary), do: "All clear", else: "Needs attention"
+  end
+
+  defp all_clear_color(nil), do: "text-secondary"
+
+  defp all_clear_color(summary) do
+    if all_clear?(summary), do: "text-success", else: "text-warning"
+  end
+
+  defp all_clear?(summary) do
+    summary.failed_ingest.count == 0 and summary.orphan_backlog.count == 0
+  end
 
   defp blank_to_nil(value) when value in [nil, ""], do: nil
   defp blank_to_nil(value), do: value
