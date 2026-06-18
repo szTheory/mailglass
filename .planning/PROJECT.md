@@ -8,15 +8,70 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Position: between milestones (v1.11 shipped 2026-06-16)
+## Current Milestone: v1.13 Admin Design-System Stress Test & UX Uplift (v3)
 
-**No active milestone.** `v1.12 Adopter Onboarding & Day-2 Confidence` shipped
-2026-06-17 (audit `status: passed` — 13/13 requirements, 5/5 phases) and **cut the first
-real linked-version Hex release since 1.6.2**: in-repo and Hex version truth is now
-**1.7.0 / 1.7.0 / 1.4.0** (mailglass / mailglass_admin / mailglass_inbound), with
-mailglass_inbound re-pinned to `{:mailglass, "== 1.7.0"}` (D-13 / REL-02). Next step is
-`/gsd-new-milestone` to define the next cycle. Posture remains quiet maintenance /
-adopter-pull per the D-23 convergence rule.
+**Opened 2026-06-18.** The first feature-milestone after the maintainer ended the post-v1.12
+quiet-maintenance posture — triggered by clicking the real `make demo` app and hitting
+lived-experience rough edges the in-the-lab v1.11 ratchet never surfaced (a tenant-scoping
+dead-end, a pointless single-tenant picker, clipped stat-card labels, "kind of ugly" visuals).
+A sanctioned adopter-visible-**quality** investment under the D-23 convergence rule (precedent:
+D-24 v1.7, D-27 v1.11) — NOT product-capability growth.
+
+**Goal:** Systematically audit and uplift the `mailglass_admin` design system **fractally**
+(foundations → primitives → forms → app-shell → data-display → component-groups → pages/flows)
+to award-winning, internally-coherent, on-brand quality in **light / dark / system** at every
+width, **WCAG 2.2 AA**, with per-decision research that is adversarially judged and synthesized
+to locked decisions, and an **idempotent no-regression ratchet** — proven against stress
+fixtures along real JTBD happy / error / boundary / edge paths — then shipped to Hex.
+
+**Target features:**
+- **Foundations audit/uplift** — semantic-token completeness (color/surface/elevation + a formal
+  **z-index layer system**, focus rings, overlays, type scale, spacing, radius, shadows, borders,
+  icons, **motion tokens**); zero one-off values; light/dark/system.
+- **Theme: full system / light / dark picker, system as default** (today only a light/dark toggle).
+- **Primitive + form-control audit** — every component in every state
+  (hover/focus/active/pressed/disabled/loading/selected/error/empty/long-content), WCAG 2.2 AA +
+  WAI-ARIA APG patterns, mobile-first responsive 320→wide.
+- **App-shell, navigation & data-display patterns** — tables-vs-cards discipline, consistent stat
+  cards, timelines, empty/error/permission/stale states, honest pagination affordances,
+  operator-under-stress clarity.
+- **Component groups (meta-components) + pages/flows** — coherent spacing/hierarchy, GOV.UK-style
+  information architecture, principle of least surprise, per-persona/JTBD happy/error/boundary/
+  edge/advanced paths.
+- **Component-lab / "Storybook-lens" stress surface** — extend the dev-only `/dev/mail/gallery`
+  into the systematic component × state × theme × viewport audit matrix (decision brief:
+  PhoenixStorybook vs in-house, leaning in-house under the zero-Node rule).
+- **Micro-animation pass** (Emil Kowalski best-practice, origin-aware overlays,
+  `prefers-reduced-motion`, transform/opacity only) + **microcopy pass** (recovery-oriented
+  errors, helpful empty states, consistent domain language).
+- **Multi-tenant fixture cohort (2–3 personas) + tenant listing / auto-select** — kills the
+  "No tenant selected" scoping dead-end and gives the tenant picker a reason to exist; stress
+  fixtures across no-data/one/many/long-IDs/non-ASCII/high-count/null/error/boundary.
+- **Usability-bug sweep** — modal-behind-scrim, scroll traps, hover on non-interactive heroes,
+  misalignment, chopped padding, inconsistent spacing, squished table columns, table-overuse,
+  inconsistent stat cards, disabled-looking-enabled controls, contrast failures.
+- **Idempotent quality ratchet** — re-arm and **extend** the v1.11 meet-or-beat baseline +
+  `GAP-NN` register + structural/a11y/motion gates across the widened matrix (system theme,
+  WCAG 2.2 AA, new viewports).
+
+**Scope locks:**
+- **Admin + demo only.** Recipient-facing email HEEx templates and `brandbook/` tokens are OUT —
+  the brand book is the source of truth (a newer brand book wins over older `prompts/` files).
+- **Host-app-friendly** (mountable library): don't hijack host auth/theme/assets/Repo; no
+  surprising global CSS/JS; no new deps without clear long-term payoff (PhoenixStorybook →
+  decision brief).
+- **Research: YES** — per-decision subagent research (Phoenix LiveDashboard / Oban Web / Backpex /
+  Kaffy / AshAdmin + Carbon/Polaris/GOV.UK + WCAG 2.2/APG + Emil Kowalski), adversarially judged;
+  extends the v1.11 LOCKED-DECISION dossiers rather than redoing them.
+- **Release posture: ACTUALLY CUT** at close — merge PR #86 first (held adopter-facing bug fixes:
+  broken operator/inbound theme, lost tenant scope), then one linked-version Hex release
+  (admin-minor drags core+inbound; D-13 inbound exact-pin re-pin).
+- **Zero Node toolchain**; admin CSS bundle rebuilt + committed on class changes. Phases continue
+  from 108 → 109+.
+
+**v1.12 (shipped 2026-06-17):** `Adopter Onboarding & Day-2 Confidence` — audit `status: passed`
+(13/13 requirements, 5/5 phases); cut the first real linked-version Hex release since 1.6.2 → live
+at **1.7.0 / 1.7.0 / 1.4.0**, mailglass_inbound re-pinned `{:mailglass, "== 1.7.0"}` (D-13 / REL-02).
 
 <details>
 <summary>v1.11 mailglass_admin Design-System Uplift — original goal and targets (shipped)</summary>
@@ -571,6 +626,8 @@ Explicit boundaries with permanent reasoning to prevent re-litigation.
 | D-25 | v1.8 brand-system work is a repo-artifact milestone, not product expansion | Mailglass had strong prompt-era brand direction but lacked source-controlled, buildable collateral for maintainers, future agents, docs, landing pages, tokens, logos, and marketing copy | ✓ Held through v1.8→v1.9→v1.10 — all artifacts stayed under `brandbook/`; no public API/package code changes; brand strategy preserved as provenance |
 | D-26 | v1.10 adopts the A/B-winning fable brand as the project's one canonical identity and hardens the release pipeline against accidental brand/planning-only releases | The v1.9 A/B winner needed to actually become the repo's identity (folder, README, social, HexDocs), and the 1.6.x accidental-release incident proved release-please could cut a release from non-code commits | ✓ Validated v1.10 — canonical `brandbook/` adopted (codex removed), README/og-card/admin/HexDocs surfaces propagated, `exclude-paths` + required `guard-release-trigger` lint added, 1.6.x aftermath reconciled to 1.6.2/1.6.2/1.3.1; audit passed 10/10; no Hex release cut |
 | D-27 | v1.11 re-baselines `mailglass_admin` onto the canonical fable brand tokens and runs a fractal (component → group → page), idempotent, research-grounded design-system uplift of all three admin surfaces — an adopter-visible-quality investment under D-23, not feature growth | The admin UI was last polished (v1.7) against the *old codex-era* brand; v1.9→v1.10 brand work never touched the admin's `app.css`, leaving it drifted (borders drawn in the accent color, cards one brand-role off, dark muted text below AA, no consumption of `brandbook/tokens.css`). The "Storybook lens" is realized as a thin dev-only gallery (zero-Node forbids real Storybook); "only-forward" is enforced by a committed score baseline + carried-forward GAP register. Scope fenced to admin UI; release prepare-only | ✓ Validated v1.11 — all 3 admin surfaces re-baselined onto `brandbook/tokens.css`; idempotent ratchet armed (36/36 cells meet-or-beat, zero regressions); dev-only gallery shipped; audit passed 34/34 reqs across 10 phases; release prepare-only held (no Hex cut); fenced scope held (no functional core/inbound changes) |
+| D-28 | Each adopter-quality milestone **actually cuts** the linked-version Hex release at close (not prepare-only), draining the staged-but-unshipped backlog to adopters | v1.7/v1.11 staged release ceremonies prepare-only, accumulating polish on `main` that adopters never saw; the convergence posture is only adopter-valuable once it ships | ✓ Validated v1.12 — first real linked-version release since 1.6.2 cut (1.7.0/1.7.0/1.4.0); carried into v1.13 (PR #86 fixes + the design-system uplift ship together) |
+| D-29 | v1.13 is a third adopter-visible-quality admin pass under D-23, distinguished from v1.7/v1.11 by being **lived-experience / real-demo-driven** rather than in-the-lab: a fractal, research-per-decision (adversarially judged), WCAG-2.2-AA, light/dark/**system**, idempotent design-system stress-test that also fixes the multi-tenant demo so the picker earns its place — then ships (D-28) | v1.11's ratchet passed in the lab (LLM-scored PNGs, structural assertions) yet clicking the real demo still surfaced usability traps and "kind of ugly" rough edges; the remaining gap is lived-experience polish + a tangible multi-tenant story, not more capability. Restraint (admin+demo only, brand book is source of truth, no new deps without a decision brief, idempotent meet-or-beat ratchet extended from v1.11) keeps it convergence-aligned | — Pending (v1.13 in flight) |
 
 ## Evolution
 
@@ -593,4 +650,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-17 after v1.12 milestone — **v1.12 Adopter Onboarding & Day-2 Confidence SHIPPED** (Phases 104-108; audit `status: passed`, 13/13 requirements, 5/5 phases). Installer fails closed on the webhook-`Plug.Parsers` footgun (+`--force` + `mix mailglass.doctor`), onboarding/day-2 docs landed, inbound replay-modal a11y parity, and the **first real linked-version Hex release since 1.6.2** was cut — live at 1.7.0 / 1.7.0 / 1.4.0, mailglass_inbound re-pinned `{:mailglass, "== 1.7.0"}`. No active milestone — next step `/gsd-new-milestone`.*
+*Last updated: 2026-06-18 after opening **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** — a lived-experience / real-demo-driven, fractal, research-per-decision, WCAG-2.2-AA, light/dark/system, idempotent design-system stress-test of `mailglass_admin` plus a tangible multi-tenant demo (D-29); admin + demo only, ships to Hex at close bundling PR #86 (D-28). Phases continue from 108 → 109+. Previously: v1.12 Adopter Onboarding & Day-2 Confidence SHIPPED 2026-06-17 (live at 1.7.0 / 1.7.0 / 1.4.0).*

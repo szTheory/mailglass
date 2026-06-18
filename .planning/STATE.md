@@ -1,34 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.12
-milestone_name: Adopter Onboarding & Day-2 Confidence
-status: shipped
-last_updated: "2026-06-17T20:55:00.000Z"
-last_activity: 2026-06-18 -- quick 260618-1qj: de-hardcoded trust-lane baseline (zero-touch, refreshed to 1.7.0); release-pipeline-maintenance thread fully CLOSED (all items done)
+milestone: v1.13
+milestone_name: Admin Design-System Stress Test & UX Uplift
+status: planning
+last_updated: "2026-06-18T14:35:33.301Z"
+last_activity: 2026-06-18
 progress:
-  total_phases: 17
-  completed_phases: 17
-  total_plans: 57
-  completed_plans: 57
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-16 — after v1.11 milestone close)
+See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** None — v1.12 shipped; next step `/gsd-new-milestone`.
+**Current focus:** v1.13 Admin Design-System Stress Test & UX Uplift — defining requirements.
 
 ## Current Position
 
-Phase: 108 (release-cut-milestone-closeout) — COMPLETE
-Plan: 1 of 1 complete
-Status: v1.12 SHIPPED — no active milestone
-Last activity: 2026-06-17 -- v1.12 shipped (1.7.0/1.7.0/1.4.0 on Hex); milestone closed
-Live Hex versions: mailglass 1.7.0 / mailglass_admin 1.7.0 / mailglass_inbound 1.4.0 (inbound pinned mailglass == 1.7.0)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-18 — Milestone v1.13 started
 
 ## v1.12 Milestone Intent
 
@@ -368,14 +367,17 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 - **No active milestone. No recommended next feature milestone** (post-v1.12 assessment 2026-06-17).
   The library is ~93–95% done for its scope; the last wedge shipped. **Default to quiet maintenance.**
   Do NOT run `/gsd-new-milestone` for feature work unless a concrete adopter pull surfaces.
+
 - **Maintenance thread `release-pipeline-maintenance.md` — ✅ FULLY CLOSED (2026-06-18).** All items done:
   ✅ (1) `gate-ci-green` advisory-classifier fix (`1e0e60b1`).
   ✅ (4) held dep PRs #76 premailex 1.0.0 + #75 swoosh 1.26.1 merged (quick `260617-syd`; `9c3bbfea`/`50b49206`).
   ✅ (5) `Core Full Suite Advisory` lane fixed → green (quick `260617-tgw`; `abadbb32`).
   ✅ (2) trust-lane baseline de-hardcoded + refreshed to 1.7.0 → dep/version bumps are now **zero-touch**
   (quick `260618-1qj`; `7cbef50b`). No remaining maintenance work; release pipeline is clean + low-maintenance.
+
 - **Before any *feature-discovery* pass** (only if reconsidering expansion): refresh
   `.planning/research/JTBD-COVERAGE.md` (now 6 milestones stale) — its conclusion still holds, only
   its status tables are stale. Not needed for maintenance work.
+
 - Expansion candidates remain pull-gated (watchlist `transport-expansion-watchlist.md`): SEED-003,
   Cloudflare Email Routing, synthetic inbound dev UI, `gen_smtp` listener, more providers.
