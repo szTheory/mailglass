@@ -98,6 +98,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:base_path, "/inbound")
      |> assign(:page_uri, "/inbound")
      |> assign(:dark_chrome, false)
+     |> assign(:theme_choice, :system)
      |> assign(:outcome_values, @outcome_values)
      |> assign(:window_options, @window_options)
      |> assign(:filter_params, default_filter_params())
@@ -122,6 +123,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:base_path, URI.parse(uri).path || "/inbound")
      |> assign(:page_uri, uri)
      |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params))
+     |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params))
      |> assign(:filter_params, filter_params)
      |> assign(:filter_form, to_form(filter_params, as: :filters))
      |> assign_inbound_state(filter_params, blank_to_nil(params["inbound_id"]))
@@ -146,6 +148,13 @@ defmodule MailglassAdmin.InboundLive do
            socket.assigns.page_uri,
            socket.assigns.dark_chrome
          )
+     )}
+  end
+
+  def handle_event("set_theme", %{"theme" => theme}, socket) do
+    {:noreply,
+     push_patch(socket,
+       to: MailglassAdmin.Operator.Shell.set_theme_path(socket.assigns.page_uri, theme)
      )}
   end
 
@@ -285,6 +294,7 @@ defmodule MailglassAdmin.InboundLive do
       inbound_path={@inbound_path}
       inbound_available?={@inbound_available?}
       dark_chrome={@dark_chrome}
+      theme_choice={@theme_choice}
       tenant={blank_to_nil(@filter_params["tenant_id"])}
       title="Inbound records"
       subtitle="See why an InboundMessage routed the way it did — execution timeline, routing trace, and raw evidence."
@@ -390,7 +400,12 @@ defmodule MailglassAdmin.InboundLive do
               <div
                 id={"inbound-detail-#{@detail.record.id}"}
                 class="motion-reveal space-y-4"
-                phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0 translate-y-1"})}
+                phx-remove={
+                  JS.hide(
+                    time: 150,
+                    transition: {"ease-out duration-150", "opacity-100", "opacity-0 translate-y-1"}
+                  )
+                }
               >
                 <.link
                   patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
@@ -836,7 +851,8 @@ defmodule MailglassAdmin.InboundLive do
       "tenant_id" => normalize_string(Map.get(params, "tenant_id", defaults["tenant_id"])),
       "provider" => normalize_string(Map.get(params, "provider", defaults["provider"])),
       "outcome" => normalize_string(Map.get(params, "outcome", defaults["outcome"])),
-      "window_hours" => normalize_window(Map.get(params, "window_hours", defaults["window_hours"])),
+      "window_hours" =>
+        normalize_window(Map.get(params, "window_hours", defaults["window_hours"])),
       "search" => normalize_string(Map.get(params, "search", defaults["search"]))
     }
   end

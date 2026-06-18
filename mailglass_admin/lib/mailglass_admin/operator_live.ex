@@ -62,6 +62,7 @@ defmodule MailglassAdmin.OperatorLive do
      |> assign(:base_path, "/operator")
      |> assign(:page_uri, "/operator")
      |> assign(:dark_chrome, false)
+     |> assign(:theme_choice, :system)
      |> assign(:status_values, @status_values)
      |> assign(:event_values, @event_values)
      |> assign(:window_options, @window_options)
@@ -82,6 +83,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:base_path, URI.parse(uri).path || "/operator")
       |> assign(:page_uri, uri)
       |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params))
+      |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params))
       |> assign(:filter_params, filter_params)
       |> assign(:filter_form, to_form(filter_params, as: :filters))
       |> assign(:support_state, support_state)
@@ -125,6 +127,13 @@ defmodule MailglassAdmin.OperatorLive do
      )}
   end
 
+  def handle_event("set_theme", %{"theme" => theme}, socket) do
+    {:noreply,
+     push_patch(socket,
+       to: MailglassAdmin.Operator.Shell.set_theme_path(socket.assigns.page_uri, theme)
+     )}
+  end
+
   def handle_event("validate_filters", %{"filters" => filters}, socket) do
     {:noreply,
      assign(socket, :filter_form, to_form(normalize_filter_params(filters), as: :filters))}
@@ -150,6 +159,7 @@ defmodule MailglassAdmin.OperatorLive do
 
   def handle_event("open_support_exemplar", params, socket) do
     support_state = support_state_from_event(params)
+
     delivery_id =
       blank_to_nil(params["delivery_id"]) ||
         get_in(socket.assigns, [Access.key(:selected_delivery), Access.key(:id)])
@@ -269,6 +279,7 @@ defmodule MailglassAdmin.OperatorLive do
       inbound_path={@inbound_path}
       inbound_available?={@inbound_available?}
       dark_chrome={@dark_chrome}
+      theme_choice={@theme_choice}
       tenant={blank_to_nil(@filter_params["tenant_id"])}
       title={if @view == :overview, do: "Operator overview", else: "Deliveries"}
       subtitle={
@@ -293,7 +304,7 @@ defmodule MailglassAdmin.OperatorLive do
                     class={"text-display font-bold #{if(@support_summary && @support_summary.failed_ingest.count > 0, do: "text-error", else: "text-success")}"}
                     data-testid="operator-overview-health-failures"
                   >
-                    <%= if @support_summary, do: @support_summary.failed_ingest.count, else: "—" %>
+                    {if @support_summary, do: @support_summary.failed_ingest.count, else: "—"}
                   </div>
                   <div class="text-label text-secondary">Recent failures</div>
                 </div>
@@ -302,7 +313,7 @@ defmodule MailglassAdmin.OperatorLive do
                     class={"text-display font-bold #{if(@support_summary && @support_summary.orphan_backlog.count > 0, do: "text-warning", else: "text-success")}"}
                     data-testid="operator-overview-health-orphans"
                   >
-                    <%= if @support_summary, do: @support_summary.orphan_backlog.count, else: "—" %>
+                    {if @support_summary, do: @support_summary.orphan_backlog.count, else: "—"}
                   </div>
                   <div class="text-label text-secondary">Orphan backlog</div>
                 </div>
@@ -311,7 +322,7 @@ defmodule MailglassAdmin.OperatorLive do
                     class="text-display font-bold text-secondary"
                     data-testid="operator-overview-health-suppressions"
                   >
-                    <%= if is_nil(@suppression_count), do: "—", else: @suppression_count %>
+                    {if is_nil(@suppression_count), do: "—", else: @suppression_count}
                   </div>
                   <div class="text-label text-secondary">Active suppressions</div>
                 </div>
@@ -331,7 +342,9 @@ defmodule MailglassAdmin.OperatorLive do
               <h2 class="text-heading font-bold text-base-content">Navigate</h2>
               <div class="card bg-base-200 border border-base-300 rounded-box p-md flex flex-col gap-sm">
                 <div class="text-body font-bold text-base-content">View Deliveries</div>
-                <div class="text-body text-secondary">Search and audit outbound sends, inspect event timelines, and replay webhooks.</div>
+                <div class="text-body text-secondary">
+                  Search and audit outbound sends, inspect event timelines, and replay webhooks.
+                </div>
                 <div>
                   <.link
                     patch={
@@ -479,7 +492,12 @@ defmodule MailglassAdmin.OperatorLive do
                 <div
                   id={"delivery-detail-#{@selected_delivery.id}"}
                   class="motion-reveal space-y-4"
-                  phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0 translate-y-1"})}
+                  phx-remove={
+                    JS.hide(
+                      time: 150,
+                      transition: {"ease-out duration-150", "opacity-100", "opacity-0 translate-y-1"}
+                    )
+                  }
                 >
                   <.link
                     patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
