@@ -213,13 +213,63 @@
   --size-control-md: 44px;
   --size-control-lg: 52px;
 
-  /* Z-index tiers — map to standard Tailwind z utilities (z-10/20/30/40/50).
-     Replaces the previous ad-hoc z-50-everywhere. */
+  /* Z-index tiers — consumed through semantic .mg-layer-* utilities.
+     --z-overlay / --z-modal remain compatibility aliases for older notes;
+     new call sites split scrim and panel explicitly. */
+  --z-base: 0;
   --z-sticky: 10;
   --z-dropdown: 20;
-  --z-overlay: 30;
-  --z-modal: 40;
+  --z-overlay-scrim: 30;
+  --z-overlay-panel: 40;
+  --z-overlay: var(--z-overlay-scrim);
+  --z-modal: var(--z-overlay-panel);
   --z-toast: 50;
+}
+
+.mg-layer-base {
+  z-index: var(--z-base);
+}
+
+.mg-layer-sticky {
+  z-index: var(--z-sticky);
+}
+
+.mg-layer-dropdown {
+  z-index: var(--z-dropdown);
+}
+
+.mg-layer-overlay-scrim {
+  z-index: var(--z-overlay-scrim);
+}
+
+.mg-layer-overlay-panel {
+  z-index: var(--z-overlay-panel);
+}
+
+.mg-layer-toast {
+  z-index: var(--z-toast);
+}
+
+.mg-overlay-scrim {
+  background-color: color-mix(in srgb, var(--color-base-content) 40%, transparent);
+}
+
+.mg-focus-ring:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  transition: outline-color var(--duration-instant) var(--ease-out);
+}
+
+.mg-focus-ring-inset:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  transition: outline-color var(--duration-instant) var(--ease-out);
+}
+
+.mg-admin-root {
+  isolation: isolate;
+  position: relative;
+  z-index: var(--z-base);
 }
 
 body {
