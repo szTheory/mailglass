@@ -136,7 +136,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           value={@candidate.webhook_event_id}
           checked={@selected}
           aria-describedby={@description_id}
-          class="radio radio-sm mt-1"
+          class="radio mt-1"
         />
         <div class="min-w-0 flex-1 space-y-3">
           <div class="space-y-1">
