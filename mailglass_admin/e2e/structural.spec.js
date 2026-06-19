@@ -1367,6 +1367,97 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   });
 
   // =========================================================================
+  // APP SHELL — Phase 112
+  // Integrated tenant, theme, navigation, and pagination proof.
+  // =========================================================================
+  test.describe("app shell structural proof — Phase 112", () => {
+
+    test("sole tenant canonicalizes, explicit theme paints root, active nav has structural cues, and pagination boundaries are honest", async ({
+      page
+    }) => {
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.context().clearCookies();
+      const resetResponse = await page.request.get("/ops/browser-reset");
+      expect(resetResponse.ok()).toBeTruthy();
+
+      await page.goto(
+        `/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent("/ops/mail")}`
+      );
+      await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+
+      await expect(page).toHaveURL(/\/ops\/mail\?/);
+      await expect(page).toHaveURL(new RegExp(`tenant_id=${tenantId}`));
+      await expect(page.getByTestId("tenant-selector")).toHaveCount(0);
+
+      await page.context().addCookies([
+        {
+          name: "mailglass_admin_theme",
+          value: "dark",
+          domain: "127.0.0.1",
+          path: "/ops/mail"
+        }
+      ]);
+
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&page=1`);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-dark");
+
+      const activeDesktop = page.locator('a[aria-current="page"][href*="view=deliveries"]').first();
+      await expect(activeDesktop).toBeVisible();
+      await expect(activeDesktop).toHaveClass(/border-l-2/);
+      await expect(activeDesktop).toHaveClass(/border-primary/);
+
+      await expect(page.getByTestId("operator-result-count")).toContainText("7 results");
+      await expect(page.getByTestId("operator-pagination")).toBeVisible();
+      await expect(page.getByTestId("operator-pagination-prev-disabled")).toHaveAttribute("aria-disabled", "true");
+      await expect(page.getByTestId("operator-pagination-next")).toHaveAttribute("href", /tenant_id=browser-tenant/);
+      await expect(page.getByTestId("operator-pagination-next")).toHaveAttribute("href", /page=2/);
+
+      await page.getByTestId("operator-pagination-next").click();
+      await expect(page).toHaveURL(/tenant_id=browser-tenant/);
+      await expect(page).toHaveURL(/page=2/);
+      await expect(page.getByTestId("operator-pagination-prev")).toBeVisible();
+      await expect(page.getByTestId("operator-pagination-next-disabled")).toHaveAttribute("aria-disabled", "true");
+
+      await page.context().clearCookies();
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+      await expect(page.locator("html")).not.toHaveAttribute("data-theme", "system");
+    });
+
+    test("multi-tenant selector preserves surface state and inbound pagination uses real boundaries", async ({
+      page
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.context().clearCookies();
+      const resetResponse = await page.request.get("/ops/browser-reset");
+      expect(resetResponse.ok()).toBeTruthy();
+
+      await page.goto(
+        `/ops/browser-login?tenant_id=&return_to=${encodeURIComponent("/ops/mail/inbound?page=1")}`
+      );
+
+      await expect(page.getByTestId("tenant-selector")).toBeVisible();
+      await expect(page.getByText("browser-tenant", { exact: true })).toBeVisible();
+      await expect(page.getByText("deny-reveal", { exact: true })).toBeVisible();
+
+      await page.getByRole("link", { name: /browser-tenant/ }).click();
+      await expect(page).toHaveURL(/\/ops\/mail\/inbound\?/);
+      await expect(page).toHaveURL(/tenant_id=browser-tenant/);
+
+      const activeMobile = page.locator('a[aria-current="page"][href*="/ops/mail/inbound"]').last();
+      await expect(activeMobile).toBeVisible();
+      await expect(activeMobile).toHaveClass(/border-b-2/);
+      await expect(activeMobile).toHaveClass(/border-primary/);
+
+      await expect(page.getByTestId("inbound-result-count")).toContainText("9 results");
+      await expect(page.getByTestId("inbound-pagination")).toBeVisible();
+      await expect(page.getByTestId("inbound-pagination-prev-disabled")).toHaveAttribute("aria-disabled", "true");
+      await expect(page.getByTestId("inbound-pagination-next")).toHaveAttribute("href", /tenant_id=browser-tenant/);
+      await expect(page.getByTestId("inbound-pagination-next")).toHaveAttribute("href", /page=2/);
+    });
+
+  });
+
+  // =========================================================================
   // PRIMITIVE STRUCTURAL MATRIX — Phase 110
   // Named primitives are proved against rendered, compiled CSS output across
   // exact 320/768/1280 widths and light/dark/system gallery wrappers.
