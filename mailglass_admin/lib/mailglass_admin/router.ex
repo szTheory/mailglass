@@ -92,6 +92,7 @@ defmodule MailglassAdmin.Router do
               MailglassAdmin.Operator.Mount,
               MailglassAdmin.InboundLive,
               MailglassAdmin.Controllers.Assets,
+              MailglassAdmin.Controllers.ThemeController,
               MailglassAdmin.GalleryLive
             ]}
 
@@ -214,6 +215,7 @@ defmodule MailglassAdmin.Router do
     quote bind_quoted: [path: path, opts: opts, session_name: session_name] do
       scope path, alias: false, as: false do
         MailglassAdmin.Router.__asset_routes__()
+        MailglassAdmin.Router.__theme_routes__()
 
         on_mount_hooks =
           opts[:on_mount] ++ [MailglassAdmin.Preview.Mount, MailglassAdmin.MountPathHook]
@@ -254,6 +256,7 @@ defmodule MailglassAdmin.Router do
     quote bind_quoted: [path: path, opts: opts, session_name: session_name] do
       scope path, alias: false, as: false do
         MailglassAdmin.Router.__asset_routes__()
+        MailglassAdmin.Router.__theme_routes__()
 
         on_mount_hooks =
           opts[:on_mount] ++
@@ -289,6 +292,13 @@ defmodule MailglassAdmin.Router do
     end
   end
 
+  @doc false
+  defmacro __theme_routes__ do
+    quote do
+      get "/theme/:theme", MailglassAdmin.Controllers.ThemeController, :set
+    end
+  end
+
   # Whitelisted session callback — the CONTEXT the design contract / T-05-01 load-bearing
   # security seam. Called by Phoenix `live_session` machinery on every
   # mount. The first arg is bound as `_conn` (underscore prefix) so any
@@ -308,7 +318,8 @@ defmodule MailglassAdmin.Router do
 
     %{
       "mailables" => mailables,
-      "live_session_name" => opts[:live_session_name]
+      "live_session_name" => opts[:live_session_name],
+      "admin_chrome_theme_cookie" => __theme_cookie_value__(conn)
       # Add keys here ONLY when intentionally surfacing them to PreviewLive.
       # NEVER pass conn.private.plug_session through wholesale.
     }
@@ -324,6 +335,7 @@ defmodule MailglassAdmin.Router do
       "auth_method" => get_optional_session(conn, session_opts[:auth_method]),
       "recent_auth_at" => get_optional_session(conn, session_opts[:recent_auth_at]),
       "live_session_name" => opts[:live_session_name],
+      "admin_chrome_theme_cookie" => __theme_cookie_value__(conn),
       # CONTEXT the design contract: the inbound router module is a compile-time opt, not a
       # session value — surfaced here (as an atom, never cookie-sourced) so the
       # operator LiveView can reflect declared inbound routes for the
@@ -334,6 +346,14 @@ defmodule MailglassAdmin.Router do
 
   defp get_optional_session(_conn, nil), do: nil
   defp get_optional_session(conn, key), do: Plug.Conn.get_session(conn, key)
+
+  @doc false
+  def __theme_cookie_value__(conn) do
+    conn
+    |> Plug.Conn.fetch_cookies()
+    |> Map.get(:req_cookies, %{})
+    |> Map.get(MailglassAdmin.Controllers.ThemeController.cookie_name())
+  end
 
   defp expand_opt_aliases(opts, env) do
     Macro.prewalk(opts, fn node -> Macro.expand(node, env) end)

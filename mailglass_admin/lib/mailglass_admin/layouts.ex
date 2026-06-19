@@ -59,17 +59,23 @@ defmodule MailglassAdmin.Layouts do
     end
   end
 
-  # Prefer the LiveView's parsed theme socket assign (set by PreviewLive and
-  # flowing into the root layout in every LiveView version); fall back to the
-  # conn query string on older (1.1.x) renders that still expose `@conn`.
+  # Prefer the LiveView's parsed theme socket assign; fall back to request
+  # query/cookie data for the disconnected first HTTP response.
   defp root_theme(%{admin_chrome_theme: theme}) when theme in [:dark, :light],
     do: explicit_theme_attr(Atom.to_string(theme))
 
-  defp root_theme(%{conn: %Plug.Conn{query_string: query_string}}) do
-    query_string
-    |> URI.decode_query()
-    |> Map.get("theme")
-    |> explicit_theme_attr()
+  defp root_theme(%{conn: %Plug.Conn{} = conn}) do
+    params = URI.decode_query(conn.query_string || "")
+
+    if Map.has_key?(params, "theme") do
+      explicit_theme_attr(params["theme"])
+    else
+      conn
+      |> Plug.Conn.fetch_cookies()
+      |> Map.get(:req_cookies, %{})
+      |> Map.get(MailglassAdmin.Controllers.ThemeController.cookie_name())
+      |> explicit_theme_attr()
+    end
   end
 
   defp root_theme(_assigns), do: nil

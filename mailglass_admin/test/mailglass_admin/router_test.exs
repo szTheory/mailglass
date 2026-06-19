@@ -180,7 +180,11 @@ defmodule MailglassAdmin.RouterTest do
       refute Map.has_key?(session, "csrf_token"),
              "adopter `csrf_token` must never leak into admin session"
 
-      assert Enum.sort(Map.keys(session)) == ["live_session_name", "mailables"],
+      assert Enum.sort(Map.keys(session)) == [
+               "admin_chrome_theme_cookie",
+               "live_session_name",
+               "mailables"
+             ],
              "__preview_session__/2 must return exactly the whitelisted keys, got #{inspect(Map.keys(session))}"
     end
 
@@ -221,6 +225,7 @@ defmodule MailglassAdmin.RouterTest do
                "auth_method" => "password",
                "recent_auth_at" => recent_auth_at,
                "live_session_name" => :mailglass_admin_operator,
+               "admin_chrome_theme_cookie" => nil,
                # D-48-07: compile-time opt (an atom, never cookie-sourced) surfaced
                # so the operator LiveView can reflect declared inbound routes for the
                # routing-trace card. nil here because no `inbound_router` opt is passed.

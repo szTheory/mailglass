@@ -5,13 +5,11 @@ defmodule MailglassAdmin.MountPathHook do
   as `:mount_path`, so the root layout and navigation links can build
   ABSOLUTE URLs.
 
-  It ALSO parses the `?theme=` query param into `:admin_chrome_theme`
+  It ALSO resolves the admin chrome theme into `:admin_chrome_theme`
   (`:dark | :light | nil`) so the root layout themes correctly on EVERY admin
-  surface. The root layout's `data-theme` reads `:admin_chrome_theme`; before
-  this hook only `PreviewLive` set it, so the operator and inbound surfaces
-  never honored `?theme=dark` (the LiveView 1.2 root layout no longer receives
-  `@conn` for a query-string fallback — see below). Wiring it here, in the one
-  hook that runs for all surfaces, fixes theme parity in a single place.
+  surface. URL `?theme=` wins for the current response, then the explicit
+  namespaced cookie seeded through the router session callback. `system` is
+  always represented by `nil`.
 
   ## Why this is load-bearing
 
@@ -47,11 +45,14 @@ defmodule MailglassAdmin.MountPathHook do
   (`:default`) and a `{module, opts}` hook.
   """
   @spec on_mount(term(), map() | :not_mounted_at_router, map(), Socket.t()) :: {:cont, Socket.t()}
-  def on_mount(_arg, _params, _session, socket) do
+  def on_mount(_arg, _params, session, socket) do
+    cookie_theme = explicit_cookie_theme(session)
+
     socket =
       socket
       |> assign(:mount_path, nil)
-      |> assign(:admin_chrome_theme, nil)
+      |> assign(:admin_chrome_theme, cookie_theme)
+      |> assign(:admin_chrome_theme_cookie, cookie_theme)
       |> Phoenix.LiveView.attach_hook(:mailglass_mount_path, :handle_params, &put_mount_path/3)
 
     {:cont, socket}
@@ -63,10 +64,21 @@ defmodule MailglassAdmin.MountPathHook do
     {:cont,
      socket
      |> assign(:mount_path, MountPath.base(path))
-     |> assign(:admin_chrome_theme, parse_theme(params["theme"]))}
+     |> assign(:admin_chrome_theme, resolve_theme(params, socket.assigns[:admin_chrome_theme_cookie]))}
   end
 
   defp parse_theme(theme) when theme in ["dark", "mailglass-dark"], do: :dark
   defp parse_theme(theme) when theme in ["light", "mailglass-light"], do: :light
   defp parse_theme(_theme), do: nil
+
+  defp explicit_cookie_theme(%{"admin_chrome_theme_cookie" => theme}), do: parse_theme(theme)
+  defp explicit_cookie_theme(_session), do: nil
+
+  defp resolve_theme(params, cookie_theme) do
+    if Map.has_key?(params, "theme") do
+      parse_theme(params["theme"])
+    else
+      cookie_theme
+    end
+  end
 end
