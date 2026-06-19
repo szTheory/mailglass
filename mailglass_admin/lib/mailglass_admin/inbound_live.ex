@@ -33,6 +33,7 @@ defmodule MailglassAdmin.InboundLive do
   alias MailglassAdmin.Inbound.ReplayModal
   alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.Timeline
+  alias MailglassAdmin.Operator.Tenants, as: TenantSelector
   alias Phoenix.LiveView.JS
 
   @gateway MailglassAdmin.OptionalDeps.MailglassInbound
@@ -65,6 +66,8 @@ defmodule MailglassAdmin.InboundLive do
 
   @impl true
   def mount(_params, session, socket) do
+    if connected?(socket), do: send(self(), :canonicalize_tenant)
+
     # The declared inbound router module is surfaced in the operator
     # session (router.ex __operator_session__) as an atom, never cookie-sourced.
     # The routing-trace card reflects its routes via the runtime gateway.
@@ -101,6 +104,9 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:page_uri, "/inbound")
      |> assign(:dark_chrome, false)
      |> assign(:theme_choice, :system)
+     |> assign(:tenant_options, [])
+     |> assign(:tenant_state, :none)
+     |> assign(:selected_tenant_id, nil)
      |> assign(:outcome_values, @outcome_values)
      |> assign(:window_options, @window_options)
      |> assign(:filter_params, default_filter_params())
@@ -120,18 +126,38 @@ defmodule MailglassAdmin.InboundLive do
   @impl true
   def handle_params(params, uri, socket) do
     {filter_params, filter_errors} = normalize_filter_params_with_errors(params)
+    tenant_options = TenantSelector.list_tenants(socket.assigns.operator_actor, [])
+    selected_tenant_id = blank_to_nil(filter_params["tenant_id"])
 
-    {:noreply,
-     socket
-     |> assign(:base_path, URI.parse(uri).path || "/inbound")
-     |> assign(:page_uri, uri)
-     |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params))
-     |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params))
-     |> assign(:filter_params, filter_params)
-     |> assign(:filter_form, to_form(filter_params, as: :filters))
-     |> assign(:filter_errors, filter_errors)
-     |> assign_inbound_state(filter_params, blank_to_nil(params["inbound_id"]))
-     |> close_replay_modal()}
+    tenant_state =
+      tenant_state(selected_tenant_id, tenant_options, Map.has_key?(params, "tenant_id"))
+
+    socket =
+      socket
+      |> assign(:base_path, URI.parse(uri).path || "/inbound")
+      |> assign(:page_uri, uri)
+      |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params))
+      |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params))
+      |> assign(:filter_params, filter_params)
+      |> assign(:filter_form, to_form(filter_params, as: :filters))
+      |> assign(:filter_errors, filter_errors)
+      |> assign(:tenant_options, tenant_options)
+      |> assign(:tenant_state, tenant_state)
+      |> assign(:selected_tenant_id, selected_tenant_id)
+
+    cond do
+      tenant_state == :auto_select ->
+        {:noreply, clear_surface_state(socket) |> close_replay_modal()}
+
+      tenant_state in [:select_required, :none] ->
+        {:noreply, clear_surface_state(socket) |> close_replay_modal()}
+
+      true ->
+        {:noreply,
+         socket
+         |> assign_inbound_state(filter_params, blank_to_nil(params["inbound_id"]))
+         |> close_replay_modal()}
+    end
   end
 
   @impl true
@@ -193,7 +219,15 @@ defmodule MailglassAdmin.InboundLive do
 
   def handle_event("clear_filters", _params, socket) do
     {:noreply,
-     push_patch(socket, to: socket.assigns.base_path <> theme_query(socket.assigns.dark_chrome))}
+     push_patch(socket,
+       to:
+         build_path(
+           socket.assigns.base_path,
+           %{"tenant_id" => socket.assigns.selected_tenant_id || ""},
+           nil,
+           socket.assigns.dark_chrome
+         )
+     )}
   end
 
   def handle_event("open_replay", _params, socket) do
@@ -279,6 +313,15 @@ defmodule MailglassAdmin.InboundLive do
   # (foreign tenant or filtered out) drop it; otherwise PREPEND to the list WITHOUT
   # stealing the current selection or resetting filters.
   @impl true
+  def handle_info(:canonicalize_tenant, %{assigns: %{tenant_state: :auto_select}} = socket) do
+    [tenant] = socket.assigns.tenant_options
+
+    {:noreply,
+     push_patch(socket,
+       to: MailglassAdmin.Operator.Shell.tenant_switch_path(socket.assigns.page_uri, tenant.id)
+     )}
+  end
+
   def handle_info({:inbound_record_inserted, record_id, _meta}, socket) do
     {:noreply, prepend_live_record(socket, record_id)}
   end
@@ -315,6 +358,13 @@ defmodule MailglassAdmin.InboundLive do
       subtitle="See why an InboundMessage routed the way it did — execution timeline, routing trace, and raw evidence."
       flash={@flash}
     >
+      <%= if @tenant_state in [:select_required, :none] do %>
+        <MailglassAdmin.Operator.Shell.tenant_selector
+          state={@tenant_state}
+          tenant_options={@tenant_options}
+          current_uri={@page_uri}
+        />
+      <% else %>
       <section
         data-testid="inbound-filters"
         class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
@@ -452,6 +502,7 @@ defmodule MailglassAdmin.InboundLive do
         phx-remove={JS.focus(to: "#inbound-replay-open-btn")}
       />
       <ReplayModal.replay_modal open?={@replay_modal_open?} record={selected_record_struct(@detail)} />
+      <% end %>
     </MailglassAdmin.Operator.Shell.shell>
     """
   end
@@ -483,6 +534,24 @@ defmodule MailglassAdmin.InboundLive do
     # selections.
     |> assign(:reveal_state, :redacted)
     |> assign(:detail_error, detail_error_for(selected_inbound_id, detail))
+  end
+
+  defp tenant_state(nil, [], _tenant_param_present?), do: :none
+  defp tenant_state(nil, [_tenant], false), do: :auto_select
+  defp tenant_state(nil, _tenants, _tenant_param_present?), do: :select_required
+  defp tenant_state(_selected_tenant_id, _tenants, _tenant_param_present?), do: :selected
+
+  defp clear_surface_state(socket) do
+    socket
+    |> assign(:records, [])
+    |> assign(:inbound_summary, @zero_summary)
+    |> assign(:empty_state, :no_tenant)
+    |> assign(:selected_record, nil)
+    |> assign(:detail, nil)
+    |> assign(:runs, [])
+    |> assign(:routing_trace, [])
+    |> assign(:reveal_state, :redacted)
+    |> assign(:detail_error, nil)
   end
 
   # Routing-trace data (IADM-04) — ONLY for a :no_match record. Reflected from the
@@ -901,9 +970,6 @@ defmodule MailglassAdmin.InboundLive do
 
   defp maybe_put_theme(params, true), do: Map.put(params, "theme", "dark")
   defp maybe_put_theme(params, false), do: params
-
-  defp theme_query(true), do: "?theme=dark"
-  defp theme_query(false), do: ""
 
   # V5 input-validation allow-list: an outcome outside the closed set casts to nil
   # (the filter is dropped) and never reaches SQL.

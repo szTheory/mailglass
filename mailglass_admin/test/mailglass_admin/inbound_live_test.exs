@@ -84,13 +84,10 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => ""}))
 
-      assert html =~ "No tenant selected"
-
-      assert html =~
-               "Inbound views are scoped to one tenant. Pick a tenant with the filters above, " <>
-                 "or add a tenant_id to the URL, to inspect its inbound routing."
-
-      assert clear_filters_count(html) == 1
+      assert html =~ "Select a tenant"
+      assert html =~ "Choose a tenant to inspect its deliveries and inbound routing"
+      assert html =~ "other-tenant"
+      assert clear_filters_count(html) == 0
 
       # No cross-tenant leak — neither the foreign id nor the foreign recipient.
       refute html =~ other.id
@@ -897,8 +894,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id,
-         %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)

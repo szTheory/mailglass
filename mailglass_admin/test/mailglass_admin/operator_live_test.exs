@@ -790,6 +790,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
     test "bare operator URL with multiple accessible tenants renders selector copy", %{conn: conn} do
       conn = operator_conn(conn)
+
       insert_delivery!(
         tenant_id: "alpha-tenant",
         recipient: "alpha@example.com",
@@ -1235,24 +1236,25 @@ defmodule MailglassAdmin.OperatorLiveTest do
   end
 
   describe "Operator Overview branch" do
-    test "bare /ops/mail/ renders h1 Operator overview (no selected delivery, no tenant)", %{
+    test "bare /ops/mail/ with no accessible tenants renders no-tenant shell state", %{
       conn: conn
     } do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, @base_path)
 
       assert html =~ "Operator overview"
-      assert html =~ ~s(data-testid="operator-overview")
+      assert html =~ ~s(data-testid="tenant-selector")
+      assert html =~ "No tenants available"
       refute html =~ ~s(data-testid="operator-master-detail")
       refute html =~ ~s(data-testid="operator-deliveries-list")
     end
 
-    test "no-tenant Overview shows nudge copy not health row", %{conn: conn} do
+    test "no-tenant Overview suppresses health row", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, @base_path)
 
-      assert html =~ "Select a tenant to begin"
-      assert html =~ ~s(data-testid="operator-overview-no-tenant")
+      assert html =~ "No tenants available"
+      assert html =~ ~s(data-testid="tenant-selector")
       refute html =~ ~s(data-testid="operator-overview-health")
     end
 

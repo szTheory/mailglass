@@ -113,6 +113,26 @@ defmodule MailglassAdmin.Operator.Shell do
     set_theme_path(uri, if(currently_dark?, do: "system", else: "dark"))
   end
 
+  @doc """
+  Builds a same-surface tenant switch path from the current URL.
+
+  Tenant switches preserve compatible filters and theme while dropping selected
+  record ids that cannot safely carry across tenants.
+  """
+  def tenant_switch_path(uri, tenant_id) when is_binary(uri) and is_binary(tenant_id) do
+    parsed = URI.parse(uri)
+    path = parsed.path || "/"
+
+    query =
+      [{"tenant_id", tenant_id}] ++
+        preserved_switch_query(parsed.query || "")
+
+    case URI.encode_query(query) do
+      "" -> path
+      encoded -> path <> "?" <> encoded
+    end
+  end
+
   defp maybe_append_theme(query, theme) when theme in ["light", "dark"],
     do: query ++ [{"theme", theme}]
 
@@ -150,17 +170,27 @@ defmodule MailglassAdmin.Operator.Shell do
   defp blank_to_nil(value) when value in [nil, ""], do: nil
   defp blank_to_nil(value), do: value
 
-  attr :active, :atom, values: [:deliveries, :inbound], required: true
-  attr :deliveries_path, :string, required: true
-  attr :inbound_path, :string, required: true
-  attr :inbound_available?, :boolean, default: false
-  attr :dark_chrome, :boolean, default: false
-  attr :theme_choice, :atom, values: [:system, :light, :dark], default: :system
-  attr :tenant, :string, default: nil
-  attr :title, :string, required: true
-  attr :subtitle, :string, default: nil
-  attr :flash, :map, default: %{}
-  slot :inner_block, required: true
+  @switch_query_keys ~w(provider status event outcome window_hours search theme support_focus support_event_id support_webhook_event_id view)
+
+  defp preserved_switch_query(query) do
+    query
+    |> URI.query_decoder()
+    |> Enum.reject(fn {key, value} ->
+      key == "tenant_id" or key not in @switch_query_keys or is_nil(blank_to_nil(value))
+    end)
+  end
+
+  attr(:active, :atom, values: [:deliveries, :inbound], required: true)
+  attr(:deliveries_path, :string, required: true)
+  attr(:inbound_path, :string, required: true)
+  attr(:inbound_available?, :boolean, default: false)
+  attr(:dark_chrome, :boolean, default: false)
+  attr(:theme_choice, :atom, values: [:system, :light, :dark], default: :system)
+  attr(:tenant, :string, default: nil)
+  attr(:title, :string, required: true)
+  attr(:subtitle, :string, default: nil)
+  attr(:flash, :map, default: %{})
+  slot(:inner_block, required: true)
 
   @doc """
   Renders the operator shell around a surface's body (passed as the inner block).
@@ -245,7 +275,7 @@ defmodule MailglassAdmin.Operator.Shell do
     """
   end
 
-  attr :flash, :map, default: %{}
+  attr(:flash, :map, default: %{})
 
   defp flash_region(assigns) do
     ~H"""
@@ -273,6 +303,49 @@ defmodule MailglassAdmin.Operator.Shell do
     """
   end
 
+  attr(:state, :atom, values: [:select_required, :none], required: true)
+  attr(:tenant_options, :list, default: [])
+  attr(:current_uri, :string, required: true)
+
+  def tenant_selector(assigns) do
+    ~H"""
+    <section
+      data-testid="tenant-selector"
+      class="rounded-box border border-base-300 bg-base-200 p-lg"
+    >
+      <div class="flex items-start gap-sm">
+        <Components.icon name="hero-building-office-2" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <div class="min-w-0 flex-1">
+          <%= if @state == :none do %>
+            <h2 class="text-heading font-bold text-base-content">No tenants available</h2>
+            <p class="mt-sm text-body text-secondary">
+              This operator does not have a tenant with mail activity yet. Send a message with a tenant_id, or check the host tenant scope.
+            </p>
+          <% else %>
+            <p class="text-label font-bold uppercase text-secondary">Tenant</p>
+            <h2 class="mt-xs text-heading font-bold text-base-content">Select a tenant</h2>
+            <p class="mt-sm text-body text-secondary">
+              Choose a tenant to inspect its deliveries and inbound routing. Tenant scope stays in the URL so refreshes and shared links keep the same view.
+            </p>
+            <div class="mt-md grid gap-sm">
+              <.link
+                :for={tenant <- @tenant_options}
+                patch={tenant_switch_path(@current_uri, tenant.id)}
+                class="mg-focus-ring flex min-h-11 items-center justify-between gap-md rounded-field border border-base-300 bg-base-100 px-md py-sm text-body hover:border-primary"
+              >
+                <span class="mono min-w-0 truncate font-bold text-base-content" title={tenant.label}>
+                  {tenant.label}
+                </span>
+                <span class="shrink-0 text-label font-bold text-primary">Select tenant</span>
+              </.link>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </section>
+    """
+  end
+
   @doc """
   Renders the orientation strip for an operator surface — a persistent, symptom-first
   guidance panel that appears when no record is selected. Each surface has frozen
@@ -281,7 +354,7 @@ defmodule MailglassAdmin.Operator.Shell do
   Placed after `defp flash_region/1` as the last function component in the module.
   No motion classes — born token-clean.
   """
-  attr :surface, :atom, values: [:deliveries, :inbound, :preview], required: true
+  attr(:surface, :atom, values: [:deliveries, :inbound, :preview], required: true)
 
   def orientation_strip(assigns) do
     assigns = assign(assigns, :copy, copy_for(assigns.surface))

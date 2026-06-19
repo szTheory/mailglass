@@ -27,6 +27,7 @@ defmodule MailglassAdmin.OperatorLive do
     SuppressionCard
   }
 
+  alias MailglassAdmin.Operator.Tenants, as: TenantSelector
   alias MailglassAdmin.Operator.Timeline, as: OperatorTimeline
   alias Phoenix.LiveView.JS
 
@@ -44,35 +45,42 @@ defmodule MailglassAdmin.OperatorLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok,
-     socket
-     |> assign_new(:operator_actor, fn -> nil end)
-     |> assign_new(:operator_auth, fn -> %{status: :unknown, recent_auth?: false} end)
-     |> assign(:view, :overview)
-     |> assign(:deliveries, [])
-     |> assign(:selected_delivery, nil)
-     |> assign(:timeline_events, [])
-     |> assign(:suppression_state, nil)
-     |> assign(:suppression_count, nil)
-     |> assign(:support_summary, nil)
-     |> assign(:support_state, default_support_state())
-     |> assign(:detail_error, nil)
-     |> assign(:replay_targets, nil)
-     |> assign(:replay_history, [])
-     |> assign(:replay_modal_open?, false)
-     |> assign(:replay_selected_target_id, nil)
-     |> assign(:recent_auth_at, get_in(socket.assigns, [:operator_actor, :recent_auth_at]))
-     |> assign(:base_path, "/operator")
-     |> assign(:page_uri, "/operator")
-     |> assign(:dark_chrome, false)
-     |> assign(:theme_choice, :system)
-     |> assign(:status_values, @status_values)
-     |> assign(:event_values, @event_values)
-     |> assign(:window_options, @window_options)
-     |> assign(:filter_params, default_filter_params())
-     |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
-     |> assign(:filter_errors, %{})
-     |> assign(:page_title, "mailglass — Operator")}
+    if connected?(socket), do: send(self(), :canonicalize_tenant)
+
+    socket =
+      socket
+      |> assign_new(:operator_actor, fn -> nil end)
+      |> assign_new(:operator_auth, fn -> %{status: :unknown, recent_auth?: false} end)
+      |> assign(:view, :overview)
+      |> assign(:deliveries, [])
+      |> assign(:selected_delivery, nil)
+      |> assign(:timeline_events, [])
+      |> assign(:suppression_state, nil)
+      |> assign(:suppression_count, nil)
+      |> assign(:support_summary, nil)
+      |> assign(:support_state, default_support_state())
+      |> assign(:detail_error, nil)
+      |> assign(:replay_targets, nil)
+      |> assign(:replay_history, [])
+      |> assign(:replay_modal_open?, false)
+      |> assign(:replay_selected_target_id, nil)
+      |> assign(:recent_auth_at, get_in(socket.assigns, [:operator_actor, :recent_auth_at]))
+      |> assign(:base_path, "/operator")
+      |> assign(:page_uri, "/operator")
+      |> assign(:dark_chrome, false)
+      |> assign(:theme_choice, :system)
+      |> assign(:tenant_options, [])
+      |> assign(:tenant_state, :none)
+      |> assign(:selected_tenant_id, nil)
+      |> assign(:status_values, @status_values)
+      |> assign(:event_values, @event_values)
+      |> assign(:window_options, @window_options)
+      |> assign(:filter_params, default_filter_params())
+      |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
+      |> assign(:filter_errors, %{})
+      |> assign(:page_title, "mailglass — Operator")
+
+    {:ok, socket}
   end
 
   @impl true
@@ -81,6 +89,11 @@ defmodule MailglassAdmin.OperatorLive do
     support_state = normalize_support_state(params)
     view = params["view"]
     delivery_id = blank_to_nil(params["delivery_id"])
+    tenant_options = TenantSelector.list_tenants(socket.assigns.operator_actor, [])
+    selected_tenant_id = blank_to_nil(filter_params["tenant_id"])
+
+    tenant_state =
+      tenant_state(selected_tenant_id, tenant_options, Map.has_key?(params, "tenant_id"))
 
     socket =
       socket
@@ -92,20 +105,42 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:filter_form, to_form(filter_params, as: :filters))
       |> assign(:filter_errors, filter_errors)
       |> assign(:support_state, support_state)
+      |> assign(:tenant_options, tenant_options)
+      |> assign(:tenant_state, tenant_state)
+      |> assign(:selected_tenant_id, selected_tenant_id)
 
-    socket =
-      if view == "deliveries" or not is_nil(delivery_id) do
-        socket
-        |> assign_delivery_state(filter_params, delivery_id)
-        |> close_replay_modal()
-      else
-        socket
-        |> assign_overview_state(filter_params)
-        |> close_replay_modal()
-      end
+    cond do
+      tenant_state == :auto_select ->
+        {:noreply, clear_surface_state(socket) |> close_replay_modal()}
 
-    {:noreply, socket}
+      tenant_state in [:select_required, :none] ->
+        {:noreply, clear_surface_state(socket) |> close_replay_modal()}
+
+      view == "deliveries" or not is_nil(delivery_id) ->
+        {:noreply,
+         socket
+         |> assign_delivery_state(filter_params, delivery_id)
+         |> close_replay_modal()}
+
+      true ->
+        {:noreply,
+         socket
+         |> assign_overview_state(filter_params)
+         |> close_replay_modal()}
+    end
   end
+
+  @impl true
+  def handle_info(:canonicalize_tenant, %{assigns: %{tenant_state: :auto_select}} = socket) do
+    [tenant] = socket.assigns.tenant_options
+
+    {:noreply,
+     push_patch(socket,
+       to: MailglassAdmin.Operator.Shell.tenant_switch_path(socket.assigns.page_uri, tenant.id)
+     )}
+  end
+
+  def handle_info(:canonicalize_tenant, socket), do: {:noreply, socket}
 
   @impl true
   def handle_event("apply_filters", %{"filters" => filters}, socket) do
@@ -170,7 +205,15 @@ defmodule MailglassAdmin.OperatorLive do
 
   def handle_event("clear_filters", _params, socket) do
     {:noreply,
-     push_patch(socket, to: socket.assigns.base_path <> theme_query(socket.assigns.dark_chrome))}
+     push_patch(socket,
+       to:
+         build_path(
+           socket.assigns.base_path,
+           %{"tenant_id" => socket.assigns.selected_tenant_id || ""},
+           nil,
+           socket.assigns.dark_chrome
+         )
+     )}
   end
 
   def handle_event("open_support_exemplar", params, socket) do
@@ -254,8 +297,7 @@ defmodule MailglassAdmin.OperatorLive do
         {:noreply, put_flash(socket, :error, "Replay is unavailable for this delivery.")}
 
       {:error, :target_required} ->
-        {:noreply,
-         put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
+        {:noreply, put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
 
       {:error, {:auth, message}} ->
         {:noreply, put_flash(socket, :error, message)}
@@ -307,6 +349,13 @@ defmodule MailglassAdmin.OperatorLive do
       }
       flash={@flash}
     >
+      <%= if @tenant_state in [:select_required, :none] do %>
+        <MailglassAdmin.Operator.Shell.tenant_selector
+          state={@tenant_state}
+          tenant_options={@tenant_options}
+          current_uri={@page_uri}
+        />
+      <% else %>
       <%= if @view == :overview do %>
         <div data-testid="operator-overview" class="grid gap-lg">
           <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
@@ -552,6 +601,7 @@ defmodule MailglassAdmin.OperatorLive do
           selected_target_id={@replay_selected_target_id}
         />
       <% end %>
+      <% end %>
     </MailglassAdmin.Operator.Shell.shell>
     """
   end
@@ -564,6 +614,26 @@ defmodule MailglassAdmin.OperatorLive do
       "event" => "",
       "window_hours" => Integer.to_string(@default_window_hours)
     }
+  end
+
+  defp tenant_state(nil, [], _tenant_param_present?), do: :none
+  defp tenant_state(nil, [_tenant], false), do: :auto_select
+  defp tenant_state(nil, _tenants, _tenant_param_present?), do: :select_required
+  defp tenant_state(_selected_tenant_id, _tenants, _tenant_param_present?), do: :selected
+
+  defp clear_surface_state(socket) do
+    socket
+    |> assign(:view, :overview)
+    |> assign(:deliveries, [])
+    |> assign(:selected_delivery, nil)
+    |> assign(:timeline_events, [])
+    |> assign(:suppression_state, nil)
+    |> assign(:support_summary, nil)
+    |> assign(:suppression_count, nil)
+    |> assign(:detail_error, nil)
+    |> assign(:replay_targets, nil)
+    |> assign(:replay_history, [])
+    |> assign(:replay_selected_target_id, nil)
   end
 
   defp filters_active?(filter_params) do
@@ -607,8 +677,7 @@ defmodule MailglassAdmin.OperatorLive do
         provider: blank_to_nil(filter_params["provider"]),
         status: cast_enum(filter_params["status"], @status_values),
         event: cast_enum(filter_params["event"], @event_values),
-        window_hours:
-          parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+        window_hours: parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
       },
       []
     )
@@ -824,9 +893,6 @@ defmodule MailglassAdmin.OperatorLive do
   defp maybe_put_theme(params, true), do: Map.put(params, "theme", "dark")
   defp maybe_put_theme(params, false), do: params
 
-  defp theme_query(true), do: "?theme=dark"
-  defp theme_query(false), do: ""
-
   defp cast_enum("", _allowed), do: nil
 
   defp cast_enum(value, allowed) when is_binary(value) do
@@ -934,8 +1000,7 @@ defmodule MailglassAdmin.OperatorLive do
     apply(support_summary_module(), :summarize_tenant, [
       %{
         tenant_id: filter_params["tenant_id"],
-        window_hours:
-          parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+        window_hours: parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
       }
     ])
   end
