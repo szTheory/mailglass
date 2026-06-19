@@ -1,9 +1,9 @@
 ---
 phase: 111
 slug: forms
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: planning-ready
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-19
 ---
 
@@ -38,22 +38,24 @@ Per-phase validation contract for feedback sampling during execution.
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 111-W0-01 | TBD | 0 | FORM-01 | T-111-01 | Duplicate filter markup is rejected outside shared primitives | conformance | `cd mailglass_admin && ./scripts/check-conformance.sh` | yes, extend | pending |
-| 111-W0-02 | TBD | 0 | FORM-02 | T-111-02 | Labels, help text, error text, and ARIA state are source-asserted | component | `cd mailglass_admin && mix test test/mailglass_admin/components_test.exs --warnings-as-errors` | yes, extend | pending |
-| 111-W0-03 | TBD | 0 | FORM-02 | T-111-03 | Invalid filter params remain bounded and surface recovery text | LiveView integration | `cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/inbound_live_test.exs --warnings-as-errors` | yes, extend | pending |
-| 111-W0-04 | TBD | 0 | FORM-03 | T-111-04 | Disabled and read-only/display-only states are programmatically distinct | component + browser structural | `cd mailglass_admin && mix test test/mailglass_admin/components_test.exs --warnings-as-errors && npm run test:operator-browser` | yes, extend | pending |
-| 111-W0-05 | TBD | 0 | FORM-03 | T-111-05 | Focus stays on the same control across ordinary LiveView filter patches | browser structural | `cd mailglass_admin && npm run test:operator-browser` | yes, extend | pending |
-| 111-W0-06 | TBD | 0 | FORM-02/FORM-03 | T-111-06 | Preview assigns controls and replay radios are updated or explicitly certified | LiveView/component + browser structural | `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs --warnings-as-errors && npm run test:operator-browser` | yes, extend | pending |
+| 111-01-T2 | 111-01 Task 2 | 1 | FORM-02/FORM-03 | T-111-01/T-111-02/T-111-03 | Shared primitives source-assert visible labels, help/error IDs, ARIA state, disabled, and read-only/display-only behavior | component | `cd mailglass_admin && mix test test/mailglass_admin/components_test.exs --warnings-as-errors` | yes, extend | pending |
+| 111-02-T1 | 111-02 Task 1 | 2 | FORM-01/FORM-03 | T-111-04/T-111-05 | Operator and inbound wrappers consume shared primitives while preserving stable filter form/control identity | component + LiveView integration | `cd mailglass_admin && mix test test/mailglass_admin/components_test.exs test/mailglass_admin/operator_live_test.exs test/mailglass_admin/inbound_live_test.exs --warnings-as-errors` | yes, extend | pending |
+| 111-02-T2 | 111-02 Task 2 | 2 | FORM-02 | T-111-04/T-111-05/T-111-06 | Invalid filter params remain bounded and surface recovery text without widening tenant/data boundaries | LiveView integration | `cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/inbound_live_test.exs --warnings-as-errors` | yes, extend | pending |
+| 111-03-T1 | 111-03 Task 1 | 2 | FORM-02/FORM-03 | T-111-07 | Preview assigns controls are labelled and read-only states are honest without changing Preview parsing behavior | LiveView/component | `cd mailglass_admin && mix test test/mailglass_admin/preview_live_test.exs --warnings-as-errors` | yes, extend | pending |
+| 111-03-T2 | 111-03 Task 2 | 2 | FORM-02/FORM-03 | T-111-08/T-111-09 | Replay target controls are explicitly labelled/certified and selected state is not color-only | component | `cd mailglass_admin && mix test test/mailglass_admin/operator/replay_modal_test.exs test/mailglass_admin/inbound/replay_modal_test.exs --warnings-as-errors` | planned create | pending |
+| 111-04-T1 | 111-04 Task 1 | 3 | FORM-01/FORM-02/FORM-03 | T-111-12 | Gallery specimens exercise real shared form primitives and migrated wrappers | browser structural | `cd mailglass_admin && npm run test:operator-browser -- --grep "gallery|form"` | yes, extend | pending |
+| 111-04-T2 | 111-04 Task 2 | 3 | FORM-01 | T-111-10 | Duplicate filter markup is rejected outside shared primitives | conformance | `cd mailglass_admin && ./scripts/check-conformance.sh` | yes, extend | pending |
+| 111-04-T3 | 111-04 Task 3 | 3 | FORM-02/FORM-03 | T-111-11/T-111-12 | Browser proof covers labels, invalid state, disabled/read-only structure, Preview/replay controls, and focus persistence across ordinary patches | browser structural + phase gate | `cd mailglass_admin && npm run test:operator-browser` and `cd mailglass_admin && mix verify.preview && ./scripts/check-conformance.sh && npm run test:operator-browser` | yes, extend | pending |
 
 ---
 
-## Wave 0 Requirements
+## Concrete Plan Coverage
 
-- [ ] `mailglass_admin/test/mailglass_admin/components_test.exs` includes contract tests for `filter_field/1` and `filter_section/1`: visible `label for`, stable control `id`, help/error IDs, `aria-describedby`, `aria-invalid`, disabled state, native readonly where valid, and display-only read-only rendering for non-text controls.
-- [ ] `mailglass_admin/test/mailglass_admin/operator_live_test.exs` and `mailglass_admin/test/mailglass_admin/inbound_live_test.exs` include invalid-param recovery assertions for normalized-away or defaulted filter params without widening tenant/data boundaries.
-- [ ] `mailglass_admin/e2e/structural.spec.js` includes focus-persistence assertions across ordinary `phx-change` and `push_patch` filter updates, plus disabled/read-only/display-only structure checks across the existing structural matrix.
-- [ ] `mailglass_admin/scripts/check-conformance.sh` includes a deterministic FORM-01 duplicate-filter-markup guard that allows thin wrappers but rejects page-local label/control HEEx duplication.
-- [ ] `mailglass_admin/test/mailglass_admin/preview_live_test.exs` and replay-related tests update or certify Preview assigns controls and replay target radios.
+- [x] Plan 111-01 Task 2 covers `mailglass_admin/test/mailglass_admin/components_test.exs` contract tests for `filter_field/1` and `filter_section/1`: visible `label for`, stable control `id`, help/error IDs, `aria-describedby`, `aria-invalid`, disabled state, native readonly where valid, and display-only read-only rendering for non-text controls.
+- [x] Plan 111-02 Task 2 covers `mailglass_admin/test/mailglass_admin/operator_live_test.exs` and `mailglass_admin/test/mailglass_admin/inbound_live_test.exs` invalid-param recovery assertions for normalized-away or defaulted filter params without widening tenant/data boundaries.
+- [x] Plan 111-04 Task 3 covers `mailglass_admin/e2e/structural.spec.js` focus-persistence assertions across ordinary `phx-change` and `push_patch` filter updates, plus disabled/read-only/display-only structure checks across the existing structural matrix.
+- [x] Plan 111-04 Task 2 covers `mailglass_admin/scripts/check-conformance.sh` with a deterministic FORM-01 duplicate-filter-markup guard that allows thin wrappers but rejects page-local label/control HEEx duplication.
+- [x] Plan 111-03 Tasks 1 and 2 cover `mailglass_admin/test/mailglass_admin/preview_live_test.exs` plus replay modal tests to update or certify Preview assigns controls and replay target radios.
 
 ---
 
@@ -67,11 +69,11 @@ Per-phase validation contract for feedback sampling during execution.
 
 ## Validation Sign-Off
 
-- [ ] All planned tasks include automated verification or an explicit Wave 0 dependency.
-- [ ] Sampling continuity: no 3 consecutive task commits without an automated check.
-- [ ] Wave 0 covers all missing references listed above.
-- [ ] No watch-mode flags are used in verification commands.
-- [ ] Feedback latency stays under 240 seconds for full gate runs.
-- [ ] Set `nyquist_compliant: true` after the final PLAN.md files reference these checks and all Wave 0 rows have concrete plan/task IDs.
+- [x] All planned tasks include automated verification.
+- [x] Sampling continuity: no 3 consecutive task commits without an automated check.
+- [x] Concrete plan/task mappings cover all missing validation references listed above.
+- [x] No watch-mode flags are used in verification commands.
+- [x] Feedback latency stays under 240 seconds for full gate runs.
+- [x] `nyquist_compliant: true` because the final PLAN.md files reference these checks and all validation rows have concrete plan/task IDs.
 
-**Approval:** pending
+**Approval:** planning-ready; execution results pending

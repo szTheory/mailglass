@@ -416,22 +416,22 @@ The final guard should be deterministic but not brittle: it should allow thin wr
 |---|-------|---------|---------------|
 | A1 | Exact primitive attr names shown in examples are proposed shapes, not locked names. | Architecture Patterns / Code Examples | Low; D-08 leaves exact attr names to implementation discretion as long as required semantics are supported. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should recovery errors live in a side map or be converted into form errors?**
-   - What we know: current filter data is map-backed `to_form`, and Phoenix form fields expose `errors`. [VERIFIED: repo] [CITED: https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html]
-   - What's unclear: the cleanest code shape for invalid URL params may be a separate `%{field => message}` map or a form-compatible error structure. [ASSUMED]
-   - Recommendation: choose the smallest shape that keeps primitive calls explicit and tests straightforward. [ASSUMED]
+1. **RESOLVED: Recovery errors live in a side map named `filter_errors`.**
+   - Decision: Plan 111-02 Task 2 uses an explicit `%{"field_name" => "message"}` side map for invalid URL/form values, assigns it as `filter_errors`, and passes field-specific messages into the shared primitives. [VERIFIED: plan]
+   - Rationale: Current filter data remains map-backed `to_form`, while recovery metadata stays explicit at the call site and avoids reshaping Phoenix form errors for URL-param recovery. [VERIFIED: plan] [CITED: https://hexdocs.pm/phoenix_html/4.3.0/Phoenix.HTML.Form.html]
+   - Verification: Plan 111-02 requires operator and inbound LiveView tests for invalid `status`, `event`, `outcome`, and `window_hours` values, with exact recovery copy and unchanged tenant/data boundaries. [VERIFIED: plan]
 
-2. **Should filter wrappers remain?**
-   - What we know: D-02 allows `MailglassAdmin.Operator.FiltersForm` and `MailglassAdmin.Inbound.FiltersForm` to remain as thin wrappers only. [VERIFIED: repo]
-   - What's unclear: direct `Components` calls would remove wrapper indirection but increase call-site churn. [ASSUMED]
-   - Recommendation: keep wrappers if they only assemble field specs/options and all label/control markup is in `Components`. [ASSUMED]
+2. **RESOLVED: Filter wrappers remain as thin composition wrappers.**
+   - Decision: Plan 111-02 Task 1 retains `MailglassAdmin.Operator.FiltersForm` and `MailglassAdmin.Inbound.FiltersForm` only as thin wrappers that assemble field specs/options and call `MailglassAdmin.Components.filter_section/1` plus `filter_field/1`. [VERIFIED: plan]
+   - Rationale: This honors D-02 by minimizing call-site churn while moving all label/control/help/error HEEx into `MailglassAdmin.Components` per D-01. [VERIFIED: plan]
+   - Verification: Plan 111-04 Task 2 adds the `FORM-DRIFT-GATE` conformance check requiring wrapper calls to shared primitives and rejecting duplicate native label/control markup in the wrapper files. [VERIFIED: plan]
 
-3. **How much Preview assigns/replay markup should be changed versus certified?**
-   - What we know: D-03 requires auditing and either updating or explicitly certifying Preview assigns controls and replay target radios where applicable. [VERIFIED: repo]
-   - What's unclear: some controls may pass after documentation/tests, while others likely need markup changes. [ASSUMED]
-   - Recommendation: planner should create explicit audit tasks with pass/fix outcomes, not a vague sweep task. [ASSUMED]
+3. **RESOLVED: Preview assigns and replay controls get explicit update/certification tasks.**
+   - Decision: Plan 111-03 Task 1 updates/certifies Preview assigns controls; Plan 111-03 Task 2 updates/certifies operator replay target radios and inbound replay modal labelling. Plan 111-04 Task 3 adds browser structural proof for those surfaces. [VERIFIED: plan]
+   - Rationale: D-03 requires a concrete audit/update/certification path for existing authored admin form controls beyond filters, not a broad sweep or redesign of non-filter workflows. [VERIFIED: plan]
+   - Verification: Plan 111-03 requires focused ExUnit coverage for Preview assigns and replay modal contracts, while Plan 111-04 requires Playwright structural checks for Preview labels and operator replay radio IDs/labels/descriptions/selected text. [VERIFIED: plan]
 
 ## Environment Availability
 
@@ -537,7 +537,7 @@ The final guard should be deterministic but not brittle: it should allow thin wr
 
 ### Tertiary (LOW confidence)
 
-- Assumptions in the Open Questions section only. [ASSUMED]
+- Historical assumptions were resolved in the Open Questions (RESOLVED) section; the remaining low-confidence item is the validity horizon below. [ASSUMED]
 
 ## Metadata
 
