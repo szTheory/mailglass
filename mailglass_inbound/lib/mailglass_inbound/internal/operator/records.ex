@@ -33,6 +33,17 @@ defmodule MailglassInbound.Internal.Operator.Records do
 
   @type filters :: map() | keyword()
 
+  @spec list_tenants(term(), keyword()) :: [%{id: String.t(), label: String.t()}]
+  def list_tenants(context, _opts \\ []) do
+    from(record in InboundRecord)
+    |> where([record], not is_nil(record.tenant_id) and record.tenant_id != "")
+    |> Tenancy.scope(context)
+    |> group_by([record], record.tenant_id)
+    |> order_by([record], asc: record.tenant_id)
+    |> select([record], %{id: record.tenant_id, label: record.tenant_id})
+    |> Repo.all()
+  end
+
   @spec list_records(filters(), keyword()) :: [map()]
   def list_records(filters, opts \\ []) do
     normalized = normalize_filters(filters)

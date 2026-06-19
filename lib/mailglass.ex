@@ -94,6 +94,7 @@ defmodule Mailglass do
         Outbound.Delivery,
         Outbound.Projector,
         Operator.Deliveries,
+        Operator.Tenants,
         Operator.ReplayHistory,
         Operator.ReplayTargets,
         Operator.Timeline,

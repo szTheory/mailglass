@@ -62,6 +62,21 @@ if Code.ensure_loaded?(MailglassInbound) do
       apply(MailglassInbound.Internal.Operator.Records, :list_records, [filters, opts])
     end
 
+    @doc "Tenant selector rows from inbound activity — routes to the inbound read-model."
+    @doc since: "0.2.0"
+    @spec list_tenants(term(), keyword()) :: [%{id: String.t(), label: String.t()}]
+    def list_tenants(context, opts \\ []) do
+      read_model = Keyword.get(opts, :read_model, MailglassInbound.Internal.Operator.Records)
+
+      read_model
+      |> apply(:list_tenants, [context, opts])
+      |> Enum.map(& &1.id)
+      |> Enum.reject(&blank?/1)
+      |> Enum.uniq()
+      |> Enum.sort()
+      |> Enum.map(&%{id: &1, label: &1})
+    end
+
     @doc "Tenant-scoped inbound overview summary for a tenant — routes to the inbound read-model."
     @doc since: "0.2.0"
     @spec summary(map() | keyword(), keyword()) :: map()
@@ -142,5 +157,7 @@ if Code.ensure_loaded?(MailglassInbound) do
     def replay(inbound_record_id, opts \\ []) do
       apply(MailglassInbound.Internal.Replay, :replay, [inbound_record_id, opts])
     end
+
+    defp blank?(value), do: not is_binary(value) or String.trim(value) == ""
   end
 end

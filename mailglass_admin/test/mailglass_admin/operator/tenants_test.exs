@@ -1,6 +1,8 @@
 defmodule MailglassAdmin.Operator.TenantsTest do
   use Mailglass.DataCase, async: true
 
+  Code.require_file("../../../lib/mailglass_admin/operator/tenants.ex", __DIR__)
+
   alias Mailglass.Outbound.Delivery
   alias MailglassAdmin.Operator.Tenants
 
