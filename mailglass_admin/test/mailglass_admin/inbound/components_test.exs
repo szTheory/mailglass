@@ -450,7 +450,10 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
         )
 
       assert html =~ "Time window"
-      assert html =~ "text-label uppercase font-bold text-secondary"
+
+      assert html =~
+               ~r/<legend class="(?=[^"]*\btext-label\b)(?=[^"]*\buppercase\b)(?=[^"]*\bfont-bold\b)(?=[^"]*\btext-secondary\b)[^"]*">Filters<\/legend>/
+
       refute html =~ "tracking-["
     end
   end
