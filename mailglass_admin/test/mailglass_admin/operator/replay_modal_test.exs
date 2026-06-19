@@ -41,7 +41,10 @@ defmodule MailglassAdmin.Operator.ReplayModalTest do
         render_component(&ReplayModal.replay_modal/1,
           open?: true,
           delivery: %{recipient: "operator@example.com"},
-          replay_targets: %{status: :exact, candidate: candidate("webhook-exact", "provider-exact")},
+          replay_targets: %{
+            status: :exact,
+            candidate: candidate("webhook-exact", "provider-exact")
+          },
           selected_target_id: nil
         )
 

@@ -5,6 +5,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
 
   use Phoenix.Component
 
+  alias MailglassAdmin.Components
   alias MailglassAdmin.Operator.RepairState
   alias Phoenix.LiveView.JS
 
@@ -18,7 +19,9 @@ defmodule MailglassAdmin.Operator.ReplayModal do
     <%= if @open? and @delivery do %>
       <div
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim fixed inset-0 overflow-y-auto p-4"
-        phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})}
+        phx-remove={
+          JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})
+        }
       >
         <div
           data-testid="operator-replay-modal"
@@ -28,7 +31,12 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           phx-key="Escape"
           phx-window-keydown="close_replay"
           class="motion-overlay mg-layer-overlay-panel mx-auto my-4 w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
-          phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"})}
+          phx-remove={
+            JS.hide(
+              time: 150,
+              transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"}
+            )
+          }
         >
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
@@ -63,19 +71,10 @@ defmodule MailglassAdmin.Operator.ReplayModal do
 
                 <form id="operator-replay-targets" phx-change="choose_replay_target" class="space-y-3">
                   <%= for candidate <- candidates do %>
-                    <label class="block cursor-pointer">
-                      <input
-                        type="radio"
-                        name="webhook_event_id"
-                        value={candidate.webhook_event_id}
-                        checked={candidate.webhook_event_id == @selected_target_id}
-                        class="sr-only"
-                      />
-                      <.target_card
-                        candidate={candidate}
-                        selected={candidate.webhook_event_id == @selected_target_id}
-                      />
-                    </label>
+                    <.target_choice
+                      candidate={candidate}
+                      selected={candidate.webhook_event_id == @selected_target_id}
+                    />
                   <% end %>
                 </form>
               </div>
@@ -119,13 +118,67 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   attr(:candidate, :map, required: true)
   attr(:selected, :boolean, default: false)
 
+  defp target_choice(assigns) do
+    assigns =
+      assigns
+      |> assign(:input_id, target_input_id(assigns.candidate))
+      |> assign(:description_id, target_description_id(assigns.candidate))
+      |> assign(:label, target_label(assigns.candidate))
+      |> assign(:description, target_description(assigns.candidate))
+
+    ~H"""
+    <div class={target_card_class(@selected)}>
+      <div class="flex items-start gap-sm">
+        <input
+          id={@input_id}
+          type="radio"
+          name="webhook_event_id"
+          value={@candidate.webhook_event_id}
+          checked={@selected}
+          aria-describedby={@description_id}
+          class="radio radio-sm mt-1"
+        />
+        <div class="min-w-0 flex-1 space-y-3">
+          <div class="space-y-1">
+            <label for={@input_id} class="cursor-pointer text-body font-bold text-base-content">
+              {@label}
+            </label>
+            <p id={@description_id} class="text-label text-secondary">
+              {@description}
+            </p>
+          </div>
+          <.selected_target_cue selected={@selected} />
+          <.target_summary candidate={@candidate} />
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   defp target_card(assigns) do
     ~H"""
-    <div class={[
-      "rounded-box border p-4",
-      @selected && "border-error bg-error/5",
-      !@selected && "border-base-300 bg-base-200"
-    ]}>
+    <div class={target_card_class(@selected)}>
+      <.selected_target_cue selected={@selected} />
+      <.target_summary candidate={@candidate} />
+    </div>
+    """
+  end
+
+  attr(:selected, :boolean, required: true)
+
+  defp selected_target_cue(assigns) do
+    ~H"""
+    <p :if={@selected} class="mb-3 inline-flex items-center gap-1 text-label font-bold text-error">
+      <Components.icon name="hero-check-circle" class="h-5 w-5" /> Selected target
+    </p>
+    """
+  end
+
+  attr(:candidate, :map, required: true)
+
+  defp target_summary(assigns) do
+    ~H"""
+    <div>
       <div class="flex flex-wrap items-start justify-between gap-sm">
         <div class="space-y-1">
           <p class="text-body font-bold text-base-content">
@@ -160,6 +213,36 @@ defmodule MailglassAdmin.Operator.ReplayModal do
   defp present(nil), do: "Unavailable"
   defp present(""), do: "Unavailable"
   defp present(value), do: value
+
+  defp target_card_class(selected) do
+    [
+      "rounded-box border p-4",
+      selected && "border-error bg-error/5",
+      !selected && "border-base-300 bg-base-200"
+    ]
+  end
+
+  defp target_input_id(candidate) do
+    safe_id =
+      candidate.webhook_event_id
+      |> to_string()
+      |> String.replace(~r/[^A-Za-z0-9_-]+/, "-")
+      |> String.trim("-")
+
+    "operator-replay-target-" <> if(safe_id == "", do: "unknown", else: safe_id)
+  end
+
+  defp target_description_id(candidate), do: target_input_id(candidate) <> "-description"
+
+  defp target_label(candidate) do
+    "#{String.upcase(candidate.provider || "unknown")} webhook target"
+  end
+
+  defp target_description(candidate) do
+    "Provider event #{present(candidate.provider_event_id)}. " <>
+      "Webhook event #{present(candidate.webhook_event_id)}. " <>
+      "Delivery linkage #{present(candidate.delivery_provider_message_id)}."
+  end
 
   defp format_datetime(nil), do: "Pending"
 

@@ -22,21 +22,29 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
     <%= if @open? and @record do %>
       <div
         class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim fixed inset-0 flex items-center justify-center p-4"
-        phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})}
+        phx-remove={
+          JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})
+        }
       >
         <div
           id="inbound-replay-modal"
           data-testid="inbound-replay-modal"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="inbound-replay-modal-title"
           phx-key="Escape"
           phx-window-keydown="close_replay"
           class="motion-overlay mg-layer-overlay-panel w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
-          phx-remove={JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"})}
+          phx-remove={
+            JS.hide(
+              time: 150,
+              transition: {"ease-out duration-150", "opacity-100 scale-100", "opacity-0 scale-[0.98]"}
+            )
+          }
         >
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
-              <h2 class="text-heading font-bold text-base-content">
+              <h2 id="inbound-replay-modal-title" class="text-heading font-bold text-base-content">
                 Replay inbound for {Components.mask_recipient(@record.envelope_recipient)}
               </h2>
               <p class="text-body text-secondary">
