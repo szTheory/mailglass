@@ -12,12 +12,12 @@ defmodule MailglassAdmin.Preview.AssignsForm do
     | `integer`         | `<input type="number" step="1">`            |
     | `float`           | `<input type="number" step="any">`          |
     | `boolean`         | `<input type="checkbox">`                   |
-    | `atom`            | disabled text input (v0.1 — URL edit only)  |
+    | `atom`            | read-only display row (URL edit only)       |
     | `DateTime`        | `<input type="datetime-local">`             |
     | `Date`            | `<input type="date">`                       |
     | struct            | `<textarea>` JSON (struct label)            |
     | `map`             | `<textarea>` JSON (plain map)               |
-    | fallback          | disabled `<input>` "(unsupported type)"     |
+    | fallback          | read-only display row "(unsupported type)"  |
 
   Form fires `phx-change="assigns_changed"` on every field edit; the
   LiveView re-calls the mailable function with updated assigns and pipes
@@ -67,162 +67,250 @@ defmodule MailglassAdmin.Preview.AssignsForm do
 
   # binary -> text input
   def field(%{value: v} = assigns) when is_binary(v) do
+    assigns = assign_control_metadata(assigns)
+
     ~H"""
-    <label class="form-control w-full">
-      <span class="label-text text-body font-normal">{humanize(@key)}</span>
+    <div class="form-control w-full">
+      <.field_label for={@control_id} text={@label} />
       <input
+        id={@control_id}
         type="text"
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
+        name={@control_name}
         value={@value}
+        aria-describedby={@help_id}
         class="input input-bordered input-sm w-full"
       />
-    </label>
+      <.field_help id={@help_id} text={@help_text} />
+    </div>
     """
   end
 
   # integer -> number input, step 1
   def field(%{value: v} = assigns) when is_integer(v) do
+    assigns = assign_control_metadata(assigns)
+
     ~H"""
-    <label class="form-control w-full">
-      <span class="label-text text-body font-normal">{humanize(@key)}</span>
+    <div class="form-control w-full">
+      <.field_label for={@control_id} text={@label} />
       <input
+        id={@control_id}
         type="number"
         step="1"
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
+        name={@control_name}
         value={Integer.to_string(@value)}
+        aria-describedby={@help_id}
         class="input input-bordered input-sm w-full"
       />
-    </label>
+      <.field_help id={@help_id} text={@help_text} />
+    </div>
     """
   end
 
   # float -> number input, step any
   def field(%{value: v} = assigns) when is_float(v) do
+    assigns = assign_control_metadata(assigns)
+
     ~H"""
-    <label class="form-control w-full">
-      <span class="label-text text-body font-normal">{humanize(@key)}</span>
+    <div class="form-control w-full">
+      <.field_label for={@control_id} text={@label} />
       <input
+        id={@control_id}
         type="number"
         step="any"
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
+        name={@control_name}
         value={Float.to_string(@value)}
+        aria-describedby={@help_id}
         class="input input-bordered input-sm w-full"
       />
-    </label>
+      <.field_help id={@help_id} text={@help_text} />
+    </div>
     """
   end
 
   # boolean -> checkbox
   def field(%{value: v} = assigns) when is_boolean(v) do
+    assigns = assign_control_metadata(assigns)
+
     ~H"""
-    <label class="label cursor-pointer justify-start gap-sm">
+    <div class="form-control w-full">
+      <input type="hidden" name={@control_name} value="false" />
       <input
+        id={@control_id}
         type="checkbox"
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
+        name={@control_name}
         value="true"
         checked={@value}
+        aria-describedby={@help_id}
         class="checkbox checkbox-sm"
       />
-      <span class="label-text text-body font-normal">{humanize(@key)}</span>
-    </label>
+      <.field_label
+        for={@control_id}
+        text={@label}
+        class="label cursor-pointer justify-start gap-sm px-0"
+      />
+      <.field_help id={@help_id} text={@help_text} />
+    </div>
     """
   end
 
   # DateTime -> datetime-local
   def field(%{value: %DateTime{}} = assigns) do
+    assigns = assign_control_metadata(assigns)
+
     ~H"""
-    <label class="form-control w-full">
-      <span class="label-text text-body font-normal">{humanize(@key)}</span>
+    <div class="form-control w-full">
+      <.field_label for={@control_id} text={@label} />
       <input
+        id={@control_id}
         type="datetime-local"
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
+        name={@control_name}
         value={DateTime.to_iso8601(@value)}
+        aria-describedby={@help_id}
         class="input input-bordered input-sm w-full"
       />
-    </label>
+      <.field_help id={@help_id} text={@help_text} />
+    </div>
     """
   end
 
   # Date -> date
   def field(%{value: %Date{}} = assigns) do
+    assigns = assign_control_metadata(assigns)
+
     ~H"""
-    <label class="form-control w-full">
-      <span class="label-text text-body font-normal">{humanize(@key)}</span>
+    <div class="form-control w-full">
+      <.field_label for={@control_id} text={@label} />
       <input
+        id={@control_id}
         type="date"
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
+        name={@control_name}
         value={Date.to_iso8601(@value)}
+        aria-describedby={@help_id}
         class="input input-bordered input-sm w-full"
       />
-    </label>
+      <.field_help id={@help_id} text={@help_text} />
+    </div>
     """
   end
 
   # struct -> JSON textarea with struct label
   def field(%{value: %{__struct__: _}} = assigns) do
+    assigns = assign_control_metadata(assigns)
+
     ~H"""
-    <label class="form-control w-full">
-      <span class="label-text text-body font-normal">
-        {humanize(@key)} <span class="text-label text-secondary font-mono">({inspect(@value.__struct__)})</span>
-      </span>
+    <div class="form-control w-full">
+      <.field_label for={@control_id} text={@label} badge={inspect(@value.__struct__)} />
       <textarea
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
+        id={@control_id}
+        name={@control_name}
+        aria-describedby={@help_id}
         class="textarea textarea-bordered textarea-sm w-full font-mono text-label"
         rows="3"
       >{inspect(@value, pretty: true, limit: :infinity)}</textarea>
-    </label>
+      <.field_help id={@help_id} text={@help_text} />
+    </div>
     """
   end
 
-  # atom -> disabled text input (v0.1; v0.5 ships atom-space form_hints select)
+  # atom -> read-only display row (v0.1; v0.5 ships atom-space form_hints select)
   def field(%{value: v} = assigns) when is_atom(v) do
-    ~H"""
-    <label class="form-control w-full">
-      <span class="label-text text-body font-normal">
-        {humanize(@key)} <span class="text-label text-secondary">(atom)</span>
-      </span>
-      <input
-        type="text"
-        disabled
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
-        value={inspect(@value)}
-        class="input input-bordered input-sm w-full"
-      />
-    </label>
-    """
+    assigns
+    |> assign_control_metadata()
+    |> assign(:type_badge, "atom")
+    |> readonly_field()
   end
 
   # plain map -> JSON textarea
   def field(%{value: v} = assigns) when is_map(v) do
+    assigns = assign_control_metadata(assigns)
+
     ~H"""
-    <label class="form-control w-full">
-      <span class="label-text text-body font-normal">{humanize(@key)} <span class="text-label text-secondary font-mono">(map)</span></span>
+    <div class="form-control w-full">
+      <.field_label for={@control_id} text={@label} badge="map" />
       <textarea
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
+        id={@control_id}
+        name={@control_name}
+        aria-describedby={@help_id}
         class="textarea textarea-bordered textarea-sm w-full font-mono text-label"
         rows="3"
       >{inspect(@value, pretty: true, limit: :infinity)}</textarea>
+      <.field_help id={@help_id} text={@help_text} />
+    </div>
+    """
+  end
+
+  # fallback — read-only inspect
+  def field(assigns) do
+    assigns
+    |> assign_control_metadata()
+    |> assign(:type_badge, "unsupported type")
+    |> readonly_field()
+  end
+
+  attr :for, :string, required: true
+  attr :text, :string, required: true
+  attr :badge, :string, default: nil
+  attr :class, :string, default: "label px-0 pb-1"
+
+  defp field_label(assigns) do
+    ~H"""
+    <label for={@for} class={@class}>
+      <span class="label-text text-body font-normal">
+        {@text}
+        <span :if={@badge} class="text-label text-secondary font-mono">({@badge})</span>
+      </span>
     </label>
     """
   end
 
-  # fallback — disabled inspect
-  def field(assigns) do
+  attr :id, :string, required: true
+  attr :text, :string, required: true
+
+  defp field_help(assigns) do
     ~H"""
-    <label class="form-control w-full">
-      <span class="label-text text-body font-normal">
-        {humanize(@key)} <span class="text-label text-secondary">(unsupported type)</span>
-      </span>
-      <input
-        type="text"
-        disabled
-        name={"assigns[" <> Atom.to_string(@key) <> "]"}
-        value={inspect(@value)}
-        class="input input-bordered input-sm w-full"
-      />
-    </label>
+    <p id={@id} class="mt-1 text-label text-secondary">{@text}</p>
     """
   end
+
+  defp readonly_field(assigns) do
+    ~H"""
+    <div class="form-control w-full">
+      <p id={@label_id} class="label px-0 pb-1">
+        <span class="label-text text-body font-normal">
+          {@label} <span class="text-label text-secondary font-mono">({@type_badge})</span>
+        </span>
+      </p>
+      <div
+        id={@control_id}
+        data-readonly-display="true"
+        aria-labelledby={@label_id}
+        aria-describedby={@help_id}
+        aria-readonly="true"
+        class="rounded-box border border-base-300 bg-base-200 p-3 font-mono text-label text-base-content"
+      >
+        {inspect(@value)}
+      </div>
+      <.field_help id={@help_id} text={@help_text} />
+    </div>
+    """
+  end
+
+  defp assign_control_metadata(assigns) do
+    key = assigns.key
+
+    assigns
+    |> assign(:control_id, control_id(key))
+    |> assign(:control_name, control_name(key))
+    |> assign(:help_id, help_id(key))
+    |> assign(:label_id, label_id(key))
+    |> assign(:label, humanize(key))
+    |> assign(:help_text, "Preview assign value for #{humanize(key)}.")
+  end
+
+  defp control_id(key), do: "assigns-" <> Atom.to_string(key)
+  defp control_name(key), do: "assigns[" <> Atom.to_string(key) <> "]"
+  defp help_id(key), do: control_id(key) <> "-help"
+  defp label_id(key), do: control_id(key) <> "-label"
 
   # snake_case_atom -> "Snake case atom" (sentence case per UI-SPEC line 97)
   defp humanize(atom) when is_atom(atom) do
