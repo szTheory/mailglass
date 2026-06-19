@@ -777,6 +777,81 @@ defmodule MailglassAdmin.OperatorLiveTest do
   end
 
   describe "cross-surface tenant scope" do
+    test "bare operator URL with exactly one accessible tenant canonicalizes to tenant_id", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      insert_delivery!(tenant_id: "solo-tenant", recipient: "solo@example.com")
+
+      {:ok, view, _html} = live(conn, @base_path)
+
+      assert_patch(view, operator_path(%{"tenant_id" => "solo-tenant"}))
+    end
+
+    test "bare operator URL with multiple accessible tenants renders selector copy", %{conn: conn} do
+      conn = operator_conn(conn)
+      insert_delivery!(
+        tenant_id: "alpha-tenant",
+        recipient: "alpha@example.com",
+        provider_message_id: "pm-alpha-tenant"
+      )
+
+      insert_delivery!(
+        tenant_id: "beta-tenant",
+        recipient: "beta@example.com",
+        provider_message_id: "pm-beta-tenant"
+      )
+
+      {:ok, _view, html} = live(conn, @base_path)
+
+      assert html =~ "Select a tenant"
+      assert html =~ "Choose a tenant to inspect its deliveries and inbound routing"
+      assert html =~ "Select tenant"
+      assert html =~ "alpha-tenant"
+      assert html =~ "beta-tenant"
+      refute html =~ "add <code"
+      refute html =~ "tenant_id=…"
+    end
+
+    test "clear filters preserves the selected tenant on deliveries", %{conn: conn} do
+      conn = operator_conn(conn)
+      insert_delivery!(provider: "postmark")
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "provider" => "postmark",
+            "view" => "deliveries"
+          })
+        )
+
+      render_hook(view, "clear_filters", %{})
+
+      assert_patch(view, operator_path(%{"tenant_id" => @tenant_id}))
+    end
+
+    test "delivery detail back preserves tenant and drops delivery id", %{conn: conn} do
+      conn = operator_conn(conn)
+      delivery = insert_delivery!(recipient: "back@example.com")
+
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+
+      view
+      |> element(~s(a[data-testid="operator-detail-back"]))
+      |> render_click()
+
+      assert_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "window_hours" => "168"
+        })
+      )
+    end
+
     test "rendered Inbound nav target preserves the current tenant", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))

@@ -23,6 +23,32 @@ defmodule MailglassAdmin.InboundLiveTest do
   @banned ["Oops", "Whoops", "Uh oh", "Something went wrong"]
 
   describe "inbound surface" do
+    test "bare inbound URL with exactly one accessible tenant canonicalizes to tenant_id", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      InboundFixtures.seed_matched!("solo-inbound", recipient: "solo@example.com")
+
+      {:ok, view, _html} = live(conn, @base_path)
+
+      assert_patch(view, inbound_path(%{"tenant_id" => "solo-inbound"}))
+    end
+
+    test "bare inbound URL with multiple accessible tenants renders selector copy", %{conn: conn} do
+      conn = operator_conn(conn)
+      InboundFixtures.seed_matched!("alpha-inbound", recipient: "alpha@example.com")
+      InboundFixtures.seed_matched!("beta-inbound", recipient: "beta@example.com")
+
+      {:ok, _view, html} = live(conn, @base_path)
+
+      assert html =~ "Select a tenant"
+      assert html =~ "Choose a tenant to inspect its deliveries and inbound routing"
+      assert html =~ "Select tenant"
+      assert html =~ "alpha-inbound"
+      assert html =~ "beta-inbound"
+      refute html =~ "add a tenant_id to the URL"
+    end
+
     test "renders the no-selection prompt and masks recipients by default (V5)", %{conn: conn} do
       conn = operator_conn(conn)
 
@@ -314,6 +340,46 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html2 =~ ~s(value="mailgun")
       assert html2 =~ ~s(<option value="accept" selected)
+    end
+
+    test "clear filters preserves the selected tenant on inbound", %{conn: conn} do
+      conn = operator_conn(conn)
+      InboundFixtures.seed_matched!(@tenant_id, provider: "mailgun")
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "provider" => "mailgun"
+          })
+        )
+
+      render_hook(view, "clear_filters", %{})
+
+      assert_patch(view, inbound_path(%{"tenant_id" => @tenant_id}))
+    end
+
+    test "inbound detail back preserves tenant and drops inbound id", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "back@example.com")
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      view
+      |> element(~s(a[data-testid="inbound-detail-back"]))
+      |> render_click()
+
+      assert_patch(
+        view,
+        inbound_path(%{
+          "tenant_id" => @tenant_id,
+          "window_hours" => "168"
+        })
+      )
     end
 
     test "invalid URL-backed filters render recovery copy without widening tenant reads", %{

@@ -76,6 +76,22 @@ defmodule MailglassAdmin.Operator.ShellTest do
     end
   end
 
+  describe "tenant_switch_path/3" do
+    test "keeps the deliveries surface and drops selected delivery ids when switching tenants" do
+      assert Shell.tenant_switch_path(
+               "/ops/mail?tenant_id=alpha&delivery_id=old-id&provider=postmark&theme=dark",
+               "beta"
+             ) == "/ops/mail?tenant_id=beta&provider=postmark&theme=dark"
+    end
+
+    test "keeps the inbound surface and drops selected inbound ids when switching tenants" do
+      assert Shell.tenant_switch_path(
+               "/ops/mail/inbound?tenant_id=alpha&inbound_id=old-id&provider=mailgun",
+               "beta"
+             ) == "/ops/mail/inbound?tenant_id=beta&provider=mailgun"
+    end
+  end
+
   describe "theme_choice/1" do
     test "maps explicit dark values to :dark" do
       assert Shell.theme_choice(%{"theme" => "dark"}) == :dark
