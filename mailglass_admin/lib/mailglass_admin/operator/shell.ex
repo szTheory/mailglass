@@ -84,25 +84,19 @@ defmodule MailglassAdmin.Operator.Shell do
   def theme_choice(_params), do: :system
 
   @doc """
-  Builds the push_patch target for setting the theme picker value on the current
-  URL while preserving unrelated query params.
+  Builds the target for setting the theme picker value through the HTTP
+  persistence seam while preserving unrelated query params in `return_to`.
 
   The `system` choice removes the explicit `theme` query key.
   """
   def set_theme_path(uri, theme) when is_binary(uri) and is_binary(theme) do
     parsed = URI.parse(uri)
     path = parsed.path || "/"
+    return_to = return_to_without_theme(path, parsed.query || "")
+    root = operator_root(path, surface_from_path(path))
 
-    query =
-      (parsed.query || "")
-      |> URI.query_decoder()
-      |> Enum.reject(fn {key, _value} -> key == "theme" end)
-      |> maybe_append_theme(theme)
-
-    case URI.encode_query(query) do
-      "" -> path
-      encoded -> path <> "?" <> encoded
-    end
+    path_join(root, "theme/" <> normalized_theme_segment(theme)) <>
+      "?" <> URI.encode_query([{"return_to", return_to}])
   end
 
   @doc """
@@ -133,10 +127,25 @@ defmodule MailglassAdmin.Operator.Shell do
     end
   end
 
-  defp maybe_append_theme(query, theme) when theme in ["light", "dark"],
-    do: query ++ [{"theme", theme}]
+  defp return_to_without_theme(path, query) do
+    query =
+      query
+      |> URI.query_decoder()
+      |> Enum.reject(fn {key, _value} -> key == "theme" end)
+      |> URI.encode_query()
 
-  defp maybe_append_theme(query, _theme), do: query
+    case query do
+      "" -> path
+      query -> path <> "?" <> query
+    end
+  end
+
+  defp normalized_theme_segment(theme) when theme in ["light", "dark"], do: theme
+  defp normalized_theme_segment(_theme), do: "system"
+
+  defp surface_from_path(path) do
+    if String.ends_with?(path, "/inbound"), do: :inbound, else: :deliveries
+  end
 
   defp operator_root(base_path, :inbound), do: trim_inbound(base_path)
   defp operator_root(base_path, :deliveries), do: base_path

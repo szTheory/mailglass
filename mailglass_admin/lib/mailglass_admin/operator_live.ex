@@ -165,7 +165,7 @@ defmodule MailglassAdmin.OperatorLive do
 
   def handle_event("toggle_theme", _params, socket) do
     {:noreply,
-     push_patch(socket,
+     redirect(socket,
        to:
          MailglassAdmin.Operator.Shell.toggle_theme_path(
            socket.assigns.page_uri,
@@ -176,7 +176,7 @@ defmodule MailglassAdmin.OperatorLive do
 
   def handle_event("set_theme", %{"theme" => theme}, socket) do
     {:noreply,
-     push_patch(socket,
+     redirect(socket,
        to: MailglassAdmin.Operator.Shell.set_theme_path(socket.assigns.page_uri, theme)
      )}
   end
