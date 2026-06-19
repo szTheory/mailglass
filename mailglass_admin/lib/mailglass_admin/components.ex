@@ -574,7 +574,8 @@ defmodule MailglassAdmin.Components do
         aria-invalid={@invalid? && "true"}
         class={filter_display_class(@invalid?)}
       >
-        {@display_text}
+        <span class="block text-label font-bold text-secondary">Read-only value</span>
+        <span>{@display_text}</span>
       </div>
 
       <input
