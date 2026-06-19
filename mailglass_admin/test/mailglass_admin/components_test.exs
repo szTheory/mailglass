@@ -16,6 +16,7 @@ defmodule MailglassAdmin.ComponentsTest do
 
   use ExUnit.Case, async: true
 
+  import Phoenix.Component
   import Phoenix.LiveViewTest
 
   alias MailglassAdmin.Components
@@ -591,6 +592,48 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
+  describe "filter_field/1 and filter_section/1 primitive contract" do
+    test "filter_section renders a fieldset with visible legend and slotted fields" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <Components.filter_section title="Filters">
+          <p data-testid="slotted-filter-field">Status field</p>
+        </Components.filter_section>
+        """)
+
+      assert_all(html, ["<fieldset", "<legend", "Filters", ~s(data-testid="slotted-filter-field")])
+    end
+
+    test "filter_field text input connects label, help, error, invalid state, and form metadata" do
+      form = filters_form(%{"status" => "deferred"})
+
+      html =
+        render_component(&Components.filter_field/1,
+          field: form[:status],
+          type: :text,
+          label: "Status",
+          help: "Filter deliveries by delivery status.",
+          error: "Status was not applied. Choose a listed status."
+        )
+
+      assert_all(html, [
+        ~s(<label for="filters_status"),
+        ~s(id="filters_status"),
+        ~s(name="filters[status]"),
+        ~s(value="deferred"),
+        ~s(id="filters_status-help"),
+        ~s(id="filters_status-error"),
+        ~s(aria-describedby="filters_status-help filters_status-error"),
+        ~s(aria-invalid="true"),
+        "Filter deliveries by delivery status.",
+        "Action needed",
+        "Status was not applied. Choose a listed status."
+      ])
+    end
+  end
+
   defp assert_all(html, markers) do
     Enum.each(markers, fn marker -> assert html =~ marker end)
   end
@@ -600,4 +643,8 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   defp radio_count(html), do: length(Regex.scan(~r/type="radio"/, html))
+
+  defp filters_form(params) do
+    Phoenix.HTML.FormData.to_form(params, as: :filters)
+  end
 end
