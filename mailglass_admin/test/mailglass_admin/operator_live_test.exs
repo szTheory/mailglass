@@ -163,7 +163,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Event was not applied. Choose a listed event."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
 
-      assert_raise ExUnit.AssertionError, fn ->
+      assert_raise ArgumentError, fn ->
         assert_patch(view, 0)
       end
     end

@@ -33,6 +33,9 @@ defmodule MailglassAdmin.OperatorLive do
   @status_values [:queued, :sent, :dispatched, :failed, :suppressed]
   @event_values Mailglass.Outbound.Delivery.__event_types__()
   @default_window_hours 168
+  @status_filter_error "Status was not applied. Choose a listed status."
+  @event_filter_error "Event was not applied. Choose a listed event."
+  @window_filter_error "Time window was not applied. Choose a positive listed time window."
   @window_options [
     {"Last 24 hours", "24"},
     {"Last 7 days", "168"},
@@ -68,12 +71,13 @@ defmodule MailglassAdmin.OperatorLive do
      |> assign(:window_options, @window_options)
      |> assign(:filter_params, default_filter_params())
      |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
+     |> assign(:filter_errors, %{})
      |> assign(:page_title, "mailglass — Operator")}
   end
 
   @impl true
   def handle_params(params, uri, socket) do
-    filter_params = normalize_filter_params(params)
+    {filter_params, filter_errors} = normalize_filter_params_with_errors(params)
     support_state = normalize_support_state(params)
     view = params["view"]
     delivery_id = blank_to_nil(params["delivery_id"])
@@ -86,6 +90,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params))
       |> assign(:filter_params, filter_params)
       |> assign(:filter_form, to_form(filter_params, as: :filters))
+      |> assign(:filter_errors, filter_errors)
       |> assign(:support_state, support_state)
 
     socket =
@@ -104,16 +109,23 @@ defmodule MailglassAdmin.OperatorLive do
 
   @impl true
   def handle_event("apply_filters", %{"filters" => filters}, socket) do
-    normalized = normalize_filter_params(filters)
+    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
 
-    path =
-      if socket.assigns[:view] == :deliveries do
-        build_path_with_view(socket.assigns.base_path, normalized, socket.assigns.dark_chrome)
-      else
-        build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
-      end
+    if map_size(filter_errors) == 0 do
+      path =
+        if socket.assigns[:view] == :deliveries do
+          build_path_with_view(socket.assigns.base_path, normalized, socket.assigns.dark_chrome)
+        else
+          build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
+        end
 
-    {:noreply, push_patch(socket, to: path)}
+      {:noreply, push_patch(socket, to: path)}
+    else
+      {:noreply,
+       socket
+       |> assign(:filter_form, to_form(normalized, as: :filters))
+       |> assign(:filter_errors, filter_errors)}
+    end
   end
 
   def handle_event("toggle_theme", _params, socket) do
@@ -135,8 +147,12 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   def handle_event("validate_filters", %{"filters" => filters}, socket) do
+    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
+
     {:noreply,
-     assign(socket, :filter_form, to_form(normalize_filter_params(filters), as: :filters))}
+     socket
+     |> assign(:filter_form, to_form(normalized, as: :filters))
+     |> assign(:filter_errors, filter_errors)}
   end
 
   def handle_event("select_delivery", %{"id" => delivery_id}, socket) do
@@ -413,6 +429,7 @@ defmodule MailglassAdmin.OperatorLive do
                   status_values={@status_values}
                   event_values={@event_values}
                   window_options={@window_options}
+                  errors={@filter_errors}
                 />
               </div>
 
@@ -554,17 +571,31 @@ defmodule MailglassAdmin.OperatorLive do
       Map.drop(default_filter_params(), ["tenant_id", "window_hours"])
   end
 
-  defp normalize_filter_params(params) do
+  defp normalize_filter_params_with_errors(params) do
     defaults = default_filter_params()
 
-    %{
+    {status, status_error} =
+      normalize_enum_filter(params, "status", @status_values, @status_filter_error)
+
+    {event, event_error} =
+      normalize_enum_filter(params, "event", @event_values, @event_filter_error)
+
+    {window_hours, window_error} = normalize_window_filter(params, defaults)
+
+    filter_params = %{
       "tenant_id" => normalize_string(Map.get(params, "tenant_id", defaults["tenant_id"])),
       "provider" => normalize_string(Map.get(params, "provider", defaults["provider"])),
-      "status" => normalize_string(Map.get(params, "status", defaults["status"])),
-      "event" => normalize_string(Map.get(params, "event", defaults["event"])),
-      "window_hours" =>
-        normalize_window(Map.get(params, "window_hours", defaults["window_hours"]))
+      "status" => status,
+      "event" => event,
+      "window_hours" => window_hours
     }
+
+    {filter_params,
+     filter_error_map([
+       {"status", status_error},
+       {"event", event_error},
+       {"window_hours", window_error}
+     ])}
   end
 
   defp load_deliveries(%{"tenant_id" => ""}), do: []
@@ -817,11 +848,40 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp parse_positive_integer(_value), do: nil
 
-  defp normalize_window(value) do
-    value
-    |> parse_positive_integer()
-    |> Kernel.||(@default_window_hours)
-    |> Integer.to_string()
+  defp normalize_enum_filter(params, field, allowed, message) do
+    value = normalize_string(Map.get(params, field, ""))
+
+    cond do
+      value == "" -> {"", nil}
+      enum_string_allowed?(value, allowed) -> {value, nil}
+      true -> {"", message}
+    end
+  end
+
+  defp enum_string_allowed?(value, allowed) do
+    Enum.any?(allowed, &(Atom.to_string(&1) == value))
+  end
+
+  defp normalize_window_filter(params, defaults) do
+    raw_value = Map.get(params, "window_hours", defaults["window_hours"])
+    raw_string = normalize_string(raw_value)
+
+    case parse_positive_integer(raw_value) do
+      integer when is_integer(integer) ->
+        {Integer.to_string(integer), nil}
+
+      nil when raw_string == "" ->
+        {Integer.to_string(@default_window_hours), nil}
+
+      nil ->
+        {Integer.to_string(@default_window_hours), @window_filter_error}
+    end
+  end
+
+  defp filter_error_map(entries) do
+    entries
+    |> Enum.reject(fn {_field, error} -> is_nil(error) end)
+    |> Map.new()
   end
 
   defp normalize_string(value) when is_binary(value), do: String.trim(value)

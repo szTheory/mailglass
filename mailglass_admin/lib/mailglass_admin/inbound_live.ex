@@ -42,6 +42,8 @@ defmodule MailglassAdmin.InboundLive do
   # to MailglassInbound — keeping the --no-optional-deps lane clean.
   @outcome_values [:no_match, :accept, :ignore, :reject, :bounce, :failed]
   @default_window_hours 168
+  @outcome_filter_error "Mailbox outcome was not applied. Choose a listed outcome."
+  @window_filter_error "Time window was not applied. Choose a positive listed time window."
   @window_options [
     {"Last 24 hours", "24"},
     {"Last 7 days", "168"},
@@ -103,6 +105,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:window_options, @window_options)
      |> assign(:filter_params, default_filter_params())
      |> assign(:filter_form, to_form(default_filter_params(), as: :filters))
+     |> assign(:filter_errors, %{})
      |> assign(:page_title, "mailglass — Inbound")}
   end
 
@@ -116,7 +119,7 @@ defmodule MailglassAdmin.InboundLive do
 
   @impl true
   def handle_params(params, uri, socket) do
-    filter_params = normalize_filter_params(params)
+    {filter_params, filter_errors} = normalize_filter_params_with_errors(params)
 
     {:noreply,
      socket
@@ -126,18 +129,26 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params))
      |> assign(:filter_params, filter_params)
      |> assign(:filter_form, to_form(filter_params, as: :filters))
+     |> assign(:filter_errors, filter_errors)
      |> assign_inbound_state(filter_params, blank_to_nil(params["inbound_id"]))
      |> close_replay_modal()}
   end
 
   @impl true
   def handle_event("apply_filters", %{"filters" => filters}, socket) do
-    normalized = normalize_filter_params(filters)
+    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
 
-    {:noreply,
-     push_patch(socket,
-       to: build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
-     )}
+    if map_size(filter_errors) == 0 do
+      {:noreply,
+       push_patch(socket,
+         to: build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
+       )}
+    else
+      {:noreply,
+       socket
+       |> assign(:filter_form, to_form(normalized, as: :filters))
+       |> assign(:filter_errors, filter_errors)}
+    end
   end
 
   def handle_event("toggle_theme", _params, socket) do
@@ -159,8 +170,12 @@ defmodule MailglassAdmin.InboundLive do
   end
 
   def handle_event("validate_filters", %{"filters" => filters}, socket) do
+    {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
+
     {:noreply,
-     assign(socket, :filter_form, to_form(normalize_filter_params(filters), as: :filters))}
+     socket
+     |> assign(:filter_form, to_form(normalized, as: :filters))
+     |> assign(:filter_errors, filter_errors)}
   end
 
   def handle_event("select_inbound", %{"id" => inbound_id}, socket) do
@@ -326,6 +341,7 @@ defmodule MailglassAdmin.InboundLive do
                 form={@filter_form}
                 outcome_values={@outcome_values}
                 window_options={@window_options}
+                errors={@filter_errors}
               />
             </div>
 
@@ -844,17 +860,27 @@ defmodule MailglassAdmin.InboundLive do
     }
   end
 
-  defp normalize_filter_params(params) do
+  defp normalize_filter_params_with_errors(params) do
     defaults = default_filter_params()
 
-    %{
+    {outcome, outcome_error} =
+      normalize_enum_filter(params, "outcome", @outcome_values, @outcome_filter_error)
+
+    {window_hours, window_error} = normalize_window_filter(params, defaults)
+
+    filter_params = %{
       "tenant_id" => normalize_string(Map.get(params, "tenant_id", defaults["tenant_id"])),
       "provider" => normalize_string(Map.get(params, "provider", defaults["provider"])),
-      "outcome" => normalize_string(Map.get(params, "outcome", defaults["outcome"])),
-      "window_hours" =>
-        normalize_window(Map.get(params, "window_hours", defaults["window_hours"])),
+      "outcome" => outcome,
+      "window_hours" => window_hours,
       "search" => normalize_string(Map.get(params, "search", defaults["search"]))
     }
+
+    {filter_params,
+     filter_error_map([
+       {"outcome", outcome_error},
+       {"window_hours", window_error}
+     ])}
   end
 
   defp close_replay_modal(socket), do: assign(socket, :replay_modal_open?, false)
@@ -903,11 +929,40 @@ defmodule MailglassAdmin.InboundLive do
 
   defp parse_positive_integer(_value), do: nil
 
-  defp normalize_window(value) do
-    value
-    |> parse_positive_integer()
-    |> Kernel.||(@default_window_hours)
-    |> Integer.to_string()
+  defp normalize_enum_filter(params, field, allowed, message) do
+    value = normalize_string(Map.get(params, field, ""))
+
+    cond do
+      value == "" -> {"", nil}
+      enum_string_allowed?(value, allowed) -> {value, nil}
+      true -> {"", message}
+    end
+  end
+
+  defp enum_string_allowed?(value, allowed) do
+    Enum.any?(allowed, &(Atom.to_string(&1) == value))
+  end
+
+  defp normalize_window_filter(params, defaults) do
+    raw_value = Map.get(params, "window_hours", defaults["window_hours"])
+    raw_string = normalize_string(raw_value)
+
+    case parse_positive_integer(raw_value) do
+      integer when is_integer(integer) ->
+        {Integer.to_string(integer), nil}
+
+      nil when raw_string == "" ->
+        {Integer.to_string(@default_window_hours), nil}
+
+      nil ->
+        {Integer.to_string(@default_window_hours), @window_filter_error}
+    end
+  end
+
+  defp filter_error_map(entries) do
+    entries
+    |> Enum.reject(fn {_field, error} -> is_nil(error) end)
+    |> Map.new()
   end
 
   defp normalize_string(value) when is_binary(value), do: String.trim(value)
