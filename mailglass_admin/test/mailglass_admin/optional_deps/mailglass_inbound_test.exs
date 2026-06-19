@@ -4,8 +4,6 @@ defmodule MailglassAdmin.OptionalDeps.MailglassInboundTest do
   Code.ensure_loaded?(MailglassInbound) ||
     Code.require_file("../../../../mailglass_inbound/lib/mailglass_inbound.ex", __DIR__)
 
-  Code.require_file("../../../lib/mailglass_admin/optional_deps/mailglass_inbound.ex", __DIR__)
-
   alias MailglassAdmin.OptionalDeps.MailglassInbound
 
   defmodule InboundTenantReadModel do

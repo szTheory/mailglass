@@ -280,7 +280,11 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert_patch(view, base_path <> "?width=375&theme=light")
 
       render_click(view, "toggle_theme", %{})
-      assert_patch(view, base_path <> "?width=375&theme=dark")
+
+      assert_redirect(
+        view,
+        "/dev/mail/theme/dark?return_to=" <> URI.encode_www_form(base_path <> "?width=375")
+      )
     end
   end
 
@@ -307,10 +311,12 @@ defmodule MailglassAdmin.PreviewLiveTest do
       {:ok, view, _html} = live(conn, base_path)
 
       render_click(view, "toggle_preview_frame_theme", %{})
-      after_admin_toggle = render_click(view, "toggle_theme", %{})
+      render_click(view, "toggle_theme", %{})
 
-      assert_patch(view, base_path <> "?theme=dark")
-      assert after_admin_toggle =~ ~s|data-preview-frame-theme="dark"|
+      assert_redirect(
+        view,
+        "/dev/mail/theme/dark?return_to=" <> URI.encode_www_form(base_path)
+      )
     end
 
     @tag :dark_toggle

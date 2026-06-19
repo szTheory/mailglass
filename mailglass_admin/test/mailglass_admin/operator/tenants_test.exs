@@ -1,10 +1,9 @@
 defmodule MailglassAdmin.Operator.TenantsTest do
-  use Mailglass.DataCase, async: true
-
-  Code.require_file("../../../lib/mailglass_admin/operator/tenants.ex", __DIR__)
+  use MailglassAdmin.LiveViewCase, async: false
 
   alias Mailglass.Outbound.Delivery
   alias MailglassAdmin.Operator.Tenants
+  alias MailglassAdmin.TestRepo
 
   defmodule InboundGateway do
     def available?, do: true
@@ -25,11 +24,12 @@ defmodule MailglassAdmin.Operator.TenantsTest do
       insert_delivery!("tenant-b")
       insert_delivery!("tenant-a")
 
-      assert Tenants.list_tenants(%{subject_id: "operator-1"}, inbound_gateway: InboundGateway) == [
-               %{id: "tenant-a", label: "tenant-a"},
-               %{id: "tenant-b", label: "tenant-b"},
-               %{id: "tenant-c", label: "tenant-c"}
-             ]
+      assert Tenants.list_tenants(%{subject_id: "operator-1"}, inbound_gateway: InboundGateway) ==
+               [
+                 %{id: "tenant-a", label: "tenant-a"},
+                 %{id: "tenant-b", label: "tenant-b"},
+                 %{id: "tenant-c", label: "tenant-c"}
+               ]
     end
 
     test "falls back to outbound tenants when the optional inbound gateway is unavailable" do
@@ -58,6 +58,6 @@ defmodule MailglassAdmin.Operator.TenantsTest do
       metadata: %{},
       status: :queued
     })
-    |> Mailglass.TestRepo.insert!()
+    |> TestRepo.insert!()
   end
 end

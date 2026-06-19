@@ -102,16 +102,16 @@ defmodule MailglassAdmin.VoiceTest do
 
     test "canonical COPY-LD strings present in Operator surface initial render", %{conn: conn} do
       conn = operator_conn(conn)
-      {:ok, _view, html} = live(conn, "/ops/mail")
+      {:ok, _view, html} = live(conn, "/ops/mail?view=deliveries&tenant_id=test-tenant")
 
       # LD-11: orientation tip — "Delivery never arrived? Start here."
-      # Rendered via Shell.orientation_strip surface={:deliveries} in the overview branch.
+      # Rendered via Shell.orientation_strip surface={:deliveries} in the deliveries branch.
       assert html =~ "Delivery never arrived? Start here.",
              "LD-11: orientation tip must use domain noun Delivery (not Email)"
 
-      # Spot-check: overview heading confirming operator surface renders correctly.
-      assert html =~ "Operator overview",
-             "Operator surface must render the overview heading on initial mount"
+      # Spot-check: deliveries heading confirming operator surface renders correctly.
+      assert html =~ "Deliveries",
+             "Operator surface must render the deliveries heading on initial mount"
     end
   end
 

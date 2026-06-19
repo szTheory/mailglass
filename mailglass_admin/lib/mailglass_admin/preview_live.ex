@@ -183,13 +183,9 @@ defmodule MailglassAdmin.PreviewLive do
 
   def handle_event("toggle_theme", _params, socket) do
     {:noreply,
-     push_patch(
+     redirect(
        socket,
-       to:
-         MailglassAdmin.Operator.Shell.toggle_theme_path(
-           socket.assigns.page_uri || "/dev/mail",
-           admin_chrome_dark?(socket.assigns.admin_chrome_theme)
-         )
+       to: preview_theme_path(socket, admin_chrome_dark?(socket.assigns.admin_chrome_theme))
      )}
   end
 
@@ -291,7 +287,8 @@ defmodule MailglassAdmin.PreviewLive do
                   </h1>
                 </div>
                 <p class="text-body text-secondary">
-                  Fix the error in <code class="font-mono text-label">{inspect(@current_mailable)}</code>
+                  Fix the error in
+                  <code class="font-mono text-label">{inspect(@current_mailable)}</code>
                   and save the file to reload.
                 </p>
                 <pre class="mt-md font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
@@ -316,7 +313,9 @@ defmodule MailglassAdmin.PreviewLive do
                     class="mg-focus-ring btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
                   >
                     <Components.icon
-                      name={if admin_chrome_dark?(@admin_chrome_theme), do: "hero-sun", else: "hero-moon"}
+                      name={
+                        if admin_chrome_dark?(@admin_chrome_theme), do: "hero-sun", else: "hero-moon"
+                      }
                       class="w-5 h-5"
                     />
                   </button>
@@ -358,7 +357,9 @@ defmodule MailglassAdmin.PreviewLive do
                 class="mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-lg"
               >
                 <Components.icon name="hero-magnifying-glass" class="mb-md h-10 w-10 text-secondary" />
-                <h1 class="mb-sm text-heading font-bold text-base-content">No Mailables discovered</h1>
+                <h1 class="mb-sm text-heading font-bold text-base-content">
+                  No Mailables discovered
+                </h1>
                 <p class="text-body text-secondary">
                   Preview scans loaded modules that use Mailglass.Mailable. Nothing was found yet.
                 </p>
@@ -369,7 +370,8 @@ defmodule MailglassAdmin.PreviewLive do
                       class="mt-0.5 h-4 w-4 shrink-0 text-primary"
                     />
                     <span>
-                      Confirm the module calls <code class="mono text-label">use Mailglass.Mailable</code>
+                      Confirm the module calls
+                      <code class="mono text-label">use Mailglass.Mailable</code>
                       and is compiled and loaded.
                     </span>
                   </li>
@@ -484,7 +486,8 @@ defmodule MailglassAdmin.PreviewLive do
           theme -> path <> "?theme=" <> theme
         end
 
-      nil -> "#"
+      nil ->
+        "#"
     end
   end
 
@@ -575,6 +578,35 @@ defmodule MailglassAdmin.PreviewLive do
 
   defp build_capture_url(base_path, width, theme),
     do: base_path <> "?width=" <> width <> "&theme=" <> theme
+
+  defp preview_theme_path(socket, currently_dark?) do
+    page_uri = socket.assigns.page_uri || socket.assigns.mount_path || "/dev/mail"
+    parsed = URI.parse(page_uri)
+    path = parsed.path || socket.assigns.mount_path || "/dev/mail"
+
+    return_to =
+      path
+      |> append_query_without_theme(parsed.query || "")
+
+    theme = if currently_dark?, do: "system", else: "dark"
+    mount_path = socket.assigns.mount_path || "/dev/mail"
+
+    String.trim_trailing(mount_path, "/") <>
+      "/theme/" <> theme <> "?" <> URI.encode_query([{"return_to", return_to}])
+  end
+
+  defp append_query_without_theme(path, query) do
+    query =
+      query
+      |> URI.query_decoder()
+      |> Enum.reject(fn {key, _value} -> key == "theme" end)
+      |> URI.encode_query()
+
+    case query do
+      "" -> path
+      query -> path <> "?" <> query
+    end
+  end
 
   defp theme_query_param(:dark), do: "dark"
   defp theme_query_param(:light), do: "light"
