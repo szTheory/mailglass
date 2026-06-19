@@ -300,7 +300,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 |-------|-----------|----------------|--------|-----------|
 | 109. Foundations + Gate-Tightening | v1.13 | 4/4 | Complete    | 2026-06-18 |
 | 110. Primitives | v1.13 | 4/4 | Complete    | 2026-06-18 |
-| 111. Forms | v1.13 | 2/4 | In Progress|  |
+| 111. Forms | v1.13 | 3/4 | In Progress|  |
 | 112. App-Shell, Nav & Tenant Seam | v1.13 | 0/TBD | Not started | - |
 | 113. Data-Display | v1.13 | 0/TBD | Not started | - |
 | 114. Component Groups | v1.13 | 0/TBD | Not started | - |

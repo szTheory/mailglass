@@ -5,16 +5,16 @@ milestone_name: Admin Design-System Stress Test & UX Uplift
 current_phase: 111
 current_phase_name: forms
 status: executing
-stopped_at: Completed 111-02-PLAN.md
-last_updated: "2026-06-19T15:50:29.599Z"
+stopped_at: Completed 111-03-PLAN.md
+last_updated: "2026-06-19T16:02:22.211Z"
 last_activity: 2026-06-19
 last_activity_desc: Phase 111 execution started
 progress:
   total_phases: 11
   completed_phases: 4
   total_plans: 18
-  completed_plans: 16
-  percent: 36
+  completed_plans: 17
+  percent: 94
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 111 (forms) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-19 — Phase 111 execution started
 
-Progress: [████████░░] 83%
+Progress: [█████████░] 94%
 
 ## v1.13 Milestone Intent
 
@@ -201,6 +201,9 @@ convergent + adversarially judged).
 - [Phase 111-02]: Filter wrappers remain thin components that delegate all control HEEx to Components.filter_field/1 and filter_section/1. — Plan 111-02 kept wrapper call-site ownership while removing duplicated label/control/help/error markup from operator and inbound filter modules.
 - [Phase 111-02]: filter_errors is a %{"field" => "message"} side map computed from raw URL/form params before normalization. — This keeps recovery metadata explicit while preserving map-backed Phoenix forms and existing read-model filter contracts.
 - [Phase 111-02]: Invalid apply_filters submissions render normalized form values and recovery copy without push_patch; valid submissions retain URL-backed patch behavior. — Invalid values stay correctable without mutating the current URL or widening tenant/data boundaries.
+- [Phase 111-03]: Preview atom and unsupported assign values render as aria-readonly display rows without hidden submitted values. — PreviewLive preserves missing read-only keys from current assigns, avoiding type-eroding string coercion.
+- [Phase 111-03]: Operator replay target radio identity is derived from sanitized webhook_event_id values with provider/event/linkage descriptions. — The target ID remains stable and traceable while keeping label and aria-describedby wiring explicit.
+- [Phase 111-03]: Inbound replay remains a single-target confirmation modal with dialog labelling and no replay target radio group. — Inbound has no ambiguous replay target branch, so certification is a no-radio component contract rather than extra controls.
 
 ## Quick Tasks Completed
 
@@ -307,6 +310,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 110-primitives P04 | 45min | 3 tasks | 6 files |
 | Phase 111-forms P01 | 7min | 2 tasks | 3 files |
 | Phase 111 P02 | 9min | 2 tasks | 7 files |
+| Phase 111 P03 | 8 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -330,8 +334,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-19T15:49:49.373Z
-**Stopped at:** Completed 111-02-PLAN.md
+**Last session:** 2026-06-19T16:02:02.094Z
+**Stopped at:** Completed 111-03-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
