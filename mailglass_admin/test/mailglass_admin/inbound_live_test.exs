@@ -14,6 +14,7 @@ defmodule MailglassAdmin.InboundLiveTest do
   import Ecto.Query
 
   alias MailglassAdmin.PubSub.Topics
+  alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.TestSupport.InboundFixtures
   alias MailglassInbound.InboundRecords.ExecutionRun
 
@@ -206,6 +207,26 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "Adjust the filters or wait for the next inbound message."
       assert clear_filters_count(html) == 2
       refute html =~ "No InboundMessages yet"
+    end
+
+    test "inbound page links preserve tenant scope and expose honest boundaries", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      for index <- 1..9 do
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "page-#{index}@example.com",
+          provider_message_id: "inbound-page-#{index}"
+        )
+      end
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="inbound-result-count")
+      assert html =~ "9 results"
+      assert html =~ ~s(data-testid="inbound-pagination")
+      assert html =~ ~s(data-testid="inbound-pagination-prev-disabled")
+      assert html =~ "tenant_id=#{@tenant_id}"
+      assert html =~ "page=2"
     end
 
     test "renders inbound responsive IA hooks and percentage grid contract", %{conn: conn} do
@@ -929,6 +950,55 @@ defmodule MailglassAdmin.InboundLiveTest do
       html = render(view)
 
       refute html =~ foreign.id
+    end
+  end
+
+  describe "inbound pagination component" do
+    test "renders count and disabled page boundaries from metadata" do
+      html =
+        render_component(&RecordsList.records_list/1,
+          records: [],
+          selected_record: nil,
+          empty_state: :filtered,
+          page_meta: %{
+            total_count: 9,
+            page: 1,
+            per_page: 5,
+            total_pages: 2,
+            has_previous?: false,
+            has_next?: true
+          },
+          previous_page_path: "/ops/mail/inbound?tenant_id=test-tenant&page=1",
+          next_page_path: "/ops/mail/inbound?tenant_id=test-tenant&page=2"
+        )
+
+      assert html =~ ~s(data-testid="inbound-result-count")
+      assert html =~ "9 results"
+      assert html =~ ~s(data-testid="inbound-pagination")
+      assert html =~ ~s(data-testid="inbound-pagination-prev-disabled")
+      assert html =~ ~s(aria-disabled="true")
+      assert html =~ ~s(data-testid="inbound-pagination-next")
+      assert html =~ "page=2"
+    end
+
+    test "keeps count and hides pagination chrome for one page" do
+      html =
+        render_component(&RecordsList.records_list/1,
+          records: [],
+          selected_record: nil,
+          empty_state: :truly_empty,
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            per_page: 5,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      assert html =~ "1 result"
+      refute html =~ ~s(data-testid="inbound-pagination")
     end
   end
 

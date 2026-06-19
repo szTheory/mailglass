@@ -637,6 +637,53 @@ defmodule MailglassAdmin.OperatorLiveTest do
   end
 
   describe "filters_active? empty states" do
+    test "renders honest result count and disabled pagination boundaries" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          page_meta: %{
+            total_count: 7,
+            page: 1,
+            per_page: 5,
+            total_pages: 2,
+            has_previous?: false,
+            has_next?: true
+          },
+          previous_page_path: "/ops/mail?tenant_id=test-tenant&view=deliveries&page=1",
+          next_page_path: "/ops/mail?tenant_id=test-tenant&view=deliveries&page=2"
+        )
+
+      assert html =~ ~s(data-testid="operator-result-count")
+      assert html =~ "7 results"
+      assert html =~ ~s(data-testid="operator-pagination")
+      assert html =~ ~s(data-testid="operator-pagination-prev-disabled")
+      assert html =~ ~s(aria-disabled="true")
+      assert html =~ ~s(data-testid="operator-pagination-next")
+      assert html =~ "page=2"
+    end
+
+    test "omits pagination chrome for one-page results while keeping count" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            per_page: 5,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      assert html =~ "1 result"
+      refute html =~ ~s(data-testid="operator-pagination")
+    end
+
     test "filtered empty state names the active filters and offers reset" do
       html =
         render_component(&DeliveriesList.deliveries_list/1,
@@ -663,6 +710,30 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Deliveries appear here once your application sends its first Message."
       assert html =~ ~s(data-testid="operator-empty-truly")
       refute html =~ ~s(phx-click="clear_filters")
+    end
+  end
+
+  describe "delivery pagination metadata" do
+    test "delivery page links preserve tenant scope and expose honest boundaries", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      for index <- 1..7 do
+        insert_delivery!(
+          recipient: "page-#{index}@example.com",
+          provider_message_id: "pm-page-#{index}",
+          last_event_at: hours_ago(index)
+        )
+      end
+
+      {:ok, _view, html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+
+      assert html =~ ~s(data-testid="operator-result-count")
+      assert html =~ "7 results"
+      assert html =~ ~s(data-testid="operator-pagination")
+      assert html =~ ~s(data-testid="operator-pagination-prev-disabled")
+      assert html =~ "tenant_id=#{@tenant_id}"
+      assert html =~ "page=2"
     end
   end
 

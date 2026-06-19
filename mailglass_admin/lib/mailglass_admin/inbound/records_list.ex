@@ -13,15 +13,29 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
   alias MailglassAdmin.Components
 
-  attr :records, :list, required: true
-  attr :selected_record, :map, default: nil
+  attr(:records, :list, required: true)
 
-  attr :empty_state, :atom,
+  attr(:page_meta, :map,
+    default: %{total_count: 0, total_pages: 0, has_previous?: false, has_next?: false}
+  )
+
+  attr(:previous_page_path, :string, default: nil)
+  attr(:next_page_path, :string, default: nil)
+  attr(:selected_record, :map, default: nil)
+
+  attr(:empty_state, :atom,
     values: [:no_tenant, :truly_empty, :filtered],
     default: :filtered
+  )
 
   def records_list(assigns) do
     ~H"""
+    <div
+      data-testid="inbound-result-count"
+      class="border-b border-base-300 px-4 py-3 text-body text-secondary"
+    >
+      {result_count_label(@page_meta)}
+    </div>
     <%= if @records == [] do %>
       <div class="flex min-h-64 flex-col items-center justify-center gap-sm p-6 text-center">
         <Components.icon name="hero-inbox-stack" class="h-8 w-8 text-secondary" />
@@ -82,20 +96,93 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         <% end %>
       </ul>
     <% end %>
+    <.pagination_controls
+      page_meta={@page_meta}
+      previous_page_path={@previous_page_path}
+      next_page_path={@next_page_path}
+    />
     """
   end
+
+  attr(:page_meta, :map, required: true)
+  attr(:previous_page_path, :string, default: nil)
+  attr(:next_page_path, :string, default: nil)
+
+  defp pagination_controls(assigns) do
+    ~H"""
+    <nav
+      :if={Map.get(@page_meta, :total_pages, 0) > 1}
+      data-testid="inbound-pagination"
+      aria-label="Inbound records pagination"
+      class="flex items-center justify-between gap-sm border-t border-base-300 px-4 py-3 text-body"
+    >
+      <.pagination_link
+        enabled?={Map.get(@page_meta, :has_previous?, false)}
+        path={@previous_page_path}
+        testid="inbound-pagination-prev"
+      >
+        Previous
+      </.pagination_link>
+
+      <span class="text-label text-secondary">
+        Page {Map.get(@page_meta, :page, 1)} of {Map.get(@page_meta, :total_pages, 1)}
+      </span>
+
+      <.pagination_link
+        enabled?={Map.get(@page_meta, :has_next?, false)}
+        path={@next_page_path}
+        testid="inbound-pagination-next"
+      >
+        Next
+      </.pagination_link>
+    </nav>
+    """
+  end
+
+  attr(:enabled?, :boolean, required: true)
+  attr(:path, :string, default: nil)
+  attr(:testid, :string, required: true)
+  slot(:inner_block, required: true)
+
+  defp pagination_link(assigns) do
+    ~H"""
+    <.link
+      :if={@enabled? and is_binary(@path)}
+      patch={@path}
+      data-testid={@testid}
+      class="btn btn-ghost min-h-11 px-md"
+    >
+      {render_slot(@inner_block)}
+    </.link>
+    <span
+      :if={!@enabled? or !is_binary(@path)}
+      data-testid={"#{@testid}-disabled"}
+      aria-disabled="true"
+      class="btn btn-ghost min-h-11 px-md opacity-60"
+    >
+      {render_slot(@inner_block)}
+    </span>
+    """
+  end
+
+  defp result_count_label(%{total_count: 1}), do: "1 result"
+
+  defp result_count_label(%{total_count: count}) when is_integer(count),
+    do: "#{count} results"
+
+  defp result_count_label(_page_meta), do: "0 results"
 
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_record, _record), do: false
 
-  defp empty_heading(:no_tenant), do: "No tenant selected"
+  defp empty_heading(:no_tenant), do: "Select a tenant"
   defp empty_heading(:truly_empty), do: "No InboundMessages yet"
   defp empty_heading(:filtered), do: "No InboundMessages match these filters"
 
   defp empty_body(:no_tenant),
     do:
-      "Inbound views are scoped to one tenant. Pick a tenant with the filters above, " <>
-        "or add a tenant_id to the URL, to inspect its inbound routing."
+      "Choose a tenant to inspect its deliveries and inbound routing. Tenant scope stays " <>
+        "in the URL so refreshes and shared links keep the same view."
 
   defp empty_body(:truly_empty),
     do: "InboundMessages appear here once this tenant receives its first message."

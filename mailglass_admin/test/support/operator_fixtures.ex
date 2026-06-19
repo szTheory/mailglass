@@ -9,7 +9,7 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   @tenant_id "browser-tenant"
 
-  def seed_browser_scenario! do
+  def seed_browser_scenario!(opts \\ []) do
     reset!()
 
     selected_delivery =
@@ -140,7 +140,10 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     })
 
     seed_inbound_matrix!()
-    seed_deny_reveal_inbound!()
+
+    if Keyword.get(opts, :deny_reveal?, true) do
+      seed_deny_reveal_inbound!()
+    end
 
     %{
       tenant_id: @tenant_id,

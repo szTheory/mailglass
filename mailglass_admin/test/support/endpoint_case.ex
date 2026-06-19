@@ -92,7 +92,14 @@ defmodule MailglassAdmin.TestAdopter.BrowserSessionController do
   end
 
   def reset(conn, _params) do
-    OperatorFixtures.seed_browser_scenario!()
+    conn = Plug.Conn.fetch_query_params(conn)
+
+    if conn.query_params["scenario"] == "sole" do
+      OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)
+    else
+      OperatorFixtures.seed_browser_scenario!()
+    end
+
     text(conn, "ok")
   end
 

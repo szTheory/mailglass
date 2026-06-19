@@ -26,7 +26,10 @@ errors=0
 COMPONENTS="${LIB}/mailglass_admin/components.ex"
 GALLERY="${LIB}/mailglass_admin/gallery_live.ex"
 OPERATOR_LIVE="${LIB}/mailglass_admin/operator_live.ex"
+INBOUND_LIVE="${LIB}/mailglass_admin/inbound_live.ex"
 INBOUND_OVERVIEW="${LIB}/mailglass_admin/inbound/overview.ex"
+DELIVERIES_LIST="${LIB}/mailglass_admin/operator/deliveries_list.ex"
+RECORDS_LIST="${LIB}/mailglass_admin/inbound/records_list.ex"
 HEROICONS="${SCRIPT_DIR}/../assets/vendor/heroicons-inline.js"
 
 # PRIMITIVE-DRIFT-GATE: the named Phase 110 primitives have exactly one public
@@ -73,6 +76,44 @@ if [[ -n "$old_primitive_signature_hits" ]]; then
   echo "FAIL: PRIMITIVE-DRIFT-GATE — old copied primitive class signature found outside Components" >&2
   errors=$((errors + 1))
 fi
+
+# FORM-DRIFT-GATE: Phase 111 filter wrappers must stay thin and continue routing
+# through the shared public primitives. This gate is scoped to the two wrapper
+# files so legitimate forms elsewhere in the app remain allowed.
+FILTER_WRAPPERS=(
+  "${LIB}/mailglass_admin/operator/filters_form.ex"
+  "${LIB}/mailglass_admin/inbound/filters_form.ex"
+)
+
+if ! grep -qE '^[[:space:]]*def[[:space:]]+filter_field\(' "$COMPONENTS" 2>/dev/null; then
+  echo "FAIL: FORM-DRIFT-GATE — Components.filter_field/1 public definition missing" >&2
+  errors=$((errors + 1))
+fi
+if ! grep -qE '^[[:space:]]*def[[:space:]]+filter_section\(' "$COMPONENTS" 2>/dev/null; then
+  echo "FAIL: FORM-DRIFT-GATE — Components.filter_section/1 public definition missing" >&2
+  errors=$((errors + 1))
+fi
+
+for wrapper in "${FILTER_WRAPPERS[@]}"; do
+  if [[ ! -f "$wrapper" ]]; then
+    echo "FAIL: FORM-DRIFT-GATE — wrapper file missing at $wrapper" >&2
+    errors=$((errors + 1))
+    continue
+  fi
+
+  if ! grep -q 'Components.filter_field' "$wrapper"; then
+    echo "FAIL: FORM-DRIFT-GATE — ${wrapper##*/} must call Components.filter_field/1" >&2
+    errors=$((errors + 1))
+  fi
+  if ! grep -q 'Components.filter_section' "$wrapper"; then
+    echo "FAIL: FORM-DRIFT-GATE — ${wrapper##*/} must call Components.filter_section/1" >&2
+    errors=$((errors + 1))
+  fi
+  if grep -En '<(label|input|select|textarea)\b|text-label font-bold text-base-content|text-label text-secondary|input input-bordered input-sm|select select-bordered select-sm|grid gap-xs|grid gap-sm md:grid-cols-2' "$wrapper" >/dev/null 2>&1; then
+    echo "FAIL: FORM-DRIFT-GATE — ${wrapper##*/} contains direct filter-control markup or old class signatures" >&2
+    errors=$((errors + 1))
+  fi
+done
 
 # STATCARD-GATE: overview KPI/stat cards must consume Components.stat_card/1.
 # This catches page-local stat helpers and the old raw card shapes that allowed
@@ -210,6 +251,35 @@ fi
 # theme-controller input, matchMedia script, or explicit "system" data-theme.
 if grep -rEn 'phx-hook=.*theme|localStorage|sessionStorage|document\.documentElement|window\.matchMedia|theme-controller|data-theme="system"|data-theme=\{[^}]*system|system[/-]light[/-]dark|light[/-]dark[/-]system' "$LIB" --include="*.ex" 2>/dev/null; then
   echo "FAIL: TOKEN-SCOPE-GATE — theme hook/storage/system picker creep found" >&2
+  errors=$((errors + 1))
+fi
+
+# PHASE112-SHELL-GATE: tenant/theme/pagination seams must stay honest.
+# Admin code consumes read-model/gateway modules; it must not grow raw Repo
+# tenant listing, concrete system root themes, old tenant dead-end copy, or
+# pagination totals inferred from truncated entry arrays.
+admin_tenant_repo_hits="$(
+  grep -rEn 'Repo\.(all|one|aggregate|get|get_by)|from\([^)]*(tenant|Tenant)|MailglassInbound\.Internal\.Operator\.Records' "$LIB/mailglass_admin" --include="*.ex" 2>/dev/null |
+    grep -vF "${LIB}/mailglass_admin/optional_deps/mailglass_inbound.ex:" || true
+)"
+if [[ -n "$admin_tenant_repo_hits" ]]; then
+  echo "$admin_tenant_repo_hits"
+  echo "FAIL: PHASE112-SHELL-GATE — admin tenant access must use scoped read-model/gateway seams, not raw Repo/direct storage" >&2
+  errors=$((errors + 1))
+fi
+
+if grep -En 'mailglass-system|data-theme="system"|root_theme.*system|system.*data-theme' "$OPERATOR_LIVE" "$INBOUND_LIVE" "${LIB}/mailglass_admin/layouts.ex" "${LIB}/mailglass_admin/layouts/root.html.heex" 2>/dev/null; then
+  echo "FAIL: PHASE112-SHELL-GATE — system theme must remain absence of a concrete root theme" >&2
+  errors=$((errors + 1))
+fi
+
+if grep -En 'No tenant selected|add (a )?tenant_id|tenant_id to the URL|\?tenant_id=…' "$OPERATOR_LIVE" "$INBOUND_LIVE" "$DELIVERIES_LIST" "$RECORDS_LIST" "${LIB}/mailglass_admin/operator/shell.ex" 2>/dev/null; then
+  echo "FAIL: PHASE112-SHELL-GATE — old no-tenant dead-end copy found in shell/list source" >&2
+  errors=$((errors + 1))
+fi
+
+if grep -En 'Enum\.count\(@(deliveries|records)\)|length\(@(deliveries|records)\)|Enum\.count\(assigns\.(deliveries|records)\)|length\(assigns\.(deliveries|records)\)' "$OPERATOR_LIVE" "$INBOUND_LIVE" "$DELIVERIES_LIST" "$RECORDS_LIST" 2>/dev/null; then
+  echo "FAIL: PHASE112-SHELL-GATE — pagination count must come from page metadata, not entry-array length" >&2
   errors=$((errors + 1))
 fi
 

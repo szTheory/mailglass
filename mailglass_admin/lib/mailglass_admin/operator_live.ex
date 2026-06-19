@@ -53,6 +53,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign_new(:operator_auth, fn -> %{status: :unknown, recent_auth?: false} end)
       |> assign(:view, :overview)
       |> assign(:deliveries, [])
+      |> assign(:deliveries_page_meta, empty_page_meta())
       |> assign(:selected_delivery, nil)
       |> assign(:timeline_events, [])
       |> assign(:suppression_state, nil)
@@ -108,6 +109,10 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:tenant_options, tenant_options)
       |> assign(:tenant_state, tenant_state)
       |> assign(:selected_tenant_id, selected_tenant_id)
+
+    if connected?(socket) and tenant_state == :auto_select do
+      send(self(), :canonicalize_tenant)
+    end
 
     cond do
       tenant_state == :auto_select ->
@@ -439,8 +444,8 @@ defmodule MailglassAdmin.OperatorLive do
             >
               <div class="text-body font-bold text-base-content">Select a tenant to begin</div>
               <div class="text-body text-secondary">
-                Operator views are scoped to one tenant at a time. Pick a tenant with the filters
-                on the Deliveries screen, or add <code class="mono">?tenant_id=…</code> to the URL.
+                Choose a tenant to inspect its deliveries and inbound routing. Tenant scope stays
+                in the URL so refreshes and shared links keep the same view.
               </div>
               <div>
                 <.link navigate={@deliveries_path} class="btn btn-primary btn-sm min-h-11">
@@ -510,6 +515,9 @@ defmodule MailglassAdmin.OperatorLive do
             </div>
             <DeliveriesList.deliveries_list
               deliveries={@deliveries}
+              page_meta={@deliveries_page_meta}
+              previous_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :previous)}
+              next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
               selected_delivery={@selected_delivery}
               filters_active?={filters_active?(@filter_params)}
             />
@@ -612,7 +620,8 @@ defmodule MailglassAdmin.OperatorLive do
       "provider" => "",
       "status" => "",
       "event" => "",
-      "window_hours" => Integer.to_string(@default_window_hours)
+      "window_hours" => Integer.to_string(@default_window_hours),
+      "page" => "1"
     }
   end
 
@@ -625,6 +634,7 @@ defmodule MailglassAdmin.OperatorLive do
     socket
     |> assign(:view, :overview)
     |> assign(:deliveries, [])
+    |> assign(:deliveries_page_meta, empty_page_meta())
     |> assign(:selected_delivery, nil)
     |> assign(:timeline_events, [])
     |> assign(:suppression_state, nil)
@@ -637,8 +647,8 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   defp filters_active?(filter_params) do
-    Map.drop(filter_params, ["tenant_id", "window_hours"]) !=
-      Map.drop(default_filter_params(), ["tenant_id", "window_hours"])
+    Map.drop(filter_params, ["tenant_id", "window_hours", "page"]) !=
+      Map.drop(default_filter_params(), ["tenant_id", "window_hours", "page"])
   end
 
   defp normalize_filter_params_with_errors(params) do
@@ -657,7 +667,8 @@ defmodule MailglassAdmin.OperatorLive do
       "provider" => normalize_string(Map.get(params, "provider", defaults["provider"])),
       "status" => status,
       "event" => event,
-      "window_hours" => window_hours
+      "window_hours" => window_hours,
+      "page" => normalize_page(params, defaults)
     }
 
     {filter_params,
@@ -668,16 +679,19 @@ defmodule MailglassAdmin.OperatorLive do
      ])}
   end
 
-  defp load_deliveries(%{"tenant_id" => ""}), do: []
+  defp load_deliveries_page(%{"tenant_id" => ""}), do: empty_page_meta()
 
-  defp load_deliveries(filter_params) do
-    Deliveries.list_recent_deliveries(
+  defp load_deliveries_page(filter_params) do
+    Deliveries.list_recent_deliveries_page(
       %{
         tenant_id: filter_params["tenant_id"],
         provider: blank_to_nil(filter_params["provider"]),
         status: cast_enum(filter_params["status"], @status_values),
         event: cast_enum(filter_params["event"], @event_values),
-        window_hours: parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+        window_hours:
+          parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
+        page: parse_positive_integer(filter_params["page"]) || 1,
+        per_page: 5
       },
       []
     )
@@ -742,7 +756,8 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   defp assign_delivery_state(socket, filter_params, selected_delivery_id) do
-    deliveries = load_deliveries(filter_params)
+    deliveries_page = load_deliveries_page(filter_params)
+    deliveries = deliveries_page.entries
     selected_delivery = find_selected_delivery(deliveries, selected_delivery_id)
     replay_targets = load_replay_targets(filter_params, selected_delivery)
     replay_history = load_replay_history(filter_params, selected_delivery)
@@ -750,6 +765,7 @@ defmodule MailglassAdmin.OperatorLive do
     socket
     |> assign(:view, :deliveries)
     |> assign(:deliveries, deliveries)
+    |> assign(:deliveries_page_meta, page_meta_without_entries(deliveries_page))
     |> assign(:selected_delivery, selected_delivery)
     |> assign(:timeline_events, load_timeline(filter_params, selected_delivery))
     |> assign(:suppression_state, load_suppression(filter_params, selected_delivery))
@@ -808,6 +824,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:suppression_count, suppression_count)
     |> assign(:inbound_path, paths.inbound)
     |> assign(:deliveries, [])
+    |> assign(:deliveries_page_meta, empty_page_meta())
     |> assign(:selected_delivery, nil)
     |> assign(:timeline_events, [])
     |> assign(:suppression_state, nil)
@@ -876,7 +893,10 @@ defmodule MailglassAdmin.OperatorLive do
       |> Map.merge(%{"delivery_id" => delivery_id})
       |> Map.merge(support_state_to_params(support_state))
       |> maybe_put_theme(dark_chrome)
-      |> Enum.reject(fn {_key, value} -> is_nil(blank_to_nil(value)) end)
+      |> Enum.reject(fn
+        {"page", "1"} -> true
+        {_key, value} -> is_nil(blank_to_nil(value))
+      end)
       |> Map.new()
 
     case URI.encode_query(params) do
@@ -888,6 +908,23 @@ defmodule MailglassAdmin.OperatorLive do
   defp build_path_with_view(base_path, filter_params, dark_chrome) do
     filter_params_with_view = Map.put(filter_params, "view", "deliveries")
     build_path(base_path, filter_params_with_view, nil, dark_chrome)
+  end
+
+  defp pagination_path(base_path, filter_params, dark_chrome, direction) do
+    page = parse_positive_integer(filter_params["page"]) || 1
+
+    next_page =
+      case direction do
+        :previous -> max(page - 1, 1)
+        :next -> page + 1
+      end
+
+    filter_params =
+      filter_params
+      |> Map.put("page", Integer.to_string(next_page))
+      |> Map.put("view", "deliveries")
+
+    build_path(base_path, filter_params, nil, dark_chrome)
   end
 
   defp maybe_put_theme(params, true), do: Map.put(params, "theme", "dark")
@@ -913,6 +950,30 @@ defmodule MailglassAdmin.OperatorLive do
   end
 
   defp parse_positive_integer(_value), do: nil
+
+  defp normalize_page(params, defaults) do
+    params
+    |> Map.get("page", defaults["page"])
+    |> parse_positive_integer()
+    |> case do
+      nil -> defaults["page"]
+      page -> Integer.to_string(page)
+    end
+  end
+
+  defp empty_page_meta do
+    %{
+      entries: [],
+      total_count: 0,
+      page: 1,
+      per_page: 5,
+      total_pages: 0,
+      has_previous?: false,
+      has_next?: false
+    }
+  end
+
+  defp page_meta_without_entries(page) when is_map(page), do: Map.delete(page, :entries)
 
   defp normalize_enum_filter(params, field, allowed, message) do
     value = normalize_string(Map.get(params, field, ""))

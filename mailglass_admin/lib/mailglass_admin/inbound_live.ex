@@ -90,6 +90,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign_new(:operator_actor, fn -> nil end)
      |> assign_new(:operator_auth, fn -> %{status: :unknown, recent_auth?: false} end)
      |> assign(:records, [])
+     |> assign(:records_page_meta, empty_page_meta())
      |> assign(:inbound_summary, @zero_summary)
      |> assign(:empty_state, :no_tenant)
      |> assign(:selected_record, nil)
@@ -144,6 +145,10 @@ defmodule MailglassAdmin.InboundLive do
       |> assign(:tenant_options, tenant_options)
       |> assign(:tenant_state, tenant_state)
       |> assign(:selected_tenant_id, selected_tenant_id)
+
+    if connected?(socket) and tenant_state == :auto_select do
+      send(self(), :canonicalize_tenant)
+    end
 
     cond do
       tenant_state == :auto_select ->
@@ -426,6 +431,9 @@ defmodule MailglassAdmin.InboundLive do
             </div>
             <RecordsList.records_list
               records={@records}
+              page_meta={@records_page_meta}
+              previous_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :previous)}
+              next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
               selected_record={@selected_record}
               empty_state={@empty_state}
             />
@@ -513,7 +521,8 @@ defmodule MailglassAdmin.InboundLive do
   # ---------------------------------------------------------------------------
 
   defp assign_inbound_state(socket, filter_params, selected_inbound_id) do
-    records = load_inbound_records(filter_params)
+    records_page = load_inbound_records_page(filter_params)
+    records = records_page.entries
     detail = load_selected_detail(filter_params, selected_inbound_id)
     runs = load_selected_timeline(filter_params, selected_inbound_id, detail)
     {detail, runs} = filter_selected_detail(detail, runs, filter_params)
@@ -523,6 +532,7 @@ defmodule MailglassAdmin.InboundLive do
 
     socket
     |> assign(:records, records)
+    |> assign(:records_page_meta, page_meta_without_entries(records_page))
     |> assign(:inbound_summary, load_inbound_summary(filter_params))
     |> assign(:empty_state, empty_state_for(filter_params, records))
     |> assign(:selected_record, selected_record)
@@ -544,6 +554,7 @@ defmodule MailglassAdmin.InboundLive do
   defp clear_surface_state(socket) do
     socket
     |> assign(:records, [])
+    |> assign(:records_page_meta, empty_page_meta())
     |> assign(:inbound_summary, @zero_summary)
     |> assign(:empty_state, :no_tenant)
     |> assign(:selected_record, nil)
@@ -708,20 +719,30 @@ defmodule MailglassAdmin.InboundLive do
   defp load_inbound_records(%{"tenant_id" => ""}), do: []
 
   defp load_inbound_records(filter_params) do
+    filter_params
+    |> load_inbound_records_page()
+    |> Map.fetch!(:entries)
+  end
+
+  defp load_inbound_records_page(%{"tenant_id" => ""}), do: empty_page_meta()
+
+  defp load_inbound_records_page(filter_params) do
     if gateway_available?() do
-      apply(@gateway, :list_records, [
+      apply(@gateway, :list_records_page, [
         %{
           tenant_id: filter_params["tenant_id"],
           provider: blank_to_nil(filter_params["provider"]),
           outcome: cast_enum(filter_params["outcome"], @outcome_values),
           window_hours:
             parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
-          search: blank_to_nil(filter_params["search"])
+          search: blank_to_nil(filter_params["search"]),
+          page: parse_positive_integer(filter_params["page"]) || 1,
+          per_page: 5
         },
         []
       ])
     else
-      []
+      empty_page_meta()
     end
   end
 
@@ -925,7 +946,8 @@ defmodule MailglassAdmin.InboundLive do
       "provider" => "",
       "outcome" => "",
       "window_hours" => Integer.to_string(@default_window_hours),
-      "search" => ""
+      "search" => "",
+      "page" => "1"
     }
   end
 
@@ -942,7 +964,8 @@ defmodule MailglassAdmin.InboundLive do
       "provider" => normalize_string(Map.get(params, "provider", defaults["provider"])),
       "outcome" => outcome,
       "window_hours" => window_hours,
-      "search" => normalize_string(Map.get(params, "search", defaults["search"]))
+      "search" => normalize_string(Map.get(params, "search", defaults["search"])),
+      "page" => normalize_page(params, defaults)
     }
 
     {filter_params,
@@ -959,7 +982,10 @@ defmodule MailglassAdmin.InboundLive do
       filter_params
       |> Map.put("inbound_id", inbound_id)
       |> maybe_put_theme(dark_chrome)
-      |> Enum.reject(fn {_key, value} -> is_nil(blank_to_nil(value)) end)
+      |> Enum.reject(fn
+        {"page", "1"} -> true
+        {_key, value} -> is_nil(blank_to_nil(value))
+      end)
       |> Map.new()
 
     case URI.encode_query(params) do
@@ -970,6 +996,19 @@ defmodule MailglassAdmin.InboundLive do
 
   defp maybe_put_theme(params, true), do: Map.put(params, "theme", "dark")
   defp maybe_put_theme(params, false), do: params
+
+  defp pagination_path(base_path, filter_params, dark_chrome, direction) do
+    page = parse_positive_integer(filter_params["page"]) || 1
+
+    next_page =
+      case direction do
+        :previous -> max(page - 1, 1)
+        :next -> page + 1
+      end
+
+    filter_params = Map.put(filter_params, "page", Integer.to_string(next_page))
+    build_path(base_path, filter_params, nil, dark_chrome)
+  end
 
   # V5 input-validation allow-list: an outcome outside the closed set casts to nil
   # (the filter is dropped) and never reaches SQL.
@@ -994,6 +1033,30 @@ defmodule MailglassAdmin.InboundLive do
   end
 
   defp parse_positive_integer(_value), do: nil
+
+  defp normalize_page(params, defaults) do
+    params
+    |> Map.get("page", defaults["page"])
+    |> parse_positive_integer()
+    |> case do
+      nil -> defaults["page"]
+      page -> Integer.to_string(page)
+    end
+  end
+
+  defp empty_page_meta do
+    %{
+      entries: [],
+      total_count: 0,
+      page: 1,
+      per_page: 5,
+      total_pages: 0,
+      has_previous?: false,
+      has_next?: false
+    }
+  end
+
+  defp page_meta_without_entries(page) when is_map(page), do: Map.delete(page, :entries)
 
   defp normalize_enum_filter(params, field, allowed, message) do
     value = normalize_string(Map.get(params, field, ""))

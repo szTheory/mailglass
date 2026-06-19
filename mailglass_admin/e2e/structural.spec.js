@@ -1377,7 +1377,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.context().clearCookies();
-      const resetResponse = await page.request.get("/ops/browser-reset");
+      const resetResponse = await page.request.get("/ops/browser-reset?scenario=sole");
       expect(resetResponse.ok()).toBeTruthy();
 
       await page.goto(
@@ -1401,12 +1401,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&page=1`);
       await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-dark");
 
-      const activeDesktop = page.locator('a[aria-current="page"][href*="view=deliveries"]').first();
+      const activeDesktop = page
+        .locator('a[aria-current="page"]')
+        .filter({ hasText: "Deliveries" })
+        .first();
       await expect(activeDesktop).toBeVisible();
       await expect(activeDesktop).toHaveClass(/border-l-2/);
       await expect(activeDesktop).toHaveClass(/border-primary/);
 
-      await expect(page.getByTestId("operator-result-count")).toContainText("7 results");
+      await expect(page.getByTestId("operator-result-count")).toContainText("6 results");
       await expect(page.getByTestId("operator-pagination")).toBeVisible();
       await expect(page.getByTestId("operator-pagination-prev-disabled")).toHaveAttribute("aria-disabled", "true");
       await expect(page.getByTestId("operator-pagination-next")).toHaveAttribute("href", /tenant_id=browser-tenant/);

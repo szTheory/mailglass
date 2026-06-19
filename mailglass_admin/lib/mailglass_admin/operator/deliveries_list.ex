@@ -7,12 +7,25 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   alias MailglassAdmin.Components
 
-  attr :deliveries, :list, required: true
-  attr :selected_delivery, :map, default: nil
-  attr :filters_active?, :boolean, default: false
+  attr(:deliveries, :list, required: true)
+
+  attr(:page_meta, :map,
+    default: %{total_count: 0, total_pages: 0, has_previous?: false, has_next?: false}
+  )
+
+  attr(:previous_page_path, :string, default: nil)
+  attr(:next_page_path, :string, default: nil)
+  attr(:selected_delivery, :map, default: nil)
+  attr(:filters_active?, :boolean, default: false)
 
   def deliveries_list(assigns) do
     ~H"""
+    <div
+      data-testid="operator-result-count"
+      class="border-b border-base-300 px-4 py-3 text-body text-secondary"
+    >
+      {result_count_label(@page_meta)}
+    </div>
     <%= if @deliveries == [] do %>
       <div
         data-testid={if @filters_active?, do: "operator-empty-filtered", else: "operator-empty-truly"}
@@ -83,8 +96,81 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <% end %>
       </ul>
     <% end %>
+    <.pagination_controls
+      page_meta={@page_meta}
+      previous_page_path={@previous_page_path}
+      next_page_path={@next_page_path}
+    />
     """
   end
+
+  attr(:page_meta, :map, required: true)
+  attr(:previous_page_path, :string, default: nil)
+  attr(:next_page_path, :string, default: nil)
+
+  defp pagination_controls(assigns) do
+    ~H"""
+    <nav
+      :if={Map.get(@page_meta, :total_pages, 0) > 1}
+      data-testid="operator-pagination"
+      aria-label="Deliveries pagination"
+      class="flex items-center justify-between gap-sm border-t border-base-300 px-4 py-3 text-body"
+    >
+      <.pagination_link
+        enabled?={Map.get(@page_meta, :has_previous?, false)}
+        path={@previous_page_path}
+        testid="operator-pagination-prev"
+      >
+        Previous
+      </.pagination_link>
+
+      <span class="text-label text-secondary">
+        Page {Map.get(@page_meta, :page, 1)} of {Map.get(@page_meta, :total_pages, 1)}
+      </span>
+
+      <.pagination_link
+        enabled?={Map.get(@page_meta, :has_next?, false)}
+        path={@next_page_path}
+        testid="operator-pagination-next"
+      >
+        Next
+      </.pagination_link>
+    </nav>
+    """
+  end
+
+  attr(:enabled?, :boolean, required: true)
+  attr(:path, :string, default: nil)
+  attr(:testid, :string, required: true)
+  slot(:inner_block, required: true)
+
+  defp pagination_link(assigns) do
+    ~H"""
+    <.link
+      :if={@enabled? and is_binary(@path)}
+      patch={@path}
+      data-testid={@testid}
+      class="btn btn-ghost min-h-11 px-md"
+    >
+      {render_slot(@inner_block)}
+    </.link>
+    <span
+      :if={!@enabled? or !is_binary(@path)}
+      data-testid={"#{@testid}-disabled"}
+      aria-disabled="true"
+      class="btn btn-ghost min-h-11 px-md opacity-60"
+    >
+      {render_slot(@inner_block)}
+    </span>
+    """
+  end
+
+  defp result_count_label(%{total_count: 1}), do: "1 result"
+
+  defp result_count_label(%{total_count: count}) when is_integer(count),
+    do: "#{count} results"
+
+  defp result_count_label(_page_meta), do: "0 results"
 
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_delivery, _delivery), do: false
@@ -105,5 +191,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   end
 
   defp format_datetime(nil), do: "Pending"
-  defp format_datetime(%DateTime{} = datetime), do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
+
+  defp format_datetime(%DateTime{} = datetime),
+    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
 end
