@@ -143,6 +143,19 @@ defmodule MailglassAdmin.Operator.ShellTest do
       |> Enum.map(&String.trim/1)
     end
 
+    defp current_nav_classes(html) do
+      {:ok, doc} = Floki.parse_fragment(html)
+
+      doc
+      |> Floki.find(~s([aria-current="page"]))
+      |> Enum.map(fn node ->
+        node
+        |> Floki.attribute("class")
+        |> List.first()
+        |> to_string()
+      end)
+    end
+
     test "active={:deliveries} marks only Deliveries nav items aria-current=page" do
       assigns = %{}
 
@@ -169,6 +182,37 @@ defmodule MailglassAdmin.Operator.ShellTest do
 
       refute Enum.any?(current, &(&1 =~ "Inbound")),
              "Inbound must never carry aria-current when active is :deliveries, got: #{inspect(current)}"
+    end
+
+    test "active shell nav renders desktop and mobile structural current cues" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <Shell.shell
+          active={:deliveries}
+          deliveries_path="/operator"
+          inbound_path="/operator/inbound"
+          inbound_available?={true}
+          title="Deliveries"
+        >
+          body
+        </Shell.shell>
+        """)
+
+      classes = current_nav_classes(html)
+
+      assert Enum.any?(classes, &String.contains?(&1, "border-l-2")),
+             "desktop nav_link should expose a border-left current cue, got: #{inspect(classes)}"
+
+      assert Enum.any?(classes, &String.contains?(&1, "border-b-2")),
+             "mobile nav_pill should expose a border-bottom current cue, got: #{inspect(classes)}"
+
+      assert Enum.all?(classes, &String.contains?(&1, "border-primary")),
+             "all active shell nav cues should use the active border token, got: #{inspect(classes)}"
+
+      assert Enum.all?(classes, &String.contains?(&1, "font-bold")),
+             "all active shell nav cues should keep bold active text, got: #{inspect(classes)}"
     end
 
     test "active={:inbound} flips aria-current=page to the Inbound nav items" do

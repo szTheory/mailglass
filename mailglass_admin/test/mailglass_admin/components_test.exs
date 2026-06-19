@@ -230,7 +230,7 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   describe "nav_link/1 primitive contract" do
-    test "active/current nav_link renders aria-current page, icon, visible label, and non-color cue" do
+    test "active/current nav_link renders aria-current page, icon, visible label, and structural non-color cue" do
       html =
         render_component(&Components.nav_link/1,
           label: "Deliveries",
@@ -243,6 +243,7 @@ defmodule MailglassAdmin.ComponentsTest do
         ~s(aria-current="page"),
         "hero-paper-airplane",
         ">Deliveries</span>",
+        "border-l-2",
         "border-primary",
         "font-bold"
       ])
@@ -258,6 +259,8 @@ defmodule MailglassAdmin.ComponentsTest do
 
       refute html =~ ~s(aria-current="page")
       assert_all(html, ["hover:bg-base-100/60", "hover:text-base-content", "text-secondary"])
+      refute html =~ "border-primary"
+      refute html =~ "font-bold"
     end
 
     test "disabled nav_link has aria-disabled true and no LiveView navigation attribute" do
@@ -313,7 +316,7 @@ defmodule MailglassAdmin.ComponentsTest do
   end
 
   describe "nav_pill/1 primitive contract" do
-    test "active/current nav_pill renders aria-current page and selected cue" do
+    test "active/current nav_pill renders aria-current page and structural non-color cue" do
       html =
         render_component(&Components.nav_pill/1,
           label: "Deliveries",
@@ -324,6 +327,8 @@ defmodule MailglassAdmin.ComponentsTest do
       assert_all(html, [
         ~s(aria-current="page"),
         "bg-primary/10",
+        "border-b-2",
+        "border-primary",
         "font-bold",
         ">Deliveries</span>"
       ])
@@ -334,6 +339,8 @@ defmodule MailglassAdmin.ComponentsTest do
 
       refute html =~ ~s(aria-current="page")
       assert_all(html, ["text-secondary", "hover:text-base-content"])
+      refute html =~ "border-primary"
+      refute html =~ "font-bold"
     end
 
     test "disabled nav_pill has aria-disabled true and no LiveView navigation attribute" do
