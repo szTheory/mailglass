@@ -110,17 +110,25 @@ defmodule MailglassAdmin.Operator.ShellTest do
   end
 
   describe "set_theme_path/2" do
-    test "removes the explicit theme query value for system" do
+    test "routes system through persistence and removes explicit theme from return path" do
       assert Shell.set_theme_path("/ops/mail?tenant_id=acme&theme=dark", "system") ==
-               "/ops/mail?tenant_id=acme"
+               "/ops/mail/theme/system?return_to=%2Fops%2Fmail%3Ftenant_id%3Dacme"
     end
 
-    test "preserves unrelated query params when setting light or dark" do
+    test "routes light and dark through persistence while preserving URL state" do
       assert Shell.set_theme_path("/ops/mail?tenant_id=acme&filter=failed&theme=dark", "light") ==
-               "/ops/mail?tenant_id=acme&filter=failed&theme=light"
+               "/ops/mail/theme/light?return_to=%2Fops%2Fmail%3Ftenant_id%3Dacme%26filter%3Dfailed"
 
-      assert Shell.set_theme_path("/ops/mail?tenant_id=acme&filter=failed", "dark") ==
-               "/ops/mail?tenant_id=acme&filter=failed&theme=dark"
+      assert Shell.set_theme_path(
+               "/ops/mail/inbound?tenant_id=acme&outcome=accept&inbound_id=rec-1",
+               "dark"
+             ) ==
+               "/ops/mail/theme/dark?return_to=%2Fops%2Fmail%2Finbound%3Ftenant_id%3Dacme%26outcome%3Daccept%26inbound_id%3Drec-1"
+    end
+
+    test "derives the persistence route from mounted operator path" do
+      assert Shell.set_theme_path("/custom/admin/mail/inbound?tenant_id=acme", "dark") ==
+               "/custom/admin/mail/theme/dark?return_to=%2Fcustom%2Fadmin%2Fmail%2Finbound%3Ftenant_id%3Dacme"
     end
   end
 
