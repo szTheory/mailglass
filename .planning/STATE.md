@@ -2,15 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
+current_phase: 111
+current_phase_name: forms
 status: executing
-last_updated: "2026-06-19T15:21:13.977Z"
-last_activity: 2026-06-19 -- Phase 111 planning complete
+stopped_at: Completed 111-01-PLAN.md
+last_updated: "2026-06-19T15:35:20.699Z"
+last_activity: 2026-06-19
+last_activity_desc: Phase 111 execution started
 progress:
   total_phases: 11
   completed_phases: 4
   total_plans: 18
-  completed_plans: 14
-  percent: 36
+  completed_plans: 15
+  percent: 83
 ---
 
 # Project State
@@ -20,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 111 — Forms
+**Current focus:** Phase 111 — forms
 
 ## Current Position
 
-Phase: 111
-Plan: Not started
+Phase: 111 (forms) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-19 -- Phase 111 planning complete
+Last activity: 2026-06-19 — Phase 111 execution started
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [████████░░] 83%
 
 ## v1.13 Milestone Intent
 
@@ -191,6 +195,9 @@ convergent + adversarially judged).
 - [Phase 110-primitives]: 110-04: Primitive structural proof uses computed styles and DOM semantics, not screenshots, pixel diffs, axe, storage, matchMedia, or theme hooks.
 - [Phase 110-primitives]: 110-04: Repeated gallery theme_picker specimens use unique native radio group names so per-cell checked state remains real.
 - [Phase 110-primitives]: 110-04: Preview URL assertions follow the existing canonical width/theme ordering.
+- [Phase 111-forms]: filter_field/1 derives control id/name/value from Phoenix.HTML.FormField metadata first, while keeping explicit id/name/value overrides for gallery and certification surfaces. — This satisfies FORM-01/FORM-02 while preserving non-form gallery certification use cases.
+- [Phase 111-forms]: Read-only select/checkbox-style controls use display-only rendering with aria-readonly and a hidden input only when submit_readonly is true and a value/name exist. — HTML readonly is not valid for select/checkbox controls, and hidden submission is only emitted when the value must submit.
+- [Phase 111-forms]: Invalid filter primitives render visible Action needed recovery copy plus hero-exclamation-circle, not color alone. — FORM-02 requires recovery-oriented errors and validation state that never relies on color alone.
 
 ## Quick Tasks Completed
 
@@ -295,6 +302,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 110-primitives P02 | 8 min | 3 tasks | 6 files |
 | Phase 110-primitives P03 | 8 min | 2 tasks | 1 files |
 | Phase 110-primitives P04 | 45min | 3 tasks | 6 files |
+| Phase 111-forms P01 | 7min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -317,6 +325,10 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 `.planning/phases/` still contains leftover backlog phase directories (999.1, 999.2) from earlier milestones. Run `/gsd-cleanup` before active phase execution if name-collision risk appears.
 
 ## Session Continuity
+
+**Last session:** 2026-06-19T15:34:43.326Z
+**Stopped at:** Completed 111-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in

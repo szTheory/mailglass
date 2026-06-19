@@ -31,9 +31,9 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 
 ### Form Controls (FORM)
 
-- [ ] **FORM-01**: The two divergent `filters_form` copies are unified into shared `filter_field` / `filter_section` primitives.
-- [ ] **FORM-02**: Every form control has a visible associated label, programmatically connected help/error text, recovery-oriented error copy, and validation state that never relies on color alone.
-- [ ] **FORM-03**: Disabled and read-only form states are visually distinct, and focus is preserved (not lost) across LiveView patches.
+- [x] **FORM-01**: The two divergent `filters_form` copies are unified into shared `filter_field` / `filter_section` primitives.
+- [x] **FORM-02**: Every form control has a visible associated label, programmatically connected help/error text, recovery-oriented error copy, and validation state that never relies on color alone.
+- [x] **FORM-03**: Disabled and read-only form states are visually distinct, and focus is preserved (not lost) across LiveView patches.
 
 ### App-Shell, Navigation & Tenant Seam (SHELL)
 
@@ -125,9 +125,9 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | PRIM-05 | Phase 110 | Complete |
 | PRIM-06 | Phase 110 | Complete |
 | PRIM-07 | Phase 110 | Complete |
-| FORM-01 | Phase 111 | Pending |
-| FORM-02 | Phase 111 | Pending |
-| FORM-03 | Phase 111 | Pending |
+| FORM-01 | Phase 111 | Complete |
+| FORM-02 | Phase 111 | Complete |
+| FORM-03 | Phase 111 | Complete |
 | SHELL-01 | Phase 112 | Pending |
 | SHELL-02 | Phase 112 | Pending |
 | SHELL-03 | Phase 112 | Pending |
@@ -155,11 +155,13 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | REL-03 | Phase 117 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 36 total (FND 5, PRIM 7, FORM 3, SHELL 6, DATA 5, GROUP 3, FLOW 4, RATCHET 5, REL 3 — REL-01 mapped to Phase 109 as the precondition gating its start)
 - Mapped to phases 109–117: 36
 - Unmapped: 0 ✓
 
 **Phase grouping (fractal level → phase number):**
+
 - A → Phase 109 (Foundations + Gate-Tightening): REL-01 precondition + FND-01..05
 - B → Phase 110 (Primitives): PRIM-01..07
 - C → Phase 111 (Forms): FORM-01..03
