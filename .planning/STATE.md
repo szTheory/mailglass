@@ -5,16 +5,16 @@ milestone_name: Admin Design-System Stress Test & UX Uplift
 current_phase: 111
 current_phase_name: forms
 status: executing
-stopped_at: Completed 111-01-PLAN.md
-last_updated: "2026-06-19T15:35:20.699Z"
+stopped_at: Completed 111-02-PLAN.md
+last_updated: "2026-06-19T15:50:29.599Z"
 last_activity: 2026-06-19
 last_activity_desc: Phase 111 execution started
 progress:
   total_phases: 11
   completed_phases: 4
   total_plans: 18
-  completed_plans: 15
-  percent: 83
+  completed_plans: 16
+  percent: 36
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 111 (forms) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-19 — Phase 111 execution started
 
@@ -198,6 +198,9 @@ convergent + adversarially judged).
 - [Phase 111-forms]: filter_field/1 derives control id/name/value from Phoenix.HTML.FormField metadata first, while keeping explicit id/name/value overrides for gallery and certification surfaces. — This satisfies FORM-01/FORM-02 while preserving non-form gallery certification use cases.
 - [Phase 111-forms]: Read-only select/checkbox-style controls use display-only rendering with aria-readonly and a hidden input only when submit_readonly is true and a value/name exist. — HTML readonly is not valid for select/checkbox controls, and hidden submission is only emitted when the value must submit.
 - [Phase 111-forms]: Invalid filter primitives render visible Action needed recovery copy plus hero-exclamation-circle, not color alone. — FORM-02 requires recovery-oriented errors and validation state that never relies on color alone.
+- [Phase 111-02]: Filter wrappers remain thin components that delegate all control HEEx to Components.filter_field/1 and filter_section/1. — Plan 111-02 kept wrapper call-site ownership while removing duplicated label/control/help/error markup from operator and inbound filter modules.
+- [Phase 111-02]: filter_errors is a %{"field" => "message"} side map computed from raw URL/form params before normalization. — This keeps recovery metadata explicit while preserving map-backed Phoenix forms and existing read-model filter contracts.
+- [Phase 111-02]: Invalid apply_filters submissions render normalized form values and recovery copy without push_patch; valid submissions retain URL-backed patch behavior. — Invalid values stay correctable without mutating the current URL or widening tenant/data boundaries.
 
 ## Quick Tasks Completed
 
@@ -303,6 +306,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 110-primitives P03 | 8 min | 2 tasks | 1 files |
 | Phase 110-primitives P04 | 45min | 3 tasks | 6 files |
 | Phase 111-forms P01 | 7min | 2 tasks | 3 files |
+| Phase 111 P02 | 9min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -326,8 +330,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-19T15:34:43.326Z
-**Stopped at:** Completed 111-01-PLAN.md
+**Last session:** 2026-06-19T15:49:49.373Z
+**Stopped at:** Completed 111-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
