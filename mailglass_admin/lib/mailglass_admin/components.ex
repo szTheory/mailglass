@@ -260,7 +260,7 @@ defmodule MailglassAdmin.Components do
       role="link"
       aria-disabled="true"
       tabindex="-1"
-      class="flex min-h-11 items-center rounded-field px-sm text-body text-secondary opacity-100"
+      class="flex min-h-11 items-center rounded-field border-b-2 border-transparent px-sm text-body text-secondary opacity-100"
       {@rest}
     >
       <span class="truncate" title={@label}>{@label}</span>
@@ -274,7 +274,7 @@ defmodule MailglassAdmin.Components do
       navigate={@href}
       aria-current={@active && "page"}
       class={[
-        "mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-(--duration-fast)",
+        "mg-focus-ring flex min-h-11 items-center rounded-field border-b-2 px-sm text-body transition-colors ease-out duration-(--duration-fast)",
         nav_pill_class(@active)
       ]}
       {@rest}
@@ -412,8 +412,8 @@ defmodule MailglassAdmin.Components do
   defp nav_link_class(false),
     do: "border-transparent text-secondary hover:bg-base-100/60 hover:text-base-content"
 
-  defp nav_pill_class(true), do: "bg-primary/10 font-bold text-base-content"
-  defp nav_pill_class(false), do: "text-secondary hover:text-base-content"
+  defp nav_pill_class(true), do: "border-primary bg-primary/10 font-bold text-base-content"
+  defp nav_pill_class(false), do: "border-transparent text-secondary hover:text-base-content"
 
   defp tenant_chip_title(nil), do: "Tenant currently in view"
   defp tenant_chip_title(tenant), do: "Tenant currently in view: " <> tenant
