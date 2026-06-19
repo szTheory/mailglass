@@ -434,6 +434,173 @@ defmodule MailglassAdmin.Components do
   defp theme_option_class(false, false),
     do: "border border-transparent text-secondary hover:bg-base-100 hover:text-base-content"
 
+  attr :title, :string, required: true
+  attr :description, :string, default: nil
+  attr :rest, :global, default: %{}
+
+  slot :inner_block, required: true
+
+  @doc """
+  Renders a visible filter control group.
+
+  The primitive uses native fieldset/legend semantics so pages can group
+  related filters without duplicating page-local label/control wrappers.
+  """
+  @doc since: "1.8.0"
+  def filter_section(assigns) do
+    ~H"""
+    <fieldset class="grid gap-md" {@rest}>
+      <legend class="text-label font-bold uppercase text-secondary">{@title}</legend>
+      <p :if={@description} class="text-body text-secondary">{@description}</p>
+      <div class="grid gap-sm md:grid-cols-2">
+        {render_slot(@inner_block)}
+      </div>
+    </fieldset>
+    """
+  end
+
+  attr :field, :any, default: nil
+  attr :id, :string, default: nil
+  attr :name, :string, default: nil
+  attr :value, :any, default: nil
+  attr :type, :atom, values: [:text, :number, :select, :textarea, :checkbox], default: :text
+  attr :label, :string, required: true
+  attr :help, :string, default: nil
+  attr :error, :any, default: nil
+  attr :options, :list, default: []
+  attr :prompt, :string, default: nil
+  attr :disabled, :boolean, default: false
+  attr :readonly, :boolean, default: false
+  attr :display_value, :string, default: nil
+  attr :submit_readonly, :boolean, default: true
+
+  attr :rest, :global,
+    default: %{},
+    include: ~w(autocomplete inputmode max min pattern placeholder step)
+
+  @doc """
+  Renders one explicit, labelled filter control.
+
+  Defaults derive from `Phoenix.HTML.FormField` metadata when `field` is
+  provided. Explicit `id`, `name`, and `value` remain supported for gallery
+  and certification surfaces that render without a form struct.
+  """
+  @doc since: "1.8.0"
+  def filter_field(assigns) do
+    assigns =
+      assigns
+      |> assign_filter_field_metadata()
+      |> assign(:native_readonly?, native_readonly?(assigns.type, assigns.readonly))
+      |> assign(:display_readonly?, display_readonly?(assigns.type, assigns.readonly))
+
+    ~H"""
+    <div class="grid gap-xs">
+      <label for={@control_id} class="text-label font-bold text-base-content">{@label}</label>
+
+      <input
+        :if={@type in [:text, :number] and !@display_readonly?}
+        id={@control_id}
+        name={@control_name}
+        type={Atom.to_string(@type)}
+        value={@control_value}
+        disabled={@disabled}
+        readonly={@native_readonly?}
+        aria-describedby={@described_by}
+        aria-invalid={@invalid? && "true"}
+        class={filter_input_class(@invalid?, @disabled, @native_readonly?)}
+        {@rest}
+      />
+
+      <textarea
+        :if={@type == :textarea and !@display_readonly?}
+        id={@control_id}
+        name={@control_name}
+        disabled={@disabled}
+        readonly={@native_readonly?}
+        aria-describedby={@described_by}
+        aria-invalid={@invalid? && "true"}
+        class={filter_textarea_class(@invalid?, @disabled, @native_readonly?)}
+        {@rest}
+      >{filter_string_value(@control_value)}</textarea>
+
+      <select
+        :if={@type == :select and !@display_readonly?}
+        id={@control_id}
+        name={@control_name}
+        disabled={@disabled}
+        aria-describedby={@described_by}
+        aria-invalid={@invalid? && "true"}
+        class={filter_select_class(@invalid?, @disabled)}
+        {@rest}
+      >
+        <option :if={@prompt} value="">{@prompt}</option>
+        <option
+          :for={option <- @normalized_options}
+          value={option.value}
+          selected={option.value == filter_string_value(@control_value)}
+        >
+          {option.label}
+        </option>
+      </select>
+
+      <div :if={@type == :checkbox and !@display_readonly?} class="flex min-h-11 items-center gap-sm">
+        <input
+          type="hidden"
+          name={@control_name}
+          value="false"
+          disabled={@disabled}
+        />
+        <input
+          id={@control_id}
+          name={@control_name}
+          type="checkbox"
+          value="true"
+          checked={filter_checked?(@control_value)}
+          disabled={@disabled}
+          aria-describedby={@described_by}
+          aria-invalid={@invalid? && "true"}
+          class={filter_checkbox_class(@invalid?, @disabled)}
+          {@rest}
+        />
+      </div>
+
+      <div
+        :if={@display_readonly?}
+        id={@control_id}
+        role="textbox"
+        aria-readonly="true"
+        tabindex="0"
+        aria-describedby={@described_by}
+        aria-invalid={@invalid? && "true"}
+        class={filter_display_class(@invalid?)}
+      >
+        {@display_text}
+      </div>
+
+      <input
+        :if={@display_readonly? and @submit_readonly and @control_name && filter_string_value(@control_value) != ""}
+        type="hidden"
+        name={@control_name}
+        value={@control_value}
+      />
+
+      <p :if={@help} id={@help_id} class="text-label text-secondary">{@help}</p>
+
+      <p
+        :if={@error_text}
+        id={@error_id}
+        role="alert"
+        class="flex items-start gap-xs text-label text-error"
+      >
+        <.icon name="hero-exclamation-circle" class="mt-0.5 h-4 w-4 shrink-0" />
+        <span>
+          <span class="font-bold">Action needed:</span> {@error_text}
+        </span>
+      </p>
+    </div>
+    """
+  end
+
   defp stat_display_value(%{state: :empty, empty_text: empty_text}), do: empty_text
   defp stat_display_value(%{state: :loading, loading_text: loading_text}), do: loading_text
 
@@ -460,6 +627,161 @@ defmodule MailglassAdmin.Components do
   defp stat_severity_class(:success), do: "text-success"
   defp stat_severity_class(:warning), do: "text-warning"
   defp stat_severity_class(:error), do: "text-error"
+
+  defp assign_filter_field_metadata(assigns) do
+    control_id = filter_control_id(assigns)
+    error_text = filter_error_text(assigns)
+    help_id = if present?(assigns.help), do: "#{control_id}-help"
+    error_id = if present?(error_text), do: "#{control_id}-error"
+    described_by = filter_described_by([help_id, error_id])
+    normalized_options = normalize_filter_options(assigns.options)
+    control_value = filter_control_value(assigns)
+
+    assigns
+    |> assign(:control_id, control_id)
+    |> assign(:control_name, filter_control_name(assigns))
+    |> assign(:control_value, control_value)
+    |> assign(:error_text, error_text)
+    |> assign(:invalid?, present?(error_text))
+    |> assign(:help_id, help_id)
+    |> assign(:error_id, error_id)
+    |> assign(:described_by, described_by)
+    |> assign(:normalized_options, normalized_options)
+    |> assign(:display_text, filter_display_text(assigns, normalized_options, control_value))
+  end
+
+  defp filter_control_id(%{id: id}) when is_binary(id) and id != "", do: id
+  defp filter_control_id(%{field: %{id: id}}) when is_binary(id) and id != "", do: id
+  defp filter_control_id(%{label: label}), do: "filter_" <> filter_slug(label)
+
+  defp filter_control_name(%{name: name}) when is_binary(name) and name != "", do: name
+  defp filter_control_name(%{field: %{name: name}}) when is_binary(name) and name != "", do: name
+  defp filter_control_name(_assigns), do: nil
+
+  defp filter_control_value(%{value: nil, field: %{value: value}}), do: value
+  defp filter_control_value(%{value: value}), do: value
+
+  defp filter_error_text(%{error: error}) do
+    normalize_filter_error(error)
+  end
+
+  defp filter_error_text(%{field: %{errors: errors}}), do: normalize_filter_error(errors)
+  defp filter_error_text(_assigns), do: nil
+
+  defp normalize_filter_error(nil), do: nil
+  defp normalize_filter_error(""), do: nil
+  defp normalize_filter_error(error) when is_binary(error), do: error
+
+  defp normalize_filter_error(errors) when is_list(errors) do
+    errors
+    |> Enum.map(&normalize_filter_error/1)
+    |> Enum.find(&present?/1)
+  end
+
+  defp normalize_filter_error({message, _opts}), do: normalize_filter_error(message)
+  defp normalize_filter_error(error), do: to_string(error)
+
+  defp normalize_filter_options(options) do
+    Enum.map(options, fn
+      {label, value} -> %{label: to_string(label), value: filter_string_value(value)}
+      %{label: label, value: value} -> %{label: to_string(label), value: filter_string_value(value)}
+      %{label: label, key: value} -> %{label: to_string(label), value: filter_string_value(value)}
+      value -> %{label: filter_option_label(value), value: filter_string_value(value)}
+    end)
+  end
+
+  defp filter_display_text(%{display_value: display_value}, _options, _value)
+       when is_binary(display_value) and display_value != "",
+       do: display_value
+
+  defp filter_display_text(_assigns, options, value) do
+    value_string = filter_string_value(value)
+
+    options
+    |> Enum.find(%{label: value_string}, &(&1.value == value_string))
+    |> Map.fetch!(:label)
+  end
+
+  defp filter_option_label(value) when is_atom(value) do
+    value
+    |> Atom.to_string()
+    |> String.replace("_", " ")
+    |> String.capitalize()
+  end
+
+  defp filter_option_label(value), do: to_string(value)
+
+  defp filter_slug(label) do
+    label
+    |> String.downcase()
+    |> String.replace(~r/[^a-z0-9]+/, "_")
+    |> String.trim("_")
+  end
+
+  defp filter_described_by(ids) do
+    ids
+    |> Enum.filter(&present?/1)
+    |> case do
+      [] -> nil
+      present_ids -> Enum.join(present_ids, " ")
+    end
+  end
+
+  defp native_readonly?(type, true) when type in [:text, :number, :textarea], do: true
+  defp native_readonly?(_type, _readonly), do: false
+
+  defp display_readonly?(type, true) when type in [:select, :checkbox], do: true
+  defp display_readonly?(_type, _readonly), do: false
+
+  defp filter_checked?(value) when value in [true, "true", "1", 1, "on"], do: true
+  defp filter_checked?(_value), do: false
+
+  defp filter_string_value(nil), do: ""
+  defp filter_string_value(value), do: to_string(value)
+
+  defp filter_input_class(invalid?, disabled?, readonly?) do
+    [
+      "input input-bordered input-sm min-h-11 w-full text-body mg-focus-ring",
+      invalid? && "input-error",
+      disabled? && "bg-base-200 text-secondary opacity-100",
+      readonly? && "bg-base-200 text-base-content"
+    ]
+  end
+
+  defp filter_textarea_class(invalid?, disabled?, readonly?) do
+    [
+      "textarea textarea-bordered textarea-sm min-h-11 w-full text-body mg-focus-ring",
+      invalid? && "textarea-error",
+      disabled? && "bg-base-200 text-secondary opacity-100",
+      readonly? && "bg-base-200 text-base-content"
+    ]
+  end
+
+  defp filter_select_class(invalid?, disabled?) do
+    [
+      "select select-bordered select-sm min-h-11 w-full text-body mg-focus-ring",
+      invalid? && "select-error",
+      disabled? && "bg-base-200 text-secondary opacity-100"
+    ]
+  end
+
+  defp filter_checkbox_class(invalid?, disabled?) do
+    [
+      "checkbox checkbox-sm mg-focus-ring",
+      invalid? && "checkbox-error",
+      disabled? && "opacity-100"
+    ]
+  end
+
+  defp filter_display_class(invalid?) do
+    [
+      "min-h-11 rounded-field border border-base-300 bg-base-200 px-sm py-2 text-body text-base-content",
+      "mg-focus-ring",
+      invalid? && "border-error"
+    ]
+  end
+
+  defp present?(value), do: is_binary(value) and value != ""
 
   @doc """
   Normalizes inbound @outcomes singular atoms to the canonical past-tense atoms expected by
