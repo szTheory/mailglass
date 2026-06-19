@@ -107,6 +107,67 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(<option value="delivered" selected)
     end
 
+    test "invalid URL-backed filters render recovery copy without narrowing tenant reads", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      insert_delivery!(
+        recipient: "match@example.com",
+        provider: "postmark",
+        status: :sent,
+        last_event_type: :delivered
+      )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "status" => "not-listed",
+            "event" => "not-real",
+            "window_hours" => "0"
+          })
+        )
+
+      assert html =~ "Status was not applied. Choose a listed status."
+      assert html =~ "Event was not applied. Choose a listed event."
+      assert html =~ "Time window was not applied. Choose a positive listed time window."
+      assert html =~ "m****@e******.com"
+      assert html =~ ~s(value="168" selected)
+      refute html =~ "not-listed"
+      refute html =~ "not-real"
+    end
+
+    test "invalid submitted filters render recovery copy and do not push a patch", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+
+      html =
+        render_hook(view, "apply_filters", %{
+          "filters" => %{
+            "tenant_id" => @tenant_id,
+            "provider" => "",
+            "status" => "not-listed",
+            "event" => "not-real",
+            "window_hours" => "-5"
+          }
+        })
+
+      assert html =~ "Status was not applied. Choose a listed status."
+      assert html =~ "Event was not applied. Choose a listed event."
+      assert html =~ "Time window was not applied. Choose a positive listed time window."
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_patch(view, 0)
+      end
+    end
+
     test "selects a delivery and renders summary, timeline, reversible suppression copy, and read-only boundaries",
          %{conn: conn} do
       conn = operator_conn(conn)
@@ -169,8 +230,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "pm_123"
       assert html =~ "Suppression"
       assert html =~ "Reversible in a later phase"
+
       assert html =~
                "This Suppression is reversible. Remove via the suppressions API or contact support."
+
       assert html =~ ~s(aria-selected="true")
       assert html =~ "Sent"
       assert html =~ "Delivered"
@@ -184,11 +247,19 @@ defmodule MailglassAdmin.OperatorLiveTest do
     test "renders support cards, masks overview recipients, and distinguishes replay audit from reconcile facts",
          %{conn: conn} do
       conn = operator_conn(conn)
-      %{selected_delivery: selected_delivery, replay_event: replay_event, reconcile_event: reconcile_event} =
+
+      %{
+        selected_delivery: selected_delivery,
+        replay_event: replay_event,
+        reconcile_event: reconcile_event
+      } =
         insert_support_summary_fixture!()
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id}))
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id})
+        )
 
       html = render(view)
       list_html = view |> element("[data-testid='operator-deliveries-list']") |> render()
@@ -225,7 +296,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       } = insert_support_summary_fixture!()
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id}))
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id})
+        )
 
       view
       |> element("[data-testid='support-card-failed-ingest-drilldown']")
@@ -296,6 +370,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "No delivery events have been recorded for this item yet."
       assert html =~ "Immutable by policy"
+
       assert html =~
                "This Suppression is permanent. Future sends to this address will be blocked."
     end
@@ -396,7 +471,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
 
       delivery =
-        insert_delivery!(recipient: "historical@example.com", provider_message_id: "pm-historical")
+        insert_delivery!(
+          recipient: "historical@example.com",
+          provider_message_id: "pm-historical"
+        )
 
       insert_event!(delivery, %{
         type: :delivered,
@@ -849,7 +927,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
     insert_event!(delivery, %{
       type: :sent,
       metadata:
-        linked_replay_metadata(webhook_event, child_provider_event_id, delivery.provider_message_id)
+        linked_replay_metadata(
+          webhook_event,
+          child_provider_event_id,
+          delivery.provider_message_id
+        )
     })
   end
 

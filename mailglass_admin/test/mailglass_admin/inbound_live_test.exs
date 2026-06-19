@@ -316,6 +316,68 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html2 =~ ~s(<option value="accept" selected)
     end
 
+    test "invalid URL-backed filters render recovery copy without widening tenant reads", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      %{record: matching} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "match@example.com",
+          provider: "mailgun"
+        )
+
+      %{record: foreign} =
+        InboundFixtures.seed_matched!(@other_tenant,
+          recipient: "foreign@example.com",
+          provider: "mailgun"
+        )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          inbound_path(%{
+            "tenant_id" => @tenant_id,
+            "outcome" => "not-real",
+            "window_hours" => "bogus"
+          })
+        )
+
+      assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
+      assert html =~ "Time window was not applied. Choose a positive listed time window."
+      assert html =~ matching.id
+      refute html =~ foreign.id
+      assert html =~ ~s(value="168" selected)
+      refute html =~ "not-real"
+      refute html =~ "bogus"
+    end
+
+    test "invalid submitted filters render recovery copy and do not push a patch", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      html =
+        render_hook(view, "apply_filters", %{
+          "filters" => %{
+            "tenant_id" => @tenant_id,
+            "provider" => "",
+            "outcome" => "not-real",
+            "window_hours" => "-5",
+            "search" => ""
+          }
+        })
+
+      assert html =~ "Mailbox outcome was not applied. Choose a listed outcome."
+      assert html =~ "Time window was not applied. Choose a positive listed time window."
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_patch(view, 0)
+      end
+    end
+
     test "an unselectable foreign-tenant record id surfaces the detail-error band, not a leak", %{
       conn: conn
     } do
@@ -364,7 +426,9 @@ defmodule MailglassAdmin.InboundLiveTest do
                "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
     end
 
-    test "a valid selected record outside the capped recent list still loads detail", %{conn: conn} do
+    test "a valid selected record outside the capped recent list still loads detail", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
@@ -767,7 +831,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id,
+         %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)
