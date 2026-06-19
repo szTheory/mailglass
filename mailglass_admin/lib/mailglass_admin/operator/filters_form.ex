@@ -5,88 +5,65 @@ defmodule MailglassAdmin.Operator.FiltersForm do
 
   use Phoenix.Component
 
+  alias MailglassAdmin.Components
+
   attr :form, Phoenix.HTML.Form, required: true
   attr :status_values, :list, required: true
   attr :event_values, :list, required: true
   attr :window_options, :list, required: true
+  attr :errors, :map, default: %{}
 
   def fields(assigns) do
     ~H"""
-    <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase text-secondary">
-        Tenant
-      </span>
-      <input
-        type="text"
-        name={@form[:tenant_id].name}
-        value={@form[:tenant_id].value}
-        class="input input-bordered min-h-11 w-full"
+    <Components.filter_section
+      title="Filters"
+      description="Narrow Deliveries without widening the tenant scope."
+    >
+      <Components.filter_field
+        field={@form[:tenant_id]}
+        label="Tenant"
+        help="Filter to one tenant id."
+        error={field_error(@errors, "tenant_id")}
         placeholder="tenant-123"
       />
-    </label>
 
-    <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase text-secondary">
-        Provider
-      </span>
-      <input
-        type="text"
-        name={@form[:provider].name}
-        value={@form[:provider].value}
-        class="input input-bordered min-h-11 w-full"
+      <Components.filter_field
+        field={@form[:provider]}
+        label="Provider"
+        help="Filter by provider key, for example postmark."
+        error={field_error(@errors, "provider")}
         placeholder="postmark"
       />
-    </label>
 
-    <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase text-secondary">
-        Status
-      </span>
-      <select
-        name={@form[:status].name}
-        class="select select-bordered min-h-11 w-full"
-      >
-        <option value="">Any status</option>
-        <%= for status <- @status_values do %>
-          <option value={Atom.to_string(status)} selected={@form[:status].value == Atom.to_string(status)}>
-            {label(status)}
-          </option>
-        <% end %>
-      </select>
-    </label>
+      <Components.filter_field
+        field={@form[:status]}
+        type={:select}
+        label="Status"
+        help="Filter by delivery status."
+        error={field_error(@errors, "status")}
+        prompt="Any status"
+        options={enum_options(@status_values)}
+      />
 
-    <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase text-secondary">
-        Event
-      </span>
-      <select
-        name={@form[:event].name}
-        class="select select-bordered min-h-11 w-full"
-      >
-        <option value="">Any event</option>
-        <%= for event <- @event_values do %>
-          <option value={Atom.to_string(event)} selected={@form[:event].value == Atom.to_string(event)}>
-            {label(event)}
-          </option>
-        <% end %>
-      </select>
-    </label>
+      <Components.filter_field
+        field={@form[:event]}
+        type={:select}
+        label="Event"
+        help="Filter by latest delivery event."
+        error={field_error(@errors, "event")}
+        prompt="Any event"
+        options={enum_options(@event_values)}
+      />
 
-    <label class="form-control">
-      <span class="mb-1 text-label font-bold uppercase text-secondary">
-        Window
-      </span>
-      <select
-        name={@form[:window_hours].name}
-        class="select select-bordered min-h-11 w-full"
-      >
-        <%= for {copy, value} <- @window_options do %>
-          <option value={value} selected={@form[:window_hours].value == value}>
-            {copy}
-          </option>
-        <% end %>
-      </select>
-    </label>
+      <Components.filter_field
+        field={@form[:window_hours]}
+        type={:select}
+        label="Time window"
+        help="Limit results to recent delivery activity."
+        error={field_error(@errors, "window_hours")}
+        options={@window_options}
+      />
+    </Components.filter_section>
     """
   end
 
@@ -98,4 +75,10 @@ defmodule MailglassAdmin.Operator.FiltersForm do
     |> String.replace("_", " ")
     |> String.capitalize()
   end
+
+  defp enum_options(values) do
+    Enum.map(values, &{label(&1), Atom.to_string(&1)})
+  end
+
+  defp field_error(errors, field), do: Map.get(errors, field)
 end

@@ -10,86 +10,62 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
 
   use Phoenix.Component
 
+  alias MailglassAdmin.Components
+
   attr :form, Phoenix.HTML.Form, required: true
   attr :outcome_values, :list, required: true
   attr :window_options, :list, required: true
+  attr :errors, :map, default: %{}
 
   def fields(assigns) do
     ~H"""
-    <label class="form-control">
-      <span class="mb-1 text-label uppercase font-bold text-secondary">
-        Tenant
-      </span>
-      <input
-        type="text"
-        name={@form[:tenant_id].name}
-        value={@form[:tenant_id].value}
-        class="input input-bordered min-h-11 w-full"
+    <Components.filter_section
+      title="Filters"
+      description="Narrow InboundMessages without widening the tenant scope."
+    >
+      <Components.filter_field
+        field={@form[:tenant_id]}
+        label="Tenant"
+        help="Filter to one tenant id."
+        error={field_error(@errors, "tenant_id")}
         placeholder="tenant-123"
       />
-    </label>
 
-    <label class="form-control">
-      <span class="mb-1 text-label uppercase font-bold text-secondary">
-        Provider
-      </span>
-      <input
-        type="text"
-        name={@form[:provider].name}
-        value={@form[:provider].value}
-        class="input input-bordered min-h-11 w-full"
+      <Components.filter_field
+        field={@form[:provider]}
+        label="Provider"
+        help="Filter by inbound provider key, for example mailgun."
+        error={field_error(@errors, "provider")}
         placeholder="mailgun"
       />
-    </label>
 
-    <label class="form-control">
-      <span class="mb-1 text-label uppercase font-bold text-secondary">
-        Mailbox outcome
-      </span>
-      <select
-        name={@form[:outcome].name}
-        class="select select-bordered min-h-11 w-full"
-      >
-        <option value="">Any outcome</option>
-        <%= for outcome <- @outcome_values do %>
-          <option
-            value={Atom.to_string(outcome)}
-            selected={@form[:outcome].value == Atom.to_string(outcome)}
-          >
-            {label(outcome)}
-          </option>
-        <% end %>
-      </select>
-    </label>
+      <Components.filter_field
+        field={@form[:outcome]}
+        type={:select}
+        label="Mailbox outcome"
+        help="Filter by routing outcome."
+        error={field_error(@errors, "outcome")}
+        prompt="Any outcome"
+        options={enum_options(@outcome_values)}
+      />
 
-    <label class="form-control">
-      <span class="mb-1 text-label uppercase font-bold text-secondary">
-        Time window
-      </span>
-      <select
-        name={@form[:window_hours].name}
-        class="select select-bordered min-h-11 w-full"
-      >
-        <%= for {copy, value} <- @window_options do %>
-          <option value={value} selected={@form[:window_hours].value == value}>
-            {copy}
-          </option>
-        <% end %>
-      </select>
-    </label>
+      <Components.filter_field
+        field={@form[:window_hours]}
+        type={:select}
+        label="Time window"
+        help="Limit results to recently received messages."
+        error={field_error(@errors, "window_hours")}
+        options={@window_options}
+      />
 
-    <label class="form-control">
-      <span class="mb-1 text-label uppercase font-bold text-secondary">
-        Search
-      </span>
-      <input
-        type="text"
-        name={@form[:search].name}
-        value={@form[:search].value}
-        class="input input-bordered min-h-11 w-full"
+      <Components.filter_field
+        field={@form[:search]}
+        label="Search"
+        help="Find by subject, recipient, or provider message id."
+        error={field_error(@errors, "search")}
         placeholder="subject or recipient"
       />
-    </label>
+    </Components.filter_section>
     """
   end
 
@@ -101,4 +77,10 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     |> String.replace("_", " ")
     |> String.capitalize()
   end
+
+  defp enum_options(values) do
+    Enum.map(values, &{label(&1), Atom.to_string(&1)})
+  end
+
+  defp field_error(errors, field), do: Map.get(errors, field)
 end
