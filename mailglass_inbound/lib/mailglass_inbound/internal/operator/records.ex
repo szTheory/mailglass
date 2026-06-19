@@ -46,47 +46,75 @@ defmodule MailglassInbound.Internal.Operator.Records do
 
   @spec list_records(filters(), keyword()) :: [map()]
   def list_records(filters, opts \\ []) do
+    filters
+    |> list_records_page(opts)
+    |> Map.fetch!(:entries)
+  end
+
+  @spec list_records_page(filters(), keyword()) :: map()
+  def list_records_page(filters, opts \\ []) do
     normalized = normalize_filters(filters)
+    page = page_from(normalized, opts)
+    per_page = per_page_from(normalized, opts)
 
     case fetch_tenant_id(normalized) do
       {:ok, tenant_id} ->
-        limit = limit_from(normalized, opts)
+        query = scoped_query(normalized, tenant_id)
+        total_count = count_records(query)
 
-        from(record in InboundRecord, as: :rec)
-        |> where([rec: record], record.tenant_id == ^tenant_id)
-        |> maybe_filter_provider(normalized[:provider])
-        |> maybe_filter_outcome(tenant_id, normalized[:outcome])
-        |> maybe_filter_window(normalized[:window_hours] || normalized[:recent_window_hours])
-        |> maybe_filter_search(normalized[:search])
-        |> order_by([rec: record],
-          desc: record.received_at,
-          desc: record.inserted_at,
-          desc: record.id
-        )
-        |> limit(^limit)
-        |> select([rec: record], %{
-          id: record.id,
-          tenant_id: record.tenant_id,
-          provider: record.provider,
-          provider_message_id: record.provider_message_id,
-          message_id: record.message_id,
-          envelope_recipient: record.envelope_recipient,
-          subject: record.subject,
-          received_at: record.received_at,
-          inserted_at: record.inserted_at,
-          # IOPS-05 (the design contract): the column is the source of truth — select it
-          # directly from the :rec binding (no subquery; the flag is set at INSERT).
-          suppression_flagged: record.suppression_flagged,
-          outcome: subquery(latest_fresh_run_field(tenant_id, :outcome)),
-          mailbox: subquery(latest_fresh_run_field(tenant_id, :mailbox))
-        })
-        |> Tenancy.scope(tenant_id)
-        |> Repo.all()
-        |> Enum.map(&cast_projected_outcome/1)
+        entries =
+          query
+          |> order_by([rec: record],
+            desc: record.received_at,
+            desc: record.inserted_at,
+            desc: record.id
+          )
+          |> limit(^per_page)
+          |> offset(^offset_for(page, per_page))
+          |> record_projection(tenant_id)
+          |> Repo.all()
+          |> Enum.map(&cast_projected_outcome/1)
+
+        page_result(entries, total_count, page, per_page)
 
       :blank ->
-        []
+        page_result([], 0, page, per_page)
     end
+  end
+
+  defp scoped_query(normalized, tenant_id) do
+    from(record in InboundRecord, as: :rec)
+    |> where([rec: record], record.tenant_id == ^tenant_id)
+    |> maybe_filter_provider(normalized[:provider])
+    |> maybe_filter_outcome(tenant_id, normalized[:outcome])
+    |> maybe_filter_window(normalized[:window_hours] || normalized[:recent_window_hours])
+    |> maybe_filter_search(normalized[:search])
+    |> Tenancy.scope(tenant_id)
+  end
+
+  defp record_projection(query, tenant_id) do
+    select(query, [rec: record], %{
+      id: record.id,
+      tenant_id: record.tenant_id,
+      provider: record.provider,
+      provider_message_id: record.provider_message_id,
+      message_id: record.message_id,
+      envelope_recipient: record.envelope_recipient,
+      subject: record.subject,
+      received_at: record.received_at,
+      inserted_at: record.inserted_at,
+      # IOPS-05 (the design contract): the column is the source of truth — select it
+      # directly from the :rec binding (no subquery; the flag is set at INSERT).
+      suppression_flagged: record.suppression_flagged,
+      outcome: subquery(latest_fresh_run_field(tenant_id, :outcome)),
+      mailbox: subquery(latest_fresh_run_field(tenant_id, :mailbox))
+    })
+  end
+
+  defp count_records(query) do
+    query
+    |> select([rec: record], count(record.id))
+    |> Repo.one()
   end
 
   # Correlated subquery: the named `field` of the LATEST FRESH ExecutionRun for the
@@ -136,14 +164,48 @@ defmodule MailglassInbound.Internal.Operator.Records do
 
   defp fetch_tenant_id(_filters), do: :blank
 
-  defp limit_from(filters, opts) do
+  defp page_from(filters, opts),
+    do: positive_integer(Map.get(filters, :page, Keyword.get(opts, :page)), 1)
+
+  defp per_page_from(filters, opts) do
     filters
-    |> Map.get(:limit, Keyword.get(opts, :limit, @default_limit))
-    |> case do
-      limit when is_integer(limit) and limit > 0 -> min(limit, @max_limit)
-      _ -> @default_limit
+    |> Map.get(
+      :per_page,
+      Map.get(filters, :limit, Keyword.get(opts, :per_page, Keyword.get(opts, :limit)))
+    )
+    |> positive_integer(@default_limit)
+    |> min(@max_limit)
+  end
+
+  defp positive_integer(value, _default) when is_integer(value) and value > 0, do: value
+
+  defp positive_integer(value, default) when is_binary(value) do
+    case Integer.parse(value) do
+      {integer, ""} when integer > 0 -> integer
+      _ -> default
     end
   end
+
+  defp positive_integer(_value, default), do: default
+
+  defp offset_for(page, per_page), do: (page - 1) * per_page
+
+  defp page_result(entries, total_count, page, per_page) do
+    total_pages = total_pages(total_count, per_page)
+
+    %{
+      entries: entries,
+      total_count: total_count,
+      page: page,
+      per_page: per_page,
+      total_pages: total_pages,
+      has_previous?: page > 1 and total_pages > 0,
+      has_next?: page < total_pages
+    }
+  end
+
+  defp total_pages(0, _per_page), do: 0
+  defp total_pages(total_count, per_page), do: ceil(total_count / per_page)
 
   defp maybe_filter_provider(query, provider) when is_binary(provider) and provider != "" do
     where(query, [rec: record], record.provider == ^provider)

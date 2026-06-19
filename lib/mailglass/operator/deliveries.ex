@@ -16,23 +16,48 @@ defmodule Mailglass.Operator.Deliveries do
 
   @spec list_recent_deliveries(filters(), keyword()) :: [map()]
   def list_recent_deliveries(filters, opts \\ []) do
+    filters
+    |> list_recent_deliveries_page(opts)
+    |> Map.fetch!(:entries)
+  end
+
+  @spec list_recent_deliveries_page(filters(), keyword()) :: map()
+  def list_recent_deliveries_page(filters, opts \\ []) do
     normalized = normalize_filters(filters)
     tenant_id = fetch_tenant_id!(normalized)
-    limit = limit_from(normalized, opts)
+    page = page_from(normalized, opts)
+    per_page = per_page_from(normalized, opts)
 
+    query = scoped_query(normalized, tenant_id)
+    total_count = Repo.aggregate(query, :count, :id)
+
+    entries =
+      query
+      |> order_by([delivery],
+        desc: delivery.last_event_at,
+        desc: delivery.inserted_at,
+        desc: delivery.id
+      )
+      |> limit(^per_page)
+      |> offset(^offset_for(page, per_page))
+      |> delivery_projection()
+      |> Repo.all()
+
+    page_result(entries, total_count, page, per_page)
+  end
+
+  defp scoped_query(normalized, tenant_id) do
     Delivery
     |> where([delivery], delivery.tenant_id == ^tenant_id)
     |> maybe_filter_provider(normalized[:provider])
     |> maybe_filter_status(normalized[:status])
     |> maybe_filter_event(normalized[:event] || normalized[:last_event_type])
     |> maybe_filter_window(normalized[:window_hours] || normalized[:recent_window_hours])
-    |> order_by([delivery],
-      desc: delivery.last_event_at,
-      desc: delivery.inserted_at,
-      desc: delivery.id
-    )
-    |> limit(^limit)
-    |> select([delivery], %{
+    |> Tenancy.scope(tenant_id)
+  end
+
+  defp delivery_projection(query) do
+    select(query, [delivery], %{
       id: delivery.id,
       tenant_id: delivery.tenant_id,
       mailable: delivery.mailable,
@@ -45,8 +70,6 @@ defmodule Mailglass.Operator.Deliveries do
       last_event_at: delivery.last_event_at,
       inserted_at: delivery.inserted_at
     })
-    |> Tenancy.scope(tenant_id)
-    |> Repo.all()
   end
 
   defp normalize_filters(filters) when is_list(filters), do: Map.new(filters)
@@ -57,14 +80,48 @@ defmodule Mailglass.Operator.Deliveries do
 
   defp fetch_tenant_id!(_filters), do: raise(ArgumentError, "tenant_id is required")
 
-  defp limit_from(filters, opts) do
+  defp page_from(filters, opts),
+    do: positive_integer(Map.get(filters, :page, Keyword.get(opts, :page)), 1)
+
+  defp per_page_from(filters, opts) do
     filters
-    |> Map.get(:limit, Keyword.get(opts, :limit, @default_limit))
-    |> case do
-      limit when is_integer(limit) and limit > 0 -> min(limit, @max_limit)
-      _ -> @default_limit
+    |> Map.get(
+      :per_page,
+      Map.get(filters, :limit, Keyword.get(opts, :per_page, Keyword.get(opts, :limit)))
+    )
+    |> positive_integer(@default_limit)
+    |> min(@max_limit)
+  end
+
+  defp positive_integer(value, _default) when is_integer(value) and value > 0, do: value
+
+  defp positive_integer(value, default) when is_binary(value) do
+    case Integer.parse(value) do
+      {integer, ""} when integer > 0 -> integer
+      _ -> default
     end
   end
+
+  defp positive_integer(_value, default), do: default
+
+  defp offset_for(page, per_page), do: (page - 1) * per_page
+
+  defp page_result(entries, total_count, page, per_page) do
+    total_pages = total_pages(total_count, per_page)
+
+    %{
+      entries: entries,
+      total_count: total_count,
+      page: page,
+      per_page: per_page,
+      total_pages: total_pages,
+      has_previous?: page > 1 and total_pages > 0,
+      has_next?: page < total_pages
+    }
+  end
+
+  defp total_pages(0, _per_page), do: 0
+  defp total_pages(total_count, per_page), do: ceil(total_count / per_page)
 
   defp maybe_filter_provider(query, provider) when is_binary(provider) and provider != "" do
     where(query, [delivery], delivery.provider == ^provider)

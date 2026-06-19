@@ -62,6 +62,13 @@ if Code.ensure_loaded?(MailglassInbound) do
       apply(MailglassInbound.Internal.Operator.Records, :list_records, [filters, opts])
     end
 
+    @doc "Paginated inbound records and page metadata for a tenant — routes to the inbound read-model."
+    @doc since: "0.2.0"
+    @spec list_records_page(map() | keyword(), keyword()) :: map()
+    def list_records_page(filters, opts \\ []) do
+      apply(MailglassInbound.Internal.Operator.Records, :list_records_page, [filters, opts])
+    end
+
     @doc "Tenant selector rows from inbound activity — routes to the inbound read-model."
     @doc since: "0.2.0"
     @spec list_tenants(term(), keyword()) :: [%{id: String.t(), label: String.t()}]
