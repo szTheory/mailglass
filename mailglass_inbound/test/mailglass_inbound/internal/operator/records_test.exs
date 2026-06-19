@@ -59,6 +59,88 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
     end
   end
 
+  describe "Records.list_records_page/2" do
+    test "returns honest total and first-page boundaries from tenant and filter scoped count" do
+      now = DateTime.utc_now()
+
+      matching =
+        for offset <- 1..3 do
+          {:ok, record} =
+            insert_record("tenant-page",
+              provider: "postmark",
+              recipient: "page-#{offset}@example.com",
+              received_at: DateTime.add(now, -offset, :second)
+            )
+
+          record
+        end
+
+      {:ok, _foreign} =
+        insert_record("tenant-other",
+          provider: "postmark",
+          recipient: "foreign@example.com",
+          received_at: now
+        )
+
+      {:ok, _filtered_out} =
+        insert_record("tenant-page",
+          provider: "sendgrid",
+          recipient: "filtered@example.com",
+          received_at: now
+        )
+
+      page =
+        Records.list_records_page(
+          %{tenant_id: "tenant-page", provider: "postmark", page: 1, per_page: 2},
+          []
+        )
+
+      assert %{
+               entries: entries,
+               total_count: 3,
+               page: 1,
+               per_page: 2,
+               total_pages: 2,
+               has_previous?: false,
+               has_next?: true
+             } = page
+
+      assert Enum.map(entries, & &1.id) == matching |> Enum.take(2) |> Enum.map(& &1.id)
+      assert Enum.count(entries) == 2
+    end
+
+    test "returns last-page entries with boundary metadata" do
+      now = DateTime.utc_now()
+
+      records =
+        for offset <- 1..3 do
+          {:ok, record} =
+            insert_record("tenant-last",
+              provider: "postmark",
+              recipient: "last-#{offset}@example.com",
+              received_at: DateTime.add(now, -offset, :second)
+            )
+
+          record
+        end
+
+      page =
+        Records.list_records_page(%{tenant_id: "tenant-last", page: 2, per_page: 2}, [])
+
+      assert %{
+               entries: [%{id: id}],
+               total_count: 3,
+               page: 2,
+               per_page: 2,
+               total_pages: 2,
+               has_previous?: true,
+               has_next?: false
+             } = page
+
+      assert id == records |> List.last() |> Map.fetch!(:id)
+    end
+  end
+
   describe "Records.list_records/2 disposition projection (WR-01)" do
     test "a matched record projects its latest-fresh-run outcome + mailbox" do
       {:ok, record} = insert_record("tenant-a")
