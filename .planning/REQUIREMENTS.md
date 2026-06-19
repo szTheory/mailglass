@@ -37,12 +37,12 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 
 ### App-Shell, Navigation & Tenant Seam (SHELL)
 
-- [ ] **SHELL-01**: A sole tenant is auto-selected (killing the pointless single-tenant picker); the tenant picker renders only when ≥2 tenants exist.
-- [ ] **SHELL-02**: When unscoped with ≥2 tenants, the operator sees a tenant listing/switcher sourced from the core read model (scoped via `Mailglass.Tenancy.scope/2` through the authenticated actor, never raw admin Repo) instead of the "No tenant selected" dead-end.
-- [ ] **SHELL-03**: Tenant scope persists across every surface and navigation action (carrying `tenant_id`, building on PR #86).
-- [ ] **SHELL-04**: The theme picker is wired through the mount hook with host-scoped persistence and no FOUC on first paint (explicit choice server-rendered from a namespaced cookie; system resolved via `prefersdark`).
-- [ ] **SHELL-05**: Navigation shows an unambiguous active/current state with a non-color cue at both nav levels.
-- [ ] **SHELL-06**: Pagination shows the result count always and pagination chrome only when there is more than one page, with boundary prev/next disabled (not hidden).
+- [x] **SHELL-01**: A sole tenant is auto-selected (killing the pointless single-tenant picker); the tenant picker renders only when ≥2 tenants exist.
+- [x] **SHELL-02**: When unscoped with ≥2 tenants, the operator sees a tenant listing/switcher sourced from the core read model (scoped via `Mailglass.Tenancy.scope/2` through the authenticated actor, never raw admin Repo) instead of the "No tenant selected" dead-end.
+- [x] **SHELL-03**: Tenant scope persists across every surface and navigation action (carrying `tenant_id`, building on PR #86).
+- [x] **SHELL-04**: The theme picker is wired through the mount hook with host-scoped persistence and no FOUC on first paint (explicit choice server-rendered from a namespaced cookie; system resolved via `prefersdark`).
+- [x] **SHELL-05**: Navigation shows an unambiguous active/current state with a non-color cue at both nav levels.
+- [x] **SHELL-06**: Pagination shows the result count always and pagination chrome only when there is more than one page, with boundary prev/next disabled (not hidden).
 
 ### Data-Display Patterns (DATA)
 
@@ -128,12 +128,12 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | FORM-01 | Phase 111 | Complete |
 | FORM-02 | Phase 111 | Complete |
 | FORM-03 | Phase 111 | Complete |
-| SHELL-01 | Phase 112 | Pending |
-| SHELL-02 | Phase 112 | Pending |
-| SHELL-03 | Phase 112 | Pending |
-| SHELL-04 | Phase 112 | Pending |
-| SHELL-05 | Phase 112 | Pending |
-| SHELL-06 | Phase 112 | Pending |
+| SHELL-01 | Phase 112 | Complete |
+| SHELL-02 | Phase 112 | Complete |
+| SHELL-03 | Phase 112 | Complete |
+| SHELL-04 | Phase 112 | Complete |
+| SHELL-05 | Phase 112 | Complete |
+| SHELL-06 | Phase 112 | Complete |
 | DATA-01 | Phase 113 | Pending |
 | DATA-02 | Phase 113 | Pending |
 | DATA-03 | Phase 113 | Pending |
