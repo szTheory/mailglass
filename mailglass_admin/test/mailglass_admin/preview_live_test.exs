@@ -15,6 +15,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
   # synthetic MailglassAdmin.TestAdopter.Endpoint.
 
   alias MailglassAdmin.Fixtures.{HappyMailer, StubMailer, BrokenMailer}
+  alias MailglassAdmin.Preview.AssignsForm
 
   @fixture_mailables [HappyMailer, StubMailer, BrokenMailer]
 
@@ -343,6 +344,53 @@ defmodule MailglassAdmin.PreviewLiveTest do
 
       assert after_change =~ "Hi Grace",
              "iframe srcdoc must reflect updated user_name assign"
+    end
+
+    test "string assigns render stable labels, IDs, names, and help associations" do
+      html = render_component(&AssignsForm.field/1, key: :user_name, value: "Ada")
+
+      assert html =~ ~s(<label for="assigns-user_name")
+      assert html =~ ~s(id="assigns-user_name")
+      assert html =~ ~s(name="assigns[user_name]")
+      assert html =~ ~s(aria-describedby="assigns-user_name-help")
+      assert html =~ ~s(id="assigns-user_name-help")
+      assert html =~ "User name"
+      refute html =~ "disabled"
+    end
+
+    test "boolean assigns render a checkbox with an explicit associated label" do
+      html = render_component(&AssignsForm.field/1, key: :subscribed, value: true)
+
+      assert html =~ ~s(type="checkbox")
+      assert html =~ ~s(id="assigns-subscribed")
+      assert html =~ ~s(name="assigns[subscribed]")
+      assert html =~ ~s(<label for="assigns-subscribed")
+      assert html =~ ~s(aria-describedby="assigns-subscribed-help")
+      assert html =~ ~s(id="assigns-subscribed-help")
+      assert html =~ "Subscribed"
+    end
+
+    test "atom assigns render as read-only display rows instead of fake disabled controls" do
+      html = render_component(&AssignsForm.field/1, key: :mode, value: :preview)
+
+      assert html =~ ~s(data-readonly-display)
+      assert html =~ ~s(id="assigns-mode")
+      assert html =~ ~s(aria-readonly="true")
+      assert html =~ ~s(aria-describedby="assigns-mode-help")
+      assert html =~ ":preview"
+      refute html =~ ~s(type="text" disabled)
+      refute html =~ ~s(disabled)
+    end
+
+    test "unsupported assigns render as read-only displays without disabled text inputs" do
+      html = render_component(&AssignsForm.field/1, key: :options, value: {:ok, "raw"})
+
+      assert html =~ ~s(data-readonly-display)
+      assert html =~ ~s(id="assigns-options")
+      assert html =~ ~s(aria-readonly="true")
+      assert html =~ "unsupported type"
+      refute html =~ ~s(type="text" disabled)
+      refute html =~ ~s(disabled)
     end
   end
 
