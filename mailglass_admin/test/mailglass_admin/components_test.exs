@@ -632,6 +632,125 @@ defmodule MailglassAdmin.ComponentsTest do
         "Status was not applied. Choose a listed status."
       ])
     end
+
+    test "filter_field select renders prompt, options, stable id, and selected value" do
+      form = filters_form(%{"status" => "delivered"})
+
+      html =
+        render_component(&Components.filter_field/1,
+          field: form[:status],
+          type: :select,
+          label: "Status",
+          prompt: "Any status",
+          options: [{"Delivered", "delivered"}, {"Bounced", "bounced"}]
+        )
+
+      assert_all(html, [
+        ~s(<label for="filters_status"),
+        ~s(<select),
+        ~s(id="filters_status"),
+        ~s(name="filters[status]"),
+        ~s(<option value="">Any status</option>),
+        ~s(value="delivered" selected>),
+        "Delivered",
+        "Bounced"
+      ])
+    end
+
+    test "filter_field invalid select renders recovery copy and non-color cue" do
+      form = filters_form(%{"status" => "unknown"})
+
+      html =
+        render_component(&Components.filter_field/1,
+          field: form[:status],
+          type: :select,
+          label: "Status",
+          options: [{"Delivered", "delivered"}, {"Bounced", "bounced"}],
+          error: "Status was not applied. Choose a listed status."
+        )
+
+      assert_all(html, [
+        ~s(aria-invalid="true"),
+        ~s(id="filters_status-error"),
+        "select-error",
+        "hero-exclamation-circle",
+        "Action needed",
+        "Status was not applied. Choose a listed status."
+      ])
+    end
+
+    test "filter_field disabled text control uses real disabled state" do
+      form = filters_form(%{"provider" => "postmark"})
+
+      html =
+        render_component(&Components.filter_field/1,
+          field: form[:provider],
+          type: :text,
+          label: "Provider",
+          disabled: true
+        )
+
+      assert_all(html, [
+        ~s(id="filters_provider"),
+        ~s(name="filters[provider]"),
+        ~s(value="postmark"),
+        "disabled",
+        "bg-base-200",
+        "text-secondary"
+      ])
+
+      refute html =~ "readonly"
+    end
+
+    test "filter_field read-only text control uses native readonly without disabled" do
+      form = filters_form(%{"provider" => "postmark"})
+
+      html =
+        render_component(&Components.filter_field/1,
+          field: form[:provider],
+          type: :text,
+          label: "Provider",
+          readonly: true
+        )
+
+      assert_all(html, [
+        ~s(id="filters_provider"),
+        ~s(name="filters[provider]"),
+        ~s(value="postmark"),
+        "readonly",
+        "bg-base-200",
+        "text-base-content"
+      ])
+
+      refute html =~ "disabled"
+    end
+
+    test "filter_field read-only select renders display text and hidden submitted value" do
+      form = filters_form(%{"status" => "delivered"})
+
+      html =
+        render_component(&Components.filter_field/1,
+          field: form[:status],
+          type: :select,
+          label: "Status",
+          readonly: true,
+          options: [{"Delivered", "delivered"}, {"Bounced", "bounced"}]
+        )
+
+      assert_all(html, [
+        ~s(<label for="filters_status"),
+        ~s(id="filters_status"),
+        ~s(aria-readonly="true"),
+        "Read-only value",
+        "Delivered",
+        ~s(type="hidden"),
+        ~s(name="filters[status]"),
+        ~s(value="delivered")
+      ])
+
+      refute html =~ "<select"
+      refute html =~ "disabled"
+    end
   end
 
   defp assert_all(html, markers) do
