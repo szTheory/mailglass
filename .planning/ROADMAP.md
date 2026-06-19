@@ -152,7 +152,7 @@ Plans:
   2. Every form control has a visible associated label, programmatically connected help/error text, recovery-oriented error copy, and validation state that never relies on color alone.
   3. Disabled and read-only form states are visually distinct, and focus is preserved (not lost) across LiveView patches.
 
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
 
 ### Phase 112: App-Shell, Navigation & Tenant Seam
