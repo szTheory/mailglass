@@ -20,6 +20,8 @@ defmodule MailglassAdmin.ComponentsTest do
   import Phoenix.LiveViewTest
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Inbound.FiltersForm, as: InboundFiltersForm
+  alias MailglassAdmin.Operator.FiltersForm, as: OperatorFiltersForm
 
   describe "status_badge/1 — outbound delivery statuses (14 atoms)" do
     test "dispatched renders badge-primary + paper-airplane icon" do
@@ -753,6 +755,109 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
+  describe "operator and inbound filter wrappers consume shared primitives" do
+    test "operator wrapper renders stable primitive-backed controls in delivery filter order" do
+      form =
+        filters_form(%{
+          "tenant_id" => "tenant-123",
+          "provider" => "postmark",
+          "status" => "sent",
+          "event" => "delivered",
+          "window_hours" => "168"
+        })
+
+      html =
+        render_component(&OperatorFiltersForm.fields/1,
+          form: form,
+          status_values: [:queued, :sent],
+          event_values: [:sent, :delivered],
+          window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
+          errors: %{"status" => "Status was not applied. Choose a listed status."}
+        )
+
+      assert_all(html, [
+        "<fieldset",
+        "<legend",
+        "Filters",
+        ~s(<label for="filters_tenant_id"),
+        ~s(id="filters_tenant_id"),
+        ~s(name="filters[tenant_id]"),
+        "Tenant",
+        ~s(<label for="filters_provider"),
+        ~s(id="filters_provider"),
+        ~s(name="filters[provider]"),
+        "Provider",
+        ~s(<label for="filters_status"),
+        ~s(<select),
+        ~s(id="filters_status"),
+        ~s(name="filters[status]"),
+        ~s(<option value="">Any status</option>),
+        ~s(<option value="sent" selected>),
+        "Status was not applied. Choose a listed status.",
+        ~s(aria-describedby="filters_status-help filters_status-error"),
+        ~s(aria-invalid="true"),
+        ~s(<label for="filters_event"),
+        "Event",
+        ~s(<label for="filters_window_hours"),
+        "Time window",
+        ~s(value="168" selected>)
+      ])
+
+      assert field_order(html, ["Tenant", "Provider", "Status", "Event", "Time window"])
+    end
+
+    test "inbound wrapper renders stable primitive-backed controls in inbound filter order" do
+      form =
+        filters_form(%{
+          "tenant_id" => "tenant-123",
+          "provider" => "mailgun",
+          "outcome" => "accept",
+          "window_hours" => "168",
+          "search" => "invoice"
+        })
+
+      html =
+        render_component(&InboundFiltersForm.fields/1,
+          form: form,
+          outcome_values: [:no_match, :accept],
+          window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
+          errors: %{"outcome" => "Mailbox outcome was not applied. Choose a listed outcome."}
+        )
+
+      assert_all(html, [
+        "<fieldset",
+        "<legend",
+        "Filters",
+        ~s(<label for="filters_tenant_id"),
+        ~s(id="filters_tenant_id"),
+        ~s(name="filters[tenant_id]"),
+        "Tenant",
+        ~s(<label for="filters_provider"),
+        ~s(id="filters_provider"),
+        ~s(name="filters[provider]"),
+        "Provider",
+        ~s(<label for="filters_outcome"),
+        ~s(<select),
+        ~s(id="filters_outcome"),
+        ~s(name="filters[outcome]"),
+        ~s(<option value="">Any outcome</option>),
+        ~s(<option value="accept" selected>),
+        "Mailbox outcome",
+        "Mailbox outcome was not applied. Choose a listed outcome.",
+        ~s(aria-describedby="filters_outcome-help filters_outcome-error"),
+        ~s(aria-invalid="true"),
+        ~s(<label for="filters_window_hours"),
+        "Time window",
+        ~s(<label for="filters_search"),
+        ~s(id="filters_search"),
+        ~s(name="filters[search]"),
+        "Search"
+      ])
+
+      assert field_order(html, ["Tenant", "Provider", "Mailbox outcome", "Time window", "Search"])
+    end
+  end
+
   defp assert_all(html, markers) do
     Enum.each(markers, fn marker -> assert html =~ marker end)
   end
@@ -765,5 +870,16 @@ defmodule MailglassAdmin.ComponentsTest do
 
   defp filters_form(params) do
     Phoenix.HTML.FormData.to_form(params, as: :filters)
+  end
+
+  defp field_order(html, labels) do
+    labels
+    |> Enum.reduce_while(-1, fn label, previous_index ->
+      case :binary.match(html, label) do
+        {index, _length} when index > previous_index -> {:cont, index}
+        _missing_or_out_of_order -> {:halt, :out_of_order}
+      end
+    end)
+    |> is_integer()
   end
 end
