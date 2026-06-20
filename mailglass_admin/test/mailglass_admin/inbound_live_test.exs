@@ -953,6 +953,219 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
+  describe "dual table+card presentation (DATA-01, Task 1)" do
+    test "records present: both inbound-records-table and inbound-records-cards testids appear", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "table@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="inbound-records-table")
+      assert html =~ ~s(data-testid="inbound-records-cards")
+    end
+
+    test "desktop table uses semantic th scope=col elements in order Outcome Mailbox Tenant Provider Received",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "th@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(<th scope="col")
+      # Column order: Outcome first, then Mailbox, Tenant, Provider, Received
+      outcome_pos = String.length(html) - (html |> String.split("Outcome") |> List.last() |> String.length())
+      mailbox_pos = String.length(html) - (html |> String.split("Mailbox") |> List.last() |> String.length())
+      tenant_pos = String.length(html) - (html |> String.split("Tenant") |> List.last() |> String.length())
+      provider_pos = String.length(html) - (html |> String.split("Provider") |> List.last() |> String.length())
+      received_pos = String.length(html) - (html |> String.split("Received") |> List.last() |> String.length())
+
+      assert outcome_pos < mailbox_pos
+      assert mailbox_pos < tenant_pos
+      assert tenant_pos < provider_pos
+      assert provider_pos < received_pos
+    end
+
+    test "both table and cards carry phx-click=select_inbound and selected record shows aria-selected=true",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "selectme@example.com")
+
+      {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      view
+      |> element("button[phx-value-id='#{record.id}']")
+      |> render_click()
+
+      html = render(view)
+
+      assert html =~ ~s(phx-click="select_inbound")
+      assert html =~ ~s(phx-value-id="#{record.id}")
+      assert (html |> String.split(~s(aria-selected="true")) |> length()) >= 2
+    end
+
+    test "inbound-record-row testid remains reachable and outcome badges carry inbound-outcome- testids",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "badge@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="inbound-record-row")
+      assert html =~ "inbound-outcome-"
+    end
+
+    test "envelope recipient renders via mask_recipient in both table and card presentations", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "maskinboth@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      # Masked recipient appears (at least twice — once for table, once for cards)
+      masked = "m**********@e******.com"
+      assert html =~ masked
+      assert (html |> String.split(masked) |> length()) >= 3
+      # Raw recipient never appears
+      refute html =~ "maskinboth@example.com"
+    end
+
+    test "record id renders with title attribute and mono truncate; result count reads from page_meta",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+      %{record: record} = InboundFixtures.seed_matched!(@tenant_id, recipient: "id@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(title="#{record.id}")
+      assert html =~ "mono"
+      assert html =~ "truncate"
+      # result count from page_meta, not faked
+      assert html =~ ~s(data-testid="inbound-result-count")
+      assert html =~ "1 result"
+    end
+  end
+
+  describe "four distinct data-state branches on inbound surface (DATA-03, Task 2)" do
+    test "no-data render emits data-state-empty and existing copy distinctions survive", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      # truly_empty path: data-state-empty with "No records"-family heading
+      assert html =~ ~s(data-testid="data-state-empty")
+      assert html =~ "No records"
+    end
+
+    test "error signal emits data-state-error distinct from empty", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      html =
+        render_component(&RecordsList.records_list/1,
+          records: [],
+          selected_record: nil,
+          empty_state: :truly_empty,
+          data_state: :error,
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            per_page: 10,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      assert html =~ ~s(data-testid="data-state-error")
+      assert html =~ "Record data unavailable"
+      refute html =~ ~s(data-testid="data-state-empty")
+    end
+
+    test "permission-denied signal emits data-state-permission-denied distinct from no-data", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+
+      html =
+        render_component(&RecordsList.records_list/1,
+          records: [],
+          selected_record: nil,
+          empty_state: :truly_empty,
+          data_state: :permission_denied,
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            per_page: 10,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      assert html =~ ~s(data-testid="data-state-permission-denied")
+      assert html =~ "Access restricted"
+      refute html =~ ~s(data-testid="data-state-empty")
+    end
+
+    test "stale signal emits data-state-stale with out-of-date copy", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      html =
+        render_component(&RecordsList.records_list/1,
+          records: [],
+          selected_record: nil,
+          empty_state: :truly_empty,
+          data_state: :stale,
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            per_page: 10,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
+
+      assert html =~ ~s(data-testid="data-state-stale")
+      assert html =~ "Data may be out of date"
+    end
+
+    test "inbound_live source contains no assign_async, inbound-loading, or Loading InboundMessages string" do
+      source =
+        File.read!("lib/mailglass_admin/inbound_live.ex")
+
+      refute source =~ "assign_async"
+      refute source =~ "inbound-loading"
+      refute source =~ "Loading InboundMessages"
+    end
+  end
+
+  describe "inbound KPI stat_card certification (DATA-02, Task 3)" do
+    test "all four inbound KPI tiles render with meaningful non-dash values", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "kpi@example.com")
+      InboundFixtures.seed_no_match!(@tenant_id, recipient: "nomatch@example.com")
+
+      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="inbound-overview-total")
+      assert html =~ ~s(data-testid="inbound-overview-no-match")
+      assert html =~ ~s(data-testid="inbound-overview-accepted")
+      assert html =~ ~s(data-testid="inbound-overview-no-match-rate")
+
+      # Meaningful values present (not dashes)
+      refute html =~ ~s(<span class="tabular-nums">—</span>)
+      refute html =~ ~s(<span class="tabular-nums">-</span>)
+    end
+  end
+
   describe "inbound pagination component" do
     test "renders count and disabled page boundaries from metadata" do
       html =
