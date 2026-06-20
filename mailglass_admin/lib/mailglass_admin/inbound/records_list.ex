@@ -77,7 +77,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
           <Components.data_state
             kind={:empty}
             title="Select a tenant"
-            body="Choose a tenant to inspect its deliveries and inbound routing. Tenant scope stays in the URL so refreshes and shared links keep the same view."
+            body="Choose a tenant to inspect its Deliveries and inbound routing. Tenant scope stays in the URL so refreshes and shared links keep the same view."
           />
           <div data-testid="inbound-empty-no-tenant" style="display:none" />
         <% else %>
@@ -358,7 +358,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
   defp empty_body(:no_tenant),
     do:
-      "Choose a tenant to inspect its deliveries and inbound routing. Tenant scope stays " <>
+      "Choose a tenant to inspect its Deliveries and inbound routing. Tenant scope stays " <>
         "in the URL so refreshes and shared links keep the same view."
 
   defp empty_body(:truly_empty),

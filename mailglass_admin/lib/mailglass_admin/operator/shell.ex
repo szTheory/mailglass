@@ -259,7 +259,7 @@ defmodule MailglassAdmin.Operator.Shell do
             />
           </nav>
 
-          <div class="flex items-center gap-sm">
+          <div class="flex min-w-0 items-center gap-sm">
             <Components.tenant_chip tenant={@tenant} />
             <span class="md:hidden">
               <Components.theme_picker selected={@theme_choice} event="set_theme" />
@@ -328,13 +328,13 @@ defmodule MailglassAdmin.Operator.Shell do
           <%= if @state == :none do %>
             <h2 class="text-heading font-bold text-base-content">No tenants available</h2>
             <p class="mt-sm text-body text-secondary">
-              This operator does not have a tenant with mail activity yet. Send a message with a tenant_id, or check the host tenant scope.
+              This operator does not have a tenant with mail activity yet. Send a Message with a tenant_id, or check the host tenant scope.
             </p>
           <% else %>
             <p class="text-label font-bold uppercase text-secondary">Tenant</p>
             <h2 class="mt-xs text-heading font-bold text-base-content">Select a tenant</h2>
             <p class="mt-sm text-body text-secondary">
-              Choose a tenant to inspect its deliveries and inbound routing. Tenant scope stays in the URL so refreshes and shared links keep the same view.
+              Choose a tenant to inspect its Deliveries and inbound routing. Tenant scope stays in the URL so refreshes and shared links keep the same view.
             </p>
             <div class="mt-md grid gap-sm">
               <.link

@@ -334,7 +334,7 @@ defmodule MailglassAdmin.Components do
       <label
         :for={option <- theme_options()}
         class={[
-          "mg-focus-ring flex min-h-11 min-w-11 cursor-pointer items-center gap-xs rounded-field px-sm transition-colors ease-out duration-(--duration-fast)",
+          "mg-focus-ring flex min-h-11 min-w-11 cursor-pointer items-center gap-xs rounded-field px-sm",
           theme_option_class(@selected == option.theme, @disabled)
         ]}
       >
