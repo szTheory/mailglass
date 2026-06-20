@@ -198,7 +198,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 113-04-PLAN.md — Gallery specimens + Playwright responsive/overflow/status/data-state proof (legacy testids migrated) + STATUS-BADGE/DATA-STATE conformance gates + single bit-clean CSS bundle commit.
+- [x] 113-04-PLAN.md — Gallery specimens + Playwright responsive/overflow/status/data-state proof (legacy testids migrated) + STATUS-BADGE/DATA-STATE conformance gates + single bit-clean CSS bundle commit.
 
 **UI hint**: yes
 
@@ -316,7 +316,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 110. Primitives | v1.13 | 4/4 | Complete    | 2026-06-18 |
 | 111. Forms | v1.13 | 3/4 | In Progress|  |
 | 112. App-Shell, Nav & Tenant Seam | v1.13 | 6/6 | Complete    | 2026-06-19 |
-| 113. Data-Display | v1.13 | 3/4 | In Progress|  |
+| 113. Data-Display | v1.13 | 4/4 | Complete   | 2026-06-20 |
 | 114. Component Groups | v1.13 | 0/TBD | Not started | - |
 | 115. Pages/Flows + Motion + Microcopy | v1.13 | 0/TBD | Not started | - |
 | 116. Fixtures + Ratchet-Arm | v1.13 | 0/TBD | Not started | - |
