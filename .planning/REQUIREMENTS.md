@@ -60,10 +60,10 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 
 ### Pages, Flows, Motion & Microcopy (FLOW)
 
-- [ ] **FLOW-01**: Each admin surface presents a GOV.UK-style information architecture following the principle of least surprise, with the top operator action immediately obvious and good onboarding for first-time, intermediate, and advanced users.
-- [ ] **FLOW-02**: Every surface's happy / error / boundary / edge / advanced path works in light/dark/system at 320→wide — no broken scrolling, no scroll-chaining traps, no modal hidden behind the scrim, no floating element covering content.
-- [ ] **FLOW-03**: A micro-animation pass applies the Emil Kowalski deltas (origin-aware overlays, theme-switch never animates, `prefers-reduced-motion` snaps to instant, transform/opacity only) within the v1.11 MOTION-LD locks.
-- [ ] **FLOW-04**: A microcopy pass covers the new permission/stale/tenant surfaces — recovery-oriented errors, domain-consistent labels, "Oops" banned across all three surfaces.
+- [x] **FLOW-01**: Each admin surface presents a GOV.UK-style information architecture following the principle of least surprise, with the top operator action immediately obvious and good onboarding for first-time, intermediate, and advanced users.
+- [x] **FLOW-02**: Every surface's happy / error / boundary / edge / advanced path works in light/dark/system at 320→wide — no broken scrolling, no scroll-chaining traps, no modal hidden behind the scrim, no floating element covering content.
+- [x] **FLOW-03**: A micro-animation pass applies the Emil Kowalski deltas (origin-aware overlays, theme-switch never animates, `prefers-reduced-motion` snaps to instant, transform/opacity only) within the v1.11 MOTION-LD locks.
+- [x] **FLOW-04**: A microcopy pass covers the new permission/stale/tenant surfaces — recovery-oriented errors, domain-consistent labels, "Oops" banned across all three surfaces.
 
 ### Fixtures & Idempotent Ratchet (RATCHET)
 
@@ -142,10 +142,10 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | GROUP-01 | Phase 114 | Complete |
 | GROUP-02 | Phase 114 | Complete |
 | GROUP-03 | Phase 114 | Complete |
-| FLOW-01 | Phase 115 | Pending |
-| FLOW-02 | Phase 115 | Pending |
-| FLOW-03 | Phase 115 | Pending |
-| FLOW-04 | Phase 115 | Pending |
+| FLOW-01 | Phase 115 | Complete |
+| FLOW-02 | Phase 115 | Complete |
+| FLOW-03 | Phase 115 | Complete |
+| FLOW-04 | Phase 115 | Complete |
 | RATCHET-01 | Phase 116 | Pending |
 | RATCHET-02 | Phase 116 | Pending |
 | RATCHET-03 | Phase 116 | Pending |
