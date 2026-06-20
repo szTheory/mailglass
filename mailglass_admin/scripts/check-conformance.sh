@@ -31,6 +31,7 @@ INBOUND_OVERVIEW="${LIB}/mailglass_admin/inbound/overview.ex"
 DELIVERIES_LIST="${LIB}/mailglass_admin/operator/deliveries_list.ex"
 RECORDS_LIST="${LIB}/mailglass_admin/inbound/records_list.ex"
 HEROICONS="${SCRIPT_DIR}/../assets/vendor/heroicons-inline.js"
+APP_CSS="${SCRIPT_DIR}/../assets/css/app.css"
 
 # PRIMITIVE-DRIFT-GATE: the named Phase 110 primitives have exactly one public
 # implementation in Components. Shell and GalleryLive must consume those public
@@ -328,6 +329,51 @@ if grep -En 'Enum\.count\(@(deliveries|records)\)|length\(@(deliveries|records)\
   errors=$((errors + 1))
 fi
 
+# VOICE-GATE (FLOW-04, COPY-LD-07 / D-12): ban the "Oops"-class exclamations in
+# admin copy. Scope is `.ex` ONLY — this is mandatory. The phoenix.mjs dependency
+# inlines a logger no-op named "noops"; scanning JS/asset files would false-red on
+# that token forever (see voice_test.exs ~32-39 and project memory "voice_test
+# 'Oops' is dep-JS noise"). It lives in a JS asset, never in an .ex file, so the
+# .ex-only scope sidesteps the false-positive entirely.
+#
+# Banned (case-insensitive, whole phrases): Oops, Whoops, Uh oh, Something went
+# wrong. "Oops" is anchored on a non-word boundary ((^|[^a-z]) before it) so the
+# substring "n[oops]" inside "noops" can never match even if an .ex file ever
+# inlined that token. Recovery copy must cause-name (COPY-LD-07), e.g.
+# "Delivery data could not be loaded. Refresh the page or adjust the filters,
+# then try again." — never an "Oops"-class apology.
+#
+# Deliberately NOT banned here: standalone Email / Status / Notification. `Status`
+# is a legitimate <th> column header (deliveries_list.ex ~106); a blanket noun ban
+# goes permanently false-red. Those domain-noun rules are POSITIVE render
+# assertions in voice_test.exs (Plan 01), never a ban grep (D-12).
+#
+# Doc-heredoc bodies are stripped before grepping: components.ex's @moduledoc
+# names the banned phrases in prose to document the ban itself. Those mentions are
+# documentation, not rendered copy, so an awk pass drops @doc/@moduledoc heredoc
+# bodies first; the .ex-only grep then runs on the remaining (code/copy) lines.
+voice_gate_hits=""
+while IFS= read -r ex_file; do
+  [[ -n "$ex_file" ]] || continue
+  stripped="$(
+    awk '
+      /^[[:space:]]*@(module)?doc[[:space:]]*"""[[:space:]]*$/ { indoc=1; next }
+      indoc && /^[[:space:]]*"""[[:space:]]*$/ { indoc=0; next }
+      indoc { next }
+      { print }
+    ' "$ex_file"
+  )"
+  hits="$(printf '%s\n' "$stripped" | grep -nEi '(^|[^a-z])(oops|whoops|uh oh|something went wrong)' || true)"
+  if [[ -n "$hits" ]]; then
+    voice_gate_hits+="${ex_file}:"$'\n'"${hits}"$'\n'
+  fi
+done < <(grep -rl '' "$LIB" --include="*.ex" 2>/dev/null || true)
+if [[ -n "$voice_gate_hits" ]]; then
+  printf '%s' "$voice_gate_hits"
+  echo "FAIL: VOICE-GATE — banned Oops-class phrase found in admin copy (.ex only); use cause-naming recovery copy (COPY-LD-07)" >&2
+  errors=$((errors + 1))
+fi
+
 # RADIUS-GATE: raw radius scale or arbitrary radius utilities.
 # Allow semantic rounded-box / rounded-field and intentional rounded-full
 # indicators; reject Tailwind scale/arbitrary radius values.
@@ -356,8 +402,29 @@ fi
 # SIZE-GATE: arbitrary size and spacing utilities.
 # Fixed sizes and spacing must use the 4px grid or semantic tokens; arbitrary
 # bracket utilities make the gate unable to reason about token discipline.
-if grep -rEn '\b(?:w|h|min-w|max-w|min-h|max-h|p[trblxy]?|m[trblxy]?|gap|space-[xy])-\[[^]]+\]' "$LIB" --include="*.ex" 2>/dev/null; then
-  echo "FAIL: SIZE-GATE — arbitrary size/spacing utility found (use token/grid utilities)" >&2
+#
+# Carve-out: viewport-relative max-height / min-height (max-h-[90vh], min-h-[…dvh],
+# etc.) is the idiomatic, token-less way to cap an overlay panel against the
+# viewport — there is no 4px-grid token for "90% of viewport height", and the
+# cap is what gives the Phase-115 modal `overflow-y-auto` + `mg-overscroll-contain`
+# scroll-chaining guard (D-04, FLOW-03) something to scroll. The exclusion is
+# applied as a second pass that drops ONLY arbitrary max-h/min-h tokens whose
+# value is a bare viewport unit (vh/svh/lvh/dvh/vw/svw/lvw/dvw/vmin/vmax); any
+# other arbitrary size/spacing bracket on the same line still trips the gate
+# because the broad first-pass match re-fires on the residual tokens. (grep here
+# is ugrep in -E/POSIX mode, which rejects PCRE lookahead — hence the two-pass
+# strip-then-rematch rather than a single negative-lookahead pattern.)
+size_gate_raw="$(grep -rEn '\b(w|h|min-w|max-w|min-h|max-h|p[trblxy]?|m[trblxy]?|gap|space-[xy])-\[[^]]+\]' "$LIB" --include="*.ex" 2>/dev/null || true)"
+# Strip the allowed viewport-relative max-h/min-h tokens, then re-check whether any
+# arbitrary size/spacing bracket survives on each line.
+size_gate_hits="$(
+  printf '%s\n' "$size_gate_raw" |
+    sed -E 's/(^|[^a-z-])(min-h|max-h)-\[[0-9.]+(vh|svh|lvh|dvh|vw|svw|lvw|dvw|vmin|vmax)\]/\1/g' |
+    grep -E '\b(w|h|min-w|max-w|min-h|max-h|p[trblxy]?|m[trblxy]?|gap|space-[xy])-\[[^]]+\]' || true
+)"
+if [[ -n "$size_gate_hits" ]]; then
+  printf '%s\n' "$size_gate_hits"
+  echo "FAIL: SIZE-GATE — arbitrary size/spacing utility found (use token/grid utilities; viewport-relative max-h/min-h excepted)" >&2
   errors=$((errors + 1))
 fi
 
@@ -391,6 +458,42 @@ fi
 if grep -rEn '\bease-in\b' "$LIB" --include="*.ex" 2>/dev/null | grep -v -- '--ease-symmetric' | grep -v 'ease-in-out' | grep -q .; then
   grep -rEn '\bease-in\b' "$LIB" --include="*.ex" 2>/dev/null | grep -v -- '--ease-symmetric' | grep -v 'ease-in-out'
   echo "FAIL: MOTION-GATE — stray ease-in found (ease-out only except --ease-symmetric, MOTION-LD-01)" >&2
+  errors=$((errors + 1))
+fi
+#
+# Part 3 — origin-aware overlays POSITIVE check (FLOW-03 / D-07/D-09).
+# The `.motion-overlay` rule in app.css must declare `transform-origin: var(--mg-origin`
+# so header-anchored overlays/toasts can re-parameterize the existing scale(0.98→1)
+# from an author-declared origin while centered modals fall back to `center`. This adds
+# NO new animated property (MOTION-LD-04/10 compliant). Comment lines are filtered
+# (drop CSS block-comment bodies: lines starting with `*` or `/*`) so the explanatory
+# prose above the rule — which mentions `--mg-origin` in an inline-style example —
+# cannot self-satisfy or self-invalidate the gate; only a real declaration counts.
+[[ -f "$APP_CSS" ]] || { echo "FAIL: MOTION-GATE — app.css not found at $APP_CSS" >&2; exit 2; }
+if ! grep -E 'transform-origin:[[:space:]]*var\(--mg-origin' "$APP_CSS" 2>/dev/null \
+     | grep -vE '^[[:space:]]*(\*|/\*)' \
+     | grep -q .; then
+  echo "FAIL: MOTION-GATE — .motion-overlay must declare transform-origin: var(--mg-origin (origin-aware overlays, D-07)" >&2
+  errors=$((errors + 1))
+fi
+#
+# Part 4 — theme-switch-never-animates NEGATIVE check (FLOW-03 / D-08/D-09).
+# Inverted default: theme-driven chrome must NOT carry an always-on color transition,
+# because the LiveView theme swap is a server-side root re-render and a `transition-colors`
+# there would flash an animated color change on every theme switch. Scope the grep
+# NARROWLY to the theme_picker/1 function body only (extracted via awk from `def theme_picker(`
+# to its matching `end`) so legitimate state-layer `transition-colors` elsewhere
+# (nav_link/nav_pill hover/focus layers) are NOT flagged. The label's interactive state
+# layer opts in via theme_option_class/2, not an always-on class on the label itself.
+theme_picker_body="$(
+  awk '
+    /^[[:space:]]*def[[:space:]]+theme_picker\(/ { inblk=1 }
+    inblk { print }
+    inblk && /^[[:space:]]*end[[:space:]]*$/ { exit }
+  ' "$COMPONENTS" 2>/dev/null || true
+)"
+if printf '%s\n' "$theme_picker_body" | grep -q 'transition-colors'; then
+  echo "FAIL: MOTION-GATE — theme-driven chrome must not animate color (state-layer opt-in only, D-08)" >&2
   errors=$((errors + 1))
 fi
 
