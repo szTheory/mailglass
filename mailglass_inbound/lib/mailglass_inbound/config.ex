@@ -109,7 +109,7 @@ defmodule MailglassInbound.Config do
   @doc """
   Returns the validated retention windows as a keyword list with every class
   present (defaults merged over any configured overrides), CLAMPED to satisfy the
-  FK-lineage invariant (CR-02).
+  FK-lineage invariant.
 
   The inbound prune deletes child-first against `on_delete: :nothing` FKs, so a
   parent window can never be shorter than a child that references it. This

@@ -1,7 +1,7 @@
 defmodule Mailglass.PubSub.Topics do
   @moduledoc """
   Typed topic builder for `Mailglass.PubSub` (SEN, ). Every topic
-  is prefixed `mailglass:` —  `LINT-06 PrefixedPubSubTopics`
+  is prefixed `mailglass:` —  `PrefixedPubSubTopics`
   enforces the prefix at lint time.
 
   ## Topics emitted

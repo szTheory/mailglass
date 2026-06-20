@@ -22,10 +22,10 @@ defmodule MailglassInbound.RateLimiter.TableOwner do
   acceptable per the design contract: "rate-limit state is not load-bearing across crashes."
   Worst case is 1 minute of burst allowance until refill restarts.
 
-  ## LIB-05 note
+  ## Reserved-singleton note
 
   This module uses `name: __MODULE__`. It is library-internal machinery (not a
-  user-facing singleton) and is the documented LINT-07/LIB-05 reserved-singleton
+  user-facing singleton) and is the documented reserved-singleton
   exception, mirroring `Mailglass.RateLimiter.TableOwner`. The inbound ETS table
   must be a process-stable named table so the limiter hot path can reach it
   without a registry lookup.

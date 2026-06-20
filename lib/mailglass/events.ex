@@ -15,7 +15,7 @@ defmodule Mailglass.Events do
     an event alongside a Delivery insert or projection update.
     Returns an enriched `%Ecto.Multi{}`.
 
-  ## Idempotency (PERSIST-03, MAIL-03 prevention)
+  ## Idempotency
 
   When `attrs` carries an `:idempotency_key`, both paths use the
   partial-unique-index conflict target:

@@ -1,7 +1,7 @@
 defmodule MailglassInbound.Internal.Doctor do
   @moduledoc """
   DNS-free pre-deploy config check runner for `mix mailglass.inbound.doctor`
-  (IOPS-01, MIME-03). All checks are pure reflection — no DB, no DNS, no network
+  All checks are pure reflection — no DB, no DNS, no network
   — so the doctor is fast, offline, and CI-friendly (the design contract).
 
   `run/1` returns `%{summary: %{pass, warn, fail, cannot_diagnose}, findings: [...]}`
@@ -17,7 +17,7 @@ defmodule MailglassInbound.Internal.Doctor do
     * provider signing keys are PRESENT (reads the same `:mailglass_inbound` config
       the plug reads — NEVER verifies a signature; the finding text says so);
     * MIME backend availability + version via `Mailglass.OptionalDeps.GenSmtp`
-      (MIME-03, no bare optional-dep reference);
+      (no bare optional-dep reference);
     * route-conflict detection REUSING `MailglassInbound.Router.Matcher.matches_route?/2`
       (the design contract): structural subsumption (broad-before-narrow) -> `:fail`,
       witness-probe shadow -> `:fail`, regex-vs-regex overlap -> `:warn`. Conflict

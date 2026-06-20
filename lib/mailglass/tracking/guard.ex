@@ -2,7 +2,7 @@ defmodule Mailglass.Tracking.Guard do
   @moduledoc """
   Runtime auth-stream tracking guard.
 
-  **Dual enforcement with  `TRACK-02 NoTrackingOnAuthStream`**:
+  **Dual enforcement with  `NoTrackingOnAuthStream`**:
 
   - Compile-time:  Credo catches most cases via AST inspection of
     `@mailglass_opts` + mailable function names.
@@ -31,7 +31,7 @@ defmodule Mailglass.Tracking.Guard do
   ## nil mailable_function (T-3-04-01)
 
   When `mailable_function` is `nil`, the guard returns `:ok` — it cannot perform
-  the heuristic without a function name.  Credo `TRACK-02` is the primary
+  the heuristic without a function name.  the Credo check is the primary
   enforcement for this case via compile-time AST inspection.
   """
 

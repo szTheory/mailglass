@@ -38,7 +38,7 @@ defmodule Mailglass.OptionalDeps.GenSmtp do
     mandatory `{:encoding, :none}` opt skips iconv entirely.
 
   A rescue-only wrapper would let the `throw` and `:exit` mechanisms escape,
-  so all three are load-bearing for the never-raise contract (`MIME-04`).
+  so all three are load-bearing for the never-raise contract.
   """
 
   @compile {:no_warn_undefined, [:gen_smtp_client, :mimemail]}
@@ -50,7 +50,7 @@ defmodule Mailglass.OptionalDeps.GenSmtp do
   whole; `:mimemail` (the MIME parser used by `decode/2`) is a distinct module
   from the same Hex package and is NOT probed here. A partial install where
   `:gen_smtp_client` loads but `:mimemail` does not falls through to `decode/2`'s
-  `:undef` rescue rather than being caught by this predicate (IN-01).
+  `:undef` rescue rather than being caught by this predicate.
   """
   @doc since: "0.1.0"
   @spec available?() :: boolean()

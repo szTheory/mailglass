@@ -13,12 +13,12 @@ defmodule Mix.Tasks.Mailglass.Inbound.Doctor do
 
   @moduledoc since: "0.2.0"
   @moduledoc """
-  Run DNS-free pre-deploy configuration checks for inbound mail (IOPS-01).
+  Run DNS-free pre-deploy configuration checks for inbound mail.
 
   Mirrors `mix mail.doctor` but is entirely offline: it reflects your configured
   inbound router and validates routes (compile + don't conflict), mailboxes (exist
   + implement `process/1`), provider signing-key PRESENCE (never verifies a
-  signature), and MIME-backend availability (MIME-03).
+  signature), and MIME-backend availability.
 
   ## Usage
 

@@ -10,7 +10,7 @@ defmodule Mailglass.Compliance do
     * `Mailglass-Mailable` — `"Module.function/arity"`; injected if absent.
 
   Full RFC 8058 `List-Unsubscribe` + `List-Unsubscribe-Post` lands in v0.5
-  (DELIV-01). `Feedback-ID` gets its full shape once tenant-scoped streams land
+  `Feedback-ID` gets its full shape once tenant-scoped streams land
   in .
 
   ## Invariant

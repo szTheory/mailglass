@@ -1,6 +1,6 @@
 defmodule MailglassAdmin.Inbound.RoutingTrace do
   @moduledoc """
-  Routing-trace card (IADM-04) — the one novel inbound surface.
+  Routing-trace card — the one novel inbound surface.
 
   Answers "why did this message not match any mailbox?" without an `iex` session,
   by rendering a per-route clause diff for a `:no_match` record. This component is

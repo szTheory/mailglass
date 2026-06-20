@@ -1,6 +1,6 @@
 defmodule Mailglass.TestAssertions do
   @moduledoc """
-  Test assertions extending Swoosh.TestAssertions (TEST-01, ).
+  Test assertions extending Swoosh.TestAssertions.
 
   Lives in `lib/` (not `test/support/`) because it's exported for
   adopter consumption. Adopters `import Mailglass.TestAssertions` in

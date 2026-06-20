@@ -1,6 +1,6 @@
 defmodule MailglassAdmin.PreviewLive do
   @moduledoc """
-  The single dev-preview LiveView surface (PREV-03..PREV-05).
+  The single dev-preview LiveView surface.
 
   Mounted by `MailglassAdmin.Router.mailglass_admin_routes/2`. Two live
   actions:

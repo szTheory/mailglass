@@ -1,6 +1,6 @@
 defmodule MailglassAdmin.Inbound.EvidenceCard do
   @moduledoc """
-  Evidence card (IADM-02 raw half) — raw provider source, default-redacted.
+  Evidence card (raw half) — raw provider source, default-redacted.
 
   NET-NEW chrome reuse. PII handling is determined by the schema: `raw_payload`
   and `raw_mime` are `redact: true` on `MailglassInbound.InboundRecords.InboundEvidence`

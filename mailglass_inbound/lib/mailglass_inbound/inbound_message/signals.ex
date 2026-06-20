@@ -14,7 +14,7 @@ defmodule MailglassInbound.InboundMessage.Signals do
   Every field is enumerated, defaulted, and non-nil. Today the only signal is:
 
     * `:suppression_flagged` — `true` when the message's first `from` address is
-      on the tenant's suppression list at receipt time (IOPS-05). It is a
+      on the tenant's suppression list at receipt time. It is a
       diagnostic signal only: there is no auto-bounce and no auto-suppression
       (the design contract). The adopter decides whether to reject, ignore, or process.
 

@@ -1,7 +1,7 @@
 defmodule MailglassInbound.Fixtures do
   @moduledoc since: "0.2.0"
   @moduledoc """
-  Code-built inbound payload fixtures for adopter tests (ITEST-07).
+  Code-built inbound payload fixtures for adopter tests.
 
   `MailglassInbound.Fixtures` builds a canonical `%MailglassInbound.InboundMessage{}`
   and raw provider payloads — Postmark JSON, SendGrid form-encoded MIME, Mailgun

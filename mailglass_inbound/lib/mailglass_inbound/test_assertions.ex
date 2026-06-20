@@ -1,7 +1,7 @@
 defmodule MailglassInbound.TestAssertions do
   @moduledoc since: "0.2.0"
   @moduledoc """
-  Inbound test assertions (ITEST-01..04) — the inbound mirror of
+  Inbound test assertions — the inbound mirror of
   `Mailglass.TestAssertions`.
 
   Adopters `import MailglassInbound.TestAssertions` (or `use` the
@@ -32,7 +32,7 @@ defmodule MailglassInbound.TestAssertions do
   `:envelope_recipient`. `:from`/`:to` match against the address-shaped lists
   (`[%{address: ...}]`). Any other key flunks with a clear message.
 
-  ## Outcome assertions (ITEST-02)
+  ## Outcome assertions
 
   `assert_inbound_accepted/0`, `_ignored/0`, `_rejected/0`, `_bounced/0` key off
   the persisted `ExecutionRun.outcome` enum carried by the captured
@@ -41,13 +41,13 @@ defmodule MailglassInbound.TestAssertions do
   to that enum in `Execution.execute/2`, so the assertion can never drift from
   what was written.
 
-  ## Routing assertions (ITEST-03)
+  ## Routing assertions
 
   `assert_inbound_routed_to/1` matches the captured route
   `%{status: :matched, mailbox: ^expected}`; `assert_inbound_no_match/0` matches
   `%{status: :no_match}`.
 
-  ## Negative assertion (ITEST-04)
+  ## Negative assertion
 
   `assert_no_inbound_received/0` refutes any captured `{:inbound, …}` tuple.
 

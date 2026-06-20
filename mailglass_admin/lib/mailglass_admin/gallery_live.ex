@@ -15,39 +15,39 @@ defmodule MailglassAdmin.GalleryLive do
 
   ## Coverage
 
-  STATE-LD-01: icon
-  STATE-LD-02: logo
-  STATE-LD-03: flash (error, info, success, warning kinds)
-  STATE-LD-04: badge (warning, stub)
-  STATE-LD-05: status_badge (22 atoms + phantom nil)
-  STATE-LD-06: nav_link, nav_pill (active, inactive, hover-ready,
-  focus-visible, disabled, long-label)
-  STATE-LD-07: tenant_chip (with-tenant, no-tenant, long-tenant,
-  non-ascii-tenant)
-  STATE-LD-08: theme_picker (system-selected, light-selected, dark-selected,
-  hover-ready, focus-visible, disabled)
-  Phase 110: stat_card (neutral, info, success, warning, error, empty,
-  loading, unavailable, long-label, long-value)
-  STATE-LD-09: orientation_strip (deliveries, inbound, preview)
-  STATE-LD-10: shell is the full page layout — not a gallery specimen
-  STATE-LD-11: deliveries_list (populated-unselected, populated-selected, empty)
-  STATE-LD-12: detail_header (shown, absent) — operator variant only
-  STATE-LD-13: filters_form (empty, filled) — static assigns, no phx-submit
-  Phase 111: filter_field (text-empty, select-filled, invalid, disabled,
-  readonly-text, readonly-select-display, section)
-  Phase 111: filters_form (empty, filled, invalid) — static assigns, no phx-submit
-  STATE-LD-14: support_cards (tier1-shown, tier1-hidden)
-  STATE-LD-15: suppression_card (present, absent)
-  STATE-LD-16: timeline (populated, highlighted-event, empty)
-  STATE-LD-17: replay_modal (closed) — open states require live event
-  STATE-LD-18: routing_trace (empty, all-passing, first-failing)
-  STATE-LD-19: evidence_card (no-evidence, redacted, revealed, denied)
-  STATE-LD-20: device_frame (inactive-btn)
-  STATE-LD-21: tabs (inactive-tab)
-  STATE-LD-22: sidebar (mailable-collapsed, mailable-expanded, scenario-active)
-  Phase 113: data_state (empty, error, permission-denied, stale)
-  Phase 113: deliveries_list-table (populated table/cards, data-state, long-value stress)
-  Phase 113: records_list-table (populated table/cards, data-state, long-value stress)
+  - icon
+  - logo
+  - flash (error, info, success, warning kinds)
+  - badge (warning, stub)
+  - status_badge (22 atoms + phantom nil)
+  - nav_link, nav_pill (active, inactive, hover-ready,
+    focus-visible, disabled, long-label)
+  - tenant_chip (with-tenant, no-tenant, long-tenant,
+    non-ascii-tenant)
+  - theme_picker (system-selected, light-selected, dark-selected,
+    hover-ready, focus-visible, disabled)
+  - stat_card (neutral, info, success, warning, error, empty,
+    loading, unavailable, long-label, long-value)
+  - orientation_strip (deliveries, inbound, preview)
+  - shell is the full page layout — not a gallery specimen
+  - deliveries_list (populated-unselected, populated-selected, empty)
+  - detail_header (shown, absent) — operator variant only
+  - filters_form (empty, filled) — static assigns, no phx-submit
+  - filter_field (text-empty, select-filled, invalid, disabled,
+    readonly-text, readonly-select-display, section)
+  - filters_form (empty, filled, invalid) — static assigns, no phx-submit
+  - support_cards (tier1-shown, tier1-hidden)
+  - suppression_card (present, absent)
+  - timeline (populated, highlighted-event, empty)
+  - replay_modal (closed) — open states require live event
+  - routing_trace (empty, all-passing, first-failing)
+  - evidence_card (no-evidence, redacted, revealed, denied)
+  - device_frame (inactive-btn)
+  - tabs (inactive-tab)
+  - sidebar (mailable-collapsed, mailable-expanded, scenario-active)
+  - data_state (empty, error, permission-denied, stale)
+  - deliveries_list-table (populated table/cards, data-state, long-value stress)
+  - records_list-table (populated table/cards, data-state, long-value stress)
 
   Boundary classification: submodule auto-classifies into the
   `MailglassAdmin` root boundary.

@@ -5,7 +5,7 @@ defmodule Mailglass.OptionalDeps.Mjml do
   `:mjml` is the Hex package name (a Rust NIF binding to the `mrml` crate).
   The Elixir module it provides is `Mjml` — note the `:mjml` vs `:mrml`
   distinction called out in `STACK.md`. Used by `Mailglass.TemplateEngine.MJML`
-  when adopters opt into MJML as an alternate rendering path (AUTHOR-05).
+  when adopters opt into MJML as an alternate rendering path.
 
   HEEx is the default `Mailglass.TemplateEngine` ( project-level); MJML is
   strictly opt-in. When `:mjml` is absent and an adopter configures the MJML

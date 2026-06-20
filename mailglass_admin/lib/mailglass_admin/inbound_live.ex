@@ -1,7 +1,7 @@
 defmodule MailglassAdmin.InboundLive do
   @moduledoc """
   Read-only operator dashboard for recent inbound records, execution lineage,
-  and routing reflection (IADM-01/02/07).
+  and routing reflection.
 
   Sibling of `MailglassAdmin.OperatorLive` (clone, not a refactor). The
   screen keeps filter and selection state in URL params so refresh, back/forward

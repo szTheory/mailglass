@@ -1,6 +1,6 @@
 defmodule Mailglass.Webhook.Ingest do
   @moduledoc """
-  Webhook ingest — the single `Ecto.Multi` that HOOK-06 reduces to.
+  Webhook ingest — the single `Ecto.Multi` that everything reduces to.
 
   `Mailglass.Webhook.Plug` calls `ingest_multi/3` after signature
   verification + tenant resolution pass. One transaction writes:
@@ -12,7 +12,7 @@ defmodule Mailglass.Webhook.Ingest do
        orphans skip the projector step per Pitfall 4)
     4. Status flip on the webhook_event row to `:succeeded`
 
-  ## Composition (CONTEXT  amended HOOK-06)
+  ## Composition
 
   Inside `Mailglass.Repo.transact/1`:
 

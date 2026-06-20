@@ -7,7 +7,7 @@ defmodule Mailglass.Webhook.WebhookEvent do
   Stores raw webhook payloads from Postmark + SendGrid for:
 
     * **Idempotency:** UNIQUE `(provider, provider_event_id)` defends
-      against replay ( + PITFALLS MAIL-03). -06's
+      against replay. The
       `Mailglass.Webhook.Ingest.ingest_multi/3` inserts with
       `on_conflict: :nothing, conflict_target: [:provider, :provider_event_id]`
       — a replay is a no-op SELECT-by-index, not an INSERT.

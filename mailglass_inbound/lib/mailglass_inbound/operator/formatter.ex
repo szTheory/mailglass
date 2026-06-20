@@ -7,7 +7,7 @@ defmodule MailglassInbound.Operator.Formatter do
   `%{check, status, title, observed, remediation, evidence}` (no `:why_it_matters`,
   no `:area`). The summary line is `"N pass, N warn, N fail"`, plus a trailing
   `", N cannot diagnose"` only when the summary carries a non-zero
-  `:cannot_diagnose` count (WR-04 — a cannot-diagnose state is a distinct
+  `:cannot_diagnose` count (a cannot-diagnose state is a distinct
   disposition from a failed check, so it is no longer folded into the `fail`
   tally). It also still drives the doctor's exit code (2).
 

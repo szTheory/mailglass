@@ -105,7 +105,7 @@ if Code.ensure_loaded?(MailglassInbound) do
       apply(MailglassInbound.Internal.Operator.Detail, :fetch, [filters, opts])
     end
 
-    @doc "Per-clause routing-trace verdicts for a route against a message (IADM-04)."
+    @doc "Per-clause routing-trace verdicts for a route against a message."
     @doc since: "0.2.0"
     @spec explain(struct(), struct()) :: [tuple()]
     def explain(route, message) do
@@ -113,7 +113,7 @@ if Code.ensure_loaded?(MailglassInbound) do
     end
 
     @doc """
-    Builds the per-route routing-trace for one inbound record (IADM-04).
+    Builds the per-route routing-trace for one inbound record.
 
     Reflects the adopter's declared routes from `router_module` via
     `__mailglass_inbound_routes__/0` (in declared order), reconstructs the

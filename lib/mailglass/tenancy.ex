@@ -34,7 +34,7 @@ defmodule Mailglass.Tenancy do
         {:cont, socket}
       end
 
-  Documented in `guides/multi-tenancy.md` ( DOCS-02).
+  Documented in `guides/multi-tenancy.md`.
   """
 
   @callback scope(queryable :: Ecto.Queryable.t(), context :: term()) :: Ecto.Queryable.t()
@@ -276,7 +276,7 @@ defmodule Mailglass.Tenancy do
   Emits an audit breadcrumb when a call intentionally opts into
   `scope: :unscoped` access.
 
-  This keeps the bypass path explicit and machine-searchable for TENANT-03
+  This keeps the bypass path explicit and machine-searchable
   reviews.
   """
   @doc since: "0.1.0"

@@ -16,12 +16,12 @@ defmodule Mailglass.Renderer do
 
   ## Performance Target
 
-  < 50ms end-to-end for a typical template (AUTHOR-03).
+  < 50ms end-to-end for a typical template.
 
   ## Boundary
 
   `Mailglass.Renderer` cannot depend on `Mailglass.Outbound`, `Mailglass.Repo`,
-  or any process. This is enforced by the `:boundary` compiler (CORE-07).
+  or any process. This is enforced by the `:boundary` compiler.
   """
 
   # Renderer is the first sub-boundary under the flat `Mailglass` root

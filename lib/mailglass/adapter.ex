@@ -1,6 +1,6 @@
 defmodule Mailglass.Adapter do
   @moduledoc """
-  Behaviour every mailglass adapter implements (TRANS-01).
+  Behaviour every mailglass adapter implements.
 
   Return shape is locked in `docs/api_stability.md` §Adapter. Changes to
   the callback signature are semver-breaking.
@@ -19,9 +19,9 @@ defmodule Mailglass.Adapter do
 
   ## Adapters in this repo
 
-  - `Mailglass.Adapters.Fake` (TRANS-02) — in-memory, Swoosh.Sandbox-style
+  - `Mailglass.Adapters.Fake` — in-memory, Swoosh.Sandbox-style
     ownership. The merge-blocking release gate.
-  - `Mailglass.Adapters.Swoosh` (TRANS-03) — wraps any `Swoosh.Adapter`
+  - `Mailglass.Adapters.Swoosh` — wraps any `Swoosh.Adapter`
     (Postmark, SendGrid, Mailgun, SES, Resend, SMTP). Normalizes errors
     into `%Mailglass.SendError{}`.
 

@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   ## Pre-publish checks (in order)
 
     1. Installer goldens — asserts installer manifest has not drifted from
-       the committed snapshot (mailglass package only; REL-04). Fails fast
+       the committed snapshot (mailglass package only). Fails fast
        before the slower tarball build.
     2. Build and unpack tarball
     3. Compare allowlist

@@ -4,10 +4,10 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   Renders a semantic `<table>` at >=768px and a `<ul>` of card buttons at <768px,
   both driven from the same `@deliveries` assign with identical selection semantics,
-  result-count, and pagination (DATA-01).
+  result-count, and pagination.
 
   Data-state branches render four distinct `Components.data_state/1` kinds when
-  there is no row data to show (DATA-03). The four branches are:
+  there is no row data to show. The four branches are:
 
     * `:empty` — no records (no-data / filtered distinction preserved)
     * `:error` — data unavailable
@@ -16,7 +16,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   Status is always rendered via `Components.status_badge/1`. Recipients are always
   masked via `Components.mask_recipient/1`. Long values use per-field classes from
-  the DATA-05 table (truncate+title for IDs, whitespace-nowrap for timestamps).
+  the deliveries table (truncate+title for IDs, whitespace-nowrap for timestamps).
   """
 
   use Phoenix.Component

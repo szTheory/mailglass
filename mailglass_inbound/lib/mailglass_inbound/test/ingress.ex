@@ -1,7 +1,7 @@
 defmodule MailglassInbound.Test.Ingress do
   @moduledoc since: "0.2.0"
   @moduledoc """
-  The inbound test driver (ITEST-06): drives the **real** synchronous
+  The inbound test driver: drives the **real** synchronous
   persist + route + execute write path and captures the outcome in the
   current test process's mailbox.
 

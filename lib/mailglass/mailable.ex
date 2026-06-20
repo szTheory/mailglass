@@ -1,6 +1,6 @@
 defmodule Mailglass.Mailable do
   @moduledoc """
-  Behaviour + `use` macro for adopter-defined mailable modules (AUTHOR-01).
+  Behaviour + `use` macro for adopter-defined mailable modules.
 
   ## Usage
 
@@ -28,8 +28,8 @@ defmodule Mailglass.Mailable do
   - `:stream` — `:transactional | :operational | :bulk` (default
     `:transactional`). Compile-time known;  LINT-checks read via AST.
   - `:tracking` — `[opens: boolean, clicks: boolean]` (default all false).
-    Off by default (TRACK-01 /  project-level). 
-    `TRACK-02 NoTrackingOnAuthStream` enforces at compile time; 
+    Off by default (project-level). 
+    `NoTrackingOnAuthStream` enforces at compile time; 
     `Mailglass.Tracking.Guard.assert_safe!/1` enforces at runtime.
   - `:from_default` — `{name, address}` tuple for the `from` header. Applied
     at `new/0` time; per-call `Swoosh.Email.from/2` overrides.
@@ -57,7 +57,7 @@ defmodule Mailglass.Mailable do
    admin preview calls `Mailglass.Renderer.render/1` directly on the
   already-built `%Message{}`; no template resolution happens at render time.
 
-  ## Injection budget (LINT-05, )
+  ## Injection budget
 
   The `__using__/1` macro injects ≤20 top-level AST forms (target: 15). 
   `NoOversizedUseInjection` enforces; a runtime AST-counting test in this
@@ -117,8 +117,8 @@ defmodule Mailglass.Mailable do
   # ---------------------------------------------------------------------------
 
   @doc """
-  Injects the mailable boilerplate. ≤20 top-level AST forms (LINT-05 enforces
-  at ).
+  Injects the mailable boilerplate. ≤20 top-level AST forms (a lint check
+  enforces this budget).
   """
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do

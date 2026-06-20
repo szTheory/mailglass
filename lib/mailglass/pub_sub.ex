@@ -10,7 +10,7 @@ defmodule Mailglass.PubSub do
   ## Topics
 
   See `Mailglass.PubSub.Topics` — a typed builder producing
-  `mailglass:`-prefixed binaries.  `LINT-06 PrefixedPubSubTopics`
+  `mailglass:`-prefixed binaries.  `PrefixedPubSubTopics`
   enforces the prefix at lint time.
   """
 end

@@ -50,7 +50,7 @@ defmodule MailglassInbound.S3Fetcher.Fake do
 
   @doc """
   Configures an `{:error, :s3_object_not_ready}` response for the first `n` calls,
-  then `{:ok, body}` for every call after — the SESI-05 bounded-retry path.
+  then `{:ok, body}` for every call after — the bounded-retry path.
   """
   @spec put_error_then_ok(String.t(), String.t(), non_neg_integer(), binary()) :: :ok
   def put_error_then_ok(bucket, key, n, body)

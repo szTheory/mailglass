@@ -21,7 +21,7 @@ defmodule MailglassInbound.MIMEError do
     failure (`{:error, _}` / `{:throw, _}` / `{:exit, _}`); `:context` carries
     non-PII metadata such as `%{byte_size: n}`.
   - `:gen_smtp_unavailable` — the optional `gen_smtp` dependency is not loaded,
-    so MIME parsing is unavailable (degraded fallback, MIME-02).
+    so MIME parsing is unavailable (degraded fallback).
 
   See `docs/api_stability.md` for the locked `:type` atom set. Adding a value
   requires a CHANGELOG entry + `@since` annotation (minor version bump);

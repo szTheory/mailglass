@@ -1,8 +1,8 @@
 if Code.ensure_loaded?(Oban.Worker) do
   defmodule MailglassInbound.Prune.Worker do
     @moduledoc """
-    Optional Oban cron worker that runs the inbound retention sweep (IOPS-03,
-    the design contract). The batched workhorse lives in `MailglassInbound.Internal.Prune`;
+    Optional Oban cron worker that runs the inbound retention sweep. The
+    batched workhorse lives in `MailglassInbound.Internal.Prune`;
     this worker's `perform/1` just delegates to `prune/0`.
 
     ## Optional-dep gating

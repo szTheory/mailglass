@@ -1,6 +1,6 @@
 defmodule MailglassInbound.RateLimiter do
   @moduledoc """
-  Inbound-local multi-bucket ETS token-bucket rate limiter (IOPS-04, the design contract).
+  Inbound-local multi-bucket ETS token-bucket rate limiter.
 
   Cloned from `Mailglass.RateLimiter` — the load-bearing `:ets.update_counter/4`
   refill math is copied verbatim. Adapted for inbound:

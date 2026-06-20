@@ -18,8 +18,8 @@ defmodule Mailglass.Adapters.Fake.Supervisor do
   ## api_stability.md note
 
   `Mailglass.Adapters.Fake.Storage` is a library-reserved GenServer name.
-  Adopters must not register a process under this name. (LINT-07 exception:
-  library-internal singleton per .)
+  Adopters must not register a process under this name (reserved
+  library-internal singleton).
   """
   use Supervisor
 

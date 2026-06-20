@@ -4,7 +4,7 @@ defmodule MailglassInbound.MIME do
 
   `parse/1` turns a canonical raw MIME body into a stable internal
   representation, or returns a structured `MailglassInbound.MIMEError`. It
-  **never raises** (`MIME-04`): the underlying gen_smtp `mimemail` decoder
+  **never raises**: the underlying gen_smtp `mimemail` decoder
   escapes through three mechanisms (`erlang:error`, `throw`, and
   `:exit`/`:undef` from iconv), all of which are absorbed by the
   `Mailglass.OptionalDeps.GenSmtp` gateway seam and translated into
@@ -22,7 +22,7 @@ defmodule MailglassInbound.MIME do
     `:context` carries `%{byte_size: byte_size(raw)}`.
   - `{:error, %MIMEError{type: :gen_smtp_unavailable}}` — the optional
     `gen_smtp` dependency is not loaded; MIME parsing is unavailable
-    (`MIME-02` degraded fallback).
+    (degraded fallback).
 
   > #### Note {: .info}
   >
@@ -118,7 +118,7 @@ defmodule MailglassInbound.MIME do
     (default `#{@default_max_depth}`). See the moduledoc note on what this
     guard does and does not bound.
   - `:gen_smtp_available?` — overrides the gateway availability check (testing
-    seam for the `MIME-02` degraded path). Defaults to
+    seam for the degraded path). Defaults to
     `Mailglass.OptionalDeps.GenSmtp.available?/0`.
   """
   @doc since: "0.2.0"

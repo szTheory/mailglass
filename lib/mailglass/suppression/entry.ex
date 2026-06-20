@@ -5,7 +5,7 @@ defmodule Mailglass.Suppression.Entry do
   ## Atom Sets (, , )
 
   - `:scope` — `:address | :domain | :address_stream`. NO default;
-    changeset `validate_required` enforces (MAIL-07 prevention).
+    changeset `validate_required` enforces this.
   - `:stream` — `:transactional | :operational | :bulk` (nullable;
     populated only when `scope = :address_stream`).
   - `:reason` — `:hard_bounce | :complaint | :unsubscribe | :manual |
@@ -72,7 +72,7 @@ defmodule Mailglass.Suppression.Entry do
 
   Enforces three invariants at the Elixir layer:
 
-  1. `:scope` is required with no default (MAIL-07 prevention — ).
+  1. `:scope` is required with no default.
   2. Scope/stream coupling via `validate_scope_stream_coupling/1`.
   3. Address normalization via `downcase_address/1` — belt-and-suspenders
      with the underlying `CITEXT` column.

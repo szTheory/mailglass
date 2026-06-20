@@ -28,8 +28,8 @@ defmodule Mailglass.Message do
     `:welcome`, `:password_reset`). Populated by the `use Mailglass.Mailable`
     macro's injected builder. Used by the runtime auth-stream tracking
     guard. Default: `nil`.
-  - `:tenant_id` — multi-tenant scope. Carried on every record (CORE-03, 
-    project-level). `nil` in single-tenant mode.
+  - `:tenant_id` — multi-tenant scope. Carried on every record
+    (project-level). `nil` in single-tenant mode.
   - `:stream` — message stream: `:transactional`, `:operational`, or `:bulk`.
     Auth and security emails must use `:transactional` (no tracking, per 
     project-level). Default: `:transactional`.

@@ -3,7 +3,7 @@ defmodule Mailglass.IdempotencyKey do
   Generates deterministic idempotency keys for webhook deduplication and
   event-ledger entries.
 
-  Keys follow the format locked in CORE-05:
+  Keys follow this canonical format:
 
     * `for_webhook_event(provider, event_id)` → `"provider:event_id"`
     * `for_provider_message_id(provider, message_id)` → `"provider:msg:message_id"`
@@ -12,7 +12,7 @@ defmodule Mailglass.IdempotencyKey do
   disjoint so a webhook event id and a provider message id that happen to
   share a string value never collide in the `UNIQUE` partial index.
 
-  ## Sanitization (T-IDEMP-001)
+  ## Sanitization
 
   Keys are derived from provider-supplied strings that reach us across a
   trust boundary. Two normalization passes run on every key:

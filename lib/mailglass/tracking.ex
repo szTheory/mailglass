@@ -1,6 +1,6 @@
 defmodule Mailglass.Tracking do
   @moduledoc """
-  Tracking public facade. Off by default per TRACK-01 / .
+  Tracking public facade. Off by default.
 
   Adopters opt in per-mailable at compile time:
 
@@ -13,7 +13,7 @@ defmodule Mailglass.Tracking do
   ## Enforcement layers ( + )
 
   1. NimbleOptions default `false` in `use` opts.
-  2.  `TRACK-02 NoTrackingOnAuthStream` Credo check at compile time.
+  2.  `NoTrackingOnAuthStream` Credo check at compile time.
   3.  `Mailglass.Tracking.Guard.assert_safe!/1` at runtime.
 
   Adopters CAN disable tracking at runtime per-call via `tracking: false` opt
@@ -42,7 +42,7 @@ defmodule Mailglass.Tracking do
 
   Reads `module.__mailglass_opts__()` to inspect the compile-time `tracking:`
   opts. Returns `%{opens: false, clicks: false}` for modules that do not use
-  `Mailglass.Mailable` (off-by-default semantics, TRACK-01).
+  `Mailglass.Mailable` (off-by-default semantics).
 
   ## Examples
 
@@ -99,7 +99,7 @@ defmodule Mailglass.Tracking do
   @doc """
   Resolves the Phoenix.Token endpoint used to sign and verify tracking tokens.
 
-  Resolution order (HI-02 fix — identical chain in Rewriter and Plug):
+  Resolution order (identical chain in Rewriter and Plug):
   1. `config :mailglass, :tracking, endpoint: MyApp.Endpoint`
   2. `config :mailglass, :adapter_endpoint, MyApp.Endpoint`
   3. Raises `%Mailglass.ConfigError{type: :tracking_endpoint_missing}` if neither is set

@@ -1,10 +1,10 @@
 defmodule MailglassInbound.PubSub.Topics do
   @moduledoc since: "0.2.0"
   @moduledoc """
-  Typed topic builder for `mailglass_inbound` PubSub broadcasts (TELE-07, the design contract).
+  Typed topic builder for `mailglass_inbound` PubSub broadcasts.
 
   Mirrors `Mailglass.PubSub.Topics` in the core library: every topic is prefixed
-  `mailglass:` so this milestone phase `LINT-06 PrefixedPubSubTopics` enforces the namespace at
+  `mailglass:` so `PrefixedPubSubTopics` enforces the namespace at
   lint time. Broadcasts always go through this builder (never a literal topic
   string at the call site) — that is what keeps `PrefixedPubSubTopics`, which only
   flags literal string arguments, satisfied while still routing every inbound

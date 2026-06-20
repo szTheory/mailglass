@@ -1,6 +1,6 @@
 defmodule Mailglass.Adapters.Fake do
   @moduledoc """
-  In-memory, time-advanceable test adapter (TRANS-02, ..).
+  In-memory, time-advanceable test adapter.
 
   **The merge-blocking release gate.** Every PR runs the full
   pipeline against this adapter. Mirrors `Swoosh.Adapters.Sandbox`:

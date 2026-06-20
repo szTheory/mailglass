@@ -17,7 +17,7 @@ defmodule Mix.Tasks.MailglassAdmin.Assets.Build do
   those files to determine which utility classes to emit).
 
   CI runs this followed by `git diff --exit-code priv/static/` per
-  CONTEXT the design contract / PREV-06 — any drift between the committed bundle and
+  the design contract: any drift between the committed bundle and
   the bundle produced from the current source fails merge.
   """
 

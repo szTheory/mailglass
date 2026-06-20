@@ -3,7 +3,7 @@ defmodule Mailglass.Outbound do
   @compile {:no_warn_undefined, [Mailglass.Outbound.Worker]}
 
   @moduledoc """
-  Public facade for the mailglass send pipeline (TRANS-04, SEN).
+  Public facade for the mailglass send pipeline.
 
   All four delivery shapes (sync, async, batch, bang variants) converge
   on the same `%Mailglass.Outbound.Delivery{}` return object. Adopter code
@@ -176,7 +176,7 @@ defmodule Mailglass.Outbound do
   # =========================================================
 
   @doc """
-  Async batch send (TRANS-04). v0.1 scope: **async-only** — every
+  Async batch send. v0.1 scope: **async-only** — every
   message in the batch produces an Oban job (or Task.Supervisor spawn
   when Oban absent). Sync-batch fan-out deferred to v0.5.
 

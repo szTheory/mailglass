@@ -4,7 +4,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
   Renders a semantic `<table>` at >=768px and a `<ul>` of card buttons at <768px,
   both driven from the same `@records` assign with identical selection semantics,
-  result-count, and pagination (DATA-01).
+  result-count, and pagination.
 
   Sibling of `MailglassAdmin.Operator.DeliveriesList` (the design contract — clone, not a
   refactor). Rows render the masked envelope recipient via the one promoted
@@ -13,7 +13,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   `normalize_inbound_outcome/1`), and a meta line mailbox · tenant · provider · received_at.
 
   Data-state branches render four distinct `Components.data_state/1` kinds when
-  there is no row data to show (DATA-03). The four branches are:
+  there is no row data to show. The four branches are:
 
     * `:empty` — no records (no-data / filtered / no-tenant distinction preserved)
     * `:error` — data unavailable

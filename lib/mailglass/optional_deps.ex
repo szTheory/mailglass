@@ -9,7 +9,7 @@ defmodule Mailglass.OptionalDeps do
   dep is absent, so `mix compile --no-optional-deps --warnings-as-errors`
   stays green across the full matrix.
 
-  ## Pattern (CORE-06)
+  ## Pattern
 
   - **Compile-time:** `@compile {:no_warn_undefined, [Module.Name, ...]}` as
     the first declaration inside the gateway module, scoped to exactly the
@@ -25,7 +25,7 @@ defmodule Mailglass.OptionalDeps do
   - `Mailglass.OptionalDeps.OpenTelemetry` — gates `{:opentelemetry, "~> 1.7"}`.
     Adopter-owned bridge via `opentelemetry_telemetry`.
   - `Mailglass.OptionalDeps.Mjml` — gates `{:mjml, "~> 6.0"}` (Rust NIF). Used
-    by `Mailglass.TemplateEngine.MJML` when adopters opt into MJML (AUTHOR-05).
+    by `Mailglass.TemplateEngine.MJML` when adopters opt into MJML.
   - `Mailglass.OptionalDeps.GenSmtp` — gates `{:gen_smtp, "~> 1.3"}`. Used by
     `mailglass_inbound` for SMTP relay ingress (v0.5+).
   - `Mailglass.OptionalDeps.Sigra` — gates `{:sigra, "~> 0.2"}`. The module is

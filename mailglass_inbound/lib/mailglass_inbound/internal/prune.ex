@@ -1,7 +1,7 @@
 defmodule MailglassInbound.Internal.Prune do
   @moduledoc """
-  Oban-independent batched retention sweep for inbound tables (IOPS-03,
-  the design contract..30). This is the workhorse: `mix mailglass.inbound.prune` and the
+  Oban-independent batched retention sweep for inbound tables. This is the
+  workhorse: `mix mailglass.inbound.prune` and the
   optional `MailglassInbound.Prune.Worker` cron both call `prune/0`.
 
   Mirrors `Mailglass.Webhook.Pruner`'s STRUCTURE (`:infinity` disables a class,
@@ -26,7 +26,7 @@ defmodule MailglassInbound.Internal.Prune do
   Because the FKs are `:nothing`, a parent window can never be shorter than a child
   that references it, or the child-first sweep would leave a surviving child whose
   parent the next delete tries to remove — tripping a `foreign_key_violation`
-  (CR-02). `MailglassInbound.Config.retention/0` enforces this by clamping
+  `MailglassInbound.Config.retention/0` enforces this by clamping
   `evidence_days >= max(execution_runs_days, replay_runs_days)` and
   `records_days >= evidence_days`, so the default windows (evidence 90d, not the
   former 30d) never invert against `:fresh` runs aged 30-90 days.

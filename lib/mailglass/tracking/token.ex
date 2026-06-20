@@ -1,6 +1,6 @@
 defmodule Mailglass.Tracking.Token do
   @moduledoc """
-  Phoenix.Token-signed tokens for open pixel + click redirect URLs (TRACK-03, ..).
+  Phoenix.Token-signed tokens for open pixel + click redirect URLs.
 
   ## Token shape ( + )
 

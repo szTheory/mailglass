@@ -98,8 +98,8 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
 
   This gateway lives in `mailglass_inbound`, NOT core. `MailglassInbound`
   "keeps optional runtime integrations behind its own gateway surface instead of
-  reusing `Mailglass.OptionalDeps.*` across package boundaries." SESI-04's
-  literal wording `Mailglass.OptionalDeps.ExAwsS3` is an erratum — the consumer
+  reusing `Mailglass.OptionalDeps.*` across package boundaries." The original
+  spec's literal wording `Mailglass.OptionalDeps.ExAwsS3` is an erratum — the consumer
   (`S3Fetcher.ExAwsS3`) lives in inbound, and core's `NoBareOptionalDepReference`
   is scoped to `lib/mailglass/`. The `NoBareOptionalDepReference` Credo check
   gates `ExAws`/`ExAws.S3` to this module; bare references anywhere else in
@@ -115,7 +115,7 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
 
   The absent-dep case is tagged distinctly as
   `{:error, {:s3_fetch_failed, :ex_aws_unavailable}}` rather than collapsing to
-  the generic `:undef` rescue. This matters for the retry layer (WR-06): a
+  the generic `:undef` rescue. This matters for the retry layer: a
   `{:s3_fetch_failed, _}` reason is classified non-retryable by
   `MailglassInbound.S3Fetcher.Retry.retryable?/1`, so a dep-absent deployment
   fails fast on the FIRST attempt instead of burning the full retry budget and
@@ -142,7 +142,7 @@ defmodule MailglassInbound.OptionalDeps.ExAwsS3 do
   the caller extracts `:body`).
 
   When the optional dep is absent, returns
-  `{:error, {:s3_fetch_failed, :ex_aws_unavailable}}` (WR-06) — a non-retryable
+  `{:error, {:s3_fetch_failed, :ex_aws_unavailable}}` — a non-retryable
   config error the retry layer short-circuits on, distinct from a genuine
   transient AWS/HTTP failure.
 

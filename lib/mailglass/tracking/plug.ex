@@ -1,6 +1,6 @@
 defmodule Mailglass.Tracking.Plug do
   @moduledoc """
-  Mountable Plug endpoint for open-pixel + click-redirect URLs (TRACK-03).
+  Mountable Plug endpoint for open-pixel + click-redirect URLs.
 
   ## Mount
 

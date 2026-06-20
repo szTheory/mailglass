@@ -1,6 +1,6 @@
 defmodule Mailglass.RateLimiter do
   @moduledoc """
-  Multi-bucket ETS token bucket rate limiter (RATE-01).
+  Multi-bucket ETS token bucket rate limiter.
 
   Hot path is `:ets.update_counter/4` — no GenServer mailbox
   serialization. The `TableOwner` GenServer exists only to own the

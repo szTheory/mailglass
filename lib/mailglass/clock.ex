@@ -1,7 +1,7 @@
 defmodule Mailglass.Clock do
   @moduledoc """
-  The single legitimate source of wall-clock time in mailglass (TEST-05).
-   `LINT-12 NoDirectDateTimeNow` forbids `DateTime.utc_now/0`
+  The single legitimate source of wall-clock time in mailglass.
+   `NoDirectDateTimeNow` forbids `DateTime.utc_now/0`
   outside this module.
 
   ## Three-tier resolution

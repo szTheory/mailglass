@@ -67,13 +67,13 @@ defmodule MailglassInbound.Telemetry do
   `NoPiiInTelemetry` (extended to inbound in this plan) lints THIS module plus every
   caller against the forbidden-key set.
 
-  ## Handler isolation (TELE-05)
+  ## Handler isolation
 
   `:telemetry.span/3` wraps each attached handler in a try/catch. A handler that
   raises is detached automatically and `[:telemetry, :handler, :failure]` is
   emitted — the caller's inbound pipeline is unaffected. `mailglass_inbound` does
   **not** add a parallel try/rescue around business code (that would duplicate or,
-  worse, swallow the meta-event operators rely on). TELE-05 comes for free from
+  worse, swallow the meta-event operators rely on). This comes for free from
   routing every span through `:telemetry.span/3`.
   """
 
@@ -144,7 +144,7 @@ defmodule MailglassInbound.Telemetry do
 
   @doc """
   Wrap the post-verify rate-limit check in a
-  `[:mailglass_inbound, :ingress, :rate_limit, *]` span (IOPS-04, the design contract). The
+  `[:mailglass_inbound, :ingress, :rate_limit, *]` span. The
   rate limiter is an ingress-path event, so it lives under the `:ingress` domain
   (beside `:suppression_flag`) to satisfy the 4-segment event convention.
 
@@ -163,7 +163,7 @@ defmodule MailglassInbound.Telemetry do
 
   @doc """
   Wrap the inbound suppression-flag computation in a
-  `[:mailglass_inbound, :ingress, :suppression_flag, *]` span (IOPS-05, the design contract).
+  `[:mailglass_inbound, :ingress, :suppression_flag, *]` span.
   Consumed by this plan.
 
   Stop metadata SHOULD include `:flagged` (boolean), `:tenant_id`, `:provider` —
@@ -180,7 +180,7 @@ defmodule MailglassInbound.Telemetry do
 
   @doc """
   Wrap a retention prune sweep in a `[:mailglass_inbound, :prune, :sweep, *]`
-  span (IOPS-03, the design contract). Consumed by this plan. The `:sweep` resource segment
+  span. Consumed by this plan. The `:sweep` resource segment
   satisfies the 4-segment event convention.
 
   Stop metadata SHOULD include the per-table counts `:records_deleted`,

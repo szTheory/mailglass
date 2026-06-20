@@ -10,7 +10,7 @@ defmodule Mailglass.TemplateEngine do
 
       config :mailglass, renderer: [engine: Mailglass.TemplateEngine.MJML]
 
-  See AUTHOR-05 in REQUIREMENTS.md. The MJML implementation ships separately
+  The MJML implementation ships separately
   after the v0.1 release.
 
   ## Callbacks

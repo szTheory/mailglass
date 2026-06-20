@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
 
   @moduledoc since: "0.2.0"
   @moduledoc """
-  Replay previously-received inbound records through their mailboxes (IOPS-02).
+  Replay previously-received inbound records through their mailboxes.
 
   `--tenant <id>` is **required** — it is the cross-tenant replay guard (T-49-17):
   every record is loaded scoped to that tenant, so a foreign-tenant `--record-id`

@@ -1,6 +1,6 @@
 defmodule Mailglass.Adapters.Swoosh do
   @moduledoc """
-  Adapter bridging to any `Swoosh.Adapter` (TRANS-03).
+  Adapter bridging to any `Swoosh.Adapter`.
 
   Adopters configure their Swoosh adapter once and mailglass wraps it —
   they keep existing Postmark/SendGrid/Mailgun/SES/Resend/SMTP config.
@@ -9,7 +9,7 @@ defmodule Mailglass.Adapters.Swoosh do
 
   Pure: no DB, no PubSub, no `Process.put`. Caller's process owns the
   HTTP request via Swoosh's `:api_client` (adopter-supplied, typically
-  Finch). LIB-06 satisfied.
+  Finch).
 
   ## Configuration
 
@@ -33,16 +33,16 @@ defmodule Mailglass.Adapters.Swoosh do
   response body — may contain provider-emitted error strings (never
   user-supplied content). The 8 forbidden keys
   (`:to, :from, :body, :html_body, :subject, :headers, :recipient, :email`)
-  NEVER appear in error context.  `LINT-02 NoPiiInTelemetryMeta`
+  NEVER appear in error context.  `NoPiiInTelemetryMeta`
   enforces.
 
   ## What this module does NOT do
 
-  - Does not call `Swoosh.Mailer.deliver/1` — forbidden by LINT-01.
+  - Does not call `Swoosh.Mailer.deliver/1` — forbidden in library code.
     Calls `Swoosh.Adapter.deliver/2` (the behaviour callback) directly.
   - Is not a GenServer — pure function, stateless.
   - Does not touch `mailglass_events`, `mailglass_deliveries`, or
-    `Phoenix.PubSub`. Side-effect-free by design (LIB-06).
+    `Phoenix.PubSub`. Side-effect-free by design.
   """
 
   @behaviour Mailglass.Adapter

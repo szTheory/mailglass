@@ -6,7 +6,7 @@ defmodule Mailglass.Webhook.Telemetry do
   per-domain helpers live in their own module under
   the domain's `lib/` directory. The helpers in this module are the
   single-module surface for the webhook telemetry contract, which
-  means  `LINT-02` (`NoPiiInTelemetryMeta`) has exactly one
+  means `NoPiiInTelemetryMeta` has exactly one
   module to lint (plus the call sites).
 
   ## Events emitted
@@ -30,7 +30,7 @@ defmodule Mailglass.Webhook.Telemetry do
   isolation: handlers that raise are auto-detached and
   `[:telemetry, :handler, :failure]` fires — a handler crash cannot
   propagate into the webhook pipeline. Callers MUST NOT reach for
-  `:telemetry.span/3` directly; use the helpers below so LINT-02
+  `:telemetry.span/3` directly; use the helpers below so the lint check
   has a single module surface to lint.
 
   ## Per-request stop metadata enrichment
@@ -62,10 +62,10 @@ defmodule Mailglass.Webhook.Telemetry do
   `conn.remote_ip` from their own plug lineage (see
   `guides/webhooks.md`).
 
-   `LINT-02` (`NoPiiInTelemetryMeta`) lints THIS module plus
+   `NoPiiInTelemetryMeta` lints THIS module plus
   every caller against the forbidden-key set.
 
-  ## `LINT-10` single-emit exception
+  ## Single-emit exception
 
   The three single-emit helpers (`normalize_emit/1`, `orphan_emit/1`,
   `duplicate_emit/1`) are deliberate exceptions to the "every event
@@ -74,7 +74,7 @@ defmodule Mailglass.Webhook.Telemetry do
   but skip the start/exception pair because they fire from INSIDE the
   larger `[:mailglass, :webhook, :ingest, *]` span (which IS a full
   span) and represent per-event signals inside a wrapped operation.
-   `LINT-10` whitelists these three event paths.
+   This exception whitelists these three event paths.
   """
 
   alias Mailglass.Telemetry

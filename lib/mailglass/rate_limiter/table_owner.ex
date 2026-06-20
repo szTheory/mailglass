@@ -23,12 +23,12 @@ defmodule Mailglass.RateLimiter.TableOwner do
   load-bearing across crashes." Worst case is 1 minute of burst
   allowance until refill restarts.
 
-  ## LIB-05 note
+  ## Reserved-singleton note
 
   This module uses `name: __MODULE__`. It is library-internal
   machinery (not a user-facing singleton) and documented in
-  `docs/api_stability.md` as a reserved singleton.  `LINT-07
-  NoDefaultModuleNameSingleton` has an allowlist entry for this
+  `docs/api_stability.md` as a reserved singleton. `NoDefaultModuleNameSingleton`
+  has an allowlist entry for this
   module.
   """
   use GenServer

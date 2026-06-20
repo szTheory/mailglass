@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
 
   @moduledoc since: "0.2.0"
   @moduledoc """
-  Manually run the inbound retention sweep (IOPS-03).
+  Manually run the inbound retention sweep.
 
   Runs `MailglassInbound.Internal.Prune.prune/0` SYNCHRONOUSLY whether or not Oban
   is installed (the design contract) — only *scheduling* needs Oban; the batched sweep is the

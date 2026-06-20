@@ -106,7 +106,7 @@ defmodule Mailglass.Config do
     rate_limit: [
       type: :keyword_list,
       default: [],
-      doc: "Rate-limiter configuration (RATE-01).",
+      doc: "Rate-limiter configuration.",
       keys: [
         tenant_recipient: [
           type: :keyword_list,
@@ -271,7 +271,7 @@ defmodule Mailglass.Config do
     postmark: [
       type: :keyword_list,
       default: [],
-      doc: "Postmark webhook configuration (HOOK-03).",
+      doc: "Postmark webhook configuration.",
       keys: [
         enabled: [
           type: :boolean,
@@ -303,7 +303,7 @@ defmodule Mailglass.Config do
     sendgrid: [
       type: :keyword_list,
       default: [],
-      doc: "SendGrid webhook configuration (HOOK-04).",
+      doc: "SendGrid webhook configuration.",
       keys: [
         enabled: [
           type: :boolean,
@@ -432,7 +432,7 @@ defmodule Mailglass.Config do
     webhook_retention: [
       type: :keyword_list,
       default: [],
-      doc: "Retention policy for `mailglass_webhook_events` rows (HOOK-06).",
+      doc: "Retention policy for `mailglass_webhook_events` rows.",
       keys: [
         succeeded_days: [
           type: {:or, [:pos_integer, {:in, [:infinity]}]},
@@ -464,7 +464,7 @@ defmodule Mailglass.Config do
 
   **Only this module may call `Application.compile_env*`.** Every other module
   reads configuration through `Application.get_env/2` (enforced by the
-  `LINT-08` Credo check in ).
+  Credo check).
 
   The brand theme is cached in `:persistent_term` after validation so
   the render hot path reads it in O(1) without re-parsing the Application env

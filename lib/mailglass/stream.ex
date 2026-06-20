@@ -7,12 +7,12 @@ defmodule Mailglass.Stream do
   `Mailglass.Outbound.Delivery.stream`). Emits a single telemetry
   event for observability.
 
-  v0.5 DELIV-02 swaps this implementation in place; callers do not
+  A future version swaps this implementation in place; callers do not
   change. The v0.5 impl will enforce:
 
   - `:transactional` stream: no tracking injection allowed
   - `:bulk` stream: RFC 8058 List-Unsubscribe header auto-injected
-  - Per-stream provider routing via per-tenant adapter resolver (DELIV-07)
+  - Per-stream provider routing via per-tenant adapter resolver
 
   Why a no-op seam at v0.1 rather than "omit the stage": the preflight
   pipeline is stable across versions. Adding stream_policy
@@ -45,7 +45,7 @@ defmodule Mailglass.Stream do
   Pattern-matches on `%Mailglass.Message{}` only — passing a raw map raises `FunctionClauseError`.
   Emits `[:mailglass, :outbound, :stream_policy, :stop]` telemetry on every call.
 
-  v0.5 DELIV-02 will swap this implementation; callers do not change.
+  A future version will swap this implementation; callers do not change.
   """
   @doc since: "0.1.0"
   @spec policy_check(Message.t()) :: :ok | {:error, Mailglass.StreamPolicyError.t()}

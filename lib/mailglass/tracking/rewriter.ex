@@ -1,6 +1,6 @@
 defmodule Mailglass.Tracking.Rewriter do
   @moduledoc """
-  Pure HTML transform: open-pixel injection + click link rewriting (TRACK-03).
+  Pure HTML transform: open-pixel injection + click link rewriting.
 
   Called by `Mailglass.Tracking.rewrite_if_enabled/1` AFTER `Mailglass.Renderer.render/1`.
   Operates on the CSS-inlined HTML string; returns a rewritten HTML string.

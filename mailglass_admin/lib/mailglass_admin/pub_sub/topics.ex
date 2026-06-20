@@ -1,7 +1,7 @@
 defmodule MailglassAdmin.PubSub.Topics do
   @moduledoc """
   Typed topic builder for `mailglass_admin` PubSub broadcasts. Every topic is
-  prefixed `mailglass:` — this milestone phase `LINT-06 PrefixedPubSubTopics` (see the
+  prefixed `mailglass:` — `PrefixedPubSubTopics` (see the
   forthcoming check in the core `mailglass` package) enforces the prefix at
   lint time. The prefixed shape matches `Mailglass.PubSub.Topics` in the core
   library; the two modules intentionally share the convention so adopter
@@ -28,7 +28,7 @@ defmodule MailglassAdmin.PubSub.Topics do
   `admin_reload/0` and `inbound_record_inserted/1` are the topics the admin
   package consumes. Every call site that subscribes to or broadcasts on these
   topics MUST go through this module — literal topic strings in call sites are
-  banned by the this milestone phase lint discipline (LINT-06 PrefixedPubSubTopics).
+  banned by the lint discipline (`PrefixedPubSubTopics`).
 
   Submodules of `MailglassAdmin` are auto-classified into the root
   boundary (`use Boundary, deps: [Mailglass], exports: [Router]` in

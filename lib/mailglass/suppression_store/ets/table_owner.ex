@@ -20,11 +20,11 @@ defmodule Mailglass.SuppressionStore.ETS.TableOwner do
   (matches the Ecto UNIQUE constraint `(tenant_id, address, scope,
   COALESCE(stream, ''))`).
 
-  ## LIB-05 note
+  ## Reserved-singleton note
 
   This module uses `name: __MODULE__`. It is library-internal machinery
   (not a user-facing singleton) and documented in `docs/api_stability.md`
-  as a reserved singleton.  `LINT-07 NoDefaultModuleNameSingleton`
+  as a reserved singleton.  `NoDefaultModuleNameSingleton`
   has an allowlist entry for this module.
   """
   use GenServer
