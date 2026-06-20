@@ -444,7 +444,7 @@ defmodule MailglassAdmin.OperatorLive do
             >
               <div class="text-body font-bold text-base-content">Select a tenant to begin</div>
               <div class="text-body text-secondary">
-                Choose a tenant to inspect its deliveries and inbound routing. Tenant scope stays
+                Choose a tenant to inspect its Deliveries and inbound routing. Tenant scope stays
                 in the URL so refreshes and shared links keep the same view.
               </div>
               <div>

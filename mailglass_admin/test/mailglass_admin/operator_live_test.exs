@@ -908,7 +908,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} = live(conn, @base_path)
 
       assert html =~ "Select a tenant"
-      assert html =~ "Choose a tenant to inspect its deliveries and inbound routing"
+      assert html =~ "Choose a tenant to inspect its Deliveries and inbound routing"
       assert html =~ "Select tenant"
       assert html =~ "alpha-tenant"
       assert html =~ "beta-tenant"
