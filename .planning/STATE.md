@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
 status: executing
-stopped_at: Phase 116 UI-SPEC approved
-last_updated: "2026-06-20T21:24:26.898Z"
+stopped_at: Completed 116-04-PLAN.md
+last_updated: "2026-06-20T21:43:22.818Z"
 last_activity: 2026-06-20
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 42
-  completed_plans: 39
+  completed_plans: 40
   percent: 82
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 116 (fixtures-idempotent-ratchet-arm) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-06-20
 
-Progress: [█████████░] 93%
+Progress: [██████████] 95%
 
 ## v1.13 Milestone Intent
 
@@ -222,6 +222,8 @@ convergent + adversarially judged).
 - [Phase ?]: Phase 116-02: axe WCAG 2.2 AA ratchet established (9-cell axe-baseline.json schema 1, screenshot-free producer, fail-closed comparator with per-rule diff)
 - [Phase ?]: [116-03] Interaction pillar (RATCHET-03): four binary Playwright gates (panel-above-scrim, scroll-chaining, focus-restore, CLS) across deliveries/inbound/preview x light/dark/system; CLS threshold 4px (<=8px ceiling), 0px floor on synchronous inbound mount; screenshot-free, no pixel-diff
 - [Phase ?]: [116-03] Preview-pane centroid hit-test clamped to the visible viewport intersection (tall device frame extends past the fold; raw centroid returned elementFromPoint null) — Rule 1 fix in assertCentroidHitsPanel
+- [Phase ?]: [116-04] Gallery mirrors the fjordline-aps persona literals as inlined SOURCE TEXT (not a runtime Personas call): the persona spec is test-only-compiled, so the dev/prod gallery cannot reference it; the drift-guard reads gallery_live.ex as text for byte-consistency
+- [Phase ?]: [116-04] RATCHET-02 matrix gate enforces per-specimen overflow for EVERY cell at the 320/390 mobile floors; at md+ a documented wide-shell allowlist exempts intrinsically-wide pre-existing card/SVG specimens (gallery-shell property) but still fails closed on NEW specimen overflow
 
 ## Quick Tasks Completed
 
@@ -340,6 +342,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 116 P01 | 14min | 3 tasks | 7 files |
 | Phase 116 P02 | 12 min | 3 tasks | 5 files |
 | Phase 116 P03 | 18 min | 2 tasks | 1 files |
+| Phase 116 P04 | 14min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -363,8 +366,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-20T21:24:00.373Z
-**Stopped at:** Phase 116 UI-SPEC approved
+**Last session:** 2026-06-20T21:43:22.814Z
+**Stopped at:** Completed 116-04-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
