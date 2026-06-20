@@ -376,6 +376,55 @@ function themeOptionLabels(wrapper) {
   return wrapper.locator("fieldset label");
 }
 
+async function assertFilterFieldContract(wrapper, config) {
+  const { label, controlSelector, helpText, errorText, disabled = false, readonly = false, readonlyDisplay = false } = config;
+  const labelLocator = wrapper.locator("label").filter({ hasText: label }).first();
+  const control = wrapper.locator(controlSelector).first();
+
+  await expect(labelLocator, `${label} label`).toBeVisible();
+  await expect(control, `${label} control`).toBeVisible();
+
+  const controlId = await control.getAttribute("id");
+  expect(controlId, `${label} control id`).toBeTruthy();
+  expect(await labelLocator.getAttribute("for"), `${label} label association`).toBe(controlId);
+
+  if (helpText) {
+    const helpId = `${controlId}-help`;
+    const help = wrapper.locator(`#${helpId}`);
+    await expect(help, `${label} help`).toBeVisible();
+    await expect(help, `${label} help text`).toContainText(helpText, { useInnerText: true });
+    expect(await control.getAttribute("aria-describedby"), `${label} help describedby`).toContain(helpId);
+  }
+
+  if (errorText) {
+    const errorId = `${controlId}-error`;
+    const error = wrapper.locator(`#${errorId}`);
+    await expect(error, `${label} error`).toBeVisible();
+    await expect(error, `${label} error text`).toContainText(errorText, { useInnerText: true });
+    await expect(error, `${label} recovery cue`).toContainText("Action needed", { useInnerText: true });
+    await expect(error.locator('[class*="hero-exclamation-circle"]'), `${label} error cue icon`).toBeVisible();
+    expect(await control.getAttribute("aria-describedby"), `${label} error describedby`).toContain(errorId);
+    expect(await control.getAttribute("aria-invalid"), `${label} invalid state`).toBe("true");
+  } else {
+    expect(await control.getAttribute("aria-invalid"), `${label} invalid state`).not.toBe("true");
+  }
+
+  if (disabled) {
+    await expect(control, `${label} disabled`).toBeDisabled();
+    expect(await control.getAttribute("readonly"), `${label} readonly`).toBeNull();
+  }
+
+  if (readonly) {
+    expect(await control.getAttribute("readonly"), `${label} readonly`).toBe("");
+    expect(await control.getAttribute("disabled"), `${label} disabled`).toBeNull();
+  }
+
+  if (readonlyDisplay) {
+    await expect(wrapper.locator("div[role='textbox']"), `${label} read-only display`).toBeVisible();
+    await expect(wrapper.locator("select"), `${label} no editable select`).toHaveCount(0);
+  }
+}
+
 async function assertThemePickerSemantics(wrapper, selectedValue, label) {
   const radios = wrapper.locator('input[type="radio"]');
   await expect(radios, `${label} radio count`).toHaveCount(3);
@@ -512,6 +561,30 @@ async function openOperatorReplayModal(page) {
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
   return modal;
+}
+
+async function openAmbiguousOperatorReplayModal(page) {
+  await openOperator(page);
+
+  const rows = page.getByTestId("operator-delivery-row");
+  const count = await rows.count();
+
+  for (let index = 0; index < count; index += 1) {
+    await rows.nth(index).click();
+    await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+    await page.getByTestId("operator-replay-open").click();
+
+    const modal = page.getByTestId("operator-replay-modal");
+    await expect(modal).toBeVisible();
+
+    if (await modal.locator("#operator-replay-targets").count()) {
+      return modal;
+    }
+
+    await modal.getByRole("button", { name: "Close", exact: true }).click();
+  }
+
+  throw new Error("Ambiguous operator replay modal was not found");
 }
 
 async function openInboundReplayModal(page) {
@@ -1362,6 +1435,200 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await openGallery(page);
       await expect(page.getByTestId("gallery-routing_trace-empty")).toBeVisible();
       await expect(page.getByTestId("gallery-evidence_card-redacted")).toBeVisible();
+    });
+
+  });
+
+  // =========================================================================
+  // FORM LAYER — Phase 111
+  // Gallery, focus persistence, Preview wiring, and replay radio contracts.
+  // =========================================================================
+  test.describe("form layer structural proof — Phase 111", () => {
+
+    test("gallery certifies filter_field, filter_section, and migrated filters_form states", async ({
+      page
+    }) => {
+      await openGallery(page);
+
+      for (const viewport of PRIMITIVE_VIEWPORTS) {
+        await page.setViewportSize(viewport);
+
+        for (const state of [
+          "text-empty",
+          "select-filled",
+          "invalid",
+          "disabled",
+          "readonly-text",
+          "readonly-select-display"
+        ]) {
+          const cell = primitiveCell(page, "filter_field", state);
+          await expect(cell, `gallery filter_field/${state} cell at ${viewport.width}`).toBeVisible();
+          await assertPrimitiveThemeWrappers(page, "filter_field", state);
+        }
+
+        for (const theme of ["light", "dark", "system"]) {
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "text-empty", theme), {
+            label: "Provider",
+            controlSelector: "input[type='text']",
+            helpText: "Filter by provider key, for example postmark."
+          });
+
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "select-filled", theme), {
+            label: "Status",
+            controlSelector: "select",
+            helpText: "Filter by delivery status."
+          });
+
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "invalid", theme), {
+            label: "Status",
+            controlSelector: "select",
+            helpText: "Filter by delivery status.",
+            errorText: "Status was not applied. Choose a listed status."
+          });
+
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "disabled", theme), {
+            label: "Provider",
+            controlSelector: "input[type='text']",
+            helpText: "Filter by provider key, for example postmark.",
+            disabled: true
+          });
+
+          await assertFilterFieldContract(primitiveWrapper(page, "filter_field", "readonly-text", theme), {
+            label: "Provider",
+            controlSelector: "input[type='text']",
+            helpText: "Filter by provider key, for example postmark.",
+            readonly: true
+          });
+
+          await assertFilterFieldContract(
+            primitiveWrapper(page, "filter_field", "readonly-select-display", theme),
+            {
+              label: "Status",
+              controlSelector: "div[role='textbox']",
+              helpText: "Filter by delivery status.",
+              readonlyDisplay: true
+            }
+          );
+
+          const section = primitiveWrapper(page, "filter_section", "section", theme);
+          await expect(section.locator("fieldset"), `gallery filter_section/${theme}`).toBeVisible();
+          await expect(section.locator("legend"), `gallery filter_section/${theme} legend`).toContainText(
+            "FILTERS",
+            { useInnerText: true }
+          );
+          await expect(section.getByText("The legend stays visible, and the grouped fields below inherit the shared form contract.", { exact: true }))
+            .toBeVisible();
+
+          await expect(
+            primitiveWrapper(page, "filters_form", "empty", theme),
+            `gallery filters_form empty ${theme}`
+          ).toBeVisible();
+          await expect(
+            primitiveWrapper(page, "filters_form", "filled", theme),
+            `gallery filters_form filled ${theme}`
+          ).toBeVisible();
+
+          const invalidWrapper = primitiveWrapper(page, "filters_form", "invalid", theme);
+          await expect(invalidWrapper, `gallery filters_form invalid ${theme}`).toBeVisible();
+          await expect(invalidWrapper).toContainText("Status was not applied. Choose a listed status.");
+          await expect(invalidWrapper).toContainText("Action needed");
+        }
+      }
+    });
+
+    test("operator and inbound filter patches keep focus on the same control", async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await openOperator(page);
+
+      const operatorFilters = page.getByTestId("operator-filters");
+      const operatorProvider = operatorFilters.getByLabel("Provider", { exact: true }).first();
+      await operatorProvider.fill("postmark");
+      await operatorProvider.focus();
+      const operatorBefore = await page.evaluate(() => document.activeElement && document.activeElement.id);
+      await page.evaluate(() => document.getElementById("operator-filters").requestSubmit());
+      await expect(operatorProvider).toBeFocused();
+      const operatorAfter = await page.evaluate(() => document.activeElement && document.activeElement.id);
+      expect(operatorAfter).toBe(operatorBefore);
+
+      await openInbound(page);
+      const inboundFilters = page.getByTestId("inbound-filters");
+      const inboundSearch = inboundFilters.getByLabel("Search", { exact: true }).first();
+      await inboundSearch.fill("browser");
+      await inboundSearch.focus();
+      const inboundBefore = await page.evaluate(() => document.activeElement && document.activeElement.id);
+      await page.evaluate(() => document.getElementById("inbound-filters").requestSubmit());
+      await expect(inboundSearch).toBeFocused();
+      const inboundAfter = await page.evaluate(() => document.activeElement && document.activeElement.id);
+      expect(inboundAfter).toBe(inboundBefore);
+    });
+
+    test("Preview assigns and operator replay radios keep explicit labels and descriptions", async ({
+      page
+    }) => {
+      await openPreviewScenario(page, "theme=light");
+
+      const previewForm = page.getByTestId("preview-assigns-form");
+      const userName = previewForm.getByLabel("User name", { exact: true }).first();
+      await expect(userName).toBeVisible();
+      const userNameId = await userName.getAttribute("id");
+      expect(userNameId).toBe("assigns-user_name");
+      expect(await previewForm.locator("label[for='assigns-user_name']").count()).toBe(1);
+      await expect(previewForm.locator("#assigns-user_name-help")).toBeVisible();
+
+      const admin = previewForm.getByLabel("Admin?", { exact: true }).first();
+      await expect(admin).toBeVisible();
+      expect(await admin.getAttribute("id")).toBe("assigns-admin?");
+      await expect(previewForm.locator('[id="assigns-admin?-help"]')).toBeVisible();
+
+      const planDisplay = previewForm.locator("[data-readonly-display='true'][id='assigns-plan']").first();
+      await expect(planDisplay).toBeVisible();
+      expect(await planDisplay.getAttribute("aria-readonly")).toBe("true");
+      await expect(previewForm.locator("#assigns-plan-help")).toBeVisible();
+
+      const modal = await openAmbiguousOperatorReplayModal(page);
+      await expect(modal).toBeVisible();
+      await expect(modal.locator("#operator-replay-targets")).toHaveCount(1);
+
+      const radios = modal.getByRole("radio", { name: "POSTMARK webhook target", exact: true });
+      await expect(radios).toHaveCount(2);
+
+      const firstTarget = radios.first();
+      const secondTarget = radios.nth(1);
+
+      const firstTargetId = await firstTarget.getAttribute("id");
+      const secondTargetId = await secondTarget.getAttribute("id");
+      expect(firstTargetId).toMatch(/^operator-replay-target-/);
+      expect(secondTargetId).toMatch(/^operator-replay-target-/);
+
+      await expect(modal.locator(`[for="${firstTargetId}"]`)).toContainText("POSTMARK webhook target", {
+        useInnerText: true
+      });
+      await expect(modal.locator(`[for="${secondTargetId}"]`)).toContainText("POSTMARK webhook target", {
+        useInnerText: true
+      });
+
+      await expect(modal.locator(`[id="${firstTargetId}-description"]`)).toContainText(
+        "Provider event browser-ambiguous-delivery-2",
+        { useInnerText: true }
+      );
+      await expect(modal.locator(`[id="${secondTargetId}-description"]`)).toContainText(
+        "Provider event browser-ambiguous-delivery-1",
+        { useInnerText: true }
+      );
+
+      await expect(modal.locator(`#${firstTargetId}`)).toHaveAttribute(
+        "aria-describedby",
+        `${firstTargetId}-description`
+      );
+      await expect(modal.locator(`#${secondTargetId}`)).toHaveAttribute(
+        "aria-describedby",
+        `${secondTargetId}-description`
+      );
+
+      await secondTarget.check();
+      await expect(modal.getByText("Selected target", { exact: true })).toBeVisible();
+      await expect(modal.locator('[class*="hero-check-circle"]')).toBeVisible();
+      await expect(modal.getByTestId("operator-replay-confirm")).toBeVisible();
     });
 
   });

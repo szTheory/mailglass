@@ -33,6 +33,9 @@ defmodule MailglassAdmin.GalleryLive do
   STATE-LD-11: deliveries_list (populated-unselected, populated-selected, empty)
   STATE-LD-12: detail_header (shown, absent) — operator variant only
   STATE-LD-13: filters_form (empty, filled) — static assigns, no phx-submit
+  Phase 111: filter_field (text-empty, select-filled, invalid, disabled,
+  readonly-text, readonly-select-display, section)
+  Phase 111: filters_form (empty, filled, invalid) — static assigns, no phx-submit
   STATE-LD-14: support_cards (tier1-shown, tier1-hidden)
   STATE-LD-15: suppression_card (present, absent)
   STATE-LD-16: timeline (populated, highlighted-event, empty)
@@ -261,6 +264,33 @@ defmodule MailglassAdmin.GalleryLive do
     """
   end
 
+  defp render_specimen(%{component: :filter_field} = assigns) do
+    ~H"""
+    <Components.filter_field
+      field={@assigns_map[:field]}
+      type={@assigns_map[:type] || :text}
+      label={@assigns_map[:label]}
+      help={@assigns_map[:help]}
+      error={@assigns_map[:error]}
+      options={@assigns_map[:options] || []}
+      prompt={@assigns_map[:prompt]}
+      disabled={@assigns_map[:disabled] || false}
+      readonly={@assigns_map[:readonly] || false}
+      display_value={@assigns_map[:display_value]}
+      submit_readonly={Map.get(@assigns_map, :submit_readonly, true)}
+      placeholder={@assigns_map[:placeholder]}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :filter_section} = assigns) do
+    ~H"""
+    <Components.filter_section title={@assigns_map[:title]} description={@assigns_map[:description]}>
+      <p class="text-label text-secondary">{@assigns_map[:body]}</p>
+    </Components.filter_section>
+    """
+  end
+
   defp render_specimen(%{component: :filters_form} = assigns) do
     ~H"""
     <FiltersForm.fields
@@ -268,6 +298,7 @@ defmodule MailglassAdmin.GalleryLive do
       status_values={@assigns_map[:status_values]}
       event_values={@assigns_map[:event_values]}
       window_options={@assigns_map[:window_options]}
+      errors={@assigns_map[:errors] || %{}}
     />
     """
   end
@@ -564,6 +595,100 @@ defmodule MailglassAdmin.GalleryLive do
        latest_replay: nil
      }},
 
+    # Phase 111: filter_field — text-empty, select-filled, invalid, disabled,
+    # readonly-text, readonly-select-display
+    {:filter_field, "text-empty",
+     %{
+       field:
+         Phoenix.HTML.FormData.to_form(
+           %{"provider" => ""},
+           as: :gallery_filter_field,
+           id: "gallery-filter-field-text-empty-form"
+         )[:provider],
+       type: :text,
+       label: "Provider",
+       help: "Filter by provider key, for example postmark.",
+       placeholder: "postmark"
+     }},
+    {:filter_field, "select-filled",
+     %{
+       field:
+         Phoenix.HTML.FormData.to_form(
+           %{"status" => "delivered"},
+           as: :gallery_filter_field,
+           id: "gallery-filter-field-select-filled-form"
+         )[:status],
+       type: :select,
+       label: "Status",
+       help: "Filter by delivery status.",
+       prompt: "Any status",
+       options: [{"Delivered", "delivered"}, {"Bounced", "bounced"}]
+     }},
+    {:filter_field, "invalid",
+     %{
+       field:
+         Phoenix.HTML.FormData.to_form(
+           %{"status" => "unknown"},
+           as: :gallery_filter_field,
+           id: "gallery-filter-field-invalid-form"
+         )[:status],
+       type: :select,
+       label: "Status",
+       help: "Filter by delivery status.",
+       error: "Status was not applied. Choose a listed status.",
+       prompt: "Any status",
+       options: [{"Delivered", "delivered"}, {"Bounced", "bounced"}]
+     }},
+    {:filter_field, "disabled",
+     %{
+       field:
+         Phoenix.HTML.FormData.to_form(
+           %{"provider" => "postmark"},
+           as: :gallery_filter_field,
+           id: "gallery-filter-field-disabled-form"
+         )[:provider],
+       type: :text,
+       label: "Provider",
+       help: "Filter by provider key, for example postmark.",
+       disabled: true
+     }},
+    {:filter_field, "readonly-text",
+     %{
+       field:
+         Phoenix.HTML.FormData.to_form(
+           %{"provider" => "postmark"},
+           as: :gallery_filter_field,
+           id: "gallery-filter-field-readonly-text-form"
+         )[:provider],
+       type: :text,
+       label: "Provider",
+       help: "Filter by provider key, for example postmark.",
+       readonly: true
+     }},
+    {:filter_field, "readonly-select-display",
+     %{
+       field:
+         Phoenix.HTML.FormData.to_form(
+           %{"status" => "delivered"},
+           as: :gallery_filter_field,
+           id: "gallery-filter-field-readonly-select-display-form"
+         )[:status],
+       type: :select,
+       label: "Status",
+       help: "Filter by delivery status.",
+       readonly: true,
+       display_value: "Delivered",
+       options: [{"Delivered", "delivered"}, {"Bounced", "bounced"}]
+     }},
+
+    # Phase 111: filter_section — section
+    {:filter_section, "section",
+     %{
+       title: "Filters",
+       description: "Group related controls under one legend.",
+       body: "The legend stays visible, and the grouped fields below inherit the shared form contract."
+     }},
+
     # STATE-LD-13: filters_form — empty and filled (static assigns, no phx-submit)
     {:filters_form, "empty",
      %{
@@ -600,6 +725,25 @@ defmodule MailglassAdmin.GalleryLive do
        status_values: [:delivered, :bounced, :deferred],
        event_values: [:delivered, :bounced],
        window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}]
+     }},
+    {:filters_form, "invalid",
+     %{
+       form:
+         Phoenix.HTML.FormData.to_form(
+           %{
+             "tenant_id" => "tenant-123",
+             "provider" => "postmark",
+             "status" => "unknown",
+             "event" => "delivered",
+             "window_hours" => "168"
+           },
+           as: :filters,
+           id: "gallery-filters-invalid"
+         ),
+       status_values: [:delivered, :bounced, :deferred],
+       event_values: [:delivered, :bounced],
+       window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
+       errors: %{"status" => "Status was not applied. Choose a listed status."}
      }},
 
     # STATE-LD-14: support_cards — tier1-shown and tier1-hidden
@@ -854,6 +998,8 @@ defmodule MailglassAdmin.GalleryLive do
   defp component_label(:orientation_strip), do: "orientation_strip"
   defp component_label(:deliveries_list), do: "deliveries_list"
   defp component_label(:detail_header), do: "detail_header"
+  defp component_label(:filter_field), do: "filter_field"
+  defp component_label(:filter_section), do: "filter_section"
   defp component_label(:filters_form), do: "filters_form"
   defp component_label(:support_cards), do: "support_cards"
   defp component_label(:suppression_card), do: "suppression_card"

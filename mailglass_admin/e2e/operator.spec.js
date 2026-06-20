@@ -176,7 +176,7 @@ test.describe("operator browser gate", () => {
     await expect(modal).toContainText("browser-ambiguous-delivery-2");
     await expect(page.getByTestId("operator-replay-confirm")).toHaveCount(0);
 
-    const secondTarget = page.getByRole("radio", { name: /browser-ambiguous-delivery-2/i });
+    const secondTarget = page.getByRole("radio", { name: "POSTMARK webhook target", exact: true }).nth(1);
     await secondTarget.focus();
     await page.keyboard.press("Space");
     await expect(secondTarget).toBeChecked();
