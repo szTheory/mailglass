@@ -161,6 +161,83 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
 
   def tenant_id, do: @tenant_id
 
+  @doc """
+  Materializes the RATCHET-01 persona stress cohort into `TestRepo` from the
+  single declarative spec (`MailglassDemo.Personas.spec/0`, CONTEXT D-06
+  mechanism 2). This is the admin-side materializer — it produces the SAME three
+  personas as the demo seed:
+
+    * `northstar` — deliveries-bearing (seeded with the lifecycle marker
+      delivery so it is selectable in `list_tenants/2`).
+    * `fjordline-aps` — a single Delivery carrying the canonical stress literals
+      (non-ASCII `from` names, ULID-class long delivery id, `>= 60`-char Mailable
+      module name) plus one `:delivered` Event with `reject_reason: nil`.
+    * `helios-void` — zero Delivery rows (realized by absence — the no-data
+      edge), so it is correctly omitted from `list_tenants/2`.
+
+  Reads literals from `MailglassDemo.Personas.spec/0` so this materializer
+  cannot drift from the demo seed or the gallery (the drift-guard, D-07,
+  enforces this fail-closed).
+  """
+  def seed_persona_cohort! do
+    reset!()
+    Enum.each(MailglassDemo.Personas.spec(), &materialize_persona!/1)
+    :ok
+  end
+
+  defp materialize_persona!(%{name: name, payload: %{kind: :no_deliveries}}) do
+    # helios-void: zero deliveries (no-data edge, realized by absence).
+    _ = name
+    :ok
+  end
+
+  defp materialize_persona!(%{name: name, payload: %{kind: :lifecycle}}) do
+    # northstar: a minimal deliveries-bearing seed so it is selectable. The
+    # admin cohort does not need the full demo lifecycle; one delivery makes the
+    # tenant appear in list_tenants/2 (the cohort's "many" edge is exercised by
+    # the demo seed, not required for the admin selectability assertion).
+    delivery =
+      insert_delivery!(%{
+        tenant_id: name,
+        recipient: "ops@#{name}.example",
+        provider: "postmark",
+        provider_message_id: "pm_#{name}_lifecycle",
+        status: :sent,
+        last_event_type: :delivered,
+        last_event_at: hours_ago(1),
+        mailable: "Mailglass.Example.NorthstarMailer"
+      })
+
+    insert_event!(delivery, %{type: :delivered, occurred_at: hours_ago(1)})
+    :ok
+  end
+
+  defp materialize_persona!(%{name: name, payload: payload}) do
+    # fjordline-aps: a single Delivery carrying the canonical stress literals.
+    delivery =
+      insert_delivery!(%{
+        tenant_id: name,
+        recipient: payload.recipient,
+        provider: "postmark",
+        provider_message_id: payload.long_delivery_id,
+        status: :sent,
+        last_event_type: payload.event_type,
+        last_event_at: hours_ago(1),
+        mailable: payload.long_mailable,
+        metadata: %{"persona" => name, "from" => payload.from}
+      })
+
+    # One :delivered event with reject_reason: nil (the legitimate null branch).
+    insert_event!(delivery, %{
+      type: payload.event_type,
+      occurred_at: hours_ago(1),
+      reject_reason: payload.reject_reason,
+      metadata: %{"provider" => "postmark", "source" => "webhook"}
+    })
+
+    :ok
+  end
+
   def exact_recipient, do: "browser-exact@example.com"
   def ambiguous_recipient, do: "browser-ambiguous@example.com"
   def noop_recipient, do: "browser-noop@example.com"

@@ -67,7 +67,21 @@ defmodule MailglassAdmin.MixProject do
   # CI/local use, but kept out of "lib" so it never ships in the Hex package
   # (mix.exs :package :files lists "lib", not "dev").
   defp elixirc_paths(:dev), do: ["lib", "dev"]
-  defp elixirc_paths(:test), do: ["lib", "test/support", "dev"]
+
+  # RATCHET-01 / CONTEXT D-06 mechanism 2 (A1 fallback — Pitfall 3): the
+  # canonical persona cohort spec lives in the demo app, but a `path:` dep on
+  # the whole `mailglass_demo` app is structurally impossible — the demo
+  # depends on `mailglass_admin`, so a back-dep is a circular path dep ("another
+  # project with the same name was already defined"). Instead we compile the
+  # single canonical spec directory directly into the admin TEST build.
+  # `reference/persona_spec/personas.ex` is a pure module — it references only
+  # core schemas (`Mailglass.Outbound.Delivery`, `Mailglass.Events.Event`), no
+  # demo-app or Phoenix deps — so it compiles cleanly here. This keeps the spec
+  # a single source of truth (admin test-support reads
+  # `MailglassDemo.Personas.spec/0`) without crossing into prod or the
+  # `--no-optional-deps` lane (it is `:test`-only, just like `test/support`).
+  @persona_spec_dir Path.expand("../reference/persona_spec", __DIR__)
+  defp elixirc_paths(:test), do: ["lib", "test/support", "dev", @persona_spec_dir]
   defp elixirc_paths(_), do: ["lib"]
 
   # CONTEXT D-24: phoenix_live_reload is dev-only optional; declare here so

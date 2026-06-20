@@ -21,8 +21,16 @@ defmodule MailglassDemo.MixProject do
     ]
   end
 
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
+  # RATCHET-01 / CONTEXT D-06: the canonical persona cohort spec
+  # (`MailglassDemo.Personas`) lives in the shared `../persona_spec` directory
+  # so BOTH the demo app and the admin TEST build can compile the single
+  # source-of-truth file without a circular path dep (the demo app already
+  # depends on `mailglass_admin`, so admin cannot depend back on the whole demo
+  # app). The spec is a pure module (core schemas only) — see
+  # `reference/persona_spec/personas.ex`.
+  @persona_spec_dir Path.expand("../persona_spec", __DIR__)
+  defp elixirc_paths(:test), do: ["lib", "test/support", @persona_spec_dir]
+  defp elixirc_paths(_), do: ["lib", @persona_spec_dir]
 
   defp deps do
     [

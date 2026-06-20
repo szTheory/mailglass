@@ -39,6 +39,18 @@ defmodule MailglassDemo.Personas do
   test support crosses the boundary (CONTEXT D-06).
   """
 
+  # This file is the single canonical persona spec, compiled into BOTH the demo
+  # app and the admin TEST build (CONTEXT D-06 mechanism 2). The admin app runs
+  # the `:boundary` compiler, which would flag this external module as
+  # "not included in any boundary" and fail the `--warnings-as-errors` lane.
+  # Declare a self-contained top-level boundary with checks disabled (the
+  # documented test-support idiom) so it is classified and exempt. Guarded by
+  # `Code.ensure_loaded?/1` so the demo app — which does not run the boundary
+  # compiler but does have `Boundary` transitively available — stays unaffected.
+  if Code.ensure_loaded?(Boundary) do
+    use Boundary, top_level?: true, check: [in: false, out: false]
+  end
+
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
 
