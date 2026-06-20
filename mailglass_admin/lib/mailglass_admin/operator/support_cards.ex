@@ -9,6 +9,8 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
   use Phoenix.Component
 
+  import MailglassAdmin.Components, only: [card: 1]
+
   alias MailglassAdmin.Operator.RepairState
 
   attr(:support_summary, :map, required: true)
@@ -17,12 +19,14 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
   def support_cards(assigns) do
     ~H"""
-    <section
+    <.card
+      padding={:md}
       data-testid="operator-support-cards"
-      class="card rounded-box border border-base-300 bg-base-200 p-md"
+      data-group-card="operator-support-cards"
+      class="shadow-raised"
     >
       <div class="flex flex-wrap items-start justify-between gap-sm">
-        <div class="space-y-1">
+        <div class="space-y-xs">
           <h3 class="text-body font-bold text-base-content">Support cards</h3>
           <p class="text-label text-secondary">
             Tenant-scoped facts from the current support window.
@@ -35,7 +39,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
       <div class="flex flex-col gap-lg mt-md">
         <article
           :if={@support_summary && @support_summary.failed_ingest.count > 0}
-          class="card bg-base-200 border border-base-300 rounded-box p-lg"
+          class="rounded-box bg-base-100 p-lg border-l-4 border-error"
           data-testid="support-card-failed-ingest-tier1"
         >
           <div class="text-display font-bold text-error">
@@ -43,7 +47,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
           </div>
           <p class="text-body text-secondary">Recent failures (last 24h)</p>
 
-          <div :if={@support_summary.failed_ingest.latest} class="mt-sm space-y-2">
+          <div :if={@support_summary.failed_ingest.latest} class="mt-sm space-y-sm">
             <p class="text-label text-secondary">
               Exemplar webhook row: {@support_summary.failed_ingest.latest.provider_event_id}
             </p>
@@ -65,13 +69,13 @@ defmodule MailglassAdmin.Operator.SupportCards do
             >
               <div>
                 <dt class="text-label uppercase font-bold">Webhook row ID</dt>
-                <dd class="mono mt-1 text-base-content">
+                <dd class="mono mt-xs text-base-content">
                   {@support_summary.failed_ingest.latest.webhook_event_id}
                 </dd>
               </div>
               <div>
                 <dt class="text-label uppercase font-bold">Provider event</dt>
-                <dd class="mt-1 text-base-content">
+                <dd class="mt-xs text-base-content">
                   {@support_summary.failed_ingest.latest.provider_event_id}
                 </dd>
               </div>
@@ -81,7 +85,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
         <article
           :if={@support_summary && @support_summary.orphan_backlog.count > 0}
-          class="card bg-base-200 border border-base-300 rounded-box p-lg"
+          class="rounded-box bg-base-100 p-lg border-l-4 border-warning"
           data-testid="support-card-orphan-backlog-tier1"
         >
           <div class="text-display font-bold text-warning">
@@ -89,7 +93,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
           </div>
           <p class="text-body text-secondary">Orphan backlog</p>
 
-          <div :if={@support_summary.orphan_backlog.oldest} class="mt-sm space-y-2">
+          <div :if={@support_summary.orphan_backlog.oldest} class="mt-sm space-y-sm">
             <p class="text-label text-secondary">
               Oldest unmatched fact: {@support_summary.orphan_backlog.oldest.provider_event_id}
             </p>
@@ -111,13 +115,13 @@ defmodule MailglassAdmin.Operator.SupportCards do
             >
               <div>
                 <dt class="text-label uppercase font-bold">Event ID</dt>
-                <dd class="mono mt-1 text-base-content">
+                <dd class="mono mt-xs text-base-content">
                   {@support_summary.orphan_backlog.oldest.event_id}
                 </dd>
               </div>
               <div>
                 <dt class="text-label uppercase font-bold">Provider event</dt>
-                <dd class="mt-1 text-base-content">
+                <dd class="mt-xs text-base-content">
                   {@support_summary.orphan_backlog.oldest.provider_event_id}
                 </dd>
               </div>
@@ -127,7 +131,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
         <article
           :if={@support_summary && replay_any_nonzero?(@support_summary.replay_outcomes.counts)}
-          class="card bg-base-200 border border-base-300 rounded-box p-lg"
+          class="rounded-box bg-base-100 p-lg border-l-4 border-error"
           data-testid="support-card-replay-outcomes-tier1"
         >
           <div class="text-display font-bold text-error">
@@ -137,7 +141,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
             Replay outcomes: {replay_count_summary(@support_summary.replay_outcomes.counts)}
           </p>
 
-          <div :if={@support_summary.replay_outcomes.latest} class="mt-sm space-y-2">
+          <div :if={@support_summary.replay_outcomes.latest} class="mt-sm space-y-sm">
             <p class="text-label text-secondary">
               Exemplar replay audit: {RepairState.effect_label(@support_summary.replay_outcomes.latest.outcome) ||
                 @support_summary.replay_outcomes.latest.outcome}
@@ -214,7 +218,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
       >
         {drilldown_banner(@support_state)}
       </div>
-    </section>
+    </.card>
     """
   end
 
