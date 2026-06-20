@@ -259,7 +259,7 @@ defmodule MailglassAdmin.Operator.Shell do
             />
           </nav>
 
-          <div class="flex min-w-0 items-center gap-sm">
+          <div class="flex min-w-0 flex-wrap items-center justify-end gap-sm">
             <Components.tenant_chip tenant={@tenant} />
             <span class="md:hidden">
               <Components.theme_picker selected={@theme_choice} event="set_theme" />

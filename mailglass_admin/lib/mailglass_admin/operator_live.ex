@@ -504,7 +504,7 @@ defmodule MailglassAdmin.OperatorLive do
           <aside
             data-testid="operator-deliveries-list-card"
             class={[
-              "card rounded-box border border-base-300 bg-base-200 p-0 md:block",
+              "card min-w-0 rounded-box border border-base-300 bg-base-200 p-0 md:block",
               @selected_delivery && "max-md:hidden"
             ]}
           >
@@ -526,7 +526,7 @@ defmodule MailglassAdmin.OperatorLive do
           <section
             data-testid="operator-detail-column"
             class={[
-              "space-y-4",
+              "min-w-0 space-y-4",
               is_nil(@selected_delivery) && "order-first md:order-none"
             ]}
           >

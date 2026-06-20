@@ -50,7 +50,7 @@ defmodule MailglassAdmin.Preview.AssignsForm do
         <.field key={key} value={value} />
       <% end %>
 
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <button type="button" class="btn btn-primary min-h-11 px-5" phx-click="render_preview">
           Render preview
         </button>

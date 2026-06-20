@@ -295,7 +295,7 @@ defmodule MailglassAdmin.PreviewLive do
               </div>
             <% @current_scenario -> %>
               <header class="flex items-start justify-between gap-md flex-wrap">
-                <h1 class="text-heading font-bold text-base-content">
+                <h1 class="min-w-0 break-words text-heading font-bold text-base-content">
                   {inspect(@current_mailable)}
                   <span class="text-secondary font-normal">· {@current_scenario}</span>
                 </h1>

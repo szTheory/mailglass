@@ -834,7 +834,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(suppressedRow.locator(".badge-outline")).toContainText("Unknown");
     });
 
-    test("Operator: master-detail grid follows 390/768/1440 responsive contract", async ({ page }) => {
+    test("Operator: master-detail grid follows 320/768/1440 responsive contract", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 900 });
       await openOperator(page);
       let columns = parseGridColumns(
@@ -852,7 +852,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
       expectRatio(columns, 0.33);
 
-      await page.setViewportSize({ width: 390, height: 844 });
+      // Phase 115 FLOW-02: the mobile cell floor is lowered 390 -> 320 in this
+      // touched test (D-04: lower the floor + patch overflow, do NOT promote the
+      // 320 cell into the permanent ratchet baseline — Phase 116 owns that).
+      await page.setViewportSize({ width: 320, height: 844 });
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
       const gridBox = await page.getByTestId("operator-master-detail").boundingBox();
       const listBox = await page.getByTestId("operator-deliveries-list-card").boundingBox();
@@ -860,7 +863,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expect(listBox).not.toBeNull();
       expect(listBox.width / gridBox.width).toBeGreaterThan(0.95);
 
-      // At 390px the table is hidden; click from the card presentation (operator-deliveries-cards).
+      // 320 overflow patch: master-detail and list-card fit the 320 floor.
+      await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator master-detail @320");
+      await assertNoElementHorizontalOverflow(page.getByTestId("operator-deliveries-list-card"), "operator list-card @320");
+
+      // At 320px the table is hidden; click from the card presentation (operator-deliveries-cards).
       await page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first().click();
       await expect(page.getByTestId("operator-deliveries-list-card")).toBeHidden();
       await expect(page.getByTestId("operator-detail-back")).toBeVisible();
@@ -875,7 +882,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     });
 
-    test("Inbound: master-detail grid follows 390/768/1440 responsive contract", async ({ page }) => {
+    test("Inbound: master-detail grid follows 320/768/1440 responsive contract", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 900 });
       await openInbound(page);
       let columns = parseGridColumns(
@@ -894,7 +901,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
       expectRatio(columns, 0.33);
 
-      await page.setViewportSize({ width: 390, height: 844 });
+      // Phase 115 FLOW-02: lower the mobile cell floor 390 -> 320 in this touched
+      // test (D-04: lower + patch overflow, NOT a ratchet rebaseline).
+      await page.setViewportSize({ width: 320, height: 844 });
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
       const gridBox = await page.getByTestId("inbound-master-detail").boundingBox();
       const listBox = await page.getByTestId("inbound-records-list-card").boundingBox();
@@ -902,7 +911,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expect(listBox).not.toBeNull();
       expect(listBox.width / gridBox.width).toBeGreaterThan(0.95);
 
-      // At 390px the table is hidden; click from the card presentation (inbound-records-cards).
+      // 320 overflow patch: master-detail and list-card fit the 320 floor.
+      await assertNoElementHorizontalOverflow(page.getByTestId("inbound-master-detail"), "inbound master-detail @320");
+      await assertNoElementHorizontalOverflow(page.getByTestId("inbound-records-list-card"), "inbound list-card @320");
+
+      // At 320px the table is hidden; click from the card presentation (inbound-records-cards).
       const mobileNoMatchRow = page
         .getByTestId("inbound-records-cards")
         .getByTestId("inbound-record-row")
@@ -2283,6 +2296,150 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         }
       });
     }
+  });
+
+  // =========================================================================
+  // MOTION CONTRACT — Phase 115 Plan 04 (FLOW-03 / D-09 / MOTION-LD locks)
+  // Origin-aware overlays (centered-modal origin unconditional, header-anchored
+  // overlay origin guarded), theme-switch-never-animates (theme label transition
+  // excludes color + getAnimations() empty after a data-theme swap), state-layer
+  // survival (transitionDuration <= 0.1s), and reduced-motion snaps overlays to
+  // instant (emulateMedia reducedMotion -> opened overlay getAnimations() empty).
+  // Deterministic, no pixel-diff: getComputedStyle / getAnimations only.
+  // =========================================================================
+  test.describe("motion contract — Phase 115 (FLOW-03)", () => {
+
+    test("centered replay modals resolve transform-origin to center (unconditional, D-07/D-09)", async ({ page }) => {
+      // CENTERED-MODAL ORIGIN — always present. Both replay modals are centered
+      // (mx-auto max-w-2xl) and OMIT --mg-origin, so transform-origin must
+      // resolve to the center keyword. Asserted unconditionally.
+      const operatorModal = await openOperatorReplayModal(page);
+      const operatorOrigin = await operatorModal.evaluate(el => getComputedStyle(el).transformOrigin);
+      // Center resolves to "<halfW>px <halfH>px"; assert it is the geometric centre.
+      const operatorCenter = await operatorModal.evaluate(el => {
+        const s = getComputedStyle(el);
+        const [x, y] = s.transformOrigin.split(" ").map(parseFloat);
+        return { x, y, halfW: el.offsetWidth / 2, halfH: el.offsetHeight / 2 };
+      });
+      expect(Math.abs(operatorCenter.x - operatorCenter.halfW), `operator modal origin x (${operatorOrigin})`).toBeLessThanOrEqual(1);
+      expect(Math.abs(operatorCenter.y - operatorCenter.halfH), `operator modal origin y (${operatorOrigin})`).toBeLessThanOrEqual(1);
+
+      const inboundModal = await openInboundReplayModal(page);
+      const inboundCenter = await inboundModal.evaluate(el => {
+        const s = getComputedStyle(el);
+        const [x, y] = s.transformOrigin.split(" ").map(parseFloat);
+        return { x, y, halfW: el.offsetWidth / 2, halfH: el.offsetHeight / 2 };
+      });
+      expect(Math.abs(inboundCenter.x - inboundCenter.halfW), "inbound modal origin x").toBeLessThanOrEqual(1);
+      expect(Math.abs(inboundCenter.y - inboundCenter.halfH), "inbound modal origin y").toBeLessThanOrEqual(1);
+    });
+
+    test("header-anchored overlay transform-origin is top-edge IF such an overlay exists (guarded, D-07)", async ({ page }) => {
+      // HEADER-ANCHORED ORIGIN — conditional. Plan 02 Task 3's real outcome is
+      // that the only overlays are the two centered replay modals (no header-
+      // anchored overlay added). Therefore: run the top-edge assertion ONLY if a
+      // header-anchored overlay element actually exists (a .motion-overlay whose
+      // inline --mg-origin declares a top keyword). If absent, SKIP — never
+      // fabricate an overlay to satisfy this (consistent with 115-02 Task 3
+      // "make no change and record in SUMMARY"). The empty case is valid.
+      await openOperator(page);
+      const count = await page
+        .locator('.motion-overlay[style*="--mg-origin: top"], .motion-overlay[style*="--mg-origin:top"]')
+        .count();
+
+      if (count === 0) {
+        test.skip(true, "No header-anchored overlay present — centered-modal-only outcome (115-02 Task 3). Top-edge origin assertion correctly skipped, never satisfied by fabricating an overlay.");
+        return;
+      }
+
+      const overlay = page
+        .locator('.motion-overlay[style*="--mg-origin: top"], .motion-overlay[style*="--mg-origin:top"]')
+        .first();
+      const originY = await overlay.evaluate(el => parseFloat(getComputedStyle(el).transformOrigin.split(" ")[1]));
+      // Top edge → y origin near 0.
+      expect(originY, "header-anchored overlay origin is top edge").toBeLessThanOrEqual(2);
+    });
+
+    test("theme-picker label transition-property excludes color (theme-switch never animates, D-08)", async ({ page }) => {
+      await openOperator(page);
+      // The shell theme picker label is the data-theme-driven chrome that must
+      // NOT carry a color transition (inverted default, D-08). Target the mobile
+      // theme picker label inside the header.
+      await page.setViewportSize({ width: 320, height: 900 });
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+      // The shell renders both a mobile (md:hidden, visible at 320) and a desktop
+      // theme picker — scope to the visible instance.
+      const label = page
+        .locator("fieldset label")
+        .filter({ hasText: "System" })
+        .filter({ visible: true })
+        .first();
+      await expect(label).toBeVisible();
+      const transitionProperty = await label.evaluate(el => getComputedStyle(el).transitionProperty);
+      expect(transitionProperty, "theme label transitionProperty excludes color").not.toContain("color");
+      expect(transitionProperty, "theme label transitionProperty excludes background-color").not.toContain("background-color");
+    });
+
+    test("data-theme swap never animates — getAnimations() empty immediately after swap (D-08)", async ({ page }) => {
+      await openOperator(page);
+      // Let the page-load entrance animations (.motion-reveal / .motion-fade-in,
+      // <=300ms) settle so we measure only animations triggered BY the swap.
+      await page.evaluate(async () => {
+        const root = document.documentElement;
+        const anims = root.getAnimations ? root.getAnimations({ subtree: true }) : [];
+        await Promise.all(anims.map(a => a.finished.catch(() => {})));
+      });
+      // Now toggle data-theme on the root and assert the swap triggers NO new
+      // running animation on the root subtree (theme-switch never animates).
+      const runningAfterSwap = await page.evaluate(() => {
+        const root = document.documentElement;
+        root.setAttribute("data-theme", "mailglass-dark");
+        void root.offsetWidth; // force a style flush
+        const anims = root.getAnimations ? root.getAnimations({ subtree: true }) : [];
+        return anims.filter(a => a.playState === "running").length;
+      });
+      expect(runningAfterSwap, "no running animations after data-theme swap").toBe(0);
+    });
+
+    test("state layer survives — focus-visible state layer transitionDuration <= 0.1s (D-08)", async ({ page }) => {
+      await openOperator(page);
+      // State layers (the surviving opt-in color transition at the instant token,
+      // 90ms <= 100ms) are proven on the focus-ring chrome. Focus a nav link and
+      // read its transitionDuration in the :focus-visible state.
+      const link = page.getByRole("navigation").getByRole("link").first();
+      await link.focus();
+      const duration = await link.evaluate(el => {
+        const durations = getComputedStyle(el).transitionDuration.split(",").map(s => parseFloat(s));
+        return Math.max(...durations);
+      });
+      expect(duration, "state-layer transitionDuration <= 0.1s").toBeLessThanOrEqual(0.1);
+    });
+
+    test("reduced-motion snaps overlays to instant — opened overlay getAnimations() empty (FLOW-03 success criterion 3 / MOTION-LD-09)", async ({ page }) => {
+      // emulateMedia MUST precede navigation (FACT 4 pattern).
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      const modal = await openOperatorReplayModal(page);
+      // Under prefers-reduced-motion the app.css neutralizer collapses overlay
+      // animation/transition durations to 0.01ms. Assert the opened overlay runs
+      // no animation (getAnimations empty / no running) AND its computed
+      // animation/transition durations are effectively zero.
+      const motion = await modal.evaluate(el => {
+        const anims = el.getAnimations ? el.getAnimations() : [];
+        const running = anims.filter(a => a.playState === "running").length;
+        const s = getComputedStyle(el);
+        return {
+          running,
+          animDur: parseFloat(s.animationDuration),
+          transDur: parseFloat(s.transitionDuration)
+        };
+      });
+      expect(motion.running, "reduced-motion overlay has no running animation").toBe(0);
+      expect(motion.animDur, "reduced-motion overlay animation-duration ~0").toBeLessThanOrEqual(0.05);
+      expect(motion.transDur, "reduced-motion overlay transition-duration ~0").toBeLessThanOrEqual(0.05);
+      // Reset emulation so later tests run with default motion.
+      await page.emulateMedia({ reducedMotion: null });
+    });
+
   });
 
 });

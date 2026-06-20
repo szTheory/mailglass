@@ -414,13 +414,13 @@ defmodule MailglassAdmin.InboundLive do
         data-testid="inbound-master-detail"
         class="mt-6 grid gap-lg md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]"
       >
-        <div class={["space-y-4", @selected_record && "max-md:hidden"]}>
+        <div class={["min-w-0 space-y-4", @selected_record && "max-md:hidden"]}>
           <Overview.overview summary={@inbound_summary} />
 
           <aside
             data-testid="inbound-records-list-card"
             class={[
-              "card rounded-box border border-base-300 bg-base-200 p-0 md:block",
+              "card min-w-0 rounded-box border border-base-300 bg-base-200 p-0 md:block",
               @selected_record && "max-md:hidden"
             ]}
           >
@@ -443,7 +443,7 @@ defmodule MailglassAdmin.InboundLive do
         <section
           data-testid="inbound-detail-column"
           class={[
-            "space-y-4",
+            "min-w-0 space-y-4",
             is_nil(@selected_record) && "order-first md:order-none"
           ]}
         >
