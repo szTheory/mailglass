@@ -67,6 +67,15 @@ for primitive in nav_link nav_pill tenant_chip theme_picker stat_card; do
   fi
 done
 
+# card/1 is the single public thin group-surface shell (Phase 114, D-01/D-02). It is
+# enforced as a PRIMITIVE-DRIFT primitive but — unlike the Phase 110 primitives — does
+# NOT get the per-primitive gallery render_specimen awk assertion: composed group specimens
+# (plan 02) register differently from the single-primitive gallery dispatchers above.
+if ! grep -qE '^[[:space:]]*def[[:space:]]+card\(' "$COMPONENTS" 2>/dev/null; then
+  echo "FAIL: PRIMITIVE-DRIFT-GATE — Components.card/1 public definition missing" >&2
+  errors=$((errors + 1))
+fi
+
 old_primitive_signature_hits="$(
   grep -rEn 'mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out duration-\(--duration-fast\)|mg-focus-ring flex min-h-11 items-center rounded-field px-sm text-body transition-colors ease-out duration-\(--duration-fast\)|inline-flex min-h-11 items-center gap-xs rounded-field border border-base-300 px-sm text-label text-secondary|btn btn-ghost btn-sm btn-square min-h-11"' "$LIB" --include="*.ex" 2>/dev/null |
     grep -vF "${COMPONENTS}:" || true
@@ -200,6 +209,42 @@ fi
 # off-grid tokens gap-3, gap-4, gap-6.
 if grep -rEn 'gap-(3|4|6)([^0-9a-z-]|$)' "$LIB" --include="*.ex" 2>/dev/null; then
   echo "FAIL: GAP-GATE — off-grid gap token found (use gap-sm/md/lg)" >&2
+  errors=$((errors + 1))
+fi
+
+# GROUP_SURFACES: the eight Phase 114 group-surface modules. SPACE-GATE and GROUP-GATE
+# scope to THIS explicit array only — NOT a recursive $LIB grep. 17 other lib files use
+# the same off-grid numerics legitimately and are out of this phase's slice (D-12;
+# 114-RESEARCH Pitfall 1). Built from $LIB like FORM-DRIFT's FILTER_WRAPPERS.
+GROUP_SURFACES=(
+  "${LIB}/mailglass_admin/operator/support_cards.ex"
+  "${LIB}/mailglass_admin/operator/suppression_card.ex"
+  "${LIB}/mailglass_admin/operator/detail_header.ex"
+  "${LIB}/mailglass_admin/operator/timeline.ex"
+  "${LIB}/mailglass_admin/inbound/routing_trace.ex"
+  "${LIB}/mailglass_admin/inbound/evidence_card.ex"
+  "${LIB}/mailglass_admin/inbound/detail_header.ex"
+  "${LIB}/mailglass_admin/inbound/timeline.ex"
+)
+
+# SPACE-GATE: ban raw off-grid padding/margin/space-y/gap numerics in the 8 group
+# surfaces only (D-03). Word-boundary-anchored per 114-RESEARCH Pitfall 1: the leading
+# (^|[^a-z-]) rejects min-h-11 / border-l-4 / h-3; the trailing [^0-9.a-z-]|$ rejects
+# mt-0.5 (next char '.') and gap-3xl (next char letter) while still catching mt-1, p-6,
+# space-y-1, gap-2 (the latter is a hole GAP-GATE leaves open). Closes the off-grid
+# spacing escape that bypasses the xs..3xl / p-md / gap-md / space-y-sm token contract.
+if grep -rEn '(^|[^a-z-])(p[trblxy]?|m[trblxy]?|space-[xy]|gap)-[0-9]+([^0-9.a-z-]|$)' "${GROUP_SURFACES[@]}" 2>/dev/null; then
+  echo "FAIL: SPACE-GATE — raw off-grid spacing literal in a group surface (use xs..3xl / p-md/p-lg / gap-md / space-y-sm)" >&2
+  errors=$((errors + 1))
+fi
+
+# GROUP-GATE: cheap same-tone card-in-card tripwire (D-05/D-07). Bans the
+# bg-base-200 + border + border-base-300 + rounded-box signature appearing in a group
+# surface — a same-tone nested shell reads as a flat box-in-box. This is a tripwire only,
+# NOT the depth authority: the Floki ExUnit ancestor-depth proof (plan 04, D-07) owns
+# real elevation-depth enforcement.
+if grep -rEn 'bg-base-200 border border-base-300 rounded-box' "${GROUP_SURFACES[@]}" 2>/dev/null; then
+  echo "FAIL: GROUP-GATE — same-tone card-in-card signature in a group surface (route the shell through Components.card/1)" >&2
   errors=$((errors + 1))
 fi
 
