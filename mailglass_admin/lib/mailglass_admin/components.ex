@@ -407,6 +407,62 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  attr :kind, :atom, values: [:empty, :error, :permission_denied, :stale], required: true
+  attr :title, :string, required: true
+  attr :body, :string, required: true
+  attr :icon, :string, default: nil
+  attr :rest, :global, default: %{}
+
+  @doc """
+  Renders one of four distinct data-state templates.
+
+  Each kind maps to a unique testid, icon, and icon color so that
+  permission-denied is never mistaken for no-data, and error is never
+  conflated with stale-data.
+
+  ## Kinds
+
+    * `:empty` — no records; rendered with `hero-inbox` and `text-secondary`
+    * `:error` — unavailable/error; rendered with `hero-exclamation-circle` and `text-error`
+    * `:permission_denied` — access restricted; rendered with `hero-lock-closed` and `text-warning`
+    * `:stale` — data may be out of date; rendered with `hero-clock` and `text-secondary`
+  """
+  @doc since: "1.13.0"
+  def data_state(assigns) do
+    assigns =
+      assign(assigns, :resolved_icon, assigns.icon || data_state_icon(assigns.kind))
+
+    ~H"""
+    <section
+      data-testid={data_state_testid(@kind)}
+      class="flex flex-col items-center gap-sm p-lg text-center"
+      {@rest}
+    >
+      <.icon
+        name={@resolved_icon}
+        class={["h-8 w-8", data_state_icon_class(@kind)]}
+      />
+      <h3 class="text-body font-bold text-base-content">{@title}</h3>
+      <p class="text-body text-secondary">{@body}</p>
+    </section>
+    """
+  end
+
+  defp data_state_testid(:empty), do: "data-state-empty"
+  defp data_state_testid(:error), do: "data-state-error"
+  defp data_state_testid(:permission_denied), do: "data-state-permission-denied"
+  defp data_state_testid(:stale), do: "data-state-stale"
+
+  defp data_state_icon(:empty), do: "hero-inbox"
+  defp data_state_icon(:error), do: "hero-exclamation-circle"
+  defp data_state_icon(:permission_denied), do: "hero-lock-closed"
+  defp data_state_icon(:stale), do: "hero-clock"
+
+  defp data_state_icon_class(:empty), do: "text-secondary"
+  defp data_state_icon_class(:error), do: "text-error"
+  defp data_state_icon_class(:permission_denied), do: "text-warning"
+  defp data_state_icon_class(:stale), do: "text-secondary"
+
   defp nav_link_class(true), do: "border-primary bg-base-100 font-bold text-base-content"
 
   defp nav_link_class(false),

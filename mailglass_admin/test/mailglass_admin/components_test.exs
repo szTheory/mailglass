@@ -601,6 +601,110 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
+  describe "data_state/1 — four distinct data-state kinds (DATA-03 contract)" do
+    test "empty kind renders data-state-empty testid, hero-inbox, text-secondary, title, and body" do
+      html =
+        render_component(&Components.data_state/1,
+          kind: :empty,
+          title: "No deliveries",
+          body: "No Deliveries have been recorded yet."
+        )
+
+      assert html =~ ~s(data-testid="data-state-empty")
+      assert html =~ "hero-inbox"
+      assert html =~ "text-secondary"
+      assert html =~ "No deliveries"
+      assert html =~ "No Deliveries have been recorded yet."
+    end
+
+    test "error kind renders data-state-error testid, hero-exclamation-circle, text-error" do
+      html =
+        render_component(&Components.data_state/1,
+          kind: :error,
+          title: "Delivery data unavailable",
+          body: "There was a problem loading Deliveries. Try refreshing the page."
+        )
+
+      assert html =~ ~s(data-testid="data-state-error")
+      assert html =~ "hero-exclamation-circle"
+      assert html =~ "text-error"
+    end
+
+    test "permission_denied kind renders data-state-permission-denied testid, hero-lock-closed, text-warning" do
+      html =
+        render_component(&Components.data_state/1,
+          kind: :permission_denied,
+          title: "Access restricted",
+          body: "You don't have permission to view Deliveries for this tenant."
+        )
+
+      assert html =~ ~s(data-testid="data-state-permission-denied")
+      assert html =~ "hero-lock-closed"
+      assert html =~ "text-warning"
+    end
+
+    test "stale kind renders data-state-stale testid, hero-clock, text-secondary" do
+      html =
+        render_component(&Components.data_state/1,
+          kind: :stale,
+          title: "Data may be out of date",
+          body: "The Deliveries shown here may not reflect recent activity."
+        )
+
+      assert html =~ ~s(data-testid="data-state-stale")
+      assert html =~ "hero-clock"
+      assert html =~ "text-secondary"
+    end
+
+    test "distinctness — empty and error have different testids, permission_denied differs from empty in icon and testid" do
+      empty_html =
+        render_component(&Components.data_state/1,
+          kind: :empty,
+          title: "No deliveries",
+          body: "No deliveries have been recorded yet."
+        )
+
+      error_html =
+        render_component(&Components.data_state/1,
+          kind: :error,
+          title: "Data unavailable",
+          body: "There was a problem loading data."
+        )
+
+      permission_html =
+        render_component(&Components.data_state/1,
+          kind: :permission_denied,
+          title: "Access restricted",
+          body: "You don't have permission."
+        )
+
+      # empty testid differs from error testid
+      assert empty_html =~ ~s(data-testid="data-state-empty")
+      refute empty_html =~ ~s(data-testid="data-state-error")
+      assert error_html =~ ~s(data-testid="data-state-error")
+      refute error_html =~ ~s(data-testid="data-state-empty")
+
+      # permission_denied uses a different icon than empty (security: must not look like no-data)
+      assert permission_html =~ "hero-lock-closed"
+      refute permission_html =~ "hero-inbox"
+      assert permission_html =~ ~s(data-testid="data-state-permission-denied")
+      refute permission_html =~ ~s(data-testid="data-state-empty")
+    end
+
+    test "icon is aria-hidden and title renders in a visible h3 (a11y: decorative icon, visible text)" do
+      html =
+        render_component(&Components.data_state/1,
+          kind: :empty,
+          title: "No deliveries",
+          body: "No deliveries have been recorded yet."
+        )
+
+      assert html =~ ~s(aria-hidden="true")
+      assert html =~ "<h3"
+      assert html =~ "No deliveries"
+    end
+  end
+
   describe "filter_field/1 and filter_section/1 primitive contract" do
     test "filter_section renders a fieldset with visible legend and slotted fields" do
       assigns = %{}
