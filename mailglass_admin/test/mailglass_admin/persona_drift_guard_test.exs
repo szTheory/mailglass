@@ -5,7 +5,7 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
   The persona cohort is materialized by THREE thin builders from one declarative
   spec (`MailglassDemo.Personas.spec/0`):
 
-    1. the demo seed (`MailglassDemo.DemoData.reset!/0` → `Personas.seed!/1`),
+    1. the demo seed (`MailglassDemo.DemoData.reset!/0` → `Personas.seed!/2`),
     2. the admin test-support materializer
        (`OperatorFixtures.seed_persona_cohort!/0`), and
     3. the gallery static specimens (widened in plan 116-04, Wave 2).
@@ -47,6 +47,24 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
                           :high_count,
                           :error
                         ])
+
+  # Per-literal intent signal (WR-03) AND the IN-02 cross-check source. Declared
+  # here (module-attribute read-at-use) so BOTH the gallery byte-consistency
+  # describe block above and `gallery_intends_literal?/2` below can read it. The
+  # gallery anchors each specimen with `data-testid="gallery-#{component}-#{state}"`
+  # (component :fjordline_stress); these per-specimen `state` strings are byte-
+  # present in the gallery source, and IN-02 asserts each also appears in the
+  # gallery-matrix STRESS_CELLS list so the two hardcoded lists cannot drift.
+  # The Latin and CJK names share the one non-ASCII-names specimen, so both map to
+  # that single state — each still gated on a per-specimen signal, not a global
+  # caption token. Before 116-04 wires a specimen its state is absent → the
+  # corresponding byte-consistency assertion is vacuous for that literal only.
+  @fjordline_specimen_states %{
+    non_ascii_latin: "fjordline-non-ascii-names",
+    non_ascii_cjk: "fjordline-non-ascii-names",
+    long_delivery_id: "fjordline-long-id",
+    long_mailable: "fjordline-long-mailable"
+  }
 
   describe "spec is the single source of truth" do
     test "the three personas + edge-case assignments match the locked D-08 set" do
@@ -213,6 +231,29 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
         end
       end
     end
+
+    test "every fjordline specimen state is also covered by the gallery-matrix STRESS_CELLS (IN-02)" do
+      # IN-02: @fjordline_specimen_states (the per-literal intent signal for the
+      # byte-consistency guard) and gallery-matrix.spec.js STRESS_CELLS hardcode
+      # the SAME state strings independently, with no cross-check. A dropped
+      # specimen would surface in two unrelated places (or silently relax this
+      # guard). Assert every state this guard keys on appears in the matrix spec's
+      # STRESS_CELLS list (as the `gallery-fjordline_stress-<state>` testid), so a
+      # dropped specimen fails one obvious place.
+      matrix_src = File.read!(matrix_spec_path())
+
+      missing =
+        @fjordline_specimen_states
+        |> Map.values()
+        |> Enum.uniq()
+        |> Enum.reject(&String.contains?(matrix_src, "gallery-fjordline_stress-#{&1}"))
+
+      assert missing == [],
+             "fjordline specimen state(s) keyed by the drift guard but absent from " <>
+               "gallery-matrix.spec.js STRESS_CELLS: #{inspect(missing)}. " <>
+               "Add the matching `gallery-fjordline_stress-<state>` testid to STRESS_CELLS " <>
+               "(or drop the state from @fjordline_specimen_states) so the two lists cannot drift."
+    end
   end
 
   # The guard's canonical derivation of the spec's deliveries-bearing persona
@@ -252,32 +293,23 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
     |> Path.expand()
   end
 
-  # Per-literal intent signal (WR-03): the gallery "intends" to carry a given
-  # fjordline persona literal iff it declares that literal's OWN namespaced
-  # specimen state. The gallery anchors each specimen with
-  # `data-testid="gallery-#{component}-#{state}"` (component :fjordline_stress);
-  # the per-specimen `state` strings below are byte-present in the gallery
-  # source (the testid is interpolated, so we key on the source-literal state
-  # that uniquely identifies each specimen and is what assembles into its
-  # testid). Each literal is therefore governed INDEPENDENTLY: dropping one
-  # specimen's state drops only that literal's byte-consistency requirement,
-  # instead of a single shared "fjordline-aps" caption token activating all four
-  # at once. The gallery's own pre-existing Phase-113 long-value stress specimen
-  # is a DIFFERENT value under a different state and is intentionally not
-  # governed by this persona drift guard.
-  #
-  # Before 116-04 wires a specimen its state is absent → returns false and the
-  # corresponding byte-consistency assertion is vacuous for that literal only.
-  # The Latin and CJK names share the one non-ASCII-names specimen, so both map
-  # to that single state — each is still gated on a per-specimen signal, not the
-  # global caption token.
-  @fjordline_specimen_states %{
-    non_ascii_latin: "fjordline-non-ascii-names",
-    non_ascii_cjk: "fjordline-non-ascii-names",
-    long_delivery_id: "fjordline-long-id",
-    long_mailable: "fjordline-long-mailable"
-  }
+  defp matrix_spec_path do
+    Path.join([
+      Path.dirname(__ENV__.file),
+      "..",
+      "..",
+      "e2e",
+      "gallery-matrix.spec.js"
+    ])
+    |> Path.expand()
+  end
 
+  # `gallery_intends_literal?/2` keys the per-literal intent signal off
+  # @fjordline_specimen_states (declared near the top of the module so it is in
+  # scope for both the byte-consistency describe block and the IN-02 cross-check).
+  # The gallery's own pre-existing Phase-113 long-value stress specimen is a
+  # DIFFERENT value under a different state and is intentionally not governed by
+  # this persona drift guard.
   defp gallery_intends_literal?(gallery_src, label) do
     case Map.fetch(@fjordline_specimen_states, label) do
       {:ok, state} -> String.contains?(gallery_src, state)
