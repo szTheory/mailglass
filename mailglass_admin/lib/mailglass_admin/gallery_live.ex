@@ -48,6 +48,20 @@ defmodule MailglassAdmin.GalleryLive do
   - data_state (empty, error, permission-denied, stale)
   - deliveries_list-table (populated table/cards, data-state, long-value stress)
   - records_list-table (populated table/cards, data-state, long-value stress)
+  - fjordline_stress (non-ascii-names, long-id, long-mailable, nil-reject) —
+    library-pure mirrors of the `fjordline-aps` persona edge values (RATCHET-02)
+
+  ## fjordline-aps persona mirror (RATCHET-02 / 116-04)
+
+  The `:fjordline_stress` specimens reproduce — with the EXACT literals the
+  `fjordline-aps` demo persona uses (`MailglassDemo.Personas.specimen_literals/0`,
+  plan 116-01) — the four non-ASCII / long-ID / long-module-name / nil-reject edge
+  values so the persona drift-guard (`persona_drift_guard_test.exs`) stays green.
+  The literals are inlined here as source text (NOT a runtime call) because the
+  persona spec is compiled only into the admin `:test` build, never `:dev`/prod —
+  the dev gallery route cannot reference it. The drift-guard reads this file as
+  text and asserts byte-consistency with the spec. Long values use
+  `truncate`/`overflow-hidden text-ellipsis` at weight 400 so they never overflow.
 
   Boundary classification: submodule auto-classifies into the
   `MailglassAdmin` root boundary.
@@ -441,6 +455,33 @@ defmodule MailglassAdmin.GalleryLive do
     ~H"""
     <div data-testid="gallery-composed-detail-timeline">
       <.composed_detail_timeline />
+    </div>
+    """
+  end
+
+  # fjordline-aps persona mirror (RATCHET-02). Each state renders one of the four
+  # edge values with the EXACT spec literals (inlined as source text — see the
+  # module doc for why this is not a runtime `Personas` call). Long values carry
+  # `truncate`/`overflow-hidden text-ellipsis` at weight 400 so the matrix resize
+  # loop (gallery-matrix.spec.js) proves zero horizontal overflow at every width.
+  defp render_specimen(%{component: :fjordline_stress} = assigns) do
+    ~H"""
+    <div class="min-w-0 space-y-sm">
+      <p class="text-label font-bold uppercase text-secondary">{@assigns_map[:caption]}</p>
+      <%= for line <- @assigns_map[:lines] do %>
+        <p
+          class="text-body font-normal text-base-content truncate overflow-hidden text-ellipsis"
+          title={line}
+        >
+          {line}
+        </p>
+      <% end %>
+      <%= if @assigns_map[:event] do %>
+        <Timeline.timeline
+          timeline_events={[@assigns_map[:event]]}
+          highlight_event_id={@assigns_map[:highlight_event_id]}
+        />
+      <% end %>
     </div>
     """
   end
@@ -1238,7 +1279,46 @@ defmodule MailglassAdmin.GalleryLive do
     # call. Data-free / minimal assigns: these are structural specimens.
     {:composed_support_triage, "operator-detail", %{}},
     {:composed_routing_evidence, "inbound-routing", %{}},
-    {:composed_detail_timeline, "inbound-detail", %{}}
+    {:composed_detail_timeline, "inbound-detail", %{}},
+
+    # Phase 116 RATCHET-02: fjordline-aps persona mirror. These specimens carry
+    # the EXACT literals the demo persona uses (MailglassDemo.Personas, plan
+    # 116-01) so the persona drift-guard stays byte-consistent. The "fjordline"
+    # token in these state names activates the drift-guard's gallery-intent
+    # heuristic; the four literal VALUES below are what it asserts byte-present.
+    #
+    # Non-ASCII display names (Latin-extended + CJK) at weight 400, truncate.
+    {:fjordline_stress, "fjordline-non-ascii-names",
+     %{
+       caption: "fjordline-aps from[].name (non-ASCII)",
+       lines: ["Bjørn Hansen", "山田太郎"]
+     }},
+    # Long ULID-class delivery ID — must truncate, never overflow.
+    {:fjordline_stress, "fjordline-long-id",
+     %{
+       caption: "fjordline-aps delivery ID (long ULID-class)",
+       lines: ["del_01JXW9ZQKB3V1N4P2RMT7FHCG"]
+     }},
+    # Long Mailable module name (>= 60 chars) — truncates identically.
+    {:fjordline_stress, "fjordline-long-mailable",
+     %{
+       caption: "fjordline-aps Mailable module name (long)",
+       lines: ["Mailglass.Demo.Mailables.TransactionalEmailWithVeryLongModuleName"]
+     }},
+    # Null branch: a :delivered event with reject_reason: nil renders NO
+    # reject-reason badge (nil = legitimate absence, not an error).
+    {:fjordline_stress, "fjordline-nil-reject",
+     %{
+       caption: "fjordline-aps :delivered event (reject_reason: nil → no badge)",
+       lines: [],
+       event: %{
+         id: "evt_fjordline_delivered",
+         type: :delivered,
+         occurred_at: ~U[2026-06-14 12:00:00Z],
+         metadata: %{},
+         reject_reason: nil
+       }
+     }}
   ]
 
   defp specimens, do: @specimens
@@ -1292,4 +1372,5 @@ defmodule MailglassAdmin.GalleryLive do
   defp component_label(:composed_support_triage), do: "composed_support_triage"
   defp component_label(:composed_routing_evidence), do: "composed_routing_evidence"
   defp component_label(:composed_detail_timeline), do: "composed_detail_timeline"
+  defp component_label(:fjordline_stress), do: "fjordline_stress"
 end
