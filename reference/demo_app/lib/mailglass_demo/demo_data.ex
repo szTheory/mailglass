@@ -26,6 +26,13 @@ defmodule MailglassDemo.DemoData do
     truncate!()
     seed_outbound!()
     seed_inbound!()
+    # RATCHET-01 / D-06: materialize the persona stress cohort from the single
+    # declarative spec. northstar is seeded by seed_outbound!/seed_inbound!
+    # above (Personas.seed! no-ops it); this adds fjordline-aps (single
+    # Delivery, non-ASCII / long-ID / null edge cases) and leaves helios-void
+    # absent (zero deliveries — the no-data edge). Runs at every harness boot
+    # via seeds.exs, which also serves RATCHET-04.
+    MailglassDemo.Personas.seed!(Repo)
     :ok
   end
 
