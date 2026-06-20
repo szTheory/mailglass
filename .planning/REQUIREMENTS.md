@@ -56,7 +56,7 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 
 - [x] **GROUP-01**: Composed component groups (support-cards triage, routing-trace + evidence, detail + timeline) have coherent, intentional spacing and visual hierarchy that makes the next action obvious.
 - [x] **GROUP-02**: Card nesting depth is ≤2 (no accidental "box prison"); content has intentional breathing room (no accidental flush-to-container edges).
-- [ ] **GROUP-03**: Elements align on a consistent x/y grid across each group (no accidental misalignment), holding together at narrow and wide widths.
+- [x] **GROUP-03**: Elements align on a consistent x/y grid across each group (no accidental misalignment), holding together at narrow and wide widths.
 
 ### Pages, Flows, Motion & Microcopy (FLOW)
 
@@ -141,7 +141,7 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | DATA-05 | Phase 113 | Complete |
 | GROUP-01 | Phase 114 | Complete |
 | GROUP-02 | Phase 114 | Complete |
-| GROUP-03 | Phase 114 | Pending |
+| GROUP-03 | Phase 114 | Complete |
 | FLOW-01 | Phase 115 | Pending |
 | FLOW-02 | Phase 115 | Pending |
 | FLOW-03 | Phase 115 | Pending |

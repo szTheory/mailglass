@@ -224,7 +224,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 114-03-PLAN.md — Box-prison fix + shell swap + ~93-token semantic sweep across the 8 group surfaces; green the gates (Wave 3)
+- [x] 114-03-PLAN.md — Box-prison fix + shell swap + ~93-token semantic sweep across the 8 group surfaces; green the gates (Wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -333,7 +333,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 111. Forms | v1.13 | 3/4 | In Progress|  |
 | 112. App-Shell, Nav & Tenant Seam | v1.13 | 6/6 | Complete    | 2026-06-19 |
 | 113. Data-Display | v1.13 | 4/4 | Complete    | 2026-06-20 |
-| 114. Component Groups | v1.13 | 2/4 | In Progress|  |
+| 114. Component Groups | v1.13 | 3/4 | In Progress|  |
 | 115. Pages/Flows + Motion + Microcopy | v1.13 | 0/TBD | Not started | - |
 | 116. Fixtures + Ratchet-Arm | v1.13 | 0/TBD | Not started | - |
 | 117. Release Cut + Milestone Closeout | v1.13 | 0/TBD | Not started | - |

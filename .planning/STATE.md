@@ -2,17 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
-current_phase: 114
-current_phase_name: component-groups
 status: executing
-stopped_at: Completed 114-02-PLAN.md
-last_updated: "2026-06-20T13:30:08.912Z"
+stopped_at: Completed 114-03-PLAN.md
+last_updated: "2026-06-20T13:40:42.678Z"
 last_activity: 2026-06-20
 progress:
   total_phases: 11
   completed_phases: 7
   total_plans: 32
-  completed_plans: 30
+  completed_plans: 31
   percent: 64
 ---
 
@@ -28,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 114 (component-groups) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-20
 
-Progress: [█████████░] 91%
+Progress: [██████████] 97%
 
 ## v1.13 Milestone Intent
 
@@ -216,6 +214,7 @@ convergent + adversarially judged).
 - [114-01]: SPACE-GATE/GROUP-GATE scope to an explicit 8-file GROUP_SURFACES array, never `$LIB` recursion (17 other lib files share the off-grid numerics — Pitfall 1 / D-12)
 - [114-01]: card/1 added to PRIMITIVE-DRIFT as a standalone def-check, NOT the gallery render_specimen awk loop (composed specimens register differently — plan 02)
 - [Phase 114]: Composed-group specimens delegate from gallery dispatcher to public composed_*/1 fns (capturable for Floki proof); smoke assertion in operator_live_test.exs binds specimen to production detail column — D-10: lab must render the same composition the live view does; harness lives in operator_live_test.exs
+- [Phase ?]: 114-03: shadow-raised passed via card/1 :global @rest class-merge (no components.ex edit); border-l-4 status rules paired with colored count + label (WCAG 1.4.1)
 
 ## Quick Tasks Completed
 
@@ -329,6 +328,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 113 P04 | 24 | 3 tasks | 8 files |
 | Phase 114 P01 | 6min | 3 tasks | 3 files |
 | Phase 114 P02 | 12 min | 3 tasks | 4 files |
+| Phase 114 P03 | 10 min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -352,8 +352,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-20T13:30:00.898Z
-**Stopped at:** Completed 114-02-PLAN.md
+**Last session:** 2026-06-20T13:40:42.670Z
+**Stopped at:** Completed 114-03-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
