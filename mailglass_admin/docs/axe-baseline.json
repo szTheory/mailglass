@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "prior": {
+    "run_id": "2026-06-20-phase-116-axe-establish",
+    "violations": {
+      "deliveries": {
+        "light": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        },
+        "dark": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        },
+        "system": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        }
+      },
+      "inbound": {
+        "light": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        },
+        "dark": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        },
+        "system": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        }
+      },
+      "preview": {
+        "light": {
+          "total": 1,
+          "rules": {
+            "aria-allowed-attr": 1
+          }
+        },
+        "dark": {
+          "total": 1,
+          "rules": {
+            "aria-allowed-attr": 1
+          }
+        },
+        "system": {
+          "total": 1,
+          "rules": {
+            "aria-allowed-attr": 1
+          }
+        }
+      }
+    }
+  },
+  "current": {
+    "run_id": "2026-06-20-phase-116-axe",
+    "violations": {
+      "deliveries": {
+        "light": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        },
+        "dark": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        },
+        "system": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        }
+      },
+      "inbound": {
+        "light": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        },
+        "dark": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        },
+        "system": {
+          "total": 1,
+          "rules": {
+            "scrollable-region-focusable": 1
+          }
+        }
+      },
+      "preview": {
+        "light": {
+          "total": 1,
+          "rules": {
+            "aria-allowed-attr": 1
+          }
+        },
+        "dark": {
+          "total": 1,
+          "rules": {
+            "aria-allowed-attr": 1
+          }
+        },
+        "system": {
+          "total": 1,
+          "rules": {
+            "aria-allowed-attr": 1
+          }
+        }
+      }
+    }
+  }
+}
