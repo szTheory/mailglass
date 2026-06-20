@@ -10,7 +10,7 @@ defmodule Mailglass.OptionalDeps.Oban do
   Oban integration lands in  (Outbound). This gateway is delivered in
    so Config/Telemetry can reference it without forward-reference pain.
 
-  ##  addition — TenancyMiddleware ()
+  ##  addition — TenancyMiddleware
 
   `Mailglass.Oban.TenancyMiddleware` (defined as a sibling module in this
   file, conditionally compiled when `Oban.Worker` is loaded) serializes
@@ -26,7 +26,7 @@ defmodule Mailglass.OptionalDeps.Oban do
   worker's `perform/1`. Both paths converge on the same
   `Mailglass.Tenancy.with_tenant/2` wrap.
 
-  ## Lint Enforcement ()
+  ## Lint Enforcement
 
   The Credo check `NoBareOptionalDepReference` flags direct `Oban.*` calls
   outside this module. All Oban interaction routes through the Outbound
@@ -87,7 +87,7 @@ end
 if Code.ensure_loaded?(Oban.Worker) do
   defmodule Mailglass.Oban.TenancyMiddleware do
     @moduledoc """
-    Serializes `Mailglass.Tenancy.current/0` across Oban job boundaries ().
+    Serializes `Mailglass.Tenancy.current/0` across Oban job boundaries.
 
     ## Enqueue side
 

@@ -15,7 +15,7 @@ defmodule Mailglass.Stream do
   - Per-stream provider routing via per-tenant adapter resolver (DELIV-07)
 
   Why a no-op seam at v0.1 rather than "omit the stage": the preflight
-  pipeline () is stable across versions. Adding stream_policy
+  pipeline is stable across versions. Adding stream_policy
   later would be a breaking change to the pipeline order; shipping a
   no-op now locks the contract.
   """

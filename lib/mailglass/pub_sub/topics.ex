@@ -11,7 +11,7 @@ defmodule Mailglass.PubSub.Topics do
   - `deliveries/1` — `"mailglass:deliveries:\#{tenant_id}"` — delivery-list stream
 
   Projector broadcasts on BOTH `events/1` and `events/2` after every
-  successful projection update ().
+  successful projection update.
   """
 
   @doc "Returns the tenant-wide event stream topic."

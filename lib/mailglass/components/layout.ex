@@ -3,7 +3,7 @@ defmodule Mailglass.Components.Layout do
   Email document layout with MSO head and CSS reset.
 
   Emits the `<!DOCTYPE html>` + `<head>` + `<body>` wrapper once. The head
-  contains the MSO `OfficeDocumentSettings` XML block () so classic Outlook
+  contains the MSO `OfficeDocumentSettings` XML block so classic Outlook
   Windows renders images at 96 DPI, and light-only color-scheme metas so
   Outlook.com cannot partial-invert the design ( defers dark mode to v0.5).
 

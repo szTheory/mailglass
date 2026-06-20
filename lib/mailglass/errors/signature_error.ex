@@ -15,7 +15,7 @@ defmodule Mailglass.SignatureError do
   formally hardens the migration with `api_stability.md` documentation
   and final message wording.
 
-  - `:missing_header` — the provider's signature header is not present on the request ()
+  - `:missing_header` — the provider's signature header is not present on the request
   - `:malformed_header` — the header is present but cannot be parsed (bad Base64, missing prefix)
   - `:bad_credentials` — Postmark Basic Auth user/pass mismatch (`Plug.Crypto.secure_compare/2` returned false)
   - `:ip_disallowed` — Postmark IP allowlist mismatch (opt-in; )
@@ -49,7 +49,7 @@ defmodule Mailglass.SignatureError do
     :bad_signature,
     :timestamp_skew,
     :malformed_key,
-    # Legacy ():
+    # Legacy:
     :missing,
     :malformed,
     :mismatch

@@ -1,10 +1,10 @@
 defmodule Mailglass.Events.Reconciler do
   @moduledoc """
-  Pure Ecto query functions for orphan-webhook reconciliation ().
+  Pure Ecto query functions for orphan-webhook reconciliation.
 
    scope: query functions only.  wraps these in
   `Mailglass.Oban.Reconciler` at `{:cron, "*/15 * * * *"}` cadence
-  ().  has no Oban dep.
+  has no Oban dep.
 
   ## What "orphan" means
 
@@ -53,7 +53,7 @@ defmodule Mailglass.Events.Reconciler do
     Default: 10_080 (7 days).
 
   Uses the partial index `mailglass_events_needs_reconcile_idx`
-  () for efficient scans.
+  for efficient scans.
   """
   @doc since: "0.1.0"
   @spec find_orphans(keyword()) :: [Event.t()]
@@ -149,7 +149,7 @@ defmodule Mailglass.Events.Reconciler do
   end
 
   defp extract(%Event{metadata: md, normalized_payload: np}, key) when is_binary(key) do
-    #  V02 migration dropped `raw_payload` from the ledger ().
+    #  V02 migration dropped `raw_payload` from the ledger.
     # Orphan reconciliation now reads `:metadata` first (preserved write
     # path for ingest-time context) and falls back to `:normalized_payload`
     # (provider-normalized Anymail fields like `sg_message_id` or

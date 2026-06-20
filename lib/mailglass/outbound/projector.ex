@@ -1,12 +1,12 @@
 defmodule Mailglass.Outbound.Projector do
   @moduledoc """
   The single place where `mailglass_deliveries` projection columns are
-  updated (). Consumed by  dispatch,  webhook ingest,
+  updated. Consumed by  dispatch,  webhook ingest,
   and + orphan reconciliation. No projection update happens
   outside this module — a  candidate Credo check
   (`NoProjectorOutsideOutbound`) will enforce at lint time.
 
-  ## App-level monotonic rule ()
+  ## App-level monotonic rule
 
   - `last_event_at` — `max(current, event.occurred_at)`; monotonic.
   - `last_event_type` — advances together with `last_event_at`. The two
@@ -30,7 +30,7 @@ defmodule Mailglass.Outbound.Projector do
   webhook batches). DB CHECK constraints on lifecycle ordering would
   cause production failures on valid provider behavior.
 
-  ## Optimistic locking ()
+  ## Optimistic locking
 
   Every returned changeset chains `Ecto.Changeset.optimistic_lock(:lock_version)`.
   Concurrent dispatch attempts on the same delivery raise
@@ -135,7 +135,7 @@ defmodule Mailglass.Outbound.Projector do
 
   @doc """
   Broadcasts a post-commit `{:delivery_updated, delivery_id, event_type, meta}`
-  payload to the relevant Mailglass.PubSub topics ().
+  payload to the relevant Mailglass.PubSub topics.
 
   Called AFTER the caller's `Repo.transact/1` (or `Repo.multi/1`) returns
   `{:ok, _}`. Broadcasting INSIDE the transaction would couple PubSub

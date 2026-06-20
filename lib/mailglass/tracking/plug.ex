@@ -14,7 +14,7 @@ defmodule Mailglass.Tracking.Plug do
   - `GET /c/:token` — HTTP 302 redirect to the signed target_url.
     Failed verify returns HTTP 404.
 
-  ## Security headers ()
+  ## Security headers
 
   Pixel response:
   - `Cache-Control: no-store, private, max-age=0`
@@ -26,7 +26,7 @@ defmodule Mailglass.Tracking.Plug do
 
   Emits `[:mailglass, :tracking, :open, :recorded]` and
   `[:mailglass, :tracking, :click, :recorded]` on successful event record.
-  Metadata: `%{delivery_id: binary, tenant_id: binary}` — no PII ().
+  Metadata: `%{delivery_id: binary, tenant_id: binary}` — no PII.
   """
 
   use Plug.Router
@@ -42,7 +42,7 @@ defmodule Mailglass.Tracking.Plug do
                   1, 0, 0, 0, 0, 44, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 68, 1, 0, 59>>
 
   get "/o/:token" do
-    # Strip .gif suffix — URL shape is /o/<token>.gif ()
+    # Strip .gif suffix — URL shape is /o/<token>.gif
     token_clean = String.replace_suffix(token, ".gif", "")
 
     case Mailglass.Tracking.Token.verify_open(Mailglass.Tracking.endpoint(), token_clean) do
@@ -109,7 +109,7 @@ defmodule Mailglass.Tracking.Plug do
 
   defp record_click_event(delivery_id, tenant_id, target_url) do
     Mailglass.Tenancy.with_tenant(tenant_id, fn ->
-      # Hash the URL to avoid storing PII-adjacent click targets in event metadata ().
+      # Hash the URL to avoid storing PII-adjacent click targets in event metadata.
       url_hash = :crypto.hash(:sha256, target_url) |> Base.encode16(case: :lower)
 
       result =

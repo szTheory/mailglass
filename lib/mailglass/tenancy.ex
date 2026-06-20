@@ -15,7 +15,7 @@ defmodule Mailglass.Tenancy do
   `scope/2` and a `"default"` literal tenant_id from `current/0` when
   no stamping has occurred.
 
-  ## Process-dict convention ()
+  ## Process-dict convention
 
   `put_current/1` writes `tenant_id :: String.t()` under the
   namespaced key `:mailglass_tenant_id`. `current/0` reads it. The
@@ -23,7 +23,7 @@ defmodule Mailglass.Tenancy do
   `Mailglass.TenancyError` when the key is unset — the fail-loud
   variant for callers that assert they hold context.
 
-  ## Phoenix 1.8 `%Scope{}` interop ()
+  ## Phoenix 1.8 `%Scope{}` interop
 
   Core does NOT pattern-match `%Phoenix.Scope{}`. Adopters write a
   two-line Plug / on_mount callback:
@@ -47,7 +47,7 @@ defmodule Mailglass.Tenancy do
                       resolve_outbound_adapter_ref: 1
 
   @doc """
-  Optional: return a per-tenant tracking host override ().
+  Optional: return a per-tenant tracking host override.
 
   Default adopter resolution: `:default` (use the global
   `config :mailglass, :tracking, host:` value). Adopters returning
@@ -87,7 +87,7 @@ defmodule Mailglass.Tenancy do
             ) :: {:ok, outbound_adapter_ref()} | :default
 
   @doc """
-  Optional: resolve the tenant from a verified webhook context ().
+  Optional: resolve the tenant from a verified webhook context.
 
   Called by `Mailglass.Webhook.Plug` AFTER `Provider.verify!/3` returns
   `:ok` — 's "verify-first, tenant-second" ordering closes the
@@ -247,7 +247,7 @@ defmodule Mailglass.Tenancy do
   stamped in the current process. Returns `:ok` otherwise.
 
   Unlike `current/0`, does NOT fall back to the `SingleTenant` default.
-  This is the SEN precondition () — ensures
+  This is the SEN precondition — ensures
   `Events.append_multi/3` auto-capture via `Tenancy.current/0` does not
   silently default to `"default"` in a multi-tenant adopter.
   """

@@ -16,7 +16,7 @@ defmodule Mailglass.Error do
   - `Mailglass.RateLimitError` — rate limit exceeded (domain, tenant, stream)
   - `Mailglass.ConfigError` — configuration missing, invalid, conflicting, optional-dep absent
   - `Mailglass.EventLedgerImmutableError` — SQLSTATE 45A01 translation (, )
-  - `Mailglass.TenancyError` — tenant context not stamped on the current process ()
+  - `Mailglass.TenancyError` — tenant context not stamped on the current process
 
   ## Pattern Matching
 

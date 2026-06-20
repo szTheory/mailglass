@@ -1,7 +1,7 @@
 defmodule Mailglass.Outbound.Delivery do
   @moduledoc """
   One row per (Message, recipient, provider) tuple. Mutable: projection
-  columns are updated by `Mailglass.Outbound.Projector` ().
+  columns are updated by `Mailglass.Outbound.Projector`.
 
   Field order per CONTEXT.md "Claude's Discretion":
   id → tenant_id → foreign keys → state → metadata/flags → timestamps.
@@ -10,19 +10,19 @@ defmodule Mailglass.Outbound.Delivery do
 
   ## Atom Sets
 
-  - `:stream` — `:transactional | :operational | :bulk` ()
+  - `:stream` — `:transactional | :operational | :bulk`
   - `:last_event_type` — full Anymail event taxonomy + mailglass
     internal `:dispatched` / `:suppressed` ( project-level)
 
-  ## Projection columns ()
+  ## Projection columns
 
   `dispatched_at`, `delivered_at`, `bounced_at`, `complained_at`,
   `suppressed_at`, `terminal`, `last_event_type`, `last_event_at` are the
-  only Elixir-modifiable facts. `Mailglass.Outbound.Projector` ()
+  only Elixir-modifiable facts. `Mailglass.Outbound.Projector`
   owns writes to these columns; `metadata` is a free-form jsonb bag for
   adopter-supplied non-PII extras.
 
-  ## Optimistic locking ()
+  ## Optimistic locking
 
   `:lock_version` defaults to `1`. Consumers chain
   `Ecto.Changeset.optimistic_lock(:lock_version)` onto the changeset when

@@ -20,7 +20,7 @@ defmodule Mailglass.Adapter do
   ## Adapters in this repo
 
   - `Mailglass.Adapters.Fake` (TRANS-02) — in-memory, Swoosh.Sandbox-style
-    ownership. The merge-blocking release gate ().
+    ownership. The merge-blocking release gate.
   - `Mailglass.Adapters.Swoosh` (TRANS-03) — wraps any `Swoosh.Adapter`
     (Postmark, SendGrid, Mailgun, SES, Resend, SMTP). Normalizes errors
     into `%Mailglass.SendError{}`.

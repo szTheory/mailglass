@@ -1,7 +1,7 @@
 defmodule Mailglass.SuppressionStore.ETS.TableOwner do
   @moduledoc """
   Init-and-idle GenServer owning the `:mailglass_suppression_store` ETS
-  table. Same pattern as `Mailglass.RateLimiter.TableOwner` ().
+  table. Same pattern as `Mailglass.RateLimiter.TableOwner`.
 
   ## ETS opts
 

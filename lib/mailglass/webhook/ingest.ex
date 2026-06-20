@@ -17,7 +17,7 @@ defmodule Mailglass.Webhook.Ingest do
   Inside `Mailglass.Repo.transact/1`:
 
     1. `SET LOCAL statement_timeout = '2s'` ( — DoS bound)
-    2. `SET LOCAL lock_timeout = '500ms'` ()
+    2. `SET LOCAL lock_timeout = '500ms'`
     3. `Multi.run(:duplicate_check, ...)` — deterministic pre-insert
        lookup against UNIQUE(provider, provider_event_id) inside the
        same snapshot as the upcoming insert. Per revision B5.

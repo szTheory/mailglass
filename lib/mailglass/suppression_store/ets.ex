@@ -1,6 +1,6 @@
 defmodule Mailglass.SuppressionStore.ETS do
   @moduledoc """
-  ETS-backed implementation of `Mailglass.SuppressionStore` ().
+  ETS-backed implementation of `Mailglass.SuppressionStore`.
 
   Test-speed + narrow production use case (single-node, read-heavy,
   sub-100-entry lists). Default impl remains

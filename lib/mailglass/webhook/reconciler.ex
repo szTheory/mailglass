@@ -24,7 +24,7 @@ if Code.ensure_loaded?(Oban.Worker) do
          UPDATE the orphan row; preserves the SQLSTATE 45A01 append-only
          invariant) + call `Projector.update_projections/2` for the
          matched Delivery + post-commit broadcast on the Projector PubSub
-         topic ( )
+         topic
       4. On no-match: leave the orphan row untouched; next sweep retries
 
     After 7 days (`max_age_minutes: 7 * 24 * 60`), `find_orphans/1` filters

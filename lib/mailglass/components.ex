@@ -13,7 +13,7 @@ defmodule Mailglass.Components do
   All brand-token attributes (`:tone`, `:variant`, `:bg`) resolve via
   `Mailglass.Components.Theme.color/1` and `.font/1` at render time. The theme
   is cached in `:persistent_term` by `Mailglass.Config.validate_at_boot!/0`
-  (); reads are O(1).
+  reads are O(1).
 
   ## MSO / Outlook VML
 
@@ -26,9 +26,9 @@ defmodule Mailglass.Components do
   ## Plaintext extraction
 
   Each content component emits `data-mg-plaintext="<strategy>"` on its root
-  node. `Mailglass.Renderer.to_plaintext/1` () walks the tree keyed
+  node. `Mailglass.Renderer.to_plaintext/1` walks the tree keyed
   off these markers. A terminal Floki pass strips all `data-mg-*` attributes
-  from the final HTML wire ().
+  from the final HTML wire.
   """
 
   use Phoenix.Component
@@ -52,7 +52,7 @@ defmodule Mailglass.Components do
 
   Styled to be invisible (`display:none`, `mso-hide:all`) and padded with
   zero-width chars to push additional content out of Gmail's preview pull
-  (). Carries `data-mg-plaintext="skip"` so the plaintext walker
+  Carries `data-mg-plaintext="skip"` so the plaintext walker
   excludes it from the text body.
   """
   @doc since: "0.1.0"
@@ -75,7 +75,7 @@ defmodule Mailglass.Components do
   attr(:rest, :global, include: @global_includes)
   slot(:inner_block, required: true)
 
-  @doc "Renders a 600px-wide centered email container table ()."
+  @doc "Renders a 600px-wide centered email container table."
   @doc since: "0.1.0"
   def container(assigns) do
     assigns = assign(assigns, :bg_color, resolve_bg(assigns.bg, assigns.bg_hex))
@@ -140,7 +140,7 @@ defmodule Mailglass.Components do
   Renders a row that holds `column/1` children.
 
   Emits a `<!--[if mso]><table role="presentation">` ghost table so classic
-  Outlook aligns columns side-by-side instead of stacking them ().
+  Outlook aligns columns side-by-side instead of stacking them.
   """
   @doc since: "0.1.0"
   def row(assigns) do
@@ -307,7 +307,7 @@ defmodule Mailglass.Components do
   end
 
   # ---------------------------------------------------------------------------
-  # button/1 — SURGICAL VML FLAGSHIP: <v:roundrect> bulletproof button ()
+  # button/1 — SURGICAL VML FLAGSHIP: <v:roundrect> bulletproof button
   # ---------------------------------------------------------------------------
 
   attr(:variant, :string, values: ~w(primary secondary ghost), default: "primary")
@@ -319,7 +319,7 @@ defmodule Mailglass.Components do
   @doc """
   Renders a bulletproof button with a `<v:roundrect>` VML wrapper for classic
   Outlook and an `<a>` HTML fallback carrying `mso-hide:all` so Outlook hides
-  it in favour of the VML version ().
+  it in favour of the VML version.
 
   Content components exclude `:style` from `:global` per .
   """
@@ -403,7 +403,7 @@ defmodule Mailglass.Components do
   defp button_bg_color("ghost", _color), do: "transparent"
 
   # ---------------------------------------------------------------------------
-  # img/1 — no VML; alt required at compile time ()
+  # img/1 — no VML; alt required at compile time
   # ---------------------------------------------------------------------------
 
   attr(:src, :string, required: true)
@@ -415,7 +415,7 @@ defmodule Mailglass.Components do
 
   @doc """
   Renders an `<img>` tag. The `:alt` attribute is required at compile time
-  () — authors must pass `alt=""` for decorative images.
+  — authors must pass `alt=""` for decorative images.
   """
   @doc since: "0.1.0"
   def img(assigns) do
@@ -442,7 +442,7 @@ defmodule Mailglass.Components do
   @doc """
   Renders an inline text link. Sets the tone color both on the `<a>` and the
   wrapping `<span>` so email clients that strip one still render the other
-  ().
+  .
   """
   @doc since: "0.1.0"
   def link(assigns) do
@@ -478,7 +478,7 @@ defmodule Mailglass.Components do
 
   @doc """
   Renders an email-safe horizontal rule: a zero-height `<table>` with a 1px
-  `border-top` on the inner `<td>` ().
+  `border-top` on the inner `<td>`.
   """
   @doc since: "0.1.0"
   def hr(assigns) do

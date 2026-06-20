@@ -345,7 +345,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     end
   end
 
-  # ---- Private: ConfirmSubscription URL construction () ----
+  # ---- Private: ConfirmSubscription URL construction ----
 
   defp build_confirm_url(topic_arn, token) do
     # TopicArn format: arn:{partition}:sns:{region}:{account}:{name}
@@ -637,7 +637,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     }
   end
 
-  # ---- SES bounce mapping () ----
+  # ---- SES bounce mapping ----
 
   defp map_bounce(%{"bounceType" => "Permanent", "bounceSubType" => sub_type}) do
     case sub_type do
@@ -653,7 +653,7 @@ defmodule Mailglass.Webhook.Providers.SES do
   defp map_bounce(%{"bounceType" => "Undetermined"}), do: {:deferred, nil}
   defp map_bounce(_), do: {:bounced, :bounced}
 
-  # ---- SES event publishing type mapping () ----
+  # ---- SES event publishing type mapping ----
 
   defp map_event_type("Send"), do: {:sent, nil}
   defp map_event_type("Delivery"), do: {:delivered, nil}
@@ -670,7 +670,7 @@ defmodule Mailglass.Webhook.Providers.SES do
     {:unknown, nil}
   end
 
-  # ---- Stable provider_event_id () ----
+  # ---- Stable provider_event_id ----
 
   defp build_provider_event_id(sns_message_id, email, _idx) when is_binary(email) do
     "#{sns_message_id}:#{email}"

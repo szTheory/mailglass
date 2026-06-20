@@ -9,13 +9,13 @@ defmodule Mailglass.RateLimiter do
 
   ## Invariants
 
-  - **`:transactional` bypass ():** `check/1` with
+  - **`:transactional` bypass:** `check/1` with
     `stream == :transactional` returns `:ok` BEFORE any ETS read.
     Password-reset / magic-link / verify-email MUST NOT be throttled
     because a marketing campaign saturated the bucket. Documented as
     a reserved invariant in `docs/api_stability.md`; this is NOT a
     tunable.
-  - **Leaky-bucket continuous refill ():** capacity tokens refill
+  - **Leaky-bucket continuous refill:** capacity tokens refill
     at `capacity / 60_000` tokens/ms.
 
   ## Configuration

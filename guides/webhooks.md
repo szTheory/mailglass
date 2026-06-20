@@ -323,12 +323,12 @@ telemetry PII policy — no `:ip`, `:user_agent`, `:remote_ip`, `:raw_body`,
 
 | Event path | Type | Stop metadata keys |
 |------------|------|--------------------|
-| `[:mailglass, :webhook, :ingest, :start | :stop | :exception]` | full span | `provider, tenant_id, status, event_count, duplicate, failure_reason, delivery_id_matched` |
-| `[:mailglass, :webhook, :signature, :verify, :start | :stop | :exception]` | full span | `provider, status, failure_reason` |
+| `[:mailglass, :webhook, :ingest, :start \| :stop \| :exception]` | full span | `provider, tenant_id, status, event_count, duplicate, failure_reason, delivery_id_matched` |
+| `[:mailglass, :webhook, :signature, :verify, :start \| :stop \| :exception]` | full span | `provider, status, failure_reason` |
 | `[:mailglass, :webhook, :normalize, :stop]` | single emit | `provider, event_type, mapped` |
 | `[:mailglass, :webhook, :orphan, :stop]` | single emit | `provider, event_type, tenant_id, age_seconds` |
 | `[:mailglass, :webhook, :duplicate, :stop]` | single emit | `provider, event_type` |
-| `[:mailglass, :webhook, :reconcile, :start | :stop | :exception]` | full span | `tenant_id, scanned_count, linked_count, remaining_orphan_count, status` |
+| `[:mailglass, :webhook, :reconcile, :start \| :stop \| :exception]` | full span | `tenant_id, scanned_count, linked_count, remaining_orphan_count, status` |
 
 ### Recipe — alert on signature failure rate
 

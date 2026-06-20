@@ -5,7 +5,7 @@ defmodule Mailglass.Schema do
   Three module attributes, no behaviour injection, no magic — consistent
   with 's "pluggable behaviours over magic" DNA. Consumed by
   `Mailglass.Outbound.Delivery`, `Mailglass.Events.Event`, and
-  `Mailglass.Suppression.Entry` ().
+  `Mailglass.Suppression.Entry`.
 
   ## Usage
 

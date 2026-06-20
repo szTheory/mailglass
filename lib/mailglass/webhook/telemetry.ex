@@ -3,7 +3,7 @@ defmodule Mailglass.Webhook.Telemetry do
   Co-located span helpers for the webhook ingest surface (CONTEXT ).
 
   Mirrors `Mailglass.Telemetry.send_span/2` placement convention
-  ( ): per-domain helpers live in their own module under
+  per-domain helpers live in their own module under
   the domain's `lib/` directory. The helpers in this module are the
   single-module surface for the webhook telemetry contract, which
   means  `LINT-02` (`NoPiiInTelemetryMeta`) has exactly one
@@ -21,7 +21,7 @@ defmodule Mailglass.Webhook.Telemetry do
   | `[:mailglass, :webhook, :reconcile, :start \\| :stop \\| :exception]` | full span | `tenant_id, scanned_count, linked_count, remaining_orphan_count, status` |
 
   Single-emit helpers delegate to `Mailglass.Telemetry.execute/3`
-  (). Full-span helpers call `:telemetry.span/3` directly
+  Full-span helpers call `:telemetry.span/3` directly
   because the Plug needs per-request stop metadata enrichment
   (`status`, `failure_reason`, `event_count`, `duplicate`) — the
   `Mailglass.Telemetry.span/3` wrapper closes metadata at call time,
@@ -48,7 +48,7 @@ defmodule Mailglass.Webhook.Telemetry do
   Start metadata is always the `metadata` argument at call time
   (before outcome is known).
 
-  ## Whitelist discipline ()
+  ## Whitelist discipline
 
   **NEVER include in any metadata map:**
 
@@ -113,7 +113,7 @@ defmodule Mailglass.Webhook.Telemetry do
   (`[:mailglass, :webhook, :normalize, :stop]`).
 
   Metadata SHOULD include `:provider`, `:event_type`, `:mapped`.
-  Alertable on sustained `mapped: false` rate ().
+  Alertable on sustained `mapped: false` rate.
   """
   @doc since: "0.1.0"
   @spec normalize_emit(map()) :: :ok

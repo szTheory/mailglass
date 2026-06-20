@@ -1,6 +1,6 @@
 defmodule Mailglass.Tracking.Guard do
   @moduledoc """
-  Runtime auth-stream tracking guard ().
+  Runtime auth-stream tracking guard.
 
   **Dual enforcement with  `TRACK-02 NoTrackingOnAuthStream`**:
 
@@ -9,11 +9,11 @@ defmodule Mailglass.Tracking.Guard do
   - Runtime: THIS MODULE catches the dynamic-function-name bypass
     (metaprogrammed mailables, `def unquote(name)(...)` patterns).
 
-  Invoked from `Mailglass.Outbound.send/2` () as a precondition
+  Invoked from `Mailglass.Outbound.send/2` as a precondition
   similar to `Mailglass.Tenancy.assert_stamped!/0` — not a preflight STAGE
   (no `{:error, _}` return path), but a FAIL-LOUD raise.
 
-  ## Regex ()
+  ## Regex
 
   `^(magic_link|password_reset|verify_email|confirm_account)` — matches the
   four canonical auth-carrying function-name prefixes. Variant function names
@@ -24,7 +24,7 @@ defmodule Mailglass.Tracking.Guard do
 
   ## Adopters CANNOT turn this off
 
-  Deliberate choice (). The "acknowledged" escape hatch is not provided.
+  Deliberate choice. The "acknowledged" escape hatch is not provided.
   Adopters who hit the regex falsely should rename their function or split their
   mailable module.
 

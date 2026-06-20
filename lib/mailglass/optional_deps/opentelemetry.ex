@@ -2,7 +2,7 @@ defmodule Mailglass.OptionalDeps.OpenTelemetry do
   @moduledoc """
   Gateway for the optional OpenTelemetry dependency (`{:opentelemetry, "~> 1.7"}`).
 
-  OpenTelemetry integration is **adopter-owned** (). The
+  OpenTelemetry integration is **adopter-owned**. The
   `opentelemetry_telemetry` bridge auto-connects any
   `[:mailglass, _, _, _, :start | :stop]` telemetry pair to OTel spans via
   the `:telemetry_span_context` metadata that `:telemetry.span/3` injects.

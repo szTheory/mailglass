@@ -40,7 +40,7 @@ defmodule Mailglass.Webhook.Router do
       `[:postmark, :sendgrid, :mailgun, :ses]`. The default remains
       `[:postmark, :sendgrid]`; Mailgun and SES require explicit opt-in.
       Unknown providers raise `ArgumentError` at compile time — invalid
-      config fails at router-mount, not at request time ().
+      config fails at router-mount, not at request time.
     * `:as` — route helper prefix. Default `:mailglass_webhook` per
       CONTEXT  (shared vocabulary lock with the  admin
       mount). Each generated route's helper is `:"\#{as}_\#{provider}"`.

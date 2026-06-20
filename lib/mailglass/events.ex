@@ -44,14 +44,14 @@ defmodule Mailglass.Events do
   describe the same underlying behavior; the detection mechanic
   is just the column that tells the story.
 
-  ## Auto-capture ()
+  ## Auto-capture
 
   When `:tenant_id` is not in `attrs`, `Mailglass.Tenancy.current/0`
   fills it. When `:trace_id` is not set, an OTel context probe fills
   it (nil-tolerant; the probe is guarded so the module compiles even
   when `:otel_propagator_text_map` is absent).
 
-  ## Telemetry ()
+  ## Telemetry
 
   Both paths (well, `append/1` directly; `append_multi/3` via the
   caller's `Repo.transact/1` call) emit
@@ -136,7 +136,7 @@ defmodule Mailglass.Events do
   end
 
   def append_multi(multi, name, attrs) when is_atom(name) and is_function(attrs, 1) do
-    # Function form (): compose via a Multi.run step that produces
+    # Function form: compose via a Multi.run step that produces
     # the attrs map from prior Multi changes, then feeds it into the insert.
     # Matches Multi.insert/4 and Oban.insert/2 function-form conventions —
     # callers can reference a prior step's result (e.g. a just-inserted

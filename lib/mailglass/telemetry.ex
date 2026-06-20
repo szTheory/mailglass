@@ -22,7 +22,7 @@ defmodule Mailglass.Telemetry do
       — Measurements on `:stop`: `%{duration: native_time}`
       — Metadata: `%{tenant_id: string, mailable: atom}`
 
-  ## Metadata Policy ()
+  ## Metadata Policy
 
   **Whitelisted keys:** `:tenant_id, :mailable, :provider, :status,
   :message_id, :delivery_id, :event_id, :latency_ms, :recipient_count,

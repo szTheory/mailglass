@@ -111,7 +111,7 @@ defmodule Mailglass.Renderer do
   @doc """
   Extracts plaintext from HTML using `data-mg-plaintext` strategy attributes.
 
-  Strategies ():
+  Strategies:
     * `"skip"` — excludes the element and its children (preheader)
     * `"link_pair"` — emits `"Label (url)"` (button, link)
     * `"divider"` — emits `"\\n---\\n"` (hr)

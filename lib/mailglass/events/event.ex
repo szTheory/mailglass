@@ -3,9 +3,9 @@ defmodule Mailglass.Events.Event do
   Append-only row in `mailglass_events`.
 
   Exposes `changeset/1` for INSERTS only. There is NO update/delete
-  helper — the `mailglass_events_immutable_trigger` () raises
+  helper — the `mailglass_events_immutable_trigger` raises
   SQLSTATE 45A01 on any UPDATE/DELETE; `Mailglass.Repo.transact/1`
-  () translates to `Mailglass.EventLedgerImmutableError`.
+  translates to `Mailglass.EventLedgerImmutableError`.
 
   Absence of an update helper also prevents code that looks like it
   could work but blows up in production.
@@ -22,7 +22,7 @@ defmodule Mailglass.Events.Event do
   `delivery_id` is a logical `:binary_id` reference — NO FK to
   `mailglass_deliveries` (ARCHITECTURE §4.3; Pitfall 4 in RESEARCH).
   Orphan webhooks insert with `delivery_id: nil` and are linked later
-  by `Mailglass.Events.Reconciler` ().
+  by `Mailglass.Events.Reconciler`.
 
   ## Idempotency
 
@@ -89,7 +89,7 @@ defmodule Mailglass.Events.Event do
 
   #  V02 migration drops `mailglass_events.raw_payload` — raw
   # provider bytes now live in `mailglass_webhook_events.raw_payload`
-  # (). The ledger holds the normalized projection + audit metadata
+  #. The ledger holds the normalized projection + audit metadata
   # only; callers that previously stashed arbitrary context in
   # `raw_payload` move it to `:metadata`.
   schema "mailglass_events" do

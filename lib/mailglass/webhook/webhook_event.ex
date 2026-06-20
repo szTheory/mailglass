@@ -14,7 +14,7 @@ defmodule Mailglass.Webhook.WebhookEvent do
     * **Audit:** full raw payload available for support / debugging.
     * **GDPR erasure:** targeted `DELETE FROM mailglass_webhook_events
       WHERE raw_payload->>'to' = ?` without touching the append-only
-      ledger ().
+      ledger.
 
   The `:raw_payload` field is marked `redact: true` so `Inspect` output
   (test failures, IEx) does NOT leak PII bytes. Mirrors accrue's

@@ -6,9 +6,9 @@ defmodule Mailglass.Webhook.Provider do
   # behaviour. Two callbacks isolate crypto (verify!/3) from taxonomy
   # (normalize/2) per CONTEXT .
   #
-  # Contract is Conn-free () so it ports to v0.5 SES SQS polling +
+  # Contract is Conn-free so it ports to v0.5 SES SQS polling +
   # inbound testing contexts without pulling `%Plug.Conn{}` into the
-  # verify path. `Mailglass.Webhook.Plug` () does the
+  # verify path. `Mailglass.Webhook.Plug` does the
   # conn-to-tuple adaptation at a single choke point.
 
   @doc """

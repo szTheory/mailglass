@@ -35,7 +35,7 @@ defmodule Mailglass.TestAssertions do
   - `assert_mail_delivered/2`, `assert_mail_bounced/2` — consume
     PubSub broadcasts from
     `Mailglass.Outbound.Projector.broadcast_delivery_updated/3`.
-    Use when asserting webhook-received events () or
+    Use when asserting webhook-received events or
     Fake-triggered events (`Mailglass.Adapters.Fake.trigger_event/3`).
 
   ## Async-safe

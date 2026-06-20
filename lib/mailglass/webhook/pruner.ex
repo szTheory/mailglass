@@ -29,13 +29,13 @@ if Code.ensure_loaded?(Oban.Worker) do
     `if Code.ensure_loaded?(Oban.Worker)`. When Oban is absent, a stub
     module is defined that exposes `available?/0 → false`;
     `Mailglass.Application` emits a consolidated `Logger.warning` at boot
-    () directing operators to run `mix mailglass.webhooks.prune` from
+    directing operators to run `mix mailglass.webhooks.prune` from
     their own cron infrastructure.
 
     ## GDPR erasure
 
     Targeted DELETE on `mailglass_webhook_events.raw_payload->>'to' = ?`
-    is the GDPR path () — handled by adopter ad-hoc via
+    is the GDPR path — handled by adopter ad-hoc via
     `Mailglass.Repo.delete_all/2`, NOT this Pruner. The Pruner's
     DELETEs are retention-policy-driven (status + age), not identity-driven.
 

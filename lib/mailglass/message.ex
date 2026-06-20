@@ -26,7 +26,7 @@ defmodule Mailglass.Message do
     and preview auto-discovery.
   - `:mailable_function` — the mailable function that built this message (e.g.
     `:welcome`, `:password_reset`). Populated by the `use Mailglass.Mailable`
-    macro's injected builder (). Used by the runtime auth-stream tracking
+    macro's injected builder. Used by the runtime auth-stream tracking
     guard. Default: `nil`.
   - `:tenant_id` — multi-tenant scope. Carried on every record (CORE-03, 
     project-level). `nil` in single-tenant mode.
@@ -314,7 +314,7 @@ defmodule Mailglass.Message do
   @doc """
   Returns a new `%Message{}` with the given key put into `metadata`.
 
-  Used by the send pipeline () to stamp `delivery_id` into the
+  Used by the send pipeline to stamp `delivery_id` into the
   message's metadata AFTER the Delivery row is inserted but BEFORE the
   adapter is called — so `Mailglass.Adapters.Fake` records the same
   `delivery_id` that the DB persisted (otherwise

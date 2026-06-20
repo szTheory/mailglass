@@ -13,7 +13,7 @@ defmodule Mailglass.TenancyError do
   - `:unstamped` — no tenant_id present in the process dictionary
   - `:webhook_tenant_unresolved` — the configured `Mailglass.Tenancy`
     resolver returned `{:error, _}` from `resolve_webhook_tenant/1` for
-    an authenticated webhook request ( ). Distinct from
+    an authenticated webhook request. Distinct from
     `:unstamped` — the request is cryptographically verified, but the
     adopter's tenancy module could not map it to a known tenant. 
     formalizes the optional `@callback resolve_webhook_tenant/1` and the

@@ -267,7 +267,7 @@ defmodule Mailglass.Config do
     # required for real-world Postmark; the webhook plug raises
     # `%ConfigError{type: :webhook_verification_key_missing}` at request
     # time if it is not set. `ip_allowlist` is opt-in — Postmark's own docs
-    # warn origin IPs can change ().
+    # warn origin IPs can change.
     postmark: [
       type: :keyword_list,
       default: [],
@@ -466,7 +466,7 @@ defmodule Mailglass.Config do
   reads configuration through `Application.get_env/2` (enforced by the
   `LINT-08` Credo check in ).
 
-  The brand theme () is cached in `:persistent_term` after validation so
+  The brand theme is cached in `:persistent_term` after validation so
   the render hot path reads it in O(1) without re-parsing the Application env
   on every message.
 

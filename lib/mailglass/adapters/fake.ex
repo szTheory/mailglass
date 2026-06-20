@@ -2,7 +2,7 @@ defmodule Mailglass.Adapters.Fake do
   @moduledoc """
   In-memory, time-advanceable test adapter (TRANS-02, ..).
 
-  **The merge-blocking release gate ().** Every PR runs the full
+  **The merge-blocking release gate.** Every PR runs the full
   pipeline against this adapter. Mirrors `Swoosh.Adapters.Sandbox`:
   ownership-by-pid, `$callers` inheritance, `allow/2` for
   cross-process delegation (LiveView, Playwright, Oban worker), shared
@@ -24,7 +24,7 @@ defmodule Mailglass.Adapters.Fake do
   `provider_message_id` lets `trigger_event/3` look up the Delivery row
   by id and simulate a Phase-4 webhook event via the REAL
   `Events.append_multi/3 + Projector.update_projections/2` write path
-  (). This keeps the Fake in sync with the production write path.
+  This keeps the Fake in sync with the production write path.
 
   ## Public API
 
@@ -139,7 +139,7 @@ defmodule Mailglass.Adapters.Fake do
   # ──────────────────────────────────────────────────────────────
 
   @doc """
-  Simulates a webhook-shaped event for a previously-delivered message ().
+  Simulates a webhook-shaped event for a previously-delivered message.
 
   Looks up the `%Delivery{}` row by `provider_message_id`, builds an
   `%Events.Event{}`, and runs it through
@@ -148,7 +148,7 @@ defmodule Mailglass.Adapters.Fake do
   uses — the Fake proves the production write path.
 
   After the transaction commits, broadcasts via
-  `Projector.broadcast_delivery_updated/3` ().
+  `Projector.broadcast_delivery_updated/3`.
 
   ## Opts
 

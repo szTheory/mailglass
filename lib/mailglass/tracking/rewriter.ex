@@ -7,7 +7,7 @@ defmodule Mailglass.Tracking.Rewriter do
   Plaintext body is NEVER modified ( — plaintext readers often go
   through text-only proxies; leaving original URLs serves user trust).
 
-  ## Skip list ()
+  ## Skip list
 
   - `mailto:`, `tel:`, `sms:`, `data:`, `javascript:` schemes
   - `#fragment` hrefs (same-page anchors)
@@ -16,7 +16,7 @@ defmodule Mailglass.Tracking.Rewriter do
   - Any `<a>` inside `<head>` (prefetch, canonical)
   - Any href equal to the List-Unsubscribe URL (v0.5 hook reserved)
 
-  ## Pixel injection ()
+  ## Pixel injection
 
   Markup: `<img src="..." width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;" />`
   Position: LAST child of `<body>`. Missing `<body>` → appended at root.

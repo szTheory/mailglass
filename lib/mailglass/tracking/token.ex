@@ -19,7 +19,7 @@ defmodule Mailglass.Tracking.Token do
   `http` or `https` only. Attempting to sign a `javascript:` or `ftp:`
   URL raises `%Mailglass.ConfigError{type: :invalid}`.
 
-  ## Salts rotation ()
+  ## Salts rotation
 
   `config :mailglass, :tracking, salts: ["q2-2026", "q1-2026"]`. The
   HEAD of the list signs; ALL salts in the list verify (iterate with
@@ -27,7 +27,7 @@ defmodule Mailglass.Tracking.Token do
   until removed from the list. Token max_age default: 2 years
   (archived-email pixel loads still work).
 
-  ## `tenant_id` in payload, not URL ()
+  ## `tenant_id` in payload, not URL
 
   Decoded `tenant_id` comes from the SIGNED PAYLOAD, not from URL
   path/query.  Plug uses it to call `Tenancy.put_current/1`.

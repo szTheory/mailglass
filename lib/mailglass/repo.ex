@@ -14,7 +14,7 @@ defmodule Mailglass.Repo do
   This module re-exports only what mailglass itself uses. Callers that need
   lower-level operations call the host Repo directly.
 
-  ## SQLSTATE 45A01 translation ()
+  ## SQLSTATE 45A01 translation
 
   Every write that touches `mailglass_events` can raise the immutability
   trigger (`BEFORE UPDATE OR DELETE` raises SQLSTATE 45A01). The facade
@@ -91,8 +91,8 @@ defmodule Mailglass.Repo do
   Executes an `Ecto.Multi` against the host-configured repo and returns
   the canonical `{:ok, changes}` / `{:error, step, reason, changes}` shape.
 
-  Added in   so `Mailglass.Outbound` () can compose
-  two Multis () via a public function — `repo/0` is deliberately
+  Added in   so `Mailglass.Outbound` can compose
+  two Multis via a public function — `repo/0` is deliberately
   private to keep the facade narrow.
 
   Raises `Mailglass.ConfigError{type: :missing}` when `:repo` is not
@@ -122,7 +122,7 @@ defmodule Mailglass.Repo do
 
   @doc """
   Delegates to the host Repo's `delete_all/2`. Used by
-  `Mailglass.Webhook.Pruner` ( ) for retention-policy
+  `Mailglass.Webhook.Pruner` for retention-policy
   DELETEs against `mailglass_webhook_events`.
 
   Does NOT translate SQLSTATE 45A01 — that trigger fires only on
@@ -148,9 +148,9 @@ defmodule Mailglass.Repo do
   translation.
 
   Intentionally does NOT rescue `%Postgrex.Error{}`: the  webhook
-  ingest Multi () calls `query!/2` from inside `Repo.transact/1`
+  ingest Multi calls `query!/2` from inside `Repo.transact/1`
   to run `SET LOCAL statement_timeout = '2s'` + `SET LOCAL lock_timeout
-  = '500ms'` (). Those `SET LOCAL` statements never produce SQLSTATE
+  = '500ms'`. Those `SET LOCAL` statements never produce SQLSTATE
   45A01 — the immutability trigger fires only on UPDATE/DELETE against
   `mailglass_events` rows — so translation would add latency for no gain
   and muddle the semantics. Callers that need the trigger's translated

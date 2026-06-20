@@ -11,20 +11,20 @@ and metadata keys that the current code emits.
 
 | Event path | Type | Metadata keys |
 |------------|------|---------------|
-| `[:mailglass, :render, :message, :start | :stop | :exception]` | full span | `tenant_id, mailable` |
-| `[:mailglass, :outbound, :send, :start | :stop | :exception]` | full span | caller-supplied whitelist keys such as `tenant_id, mailable, status, delivery_id, latency_ms` |
-| `[:mailglass, :outbound, :dispatch, :start | :stop | :exception]` | full span | caller-supplied whitelist keys such as `provider, status, delivery_id, latency_ms` |
+| `[:mailglass, :render, :message, :start \| :stop \| :exception]` | full span | `tenant_id, mailable` |
+| `[:mailglass, :outbound, :send, :start \| :stop \| :exception]` | full span | caller-supplied whitelist keys such as `tenant_id, mailable, status, delivery_id, latency_ms` |
+| `[:mailglass, :outbound, :dispatch, :start \| :stop \| :exception]` | full span | caller-supplied whitelist keys such as `provider, status, delivery_id, latency_ms` |
 
 ### Webhook spans and emits from `Mailglass.Webhook.Telemetry`
 
 | Event path | Type | Stop metadata keys |
 |------------|------|--------------------|
-| `[:mailglass, :webhook, :ingest, :start | :stop | :exception]` | full span | `provider, tenant_id, status, event_count, duplicate, failure_reason, delivery_id_matched` |
-| `[:mailglass, :webhook, :signature, :verify, :start | :stop | :exception]` | full span | `provider, status, failure_reason` |
+| `[:mailglass, :webhook, :ingest, :start \| :stop \| :exception]` | full span | `provider, tenant_id, status, event_count, duplicate, failure_reason, delivery_id_matched` |
+| `[:mailglass, :webhook, :signature, :verify, :start \| :stop \| :exception]` | full span | `provider, status, failure_reason` |
 | `[:mailglass, :webhook, :normalize, :stop]` | single emit | `provider, event_type, mapped` |
 | `[:mailglass, :webhook, :orphan, :stop]` | single emit | `provider, event_type, tenant_id, age_seconds` |
 | `[:mailglass, :webhook, :duplicate, :stop]` | single emit | `provider, event_type` |
-| `[:mailglass, :webhook, :reconcile, :start | :stop | :exception]` | full span | `tenant_id, scanned_count, linked_count, remaining_orphan_count, status` |
+| `[:mailglass, :webhook, :reconcile, :start \| :stop \| :exception]` | full span | `tenant_id, scanned_count, linked_count, remaining_orphan_count, status` |
 
 ## Whitelist and privacy posture
 

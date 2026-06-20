@@ -14,9 +14,9 @@ defmodule Mailglass.ConfigError do
   - `:optional_dep_missing` — an optional dependency is required for the
     selected configuration but is not loaded
   - `:tracking_on_auth_stream` — open/click tracking is enabled on a mailable
-    whose function name matches an auth-stream heuristic (). Forbidden.
+    whose function name matches an auth-stream heuristic. Forbidden.
   - `:tracking_host_missing` — a mailable enables opens or clicks but no
-    tracking host is configured (). Required for link rewriting.
+    tracking host is configured. Required for link rewriting.
   - `:tracking_endpoint_missing` — tracking is enabled but no Phoenix.Token
     endpoint is configured. Set `config :mailglass, :tracking, endpoint:` or
     `config :mailglass, :adapter_endpoint` to enable open/click tracking.

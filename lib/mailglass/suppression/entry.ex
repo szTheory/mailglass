@@ -11,7 +11,7 @@ defmodule Mailglass.Suppression.Entry do
   - `:reason` — `:hard_bounce | :complaint | :unsubscribe | :manual |
     :policy | :invalid_recipient`.
 
-  ## Coupling invariants ()
+  ## Coupling invariants
 
   - `scope = :address_stream` REQUIRES `stream`.
   - `scope IN (:address, :domain)` REJECTS `stream`.
@@ -73,7 +73,7 @@ defmodule Mailglass.Suppression.Entry do
   Enforces three invariants at the Elixir layer:
 
   1. `:scope` is required with no default (MAIL-07 prevention — ).
-  2. Scope/stream coupling () via `validate_scope_stream_coupling/1`.
+  2. Scope/stream coupling via `validate_scope_stream_coupling/1`.
   3. Address normalization via `downcase_address/1` — belt-and-suspenders
      with the underlying `CITEXT` column.
   """

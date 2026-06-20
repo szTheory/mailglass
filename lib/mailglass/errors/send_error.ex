@@ -75,7 +75,7 @@ defmodule Mailglass.SendError do
     }
   end
 
-  # Brand-voice-conformant messages (). Never "Oops!" or "Something went wrong."
+  # Brand-voice-conformant messages. Never "Oops!" or "Something went wrong."
   defp format_message(:adapter_failure, _ctx), do: "Delivery failed: adapter returned an error"
 
   defp format_message(:rendering_failed, _ctx),

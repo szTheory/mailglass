@@ -30,18 +30,18 @@ defmodule Mailglass.Mailable do
   - `:tracking` — `[opens: boolean, clicks: boolean]` (default all false).
     Off by default (TRACK-01 /  project-level). 
     `TRACK-02 NoTrackingOnAuthStream` enforces at compile time; 
-    `Mailglass.Tracking.Guard.assert_safe!/1` enforces at runtime ().
+    `Mailglass.Tracking.Guard.assert_safe!/1` enforces at runtime.
   - `:from_default` — `{name, address}` tuple for the `from` header. Applied
     at `new/0` time; per-call `Swoosh.Email.from/2` overrides.
   - `:reply_to_default` — same shape as `:from_default` for Reply-To.
 
-  ## Adopter convention ()
+  ## Adopter convention
 
   `new/0` returns a `%Mailglass.Message{}`. Use `Mailglass.Message.update_swoosh/2`
   to pipe into Swoosh builder functions and `Mailglass.Message.put_function/2` to
   stamp the `:mailable_function` field (required by  runtime Guard).
 
-  ## Runtime tier ()
+  ## Runtime tier
 
   The injected `new/0` returns a `%Mailglass.Message{}`; adopters pipe
   through `Mailglass.Message.update_swoosh/2` and Swoosh builder functions.
