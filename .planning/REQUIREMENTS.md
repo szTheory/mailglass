@@ -67,7 +67,7 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 
 ### Fixtures & Idempotent Ratchet (RATCHET)
 
-- [ ] **RATCHET-01**: A realistic 2–3-tenant persona stress-fixture cohort (with no-data / one / many / long-ID / non-ASCII / null / high-count / error edge data) lands in `reference/demo_app` seeds + gallery stress specimens — making multi-tenancy tangible and giving the picker a reason to exist.
+- [x] **RATCHET-01**: A realistic 2–3-tenant persona stress-fixture cohort (with no-data / one / many / long-ID / non-ASCII / null / high-count / error edge data) lands in `reference/demo_app` seeds + gallery stress specimens — making multi-tenancy tangible and giving the picker a reason to exist.
 - [ ] **RATCHET-02**: The dev-only component-lab gallery is widened to a component × state × {light, dark, system} × {320…wide} matrix.
 - [ ] **RATCHET-03**: The ratchet gains an interaction pillar (hit-test panel-above-scrim, scroll-chaining, focus-restore-to-trigger, layout-jump) and an axe-violation JSON baseline (WCAG 2.2 AA) — both screenshot-free, no pixel-diff.
 - [ ] **RATCHET-04**: The full matrix runs INCLUDING at least one run against rich `reference/demo_app` data (closing the "lab-passes-but-ugly" gap), then `current → prior` is promoted and re-scored with all gates green (meet-or-beat, zero regressions).
@@ -146,7 +146,7 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | FLOW-02 | Phase 115 | Complete |
 | FLOW-03 | Phase 115 | Complete |
 | FLOW-04 | Phase 115 | Complete |
-| RATCHET-01 | Phase 116 | Pending |
+| RATCHET-01 | Phase 116 | Complete |
 | RATCHET-02 | Phase 116 | Pending |
 | RATCHET-03 | Phase 116 | Pending |
 | RATCHET-04 | Phase 116 | Pending |

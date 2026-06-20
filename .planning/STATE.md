@@ -2,18 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
-current_phase: 116
-current_phase_name: Fixtures + Idempotent Ratchet-Arm
 status: executing
 stopped_at: Phase 116 UI-SPEC approved
-last_updated: "2026-06-20T20:45:41.498Z"
+last_updated: "2026-06-20T21:06:53.737Z"
 last_activity: 2026-06-20
-last_activity_desc: Phase 115 complete, transitioned to Phase 116
 progress:
   total_phases: 11
   completed_phases: 9
-  total_plans: 36
-  completed_plans: 36
+  total_plans: 42
+  completed_plans: 37
   percent: 82
 ---
 
@@ -24,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 115 — Pages/Flows + Micro-Animation + Microcopy
+**Current focus:** Phase 116 — fixtures-idempotent-ratchet-arm
 
 ## Current Position
 
-Phase: 116 — Fixtures + Idempotent Ratchet-Arm
-Plan: Not started
+Phase: 116 (fixtures-idempotent-ratchet-arm) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-06-20 — Phase 115 complete, transitioned to Phase 116
+Last activity: 2026-06-20
 
-Progress: [██████████] 100%
+Progress: [█████████░] 88%
 
 ## v1.13 Milestone Intent
 
@@ -220,6 +217,8 @@ convergent + adversarially judged).
 - [Phase ?]: 114-03: shadow-raised passed via card/1 :global @rest class-merge (no components.ex edit); border-l-4 status rules paired with colored count + label (WCAG 1.4.1)
 - [Phase ?]: Plan 114-04: Floki top-down ancestor-depth proof (no Floki.parent) is the authoritative GROUP-02 depth check; grep is only a tripwire
 - [Phase ?]: Plan 114-04: Playwright composed-group geometry scopes to the light theme wrapper + direct-sibling [data-group-card]; narrow-width overflow asserts no descendant exceeds the viewport
+- [Phase ?]: 116-01: A1 path-dep is circular (demo depends on admin); fell back to a shared reference/persona_spec/ dir compiled into both demo + admin test builds via absolute elixirc_paths
+- [Phase ?]: 116-01: DemoData.reset! seeds the persona cohort at harness boot (Personas.seed!/1) — feeds RATCHET-04; canonical fjordline literals via Personas.specimen_literals/0 for plan 116-04 to mirror
 
 ## Quick Tasks Completed
 
@@ -335,6 +334,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 114 P02 | 12 min | 3 tasks | 4 files |
 | Phase 114 P03 | 10 min | 3 tasks | 8 files |
 | Phase 114 P04 | 5 min | 2 tasks | 2 files |
+| Phase 116 P01 | 14min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -358,9 +358,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-20T20:23:14.440Z
+**Last session:** 2026-06-20T21:06:01.393Z
 **Stopped at:** Phase 116 UI-SPEC approved
-**Resume file:** .planning/phases/116-fixtures-idempotent-ratchet-arm/116-UI-SPEC.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in

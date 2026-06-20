@@ -273,7 +273,7 @@ Plans:
 **Plans**: 6 plans
 **Wave 1**
 
-- [ ] 116-01-PLAN.md (wave 1) — Persona stress-fixture cohort: declarative spec + 3 materializers + drift-guard + test-only path dep (RATCHET-01)
+- [x] 116-01-PLAN.md (wave 1) — Persona stress-fixture cohort: declarative spec + 3 materializers + drift-guard + test-only path dep (RATCHET-01)
 - [ ] 116-02-PLAN.md (wave 1) — Axe WCAG 2.2 AA baseline: @axe-core/playwright devDep, producer spec, 9-cell schema-1 JSON, fail-closed comparator (RATCHET-03)
 - [ ] 116-03-PLAN.md (wave 1) — Interaction pillar: 4 binary Playwright gates (panel-above-scrim, scroll-chaining, focus-restore, CLS) (RATCHET-03)
 
@@ -360,7 +360,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 113. Data-Display | v1.13 | 4/4 | Complete    | 2026-06-20 |
 | 114. Component Groups | v1.13 | 4/4 | Complete    | 2026-06-20 |
 | 115. Pages/Flows + Motion + Microcopy | v1.13 | 4/4 | Complete    | 2026-06-20 |
-| 116. Fixtures + Ratchet-Arm | v1.13 | 0/TBD | Not started | - |
+| 116. Fixtures + Ratchet-Arm | v1.13 | 1/6 | In Progress|  |
 | 117. Release Cut + Milestone Closeout | v1.13 | 0/TBD | Not started | - |
 
 ## Backlog
