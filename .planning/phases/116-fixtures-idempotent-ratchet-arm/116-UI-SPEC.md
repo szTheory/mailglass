@@ -1,10 +1,11 @@
 ---
 phase: 116
 slug: fixtures-idempotent-ratchet-arm
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-20
+reviewed_at: 2026-06-20T00:00:00Z
 ---
 
 # Phase 116 — UI Design Contract
