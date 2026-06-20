@@ -102,7 +102,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         <% end %>
       <% true -> %>
         <%!-- Desktop table (>=768px) --%>
-        <div class="hidden md:block" data-testid="inbound-records-table">
+        <div class="hidden md:block overflow-x-auto" data-testid="inbound-records-table">
           <table class="table w-full table-fixed">
             <thead>
               <tr>

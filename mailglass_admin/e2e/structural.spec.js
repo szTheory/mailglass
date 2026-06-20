@@ -50,7 +50,9 @@ async function openOperator(page) {
   await expect(
     page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
   ).toBeVisible();
-  await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
+  // operator-deliveries-list-card is the <aside> wrapper — always visible regardless of breakpoint.
+  // (operator-deliveries-list is the <ul> inside md:hidden and is hidden on desktop — Phase 113 DATA-01)
+  await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 }
 
 async function loginOperator(page, returnTo, subjectId = "operator-1", sessionTenantId = tenantId) {
@@ -547,9 +549,12 @@ async function assertPanelAboveScrim(modal, label) {
 }
 
 function noMatchRow(page) {
+  // Phase 113: inbound-record-row appears in both hidden table and visible cards at mobile.
+  // Use the visible() filter to always get the visible row regardless of viewport.
   return page
     .getByTestId("inbound-record-row")
     .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+    .filter({ visible: true })
     .first();
 }
 
@@ -811,14 +816,17 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("operator-detail-error")).toBeVisible();
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&status=queued`);
-      const filteredEmpty = page.getByTestId("operator-empty-filtered");
+      // Phase 113: filtered-empty now renders via data_state/1; hidden stub preserves testid for URL probes.
+      // Assert the visible data-state-empty section (scoped to list-card to avoid strict-mode violation).
+      const filteredEmpty = page.getByTestId("operator-deliveries-list-card").getByTestId("data-state-empty");
       await expect(filteredEmpty).toBeVisible();
-      await expect(filteredEmpty.getByRole("button", { name: "Clear filters" })).toBeVisible();
+      await expect(page.getByTestId("operator-empty-reset")).toBeVisible();
 
       await page.goto(`/ops/mail?tenant_id=browser-empty&view=deliveries`);
-      const trulyEmpty = page.getByTestId("operator-empty-truly");
+      // Phase 113: truly-empty now renders via data_state/1.
+      const trulyEmpty = page.getByTestId("operator-deliveries-list-card").getByTestId("data-state-empty");
       await expect(trulyEmpty).toBeVisible();
-      await expect(trulyEmpty.getByRole("button", { name: "Clear filters" })).toHaveCount(0);
+      await expect(page.getByTestId("operator-empty-reset")).toHaveCount(0);
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&status=suppressed`);
       const suppressedRow = page.getByTestId("operator-delivery-row").first();
@@ -852,7 +860,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expect(listBox).not.toBeNull();
       expect(listBox.width / gridBox.width).toBeGreaterThan(0.95);
 
-      await page.getByTestId("operator-delivery-row").first().click();
+      // At 390px the table is hidden; click from the card presentation (operator-deliveries-cards).
+      await page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first().click();
       await expect(page.getByTestId("operator-deliveries-list-card")).toBeHidden();
       await expect(page.getByTestId("operator-detail-back")).toBeVisible();
     });
@@ -893,7 +902,13 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expect(listBox).not.toBeNull();
       expect(listBox.width / gridBox.width).toBeGreaterThan(0.95);
 
-      await noMatchRow(page).click();
+      // At 390px the table is hidden; click from the card presentation (inbound-records-cards).
+      const mobileNoMatchRow = page
+        .getByTestId("inbound-records-cards")
+        .getByTestId("inbound-record-row")
+        .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
+        .first();
+      await mobileNoMatchRow.click();
       await expect(page.getByTestId("inbound-records-list-card")).toBeHidden();
       await expect(page.getByTestId("inbound-detail-back")).toBeVisible();
 
@@ -909,13 +924,16 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       page
     }) => {
       await openInbound(page, "");
-      await expect(page.getByRole("heading", { name: "No tenant selected" })).toBeVisible();
+      // Phase 113: no-tenant state now renders via data_state/1 with title "Select a tenant" (h3)
+      await expect(page.getByRole("heading", { name: "Select a tenant" })).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=browser-empty`);
-      await expect(page.getByText("No InboundMessages yet")).toBeVisible();
+      // Phase 113: truly-empty copy updated per UI-SPEC contract
+      await expect(page.getByText("No records have been recorded yet.")).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&search=impossible-filtered-empty`);
-      await expect(page.getByText("No InboundMessages match these filters")).toBeVisible();
+      // Phase 113: filtered-empty copy updated per UI-SPEC contract
+      await expect(page.getByText("No records match the current filters.")).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&inbound_id=does-not-exist`);
       await expect(page.getByTestId("inbound-detail-error")).toBeVisible();
@@ -999,11 +1017,13 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           }
 
           await openInbound(page, theme.query, "operator-1");
-          await assertTextContrastAA(page.getByRole("heading", { name: "No tenant selected" }), `${theme.name} ${viewport.width} no-tenant`);
+          // Phase 113: no-tenant heading is now "Select a tenant" (from data_state/1 h3 title)
+          await assertTextContrastAA(page.getByRole("heading", { name: "Select a tenant" }), `${theme.name} ${viewport.width} no-tenant`);
           await openInbound(page, `tenant_id=browser-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
-          await assertTextContrastAA(page.getByText("No InboundMessages yet"), `${theme.name} ${viewport.width} truly-empty`);
+          // Phase 113: truly-empty and filtered-empty copy updated per UI-SPEC contract
+          await assertTextContrastAA(page.getByText("No records have been recorded yet."), `${theme.name} ${viewport.width} truly-empty`);
           await openInbound(page, `tenant_id=${tenantId}&search=filtered-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
-          await assertTextContrastAA(page.getByText("No InboundMessages match these filters"), `${theme.name} ${viewport.width} filtered-empty`);
+          await assertTextContrastAA(page.getByText("No records match the current filters."), `${theme.name} ${viewport.width} filtered-empty`);
           await openInbound(page, `tenant_id=${tenantId}&inbound_id=does-not-exist${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           await assertTextContrastAA(page.getByTestId("inbound-detail-error"), `${theme.name} ${viewport.width} detail-error`);
         }
@@ -1192,7 +1212,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.emulateMedia({ reducedMotion: "reduce" });
       await openOperator(page);
 
-      await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
+      // operator-deliveries-list-card is the <aside> container — always visible at any breakpoint
+      await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     });
 
     test("Inbound: page heading visible under reduced-motion", async ({ page }) => {
@@ -1220,7 +1241,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       // .motion-reveal on the detail pane is conditional (renders only after
       // delivery selection). Click the first row to bring it into the DOM.
-      const firstRow = page.getByTestId("operator-deliveries-list").getByRole("button").first();
+      // Use operator-delivery-row testid which resolves across table and card presentations.
+      const firstRow = page.getByTestId("operator-delivery-row").first();
       await firstRow.click();
 
       // Wait for the detail pane to appear
@@ -1291,10 +1313,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await openOperator(page);
 
       // Check a curated set of non-allowlisted structural elements
-      // body, deliveries-list container, nav container background
+      // body, deliveries-list card container, nav container background
+      // (operator-deliveries-list-card is the <aside> — always rendered regardless of breakpoint)
       const elementLocators = [
         page.locator("body"),
-        page.getByTestId("operator-deliveries-list"),
+        page.getByTestId("operator-deliveries-list-card"),
         page.getByRole("navigation").first()
       ];
 
@@ -1375,8 +1398,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("Operator: detail pane carries phx-remove exit attribute (MOTION-LD-13)", async ({ page }) => {
       await openOperator(page);
 
-      // Select the first delivery by clicking the first row button in the list
-      const firstRow = page.getByTestId("operator-deliveries-list").getByRole("button").first();
+      // Select the first delivery by clicking the first row (resolves across table and card presentations).
+      const firstRow = page.getByTestId("operator-delivery-row").first();
       await firstRow.click();
 
       // The detail pane element ID is delivery-detail-{id}; locate by id prefix pattern
@@ -1938,6 +1961,205 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           ).toBeVisible();
         }
       }
+    });
+
+  });
+
+  // =========================================================================
+  // DATA-DISPLAY — Phase 113
+  // Responsive table/card switching, overflow, status labels, selection a11y,
+  // and data-state distinctness. DATA-01..05 structural proof.
+  // No screenshots/pixel diff (D-08). No new runtime deps.
+  // =========================================================================
+  test.describe("data-display structural proof — Phase 113", () => {
+
+    test("responsive: operator-deliveries-table visible at 768px; operator-deliveries-cards visible at 390px (DATA-01)", async ({ page }) => {
+      await page.setViewportSize({ width: 768, height: 900 });
+      await openOperator(page);
+
+      // At >=768px: table visible, cards hidden (hidden md:block / md:hidden)
+      await expect(page.getByTestId("operator-deliveries-table")).toBeVisible();
+      await expect(page.getByTestId("operator-deliveries-cards")).toBeHidden();
+
+      // At <768px: cards visible, table hidden
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+      await expect(page.getByTestId("operator-deliveries-table")).toBeHidden();
+      await expect(page.getByTestId("operator-deliveries-cards")).toBeVisible();
+    });
+
+    test("responsive: inbound-records-table visible at 768px; inbound-records-cards visible at 390px (DATA-01)", async ({ page }) => {
+      await page.setViewportSize({ width: 768, height: 900 });
+      await openInbound(page);
+
+      // At >=768px: table visible, cards hidden (hidden md:block / md:hidden)
+      await expect(page.getByTestId("inbound-records-table")).toBeVisible();
+      await expect(page.getByTestId("inbound-records-cards")).toBeHidden();
+
+      // At <768px: cards visible, table hidden
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+      await expect(page.getByTestId("inbound-records-table")).toBeHidden();
+      await expect(page.getByTestId("inbound-records-cards")).toBeVisible();
+    });
+
+    test("overflow: list containers do not exceed their parent aside width at 320px and 768px (DATA-05)", async ({ page }) => {
+      // DATA-05: the list wrappers must not push content outside the aside card column.
+      // The table has overflow-x-auto for internal scroll; we assert it fits within the aside.
+      // Cards (md:hidden) fit at 320px; table (hidden md:block) fits at 768px inside the aside.
+      for (const width of [320, 768]) {
+        await page.setViewportSize({ width, height: 900 });
+        await openOperator(page);
+
+        const asideWidth = await page.getByTestId("operator-deliveries-list-card").evaluate(el => el.getBoundingClientRect().width);
+        // Each testid's offsetWidth must not exceed the aside width (overflow-x-auto contains internal scroll).
+        const tableWidth = await page.getByTestId("operator-deliveries-table").evaluate(el => el.offsetWidth);
+        const cardsWidth = await page.getByTestId("operator-deliveries-cards").evaluate(el => el.offsetWidth);
+        expect(tableWidth, `operator-deliveries-table fits aside at ${width}px`).toBeLessThanOrEqual(asideWidth + 1);
+        expect(cardsWidth, `operator-deliveries-cards fits aside at ${width}px`).toBeLessThanOrEqual(asideWidth + 1);
+
+        await openInbound(page);
+        const inboundAsideWidth = await page.getByTestId("inbound-records-list-card").evaluate(el => el.getBoundingClientRect().width);
+        const inboundTableWidth = await page.getByTestId("inbound-records-table").evaluate(el => el.offsetWidth);
+        const inboundCardsWidth = await page.getByTestId("inbound-records-cards").evaluate(el => el.offsetWidth);
+        expect(inboundTableWidth, `inbound-records-table fits aside at ${width}px`).toBeLessThanOrEqual(inboundAsideWidth + 1);
+        expect(inboundCardsWidth, `inbound-records-cards fits aside at ${width}px`).toBeLessThanOrEqual(inboundAsideWidth + 1);
+      }
+    });
+
+    test("status labels visible in both table and card presentation (DATA-04)", async ({ page }) => {
+      // Desktop: table visible — check status badge has visible text label
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await openOperator(page);
+
+      const tableRow = page.getByTestId("operator-deliveries-table").locator("[data-testid='operator-delivery-row']").first();
+      await expect(tableRow).toBeVisible();
+      // status_badge renders a <span> with text — assert the badge has non-empty text
+      const tableStatusBadge = tableRow.locator("td").first().locator(".badge");
+      await expect(tableStatusBadge).toBeVisible();
+      await expect(tableStatusBadge).toHaveText(/.+/);
+
+      // Mobile: cards visible — check status badge has visible text label
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+      const cardRow = page.getByTestId("operator-deliveries-cards").locator("[data-testid='operator-delivery-row']").first();
+      await expect(cardRow).toBeVisible();
+      const cardStatusBadge = cardRow.locator(".badge").first();
+      await expect(cardStatusBadge).toBeVisible();
+      await expect(cardStatusBadge).toHaveText(/.+/);
+    });
+
+    test("outcome badges visible in both inbound table and card presentation (DATA-04)", async ({ page }) => {
+      // Desktop: inbound table visible — check outcome badge has visible text
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await openInbound(page);
+
+      const tableRow = page.getByTestId("inbound-records-table").locator("[data-testid='inbound-record-row']").first();
+      await expect(tableRow).toBeVisible();
+      const tableOutcomeBadge = tableRow.locator("td").first().locator(".badge");
+      await expect(tableOutcomeBadge).toBeVisible();
+      await expect(tableOutcomeBadge).toHaveText(/.+/);
+
+      // Mobile: inbound cards visible — check outcome badge has visible text
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+      const cardRow = page.getByTestId("inbound-records-cards").locator("[data-testid='inbound-record-row']").first();
+      await expect(cardRow).toBeVisible();
+      const cardOutcomeBadge = cardRow.locator(".badge").first();
+      await expect(cardOutcomeBadge).toBeVisible();
+      await expect(cardOutcomeBadge).toHaveText(/.+/);
+    });
+
+    test("aria-selected=true set on clicked row in both table (desktop) and card (mobile) presentations (DATA-04)", async ({ page }) => {
+      // Desktop: click a table row — aria-selected must be true
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await openOperator(page);
+
+      const tableRow = page.getByTestId("operator-deliveries-table").locator("[data-testid='operator-delivery-row']").first();
+      await tableRow.click();
+      await expect(tableRow).toHaveAttribute("aria-selected", "true");
+
+      // Mobile: click a card row — aria-selected must be true
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+      const cardRow = page.getByTestId("operator-deliveries-cards").locator("[data-testid='operator-delivery-row']").first();
+      await cardRow.click();
+      await expect(cardRow).toHaveAttribute("aria-selected", "true");
+    });
+
+    test("aria-selected=true set on clicked row in both inbound table (desktop) and card (mobile) presentations (DATA-04)", async ({ page }) => {
+      // Desktop: click an inbound table row — aria-selected must be true
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await openInbound(page);
+
+      const tableRow = page.getByTestId("inbound-records-table").locator("[data-testid='inbound-record-row']").first();
+      await tableRow.click();
+      await expect(tableRow).toHaveAttribute("aria-selected", "true");
+
+      // Mobile: click an inbound card row — aria-selected must be true
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
+      const cardRow = page.getByTestId("inbound-records-cards").locator("[data-testid='inbound-record-row']").first();
+      await cardRow.click();
+      await expect(cardRow).toHaveAttribute("aria-selected", "true");
+    });
+
+    test("data-state four kinds render distinctly in gallery specimens (DATA-03)", async ({ page }) => {
+      await openGallery(page);
+
+      // Each of the four data_state kinds must render with a distinct testid
+      await expect(page.getByTestId("gallery-data_state-empty")).toBeVisible();
+      await expect(page.getByTestId("gallery-data_state-error")).toBeVisible();
+      await expect(page.getByTestId("gallery-data_state-permission-denied")).toBeVisible();
+      await expect(page.getByTestId("gallery-data_state-stale")).toBeVisible();
+
+      // The four rendered data-state testids must be distinct (DATA-03 distinctness)
+      // Scope to the gallery-data_state-* cells to avoid strict-mode violations from
+      // other gallery specimens (deliveries_list empty branches also emit data-state-empty).
+      const emptyCell = page.getByTestId("gallery-data_state-empty");
+      const errorCell = page.getByTestId("gallery-data_state-error");
+      const permDeniedCell = page.getByTestId("gallery-data_state-permission-denied");
+      const staleCell = page.getByTestId("gallery-data_state-stale");
+
+      await expect(emptyCell.getByTestId("data-state-empty").first()).toBeVisible();
+      await expect(errorCell.getByTestId("data-state-error").first()).toBeVisible();
+      await expect(permDeniedCell.getByTestId("data-state-permission-denied").first()).toBeVisible();
+      await expect(staleCell.getByTestId("data-state-stale").first()).toBeVisible();
+
+      // permission-denied is distinct from empty — different testid
+      await expect(permDeniedCell.getByTestId("data-state-empty")).toHaveCount(0);
+      await expect(emptyCell.getByTestId("data-state-permission-denied")).toHaveCount(0);
+    });
+
+    test("gallery certifies deliveries_list and records_list table+cards and long-value stress specimens (DATA-01/05)", async ({ page }) => {
+      await openGallery(page);
+
+      // Deliveries list specimens
+      await expect(page.getByTestId("gallery-deliveries_list-table-populated")).toBeVisible();
+      await expect(page.getByTestId("gallery-deliveries_list-data-state-error")).toBeVisible();
+      await expect(page.getByTestId("gallery-deliveries_list-long-value-stress")).toBeVisible();
+
+      // Records list specimens
+      await expect(page.getByTestId("gallery-records_list-table-populated")).toBeVisible();
+      await expect(page.getByTestId("gallery-records_list-data-state-error")).toBeVisible();
+      await expect(page.getByTestId("gallery-records_list-long-value-stress")).toBeVisible();
+
+      // Long-value stress overflow is proven against the live pages (320px) in the DATA-05 overflow test.
+      // Gallery cells are arranged in a flex-wrap row (three theme variants side-by-side) whose
+      // individual columns are narrower than the live full-width viewport — asserting overflow
+      // on gallery cells at 320px would fail trivially due to the gallery layout, not the component.
+      // The DATA-05 overflow test covers the live pages at both 320px and 768px.
+    });
+
+    test("loading contract remains synchronous — no assign_async or inbound-loading (D-06 invariant)", () => {
+      // Re-confirm D-06 synchronous invariant still holds for both list modules
+      const deliveriesSrc = require("fs").readFileSync("lib/mailglass_admin/operator/deliveries_list.ex", "utf8");
+      expect(deliveriesSrc).not.toContain("assign_async");
+
+      const inboundSrc = require("fs").readFileSync("lib/mailglass_admin/inbound_live.ex", "utf8");
+      expect(inboundSrc).not.toContain("assign_async");
+      expect(inboundSrc).not.toContain('data-testid="inbound-loading"');
+      expect(inboundSrc).not.toContain("Loading InboundMessages...");
     });
 
   });

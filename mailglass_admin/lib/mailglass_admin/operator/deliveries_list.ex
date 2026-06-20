@@ -99,7 +99,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <% end %>
       <% true -> %>
         <%!-- Desktop table (>=768px) --%>
-        <div class="hidden md:block" data-testid="operator-deliveries-table">
+        <div class="hidden md:block overflow-x-auto" data-testid="operator-deliveries-table">
           <table class="table w-full table-fixed">
             <thead>
               <tr>
