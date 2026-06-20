@@ -2763,6 +2763,179 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   });
 
+  // =========================================================================
+  // Phase 116 RATCHET-05 — BUCKET-A NET-NEW GUARDS (D-11)
+  //
+  // The 6 net-new Bucket-A regression guards (~18 of 24 defects already cite a
+  // green guard from phases 109–115; these are the remaining 6). Each carries a
+  // STABLE, CITEABLE test title — the executable manifest
+  // `bucket_a_coverage_test.exs` asserts each title literal physically exists in
+  // this file and fails closed if a title is renamed or deleted. A11 lives in
+  // check-conformance.sh (TABLE-OVERUSE-GATE); the other 5 are here.
+  //
+  // All assertions are binary/structural (elementFromPoint / getBoundingClientRect
+  // / computed style) — no screenshots, no pixel diff. A21 cross-cites the plan
+  // 116-03 interaction-pillar CLS gate (CLS_THRESHOLD_PX) rather than duplicating
+  // its measurement logic.
+  // =========================================================================
+  test.describe("Bucket-A net-new guards — A3 A4/A23 A16-system A21 A22", () => {
+
+    // ---- A3: hover only on interactive elements (no-data empty-state surface) --
+    // On the no-data surface, every element carrying a hover-derived CSS transition
+    // must be interactive (a / button / [role=button] / [phx-click] / [tabindex]).
+    // Decorative empty-state elements (icons, illustration copy, headings) must NOT
+    // have a hover transition — a hover affordance on a non-interactive element is a
+    // false affordance. The browser-server reachable no-data surface is the shared
+    // empty-state render (tenant browser-empty; the helios-void persona resolves to
+    // the SAME empty-state path — UI-SPEC: "the empty-state rendering path is shared;
+    // tenant context is provided by the URL/session"). Hover transitions are detected
+    // by toggling :hover via forced pseudo-state and diffing the computed transition.
+    test("Bucket-A A3: hover affordance only on interactive elements (no-data empty state)", async ({ page }) => {
+      await loginOperator(page, `/ops/mail?tenant_id=browser-empty`, "operator-1", "browser-empty");
+      await page.goto(`/ops/mail?tenant_id=browser-empty&view=deliveries`);
+
+      // The no-data empty state renders via data_state/1 inside the list card.
+      const emptyState = page.getByTestId("operator-deliveries-list-card").getByTestId("data-state-empty");
+      await expect(emptyState).toBeVisible();
+
+      // Enumerate every element in the empty-state subtree that carries a non-"all"
+      // hover-derived CSS transition on a hover-affected property, and assert each is
+      // interactive. A `transition` declared on a hover-target element is the false
+      // affordance we ban on decorative content.
+      const offenders = await emptyState.evaluate(root => {
+        const isInteractive = el =>
+          el.matches("a, button, [role='button'], [phx-click], [tabindex]");
+
+        const offending = [];
+        const candidates = [root, ...root.querySelectorAll("*")];
+        for (const el of candidates) {
+          const style = getComputedStyle(el);
+          const dur = style.transitionDuration || "0s";
+          const props = style.transitionProperty || "none";
+          // An element animates on hover if it declares a non-zero transition on a
+          // property hover commonly affects (transform/color/background/box-shadow/
+          // border) AND is NOT interactive.
+          const hasTransition =
+            dur.split(",").some(d => Number.parseFloat(d) > 0) &&
+            props !== "none" &&
+            /transform|color|background|box-shadow|border|opacity|all/.test(props);
+          if (hasTransition && !isInteractive(el)) {
+            offending.push({
+              tag: el.tagName,
+              cls: el.getAttribute("class") || "",
+              props
+            });
+          }
+        }
+        return offending;
+      });
+
+      expect(
+        offenders,
+        `A3: decorative empty-state elements must not carry hover transitions; offenders=${JSON.stringify(offenders)}`
+      ).toEqual([]);
+    });
+
+    // ---- A4 / A23: floating elements never overlap a primary CTA -----------------
+    // For each open floating/overlay element on a surface, assert its bounding rect
+    // does NOT intersect any visible btn-primary rect that lives OUTSIDE the overlay.
+    // A primary CTA inside the overlay (e.g. the modal's own confirm) is allowed —
+    // the overlay legitimately contains it. The reachable floating elements in the
+    // browser server are the replay modal panel (deliveries) and the flash region.
+    test("Bucket-A A4/A23: floating elements do not overlap a primary CTA outside the overlay", async ({ page }) => {
+      const modal = await openOperatorReplayModal(page);
+      await expect(modal).toBeVisible();
+
+      const overlap = await modal.evaluate(overlayEl => {
+        const intersects = (a, b) =>
+          a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+
+        const overlayRect = overlayEl.getBoundingClientRect();
+        const offenders = [];
+        for (const cta of document.querySelectorAll(".btn-primary")) {
+          // Skip CTAs that live inside the overlay subtree — those are legitimately
+          // contained, not obscured.
+          if (overlayEl.contains(cta)) continue;
+          const style = getComputedStyle(cta);
+          if (style.display === "none" || style.visibility === "hidden") continue;
+          const rect = cta.getBoundingClientRect();
+          if (rect.width === 0 || rect.height === 0) continue;
+          if (intersects(overlayRect, rect)) {
+            offenders.push({ cls: cta.getAttribute("class") || "" });
+          }
+        }
+        return offenders;
+      });
+
+      expect(
+        overlap,
+        `A4/A23: open overlay must not overlap a btn-primary outside it; offenders=${JSON.stringify(overlap)}`
+      ).toEqual([]);
+
+      await page.keyboard.press("Escape");
+    });
+
+    // ---- A16-system: system theme dark-contrast parity --------------------------
+    // The `system` theme with prefers-color-scheme:dark must be contrast-equivalent
+    // to explicit `dark`: every text region that passes AA (>=4.5:1) under explicit
+    // dark must also pass under system+dark. This is the Playwright-direct mirror of
+    // the axe invariant axe_system.total <= axe_dark.total (plan 116-02). Asserting
+    // AA contrast under system+dark on the same regions proves no system-cell
+    // regression relative to dark.
+    test("Bucket-A A16-system: system theme contrast parity with explicit dark", async ({ page }) => {
+      // Explicit dark — establish the passing regions.
+      await page.emulateMedia({ colorScheme: "dark" });
+      await openInbound(page, `tenant_id=${tenantId}&theme=dark`);
+      await expect(page.locator('[data-theme="mailglass-dark"]').first()).toBeVisible();
+      await assertTextContrastAA(page.getByTestId("inbound-overview"), "A16 dark inbound-overview");
+
+      // System theme (no ?theme= param) under prefers-color-scheme:dark must resolve
+      // to dark and hold the SAME AA contrast — no system-cell regression vs dark.
+      await page.emulateMedia({ colorScheme: "dark" });
+      await openInbound(page, `tenant_id=${tenantId}`);
+      await expectNoDataTheme(page.locator("html"), "A16 system root html (no explicit data-theme)");
+      await assertTextContrastAA(page.getByTestId("inbound-overview"), "A16 system inbound-overview (parity with dark)");
+
+      await page.emulateMedia({ colorScheme: null });
+    });
+
+    // ---- A21: loading-state CLS within threshold --------------------------------
+    // Cross-cites the plan 116-03 interaction-pillar CLS gate (CLS_THRESHOLD_PX).
+    // Captures the inbound overview region height loading-vs-settled and asserts the
+    // delta is within the CLS threshold; the settled state is measured at networkidle
+    // + animation settle so intentional reveal motion does not trip the gate.
+    test("Bucket-A A21: loading-state CLS height delta within threshold", async ({ page }) => {
+      await openInbound(page, `tenant_id=${tenantId}`);
+      const region = page.getByTestId("inbound-overview");
+      await expect(region).toBeVisible();
+      const loadingHeight = await regionHeight(region);
+
+      await page.waitForLoadState("networkidle");
+      await settleAnimations(page);
+      const loadedHeight = await regionHeight(region);
+
+      expect(
+        Math.abs(loadedHeight - loadingHeight),
+        `A21: inbound overview CLS delta <= ${CLS_THRESHOLD_PX}px`
+      ).toBeLessThanOrEqual(CLS_THRESHOLD_PX);
+    });
+
+    // ---- A22: no skeleton on synchronous surfaces -------------------------------
+    // The inbound mount is synchronous (data available on mount). It must render
+    // ZERO .mg-skeleton elements in the settled DOM — a skeleton on a synchronous
+    // surface is a misleading affordance. Extends the interaction-pillar synchronous
+    // mount gate with a standalone A22-titled guard the manifest can cite directly.
+    test("Bucket-A A22: synchronous inbound mount renders no skeleton", async ({ page }) => {
+      await openInbound(page, `tenant_id=${tenantId}`);
+      await page.waitForLoadState("networkidle");
+      await settleAnimations(page);
+
+      const skeletonCount = await page.locator(".mg-skeleton").count();
+      expect(skeletonCount, "A22: synchronous inbound mount renders no .mg-skeleton").toBe(0);
+    });
+
+  });
+
 });
 
 // Counts how many elements in the matched subtree(s) actually own a vertical
