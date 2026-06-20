@@ -2,17 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
-current_phase: 999.1
 status: executing
 stopped_at: Phase 114 UI-SPEC approved
-last_updated: "2026-06-20T13:08:34.238Z"
+last_updated: "2026-06-20T13:18:36.964Z"
 last_activity: 2026-06-20
-last_activity_desc: Phase 114 planning complete
 progress:
   total_phases: 11
   completed_phases: 7
-  total_plans: 28
-  completed_plans: 28
+  total_plans: 32
+  completed_plans: 29
   percent: 64
 ---
 
@@ -23,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 999.1 — human readable code comments gsd artifact cleanup backlog
+**Current focus:** Phase 114 — component-groups
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
+Phase: 114 (component-groups) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-20 — Phase 114 planning complete
+Last activity: 2026-06-20
 
-Progress: [█████████░] 93%
+Progress: [█████████░] 91%
 
 ## v1.13 Milestone Intent
 
@@ -212,6 +210,9 @@ convergent + adversarially judged).
 - [Phase ?]: noMatchRow() uses filter({visible:true}) to work at both mobile and desktop viewports
 - [Phase ?]: Gallery overflow proof deferred to live-page assertions; gallery cells too narrow at 320px for meaningful per-cell check
 - [Phase ?]: UI-SPEC copy changes from Plan 03 require concurrent updates to voice_test and components_test assertions
+- [114-01]: Components.card/1 thin shell drops the decorative DaisyUI `card` class (no DaisyUI card layout relied on); GROUP-GATE/PRIMITIVE-DRIFT signatures match the dropped-class shape
+- [114-01]: SPACE-GATE/GROUP-GATE scope to an explicit 8-file GROUP_SURFACES array, never `$LIB` recursion (17 other lib files share the off-grid numerics — Pitfall 1 / D-12)
+- [114-01]: card/1 added to PRIMITIVE-DRIFT as a standalone def-check, NOT the gallery render_specimen awk loop (composed specimens register differently — plan 02)
 
 ## Quick Tasks Completed
 
@@ -323,6 +324,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 113 P02 | 25 | 3 tasks | 2 files |
 | Phase 113 P03 | 8 minutes | 3 tasks | 2 files |
 | Phase 113 P04 | 24 | 3 tasks | 8 files |
+| Phase 114 P01 | 6min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -346,9 +348,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-20T12:45:50.896Z
+**Last session:** 2026-06-20T13:18:29.895Z
 **Stopped at:** Phase 114 UI-SPEC approved
-**Resume file:** .planning/phases/114-component-groups/114-UI-SPEC.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
