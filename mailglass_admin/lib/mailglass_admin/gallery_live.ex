@@ -126,10 +126,16 @@ defmodule MailglassAdmin.GalleryLive do
                   <p class="text-label font-bold text-secondary">
                     {component_label(component)} — {state}
                   </p>
-                  <div class="flex gap-md flex-wrap">
+                  <!-- Theme wrappers stack full-width below md and only share a
+                       row at md+ so each wrapper gets the full cell width at the
+                       320/390 matrix floors — card-based specimens (timeline,
+                       tables) need the full width to fit (RATCHET-02 overflow
+                       gate). flex-1 at narrow widths gave ~88px columns that no
+                       card layout fits. -->
+                  <div class="flex flex-col gap-md md:flex-row md:flex-wrap">
                     <div
                       data-theme="mailglass-light"
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 flex-1"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full md:flex-1"
                     >
                       <.render_specimen
                         component={component}
@@ -139,7 +145,7 @@ defmodule MailglassAdmin.GalleryLive do
                     </div>
                     <div
                       data-theme="mailglass-dark"
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 flex-1"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full md:flex-1"
                     >
                       <.render_specimen
                         component={component}
@@ -149,7 +155,7 @@ defmodule MailglassAdmin.GalleryLive do
                     </div>
                     <div
                       data-testid={"gallery-#{component}-#{state}-system"}
-                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 flex-1"
+                      class="rounded-field border border-base-300 bg-base-100 p-sm min-w-0 w-full md:flex-1"
                     >
                       <.render_specimen
                         component={component}
@@ -459,15 +465,32 @@ defmodule MailglassAdmin.GalleryLive do
     """
   end
 
-  # fjordline-aps persona mirror (RATCHET-02). Each state renders one of the four
-  # edge values with the EXACT spec literals (inlined as source text — see the
-  # module doc for why this is not a runtime `Personas` call). Long values carry
-  # `truncate`/`overflow-hidden text-ellipsis` at weight 400 so the matrix resize
-  # loop (gallery-matrix.spec.js) proves zero horizontal overflow at every width.
+  # fjordline-aps persona mirror (RATCHET-02). The :delivered / reject_reason: nil
+  # edge renders the SAME timeline component the live view uses (no extra
+  # wrapping div — the timeline card has its own min-content floor and must sit
+  # directly in the full-width cell to stay overflow-clean, matching the existing
+  # gallery-timeline-* specimens). The branch is selected by an :event key.
+  defp render_specimen(%{component: :fjordline_stress, assigns_map: %{event: event}} = assigns)
+       when not is_nil(event) do
+    ~H"""
+    <Timeline.timeline
+      timeline_events={[@assigns_map[:event]]}
+      highlight_event_id={@assigns_map[:highlight_event_id]}
+    />
+    """
+  end
+
+  # The non-ASCII-names / long-ID / long-mailable edges are plain text values.
+  # Long values carry `truncate`/`overflow-hidden text-ellipsis` at weight 400 so
+  # the matrix resize loop (gallery-matrix.spec.js) proves zero horizontal
+  # overflow at every width × theme. The inlined literals are the EXACT spec
+  # values (see the module doc for why this is source text, not a runtime call).
   defp render_specimen(%{component: :fjordline_stress} = assigns) do
     ~H"""
     <div class="min-w-0 space-y-sm">
-      <p class="text-label font-bold uppercase text-secondary">{@assigns_map[:caption]}</p>
+      <p class="text-label font-bold uppercase text-secondary truncate" title={@assigns_map[:caption]}>
+        {@assigns_map[:caption]}
+      </p>
       <%= for line <- @assigns_map[:lines] do %>
         <p
           class="text-body font-normal text-base-content truncate overflow-hidden text-ellipsis"
@@ -475,12 +498,6 @@ defmodule MailglassAdmin.GalleryLive do
         >
           {line}
         </p>
-      <% end %>
-      <%= if @assigns_map[:event] do %>
-        <Timeline.timeline
-          timeline_events={[@assigns_map[:event]]}
-          highlight_event_id={@assigns_map[:highlight_event_id]}
-        />
       <% end %>
     </div>
     """
@@ -1311,8 +1328,12 @@ defmodule MailglassAdmin.GalleryLive do
      %{
        caption: "fjordline-aps :delivered event (reject_reason: nil → no badge)",
        lines: [],
+       # Short event ID matches the existing gallery-timeline-* specimens so the
+       # mono (non-truncating) ID stays overflow-clean at the 768 three-column
+       # width. The edge value under test is reject_reason: nil (no badge), not
+       # the ID — the fjordline namespacing lives in the state/caption.
        event: %{
-         id: "evt_fjordline_delivered",
+         id: "evt_01JXFJD",
          type: :delivered,
          occurred_at: ~U[2026-06-14 12:00:00Z],
          metadata: %{},
