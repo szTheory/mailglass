@@ -5,6 +5,7 @@
     "test:operator-browser": "mix mailglass_admin.assets.build && playwright test --config=playwright.config.cjs --workers=1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.2",
     "@playwright/test": "^1.59.1"
   }
 }
