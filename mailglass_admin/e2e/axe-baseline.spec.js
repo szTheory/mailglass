@@ -230,10 +230,24 @@ test.describe("axe WCAG 2.2 AA baseline producer (RATCHET-03)", () => {
       }
     }
 
-    const runId = `${new Date().toISOString().slice(0, 10)}-phase-116-axe`;
+    // Per-invocation unique run_id, decoupled from any milestone date so a
+    // same-day re-run can never collide with the committed `prior.run_id`
+    // (WR-01). The full ISO timestamp (colons/dots flattened to dashes) is
+    // distinct down to the millisecond.
+    const runId = `axe-${new Date().toISOString().replace(/[:.]/g, "-")}`;
     // Preserve the existing `prior` block — the real current->prior promotion is
     // plan 116-06's job, not this producer's.
     const existing = JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"));
+    // Fail closed before writing: never emit a `current.run_id` equal to the
+    // existing `prior.run_id`, which would make the ExUnit anti-vacuity guard
+    // (axe_baseline_test.exs) fail on an otherwise-valid re-baseline.
+    const priorRunId = existing.prior && existing.prior.run_id;
+    if (runId === priorRunId) {
+      throw new Error(
+        `axe producer: generated run_id ${runId} collides with the committed ` +
+          "prior.run_id — refusing to write a vacuous self-comparison baseline."
+      );
+    }
     const next = {
       schema_version: 1,
       prior: existing.prior,
