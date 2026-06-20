@@ -705,6 +705,70 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
+  describe "stat_card/1 — DATA-02 meaningful-text contract lock" do
+    test "state :empty renders empty_text, never a bare dash placeholder" do
+      html =
+        render_component(&Components.stat_card/1,
+          label: "Deliveries",
+          state: :empty,
+          severity: :neutral
+        )
+
+      assert html =~ "No data yet"
+      refute html =~ ">—<"
+      refute html =~ ">___<"
+    end
+
+    test "state :unavailable renders unavailable_text, never a bare dash placeholder" do
+      html =
+        render_component(&Components.stat_card/1,
+          label: "Provider status",
+          state: :unavailable,
+          severity: :error
+        )
+
+      assert html =~ "Unavailable"
+      refute html =~ ">—<"
+    end
+
+    test "state :loading renders loading_text, never a bare dash placeholder" do
+      html =
+        render_component(&Components.stat_card/1,
+          label: "Delivery health",
+          state: :loading,
+          severity: :info
+        )
+
+      assert html =~ "Resolving"
+      refute html =~ ">—<"
+    end
+
+    test "severity :neutral renders visible 'All clear' label plus hero-minus-circle icon and text-secondary class (all-clear reads as real state)" do
+      html =
+        render_component(&Components.stat_card/1,
+          label: "All-clear status",
+          value: "All clear",
+          severity: :neutral
+        )
+
+      assert html =~ "All clear"
+      assert html =~ "hero-minus-circle"
+      assert html =~ "text-secondary"
+    end
+
+    test "value: nil with default state falls back to empty_text, not a dash" do
+      html =
+        render_component(&Components.stat_card/1,
+          label: "Bounces",
+          value: nil,
+          severity: :neutral
+        )
+
+      assert html =~ "No data yet"
+      refute html =~ ">—<"
+    end
+  end
+
   describe "filter_field/1 and filter_section/1 primitive contract" do
     test "filter_section renders a fieldset with visible legend and slotted fields" do
       assigns = %{}
