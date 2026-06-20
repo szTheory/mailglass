@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
   Manually run the inbound retention sweep.
 
   Runs `MailglassInbound.Internal.Prune.prune/0` SYNCHRONOUSLY whether or not Oban
-  is installed (the design contract) — only *scheduling* needs Oban; the batched sweep is the
+  is installed — only *scheduling* needs Oban; the batched sweep is the
   workhorse. Deletes happen in batches of 1000 (`FOR UPDATE SKIP LOCKED`) under a
   `pg_try_advisory_lock` single-run guard, child-first across the four retention
   windows (replay_runs 30d, execution_runs 90d, evidence 30d, records 90d), with
@@ -27,17 +27,17 @@ defmodule Mix.Tasks.Mailglass.Inbound.Prune do
       mix mailglass.inbound.prune --yes        # skip confirmation (cron/CI)
 
   Because the sweep DELETES rows, the confirmation tier is stronger than replay's
-  `[y/N]`: it requires a typed `yes` (the design contract). `--yes`/`-y` skips it for cron/CI;
+  `[y/N]`: it requires a typed `yes`. `--yes`/`-y` skips it for cron/CI;
   `--dry-run` reports scope without deleting.
 
   Emits `[:mailglass_inbound, :prune, :sweep, :stop]` with per-table deletion
-  counts (no PII, the design contract).
+  counts (no PII).
 
   ## Scheduled pruning
 
   An optional `MailglassInbound.Prune.Worker` Oban cron worker exists but is NOT
-  auto-registered (the design contract). Operators wire `0 3 * * *` in their own Oban config
-  (this milestone phase operator guide). Oban-less adopters run this task from system cron.
+  auto-registered. Operators wire `0 3 * * *` in their own Oban config
+  (operator guide). Oban-less adopters run this task from system cron.
   """
 
   @impl Mix.Task

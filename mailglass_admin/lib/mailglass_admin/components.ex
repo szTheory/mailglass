@@ -291,7 +291,7 @@ defmodule MailglassAdmin.Components do
   Renders the read-only tenant context chip.
 
   The chip intentionally does not expose switching, loading, or navigation
-  behavior in Phase 110.
+  behavior.
   """
   @doc since: "1.8.0"
   def tenant_chip(assigns) do
@@ -469,7 +469,7 @@ defmodule MailglassAdmin.Components do
 
   @doc """
   Renders the thin group-surface shell: border, radius, surface tone, and outer
-  padding only (D-01/D-02).
+  padding only.
 
   This is the single source for the group-surface shell. It deliberately owns no
   layout engine — no header/footer/grid slots, no inter-card rhythm, no `dl`/`ol`
@@ -1009,10 +1009,10 @@ defmodule MailglassAdmin.Components do
   defp status_label(_status), do: "Unknown"
 
   @doc """
-  Masks a recipient email for operator display (PII minimization, the design contract).
+  Masks a recipient email for operator display (PII minimization).
 
   The ONE audited masking definition in the admin package: both
-  `MailglassAdmin.Operator.DeliveriesList` (outbound) and the this milestone phase inbound
+  `MailglassAdmin.Operator.DeliveriesList` (outbound) and the inbound
   components call this so there is never a second, drifting copy. Keeps the first
   grapheme of each segment and stars the rest, preserving the email shape:
 

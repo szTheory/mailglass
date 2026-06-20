@@ -16,8 +16,7 @@ defmodule Mix.Tasks.MailglassAdmin.Assets.Build do
   source under `lib/mailglass_admin/` (Tailwind's content scanner walks
   those files to determine which utility classes to emit).
 
-  CI runs this followed by `git diff --exit-code priv/static/` per
-  the design contract: any drift between the committed bundle and
+  CI runs this followed by `git diff --exit-code priv/static/`: any drift between the committed bundle and
   the bundle produced from the current source fails merge.
   """
 

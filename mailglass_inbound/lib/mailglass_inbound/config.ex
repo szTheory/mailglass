@@ -57,13 +57,13 @@ defmodule MailglassInbound.Config do
   ]
 
   @moduledoc """
-  Validated configuration accessor for the `:mailglass_inbound` app env (the design contract).
+  Validated configuration accessor for the `:mailglass_inbound` app env.
 
   Mirrors the *style* of `Mailglass.Config` (NimbleOptions `@schema` declared
   before `@moduledoc`, `validate_at_boot!/0`) but reads the **`:mailglass_inbound`**
   app env, never core `Mailglass.Config`. Adding inbound keys to core would invert
   the package dependency — core reads `:mailglass` only and cannot validate config
-  for a package it does not depend on (boundary law, the design contract).
+  for a package it does not depend on (boundary law).
 
   ## Configuration
 
@@ -82,7 +82,7 @@ defmodule MailglassInbound.Config do
 
   `:infinity` on any retention class disables that window. Only the knobs the
   runtime actually reads are shipped — no speculative per-tenant override maps
-  (honest-surface, the design contract).
+  (honest-surface).
 
   ## Schema
 

@@ -12,8 +12,7 @@ defmodule MailglassAdmin.PubSub.Topics do
 
   - `admin_reload/0` — `"mailglass:admin:reload"` — the LiveReload notify
     target. `MailglassAdmin.PreviewLive` subscribes on mount; broadcasts
-    originate from the adopter's `:phoenix_live_reload` config (CONTEXT
-    the design contract). The admin package itself never broadcasts on this topic at
+    originate from the adopter's `:phoenix_live_reload` config. The admin package itself never broadcasts on this topic at
     v0.1 — it is purely a consumer surface.
 
   - `inbound_record_inserted/1` — `"mailglass:inbound:\#{tenant_id}"` — the
@@ -21,8 +20,7 @@ defmodule MailglassAdmin.PubSub.Topics do
     `Mailglass.PubSub`) so new inbound mail renders in real time. The admin is
     a CONSUMER of this topic; `mailglass_inbound` is the producer. The builder
     here MUST return the IDENTICAL string as
-    `MailglassInbound.PubSub.Topics.inbound_record_inserted/1` (CONTEXT the design contract,
-    V8) — the parity test asserts it — so a subscribe here matches a broadcast
+    `MailglassInbound.PubSub.Topics.inbound_record_inserted/1` (V8) — the parity test asserts it — so a subscribe here matches a broadcast
     there without an inbound→admin compile dependency.
 
   `admin_reload/0` and `inbound_record_inserted/1` are the topics the admin
@@ -48,7 +46,7 @@ defmodule MailglassAdmin.PubSub.Topics do
   The operator dashboard subscribes to this topic on `Mailglass.PubSub`. The
   `tenant_id` is embedded so subscribers are scoped to a single tenant. Returns
   the IDENTICAL string as `MailglassInbound.PubSub.Topics.inbound_record_inserted/1`
-  (CONTEXT the design contract) — the admin consumes the inbound producer's stream without an
+  the admin consumes the inbound producer's stream without an
   inbound→admin compile dependency.
   """
   @doc since: "0.2.0"

@@ -9,7 +9,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
   header count) and a masked placeholder for the raw body.
 
   Revealing the raw payload requires the `:reveal_raw` capability (the same
-  `MailglassAdmin.Auth.authorize/3` seam as replay — no new auth surface, the design contract).
+  `MailglassAdmin.Auth.authorize/3` seam as replay — no new auth surface).
   The InboundLive owns the authorization decision and passes `reveal_state` here:
 
     - `:redacted` — default; raw bytes absent, redacted placeholder shown.

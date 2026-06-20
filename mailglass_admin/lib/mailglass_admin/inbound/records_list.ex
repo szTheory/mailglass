@@ -6,7 +6,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   both driven from the same `@records` assign with identical selection semantics,
   result-count, and pagination.
 
-  Sibling of `MailglassAdmin.Operator.DeliveriesList` (the design contract — clone, not a
+  Sibling of `MailglassAdmin.Operator.DeliveriesList` (clone, not a
   refactor). Rows render the masked envelope recipient via the one promoted
   `MailglassAdmin.Components.mask_recipient/1` definition, the record id in mono,
   an outcome badge via `Components.status_badge/1` (normalized through

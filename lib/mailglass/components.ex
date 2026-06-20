@@ -441,8 +441,7 @@ defmodule Mailglass.Components do
 
   @doc """
   Renders an inline text link. Sets the tone color both on the `<a>` and the
-  wrapping `<span>` so email clients that strip one still render the other
-  .
+  wrapping `<span>` so email clients that strip one still render the other.
   """
   @doc since: "0.1.0"
   def link(assigns) do

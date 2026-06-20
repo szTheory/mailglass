@@ -11,6 +11,13 @@ defmodule Mailglass.Credo.NoPlanningArtifactComments do
         ~r/\bREQ-[A-Z0-9-]+\b/,
         ~r/\bGSD\b/
       ],
+      # Additional patterns enforced ONLY in docstrings (reader-facing), not in
+      # `#` comments — bare `CATEGORY-NN` REQ-IDs are kept in source comments as
+      # maintainer traceability but must never leak into HexDocs. The prefix set
+      # is curated to exclude real-world tokens (SHA-256, UTF-8, OTP-27).
+      docstring_banned_patterns: [
+        ~r/\b(?:T-)?(?:STATE-LD|AUTHOR|CORE|CR|DATA|DELIV|DOCS|HI|HOOK|IADM|IDEMP|IN|IOPS|ITEST|LD|LIB|LINT|MAIL|ME|MIME|PII|PREV|RATE|REL|RELH|SESI|SUPP|TELE|TENANT|TEST|TOKEN|TRACK|TRANS|UNSUB|WR|PERSIST)-\d{1,3}\b/
+      ],
       included_path_prefixes: ["lib/mailglass/", "mailglass_admin/lib/", "mailglass_inbound/lib/"],
       allowed_literals: []
     ],
@@ -21,6 +28,8 @@ defmodule Mailglass.Credo.NoPlanningArtifactComments do
       """,
       params: [
         banned_patterns: "Regex list of disallowed planning-artifact tokens.",
+        docstring_banned_patterns:
+          "Extra patterns enforced in docstrings only (not comments) — bare CATEGORY-NN REQ-IDs.",
         included_path_prefixes: "Only files in these path prefixes are linted.",
         allowed_literals: "Exact literal matches that are intentionally allowed."
       ]
@@ -35,6 +44,7 @@ defmodule Mailglass.Credo.NoPlanningArtifactComments do
     if included_path?(source_file, included_path_prefixes) do
       issue_meta = IssueMeta.for(source_file, params)
       banned_patterns = Params.get(params, :banned_patterns, __MODULE__)
+      docstring_banned_patterns = Params.get(params, :docstring_banned_patterns, __MODULE__)
       allowed_literals = params |> Params.get(:allowed_literals, __MODULE__) |> MapSet.new()
 
       comment_issues =
@@ -46,7 +56,13 @@ defmodule Mailglass.Credo.NoPlanningArtifactComments do
         source_file
         |> collect_docstring_surfaces()
         |> Enum.flat_map(
-          &issues_for_surface(&1, issue_meta, banned_patterns, allowed_literals, "docstring")
+          &issues_for_surface(
+            &1,
+            issue_meta,
+            banned_patterns ++ docstring_banned_patterns,
+            allowed_literals,
+            "docstring"
+          )
         )
 
       comment_issues ++ docstring_issues

@@ -7,7 +7,7 @@ defmodule Mix.Tasks.MailglassAdmin.Daisyui.Update do
   Curls the latest `daisyui.js` + `daisyui-theme.js` from the daisyUI
   GitHub releases page and writes them to `assets/vendor/`. Prepends a
   pin-comment with today's date + the source URL for CHANGELOG
-  traceability per CONTEXT the design contract.
+  traceability.
 
   ## Usage
 

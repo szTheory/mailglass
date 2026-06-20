@@ -8,7 +8,7 @@ defmodule MailglassInbound.Router do
   by `MailglassInbound.Router.Matcher`, which preserves top-to-bottom,
   first-match-wins semantics.
 
-  this milestone phase intentionally keeps the public matcher surface narrow:
+  This router intentionally keeps the public matcher surface narrow:
 
   - `:recipient` accepts an exact string or regex and matches the envelope recipient.
   - `:subject` accepts an exact string or regex.

@@ -2,11 +2,11 @@ defmodule MailglassInbound.Internal.Doctor do
   @moduledoc """
   DNS-free pre-deploy config check runner for `mix mailglass.inbound.doctor`
   All checks are pure reflection — no DB, no DNS, no network
-  — so the doctor is fast, offline, and CI-friendly (the design contract).
+  — so the doctor is fast, offline, and CI-friendly.
 
   `run/1` returns `%{summary: %{pass, warn, fail, cannot_diagnose}, findings: [...]}`
   with the locked finding shape `%{check, status, title, observed, remediation,
-  evidence}` (the design contract). The CLI shell maps the summary to the three-state exit code.
+  evidence}`. The CLI shell maps the summary to the three-state exit code.
 
   ## Checks (all DNS-free)
 
@@ -19,9 +19,9 @@ defmodule MailglassInbound.Internal.Doctor do
     * MIME backend availability + version via `Mailglass.OptionalDeps.GenSmtp`
       (no bare optional-dep reference);
     * route-conflict detection REUSING `MailglassInbound.Router.Matcher.matches_route?/2`
-      (the design contract): structural subsumption (broad-before-narrow) -> `:fail`,
+      structural subsumption (broad-before-narrow) -> `:fail`,
       witness-probe shadow -> `:fail`, regex-vs-regex overlap -> `:warn`. Conflict
-      findings name `router.ex:LINE` via `Route.:source` (the design contract).
+      findings name `router.ex:LINE` via `Route.:source`.
   """
 
   alias MailglassInbound.InboundMessage

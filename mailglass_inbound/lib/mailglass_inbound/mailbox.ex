@@ -3,7 +3,7 @@ defmodule MailglassInbound.Mailbox do
   @moduledoc """
   Behaviour for adopter-defined inbound mailboxes.
 
-  this milestone phase locks the public mailbox contract to one callback:
+  This module locks the public mailbox contract to one callback:
   `process/1`. The callback receives the stable
   `%MailglassInbound.InboundMessage{}` value object and must return one of the
   approved outcomes:

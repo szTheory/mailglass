@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Mailglass.Reconcile do
   Intended for:
 
     * Adopters without Oban in their deps (the Application boot
-      warning directs them here — see CONTEXT D-20).
+      warning directs them here).
     * Ops engineers who want to run a sweep without waiting for the
       next `*/5 * * * *` cron tick.
     * System-cron invocation in Oban-less environments (e.g.
@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Mailglass.Reconcile do
 
   Emits the same `[:mailglass, :webhook, :reconcile, :start | :stop |
   :exception]` telemetry span as the Oban worker (telemetry metadata
-  stays whitelist-conformant per D-23).
+  stays whitelist-conformant).
 
   When Oban is absent, this task still performs the same reconcile
   sweep and serves as the maintenance fallback you can run manually or

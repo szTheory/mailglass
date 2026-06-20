@@ -14,7 +14,7 @@ defmodule MailglassInbound.PubSub.Topics do
 
   - `inbound_record_inserted/1` — `"mailglass:inbound:\#{tenant_id}"` — the
     per-tenant stream that fires once after an `InboundRecord` is committed
-    (status `:inserted`). The this milestone phase admin LiveView subscribes here on
+    (status `:inserted`). The admin LiveView subscribes here on
     `Mailglass.PubSub` so it can render new inbound mail in real time without an
     inbound→admin compile dependency. The topic carries `tenant_id` so a
     subscriber only ever sees its own tenant's records.
@@ -26,7 +26,7 @@ defmodule MailglassInbound.PubSub.Topics do
   @doc """
   Returns the per-tenant inbound record-inserted stream topic.
 
-  The this milestone phase admin LiveView subscribes to this topic on `Mailglass.PubSub`.
+  The admin LiveView subscribes to this topic on `Mailglass.PubSub`.
   The `tenant_id` is embedded so subscribers are scoped to a single tenant.
   """
   @doc since: "0.2.0"

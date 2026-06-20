@@ -40,7 +40,7 @@ defmodule MailglassInbound.MailboxCase do
   execution **structurally**: `MailglassInbound.Test.Ingress` drives
   `MailglassInbound.Execution.execute/2` (SYNC) directly — there is no
   async-mode app-env key to flip and therefore no leak surface across tests
-  (the design contract, T-47-13). The only teardown is `Sandbox.stop_owner/1`; the only
+  The only teardown is `Sandbox.stop_owner/1`; the only
   shared-state hygiene is the per-setup ETS / process-dict reset below.
 
   ## Default setup

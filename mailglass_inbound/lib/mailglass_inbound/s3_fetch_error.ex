@@ -19,8 +19,7 @@ defmodule MailglassInbound.S3FetchError do
 
   - `:s3_object_not_ready` — the bounded `GetObject` retry was exhausted before
     the object became readable. This is the **transient** path: the handler does
-    NOT ack, so SNS redelivers and the dedupe layer is the real safety net
-    (the design contract).
+    NOT ack, so SNS redelivers and the dedupe layer is the real safety net.
   - `:s3_fetch_failed` — a non-retryable S3 error (access denied, bucket missing,
     malformed key, gateway/exit failure). Retrying will not help.
 

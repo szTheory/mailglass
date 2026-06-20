@@ -10,7 +10,7 @@ defmodule Mix.Tasks.Mailglass.Webhooks.Prune do
   Intended for:
 
     * Adopters without Oban in their deps (the Application boot
-      warning directs them here — see CONTEXT D-20).
+      warning directs them here).
     * Ops engineers who want to run a prune sweep out-of-band.
     * System-cron invocation in Oban-less environments
       (e.g. `0 3 * * * cd /app && mix mailglass.webhooks.prune`).
@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Mailglass.Webhooks.Prune do
 
   Emits `[:mailglass, :webhook, :prune, :stop]` telemetry with
   `%{succeeded_deleted: n, dead_deleted: m}` measurements and
-  `%{status: :ok}` metadata per CONTEXT D-22 + D-23 whitelist.
+  `%{status: :ok}` metadata per the whitelist.
 
   Exits with status 1 when `Mailglass.Webhook.Pruner` is not compiled
   (Oban absent from deps).

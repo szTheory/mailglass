@@ -15,8 +15,7 @@
 if Code.ensure_loaded?(MailglassInbound) do
   defmodule MailglassAdmin.OptionalDeps.MailglassInbound do
     @moduledoc """
-    Runtime gateway for all `mailglass_inbound` access from `mailglass_admin`
-    (CONTEXT the design contract / the design contract).
+    Runtime gateway for all `mailglass_inbound` access from `mailglass_admin`.
 
     The admin LiveView never references `MailglassInbound.*` directly — it calls
     these wrappers, which `apply/3` into the inbound read-models
@@ -120,7 +119,7 @@ if Code.ensure_loaded?(MailglassInbound) do
     canonical `%InboundMessage{}` from the stored record through the internal
     inbound message reconstruction helper, and runs the in-package
     `Router.Matcher.explain/2` per route — so the rendered verdict equals real
-    matcher behavior (the design contract; the view never re-implements match semantics).
+    matcher behavior (the view never re-implements match semantics).
 
     Returns a list (declared route order) of `%{mailbox: String.t(), verdicts:
     [tuple()]}`. The `mailbox` is the route's mailbox module rendered as a string;
@@ -156,7 +155,7 @@ if Code.ensure_loaded?(MailglassInbound) do
     Replays a stored inbound record by id. The caller passes `tenant_id:` in `opts`
     — `Internal.Replay.replay/2` scopes every load to that tenant and refuses a
     foreign-tenant id with `{:error, :not_found}` (T-49-17). The admin's
-    `verify_tenant/2` gate (the design contract) remains the first line of defence; this seam is
+    `verify_tenant/2` gate remains the first line of defence; this seam is
     now tenant-safe by construction too.
     """
     @doc since: "0.2.0"

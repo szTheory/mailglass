@@ -35,7 +35,7 @@ defmodule MailglassInbound.MIME do
   > provider-fed deep-nesting (boundary-bomb) DoS.
   >
   > Provider-fed DoS hardening — a real decoder-level recursion limit — is a
-  > **this milestone phase** concern that will plug into this same seam. The guard is kept
+  > A **future** concern that will plug into this same seam. The guard is kept
   > because it is that seam and because it bounds the representation the
   > pipeline iterates.
 
@@ -56,16 +56,16 @@ defmodule MailglassInbound.MIME do
 
   ## Standalone — not wired into any provider path
 
-  This parser is the **producer only** (`the design contract`). It is NOT wired into the
-  working JSON-based Postmark/SendGrid normalize paths in this phase. this milestone phase
-  (Mailgun/SES raw-MIME ingress) is the first consumer.
+  This parser is the **producer only**. It is NOT wired into the
+  working JSON-based Postmark/SendGrid normalize paths in this version; Mailgun/SES
+  raw-MIME ingress is the first consumer.
 
   ## Encoding note
 
   The gateway passes `{:encoding, :none}` to the decoder (gen_smtp does not
   bundle iconv), so leaf `:body` bytes are **not** transcoded to UTF-8. A consumer
   that needs UTF-8 text must transcode using the part's declared charset
-  (`content_type_params["charset"]`). Flagged for this milestone phase.
+  (`content_type_params["charset"]`). Flagged as a future improvement.
   """
 
   # Aliased with a distinct root segment (not `GenSmtp`) so the

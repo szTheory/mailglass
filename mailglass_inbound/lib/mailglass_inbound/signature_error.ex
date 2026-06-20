@@ -7,7 +7,7 @@ defmodule MailglassInbound.SignatureError do
   Webhook signature errors are never retryable — the caller is either
   misconfigured (wrong signing key) or the request is a forgery. The plug maps
   this to a 4xx and lets the request fail closed; there is **no** recovery path
-  (CLAUDE.md "Things Not To Do" #5 / the design contract). This struct mirrors the no-recovery
+  (CLAUDE.md "Things Not To Do" #5). This struct mirrors the no-recovery
   contract of core `Mailglass.SignatureError` while staying package-local.
 
   It follows the same closed-`:type` discipline as

@@ -2,16 +2,15 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
   @moduledoc """
   Selected inbound-record summary header.
 
-  Sibling of `MailglassAdmin.Operator.DetailHeader` (the design contract). Receives the
+  Sibling of `MailglassAdmin.Operator.DetailHeader`. Receives the
   detail read-model map `%{record: %InboundRecord{}, mailbox:, outcome:,
   outcome_reason:, evidence:}` from the internal inbound detail gateway.
 
   CRITICAL (Pitfall 2): the `:suppression_flagged` field does NOT exist on any
-  this milestone phase schema — it lands in this milestone phase. The flag is read with
+  current schema — it lands in a future release. The flag is read with
   `Map.get(record, :suppression_flagged, false)`, NEVER via dot-access on a missing
   struct key (which raises `KeyError`). The suppression-flag copy renders only when the flag
-  is truthy, so it is forward-compatible scaffolding that simply never renders until
-  this milestone phase.
+  is truthy, so it is forward-compatible scaffolding that simply never renders until a future release.
   """
 
   use Phoenix.Component

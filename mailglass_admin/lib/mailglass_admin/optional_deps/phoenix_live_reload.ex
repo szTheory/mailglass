@@ -8,7 +8,7 @@ if Code.ensure_loaded?(Phoenix.LiveReloader) do
   defmodule MailglassAdmin.OptionalDeps.PhoenixLiveReload do
     @moduledoc """
     Gateway for the optional `{:phoenix_live_reload, "~> 1.6"}` dep
-    (CONTEXT the design contract, dev-only).
+    (dev-only).
 
     When `phoenix_live_reload` is loaded (the normal dev configuration),
     `MailglassAdmin.PreviewLive` subscribes to

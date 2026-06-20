@@ -2,7 +2,7 @@ defmodule MailglassAdmin.Inbound.Timeline do
   @moduledoc """
   Read-only execution-lineage timeline for one inbound record, chronological.
 
-  Sibling of `MailglassAdmin.Operator.Timeline` (the design contract). Rows are
+  Sibling of `MailglassAdmin.Operator.Timeline`. Rows are
   `ExecutionRun` projections (Pitfall 7 — the lineage schema, NOT the replay-run
   schema) from the internal inbound timeline gateway, each carrying
   `source` (`:fresh`/`:replay`), `mailbox`, `outcome`, `outcome_reason`,

@@ -6,19 +6,19 @@ defmodule MailglassInbound.Internal.Prune do
 
   Mirrors `Mailglass.Webhook.Pruner`'s STRUCTURE (`:infinity` disables a class,
   per-table telemetry) but UPGRADES the unbounded `delete_all` to a batched idiom
-  (the design contract): each table deletes `LIMIT 1000` rows at a time
+  each table deletes `LIMIT 1000` rows at a time
   (`FOR UPDATE SKIP LOCKED`), looping until a batch deletes `< 1000`. The whole
   sweep is serialized by a session `pg_try_advisory_lock` — a concurrent second
   run returns `{:ok, :locked_out}` and deletes nothing.
 
-  ## Window split (the design contract) — three physical tables, four windows
+  ## Window split — three physical tables, four windows
 
     * `mailglass_inbound_replay_runs` WHERE `source = :replay` AND age > replay_runs_days (30d)
     * `mailglass_inbound_replay_runs` WHERE `source = :fresh`  AND age > execution_runs_days (90d)
     * `mailglass_inbound_evidence` WHERE age > evidence_days (90d)
     * `mailglass_inbound_records` WHERE age > records_days (90d)
 
-  Deletes run child-first (the design contract): replay_runs (both source filters) -> evidence
+  Deletes run child-first: replay_runs (both source filters) -> evidence
   -> records. FKs are `on_delete: :nothing`, so a mis-ordered delete fails loudly
   on the FK (the designed safety net — do NOT switch to CASCADE).
   Prune operations must remain tenant-scoped and operator-confirmed before destructive actions.

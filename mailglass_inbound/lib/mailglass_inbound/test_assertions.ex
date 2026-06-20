@@ -57,7 +57,7 @@ defmodule MailglassInbound.TestAssertions do
   `%MailglassInbound.Error{}`. The errors-as-contract rule (CLAUDE.md) governs
   the library's runtime API surface; test assertions are a test-time tool, so
   they speak ExUnit. `ExUnit.Assertions` is imported from the bundled OTP
-  `:ex_unit` app — no Hex dependency is added (the design contract).
+  `:ex_unit` app — no Hex dependency is added.
 
   ## PII posture
 

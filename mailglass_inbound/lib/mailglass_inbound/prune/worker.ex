@@ -15,9 +15,9 @@ if Code.ensure_loaded?(Oban.Worker) do
 
     ## Never auto-registered
 
-    This worker is NOT auto-registered in `MailglassInbound.Application` (the design contract).
+    This worker is NOT auto-registered in `MailglassInbound.Application`.
     Operators wire the cron in their own Oban config — the recommended cadence is
-    `0 3 * * *` (3 AM UTC; documented in the this milestone phase operator guide). The
+    `0 3 * * *` (3 AM UTC; documented in the operator guide). The
     `mix mailglass.inbound.prune` task runs the sweep synchronously whether or not
     Oban is present, so Oban-less adopters still get a working prune.
     """
@@ -47,7 +47,7 @@ else
 
     `available?/0` returns `false`. The `mix mailglass.inbound.prune` task does
     NOT gate on this — it runs `MailglassInbound.Internal.Prune.prune/0`
-    synchronously regardless (only scheduling needs Oban, the design contract).
+    synchronously regardless (only scheduling needs Oban).
     """
 
     @doc since: "1.2.0"
