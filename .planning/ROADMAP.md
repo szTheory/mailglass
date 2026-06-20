@@ -185,7 +185,21 @@ Plans:
   4. Severity/status is encoded by icon+label+color (never color alone) and is scannable in a 5-second operator-under-stress test.
   5. Long real-world values (UUIDs, module/function names, URLs, non-ASCII names, timestamps) are handled gracefully — truncate+tooltip or expand, never overflow or chop.
 
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+**Wave 1**
+
+- [ ] 113-01-PLAN.md — Shared `Components.data_state/1` four-state primitive + embed data-state Heroicons + certify stat_card meaningful-text contract.
+
+**Wave 2** *(blocked on Wave 1; 02 and 03 run in parallel — disjoint files)*
+
+- [ ] 113-02-PLAN.md — Deliveries dual table+card presentation, four data-states, long-value handling, operator KPI stat_card certification.
+- [ ] 113-03-PLAN.md — Inbound records dual table+card presentation (synchronous-only), four data-states, long-value handling, inbound KPI stat_card certification.
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 113-04-PLAN.md — Gallery specimens + Playwright responsive/overflow/status/data-state proof (legacy testids migrated) + STATUS-BADGE/DATA-STATE conformance gates + single bit-clean CSS bundle commit.
+
 **UI hint**: yes
 
 ### Phase 114: Component Groups
