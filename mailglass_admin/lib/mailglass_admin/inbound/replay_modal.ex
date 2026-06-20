@@ -34,7 +34,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
           aria-labelledby="inbound-replay-modal-title"
           phx-key="Escape"
           phx-window-keydown="close_replay"
-          class="motion-overlay mg-layer-overlay-panel w-full max-w-2xl rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
+          class="motion-overlay mg-layer-overlay-panel mg-overscroll-contain mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-box border border-base-300 bg-base-100 p-6 shadow-overlay"
           phx-remove={
             JS.hide(
               time: 150,

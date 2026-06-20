@@ -18,7 +18,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
     ~H"""
     <%= if @open? and @delivery do %>
       <div
-        class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim fixed inset-0 overflow-y-auto p-4"
+        class="motion-tab-swap mg-layer-overlay-scrim mg-overlay-scrim mg-overscroll-contain fixed inset-0 overflow-y-auto p-4"
         phx-remove={
           JS.hide(time: 150, transition: {"ease-out duration-150", "opacity-100", "opacity-0"})
         }
