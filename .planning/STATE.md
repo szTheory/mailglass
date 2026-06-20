@@ -4,13 +4,13 @@ milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
 status: executing
 stopped_at: Phase 116 UI-SPEC approved
-last_updated: "2026-06-20T21:06:53.737Z"
+last_updated: "2026-06-20T21:15:40.253Z"
 last_activity: 2026-06-20
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 42
-  completed_plans: 37
+  completed_plans: 38
   percent: 82
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 116 (fixtures-idempotent-ratchet-arm) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-06-20
 
-Progress: [█████████░] 88%
+Progress: [█████████░] 90%
 
 ## v1.13 Milestone Intent
 
@@ -219,6 +219,7 @@ convergent + adversarially judged).
 - [Phase ?]: Plan 114-04: Playwright composed-group geometry scopes to the light theme wrapper + direct-sibling [data-group-card]; narrow-width overflow asserts no descendant exceeds the viewport
 - [Phase ?]: 116-01: A1 path-dep is circular (demo depends on admin); fell back to a shared reference/persona_spec/ dir compiled into both demo + admin test builds via absolute elixirc_paths
 - [Phase ?]: 116-01: DemoData.reset! seeds the persona cohort at harness boot (Personas.seed!/1) — feeds RATCHET-04; canonical fjordline literals via Personas.specimen_literals/0 for plan 116-04 to mirror
+- [Phase ?]: Phase 116-02: axe WCAG 2.2 AA ratchet established (9-cell axe-baseline.json schema 1, screenshot-free producer, fail-closed comparator with per-rule diff)
 
 ## Quick Tasks Completed
 
@@ -335,6 +336,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 114 P03 | 10 min | 3 tasks | 8 files |
 | Phase 114 P04 | 5 min | 2 tasks | 2 files |
 | Phase 116 P01 | 14min | 3 tasks | 7 files |
+| Phase 116 P02 | 12 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -358,7 +360,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-20T21:06:01.393Z
+**Last session:** 2026-06-20T21:15:25.932Z
 **Stopped at:** Phase 116 UI-SPEC approved
 **Resume file:** None
 
