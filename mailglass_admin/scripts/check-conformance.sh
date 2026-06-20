@@ -539,6 +539,31 @@ if [[ -n "$non_components_defs" ]]; then
   errors=$((errors + 1))
 fi
 
+# TABLE-OVERUSE-GATE (A11 / RATCHET-05): count-must-not-increase floor on <table>
+# element-open tags in lib/. <table> is appropriate ONLY for genuinely tabular,
+# multi-column data; a <table> used as a layout device for a homogeneous list is a
+# Bucket-A A11 violation. This gate is the COUNT TRIPWIRE — the per-<table>
+# justification rows live in the Bucket-A coverage manifest (bucket_a_coverage_test.exs).
+#
+# The floor (TABLE_FLOOR) is the Phase-116-start value: 3 genuinely-tabular tables —
+# operator deliveries_list.ex, inbound records_list.ex, preview tabs.ex. Adding a
+# 4th <table> without bumping this floor (which requires a justification row in the
+# manifest) fails the gate.
+#
+# Comment hygiene (Comment-Text Discipline): the match pattern is `<table` followed
+# by WHITESPACE (a real element-open tag, e.g. `<table class=...`). The @moduledoc
+# prose form is the backtick-wrapped `<table>` (immediate `>` after the tag name),
+# which this pattern can never match — so header/doc prose mentioning a table cannot
+# inflate the count. Never a bare unfiltered grep -c on the raw file.
+TABLE_FLOOR=3
+table_count="$(grep -rhoE '<table[[:space:]]' "$LIB" --include="*.ex" 2>/dev/null | wc -l | tr -d '[:space:]')"
+if [[ "$table_count" -gt "$TABLE_FLOOR" ]]; then
+  echo "Found $table_count <table> element-open tags in lib/ (floor is $TABLE_FLOOR):" >&2
+  grep -rnE '<table[[:space:]]' "$LIB" --include="*.ex" 2>/dev/null >&2 || true
+  echo "FAIL: TABLE-OVERUSE-GATE — <table> count rose above the $TABLE_FLOOR floor; add a per-table justification row to bucket_a_coverage_test.exs and bump TABLE_FLOOR, or use cards/lists (A11)" >&2
+  errors=$((errors + 1))
+fi
+
 if [[ $errors -gt 0 ]]; then
   echo "FAIL: design-system conformance violations found ($errors gate(s) failed)" >&2
   exit 1
