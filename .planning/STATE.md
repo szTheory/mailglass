@@ -2,15 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
+current_phase: 114
+current_phase_name: component-groups
 status: executing
-stopped_at: Phase 114 UI-SPEC approved
-last_updated: "2026-06-20T13:18:36.964Z"
+stopped_at: Completed 114-02-PLAN.md
+last_updated: "2026-06-20T13:30:08.912Z"
 last_activity: 2026-06-20
 progress:
   total_phases: 11
   completed_phases: 7
   total_plans: 32
-  completed_plans: 29
+  completed_plans: 30
   percent: 64
 ---
 
@@ -26,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 114 (component-groups) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-20
 
@@ -213,6 +215,7 @@ convergent + adversarially judged).
 - [114-01]: Components.card/1 thin shell drops the decorative DaisyUI `card` class (no DaisyUI card layout relied on); GROUP-GATE/PRIMITIVE-DRIFT signatures match the dropped-class shape
 - [114-01]: SPACE-GATE/GROUP-GATE scope to an explicit 8-file GROUP_SURFACES array, never `$LIB` recursion (17 other lib files share the off-grid numerics — Pitfall 1 / D-12)
 - [114-01]: card/1 added to PRIMITIVE-DRIFT as a standalone def-check, NOT the gallery render_specimen awk loop (composed specimens register differently — plan 02)
+- [Phase 114]: Composed-group specimens delegate from gallery dispatcher to public composed_*/1 fns (capturable for Floki proof); smoke assertion in operator_live_test.exs binds specimen to production detail column — D-10: lab must render the same composition the live view does; harness lives in operator_live_test.exs
 
 ## Quick Tasks Completed
 
@@ -325,6 +328,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 113 P03 | 8 minutes | 3 tasks | 2 files |
 | Phase 113 P04 | 24 | 3 tasks | 8 files |
 | Phase 114 P01 | 6min | 3 tasks | 3 files |
+| Phase 114 P02 | 12 min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -348,8 +352,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-20T13:18:29.895Z
-**Stopped at:** Phase 114 UI-SPEC approved
+**Last session:** 2026-06-20T13:30:00.898Z
+**Stopped at:** Completed 114-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
