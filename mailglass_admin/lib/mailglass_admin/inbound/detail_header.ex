@@ -27,13 +27,14 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
       |> assign(:mailbox, assigns.detail[:mailbox])
 
     ~H"""
-    <article
+    <Components.card
+      padding={:lg}
       data-testid="inbound-detail-header"
-      class="card rounded-box border border-base-300 bg-base-200 p-6"
+      data-group-card="inbound-detail-header"
     >
       <div class="flex flex-wrap items-start justify-between gap-md">
-        <div class="space-y-2">
-          <div class="flex flex-wrap items-center gap-2">
+        <div class="space-y-sm">
+          <div class="flex flex-wrap items-center gap-sm">
             <h2 class="text-heading font-bold text-base-content">
               {Components.mask_recipient(@record.envelope_recipient)}
             </h2>
@@ -52,33 +53,33 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
         <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
           <div>
             <dt class="text-label font-bold uppercase">Tenant</dt>
-            <dd class="mt-1 text-base-content">{@record.tenant_id}</dd>
+            <dd class="mt-xs text-base-content">{@record.tenant_id}</dd>
           </div>
           <div>
             <dt class="text-label font-bold uppercase">Provider</dt>
-            <dd class="mt-1 text-base-content">{String.upcase(@record.provider || "unknown")}</dd>
+            <dd class="mt-xs text-base-content">{String.upcase(@record.provider || "unknown")}</dd>
           </div>
           <div>
             <dt class="text-label font-bold uppercase">From</dt>
-            <dd class="mt-1 text-base-content">{sender_display(@record)}</dd>
+            <dd class="mt-xs text-base-content">{sender_display(@record)}</dd>
           </div>
           <div>
             <dt class="text-label font-bold uppercase">Subject</dt>
-            <dd class="mt-1 text-base-content">{present(@record.subject)}</dd>
+            <dd class="mt-xs text-base-content">{present(@record.subject)}</dd>
           </div>
           <div>
             <dt class="text-label font-bold uppercase">Received</dt>
-            <dd class="mono mt-1 text-base-content">{format_datetime(@record.received_at)}</dd>
+            <dd class="mono mt-xs text-base-content">{format_datetime(@record.received_at)}</dd>
           </div>
           <div>
             <dt class="text-label font-bold uppercase">Matched mailbox</dt>
-            <dd class="mt-1 text-base-content">{matched_mailbox(@mailbox)}</dd>
+            <dd class="mt-xs text-base-content">{matched_mailbox(@mailbox)}</dd>
           </div>
         </dl>
       </div>
 
-      <div class="mt-6 flex flex-wrap items-start justify-between gap-md border-t border-base-300 pt-4">
-        <div class="space-y-1">
+      <div class="mt-lg flex flex-wrap items-start justify-between gap-md border-t border-base-300 pt-md">
+        <div class="space-y-xs">
           <h3 class="text-body font-bold uppercase text-secondary">Replay</h3>
           <p class="text-body text-base-content">{replay_hint(@outcome)}</p>
         </div>
@@ -94,7 +95,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           Replay inbound
         </button>
       </div>
-    </article>
+    </Components.card>
     """
   end
 

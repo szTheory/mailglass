@@ -5,12 +5,14 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
 
   use Phoenix.Component
 
+  import MailglassAdmin.Components, only: [card: 1]
+
   attr :suppression_state, :map, default: nil
 
   def suppression_card(assigns) do
     ~H"""
-    <article data-testid="operator-suppression-card" class="card rounded-box border border-base-300 bg-base-200 p-6">
-      <div class="mb-4 flex items-center justify-between gap-sm">
+    <.card padding={:lg} data-testid="operator-suppression-card" data-group-card="operator-suppression-card">
+      <div class="mb-md flex items-center justify-between gap-sm">
         <h3 class="text-body font-bold text-base-content">Suppression</h3>
         <span class="badge badge-outline">
           {headline(@suppression_state)}
@@ -18,23 +20,23 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
       </div>
 
       <%= if @suppression_state do %>
-        <div class="space-y-3 text-body">
+        <div class="space-y-md text-body">
           <div class="grid gap-sm sm:grid-cols-2">
             <div>
               <p class="text-label uppercase font-bold text-secondary">Scope</p>
-              <p class="mt-1 text-base-content">{label(Map.get(@suppression_state, :scope))}</p>
+              <p class="mt-xs text-base-content">{label(Map.get(@suppression_state, :scope))}</p>
             </div>
             <div>
               <p class="text-label uppercase font-bold text-secondary">Reason</p>
-              <p class="mt-1 text-base-content">{label(Map.get(@suppression_state, :reason))}</p>
+              <p class="mt-xs text-base-content">{label(Map.get(@suppression_state, :reason))}</p>
             </div>
             <div :if={Map.get(@suppression_state, :stream)}>
               <p class="text-label uppercase font-bold text-secondary">Stream</p>
-              <p class="mt-1 text-base-content">{label(Map.get(@suppression_state, :stream))}</p>
+              <p class="mt-xs text-base-content">{label(Map.get(@suppression_state, :stream))}</p>
             </div>
             <div>
               <p class="text-label uppercase font-bold text-secondary">Source</p>
-              <p class="mt-1 text-base-content">{Map.get(@suppression_state, :source, "Unknown")}</p>
+              <p class="mt-xs text-base-content">{Map.get(@suppression_state, :source, "Unknown")}</p>
             </div>
           </div>
           <p class="text-secondary">{body_copy(@suppression_state)}</p>
@@ -44,7 +46,7 @@ defmodule MailglassAdmin.Operator.SuppressionCard do
           No active Suppression for this Delivery.
         </p>
       <% end %>
-    </article>
+    </.card>
     """
   end
 

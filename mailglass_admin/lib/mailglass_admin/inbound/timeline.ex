@@ -11,15 +11,18 @@ defmodule MailglassAdmin.Inbound.Timeline do
 
   use Phoenix.Component
 
+  import MailglassAdmin.Components, only: [card: 1]
+
   attr :runs, :list, required: true
 
   def timeline(assigns) do
     ~H"""
-    <article
+    <.card
+      padding={:lg}
       data-testid="inbound-timeline"
-      class="card rounded-box border border-base-300 bg-base-200 p-6"
+      data-group-card="inbound-timeline"
     >
-      <div class="mb-4 flex items-center justify-between gap-sm">
+      <div class="mb-md flex items-center justify-between gap-sm">
         <h3 class="text-body font-bold text-base-content">Execution timeline</h3>
         <span class="text-label text-secondary">Chronological order</span>
       </div>
@@ -29,21 +32,21 @@ defmodule MailglassAdmin.Inbound.Timeline do
           No execution runs have been recorded for this message yet.
         </p>
       <% else %>
-        <ol class="motion-timeline space-y-4">
+        <ol class="motion-timeline space-y-lg">
           <%= for {run, index} <- Enum.with_index(@runs) do %>
             <li
               data-testid="inbound-timeline-run"
               data-run-id={run.id}
               class="flex gap-sm"
             >
-              <div class="mt-1 flex flex-col items-center">
+              <div class="mt-xs flex flex-col items-center">
                 <span class={["h-3 w-3 rounded-full", outcome_dot_class(run.outcome)]}></span>
-                <span :if={index < length(@runs) - 1} class="mt-2 h-full w-px bg-base-300"></span>
+                <span :if={index < length(@runs) - 1} class="mt-sm h-full w-px bg-base-300"></span>
               </div>
-              <div class="min-w-0 flex-1 rounded-box border border-base-300 bg-base-100 p-4">
+              <div class="min-w-0 flex-1 rounded-box border border-base-300 bg-base-100 p-md">
                 <div class="flex flex-wrap items-start justify-between gap-sm">
-                  <div class="space-y-1">
-                    <div class="flex flex-wrap items-center gap-2">
+                  <div class="space-y-xs">
+                    <div class="flex flex-wrap items-center gap-sm">
                       <p class="text-body font-bold text-base-content">{outcome_label(run.outcome)}</p>
                       <span class="badge badge-outline">{source_label(run.source)}</span>
                     </div>
@@ -60,7 +63,7 @@ defmodule MailglassAdmin.Inbound.Timeline do
           <% end %>
         </ol>
       <% end %>
-    </article>
+    </.card>
     """
   end
 

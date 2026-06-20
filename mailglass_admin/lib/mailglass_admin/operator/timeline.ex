@@ -13,11 +13,12 @@ defmodule MailglassAdmin.Operator.Timeline do
 
   def timeline(assigns) do
     ~H"""
-    <article
+    <Components.card
+      padding={:lg}
       data-testid="operator-timeline"
-      class="card rounded-box border border-base-300 bg-base-200 p-6"
+      data-group-card="operator-timeline"
     >
-      <div class="mb-4 flex items-center justify-between gap-sm">
+      <div class="mb-md flex items-center justify-between gap-sm">
         <h3 class="text-body font-bold text-base-content">Event timeline</h3>
         <span class="text-label text-secondary">Chronological order</span>
       </div>
@@ -27,7 +28,7 @@ defmodule MailglassAdmin.Operator.Timeline do
           No delivery events have been recorded for this item yet.
         </p>
       <% else %>
-        <ol class="motion-timeline space-y-4">
+        <ol class="motion-timeline space-y-lg">
           <%= for {event, index} <- Enum.with_index(@timeline_events) do %>
             <li
               data-testid="operator-timeline-event"
@@ -37,18 +38,18 @@ defmodule MailglassAdmin.Operator.Timeline do
               }
               class="flex gap-sm"
             >
-              <div class="mt-1 flex flex-col items-center">
+              <div class="mt-xs flex flex-col items-center">
                 <span class={["h-3 w-3 rounded-full", event_dot_class(event.type)]}></span>
-                <span :if={index < length(@timeline_events) - 1} class="mt-2 h-full w-px bg-base-300">
+                <span :if={index < length(@timeline_events) - 1} class="mt-sm h-full w-px bg-base-300">
                 </span>
               </div>
               <div class={[
-                "min-w-0 flex-1 rounded-box border bg-base-100 p-4",
+                "min-w-0 flex-1 rounded-box border bg-base-100 p-md",
                 event_container_class(@highlight_event_id, event.id)
               ]}>
                 <div class="flex flex-wrap items-start justify-between gap-sm">
-                  <div class="space-y-1">
-                    <div class="flex flex-wrap items-center gap-2">
+                  <div class="space-y-xs">
+                    <div class="flex flex-wrap items-center gap-sm">
                       <p class="text-body font-bold text-base-content">{event_label(event.type)}</p>
                       <Components.status_badge :if={event_badge(event.type)} status={event.type} size={:sm} />
                     </div>
@@ -67,7 +68,7 @@ defmodule MailglassAdmin.Operator.Timeline do
           <% end %>
         </ol>
       <% end %>
-    </article>
+    </Components.card>
     """
   end
 

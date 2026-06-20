@@ -30,11 +30,12 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
 
   def routing_trace(assigns) do
     ~H"""
-    <article
+    <Components.card
+      padding={:lg}
       data-testid="inbound-routing-trace"
-      class="card rounded-box border border-base-300 bg-base-200 p-6"
+      data-group-card="inbound-routing-trace"
     >
-      <div class="mb-4 space-y-1">
+      <div class="mb-md space-y-xs">
         <h3 class="text-body font-bold text-base-content">Routing trace</h3>
         <p class="text-label text-secondary">Why this message did not match</p>
       </div>
@@ -44,30 +45,30 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
           No inbound routes are declared, so there is nothing to trace.
         </p>
       <% else %>
-        <div class="space-y-4">
+        <div class="space-y-lg">
           <%= for route <- @trace do %>
             <section
               data-testid="inbound-route-card"
-              class="rounded-box border border-base-300 bg-base-100 p-4"
+              class="rounded-box border border-base-300 bg-base-100 p-md"
             >
-              <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div class="mb-sm flex flex-wrap items-center justify-between gap-sm">
                 <p class="mono text-body text-base-content">{route.mailbox}</p>
                 <span class="badge badge-outline badge-error">No match</span>
               </div>
 
-              <ul class="space-y-3">
+              <ul class="space-y-md">
                 <%= for verdict <- annotate(route.verdicts) do %>
                   <li
                     data-testid="inbound-trace-clause"
                     class={[
                       "rounded-box",
-                      verdict.first_failing? && "border-l-4 border-error px-3"
+                      verdict.first_failing? && "border-l-4 border-error px-sm"
                     ]}
                   >
                     <div class="grid gap-sm sm:grid-cols-[minmax(7rem,10rem)_1fr_1fr]">
-                      <div class="space-y-1">
+                      <div class="space-y-xs">
                         <span class="text-label uppercase font-bold text-secondary">Dimension</span>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-sm">
                           <Components.icon
                             name={if verdict.pass?, do: "hero-check-circle", else: "hero-x-circle"}
                             class={[
@@ -79,14 +80,14 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
                         </div>
                       </div>
 
-                      <div class="space-y-1">
+                      <div class="space-y-xs">
                         <span class="text-label uppercase font-bold text-secondary">Expected</span>
                         {expected_markup(assigns, verdict)}
                       </div>
 
-                      <div class="space-y-1">
+                      <div class="space-y-xs">
                         <span class="text-label uppercase font-bold text-secondary">Actual</span>
-                        <span class="mono rounded-box border border-base-300 bg-base-100 px-2 py-1 text-label text-base-content">
+                        <span class="mono rounded-box border border-base-300 bg-base-100 px-sm py-xs text-label text-base-content">
                           {verdict.actual}
                         </span>
                       </div>
@@ -102,11 +103,11 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
           <% end %>
         </div>
 
-        <p class="mt-4 text-label text-secondary">
+        <p class="mt-md text-label text-secondary">
           Each route matches by AND across its clauses: any = no constraint, an exact value matches by string equality, and ~r/…/ matches by regular expression.
         </p>
       <% end %>
-    </article>
+    </Components.card>
     """
   end
 
@@ -114,7 +115,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
   # exact string verbatim — all wrapped in a mono chip.
   defp expected_markup(assigns, %{matcher_kind: :wildcard}) do
     ~H"""
-    <span class="mono rounded-box border border-base-300 bg-base-100 px-2 py-1 text-label text-secondary">
+    <span class="mono rounded-box border border-base-300 bg-base-100 px-sm py-xs text-label text-secondary">
       any
     </span>
     """
@@ -124,7 +125,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     assigns = Phoenix.Component.assign(assigns, :expected, verdict.expected)
 
     ~H"""
-    <span class="mono rounded-box border border-base-300 bg-base-100 px-2 py-1 text-label text-base-content">
+    <span class="mono rounded-box border border-base-300 bg-base-100 px-sm py-xs text-label text-base-content">
       {@expected}
     </span>
     """
