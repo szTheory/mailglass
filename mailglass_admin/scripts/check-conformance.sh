@@ -157,6 +157,17 @@ grep -rhoE 'hero-[a-z0-9-]+' "$LIB" --include="*.ex" 2>/dev/null |
   sed 's/^hero-//' |
   sort -u > "$used_icons"
 
+# IN-03: distinguish "this lib genuinely uses zero icons" from "the scan found
+# nothing because the path/cwd was wrong". grep exits non-zero on zero matches
+# and the pipe masks that exit under `set -euo pipefail`, so an empty used_icons
+# would otherwise read as "no missing icons" and pass vacuously. The admin lib
+# always references hero-* icons, so an empty result is a scan/path error, not a
+# legitimately icon-free lib — fail loud.
+[[ -s "$used_icons" ]] || {
+  echo "FAIL: ICON-EXISTS-GATE — zero hero-* usages scanned in $LIB (path/scan error, not an icon-free lib)" >&2
+  exit 2
+}
+
 grep -E '^[[:space:]]*"[-a-z0-9]+":' "$HEROICONS" 2>/dev/null |
   sed -E 's/^[[:space:]]*"([-a-z0-9]+)".*/\1/' |
   sort -u > "$available_icons"
