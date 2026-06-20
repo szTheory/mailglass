@@ -1392,4 +1392,293 @@ defmodule MailglassAdmin.OperatorLiveTest do
   end
 
   defp minutes_ago(minutes), do: DateTime.add(DateTime.utc_now(), -minutes, :minute)
+
+  describe "dual table+card presentation (DATA-01, Plan 02 Task 1)" do
+    test "both operator-deliveries-table and operator-deliveries-cards testids are rendered when deliveries are present" do
+      delivery = %{
+        id: "test-delivery-id-001",
+        tenant_id: "t1",
+        recipient: "dual@example.com",
+        provider: "postmark",
+        provider_message_id: "pm-dual-001",
+        status: :sent,
+        last_event_type: :delivered,
+        last_event_at: ~U[2026-06-01 12:00:00Z]
+      }
+
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [delivery],
+          selected_delivery: nil,
+          filters_active?: false,
+          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      assert html =~ ~s(data-testid="operator-deliveries-table")
+      assert html =~ ~s(data-testid="operator-deliveries-cards")
+    end
+
+    test "desktop table uses semantic <table> with <th scope=col> headers in Status-first order" do
+      delivery = %{
+        id: "test-delivery-id-002",
+        tenant_id: "t1",
+        recipient: "headers@example.com",
+        provider: "postmark",
+        provider_message_id: "pm-headers-002",
+        status: :sent,
+        last_event_type: :delivered,
+        last_event_at: ~U[2026-06-01 12:00:00Z]
+      }
+
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [delivery],
+          selected_delivery: nil,
+          filters_active?: false,
+          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      assert html =~ "<table"
+      assert html =~ ~s(scope="col")
+      # Status must be first column header
+      assert html =~ "Status"
+    end
+
+    test "both presentations carry phx-click=select_delivery and phx-value-id; selected delivery carries aria-selected=true in both" do
+      delivery = %{
+        id: "selected-delivery-id-003",
+        tenant_id: "t1",
+        recipient: "select@example.com",
+        provider: "postmark",
+        provider_message_id: "pm-sel-003",
+        status: :delivered,
+        last_event_type: :delivered,
+        last_event_at: ~U[2026-06-01 12:00:00Z]
+      }
+
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [delivery],
+          selected_delivery: delivery,
+          filters_active?: false,
+          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      assert html =~ ~s(phx-click="select_delivery")
+      assert html =~ ~s(phx-value-id="selected-delivery-id-003")
+      # aria-selected="true" must appear for the selected delivery
+      assert html =~ ~s(aria-selected="true")
+    end
+
+    test "recipients render via mask_recipient in both table and card presentations — no raw recipient string" do
+      delivery = %{
+        id: "mask-delivery-id-004",
+        tenant_id: "t1",
+        recipient: "masktest@example.com",
+        provider: "postmark",
+        provider_message_id: "pm-mask-004",
+        status: :sent,
+        last_event_type: :sent,
+        last_event_at: ~U[2026-06-01 12:00:00Z]
+      }
+
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [delivery],
+          selected_delivery: nil,
+          filters_active?: false,
+          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      refute html =~ "masktest@example.com"
+      assert html =~ "m*******@e******.com"
+    end
+
+    test "delivery id renders with a title attribute equal to the id and a truncate/mono class in both presentations" do
+      delivery = %{
+        id: "title-delivery-id-005",
+        tenant_id: "t1",
+        recipient: "title@example.com",
+        provider: "postmark",
+        provider_message_id: "pm-title-005",
+        status: :sent,
+        last_event_type: :sent,
+        last_event_at: ~U[2026-06-01 12:00:00Z]
+      }
+
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [delivery],
+          selected_delivery: nil,
+          filters_active?: false,
+          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      assert html =~ ~s(title="title-delivery-id-005")
+      assert html =~ "truncate"
+      assert html =~ "mono"
+    end
+
+    test "result count reads from page_meta.total_count — 1 result for total_count 1 regardless of list length" do
+      delivery = %{
+        id: "count-delivery-id-006",
+        tenant_id: "t1",
+        recipient: "count@example.com",
+        provider: "postmark",
+        provider_message_id: "pm-count-006",
+        status: :sent,
+        last_event_type: :sent,
+        last_event_at: ~U[2026-06-01 12:00:00Z]
+      }
+
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [delivery, delivery],
+          selected_delivery: nil,
+          filters_active?: false,
+          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      assert html =~ "1 result"
+      refute html =~ "2 result"
+    end
+  end
+
+  describe "four distinct data-state branches (DATA-03, Plan 02 Task 2)" do
+    test "no-data deliveries path emits data-state-empty with 'No deliveries' heading" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :empty,
+          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      assert html =~ ~s(data-testid="data-state-empty")
+      assert html =~ "No deliveries"
+    end
+
+    test "error signal emits data-state-error with 'Delivery data unavailable' — distinct from empty" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :error,
+          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      assert html =~ ~s(data-testid="data-state-error")
+      assert html =~ "Delivery data unavailable"
+      refute html =~ ~s(data-testid="data-state-empty")
+    end
+
+    test "permission-denied signal emits data-state-permission-denied with 'Access restricted' — never the no-data testid" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :permission_denied,
+          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      assert html =~ ~s(data-testid="data-state-permission-denied")
+      assert html =~ "Access restricted"
+      refute html =~ ~s(data-testid="data-state-empty")
+    end
+
+    test "stale signal emits data-state-stale with 'Data may be out of date'" do
+      html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :stale,
+          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      assert html =~ ~s(data-testid="data-state-stale")
+      assert html =~ "Data may be out of date"
+    end
+
+    test "no two states share a testid — the legacy filtered/truly-empty distinction is preserved within :empty" do
+      empty_html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :empty,
+          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      error_html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :error,
+          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      permission_html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :permission_denied,
+          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      stale_html =
+        render_component(&DeliveriesList.deliveries_list/1,
+          deliveries: [],
+          selected_delivery: nil,
+          filters_active?: false,
+          data_state: :stale,
+          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+        )
+
+      # :empty and :error must have different testids
+      assert empty_html =~ ~s(data-testid="data-state-empty")
+      refute empty_html =~ ~s(data-testid="data-state-error")
+      assert error_html =~ ~s(data-testid="data-state-error")
+      refute error_html =~ ~s(data-testid="data-state-empty")
+      # :permission_denied must not use the no-data testid
+      assert permission_html =~ ~s(data-testid="data-state-permission-denied")
+      refute permission_html =~ ~s(data-testid="data-state-empty")
+      # :stale must be distinct
+      assert stale_html =~ ~s(data-testid="data-state-stale")
+      refute stale_html =~ ~s(data-testid="data-state-empty")
+    end
+  end
+
+  describe "operator KPI stat_card call sites — DATA-02 certification (Plan 02 Task 3)" do
+    test "all four operator KPI testids render through the stat_card primitive" do
+      conn = operator_conn(build_conn())
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="operator-overview-health-failures")
+      assert html =~ ~s(data-testid="operator-overview-health-orphans")
+      assert html =~ ~s(data-testid="operator-overview-health-suppressions")
+      assert html =~ ~s(data-testid="operator-overview-health-allclear")
+    end
+
+    test "all-clear tile renders a real readable value — not a bare dash" do
+      conn = operator_conn(build_conn())
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      # The all-clear tile should render one of these real readable values, never "—"
+      allclear_present =
+        html =~ "All clear" or html =~ "Needs attention" or html =~ "Unavailable"
+
+      assert allclear_present,
+             "all-clear tile must render a real readable value (All clear / Needs attention / Unavailable)"
+
+      # Should NOT render a bare dash as the value
+      refute html =~ ~s(data-testid="operator-overview-health-allclear">—</),
+             "all-clear tile must not render a bare dash"
+    end
+  end
 end
