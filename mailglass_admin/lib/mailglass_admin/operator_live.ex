@@ -561,6 +561,7 @@ defmodule MailglassAdmin.OperatorLive do
               <% true -> %>
                 <div
                   id={"delivery-detail-#{@selected_delivery.id}"}
+                  data-region
                   class="motion-reveal space-y-4"
                   phx-remove={
                     JS.hide(

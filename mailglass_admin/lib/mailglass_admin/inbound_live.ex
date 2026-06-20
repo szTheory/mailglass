@@ -473,6 +473,7 @@ defmodule MailglassAdmin.InboundLive do
             <% true -> %>
               <div
                 id={"inbound-detail-#{@detail.record.id}"}
+                data-region
                 class="motion-reveal space-y-4"
                 phx-remove={
                   JS.hide(
