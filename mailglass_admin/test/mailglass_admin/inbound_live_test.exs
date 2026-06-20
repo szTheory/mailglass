@@ -103,13 +103,13 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "No InboundMessages yet"
+      assert html =~ "No records"
 
       assert html =~
-               "InboundMessages appear here once this tenant receives its first message."
+               "No records have been recorded yet."
 
       assert clear_filters_count(html) == 1
-      refute html =~ "No InboundMessages match these filters"
+      refute html =~ "No records match the current filters."
     end
 
     test "a tenant query returns only that tenant's rows (V1 isolation)", %{conn: conn} do
@@ -203,10 +203,10 @@ defmodule MailglassAdmin.InboundLiveTest do
           })
         )
 
-      assert html =~ "No InboundMessages match these filters"
-      assert html =~ "Adjust the filters or wait for the next inbound message."
+      assert html =~ "No records"
+      assert html =~ "No records match the current filters."
       assert clear_filters_count(html) == 2
-      refute html =~ "No InboundMessages yet"
+      refute html =~ "No records have been recorded yet."
     end
 
     test "inbound page links preserve tenant scope and expose honest boundaries", %{conn: conn} do
@@ -966,20 +966,45 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-records-cards")
     end
 
-    test "desktop table uses semantic th scope=col elements in order Outcome Mailbox Tenant Provider Received",
-         %{conn: conn} do
-      conn = operator_conn(conn)
-      InboundFixtures.seed_matched!(@tenant_id, recipient: "th@example.com")
+    test "desktop table uses semantic th scope=col elements in order Outcome Mailbox Tenant Provider Received" do
+      # Use render_component to get just the records_list HTML, isolating the table markup
+      # so we can assert column header order without interference from page nav text
+      %{record: record} = InboundFixtures.seed_matched!(@tenant_id, recipient: "th@example.com")
 
-      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+      html =
+        render_component(&RecordsList.records_list/1,
+          records: [
+            %{
+              id: record.id,
+              tenant_id: @tenant_id,
+              provider: "mailgun",
+              envelope_recipient: "th@example.com",
+              received_at: nil,
+              outcome: :accept,
+              mailbox: "MyApp.Mailboxes.SupportMailbox"
+            }
+          ],
+          selected_record: nil,
+          empty_state: :filtered,
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            per_page: 10,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
+        )
 
       assert html =~ ~s(<th scope="col")
-      # Column order: Outcome first, then Mailbox, Tenant, Provider, Received
-      outcome_pos = String.length(html) - (html |> String.split("Outcome") |> List.last() |> String.length())
-      mailbox_pos = String.length(html) - (html |> String.split("Mailbox") |> List.last() |> String.length())
-      tenant_pos = String.length(html) - (html |> String.split("Tenant") |> List.last() |> String.length())
-      provider_pos = String.length(html) - (html |> String.split("Provider") |> List.last() |> String.length())
-      received_pos = String.length(html) - (html |> String.split("Received") |> List.last() |> String.length())
+      # Column order within the table header: Outcome first, then Mailbox, Tenant, Provider, Received
+      thead_html = html |> String.split("<thead>") |> List.last() |> String.split("</thead>") |> List.first()
+
+      outcome_pos = String.length(thead_html) - (thead_html |> String.split("Outcome") |> List.last() |> String.length())
+      mailbox_pos = String.length(thead_html) - (thead_html |> String.split("Mailbox") |> List.last() |> String.length())
+      tenant_pos = String.length(thead_html) - (thead_html |> String.split("Tenant") |> List.last() |> String.length())
+      provider_pos = String.length(thead_html) - (thead_html |> String.split("Provider") |> List.last() |> String.length())
+      received_pos = String.length(thead_html) - (thead_html |> String.split("Received") |> List.last() |> String.length())
 
       assert outcome_pos < mailbox_pos
       assert mailbox_pos < tenant_pos
@@ -1027,7 +1052,9 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       # Masked recipient appears (at least twice — once for table, once for cards)
-      masked = "m**********@e******.com"
+      # "maskinboth" has 10 chars: m + 9 stars = "m*********"
+      # "example" has 7 chars: e + 6 stars = "e******"
+      masked = "m*********@e******.com"
       assert html =~ masked
       assert (html |> String.split(masked) |> length()) >= 3
       # Raw recipient never appears
@@ -1063,9 +1090,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "No records"
     end
 
-    test "error signal emits data-state-error distinct from empty", %{conn: conn} do
-      conn = operator_conn(conn)
-
+    test "error signal emits data-state-error distinct from empty" do
       html =
         render_component(&RecordsList.records_list/1,
           records: [],
@@ -1087,11 +1112,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ ~s(data-testid="data-state-empty")
     end
 
-    test "permission-denied signal emits data-state-permission-denied distinct from no-data", %{
-      conn: conn
-    } do
-      conn = operator_conn(conn)
-
+    test "permission-denied signal emits data-state-permission-denied distinct from no-data" do
       html =
         render_component(&RecordsList.records_list/1,
           records: [],
@@ -1113,9 +1134,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ ~s(data-testid="data-state-empty")
     end
 
-    test "stale signal emits data-state-stale with out-of-date copy", %{conn: conn} do
-      conn = operator_conn(conn)
-
+    test "stale signal emits data-state-stale with out-of-date copy" do
       html =
         render_component(&RecordsList.records_list/1,
           records: [],
@@ -1224,7 +1243,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~
-               "No InboundMessages yet"
+               "No records"
 
       assert html =~
                "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."

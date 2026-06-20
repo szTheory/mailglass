@@ -1,12 +1,24 @@
 defmodule MailglassAdmin.Inbound.RecordsList do
   @moduledoc """
-  Recent inbound records list with semantic selected-row treatment.
+  Recent inbound records list with dual table+card presentation.
+
+  Renders a semantic `<table>` at >=768px and a `<ul>` of card buttons at <768px,
+  both driven from the same `@records` assign with identical selection semantics,
+  result-count, and pagination (DATA-01).
 
   Sibling of `MailglassAdmin.Operator.DeliveriesList` (the design contract — clone, not a
   refactor). Rows render the masked envelope recipient via the one promoted
   `MailglassAdmin.Components.mask_recipient/1` definition, the record id in mono,
-  an outcome badge, and a meta line `tenant · PROVIDER · matched-mailbox-or-"no
-  match" · received_at`.
+  an outcome badge via `Components.status_badge/1` (normalized through
+  `normalize_inbound_outcome/1`), and a meta line mailbox · tenant · provider · received_at.
+
+  Data-state branches render four distinct `Components.data_state/1` kinds when
+  there is no row data to show (DATA-03). The four branches are:
+
+    * `:empty` — no records (no-data / filtered / no-tenant distinction preserved)
+    * `:error` — data unavailable
+    * `:permission_denied` — access restricted
+    * `:stale` — data may be out of date
   """
 
   use Phoenix.Component
@@ -28,6 +40,10 @@ defmodule MailglassAdmin.Inbound.RecordsList do
     default: :filtered
   )
 
+  # :empty | :error | :permission_denied | :stale | nil
+  # nil means "normal flow": render records or the legacy empty branches
+  attr(:data_state, :atom, default: nil)
+
   def records_list(assigns) do
     ~H"""
     <div
@@ -36,65 +52,230 @@ defmodule MailglassAdmin.Inbound.RecordsList do
     >
       {result_count_label(@page_meta)}
     </div>
-    <%= if @records == [] do %>
-      <div class="flex min-h-64 flex-col items-center justify-center gap-sm p-6 text-center">
-        <Components.icon name="hero-inbox-stack" class="h-8 w-8 text-secondary" />
-        <div class="space-y-1">
-          <h3 class="text-body font-bold text-base-content">{empty_heading(@empty_state)}</h3>
-          <p class="text-body text-secondary">{empty_body(@empty_state)}</p>
-        </div>
-        <button
-          :if={@empty_state == :filtered}
-          type="button"
-          phx-click="clear_filters"
-          class="btn btn-ghost min-h-11"
-        >
-          Clear filters
-        </button>
-      </div>
-    <% else %>
-      <ul data-testid="inbound-records-list" class="divide-y divide-base-300">
-        <%= for record <- @records do %>
-          <li>
+    <%= cond do %>
+      <% @data_state == :error -> %>
+        <Components.data_state
+          kind={:error}
+          title="Record data unavailable"
+          body="There was a problem loading records. Try refreshing the page."
+        />
+      <% @data_state == :permission_denied -> %>
+        <Components.data_state
+          kind={:permission_denied}
+          title="Access restricted"
+          body="You don't have permission to view records for this tenant."
+        />
+      <% @data_state == :stale -> %>
+        <Components.data_state
+          kind={:stale}
+          title="Data may be out of date"
+          body="The records shown here may not reflect recent activity."
+        />
+      <% @data_state == :empty or (@data_state == nil and @records == []) -> %>
+        <%!-- :no_tenant retains its original selector copy; :truly_empty and :filtered use UI-SPEC "No records" copy --%>
+        <%= if @empty_state == :no_tenant do %>
+          <Components.data_state
+            kind={:empty}
+            title="Select a tenant"
+            body="Choose a tenant to inspect its deliveries and inbound routing. Tenant scope stays in the URL so refreshes and shared links keep the same view."
+          />
+          <div data-testid="inbound-empty-no-tenant" style="display:none" />
+        <% else %>
+          <Components.data_state
+            kind={:empty}
+            title="No records"
+            body={empty_body(@empty_state)}
+          />
+          <%= if @empty_state == :filtered do %>
+            <div data-testid="inbound-empty-filtered" style="display:none" />
             <button
-              data-testid="inbound-record-row"
-              data-selected={if selected?(@selected_record, record), do: "true", else: "false"}
               type="button"
-              phx-click="select_inbound"
-              phx-value-id={record.id}
-              aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
-              aria-selected={if selected?(@selected_record, record), do: "true", else: "false"}
-              class={[
-                "flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
-                row_classes(@selected_record, record)
-              ]}
+              phx-click="clear_filters"
+              data-testid="inbound-empty-reset"
+              class="btn btn-ghost min-h-11 mx-auto block"
             >
-              <div class="flex items-start justify-between gap-sm">
-                <div class="min-w-0">
-                  <p class="truncate text-body font-bold text-base-content">
-                    {Components.mask_recipient(record.envelope_recipient)}
-                  </p>
-                  <p class="mono mt-1 text-label text-secondary">{record.id}</p>
-                </div>
-                <Components.status_badge
-                  status={Components.normalize_inbound_outcome(record_outcome(record))}
-                  size={:sm}
-                />
-              </div>
-
-              <div class="flex flex-wrap items-center gap-2 text-label text-secondary">
-                <span>{record.tenant_id}</span>
-                <span>&middot;</span>
-                <span>{String.upcase(record.provider || "unknown")}</span>
-                <span>&middot;</span>
-                <span>{matched_mailbox_label(record)}</span>
-                <span>&middot;</span>
-                <span class="mono">{format_datetime(record.received_at)}</span>
-              </div>
+              Clear filters
             </button>
-          </li>
+          <% else %>
+            <div data-testid="inbound-empty-truly" style="display:none" />
+          <% end %>
         <% end %>
-      </ul>
+      <% true -> %>
+        <%!-- Desktop table (>=768px) --%>
+        <div class="hidden md:block" data-testid="inbound-records-table">
+          <table class="table w-full table-fixed">
+            <thead>
+              <tr>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Outcome</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary">Recipient</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary">Mailbox</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Tenant</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-24">Provider</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-44">Received</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                :for={record <- @records}
+                data-testid="inbound-record-row"
+                data-selected={if selected?(@selected_record, record), do: "true", else: "false"}
+                phx-click="select_inbound"
+                phx-value-id={record.id}
+                aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
+                aria-selected={if selected?(@selected_record, record), do: "true", else: "false"}
+                class={[
+                  "mg-focus-ring-inset min-h-11 cursor-pointer transition-colors",
+                  row_classes(@selected_record, record)
+                ]}
+              >
+                <td class="text-body text-base-content">
+                  <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
+                    <Components.status_badge
+                      status={Components.normalize_inbound_outcome(record_outcome(record))}
+                      size={:sm}
+                    />
+                  </span>
+                </td>
+                <td class="min-w-0 text-body text-base-content">
+                  <span
+                    class="min-w-0 truncate block"
+                    title={Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                  >
+                    {Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                  </span>
+                </td>
+                <td class="min-w-0 text-body text-base-content">
+                  <span
+                    class="min-w-0 truncate block"
+                    title={matched_mailbox_label(record)}
+                  >
+                    {matched_mailbox_label(record)}
+                  </span>
+                </td>
+                <td class="min-w-0 text-body text-base-content">
+                  <span class="min-w-0 truncate block" title={Map.get(record, :tenant_id, "")}>
+                    {Map.get(record, :tenant_id, "")}
+                  </span>
+                </td>
+                <td class="text-body text-base-content">
+                  <span
+                    class="mono min-w-0 truncate block"
+                    title={String.upcase(Map.get(record, :provider, nil) || "unknown")}
+                  >
+                    {String.upcase(Map.get(record, :provider, nil) || "unknown")}
+                  </span>
+                </td>
+                <td class="text-label text-secondary">
+                  <span
+                    class="mono whitespace-nowrap"
+                    title={format_datetime(Map.get(record, :received_at))}
+                  >
+                    {format_datetime(Map.get(record, :received_at))}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <%!-- Mobile cards (<768px) — inbound-records-list kept for legacy consumers; Plan 04 migrates --%>
+        <div data-testid="inbound-records-cards" class="md:hidden">
+          <ul
+            data-testid="inbound-records-list"
+            class="divide-y divide-base-300"
+          >
+            <li :for={record <- @records}>
+              <button
+                data-testid="inbound-record-row"
+                data-selected={if selected?(@selected_record, record), do: "true", else: "false"}
+                type="button"
+                phx-click="select_inbound"
+                phx-value-id={record.id}
+                aria-current={if selected?(@selected_record, record), do: "true", else: "false"}
+                aria-selected={if selected?(@selected_record, record), do: "true", else: "false"}
+                class={[
+                  "mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
+                  row_classes(@selected_record, record)
+                ]}
+              >
+                <%!-- Outcome badge first/prominent --%>
+                <div>
+                  <span data-testid={"inbound-outcome-#{record_outcome(record)}"}>
+                    <Components.status_badge
+                      status={Components.normalize_inbound_outcome(record_outcome(record))}
+                      size={:sm}
+                    />
+                  </span>
+                </div>
+
+                <%!-- Envelope recipient (masked) --%>
+                <div class="min-w-0">
+                  <span class="text-label font-bold uppercase text-secondary">Recipient</span>
+                  <p
+                    class="min-w-0 truncate text-body text-base-content"
+                    title={Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                  >
+                    {Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                  </p>
+                </div>
+
+                <%!-- Record ID with truncate+title --%>
+                <div class="min-w-0">
+                  <span class="text-label font-bold uppercase text-secondary">ID</span>
+                  <p
+                    class="mono min-w-0 truncate text-label text-secondary"
+                    title={Map.get(record, :id, "")}
+                  >
+                    {Map.get(record, :id, "")}
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap items-start gap-md text-label text-secondary">
+                  <%!-- Mailbox --%>
+                  <div class="min-w-0">
+                    <span class="font-bold uppercase">Mailbox</span>
+                    <p
+                      class="min-w-0 truncate"
+                      title={matched_mailbox_label(record)}
+                    >
+                      {matched_mailbox_label(record)}
+                    </p>
+                  </div>
+
+                  <%!-- Tenant --%>
+                  <div class="min-w-0">
+                    <span class="font-bold uppercase">Tenant</span>
+                    <p class="min-w-0 truncate" title={Map.get(record, :tenant_id, "")}>
+                      {Map.get(record, :tenant_id, "")}
+                    </p>
+                  </div>
+
+                  <%!-- Provider --%>
+                  <div>
+                    <span class="font-bold uppercase">Provider</span>
+                    <p
+                      class="mono min-w-0 truncate"
+                      title={String.upcase(Map.get(record, :provider, nil) || "unknown")}
+                    >
+                      {String.upcase(Map.get(record, :provider, nil) || "unknown")}
+                    </p>
+                  </div>
+
+                  <%!-- Received timestamp --%>
+                  <div>
+                    <span class="font-bold uppercase">Received</span>
+                    <p
+                      class="mono whitespace-nowrap"
+                      title={format_datetime(Map.get(record, :received_at))}
+                    >
+                      {format_datetime(Map.get(record, :received_at))}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            </li>
+          </ul>
+        </div>
     <% end %>
     <.pagination_controls
       page_meta={@page_meta}
@@ -175,19 +356,15 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_record, _record), do: false
 
-  defp empty_heading(:no_tenant), do: "Select a tenant"
-  defp empty_heading(:truly_empty), do: "No InboundMessages yet"
-  defp empty_heading(:filtered), do: "No InboundMessages match these filters"
-
   defp empty_body(:no_tenant),
     do:
       "Choose a tenant to inspect its deliveries and inbound routing. Tenant scope stays " <>
         "in the URL so refreshes and shared links keep the same view."
 
   defp empty_body(:truly_empty),
-    do: "InboundMessages appear here once this tenant receives its first message."
+    do: "No records have been recorded yet."
 
-  defp empty_body(:filtered), do: "Adjust the filters or wait for the next inbound message."
+  defp empty_body(:filtered), do: "No records match the current filters."
 
   defp row_classes(%{id: id}, %{id: id}),
     do: "border-l-4 border-primary bg-base-100 text-base-content"
