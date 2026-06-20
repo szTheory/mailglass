@@ -131,7 +131,7 @@ defmodule MailglassAdmin.VoiceTest do
       conn = operator_conn(conn)
 
       # Mount with a provider filter that can never match — forces the :filtered empty state
-      # so LD-03 "No InboundMessages match these filters" is present in the first render.
+      # so the filtered-empty data_state is present in the first render.
       # Shell.orientation_strip surface={:inbound} renders in the is_nil(@detail) branch
       # (no record selected), so LD-12 and LD-16 are also present.
       {:ok, _view, html} =
@@ -149,10 +149,10 @@ defmodule MailglassAdmin.VoiceTest do
                "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence.",
              "LD-16: no-selection prompt must use InboundMessage and Mailbox domain nouns"
 
-      # LD-03: filtered empty-state heading (present because provider filter is active
-      # with no matching records).
-      assert html =~ "No InboundMessages match these filters",
-             "LD-03: filtered empty state must use InboundMessage domain noun"
+      # LD-03: filtered empty-state body — Phase 113 UI-SPEC updated to "No records match
+      # the current filters." (data_state/1 routes through title "No records" + this body).
+      assert html =~ "No records match the current filters.",
+             "LD-03: filtered empty state must be present (UI-SPEC copy from Phase 113)"
     end
   end
 

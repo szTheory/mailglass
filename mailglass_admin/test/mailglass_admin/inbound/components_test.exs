@@ -25,10 +25,11 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
   describe "RecordsList.records_list/1" do
     test "renders the empty-state copy for []" do
+      # Phase 113: empty state now routes through Components.data_state/1 with UI-SPEC copy.
+      # Default empty_state is :filtered; renders "No records match the current filters."
       html = render_component(&RecordsList.records_list/1, records: [], selected_record: nil)
 
-      assert html =~ "No InboundMessages match these filters"
-      assert html =~ "Adjust the filters or wait for the next inbound message."
+      assert html =~ "No records match the current filters."
       assert html =~ "Clear filters"
     end
 

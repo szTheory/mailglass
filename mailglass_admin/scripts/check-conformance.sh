@@ -349,6 +349,48 @@ if grep -rEn '\bease-in\b' "$LIB" --include="*.ex" 2>/dev/null | grep -v -- '--e
   errors=$((errors + 1))
 fi
 
+# STATUS-BADGE-GATE: status/outcome badge rendering in list modules must route through
+# Components.status_badge/1 only. Positive check: each list module calls status_badge.
+# Negative check: no defp badge/severity helper was added inside the list modules,
+# and no raw badge-* class literal appears outside a Components.status_badge context.
+# grep -v '^#' suppresses gate header comments from self-matching (Comment-Text Discipline).
+for list_module in "$DELIVERIES_LIST" "$RECORDS_LIST"; do
+  module_name="${list_module##*/}"
+  if ! grep -q 'Components.status_badge' "$list_module" 2>/dev/null; then
+    echo "FAIL: STATUS-BADGE-GATE — $module_name must call Components.status_badge/1 for status rendering" >&2
+    errors=$((errors + 1))
+  fi
+  if grep -v '^#' "$list_module" 2>/dev/null | grep -qE 'defp (badge_class|severity_class|outcome_class|badge_for)\b'; then
+    echo "FAIL: STATUS-BADGE-GATE — $module_name contains a private badge/severity helper; route through Components.status_badge/1" >&2
+    errors=$((errors + 1))
+  fi
+done
+
+# DATA-STATE-GATE: the four data-state-* testids must each be present in the Components
+# source as distinct literals (DATA-03 keeps four distinct UI states). A single merged
+# generic testid is a design-system regression. Also confirm data_state/1 is the single
+# public definition (no duplicate or private shadow in lib/).
+for ds_kind in data-state-empty data-state-error data-state-permission-denied data-state-stale; do
+  if ! grep -qF "\"${ds_kind}\"" "$COMPONENTS" 2>/dev/null; then
+    echo "FAIL: DATA-STATE-GATE — Components must emit testid \"${ds_kind}\" (four distinct data states required)" >&2
+    errors=$((errors + 1))
+  fi
+done
+
+data_state_defs="$(grep -rEn 'def[[:space:]]+data_state[[:space:]]*(\(|$)' "$LIB" --include="*.ex" 2>/dev/null || true)"
+def_count="$(echo "$data_state_defs" | grep -c 'def[[:space:]]' || true)"
+if [[ "$def_count" -lt 1 ]]; then
+  echo "FAIL: DATA-STATE-GATE — Components.data_state/1 public definition missing" >&2
+  errors=$((errors + 1))
+fi
+# Only count non-Components definitions as violations (the one public def must live in Components)
+non_components_defs="$(echo "$data_state_defs" | grep -vF "${COMPONENTS}:" || true)"
+if [[ -n "$non_components_defs" ]]; then
+  echo "$non_components_defs"
+  echo "FAIL: DATA-STATE-GATE — data_state defined outside Components; must have exactly one public definition in components.ex" >&2
+  errors=$((errors + 1))
+fi
+
 if [[ $errors -gt 0 ]]; then
   echo "FAIL: design-system conformance violations found ($errors gate(s) failed)" >&2
   exit 1
