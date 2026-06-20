@@ -462,17 +462,19 @@ await assertNoElementHorizontalOverflow(
 | A3 | Empty states are often treated as copy variants instead of state templates. | Common Pitfalls | Low; phase decisions already require explicit templates. |
 | A4 | Designers compress severity UI under density pressure. | Common Pitfalls | Low; phase decisions and tests prevent the regression regardless. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the data-state helper live in `Components` or stay list-local?**
    - What we know: D-05 allows a distinct reusable helper if it is cleaner than page-local markup. [VERIFIED: repo: `.planning/phases/113-data-display/113-CONTEXT.md`]
    - What's unclear: How many call sites need the exact same taxonomy after implementation. [VERIFIED: repo: `mailglass_admin/lib/mailglass_admin/operator/deliveries_list.ex`, `mailglass_admin/lib/mailglass_admin/inbound/records_list.ex`, `mailglass_admin/lib/mailglass_admin/inbound_live.ex`]
    - Recommendation: Start with `Components.data_state/1` only if at least two surfaces use identical structure; otherwise keep state markup in the list/detail component and certify with tests. [ASSUMED]
+   - **RESOLVED:** In favor of a public `Components.data_state/1` — three surfaces (`deliveries_list`, `records_list`, `inbound_live` detail-error) share the identical four-state taxonomy, meeting the ≥2-surface rule. Decided by Plan `113-01` (Task 2). [VERIFIED: repo: `.planning/phases/113-data-display/113-01-PLAN.md`]
 
 2. **Which fields get truncation versus wrapping or expansion?**
    - What we know: UUIDs, tenant IDs, provider IDs, module/function names, URLs, subjects, non-ASCII names, and timestamps are in scope. [VERIFIED: repo: `.planning/phases/113-data-display/113-CONTEXT.md`]
    - What's unclear: The final table column set and mobile field ordering are delegated to planner discretion. [VERIFIED: repo: `.planning/phases/113-data-display/113-CONTEXT.md`]
    - Recommendation: Truncate+title compact IDs/names in tables, use repeated labels and wrapping/expandable content in cards where readability matters, and keep timestamps no-wrap with a title. [CITED: https://www.w3.org/WAI/WCAG21/Techniques/css/C33; ASSUMED]
+   - **RESOLVED:** Per-field long-value handling fixed by the UI-SPEC DATA-05 table and baked into Plans `113-02`/`113-03` (Task 1): compact IDs/module names `truncate` + `title`, timestamps `whitespace-nowrap` + `title`, `table-fixed`/`min-w-0` to prevent horizontal scroll. [VERIFIED: repo: `.planning/phases/113-data-display/113-02-PLAN.md`, `.planning/phases/113-data-display/113-03-PLAN.md`, `.planning/phases/113-data-display/113-UI-SPEC.md`]
 
 ## Environment Availability
 
