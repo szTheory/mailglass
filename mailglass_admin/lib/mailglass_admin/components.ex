@@ -463,6 +463,31 @@ defmodule MailglassAdmin.Components do
   defp data_state_icon_class(:permission_denied), do: "text-warning"
   defp data_state_icon_class(:stale), do: "text-secondary"
 
+  attr :padding, :atom, values: [:md, :lg], default: :md
+  attr :rest, :global, default: %{}
+  slot :inner_block, required: true
+
+  @doc """
+  Renders the thin group-surface shell: border, radius, surface tone, and outer
+  padding only (D-01/D-02).
+
+  This is the single source for the group-surface shell. It deliberately owns no
+  layout engine — no header/footer/grid slots, no inter-card rhythm, no `dl`/`ol`
+  spacing. `shadow-raised` and `data-group-card` are applied at call sites, not
+  baked in here. Padding is the one closed knob (`:md` -> `p-md`, `:lg` -> `p-lg`).
+  """
+  @doc since: "1.13.0"
+  def card(assigns) do
+    ~H"""
+    <div class={["rounded-box border border-base-300 bg-base-200", card_padding(@padding)]} {@rest}>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  defp card_padding(:md), do: "p-md"
+  defp card_padding(:lg), do: "p-lg"
+
   defp nav_link_class(true), do: "border-primary bg-base-100 font-bold text-base-content"
 
   defp nav_link_class(false),
