@@ -47,8 +47,8 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 ### Data-Display Patterns (DATA)
 
 - [ ] **DATA-01**: Deliveries and Inbound lists render as tables ≥768px and transform to a card/list layout <768px — no squished, unreadable columns.
-- [ ] **DATA-02**: Every stat/KPI card across all surfaces uses the canonical `stat_card` — no clipped labels, no bare `—`/`___` placeholders, and "all clear" reads as a real state.
-- [ ] **DATA-03**: Empty, error, permission-denied, and stale-data states are distinct templates (no-data ≠ unavailable ≠ permission-denied).
+- [x] **DATA-02**: Every stat/KPI card across all surfaces uses the canonical `stat_card` — no clipped labels, no bare `—`/`___` placeholders, and "all clear" reads as a real state.
+- [x] **DATA-03**: Empty, error, permission-denied, and stale-data states are distinct templates (no-data ≠ unavailable ≠ permission-denied).
 - [ ] **DATA-04**: Severity/status is encoded by icon+label+color (never color alone) and is scannable in a 5-second operator-under-stress test.
 - [ ] **DATA-05**: Long real-world values (UUIDs, module/function names, URLs, non-ASCII names, timestamps) are handled gracefully — truncate+tooltip or expand, never overflow or chop.
 
@@ -135,8 +135,8 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | SHELL-05 | Phase 112 | Complete |
 | SHELL-06 | Phase 112 | Complete |
 | DATA-01 | Phase 113 | Pending |
-| DATA-02 | Phase 113 | Pending |
-| DATA-03 | Phase 113 | Pending |
+| DATA-02 | Phase 113 | Complete |
+| DATA-03 | Phase 113 | Complete |
 | DATA-04 | Phase 113 | Pending |
 | DATA-05 | Phase 113 | Pending |
 | GROUP-01 | Phase 114 | Pending |

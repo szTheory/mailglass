@@ -189,7 +189,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 113-01-PLAN.md — Shared `Components.data_state/1` four-state primitive + embed data-state Heroicons + certify stat_card meaningful-text contract.
+- [x] 113-01-PLAN.md — Shared `Components.data_state/1` four-state primitive + embed data-state Heroicons + certify stat_card meaningful-text contract.
 
 **Wave 2** *(blocked on Wave 1; 02 and 03 run in parallel — disjoint files)*
 
@@ -316,7 +316,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 110. Primitives | v1.13 | 4/4 | Complete    | 2026-06-18 |
 | 111. Forms | v1.13 | 3/4 | In Progress|  |
 | 112. App-Shell, Nav & Tenant Seam | v1.13 | 6/6 | Complete    | 2026-06-19 |
-| 113. Data-Display | v1.13 | 0/TBD | Not started | - |
+| 113. Data-Display | v1.13 | 1/4 | In Progress|  |
 | 114. Component Groups | v1.13 | 0/TBD | Not started | - |
 | 115. Pages/Flows + Motion + Microcopy | v1.13 | 0/TBD | Not started | - |
 | 116. Fixtures + Ratchet-Arm | v1.13 | 0/TBD | Not started | - |
