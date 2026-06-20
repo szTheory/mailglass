@@ -57,19 +57,19 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         <Components.data_state
           kind={:error}
           title="Record data unavailable"
-          body="There was a problem loading records. Try refreshing the page."
+          body="Record data could not be loaded. Refresh the page or adjust the filters, then try again."
         />
       <% @data_state == :permission_denied -> %>
         <Components.data_state
           kind={:permission_denied}
           title="Access restricted"
-          body="You don't have permission to view records for this tenant."
+          body="You do not have access to this tenant's inbound routing. Ask an administrator to grant access."
         />
       <% @data_state == :stale -> %>
         <Components.data_state
           kind={:stale}
           title="Data may be out of date"
-          body="The records shown here may not reflect recent activity."
+          body="Showing InboundMessages as of 14:32. Refresh to load the latest."
         />
       <% @data_state == :empty or (@data_state == nil and @records == []) -> %>
         <%!-- :no_tenant retains its original selector copy; :truly_empty and :filtered use UI-SPEC "No records" copy --%>
