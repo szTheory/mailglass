@@ -70,7 +70,7 @@ inbound exact-pin re-pin. Phases continue from 108 → 109+.
 - [ ] **Phase 113: Data-Display** - Tables ≥768px → cards <768px; all KPIs on canonical `stat_card`; distinct empty/error/permission/stale templates; severity icon+label+color; long-value handling
 - [x] **Phase 114: Component Groups** - Coherent spacing/hierarchy across composed groups (support-cards, routing-trace+evidence, detail+timeline); box-nesting depth ≤2; x/y alignment discipline (completed 2026-06-20)
 - [x] **Phase 115: Pages/Flows + Micro-Animation + Microcopy** - GOV.UK-style IA per surface; happy/error/boundary/edge/advanced paths in light/dark/system at every width; Emil Kowalski micro-animation deltas; permission/stale/tenant microcopy ("Oops" banned) (completed 2026-06-20)
-- [ ] **Phase 116: Fixtures + Idempotent Ratchet-Arm** - Land the 2-3-persona stress cohort + widen gallery to component×state×theme×viewport; interaction pillar + axe-JSON baseline; run full matrix incl. one run against demo_app data; promote current→prior, re-score all gates green; close all 24 usability defects
+- [x] **Phase 116: Fixtures + Idempotent Ratchet-Arm** - Land the 2-3-persona stress cohort + widen gallery to component×state×theme×viewport; interaction pillar + axe-JSON baseline; run full matrix incl. one run against demo_app data; promote current→prior, re-score all gates green; close all 24 usability defects (completed 2026-06-20)
 - [ ] **Phase 117: Release Cut + Milestone Closeout** - Cut the linked-version Hex release (admin-minor drags core+inbound); D-13 inbound exact-pin re-pin; Hex resolution + post-publish smoke green; milestone audited and archived
 
 ### Phase Details
@@ -360,7 +360,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 113. Data-Display | v1.13 | 4/4 | Complete    | 2026-06-20 |
 | 114. Component Groups | v1.13 | 4/4 | Complete    | 2026-06-20 |
 | 115. Pages/Flows + Motion + Microcopy | v1.13 | 4/4 | Complete    | 2026-06-20 |
-| 116. Fixtures + Ratchet-Arm | v1.13 | 6/6 | Complete   | 2026-06-20 |
+| 116. Fixtures + Ratchet-Arm | v1.13 | 6/6 | Complete    | 2026-06-20 |
 | 117. Release Cut + Milestone Closeout | v1.13 | 0/TBD | Not started | - |
 
 ## Backlog
