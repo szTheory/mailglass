@@ -214,10 +214,22 @@ Plans:
   3. Elements align on a consistent x/y grid across each group (no accidental misalignment), holding together at narrow and wide widths.
 
 **Plans**: 4 plans
+**Wave 1**
+
 - [ ] 114-01-PLAN.md — Thin `<.card>` shell + SPACE-GATE/GROUP-GATE conformance gates (substrate, Wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 114-02-PLAN.md — Composed-group gallery specimens + `data-region`/`data-group-card` wiring + live-view smoke binding (Wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 114-03-PLAN.md — Box-prison fix + shell swap + ~93-token semantic sweep across the 8 group surfaces; green the gates (Wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 114-04-PLAN.md — Floki depth proof + Playwright `Group:` geometry (sibling-x, padding-floor, no-overflow at 320/1280) (Wave 3)
+
 **UI hint**: yes
 
 ### Phase 115: Pages/Flows + Micro-Animation + Microcopy
