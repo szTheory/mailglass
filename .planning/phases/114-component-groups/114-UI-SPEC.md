@@ -1,10 +1,11 @@
 ---
 phase: 114
 slug: component-groups
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-20
+reviewed_at: 2026-06-20
 ---
 
 # Phase 114 — UI Design Contract
