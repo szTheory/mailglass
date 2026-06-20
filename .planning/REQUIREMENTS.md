@@ -71,7 +71,7 @@ Fractal, dependency-ordered (foundations → primitives → forms → app-shell 
 - [x] **RATCHET-02**: The dev-only component-lab gallery is widened to a component × state × {light, dark, system} × {320…wide} matrix.
 - [x] **RATCHET-03**: The ratchet gains an interaction pillar (hit-test panel-above-scrim, scroll-chaining, focus-restore-to-trigger, layout-jump) and an axe-violation JSON baseline (WCAG 2.2 AA) — both screenshot-free, no pixel-diff.
 - [ ] **RATCHET-04**: The full matrix runs INCLUDING at least one run against rich `reference/demo_app` data (closing the "lab-passes-but-ugly" gap), then `current → prior` is promoted and re-scored with all gates green (meet-or-beat, zero regressions).
-- [ ] **RATCHET-05**: All 24 enumerated usability defects (PITFALLS Bucket A) are closed, each with a regression guard (grep gate, Playwright structural assertion, axe scan, or fixture stress-case).
+- [x] **RATCHET-05**: All 24 enumerated usability defects (PITFALLS Bucket A) are closed, each with a regression guard (grep gate, Playwright structural assertion, axe scan, or fixture stress-case).
 
 ### Release & Closeout (REL)
 
@@ -150,7 +150,7 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 | RATCHET-02 | Phase 116 | Complete |
 | RATCHET-03 | Phase 116 | Complete |
 | RATCHET-04 | Phase 116 | Pending |
-| RATCHET-05 | Phase 116 | Pending |
+| RATCHET-05 | Phase 116 | Complete |
 | REL-02 | Phase 117 | Pending |
 | REL-03 | Phase 117 | Pending |
 

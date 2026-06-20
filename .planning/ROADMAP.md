@@ -280,7 +280,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 116-04-PLAN.md (wave 2) — Gallery matrix widening: resize-loop over stable testids × {320,390,768,wide} × {light,dark,system} (RATCHET-02)
-- [ ] 116-05-PLAN.md (wave 2) — Bucket-A closure: 6 net-new guards + executable fail-closed coverage manifest for all 24 defects (RATCHET-05)
+- [x] 116-05-PLAN.md (wave 2) — Bucket-A closure: 6 net-new guards + executable fail-closed coverage manifest for all 24 defects (RATCHET-05)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -360,7 +360,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 113. Data-Display | v1.13 | 4/4 | Complete    | 2026-06-20 |
 | 114. Component Groups | v1.13 | 4/4 | Complete    | 2026-06-20 |
 | 115. Pages/Flows + Motion + Microcopy | v1.13 | 4/4 | Complete    | 2026-06-20 |
-| 116. Fixtures + Ratchet-Arm | v1.13 | 4/6 | In Progress|  |
+| 116. Fixtures + Ratchet-Arm | v1.13 | 5/6 | In Progress|  |
 | 117. Release Cut + Milestone Closeout | v1.13 | 0/TBD | Not started | - |
 
 ## Backlog
