@@ -271,12 +271,21 @@ Plans:
   5. All 24 enumerated usability defects (PITFALLS Bucket A) are closed, each with a regression guard (grep gate, Playwright structural assertion, axe scan, or fixture stress-case).
 
 **Plans**: 6 plans
+**Wave 1**
+
 - [ ] 116-01-PLAN.md (wave 1) — Persona stress-fixture cohort: declarative spec + 3 materializers + drift-guard + test-only path dep (RATCHET-01)
 - [ ] 116-02-PLAN.md (wave 1) — Axe WCAG 2.2 AA baseline: @axe-core/playwright devDep, producer spec, 9-cell schema-1 JSON, fail-closed comparator (RATCHET-03)
 - [ ] 116-03-PLAN.md (wave 1) — Interaction pillar: 4 binary Playwright gates (panel-above-scrim, scroll-chaining, focus-restore, CLS) (RATCHET-03)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 116-04-PLAN.md (wave 2) — Gallery matrix widening: resize-loop over stable testids × {320,390,768,wide} × {light,dark,system} (RATCHET-02)
 - [ ] 116-05-PLAN.md (wave 2) — Bucket-A closure: 6 net-new guards + executable fail-closed coverage manifest for all 24 defects (RATCHET-05)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 116-06-PLAN.md (wave 3) — Full matrix incl. demo-data run + promote current→prior + 54-cell & 9-cell re-score, all 3 comparators green (RATCHET-04)
+
 **UI hint**: yes
 **Research flag**: light `/gsd-plan-phase` research needed — decide the axe-JSON baseline format (per-surface counts vs rule-id allowlist, matching the existing score-baseline ergonomics) and the `ratchet_baseline_test.exs` schema-v3 cell-count (add `system` as a 3rd theme → 54 cells vs keeping viewport structural-only).
 

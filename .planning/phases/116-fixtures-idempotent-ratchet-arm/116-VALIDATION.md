@@ -2,8 +2,8 @@
 phase: 116
 slug: fixtures-idempotent-ratchet-arm
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-20
 ---
 
@@ -52,18 +52,24 @@ created: 2026-06-20
 
 ---
 
-## Wave 0 Requirements
+## Wave 0 Requirements — front-loaded in Wave 1 `tdd` tasks
 
-- [ ] `mailglass_admin/test/mailglass_admin/axe_baseline_test.exs` — clone of `ratchet_baseline_test.exs` comparator (RATCHET-03)
-- [ ] `mailglass_admin/docs/axe-baseline.json` — 9-cell schema-1 baseline, seeded by producer spec (RATCHET-03)
-- [ ] `mailglass_admin/e2e/axe-baseline.spec.js` — producer spec regenerating `current.violations` (RATCHET-03)
-- [ ] `reference/demo_app/lib/mailglass_demo/personas.ex` — declarative persona spec (RATCHET-01)
-- [ ] `mailglass_admin/test/support/operator_fixtures.ex` — `seed_persona_cohort!/0` (RATCHET-01)
-- [ ] test-only path-dep entry in `mailglass_admin/mix.exs` (`only: [:test]`) (RATCHET-01) — **verify `mix deps.get && mix compile` (Assumption A1)**
-- [ ] persona drift-guard test (RATCHET-01 / D-07)
-- [ ] `mailglass_admin/test/.../bucket_a_coverage_test.exs` executable manifest + `.planning/research/v1.13/BUCKET-A-LEDGER.md` human mirror (RATCHET-05)
-- [ ] `npm install --save-dev @axe-core/playwright@^4.11.2` in `mailglass_admin/` + commit lockfile if tracked
-- [ ] 6 net-new Bucket-A guards (A3, A4/A23, A16-system, A21, A22, A11)
+> There is no separate pre-Wave-0 in this phase. Test/baseline scaffolds are front-loaded into the
+> Wave-1 `tdd="true"` tasks (and the Wave-2 producer/comparator tasks they unblock), so every MISSING
+> reference is created by the task that consumes it before any later wave samples it. The annotation in
+> brackets names the discharging plan/task. `wave_0_complete: true` reflects this front-loaded design,
+> not a literal completed pre-wave.
+
+- [x] `reference/demo_app/lib/mailglass_demo/personas.ex` — declarative persona spec (RATCHET-01) → **116-01 Task 1 (tdd)**
+- [x] `mailglass_admin/test/support/operator_fixtures.ex` — `seed_persona_cohort!/0` (RATCHET-01) → **116-01 Task 2 (tdd)**
+- [x] test-only path-dep entry in `mailglass_admin/mix.exs` (`only: [:test]`) (RATCHET-01) — **verify `mix deps.get && mix compile` (Assumption A1)** → **116-01 Task 2 (tdd)**
+- [x] persona drift-guard test (RATCHET-01 / D-07) → **116-01 Task 3 (tdd)**
+- [x] `mailglass_admin/test/mailglass_admin/axe_baseline_test.exs` — clone of `ratchet_baseline_test.exs` comparator (RATCHET-03) → **116-02 (tdd-first comparator)**
+- [x] `mailglass_admin/docs/axe-baseline.json` — 9-cell schema-1 baseline, seeded by producer spec (RATCHET-03) → **116-02**
+- [x] `mailglass_admin/e2e/axe-baseline.spec.js` — producer spec regenerating `current.violations` (RATCHET-03) → **116-02**
+- [x] `npm install --save-dev @axe-core/playwright@^4.11.2` in `mailglass_admin/` + commit lockfile if tracked → **116-02 (single install task, with legitimacy checkpoint)**
+- [x] `mailglass_admin/test/.../bucket_a_coverage_test.exs` executable manifest + `.planning/research/v1.13/BUCKET-A-LEDGER.md` human mirror (RATCHET-05) → **116-05 Task 3**
+- [x] 6 net-new Bucket-A guards (A3, A4/A23, A16-system, A21, A22, A11) → **116-05 Tasks 1-2**
 
 ---
 
@@ -87,11 +93,11 @@ created: 2026-06-20
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 180s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (front-loaded into Wave-1 `tdd` tasks + Wave-2 producers; see annotated rows above)
+- [x] No watch-mode flags
+- [x] Feedback latency < 180s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** signed-off (2026-06-20) — 100% automated verify, no watch-mode, <180s latency, sampling continuity intact, all MISSING references front-loaded into the Wave-1 tdd tasks that consume them.

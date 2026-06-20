@@ -578,22 +578,28 @@ async function assertPanelAboveScrim(modal, label) {
 
 **Note:** the directional axe format (hybrid counts + rule breakdown, separate docs/ file, 9 cells) is LOCKED in CONTEXT.md, not assumed. The wire-shape claims (violation fields, API methods, version resolution) are `[VERIFIED]`/`[CITED]`, not assumed.
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> All three questions are resolved and threaded into the plan set. Each carries an inline resolution
+> pointer naming the consuming plan/task. The questions are retained (not deleted) for traceability.
 
 1. **Does the demo webServer boot seed the cohort?**
    - What we know: demo config runs `mix ecto.setup && mix phx.server`; `seeds.exs` calls `DemoData.reset!`.
    - What's unclear: whether `ecto.setup` runs `seeds.exs` (alias-dependent), and whether the `/demo/evidence/reset` beforeEach re-runs `Personas.seed!`.
    - Recommendation: plan a task to confirm `DemoData.reset!` (incl. `Personas.seed!`) runs both at boot AND on the reset-token POST.
+   - **RESOLVED →** Plan **116-06 Task 1** (demo cohort run) opens by confirming `Personas.seed!` runs on the `/demo/evidence/reset` token POST and wires `reset!` to seed the cohort if not; plan **116-01 Task 1** wires `DemoData.reset!` to call `Personas.seed!(Repo)` (boot seeding) and its 116-01 SUMMARY records whether boot seeding holds. (maps to Assumption A5)
 
 2. **Path-dep granularity for `personas.ex`.**
    - What we know: only test support may cross the demo boundary.
    - What's unclear: whether the whole demo app compiles cleanly as an admin test dep, or whether `Personas` must be a minimal extractable module.
    - Recommendation: try the full path dep first; fall back to a pure spec module if `mix compile` conflicts.
+   - **RESOLVED →** Plan **116-01 Task 2** adds the `{:mailglass_demo, path: "../reference/demo_app", only: [:test], runtime: false}` path dep and discharges it with `MIX_ENV=test mix deps.get && mix compile`, with the documented fallback to extract a minimal standalone `Personas` module if a mailglass/phoenix version conflict surfaces. (maps to Assumption A1 / Pitfall 3)
 
 3. **Is `helios-void` a zero-row tenant or a rows-but-no-Delivery tenant?**
    - What we know: `list_tenants/2` keys off distinct non-null `Delivery.tenant_id`; absence is the asserted edge.
    - What's unclear: D-08 says "direct-URL renders empty state" — that needs a reachable surface.
    - Recommendation: planner decides; likely a tenant_id the test navigates to with zero Deliveries (may have an Event/InboundMessage to make the surface non-404 but Delivery-empty).
+   - **RESOLVED →** Plan **116-01 Task 2** resolves helios-void as a reachable zero-Delivery tenant: it is absent from `list_tenants/2` (no Delivery rows) yet navigable by direct URL to render the empty state without a crash (asserted in `persona_cohort_test.exs`). (maps to Assumption A4)
 
 ## Environment Availability
 
