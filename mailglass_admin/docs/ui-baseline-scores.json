@@ -3,35 +3,6 @@
   "pillar_rubric": "design-system.md:104-121",
   "grade_scale": "1-4 (1=non-conformant, 2=significant-gaps, 3=mostly-conformant, 4=excellent)",
   "prior": {
-    "run_id": "2026-06-13-phase-95-baseline",
-    "surfaces": {
-      "deliveries": {
-        "Spacing": { "light": 3, "dark": 3, "system": 3 },
-        "Radius": { "light": 4, "dark": 4, "system": 4 },
-        "Color": { "light": 4, "dark": 4, "system": 4 },
-        "Type": { "light": 3, "dark": 3, "system": 3 },
-        "Elevation": { "light": 4, "dark": 4, "system": 4 },
-        "Motion+A11y": { "light": 3, "dark": 3, "system": 3 }
-      },
-      "inbound": {
-        "Spacing": { "light": 3, "dark": 3, "system": 3 },
-        "Radius": { "light": 4, "dark": 4, "system": 4 },
-        "Color": { "light": 4, "dark": 4, "system": 4 },
-        "Type": { "light": 3, "dark": 3, "system": 3 },
-        "Elevation": { "light": 4, "dark": 4, "system": 4 },
-        "Motion+A11y": { "light": 3, "dark": 3, "system": 3 }
-      },
-      "preview": {
-        "Spacing": { "light": 3, "dark": 3, "system": 3 },
-        "Radius": { "light": 4, "dark": 4, "system": 4 },
-        "Color": { "light": 4, "dark": 4, "system": 4 },
-        "Type": { "light": 3, "dark": 3, "system": 3 },
-        "Elevation": { "light": 4, "dark": 4, "system": 4 },
-        "Motion+A11y": { "light": 2, "dark": 2, "system": 2 }
-      }
-    }
-  },
-  "current": {
     "run_id": "2026-06-16-phase-103",
     "surfaces": {
       "deliveries": {
@@ -57,6 +28,35 @@
         "Type": { "light": 4, "dark": 4, "system": 4 },
         "Elevation": { "light": 4, "dark": 4, "system": 4 },
         "Motion+A11y": { "light": 3, "dark": 3, "system": 3 }
+      }
+    }
+  },
+  "current": {
+    "run_id": "2026-06-20-phase-116",
+    "surfaces": {
+      "deliveries": {
+        "Spacing": { "light": 4, "dark": 4, "system": 4 },
+        "Radius": { "light": 4, "dark": 4, "system": 4 },
+        "Color": { "light": 4, "dark": 4, "system": 4 },
+        "Type": { "light": 4, "dark": 4, "system": 4 },
+        "Elevation": { "light": 4, "dark": 4, "system": 4 },
+        "Motion+A11y": { "light": 4, "dark": 4, "system": 4 }
+      },
+      "inbound": {
+        "Spacing": { "light": 4, "dark": 4, "system": 4 },
+        "Radius": { "light": 4, "dark": 4, "system": 4 },
+        "Color": { "light": 4, "dark": 4, "system": 4 },
+        "Type": { "light": 4, "dark": 4, "system": 4 },
+        "Elevation": { "light": 4, "dark": 4, "system": 4 },
+        "Motion+A11y": { "light": 4, "dark": 4, "system": 4 }
+      },
+      "preview": {
+        "Spacing": { "light": 4, "dark": 4, "system": 4 },
+        "Radius": { "light": 4, "dark": 4, "system": 4 },
+        "Color": { "light": 4, "dark": 4, "system": 4 },
+        "Type": { "light": 4, "dark": 4, "system": 4 },
+        "Elevation": { "light": 4, "dark": 4, "system": 4 },
+        "Motion+A11y": { "light": 4, "dark": 4, "system": 4 }
       }
     }
   }
