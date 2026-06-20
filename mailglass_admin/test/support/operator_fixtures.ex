@@ -212,8 +212,12 @@ defmodule MailglassAdmin.TestSupport.OperatorFixtures do
     :ok
   end
 
-  defp materialize_persona!(%{name: name, payload: payload}) do
+  defp materialize_persona!(%{name: name, payload: %{kind: :single_delivery} = payload}) do
     # fjordline-aps: a single Delivery carrying the canonical stress literals.
+    # WR-05: match the payload kind EXPLICITLY (no bare catch-all). A future
+    # persona with a new/typo'd payload.kind now raises FunctionClauseError
+    # (fail-closed) instead of being silently mis-materialized as a fjordline
+    # single-delivery and crashing mid-insert on a missing payload field.
     delivery =
       insert_delivery!(%{
         tenant_id: name,
