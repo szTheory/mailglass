@@ -19,6 +19,9 @@ defmodule MailglassAdmin.VoiceTest do
   use MailglassAdmin.LiveViewCase, async: false
 
   alias MailglassAdmin.Fixtures.{HappyMailer, StubMailer, BrokenMailer}
+  alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.Shell
+  alias MailglassAdmin.TestSupport.OperatorFixtures
 
   # Data-driven banned-word list (D-09, COPY-LD-09). Each entry is checked
   # case-insensitively against script-stripped HTML on every surface.
@@ -153,6 +156,122 @@ defmodule MailglassAdmin.VoiceTest do
       # the current filters." (data_state/1 routes through title "No records" + this body).
       assert html =~ "No records match the current filters.",
              "LD-03: filtered empty state must be present (UI-SPEC copy from Phase 113)"
+    end
+  end
+
+  # Asserts banned exclamations are absent from a script-stripped rendered HTML
+  # fragment, mirroring the per-surface @banned_words loop (D-12).
+  defp refute_banned_words(html, context) do
+    lower = html |> strip_scripts() |> String.downcase()
+
+    Enum.each(@banned_words, fn word ->
+      refute lower =~ word,
+             "brand voice: #{inspect(word)} must never appear (#{context})"
+    end)
+  end
+
+  describe "data_state copy (FLOW-04 permission_denied / stale, D-12)" do
+    test "deliveries permission_denied: banned-free + locked verbatim present" do
+      html =
+        render_component(&Components.data_state/1,
+          kind: :permission_denied,
+          title: "Access restricted",
+          body:
+            "You do not have access to this tenant's mail operations. " <>
+              "Ask an administrator to grant access."
+        )
+
+      refute_banned_words(html, "deliveries permission_denied")
+      assert html =~ "Access restricted"
+      assert html =~ "You do not have access to this tenant&#39;s mail operations."
+      # No existence leak: copy never names a tenant id or the missing permission.
+      refute html =~ "tenant_id"
+    end
+
+    test "inbound permission_denied: banned-free + locked verbatim present" do
+      html =
+        render_component(&Components.data_state/1,
+          kind: :permission_denied,
+          title: "Access restricted",
+          body:
+            "You do not have access to this tenant's inbound routing. " <>
+              "Ask an administrator to grant access."
+        )
+
+      refute_banned_words(html, "inbound permission_denied")
+      assert html =~ "Access restricted"
+      assert html =~ "You do not have access to this tenant&#39;s inbound routing."
+    end
+
+    test "deliveries stale: banned-free + locked verbatim present" do
+      html =
+        render_component(&Components.data_state/1,
+          kind: :stale,
+          title: "Data may be out of date",
+          body: "Showing Deliveries as of 14:32. Refresh to load the latest."
+        )
+
+      refute_banned_words(html, "deliveries stale")
+      assert html =~ "Data may be out of date"
+      assert html =~ "Showing Deliveries as of 14:32. Refresh to load the latest."
+    end
+
+    test "inbound stale: banned-free + locked verbatim present" do
+      html =
+        render_component(&Components.data_state/1,
+          kind: :stale,
+          title: "Data may be out of date",
+          body: "Showing InboundMessages as of 14:32. Refresh to load the latest."
+        )
+
+      refute_banned_words(html, "inbound stale")
+      assert html =~ "Data may be out of date"
+      assert html =~ "Showing InboundMessages as of 14:32. Refresh to load the latest."
+    end
+  end
+
+  describe "tenant failure modes (FLOW-02 D-06 — 0 / 1 / >=2)" do
+    test "no tenants exist (0): banned-free + locked verbatim present" do
+      html =
+        render_component(&Shell.tenant_selector/1,
+          state: :none,
+          tenant_options: [],
+          current_uri: "/ops/mail"
+        )
+
+      refute_banned_words(html, "tenant state :none")
+      assert html =~ "No tenants available"
+      assert html =~ "Send a Message with a tenant_id"
+    end
+
+    test "tenant switcher (>=2): banned-free + locked verbatim + per-tenant link" do
+      html =
+        render_component(&Shell.tenant_selector/1,
+          state: :select_required,
+          tenant_options: [%{id: "tenant-a", label: "tenant-a"}, %{id: "tenant-b", label: "tenant-b"}],
+          current_uri: "/ops/mail"
+        )
+
+      refute_banned_words(html, "tenant state :select_required")
+      assert html =~ "Select a tenant"
+      assert html =~ "inspect its Deliveries and inbound routing"
+      # Domain nouns enforced as POSITIVE assertions only (D-12) — never a ban grep.
+      assert html =~ "Select tenant", "per-tenant link label must be present"
+    end
+
+    test "sole tenant (1): picker testid is ABSENT (auto-select proven, D-06)", %{conn: conn} do
+      # Seed exactly one distinct tenant (browser-tenant). deny_reveal?: false omits
+      # the second "deny-reveal" inbound tenant, so list_tenants returns one row and
+      # mounting without a ?tenant_id= param drives tenant_state -> :auto_select,
+      # which renders NO picker.
+      OperatorFixtures.seed_browser_scenario!(deny_reveal?: false)
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, "/ops/mail")
+
+      refute html =~ ~s(data-testid="tenant-selector"),
+             "sole-tenant mount must auto-select and render no tenant picker (D-06)"
+
+      refute_banned_words(html, "sole-tenant auto-select")
     end
   end
 
