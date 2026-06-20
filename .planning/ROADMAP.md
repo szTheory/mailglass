@@ -68,7 +68,7 @@ inbound exact-pin re-pin. Phases continue from 108 → 109+.
 - [ ] **Phase 111: Forms** - Unify the two `filters_form` copies into shared `filter_field`/`filter_section`; every control labeled, error-recoverable, never color-alone, focus-preserved across patches
 - [ ] **Phase 112: App-Shell, Navigation & Tenant Seam** - Auto-select sole tenant + listing/switcher from the core read model (kills "No tenant selected"); tenant scope persists across surfaces; theme picker wired no-FOUC; honest pagination; non-color active nav
 - [ ] **Phase 113: Data-Display** - Tables ≥768px → cards <768px; all KPIs on canonical `stat_card`; distinct empty/error/permission/stale templates; severity icon+label+color; long-value handling
-- [ ] **Phase 114: Component Groups** - Coherent spacing/hierarchy across composed groups (support-cards, routing-trace+evidence, detail+timeline); box-nesting depth ≤2; x/y alignment discipline
+- [x] **Phase 114: Component Groups** - Coherent spacing/hierarchy across composed groups (support-cards, routing-trace+evidence, detail+timeline); box-nesting depth ≤2; x/y alignment discipline (completed 2026-06-20)
 - [ ] **Phase 115: Pages/Flows + Micro-Animation + Microcopy** - GOV.UK-style IA per surface; happy/error/boundary/edge/advanced paths in light/dark/system at every width; Emil Kowalski micro-animation deltas; permission/stale/tenant microcopy ("Oops" banned)
 - [ ] **Phase 116: Fixtures + Idempotent Ratchet-Arm** - Land the 2-3-persona stress cohort + widen gallery to component×state×theme×viewport; interaction pillar + axe-JSON baseline; run full matrix incl. one run against demo_app data; promote current→prior, re-score all gates green; close all 24 usability defects
 - [ ] **Phase 117: Release Cut + Milestone Closeout** - Cut the linked-version Hex release (admin-minor drags core+inbound); D-13 inbound exact-pin re-pin; Hex resolution + post-publish smoke green; milestone audited and archived
@@ -333,7 +333,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 111. Forms | v1.13 | 3/4 | In Progress|  |
 | 112. App-Shell, Nav & Tenant Seam | v1.13 | 6/6 | Complete    | 2026-06-19 |
 | 113. Data-Display | v1.13 | 4/4 | Complete    | 2026-06-20 |
-| 114. Component Groups | v1.13 | 4/4 | Complete   | 2026-06-20 |
+| 114. Component Groups | v1.13 | 4/4 | Complete    | 2026-06-20 |
 | 115. Pages/Flows + Motion + Microcopy | v1.13 | 0/TBD | Not started | - |
 | 116. Fixtures + Ratchet-Arm | v1.13 | 0/TBD | Not started | - |
 | 117. Release Cut + Milestone Closeout | v1.13 | 0/TBD | Not started | - |
