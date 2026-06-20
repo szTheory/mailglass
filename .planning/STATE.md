@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.13
 milestone_name: Admin Design-System Stress Test & UX Uplift
-status: executing
+status: verifying
 stopped_at: Completed 114-03-PLAN.md
-last_updated: "2026-06-20T13:40:42.678Z"
+last_updated: "2026-06-20T13:48:47.437Z"
 last_activity: 2026-06-20
 progress:
   total_phases: 11
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 32
-  completed_plans: 31
-  percent: 64
+  completed_plans: 32
+  percent: 73
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 114 (component-groups) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-20
 
-Progress: [██████████] 97%
+Progress: [██████████] 100%
 
 ## v1.13 Milestone Intent
 
@@ -215,6 +215,8 @@ convergent + adversarially judged).
 - [114-01]: card/1 added to PRIMITIVE-DRIFT as a standalone def-check, NOT the gallery render_specimen awk loop (composed specimens register differently — plan 02)
 - [Phase 114]: Composed-group specimens delegate from gallery dispatcher to public composed_*/1 fns (capturable for Floki proof); smoke assertion in operator_live_test.exs binds specimen to production detail column — D-10: lab must render the same composition the live view does; harness lives in operator_live_test.exs
 - [Phase ?]: 114-03: shadow-raised passed via card/1 :global @rest class-merge (no components.ex edit); border-l-4 status rules paired with colored count + label (WCAG 1.4.1)
+- [Phase ?]: Plan 114-04: Floki top-down ancestor-depth proof (no Floki.parent) is the authoritative GROUP-02 depth check; grep is only a tripwire
+- [Phase ?]: Plan 114-04: Playwright composed-group geometry scopes to the light theme wrapper + direct-sibling [data-group-card]; narrow-width overflow asserts no descendant exceeds the viewport
 
 ## Quick Tasks Completed
 
@@ -329,6 +331,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 114 P01 | 6min | 3 tasks | 3 files |
 | Phase 114 P02 | 12 min | 3 tasks | 4 files |
 | Phase 114 P03 | 10 min | 3 tasks | 8 files |
+| Phase 114 P04 | 5 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -352,7 +355,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-20T13:40:42.670Z
+**Last session:** 2026-06-20T13:48:39.441Z
 **Stopped at:** Completed 114-03-PLAN.md
 **Resume file:** None
 
