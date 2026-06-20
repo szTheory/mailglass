@@ -74,22 +74,11 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
       OperatorFixtures.seed_persona_cohort!()
 
       # The spec's deliveries-bearing personas: every persona NOT carrying the
-      # :no_data edge must produce >= 1 Delivery row.
-      spec_bearing =
-        MailglassDemo.Personas.spec()
-        |> Enum.reject(&MapSet.member?(&1.edge_cases, :no_data))
-        |> Enum.map(& &1.name)
-        |> Enum.sort()
-
-      materialized =
-        TestRepo.all(
-          from(d in Delivery,
-            distinct: true,
-            where: not is_nil(d.tenant_id) and d.tenant_id != "",
-            select: d.tenant_id
-          )
-        )
-        |> Enum.sort()
+      # :no_data edge must produce >= 1 Delivery row. Derived via the shared
+      # guard helpers so the fail-closed test below exercises the SAME
+      # comparison (WR-02).
+      spec_bearing = spec_bearing(MailglassDemo.Personas.spec())
+      materialized = materialized_tenant_ids()
 
       assert materialized == spec_bearing,
              "admin materializer drifted from spec: spec expects deliveries for " <>
@@ -107,28 +96,43 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
       end
     end
 
-    test "adding a persona to spec() without materializing it fails closed" do
+    test "the guard's own comparison fails closed when spec() gains an unmaterialized persona" do
       OperatorFixtures.seed_persona_cohort!()
 
-      # Simulate spec drift: a fourth deliveries-bearing persona added to the
-      # spec but NOT added to any materializer. The guard's comparison
-      # (spec_bearing == materialized) must reject it.
-      drifted_spec_bearing =
-        (MailglassDemo.Personas.spec()
-         |> Enum.reject(&MapSet.member?(&1.edge_cases, :no_data))
-         |> Enum.map(& &1.name)) ++ ["phantom-persona"]
+      # Drive the EXACT comparison the production guard uses
+      # (`materialized == spec_bearing`, the sibling test above) against a
+      # spec that has genuinely drifted: a fourth deliveries-bearing persona is
+      # injected into the spec but NOT materialized into the DB. The production
+      # assertion must reject it — proving the guard fails closed, not merely
+      # that a local `==` works on hand-built lists.
+      #
+      # `spec_bearing/1` and `materialized_tenant_ids/0` below are the same
+      # derivation + query the production guard runs, so this test exercises the
+      # real comparison rather than a throwaway parallel one.
+      drifted_spec =
+        MailglassDemo.Personas.spec() ++
+          [%{name: "phantom-persona", edge_cases: MapSet.new([:one])}]
 
-      materialized =
-        TestRepo.all(
-          from(d in Delivery,
-            distinct: true,
-            where: not is_nil(d.tenant_id) and d.tenant_id != "",
-            select: d.tenant_id
-          )
-        )
+      drifted_spec_bearing = spec_bearing(drifted_spec)
+      materialized = materialized_tenant_ids()
 
-      refute Enum.sort(drifted_spec_bearing) == Enum.sort(materialized),
-             "guard must fail closed when a spec persona has no materialization"
+      # Sanity: an UNDRIFTED spec passes the very same comparison, so the
+      # failure below is caused by the injected phantom and not by an unrelated
+      # mismatch (e.g. a seeding bug). This pins the guard to the real property.
+      assert materialized == spec_bearing(MailglassDemo.Personas.spec()),
+             "precondition: the real spec must agree with the DB before we drift it"
+
+      # The production comparison (`materialized == spec_bearing`) must now be
+      # FALSE — the phantom is in the spec but absent from the DB, so the guard
+      # fails closed exactly as the sibling assertion would.
+      refute materialized == drifted_spec_bearing,
+             "guard must fail closed when a spec persona has no materialization, " <>
+               "but materialized #{inspect(materialized)} still equalled the " <>
+               "drifted spec #{inspect(drifted_spec_bearing)}"
+
+      # And the specific phantom is what the guard would report as drift.
+      assert "phantom-persona" in (drifted_spec_bearing -- materialized),
+             "the injected phantom persona must be the detected drift"
     end
   end
 
@@ -196,17 +200,44 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
             {:long_delivery_id, literals.long_delivery_id},
             {:long_mailable, literals.long_mailable}
           ] do
-        # A fjordline-namespaced reference in the gallery is the signal that the
-        # gallery intends to mirror this persona literal. If present, it must be
-        # the exact spec value.
-        if String.contains?(gallery_src, "fjordline") and
-             gallery_intends_literal?(gallery_src, label) do
+        # The PER-LITERAL namespaced specimen testid is the signal that the
+        # gallery intends to mirror this specific persona literal (WR-03). Each
+        # literal is governed independently: dropping one specimen's testid
+        # releases only that literal's byte-consistency requirement, so a
+        # dropped value is detected precisely rather than via a single shared
+        # caption token gating all four at once.
+        if gallery_intends_literal?(gallery_src, label) do
           assert String.contains?(gallery_src, value),
-                 "gallery mirrors the fjordline #{label} specimen but the value " <>
+                 "gallery carries the #{label} specimen testid but the value " <>
                    "diverged from the spec literal #{inspect(value)}"
         end
       end
     end
+  end
+
+  # The guard's canonical derivation of the spec's deliveries-bearing persona
+  # names: every persona NOT carrying :no_data must produce >= 1 Delivery row.
+  # Shared by the production assertion ("deliveries-bearing personas ... are
+  # exactly the ones materialized") and the fail-closed test so both exercise
+  # the SAME comparison (WR-02).
+  defp spec_bearing(spec) do
+    spec
+    |> Enum.reject(&MapSet.member?(&1.edge_cases, :no_data))
+    |> Enum.map(& &1.name)
+    |> Enum.sort()
+  end
+
+  # The guard's canonical materialization query: the distinct non-empty
+  # tenant_ids that actually carry Delivery rows.
+  defp materialized_tenant_ids do
+    TestRepo.all(
+      from(d in Delivery,
+        distinct: true,
+        where: not is_nil(d.tenant_id) and d.tenant_id != "",
+        select: d.tenant_id
+      )
+    )
+    |> Enum.sort()
   end
 
   defp gallery_source_path do
@@ -221,12 +252,36 @@ defmodule MailglassAdmin.PersonaDriftGuardTest do
     |> Path.expand()
   end
 
-  # Heuristic: the gallery "intends" to carry a fjordline persona literal once
-  # 116-04 adds a fjordline-namespaced specimen for it. Until then this returns
-  # false and the byte-consistency assertion is vacuous (the gallery's own
-  # pre-existing Phase-113 long-value stress specimen is a DIFFERENT value and
-  # is intentionally not governed by this persona drift guard).
-  defp gallery_intends_literal?(gallery_src, _label) do
-    String.contains?(gallery_src, "fjordline-aps")
+  # Per-literal intent signal (WR-03): the gallery "intends" to carry a given
+  # fjordline persona literal iff it declares that literal's OWN namespaced
+  # specimen state. The gallery anchors each specimen with
+  # `data-testid="gallery-#{component}-#{state}"` (component :fjordline_stress);
+  # the per-specimen `state` strings below are byte-present in the gallery
+  # source (the testid is interpolated, so we key on the source-literal state
+  # that uniquely identifies each specimen and is what assembles into its
+  # testid). Each literal is therefore governed INDEPENDENTLY: dropping one
+  # specimen's state drops only that literal's byte-consistency requirement,
+  # instead of a single shared "fjordline-aps" caption token activating all four
+  # at once. The gallery's own pre-existing Phase-113 long-value stress specimen
+  # is a DIFFERENT value under a different state and is intentionally not
+  # governed by this persona drift guard.
+  #
+  # Before 116-04 wires a specimen its state is absent → returns false and the
+  # corresponding byte-consistency assertion is vacuous for that literal only.
+  # The Latin and CJK names share the one non-ASCII-names specimen, so both map
+  # to that single state — each is still gated on a per-specimen signal, not the
+  # global caption token.
+  @fjordline_specimen_states %{
+    non_ascii_latin: "fjordline-non-ascii-names",
+    non_ascii_cjk: "fjordline-non-ascii-names",
+    long_delivery_id: "fjordline-long-id",
+    long_mailable: "fjordline-long-mailable"
+  }
+
+  defp gallery_intends_literal?(gallery_src, label) do
+    case Map.fetch(@fjordline_specimen_states, label) do
+      {:ok, state} -> String.contains?(gallery_src, state)
+      :error -> false
+    end
   end
 end
