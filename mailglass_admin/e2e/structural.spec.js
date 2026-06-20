@@ -608,6 +608,130 @@ async function openInboundReplayModal(page) {
   return modal;
 }
 
+// =============================================================================
+// Phase 116 RATCHET-03 interaction pillar — theme-axis helpers.
+//
+// The interaction invariants (panel-above-scrim, scroll-chaining, focus-restore,
+// CLS) are theme-independent runtime DOM properties, but the pillar parameterizes
+// them across light/dark/system so each invariant is exercised against the
+// genuinely rendered overlay under every theme. Theme drive mirrors the existing
+// shell contract + the A16-system precedent (UI-SPEC "System theme"):
+//   light  -> ?theme=light
+//   dark   -> ?theme=dark
+//   system -> no ?theme= param AND emulateMedia({colorScheme:'dark'}) so the
+//             media-query branch is genuinely exercised (not a no-op light render).
+// The three theme labels drive the test name so the failing combination is the
+// diagnosis (D-01).
+const INTERACTION_THEMES = ["light", "dark", "system"];
+
+function themeQuery(theme) {
+  // system == absence of an explicit theme query value (shell.ex theme contract).
+  return theme === "system" ? "" : `theme=${theme}`;
+}
+
+// For the `system` theme, the OS prefers-color-scheme media query must be set to
+// dark BEFORE navigation so the system branch resolves to dark (A16-system).
+// emulateMedia MUST precede navigation (the FACT-4 pattern already used in this spec).
+async function applyThemeEmulation(page, theme) {
+  if (theme === "system") {
+    await page.emulateMedia({ colorScheme: "dark" });
+  } else {
+    await page.emulateMedia({ colorScheme: null });
+  }
+}
+
+// Opens the operator deliveries surface under a specific theme, then opens the
+// replay dialog. Returns the modal locator. Reuses the proven open path
+// (browser-reset + login + row click + replay-open) but threads the theme query.
+async function openOperatorReplayModalThemed(page, theme) {
+  await applyThemeEmulation(page, theme);
+  const query = ["tenant_id=" + tenantId, "view=deliveries", themeQuery(theme)]
+    .filter(Boolean)
+    .join("&");
+  await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
+  await page.goto(`/ops/mail?${query}`);
+  await expect(
+    page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
+  ).toBeVisible();
+  await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+
+  await page.getByTestId("operator-delivery-row").first().click();
+  await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+  await page.getByTestId("operator-replay-open").click();
+  const modal = page.getByTestId("operator-replay-modal");
+  await expect(modal).toBeVisible();
+  return modal;
+}
+
+// Opens the inbound surface under a specific theme, then opens the replay modal.
+async function openInboundReplayModalThemed(page, theme) {
+  await applyThemeEmulation(page, theme);
+  const query = ["tenant_id=" + tenantId, themeQuery(theme)].filter(Boolean).join("&");
+  await openInbound(page, query);
+
+  const replayableRow = page
+    .getByTestId("inbound-record-row")
+    .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
+    .first();
+  await replayableRow.click();
+  await page.waitForURL(/inbound_id=/);
+  await page.getByTestId("inbound-replay-open").click();
+
+  const modal = page.getByTestId("inbound-replay-modal");
+  await expect(modal).toBeVisible();
+  return modal;
+}
+
+// Opens the preview surface (a real content panel, not a scrim overlay) under a
+// specific theme. The preview "panel" in the Invariant-1 contract is the
+// device-frame preview-pane; for system it inherits the OS scheme (no data-theme).
+async function openPreviewPanelThemed(page, theme) {
+  await applyThemeEmulation(page, theme);
+  await page.context().clearCookies();
+  const query = theme === "system" ? "theme=system" : `theme=${theme}`;
+  await page.goto(`/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?${query}`);
+  await expect(page.getByTestId("preview-shell")).toBeVisible();
+  const pane = page.getByTestId("preview-pane");
+  await expect(pane).toBeVisible();
+  return pane;
+}
+
+// Centroid elementFromPoint hit-test: the panel (or a descendant) must be the
+// topmost element at the panel's geometric center — never the scrim beneath it.
+// Generalizes assertPanelAboveScrim's hit-test so it can target any panel locator
+// (scrim-backed dialogs OR the non-scrim preview pane).
+async function assertCentroidHitsPanel(panel, label) {
+  await expect(panel, label).toBeVisible();
+  // The preview pane is a tall device frame that can extend past the viewport, so
+  // its raw centroid may fall outside the visible area (elementFromPoint -> null).
+  // Scroll it into view, then hit-test the centroid of the panel's VISIBLE
+  // intersection with the viewport — still a true centroid hit-test, never a
+  // screenshot/pixel diff.
+  await panel.first().scrollIntoViewIfNeeded();
+  const hit = await panel.evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const left = Math.max(rect.left, 0);
+    const top = Math.max(rect.top, 0);
+    const right = Math.min(rect.right, vw);
+    const bottom = Math.min(rect.bottom, vh);
+    const x = (left + right) / 2;
+    const y = (top + bottom) / 2;
+    const hitEl = document.elementFromPoint(x, y);
+    const nearestTestId = hitEl && hitEl.closest ? hitEl.closest("[data-testid]") : null;
+    return {
+      ok: hitEl === el || el.contains(hitEl),
+      hitTag: hitEl ? hitEl.tagName : null,
+      hitTestId: nearestTestId ? nearestTestId.getAttribute("data-testid") : null
+    };
+  });
+  expect(
+    hit.ok,
+    `${label}: centroid hit-test returns the panel/descendant; hit=${hit.hitTestId || hit.hitTag}`
+  ).toBeTruthy();
+}
+
 test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   // =========================================================================
@@ -2442,4 +2566,237 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   });
 
+  // =========================================================================
+  // Phase 116 RATCHET-03 — INTERACTION PILLAR (D-01)
+  //
+  // Four BINARY pass/fail Playwright gates. These are true/false runtime DOM
+  // properties an LLM scoring a static PNG cannot observe and a 1-4 aesthetic
+  // rubric must NOT be able to trade away (UI-SPEC "Interaction Invariants").
+  // The failing test name IS the diagnosis. Screenshot-free, no pixel-diff —
+  // elementFromPoint / scrollY / activeElement / getBoundingClientRect only.
+  //
+  // CLS threshold (Invariant 4 / A21): 4px. Well under the <=8px ceiling the
+  // UI-SPEC mandates as "meaningful", with headroom for Chromium sub-pixel
+  // layout rounding; synchronous surfaces (inbound mount) assert the 0px floor.
+  // =========================================================================
+  const CLS_THRESHOLD_PX = 4;
+  const CLS_SYNC_THRESHOLD_PX = 0;
+
+  test.describe("interaction pillar — Invariant 1 panel-above-scrim + Invariant 2 scroll-chaining", () => {
+
+    // ---- Invariant 1: panel above scrim (centroid hit-test) -----------------
+    // Parameterized across the three overlay surfaces x light/dark/system. The
+    // panel (or a descendant) must be the topmost element at its centroid; the
+    // scrim must never intercept. Holds regardless of theme/data density.
+    for (const theme of INTERACTION_THEMES) {
+      test(`panel above scrim — deliveries replay dialog (${theme})`, async ({ page }) => {
+        const modal = await openOperatorReplayModalThemed(page, theme);
+        await assertPanelAboveScrim(modal, `deliveries replay dialog (${theme})`);
+        await page.emulateMedia({ colorScheme: null });
+      });
+
+      test(`panel above scrim — inbound modal (${theme})`, async ({ page }) => {
+        const modal = await openInboundReplayModalThemed(page, theme);
+        await assertPanelAboveScrim(modal, `inbound modal (${theme})`);
+        await page.emulateMedia({ colorScheme: null });
+      });
+
+      test(`panel above scrim — preview panel (${theme})`, async ({ page }) => {
+        // The preview pane is a real content panel (no scrim). The centroid
+        // hit-test proves the pane is the top element at its center.
+        const pane = await openPreviewPanelThemed(page, theme);
+        await assertCentroidHitsPanel(pane, `preview panel (${theme})`);
+        await page.emulateMedia({ colorScheme: null });
+      });
+    }
+
+    // ---- Invariant 2: scroll-chaining / overscroll-contain ------------------
+    // Scroll the overlay scroll-container to its end and assert the background
+    // document's window.scrollY is unchanged (overscroll-behavior: contain). Also
+    // assert at most ONE element in the overlay subtree owns a vertical scrollbar.
+    for (const theme of INTERACTION_THEMES) {
+      test(`scroll-chaining contained — deliveries replay dialog (${theme})`, async ({ page }) => {
+        const modal = await openOperatorReplayModalThemed(page, theme);
+
+        const before = await page.evaluate(() => window.scrollY);
+        // Operator scrim carries mg-overscroll-contain + overflow-y-auto; the
+        // panel sits inside it. Scroll the contain container to its very end.
+        await modal.evaluate(el => {
+          const scroller = el.closest(".mg-overscroll-contain") || el;
+          scroller.scrollTop = scroller.scrollHeight;
+        });
+        const after = await page.evaluate(() => window.scrollY);
+        expect(after, `deliveries (${theme}) background scrollY unchanged after overlay scroll-to-end`).toBe(before);
+
+        // At most one vertical scrollbar in the overlay subtree (the scroll owner).
+        const scrollbarCount = await scrollableSubtreeCount(page, ".mg-overscroll-contain");
+        expect(
+          scrollbarCount,
+          `deliveries (${theme}) overlay subtree has <=1 vertical scrollbar`
+        ).toBeLessThanOrEqual(1);
+
+        await page.keyboard.press("Escape");
+        await expect(page.getByTestId("operator-replay-modal")).toHaveCount(0);
+        await page.emulateMedia({ colorScheme: null });
+      });
+
+      test(`scroll-chaining contained — inbound modal (${theme})`, async ({ page }) => {
+        const modal = await openInboundReplayModalThemed(page, theme);
+
+        const before = await page.evaluate(() => window.scrollY);
+        // The inbound panel itself carries mg-overscroll-contain + overflow-y-auto.
+        await modal.evaluate(el => {
+          const scroller = el.classList.contains("mg-overscroll-contain")
+            ? el
+            : el.closest(".mg-overscroll-contain") || el;
+          scroller.scrollTop = scroller.scrollHeight;
+        });
+        const after = await page.evaluate(() => window.scrollY);
+        expect(after, `inbound (${theme}) background scrollY unchanged after overlay scroll-to-end`).toBe(before);
+
+        const scrollbarCount = await scrollableSubtreeCount(page, ".mg-overscroll-contain");
+        expect(
+          scrollbarCount,
+          `inbound (${theme}) overlay subtree has <=1 vertical scrollbar`
+        ).toBeLessThanOrEqual(1);
+
+        await page.keyboard.press("Escape");
+        await expect(page.getByTestId("inbound-replay-modal")).toHaveCount(0);
+        await page.emulateMedia({ colorScheme: null });
+      });
+    }
+
+  });
+
+  test.describe("interaction pillar — Invariant 3 focus-restore + Invariant 4 layout-jump/CLS", () => {
+
+    // ---- Invariant 3: focus restore to trigger ------------------------------
+    // Open the replay modal on deliveries (trigger id=replay-open-btn, the
+    // JS.focus return target per STATE.md [Phase ?]), close it via the in-modal
+    // close_replay control (phx-remove -> JS.focus(to:"#replay-open-btn")), and
+    // assert document.activeElement === the trigger. Parameterized x theme.
+    for (const theme of INTERACTION_THEMES) {
+      test(`focus restore to trigger — deliveries replay modal (${theme})`, async ({ page }) => {
+        const modal = await openOperatorReplayModalThemed(page, theme);
+
+        const triggerId = await page.getByTestId("operator-replay-open").getAttribute("id");
+        expect(triggerId, "replay trigger id present").toBe("replay-open-btn");
+
+        // Close via the modal's Close button (routes to close_replay; the
+        // :if span's phx-remove fires JS.focus(to:"#replay-open-btn")).
+        await modal.getByRole("button", { name: "Close", exact: true }).click();
+        await expect(page.getByTestId("operator-replay-modal")).toHaveCount(0);
+
+        const activeId = await page.evaluate(
+          () => document.activeElement && document.activeElement.id
+        );
+        expect(
+          activeId,
+          `deliveries (${theme}) focus restored to trigger after replay modal close`
+        ).toBe("replay-open-btn");
+
+        await page.emulateMedia({ colorScheme: null });
+      });
+    }
+
+    // ---- Invariant 4: layout-jump / CLS -------------------------------------
+    // Capture a content region's getBoundingClientRect().height in the loading
+    // state and the settled state; assert |loaded - loading| <= threshold. The
+    // settled state is measured via waitForLoadState('networkidle') so intentional
+    // reveal motion does not trip the gate (Motion Contract). The synchronous
+    // inbound mount asserts the 0px floor AND zero .mg-skeleton (A22 cross-cite).
+    for (const theme of INTERACTION_THEMES) {
+      test(`layout-jump/CLS within threshold — deliveries list region (${theme})`, async ({ page }) => {
+        await applyThemeEmulation(page, theme);
+        const query = ["tenant_id=" + tenantId, "view=deliveries", themeQuery(theme)]
+          .filter(Boolean)
+          .join("&");
+        await loginOperator(page, `/ops/mail?tenant_id=${tenantId}`);
+        await page.goto(`/ops/mail?${query}`);
+
+        const region = page.getByTestId("operator-deliveries-list-card");
+        await expect(region).toBeVisible();
+        const loadingHeight = await regionHeight(region);
+
+        await page.waitForLoadState("networkidle");
+        // Let any reveal motion settle to its final frame before measuring.
+        await settleAnimations(page);
+        const loadedHeight = await regionHeight(region);
+
+        expect(
+          Math.abs(loadedHeight - loadingHeight),
+          `deliveries (${theme}) list region CLS delta <= ${CLS_THRESHOLD_PX}px`
+        ).toBeLessThanOrEqual(CLS_THRESHOLD_PX);
+
+        await page.emulateMedia({ colorScheme: null });
+      });
+
+      test(`layout-jump/CLS 0px on synchronous inbound mount (${theme})`, async ({ page }) => {
+        await applyThemeEmulation(page, theme);
+        const query = ["tenant_id=" + tenantId, themeQuery(theme)].filter(Boolean).join("&");
+        await openInbound(page, query);
+
+        const region = page.getByTestId("inbound-records-list-card");
+        await expect(region).toBeVisible();
+        const loadingHeight = await regionHeight(region);
+
+        await page.waitForLoadState("networkidle");
+        await settleAnimations(page);
+        const loadedHeight = await regionHeight(region);
+
+        // Inbound mount is synchronous (A22): 0px floor, and NO skeleton in the
+        // settled DOM. Both are binary — the test name is the diagnosis.
+        expect(
+          Math.abs(loadedHeight - loadingHeight),
+          `inbound (${theme}) synchronous mount CLS delta == ${CLS_SYNC_THRESHOLD_PX}px`
+        ).toBeLessThanOrEqual(CLS_SYNC_THRESHOLD_PX);
+
+        const skeletonCount = await page.locator(".mg-skeleton").count();
+        expect(
+          skeletonCount,
+          `inbound (${theme}) synchronous mount renders no .mg-skeleton`
+        ).toBe(0);
+
+        await page.emulateMedia({ colorScheme: null });
+      });
+    }
+
+  });
+
 });
+
+// Counts how many elements in the matched subtree(s) actually own a vertical
+// scrollbar (scrollHeight > clientHeight AND a scrolling overflow). Used to assert
+// the overlay has at most one scroll owner (Invariant 2).
+async function scrollableSubtreeCount(page, rootSelector) {
+  return page.evaluate(sel => {
+    const roots = Array.from(document.querySelectorAll(sel));
+    let count = 0;
+    for (const root of roots) {
+      const candidates = [root, ...root.querySelectorAll("*")];
+      for (const el of candidates) {
+        const style = getComputedStyle(el);
+        const overflowsY = ["auto", "scroll", "overlay"].includes(style.overflowY);
+        if (overflowsY && el.scrollHeight > el.clientHeight + 1) {
+          count += 1;
+        }
+      }
+    }
+    return count;
+  }, rootSelector);
+}
+
+// Reads a region's getBoundingClientRect().height (Invariant 4 measurement).
+async function regionHeight(locator) {
+  return locator.first().evaluate(el => el.getBoundingClientRect().height);
+}
+
+// Waits for all running animations in the document subtree to finish so CLS is
+// measured at the settled frame, not mid-reveal (Motion Contract).
+async function settleAnimations(page) {
+  await page.evaluate(async () => {
+    const root = document.documentElement;
+    const anims = root.getAnimations ? root.getAnimations({ subtree: true }) : [];
+    await Promise.all(anims.map(a => a.finished.catch(() => {})));
+  });
+}
