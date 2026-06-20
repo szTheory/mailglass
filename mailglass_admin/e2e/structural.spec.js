@@ -2164,4 +2164,125 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
   });
 
+  // =========================================================================
+  // Group: composed-group geometry proof — Phase 114 (GROUP-01 / GROUP-03)
+  // Direct-sibling x-equality (D-08), computed padding-floor / no-flush (D-09),
+  // and no horizontal overflow at 320 and 1280 for the three composed-group
+  // specimens. Reuses the locked Phase 113 substrate (boundingBox, Math.round,
+  // assertNoElementHorizontalOverflow) — zero new dependency, zero-Node (D-11).
+  //
+  // Scoping is DIRECT SIBLINGS ONLY (`:scope > [data-region] > [data-group-card]`),
+  // never a descendant sweep — the timeline rail / border-l-4 indented children
+  // would false-fail an x-equality sweep (Pitfall 4 / D-08). Padding floor is the
+  // semantic --spacing-md token (16px), the minimum padding any group shell uses
+  // (support_cards p-md; the other seven p-lg) — proving no flush-to-container edge.
+  // =========================================================================
+  test.describe("Group: composed-group geometry — Phase 114", () => {
+    // Each composed specimen is rendered once per theme wrapper (light/dark/system),
+    // so the inner `gallery-composed-*` testid is non-unique on the page. Scope each
+    // measurement to the cell's LIGHT theme wrapper to address a single instance.
+    // [cellTestId (component_state, underscored), innerTestId (hyphenated)]
+    const GROUP_SPECIMENS = [
+      ["gallery-composed_support_triage-operator-detail", "gallery-composed-support-triage"],
+      ["gallery-composed_routing_evidence-inbound-routing", "gallery-composed-routing-evidence"],
+      ["gallery-composed_detail_timeline-inbound-detail", "gallery-composed-detail-timeline"]
+    ];
+
+    // --spacing-md = 16px (assets/css/app.css). Minimum padding a group card uses.
+    const PADDING_FLOOR_PX = 16;
+    const GROUP_VIEWPORTS = [320, 1280];
+
+    for (const [cellTestId, innerTestId] of GROUP_SPECIMENS) {
+      test(`${innerTestId}: direct-sibling left-edge alignment, padding-floor, and no overflow at 320/1280`, async ({
+        page
+      }) => {
+        for (const vp of GROUP_VIEWPORTS) {
+          await page.setViewportSize({ width: vp, height: 900 });
+          // Re-settle the gallery heading at each width BEFORE measuring (flake
+          // containment — measure only after the LiveView has painted).
+          await openGallery(page);
+
+          // Scope to the LIGHT theme wrapper of this cell so the inner composed
+          // testid resolves to exactly one specimen instance.
+          const region = page
+            .getByTestId(cellTestId)
+            .locator(`[data-theme="mailglass-light"]`)
+            .first()
+            .getByTestId(innerTestId);
+          await expect(region, `${innerTestId} region @${vp}`).toBeVisible();
+
+          // DIRECT SIBLINGS ONLY — never a descendant sweep (D-08).
+          const cards = region.locator(":scope > [data-region] > [data-group-card]");
+          const count = await cards.count();
+          expect(count, `${innerTestId} group-card count @${vp}`).toBeGreaterThan(1);
+
+          // (1) Sibling-x equality: all group cards share a left edge (±1px).
+          const xs = [];
+          for (let i = 0; i < count; i++) {
+            const box = await cards.nth(i).boundingBox();
+            expect(box, `${innerTestId} card ${i} box @${vp}`).not.toBeNull();
+            xs.push(Math.round(box.x));
+          }
+          const minX = Math.min(...xs);
+          for (const x of xs) {
+            expect(
+              Math.abs(x - minX),
+              `${innerTestId} card left-edge x @${vp}`
+            ).toBeLessThanOrEqual(1);
+          }
+
+          // (2) Padding-floor / no-flush: each card's rendered left/right padding
+          // is >= the semantic token floor (covers GROUP-01 coherent spacing +
+          // GROUP-02 "no flush-to-container edge"). Reads computed style.
+          for (let i = 0; i < count; i++) {
+            const padding = await cards.nth(i).evaluate(el => {
+              const s = getComputedStyle(el);
+              return {
+                left: parseFloat(s.paddingLeft),
+                right: parseFloat(s.paddingRight)
+              };
+            });
+            expect(
+              padding.left,
+              `${innerTestId} card ${i} padding-left floor @${vp}`
+            ).toBeGreaterThanOrEqual(PADDING_FLOOR_PX);
+            expect(
+              padding.right,
+              `${innerTestId} card ${i} padding-right floor @${vp}`
+            ).toBeGreaterThanOrEqual(PADDING_FLOOR_PX);
+          }
+
+          // (3) No horizontal overflow at narrow and wide widths.
+          //
+          // The gallery lays each specimen out in a THREE-column flex-wrap row
+          // (light/dark/system side by side). At 320px those columns collapse to
+          // ~56px each — so the standard self-relative overflow check
+          // (scrollWidth - clientWidth) measures the artificial gallery column,
+          // not the group (documented gallery-layout artifact, see the Phase 113
+          // gallery-overflow note above; the live-page DATA-05 overflow test
+          // owns the real 320px contract on the full-width operator/inbound
+          // pages where these groups render). So at narrow widths assert the
+          // genuine "no horizontal scrollbar" contract: NO descendant of the
+          // group is wider than the VIEWPORT. At wide widths the column is roomy,
+          // so the standard self-relative check applies directly.
+          if (vp <= 768) {
+            const widestDescendant = await region.evaluate(el => {
+              let max = 0;
+              for (const node of el.querySelectorAll("*")) {
+                if (node.scrollWidth > max) max = node.scrollWidth;
+              }
+              return max;
+            });
+            expect(
+              widestDescendant,
+              `${innerTestId} widest descendant fits viewport @${vp}`
+            ).toBeLessThanOrEqual(vp);
+          } else {
+            await assertNoElementHorizontalOverflow(region, `${innerTestId} @${vp}`);
+          }
+        }
+      });
+    }
+  });
+
 });
