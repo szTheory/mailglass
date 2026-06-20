@@ -97,6 +97,50 @@ defmodule MailglassAdmin.AxeBaselineTest do
     compare_axe(b["prior"], b["current"])
   end
 
+  test "system cell never carries more violations than the dark cell (A16-axe parity)",
+       %{baseline: b} do
+    # WR-02: Bucket-A A16-axe cites a "system cell <= dark cell" property. The
+    # system theme follows prefers-color-scheme:dark (see axe-baseline.spec.js
+    # emulatedColorScheme/themeQuery), so it must not regress relative to the
+    # explicit dark cell — otherwise the system-mode surface is less accessible
+    # than the dark surface it is meant to mirror. Assert per-total AND per-rule
+    # over the `current` block so the ledger claim is genuinely enforced, not
+    # vacuous.
+    breaches =
+      for surface <- @surfaces do
+        dark = get_in(b, ["current", "violations", surface, "dark"])
+        system = get_in(b, ["current", "violations", surface, "system"])
+
+        cond do
+          is_nil(dark) or is_nil(system) ->
+            "#{surface}: missing dark/system cell (dark=#{inspect(dark)}, system=#{inspect(system)})"
+
+          system["total"] > dark["total"] ->
+            "#{surface}: system total #{system["total"]} > dark total #{dark["total"]} (PARITY BREACH)"
+
+          true ->
+            rule_breaches =
+              for {rid, scount} <- system["rules"] || %{} do
+                dcount = get_in(dark, ["rules", rid]) || 0
+
+                if scount > dcount,
+                  do: "#{surface}: system #{rid} #{scount} > dark #{dcount} (PARITY BREACH)",
+                  else: nil
+              end
+              |> Enum.reject(&is_nil/1)
+
+            if rule_breaches == [], do: nil, else: Enum.join(rule_breaches, "\n")
+        end
+      end
+      |> Enum.reject(&is_nil/1)
+
+    assert breaches == [],
+           "A16-axe system<=dark parity breached (#{length(breaches)}):\n" <>
+             Enum.join(breaches, "\n") <>
+             "\nThe system theme follows prefers-color-scheme:dark and must not " <>
+             "carry more axe violations than the explicit dark cell."
+  end
+
   # ---------------------------------------------------------------------------
   # Verify-by-construction: the comparator must fail closed on a rising cell
   # total, a rising per-rule count, AND a new rule-id under a flat total.
@@ -168,6 +212,31 @@ defmodule MailglassAdmin.AxeBaselineTest do
     assert msg =~ "inbound.dark: missing cell"
   end
 
+  test "compare_axe fails closed when a non-zero-total cell has a non-map rules map (WR-03)" do
+    prior = nine_cells(fn _s, _t -> flat_cell() end)
+
+    # A producer regression: same total but the rules map was dropped to nil.
+    # Without the guard this slips through (total did not rise, and `cc["rules"]
+    # || %{}` coerces nil to empty, so the per-rule loop finds nothing).
+    current =
+      nine_cells(fn
+        "inbound", "dark" -> %{"total" => 1, "rules" => nil}
+        _s, _t -> flat_cell()
+      end)
+
+    assert {:error, msg} = run_compare(prior, current)
+    assert msg =~ "inbound.dark: current rules map missing/non-map"
+  end
+
+  test "compare_axe tolerates a non-map rules map only when the total is zero (no violations)" do
+    # A clean cell is {total: 0, rules: {}}; a {total: 0, rules: nil} should not
+    # trip the non-map guard, since there are no violations to diff.
+    prior = nine_cells(fn _s, _t -> %{"total" => 0, "rules" => %{}} end)
+    current = nine_cells(fn _s, _t -> %{"total" => 0, "rules" => nil} end)
+
+    assert :ok = run_compare(prior, current)
+  end
+
   test "compare_axe passes when every cell meets-or-beats prior" do
     prior = nine_cells(fn _s, _t -> %{"total" => 2, "rules" => %{"color-contrast" => 2}} end)
     # current improves: fewer violations everywhere.
@@ -209,6 +278,16 @@ defmodule MailglassAdmin.AxeBaselineTest do
 
           cc["total"] > pc["total"] ->
             "#{surface}.#{theme}: total #{pc["total"]} → #{cc["total"]} (REGRESSION)"
+
+          # Fail closed when a present cell carries a non-zero total but a
+          # missing/non-map `rules` map: a producer bug emitting
+          # `{total: 2, rules: null}` would otherwise pass clean (the rising-total
+          # branch above only fires when the total itself rose), masking a rule
+          # swap that lost its per-rule detail (WR-03). A genuinely clean cell is
+          # `{total: 0, rules: {}}`, so only guard non-zero totals.
+          cc["total"] > 0 and not is_map(cc["rules"]) ->
+            "#{surface}.#{theme}: current rules map missing/non-map under " <>
+              "total #{inspect(cc["total"])} (cannot diff — REGRESSION)"
 
           true ->
             # Per-rule diff: fail closed when ANY rule's count rises OR a rule-id
