@@ -1127,11 +1127,11 @@ defmodule MailglassAdmin.GalleryLive do
     {:data_state, "empty",
      %{kind: :empty, title: "No deliveries", body: "No deliveries have been recorded yet."}},
     {:data_state, "error",
-     %{kind: :error, title: "Delivery data unavailable", body: "There was a problem loading deliveries. Try refreshing the page."}},
+     %{kind: :error, title: "Delivery data unavailable", body: "Delivery data could not be loaded. Refresh the page or adjust the filters, then try again."}},
     {:data_state, "permission-denied",
-     %{kind: :permission_denied, title: "Access restricted", body: "You don't have permission to view deliveries for this tenant."}},
+     %{kind: :permission_denied, title: "Access restricted", body: "You do not have access to this tenant's mail operations. Ask an administrator to grant access."}},
     {:data_state, "stale",
-     %{kind: :stale, title: "Data may be out of date", body: "The deliveries shown here may not reflect recent activity."}},
+     %{kind: :stale, title: "Data may be out of date", body: "Showing Deliveries as of 14:32. Refresh to load the latest."}},
 
     # Phase 113: deliveries_list — table/cards populated state (DATA-01)
     {:deliveries_list, "table-populated",
