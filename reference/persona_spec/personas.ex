@@ -152,28 +152,35 @@ defmodule MailglassDemo.Personas do
   end
 
   @doc """
-  Materializes the whole cohort into `repo`.
+  Materializes the whole cohort into `repo`, anchoring every seeded timestamp to
+  the caller-supplied `occurred_at` origin.
 
   `northstar` is seeded by the caller's existing lifecycle body (so this only
   seeds the NEW personas) — see `MailglassDemo.DemoData.reset!/0`, which runs
-  the northstar lifecycle and then calls `seed!/1` for `fjordline-aps` and
+  the northstar lifecycle and then calls `seed!/2` for `fjordline-aps` and
   `helios-void`. `helios-void` is realized by absence (no insert).
+
+  `occurred_at` MUST be the demo's shared seed anchor (WR-04): folding a private
+  `DateTime.utc_now/0` inside the materializer would tie the fjordline event's
+  `idempotency_key` to a wall-clock second unrelated to the rest of the seed's
+  anchor-relative timestamps, defeating the "determinism is carried by
+  IDs/counts/offsets, never absolute timestamps" contract. The origin is passed
+  in explicitly so all three materializations (demo seed, admin test-support,
+  gallery) share one time origin.
   """
-  @spec seed!(Ecto.Repo.t()) :: :ok
-  def seed!(repo) do
-    Enum.each(spec(), fn persona -> materialize!(repo, persona) end)
+  @spec seed!(Ecto.Repo.t(), DateTime.t()) :: :ok
+  def seed!(repo, %DateTime{} = occurred_at) do
+    Enum.each(spec(), fn persona -> materialize!(repo, persona, occurred_at) end)
     :ok
   end
 
   # northstar is materialized by the existing DemoData lifecycle, not here.
-  defp materialize!(_repo, %{name: @northstar}), do: :ok
+  defp materialize!(_repo, %{name: @northstar}, _occurred_at), do: :ok
 
   # helios-void is realized by ABSENCE — zero Delivery rows (D-08).
-  defp materialize!(_repo, %{name: @helios_void}), do: :ok
+  defp materialize!(_repo, %{name: @helios_void}, _occurred_at), do: :ok
 
-  defp materialize!(repo, %{name: @fjordline, payload: payload}) do
-    occurred_at = DateTime.truncate(DateTime.utc_now(), :second)
-
+  defp materialize!(repo, %{name: @fjordline, payload: %{kind: :single_delivery} = payload}, occurred_at) do
     delivery =
       %{
         tenant_id: @fjordline,

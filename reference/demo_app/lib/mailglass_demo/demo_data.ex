@@ -31,8 +31,11 @@ defmodule MailglassDemo.DemoData do
     # above (Personas.seed! no-ops it); this adds fjordline-aps (single
     # Delivery, non-ASCII / long-ID / null edge cases) and leaves helios-void
     # absent (zero deliveries — the no-data edge). Runs at every harness boot
-    # via seeds.exs, which also serves RATCHET-04.
-    MailglassDemo.Personas.seed!(Repo)
+    # via seeds.exs, which also serves RATCHET-04. Thread the shared seed anchor
+    # (WR-04) so the persona materializer's timestamps — and the fjordline event
+    # idempotency_key derived from them — stay anchor-relative like the rest of
+    # the seed, instead of re-reading the wall clock inside Personas.
+    MailglassDemo.Personas.seed!(Repo, seed_anchor())
     :ok
   end
 
