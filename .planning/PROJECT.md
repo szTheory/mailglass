@@ -143,16 +143,25 @@ landing + email specimens, four portable SVGs, and a domain-noun copy library.
 
 ## Current State
 
-**v1.13 IN PROGRESS 2026-06-18 (Phases 109-110 complete).** The admin stress-test
-milestone has completed the foundation and primitive layers: Phase 109 merged the
-PR #86 baseline, established system-theme plumbing and semantic z-index/focus/motion
-gates, and Phase 110 promoted the shared admin atoms into public primitives
-(`nav_link`, `nav_pill`, `tenant_chip`, `theme_picker`, `stat_card`). The real shell,
-operator overview, inbound overview, and dev gallery now consume those primitives; the
-gallery certifies light/dark/system primitive states; fail-closed primitive drift,
-stat-card, and icon-inventory gates are armed; and verifier status is `passed` with
-PRIM-01..07 at 7/7. Next intended v1.13 slice is Phase 111 Forms, despite the generic
-GSD backlog pointer currently surfacing Phase 999.1.
+**v1.13 IN PROGRESS 2026-06-20 (Phases 109, 110, 114, 115, 116 complete; 111, 112,
+113 still open; 117 = release cut).** The admin stress-test milestone has its
+foundation, primitives, component-groups, pages/flows, and the fixtures + idempotent
+ratchet-arm landed. Phase 109 merged the PR #86 baseline and established system-theme
+plumbing + semantic z-index/focus/motion gates; Phase 110 promoted the shared admin
+atoms into public primitives (`nav_link`, `nav_pill`, `tenant_chip`, `theme_picker`,
+`stat_card`). **Phase 116 (Fixtures + Idempotent Ratchet-Arm) completed 2026-06-20,
+verifier `passed`, RATCHET-01..05 at 5/5:** a single declarative `MailglassDemo.Personas`
+spec (northstar / fjordline-aps / helios-void stress cohort, materialized into both the
+demo seed and admin test fixtures via a shared `reference/persona_spec/` dir to dodge a
+circular path-dep); a frozen 9-cell WCAG 2.2 AA axe-violation JSON baseline + fail-closed
+comparator; four binary interaction-pillar gates (panel-above-scrim, scroll-chaining,
+focus-restore, CLS≤4px) plus a component×state×{light,dark,system}×{320..wide} gallery
+matrix overflow gate; an executable fail-closed Bucket-A manifest closing all 24 usability
+defects; and a full-matrix run against rich `reference/demo_app` data that promoted the
+54-cell aesthetic + 9-cell axe baselines current→prior with all three comparators green.
+Code review was clean of blockers (0 Critical / 4 Warning / 4 Info — gate-honesty notes,
+none falsifying a must-have). Remaining v1.13 work: Phases 111 (Forms), 112 (App-Shell /
+Tenant Seam — planning WIP), 113 (Data-Display), then 117 (release cut + closeout).
 
 **v1.11 SHIPPED 2026-06-16 (audit `status: passed` — 34/34 requirements, 10/10
 phases, 16/16 integration paths, 7/7 E2E flows).** All ten phases (94-103) closed:
@@ -667,4 +676,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-18 after Phase 110 completed in **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** — foundation and primitive layers are now verified; next intended milestone slice is Phase 111 Forms. Previously: v1.12 Adopter Onboarding & Day-2 Confidence SHIPPED 2026-06-17 (live at 1.7.0 / 1.7.0 / 1.4.0).*
+*Last updated: 2026-06-20 after Phase 116 (Fixtures + Idempotent Ratchet-Arm) completed in **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** — foundation, primitives, component-groups, pages/flows, and the fixtures + idempotent ratchet-arm are verified; remaining v1.13 slices are Phases 111 Forms, 112 App-Shell/Tenant Seam, 113 Data-Display, then 117 release cut. Previously: v1.12 Adopter Onboarding & Day-2 Confidence SHIPPED 2026-06-17 (live at 1.7.0 / 1.7.0 / 1.4.0).*
