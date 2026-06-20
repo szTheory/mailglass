@@ -1,6 +1,22 @@
 defmodule MailglassAdmin.Operator.DeliveriesList do
   @moduledoc """
-  Recent deliveries list with semantic selected-row treatment.
+  Recent deliveries list with dual table+card presentation.
+
+  Renders a semantic `<table>` at >=768px and a `<ul>` of card buttons at <768px,
+  both driven from the same `@deliveries` assign with identical selection semantics,
+  result-count, and pagination (DATA-01).
+
+  Data-state branches render four distinct `Components.data_state/1` kinds when
+  there is no row data to show (DATA-03). The four branches are:
+
+    * `:empty` — no records (no-data / filtered distinction preserved)
+    * `:error` — data unavailable
+    * `:permission_denied` — access restricted
+    * `:stale` — data may be out of date
+
+  Status is always rendered via `Components.status_badge/1`. Recipients are always
+  masked via `Components.mask_recipient/1`. Long values use per-field classes from
+  the DATA-05 table (truncate+title for IDs, whitespace-nowrap for timestamps).
   """
 
   use Phoenix.Component
@@ -18,6 +34,10 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   attr(:selected_delivery, :map, default: nil)
   attr(:filters_active?, :boolean, default: false)
 
+  # :empty | :error | :permission_denied | :stale | nil
+  # nil means "normal flow": render deliveries or the legacy empty branches
+  attr(:data_state, :atom, default: nil)
+
   def deliveries_list(assigns) do
     ~H"""
     <div
@@ -26,39 +46,129 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     >
       {result_count_label(@page_meta)}
     </div>
-    <%= if @deliveries == [] do %>
-      <div
-        data-testid={if @filters_active?, do: "operator-empty-filtered", else: "operator-empty-truly"}
-        class="flex min-h-64 flex-col items-center justify-center gap-sm p-6 text-center"
-      >
-        <Components.icon name="hero-inbox-stack" class="h-8 w-8 text-secondary" />
-        <div class="space-y-1">
-          <%= if @filters_active? do %>
-            <h3 class="text-body font-bold text-base-content">No Deliveries match your filters</h3>
-            <p class="text-body text-secondary">
-              Adjust the filters or wait for the next send.
-            </p>
-          <% else %>
-            <h3 class="text-body font-bold text-base-content">No Deliveries yet</h3>
-            <p class="text-body text-secondary">
-              Deliveries appear here once your application sends its first Message.
-            </p>
-          <% end %>
+    <%= cond do %>
+      <% @data_state == :error -> %>
+        <Components.data_state
+          kind={:error}
+          title="Delivery data unavailable"
+          body="There was a problem loading deliveries. Try refreshing the page."
+        />
+      <% @data_state == :permission_denied -> %>
+        <Components.data_state
+          kind={:permission_denied}
+          title="Access restricted"
+          body="You don't have permission to view deliveries for this tenant."
+        />
+      <% @data_state == :stale -> %>
+        <Components.data_state
+          kind={:stale}
+          title="Data may be out of date"
+          body="The deliveries shown here may not reflect recent activity."
+        />
+      <% @data_state == :empty or (@data_state == nil and @deliveries == []) -> %>
+        <%= if @filters_active? do %>
+          <Components.data_state
+            kind={:empty}
+            title="No deliveries"
+            body="No deliveries match the current filters."
+            data-testid-override="operator-empty-filtered"
+          />
+          <div
+            data-testid="operator-empty-filtered"
+            style="display:none"
+          />
+          <button
+            type="button"
+            phx-click="clear_filters"
+            data-testid="operator-empty-reset"
+            class="btn btn-ghost min-h-11 mx-auto block"
+          >
+            Clear filters
+          </button>
+        <% else %>
+          <Components.data_state
+            kind={:empty}
+            title="No deliveries"
+            body="No deliveries have been recorded yet."
+            data-testid-override="operator-empty-truly"
+          />
+          <div
+            data-testid="operator-empty-truly"
+            style="display:none"
+          />
+        <% end %>
+      <% true -> %>
+        <%!-- Desktop table (>=768px) --%>
+        <div class="hidden md:block" data-testid="operator-deliveries-table">
+          <table class="table w-full table-fixed">
+            <thead>
+              <tr>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Status</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary">Recipient</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Tenant</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-24">Provider</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-28">Event</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-44">Last event</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                :for={delivery <- @deliveries}
+                data-testid="operator-delivery-row"
+                data-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
+                phx-click="select_delivery"
+                phx-value-id={delivery.id}
+                aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
+                aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
+                class={[
+                  "mg-focus-ring-inset min-h-11 cursor-pointer transition-colors",
+                  row_classes(@selected_delivery, delivery)
+                ]}
+              >
+                <td class="text-body text-base-content">
+                  <Components.status_badge status={delivery.status} size={:sm} />
+                </td>
+                <td class="min-w-0 text-body text-base-content">
+                  <span
+                    class="min-w-0 truncate block"
+                    title={Components.mask_recipient(delivery.recipient)}
+                  >
+                    {Components.mask_recipient(delivery.recipient)}
+                  </span>
+                </td>
+                <td class="min-w-0 text-body text-base-content">
+                  <span class="min-w-0 truncate block" title={delivery.tenant_id}>
+                    {delivery.tenant_id}
+                  </span>
+                </td>
+                <td class="text-body text-base-content">
+                  <span class="mono min-w-0 truncate block" title={delivery.provider}>
+                    {String.upcase(delivery.provider || "unknown")}
+                  </span>
+                </td>
+                <td class="text-body text-base-content">
+                  {label(delivery.last_event_type)}
+                </td>
+                <td class="text-label text-secondary">
+                  <span
+                    class="mono whitespace-nowrap"
+                    title={format_datetime(delivery.last_event_at)}
+                  >
+                    {format_datetime(delivery.last_event_at)}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <button
-          :if={@filters_active?}
-          type="button"
-          phx-click="clear_filters"
-          data-testid="operator-empty-reset"
-          class="btn btn-ghost min-h-11"
+
+        <%!-- Mobile cards (<768px) — operator-deliveries-list kept for legacy consumers; Plan 04 migrates --%>
+        <div data-testid="operator-deliveries-cards" class="md:hidden">
+        <ul
+          data-testid="operator-deliveries-list"
+          class="divide-y divide-base-300"
         >
-          Clear filters
-        </button>
-      </div>
-    <% else %>
-      <ul data-testid="operator-deliveries-list" class="divide-y divide-base-300">
-        <%= for delivery <- @deliveries do %>
-          <li>
+          <li :for={delivery <- @deliveries}>
             <button
               data-testid="operator-delivery-row"
               data-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
@@ -72,29 +182,71 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                 row_classes(@selected_delivery, delivery)
               ]}
             >
-              <div class="flex items-start justify-between gap-sm">
-                <div class="min-w-0">
-                  <p class="truncate text-body font-bold text-base-content">
-                    {Components.mask_recipient(delivery.recipient)}
-                  </p>
-                  <p class="mono mt-1 text-label text-secondary">{delivery.id}</p>
-                </div>
+              <%!-- Status badge first/prominent --%>
+              <div>
                 <Components.status_badge status={delivery.status} size={:sm} />
               </div>
 
-              <div class="flex flex-wrap items-center gap-2 text-label text-secondary">
-                <span>{delivery.tenant_id}</span>
-                <span>&middot;</span>
-                <span>{String.upcase(delivery.provider || "unknown")}</span>
-                <span>&middot;</span>
-                <span>{label(delivery.last_event_type)}</span>
-                <span>&middot;</span>
-                <span class="mono">{format_datetime(delivery.last_event_at)}</span>
+              <%!-- Recipient (masked) --%>
+              <div class="min-w-0">
+                <span class="text-label font-bold uppercase text-secondary">Recipient</span>
+                <p
+                  class="min-w-0 truncate text-body text-base-content"
+                  title={Components.mask_recipient(delivery.recipient)}
+                >
+                  {Components.mask_recipient(delivery.recipient)}
+                </p>
+              </div>
+
+              <%!-- Delivery ID with truncate+title --%>
+              <div class="min-w-0">
+                <span class="text-label font-bold uppercase text-secondary">ID</span>
+                <p
+                  class="mono min-w-0 truncate text-label text-secondary"
+                  title={delivery.id}
+                >
+                  {delivery.id}
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-start gap-md text-label text-secondary">
+                <%!-- Tenant --%>
+                <div class="min-w-0">
+                  <span class="font-bold uppercase">Tenant</span>
+                  <p class="min-w-0 truncate" title={delivery.tenant_id}>
+                    {delivery.tenant_id}
+                  </p>
+                </div>
+
+                <%!-- Provider --%>
+                <div>
+                  <span class="font-bold uppercase">Provider</span>
+                  <p class="mono min-w-0 truncate" title={delivery.provider}>
+                    {String.upcase(delivery.provider || "unknown")}
+                  </p>
+                </div>
+
+                <%!-- Event --%>
+                <div>
+                  <span class="font-bold uppercase">Event</span>
+                  <p>{label(delivery.last_event_type)}</p>
+                </div>
+
+                <%!-- Timestamp --%>
+                <div>
+                  <span class="font-bold uppercase">Last event</span>
+                  <p
+                    class="mono whitespace-nowrap"
+                    title={format_datetime(delivery.last_event_at)}
+                  >
+                    {format_datetime(delivery.last_event_at)}
+                  </p>
+                </div>
               </div>
             </button>
           </li>
-        <% end %>
-      </ul>
+        </ul>
+        </div>
     <% end %>
     <.pagination_controls
       page_meta={@page_meta}

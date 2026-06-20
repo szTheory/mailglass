@@ -43,10 +43,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
-      assert html =~ "No Deliveries yet"
+      assert html =~ "No deliveries"
 
       assert html =~
-               "Deliveries appear here once your application sends its first Message."
+               "No deliveries have been recorded yet."
 
       assert html =~ "Select a delivery to inspect its event timeline and suppression state."
     end
@@ -692,8 +692,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           filters_active?: true
         )
 
-      assert html =~ "No Deliveries match your filters"
-      assert html =~ "Adjust the filters or wait for the next send."
+      assert html =~ "No deliveries"
+      assert html =~ "No deliveries match the current filters."
       assert html =~ ~s(phx-click="clear_filters")
       assert html =~ ~s(data-testid="operator-empty-filtered")
     end
@@ -706,8 +706,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           filters_active?: false
         )
 
-      assert html =~ "No Deliveries yet"
-      assert html =~ "Deliveries appear here once your application sends its first Message."
+      assert html =~ "No deliveries"
+      assert html =~ "No deliveries have been recorded yet."
       assert html =~ ~s(data-testid="operator-empty-truly")
       refute html =~ ~s(phx-click="clear_filters")
     end
