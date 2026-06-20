@@ -2,28 +2,33 @@
 phase: 116-fixtures-idempotent-ratchet-arm
 reviewed: 2026-06-20T00:00:00Z
 depth: standard
-files_reviewed: 15
+files_reviewed: 19
 files_reviewed_list:
-  - reference/persona_spec/personas.ex
-  - reference/demo_app/lib/mailglass_demo/demo_data.ex
-  - reference/demo_app/mix.exs
-  - reference/demo_app/assets/e2e/cohort.spec.js
+  - mailglass_admin/docs/axe-baseline.json
+  - mailglass_admin/docs/ui-baseline-scores.json
+  - mailglass_admin/e2e/axe-baseline.spec.js
+  - mailglass_admin/e2e/gallery-matrix.spec.js
+  - mailglass_admin/e2e/structural.spec.js
   - mailglass_admin/lib/mailglass_admin/gallery_live.ex
   - mailglass_admin/mix.exs
+  - mailglass_admin/package-lock.json
+  - mailglass_admin/package.json
+  - mailglass_admin/priv/static/app.css
   - mailglass_admin/scripts/check-conformance.sh
-  - mailglass_admin/test/support/operator_fixtures.ex
-  - mailglass_admin/test/mailglass_admin/persona_cohort_test.exs
-  - mailglass_admin/test/mailglass_admin/persona_drift_guard_test.exs
   - mailglass_admin/test/mailglass_admin/axe_baseline_test.exs
   - mailglass_admin/test/mailglass_admin/bucket_a_coverage_test.exs
-  - mailglass_admin/e2e/axe-baseline.spec.js
-  - mailglass_admin/e2e/structural.spec.js
-  - mailglass_admin/e2e/gallery-matrix.spec.js
+  - mailglass_admin/test/mailglass_admin/persona_cohort_test.exs
+  - mailglass_admin/test/mailglass_admin/persona_drift_guard_test.exs
+  - mailglass_admin/test/support/operator_fixtures.ex
+  - reference/demo_app/assets/e2e/cohort.spec.js
+  - reference/demo_app/lib/mailglass_demo/demo_data.ex
+  - reference/demo_app/mix.exs
+  - reference/persona_spec/personas.ex
 findings:
   critical: 0
-  warning: 4
+  warning: 5
   info: 4
-  total: 8
+  total: 9
 status: issues_found
 ---
 
@@ -31,183 +36,219 @@ status: issues_found
 
 **Reviewed:** 2026-06-20
 **Depth:** standard
-**Files Reviewed:** 15
+**Files Reviewed:** 19
 **Status:** issues_found
 
 ## Summary
 
-Phase 116 is test-infrastructure, fixtures, and dev-only UI: a multi-tenant persona
-stress cohort with a fail-closed drift-guard, a WCAG 2.2 AA axe baseline + comparator,
-Playwright structural/interaction gates, a widened gallery, a 24-defect Bucket-A
-coverage manifest, and promoted aesthetic+axe baselines. The work is careful and
-well-documented, with most gates correctly designed to fail closed.
+Phase 116 ("fixtures-idempotent-ratchet-arm") wires a single-source-of-truth
+persona cohort spec into three materializers (demo seed, admin test-support,
+gallery specimens), arms an axe-violation ratchet, and adds an executable
+Bucket-A coverage manifest. The prior WR-01..WR-04 fixes hold: the axe producer
+generates a per-invocation unique `run_id` (axe-baseline.spec.js:270), refuses to
+write a `current.run_id` equal to the committed `prior.run_id` (lines 277-283),
+the persona drift-guard fail-closed test now drives the real `materialized ==
+spec_bearing` comparison through shared helpers (persona_drift_guard_test.exs:99-136),
+and the axe producer throws on a required overlay that won't open
+(openOverlay/openDeliveries/openInbound).
 
-No BLOCKER/Critical defects: there are no security holes, data-loss paths, or
-crashes. The append-only / no-PII / structured-error conventions are respected, and
-the FROZEN baselines (`reference/demo_app`, `host_app`) were not destabilized in any
-committed lockfile.
+The defects below are concentrated where the phase's own thesis lives: artifact
+**idempotency/determinism** and **ratchet honesty**. The most material finding
+is that the committed `current` axe block in `docs/axe-baseline.json` could not
+have been produced by the committed producer — its `run_id` format does not match
+the producer's output — so the "current" half of the ratchet is a hand-authored
+placeholder, not a measured scan. Several manifest/coverage citations also assert
+properties their cited guards do not actually enforce, which weakens the
+fail-closed contract the phase is built to provide.
 
-The findings that matter are all about *gate honesty* — places where a ratchet or
-drift-guard can pass vacuously, silently flip a comparator test red on a benign
-re-run, or assert a tautology instead of the property it claims to prove. For a phase
-whose entire deliverable is "idempotent, fail-closed gates," these are real Warnings:
-a gate that lies is worse than no gate. The Info items are minor consistency notes on
-dev-only surfaces.
+No blocking security or data-loss defects were found. Generated bundles
+(`package-lock.json`, `priv/static/app.css`) were noted as generated and not
+style-reviewed.
 
 ## Warnings
 
-### WR-01: Axe producer's hardcoded run_id collides with the committed `prior.run_id` on a same-day re-run
+### WR-01: Committed `current` axe baseline was not produced by the committed producer
 
-**File:** `mailglass_admin/e2e/axe-baseline.spec.js:233`
-**Issue:** The producer derives the fresh `current` run_id as a date-stamped literal:
-
-```js
-const runId = `${new Date().toISOString().slice(0, 10)}-phase-116-axe`;
-```
-
-The committed baseline (`docs/axe-baseline.json`) now has
-`prior.run_id = "2026-06-20-phase-116-axe"` (plan 116-06 promoted the producer's
-output into `prior`) and `current.run_id = "axe-2026-06-20-phase-116"` (hand-assigned
-a *different* shape in 116-06 to dodge the collision). If anyone re-runs the producer
-with `PERSIST_AXE_BASELINE=1` on 2026-06-20, it writes `current.run_id =
-"2026-06-20-phase-116-axe"` — byte-identical to the committed `prior.run_id`. The
-ExUnit anti-vacuity guard (`axe_baseline_test.exs:93`,
-`b["prior"]["run_id"] != b["current"]["run_id"]`) then fails the suite. The producer's
-output format and the committed shape have already diverged (`-phase-116-axe` vs
-`axe-...-phase-116`), so the "regenerate the baseline" command documented in the spec
-header and in `axe_baseline_test.exs:13` is no longer round-trippable without a manual
-edit. This is exactly the kind of silent, dated, milestone-pinned literal a future
-re-baseline will trip over.
-**Fix:** Make the run_id unique per invocation and decoupled from the milestone date,
-e.g. append a timestamp/uuid suffix and drop the hardcoded `phase-116`:
+**File:** `mailglass_admin/docs/axe-baseline.json:69`
+**Issue:** The committed `current.run_id` is `"axe-2026-06-20-phase-116"`. The
+producer that owns this block generates the run_id as:
 
 ```js
 const runId = `axe-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 ```
 
-and have the producer *never* emit a run_id that can equal the existing `prior.run_id`
-(read `existing.prior.run_id` and assert inequality before writing).
+(axe-baseline.spec.js:270), which yields `axe-2026-06-20T14-32-07-123Z`-shaped
+strings carrying a full ISO timestamp. The committed value embeds a hand-typed
+milestone label (`-phase-116`) and no timestamp, so it cannot have come from a
+real `PERSIST_AXE_BASELINE=1` run — it was authored by hand. The `current`
+violations block is also byte-identical to `prior` (verified: every cell is
+`total: 1` with the same rule-id). This means the "current" half of the ratchet
+is a placeholder rather than a measured scan, defeating the point of a
+prior→current ratchet for this commit: a regression introduced now would not be
+caught because `current` was never actually measured against the live surfaces.
+The anti-vacuity guard (`prior.run_id != current.run_id`,
+axe_baseline_test.exs:93) passes only because the two were given different
+hand-typed labels.
+**Fix:** Regenerate the baseline from the live surfaces so `current` reflects a
+real scan:
 
-### WR-02: Persona drift-guard "fails closed" test is a tautology — it never exercises the guard
-
-**File:** `mailglass_admin/test/mailglass_admin/persona_drift_guard_test.exs:110-132`
-**Issue:** The test named "adding a persona to spec() without materializing it fails
-closed" does not add a persona to `spec()` or run the real guard. It builds a
-throwaway list by appending `"phantom-persona"` to the spec-derived names *in the test
-body*, then asserts:
-
-```elixir
-refute Enum.sort(drifted_spec_bearing) == Enum.sort(materialized)
+```bash
+cd mailglass_admin && PERSIST_AXE_BASELINE=1 \
+  npm run test:operator-browser -- axe-baseline.spec.js
 ```
 
-`drifted_spec_bearing` always contains `"phantom-persona"` and `materialized` never
-will, so this `refute` is true by construction regardless of how (or whether) the
-production drift-guard behaves. It proves the local `==` operator works, not that
-`OperatorFixtures.seed_persona_cohort!/0` plus the real assertion in the sibling test
-("deliveries-bearing personas in the spec are exactly the ones materialized") actually
-fail closed when `spec/0` gains an unmaterialized persona. A reviewer reading the test
-name would believe the fail-closed property is covered; it is not.
-**Fix:** Drive the real guard with a genuinely-drifted spec. Either inject a stub spec
-provider, or assert that the production comparison
-(`materialized == spec_bearing`) would raise — e.g. capture the comparison the guard
-uses and prove that a spec with an extra bearing persona but unchanged DB makes it
-unequal. At minimum, rename the test so it does not overstate what it verifies.
+Commit the resulting `current` block (whose `run_id` will carry a real
+timestamp). If `prior` and `current` are legitimately equal, that is fine — but
+`current` must still be a producer output, not a hand-edited clone, or the
+ratchet is comparing nothing measured.
 
-### WR-03: Gallery drift-guard intent heuristic ignores its `label` argument — all four literals share one coarse trigger
+### WR-02: Bucket-A `A16-axe` cites a "system cell <= dark cell" property that no guard enforces
 
-**File:** `mailglass_admin/test/mailglass_admin/persona_drift_guard_test.exs:202-209,229-231`
-**Issue:** `gallery_intends_literal?(gallery_src, _label)` discards the per-literal
-`label` and returns `String.contains?(gallery_src, "fjordline-aps")` for *every*
-literal. The caller then also gates on `String.contains?(gallery_src, "fjordline")`.
-Net effect: the moment the gallery mentions `"fjordline-aps"` anywhere (it does, in
-several captions), the byte-consistency assertion activates for all four literals
-simultaneously and stays active. That means the guard cannot distinguish "the gallery
-mirrors the long-id specimen" from "the gallery mirrors the CJK name specimen" — if a
-future edit drops one specimen's value but keeps the `"fjordline-aps"` caption token,
-the guard still demands *all four* values be byte-present and will fail on the wrong
-one, or (if the dropped value was never required) pass for the wrong reason. The
-heuristic is advertised in the docstring as per-label ("if the gallery references the
-persona-namespaced value") but is implemented as a single global trigger.
-**Fix:** Tie the intent signal to a per-literal namespaced testid/state rather than the
-shared caption token, e.g. check for the specific `gallery-fjordline_stress-fjordline-long-id`
-testid when `label == :long_delivery_id`, so each literal's presence is governed
-independently and a dropped specimen is detected precisely.
+**File:** `mailglass_admin/test/mailglass_admin/bucket_a_coverage_test.exs:126`
+**Issue:** The manifest row is
+`%{id: "A16-axe", desc: "Axe WCAG 2.2 AA baseline (system cell <= dark cell)", guard_kind: :axe, locator: "axe-baseline.json", status: :live}`.
+The `:axe` citation test (lines 246-263) only asserts that the literal string
+`"axe-baseline.json"` appears in `axe_baseline_test.exs` and that three files
+exist. It does **not** verify any system-vs-dark parity. Inspection of both
+`axe_baseline_test.exs` and `axe-baseline.spec.js` confirms there is no
+`system <= dark` assertion anywhere — `compare_axe/2` only ratchets each cell
+against its own prior value. So Bucket-A defect A16 (system-parity variant) is
+marked `:live` on a guard that proves a weaker property than the row describes.
+This is the "STALE / vacuous CITATION" failure mode the manifest's own moduledoc
+(lines 18-19) claims to prevent.
+**Fix:** Either (a) add a real assertion to `axe_baseline_test.exs` that for each
+surface `current.violations[surface]["system"].total <= ...["dark"].total` (and
+per-rule), then keep the citation; or (b) correct the `A16-axe` `desc` to state
+only what the guard checks (a fail-closed prior→current axe ratchet that includes
+the system cell) so the ledger does not overclaim.
 
-### WR-04: Axe producer best-effort overlay open can silently under-count violations and still promote the baseline
+### WR-03: `compare_axe` per-rule diff tolerates a `nil`/missing rules map under a flat total
 
-**File:** `mailglass_admin/e2e/axe-baseline.spec.js:154-160,98-114`
-**Issue:** `openOverlay` swallows *all* errors from the opener
-(`catch (_err) { /* scan the surface alone */ }`). The opener does the row click,
-detail-column wait, replay-open click, and `[role=dialog]` assertions. If any of those
-break (a renamed testid, a fixture with no replayable row, a timing regression), the
-producer silently scans the surface *without* the overlay, measures fewer failing
-nodes, and — under `PERSIST_AXE_BASELINE=1` — happily writes that lower count as the
-new `current`. Because the ratchet is "meet-or-beat," a silently-lowered baseline then
-*tightens* the floor: a later legitimate run that does open the overlay reads as a
-regression, OR (worse) a genuine new overlay violation is masked because the baseline
-was captured overlay-free. The fold of overlay violations into the surface (D-03) is
-the whole point of the producer, and it is exactly the part that can vanish without a
-trace. This is a non-deterministic gate input.
-**Fix:** Distinguish "this surface legitimately has no overlay" (preview) from "the
-overlay open failed unexpectedly." For deliveries/inbound, let the opener failure throw
-(fail the producer test) rather than catching unconditionally, or record a per-cell
-`overlay_opened: true|false` flag in the JSON and assert it stays `true` for the two
-scrim-backed surfaces so an overlay-free scan cannot be promoted unnoticed.
+**File:** `mailglass_admin/test/mailglass_admin/axe_baseline_test.exs:218`
+**Issue:** `cc["rules"] || %{}` silently coerces a missing/`nil` current rules map
+to empty. The shape test (lines 68-88) runs only over committed JSON, so it does
+not guard a future producer regression. If a producer bug emitted a cell as
+`{total: 2, rules: null}`, the comparator's rising-total branch (line 210) is the
+only thing that could catch it — and only if the total actually rose. A cell that
+went `{total: 2, rules: {color-contrast: 2}}` → `{total: 2, rules: null}` (same
+total, lost rule detail) passes clean, masking a rule swap. The per-rule loop also
+iterates `cc["rules"]` only, so a prior rule absent from current is never examined
+(benign for a ratchet, but combined with the coercion it makes "rules became null"
+indistinguishable from genuine improvement). Not a live failure today (committed
+data is well-formed) but it weakens the fail-closed guarantee the moduledoc
+advertises.
+**Fix:** Fail closed when a present cell has a non-map `rules` under a non-zero
+total:
+
+```elixir
+true ->
+  cond do
+    not is_map(cc["rules"]) ->
+      "#{surface}.#{theme}: current rules map missing/non-map (cannot diff)"
+    true ->
+      # ... existing per-rule diff ...
+  end
+```
+
+### WR-04: Demo fjordline materializer uses raw `utc_now`, bypassing the deterministic seed anchor
+
+**File:** `reference/persona_spec/personas.ex:175`
+**Issue:** The demo `reset!/0` establishes a process-stored seed anchor
+(`Process.put(@anchor_key, DateTime.truncate(DateTime.utc_now(), :second))`,
+demo_data.ex:25) so all northstar timestamps are anchor-relative via
+`minutes_ago/1`. The moduledoc (demo_data.ex:14-18) states determinism "is carried
+by IDs/counts/offsets ... never by absolute timestamps." But the fjordline persona
+is materialized by `Personas.materialize!/2`, which computes its own
+`occurred_at = DateTime.truncate(DateTime.utc_now(), :second)` (personas.ex:175)
+instead of reading the demo anchor, and then folds `DateTime.to_unix(occurred_at)`
+into the event `idempotency_key` (personas.ex:211). So the seeded fjordline event
+key is tied to an absolute wall-clock second that diverges from the rest of the
+seed's anchor-relative timestamps, and from the admin materializer (which uses
+`hours_ago(1)`, operator_fixtures.ex:231-236). The cohort spec is the single source
+of truth for *values* but not for *time origin* — the same persona lands at
+unrelated instants across the two materializations, the inconsistency this phase's
+"idempotent fixtures" thesis is meant to eliminate.
+**Fix:** Thread the time origin through the materializer rather than re-reading the
+clock inside `Personas`. Pass an `occurred_at`/anchor argument into
+`seed!/1` → `materialize!/2` (demo passes its anchor; admin passes `hours_ago(1)`)
+so all three materializations share one explicit origin.
+
+### WR-05: Persona materializers use a positional catch-all clause that silently mis-materializes unknown payload kinds
+
+**File:** `mailglass_admin/test/support/operator_fixtures.ex:215`
+**Issue:** `materialize_persona!/1` dispatches on map shape: `%{payload: %{kind:
+:no_deliveries}}`, `%{payload: %{kind: :lifecycle}}`, then a bare catch-all
+`%{name: name, payload: payload}` (line 215) that assumes the fjordline
+single-delivery shape. The catch-all is positional: any future persona added to
+`spec/0` with a new `payload.kind` (or a typo'd kind) falls into the fjordline
+branch and is materialized as a fjordline-style delivery — or crashes mid-insert on
+a missing `payload.recipient`/`payload.long_delivery_id`. `Personas.materialize!/2`
+(personas.ex:174) has the identical positional risk for its `:fjordline` clause.
+The drift-guard checks tenant_id presence, not that each persona materialized via
+its intended branch, so a mis-dispatch could pass the guard.
+**Fix:** Match the kind explicitly and let an unknown kind raise:
+
+```elixir
+defp materialize_persona!(%{name: name, payload: %{kind: :single_delivery} = payload}) do
+  # ... existing fjordline body ...
+end
+# no catch-all — an unknown payload.kind raises FunctionClauseError (fail-closed)
+```
 
 ## Info
 
-### IN-01: `fjordline` persona event uses wall-clock `utc_now`, diverging from the demo's seed-anchor determinism convention
+### IN-01: `bucket_a_coverage_test.exs` A24 `do: "—"` citation is brittle to gate reformatting
 
-**File:** `reference/persona_spec/personas.ex:175,205,209`
-**Issue:** `materialize!/2` for fjordline-aps stamps `occurred_at` /
-`last_event_at` with `DateTime.utc_now()` truncated, not the demo's
-`@anchor_key`-based `minutes_ago/1`. `demo_data.ex:14-18` explicitly documents that the
-northstar seed ages out of the operator recency windows by an anchored offset, and that
-"Determinism is carried by IDs/counts/offsets ... never by absolute timestamps." The
-fjordline delivery therefore always renders as "now," inconsistent with the rest of the
-cohort. This is harmless for the cohort assertions (they key off IDs/values, not
-recency) but is a determinism-convention drift worth a comment or alignment.
-**Fix:** Either thread the demo seed anchor into `seed!/1`, or add a short comment in
-`personas.ex` noting the intentional always-fresh stamping and why it does not need the
-anchor (the cohort tests never assert on fjordline recency).
+**File:** `mailglass_admin/test/mailglass_admin/bucket_a_coverage_test.exs:157`
+**Issue:** The A24 `:grep_gate` locator is the literal `do: \"—\"`, matched verbatim
+against `check-conformance.sh` (test line 218). The script contains `do: "—"` inside
+STATCARD-GATE (check-conformance.sh:143), so it passes today — but the citation
+depends on exact spacing surviving the shell pattern. A whitespace-only edit to that
+gate (e.g. `do:"—"`) would break the citation and surface as a confusing
+"STALE CITATION (A24)" failure unrelated to any real regression.
+**Fix:** Cite the gate by its stable name (`STATCARD-GATE`) like the other rows, or
+pin the `do: "—"` token with a comment in the shell script so an editor knows not to
+reformat it.
 
-### IN-02: Demo landing-page summary count now silently includes the fjordline-aps delivery while labeled with the northstar tenant
+### IN-02: `gallery_intends_literal?` state strings are duplicated, uncross-checked, in the matrix spec
 
-**File:** `reference/demo_app/lib/mailglass_demo/demo_data.ex:39-47`
-**Issue:** `summary/0` returns `tenant_id: @tenant` ("northstar") next to
-`deliveries: Repo.aggregate(Delivery, :count)`, which is a *global* count across all
-tenants. Phase 116 adds the fjordline-aps delivery, so the dev landing page's
-"northstar … N deliveries" stat is now off by one (counts a non-northstar row). It is a
-dev-only cosmetic page and the aggregate was already global pre-116, so this is minor —
-but the new cohort makes the tenant label visibly inconsistent with the number.
-**Fix:** Scope the aggregate to `@tenant` (`where: d.tenant_id == @tenant`) if the card
-is meant to describe northstar, or relabel the card as a global total.
+**File:** `mailglass_admin/test/mailglass_admin/persona_drift_guard_test.exs:274`
+**Issue:** `@fjordline_specimen_states` keys on state strings (e.g.
+`"fjordline-long-id"`) that are also hardcoded as testid suffixes in
+`gallery-matrix.spec.js` STRESS_CELLS (lines 48-58). The two lists are maintained
+independently with no cross-check. If the gallery drops a specimen state, the matrix
+spec fails at runtime, but the drift-guard (reading only `gallery_live.ex`) silently
+relaxes that literal's byte-consistency requirement — the same regression surfaces in
+two unrelated places, or not at all in the guard.
+**Fix:** Add a small assertion that every fjordline state in `@fjordline_specimen_states`
+appears in the matrix STRESS_CELLS list (or derive one from the other) so a dropped
+specimen fails one obvious place.
 
-### IN-03: `mailglass_admin/mix.exs` inbound-dep comment vs. constraint drift (≥ doc accuracy)
+### IN-03: ICON-EXISTS-GATE cannot distinguish "zero icons used" from "scan found nothing"
 
-**File:** `mailglass_admin/mix.exs:102-106,164-184`
-**Issue:** The dep comment at lines 102-106 describes the inbound sibling as "FLOATING
-(`~> 0.2`, never `==`)", but the actual constraint (line 180) and the surrounding block
-(lines 164-172) are `~> 1.1`. The two comments disagree about the floating line. The
-116-02 SUMMARY also restates the stale `~> 0.2`. Not a functional defect (the live
-constraint is `~> 1.1`), but the contradictory inline doc is a future-maintainer trap
-in a file whose entire purpose is hand-maintained version pins.
-**Fix:** Update the line 102-106 comment to `~> 1.1` to match the live constraint and
-the line 164-172 block.
+**File:** `mailglass_admin/scripts/check-conformance.sh:156`
+**Issue:** `grep -rhoE 'hero-[a-z0-9-]+' "$LIB" ... | sort -u > "$used_icons"` under
+`set -euo pipefail`. `grep` exits non-zero on zero matches; the pipe masks that exit,
+so an empty `used_icons` reads as "no missing icons" and the gate passes. The
+BASH_SOURCE anchoring + dir-exists assert (lines 22-24) mitigates the wrong-cwd case,
+but the gate still cannot tell a genuinely icon-free lib from a failed scan — the same
+vacuity class the script's own comments flag elsewhere.
+**Fix:** After building `used_icons`, assert it is non-empty:
+`[[ -s "$used_icons" ]] || { echo "FAIL: ICON-EXISTS-GATE — zero hero-* usages scanned (path/scan error)" >&2; exit 2; }`.
 
-### IN-04: `bucket_a_coverage_test.exs` declares a `:playwright_testid` guard kind that no manifest row uses
+### IN-04: `axe-baseline.json` `prior.run_id` is a hand-typed label, eroding run_id provenance
 
-**File:** `mailglass_admin/test/mailglass_admin/bucket_a_coverage_test.exs:14,236-244`
-**Issue:** The module documents and tests a `:playwright_testid` guard kind, but no row
-in `@manifest` carries `guard_kind: :playwright_testid`. The corresponding test
-("every :playwright_testid citation literal physically exists") iterates an empty
-comprehension and passes vacuously. Harmless dead branch today, but it is precisely the
-"vacuous pass" shape this manifest is built to prevent, and it can mask a future typo
-(someone adds a `:playwright_testid` row with a stale testid and the dedicated test
-still appears to cover it).
-**Fix:** Either drop the unused guard kind + its test, or add an assertion that at least
-one row exercises it (or that the kind is intentionally reserved), so the empty
-iteration cannot silently certify a future stale citation.
+**File:** `mailglass_admin/docs/axe-baseline.json:4`
+**Issue:** `prior.run_id` is `"2026-06-20-phase-116-axe"` — a hand-authored label, not
+a producer timestamp. The producer preserves `existing.prior` verbatim
+(axe-baseline.spec.js:300), so `prior` is human-managed during a re-baseline by
+design — but pairing a hand-typed `prior` with a hand-typed `current` (WR-01) means
+*neither* committed block traces to a producer run, removing the audit trail the
+run_id exists to provide.
+**Fix:** When promoting `current → prior` (the producer comment assigns this to plan
+116-06), copy the previous real `current.run_id` (a producer timestamp) into
+`prior.run_id` rather than typing a milestone string, so both blocks always trace to
+a producer run.
 
 ---
 
