@@ -153,8 +153,13 @@ defmodule MailglassAdmin.BucketACoverageTest do
       locator: "Bucket-A A22: synchronous inbound mount renders no skeleton", status: :live},
 
     # --- A24: bare "—" / "___" placeholder cards ----------------------------
+    # Cite the gate by its stable NAME (IN-01) rather than the verbatim `do: "—"`
+    # em-dash token: the token lives inside STATCARD-GATE's negative-grep pattern
+    # (check-conformance.sh), and a whitespace-only reformat of that pattern would
+    # break a verbatim-token citation as a confusing "STALE CITATION (A24)"
+    # unrelated to any real regression. The gate name is the durable handle.
     %{id: "A24", desc: "STATCARD-GATE bans the bare em-dash placeholder fallback", guard_kind: :grep_gate,
-      locator: "do: \"—\"", status: :live},
+      locator: "STATCARD-GATE", status: :live},
 
     # --- B-A1: focus not restored to trigger on overlay close ---------------
     %{id: "B-A1", desc: "Focus restored to the opening trigger after overlay close", guard_kind: :playwright_title,
