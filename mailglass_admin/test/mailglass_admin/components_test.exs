@@ -1033,6 +1033,49 @@ defmodule MailglassAdmin.ComponentsTest do
     end
   end
 
+  describe "card/1 — thin group-surface shell (D-01/D-02)" do
+    test "padding={:md} renders the rounded-box surface with p-md and inner_block" do
+      html = render_component(&Components.card/1, %{padding: :md, inner_block: card_body()})
+
+      assert html =~ "rounded-box"
+      assert html =~ "border border-base-300"
+      assert html =~ "bg-base-200"
+      assert html =~ "p-md"
+      refute html =~ "p-lg"
+      assert html =~ "card body"
+    end
+
+    test "padding={:lg} renders p-lg instead of p-md" do
+      html = render_component(&Components.card/1, %{padding: :lg, inner_block: card_body()})
+
+      assert html =~ "p-lg"
+      refute html =~ "p-md"
+    end
+
+    test "padding defaults to :md when the attr is omitted" do
+      html = render_component(&Components.card/1, %{inner_block: card_body()})
+
+      assert html =~ "p-md"
+      refute html =~ "p-lg"
+    end
+
+    test "forwards arbitrary data-* attributes and class overrides through :global @rest" do
+      html =
+        render_component(&Components.card/1, %{
+          "data-testid" => "group-shell",
+          "data-group-card" => "true",
+          class: "extra-class",
+          inner_block: card_body()
+        })
+
+      assert html =~ ~s(data-testid="group-shell")
+      assert html =~ ~s(data-group-card="true")
+      assert html =~ "extra-class"
+    end
+  end
+
+  defp card_body, do: [%{inner_block: fn _, _ -> "card body" end}]
+
   defp assert_all(html, markers) do
     Enum.each(markers, fn marker -> assert html =~ marker end)
   end
