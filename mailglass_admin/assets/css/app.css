@@ -329,9 +329,36 @@ code, pre, .mono {
 }
 
 /* overlay — modal/popover panel enters with a faint scale-up from 0.98 (never
-   from 0 — great-animations). Exit stays instant (server-side :if removal). */
+   from 0 — great-animations). Exit stays instant (server-side :if removal).
+
+   Origin-aware (FLOW-03 / D-07): the existing scale(0.98→1) now scales from an
+   author-declared origin. The trigger sets a FIXED keyword at author time via
+   inline `style="--mg-origin: top right"` (header-anchored/toast); centered
+   confirm modals OMIT the var and fall back to `center`. This re-parameterizes
+   the existing keyframe only — NO new animated property (MOTION-LD-04/10),
+   NO getBoundingClientRect, NO phx-hook (zero-hook lock). Reduced-motion is
+   already neutralized by the global @media block below — no extra rule needed. */
 .motion-overlay {
   animation: mg-overlay var(--duration-reveal) var(--ease-out) both;
+  transform-origin: var(--mg-origin, center);
+}
+
+/* state-layer color transition (FLOW-03 / D-08, inverted default): bulk
+   theme-driven color/border transitions stay OFF by default so a server-side
+   theme re-render never flashes an animated color change. ONLY interactive
+   state layers opt in, at the fast token (90ms ≤ 100ms, MOTION-LD-06). Apply
+   `.mg-state-layer` to interactive chrome whose :hover/:focus color should
+   ease; NEVER declare transition-colors on data-theme-driven root chrome. */
+.mg-state-layer {
+  transition: color var(--duration-instant) var(--ease-out),
+              background-color var(--duration-instant) var(--ease-out),
+              border-color var(--duration-instant) var(--ease-out);
+}
+
+/* scroll-chaining guard (FLOW-02 / D-04): modal scroll containers contain
+   their overscroll so background scrollY stays unchanged at 320px. */
+.mg-overscroll-contain {
+  overscroll-behavior: contain;
 }
 
 /* timeline-in — staggered entrance for chronological event lists. Stagger is
