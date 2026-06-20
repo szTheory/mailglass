@@ -245,10 +245,16 @@ Plans:
   4. A microcopy pass covers the new permission/stale/tenant surfaces — recovery-oriented errors, domain-consistent labels, "Oops" banned across all three surfaces.
 
 **Plans**: 4 plans
+**Wave 1**
+
 - [ ] 115-01-PLAN.md — Microcopy + 320 shell-layout patches + voice_test (FLOW-01/02/04)
 - [ ] 115-02-PLAN.md — Origin-aware overlays + theme-switch suppression + overscroll-contain (FLOW-02/03)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 115-03-PLAN.md — VOICE-GATE + MOTION-GATE conformance additions (FLOW-03/04)
 - [ ] 115-04-PLAN.md — flows.spec.js 5-path walk + structural 320-floor/motion assertions (FLOW-01/02/03)
+
 **UI hint**: yes
 
 ### Phase 116: Fixtures + Idempotent Ratchet-Arm
