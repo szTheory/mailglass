@@ -45,6 +45,9 @@ defmodule MailglassAdmin.GalleryLive do
   STATE-LD-20: device_frame (inactive-btn)
   STATE-LD-21: tabs (inactive-tab)
   STATE-LD-22: sidebar (mailable-collapsed, mailable-expanded, scenario-active)
+  Phase 113: data_state (empty, error, permission-denied, stale)
+  Phase 113: deliveries_list-table (populated table/cards, data-state, long-value stress)
+  Phase 113: records_list-table (populated table/cards, data-state, long-value stress)
 
   Boundary classification: submodule auto-classifies into the
   `MailglassAdmin` root boundary.
@@ -61,6 +64,7 @@ defmodule MailglassAdmin.GalleryLive do
   alias MailglassAdmin.Operator.SuppressionCard
   alias MailglassAdmin.Operator.Timeline
   alias MailglassAdmin.Operator.ReplayModal
+  alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.EvidenceCard
   alias MailglassAdmin.Preview.DeviceFrame
@@ -245,11 +249,33 @@ defmodule MailglassAdmin.GalleryLive do
     """
   end
 
+  defp render_specimen(%{component: :data_state} = assigns) do
+    ~H"""
+    <Components.data_state
+      kind={@assigns_map[:kind]}
+      title={@assigns_map[:title]}
+      body={@assigns_map[:body]}
+    />
+    """
+  end
+
   defp render_specimen(%{component: :deliveries_list} = assigns) do
     ~H"""
     <DeliveriesList.deliveries_list
       deliveries={@assigns_map[:deliveries]}
       selected_delivery={@assigns_map[:selected_delivery]}
+      data_state={@assigns_map[:data_state]}
+    />
+    """
+  end
+
+  defp render_specimen(%{component: :records_list} = assigns) do
+    ~H"""
+    <RecordsList.records_list
+      records={@assigns_map[:records]}
+      selected_record={@assigns_map[:selected_record]}
+      data_state={@assigns_map[:data_state]}
+      empty_state={@assigns_map[:empty_state] || :truly_empty}
     />
     """
   end
@@ -961,6 +987,116 @@ defmodule MailglassAdmin.GalleryLive do
        ],
        current_mailable: MyApp.WelcomeMailer,
        current_scenario: :"with-name"
+     }},
+
+    # Phase 113: data_state — four distinct kinds (DATA-03)
+    {:data_state, "empty",
+     %{kind: :empty, title: "No deliveries", body: "No deliveries have been recorded yet."}},
+    {:data_state, "error",
+     %{kind: :error, title: "Delivery data unavailable", body: "There was a problem loading deliveries. Try refreshing the page."}},
+    {:data_state, "permission-denied",
+     %{kind: :permission_denied, title: "Access restricted", body: "You don't have permission to view deliveries for this tenant."}},
+    {:data_state, "stale",
+     %{kind: :stale, title: "Data may be out of date", body: "The deliveries shown here may not reflect recent activity."}},
+
+    # Phase 113: deliveries_list — table/cards populated state (DATA-01)
+    {:deliveries_list, "table-populated",
+     %{
+       deliveries: [
+         %{
+           id: "del_01JXABCDEF",
+           recipient: "j*@e******.com",
+           status: :delivered,
+           tenant_id: "acme-corp",
+           provider: "postmark",
+           last_event_type: :delivered,
+           last_event_at: ~U[2026-06-14 12:00:00Z]
+         },
+         %{
+           id: "del_01JXGHIJKL",
+           recipient: "a*@m****.io",
+           status: :bounced,
+           tenant_id: "acme-corp",
+           provider: "sendgrid",
+           last_event_type: :bounced,
+           last_event_at: ~U[2026-06-14 11:45:00Z]
+         }
+       ],
+       selected_delivery: nil,
+       data_state: nil
+     }},
+
+    # Phase 113: deliveries_list — data-state error branch (DATA-03)
+    {:deliveries_list, "data-state-error",
+     %{deliveries: [], selected_delivery: nil, data_state: :error}},
+
+    # Phase 113: deliveries_list — long-value stress (DATA-05)
+    {:deliveries_list, "long-value-stress",
+     %{
+       deliveries: [
+         %{
+           id: "del_01JXWIDEVALUE000000000000000000000000000000000000",
+           recipient: "b*****@enterprise-example-company-name.co.uk",
+           status: :deferred,
+           tenant_id: "tenant_01JXWIDEVALUE000000000000000000000000",
+           provider: "postmark-enterprise-relay",
+           last_event_type: :deferred,
+           last_event_at: ~U[2026-06-14 23:59:59Z]
+         }
+       ],
+       selected_delivery: nil,
+       data_state: nil
+     }},
+
+    # Phase 113: records_list — table/cards populated state (DATA-01)
+    {:records_list, "table-populated",
+     %{
+       records: [
+         %{
+           id: "inb_01JXABCDEF",
+           envelope_recipient: "s*@m***.io",
+           outcome: :accepted,
+           mailbox: "MyApp.SupportMailbox",
+           tenant_id: "acme-corp",
+           provider: "sendgrid",
+           received_at: ~U[2026-06-14 12:00:00Z]
+         },
+         %{
+           id: "inb_01JXGHIJKL",
+           envelope_recipient: "b*@e******.com",
+           outcome: :no_match,
+           mailbox: nil,
+           tenant_id: "acme-corp",
+           provider: "postmark",
+           received_at: ~U[2026-06-14 11:45:00Z]
+         }
+       ],
+       selected_record: nil,
+       data_state: nil,
+       empty_state: :truly_empty
+     }},
+
+    # Phase 113: records_list — data-state error branch (DATA-03)
+    {:records_list, "data-state-error",
+     %{records: [], selected_record: nil, data_state: :error, empty_state: :truly_empty}},
+
+    # Phase 113: records_list — long-value stress (DATA-05)
+    {:records_list, "long-value-stress",
+     %{
+       records: [
+         %{
+           id: "inb_01JXWIDEVALUE000000000000000000000000000000000000",
+           envelope_recipient: "b*****@enterprise-example-company-name.co.uk",
+           outcome: :accepted,
+           mailbox: "MyApp.VeryLongSupportMailbox.HandlesAllIncomingMessages",
+           tenant_id: "tenant_01JXWIDEVALUE000000000000000000000000",
+           provider: "sendgrid-enterprise-relay",
+           received_at: ~U[2026-06-14 23:59:59Z]
+         }
+       ],
+       selected_record: nil,
+       data_state: nil,
+       empty_state: :truly_empty
      }}
   ]
 
@@ -1010,4 +1146,6 @@ defmodule MailglassAdmin.GalleryLive do
   defp component_label(:device_frame), do: "device_frame"
   defp component_label(:tabs), do: "tabs"
   defp component_label(:sidebar), do: "sidebar"
+  defp component_label(:data_state), do: "data_state"
+  defp component_label(:records_list), do: "records_list"
 end
