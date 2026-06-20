@@ -283,6 +283,37 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert detail_html =~ selected_delivery.recipient
     end
 
+    # Phase 114 D-10: binds the gallery composed-group specimen
+    # (GalleryLive.composed_support_triage/1) to production reality. The specimen
+    # wraps `<div data-region>` around DetailHeader + SupportCards + Timeline +
+    # SuppressionCard; this asserts the REAL operator detail column carries the
+    # same data-region scope + group testids, so a specimen that drifts from
+    # production composition fails the suite.
+    test "production operator detail column carries data-region + the composed-group testids",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{selected_delivery: selected_delivery} = insert_support_summary_fixture!()
+
+      {:ok, view, _html} =
+        live(
+          conn,
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id})
+        )
+
+      detail_html = view |> element("#delivery-detail-#{selected_delivery.id}") |> render()
+
+      # The data-region scope the plan-04 Floki ancestor-depth proof binds against.
+      assert detail_html =~ "data-region"
+
+      # The four group testids the composed_support_triage specimen assembles, in
+      # the same order operator_live.ex composes them.
+      assert detail_html =~ ~s(data-testid="operator-detail-header")
+      assert detail_html =~ ~s(data-testid="operator-support-cards")
+      assert detail_html =~ ~s(data-testid="operator-timeline")
+      assert detail_html =~ ~s(data-testid="operator-suppression-card")
+    end
+
     test "support card drilldowns reveal concrete webhook, replay audit, orphan, and reconcile exemplars",
          %{conn: conn} do
       conn = operator_conn(conn)
