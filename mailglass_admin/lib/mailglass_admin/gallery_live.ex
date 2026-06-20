@@ -414,6 +414,140 @@ defmodule MailglassAdmin.GalleryLive do
   end
 
   # ---------------------------------------------------------------------------
+  # Composed-group specimens (D-10) — the dispatcher DELEGATES to the public
+  # composed_*/1 fns below so the gallery route and the plan-04 Floki proof
+  # (`render_component(&GalleryLive.composed_*/1, %{})`) render the IDENTICAL
+  # tree. These specimens are structural / data-free; the per-primitive `awk`
+  # dispatcher assertion does NOT apply to them (different shape, RESEARCH).
+  # ---------------------------------------------------------------------------
+
+  defp render_specimen(%{component: :composed_support_triage} = assigns) do
+    ~H"""
+    <div data-testid="gallery-composed-support-triage">
+      <.composed_support_triage />
+    </div>
+    """
+  end
+
+  defp render_specimen(%{component: :composed_routing_evidence} = assigns) do
+    ~H"""
+    <div data-testid="gallery-composed-routing-evidence">
+      <.composed_routing_evidence />
+    </div>
+    """
+  end
+
+  defp render_specimen(%{component: :composed_detail_timeline} = assigns) do
+    ~H"""
+    <div data-testid="gallery-composed-detail-timeline">
+      <.composed_detail_timeline />
+    </div>
+    """
+  end
+
+  # ---------------------------------------------------------------------------
+  # Public composed-group functions (D-10) — capturable as
+  # `&MailglassAdmin.GalleryLive.composed_*/1`. Each wraps `<div data-region>`
+  # around calls to the SAME group-assembling component functions the live
+  # views call (operator_live.ex / inbound_live.ex), in the SAME order — NEVER
+  # a hand-copied HEEx tree (Pitfall 5). They take bare assigns and supply their
+  # own data-free / minimal structural assigns so a render-time proof can
+  # capture them with `%{}`. The `data-group-card` lands on each group's outer
+  # shell once plan 03 swaps `<.card>` into the group modules.
+  # ---------------------------------------------------------------------------
+
+  @doc false
+  # Operator detail column: detail_header + support_cards + timeline + suppression_card
+  # (operator_live.ex:579-593 order).
+  def composed_support_triage(assigns) do
+    assigns =
+      assigns
+      |> assign(:suppression_state, nil)
+      |> assign(:latest_replay, nil)
+      |> assign(:highlight_event_id, nil)
+      |> assign(:delivery, %{
+        id: "del_01JXABCDEF",
+        recipient: "j*@e******.com",
+        status: :delivered,
+        mailable: "MyApp.WelcomeMailer",
+        tenant_id: "acme-corp",
+        provider: "postmark",
+        stream: :transactional,
+        last_event_type: :delivered,
+        last_event_at: ~U[2026-06-14 12:00:00Z],
+        provider_message_id: "msg_abc123"
+      })
+
+    ~H"""
+    <div data-region class="space-y-4">
+      <DetailHeader.detail_header
+        delivery={@delivery}
+        replay_targets={%{status: :unavailable, reason: :no_webhook}}
+        latest_replay={@latest_replay}
+      />
+      <SupportCards.support_cards
+        support_summary={%{
+          failed_ingest: %{count: 0, latest: nil},
+          orphan_backlog: %{count: 0, oldest: nil},
+          replay_outcomes: %{counts: %{failed: 0, noop: 0, replayed: 0}, latest: nil},
+          reconcile_facts: %{
+            reconciled_count: 0,
+            still_unmatched_count: 0,
+            latest_reconciled: nil
+          }
+        }}
+        support_state={%{focused_card: nil, drilldown_banner: nil}}
+        suppression_count={0}
+      />
+      <Timeline.timeline timeline_events={[]} highlight_event_id={@highlight_event_id} />
+      <SuppressionCard.suppression_card suppression_state={@suppression_state} />
+    </div>
+    """
+  end
+
+  @doc false
+  # Inbound routing+evidence group: routing_trace + evidence_card
+  # (inbound_live.ex:493-500 routing/evidence pairing).
+  def composed_routing_evidence(assigns) do
+    assigns = assign(assigns, :evidence, nil)
+
+    ~H"""
+    <div data-region class="space-y-4">
+      <RoutingTrace.routing_trace trace={[]} />
+      <EvidenceCard.evidence_card evidence={@evidence} reveal_state={:redacted} can_reveal?={true} />
+    </div>
+    """
+  end
+
+  @doc false
+  # Inbound detail column head: inbound detail_header + inbound timeline
+  # (inbound_live.ex:491-492 order).
+  def composed_detail_timeline(assigns) do
+    assigns =
+      assign(assigns, :detail, %{
+        record: %{
+          id: "rec-1",
+          tenant_id: "tenant-a",
+          provider: "mailgun",
+          envelope_recipient: "a****@e******.com",
+          subject: "Hello",
+          received_at: ~U[2026-05-24 10:00:00Z]
+        },
+        mailbox: "MyApp.SupportMailbox",
+        outcome: :accept,
+        outcome_reason: nil,
+        evidence: nil
+      })
+
+    ~H"""
+    <div data-region class="space-y-4">
+      <MailglassAdmin.Inbound.DetailHeader.detail_header detail={@detail} />
+      <MailglassAdmin.Inbound.Timeline.timeline runs={[]} />
+    </div>
+    """
+  end
+
+  # ---------------------------------------------------------------------------
   # Specimen list — one entry per STATE-LD row × state atom
   # ---------------------------------------------------------------------------
 
@@ -1097,7 +1231,14 @@ defmodule MailglassAdmin.GalleryLive do
        selected_record: nil,
        data_state: nil,
        empty_state: :truly_empty
-     }}
+     }},
+
+    # Phase 114: composed-group specimens (D-10) — each delegates to a public
+    # composed_*/1 fn that calls the SAME group-assembling fns the live views
+    # call. Data-free / minimal assigns: these are structural specimens.
+    {:composed_support_triage, "operator-detail", %{}},
+    {:composed_routing_evidence, "inbound-routing", %{}},
+    {:composed_detail_timeline, "inbound-detail", %{}}
   ]
 
   defp specimens, do: @specimens
@@ -1148,4 +1289,7 @@ defmodule MailglassAdmin.GalleryLive do
   defp component_label(:sidebar), do: "sidebar"
   defp component_label(:data_state), do: "data_state"
   defp component_label(:records_list), do: "records_list"
+  defp component_label(:composed_support_triage), do: "composed_support_triage"
+  defp component_label(:composed_routing_evidence), do: "composed_routing_evidence"
+  defp component_label(:composed_detail_timeline), do: "composed_detail_timeline"
 end
