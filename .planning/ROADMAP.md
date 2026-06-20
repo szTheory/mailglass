@@ -284,7 +284,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 116-06-PLAN.md (wave 3) — Full matrix incl. demo-data run + promote current→prior + 54-cell & 9-cell re-score, all 3 comparators green (RATCHET-04)
+- [x] 116-06-PLAN.md (wave 3) — Full matrix incl. demo-data run + promote current→prior + 54-cell & 9-cell re-score, all 3 comparators green (RATCHET-04)
 
 **UI hint**: yes
 **Research flag**: light `/gsd-plan-phase` research needed — decide the axe-JSON baseline format (per-surface counts vs rule-id allowlist, matching the existing score-baseline ergonomics) and the `ratchet_baseline_test.exs` schema-v3 cell-count (add `system` as a 3rd theme → 54 cells vs keeping viewport structural-only).
@@ -360,7 +360,7 @@ Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
 | 113. Data-Display | v1.13 | 4/4 | Complete    | 2026-06-20 |
 | 114. Component Groups | v1.13 | 4/4 | Complete    | 2026-06-20 |
 | 115. Pages/Flows + Motion + Microcopy | v1.13 | 4/4 | Complete    | 2026-06-20 |
-| 116. Fixtures + Ratchet-Arm | v1.13 | 5/6 | In Progress|  |
+| 116. Fixtures + Ratchet-Arm | v1.13 | 6/6 | Complete   | 2026-06-20 |
 | 117. Release Cut + Milestone Closeout | v1.13 | 0/TBD | Not started | - |
 
 ## Backlog
