@@ -34,6 +34,12 @@ const baseURL =
 const SURFACES = ["deliveries", "inbound", "preview"];
 const THEMES = ["light", "dark", "system"];
 
+// The two scrim-backed surfaces whose [role=dialog] overlay violations fold
+// into the surface (D-03). For these the overlay MUST open — a silent
+// overlay-free scan under-counts violations and would corrupt the ratchet floor
+// (WR-04). Preview has no overlay and is intentionally absent from this set.
+const OVERLAY_REQUIRED_SURFACES = new Set(["deliveries", "inbound"]);
+
 // docs/axe-baseline.json is a sibling of ui-baseline-scores.json — one level up
 // from e2e/ into mailglass_admin/, then into docs/.
 const BASELINE_PATH = path.join(__dirname, "..", "docs", "axe-baseline.json");
@@ -101,9 +107,10 @@ async function openDeliveries(page, theme) {
   await expect(
     page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
   ).toBeVisible();
-  // Open the replay [role=dialog] overlay (D-03 fold). Best-effort: if no
-  // replayable row exists in this fixture, the surface is scanned without it.
-  await openOverlay(page, async () => {
+  // Open the replay [role=dialog] overlay (D-03 fold). REQUIRED for deliveries:
+  // any failure throws and fails the producer rather than silently scanning the
+  // surface overlay-free and under-counting violations (WR-04).
+  return openOverlay(page, "deliveries", async () => {
     await page.getByTestId("operator-delivery-row").first().click();
     await expect(page.getByTestId("operator-detail-column")).toBeVisible();
     await page.getByTestId("operator-replay-open").click();
@@ -119,7 +126,8 @@ async function openInbound(page, theme) {
   await expect(
     page.getByRole("heading", { name: "Inbound records", level: 1 })
   ).toBeVisible();
-  await openOverlay(page, async () => {
+  // REQUIRED for inbound (see openDeliveries / WR-04): failure throws.
+  return openOverlay(page, "inbound", async () => {
     const replayableRow = page
       .getByTestId("inbound-record-row")
       .filter({
@@ -146,19 +154,33 @@ async function openPreview(page, theme) {
     )
   );
   await expect(page.getByTestId("preview-shell")).toBeVisible();
+  // Preview legitimately has no overlay to fold (D-03) — there is nothing to
+  // open, so report overlay_opened=false WITHOUT it being a failure.
+  return false;
 }
 
-// Runs the opener; if the surface's overlay cannot be opened in this fixture
-// (e.g. no replayable row), the surface is still scanned without it rather than
-// failing the whole producer. The folded scan happens with the overlay open.
-async function openOverlay(page, opener) {
-  try {
-    await opener();
-  } catch (_err) {
-    // No overlay available for this surface/theme — scan the surface alone.
+// Runs the opener for a scrim-backed surface. The overlay fold (D-03) is the
+// whole point of the producer, so an opener failure on a REQUIRED surface
+// throws and fails the producer rather than silently scanning the surface
+// overlay-free and promoting an under-counted baseline (WR-04). Returns true
+// when the overlay opened. `surface` MUST be in OVERLAY_REQUIRED_SURFACES — the
+// previous unconditional `catch` that could mask a renamed testid or timing
+// regression is gone.
+async function openOverlay(page, surface, opener) {
+  if (!OVERLAY_REQUIRED_SURFACES.has(surface)) {
+    throw new Error(
+      `openOverlay called for non-overlay surface "${surface}" — only ` +
+        `${[...OVERLAY_REQUIRED_SURFACES].join(", ")} fold an overlay (D-03).`
+    );
   }
+  // No try/catch: a failure here (renamed testid, no replayable row, timing
+  // regression) is a real producer failure, not a silently-skipped scan.
+  await opener();
+  return true;
 }
 
+// Returns whether the surface's overlay was opened so the producer can assert
+// the two scrim-backed surfaces were never scanned overlay-free (WR-04).
 async function openSurface(page, surface, theme) {
   if (surface === "deliveries") return openDeliveries(page, theme);
   if (surface === "inbound") return openInbound(page, theme);
@@ -187,9 +209,9 @@ function summarizeViolations(violations) {
 
 async function scanSurface(page, surface, theme) {
   await applyTheme(page, theme);
-  await openSurface(page, surface, theme);
+  const overlayOpened = await openSurface(page, surface, theme);
   const results = await new AxeBuilder({ page }).withTags(WCAG_22_AA_TAGS).analyze();
-  return summarizeViolations(results.violations);
+  return { ...summarizeViolations(results.violations), overlay_opened: overlayOpened };
 }
 
 // ---------------------------------------------------------------------------
@@ -208,6 +230,17 @@ test.describe("axe WCAG 2.2 AA baseline producer (RATCHET-03)", () => {
         // Shape assertion — every cell is { total: number, rules: object }.
         expect(typeof cell.total, `${surface}.${theme} total`).toBe("number");
         expect(typeof cell.rules, `${surface}.${theme} rules`).toBe("object");
+        // Fail closed (WR-04): the two scrim-backed surfaces MUST have opened
+        // their overlay so the D-03 fold actually measured the overlay's
+        // violations. An overlay-free scan under-counts and must never be
+        // promoted. (openOverlay also throws on failure; this is the recorded,
+        // assertable backstop.)
+        if (OVERLAY_REQUIRED_SURFACES.has(surface)) {
+          expect(
+            cell.overlay_opened,
+            `${surface}.${theme} must scan with its [role=dialog] overlay open`
+          ).toBe(true);
+        }
         measured[surface] = measured[surface] || {};
         measured[surface][theme] = cell;
       });
@@ -248,10 +281,23 @@ test.describe("axe WCAG 2.2 AA baseline producer (RATCHET-03)", () => {
           "prior.run_id — refusing to write a vacuous self-comparison baseline."
       );
     }
+    // Persist only the committed cell shape ({ total, rules }). The
+    // overlay_opened flag is an in-run fail-closed guard (asserted above), not
+    // part of the committed baseline schema the ExUnit comparator reads — strip
+    // it so the committed JSON stays minimal and byte-stable.
+    const persistedViolations = {};
+    for (const surface of SURFACES) {
+      persistedViolations[surface] = {};
+      for (const theme of THEMES) {
+        const { total, rules } = measured[surface][theme];
+        persistedViolations[surface][theme] = { total, rules };
+      }
+    }
+
     const next = {
       schema_version: 1,
       prior: existing.prior,
-      current: { run_id: runId, violations: measured }
+      current: { run_id: runId, violations: persistedViolations }
     };
     fs.writeFileSync(BASELINE_PATH, JSON.stringify(next, null, 2) + "\n");
   });
