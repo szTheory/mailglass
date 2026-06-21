@@ -386,18 +386,20 @@ jobs:
         # just published, so clear the Hex registry cache and retry deps.get until
         # the freshly-published version resolves.
         run: |
-          # Resolve the just-published linked core from a pristine Hex registry.
-          # Point HEX_HOME at a fresh empty dir so Hex holds NO cached registry and
-          # `mix deps.get` MUST fetch the live one (which includes the new core
-          # version). A stale/CDN-edge-cached registry otherwise yields a sub-100ms
-          # offline "version solving failed" for {:mailglass, "== <core>"}.
-          export HEX_HOME="$(mktemp -d)"
+          # The just-published linked core (mailglass) can raise transitive
+          # requirements that the committed sibling mix.lock still pins to older
+          # versions (e.g. mailglass 1.8.0 needs premailex ~> 1.0 while the lock
+          # pins premailex 0.3.x) — yielding an offline "the lock is incompatible
+          # with mailglass" / "version solving failed". Unlock so deps.get
+          # re-resolves the published core and its updated transitive deps. Retry
+          # for index/CDN propagation slack right after publish-core.
           for attempt in 1 2 3 4 5 6; do
+            mix deps.unlock --all || true
             if mix deps.get; then exit 0; fi
-            echo "deps.get attempt ${attempt} failed (linked core not yet resolvable); retrying with a fresh HEX_HOME in 20s"
-            export HEX_HOME="$(mktemp -d)"
+            echo "deps.get attempt ${attempt} failed (linked core not yet resolvable); retrying in 20s"
             sleep 20
           done
+          mix deps.unlock --all || true
           mix deps.get
       - name: Read mailglass_admin version from mix.exs
         id: version
@@ -486,18 +488,20 @@ jobs:
         # `{:mailglass, "== <core>"}`. Drop the registry cache and retry so
         # deps.get re-fetches the live registry (with index/CDN-propagation slack).
         run: |
-          # Resolve the just-published linked core from a pristine Hex registry.
-          # Point HEX_HOME at a fresh empty dir so Hex holds NO cached registry and
-          # `mix deps.get` MUST fetch the live one (which includes the new core
-          # version). A stale/CDN-edge-cached registry otherwise yields a sub-100ms
-          # offline "version solving failed" for {:mailglass, "== <core>"}.
-          export HEX_HOME="$(mktemp -d)"
+          # The just-published linked core (mailglass) can raise transitive
+          # requirements that the committed sibling mix.lock still pins to older
+          # versions (e.g. mailglass 1.8.0 needs premailex ~> 1.0 while the lock
+          # pins premailex 0.3.x) — yielding an offline "the lock is incompatible
+          # with mailglass" / "version solving failed". Unlock so deps.get
+          # re-resolves the published core and its updated transitive deps. Retry
+          # for index/CDN propagation slack right after publish-core.
           for attempt in 1 2 3 4 5 6; do
+            mix deps.unlock --all || true
             if mix deps.get; then exit 0; fi
-            echo "deps.get attempt ${attempt} failed (linked core not yet resolvable); retrying with a fresh HEX_HOME in 20s"
-            export HEX_HOME="$(mktemp -d)"
+            echo "deps.get attempt ${attempt} failed (linked core not yet resolvable); retrying in 20s"
             sleep 20
           done
+          mix deps.unlock --all || true
           mix deps.get
       - name: Read mailglass_inbound version from mix.exs
         id: version
