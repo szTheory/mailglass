@@ -382,7 +382,17 @@ jobs:
         working-directory: mailglass_admin
         env:
           MIX_PUBLISH: "true"
-        run: mix deps.get
+        # Same stale-registry workaround as publish-inbound: the linked core was
+        # just published, so clear the Hex registry cache and retry deps.get until
+        # the freshly-published version resolves.
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            rm -rf "${HEX_HOME:-$HOME/.hex}"/cache.ets "${HEX_HOME:-$HOME/.hex}"/*.ets 2>/dev/null || true
+            if mix deps.get; then exit 0; fi
+            echo "deps.get attempt ${attempt} failed (linked core not yet resolvable); clearing Hex registry cache, retrying in 20s"
+            sleep 20
+          done
+          mix deps.get
       - name: Read mailglass_admin version from mix.exs
         id: version
         working-directory: mailglass_admin
@@ -464,7 +474,19 @@ jobs:
         working-directory: mailglass_inbound
         env:
           MIX_PUBLISH: "true"
-        run: mix deps.get
+        # The linked core (mailglass) was published moments ago by publish-core.
+        # A stale local Hex registry cache fails to resolve the just-published
+        # version — observed as a sub-100ms offline "version solving failed" for
+        # `{:mailglass, "== <core>"}`. Drop the registry cache and retry so
+        # deps.get re-fetches the live registry (with index/CDN-propagation slack).
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            rm -rf "${HEX_HOME:-$HOME/.hex}"/cache.ets "${HEX_HOME:-$HOME/.hex}"/*.ets 2>/dev/null || true
+            if mix deps.get; then exit 0; fi
+            echo "deps.get attempt ${attempt} failed (linked core not yet resolvable); clearing Hex registry cache, retrying in 20s"
+            sleep 20
+          done
+          mix deps.get
       - name: Read mailglass_inbound version from mix.exs
         id: version
         working-directory: mailglass_inbound
