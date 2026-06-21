@@ -109,6 +109,7 @@ defmodule MailglassAdmin.PreviewLive do
         |> assign(:current_assigns, current_assigns)
         |> assign(:device_width, device_width)
         |> assign(:admin_chrome_theme, admin_chrome_theme)
+        |> assign(:preview_frame_dark_chrome, frame_from_params(params, socket))
         |> assign(:base_path, base_path)
         |> assign(:page_uri, uri)
         |> assign(:page_title, "mailglass — " <> to_string(scenario))
@@ -587,6 +588,7 @@ defmodule MailglassAdmin.PreviewLive do
     return_to =
       path
       |> append_query_without_theme(parsed.query || "")
+      |> put_frame_query(socket.assigns.preview_frame_dark_chrome)
 
     theme = if currently_dark?, do: "system", else: "dark"
     mount_path = socket.assigns.mount_path || "/dev/mail"
@@ -595,11 +597,17 @@ defmodule MailglassAdmin.PreviewLive do
       "/theme/" <> theme <> "?" <> URI.encode_query([{"return_to", return_to}])
   end
 
+  # The admin-chrome theme toggle performs a full controller redirect (cookie +
+  # return_to), which remounts this LiveView and would otherwise drop the
+  # in-memory preview-frame theme. Carry the live frame state through return_to so
+  # the two toggles stay independent (handle_params restores it on remount). Strip
+  # any prior `frame` first so a stale value never duplicates or overrides the
+  # current assign.
   defp append_query_without_theme(path, query) do
     query =
       query
       |> URI.query_decoder()
-      |> Enum.reject(fn {key, _value} -> key == "theme" end)
+      |> Enum.reject(fn {key, _value} -> key in ["theme", "frame"] end)
       |> URI.encode_query()
 
     case query do
@@ -607,6 +615,20 @@ defmodule MailglassAdmin.PreviewLive do
       query -> path <> "?" <> query
     end
   end
+
+  defp put_frame_query(path, true) do
+    separator = if String.contains?(path, "?"), do: "&", else: "?"
+    path <> separator <> "frame=dark"
+  end
+
+  defp put_frame_query(path, _not_dark), do: path
+
+  # Restore the preview-frame theme from the URL only when the param is present
+  # (the admin-theme redirect re-supplies it). Plain navigations omit it, so the
+  # current in-memory assign is preserved rather than reset on every patch.
+  defp frame_from_params(%{"frame" => "dark"}, _socket), do: true
+  defp frame_from_params(%{"frame" => "light"}, _socket), do: false
+  defp frame_from_params(_params, socket), do: socket.assigns.preview_frame_dark_chrome
 
   defp theme_query_param(:dark), do: "dark"
   defp theme_query_param(:light), do: "light"
