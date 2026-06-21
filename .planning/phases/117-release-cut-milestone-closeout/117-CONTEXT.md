@@ -11,7 +11,7 @@ verified on local `main` (Phases 109–116) — to Hex adopters, then audit and 
 milestone. Scope is the **release ceremony + closeout only**: cut the linked-version Hex
 release (admin-minor drags matched core + inbound), re-pin the D-13 inbound exact-pin to the
 new core version, verify Hex resolution + post-publish smoke green, then audit (`status: passed`
-on all 36 requirements) and archive v1.13.
+on all 41 requirements) and archive v1.13.
 
 NOT in scope: any product-capability, component, or doc change. No reference-baseline pin bump
 (baselines resolve `~> 1.0`). Requirements: REL-02, REL-03.
@@ -68,11 +68,14 @@ NOT in scope: any product-capability, component, or doc change. No reference-bas
 - **D-07:** **No reference-baseline pin bump.** `reference/host_app` and `reference/demo_app`
   pin all three packages at `~> 1.0`, which resolves any 1.x bump — baseline change is OUT of
   scope (matching the 108 precedent). Do not touch the 5-file baseline-coupling set.
-- **D-08:** **Milestone audit uses corrected scope counts** — **9 phases (109–117)** and **36
-  requirements** (FND/PRIM/FORM/SHELL/DATA/GROUP/FLOW/RATCHET/REL). Do NOT trust
+- **D-08:** **Milestone audit uses corrected scope counts** — **9 phases (109–117)** and **41
+  requirements** (FND 5, PRIM 7, FORM 3, SHELL 6, DATA 5, GROUP 3, FLOW 4, RATCHET 5, REL 3 = 41).
+  *(Corrected 2026-06-21: the original "36" was an arithmetic error — the per-prefix breakdown sums
+  to 41, and REQUIREMENTS.md enumerates 41 distinct REQ-IDs; maintainer-confirmed scope is all 41,
+  including REL-01 the PR #86 precondition.)* Do NOT trust
   `gsd-sdk milestone.complete` — it sweeps in 999.x backlog dirs and inflates the matrix.
   Archive artifact set mirrors 108: `v1.13-ROADMAP.md`, `v1.13-REQUIREMENTS.md`,
-  `v1.13-MILESTONE-AUDIT.md` (all 36 REQ-IDs `status: passed`), update
+  `v1.13-MILESTONE-AUDIT.md` (all 41 REQ-IDs `status: passed`), update
   `MILESTONES.md`/`PROJECT.md`/`ROADMAP.md`/`STATE.md`, append `RETROSPECTIVE.md`, then tag
   `v1.13` (a milestone marker, distinct from the RP-created `*-v1.8.0` Hex release tags).
 - **D-09:** **Known smoke noise is a non-blocker.** The issue #32 swoosh/hackney OPS-01

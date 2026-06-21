@@ -156,8 +156,8 @@ Final phase-number assignment (phases continue from v1.12's last phase 108 → 1
 
 **Coverage:**
 
-- v1 requirements: 36 total (FND 5, PRIM 7, FORM 3, SHELL 6, DATA 5, GROUP 3, FLOW 4, RATCHET 5, REL 3 — REL-01 mapped to Phase 109 as the precondition gating its start)
-- Mapped to phases 109–117: 36
+- v1.13 requirements: 41 total (FND 5, PRIM 7, FORM 3, SHELL 6, DATA 5, GROUP 3, FLOW 4, RATCHET 5, REL 3 = 41 — REL-01 mapped to Phase 109 as the precondition gating its start)
+- Mapped to phases 109–117: 41
 - Unmapped: 0 ✓
 
 **Phase grouping (fractal level → phase number):**
