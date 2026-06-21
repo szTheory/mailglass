@@ -62,8 +62,8 @@ Add `mailglass` to your dependencies:
 # mix.exs
 def deps do
   [
-    {:mailglass, "~> 1.7"},
-    {:mailglass_admin, "~> 1.7", only: [:dev]}
+    {:mailglass, "~> 1.8"},
+    {:mailglass_admin, "~> 1.8", only: [:dev]}
   ]
 end
 ```
