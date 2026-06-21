@@ -31,5 +31,9 @@
   # Reason: MailglassReferenceHostWeb.Router.call/2 is a reference-host router loaded at runtime via Code.require_file; dialyzer cannot see the soft-loaded module.
   {"dev/mailglass/reference_host/webhook_operator_proof.ex", "Function MailglassReferenceHostWeb.Router.call/2 does not exist."},
   # Reason: TrustRunnerFixtures.webhook_ingest_evidence/0 returns a deterministic evidence map; map() is intentionally broad for forward-compat (test-support fixture, Phase 57).
-  {"test/support/reference_host/trust_runner_fixtures.ex", "Type specification for webhook_ingest_evidence is a supertype of the success typing."}
+  {"test/support/reference_host/trust_runner_fixtures.ex", "Type specification for webhook_ingest_evidence is a supertype of the success typing."},
+  # Reason: list_recent_deliveries returns a map projection via Ecto `select` (delivery_projection/1); Ecto's Repo.all/2 is spec'd [struct()], so the runtime-correct [map()] spec reads as a supertype under :underspecs. Same intentional Ecto-projection pattern as the BIMI/proof entries above (operator read-model, Phase 112). OTP-27-specific (does not fire on OTP 28).
+  {"lib/mailglass/operator/deliveries.ex", "Type specification for list_recent_deliveries is a supertype of the success typing."},
+  # Reason: list_tenants returns a %{id, label} map projection via Ecto `select`; Ecto's Repo.all/2 is spec'd [struct()], which is disjoint from the tenant_row() map shape, so the runtime-correct spec reads as invalid_contract. Ecto-projection artifact, not a real mismatch (operator read-model, Phase 112). OTP-27-specific (does not fire on OTP 28).
+  {"lib/mailglass/operator/tenants.ex", "Invalid type specification for function list_tenants."}
 ]
