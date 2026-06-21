@@ -485,7 +485,7 @@ defmodule MailglassAdmin.InboundLive do
                 <.link
                   patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
                   data-testid="inbound-detail-back"
-                  class="btn btn-ghost !h-11 min-h-11 md:hidden"
+                  class="mg-focus-ring btn btn-ghost !h-11 min-h-11 md:hidden"
                 >
                   Back to inbound records
                 </.link>
