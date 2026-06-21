@@ -154,7 +154,7 @@ jobs:
             core.info(`Latest release ${latest.tag_name} is ${ageDays.toFixed(1)} days old; running smoke for v${version}.`);
       - name: Checkout release ref
         if: ${{ steps.guard.outputs.should_run == 'true' && steps.guard.outputs.release_ref != '' }}
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           ref: ${{ steps.guard.outputs.release_ref }}
       - name: Read mailglass_inbound version
@@ -327,7 +327,7 @@ jobs:
       VERSION: ${{ needs.cron-guard.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
         with:
@@ -399,7 +399,7 @@ jobs:
       POSTGRES_PASSWORD: postgres
     steps:
       - name: Checkout release ref
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           ref: ${{ needs.cron-guard.outputs.release_ref }}
       - name: Set up OTP + Elixir
@@ -452,7 +452,7 @@ jobs:
       VERSION: ${{ needs.cron-guard.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - name: Set up OTP + Elixir
         uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
         with:
