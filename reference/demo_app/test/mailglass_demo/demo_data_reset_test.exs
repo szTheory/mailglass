@@ -19,14 +19,15 @@ defmodule MailglassDemo.DemoDataResetTest do
     rerun = snapshot()
 
     assert Map.take(rerun, deterministic_keys()) == Map.take(baseline, deterministic_keys())
-    assert rerun.deliveries == 16
-    assert rerun.events == 35
+    assert rerun.deliveries == 17
+    assert rerun.events == 36
     assert rerun.inbound == 6
     assert rerun.suppressions == 1
     assert rerun.inbound_evidence == 6
     assert rerun.inbound_replay_runs == 8
 
     assert rerun.delivery_message_ids == [
+             "del_01JXW9ZQKB3V1N4P2RMT7FHCG",
              "pm-demo-badge-clicked-001",
              "pm-demo-badge-opened-001",
              "pm-demo-badge-queued-001",
