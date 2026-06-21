@@ -33,7 +33,9 @@ test.describe("mailglass demo evidence", () => {
     await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
     // Navigate to Deliveries view to assert the list
     await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
-    await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
+    // Phase 113 (DATA-01) made operator-deliveries-list the mobile-only (md:hidden)
+    // <ul>; assert the viewport-agnostic operator-deliveries-list-card <aside> wrapper.
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
     const deliveryId = await page.getByTestId("operator-delivery-row").first().getAttribute("phx-value-id");
     await page.goto(`/demo/login?return_to=/ops/mail?tenant_id=northstar%26delivery_id=${deliveryId}`);
@@ -47,7 +49,9 @@ test.describe("mailglass demo evidence", () => {
     await page.getByRole("link", { name: /inbound operator/i }).click();
     await expect(page).toHaveURL(/\/ops\/mail\/inbound\?tenant_id=northstar/);
     await expect(page.getByRole("heading", { name: "Inbound records", exact: true })).toBeVisible();
-    await expect(page.getByTestId("inbound-records-list")).toBeVisible();
+    // Phase 113 (DATA-01): inbound-records-list is the mobile-only <ul>; assert the
+    // viewport-agnostic inbound-records-list-card <aside> wrapper instead.
+    await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 
     const inboundId = await page.getByTestId("inbound-record-row").first().getAttribute("phx-value-id");
     await page.goto(`/demo/login?return_to=/ops/mail/inbound?tenant_id=northstar%26inbound_id=${inboundId}`);

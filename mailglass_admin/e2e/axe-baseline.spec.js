@@ -226,6 +226,11 @@ test.describe("axe WCAG 2.2 AA baseline producer (RATCHET-03)", () => {
   for (const surface of SURFACES) {
     for (const theme of THEMES) {
       test(`scan ${surface} / ${theme}`, async ({ page }) => {
+        // A full-page axe-core analysis (plus overlay open on the scrim-backed
+        // surfaces) can occasionally brush against the 30s per-test default under
+        // CI/Docker load — the preview surface is the heaviest. Mark these scans
+        // slow (3x timeout) so a slow-but-correct scan does not flake the gate.
+        test.slow();
         const cell = await scanSurface(page, surface, theme);
         // Shape assertion — every cell is { total: number, rules: object }.
         expect(typeof cell.total, `${surface}.${theme} total`).toBe("number");

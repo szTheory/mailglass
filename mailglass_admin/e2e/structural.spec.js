@@ -228,19 +228,29 @@ function contrastRatio(foreground, background) {
 
 async function resolvedColors(locator) {
   return locator.first().evaluate(el => {
+    // Resolve any CSS color (incl. Tailwind v4 oklab/oklch wide-gamut values) to
+    // a concrete rgba() string by rasterizing one pixel and reading it back.
+    // canvas.fillStyle readback now echoes oklab/oklch on modern Chromium, which
+    // the downstream rgb/hex parser cannot read; getImageData always yields 0-255
+    // sRGB channels regardless of the source color space.
     const normalizeColor = value => {
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
 
       if (!context) return value;
 
-      context.fillStyle = "#000000";
+      context.clearRect(0, 0, 1, 1);
       context.fillStyle = value;
-      return context.fillStyle;
+      context.fillRect(0, 0, 1, 1);
+      const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+      return `rgba(${r}, ${g}, ${b}, ${a / 255})`;
     };
 
+    // Check transparency on the normalized rgba so oklab(.../0) etc. are detected
+    // (the legacy rgba-only regex missed wide-gamut transparent values, which made
+    // the parent-background walk stop at a transparent ghost surface).
     const transparent = value => {
-      const match = String(value).match(/rgba?\(([^)]+)\)/);
+      const match = String(normalizeColor(value)).match(/rgba?\(([^)]+)\)/);
       if (!match) return false;
       const parts = match[1]
         .replace(/\//g, " ")
@@ -280,6 +290,25 @@ async function assertTextContrastAA(locator, label) {
 
 async function assertNonTextContrastAA(locator, label) {
   await expect(locator.first(), label).toBeVisible();
+  // The design-system focus ring animates outline-color over --duration-instant
+  // (90ms). Measuring immediately after focus can sample a mid-transition color,
+  // so wait until outline-color settles (stable across consecutive frames) before
+  // reading. No-op for elements without a focus-ring transition.
+  await locator.first().evaluate(el => new Promise(resolve => {
+    let previous = null;
+    let stableFrames = 0;
+    const tick = () => {
+      const current = getComputedStyle(el).outlineColor;
+      if (current === previous) {
+        if (++stableFrames >= 3) return resolve();
+      } else {
+        stableFrames = 0;
+        previous = current;
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  }));
   const colors = await resolvedColors(locator);
   const stroke = parseRgbColor(colors.outlineColor) || parseRgbColor(colors.borderColor);
   let background = parseRgbColor(colors.backgroundColor);
@@ -560,7 +589,10 @@ function noMatchRow(page) {
 
 async function openOperatorReplayModal(page) {
   await openOperator(page);
-  await page.getByTestId("operator-delivery-row").first().click();
+  // operator-delivery-row exists in both the desktop <table> and mobile card <ul>
+  // (Phase 113 DATA-01). Filter to the visible presentation so the click targets
+  // the rendered row at the current viewport instead of the hidden one.
+  await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
   await expect(page.getByTestId("operator-detail-column")).toBeVisible();
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
@@ -597,6 +629,7 @@ async function openInboundReplayModal(page) {
 
   const replayableRow = page
     .getByTestId("inbound-record-row")
+    .filter({ visible: true })
     .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
     .first();
   await replayableRow.click();
@@ -671,6 +704,7 @@ async function openInboundReplayModalThemed(page, theme) {
 
   const replayableRow = page
     .getByTestId("inbound-record-row")
+    .filter({ visible: true })
     .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
     .first();
   await replayableRow.click();
@@ -801,7 +835,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const filterToggle = page.getByTestId("operator-filters-toggle");
       await assertTouchTarget(filterToggle, "operator filter toggle");
 
-      await page.getByTestId("operator-delivery-row").first().click();
+      await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
       const back = page.getByTestId("operator-detail-back");
       await assertTouchTarget(back, "operator detail back");
     });
@@ -1129,6 +1163,13 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await assertTextContrastAA(page.getByTestId("inbound-trace-clause").first(), `${theme.name} ${viewport.width} inbound-trace-clause`);
           const selectedBoundary =
             viewport.width < 768 ? page.getByTestId("inbound-detail-back") : row;
+          // The design-system focus ring is :focus-visible-gated (correct a11y:
+          // no ring on mouse). Selecting the row above is a mouse interaction, so
+          // a subsequent programmatic .focus() would NOT match :focus-visible and
+          // the ring would be absent. Press a key first to switch the heuristic to
+          // keyboard modality, so .focus() applies the real focus indicator we want
+          // to measure for non-text contrast.
+          await page.keyboard.press("Tab");
           await selectedBoundary.focus();
           await assertNonTextContrastAA(selectedBoundary, `${theme.name} ${viewport.width} selected/detail flow`);
 
@@ -1294,7 +1335,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
 
       await page.getByTestId("preview-admin-theme-toggle").click();
-      await expect(page).toHaveURL(/theme=dark/);
+      // Phase 112 moved admin-chrome theming to the mount-path-aware ThemeController:
+      // the toggle persists the choice via the `mailglass_admin_theme` cookie and
+      // redirects to a theme-stripped return_to, so the final URL no longer carries
+      // a `theme=dark` query param. The applied theme is asserted via the shell's
+      // data-theme attribute below, which is the authoritative signal.
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
     });

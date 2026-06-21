@@ -7,7 +7,11 @@ const noopRecipient = "browser-noop@example.com";
 const selectedRecipient = "browser-selected@example.com";
 
 function deliveryRow(page, index) {
-  return page.getByTestId("operator-delivery-row").nth(index);
+  // Phase 113 (DATA-01) renders rows in two presentations sharing this testid:
+  // a desktop <table> (>=768px) and a mobile card <ul> (<768px). Exactly one is
+  // visible per viewport, so filter to the visible presentation before indexing —
+  // otherwise .nth() resolves the hidden desktop <tr> at mobile widths and clicks hang.
+  return page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(index);
 }
 
 async function openOperator(page) {
@@ -26,7 +30,13 @@ async function openOperator(page) {
   await expect(
     page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
   ).toBeVisible();
-  await expect(page.getByTestId("operator-deliveries-list")).toBeVisible();
+  // Phase 113 (DATA-01) split the deliveries list into a responsive table
+  // (>=768px) + card list (<768px). The legacy `operator-deliveries-list` <ul>
+  // is now the mobile-only (md:hidden) presentation, so it is hidden on the
+  // desktop viewports most operator-gate tests use. Assert the viewport-agnostic
+  // `operator-deliveries-list-card` aside instead — it is visible at all widths
+  // on a fresh (pre-selection) deliveries view.
+  await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 }
 
 test.describe("operator browser gate", () => {
@@ -322,6 +332,7 @@ test.describe("operator browser gate", () => {
 
     await page
       .getByTestId("inbound-record-row")
+      .filter({ visible: true })
       .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
       .first()
       .click();
