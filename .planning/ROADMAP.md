@@ -300,7 +300,11 @@ Plans:
   2. Hex resolution + post-publish smoke are verified green.
   3. The milestone is audited (`status: passed` on all 36 requirements) and archived.
 
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+**Wave 0–5 (single sequential ceremony plan)**
+
+- [ ] 117-01-PLAN.md — Release cut + v1.13 closeout: regenerate publish allowlist (D-04), push body to re-score RP PR #87 to 1.8.0/1.8.0 + inbound re-pin == 1.8.0 (D-02/D-05), maintainer go/no-go (D-06), confirm Hex live, consumer + post-publish smoke (D-09), audit 36 reqs + archive + tag v1.13 (D-08).
 
 ### Execution Order
 
