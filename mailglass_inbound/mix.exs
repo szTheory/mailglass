@@ -1,7 +1,7 @@
 defmodule MailglassInbound.MixProject do
   use Mix.Project
 
-  @version "1.4.0"
+  @version "1.5.0"
   @source_url "https://github.com/szTheory/mailglass"
   @description "Inbound routing contract package for mailglass"
 
@@ -124,7 +124,7 @@ defmodule MailglassInbound.MixProject do
   # `fix(inbound):` release is required either way to ship the new pin to Hex.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 1.7.0"}
+      {:mailglass, "== 1.8.0"}
     else
       {:mailglass, path: "..", override: true}
     end

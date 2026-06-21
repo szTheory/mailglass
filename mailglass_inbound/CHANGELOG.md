@@ -5,6 +5,14 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.4.0...mailglass_inbound-v1.5.0) (2026-06-21)
+
+
+### Features
+
+* **112-01:** implement scoped tenant selector seam ([d74b47b](https://github.com/szTheory/mailglass/commit/d74b47bbde226f3039dcfff0f91b4061beda4fbb))
+* **112-05:** add read-model pagination metadata APIs ([4c78d23](https://github.com/szTheory/mailglass/commit/4c78d23fdef46ec4bb67814d4c6f74f380a8c6b5))
+
 ## [1.4.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.3.1...mailglass_inbound-v1.4.0) (2026-06-17)
 
 
