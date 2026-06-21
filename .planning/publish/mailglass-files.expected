@@ -95,6 +95,7 @@ lib/mailglass/operator/replay_history.ex
 lib/mailglass/operator/replay_targets.ex
 lib/mailglass/operator/support_summary.ex
 lib/mailglass/operator/suppressions.ex
+lib/mailglass/operator/tenants.ex
 lib/mailglass/operator/timeline.ex
 lib/mailglass/optional_deps.ex
 lib/mailglass/optional_deps/gen_smtp.ex

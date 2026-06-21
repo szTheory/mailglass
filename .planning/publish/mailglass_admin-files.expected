@@ -3,6 +3,7 @@ CHANGELOG.md
 LICENSE
 README.md
 docs/api_stability.md
+docs/axe-baseline.json
 docs/compatibility-and-deprecations.md
 docs/design-system.md
 docs/operator-trust.md
@@ -12,6 +13,7 @@ lib/mailglass_admin.ex
 lib/mailglass_admin/auth.ex
 lib/mailglass_admin/components.ex
 lib/mailglass_admin/controllers/assets.ex
+lib/mailglass_admin/controllers/theme_controller.ex
 lib/mailglass_admin/gallery_live.ex
 lib/mailglass_admin/inbound/destructive_action.ex
 lib/mailglass_admin/inbound/detail_header.ex
@@ -26,6 +28,8 @@ lib/mailglass_admin/inbound_live.ex
 lib/mailglass_admin/layouts.ex
 lib/mailglass_admin/layouts/app.html.heex
 lib/mailglass_admin/layouts/root.html.heex
+lib/mailglass_admin/mount_path.ex
+lib/mailglass_admin/mount_path_hook.ex
 lib/mailglass_admin/operator/deliveries_list.ex
 lib/mailglass_admin/operator/destructive_action.ex
 lib/mailglass_admin/operator/detail_header.ex
@@ -36,6 +40,7 @@ lib/mailglass_admin/operator/replay_modal.ex
 lib/mailglass_admin/operator/shell.ex
 lib/mailglass_admin/operator/support_cards.ex
 lib/mailglass_admin/operator/suppression_card.ex
+lib/mailglass_admin/operator/tenants.ex
 lib/mailglass_admin/operator/timeline.ex
 lib/mailglass_admin/operator_live.ex
 lib/mailglass_admin/optional_deps/mailglass_inbound.ex
