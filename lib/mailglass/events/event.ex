@@ -89,7 +89,7 @@ defmodule Mailglass.Events.Event do
 
   #  V02 migration drops `mailglass_events.raw_payload` — raw
   # provider bytes now live in `mailglass_webhook_events.raw_payload`
-  #. The ledger holds the normalized projection + audit metadata
+  # . The ledger holds the normalized projection + audit metadata
   # only; callers that previously stashed arbitrary context in
   # `raw_payload` move it to `:metadata`.
   schema "mailglass_events" do
