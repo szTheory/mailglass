@@ -14,6 +14,23 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.8.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.7.0...mailglass-v1.8.0) (2026-06-21)
+
+
+### Features
+
+* **112-01:** implement scoped tenant selector seam ([d74b47b](https://github.com/szTheory/mailglass/commit/d74b47bbde226f3039dcfff0f91b4061beda4fbb))
+* **112-05:** add read-model pagination metadata APIs ([4c78d23](https://github.com/szTheory/mailglass/commit/4c78d23fdef46ec4bb67814d4c6f74f380a8c6b5))
+* **116-01:** admin-side seed_persona_cohort!/0 + cohort integration test ([039a9da](https://github.com/szTheory/mailglass/commit/039a9da64ff4c9d8eb180d642bb44f78bb9370c9))
+* **116-01:** declarative Personas spec + parameterized demo seeding ([fcf5636](https://github.com/szTheory/mailglass/commit/fcf56362b8928f0427ce31403c78dfab06bdf0e1))
+
+
+### Bug Fixes
+
+* **116:** reconcile demo reset counts for the fjordline persona ([f71b2cc](https://github.com/szTheory/mailglass/commit/f71b2cc5a2a7692a2149082b15fddba06d6092fe))
+* **116:** WR-04/WR-05 thread the demo seed anchor through Personas.materialize and match payload kind explicitly ([fc5b733](https://github.com/szTheory/mailglass/commit/fc5b7332abf406a8977c2e485f4c6578bdc0e859))
+* **admin:** preview mount-aware URLs + operator tenant/theme/stat-card UI fixes ([766edf8](https://github.com/szTheory/mailglass/commit/766edf896befd713a46537c16ac1fb3ab5c695a6))
+
 ## [1.7.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.6.2...mailglass-v1.7.0) (2026-06-17)
 
 
