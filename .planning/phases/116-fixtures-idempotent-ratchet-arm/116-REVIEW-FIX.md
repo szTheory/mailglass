@@ -1,24 +1,34 @@
 ---
 phase: 116-fixtures-idempotent-ratchet-arm
-fixed_at: 2026-06-20T19:21:00Z
+fixed_at: 2026-06-21T16:00:00Z
 review_path: .planning/phases/116-fixtures-idempotent-ratchet-arm/116-REVIEW.md
 iteration: 1
 findings_in_scope: 9
-fixed: 7
-skipped: 2
-status: partial
+fixed: 9
+skipped: 0
+status: all_fixed
 ---
 
 # Phase 116: Code Review Fix Report
 
-**Fixed at:** 2026-06-20T19:21:00Z
+**Fixed at:** 2026-06-21T16:00:00Z (WR-01/IN-04 completed in a follow-up pass — see below)
 **Source review:** .planning/phases/116-fixtures-idempotent-ratchet-arm/116-REVIEW.md
 **Iteration:** 1
 
 **Summary:**
 - Findings in scope: 9 (5 Warning + 4 Info; fix_scope = all)
-- Fixed: 7
-- Skipped: 2
+- Fixed: 9
+- Skipped: 0
+
+> **Follow-up pass (2026-06-21):** The initial fixer pass left WR-01 and IN-04
+> skipped because regenerating the axe baseline needs a live Phoenix browser
+> server + Playwright. That environment turned out to be available
+> (`node_modules` + cached Chromium present; the Playwright config auto-boots the
+> operator browser server), so both were resolved by running the real producer —
+> see the **Resolved in follow-up pass** section. The demo-reset count
+> assertion flagged under WR-04 as "pre-existing, out of scope" was also
+> reconciled (it was in fact a Phase-116 regression, not pre-existing). Net:
+> all 9 review findings fixed, plus the demo-reset regression.
 
 All seven fixed findings were validated against the actual touched files. The
 admin ExUnit suites that exercise the changes ran green in an isolated worktree
@@ -79,14 +89,16 @@ now anchor-relative like the rest of the seed. Validated determinism: the
 `demo_data_reset_test.exs` deterministic-keys comparison passed across two
 resets.
 
-**Note (pre-existing, out of scope):** `demo_data_reset_test.exs` also asserts
-`rerun.deliveries == 16` / `rerun.events == 35`. Those hardcoded counts predate
-Phase 116 (last touched in commit 466544f3, the Docker-DX PR #65) and do not
-account for the fjordline persona this phase adds (now 17 deliveries). That
-count-assertion failure exists on the committed Phase-116 baseline independent
-of this fix — no review finding cites it, so it was not touched here. It should
-be reconciled by the phase's own verification (update the expected counts to the
-post-116 cohort).
+**Note — RESOLVED in follow-up pass (commit f71b2cc5):** `demo_data_reset_test.exs`
+asserted `rerun.deliveries == 16` / `rerun.events == 35`. This was *not*
+pre-existing as first reported: Phase 116-01 (commit fcf56362) added
+`Personas.seed!` to `DemoData.reset!/0`, which materializes the fjordline-aps
+single-Delivery persona (1 Delivery + 1 `:delivered` Event), so the determinism
+guard had been red since 116-01. Reconciled the literal assertions to the true
+post-persona snapshot: 17 deliveries, 36 events, and the long_delivery_id
+`del_01JXW9ZQKB3V1N4P2RMT7FHCG` at the head of `delivery_message_ids`
+(lowercase `d` sorts before `p`/`s`). Verified: `mix test
+demo_data_reset_test.exs --seed 0` → 1 test, 0 failures.
 
 ### WR-05: Persona materializers use a positional catch-all clause that silently mis-materializes unknown payload kinds
 
@@ -137,47 +149,42 @@ as "no missing icons" and pass vacuously; the admin lib always references
 loud. Verified: `bash check-conformance.sh` still exits 0 (real icons are
 scanned, assertion satisfied) and `bash -n` syntax check passes.
 
-## Skipped Issues
+## Resolved in follow-up pass (2026-06-21)
 
 ### WR-01: Committed `current` axe baseline was not produced by the committed producer
 
-**File:** `mailglass_admin/docs/axe-baseline.json:69`
-**Reason:** skipped — cannot regenerate a real scan in this environment, and a
-cosmetic relabel is explicitly forbidden. The only honest fix (per the review
-and the phase guidance) is to regenerate the `current` block from the live
-operator surfaces:
-`cd mailglass_admin && PERSIST_AXE_BASELINE=1 npm run test:operator-browser -- axe-baseline.spec.js`.
-That requires a running Phoenix browser server + Playwright/@axe-core, and
-`node_modules` is gitignored/absent here (no network fetch + no live server in
-this sandbox). Hand-editing `current.run_id` to a timestamp-shaped string would
-fabricate provenance for data that is still hand-typed — exactly the "paper over
-it with a cosmetic label change" the phase brief prohibits. The honest
-strengthening (making the anti-vacuity guard require `current.run_id` to match
-the producer's `axe-<ISO>` format) would turn the committed hand-typed data red,
-which cannot be committed clean. Left for a human to run the producer and commit
-a real measured `current` block.
-**Original issue:** The committed `current.run_id` (`axe-2026-06-20-phase-116`)
-does not match the producer's `axe-<ISO-timestamp>` format and the `current`
-violations block is byte-identical to `prior`, so the "current" half of the
-ratchet is a hand-authored placeholder, not a measured scan.
+**File:** `mailglass_admin/docs/axe-baseline.json`
+**Commit:** 5c32f7e4
+**Applied fix:** Ran the real producer against the live operator surfaces —
+`PERSIST_AXE_BASELINE=1 npm run test:operator-browser -- axe-baseline.spec.js`.
+The Playwright config auto-boots the operator browser server
+(`reuseExistingServer` off-CI), and `node_modules` + cached Chromium were
+present, so the scan ran for real (9 cells: deliveries/inbound/preview ×
+light/dark/system, overlays folded in — all green). The `current` block now
+carries a genuine producer `run_id` (`axe-2026-06-21T15-53-05-411Z`) and
+measured violations. The measured values matched the previously hand-typed ones
+exactly (every cell `total: 1` — `scrollable-region-focusable` on the operator
+surfaces, `aria-allowed-attr` on preview), confirming the old hand-typed data
+was *accurate* but now it is provenance-backed rather than authored. The
+12-test ExUnit comparator passes.
 
 ### IN-04: `axe-baseline.json` `prior.run_id` is a hand-typed label, eroding run_id provenance
 
-**File:** `mailglass_admin/docs/axe-baseline.json:4`
-**Reason:** skipped — same root cause as WR-01. `prior.run_id`
-(`2026-06-20-phase-116-axe`) is hand-typed because the matching `current` was
-never produced by a real scan; the producer preserves `prior` verbatim, so the
-honest fix is to promote a *real* `current.run_id` (a producer timestamp) into
-`prior` during the next re-baseline (plan 116-06's `current → prior`
-promotion). That depends on first having a producer-generated `current`
-(WR-01), which cannot be done here. Editing `prior.run_id` in isolation would
-not restore the audit trail and would still leave both blocks untraceable to a
-producer run.
-**Original issue:** `prior.run_id` is a hand-authored milestone label rather
-than a producer timestamp, so neither committed block traces to a producer run.
+**File:** `mailglass_admin/docs/axe-baseline.json`
+**Commit:** 5c32f7e4 (bundled with WR-01)
+**Applied fix:** Did the `current → prior` promotion the review's fix called
+for. After the first genuine producer run, promoted that measured scan into
+`prior` (so `prior.run_id` = `axe-2026-06-21T15-51-22-195Z`, a real producer
+timestamp), then ran the producer again to capture a fresh `current`. Both
+blocks now trace to genuine producer runs with distinct ISO timestamps; the
+anti-vacuity guard (`prior.run_id != current.run_id`) holds on real data, and
+the two blocks are legitimately equal (no accessibility regression in the
+current tree), which the comparator explicitly permits. No hand-typed `run_id`
+remains in the file.
 
 ---
 
-_Fixed: 2026-06-20T19:21:00Z_
-_Fixer: Claude (gsd-code-fixer)_
+_Initial fix pass: 2026-06-20T19:21:00Z (7 fixed, 2 skipped)_
+_Follow-up pass: 2026-06-21 (WR-01 + IN-04 resolved; demo-reset regression reconciled)_
+_Fixer: Claude (gsd-code-fixer) + orchestrator follow-up_
 _Iteration: 1_
