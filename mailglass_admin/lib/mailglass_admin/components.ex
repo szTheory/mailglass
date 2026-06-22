@@ -533,7 +533,7 @@ defmodule MailglassAdmin.Components do
     <fieldset class="grid gap-md" {@rest}>
       <legend class="text-label font-bold uppercase text-secondary">{@title}</legend>
       <p :if={@description} class="text-body text-secondary">{@description}</p>
-      <div class="grid gap-sm md:grid-cols-2">
+      <div class="grid gap-sm grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
         {render_slot(@inner_block)}
       </div>
     </fieldset>

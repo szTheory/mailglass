@@ -389,16 +389,14 @@ defmodule MailglassAdmin.InboundLive do
             id="inbound-filters"
             phx-change="validate_filters"
             phx-submit="apply_filters"
-            class="mt-4 grid gap-sm md:mt-0"
+            class="mt-4 grid gap-md md:mt-0"
           >
-            <div class="grid gap-sm md:grid-cols-2 xl:grid-cols-5">
-              <FiltersForm.fields
-                form={@filter_form}
-                outcome_values={@outcome_values}
-                window_options={@window_options}
-                errors={@filter_errors}
-              />
-            </div>
+            <FiltersForm.fields
+              form={@filter_form}
+              outcome_values={@outcome_values}
+              window_options={@window_options}
+              errors={@filter_errors}
+            />
 
             <div class="flex flex-wrap gap-2">
               <button type="submit" class="btn btn-primary min-h-11 px-5">Open record</button>
@@ -412,7 +410,13 @@ defmodule MailglassAdmin.InboundLive do
 
       <section
         data-testid="inbound-master-detail"
-        class="mt-6 grid gap-lg md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]"
+        class={[
+          "mt-6 grid gap-lg",
+          if(@selected_record,
+            do: "md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]",
+            else: "grid-cols-1"
+          )
+        ]}
       >
         <div class={["min-w-0 space-y-4", @selected_record && "max-md:hidden"]}>
           <Overview.overview summary={@inbound_summary} />

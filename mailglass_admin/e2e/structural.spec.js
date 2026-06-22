@@ -995,7 +995,22 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("Operator: master-detail grid follows 320/768/1440 responsive contract", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 900 });
       await openOperator(page);
+
+      // The master-detail split is a SELECTED-state contract: with nothing
+      // selected the list spans full width (single column) so the table has
+      // room. Assert the full-width default, then open a delivery to assert the
+      // 40/60 (768) and 33/67 (1440) split governs the detail view.
       let columns = parseGridColumns(
+        await page.getByTestId("operator-master-detail").evaluate(
+          el => getComputedStyle(el).getPropertyValue("grid-template-columns")
+        )
+      );
+      expect(columns.length).toBe(1);
+
+      await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
+      await expect(page.getByTestId("operator-detail-header")).toBeVisible();
+
+      columns = parseGridColumns(
         await page.getByTestId("operator-master-detail").evaluate(
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
         )
@@ -1043,7 +1058,21 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("Inbound: master-detail grid follows 320/768/1440 responsive contract", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 900 });
       await openInbound(page);
+
+      // SELECTED-state contract (mirrors the operator surface): nothing selected
+      // => full-width records list (single column); a selected record => the
+      // 40/60 (768) and 33/67 (1440) split governs the detail view.
       let columns = parseGridColumns(
+        await page.getByTestId("inbound-master-detail").evaluate(
+          el => getComputedStyle(el).getPropertyValue("grid-template-columns")
+        )
+      );
+      expect(columns.length).toBe(1);
+
+      await page.getByTestId("inbound-record-row").filter({ visible: true }).first().click();
+      await expect(page.getByTestId("inbound-detail-header")).toBeVisible();
+
+      columns = parseGridColumns(
         await page.getByTestId("inbound-master-detail").evaluate(
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
         )
@@ -1051,7 +1080,6 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expectRatio(columns, 0.4);
 
       await page.setViewportSize({ width: 1440, height: 1000 });
-      await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
       columns = parseGridColumns(
         await page.getByTestId("inbound-master-detail").evaluate(
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")

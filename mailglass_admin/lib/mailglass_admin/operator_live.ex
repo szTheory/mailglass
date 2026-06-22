@@ -394,8 +394,8 @@ defmodule MailglassAdmin.OperatorLive do
                   data-testid="operator-overview-health-suppressions"
                 />
                 <Components.stat_card
-                  label="All-clear status"
-                  value={all_clear_label(@support_summary)}
+                  label="Overall status"
+                  value={all_clear_value(@support_summary)}
                   state={all_clear_state(@support_summary)}
                   severity={all_clear_severity(@support_summary)}
                   severity_label={all_clear_label(@support_summary)}
@@ -475,17 +475,15 @@ defmodule MailglassAdmin.OperatorLive do
               id="operator-filters"
               phx-change="validate_filters"
               phx-submit="apply_filters"
-              class="mt-4 grid gap-sm md:mt-0"
+              class="mt-4 grid gap-md md:mt-0"
             >
-              <div class="grid gap-sm md:grid-cols-2 xl:grid-cols-5">
-                <FiltersForm.fields
-                  form={@filter_form}
-                  status_values={@status_values}
-                  event_values={@event_values}
-                  window_options={@window_options}
-                  errors={@filter_errors}
-                />
-              </div>
+              <FiltersForm.fields
+                form={@filter_form}
+                status_values={@status_values}
+                event_values={@event_values}
+                window_options={@window_options}
+                errors={@filter_errors}
+              />
 
               <div class="flex flex-wrap gap-2">
                 <button type="submit" class="btn btn-primary min-h-11 px-5">Open delivery</button>
@@ -499,7 +497,13 @@ defmodule MailglassAdmin.OperatorLive do
 
         <section
           data-testid="operator-master-detail"
-          class="mt-6 grid gap-lg md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]"
+          class={[
+            "mt-6 grid gap-lg",
+            if(@selected_delivery,
+              do: "md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]",
+              else: "grid-cols-1"
+            )
+          ]}
         >
           <aside
             data-testid="operator-deliveries-list-card"
@@ -1117,6 +1121,15 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp all_clear_label(summary) do
     if all_clear?(summary), do: "All clear", else: "Needs attention"
+  end
+
+  # Short, fits-the-display-slot status token. The descriptive phrasing
+  # ("All clear" / "Needs attention") rides in the severity_label below it,
+  # so the big value never truncates the way a full sentence did.
+  defp all_clear_value(nil), do: "—"
+
+  defp all_clear_value(summary) do
+    if all_clear?(summary), do: "Clear", else: "Attention"
   end
 
   defp all_clear_severity(nil), do: :neutral
