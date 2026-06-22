@@ -233,10 +233,6 @@ defmodule MailglassAdmin.Operator.Shell do
             active={@active == :inbound}
           />
         </nav>
-
-        <div class="mt-auto border-t border-base-300 p-sm">
-          <Components.theme_picker selected={@theme_choice} event="set_theme" />
-        </div>
       </aside>
 
       <div class="flex min-w-0 flex-1 flex-col">
@@ -261,9 +257,7 @@ defmodule MailglassAdmin.Operator.Shell do
 
           <div class="flex min-w-0 flex-wrap items-center justify-end gap-sm">
             <Components.tenant_chip tenant={@tenant} />
-            <span class="md:hidden">
-              <Components.theme_picker selected={@theme_choice} event="set_theme" />
-            </span>
+            <Components.theme_picker selected={@theme_choice} event="set_theme" />
           </div>
         </header>
 

@@ -266,6 +266,15 @@
   transition: outline-color var(--duration-instant) var(--ease-out);
 }
 
+/* Draws the focus ring on a visible wrapper (e.g. a segmented-control segment)
+   when the real control it labels is an sr-only input that is keyboard-focused.
+   Lets a control hide the native radio dot without losing focus visibility. */
+.mg-focus-ring-within:has(> input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  transition: outline-color var(--duration-instant) var(--ease-out);
+}
+
 .mg-admin-root {
   isolation: isolate;
   position: relative;

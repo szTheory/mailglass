@@ -334,7 +334,7 @@ defmodule MailglassAdmin.Components do
       <label
         :for={option <- theme_options()}
         class={[
-          "mg-focus-ring flex min-h-11 min-w-11 cursor-pointer items-center gap-xs rounded-field px-sm",
+          "mg-focus-ring-within flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-field px-sm",
           theme_option_class(@selected == option.theme, @disabled)
         ]}
       >
@@ -347,7 +347,7 @@ defmodule MailglassAdmin.Components do
           phx-click={@event}
           phx-target={@target}
           phx-value-theme={if @event, do: option.value}
-          class="mg-focus-ring h-4 w-4"
+          class="sr-only"
         />
         <span class="whitespace-nowrap">{option.label}</span>
       </label>

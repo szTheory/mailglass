@@ -336,12 +336,18 @@ async function assertTouchTarget(locator, label) {
   expect(Math.round(box.height), `${label} target-size height`).toBeGreaterThanOrEqual(44);
 }
 
-async function assertFocusAppearanceAndNotObscured(page, locator, label) {
+// `locator` is the element that receives keyboard focus. For controls that
+// visually hide their focusable element (e.g. a segmented control whose native
+// radio is sr-only and whose focus ring renders on the visible segment label),
+// pass `opts.indicatorLocator` — the visible element the focus indicator draws
+// on. We focus `locator` but measure appearance/obscuring on the indicator.
+async function assertFocusAppearanceAndNotObscured(page, locator, label, opts = {}) {
   const target = locator.first();
-  await expect(target, label).toBeVisible();
+  const indicator = (opts.indicatorLocator || locator).first();
+  await expect(indicator, label).toBeVisible();
   await target.focus();
 
-  const focusState = await target.evaluate(el => {
+  const focusState = await indicator.evaluate(el => {
     const style = getComputedStyle(el);
     const rect = el.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
@@ -359,7 +365,7 @@ async function assertFocusAppearanceAndNotObscured(page, locator, label) {
   expect(focusState.outlineStyle, `${label} focus indicator style`).not.toBe("none");
   expect(focusState.notObscured, `${label} Focus Not Obscured`).toBeTruthy();
 
-  await assertNonTextContrastAA(target, label);
+  await assertNonTextContrastAA(indicator, label);
 }
 
 async function expectNoDataTheme(locator, label) {
@@ -2080,11 +2086,17 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
             primitiveWrapper(page, "nav_pill", "focus-visible", theme).locator("a"),
             `${theme} ${viewport.width} nav_pill focus ring`
           );
-          await assertFocusAppearanceAndNotObscured(
-            page,
-            primitiveWrapper(page, "theme_picker", "focus-visible", theme).locator('input[type="radio"]').first(),
-            `${theme} ${viewport.width} theme_picker focus ring`
-          );
+          {
+            // The native radio is sr-only; the focus ring renders on the
+            // visible segment label. Focus the input, measure the label.
+            const themePickerFocus = primitiveWrapper(page, "theme_picker", "focus-visible", theme);
+            await assertFocusAppearanceAndNotObscured(
+              page,
+              themePickerFocus.locator('input[type="radio"]').first(),
+              `${theme} ${viewport.width} theme_picker focus ring`,
+              { indicatorLocator: themeOptionLabels(themePickerFocus).first() }
+            );
+          }
 
           await assertProgrammaticDisabled(
             primitiveWrapper(page, "nav_link", "disabled", theme).locator("[role='link']"),
