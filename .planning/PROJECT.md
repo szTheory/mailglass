@@ -513,7 +513,21 @@ All 84 v1 REQ-IDs, 38 v0.2 REQ-IDs, 10 v1.1 REQ-IDs, 13 v1.4 REQ-IDs, 19 v1.7 RE
 - ✓ DOCS-01..05 — ExDoc with 9 guides, migration-from-swoosh, doc-contract tests, governance files
 - ✓ BRAND-01..03 — Brand-conformant UI + voice + docs
 
-## Most Recent Milestone: v1.12 Adopter Onboarding & Day-2 Confidence (SHIPPED 2026-06-17)
+## Most Recent Milestone: v1.13 Admin Design-System Stress Test & UX Uplift v3 (SHIPPED 2026-06-21)
+
+**Current released state: `mailglass` 1.8.0 / `mailglass_admin` 1.8.0 / `mailglass_inbound` 1.5.0**
+(live on Hex 2026-06-21). **Opened 2026-06-18; shipped 2026-06-21** — audit `status: passed`
+(41/41 requirements, 9 phases 109–117); linked-version MINOR (admin design-system bump drags
+matched core + inbound), `mailglass_inbound` re-pinned `{:mailglass, "== 1.8.0"}` (D-13 / REL-02).
+Third lived-experience admin design-system pass (light/dark/system, WCAG 2.2 AA, multi-tenant
+stress fixtures, axe-JSON + score-baseline ratchet) — no product-capability growth (D-23/D-28/D-29).
+Detail archived in `.planning/milestones/v1.13-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
+Release-engineering note: the 227-commit body had never run CI while origin was frozen, so the cut
+surfaced 3 latent regressions (a `mix format` comment, 2 Dialyzer Ecto map-projection specs, 16
+stale Phase-113 responsive browser specs) plus a publish-time `premailex` lock-incompat fixed by
+`mix deps.unlock --all` before the sibling `deps.get` in `publish-hex.yml` (`ceee3835`).
+
+## Preceding Milestone: v1.12 Adopter Onboarding & Day-2 Confidence (SHIPPED 2026-06-17)
 
 **Opened 2026-06-16; shipped 2026-06-17** — audit `status: passed` (13/13 requirements, 5/5 phases);
 **cut the first real linked-version Hex release since 1.6.2** → live at 1.7.0 / 1.7.0 / 1.4.0,
