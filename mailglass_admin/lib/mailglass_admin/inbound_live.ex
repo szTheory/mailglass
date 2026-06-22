@@ -105,6 +105,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:page_uri, "/inbound")
      |> assign(:dark_chrome, false)
      |> assign(:theme_choice, :system)
+     |> assign(:theme_cookie, session_theme_cookie(session))
      |> assign(:tenant_options, [])
      |> assign(:tenant_state, :none)
      |> assign(:selected_tenant_id, nil)
@@ -124,6 +125,13 @@ defmodule MailglassAdmin.InboundLive do
   defp session_tenant_id(session) when is_map(session), do: Map.get(session, "tenant_id")
   defp session_tenant_id(_session), do: nil
 
+  # Persisted theme cookie surfaced via the operator session callback; the shell
+  # resolves theme from it when the URL carries no explicit ?theme= override.
+  defp session_theme_cookie(session) when is_map(session),
+    do: Map.get(session, "admin_chrome_theme_cookie")
+
+  defp session_theme_cookie(_session), do: nil
+
   @impl true
   def handle_params(params, uri, socket) do
     {filter_params, filter_errors} = normalize_filter_params_with_errors(params)
@@ -137,8 +145,8 @@ defmodule MailglassAdmin.InboundLive do
       socket
       |> assign(:base_path, URI.parse(uri).path || "/inbound")
       |> assign(:page_uri, uri)
-      |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params))
-      |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params))
+      |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params, socket.assigns.theme_cookie))
+      |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params, socket.assigns.theme_cookie))
       |> assign(:filter_params, filter_params)
       |> assign(:filter_form, to_form(filter_params, as: :filters))
       |> assign(:filter_errors, filter_errors)

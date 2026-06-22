@@ -567,3 +567,42 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
   }
 
 });
+
+// =============================================================================
+// THEME PICKER CLICK (FLOW-03) — clicking the operator shell's theme_picker must
+// actually re-theme the admin shell. Guards two regressions at once: (1) the
+// sr-only radio that swallowed clicks (overlay must keep the input the click
+// target), and (2) the shell deriving theme from URL params only, so the
+// cookie-persisting redirect left .mg-admin-root unthemed. The shell always
+// stamps an explicit data-theme, so assert on .mg-admin-root (the admin theme
+// root), not the host <html>.
+// =============================================================================
+
+test.describe("flows: operator theme picker applies the theme on click (FLOW-03)", () => {
+
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize(FLOW_VIEWPORT);
+  });
+
+  test("clicking Dark / Light / System re-themes the admin shell and updates selection", async ({ page }) => {
+    await openOperator(page);
+    const root = page.locator(".mg-admin-root").first();
+
+    // Default (system): shell stamps the light theme; system radio is selected.
+    await expect(root).toHaveAttribute("data-theme", "mailglass-light");
+    await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
+
+    await page.getByRole("radio", { name: "Dark", exact: true }).click();
+    await expect(root, "Dark click themes the shell").toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
+
+    await page.getByRole("radio", { name: "Light", exact: true }).click();
+    await expect(root, "Light click themes the shell").toHaveAttribute("data-theme", "mailglass-light");
+    await expect(page.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
+
+    await page.getByRole("radio", { name: "System", exact: true }).click();
+    await expect(root, "System click returns to the default light stamp").toHaveAttribute("data-theme", "mailglass-light");
+    await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
+  });
+
+});

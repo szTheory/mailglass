@@ -334,10 +334,14 @@ defmodule MailglassAdmin.Components do
       <label
         :for={option <- theme_options()}
         class={[
-          "mg-focus-ring-within flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-field px-sm",
+          "mg-focus-ring-within relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-field px-sm",
           theme_option_class(@selected == option.theme, @disabled)
         ]}
       >
+        <%!-- The radio is a transparent overlay filling the whole segment, so a
+              click lands on the input itself and fires phx-click directly (a
+              clipped sr-only input is not the click target — the label/span is,
+              and LiveView's closest() only walks ancestors, never the input). --%>
         <input
           type="radio"
           name={@name}
@@ -347,7 +351,7 @@ defmodule MailglassAdmin.Components do
           phx-click={@event}
           phx-target={@target}
           phx-value-theme={if @event, do: option.value}
-          class="sr-only"
+          class="absolute inset-0 m-0 cursor-pointer appearance-none rounded-field opacity-0 disabled:cursor-default"
         />
         <span class="whitespace-nowrap">{option.label}</span>
       </label>
