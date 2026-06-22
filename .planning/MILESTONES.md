@@ -1,5 +1,17 @@
 # Milestones
 
+## ✅ v1.13 Admin Design-System Stress Test & UX Uplift (v3) (Shipped: 2026-06-21)
+
+**Phases completed:** 9 phases (109–117), 41 reqs — **mailglass 1.8.0 / mailglass_admin 1.8.0 / mailglass_inbound 1.5.0 live on Hex** (see `milestones/v1.13-MILESTONE-AUDIT.md`)
+
+> Bottom-up fractal admin design-system uplift (foundation → primitives → forms → app shell →
+> data display → composed groups → motion → WCAG 2.2 AA ratchet), then a linked-version MINOR
+> release. Milestone audit `status: passed` — 41/41 requirements, 9/9 phases. Inbound re-pinned
+> `{:mailglass, "== 1.8.0"}` (D-05/D-13). Two real admin fixes shipped in 1.8.0 (mobile back-button
+> focus ring; preview frame-theme independence). Publish unblocked via a `mix deps.unlock --all`
+> fix in publish-hex.yml (mailglass 1.8.0 → premailex ~> 1.0 vs the stale sibling lock).
+> (Scope counted directly from phases 109–117 to avoid `milestone.complete` 999.x inflation.)
+
 ## v1.12 Adopter Onboarding & Day-2 Confidence (Shipped: 2026-06-17)
 
 **Phases completed:** 5 phases (104–108), 11 plans — **mailglass 1.7.0 / mailglass_admin 1.7.0 / mailglass_inbound 1.4.0 live on Hex**
