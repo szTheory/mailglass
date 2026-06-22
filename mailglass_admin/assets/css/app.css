@@ -355,6 +355,17 @@ code, pre, .mono {
               border-color var(--duration-instant) var(--ease-out);
 }
 
+/* D-08 enforcement: a data-theme swap must be INSTANT. Tailwind's
+   `transition-colors`, daisyUI components, and `.mg-state-layer` all ease
+   color/border — harmless when light↔dark was a no-op, but now that the themes
+   actually differ a swap would animate every surface. Scope all theme-driven
+   easing to the interactive states: an IDLE element transitions only
+   transform/opacity, so a theme swap never animates, while hover/focus easing
+   and the focus ring (which apply in their own states) are untouched. */
+.mg-admin-root *:not(:hover):not(:focus):not(:focus-visible) {
+  transition-property: transform, opacity;
+}
+
 /* scroll-chaining guard (FLOW-02 / D-04): modal scroll containers contain
    their overscroll so background scrollY stays unchanged at 320px. */
 .mg-overscroll-contain {
