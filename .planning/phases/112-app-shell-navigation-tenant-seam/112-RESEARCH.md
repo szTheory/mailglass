@@ -453,22 +453,19 @@ end
 | A3 | Developers commonly mis-implement system as a concrete stored theme. | Pitfall 4 | Verification must explicitly reject `data-theme="system"` and explicit root theme under system. |
 | A4 | Client-side counting from entries is a likely pagination implementation trap. | Pitfall 5 | Pagination could render dishonest totals if planner does not require count-query tests. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Exact actor-to-tenancy context shape**
    - What we know: `operator_actor` is assigned by `Operator.Mount`, includes `:subject_id` and optional `:tenant_id`, and `Tenancy.scope/2` accepts arbitrary context. [VERIFIED: repo: `mailglass_admin/lib/mailglass_admin/operator/mount.ex`, `mailglass_admin/lib/mailglass_admin/auth.ex`, `lib/mailglass/tenancy.ex`]
-   - What's unclear: Existing default read models pass a tenant id string, not an actor map, into `Tenancy.scope/2`. [VERIFIED: repo: `lib/mailglass/operator/deliveries.ex`]
-   - Recommendation: Add tenant projection with a clearly documented context argument; support actor maps by defaulting to `actor[:tenant_id]` where present, and test with a custom tenancy resolver. [ASSUMED]
+   - RESOLVED: The tenant selector accepts the authenticated `operator_actor` map as its context, documents extraction of `actor[:tenant_id]` when present, and passes that actor/context to `Mailglass.Tenancy.scope/2`. Tests use a custom tenancy resolver to prove scoping. The admin shell does not use raw Repo access. [RESOLVED: orchestrator repo inspection]
 
 2. **Inbound tenant projection source**
    - What we know: Inbound rows live in `mailglass_inbound` behind an optional runtime gateway, while outbound/core deliveries live in `mailglass`. [VERIFIED: repo: `mailglass_admin/lib/mailglass_admin/optional_deps/mailglass_inbound.ex`, `mailglass_inbound/lib/mailglass_inbound/internal/operator/records.ex`]
-   - What's unclear: Whether Phase 112 tenant list should union outbound and inbound tenant ids when inbound is installed, or use outbound/core delivery tenants only. [ASSUMED]
-   - Recommendation: Start with core outbound `Mailglass.Operator.Tenants` projection for the shell baseline; optionally extend gateway union only if tests show inbound-only tenants are a real demo path. [ASSUMED]
+   - RESOLVED: Phase 112 tenant discovery is a unified shell-accessible tenant selector, not outbound-only. The core selector includes distinct outbound tenant ids and unions inbound-only tenant ids through `MailglassAdmin.OptionalDeps.MailglassInbound` when `mailglass_inbound` is loaded. The admin shell consumes one seam and never references `MailglassInbound.*` directly; optional gateway functions may be added or extended as needed. [RESOLVED: orchestrator repo inspection]
 
 3. **Cookie path derivation**
    - What we know: root layout has a mount-aware asset helper using `:mount_path`, and router/session machinery passes mount context. [VERIFIED: repo: `mailglass_admin/lib/mailglass_admin/layouts.ex`]
-   - What's unclear: The exact helper for setting a cookie path scoped to the adopter's mounted admin path. [ASSUMED]
-   - Recommendation: Planner should include a small investigation/implementation task for `mailglass_admin_theme` cookie path, with tests under mounted `/ops/mail` routes. [ASSUMED]
+   - RESOLVED: Use a namespaced admin theme cookie whose path is scoped to the host/mount path seam. System mode clears/deletes that explicit cookie and never emits `data-theme="system"`. Plans include mounted admin route tests such as `/ops/mail` where the repo's mount-path support is available. [RESOLVED: orchestrator repo inspection]
 
 ## Environment Availability
 
