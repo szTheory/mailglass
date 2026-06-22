@@ -4,6 +4,72 @@
 
 ---
 
+## Milestone: v1.13 — Admin Design-System Stress Test & UX Uplift (v3)
+
+**Shipped 2026-06-21** — 9 phases (109–117), 41 requirements, audit `status: passed`.
+**Linked-version MINOR release:** mailglass 1.8.0 / mailglass_admin 1.8.0 / mailglass_inbound 1.5.0,
+inbound re-pinned `{:mailglass, "== 1.8.0"}` (D-13). Third lived-experience admin design-system pass
+(after v1.7/v1.11), distinguished by D-29: the v1.11 ratchet passed in the lab yet the real
+`make demo` app still surfaced usability traps. Light/dark/system at every width, WCAG 2.2 AA,
+multi-tenant stress fixtures, axe-JSON + score-baseline ratchet — no product-capability growth.
+
+### What shipped
+
+Bottom-up fractal uplift: token/gate foundation (109) → public primitives incl. canonical
+`stat_card` + 3-way theme picker (110) → unified filter components (111) → tenant seam auto-selecting
+the sole tenant from the core read model (112) → responsive table→card data display (113) → composed
+group geometry (114) → motion contract (115) → multi-tenant persona cohort + ratchet-arm with axe
+baseline and the 24-defect usability sweep (116) → release cut + milestone closeout (117). Two genuine
+product fixes also landed: `mg-focus-ring` on the mobile detail-back buttons (WCAG 2.4.11) and
+preview frame-theme independence across the admin-chrome theme toggle.
+
+### What worked
+
+- **Tighten-then-re-baseline held again.** Gates were tightened inside each phase with the full
+  pillar re-score deferred to the final ratchet-arm phase (116) — the re-baseline could not regress
+  silently. The v1.11 pattern carried cleanly into a second consecutive design-system milestone.
+- **The executable Bucket-A manifest.** Every one of the 24 usability defects cites a guard literal
+  (gate name / e2e title / axe ref / persona literal) asserted to physically exist, so a renamed or
+  deleted guard fails the manifest rather than passing vacuously — closure was mechanical, not asserted.
+- **Advisory-aware `gate-ci-green` did its job.** The Demo/Operator browser lanes are non-blocking;
+  the release wasn't held hostage by an intermittent demo seeding flake.
+- **Human-identity merge avoided the anti-recursion stall.** Merging via `--admin` (BLOCKED state,
+  only `guard-release-trigger` required) ran CI on the merge SHA under a human identity, so the bot
+  anti-recursion gap that stalls `publish-hex` `gate-ci-green` never triggered.
+
+### Key lessons / friction
+
+- **Lesson (repeat of v1.12, sharper): a frozen origin means the release body has never run full CI.**
+  The 227-commit v1.13 body executed locally on `main` with targeted gates; pushing it for the release
+  surfaced 3 latent regressions on first real CI — a `mix format` comment in `events/event.ex`, 2
+  Dialyzer Ecto map-projection spec artifacts (`operator/{deliveries,tenants}.ex`, suppressed), and
+  16 stale browser specs from the Phase-113 responsive migration (`*-list-card` selectors, visible-row
+  filtering, oklab-unparseable contrast helpers, focus-modality + transition-race fixes). The standing
+  fix remains: a full-CI dry run before the release ceremony, not just targeted phase gates.
+- **Lesson: a published core can raise a NEW transitive requirement the sibling lock can't satisfy.**
+  publish-inbound/admin failed because `mailglass 1.8.0` requires `premailex ~> 1.0` while the sibling
+  `mix.lock` still pinned `premailex 0.3.x` → "the lock is incompatible with mailglass" / version
+  solving failed. Registry-cache and `HEX_HOME=$(mktemp -d)` attempts were red herrings — the real fix
+  was `mix deps.unlock --all` before the sibling `deps.get` in `publish-hex.yml` (`ceee3835`), now
+  permanent in the pipeline. When core bumps a dep floor, the siblings' locks must be unlocked at
+  publish time, not just refreshed.
+- **Friction: premature cancel of a slow publish run.** Long Hex-index polling made an in-flight
+  publish look hung; cancelling it cost a re-dispatch. Read the run's actual elapsed time, not the
+  polling wall-clock, before assuming a stall.
+- **Playwright modality is subtle.** `:focus-visible` only triggers on keyboard modality — a
+  programmatic `.focus()` after a mouse `.click()` won't show the ring, and a 90ms `outline-color`
+  transition races the measurement. Tab-to-focus + settle-the-transition + `getImageData` (oklab-safe)
+  was the durable shape.
+
+### Follow-up (non-blocking)
+
+- **`cohort:58` demo seeding flake** — intermittent shared-DB seeding race in the demo Playwright
+  lane; advisory-only (didn't block publish) but worth hardening with a deterministic per-test seed.
+- **No `gsd-retrospective` skill is installed** in this environment, so this entry was authored
+  directly against the milestone audit's release-engineering notes rather than generated.
+
+---
+
 ## Milestone: v1.12 — Adopter Onboarding & Day-2 Confidence
 
 **Shipped 2026-06-17** — 5 phases (104–108), 13 requirements, audit `status: passed`.
