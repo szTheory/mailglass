@@ -304,7 +304,24 @@ defmodule MailglassAdmin.Preview.AssignsForm do
     |> assign(:help_id, help_id(key))
     |> assign(:label_id, label_id(key))
     |> assign(:label, humanize(key))
-    |> assign(:help_text, "Preview assign value for #{humanize(key)}.")
+    |> assign(:help_text, help_text_for(assigns.value))
+  end
+
+  # Per-field help describes the value type and how to edit it — not a
+  # restatement of the label (the old "Preview assign value for X." boilerplate
+  # repeated the field name under every control and added no information).
+  defp help_text_for(value) do
+    cond do
+      is_boolean(value) -> "Toggle on or off."
+      is_binary(value) -> "Text value."
+      is_integer(value) -> "Whole number."
+      is_float(value) -> "Decimal number."
+      is_struct(value, DateTime) -> "Date and time."
+      is_struct(value, Date) -> "Date."
+      is_struct(value) or is_map(value) -> "Edit as JSON, then re-render."
+      is_atom(value) -> "Set this in the URL; read-only here."
+      true -> "Read-only."
+    end
   end
 
   defp control_id(key), do: "assigns-" <> Atom.to_string(key)
@@ -315,6 +332,6 @@ defmodule MailglassAdmin.Preview.AssignsForm do
   # snake_case_atom -> "Snake case atom" (sentence case per UI-SPEC line 97)
   defp humanize(atom) when is_atom(atom) do
     [first | rest] = atom |> Atom.to_string() |> String.split("_")
-    String.capitalize(first) <> " " <> Enum.join(rest, " ")
+    Enum.join([String.capitalize(first) | rest], " ")
   end
 end
