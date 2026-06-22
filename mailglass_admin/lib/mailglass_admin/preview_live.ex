@@ -245,6 +245,11 @@ defmodule MailglassAdmin.PreviewLive do
       data-theme={admin_theme_attr(@admin_chrome_theme)}
       class="mg-admin-root min-h-screen bg-base-100 text-base-content px-md py-lg md:px-lg md:py-xl"
     >
+      <header class="mb-lg flex items-center gap-sm border-b border-base-300 pb-md">
+        <Components.logo class="h-6 w-auto" />
+        <span class="text-label font-bold uppercase text-secondary">Preview</span>
+      </header>
+
       <div class="grid gap-lg md:grid-cols-[20rem_1fr]">
         <aside
           data-testid="preview-sidebar-desktop"
@@ -308,10 +313,10 @@ defmodule MailglassAdmin.PreviewLive do
                     phx-click="toggle_theme"
                     aria-label={
                       if admin_chrome_dark?(@admin_chrome_theme),
-                        do: "Switch admin chrome to light theme",
-                        else: "Switch admin chrome to dark theme"
+                        do: "Switch the app theme to light",
+                        else: "Switch the app theme to dark"
                     }
-                    class="mg-focus-ring btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
+                    class="mg-focus-ring btn btn-ghost btn-sm min-h-11 gap-xs px-sm"
                   >
                     <Components.icon
                       name={
@@ -319,6 +324,7 @@ defmodule MailglassAdmin.PreviewLive do
                       }
                       class="w-5 h-5"
                     />
+                    <span class="text-label font-bold">App</span>
                   </button>
                   <button
                     type="button"
@@ -326,15 +332,16 @@ defmodule MailglassAdmin.PreviewLive do
                     phx-click="toggle_preview_frame_theme"
                     aria-label={
                       if @preview_frame_dark_chrome,
-                        do: "Switch preview frame to light chrome",
-                        else: "Switch preview frame to dark chrome"
+                        do: "Switch the email preview backdrop to light",
+                        else: "Switch the email preview backdrop to dark"
                     }
-                    class="mg-focus-ring btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
+                    class="mg-focus-ring btn btn-ghost btn-sm min-h-11 gap-xs px-sm"
                   >
                     <Components.icon
                       name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
                       class="w-5 h-5"
                     />
+                    <span class="text-label font-bold">Email</span>
                   </button>
                 </div>
               </header>
@@ -423,7 +430,7 @@ defmodule MailglassAdmin.PreviewLive do
                     Check mobile, tablet, and desktop rendering at 375 / 768 / 1024px.
                   </.legend_item>
                   <.legend_item icon="hero-moon" title="Light & dark">
-                    Toggle admin chrome and the preview frame independently.
+                    Toggle the App and Email preview themes independently.
                   </.legend_item>
                   <.legend_item icon="hero-pencil-square" title="Editable assigns">
                     Edit the scenario's assigns inline and re-render instantly.

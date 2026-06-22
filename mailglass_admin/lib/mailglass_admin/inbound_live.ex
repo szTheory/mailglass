@@ -408,6 +408,13 @@ defmodule MailglassAdmin.InboundLive do
         </div>
       </section>
 
+      <%!-- Health strip lives full-width above the master-detail so it never
+            clips inside the 40% list column when a record is open. Hidden on
+            mobile once a record is selected (the detail takes the screen). --%>
+      <div class={["mt-6", @selected_record && "max-md:hidden"]}>
+        <Overview.overview summary={@inbound_summary} />
+      </div>
+
       <section
         data-testid="inbound-master-detail"
         class={[
@@ -419,8 +426,6 @@ defmodule MailglassAdmin.InboundLive do
         ]}
       >
         <div class={["min-w-0 space-y-4", @selected_record && "max-md:hidden"]}>
-          <Overview.overview summary={@inbound_summary} />
-
           <aside
             data-testid="inbound-records-list-card"
             class={[

@@ -79,7 +79,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     ~H"""
     <details open={@current_mailable == @mod}>
       <summary class="mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body font-bold text-base-content cursor-pointer hover:bg-base-200 rounded transition-colors">
-        <span class="truncate">{inspect(@mod)}</span>
+        <.mailable_label mod={@mod} />
       </summary>
       <ul class="mt-1 ml-2">
         <%= for {scenario_name, _defaults} <- @reflection do %>
@@ -103,7 +103,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
   def mailable_entry(%{reflection: :no_previews} = assigns) do
     ~H"""
     <div class="flex items-center gap-2 px-3 py-2 min-h-11 text-body text-secondary">
-      <span class="truncate">{inspect(@mod)}</span>
+      <.mailable_label mod={@mod} />
       <Components.badge variant={:stub} />
       <span class="sr-only">No previews defined</span>
     </div>
@@ -117,11 +117,40 @@ defmodule MailglassAdmin.Preview.Sidebar do
       title="preview_props/0 raised an error"
       class="mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body text-base-content hover:bg-base-200 rounded transition-colors"
     >
-      <span class="truncate">{inspect(@mod)}</span>
+      <.mailable_label mod={@mod} />
       <Components.badge variant={:warning} />
       <span class="sr-only">preview_props/0 raised an error</span>
     </.link>
     """
+  end
+
+  attr(:mod, :atom, required: true)
+
+  # Two-tier mailable label: the leaf module (what operators actually scan for)
+  # reads prominently while the namespace is de-emphasized above it. Truncation
+  # now bites the namespace, never the leaf — the old single-line `inspect/1`
+  # truncated the meaningful end ("MailglassDemoWeb.Mailers.Accoun…").
+  defp mailable_label(assigns) do
+    {namespace, leaf} = module_parts(assigns.mod)
+    assigns = assign(assigns, namespace: namespace, leaf: leaf)
+
+    ~H"""
+    <span class="flex min-w-0 flex-1 flex-col leading-tight" title={inspect(@mod)}>
+      <span :if={@namespace} class="truncate text-label font-normal text-secondary">
+        {@namespace}
+      </span>
+      <span class="truncate">{@leaf}</span>
+    </span>
+    """
+  end
+
+  # Splits a module into {namespace, leaf}. A single-segment module has no
+  # namespace tier (nil), so it renders as a one-line label.
+  defp module_parts(mod) do
+    case String.split(inspect(mod), ".") do
+      [single] -> {nil, single}
+      parts -> {parts |> Enum.drop(-1) |> Enum.join("."), List.last(parts)}
+    end
   end
 
   @doc """
