@@ -106,9 +106,9 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                 <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Status</th>
                 <th scope="col" class="text-label font-bold uppercase text-secondary">Recipient</th>
                 <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Tenant</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-24">Provider</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Provider</th>
                 <th scope="col" class="text-label font-bold uppercase text-secondary w-28">Event</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-44">Last event</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-52">Last event</th>
               </tr>
             </thead>
             <tbody>
