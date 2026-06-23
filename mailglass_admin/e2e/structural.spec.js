@@ -326,9 +326,33 @@ async function assertNonTextContrastAA(locator, label) {
   expect(contrastRatio(stroke, background), `${label} non-text contrast`).toBeGreaterThanOrEqual(3);
 }
 
+// Controls inside overlays animate in via a scale transform (`.motion-overlay`),
+// so their on-screen rect is fractionally smaller than the settled layout box
+// until the entry animation completes. Measure the SETTLED element: poll the
+// bounding box until two consecutive reads agree, so target-size reflects the
+// steady state, not a mid-animation frame. The 44px floor is unchanged.
+async function settledBoundingBox(locator, label) {
+  let prev = await locator.boundingBox();
+  for (let i = 0; i < 20; i++) {
+    await locator.page().waitForTimeout(50);
+    const next = await locator.boundingBox();
+    if (
+      prev &&
+      next &&
+      Math.abs(prev.width - next.width) < 0.5 &&
+      Math.abs(prev.height - next.height) < 0.5
+    ) {
+      return next;
+    }
+    prev = next;
+  }
+  return prev;
+}
+
 async function assertTouchTarget(locator, label) {
-  await expect(locator.first(), label).toBeVisible();
-  const box = await locator.first().boundingBox();
+  const target = locator.first();
+  await expect(target, label).toBeVisible();
+  const box = await settledBoundingBox(target, label);
   expect(box, `${label} target-size box`).not.toBeNull();
   // Chromium can report 44px CSS floors as 43.89px after subpixel layout.
   // Round to the rendered pixel for the structural target-size assertion.
