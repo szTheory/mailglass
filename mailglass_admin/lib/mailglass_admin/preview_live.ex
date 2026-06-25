@@ -305,7 +305,7 @@ defmodule MailglassAdmin.PreviewLive do
                   {inspect(@current_mailable)}
                   <span class="text-secondary font-normal">· {@current_scenario}</span>
                 </h1>
-                <div data-testid="preview-header-controls" class="flex gap-sm items-center">
+                <div data-testid="preview-header-controls" class="flex flex-wrap gap-sm items-center">
                   <DeviceFrame.device_frame device_width={@device_width} />
                   <button
                     type="button"
