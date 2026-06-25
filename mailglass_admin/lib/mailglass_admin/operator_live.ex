@@ -1134,8 +1134,11 @@ defmodule MailglassAdmin.OperatorLive do
 
   # Short, fits-the-display-slot status token. The descriptive phrasing
   # ("All clear" / "Needs attention") rides in the severity_label below it,
-  # so the big value never truncates the way a full sentence did.
-  defp all_clear_value(nil), do: "—"
+  # so the big value never truncates the way a full sentence did. A nil
+  # summary returns no value: all_clear_state/1 reports :unavailable, so
+  # stat_card renders its own canonical placeholder rather than a hand-rolled
+  # dash (STATCARD-GATE: overview cards never inline bare-dash placeholders).
+  defp all_clear_value(nil), do: nil
 
   defp all_clear_value(summary) do
     if all_clear?(summary), do: "Clear", else: "Attention"
