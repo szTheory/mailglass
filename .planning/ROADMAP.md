@@ -34,7 +34,7 @@ structural gates can't, and redesign the four admin/operator surfaces **page-by-
 biggest-impact-first** to ruthlessly de-duplicated, Apple-like deliberate IA — then ship to Hex.
 Binding quality bar: `.planning/research/v1.14/STRESS-TEST-PROMPT.md` (do not dilute).
 
-- [ ] **Phase 118: Method, Audit & Storybook stand-up** - Persona-critic harness + screenshot-backed defect register; phoenix_storybook dev-only review surface; new judgment gates drafted; floor inherited
+- [x] **Phase 118: Method, Audit & Storybook stand-up** - Persona-critic harness + screenshot-backed defect register; phoenix_storybook dev-only review surface; new judgment gates drafted; floor inherited (completed 2026-06-26)
 - [ ] **Phase 119: App-shell + Nav + Overview redesign** - The keystone #1-pain surface: fix the false-active-nav bug, give Overview its own identity, kill redundant nav cards, make health stats actionable
 - [ ] **Phase 120: Deliveries surface redesign** - Core operator JTBD redesigned to a streamlined, non-info-dump IA across the full matrix
 - [ ] **Phase 121: Inbound surface redesign** - Inbound brought consistent with the cleaned-up Deliveries patterns across the full matrix
@@ -235,7 +235,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 118. Method, Audit & Storybook stand-up | 3/3 | Complete   | 2026-06-26 |
+| 118. Method, Audit & Storybook stand-up | 3/3 | Complete    | 2026-06-26 |
 | 119. App-shell + Nav + Overview redesign | 0/? | Not started | - |
 | 120. Deliveries surface redesign | 0/? | Not started | - |
 | 121. Inbound surface redesign | 0/? | Not started | - |

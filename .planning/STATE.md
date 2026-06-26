@@ -2,16 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-status: verifying
-stopped_at: Completed 118-03-PLAN.md
-last_updated: "2026-06-26T16:51:16.994Z"
+current_phase: 119
+current_phase_name: App-shell + Nav + Overview redesign
+status: ready_to_plan
+stopped_at: Phase 118 complete, ready to plan Phase 119
+last_updated: "2026-06-26T17:15:38.937Z"
 last_activity: 2026-06-26
+last_activity_desc: Phase 118 complete, transitioned to Phase 119
 progress:
-  total_phases: 9
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 33
+  total_phases: 7
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
+  percent: 14
 ---
 
 # Project State
@@ -21,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 118 — method-audit-storybook-stand-up
+**Current focus:** Phase 119 — App-shell + Nav + Overview redesign
 
 ## Current Position
 
-Phase: 118 (method-audit-storybook-stand-up) — EXECUTING
-Plan: 3 of 3
-Status: Phase complete — ready for verification
-Last activity: 2026-06-26
+Phase: 119 — App-shell + Nav + Overview redesign
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-26 — Phase 118 complete, transitioned to Phase 119
 
 ## v1.14 Milestone Intent
 
