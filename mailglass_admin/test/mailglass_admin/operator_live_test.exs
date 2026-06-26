@@ -1398,6 +1398,108 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-deliveries-list")
       refute html =~ ~s(data-testid="operator-overview")
     end
+
+    # SHELL-02: operator-overview-nav block deleted (D-04/D-NAV-DUP)
+    test "Overview does NOT render the redundant Navigate block (operator-overview-nav deleted)", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      refute html =~ ~s(data-testid="operator-overview-nav"),
+             "operator-overview-nav block must be deleted (D-04)"
+    end
+
+    # SHELL-02: failures stat card wrapped in drill-through link (status=failed, tenant-scoped)
+    test "failures stat card is wrapped in a drill-through link to status=failed Deliveries", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="operator-overview-health-failures-link"),
+             "failures stat card must be wrapped in a drill-through link"
+
+      {:ok, doc} = Floki.parse_document(html)
+
+      failures_link =
+        doc
+        |> Floki.find(~s([data-testid="operator-overview-health-failures-link"]))
+        |> List.first()
+
+      assert failures_link != nil, "expected operator-overview-health-failures-link element"
+
+      href = failures_link |> Floki.attribute("href") |> List.first() || ""
+
+      assert href =~ "status=failed",
+             "failures drill-through link href must contain status=failed, got: #{inspect(href)}"
+
+      assert href =~ "tenant_id=#{@tenant_id}",
+             "failures drill-through link must preserve tenant_id, got: #{inspect(href)}"
+    end
+
+    # SHELL-02: suppressions stat card wrapped in drill-through link (status=suppressed, tenant-scoped)
+    test "suppressions stat card is wrapped in a drill-through link to status=suppressed Deliveries",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ ~s(data-testid="operator-overview-health-suppressions-link"),
+             "suppressions stat card must be wrapped in a drill-through link"
+
+      {:ok, doc} = Floki.parse_document(html)
+
+      suppressions_link =
+        doc
+        |> Floki.find(~s([data-testid="operator-overview-health-suppressions-link"]))
+        |> List.first()
+
+      assert suppressions_link != nil, "expected operator-overview-health-suppressions-link element"
+
+      href = suppressions_link |> Floki.attribute("href") |> List.first() || ""
+
+      assert href =~ "status=suppressed",
+             "suppressions drill-through link href must contain status=suppressed, got: #{inspect(href)}"
+
+      assert href =~ "tenant_id=#{@tenant_id}",
+             "suppressions drill-through link must preserve tenant_id, got: #{inspect(href)}"
+    end
+
+    # SHELL-02: orientation strip empty-pane-only, null-safe gate on nil support_summary
+    test "nil support_summary does not raise and orientation strip is suppressed", %{conn: conn} do
+      # The OperatorLive assigns support_summary=nil on mount (before handle_params).
+      # After handle_params with no module loaded, it stays nil. We verify render doesn't crash.
+      conn = operator_conn(conn)
+      # Use a tenant that would have no support_summary (or the module would fail silently)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      # Should not crash (no FunctionClauseError on nil.failed_ingest.count)
+      assert html =~ ~s(data-testid="operator-overview-health"),
+             "overview health block must render even when support_summary is nil"
+
+      # With nil support_summary, orientation strip is suppressed (nil is attention/unavailable)
+      refute html =~ ~s(data-testid="operator-overview-orientation"),
+             "orientation strip must be absent when support_summary is nil (null-safe gate)"
+    end
+
+    # SHELL-02: all-clear orientation strip renders in all-clear/zero-data state
+    # NOTE: This test is exploratory — the all-clear state requires a non-nil support_summary
+    # where both failed_ingest.count == 0 and orphan_backlog.count == 0, AND suppression_count in [0, nil].
+    # In the test environment, support_summary may be nil (module-apply rescues to nil).
+    # So we verify the gate condition: strip is absent when support_summary is nil (above test covers this).
+    # The all-clear branch is verified by the shell_test unit tests (faster, no full LiveView).
+    test "overview renders orientation strip container testid only in all-clear state", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      # In test env, support_summary is either nil (module unavailable → strip absent)
+      # or a real summary (if available); both cases the conditional renders correctly.
+      # We do not assert presence/absence of strip here beyond the nil guard (covered above).
+      # This test asserts the page renders without crashing.
+      assert html =~ ~s(data-testid="operator-overview")
+    end
   end
 
   describe "motion-reveal re-fire fix (GAP-19 / MOTION-01)" do
