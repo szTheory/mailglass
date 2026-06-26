@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-status: Roadmap created; awaiting `/gsd-plan-phase 118`
-stopped_at: Phase 118 context gathered (assumptions mode)
-last_updated: "2026-06-26T12:47:06.541Z"
-last_activity: 2026-06-26 — v1.14 roadmap created (Phases 118-124)
+status: executing
+stopped_at: Completed 118-01-PLAN.md
+last_updated: "2026-06-26T16:28:05.042Z"
+last_activity: 2026-06-26
 progress:
   total_phases: 9
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 9
+  completed_plans: 7
   percent: 22
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 118 — Method, Audit & Storybook stand-up (ready to plan)
+**Current focus:** Phase 118 — method-audit-storybook-stand-up
 
 ## Current Position
 
-Phase: 118 — Method, Audit & Storybook stand-up (not started; ready to plan)
-Plan: —
-Status: Roadmap created; awaiting `/gsd-plan-phase 118`
-Last activity: 2026-06-26 — v1.14 roadmap created (Phases 118-124)
+Phase: 118 (method-audit-storybook-stand-up) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-06-26
 
 ## v1.14 Milestone Intent
 
@@ -239,6 +239,8 @@ plan directly from the v1.13 precedent.
 - [116-05] A11 TABLE-OVERUSE-GATE floor = 3 (deliveries_list, records_list, preview/tabs — all genuinely tabular); the match pattern is "<table" + whitespace, which excludes the @moduledoc backtick prose form so header/doc text cannot inflate the count.
 - [116-05] 6 net-new Bucket-A guards landed (A3, A4/A23, A16-system, A21, A22, A11); ~18 cite existing green guards from phases 109-115 + plans 116-02/03. All 24 ship status: live (no downgrades), so 116-06's phase gate accounts for a full 24/24 closure.
 - [Phase ?]: v1.13 ratchet-arm armed (116-06): 54-cell aesthetic + 9-cell axe baselines promoted current->prior with distinct run_ids; all three fail-closed comparators green (22 tests, 0 failures)
+- [Phase ?]: Storybook theme bridge uses per-variation template-level data-theme (not color_mode class picker); admin components key off data-theme which a CSS class cannot drive without a forbidden app.css alias (D-08).
+- [Phase ?]: phoenix_storybook css_path = served committed bundle URL /dev/mail/css-<md5>; no new asset build, app.css untouched (D-07).
 
 ## Quick Tasks Completed
 
@@ -360,6 +362,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 116 P04 | 14min | 2 tasks | 3 files |
 | Phase 116 P05 | 7 min | 3 tasks | 4 files |
 | Phase 116 P06 | 17min | 3 tasks | 4 files |
+| Phase 118 P01 | 11min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -384,9 +387,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-26T12:47:06.534Z
-**Stopped at:** Phase 118 context gathered (assumptions mode)
-**Resume file:** .planning/phases/118-method-audit-storybook-stand-up/118-CONTEXT.md
+**Last session:** 2026-06-26T16:27:58.343Z
+**Stopped at:** Completed 118-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in

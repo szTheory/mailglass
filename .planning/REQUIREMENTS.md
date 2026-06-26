@@ -29,7 +29,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 ## v1.14 Requirements
 
 ### Method & Audit (the method inversion)
-- [ ] **METHOD-01**: Adversarial persona/JTBD critic agents walk every admin surface (live `make demo`
+- [x] **METHOD-01**: Adversarial persona/JTBD critic agents walk every admin surface (live `make demo`
       + the review surface) across the viewport×theme×state matrix and produce a prioritized,
       severity-ranked, **screenshot-backed defect register** (the hit-list driving the redesign).
 - [ ] **METHOD-02**: New judgment-level regression guards (nav-active-correctness; no nav-duplication
@@ -37,7 +37,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
       issues cannot silently regress.
 
 ### Storybook / Review Surface
-- [ ] **STORY-01**: A dev-only `phoenix_storybook` surface renders admin primitives, component groups,
+- [x] **STORY-01**: A dev-only `phoenix_storybook` surface renders admin primitives, component groups,
       and pages on-brand (sandbox stylesheet = the committed `app.css`) with stories spanning
       states/themes/viewports; it is `only: :dev` so adopters never install it (zero-Node guarantee
       intact).
@@ -98,9 +98,9 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| METHOD-01 | Phase 118 | Pending |
+| METHOD-01 | Phase 118 | Complete |
 | METHOD-02 | Phase 118 | Pending |
-| STORY-01 | Phase 118 | Pending |
+| STORY-01 | Phase 118 | Complete |
 | STORY-02 | Phase 118 | Pending |
 | SHELL-01 | Phase 119 | Pending |
 | SHELL-02 | Phase 119 | Pending |
