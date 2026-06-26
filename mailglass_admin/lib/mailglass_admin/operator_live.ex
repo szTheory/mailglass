@@ -339,6 +339,7 @@ defmodule MailglassAdmin.OperatorLive do
 
     assigns =
       assign(assigns,
+        overview_path: paths.overview,
         deliveries_path: paths.deliveries,
         inbound_path: Map.get(assigns, :inbound_path, paths.inbound),
         inbound_available?: MailglassAdmin.Operator.Shell.inbound_available?()
@@ -346,7 +347,8 @@ defmodule MailglassAdmin.OperatorLive do
 
     ~H"""
     <MailglassAdmin.Operator.Shell.shell
-      active={:deliveries}
+      active={@view}
+      overview_path={@overview_path}
       deliveries_path={@deliveries_path}
       inbound_path={@inbound_path}
       inbound_available?={@inbound_available?}
@@ -836,6 +838,7 @@ defmodule MailglassAdmin.OperatorLive do
     |> assign(:view, :overview)
     |> assign(:support_summary, support_summary)
     |> assign(:suppression_count, suppression_count)
+    |> assign(:overview_path, paths.overview)
     |> assign(:inbound_path, paths.inbound)
     |> assign(:deliveries, [])
     |> assign(:deliveries_page_meta, empty_page_meta())

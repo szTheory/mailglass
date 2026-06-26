@@ -57,6 +57,7 @@ defmodule MailglassAdmin.Operator.Shell do
     query = build_query(tenant_id, dark_chrome)
 
     %{
+      overview: root <> query,
       deliveries: root <> query,
       inbound: path_join(root, "inbound") <> query
     }
@@ -198,7 +199,8 @@ defmodule MailglassAdmin.Operator.Shell do
     end)
   end
 
-  attr(:active, :atom, values: [:deliveries, :inbound], required: true)
+  attr(:active, :atom, values: [:overview, :deliveries, :inbound], required: true)
+  attr(:overview_path, :string, required: true)
   attr(:deliveries_path, :string, required: true)
   attr(:inbound_path, :string, required: true)
   attr(:inbound_available?, :boolean, default: false)
@@ -229,6 +231,12 @@ defmodule MailglassAdmin.Operator.Shell do
 
         <nav class="flex flex-col gap-xs p-sm" aria-label="Operator sections">
           <Components.nav_link
+            label="Overview"
+            icon="hero-chart-bar"
+            href={@overview_path}
+            active={@active == :overview}
+          />
+          <Components.nav_link
             label="Deliveries"
             icon="hero-paper-airplane"
             href={@deliveries_path}
@@ -251,6 +259,11 @@ defmodule MailglassAdmin.Operator.Shell do
           </div>
 
           <nav class="flex items-center gap-xs md:hidden" aria-label="Operator sections">
+            <Components.nav_pill
+              label="Overview"
+              href={@overview_path}
+              active={@active == :overview}
+            />
             <Components.nav_pill
               label="Deliveries"
               href={@deliveries_path}
