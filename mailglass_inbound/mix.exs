@@ -122,6 +122,11 @@ defmodule MailglassInbound.MixProject do
   # cutting an inbound release — the published inbound then still carries the
   # previous pin and blocks dependency resolution beside the new core. A
   # `fix(inbound):` release is required either way to ship the new pin to Hex.
+  #
+  # 2026-06-26: re-pin 1.8.0 -> 1.9.0 for the v1.13 (mailglass 1.9.0) release.
+  # The chore release commit (#90) pre-synced the pin; this fix(inbound) cuts the
+  # paired inbound release that ships == 1.9.0 and unblocks the mailglass_admin
+  # 1.9.0 publish (whose deps.get resolves inbound beside the new core).
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
       {:mailglass, "== 1.9.0"}
