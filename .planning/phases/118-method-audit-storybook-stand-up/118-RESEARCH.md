@@ -510,20 +510,25 @@ Makefile:43). Resolve this before authoring the screenshot seam. [CITED: `operat
 
 **These four are the only unverified items; all are low/medium risk with documented fallbacks.**
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Exact `css_path` literal for the storybook mount**
+Both items are functionally resolved with recommendations the plans implement; neither leaves an
+execution-blocking fork. Carried into the plan as concrete tasks/discretion, not open decisions.
+
+1. **Exact `css_path` literal for the storybook mount** — **RESOLVED:** hardcode
+   `"/dev/mail/css-" <> MailglassAdmin.Controllers.Assets.css_hash()` (Plan 01 Task 2 implements this
+   verbatim with a load-`/dev/storybook` verify step).
    - What we know: `__asset_routes__` emits `get "/css-:md5"`; layout builds it via
      `mounted_asset_url(assigns, "css-" <> css_hash())` relative to the admin mount (`/dev/mail`).
-   - What's unclear: whether the storybook (mounted at `/dev/storybook`) can reference the
-     `/dev/mail/css-<hash>` route directly as an absolute path (it should — it's a plain `<link>`).
-   - Recommendation: hardcode `"/dev/mail/css-" <> MailglassAdmin.Controllers.Assets.css_hash()` and
-     verify by loading `/dev/storybook` against a running demo; the explorer renders styled or not.
+   - What was unclear: whether the storybook (mounted at `/dev/storybook`) can reference the
+     `/dev/mail/css-<hash>` route directly as an absolute path — it can; it's a plain `<link>` URL.
+   - Verify by loading `/dev/storybook` against a running demo; the explorer renders styled or not.
 
-2. **Story-file inventory order (Claude's discretion)**
-   - Recommendation: foundations → primitives (nav_link, stat_card, theme_picker, badge — the gallery
-     already enumerates these in `structural.spec.js:25-42`) → groups → pages, biggest-impact surface
-     first (App-shell/Overview). Stories are review aids, not gates — start small, expand as 119+ need.
+2. **Story-file inventory order (Claude's discretion)** — **RESOLVED:** foundations → primitives
+   (nav_link, stat_card, theme_picker, badge — the gallery already enumerates these in
+   `structural.spec.js:25-42`) → groups → pages, biggest-impact surface first (App-shell/Overview);
+   implemented in Plan 01 Task 3. Stories are review aids, not gates — start small, expand as 119+ need.
+   A discretion item per D-09, not a blocking unknown.
 
 ## Environment Availability
 
