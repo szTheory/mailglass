@@ -105,6 +105,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:page_uri, "/inbound")
      |> assign(:dark_chrome, false)
      |> assign(:theme_choice, :system)
+     |> assign(:theme_cookie, session_theme_cookie(session))
      |> assign(:tenant_options, [])
      |> assign(:tenant_state, :none)
      |> assign(:selected_tenant_id, nil)
@@ -124,6 +125,13 @@ defmodule MailglassAdmin.InboundLive do
   defp session_tenant_id(session) when is_map(session), do: Map.get(session, "tenant_id")
   defp session_tenant_id(_session), do: nil
 
+  # Persisted theme cookie surfaced via the operator session callback; the shell
+  # resolves theme from it when the URL carries no explicit ?theme= override.
+  defp session_theme_cookie(session) when is_map(session),
+    do: Map.get(session, "admin_chrome_theme_cookie")
+
+  defp session_theme_cookie(_session), do: nil
+
   @impl true
   def handle_params(params, uri, socket) do
     {filter_params, filter_errors} = normalize_filter_params_with_errors(params)
@@ -137,8 +145,8 @@ defmodule MailglassAdmin.InboundLive do
       socket
       |> assign(:base_path, URI.parse(uri).path || "/inbound")
       |> assign(:page_uri, uri)
-      |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params))
-      |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params))
+      |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params, socket.assigns.theme_cookie))
+      |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params, socket.assigns.theme_cookie))
       |> assign(:filter_params, filter_params)
       |> assign(:filter_form, to_form(filter_params, as: :filters))
       |> assign(:filter_errors, filter_errors)
@@ -389,16 +397,14 @@ defmodule MailglassAdmin.InboundLive do
             id="inbound-filters"
             phx-change="validate_filters"
             phx-submit="apply_filters"
-            class="mt-4 grid gap-sm md:mt-0"
+            class="mt-4 grid gap-md md:mt-0"
           >
-            <div class="grid gap-sm md:grid-cols-2 xl:grid-cols-5">
-              <FiltersForm.fields
-                form={@filter_form}
-                outcome_values={@outcome_values}
-                window_options={@window_options}
-                errors={@filter_errors}
-              />
-            </div>
+            <FiltersForm.fields
+              form={@filter_form}
+              outcome_values={@outcome_values}
+              window_options={@window_options}
+              errors={@filter_errors}
+            />
 
             <div class="flex flex-wrap gap-2">
               <button type="submit" class="btn btn-primary min-h-11 px-5">Open record</button>
@@ -410,13 +416,24 @@ defmodule MailglassAdmin.InboundLive do
         </div>
       </section>
 
+      <%!-- Health strip lives full-width above the master-detail so it never
+            clips inside the 40% list column when a record is open. Hidden on
+            mobile once a record is selected (the detail takes the screen). --%>
+      <div class={["mt-6", @selected_record && "max-md:hidden"]}>
+        <Overview.overview summary={@inbound_summary} />
+      </div>
+
       <section
         data-testid="inbound-master-detail"
-        class="mt-6 grid gap-lg md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]"
+        class={[
+          "mt-6 grid gap-lg",
+          if(@selected_record,
+            do: "md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]",
+            else: "grid-cols-1"
+          )
+        ]}
       >
         <div class={["min-w-0 space-y-4", @selected_record && "max-md:hidden"]}>
-          <Overview.overview summary={@inbound_summary} />
-
           <aside
             data-testid="inbound-records-list-card"
             class={[

@@ -62,26 +62,35 @@ defmodule MailglassAdmin.Operator.Shell do
     }
   end
 
-  @doc "True when the request carries an explicit dark-theme selection."
-  def dark_chrome?(params) when is_map(params),
-    do: theme_choice(params) == :dark
-
-  def dark_chrome?(_params), do: false
+  @doc "True when the resolved theme selection is dark."
+  def dark_chrome?(params, cookie \\ nil),
+    do: theme_choice(params, cookie) == :dark
 
   @doc """
-  Normalizes the URL theme query value into the shell's three-choice picker state.
+  Resolves the shell's three-choice picker state from the URL theme param,
+  falling back to the persisted theme cookie.
 
-  `:system` is represented by absence of an explicit theme query value.
+  An explicit `?theme=` query value wins (a per-link override, matching the
+  root layout's precedence); otherwise the persisted cookie decides; absent
+  both, `:system`. The operator/inbound theme picker persists via cookie + a
+  param-stripping redirect (`set_theme_path/2` → ThemeController), so the
+  cookie — not the URL — is the source of truth across navigations.
   """
-  def theme_choice(params) when is_map(params) do
+  def theme_choice(params, cookie \\ nil)
+
+  def theme_choice(params, cookie) when is_map(params) do
     case Map.get(params, "theme") do
       value when value in ["dark", "mailglass-dark"] -> :dark
       value when value in ["light", "mailglass-light"] -> :light
-      _value -> :system
+      _value -> cookie_theme_choice(cookie)
     end
   end
 
-  def theme_choice(_params), do: :system
+  def theme_choice(_params, cookie), do: cookie_theme_choice(cookie)
+
+  defp cookie_theme_choice(value) when value in ["dark", "mailglass-dark"], do: :dark
+  defp cookie_theme_choice(value) when value in ["light", "mailglass-light"], do: :light
+  defp cookie_theme_choice(_value), do: :system
 
   @doc """
   Builds the target for setting the theme picker value through the HTTP
@@ -233,10 +242,6 @@ defmodule MailglassAdmin.Operator.Shell do
             active={@active == :inbound}
           />
         </nav>
-
-        <div class="mt-auto border-t border-base-300 p-sm">
-          <Components.theme_picker selected={@theme_choice} event="set_theme" />
-        </div>
       </aside>
 
       <div class="flex min-w-0 flex-1 flex-col">
@@ -261,9 +266,7 @@ defmodule MailglassAdmin.Operator.Shell do
 
           <div class="flex min-w-0 flex-wrap items-center justify-end gap-sm">
             <Components.tenant_chip tenant={@tenant} />
-            <span class="md:hidden">
-              <Components.theme_picker selected={@theme_choice} event="set_theme" />
-            </span>
+            <Components.theme_picker selected={@theme_choice} event="set_theme" />
           </div>
         </header>
 

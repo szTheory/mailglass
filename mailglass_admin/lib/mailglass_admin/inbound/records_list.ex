@@ -110,8 +110,8 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                 <th scope="col" class="text-label font-bold uppercase text-secondary">Recipient</th>
                 <th scope="col" class="text-label font-bold uppercase text-secondary">Mailbox</th>
                 <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Tenant</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-24">Provider</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-44">Received</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Provider</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-52">Received</th>
               </tr>
             </thead>
             <tbody>

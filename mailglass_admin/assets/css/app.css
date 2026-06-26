@@ -266,6 +266,15 @@
   transition: outline-color var(--duration-instant) var(--ease-out);
 }
 
+/* Draws the focus ring on a visible wrapper (e.g. a segmented-control segment)
+   when the real control it labels is an sr-only input that is keyboard-focused.
+   Lets a control hide the native radio dot without losing focus visibility. */
+.mg-focus-ring-within:has(> input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  transition: outline-color var(--duration-instant) var(--ease-out);
+}
+
 .mg-admin-root {
   isolation: isolate;
   position: relative;
@@ -353,6 +362,17 @@ code, pre, .mono {
   transition: color var(--duration-instant) var(--ease-out),
               background-color var(--duration-instant) var(--ease-out),
               border-color var(--duration-instant) var(--ease-out);
+}
+
+/* D-08 enforcement: a data-theme swap must be INSTANT. Tailwind's
+   `transition-colors`, daisyUI components, and `.mg-state-layer` all ease
+   color/border — harmless when light↔dark was a no-op, but now that the themes
+   actually differ a swap would animate every surface. Scope all theme-driven
+   easing to the interactive states: an IDLE element transitions only
+   transform/opacity, so a theme swap never animates, while hover/focus easing
+   and the focus ring (which apply in their own states) are untouched. */
+.mg-admin-root *:not(:hover):not(:focus):not(:focus-visible) {
+  transition-property: transform, opacity;
 }
 
 /* scroll-chaining guard (FLOW-02 / D-04): modal scroll containers contain

@@ -240,8 +240,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(to&quot;:&quot;#inbound-filter-panel&quot;)
       assert html =~ ~s(id="inbound-filter-panel")
       assert html =~ "hidden md:block"
-      assert html =~ "md:grid-cols-[40%_60%]"
-      assert html =~ "min-[1440px]:!grid-cols-[33%_67%]"
+      # Master-detail split is conditional: a single column until a record is
+      # selected. The split-percentage grid is asserted in the selection test.
+      assert html =~ "grid-cols-1"
+      refute html =~ "md:grid-cols-[40%_60%]"
       assert html =~ "Recent InboundMessages"
       refute html =~ "tracking-[0.08em]"
     end
@@ -275,6 +277,9 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-detail-back")
       assert html =~ "Back to inbound records"
       assert html =~ "max-md:hidden"
+      # With a record selected, the master-detail percentage grid is active.
+      assert html =~ "md:grid-cols-[40%_60%]"
+      assert html =~ "min-[1440px]:!grid-cols-[33%_67%]"
       assert html =~ ~s(data-testid="inbound-timeline")
       assert html =~ "Execution timeline"
       assert html =~ "MyApp.Mailboxes.SupportMailbox"

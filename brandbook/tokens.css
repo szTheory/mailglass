@@ -3,10 +3,17 @@
    [data-theme="dark"] and, for viewers whose OS prefers dark, under the
    media block at the end. Pages follow the OS setting by default; set
    data-theme="light" or data-theme="dark" on the root element to force a
-   theme. tokens.json records the same values with the raw palette names. */
+   theme. tokens.json records the same values with the raw palette names.
+
+   The mountable admin (mailglass_admin) drives its daisyUI themes with the
+   prefixed names "mailglass-light"/"mailglass-dark", so every theme selector
+   below matches BOTH the brand-book names and the admin's prefixed names —
+   otherwise an explicit theme toggle in the admin would set data-theme but
+   never pull in these token values. */
 
 :root,
-[data-theme="light"] {
+[data-theme="light"],
+[data-theme="mailglass-light"] {
   color-scheme: light;
 
   --mg-color-background: #F8FBFD;
@@ -86,7 +93,8 @@
   --mg-focus-ring-offset: 2px;
 }
 
-[data-theme="dark"] {
+[data-theme="dark"],
+[data-theme="mailglass-dark"] {
   color-scheme: dark;
 
   --mg-color-background: #0D1B2A;
@@ -138,7 +146,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"]):not([data-theme="mailglass-light"]) {
     color-scheme: dark;
 
     --mg-color-background: #0D1B2A;

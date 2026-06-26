@@ -326,9 +326,33 @@ async function assertNonTextContrastAA(locator, label) {
   expect(contrastRatio(stroke, background), `${label} non-text contrast`).toBeGreaterThanOrEqual(3);
 }
 
+// Controls inside overlays animate in via a scale transform (`.motion-overlay`),
+// so their on-screen rect is fractionally smaller than the settled layout box
+// until the entry animation completes. Measure the SETTLED element: poll the
+// bounding box until two consecutive reads agree, so target-size reflects the
+// steady state, not a mid-animation frame. The 44px floor is unchanged.
+async function settledBoundingBox(locator, label) {
+  let prev = await locator.boundingBox();
+  for (let i = 0; i < 20; i++) {
+    await locator.page().waitForTimeout(50);
+    const next = await locator.boundingBox();
+    if (
+      prev &&
+      next &&
+      Math.abs(prev.width - next.width) < 0.5 &&
+      Math.abs(prev.height - next.height) < 0.5
+    ) {
+      return next;
+    }
+    prev = next;
+  }
+  return prev;
+}
+
 async function assertTouchTarget(locator, label) {
-  await expect(locator.first(), label).toBeVisible();
-  const box = await locator.first().boundingBox();
+  const target = locator.first();
+  await expect(target, label).toBeVisible();
+  const box = await settledBoundingBox(target, label);
   expect(box, `${label} target-size box`).not.toBeNull();
   // Chromium can report 44px CSS floors as 43.89px after subpixel layout.
   // Round to the rendered pixel for the structural target-size assertion.
@@ -336,12 +360,18 @@ async function assertTouchTarget(locator, label) {
   expect(Math.round(box.height), `${label} target-size height`).toBeGreaterThanOrEqual(44);
 }
 
-async function assertFocusAppearanceAndNotObscured(page, locator, label) {
+// `locator` is the element that receives keyboard focus. For controls that
+// visually hide their focusable element (e.g. a segmented control whose native
+// radio is sr-only and whose focus ring renders on the visible segment label),
+// pass `opts.indicatorLocator` — the visible element the focus indicator draws
+// on. We focus `locator` but measure appearance/obscuring on the indicator.
+async function assertFocusAppearanceAndNotObscured(page, locator, label, opts = {}) {
   const target = locator.first();
-  await expect(target, label).toBeVisible();
+  const indicator = (opts.indicatorLocator || locator).first();
+  await expect(indicator, label).toBeVisible();
   await target.focus();
 
-  const focusState = await target.evaluate(el => {
+  const focusState = await indicator.evaluate(el => {
     const style = getComputedStyle(el);
     const rect = el.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
@@ -359,7 +389,7 @@ async function assertFocusAppearanceAndNotObscured(page, locator, label) {
   expect(focusState.outlineStyle, `${label} focus indicator style`).not.toBe("none");
   expect(focusState.notObscured, `${label} Focus Not Obscured`).toBeTruthy();
 
-  await assertNonTextContrastAA(target, label);
+  await assertNonTextContrastAA(indicator, label);
 }
 
 async function expectNoDataTheme(locator, label) {
@@ -995,7 +1025,22 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("Operator: master-detail grid follows 320/768/1440 responsive contract", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 900 });
       await openOperator(page);
+
+      // The master-detail split is a SELECTED-state contract: with nothing
+      // selected the list spans full width (single column) so the table has
+      // room. Assert the full-width default, then open a delivery to assert the
+      // 40/60 (768) and 33/67 (1440) split governs the detail view.
       let columns = parseGridColumns(
+        await page.getByTestId("operator-master-detail").evaluate(
+          el => getComputedStyle(el).getPropertyValue("grid-template-columns")
+        )
+      );
+      expect(columns.length).toBe(1);
+
+      await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
+      await expect(page.getByTestId("operator-detail-header")).toBeVisible();
+
+      columns = parseGridColumns(
         await page.getByTestId("operator-master-detail").evaluate(
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
         )
@@ -1043,7 +1088,21 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("Inbound: master-detail grid follows 320/768/1440 responsive contract", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 900 });
       await openInbound(page);
+
+      // SELECTED-state contract (mirrors the operator surface): nothing selected
+      // => full-width records list (single column); a selected record => the
+      // 40/60 (768) and 33/67 (1440) split governs the detail view.
       let columns = parseGridColumns(
+        await page.getByTestId("inbound-master-detail").evaluate(
+          el => getComputedStyle(el).getPropertyValue("grid-template-columns")
+        )
+      );
+      expect(columns.length).toBe(1);
+
+      await page.getByTestId("inbound-record-row").filter({ visible: true }).first().click();
+      await expect(page.getByTestId("inbound-detail-header")).toBeVisible();
+
+      columns = parseGridColumns(
         await page.getByTestId("inbound-master-detail").evaluate(
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
         )
@@ -1051,7 +1110,6 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expectRatio(columns, 0.4);
 
       await page.setViewportSize({ width: 1440, height: 1000 });
-      await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
       columns = parseGridColumns(
         await page.getByTestId("inbound-master-detail").evaluate(
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
@@ -2052,11 +2110,17 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
             primitiveWrapper(page, "nav_pill", "focus-visible", theme).locator("a"),
             `${theme} ${viewport.width} nav_pill focus ring`
           );
-          await assertFocusAppearanceAndNotObscured(
-            page,
-            primitiveWrapper(page, "theme_picker", "focus-visible", theme).locator('input[type="radio"]').first(),
-            `${theme} ${viewport.width} theme_picker focus ring`
-          );
+          {
+            // The native radio is sr-only; the focus ring renders on the
+            // visible segment label. Focus the input, measure the label.
+            const themePickerFocus = primitiveWrapper(page, "theme_picker", "focus-visible", theme);
+            await assertFocusAppearanceAndNotObscured(
+              page,
+              themePickerFocus.locator('input[type="radio"]').first(),
+              `${theme} ${viewport.width} theme_picker focus ring`,
+              { indicatorLocator: themeOptionLabels(themePickerFocus).first() }
+            );
+          }
 
           await assertProgrammaticDisabled(
             primitiveWrapper(page, "nav_link", "disabled", theme).locator("[role='link']"),
