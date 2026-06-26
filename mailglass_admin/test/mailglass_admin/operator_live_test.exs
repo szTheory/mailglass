@@ -1789,6 +1789,73 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end
   end
 
+  describe "SHELL-03: triage subtitle + all-clear calm copy" do
+    # SHELL-03: subtitle is a state-driven triage line, never banned phrases
+    test "all-clear state subtitle is 'Your delivery system is healthy.'", %{conn: conn} do
+      # Fresh test DB: no failed_ingest webhook events → all_clear? == true
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ "Your delivery system is healthy.",
+             "all-clear subtitle must be 'Your delivery system is healthy.'"
+    end
+
+    test "attention state subtitle is 'Your delivery system needs attention.'", %{conn: conn} do
+      conn = operator_conn(conn)
+      # Insert a failed webhook_event to force attention state
+      insert_webhook_event!(status: :failed)
+
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~ "Your delivery system needs attention.",
+             "attention subtitle must be 'Your delivery system needs attention.'"
+    end
+
+    test "subtitle never contains 'Oops' or 'Navigate to'", %{conn: conn} do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      refute html =~ "Oops",
+             "subtitle must never contain 'Oops'"
+
+      refute html =~ "Navigate to",
+             "subtitle must never contain 'Navigate to'"
+    end
+
+    test "deliveries surface subtitle is the inspection-focused triage line", %{conn: conn} do
+      conn = operator_conn(conn)
+      insert_delivery!(recipient: "sub-test@example.com")
+
+      {:ok, _view, html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+
+      assert html =~
+               "Prove what happened to a message — inspect its event timeline, suppression state, and replay history.",
+             "Deliveries subtitle must be the inspection-focused triage line"
+    end
+
+    test "all-clear state renders calm single paragraph above orientation strip", %{conn: conn} do
+      # Fresh test DB: all_clear? == true
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~
+               "Your delivery system is healthy — nothing needs your attention right now.",
+             "all-clear state must render the calm paragraph"
+    end
+
+    test "attention state does NOT render the calm paragraph", %{conn: conn} do
+      conn = operator_conn(conn)
+      insert_webhook_event!(status: :failed)
+
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      refute html =~
+               "Your delivery system is healthy — nothing needs your attention right now.",
+             "attention state must not render the all-clear calm paragraph"
+    end
+  end
+
   describe "operator KPI stat_card call sites — DATA-02 certification (Plan 02 Task 3)" do
     test "all four operator KPI testids render through the stat_card primitive" do
       conn = operator_conn(build_conn())
