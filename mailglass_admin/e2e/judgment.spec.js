@@ -62,19 +62,18 @@ async function openOverview(page) {
   await expect(page.getByTestId("operator-overview")).toBeVisible();
 }
 
-test.describe("judgment gates (drafted — armed in Phase 123)", () => {
+test.describe("judgment gates (armed in Phase 119)", () => {
   // GATE: nav-active-correctness
   //
   // Correct end-state: on the Overview route the Deliveries sidebar nav link does
   // NOT carry aria-current="page", AND an Overview nav item exists that DOES carry
-  // aria-current="page". Today the shell hardcodes the Deliveries-active sidebar on
-  // every operator view (operator_live.ex:349) and there is no Overview nav item at
-  // all — so this asserts behavior that does not yet exist and MUST stay test.fixme
-  // until Phase 119 gives Overview its own nav identity and removes the false active
-  // state. The accent-allowlist Playwright seam keys off [aria-current='page']
-  // (structural.spec.js:11-17), so a correct active item is also what keeps the
-  // Glass accent legitimate on this route.
-  test.fixme("nav-active-correctness: Overview route highlights Overview, not Deliveries", async ({
+  // aria-current="page". Phase 119 (SHELL-01) gave Overview its own nav identity and
+  // fixed the false-active bug (operator_live.ex active={@view} replaces literal
+  // active={:deliveries}). The accent-allowlist Playwright seam keys off
+  // [aria-current='page'] (structural.spec.js:11-17), so a correct active item is
+  // also what keeps the Glass accent legitimate on this route.
+  // NOTE: This gate is NOT yet added to a required CI lane — that arming is Phase 123 (D-13).
+  test("nav-active-correctness: Overview route highlights Overview, not Deliveries", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -83,8 +82,10 @@ test.describe("judgment gates (drafted — armed in Phase 123)", () => {
     const sidebar = page.getByRole("navigation", { name: "Operator sections" }).first();
 
     // Deliveries must NOT be the active (aria-current=page) item on the Overview route.
+    // nav_link emits aria-current={@active && "page"}: when inactive, Phoenix OMITS the
+    // attribute entirely (boolean false → no attribute). Assert absence of the attribute.
     const deliveriesLink = sidebar.getByRole("link", { name: "Deliveries", exact: true });
-    await expect(deliveriesLink).toHaveAttribute("aria-current", "false");
+    await expect(deliveriesLink).not.toHaveAttribute("aria-current", "page");
 
     // An Overview nav item must exist and BE the active (aria-current=page) item.
     const overviewLink = sidebar.getByRole("link", { name: "Overview", exact: true });
@@ -95,11 +96,11 @@ test.describe("judgment gates (drafted — armed in Phase 123)", () => {
   //
   // Correct end-state: the populated Overview renders ZERO
   // data-testid="operator-overview-nav" elements — the in-page "Navigate" card block
-  // (operator_live.ex:416) duplicates the always-visible sidebar and is removed in
-  // Phase 119. The existing operator.spec.js VERIF-02 test asserts this same testid
-  // IS visible (the flagged Pitfall-2 contradiction); that opposing test is updated
-  // in Phase 119, NOT here.
-  test.fixme("no-nav-duplication: populated Overview renders no in-page Navigate card block", async ({
+  // was removed in Phase 119 (SHELL-02). The operator.spec.js VERIF-02 test previously
+  // asserted this same testid IS visible (the flagged Pitfall-2 contradiction); that
+  // opposing test was updated in Phase 119 (119-02 Task 1).
+  // NOTE: This gate is NOT yet added to a required CI lane — that arming is Phase 123 (D-13).
+  test("no-nav-duplication: populated Overview renders no in-page Navigate card block", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
