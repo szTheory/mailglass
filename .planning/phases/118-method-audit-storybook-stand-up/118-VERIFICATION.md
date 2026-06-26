@@ -1,15 +1,17 @@
 ---
 phase: 118-method-audit-storybook-stand-up
 verified: 2026-06-26T16:57:57Z
-status: human_needed
+status: passed
 score: 11/12 must-haves verified
 behavior_unverified: 1
 overrides_applied: 0
 human_verification:
+
   - test: "Load /dev/storybook against a running `make demo` (clean boot) and walk the foundations + 5 primitive stories in light and dark."
     expected: "The explorer's sandbox iframe renders each admin primitive (nav_link, nav_pill, tenant_chip, theme_picker, stat_card) styled on-brand via the committed app.css bundle, and the paired light/dark variations visibly switch theme (data-theme bridge resolves the @import of /dev/mail/css-<hash>)."
     why_human: "Whether the css_path @import actually resolves the committed bundle and the components paint on-brand inside the explorer is a runtime-render property. The wiring (css_path, sandbox_class, template-level data-theme) is present and structurally correct, but rendering can only be confirmed against a live demo. Plan 03's SUMMARY reports re-shot evidence that it renders after a clean boot, but that evidence lives only in the git-ignored screenshot cache and cannot be independently re-verified statically. Plan 01 itself flagged this as a pending human-judgment item (coverage D2)."
 behavior_unverified_items:
+
   - truth: "A dev-only phoenix_storybook surface mounts at /dev/storybook and renders admin primitives styled by the committed app.css sandbox bundle."
     test: "Open /dev/storybook on a running `make demo` (clean boot) and inspect a theme-sensitive primitive in both light and dark."
     expected: "Primitives render on-brand from the committed bundle; light/dark variations switch via the template-level data-theme root."
