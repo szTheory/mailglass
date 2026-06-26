@@ -80,7 +80,10 @@ that produces the prioritized screenshot-backed defect register driving the rede
   4. New judgment-level regression guards (nav-active-correctness; no nav-duplication on a populated
      page) are drafted/armed and the full v1.13 ratchet floor (~26 conformance gates, 54-cell aesthetic
      baseline, 9-cell axe baseline, 24-item Bucket-A manifest, persona drift-guard) is inherited green.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 118-01-PLAN.md — phoenix_storybook dev-only stand-up + sandbox CSS + Wave-0 .gitignore prereq (METHOD-01, STORY-01)
+- [ ] 118-02-PLAN.md — two drafted judgment gates (test.fixme) + verify-green inherited floor + gallery unchanged (METHOD-02, STORY-02)
+- [ ] 118-03-PLAN.md — persona-critic screenshot harness + milestone-scoped DEFECT-REGISTER.md (METHOD-01)
 **UI hint**: yes
 
 ### Phase 119: App-shell + Nav + Overview redesign
@@ -197,7 +200,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 118. Method, Audit & Storybook stand-up | 0/? | Not started | - |
+| 118. Method, Audit & Storybook stand-up | 0/3 | Not started | - |
 | 119. App-shell + Nav + Overview redesign | 0/? | Not started | - |
 | 120. Deliveries surface redesign | 0/? | Not started | - |
 | 121. Inbound surface redesign | 0/? | Not started | - |
