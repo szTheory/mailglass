@@ -1465,40 +1465,42 @@ defmodule MailglassAdmin.OperatorLiveTest do
              "suppressions drill-through link must preserve tenant_id, got: #{inspect(href)}"
     end
 
-    # SHELL-02: orientation strip empty-pane-only, null-safe gate on nil support_summary
-    test "nil support_summary does not raise and orientation strip is suppressed", %{conn: conn} do
-      # The OperatorLive assigns support_summary=nil on mount (before handle_params).
-      # After handle_params with no module loaded, it stays nil. We verify render doesn't crash.
-      conn = operator_conn(conn)
-      # Use a tenant that would have no support_summary (or the module would fail silently)
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
-
-      # Should not crash (no FunctionClauseError on nil.failed_ingest.count)
-      assert html =~ ~s(data-testid="operator-overview-health"),
-             "overview health block must render even when support_summary is nil"
-
-      # With nil support_summary, orientation strip is suppressed (nil is attention/unavailable)
-      refute html =~ ~s(data-testid="operator-overview-orientation"),
-             "orientation strip must be absent when support_summary is nil (null-safe gate)"
-    end
-
-    # SHELL-02: all-clear orientation strip renders in all-clear/zero-data state
-    # NOTE: This test is exploratory — the all-clear state requires a non-nil support_summary
-    # where both failed_ingest.count == 0 and orphan_backlog.count == 0, AND suppression_count in [0, nil].
-    # In the test environment, support_summary may be nil (module-apply rescues to nil).
-    # So we verify the gate condition: strip is absent when support_summary is nil (above test covers this).
-    # The all-clear branch is verified by the shell_test unit tests (faster, no full LiveView).
-    test "overview renders orientation strip container testid only in all-clear state", %{
+    # SHELL-02: orientation strip empty-pane-only, null-safe gate
+    # In the test env the SupportSummary module IS available, so summarize_tenant returns
+    # all-zeros for an empty tenant. With no failures/orphans/suppressions, the gate evaluates
+    # all_clear? == true and suppression_count == 0 → orientation strip IS shown (all-clear state).
+    # This tests both that the render does not crash AND that the all-clear path shows the strip.
+    test "all-clear tenant Overview renders orientation strip (empty-pane-only gate active)", %{
       conn: conn
     } do
+      # Fresh test DB for this tenant has no failures or orphans → all_clear? == true
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      # In test env, support_summary is either nil (module unavailable → strip absent)
-      # or a real summary (if available); both cases the conditional renders correctly.
-      # We do not assert presence/absence of strip here beyond the nil guard (covered above).
-      # This test asserts the page renders without crashing.
-      assert html =~ ~s(data-testid="operator-overview")
+      # Should not crash (null-safe gate: @support_summary && all_clear?(@support_summary))
+      assert html =~ ~s(data-testid="operator-overview-health"),
+             "overview health block must render without crashing"
+
+      # In all-clear state: orientation strip is visible (empty-pane-only = all-clear is empty)
+      assert html =~ ~s(data-testid="operator-overview-orientation"),
+             "orientation strip must be present in all-clear state (empty-pane-only gate)"
+    end
+
+    # SHELL-02: attention state suppresses orientation strip
+    # all_clear? checks failed_ingest.count (webhook_events with :failed/:dead status),
+    # NOT delivery status. Insert a failed webhook_event to trigger the attention state.
+    test "attention state (non-zero failed_ingest webhook events) suppresses the orientation strip",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      # Insert a failed webhook_event — this is what summarize_tenant counts for failed_ingest
+      insert_webhook_event!(status: :failed)
+
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      # Orientation strip must be absent when failed_ingest.count > 0 (attention state)
+      refute html =~ ~s(data-testid="operator-overview-orientation"),
+             "orientation strip must be absent in attention state (failed_ingest.count > 0)"
     end
   end
 

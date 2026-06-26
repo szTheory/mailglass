@@ -374,20 +374,32 @@ defmodule MailglassAdmin.OperatorLive do
       <% else %>
       <%= if @view == :overview do %>
         <div data-testid="operator-overview" class="grid gap-lg">
-          <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
-
           <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
             <div data-testid="operator-overview-health" class="grid gap-md">
               <h2 class="text-heading font-bold text-base-content">Health</h2>
               <div class="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
-                <Components.stat_card
-                  label="Recent failures"
-                  value={support_metric_count(@support_summary, :failed_ingest)}
-                  state={support_metric_state(@support_summary, :failed_ingest)}
-                  severity={support_metric_severity(@support_summary, :failed_ingest, :error)}
-                  severity_label={support_metric_severity_label(@support_summary, :failed_ingest)}
-                  data-testid="operator-overview-health-failures"
-                />
+                <.link
+                  patch={
+                    build_path(
+                      @base_path,
+                      @filter_params |> Map.put("view", "deliveries") |> Map.put("status", "failed"),
+                      nil,
+                      @dark_chrome
+                    )
+                  }
+                  class="block mg-focus-ring rounded-box hover:border-primary transition-colors ease-out duration-(--duration-fast)"
+                  aria-label="View recent failures in Deliveries"
+                  data-testid="operator-overview-health-failures-link"
+                >
+                  <Components.stat_card
+                    label="Recent failures"
+                    value={support_metric_count(@support_summary, :failed_ingest)}
+                    state={support_metric_state(@support_summary, :failed_ingest)}
+                    severity={support_metric_severity(@support_summary, :failed_ingest, :error)}
+                    severity_label={support_metric_severity_label(@support_summary, :failed_ingest)}
+                    data-testid="operator-overview-health-failures"
+                  />
+                </.link>
                 <Components.stat_card
                   label="Orphan backlog"
                   value={support_metric_count(@support_summary, :orphan_backlog)}
@@ -396,14 +408,30 @@ defmodule MailglassAdmin.OperatorLive do
                   severity_label={support_metric_severity_label(@support_summary, :orphan_backlog)}
                   data-testid="operator-overview-health-orphans"
                 />
-                <Components.stat_card
-                  label="Active suppressions"
-                  value={@suppression_count}
-                  state={count_state(@suppression_count)}
-                  severity={suppression_severity(@suppression_count)}
-                  severity_label={suppression_severity_label(@suppression_count)}
-                  data-testid="operator-overview-health-suppressions"
-                />
+                <.link
+                  patch={
+                    build_path(
+                      @base_path,
+                      @filter_params
+                      |> Map.put("view", "deliveries")
+                      |> Map.put("status", "suppressed"),
+                      nil,
+                      @dark_chrome
+                    )
+                  }
+                  class="block mg-focus-ring rounded-box hover:border-primary transition-colors ease-out duration-(--duration-fast)"
+                  aria-label="View active suppressions in Deliveries"
+                  data-testid="operator-overview-health-suppressions-link"
+                >
+                  <Components.stat_card
+                    label="Active suppressions"
+                    value={@suppression_count}
+                    state={count_state(@suppression_count)}
+                    severity={suppression_severity(@suppression_count)}
+                    severity_label={suppression_severity_label(@suppression_count)}
+                    data-testid="operator-overview-health-suppressions"
+                  />
+                </.link>
                 <Components.stat_card
                   label="Overall status"
                   value={all_clear_value(@support_summary)}
@@ -415,38 +443,14 @@ defmodule MailglassAdmin.OperatorLive do
               </div>
             </div>
 
-            <div data-testid="operator-overview-nav" class="grid gap-md">
-              <h2 class="text-heading font-bold text-base-content">Navigate</h2>
-              <div class="card bg-base-200 border border-base-300 rounded-box p-md flex flex-col gap-sm">
-                <div class="text-body font-bold text-base-content">View Deliveries</div>
-                <div class="text-body text-secondary">
-                  Search and audit outbound sends, inspect event timelines, and replay webhooks.
-                </div>
-                <div>
-                  <.link
-                    patch={
-                      build_path(
-                        @base_path,
-                        Map.put(@filter_params, "view", "deliveries"),
-                        nil,
-                        @dark_chrome
-                      )
-                    }
-                    class="btn btn-primary btn-sm min-h-11"
-                  >
-                    View Deliveries
-                  </.link>
-                </div>
-              </div>
-              <div class="card bg-base-200 border border-base-300 rounded-box p-md flex flex-col gap-sm">
-                <div class="text-body font-bold text-base-content">View Inbound</div>
-                <div class="text-body text-secondary">Inspect inbound routing and outcomes.</div>
-                <div>
-                  <.link navigate={@inbound_path} class="btn btn-primary btn-sm min-h-11">
-                    View Inbound
-                  </.link>
-                </div>
-              </div>
+            <div
+              :if={
+                @support_summary && all_clear?(@support_summary) &&
+                  @suppression_count in [0, nil]
+              }
+              data-testid="operator-overview-orientation"
+            >
+              <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
             </div>
           <% else %>
             <div
