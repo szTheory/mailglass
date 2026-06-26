@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
 status: planning
-last_updated: "2026-06-26T09:47:32.778Z"
+last_updated: "2026-06-26T12:00:00.000Z"
 last_activity: 2026-06-26
 progress:
-  total_phases: 0
+  total_phases: 7
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,50 +20,61 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 117 — release-cut-milestone-closeout
+**Current focus:** Phase 118 — Method, Audit & Storybook stand-up (ready to plan)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 118 — Method, Audit & Storybook stand-up (not started; ready to plan)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-26 — Milestone v1.14 started
+Status: Roadmap created; awaiting `/gsd-plan-phase 118`
+Last activity: 2026-06-26 — v1.14 roadmap created (Phases 118-124)
 
-## v1.13 Milestone Intent
+## v1.14 Milestone Intent
 
-- Third adopter-visible-quality admin pass (after v1.7/v1.11) under D-23, distinguished as
-  **lived-experience / real-demo-driven** (D-29): the v1.11 ratchet passed in the lab yet clicking
-  the real `make demo` app still surfaced usability traps (tenant-scoping dead-end, pointless
-  single-tenant picker, clipped stat-card labels, modal-behind-scrim, "kind of ugly" rough edges).
-  Systematically audit + uplift the `mailglass_admin` design system **fractally** to award-winning,
-  coherent, on-brand quality in **light / dark / system** at every width, **WCAG 2.2 AA**, proven
-  against multi-tenant stress fixtures along real JTBD paths — then **ship to Hex** (D-28). NOT
-  product-capability growth.
+- **Method inversion (the root-cause fix).** Three admin-UI design milestones shipped
+  (v1.7/v1.11/v1.13), yet clicking the real `make demo` still surfaces obvious IA/usability problems on
+  the operator landing: the sidebar **always highlights "Deliveries"** even on the overview (hardcoded
+  `active={:deliveries}`), a redundant **"Navigate" section** duplicates the always-visible sidebar, and
+  the **overview is a homepage that mostly points elsewhere**. Root cause: prior passes were **bottom-up
+  + structural-gate-verified** → clean primitives on muddy pages, because no structural gate can ask "is
+  this page redundant / coherent / least-surprising." v1.14 **inverts the method**: top-down, JTBD/IA-led,
+  with a **judgment-level adversarial persona-critic review loop** (+ maintainer sign-off) that catches
+  taste/redundancy/IA problems gates can't.
 
-- Headline fixes: theme picker system/light/dark (system default); auto-select sole tenant +
-  tenant listing/switcher from the **core read model** (kills "No tenant selected"); canonical
-  `stat_card`; row-to-card responsive tables; honest pagination; z-index layer system
-  (modal-behind-scrim); 44×44 targets; the 24-bug usability sweep; multi-tenant stress-fixture
-  cohort; extended idempotent ratchet (system theme + WCAG 2.2 AA + axe-JSON baseline + interaction
-  pillar). Then the linked-version Hex release + D-13 inbound exact-pin re-pin.
+- **Surface-by-surface redesign, biggest-impact first.** Ruthlessly de-duplicated, Apple-like deliberate
+  IA. Mobile-first, light/dark/system, WCAG 2.2 AA, Emil-Kowalski-grade motion, on-brand microcopy.
+  **Idempotent — only-forward, no regressions** (inherit the full v1.13 ratchet floor). Order: app-shell +
+  nav + overview (#1 pain) → Deliveries (core JTBD) → Inbound → Preview → cross-surface coherence →
+  **ship to Hex** (D-28, linked-version like v1.13). NOT product-capability growth (D-23 convergence).
 
-## v1.13 Scope Locks
+- **Locked decisions (maintainer, 2026-06-26):** (1) Overview → real triage destination (de-dupe, own
+  nav item, actionable health stats). (2) Review method → adversarial persona critics, mostly autonomous,
+  phase-boundary checkpoints (before/after per surface), not per-fix UAT. (3) Release → ship to Hex
+  (admin-minor drags core+inbound; D-13 inbound exact-pin re-pin; consumer + post-publish smoke; audit +
+  archive). (4) Preview review surface → adopt `phoenix_storybook` as `only: :dev` (dev-only dep doesn't
+  touch the zero-Node *adopter-facing* guarantee; shipped `priv/static/app.css` unchanged; sandbox CSS =
+  the committed bundle); keep `/dev/mail/gallery` as the ratchet/structural-contract surface.
 
-- **Admin + demo only.** Recipient-facing email HEEx templates and `brandbook/` tokens are OUT —
-  the brand book is the source of truth. No new product capability/providers/transports/routes.
+## v1.14 Scope Locks
 
-- **Host-app-friendly** (mountable library): no hijacking host auth/theme/assets/Repo; no global
-  CSS/JS collisions. Tenant listing in the **core read model** scoped via `Mailglass.Tenancy.scope/2`
-  through the authenticated actor, never raw admin Repo.
+- **Admin + demo only.** Recipient-facing email HEEx templates and `brandbook/` tokens are OUT — the
+  brand book is the source of truth. No new product capability/providers/transports/routes (D-23).
 
-- **Zero-Node asset pipeline** (committed `priv/static/app.css`, rebuilt + committed on class
-  changes). The only net-new dependency is one **test-only** npm devDep `@axe-core/playwright`;
-  zero new Hex deps. No pixel-diff regression — ever (structural + axe-JSON + score-baseline).
+- **Host-app-friendly** (mountable library): no hijacking host auth/theme/assets/Repo; no global CSS/JS
+  collisions.
 
-- **Two binding sequencing constraints:** (1) merge PR #86 BEFORE Phase 109 (REL-01 precondition);
-  (2) tighten gates BEFORE re-baselining — gates tightened inside each phase, full pillar re-score
-  ONLY in the final ratchet-arm phase (116). The multi-tenant stress-fixture cohort (RATCHET-01) is
-  the keystone dependency — lands late, gates the final score.
+- **Zero-Node *shipped* asset pipeline** preserved (committed `priv/static/app.css`, rebuilt + committed
+  on class changes). `phoenix_storybook` is a `only: :dev` dep — adopters never install it or build its
+  assets; dev/CI gaining Node is accepted. No pixel-diff regression — ever (structural + axe-JSON +
+  score-baseline only).
+
+- **Idempotent floor (inherit, keep green, re-score only upward):** ~26 conformance gates, 54-cell
+  aesthetic baseline, 9-cell axe baseline, 24-item Bucket-A manifest, persona drift-guard.
+
+- **Two binding sequencing constraints:** (1) Phase 118 (persona-critic harness + defect register) is a
+  **hard precondition** for Phase 119 — the hit-list drives every surface redesign. (2) Each surface
+  redesign (120 → 121 → 122) inherits the cleaned-up patterns from the prior one; the full pillar re-score
+  + new judgment-gate arming happens ONLY in Phase 123.
 
 - **Release posture: ACTUALLY CUT** (D-28) — admin-minor bump drags matched core+inbound via
   linked-version releases; D-13 inbound exact-pin re-pin after the PR merges.
@@ -72,24 +83,24 @@ Last activity: 2026-06-26 — Milestone v1.14 started
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 109 | Foundations + Gate-Tightening | Merge PR #86 (REL-01 precondition); z-index/motion/elevation/focus/overlay tokens + system-theme plumbing in light/dark/system; tighten gates FIRST, prove green before any re-score (FND-01..05) |
-| 110 | Primitives | Promote inlined atoms to public components; canonical `stat_card` + 3-way theme-picker primitive; every primitive in every state, WCAG 2.2 AA + APG, 320→wide, 44×44, icon-exists guard (PRIM-01..07) |
-| 111 | Forms | Unify the two `filters_form` copies into shared `filter_field`/`filter_section`; labeled, recoverable, never color-alone, focus-preserved (FORM-01..03) |
-| 112 | App-Shell, Nav & Tenant Seam | Auto-select sole tenant + listing/switcher from core read model; tenant scope persists; theme picker no-FOUC; honest pagination; non-color active nav (SHELL-01..06) |
-| 113 | Data-Display | Tables ≥768→cards <768; all KPIs on `stat_card`; distinct empty/error/permission/stale templates; severity icon+label+color; long-value handling (DATA-01..05) |
-| 114 | Component Groups | Coherent spacing/hierarchy across composed groups; box-nesting ≤2; x/y alignment (GROUP-01..03) |
-| 115 | Pages/Flows + Motion + Microcopy | GOV.UK-style IA per surface; happy/error/boundary/edge/advanced paths in light/dark/system at every width; Emil Kowalski micro-animation; permission/stale/tenant microcopy ("Oops" banned) (FLOW-01..04) |
-| 116 | Fixtures + Ratchet-Arm | 2-3-persona stress cohort + gallery widened to component×state×theme×viewport; interaction pillar + axe-JSON baseline; full matrix incl. one run vs demo_app data; promote current→prior, re-score; close 24 usability defects (RATCHET-01..05) |
-| 117 | Release Cut + Milestone Closeout | Cut linked-version Hex release (admin-minor drags core+inbound); D-13 inbound re-pin; Hex resolution + post-publish smoke; milestone audit + archive (REL-02/03) |
+| 118 | Method, Audit & Storybook stand-up | Persona-critic harness across the viewport×theme×state matrix → prioritized screenshot-backed defect register; `phoenix_storybook` `only: :dev` review surface (sandbox CSS = committed `app.css`); keep `/dev/mail/gallery` for ratchets; draft new judgment gates; inherit the v1.13 floor green (METHOD-01/02, STORY-01/02) |
+| 119 | App-shell + Nav + Overview redesign | **Keystone #1 pain.** Fix false-active-nav bug; Overview → real triage destination with own nav identity; delete redundant Navigate cards; orientation strip → empty-pane-only; actionable health stats; streamlined non-redundant microcopy; full matrix + persona stress (SHELL-01/02/03) |
+| 120 | Deliveries surface redesign | Core operator JTBD → streamlined non-info-dump IA across the full matrix; inherits 119 patterns (DELIV-01) |
+| 121 | Inbound surface redesign | Consistent with cleaned-up Deliveries patterns; PII/raw-payload boundaries preserved; full matrix (INB-01) |
+| 122 | Preview surface redesign | Consistent with established patterns; previewed-email independent theme toggle intact; full matrix (PREV-01) |
+| 123 | Cross-surface coherence + ratchet re-arm | All four surfaces cohere; storybook + gallery finalized; aesthetic ratchet re-scored only-forward; new judgment gates (nav-active-correctness, no-nav-duplication) armed green (COH-01/02) |
+| 124 | Release cut + milestone closeout | Linked-version Hex release (admin-minor drags core+inbound); D-13 inbound re-pin; Hex resolution + consumer + post-publish smoke; milestone audit + archive (REL-01/02) |
 
-**Execution order:** 109 → 110 → 111 → 112 → 113 → 114 → 115 → 116 → 117 (strictly sequential;
-bottom-up fractal so each level inherits a fixed lower level). REL-01 / PR #86 merge gates the
-start of 109. Gates tightened per-phase; full re-score only in 116.
+**Execution order:** 118 → 119 → 120 → 121 → 122 → 123 → 124 (strictly sequential; top-down,
+biggest-impact-first). Phase 118 (persona-critic harness + defect register) is a hard precondition for
+the keystone shell redesign (119). Each surface redesign inherits the prior surface's cleaned-up
+patterns. Full pillar re-score + judgment-gate arming only in 123; release cut last (124).
 
-**Research flags:** Phase 112 (tenant seam — core `list_tenants` projection shape + `Tenancy.scope/2`
-composition) and Phase 116 (axe-JSON baseline format + ratchet schema-v3 cell-count) likely need
-light `/gsd-plan-phase` research. 109/110/111/113/114/115 plan directly (research already
-convergent + adversarially judged).
+**Research flags:** Phase 118 (persona-critic harness design + `phoenix_storybook` sandbox-CSS
+integration, `only: :dev`) and Phase 119 (GOV.UK IA patterns + overview-as-triage redesign) likely need
+light `/gsd-plan-phase` research. Surface-redesign phases 120-122 inherit 118/119 patterns and the
+v1.11/v1.13 research dossiers — plan directly. Phases 123 (ratchet re-score) and 124 (release ceremony)
+plan directly from the v1.13 precedent.
 
 ## Decisions
 
@@ -351,6 +362,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Roadmap Evolution
 
+- 2026-06-26: v1.14 roadmap created. Phases 118-124, numbering continues from v1.13 (last phase 117). All 14 REQ-IDs mapped to exactly one phase, 100% coverage (METHOD-01/02 + STORY-01/02 → 118; SHELL-01/02/03 → 119; DELIV-01 → 120; INB-01 → 121; PREV-01 → 122; COH-01/02 → 123; REL-01/02 → 124). Follows the maintainer-approved seed (`.planning/research/v1.14/MILESTONE-SEED.md` P0-P6) one-to-one: top-down, JTBD/IA-led, biggest-impact-first. Strictly sequential critical path 118 → … → 124. Binding sequencing: (1) Phase 118 (adversarial persona-critic harness + screenshot-backed defect register) is a HARD precondition for the keystone shell redesign (119) — the hit-list drives every surface redesign; (2) each surface redesign (120 → 121 → 122) inherits the prior surface's cleaned-up patterns; full pillar re-score + new judgment-gate arming (nav-active-correctness, no-nav-duplication) happens ONLY in Phase 123; release cut last (124). Cross-cutting acceptance criteria (light/dark/system × 320→wide × happy/empty/error/boundary; WCAG 2.2 AA; Emil-Kowalski motion; on-brand microcopy; idempotent only-forward inheriting the v1.13 ratchet floor) baked into every surface phase. Research flags: Phase 118 (persona-critic harness design + `phoenix_storybook` sandbox-CSS integration, `only: :dev`) + Phase 119 (GOV.UK IA + overview-as-triage) need light `/gsd-plan-phase` research; 120-124 plan directly. Release ACTUALLY CUT at close (D-28): admin-minor drags matched core+inbound; D-13 inbound exact-pin re-pin.
 - 2026-06-18: v1.13 roadmap created. Phases 109-117, numbering continues from v1.12 (last phase 108). All 36 REQ-IDs mapped to exactly one phase, 100% coverage (REL-01 precondition + FND-01..05 → 109; PRIM-01..07 → 110; FORM-01..03 → 111; SHELL-01..06 → 112; DATA-01..05 → 113; GROUP-01..03 → 114; FLOW-01..04 → 115; RATCHET-01..05 → 116; REL-02..03 → 117). Adopts the research-converged, adversarially-grounded dependency-ordered fractal build order A–H from `.planning/research/v1.13/SUMMARY.md`, mapped to 109–116, with H's release reqs split into a dedicated closeout phase 117 (v1.12 precedent) for cleaner success criteria. Strictly sequential critical path 109 → … → 117. Two binding sequencing constraints encoded as explicit dependencies: (1) merge PR #86 (REL-01) BEFORE Phase 109; (2) tighten gates BEFORE re-baselining — gates tightened inside each phase, full pillar re-score ONLY in Phase 116. RATCHET-01 multi-tenant stress cohort is the keystone dependency: lands late (116) but gates the final score. Research flags: Phase 112 (core `list_tenants` projection shape) + Phase 116 (axe-JSON baseline format + ratchet schema-v3 cell-count) need light `/gsd-plan-phase` research; 109/110/111/113/114/115 plan directly. Release ACTUALLY CUT at close (D-28): admin-minor drags matched core+inbound via linked-version releases; D-13 inbound exact-pin re-pin.
 - 2026-06-13: v1.11 roadmap created. Phases 94-103, numbering continues from v1.10 (last phase 93). All 34 REQ-IDs mapped to exactly one phase, 100% coverage (TOKEN-01..05 + RATCHET-03 → 94; RATCHET-01/02/04/05 → 95; RESEARCH-01..05 → 96; COMP-01..03 + GALLERY-01/02 → 97; cross-surface GROUP-01/PAGE-01/02/RESP-01/FLOW-01/02/A11Y-01/02 anchored on operator → 98; GROUP-02/03 → 99; PAGE-03 → 100; COPY-01 → 101; MOTION-01/02 → 102; 103 is closeout-only). Critical path 94 → 95 → 96 → 97 → {98,99,100 parallel} → {101,102 parallel} → 103. Cross-cutting GROUP/PAGE/RESP/FLOW/A11Y reqs counted once at their operator anchor (98) and re-applied per-surface on 99/100. Phase 94 tightens conformance gates FIRST (tighten-then-re-baseline) so the token re-baseline can't regress silently. Release prepare-only; admin-minor bump drags matched core+inbound via linked-version releases.
 - 2026-06-12: v1.10 roadmap created. Phases 91-93, numbering continues from v1.9 (last phase 90). All 10 REQ-IDs (FOLD-01..03 → 91, SURF-01..03 → 92, HEXD-01..02 + RELH-01..02 → 93) mapped to exactly one phase, 100% coverage. Strictly linear critical path 91 → 92 → 93. RELH-02 flagged potentially blocked-on-external (in-flight release train must settle). Adoption mechanics pre-settled in `.planning/research/v1.10-brand-adoption/ADOPTION-MECHANICS.md`.
@@ -487,9 +499,13 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- **No active milestone. No recommended next feature milestone** (post-v1.12 assessment 2026-06-17).
-  The library is ~93–95% done for its scope; the last wedge shipped. **Default to quiet maintenance.**
-  Do NOT run `/gsd-new-milestone` for feature work unless a concrete adopter pull surfaces.
+- **Active milestone: v1.14 Operator IA & Lived-Experience Redesign** (opened 2026-06-26).
+  Roadmap created (Phases 118-124, 14 REQ-IDs, 100% coverage). This is an adopter-visible *quality*
+  milestone under D-23 convergence (the method-inverting top-down/JTBD-led redesign) — NOT
+  product-capability growth. **Next: `/gsd-plan-phase 118`** (or `/gsd-discuss-phase 118` first).
+  Phase 118 is the hard precondition (persona-critic harness + defect register) for the keystone shell
+  redesign in 119. Surface order 119 → 120 → 121 → 122, then coherence/ratchet (123), then Hex release
+  (124). The post-v1.12 "quiet maintenance" posture is superseded for the duration of v1.14.
 
 - **Maintenance thread `release-pipeline-maintenance.md` — ✅ FULLY CLOSED (2026-06-18).** All items done:
   ✅ (1) `gate-ci-green` advisory-classifier fix (`1e0e60b1`).

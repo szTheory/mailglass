@@ -96,4 +96,21 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 
 ## Traceability
 
-(Filled by the roadmap — each REQ-ID maps to exactly one phase, 118+.)
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| METHOD-01 | Phase 118 | Pending |
+| METHOD-02 | Phase 118 | Pending |
+| STORY-01 | Phase 118 | Pending |
+| STORY-02 | Phase 118 | Pending |
+| SHELL-01 | Phase 119 | Pending |
+| SHELL-02 | Phase 119 | Pending |
+| SHELL-03 | Phase 119 | Pending |
+| DELIV-01 | Phase 120 | Pending |
+| INB-01 | Phase 121 | Pending |
+| PREV-01 | Phase 122 | Pending |
+| COH-01 | Phase 123 | Pending |
+| COH-02 | Phase 123 | Pending |
+| REL-01 | Phase 124 | Pending |
+| REL-02 | Phase 124 | Pending |
+
+**Coverage: 14/14 requirements mapped to exactly one phase (118-124). No orphans, no duplicates.**
