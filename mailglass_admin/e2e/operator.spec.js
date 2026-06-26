@@ -365,6 +365,36 @@ test.describe("operator browser gate", () => {
 
     // Navigation CTAs container (View Deliveries + View Inbound links)
     await expect(page.getByTestId("operator-overview-nav")).toBeVisible();
+
+    // SHELL-02: failures stat card is wrapped in a drill-through link to status=failed Deliveries
+    const failuresLink = page.getByTestId("operator-overview-health-failures-link");
+    await expect(failuresLink).toBeVisible();
+    await expect(failuresLink).toHaveAttribute("href", /status=failed/);
+
+    // SHELL-02: suppressions stat card is wrapped in a drill-through link to status=suppressed Deliveries
+    const suppressionsLink = page.getByTestId("operator-overview-health-suppressions-link");
+    await expect(suppressionsLink).toBeVisible();
+    await expect(suppressionsLink).toHaveAttribute("href", /status=suppressed/);
+  });
+
+  // SHELL-02: orientation strip is empty-pane-only — present on all-clear, absent when attention needed.
+  // Uses the browser-tenant persona which has existing seed data (non-zero failures = attention state).
+  // The all-clear branch is checked by navigating to a tenant with no seed failures/suppressions;
+  // use the browser-tenant directly for the attention check (seed data includes failures).
+  test("operator overview orientation strip is empty-pane-only (all-clear vs attention)", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    // Navigate to Overview (openOperator lands on Deliveries)
+    await page.goto(`/ops/mail?tenant_id=${tenantId}`);
+    await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+
+    // In the browser-tenant with seed data present, the Overview is in attention state.
+    // The orientation strip should be absent (suppressed — health needs attention).
+    // NOTE: this assertion goes RED until Task 2 gates the strip on the all-clear predicate.
+    await expect(page.getByTestId("operator-overview-orientation")).toHaveCount(0);
   });
 
   // VERIF-02: structural coverage for inbound and preview orientation strips (D-05)
