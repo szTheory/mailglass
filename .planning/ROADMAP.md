@@ -122,7 +122,11 @@ the storybook/gallery review surfaces must exist to iterate against)
      content, no horizontal overflow), light/dark/system, happy/empty/error/boundary states, WCAG 2.2 AA
      (keyboard-complete, visible/restored focus, 44×44 targets, labeled controls), and Emil-Kowalski-grade
      transform/opacity motion that snaps instant under reduced-motion.
-**Plans**: TBD
+**Plans**: 2 plans
+
+- [ ] 119-01-PLAN.md — SHELL-01/02/03 code: nav active-state fix + Overview nav identity, delete Navigate block, drill-through health + empty-pane orientation, triage microcopy + motion (Wave 1; Wave-0 e2e scaffolds)
+- [ ] 119-02-PLAN.md — D-09 paired tests: rewrite operator.spec.js VERIF-02 + flip/fix both judgment.spec.js gates (Wave 2)
+
 **UI hint**: yes
 
 ### Phase 120: Deliveries surface redesign
@@ -236,7 +240,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 118. Method, Audit & Storybook stand-up | 3/3 | Complete    | 2026-06-26 |
-| 119. App-shell + Nav + Overview redesign | 0/? | Not started | - |
+| 119. App-shell + Nav + Overview redesign | 0/2 | Not started | - |
 | 120. Deliveries surface redesign | 0/? | Not started | - |
 | 121. Inbound surface redesign | 0/? | Not started | - |
 | 122. Preview surface redesign | 0/? | Not started | - |

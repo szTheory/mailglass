@@ -2,7 +2,7 @@
 phase: 119
 slug: app-shell-nav-overview-redesign
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-06-26
 ---
@@ -42,7 +42,14 @@ created: 2026-06-26
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | TBD | SHELL-01/02/03 | — | N/A | e2e/unit | TBD by planner | ✅ existing | ⬜ pending |
+| 119-01 T0 (Wave-0 scaffolds) | 119-01 | 0 | SHELL-01/02 | — | N/A (assertions only) | e2e scaffold | `cd mailglass_admin && grep -n 'status=failed\|status=suppressed\|orientation-strip-overview' e2e/operator.spec.js` | ✅ operator.spec.js exists | ⬜ pending |
+| 119-01 T1 (nav active + Overview identity) | 119-01 | 1 | SHELL-01 | T-119-01 | tenant_id preserved in `@overview_path` (surface_paths) | unit | `cd mailglass_admin && mix test test/mailglass_admin/operator/shell_test.exs test/mailglass_admin/components_test.exs` | ✅ existing | ⬜ pending |
+| 119-01 T2 (Overview triage + drill-through + empty-pane orientation) | 119-01 | 1 | SHELL-02 | T-119-02 | drill-through `build_path/4` keeps tenant scope; closed-set `@status_values` | unit/render | `cd mailglass_admin && mix test test/mailglass_admin/operator_live_test.exs test/mailglass_admin/token_parity_test.exs` | ✅ existing | ⬜ pending |
+| 119-01 T3 (microcopy + motion) | 119-01 | 1 | SHELL-03 | — | N/A | unit/static | `cd mailglass_admin && mix test test/mailglass_admin/operator/shell_test.exs && grep -c '@keyframes' assets/css/app.css` (no new keyframes) | ✅ existing | ⬜ pending |
+| 119-02 T1 (VERIF-02 rewrite) | 119-02 | 2 | SHELL-02 (D-09) | — | N/A | e2e | `cd mailglass_admin && npm run test:operator-browser -- -g "operator overview"` | ✅ operator.spec.js | ⬜ pending |
+| 119-02 T2 (flip + fix judgment gates) | 119-02 | 2 | SHELL-01/02 (D-09) | — | N/A | e2e | `cd mailglass_admin && npm run test:operator-browser -- e2e/judgment.spec.js` | ✅ judgment.spec.js | ⬜ pending |
+
+**Asset-rebuild note (D-12):** the chosen no-rebuild path (icon `hero-chart-bar` already embedded; `hover:border-primary` already in the committed `priv/static/app.css`; `block`/`rounded-box`/`mg-focus-ring`/motion tokens all pre-existing) introduces **zero new Tailwind classes**, so **no `mix assets.build` and no bundle commit are required**. TokenParityTest is still run after the code change as a tripwire to prove the bundle was not disturbed.
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
