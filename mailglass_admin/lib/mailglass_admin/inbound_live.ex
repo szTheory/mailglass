@@ -353,6 +353,7 @@ defmodule MailglassAdmin.InboundLive do
 
     assigns =
       assign(assigns,
+        overview_path: paths.overview,
         deliveries_path: paths.deliveries,
         inbound_path: paths.inbound,
         inbound_available?: MailglassAdmin.Operator.Shell.inbound_available?()
@@ -361,6 +362,7 @@ defmodule MailglassAdmin.InboundLive do
     ~H"""
     <MailglassAdmin.Operator.Shell.shell
       active={:inbound}
+      overview_path={@overview_path}
       deliveries_path={@deliveries_path}
       inbound_path={@inbound_path}
       inbound_available?={@inbound_available?}

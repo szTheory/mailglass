@@ -357,11 +357,16 @@ defmodule MailglassAdmin.OperatorLive do
       tenant={blank_to_nil(@filter_params["tenant_id"])}
       title={if @view == :overview, do: "Operator overview", else: "Deliveries"}
       subtitle={
-        if @view == :overview,
-          do:
-            "A task-oriented overview of your email delivery health. Navigate to Deliveries to inspect individual sends.",
-          else:
+        cond do
+          @view != :overview ->
             "Prove what happened to a message — inspect its event timeline, suppression state, and replay history."
+
+          @support_summary && all_clear?(@support_summary) && @suppression_count in [0, nil] ->
+            "Your delivery system is healthy."
+
+          true ->
+            "Your delivery system needs attention."
+        end
       }
       flash={@flash}
     >
@@ -442,6 +447,16 @@ defmodule MailglassAdmin.OperatorLive do
                 />
               </div>
             </div>
+
+            <p
+              :if={
+                @support_summary && all_clear?(@support_summary) &&
+                  @suppression_count in [0, nil]
+              }
+              class="text-body text-secondary"
+            >
+              Your delivery system is healthy — nothing needs your attention right now.
+            </p>
 
             <div
               :if={
