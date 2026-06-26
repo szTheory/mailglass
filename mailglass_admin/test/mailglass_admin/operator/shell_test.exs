@@ -163,7 +163,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
         rendered_to_string(~H"""
         <Shell.shell
           active={:deliveries}
-          deliveries_path="/operator"
+          overview_path="/operator"
+          deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
           inbound_available?={true}
           title="Deliveries"
@@ -191,7 +192,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
         rendered_to_string(~H"""
         <Shell.shell
           active={:deliveries}
-          deliveries_path="/operator"
+          overview_path="/operator"
+          deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
           inbound_available?={true}
           title="Deliveries"
@@ -222,7 +224,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
         rendered_to_string(~H"""
         <Shell.shell
           active={:inbound}
-          deliveries_path="/operator"
+          overview_path="/operator"
+          deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
           inbound_available?={true}
           title="Inbound"
@@ -240,6 +243,89 @@ defmodule MailglassAdmin.Operator.ShellTest do
 
       refute Enum.any?(current, &(&1 =~ "Deliveries")),
              "Deliveries must never carry aria-current when active is :inbound, got: #{inspect(current)}"
+
+      refute Enum.any?(current, &(&1 =~ "Overview")),
+             "Overview must never carry aria-current when active is :inbound, got: #{inspect(current)}"
+    end
+
+    test "active={:overview} marks only Overview nav items aria-current=page" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <Shell.shell
+          active={:overview}
+          overview_path="/operator"
+          deliveries_path="/operator?view=deliveries"
+          inbound_path="/operator/inbound"
+          inbound_available?={true}
+          title="Operator overview"
+        >
+          body
+        </Shell.shell>
+        """)
+
+      current = current_nav_labels(html)
+
+      assert current != [], "expected at least one aria-current=page nav item"
+
+      assert Enum.all?(current, &(&1 =~ "Overview")),
+             "expected every aria-current nav item to be Overview, got: #{inspect(current)}"
+
+      refute Enum.any?(current, &(&1 =~ "Deliveries")),
+             "Deliveries must never carry aria-current when active is :overview, got: #{inspect(current)}"
+
+      refute Enum.any?(current, &(&1 =~ "Inbound")),
+             "Inbound must never carry aria-current when active is :overview, got: #{inspect(current)}"
+    end
+
+    test "Overview nav_link and nav_pill are always rendered (no :if gate), href equals overview_path" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <Shell.shell
+          active={:deliveries}
+          overview_path="/operator"
+          deliveries_path="/operator?view=deliveries"
+          inbound_path="/operator/inbound"
+          inbound_available?={false}
+          title="Deliveries"
+        >
+          body
+        </Shell.shell>
+        """)
+
+      {:ok, doc} = Floki.parse_fragment(html)
+
+      # Overview nav items must be present even when inbound_available?=false (always-shown, no gate)
+      overview_links =
+        doc
+        |> Floki.find("a")
+        |> Enum.filter(fn node -> Floki.text(node) |> String.trim() =~ "Overview" end)
+
+      assert length(overview_links) >= 2,
+             "expected at least 2 Overview nav items (sidebar + mobile), got: #{length(overview_links)}"
+
+      Enum.each(overview_links, fn link ->
+        href = link |> Floki.attribute("href") |> List.first()
+
+        assert href == "/operator",
+               "expected Overview nav item href to be /operator (bare root), got: #{inspect(href)}"
+      end)
+    end
+
+    test "surface_paths/4 returns :overview key with bare root (no view= param)" do
+      paths = Shell.surface_paths("/ops/mail", :deliveries, false, "acme")
+
+      assert Map.has_key?(paths, :overview),
+             "expected surface_paths to return :overview key, got: #{inspect(Map.keys(paths))}"
+
+      assert paths.overview == "/ops/mail?tenant_id=acme",
+             "expected :overview to be bare root with tenant, got: #{inspect(paths.overview)}"
+
+      refute paths.overview =~ "view=",
+             "expected :overview path to have no view= param, got: #{inspect(paths.overview)}"
     end
   end
 
@@ -251,7 +337,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
         rendered_to_string(~H"""
         <Shell.shell
           active={:deliveries}
-          deliveries_path="/operator"
+          overview_path="/operator"
+          deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
           inbound_available?={true}
           theme_choice={:light}
