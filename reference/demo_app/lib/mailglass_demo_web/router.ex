@@ -5,6 +5,7 @@ defmodule MailglassDemoWeb.Router do
   import Phoenix.LiveView.Router
   import Plug.Conn
   import MailglassAdmin.Router
+  import PhoenixStorybook.Router
 
   pipeline :browser do
     plug(:accepts, ["html"])
@@ -34,6 +35,13 @@ defmodule MailglassDemoWeb.Router do
     post("/evidence/reset", PageController, :evidence_reset)
   end
 
+  # Serves phoenix_storybook's OWN prebuilt explorer assets (shipped in the hex
+  # package). Dev-only because the dep is `only: :dev` — absent from the compiled
+  # prod build entirely (T-118-01 mitigation).
+  scope "/" do
+    storybook_assets()
+  end
+
   scope "/dev" do
     pipe_through(:browser)
 
@@ -44,6 +52,12 @@ defmodule MailglassDemoWeb.Router do
         MailglassDemoWeb.Mailers.OperationsMailer
       ]
     )
+
+    # Dev-only interactive component review surface (PROJECT D-06). Mounted strictly
+    # inside this dev-only /dev scope so it is never prod-reachable (V4 access-control
+    # mitigation T-118-01). Its sandbox CSS is the committed admin bundle served by
+    # mailglass_admin_routes/2 above at /dev/mail/css-<md5>.
+    live_storybook("/storybook", backend_module: MailglassDemoWeb.Storybook)
   end
 
   scope "/ops" do

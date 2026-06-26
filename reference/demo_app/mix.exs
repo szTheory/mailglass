@@ -43,6 +43,10 @@ defmodule MailglassDemo.MixProject do
       {:bandit, "~> 1.6"},
       {:phoenix_live_view, "~> 1.1"},
       {:phoenix_html, "~> 4.1"},
+      # Dev-only interactive component review surface (PROJECT D-06). Never
+      # ships to adopters: the dep is absent from mailglass_admin's :files glob
+      # and is mounted strictly inside the demo router's dev-only /dev scope.
+      {:phoenix_storybook, "~> 1.2", only: :dev},
       mailglass_dep(),
       mailglass_admin_dep(),
       mailglass_inbound_dep()
