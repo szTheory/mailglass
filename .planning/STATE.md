@@ -4,11 +4,11 @@ milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
 current_phase: 119
 current_phase_name: App-shell + Nav + Overview redesign
-status: planning
-stopped_at: Phase 119 UI-SPEC approved
-last_updated: "2026-06-26T20:18:08.904Z"
+status: planned
+stopped_at: Phase 119 plans created (2 plans, plan-checker PASS)
+last_updated: "2026-06-26T20:39:50.436Z"
 last_activity: 2026-06-26
-last_activity_desc: Phase 118 complete, transitioned to Phase 119
+last_activity_desc: Phase 119 planned — 2 plans / 6 tasks, plan-checker PASS
 progress:
   total_phases: 7
   completed_phases: 1
