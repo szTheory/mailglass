@@ -4,13 +4,13 @@ milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
 status: executing
 stopped_at: Completed 118-01-PLAN.md
-last_updated: "2026-06-26T16:28:05.042Z"
+last_updated: "2026-06-26T16:33:27.436Z"
 last_activity: 2026-06-26
 progress:
   total_phases: 9
   completed_phases: 2
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
   percent: 22
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 118 (method-audit-storybook-stand-up) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-06-26
 
@@ -241,6 +241,7 @@ plan directly from the v1.13 precedent.
 - [Phase ?]: v1.13 ratchet-arm armed (116-06): 54-cell aesthetic + 9-cell axe baselines promoted current->prior with distinct run_ids; all three fail-closed comparators green (22 tests, 0 failures)
 - [Phase ?]: Storybook theme bridge uses per-variation template-level data-theme (not color_mode class picker); admin components key off data-theme which a CSS class cannot drive without a forbidden app.css alias (D-08).
 - [Phase ?]: phoenix_storybook css_path = served committed bundle URL /dev/mail/css-<md5>; no new asset build, app.css untouched (D-07).
+- [Phase ?]: [118-02] Both judgment gates (nav-active-correctness, no-nav-duplication) are test.fixme asserting the correct end-state (D-12); flip green in Phase 119, armed into the floor in Phase 123 (D-13); not in any required CI lane.
 
 ## Quick Tasks Completed
 
@@ -363,6 +364,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 116 P05 | 7 min | 3 tasks | 4 files |
 | Phase 116 P06 | 17min | 3 tasks | 4 files |
 | Phase 118 P01 | 11min | 3 tasks | 12 files |
+| Phase 118 P02 | 4min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -387,7 +389,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-26T16:27:58.343Z
+**Last session:** 2026-06-26T16:33:07.767Z
 **Stopped at:** Completed 118-01-PLAN.md
 **Resume file:** None
 

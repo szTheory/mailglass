@@ -32,7 +32,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 - [x] **METHOD-01**: Adversarial persona/JTBD critic agents walk every admin surface (live `make demo`
       + the review surface) across the viewport×theme×state matrix and produce a prioritized,
       severity-ranked, **screenshot-backed defect register** (the hit-list driving the redesign).
-- [ ] **METHOD-02**: New judgment-level regression guards (nav-active-correctness; no nav-duplication
+- [x] **METHOD-02**: New judgment-level regression guards (nav-active-correctness; no nav-duplication
       on a populated page) are armed, green, and added to the inherited ratchet floor so the fixed
       issues cannot silently regress.
 
@@ -41,7 +41,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
       and pages on-brand (sandbox stylesheet = the committed `app.css`) with stories spanning
       states/themes/viewports; it is `only: :dev` so adopters never install it (zero-Node guarantee
       intact).
-- [ ] **STORY-02**: The existing `/dev/mail/gallery` is retained as the structural-contract/ratchet
+- [x] **STORY-02**: The existing `/dev/mail/gallery` is retained as the structural-contract/ratchet
       surface with no drift-guard regression.
 
 ### App-Shell, Navigation & Overview (biggest-impact surface)
@@ -99,9 +99,9 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | METHOD-01 | Phase 118 | Complete |
-| METHOD-02 | Phase 118 | Pending |
+| METHOD-02 | Phase 118 | Complete |
 | STORY-01 | Phase 118 | Complete |
-| STORY-02 | Phase 118 | Pending |
+| STORY-02 | Phase 118 | Complete |
 | SHELL-01 | Phase 119 | Pending |
 | SHELL-02 | Phase 119 | Pending |
 | SHELL-03 | Phase 119 | Pending |

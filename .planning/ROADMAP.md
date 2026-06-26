@@ -89,7 +89,7 @@ that produces the prioritized screenshot-backed defect register driving the rede
 **Wave 1**
 
 - [x] 118-01-PLAN.md — phoenix_storybook dev-only stand-up + sandbox CSS + Wave-0 .gitignore prereq (METHOD-01, STORY-01)
-- [ ] 118-02-PLAN.md — two drafted judgment gates (test.fixme) + verify-green inherited floor + gallery unchanged (METHOD-02, STORY-02)
+- [x] 118-02-PLAN.md — two drafted judgment gates (test.fixme) + verify-green inherited floor + gallery unchanged (METHOD-02, STORY-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -235,7 +235,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 118. Method, Audit & Storybook stand-up | 1/3 | In Progress|  |
+| 118. Method, Audit & Storybook stand-up | 2/3 | In Progress|  |
 | 119. App-shell + Nav + Overview redesign | 0/? | Not started | - |
 | 120. Deliveries surface redesign | 0/? | Not started | - |
 | 121. Inbound surface redesign | 0/? | Not started | - |
