@@ -93,7 +93,7 @@ that produces the prioritized screenshot-backed defect register driving the rede
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 118-03-PLAN.md — persona-critic screenshot harness + milestone-scoped DEFECT-REGISTER.md (METHOD-01)
+- [x] 118-03-PLAN.md — persona-critic screenshot harness + milestone-scoped DEFECT-REGISTER.md (METHOD-01)
 
 **UI hint**: yes
 
@@ -235,7 +235,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 118. Method, Audit & Storybook stand-up | 2/3 | In Progress|  |
+| 118. Method, Audit & Storybook stand-up | 3/3 | Complete   | 2026-06-26 |
 | 119. App-shell + Nav + Overview redesign | 0/? | Not started | - |
 | 120. Deliveries surface redesign | 0/? | Not started | - |
 | 121. Inbound surface redesign | 0/? | Not started | - |
