@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-current_phase: 119
-current_phase_name: app-shell-nav-overview-redesign
+current_phase: 120
+current_phase_name: Deliveries surface redesign
 status: executing
-stopped_at: Phase 119 plans created (2 plans, plan-checker PASS)
-last_updated: "2026-06-26T20:43:02.249Z"
+stopped_at: Phase 119 UI-SPEC approved
+last_updated: "2026-06-26T21:14:28.942Z"
 last_activity: 2026-06-26
-last_activity_desc: Phase 119 execution started
+last_activity_desc: Phase 119 complete, transitioned to Phase 120
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 3
-  percent: 14
+  completed_plans: 5
+  percent: 29
 ---
 
 # Project State
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 ## Current Position
 
-Phase: 119 (app-shell-nav-overview-redesign) — EXECUTING
-Plan: 1 of 2
+Phase: 120 — Deliveries surface redesign
+Plan: Not started
 Status: Executing Phase 119
-Last activity: 2026-06-26 — Phase 119 execution started
+Last activity: 2026-06-26 — Phase 119 complete, transitioned to Phase 120
 
 ## v1.14 Milestone Intent
 
