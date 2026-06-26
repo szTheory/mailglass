@@ -347,9 +347,10 @@ test.describe("operator browser gate", () => {
   });
 
   // VERIF-02: structural coverage for Operator Overview landing (D-05 / GAP-register sev-4 closeout)
-  // Asserts the health-count cards container and navigation CTAs container are visible
+  // Asserts the health-count cards container and drill-through links are visible
   // when the tenant is scoped. Uses getByTestId for structural assertions (not pixel-based).
-  test("operator overview landing has health cards and navigation CTAs", async ({ page }) => {
+  // Note: operator-overview-nav (Navigate block) was removed in Phase 119 (SHELL-02).
+  test("operator overview landing has health cards and drill-through links", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
@@ -362,9 +363,6 @@ test.describe("operator browser gate", () => {
 
     // Health-count cards container (all four sub-cards always render; colors vary by seed state)
     await expect(page.getByTestId("operator-overview-health")).toBeVisible();
-
-    // Navigation CTAs container (View Deliveries + View Inbound links)
-    await expect(page.getByTestId("operator-overview-nav")).toBeVisible();
 
     // SHELL-02: failures stat card is wrapped in a drill-through link to status=failed Deliveries
     const failuresLink = page.getByTestId("operator-overview-health-failures-link");
