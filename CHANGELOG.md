@@ -14,6 +14,20 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.9.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.8.0...mailglass-v1.9.0) (2026-06-26)
+
+
+### Features
+
+* **admin:** fold post-117 admin polish + fix the release-blocking demo reset race ([#91](https://github.com/szTheory/mailglass/issues/91)) ([5bba33c](https://github.com/szTheory/mailglass/commit/5bba33ccaed46f14d9ac1314ab829c6fdb10841e))
+
+
+### Bug Fixes
+
+* **ci:** refresh Hex registry before sibling publish deps.get ([c56973e](https://github.com/szTheory/mailglass/commit/c56973ea4bf18dd9a91c7257d234221fca162f2a))
+* **ci:** unlock stale sibling lock before publish deps.get ([ceee383](https://github.com/szTheory/mailglass/commit/ceee38352f3bbccf20368b2fa65d6f614430e2cc))
+* **ci:** use a fresh HEX_HOME for sibling publish deps.get ([f772e46](https://github.com/szTheory/mailglass/commit/f772e46ce3880afe889f262ef49cdee32d3ddfc8))
+
 ## [1.8.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.7.0...mailglass-v1.8.0) (2026-06-21)
 
 

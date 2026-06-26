@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.9.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.8.0...mailglass_admin-v1.9.0) (2026-06-26)
+
+
+### Features
+
+* **admin:** fold post-117 admin polish + fix the release-blocking demo reset race ([#91](https://github.com/szTheory/mailglass/issues/91)) ([5bba33c](https://github.com/szTheory/mailglass/commit/5bba33ccaed46f14d9ac1314ab829c6fdb10841e))
+
 ## [1.8.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.7.0...mailglass_admin-v1.8.0) (2026-06-21)
 
 
