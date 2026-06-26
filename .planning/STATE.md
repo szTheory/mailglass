@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-status: planning
-last_updated: "2026-06-26T12:00:00.000Z"
-last_activity: 2026-06-26
+status: Roadmap created; awaiting `/gsd-plan-phase 118`
+stopped_at: Phase 118 context gathered (assumptions mode)
+last_updated: "2026-06-26T12:47:06.541Z"
+last_activity: 2026-06-26 — v1.14 roadmap created (Phases 118-124)
 progress:
-  total_phases: 7
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 9
+  completed_phases: 2
+  total_plans: 6
+  completed_plans: 6
+  percent: 22
 ---
 
 # Project State
@@ -36,6 +37,7 @@ Last activity: 2026-06-26 — v1.14 roadmap created (Phases 118-124)
   the operator landing: the sidebar **always highlights "Deliveries"** even on the overview (hardcoded
   `active={:deliveries}`), a redundant **"Navigate" section** duplicates the always-visible sidebar, and
   the **overview is a homepage that mostly points elsewhere**. Root cause: prior passes were **bottom-up
+
   + structural-gate-verified** → clean primitives on muddy pages, because no structural gate can ask "is
   this page redundant / coherent / least-surprising." v1.14 **inverts the method**: top-down, JTBD/IA-led,
   with a **judgment-level adversarial persona-critic review loop** (+ maintainer sign-off) that catches
@@ -74,6 +76,7 @@ Last activity: 2026-06-26 — v1.14 roadmap created (Phases 118-124)
 - **Two binding sequencing constraints:** (1) Phase 118 (persona-critic harness + defect register) is a
   **hard precondition** for Phase 119 — the hit-list drives every surface redesign. (2) Each surface
   redesign (120 → 121 → 122) inherits the cleaned-up patterns from the prior one; the full pillar re-score
+
   + new judgment-gate arming happens ONLY in Phase 123.
 
 - **Release posture: ACTUALLY CUT** (D-28) — admin-minor bump drags matched core+inbound via
@@ -381,9 +384,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-22T14:47:16.921Z
-**Stopped at:** context exhaustion at 75% (2026-06-22)
-**Resume file:** .planning/phases/117-release-cut-milestone-closeout/117-CONTEXT.md
+**Last session:** 2026-06-26T12:47:06.534Z
+**Stopped at:** Phase 118 context gathered (assumptions mode)
+**Resume file:** .planning/phases/118-method-audit-storybook-stand-up/118-CONTEXT.md
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
