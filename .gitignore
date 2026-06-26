@@ -36,6 +36,14 @@ erl_crash.dump
 .DS_Store
 **/.DS_Store
 
+# Persona-critic screenshot evidence cache (v1.14+). Screenshots are
+# evidence-only attachments (PROJECT D-02), NOT a pixel-diff baseline. The gsd
+# commit seam sweeps all dirty .planning/ paths, so the ~80-120 evidence PNGs
+# the harness produces must be ignored. Scoped narrowly to the `.cache` dir so
+# tracked sibling artifacts (DEFECT-REGISTER.md, story files, MILESTONE-SEED.md)
+# stay tracked.
+/.planning/research/**/.cache/
+
 # Local IDE/tooling — no project artifacts
 /.claude/
 /.bg-shell/
