@@ -8,138 +8,63 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v1.13 Admin Design-System Stress Test & UX Uplift (v3)
+## Current Milestone: v1.14 Operator IA & Lived-Experience Redesign
 
-**Opened 2026-06-18.** The first feature-milestone after the maintainer ended the post-v1.12
-quiet-maintenance posture — triggered by clicking the real `make demo` app and hitting
-lived-experience rough edges the in-the-lab v1.11 ratchet never surfaced (a tenant-scoping
-dead-end, a pointless single-tenant picker, clipped stat-card labels, "kind of ugly" visuals).
-A sanctioned adopter-visible-**quality** investment under the D-23 convergence rule (precedent:
-D-24 v1.7, D-27 v1.11) — NOT product-capability growth.
+**Opened 2026-06-26.** The **fourth** admin-UI quality pass (after v1.7, v1.11, v1.13), opened
+because clicking the real `make demo` after v1.13 shipped *still* surfaced obvious IA/usability
+problems — a sidebar that always highlights "Deliveries", an overview "Navigate" section that
+duplicates the sidebar, a homepage that mostly points elsewhere. Root cause: the prior three passes
+were **bottom-up and structural-gate-verified**, producing clean primitives on muddy pages — no
+structural gate can ask "is this page redundant / coherent / least-surprising." A sanctioned
+adopter-visible-**quality** investment under D-23 (precedent D-24 v1.7, D-27 v1.11, D-29 v1.13) —
+NOT product-capability growth.
 
-**Goal:** Systematically audit and uplift the `mailglass_admin` design system **fractally**
-(foundations → primitives → forms → app-shell → data-display → component-groups → pages/flows)
-to award-winning, internally-coherent, on-brand quality in **light / dark / system** at every
-width, **WCAG 2.2 AA**, with per-decision research that is adversarially judged and synthesized
-to locked decisions, and an **idempotent no-regression ratchet** — proven against stress
-fixtures along real JTBD happy / error / boundary / edge paths — then shipped to Hex.
+**Goal:** Invert the method to **top-down, JTBD/IA-led**, and add a **judgment-level review loop**
+(adversarial persona/JTBD critic agents + maintainer sign-off) that catches the taste/redundancy/IA
+problems structural gates can't. Redesign the admin/operator surfaces page-by-page, biggest-impact
+first, to ruthlessly de-duplicated, Apple-like deliberate IA — everything intentional, nothing
+accidental — mobile-first, light/dark/system, WCAG 2.2 AA, Emil-Kowalski-grade motion, on-brand
+microcopy, **idempotent (only-forward, inheriting the full v1.13 ratchet floor)** — then ship to Hex.
 
-**Target features:**
-- **Foundations audit/uplift** — semantic-token completeness (color/surface/elevation + a formal
-  **z-index layer system**, focus rings, overlays, type scale, spacing, radius, shadows, borders,
-  icons, **motion tokens**); zero one-off values; light/dark/system.
-- **Theme: full system / light / dark picker, system as default** (today only a light/dark toggle).
-- **Primitive + form-control audit** — every component in every state
-  (hover/focus/active/pressed/disabled/loading/selected/error/empty/long-content), WCAG 2.2 AA +
-  WAI-ARIA APG patterns, mobile-first responsive 320→wide.
-- **App-shell, navigation & data-display patterns** — tables-vs-cards discipline, consistent stat
-  cards, timelines, empty/error/permission/stale states, honest pagination affordances,
-  operator-under-stress clarity.
-- **Component groups (meta-components) + pages/flows** — coherent spacing/hierarchy, GOV.UK-style
-  information architecture, principle of least surprise, per-persona/JTBD happy/error/boundary/
-  edge/advanced paths.
-- **Component-lab / "Storybook-lens" stress surface** — extend the dev-only `/dev/mail/gallery`
-  into the systematic component × state × theme × viewport audit matrix (decision brief:
-  PhoenixStorybook vs in-house, leaning in-house under the zero-Node rule).
-- **Micro-animation pass** (Emil Kowalski best-practice, origin-aware overlays,
-  `prefers-reduced-motion`, transform/opacity only) + **microcopy pass** (recovery-oriented
-  errors, helpful empty states, consistent domain language).
-- **Multi-tenant fixture cohort (2–3 personas) + tenant listing / auto-select** — kills the
-  "No tenant selected" scoping dead-end and gives the tenant picker a reason to exist; stress
-  fixtures across no-data/one/many/long-IDs/non-ASCII/high-count/null/error/boundary.
-- **Usability-bug sweep** — modal-behind-scrim, scroll traps, hover on non-interactive heroes,
-  misalignment, chopped padding, inconsistent spacing, squished table columns, table-overuse,
-  inconsistent stat cards, disabled-looking-enabled controls, contrast failures.
-- **Idempotent quality ratchet** — re-arm and **extend** the v1.11 meet-or-beat baseline +
-  `GAP-NN` register + structural/a11y/motion gates across the widened matrix (system theme,
-  WCAG 2.2 AA, new viewports).
+Binding quality bar: `.planning/research/v1.14/STRESS-TEST-PROMPT.md` (do not dilute). Seed brief:
+`.planning/research/v1.14/MILESTONE-SEED.md`.
+
+**Target features (top-down, biggest-impact first):**
+- **Method + audit + storybook stand-up** — adversarial persona-critic harness producing a
+  prioritized, screenshot-backed defect register across all surfaces; adopt `phoenix_storybook` as
+  a `only: :dev` dependency (sandbox CSS = committed `app.css`; keep `/dev/mail/gallery` for the
+  ratchet contracts); new judgment gates (nav-active-correctness, no-nav-duplication).
+- **App-shell + nav + Overview redesign (#1 pain)** — fix the false-active nav bug; Overview becomes
+  a real triage destination (redundant nav cards removed, orientation strip only on genuine empty
+  panes, actionable/drill-down health stats, own nav identity); streamlined shell/overview microcopy.
+- **Deliveries surface** end-to-end redesign (core operator JTBD) across happy/empty/error/boundary,
+  light/dark/system, every width.
+- **Inbound surface** redesign, made consistent with the cleaned-up patterns.
+- **Preview surface** redesign + consistency.
+- **Cross-surface coherence + review-surface finalize + ratchet re-arm** — re-score the aesthetic
+  baseline only-forward; arm the new judgment gates.
+- **Release cut + closeout** — linked-version Hex release (admin-minor drags core+inbound), D-13
+  inbound exact-pin re-pin, consumer + post-publish smoke, milestone audit + archive.
+
+**Locked decisions (maintainer, 2026-06-26):** (1) Overview → real triage destination; (2) review
+method → persona critics, mostly autonomous with phase-boundary sign-off; (3) ship to Hex; (4) adopt
+`phoenix_storybook` dev-only.
 
 **Scope locks:**
-- **Admin + demo only.** Recipient-facing email HEEx templates and `brandbook/` tokens are OUT —
-  the brand book is the source of truth (a newer brand book wins over older `prompts/` files).
-- **Host-app-friendly** (mountable library): don't hijack host auth/theme/assets/Repo; no
-  surprising global CSS/JS; no new deps without clear long-term payoff (PhoenixStorybook →
-  decision brief).
-- **Research: YES** — per-decision subagent research (Phoenix LiveDashboard / Oban Web / Backpex /
-  Kaffy / AshAdmin + Carbon/Polaris/GOV.UK + WCAG 2.2/APG + Emil Kowalski), adversarially judged;
-  extends the v1.11 LOCKED-DECISION dossiers rather than redoing them.
-- **Release posture: ACTUALLY CUT** at close — merge PR #86 first (held adopter-facing bug fixes:
-  broken operator/inbound theme, lost tenant scope), then one linked-version Hex release
-  (admin-minor drags core+inbound; D-13 inbound exact-pin re-pin).
-- **Zero Node toolchain**; admin CSS bundle rebuilt + committed on class changes. Phases continue
-  from 108 → 109+.
-
-**v1.12 (shipped 2026-06-17):** `Adopter Onboarding & Day-2 Confidence` — audit `status: passed`
-(13/13 requirements, 5/5 phases); cut the first real linked-version Hex release since 1.6.2 → live
-at **1.7.0 / 1.7.0 / 1.4.0**, mailglass_inbound re-pinned `{:mailglass, "== 1.7.0"}` (D-13 / REL-02).
-
-<details>
-<summary>v1.11 mailglass_admin Design-System Uplift — original goal and targets (shipped)</summary>
-
-**Goal:** Re-baseline the admin UI onto the canonical brand tokens, then fractally
-audit-and-uplift every component, component-group, and page across the Operator,
-Inbound, and Preview surfaces to award-winning quality in light + dark and at every
-width — enforced by an idempotent, research-grounded quality ratchet.
-
-**Why now:** The admin/operator LiveView UI was last polished (v1.7) against the *old
-codex-era* brand. The v1.9→v1.10 brand work only touched `brandbook/`, README, social,
-and HexDocs (plus a single admin wordmark swap), so the admin's CSS foundation has
-drifted from the canonical fable brand — verified: every admin border is drawn in the
-*accent* color (`base-300`→Ice), cards sit one brand-role off (`base-200`→Mist instead
-of `surface-raised`), dark muted text is below WCAG AA, and the admin's `app.css` never
-consumes `brandbook/tokens.css`. This is the root cause of the "UI feels off-brand /
-inbound looks ugly" perception.
-
-**Target features (Phases 94–103, numbering continues from v1.10):**
-- Token re-baseline: `mailglass_admin/assets/css/app.css` consumes the canonical `brandbook/tokens.css` `--mg-*` two-tier system as single source of truth (with a token-parity gate).
-- Idempotent quality ratchet: committed per-component×pillar×theme score baseline (meet-or-beat), carried-forward `GAP-NN` register, tightened conformance + motion + structural-assertion gates, LLM-scored PNG matrix.
-- Front-loaded research dossier (Emil Kowalski motion, gov.uk IA, component-state matrices, dark-mode pitfalls, "thoughtful maintainer" microcopy), adversarially synthesized to locked decisions.
-- Fractal component → group → page uplift across all three surfaces, in light + dark, mobile-first responsive (390/768/1440), with the heaviest lift on the structurally-thin Inbound surface.
-- A thin, dev-only component gallery LiveView (Storybook-lens) doubling as the exhaustive audit + visual-regression surface.
-- Micro-animation and microcopy passes within the hard motion/voice constraints; new dark-mode support for the Preview chrome.
-
-**Scope locks (decided with maintainer):** admin UI only (3 surfaces) — core email-template
-HEEx components and `brandbook/` specimens are OUT; no new product features; no core/inbound
-*functional* code changes (a `mailglass_admin` minor bump mechanically drags matched core +
-inbound versions via linked-version releases). **Release posture: prepare-only** — stage the
-ceremony, decide whether to cut a real Hex release at milestone close (v1.7 precedent).
-
-**`v1.10 Brand Adoption` shipped 2026-06-13** (Phases 91-93; audit `status: passed`,
-10/10 requirements) — see **Current State** below. The dormant 999.x backlog
-(human-readable comments cleanup; shift-left preview-screenshot workflow) remains
-promoted separately only if a maintenance pass or adopter pull justifies it.
-
-</details>
-
-**v1.9 context (shipped):**
-
-**`v1.9 Brand Book Fable — A/B Brand System` SHIPPED 2026-06-12.** The
-competing fable brand book is complete and maintainer-approved
-("I LOVE THE NEW BRANDBOOK"): the sealed-flap identity (4-round tournament
-winner) as an 8-asset two-expression logo system, contrast-proven two-tier
-tokens with full light/dark parity, a self-contained 77.7 KB HTML book with
-live theme toggle / keyboard-operable gallery / runtime-computed WCAG matrix,
-landing + email specimens, four portable SVGs, and a domain-noun copy library.
-22/22 requirements verified; the Phase 90 gate passed 9/9 on its first run.
-**Deferred to the next milestone:** adopting the winner as canonical
-`brandbook/` (folder rename, README/HexDocs/social propagation, PNG exports).
-
-<details>
-<summary>v1.9 original goal and targets (shipped)</summary>
-
-**Goal:** Build a second, fully self-contained fable brand book to A/B against the frozen codex `brandbook/` baseline (commit `09a84dd4`) — and beat it on craft, buildability, and standalone polish.
-
-**Target features:**
-- Research-grounded differentiation brief (forensic codex audit + world-class OSS/devtools brand-system research)
-- Foundations: semantic design tokens with interaction/feedback state roles, light AND dark, computed WCAG contrast matrix
-- Bounded logo tournament with a maintainer hard-pause: 8 diverse-by-axis options including integrated custom typemarks; no rectangular background plates, boundary-breaking marks, tight logotype proximity, no subtitle in the main lockup; refinement rounds on the pick(s); winner shipped as outlined-path SVGs (zero `font-family` in assets)
-- Standalone HTML brand book (`index.html`): self-contained, light/dark toggle, live component gallery with real hover/focus/disabled states, rendered contrast matrix, logo system section
-- Collateral: landing-page and transactional-email HTML specimens, README/docs/OG/diagram-language SVGs, per-surface copy library and domain-noun microcopy
-- Scripted quality gate: no planning-language leakage, no font dependencies, size budgets, local-only references, dark/16px render checks
-
-**Scope locks:** Only the fable staging folder is written. `brandbook/` (frozen baseline), `mailglass_admin`, guides, and README are out of scope. Text artifacts only (SVG/MD/JSON/CSS/HTML); no Node toolchain, no binaries, no embedded fonts, no external network requests. Creative latitude on palette/type/logo where justified; locked essence: "mail you can see through," thoughtful-maintainer voice, glass-as-metaphor-not-gimmick.
-
-</details>
+- **Admin + demo only.** Recipient-facing email HEEx templates and `brandbook/` tokens are OUT — the
+  brand book is the source of truth (a newer brand book wins over older `prompts/` files).
+- **Host-app-friendly** (mountable library): don't hijack host auth/theme/assets/Repo; no surprising
+  global CSS/JS. `phoenix_storybook` is `only: :dev` — adopters never install it (zero-Node is an
+  adopter-facing guarantee, intact).
+- **Idempotent, no regressions** — inherit the full v1.13 ratchet floor (~26 conformance gates,
+  54-cell aesthetic baseline, 9-cell axe baseline, 24-item Bucket-A manifest, persona drift-guard);
+  re-score only upward.
+- **Research: YES** — per-decision subagent research at the phase level (Phoenix LiveView / GOV.UK /
+  Carbon/Polaris/Atlassian / WCAG 2.2 + APG / Emil Kowalski / comparable admin UIs), adversarially
+  judged; extends the v1.11/v1.13 LOCKED-DECISION dossiers rather than redoing them.
+- **Release posture: ACTUALLY CUT** at close (linked-version; D-13 inbound re-pin).
+- **Zero Node toolchain** in the *shipped* asset pipeline; admin CSS bundle rebuilt + committed on
+  class changes. Phases continue from 117 → 118+.
 
 ## Current State
 
@@ -690,4 +615,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-20 after Phase 116 (Fixtures + Idempotent Ratchet-Arm) completed in **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** — foundation, primitives, component-groups, pages/flows, and the fixtures + idempotent ratchet-arm are verified; remaining v1.13 slices are Phases 111 Forms, 112 App-Shell/Tenant Seam, 113 Data-Display, then 117 release cut. Previously: v1.12 Adopter Onboarding & Day-2 Confidence SHIPPED 2026-06-17 (live at 1.7.0 / 1.7.0 / 1.4.0).*
+*Last updated: 2026-06-26 — opened **v1.14 Operator IA & Lived-Experience Redesign** (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).*

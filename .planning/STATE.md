@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.13
-milestone_name: Admin Design-System Stress Test & UX Uplift
-current_phase: 117
-status: completed
-stopped_at: context exhaustion at 75% (2026-06-22)
-last_updated: "2026-06-22T14:47:31.424Z"
-last_activity: 2026-06-22
-last_activity_desc: Phase 117 marked complete
+milestone: v1.14
+milestone_name: Operator IA & Lived-Experience Redesign
+status: planning
+last_updated: "2026-06-26T09:47:32.778Z"
+last_activity: 2026-06-26
 progress:
-  total_phases: 11
-  completed_phases: 11
-  total_plans: 43
-  completed_plans: 43
-  percent: 100
-current_phase_name: release-cut-milestone-closeout
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,12 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 ## Current Position
 
-Phase: 117 — COMPLETE
-Plan: 1 of 1
-Status: Phase 117 complete
-Last activity: 2026-06-22 — Phase 117 marked complete
-
-Progress: [██████████] 100%
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-26 — Milestone v1.14 started
 
 ## v1.13 Milestone Intent
 
