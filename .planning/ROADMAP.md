@@ -36,7 +36,7 @@ Binding quality bar: `.planning/research/v1.14/STRESS-TEST-PROMPT.md` (do not di
 
 - [x] **Phase 118: Method, Audit & Storybook stand-up** - Persona-critic harness + screenshot-backed defect register; phoenix_storybook dev-only review surface; new judgment gates drafted; floor inherited (completed 2026-06-26)
 - [x] **Phase 119: App-shell + Nav + Overview redesign** - The keystone #1-pain surface: fix the false-active-nav bug, give Overview its own identity, kill redundant nav cards, make health stats actionable (completed 2026-06-26)
-- [ ] **Phase 120: Deliveries surface redesign** - Core operator JTBD redesigned to a streamlined, non-info-dump IA across the full matrix
+- [x] **Phase 120: Deliveries surface redesign** - Core operator JTBD redesigned to a streamlined, non-info-dump IA across the full matrix (completed 2026-06-27)
 - [ ] **Phase 121: Inbound surface redesign** - Inbound brought consistent with the cleaned-up Deliveries patterns across the full matrix
 - [ ] **Phase 122: Preview surface redesign** - Preview brought consistent with the established patterns across the full matrix
 - [ ] **Phase 123: Cross-surface coherence + ratchet re-arm** - All four surfaces cohere; storybook + gallery finalized; aesthetic ratchet re-scored only-forward with new judgment gates armed
@@ -152,11 +152,11 @@ interaction model (not an info-dump), inheriting the Phase 119 shell/IA/microcop
 
 **Wave 1**
 
-- [ ] 120-01-PLAN.md — render-condition gating: filters toolbar + Open-delivery CTA on populated/no-match, orientation strip empty-pane-only, paired ExUnit update (DELIV-01)
+- [x] 120-01-PLAN.md — render-condition gating: filters toolbar + Open-delivery CTA on populated/no-match, orientation strip empty-pane-only, paired ExUnit update (DELIV-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 120-02-PLAN.md — paired Playwright updates + new Deliveries empty-pane-only judgment gate + persona re-shoot + inherited-floor/TokenParity hold (DELIV-01)
+- [x] 120-02-PLAN.md — paired Playwright updates + new Deliveries empty-pane-only judgment gate + persona re-shoot + inherited-floor/TokenParity hold (DELIV-01)
 
 **UI hint**: yes
 
@@ -250,7 +250,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 |-------|----------------|--------|-----------|
 | 118. Method, Audit & Storybook stand-up | 3/3 | Complete    | 2026-06-26 |
 | 119. App-shell + Nav + Overview redesign | 2/2 | Complete    | 2026-06-26 |
-| 120. Deliveries surface redesign | 0/2 | Not started | - |
+| 120. Deliveries surface redesign | 2/2 | Complete    | 2026-06-27 |
 | 121. Inbound surface redesign | 0/? | Not started | - |
 | 122. Preview surface redesign | 0/? | Not started | - |
 | 123. Cross-surface coherence + ratchet re-arm | 0/? | Not started | - |

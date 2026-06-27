@@ -69,7 +69,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 
 ### Deliveries Surface
 
-- [ ] **DELIV-01**: The Deliveries surface is redesigned for its core operator JTBD with a streamlined,
+- [x] **DELIV-01**: The Deliveries surface is redesigned for its core operator JTBD with a streamlined,
       non-info-dump IA — satisfying the cross-cutting matrix above.
 
 ### Inbound Surface
@@ -129,7 +129,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 | SHELL-01 | Phase 119 | Complete |
 | SHELL-02 | Phase 119 | Complete |
 | SHELL-03 | Phase 119 | Complete |
-| DELIV-01 | Phase 120 | Pending |
+| DELIV-01 | Phase 120 | Complete |
 | INB-01 | Phase 121 | Pending |
 | PREV-01 | Phase 122 | Pending |
 | COH-01 | Phase 123 | Pending |
