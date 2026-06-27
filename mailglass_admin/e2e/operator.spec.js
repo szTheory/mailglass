@@ -22,10 +22,13 @@ async function openOperator(page) {
   await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${returnTo}`);
   await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
   // Navigate to Deliveries view before delivery-centric assertions.
-  // Target the page h1 (level 1) explicitly: the Deliveries surface now also
-  // renders the orientation strip's <h2>Deliveries</h2> section heading, so an
-  // unqualified heading query is ambiguous under Playwright strict mode at the
-  // viewports where the strip is visible.
+  // Target the page h1 (level 1) explicitly. The orientation strip is now
+  // empty-pane-only (Phase 120 / D-08): on a POPULATED Deliveries view the strip
+  // — and its second <h2>Deliveries</h2> section heading (the D-LABEL-TRIPLING
+  // third heading) — is no longer rendered, so the historical heading ambiguity is
+  // gone here. The `level: 1` qualifier is retained anyway: it is harmless, still
+  // correct, and keeps the query unambiguous on the genuine-no-data view where the
+  // strip (and its <h2>) does render.
   await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
   await expect(
     page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
@@ -80,25 +83,24 @@ test.describe("operator browser gate", () => {
     await expect(page.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
   });
 
-  test("mobile shows orientation before list and preserves detail section order", async ({ page }) => {
+  test("mobile keeps orientation strip off a populated list and preserves detail section order", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openOperator(page);
 
+    // Phase 120 / D-08: the orientation strip is empty-pane-only. On a POPULATED
+    // Deliveries view it is NOT rendered, so the old "orientation strip renders
+    // above the list" ordering assertion is converted to a strip-ABSENCE assertion.
+    // The strip-presence proof now lives in the genuine-no-data judgment gate below.
     const deliveriesCard = page.getByTestId("operator-deliveries-list-card");
-    const orientation = page.getByTestId("deliveries-orientation");
-
-    const deliveriesBox = await deliveriesCard.boundingBox();
-    const orientationBox = await orientation.boundingBox();
-
-    expect(deliveriesBox).not.toBeNull();
-    expect(orientationBox).not.toBeNull();
-    expect(orientationBox.y).toBeLessThan(deliveriesBox.y);
+    await expect(deliveriesCard).toBeVisible();
+    await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
 
     await deliveryRow(page, 0).click();
 
     await expect(deliveriesCard).toBeHidden();
     await expect(page.getByTestId("operator-detail-back")).toBeVisible();
 
+    // Detail-section order is independent of the strip and remains a valid contract.
     const headerBox = await page.getByTestId("operator-detail-header").boundingBox();
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
     const suppressionBox = await page.getByTestId("operator-suppression-card").boundingBox();
@@ -109,9 +111,11 @@ test.describe("operator browser gate", () => {
     expect(headerBox.y).toBeLessThan(timelineBox.y);
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
 
-    // Acceptance check for GAP-07 at 390px: orientation strip must be visible (deliveries-orientation)
+    // Re-confirm strip absence on the populated &view=deliveries route at 390px
+    // (the inverse of the former GAP-07 visible-strip check — the strip moved to no-data only).
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
-    await expect(page.getByTestId("deliveries-orientation")).toBeVisible();
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
   });
 
   test("failed SendGrid row remains index-pinned for failure audit", async ({ page }) => {
@@ -393,6 +397,62 @@ test.describe("operator browser gate", () => {
     // The orientation strip should be absent (suppressed — health needs attention).
     // NOTE: this assertion goes RED until Task 2 gates the strip on the all-clear predicate.
     await expect(page.getByTestId("operator-overview-orientation")).toHaveCount(0);
+  });
+
+  // D-10 (Phase 120): Deliveries empty-pane-only judgment gate.
+  // Modeled on the Overview empty-pane-only gate above, this locks the single-calm-pane
+  // contract for the Deliveries surface into the operator browser ratchet:
+  //   - POPULATED  → orientation strip ABSENT (count 0) + filters toolbar PRESENT.
+  //   - NO-DATA    → orientation strip PRESENT (count 1) + filters toolbar WITHHELD
+  //                  (count 0, locks D-02/D-04: the toolbar is the only scope-widening
+  //                  vector, so its absence is the security boundary) + master-detail
+  //                  grid WITHHELD (count 0, locks the single-calm-pane contract D-03 —
+  //                  which is also why no "Select a delivery…" helper renders) +
+  //                  operator-empty-truly visible.
+  //   - NO-MATCH   → filters toolbar PRESENT (Clear-filters escape kept) + orientation
+  //                  strip ABSENT (count 0; the strip is genuine-no-data only).
+  // T-120-04 security boundary: the no-data `operator-filters` count 0 assertion arms
+  // the regression gate — any future change re-introducing the toolbar (scope-widening
+  // vector) in genuine no-data fails this browser gate.
+  test("deliveries orientation strip is empty-pane-only; filters toolbar withheld on no-data, kept on no-match", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
+
+    // --- POPULATED Deliveries view (browser-tenant has seed rows) ---
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+    await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
+    // Strip absent on populated; toolbar present.
+    await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
+    await expect(page.getByTestId("operator-filters")).toBeVisible();
+
+    // --- GENUINE NO-DATA Deliveries view ---
+    // Log in to a tenant with zero seeded deliveries (only browser-tenant is seeded by
+    // browser-reset). A fresh tenant id yields @deliveries == [] with no active filters
+    // and no filter errors → the genuine-no-data single-calm-pane branch.
+    const emptyTenant = "browser-empty-tenant";
+    const emptyReturnTo = encodeURIComponent(`/ops/mail?tenant_id=${emptyTenant}&view=deliveries`);
+    await page.goto(`/ops/browser-login?tenant_id=${emptyTenant}&return_to=${emptyReturnTo}`);
+
+    // Single calm pane: empty-truly + orientation strip only.
+    // `operator-empty-truly` is a presence-marker div (style="display:none" in
+    // deliveries_list.ex), so assert its presence by count — matching the Plan 01
+    // ExUnit `assert html =~ "operator-empty-truly"` contract — not CSS visibility.
+    await expect(page.getByTestId("operator-empty-truly")).toHaveCount(1);
+    await expect(page.getByTestId("deliveries-orientation")).toHaveCount(1);
+    // Toolbar WITHHELD (D-02/D-04 — the only scope-widening vector is absent).
+    await expect(page.getByTestId("operator-filters")).toHaveCount(0);
+    // Master-detail grid WITHHELD (D-03 single-calm-pane; no "Select a delivery…" helper).
+    await expect(page.getByTestId("operator-master-detail")).toHaveCount(0);
+
+    // --- NO-MATCH Deliveries view ---
+    // Active filter that matches zero browser-tenant rows: status=queued is a valid
+    // status (@status_values) with no seeded queued delivery → @deliveries == [] AND
+    // filters_active?/1 true → no-match (toolbar kept, strip absent).
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&status=queued`);
+    await expect(page.getByTestId("operator-filters")).toBeVisible();
+    await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
   });
 
   // VERIF-02: structural coverage for inbound and preview orientation strips (D-05)
