@@ -1,10 +1,11 @@
 ---
 phase: 120
 slug: deliveries-surface-redesign
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-26
+reviewed_at: 2026-06-26
 ---
 
 # Phase 120 — UI Design Contract
