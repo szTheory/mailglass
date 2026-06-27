@@ -31,15 +31,20 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-master-detail")
       assert html =~ "s*******@e******.com"
       refute html =~ delivery.recipient
+      # Positive D-06 proof: the populated-but-unselected detail column still renders
+      # the "Select a delivery…" master-detail helper.
       assert html =~ "Select a delivery to inspect its event timeline and suppression state."
       refute html =~ "Event timeline"
-      # Orientation strip: present when no delivery is selected (GAP-07)
-      assert html =~ ~s(data-testid="deliveries-orientation")
+      # Orientation strip is empty-pane-only: absent on a populated view,
+      # present only in genuine no-data.
+      refute html =~ ~s(data-testid="deliveries-orientation")
     end
 
-    test "renders the recent deliveries empty state", %{conn: conn} do
+    test "renders a single calm pane (empty-truly + orientation strip) in genuine no-data (no rows, no active filters)",
+         %{conn: conn} do
       conn = operator_conn(conn)
 
+      # No delivery inserted + default filter params → filters_active?/1 is false.
       {:ok, _view, html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
@@ -48,7 +53,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~
                "No deliveries have been recorded yet."
 
-      assert html =~ "Select a delivery to inspect its event timeline and suppression state."
+      # Single calm pane: the empty-truly state + the orientation strip (its only location).
+      assert html =~ ~s(data-testid="operator-empty-truly")
+      assert html =~ ~s(data-testid="deliveries-orientation")
+
+      # The filters toolbar (the only scope-widening vector) and the entire master-detail
+      # grid are withheld — so the nested "Select a delivery…" helper does not render here.
+      refute html =~ ~s(data-testid="operator-filters")
+      refute html =~ ~s(data-testid="operator-master-detail")
+      refute html =~ "Select a delivery to inspect its event timeline and suppression state."
     end
 
     test "applies filters through URL-backed state", %{conn: conn} do
@@ -105,6 +118,36 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(value="postmark")
       assert html =~ ~s(<option value="sent" selected)
       assert html =~ ~s(<option value="delivered" selected)
+    end
+
+    test "no-match (active filters, zero rows) keeps the filters toolbar and withholds the orientation strip",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      # A sent delivery exists, but the active status filter (failed) matches nothing →
+      # @deliveries == [] AND filters_active?/1 is true (the no-match state, not no-data).
+      insert_delivery!(
+        recipient: "only-sent@example.com",
+        provider: "postmark",
+        status: :sent,
+        last_event_type: :delivered
+      )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "status" => "failed"
+          })
+        )
+
+      # Toolbar kept so the operator retains the Clear-filters escape; in-pane no-match copy present.
+      assert html =~ ~s(data-testid="operator-filters")
+      assert html =~ ~s(data-testid="operator-empty-filtered")
+      # Orientation strip is genuine-no-data only → absent in no-match.
+      refute html =~ ~s(data-testid="deliveries-orientation")
     end
 
     test "invalid URL-backed filters render recovery copy without narrowing tenant reads", %{
