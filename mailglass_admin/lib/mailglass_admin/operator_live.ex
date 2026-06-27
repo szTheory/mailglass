@@ -486,10 +486,32 @@ defmodule MailglassAdmin.OperatorLive do
           <% end %>
         </div>
       <% else %>
-        <section
-          data-testid="operator-filters"
-          class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
-        >
+        <%= cond do %>
+          <% @deliveries == [] and not filters_active?(@filter_params) and @filter_errors == %{} -> %>
+            <%!-- Genuine no-data: a single calm pane only — operator-empty-truly + orientation strip.
+                  The filters toolbar, the Open-delivery CTA, and the entire master-detail grid (and
+                  therefore the "Select a delivery…" helper nested inside it) are all withheld.
+                  An in-progress invalid filter submission (@filter_errors non-empty) is NOT genuine
+                  no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters. --%>
+            <section
+              data-testid="operator-deliveries-empty-pane"
+              class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+            >
+              <DeliveriesList.deliveries_list
+                deliveries={[]}
+                page_meta={@deliveries_page_meta}
+                previous_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :previous)}
+                next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
+                selected_delivery={nil}
+                filters_active?={false}
+              />
+            </section>
+            <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
+          <% true -> %>
+            <section
+              data-testid="operator-filters"
+              class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
+            >
           <button
             type="button"
             phx-click={JS.toggle(to: "#operator-filter-panel")}
@@ -578,7 +600,6 @@ defmodule MailglassAdmin.OperatorLive do
                   </div>
                 </div>
               <% is_nil(@selected_delivery) -> %>
-                <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
                 <div
                   data-testid="operator-empty-detail"
                   class="card hidden rounded-box border border-base-300 bg-base-200 p-6 md:block"
@@ -643,6 +664,7 @@ defmodule MailglassAdmin.OperatorLive do
           replay_targets={@replay_targets}
           selected_target_id={@replay_selected_target_id}
         />
+        <% end %>
       <% end %>
       <% end %>
     </MailglassAdmin.Operator.Shell.shell>
