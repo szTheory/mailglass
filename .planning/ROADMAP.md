@@ -148,7 +148,16 @@ interaction model (not an info-dump), inheriting the Phase 119 shell/IA/microcop
   3. WCAG 2.2 AA + APG holds (keyboard-complete, visible/restored focus, never color-alone, 44×44
      targets, labeled controls, predictable dialogs); microcopy is on-brand and recovery-oriented; motion
      is Emil-Kowalski-grade within the v1.13 MOTION locks; all inherited gates stay green.
-**Plans**: TBD
+**Plans**: 2 plans
+
+**Wave 1**
+
+- [ ] 120-01-PLAN.md — render-condition gating: filters toolbar + Open-delivery CTA on populated/no-match, orientation strip empty-pane-only, paired ExUnit update (DELIV-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 120-02-PLAN.md — paired Playwright updates + new Deliveries empty-pane-only judgment gate + persona re-shoot + inherited-floor/TokenParity hold (DELIV-01)
+
 **UI hint**: yes
 
 ### Phase 121: Inbound surface redesign
@@ -241,7 +250,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 |-------|----------------|--------|-----------|
 | 118. Method, Audit & Storybook stand-up | 3/3 | Complete    | 2026-06-26 |
 | 119. App-shell + Nav + Overview redesign | 2/2 | Complete    | 2026-06-26 |
-| 120. Deliveries surface redesign | 0/? | Not started | - |
+| 120. Deliveries surface redesign | 0/2 | Not started | - |
 | 121. Inbound surface redesign | 0/? | Not started | - |
 | 122. Preview surface redesign | 0/? | Not started | - |
 | 123. Cross-surface coherence + ratchet re-arm | 0/? | Not started | - |
