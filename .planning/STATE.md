@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-current_phase: 120
-current_phase_name: Deliveries surface redesign
 status: executing
-stopped_at: Phase 119 UI-SPEC approved
-last_updated: "2026-06-26T21:14:28.942Z"
-last_activity: 2026-06-26
-last_activity_desc: Phase 119 complete, transitioned to Phase 120
+stopped_at: Phase 120 context gathered (assumptions mode)
+last_updated: "2026-06-27T01:06:34.451Z"
+last_activity: 2026-06-26 — Phase 119 complete, transitioned to Phase 120
 progress:
-  total_phases: 7
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 29
+  total_phases: 9
+  completed_phases: 4
+  total_plans: 11
+  completed_plans: 11
+  percent: 44
 ---
 
 # Project State
@@ -393,9 +390,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-26T20:18:08.894Z
-**Stopped at:** Phase 119 UI-SPEC approved
-**Resume file:** .planning/phases/119-app-shell-nav-overview-redesign/119-UI-SPEC.md
+**Last session:** 2026-06-27T01:06:34.445Z
+**Stopped at:** Phase 120 context gathered (assumptions mode)
+**Resume file:** .planning/phases/120-deliveries-surface-redesign/120-CONTEXT.md
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
