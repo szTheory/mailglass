@@ -100,6 +100,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:reveal_state, :redacted)
      |> assign(:inbound_router, inbound_router)
      |> assign(:detail_error, nil)
+     |> assign(:data_state, nil)
      |> assign(:replay_modal_open?, false)
      |> assign(:base_path, "/inbound")
      |> assign(:page_uri, "/inbound")
@@ -380,10 +381,32 @@ defmodule MailglassAdmin.InboundLive do
           current_uri={@page_uri}
         />
       <% else %>
-      <section
-        data-testid="inbound-filters"
-        class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
-      >
+        <%= cond do %>
+          <% @records == [] and not filters_active?(@filter_params) and @filter_errors == %{} -> %>
+            <%!-- Genuine no-data: a single calm pane only — inbound-empty-truly + orientation strip.
+                  The filters toolbar, the Open-record CTA, the Inbound.Overview health strip, and the
+                  entire master-detail grid (and therefore the "Select an InboundMessage…" helper nested
+                  inside it) are all withheld (D-02/D-05 — the filters toolbar is the only scope-widening
+                  vector). An in-flight invalid filter submission (@filter_errors non-empty) is NOT genuine
+                  no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters. --%>
+            <section
+              data-testid="inbound-deliveries-empty-pane"
+              class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+            >
+              <RecordsList.records_list
+                records={[]}
+                page_meta={@records_page_meta}
+                previous_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :previous)}
+                next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
+                empty_state={:truly_empty}
+              />
+            </section>
+            <MailglassAdmin.Operator.Shell.orientation_strip surface={:inbound} />
+          <% true -> %>
+            <section
+              data-testid="inbound-filters"
+              class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
+            >
         <button
           type="button"
           phx-click={JS.toggle(to: "#inbound-filter-panel")}
@@ -455,6 +478,7 @@ defmodule MailglassAdmin.InboundLive do
               next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
               selected_record={@selected_record}
               empty_state={@empty_state}
+              data_state={@data_state}
             />
           </aside>
         </div>
@@ -480,7 +504,6 @@ defmodule MailglassAdmin.InboundLive do
                 </div>
               </div>
             <% is_nil(@detail) -> %>
-              <MailglassAdmin.Operator.Shell.orientation_strip surface={:inbound} />
               <div
                 data-testid="inbound-empty-detail"
                 class="card rounded-box border border-base-300 bg-base-200 p-6"
@@ -530,6 +553,7 @@ defmodule MailglassAdmin.InboundLive do
         phx-remove={JS.focus(to: "#inbound-replay-open-btn")}
       />
       <ReplayModal.replay_modal open?={@replay_modal_open?} record={selected_record_struct(@detail)} />
+        <% end %>
       <% end %>
     </MailglassAdmin.Operator.Shell.shell>
     """
@@ -564,6 +588,10 @@ defmodule MailglassAdmin.InboundLive do
     # selections.
     |> assign(:reveal_state, :redacted)
     |> assign(:detail_error, detail_error_for(selected_inbound_id, detail))
+    # Route a load/authorization failure into the dormant RecordsList data_state
+    # (D-09) — reuse the existing detail_error signal rather than a new query.
+    # nil stays the normal flow (records / legacy empty branches render).
+    |> assign(:data_state, data_state_for(detail_error_for(selected_inbound_id, detail)))
   end
 
   defp tenant_state(nil, [], _tenant_param_present?), do: :none
@@ -583,6 +611,7 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:routing_trace, [])
     |> assign(:reveal_state, :redacted)
     |> assign(:detail_error, nil)
+    |> assign(:data_state, nil)
   end
 
   # Routing-trace data (IADM-04) — ONLY for a :no_match record. Reflected from the
@@ -926,6 +955,14 @@ defmodule MailglassAdmin.InboundLive do
   defp detail_error_for(nil, _detail), do: nil
   defp detail_error_for(_inbound_id, nil), do: :not_found
   defp detail_error_for(_inbound_id, _detail), do: nil
+
+  # Wire the dormant RecordsList data_state (D-09) from the failure signal the
+  # LiveView already computes (detail_error_for/2). A :not_found load means the
+  # list could not be resolved for the selection → surface the existing
+  # error pane. nil is the normal flow: records or the legacy empty branches.
+  defp data_state_for(nil), do: nil
+  defp data_state_for(:not_found), do: :error
+  defp data_state_for(_reason), do: :error
 
   defp selected_record_struct(nil), do: nil
   defp selected_record_struct(%{record: record}), do: record
