@@ -285,18 +285,23 @@ defmodule MailglassAdmin.PreviewLive do
             <% @render_error -> %>
               <div
                 data-testid="preview-render-error"
-                class="rounded-box border border-error bg-base-200 p-lg"
+                role="status"
+                aria-live="polite"
+                class="motion-reveal rounded-box border border-error bg-base-200 p-lg"
               >
                 <div class="flex items-center gap-sm mb-md">
                   <Components.icon name="hero-exclamation-circle" class="w-5 h-5 text-error" />
                   <h1 class="text-heading font-bold text-base-content">
-                    preview_props/0 raised an error
+                    This Mailable raised while rendering
                   </h1>
                 </div>
                 <p class="text-body text-secondary">
-                  Fix the error in
                   <code class="font-mono text-label">{inspect(@current_mailable)}</code>
-                  and save the file to reload.
+                  raised while rendering the
+                  <code class="font-mono text-label">{@current_scenario}</code>
+                  scenario. Fix it in
+                  <code class="font-mono text-label">{inspect(@current_mailable)}</code>
+                  and save to reload — the full error is below.
                 </p>
                 <pre class="mt-md font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
               </div>
