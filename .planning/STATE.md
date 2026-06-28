@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-current_phase: 123
-current_phase_name: Cross-surface coherence + ratchet re-arm
 status: verifying
-stopped_at: Phase 122 UI-SPEC approved
-last_updated: "2026-06-28T19:38:09.859Z"
-last_activity: 2026-06-28
-last_activity_desc: Phase 122 complete, transitioned to Phase 123
+stopped_at: Phase 123 context gathered (assumptions mode)
+last_updated: "2026-06-28T21:34:38.750Z"
+last_activity: 2026-06-28 — Phase 122 complete, transitioned to Phase 123
 progress:
-  total_phases: 7
-  completed_phases: 5
-  total_plans: 14
-  completed_plans: 14
-  percent: 71
+  total_phases: 9
+  completed_phases: 7
+  total_plans: 20
+  completed_plans: 20
+  percent: 78
 ---
 
 # Project State
@@ -404,9 +401,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T19:26:17.746Z
-**Stopped at:** Phase 122 UI-SPEC approved
-**Resume file:** None
+**Last session:** 2026-06-28T21:34:38.742Z
+**Stopped at:** Phase 123 context gathered (assumptions mode)
+**Resume file:** .planning/phases/123-cross-surface-coherence-ratchet-re-arm/123-CONTEXT.md
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
