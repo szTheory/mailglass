@@ -38,6 +38,9 @@ defmodule MailglassAdmin.Operator.ReplayModal do
             )
           }
         >
+          <%!-- Focus-trap start sentinel: Shift+Tab off the first control lands here and wraps to the last control (Confirm). Pure LiveView.JS, no client hook, no new npm dep. --%>
+          <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#operator-replay-confirm")}>
+          </span>
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
               <h2 id="replay-modal-title" class="text-heading font-bold text-base-content">
@@ -48,7 +51,12 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               </p>
             </div>
 
-            <button type="button" phx-click="close_replay" class="btn btn-ghost btn-sm">
+            <button
+              id="operator-replay-close"
+              type="button"
+              phx-click="close_replay"
+              class="btn btn-ghost btn-sm"
+            >
               Close
             </button>
           </div>
@@ -101,6 +109,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
             </button>
             <button
               :if={confirm_enabled?(@replay_targets, @selected_target_id)}
+              id="operator-replay-confirm"
               type="button"
               phx-click="confirm_replay"
               data-testid="operator-replay-confirm"
@@ -109,6 +118,9 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               Confirm replay
             </button>
           </div>
+          <%!-- Focus-trap end sentinel: Tab off the last control lands here and wraps to the first control (Close). --%>
+          <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#operator-replay-close")}>
+          </span>
         </div>
       </div>
     <% end %>

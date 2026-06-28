@@ -42,6 +42,9 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
             )
           }
         >
+          <%!-- Focus-trap start sentinel: Shift+Tab off the first control lands here and wraps to the last control (Confirm). Pure LiveView.JS, no client hook, no new npm dep. --%>
+          <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#inbound-replay-confirm")}>
+          </span>
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
               <h2 id="inbound-replay-modal-title" class="text-heading font-bold text-base-content">
@@ -52,7 +55,12 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
               </p>
             </div>
 
-            <button type="button" phx-click="close_replay" class="btn btn-ghost min-h-11 px-4">
+            <button
+              id="inbound-replay-close"
+              type="button"
+              phx-click="close_replay"
+              class="btn btn-ghost min-h-11 px-4"
+            >
               Close
             </button>
           </div>
@@ -62,6 +70,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
               Cancel
             </button>
             <button
+              id="inbound-replay-confirm"
               type="button"
               phx-click="confirm_replay"
               data-testid="inbound-replay-confirm"
@@ -70,6 +79,9 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
               Confirm replay
             </button>
           </div>
+          <%!-- Focus-trap end sentinel: Tab off the last control lands here and wraps to the first control (Close). --%>
+          <span tabindex="0" aria-hidden="true" phx-focus={JS.focus(to: "#inbound-replay-close")}>
+          </span>
         </div>
       </div>
     <% end %>
