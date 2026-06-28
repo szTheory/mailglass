@@ -389,7 +389,7 @@ defmodule MailglassAdmin.PreviewLive do
                   No mailables discovered yet. Define one with `mix mailglass.gen.mailable` and it will appear here, ready to preview.
                 </h1>
                 <p class="mt-md text-label font-bold text-secondary">Generate your first Mailable</p>
-                <code class="mono text-primary mt-sm inline-block overflow-auto whitespace-pre-wrap text-label">mix mailglass.gen.mailable</code>
+                <code class="font-mono text-primary mt-sm inline-block overflow-auto whitespace-pre-wrap text-label">mix mailglass.gen.mailable</code>
                 <p class="mt-sm text-body text-secondary">
                   Then reload — Preview discovers it automatically.
                 </p>
@@ -402,7 +402,7 @@ defmodule MailglassAdmin.PreviewLive do
                     />
                     <span>
                       Confirm the module calls
-                      <code class="mono text-label">use Mailglass.Mailable</code>
+                      <code class="font-mono text-label">use Mailglass.Mailable</code>
                       and is compiled and loaded.
                     </span>
                   </li>
@@ -412,7 +412,7 @@ defmodule MailglassAdmin.PreviewLive do
                       class="mt-0.5 h-4 w-4 shrink-0 text-primary"
                     />
                     <span>
-                      Or pass an explicit list to the router: <code class="mono text-label overflow-auto whitespace-pre-wrap">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
+                      Or pass an explicit list to the router: <code class="font-mono text-label overflow-auto whitespace-pre-wrap">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
                     </span>
                   </li>
                 </ul>
