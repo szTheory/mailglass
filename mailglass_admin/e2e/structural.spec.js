@@ -900,7 +900,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.setViewportSize({ width: 390, height: 844 });
       await openPreviewScenario(page, "theme=light");
-      await assertTouchTarget(page.getByTestId("preview-admin-theme-toggle"), "preview admin theme control");
+      // Admin chrome theming is the canonical theme_picker; each radio segment
+      // (label) carries the min-h-11/min-w-11 touch floor.
+      await assertTouchTarget(
+        page.getByTestId("preview-header-controls").locator('label:has(input[name="theme"][value="dark"])'),
+        "preview admin theme control"
+      );
       await assertTouchTarget(page.getByTestId("preview-frame-theme-toggle"), "preview frame theme control");
       await assertTouchTarget(
         page.getByTestId("preview-mobile-mailables").locator("summary").first(),
@@ -1392,12 +1397,14 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
 
-      await page.getByTestId("preview-admin-theme-toggle").click();
-      // Phase 112 moved admin-chrome theming to the mount-path-aware ThemeController:
-      // the toggle persists the choice via the `mailglass_admin_theme` cookie and
-      // redirects to a theme-stripped return_to, so the final URL no longer carries
-      // a `theme=dark` query param. The applied theme is asserted via the shell's
+      // Admin chrome theming is now the canonical tri-state theme_picker — pick
+      // the "dark" radio segment. Phase 112 moved admin-chrome theming to the
+      // mount-path-aware ThemeController: the choice persists via the
+      // `mailglass_admin_theme` cookie and redirects to a theme-stripped
+      // return_to that carries frame=dark (D-05), so the email backdrop survives
+      // the chrome remount. The applied theme is asserted via the shell's
       // data-theme attribute below, which is the authoritative signal.
+      await page.getByTestId("preview-header-controls").locator('input[name="theme"][value="dark"]').click();
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
     });
@@ -1529,7 +1536,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await assertFocusAppearanceAndNotObscured(
         page,
-        page.getByTestId("preview-admin-theme-toggle"),
+        page.getByTestId("preview-header-controls").locator('input[name="theme"][value="dark"]'),
         "preview admin theme focus"
       );
       await assertFocusAppearanceAndNotObscured(

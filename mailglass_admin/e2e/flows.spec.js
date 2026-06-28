@@ -461,6 +461,36 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoElementHorizontalOverflow(page.getByTestId("preview-shell"), "preview advanced shell");
   });
 
+  test("Preview a11y: admin theme_picker is tri-state (system reachable)", async ({ page }) => {
+    await openPreviewScenario(page, "theme=light");
+    // The bespoke binary App button is gone; the canonical theme_picker renders
+    // three theme radios (system/light/dark) within the header controls.
+    const controls = page.getByTestId("preview-header-controls");
+    const radios = controls.locator('input[type="radio"][name="theme"]');
+    await expect(radios).toHaveCount(3);
+    // The :system option is reachable (the third tri-state choice the old binary
+    // button could never express).
+    await expect(controls.locator('input[type="radio"][name="theme"][value="system"]')).toHaveCount(1);
+    // The bespoke admin-theme button must be gone after the swap.
+    await expect(page.getByTestId("preview-admin-theme-toggle")).toHaveCount(0);
+  });
+
+  test("Preview a11y: backdrop toggle reflects aria-pressed + announces via aria-live", async ({ page }) => {
+    await openPreviewScenario(page, "theme=light");
+    const backdrop = page.getByTestId("preview-frame-theme-toggle");
+    const status = page.getByTestId("preview-backdrop-status");
+    // Pre-click: backdrop off (light), aria-pressed=false, announce says light.
+    await expect(backdrop).toHaveAttribute("aria-pressed", "false");
+    await expect(status).toHaveAttribute("role", "status");
+    await expect(status).toHaveAttribute("aria-live", "polite");
+    await expect(status).toHaveText("Email backdrop: light");
+    // Toggle: aria-pressed flips true and the aria-live region announces dark.
+    await backdrop.click();
+    await expect(backdrop).toHaveAttribute("aria-pressed", "true");
+    await expect(status).toHaveText("Email backdrop: dark");
+    await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
+  });
+
 });
 
 // =============================================================================

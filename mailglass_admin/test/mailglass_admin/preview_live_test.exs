@@ -152,10 +152,18 @@ defmodule MailglassAdmin.PreviewLiveTest do
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
       assert html =~ ~s(data-testid="preview-header-controls")
-      assert html =~ ~s(data-testid="preview-admin-theme-toggle")
-      assert html =~ ~s(phx-click="toggle_theme")
+      # Admin chrome theme is now the canonical tri-state theme_picker firing
+      # set_theme (the bespoke binary preview-admin-theme-toggle button is gone).
+      refute html =~ ~s(data-testid="preview-admin-theme-toggle")
+      refute html =~ ~s(phx-click="toggle_theme")
+      assert html =~ ~s(phx-click="set_theme")
+      assert html =~ ~s(phx-value-theme="system")
       assert html =~ ~s(data-testid="preview-frame-theme-toggle")
       assert html =~ ~s(phx-click="toggle_preview_frame_theme")
+      # Hardened backdrop toggle: aria-pressed + aria-live announce region.
+      assert html =~ ~s(aria-pressed=)
+      assert html =~ ~s(data-testid="preview-backdrop-status")
+      assert html =~ "Email backdrop"
       assert html =~ ~s(data-testid="preview-assigns-form")
       assert html =~ ~s(data-testid="preview-tab-strip")
       assert html =~ ~s(data-testid="preview-pane")
@@ -271,7 +279,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
     end
 
     @tag :url_state
-    test "set_device and toggle_theme keep canonical width/theme URL params",
+    test "set_device and set_theme keep canonical width/theme URL params",
          %{conn: conn} do
       base_path = "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default"
       {:ok, view, _html} = live(conn, base_path <> "?width=768&theme=light")
@@ -279,7 +287,7 @@ defmodule MailglassAdmin.PreviewLiveTest do
       render_click(view, "set_device", %{"width" => "375"})
       assert_patch(view, base_path <> "?width=375&theme=light")
 
-      render_click(view, "toggle_theme", %{})
+      render_click(view, "set_theme", %{"theme" => "dark"})
 
       assert_redirect(
         view,
@@ -311,11 +319,11 @@ defmodule MailglassAdmin.PreviewLiveTest do
       {:ok, view, _html} = live(conn, base_path)
 
       render_click(view, "toggle_preview_frame_theme", %{})
-      render_click(view, "toggle_theme", %{})
+      render_click(view, "set_theme", %{"theme" => "dark"})
 
       assert_redirect(
         view,
-        "/dev/mail/theme/dark?return_to=" <> URI.encode_www_form(base_path)
+        "/dev/mail/theme/dark?return_to=" <> URI.encode_www_form(base_path <> "?frame=dark")
       )
     end
 
