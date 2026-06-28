@@ -590,8 +590,10 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:detail_error, detail_error_for(selected_inbound_id, detail))
     # Route a load/authorization failure into the dormant RecordsList data_state
     # (D-09) — reuse the existing detail_error signal rather than a new query.
-    # nil stays the normal flow (records / legacy empty branches render).
-    |> assign(:data_state, data_state_for(detail_error_for(selected_inbound_id, detail)))
+    # Only escalate when there is NO record to show (records == []); when the
+    # list loaded rows it must always render them, so data_state stays nil and
+    # the bad selection is surfaced by the detail-error band instead.
+    |> assign(:data_state, data_state_for(records, detail_error_for(selected_inbound_id, detail)))
   end
 
   defp tenant_state(nil, [], _tenant_param_present?), do: :none
@@ -957,12 +959,15 @@ defmodule MailglassAdmin.InboundLive do
   defp detail_error_for(_inbound_id, _detail), do: nil
 
   # Wire the dormant RecordsList data_state (D-09) from the failure signal the
-  # LiveView already computes (detail_error_for/2). A :not_found load means the
-  # list could not be resolved for the selection → surface the existing
-  # error pane. nil is the normal flow: records or the legacy empty branches.
-  defp data_state_for(nil), do: nil
-  defp data_state_for(:not_found), do: :error
-  defp data_state_for(_reason), do: :error
+  # LiveView already computes (detail_error_for/2). The records list must always
+  # render rows it loaded, so when records are present data_state stays nil (the
+  # bad selection is surfaced by the detail-error band). Only when there are no
+  # rows to show does a load/authorization failure escalate the list to :error,
+  # making the previously-dead error branch reachable. nil is the normal flow.
+  defp data_state_for([_ | _], _detail_error), do: nil
+  defp data_state_for(_records, nil), do: nil
+  defp data_state_for(_records, :not_found), do: :error
+  defp data_state_for(_records, _reason), do: :error
 
   defp selected_record_struct(nil), do: nil
   defp selected_record_struct(%{record: record}), do: record
