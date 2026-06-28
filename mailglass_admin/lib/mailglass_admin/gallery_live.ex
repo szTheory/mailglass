@@ -428,7 +428,6 @@ defmodule MailglassAdmin.GalleryLive do
       current_mailable={@assigns_map[:current_mailable]}
       current_scenario={@assigns_map[:current_scenario]}
       device_width={@assigns_map[:device_width] || 768}
-      dark_chrome={@assigns_map[:dark_chrome] || false}
     />
     """
   end

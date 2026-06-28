@@ -27,7 +27,6 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:current_mailable, :atom, default: nil)
   attr(:current_scenario, :atom, default: nil)
   attr(:device_width, :integer, default: 768)
-  attr(:dark_chrome, :boolean, default: false)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
 
@@ -53,7 +52,6 @@ defmodule MailglassAdmin.Preview.Sidebar do
               current_mailable={@current_mailable}
               current_scenario={@current_scenario}
               device_width={@device_width}
-              dark_chrome={@dark_chrome}
               admin_chrome_theme={@admin_chrome_theme}
               mount_path={@mount_path}
             />
@@ -69,7 +67,6 @@ defmodule MailglassAdmin.Preview.Sidebar do
   attr(:current_mailable, :atom, default: nil)
   attr(:current_scenario, :atom, default: nil)
   attr(:device_width, :integer, default: 768)
-  attr(:dark_chrome, :boolean, default: false)
   attr(:admin_chrome_theme, :atom, default: nil)
   attr(:mount_path, :string, default: nil)
 

@@ -363,16 +363,25 @@ defmodule MailglassAdmin.PreviewLive do
               <MailglassAdmin.Operator.Shell.orientation_strip surface={:preview} />
               <div
                 data-testid="preview-empty-mailables"
-                class="mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-lg"
+                class="motion-reveal mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-lg"
               >
                 <Components.icon name="hero-magnifying-glass" class="mb-md h-10 w-10 text-secondary" />
+                <%!-- Empty-state copy is the brandbook-canonical Mailable Empty string
+                      (brandbook/copy/microcopy.md:17), kept VERBATIM with literal
+                      backticks so voice_test.exs greps it byte-for-byte
+                      (D-09 / Pitfall-2 green-only-forward). The generator chip below is
+                      the PRIMARY next step; the two discovery checks are a secondary
+                      recovery checklist. --%>
                 <h1 class="mb-sm text-heading font-bold text-base-content">
-                  No Mailables discovered
+                  No mailables discovered yet. Define one with `mix mailglass.gen.mailable` and it will appear here, ready to preview.
                 </h1>
-                <p class="text-body text-secondary">
-                  Preview scans loaded modules that use Mailglass.Mailable. Nothing was found yet.
+                <p class="mt-md text-label font-bold text-secondary">Generate your first Mailable</p>
+                <code class="mono text-primary mt-sm inline-block overflow-auto whitespace-pre-wrap text-label">mix mailglass.gen.mailable</code>
+                <p class="mt-sm text-body text-secondary">
+                  Then reload — Preview discovers it automatically.
                 </p>
-                <ul class="mt-md grid gap-sm text-body text-secondary">
+                <p class="mt-md text-label font-bold text-secondary">Still not showing up?</p>
+                <ul class="mt-sm grid gap-sm text-body text-secondary">
                   <li class="flex items-start gap-sm">
                     <Components.icon
                       name="hero-check-circle"
@@ -390,7 +399,7 @@ defmodule MailglassAdmin.PreviewLive do
                       class="mt-0.5 h-4 w-4 shrink-0 text-primary"
                     />
                     <span>
-                      Or pass an explicit list to the router: <code class="mono text-label">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
+                      Or pass an explicit list to the router: <code class="mono text-label overflow-auto whitespace-pre-wrap">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
                     </span>
                   </li>
                 </ul>
