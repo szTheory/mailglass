@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-status: executing
+status: verifying
 stopped_at: Completed 121-03-PLAN.md
-last_updated: "2026-06-28T17:15:25.768Z"
+last_updated: "2026-06-28T17:25:27.826Z"
 last_activity: 2026-06-28
 progress:
   total_phases: 9
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 17
-  completed_plans: 16
-  percent: 56
+  completed_plans: 17
+  percent: 67
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 121 (Inbound surface redesign) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-28
 
 ## v1.14 Milestone Intent
@@ -245,6 +245,8 @@ plan directly from the v1.13 precedent.
 - [Phase ?]: 121-01: Inbound gated into no-data/no-match/populated cond off empty_state_for/2; orientation strip empty-pane-only; data_state escalates only when records == []
 - [Phase ?]: [121-03] Replay-modal focus-trap uses pure-LiveView.JS focus-sentinel spans (tabindex=0 + phx-focus={JS.focus(to:)}) wrapping to stable Close/Confirm ids — render-state-independent, byte-identical across inbound+operator modals; double-submit lock is phx-disable-with=Replaying… (D-14).
 - [Phase ?]: 121-02 reveal a11y + PII-free reveal telemetry — ARIA disclosure (aria-expanded/aria-controls) + re-redact collapse + aria-live region; [:mailglass_admin, :inbound, :reveal_raw, :stop] with tenant_id/record_id/outcome only; D-10 redacted-default + pure authorize_reveal/1 untouched
+- [Phase ?]: 121-04: Inbound empty-pane-only judgment gate (POPULATED/NO-DATA/NO-MATCH by testid count); T-121-10 no-data inbound-filters count-0 security boundary armed
+- [Phase ?]: 121-04: operator-inbound persona re-shoot deferred to Phase 123 — demo webServer boot needs a baseline-drifting mix deps.get; D-17 fallback applied (no fabricated run)
 
 ## Quick Tasks Completed
 
@@ -371,6 +373,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 118 P03 | 33min | 2 tasks | 2 files |
 | Phase 121 P01 | 24min | 3 tasks | 4 files |
 | Phase 121 P03 | 7 min | 2 tasks | 2 files |
+| Phase 121 P04 | 5min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -395,7 +398,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T17:15:08.361Z
+**Last session:** 2026-06-28T17:24:54.116Z
 **Stopped at:** Completed 121-03-PLAN.md
 **Resume file:** None
 
