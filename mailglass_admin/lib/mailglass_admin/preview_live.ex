@@ -739,6 +739,11 @@ defmodule MailglassAdmin.PreviewLive do
     end)
   end
 
+  # A crafted "assigns_changed" event can bind "assigns" to a non-map (string,
+  # list) on this dev surface; ignore malformed payloads rather than raising
+  # FunctionClauseError and tearing down the LiveView (WR-03).
+  defp merge_assigns(current, _params), do: current
+
   defp safe_key_atom(k) when is_binary(k) do
     String.to_existing_atom(k)
   rescue
