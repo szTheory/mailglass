@@ -79,7 +79,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 
 ### Preview Surface
 
-- [ ] **PREV-01**: The Preview surface is redesigned consistent with the established patterns —
+- [x] **PREV-01**: The Preview surface is redesigned consistent with the established patterns —
       satisfying the cross-cutting matrix above.
 
 ### Cross-Surface Coherence & Ratchet
@@ -131,7 +131,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 | SHELL-03 | Phase 119 | Complete |
 | DELIV-01 | Phase 120 | Complete |
 | INB-01 | Phase 121 | Complete |
-| PREV-01 | Phase 122 | Pending |
+| PREV-01 | Phase 122 | Complete |
 | COH-01 | Phase 123 | Pending |
 | COH-02 | Phase 123 | Pending |
 | REL-01 | Phase 124 | Pending |

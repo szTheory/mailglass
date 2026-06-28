@@ -209,7 +209,7 @@ email's independent theme toggle intact.
 **Plans**: 3 plans
 **Wave 1**
 
-- [ ] 122-01-PLAN.md — Dual-theme toggle a11y: adopt theme_picker for admin chrome routed through the frame-aware preview_theme_path (D-05 load-bearing invariant), harden the backdrop button, toggle-a11y e2e (wave 1)
+- [x] 122-01-PLAN.md — Dual-theme toggle a11y: adopt theme_picker for admin chrome routed through the frame-aware preview_theme_path (D-05 load-bearing invariant), harden the backdrop button, toggle-a11y e2e (wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -270,7 +270,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 | 119. App-shell + Nav + Overview redesign | 2/2 | Complete    | 2026-06-26 |
 | 120. Deliveries surface redesign | 2/2 | Complete    | 2026-06-27 |
 | 121. Inbound surface redesign | 4/4 | Complete    | 2026-06-28 |
-| 122. Preview surface redesign | 0/? | Not started | - |
+| 122. Preview surface redesign | 1/3 | In Progress|  |
 | 123. Cross-surface coherence + ratchet re-arm | 0/? | Not started | - |
 | 124. Release cut + milestone closeout | 0/? | Not started | - |
 

@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-current_phase: 122
-current_phase_name: Preview surface redesign
 status: executing
 stopped_at: Phase 122 UI-SPEC approved
-last_updated: "2026-06-28T18:55:39.439Z"
+last_updated: "2026-06-28T19:10:15.507Z"
 last_activity: 2026-06-28
-last_activity_desc: Phase 121 complete, transitioned to Phase 122
 progress:
-  total_phases: 7
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
-  percent: 57
+  total_phases: 9
+  completed_phases: 6
+  total_plans: 20
+  completed_plans: 18
+  percent: 67
 ---
 
 # Project State
@@ -24,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 121 — Inbound surface redesign
+**Current focus:** Phase 122 — preview-surface-redesign
 
 ## Current Position
 
-Phase: 122 — Preview surface redesign
-Plan: Not started
+Phase: 122 (preview-surface-redesign) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-06-28 — Phase 121 complete, transitioned to Phase 122
+Last activity: 2026-06-28
 
 ## v1.14 Milestone Intent
 
