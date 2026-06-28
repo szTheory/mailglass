@@ -242,7 +242,17 @@ final pillar re-score)
   3. The new judgment-level gates (nav-active-correctness; no nav-duplication on a populated page) are
      armed and green in the inherited ratchet floor (~26+ conformance gates), so the redesign's headline
      fixes cannot silently regress.
-**Plans**: TBD
+**Plans**: 3 plans
+
+**Wave 1** *(independent — re-score floor + review-surface finalization run in parallel)*
+
+- [ ] 123-01-PLAN.md — COH-02: promote+re-score the 54-cell ratchet only-forward (distinct run_ids, anti-vacuity guard) + arm the two judgment gates (de-disclaim judgment.spec.js + floor gate-count ~26→~28); no asset rebuild (wave 1)
+- [ ] 123-02-PLAN.md — COH-01: storybook story-inventory completeness vs shipped primitives + accept indigo explorer chrome (dev-only cosmetic) + stale-boot DX caveat; gallery byte-unchanged (wave 1)
+
+**Wave 2** *(blocked on Wave 1 — verdict cites the green floor + finalized review surfaces)*
+
+- [ ] 123-03-PLAN.md — COH-01: re-run the adversarial persona-critic harness across all four surfaces (evidence only) + close out DEFECT-REGISTER (Status flips + coherence sign-off, five hats/three personas verbatim); no new coherence gate, Personas.spec/0 untouched (wave 2)
+
 **UI hint**: yes
 
 ### Phase 124: Release cut + milestone closeout
