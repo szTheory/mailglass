@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-status: executing
+status: verifying
 stopped_at: Phase 122 UI-SPEC approved
-last_updated: "2026-06-28T19:20:01.220Z"
+last_updated: "2026-06-28T19:26:55.086Z"
 last_activity: 2026-06-28
 progress:
   total_phases: 9
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 20
-  completed_plans: 19
-  percent: 67
+  completed_plans: 20
+  percent: 78
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 122 (preview-surface-redesign) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-28
 
 ## v1.14 Milestone Intent
@@ -247,6 +247,7 @@ plan directly from the v1.13 precedent.
 - [Phase ?]: 121-02 reveal a11y + PII-free reveal telemetry — ARIA disclosure (aria-expanded/aria-controls) + re-redact collapse + aria-live region; [:mailglass_admin, :inbound, :reveal_raw, :stop] with tenant_id/record_id/outcome only; D-10 redacted-default + pure authorize_reveal/1 untouched
 - [Phase ?]: 121-04: Inbound empty-pane-only judgment gate (POPULATED/NO-DATA/NO-MATCH by testid count); T-121-10 no-data inbound-filters count-0 security boundary armed
 - [Phase ?]: 121-04: operator-inbound persona re-shoot deferred to Phase 123 — demo webServer boot needs a baseline-drifting mix deps.get; D-17 fallback applied (no fabricated run)
+- [Phase ?]: Phase 122 closed green-only-forward; persona re-shoot deferred to Phase 123 per D-17; app.css untouched + TokenParity green (D-13); floor held, no pillar re-score
 
 ## Quick Tasks Completed
 
@@ -375,6 +376,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 121 P03 | 7 min | 2 tasks | 2 files |
 | Phase 121 P04 | 5min | 3 tasks | 3 files |
 | Phase 122 P02 | 6 min | 3 tasks | 7 files |
+| Phase 122 P03 | 3min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -399,7 +401,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T19:20:01.214Z
+**Last session:** 2026-06-28T19:26:17.746Z
 **Stopped at:** Phase 122 UI-SPEC approved
 **Resume file:** None
 

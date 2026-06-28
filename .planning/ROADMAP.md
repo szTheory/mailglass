@@ -217,7 +217,7 @@ email's independent theme toggle intact.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 122-03-PLAN.md — Persona re-shoot (no new cells / D-17 fallback) + asset-bundle-untouched + inherited floor green only-forward (wave 3)
+- [x] 122-03-PLAN.md — Persona re-shoot (no new cells / D-17 fallback) + asset-bundle-untouched + inherited floor green only-forward (wave 3)
 
 **UI hint**: yes
 
@@ -270,7 +270,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 | 119. App-shell + Nav + Overview redesign | 2/2 | Complete    | 2026-06-26 |
 | 120. Deliveries surface redesign | 2/2 | Complete    | 2026-06-27 |
 | 121. Inbound surface redesign | 4/4 | Complete    | 2026-06-28 |
-| 122. Preview surface redesign | 2/3 | In Progress|  |
+| 122. Preview surface redesign | 3/3 | Complete   | 2026-06-28 |
 | 123. Cross-surface coherence + ratchet re-arm | 0/? | Not started | - |
 | 124. Release cut + milestone closeout | 0/? | Not started | - |
 
