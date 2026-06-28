@@ -73,7 +73,11 @@ ranked screenshot-backed defect register. Promote findings into NEW durable gate
 
 ## Idempotent floor (inherit, keep green, re-score only upward)
 
-~26 conformance gates (`mailglass_admin/scripts/check-conformance.sh`); 54-cell aesthetic baseline
+~28 gates total: ~26 grep-based conformance gates (`mailglass_admin/scripts/check-conformance.sh`)
++ 2 armed judgment gates — **nav-active-correctness** and **no-nav-duplication**
+(`mailglass_admin/e2e/judgment.spec.js`), which run in the required `operator_browser_gate` Playwright
+lane (`playwright.config.cjs` testDir "./e2e" glob), NOT in `check-conformance.sh` (grep cannot read
+rendered active-nav state — D-05). Plus the 54-cell aesthetic baseline
 (`docs/ui-baseline-scores.json`, `ratchet_baseline_test`); 9-cell axe baseline (`docs/axe-
 baseline.json`); 24-item Bucket-A manifest (`bucket_a_coverage_test.exs`); persona drift-guard. Tokens
 in `mailglass_admin/assets/css/app.css` + `brandbook/` are source of truth. Recipient-facing email

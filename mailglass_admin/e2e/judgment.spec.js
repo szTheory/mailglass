@@ -8,14 +8,12 @@ const { test, expect } = require("@playwright/test");
 // for a hardcoded `active={...}` assignment can never evaluate whether the right
 // nav item is highlighted on the right route. Only a rendered-DOM assertion can.
 //
-// Both gates are expressed as `test.fixme(...)`: Playwright reports them as
-// skipped (never red, never green) and does NOT execute their bodies. They assert
-// the CORRECT END-STATE, not today's behavior — so they are NOT armed against the
-// live bug (D-12). They flip green in Phase 119 (when the shell stops hardcoding
-// the Deliveries-active sidebar on the Overview route and the redundant in-page
-// Navigate card block is removed), and are armed into the ratchet floor in
-// Phase 123 (D-13 — this spec is intentionally absent from every required CI lane
-// in Phase 118).
+// Both gates are live `test(...)` and ARMED: they flipped green in Phase 119
+// (when the shell stopped hardcoding the Deliveries-active sidebar on the Overview
+// route and the redundant in-page Navigate card block was removed), and were armed
+// into the documented ratchet floor in Phase 123. They run in the REQUIRED
+// operator_browser_gate CI lane — playwright.config.cjs testDir "./e2e" globs this
+// spec into `npm run test:operator-browser`, so a regression here blocks the PR.
 //
 // Pitfall reference (118-RESEARCH.md): the no-nav-duplication gate targets the
 // same data-testid the existing operator.spec.js VERIF-02 test currently asserts
@@ -72,7 +70,8 @@ test.describe("judgment gates (armed in Phase 119)", () => {
   // active={:deliveries}). The accent-allowlist Playwright seam keys off
   // [aria-current='page'] (structural.spec.js:11-17), so a correct active item is
   // also what keeps the Glass accent legitimate on this route.
-  // NOTE: This gate is NOT yet added to a required CI lane — that arming is Phase 123 (D-13).
+  // NOTE: This gate is armed and runs in the required operator_browser_gate lane
+  // (playwright.config.cjs testDir "./e2e" glob).
   test("nav-active-correctness: Overview route highlights Overview, not Deliveries", async ({
     page
   }) => {
@@ -99,7 +98,8 @@ test.describe("judgment gates (armed in Phase 119)", () => {
   // was removed in Phase 119 (SHELL-02). The operator.spec.js VERIF-02 test previously
   // asserted this same testid IS visible (the flagged Pitfall-2 contradiction); that
   // opposing test was updated in Phase 119 (119-02 Task 1).
-  // NOTE: This gate is NOT yet added to a required CI lane — that arming is Phase 123 (D-13).
+  // NOTE: This gate is armed and runs in the required operator_browser_gate lane
+  // (playwright.config.cjs testDir "./e2e" glob).
   test("no-nav-duplication: populated Overview renders no in-page Navigate card block", async ({
     page
   }) => {
