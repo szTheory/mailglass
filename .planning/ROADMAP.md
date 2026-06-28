@@ -179,7 +179,11 @@ its PII/raw-payload boundaries.
   3. WCAG 2.2 AA + APG holds (keyboard-complete, visible/restored focus, never color-alone, 44×44
      targets, predictable dialogs incl. the replay modal); microcopy is on-brand and recovery-oriented;
      motion is Emil-Kowalski-grade within the v1.13 MOTION locks; all inherited gates stay green.
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 121-01-PLAN.md — Inbound IA gating (no-data/no-match/populated cond, empty-pane-only orientation, data_state wiring, D-07 noun fix) + paired ExUnit/voice updates
+- [ ] 121-02-PLAN.md — Reveal ARIA disclosure + re-redact + aria-live + PII-free reveal telemetry
+- [ ] 121-03-PLAN.md — Both replay modals: Tab focus-trap + double-submit pending-lock (lockstep)
+- [ ] 121-04-PLAN.md — e2e judgment gate + paired split + reveal/replay a11y assertions + structural verify + persona re-shoot
 **UI hint**: yes
 
 ### Phase 122: Preview surface redesign
