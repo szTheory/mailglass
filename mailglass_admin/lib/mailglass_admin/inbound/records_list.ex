@@ -362,7 +362,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         "in the URL so refreshes and shared links keep the same view."
 
   defp empty_body(:truly_empty),
-    do: "No records have been recorded yet."
+    do: "No InboundMessages have been recorded yet."
 
   defp empty_body(:filtered), do: "No records match the current filters."
 
