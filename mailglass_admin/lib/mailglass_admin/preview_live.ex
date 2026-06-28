@@ -453,7 +453,7 @@ defmodule MailglassAdmin.PreviewLive do
                     Check mobile, tablet, and desktop rendering at 375 / 768 / 1024px.
                   </.legend_item>
                   <.legend_item icon="hero-moon" title="Light & dark">
-                    Toggle the App and Email preview themes independently.
+                    Toggle the app chrome and the email backdrop independently.
                   </.legend_item>
                   <.legend_item icon="hero-pencil-square" title="Editable assigns">
                     Edit the scenario's assigns inline and re-render instantly.
