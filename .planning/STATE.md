@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
 status: executing
-stopped_at: Phase 121 planned + verified (4 plans, 3 waves)
-last_updated: "2026-06-28T17:00:27.240Z"
+stopped_at: Completed 121-03-PLAN.md
+last_updated: "2026-06-28T17:06:33.536Z"
 last_activity: 2026-06-28
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 17
-  completed_plans: 14
+  completed_plans: 15
   percent: 56
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 121 (Inbound surface redesign) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-28
 
@@ -243,6 +243,7 @@ plan directly from the v1.13 precedent.
 - [Phase ?]: phoenix_storybook css_path = served committed bundle URL /dev/mail/css-<md5>; no new asset build, app.css untouched (D-07).
 - [Phase ?]: [118-02] Both judgment gates (nav-active-correctness, no-nav-duplication) are test.fixme asserting the correct end-state (D-12); flip green in Phase 119, armed into the floor in Phase 123 (D-13); not in any required CI lane.
 - [Phase ?]: 121-01: Inbound gated into no-data/no-match/populated cond off empty_state_for/2; orientation strip empty-pane-only; data_state escalates only when records == []
+- [Phase ?]: [121-03] Replay-modal focus-trap uses pure-LiveView.JS focus-sentinel spans (tabindex=0 + phx-focus={JS.focus(to:)}) wrapping to stable Close/Confirm ids — render-state-independent, byte-identical across inbound+operator modals; double-submit lock is phx-disable-with=Replaying… (D-14).
 
 ## Quick Tasks Completed
 
@@ -368,6 +369,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 118 P02 | 4min | 2 tasks | 1 files |
 | Phase 118 P03 | 33min | 2 tasks | 2 files |
 | Phase 121 P01 | 24min | 3 tasks | 4 files |
+| Phase 121 P03 | 7 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -392,9 +394,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T16:42:46.433Z
-**Stopped at:** Phase 121 planned + verified (4 plans, 3 waves)
-**Resume file:** .planning/phases/121-inbound-surface-redesign/121-01-PLAN.md
+**Last session:** 2026-06-28T17:06:14.232Z
+**Stopped at:** Completed 121-03-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
