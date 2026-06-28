@@ -74,7 +74,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 
 ### Inbound Surface
 
-- [ ] **INB-01**: The Inbound surface is redesigned consistent with the cleaned-up Deliveries patterns —
+- [x] **INB-01**: The Inbound surface is redesigned consistent with the cleaned-up Deliveries patterns —
       satisfying the cross-cutting matrix above.
 
 ### Preview Surface
@@ -130,7 +130,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 | SHELL-02 | Phase 119 | Complete |
 | SHELL-03 | Phase 119 | Complete |
 | DELIV-01 | Phase 120 | Complete |
-| INB-01 | Phase 121 | Pending |
+| INB-01 | Phase 121 | Complete |
 | PREV-01 | Phase 122 | Pending |
 | COH-01 | Phase 123 | Pending |
 | COH-02 | Phase 123 | Pending |

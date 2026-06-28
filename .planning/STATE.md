@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
 status: executing
-stopped_at: Phase 121 context gathered (assumptions mode)
-last_updated: "2026-06-28T16:07:09.451Z"
-last_activity: 2026-06-27 — Phase 120 complete, transitioned to Phase 121
+stopped_at: Phase 121 planned + verified (4 plans, 3 waves)
+last_updated: "2026-06-28T17:00:27.240Z"
+last_activity: 2026-06-28
 progress:
   total_phases: 9
   completed_phases: 5
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 17
+  completed_plans: 14
   percent: 56
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 120 — Deliveries surface redesign
+**Current focus:** Phase 121 — Inbound surface redesign
 
 ## Current Position
 
-Phase: 121 — Inbound surface redesign
-Plan: Not started
-Status: Executing Phase 120
-Last activity: 2026-06-27 — Phase 120 complete, transitioned to Phase 121
+Phase: 121 (Inbound surface redesign) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-06-28
 
 ## v1.14 Milestone Intent
 
@@ -242,6 +242,7 @@ plan directly from the v1.13 precedent.
 - [Phase ?]: Storybook theme bridge uses per-variation template-level data-theme (not color_mode class picker); admin components key off data-theme which a CSS class cannot drive without a forbidden app.css alias (D-08).
 - [Phase ?]: phoenix_storybook css_path = served committed bundle URL /dev/mail/css-<md5>; no new asset build, app.css untouched (D-07).
 - [Phase ?]: [118-02] Both judgment gates (nav-active-correctness, no-nav-duplication) are test.fixme asserting the correct end-state (D-12); flip green in Phase 119, armed into the floor in Phase 123 (D-13); not in any required CI lane.
+- [Phase ?]: 121-01: Inbound gated into no-data/no-match/populated cond off empty_state_for/2; orientation strip empty-pane-only; data_state escalates only when records == []
 
 ## Quick Tasks Completed
 
@@ -366,6 +367,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 118 P01 | 11min | 3 tasks | 12 files |
 | Phase 118 P02 | 4min | 2 tasks | 1 files |
 | Phase 118 P03 | 33min | 2 tasks | 2 files |
+| Phase 121 P01 | 24min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -390,9 +392,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T16:07:09.444Z
-**Stopped at:** Phase 121 context gathered (assumptions mode)
-**Resume file:** .planning/phases/121-inbound-surface-redesign/121-CONTEXT.md
+**Last session:** 2026-06-28T16:42:46.433Z
+**Stopped at:** Phase 121 planned + verified (4 plans, 3 waves)
+**Resume file:** .planning/phases/121-inbound-surface-redesign/121-01-PLAN.md
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
