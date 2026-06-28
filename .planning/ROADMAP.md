@@ -213,7 +213,7 @@ email's independent theme toggle intact.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 122-02-PLAN.md — Microcopy + a11y + dead-code: brandbook onboarding (generator primary), recovery-oriented error card with inline `<pre>`, error-transition focus/announce, dead dark_chrome removal, token normalization + paired voice/e2e updates (wave 2)
+- [x] 122-02-PLAN.md — Microcopy + a11y + dead-code: brandbook onboarding (generator primary), recovery-oriented error card with inline `<pre>`, error-transition focus/announce, dead dark_chrome removal, token normalization + paired voice/e2e updates (wave 2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -270,7 +270,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 | 119. App-shell + Nav + Overview redesign | 2/2 | Complete    | 2026-06-26 |
 | 120. Deliveries surface redesign | 2/2 | Complete    | 2026-06-27 |
 | 121. Inbound surface redesign | 4/4 | Complete    | 2026-06-28 |
-| 122. Preview surface redesign | 1/3 | In Progress|  |
+| 122. Preview surface redesign | 2/3 | In Progress|  |
 | 123. Cross-surface coherence + ratchet re-arm | 0/? | Not started | - |
 | 124. Release cut + milestone closeout | 0/? | Not started | - |
 
