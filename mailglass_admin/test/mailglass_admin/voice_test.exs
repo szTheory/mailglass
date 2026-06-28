@@ -134,16 +134,18 @@ defmodule MailglassAdmin.VoiceTest do
       conn = operator_conn(conn)
 
       # Mount with a provider filter that can never match — forces the :filtered empty state
-      # so the filtered-empty data_state is present in the first render.
-      # Shell.orientation_strip surface={:inbound} renders in the is_nil(@detail) branch
-      # (no record selected), so LD-12 and LD-16 are also present.
+      # so the filtered-empty data_state is present in the first render. In no-match the
+      # master-detail grid stays, so LD-16 (select prompt) and LD-03 (filtered body) are present.
       {:ok, _view, html} =
         live(conn, "/ops/mail/inbound?tenant_id=voice-test-tenant&provider=no-such-provider")
 
-      # LD-12: orientation tip — inbound surface.
-      # HEEx HTML-escapes the apostrophe in "didn't" as &#39;.
-      # Assert the HTML-entity form to match what the rendered output actually contains.
-      assert html =~ "InboundMessage didn&#39;t route as expected? Inspect the routing trace.",
+      # LD-12: orientation tip — inbound surface. The orientation strip is now
+      # empty-pane-only (Phase 121 D-04): it no longer renders on this no-match
+      # mount, so assert LD-12 against the component directly (the byte-frozen
+      # :inbound copy, D-08). HEEx HTML-escapes the apostrophe in "didn't" as &#39;.
+      strip_html = render_component(&Shell.orientation_strip/1, surface: :inbound)
+
+      assert strip_html =~ "InboundMessage didn&#39;t route as expected? Inspect the routing trace.",
              "LD-12: orientation tip must use InboundMessage domain noun"
 
       # LD-16: rendered-pane select prompt (inbound-empty-detail div, always rendered

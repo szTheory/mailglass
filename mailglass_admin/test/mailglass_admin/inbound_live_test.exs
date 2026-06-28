@@ -70,8 +70,12 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "Execution timeline"
       # Record id IS rendered (it is not PII) so selection works.
       assert html =~ record.id
-      # Orientation strip: present when no detail is selected (GAP-09)
-      assert html =~ ~s(data-testid="inbound-orientation")
+      # Orientation strip is empty-pane-only now (D-04): on a POPULATED but
+      # unselected view it MUST be absent — the strip no longer tripled labels
+      # below a populated table. The inbound-empty-detail column-fill helper
+      # (asserted positively above via its Select-an-InboundMessage copy) stays.
+      refute html =~ ~s(data-testid="inbound-orientation")
+      assert html =~ ~s(data-testid="inbound-empty-detail")
     end
 
     test "blank tenant renders the empty state and leaks no other-tenant id or recipient (V1)", %{
@@ -96,19 +100,30 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "s*****@e*******.com"
     end
 
-    test "tenant with no inbound history renders truly-empty copy without empty reset", %{
-      conn: conn
-    } do
+    test "genuine no-data renders a single calm pane: truly-empty copy + orientation, toolbar withheld",
+         %{
+           conn: conn
+         } do
       conn = operator_conn(conn)
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ "No records"
 
+      # D-07 noun discipline: the InboundMessage noun, not the old "No records…" drift.
       assert html =~
-               "No records have been recorded yet."
+               "No InboundMessages have been recorded yet."
 
-      assert clear_filters_count(html) == 1
+      # Genuine no-data is a single calm pane: orientation strip present,
+      # filters toolbar and the master-detail grid WITHHELD (D-02/D-05 —
+      # the toolbar is the only scope-widening vector).
+      assert html =~ ~s(data-testid="inbound-orientation")
+      refute html =~ ~s(data-testid="inbound-filters")
+      refute html =~ ~s(data-testid="inbound-master-detail")
+
+      # The toolbar Clear-filters button is gone, and the truly-empty pane has
+      # no in-pane reset (that is :filtered-only) — so the count is 0.
+      assert clear_filters_count(html) == 0
       refute html =~ "No records match the current filters."
     end
 
@@ -164,7 +179,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "accepted-101@example.com"
     end
 
-    test "gateway-unavailable runtime path renders exact zero summary for tenant query", %{
+    test "gateway-unavailable runtime path renders the calm no-data pane without leaking", %{
       conn: conn
     } do
       conn = operator_conn(conn)
@@ -176,12 +191,14 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ ~s(data-testid="inbound-overview")
-      assert html =~ "InboundMessages"
-      assert html =~ "No match"
-      assert html =~ "Accepted"
-      assert html =~ "No-match rate"
-      assert html =~ "0.0%"
+      # Gateway-down degrades to an empty record set; with no records, no active
+      # filters, and no filter errors this is genuine no-data — the calm pane
+      # renders and the health strip is withheld (Phase 121 D-02). The degraded
+      # path must still not crash and must not leak the seeded recipient.
+      assert html =~ "No records"
+      assert html =~ "No InboundMessages have been recorded yet."
+      assert html =~ ~s(data-testid="inbound-orientation")
+      refute html =~ ~s(data-testid="inbound-overview")
       refute html =~ "hidden@example.com"
     end
 
@@ -231,6 +248,10 @@ defmodule MailglassAdmin.InboundLiveTest do
 
     test "renders inbound responsive IA hooks and percentage grid contract", %{conn: conn} do
       conn = operator_conn(conn)
+
+      # Populate the tenant so the filters toolbar + master-detail grid render —
+      # these IA hooks are withheld in genuine no-data (Phase 121 D-02/D-03).
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
@@ -473,6 +494,11 @@ defmodule MailglassAdmin.InboundLiveTest do
       conn = operator_conn(conn)
       %{record: foreign} = InboundFixtures.seed_matched!(@other_tenant)
 
+      # Seed a same-tenant record so the surface is populated and the master-detail
+      # grid (which holds the detail-error band) renders — genuine no-data withholds
+      # the grid entirely (Phase 121 D-02). The error band is the no-leak affordance.
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "local@example.com")
+
       {:ok, _view, html} =
         live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
 
@@ -677,6 +703,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       %{record: foreign} =
         InboundFixtures.seed_matched!(@other_tenant, subject: "shared unique keyword")
+
+      # Seed a same-tenant record so the surface is populated (the filters toolbar
+      # only renders in no-match/populated, not genuine no-data — Phase 121 D-02/D-03).
+      # Its subject does NOT contain the search keyword, so it never matches.
+      InboundFixtures.seed_matched!(@tenant_id, subject: "local unrelated subject")
 
       {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
@@ -1245,20 +1276,31 @@ defmodule MailglassAdmin.InboundLiveTest do
     } do
       conn = operator_conn(conn)
 
-      {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+      # Genuine no-data: the calm pane carries the truly-empty copy (D-07 noun).
+      # The no-selection prompt lives in the master-detail grid, which no-data
+      # withholds (D-02) — assert it on a populated-but-unselected mount instead.
+      {:ok, _view, empty_html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~
-               "No records"
+      assert empty_html =~ "No records"
+      assert empty_html =~ "No InboundMessages have been recorded yet."
+      refute_banned(empty_html)
 
-      assert html =~
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
+      {:ok, _view, populated_html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
+
+      assert populated_html =~
                "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."
 
-      refute_banned(html)
+      refute_banned(populated_html)
     end
 
     test "detail-load-error band carries verbatim copy and no banned words (V10)", %{conn: conn} do
       conn = operator_conn(conn)
       %{record: foreign} = InboundFixtures.seed_matched!(@other_tenant)
+
+      # Populate the same tenant so the master-detail grid (and its detail-error
+      # band) renders — genuine no-data withholds the grid (Phase 121 D-02).
+      InboundFixtures.seed_matched!(@tenant_id, recipient: "local@example.com")
 
       {:ok, _view, html} =
         live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
