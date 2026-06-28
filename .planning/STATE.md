@@ -2,16 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
+current_phase: 123
+current_phase_name: Cross-surface coherence + ratchet re-arm
 status: verifying
 stopped_at: Phase 122 UI-SPEC approved
-last_updated: "2026-06-28T19:26:55.086Z"
+last_updated: "2026-06-28T19:38:09.859Z"
 last_activity: 2026-06-28
+last_activity_desc: Phase 122 complete, transitioned to Phase 123
 progress:
-  total_phases: 9
-  completed_phases: 7
-  total_plans: 20
-  completed_plans: 20
-  percent: 78
+  total_phases: 7
+  completed_phases: 5
+  total_plans: 14
+  completed_plans: 14
+  percent: 71
 ---
 
 # Project State
@@ -25,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 ## Current Position
 
-Phase: 122 (preview-surface-redesign) — EXECUTING
-Plan: 3 of 3
+Phase: 123 — Cross-surface coherence + ratchet re-arm
+Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-06-28
+Last activity: 2026-06-28 — Phase 122 complete, transitioned to Phase 123
 
 ## v1.14 Milestone Intent
 
