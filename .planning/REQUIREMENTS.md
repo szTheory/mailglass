@@ -84,7 +84,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 
 ### Cross-Surface Coherence & Ratchet
 
-- [ ] **COH-01**: All four surfaces are cross-surface coherent (spacing, hierarchy, IA, microcopy,
+- [x] **COH-01**: All four surfaces are cross-surface coherent (spacing, hierarchy, IA, microcopy,
       motion); the storybook + gallery review surfaces are finalized and consistent.
 
 - [x] **COH-02**: The aesthetic ratchet baseline is re-scored **only-forward** (meet-or-beat, zero
@@ -132,7 +132,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 | DELIV-01 | Phase 120 | Complete |
 | INB-01 | Phase 121 | Complete |
 | PREV-01 | Phase 122 | Complete |
-| COH-01 | Phase 123 | Pending |
+| COH-01 | Phase 123 | Complete |
 | COH-02 | Phase 123 | Complete |
 | REL-01 | Phase 124 | Pending |
 | REL-02 | Phase 124 | Pending |
