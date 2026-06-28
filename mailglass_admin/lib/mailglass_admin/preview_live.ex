@@ -319,6 +319,7 @@ defmodule MailglassAdmin.PreviewLive do
                     type="button"
                     data-testid="preview-frame-theme-toggle"
                     phx-click="toggle_preview_frame_theme"
+                    aria-pressed={@preview_frame_dark_chrome}
                     aria-label={
                       if @preview_frame_dark_chrome,
                         do: "Switch the email preview backdrop to light",
@@ -330,8 +331,19 @@ defmodule MailglassAdmin.PreviewLive do
                       name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
                       class="w-5 h-5"
                     />
-                    <span class="text-label font-bold">Email</span>
+                    <span class="text-label font-bold">Email backdrop</span>
                   </button>
+                  <%!-- Backdrop state is announced in TEXT, never the backdrop color
+                        alone (WCAG 1.4.1). The region is always present so the flip is
+                        perceived in both directions (mirrors evidence_card.ex). --%>
+                  <span
+                    data-testid="preview-backdrop-status"
+                    role="status"
+                    aria-live="polite"
+                    class="sr-only"
+                  >
+                    {backdrop_status_text(@preview_frame_dark_chrome)}
+                  </span>
                 </div>
               </header>
 
@@ -538,6 +550,11 @@ defmodule MailglassAdmin.PreviewLive do
   defp admin_chrome_selected(:dark), do: :dark
   defp admin_chrome_selected(:light), do: :light
   defp admin_chrome_selected(_theme), do: :system
+
+  # Text announced through the aria-live status region (WCAG 1.4.1). The backdrop
+  # state change is perceivable in TEXT, never the backdrop color alone.
+  defp backdrop_status_text(true), do: "Email backdrop: dark"
+  defp backdrop_status_text(_), do: "Email backdrop: light"
 
   defp normalize_capture_url_state(params, socket) do
     width =
