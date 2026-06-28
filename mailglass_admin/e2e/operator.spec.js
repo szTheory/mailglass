@@ -455,17 +455,68 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
   });
 
-  // VERIF-02: structural coverage for inbound and preview orientation strips (D-05)
-  // Asserts inbound-orientation and preview-orientation testids are visible on
-  // their respective surfaces. Mirrors the existing deliveries-orientation check
-  // in the mobile test (line 101).
-  test("inbound and preview surfaces render their orientation strips", async ({ page }) => {
+  // D-16 (Phase 121): Inbound empty-pane-only judgment gate.
+  // Modeled VERBATIM on the Deliveries empty-pane-only gate above, this locks the
+  // single-calm-pane contract for the Inbound surface into the operator browser
+  // ratchet (armed into the permanent floor in Phase 123):
+  //   - POPULATED  → orientation strip ABSENT (count 0) + filters toolbar PRESENT.
+  //   - NO-DATA    → orientation strip PRESENT (count 1) + filters toolbar WITHHELD
+  //                  (count 0, locks D-02/D-05: the toolbar is the only scope-widening
+  //                  vector, so its absence is the security boundary) + master-detail
+  //                  grid WITHHELD (count 0, the single-calm-pane contract) +
+  //                  inbound-empty-truly present (count 1).
+  //   - NO-MATCH   → filters toolbar PRESENT (Clear-filters escape kept) + orientation
+  //                  strip ABSENT (count 0; the strip is genuine-no-data only).
+  // T-121-10 security boundary: the no-data `inbound-filters` count 0 assertion arms
+  // the regression gate — any future change re-introducing the tenant-scope-widening
+  // toolbar in genuine no-data fails this browser gate.
+  // Markers are style="display:none" divs (records_list.ex:100) — assert by COUNT,
+  // never pixel/CSS visibility.
+  test("inbound orientation strip is empty-pane-only; filters toolbar withheld on no-data, kept on no-match", async ({
+    page
+  }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    // Inbound surface orientation strip
+    // --- POPULATED Inbound view (browser-tenant has seed rows) ---
     await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
-    await expect(page.getByTestId("inbound-orientation")).toBeVisible();
+    await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
+    // Strip absent on populated; toolbar present.
+    await expect(page.getByTestId("inbound-orientation")).toHaveCount(0);
+    await expect(page.getByTestId("inbound-filters")).toBeVisible();
+
+    // --- GENUINE NO-DATA Inbound view ---
+    // Log in to a tenant with zero seeded InboundMessages (only browser-tenant is
+    // seeded by browser-reset). A fresh tenant id yields @records == [] with no active
+    // filters and no filter errors → the genuine-no-data single-calm-pane branch.
+    const emptyTenant = "browser-empty-tenant";
+    const emptyReturnTo = encodeURIComponent(`/ops/mail/inbound?tenant_id=${emptyTenant}`);
+    await page.goto(`/ops/browser-login?tenant_id=${emptyTenant}&return_to=${emptyReturnTo}`);
+
+    // Single calm pane: inbound-empty-truly + orientation strip only.
+    await expect(page.getByTestId("inbound-empty-truly")).toHaveCount(1);
+    await expect(page.getByTestId("inbound-orientation")).toHaveCount(1);
+    // Toolbar WITHHELD (D-02/D-05 — the only scope-widening vector is absent).
+    await expect(page.getByTestId("inbound-filters")).toHaveCount(0);
+    // Master-detail grid WITHHELD (single-calm-pane; no "Select an InboundMessage…" helper).
+    await expect(page.getByTestId("inbound-master-detail")).toHaveCount(0);
+
+    // --- NO-MATCH Inbound view ---
+    // Active filter that matches zero browser-tenant rows: provider=no-such-provider
+    // → @records == [] AND filters_active?/1 true → no-match (toolbar kept, strip absent).
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&provider=no-such-provider`);
+    await expect(page.getByTestId("inbound-filters")).toBeVisible();
+    await expect(page.getByTestId("inbound-orientation")).toHaveCount(0);
+  });
+
+  // VERIF-02 (split for D-15/D-16, Phase 121): the inbound orientation strip is now
+  // empty-pane-only (asserted by the judgment gate above), so this paired test keeps
+  // ONLY the preview-orientation assertion — the previous populated-inbound assertion
+  // (inbound-orientation toBeVisible on /ops/mail/inbound?tenant_id=…) is removed
+  // because the strip no longer renders below a populated table (D-04).
+  test("preview surface renders its orientation strip", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page);
 
     // Preview surface orientation strip (renders when @mailables == []).
     // Navigate via /ops/browser-preview-empty which sets mailables=[] in the session
