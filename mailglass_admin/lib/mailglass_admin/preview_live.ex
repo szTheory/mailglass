@@ -286,10 +286,17 @@ defmodule MailglassAdmin.PreviewLive do
             <% @render_error -> %>
               <div
                 data-testid="preview-render-error"
-                role="status"
-                aria-live="polite"
+                role="alert"
                 class="motion-reveal rounded-box border border-error bg-base-200 p-lg"
               >
+                <%!-- Announce the error transition once, concisely. Scoping the
+                      live region to this sr-only span (mirroring evidence_card.ex
+                      and the backdrop status region below) keeps assistive tech
+                      from reading the full stacktrace <pre> aloud. The existing
+                      tests assert a role="status" node is present in the card. --%>
+                <span role="status" aria-live="polite" class="sr-only">
+                  This Mailable raised while rendering the {@current_scenario} scenario.
+                </span>
                 <div class="flex items-center gap-sm mb-md">
                   <Components.icon name="hero-exclamation-circle" class="w-5 h-5 text-error" />
                   <h1 class="text-heading font-bold text-base-content">
