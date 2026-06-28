@@ -39,14 +39,20 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
         <h3 class="text-body font-bold text-base-content">Raw provider source</h3>
         <div :if={@evidence && @reveal_state != :revealed} class="flex flex-wrap items-center gap-sm">
           <span class="badge badge-outline text-label">Raw source locked</span>
-          <button
-            type="button"
-            phx-click="reveal_raw"
-            data-testid="inbound-evidence-reveal"
-            class="btn btn-ghost min-h-11 px-md"
-          >
-            Reveal raw source
-          </button>
+          <div class="flex flex-col items-end gap-2xs">
+            <button
+              id="inbound-evidence-reveal-btn"
+              type="button"
+              phx-click="reveal_raw"
+              data-testid="inbound-evidence-reveal"
+              aria-expanded={if @reveal_state == :revealed, do: "true", else: "false"}
+              aria-controls="inbound-evidence-raw"
+              class="mg-focus-ring btn btn-ghost min-h-11 px-md"
+            >
+              Reveal raw source
+            </button>
+            <span class="text-label text-secondary">Contains unredacted PII.</span>
+          </div>
         </div>
       </div>
 
@@ -89,9 +95,19 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
         <%= case @reveal_state do %>
           <% :revealed -> %>
             <div class="space-y-xs">
-              <p class="text-label uppercase font-bold text-secondary">
-                Raw payload (read-only)
-              </p>
+              <div class="flex flex-wrap items-center justify-between gap-sm">
+                <p class="text-label uppercase font-bold text-secondary">
+                  Raw payload (read-only)
+                </p>
+                <button
+                  type="button"
+                  phx-click="re_redact_raw"
+                  data-testid="inbound-evidence-re-redact"
+                  class="mg-focus-ring btn btn-ghost min-h-11 px-md"
+                >
+                  Re-redact raw source
+                </button>
+              </div>
               <pre
                 data-testid="inbound-evidence-raw"
                 class="mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
@@ -112,6 +128,18 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
               Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability.
             </p>
         <% end %>
+
+        <%!-- Reveal-state change is announced in TEXT, never the warning border
+              color alone (WCAG 1.4.1, D-11). The region is always present so the
+              announcement is perceived on the :revealed -> :redacted collapse too. --%>
+        <p
+          data-testid="inbound-evidence-status"
+          role="status"
+          aria-live="polite"
+          class={["mt-sm text-body text-secondary", @reveal_state != :revealed && "sr-only"]}
+        >
+          {reveal_status_text(@reveal_state)}
+        </p>
       <% end %>
     </.card>
     """
@@ -142,4 +170,11 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
 
   defp inspect_value(value) when is_binary(value), do: value
   defp inspect_value(value), do: inspect(value)
+
+  # Text announced through the aria-live status region (WCAG 1.4.1, D-11). The
+  # state change is perceivable in TEXT, never the warning border color alone.
+  defp reveal_status_text(:revealed),
+    do: "Raw source revealed. This payload contains unredacted PII."
+
+  defp reveal_status_text(_redacted_or_denied), do: "Raw source re-redacted."
 end
