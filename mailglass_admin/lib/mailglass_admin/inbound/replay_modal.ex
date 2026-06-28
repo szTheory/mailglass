@@ -73,6 +73,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
               id="inbound-replay-confirm"
               type="button"
               phx-click="confirm_replay"
+              phx-disable-with="Replaying…"
               data-testid="inbound-replay-confirm"
               class="btn btn-error min-h-11 px-5"
             >

@@ -112,6 +112,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               id="operator-replay-confirm"
               type="button"
               phx-click="confirm_replay"
+              phx-disable-with="Replaying…"
               data-testid="operator-replay-confirm"
               class="btn btn-error min-h-11 px-5"
             >
