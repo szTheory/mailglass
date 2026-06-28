@@ -909,7 +909,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Admin chrome theming is the canonical theme_picker; each radio segment
       // (label) carries the min-h-11/min-w-11 touch floor.
       await assertTouchTarget(
-        page.getByTestId("preview-header-controls").locator('label:has(input[name="theme"][value="dark"])'),
+        page.getByTestId("preview-header-controls").locator('label:has(input[name="preview_admin_theme"][value="dark"])'),
         "preview admin theme control"
       );
       await assertTouchTarget(page.getByTestId("preview-frame-theme-toggle"), "preview frame theme control");
@@ -1410,7 +1410,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // return_to that carries frame=dark (D-05), so the email backdrop survives
       // the chrome remount. The applied theme is asserted via the shell's
       // data-theme attribute below, which is the authoritative signal.
-      await page.getByTestId("preview-header-controls").locator('input[name="theme"][value="dark"]').click();
+      await page.getByTestId("preview-header-controls").locator('input[name="preview_admin_theme"][value="dark"]').click();
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
     });
@@ -1542,7 +1542,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await assertFocusAppearanceAndNotObscured(
         page,
-        page.getByTestId("preview-header-controls").locator('input[name="theme"][value="dark"]'),
+        page.getByTestId("preview-header-controls").locator('input[name="preview_admin_theme"][value="dark"]'),
         "preview admin theme focus"
       );
       await assertFocusAppearanceAndNotObscured(

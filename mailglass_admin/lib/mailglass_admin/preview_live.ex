@@ -336,6 +336,7 @@ defmodule MailglassAdmin.PreviewLive do
                   <div class="flex flex-col gap-xs">
                     <span class="text-label text-secondary">App theme</span>
                     <Components.theme_picker
+                      name="preview_admin_theme"
                       selected={admin_chrome_selected(@admin_chrome_theme)}
                       event="set_theme"
                     />

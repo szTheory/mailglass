@@ -469,11 +469,11 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     // The bespoke binary App button is gone; the canonical theme_picker renders
     // three theme radios (system/light/dark) within the header controls.
     const controls = page.getByTestId("preview-header-controls");
-    const radios = controls.locator('input[type="radio"][name="theme"]');
+    const radios = controls.locator('input[type="radio"][name="preview_admin_theme"]');
     await expect(radios).toHaveCount(3);
     // The :system option is reachable (the third tri-state choice the old binary
     // button could never express).
-    await expect(controls.locator('input[type="radio"][name="theme"][value="system"]')).toHaveCount(1);
+    await expect(controls.locator('input[type="radio"][name="preview_admin_theme"][value="system"]')).toHaveCount(1);
     // The bespoke admin-theme button must be gone after the swap.
     await expect(page.getByTestId("preview-admin-theme-toggle")).toHaveCount(0);
   });
