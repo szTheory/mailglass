@@ -3,7 +3,7 @@
   "pillar_rubric": "design-system.md:104-121",
   "grade_scale": "1-4 (1=non-conformant, 2=significant-gaps, 3=mostly-conformant, 4=excellent)",
   "prior": {
-    "run_id": "2026-06-16-phase-103",
+    "run_id": "2026-06-20-phase-116",
     "surfaces": {
       "deliveries": {
         "Spacing": { "light": 4, "dark": 4, "system": 4 },
@@ -27,12 +27,12 @@
         "Color": { "light": 4, "dark": 4, "system": 4 },
         "Type": { "light": 4, "dark": 4, "system": 4 },
         "Elevation": { "light": 4, "dark": 4, "system": 4 },
-        "Motion+A11y": { "light": 3, "dark": 3, "system": 3 }
+        "Motion+A11y": { "light": 4, "dark": 4, "system": 4 }
       }
     }
   },
   "current": {
-    "run_id": "2026-06-20-phase-116",
+    "run_id": "2026-06-28-phase-123",
     "surfaces": {
       "deliveries": {
         "Spacing": { "light": 4, "dark": 4, "system": 4 },
