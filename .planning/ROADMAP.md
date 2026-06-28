@@ -206,7 +206,10 @@ email's independent theme toggle intact.
   3. WCAG 2.2 AA + APG holds (keyboard-complete, visible/restored focus, never color-alone, 44×44
      targets, labeled controls); microcopy is on-brand and recovery-oriented; motion is
      Emil-Kowalski-grade within the v1.13 MOTION locks; all inherited gates stay green.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 122-01-PLAN.md — Dual-theme toggle a11y: adopt theme_picker for admin chrome routed through the frame-aware preview_theme_path (D-05 load-bearing invariant), harden the backdrop button, toggle-a11y e2e (wave 1)
+- [ ] 122-02-PLAN.md — Microcopy + a11y + dead-code: brandbook onboarding (generator primary), recovery-oriented error card with inline `<pre>`, error-transition focus/announce, dead dark_chrome removal, token normalization + paired voice/e2e updates (wave 2)
+- [ ] 122-03-PLAN.md — Persona re-shoot (no new cells / D-17 fallback) + asset-bundle-untouched + inherited floor green only-forward (wave 3)
 **UI hint**: yes
 
 ### Phase 123: Cross-surface coherence + ratchet re-arm
