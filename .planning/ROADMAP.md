@@ -39,7 +39,7 @@ Binding quality bar: `.planning/research/v1.14/STRESS-TEST-PROMPT.md` (do not di
 - [x] **Phase 120: Deliveries surface redesign** - Core operator JTBD redesigned to a streamlined, non-info-dump IA across the full matrix (completed 2026-06-27)
 - [x] **Phase 121: Inbound surface redesign** - Inbound brought consistent with the cleaned-up Deliveries patterns across the full matrix (completed 2026-06-28)
 - [x] **Phase 122: Preview surface redesign** - Preview brought consistent with the established patterns across the full matrix (completed 2026-06-28)
-- [ ] **Phase 123: Cross-surface coherence + ratchet re-arm** - All four surfaces cohere; storybook + gallery finalized; aesthetic ratchet re-scored only-forward with new judgment gates armed
+- [x] **Phase 123: Cross-surface coherence + ratchet re-arm** - All four surfaces cohere; storybook + gallery finalized; aesthetic ratchet re-scored only-forward with new judgment gates armed
 - [ ] **Phase 124: Release cut + milestone closeout** - Linked-version Hex release (admin-minor drags core+inbound), D-13 inbound re-pin, consumer + post-publish smoke, audit + archive
 
 **Execution order:** 118 → 119 → 120 → 121 → 122 → 123 → 124 (strictly sequential).
