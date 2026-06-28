@@ -246,7 +246,7 @@ final pillar re-score)
 
 **Wave 1** *(independent — re-score floor + review-surface finalization run in parallel)*
 
-- [ ] 123-01-PLAN.md — COH-02: promote+re-score the 54-cell ratchet only-forward (distinct run_ids, anti-vacuity guard) + arm the two judgment gates (de-disclaim judgment.spec.js + floor gate-count ~26→~28); no asset rebuild (wave 1)
+- [x] 123-01-PLAN.md — COH-02: promote+re-score the 54-cell ratchet only-forward (distinct run_ids, anti-vacuity guard) + arm the two judgment gates (de-disclaim judgment.spec.js + floor gate-count ~26→~28); no asset rebuild (wave 1)
 - [ ] 123-02-PLAN.md — COH-01: storybook story-inventory completeness vs shipped primitives + accept indigo explorer chrome (dev-only cosmetic) + stale-boot DX caveat; gallery byte-unchanged (wave 1)
 
 **Wave 2** *(blocked on Wave 1 — verdict cites the green floor + finalized review surfaces)*
@@ -281,7 +281,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 | 120. Deliveries surface redesign | 2/2 | Complete    | 2026-06-27 |
 | 121. Inbound surface redesign | 4/4 | Complete    | 2026-06-28 |
 | 122. Preview surface redesign | 3/3 | Complete    | 2026-06-28 |
-| 123. Cross-surface coherence + ratchet re-arm | 0/? | Not started | - |
+| 123. Cross-surface coherence + ratchet re-arm | 1/3 | In Progress|  |
 | 124. Release cut + milestone closeout | 0/? | Not started | - |
 
 ## Phases (Shipped — Archived)

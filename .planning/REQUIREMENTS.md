@@ -87,7 +87,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 - [ ] **COH-01**: All four surfaces are cross-surface coherent (spacing, hierarchy, IA, microcopy,
       motion); the storybook + gallery review surfaces are finalized and consistent.
 
-- [ ] **COH-02**: The aesthetic ratchet baseline is re-scored **only-forward** (meet-or-beat, zero
+- [x] **COH-02**: The aesthetic ratchet baseline is re-scored **only-forward** (meet-or-beat, zero
       regressions) with all inherited gates + the new judgment gates green.
 
 ### Release & Closeout
@@ -133,7 +133,7 @@ Every surface/redesign requirement below is only satisfied when it holds across 
 | INB-01 | Phase 121 | Complete |
 | PREV-01 | Phase 122 | Complete |
 | COH-01 | Phase 123 | Pending |
-| COH-02 | Phase 123 | Pending |
+| COH-02 | Phase 123 | Complete |
 | REL-01 | Phase 124 | Pending |
 | REL-02 | Phase 124 | Pending |
 

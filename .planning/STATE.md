@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-current_phase: 123
-current_phase_name: Cross-surface coherence + ratchet re-arm
 status: executing
-stopped_at: Phase 123 context gathered (assumptions mode)
-last_updated: "2026-06-28T21:53:36.017Z"
-last_activity: 2026-06-28
-last_activity_desc: Phase 122 complete, transitioned to Phase 123
+stopped_at: Completed 123-01-PLAN.md (ratchet re-score + judgment-gate arm)
+last_updated: "2026-06-28T22:02:16Z"
+last_activity: 2026-06-28 — Phase 123 Plan 01 complete (ratchet promoted+re-scored only-forward; two judgment gates armed)
 progress:
   total_phases: 9
   completed_phases: 7
-  total_plans: 20
-  completed_plans: 20
-  percent: 78
+  total_plans: 23
+  completed_plans: 22
+  percent: 80
 ---
 
 # Project State
@@ -29,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 123 — Cross-surface coherence + ratchet re-arm
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-28 — Phase 122 complete, transitioned to Phase 123
+Plan: 01 of 3 complete (123-02, 123-03 remaining)
+Status: In progress
+Last activity: 2026-06-28 — 123-01 complete (ratchet promoted+re-scored only-forward under run_id 2026-06-28-phase-123; nav-active-correctness + no-nav-duplication judgment gates armed; priv/static byte-unchanged)
 
 ## v1.14 Milestone Intent
 
@@ -265,6 +262,7 @@ plan directly from the v1.13 precedent.
 
 **Velocity:**
 
+- Phase 123 Plan 01: 2 tasks, 3 files, ~3 min — ratchet promoted+re-scored only-forward (run_id 2026-06-28-phase-123, ratchet_baseline_test 4/4 green); two judgment gates armed (de-disclaim + floor inventory ~26→~28); priv/static byte-unchanged
 - v1.9 phases completed: 6 (85-90), 7 plans — shipped 2026-06-12, gate 9/9 first run, maintainer A/B sign-off
 - v1.8 phases completed: 3 through GSD (80-82), 5 plans; phases 83-84 closed superseded 2026-06-11
 - v1.7 phases completed: 6 (74-79), 22 plans — admin UI IA & design-system polish v2; audit passed (19/19 reqs, 7/7 seams, 3/3 flows); shipped 2026-06-05
@@ -404,9 +402,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T21:34:38.742Z
-**Stopped at:** Phase 123 context gathered (assumptions mode)
-**Resume file:** .planning/phases/123-cross-surface-coherence-ratchet-re-arm/123-CONTEXT.md
+**Last session:** 2026-06-28T22:02:16Z
+**Stopped at:** Completed 123-01-PLAN.md (ratchet re-score + judgment-gate arm)
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
