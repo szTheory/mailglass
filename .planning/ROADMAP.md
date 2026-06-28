@@ -251,7 +251,7 @@ final pillar re-score)
 
 **Wave 2** *(blocked on Wave 1 — verdict cites the green floor + finalized review surfaces)*
 
-- [ ] 123-03-PLAN.md — COH-01: re-run the adversarial persona-critic harness across all four surfaces (evidence only) + close out DEFECT-REGISTER (Status flips + coherence sign-off, five hats/three personas verbatim); no new coherence gate, Personas.spec/0 untouched (wave 2)
+- [x] 123-03-PLAN.md — COH-01: re-run the adversarial persona-critic harness across all four surfaces (evidence only) + close out DEFECT-REGISTER (Status flips + coherence sign-off, five hats/three personas verbatim); no new coherence gate, Personas.spec/0 untouched (wave 2)
 
 **UI hint**: yes
 
@@ -281,7 +281,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 | 120. Deliveries surface redesign | 2/2 | Complete    | 2026-06-27 |
 | 121. Inbound surface redesign | 4/4 | Complete    | 2026-06-28 |
 | 122. Preview surface redesign | 3/3 | Complete    | 2026-06-28 |
-| 123. Cross-surface coherence + ratchet re-arm | 2/3 | In Progress|  |
+| 123. Cross-surface coherence + ratchet re-arm | 3/3 | Complete   | 2026-06-28 |
 | 124. Release cut + milestone closeout | 0/? | Not started | - |
 
 ## Phases (Shipped — Archived)

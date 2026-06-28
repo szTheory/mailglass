@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-current_phase: 123
-current_phase_name: Cross-surface coherence + ratchet re-arm
 status: executing
-stopped_at: Completed 123-02-PLAN.md
-last_updated: "2026-06-28T22:10:22.698Z"
+stopped_at: Completed 123-03-PLAN.md (Phase 123 complete)
+last_updated: "2026-06-28T22:17:23.428Z"
 last_activity: 2026-06-28
-last_activity_desc: 123-01 complete (ratchet promoted+re-scored only-forward under run_id 2026-06-28-phase-123; nav-active-correctness + no-nav-duplication judgment gates armed; priv/static byte-unchanged)
 progress:
-  total_phases: 7
-  completed_phases: 5
-  total_plans: 17
-  completed_plans: 16
-  percent: 71
+  total_phases: 9
+  completed_phases: 8
+  total_plans: 23
+  completed_plans: 23
+  percent: 89
 ---
 
 # Project State
@@ -29,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 123 — Cross-surface coherence + ratchet re-arm
-Plan: 2 of 3 complete (123-02, 123-03 remaining)
-Status: Ready to execute
-Last activity: 2026-06-28 — 123-01 complete (ratchet promoted+re-scored only-forward under run_id 2026-06-28-phase-123; nav-active-correctness + no-nav-duplication judgment gates armed; priv/static byte-unchanged)
+Plan: 3 of 3 complete
+Status: Phase 123 complete — ready for Phase 124 (release cut)
+Last activity: 2026-06-28
 
 ## v1.14 Milestone Intent
 
@@ -253,6 +250,7 @@ plan directly from the v1.13 precedent.
 - [Phase ?]: Phase 122 closed green-only-forward; persona re-shoot deferred to Phase 123 per D-17; app.css untouched + TokenParity green (D-13); floor held, no pillar re-score
 - [Phase 123]: D-09 accept-indigo: phoenix_storybook 1.2.0 explorer chrome accepted as dev-only cosmetic; no config accent hook exists, theming needs dep CSS override or Node build (both forbidden); title already set to brand name
 - [Phase 123]: D-11 storybook inventory complete as-is: 5 brand primitives match components.ex with zero attribute drift; 119-122 introduced no new theme-sensitive primitive; no story files added
+- [Phase ?]: COH-01 coherence proof closed: DEFECT-REGISTER all 10 findings RESOLVED/HELD + Phase 123 cross-surface coherence sign-off (five hats + three personas verbatim, green-floor citation, no new automated coherence gate, D-06 single-ledger). Persona re-shoot grounded in existing .cache evidence + green floor — demo unrunnable in-env per plan authorization.
 
 ## Quick Tasks Completed
 
@@ -384,6 +382,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 122 P02 | 6 min | 3 tasks | 7 files |
 | Phase 122 P03 | 3min | 2 tasks | 1 files |
 | Phase 123 P02 | 3 | 2 tasks | 1 files |
+| Phase 123 P03 | 8min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -408,8 +407,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T22:10:22.689Z
-**Stopped at:** Completed 123-02-PLAN.md
+**Last session:** 2026-06-28T22:17:23.422Z
+**Stopped at:** Completed 123-03-PLAN.md (Phase 123 complete)
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
