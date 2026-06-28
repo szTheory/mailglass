@@ -111,12 +111,12 @@ defmodule MailglassAdmin.Preview.Sidebar do
     ~H"""
     <.link
       patch={broken_path(@mount_path, @mod)}
-      title="preview_props/0 raised an error"
+      title="This Mailable raised while rendering"
       class="mg-focus-ring flex items-center gap-2 px-3 py-2 min-h-11 text-body text-base-content hover:bg-base-200 rounded transition-colors"
     >
       <.mailable_label mod={@mod} />
       <Components.badge variant={:warning} />
-      <span class="sr-only">preview_props/0 raised an error</span>
+      <span class="sr-only">This Mailable raised while rendering</span>
     </.link>
     """
   end

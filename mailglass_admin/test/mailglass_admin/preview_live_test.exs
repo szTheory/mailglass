@@ -136,10 +136,10 @@ defmodule MailglassAdmin.PreviewLiveTest do
       {:ok, _view, html} = live(empty_conn, "/dev/mail")
 
       assert html =~ ~s(data-testid="preview-empty-mailables")
-      assert html =~ "No Mailables discovered"
-
-      assert html =~
-               "Preview scans loaded modules that use Mailglass.Mailable. Nothing was found yet."
+      # D-09: onboarding leads with the brandbook Empty string verbatim and
+      # surfaces the generator as the PRIMARY next step.
+      assert html =~ "No mailables discovered yet. Define one with `mix mailglass.gen.mailable`"
+      assert html =~ "mix mailglass.gen.mailable"
 
       assert html =~ "Read preview setup"
       refute html =~ "Preview the first Mailable"
@@ -170,16 +170,20 @@ defmodule MailglassAdmin.PreviewLiveTest do
     end
 
     @tag :page_groups
-    test "render error branch names preview_props failure and recovery target",
+    test "render error branch names the Mailable + scenario and the recovery target",
          %{conn: conn} do
       {:ok, _view, html} =
         live(conn, "/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__")
 
       assert html =~ ~s(data-testid="preview-render-error")
-      assert html =~ "preview_props/0 raised an error"
-      assert html =~ "Fix the error in"
+      # D-10: generalized recovery-oriented headline; lead names BOTH the Mailable
+      # and the scenario; the error card announces the transition (role=status).
+      assert html =~ "This Mailable raised while rendering"
       assert html =~ "MailglassAdmin.Fixtures.BrokenMailer"
-      assert html =~ "and save the file to reload."
+      assert html =~ "save to reload"
+      assert html =~ ~s(role="status")
+      # Inline scrollable <pre> kept (no redirect to logs — dev DX, D-10).
+      assert html =~ "max-h-80"
       refute html =~ "Something went wrong"
     end
   end

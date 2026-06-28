@@ -8,7 +8,8 @@ defmodule MailglassAdmin.PreviewLive do
     * `:index` at `/` — no scenario selected. Renders the start page: a
       value statement, a "Preview the first Mailable" deep link, and a legend of
       the tool's affordances. When auto-scan finds zero mailables, renders the
-      actionable "No Mailables discovered" empty state instead.
+      brandbook-canonical "No mailables discovered yet…" onboarding state instead,
+      leading with `mix mailglass.gen.mailable` as the primary next step.
     * `:show` at `/:mailable/:scenario` — renders the full preview:
       sidebar, main pane header, device + dark toggles, assigns form,
       HTML/Text/Raw/Headers tab strip.

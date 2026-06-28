@@ -92,7 +92,11 @@ async function openPreviewEmpty(page) {
   await expect(page.getByTestId("preview-orientation")).toBeVisible();
   await expect(page.getByTestId("preview-shell")).toBeVisible();
   await expect(page.getByTestId("preview-empty-mailables")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "No Mailables discovered", exact: true })).toBeVisible();
+  // D-09: onboarding leads with the brandbook Empty string verbatim (the h1 carries
+  // the generator name as an inline <code> chip, so match on the leading prose).
+  await expect(
+    page.getByRole("heading", { level: 1, name: /No mailables discovered yet\./ })
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: "Read preview setup", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Preview the first Mailable", exact: true })).toHaveCount(0);
 }
@@ -118,12 +122,14 @@ async function openPreviewError(page, query = "theme=light") {
   await page.goto(`/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__${query ? "?" + query : ""}`);
   await expect(page.getByTestId("preview-shell")).toBeVisible();
   await expect(page.getByTestId("preview-render-error")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "preview_props/0 raised an error", exact: true })).toBeVisible();
-  await expect(page.getByText("Fix the error in")).toBeVisible();
+  // D-10: generalized recovery-oriented error headline; lead names the Mailable + scenario.
   await expect(
-    page.getByTestId("preview-render-error").getByText("MailglassAdmin.Fixtures.BrokenMailer", { exact: true })
+    page.getByRole("heading", { name: "This Mailable raised while rendering", exact: true })
   ).toBeVisible();
-  await expect(page.getByText("and save the file to reload.")).toBeVisible();
+  await expect(
+    page.getByTestId("preview-render-error").getByText("MailglassAdmin.Fixtures.BrokenMailer", { exact: true }).first()
+  ).toBeVisible();
+  await expect(page.getByText("save to reload")).toBeVisible();
 }
 
 // Opens the Gallery surface (dev-only, no auth required)

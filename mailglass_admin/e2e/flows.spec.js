@@ -441,7 +441,10 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
   test("Preview edge: index with many scenarios in details navigation at 320", async ({ page }) => {
     await openPreviewIndex(page, "");
-    await assertSingleH1(page, "preview edge");
+    // D-11c: the start branch (mailables present, no scenario selected) renders
+    // preview-start and MUST expose exactly one <h1>.
+    await expect(page.getByTestId("preview-start")).toBeVisible();
+    await assertSingleH1(page, "preview start branch");
     await assertNoRootOverflow(page, "preview edge");
     await assertNoElementHorizontalOverflow(page.getByTestId("preview-shell"), "preview edge shell");
     // Mobile mailables navigation reaches a real scenario link at 320.
