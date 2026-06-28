@@ -627,9 +627,15 @@ defmodule MailglassAdmin.PreviewLive do
   # the email backdrop alive across the remount, so the put_frame_query call MUST
   # stay verbatim.
   defp preview_theme_path(socket, theme) when is_binary(theme) do
-    page_uri = socket.assigns.page_uri || socket.assigns.mount_path || "/dev/mail"
-    parsed = URI.parse(page_uri)
-    path = parsed.path || socket.assigns.mount_path || "/dev/mail"
+    parsed = URI.parse(socket.assigns.page_uri || "")
+    # Resolve the mount base from the live assign, falling back to deriving it
+    # from the current document path rather than a hard-coded "/dev/mail" — a
+    # literal default silently breaks any adopter mounted elsewhere (e.g.
+    # "/admin/preview") on the chrome-theme persistence round-trip (WR-02).
+    mount_base =
+      socket.assigns.mount_path || MailglassAdmin.MountPath.base(parsed.path)
+
+    path = parsed.path || mount_base
 
     return_to =
       path
@@ -637,9 +643,8 @@ defmodule MailglassAdmin.PreviewLive do
       |> put_frame_query(socket.assigns.preview_frame_dark_chrome)
 
     segment = theme_segment(theme)
-    mount_path = socket.assigns.mount_path || "/dev/mail"
 
-    String.trim_trailing(mount_path, "/") <>
+    String.trim_trailing(mount_base, "/") <>
       "/theme/" <> segment <> "?" <> URI.encode_query([{"return_to", return_to}])
   end
 
