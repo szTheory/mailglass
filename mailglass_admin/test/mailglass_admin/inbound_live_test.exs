@@ -1463,6 +1463,111 @@ defmodule MailglassAdmin.InboundLiveTest do
     end
   end
 
+  describe "reveal re-redact + PII-free telemetry (D-11 / D-12)" do
+    @pii_keys [:to, :from, :body, :html_body, :subject, :headers, :recipient, :email, :payload]
+
+    test "re_redact_raw collapses :revealed back to :redacted with no auth call (D-11)", %{
+      conn: conn
+    } do
+      secret = "RR-SECRET-#{System.unique_integer([:positive])}"
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "rr@example.com",
+          evidence: [raw_payload: %{"body" => secret}]
+        )
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      # Grant first so we have something to collapse.
+      revealed_html = render_click(view, "reveal_raw", %{})
+      assert revealed_html =~ ~s(data-testid="inbound-evidence-raw")
+      assert revealed_html =~ secret
+
+      # Re-redact collapses back: raw bytes absent, redacted body present.
+      redacted_html = render_click(view, "re_redact_raw", %{})
+      refute redacted_html =~ ~s(data-testid="inbound-evidence-raw")
+      refute redacted_html =~ secret
+
+      assert redacted_html =~
+               "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
+    end
+
+    test "reveal emits a PII-free [:reveal_raw, :stop] with outcome=:granted (D-12)", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "tg@example.com",
+          evidence: [raw_payload: %{"body" => "GRANT-BYTES"}]
+        )
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      meta = attach_and_reveal(view)
+
+      assert meta.outcome == :granted
+      assert Map.has_key?(meta, :tenant_id)
+      assert Map.has_key?(meta, :record_id)
+      assert_no_pii(meta)
+    end
+
+    test "reveal emits outcome=:denied for a denying operator (D-12)", %{conn: conn} do
+      conn = operator_conn(conn, %{"current_user_id" => "deny-reveal"})
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id,
+          recipient: "td@example.com",
+          evidence: [raw_payload: %{"body" => "DENY-BYTES"}]
+        )
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      meta = attach_and_reveal(view)
+
+      assert meta.outcome == :denied
+      assert_no_pii(meta)
+    end
+
+    defp attach_and_reveal(view) do
+      ref = make_ref()
+      test_pid = self()
+      handler_id = "test-reveal-#{inspect(ref)}"
+
+      :telemetry.attach(
+        handler_id,
+        [:mailglass_admin, :inbound, :reveal_raw, :stop],
+        fn _event, _measurements, metadata, _config ->
+          send(test_pid, {ref, metadata})
+        end,
+        nil
+      )
+
+      try do
+        render_click(view, "reveal_raw", %{})
+
+        receive do
+          {^ref, metadata} -> metadata
+        after
+          1_000 -> flunk("expected [:mailglass_admin, :inbound, :reveal_raw, :stop] telemetry event")
+        end
+      after
+        :telemetry.detach(handler_id)
+      end
+    end
+
+    defp assert_no_pii(meta) do
+      for key <- @pii_keys do
+        refute Map.has_key?(meta, key),
+               "telemetry metadata leaked PII key #{inspect(key)}: #{inspect(meta)}"
+      end
+    end
+  end
+
   defp refute_banned(html) do
     for word <- @banned do
       refute html =~ word, "banned brand-voice word #{inspect(word)} found in rendered HTML"

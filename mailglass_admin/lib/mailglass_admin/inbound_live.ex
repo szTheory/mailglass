@@ -98,6 +98,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:runs, [])
      |> assign(:routing_trace, [])
      |> assign(:reveal_state, :redacted)
+     |> assign(:focus_reveal_after_redact, false)
      |> assign(:inbound_router, inbound_router)
      |> assign(:detail_error, nil)
      |> assign(:data_state, nil)
@@ -257,7 +258,27 @@ defmodule MailglassAdmin.InboundLive do
   # the evidence card renders the raw payload read-only; on denial the redacted
   # placeholder stays and a brand-voice line explains the gate.
   def handle_event("reveal_raw", _params, socket) do
-    {:noreply, assign(socket, :reveal_state, authorize_reveal(socket))}
+    reveal_state = authorize_reveal(socket)
+
+    # PII-free reveal-audit count (D-12). authorize_reveal/1 stays a PURE auth
+    # helper returning the reveal_state atom; the outcome mapping + emit live
+    # HERE at the call-site (:revealed -> :granted, :denied -> :denied). Metadata
+    # is tenant_id / record_id / outcome ONLY — never payload/body/headers/
+    # recipient (CLAUDE.md telemetry PII rule). Fire-and-forget: it must not
+    # change control flow.
+    emit_reveal_telemetry(socket, reveal_outcome(reveal_state))
+
+    {:noreply, assign(socket, :reveal_state, reveal_state)}
+  end
+
+  # Re-redact (D-11) — collapse a revealed payload back to :redacted with NO
+  # authorize call (collapsing never widens access; no fourth state atom). Focus
+  # returns to the reveal button via the focus sentinel keyed on :reveal_state.
+  def handle_event("re_redact_raw", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:reveal_state, :redacted)
+     |> assign(:focus_reveal_after_redact, true)}
   end
 
   # Replay confirm flow (IADM-03). Simplified clone of OperatorLive's confirm_replay
@@ -552,6 +573,12 @@ defmodule MailglassAdmin.InboundLive do
         phx-mounted={JS.focus_first(to: "#inbound-replay-modal")}
         phx-remove={JS.focus(to: "#inbound-replay-open-btn")}
       />
+
+      <%!-- Re-redact focus return (D-11): a one-shot sentinel returns focus to the reveal disclosure button after collapsing a revealed payload. --%>
+      <span
+        :if={@focus_reveal_after_redact}
+        phx-mounted={JS.focus(to: "#inbound-evidence-reveal-btn")}
+      />
       <ReplayModal.replay_modal open?={@replay_modal_open?} record={selected_record_struct(@detail)} />
         <% end %>
       <% end %>
@@ -587,6 +614,7 @@ defmodule MailglassAdmin.InboundLive do
     # redacted — reveal is a per-view capability action, never sticky across
     # selections.
     |> assign(:reveal_state, :redacted)
+    |> assign(:focus_reveal_after_redact, false)
     |> assign(:detail_error, detail_error_for(selected_inbound_id, detail))
     # Route a load/authorization failure into the dormant RecordsList data_state
     # (D-09) — reuse the existing detail_error signal rather than a new query.
@@ -612,6 +640,7 @@ defmodule MailglassAdmin.InboundLive do
     |> assign(:runs, [])
     |> assign(:routing_trace, [])
     |> assign(:reveal_state, :redacted)
+    |> assign(:focus_reveal_after_redact, false)
     |> assign(:detail_error, nil)
     |> assign(:data_state, nil)
   end
@@ -997,6 +1026,32 @@ defmodule MailglassAdmin.InboundLive do
       :denied
     end
   end
+
+  # Maps the pure authorize_reveal/1 reveal_state atom to a telemetry outcome at
+  # the call-site (NOT inside the pure helper). :revealed -> :granted, anything
+  # else (:denied) -> :denied.
+  defp reveal_outcome(:revealed), do: :granted
+  defp reveal_outcome(_other), do: :denied
+
+  # PII-free reveal-audit emit (D-12). mailglass_admin has no telemetry today, so
+  # this is a single fire-and-forget :telemetry.execute/3 (not a full span).
+  # Metadata is whitelisted to tenant_id / record_id / outcome — NEVER
+  # payload/body/headers/recipient/email (CLAUDE.md PII rule). Durable persisted
+  # reveal-audit is deferred (Phase 123+).
+  defp emit_reveal_telemetry(socket, outcome) do
+    :telemetry.execute(
+      [:mailglass_admin, :inbound, :reveal_raw, :stop],
+      %{count: 1},
+      %{
+        tenant_id: blank_to_nil(socket.assigns.filter_params["tenant_id"]),
+        record_id: reveal_record_id(socket.assigns.detail),
+        outcome: outcome
+      }
+    )
+  end
+
+  defp reveal_record_id(%{record: %{id: id}}), do: id
+  defp reveal_record_id(_detail), do: nil
 
   # ---------------------------------------------------------------------------
   # URL <-> filter param plumbing (cloned from OperatorLive).
