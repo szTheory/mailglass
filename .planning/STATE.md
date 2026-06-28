@@ -2,16 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
+current_phase: 122
+current_phase_name: Preview surface redesign
 status: verifying
 stopped_at: Completed 121-03-PLAN.md
-last_updated: "2026-06-28T17:25:27.826Z"
+last_updated: "2026-06-28T17:31:13.130Z"
 last_activity: 2026-06-28
+last_activity_desc: Phase 121 complete, transitioned to Phase 122
 progress:
-  total_phases: 9
-  completed_phases: 6
-  total_plans: 17
-  completed_plans: 17
-  percent: 67
+  total_phases: 7
+  completed_phases: 4
+  total_plans: 11
+  completed_plans: 11
+  percent: 57
 ---
 
 # Project State
@@ -25,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 ## Current Position
 
-Phase: 121 (Inbound surface redesign) — EXECUTING
-Plan: 4 of 4
+Phase: 122 — Preview surface redesign
+Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-06-28
+Last activity: 2026-06-28 — Phase 121 complete, transitioned to Phase 122
 
 ## v1.14 Milestone Intent
 

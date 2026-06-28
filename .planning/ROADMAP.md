@@ -37,7 +37,7 @@ Binding quality bar: `.planning/research/v1.14/STRESS-TEST-PROMPT.md` (do not di
 - [x] **Phase 118: Method, Audit & Storybook stand-up** - Persona-critic harness + screenshot-backed defect register; phoenix_storybook dev-only review surface; new judgment gates drafted; floor inherited (completed 2026-06-26)
 - [x] **Phase 119: App-shell + Nav + Overview redesign** - The keystone #1-pain surface: fix the false-active-nav bug, give Overview its own identity, kill redundant nav cards, make health stats actionable (completed 2026-06-26)
 - [x] **Phase 120: Deliveries surface redesign** - Core operator JTBD redesigned to a streamlined, non-info-dump IA across the full matrix (completed 2026-06-27)
-- [ ] **Phase 121: Inbound surface redesign** - Inbound brought consistent with the cleaned-up Deliveries patterns across the full matrix
+- [x] **Phase 121: Inbound surface redesign** - Inbound brought consistent with the cleaned-up Deliveries patterns across the full matrix (completed 2026-06-28)
 - [ ] **Phase 122: Preview surface redesign** - Preview brought consistent with the established patterns across the full matrix
 - [ ] **Phase 123: Cross-surface coherence + ratchet re-arm** - All four surfaces cohere; storybook + gallery finalized; aesthetic ratchet re-scored only-forward with new judgment gates armed
 - [ ] **Phase 124: Release cut + milestone closeout** - Linked-version Hex release (admin-minor drags core+inbound), D-13 inbound re-pin, consumer + post-publish smoke, audit + archive
@@ -180,10 +180,12 @@ its PII/raw-payload boundaries.
      targets, predictable dialogs incl. the replay modal); microcopy is on-brand and recovery-oriented;
      motion is Emil-Kowalski-grade within the v1.13 MOTION locks; all inherited gates stay green.
 **Plans**: 4 plans
+
 - [x] 121-01-PLAN.md — Inbound IA gating (no-data/no-match/populated cond, empty-pane-only orientation, data_state wiring, D-07 noun fix) + paired ExUnit/voice updates
 - [x] 121-02-PLAN.md — Reveal ARIA disclosure + re-redact + aria-live + PII-free reveal telemetry
 - [x] 121-03-PLAN.md — Both replay modals: Tab focus-trap + double-submit pending-lock (lockstep)
 - [x] 121-04-PLAN.md — e2e judgment gate + paired split + reveal/replay a11y assertions + structural verify + persona re-shoot
+
 **UI hint**: yes
 
 ### Phase 122: Preview surface redesign
@@ -255,7 +257,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 | 118. Method, Audit & Storybook stand-up | 3/3 | Complete    | 2026-06-26 |
 | 119. App-shell + Nav + Overview redesign | 2/2 | Complete    | 2026-06-26 |
 | 120. Deliveries surface redesign | 2/2 | Complete    | 2026-06-27 |
-| 121. Inbound surface redesign | 4/4 | Complete   | 2026-06-28 |
+| 121. Inbound surface redesign | 4/4 | Complete    | 2026-06-28 |
 | 122. Preview surface redesign | 0/? | Not started | - |
 | 123. Cross-surface coherence + ratchet re-arm | 0/? | Not started | - |
 | 124. Release cut + milestone closeout | 0/? | Not started | - |
