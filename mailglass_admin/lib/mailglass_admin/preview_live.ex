@@ -86,6 +86,16 @@ defmodule MailglassAdmin.PreviewLive do
     {:ok, socket}
   end
 
+  # Precedence contract for :admin_chrome_theme (see code review IN-03):
+  # `MailglassAdmin.MountPathHook` attaches a `:handle_params` hook that runs
+  # BEFORE this function and seeds :admin_chrome_theme from `?theme=` (else the
+  # cookie). PreviewLive then re-derives the same value here from the same
+  # `?theme=` param via `normalize_capture_url_state/2`. The two derivations are
+  # intentionally kept in agreement: both key off `?theme=`, and PreviewLive's
+  # no-param fallback (`normalize_capture_url_state`) reads back the value the
+  # hook just set. PreviewLive is the authoritative writer for the rendered
+  # frame; the hook only provides the seed. If either parser changes, update
+  # both so they cannot silently diverge.
   @impl true
   def handle_params(%{"mailable" => mod_str, "scenario" => name_str} = params, uri, socket) do
     {device_width, admin_chrome_theme} = normalize_capture_url_state(params, socket)
@@ -149,6 +159,8 @@ defmodule MailglassAdmin.PreviewLive do
      |> assign(:current_mailable, nil)
      |> assign(:current_scenario, nil)
      |> assign(:base_path, nil)
+     # See IN-03 precedence note above: re-derived from the same `?theme=` param
+     # the MountPathHook already seeded, kept deliberately in agreement.
      |> assign(:admin_chrome_theme, parse_admin_chrome_theme(params["theme"]))
      |> assign(:page_uri, uri)
      |> assign(:page_title, "mailglass — Preview")}
