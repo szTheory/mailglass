@@ -68,7 +68,18 @@ method → persona critics, mostly autonomous with phase-boundary sign-off; (3) 
 
 ## Current State
 
-**v1.13 IN PROGRESS 2026-06-20 (Phases 109, 110, 114, 115, 116 complete; 111, 112,
+**v1.14 IN PROGRESS — Phase 122 (Preview surface redesign) complete 2026-06-28, verifier
+`passed` (PREV-01, 12/12 must-haves).** Preview's admin chrome now uses the canonical
+tri-state `Components.theme_picker` (frame-aware `set_theme` routing preserves the
+independent email-backdrop axis — the load-bearing D-05 invariant); the email-backdrop
+toggle is a11y-hardened (aria-pressed + visible label + aria-live), onboarding/render-error
+copy is re-voiced to brandbook, and the dead `dark_chrome` attr was removed. The `preview`
+persona re-shoot was deferred to Phase 123 under the locked D-17 fallback (demo boot needs a
+baseline-drifting `mix deps.get`). Next: Phase 123 (cross-surface coherence + ratchet
+re-arm), then Phase 124 (release cut + closeout).
+
+**v1.13 (prior milestone — SHIPPED 2026-06-21, live 1.8.0/1.8.0/1.5.0, archived; Phases
+109, 110, 114, 115, 116 complete; 111, 112,
 113 still open; 117 = release cut).** The admin stress-test milestone has its
 foundation, primitives, component-groups, pages/flows, and the fixtures + idempotent
 ratchet-arm landed. Phase 109 merged the PR #86 baseline and established system-theme
@@ -615,4 +626,4 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-26 — opened **v1.14 Operator IA & Lived-Experience Redesign** (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).*
+*Last updated: 2026-06-28 — **v1.14 Phase 122 (Preview surface redesign) complete**, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).*
