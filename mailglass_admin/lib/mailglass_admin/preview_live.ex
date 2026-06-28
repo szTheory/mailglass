@@ -182,12 +182,13 @@ defmodule MailglassAdmin.PreviewLive do
      )}
   end
 
-  def handle_event("toggle_theme", _params, socket) do
-    {:noreply,
-     redirect(
-       socket,
-       to: preview_theme_path(socket, admin_chrome_dark?(socket.assigns.admin_chrome_theme))
-     )}
+  # Tri-state chrome-theme set, fired by the canonical Components.theme_picker
+  # ("system"|"light"|"dark"). MUST route through Preview's OWN frame-aware
+  # preview_theme_path/2 — NEVER the operator shell's theme path builder (D-05):
+  # the shell builder has no frame handling and would silently reset the email
+  # backdrop on every chrome flip.
+  def handle_event("set_theme", %{"theme" => theme}, socket) do
+    {:noreply, redirect(socket, to: preview_theme_path(socket, theme))}
   end
 
   def handle_event("set_tab", %{"tab" => t}, socket) do
@@ -307,25 +308,13 @@ defmodule MailglassAdmin.PreviewLive do
                 </h1>
                 <div data-testid="preview-header-controls" class="flex flex-wrap gap-sm items-center">
                   <DeviceFrame.device_frame device_width={@device_width} />
-                  <button
-                    type="button"
-                    data-testid="preview-admin-theme-toggle"
-                    phx-click="toggle_theme"
-                    aria-label={
-                      if admin_chrome_dark?(@admin_chrome_theme),
-                        do: "Switch the app theme to light",
-                        else: "Switch the app theme to dark"
-                    }
-                    class="mg-focus-ring btn btn-ghost btn-sm min-h-11 gap-xs px-sm"
-                  >
-                    <Components.icon
-                      name={
-                        if admin_chrome_dark?(@admin_chrome_theme), do: "hero-sun", else: "hero-moon"
-                      }
-                      class="w-5 h-5"
+                  <div class="flex flex-col gap-xs">
+                    <span class="text-label text-secondary">App theme</span>
+                    <Components.theme_picker
+                      selected={admin_chrome_selected(@admin_chrome_theme)}
+                      event="set_theme"
                     />
-                    <span class="text-label font-bold">App</span>
-                  </button>
+                  </div>
                   <button
                     type="button"
                     data-testid="preview-frame-theme-toggle"
@@ -543,8 +532,12 @@ defmodule MailglassAdmin.PreviewLive do
   defp admin_theme_attr(:light), do: "mailglass-light"
   defp admin_theme_attr(_theme), do: nil
 
-  defp admin_chrome_dark?(:dark), do: true
-  defp admin_chrome_dark?(_theme), do: false
+  # Map the persisted chrome theme (:dark | :light | nil) onto the theme_picker's
+  # closed :system | :light | :dark selection. nil means no explicit override,
+  # which the picker presents as :system.
+  defp admin_chrome_selected(:dark), do: :dark
+  defp admin_chrome_selected(:light), do: :light
+  defp admin_chrome_selected(_theme), do: :system
 
   defp normalize_capture_url_state(params, socket) do
     width =
@@ -587,7 +580,14 @@ defmodule MailglassAdmin.PreviewLive do
   defp build_capture_url(base_path, width, theme),
     do: base_path <> "?width=" <> width <> "&theme=" <> theme
 
-  defp preview_theme_path(socket, currently_dark?) do
+  # Frame-aware chrome-theme redirect builder (D-05). The `theme` segment is the
+  # closed tri-state set the theme_picker emits ("system"|"light"|"dark"); it is
+  # the only theme-derived value interpolated into the path. The full controller
+  # redirect through /theme/<segment> remounts this LiveView and drops the
+  # in-memory preview_frame_dark_chrome — `frame=dark` in return_to is what keeps
+  # the email backdrop alive across the remount, so the put_frame_query call MUST
+  # stay verbatim.
+  defp preview_theme_path(socket, theme) when is_binary(theme) do
     page_uri = socket.assigns.page_uri || socket.assigns.mount_path || "/dev/mail"
     parsed = URI.parse(page_uri)
     path = parsed.path || socket.assigns.mount_path || "/dev/mail"
@@ -597,12 +597,18 @@ defmodule MailglassAdmin.PreviewLive do
       |> append_query_without_theme(parsed.query || "")
       |> put_frame_query(socket.assigns.preview_frame_dark_chrome)
 
-    theme = if currently_dark?, do: "system", else: "dark"
+    segment = theme_segment(theme)
     mount_path = socket.assigns.mount_path || "/dev/mail"
 
     String.trim_trailing(mount_path, "/") <>
-      "/theme/" <> theme <> "?" <> URI.encode_query([{"return_to", return_to}])
+      "/theme/" <> segment <> "?" <> URI.encode_query([{"return_to", return_to}])
   end
+
+  # Closed-set guard: only the three theme_picker values are accepted; anything
+  # else collapses to "system" so a stray param can never reach the /theme route.
+  defp theme_segment("dark"), do: "dark"
+  defp theme_segment("light"), do: "light"
+  defp theme_segment(_other), do: "system"
 
   # The admin-chrome theme toggle performs a full controller redirect (cookie +
   # return_to), which remounts this LiveView and would otherwise drop the
