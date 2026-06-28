@@ -1,10 +1,11 @@
 ---
 phase: 121
 slug: inbound-surface-redesign
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-28
+reviewed_at: 2026-06-28
 ---
 
 # Phase 121 — UI Design Contract
