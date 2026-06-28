@@ -4,13 +4,13 @@ milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
 status: executing
 stopped_at: Completed 121-03-PLAN.md
-last_updated: "2026-06-28T17:06:33.536Z"
+last_updated: "2026-06-28T17:15:25.768Z"
 last_activity: 2026-06-28
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 16
   percent: 56
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 ## Current Position
 
 Phase: 121 (Inbound surface redesign) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-28
 
@@ -244,6 +244,7 @@ plan directly from the v1.13 precedent.
 - [Phase ?]: [118-02] Both judgment gates (nav-active-correctness, no-nav-duplication) are test.fixme asserting the correct end-state (D-12); flip green in Phase 119, armed into the floor in Phase 123 (D-13); not in any required CI lane.
 - [Phase ?]: 121-01: Inbound gated into no-data/no-match/populated cond off empty_state_for/2; orientation strip empty-pane-only; data_state escalates only when records == []
 - [Phase ?]: [121-03] Replay-modal focus-trap uses pure-LiveView.JS focus-sentinel spans (tabindex=0 + phx-focus={JS.focus(to:)}) wrapping to stable Close/Confirm ids — render-state-independent, byte-identical across inbound+operator modals; double-submit lock is phx-disable-with=Replaying… (D-14).
+- [Phase ?]: 121-02 reveal a11y + PII-free reveal telemetry — ARIA disclosure (aria-expanded/aria-controls) + re-redact collapse + aria-live region; [:mailglass_admin, :inbound, :reveal_raw, :stop] with tenant_id/record_id/outcome only; D-10 redacted-default + pure authorize_reveal/1 untouched
 
 ## Quick Tasks Completed
 
@@ -394,7 +395,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T17:06:14.232Z
+**Last session:** 2026-06-28T17:15:08.361Z
 **Stopped at:** Completed 121-03-PLAN.md
 **Resume file:** None
 

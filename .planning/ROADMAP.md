@@ -181,7 +181,7 @@ its PII/raw-payload boundaries.
      motion is Emil-Kowalski-grade within the v1.13 MOTION locks; all inherited gates stay green.
 **Plans**: 4 plans
 - [x] 121-01-PLAN.md — Inbound IA gating (no-data/no-match/populated cond, empty-pane-only orientation, data_state wiring, D-07 noun fix) + paired ExUnit/voice updates
-- [ ] 121-02-PLAN.md — Reveal ARIA disclosure + re-redact + aria-live + PII-free reveal telemetry
+- [x] 121-02-PLAN.md — Reveal ARIA disclosure + re-redact + aria-live + PII-free reveal telemetry
 - [x] 121-03-PLAN.md — Both replay modals: Tab focus-trap + double-submit pending-lock (lockstep)
 - [ ] 121-04-PLAN.md — e2e judgment gate + paired split + reveal/replay a11y assertions + structural verify + persona re-shoot
 **UI hint**: yes
@@ -255,7 +255,7 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
 | 118. Method, Audit & Storybook stand-up | 3/3 | Complete    | 2026-06-26 |
 | 119. App-shell + Nav + Overview redesign | 2/2 | Complete    | 2026-06-26 |
 | 120. Deliveries surface redesign | 2/2 | Complete    | 2026-06-27 |
-| 121. Inbound surface redesign | 2/4 | In Progress|  |
+| 121. Inbound surface redesign | 3/4 | In Progress|  |
 | 122. Preview surface redesign | 0/? | Not started | - |
 | 123. Cross-surface coherence + ratchet re-arm | 0/? | Not started | - |
 | 124. Release cut + milestone closeout | 0/? | Not started | - |
