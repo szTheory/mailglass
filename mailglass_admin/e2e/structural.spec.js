@@ -1157,8 +1157,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByRole("heading", { name: "Select a tenant" })).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=browser-empty`);
-      // Phase 113: truly-empty copy updated per UI-SPEC contract
-      await expect(page.getByText("No records have been recorded yet.")).toBeVisible();
+      // Phase 121 (D-07): truly-empty body uses the InboundMessage noun
+      await expect(page.getByText("No InboundMessages have been recorded yet.")).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&search=impossible-filtered-empty`);
       // Phase 113: filtered-empty copy updated per UI-SPEC contract
@@ -1256,8 +1256,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           // Phase 113: no-tenant heading is now "Select a tenant" (from data_state/1 h3 title)
           await assertTextContrastAA(page.getByRole("heading", { name: "Select a tenant" }), `${theme.name} ${viewport.width} no-tenant`);
           await openInbound(page, `tenant_id=browser-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
-          // Phase 113: truly-empty and filtered-empty copy updated per UI-SPEC contract
-          await assertTextContrastAA(page.getByText("No records have been recorded yet."), `${theme.name} ${viewport.width} truly-empty`);
+          // Phase 121 (D-07): truly-empty body uses the InboundMessage noun; filtered-empty unchanged
+          await assertTextContrastAA(page.getByText("No InboundMessages have been recorded yet."), `${theme.name} ${viewport.width} truly-empty`);
           await openInbound(page, `tenant_id=${tenantId}&search=filtered-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           await assertTextContrastAA(page.getByText("No records match the current filters."), `${theme.name} ${viewport.width} filtered-empty`);
           await openInbound(page, `tenant_id=${tenantId}&inbound_id=does-not-exist${theme.query ? `&${theme.query}` : ""}`, "operator-1");

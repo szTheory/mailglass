@@ -606,3 +606,91 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
   });
 
 });
+
+// =============================================================================
+// A11Y DELTAS (Phase 121 Plan 04, D-11 / D-14 / D-16)
+//
+// Only-forward evidence for the three new a11y behaviors built in Plans 02 & 03:
+//   - Reveal disclosure (Plan 02): aria-expanded false->true, aria-controls=
+//     "inbound-evidence-raw", a "Re-redact raw source" collapse returning the raw
+//     bytes to count 0, and a role="status" aria-live="polite" region.
+//   - Replay-modal Tab focus-trap (Plan 03): Tab off the last control wraps focus
+//     back inside the dialog, on BOTH the inbound and operator replay modals.
+//   - Replay-modal double-submit lock (Plan 03): Confirm carries phx-disable-with
+//     ("Replaying…") so a second click cannot re-fire, on BOTH surfaces.
+//
+// The locked redacted-by-default PII boundary (inbound-evidence-raw count 0 in
+// every non-revealed state) is preserved — never weakened (D-10).
+// =============================================================================
+test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + double-submit (D-11/D-14)", () => {
+
+  test("Inbound reveal is a true ARIA disclosure: aria-expanded false->true, re-redact collapses raw, aria-live present", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openInbound(page);
+
+    // Select a no-match row to reach the EvidenceCard in its redacted-by-default state.
+    await noMatchRow(page).click();
+    await page.waitForURL(/inbound_id=/);
+    await expect(page.getByTestId("inbound-evidence-card")).toBeVisible();
+
+    const reveal = page.getByTestId("inbound-evidence-reveal");
+    // Disclosure semantics in the redacted state.
+    await expect(reveal).toHaveAttribute("aria-expanded", "false");
+    await expect(reveal).toHaveAttribute("aria-controls", "inbound-evidence-raw");
+    // Redacted-by-default PII boundary (D-10): raw bytes absent before reveal.
+    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
+
+    // Grant the reveal — aria-expanded flips true and the raw payload renders.
+    await reveal.click();
+    await expect(reveal).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(1);
+
+    // aria-live status region announces the grant in TEXT (WCAG 1.4.1, never color alone).
+    const status = page.getByTestId("inbound-evidence-status");
+    await expect(status).toHaveAttribute("role", "status");
+    await expect(status).toHaveAttribute("aria-live", "polite");
+    await expect(status).toContainText("Raw source revealed.");
+
+    // Re-redact collapses back to redacted: raw bytes return to count 0, aria-expanded false.
+    await page.getByTestId("inbound-evidence-re-redact").click();
+    await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
+    await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
+    await expect(reveal).toHaveAttribute("aria-expanded", "false");
+  });
+
+  test("Inbound replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const modal = await openInboundReplayModal(page);
+
+    // Focus-trap: drive focus to the last control (Confirm) then Tab — the end
+    // sentinel wraps focus back to the first control, so focus stays inside the dialog.
+    await page.locator("#inbound-replay-confirm").focus();
+    await page.keyboard.press("Tab");
+    const focusInside = await modal.evaluate(el => el.contains(document.activeElement));
+    expect(focusInside, "focus remains within the inbound replay dialog after Tab past Confirm").toBeTruthy();
+
+    // Double-submit lock: Confirm carries phx-disable-with so a render->click double-fire
+    // cannot append a duplicate replay run to the append-only ledger.
+    await expect(page.locator("#inbound-replay-confirm")).toHaveAttribute("phx-disable-with", "Replaying…");
+  });
+
+  test("Operator replay modal: Tab off the last control keeps focus inside the dialog; Confirm locks after first click", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const modal = await openOperatorReplayModal(page);
+
+    await page.locator("#operator-replay-confirm").focus();
+    await page.keyboard.press("Tab");
+    const focusInside = await modal.evaluate(el => el.contains(document.activeElement));
+    expect(focusInside, "focus remains within the operator replay dialog after Tab past Confirm").toBeTruthy();
+
+    await expect(page.locator("#operator-replay-confirm")).toHaveAttribute("phx-disable-with", "Replaying…");
+  });
+
+});
