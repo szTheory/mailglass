@@ -1,10 +1,11 @@
 ---
 phase: 122
 slug: preview-surface-redesign
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-28
+reviewed_at: 2026-06-28
 ---
 
 # Phase 122 — UI Design Contract
