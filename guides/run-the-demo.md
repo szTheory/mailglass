@@ -130,6 +130,14 @@ then `make demo` for a fresh start.
 limitation (admin asset URLs resolve relative to the mount root). Navigate from
 the dashboard rather than reloading a deep URL. Tracked as GAP-22.
 
+**`/dev/storybook` returns a 500 (`PhoenixStorybook.Router is not available`)**
+— the dev-only component storybook is a live route added with the
+`phoenix_storybook` dep. A demo container that was already running from *before*
+that dep landed cannot hot-reload the `live_storybook` macro, so the route raises
+an `UndefinedFunctionError` until the container is freshly booted. Run `make demo`
+(or `docker restart`) once to pick it up. The operator surfaces under `/dev/mail`
+hot-reload fine — only the storybook live-route needs the clean boot.
+
 ---
 
 The demo lives in `reference/demo_app`. Its DOM, routes, and copy are
