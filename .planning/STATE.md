@@ -2,16 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
-status: verifying
-stopped_at: Phase 122 context gathered (assumptions mode + 3-area research)
-last_updated: "2026-06-28T17:50:59.472Z"
-last_activity: 2026-06-28 — Phase 121 complete, transitioned to Phase 122
+current_phase: 122
+current_phase_name: Preview surface redesign
+status: executing
+stopped_at: Phase 122 UI-SPEC approved
+last_updated: "2026-06-28T18:55:39.439Z"
+last_activity: 2026-06-28
+last_activity_desc: Phase 121 complete, transitioned to Phase 122
 progress:
-  total_phases: 9
-  completed_phases: 6
-  total_plans: 17
-  completed_plans: 17
-  percent: 67
+  total_phases: 7
+  completed_phases: 4
+  total_plans: 11
+  completed_plans: 11
+  percent: 57
 ---
 
 # Project State
@@ -27,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 122 — Preview surface redesign
 Plan: Not started
-Status: Phase complete — ready for verification
+Status: Ready to execute
 Last activity: 2026-06-28 — Phase 121 complete, transitioned to Phase 122
 
 ## v1.14 Milestone Intent
@@ -398,9 +401,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T17:50:59.461Z
-**Stopped at:** Phase 122 context gathered (assumptions mode + 3-area research)
-**Resume file:** .planning/phases/122-preview-surface-redesign/122-CONTEXT.md
+**Last session:** 2026-06-28T18:34:28.418Z
+**Stopped at:** Phase 122 UI-SPEC approved
+**Resume file:** .planning/phases/122-preview-surface-redesign/122-UI-SPEC.md
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in

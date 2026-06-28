@@ -207,9 +207,18 @@ email's independent theme toggle intact.
      targets, labeled controls); microcopy is on-brand and recovery-oriented; motion is
      Emil-Kowalski-grade within the v1.13 MOTION locks; all inherited gates stay green.
 **Plans**: 3 plans
+**Wave 1**
+
 - [ ] 122-01-PLAN.md — Dual-theme toggle a11y: adopt theme_picker for admin chrome routed through the frame-aware preview_theme_path (D-05 load-bearing invariant), harden the backdrop button, toggle-a11y e2e (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 122-02-PLAN.md — Microcopy + a11y + dead-code: brandbook onboarding (generator primary), recovery-oriented error card with inline `<pre>`, error-transition focus/announce, dead dark_chrome removal, token normalization + paired voice/e2e updates (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 122-03-PLAN.md — Persona re-shoot (no new cells / D-17 fallback) + asset-bundle-untouched + inherited floor green only-forward (wave 3)
+
 **UI hint**: yes
 
 ### Phase 123: Cross-surface coherence + ratchet re-arm
