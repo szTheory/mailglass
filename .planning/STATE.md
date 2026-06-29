@@ -4,11 +4,11 @@ milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
 current_phase: 124
 current_phase_name: Release cut + milestone closeout
-status: executing
-stopped_at: Phase 124 context gathered (assumptions mode)
-last_updated: "2026-06-29T16:55:45.709Z"
+status: paused
+stopped_at: Phase 124 release PAUSED at publish gate — EEF dep-security advisory wave blocks publish
+last_updated: "2026-06-29T23:30:00.000Z"
 last_activity: 2026-06-29
-last_activity_desc: Phase 124 planning complete
+last_activity_desc: "Phase 124 release paused: PR #97 merged + tagged (f0c84ec0), NOTHING published; blocked on a coordinated EEF dep-security advisory wave (cowlib/cowboy/postgrex/phoenix/mint/req/decimal). See .planning/threads/v1.14-release-paused-dep-security-wave.md"
 progress:
   total_phases: 9
   completed_phases: 8
@@ -28,10 +28,11 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 ## Current Position
 
-Phase: 124 — Release cut + milestone closeout
-Plan: not yet planned (CONTEXT captured)
-Status: Phase 124 context gathered (assumptions mode) — ready for /gsd-plan-phase 124
-Last activity: 2026-06-29 — Phase 124 planning complete
+Phase: 124 — Release cut + milestone closeout — **PAUSED at publish gate**
+Plan: 124-01 (Waves 0–2 done; Waves 3–5 pending release recovery)
+Status: PR #97 MERGED (squash `f0c84ec0` chore: release main), 3 release tags created (mailglass-v1.10.0 / mailglass_admin-v1.10.0 / mailglass_inbound-v1.5.2), **NOTHING published to Hex** — all 3 publish-hex runs blocked at prepublish-summary by a coordinated EEF dep-security advisory wave (cowlib, cowboy, postgrex, phoenix, mint, req, decimal). No irreversibility.
+Next action: dedicated dependency-security pass (bump 7 flagged deps to patched versions across the 3 locks, verify, get hex.audit clean), then recover the release (move tags to fixed SHA + re-dispatch publish-hex) and resume Wave 3. Full handoff: `.planning/threads/v1.14-release-paused-dep-security-wave.md`.
+Last activity: 2026-06-29 — Phase 124 release paused at publish gate
 
 ## v1.14 Milestone Intent
 
