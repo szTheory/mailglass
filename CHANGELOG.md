@@ -14,6 +14,20 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.10.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.9.0...mailglass-v1.10.0) (2026-06-29)
+
+
+### Features
+
+* **118-01:** author foundations + primitives story inventory (STORY-01) ([6e34470](https://github.com/szTheory/mailglass/commit/6e344707d83d875227dee0eec7c872f81cb0056e))
+* **118-01:** mount dev-only phoenix_storybook in the demo app (D-06/D-07) ([2667c55](https://github.com/szTheory/mailglass/commit/2667c5546cd0fa3bdbd41d541945fc33524ebd1f))
+* **118-03:** add persona-critic screenshot seam reusing existing Playwright infra ([e596bf9](https://github.com/szTheory/mailglass/commit/e596bf9c06e3d1b4c6e0062d547f93f2d0e65360))
+
+
+### Bug Fixes
+
+* **deps:** bump plug to 1.19.3 for CVE-2026-54892 (HIGH) ([fc17fdf](https://github.com/szTheory/mailglass/commit/fc17fdfd05f2080301986fec14b1b26671ce09d4))
+
 ## [1.9.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.8.0...mailglass-v1.9.0) (2026-06-26)
 
 

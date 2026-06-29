@@ -5,6 +5,14 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.5.1...mailglass_inbound-v1.5.2) (2026-06-29)
+
+
+### Bug Fixes
+
+* **deps:** bump plug to 1.19.3 for CVE-2026-54892 (HIGH) ([fc17fdf](https://github.com/szTheory/mailglass/commit/fc17fdfd05f2080301986fec14b1b26671ce09d4))
+* **inbound:** re-pin to mailglass == 1.10.0 ([8c9d1ff](https://github.com/szTheory/mailglass/commit/8c9d1ffc4bf7a9d6bad746705634515b1d984d80))
+
 ## [1.5.1](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.5.0...mailglass_inbound-v1.5.1) (2026-06-26)
 
 
