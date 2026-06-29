@@ -345,7 +345,7 @@ defmodule MailglassAdmin.PreviewLive do
                     type="button"
                     data-testid="preview-frame-theme-toggle"
                     phx-click="toggle_preview_frame_theme"
-                    aria-pressed={@preview_frame_dark_chrome}
+                    aria-pressed={if @preview_frame_dark_chrome, do: "true", else: "false"}
                     aria-label={
                       if @preview_frame_dark_chrome,
                         do: "Switch the email preview backdrop to light",

@@ -37,8 +37,15 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
     >
       <div class="mb-md flex flex-wrap items-center justify-between gap-sm">
         <h3 class="text-body font-bold text-base-content">Raw provider source</h3>
-        <div :if={@evidence && @reveal_state != :revealed} class="flex flex-wrap items-center gap-sm">
-          <span class="badge badge-outline text-label">Raw source locked</span>
+        <%!-- True ARIA disclosure (D-11): the reveal trigger PERSISTS across the
+              redacted -> revealed transition, toggling aria-expanded rather than
+              being swapped out. aria-controls points at the raw region it governs;
+              the re-redact control inside the revealed payload collapses it back.
+              The "Raw source locked" badge + PII caption only show while collapsed. --%>
+        <div :if={@evidence} class="flex flex-wrap items-center gap-sm">
+          <span :if={@reveal_state != :revealed} class="badge badge-outline text-label">
+            Raw source locked
+          </span>
           <div class="flex flex-col items-end gap-2xs">
             <button
               id="inbound-evidence-reveal-btn"
@@ -49,9 +56,11 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
               aria-controls="inbound-evidence-raw"
               class="mg-focus-ring btn btn-ghost min-h-11 px-md"
             >
-              Reveal raw source
+              {if @reveal_state == :revealed, do: "Raw source revealed", else: "Reveal raw source"}
             </button>
-            <span class="text-label text-secondary">Contains unredacted PII.</span>
+            <span :if={@reveal_state != :revealed} class="text-label text-secondary">
+              Contains unredacted PII.
+            </span>
           </div>
         </div>
       </div>
