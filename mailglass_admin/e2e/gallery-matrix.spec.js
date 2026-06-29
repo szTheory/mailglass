@@ -75,33 +75,6 @@ function themeWrapper(page, cellTestId, theme) {
 async function assertNoHorizontalOverflow(locator, label) {
   await expect(locator, `${label} visible`).toBeVisible();
   const overflow = await locator.evaluate(el => el.scrollWidth - el.clientWidth);
-  if (overflow > 1) {
-    // TEMP DIAGNOSTIC (gallery-evidence_card-revealed @768 CI-only 5px overflow):
-    // identify which descendant boxes extend past the container's right edge.
-    const culprits = await locator.evaluate(el => {
-      const base = el.getBoundingClientRect();
-      const out = [];
-      el.querySelectorAll("*").forEach(node => {
-        const r = node.getBoundingClientRect();
-        const over = Math.round(r.right - base.right);
-        if (over > 1) {
-          out.push({
-            over,
-            tag: node.tagName.toLowerCase(),
-            testid: node.getAttribute("data-testid") || null,
-            cls: (node.getAttribute("class") || "").slice(0, 90),
-            w: Math.round(r.width),
-            scrollW: node.scrollWidth,
-            clientW: node.clientWidth
-          });
-        }
-      });
-      out.sort((a, b) => b.over - a.over);
-      return out.slice(0, 8);
-    });
-    // eslint-disable-next-line no-console
-    console.log(`[OVERFLOW-DIAG] ${label} overflow=${overflow}px culprits=` + JSON.stringify(culprits));
-  }
   expect(overflow, `${label} horizontal overflow (scrollWidth - clientWidth)`).toBeLessThanOrEqual(1);
 }
 

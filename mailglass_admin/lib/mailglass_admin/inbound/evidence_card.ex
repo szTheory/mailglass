@@ -112,14 +112,14 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
                   type="button"
                   phx-click="re_redact_raw"
                   data-testid="inbound-evidence-re-redact"
-                  class="mg-focus-ring btn btn-ghost min-h-11 px-md"
+                  class="mg-focus-ring btn btn-ghost min-h-11 px-sm"
                 >
                   Re-redact raw source
                 </button>
               </div>
               <pre
                 data-testid="inbound-evidence-raw"
-                class="mono max-h-80 w-full min-w-0 overflow-auto whitespace-pre-wrap break-all rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
+                class="mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
               ><%= raw_payload_text(@evidence) %></pre>
             </div>
           <% :denied -> %>
