@@ -153,7 +153,7 @@ defmodule MailglassAdmin.MixProject do
   # empirically during the v0.1.1 cycle.)
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 1.9.0"}
+      {:mailglass, "== 1.10.0"}
     else
       {:mailglass, path: "..", override: true}
     end
