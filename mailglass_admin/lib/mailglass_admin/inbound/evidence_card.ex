@@ -119,7 +119,7 @@ defmodule MailglassAdmin.Inbound.EvidenceCard do
               </div>
               <pre
                 data-testid="inbound-evidence-raw"
-                class="mono max-h-80 overflow-auto rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
+                class="mono max-h-80 w-full min-w-0 overflow-auto whitespace-pre-wrap break-all rounded-box border border-base-300 bg-base-100 p-sm text-label text-base-content"
               ><%= raw_payload_text(@evidence) %></pre>
             </div>
           <% :denied -> %>
