@@ -92,8 +92,14 @@ function noMatchRow(page) {
 
 async function openOperatorReplayModal(page) {
   await openOperator(page);
+  // The Confirm control only renders when replay is :exact (or :ambiguous with a
+  // selected target) — confirm_enabled?/2 in replay_modal.ex. Row 0 in the browser
+  // seed is non-replayable (:unavailable), so it yields a modal WITHOUT a Confirm
+  // button. Select the exact-replay delivery (index 3, per operator.spec.js's
+  // delivery seed ordering) so #operator-replay-confirm is present for the
+  // focus-trap / double-submit assertions.
   // visible() resolves the card row at <768px and the table row at >=768px.
-  await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
+  await page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3).click();
   await expect(page.getByTestId("operator-detail-column")).toBeVisible();
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");

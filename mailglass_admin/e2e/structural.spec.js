@@ -1022,8 +1022,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByTestId("operator-empty-reset")).toBeVisible();
 
       await page.goto(`/ops/mail?tenant_id=browser-empty&view=deliveries`);
-      // Phase 113: truly-empty now renders via data_state/1.
-      const trulyEmpty = page.getByTestId("operator-deliveries-list-card").getByTestId("data-state-empty");
+      // Phase 120 (D-08): genuine no-data renders the single calm pane
+      // (operator-deliveries-empty-pane), NOT the master-detail list card. The
+      // data_state/1 :empty render still lives inside that pane.
+      const trulyEmpty = page.getByTestId("operator-deliveries-empty-pane").getByTestId("data-state-empty");
       await expect(trulyEmpty).toBeVisible();
       await expect(page.getByTestId("operator-empty-reset")).toHaveCount(0);
 
@@ -1540,10 +1542,19 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     }) => {
       await openPreviewScenario(page, "theme=light");
 
+      // The theme_picker segment hides its native radio (opacity-0 overlay) and
+      // draws the visible >=2px focus ring on the wrapping <label> via
+      // .mg-focus-ring-within:has(> input:focus-visible). Focus the input but
+      // measure the indicator on its label wrapper (the helper's documented
+      // indicatorLocator contract) — the input itself only carries the UA 1px outline.
+      const adminThemeRadio = page
+        .getByTestId("preview-header-controls")
+        .locator('input[name="preview_admin_theme"][value="dark"]');
       await assertFocusAppearanceAndNotObscured(
         page,
-        page.getByTestId("preview-header-controls").locator('input[name="preview_admin_theme"][value="dark"]'),
-        "preview admin theme focus"
+        adminThemeRadio,
+        "preview admin theme focus",
+        { indicatorLocator: adminThemeRadio.locator("xpath=ancestor::label[1]") }
       );
       await assertFocusAppearanceAndNotObscured(
         page,
@@ -2916,8 +2927,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await loginOperator(page, `/ops/mail?tenant_id=browser-empty`, "operator-1", "browser-empty");
       await page.goto(`/ops/mail?tenant_id=browser-empty&view=deliveries`);
 
-      // The no-data empty state renders via data_state/1 inside the list card.
-      const emptyState = page.getByTestId("operator-deliveries-list-card").getByTestId("data-state-empty");
+      // Phase 120 (D-08): genuine no-data renders the single calm pane
+      // (operator-deliveries-empty-pane); the data_state/1 :empty render lives there.
+      const emptyState = page.getByTestId("operator-deliveries-empty-pane").getByTestId("data-state-empty");
       await expect(emptyState).toBeVisible();
 
       // Enumerate every element in the empty-state subtree that carries a non-"all"
