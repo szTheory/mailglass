@@ -270,7 +270,9 @@ Hex resolution + consumer + post-publish smoke, and audit + archive the mileston
   2. The milestone is audited (`status: passed`, every v1.14 requirement satisfied) and archived
      (`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; MILESTONES/PROJECT/ROADMAP/STATE
      evolved; tagged `v1.14`).
-**Plans**: TBD
+**Plans**: 1 plan
+
+- [ ] 124-01-PLAN.md — 6-wave linked-version release ceremony (rebase-reconcile origin + ff-push, fix(inbound): re-pin == 1.10.0, verify regenerated RP PR 1.10.0/1.10.0/1.5.2, maintainer go/no-go, Hex confirm, consumer + post-publish smoke) + milestone audit/archive/tag v1.14 (REL-01, REL-02)
 
 ## Progress
 
