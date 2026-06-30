@@ -59,13 +59,24 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
     # priv/repo/migrations files) through Ecto.Migrator, exactly as an
     # adopter's generated wrapper migration runs it, threading the isolated
     # prefix through every V-step.
+    #
+    # A UNIQUE migration version per setup is required: `Ecto.Migrator.up`
+    # records the version in `schema_migrations` and treats a re-used version
+    # as `:already_up` (skipping the run). Each test gets a fresh version so
+    # the dispatcher actually executes; on_exit removes the row so no residue
+    # leaks into the shared `schema_migrations` table.
+    version = System.unique_integer([:positive, :monotonic]) + 90_000_000_000_000
+
     {:ok, _, _} =
       Ecto.Migrator.with_repo(TestRepo, fn repo ->
-        Ecto.Migrator.up(repo, 99_999_999_999_999, ShippedWrapperMigration, log: false)
+        Ecto.Migrator.up(repo, version, ShippedWrapperMigration, log: false)
       end)
 
     on_exit(fn ->
       {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
+      {:ok, _} =
+        TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
+
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
