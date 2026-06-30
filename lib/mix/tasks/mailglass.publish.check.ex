@@ -43,6 +43,25 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   use Mix.Task
 
+  # Accepted hex.audit advisories — advisory IDs we deliberately allow past the
+  # Step-13 gate because NO patched version exists in ANY release of the affected
+  # package (OSV reports the advisory as "introduced <ver>" with no `fixed` event)
+  # AND the dep is a transitive ecosystem fixture we cannot drop. Every OTHER
+  # advisory (anything with an available fix) still hard-blocks delivery. Keyed by
+  # the primary EEF-CVE id reported on the hex.audit finding line; revisit and
+  # remove each entry the moment upstream ships a fix.
+  #
+  # cowlib (transitive via cowboy/plug_cowboy/phoenix; unavoidable for any web
+  # server) — both introduced in 2.9.0, unfixed through the latest 2.17.1:
+  #   * EEF-CVE-2026-43966 (MEDIUM) — HTTP Response Splitting via non-VCHAR bytes
+  #   * EEF-CVE-2026-43969 (LOW)    — Cookie Request Header Injection
+  # Accepted 2026-06-30 for the v1.14 release; see
+  # .planning/threads/v1.14-release-paused-dep-security-wave.md.
+  @accepted_advisories %{
+    "EEF-CVE-2026-43966" => "cowlib HTTP Response Splitting (MEDIUM) — no upstream fix as of 2.17.1",
+    "EEF-CVE-2026-43969" => "cowlib Cookie Request Header Injection (LOW) — no upstream fix as of 2.17.1"
+  }
+
   @impl Mix.Task
   def run(argv) do
     {opts, rest, invalid} = OptionParser.parse(argv, strict: [package: :string, keep: :boolean])
@@ -1015,13 +1034,62 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       )
 
     if status != 0 do
-      fail_step(
-        "run hex.audit",
-        "Delivery blocked: mix hex.audit reported issues for #{ctx.package}. #{String.trim(output)}"
-      )
-    end
+      case unaccepted_audit_findings(output) do
+        [] ->
+          # hex.audit exited non-zero, but every finding is in @accepted_advisories
+          # (unfixable, no upstream patch). Allow delivery; record the acceptance.
+          accepted = @accepted_advisories |> Map.values() |> Enum.join("; ")
 
-    Map.put(ctx, :audit_output, output)
+          Map.put(
+            ctx,
+            :audit_output,
+            String.trim(output) <>
+              "\n\n[mailglass.publish.check] hex.audit findings are all in the accepted-advisories allowlist " <>
+              "(no upstream fix available) — delivery allowed: #{accepted}"
+          )
+
+        unaccepted ->
+          fail_step(
+            "run hex.audit",
+            "Delivery blocked: mix hex.audit reported non-accepted issues for #{ctx.package} " <>
+              "(#{Enum.join(unaccepted, ", ")}). A fix is available — bump the dep. Full output:\n#{String.trim(output)}"
+          )
+      end
+    else
+      Map.put(ctx, :audit_output, output)
+    end
+  end
+
+  # Parse `mix hex.audit` output and return the list of findings that are NOT in
+  # @accepted_advisories. Retired packages are NEVER accepted (a retired package
+  # must be replaced), so their presence always yields a non-empty result.
+  # Advisory finding lines look like: `  <pkg> <version> - <ADVISORY_ID> (<SEV>)`.
+  # Public (with @doc false) only so the security-critical allowlist behaviour is
+  # unit-testable; not part of the task's user-facing contract.
+  @doc false
+  def unaccepted_audit_findings(output) do
+    lines = String.split(output, "\n")
+
+    retired =
+      if Enum.any?(lines, &(&1 =~ ~r/retired/i)) and
+           not Enum.any?(lines, &(&1 =~ ~r/No retired packages found/i)) do
+        ["retired package(s) present"]
+      else
+        []
+      end
+
+    advisories =
+      lines
+      |> Enum.flat_map(fn line ->
+        case Regex.run(~r/^\s+(\S+)\s+\S+\s+-\s+(\S+)\s+\(/, line) do
+          [_, pkg, id] -> [{pkg, id}]
+          _ -> []
+        end
+      end)
+      |> Enum.reject(fn {_pkg, id} -> Map.has_key?(@accepted_advisories, id) end)
+      |> Enum.map(fn {pkg, id} -> "#{pkg} #{id}" end)
+
+    retired ++ advisories
   end
 
   defp capture_outdated(ctx) do
