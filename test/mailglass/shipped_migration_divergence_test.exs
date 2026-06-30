@@ -74,6 +74,7 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
 
     on_exit(fn ->
       {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
+
       {:ok, _} =
         TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
 
