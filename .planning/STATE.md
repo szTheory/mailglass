@@ -403,7 +403,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Pending Todos
 
-- Refresh outbound admin UI look and feel (`.planning/todos/pending/2026-06-13-refresh-outbound-admin-ui-look-and-feel.md`) — follow-up design-system milestone candidate from Phase 92 human UAT.
+- **Remove the cowlib advisory allowlist when upstream fixes** (`.planning/todos/pending/2026-06-30-remove-cowlib-advisory-allowlist-when-upstream-fixes.md`) — v1.14 added a narrow temporary allowlist in `publish.check` for 2 unfixable cowlib advisories (EEF-CVE-2026-43966/43969). Maintenance-tier `/gsd-quick` when cowlib ships a patch.
+- **Run the UI browser/persona gate during phases, not only at release** (`.planning/backlog/ui-browser-gate-during-phases-not-only-at-release.md`) — v1.14 post-mortem: deferred phase verification let 7 browser-gate regressions reach the release ceremony. Fold into the next admin-UI milestone's method; surface via `/gsd-review-backlog`.
+- ~~Refresh outbound admin UI look and feel~~ — superseded by v1.11's fractal three-surface uplift + v1.14 operator IA redesign (resolved; the 2026-06-13 todo file is stale).
 
 ## Pre-existing Cleanup Backlog (Not v1.10 Scope)
 
