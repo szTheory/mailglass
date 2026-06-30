@@ -1,7 +1,7 @@
 defmodule MailglassInbound.MixProject do
   use Mix.Project
 
-  @version "1.5.2"
+  @version "1.5.3"
   @source_url "https://github.com/szTheory/mailglass"
   @description "Inbound routing contract package for mailglass"
 
