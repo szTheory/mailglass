@@ -4,6 +4,27 @@
 
 ---
 
+## Milestone: v1.14 — Operator IA & Lived-Experience Redesign
+
+**Shipped 2026-06-30** — 7 phases (118–124), 15 requirements, audit `status: passed`.
+**Linked-version release:** mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3, inbound pinned `{:mailglass, "== 1.10.1"}`.
+
+**What worked:**
+- **Method inversion delivered.** Top-down JTBD/IA-led redesign + adversarial persona-critic loop caught taste/redundancy/IA problems that bottom-up structural gates can't (false-active nav, redundant overview cards, homepage-that-points-elsewhere).
+- **Surface-by-surface, biggest-impact-first** ordering with each surface inheriting the prior's cleaned-up patterns; full pillar re-score + judgment-gate arming consolidated into Phase 123.
+- **The release ceremony's fix-forward discipline held** under a remarkable pile-up of surprises (below), shipping a genuinely-green release rather than a rubber-stamped one.
+
+**Key lessons (the hard ones this cycle):**
+- **Deferred verification is a debt that comes due at the worst time.** The 128-commit body was built entirely on local `main` and never CI'd; phases 119–123 deferred browser/persona re-shoots ("demo unrunnable in-env", cached evidence). The release push was the first real CI run and surfaced **7 operator-browser-gate regressions** — 2 genuine a11y bugs (preview backdrop `aria-pressed`, inbound reveal ARIA disclosure), 3 stale specs, 1 CI-only Linux-Chromium gallery overflow. Run the real gate before claiming a surface green.
+- **Local hex can't see fresh advisories.** A coordinated EEF advisory disclosure (plug, then cowlib/cowboy/postgrex/phoenix/mint/req/decimal — ~16 CVEs) was invisible to local `publish.check` (hex v2.4.2 stale advisory DB) and only blocked on the CI/publish runner. Always validate `hex.audit` on a runner before trusting a clean local publish.check.
+- **Some advisories are unfixable.** cowlib EEF-CVE-2026-43966/43969 have no patched release and cowlib is an unavoidable transitive web-stack dep. Added a **narrow, documented, CVE-ID-specific allowlist** to `publish.check`'s hex.audit gate (every other/fixable advisory still hard-blocks; regression-tested). Revisit when cowlib ships a fix.
+- **Recover unpublished cuts as a fresh patch, not by moving tags.** The 1.10.0/1.10.0/1.5.2 cut (tags at `f0c84ec0`) never published (publish gate blocked). Rather than force-move release tags, let RP cut a clean **1.10.1/1.10.1/1.5.3** (repeat the `fix(inbound)` re-pin == 1.10.1); the unpublished 1.10.0 tags remain harmless phantoms. `mix.lock` isn't shipped, but the publish gate audits the lock *at the tag* — so the fix must be in the tagged tree.
+- **Self-approval is blocked on RP PRs** → admin-squash-merge is the path (a human-pushed squash also dodges the bot-merge `gate-ci-green` anti-recursion gap). Racing publish-hex fan-outs are idempotent noise — one run publishes all three; the losers fail on "already published."
+
+**Release outcome:** 1.10.1/1.10.1/1.5.3 live on Hex; consumer + post-publish smoke green; first linked-version cut since 1.9.0/1.9.0/1.5.1 (v1.13).
+
+---
+
 ## Milestone: v1.13 — Admin Design-System Stress Test & UX Uplift (v3)
 
 **Shipped 2026-06-21** — 9 phases (109–117), 41 requirements, audit `status: passed`.

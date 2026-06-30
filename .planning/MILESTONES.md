@@ -1,5 +1,22 @@
 # Milestones
 
+## ✅ v1.14 Operator IA & Lived-Experience Redesign (Shipped: 2026-06-30)
+
+**Phases completed:** 7 phases (118–124), 15 reqs — **mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3 live on Hex** (see `milestones/v1.14-MILESTONE-AUDIT.md`)
+
+> Top-down JTBD/IA-led operator-surface redesign with an adversarial persona-critic review loop
+> (inverts the prior bottom-up/structural-gate method), then a linked-version release. Milestone
+> audit `status: passed` — 15/15 requirements, 7/7 phases. The release ceremony required a large
+> in-flight fix-forward: the v1.14 body's first real CI run surfaced 7 operator-browser-gate
+> regressions (2 real a11y bugs + 3 stale specs + 1 CI-only gallery overflow) and a plug CVE; the
+> publish gate then surfaced a coordinated EEF dependency-security advisory wave
+> (cowlib/cowboy/postgrex/phoenix/mint/req/decimal). All fixable deps were bumped; 2 **unfixable**
+> cowlib advisories were accepted via a narrow documented allowlist in `publish.check`'s hex.audit
+> gate. The original 1.10.0/1.10.0/1.5.2 cut (tags at `f0c84ec0`) never published and recovered as a
+> patch **1.10.1/1.10.1/1.5.3**. Inbound re-pinned `{:mailglass, "== 1.10.1"}` (D-13). Full narrative:
+> `threads/v1.14-release-paused-dep-security-wave.md` + `debug/resolved/operator-browser-gate-v114.md`.
+> (Scope counted directly from phases 118–124 to avoid `milestone.complete` 999.x inflation.)
+
 ## ✅ v1.13 Admin Design-System Stress Test & UX Uplift (v3) (Shipped: 2026-06-21)
 
 **Phases completed:** 9 phases (109–117), 41 reqs — **mailglass 1.8.0 / mailglass_admin 1.8.0 / mailglass_inbound 1.5.0 live on Hex** (see `milestones/v1.13-MILESTONE-AUDIT.md`)

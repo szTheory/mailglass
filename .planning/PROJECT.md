@@ -68,7 +68,14 @@ method → persona critics, mostly autonomous with phase-boundary sign-off; (3) 
 
 ## Current State
 
-**v1.14 IN PROGRESS — Phase 122 (Preview surface redesign) complete 2026-06-28, verifier
+**v1.14 SHIPPED 2026-06-30 — mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3
+live on Hex (current live versions).** All 7 phases (118–124) complete, audit `status: passed`
+(15/15 reqs). Shipped via a linked-version cut that recovered as a patch (the 1.10.0 cut never
+published — blocked by a coordinated EEF dep-security advisory wave; see
+`milestones/v1.14-MILESTONE-AUDIT.md` + `threads/v1.14-release-paused-dep-security-wave.md`). No
+active milestone — `/gsd-new-milestone` for the next cycle. _Historical phase detail below._
+
+**v1.14 (Phase 122 mid-milestone snapshot) — Preview surface redesign complete 2026-06-28, verifier
 `passed` (PREV-01, 12/12 must-haves).** Preview's admin chrome now uses the canonical
 tri-state `Components.theme_picker` (frame-aware `set_theme` routing preserves the
 independent email-backdrop axis — the load-bearing D-05 invariant); the email-backdrop

@@ -4,17 +4,17 @@ milestone: v1.14
 milestone_name: Operator IA & Lived-Experience Redesign
 current_phase: 124
 current_phase_name: Release cut + milestone closeout
-status: paused
-stopped_at: Phase 124 release PAUSED at publish gate — EEF dep-security advisory wave blocks publish
-last_updated: "2026-06-29T23:30:00.000Z"
-last_activity: 2026-06-29
-last_activity_desc: "Phase 124 release paused: PR #97 merged + tagged (f0c84ec0), NOTHING published; blocked on a coordinated EEF dep-security advisory wave (cowlib/cowboy/postgrex/phoenix/mint/req/decimal). See .planning/threads/v1.14-release-paused-dep-security-wave.md"
+status: complete
+stopped_at: v1.14 SHIPPED — mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3 live on Hex; milestone audited + archived + tagged v1.14
+last_updated: "2026-06-30T05:00:00.000Z"
+last_activity: 2026-06-30
+last_activity_desc: "v1.14 milestone COMPLETE — recovered linked-version release shipped 1.10.1/1.10.1/1.5.3 (the 1.10.0 cut was blocked by an EEF dep-security advisory wave; bumped fixable deps + allowlisted 2 unfixable cowlib advisories). 7/7 phases, 15/15 reqs passed. No active milestone."
 progress:
-  total_phases: 9
-  completed_phases: 8
-  total_plans: 23
-  completed_plans: 23
-  percent: 89
+  total_phases: 7
+  completed_phases: 7
+  total_plans: 24
+  completed_plans: 24
+  percent: 100
 ---
 
 # Project State
@@ -24,15 +24,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 124 — release cut + milestone closeout
+**Current focus:** No active milestone — v1.14 shipped 2026-06-30. Next: `/gsd-new-milestone`.
 
 ## Current Position
 
-Phase: 124 — Release cut + milestone closeout — **PAUSED at publish gate**
-Plan: 124-01 (Waves 0–2 done; Waves 3–5 pending release recovery)
-Status: PR #97 MERGED (squash `f0c84ec0` chore: release main), 3 release tags created (mailglass-v1.10.0 / mailglass_admin-v1.10.0 / mailglass_inbound-v1.5.2), **NOTHING published to Hex** — all 3 publish-hex runs blocked at prepublish-summary by a coordinated EEF dep-security advisory wave (cowlib, cowboy, postgrex, phoenix, mint, req, decimal). No irreversibility.
-Next action: dedicated dependency-security pass (bump 7 flagged deps to patched versions across the 3 locks, verify, get hex.audit clean), then recover the release (move tags to fixed SHA + re-dispatch publish-hex) and resume Wave 3. Full handoff: `.planning/threads/v1.14-release-paused-dep-security-wave.md`.
-Last activity: 2026-06-29 — Phase 124 release paused at publish gate
+Phase: 124 — Release cut + milestone closeout — **COMPLETE** (v1.14 SHIPPED)
+Plan: 124-01 complete (all waves) + dep-security fix-forward + release recovery
+Status: **mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3 live on Hex** (Released 2026-06-30; inbound pins `== 1.10.1`). Milestone v1.14 audited (`status: passed`, 7 phases / 15 reqs), archived (`milestones/v1.14-*`), tagged `v1.14`. Consumer + post-publish smoke green. The originally-cut 1.10.0/1.10.0/1.5.2 tags (`f0c84ec0`) never published and remain as harmless phantoms — recovery shipped as a patch.
+Next action: no active milestone — run `/gsd-new-milestone` for the next cycle. (Quiet-maintenance / adopter-pull posture per D-23.)
+Last activity: 2026-06-30 — v1.14 milestone complete + closed
 
 ## v1.14 Milestone Intent
 
