@@ -123,18 +123,20 @@ defmodule MailglassInbound.MixProject do
   # previous pin and blocks dependency resolution beside the new core. A
   # `fix(inbound):` release is required either way to ship the new pin to Hex.
   #
-  # 2026-06-30: re-pin 1.10.0 -> 1.10.1 for the v1.14 release recovery. The
-  # original 1.10.0/1.10.0/1.5.2 cut (tags at f0c84ec0) NEVER published — the
-  # publish gate's hex.audit blocked on a coordinated EEF dep-security advisory
-  # wave. After bumping the flagged deps + allowlisting the 2 unfixable cowlib
-  # advisories, the recovery ships as a fresh patch 1.10.1/1.10.1/1.5.3 (the
-  # unpublished 1.10.0 tags remain as harmless phantoms). This fix(inbound) lands
-  # on origin/main BEFORE the linked release PR merges so Release Please folds a
-  # paired inbound 1.5.3 release into the SAME PR, shipping == 1.10.1 and
-  # unblocking the mailglass_admin 1.10.1 publish.
+  # 2026-06-30: re-pin 1.10.1 -> 1.10.2 for the 1.10.2 patch release. Core
+  # 1.10.2 ships the shipped-migration divergence fix (deliveries idempotency
+  # DDL via V05, #100) — without a paired inbound release the published inbound
+  # 1.5.3 keeps pinning == 1.10.1, holding inbound adopters on the broken 1.10.1
+  # deliveries migration. This fix(inbound) lands on origin/main BEFORE the
+  # linked release PR (#101) merges so Release Please folds a paired inbound
+  # 1.5.4 release into the SAME PR, shipping == 1.10.2 and unblocking the
+  # mailglass_admin 1.10.2 publish. (The bare-main SHA carrying this re-pin is
+  # transiently contract-test-red because core @version on main is still 1.10.1
+  # until #101 merges — the intended, documented window; see caacffae for the
+  # prior 1.10.0 -> 1.10.1 precedent during the v1.14 recovery.)
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 1.10.1"}
+      {:mailglass, "== 1.10.2"}
     else
       {:mailglass, path: "..", override: true}
     end
