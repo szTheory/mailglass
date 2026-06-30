@@ -58,8 +58,10 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   # Accepted 2026-06-30 for the v1.14 release; see
   # .planning/threads/v1.14-release-paused-dep-security-wave.md.
   @accepted_advisories %{
-    "EEF-CVE-2026-43966" => "cowlib HTTP Response Splitting (MEDIUM) — no upstream fix as of 2.17.1",
-    "EEF-CVE-2026-43969" => "cowlib Cookie Request Header Injection (LOW) — no upstream fix as of 2.17.1"
+    "EEF-CVE-2026-43966" =>
+      "cowlib HTTP Response Splitting (MEDIUM) — no upstream fix as of 2.17.1",
+    "EEF-CVE-2026-43969" =>
+      "cowlib Cookie Request Header Injection (LOW) — no upstream fix as of 2.17.1"
   }
 
   @impl Mix.Task
