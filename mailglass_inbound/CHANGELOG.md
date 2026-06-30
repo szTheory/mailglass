@@ -5,6 +5,14 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.3](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.5.2...mailglass_inbound-v1.5.3) (2026-06-30)
+
+
+### Bug Fixes
+
+* **deps:** bump admin + inbound deps to clear the EEF security advisory wave ([29a6155](https://github.com/szTheory/mailglass/commit/29a6155d854f9fcf3225e2f6afc68bdc67f4c161))
+* **inbound:** re-pin to mailglass == 1.10.1 for the v1.14 release recovery ([caacffa](https://github.com/szTheory/mailglass/commit/caacffae9bfbff903951055e6b9e0d04dd7bba4b))
+
 ## [1.5.2](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.5.1...mailglass_inbound-v1.5.2) (2026-06-29)
 
 

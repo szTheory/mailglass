@@ -14,6 +14,13 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.10.1](https://github.com/szTheory/mailglass/compare/mailglass-v1.10.0...mailglass-v1.10.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* **release:** accept unfixable cowlib advisories in publish.check hex.audit gate ([8e9fbaf](https://github.com/szTheory/mailglass/commit/8e9fbaf962e68e012ef66c8f98d30a20756ce16f))
+
 ## [1.10.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.9.0...mailglass-v1.10.0) (2026-06-29)
 
 

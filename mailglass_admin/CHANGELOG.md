@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.10.1](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.10.0...mailglass_admin-v1.10.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* **deps:** bump admin + inbound deps to clear the EEF security advisory wave ([29a6155](https://github.com/szTheory/mailglass/commit/29a6155d854f9fcf3225e2f6afc68bdc67f4c161))
+
 ## [1.10.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.9.0...mailglass_admin-v1.10.0) (2026-06-29)
 
 
