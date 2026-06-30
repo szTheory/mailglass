@@ -66,8 +66,8 @@ defmodule Mailglass.MigrationTest do
                Mailglass.Migrations.Postgres.current_version()
     end
 
-    test "current version exposes V04 through the dispatcher" do
-      assert Mailglass.Migrations.Postgres.current_version() == 4
+    test "current version exposes V05 through the dispatcher" do
+      assert Mailglass.Migrations.Postgres.current_version() == 5
     end
 
     test "is idempotent — rerunning the migration is a no-op" do
