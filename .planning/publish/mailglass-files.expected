@@ -90,6 +90,7 @@ lib/mailglass/migrations/postgres/v01.ex
 lib/mailglass/migrations/postgres/v02.ex
 lib/mailglass/migrations/postgres/v03.ex
 lib/mailglass/migrations/postgres/v04.ex
+lib/mailglass/migrations/postgres/v05.ex
 lib/mailglass/operator/deliveries.ex
 lib/mailglass/operator/replay_history.ex
 lib/mailglass/operator/replay_targets.ex
