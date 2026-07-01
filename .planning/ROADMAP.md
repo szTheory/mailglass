@@ -118,7 +118,11 @@ are re-shaped)
 
   4. `guard-release-trigger` is verified to always report (no green-but-BLOCKED regression) and
      `gate-self-test.yml`'s stale `check_name` default is corrected to `CI Green` (GATE-04).
-**Plans**: TBD (planning)
+**Plans**: 2 plans
+
+- [ ] 126-01-PLAN.md — Add the `CI Green` aggregate job (`if: always()`, `needs` = the 5 required leaves) + a hand-rolled `changes` detection gate (drops the workflow-level `paths-ignore` so `CI Green` always reports), collapse `REQUIRED_CHECKS` to `{CI Green, Guard Release Trigger}`, and extend `required_checks_test.exs` to the set-equality coverage meta-test (GATE-01, GATE-03)
+- [ ] 126-02-PLAN.md — Enforce required-lane-must-be-`success` on the publish path (`REQUIRED_LANES` set; skipped required lane blocks), fix the `gate-self-test.yml` stale `Tests (` default → `CI Green`, and add the `guard-release-trigger` always-reports invariant test (GATE-02, GATE-04)
+
 **UI hint**: no
 
 ### Phase 127: Inbound test determinism
