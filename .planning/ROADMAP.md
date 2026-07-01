@@ -141,7 +141,9 @@ step (Phase 128).
   2. `--seed 0` is deleted from `ci.yml` and the `mix ci` alias and appears nowhere; the inbound suite
      is green across 20 random-seed runs (DET-02). Any `|| mix test --failed` retry idiom is kept only
      as a time-boxed transition net with a removal date (LD-8).
-**Plans**: TBD (planning)
+**Plans**: 1 plan
+Plans:
+- [ ] 127-01-PLAN.md — Fix MailboxCase (async: false default, drop shared:), update docs, delete --seed 0 from ci.yml; prove 20-seed determinism
 **UI hint**: no
 
 ### Phase 128: `mix ci` parity completion (folds in PR #104)
