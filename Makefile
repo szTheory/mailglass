@@ -24,7 +24,7 @@ COMPOSE := docker compose -f compose.demo.yml
 HTTP    := http://localhost:$(MAILGLASS_DEMO_HTTP_PORT)
 
 .DEFAULT_GOAL := help
-.PHONY: help demo demo-down demo-clean demo-reset demo-e2e demo-logs
+.PHONY: help demo demo-down demo-clean demo-reset demo-e2e demo-logs ci ci-fast ci-browser
 
 help: ## List the demo commands
 	@printf '\nmailglass demo — run the click-around dashboard in one command.\n\n'
@@ -59,3 +59,12 @@ demo-e2e: ## Run the Playwright browser-evidence suite against the demo
 
 demo-logs: ## Follow the demo app logs
 	@$(COMPOSE) logs -f demo
+
+ci: ## Run the full local↔CI parity suite (needs Postgres + network)
+	@MAILGLASS_PATH="$$(pwd)" mix ci
+
+ci-fast: ## Fast static checks only (format + credo + compile). Pre-commit loop.
+	@mix ci.fast
+
+ci-browser: ## Opt-in admin browser gate (Node + Playwright)
+	@mix ci.browser
