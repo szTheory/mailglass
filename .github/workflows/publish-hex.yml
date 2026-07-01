@@ -195,9 +195,12 @@ jobs:
             // conclusion === 'success'. A skipped, missing, failed, or cancelled
             // required lane BLOCKS publish (GATE-02, per LD-6).
             //
-            // NOTE: this set must stay identical to ci_green.needs in ci.yml
-            // (the LD-10 shared ci_lanes seam; a future phase may hoist it to
-            // one source — Phase 128 MIXCI-03).
+            // NOTE: this set must stay identical to ci_green.needs in ci.yml.
+            // The canonical Elixir-side source is Mailglass.CILanes
+            // (test/support/ci_lanes.ex); its required_lanes/0 is verified against
+            // ci_green.needs by the GATE-03 meta-test (LD-10 shared ci_lanes seam,
+            // hoisted in Phase 128 MIXCI-03). This YAML copy remains the CI-side
+            // declaration that the meta-test checks — kept in lockstep, not deleted.
             const REQUIRED_LANES = [
               'Support Contract Core (Elixir 1.18 / OTP 27)',
               'Support Contract Admin (Elixir 1.18 / OTP 27)',

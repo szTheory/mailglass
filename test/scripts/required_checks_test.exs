@@ -12,13 +12,11 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
   ]
 
   # The canonical set of required leaf display names that ci_green.needs must cover.
-  @required_leaf_names MapSet.new([
-    "Support Contract Core (Elixir 1.18 / OTP 27)",
-    "Support Contract Admin (Elixir 1.18 / OTP 27)",
-    "Compile No Optional Deps (Elixir 1.18 / OTP 27)",
-    "Trust Lane Repo Head (Elixir 1.18 / OTP 27)",
-    "Installer Host Smoke"
-  ])
+  # Read from the single Elixir-side source (Mailglass.CILanes, test/support/ci_lanes.ex)
+  # so the required-lane identity is defined once and shared with the MIXCI-03
+  # parity-drift test (D-LD-10). test/support is in elixirc_paths(:test), so the module
+  # is compiled before this test and is available at module-attribute (compile) time.
+  @required_leaf_names MapSet.new(Mailglass.CILanes.required_lanes())
 
   test "REQUIRED_CHECKS array and print_expected_text bullets stay in sync" do
     source = File.read!(@script_path)
