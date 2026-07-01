@@ -4,21 +4,56 @@ We welcome contributions! Mailglass is developed using a phase-based roadmap fou
 
 ## Local Setup
 
+Prerequisites:
+
+- **Elixir ~> 1.18 / OTP 27+** (the supported floor).
+- **PostgreSQL** running locally (the test suite and every contract lane are
+  DB-backed). Defaults expect `postgres`/`postgres` on `localhost:5432`; override
+  with `POSTGRES_HOST` / `POSTGRES_USER` / `POSTGRES_PASSWORD`.
+- **Node 22+** — only if you run the optional admin browser gate
+  (`mix ci.browser`). It is NOT needed for a normal contribution: mailglass's
+  zero-Node guarantee is for *adopters*, and the required checks need no Node.
+
+Steps:
+
 1. Clone the repo.
 2. Install dependencies: `mix deps.get`.
-3. Setup the test database: `mix ecto.setup` (or `mix ecto.create -r Mailglass.TestRepo`).
-4. Run tests: `mix test`.
+3. Create the test databases: `mix ci.setup`
+   (creates `Mailglass.TestRepo` and the inbound test DB).
+4. Run the tests: `mix test`.
 
-To see the admin UI working against seeded data — the fastest way to iterate on
-`mailglass_admin` — run the click-around demo with Docker: `make demo` (see
-[`guides/run-the-demo.md`](guides/run-the-demo.md)).
+To click around the admin UI against seeded data — the fastest way to iterate on
+`mailglass_admin` — run the demo with Docker: `make demo`
+(see [`guides/run-the-demo.md`](guides/run-the-demo.md)).
 
 ## Development Workflow
 
 1. Create a branch.
 2. Implement your changes and add tests.
-3. Run the full verification suite: `mix verify.phase_07`.
-4. Submit a PR.
+3. **Inner loop (fast, seconds, no DB):** `mix ci.fast`
+   — runs `mix format --check-formatted`, unused-deps check,
+   `compile --warnings-as-errors` (with and without optional deps), and
+   `mix credo --strict`. Run this often.
+4. **Before you push — full local↔CI parity:** `mix ci`
+   — run from the repo root. Mirrors every required merge gate plus the standard
+   hygiene lanes across all three sibling packages: the core and admin support
+   contracts, the full core test suite, inbound tests, `mix dialyzer`,
+   `mix docs --warnings-as-errors`, `mix hex.audit`, the reference-host **trust
+   lane**, and the **installer host smoke** (which generates a throwaway Phoenix
+   app, so this step needs network access and takes a few minutes — it runs
+   last, after everything cheap has already passed).
+   Requires Postgres; the installer step also requires network access.
+5. **(Optional) Admin browser gate:** `mix ci.browser`
+   — runs the Playwright operator-UI checks. Needs Node 22+ and downloads a
+   Chromium build. This lane is advisory (it does not block merge), so skip it
+   unless you touched the admin UI.
+6. Open a PR.
+
+If a step in `mix ci` fails, it names the failing check and stops there
+(fail-fast). Fix it and re-run — `mix ci` is safe to run repeatedly.
+
+> Prefer `make`? `make ci`, `make ci-fast`, and `make ci-browser` are thin
+> wrappers around the Mix aliases above.
 
 ## Commit Guidelines
 
