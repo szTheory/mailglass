@@ -35,13 +35,16 @@ if command -v pg_isready >/dev/null 2>&1; then
   fi
 else
   # No pg_isready — fall back to a bounded TCP probe on the Postgres port.
+  # Every branch is time-bounded so a blackholed host fails fast instead of
+  # hanging on the kernel connect timeout.
   if command -v nc >/dev/null 2>&1; then
     if nc -z -w 5 "$HOST" "$PORT" >/dev/null 2>&1; then
       reachable=1
     fi
-  elif (exec 3<>"/dev/tcp/$HOST/$PORT") 2>/dev/null; then
-    reachable=1
-    exec 3>&- 3<&- 2>/dev/null || true
+  elif command -v timeout >/dev/null 2>&1; then
+    if timeout 5 bash -c "exec 3<>/dev/tcp/${HOST}/${PORT}" >/dev/null 2>&1; then
+      reachable=1
+    fi
   fi
 fi
 

@@ -50,7 +50,7 @@ defmodule MailglassInbound.MixProject do
     [
       test: [&configure_test_swoosh/1, "test"],
       # Sibling-local ci verb (uniform across packages). The inbound test step
-      # is `test --exclude property` with NO --seed 0 — Phase 127 (DET-02) made
+      # is `test --exclude property` with NO seed pin — Phase 127 (DET-02) made
       # the suite deterministic via serial MailboxCase; a seed pin regresses it.
       "ci.fast": [
         "format --check-formatted",

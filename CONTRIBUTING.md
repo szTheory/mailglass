@@ -31,7 +31,7 @@ To click around the admin UI against seeded data — the fastest way to iterate 
 1. Create a branch.
 2. Implement your changes and add tests.
 3. **Inner loop (fast, seconds, no DB):** `mix ci.fast`
-   — runs `mix format --check-formatted`, unused-deps check,
+   — runs `mix format --check-formatted`,
    `compile --warnings-as-errors` (with and without optional deps), and
    `mix credo --strict`. Run this often.
 4. **Before you push — full local↔CI parity:** `mix ci`

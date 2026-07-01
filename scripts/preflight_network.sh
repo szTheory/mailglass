@@ -34,9 +34,12 @@ elif command -v nc >/dev/null 2>&1; then
   if nc -z -w 8 "$HOST" "$PORT" >/dev/null 2>&1; then
     reachable=1
   fi
-elif (exec 3<>"/dev/tcp/$HOST/$PORT") 2>/dev/null; then
-  reachable=1
-  exec 3>&- 3<&- 2>/dev/null || true
+elif command -v timeout >/dev/null 2>&1; then
+  # Bounded raw-TCP fallback so a blackholed host fails fast rather than
+  # hanging on the kernel connect timeout.
+  if timeout 8 bash -c "exec 3<>/dev/tcp/${HOST}/${PORT}" >/dev/null 2>&1; then
+    reachable=1
+  fi
 fi
 
 if [[ "$reachable" -eq 1 ]]; then
