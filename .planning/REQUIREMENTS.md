@@ -56,10 +56,10 @@ product-behavior change, then cut a real linked Hex release that dogfoods the ha
 
 ### MIXCI — `mix ci` local↔CI parity (folds in PR #104 → Phase 128)
 
-- [ ] **MIXCI-01**: `mix ci` equals the mergeable surface — it runs all 5 required gates including
+- [x] **MIXCI-01**: `mix ci` equals the mergeable surface — it runs all 5 required gates including
   Installer Host Smoke and the reference-host trust lane (LD-10).
 
-- [ ] **MIXCI-02**: The tiered aliases exist and are env-pinned — `mix ci.fast` (seconds, no DB),
+- [x] **MIXCI-02**: The tiered aliases exist and are env-pinned — `mix ci.fast` (seconds, no DB),
   `mix ci` (full parity), `mix ci.browser` (opt-in Node) — with sibling-local `ci`/`ci.fast` aliases
   and a discoverable `make ci`/`make help` wrapper.
 
@@ -67,10 +67,10 @@ product-behavior change, then cut a real linked Hex release that dogfoods the ha
   required+advisory CI lane by identity + flag-set (shared source with GATE-03), failing loudly on
   drift (LD-10).
 
-- [ ] **MIXCI-04**: `mix ci`/`ci.setup` preflight-probes Postgres (and the installer step probes
+- [x] **MIXCI-04**: `mix ci`/`ci.setup` preflight-probes Postgres (and the installer step probes
   network) and prints a brand-voice actionable message on absence, never a raw connection crash (LD-12).
 
-- [ ] **MIXCI-05**: `verify.*` are designated internal composition targets, the deprecated
+- [x] **MIXCI-05**: `verify.*` are designated internal composition targets, the deprecated
   `verify.phase_NN` pass-throughs are removed, and CONTRIBUTING points at `mix ci`/`mix ci.fast`
   (only once MIXCI-01 holds) (LD-12).
 

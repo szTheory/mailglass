@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-status: ready_to_plan
-stopped_at: Phase 127 complete (1/1) — ready to plan Phase 128
-last_updated: 2026-07-01T21:00:00.000Z
-last_activity: 2026-07-01 -- Phase 127 (inbound-test-determinism) complete, verified 5/5
+status: executing
+stopped_at: Completed 128-01-PLAN.md
+last_updated: "2026-07-01T21:02:19.148Z"
+last_activity: 2026-07-01
 progress:
   total_phases: 16
-  completed_phases: 4
-  total_plans: 10
-  completed_plans: 10
-  percent: 25
+  completed_phases: 5
+  total_plans: 12
+  completed_plans: 11
+  percent: 31
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 128 — `mix ci` parity completion (consumes the Phase 127 `--seed 0` deletion)
+**Current focus:** Phase 128 — mix-ci-parity-completion-folds-in-pr-104
 
 ## Current Position
 
-Phase: 128
-Plan: Not started
-Status: Ready to plan
+Phase: 128 (mix-ci-parity-completion-folds-in-pr-104) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-07-01
 
 ## v1.14 Milestone Intent
@@ -253,6 +253,8 @@ plan directly from the v1.13 precedent.
 - [Phase ?]: COH-01 coherence proof closed: DEFECT-REGISTER all 10 findings RESOLVED/HELD + Phase 123 cross-surface coherence sign-off (five hats + three personas verbatim, green-floor citation, no new automated coherence gate, D-06 single-ledger). Persona re-shoot grounded in existing .cache evidence + green floor — demo unrunnable in-env per plan authorization.
 - [Phase ?]: ci_green aggregate job (if: always(), 5 required leaf needs) is sole required branch-protection context alongside Guard Release Trigger
 - [Phase ?]: changes detection gate (hand-rolled git diff) replaces workflow-level paths-ignore; workflow always triggers, leaves skip individually
+- [Phase 128]: mix ci inbound test step uses 'mix test --exclude property' with NO --seed 0 — Consumes Phase 127 DET-02 determinism; a seed pin would regress it
+- [Phase 128]: deps.unlock --check-unused kept out of ci.fast — Lock carries orphaned transitive entries (castore, unicode_util_compat) that would red the check; cleaning them is a deferred follow-up (matches PR #104)
 
 ## Quick Tasks Completed
 
@@ -388,6 +390,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 123 P03 | 8min | 2 tasks | 1 files |
 | Phase 125 P01 | 1200 | 3 tasks | 17 files |
 | Phase 126 P01 | 8 | 3 tasks | 3 files |
+| Phase 128 P01 | 4 min | 5 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -414,8 +417,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-01T18:51:25.247Z
-**Stopped at:** Completed 123-03-PLAN.md (Phase 123 complete)
+**Last session:** 2026-07-01T21:02:18.784Z
+**Stopped at:** Completed 128-01-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
