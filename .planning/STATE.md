@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-current_phase: 125
-current_phase_name: sibling-pin-loosening-keystone-atomic
-status: verifying
-stopped_at: Completed 123-03-PLAN.md (Phase 123 complete)
-last_updated: "2026-07-01T17:49:40.542Z"
+current_phase: 126
+current_phase_name: ci-green-fan-in-gate-branch-protection-collapse
+status: ready_to_plan
+stopped_at: Phase 125 complete (1/1), verified — ready to plan Phase 126
+last_updated: 2026-07-01T18:01:05.561Z
 last_activity: 2026-07-01
-last_activity_desc: Phase 125 execution started
+last_activity_desc: Phase 125 (sibling-pin loosening keystone) executed + verified
 progress:
   total_phases: 7
   completed_phases: 1
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 125 — sibling-pin-loosening-keystone-atomic
+**Current focus:** Phase 126 — CI Green fan-in gate + branch-protection collapse
 
 ## Current Position
 
-Phase: 125 (sibling-pin-loosening-keystone-atomic) — EXECUTING
-Plan: 1 of 1
-Status: Phase complete — ready for verification
-Last activity: 2026-07-01 -- Phase 125 execution started
+Phase: 126
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-07-01
 
 ## v1.14 Milestone Intent
 
