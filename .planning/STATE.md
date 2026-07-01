@@ -2,16 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-status: executing
-stopped_at: Completed 128-01-PLAN.md
-last_updated: "2026-07-01T21:02:19.148Z"
+current_phase: 128
+current_phase_name: mix-ci-parity-completion-folds-in-pr-104
+status: verifying
+stopped_at: Completed 128-02-PLAN.md
+last_updated: "2026-07-01T21:10:09.138Z"
 last_activity: 2026-07-01
 progress:
-  total_phases: 16
-  completed_phases: 5
-  total_plans: 12
-  completed_plans: 11
-  percent: 31
+  total_phases: 7
+  completed_phases: 4
+  total_plans: 6
+  completed_plans: 6
+  percent: 57
 ---
 
 # Project State
@@ -27,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 128 (mix-ci-parity-completion-folds-in-pr-104) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-01
 
 ## v1.14 Milestone Intent
@@ -255,6 +257,7 @@ plan directly from the v1.13 precedent.
 - [Phase ?]: changes detection gate (hand-rolled git diff) replaces workflow-level paths-ignore; workflow always triggers, leaves skip individually
 - [Phase 128]: mix ci inbound test step uses 'mix test --exclude property' with NO --seed 0 — Consumes Phase 127 DET-02 determinism; a seed pin would regress it
 - [Phase 128]: deps.unlock --check-unused kept out of ci.fast — Lock carries orphaned transitive entries (castore, unicode_util_compat) that would red the check; cleaning them is a deferred follow-up (matches PR #104)
+- [Phase 128]: Mailglass.CILanes is the single Elixir-side source for required+advisory CI lane identity; GATE-03 and the MIXCI-03 parity-drift test read it, and the parity test carries a durable no-seed assertion making DET-02 permanent. — One-definition-of-green (D-LD-10): the two CI surfaces (human aliases vs per-job matrix) stay coherent via a shared source + a fail-loud drift test, not duplicated literals.
 
 ## Quick Tasks Completed
 
@@ -391,6 +394,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 125 P01 | 1200 | 3 tasks | 17 files |
 | Phase 126 P01 | 8 | 3 tasks | 3 files |
 | Phase 128 P01 | 4 min | 5 tasks | 7 files |
+| Phase 128 P02 | 4 min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -417,8 +421,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-01T21:02:18.784Z
-**Stopped at:** Completed 128-01-PLAN.md
+**Last session:** 2026-07-01T21:10:01.593Z
+**Stopped at:** Completed 128-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

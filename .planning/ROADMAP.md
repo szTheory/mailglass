@@ -143,7 +143,9 @@ step (Phase 128).
      as a time-boxed transition net with a removal date (LD-8).
 **Plans**: 1 plan
 Plans:
+
 - [x] 127-01-PLAN.md — Fix MailboxCase (async: false default, drop shared:), update docs, delete --seed 0 from ci.yml; prove 20-seed determinism
+
 **UI hint**: no
 
 ### Phase 128: `mix ci` parity completion (folds in PR #104)
@@ -174,8 +176,10 @@ open PR #104 DX slice.
      pass-throughs are removed, and CONTRIBUTING points at `mix ci`/`mix ci.fast` (only once MIXCI-01
      holds), with no `verify.phase_07` 404 (LD-12, MIXCI-05).
 **Plans**: 2 plans
+
 - [x] 128-01-PLAN.md — ci alias family (ci.fast/ci/ci.setup/ci.browser) + sibling aliases + preflight guards + make ci + CONTRIBUTING + remove deprecated pass-throughs (MIXCI-01/02/04/05)
-- [ ] 128-02-PLAN.md — shared ci_lanes source + GATE-03 rewire + MIXCI-03 parity-drift test (MIXCI-03)
+- [x] 128-02-PLAN.md — shared ci_lanes source + GATE-03 rewire + MIXCI-03 parity-drift test (MIXCI-03)
+
 **UI hint**: no
 
 ### Phase 129: Cache-key + PLT correctness

@@ -63,7 +63,7 @@ product-behavior change, then cut a real linked Hex release that dogfoods the ha
   `mix ci` (full parity), `mix ci.browser` (opt-in Node) — with sibling-local `ci`/`ci.fast` aliases
   and a discoverable `make ci`/`make help` wrapper.
 
-- [ ] **MIXCI-03**: A manifest-membership parity-drift test asserts `ci` ∪ `ci.browser` covers every
+- [x] **MIXCI-03**: A manifest-membership parity-drift test asserts `ci` ∪ `ci.browser` covers every
   required+advisory CI lane by identity + flag-set (shared source with GATE-03), failing loudly on
   drift (LD-10).
 
