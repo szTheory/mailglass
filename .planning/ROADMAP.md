@@ -199,7 +199,9 @@ Dialyzer can move toward the required set.
   2. The PLT cache uses Bandit-style self-healing eviction — a corrupted/stale PLT is evicted and
      rebuilt by the workflow; only after this may Dialyzer be promoted toward the required set (LD-7,
      CACHE-02).
-**Plans**: TBD (planning)
+**Plans**: 2 plans
+- [ ] 129-01-PLAN.md — `.tool-versions` single source + toolchain-hashed cache keys / version-file setup-beam across 5 canonical workflows (CACHE-01, wave 1)
+- [ ] 129-02-PLAN.md — Bandit-style PLT self-healing eviction + toolchain-scoped PLT cache in the ci.yml dialyzer job (CACHE-02, wave 2)
 **UI hint**: no
 
 ### Phase 130: Supply chain + workflow hygiene
