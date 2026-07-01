@@ -83,7 +83,11 @@ defmodule Mailglass.StabilityContractTest do
       expected = File.read!(".planning/publish/mailglass_inbound-files.expected")
       summary = File.read!(".planning/publish/mailglass_inbound-publish-summary.json")
 
-      assert workflow =~ "\"mailglass_inbound/mix.exs:mailglass\""
+      # The workflow syncs the inbound README `~>` pin and the inbound
+      # publish-summary (the `== X.Y.Z` PINS-array sed step was removed in
+      # v1.15 Phase 125 — the sibling mix.exs dep is now a hand-maintained `~>`).
+      assert workflow =~ "mailglass_inbound/README.md"
+      assert workflow =~ "mailglass_inbound-publish-summary.json"
       assert config =~ "\"mailglass_inbound\""
       # The manifest's `mailglass_inbound` entry is `0.0.0` on `main` (the
       # release-please first-publish sentinel from Phase 044.5 Plan 01) and
@@ -98,11 +102,23 @@ defmodule Mailglass.StabilityContractTest do
 
       assert publish_check =~ "defp packages(\"mailglass_inbound\"), do: [:mailglass_inbound]"
       assert publish_check =~ "defp package_dir(repo_root, :mailglass_inbound)"
-      # The release-please sync step bumps the inbound's pinned mailglass dep
-      # and the inbound @version on the release-please PR branch each ceremony.
-      # Use SemVer-pattern assertions (ceremony-agnostic) so the test does not
-      # need updating per release, mirroring the manifest check above.
-      assert inbound_mix =~ ~r/\{:mailglass, "== \d+\.\d+\.\d+"\}/
+      # The inbound MIX_PUBLISH dep is a pessimistic `~>` constraint that admits
+      # core @version (not a bare `==` pin — v1.15 Phase 125 LD-2/LD-3).
+      # Extract the requirement string from the MIX_PUBLISH branch and verify
+      # admit-`~>`-reject-`==` using Version.match? against the derived core version.
+      expected_core_version = read_at_version!("mix.exs")
+      inbound_req =
+        case Regex.run(~r/\{:mailglass, "([^"]+)"\}/, inbound_mix) do
+          [_, req] -> req
+          _ -> flunk("could not extract mailglass requirement from mailglass_inbound/mix.exs")
+        end
+
+      refute String.starts_with?(inbound_req, "=="),
+             "inbound mailglass dep must be a pessimistic `~>` constraint, not a bare `==` pin"
+
+      assert Version.match?(expected_core_version, inbound_req),
+             "inbound mailglass dep `#{inbound_req}` does not admit core @version #{expected_core_version}"
+
       assert inbound_mix =~ ~r/@version "\d+\.\d+\.\d+"/
       assert inbound_mix =~ "\"docs/sendgrid_ingress.md\""
       assert expected =~ "docs/sendgrid_ingress.md"
@@ -149,14 +165,23 @@ defmodule Mailglass.StabilityContractTest do
       # Inbound @version agrees with the manifest entry.
       assert read_at_version!("mailglass_inbound/mix.exs") == expected_version
 
-      # WR-04: the inbound MIX_PUBLISH pin (`{:mailglass, "== X.Y.Z"}` in
-      # mailglass_dep/0) tracks the *core* @version — derived, not a literal.
-      assert Regex.match?(
-               ~r/\{:mailglass, "== #{Regex.escape(expected_core_version)}"\}/,
-               inbound_mix
-             ),
-             "inbound publish pin in mailglass_dep/0 does not match core @version " <>
-               "(#{expected_core_version}); update the `== X.Y.Z` pin in mailglass_inbound/mix.exs"
+      # WR-04: the inbound MIX_PUBLISH dep is a pessimistic `~>` constraint
+      # (not a bare `==` pin — v1.15 Phase 125 LD-2/LD-3) that admits core
+      # @version via Version.match?. Extract the requirement string from the
+      # MIX_PUBLISH branch and assert the admit-`~>`-reject-`==` contract.
+      inbound_req_for_preflight =
+        case Regex.run(~r/\{:mailglass, "([^"]+)"\}/, inbound_mix) do
+          [_, req] -> req
+          _ -> flunk("could not extract mailglass requirement from mailglass_inbound/mix.exs")
+        end
+
+      refute String.starts_with?(inbound_req_for_preflight, "=="),
+             "inbound mailglass dep must be a pessimistic `~>` constraint, not a bare `==` pin; " <>
+               "update mailglass_inbound/mix.exs mailglass_dep/0"
+
+      assert Version.match?(expected_core_version, inbound_req_for_preflight),
+             "inbound mailglass dep `#{inbound_req_for_preflight}` does not admit core @version " <>
+               "(#{expected_core_version}); update mailglass_inbound/mix.exs mailglass_dep/0"
 
       # Changelog and READMEs reflect the same inbound version. The install
       # hint tracks the current MINOR line (`~> major.minor`), which is what the
@@ -176,7 +201,16 @@ defmodule Mailglass.StabilityContractTest do
       assert summary["manifest_version"] == expected_version
       assert summary["source_ref"] == "v#{expected_version}"
       assert summary["source_ref_pattern"] == "mailglass_inbound-v%{version}"
-      assert summary["mailglass_inbound_publish_pin"] == "== #{expected_core_version}"
+      # The committed publish-summary carries the pessimistic `~>` constraint
+      # (not a bare `==` pin — v1.15 Phase 125 LD-3). Assert the summary field
+      # admits core @version and is not a bare `==`.
+      summary_pin = summary["mailglass_inbound_publish_pin"]
+
+      refute String.starts_with?(summary_pin, "=="),
+             "publish-summary mailglass_inbound_publish_pin must be a `~>` constraint, not a bare `==` pin"
+
+      assert Version.match?(expected_core_version, summary_pin),
+             "publish-summary mailglass_inbound_publish_pin `#{summary_pin}` does not admit core @version #{expected_core_version}"
       assert summary["linked_versions"]["mailglass"] == expected_core_version
       assert summary["linked_versions"]["mailglass_admin"] == expected_core_version
       assert summary["linked_versions"]["mailglass_inbound"] == expected_version

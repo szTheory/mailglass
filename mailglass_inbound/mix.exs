@@ -111,32 +111,22 @@ defmodule MailglassInbound.MixProject do
     ]
   end
 
-  # Published builds pin the exact core version this inbound release was cut
-  # against (linked-release tracking). Bumping this pin must land as a
-  # `fix(inbound):` commit — chore/docs commits do NOT trigger a Release Please
-  # inbound bump, which would leave adopters on a stale `== <prev>` pin while
-  # core advances. Dev/test resolves the sibling via the local path dep.
+  # Published builds constrain to the core 1.10 release line with a floor at
+  # 1.10.2 (the shipped-migration divergence fix — deliveries idempotency DDL
+  # via V05, #100). The floor excludes the broken 1.10.0/1.10.1 core versions
+  # without forcing a paired inbound release on every core patch. This mirrors
+  # Ash's `~> 3.5 and >= 3.5.13` precedent (LD-2, v1.15 Phase 125).
   #
-  # Note: the release workflow's sed step may pre-sync this pin line inside a
-  # core/admin release commit (a `chore`), which updates the pin in git WITHOUT
-  # cutting an inbound release — the published inbound then still carries the
-  # previous pin and blocks dependency resolution beside the new core. A
-  # `fix(inbound):` release is required either way to ship the new pin to Hex.
+  # A new core MINOR (1.11.0) is where internal contracts (Mailglass.Outbound.*,
+  # events table, Error hierarchy) may shift. Inbound adopters can upgrade patch
+  # releases freely; each minor line requires a deliberate `fix(inbound):`
+  # floor-bump asserting "verified against core 1.11." Do NOT speculatively widen
+  # to `~> 1.10 or ~> 1.11` — the minor boundary is a meaningful contract gate.
   #
-  # 2026-06-30: re-pin 1.10.1 -> 1.10.2 for the 1.10.2 patch release. Core
-  # 1.10.2 ships the shipped-migration divergence fix (deliveries idempotency
-  # DDL via V05, #100) — without a paired inbound release the published inbound
-  # 1.5.3 keeps pinning == 1.10.1, holding inbound adopters on the broken 1.10.1
-  # deliveries migration. This fix(inbound) lands on origin/main BEFORE the
-  # linked release PR (#101) merges so Release Please folds a paired inbound
-  # 1.5.4 release into the SAME PR, shipping == 1.10.2 and unblocking the
-  # mailglass_admin 1.10.2 publish. (The bare-main SHA carrying this re-pin is
-  # transiently contract-test-red because core @version on main is still 1.10.1
-  # until #101 merges — the intended, documented window; see caacffae for the
-  # prior 1.10.0 -> 1.10.1 precedent during the v1.14 recovery.)
+  # Dev/test resolves the sibling via the local path dep (else-branch, untouched).
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 1.10.2"}
+      {:mailglass, "~> 1.10 and >= 1.10.2"}
     else
       {:mailglass, path: "..", override: true}
     end

@@ -34,30 +34,27 @@ Use Conventional Commits:
 - New features must include documentation and tests.
 - Maintain atomic commits.
 
-## Why we sed mix.exs after release-please runs
+## How release-please syncs README install pins (and what it no longer does)
 
-Release Please's `extra-files` generic updater silently no-ops on a `mix.exs`
-already managed by the `elixir` release-type. The `{:mailglass, "== <ver>"}`
-pin in `mailglass_admin/mix.exs` therefore never gets rewritten by the action
-itself.
+`.github/workflows/release-please.yml` runs a `sed` step on the
+`release-please--branches--main` PR branch after the action runs. It syncs:
 
-`.github/workflows/release-please.yml` syncs the pin via a `sed` step on the
-release-please PR branch after the action runs. This is the **steady-state
-mitigation** rather than authoring a TypeScript plugin (which would violate
-the "no Node toolchain anywhere" engineering DNA) or refactoring to
-`version.exs` (which adds Hex tarball + `Code.eval_file` load-order risk).
+- The `{:mailglass_inbound, "~> X.Y"}` install hint in `mailglass_inbound/README.md`
+  to the new inbound major.minor.
+- The `{:mailglass, "~> X.Y"}` and `{:mailglass_admin, "~> X.Y"}` install hints
+  in the three READMEs to the new core major.minor.
+- The `mailglass_inbound_publish_pin` field in
+  `.planning/publish/mailglass_inbound-publish-summary.json` to the new `~>` constraint.
+
+**What the sed step does NOT touch:** the sibling `mix.exs` core-dep declarations.
+As of v1.15 Phase 125 the sibling packages use hand-maintained pessimistic `~>` constraints
+(`mailglass_inbound` uses `~> 1.10 and >= 1.10.2`, `mailglass_admin` uses `~> 1.10`).
+A core **patch** release requires no sibling change at all. A core **minor** (e.g. 1.11.0)
+requires a deliberate `fix(inbound):` commit in `mailglass_inbound/mix.exs` updating the
+floor — asserting "verified against core 1.11" — before or alongside the release PR.
 
 **Recursion-safety guarantee:** the sync push uses `GITHUB_TOKEN`, which by
 GitHub's anti-recursion guarantee does NOT trigger further workflow runs.
-
-**Sed-anchor stability:** `mailglass_admin/test/mailglass_admin/mix_config_test.exs`
-asserts the dep tuple in `mailglass_admin/mix.exs` matches the literal
-`{:mailglass, "== <semver>"}` shape the sed regex anchors on. Any future
-rename of the dep tuple form will fail this test loudly — update the sed
-regex (in `release-please.yml`) and this section together.
-
-**Pointer:** see `.planning/todos/pending/2026-04-26-release-please-extra-files-no-op-on-managed-mix-exs.md`
-for the empirical observation history.
 
 ## If a release publishes but the tags/publish never fire
 

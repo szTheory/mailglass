@@ -150,40 +150,14 @@ jobs:
           git fetch origin "$BRANCH":"$BRANCH"
           git checkout "$BRANCH"
 
-          # Both mailglass_admin and mailglass_inbound pin to CORE'S manifest version,
-          # not their own. Read .["."] directly; do NOT use a fallback chain (would
-          # return inbound's unlinked version after the linked-versions split).
+          # Read the core manifest version — used to sync README `~>` install pins
+          # and the inbound publish-summary. Read .["."] directly; do NOT use a
+          # fallback chain (would return inbound's unlinked version).
           CORE_VERSION=$(jq -r '.["."]' .release-please-manifest.json)
           if [ -z "$CORE_VERSION" ] || [ "$CORE_VERSION" = "null" ]; then
             echo "ERROR: could not read core version (.[\".\"]) from .release-please-manifest.json" >&2
             exit 1
           fi
-          echo "Target dep pin: {:mailglass, \"== $CORE_VERSION\"}"
-
-          # REL-05: Bash-loop generalization keyed on (path, dep_atom) pairs.
-          # Keep the linked sibling packages explicit in the release PR diff.
-          PINS=(
-            "mailglass_admin/mix.exs:mailglass"
-            "mailglass_inbound/mix.exs:mailglass"
-          )
-
-          for entry in "${PINS[@]}"; do
-            path="${entry%:*}"
-            dep="${entry##*:}"
-
-            # REL-05: exit-1 guard — catches the case where the dep tuple was
-            # renamed and the sed would silently no-op. Two layers of protection:
-            # (1) this guard, (2) mix_config_test.exs sed-anchor stability test.
-            matches=$(grep -cE "\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}" "$path" || true)
-            if [ "$matches" -eq 0 ]; then
-              echo "ERROR: sed anchor regex matched zero lines in $path." >&2
-              echo "The dep tuple shape may have been renamed — see CONTRIBUTING.md REL-05 section." >&2
-              exit 1
-            fi
-
-            sed -i -E "s/\{:${dep}, \"== [0-9]+\.[0-9]+\.[0-9]+\"\}/{:${dep}, \"== ${CORE_VERSION}\"}/" "$path"
-          done
-
           # Sync the inbound README's `{:mailglass_inbound, "~> X.Y"}` install
           # pin to the inbound package's new major.minor. The docs contract
           # (WR-01, mailglass_inbound/test/.../docs_contract_test.exs) asserts
@@ -233,15 +207,13 @@ jobs:
             SUMMARY=.planning/publish/mailglass_inbound-publish-summary.json
             if [ -f "$SUMMARY" ]; then
               tmp=$(mktemp)
-              jq --arg v "$INBOUND_VERSION" --arg pin "== ${CORE_VERSION}" --arg core "$CORE_VERSION" \
+              jq --arg v "$INBOUND_VERSION" --arg pin "~> ${CORE_MM} and >= ${CORE_VERSION}" --arg core "$CORE_VERSION" \
                 '.version=$v | .manifest_version=$v | .source_ref=("v"+$v) | .mailglass_inbound_publish_pin=$pin | .linked_versions.mailglass=$core | .linked_versions.mailglass_admin=$core | .linked_versions.mailglass_inbound=$v' \
                 "$SUMMARY" >"$tmp" && mv "$tmp" "$SUMMARY"
             fi
           fi
 
           SYNC_PATHS=(
-            mailglass_admin/mix.exs
-            mailglass_inbound/mix.exs
             mailglass_inbound/README.md
             mailglass_inbound/docs/inbound-install.md
             README.md
@@ -259,7 +231,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "${SYNC_PATHS[@]}"
-          git commit -m "chore(release-please): sync sibling mailglass dep pins to == $CORE_VERSION + inbound README pin"
+          git commit -m "chore(release-please): sync inbound README \`~>\` pin + publish-summary to core $CORE_VERSION"
           git push origin "$BRANCH"
 
       # Hands-free release: arm squash auto-merge so the release PR ships the

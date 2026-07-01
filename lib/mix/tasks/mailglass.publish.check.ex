@@ -775,19 +775,20 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
                  {:mailglass, _req, _opts} -> true
                  _ -> false
                end) do
-            {:mailglass, "== " <> version} when version == ctx.root_version ->
-              Map.put(ctx, sibling_publish_pin_key(ctx.package), "== #{version}")
-
-            {:mailglass, "== " <> version} ->
-              fail_step(
-                "check dependency shapes",
-                "Delivery blocked: #{ctx.package_name}'s mailglass dep is \"== #{version}\" but mailglass core declares @version \"#{ctx.root_version}\". Run release-please to re-link versions, then re-publish."
-              )
+            {:mailglass, req} when is_binary(req) ->
+              if mailglass_constraint_admits_core?(req, ctx.root_version) do
+                Map.put(ctx, sibling_publish_pin_key(ctx.package), req)
+              else
+                fail_step(
+                  "check dependency shapes",
+                  "Delivery blocked: #{ctx.package_name}'s mailglass dep is an exact `==` pin; sibling packages must use a pessimistic `~>` constraint that admits the core release line."
+                )
+              end
 
             other ->
               fail_step(
                 "check dependency shapes",
-                "Delivery blocked: #{ctx.package_name}'s mailglass dep is not a Hex version constraint: #{inspect(other)}. Run release-please to re-link versions, then re-publish."
+                "Delivery blocked: #{ctx.package_name}'s mailglass dep is not a Hex version constraint: #{inspect(other)}. Fix #{ctx.package_name}/mix.exs and rebuild."
               )
           end
         else
@@ -824,24 +825,34 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
              {:mailglass, _req, _opts} -> true
              _ -> false
            end) do
-        {:mailglass, "== " <> version} when version == ctx.root_version ->
-          ctx
-
-        {:mailglass, "== " <> version} ->
-          fail_step(
-            "check linked-version constraint",
-            "Delivery blocked: #{ctx.package_name}'s mailglass dep is \"== #{version}\" but mailglass core declares @version \"#{ctx.root_version}\". Run release-please to re-link versions, then re-publish."
-          )
+        {:mailglass, req} when is_binary(req) ->
+          if mailglass_constraint_admits_core?(req, ctx.root_version) do
+            ctx
+          else
+            fail_step(
+              "check linked-version constraint",
+              "Delivery blocked: #{ctx.package_name}'s mailglass dep is an exact `==` pin; sibling packages must use a pessimistic `~>` constraint that admits the core release line."
+            )
+          end
 
         other ->
           fail_step(
             "check linked-version constraint",
-            "Delivery blocked: #{ctx.package_name}'s mailglass dep is not a Hex version constraint: #{inspect(other)}. Run release-please to re-link versions, then re-publish."
+            "Delivery blocked: #{ctx.package_name}'s mailglass dep is not a Hex version constraint: #{inspect(other)}. Fix #{ctx.package_name}/mix.exs and rebuild."
           )
       end
     else
       ctx
     end
+  end
+
+  # Shared predicate: accepts a mailglass dependency requirement string that
+  # uses a pessimistic `~>` constraint (rejecting bare `==` exact pins) AND
+  # admits the given core version via Version.match?/2. A bare `==` pin forces
+  # a paired sibling release on every core patch; a pessimistic `~>` allows
+  # patch upgrades freely while still bounding the minor boundary.
+  defp mailglass_constraint_admits_core?(req, core_version) do
+    not String.starts_with?(req, "==") and Version.match?(core_version, req)
   end
 
   defp verify_prod_deps(ctx) do

@@ -117,7 +117,7 @@
     "mailglass_admin": "1.10.2",
     "mailglass_inbound": "1.5.4"
   },
-  "mailglass_inbound_publish_pin": "== 1.10.2",
+  "mailglass_inbound_publish_pin": "~> 1.10 and >= 1.10.2",
   "manifest_version": "1.5.4",
   "package": "mailglass_inbound",
   "package_files": [
@@ -194,6 +194,6 @@
   "source_ref": "v1.5.4",
   "source_ref_pattern": "mailglass_inbound-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 495718,
+  "tarball_size": 497087,
   "version": "1.5.4"
 }

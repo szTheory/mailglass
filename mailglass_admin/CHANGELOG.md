@@ -4,6 +4,14 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [Unreleased]
+
+### Changed
+
+* `mailglass_admin` now depends on `mailglass ~> 1.10` instead of an exact pin.
+  Because admin is in the linked-versions release group with core, `~> 1.10` is
+  safe — admin never resolves against a core minor it was not shipped with.
+
 ## [1.10.2](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.10.1...mailglass_admin-v1.10.2) (2026-06-30)
 
 

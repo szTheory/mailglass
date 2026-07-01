@@ -5,6 +5,15 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+* `mailglass_inbound` now depends on `mailglass ~> 1.10 and >= 1.10.2` instead
+  of an exact pin; you may upgrade core patch releases without waiting for a
+  paired inbound release. The `>= 1.10.2` floor excludes the broken 1.10.0 and
+  1.10.1 deliveries-migration core versions.
+
 ## [1.5.4](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.5.3...mailglass_inbound-v1.5.4) (2026-06-30)
 
 

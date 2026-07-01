@@ -1,9 +1,9 @@
 defmodule MailglassAdmin.MixConfigTest do
   @moduledoc """
-  Asserts the Hex-publish dep pin lock from CONTEXT D-02 / PREV-01 /
+  Asserts the Hex-publish dep constraint from CONTEXT D-02 / PREV-01 /
   DIST-01: `mailglass_admin/mix.exs` flips between a local path dep
   (`{:mailglass, path: "..", override: true}`) for contributors and a
-  pinned Hex dep (`{:mailglass, "== <version>"}`) when `MIX_PUBLISH=true`.
+  pessimistic `~>` Hex constraint when `MIX_PUBLISH=true` (v1.15 Phase 125).
 
   Plan 02 makes these assertions green by landing `mailglass_admin/mix.exs`
   with the conditional `mailglass_dep/0` helper from 05-PATTERNS.md.
@@ -42,14 +42,18 @@ defmodule MailglassAdmin.MixConfigTest do
       {:ok, original_env: original}
     end
 
-    test "MIX_PUBLISH=true pins mailglass to the exact current version" do
+    test "MIX_PUBLISH=true uses a pessimistic ~> constraint that admits the package version" do
       System.put_env("MIX_PUBLISH", "true")
       version = Mix.Project.config()[:version]
       dep_tuple = evaluate_mailglass_dep()
 
-      assert {:mailglass, pin} = dep_tuple
-      assert pin == "== #{version}",
-             "expected pinned Hex dep `== #{version}`, got #{inspect(dep_tuple)}"
+      assert {:mailglass, req} = dep_tuple
+
+      refute String.starts_with?(req, "=="),
+             "mailglass dep must be a pessimistic `~>` constraint, not a bare `==` pin; got #{inspect(dep_tuple)}"
+
+      assert Version.match?(version, req),
+             "mailglass dep `#{req}` does not admit the package version #{version}; got #{inspect(dep_tuple)}"
     end
 
     test "MIX_PUBLISH unset falls back to path: \"..\" dep with override: true" do
@@ -82,44 +86,6 @@ defmodule MailglassAdmin.MixConfigTest do
       )
 
     result
-  end
-
-  describe "release-please sed-anchor regex stability (REL-05)" do
-    # The sed step in .github/workflows/release-please.yml anchors on the
-    # literal `{:mailglass, "== <semver>"}` shape. Renaming the dep tuple,
-    # or changing the version-pin format, would silently break the no-op fix
-    # documented in CONTRIBUTING.md "Why we sed mix.exs after release-please
-    # runs". This test fails LOUDLY before the workflow silently becomes a
-    # no-op again.
-    setup do
-      original = System.get_env("MIX_PUBLISH")
-
-      on_exit(fn ->
-        case original do
-          nil -> System.delete_env("MIX_PUBLISH")
-          val -> System.put_env("MIX_PUBLISH", val)
-        end
-      end)
-
-      {:ok, original_env: original}
-    end
-
-    test "MIX_PUBLISH=true emits dep tuple matching the sed regex literal" do
-      System.put_env("MIX_PUBLISH", "true")
-      source = File.read!(@mix_exs)
-
-      # Same regex shape as the sed step:
-      # sed -E 's/\{:mailglass, "== [0-9]+\.[0-9]+\.[0-9]+"\}/.../'
-      sed_anchor = ~r/\{:mailglass, "== \d+\.\d+\.\d+"\}/
-
-      assert Regex.match?(sed_anchor, source),
-             """
-             release-please.yml sed step anchors on the literal
-             `{:mailglass, "== <semver>"}` form. The current mix.exs no longer
-             emits this form. Either update the sed regex (and CONTRIBUTING.md
-             REL-05 section) or restore the literal pin shape.
-             """
-    end
   end
 
   defp extract_function_body(ast, name, arity) do

@@ -14,6 +14,15 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [Unreleased]
+
+### Changed
+
+* The sibling packages (`mailglass_inbound`, `mailglass_admin`) now depend on
+  `mailglass` via pessimistic `~>` constraints instead of exact pins, ending
+  the paired-release-per-core-patch requirement. A core patch release no longer
+  drags a paired inbound or admin release.
+
 ## [1.10.2](https://github.com/szTheory/mailglass/compare/mailglass-v1.10.1...mailglass-v1.10.2) (2026-06-30)
 
 

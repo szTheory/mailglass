@@ -120,6 +120,7 @@
     "lib/mailglass/migrations/postgres/v02.ex",
     "lib/mailglass/migrations/postgres/v03.ex",
     "lib/mailglass/migrations/postgres/v04.ex",
+    "lib/mailglass/migrations/postgres/v05.ex",
     "lib/mailglass/operator/deliveries.ex",
     "lib/mailglass/operator/replay_history.ex",
     "lib/mailglass/operator/replay_targets.ex",
@@ -253,11 +254,11 @@
     ]
   },
   "linked_versions": {
-    "mailglass": "1.9.0",
-    "mailglass_admin": "1.9.0",
-    "mailglass_inbound": "1.5.1"
+    "mailglass": "1.10.2",
+    "mailglass_admin": "1.10.2",
+    "mailglass_inbound": "1.5.4"
   },
-  "manifest_version": "1.9.0",
+  "manifest_version": "1.10.2",
   "package": "mailglass",
   "package_files": [
     "lib",
@@ -293,9 +294,9 @@
     ],
     "status": "ok"
   },
-  "source_ref": "v1.9.0",
+  "source_ref": "v1.10.2",
   "source_ref_pattern": "mailglass-sibling-group-v%{version}",
   "source_url": "https://github.com/szTheory/mailglass",
-  "tarball_size": 1167681,
-  "version": "1.9.0"
+  "tarball_size": 1175700,
+  "version": "1.10.2"
 }

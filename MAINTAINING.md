@@ -236,6 +236,29 @@ months tells evaluators "don't bet on this lib."
 5. **Already retired and false alarm.**
    Run `mix hex.retire <pkg> <ver> --unretire`.
 
+### `~>` Sibling Pin: Rollback Lever for a Bad Core Patch
+
+As of v1.15 Phase 125, `mailglass_inbound` and `mailglass_admin` use pessimistic
+`~>` constraints on `mailglass` core instead of exact `==` pins. This changed the
+resolver's degrees of freedom: a core patch release now auto-resolves into `~>`
+sibling adopters' dependency graphs (previously the `==` wall blocked it structurally).
+
+**If a bad core patch slips through and reaches adopters via the `~>` constraint:**
+
+```
+mix hex.retire mailglass X.Y.Z security|invalid --message "<140 chars describing the issue>"
+```
+
+This tells the Hex resolver to stop selecting that version. Follow immediately
+with a fixed `X.Y.(Z+1)` core release so the `~>` constraint resolves to the
+safe version instead. The sibling packages themselves need no change — their
+`~>` constraint automatically picks up the new patch.
+
+**Contrast with the old `==` behavior:** with exact pins, a bad core patch could
+never silently reach inbound adopters because the inbound `== X.Y.Z` constraint
+would hold them on the prior version until a deliberate paired inbound release.
+`mix hex.retire` is the explicit replacement for that structural guarantee.
+
 ## Security Response SLA
 
 Single-maintainer numbers, written to be kept rather than aspired to.

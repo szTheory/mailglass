@@ -134,26 +134,15 @@ defmodule MailglassAdmin.MixProject do
 
   # CONTEXT D-02 linked-versions switch (the ONE pattern with no analog in
   # mailglass core's mix.exs): local-dev uses a path dep so the sibling
-  # packages evolve together; publishing to Hex pins the exact sibling
-  # version via Release Please linked-versions plugin (Phase 7 D-03).
-  #
-  # The pinned-version string ("== 0.1.0") is a LITERAL, not an @version
-  # interpolation. mix_config_test.exs evaluates this function's body in
-  # isolation (via Code.string_to_quoted + Code.eval_quoted) where module
-  # attributes are unreachable — `@version` would raise
-  # `cannot invoke @/1 outside module`.
-  #
-  # Release Please's linked-versions plugin bumps the `@version` attribute
-  # above automatically. The `==` literal below is rewritten by a sed step
-  # in `.github/workflows/release-please.yml` that runs after the
-  # release-please action and pushes a sync commit onto the
-  # `release-please--branches--main` PR branch. (release-please's own
-  # `extra-files` generic updater silently no-ops on a mix.exs already
-  # managed by the elixir release-type, so we cannot rely on it — verified
-  # empirically during the v0.1.1 cycle.)
+  # packages evolve together; publishing to Hex uses a pessimistic `~>` constraint
+  # (v1.15 Phase 125, LD-2). Admin is in the linked-versions group
+  # [mailglass, mailglass_admin] — the Release Please plugin release-time-locks
+  # admin's minor to core, so `~> 1.10` is safe: admin never resolves against a
+  # core minor it was not shipped with. A new core minor requires a linked admin
+  # release, which updates this line.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "== 1.10.2"}
+      {:mailglass, "~> 1.10"}
     else
       {:mailglass, path: "..", override: true}
     end
