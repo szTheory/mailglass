@@ -2,18 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-current_phase_name: defining requirements
-status: executing
+current_phase: 125
+current_phase_name: sibling-pin-loosening-keystone-atomic
+status: verifying
 stopped_at: Completed 123-03-PLAN.md (Phase 123 complete)
-last_updated: "2026-07-01T17:26:12.725Z"
+last_updated: "2026-07-01T17:49:40.542Z"
 last_activity: 2026-07-01
-last_activity_desc: Milestone v1.15 started
+last_activity_desc: Phase 125 execution started
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 7
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
+  percent: 14
 ---
 
 # Project State
@@ -23,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** 1.10.2 patch shipped 2026-07-01. Two scoped milestones designed & researched (CI/CD efficiency; Postgres schema isolation → 2.0). Next: `/gsd-new-milestone` for Milestone 1.
+**Current focus:** Phase 125 — sibling-pin-loosening-keystone-atomic
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Ready to execute
-Last activity: 2026-07-01 — Milestone v1.15 started
+Phase: 125 (sibling-pin-loosening-keystone-atomic) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
+Last activity: 2026-07-01 -- Phase 125 execution started
 
 ## v1.14 Milestone Intent
 
@@ -386,6 +387,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 122 P03 | 3min | 2 tasks | 1 files |
 | Phase 123 P02 | 3 | 2 tasks | 1 files |
 | Phase 123 P03 | 8min | 2 tasks | 1 files |
+| Phase 125 P01 | 1200 | 3 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -412,7 +414,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-06-28T22:17:23.422Z
+**Last session:** 2026-07-01T17:49:40.533Z
 **Stopped at:** Completed 123-03-PLAN.md (Phase 123 complete)
 **Resume file:** None
 

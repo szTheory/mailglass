@@ -89,7 +89,9 @@ longer drags a paired sibling release. This is the keystone: it unblocks every f
   5. The whole change lands atomically — splitting any part reds main or miscuts the next release (the
      sed anchor would match zero `==` lines) (LD-3).
 **Plans**: 1 plan
-- [ ] 125-01-PLAN.md — Loosen both sibling `==` pins to `~>` (inbound `~> 1.10 and >= 1.10.2`, admin `~> 1.10`), relax stability_contract_test + publish.check + admin mix_config_test to admit-`~>`-reject-`==`, delete the two `== X.Y.Z` sed rewrites (retire the 3 dead sed-anchor gates), ship CHANGELOG entries + `mix hex.retire` rollback doc — as ONE atomic change (PIN-01..05)
+
+- [x] 125-01-PLAN.md — Loosen both sibling `==` pins to `~>` (inbound `~> 1.10 and >= 1.10.2`, admin `~> 1.10`), relax stability_contract_test + publish.check + admin mix_config_test to admit-`~>`-reject-`==`, delete the two `== X.Y.Z` sed rewrites (retire the 3 dead sed-anchor gates), ship CHANGELOG entries + `mix hex.retire` rollback doc — as ONE atomic change (PIN-01..05)
+
 **UI hint**: no
 
 ### Phase 126: CI Green fan-in gate + branch-protection collapse
