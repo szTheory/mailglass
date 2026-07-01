@@ -2,12 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-current_phase: 128
-current_phase_name: mix-ci-parity-completion-folds-in-pr-104
+current_phase: 129
+current_phase_name: Cache-key + PLT correctness
 status: verifying
 stopped_at: Completed 128-02-PLAN.md
-last_updated: "2026-07-01T21:10:09.138Z"
+last_updated: "2026-07-01T22:39:37.531Z"
 last_activity: 2026-07-01
+last_activity_desc: Phase 128 complete, transitioned to Phase 129
 progress:
   total_phases: 7
   completed_phases: 4
@@ -27,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 ## Current Position
 
-Phase: 128 (mix-ci-parity-completion-folds-in-pr-104) — EXECUTING
-Plan: 2 of 2
+Phase: 129 — Cache-key + PLT correctness
+Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-07-01
+Last activity: 2026-07-01 — Phase 128 complete, transitioned to Phase 129
 
 ## v1.14 Milestone Intent
 
