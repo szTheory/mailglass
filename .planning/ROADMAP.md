@@ -173,7 +173,9 @@ open PR #104 DX slice.
   5. `verify.*` are designated internal composition targets, the deprecated `verify.phase_NN`
      pass-throughs are removed, and CONTRIBUTING points at `mix ci`/`mix ci.fast` (only once MIXCI-01
      holds), with no `verify.phase_07` 404 (LD-12, MIXCI-05).
-**Plans**: TBD (planning)
+**Plans**: 2 plans
+- [ ] 128-01-PLAN.md — ci alias family (ci.fast/ci/ci.setup/ci.browser) + sibling aliases + preflight guards + make ci + CONTRIBUTING + remove deprecated pass-throughs (MIXCI-01/02/04/05)
+- [ ] 128-02-PLAN.md — shared ci_lanes source + GATE-03 rewire + MIXCI-03 parity-drift test (MIXCI-03)
 **UI hint**: no
 
 ### Phase 129: Cache-key + PLT correctness
