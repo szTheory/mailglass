@@ -45,7 +45,7 @@ defmodule MailglassInbound.MailboxCase do
 
   ## Default setup
 
-  - `Ecto.Adapters.SQL.Sandbox.start_owner!(repo, shared: not tags[:async])`
+  - `Ecto.Adapters.SQL.Sandbox.start_owner!(repo)` — plain ownership checkout; the suite runs serial by default (`async: false`)
   - `Mailglass.Tenancy.put_current("test-tenant")` (unless `@tag tenant: :unset`)
   - resets `Mailglass.Webhook.Providers.SES.CertCache` (process-global ETS)
   - resets `MailglassInbound.S3Fetcher.Fake` (process-dict)
@@ -58,7 +58,7 @@ defmodule MailglassInbound.MailboxCase do
 
   - `@tag tenant: "acme"` — override the default `"test-tenant"`
   - `@tag tenant: :unset` — disable tenancy stamping
-  - `@tag async: false` — disable async (sandbox checks out in shared mode)
+  - `@tag async: false` — always set; `MailboxCase` defaults serial execution
 
   ## Example
 
@@ -89,8 +89,6 @@ defmodule MailglassInbound.MailboxCase do
   end
 
   setup tags do
-    async? = Map.get(tags, :async, true)
-
     # Repo resolves from app-env — never the package's own test-repo literal
     # (Pitfall 1, T-47-14). The package does not own a repo; the adopter
     # configures one in config/test.exs.
@@ -98,7 +96,7 @@ defmodule MailglassInbound.MailboxCase do
       Application.get_env(:mailglass_inbound, :repo) ||
         raise "config :mailglass_inbound, :repo must be set for MailglassInbound.MailboxCase"
 
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(repo, shared: not async?)
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(repo)
 
     tenant_id =
       case Map.get(tags, :tenant, "test-tenant") do
