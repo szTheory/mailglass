@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-current_phase: 129
-current_phase_name: Cache-key + PLT correctness
-status: planned
-stopped_at: Completed 128-02-PLAN.md
-last_updated: "2026-07-01T23:21:15.192Z"
-last_activity: 2026-07-01
-last_activity_desc: Phase 128 complete, transitioned to Phase 129
+status: ready_to_plan
+stopped_at: Phase 129 complete (2/2, verified 7/7) — ready to plan Phase 130
+last_updated: 2026-07-01T23:51:42.120Z
+last_activity: 2026-07-01 -- Phase 129 executed + verified (cache-key + PLT correctness)
 progress:
   total_phases: 7
-  completed_phases: 4
-  total_plans: 6
-  completed_plans: 6
-  percent: 57
+  completed_phases: 5
+  total_plans: 14
+  completed_plans: 14
+  percent: 71
 ---
 
 # Project State
@@ -24,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 128 — mix-ci-parity-completion-folds-in-pr-104
+**Current focus:** Phase 130 — Supply chain + workflow hygiene (mix_audit gate, dependabot sibling coverage, actionlint, 1.19/OTP28 advisory row)
 
 ## Current Position
 
-Phase: 129 — Cache-key + PLT correctness
+Phase: 130
 Plan: Not started
-Status: planned
-Last activity: 2026-07-01 — Phase 128 complete, transitioned to Phase 129
+Status: Ready to plan
+Last activity: 2026-07-01
 
 ## v1.14 Milestone Intent
 

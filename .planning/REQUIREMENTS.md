@@ -76,10 +76,10 @@ product-behavior change, then cut a real linked Hex release that dogfoods the ha
 
 ### CACHE — Cache-key + PLT correctness (→ Phase 129)
 
-- [ ] **CACHE-01**: The deps/`_build` cache key includes OTP+Elixir dims derived from a single
+- [x] **CACHE-01**: The deps/`_build` cache key includes OTP+Elixir dims derived from a single
   `.tool-versions`/`env:` source (not per-block hardcoded literals) with per-env prefix (LD-9).
 
-- [ ] **CACHE-02**: The PLT cache uses Bandit-style self-healing eviction (evict + rebuild on a stale
+- [x] **CACHE-02**: The PLT cache uses Bandit-style self-healing eviction (evict + rebuild on a stale
   Dialyzer failure); only after this may Dialyzer be promoted toward the required set (LD-7).
 
 ### SUPPLY — Supply chain + workflow hygiene (→ Phase 130)
