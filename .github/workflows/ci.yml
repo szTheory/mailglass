@@ -491,7 +491,12 @@ jobs:
         # is missing a `# Reason:` comment block (D-08-27).
         run: bash scripts/check_dialyzer_ignore.sh
       - name: Run Dialyzer
+        id: dialyzer
+        continue-on-error: true
         run: mix dialyzer
+      - name: Evict stale PLT + rebuild
+        if: steps.dialyzer.outcome == 'failure'
+        run: rm -rf _build/test/*.plt && mix dialyzer --plt && mix dialyzer
 
   docs_warnings_as_errors:
     name: Docs Warnings as Errors (Elixir 1.18 / OTP 27)
