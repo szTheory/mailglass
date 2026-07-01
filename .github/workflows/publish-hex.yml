@@ -191,17 +191,29 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
+            // Required lanes: each must be present in the run's jobs AND have
+            // conclusion === 'success'. A skipped, missing, failed, or cancelled
+            // required lane BLOCKS publish (GATE-02, per LD-6).
+            //
+            // NOTE: this set must stay identical to ci_green.needs in ci.yml
+            // (the LD-10 shared ci_lanes seam; a future phase may hoist it to
+            // one source — Phase 128 MIXCI-03).
+            const REQUIRED_LANES = [
+              'Support Contract Core (Elixir 1.18 / OTP 27)',
+              'Support Contract Admin (Elixir 1.18 / OTP 27)',
+              'Compile No Optional Deps (Elixir 1.18 / OTP 27)',
+              'Trust Lane Repo Head (Elixir 1.18 / OTP 27)',
+              'Installer Host Smoke'
+            ];
+
             // Advisory lanes are non-blocking for publish — they are NOT
-            // branch-protection required checks (the required set is Compile No
-            // Optional Deps, Installer Host Smoke, Support Contract Core/Admin,
-            // Trust Lane Repo Head). "Operator Browser Gate" and "Demo Browser
-            // Evidence" predate the naming convention and are listed explicitly;
-            // every other advisory lane follows the "<name> Advisory (...)"
-            // convention and is matched by isAdvisory() below — so a red advisory
-            // lane (e.g. Preview Capture Advisory, whose CI harness is
-            // independently broken on a missing inbound migration) never blocks a
-            // release. Rule of thumb: if a lane is not required by branch
-            // protection, it is advisory here too.
+            // branch-protection required checks. "Operator Browser Gate" and
+            // "Demo Browser Evidence" predate the naming convention and are
+            // listed explicitly; every other advisory lane follows the
+            // "<name> Advisory (...)" convention and is matched by isAdvisory()
+            // below — so a red advisory lane never blocks a release.
+            // Rule of thumb: if a lane is not required by branch protection,
+            // it is advisory here too.
             const ADVISORY_LANES = [
               'Operator Browser Gate',
               'Demo Browser Evidence'
@@ -223,25 +235,42 @@ jobs:
 
             const latest = data.workflow_runs[0];
 
-            // If overall conclusion is success, we're done.
-            if (latest.conclusion === 'success') {
-              return;
-            }
-
-            // Otherwise, inspect job-level conclusions and accept overall
-            // failure ONLY when every failing job is in ADVISORY_LANES.
+            // Always fetch job-level conclusions to verify required lanes.
+            // We do NOT early-return on latest.conclusion === 'success' because
+            // a run with a path-skipped required lane can still report overall
+            // success — a skipped required lane must block (GATE-02).
             const jobs = await github.paginate(
               github.rest.actions.listJobsForWorkflowRun,
               { owner: context.repo.owner, repo: context.repo.repo, run_id: latest.id, per_page: 100 }
             );
 
+            // Required-lane check: every required lane must be present AND success.
+            const requiredBlocking = [];
+            for (const lane of REQUIRED_LANES) {
+              const job = jobs.find(j => j.name === lane);
+              if (!job) {
+                requiredBlocking.push(`${lane} (missing)`);
+              } else if (job.conclusion !== 'success') {
+                requiredBlocking.push(`${lane} (${job.conclusion})`);
+              }
+            }
+
+            if (requiredBlocking.length > 0) {
+              const list = requiredBlocking.map(s => `  - ${s}`).join('\n');
+              core.setFailed(`Delivery blocked: required CI lane(s) did not pass on SHA ${sha}:\n${list}\nRun: ${latest.html_url}`);
+              return;
+            }
+
             const isAdvisory = (jobName) =>
               ADVISORY_LANES.some(lane => jobName.startsWith(lane)) ||
               / Advisory \(/.test(jobName);
 
+            // Non-required, non-advisory failures still block (e.g. unexpected
+            // new lanes that are neither in REQUIRED_LANES nor advisory).
             const blockingFailures = jobs
               .filter(j => j.conclusion !== 'success' && j.conclusion !== 'skipped')
-              .filter(j => !isAdvisory(j.name));
+              .filter(j => !isAdvisory(j.name))
+              .filter(j => !REQUIRED_LANES.includes(j.name));
 
             if (blockingFailures.length > 0) {
               const detail = blockingFailures.map(j => `  - ${j.name} (${j.conclusion})`).join('\n');
