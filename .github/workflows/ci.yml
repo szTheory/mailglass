@@ -3,14 +3,8 @@ name: CI
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - ".planning/**"
-      - "prompts/**"
   pull_request:
     branches: [main]
-    paths-ignore:
-      - ".planning/**"
-      - "prompts/**"
   workflow_dispatch:
     # Manual dispatch is required for the release-please PR head ref.
     # GITHUB_TOKEN-driven pushes (release-please bot) do NOT trigger
@@ -26,9 +20,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect Non-Doc Changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Compute changed-path gate
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # A dispatched release run must always execute the full matrix.
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="HEAD"
+            CHANGED=$(git diff --name-only "${BASE}...${HEAD}" 2>/dev/null || git diff --name-only "${BASE}" "${HEAD}")
+            NON_DOC=$(echo "$CHANGED" | grep -v '^\.planning/' | grep -v '^prompts/' || true)
+            if [ -z "$NON_DOC" ]; then
+              echo "code=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "code=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            # push event: compare against the before SHA
+            BEFORE="${{ github.event.before }}"
+            AFTER="${{ github.sha }}"
+            if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              echo "code=true" >> "$GITHUB_OUTPUT"
+            else
+              CHANGED=$(git diff --name-only "${BEFORE}" "${AFTER}" 2>/dev/null || true)
+              NON_DOC=$(echo "$CHANGED" | grep -v '^\.planning/' | grep -v '^prompts/' || true)
+              if [ -z "$NON_DOC" ]; then
+                echo "code=false" >> "$GITHUB_OUTPUT"
+              else
+                echo "code=true" >> "$GITHUB_OUTPUT"
+              fi
+            fi
+          fi
+
   format_check:
     name: Format Check (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -57,6 +96,8 @@ jobs:
   compile_warnings:
     name: Compile Warnings as Errors (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -85,9 +126,11 @@ jobs:
   compile_no_optional_deps:
     name: Compile No Optional Deps (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
-    # Required check — keep matrix-free. A 1-combo matrix makes GitHub append
-    # " (1.18, 27)" to the check name, which then no longer matches the required
-    # status-check context registered in scripts/setup_branch_protection.sh.
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    # Required leaf behind CI Green aggregate — keep matrix-free. A 1-combo matrix
+    # makes GitHub append " (1.18, 27)" to the check name, which would break any
+    # job-name-based mapping. CI Green is the registered branch-protection context.
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
@@ -111,6 +154,8 @@ jobs:
   installer_host_smoke:
     name: Installer Host Smoke
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     # Shift-left of the post-publish consumer-install smoke: runs the SAME
     # scripts/consumer_install_smoke.sh against the WORKING TREE (local path
     # deps) — phx.new -> install -> OPS-01 guard -> compile --warnings-as-errors
@@ -143,8 +188,10 @@ jobs:
   support_contract_core:
     name: Support Contract Core (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
-    # Required check — keep matrix-free (see compile_no_optional_deps): a 1-combo
-    # matrix appends " (1.18, 27)" to the name and breaks the required-context match.
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    # Required leaf behind CI Green aggregate — keep matrix-free (see
+    # compile_no_optional_deps): a 1-combo matrix appends " (1.18, 27)" to the name.
     services:
       postgres:
         image: postgres:16-alpine
@@ -193,6 +240,8 @@ jobs:
   mix_task_tests:
     name: Mix Task Tests (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -252,6 +301,8 @@ jobs:
   inbound_test:
     name: Inbound Test (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -328,6 +379,8 @@ jobs:
 
   inbound_compile_no_optional_deps:
     name: Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     # Compile-only gate (no Postgres, no MIX_ENV: test). Exercises the inbound→core
     # cross-package reference (MailglassInbound.Execution.Worker → Mailglass.Oban.TenancyMiddleware)
     # under `--no-optional-deps`, where Oban is stripped from both inbound's dep and
@@ -370,6 +423,8 @@ jobs:
   credo_strict:
     name: Credo Strict (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -415,6 +470,8 @@ jobs:
   dialyzer:
     name: Dialyzer (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -473,6 +530,8 @@ jobs:
   docs_warnings_as_errors:
     name: Docs Warnings as Errors (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -503,6 +562,8 @@ jobs:
   hex_audit:
     name: Hex Audit (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -531,6 +592,8 @@ jobs:
   installer_golden_gate:
     name: Installer Golden Gate (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -584,8 +647,10 @@ jobs:
   support_contract_admin:
     name: Support Contract Admin (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
-    # Required check — keep matrix-free (see compile_no_optional_deps): a 1-combo
-    # matrix appends " (1.18, 27)" to the name and breaks the required-context match.
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    # Required leaf behind CI Green aggregate — keep matrix-free (see
+    # compile_no_optional_deps): a 1-combo matrix appends " (1.18, 27)" to the name.
     services:
       postgres:
         image: postgres:16-alpine
@@ -643,6 +708,8 @@ jobs:
   operator_browser_gate:
     name: Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -716,6 +783,8 @@ jobs:
   demo_browser_evidence:
     name: Demo Browser Evidence (Docker Compose / Chromium)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     timeout-minutes: 20
     env:
       CI: true
@@ -740,6 +809,8 @@ jobs:
   preview_capture_advisory:
     name: Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -874,8 +945,10 @@ jobs:
   trust_lane_repo_head:
     name: Trust Lane Repo Head (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
-    # Required check — keep matrix-free (see compile_no_optional_deps): a 1-combo
-    # matrix appends " (1.18, 27)" to the name and breaks the required-context match.
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    # Required leaf behind CI Green aggregate — keep matrix-free (see
+    # compile_no_optional_deps): a 1-combo matrix appends " (1.18, 27)" to the name.
     services:
       postgres:
         image: postgres:16-alpine
@@ -948,8 +1021,10 @@ jobs:
   trust_lane_clean_baseline:
     name: Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
-    # Publish-gate-only: NOT in REQUIRED_CHECKS (D-04/A1 lock). Unconditional:
-    # no if:/needs: so gate-ci-green treats a failure as blocking, not neutral.
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    # Publish-gate-only: NOT in REQUIRED_CHECKS (D-04/A1 lock) and NOT in
+    # ci_green.needs. Gated on changes so docs-only PRs skip it.
     services:
       postgres:
         image: postgres:16-alpine
@@ -1066,3 +1141,36 @@ jobs:
               echo "Review the verifier step log and re-apply with ./scripts/setup_branch_protection.sh main."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+  ci_green:
+    name: CI Green
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - compile_no_optional_deps
+      - installer_host_smoke
+      - support_contract_core
+      - support_contract_admin
+      - trust_lane_repo_head
+    steps:
+      - name: Evaluate required lane results
+        run: |
+          FAILED_LANES=""
+          for job_result in \
+            "compile_no_optional_deps=${{ needs.compile_no_optional_deps.result }}" \
+            "installer_host_smoke=${{ needs.installer_host_smoke.result }}" \
+            "support_contract_core=${{ needs.support_contract_core.result }}" \
+            "support_contract_admin=${{ needs.support_contract_admin.result }}" \
+            "trust_lane_repo_head=${{ needs.trust_lane_repo_head.result }}"
+          do
+            lane="${job_result%%=*}"
+            result="${job_result##*=}"
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              FAILED_LANES="${FAILED_LANES} ${lane}"
+            fi
+          done
+          if [ -n "$FAILED_LANES" ]; then
+            echo "Delivery blocked: required CI lane(s) did not pass:${FAILED_LANES}"
+            exit 1
+          fi
+          echo "All required CI lanes passed or were skipped."
