@@ -76,7 +76,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
         with:
           path: deps
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
       - name: Install deps (root)
         run: mix deps.get
       - name: Wait for postgres + create test DB
@@ -313,7 +313,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
         with:
           path: deps
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
       - name: Install deps
         run: mix deps.get
       - name: Read mailglass version from mix.exs
@@ -394,7 +394,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
         with:
           path: deps
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
       - name: Install deps (MIX_PUBLISH=true → resolves :mailglass as Hex package)
         # mailglass_admin/mix.exs has a conditional `mailglass_dep/0`:
         # MIX_PUBLISH=true → {:mailglass, "== 0.1.0"} from Hex
@@ -497,7 +497,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
         with:
           path: deps
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
       - name: Install deps (MIX_PUBLISH=true → resolves :mailglass as Hex package)
         # mailglass_inbound/mix.exs has a conditional dep selector:
         # MIX_PUBLISH=true → {:mailglass, "== <version>"} from Hex
