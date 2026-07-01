@@ -38,6 +38,8 @@ defmodule MailglassInbound.MixProject do
   def cli do
     [
       preferred_envs: [
+        ci: :test,
+        "ci.fast": :test,
         "verify.support_contract.inbound": :test,
         "verify.stability_contract": :test
       ]
@@ -47,6 +49,18 @@ defmodule MailglassInbound.MixProject do
   defp aliases do
     [
       test: [&configure_test_swoosh/1, "test"],
+      # Sibling-local ci verb (uniform across packages). The inbound test step
+      # is `test --exclude property` with NO --seed 0 — Phase 127 (DET-02) made
+      # the suite deterministic via serial MailboxCase; a seed pin regresses it.
+      "ci.fast": [
+        "format --check-formatted",
+        "compile --no-optional-deps --warnings-as-errors"
+      ],
+      ci: [
+        "ci.fast",
+        "verify.support_contract.inbound",
+        "test --exclude property"
+      ],
       "verify.docs.contract.inbound": [
         "test test/mailglass_inbound/docs_contract_test.exs --warnings-as-errors"
       ],

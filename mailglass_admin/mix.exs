@@ -33,6 +33,8 @@ defmodule MailglassAdmin.MixProject do
   def cli do
     [
       preferred_envs: [
+        ci: :test,
+        "ci.fast": :test,
         "mailglass_admin.preview.capture": :test,
         "verify.preview": :test,
         "verify.phase_05": :test,
@@ -182,6 +184,18 @@ defmodule MailglassAdmin.MixProject do
   # Step 4 is the PREV-06 / CONTEXT D-04 merge gate — bundle drift CI check.
   defp aliases do
     [
+      # Sibling-local ci verb (uniform "is this green?" across packages). The
+      # root `mix ci` already fans out; these serve the inner-loop-in-a-subdir
+      # case for a contributor working inside mailglass_admin/.
+      "ci.fast": [
+        "format --check-formatted",
+        "compile --no-optional-deps --warnings-as-errors",
+        "credo --strict"
+      ],
+      ci: [
+        "ci.fast",
+        "verify.support_contract.admin"
+      ],
       # Semantic alias (REL-03)
       "verify.preview": [
         "compile --no-optional-deps --warnings-as-errors",
