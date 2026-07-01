@@ -15,21 +15,15 @@ REPO_NAME="${REPO_NAME:-mailglass}"
 REPO="${OWNER}/${REPO_NAME}"
 
 REQUIRED_CHECKS=(
-  "Support Contract Core (Elixir 1.18 / OTP 27)"
-  "Support Contract Admin (Elixir 1.18 / OTP 27)"
-  "Compile No Optional Deps (Elixir 1.18 / OTP 27)"
-  "Trust Lane Repo Head (Elixir 1.18 / OTP 27)"
-  "Installer Host Smoke"
+  "CI Green"
+  "Guard Release Trigger"
 )
 
 print_expected_text() {
   cat <<'TEXT'
 Expected required status checks:
-  - Support Contract Core (Elixir 1.18 / OTP 27)
-  - Support Contract Admin (Elixir 1.18 / OTP 27)
-  - Compile No Optional Deps (Elixir 1.18 / OTP 27)
-  - Trust Lane Repo Head (Elixir 1.18 / OTP 27)
-  - Installer Host Smoke
+  - CI Green
+  - Guard Release Trigger
 
 Expected non-context branch protection fields:
   - required_status_checks.strict: true
