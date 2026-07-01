@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
 current_phase: 126
-current_phase_name: ci-green-fan-in-gate-branch-protection-collapse
-status: ready_to_plan
+status: executing
 stopped_at: Phase 125 complete (1/1), verified — ready to plan Phase 126
-last_updated: 2026-07-01T18:01:05.561Z
+last_updated: "2026-07-01T18:21:32.433Z"
 last_activity: 2026-07-01
-last_activity_desc: Phase 125 (sibling-pin loosening keystone) executed + verified
+last_activity_desc: Phase 126 planning complete
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 1
   completed_plans: 1
   percent: 14
+current_phase_name: ci-green-fan-in-gate-branch-protection-collapse
 ---
 
 # Project State
@@ -30,8 +30,8 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 126
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-07-01
+Status: Ready to execute
+Last activity: 2026-07-01 — Phase 126 planning complete
 
 ## v1.14 Milestone Intent
 
