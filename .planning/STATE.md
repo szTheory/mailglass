@@ -2,9 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-status: planning
-last_updated: "2026-07-01T16:12:07.026Z"
+current_phase_name: defining requirements
+status: executing
+stopped_at: Completed 123-03-PLAN.md (Phase 123 complete)
+last_updated: "2026-07-01T17:26:12.725Z"
 last_activity: 2026-07-01
+last_activity_desc: Milestone v1.15 started
 progress:
   total_phases: 0
   completed_phases: 0
@@ -26,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: Not started (defining requirements)
 Plan: —
-Status: Defining requirements
+Status: Ready to execute
 Last activity: 2026-07-01 — Milestone v1.15 started
 
 ## v1.14 Milestone Intent
