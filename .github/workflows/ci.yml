@@ -363,12 +363,8 @@ jobs:
       - name: Run inbound tests
         # --exclude property: the 1000-run convergence property is gated
         # separately in the step below; this runs the fast unit subset first.
-        # --seed 0: this suite has a known cross-file test-isolation flake under
-        # random parallel ordering (duplicate-fingerprint / pool contention); a
-        # pinned seed is the documented deterministic-green workaround. The real
-        # isolation fix is tracked for v1.4 (Release Discipline / green main).
         working-directory: mailglass_inbound
-        run: mix test --exclude property --seed 0
+        run: mix test --exclude property
       - name: Run inbound convergence property (TELE-08)
         # --only property: the TELE-08 1000-run replay-convergence proof runs
         # against the real MailglassInbound.TestRepo Postgres DB created above.

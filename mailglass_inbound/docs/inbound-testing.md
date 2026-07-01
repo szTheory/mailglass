@@ -23,11 +23,10 @@ end
 
 ### Why `async: false` is required
 
-`MailboxCase` checks out an Ecto sandbox in shared mode and resets ETS-backed
-state (the SES cert cache, the S3 fetcher seam) in its `setup` callback. Both
-are process-global. Running `async: true` MailboxCase tests concurrently causes
-non-deterministic sandbox ownership conflicts and shared-state bleed across
-tests.
+`MailboxCase` resets ETS-backed state (the SES cert cache, the S3 fetcher seam)
+in its `setup` callback. Both are process-global. Running `async: true` MailboxCase
+tests concurrently causes non-deterministic shared-state bleed across tests.
+`MailboxCase` defaults to serial execution to prevent this by construction.
 
 The rule is absolute: **always `use MailglassInbound.MailboxCase, async: false`**.
 
@@ -56,7 +55,7 @@ Test.Ingress.receive_inbound(message, router: MyApp.MailglassInboundRouter)
 | --- | ------ |
 | `@tag tenant: "acme"` | Override the default `"test-tenant"` |
 | `@tag tenant: :unset` | Disable tenancy stamping for this test |
-| `@tag async: false` | Always set — sandbox is in shared mode |
+| `@tag async: false` | Always set — `MailboxCase` defaults serial execution |
 
 ## Test.Ingress: driving the real path
 
