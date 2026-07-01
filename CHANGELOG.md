@@ -14,6 +14,13 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.10.2](https://github.com/szTheory/mailglass/compare/mailglass-v1.10.1...mailglass-v1.10.2) (2026-06-30)
+
+
+### Bug Fixes
+
+* ship deliveries idempotency DDL via the migration dispatcher (V05) ([#100](https://github.com/szTheory/mailglass/issues/100)) ([9512ce1](https://github.com/szTheory/mailglass/commit/9512ce1b1d5612faf36dd279a3447105374f21b3))
+
 ## [1.10.1](https://github.com/szTheory/mailglass/compare/mailglass-v1.10.0...mailglass-v1.10.1) (2026-06-30)
 
 
