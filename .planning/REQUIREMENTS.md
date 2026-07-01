@@ -47,11 +47,11 @@ product-behavior change, then cut a real linked Hex release that dogfoods the ha
 
 ### DET — Inbound test determinism (→ Phase 127)
 
-- [ ] **DET-01**: The shared-mode/async sandbox flake is fixed at the root (`MailboxCase` defaults
+- [x] **DET-01**: The shared-mode/async sandbox flake is fixed at the root (`MailboxCase` defaults
   `async: false`, drops `shared:`, plain ownership checkout) so the suite is deterministic by
   construction (LD-8).
 
-- [ ] **DET-02**: `--seed 0` is deleted from `ci.yml` and never appears in the `mix ci` inbound step;
+- [x] **DET-02**: `--seed 0` is deleted from `ci.yml` and never appears in the `mix ci` inbound step;
   the suite is green across 20 random-seed runs (LD-8).
 
 ### MIXCI — `mix ci` local↔CI parity (folds in PR #104 → Phase 128)

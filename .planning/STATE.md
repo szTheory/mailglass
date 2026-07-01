@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-current_phase: 127
-status: executing
-stopped_at: Phase 126 complete (2/2), verified — ready to plan Phase 127
-last_updated: "2026-07-01T19:56:19.252Z"
-last_activity: 2026-07-01
-last_activity_desc: Phase 126 complete + verified
+status: ready_to_plan
+stopped_at: Phase 127 complete (1/1) — ready to plan Phase 128
+last_updated: 2026-07-01T21:00:00.000Z
+last_activity: 2026-07-01 -- Phase 127 (inbound-test-determinism) complete, verified 5/5
 progress:
-  total_phases: 7
-  completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
-  percent: 28
-current_phase_name: inbound-test-determinism
+  total_phases: 16
+  completed_phases: 4
+  total_plans: 10
+  completed_plans: 10
+  percent: 25
 ---
 
 # Project State
@@ -24,14 +21,14 @@ current_phase_name: inbound-test-determinism
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 127 — Inbound test determinism (root-cause fix for the shared-mode/async sandbox flake)
+**Current focus:** Phase 128 — `mix ci` parity completion (consumes the Phase 127 `--seed 0` deletion)
 
 ## Current Position
 
-Phase: 127
+Phase: 128
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-07-01 — Phase 126 complete + verified
+Status: Ready to plan
+Last activity: 2026-07-01
 
 ## v1.14 Milestone Intent
 

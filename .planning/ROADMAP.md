@@ -143,7 +143,7 @@ step (Phase 128).
      as a time-boxed transition net with a removal date (LD-8).
 **Plans**: 1 plan
 Plans:
-- [ ] 127-01-PLAN.md — Fix MailboxCase (async: false default, drop shared:), update docs, delete --seed 0 from ci.yml; prove 20-seed determinism
+- [x] 127-01-PLAN.md — Fix MailboxCase (async: false default, drop shared:), update docs, delete --seed 0 from ci.yml; prove 20-seed determinism
 **UI hint**: no
 
 ### Phase 128: `mix ci` parity completion (folds in PR #104)
