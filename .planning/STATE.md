@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.14
-milestone_name: Operator IA & Lived-Experience Redesign
-current_phase: 124
-current_phase_name: Release cut + milestone closeout
-status: complete
-stopped_at: 1.10.2 patch SHIPPED — mailglass 1.10.2 / mailglass_admin 1.10.2 / mailglass_inbound 1.5.4 live on Hex (shipped-migration divergence fix). Milestone-1/2 research dossiers written; mix ci PR #104 open.
-last_updated: "2026-07-01T02:30:00.000Z"
+milestone: v1.15
+milestone_name: Release-Pipeline Efficiency & Contributor DX
+status: planning
+last_updated: "2026-07-01T16:12:07.026Z"
 last_activity: 2026-07-01
-last_activity_desc: "1.10.2/1.10.2/1.5.4 patch SHIPPED to Hex — fixes the shipped-migration divergence bug (fresh Mailglass.Migration.up() lacked deliveries idempotency_key/status/last_error). Release recovery: 3 tag-move cycles cleared (1) files-allowlist missing v05.ex, (2) inbound == pin ordering trap, (3) retired plug 1.20.1 in admin lock -> 1.20.2. Also: 3 research dossiers (mix ci DX, CI/CD+release hardening, PG schema isolation 2.0) written under .planning/research/; mix ci parity aliases in PR #104."
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 24
-  completed_plans: 24
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,11 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 ## Current Position
 
-Phase: none — post-1.10.2 patch; Milestone-1/2 planning teed up
-Plan: quick task 260630-f1i (migration fix) shipped; audit plan at `/Users/jon/.claude/plans/software-quality-evaluation-prompt-txt-purring-bunny.md`
-Status: **mailglass 1.10.2 / mailglass_admin 1.10.2 / mailglass_inbound 1.5.4 live on Hex** (Released 2026-07-01; inbound pins `== 1.10.2`). The 1.10.2 patch fixes the shipped-migration divergence bug (see quick-task row). Release recovery took 3 tag-move cycles (allowlist v05.ex, inbound `==` pin ordering, retired plug 1.20.1→1.20.2 in admin). Consumer/post-publish flows green (publish run `28525073712` all jobs success).
-Next action: **Milestone 1 — CI/CD & Release-Pipeline Efficiency** (`/gsd-new-milestone`), then **Milestone 2 — Postgres Schema Isolation → 2.0**. Both designed & research-locked (see `.planning/research/milestone-cicd/` + `.planning/research/milestone-schema-isolation/`). Milestone-1 P0 = replace the `{:mailglass, "== X"}` exact pin with `~>` (root cause of the release dance). First merge **PR #104** (mix ci parity aliases) into whichever milestone opens. Convergence posture (D-23) still holds — this is hygiene + one chosen breaking improvement, not feature growth.
-Last activity: 2026-07-01 — 1.10.2 patch shipped + Milestone-1/2 research
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-07-01 — Milestone v1.15 started
 
 ## v1.14 Milestone Intent
 

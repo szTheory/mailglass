@@ -26,7 +26,35 @@
 - ✅ **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** - Phases 109-117 (shipped 2026-06-21) - see [milestones/v1.13-ROADMAP.md](milestones/v1.13-ROADMAP.md) and [milestones/v1.13-MILESTONE-AUDIT.md](milestones/v1.13-MILESTONE-AUDIT.md)
 - ✅ **v1.14 Operator IA & Lived-Experience Redesign** - Phases 118-124 (shipped 2026-06-30 — mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3) - see [milestones/v1.14-ROADMAP.md](milestones/v1.14-ROADMAP.md) and [milestones/v1.14-MILESTONE-AUDIT.md](milestones/v1.14-MILESTONE-AUDIT.md)
 
-_No active milestone — see `/gsd-new-milestone` for the next cycle._
+🚧 **v1.15 Release-Pipeline Efficiency & Contributor DX** — Phases 125-131 (active, opened 2026-07-01) — decisions of record: [research/milestone-cicd/SYNTHESIS.md](research/milestone-cicd/SYNTHESIS.md)
+
+## Phases (Active — v1.15)
+
+**Milestone goal:** Kill the exact-pin release dance and close the local↔CI parity gap — make
+releases genuinely hands-free and make **one command reproduce the mergeable surface** — with zero
+product-behavior change, then cut a real linked Hex release that dogfoods the hardened pipeline.
+Decisions of record (LD-1..13): `.planning/research/milestone-cicd/SYNTHESIS.md`. Infrastructure/DX
+only — D-23 convergence holds; no product code, no schema change (that is v2.0).
+
+- [ ] **Phase 125: Sibling-pin loosening (keystone, atomic)** — Replace both `{:mailglass, "== X.Y.Z"}` pins with `~>` (inbound `~> 1.10 and >= 1.10.2`, admin `~> 1.10`), relax `stability_contract_test` + `publish.check` to admit-not-equal, delete the `==` sed rewrites from `release-please.yml`, ship the CHANGELOG + Hex-retirement rollback note — as ONE indivisible change. **Requirements:** PIN-01..05. **Success:** (1) both siblings resolve core from Hex under `~>` with `MIX_PUBLISH=true`; (2) the relaxed contract test passes on a bare main SHA where core `@version` is unchanged (the scenario that was red before); (3) a simulated core patch release touches zero sibling pin lines; (4) `publish.check` passes for all three packages.
+- [ ] **Phase 126: CI Green fan-in gate + branch-protection collapse** — Add the `CI Green` aggregate job (release-SHA-safe `skipped` handling), collapse branch protection to `CI Green` + `guard-release-trigger`, add the set-equality coverage meta-test, verify `guard-release-trigger` always reports, fix the `gate-self-test` stale default. **Requirements:** GATE-01..04. **Success:** (1) a synthetic failing PR shows `CI Green` = FAILURE and is blocked; (2) a fully-green PR is mergeable without `--admin`; (3) the meta-test fails if a required lane is dropped from `needs`; (4) `gate-self-test` polls the real gate.
+- [ ] **Phase 127: Inbound test determinism** — Root-cause fix for the shared-mode/async sandbox flake (`MailboxCase` serial + drop `shared:`); delete `--seed 0` everywhere. **Requirements:** DET-01..02. **Success:** (1) the inbound suite is green across 20 random-seed runs; (2) `--seed 0` appears nowhere in `ci.yml` or the `mix ci` alias; (3) `grep shared: mailbox_case.ex` is empty.
+- [ ] **Phase 128: `mix ci` parity completion (folds in PR #104)** — Complete `mix ci` to equal the mergeable surface (add Installer Host Smoke + trust lane); tiered `ci.fast`/`ci`/`ci.browser` + sibling aliases + `make ci`; manifest-membership parity-drift test (shared source with GATE-03); Postgres/network preflight brand-voice guard; designate `verify.*` internal + remove deprecated `verify.phase_NN`; land the CONTRIBUTING copy. **Requirements:** MIXCI-01..05. **Success:** (1) `mix ci` runs all 5 required gates; (2) the parity-drift test fails when a required CI lane isn't covered by the alias; (3) `mix ci` with no Postgres prints an actionable brand-voice message, not a raw crash; (4) CONTRIBUTING points at `mix ci`, no `verify.phase_07`.
+- [ ] **Phase 129: Cache-key + PLT correctness** — Toolchain-scoped cache key derived from a single `.tool-versions`/`env:` source; Bandit-style PLT self-healing eviction; only then may Dialyzer move toward required. **Requirements:** CACHE-01..02. **Success:** (1) cache keys in Actions logs carry OTP+Elixir dims from one source; (2) a corrupted PLT is evicted and rebuilt by the workflow; (3) no per-block hardcoded toolchain literals remain.
+- [ ] **Phase 130: Supply chain + workflow hygiene** — `mix_audit` advisory-on-PR / block-at-release; dependabot sibling-dir coverage; cowlib OSV-staleness forcing function (loud CI warning + publish hard-block, fail-open); `actionlint` on workflow PRs; latest-Elixir 1.19/OTP28 advisory row (non-blocking) + floor-coincidence note. **Requirements:** SUPPLY-01..05. **Success:** (1) a simulated unfixable advisory reds the publish gate but NOT open PRs; (2) dependabot watches both sibling locks; (3) `actionlint` fails a malformed workflow PR; (4) the 1.19/28 row runs on cron only and never blocks.
+- [ ] **Phase 131: Release cut + milestone closeout** — Cut the real linked v1.15 (core+admin linked; inbound minor for the dependency-policy change) through the hardened pipeline; consumer + post-publish smoke; milestone audit + archive. **Requirements:** SHIP-01..03. **Success:** (1) v1.15 live on Hex, `~>` pins resolve from Hex; (2) consumer + post-publish smoke green; (3) the release ceremony was a confirmation (per-phase CI caught regressions earlier); (4) milestone audited + archived.
+
+**Execution order:** 125 → 126 → 127 → 128 → 129 → 130 → 131 (dependency-ordered, biggest-leverage
+first). **125 is the keystone** — it unblocks every future release and is internally atomic. **127
+precedes 128** (the `mix ci` inbound step must consume the `--seed 0` deletion). **129 precedes any
+Dialyzer promotion** (PLT self-healing must exist before Dialyzer can block merges — LD-7). **131 is
+last** and cuts the real release, validating the whole pipeline end-to-end (LD-1).
+
+**Method:** dogfood the v1.14-post-mortem backlog fix — each phase pushes a `phase/NN` branch and
+requires green CI, so the release ceremony is a confirmation, not a discovery.
+
+**Research flags:** none — the milestone is research-complete (decision-ready dossiers +
+`SYNTHESIS.md` adversarial refinement). All phases plan directly.
 
 ## Phases (Archived — v1.14, shipped 2026-06-30)
 

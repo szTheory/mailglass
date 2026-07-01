@@ -8,63 +8,64 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v1.14 Operator IA & Lived-Experience Redesign
+## Current Milestone: v1.15 Release-Pipeline Efficiency & Contributor DX
 
-**Opened 2026-06-26.** The **fourth** admin-UI quality pass (after v1.7, v1.11, v1.13), opened
-because clicking the real `make demo` after v1.13 shipped *still* surfaced obvious IA/usability
-problems — a sidebar that always highlights "Deliveries", an overview "Navigate" section that
-duplicates the sidebar, a homepage that mostly points elsewhere. Root cause: the prior three passes
-were **bottom-up and structural-gate-verified**, producing clean primitives on muddy pages — no
-structural gate can ask "is this page redundant / coherent / least-surprising." A sanctioned
-adopter-visible-**quality** investment under D-23 (precedent D-24 v1.7, D-27 v1.11, D-29 v1.13) —
-NOT product-capability growth.
+**Opened 2026-07-01.** First of two designed-and-research-locked hygiene milestones (this one, then
+v2.0 Postgres Schema Isolation). Opened because the 1.10.2 patch release took **three tag-move
+recovery cycles** — the recurring symptom of a release pipeline whose exact-pin sibling coupling
+forces a transient-red-to-main dance on every core bump, plus a local↔CI parity gap where the
+documented contributor command (`mix verify.phase_07`, deprecated) exercises a fraction of what merge
+requires. This is **infrastructure/DX hardening + one deliberate breaking-the-dance improvement** —
+NOT product-capability growth (D-23 convergence holds; the library is feature-complete at ~93–95%).
 
-**Goal:** Invert the method to **top-down, JTBD/IA-led**, and add a **judgment-level review loop**
-(adversarial persona/JTBD critic agents + maintainer sign-off) that catches the taste/redundancy/IA
-problems structural gates can't. Redesign the admin/operator surfaces page-by-page, biggest-impact
-first, to ruthlessly de-duplicated, Apple-like deliberate IA — everything intentional, nothing
-accidental — mobile-first, light/dark/system, WCAG 2.2 AA, Emil-Kowalski-grade motion, on-brand
-microcopy, **idempotent (only-forward, inheriting the full v1.13 ratchet floor)** — then ship to Hex.
+**Goal:** Kill the exact-pin release dance and close the local↔CI parity gap — make releases genuinely
+hands-free and make **one command reproduce the mergeable surface** — with zero product-behavior
+change, then cut a real linked Hex release that dogfoods the hardened pipeline end-to-end.
 
-Binding quality bar: `.planning/research/v1.14/STRESS-TEST-PROMPT.md` (do not dilute). Seed brief:
-`.planning/research/v1.14/MILESTONE-SEED.md`.
+Research base (decision-ready, adversarially verified 2026-07-01):
+`.planning/research/milestone-cicd/` — `CICD-RELEASE-HARDENING.md`, `DX-MIX-CI.md`, and
+`SYNTHESIS.md` (the locked decisions + the ~19 adversarial refinements that correct the raw dossiers).
 
-**Target features (top-down, biggest-impact first):**
-- **Method + audit + storybook stand-up** — adversarial persona-critic harness producing a
-  prioritized, screenshot-backed defect register across all surfaces; adopt `phoenix_storybook` as
-  a `only: :dev` dependency (sandbox CSS = committed `app.css`; keep `/dev/mail/gallery` for the
-  ratchet contracts); new judgment gates (nav-active-correctness, no-nav-duplication).
-- **App-shell + nav + Overview redesign (#1 pain)** — fix the false-active nav bug; Overview becomes
-  a real triage destination (redundant nav cards removed, orientation strip only on genuine empty
-  panes, actionable/drill-down health stats, own nav identity); streamlined shell/overview microcopy.
-- **Deliveries surface** end-to-end redesign (core operator JTBD) across happy/empty/error/boundary,
-  light/dark/system, every width.
-- **Inbound surface** redesign, made consistent with the cleaned-up patterns.
-- **Preview surface** redesign + consistency.
-- **Cross-surface coherence + review-surface finalize + ratchet re-arm** — re-score the aesthetic
-  baseline only-forward; arm the new judgment gates.
-- **Release cut + closeout** — linked-version Hex release (admin-minor drags core+inbound), D-13
-  inbound exact-pin re-pin, consumer + post-publish smoke, milestone audit + archive.
+**Target features (dependency-ordered, biggest-leverage first):**
+- **Sibling-pin loosening (keystone, atomic)** — replace `{:mailglass, "== X.Y.Z"}` with `~>`
+  (inbound `~> 1.10 and >= 1.10.2`, admin `~> 1.10`) + relaxed `stability_contract_test` +
+  `publish.check` verify + deleted release-please `==` sed rewrites, as one indivisible change.
+  Deletes the transient-red-to-main dance and the paired-inbound-per-patch drag.
+- **CI Green fan-in gate** — one aggregate required context (release-SHA-safe `skipped` handling)
+  replacing the 5 leaf contexts that cause green-but-BLOCKED / admin-merge; set-equality meta-test.
+- **Inbound determinism** — root-cause fix for the shared-mode/async sandbox flake (retire `--seed 0`).
+- **`mix ci` parity completion** — finish PR #104 so `mix ci` == the mergeable surface (adds Installer
+  Host Smoke + trust lane); tiered `ci.fast`/`ci`/`ci.browser`; parity-drift manifest test;
+  Postgres/network preflight guard; `verify.*` designated internal.
+- **Cache-key + PLT correctness** — toolchain-scoped key from a single `.tool-versions` source;
+  Bandit-style PLT self-healing eviction.
+- **Supply chain + workflow hygiene** — `mix_audit` (advisory-on-PR / block-at-release); dependabot
+  sibling-dir coverage; cowlib OSV-staleness forcing function; `actionlint`; latest-Elixir advisory row.
+- **Release cut + closeout** — cut the real linked v1.15 (core+admin linked; inbound **minor** for the
+  dependency-policy change), consumer + post-publish smoke, milestone audit + archive.
 
-**Locked decisions (maintainer, 2026-06-26):** (1) Overview → real triage destination; (2) review
-method → persona critics, mostly autonomous with phase-boundary sign-off; (3) ship to Hex; (4) adopt
-`phoenix_storybook` dev-only.
+**Locked decisions (maintainer, 2026-07-01):** (1) **Cut a real Hex release** — the `~>` pins and
+`mix ci` aliases only benefit adopters once published, and a real ceremony is the best end-to-end test
+of the new pipeline. (2) Inbound pin floors at `>= 1.10.2` (the V05 migration fix), not bare `~> 1.10`
+(which would admit the broken `1.10.0/1.10.1`). (3) `mix_audit` and OSV-staleness are advisory on PR,
+blocking only at the publish gate (a v1.14-style advisory wave must never red every open PR). (4) The
+pin change ships with a CHANGELOG line + documented **Hex retirement** as the new rollback lever
+(replacing the `==` wall).
 
 **Scope locks:**
-- **Admin + demo only.** Recipient-facing email HEEx templates and `brandbook/` tokens are OUT — the
-  brand book is the source of truth (a newer brand book wins over older `prompts/` files).
-- **Host-app-friendly** (mountable library): don't hijack host auth/theme/assets/Repo; no surprising
-  global CSS/JS. `phoenix_storybook` is `only: :dev` — adopters never install it (zero-Node is an
-  adopter-facing guarantee, intact).
-- **Idempotent, no regressions** — inherit the full v1.13 ratchet floor (~26 conformance gates,
-  54-cell aesthetic baseline, 9-cell axe baseline, 24-item Bucket-A manifest, persona drift-guard);
-  re-score only upward.
-- **Research: YES** — per-decision subagent research at the phase level (Phoenix LiveView / GOV.UK /
-  Carbon/Polaris/Atlassian / WCAG 2.2 + APG / Emil Kowalski / comparable admin UIs), adversarially
-  judged; extends the v1.11/v1.13 LOCKED-DECISION dossiers rather than redoing them.
-- **Release posture: ACTUALLY CUT** at close (linked-version; D-13 inbound re-pin).
-- **Zero Node toolchain** in the *shipped* asset pipeline; admin CSS bundle rebuilt + committed on
-  class changes. Phases continue from 117 → 118+.
+- **Infrastructure + DX only.** No product code, no new provider/transport/route, no schema change
+  (Postgres schema isolation is the *next* milestone → v2.0). D-23 convergence holds.
+- **Zero product-behavior change** — every change is CI/release-machinery, test-determinism, or
+  contributor tooling. The one adopter-visible change is the loosened published dependency constraint.
+- **Zero-Node stays adopter-facing** — Node lives only in the opt-in `mix ci.browser`; the required +
+  hygiene tiers need none (per the "zero-Node is adopter-facing, not a dev-tooling ban" rule).
+- **Atomic-change discipline** — the pin loosening (pin + contract test + publish.check + sed
+  deletion) lands as one indivisible change; Dialyzer is not promoted to required until the PLT
+  self-healing fix lands. Sequencing is dependency-ordered, not convenience-ordered.
+- **Dogfood the method** — each phase pushes a `phase/NN` branch and requires green CI, so the release
+  ceremony is a confirmation, not a discovery (adopts the v1.14-post-mortem backlog fix).
+- **Research: DONE** — decision-ready dossiers + adversarial synthesis already persisted; phases plan
+  directly. Phases continue from 124 → 125+.
 
 ## Current State
 
@@ -633,4 +634,6 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-06-28 — **v1.14 Phase 122 (Preview surface redesign) complete**, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).*
+*Last updated: 2026-07-01 — **v1.15 Release-Pipeline Efficiency & Contributor DX opened** (infrastructure/DX hardening + the deliberate exact-pin→`~>` improvement; cut a real linked Hex release at close; phases 125–131). Previous milestone **v1.14 Operator IA & Lived-Experience Redesign SHIPPED 2026-06-30** — live at 1.10.1 → patched to **1.10.2 / 1.10.2 / 1.5.4** on 2026-07-01. v1.14 detail below.*
+<!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
+
