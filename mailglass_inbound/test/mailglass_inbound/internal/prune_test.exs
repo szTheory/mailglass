@@ -35,14 +35,23 @@ defmodule MailglassInbound.Internal.PruneTest do
   setup do
     # Real shared connection (NOT the per-test sandbox transaction): the prune
     # sweep commits between batches and uses session advisory locks. Cleanup runs
-    # at the START of each test (real rows persist across tests), so on_exit only
-    # restores config — it must not touch the DB connection it does not own.
+    # at the START of each test (real rows persist across tests). on_exit also
+    # truncates via a fresh checkout so the last test's committed rows do not
+    # bleed into subsequent test modules (e.g. ReplayTest uses Sandbox.checkout
+    # in :manual mode and would see real-committed rows from this module).
     :ok = Sandbox.checkout(TestRepo, sandbox: false)
     Sandbox.mode(TestRepo, {:shared, self()})
     truncate_all()
     prior = Application.get_env(:mailglass_inbound, :retention)
 
-    on_exit(fn -> restore(:retention, prior) end)
+    on_exit(fn ->
+      restore(:retention, prior)
+      # Truncate committed rows after the last test so subsequent test modules
+      # running with a sandboxed checkout do not see stale real-committed data.
+      :ok = Sandbox.checkout(TestRepo, sandbox: false)
+      truncate_all()
+      Sandbox.checkin(TestRepo)
+    end)
 
     :ok
   end
