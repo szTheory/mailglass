@@ -56,6 +56,186 @@ requires green CI, so the release ceremony is a confirmation, not a discovery.
 **Research flags:** none — the milestone is research-complete (decision-ready dossiers +
 `SYNTHESIS.md` adversarial refinement). All phases plan directly.
 
+## Phase Details (Active — v1.15)
+
+> Decisions of record for every phase below: `.planning/research/milestone-cicd/SYNTHESIS.md`
+> (LD-1..13). Live versions at milestone open: `mailglass` 1.10.2 / `mailglass_admin` 1.10.2 /
+> `mailglass_inbound` 1.5.4.
+
+### Phase 125: Sibling-pin loosening (keystone, atomic)
+
+**Goal**: Replace both `{:mailglass, "== X.Y.Z"}` sibling pins with pessimistic `~>` constraints and
+relax every gate that enforced exact equality — as ONE indivisible change — so a core patch release no
+longer drags a paired sibling release. This is the keystone: it unblocks every future release.
+**Depends on**: Nothing (first phase of v1.15; keystone for the whole milestone)
+**Requirements**: PIN-01, PIN-02, PIN-03, PIN-04, PIN-05
+**Success Criteria** (what must be TRUE):
+
+  1. Both siblings resolve core from Hex under `~>` with `MIX_PUBLISH=true` — inbound pinned
+     `{:mailglass, "~> 1.10 and >= 1.10.2"}` (floored at the V05 deliveries-migration fix), admin
+     `{:mailglass, "~> 1.10"}` (safe via the linked-versions plugin) (LD-2).
+
+  2. `stability_contract_test` (:105 regex, :154–159 assertion) and `publish.check`
+     (`verify_deps`, `verify_linked_constraint`) assert the sibling pin *admits* core `@version` via
+     `Version.match?` and is pessimistic (`~>`), rejecting `==` — the relaxed contract passes on a bare
+     main SHA where core `@version` is unchanged (the exact scenario that was red before) (LD-3).
+
+  3. The two `== X.Y.Z` sed rewrites are deleted from `release-please.yml`; a simulated core patch
+     release touches zero sibling pin lines (LD-3).
+
+  4. The change ships a CHANGELOG entry and documents `mix hex.retire mailglass X.Y.Z` as the rollback
+     lever that replaces the `==` wall (LD-5); `publish.check` passes for all three packages.
+
+  5. The whole change lands atomically — splitting any part reds main or miscuts the next release (the
+     sed anchor would match zero `==` lines) (LD-3).
+**Plans**: TBD (planning)
+**UI hint**: no
+
+### Phase 126: CI Green fan-in gate + branch-protection collapse
+
+**Goal**: Collapse the 5 required leaf branch-protection contexts into a single `CI Green` aggregate
+job (plus `guard-release-trigger`), with release-SHA-safe `skipped` handling and a set-equality
+coverage meta-test so no required lane can silently drop out of `needs`.
+**Depends on**: Phase 125 (the pin change must be green first; the keystone lands before pipeline gates
+are re-shaped)
+**Requirements**: GATE-01, GATE-02, GATE-03, GATE-04
+**Success Criteria** (what must be TRUE):
+
+  1. A single `CI Green` aggregate job (`if: always()`, explicit `needs`) is the sole required
+     branch-protection context alongside `guard-release-trigger`, replacing the 5 leaf contexts
+     (GATE-01); a synthetic failing PR shows `CI Green` = FAILURE and is blocked; a fully-green PR is
+     mergeable without `--admin`.
+
+  2. On the release/publish path a required lane must be `success` — a `skipped` required lane does NOT
+     count as green (LD-6, GATE-02).
+
+  3. A coverage meta-test asserts set-equality between `setup_branch_protection.sh` `REQUIRED_CHECKS`,
+     `ci-green.needs`, and the actual job set (not superset), and that no required lane is permanently
+     `if:`-disabled; it fails if a required lane is dropped from `needs` (GATE-03).
+
+  4. `guard-release-trigger` is verified to always report (no green-but-BLOCKED regression) and
+     `gate-self-test.yml`'s stale `check_name` default is corrected to `CI Green` (GATE-04).
+**Plans**: TBD (planning)
+**UI hint**: no
+
+### Phase 127: Inbound test determinism
+
+**Goal**: Root-cause-fix the shared-mode/async sandbox flake in the inbound suite so it is
+deterministic by construction, then delete `--seed 0` everywhere. Precondition for the `mix ci` inbound
+step (Phase 128).
+**Depends on**: Phase 126 (lands on the hardened gate; determinism precedes the `mix ci` inbound step)
+**Requirements**: DET-01, DET-02
+**Success Criteria** (what must be TRUE):
+
+  1. The shared-mode/async sandbox flake is fixed at the root — `MailboxCase` defaults `async: false`,
+     drops `shared:`, uses a plain ownership checkout (Option B) — so the suite is deterministic by
+     construction (LD-8); `grep shared: mailbox_case.ex` is empty.
+
+  2. `--seed 0` is deleted from `ci.yml` and the `mix ci` alias and appears nowhere; the inbound suite
+     is green across 20 random-seed runs (DET-02). Any `|| mix test --failed` retry idiom is kept only
+     as a time-boxed transition net with a removal date (LD-8).
+**Plans**: TBD (planning)
+**UI hint**: no
+
+### Phase 128: `mix ci` parity completion (folds in PR #104)
+
+**Goal**: Complete `mix ci` so it equals the mergeable surface (add Installer Host Smoke + trust lane),
+ship tiered `ci.fast`/`ci`/`ci.browser` aliases + sibling aliases + `make ci`, a manifest-membership
+parity-drift test, brand-voice preflight guards, and the CONTRIBUTING copy. Folds in and completes the
+open PR #104 DX slice.
+**Depends on**: Phase 127 (the `mix ci` inbound step must consume the `--seed 0` deletion)
+**Requirements**: MIXCI-01, MIXCI-02, MIXCI-03, MIXCI-04, MIXCI-05
+**Success Criteria** (what must be TRUE):
+
+  1. `mix ci` equals the mergeable surface — runs all 5 required gates including Installer Host Smoke
+     and the reference-host trust lane (LD-10, MIXCI-01).
+
+  2. Tiered env-pinned aliases exist — `mix ci.fast` (seconds, no DB), `mix ci` (full parity),
+     `mix ci.browser` (opt-in Node) — with sibling-local `ci`/`ci.fast` aliases and a discoverable
+     `make ci`/`make help` wrapper (MIXCI-02).
+
+  3. A manifest-membership parity-drift test asserts `ci` ∪ `ci.browser` covers every required+advisory
+     CI lane by identity + flag-set (shared `ci_lanes` source with GATE-03), failing loudly on drift —
+     not a vacuous substring superset (LD-10, MIXCI-03).
+
+  4. `mix ci`/`ci.setup` preflight-probe Postgres (and the installer step probes network) and print a
+     brand-voice actionable message on absence, never a raw connection crash (LD-12, MIXCI-04).
+
+  5. `verify.*` are designated internal composition targets, the deprecated `verify.phase_NN`
+     pass-throughs are removed, and CONTRIBUTING points at `mix ci`/`mix ci.fast` (only once MIXCI-01
+     holds), with no `verify.phase_07` 404 (LD-12, MIXCI-05).
+**Plans**: TBD (planning)
+**UI hint**: no
+
+### Phase 129: Cache-key + PLT correctness
+
+**Goal**: Derive the deps/`_build` cache key from a single toolchain source (kill the ~15 hardcoded
+`otp27-ex1.18` literals) and add Bandit-style self-healing PLT eviction — the precondition before
+Dialyzer can move toward the required set.
+**Depends on**: Phase 128 (pipeline DX complete; cache/PLT correctness precedes any Dialyzer promotion)
+**Requirements**: CACHE-01, CACHE-02
+**Success Criteria** (what must be TRUE):
+
+  1. The deps/`_build` cache key includes OTP+Elixir dims derived from a single `.tool-versions`/`env:`
+     source (not per-block hardcoded literals) with a per-env prefix; cache keys in Actions logs carry
+     OTP+Elixir dims from one source and no per-block hardcoded toolchain literals remain (LD-9,
+     CACHE-01).
+
+  2. The PLT cache uses Bandit-style self-healing eviction — a corrupted/stale PLT is evicted and
+     rebuilt by the workflow; only after this may Dialyzer be promoted toward the required set (LD-7,
+     CACHE-02).
+**Plans**: TBD (planning)
+**UI hint**: no
+
+### Phase 130: Supply chain + workflow hygiene
+
+**Goal**: Add supply-chain and workflow-hygiene guards that never red an open PR under an unfixable
+advisory wave — `mix_audit` advisory-on-PR/block-at-release, dependabot sibling coverage, a cowlib
+OSV-staleness forcing function (fail-open), `actionlint` on workflow PRs, and a non-blocking
+latest-Elixir advisory row.
+**Depends on**: Phase 129 (advisory-row + Dialyzer sequencing rests on the cache/PLT fix)
+**Requirements**: SUPPLY-01, SUPPLY-02, SUPPLY-03, SUPPLY-04, SUPPLY-05
+**Success Criteria** (what must be TRUE):
+
+  1. `mix deps.audit` runs advisory (non-blocking) on PR and blocking only at the publish gate — a
+     simulated unfixable advisory reds the publish gate but NOT open PRs (LD-4, SUPPLY-01).
+
+  2. `dependabot.yml` watches the `mailglass_admin` and `mailglass_inbound` sibling locks (not the
+     frozen reference baselines) (SUPPLY-02).
+
+  3. The cowlib allowlist has a forcing function — OSV-staleness is a loud CI warning on every run + a
+     hard block at publish, fail-open on OSV API outage (LD-4, SUPPLY-03).
+
+  4. `actionlint` gates `.github/workflows/**` changes on PR and fails a malformed workflow PR
+     (LD-11, SUPPLY-04).
+
+  5. A latest-Elixir advisory row (1.19 / OTP 28) runs non-blocking on push+cron only and never blocks;
+     the floor-coincidence invariant (LD-13) is documented (SUPPLY-05).
+**Plans**: TBD (planning)
+**UI hint**: no
+
+### Phase 131: Release cut + milestone closeout
+
+**Goal**: Cut the real linked v1.15 Hex release through the hardened pipeline (core+admin linked;
+inbound a minor bump for the dependency-policy change), prove consumer + post-publish smoke, and audit +
+archive the milestone — validating the whole pipeline end-to-end.
+**Depends on**: Phase 130 (everything hardened and green before the real release ceremony)
+**Requirements**: SHIP-01, SHIP-02, SHIP-03
+**Success Criteria** (what must be TRUE):
+
+  1. A real linked Hex release is cut through the hardened pipeline — core+admin linked, inbound a
+     **minor** bump for the dependency-policy change — and v1.15 is live on Hex with `~>` pins resolving
+     from Hex (LD-1, SHIP-01).
+
+  2. Consumer + post-publish smoke pass against the published packages; the `~>` pins resolve correctly
+     from Hex (SHIP-02).
+
+  3. The release ceremony was a confirmation (per-phase "CI-the-body" method — push `phase/NN`, require
+     green CI — caught regressions earlier); the milestone is audited against intent and archived
+     (SHIP-03).
+**Plans**: TBD (planning)
+**UI hint**: no
+
 ## Phases (Archived — v1.14, shipped 2026-06-30)
 
 **Milestone goal:** Invert the admin-UI quality method to **top-down, JTBD/IA-led**, add a
