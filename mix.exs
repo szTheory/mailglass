@@ -38,16 +38,19 @@ defmodule Mailglass.MixProject do
   end
 
   # Elixir 1.18+ no longer auto-promotes :test for `mix test` invocations
-  # nested inside aliases. Every composite verify.* alias must declare its
-  # preferred env here, otherwise `mix verify.phase_07` (and friends) raise
-  # the `set MIX_ENV explicitly` error before any sub-task runs.
-  #
-  # REL-03: Both semantic names (verify.foundation etc.) and deprecated
-  # pass-throughs (verify.phase_NN) are listed for one cycle.
+  # nested inside aliases. Every composite alias that nests `mix test` (or an
+  # env-sensitive compile) must declare its preferred env here, otherwise it
+  # raises the `set MIX_ENV explicitly` error before any sub-task runs. This is
+  # the #1 "alias looks broken on first run" footgun for the ci.* family below.
   def cli do
     [
       preferred_envs: [
-        # Semantic aliases (REL-03)
+        # Local↔CI parity aliases (CICD milestone)
+        ci: :test,
+        "ci.fast": :test,
+        "ci.setup": :test,
+        "ci.browser": :test,
+        # Semantic verify aliases (REL-03)
         "verify.foundation": :test,
         "verify.persistence": :test,
         "verify.send_pipeline": :test,
@@ -58,13 +61,6 @@ defmodule Mailglass.MixProject do
         "verify.demo_browser_evidence": :test,
         "verify.phase69": :test,
         "verify.phase67": :test,
-        # Deprecated pass-throughs — remove after one release cycle
-        "verify.phase01": :test,
-        "verify.phase_01": :test,
-        "verify.phase_02": :test,
-        "verify.phase_03": :test,
-        "verify.phase_04": :test,
-        "verify.phase_07": :test,
         "verify.cold_start": :test,
         "verify.installer.golden": :test,
         "verify.installer.idempotency": :test,
@@ -255,22 +251,6 @@ defmodule Mailglass.MixProject do
         "cmd rg -n 'MAILGLASS_DEMO_DEPS|service_healthy|npm ci|playwright install --with-deps chromium|cache' compose.demo.yml"
       ],
 
-      # --- Deprecated pass-throughs (REL-03, one cycle) ---
-      # These delegate to the canonical semantic aliases above.
-
-      # verify.phase01 (legacy spelling without underscore) — deprecated; use verify.foundation
-      "verify.phase01": ["verify.foundation"],
-      # verify.phase_01 — deprecated; use verify.foundation
-      "verify.phase_01": ["verify.foundation"],
-      # verify.phase_02 — deprecated; use verify.persistence
-      "verify.phase_02": ["verify.persistence"],
-      # verify.phase_03 — deprecated; use verify.send_pipeline
-      "verify.phase_03": ["verify.send_pipeline"],
-      # verify.phase_04 — deprecated; use verify.webhooks
-      "verify.phase_04": ["verify.webhooks"],
-      # verify.phase_07 — deprecated; use verify.installer
-      "verify.phase_07": ["verify.installer"],
-
       # --- Non-phase aliases (unchanged) ---
 
       "verify.installer.golden": [
@@ -336,6 +316,72 @@ defmodule Mailglass.MixProject do
         "ecto.drop -r Mailglass.TestRepo --quiet",
         "ecto.create -r Mailglass.TestRepo --quiet",
         "test --warnings-as-errors --exclude flaky --exclude migration_roundtrip"
+      ],
+
+      # --- Local↔CI parity (CICD milestone) ---
+      #
+      # `mix ci` is the ONE command a contributor runs before opening a PR: it
+      # mirrors the 5 required branch-protection gates plus the standard hygiene
+      # lanes, across all three sibling packages. Three tiers:
+      #
+      #   mix ci.fast    — seconds, no DB/network. Pre-commit loop.
+      #   mix ci         — full local parity. Needs Postgres + network (phx.new).
+      #   mix ci.browser — opt-in Node/Playwright admin browser gate (advisory).
+      #
+      # CI keeps its per-job step split for legible, parallel status; the SUM of
+      # `mix ci` + `mix ci.browser` equals the mergeable surface, so "green
+      # locally" means "green in CI". Ordering inside each alias is cheap →
+      # expensive, fail-fast.
+
+      # Create every test DB the parity run needs. Preflight-probes Postgres
+      # first so absence fails with a brand-voice line, not a DB stacktrace.
+      "ci.setup": [
+        "cmd bash scripts/preflight_postgres.sh",
+        "ecto.create -r Mailglass.TestRepo --quiet",
+        "cmd --cd mailglass_inbound mix ecto.create -r MailglassInbound.TestRepo --quiet"
+      ],
+
+      # Fast tier — no Postgres, no network. The pre-commit / inner-loop gate.
+      # (deps.unlock --check-unused is intentionally omitted: the lock carries
+      # orphaned transitive entries; cleaning them is a deferred follow-up.)
+      "ci.fast": [
+        "format --check-formatted",
+        "compile --warnings-as-errors",
+        "compile --no-optional-deps --warnings-as-errors",
+        "credo --strict"
+      ],
+
+      # Full local parity — run from repo ROOT. Requires Postgres (+ network for
+      # the installer smoke step at the end). Mirrors the 5 required gates +
+      # hygiene. Preflight guards fail closed before any DB/network task.
+      ci: [
+        "cmd bash scripts/preflight_postgres.sh",
+        "ci.fast",
+        "ci.setup",
+        "verify.support_contract.core",
+        "test --warnings-as-errors --exclude flaky",
+        "cmd --cd mailglass_admin mix verify.support_contract.admin",
+        "cmd --cd mailglass_inbound mix compile --no-optional-deps --warnings-as-errors",
+        "cmd --cd mailglass_inbound mix test --exclude property",
+        "docs --warnings-as-errors",
+        "mailglass.docs.check",
+        "hex.audit",
+        "dialyzer",
+        "cmd --cd reference/host_app mix deps.get",
+        "cmd --cd reference/host_app env MIX_ENV=dev mix compile",
+        "verify.reference_host.journey",
+        "cmd bash scripts/check_trust_runner_checkpoint.sh",
+        "cmd bash scripts/preflight_network.sh",
+        "cmd env DEP_MODE=path MAILGLASS_PATH=#{File.cwd!()} bash scripts/consumer_install_smoke.sh"
+      ],
+
+      # Opt-in browser gate (Node + Playwright). Advisory in CI; zero-Node is an
+      # ADOPTER guarantee, so requiring Node HERE (dev/CI tooling) is fine.
+      "ci.browser": [
+        "ci.setup",
+        "cmd --cd mailglass_admin npm ci",
+        "cmd --cd mailglass_admin npx playwright install --with-deps chromium",
+        "cmd --cd mailglass_admin npm run test:operator-browser"
       ]
     ]
   end
