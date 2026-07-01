@@ -33,16 +33,16 @@ product-behavior change, then cut a real linked Hex release that dogfoods the ha
 
 ### GATE — CI Green fan-in gate + branch-protection (→ Phase 126)
 
-- [ ] **GATE-01**: A single `CI Green` aggregate job (`if: always()`, explicit `needs`) is the SOLE
+- [x] **GATE-01**: A single `CI Green` aggregate job (`if: always()`, explicit `needs`) is the SOLE
   required branch-protection context alongside `guard-release-trigger`, replacing the 5 leaf contexts.
 
-- [ ] **GATE-02**: On the release/publish path a required lane must be `success` — a `skipped` required
+- [x] **GATE-02**: On the release/publish path a required lane must be `success` — a `skipped` required
   lane does NOT count as green (LD-6).
 
-- [ ] **GATE-03**: A coverage meta-test asserts set-equality between `REQUIRED_CHECKS`, `ci-green.needs`,
+- [x] **GATE-03**: A coverage meta-test asserts set-equality between `REQUIRED_CHECKS`, `ci-green.needs`,
   and the job set, and that no required lane is permanently `if:`-disabled (LD-6).
 
-- [ ] **GATE-04**: `guard-release-trigger` is verified to always report (no green-but-BLOCKED regression)
+- [x] **GATE-04**: `guard-release-trigger` is verified to always report (no green-but-BLOCKED regression)
   and `gate-self-test.yml`'s stale `check_name` default is corrected to `CI Green` (LD-6).
 
 ### DET — Inbound test determinism (→ Phase 127)

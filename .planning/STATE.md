@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-current_phase: 126
-status: executing
-stopped_at: Phase 125 complete (1/1), verified — ready to plan Phase 126
-last_updated: "2026-07-01T18:21:32.433Z"
+current_phase: 127
+current_phase_name: inbound-test-determinism
+status: ready_to_plan
+stopped_at: Phase 126 complete (2/2), verified — ready to plan Phase 127
+last_updated: 2026-07-01T19:33:54.447Z
 last_activity: 2026-07-01
-last_activity_desc: Phase 126 planning complete
+last_activity_desc: Phase 126 execution complete + verified (GATE-01..04 all MET)
 progress:
   total_phases: 7
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
-  percent: 14
-current_phase_name: ci-green-fan-in-gate-branch-protection-collapse
+  completed_phases: 2
+  total_plans: 3
+  completed_plans: 3
+  percent: 28
 ---
 
 # Project State
@@ -24,14 +24,14 @@ current_phase_name: ci-green-fan-in-gate-branch-protection-collapse
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 126 — CI Green fan-in gate + branch-protection collapse
+**Current focus:** Phase 127 — Inbound test determinism (root-cause fix for the shared-mode/async sandbox flake)
 
 ## Current Position
 
-Phase: 126
+Phase: 127
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-07-01 — Phase 126 planning complete
+Status: Ready to plan
+Last activity: 2026-07-01 — Phase 126 complete + verified
 
 ## v1.14 Milestone Intent
 
@@ -254,6 +254,8 @@ plan directly from the v1.13 precedent.
 - [Phase 123]: D-09 accept-indigo: phoenix_storybook 1.2.0 explorer chrome accepted as dev-only cosmetic; no config accent hook exists, theming needs dep CSS override or Node build (both forbidden); title already set to brand name
 - [Phase 123]: D-11 storybook inventory complete as-is: 5 brand primitives match components.ex with zero attribute drift; 119-122 introduced no new theme-sensitive primitive; no story files added
 - [Phase ?]: COH-01 coherence proof closed: DEFECT-REGISTER all 10 findings RESOLVED/HELD + Phase 123 cross-surface coherence sign-off (five hats + three personas verbatim, green-floor citation, no new automated coherence gate, D-06 single-ledger). Persona re-shoot grounded in existing .cache evidence + green floor — demo unrunnable in-env per plan authorization.
+- [Phase ?]: ci_green aggregate job (if: always(), 5 required leaf needs) is sole required branch-protection context alongside Guard Release Trigger
+- [Phase ?]: changes detection gate (hand-rolled git diff) replaces workflow-level paths-ignore; workflow always triggers, leaves skip individually
 
 ## Quick Tasks Completed
 
@@ -388,6 +390,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 123 P02 | 3 | 2 tasks | 1 files |
 | Phase 123 P03 | 8min | 2 tasks | 1 files |
 | Phase 125 P01 | 1200 | 3 tasks | 17 files |
+| Phase 126 P01 | 8 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -414,7 +417,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-01T17:49:40.533Z
+**Last session:** 2026-07-01T18:51:25.247Z
 **Stopped at:** Completed 123-03-PLAN.md (Phase 123 complete)
 **Resume file:** None
 
