@@ -480,10 +480,10 @@ jobs:
       - name: Cache PLT
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
         with:
-          path: _build/dev/*.plt
-          key: ${{ runner.os }}-dialyzer-plt-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          path: _build/test/*.plt
+          key: plt-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-dialyzer-plt-${{ matrix.otp }}-${{ matrix.elixir }}-
+            plt-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-
       - name: Install deps
         run: mix deps.get
       - name: Verify ignore-file docs (shell gate)
