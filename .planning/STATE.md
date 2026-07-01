@@ -4,9 +4,9 @@ milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
 current_phase: 129
 current_phase_name: Cache-key + PLT correctness
-status: verifying
+status: planned
 stopped_at: Completed 128-02-PLAN.md
-last_updated: "2026-07-01T22:39:37.531Z"
+last_updated: "2026-07-01T23:21:15.192Z"
 last_activity: 2026-07-01
 last_activity_desc: Phase 128 complete, transitioned to Phase 129
 progress:
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 129 — Cache-key + PLT correctness
 Plan: Not started
-Status: Phase complete — ready for verification
+Status: planned
 Last activity: 2026-07-01 — Phase 128 complete, transitioned to Phase 129
 
 ## v1.14 Milestone Intent
