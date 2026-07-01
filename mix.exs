@@ -71,6 +71,10 @@ defmodule Mailglass.MixProject do
         "verify.installer.smoke": :test,
         "verify.support_contract.core": :test,
         "verify.stability_contract": :test,
+        ci: :test,
+        "ci.fast": :test,
+        "ci.setup": :test,
+        "ci.browser": :test,
         "verify.provider_compatibility": :test,
         "verify.docs.contract": :test,
         "verify.docs.contract.inbound": :test,
@@ -304,6 +308,52 @@ defmodule Mailglass.MixProject do
         "cmd --cd mailglass_inbound mix verify.support_contract.inbound",
         "mailglass.docs.check",
         "compile --no-optional-deps --warnings-as-errors"
+      ],
+      # ----------------------------------------------------------------------
+      # Local<->CI parity (CICD milestone). `mix ci` is the ONE command a
+      # contributor runs before opening a PR: it mirrors the required
+      # branch-protection gates plus standard hygiene, across all three sibling
+      # packages. CI (.github/workflows/ci.yml) keeps its per-job split for
+      # legible, parallel, matrix-gated checks; the SUM of `mix ci` +
+      # `mix ci.browser` equals the mergeable surface, so "green locally" means
+      # "green in CI". Tiers:
+      #   mix ci.fast    — seconds, no DB/network. Pre-commit inner loop.
+      #   mix ci         — full parity. Needs Postgres (+ network for installer). Pre-push.
+      #   mix ci.browser — opt-in Node/Playwright admin browser gate (advisory in CI;
+      #                    zero-Node is an ADOPTER guarantee, so dev/CI Node is fine).
+      # Ordering inside each alias is cheap -> expensive, fail-fast.
+      # ----------------------------------------------------------------------
+      "ci.setup": [
+        "ecto.create -r Mailglass.TestRepo --quiet",
+        "cmd --cd mailglass_inbound mix ecto.create -r MailglassInbound.TestRepo --quiet"
+      ],
+      # NOTE: `deps.unlock --check-unused` is deliberately NOT here — no CI lane
+      # gates on it and the lock currently carries orphaned transitive entries
+      # (castore, unicode_util_compat). Cleaning those is a separate follow-up;
+      # `mix ci` mirrors what CI enforces, nothing stricter.
+      "ci.fast": [
+        "format --check-formatted",
+        "compile --warnings-as-errors",
+        "compile --no-optional-deps --warnings-as-errors",
+        "credo --strict"
+      ],
+      ci: [
+        "ci.fast",
+        "ci.setup",
+        "verify.support_contract.core",
+        "cmd --cd mailglass_admin mix verify.support_contract.admin",
+        "cmd --cd mailglass_inbound mix compile --no-optional-deps --warnings-as-errors",
+        "cmd --cd mailglass_inbound mix test --exclude property --seed 0",
+        "mailglass.docs.check",
+        "hex.audit",
+        "dialyzer",
+        "verify.reference_host.journey"
+      ],
+      "ci.browser": [
+        "ci.setup",
+        "cmd --cd mailglass_admin npm ci",
+        "cmd --cd mailglass_admin npx playwright install --with-deps chromium",
+        "cmd --cd mailglass_admin npm run test:operator-browser"
       ],
       "verify.provider_compatibility": [
         "test test/mailglass/adapter_test.exs test/mailglass/adapters/swoosh_test.exs test/mailglass/webhook/providers/postmark_test.exs test/mailglass/webhook/providers/sendgrid_test.exs test/mailglass/webhook/providers/mailgun_test.exs test/mailglass/webhook/providers/resend_test.exs test/mailglass/webhook/providers/ses_test.exs test/mailglass/webhook/providers/ses/cert_cache_test.exs test/mailglass/webhook/plug_mailgun_test.exs test/mailglass/webhook/plug_ses_test.exs test/mailglass/webhook/providers/resend_webhook_plug_test.exs --warnings-as-errors"

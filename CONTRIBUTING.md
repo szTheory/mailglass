@@ -17,8 +17,16 @@ To see the admin UI working against seeded data — the fastest way to iterate o
 
 1. Create a branch.
 2. Implement your changes and add tests.
-3. Run the full verification suite: `mix verify.phase_07`.
-4. Submit a PR.
+3. Inner loop (seconds, no DB/network): `mix ci.fast` — format, unused-deps,
+   compile (incl. `--no-optional-deps`) as warnings-as-errors, and Credo.
+4. Before pushing: `mix ci` — the full local↔CI parity run. It mirrors the
+   required branch-protection gates plus hygiene across all three sibling
+   packages, so a green `mix ci` means a green PR. **Prerequisites:** a running
+   Postgres (as for `mix test`); `mix ci.setup` creates the sibling test DBs.
+5. Optional (needs Node): `mix ci.browser` runs the admin operator browser gate
+   (Playwright/Chromium). This is advisory in CI — the zero-Node guarantee is
+   for *adopters*, so dev/CI tooling using Node is fine.
+6. Submit a PR.
 
 ## Commit Guidelines
 
