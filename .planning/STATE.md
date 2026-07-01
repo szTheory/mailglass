@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
 current_phase: 127
-current_phase_name: inbound-test-determinism
-status: ready_to_plan
+status: executing
 stopped_at: Phase 126 complete (2/2), verified — ready to plan Phase 127
-last_updated: 2026-07-01T19:33:54.447Z
+last_updated: "2026-07-01T19:56:19.252Z"
 last_activity: 2026-07-01
-last_activity_desc: Phase 126 execution complete + verified (GATE-01..04 all MET)
+last_activity_desc: Phase 126 complete + verified
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 3
   completed_plans: 3
   percent: 28
+current_phase_name: inbound-test-determinism
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 127
 Plan: Not started
-Status: Ready to plan
+Status: Ready to execute
 Last activity: 2026-07-01 — Phase 126 complete + verified
 
 ## v1.14 Milestone Intent
