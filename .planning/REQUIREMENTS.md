@@ -43,8 +43,10 @@
 
 - [ ] **FACADE-04**: A dedicated schema-isolation integration test creates the schema, migrates,
   round-trips insert/read, and asserts mailglass tables exist under `mailglass.*` while `public` holds
-  none of them; the full core suite runs green under BOTH `schema: "public"` and `schema: "mailglass"`
-  (new CI matrix axis).
+  none of them; operator reads + orphan-count + Tenancy.scope/2 resolve correctly under the prefix.
+  (D-06: the full-core-suite-green-under-BOTH-schemas CI matrix axis is deferred to Phase 134 — the
+  raw-DDL trigger/function/CHECK qualification required to stand the suite up under `mailglass` without a
+  `search_path` pin is Phase C's deliverable. A MIGR requirement in Phase 134 owns the CI matrix axis.)
 
 ### MIGR — Migration entrypoint + raw-DDL qualification (Phase C)
 
