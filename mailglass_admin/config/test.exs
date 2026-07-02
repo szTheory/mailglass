@@ -23,6 +23,13 @@ config :mailglass, :tracking,
   host: "localhost:4000",
   salts: ["test-salt"]
 
+# Pin the schema to "public" so the admin test suite uses the already-migrated
+# public schema (pre-2.0 posture). The dedicated FACADE-03 schema-isolation
+# render test creates the "mailglass" schema in-process and passes prefix:
+# explicitly; the rest of the suite must not inject prefix: "mailglass" and
+# then fail to find tables. Mirrors the equivalent pin in core config/test.exs.
+config :mailglass, :schema, "public"
+
 # Point the MailglassInbound.Repo facade at the admin test repo so the inbound
 # read-models (Internal.Operator.{Records,Timeline,Detail}) and replay seam
 # resolve a repo under the admin suite. The facade RAISES when :repo is unset
