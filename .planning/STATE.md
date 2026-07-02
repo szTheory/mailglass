@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Postgres Schema Isolation
-status: planning
-last_updated: "2026-07-02T21:15:00.000Z"
-last_activity: 2026-07-02
+status: Roadmapped (awaiting `/gsd-plan-phase 132`)
+stopped_at: Phase 132 context gathered (assumptions mode)
+last_updated: "2026-07-02T20:54:50.112Z"
+last_activity: 2026-07-02 — v2.0 roadmap created (ROADMAP.md + REQUIREMENTS.md traceability filled)
 progress:
-  total_phases: 6
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 8
+  completed_phases: 2
+  total_plans: 6
+  completed_plans: 6
+  percent: 25
 ---
 
 # Project State
@@ -54,9 +55,11 @@ Last activity: 2026-07-02 — v2.0 roadmap created (ROADMAP.md + REQUIREMENTS.md
 
 - **Schema isolation + its upgrade path only.** No new product capability/providers/transports/routes
   (D-23). The one adopter-visible change is the default table schema (breaking).
+
 - **Postgres-only** (unchanged). No MySQL/SQLite.
 - **Not per-tenant schemas.** `:schema` is one fixed library schema; multi-tenant *data* isolation stays
   `tenant_id` scoping (orthogonal, composes with the prefix).
+
 - **No `search_path` mutation.** Rejected on principle. `citext` stays in `public`.
 - **Zero-Node stays adopter-facing.** No product-behavior change beyond the schema location.
 - **Dogfood the hardened v1.15 pipeline** — real linked 2.0/2.0/2.x release using the loosened `~>`
@@ -408,9 +411,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-02T17:55:16.820Z
-**Stopped at:** Completed Phase 131 — v1.15 milestone archived; no active milestone
-**Resume file:** None
+**Last session:** 2026-07-02T20:54:50.104Z
+**Stopped at:** Phase 132 context gathered (assumptions mode)
+**Resume file:** .planning/phases/132-config-mailglass-identifier-foundation/132-CONTEXT.md
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
