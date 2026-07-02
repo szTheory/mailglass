@@ -112,30 +112,5 @@ defmodule Mailglass.Migrations.Postgres do
     end)
   end
 
-  # Postgres unquoted-identifier grammar: letter or underscore, then any
-  # combination of letters, digits, and underscores. Rejects anything that
-  # could be an injection vector (quotes, semicolons, whitespace, etc.).
-  # Callers with a legitimate need for a quoted identifier (mixed case,
-  # dashes) should pre-quote and adjust the regex — but at v0.1 we do not
-  # surface such options.
-  @identifier_regex ~r/\A[a-zA-Z_][a-zA-Z0-9_]*\z/
-
-  defp validate_identifier!(value, key) when is_binary(value) do
-    if Regex.match?(@identifier_regex, value) do
-      :ok
-    else
-      raise Mailglass.ConfigError.new(:invalid,
-              context: %{
-                key: key,
-                reason: "must match #{inspect(@identifier_regex)}"
-              }
-            )
-    end
-  end
-
-  defp validate_identifier!(value, key) do
-    raise Mailglass.ConfigError.new(:invalid,
-            context: %{key: key, reason: "must be a binary, got: #{inspect(value)}"}
-          )
-  end
+  defp validate_identifier!(value, key), do: Mailglass.Identifier.validate!(value, key)
 end
