@@ -80,8 +80,12 @@ This is Design Phase A: everything downstream reads `Config.schema/0` and valida
 **Depends on**: Nothing (first phase of v2.0)
 **Requirements**: SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04
 **Plans:** 2 plans
+**Wave 1**
 
 - [ ] 132-01-PLAN.md — Core foundation: `Mailglass.Identifier` validator, `Config.schema/0` boot-warm + `:persistent_term` cache, migration delegate (SCHEMA-01/02/03), Wave 1
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 132-02-PLAN.md — Inbound mirror: `MailglassInbound.Config.schema/0` reusing core validator + `application.ex` boot wiring (SCHEMA-04), Wave 2
 
 **Success Criteria** (what must be TRUE):
@@ -188,6 +192,7 @@ version-dispatcher migration entrypoint — for inbound)
      `create table`/`index`/`references`.
 
   3. The inbound suite runs green under both `schema: "public"` and `schema: "mailglass"`.
+
 **Plans**: TBD
 **UI hint**: no
 
