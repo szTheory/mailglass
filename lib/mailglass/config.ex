@@ -14,6 +14,14 @@ defmodule Mailglass.Config do
       default: nil,
       doc: "The adopter's Ecto.Repo module. Required from + onwards."
     ],
+    schema: [
+      type: :string,
+      default: "mailglass",
+      doc:
+        "Names the Postgres SCHEMA holding all mailglass domain tables. " <>
+          "`\"public\"` is the explicit pre-2.0 opt-out. Must be a valid " <>
+          "unquoted Postgres identifier."
+    ],
     adapter: [
       type: :any,
       default: {Mailglass.Adapters.Fake, []},
@@ -459,6 +467,9 @@ defmodule Mailglass.Config do
     ]
   ]
 
+  # persistent_term key for the boot-validated Postgres schema name.
+  @schema_key {__MODULE__, :schema}
+
   @moduledoc """
   Runtime configuration for mailglass, validated at boot via NimbleOptions.
 
@@ -468,7 +479,9 @@ defmodule Mailglass.Config do
 
   The brand theme is cached in `:persistent_term` after validation so
   the render hot path reads it in O(1) without re-parsing the Application env
-  on every message.
+  on every message. The `:schema` name is cached the same way — warmed at boot
+  by `validate_at_boot!/0`, with a self-healing backfill (`schema/0`) that
+  re-reads and re-validates from the Application env for boot-skipped contexts.
 
   ## Options
 
@@ -542,6 +555,11 @@ defmodule Mailglass.Config do
 
     theme = Keyword.get(validated, :theme, [])
     :persistent_term.put({__MODULE__, :theme}, theme)
+
+    # Cache the validated schema from the boot pipeline so boot and cache can
+    # never disagree. `Identifier.validate!/2` fails fast on a bad identifier.
+    schema = Keyword.get(validated, :schema, "mailglass")
+    :persistent_term.put(@schema_key, Mailglass.Identifier.validate!(schema, :schema))
 
     telemetry_opts = Keyword.get(validated, :telemetry, [])
 
@@ -630,6 +648,34 @@ defmodule Mailglass.Config do
   @spec get_theme() :: keyword()
   def get_theme do
     :persistent_term.get({__MODULE__, :theme}, [])
+  end
+
+  @doc """
+  Returns the configured Postgres schema name (default `"mailglass"`).
+
+  Serves from `:persistent_term` in O(1) on the hot path. Warmed at boot by
+  `validate_at_boot!/0`; on a cold-cache miss (a boot-skipped context) it
+  self-heals by re-reading and re-validating the `:schema` Application env,
+  then caching the validated value. `"public"` is the explicit pre-2.0 opt-out.
+
+  Unlike `get_theme/0`, this never returns a silent default on a miss — the
+  value is always validated once at the cache-write boundary so an adopter's
+  `schema: "public"` opt-out can never be masked.
+  """
+  @doc since: "2.0.0"
+  @spec schema() :: String.t()
+  def schema do
+    case :persistent_term.get(@schema_key, :__miss__) do
+      :__miss__ -> warm_schema()
+      schema -> schema
+    end
+  end
+
+  defp warm_schema do
+    schema = Application.get_env(:mailglass, :schema, "mailglass")
+    Mailglass.Identifier.validate!(schema, :schema)
+    :persistent_term.put(@schema_key, schema)
+    schema
   end
 
   @doc """
