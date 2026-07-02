@@ -20,7 +20,7 @@
 - [x] **SCHEMA-03**: A shared `Mailglass.Identifier.validate!/2` (promoted from
   `Migrations.Postgres.validate_identifier!/2`) rejects any value that is not a valid unquoted Postgres
   identifier (`[a-zA-Z_][a-zA-Z0-9_]*`), and both config-boot and migration validation use it.
-- [ ] **SCHEMA-04**: `mailglass_inbound` mirrors the same contract on its own line —
+- [x] **SCHEMA-04**: `mailglass_inbound` mirrors the same contract on its own line —
   `config :mailglass_inbound, :schema` (default `"mailglass"`), a validated accessor, boot validation,
   and a `:persistent_term` cache — reusing `Mailglass.Identifier`.
 
@@ -121,7 +121,7 @@
 | SCHEMA-01 | Phase 132 | Complete |
 | SCHEMA-02 | Phase 132 | Complete |
 | SCHEMA-03 | Phase 132 | Complete |
-| SCHEMA-04 | Phase 132 | Pending |
+| SCHEMA-04 | Phase 132 | Complete |
 | FACADE-01 | Phase 133 | Pending |
 | FACADE-02 | Phase 133 | Pending |
 | FACADE-03 | Phase 133 | Pending |

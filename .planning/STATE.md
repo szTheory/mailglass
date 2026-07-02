@@ -4,14 +4,14 @@ milestone: v2.0
 milestone_name: Postgres Schema Isolation
 status: executing
 stopped_at: Phase 132 context gathered (assumptions mode)
-last_updated: "2026-07-02T21:30:11.521Z"
-last_activity: 2026-07-02 — Phase 132 planned (2 plans across 2 waves; plan-checker VERIFICATION PASSED)
+last_updated: "2026-07-02T21:34:40.572Z"
+last_activity: 2026-07-02 — Phase 132 Plan 02 executed (inbound schema-config mirror; both waves complete)
 progress:
   total_phases: 8
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
-  percent: 25
+  completed_plans: 8
+  percent: 38
 ---
 
 # Project State
@@ -246,6 +246,8 @@ Phase 136's `ALTER TABLE … SET SCHEMA` `ACCESS EXCLUSIVE` locking posture).
 - [Phase ?]: [130-02] OPEN A2: setup-beam v1.24.0 resolving '1.19'/'28' on ubuntu-latest is confirmable only by a live run; setup failure is advisory-acceptable (never blocks PR/publish).
 - [Phase ?]: 132-01: Mailglass.Identifier is the single Postgres unquoted-identifier chokepoint; migration path delegates to it
 - [Phase ?]: 132-01: Config.schema/0 uses :__miss__ sentinel self-heal; validate once at the cache-write boundary
+- [Phase ?]: 132-02: MailglassInbound.Config.schema/0 mirrors core exactly (same default/validator/error/key/sentinel/warm_schema); reuses core Mailglass.Identifier — no inbound-local regex or error type; reads :mailglass_inbound env only (boundary law)
+- [Phase ?]: 132-02: closed pre-existing gap — inbound validate_at_boot!/0 was defined but never called; now the first statement of Application.start/2 (fails fast at boot on a bad :schema). mix credo N/A in inbound (no credo dep); use compile --warnings-as-errors + format --check-formatted as the style gate
 
 ## Quick Tasks Completed
 
@@ -387,6 +389,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 130 P02 | 9min | 3 tasks | 4 files |
 | Phase 131 P01 | 2 sessions | 9 tasks | 8 files |
 | Phase 132 P01 | 6min | 3 tasks | 5 files |
+| Phase 132 P02 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -414,7 +417,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-02T21:30:05.225Z
+**Last session:** 2026-07-02T21:34:40.567Z
 **Stopped at:** Phase 132 context gathered (assumptions mode)
 **Resume file:** None
 

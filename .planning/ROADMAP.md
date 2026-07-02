@@ -86,7 +86,7 @@ This is Design Phase A: everything downstream reads `Config.schema/0` and valida
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 132-02-PLAN.md — Inbound mirror: `MailglassInbound.Config.schema/0` reusing core validator + `application.ex` boot wiring (SCHEMA-04), Wave 2
+- [x] 132-02-PLAN.md — Inbound mirror: `MailglassInbound.Config.schema/0` reusing core validator + `application.ex` boot wiring (SCHEMA-04), Wave 2
 
 **Success Criteria** (what must be TRUE):
 
@@ -252,7 +252,7 @@ be complete and green before the real release ceremony)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 132. Config + `Mailglass.Identifier` foundation | 1/2 | In Progress|  |
+| 132. Config + `Mailglass.Identifier` foundation | 2/2 | Complete   | 2026-07-02 |
 | 133. Repo-facade prefix injection + Multi threading | 0/? | Not started | - |
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 0/? | Not started | - |
 | 135. Inbound package schema isolation | 0/? | Not started | - |
