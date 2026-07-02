@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-status: executing
+status: verifying
 stopped_at: Completed 130-01-PLAN.md
-last_updated: "2026-07-02T12:38:55.915Z"
+last_updated: "2026-07-02T12:43:28.965Z"
 last_activity: 2026-07-02
 progress:
   total_phases: 16
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 16
-  completed_plans: 15
-  percent: 44
+  completed_plans: 16
+  percent: 50
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 Phase: 130 (supply-chain-workflow-hygiene) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-02
 
 ## v1.14 Milestone Intent
@@ -258,6 +258,9 @@ plan directly from the v1.13 precedent.
 - [Phase 128]: Mailglass.CILanes is the single Elixir-side source for required+advisory CI lane identity; GATE-03 and the MIXCI-03 parity-drift test read it, and the parity test carries a durable no-seed assertion making DET-02 permanent. — One-definition-of-green (D-LD-10): the two CI surfaces (human aliases vs per-job matrix) stay coherent via a shared source + a fail-loud drift test, not duplicated literals.
 - [Phase ?]: Phase 130-01: deps.audit publish-gate parses mix_audit GHSA output as a peer function; GHSA-vs-EEF-CVE ID asymmetry is intended
 - [Phase ?]: Phase 130-01: OSV EEF-CVE-2026-43966/43969 resolve HTTP 200 natively; staleness gate runs on live data with try/rescue/catch fail-open
+- [Phase ?]: [130-02] Dependabot sibling coverage added for /mailglass_admin + /mailglass_inbound only; frozen reference/ baselines excluded (reference-baseline-coupling).
+- [Phase ?]: [130-02] 1.19/OTP28 advisory lives in a NEW core_latest_elixir_advisory job with job-level 'if: github.event_name != pull_request' (only matrix-toolchain PR exclusion); name matches isAdvisory(), toolchain-scoped cache key, LD-13 invariant in workflow + mix.exs.
+- [Phase ?]: [130-02] OPEN A2: setup-beam v1.24.0 resolving '1.19'/'28' on ubuntu-latest is confirmable only by a live run; setup failure is advisory-acceptable (never blocks PR/publish).
 
 ## Quick Tasks Completed
 
@@ -396,6 +399,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 128 P01 | 4 min | 5 tasks | 7 files |
 | Phase 128 P02 | 4 min | 2 tasks | 4 files |
 | Phase 130 P01 | 2 sessions | 3 tasks | 6 files |
+| Phase 130 P02 | 9min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -422,7 +426,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-02T12:38:55.911Z
+**Last session:** 2026-07-02T12:43:02.715Z
 **Stopped at:** Completed 130-01-PLAN.md
 **Resume file:** None
 

@@ -87,14 +87,14 @@ product-behavior change, then cut a real linked Hex release that dogfoods the ha
 - [x] **SUPPLY-01**: `mix deps.audit` (mix_audit) runs advisory (non-blocking) on PR and blocking only
   at the publish gate; never reds an open PR under an unfixable-advisory wave (LD-4).
 
-- [ ] **SUPPLY-02**: `dependabot.yml` watches the `mailglass_admin` and `mailglass_inbound` sibling
+- [x] **SUPPLY-02**: `dependabot.yml` watches the `mailglass_admin` and `mailglass_inbound` sibling
   locks (not the frozen reference baselines).
 
 - [x] **SUPPLY-03**: The cowlib allowlist has a forcing function — OSV-staleness is a loud CI warning
   on every run + a hard block at publish, fail-open on OSV outage (LD-4).
 
-- [ ] **SUPPLY-04**: `actionlint` gates `.github/workflows/**` changes on PR (LD-11).
-- [ ] **SUPPLY-05**: A latest-Elixir advisory row (1.19 / OTP 28) runs non-blocking on push+cron only;
+- [x] **SUPPLY-04**: `actionlint` gates `.github/workflows/**` changes on PR (LD-11).
+- [x] **SUPPLY-05**: A latest-Elixir advisory row (1.19 / OTP 28) runs non-blocking on push+cron only;
   the floor-coincidence invariant is documented (LD-13).
 
 ### SHIP — Release cut + closeout (→ Phase 131)
