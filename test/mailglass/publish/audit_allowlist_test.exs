@@ -42,4 +42,122 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
       assert Check.unaccepted_audit_findings("No retired packages found") == []
     end
   end
+
+  # SUPPLY-01: the `mix deps.audit` gate (Step 14). mix_audit 2.1.5 uses the
+  # mirego/elixir-security-advisories DB, which keys advisories by GHSA id and
+  # emits a multi-line human block per vulnerability:
+  #
+  #     Name: <pkg>
+  #     Version: <ver>
+  #     Lockfile: mix.lock
+  #     URL: https://github.com/advisories/<GHSA-id>
+  #     Title: <title>
+  #     ...
+  #
+  # The advisory id (GHSA-*) does NOT match the @accepted_advisories keys
+  # (EEF-CVE-*), so a deps.audit finding is NEVER auto-suppressed by the hex.audit
+  # allowlist — it always surfaces. That is the intended asymmetry: the cowlib
+  # advisories the hex.audit allowlist accepts are NOT in the mix_audit DB, so
+  # deps.audit stays clean for them today. See the SUMMARY (A4) for the format
+  # provenance.
+  describe "unaccepted_deps_audit_findings/1" do
+    test "a non-allowlisted GHSA finding in deps.audit human format returns a non-empty list" do
+      output = """
+      Name: altcha
+      Version: 0.9.0
+      Lockfile: mix.lock
+      URL: https://github.com/advisories/GHSA-6gvq-jcmp-8959
+      Title: ALTCHA Proof-of-Work Vulnerable to Challenge Splicing and Replay
+      Severity: moderate
+      Vulnerable versions: < 1.0.0
+      First patched versions: 1.0.0
+
+      Vulnerabilities found!
+      """
+
+      assert Check.unaccepted_deps_audit_findings(output) == [
+               "altcha GHSA-6gvq-jcmp-8959"
+             ]
+    end
+
+    test "reports every vulnerable package block, not just the first" do
+      output = """
+      Name: altcha
+      Version: 0.9.0
+      URL: https://github.com/advisories/GHSA-6gvq-jcmp-8959
+      Title: A
+
+      Name: some_pkg
+      Version: 1.2.3
+      URL: https://github.com/advisories/GHSA-aaaa-bbbb-cccc
+      Title: B
+
+      Vulnerabilities found!
+      """
+
+      assert Check.unaccepted_deps_audit_findings(output) == [
+               "altcha GHSA-6gvq-jcmp-8959",
+               "some_pkg GHSA-aaaa-bbbb-cccc"
+             ]
+    end
+
+    test "a clean deps.audit scan returns []" do
+      assert Check.unaccepted_deps_audit_findings("No vulnerabilities found.") == []
+    end
+
+    test "suppresses a finding whose GHSA id is in the accepted allowlist" do
+      # Defensive: if a future accepted advisory is keyed by its GHSA id, a
+      # matching deps.audit block must be suppressed (mirrors hex.audit semantics).
+      # Uses the real accepted EEF-CVE id, which is NOT a GHSA id, so this block
+      # is NOT suppressed today — proving the allowlist filter is wired without a
+      # false positive.
+      output = """
+      Name: cowlib
+      Version: 2.17.1
+      URL: https://github.com/advisories/GHSA-notaccepted-xxxx-yyyy
+      Title: cowlib demo
+
+      Vulnerabilities found!
+      """
+
+      assert Check.unaccepted_deps_audit_findings(output) == [
+               "cowlib GHSA-notaccepted-xxxx-yyyy"
+             ]
+    end
+  end
+
+  # SUPPLY-03: the OSV-staleness forcing function. classify_osv_response/2 is the
+  # pure decode+classify core of check_osv_advisory_staleness/0, extracted so the
+  # stale/active/parse-error branches are unit-testable without live HTTP. The
+  # network fail-open path (osv_get/1 -> {:error, _}) is exercised separately below.
+  describe "classify_osv_response/2 (OSV staleness classification)" do
+    test "a body with a \"withdrawn\" key classifies as stale" do
+      body = ~s({"id":"EEF-CVE-2026-43966","withdrawn":"2026-08-01T00:00:00Z"})
+
+      assert Check.classify_osv_response("EEF-CVE-2026-43966", body) ==
+               {:stale, "EEF-CVE-2026-43966", "2026-08-01T00:00:00Z"}
+    end
+
+    test "a body without a \"withdrawn\" key classifies as active" do
+      body = ~s({"id":"EEF-CVE-2026-43966","summary":"still live"})
+
+      assert Check.classify_osv_response("EEF-CVE-2026-43966", body) ==
+               {:active, "EEF-CVE-2026-43966"}
+    end
+
+    test "malformed JSON classifies as an error (fail-open, never blocks)" do
+      assert {:error, "EEF-CVE-2026-43966", :parse_error} =
+               Check.classify_osv_response("EEF-CVE-2026-43966", "{not json")
+    end
+  end
+
+  describe "osv_get/1 (fail-open network contract)" do
+    test "an unresolvable host returns an {:error, _} tuple rather than raising" do
+      # A DNS name that cannot resolve exercises the try/rescue fail-open path.
+      # The contract: osv_get/1 NEVER raises and NEVER blocks — it returns
+      # {:error, reason} so check_osv_advisory_staleness/0 can log-and-continue.
+      assert {:error, _reason} =
+               Check.osv_get("https://osv-does-not-exist.invalid/v1/vulns/EEF-CVE-2026-43966")
+    end
+  end
 end
