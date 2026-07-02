@@ -8,10 +8,66 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v2.0 Postgres Schema Isolation (next — not yet opened)
+## Current Milestone: v2.0 Postgres Schema Isolation (OPENED 2026-07-02)
 
-Next planned milestone. See `.planning/STATE.md` for status. The v1.15 milestone is complete and
-archived.
+**Opened 2026-07-02.** Second of the two designed-and-research-locked hygiene milestones (v1.15
+shipped first). The 2026-07-01 quality/CI/PG-schema audit found DB/data-model hygiene is the one
+genuinely weak dimension (it surfaced the 1.10.2 shipped-migration bug), and flagged that mailglass's
+domain tables land in the host app's `public` schema — sprawling into the adopter's namespace, and
+leaving the append-only events immutability trigger/function hard-bound to `public`. This milestone is
+**hygiene + one deliberate breaking improvement** (D-23 convergence still holds — NOT feature growth).
+
+**Goal:** Default all mailglass domain tables into a dedicated `"mailglass"` Postgres SCHEMA instead
+of the host's `public`, with an explicit one-line `config :mailglass, :schema, "public"` opt-out and a
+first-class codemod upgrade path. Breaking → `mailglass` 2.0 (+ linked admin 2.0, paired inbound bump).
+
+Research base (LOCKED, decision-ready, 2026-06-30):
+`.planning/research/milestone-schema-isolation/SCHEMA-ISOLATION-DESIGN.md` — the full end-to-end design
+(Ecto/Postgres mechanics decision table, Oban precedent, adopter upgrade routes A/B, 13-item footgun
+checklist, concrete diff surface, and the A–F phased build order).
+
+**Target features (dependency-ordered, biggest-leverage first):**
+- **Config + identifier foundation (Phase A)** — `config :mailglass, :schema` (default `"mailglass"`),
+  a validated `schema/0` accessor, boot-time identifier validation, `:persistent_term` hot-path cache,
+  and a shared `Mailglass.Identifier` validator promoted from `Migrations.Postgres`. Additive; no
+  behavior change yet. Mirrored for `config :mailglass_inbound, :schema`.
+- **Repo-facade prefix injection (Phase B)** — thread `put_prefix/1` (runtime `prefix:`, NOT
+  compile-time `@schema_prefix`) through every `Mailglass.Repo` read/write, and `multi_opts/1` into the
+  Events/Outbound/Escalation `Ecto.Multi` builders. Admin needs ZERO changes (reads route through the
+  facade). Verified under both `public` and `mailglass` schemas (new CI matrix axis).
+- **Migration entrypoint + raw-DDL qualification (Phase C)** — inject prefix at `Mailglass.Migration`,
+  add `maybe_create_schema/1`/`maybe_drop_schema/1` (Oban `create_schema:false` escape hatch, RESTRICT
+  drop), and hand-qualify the v01 immutability trigger+function (schema-scoped, `SET search_path=''`),
+  the v01/v03 CHECK constraints, and all `down/0` raw drops. `citext` stays in `public`.
+- **Inbound package (Phase D)** — config key + facade threading + convert inbound's loose `change/0`
+  migrations to the same prefix-aware version-dispatcher pattern core uses (also fixes the loose-file
+  adopter-copy DX). No cross-package FKs, so no cross-schema FK hazard.
+- **Upgrade tooling + docs (Phase E)** — `mix mailglass.upgrade.v2_schema` codemod generating the
+  Route B `ALTER TABLE … SET SCHEMA` move migration (with `lock_timeout` + trigger recreation);
+  `guides/upgrading-to-v2_0.md` (Route A one-line opt-out, Route B move, grants, `public.` grep
+  checklist); update `api_stability.md` with the `:schema` config contract.
+- **Release cut + closeout (Phase F)** — linked core+admin 2.0, paired inbound bump (== / `~>` drag),
+  coordinated 5-file reference-baseline update, consumer + post-publish smoke, audit + archive.
+
+**Locked decisions (research, 2026-06-30 — see SCHEMA-ISOLATION-DESIGN.md §1):** (1) Default schema
+`"mailglass"`; `"public"` is the explicit breaking opt-out. (2) Runtime facade-injected `prefix:`, NOT
+`@schema_prefix` (compile-time attr can't honor `runtime.exs`; Oban precedent). (3) Explicit
+per-query/per-DDL qualification, NEVER `SET search_path` (PgBouncer-transaction-mode leak, CVE-2018-1058,
+plan-cache invalidation). (4) `citext` stays in `public` — keep `public` resolvable or comparisons
+silently go case-sensitive. (5) `Ecto.Multi` prefix threaded per-builder, not per-executor. (6) NO
+`@schema_prefix` anywhere (avoid the read-vs-write precedence inversion) — add a grep/Credo guard.
+
+**Scope locks:**
+- **Schema isolation + its upgrade path only.** No new product capability/providers/transports/routes
+  (D-23 convergence holds). The one adopter-visible change is the default table schema (breaking).
+- **Postgres-only** (unchanged). No MySQL/SQLite.
+- **Not per-tenant schemas.** `:schema` is one fixed library schema; multi-tenant *data* isolation
+  stays `tenant_id` scoping (orthogonal, composes with the prefix).
+- **No `search_path` mutation.** Rejected on principle. `citext` stays in `public`.
+- **Zero-Node stays adopter-facing.** No product-behavior change beyond the schema location.
+- **Dogfood the hardened v1.15 pipeline** — real linked release; the loosened sibling pins now in play.
+- **Research: DONE** — the LOCKED design dossier is decision-ready; phases plan directly (light
+  per-phase research only where a phase touches unfamiliar Ecto/Postgres edges). Phases continue 132+.
 
 ---
 
@@ -648,6 +704,6 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-01 — **v1.15 Release-Pipeline Efficiency & Contributor DX opened** (infrastructure/DX hardening + the deliberate exact-pin→`~>` improvement; cut a real linked Hex release at close; phases 125–131). Previous milestone **v1.14 Operator IA & Lived-Experience Redesign SHIPPED 2026-06-30** — live at 1.10.1 → patched to **1.10.2 / 1.10.2 / 1.5.4** on 2026-07-01. v1.14 detail below.*
+*Last updated: 2026-07-02 — **v2.0 Postgres Schema Isolation opened** (default domain tables into a dedicated `"mailglass"` schema with explicit `public` opt-out + codemod upgrade path; breaking → linked 2.0/2.0/2.x; research-locked in `research/milestone-schema-isolation/SCHEMA-ISOLATION-DESIGN.md`; phases 132+). Previous milestone **v1.15 Release-Pipeline Efficiency & Contributor DX SHIPPED 2026-07-02** — live at **1.11.0 / 1.11.0 / 1.6.0** on Hex (first loosened-`~>`-pin release).*
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
 

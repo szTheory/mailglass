@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.15
-milestone_name: Release-Pipeline Efficiency & Contributor DX
-current_phase: 131
-current_phase_name: release-cut-milestone-closeout
-status: complete
-stopped_at: Completed Phase 131 — v1.15 SHIPPED 2026-07-02
-last_updated: "2026-07-02T17:55:16.829Z"
+milestone: v2.0
+milestone_name: Postgres Schema Isolation
+status: planning
+last_updated: "2026-07-02T20:28:41.087Z"
 last_activity: 2026-07-02
-last_activity_desc: v1.15 shipped to Hex; Phase 131 complete; milestone archived
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 ## Current Position
 
-Phase: 131 (release-cut-milestone-closeout) — COMPLETE
-Plan: 1 of 1 (complete)
-Status: v1.15 SHIPPED — 1.11.0/1.11.0/1.6.0 live on Hex (2026-07-02). Keystone `{:mailglass, "~> 1.10 and >= 1.10.2"}` on Hex. No active milestone.
-Last activity: 2026-07-02 -- v1.15 shipped to Hex; Phase 131 complete; milestone archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-07-02 — Milestone v2.0 started
 
 ## v1.14 Milestone Intent
 
