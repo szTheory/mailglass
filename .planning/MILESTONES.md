@@ -1,5 +1,21 @@
 # Milestones
 
+## ✅ v1.15 Release-Pipeline Efficiency & Contributor DX (Shipped: 2026-07-02)
+
+**Phases completed:** 7 phases (125–131), 26 reqs — **mailglass 1.11.0 / mailglass_admin 1.11.0 / mailglass_inbound 1.6.0 live on Hex** (see `milestones/v1.15-MILESTONE-AUDIT.md`)
+
+> Infrastructure/DX hardening milestone: killed the exact-pin release dance (keystone `{:mailglass,
+> "~> 1.10 and >= 1.10.2"}` shipped on Hex in inbound 1.6.0 — the first release with loosened sibling
+> pins), closed the local↔CI parity gap with tiered `mix ci.fast`/`mix ci`/`mix ci.browser` aliases, fixed
+> inbound test determinism (retired `--seed 0`), hardened cache keys + PLT self-healing, and added
+> supply-chain hygiene (dep audit, actionlint, OSV-staleness forcing function). Zero product-behavior
+> change; D-23 convergence holds. The release ceremony dogfooded the hardened pipeline end-to-end.
+> Milestone audit `status: passed` — 26/26 requirements, 7/7 phases.
+> Inbound 1.6.0 carries `{:mailglass, "~> 1.10 and >= 1.10.2"}` — NOT `== 1.11.0` (the keystone
+> LD-2 decoupling is live on Hex; the floor stays `>= 1.10.2`, not bumped to 1.11.0).
+>
+> (Scope counted directly from phases 125–131 to avoid `milestone.complete` 999.x inflation.)
+
 ## ✅ v1.14 Operator IA & Lived-Experience Redesign (Shipped: 2026-06-30)
 
 **Phases completed:** 7 phases (118–124), 15 reqs — **mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3 live on Hex** (see `milestones/v1.14-MILESTONE-AUDIT.md`)

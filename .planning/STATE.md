@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-current_phase: 131
-current_phase_name: Release cut + milestone closeout
-status: verifying
-stopped_at: Completed 130-01-PLAN.md
-last_updated: "2026-07-02T12:47:48.030Z"
-last_activity: 2026-07-02
-last_activity_desc: Phase 130 complete, transitioned to Phase 131
+status: complete
+stopped_at: Completed Phase 131 — v1.15 SHIPPED 2026-07-02
+last_updated: "2026-07-02T18:30:00Z"
+last_activity: 2026-07-02 -- v1.15 shipped to Hex (1.11.0/1.11.0/1.6.0); Phase 131 complete; milestone archived
 progress:
   total_phases: 7
-  completed_phases: 6
-  total_plans: 10
-  completed_plans: 10
-  percent: 86
+  completed_phases: 7
+  total_plans: 7
+  completed_plans: 7
+  percent: 100
 ---
 
 # Project State
@@ -24,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 130 — supply-chain-workflow-hygiene
+**Current focus:** Phase 131 — release-cut-milestone-closeout
 
 ## Current Position
 
-Phase: 131 — Release cut + milestone closeout
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-07-02 — Phase 130 complete, transitioned to Phase 131
+Phase: 131 (release-cut-milestone-closeout) — COMPLETE
+Plan: 1 of 1 (complete)
+Status: v1.15 SHIPPED — 1.11.0/1.11.0/1.6.0 live on Hex (2026-07-02). Keystone `{:mailglass, "~> 1.10 and >= 1.10.2"}` on Hex. No active milestone.
+Last activity: 2026-07-02 -- v1.15 shipped to Hex; Phase 131 complete; milestone archived
 
 ## v1.14 Milestone Intent
 
@@ -403,6 +400,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 128 P02 | 4 min | 2 tasks | 4 files |
 | Phase 130 P01 | 2 sessions | 3 tasks | 6 files |
 | Phase 130 P02 | 9min | 3 tasks | 4 files |
+| Phase 131 P01 | 2 sessions | 9 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -419,6 +417,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ### Pending Todos
 
+- **Fix `post-publish-smoke` `wait-for-index` missing checkout step** — The `wait-for-index` job uses `version-file: .tool-versions` in `setup-beam` but has no `actions/checkout` step. Works on scheduled runs (runner workspace reuse), fails on dispatch/release paths (fresh runners). Maintenance-tier fix: add a checkout step to `wait-for-index`. Low priority — scheduled smoke still runs nightly; consumer smoke is the SHIP-02 proof.
 - **Remove the cowlib advisory allowlist when upstream fixes** (`.planning/todos/pending/2026-06-30-remove-cowlib-advisory-allowlist-when-upstream-fixes.md`) — v1.14 added a narrow temporary allowlist in `publish.check` for 2 unfixable cowlib advisories (EEF-CVE-2026-43966/43969). Maintenance-tier `/gsd-quick` when cowlib ships a patch.
 - **Run the UI browser/persona gate during phases, not only at release** (`.planning/backlog/ui-browser-gate-during-phases-not-only-at-release.md`) — v1.14 post-mortem: deferred phase verification let 7 browser-gate regressions reach the release ceremony. Fold into the next admin-UI milestone's method; surface via `/gsd-review-backlog`.
 - ~~Refresh outbound admin UI look and feel~~ — superseded by v1.11's fractal three-surface uplift + v1.14 operator IA redesign (resolved; the 2026-06-13 todo file is stale).
@@ -429,8 +428,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-02T12:43:02.715Z
-**Stopped at:** Completed 130-01-PLAN.md
+**Last session:** 2026-07-02T18:30:00Z
+**Stopped at:** Completed Phase 131 — v1.15 milestone archived; no active milestone
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

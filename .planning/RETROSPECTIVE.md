@@ -4,6 +4,30 @@
 
 ---
 
+## Milestone: v1.15 — Release-Pipeline Efficiency & Contributor DX
+
+**Shipped 2026-07-02** — 7 phases (125–131), 26 requirements, audit `status: passed`.
+**Linked-version release:** mailglass 1.11.0 / mailglass_admin 1.11.0 / mailglass_inbound 1.6.0, inbound carrying the LOOSENED `{:mailglass, "~> 1.10 and >= 1.10.2"}` (the keystone LD-2 decoupling — NOT `== 1.11.0`).
+
+**What worked:**
+
+- **"CI-the-body" method.** Each of the 7 phases pushed a `phase/NN` branch and required green CI before merge. The release ceremony (Phase 131) was a confirmation, not a discovery. The Wave-0 landmines (D-05 inbound `docs_contract_test` and D-11 the `~>`-aware post-publish-smoke grep) were surfaced by the pre-flight plan, not stumbled into during the ceremony.
+- **Keystone sequencing held.** Phase 125 (pin loosening) was internally atomic — pin + contract test relaxation + publish.check assertion + sed deletion in one indivisible change. Every downstream phase inherited a stable, releasable tree.
+- **Inbound 1.6.0 scored as a MINOR automatically.** Release Please read the banked `feat(125-01)` commit and scored inbound a minor bump — no deliberate re-pin dance was needed. The `~>` decoupling was mechanical, not manual.
+- **Research-locked decisions, no ceremony debates.** The 13 locked decisions (LD-1..13) from `.planning/research/milestone-cicd/SYNTHESIS.md` were adversarially verified before Phase 125 started. No architectural debates during execution.
+- **gate-ci-green self-heal ran as designed.** The bot-merged RP squash SHA (`827cede1`) got no ci.yml run (anti-recursion). gate-ci-green found the push-triggered ci.yml run on the same SHA (the admin-merge push re-ran CI), confirmed all 5 required lanes green in 8 seconds, and proceeded to publish without dispatching a self-heal.
+
+**Key lessons (the hard ones this cycle):**
+
+- **Parallel publish-hex fan-outs remain a race.** Three releases created three fan-outs; the `mailglass-v1.11.0` and `mailglass_inbound-v1.6.0` tag runs failed `publish-core` with "must include the --replace flag" (core was already on Hex from a prior dispatch; the idempotency check didn't catch the timing). Only the `mailglass_admin-v1.11.0` run hit the idempotency skip and proceeded to publish inbound + admin. All three packages ended up on Hex, but the fan-out failure noise is non-obvious. **Lesson:** when a "must include --replace" error appears on a pipeline that's supposed to be idempotent, check `mix hex.info` first — the package may already be live.
+- **post-publish-smoke `wait-for-index` missing checkout.** The `wait-for-index` job uses `version-file: .tool-versions` in `setup-beam` but has no checkout step. It works on scheduled runs because GitHub reuses the runner workspace (picking up the checkout from `cron-guard`), but fails on dispatch/release paths where each job gets a fresh runner. This is a pre-existing bug, NOT a v1.15 regression. Deferred to the v2.0 infrastructure pass.
+- **The cosmetic `mailglass_inbound_publish_pin` field in `publish/mailglass_inbound-publish-summary.json` does NOT sync to `~> 1.10 and >= 1.10.2`.** Release-please.yml syncs it to `~> 1.11 and >= 1.11.0` (the new core version). This cosmetic artifact field is only ever WRITTEN by `publish.check`, never read/compared — do not "fix" it, do not let it alarm you. The real proof is `mix hex.info mailglass_inbound 1.6.0 | grep mailglass`.
+- **Inbound floor intentionally stays `>= 1.10.2`, not bumped to `>= 1.11.0`.** The decoupling goal is that a future core patch does NOT force a paired inbound release. Bumping the floor to `>= 1.11.0` would re-couple them. The CHANGELOG says "verified against core 1.11" — the floor is a minimum contract, not a tested-version annotation.
+
+**Release outcome:** 1.11.0/1.11.0/1.6.0 live on Hex; consumer smoke EXIT 0 (SHIP-02 keystone proof: `~>` resolves from Hex); post-publish-smoke scheduled path works (dispatch path has pre-existing `wait-for-index` bug); milestone audited + archived.
+
+---
+
 ## Milestone: v1.14 — Operator IA & Lived-Experience Redesign
 
 **Shipped 2026-06-30** — 7 phases (118–124), 15 requirements, audit `status: passed`.

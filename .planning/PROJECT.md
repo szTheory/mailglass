@@ -8,9 +8,16 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v1.15 Release-Pipeline Efficiency & Contributor DX
+## Current Milestone: v2.0 Postgres Schema Isolation (next — not yet opened)
 
-**Opened 2026-07-01.** First of two designed-and-research-locked hygiene milestones (this one, then
+Next planned milestone. See `.planning/STATE.md` for status. The v1.15 milestone is complete and
+archived.
+
+---
+
+## Archived: v1.15 Release-Pipeline Efficiency & Contributor DX (SHIPPED 2026-07-02)
+
+**Opened 2026-07-01, shipped 2026-07-02.** First of two designed-and-research-locked hygiene milestones (this one, then
 v2.0 Postgres Schema Isolation). Opened because the 1.10.2 patch release took **three tag-move
 recovery cycles** — the recurring symptom of a release pipeline whose exact-pin sibling coupling
 forces a transient-red-to-main dance on every core bump, plus a local↔CI parity gap where the
@@ -69,12 +76,19 @@ pin change ships with a CHANGELOG line + documented **Hex retirement** as the ne
 
 ## Current State
 
-**v1.14 SHIPPED 2026-06-30 — mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3
-live on Hex (current live versions).** All 7 phases (118–124) complete, audit `status: passed`
-(15/15 reqs). Shipped via a linked-version cut that recovered as a patch (the 1.10.0 cut never
-published — blocked by a coordinated EEF dep-security advisory wave; see
-`milestones/v1.14-MILESTONE-AUDIT.md` + `threads/v1.14-release-paused-dep-security-wave.md`). No
-active milestone — `/gsd-new-milestone` for the next cycle. _Historical phase detail below._
+**v1.15 SHIPPED 2026-07-02 — mailglass 1.11.0 / mailglass_admin 1.11.0 / mailglass_inbound 1.6.0
+live on Hex (current live versions).** All 7 phases (125–131) complete, audit `status: passed`
+(26/26 reqs). The keystone LD-2 decoupling shipped: inbound 1.6.0 carries
+`{:mailglass, "~> 1.10 and >= 1.10.2"}` on Hex — NOT `== 1.11.0`. The floor stays `>= 1.10.2`
+(not bumped to 1.11.0) so the decouple is real. See `milestones/v1.15-MILESTONE-AUDIT.md`. No
+active milestone — quiet maintenance / adopter-pull posture. Next planned: v2.0 Postgres Schema
+Isolation. _Historical phase detail below._
+
+**v1.14 SHIPPED 2026-06-30 — mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3.**
+All 7 phases (118–124) complete, audit `status: passed` (15/15 reqs). Shipped via a linked-version
+cut that recovered as a patch (the 1.10.0 cut never published — blocked by a coordinated EEF
+dep-security advisory wave; see `milestones/v1.14-MILESTONE-AUDIT.md` +
+`threads/v1.14-release-paused-dep-security-wave.md`). _Historical phase detail below._
 
 **v1.14 (Phase 122 mid-milestone snapshot) — Preview surface redesign complete 2026-06-28, verifier
 `passed` (PREV-01, 12/12 must-haves).** Preview's admin chrome now uses the canonical
