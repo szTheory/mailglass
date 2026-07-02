@@ -188,6 +188,13 @@ defmodule Mailglass.Operator.SupportSummary do
   end
 
   defp unresolved_orphans_query(tenant_id, window_started_at) do
+    # Defensive schema prefix baked into query struct (belt-and-suspenders).
+    # The outer execution goes through Repo.all/one which adds prefix: via put_prefix/1,
+    # but the correlated not-exists inner `from(reconciled in Event, ...)` uses the same
+    # Event schema with parent_as(:orphan). Baking the prefix into the query struct here
+    # guarantees the nested from resolves under the configured schema rather than public.
+    # The schema-isolation integration test asserts the orphan-count under the configured
+    # schema. Dossier §3.4.
     from(event in Event,
       as: :orphan,
       where: event.tenant_id == ^tenant_id,
@@ -207,6 +214,7 @@ defmodule Mailglass.Operator.SupportSummary do
           )
         )
     )
+    |> Ecto.Query.put_query_prefix(Mailglass.Config.schema())
   end
 
   defp normalize_replay_latest(nil), do: nil

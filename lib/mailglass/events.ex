@@ -173,10 +173,9 @@ defmodule Mailglass.Events do
 
   # : partial-unique-index conflict target REQUIRES the WHERE fragment
   # to match the index DDL character-for-character.
-  # Phase 133 (FACADE-02): prefix: Config.schema() injected via Keyword.put_new
-  # so an explicit caller :prefix wins. This single chokepoint covers all four
-  # write sites: append_multi/3 map form, append_multi/3 fn form, do_insert/1
-  # idempotent clause, and do_insert/1 plain clause.
+  # Schema prefix threaded here via Keyword.put_new so an explicit caller :prefix wins.
+  # This single chokepoint covers all four write sites: append_multi/3 map form,
+  # append_multi/3 fn form, do_insert/1 idempotent clause, and do_insert/1 plain clause.
   defp insert_opts(%{idempotency_key: key}) when is_binary(key) do
     [
       on_conflict: :nothing,
