@@ -228,7 +228,9 @@ latest-Elixir advisory row.
 
   5. A latest-Elixir advisory row (1.19 / OTP 28) runs non-blocking on push+cron only and never blocks;
      the floor-coincidence invariant (LD-13) is documented (SUPPLY-05).
-**Plans**: TBD (planning)
+**Plans**: 2 plans
+- [ ] 130-01-PLAN.md — mix_audit advisory PR lane + publish-gate block + OSV-staleness forcing function + CILanes registration (SUPPLY-01, SUPPLY-03, wave 1)
+- [ ] 130-02-PLAN.md — dependabot sibling coverage + dependency-review advisory step + 1.19/OTP28 advisory matrix row + LD-13 invariant (SUPPLY-02, SUPPLY-04, SUPPLY-05, wave 1)
 **UI hint**: no
 
 ### Phase 131: Release cut + milestone closeout
