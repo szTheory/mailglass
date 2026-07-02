@@ -41,7 +41,7 @@ only — D-23 convergence holds; no product code, no schema change (that is v2.0
 - [ ] **Phase 127: Inbound test determinism** — Root-cause fix for the shared-mode/async sandbox flake (`MailboxCase` serial + drop `shared:`); delete `--seed 0` everywhere. **Requirements:** DET-01..02. **Success:** (1) the inbound suite is green across 20 random-seed runs; (2) `--seed 0` appears nowhere in `ci.yml` or the `mix ci` alias; (3) `grep shared: mailbox_case.ex` is empty.
 - [x] **Phase 128: `mix ci` parity completion (folds in PR #104)** — Complete `mix ci` to equal the mergeable surface (add Installer Host Smoke + trust lane); tiered `ci.fast`/`ci`/`ci.browser` + sibling aliases + `make ci`; manifest-membership parity-drift test (shared source with GATE-03); Postgres/network preflight brand-voice guard; designate `verify.*` internal + remove deprecated `verify.phase_NN`; land the CONTRIBUTING copy. **Requirements:** MIXCI-01..05. **Success:** (1) `mix ci` runs all 5 required gates; (2) the parity-drift test fails when a required CI lane isn't covered by the alias; (3) `mix ci` with no Postgres prints an actionable brand-voice message, not a raw crash; (4) CONTRIBUTING points at `mix ci`, no `verify.phase_07`. (completed 2026-07-01)
 - [x] **Phase 129: Cache-key + PLT correctness** — Toolchain-scoped cache key derived from a single `.tool-versions`/`env:` source; Bandit-style PLT self-healing eviction; only then may Dialyzer move toward required. **Requirements:** CACHE-01..02. **Success:** (1) cache keys in Actions logs carry OTP+Elixir dims from one source; (2) a corrupted PLT is evicted and rebuilt by the workflow; (3) no per-block hardcoded toolchain literals remain.
-- [ ] **Phase 130: Supply chain + workflow hygiene** — `mix_audit` advisory-on-PR / block-at-release; dependabot sibling-dir coverage; cowlib OSV-staleness forcing function (loud CI warning + publish hard-block, fail-open); `actionlint` on workflow PRs; latest-Elixir 1.19/OTP28 advisory row (non-blocking) + floor-coincidence note. **Requirements:** SUPPLY-01..05. **Success:** (1) a simulated unfixable advisory reds the publish gate but NOT open PRs; (2) dependabot watches both sibling locks; (3) `actionlint` fails a malformed workflow PR; (4) the 1.19/28 row runs on cron only and never blocks.
+- [x] **Phase 130: Supply chain + workflow hygiene** — `mix_audit` advisory-on-PR / block-at-release; dependabot sibling-dir coverage; cowlib OSV-staleness forcing function (loud CI warning + publish hard-block, fail-open); `actionlint` on workflow PRs; latest-Elixir 1.19/OTP28 advisory row (non-blocking) + floor-coincidence note. **Requirements:** SUPPLY-01..05. **Success:** (1) a simulated unfixable advisory reds the publish gate but NOT open PRs; (2) dependabot watches both sibling locks; (3) `actionlint` fails a malformed workflow PR; (4) the 1.19/28 row runs on cron only and never blocks. (completed 2026-07-02)
 - [ ] **Phase 131: Release cut + milestone closeout** — Cut the real linked v1.15 (core+admin linked; inbound minor for the dependency-policy change) through the hardened pipeline; consumer + post-publish smoke; milestone audit + archive. **Requirements:** SHIP-01..03. **Success:** (1) v1.15 live on Hex, `~>` pins resolve from Hex; (2) consumer + post-publish smoke green; (3) the release ceremony was a confirmation (per-phase CI caught regressions earlier); (4) milestone audited + archived.
 
 **Execution order:** 125 → 126 → 127 → 128 → 129 → 130 → 131 (dependency-ordered, biggest-leverage
@@ -200,8 +200,10 @@ Dialyzer can move toward the required set.
      rebuilt by the workflow; only after this may Dialyzer be promoted toward the required set (LD-7,
      CACHE-02).
 **Plans**: 2 plans
+
 - [x] 129-01-PLAN.md — `.tool-versions` single source + toolchain-hashed cache keys / version-file setup-beam across 5 canonical workflows (CACHE-01, wave 1)
 - [x] 129-02-PLAN.md — Bandit-style PLT self-healing eviction + toolchain-scoped PLT cache in the ci.yml dialyzer job (CACHE-02, wave 2)
+
 **UI hint**: no
 
 ### Phase 130: Supply chain + workflow hygiene
@@ -229,8 +231,10 @@ latest-Elixir advisory row.
   5. A latest-Elixir advisory row (1.19 / OTP 28) runs non-blocking on push+cron only and never blocks;
      the floor-coincidence invariant (LD-13) is documented (SUPPLY-05).
 **Plans**: 2 plans
+
 - [x] 130-01-PLAN.md — mix_audit advisory PR lane + publish-gate block + OSV-staleness forcing function + CILanes registration (SUPPLY-01, SUPPLY-03, wave 1)
 - [x] 130-02-PLAN.md — dependabot sibling coverage + dependency-review advisory step + 1.19/OTP28 advisory matrix row + LD-13 invariant (SUPPLY-02, SUPPLY-04, SUPPLY-05, wave 1)
+
 **UI hint**: no
 
 ### Phase 131: Release cut + milestone closeout
