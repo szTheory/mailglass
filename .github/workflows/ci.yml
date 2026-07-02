@@ -550,6 +550,38 @@ jobs:
       - name: Run Hex audit
         run: mix hex.audit
 
+  deps_audit_advisory:
+    name: Deps Audit Advisory (Elixir 1.18 / OTP 27)
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    # Advisory-only: mix deps.audit surfaces transitive-dep advisories from the
+    # elixir-security-advisories DB. Under an unfixable CVE wave it will red, so
+    # continue-on-error keeps it non-blocking on PRs. The publish gate
+    # (mailglass.publish.check Step 14) is where a non-allowlisted advisory
+    # actually hard-blocks delivery. The "Advisory (" naming convention is what
+    # publish-hex.yml gate-ci-green's isAdvisory() matches to skip it (SUPPLY-01).
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - name: Cache deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: deps
+          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
+      - name: Install deps
+        run: mix deps.get
+      - name: Run deps audit
+        run: mix deps.audit
+
   installer_golden_gate:
     name: Installer Golden Gate (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
