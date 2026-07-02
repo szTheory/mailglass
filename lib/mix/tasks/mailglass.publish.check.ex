@@ -38,7 +38,9 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     11. Check prod deps resolution
     12. Compile tarball in isolation
     13. Run hex.audit
-    14. Capture hex.outdated advisory
+    14. Run deps.audit (mix_audit supply-chain scan)
+    15. Verify OSV advisory freshness (accepted-allowlist staleness gate)
+    16. Capture hex.outdated advisory
   """
 
   use Mix.Task
@@ -110,6 +112,29 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
     counts = %{create: 0, update: 0, unchanged: 0, conflict: 0}
 
+    # SUPPLY-03: loud-warn-always OSV staleness notice. Emitted once per package
+    # run BEFORE the step chain so an operator always sees the live status of every
+    # accepted-advisory entry (active / stale / OSV-unavailable). This call never
+    # blocks; the blocking decision is deferred to the Step-15 gate below.
+    Enum.each(check_osv_advisory_staleness(), fn
+      {:active, id} ->
+        IO.puts(:stderr, "[publish.check] notice: accepted advisory #{id} confirmed active in OSV")
+
+      {:stale, id, date} ->
+        IO.puts(
+          :stderr,
+          "[publish.check] WARNING: accepted advisory #{id} was WITHDRAWN upstream (#{date}) — " <>
+            "a fix exists; this will block at the freshness gate"
+        )
+
+      {:error, id, reason} ->
+        IO.puts(
+          :stderr,
+          "[publish.check] WARNING: OSV API unavailable for #{id} (#{inspect(reason)}) — " <>
+            "staleness check will fail-open"
+        )
+    end)
+
     # REL-04: installer goldens drift detection (mailglass only).
     # If the installer manifest drifted from the snapshot, version bumps
     # would silently ship broken installer output. Fail pre-publish here,
@@ -157,6 +182,11 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       step(counts, :unchanged, package, "compile tarball in isolation", ctx, &verify_compile/1)
 
     {counts, ctx} = step(counts, :update, package, "run hex.audit", ctx, &verify_audit/1)
+
+    {counts, ctx} = step(counts, :update, package, "run deps.audit", ctx, &verify_deps_audit/1)
+
+    {counts, ctx} =
+      step(counts, :update, package, "verify osv advisory freshness", ctx, &verify_osv_freshness/1)
 
     {counts, ctx} =
       step(counts, :update, package, "capture hex.outdated advisory", ctx, &capture_outdated/1)
@@ -1103,6 +1133,165 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
       |> Enum.map(fn {pkg, id} -> "#{pkg} #{id}" end)
 
     retired ++ advisories
+  end
+
+  # SUPPLY-01: Step 14 — the `mix deps.audit` gate. `mix deps.audit` (mix_audit)
+  # scans mix.lock against the mirego/elixir-security-advisories DB. On PR the lane
+  # is advisory (continue-on-error). HERE, at publish, a non-allowlisted finding
+  # hard-blocks delivery. A clean scan exits 0; any vulnerability exits non-zero.
+  defp verify_deps_audit(ctx) do
+    audit_root = compile_root(ctx)
+    fetch_compile_deps!(audit_root, ctx)
+
+    {output, status} =
+      System.cmd("mix", ["deps.audit"],
+        cd: audit_root,
+        env: mix_env(ctx),
+        stderr_to_stdout: true
+      )
+
+    if status != 0 do
+      case unaccepted_deps_audit_findings(output) do
+        [] ->
+          accepted = @accepted_advisories |> Map.values() |> Enum.join("; ")
+
+          Map.put(
+            ctx,
+            :deps_audit_output,
+            String.trim(output) <>
+              "\n\n[mailglass.publish.check] mix deps.audit findings are all in the accepted-advisories " <>
+              "allowlist (no upstream fix available) — delivery allowed: #{accepted}"
+          )
+
+        unaccepted ->
+          fail_step(
+            "run deps.audit",
+            "Delivery blocked: mix deps.audit reported non-accepted issues for #{ctx.package} " <>
+              "(#{Enum.join(unaccepted, ", ")}). A fix is available — bump the dep. Full output:\n#{String.trim(output)}"
+          )
+      end
+    else
+      Map.put(ctx, :deps_audit_output, output)
+    end
+  end
+
+  # Parse `mix deps.audit` human-formatter output and return the list of findings
+  # NOT in @accepted_advisories. mix_audit 2.1.5 emits a multi-line block per
+  # vulnerability; the advisory id is the trailing GHSA-* segment of the `URL:`
+  # line (`https://github.com/advisories/GHSA-xxxx-yyyy-zzzz`), paired with the
+  # `Name:` line for the package. The @accepted_advisories keys are EEF-CVE ids,
+  # so a GHSA finding is never auto-suppressed today — that asymmetry is intended
+  # (the accepted cowlib advisories are not present in the mix_audit DB). The
+  # allowlist filter is still applied so a future GHSA-keyed acceptance works.
+  # Public (with @doc false) only so this security-critical parser is unit-testable.
+  @doc false
+  def unaccepted_deps_audit_findings(output) do
+    lines = String.split(output, "\n")
+
+    {findings, _pkg} =
+      Enum.reduce(lines, {[], nil}, fn line, {acc, current_pkg} ->
+        cond do
+          match = Regex.run(~r/^\s*Name:\s+(\S+)/, line) ->
+            [_, pkg] = match
+            {acc, pkg}
+
+          match = Regex.run(~r/^\s*URL:.*\/(GHSA-\S+)/, line) ->
+            [_, id] = match
+            {[{current_pkg, id} | acc], current_pkg}
+
+          true ->
+            {acc, current_pkg}
+        end
+      end)
+
+    findings
+    |> Enum.reverse()
+    |> Enum.reject(fn {_pkg, id} -> Map.has_key?(@accepted_advisories, id) end)
+    |> Enum.map(fn {pkg, id} -> "#{pkg} #{id}" end)
+  end
+
+  # SUPPLY-03: OSV-staleness forcing function. Every accepted-advisory entry is
+  # checked against OSV.dev on every publish run so an allowlist entry cannot
+  # silently outlive its upstream advisory (withdrawn == a fix exists → the entry
+  # must be removed and the dep bumped). Returns a list of per-id classifications;
+  # this call NEVER blocks — the block decision lives in verify_osv_freshness/1.
+  defp check_osv_advisory_staleness do
+    Enum.map(Map.keys(@accepted_advisories), fn id ->
+      case osv_get("https://api.osv.dev/v1/vulns/#{id}") do
+        {:ok, body} -> classify_osv_response(id, body)
+        {:error, reason} -> {:error, id, reason}
+      end
+    end)
+  end
+
+  # Pure decode+classify core of the OSV staleness check — extracted so the
+  # stale/active/parse-error branches are unit-testable without live HTTP.
+  # OSV's schema marks a withdrawn (retracted) advisory with a top-level
+  # `"withdrawn"` timestamp; its presence means upstream considers the issue
+  # resolved/retracted, so an accepted-advisory entry keyed to it is stale.
+  @doc false
+  def classify_osv_response(id, body) do
+    case Jason.decode(body) do
+      {:ok, %{"withdrawn" => withdrawn_at}} -> {:stale, id, withdrawn_at}
+      {:ok, _decoded} -> {:active, id}
+      {:error, _} -> {:error, id, :parse_error}
+    end
+  end
+
+  # HTTP GET wrapper for the OSV API with a hard fail-open contract: ANY error
+  # path (network, timeout, non-200, exception) returns {:error, reason} and NEVER
+  # raises. An OSV outage must not block a security patch release (T-130-02).
+  @doc false
+  def osv_get(url) do
+    :httpc.request(
+      :get,
+      {String.to_charlist(url), []},
+      [{:timeout, 5_000}, {:connect_timeout, 5_000}],
+      body_format: :binary
+    )
+    |> case do
+      {:ok, {{_http, 200, _reason}, _headers, body}} -> {:ok, to_string(body)}
+      {:ok, {{_http, status, _reason}, _headers, _body}} -> {:error, {:http_status, status}}
+      {:error, reason} -> {:error, reason}
+    end
+  rescue
+    _ -> {:error, :exception}
+  catch
+    :exit, reason -> {:error, {:exit, reason}}
+  end
+
+  # Step 15 — OSV freshness gate. Runs check_osv_advisory_staleness/0 and:
+  #   * {:stale, id, date} → hard-block (upstream withdrew the advisory: a fix
+  #     exists, so the allowlist entry must be removed and the dep bumped).
+  #   * {:error, id, reason} → fail-open: warn loudly and continue (OSV outage
+  #     must never block a security patch release, T-130-02).
+  #   * {:active, id} → confirmed still live; continue.
+  defp verify_osv_freshness(ctx) do
+    results = check_osv_advisory_staleness()
+
+    Enum.each(results, fn
+      {:stale, id, date} ->
+        fail_step(
+          "verify osv advisory freshness",
+          "Delivery blocked: accepted advisory #{id} has been withdrawn upstream " <>
+            "(fixed as of #{date}). Remove it from @accepted_advisories and bump the dep."
+        )
+
+      {:error, id, reason} ->
+        IO.puts(
+          :stderr,
+          "[publish.check] WARNING: OSV API unavailable for #{id} " <>
+            "(#{inspect(reason)}) — skipping staleness check (fail-open)"
+        )
+
+      {:active, id} ->
+        IO.puts(
+          :stderr,
+          "[publish.check] notice: allowlist entry #{id} confirmed active in OSV"
+        )
+    end)
+
+    Map.put(ctx, :osv_staleness, results)
   end
 
   defp capture_outdated(ctx) do

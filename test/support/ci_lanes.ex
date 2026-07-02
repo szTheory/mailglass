@@ -64,6 +64,7 @@ defmodule Mailglass.CILanes do
     "Dialyzer (Elixir 1.18 / OTP 27)",
     "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
     "Hex Audit (Elixir 1.18 / OTP 27)",
+    "Deps Audit Advisory (Elixir 1.18 / OTP 27)",
     "Mix Task Tests (Elixir 1.18 / OTP 27)",
     "Inbound Test (Elixir 1.18 / OTP 27)",
     "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)"

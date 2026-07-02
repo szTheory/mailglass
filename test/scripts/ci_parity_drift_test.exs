@@ -112,6 +112,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
       "Docs Warnings as Errors (Elixir 1.18 / OTP 27)" =>
         &any_step?(&1, "docs --warnings-as-errors"),
       "Hex Audit (Elixir 1.18 / OTP 27)" => &any_step?(&1, "hex.audit"),
+      "Deps Audit Advisory (Elixir 1.18 / OTP 27)" => &any_step?(&1, "deps.audit"),
       "Mix Task Tests (Elixir 1.18 / OTP 27)" =>
         &any_step?(&1, "test --warnings-as-errors --exclude flaky"),
       "Inbound Test (Elixir 1.18 / OTP 27)" =>
@@ -189,6 +190,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
         "Dialyzer (Elixir 1.18 / OTP 27)",
         "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
         "Hex Audit (Elixir 1.18 / OTP 27)",
+        "Deps Audit Advisory (Elixir 1.18 / OTP 27)",
         "Mix Task Tests (Elixir 1.18 / OTP 27)",
         "Inbound Test (Elixir 1.18 / OTP 27)",
         "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)",
