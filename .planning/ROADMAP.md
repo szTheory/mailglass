@@ -256,7 +256,8 @@ archive the milestone — validating the whole pipeline end-to-end.
   3. The release ceremony was a confirmation (per-phase "CI-the-body" method — push `phase/NN`, require
      green CI — caught regressions earlier); the milestone is audited against intent and archived
      (SHIP-03).
-**Plans**: TBD (planning)
+**Plans**: 1 plan
+- [ ] 131-01-PLAN.md — Release cut + closeout: Wave-0 pre-flight fixes (D-05 docs_contract, D-11 post-publish-smoke `~>`-grep, D-06 publish.check) → clean ff-push + verify RP PR (1.11.0/1.11.0/1.6.0, pins stay `~>`) → maintainer go/no-go → confirm Hex live → consumer + post-publish smoke → audit 26 reqs / archive / tag v1.15
 **UI hint**: no
 
 ## Phases (Archived — v1.14, shipped 2026-06-30)
