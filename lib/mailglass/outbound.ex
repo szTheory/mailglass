@@ -386,7 +386,7 @@ defmodule Mailglass.Outbound do
 
     result =
       Ecto.Multi.new()
-      |> Ecto.Multi.insert(:delivery, Delivery.changeset(%Delivery{id: delivery_id}, attrs))
+      |> Ecto.Multi.insert(:delivery, Delivery.changeset(%Delivery{id: delivery_id}, attrs), Repo.multi_opts())
       |> Events.append_multi(:event_queued, fn %{delivery: d} ->
         %{
           tenant_id: tenant_id,
@@ -422,7 +422,7 @@ defmodule Mailglass.Outbound do
 
     multi =
       Ecto.Multi.new()
-      |> Ecto.Multi.insert(:delivery, Delivery.changeset(%Delivery{id: delivery_id}, attrs))
+      |> Ecto.Multi.insert(:delivery, Delivery.changeset(%Delivery{id: delivery_id}, attrs), Repo.multi_opts())
       |> Events.append_multi(:event_queued, fn %{delivery: d} ->
         %{
           tenant_id: tenant_id,
@@ -557,7 +557,8 @@ defmodule Mailglass.Outbound do
       |> Ecto.Multi.insert_all(:deliveries, Delivery, rows,
         on_conflict: :nothing,
         conflict_target: {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-        returning: true
+        returning: true,
+        prefix: Config.schema()
       )
       |> Ecto.Multi.run(:events, fn repo, %{deliveries: {_count, inserted}} ->
         event_rows =
@@ -581,7 +582,8 @@ defmodule Mailglass.Outbound do
             on_conflict: :nothing,
             conflict_target:
               {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-            returning: false
+            returning: false,
+            prefix: Config.schema()
           )
 
         {:ok, n}
@@ -708,7 +710,8 @@ defmodule Mailglass.Outbound do
               last_event_at: Clock.utc_now(),
               metadata: rendered.metadata || %{},
               idempotency_key: ik
-            })
+            }),
+            Repo.multi_opts()
           )
           |> Events.append_multi(:event_queued, fn %{delivery: d} ->
             %{
@@ -777,7 +780,8 @@ defmodule Mailglass.Outbound do
               last_event_type: :dispatched,
               provider_message_id: pmid,
               dispatched_at: event_occurred_at
-            })
+            }),
+            Repo.multi_opts()
           )
           |> Events.append_multi(:event_dispatched, event_attrs)
         )
@@ -805,7 +809,8 @@ defmodule Mailglass.Outbound do
             |> Ecto.Changeset.change(%{
               status: :failed,
               last_error: serialize_error(err)
-            })
+            }),
+            Repo.multi_opts()
           )
           |> Events.append_multi(:event_failed, %{
             tenant_id: delivery.tenant_id,

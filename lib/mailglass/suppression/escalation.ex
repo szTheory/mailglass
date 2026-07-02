@@ -15,7 +15,7 @@ if Code.ensure_loaded?(Oban.Worker) do
 
     import Ecto.Query
 
-    alias Mailglass.{Clock, Repo, Tenancy}
+    alias Mailglass.{Clock, Config, Repo, Tenancy}
     alias Mailglass.Events.Event
     alias Mailglass.Outbound.Delivery
     alias Mailglass.Suppression.Entry
@@ -124,7 +124,8 @@ if Code.ensure_loaded?(Oban.Worker) do
       case Repo.insert(changeset,
              on_conflict: :nothing,
              conflict_target: @conflict_target,
-             returning: true
+             returning: true,
+             prefix: Config.schema()
            ) do
         {:ok, %Entry{id: nil}} ->
           {:ok, fetch_existing!(attrs.tenant_id, attrs.address)}
