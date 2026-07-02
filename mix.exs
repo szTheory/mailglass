@@ -8,6 +8,10 @@ defmodule Mailglass.MixProject do
     [
       app: :mailglass,
       version: @version,
+      # LD-13: when the required pin advances past 1.18, add a 1.18 floor row to the
+      # required lane or raise this floor — never let the tested version outrun it.
+      # See .planning/research/milestone-cicd/SYNTHESIS.md LD-13 and the 1.19/OTP28
+      # advisory row in .github/workflows/advisory-matrix.yml.
       elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       elixirc_options: elixirc_options(),
