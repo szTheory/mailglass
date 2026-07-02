@@ -137,8 +137,10 @@ facade) resolve to the configured schema with zero admin code changes. This is D
      to Phase 134, where the raw-DDL trigger/function qualification that lets the suite stand up under
      `mailglass` lands.)
 **Plans**: 2 plans
-- [ ] 133-01-PLAN.md — Facade `put_prefix/1` + public `multi_opts/1` threaded through every delegated Repo read/write and per-step into the Events/Outbound/Escalation Multi builders; defensive `put_query_prefix/2` on the orphans subquery (FACADE-01, FACADE-02)
+
+- [x] 133-01-PLAN.md — Facade `put_prefix/1` + public `multi_opts/1` threaded through every delegated Repo read/write and per-step into the Events/Outbound/Escalation Multi builders; defensive `put_query_prefix/2` on the orphans subquery (FACADE-01, FACADE-02)
 - [ ] 133-02-PLAN.md — Dedicated schema-isolation integration test + zero-admin-change render proof + facade-bypass verification; record the D-06 roadmap/requirements split (FACADE-03, FACADE-04)
+
 **UI hint**: no
 
 ### Phase 134: Migration entrypoint + raw-DDL/trigger qualification
@@ -257,7 +259,7 @@ be complete and green before the real release ceremony)
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 132. Config + `Mailglass.Identifier` foundation | 2/2 | Complete    | 2026-07-02 |
-| 133. Repo-facade prefix injection + Multi threading | 0/? | Not started | - |
+| 133. Repo-facade prefix injection + Multi threading | 1/2 | In Progress|  |
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 0/? | Not started | - |
 | 135. Inbound package schema isolation | 0/? | Not started | - |
 | 136. Upgrade codemod + docs + api_stability | 0/? | Not started | - |
