@@ -176,6 +176,7 @@ defmodule Mailglass.MixProject do
       {:igniter, "~> 0.7", optional: true, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
   end
@@ -366,6 +367,7 @@ defmodule Mailglass.MixProject do
         "docs --warnings-as-errors",
         "mailglass.docs.check",
         "hex.audit",
+        "deps.audit",
         "dialyzer",
         "cmd --cd reference/host_app mix deps.get",
         "cmd --cd reference/host_app env MIX_ENV=dev mix compile",
