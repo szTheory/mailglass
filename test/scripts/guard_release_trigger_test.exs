@@ -147,7 +147,7 @@ defmodule Mailglass.Scripts.GuardReleaseTriggerTest do
               Regex.match?(~r/^\s{4,}/, line) or line == ""
             end)
 
-          (Enum.join([header | children], "\n"))
+          Enum.join([header | children], "\n")
       end
 
     {source, pr_block}

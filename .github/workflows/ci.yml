@@ -137,7 +137,7 @@ jobs:
           restore-keys: |
             mix-${{ runner.os }}-${{ hashFiles('.tool-versions') }}-${{ env.MIX_ENV || 'dev' }}-
       - name: Install deps
-        run: mix deps.get --only test
+        run: mix deps.get
       - name: Compile without optional deps
         run: mix compile --no-optional-deps --warnings-as-errors
 

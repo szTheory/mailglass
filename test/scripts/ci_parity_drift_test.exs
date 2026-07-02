@@ -98,11 +98,10 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
         &any_step?(&1, "verify.support_contract.admin"),
       "Compile No Optional Deps (Elixir 1.18 / OTP 27)" =>
         &any_step?(&1, "compile --no-optional-deps --warnings-as-errors"),
-      "Trust Lane Repo Head (Elixir 1.18 / OTP 27)" =>
-        fn steps ->
-          any_step?(steps, "verify.reference_host.journey") and
-            any_step?(steps, "check_trust_runner_checkpoint.sh")
-        end,
+      "Trust Lane Repo Head (Elixir 1.18 / OTP 27)" => fn steps ->
+        any_step?(steps, "verify.reference_host.journey") and
+          any_step?(steps, "check_trust_runner_checkpoint.sh")
+      end,
       "Installer Host Smoke" => &any_step?(&1, "consumer_install_smoke.sh"),
       "Format Check (Elixir 1.18 / OTP 27)" => &any_step?(&1, "format --check-formatted"),
       "Compile Warnings as Errors (Elixir 1.18 / OTP 27)" =>
@@ -115,8 +114,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
       "Deps Audit Advisory (Elixir 1.18 / OTP 27)" => &any_step?(&1, "deps.audit"),
       "Mix Task Tests (Elixir 1.18 / OTP 27)" =>
         &any_step?(&1, "test --warnings-as-errors --exclude flaky"),
-      "Inbound Test (Elixir 1.18 / OTP 27)" =>
-        &any_step?(&1, "mailglass_inbound mix test"),
+      "Inbound Test (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass_inbound mix test"),
       "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)" =>
         &any_step?(&1, "mailglass_inbound mix compile --no-optional-deps")
     }
@@ -155,12 +153,12 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   test "anti-vacuity: alias step-set, ci_lanes source, and lane/matcher table are all non-empty and bijective" do
     steps = union_steps()
 
-    assert length(steps) > 0,
+    assert steps != [],
            "flattened mix ci ∪ ci.browser step-set is empty — alias parse returned nothing"
 
     lanes = all_lanes()
 
-    assert length(lanes) > 0,
+    assert lanes != [],
            "Mailglass.CILanes required + advisory lanes parsed empty — ci_lanes source changed"
 
     assert length(Mailglass.CILanes.required_lanes()) == 5,

@@ -107,6 +107,7 @@ defmodule Mailglass.StabilityContractTest do
       # Extract the requirement string from the MIX_PUBLISH branch and verify
       # admit-`~>`-reject-`==` using Version.match? against the derived core version.
       expected_core_version = read_at_version!("mix.exs")
+
       inbound_req =
         case Regex.run(~r/\{:mailglass, "([^"]+)"\}/, inbound_mix) do
           [_, req] -> req
@@ -211,6 +212,7 @@ defmodule Mailglass.StabilityContractTest do
 
       assert Version.match?(expected_core_version, summary_pin),
              "publish-summary mailglass_inbound_publish_pin `#{summary_pin}` does not admit core @version #{expected_core_version}"
+
       assert summary["linked_versions"]["mailglass"] == expected_core_version
       assert summary["linked_versions"]["mailglass_admin"] == expected_core_version
       assert summary["linked_versions"]["mailglass_inbound"] == expected_version
