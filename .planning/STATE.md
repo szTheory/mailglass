@@ -4,17 +4,17 @@ milestone: v2.0
 milestone_name: Postgres Schema Isolation)
 current_phase: 133
 current_phase_name: repo-facade-prefix-injection-multi-threading
-status: executing
-stopped_at: Phase 133 context gathered (assumptions mode)
-last_updated: "2026-07-02T22:48:02.401Z"
+status: verifying
+stopped_at: Completed 133-02-PLAN.md
+last_updated: "2026-07-02T23:08:33.781Z"
 last_activity: 2026-07-02
 last_activity_desc: Phase 133 execution started
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
-  percent: 17
+  completed_plans: 4
+  percent: 33
 ---
 
 # Project State
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 Milestone: v2.0 Postgres Schema Isolation (6 phases, 132-137)
 Phase: 133 (repo-facade-prefix-injection-multi-threading) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-02 -- Phase 133 execution started
 
 ## v2.0 Milestone Intent
@@ -251,6 +251,10 @@ Phase 136's `ALTER TABLE … SET SCHEMA` `ACCESS EXCLUSIVE` locking posture).
 - [Phase ?]: 132-01: Config.schema/0 uses :__miss__ sentinel self-heal; validate once at the cache-write boundary
 - [Phase ?]: 132-02: MailglassInbound.Config.schema/0 mirrors core exactly (same default/validator/error/key/sentinel/warm_schema); reuses core Mailglass.Identifier — no inbound-local regex or error type; reads :mailglass_inbound env only (boundary law)
 - [Phase ?]: 132-02: closed pre-existing gap — inbound validate_at_boot!/0 was defined but never called; now the first statement of Application.start/2 (fails fast at boot on a bad :schema). mix credo N/A in inbound (no credo dep); use compile --warnings-as-errors + format --check-formatted as the style gate
+- [Phase ?]: FACADE-03 zero-code-change proof confirmed
+- [Phase ?]: no admin lib changes needed; facade injects prefix: Config.schema() transparently
+- [Phase ?]: D-06 split: dedicated integration test in Phase 133; full-suite CI matrix axis deferred to Phase 134 (raw-DDL qualification needed first)
+- [Phase ?]: admin config/test.exs must pin :schema to 'public'; facade otherwise injects prefix:'mailglass' on all ops and citext probe exhausts
 
 ## Quick Tasks Completed
 
@@ -394,6 +398,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 132 P01 | 6min | 3 tasks | 5 files |
 | Phase 132 P02 | 3min | 2 tasks | 3 files |
 | Phase 133 P01 | 10 | 3 tasks | 8 files |
+| Phase 133 P02 | 15min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -421,9 +426,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-02T22:48:02.394Z
-**Stopped at:** Phase 133 context gathered (assumptions mode)
-**Resume file:** .planning/phases/133-repo-facade-prefix-injection-multi-threading/133-CONTEXT.md
+**Last session:** 2026-07-02T23:08:33.775Z
+**Stopped at:** Completed 133-02-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in

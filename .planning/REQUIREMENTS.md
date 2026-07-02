@@ -37,11 +37,11 @@
   (`Events.append_multi`/`insert_opts`, `Outbound` insert/insert_all/update, `Suppression.Escalation`)
   threads `prefix:` per-step via a shared `multi_opts/1`, so no step falls back to the connection schema.
 
-- [ ] **FACADE-03**: `mailglass_admin` requires zero code changes — its `Operator.*` reads land in the
+- [x] **FACADE-03**: `mailglass_admin` requires zero code changes — its `Operator.*` reads land in the
   configured schema through the facade — proven by an admin integration test booting against a
   schema-isolated DB and asserting the dashboard renders.
 
-- [ ] **FACADE-04**: A dedicated schema-isolation integration test creates the schema, migrates,
+- [x] **FACADE-04**: A dedicated schema-isolation integration test creates the schema, migrates,
   round-trips insert/read, and asserts mailglass tables exist under `mailglass.*` while `public` holds
   none of them; operator reads + orphan-count + Tenancy.scope/2 resolve correctly under the prefix.
   (D-06: the full-core-suite-green-under-BOTH-schemas CI matrix axis is deferred to Phase 134 — the
@@ -148,8 +148,8 @@
 | SCHEMA-04 | Phase 132 | Complete |
 | FACADE-01 | Phase 133 | Complete |
 | FACADE-02 | Phase 133 | Complete |
-| FACADE-03 | Phase 133 | Pending |
-| FACADE-04 | Phase 133 | Pending |
+| FACADE-03 | Phase 133 | Complete |
+| FACADE-04 | Phase 133 | Complete |
 | MIGR-01 | Phase 134 | Pending |
 | MIGR-02 | Phase 134 | Pending |
 | MIGR-03 | Phase 134 | Pending |
