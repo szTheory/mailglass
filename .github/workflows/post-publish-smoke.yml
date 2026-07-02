@@ -353,12 +353,18 @@ jobs:
           INFO=$(mix hex.info mailglass_inbound "${VERSION_INBOUND}" 2>&1)
           echo "${INFO}"
 
-          if echo "${INFO}" | grep -F "mailglass == ${VERSION}" >/dev/null; then
+          # ~>-aware compatibility check: matches both the legacy exact form
+          # (mailglass == X.Y.Z) and the loosened sibling-pin form
+          # (mailglass ~> ... and >= ...) introduced by the Phase 125 pin
+          # loosening (LD-2). Anchored on the `mailglass` dep name to avoid
+          # false matches on `mailglass_inbound` or `mailglass_admin` lines.
+          if echo "${INFO}" | grep -E "^[[:space:]]*mailglass (==|~>|>=)" >/dev/null || \
+             echo "${INFO}" | grep -F "mailglass == ${VERSION}" >/dev/null; then
             echo "include_inbound=true" >> "$GITHUB_OUTPUT"
-            echo "mailglass_inbound ${VERSION_INBOUND} is compatible with mailglass ${VERSION}."
+            echo "mailglass_inbound ${VERSION_INBOUND} is compatible with mailglass ${VERSION} (loosened ~> or exact == pin detected)."
           else
             echo "include_inbound=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping inbound consumer dependency: mailglass_inbound ${VERSION_INBOUND} is not compatible with mailglass ${VERSION}."
+            echo "Skipping inbound consumer dependency: mailglass_inbound ${VERSION_INBOUND} has no recognized mailglass compatibility pin for ${VERSION}."
           fi
       - name: Run consumer-install smoke (published Hex versions)
         # Shared body with the PR-time `Installer Host Smoke` job in ci.yml —
