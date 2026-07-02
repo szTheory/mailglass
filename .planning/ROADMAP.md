@@ -264,7 +264,7 @@ be complete and green before the real release ceremony)
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 132. Config + `Mailglass.Identifier` foundation | 2/2 | Complete    | 2026-07-02 |
-| 133. Repo-facade prefix injection + Multi threading | 2/2 | Complete   | 2026-07-02 |
+| 133. Repo-facade prefix injection + Multi threading | 2/2 | Complete    | 2026-07-02 |
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 0/? | Not started | - |
 | 135. Inbound package schema isolation | 0/? | Not started | - |
 | 136. Upgrade codemod + docs + api_stability | 0/? | Not started | - |
