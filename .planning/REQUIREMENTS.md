@@ -118,4 +118,27 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| _(filled by roadmap)_ | | |
+| SCHEMA-01 | Phase 132 | Pending |
+| SCHEMA-02 | Phase 132 | Pending |
+| SCHEMA-03 | Phase 132 | Pending |
+| SCHEMA-04 | Phase 132 | Pending |
+| FACADE-01 | Phase 133 | Pending |
+| FACADE-02 | Phase 133 | Pending |
+| FACADE-03 | Phase 133 | Pending |
+| FACADE-04 | Phase 133 | Pending |
+| MIGR-01 | Phase 134 | Pending |
+| MIGR-02 | Phase 134 | Pending |
+| MIGR-03 | Phase 134 | Pending |
+| MIGR-04 | Phase 134 | Pending |
+| MIGR-05 | Phase 134 | Pending |
+| MIGR-06 | Phase 134 | Pending |
+| INB-01 | Phase 135 | Pending |
+| INB-02 | Phase 135 | Pending |
+| INB-03 | Phase 135 | Pending |
+| UPG-01 | Phase 136 | Pending |
+| UPG-02 | Phase 136 | Pending |
+| UPG-03 | Phase 136 | Pending |
+| UPG-04 | Phase 136 | Pending |
+| REL-01 | Phase 137 | Pending |
+| REL-02 | Phase 137 | Pending |
+| REL-03 | Phase 137 | Pending |

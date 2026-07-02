@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Postgres Schema Isolation
 status: planning
-last_updated: "2026-07-02T20:28:41.087Z"
+last_updated: "2026-07-02T21:15:00.000Z"
 last_activity: 2026-07-02
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,89 +20,70 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 131 — release-cut-milestone-closeout
+**Current focus:** Phase 132 — Config + `Mailglass.Identifier` foundation (v2.0, not started)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Milestone: v2.0 Postgres Schema Isolation (6 phases, 132-137)
+Phase: Not started — roadmap complete, ready to plan Phase 132
 Plan: —
-Status: Defining requirements
-Last activity: 2026-07-02 — Milestone v2.0 started
+Status: Roadmapped (awaiting `/gsd-plan-phase 132`)
+Last activity: 2026-07-02 — v2.0 roadmap created (ROADMAP.md + REQUIREMENTS.md traceability filled)
 
-## v1.14 Milestone Intent
+## v2.0 Milestone Intent
 
-- **Method inversion (the root-cause fix).** Three admin-UI design milestones shipped
-  (v1.7/v1.11/v1.13), yet clicking the real `make demo` still surfaces obvious IA/usability problems on
-  the operator landing: the sidebar **always highlights "Deliveries"** even on the overview (hardcoded
-  `active={:deliveries}`), a redundant **"Navigate" section** duplicates the always-visible sidebar, and
-  the **overview is a homepage that mostly points elsewhere**. Root cause: prior passes were **bottom-up
+- **Hygiene + one deliberate breaking improvement (NOT feature growth).** The 2026-07-01 quality/CI/PG-schema
+  audit found DB/data-model hygiene is the one genuinely weak dimension (it surfaced the 1.10.2
+  shipped-migration bug), and flagged that mailglass's domain tables land in the host app's `public`
+  schema — sprawling into the adopter's namespace and leaving the append-only events immutability
+  trigger/function hard-bound to `public`. D-23 convergence still holds; the library is feature-complete.
 
-  + structural-gate-verified** → clean primitives on muddy pages, because no structural gate can ask "is
-  this page redundant / coherent / least-surprising." v1.14 **inverts the method**: top-down, JTBD/IA-led,
-  with a **judgment-level adversarial persona-critic review loop** (+ maintainer sign-off) that catches
-  taste/redundancy/IA problems gates can't.
+- **Goal.** Default all mailglass domain tables into a dedicated `"mailglass"` Postgres SCHEMA instead of
+  `public`, with an explicit one-line `config :mailglass, :schema, "public"` opt-out and a first-class
+  codemod upgrade path. Breaking → `mailglass` 2.0 (+ linked admin 2.0, paired inbound bump).
 
-- **Surface-by-surface redesign, biggest-impact first.** Ruthlessly de-duplicated, Apple-like deliberate
-  IA. Mobile-first, light/dark/system, WCAG 2.2 AA, Emil-Kowalski-grade motion, on-brand microcopy.
-  **Idempotent — only-forward, no regressions** (inherit the full v1.13 ratchet floor). Order: app-shell +
-  nav + overview (#1 pain) → Deliveries (core JTBD) → Inbound → Preview → cross-surface coherence →
-  **ship to Hex** (D-28, linked-version like v1.13). NOT product-capability growth (D-23 convergence).
+- **Locked decisions (research, 2026-06-30 — dossier §1):** (1) default schema `"mailglass"`, `"public"`
+  the explicit breaking opt-out; (2) runtime facade-injected `prefix:`, NOT `@schema_prefix` (Oban
+  precedent — a compile-time attr can't honor `runtime.exs`); (3) explicit per-query/per-DDL
+  qualification, NEVER `SET search_path` (PgBouncer transaction-mode leak, CVE-2018-1058, plan-cache
+  invalidation); (4) `citext` stays in `public` (keep it resolvable or comparisons silently go
+  case-sensitive); (5) `Ecto.Multi` prefix threaded per-builder, not per-executor; (6) NO `@schema_prefix`
+  anywhere (grep/Credo guard against the read-vs-write precedence inversion).
 
-- **Locked decisions (maintainer, 2026-06-26):** (1) Overview → real triage destination (de-dupe, own
-  nav item, actionable health stats). (2) Review method → adversarial persona critics, mostly autonomous,
-  phase-boundary checkpoints (before/after per surface), not per-fix UAT. (3) Release → ship to Hex
-  (admin-minor drags core+inbound; D-13 inbound exact-pin re-pin; consumer + post-publish smoke; audit +
-  archive). (4) Preview review surface → adopt `phoenix_storybook` as `only: :dev` (dev-only dep doesn't
-  touch the zero-Node *adopter-facing* guarantee; shipped `priv/static/app.css` unchanged; sandbox CSS =
-  the committed bundle); keep `/dev/mail/gallery` as the ratchet/structural-contract surface.
+## v2.0 Scope Locks
 
-## v1.14 Scope Locks
-
-- **Admin + demo only.** Recipient-facing email HEEx templates and `brandbook/` tokens are OUT — the
-  brand book is the source of truth. No new product capability/providers/transports/routes (D-23).
-
-- **Host-app-friendly** (mountable library): no hijacking host auth/theme/assets/Repo; no global CSS/JS
-  collisions.
-
-- **Zero-Node *shipped* asset pipeline** preserved (committed `priv/static/app.css`, rebuilt + committed
-  on class changes). `phoenix_storybook` is a `only: :dev` dep — adopters never install it or build its
-  assets; dev/CI gaining Node is accepted. No pixel-diff regression — ever (structural + axe-JSON +
-  score-baseline only).
-
-- **Idempotent floor (inherit, keep green, re-score only upward):** ~26 conformance gates, 54-cell
-  aesthetic baseline, 9-cell axe baseline, 24-item Bucket-A manifest, persona drift-guard.
-
-- **Two binding sequencing constraints:** (1) Phase 118 (persona-critic harness + defect register) is a
-  **hard precondition** for Phase 119 — the hit-list drives every surface redesign. (2) Each surface
-  redesign (120 → 121 → 122) inherits the cleaned-up patterns from the prior one; the full pillar re-score
-
-  + new judgment-gate arming happens ONLY in Phase 123.
-
-- **Release posture: ACTUALLY CUT** (D-28) — admin-minor bump drags matched core+inbound via
-  linked-version releases; D-13 inbound exact-pin re-pin after the PR merges.
+- **Schema isolation + its upgrade path only.** No new product capability/providers/transports/routes
+  (D-23). The one adopter-visible change is the default table schema (breaking).
+- **Postgres-only** (unchanged). No MySQL/SQLite.
+- **Not per-tenant schemas.** `:schema` is one fixed library schema; multi-tenant *data* isolation stays
+  `tenant_id` scoping (orthogonal, composes with the prefix).
+- **No `search_path` mutation.** Rejected on principle. `citext` stays in `public`.
+- **Zero-Node stays adopter-facing.** No product-behavior change beyond the schema location.
+- **Dogfood the hardened v1.15 pipeline** — real linked 2.0/2.0/2.x release using the loosened `~>`
+  sibling pins and tiered `mix ci` surface now in play.
 
 ## Roadmap Snapshot
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 118 | Method, Audit & Storybook stand-up | Persona-critic harness across the viewport×theme×state matrix → prioritized screenshot-backed defect register; `phoenix_storybook` `only: :dev` review surface (sandbox CSS = committed `app.css`); keep `/dev/mail/gallery` for ratchets; draft new judgment gates; inherit the v1.13 floor green (METHOD-01/02, STORY-01/02) |
-| 119 | App-shell + Nav + Overview redesign | **Keystone #1 pain.** Fix false-active-nav bug; Overview → real triage destination with own nav identity; delete redundant Navigate cards; orientation strip → empty-pane-only; actionable health stats; streamlined non-redundant microcopy; full matrix + persona stress (SHELL-01/02/03) |
-| 120 | Deliveries surface redesign | Core operator JTBD → streamlined non-info-dump IA across the full matrix; inherits 119 patterns (DELIV-01) |
-| 121 | Inbound surface redesign | Consistent with cleaned-up Deliveries patterns; PII/raw-payload boundaries preserved; full matrix (INB-01) |
-| 122 | Preview surface redesign | Consistent with established patterns; previewed-email independent theme toggle intact; full matrix (PREV-01) |
-| 123 | Cross-surface coherence + ratchet re-arm | All four surfaces cohere; storybook + gallery finalized; aesthetic ratchet re-scored only-forward; new judgment gates (nav-active-correctness, no-nav-duplication) armed green (COH-01/02) |
-| 124 | Release cut + milestone closeout | Linked-version Hex release (admin-minor drags core+inbound); D-13 inbound re-pin; Hex resolution + consumer + post-publish smoke; milestone audit + archive (REL-01/02) |
+| 132 | Config + `Mailglass.Identifier` foundation (Design Phase A) | `config :mailglass, :schema` (default `"mailglass"`); boot-validated `:persistent_term`-cached `Config.schema/0`; shared `Mailglass.Identifier` validator; mirror on `config :mailglass_inbound, :schema`. Pure additive (SCHEMA-01..04) |
+| 133 | Repo-facade prefix injection + Multi threading (Design Phase B) | `put_prefix/1` (`Keyword.put_new`) through every `Mailglass.Repo` call + `multi_opts/1` per-step into Events/Outbound/Escalation Multi builders; admin zero-change; full core suite green under both `public` and `mailglass` (new CI axis) (FACADE-01..04) |
+| 134 | Migration entrypoint + raw-DDL/trigger qualification (Design Phase C) | Inject prefix at `Mailglass.Migration`; `maybe_create_schema/1` (`create_schema:false`) + `maybe_drop_schema/1` (`RESTRICT`); schema-qualify v01 trigger+function (`SET search_path=''`) + v01/v03 CHECKs + all `down/0` drops; `citext` stays in `public`. **Load-bearing:** SQLSTATE 45A01 regression under `mailglass` with no `search_path` pin (MIGR-01..06) |
+| 135 | Inbound package schema isolation (Design Phase D) | `config :mailglass_inbound, :schema` accessor + `MailglassInbound.Repo` facade threading; convert loose `change/0` migrations to the prefix-aware version-dispatcher pattern with `CREATE SCHEMA`; inbound suite green under both prefixes (INB-01..03) |
+| 136 | Upgrade codemod + docs + api_stability (Design Phase E) | `mix mailglass.upgrade.v2_schema` Route B move migration (`ALTER TABLE … SET SCHEMA` + `lock_timeout` + trigger recreation + `down/0`); `guides/upgrading-to-v2_0.md`; `:schema` config contract in `api_stability.md`; codemod run green vs `reference/host_app` (UPG-01..04) |
+| 137 | Linked 2.0 release ceremony + milestone closeout (Design Phase F) | Linked core+admin 2.0 + paired inbound bump (`~>` sibling-pin drag) through the v1.15-hardened pipeline; coordinated 5-file reference-baseline update; consumer + post-publish smoke; audit + archive (REL-01..03) |
 
-**Execution order:** 118 → 119 → 120 → 121 → 122 → 123 → 124 (strictly sequential; top-down,
-biggest-impact-first). Phase 118 (persona-critic harness + defect register) is a hard precondition for
-the keystone shell redesign (119). Each surface redesign inherits the prior surface's cleaned-up
-patterns. Full pillar re-score + judgment-gate arming only in 123; release cut last (124).
+**Execution order:** 132 → 133 → 134 → 135 → 136 → 137 (strictly sequential, dependency-ordered per the
+dossier's A→B→C→D→E→F build order). 133 depends on 132 (config accessor); 134 depends on 133's facade +
+132's identifier; 135 mirrors A–C for inbound; 136 depends on the fresh-install shape from 134; 137
+depends on all prior and dogfoods the v1.15-hardened release pipeline. **134's `citext` +
+immutability-trigger regression (MIGR-05) is the load-bearing correctness proof.**
 
-**Research flags:** Phase 118 (persona-critic harness design + `phoenix_storybook` sandbox-CSS
-integration, `only: :dev`) and Phase 119 (GOV.UK IA patterns + overview-as-triage redesign) likely need
-light `/gsd-plan-phase` research. Surface-redesign phases 120-122 inherit 118/119 patterns and the
-v1.11/v1.13 research dossiers — plan directly. Phases 123 (ratchet re-score) and 124 (release ceremony)
-plan directly from the v1.13 precedent.
+**Research flags:** none blocking — the LOCKED dossier
+(`.planning/research/milestone-schema-isolation/SCHEMA-ISOLATION-DESIGN.md`) is decision-ready. Run only
+light per-phase `/gsd-plan-phase` research where a phase touches an unfamiliar Ecto/Postgres edge
+(candidates: Phase 134's raw-DDL trigger/function `SET search_path=''` interaction with the SQL Sandbox;
+Phase 136's `ALTER TABLE … SET SCHEMA` `ACCESS EXCLUSIVE` locking posture).
 
 ## Decisions
 

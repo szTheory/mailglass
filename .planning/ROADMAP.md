@@ -25,509 +25,270 @@
 - ✅ **v1.12 Adopter Onboarding & Day-2 Confidence** - Phases 104-108 (shipped 2026-06-17) - see [milestones/v1.12-ROADMAP.md](milestones/v1.12-ROADMAP.md) and [milestones/v1.12-MILESTONE-AUDIT.md](milestones/v1.12-MILESTONE-AUDIT.md)
 - ✅ **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** - Phases 109-117 (shipped 2026-06-21) - see [milestones/v1.13-ROADMAP.md](milestones/v1.13-ROADMAP.md) and [milestones/v1.13-MILESTONE-AUDIT.md](milestones/v1.13-MILESTONE-AUDIT.md)
 - ✅ **v1.14 Operator IA & Lived-Experience Redesign** - Phases 118-124 (shipped 2026-06-30 — mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3) - see [milestones/v1.14-ROADMAP.md](milestones/v1.14-ROADMAP.md) and [milestones/v1.14-MILESTONE-AUDIT.md](milestones/v1.14-MILESTONE-AUDIT.md)
-
 - ✅ **v1.15 Release-Pipeline Efficiency & Contributor DX** — Phases 125-131 (shipped 2026-07-02 — mailglass 1.11.0 / mailglass_admin 1.11.0 / mailglass_inbound 1.6.0; keystone `~>` pin decoupling live) — see [milestones/v1.15-ROADMAP.md](milestones/v1.15-ROADMAP.md) and [milestones/v1.15-MILESTONE-AUDIT.md](milestones/v1.15-MILESTONE-AUDIT.md)
+- 🚧 **v2.0 Postgres Schema Isolation** — Phases 132-137 (**ACTIVE** — opened 2026-07-02)
 
-🔜 **v2.0 Postgres Schema Isolation** — next planned milestone (not yet opened)
+## Phases (Active — v2.0 Postgres Schema Isolation)
 
-## Phases (Archived — v1.15, SHIPPED 2026-07-02)
+**Milestone goal:** Default all mailglass domain tables into a dedicated `"mailglass"` Postgres SCHEMA
+instead of the host app's `public`, with an explicit one-line `config :mailglass, :schema, "public"`
+opt-out and a first-class codemod upgrade path. Breaking → `mailglass` 2.0 (+ linked admin 2.0, paired
+inbound bump). This is **hygiene + one deliberate breaking improvement** (D-23 convergence holds — NOT
+feature growth). Decisions of record + the A–F build order: LOCKED design dossier
+`.planning/research/milestone-schema-isolation/SCHEMA-ISOLATION-DESIGN.md` (§0–§7). Live versions at
+milestone open: `mailglass` 1.11.0 / `mailglass_admin` 1.11.0 / `mailglass_inbound` 1.6.0.
 
-**Milestone goal:** Kill the exact-pin release dance and close the local↔CI parity gap — make
-releases genuinely hands-free and make **one command reproduce the mergeable surface** — with zero
-product-behavior change, then cut a real linked Hex release that dogfoods the hardened pipeline.
-Decisions of record (LD-1..13): `.planning/research/milestone-cicd/SYNTHESIS.md`. Infrastructure/DX
-only — D-23 convergence holds; no product code, no schema change (that is v2.0).
+- [ ] **Phase 132: Config + `Mailglass.Identifier` foundation (Design Phase A)** — Add `config :mailglass, :schema` (default `"mailglass"`, `"public"` explicit opt-out), a validated `Config.schema/0` accessor with boot-time validation + `:persistent_term` cache, promote the identifier regex to a shared `Mailglass.Identifier` validator, and mirror the whole contract on `config :mailglass_inbound, :schema`. Pure additive — no behavior change yet (facade not wired). **Requirements:** SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04. **Success:** (1) an adopter can set `config :mailglass, :schema, "<name>"`; unset defaults to `"mailglass"` and `"public"` is documented as the pre-2.0 opt-out; (2) `Config.schema/0` returns a validated name, `validate_at_boot!/0` fails fast on a malformed identifier, and the value is served from `:persistent_term` (no per-op `Application.get_env`); (3) `Mailglass.Identifier.validate!/2` rejects any non-`[a-zA-Z_][a-zA-Z0-9_]*` value and both config-boot and migration validation call it; (4) `mailglass_inbound` mirrors the same accessor + boot validation + cache reusing `Mailglass.Identifier`; (5) config tests + `mix credo` green with zero runtime behavior change.
+- [ ] **Phase 133: Repo-facade prefix injection + Multi threading (Design Phase B)** — Thread `put_prefix/1` (runtime `prefix:`, `Keyword.put_new` so an explicit caller `:prefix` wins) through every `Mailglass.Repo` delegated read/write, and a shared `multi_opts/1` per-step into the Events/Outbound/Escalation `Ecto.Multi` builders. Admin needs zero code changes. Verified under both `public` and `mailglass` schemas (new CI matrix axis). **Requirements:** FACADE-01, FACADE-02, FACADE-03, FACADE-04. **Success:** (1) every `Mailglass.Repo` delegated call injects `prefix: Config.schema()` via `Keyword.put_new` and NO `@schema_prefix` is declared on any schema; (2) every mailglass-table Multi builder threads `prefix:` per-step via `multi_opts/1` so no step falls back to the connection schema; (3) `mailglass_admin` requires zero code changes — proven by an admin integration test booting against a schema-isolated DB and asserting the dashboard renders; (4) a dedicated schema-isolation integration test creates the schema, migrates, round-trips insert/read, and asserts mailglass tables exist under `mailglass.*` while `public` holds none, and the full core suite runs green under BOTH `schema: "public"` and `schema: "mailglass"`.
+- [ ] **Phase 134: Migration entrypoint + raw-DDL/trigger qualification (Design Phase C)** — Inject `prefix:` at `Mailglass.Migration.up/down`, add `maybe_create_schema/1` (`create_schema: false` escape hatch) + `maybe_drop_schema/1` (`RESTRICT`), and hand-qualify the v01 immutability trigger + function (schema-scoped, `SET search_path = ''`), the v01/v03 CHECK constraints, and all `down/0` raw drops; `citext` stays in `public`. **Requirements:** MIGR-01, MIGR-02, MIGR-03, MIGR-04, MIGR-05, MIGR-06. **Success:** (1) `Mailglass.Migration.up/down` thread `prefix: Config.schema()` into the v01–v05 dispatcher; (2) `Migrations.Postgres.up/1` issues `CREATE SCHEMA IF NOT EXISTS` for a non-public prefix honoring `create_schema: false`, and `down/1` drops it with `RESTRICT` only if created and only after tables are gone; (3) the events trigger + function are created IN the configured schema (`<schema>.mailglass_raise_immutability`, `SET search_path = ''`) so two installs never collide on a global function name; (4) the v01/v03 CHECK constraints and every `down/0` raw `execute()` drop are hand-qualified to the runtime prefix; (5) **the load-bearing regression:** migrating up/down against a non-public prefix succeeds, `citext` is created unqualified (stays in `public`), and the immutability trigger raises SQLSTATE 45A01 under the `mailglass` schema WITHOUT any `search_path` pin; (6) a grep/Credo guard fails the build if any mailglass schema module declares `@schema_prefix`.
+- [ ] **Phase 135: Inbound package schema isolation (Design Phase D)** — `config :mailglass_inbound, :schema` accessor wired through `MailglassInbound.Repo` (`put_prefix/1` + `multi_opts/1`), and convert inbound's loose `change/0` migration files to the same prefix-aware version-dispatcher pattern core uses (`MailglassInbound.Migration.up/down` + `Migrations.Postgres.VNN` + `CREATE SCHEMA IF NOT EXISTS` at the head). No cross-package FKs → no cross-schema FK hazard. **Requirements:** INB-01, INB-02, INB-03. **Success:** (1) `MailglassInbound.Repo` threads `put_prefix/1` through its reads/writes and `multi_opts/1` through its Multi builders, resolving inbound tables to the configured schema; (2) inbound's loose `change/0` migrations are converted to the version-dispatcher pattern that issues `CREATE SCHEMA IF NOT EXISTS` and threads `prefix:` into every `create table`/`index`/`references`; (3) the inbound suite runs green under both `schema: "public"` and `schema: "mailglass"`.
+- [ ] **Phase 136: Upgrade codemod + docs + api_stability (Design Phase E)** — Ship `mix mailglass.upgrade.v2_schema` (Route B `ALTER TABLE … SET SCHEMA` move migration with `lock_timeout` + trigger recreation + working `down/0`), author `guides/upgrading-to-v2_0.md`, and update `api_stability.md` (core + inbound) with the `:schema` config contract. **Requirements:** UPG-01, UPG-02, UPG-03, UPG-04. **Success:** (1) `mix mailglass.upgrade.v2_schema` generates a Route B move migration that `CREATE SCHEMA`s, `ALTER TABLE … SET SCHEMA`s all four core tables under `SET LOCAL lock_timeout`, and recreates the immutability trigger + function schema-qualified — with a working `down/0`; (2) `guides/upgrading-to-v2_0.md` documents both routes (Route A one-line `"public"` opt-out; Route B move), the `create_schema: false` grants, the `public.mailglass_*` literal-SQL grep checklist, and the `lock_timeout` + retry posture; (3) `api_stability.md` (core + inbound) documents the `:schema` config as a stable 2.0 surface and states the tenancy-vs-schema orthogonality so no one conflates `:schema` with per-tenant prefixes; (4) the codemod is run end-to-end against `reference/host_app` (frozen baseline) and asserted green.
+- [ ] **Phase 137: Linked 2.0 release ceremony + milestone closeout (Design Phase F)** — Cut the linked-version 2.0 release (core + admin `2.0.0`, paired inbound bump via the loosened `~>` sibling-pin drag) through the v1.15-hardened pipeline (`mix ci` tiers, `CI Green` fan-in gate), apply the coordinated 5-file reference-baseline update, prove consumer + post-publish smoke, and audit + archive. **Requirements:** REL-01, REL-02, REL-03. **Success:** (1) a linked-version 2.0 release is cut — core + admin `2.0.0`, paired inbound bump — with the coordinated 5-file reference-baseline update applied, dogfooding the v1.15-hardened release pipeline; (2) Hex resolution, the consumer smoke, and post-publish smoke are confirmed green for all three published packages; (3) the milestone audit runs `status: passed` and the milestone is archived.
 
-- [x] **Phase 125: Sibling-pin loosening (keystone, atomic)** — Replace both `{:mailglass, "== X.Y.Z"}` pins with `~>` (inbound `~> 1.10 and >= 1.10.2`, admin `~> 1.10`), relax `stability_contract_test` + `publish.check` to admit-not-equal, delete the `==` sed rewrites from `release-please.yml`, ship the CHANGELOG + Hex-retirement rollback note — as ONE indivisible change. **Requirements:** PIN-01..05. **Success:** (1) both siblings resolve core from Hex under `~>` with `MIX_PUBLISH=true`; (2) the relaxed contract test passes on a bare main SHA where core `@version` is unchanged (the scenario that was red before); (3) a simulated core patch release touches zero sibling pin lines; (4) `publish.check` passes for all three packages.
-- [x] **Phase 126: CI Green fan-in gate + branch-protection collapse** — Add the `CI Green` aggregate job (release-SHA-safe `skipped` handling), collapse branch protection to `CI Green` + `guard-release-trigger`, add the set-equality coverage meta-test, verify `guard-release-trigger` always reports, fix the `gate-self-test` stale default. **Requirements:** GATE-01..04. **Success:** (1) a synthetic failing PR shows `CI Green` = FAILURE and is blocked; (2) a fully-green PR is mergeable without `--admin`; (3) the meta-test fails if a required lane is dropped from `needs`; (4) `gate-self-test` polls the real gate.
-- [x] **Phase 127: Inbound test determinism** — Root-cause fix for the shared-mode/async sandbox flake (`MailboxCase` serial + drop `shared:`); delete `--seed 0` everywhere. **Requirements:** DET-01..02. **Success:** (1) the inbound suite is green across 20 random-seed runs; (2) `--seed 0` appears nowhere in `ci.yml` or the `mix ci` alias; (3) `grep shared: mailbox_case.ex` is empty.
-- [x] **Phase 128: `mix ci` parity completion (folds in PR #104)** — Complete `mix ci` to equal the mergeable surface (add Installer Host Smoke + trust lane); tiered `ci.fast`/`ci`/`ci.browser` + sibling aliases + `make ci`; manifest-membership parity-drift test (shared source with GATE-03); Postgres/network preflight brand-voice guard; designate `verify.*` internal + remove deprecated `verify.phase_NN`; land the CONTRIBUTING copy. **Requirements:** MIXCI-01..05. **Success:** (1) `mix ci` runs all 5 required gates; (2) the parity-drift test fails when a required CI lane isn't covered by the alias; (3) `mix ci` with no Postgres prints an actionable brand-voice message, not a raw crash; (4) CONTRIBUTING points at `mix ci`, no `verify.phase_07`. (completed 2026-07-01)
-- [x] **Phase 129: Cache-key + PLT correctness** — Toolchain-scoped cache key derived from a single `.tool-versions`/`env:` source; Bandit-style PLT self-healing eviction; only then may Dialyzer move toward required. **Requirements:** CACHE-01..02. **Success:** (1) cache keys in Actions logs carry OTP+Elixir dims from one source; (2) a corrupted PLT is evicted and rebuilt by the workflow; (3) no per-block hardcoded toolchain literals remain.
-- [x] **Phase 130: Supply chain + workflow hygiene** — `mix_audit` advisory-on-PR / block-at-release; dependabot sibling-dir coverage; cowlib OSV-staleness forcing function (loud CI warning + publish hard-block, fail-open); `actionlint` on workflow PRs; latest-Elixir 1.19/OTP28 advisory row (non-blocking) + floor-coincidence note. **Requirements:** SUPPLY-01..05. **Success:** (1) a simulated unfixable advisory reds the publish gate but NOT open PRs; (2) dependabot watches both sibling locks; (3) `actionlint` fails a malformed workflow PR; (4) the 1.19/28 row runs on cron only and never blocks. (completed 2026-07-02)
-- [x] **Phase 131: Release cut + milestone closeout** — Cut the real linked v1.15 (core+admin linked; inbound minor for the dependency-policy change) through the hardened pipeline; consumer + post-publish smoke; milestone audit + archive. **Requirements:** SHIP-01..03. **Success:** (1) v1.15 live on Hex, `~>` pins resolve from Hex; (2) consumer + post-publish smoke green; (3) the release ceremony was a confirmation (per-phase CI caught regressions earlier); (4) milestone audited + archived. (completed 2026-07-02)
+**Execution order:** 132 → 133 → 134 → 135 → 136 → 137 (strictly sequential, dependency-ordered per
+the design's A→B→C→D→E→F build order). **133 depends on 132** (the facade reads the `Config.schema/0`
+accessor). **134 depends on 133 + 132** (the migration entrypoint injects the same runtime prefix and
+reuses `Mailglass.Identifier`). **135 mirrors 132–134 for the inbound package.** **136 depends on the
+fresh-install shape locked in 134** (the codemod recreates the same schema-qualified trigger/function).
+**137 depends on all prior** and validates the whole change on Hex. **134's `citext` + immutability-trigger
+regression (MIGR-05) is the load-bearing correctness proof** of the milestone; **137 must dogfood the
+v1.15-hardened release pipeline** — loosened `~>` sibling pins and the tiered `mix ci` surface.
 
-**Execution order:** 125 → 126 → 127 → 128 → 129 → 130 → 131 (dependency-ordered, biggest-leverage
-first). **125 is the keystone** — it unblocks every future release and is internally atomic. **127
-precedes 128** (the `mix ci` inbound step must consume the `--seed 0` deletion). **129 precedes any
-Dialyzer promotion** (PLT self-healing must exist before Dialyzer can block merges — LD-7). **131 is
-last** and cuts the real release, validating the whole pipeline end-to-end (LD-1).
+**Research flags:** none blocking — the LOCKED design dossier is decision-ready (Ecto/Postgres mechanics
+decision table, Oban precedent, 13-item footgun checklist, concrete diff surface). Per PROJECT.md, run
+only **light per-phase `/gsd-plan-phase` research** where a phase touches an unfamiliar Ecto/Postgres
+edge (candidate: Phase 134's raw-DDL trigger/function schema-qualification + `SET search_path = ''`
+interaction with the SQL Sandbox, and Phase 136's `ALTER TABLE … SET SCHEMA` locking posture).
 
-**Method:** dogfood the v1.14-post-mortem backlog fix — each phase pushes a `phase/NN` branch and
-requires green CI, so the release ceremony is a confirmation, not a discovery.
+## Phase Details (Active — v2.0)
 
-**Research flags:** none — the milestone is research-complete (decision-ready dossiers +
-`SYNTHESIS.md` adversarial refinement). All phases plan directly.
+> Decisions of record for every phase below: the LOCKED design dossier
+> `.planning/research/milestone-schema-isolation/SCHEMA-ISOLATION-DESIGN.md` (§0–§7); the A–F phased
+> build order is §5. Requirements: `.planning/REQUIREMENTS.md`. Six locked decisions (dossier §1):
+> (1) default schema `"mailglass"`, `"public"` explicit opt-out; (2) runtime facade-injected `prefix:`,
+> NOT `@schema_prefix`; (3) explicit per-query/per-DDL qualification, NEVER `SET search_path`;
+> (4) `citext` stays in `public`; (5) `Ecto.Multi` prefix threaded per-builder; (6) NO `@schema_prefix`
+> anywhere (grep/Credo guard).
 
-## Phase Details (Active — v1.15)
+### Phase 132: Config + `Mailglass.Identifier` foundation
 
-> Decisions of record for every phase below: `.planning/research/milestone-cicd/SYNTHESIS.md`
-> (LD-1..13). Live versions at milestone open: `mailglass` 1.10.2 / `mailglass_admin` 1.10.2 /
-> `mailglass_inbound` 1.5.4.
-
-### Phase 125: Sibling-pin loosening (keystone, atomic)
-
-**Goal**: Replace both `{:mailglass, "== X.Y.Z"}` sibling pins with pessimistic `~>` constraints and
-relax every gate that enforced exact equality — as ONE indivisible change — so a core patch release no
-longer drags a paired sibling release. This is the keystone: it unblocks every future release.
-**Depends on**: Nothing (first phase of v1.15; keystone for the whole milestone)
-**Requirements**: PIN-01, PIN-02, PIN-03, PIN-04, PIN-05
+**Goal**: Establish the additive configuration + validation foundation — the `:schema` config key
+(default `"mailglass"`), a boot-validated `:persistent_term`-cached accessor, and a shared
+`Mailglass.Identifier` validator — mirrored on the inbound line, with zero runtime behavior change yet.
+This is Design Phase A: everything downstream reads `Config.schema/0` and validates through
+`Mailglass.Identifier`.
+**Depends on**: Nothing (first phase of v2.0)
+**Requirements**: SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04
 **Success Criteria** (what must be TRUE):
 
-  1. Both siblings resolve core from Hex under `~>` with `MIX_PUBLISH=true` — inbound pinned
-     `{:mailglass, "~> 1.10 and >= 1.10.2"}` (floored at the V05 deliveries-migration fix), admin
-     `{:mailglass, "~> 1.10"}` (safe via the linked-versions plugin) (LD-2).
+  1. An adopter can set `config :mailglass, :schema, "<name>"`; unset defaults to `"mailglass"`, and
+     `"public"` is documented (config key `:doc`) as the explicit pre-2.0 opt-out.
 
-  2. `stability_contract_test` (:105 regex, :154–159 assertion) and `publish.check`
-     (`verify_deps`, `verify_linked_constraint`) assert the sibling pin *admits* core `@version` via
-     `Version.match?` and is pessimistic (`~>`), rejecting `==` — the relaxed contract passes on a bare
-     main SHA where core `@version` is unchanged (the exact scenario that was red before) (LD-3).
+  2. `Mailglass.Config.schema/0` returns the validated schema name, `validate_at_boot!/0` fails fast on
+     a malformed identifier, and the value is served from `:persistent_term` so the hot path never calls
+     `Application.get_env` per operation.
 
-  3. The two `== X.Y.Z` sed rewrites are deleted from `release-please.yml`; a simulated core patch
-     release touches zero sibling pin lines (LD-3).
+  3. A shared `Mailglass.Identifier.validate!/2` (promoted from `Migrations.Postgres.validate_identifier!/2`)
+     rejects any value that is not a valid unquoted Postgres identifier (`[a-zA-Z_][a-zA-Z0-9_]*`), and
+     both config-boot and migration validation call it.
 
-  4. The change ships a CHANGELOG entry and documents `mix hex.retire mailglass X.Y.Z` as the rollback
-     lever that replaces the `==` wall (LD-5); `publish.check` passes for all three packages.
+  4. `mailglass_inbound` mirrors the same contract on its own line — `config :mailglass_inbound, :schema`
+     (default `"mailglass"`), a validated accessor, boot validation, and a `:persistent_term` cache —
+     reusing `Mailglass.Identifier`.
 
-  5. The whole change lands atomically — splitting any part reds main or miscuts the next release (the
-     sed anchor would match zero `==` lines) (LD-3).
-**Plans**: 1 plan
-
-- [x] 125-01-PLAN.md — Loosen both sibling `==` pins to `~>` (inbound `~> 1.10 and >= 1.10.2`, admin `~> 1.10`), relax stability_contract_test + publish.check + admin mix_config_test to admit-`~>`-reject-`==`, delete the two `== X.Y.Z` sed rewrites (retire the 3 dead sed-anchor gates), ship CHANGELOG entries + `mix hex.retire` rollback doc — as ONE atomic change (PIN-01..05)
-
+  5. Config tests + `mix credo` are green and there is no runtime behavior change (the facade is not yet
+     wired — this phase is pure additive foundation).
+**Plans**: TBD
 **UI hint**: no
 
-### Phase 126: CI Green fan-in gate + branch-protection collapse
+### Phase 133: Repo-facade prefix injection + Multi threading
 
-**Goal**: Collapse the 5 required leaf branch-protection contexts into a single `CI Green` aggregate
-job (plus `guard-release-trigger`), with release-SHA-safe `skipped` handling and a set-equality
-coverage meta-test so no required lane can silently drop out of `needs`.
-**Depends on**: Phase 125 (the pin change must be green first; the keystone lands before pipeline gates
-are re-shaped)
-**Requirements**: GATE-01, GATE-02, GATE-03, GATE-04
+**Goal**: Wire the core prefix-threading mechanism — inject `prefix: Config.schema()` at the
+`Mailglass.Repo` facade (the universal choke point) for every delegated read/write, and per-step into
+the `Ecto.Multi` builders — so all mailglass reads/writes (including admin's, which route through the
+facade) resolve to the configured schema with zero admin code changes. This is Design Phase B.
+**Depends on**: Phase 132 (the facade reads the `Config.schema/0` accessor + `:persistent_term` cache)
+**Requirements**: FACADE-01, FACADE-02, FACADE-03, FACADE-04
 **Success Criteria** (what must be TRUE):
 
-  1. A single `CI Green` aggregate job (`if: always()`, explicit `needs`) is the sole required
-     branch-protection context alongside `guard-release-trigger`, replacing the 5 leaf contexts
-     (GATE-01); a synthetic failing PR shows `CI Green` = FAILURE and is blocked; a fully-green PR is
-     mergeable without `--admin`.
+  1. Every `Mailglass.Repo` delegated call (`insert/update/delete/one/all/get/aggregate/delete_all`)
+     injects `prefix: Config.schema()` via `put_prefix/1` using `Keyword.put_new` (so an explicit
+     caller-supplied `:prefix` still wins), and NO `@schema_prefix` is declared on any schema.
 
-  2. On the release/publish path a required lane must be `success` — a `skipped` required lane does NOT
-     count as green (LD-6, GATE-02).
+  2. Every `Ecto.Multi` builder that writes a mailglass table (Events `append_multi`/`insert_opts`,
+     Outbound insert/insert_all/update, `Suppression.Escalation`) threads `prefix:` per-step via a shared
+     `multi_opts/1`, so no step falls back to the connection schema.
 
-  3. A coverage meta-test asserts set-equality between `setup_branch_protection.sh` `REQUIRED_CHECKS`,
-     `ci-green.needs`, and the actual job set (not superset), and that no required lane is permanently
-     `if:`-disabled; it fails if a required lane is dropped from `needs` (GATE-03).
+  3. `mailglass_admin` requires zero code changes — its `Operator.*` reads land in the configured schema
+     through the facade — proven by an admin integration test booting against a schema-isolated DB and
+     asserting the dashboard renders.
 
-  4. `guard-release-trigger` is verified to always report (no green-but-BLOCKED regression) and
-     `gate-self-test.yml`'s stale `check_name` default is corrected to `CI Green` (GATE-04).
-**Plans**: 2 plans
-
-- [x] 126-01-PLAN.md — Add the `CI Green` aggregate job (`if: always()`, `needs` = the 5 required leaves) + a hand-rolled `changes` detection gate (drops the workflow-level `paths-ignore` so `CI Green` always reports), collapse `REQUIRED_CHECKS` to `{CI Green, Guard Release Trigger}`, and extend `required_checks_test.exs` to the set-equality coverage meta-test (GATE-01, GATE-03)
-- [x] 126-02-PLAN.md — Enforce required-lane-must-be-`success` on the publish path (`REQUIRED_LANES` set; skipped required lane blocks), fix the `gate-self-test.yml` stale `Tests (` default → `CI Green`, and add the `guard-release-trigger` always-reports invariant test (GATE-02, GATE-04)
-
+  4. A dedicated schema-isolation integration test creates the schema, migrates, round-trips insert/read,
+     and asserts mailglass tables exist under `mailglass.*` while `public` holds none of them; the full
+     core suite runs green under BOTH `schema: "public"` and `schema: "mailglass"` (new CI matrix axis).
+**Plans**: TBD
 **UI hint**: no
 
-### Phase 127: Inbound test determinism
+### Phase 134: Migration entrypoint + raw-DDL/trigger qualification
 
-**Goal**: Root-cause-fix the shared-mode/async sandbox flake in the inbound suite so it is
-deterministic by construction, then delete `--seed 0` everywhere. Precondition for the `mix ci` inbound
-step (Phase 128).
-**Depends on**: Phase 126 (lands on the hardened gate; determinism precedes the `mix ci` inbound step)
-**Requirements**: DET-01, DET-02
+**Goal**: Close the migration-layer gaps — inject the runtime prefix at the `Mailglass.Migration`
+entrypoint, actually issue `CREATE SCHEMA`/`DROP SCHEMA` (with the `create_schema: false` escape hatch
+and `RESTRICT`), and hand-qualify every raw-DDL object Ecto does not auto-prefix (the immutability
+trigger + function, the CHECK constraints, all `down/0` drops), while keeping `citext` in `public`.
+This is Design Phase C and carries the milestone's load-bearing correctness proof.
+**Depends on**: Phase 133 (the migration entrypoint injects the same runtime prefix) + Phase 132 (reuses
+`Mailglass.Identifier` for the `CREATE SCHEMA` identifier guard)
+**Requirements**: MIGR-01, MIGR-02, MIGR-03, MIGR-04, MIGR-05, MIGR-06
 **Success Criteria** (what must be TRUE):
 
-  1. The shared-mode/async sandbox flake is fixed at the root — `MailboxCase` defaults `async: false`,
-     drops `shared:`, uses a plain ownership checkout (Option B) — so the suite is deterministic by
-     construction (LD-8); `grep shared: mailbox_case.ex` is empty.
+  1. `Mailglass.Migration.up/down` inject `prefix: Config.schema()` so the version dispatcher (v01–v05)
+     threads the configured schema into every structural DDL statement.
 
-  2. `--seed 0` is deleted from `ci.yml` and the `mix ci` alias and appears nowhere; the inbound suite
-     is green across 20 random-seed runs (DET-02). Any `|| mix test --failed` retry idiom is kept only
-     as a time-boxed transition net with a removal date (LD-8).
-**Plans**: 1 plan
-Plans:
+  2. `Migrations.Postgres.up/1` issues `CREATE SCHEMA IF NOT EXISTS` for a non-public prefix, honoring an
+     explicit `create_schema: false` escape hatch (locked-down prod role); `down/1` drops the schema with
+     `RESTRICT` only if it was created and only after all tables are gone.
 
-- [x] 127-01-PLAN.md — Fix MailboxCase (async: false default, drop shared:), update docs, delete --seed 0 from ci.yml; prove 20-seed determinism
+  3. The events immutability trigger + function are schema-qualified and created IN the configured schema
+     (`<schema>.mailglass_raise_immutability`) with `SET search_path = ''` on the function, so two installs
+     in different schemas of one database never collide on a global function name.
 
+  4. The v01/v03 CHECK constraints and every `down/0` raw `execute()` drop (trigger/function/table) are
+     hand-qualified to the runtime prefix (Ecto does not prefix raw SQL).
+
+  5. **Load-bearing regression:** `citext` is created UNqualified (stays in `public`); migrating up/down
+     against a non-public prefix succeeds, and a regression test proves the immutability trigger raises
+     SQLSTATE 45A01 under the `mailglass` schema WITHOUT any `search_path` pin.
+
+  6. A grep/Credo guard fails the build if any mailglass schema module declares `@schema_prefix`
+     (enforces the pure-runtime-prefix decision and blocks the read-vs-write precedence inversion).
+**Plans**: TBD
 **UI hint**: no
 
-### Phase 128: `mix ci` parity completion (folds in PR #104)
+### Phase 135: Inbound package schema isolation
 
-**Goal**: Complete `mix ci` so it equals the mergeable surface (add Installer Host Smoke + trust lane),
-ship tiered `ci.fast`/`ci`/`ci.browser` aliases + sibling aliases + `make ci`, a manifest-membership
-parity-drift test, brand-voice preflight guards, and the CONTRIBUTING copy. Folds in and completes the
-open PR #104 DX slice.
-**Depends on**: Phase 127 (the `mix ci` inbound step must consume the `--seed 0` deletion)
-**Requirements**: MIXCI-01, MIXCI-02, MIXCI-03, MIXCI-04, MIXCI-05
+**Goal**: Bring `mailglass_inbound` onto the same schema-isolation contract on its own version line —
+config key + facade threading + converting its loose `change/0` migration files to the prefix-aware
+version-dispatcher pattern core uses (which also fixes the loose-file adopter-copy DX). This is Design
+Phase D; inbound has only internal FKs, so there is no cross-schema FK hazard.
+**Depends on**: Phase 134 (mirrors the A–C core pattern — config accessor, facade injection, and the
+version-dispatcher migration entrypoint — for inbound)
+**Requirements**: INB-01, INB-02, INB-03
 **Success Criteria** (what must be TRUE):
 
-  1. `mix ci` equals the mergeable surface — runs all 5 required gates including Installer Host Smoke
-     and the reference-host trust lane (LD-10, MIXCI-01).
+  1. `MailglassInbound.Repo` threads `put_prefix/1` through its delegated reads/writes and `multi_opts/1`
+     through its Multi builders, resolving inbound tables to the configured schema.
 
-  2. Tiered env-pinned aliases exist — `mix ci.fast` (seconds, no DB), `mix ci` (full parity),
-     `mix ci.browser` (opt-in Node) — with sibling-local `ci`/`ci.fast` aliases and a discoverable
-     `make ci`/`make help` wrapper (MIXCI-02).
+  2. Inbound's loose `change/0` migration files are converted to the same prefix-aware version-dispatcher
+     pattern core uses (`MailglassInbound.Migration.up/down` + `Migrations.Postgres.VNN`), issuing
+     `CREATE SCHEMA IF NOT EXISTS` at the head and threading `prefix:` into every
+     `create table`/`index`/`references`.
 
-  3. A manifest-membership parity-drift test asserts `ci` ∪ `ci.browser` covers every required+advisory
-     CI lane by identity + flag-set (shared `ci_lanes` source with GATE-03), failing loudly on drift —
-     not a vacuous substring superset (LD-10, MIXCI-03).
-
-  4. `mix ci`/`ci.setup` preflight-probe Postgres (and the installer step probes network) and print a
-     brand-voice actionable message on absence, never a raw connection crash (LD-12, MIXCI-04).
-
-  5. `verify.*` are designated internal composition targets, the deprecated `verify.phase_NN`
-     pass-throughs are removed, and CONTRIBUTING points at `mix ci`/`mix ci.fast` (only once MIXCI-01
-     holds), with no `verify.phase_07` 404 (LD-12, MIXCI-05).
-**Plans**: 2 plans
-
-- [x] 128-01-PLAN.md — ci alias family (ci.fast/ci/ci.setup/ci.browser) + sibling aliases + preflight guards + make ci + CONTRIBUTING + remove deprecated pass-throughs (MIXCI-01/02/04/05)
-- [x] 128-02-PLAN.md — shared ci_lanes source + GATE-03 rewire + MIXCI-03 parity-drift test (MIXCI-03)
-
+  3. The inbound suite runs green under both `schema: "public"` and `schema: "mailglass"`.
+**Plans**: TBD
 **UI hint**: no
 
-### Phase 129: Cache-key + PLT correctness
+### Phase 136: Upgrade codemod + docs + api_stability
 
-**Goal**: Derive the deps/`_build` cache key from a single toolchain source (kill the ~15 hardcoded
-`otp27-ex1.18` literals) and add Bandit-style self-healing PLT eviction — the precondition before
-Dialyzer can move toward the required set.
-**Depends on**: Phase 128 (pipeline DX complete; cache/PLT correctness precedes any Dialyzer promotion)
-**Requirements**: CACHE-01, CACHE-02
+**Goal**: Ship the first-class upgrade path for existing adopters — the `mix mailglass.upgrade.v2_schema`
+codemod (Route B `ALTER TABLE … SET SCHEMA` move migration), the `guides/upgrading-to-v2_0.md` guide
+covering both upgrade routes, and the `:schema` config contract in `api_stability.md` — proven
+end-to-end against the frozen reference host. This is Design Phase E.
+**Depends on**: Phase 134 (the codemod recreates the same schema-qualified trigger/function the
+fresh-install path locks in Phase C)
+**Requirements**: UPG-01, UPG-02, UPG-03, UPG-04
 **Success Criteria** (what must be TRUE):
 
-  1. The deps/`_build` cache key includes OTP+Elixir dims derived from a single `.tool-versions`/`env:`
-     source (not per-block hardcoded literals) with a per-env prefix; cache keys in Actions logs carry
-     OTP+Elixir dims from one source and no per-block hardcoded toolchain literals remain (LD-9,
-     CACHE-01).
+  1. `mix mailglass.upgrade.v2_schema` generates a Route B move migration that `CREATE SCHEMA`s,
+     `ALTER TABLE … SET SCHEMA`s all four core tables under `SET LOCAL lock_timeout`, and recreates the
+     immutability trigger + function schema-qualified — with a working `down/0`.
 
-  2. The PLT cache uses Bandit-style self-healing eviction — a corrupted/stale PLT is evicted and
-     rebuilt by the workflow; only after this may Dialyzer be promoted toward the required set (LD-7,
-     CACHE-02).
-**Plans**: 2 plans
+  2. `guides/upgrading-to-v2_0.md` documents both routes (Route A one-line `"public"` opt-out; Route B
+     move), the `create_schema: false` grants, the `public.mailglass_*` literal-SQL grep checklist, and
+     the `lock_timeout` + retry locking posture.
 
-- [x] 129-01-PLAN.md — `.tool-versions` single source + toolchain-hashed cache keys / version-file setup-beam across 5 canonical workflows (CACHE-01, wave 1)
-- [x] 129-02-PLAN.md — Bandit-style PLT self-healing eviction + toolchain-scoped PLT cache in the ci.yml dialyzer job (CACHE-02, wave 2)
+  3. `api_stability.md` (core + inbound) documents the `:schema` config contract as a stable 2.0 surface,
+     and the tenancy-vs-schema orthogonality is stated so no one conflates `:schema` with per-tenant
+     prefixes.
 
+  4. The `mix mailglass.upgrade.v2_schema` codemod is run end-to-end against `reference/host_app` (frozen
+     baseline) and asserted green.
+**Plans**: TBD
 **UI hint**: no
 
-### Phase 130: Supply chain + workflow hygiene
+### Phase 137: Linked 2.0 release ceremony + milestone closeout
 
-**Goal**: Add supply-chain and workflow-hygiene guards that never red an open PR under an unfixable
-advisory wave — `mix_audit` advisory-on-PR/block-at-release, dependabot sibling coverage, a cowlib
-OSV-staleness forcing function (fail-open), `actionlint` on workflow PRs, and a non-blocking
-latest-Elixir advisory row.
-**Depends on**: Phase 129 (advisory-row + Dialyzer sequencing rests on the cache/PLT fix)
-**Requirements**: SUPPLY-01, SUPPLY-02, SUPPLY-03, SUPPLY-04, SUPPLY-05
+**Goal**: Cut the linked-version 2.0 release (core + admin `2.0.0`, paired inbound bump) through the
+v1.15-hardened pipeline, apply the coordinated 5-file reference-baseline update, prove consumer +
+post-publish smoke, and audit + archive the milestone — dogfooding the loosened `~>` sibling pins and
+tiered `mix ci` surface end-to-end. This is Design Phase F.
+**Depends on**: Phase 136 (everything — core facade/migrations, inbound, upgrade tooling + docs — must
+be complete and green before the real release ceremony)
+**Requirements**: REL-01, REL-02, REL-03
 **Success Criteria** (what must be TRUE):
 
-  1. `mix deps.audit` runs advisory (non-blocking) on PR and blocking only at the publish gate — a
-     simulated unfixable advisory reds the publish gate but NOT open PRs (LD-4, SUPPLY-01).
+  1. A linked-version 2.0 release is cut — core + admin `2.0.0`, paired inbound bump (sibling-pin drag) —
+     with the coordinated 5-file reference-baseline update applied, dogfooding the v1.15-hardened release
+     pipeline (loosened `~>` sibling pins, `mix ci` tiers, `CI Green` fan-in gate).
 
-  2. `dependabot.yml` watches the `mailglass_admin` and `mailglass_inbound` sibling locks (not the
-     frozen reference baselines) (SUPPLY-02).
+  2. Hex resolution, the consumer smoke, and post-publish smoke are confirmed green for all three
+     published packages.
 
-  3. The cowlib allowlist has a forcing function — OSV-staleness is a loud CI warning on every run + a
-     hard block at publish, fail-open on OSV API outage (LD-4, SUPPLY-03).
-
-  4. `actionlint` gates `.github/workflows/**` changes on PR and fails a malformed workflow PR
-     (LD-11, SUPPLY-04).
-
-  5. A latest-Elixir advisory row (1.19 / OTP 28) runs non-blocking on push+cron only and never blocks;
-     the floor-coincidence invariant (LD-13) is documented (SUPPLY-05).
-**Plans**: 2 plans
-
-- [x] 130-01-PLAN.md — mix_audit advisory PR lane + publish-gate block + OSV-staleness forcing function + CILanes registration (SUPPLY-01, SUPPLY-03, wave 1)
-- [x] 130-02-PLAN.md — dependabot sibling coverage + dependency-review advisory step + 1.19/OTP28 advisory matrix row + LD-13 invariant (SUPPLY-02, SUPPLY-04, SUPPLY-05, wave 1)
-
+  3. The milestone audit runs `status: passed` and the milestone is archived
+     (`milestones/v2.0-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; MILESTONES/PROJECT/ROADMAP/STATE
+     evolved; tagged `v2.0`).
+**Plans**: TBD
 **UI hint**: no
-
-### Phase 131: Release cut + milestone closeout
-
-**Goal**: Cut the real linked v1.15 Hex release through the hardened pipeline (core+admin linked;
-inbound a minor bump for the dependency-policy change), prove consumer + post-publish smoke, and audit +
-archive the milestone — validating the whole pipeline end-to-end.
-**Depends on**: Phase 130 (everything hardened and green before the real release ceremony)
-**Requirements**: SHIP-01, SHIP-02, SHIP-03
-**Success Criteria** (what must be TRUE):
-
-  1. A real linked Hex release is cut through the hardened pipeline — core+admin linked, inbound a
-     **minor** bump for the dependency-policy change — and v1.15 is live on Hex with `~>` pins resolving
-     from Hex (LD-1, SHIP-01).
-
-  2. Consumer + post-publish smoke pass against the published packages; the `~>` pins resolve correctly
-     from Hex (SHIP-02).
-
-  3. The release ceremony was a confirmation (per-phase "CI-the-body" method — push `phase/NN`, require
-     green CI — caught regressions earlier); the milestone is audited against intent and archived
-     (SHIP-03).
-**Plans**: 1 plan
-
-- [x] 131-01-PLAN.md — Release cut + closeout: Wave-0 pre-flight fixes (D-05 docs_contract, D-11 post-publish-smoke `~>`-grep, D-06 publish.check) → clean ff-push + verify RP PR (1.11.0/1.11.0/1.6.0, pins stay `~>`) → maintainer go/no-go → confirm Hex live → consumer + post-publish smoke → audit 26 reqs / archive / tag v1.15
-
-**UI hint**: no
-
-## Phases (Archived — v1.14, shipped 2026-06-30)
-
-**Milestone goal:** Invert the admin-UI quality method to **top-down, JTBD/IA-led**, add a
-**judgment-level adversarial persona-critic review loop** that catches taste/redundancy/IA problems
-structural gates can't, and redesign the four admin/operator surfaces **page-by-page,
-biggest-impact-first** to ruthlessly de-duplicated, Apple-like deliberate IA — then ship to Hex.
-Binding quality bar: `.planning/research/v1.14/STRESS-TEST-PROMPT.md` (do not dilute).
-
-- [x] **Phase 118: Method, Audit & Storybook stand-up** - Persona-critic harness + screenshot-backed defect register; phoenix_storybook dev-only review surface; new judgment gates drafted; floor inherited (completed 2026-06-26)
-- [x] **Phase 119: App-shell + Nav + Overview redesign** - The keystone #1-pain surface: fix the false-active-nav bug, give Overview its own identity, kill redundant nav cards, make health stats actionable (completed 2026-06-26)
-- [x] **Phase 120: Deliveries surface redesign** - Core operator JTBD redesigned to a streamlined, non-info-dump IA across the full matrix (completed 2026-06-27)
-- [x] **Phase 121: Inbound surface redesign** - Inbound brought consistent with the cleaned-up Deliveries patterns across the full matrix (completed 2026-06-28)
-- [x] **Phase 122: Preview surface redesign** - Preview brought consistent with the established patterns across the full matrix (completed 2026-06-28)
-- [x] **Phase 123: Cross-surface coherence + ratchet re-arm** - All four surfaces cohere; storybook + gallery finalized; aesthetic ratchet re-scored only-forward with new judgment gates armed
-- [ ] **Phase 124: Release cut + milestone closeout** - Linked-version Hex release (admin-minor drags core+inbound), D-13 inbound re-pin, consumer + post-publish smoke, audit + archive
-
-**Execution order:** 118 → 119 → 120 → 121 → 122 → 123 → 124 (strictly sequential).
-Top-down, biggest-impact-first: the persona-critic harness (118) must precede the keystone shell
-redesign (119); each surface redesign (120 → 121 → 122) inherits the cleaned-up patterns from the
-prior one; coherence + ratchet-arm (123) lands after all four surfaces are clean; the release cut
-(124) is last. **118 is a hard precondition for 119** — the review loop produces the hit-list that
-drives every surface redesign.
-
-**Research flags:** Phase 118 (persona-critic harness design + `phoenix_storybook` sandbox-CSS
-integration: wiring the committed `app.css` as the storybook sandbox stylesheet, `only: :dev`) and
-Phase 119 (GOV.UK IA patterns + overview-as-triage redesign) likely need light `/gsd-plan-phase`
-research. Surface-redesign phases 120-122 inherit the 118/119 patterns and the v1.11/v1.13 research
-dossiers — plan directly. Phase 123 (ratchet re-score mechanics) and Phase 124 (release ceremony)
-plan directly from the v1.13 precedent.
-
-## Phase Details
-
-### Phase 118: Method, Audit & Storybook stand-up
-
-**Goal**: Stand up the inverted, judgment-level review method — an adversarial persona-critic harness
-that produces the prioritized screenshot-backed defect register driving the redesign — plus a dev-only
-`phoenix_storybook` review surface, the new judgment regression gates, and the inherited ratchet floor.
-**Depends on**: Nothing (first phase of v1.14; the keystone precondition for all surface redesigns)
-**Requirements**: METHOD-01, METHOD-02, STORY-01, STORY-02
-**Success Criteria** (what must be TRUE):
-
-  1. Adversarial persona/JTBD critic agents (dev-evaluator, library-integrator, maintainer-debugging,
-     operator/on-call-SRE-under-stress, security-reviewer) walk every admin surface — live `make demo`
-     plus the review surface — across the 320/375/768/1024/1440/wide × light/dark/system ×
-     happy/empty/loading/error/permission-denied/boundary matrix using the northstar / fjordline-aps /
-     helios-void persona stress data, and emit one prioritized, severity-ranked, **screenshot-backed
-     defect register** (the hit-list).
-
-  2. A dev-only `phoenix_storybook` surface (`only: :dev`) renders admin primitives, component groups,
-     and pages on-brand — its **sandbox stylesheet is the committed `app.css`** — with stories spanning
-     states/themes/viewports; adopters never install it and the shipped `priv/static/app.css` is
-     unchanged (zero-Node guarantee intact).
-
-  3. The existing `/dev/mail/gallery` is retained as the structural-contract / ratchet surface with no
-     drift-guard regression.
-
-  4. New judgment-level regression guards (nav-active-correctness; no nav-duplication on a populated
-     page) are drafted/armed and the full v1.13 ratchet floor (~26 conformance gates, 54-cell aesthetic
-     baseline, 9-cell axe baseline, 24-item Bucket-A manifest, persona drift-guard) is inherited green.
-**Plans**: 3 plans
-**Wave 1**
-
-- [x] 118-01-PLAN.md — phoenix_storybook dev-only stand-up + sandbox CSS + Wave-0 .gitignore prereq (METHOD-01, STORY-01)
-- [x] 118-02-PLAN.md — two drafted judgment gates (test.fixme) + verify-green inherited floor + gallery unchanged (METHOD-02, STORY-02)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 118-03-PLAN.md — persona-critic screenshot harness + milestone-scoped DEFECT-REGISTER.md (METHOD-01)
-
-**UI hint**: yes
-
-### Phase 119: App-shell + Nav + Overview redesign
-
-**Goal**: Redesign the #1-pain surface — the app shell, navigation, and Overview landing — into a real
-triage destination with correct location awareness and zero redundant chrome. This is the keystone:
-it establishes the cleaned-up IA/component/microcopy patterns every later surface inherits.
-**Depends on**: Phase 118 (consumes the defect register hit-list and the persona-critic harness;
-the storybook/gallery review surfaces must exist to iterate against)
-**Requirements**: SHELL-01, SHELL-02, SHELL-03
-**Success Criteria** (what must be TRUE):
-
-  1. The sidebar nav shows the **correct active item** for the current surface (overview / deliveries /
-     inbound) — never a false highlight (fixes the hardcoded `active={:deliveries}` bug); active state
-     is conveyed non-color-alone and is obvious in light, dark, and system themes.
-
-  2. The Overview is a **real triage destination**: the redundant "Navigate" nav cards are removed, the
-     generic orientation strip shows only on genuine empty panes, health stats are
-     actionable/drill-down, and Overview has its own nav identity.
-
-  3. Shell + Overview microcopy is streamlined, on-brand (thoughtful-maintainer voice, "Oops" banned),
-     and non-redundant — no boilerplate labels, nothing duplicating the always-visible sidebar.
-
-  4. The whole surface holds across the full matrix: 320→wide responsive (no squished tables, no chopped
-     content, no horizontal overflow), light/dark/system, happy/empty/error/boundary states, WCAG 2.2 AA
-     (keyboard-complete, visible/restored focus, 44×44 targets, labeled controls), and Emil-Kowalski-grade
-     transform/opacity motion that snaps instant under reduced-motion.
-**Plans**: 2 plans
-
-- [x] 119-01-PLAN.md — SHELL-01/02/03 code: nav active-state fix + Overview nav identity, delete Navigate block, drill-through health + empty-pane orientation, triage microcopy + motion (Wave 1; Wave-0 e2e scaffolds)
-- [x] 119-02-PLAN.md — D-09 paired tests: rewrite operator.spec.js VERIF-02 + flip/fix both judgment.spec.js gates (Wave 2)
-
-**UI hint**: yes
-
-### Phase 120: Deliveries surface redesign
-
-**Goal**: Redesign the Deliveries surface — the core operator JTBD — into a streamlined, focused
-interaction model (not an info-dump), inheriting the Phase 119 shell/IA/microcopy patterns.
-**Depends on**: Phase 119 (inherits the cleaned-up shell, nav, IA, microcopy, and motion patterns)
-**Requirements**: DELIV-01
-**Success Criteria** (what must be TRUE):
-
-  1. The Deliveries surface is redesigned for its core operator JTBD with a streamlined, non-info-dump
-     IA — operators scan status/severity/entity/time/next-action fast; no redundant UI; least-surprise
-     throughout.
-
-  2. The surface satisfies the full cross-cutting matrix: 320→wide responsive (tables → cards/lists
-     < 768, no squished columns, graceful long IDs/UUIDs/module-names/non-ASCII/high-counts/nulls),
-     light/dark/system, happy/empty/loading/error/permission-denied/boundary/disconnected-reconnect.
-
-  3. WCAG 2.2 AA + APG holds (keyboard-complete, visible/restored focus, never color-alone, 44×44
-     targets, labeled controls, predictable dialogs); microcopy is on-brand and recovery-oriented; motion
-     is Emil-Kowalski-grade within the v1.13 MOTION locks; all inherited gates stay green.
-**Plans**: 2 plans
-
-**Wave 1**
-
-- [x] 120-01-PLAN.md — render-condition gating: filters toolbar + Open-delivery CTA on populated/no-match, orientation strip empty-pane-only, paired ExUnit update (DELIV-01)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 120-02-PLAN.md — paired Playwright updates + new Deliveries empty-pane-only judgment gate + persona re-shoot + inherited-floor/TokenParity hold (DELIV-01)
-
-**UI hint**: yes
-
-### Phase 121: Inbound surface redesign
-
-**Goal**: Redesign the Inbound surface consistent with the cleaned-up Deliveries patterns, preserving
-its PII/raw-payload boundaries.
-**Depends on**: Phase 120 (inherits the Deliveries-surface patterns for cross-surface consistency)
-**Requirements**: INB-01
-**Success Criteria** (what must be TRUE):
-
-  1. The Inbound surface is redesigned consistent with the cleaned-up Deliveries patterns (spacing,
-     hierarchy, IA, microcopy, motion) — streamlined, non-info-dump, least-surprise — while preserving
-     PII/raw-payload-default-hidden boundaries.
-
-  2. The surface satisfies the full cross-cutting matrix: 320→wide responsive (cards/lists < 768,
-     graceful long values), light/dark/system, happy/empty/loading/error/permission-denied/boundary/
-     disconnected-reconnect.
-
-  3. WCAG 2.2 AA + APG holds (keyboard-complete, visible/restored focus, never color-alone, 44×44
-     targets, predictable dialogs incl. the replay modal); microcopy is on-brand and recovery-oriented;
-     motion is Emil-Kowalski-grade within the v1.13 MOTION locks; all inherited gates stay green.
-**Plans**: 4 plans
-
-- [x] 121-01-PLAN.md — Inbound IA gating (no-data/no-match/populated cond, empty-pane-only orientation, data_state wiring, D-07 noun fix) + paired ExUnit/voice updates
-- [x] 121-02-PLAN.md — Reveal ARIA disclosure + re-redact + aria-live + PII-free reveal telemetry
-- [x] 121-03-PLAN.md — Both replay modals: Tab focus-trap + double-submit pending-lock (lockstep)
-- [x] 121-04-PLAN.md — e2e judgment gate + paired split + reveal/replay a11y assertions + structural verify + persona re-shoot
-
-**UI hint**: yes
-
-### Phase 122: Preview surface redesign
-
-**Goal**: Redesign the Preview surface consistent with the established patterns, keeping the previewed
-email's independent theme toggle intact.
-**Depends on**: Phase 121 (inherits the now-consistent Deliveries + Inbound patterns)
-**Requirements**: PREV-01
-**Success Criteria** (what must be TRUE):
-
-  1. The Preview surface is redesigned consistent with the established cross-surface patterns (spacing,
-     hierarchy, IA, microcopy, motion) — streamlined, non-info-dump, least-surprise — with the previewed
-     email keeping its own independent dark/light toggle distinct from the admin chrome theme.
-
-  2. The surface satisfies the full cross-cutting matrix: 320→wide responsive, light/dark/system admin
-     chrome at parity, happy/empty/loading/error/boundary states.
-
-  3. WCAG 2.2 AA + APG holds (keyboard-complete, visible/restored focus, never color-alone, 44×44
-     targets, labeled controls); microcopy is on-brand and recovery-oriented; motion is
-     Emil-Kowalski-grade within the v1.13 MOTION locks; all inherited gates stay green.
-**Plans**: 3 plans
-**Wave 1**
-
-- [x] 122-01-PLAN.md — Dual-theme toggle a11y: adopt theme_picker for admin chrome routed through the frame-aware preview_theme_path (D-05 load-bearing invariant), harden the backdrop button, toggle-a11y e2e (wave 1)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 122-02-PLAN.md — Microcopy + a11y + dead-code: brandbook onboarding (generator primary), recovery-oriented error card with inline `<pre>`, error-transition focus/announce, dead dark_chrome removal, token normalization + paired voice/e2e updates (wave 2)
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [x] 122-03-PLAN.md — Persona re-shoot (no new cells / D-17 fallback) + asset-bundle-untouched + inherited floor green only-forward (wave 3)
-
-**UI hint**: yes
-
-### Phase 123: Cross-surface coherence + ratchet re-arm
-
-**Goal**: Prove the four surfaces cohere as one deliberate, Apple-like system; finalize the storybook +
-gallery review surfaces; re-score the aesthetic ratchet only-forward and arm the new judgment gates so
-the fixed issues cannot silently regress.
-**Depends on**: Phase 122 (all four surfaces must be redesigned before cross-surface coherence and the
-final pillar re-score)
-**Requirements**: COH-01, COH-02
-**Success Criteria** (what must be TRUE):
-
-  1. All four surfaces (Overview/shell, Deliveries, Inbound, Preview) are **cross-surface coherent** —
-     consistent spacing, hierarchy, IA, microcopy, and motion — and the storybook + `/dev/mail/gallery`
-     review surfaces are finalized and consistent with the shipped UI.
-
-  2. The aesthetic ratchet baseline is re-scored **only-forward** (meet-or-beat, zero regressions): the
-     54-cell aesthetic baseline, 9-cell axe baseline, 24-item Bucket-A manifest, and persona drift-guard
-     are all green, with current promoted over prior under distinct run-ids.
-
-  3. The new judgment-level gates (nav-active-correctness; no nav-duplication on a populated page) are
-     armed and green in the inherited ratchet floor (~26+ conformance gates), so the redesign's headline
-     fixes cannot silently regress.
-**Plans**: 3 plans
-
-**Wave 1** *(independent — re-score floor + review-surface finalization run in parallel)*
-
-- [x] 123-01-PLAN.md — COH-02: promote+re-score the 54-cell ratchet only-forward (distinct run_ids, anti-vacuity guard) + arm the two judgment gates (de-disclaim judgment.spec.js + floor gate-count ~26→~28); no asset rebuild (wave 1)
-- [x] 123-02-PLAN.md — COH-01: storybook story-inventory completeness vs shipped primitives + accept indigo explorer chrome (dev-only cosmetic) + stale-boot DX caveat; gallery byte-unchanged (wave 1)
-
-**Wave 2** *(blocked on Wave 1 — verdict cites the green floor + finalized review surfaces)*
-
-- [x] 123-03-PLAN.md — COH-01: re-run the adversarial persona-critic harness across all four surfaces (evidence only) + close out DEFECT-REGISTER (Status flips + coherence sign-off, five hats/three personas verbatim); no new coherence gate, Personas.spec/0 untouched (wave 2)
-
-**UI hint**: yes
-
-### Phase 124: Release cut + milestone closeout
-
-**Goal**: Cut the linked-version Hex release that carries the redesign to adopters, re-pin inbound, prove
-Hex resolution + consumer + post-publish smoke, and audit + archive the milestone.
-**Depends on**: Phase 123 (everything must be coherent, re-scored, and gate-green before publishing)
-**Requirements**: REL-01, REL-02
-**Success Criteria** (what must be TRUE):
-
-  1. A linked-version Hex release is cut — the admin-minor bump drags matched core + inbound — the D-13
-     inbound exact-pin is re-pinned to the new core version, and Hex resolution + consumer smoke +
-     post-publish smoke are green.
-
-  2. The milestone is audited (`status: passed`, every v1.14 requirement satisfied) and archived
-     (`milestones/v1.14-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; MILESTONES/PROJECT/ROADMAP/STATE
-     evolved; tagged `v1.14`).
-**Plans**: 1 plan
-
-- [ ] 124-01-PLAN.md — 6-wave linked-version release ceremony (rebase-reconcile origin + ff-push, fix(inbound): re-pin == 1.10.0, verify regenerated RP PR 1.10.0/1.10.0/1.5.2, maintainer go/no-go, Hex confirm, consumer + post-publish smoke) + milestone audit/archive/tag v1.14 (REL-01, REL-02)
 
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 118. Method, Audit & Storybook stand-up | 3/3 | Complete    | 2026-06-26 |
-| 119. App-shell + Nav + Overview redesign | 2/2 | Complete    | 2026-06-26 |
-| 120. Deliveries surface redesign | 2/2 | Complete    | 2026-06-27 |
-| 121. Inbound surface redesign | 4/4 | Complete    | 2026-06-28 |
-| 122. Preview surface redesign | 3/3 | Complete    | 2026-06-28 |
-| 123. Cross-surface coherence + ratchet re-arm | 3/3 | Complete   | 2026-06-28 |
-| 124. Release cut + milestone closeout | 0/? | Not started | - |
+| 132. Config + `Mailglass.Identifier` foundation | 0/? | Not started | - |
+| 133. Repo-facade prefix injection + Multi threading | 0/? | Not started | - |
+| 134. Migration entrypoint + raw-DDL/trigger qualification | 0/? | Not started | - |
+| 135. Inbound package schema isolation | 0/? | Not started | - |
+| 136. Upgrade codemod + docs + api_stability | 0/? | Not started | - |
+| 137. Linked 2.0 release ceremony + milestone closeout | 0/? | Not started | - |
 
 ## Phases (Shipped — Archived)
 
-All milestones through v1.13 are shipped and archived. Per-milestone phase detail,
+All milestones through v1.15 are shipped and archived. Per-milestone phase detail,
 success criteria, and plan breakdowns live in `.planning/milestones/vX.Y-ROADMAP.md`.
+
+<details>
+<summary>✅ v1.15 Release-Pipeline Efficiency & Contributor DX (Phases 125-131) — SHIPPED 2026-07-02</summary>
+
+Infrastructure/DX hardening: killed the exact-pin release dance (keystone `{:mailglass, "~> 1.10 and
+>= 1.10.2"}` shipped in inbound 1.6.0 — first release with loosened sibling pins), closed the local↔CI
+parity gap with tiered `mix ci.fast`/`mix ci`/`mix ci.browser`, fixed inbound test determinism (retired
+`--seed 0`), hardened cache keys + PLT self-healing, added supply-chain hygiene, and cut a real linked
+release dogfooding the hardened pipeline → **mailglass 1.11.0 / mailglass_admin 1.11.0 /
+mailglass_inbound 1.6.0 live on Hex**. Audit `status: passed` — 26/26 requirements, 7/7 phases.
+Decisions of record: `.planning/research/milestone-cicd/SYNTHESIS.md` (LD-1..13). Full detail:
+[milestones/v1.15-ROADMAP.md](milestones/v1.15-ROADMAP.md).
+
+- [x] Phase 125: Sibling-pin loosening (keystone, atomic) — PIN-01..05
+- [x] Phase 126: CI Green fan-in gate + branch-protection collapse — GATE-01..04
+- [x] Phase 127: Inbound test determinism — DET-01..02
+- [x] Phase 128: `mix ci` parity completion (folds in PR #104) — MIXCI-01..05
+- [x] Phase 129: Cache-key + PLT correctness — CACHE-01..02
+- [x] Phase 130: Supply chain + workflow hygiene — SUPPLY-01..05
+- [x] Phase 131: Release cut + milestone closeout — SHIP-01..03
+
+**Execution order:** 125 → 126 → 127 → 128 → 129 → 130 → 131 (dependency-ordered; 125 keystone; 131 last).
+
+</details>
+
+<details>
+<summary>✅ v1.14 Operator IA & Lived-Experience Redesign (Phases 118-124) — SHIPPED 2026-06-30</summary>
+
+Top-down JTBD/IA-led operator-surface redesign with an adversarial persona-critic review loop, then a
+linked-version release → **mailglass 1.10.1 / mailglass_admin 1.10.1 / mailglass_inbound 1.5.3 live on
+Hex**. Audit `status: passed` — 15/15 requirements, 7/7 phases. The release recovered as a patch after
+the 1.10.0 cut was blocked by a coordinated EEF dep-security advisory wave. Full detail:
+[milestones/v1.14-ROADMAP.md](milestones/v1.14-ROADMAP.md).
+
+</details>
 
 <details>
 <summary>✅ v1.13 Admin Design-System Stress Test & UX Uplift (Phases 109-117) — SHIPPED 2026-06-21</summary>
@@ -539,6 +300,7 @@ Audit status: passed — 41/41 requirements, 9/9 phases. Inbound re-pinned {:mai
 Full detail: [milestones/v1.13-ROADMAP.md](milestones/v1.13-ROADMAP.md).
 
 </details>
+
 <details>
 <summary>✅ v1.12 Adopter Onboarding & Day-2 Confidence (Phases 104-108) — SHIPPED 2026-06-17</summary>
 
@@ -559,19 +321,6 @@ Inbound, and Preview surfaces — enforced by an idempotent, research-grounded q
 ratchet. Admin UI only (3 surfaces). Release posture: prepare-only (no Hex release cut).
 Audit `status: passed` — 34/34 requirements, 10/10 phases, 16/16 integration, 7/7 flows.
 Full detail: [milestones/v1.11-ROADMAP.md](milestones/v1.11-ROADMAP.md).
-
-- [x] Phase 94: Token Re-Baseline onto Canonical Brand (3/3 plans) — completed 2026-06-13
-- [x] Phase 95: Audit Apparatus + Quality-Ratchet v2 (4/4 plans) — completed 2026-06-14
-- [x] Phase 96: Research Dossier (6/6 plans) — completed 2026-06-14
-- [x] Phase 97: Cross-Surface Component Layer (8/8 plans) — completed 2026-06-14
-- [x] Phase 98: Operator / Deliveries Surface (4/4 plans) — completed 2026-06-14
-- [x] Phase 99: Inbound Surface (5/5 plans) — completed 2026-06-15
-- [x] Phase 100: Preview Surface (3/3 plans) — completed 2026-06-15
-- [x] Phase 101: Microcopy Pass (2/2 plans) — completed 2026-06-16
-- [x] Phase 102: Motion + Micro-interaction Pass (3/3 plans) — completed 2026-06-16
-- [x] Phase 103: Verification + Idempotent Closeout (4/4 plans) — completed 2026-06-16
-
-**Critical path:** 94 → 95 → 96 → 97 → {98, 99, 100 parallel} → {101, 102 parallel} → 103
 
 </details>
 
