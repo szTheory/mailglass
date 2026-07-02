@@ -287,9 +287,11 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
       # - migrations/ directory (migration DDL modules, out of scope for Phase 134)
       lib_files =
         Path.wildcard(Path.join(lib_dir, "**/*.ex"))
-        |> Enum.reject(&String.contains?(&1, "/migrations/"))
-        |> Enum.reject(&String.ends_with?(&1, "migration.ex"))
-        |> Enum.reject(&String.ends_with?(&1, "/repo.ex"))
+        |> Enum.reject(fn path ->
+          String.contains?(path, "/migrations/") or
+            String.ends_with?(path, "migration.ex") or
+            String.ends_with?(path, "/repo.ex")
+        end)
 
       # Check for direct Application.get_env(:mailglass, :repo) calls.
       # The allowlisted file (migration.ex) is already excluded above.

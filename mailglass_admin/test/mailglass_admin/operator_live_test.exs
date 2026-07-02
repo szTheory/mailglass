@@ -1926,4 +1926,189 @@ defmodule MailglassAdmin.OperatorLiveTest do
              "all-clear tile must not render a bare dash"
     end
   end
+
+end
+
+# FACADE-03: zero-admin-code-change proof — admin dashboard renders a written
+# record against a schema-isolated DB with NO mailglass_admin/lib/ changes.
+#
+# Placed in a separate module because ExUnit prohibits setup_all inside a
+# describe block. This module owns its own setup_all (DDL phase: CREATE SCHEMA
+# + prefixed migration, once before any test, in Sandbox :auto mode) and its
+# own per-test setup (Sandbox owner + tenant stamp + conn), reproducing the
+# MailglassAdmin.LiveViewCase contract without inheriting its ordering.
+#
+# Sandbox-owner ordering (footgun 13): schema exists BEFORE the Sandbox owner
+# starts. setup_all creates the schema; per-test setup then starts the owner.
+defmodule MailglassAdmin.OperatorLive.Facade03SchemaIsolationTest do
+  use ExUnit.Case, async: false
+
+  import Phoenix.ConnTest
+  import Phoenix.LiveViewTest
+
+  alias Mailglass.Outbound.Delivery
+  alias MailglassAdmin.TestRepo
+
+  @endpoint MailglassAdmin.TestSupport.AdminBootstrap.endpoint()
+  @base_path "/ops/mail"
+  @schema_prefix "mailglass"
+  @schema_tenant "facade03-tenant"
+
+  # Inline wrapper migration — mirrors the one in ShippedMigrationDivergenceTest.
+  # The SET LOCAL search_path pin binds v01's unqualified trigger DDL to
+  # @schema_prefix so it does not collide with public.mailglass_events.
+  defmodule Facade03WrapperMigration do
+    use Ecto.Migration
+
+    @prefix "mailglass"
+
+    def up do
+      execute("SET LOCAL search_path TO #{@prefix}, public")
+      Mailglass.Migration.up(prefix: @prefix, repo: MailglassAdmin.TestRepo)
+    end
+
+    def down do
+      execute("SET LOCAL search_path TO #{@prefix}, public")
+      Mailglass.Migration.down(prefix: @prefix, repo: MailglassAdmin.TestRepo)
+    end
+  end
+
+  # Stands up the mailglass schema ONCE before any test in this module.
+  # Must run in Sandbox :auto mode so the DDL commits outside any
+  # transactional wrapper. Restores :manual after migration so the per-test
+  # start_owner! (shared: true) works normally.
+  setup_all do
+    # Ensure the synthetic endpoint is started (idempotent).
+    MailglassAdmin.TestSupport.AdminBootstrap.setup_all()
+
+    # Override :schema so the facade injects prefix: "mailglass" for reads
+    # in this module's tests (temporarily; restored in on_exit).
+    original_schema = Application.get_env(:mailglass, :schema)
+    Application.put_env(:mailglass, :schema, @schema_prefix)
+    :persistent_term.erase({Mailglass.Config, :schema})
+
+    # DDL phase — flip to :auto so CREATE SCHEMA + migration can commit.
+    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
+    {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@schema_prefix} CASCADE")
+    {:ok, _} = TestRepo.query("CREATE SCHEMA #{@schema_prefix}")
+
+    version = System.unique_integer([:positive, :monotonic]) + 91_000_000_000_000
+
+    {:ok, _, _} =
+      Ecto.Migrator.with_repo(TestRepo, fn repo ->
+        Ecto.Migrator.up(repo, version, Facade03WrapperMigration, log: false)
+      end)
+
+    # Restore :manual so the per-test setup (start_owner! shared: true) works.
+    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
+
+    on_exit(fn ->
+      # Flip to :auto so cleanup queries can run outside any Sandbox tx wrapper.
+      # There is no Sandbox owner at this point (all per-test owners have exited).
+      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
+      {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@schema_prefix} CASCADE")
+
+      {:ok, _} =
+        TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
+
+      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
+
+      if original_schema do
+        Application.put_env(:mailglass, :schema, original_schema)
+      else
+        Application.delete_env(:mailglass, :schema)
+      end
+
+      :persistent_term.erase({Mailglass.Config, :schema})
+    end)
+
+    :ok
+  end
+
+  # Per-test setup: start the Sandbox owner (schema already exists from setup_all),
+  # stamp the test tenant, build the Phoenix conn. Reproduces LiveViewCase's setup
+  # contract (live_view_case.ex:34-40) without inheriting its ordering.
+  # Note: the citext probe is intentionally skipped here. The schema creation in
+  # setup_all does not drop/recreate the citext extension (it stays in public),
+  # so there is no stale-OID risk. The standard probe would fail because
+  # SuppressionStore.check goes through the facade with prefix: "mailglass" while
+  # the probe's direct TestRepo.insert targets public — conflicting schema contexts.
+  setup do
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(TestRepo, shared: true)
+    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+
+    Mailglass.Tenancy.put_current(@schema_tenant)
+
+    conn = MailglassAdmin.TestSupport.AdminBootstrap.build_conn()
+    {:ok, conn: conn}
+  end
+
+  describe "FACADE-03: admin zero-code-change proof — schema-isolated render" do
+    test "write→read→render round-trip: delivery in mailglass schema appears in dashboard",
+         %{conn: conn} do
+      # WRITE: insert a delivery with explicit prefix: "mailglass" so it lands
+      # in mailglass.mailglass_deliveries.
+      now = DateTime.utc_now()
+
+      delivery =
+        %{
+          tenant_id: @schema_tenant,
+          mailable: "Mailglass.Example.AdminRenderProofMailer",
+          stream: :transactional,
+          recipient: "facade03-proof@example.com",
+          recipient_domain: "example.com",
+          provider: "postmark",
+          status: :sent,
+          last_event_type: :sent,
+          last_event_at: now,
+          metadata: %{}
+        }
+        |> Delivery.changeset()
+        |> TestRepo.insert!(prefix: @schema_prefix)
+
+      # Isolation check: delivery must NOT be in public schema.
+      {:ok, %{rows: [[pub_count]]}} =
+        TestRepo.query(
+          "SELECT COUNT(*) FROM public.mailglass_deliveries WHERE tenant_id = $1",
+          [@schema_tenant]
+        )
+
+      assert pub_count == 0,
+             "delivery must not land in public.mailglass_deliveries — " <>
+               "facade routes to #{@schema_prefix}"
+
+      # READ + RENDER: mount the admin operator LiveView for the test tenant.
+      # Operator reads route through Mailglass.Operator.Deliveries →
+      # Mailglass.Repo.all/2 → puts prefix: Config.schema() = "mailglass".
+      # If the facade were bypassed (write in public), the dashboard would be empty.
+      conn =
+        conn
+        |> Plug.Test.init_test_session(%{
+          "current_user_id" => "operator-1",
+          "tenant_id" => @schema_tenant,
+          "auth_method" => "password",
+          "recent_auth_at" =>
+            DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
+        })
+        |> Plug.Conn.fetch_session()
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          @base_path <>
+            "?" <>
+            URI.encode_query(%{"tenant_id" => @schema_tenant, "view" => "deliveries"})
+        )
+
+      # The masked recipient (mask_recipient/1 applies) or delivery ID must
+      # appear in the deliveries list, proving the facade read from mailglass.*.
+      # A facade-bypassing write (in public) would yield an empty dashboard here.
+      assert html =~ delivery.id or html =~ "facade03" or html =~ "f***3@e******.com",
+             "admin dashboard must render the delivery from #{@schema_prefix}.mailglass_deliveries; " <>
+               "a hidden facade-bypassing write (in public) would yield an empty dashboard"
+
+      assert html =~ ~s(data-testid="operator-master-detail"),
+             "master-detail must render when deliveries exist in the #{@schema_prefix} schema"
+    end
+  end
 end
