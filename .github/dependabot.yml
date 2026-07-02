@@ -4,6 +4,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "mix"
+    directory: "/mailglass_admin"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "mix"
+    directory: "/mailglass_inbound"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
