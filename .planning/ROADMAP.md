@@ -82,7 +82,7 @@ This is Design Phase A: everything downstream reads `Config.schema/0` and valida
 **Plans:** 2 plans
 **Wave 1**
 
-- [ ] 132-01-PLAN.md — Core foundation: `Mailglass.Identifier` validator, `Config.schema/0` boot-warm + `:persistent_term` cache, migration delegate (SCHEMA-01/02/03), Wave 1
+- [x] 132-01-PLAN.md — Core foundation: `Mailglass.Identifier` validator, `Config.schema/0` boot-warm + `:persistent_term` cache, migration delegate (SCHEMA-01/02/03), Wave 1
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -252,7 +252,7 @@ be complete and green before the real release ceremony)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 132. Config + `Mailglass.Identifier` foundation | 0/2 | Not started | - |
+| 132. Config + `Mailglass.Identifier` foundation | 1/2 | In Progress|  |
 | 133. Repo-facade prefix injection + Multi threading | 0/? | Not started | - |
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 0/? | Not started | - |
 | 135. Inbound package schema isolation | 0/? | Not started | - |

@@ -12,12 +12,12 @@
 
 ### SCHEMA — Config + identifier foundation (Phase A)
 
-- [ ] **SCHEMA-01**: An adopter can set `config :mailglass, :schema, "<name>"`; unset defaults to
+- [x] **SCHEMA-01**: An adopter can set `config :mailglass, :schema, "<name>"`; unset defaults to
   `"mailglass"`, and `"public"` is the explicit pre-2.0 opt-out (documented in the config key `:doc`).
-- [ ] **SCHEMA-02**: `Mailglass.Config.schema/0` returns the validated schema name, is validated at boot
+- [x] **SCHEMA-02**: `Mailglass.Config.schema/0` returns the validated schema name, is validated at boot
   (`validate_at_boot!/0` fails fast on a malformed identifier), and is cached in `:persistent_term` so
   the hot path never calls `Application.get_env` per operation.
-- [ ] **SCHEMA-03**: A shared `Mailglass.Identifier.validate!/2` (promoted from
+- [x] **SCHEMA-03**: A shared `Mailglass.Identifier.validate!/2` (promoted from
   `Migrations.Postgres.validate_identifier!/2`) rejects any value that is not a valid unquoted Postgres
   identifier (`[a-zA-Z_][a-zA-Z0-9_]*`), and both config-boot and migration validation use it.
 - [ ] **SCHEMA-04**: `mailglass_inbound` mirrors the same contract on its own line —
@@ -118,9 +118,9 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| SCHEMA-01 | Phase 132 | Pending |
-| SCHEMA-02 | Phase 132 | Pending |
-| SCHEMA-03 | Phase 132 | Pending |
+| SCHEMA-01 | Phase 132 | Complete |
+| SCHEMA-02 | Phase 132 | Complete |
+| SCHEMA-03 | Phase 132 | Complete |
 | SCHEMA-04 | Phase 132 | Pending |
 | FACADE-01 | Phase 133 | Pending |
 | FACADE-02 | Phase 133 | Pending |
