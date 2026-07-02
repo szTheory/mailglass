@@ -454,9 +454,60 @@ defmodule MailglassInbound.DocsContractTest do
       |> Enum.take(2)
       |> Enum.join(".")
 
-    [_, expected_mailglass_pin] =
-      Regex.run(~r/\{:mailglass,\s*"==\s*(\d+\.\d+)\.\d+"/, mixfile) ||
-        flunk("mailglass_inbound/mix.exs is missing the MIX_PUBLISH mailglass pin")
+    # The README/install guide tracks "what adopters install alongside inbound" =
+    # the CORE RELEASE major.minor. release-please.yml's CORE_MM sed keeps the
+    # README core pin synced to the core release (e.g. ~> 1.11 on the release
+    # branch). This is intentionally DECOUPLED from the inbound compatibility
+    # floor in mix.exs (which stays ~> 1.10 and >= 1.10.2 per LD-2) — the README
+    # always points to the latest tested core, not the oldest admitted core.
+    #
+    # Source: .release-please-manifest.json .["."] (core version), falling back
+    # to core mix.exs @version. Test file is in mailglass_inbound/test/mailglass_inbound/,
+    # so repo root is three levels up (../../../).
+    manifest_path = Path.expand("../../../.release-please-manifest.json", __DIR__)
+
+    core_version =
+      case File.read(manifest_path) do
+        {:ok, json} ->
+          case Jason.decode(json) do
+            {:ok, %{"." => version}} -> version
+            _ -> nil
+          end
+
+        _ ->
+          nil
+      end
+
+    core_version =
+      if core_version do
+        core_version
+      else
+        core_mixfile = File.read!(Path.expand("../../../mix.exs", __DIR__))
+
+        [_, v] =
+          Regex.run(~r/@version\s+"(\d+\.\d+\.\d+)"/, core_mixfile) ||
+            flunk("Could not determine core version from manifest or mix.exs")
+
+        v
+      end
+
+    expected_mailglass_pin =
+      core_version
+      |> String.split(".")
+      |> Enum.take(2)
+      |> Enum.join(".")
+
+    # Positive assertion: the inbound compatibility floor (from mix.exs's loosened
+    # ~> 1.10 and >= 1.10.2 dep) must admit the current core release version.
+    # This ensures the decoupling is intentional — any future accidental floor
+    # tightening that would exclude a released core will trip this assertion.
+    [_, floor_constraint] =
+      Regex.run(~r/\{:mailglass,\s*"([^"]+)"/, mixfile) ||
+        flunk("mailglass_inbound/mix.exs is missing the mailglass dep (checked for MIX_PUBLISH form)")
+
+    assert Version.match?(core_version, floor_constraint),
+           "The inbound compatibility floor (#{inspect(floor_constraint)}) does not admit " <>
+             "core #{core_version} — floor must be widened or the release version reconciled"
 
     for {doc_name, doc} <- [{"README", readme}, {"install guide", install}] do
       [_, inbound_pin] =
