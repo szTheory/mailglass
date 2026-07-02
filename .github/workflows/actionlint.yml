@@ -23,3 +23,14 @@ jobs:
         uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca  # v1.7.12
       - name: Verify Tests gate is halt-on-failure
         run: ./scripts/check_tests_gate.sh
+      # Advisory dependency review (LD-4): scans PR dependency manifest changes
+      # for newly introduced HIGH+ vulnerabilities. continue-on-error keeps it
+      # non-blocking (never blocks a PR, even under an unfixable-advisory wave).
+      # PR-only: dependency-review-action requires a PR diff context and fails on
+      # workflow_dispatch runs without one.
+      - name: Dependency review
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294  # v5.0.0
+        with:
+          fail-on-severity: high
