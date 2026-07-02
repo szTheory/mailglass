@@ -8,6 +8,12 @@ config :mailglass,
 # Phase 2: route mailglass's own Repo facade at Mailglass.TestRepo.
 config :mailglass, repo: Mailglass.TestRepo
 
+# Phase 133 (FACADE-01): the test suite runs against `public` (the pre-2.0
+# default). Schema-isolation tests that exercise the `"mailglass"` schema
+# override this in their own `setup` via Application.put_env + persistent_term
+# erase. The dedicated FACADE-04 integration test creates the schema in-process.
+config :mailglass, :schema, "public"
+
 # Phase 2: single-tenant resolver by default. Adopters who need
 # multi-tenancy override this to their own `@behaviour Mailglass.Tenancy` module.
 config :mailglass, tenancy: Mailglass.Tenancy.SingleTenant

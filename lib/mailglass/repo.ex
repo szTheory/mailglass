@@ -23,6 +23,19 @@ defmodule Mailglass.Repo do
   mailglass-owned error, never the raw Postgrex struct. The translation
   is centralized in `translate_postgrex_error/2` — adding new write
   functions means wiring the same rescue clause.
+
+  ## Schema prefix injection (v2.0)
+
+  Every delegated read/write injects `prefix: Mailglass.Config.schema()` via
+  `Keyword.put_new`, routing all operations to the configured Postgres schema
+  (`"mailglass"` by default, `"public"` for pre-2.0 opt-out). An explicit
+  caller-supplied `:prefix` wins over the injected default. This is the
+  FACADE-01/FACADE-02 load-bearing mechanism for schema isolation.
+
+  `transact/2`, `multi/2`, and `query!/2` do NOT inject prefix — the prefix
+  must be threaded per-step in `Ecto.Multi` builders (see `multi_opts/1`).
+  A future raw caller passing a mailglass table to `query!/2` must qualify
+  the table inline; the facade cannot rewrite arbitrary SQL.
   """
 
   @doc """
@@ -59,7 +72,7 @@ defmodule Mailglass.Repo do
   @spec insert(Ecto.Changeset.t() | struct(), keyword()) ::
           {:ok, struct()} | {:error, Ecto.Changeset.t()}
   def insert(struct_or_changeset, opts \\ []) do
-    repo().insert(struct_or_changeset, opts)
+    repo().insert(struct_or_changeset, put_prefix(opts))
   rescue
     err in Postgrex.Error ->
       translate_postgrex_error(err, __STACKTRACE__)
@@ -70,7 +83,7 @@ defmodule Mailglass.Repo do
   @spec update(Ecto.Changeset.t(), keyword()) ::
           {:ok, struct()} | {:error, Ecto.Changeset.t()}
   def update(changeset, opts \\ []) do
-    repo().update(changeset, opts)
+    repo().update(changeset, put_prefix(opts))
   rescue
     err in Postgrex.Error ->
       translate_postgrex_error(err, __STACKTRACE__)
@@ -81,7 +94,7 @@ defmodule Mailglass.Repo do
   @spec delete(struct() | Ecto.Changeset.t(), keyword()) ::
           {:ok, struct()} | {:error, Ecto.Changeset.t()}
   def delete(struct_or_changeset, opts \\ []) do
-    repo().delete(struct_or_changeset, opts)
+    repo().delete(struct_or_changeset, put_prefix(opts))
   rescue
     err in Postgrex.Error ->
       translate_postgrex_error(err, __STACKTRACE__)
@@ -99,6 +112,10 @@ defmodule Mailglass.Repo do
   configured (same path as `transact/2`). Event-ledger-immutability
   errors (SQLSTATE 45A01) are translated via the same rescue as the
   other write helpers.
+
+  NOTE: `multi/2` does NOT inject prefix at the executor level — Ecto.Multi
+  does not propagate executor opts into inner step SQL. Use `multi_opts/1`
+  to thread prefix per-step in Multi builder chains.
   """
   @doc since: "0.1.0"
   @spec multi(Ecto.Multi.t(), keyword()) ::
@@ -110,15 +127,38 @@ defmodule Mailglass.Repo do
       translate_postgrex_error(err, __STACKTRACE__)
   end
 
+  @doc """
+  Returns opts with `prefix: Mailglass.Config.schema()` injected via
+  `Keyword.put_new`, for use as the step-level opts in `Ecto.Multi` builders
+  in domain modules (Events, Outbound, Suppression.Escalation).
+
+  `Ecto.Multi` does NOT propagate the transaction/executor opts into inner
+  step SQL. Every builder step that writes a mailglass table must carry its
+  own `:prefix`; call `multi_opts/1` (or `multi_opts()`) to build that opts
+  list rather than constructing it by hand.
+
+  An explicit caller-supplied `:prefix` wins over the injected default
+  (`Keyword.put_new` semantics).
+
+  ## Examples
+
+      Ecto.Multi.new()
+      |> Ecto.Multi.insert(:delivery, changeset, Repo.multi_opts())
+      |> Ecto.Multi.insert_all(:events, Event, rows, Repo.multi_opts(on_conflict: :nothing))
+  """
+  @doc since: "2.0.0"
+  @spec multi_opts(keyword()) :: keyword()
+  def multi_opts(opts \\ []), do: Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
+
   @doc "Delegates to the host Repo's `one/2`."
   @doc since: "0.1.0"
   @spec one(Ecto.Queryable.t(), keyword()) :: struct() | nil
-  def one(queryable, opts \\ []), do: repo().one(queryable, opts)
+  def one(queryable, opts \\ []), do: repo().one(queryable, put_prefix(opts))
 
   @doc "Delegates to the host Repo's `all/2`."
   @doc since: "0.1.0"
   @spec all(Ecto.Queryable.t(), keyword()) :: [struct()]
-  def all(queryable, opts \\ []), do: repo().all(queryable, opts)
+  def all(queryable, opts \\ []), do: repo().all(queryable, put_prefix(opts))
 
   @doc """
   Delegates to the host Repo's `delete_all/2`. Used by
@@ -131,17 +171,18 @@ defmodule Mailglass.Repo do
   """
   @doc since: "0.1.0"
   @spec delete_all(Ecto.Queryable.t(), keyword()) :: {non_neg_integer(), nil | [term()]}
-  def delete_all(queryable, opts \\ []), do: repo().delete_all(queryable, opts)
+  def delete_all(queryable, opts \\ []), do: repo().delete_all(queryable, put_prefix(opts))
 
-  @doc "Delegates to the host Repo's `aggregate/3`."
+  @doc "Delegates to the host Repo's `aggregate/4` (with optional opts for schema prefix)."
   @doc since: "1.4.5"
-  @spec aggregate(Ecto.Queryable.t(), atom(), atom()) :: term() | nil
-  def aggregate(queryable, aggregate, field), do: repo().aggregate(queryable, aggregate, field)
+  @spec aggregate(Ecto.Queryable.t(), atom(), atom(), keyword()) :: term() | nil
+  def aggregate(queryable, aggregate, field, opts \\ []),
+    do: repo().aggregate(queryable, aggregate, field, put_prefix(opts))
 
   @doc "Delegates to the host Repo's `get/3`."
   @doc since: "0.1.0"
   @spec get(Ecto.Queryable.t(), term(), keyword()) :: struct() | nil
-  def get(queryable, id, opts \\ []), do: repo().get(queryable, id, opts)
+  def get(queryable, id, opts \\ []), do: repo().get(queryable, id, put_prefix(opts))
 
   @doc """
   Delegates to the host Repo's `query!/2`. Raw passthrough — no SQLSTATE
@@ -156,6 +197,11 @@ defmodule Mailglass.Repo do
   and muddle the semantics. Callers that need the trigger's translated
   error use `insert/2`, `update/2`, `delete/2`, `transact/1`, or
   `multi/1` instead.
+
+  NOTE: the facade cannot rewrite arbitrary SQL. A future raw caller
+  that touches a mailglass table must schema-qualify the table inline
+  (e.g. `"mailglass.mailglass_events"`) — the current two callers both
+  run schema-agnostic `SET LOCAL` statements.
   """
   @doc since: "0.1.0"
   @spec query!(String.t(), [term()]) :: term()
@@ -172,6 +218,14 @@ defmodule Mailglass.Repo do
       mod when is_atom(mod) -> mod
     end
   end
+
+  # Injects `prefix: Mailglass.Config.schema()` via `Keyword.put_new`, so an
+  # explicit caller-supplied `:prefix` wins. Every delegated read/write
+  # (insert/update/delete/one/all/get/aggregate/delete_all) passes opts through
+  # this function — it is the FACADE-01 schema-isolation choke point.
+  # `transact/2`, `multi/2`, and `query!/2` do NOT use `put_prefix/1`.
+  @spec put_prefix(keyword()) :: keyword()
+  defp put_prefix(opts), do: Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
 
   # Translates Postgrex errors that represent mailglass-specific SQL-level
   # invariants. Currently handles SQLSTATE 45A01 (event ledger immutability
