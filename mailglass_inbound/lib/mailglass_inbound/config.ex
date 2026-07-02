@@ -12,6 +12,15 @@ defmodule MailglassInbound.Config do
   ]
 
   @schema [
+    schema: [
+      type: :string,
+      default: "mailglass",
+      doc:
+        "Names the Postgres SCHEMA holding all mailglass inbound tables. " <>
+          "`\"public\"` is the explicit pre-2.0 opt-out. Must be a valid " <>
+          "unquoted Postgres identifier. Read from the `:mailglass_inbound` " <>
+          "app env only (never core `:mailglass`)."
+    ],
     retention: [
       type: :keyword_list,
       default: [],
@@ -56,6 +65,9 @@ defmodule MailglassInbound.Config do
     ]
   ]
 
+  # persistent_term key for the boot-validated Postgres schema name.
+  @schema_key {__MODULE__, :schema}
+
   @moduledoc """
   Validated configuration accessor for the `:mailglass_inbound` app env.
 
@@ -94,16 +106,57 @@ defmodule MailglassInbound.Config do
 
   Returns `:ok`. Raises `NimbleOptions.ValidationError` if the configured shape
   is invalid (e.g. a negative retention value, a non-`:infinity` atom on a
-  retention class, or a negative bucket capacity).
+  retention class, or a negative bucket capacity). Raises
+  `Mailglass.ConfigError` with `type: :invalid` if `:schema` is not a valid
+  unquoted Postgres identifier.
 
-  Intended to be called from the host application's boot path (it is not called
-  automatically — the inbound package does not own the host's app env).
+  Inbound's own `MailglassInbound.Application.start/2` now calls this at boot to
+  warm the `:schema` `:persistent_term` cache and fail fast on a bad identifier.
+  Only `:schema` is cached — the on-demand `retention/0` / `rate_limit/0` reads
+  stay on the uncached `validated/0` path and are unaffected.
   """
   @doc since: "1.2.0"
   @spec validate_at_boot!() :: :ok
   def validate_at_boot! do
-    _ = validated()
+    validated = validated()
+
+    # Cache the validated schema from the boot pipeline so boot and cache can
+    # never disagree. `Mailglass.Identifier.validate!/2` (core) fails fast on a
+    # bad identifier. Only `:schema` is cached — retention/rate_limit stay cold.
+    schema = Keyword.get(validated, :schema, "mailglass")
+    :persistent_term.put(@schema_key, Mailglass.Identifier.validate!(schema, :schema))
+
     :ok
+  end
+
+  @doc """
+  Returns the configured Postgres schema name (default `"mailglass"`).
+
+  Serves from `:persistent_term` in O(1) on the hot path. Warmed at boot by
+  `validate_at_boot!/0`; on a cold-cache miss (a boot-skipped context) it
+  self-heals by re-reading and re-validating the `:schema` `:mailglass_inbound`
+  app env (never core `:mailglass`), then caching the validated value.
+  `"public"` is the explicit pre-2.0 opt-out.
+
+  Reuses core's `Mailglass.Identifier.validate!/2` — one validator across the
+  family, no inbound-local regex and no inbound-local error type. The value is
+  always validated once at the cache-write boundary so an adopter's
+  `schema: "public"` opt-out can never be masked by a silent default.
+  """
+  @doc since: "2.0.0"
+  @spec schema() :: String.t()
+  def schema do
+    case :persistent_term.get(@schema_key, :__miss__) do
+      :__miss__ -> warm_schema()
+      schema -> schema
+    end
+  end
+
+  defp warm_schema do
+    schema = Application.get_env(:mailglass_inbound, :schema, "mailglass")
+    Mailglass.Identifier.validate!(schema, :schema)
+    :persistent_term.put(@schema_key, schema)
+    schema
   end
 
   @doc """
