@@ -5,6 +5,21 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.5.4...mailglass_inbound-v1.6.0) (2026-07-02)
+
+
+### Features
+
+* **125-01:** loosen sibling pins from == to ~&gt; (keystone atomic change) ([37dcaf1](https://github.com/szTheory/mailglass/commit/37dcaf11dfa1cea1f59ac7f247d71ff8bf9943bf))
+* **128-01:** add sibling-local ci/ci.fast aliases in admin + inbound ([dae016d](https://github.com/szTheory/mailglass/commit/dae016d9863db2d6aa3baa84fd073b3849286b5e))
+
+
+### Bug Fixes
+
+* **127-01:** MailboxCase — default async: false, drop shared:, remove async? (DET-01) ([2ec1ad4](https://github.com/szTheory/mailglass/commit/2ec1ad47be0c67479d96cc7973c80396d1e9c448))
+* **127-01:** PruneTest on_exit truncate — prevent sandbox: false row bleed into ReplayTest (DET-01) ([4b246a9](https://github.com/szTheory/mailglass/commit/4b246a9bc4b6763579620a63fa4c66bc31a38a57))
+* **128:** bound preflight TCP fallback; correct CONTRIBUTING + comment discipline ([90f1416](https://github.com/szTheory/mailglass/commit/90f1416813553aecd8ba67dd3223836a8f9f9444))
+
 ## [Unreleased]
 
 ### Changed

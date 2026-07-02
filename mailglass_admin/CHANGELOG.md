@@ -4,6 +4,14 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [1.11.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.10.2...mailglass_admin-v1.11.0) (2026-07-02)
+
+
+### Features
+
+* **125-01:** loosen sibling pins from == to ~&gt; (keystone atomic change) ([37dcaf1](https://github.com/szTheory/mailglass/commit/37dcaf11dfa1cea1f59ac7f247d71ff8bf9943bf))
+* **128-01:** add sibling-local ci/ci.fast aliases in admin + inbound ([dae016d](https://github.com/szTheory/mailglass/commit/dae016d9863db2d6aa3baa84fd073b3849286b5e))
+
 ## [Unreleased]
 
 ### Changed

@@ -14,6 +14,29 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [1.11.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.10.2...mailglass-v1.11.0) (2026-07-02)
+
+
+### Features
+
+* **125-01:** loosen sibling pins from == to ~&gt; (keystone atomic change) ([37dcaf1](https://github.com/szTheory/mailglass/commit/37dcaf11dfa1cea1f59ac7f247d71ff8bf9943bf))
+* **128-01:** add brand-voice Postgres + network preflight guards ([8fcea59](https://github.com/szTheory/mailglass/commit/8fcea591f3ea486954cebabf0cde206f07c70756))
+* **128-01:** add make ci / ci-fast / ci-browser wrappers ([7c69277](https://github.com/szTheory/mailglass/commit/7c6927764a1db5d722abb04a14f5e25d247f6ee7))
+* **128-01:** add mix ci alias family, remove deprecated verify.phase pass-throughs ([62da46a](https://github.com/szTheory/mailglass/commit/62da46aeb232262e292ffd4ed0adb7c10c075c98))
+* **128-02:** add MIXCI-03 parity-drift + durable seed guard test ([4a3fa5a](https://github.com/szTheory/mailglass/commit/4a3fa5a3aac3d1f74e11bf152edb1968c8252cef))
+* **128-02:** hoist required+advisory CI lanes to Mailglass.CILanes source ([6747fdd](https://github.com/szTheory/mailglass/commit/6747fddff0035eb0e75bf1e3316038436f13223c))
+* **129-01:** point all canonical-lane setup-beam blocks at .tool-versions ([6c7f359](https://github.com/szTheory/mailglass/commit/6c7f359d5d9d398f029367649daf407b50880211))
+* **129-01:** rewrite canonical deps/_build cache keys to toolchain-hashed shape ([35bef2a](https://github.com/szTheory/mailglass/commit/35bef2a0b90a41e987c32f0c31351c5c1ef68cdf))
+* **130-01:** add deps_audit_advisory advisory CI lane (SUPPLY-01) ([a7c86e4](https://github.com/szTheory/mailglass/commit/a7c86e42d2fa7e53665fa02f7824526b3b55b2e3))
+* **130-01:** add mix_audit dep and deps.audit ci alias entry ([3adde80](https://github.com/szTheory/mailglass/commit/3adde80b5ec57e8aaea7e229b42071adaf4ce097))
+* **130-01:** implement deps.audit gate + OSV staleness (SUPPLY-01/03) ([8d10afd](https://github.com/szTheory/mailglass/commit/8d10afdf9660179452da74eb24700e41b74ca08a))
+
+
+### Bug Fixes
+
+* **128:** bound preflight TCP fallback; correct CONTRIBUTING + comment discipline ([90f1416](https://github.com/szTheory/mailglass/commit/90f1416813553aecd8ba67dd3223836a8f9f9444))
+* **ci:** format+credo+compile-no-optional-deps regressions from phase 126-130 commits ([6da0074](https://github.com/szTheory/mailglass/commit/6da0074489c1033eaccc34dd2c64f30fca49c37a))
+
 ## [Unreleased]
 
 ### Changed
