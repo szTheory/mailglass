@@ -79,6 +79,11 @@ This is Design Phase A: everything downstream reads `Config.schema/0` and valida
 `Mailglass.Identifier`.
 **Depends on**: Nothing (first phase of v2.0)
 **Requirements**: SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04
+**Plans:** 2 plans
+
+- [ ] 132-01-PLAN.md — Core foundation: `Mailglass.Identifier` validator, `Config.schema/0` boot-warm + `:persistent_term` cache, migration delegate (SCHEMA-01/02/03), Wave 1
+- [ ] 132-02-PLAN.md — Inbound mirror: `MailglassInbound.Config.schema/0` reusing core validator + `application.ex` boot wiring (SCHEMA-04), Wave 2
+
 **Success Criteria** (what must be TRUE):
 
   1. An adopter can set `config :mailglass, :schema, "<name>"`; unset defaults to `"mailglass"`, and
@@ -98,7 +103,6 @@ This is Design Phase A: everything downstream reads `Config.schema/0` and valida
 
   5. Config tests + `mix credo` are green and there is no runtime behavior change (the facade is not yet
      wired — this phase is pure additive foundation).
-**Plans**: TBD
 **UI hint**: no
 
 ### Phase 133: Repo-facade prefix injection + Multi threading
@@ -243,7 +247,7 @@ be complete and green before the real release ceremony)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 132. Config + `Mailglass.Identifier` foundation | 0/? | Not started | - |
+| 132. Config + `Mailglass.Identifier` foundation | 0/2 | Not started | - |
 | 133. Repo-facade prefix injection + Multi threading | 0/? | Not started | - |
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 0/? | Not started | - |
 | 135. Inbound package schema isolation | 0/? | Not started | - |
