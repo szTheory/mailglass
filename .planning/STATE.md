@@ -2,18 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.15
 milestone_name: Release-Pipeline Efficiency & Contributor DX
-current_phase: 130
 status: executing
-stopped_at: Phase 129 complete (2/2, verified 7/7) — ready to plan Phase 130
-last_updated: "2026-07-02T00:20:53.935Z"
+stopped_at: Completed 130-01-PLAN.md
+last_updated: "2026-07-02T12:38:55.915Z"
 last_activity: 2026-07-02
-last_activity_desc: Phase 130 planning complete
 progress:
-  total_phases: 7
-  completed_phases: 5
-  total_plans: 14
-  completed_plans: 14
-  percent: 71
+  total_phases: 16
+  completed_phases: 7
+  total_plans: 16
+  completed_plans: 15
+  percent: 44
 ---
 
 # Project State
@@ -23,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 130 — Supply chain + workflow hygiene (mix_audit gate, dependabot sibling coverage, actionlint, 1.19/OTP28 advisory row)
+**Current focus:** Phase 130 — supply-chain-workflow-hygiene
 
 ## Current Position
 
-Phase: 130
-Plan: Not started
+Phase: 130 (supply-chain-workflow-hygiene) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-07-02 — Phase 130 planning complete
+Last activity: 2026-07-02
 
 ## v1.14 Milestone Intent
 
@@ -258,6 +256,8 @@ plan directly from the v1.13 precedent.
 - [Phase 128]: mix ci inbound test step uses 'mix test --exclude property' with NO --seed 0 — Consumes Phase 127 DET-02 determinism; a seed pin would regress it
 - [Phase 128]: deps.unlock --check-unused kept out of ci.fast — Lock carries orphaned transitive entries (castore, unicode_util_compat) that would red the check; cleaning them is a deferred follow-up (matches PR #104)
 - [Phase 128]: Mailglass.CILanes is the single Elixir-side source for required+advisory CI lane identity; GATE-03 and the MIXCI-03 parity-drift test read it, and the parity test carries a durable no-seed assertion making DET-02 permanent. — One-definition-of-green (D-LD-10): the two CI surfaces (human aliases vs per-job matrix) stay coherent via a shared source + a fail-loud drift test, not duplicated literals.
+- [Phase ?]: Phase 130-01: deps.audit publish-gate parses mix_audit GHSA output as a peer function; GHSA-vs-EEF-CVE ID asymmetry is intended
+- [Phase ?]: Phase 130-01: OSV EEF-CVE-2026-43966/43969 resolve HTTP 200 natively; staleness gate runs on live data with try/rescue/catch fail-open
 
 ## Quick Tasks Completed
 
@@ -395,6 +395,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 126 P01 | 8 | 3 tasks | 3 files |
 | Phase 128 P01 | 4 min | 5 tasks | 7 files |
 | Phase 128 P02 | 4 min | 2 tasks | 4 files |
+| Phase 130 P01 | 2 sessions | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -421,8 +422,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-01T21:10:01.593Z
-**Stopped at:** Completed 128-02-PLAN.md
+**Last session:** 2026-07-02T12:38:55.911Z
+**Stopped at:** Completed 130-01-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

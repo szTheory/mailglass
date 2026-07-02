@@ -84,13 +84,13 @@ product-behavior change, then cut a real linked Hex release that dogfoods the ha
 
 ### SUPPLY — Supply chain + workflow hygiene (→ Phase 130)
 
-- [ ] **SUPPLY-01**: `mix deps.audit` (mix_audit) runs advisory (non-blocking) on PR and blocking only
+- [x] **SUPPLY-01**: `mix deps.audit` (mix_audit) runs advisory (non-blocking) on PR and blocking only
   at the publish gate; never reds an open PR under an unfixable-advisory wave (LD-4).
 
 - [ ] **SUPPLY-02**: `dependabot.yml` watches the `mailglass_admin` and `mailglass_inbound` sibling
   locks (not the frozen reference baselines).
 
-- [ ] **SUPPLY-03**: The cowlib allowlist has a forcing function — OSV-staleness is a loud CI warning
+- [x] **SUPPLY-03**: The cowlib allowlist has a forcing function — OSV-staleness is a loud CI warning
   on every run + a hard block at publish, fail-open on OSV outage (LD-4).
 
 - [ ] **SUPPLY-04**: `actionlint` gates `.github/workflows/**` changes on PR (LD-11).
