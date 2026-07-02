@@ -8,6 +8,11 @@ defmodule MailglassInbound.Application do
 
   @impl Application
   def start(_type, _args) do
+    # Validate + warm the :schema :persistent_term cache before anything else so a
+    # malformed identifier fails the node at boot, not mid-request (D-15). Inbound
+    # owns its own app env, so a direct call is correct — no load-order guard needed.
+    :ok = MailglassInbound.Config.validate_at_boot!()
+
     :ok = maybe_warn_fallback_mode()
 
     children = [
