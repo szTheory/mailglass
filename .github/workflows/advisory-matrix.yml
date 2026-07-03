@@ -246,3 +246,78 @@ jobs:
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run provider compatibility advisory
         run: mix verify.provider_compatibility
+
+  mailglass_inbound_dual_schema_advisory:
+    name: Inbound Full Suite Advisory (schema ${{ matrix.schema }})
+    # D-13 / INB-03: runs the FULL inbound suite under BOTH the default
+    # `public` schema and the isolated `mailglass` schema. Advisory / non-blocking
+    # — this workflow is never a required PR check (fake-adapter-is-the-gate DNA).
+    # The `schema` matrix axis mirrors core_full_suite_advisory's D-06 axis.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - elixir: "1.18"
+            otp: "27"
+            schema: "public"
+          - elixir: "1.18"
+            otp: "27"
+            schema: "mailglass"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MIX_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    defaults:
+      run:
+        working-directory: mailglass_inbound
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - name: Set up OTP + Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Cache deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: mailglass_inbound/deps
+          key: inbound-${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('mailglass_inbound/mix.lock') }}
+          restore-keys: |
+            inbound-${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-
+      - name: Install deps
+        run: mix deps.get
+      - name: Compile
+        run: mix compile --warnings-as-errors
+      - name: Wait for postgres + create test DB
+        env:
+          PGPASSWORD: postgres
+        run: |
+          until pg_isready -h localhost -U postgres -d postgres; do sleep 1; done
+          mix ecto.create -r MailglassInbound.TestRepo --quiet
+      - name: Run inbound dual-schema advisory full suite
+        # MAILGLASS_SCHEMA (D-12 / INB-03): test_helper.exs reads this env var
+        # to align BOTH Migration.up(prefix:) AND Config.schema/0 to the matrix
+        # schema, then sets search_path on the TestRepo connections so unqualified
+        # raw SQL in tests also targets the configured schema.
+        # `--seed 0` pins the test ordering to dodge the phase-45 property-test
+        # pool flake (tcp recv: closed) deterministically (D-13 anti-flake).
+        env:
+          MAILGLASS_SCHEMA: ${{ matrix.schema }}
+        run: mix test --seed 0
