@@ -221,7 +221,7 @@ version-dispatcher migration entrypoint — for inbound)
 **Wave 1** *(parallel — zero file overlap)*
 
 - [x] 135-01-PLAN.md — Facade `put_prefix/1` threaded through `MailglassInbound.Repo` reads/writes + load-bearing inline-qualify of the prune batched DELETE (D-02) + schema-isolation test (INB-01), Wave 1
-- [ ] 135-02-PLAN.md — Migration conversion: `MailglassInbound.Migration`/`Migrations.Postgres`/`V01` version-dispatcher stack with `CREATE SCHEMA IF NOT EXISTS` + independent pg_class anchor, `mix mailglass.inbound.gen.migration` generator, delete the 7 loose `.exs` files (INB-02), Wave 1
+- [x] 135-02-PLAN.md — Migration conversion: `MailglassInbound.Migration`/`Migrations.Postgres`/`V01` version-dispatcher stack with `CREATE SCHEMA IF NOT EXISTS` + independent pg_class anchor, `mix mailglass.inbound.gen.migration` generator, delete the 7 loose `.exs` files (INB-02), Wave 1
 
 **Wave 2** *(blocked on Wave 1 — the green-under-both proof exercises both the facade and the migration entrypoint)*
 
@@ -288,7 +288,7 @@ be complete and green before the real release ceremony)
 | 132. Config + `Mailglass.Identifier` foundation | 2/2 | Complete    | 2026-07-02 |
 | 133. Repo-facade prefix injection + Multi threading | 2/2 | Complete    | 2026-07-02 |
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 3/3 | Complete    | 2026-07-03 |
-| 135. Inbound package schema isolation | 1/3 | In Progress|  |
+| 135. Inbound package schema isolation | 2/3 | In Progress|  |
 | 136. Upgrade codemod + docs + api_stability | 0/? | Not started | - |
 | 137. Linked 2.0 release ceremony + milestone closeout | 0/? | Not started | - |
 
