@@ -78,6 +78,12 @@ extra_checks = [
    [
      allowed_modules: [Mailglass.Config]
    ]},
+  # MIGR-06: mailglass injects the Postgres schema prefix at RUNTIME via the
+  # facade (Config.schema/0). A compile-time `@schema` `@prefix` module attribute
+  # pins the read side to a baked-in schema and inverts read-vs-write prefix
+  # precedence (decision 6). This check fails the build on any such attribute
+  # under lib/mailglass/.
+  {Mailglass.Credo.NoSchemaPrefixAttribute, []},
   {Mailglass.Credo.NoOtherAppEnvReads, [allowed_apps: [:mailglass]]},
   {Mailglass.Credo.TelemetryEventConvention,
    [required_root: [:mailglass, :mailglass_inbound], min_segments: 4]},
