@@ -209,7 +209,24 @@ version-dispatcher migration entrypoint — for inbound)
 
   3. The inbound suite runs green under both `schema: "public"` and `schema: "mailglass"`.
 
-**Plans**: TBD
+> **INB-01 wording adjustment (D-03, applied at planning):** INB-01's "`multi_opts/1` through its Multi
+> builders" clause is satisfied **vacuously / deferred** — `mailglass_inbound` has **zero `Ecto.Multi`
+> builders** today (the only `Ecto.Multi` reference is the facade's own `multi/2` passthrough). Adding
+> `multi_opts/1` now is YAGNI on a permanent public surface the narrow-facade principle argues against; it
+> lands in the same commit as the first inbound Multi builder that needs it. This parallels the Phase 133
+> D-06 roadmap-wording adjustment.
+
+**Plans**: 3 plans
+
+**Wave 1** *(parallel — zero file overlap)*
+
+- [ ] 135-01-PLAN.md — Facade `put_prefix/1` threaded through `MailglassInbound.Repo` reads/writes + load-bearing inline-qualify of the prune batched DELETE (D-02) + schema-isolation test (INB-01), Wave 1
+- [ ] 135-02-PLAN.md — Migration conversion: `MailglassInbound.Migration`/`Migrations.Postgres`/`V01` version-dispatcher stack with `CREATE SCHEMA IF NOT EXISTS` + independent pg_class anchor, `mix mailglass.inbound.gen.migration` generator, delete the 7 loose `.exs` files (INB-02), Wave 1
+
+**Wave 2** *(blocked on Wave 1 — the green-under-both proof exercises both the facade and the migration entrypoint)*
+
+- [ ] 135-03-PLAN.md — Dual-schema test harness (`test_helper.exs` → `Migration.up/1` + `MAILGLASS_SCHEMA` facade alignment) + non-blocking `mailglass_inbound` `schema: [public, mailglass]` advisory CI axis (INB-03), Wave 2
+
 **UI hint**: no
 
 ### Phase 136: Upgrade codemod + docs + api_stability
@@ -271,7 +288,7 @@ be complete and green before the real release ceremony)
 | 132. Config + `Mailglass.Identifier` foundation | 2/2 | Complete    | 2026-07-02 |
 | 133. Repo-facade prefix injection + Multi threading | 2/2 | Complete    | 2026-07-02 |
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 3/3 | Complete    | 2026-07-03 |
-| 135. Inbound package schema isolation | 0/? | Not started | - |
+| 135. Inbound package schema isolation | 0/3 | Not started | - |
 | 136. Upgrade codemod + docs + api_stability | 0/? | Not started | - |
 | 137. Linked 2.0 release ceremony + milestone closeout | 0/? | Not started | - |
 

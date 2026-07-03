@@ -76,6 +76,10 @@
 
 - [ ] **INB-01**: `MailglassInbound.Repo` threads `put_prefix/1` through its delegated reads/writes and
   `multi_opts/1` through its Multi builders, resolving inbound tables to the configured schema.
+  _(D-03, Phase 135 planning): the `multi_opts/1` clause is satisfied **vacuously / deferred** — inbound
+  has zero `Ecto.Multi` builders today, so no `multi_opts/1` is added this phase; it lands with the first
+  inbound Multi builder that needs it. Plan 135-01 also inline-qualifies the facade-bypassing prune DELETE
+  (D-02, load-bearing correctness fix beyond the roadmap success criteria)._
 
 - [ ] **INB-02**: Inbound's loose `change/0` migration files are converted to the same prefix-aware
   version-dispatcher pattern core uses (`MailglassInbound.Migration.up/down` + `Migrations.Postgres.VNN`),
