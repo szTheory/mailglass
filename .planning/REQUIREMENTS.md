@@ -81,7 +81,7 @@
   inbound Multi builder that needs it. Plan 135-01 also inline-qualifies the facade-bypassing prune DELETE
   (D-02, load-bearing correctness fix beyond the roadmap success criteria)._
 
-- [ ] **INB-02**: Inbound's loose `change/0` migration files are converted to the same prefix-aware
+- [x] **INB-02**: Inbound's loose `change/0` migration files are converted to the same prefix-aware
   version-dispatcher pattern core uses (`MailglassInbound.Migration.up/down` + `Migrations.Postgres.VNN`),
   issuing `CREATE SCHEMA IF NOT EXISTS` at the head and threading `prefix:` into every
   `create table`/`index`/`references`.
@@ -161,7 +161,7 @@
 | MIGR-05 | Phase 134 | Complete |
 | MIGR-06 | Phase 134 | Complete |
 | INB-01 | Phase 135 | Complete |
-| INB-02 | Phase 135 | Pending |
+| INB-02 | Phase 135 | Complete |
 | INB-03 | Phase 135 | Complete |
 | UPG-01 | Phase 136 | Pending |
 | UPG-02 | Phase 136 | Pending |

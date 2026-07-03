@@ -288,7 +288,7 @@ be complete and green before the real release ceremony)
 | 132. Config + `Mailglass.Identifier` foundation | 2/2 | Complete    | 2026-07-02 |
 | 133. Repo-facade prefix injection + Multi threading | 2/2 | Complete    | 2026-07-02 |
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 3/3 | Complete    | 2026-07-03 |
-| 135. Inbound package schema isolation | 3/3 | Complete   | 2026-07-03 |
+| 135. Inbound package schema isolation | 3/3 | Complete    | 2026-07-03 |
 | 136. Upgrade codemod + docs + api_stability | 0/? | Not started | - |
 | 137. Linked 2.0 release ceremony + milestone closeout | 0/? | Not started | - |
 
