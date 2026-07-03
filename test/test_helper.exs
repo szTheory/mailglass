@@ -32,18 +32,58 @@ migrations_path =
 
 test_repo_config = Application.get_env(:mailglass, Mailglass.TestRepo)
 
+# Schema-isolation matrix support (D-06 / Success Criterion 7). config/runtime.exs
+# maps MAILGLASS_SCHEMA onto `config :mailglass, :schema`; the default suite keeps
+# the config/test.exs "public" pin. For a non-public schema the whole suite must
+# actually run there: the migrations' unqualified DDL and the raw-SQL test setup
+# need `search_path = <schema>` on the connection (the facade's `prefix:` injection
+# already routes Ecto queries), and the schema must be created before the migrator
+# writes its `schema_migrations` bookkeeping table (else CREATE TABLE fails with
+# 3F000 under the isolated search_path).
+schema = Mailglass.Config.schema()
+
+# search_path is "<schema>, public": unqualified DDL/queries resolve to the
+# isolated schema first, but the `citext` extension type (installed in public)
+# stays resolvable. Mirrors the admin operator harness's `SET LOCAL search_path
+# TO <schema>, public`.
+migration_parameters =
+  if schema != "public" do
+    test_repo_config
+    |> Keyword.get(:parameters, [])
+    |> Keyword.put(:search_path, "#{schema}, public")
+  else
+    Keyword.get(test_repo_config, :parameters, [])
+  end
+
 Application.put_env(
   :mailglass,
   Mailglass.TestRepo,
-  Keyword.put(test_repo_config, :pool, DBConnection.ConnectionPool)
+  test_repo_config
+  |> Keyword.put(:pool, DBConnection.ConnectionPool)
+  |> Keyword.put(:parameters, migration_parameters)
 )
 
 {:ok, _, _} =
   Ecto.Migrator.with_repo(Mailglass.TestRepo, fn repo ->
+    if schema != "public" do
+      Ecto.Adapters.SQL.query!(repo, ~s(CREATE SCHEMA IF NOT EXISTS "#{schema}"))
+    end
+
     Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
   end)
 
-Application.put_env(:mailglass, Mailglass.TestRepo, test_repo_config)
+# Restore the Sandbox pool config for the long-lived TestRepo, keeping the
+# search_path patch so test-body Sandbox connections resolve unqualified raw SQL
+# to the isolated schema (Sandbox connections inherit the search_path set at pool
+# startup).
+restored_test_repo_config =
+  if schema != "public" do
+    Keyword.put(test_repo_config, :parameters, migration_parameters)
+  else
+    test_repo_config
+  end
+
+Application.put_env(:mailglass, Mailglass.TestRepo, restored_test_repo_config)
 
 {:ok, _pid} = Mailglass.TestRepo.start_link()
 
