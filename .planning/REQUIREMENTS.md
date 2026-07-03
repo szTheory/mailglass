@@ -86,7 +86,7 @@
   issuing `CREATE SCHEMA IF NOT EXISTS` at the head and threading `prefix:` into every
   `create table`/`index`/`references`.
 
-- [ ] **INB-03**: The inbound suite runs green under both `schema: "public"` and `schema: "mailglass"`.
+- [x] **INB-03**: The inbound suite runs green under both `schema: "public"` and `schema: "mailglass"`.
 
 ### UPG — Upgrade tooling + docs (Phase E)
 
@@ -162,7 +162,7 @@
 | MIGR-06 | Phase 134 | Complete |
 | INB-01 | Phase 135 | Complete |
 | INB-02 | Phase 135 | Pending |
-| INB-03 | Phase 135 | Pending |
+| INB-03 | Phase 135 | Complete |
 | UPG-01 | Phase 136 | Pending |
 | UPG-02 | Phase 136 | Pending |
 | UPG-03 | Phase 136 | Pending |

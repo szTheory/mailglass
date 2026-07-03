@@ -225,7 +225,7 @@ version-dispatcher migration entrypoint — for inbound)
 
 **Wave 2** *(blocked on Wave 1 — the green-under-both proof exercises both the facade and the migration entrypoint)*
 
-- [ ] 135-03-PLAN.md — Dual-schema test harness (`test_helper.exs` → `Migration.up/1` + `MAILGLASS_SCHEMA` facade alignment) + non-blocking `mailglass_inbound` `schema: [public, mailglass]` advisory CI axis (INB-03), Wave 2
+- [x] 135-03-PLAN.md — Dual-schema test harness (`test_helper.exs` → `Migration.up/1` + `MAILGLASS_SCHEMA` facade alignment) + non-blocking `mailglass_inbound` `schema: [public, mailglass]` advisory CI axis (INB-03), Wave 2
 
 **UI hint**: no
 
@@ -288,7 +288,7 @@ be complete and green before the real release ceremony)
 | 132. Config + `Mailglass.Identifier` foundation | 2/2 | Complete    | 2026-07-02 |
 | 133. Repo-facade prefix injection + Multi threading | 2/2 | Complete    | 2026-07-02 |
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 3/3 | Complete    | 2026-07-03 |
-| 135. Inbound package schema isolation | 2/3 | In Progress|  |
+| 135. Inbound package schema isolation | 3/3 | Complete   | 2026-07-03 |
 | 136. Upgrade codemod + docs + api_stability | 0/? | Not started | - |
 | 137. Linked 2.0 release ceremony + milestone closeout | 0/? | Not started | - |
 
