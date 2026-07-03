@@ -33,9 +33,9 @@ defmodule MailglassReferenceHost.MixProject do
       # Hex consumer compiles against the published siblings. The exact baseline
       # version is pinned by mix.lock. A major crosses the tilde boundary, so the
       # 2.0 advance is a deliberate coordinated mix.exs + mix.lock edit (D-06).
-      {:mailglass, "~> 2.0"},
-      {:mailglass_admin, "~> 2.0"},
-      {:mailglass_inbound, "~> 2.0"}
+      {:mailglass, "~> 1.0"},
+      {:mailglass_admin, "~> 1.0"},
+      {:mailglass_inbound, "~> 1.0"}
     ]
   end
 
