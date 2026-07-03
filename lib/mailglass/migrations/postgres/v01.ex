@@ -234,8 +234,31 @@ defmodule Mailglass.Migrations.Postgres.V01 do
     drop(table(:mailglass_deliveries, prefix: prefix))
 
     # citext stays UNqualified (installed into public). Dropping it on down is a
-    # best-effort teardown; redesigning the drop-on-down opt-in is out of scope
-    # for this milestone (dossier §3.6).
-    execute("DROP EXTENSION IF EXISTS citext")
+    # genuinely BEST-EFFORT teardown: with schema isolation a second install can
+    # coexist in another schema (or the shared public baseline) whose tables
+    # still depend on the extension. A bare `DROP EXTENSION IF EXISTS citext`
+    # (no CASCADE) raises 2BP01 in that case, which would abort an otherwise
+    # clean per-schema teardown. Guard the drop so it fires ONLY when no object
+    # still depends on citext — never CASCADE (that would silently break the
+    # surviving install's :citext columns). Redesigning the drop-on-down opt-in
+    # is out of scope for this milestone (dossier §3.6).
+    execute("""
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_attribute a
+        JOIN pg_class c ON c.oid = a.attrelid
+        JOIN pg_type t ON t.oid = a.atttypid
+        WHERE t.typname = 'citext'
+          AND a.attnum > 0
+          AND NOT a.attisdropped
+          AND c.relkind IN ('r', 'p')
+      ) THEN
+        DROP EXTENSION IF EXISTS citext;
+      END IF;
+    END
+    $$;
+    """)
   end
 end
