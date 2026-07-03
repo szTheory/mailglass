@@ -254,7 +254,9 @@ fresh-install path locks in Phase C)
 
   4. The `mix mailglass.upgrade.v2_schema` codemod is run end-to-end against `reference/host_app` (frozen
      baseline) and asserted green.
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 136-01-PLAN.md — `mix mailglass.upgrade.v2_schema` codemod (Route B move migration) + emitter/migration-execution tests (UPG-01, UPG-04)
+- [ ] 136-02-PLAN.md — `guides/upgrading-to-v2_0.md` + `:schema` api_stability contract (core+inbound) + mix.exs/publish-allowlist wiring + docs-token test (UPG-02, UPG-03)
 **UI hint**: no
 
 ### Phase 137: Linked 2.0 release ceremony + milestone closeout
