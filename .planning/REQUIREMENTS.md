@@ -90,19 +90,19 @@
 
 ### UPG — Upgrade tooling + docs (Phase E)
 
-- [ ] **UPG-01**: `mix mailglass.upgrade.v2_schema` generates a Route B move migration that
+- [x] **UPG-01**: `mix mailglass.upgrade.v2_schema` generates a Route B move migration that
   `CREATE SCHEMA`s, `ALTER TABLE … SET SCHEMA`s all four core tables under `SET LOCAL lock_timeout`,
   and recreates the immutability trigger+function schema-qualified — with a working `down/0`.
 
-- [ ] **UPG-02**: `guides/upgrading-to-v2_0.md` documents both routes (Route A one-line `"public"`
+- [x] **UPG-02**: `guides/upgrading-to-v2_0.md` documents both routes (Route A one-line `"public"`
   opt-out; Route B move), the `create_schema: false` grants, the `public.mailglass_*` literal-SQL grep
   checklist, and the `lock_timeout`+retry locking posture.
 
-- [ ] **UPG-03**: `api_stability.md` (core + inbound) documents the `:schema` config contract as a
+- [x] **UPG-03**: `api_stability.md` (core + inbound) documents the `:schema` config contract as a
   stable 2.0 surface, and the tenancy-vs-schema orthogonality is stated so no one conflates `:schema`
   with per-tenant prefixes.
 
-- [ ] **UPG-04**: The `mix mailglass.upgrade.v2_schema` codemod is run end-to-end against
+- [x] **UPG-04**: The `mix mailglass.upgrade.v2_schema` codemod is run end-to-end against
   `reference/host_app` (frozen baseline) and asserted green.
 
 ### REL — Release cut + milestone closeout (Phase F)
@@ -163,10 +163,10 @@
 | INB-01 | Phase 135 | Complete |
 | INB-02 | Phase 135 | Complete |
 | INB-03 | Phase 135 | Complete |
-| UPG-01 | Phase 136 | Pending |
-| UPG-02 | Phase 136 | Pending |
-| UPG-03 | Phase 136 | Pending |
-| UPG-04 | Phase 136 | Pending |
+| UPG-01 | Phase 136 | Complete |
+| UPG-02 | Phase 136 | Complete |
+| UPG-03 | Phase 136 | Complete |
+| UPG-04 | Phase 136 | Complete |
 | REL-01 | Phase 137 | Pending |
 | REL-02 | Phase 137 | Pending |
 | REL-03 | Phase 137 | Pending |

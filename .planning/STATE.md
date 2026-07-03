@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Postgres Schema Isolation)
-current_phase: 136
-current_phase_name: upgrade-codemod-docs-api-stability
-status: ready_to_execute
-stopped_at: Phase 136 planned (2 plans, both wave 1) + plan-checker PASS — ready to execute
-last_updated: 2026-07-03T10:10:00.000Z
+current_phase: 137
+current_phase_name: Linked 2.0 release ceremony + milestone closeout
+status: executing
+stopped_at: Phase 135 context gathered (assumptions mode)
+last_updated: "2026-07-03T10:32:00.400Z"
 last_activity: 2026-07-03
-last_activity_desc: Phase 136 planned — research + validation + 2 plans; plan-checker PASS (2 non-blocking warns resolved)
+last_activity_desc: Phase 136 complete, transitioned to Phase 137
 progress:
   total_phases: 6
-  completed_phases: 4
-  total_plans: 10
-  completed_plans: 16
-  percent: 67
+  completed_phases: 5
+  total_plans: 12
+  completed_plans: 12
+  percent: 83
 ---
 
 # Project State
@@ -24,15 +24,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 136 — Upgrade codemod + docs + api_stability (Design Phase E). (phase.complete reported 999.1, a leftover backlog dir — ignored; the real v2.0 next phase is 136.)
+**Current focus:** Phase 136 — upgrade-codemod-docs-api-stability
 
 ## Current Position
 
 Milestone: v2.0 Postgres Schema Isolation (6 phases, 132-137)
-Phase: 136 (planned; 132-135 complete)
-Plan: 2 plans (136-01 codemod+proofs, 136-02 docs+api_stability), both wave 1, depends_on: []
-Status: Ready to execute (plan-checker PASS)
-Last activity: 2026-07-03
+Phase: 137 — Linked 2.0 release ceremony + milestone closeout
+Plan: Not started
+Status: Executing Phase 136
+Last activity: 2026-07-03 — Phase 136 complete, transitioned to Phase 137
 
 ## v2.0 Milestone Intent
 
