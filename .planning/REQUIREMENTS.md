@@ -50,10 +50,10 @@
 
 ### MIGR — Migration entrypoint + raw-DDL qualification (Phase C)
 
-- [ ] **MIGR-01**: `Mailglass.Migration.up/down` inject `prefix: Config.schema()` so the version
+- [x] **MIGR-01**: `Mailglass.Migration.up/down` inject `prefix: Config.schema()` so the version
   dispatcher (v01–v05) threads the configured schema into every structural DDL statement.
 
-- [ ] **MIGR-02**: `Migrations.Postgres.up/1` issues `CREATE SCHEMA IF NOT EXISTS` for a non-public
+- [x] **MIGR-02**: `Migrations.Postgres.up/1` issues `CREATE SCHEMA IF NOT EXISTS` for a non-public
   prefix, honoring an explicit `create_schema: false` escape hatch (locked-down prod role); `down/1`
   drops the schema with `RESTRICT` only if it was created and only after all tables are gone.
 
@@ -150,8 +150,8 @@
 | FACADE-02 | Phase 133 | Complete |
 | FACADE-03 | Phase 133 | Complete |
 | FACADE-04 | Phase 133 | Complete |
-| MIGR-01 | Phase 134 | Pending |
-| MIGR-02 | Phase 134 | Pending |
+| MIGR-01 | Phase 134 | Complete |
+| MIGR-02 | Phase 134 | Complete |
 | MIGR-03 | Phase 134 | Pending |
 | MIGR-04 | Phase 134 | Pending |
 | MIGR-05 | Phase 134 | Pending |

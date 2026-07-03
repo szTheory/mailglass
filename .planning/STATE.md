@@ -2,19 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Postgres Schema Isolation)
-current_phase: 134
 status: executing
-stopped_at: Phase 133 complete (2/2) — ready to plan Phase 134
-last_updated: "2026-07-02T23:36:48.601Z"
-last_activity: 2026-07-02
-last_activity_desc: Phase null planning complete
+stopped_at: Completed 133-02-PLAN.md
+last_updated: "2026-07-03T00:49:38.161Z"
+last_activity: 2026-07-03
 progress:
-  total_phases: 6
-  completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
-  percent: 33
-current_phase_name: migration-entrypoint-raw-ddl-trigger-qualification
+  total_phases: 8
+  completed_phases: 4
+  total_plans: 13
+  completed_plans: 11
+  percent: 50
 ---
 
 # Project State
@@ -24,15 +21,15 @@ current_phase_name: migration-entrypoint-raw-ddl-trigger-qualification
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 134 — Migration entrypoint + raw-DDL/trigger qualification (Design Phase C)
+**Current focus:** Phase 134 — migration-entrypoint-raw-ddl-trigger-qualification
 
 ## Current Position
 
 Milestone: v2.0 Postgres Schema Isolation (6 phases, 132-137)
-Phase: 134
-Plan: Not started
+Phase: 134 (migration-entrypoint-raw-ddl-trigger-qualification) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-07-02 — Phase null planning complete
+Last activity: 2026-07-03
 
 ## v2.0 Milestone Intent
 
@@ -255,6 +252,9 @@ Phase 136's `ALTER TABLE … SET SCHEMA` `ACCESS EXCLUSIVE` locking posture).
 - [Phase ?]: no admin lib changes needed; facade injects prefix: Config.schema() transparently
 - [Phase ?]: D-06 split: dedicated integration test in Phase 133; full-suite CI matrix axis deferred to Phase 134 (raw-DDL qualification needed first)
 - [Phase ?]: admin config/test.exs must pin :schema to 'public'; facade otherwise injects prefix:'mailglass' on all ops and citext probe exhausts
+- [Phase ?]: [134-01] Migration.up/down inject prefix: Config.schema() via Keyword.put_new (MIGR-01); migrated_version/1 untouched.
+- [Phase ?]: [134-01] maybe_create_schema/1 is up/1 first action (gated create_schema, honors create_schema: false); maybe_drop_schema/1 fires only at teardown version 0 with DROP SCHEMA RESTRICT never CASCADE (MIGR-02).
+- [Phase ?]: [134-01] Non-public-prefix down full round-trip + citext/trigger qualification deferred to 134-02; 134-01 proves DROP SCHEMA RESTRICT via the exact emitted DDL to avoid corrupting shared public.citext mid-suite.
 
 ## Quick Tasks Completed
 
@@ -399,6 +399,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 132 P02 | 3min | 2 tasks | 3 files |
 | Phase 133 P01 | 10 | 3 tasks | 8 files |
 | Phase 133 P02 | 15min | 3 tasks | 5 files |
+| Phase 134 P01 | ~13 min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -426,7 +427,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-02T23:08:33.775Z
+**Last session:** 2026-07-03T00:49:13.507Z
 **Stopped at:** Completed 133-02-PLAN.md
 **Resume file:** None
 
