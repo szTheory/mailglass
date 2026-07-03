@@ -9,6 +9,13 @@ defmodule MailglassInbound.Ingress.Persist do
   alias MailglassInbound.InboundRecords.InboundRecord
   alias MailglassInbound.Router.Matcher
 
+  # Returns the schema-prefix option that must be passed to all direct repo
+  # calls (insert, one, all) so they route to the configured Postgres schema
+  # (INB-01 / D-12). This mirrors what `MailglassInbound.Repo.put_prefix/1`
+  # does for facade calls — callers that pass an explicit `:prefix` override
+  # this via Ecto's `Keyword.put_new` / option-merge semantics (caller wins).
+  defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]
+
   @type handoff_t :: %{
           required(:tenant_id) => String.t(),
           required(:provider) => atom() | String.t(),
@@ -153,7 +160,7 @@ defmodule MailglassInbound.Ingress.Persist do
             limit: 1
           )
 
-        repo.one(query)
+        repo.one(query, schema_opts())
     end
   end
 
@@ -197,7 +204,7 @@ defmodule MailglassInbound.Ingress.Persist do
             limit: 1
           )
 
-        repo.one(query)
+        repo.one(query, schema_opts())
     end
   end
 
@@ -238,7 +245,7 @@ defmodule MailglassInbound.Ingress.Persist do
             limit: 1
           )
 
-        repo.one(query)
+        repo.one(query, schema_opts())
     end
   end
 
@@ -271,7 +278,7 @@ defmodule MailglassInbound.Ingress.Persist do
         limit: 1
       )
 
-    repo.one(query)
+    repo.one(query, schema_opts())
   end
 
   defp insert_record(repo, tenant_id, provider, message, suppression_flagged) do
@@ -300,7 +307,7 @@ defmodule MailglassInbound.Ingress.Persist do
 
     changeset = InboundRecords.change_inbound_record(attrs)
 
-    case repo.insert(changeset) do
+    case repo.insert(changeset, schema_opts()) do
       {:ok, record} ->
         {:ok, record}
 
@@ -396,7 +403,7 @@ defmodule MailglassInbound.Ingress.Persist do
 
     attrs
     |> InboundRecords.change_inbound_evidence()
-    |> repo.insert()
+    |> repo.insert(schema_opts())
   end
 
   defp route_compatibility(message, opts) do

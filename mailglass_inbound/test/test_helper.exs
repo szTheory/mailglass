@@ -18,26 +18,122 @@ Application.put_env(:swoosh, :api_client, false, persistent: true)
 # time out. Override the pool to the default `DBConnection.ConnectionPool` for
 # the migration step, then restore the Sandbox pool config for the long-lived
 # TestRepo that test bodies use.
-migrations_path =
-  :code.priv_dir(:mailglass_inbound)
-  |> Path.join("repo/migrations")
+#
+# **Dual-schema alignment (D-12 / INB-03):**
+# Read MAILGLASS_SCHEMA from the environment (default "public" when unset or
+# empty, mirroring core config/runtime.exs semantics). Three alignment steps:
+#
+#   1. Set `config :mailglass_inbound, :schema` to the target schema so
+#      `Config.schema/0` reads the right value after the cache reset.
+#   2. Erase the `{MailglassInbound.Config, :schema}` `:persistent_term` key so
+#      `Config.schema/0` re-warms from the updated app env on its next call,
+#      not from the stale "public" boot-warmed value.
+#   3. When schema != "public", add `parameters: [search_path: schema]` to the
+#      TestRepo Postgrex connection config so that raw SQL (TRUNCATE TABLE,
+#      query!/2 without an explicit schema qualifier) targets the correct schema.
+#      This is needed because Ecto's `:prefix` option only applies to
+#      Ecto-DSL calls (insert/one/all), not raw query!/2 SQL. Tests that
+#      TRUNCATE the inbound tables must hit the migrated schema, not "public".
+#      For schema == "public", the Postgres default search_path ($user, public)
+#      already resolves to public — no override needed.
+#
+# **Migration runner requirement:** `Migrations.Postgres` uses `use Ecto.Migration`
+# and calls `execute/1` / `create/1`, which require an active
+# `Ecto.Migration.Runner` process. That runner is started by `Ecto.Migrator.up/4`.
+# We drive migration by defining an inline wrapper migration and calling
+# `Ecto.Migrator.up(repo, version, WrapperModule)` inside the `with_repo` block —
+# the same pattern `migrations_test.exs` uses. The version slot (99_000_000_000_000)
+# is large enough that it does not collide with any real adopter migration timestamp.
+#
+# CREATE SCHEMA runs as the first statement inside with_repo (before Sandbox.mode
+# and any test checkout), so the schema exists before the SQL Sandbox owner
+# starts — the schema-must-exist-before-Sandbox-owner footgun is resolved
+# structurally (footgun 13 / T-135-06).
+
+schema =
+  case System.get_env("MAILGLASS_SCHEMA") do
+    s when is_binary(s) and s != "" -> s
+    _ -> "public"
+  end
+
+# 1. Align the app env so Config.schema/0 re-warms to the target schema.
+Application.put_env(:mailglass_inbound, :schema, schema)
+
+# 2. Erase the persistent_term cache so Config.schema/0 re-reads from app env
+#    rather than serving the stale boot-warmed value (which was "public" from
+#    the compile-time config/test.exs pin set in Plan 01). Any subsequent call
+#    to Config.schema/0 self-heals by warm_schema/0 and writes `schema` back.
+:persistent_term.erase({MailglassInbound.Config, :schema})
+
+# 3. Define the inline wrapper migration that drives Migration.up/1 inside the
+#    active Ecto.Migration.Runner context set up by Ecto.Migrator.up/4.
+defmodule MailglassInbound.TestMigration.Install do
+  @moduledoc false
+  use Ecto.Migration
+
+  def up do
+    MailglassInbound.Migration.up(
+      prefix: Application.get_env(:mailglass_inbound, :schema, "public"),
+      repo: MailglassInbound.TestRepo
+    )
+  end
+
+  def down, do: :ok
+end
 
 test_repo_config = Application.get_env(:mailglass_inbound, MailglassInbound.TestRepo)
+
+# 4. For non-public schemas, update the TestRepo Postgrex connection parameters
+#    to set search_path = schema. This ensures raw SQL queries (e.g.
+#    `TRUNCATE TABLE mailglass_inbound_records CASCADE` in test setup blocks)
+#    target the correct schema rather than the Postgres default "public". For
+#    the default "public" schema, the Postgres default search_path already
+#    resolves correctly, so no override is applied.
+patched_config =
+  if schema != "public" do
+    parameters = Keyword.get(test_repo_config, :parameters, [])
+    new_parameters = Keyword.put(parameters, :search_path, schema)
+    Keyword.put(test_repo_config, :parameters, new_parameters)
+  else
+    test_repo_config
+  end
 
 Application.put_env(
   :mailglass_inbound,
   MailglassInbound.TestRepo,
-  Keyword.put(test_repo_config, :pool, DBConnection.ConnectionPool)
+  Keyword.put(patched_config, :pool, DBConnection.ConnectionPool)
 )
 
 {:ok, _, _} =
   Ecto.Migrator.with_repo(MailglassInbound.TestRepo, fn repo ->
-    Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+    Ecto.Migrator.up(repo, 99_000_000_000_000, MailglassInbound.TestMigration.Install, log: false)
   end)
 
-Application.put_env(:mailglass_inbound, MailglassInbound.TestRepo, test_repo_config)
+# Restore original config (including the search_path patch for the long-lived
+# TestRepo pool that test bodies use — Sandbox connections inherit the search_path
+# set at pool startup).
+Application.put_env(:mailglass_inbound, MailglassInbound.TestRepo, patched_config)
 
 {:ok, _pid} = MailglassInbound.TestRepo.start_link()
+
+# When running under a non-public schema, Ecto.Migrator.up/4 in migrations_test.exs
+# records version slots in `<schema>.schema_migrations` (because search_path resolves
+# there). Those test cleanup blocks only delete from `public.schema_migrations`, so
+# the non-public `schema_migrations` table accumulates leftover entries across runs.
+# On the next run, System.unique_integer/1 produces the same small monotonic values
+# (same test seeds), matching stale entries — causing Ecto.Migrator to skip those
+# migrations (version already applied). Result: CREATE SCHEMA never fires and
+# migrations_test.exs assertions fail.
+#
+# Fix: after TestRepo starts, purge stale test-version entries from the non-public
+# `schema_migrations` table (keeping only our well-known install version slot
+# 99_000_000_000_000 which is legitimate and stable across runs).
+if schema != "public" do
+  MailglassInbound.TestRepo.query!(
+    "DELETE FROM schema_migrations WHERE version != $1",
+    [99_000_000_000_000]
+  )
+end
 
 Ecto.Adapters.SQL.Sandbox.mode(MailglassInbound.TestRepo, :manual)
 
