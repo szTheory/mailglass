@@ -29,12 +29,13 @@ defmodule MailglassReferenceHost.MixProject do
       {:postgrex, "~> 0.22"},
       {:jason, "~> 1.4"},
       {:plug_cowboy, "~> 2.7"},
-      # Wide 1.x floor on purpose: this reference app just needs to prove a real
+      # Wide 2.x floor on purpose: this reference app just needs to prove a real
       # Hex consumer compiles against the published siblings. The exact baseline
-      # version is pinned by mix.lock, so these never need editing on a release.
-      {:mailglass, "~> 1.0"},
-      {:mailglass_admin, "~> 1.0"},
-      {:mailglass_inbound, "~> 1.0"}
+      # version is pinned by mix.lock. A major crosses the tilde boundary, so the
+      # 2.0 advance is a deliberate coordinated mix.exs + mix.lock edit (D-06).
+      {:mailglass, "~> 2.0"},
+      {:mailglass_admin, "~> 2.0"},
+      {:mailglass_inbound, "~> 2.0"}
     ]
   end
 
