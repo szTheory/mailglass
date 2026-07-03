@@ -14,14 +14,16 @@ defmodule MailglassInbound.Migrations.AddSuppressionFlaggedToInboundRecords do
   # Inbound tables are append-only by convention but carry no UPDATE/DELETE
   # trigger; the flag is set once at INSERT.
 
+  @prefix "mailglass"
+
   def up do
-    alter table(:mailglass_inbound_records) do
+    alter table(:mailglass_inbound_records, prefix: @prefix) do
       add(:suppression_flagged, :boolean, null: false, default: false)
     end
   end
 
   def down do
-    alter table(:mailglass_inbound_records) do
+    alter table(:mailglass_inbound_records, prefix: @prefix) do
       remove(:suppression_flagged)
     end
   end

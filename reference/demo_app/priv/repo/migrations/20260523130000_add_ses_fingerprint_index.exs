@@ -12,13 +12,16 @@ defmodule MailglassInbound.Migrations.AddSesFingerprintIndex do
   # (`20260523120000_add_mailgun_fingerprint_index`) and SendGrid
   # (`20260506220000`) fingerprint indexes. It does NOT recreate the column.
 
+  @prefix "mailglass"
+
   def up do
     create(
       unique_index(
         :mailglass_inbound_evidence,
         [:tenant_id, :provider, :raw_mime_fingerprint],
         where: "provider = 'ses' AND raw_mime_fingerprint IS NOT NULL",
-        name: :mailglass_inbound_records_ses_fingerprint_idx
+        name: :mailglass_inbound_records_ses_fingerprint_idx,
+        prefix: @prefix
       )
     )
   end
@@ -26,7 +29,8 @@ defmodule MailglassInbound.Migrations.AddSesFingerprintIndex do
   def down do
     drop_if_exists(
       index(:mailglass_inbound_evidence, [:tenant_id, :provider, :raw_mime_fingerprint],
-        name: :mailglass_inbound_records_ses_fingerprint_idx
+        name: :mailglass_inbound_records_ses_fingerprint_idx,
+        prefix: @prefix
       )
     )
   end

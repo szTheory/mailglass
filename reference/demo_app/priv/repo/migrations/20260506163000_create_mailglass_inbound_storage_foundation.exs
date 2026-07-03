@@ -2,8 +2,13 @@ defmodule MailglassInbound.Migrations.CreateStorageFoundation do
   @moduledoc false
   use Ecto.Migration
 
+  # Inbound tables live in the configured schema (v2.0 default "mailglass") so the
+  # runtime facade (prefix: MailglassInbound.Config.schema()) reads them there.
+  # references/2 inside a prefixed create table block inherits the block prefix.
+  @prefix "mailglass"
+
   def change do
-    create table(:mailglass_inbound_records, primary_key: false) do
+    create table(:mailglass_inbound_records, primary_key: false, prefix: @prefix) do
       add(:id, :uuid, primary_key: true)
       add(:tenant_id, :text, null: false)
       add(:provider, :text, null: false)
@@ -26,10 +31,10 @@ defmodule MailglassInbound.Migrations.CreateStorageFoundation do
       timestamps(type: :utc_datetime_usec)
     end
 
-    create(index(:mailglass_inbound_records, [:tenant_id]))
-    create(index(:mailglass_inbound_records, [:tenant_id, :provider]))
+    create(index(:mailglass_inbound_records, [:tenant_id], prefix: @prefix))
+    create(index(:mailglass_inbound_records, [:tenant_id, :provider], prefix: @prefix))
 
-    create table(:mailglass_inbound_evidence, primary_key: false) do
+    create table(:mailglass_inbound_evidence, primary_key: false, prefix: @prefix) do
       add(:id, :uuid, primary_key: true)
       add(:tenant_id, :text, null: false)
       add(:provider, :text, null: false)
@@ -50,10 +55,10 @@ defmodule MailglassInbound.Migrations.CreateStorageFoundation do
       timestamps(type: :utc_datetime_usec)
     end
 
-    create(unique_index(:mailglass_inbound_evidence, [:inbound_record_id]))
-    create(index(:mailglass_inbound_evidence, [:tenant_id]))
+    create(unique_index(:mailglass_inbound_evidence, [:inbound_record_id], prefix: @prefix))
+    create(index(:mailglass_inbound_evidence, [:tenant_id], prefix: @prefix))
 
-    create table(:mailglass_inbound_replay_runs, primary_key: false) do
+    create table(:mailglass_inbound_replay_runs, primary_key: false, prefix: @prefix) do
       add(:id, :uuid, primary_key: true)
       add(:tenant_id, :text, null: false)
       add(:replay_id, :text, null: false)
@@ -79,8 +84,8 @@ defmodule MailglassInbound.Migrations.CreateStorageFoundation do
       timestamps(type: :utc_datetime_usec)
     end
 
-    create(unique_index(:mailglass_inbound_replay_runs, [:tenant_id, :replay_id]))
-    create(index(:mailglass_inbound_replay_runs, [:tenant_id, :inbound_record_id]))
-    create(index(:mailglass_inbound_replay_runs, [:tenant_id, :inbound_evidence_id]))
+    create(unique_index(:mailglass_inbound_replay_runs, [:tenant_id, :replay_id], prefix: @prefix))
+    create(index(:mailglass_inbound_replay_runs, [:tenant_id, :inbound_record_id], prefix: @prefix))
+    create(index(:mailglass_inbound_replay_runs, [:tenant_id, :inbound_evidence_id], prefix: @prefix))
   end
 end

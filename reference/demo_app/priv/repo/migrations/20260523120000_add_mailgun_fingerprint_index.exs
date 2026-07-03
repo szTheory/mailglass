@@ -11,13 +11,16 @@ defmodule MailglassInbound.Migrations.AddMailgunFingerprintIndex do
   # dedupe through the generic `mailglass_inbound_records_postmark_idempotency_idx`
   # (DRIFT #2 — its columns are provider-agnostic).
 
+  @prefix "mailglass"
+
   def up do
     create(
       unique_index(
         :mailglass_inbound_evidence,
         [:tenant_id, :provider, :raw_mime_fingerprint],
         where: "provider = 'mailgun' AND raw_mime_fingerprint IS NOT NULL",
-        name: :mailglass_inbound_records_mailgun_fingerprint_idx
+        name: :mailglass_inbound_records_mailgun_fingerprint_idx,
+        prefix: @prefix
       )
     )
   end
@@ -25,7 +28,8 @@ defmodule MailglassInbound.Migrations.AddMailgunFingerprintIndex do
   def down do
     drop_if_exists(
       index(:mailglass_inbound_evidence, [:tenant_id, :provider, :raw_mime_fingerprint],
-        name: :mailglass_inbound_records_mailgun_fingerprint_idx
+        name: :mailglass_inbound_records_mailgun_fingerprint_idx,
+        prefix: @prefix
       )
     )
   end
