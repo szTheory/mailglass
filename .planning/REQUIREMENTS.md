@@ -68,7 +68,7 @@
   non-public prefix succeeds, and a regression test proves the immutability trigger raises SQLSTATE
   45A01 under the `mailglass` schema WITHOUT any `search_path` pin.
 
-- [ ] **MIGR-06**: A grep/Credo guard fails the build if any mailglass schema module declares
+- [x] **MIGR-06**: A grep/Credo guard fails the build if any mailglass schema module declares
   `@schema_prefix` (enforces the pure-runtime-prefix decision and blocks the read-vs-write precedence
   inversion).
 
@@ -155,7 +155,7 @@
 | MIGR-03 | Phase 134 | Complete |
 | MIGR-04 | Phase 134 | Complete |
 | MIGR-05 | Phase 134 | Complete |
-| MIGR-06 | Phase 134 | Pending |
+| MIGR-06 | Phase 134 | Complete |
 | INB-01 | Phase 135 | Pending |
 | INB-02 | Phase 135 | Pending |
 | INB-03 | Phase 135 | Pending |
