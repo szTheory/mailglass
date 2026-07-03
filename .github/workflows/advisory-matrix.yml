@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   core_full_suite_advisory:
-    name: Core Full Suite Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }})
+    name: Core Full Suite Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,8 +28,18 @@ jobs:
           # 1.17 was never a supported target; the matrix row existed only as advisory
           # coverage and failed on every push due to 1.18-only stdlib usage in the codebase.
           # Remove when re-adding any future advisory-only version row.
+          #
+          # D-06 / Success Criterion 7: the `schema` axis runs the full core suite
+          # under BOTH the default `public` schema and the isolated `mailglass`
+          # schema. The mailglass row exercises the Phase 134 migration entrypoint
+          # (CREATE SCHEMA + schema-qualified raw DDL) end-to-end; MAILGLASS_SCHEMA
+          # is exported to the run step below, read by config/runtime.exs.
           - elixir: "1.18"
             otp: "27"
+            schema: "public"
+          - elixir: "1.18"
+            otp: "27"
+            schema: "mailglass"
     services:
       postgres:
         image: postgres:16-alpine
@@ -86,6 +96,13 @@ jobs:
         # are covered by the dedicated Trust Lane / Demo Browser Evidence /
         # publish-hex post-publish-smoke lanes. Excluding them lets this lane be a
         # meaningful green canary instead of permanently red.
+        #
+        # MAILGLASS_SCHEMA (D-06): config/runtime.exs reads this in the :test env
+        # to override `config :mailglass, :schema`, so the whole suite runs under
+        # the matrix schema (public or mailglass). The `--exclude requires_workspace`
+        # flag is preserved unchanged.
+        env:
+          MAILGLASS_SCHEMA: ${{ matrix.schema }}
         run: mix test --warnings-as-errors --exclude requires_workspace
 
   # LD-13 floor-coincidence invariant:
@@ -95,7 +112,7 @@ jobs:
   # never let the tested version outrun the declared `~> 1.18` floor.
   # See .planning/research/milestone-cicd/SYNTHESIS.md LD-13.
   core_latest_elixir_advisory:
-    name: Core Full Suite Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }})
+    name: Core Full Suite Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})
     # Job-level if is the ONLY mechanism to exclude a matrix row from PR events —
     # GitHub Actions does not support per-matrix-row if conditions. This guarantees
     # the 1.19/OTP28 row NEVER runs on a PR, NEVER blocks a PR, and NEVER appears in
@@ -109,8 +126,15 @@ jobs:
           # Latest Elixir/OTP advisory line. If setup-beam cannot resolve "1.19" /
           # "28" on ubuntu-latest, this row fails at setup — advisory-acceptable
           # (a red advisory, never a blocked PR or publish).
+          #
+          # D-06 / Success Criterion 7: schema axis (public + mailglass), same as
+          # the 1.18 job above. MAILGLASS_SCHEMA is exported to the run step.
           - elixir: "1.19"
             otp: "28"
+            schema: "public"
+          - elixir: "1.19"
+            otp: "28"
+            schema: "mailglass"
     services:
       postgres:
         image: postgres:16-alpine
@@ -162,6 +186,11 @@ jobs:
           until pg_isready -h localhost -U postgres -d postgres; do sleep 1; done
           mix ecto.create -r Mailglass.TestRepo --quiet
       - name: Run advisory full suite
+        # MAILGLASS_SCHEMA (D-06): runs the full suite under the matrix schema
+        # (public or mailglass) via config/runtime.exs. `--exclude requires_workspace`
+        # preserved unchanged.
+        env:
+          MAILGLASS_SCHEMA: ${{ matrix.schema }}
         run: mix test --warnings-as-errors --exclude requires_workspace
 
   provider_compatibility_advisory:
