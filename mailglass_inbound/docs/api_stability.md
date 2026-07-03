@@ -361,6 +361,33 @@ Documented guarantees:
   fragments never leak
 - is package-local and does not implement the core `Mailglass.Error` behaviour
 
+### Schema config (2.0)
+
+#### `config :mailglass_inbound, :schema`
+
+Selects the single Postgres schema that holds the inbound package's tables,
+mirroring the core `config :mailglass, :schema` contract.
+
+Contract:
+
+- Value is a valid unquoted Postgres identifier, validated at boot; an invalid
+  identifier raises a config error at startup.
+- Default is `"mailglass"`. In `2.0`, inbound tables live in a dedicated
+  `mailglass` schema unless you configure otherwise.
+- `"public"` is the explicit, supported opt-out that keeps `1.x` behavior (tables
+  in `public`) as a one-line breaking-change escape hatch. See the core
+  `guides/upgrading-to-v2_0.md` upgrade guide.
+
+**Tenancy vs. schema — orthogonal axes.** `:schema` selects the *single fixed
+library schema* for every inbound table. It is orthogonal to `tenant_id`
+multi-tenant data scoping: `tenant_id` scopes *rows* and composes with whatever
+schema is configured. `:schema` is **not** a per-tenant prefix — do not conflate
+the two. mailglass_inbound does not use per-tenant schemas; adopters who want
+per-tenant data isolation use `tenant_id` scoping, while `:schema` isolates the
+inbound tables from the host's `public` namespace, a different axis entirely.
+
+Since: 2.0.0.
+
 ## Inventory Notes
 
 - Stable does not mean everything ExDoc renders.

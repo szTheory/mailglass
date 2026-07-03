@@ -512,6 +512,37 @@ Raises `%ConfigError{type: :missing}` when `:repo` is not configured. SQLSTATE 4
 
 Since: 0.1.0.
 
+## §Schema config (2.0)
+
+### `config :mailglass, :schema`
+
+Selects the single Postgres schema that holds all mailglass domain tables
+(`mailglass_events`, `mailglass_deliveries`, `mailglass_suppressions`,
+`mailglass_webhook_events`), their indexes and constraints, and the append-only
+immutability trigger and function.
+
+Contract:
+
+- Value is a valid unquoted Postgres identifier. It is validated at boot via
+  `Mailglass.Config.schema/0` + `Mailglass.Identifier`; an invalid identifier
+  raises `%ConfigError{}` at startup.
+- Default is `"mailglass"`. In `2.0`, mailglass tables live in a dedicated
+  `mailglass` schema unless you configure otherwise.
+- `"public"` is the explicit, supported opt-out — it keeps `1.x` behavior (all
+  tables in `public`) as a one-line breaking-change escape hatch. See
+  [`guides/upgrading-to-v2_0.md`](../guides/upgrading-to-v2_0.md).
+
+**Tenancy vs. schema — orthogonal axes.** `:schema` selects the *single fixed
+library schema* for every mailglass table. It is orthogonal to `tenant_id`
+multi-tenant data scoping: `tenant_id` scopes *rows* (via `Mailglass.Tenancy` and
+`WHERE tenant_id = ?`) and composes with whatever schema is configured. `:schema`
+is **not** a per-tenant prefix — do not conflate the two. mailglass does not use
+per-tenant schemas; adopters who want per-tenant data isolation use `tenant_id`
+scoping (the shipped model), while `:schema` isolates mailglass's tables from the
+host's `public` namespace, a different axis entirely.
+
+Since: 2.0.0.
+
 ## §Events.append_multi function-form (Phase 3)
 
 ### Function-form attrs (I-03)
