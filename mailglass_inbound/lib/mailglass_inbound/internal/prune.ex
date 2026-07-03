@@ -11,6 +11,20 @@ defmodule MailglassInbound.Internal.Prune do
   sweep is serialized by a session `pg_try_advisory_lock` — a concurrent second
   run returns `{:ok, :locked_out}` and deletes nothing.
 
+  ## Schema qualification
+
+  The prune sweep holds a direct reference to the raw host repo (not the
+  `MailglassInbound.Repo` facade) because it needs `checkout/1` to pin one
+  connection for the advisory lock session. The facade cannot rewrite this path,
+  so any mailglass-table SQL issued from this module MUST carry an explicit
+  `prefix: MailglassInbound.Config.schema()` inline (INB-01 / D-02 correctness
+  requirement). The single `repo.delete_all(...)` in `delete_batched/3` carries
+  this prefix. The two advisory-lock `repo.query!` calls (`pg_try_advisory_lock` /
+  `pg_advisory_unlock`) and `repo.checkout/1` are intentionally UNprefixed — they
+  are session-scoped, schema-agnostic SQL that touch no mailglass table (mirrors the
+  core `Mailglass.Repo.query!/2` SET LOCAL exemption). Any future raw mailglass-table
+  SQL added to this module's direct-repo path MUST follow the same inline-prefix rule.
+
   ## Window split — three physical tables, four windows
 
     * `mailglass_inbound_replay_runs` WHERE `source = :replay` AND age > replay_runs_days (30d)
@@ -193,7 +207,9 @@ defmodule MailglassInbound.Internal.Prune do
         |> lock("FOR UPDATE SKIP LOCKED")
 
       {count, _} =
-        repo.delete_all(from(r in schema, where: r.id in subquery(inner)))
+        repo.delete_all(from(r in schema, where: r.id in subquery(inner)),
+          prefix: MailglassInbound.Config.schema()
+        )
 
       count
     end)
