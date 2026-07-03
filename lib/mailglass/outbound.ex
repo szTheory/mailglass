@@ -386,7 +386,11 @@ defmodule Mailglass.Outbound do
 
     result =
       Ecto.Multi.new()
-      |> Ecto.Multi.insert(:delivery, Delivery.changeset(%Delivery{id: delivery_id}, attrs), Repo.multi_opts())
+      |> Ecto.Multi.insert(
+        :delivery,
+        Delivery.changeset(%Delivery{id: delivery_id}, attrs),
+        Repo.multi_opts()
+      )
       |> Events.append_multi(:event_queued, fn %{delivery: d} ->
         %{
           tenant_id: tenant_id,
@@ -422,7 +426,11 @@ defmodule Mailglass.Outbound do
 
     multi =
       Ecto.Multi.new()
-      |> Ecto.Multi.insert(:delivery, Delivery.changeset(%Delivery{id: delivery_id}, attrs), Repo.multi_opts())
+      |> Ecto.Multi.insert(
+        :delivery,
+        Delivery.changeset(%Delivery{id: delivery_id}, attrs),
+        Repo.multi_opts()
+      )
       |> Events.append_multi(:event_queued, fn %{delivery: d} ->
         %{
           tenant_id: tenant_id,

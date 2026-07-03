@@ -140,6 +140,7 @@ defmodule Mailglass.RepoTest do
       :persistent_term.erase({Mailglass.Config, :schema})
       # Set schema to "mailglass" for these tests
       Application.put_env(:mailglass, :schema, "mailglass")
+
       on_exit(fn ->
         Application.delete_env(:mailglass, :schema)
         :persistent_term.erase({Mailglass.Config, :schema})
@@ -251,14 +252,14 @@ defmodule Mailglass.RepoTest do
     end
 
     test "transact/2 does NOT inject prefix (opts pass through unchanged)" do
-      Mailglass.Repo.transact(fn -> {:ok, nil} end, [foo: :bar])
+      Mailglass.Repo.transact(fn -> {:ok, nil} end, foo: :bar)
       assert_received {:transact_opts, opts}
       refute Keyword.has_key?(opts, :prefix)
       assert opts[:foo] == :bar
     end
 
     test "multi/2 does NOT inject prefix (opts pass through unchanged to executor)" do
-      Mailglass.Repo.multi(Ecto.Multi.new(), [foo: :bar])
+      Mailglass.Repo.multi(Ecto.Multi.new(), foo: :bar)
       assert_received {:multi_opts, opts}
       refute Keyword.has_key?(opts, :prefix)
       assert opts[:foo] == :bar
@@ -275,10 +276,12 @@ defmodule Mailglass.RepoTest do
     setup do
       :persistent_term.erase({Mailglass.Config, :schema})
       Application.put_env(:mailglass, :schema, "mailglass")
+
       on_exit(fn ->
         Application.delete_env(:mailglass, :schema)
         :persistent_term.erase({Mailglass.Config, :schema})
       end)
+
       :ok
     end
 
