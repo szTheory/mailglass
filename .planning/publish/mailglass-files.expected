@@ -25,6 +25,7 @@ guides/testing.md
 guides/unsubscribe.md
 guides/upgrading-from-v0_1.md
 guides/upgrading-to-v1_0.md
+guides/upgrading-to-v2_0.md
 guides/webhook-troubleshooting.md
 guides/webhooks.md
 hex_metadata.config

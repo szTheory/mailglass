@@ -437,6 +437,7 @@ defmodule Mailglass.MixProject do
         "docs/api_stability.md",
         "guides/compatibility-and-deprecations.md",
         "guides/upgrading-to-v1_0.md",
+        "guides/upgrading-to-v2_0.md",
         "guides/getting-started.md",
         "guides/learning-path.md",
         "guides/jobs.md",
@@ -467,6 +468,7 @@ defmodule Mailglass.MixProject do
         ],
         Guides: [
           "guides/upgrading-to-v1_0.md",
+          "guides/upgrading-to-v2_0.md",
           "guides/getting-started.md",
           "guides/learning-path.md",
           "guides/jobs.md",
