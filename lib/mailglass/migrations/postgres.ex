@@ -16,6 +16,10 @@ defmodule Mailglass.Migrations.Postgres do
   @spec up(keyword()) :: :ok
   def up(opts) do
     opts = with_defaults(opts, @current_version)
+    # First action: physically create the schema (MIGR-02) so the v01..v05
+    # `create table(prefix:)` DDL has a namespace to land in. No-op for the
+    # default "public" prefix and for an explicit `create_schema: false`.
+    maybe_create_schema(opts)
     initial = migrated_version(opts)
 
     cond do
@@ -80,12 +84,38 @@ defmodule Mailglass.Migrations.Postgres do
     end
 
     case direction do
-      :up -> record_version(opts, Enum.max(range))
-      :down -> record_version(opts, Enum.min(range) - 1)
+      :up ->
+        record_version(opts, Enum.max(range))
+
+      :down ->
+        target = Enum.min(range) - 1
+        record_version(opts, target)
+        # Drop the schema only on a full teardown to version 0 — after every
+        # v01 table is gone (MIGR-02). Partial down-migrations that don't reach
+        # 0 leave the schema in place. RESTRICT (never CASCADE) so a non-empty
+        # schema fails loudly instead of silently nuking adopter objects.
+        if target == 0, do: maybe_drop_schema(opts)
     end
 
     :ok
   end
+
+  defp maybe_create_schema(%{prefix: prefix, create_schema: true}) do
+    # Re-validate before interpolation as the single unquoted-identifier
+    # chokepoint (WR-01 lineage / decision 132-01), even though the value is
+    # operator config, not request input. `inspect/1` double-quotes it.
+    validate_identifier!(prefix, :prefix)
+    execute(~s(CREATE SCHEMA IF NOT EXISTS #{inspect(prefix)}))
+  end
+
+  defp maybe_create_schema(_), do: :ok
+
+  defp maybe_drop_schema(%{prefix: prefix, create_schema: true}) do
+    validate_identifier!(prefix, :prefix)
+    execute(~s(DROP SCHEMA IF EXISTS #{inspect(prefix)} RESTRICT))
+  end
+
+  defp maybe_drop_schema(_), do: :ok
 
   defp record_version(_opts, 0), do: :ok
 
