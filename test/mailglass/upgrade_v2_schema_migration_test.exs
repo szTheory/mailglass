@@ -45,8 +45,10 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
     end
 
     def down do
+      # Only reverse the MOVE (mailglass.* → public). The public 1.x seed is left
+      # in place so the test can assert the four tables are back in public; final
+      # teardown of the public objects happens in the test's on_exit.
       @emitted_mod.down()
-      Mailglass.Migration.down(prefix: "public", repo: Mailglass.TestRepo)
     end
   end
 
@@ -230,20 +232,25 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
   defp sqlstate(%{code: code}) when is_binary(code), do: code
   defp sqlstate(%{code: code}) when is_atom(code), do: Atom.to_string(code)
 
+  # Restore the suite baseline schema this test's teardown tore down. On the
+  # default suite the baseline mailglass tables live in `public` (booted by
+  # test_helper); under the CI schema-isolation axis they live in `mailglass`.
+  # Either way our setup/teardown dropped them (the move relocated them into
+  # `mailglass`, then on_exit dropped that schema CASCADE + cleaned public), so we
+  # MUST re-migrate the baseline before the next test file boots — otherwise the
+  # shared DB is poisoned (the citext probe hits an absent mailglass_suppressions
+  # and exhausts). The boot-migration version rows still say "applied", so clear
+  # them first to force the migrator to re-create the tables.
   defp restore_suite_baseline_schema do
-    if System.get_env("MAILGLASS_SCHEMA") in [nil, "", "public"] do
-      :ok
-    else
-      {:ok, _} = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
+    {:ok, _} = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
 
-      migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
+    migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
 
-      {:ok, _, _} =
-        Ecto.Migrator.with_repo(TestRepo, fn repo ->
-          Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
-        end)
+    {:ok, _, _} =
+      Ecto.Migrator.with_repo(TestRepo, fn repo ->
+        Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+      end)
 
-      :ok
-    end
+    :ok
   end
 end
