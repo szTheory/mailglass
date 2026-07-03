@@ -19,7 +19,7 @@ defmodule MailglassInbound.Migration do
   Postgres-only at v2.0 per PROJECT.md (MySQL/SQLite out of scope).
   Inbound maintains its own independent version anchor — separate from core's
   `mailglass_events` anchor — so both packages can evolve independently even in
-  a shared schema (D-07).
+  a shared schema.
   """
 
   @doc "Runs all pending inbound migrations up to the latest version."
@@ -52,7 +52,7 @@ defmodule MailglassInbound.Migration do
   unlike `up/1` / `down/1`, it does not rely on the migration runner
   process (it issues a single pg_class query against the configured Repo
   and returns an integer). Anchored on `mailglass_inbound_records`, not
-  `mailglass_events` (D-07: independent version lines).
+  `mailglass_events` — the two packages maintain independent version lines.
   """
   @doc since: "2.0.0"
   @spec migrated_version(keyword()) :: non_neg_integer()

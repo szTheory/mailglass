@@ -8,7 +8,7 @@ defmodule MailglassInbound.Migrations.Postgres.V01 do
     # Gate every raw interpolation below through the single unquoted-identifier
     # chokepoint (T-135-03). `inspect/1` double-quotes an already-validated
     # identifier. Inbound has no trigger/function/CHECK DDL that requires raw
-    # #{prefix}. interpolation (D-10) — only CREATE SCHEMA (runner-owned) and
+    # #{prefix}. interpolation — only CREATE SCHEMA (runner-owned) and
     # this record_version COMMENT (runner-owned) use raw interpolation; V01 itself
     # uses only the Ecto DSL with `prefix:` keyword threading.
     Mailglass.Identifier.validate!(prefix, :prefix)
@@ -38,7 +38,7 @@ defmodule MailglassInbound.Migrations.Postgres.V01 do
       add(:text_body, :text)
       add(:html_body, :text)
       add(:attachments, {:array, :map}, null: false, default: [])
-      # migration 7: suppression flag — inline at final state (D-08)
+      # migration 7: suppression flag — inline at final state
       add(:suppression_flagged, :boolean, null: false, default: false)
 
       timestamps(type: :utc_datetime_usec)
@@ -70,7 +70,7 @@ defmodule MailglassInbound.Migrations.Postgres.V01 do
       add(:tenant_id, :text, null: false)
       add(:provider, :text, null: false)
 
-      # FK to mailglass_inbound_records — no :prefix on references() (D-09):
+      # FK to mailglass_inbound_records — no :prefix on references():
       # the FK inherits the enclosing create table block prefix automatically.
       add(
         :inbound_record_id,
@@ -85,8 +85,8 @@ defmodule MailglassInbound.Migrations.Postgres.V01 do
       add(:parse_warnings, :map, null: false, default: %{})
       add(:attachment_blobs, :map, null: false, default: %{})
       # migration 4: raw_mime_fingerprint STORED generated column, inline at final
-      # state (D-08). The expression references only same-row columns, so no raw
-      # #{prefix}. DDL is needed here (D-10).
+      # state. The expression references only same-row columns, so no raw
+      # #{prefix}. DDL is needed here.
       add(:raw_mime_fingerprint, :text,
         generated: "ALWAYS AS (CASE WHEN raw_mime IS NULL THEN NULL ELSE md5(raw_mime) END) STORED"
       )
@@ -134,7 +134,7 @@ defmodule MailglassInbound.Migrations.Postgres.V01 do
     # Final state after 7 historical migrations:
     #   - base columns (migration 1) — replay_id and mailbox are NULLABLE (migration 3)
     #   - source :text NOT NULL DEFAULT 'replay' (migration 3, inline here)
-    # D-08: skip migration 3's UPDATE backfill and DROP NOT NULL execute() entirely —
+    # Skip migration 3's UPDATE backfill and DROP NOT NULL execute() entirely —
     # these are forward-only reconciliations meaningless against an empty table.
     # -------------------------------------------------------------------------
     create table(:mailglass_inbound_replay_runs, primary_key: false, prefix: prefix) do
@@ -143,7 +143,7 @@ defmodule MailglassInbound.Migrations.Postgres.V01 do
       # migration 3: replay_id and mailbox are NULLABLE at final state
       add(:replay_id, :text)
       add(:mailbox, :text)
-      # migration 3: source NOT NULL DEFAULT 'replay' declared inline (D-08)
+      # migration 3: source NOT NULL DEFAULT 'replay' declared inline
       add(:source, :text, null: false, default: "replay")
       add(:outcome, :text)
       add(:outcome_reason, :text)
@@ -151,7 +151,7 @@ defmodule MailglassInbound.Migrations.Postgres.V01 do
       add(:executed_at, :utc_datetime_usec, null: false)
       add(:metadata, :map, null: false, default: %{})
 
-      # FKs — no :prefix on references() (D-09): inherits block prefix
+      # FKs — no :prefix on references(): inherits block prefix
       add(
         :inbound_record_id,
         references(:mailglass_inbound_records, type: :uuid, on_delete: :nothing),

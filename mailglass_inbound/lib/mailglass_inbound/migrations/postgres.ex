@@ -59,7 +59,7 @@ defmodule MailglassInbound.Migrations.Postgres do
     # interpolation. The prefix is also validated against an identifier
     # regex above as a belt-and-suspenders guard. Inbound anchors on
     # `mailglass_inbound_records` — independent of core's `mailglass_events`
-    # anchor (D-07).
+    # anchor.
     query = """
     SELECT pg_catalog.obj_description(pg_class.oid, 'pg_class')
     FROM pg_class
@@ -123,7 +123,7 @@ defmodule MailglassInbound.Migrations.Postgres do
   defp record_version(%{prefix: prefix}, version) do
     # `prefix` is validated by `with_defaults/2` before reaching here.
     # Inbound version anchor: pg_class comment on `mailglass_inbound_records`
-    # (D-07 — independent from core's `mailglass_events` anchor).
+    # (independent from core's `mailglass_events` anchor).
     validate_identifier!(prefix, :prefix)
     execute("COMMENT ON TABLE #{inspect(prefix)}.mailglass_inbound_records IS '#{version}'")
   end

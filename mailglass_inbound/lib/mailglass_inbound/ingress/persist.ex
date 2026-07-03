@@ -11,7 +11,7 @@ defmodule MailglassInbound.Ingress.Persist do
 
   # Returns the schema-prefix option that must be passed to all direct repo
   # calls (insert, one, all) so they route to the configured Postgres schema
-  # (INB-01 / D-12). This mirrors what `MailglassInbound.Repo.put_prefix/1`
+  # This mirrors what `MailglassInbound.Repo.put_prefix/1`
   # does for facade calls — callers that pass an explicit `:prefix` override
   # this via Ecto's `Keyword.put_new` / option-merge semantics (caller wins).
   defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]

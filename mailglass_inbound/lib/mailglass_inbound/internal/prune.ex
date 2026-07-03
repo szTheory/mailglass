@@ -17,8 +17,8 @@ defmodule MailglassInbound.Internal.Prune do
   `MailglassInbound.Repo` facade) because it needs `checkout/1` to pin one
   connection for the advisory lock session. The facade cannot rewrite this path,
   so any mailglass-table SQL issued from this module MUST carry an explicit
-  `prefix: MailglassInbound.Config.schema()` inline (INB-01 / D-02 correctness
-  requirement). The single `repo.delete_all(...)` in `delete_batched/3` carries
+  `prefix: MailglassInbound.Config.schema()` inline for correctness.
+  The single `repo.delete_all(...)` in `delete_batched/3` carries
   this prefix. The two advisory-lock `repo.query!` calls (`pg_try_advisory_lock` /
   `pg_advisory_unlock`) and `repo.checkout/1` are intentionally UNprefixed — they
   are session-scoped, schema-agnostic SQL that touch no mailglass table (mirrors the

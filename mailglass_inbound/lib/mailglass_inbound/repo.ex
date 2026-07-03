@@ -14,7 +14,7 @@ defmodule MailglassInbound.Repo do
 
   `transact/2` and `multi/2` do NOT inject prefix. The inner `insert/2`, `one/2`,
   `all/2`, and `get/3` calls inside a transaction carry their own prefix via the
-  facade. Inbound has no Multi builders today (D-03 defers `multi_opts/1`); a future
+  facade. Inbound has no Multi builders today (`multi_opts/1` is deferred); a future
   raw caller that passes an inbound table to a non-facade path must qualify inline.
   """
 
