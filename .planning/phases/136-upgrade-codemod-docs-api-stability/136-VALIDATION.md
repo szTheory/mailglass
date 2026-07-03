@@ -1,8 +1,8 @@
 ---
 phase: 136
 slug: upgrade-codemod-docs-api-stability
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-07-03
 ---
@@ -37,13 +37,17 @@ created: 2026-07-03
 
 ## Per-Task Verification Map
 
+> Task IDs match the shipped 2-plan structure: **136-01** (codemod + emitter/execution proofs, wave 1, UPG-01/04) and **136-02** (docs + api_stability + wiring, wave 1, UPG-02/03). Both `depends_on: []`, zero `files_modified` overlap. Wave 0 test scaffolds are Task 1 of each plan.
+
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 136-01-01 | 01 | 1 | UPG-01 | — | Task emits a compilable, idempotent move migration: all four `ALTER … SET SCHEMA`, byte-parity trigger/function (`SET search_path=''` / `45A01`), `SET LOCAL lock_timeout`, working `down/0` | unit | `mix test test/mailglass/upgrade_v2_schema_generation_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| 136-02-01 | 02 | 2 | UPG-01/04 | — | Generated migration over a 1.x `public` seed moves all four tables to `mailglass.*`; 45A01 fires under moved schema with NO `search_path` pin; version-comment + citext survive; `down` reverses to `public` | integration (DDL, `async: false`) | `mix test test/mailglass/upgrade_v2_schema_migration_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| 136-03-01 | 03 | 1 | UPG-02 | — | `guides/upgrading-to-v2_0.md` contains Route A, Route B, `create_schema:false` grants SQL, `public.mailglass_*` grep checklist, `lock_timeout`/retry posture | doc-token | `mix test test/mailglass/upgrade_v2_docs_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| 136-03-02 | 03 | 1 | UPG-03 | — | Both api_stability docs (core + inbound) document `:schema` as a stable 2.0 surface + tenancy-vs-schema orthogonality prose | doc-token | `mix test test/mailglass/upgrade_v2_docs_test.exs --seed 0` | ❌ W0 | ⬜ pending |
-| 136-03-03 | 03 | 1 | UPG-02 (release gate) | — | `guides/upgrading-to-v2_0.md` present in `.planning/publish/mailglass-files.expected` (sorted) + wired into `mix.exs` extras/groups_for_extras | allowlist/doc | `mix test test/mailglass/upgrade_v2_docs_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| 136-01-01 | 01 | 1 | UPG-01 | T-136-01/03/04 | Wave 0: emitter unit test + `async:false` migration-execution test scaffolds fail-first | unit + integration scaffold | `mix test test/mailglass/upgrade_v2_schema_generation_test.exs test/mailglass/upgrade_v2_schema_migration_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| 136-01-02 | 01 | 1 | UPG-01, UPG-04 | T-136-01/02/04 | Task emits a compilable, idempotent move migration (four `ALTER … SET SCHEMA`, byte-parity trigger/function `SET search_path=''`/`45A01`, `SET LOCAL lock_timeout`, FULL `down/0`, no `@disable_ddl_transaction`, no citext); applied over a 1.x `public` seed it moves all four tables to `mailglass.*`, 45A01 fires under the moved schema with NO `search_path` pin, dynamic version-comment + citext survive, `down` reverses to `public` | unit + integration (DDL, `async: false`) | `mix test test/mailglass/upgrade_v2_schema_generation_test.exs test/mailglass/upgrade_v2_schema_migration_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| 136-01-03 | 01 | 1 | UPG-04 | T-136-05 | Emitter produces a valid migration for `reference/host_app`'s app module WITHOUT bumping host_app pins/locks (`git status reference/host_app` clean) | integration | `mix test test/mailglass/upgrade_v2_schema_migration_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| 136-02-01 | 02 | 1 | UPG-02, UPG-03 | — | Wave 0: docs-token + allowlist-presence test scaffold fails-first | doc-token scaffold | `mix test test/mailglass/upgrade_v2_docs_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| 136-02-02 | 02 | 1 | UPG-02 | — | `guides/upgrading-to-v2_0.md` documents Route A, Route B, `create_schema:false` grants SQL, `public.mailglass_*` grep checklist, `lock_timeout`/`55P03`-retry posture | doc-token | `mix test test/mailglass/upgrade_v2_docs_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| 136-02-03 | 02 | 1 | UPG-03 | — | Both api_stability docs (core + inbound) document `:schema` as a stable 2.0 surface + tenancy-vs-schema orthogonality prose | doc-token | `mix test test/mailglass/upgrade_v2_docs_test.exs --seed 0` | ❌ W0 | ⬜ pending |
+| 136-02-04 | 02 | 1 | UPG-02 (release gate) | — | `guides/upgrading-to-v2_0.md` present in `.planning/publish/mailglass-files.expected` (sorted) + wired into `mix.exs` extras/groups_for_extras | allowlist/doc | `mix test test/mailglass/upgrade_v2_docs_test.exs --seed 0` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -70,11 +74,11 @@ created: 2026-07-03
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 40s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 40s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-07-03 (plan-checker PASS; task map aligned to the shipped 2-plan structure)
