@@ -5,8 +5,16 @@ defmodule Mailglass.Migrations.Postgres.V01 do
   def up(opts \\ []) do
     prefix = opts[:prefix]
 
+    # Gate every raw #{q}. interpolation below through the single
+    # unquoted-identifier chokepoint (decision 132-01 / T-134-01). `inspect/1`
+    # double-quotes an already-validated identifier.
+    Mailglass.Identifier.validate!(prefix, :prefix)
+    q = inspect(prefix)
+
     # citext extension FIRST — Pitfall 8: ordering matters; mailglass_suppressions.address
     # declares :citext below and Postgres resolves the type at CREATE TABLE time.
+    # LEFT UNqualified on purpose (MIGR-05): citext installs into public so
+    # case-insensitive resolution works with no search_path pin.
     execute("CREATE EXTENSION IF NOT EXISTS citext")
 
     # Table 1: mailglass_deliveries — mutable projection of latest event state per recipient/send.
@@ -121,27 +129,33 @@ defmodule Mailglass.Migrations.Postgres.V01 do
     # Pattern from accrue: plpgsql RAISE SQLSTATE '45A01' with a fixed
     # MESSAGE. Mailglass.Repo.transact/1 rescues %Postgrex.Error{pg_code: "45A01"}
     # and reraises Mailglass.EventLedgerImmutableError.
+    # Schema-qualify the function (MIGR-03) so two installs in different schemas
+    # of one DB never collide on the global function name. `SET search_path = ''`
+    # is defense-in-depth (T-134-02 / CVE-2018-1058): the body references nothing
+    # unqualified, so the empty path immunizes it against a caller's ambient path.
     execute(
       """
-      CREATE OR REPLACE FUNCTION mailglass_raise_immutability()
+      CREATE OR REPLACE FUNCTION #{q}.mailglass_raise_immutability()
       RETURNS trigger
-      LANGUAGE plpgsql AS $$
+      LANGUAGE plpgsql
+      SET search_path = ''
+      AS $$
       BEGIN
         RAISE SQLSTATE '45A01'
           USING MESSAGE = 'mailglass_events is append-only; UPDATE and DELETE are forbidden';
       END;
       $$;
       """,
-      "DROP FUNCTION IF EXISTS mailglass_raise_immutability()"
+      "DROP FUNCTION IF EXISTS #{q}.mailglass_raise_immutability()"
     )
 
     execute(
       """
       CREATE TRIGGER mailglass_events_immutable_trigger
-        BEFORE UPDATE OR DELETE ON mailglass_events
-        FOR EACH ROW EXECUTE FUNCTION mailglass_raise_immutability();
+        BEFORE UPDATE OR DELETE ON #{q}.mailglass_events
+        FOR EACH ROW EXECUTE FUNCTION #{q}.mailglass_raise_immutability();
       """,
-      "DROP TRIGGER IF EXISTS mailglass_events_immutable_trigger ON mailglass_events"
+      "DROP TRIGGER IF EXISTS mailglass_events_immutable_trigger ON #{q}.mailglass_events"
     )
 
     # Table 3: mailglass_suppressions — address- / domain- / stream-scoped blocks.
@@ -165,14 +179,14 @@ defmodule Mailglass.Migrations.Postgres.V01 do
     # scope in (:address, :domain) with stream IS NULL.
     execute(
       """
-      ALTER TABLE mailglass_suppressions
+      ALTER TABLE #{q}.mailglass_suppressions
         ADD CONSTRAINT mailglass_suppressions_stream_scope_check
         CHECK (
           (scope = 'address_stream' AND stream IS NOT NULL) OR
           (scope IN ('address', 'domain') AND stream IS NULL)
         )
       """,
-      "ALTER TABLE mailglass_suppressions DROP CONSTRAINT IF EXISTS mailglass_suppressions_stream_scope_check"
+      "ALTER TABLE #{q}.mailglass_suppressions DROP CONSTRAINT IF EXISTS mailglass_suppressions_stream_scope_check"
     )
 
     # UNIQUE with COALESCE(stream, '') normalizes NULL-vs-'' so
@@ -202,16 +216,26 @@ defmodule Mailglass.Migrations.Postgres.V01 do
     )
   end
 
-  def down(_opts \\ []) do
+  def down(opts \\ []) do
+    prefix = opts[:prefix]
+
+    # Same identifier chokepoint as up/1 — Ecto does NOT prefix raw execute()
+    # SQL, so the trigger/function drops must be hand-qualified with #{q}.
+    Mailglass.Identifier.validate!(prefix, :prefix)
+    q = inspect(prefix)
+
     # Reverse order: suppressions → trigger → function → events → deliveries → extension.
-    drop(table(:mailglass_suppressions))
+    drop(table(:mailglass_suppressions, prefix: prefix))
 
-    execute("DROP TRIGGER IF EXISTS mailglass_events_immutable_trigger ON mailglass_events")
-    execute("DROP FUNCTION IF EXISTS mailglass_raise_immutability()")
+    execute("DROP TRIGGER IF EXISTS mailglass_events_immutable_trigger ON #{q}.mailglass_events")
+    execute("DROP FUNCTION IF EXISTS #{q}.mailglass_raise_immutability()")
 
-    drop(table(:mailglass_events))
-    drop(table(:mailglass_deliveries))
+    drop(table(:mailglass_events, prefix: prefix))
+    drop(table(:mailglass_deliveries, prefix: prefix))
 
+    # citext stays UNqualified (installed into public). Dropping it on down is a
+    # best-effort teardown; redesigning the drop-on-down opt-in is out of scope
+    # for this milestone (dossier §3.6).
     execute("DROP EXTENSION IF EXISTS citext")
   end
 end
