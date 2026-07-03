@@ -74,7 +74,7 @@
 
 ### INB — Inbound package (Phase D)
 
-- [ ] **INB-01**: `MailglassInbound.Repo` threads `put_prefix/1` through its delegated reads/writes and
+- [x] **INB-01**: `MailglassInbound.Repo` threads `put_prefix/1` through its delegated reads/writes and
   `multi_opts/1` through its Multi builders, resolving inbound tables to the configured schema.
   _(D-03, Phase 135 planning): the `multi_opts/1` clause is satisfied **vacuously / deferred** — inbound
   has zero `Ecto.Multi` builders today, so no `multi_opts/1` is added this phase; it lands with the first
@@ -160,7 +160,7 @@
 | MIGR-04 | Phase 134 | Complete |
 | MIGR-05 | Phase 134 | Complete |
 | MIGR-06 | Phase 134 | Complete |
-| INB-01 | Phase 135 | Pending |
+| INB-01 | Phase 135 | Complete |
 | INB-02 | Phase 135 | Pending |
 | INB-03 | Phase 135 | Pending |
 | UPG-01 | Phase 136 | Pending |
