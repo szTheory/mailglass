@@ -139,12 +139,12 @@ defmodule MailglassAdmin.MixProject do
   # packages evolve together; publishing to Hex uses a pessimistic `~>` constraint
   # (v1.15 Phase 125, LD-2). Admin is in the linked-versions group
   # [mailglass, mailglass_admin] — the Release Please plugin release-time-locks
-  # admin's minor to core, so `~> 1.10` is safe: admin never resolves against a
+  # admin's minor to core, so `~> 2.0` is safe: admin never resolves against a
   # core minor it was not shipped with. A new core minor requires a linked admin
   # release, which updates this line.
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "~> 1.10"}
+      {:mailglass, "~> 2.0"}
     else
       {:mailglass, path: "..", override: true}
     end

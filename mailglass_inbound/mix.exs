@@ -125,22 +125,21 @@ defmodule MailglassInbound.MixProject do
     ]
   end
 
-  # Published builds constrain to the core 1.10 release line with a floor at
-  # 1.10.2 (the shipped-migration divergence fix — deliveries idempotency DDL
-  # via V05, #100). The floor excludes the broken 1.10.0/1.10.1 core versions
-  # without forcing a paired inbound release on every core patch. This mirrors
-  # Ash's `~> 3.5 and >= 3.5.13` precedent (LD-2, v1.15 Phase 125).
+  # Published builds constrain to the core 2.0 release line. The v1.15 loosened-`~>`
+  # keystone stays: this is a pessimistic `~> 2.0` pin, NOT an `== X.Y.Z` re-pin.
+  # The old `and >= 1.10.2` floor only ever excluded the broken 1.10.0/1.10.1 core
+  # builds; there is no analog on the fresh 2.0 line, so it is dropped (D-05).
   #
-  # A new core MINOR (1.11.0) is where internal contracts (Mailglass.Outbound.*,
+  # A new core MINOR (2.1.0) is where internal contracts (Mailglass.Outbound.*,
   # events table, Error hierarchy) may shift. Inbound adopters can upgrade patch
   # releases freely; each minor line requires a deliberate `fix(inbound):`
-  # floor-bump asserting "verified against core 1.11." Do NOT speculatively widen
-  # to `~> 1.10 or ~> 1.11` — the minor boundary is a meaningful contract gate.
+  # floor-bump asserting "verified against core 2.1." Do NOT speculatively widen
+  # to `~> 2.0 or ~> 2.1` — the minor boundary is a meaningful contract gate.
   #
   # Dev/test resolves the sibling via the local path dep (else-branch, untouched).
   defp mailglass_dep do
     if System.get_env("MIX_PUBLISH") == "true" do
-      {:mailglass, "~> 1.10 and >= 1.10.2"}
+      {:mailglass, "~> 2.0"}
     else
       {:mailglass, path: "..", override: true}
     end
