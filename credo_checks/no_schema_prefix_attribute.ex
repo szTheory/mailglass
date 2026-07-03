@@ -16,7 +16,7 @@ defmodule Mailglass.Credo.NoSchemaPrefixAttribute do
       single baked-in schema and inverts the read-vs-write prefix precedence
       that the runtime facade guarantees (decision 6): reads would resolve
       against the attribute value while writes/migrations resolve against
-      `Config.schema/0`. Delete the attribute and let the facade inject the
+      `Mailglass.Config.schema/0`. Delete the attribute and let the facade inject the
       prefix.
       """,
       params: [
@@ -58,7 +58,7 @@ defmodule Mailglass.Credo.NoSchemaPrefixAttribute do
         issue_meta,
         message:
           "`@#{attr_name}` is forbidden: mailglass injects the schema prefix at " <>
-            "runtime via `Config.schema/0`; a compile-time attribute inverts " <>
+            "runtime via `Mailglass.Config.schema/0`; a compile-time attribute inverts " <>
             "read-vs-write prefix precedence (decision 6). Delete it.",
         trigger: "@#{attr_name}",
         line_no: meta[:line],
