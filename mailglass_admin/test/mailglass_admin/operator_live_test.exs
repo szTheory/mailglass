@@ -1973,6 +1973,28 @@ defmodule MailglassAdmin.OperatorLive.Facade03SchemaIsolationTest do
     end
   end
 
+  # Inbound wrapper migration — the operator LiveView reads inbound tables
+  # (list_tenants → mailglass_inbound_records) on every mount, so the isolated
+  # "mailglass" schema must carry the inbound tables too, not just core. Inbound
+  # composes via a NESTED migrator (MailglassInbound.Migration.up drives its own
+  # Migrations.Postgres), so a naive direct DDL call does not work outside an
+  # active Ecto.Migration.Runner — it must be driven by its own
+  # Ecto.Migrator.up with a distinct version slot. This mirrors the canonical
+  # pattern in mailglass_inbound/test/test_helper.exs.
+  defmodule Facade03InboundWrapperMigration do
+    use Ecto.Migration
+
+    @prefix "mailglass"
+
+    def up do
+      MailglassInbound.Migration.up(prefix: @prefix, repo: MailglassAdmin.TestRepo)
+    end
+
+    def down do
+      MailglassInbound.Migration.down(prefix: @prefix, repo: MailglassAdmin.TestRepo)
+    end
+  end
+
   # Stands up the mailglass schema ONCE before any test in this module.
   # Must run in Sandbox :auto mode so the DDL commits outside any
   # transactional wrapper. Restores :manual after migration so the per-test
@@ -1982,21 +2004,33 @@ defmodule MailglassAdmin.OperatorLive.Facade03SchemaIsolationTest do
     MailglassAdmin.TestSupport.AdminBootstrap.setup_all()
 
     # Override :schema so the facade injects prefix: "mailglass" for reads
-    # in this module's tests (temporarily; restored in on_exit).
+    # in this module's tests (temporarily; restored in on_exit). Both the core
+    # and inbound facades read their own schema key — the operator LiveView
+    # touches both (deliveries + inbound records), so both must flip.
     original_schema = Application.get_env(:mailglass, :schema)
+    original_inbound_schema = Application.get_env(:mailglass_inbound, :schema)
     Application.put_env(:mailglass, :schema, @schema_prefix)
+    Application.put_env(:mailglass_inbound, :schema, @schema_prefix)
     :persistent_term.erase({Mailglass.Config, :schema})
+    :persistent_term.erase({MailglassInbound.Config, :schema})
 
     # DDL phase — flip to :auto so CREATE SCHEMA + migration can commit.
     Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
     {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@schema_prefix} CASCADE")
     {:ok, _} = TestRepo.query("CREATE SCHEMA #{@schema_prefix}")
 
-    version = System.unique_integer([:positive, :monotonic]) + 91_000_000_000_000
+    # Version slots above the public-schema install slot (99_000_000_000_001 in
+    # test_helper.exs) so Ecto's monotonic-order warning does not fire.
+    version = System.unique_integer([:positive, :monotonic]) + 99_000_000_100_000
+    inbound_version = System.unique_integer([:positive, :monotonic]) + 99_000_000_100_000
 
     {:ok, _, _} =
       Ecto.Migrator.with_repo(TestRepo, fn repo ->
         Ecto.Migrator.up(repo, version, Facade03WrapperMigration, log: false)
+        # Inbound tables into the SAME isolated schema (its own version slot; the
+        # inbound migrator composes a nested runner, so it needs a fresh
+        # Ecto.Migrator.up rather than a call inside the core wrapper body).
+        Ecto.Migrator.up(repo, inbound_version, Facade03InboundWrapperMigration, log: false)
       end)
 
     # Restore :manual so the per-test setup (start_owner! shared: true) works.
@@ -2009,7 +2043,9 @@ defmodule MailglassAdmin.OperatorLive.Facade03SchemaIsolationTest do
       {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@schema_prefix} CASCADE")
 
       {:ok, _} =
-        TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
+        TestRepo.query("DELETE FROM schema_migrations WHERE version = ANY($1)", [
+          [version, inbound_version]
+        ])
 
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
 
@@ -2019,7 +2055,14 @@ defmodule MailglassAdmin.OperatorLive.Facade03SchemaIsolationTest do
         Application.delete_env(:mailglass, :schema)
       end
 
+      if original_inbound_schema do
+        Application.put_env(:mailglass_inbound, :schema, original_inbound_schema)
+      else
+        Application.delete_env(:mailglass_inbound, :schema)
+      end
+
       :persistent_term.erase({Mailglass.Config, :schema})
+      :persistent_term.erase({MailglassInbound.Config, :schema})
     end)
 
     :ok

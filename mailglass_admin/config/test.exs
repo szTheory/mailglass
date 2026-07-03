@@ -37,6 +37,15 @@ config :mailglass, :schema, "public"
 # against this same DB in test/test_helper.exs so InboundLive fixtures insert.
 config :mailglass_inbound, :repo, MailglassAdmin.TestRepo
 
+# Pin the INBOUND schema to "public" too. MailglassInbound.Config.schema/0
+# defaults to "mailglass" (not "public"), so without this pin the operator
+# LiveView's inbound reads (list_tenants → mailglass_inbound_records) inject
+# prefix: "mailglass" and fail with 42P01 because test_helper.exs migrates the
+# inbound tables into "public". This mirrors the :mailglass schema pin above —
+# the whole admin suite runs against the public-migrated tables; only the
+# dedicated FACADE-03 module flips both schemas to "mailglass" in-process.
+config :mailglass_inbound, :schema, "public"
+
 # Synthetic adopter endpoint for router + LiveView test coverage.
 # See test/support/endpoint_case.ex. The `secret_key_base` literal is
 # 72 chars (>= Phoenix's 64-byte minimum).
