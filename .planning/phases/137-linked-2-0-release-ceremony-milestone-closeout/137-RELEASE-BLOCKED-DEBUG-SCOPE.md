@@ -91,6 +91,21 @@ bugs remain among the ~428 original failures. Confirmed example:
   DB-pool flake — passes in isolation). CI advisory-lane logs on the latest RP-PR head are the
   authoritative full-suite signal (cleaner than local DB state).
 
+### 3b. ⚠️ Scrutinize the RC3/RC4/RC5 `search_path` harness mechanism vs. locked decision (3) + MIGR-05
+My harness fixes set `search_path='<schema>, public'` (RC3 core) / `search_path=<schema>` (RC4
+inbound, pre-existing) on the TEST connection to make the suite run under the isolated schema.
+This is a test-harness convenience (the inbound harness already did it for raw-SQL fixtures), and
+it does NOT change whether the schema-qualified immutability trigger fires (triggers attach to the
+table) — so **MIGR-05 (45A01 under non-public schema) should still be a valid proof**. BUT locked
+decision (3) is "explicit per-query/per-DDL qualification, NEVER SET search_path", and MIGR-05 is
+framed as "no search_path pin". A connection-level search_path can **mask a library query that
+forgot its explicit `prefix:`** — resolving it via search_path so the test passes when it should
+fail. The debug effort MUST decide whether the mailglass-axis suite should run WITHOUT a query-path
+search_path (relying solely on the facade's `prefix:` injection, so missing-qualification bugs
+surface) and confine search_path strictly to the raw-SQL fixture/TRUNCATE setup — otherwise the
+schema-isolation validation is weaker than the milestone intends. Re-audit RC3/RC4/RC5 through this
+lens; my fixes prioritized "make the suite run", not "maximize qualification rigor".
+
 ### 4. Re-verify + resume
 After RC5/RC7/residuals are green locally, push, let RP regenerate #119, confirm CI **fully
 green** on the PR head, then resume Plan 02 Task 2 onward (re-arm/admin-merge → publish → verify)
