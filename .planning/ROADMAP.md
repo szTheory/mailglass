@@ -282,7 +282,10 @@ be complete and green before the real release ceremony)
   3. The milestone audit runs `status: passed` and the milestone is archived
      (`milestones/v2.0-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; MILESTONES/PROJECT/ROADMAP/STATE
      evolved; tagged `v2.0`).
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 137-01-PLAN.md — Pre-release sibling mix.exs pin edits (~> 2.0, drop inbound floor) + coordinated reference-baseline advance adopting the mailglass default schema (REL-01)
+- [ ] 137-02-PLAN.md — Release-As 2.0.0 trigger + RP dry-run rehearsal + merge/publish + three-package hex.info/consumer/post-publish smoke verification (REL-01, REL-02)
+- [ ] 137-03-PLAN.md — Milestone audit → archive → manual MILESTONES/STATE correction + CLAUDE.md/MEMORY refresh + v2.0 tag (REL-03)
 **UI hint**: no
 
 ## Progress
