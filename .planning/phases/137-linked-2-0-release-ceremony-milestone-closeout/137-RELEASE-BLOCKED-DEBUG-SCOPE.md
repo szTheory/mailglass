@@ -14,6 +14,12 @@ release is **paused and this scope is being handled as a formal debug/gap-closur
 DISARMED** (`gh pr merge 119 --disable-auto` was run). It cannot publish on its own. Do NOT
 re-arm auto-merge or merge #119 until CI is green.
 
+> ⚠️ **AUTO-MERGE RE-ARMS ON EVERY PUSH TO MAIN.** release-please's "Arm auto-merge" step runs
+> each time it regenerates the PR (i.e. after any push to main, including debug-fix commits). So
+> during this pause, **after every push run `gh pr merge 119 --disable-auto` again** and verify
+> `autoMergeRequest == null`. (Observed 2026-07-03: the fix-commit pushes silently re-armed it;
+> re-disarmed. It stayed safe only because CI Green was red — do not rely on that.)
+
 ## Release mechanics (how to resume once green)
 
 - Publish gate = `CI Green` (branch-protection context), which requires exactly 5 leaves:
