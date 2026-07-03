@@ -106,6 +106,18 @@ Application.put_env(
 
 {:ok, _, _} =
   Ecto.Migrator.with_repo(MailglassInbound.TestRepo, fn repo ->
+    # Ecto's migrator creates its `schema_migrations` bookkeeping table BEFORE
+    # running any migration body. The TestRepo connection already carries
+    # `search_path = <schema>` (patched above), so for a non-public schema that
+    # does not physically exist yet, that first DDL fails with 3F000
+    # (invalid_schema_name) — the migration body's own CREATE SCHEMA never gets
+    # a chance to run. Create the schema up front (CREATE SCHEMA is
+    # search_path-independent) so both schema_migrations and the migration body
+    # land in the target schema.
+    if schema != "public" do
+      Ecto.Adapters.SQL.query!(repo, ~s(CREATE SCHEMA IF NOT EXISTS "#{schema}"))
+    end
+
     Ecto.Migrator.up(repo, 99_000_000_000_000, MailglassInbound.TestMigration.Install, log: false)
   end)
 
