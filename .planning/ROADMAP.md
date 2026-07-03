@@ -283,9 +283,11 @@ be complete and green before the real release ceremony)
      (`milestones/v2.0-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`; MILESTONES/PROJECT/ROADMAP/STATE
      evolved; tagged `v2.0`).
 **Plans**: 3 plans
-- [ ] 137-01-PLAN.md — Pre-release sibling mix.exs pin edits (~> 2.0, drop inbound floor) + coordinated reference-baseline advance adopting the mailglass default schema (REL-01)
+
+- [x] 137-01-PLAN.md — Pre-release sibling mix.exs pin edits (~> 2.0, drop inbound floor) + coordinated reference-baseline advance adopting the mailglass default schema (REL-01)
 - [ ] 137-02-PLAN.md — Release-As 2.0.0 trigger + RP dry-run rehearsal + merge/publish + three-package hex.info/consumer/post-publish smoke verification (REL-01, REL-02)
 - [ ] 137-03-PLAN.md — Milestone audit → archive → manual MILESTONES/STATE correction + CLAUDE.md/MEMORY refresh + v2.0 tag (REL-03)
+
 **UI hint**: no
 
 ## Progress
@@ -297,7 +299,7 @@ be complete and green before the real release ceremony)
 | 134. Migration entrypoint + raw-DDL/trigger qualification | 3/3 | Complete    | 2026-07-03 |
 | 135. Inbound package schema isolation | 3/3 | Complete    | 2026-07-03 |
 | 136. Upgrade codemod + docs + api_stability | 2/2 | Complete    | 2026-07-03 |
-| 137. Linked 2.0 release ceremony + milestone closeout | 0/? | Not started | - |
+| 137. Linked 2.0 release ceremony + milestone closeout | 1/3 | In Progress|  |
 
 ## Phases (Shipped — Archived)
 

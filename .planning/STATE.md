@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Postgres Schema Isolation)
 current_phase: 137
-current_phase_name: Linked 2.0 release ceremony + milestone closeout
+current_phase_name: linked-2-0-release-ceremony-milestone-closeout
 status: executing
 stopped_at: Phase 137 context gathered (assumptions mode)
-last_updated: "2026-07-03T15:37:47.102Z"
+last_updated: "2026-07-03T15:57:57.426Z"
 last_activity: 2026-07-03
-last_activity_desc: Phase 136 complete, transitioned to Phase 137
+last_activity_desc: Phase 137 execution started
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 15
+  completed_plans: 13
   percent: 83
 ---
 
@@ -24,15 +24,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 136 — upgrade-codemod-docs-api-stability
+**Current focus:** Phase 137 — linked-2-0-release-ceremony-milestone-closeout
 
 ## Current Position
 
 Milestone: v2.0 Postgres Schema Isolation (6 phases, 132-137)
-Phase: 137 — Linked 2.0 release ceremony + milestone closeout
-Plan: Not started
-Status: Executing Phase 136
-Last activity: 2026-07-03 — Phase 136 complete, transitioned to Phase 137
+Phase: 137 (linked-2-0-release-ceremony-milestone-closeout) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-07-03 — Phase 137 execution started
 
 ## v2.0 Milestone Intent
 
@@ -258,6 +258,8 @@ Phase 136's `ALTER TABLE … SET SCHEMA` `ACCESS EXCLUSIVE` locking posture).
 - [Phase ?]: [134-01] Migration.up/down inject prefix: Config.schema() via Keyword.put_new (MIGR-01); migrated_version/1 untouched.
 - [Phase ?]: [134-01] maybe_create_schema/1 is up/1 first action (gated create_schema, honors create_schema: false); maybe_drop_schema/1 fires only at teardown version 0 with DROP SCHEMA RESTRICT never CASCADE (MIGR-02).
 - [Phase ?]: [134-01] Non-public-prefix down full round-trip + citext/trigger qualification deferred to 134-02; 134-01 proves DROP SCHEMA RESTRICT via the exact emitted DDL to avoid corrupting shared public.citext mid-suite.
+- [Phase ?]: 137-01: 2.0 reference-baseline lock regen deferred to Plan 02 post-publish; mix.exs pins landed now
+- [Phase ?]: 137-01: reference baseline adopts mailglass default schema (no :schema public pin) per D-07
 
 ## Quick Tasks Completed
 
@@ -432,7 +434,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-03T15:37:47.091Z
+**Last session:** 2026-07-03T15:57:41.745Z
 **Stopped at:** Phase 137 context gathered (assumptions mode)
 **Resume file:** .planning/phases/137-linked-2-0-release-ceremony-milestone-closeout/137-CONTEXT.md
 
