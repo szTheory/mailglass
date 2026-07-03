@@ -23,6 +23,12 @@ defmodule Mailglass.Migration do
   @doc since: "0.1.0"
   @spec up(keyword()) :: :ok
   def up(opts \\ []) when is_list(opts) do
+    # Inject the configured schema as the migration prefix (MIGR-01). Use
+    # `Keyword.put_new` so an explicit caller `:prefix` (the test harness, or
+    # an adopter running a targeted migration) still wins over the config
+    # default. The dispatcher's `with_defaults/2` supplies "public" + identifier
+    # validation downstream for callers who pass neither.
+    opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
     migrator().up(opts)
   end
 
@@ -30,6 +36,9 @@ defmodule Mailglass.Migration do
   @doc since: "0.1.0"
   @spec down(keyword()) :: :ok
   def down(opts \\ []) when is_list(opts) do
+    # Same runtime-prefix injection as `up/1` (MIGR-01) — explicit caller
+    # `:prefix` wins via `Keyword.put_new`.
+    opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
     migrator().down(opts)
   end
 
