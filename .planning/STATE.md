@@ -5,10 +5,10 @@ milestone_name: Postgres Schema Isolation)
 current_phase: 135
 current_phase_name: inbound-package-schema-isolation
 status: ready_to_plan
-stopped_at: Phase 135 complete (3/3) — ready to discuss Phase 999.1
+stopped_at: Phase 135 complete (3/3), verified PASSED — next is Phase 136 (upgrade codemod + docs)
 last_updated: 2026-07-03T09:40:42.910Z
 last_activity: 2026-07-03
-last_activity_desc: Phase 135 execution started
+last_activity_desc: Phase 135 executed + verified (dual-schema green under public + mailglass)
 progress:
   total_phases: 6
   completed_phases: 4
@@ -24,12 +24,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 999.1 — human readable code comments gsd artifact cleanup backlog
+**Current focus:** Phase 136 — Upgrade codemod + docs + api_stability (Design Phase E). (phase.complete reported 999.1, a leftover backlog dir — ignored; the real v2.0 next phase is 136.)
 
 ## Current Position
 
 Milestone: v2.0 Postgres Schema Isolation (6 phases, 132-137)
-Phase: 999.1
+Phase: 136 (next — not started; 132-135 complete)
 Plan: Not started
 Status: Ready to plan
 Last activity: 2026-07-03
