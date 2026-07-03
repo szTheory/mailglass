@@ -10,6 +10,13 @@ config :swoosh, :api_client, false
 # their own repo here; mailglass_inbound never owns one outside its own suite.
 config :mailglass_inbound, :repo, MailglassInbound.TestRepo
 
+# Pin :schema to "public" in the test env so the facade injects prefix:"public"
+# and all test DB inserts/reads hit the schema where migrations ran. Mirrors
+# config/test.exs in core mailglass (see Phase 133). The dedicated schema-isolation
+# test (repo_prefix_test.exs) overrides this per-test to a non-public name, then
+# erases the :persistent_term cache so Config.schema/0 re-reads from app env.
+config :mailglass_inbound, :schema, "public"
+
 # TestRepo Postgres credentials. Honor MIX_TEST_PARTITION for parallel CI
 # partitions; fall back to localhost with standard creds otherwise. Inbound has
 # no citext columns, so the core citext-specific prepare/disconnect options are
