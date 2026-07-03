@@ -57,14 +57,14 @@
   prefix, honoring an explicit `create_schema: false` escape hatch (locked-down prod role); `down/1`
   drops the schema with `RESTRICT` only if it was created and only after all tables are gone.
 
-- [ ] **MIGR-03**: The events immutability trigger + function are schema-qualified and created IN the
+- [x] **MIGR-03**: The events immutability trigger + function are schema-qualified and created IN the
   configured schema (`<schema>.mailglass_raise_immutability`), with `SET search_path = ''` on the
   function, so two installs in different schemas of one database never collide on a global function name.
 
-- [ ] **MIGR-04**: The v01/v03 CHECK constraints and every `down/0` raw `execute()` drop
+- [x] **MIGR-04**: The v01/v03 CHECK constraints and every `down/0` raw `execute()` drop
   (trigger/function/table) are hand-qualified to the runtime prefix (Ecto does not prefix raw SQL).
 
-- [ ] **MIGR-05**: `citext` is created UNqualified (stays in `public`); migrating up/down against a
+- [x] **MIGR-05**: `citext` is created UNqualified (stays in `public`); migrating up/down against a
   non-public prefix succeeds, and a regression test proves the immutability trigger raises SQLSTATE
   45A01 under the `mailglass` schema WITHOUT any `search_path` pin.
 
@@ -152,9 +152,9 @@
 | FACADE-04 | Phase 133 | Complete |
 | MIGR-01 | Phase 134 | Complete |
 | MIGR-02 | Phase 134 | Complete |
-| MIGR-03 | Phase 134 | Pending |
-| MIGR-04 | Phase 134 | Pending |
-| MIGR-05 | Phase 134 | Pending |
+| MIGR-03 | Phase 134 | Complete |
+| MIGR-04 | Phase 134 | Complete |
+| MIGR-05 | Phase 134 | Complete |
 | MIGR-06 | Phase 134 | Pending |
 | INB-01 | Phase 135 | Pending |
 | INB-02 | Phase 135 | Pending |
