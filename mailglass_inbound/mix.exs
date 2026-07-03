@@ -4,6 +4,10 @@ defmodule MailglassInbound.MixProject do
   @version "1.6.0"
   @source_url "https://github.com/szTheory/mailglass"
   @description "Inbound routing contract package for mailglass"
+  # Release-As path anchor (137-02, D-04): this mailglass_inbound/ subtree touch
+  # attributes the companion commit's SEPARATE `Release-As: 2.0.0` footer to the
+  # standalone mailglass_inbound package (its own breaking changes from Phase 135),
+  # so RP cuts inbound 2.0.0 rather than the 1.7.0 minor it would otherwise score.
 
   def project do
     [
