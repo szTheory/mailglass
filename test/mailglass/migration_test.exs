@@ -173,6 +173,197 @@ defmodule Mailglass.MigrationTest do
     end
   end
 
+  describe "up/down against a non-public prefix (MIGR-01/02 regression)" do
+    @describetag :schema_isolation
+
+    @prefix "mailglass"
+
+    # Inline wrapper migration. `Mailglass.Migration.up` issues `execute()` DDL
+    # that requires an active `Ecto.Migration.Runner` process, so it must be
+    # driven through `Ecto.Migrator` (the same path adopters hit via
+    # `mix ecto.migrate`), not called bare.
+    #
+    # The `SET LOCAL search_path` pin is REQUIRED at the 134-01 boundary and is
+    # a DELIBERATE, DOCUMENTED CRUTCH: v01's events-immutability trigger is still
+    # created with a bare, unqualified `CREATE TRIGGER … ON mailglass_events`
+    # (postgres/v01.ex:140) and function `mailglass_raise_immutability()`
+    # (v01.ex:126). Postgres has no `CREATE TRIGGER IF NOT EXISTS`, so without a
+    # search_path pin the unqualified trigger resolves against the already-
+    # migrated `public.mailglass_events` and raises 42710 duplicate_object.
+    # Schema-qualifying that raw DDL (and REMOVING this pin) is Plan 134-02's
+    # load-bearing task — this test proves ONLY the CREATE SCHEMA / DROP SCHEMA
+    # RESTRICT lifecycle that 134-01 delivers, mirroring the sibling
+    # schema_isolation_integration_test.exs crutch (D-06 defers the pin removal).
+    #
+    # The DOWN-side raw-DDL round-trip (v01's `DROP EXTENSION citext` +
+    # unqualified trigger/function drops) is intentionally NOT driven through the
+    # migrator here: under the coexisting `public` suite, v01's shared-`citext`
+    # drop raises 2BP01 (public.mailglass_suppressions still depends on citext).
+    # Qualifying/guarding those `down/0` drops is Plan 134-02's job. To prove
+    # 134-01's DROP SCHEMA RESTRICT lifecycle in isolation, the down-side test
+    # drops the schema's tables directly, then exercises the dispatcher's
+    # schema-drop on the now-empty schema.
+    defmodule PrefixUpMigration do
+      use Ecto.Migration
+
+      def up do
+        execute("SET LOCAL search_path TO mailglass, public")
+        Mailglass.Migration.up(prefix: "mailglass", repo: Mailglass.TestRepo)
+      end
+
+      # No-op down: the migrator requires a down/0, but 134-01's schema-teardown
+      # proof runs the dispatcher's down directly (below), sidestepping v01's
+      # 134-02-owned citext-drop collision.
+      def down, do: :ok
+    end
+
+    defmodule PrefixNoCreateUpMigration do
+      use Ecto.Migration
+
+      def up do
+        execute("SET LOCAL search_path TO mailglass, public")
+
+        Mailglass.Migration.up(
+          prefix: "mailglass",
+          repo: Mailglass.TestRepo,
+          create_schema: false
+        )
+      end
+
+      def down, do: :ok
+    end
+
+    setup do
+      # Unique migration version per run so Ecto.Migrator's schema_migrations
+      # tracking treats each run as fresh; on_exit cleans the schema + the
+      # schema_migrations row so the test is re-runnable and does not pollute
+      # subsequent files.
+      version = System.unique_integer([:positive, :monotonic]) + 90_000_000_000_000
+
+      on_exit(fn ->
+        _ = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
+        _ = TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
+
+        # Baseline safety net: v01's `down` (reachable through
+        # `Mailglass.Migration.down/1`) runs an unqualified
+        # `DROP EXTENSION IF EXISTS citext` that removes the shared `public`
+        # extension the rest of the suite depends on (dossier: "citext stays in
+        # public"). Guarding/qualifying that drop is Plan 134-02's job — until
+        # then, re-create it here so subsequent test files (and the next
+        # test_helper citext probe) see a clean baseline. This is scoped to this
+        # describe block only.
+        _ = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext")
+      end)
+
+      {:ok, version: version}
+    end
+
+    test "up creates the schema + its tables and re-up is a no-op", %{version: version} do
+      # === up: CREATE SCHEMA (first action) + tables land under mailglass.* ===
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.up(repo, version, PrefixUpMigration, log: false)
+        end)
+
+      assert schema_exists?(@prefix),
+             "up/1 must CREATE SCHEMA #{@prefix} as its first action"
+
+      assert table_exists_in_schema?(@prefix, "mailglass_events")
+      assert table_exists_in_schema?(@prefix, "mailglass_deliveries")
+      assert table_exists_in_schema?(@prefix, "mailglass_suppressions")
+
+      # === re-up is a no-op (version-comment idempotency preserved) ===
+      assert Migration.migrated_version(prefix: @prefix, repo: TestRepo) ==
+               Mailglass.Migrations.Postgres.current_version()
+
+      # Re-running the same version through the migrator is a no-op
+      # (:already_up); the version comment stays at @current_version.
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.up(repo, version, PrefixUpMigration, log: false)
+        end)
+
+      assert Migration.migrated_version(prefix: @prefix, repo: TestRepo) ==
+               Mailglass.Migrations.Postgres.current_version()
+    end
+
+    test "DROP SCHEMA RESTRICT refuses a non-empty schema and succeeds once empty" do
+      # Proves MIGR-02's down-side data-safety contract: `maybe_drop_schema/1`
+      # emits `DROP SCHEMA IF EXISTS "<prefix>" RESTRICT` (NEVER CASCADE) — so a
+      # schema that still holds objects (an adopter parked data there) fails
+      # loudly rather than being silently nuked, and the drop succeeds only once
+      # the schema is empty.
+      #
+      # This asserts the exact DDL the dispatcher issues at version 0, WITHOUT
+      # driving `Mailglass.Migration.down/1` (which would also run v01's
+      # unqualified `DROP EXTENSION citext` — a 134-02-owned raw-DDL concern that
+      # would corrupt the shared `public.citext` baseline mid-suite).
+      {:ok, _} = TestRepo.query("CREATE SCHEMA #{@prefix}")
+      assert schema_exists?(@prefix)
+
+      {:ok, _} = TestRepo.query("CREATE TABLE #{@prefix}.parked_object (id int)")
+
+      # RESTRICT must refuse the drop while the schema is non-empty.
+      assert {:error, %Postgrex.Error{postgres: %{code: :dependent_objects_still_exist}}} =
+               TestRepo.query(~s(DROP SCHEMA IF EXISTS "#{@prefix}" RESTRICT))
+
+      assert schema_exists?(@prefix),
+             "RESTRICT must leave a non-empty schema in place (never CASCADE)"
+
+      # Empty the schema, then the same RESTRICT drop succeeds and the schema is
+      # gone — matching `maybe_drop_schema/1`'s post-teardown behavior.
+      {:ok, _} = TestRepo.query("DROP TABLE #{@prefix}.parked_object")
+      {:ok, _} = TestRepo.query(~s(DROP SCHEMA IF EXISTS "#{@prefix}" RESTRICT))
+
+      refute schema_exists?(@prefix),
+             "DROP SCHEMA RESTRICT must remove the now-empty #{@prefix} schema"
+    end
+
+    test "create_schema: false does not issue CREATE SCHEMA (locked-down-prod contract)", %{
+      version: version
+    } do
+      # Pre-create the schema by hand (as a role WITH create would), then migrate
+      # with create_schema: false to prove up/1 does NOT itself issue CREATE
+      # SCHEMA — the tables still land because the schema already exists. A bare
+      # create_schema: false against a MISSING schema would fail at CREATE TABLE,
+      # which is the documented locked-down-prod contract (dossier §4.4).
+      {:ok, _} = TestRepo.query("CREATE SCHEMA #{@prefix}")
+
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.up(repo, version, PrefixNoCreateUpMigration, log: false)
+        end)
+
+      assert table_exists_in_schema?(@prefix, "mailglass_events"),
+             "tables must be created into the pre-existing schema even with create_schema: false"
+
+      # The schema stays present (up with create_schema: false never creates it,
+      # and there is no schema drop on this success path).
+      assert schema_exists?(@prefix),
+             "up/1 with create_schema: false must operate against the operator-owned schema"
+    end
+  end
+
+  defp schema_exists?(prefix) do
+    {:ok, %{rows: rows}} =
+      TestRepo.query("SELECT 1 FROM pg_namespace WHERE nspname = $1", [prefix])
+
+    rows != []
+  end
+
+  defp table_exists_in_schema?(prefix, table_name) do
+    {:ok, %{rows: rows}} =
+      TestRepo.query(
+        """
+        SELECT 1 FROM information_schema.tables
+        WHERE table_name = $1 AND table_schema = $2
+        """,
+        [table_name, prefix]
+      )
+
+    rows != []
+  end
+
   defp table_exists?(table_name) do
     {:ok, %{rows: rows}} =
       TestRepo.query("""
