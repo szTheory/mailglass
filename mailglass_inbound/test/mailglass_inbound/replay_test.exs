@@ -9,9 +9,17 @@ defmodule MailglassInbound.ReplayTest do
   alias MailglassInbound.Ingress.Persist
   alias MailglassInbound.Internal.Replay
 
-  @migration_path Path.expand("../../priv/repo/migrations/20260506163000_create_mailglass_inbound_storage_foundation.exs", __DIR__)
-  @execution_migration_path Path.expand("../../priv/repo/migrations/20260506210000_generalize_replay_runs_to_execution_lineage.exs", __DIR__)
-  @phase_41_migration_path Path.expand("../../priv/repo/migrations/20260506220000_add_sendgrid_fingerprint_and_replay_contract_fields.exs", __DIR__)
+  # Phase 135 collapsed the 7 loose historical migrations into a single final-state
+  # V01 snapshot (D-08). The canonical schema DDL — records/evidence/replay_runs
+  # tables, the execution-lineage columns, and the fingerprint indexes — now lives
+  # there, so all three former per-file references point at the snapshot.
+  @schema_snapshot_path Path.expand(
+                          "../../lib/mailglass_inbound/migrations/postgres/v01.ex",
+                          __DIR__
+                        )
+  @migration_path @schema_snapshot_path
+  @execution_migration_path @schema_snapshot_path
+  @phase_41_migration_path @schema_snapshot_path
 
   defmodule SupportMailbox do
     @behaviour MailglassInbound.Mailbox
@@ -123,14 +131,16 @@ defmodule MailglassInbound.ReplayTest do
 
       accept = InboundRecords.change_execution_run(Map.put(base_attrs, :mailbox_outcome, :accept))
       ignore = InboundRecords.change_execution_run(Map.put(base_attrs, :mailbox_outcome, :ignore))
-      no_match = InboundRecords.change_execution_run(%{
-        tenant_id: "tenant-123",
-        inbound_record_id: Ecto.UUID.generate(),
-        inbound_evidence_id: Ecto.UUID.generate(),
-        source: :fresh,
-        mailbox: nil,
-        mailbox_outcome: :no_match
-      })
+
+      no_match =
+        InboundRecords.change_execution_run(%{
+          tenant_id: "tenant-123",
+          inbound_record_id: Ecto.UUID.generate(),
+          inbound_evidence_id: Ecto.UUID.generate(),
+          source: :fresh,
+          mailbox: nil,
+          mailbox_outcome: :no_match
+        })
 
       reject =
         InboundRecords.change_execution_run(
@@ -148,9 +158,7 @@ defmodule MailglassInbound.ReplayTest do
         )
 
       invalid =
-        InboundRecords.change_execution_run(
-          Map.put(base_attrs, :mailbox_outcome, :maybe)
-        )
+        InboundRecords.change_execution_run(Map.put(base_attrs, :mailbox_outcome, :maybe))
 
       assert accept.valid?
       assert Ecto.Changeset.get_field(accept, :outcome) == :accept
@@ -176,7 +184,9 @@ defmodule MailglassInbound.ReplayTest do
       assert Ecto.Changeset.get_field(failed, :failure) == %{kind: :error, reason: "boom"}
 
       refute invalid.valid?
-      assert {"must be :no_match, :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata", _} =
+
+      assert {"must be :no_match, :accept, :ignore, {:reject, reason}, {:bounce, reason}, or :failed with failure metadata",
+              _} =
                invalid.errors[:outcome]
     end
 
@@ -219,7 +229,16 @@ defmodule MailglassInbound.ReplayTest do
       assert inserts == []
       assert migration_source =~ "raw_mime_fingerprint"
       assert migration_source =~ "mailglass_inbound_records_sendgrid_fingerprint_idx"
-      refute migration_source =~ "provider_message_id"
+
+      # The sendgrid dedup index keys on the raw-mime fingerprint, NOT on
+      # provider_message_id. In the collapsed V01 snapshot provider_message_id
+      # appears elsewhere (the postmark idempotency index), so scope the check to
+      # the sendgrid index definition block.
+      sendgrid_index =
+        Regex.run(~r/unique_index\([^()]*sendgrid[^()]*\)/s, migration_source) |> List.first()
+
+      assert sendgrid_index =~ "raw_mime_fingerprint"
+      refute sendgrid_index =~ "provider_message_id"
     end
   end
 
@@ -227,6 +246,7 @@ defmodule MailglassInbound.ReplayTest do
     test "reuses stored canonical and evidence truth, defaults to the latest fresh matched mailbox, and appends replay lineage" do
       record = valid_inbound_record()
       evidence = valid_inbound_evidence(record.id)
+
       latest_fresh_match = %ExecutionRun{
         inbound_record_id: record.id,
         inbound_evidence_id: evidence.id,
@@ -259,6 +279,7 @@ defmodule MailglassInbound.ReplayTest do
     test "fails explicitly when only no-match fresh history exists" do
       record = valid_inbound_record()
       evidence = valid_inbound_evidence(record.id)
+
       no_match_run = %ExecutionRun{
         inbound_record_id: record.id,
         inbound_evidence_id: evidence.id,

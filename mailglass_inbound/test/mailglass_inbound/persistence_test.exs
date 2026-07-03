@@ -6,7 +6,12 @@ defmodule MailglassInbound.PersistenceTest do
   alias MailglassInbound.InboundRecords.InboundRecord
   alias MailglassInbound.Repo
 
-  @migration_path Path.expand("../../priv/repo/migrations/20260506163000_create_mailglass_inbound_storage_foundation.exs", __DIR__)
+  # Phase 135 collapsed the 7 loose historical migrations into a single final-state
+  # V01 snapshot (D-08). The canonical schema DDL now lives there.
+  @migration_path Path.expand(
+                    "../../lib/mailglass_inbound/migrations/postgres/v01.ex",
+                    __DIR__
+                  )
 
   describe "canonical and evidence boundaries" do
     test "keeps normalized adopter-facing truth separate from raw evidence" do
@@ -95,11 +100,13 @@ defmodule MailglassInbound.PersistenceTest do
       Application.put_env(:mailglass_inbound, :repo, FakeRepo)
 
       assert {:ok, {:inserted, InboundRecord}} =
-               Repo.insert(InboundRecord.changeset(%{
-                 tenant_id: "tenant-123",
-                 provider: "postmark",
-                 received_at: DateTime.utc_now()
-               }))
+               Repo.insert(
+                 InboundRecord.changeset(%{
+                   tenant_id: "tenant-123",
+                   provider: "postmark",
+                   received_at: DateTime.utc_now()
+                 })
+               )
 
       assert {:ok, :done} = Repo.transact(fn -> {:ok, :done} end)
     end

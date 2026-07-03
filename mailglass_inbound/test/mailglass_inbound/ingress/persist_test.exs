@@ -8,6 +8,14 @@ defmodule MailglassInbound.Ingress.PersistTest do
   alias MailglassInbound.Ingress.Persist
   alias MailglassInbound.TestRepo
 
+  # Phase 135 collapsed the 7 loose historical migrations into a single final-state
+  # V01 snapshot (D-08). The partial unique fingerprint/idempotency indexes these
+  # tests document now live in the snapshot.
+  @schema_snapshot_path Path.expand(
+                          "../../../lib/mailglass_inbound/migrations/postgres/v01.ex",
+                          __DIR__
+                        )
+
   defmodule SupportMailbox do
     @behaviour MailglassInbound.Mailbox
     def process(_message), do: :accept
@@ -16,7 +24,7 @@ defmodule MailglassInbound.Ingress.PersistTest do
   defmodule TestRouter do
     use MailglassInbound.Router
 
-    route SupportMailbox, recipient: "support@example.com"
+    route(SupportMailbox, recipient: "support@example.com")
   end
 
   # IOPS-05: a configurable stub of `Mailglass.SuppressionStore` so the
@@ -122,12 +130,9 @@ defmodule MailglassInbound.Ingress.PersistTest do
   end
 
   test "documents the partial unique index for Postmark ingress idempotency" do
-    migration =
-      File.read!(
-        Path.expand("../../../priv/repo/migrations/20260506180000_add_postmark_ingress_idempotency.exs", __DIR__)
-      )
+    migration = File.read!(@schema_snapshot_path)
 
-    assert migration =~ "create unique_index"
+    assert migration =~ "unique_index("
     assert migration =~ "provider_message_id IS NOT NULL"
     assert migration =~ "mailglass_inbound_records_postmark_idempotency_idx"
   end
@@ -164,18 +169,19 @@ defmodule MailglassInbound.Ingress.PersistTest do
     end
 
     test "documents the Mailgun-scoped partial unique fingerprint index migration" do
-      migration =
-        File.read!(
-          Path.expand(
-            "../../../priv/repo/migrations/20260523120000_add_mailgun_fingerprint_index.exs",
-            __DIR__
-          )
-        )
+      migration = File.read!(@schema_snapshot_path)
 
-      assert migration =~ "create unique_index"
+      assert migration =~ "unique_index("
       assert migration =~ "provider = 'mailgun' AND raw_mime_fingerprint IS NOT NULL"
       assert migration =~ "mailglass_inbound_records_mailgun_fingerprint_idx"
-      refute migration =~ "generated:"
+
+      # The fingerprint index is a plain partial unique index — it does not itself
+      # declare the STORED generated column (that lives on the evidence table's
+      # create block in the collapsed snapshot). Scope the check to the index block.
+      mailgun_index =
+        Regex.run(~r/unique_index\([^()]*mailgun[^()]*\)/s, migration) |> List.first()
+
+      refute mailgun_index =~ "generated:"
     end
 
     # CR-01: the check-then-act dedup window. A concurrent redelivery of the same
@@ -251,18 +257,18 @@ defmodule MailglassInbound.Ingress.PersistTest do
     end
 
     test "documents the SES-scoped partial unique fingerprint index migration" do
-      migration =
-        File.read!(
-          Path.expand(
-            "../../../priv/repo/migrations/20260523130000_add_ses_fingerprint_index.exs",
-            __DIR__
-          )
-        )
+      migration = File.read!(@schema_snapshot_path)
 
-      assert migration =~ "create unique_index"
+      assert migration =~ "unique_index("
       assert migration =~ "provider = 'ses' AND raw_mime_fingerprint IS NOT NULL"
       assert migration =~ "mailglass_inbound_records_ses_fingerprint_idx"
-      refute migration =~ "generated:"
+
+      # The fingerprint index is a plain partial unique index — it does not itself
+      # declare the STORED generated column (that lives on the evidence table's
+      # create block in the collapsed snapshot). Scope the check to the index block.
+      ses_index = Regex.run(~r/unique_index\([^()]*ses[^()]*\)/s, migration) |> List.first()
+
+      refute ses_index =~ "generated:"
     end
   end
 
