@@ -3,6 +3,11 @@ defmodule Mailglass.MixProject do
 
   @version "1.11.0"
   @source_url "https://github.com/szTheory/mailglass"
+  # Release-As path anchor (137-02, D-01): this root mix.exs touch attributes the
+  # companion commit's `Release-As: 2.0.0` footer to the linked mailglass +
+  # mailglass_admin group (core `exclude-paths` keeps admin/inbound out of `.`).
+  # The linked-versions plugin may still override a per-commit trailer (v1.0 Pitfall 5);
+  # the D-02 dry-run PR inspection is the gate that confirms 2.0.0 before merge.
 
   def project do
     [
