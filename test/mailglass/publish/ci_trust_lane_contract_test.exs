@@ -19,8 +19,21 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
     assert job =~ "retention-days: 90"
     assert job =~ "path: tmp/mailglass_trust_runner/checkpoint.json"
 
-    refute job =~ ~r/^    if:/m
-    refute job =~ ~r/^    needs:/m
+    # Phase 126 (M1 CI/CD efficiency, commit db8761527) intentionally gated EVERY
+    # lane — including this one — on the `changes` job so docs-only PRs skip the
+    # expensive trust journey. That is compatible with the publish gate: a real
+    # release PR always carries a code change (version bumps), so `code == 'true'`
+    # and the lane RUNS and gates. On a docs-only PR the lane is `skipped`, and
+    # the publish gate's `blockingFailures` filter excludes `skipped` jobs —
+    # so a skip never permits an unverified release. The load-bearing contract is
+    # NOT "always run" but "publish-gate-only": this lane must NOT be a required
+    # branch-protection check and must NOT be in ci_green.needs, so a red baseline
+    # never masquerades as a required-green while still blocking publish when run.
+    assert job =~ "needs: [changes]"
+    assert job =~ "if: needs.changes.outputs.code == 'true'"
+
+    # Publish-gate-only guarantee: not wired into the ci_green aggregate.
+    refute ci_green_needs(workflow) =~ "trust_lane_clean_baseline"
   end
 
   test "clean-baseline guard rejects a sibling resolved via a non-Hex source" do
@@ -144,5 +157,14 @@ defmodule Mailglass.Publish.CITrustLaneContractTest do
     [_before, rest] = String.split(workflow, "\n  #{start_key}:\n", parts: 2)
     [job | _after] = String.split(rest, "\n  #{next_key}:\n", parts: 2)
     job
+  end
+
+  # The ci_green aggregate job block — the load-bearing "publish-gate-only"
+  # contract asserts trust_lane_clean_baseline is NOT a required leaf, so it must
+  # not appear in ci_green.needs. ci_green is the final job in ci.yml, so the
+  # block runs to end-of-file.
+  defp ci_green_needs(workflow) do
+    [_before, ci_green] = String.split(workflow, "\n  ci_green:\n", parts: 2)
+    ci_green
   end
 end
