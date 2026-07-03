@@ -80,6 +80,13 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
       end
 
       :persistent_term.erase({Mailglass.Config, :schema})
+
+      # Under the CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass) the suite
+      # baseline schema IS `mailglass` (migrated at boot). This test's teardown
+      # dropped it, so re-migrate the baseline before the next test file runs.
+      # No-op on the default "public" suite.
+      restore_suite_baseline_schema()
+
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
@@ -237,4 +244,29 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
   defp sqlstate(%{pg_code: pg_code}) when is_binary(pg_code), do: pg_code
   defp sqlstate(%{code: code}) when is_binary(code), do: code
   defp sqlstate(%{code: code}) when is_atom(code), do: Atom.to_string(code)
+
+  # When the suite runs under MAILGLASS_SCHEMA=mailglass, re-migrate the suite
+  # baseline schema this test's teardown dropped (idempotent — the migration
+  # entrypoint issues CREATE SCHEMA IF NOT EXISTS + creates tables under
+  # Config.schema/0). No-op on the default "public" suite.
+  defp restore_suite_baseline_schema do
+    if System.get_env("MAILGLASS_SCHEMA") in [nil, "", "public"] do
+      :ok
+    else
+      # The boot migration files (versions 1..N) are still recorded as applied in
+      # public.schema_migrations even though this teardown dropped the mailglass
+      # schema. `:up all` would therefore be a no-op and NOT re-create the schema.
+      # Clear the boot-migration version rows so the migrator re-applies them.
+      {:ok, _} = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
+
+      migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
+
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+        end)
+
+      :ok
+    end
+  end
 end

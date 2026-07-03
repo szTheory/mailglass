@@ -29,3 +29,21 @@ import Config
 # Single-tenant installs only need `config :mailglass, adapter`.
 # Add `config :mailglass, adapters:` when your tenancy callback needs
 # reusable named route refs at runtime.
+
+# CI matrix-axis hook (D-06 / Success Criterion 7). runtime.exs is evaluated
+# AFTER config/test.exs, so this runtime override wins over the test.exs
+# `:schema` "public" pin. When the Advisory Matrix job sets
+# `MAILGLASS_SCHEMA=mailglass`, the whole core suite runs under the isolated
+# `mailglass` schema via the existing `Config.schema/0` path (facade prefix
+# injection + migration entrypoint). Guarded to the :test env and a non-empty
+# value so dev/prod are never affected and the default suite (no env var) keeps
+# the config/test.exs "public" pin.
+if config_env() == :test do
+  case System.get_env("MAILGLASS_SCHEMA") do
+    schema when is_binary(schema) and schema != "" ->
+      config :mailglass, :schema, schema
+
+    _ ->
+      :ok
+  end
+end

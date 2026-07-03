@@ -77,13 +77,23 @@ defmodule Mailglass.TestSupport.CitextProbe do
   defp default_probe(repo) do
     probe_address = "probe-#{System.unique_integer([:positive])}@example.test"
 
+    # Schema-aware: under the CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass)
+    # the `mailglass_suppressions` table lives in the `mailglass` schema, not
+    # `public`. `SuppressionStore.check/1` already routes through the facade
+    # (which injects `prefix: Config.schema()`), but the raw-repo delete_all /
+    # insert / delete below bypass the facade, so they must inject the same
+    # prefix explicitly — otherwise they hit an unqualified `mailglass_suppressions`
+    # (resolving via public search_path) and raise 42P01, which the probe would
+    # mistake for a poisoned-OID Postgrex.Error and retry until exhaustion.
+    prefix = Mailglass.Config.schema()
+
     case SuppressionStore.check(%{tenant_id: "__probe__", address: "probe@example.test"}) do
       :not_suppressed -> :ok
       {:suppressed, _entry} -> :ok
       {:error, _reason} -> :ok
     end
 
-    repo.delete_all(from(e in Entry, where: e.tenant_id == "__probe__"))
+    repo.delete_all(from(e in Entry, where: e.tenant_id == "__probe__"), prefix: prefix)
 
     {:ok, inserted} =
       %{
@@ -94,9 +104,9 @@ defmodule Mailglass.TestSupport.CitextProbe do
         source: "probe"
       }
       |> Entry.changeset()
-      |> repo.insert()
+      |> repo.insert(prefix: prefix)
 
-    _ = repo.delete(inserted)
+    _ = repo.delete(inserted, prefix: prefix)
 
     :ok
   end

@@ -24,6 +24,9 @@ defmodule Mailglass.MigrationTest do
 
     on_exit(fn ->
       # Reapply migrations idempotently so subsequent test files see schema.
+      # Under the schema-isolation axis this also clears stale schema_migrations
+      # rows so a dropped baseline schema is genuinely re-created (see
+      # restore_suite_baseline_schema/0), not skipped as :already_up.
       case safe_migrated_version() do
         0 -> _ = safe_migrate_up()
         _ -> :ok
@@ -46,11 +49,15 @@ defmodule Mailglass.MigrationTest do
 
     test "installs the mailglass_events_immutable_trigger on mailglass_events" do
       {:ok, %{rows: rows}} =
-        TestRepo.query("""
-        SELECT trigger_name FROM information_schema.triggers
-        WHERE event_object_table = 'mailglass_events'
-          AND trigger_name = 'mailglass_events_immutable_trigger'
-        """)
+        TestRepo.query(
+          """
+          SELECT trigger_name FROM information_schema.triggers
+          WHERE event_object_table = 'mailglass_events'
+            AND event_object_schema = $1
+            AND trigger_name = 'mailglass_events_immutable_trigger'
+          """,
+          [Mailglass.Config.schema()]
+        )
 
       # The trigger is registered for BOTH UPDATE and DELETE, so
       # information_schema returns two rows (one per event action).
@@ -62,7 +69,7 @@ defmodule Mailglass.MigrationTest do
       # Current version is bumped by each V-step (Phase 2 shipped V01 = 1;
       # Phase 4 Plan 01 ships V02 = 2; the dispatcher's @current_version
       # drives this assertion so it stays correct as new versions land).
-      assert Migration.migrated_version() ==
+      assert Migration.migrated_version(prefix: Mailglass.Config.schema(), repo: TestRepo) ==
                Mailglass.Migrations.Postgres.current_version()
     end
 
@@ -71,7 +78,7 @@ defmodule Mailglass.MigrationTest do
     end
 
     test "is idempotent — rerunning the migration is a no-op" do
-      version_before = Migration.migrated_version()
+      version_before = Migration.migrated_version(prefix: Mailglass.Config.schema(), repo: TestRepo)
 
       # Rerunning through Ecto.Migrator against the already-migrated DB is a
       # no-op because Ecto's schema_migrations tracking skips applied files.
@@ -81,16 +88,21 @@ defmodule Mailglass.MigrationTest do
           Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
         end)
 
-      assert Migration.migrated_version() == version_before
+      assert Migration.migrated_version(prefix: Mailglass.Config.schema(), repo: TestRepo) ==
+               version_before
     end
 
     test "created all four mailglass_events indexes" do
       {:ok, %{rows: rows}} =
-        TestRepo.query("""
-        SELECT indexname FROM pg_indexes
-        WHERE tablename = 'mailglass_events'
-        ORDER BY indexname
-        """)
+        TestRepo.query(
+          """
+          SELECT indexname FROM pg_indexes
+          WHERE tablename = 'mailglass_events'
+            AND schemaname = $1
+          ORDER BY indexname
+          """,
+          [Mailglass.Config.schema()]
+        )
 
       names = Enum.map(rows, &hd/1)
 
@@ -103,12 +115,19 @@ defmodule Mailglass.MigrationTest do
     end
 
     test "mailglass_suppressions has stream_scope_check CHECK constraint" do
+      # Schema-qualify the regclass so it resolves under the active schema
+      # (Config.schema/0), not whatever the ambient search_path happens to be.
+      schema = Mailglass.Config.schema()
+
       {:ok, %{rows: rows}} =
-        TestRepo.query("""
-        SELECT conname FROM pg_constraint
-        WHERE conrelid = 'mailglass_suppressions'::regclass
-          AND contype = 'c'
-        """)
+        TestRepo.query(
+          """
+          SELECT conname FROM pg_constraint
+          WHERE conrelid = ($1 || '.mailglass_suppressions')::regclass
+            AND contype = 'c'
+          """,
+          [schema]
+        )
 
       names = Enum.map(rows, &hd/1)
       assert "mailglass_suppressions_stream_scope_check" in names
@@ -155,8 +174,10 @@ defmodule Mailglass.MigrationTest do
       assert ext_rows == []
 
       # Migrated version resets to 0 once the event table (whose pg_class
-      # comment holds the version marker) is gone.
-      assert Migration.migrated_version() == 0
+      # comment holds the version marker) is gone. Under the schema-isolation
+      # axis the whole schema is dropped by the full teardown, so the version
+      # query matches no rows and resolves to 0 either way.
+      assert Migration.migrated_version(prefix: Mailglass.Config.schema(), repo: TestRepo) == 0
 
       # Reapply so subsequent tests / files in the same run have the schema
       # back. Uses Ecto.Migrator again — same path as test_helper.exs.
@@ -168,7 +189,7 @@ defmodule Mailglass.MigrationTest do
       # Version advances through every V-step the dispatcher currently
       # ships. Phase 4 Plan 01 bumped @current_version 1 → 2; future
       # V03+ will keep this assertion correct without another code edit.
-      assert Migration.migrated_version() ==
+      assert Migration.migrated_version(prefix: Mailglass.Config.schema(), repo: TestRepo) ==
                Mailglass.Migrations.Postgres.current_version()
     end
   end
@@ -253,6 +274,12 @@ defmodule Mailglass.MigrationTest do
         # test_helper citext probe) see a clean baseline. This is scoped to this
         # describe block only.
         _ = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext")
+
+        # Under the CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass) the
+        # suite baseline schema IS `mailglass` (boot-migrated). The DROP SCHEMA
+        # above just destroyed it, so re-migrate the baseline before the next
+        # test observes a missing schema. No-op on the default "public" suite.
+        restore_suite_baseline_schema()
       end)
 
       {:ok, version: version}
@@ -298,6 +325,12 @@ defmodule Mailglass.MigrationTest do
       # driving `Mailglass.Migration.down/1` (which would also run v01's
       # unqualified `DROP EXTENSION citext` — a 134-02-owned raw-DDL concern that
       # would corrupt the shared `public.citext` baseline mid-suite).
+      #
+      # Clean slate: under the CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass)
+      # the `mailglass` schema already exists as the boot baseline, so a bare
+      # CREATE SCHEMA would raise 42P06. Drop first (the file-level on_exit
+      # re-migrates the baseline afterward). No-op on the default "public" suite.
+      {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
       {:ok, _} = TestRepo.query("CREATE SCHEMA #{@prefix}")
       assert schema_exists?(@prefix)
 
@@ -327,6 +360,11 @@ defmodule Mailglass.MigrationTest do
       # SCHEMA — the tables still land because the schema already exists. A bare
       # create_schema: false against a MISSING schema would fail at CREATE TABLE,
       # which is the documented locked-down-prod contract (dossier §4.4).
+      #
+      # Clean slate first (drop the boot baseline that exists under the
+      # MAILGLASS_SCHEMA=mailglass axis), then hand-create so this test controls
+      # the pre-existing-schema precondition. No-op on the default "public" suite.
+      {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
       {:ok, _} = TestRepo.query("CREATE SCHEMA #{@prefix}")
 
       {:ok, _, _} =
@@ -364,24 +402,23 @@ defmodule Mailglass.MigrationTest do
     rows != []
   end
 
-  defp table_exists?(table_name) do
-    {:ok, %{rows: rows}} =
-      TestRepo.query("""
-      SELECT 1 FROM information_schema.tables
-      WHERE table_name = '#{table_name}' AND table_schema = 'public'
-      """)
-
-    rows != []
-  end
+  # Schema-aware: resolves the active schema via Config.schema/0 so these tests
+  # pass under BOTH the default "public" suite AND the CI schema-isolation axis
+  # (MAILGLASS_SCHEMA=mailglass), where the migration entrypoint lands every
+  # object in the `mailglass` schema.
+  defp table_exists?(table_name), do: table_exists_in_schema?(Mailglass.Config.schema(), table_name)
 
   defp column_exists?(table_name, column_name) do
     {:ok, %{rows: rows}} =
-      TestRepo.query("""
-      SELECT 1 FROM information_schema.columns
-      WHERE table_name = '#{table_name}'
-        AND column_name = '#{column_name}'
-        AND table_schema = 'public'
-      """)
+      TestRepo.query(
+        """
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = $1
+          AND column_name = $2
+          AND table_schema = $3
+        """,
+        [table_name, column_name, Mailglass.Config.schema()]
+      )
 
     rows != []
   end
@@ -395,10 +432,36 @@ defmodule Mailglass.MigrationTest do
   end
 
   defp safe_migrate_up do
+    maybe_clear_stale_baseline_versions()
+
     Ecto.Migrator.with_repo(TestRepo, fn repo ->
       Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
     end)
   rescue
     _ -> :ok
+  end
+
+  # Re-migrate the suite baseline schema after a teardown dropped it. Under the
+  # CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass) the baseline IS
+  # `mailglass`; a bare `:up all` would be a no-op because schema_migrations
+  # still records the boot versions, so clear them first. No-op on the default
+  # "public" suite.
+  defp restore_suite_baseline_schema do
+    maybe_clear_stale_baseline_versions()
+
+    _ =
+      Ecto.Migrator.with_repo(TestRepo, fn repo ->
+        Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
+      end)
+
+    :ok
+  end
+
+  defp maybe_clear_stale_baseline_versions do
+    if System.get_env("MAILGLASS_SCHEMA") not in [nil, "", "public"] do
+      _ = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
+    end
+
+    :ok
   end
 end

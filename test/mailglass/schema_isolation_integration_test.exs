@@ -86,6 +86,16 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
       end
 
       :persistent_term.erase({Mailglass.Config, :schema})
+
+      # Under the CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass) the SUITE
+      # baseline schema IS `mailglass`, migrated once at boot by test_helper.exs.
+      # This test's teardown just dropped that schema — so re-migrate the suite
+      # baseline before yielding to the next test file, or every subsequent
+      # facade query in the run would hit a missing schema. On the default
+      # "public" suite (env unset) `mailglass` was never the baseline, so nothing
+      # to restore.
+      restore_suite_baseline_schema()
+
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
@@ -105,10 +115,11 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
         })
 
       # === Assertion 1: public.mailglass_events holds zero rows ===
-      {:ok, %{rows: [[public_count]]}} =
-        TestRepo.query("SELECT COUNT(*) FROM public.mailglass_events", [])
-
-      assert public_count == 0,
+      # `public_row_count/2` returns 0 when the public table is absent — under the
+      # CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass) the whole suite is
+      # migrated into `mailglass`, so `public.mailglass_events` does not exist at
+      # all, which is an even stronger form of "the row is not in public".
+      assert public_row_count("mailglass_events") == 0,
              "public.mailglass_events must be empty — facade must route to #{@prefix}, not public"
 
       # === Assertion 2: mailglass.mailglass_events holds the written row ===
@@ -151,13 +162,7 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
         })
 
       # === Assertion 1: public.mailglass_deliveries holds zero rows ===
-      {:ok, %{rows: [[pub_del_count]]}} =
-        TestRepo.query(
-          "SELECT COUNT(*) FROM public.mailglass_deliveries WHERE tenant_id = $1",
-          [@tenant_id]
-        )
-
-      assert pub_del_count == 0,
+      assert public_row_count("mailglass_deliveries", @tenant_id) == 0,
              "public.mailglass_deliveries must be empty — delivery write must land in #{@prefix}"
 
       # === Assertion 2: mailglass.mailglass_deliveries holds the row ===
@@ -171,13 +176,7 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
              "#{@prefix}.mailglass_deliveries must contain exactly one delivery row"
 
       # === Assertion 3: public.mailglass_events holds zero rows for this tenant ===
-      {:ok, %{rows: [[pub_evt_count]]}} =
-        TestRepo.query(
-          "SELECT COUNT(*) FROM public.mailglass_events WHERE tenant_id = $1",
-          [@tenant_id]
-        )
-
-      assert pub_evt_count == 0,
+      assert public_row_count("mailglass_events", @tenant_id) == 0,
              "public.mailglass_events must be empty — events write must land in #{@prefix}"
 
       # === Assertion 4: Operator reads resolve under the prefix ===
@@ -190,7 +189,8 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
 
       # The summary struct must be returned successfully (not crash with
       # "table mailglass_deliveries does not exist in schema mailglass").
-      assert is_map(summary), "SupportSummary.summarize_tenant/1 must succeed under #{@prefix} schema"
+      assert is_map(summary),
+             "SupportSummary.summarize_tenant/1 must succeed under #{@prefix} schema"
 
       # Deliveries list read via Operator.Deliveries (goes through Repo.aggregate + Repo.all).
       deliveries =
@@ -309,6 +309,67 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
              "D-08 invariant: the following lib/ files bypass the Mailglass.Repo facade " <>
                "with a direct Application.get_env(:mailglass, :repo) call (only migration.ex is allowed): " <>
                inspect(direct_repo_env_hits)
+    end
+  end
+
+  # Count rows in `public.<table>` (optionally scoped to a tenant), returning 0
+  # when the `public` table does not exist. Under the CI schema-isolation axis
+  # (MAILGLASS_SCHEMA=mailglass) the whole suite is migrated into `mailglass`, so
+  # there is no `public.mailglass_*` table at all — which is a stronger proof of
+  # isolation than an empty public table (the row provably cannot be in a schema
+  # with no such relation). Under the default "public" suite the public tables
+  # exist and this counts them as before.
+  defp public_row_count(table, tenant_id \\ nil) do
+    if public_table_exists?(table) do
+      {sql, params} =
+        if tenant_id do
+          {"SELECT COUNT(*) FROM public.#{table} WHERE tenant_id = $1", [tenant_id]}
+        else
+          {"SELECT COUNT(*) FROM public.#{table}", []}
+        end
+
+      {:ok, %{rows: [[count]]}} = TestRepo.query(sql, params)
+      count
+    else
+      0
+    end
+  end
+
+  defp public_table_exists?(table) do
+    {:ok, %{rows: rows}} =
+      TestRepo.query(
+        """
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = $1
+        """,
+        [table]
+      )
+
+    rows != []
+  end
+
+  # When the suite runs under MAILGLASS_SCHEMA=mailglass, re-migrate the suite
+  # baseline schema that this test's teardown dropped (idempotent — the migration
+  # entrypoint issues CREATE SCHEMA IF NOT EXISTS + creates tables under
+  # Config.schema/0). No-op on the default "public" suite.
+  defp restore_suite_baseline_schema do
+    if System.get_env("MAILGLASS_SCHEMA") in [nil, "", "public"] do
+      :ok
+    else
+      # The boot migration files (versions 1..N) are still recorded as applied in
+      # public.schema_migrations even though this teardown dropped the mailglass
+      # schema. `:up all` would therefore be a no-op and NOT re-create the schema.
+      # Clear the boot-migration version rows so the migrator re-applies them.
+      {:ok, _} = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
+
+      migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
+
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+        end)
+
+      :ok
     end
   end
 end
