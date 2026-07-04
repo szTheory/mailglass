@@ -74,8 +74,8 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
         "guides/compatibility-and-deprecations.md",
         "guides/upgrading-to-v1_0.md",
         "mix mailglass.install",
-        "**`mailglass_inbound`** (inbound routing; stable 1.0)",
-        "`mailglass_inbound` has its own stable `1.0` contract inventory"
+        "**`mailglass_inbound`** (inbound routing; stable 2.0)",
+        "`mailglass_inbound` has its own stable `2.0` contract inventory"
       ],
       forbidden: [
         "~> 0.1",
