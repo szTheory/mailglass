@@ -42,6 +42,18 @@ test_repo_config = Application.get_env(:mailglass, Mailglass.TestRepo)
 # 3F000 under the isolated search_path).
 schema = Mailglass.Config.schema()
 
+# On any non-public schema axis, exclude `:public_only` tests. These are
+# generic, ambient-schema round-trip tests (e.g. migration_test.exs's `down/0`
+# describe) whose isolation-path coverage is provided separately by
+# `:schema_isolation`-tagged siblings. On the mailglass axis the harness
+# connection search_path + Sandbox :auto makes their full `Ecto.Migrator.run(
+# :down, all: true)` deadlock on `lock_for_migrations` — and they add no
+# isolation coverage — so they run only on the public axis where they validate
+# the adopter `mix ecto.rollback` path.
+if schema != "public" do
+  ExUnit.configure(exclude: [:public_only])
+end
+
 # search_path is "<schema>, public": unqualified DDL/queries resolve to the
 # isolated schema first, but the `citext` extension type (installed in public)
 # stays resolvable. Mirrors the admin operator harness's `SET LOCAL search_path

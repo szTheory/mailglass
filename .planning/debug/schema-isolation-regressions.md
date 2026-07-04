@@ -36,10 +36,21 @@ updated: 2026-07-03
 
 ## Current Focus
 
-hypothesis: RC5 + RC7 + docs_contract RESOLVED. RC3-tail enumerated + classified. Remaining item is the mailglass-axis `migration_test.exs:146` `lock_for_migrations` timeout — which is entangled with the section-3b/4 search_path rigor decision (a genuine architectural fork). Raising a CHECKPOINT.
-test: n/a — awaiting a strategic decision on the connection-level search_path mechanism.
-expecting: Maintainer decision on whether the mailglass-axis suite drops the connection search_path (rely on facade prefix: only) vs keeps it (test-harness convenience that also causes the migrator lock interaction).
-next_action: Emit CHECKPOINT (decision) with the concrete tradeoffs. Do NOT decide unilaterally per the scope-doc section 3b/4 instruction.
+hypothesis: Maintainer chose Option B (scope the line-144 `down/0` generic-rollback test to the public axis via `:public_only` tag; the isolation path is already proven by the line-197 `:schema_isolation` sibling). Implementing Option B for the release + a measured Option A dry-run to size the search_path-removal blast radius.
+test: BOTH axes on `migration_test.exs` — public must still RUN the down/0 test; mailglass must SKIP it (no lock timeout) while the schema_isolation sibling still runs+passes.
+expecting: Option B green on both axes. Option A dry-run cataloged then reverted.
+
+reasoning_checkpoint:
+  hypothesis: "The line-144 `down/0` describe is a generic public-axis rollback test (tagged `:migration_roundtrip`). It contributes ZERO schema-isolation coverage on the mailglass axis — the non-public down path is proven independently by the line-197 `:schema_isolation` sibling describe. It only fails on the mailglass axis because the harness connection search_path='mailglass, public' + Sandbox :auto makes Ecto.Migrator.run(:down, all: true) deadlock on lock_for_migrations."
+  confirming_evidence:
+    - "Line 145: `@describetag :migration_roundtrip` — generic roundtrip, no `:schema_isolation` tag."
+    - "Lines 197-383: separate describe tagged `:schema_isolation` proves CREATE/DROP SCHEMA + non-public up/down lifecycle."
+    - "Evidence log (e): passes 12/0 under public on clean DB; times out 60s on do_lock_for_migrations under mailglass axis."
+  falsification_test: "If skipping the down/0 test on the mailglass axis dropped real isolation coverage, the `:schema_isolation` sibling would NOT already exercise the non-public down path — but it does (lines 317-353, DROP SCHEMA RESTRICT lifecycle)."
+  fix_rationale: "Tagging the generic test `:public_only` + excluding that tag on non-public axes routes each test to the axis it actually validates. Addresses root cause (wrong-axis test drag), not the symptom (lock timeout)."
+  blind_spots: "Whether any OTHER non-isolation test in the suite has the same wrong-axis lock interaction — Task 2 dry-run will surface those."
+
+next_action: Task 1 — add `@describetag :public_only` to the line-144 down/0 describe; add axis-conditional ExUnit.configure exclude to test_helper.exs; verify both axes.
 
 ## Evidence
 
@@ -54,6 +65,8 @@ next_action: Emit CHECKPOINT (decision) with the concrete tradeoffs. Do NOT deci
   - (c) `docs_contract_test:43-47`: REAL, order-independent — README was updated to "stable 2.0" (RC fix `22c03d82`) but the 3 test assertions still said "stable 1.0". FIXED (updated 3 assertions to 2.0). Now 32/0. Committed.
   - (d) `post_publish_smoke_contract_test:34`: asserts publish-hex `consumer-install` job has an inline `Run mix mailglass.install` step, but that job (in post-publish-smoke.yml) was refactored to `bash scripts/consumer_install_smoke.sh` in PR #61 (`9a02847e`), LONG before v2.0. PRE-EXISTING stale test, AND tagged `@moduletag :requires_workspace` → EXCLUDED from the Core Full Suite Advisory lane (`--exclude requires_workspace`), so it does NOT run in CI and does NOT block the release. OUT OF SCOPE for this v2.0 debug effort; not fixed here.
   - (e) `migration_test.exs:146` ("down/0 drops all three tables + trigger + function + citext in reverse order"): passes 12/0 under PUBLIC on a clean DB (the scope-doc's public `fn_rows` failure did NOT reproduce locally on a clean DB — was likely CI DB-state-specific). Under MAILGLASS it TIMES OUT (60s) on `Ecto.Migrator.do_lock_for_migrations` when `Ecto.Migrator.run(:down, all: true)` runs with the connection `search_path = "mailglass, public"` + Sandbox `:auto`. This test lives in the NON-isolation `up/0`/`down/0` describe (no `@describetag :schema_isolation`) — it's a generic public-axis rollback test dragged into the mailglass axis by the global harness search_path. This is precisely the section-3b/4 search_path-rigor fork → CHECKPOINT.
+
+- timestamp: 2026-07-03 — TASK 1 (Option B) IMPLEMENTED + VERIFIED GREEN ON BOTH AXES. Added `@describetag :public_only` (with an explanatory comment pointing at the `:schema_isolation` sibling as the isolation-path proof) to the line-144 `down/0` describe in `test/mailglass/migration_test.exs`. Added an axis-conditional `if schema != "public", do: ExUnit.configure(exclude: [:public_only])` in root `test/test_helper.exs` (schema var = `Mailglass.Config.schema()`). Verification (clean DBs per axis): `MAILGLASS_SCHEMA=public mix test --seed 0 test/mailglass/migration_test.exs` → 12 tests, 0 failures (down/0 RUNS + passes). `MAILGLASS_SCHEMA=mailglass mix test --seed 0 test/mailglass/migration_test.exs` → 11 tests, 0 failures, **1 excluded** (down/0 SKIPPED, NO lock timeout; the `:schema_isolation` sibling still runs+passes — confirmed via `--only schema_isolation` → 3 tests, 0 failures). Root cause addressed: wrong-axis test drag, not the symptom. Committed locally (not pushed).
 
 ## Eliminated
 

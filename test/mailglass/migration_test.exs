@@ -143,6 +143,17 @@ defmodule Mailglass.MigrationTest do
 
   describe "down/0" do
     @describetag :migration_roundtrip
+    # :public_only — this is a GENERIC rollback round-trip on the ambient schema.
+    # It contributes ZERO schema-isolation coverage on the mailglass axis: the
+    # non-public up/down lifecycle is proven independently by the
+    # `describe "up/down against a non-public prefix (MIGR-01/02 regression)"`
+    # sibling below (tagged :schema_isolation, DROP SCHEMA RESTRICT lifecycle at
+    # lines ~317-353). On the mailglass axis the harness connection search_path
+    # ("mailglass, public") + Sandbox :auto makes `Ecto.Migrator.run(:down,
+    # all: true)` deadlock on `lock_for_migrations`; test_helper.exs excludes
+    # :public_only on any non-public axis so this public-axis test runs only
+    # where it validates something.
+    @describetag :public_only
     test "drops all three tables + trigger + function + citext in reverse order" do
       # Roll the schema down through Ecto.Migrator (the same code path adopters
       # hit via `mix ecto.rollback`). :all with :down reverses every applied
