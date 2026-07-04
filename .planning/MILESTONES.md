@@ -1,5 +1,26 @@
 # Milestones
 
+## ✅ v2.0 Postgres Schema Isolation (Shipped: 2026-07-04)
+
+**Phases completed:** 6 phases (132–137), ~20 reqs — **mailglass 2.0.0 / mailglass_admin 2.0.0 / mailglass_inbound 2.0.0 live on Hex** (see `milestones/v2.0-MILESTONE-AUDIT.md`)
+
+> First breaking major: default all mailglass domain tables into a dedicated `mailglass` Postgres
+> SCHEMA (was `public`) via runtime facade-injected `prefix:` (NEVER `SET search_path` — decision 3),
+> with a `config :mailglass, :schema, "public"` opt-out and a `mix mailglass.upgrade.v2_schema` codemod;
+> `citext` stays in `public`. MIGR-05 keystone proven: the append-only immutability trigger fires
+> (45A01) under a non-public schema with no search_path pin. The linked 2.0/2.0/2.0 release needed heavy
+> fix-forward: PR #119's first full-body CI of the never-pushed 132–136 body surfaced ~7 cross-phase
+> regressions (a 4-round `/gsd-debug` campaign fixed them — incl. a REAL `webhook/ingest.ex`
+> missing-`prefix:` bug the isolation test harness's `search_path` had MASKED, the decision-3/MIGR-05
+> validation point). After merge, the publish fan-out surfaced 3 packaging defects (core file-allowlist,
+> inbound `priv`/allowlist, admin's stale `~> 1.1` inbound pin), each recovered via force tag-move +
+> `workflow_dispatch` re-publish (verify via Hex API, not run status). Consumer smoke green; reference
+> baseline advanced to `~> 2.0`. Full narrative: `debug/resolved/schema-isolation-regressions.md` +
+> `137-RELEASE-BLOCKED-DEBUG-SCOPE.md` + memory `project_v2_0_release_blocked`.
+> Tracked follow-up: bucket-(b) ~48-file test-fixture `search_path` sweep (Core Full Suite Advisory
+> stays the known persistent flake until then).
+> (Scope counted directly from phases 132–137 to avoid `milestone.complete` 999.x inflation.)
+
 ## ✅ v1.15 Release-Pipeline Efficiency & Contributor DX (Shipped: 2026-07-02)
 
 **Phases completed:** 7 phases (125–131), 26 reqs — **mailglass 1.11.0 / mailglass_admin 1.11.0 / mailglass_inbound 1.6.0 live on Hex** (see `milestones/v1.15-MILESTONE-AUDIT.md`)

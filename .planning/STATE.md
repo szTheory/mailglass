@@ -4,17 +4,17 @@ milestone: v2.0
 milestone_name: Postgres Schema Isolation)
 current_phase: 137
 current_phase_name: linked-2-0-release-ceremony-milestone-closeout
-status: executing
-stopped_at: Phase 137 context gathered (assumptions mode)
-last_updated: "2026-07-03T15:57:57.426Z"
-last_activity: 2026-07-03
-last_activity_desc: Phase 137 execution started
+status: complete
+stopped_at: v2.0 shipped + milestone closed out (2.0.0/2.0.0/2.0.0 on Hex)
+last_updated: "2026-07-04T18:45:00.000Z"
+last_activity: 2026-07-04
+last_activity_desc: v2.0 Postgres Schema Isolation shipped — mailglass/admin/inbound 2.0.0 live on Hex; milestone closed out
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 15
-  completed_plans: 13
-  percent: 83
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -24,15 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 137 — linked-2-0-release-ceremony-milestone-closeout
+**Current focus:** none — v2.0 milestone SHIPPED + closed out. Posture: quiet maintenance / adopter-pull until the next milestone (`/gsd-new-milestone`).
 
 ## Current Position
 
-Milestone: v2.0 Postgres Schema Isolation (6 phases, 132-137)
-Phase: 137 (linked-2-0-release-ceremony-milestone-closeout) — EXECUTING
-Plan: 2 of 3
-Status: Ready to execute
-Last activity: 2026-07-03 — Phase 137 execution started
+Milestone: v2.0 Postgres Schema Isolation (6 phases, 132-137) — ✅ SHIPPED 2026-07-04 (mailglass 2.0.0 / mailglass_admin 2.0.0 / mailglass_inbound 2.0.0 live on Hex; consumer smoke green; reference baseline advanced to ~> 2.0)
+Phase: 137 (linked-2-0-release-ceremony-milestone-closeout) — COMPLETE
+Plan: 3 of 3 complete
+Status: Milestone complete — no active phase. Audit `status: passed` (see `milestones/v2.0-MILESTONE-AUDIT.md`). Next: `/gsd-new-milestone` or quiet maintenance.
+Last activity: 2026-07-04 — v2.0 shipped + closed out
+Tracked follow-up (non-blocking): bucket-(b) ~48-file test-fixture `search_path` sweep — Core Full Suite Advisory stays the known persistent flake until then.
 
 ## v2.0 Milestone Intent
 
