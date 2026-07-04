@@ -5,6 +5,32 @@ All notable changes to `mailglass_inbound` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.6.0...mailglass_inbound-v2.0.0) (2026-07-04)
+
+
+### Features
+
+* **132-02:** add :schema key, schema/0 accessor, boot-warm to MailglassInbound.Config ([344230e](https://github.com/szTheory/mailglass/commit/344230e05bcd3c977ca11f72f9e06b815d8f609d))
+* **132-02:** wire MailglassInbound.Config.validate_at_boot!/0 into application start/2 ([9064711](https://github.com/szTheory/mailglass/commit/906471194c0f3b3e9db0e3235815615d1e39edf2))
+* **135-01:** thread put_prefix/1 through MailglassInbound.Repo facade ([fac03d2](https://github.com/szTheory/mailglass/commit/fac03d23b56a756028fe33a500a10fb31913365b))
+* **135-02:** MailglassInbound.Migration entrypoint + Postgres runner with CREATE/DROP SCHEMA ([9ffd8d2](https://github.com/szTheory/mailglass/commit/9ffd8d204eb49ed8b0c222ed4d65732ee3d5facc))
+* **135-02:** mix mailglass.inbound.gen.migration delegating-wrapper generator + migrations round-trip test ([65bde07](https://github.com/szTheory/mailglass/commit/65bde07d6a62bdf834d69e77c2d3f48cfab27beb))
+* **135-02:** V01 final-state snapshot + delete 7 loose migration files ([1c14a41](https://github.com/szTheory/mailglass/commit/1c14a41a709d059decc0a28ab7fa266b6ab4ce8e))
+* **135-03:** rewire test_helper to Migration.up/1 with MAILGLASS_SCHEMA dual-schema alignment ([ddefdc3](https://github.com/szTheory/mailglass/commit/ddefdc3376ca08fda9ca35f4903a7dd7e8a2077d))
+
+
+### Bug Fixes
+
+* **135-01:** inline-qualify prune batched DELETE with schema prefix (D-02) ([a91c267](https://github.com/szTheory/mailglass/commit/a91c267c2a0bf0b9cd1184c7e76e8a9e03bd0ff3))
+* **135-01:** pin schema to public in inbound test env (Rule 2 - missing critical config) ([c35dd10](https://github.com/szTheory/mailglass/commit/c35dd10d729c7cb54b0ef6ff75d85de064d451bb))
+* **135:** repoint inbound migration-doc tests to V01 snapshot after loose-file collapse ([cd55cc0](https://github.com/szTheory/mailglass/commit/cd55cc05ec5c343fc948c0824ae59997dbb7f93a))
+* **137-02:** pre-create non-public schema before inbound migrator runs ([e831b70](https://github.com/szTheory/mailglass/commit/e831b709d177d318dff615d8271a43d77bfc92f6))
+
+
+### Miscellaneous Chores
+
+* **release:** trigger 2.0.0 major for standalone mailglass_inbound ([76998a7](https://github.com/szTheory/mailglass/commit/76998a7bb01c6a4fc7b2d918b95d4b78834360d4))
+
 ## [1.6.0](https://github.com/szTheory/mailglass/compare/mailglass_inbound-v1.5.4...mailglass_inbound-v1.6.0) (2026-07-02)
 
 

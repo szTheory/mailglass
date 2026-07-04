@@ -14,6 +14,50 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.0.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.11.0...mailglass-v2.0.0) (2026-07-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* **release:** marker is banked in 132-136, so release-please would otherwise cut 1.12.0/1.12.0. This root mix.exs touch attributes the footer below to the linked group (core exclude-paths keep admin/inbound out of `.`).
+
+### Features
+
+* **132-01:** add :schema config key, schema/0 accessor, boot-warm ([3ab6978](https://github.com/szTheory/mailglass/commit/3ab6978a66b76d7d9d77380b0be43504b1c1b62f))
+* **132-01:** implement Mailglass.Identifier shared validator ([9c4aedc](https://github.com/szTheory/mailglass/commit/9c4aedc4e21fcfa31c62fdf98e1b4de91a4a16f7))
+* **133-01:** add put_prefix/1 + multi_opts/1 to Mailglass.Repo facade ([be7a16a](https://github.com/szTheory/mailglass/commit/be7a16a6a9dffa569741543f18f86a47a7640431))
+* **133-01:** defensive put_query_prefix on orphans subquery + fix Credo comments ([de34a2e](https://github.com/szTheory/mailglass/commit/de34a2ea8afd1ebf2ccab37e3f2f090e081581fe))
+* **133-01:** thread prefix per-step into Events/Outbound/Escalation Multi builders ([a3abe87](https://github.com/szTheory/mailglass/commit/a3abe87fbf366e8c4f8f61db6a21e885b267619d))
+* **133-02:** add FACADE-04 schema-isolation integration test + fix admin test.exs schema pin ([70a3e07](https://github.com/szTheory/mailglass/commit/70a3e0715ec69c44f9977025f7dd4bab8aaddf0f))
+* **133-02:** FACADE-03 admin zero-code-change render proof + D-08 bypass fix ([ee8e965](https://github.com/szTheory/mailglass/commit/ee8e965d54fd7bd2e86676c3e2cb0d4f697841b3))
+* **134-01:** add maybe_create_schema/1 + maybe_drop_schema/1 to Postgres dispatcher ([43e3c65](https://github.com/szTheory/mailglass/commit/43e3c657fc53d5f349686e6e7ae31753eb5b0b75))
+* **134-01:** inject prefix: Config.schema() at Mailglass.Migration entrypoint ([0d0d70d](https://github.com/szTheory/mailglass/commit/0d0d70dc4b00ede2f9fc254f1a8036309507bdc0))
+* **134-02:** schema-qualify v01 immutability fn+trigger+CHECK, thread prefix through down/1 (MIGR-03, MIGR-04) ([ac2a2e5](https://github.com/szTheory/mailglass/commit/ac2a2e5b1a5f5b182332f93dd657cb04259f1708))
+* **134-02:** schema-qualify v03 complaint CHECK in up/1 and down/1 (MIGR-04) ([63f54a3](https://github.com/szTheory/mailglass/commit/63f54a3f29be0774b35b937bfbd6820a4d6c2d72))
+* **134-03:** add NoSchemaPrefixAttribute credo guard (MIGR-06) ([dc40465](https://github.com/szTheory/mailglass/commit/dc404655c068b543806cb48e800ba9d702b7aab0))
+* **134-03:** MAILGLASS_SCHEMA override + schema-aware suite (D-06 axis) ([ace086b](https://github.com/szTheory/mailglass/commit/ace086b5e09a51e81e63c34eb6c4edf0242f2a9b))
+* **135-03:** add mailglass_inbound dual-schema advisory CI job (INB-03) ([76f2be0](https://github.com/szTheory/mailglass/commit/76f2be0e8022281eb3c97cdc1a7a565e03301ca0))
+* **136-01:** implement mix mailglass.upgrade.v2_schema file-emitter ([ffeb84e](https://github.com/szTheory/mailglass/commit/ffeb84ed023b25a17ec0eb50ec5cd04b49553c71))
+
+
+### Bug Fixes
+
+* **137-02:** defer reference baseline ~&gt; 2.0 advance to post-publish ([c38d20c](https://github.com/szTheory/mailglass/commit/c38d20c0ea7a987bd02d072c7745fb0afd5bfe5f))
+* **137-02:** schema-qualify demo hand-written migrations for v2.0 mailglass schema ([adc27f8](https://github.com/szTheory/mailglass/commit/adc27f8889f9447ed9be7ca98bac6ba4b5a38291))
+* **137-02:** set up non-public schema in core test harness (D-06 matrix) ([3169228](https://github.com/szTheory/mailglass/commit/3169228f9e75185c9b68757fe433ebc9b7c97368))
+* **137:** no-op redundant demo delivery-snapshot migration for v2.0 ([076530d](https://github.com/szTheory/mailglass/commit/076530dce3b19ca101f65806ada74541983165c6))
+* **137:** schema-qualify demo seed/reset SQL for v2.0 mailglass schema ([ead30b5](https://github.com/szTheory/mailglass/commit/ead30b5e830bab6d1d8012a8273ca03af63b18d5))
+* **docs-contract:** update inbound stability marker assertions to 2.0 ([2996c5e](https://github.com/szTheory/mailglass/commit/2996c5e9d55ab21e2c90645221c51c2cd78dbd05))
+* **docs:** bump docs.check README inbound tokens to stable 2.0 ([32657f7](https://github.com/szTheory/mailglass/commit/32657f7b80730b86bc82b63be71ee339d4ab5462))
+* **publish-contract:** reconcile trust-lane contract test with Phase 126 changes-gate ([b308f45](https://github.com/szTheory/mailglass/commit/b308f453dd831d1ec7d8735cc157f93775223213))
+* **test:** scope generic down/0 rollback test to public axis ([ba993c4](https://github.com/szTheory/mailglass/commit/ba993c4ff10b55d7a53fc23f8e1549f49dfa5d12))
+* **webhook:** thread schema prefix through ingest Multi write steps ([f64c0b2](https://github.com/szTheory/mailglass/commit/f64c0b2ff5677ba6c5566857965e8b2970130c08))
+
+
+### Miscellaneous Chores
+
+* **release:** trigger 2.0.0 major for linked core+admin group ([c96d7ca](https://github.com/szTheory/mailglass/commit/c96d7ca8b9039a842d53f904e59eedfe3da40093))
+
 ## [1.11.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.10.2...mailglass-v1.11.0) (2026-07-02)
 
 
