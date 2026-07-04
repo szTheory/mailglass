@@ -106,6 +106,25 @@ surface) and confine search_path strictly to the raw-SQL fixture/TRUNCATE setup 
 schema-isolation validation is weaker than the milestone intends. Re-audit RC3/RC4/RC5 through this
 lens; my fixes prioritized "make the suite run", not "maximize qualification rigor".
 
+**RESOLUTION (2026-07-03):** The rigor fork was measured via an Option A dry-run (harness search_path
+dropped). It surfaced exactly one genuine masked LIBRARY missing-`prefix:` bug — **bucket (a)**: 4
+write steps in `Mailglass.Webhook.Ingest.build_multi` + the sibling `Suppression.AutoSuppress.insert/2`
+omitted the per-step `prefix:`, relying on search_path. **Bucket (a) is now FIXED** (threaded
+`Repo.multi_opts()`; verified both axes standard-harness AND with search_path dropped — facade prefix,
+not search_path, does the routing). See `.planning/debug/resolved/schema-isolation-regressions.md`
+Resolution. Two items are TRACKED FOLLOW-UPS for **after 2.0 publishes** (NOT release blockers):
+
+1. **Bucket (b) — 48-file test-fixture search_path reliance (171 failures).** Test bodies + fixture
+   generators call `TestRepo.insert(changeset)` / raw SQL directly (not through `Mailglass.Repo`), so
+   no `prefix:` is injected and they rely on the connection search_path. These are HARNESS-side, not
+   library bugs. Remediation: thread `prefix:` through all fixtures, OR confine search_path strictly
+   to raw-SQL fixture setup. Doing this unblocks fully dropping the harness search_path (so ONLY
+   facade `prefix:` injection routes queries — maximal isolation rigor).
+2. **citext-in-public boot gotcha.** A full search_path drop requires `CREATE EXTENSION citext SCHEMA
+   public` — citext must NOT live inside the isolated schema, or `CitextProbe` (core
+   `test/test_helper.exs:127`) fails `type citext can not be handled` at suite boot before any test
+   runs. Any future full-drop (Option A) work must create citext in `public`.
+
 ### 4. Re-verify + resume
 After RC5/RC7/residuals are green locally, push, let RP regenerate #119, confirm CI **fully
 green** on the PR head, then resume Plan 02 Task 2 onward (re-arm/admin-merge → publish → verify)

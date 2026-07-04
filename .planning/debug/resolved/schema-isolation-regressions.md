@@ -1,6 +1,6 @@
 ---
 slug: schema-isolation-regressions
-status: investigating
+status: resolved
 trigger: v2.0 schema-isolation full-suite regressions blocking the linked 2.0 release (PR #119). Never-CI'd 132–136 body surfaced ~7 real cross-phase regressions on first full-body CI. 8 fixes landed; RC5/RC7/residuals remain. Full scope in .planning/phases/137-linked-2-0-release-ceremony-milestone-closeout/137-RELEASE-BLOCKED-DEBUG-SCOPE.md
 created: 2026-07-03
 updated: 2026-07-03
@@ -36,11 +36,11 @@ updated: 2026-07-03
 
 ## Current Focus
 
-hypothesis: RESOLVED. Option B implemented + GREEN on both axes (public RUNS down/0 12/0; mailglass SKIPS it 11/0 1-excluded, no lock timeout; :schema_isolation sibling green 3/0). Committed locally `ba993c4f`. Option A dry-run cataloged + fully reverted (`cd51533a` findings doc). NEW OPEN DECISION surfaced by the dry-run (see next_action).
-test: n/a — awaiting maintainer decision on bucket (a).
-expecting: Option B green (achieved). Bucket-(a) fix decision from maintainer.
+hypothesis: RESOLVED — ALL in-scope regressions fixed. Maintainer chose Option 1 (fix bucket (a) now). Applied canonical `Repo.multi_opts()` prefix injection to all 4 masked write steps in the webhook-ingest path. Verified BOTH axes (standard harness green; search_path-dropped proof green). Committed locally. This closes the last in-scope regression.
+test: DONE — both axes green under standard harness; search_path-dropped proof confirms facade prefix (not search_path) does the routing.
+expecting: n/a — resolved.
 
-next_action: DECISION PENDING (returned to orchestrator; AskUserQuestion unavailable in this subagent). The Option A dry-run found a SMALL REAL production bug — bucket (a): 5 failures, ONE module `lib/mailglass/webhook/ingest.ex` `build_multi` (`Multi.insert(:webhook_event)` / `Multi.update_all(:flip_status)` / projector steps omit `Repo.multi_opts()` → wrong-schema writes under a non-public schema; masked today only by the harness search_path — exactly the MIGR-05/decision-(3) concern). Debugger deliberately did NOT fix it (per "no A beyond dry-run without further decision"). Options: (1) Fix (a) now — apply `Repo.multi_opts()`/prefix to the ~4 ingest Multi steps, verify both axes, commit locally, no push (cheap, max rigor); (2) Ship on B, file bucket (a) + the §3b 48-file fixture sweep as a tracked v2.0 follow-up. Bucket (b) 48-file fixture cascade is NOT for this release either way.
+next_action: NONE (resolved). Bucket (b) 48-file fixture-qualification sweep + full harness search_path drop are TRACKED FOLLOW-UPS for post-2.0-publish (recorded in Resolution + 137-RELEASE-BLOCKED-DEBUG-SCOPE.md). Main is ready to push so PR #119 head CI can verify fully green.
 
 reasoning_checkpoint:
   hypothesis: "The line-144 `down/0` describe is a generic public-axis rollback test (tagged `:migration_roundtrip`). It contributes ZERO schema-isolation coverage on the mailglass axis — the non-public down path is proven independently by the line-197 `:schema_isolation` sibling describe. It only fails on the mailglass axis because the harness connection search_path='mailglass, public' + Sandbox :auto makes Ecto.Migrator.run(:down, all: true) deadlock on lock_for_migrations."
@@ -85,6 +85,17 @@ next_action: DONE. Task 1 committed (`ba993c4f`), both axes green. Task 2 dry-ru
   - **(c) known flakes — 0** (voice_test/phoenix.mjs "oops" and phase-45 inbound pool did not appear in this run; the inbound property flake is a separate suite).
   RECOMMENDATION: bucket (a) is TINY (5 failures, 1 module, ~4 Multi steps) → **fix (a) now** (add `Repo.multi_opts()` / `put_query_prefix` to the ingest Multi steps — cheap, high-rigor, closes the exact MIGR-05/decision-(3) masking gap). But bucket (b) is a BROAD 48-file cascade → **do NOT pursue full Option A (removing the harness search_path) for this release**; file it as a tracked v2.0-follow-up (either thread `prefix:` through all fixtures, or keep the search_path strictly for raw-SQL fixture setup per section 3b's "confine search_path to fixtures" framing). Ship on B + the small (a) fix; track the fixture-qualification sweep separately. Experiment fully reverted (`git restore test/test_helper.exs`; DBs reset); working tree clean at the Task-1 commit only.
 
+- timestamp: 2026-07-03 — BUCKET (a) RESOLVED (maintainer Option 1: fix now). Applied the codebase's CANONICAL prefix-injection idiom (`Mailglass.Repo.multi_opts/1` → `Keyword.put_new(:prefix, Mailglass.Config.schema())`, per the `events.ex`/`outbound.ex` exemplars — NO `SET search_path`, no new pattern invented) to EVERY masked write step reachable from `lib/mailglass/webhook/ingest.ex` `build_multi`:
+  1. `Multi.insert(:webhook_event, ...)` (ingest.ex ~216) — wrapped the fixed `on_conflict:/conflict_target:/returning:` opts in `Repo.multi_opts(...)`.
+  2. `Multi.update_all(:flip_status, ...)` (ingest.ex ~225) — moved the `set:` keyword to the 4th arg (updates) and passed `Repo.multi_opts()` as the SEPARATE 5th arg (opts). **GOTCHA caught in verification:** collapsing `set:` + `prefix:` into one keyword is a `malformed update` ArgumentError — `Multi.update_all/5` needs updates (4th) and opts (5th) as distinct args.
+  3. `:projector_apply` `repo.update(changeset)` (ingest.ex ~307) — the Ecto.Multi callback `repo` is the RAW host repo (NOT the `Mailglass.Repo` facade), so it does NOT inject prefix; added `Repo.multi_opts()` as the update opts.
+  4. `Mailglass.Suppression.AutoSuppress.insert/2` (auto_suppress.ex ~54, sibling multi builder reached via the `:auto_suppress` step) — same raw-`repo.insert` no-prefix bug; wrapped its `on_conflict:/conflict_target:/returning:` opts in `Mailglass.Repo.multi_opts(...)`.
+  Read-side steps (`:duplicate_check`, `:projector_categorize`, `resolve_delivery_id`) already route through `Mailglass.Repo.one` (facade injects prefix) — left unchanged. `Events.append_multi` already threads `insert_opts` with `prefix: Config.schema()` — unchanged.
+  VERIFICATION — BOTH AXES, STANDARD HARNESS (search_path retained): named repro `core_webhook_integration_test.exs`+`ingest_auto_suppress_test.exs` → PUBLIC 19/0, MAILGLASS 19/0. Broader `test/mailglass/webhook/` → PUBLIC 217/0, MAILGLASS 217/0.
+  CRITICAL PROOF — MAILGLASS AXIS, CONNECTION search_path DROPPED to "public" (long-lived pool only; migration bootstrap kept "mailglass, public" so DDL still lands in the isolated schema): a throwaway ExUnit proof drove `ingest_multi/3` then read each table two ways — RAW `TestRepo` (public, no prefix) vs FACADE `Mailglass.Repo` (prefix: mailglass). Result: webhook_event raw=0/facade=1; event raw=0/facade=1; delivery facade=1; suppression_entry raw=0/facade=1 → **1 test, 0 failures**. This proves the FACADE PREFIX INJECTION (not the harness search_path) now routes every write to the `mailglass` schema. The 5 remaining failures seen when running the real suite with search_path dropped are ALL test-side raw reads (`TestRepo.aggregate`/`TestRepo.all(Entry)`, no prefix) asserting against `public` — bucket (b), NOT library bugs.
+  BOOT-TIME GOTCHA (dry-run finding, reconfirmed): a full harness search_path drop requires `citext` in `public` (the `CitextProbe` at test_helper.exs:127 fails `type citext can not be handled` if citext lives only inside the isolated schema). In this DB citext was already in `public`, so the proof ran without a DB edit; a full Option A migration must `CREATE EXTENSION citext SCHEMA public` (NOT inside the isolated schema).
+  Temp harness edit (long-lived pool search_path → "public") REVERTED via `git checkout test/test_helper.exs`; proof script deleted; Sandbox rolled back all writes; DB left clean (citext untouched in public); tree clean except the 2 intended library files. Committed atomically (fix + this debug-file update).
+
 ## Eliminated
 
 - hypothesis: The ~193 local `MAILGLASS_SCHEMA=public mix test` failures (webhook/DB providers) are real per-test v2.0 regressions.
@@ -102,3 +113,28 @@ next_action: DONE. Task 1 committed (`ba993c4f`), both axes green. Task 2 dry-ru
 - hypothesis: The admin `test_helper.exs` `inbound_migrations_path` (`:code.priv_dir(:mailglass_inbound)/repo/migrations`) was migrating inbound tables into the admin DB.
   evidence: Inbound ships no `priv/` directory at all; the path is empty/nonexistent so `Ecto.Migrator.run` ran zero inbound migrations. Inbound tables were never present in the admin test DB (`pg_tables` LIKE 'mailglass_inbound%' → 0 rows).
   timestamp: 2026-07-03
+
+- hypothesis: The 5 remaining failures when running the real webhook suite under the mailglass axis with search_path dropped are further LIBRARY missing-prefix bugs.
+  evidence: All 5 are test-side raw reads (`TestRepo.aggregate`/`TestRepo.all(Entry)`, no `prefix:`) asserting against `public`; the standalone facade-vs-raw proof shows the library WROTE to `mailglass` (facade read=1, raw public read=0) for webhook_event, event, delivery, and suppression_entry. So the residual failures are bucket (b) test-harness reliance, not library bugs.
+  timestamp: 2026-07-03
+
+## Resolution
+
+root_cause: |
+  Under a non-public Postgres schema (`config :mailglass, :schema, "mailglass"`, the v2.0 default), the webhook-ingest transaction wrote to the WRONG schema. `Mailglass.Repo.multi/2` executes an `Ecto.Multi` but CANNOT inject a `prefix:` into inner step SQL (Ecto.Multi does not propagate executor opts into steps — documented in repo.ex "Schema prefix injection"). Four write steps reachable from `Mailglass.Webhook.Ingest.build_multi` omitted the per-step prefix and therefore relied on the connection `search_path` to resolve their target tables — violating locked-decision-(3) / MIGR-05 ("explicit per-query/per-DDL qualification, NEVER SET search_path"). The test harness's connection `search_path = "mailglass, public"` MASKED the bug: writes resolved to `mailglass` via search_path even though no `prefix:` was threaded. The four steps: (1) `Multi.insert(:webhook_event)`, (2) `Multi.update_all(:flip_status)`, (3) `:projector_apply` `repo.update` (raw Ecto.Multi callback repo, not the facade), and (4) the sibling `Mailglass.Suppression.AutoSuppress.insert/2` `repo.insert` reached via the `:auto_suppress` step. Sibling modules `events.ex` (insert_opts carries `prefix: Config.schema()`) and `outbound.ex` (steps carry `Repo.multi_opts()`) were already correct — they were the exemplars.
+
+fix: |
+  Threaded the codebase's canonical `Mailglass.Repo.multi_opts/1` (which injects `prefix: Mailglass.Config.schema()` via `Keyword.put_new`, so an explicit caller `:prefix` still wins) onto all four write steps — matching the `events.ex`/`outbound.ex` idiom exactly; no `SET search_path`, no new pattern. Files: `lib/mailglass/webhook/ingest.ex` (steps 1–3) and `lib/mailglass/suppression/auto_suppress.ex` (step 4). For `Multi.update_all` the `set:` updates keyword stays the 4th arg and `Repo.multi_opts()` is the separate 5th (opts) arg (merging them is a malformed-update error).
+
+verification: |
+  BOTH AXES, standard harness (search_path retained): named repro files PUBLIC 19/0 + MAILGLASS 19/0; broader `test/mailglass/webhook/` PUBLIC 217/0 + MAILGLASS 217/0. CRITICAL PROOF, mailglass axis with the long-lived pool search_path dropped to "public": facade-vs-raw read-back showed every library write landed in `mailglass` (facade read=1, raw public read=0) across webhook_event/event/delivery/suppression_entry → proof test 0 failures. Temp harness edit reverted; tree clean; DB clean.
+
+files_changed:
+  - lib/mailglass/webhook/ingest.ex
+  - lib/mailglass/suppression/auto_suppress.ex
+
+## Tracked follow-ups (post-2.0-publish)
+
+- **Bucket (b) — 48-file test-fixture search_path reliance (171 failures).** Test bodies + fixture generators call `TestRepo.insert(changeset)` / raw SQL directly (not through `Mailglass.Repo`), so no `prefix:` is injected and they rely on the connection search_path. Representative: `events/event_test.exs:41`, `outbound/projector_test.exs` (×11), `operator/suppressions_test.exs` (×8), `compliance/unsubscribe_controller_test.exs` (×8). NOT a library bug; a harness-side sweep. Remediation options: thread `prefix:` through all fixtures, OR keep the connection search_path strictly for raw-SQL fixture setup (§3b "confine search_path to fixtures"). NOT for the 2.0 release.
+- **Fully drop the harness connection search_path.** Currently the mailglass-axis long-lived pool keeps `search_path = "mailglass, public"`. Fully removing it (so ONLY facade `prefix:` injection routes queries, surfacing any future missing-qualification bug) is blocked on bucket (b). Defer to the same sweep.
+- **citext-in-public boot gotcha.** A full Option A (harness search_path fully dropped) requires `citext` created in `public`, NOT inside the isolated schema — otherwise `CitextProbe` (test_helper.exs:127) fails `type citext can not be handled` at suite boot. Any future search_path-drop work must `CREATE EXTENSION citext SCHEMA public`.

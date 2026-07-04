@@ -216,16 +216,28 @@ defmodule Mailglass.Webhook.Ingest do
     |> Multi.insert(
       :webhook_event,
       WebhookEvent.changeset(webhook_event_attrs),
-      on_conflict: :nothing,
-      conflict_target: [:provider, :provider_event_id],
-      returning: true
+      # v2.0 FACADE-01: raw Ecto.Multi steps do NOT inherit the facade's
+      # prefix injection (Repo.multi/2 cannot rewrite inner step SQL — see
+      # repo.ex "Schema prefix injection"). Thread prefix: Config.schema()
+      # explicitly via Repo.multi_opts/1 so this insert routes to the
+      # isolated schema. Merged over the fixed on_conflict opts.
+      Repo.multi_opts(
+        on_conflict: :nothing,
+        conflict_target: [:provider, :provider_event_id],
+        returning: true
+      )
     )
     |> append_events_for_each(events, provider, tenant_id)
     |> update_projections_for_each(events)
     |> Multi.update_all(
       :flip_status,
       &flip_status_query(&1, provider_str),
-      set: [status: :succeeded, processed_at: Clock.utc_now()]
+      [set: [status: :succeeded, processed_at: Clock.utc_now()]],
+      # v2.0 FACADE-01: opts (5th arg) carries prefix so the status flip UPDATE
+      # targets the isolated schema's mailglass_webhook_events row. The updates
+      # keyword (4th arg) stays separate — merging prefix into it is a malformed
+      # update.
+      Repo.multi_opts()
     )
   end
 
@@ -304,7 +316,12 @@ defmodule Mailglass.Webhook.Ingest do
           {:matched, delivery, inserted_event} ->
             changeset = Projector.update_projections(delivery, inserted_event)
 
-            case repo.update(changeset) do
+            # v2.0 FACADE-01: `repo` is the raw Ecto.Multi callback repo (the
+            # host Repo), NOT the Mailglass.Repo facade — it does NOT inject
+            # prefix. Thread prefix: Config.schema() via Repo.multi_opts/0 so
+            # the projection UPDATE routes to the isolated schema's
+            # mailglass_deliveries row.
+            case repo.update(changeset, Repo.multi_opts()) do
               {:ok, _projected} -> {:ok, {:matched, delivery, inserted_event}}
               {:error, reason} -> {:error, reason}
             end

@@ -52,12 +52,18 @@ defmodule Mailglass.Suppression.AutoSuppress do
   def insert(_repo, :skip), do: {:ok, :skip}
 
   def insert(repo, attrs) when is_map(attrs) do
+    # v2.0 FACADE-01: `repo` is the raw Ecto.Multi callback repo (the host
+    # Repo), NOT the Mailglass.Repo facade — it does NOT inject prefix. Thread
+    # prefix: Config.schema() via Repo.multi_opts/1 so this suppression-entry
+    # insert routes to the isolated schema. Merged over the fixed conflict opts.
     attrs
     |> Entry.changeset()
     |> repo.insert(
-      on_conflict: :nothing,
-      conflict_target: @conflict_target,
-      returning: true
+      Mailglass.Repo.multi_opts(
+        on_conflict: :nothing,
+        conflict_target: @conflict_target,
+        returning: true
+      )
     )
   end
 
