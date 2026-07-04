@@ -803,22 +803,32 @@ defmodule MailglassDemo.DemoData do
     }
   end
 
+  # v2.0 moves the mailglass + inbound tables into the configured schema
+  # (default "mailglass"). These raw statements bypass the Ecto facade, so no
+  # `prefix:` is injected and the demo connection's search_path does not include
+  # the isolated schema — every bare table name must be schema-qualified inline.
+  # `Mailglass.Config.schema/0` validates the value as a safe SQL identifier
+  # (Mailglass.Identifier.validate!/2), so interpolating it here is injection-safe.
+  defp schema, do: Mailglass.Config.schema()
+
   defp truncate! do
+    s = schema()
+
     Repo.query!("""
     TRUNCATE TABLE
-      mailglass_inbound_replay_runs,
-      mailglass_inbound_evidence,
-      mailglass_inbound_records,
-      mailglass_webhook_events,
-      mailglass_events,
-      mailglass_suppressions,
-      mailglass_deliveries
+      #{s}.mailglass_inbound_replay_runs,
+      #{s}.mailglass_inbound_evidence,
+      #{s}.mailglass_inbound_records,
+      #{s}.mailglass_webhook_events,
+      #{s}.mailglass_events,
+      #{s}.mailglass_suppressions,
+      #{s}.mailglass_deliveries
     RESTART IDENTITY CASCADE
     """)
   end
 
   defp count_table!(table) do
-    %{rows: [[count]]} = Repo.query!("SELECT count(*) FROM #{table}")
+    %{rows: [[count]]} = Repo.query!("SELECT count(*) FROM #{schema()}.#{table}")
     count
   end
 
