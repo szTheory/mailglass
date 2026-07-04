@@ -861,7 +861,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(primaryBtn).toBeVisible();
       const box = await primaryBtn.boundingBox();
       expect(box).not.toBeNull();
-      expect(box.height).toBeGreaterThanOrEqual(44);
+      // Round to the rendered pixel (Chromium subpixel floor — see ~365-366).
+      expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
     });
 
     test("Operator: filter toggle and detail back controls meet touch target floor", async ({ page }) => {
@@ -935,7 +936,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       if (buttonCount > 0) {
         const box = await buttons.first().boundingBox();
         if (box) {
-          expect(box.height).toBeGreaterThanOrEqual(44);
+          // Round to the rendered pixel (Chromium subpixel floor — see ~365-366).
+          expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
           return;
         }
       }
@@ -943,7 +945,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       if (linkCount > 0) {
         const box = await links.first().boundingBox();
         if (box) {
-          expect(box.height).toBeGreaterThanOrEqual(44);
+          // Round to the rendered pixel (Chromium subpixel floor — see ~365-366).
+          expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
         }
       }
     });
@@ -1158,8 +1161,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       const backBox = await page.getByTestId("inbound-detail-back").boundingBox();
       expect(filterToggleBox).not.toBeNull();
       expect(backBox).not.toBeNull();
-      expect(filterToggleBox.height).toBeGreaterThanOrEqual(44);
-      expect(backBox.height).toBeGreaterThanOrEqual(44);
+      // Round to the rendered pixel: Chromium reports a 44px CSS floor as
+      // 43.99998px after subpixel layout — a target rendered at 43.99998px IS a
+      // 44px target for WCAG 2.2 target-size. Matches the checkTargetSize helper
+      // (lines ~365-366) and flows.spec.js:283, which already round.
+      expect(Math.round(filterToggleBox.height)).toBeGreaterThanOrEqual(44);
+      expect(Math.round(backBox.height)).toBeGreaterThanOrEqual(44);
     });
 
     test("Inbound: no-tenant truly-empty filtered-empty detail-error loading contract and selected/detail flow are named", async ({
