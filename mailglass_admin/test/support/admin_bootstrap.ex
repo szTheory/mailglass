@@ -1,9 +1,39 @@
+# Inbound tables land in the SAME admin test DB so the operator/preview browser
+# surface can query inbound rows (InboundRecord/ExecutionRun/replay) against
+# MailglassAdmin.TestRepo — config :mailglass_inbound, :repo (config/test.exs).
+#
+# Inbound ships NO priv/repo/migrations directory — its schema is created
+# programmatically via MailglassInbound.Migration.up/1, which composes a NESTED
+# Migrations.Postgres runner. So we CANNOT point Ecto.Migrator.run at a
+# migrations path (there is none — the old code pointed at an empty path and ran
+# ZERO inbound migrations, so mailglass_inbound_replay_runs never existed and the
+# OperatorBrowserServer crashed on the first inbound query). Instead we drive it
+# with an inline wrapper migration under its own Ecto.Migrator.up version slot,
+# mirroring the canonical pattern in mailglass_admin/test/test_helper.exs and
+# mailglass_inbound/test/test_helper.exs. The prefix is read from config
+# (:mailglass_inbound, :schema — pinned "public" in config/test.exs) so the
+# browser harness's inbound tables land in the same schema its reads target.
+defmodule MailglassAdmin.TestSupport.BrowserInboundInstallMigration do
+  @moduledoc false
+  use Ecto.Migration
+
+  def up do
+    MailglassInbound.Migration.up(
+      prefix: Application.get_env(:mailglass_inbound, :schema, "public"),
+      repo: MailglassAdmin.TestRepo
+    )
+  end
+
+  def down, do: :ok
+end
+
 defmodule MailglassAdmin.TestSupport.AdminBootstrap do
   @moduledoc false
 
   @endpoint MailglassAdmin.TestAdopter.Endpoint
   @error_html MailglassAdmin.TestAdopter.ErrorHTML
   @default_server_ownership_timeout 10 * 60_000
+  @inbound_install_version 99_000_000_000_001
 
   def endpoint, do: @endpoint
 
@@ -64,16 +94,6 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
       :code.priv_dir(:mailglass)
       |> Path.join("repo/migrations")
 
-    # Inbound migrations land in the SAME admin test DB so the operator/preview
-    # browser surface can query inbound rows (InboundRecord/ExecutionRun/replay)
-    # against MailglassAdmin.TestRepo — config :mailglass_inbound, :repo,
-    # MailglassAdmin.TestRepo (config/test.exs). Mirrors test/test_helper.exs;
-    # without it the OperatorBrowserServer crashes on the first inbound query
-    # (relation "mailglass_inbound_replay_runs" does not exist).
-    inbound_migrations_path =
-      :code.priv_dir(:mailglass_inbound)
-      |> Path.join("repo/migrations")
-
     test_repo_config = Application.get_env(:mailglass, MailglassAdmin.TestRepo)
     pool_mode = Keyword.get(opts, :pool, :sandbox)
 
@@ -92,7 +112,16 @@ defmodule MailglassAdmin.TestSupport.AdminBootstrap do
     {:ok, _, _} =
       Ecto.Migrator.with_repo(MailglassAdmin.TestRepo, fn repo ->
         Ecto.Migrator.run(repo, core_migrations_path, :up, all: true, log: false)
-        Ecto.Migrator.run(repo, inbound_migrations_path, :up, all: true, log: false)
+
+        # Inbound schema via its programmatic installer under a dedicated version
+        # slot (large enough not to collide with any core migration timestamp).
+        # The old empty-path Ecto.Migrator.run ran ZERO inbound migrations.
+        Ecto.Migrator.up(
+          repo,
+          @inbound_install_version,
+          MailglassAdmin.TestSupport.BrowserInboundInstallMigration,
+          log: false
+        )
       end)
 
     Application.put_env(:mailglass, MailglassAdmin.TestRepo, test_repo_config)
