@@ -37,6 +37,28 @@ re-arm auto-merge or merge #119 until CI is green.
   (mix.exs `~> 2.0` + regenerate both locks, `MAILGLASS_DEMO_DEPS=hex` for demo_app, adopt the
   mailglass default schema per D-07) — this is Plan 02 Task 4 / the reference-baseline-coupling memo.
 
+## Round 2 (REOPEN 2026-07-03) — 4-of-6 residual advisory reds fixed
+
+After Round 1's RC5/RC7/RC3-tail/docs-contract/Option-B/webhook-ingest-prefix fixes were
+pushed, the full PR #119 CI (head after `f64c0b2f`) left **6 advisory reds**. Orchestrator
+triage narrowed the v2.0-attributable set to **exactly 4**; all 4 are now FIXED + verified
+locally + committed atomically (NOT pushed). The other **2** are pre-existing flake, out of scope.
+
+| Item | Lane(s) | Root cause | Fix commit |
+|------|---------|-----------|-----------|
+| 1 | Docs Warnings as Errors | `docs.check` `@tier1_surface_rules["README.md"]` still required the inbound `stable 1.0` tokens; README already bumped to `stable 2.0` (22c03d82/2996c5e9) | ✅ `32657f7b` |
+| 2 | Demo Browser Evidence | v2.0 core `Migrations.Postgres.V05` now creates `idempotency_key`/`status`/`last_error` + the unique index first-class → demo `add_delivery_snapshot_fields` re-adds them → `42701 duplicate_column` | ✅ `076530dc` (no-op'd redundant demo migration) |
+| 3+4 | Operator Browser Gate + Preview Capture Advisory | browser harness `AdminBootstrap.ensure_repo_started!` migrated inbound via an empty `priv/repo/migrations` path (inbound ships none) → 0 inbound migrations → `relation "mailglass_inbound_replay_runs" does not exist` at fixture seed | ✅ `5267fe47` (RC5-pattern programmatic installer) |
+
+**4-vs-6 attribution.** The remaining 2 reds are the **Core Full Suite Advisory** lanes
+(public + mailglass) — CONFIRMED pre-existing persistent flake (red on `4b4a8dba` and every
+recent main commit; persistently-red since 2026-06-17, predating v2.0; shipped red on v1.14
+AND v1.15). They are the already-DEFERRED **bucket-(b)** 48-file fixture/search_path follow-up
+(`already_shared` sandbox + `citext probe exhausted` cascade). Left red, advisory + tracked —
+NOT attempted this pass. Main is ready to re-push for a fresh PR #119 CI where **only those 2
+Core Full Suite lanes should remain red**. (Do NOT push/merge/re-arm per SAFE STATE; auto-merge
+re-arms on push → re-disarm `gh pr merge 119 --disable-auto` after the re-push.)
+
 ## Regression inventory (7 root causes; all real, zero flakes)
 
 | RC | Lane(s) | Root cause | Status |
