@@ -57,18 +57,18 @@ defmodule MailglassDemo.MixProject do
   # mix.lock. A major crosses the tilde boundary, so the 2.0 advance is a deliberate
   # coordinated mix.exs + mix.lock edit (D-06).
   defp mailglass_dep do
-    if hex_deps?(), do: {:mailglass, "~> 1.0"}, else: {:mailglass, path: "../..", override: true}
+    if hex_deps?(), do: {:mailglass, "~> 2.0"}, else: {:mailglass, path: "../..", override: true}
   end
 
   defp mailglass_admin_dep do
     if hex_deps?(),
-      do: {:mailglass_admin, "~> 1.0"},
+      do: {:mailglass_admin, "~> 2.0"},
       else: {:mailglass_admin, path: "../../mailglass_admin", override: true}
   end
 
   defp mailglass_inbound_dep do
     if hex_deps?(),
-      do: {:mailglass_inbound, "~> 1.0"},
+      do: {:mailglass_inbound, "~> 2.0"},
       else: {:mailglass_inbound, path: "../../mailglass_inbound", override: true}
   end
 
