@@ -59,6 +59,31 @@ NOT attempted this pass. Main is ready to re-push for a fresh PR #119 CI where *
 Core Full Suite lanes should remain red**. (Do NOT push/merge/re-arm per SAFE STATE; auto-merge
 re-arms on push → re-disarm `gh pr merge 119 --disable-auto` after the re-push.)
 
+## Round 3 (REOPEN 2026-07-03) — the last 2 v2.0-attributable reds fixed
+
+After Round 2's 4 fixes were pushed, PR #119 CI on head `09070235` (run
+`28692176140`) left exactly **2** reds in scope + the 2 pre-existing Core Full
+Suite lanes. Both in-scope reds are now FIXED + verified locally + committed
+atomically (NOT pushed).
+
+| Item | Lane | Root cause (corrected) | Fix commit |
+|------|------|-----------|-----------|
+| A | Demo Browser Evidence | NOT the 210000 ALTER (the whole migration chain applies clean — CI log confirms `== Migrated 20260506210000`). The `42P01` fires DOWNSTREAM at `DemoData.reset!/0` (seeds.exs): `truncate!/0`+`count_table!/1` used UNqualified raw SQL, AND `delivery!/1` etc. insert core changesets directly through the demo's OWN `MailglassDemo.Repo` (no facade → no `prefix:`). | ✅ `ead30b5e` (qualified raw SQL via `Mailglass.Config.schema/0`; `Repo.init/2` pins `search_path = public, <schema>` — public FIRST so core's UNqualified `CREATE EXTENSION citext` stays in public per MIGR-05) |
+| B | Operator Browser Gate | FLAKE (identical `06f0925f` passed on main-push, failed on PR): `structural.spec.js:1162` compared an UNROUNDED `43.99998474121094` to `>= 44`. Siblings (`:365-366`, `flows.spec.js:283`) already `Math.round`. | ✅ `41269425` (`Math.round(...)` on all 5 tap-target 44px assertions: `:864`/`:938`/`:946`/`:1161`/`:1162`) |
+
+**Verification.** ITEM A: dev-env (the Docker lane's env) create → migrate → seed
+→ reset all green; citext in `public`; data (17/36/6/8/1) in the `mailglass`
+schema; reseed idempotent; demo mix.lock drift reverted; DB dropped; tree clean.
+ITEM B: `node --check` passes; received value fails `>= 44` unrounded, passes at
+`Math.round → 44`; consistent with the rounding siblings, no behavioral
+assertion touched.
+
+**Status.** Main is ready to re-push for a fresh PR #119 CI where ONLY the 2
+pre-existing **Core Full Suite Advisory** lanes (bucket-(b), OUT OF SCOPE) should
+remain red. Do NOT push/merge/re-arm per SAFE STATE; auto-merge re-arms on push →
+re-disarm `gh pr merge 119 --disable-auto` after the re-push. Full per-item
+detail in `.planning/debug/schema-isolation-regressions.md` "Round 3 Evidence".
+
 ## Regression inventory (7 root causes; all real, zero flakes)
 
 | RC | Lane(s) | Root cause | Status |
