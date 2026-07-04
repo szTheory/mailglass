@@ -75,6 +75,7 @@ lib/mailglass/events/event.ex
 lib/mailglass/events/reconciler.ex
 lib/mailglass/gettext.ex
 lib/mailglass/idempotency_key.ex
+lib/mailglass/identifier.ex
 lib/mailglass/installer/apply.ex
 lib/mailglass/installer/conflict.ex
 lib/mailglass/installer/doctor.ex
@@ -184,6 +185,7 @@ lib/mix/tasks/mailglass.reconcile.ex
 lib/mix/tasks/mailglass.stability.check.ex
 lib/mix/tasks/mailglass.suppressions.resync.ex
 lib/mix/tasks/mailglass.upgrade.v0_2.ex
+lib/mix/tasks/mailglass.upgrade.v2_schema.ex
 lib/mix/tasks/mailglass.webhooks.prune.ex
 mix.exs
 priv/gettext/emails.pot
