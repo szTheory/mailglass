@@ -4,6 +4,20 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.0.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.11.0...mailglass_admin-v2.0.0) (2026-07-04)
+
+
+### Features
+
+* **133-02:** add FACADE-04 schema-isolation integration test + fix admin test.exs schema pin ([70a3e07](https://github.com/szTheory/mailglass/commit/70a3e0715ec69c44f9977025f7dd4bab8aaddf0f))
+* **133-02:** FACADE-03 admin zero-code-change render proof + D-08 bypass fix ([ee8e965](https://github.com/szTheory/mailglass/commit/ee8e965d54fd7bd2e86676c3e2cb0d4f697841b3))
+
+
+### Bug Fixes
+
+* **137:** migrate inbound tables via programmatic installer in browser harness ([5267fe4](https://github.com/szTheory/mailglass/commit/5267fe47c8a4e663dfea07c5520bd38e776c2df2))
+* **admin-test:** migrate inbound tables into admin test DB + pin inbound schema ([57237e6](https://github.com/szTheory/mailglass/commit/57237e618c5728c75985ac119edd13f2c79efafc))
+
 ## [1.11.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.10.2...mailglass_admin-v1.11.0) (2026-07-02)
 
 
