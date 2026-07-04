@@ -159,7 +159,7 @@ defmodule MailglassInbound.MixProject do
         "GitHub" => @source_url,
         "HexDocs" => "https://hexdocs.pm/mailglass_inbound"
       },
-      files: ~w(lib docs priv .formatter.exs mix.exs README* CHANGELOG* LICENSE*)
+      files: ~w(lib docs .formatter.exs mix.exs README* CHANGELOG* LICENSE*)
     ]
   end
 
