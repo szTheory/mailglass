@@ -102,25 +102,29 @@ defmodule Mailglass.Webhook.Replay do
        )
        when is_binary(tenant_id) and tenant_id != "" and is_binary(webhook_event_id) and
               webhook_event_id != "" and is_map(actor) do
-    {:ok,
-     %{
-       tenant_id: tenant_id,
-       webhook_event_id: webhook_event_id,
-       actor: normalize_actor(actor),
-       delivery_id: Map.get(attrs, :delivery_id) || Map.get(attrs, "delivery_id")
-     }}
+    actor = normalize_actor(actor)
+
+    if Map.has_key?(actor, :subject_id) do
+      {:ok,
+       %{
+         tenant_id: tenant_id,
+         webhook_event_id: webhook_event_id,
+         actor: actor,
+         delivery_id: Map.get(attrs, :delivery_id) || Map.get(attrs, "delivery_id")
+       }}
+    else
+      {:error, :invalid_params}
+    end
   end
 
   defp normalize_params(_attrs), do: {:error, :invalid_params}
 
   defp normalize_actor(actor) do
-    actor
-    |> Map.new(fn
-      {key, value} when is_binary(key) -> {String.to_existing_atom(key), value}
+    Map.new(actor, fn
+      {"subject_id", value} -> {:subject_id, value}
+      {"tenant_id", value} -> {:tenant_id, value}
       pair -> pair
     end)
-  rescue
-    ArgumentError -> actor
   end
 
   defp fetch_target(tenant_id, webhook_event_id) do

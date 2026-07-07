@@ -83,6 +83,30 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "Repo.one"
   end
 
+  test "flags raw repo alias even when another function aliases the facade repo" do
+    source = """
+    defmodule Mailglass.Webhook.BadRepoAliasWithFacadeAliasElsewhere do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch do
+        alias MyApp.Repo
+        Repo.one(from(event in Event, limit: 1))
+      end
+
+      def unrelated do
+        alias Mailglass.Repo
+        Repo
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_repo_alias_with_facade_elsewhere.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "Repo.one"
+  end
+
   test "flags raw repo read through local query helper return without prefix opts" do
     source = """
     defmodule Mailglass.Webhook.BadQueryFunctionReturn do
@@ -315,6 +339,58 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     """
 
     assert run_check(source, "lib/mailglass/webhook/unrelated_event_same_file_read.ex") == []
+  end
+
+  test "does not leak function-local schema aliases into unrelated functions" do
+    source = """
+    defmodule Mailglass.Webhook.UnrelatedEventFunctionAliasRead do
+      import Ecto.Query
+
+      def fetch(repo) do
+        alias Other.Event
+        repo.one(from(event in Event, limit: 1))
+      end
+
+      def unrelated do
+        alias Mailglass.Events.Event
+        Event
+      end
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/unrelated_event_function_alias_read.ex") == []
+  end
+
+  test "flags wrong config alias helper when another function aliases inbound config" do
+    source = """
+    defmodule MailglassInbound.Internal.BadConfigAliasHelperBypass do
+      import Ecto.Query
+      alias MailglassInbound.InboundRecords.InboundRecord
+
+      def fetch(repo) do
+        repo.one(from(record in InboundRecord, limit: 1), schema_opts())
+      end
+
+      defp schema_opts do
+        alias Mailglass.Config
+        [prefix: Config.schema()]
+      end
+
+      def unrelated do
+        alias MailglassInbound.Config
+        Config.schema()
+      end
+    end
+    """
+
+    issues =
+      run_check(
+        source,
+        "mailglass_inbound/lib/mailglass_inbound/internal/bad_config_alias_helper_bypass.ex"
+      )
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
   end
 
   test "flags renamed inbound schema alias without prefix opts" do

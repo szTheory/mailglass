@@ -134,6 +134,57 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
     assert_prefixed_calls([:get, :get])
   end
 
+  test "Execution.load/2 rejects unknown mailbox strings without creating atoms" do
+    record_id = Ecto.UUID.generate()
+    evidence_id = Ecto.UUID.generate()
+    mailbox = "MailglassInbound.UnknownMailbox#{System.unique_integer([:positive])}"
+
+    refute existing_atom?("Elixir." <> mailbox)
+
+    queue_get_results([
+      inbound_record(record_id),
+      inbound_evidence(evidence_id, record_id)
+    ])
+
+    assert {:error, :invalid_job_args} =
+             Execution.load(
+               %{
+                 "inbound_record_id" => record_id,
+                 "inbound_evidence_id" => evidence_id,
+                 "route_status" => "matched",
+                 "mailbox" => mailbox
+               },
+               repo: CaptureRepo
+             )
+
+    refute existing_atom?("Elixir." <> mailbox)
+    assert_prefixed_calls([:get, :get])
+  end
+
+  test "Internal.Replay.replay/2 rejects unknown mailbox strings without creating atoms" do
+    record_id = Ecto.UUID.generate()
+    evidence_id = Ecto.UUID.generate()
+    mailbox = "MailglassInbound.UnknownReplayMailbox#{System.unique_integer([:positive])}"
+
+    refute existing_atom?("Elixir." <> mailbox)
+
+    queue_one_results([
+      inbound_record(record_id),
+      inbound_evidence(evidence_id, record_id),
+      execution_run(record_id, evidence_id, mailbox)
+    ])
+
+    assert {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}} =
+             Replay.replay(record_id,
+               tenant_id: "tenant-a",
+               repo: CaptureRepo,
+               execution: ExecutionStub
+             )
+
+    refute existing_atom?("Elixir." <> mailbox)
+    assert_prefixed_calls([:one, :one, :one])
+  end
+
   test "mix task selector resolution passes schema prefix opts to raw repo all call" do
     record_id = Ecto.UUID.generate()
     queue_all_result([record_id])
@@ -166,14 +217,14 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
     }
   end
 
-  defp execution_run(record_id, evidence_id) do
+  defp execution_run(record_id, evidence_id, mailbox \\ Atom.to_string(TestMailbox)) do
     %ExecutionRun{
       id: Ecto.UUID.generate(),
       tenant_id: "tenant-a",
       inbound_record_id: record_id,
       inbound_evidence_id: evidence_id,
       source: :fresh,
-      mailbox: Atom.to_string(TestMailbox),
+      mailbox: mailbox,
       outcome: :accept
     }
   end
@@ -199,5 +250,12 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
     Process.delete(:capture_repo_all_results)
     Process.delete(:execution_payload)
     Process.delete(:execution_opts)
+  end
+
+  defp existing_atom?(name) do
+    _atom = String.to_existing_atom(name)
+    true
+  rescue
+    ArgumentError -> false
   end
 end

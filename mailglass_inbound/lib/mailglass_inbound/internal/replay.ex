@@ -74,7 +74,7 @@ defmodule MailglassInbound.Internal.Replay do
   defp resolve_mailbox(repo, inbound_record_id, tenant_id) do
     case latest_matched_fresh_run(repo, inbound_record_id, tenant_id) do
       %ExecutionRun{mailbox: mailbox} when is_binary(mailbox) and mailbox != "" ->
-        {:ok, mailbox_module(mailbox)}
+        resolve_mailbox_module(mailbox)
 
       nil ->
         case latest_fresh_run(repo, inbound_record_id, tenant_id) do
@@ -88,6 +88,12 @@ defmodule MailglassInbound.Internal.Replay do
             {:error, {:replay_mailbox_missing, %{reason: :no_prior_match}}}
         end
     end
+  end
+
+  defp resolve_mailbox_module(mailbox) do
+    {:ok, mailbox_module(mailbox)}
+  rescue
+    ArgumentError -> {:error, {:replay_mailbox_missing, %{reason: :invalid_mailbox}}}
   end
 
   defp latest_matched_fresh_run(repo, inbound_record_id, tenant_id) do
@@ -131,5 +137,7 @@ defmodule MailglassInbound.Internal.Replay do
   end
 
   defp mailbox_module("Elixir." <> _rest = mailbox), do: String.to_existing_atom(mailbox)
-  defp mailbox_module(mailbox), do: mailbox |> String.split(".") |> Module.concat()
+
+  defp mailbox_module(mailbox) when is_binary(mailbox),
+    do: String.to_existing_atom("Elixir." <> mailbox)
 end

@@ -264,7 +264,9 @@ defmodule MailglassInbound.Execution do
   defp decode_route(_route_status, _mailbox), do: {:error, :invalid_job_args}
 
   defp mailbox_module("Elixir." <> _rest = mailbox), do: String.to_existing_atom(mailbox)
-  defp mailbox_module(mailbox), do: mailbox |> String.split(".") |> Module.concat()
+
+  defp mailbox_module(mailbox) when is_binary(mailbox),
+    do: String.to_existing_atom("Elixir." <> mailbox)
 
   defp route_status(%{status: status}) when is_atom(status), do: Atom.to_string(status)
   defp route_status(_route), do: "unknown"

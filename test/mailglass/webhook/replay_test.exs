@@ -61,6 +61,42 @@ defmodule Mailglass.Webhook.ReplayTest do
       refute succeeded.metadata["outcome"] == "noop"
     end
 
+    test "normalizes known actor string keys without failing on unknown keys" do
+      unknown_key = "unknown_actor_key_#{System.unique_integer([:positive])}"
+      delivery = insert_delivery!(provider_message_id: "msg-replay-string-actor")
+
+      webhook_event =
+        insert_webhook_event!(
+          provider_event_id: "postmark-webhook-string-actor",
+          raw_payload: %{
+            "RecordType" => "Delivery",
+            "MessageID" => "msg-replay-string-actor",
+            "ID" => 102
+          }
+        )
+
+      assert {:ok, result} =
+               Replay.execute(%{
+                 tenant_id: "test-tenant",
+                 webhook_event_id: webhook_event.id,
+                 delivery_id: delivery.id,
+                 actor: %{
+                   "subject_id" => "operator-string-key",
+                   "tenant_id" => "test-tenant",
+                   unknown_key => "preserved"
+                 }
+               })
+
+      assert result.status == :replayed
+
+      [requested] = replay_events_for(webhook_event.id, :webhook_replay_requested)
+      [succeeded] = replay_events_for(webhook_event.id, :webhook_replay_succeeded)
+
+      assert requested.metadata["actor_id"] == "operator-string-key"
+      assert requested.metadata["actor_tenant_id"] == "test-tenant"
+      assert succeeded.metadata["actor_id"] == "operator-string-key"
+    end
+
     test "returns a noop outcome when replay converges on existing ledger rows" do
       delivery = insert_delivery!(provider_message_id: "msg-replay-noop")
       raw_body = ~s({"RecordType":"Delivery","MessageID":"msg-replay-noop","ID":202})
