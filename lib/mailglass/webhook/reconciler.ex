@@ -174,9 +174,13 @@ if Code.ensure_loaded?(Oban.Worker) do
           multi =
             Multi.new()
             |> Events.append_multi(:reconciled_event, reconciled_attrs)
-            |> Multi.update(:projection, fn _changes ->
-              Projector.update_projections(delivery, orphan)
-            end)
+            |> Multi.update(
+              :projection,
+              fn _changes ->
+                Projector.update_projections(delivery, orphan)
+              end,
+              Repo.multi_opts()
+            )
 
           case Repo.transact(fn -> Repo.multi(multi) end) do
             {:ok, {:ok, changes}} ->
@@ -346,9 +350,13 @@ else
           multi =
             Multi.new()
             |> Events.append_multi(:reconciled_event, reconciled_attrs)
-            |> Multi.update(:projection, fn _changes ->
-              Projector.update_projections(delivery, orphan)
-            end)
+            |> Multi.update(
+              :projection,
+              fn _changes ->
+                Projector.update_projections(delivery, orphan)
+              end,
+              Repo.multi_opts()
+            )
 
           case Repo.transact(fn -> Repo.multi(multi) end) do
             {:ok, {:ok, changes}} ->
