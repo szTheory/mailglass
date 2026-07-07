@@ -361,6 +361,49 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert run_check(source, "lib/mailglass/webhook/unrelated_event_function_alias_read.ex") == []
   end
 
+  test "flags schema alias uses before later same-function non-schema alias rebind" do
+    source = """
+    defmodule Mailglass.Webhook.BadLaterSchemaAliasRebind do
+      import Ecto.Query
+
+      def fetch(repo) do
+        alias Mailglass.Events.Event
+        query = from(event in Event, limit: 1)
+        repo.one(query)
+        alias Other.Event
+        Event
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_later_schema_alias_rebind.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags Repo.multi_opts before later same-function facade repo alias rebind" do
+    source = """
+    defmodule Mailglass.Webhook.BadLaterRepoAliasRebind do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch(repo) do
+        alias Other.Repo
+        query = from(event in Event, limit: 1)
+        repo.one(query, Repo.multi_opts())
+        alias Mailglass.Repo
+        Repo
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_later_repo_alias_rebind.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
   test "flags wrong config alias helper when another function aliases inbound config" do
     source = """
     defmodule MailglassInbound.Internal.BadConfigAliasHelperBypass do

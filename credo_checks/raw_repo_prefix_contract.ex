@@ -220,39 +220,22 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
         when def_type in [:def, :defp] and is_list(body_kw) ->
           body = Keyword.get(body_kw, :do)
 
-          function_schema_owners = apply_schema_aliases(schema_owners, body)
-
-          function_mailglass_repo_aliases =
-            MapSet.union(mailglass_repo_aliases, collect_mailglass_repo_aliases(body))
-
-          function_facade_repo_aliases =
-            MapSet.union(facade_repo_aliases, collect_facade_repo_aliases(body))
-
-          function_raw_repo_aliases = MapSet.union(raw_repo_aliases, collect_raw_repo_aliases(body))
-          function_multi_aliases = MapSet.union(multi_aliases, collect_multi_aliases(body))
-
-          function_mailglass_config_alias_owners =
-            merge_owner_maps(
-              mailglass_config_alias_owners,
-              collect_mailglass_config_alias_owners(body)
-            )
-
           function_issues =
             function_issues(
               head,
               body,
               issue_meta,
-              function_schema_owners,
+              schema_owners,
               table_source_owners,
               repo_functions,
               multi_functions,
               projection_steps,
               verified_prefix_helpers,
-              function_mailglass_repo_aliases,
-              function_facade_repo_aliases,
-              function_raw_repo_aliases,
-              function_multi_aliases,
-              function_mailglass_config_alias_owners
+              mailglass_repo_aliases,
+              facade_repo_aliases,
+              raw_repo_aliases,
+              multi_aliases,
+              mailglass_config_alias_owners
             )
 
           {node, Enum.reverse(function_issues) ++ issues}
@@ -313,6 +296,12 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          mailglass_config_alias_owners
        ) do
     initial_state = %{
+      schema_owners: schema_owners,
+      mailglass_repo_aliases: mailglass_repo_aliases,
+      facade_repo_aliases: facade_repo_aliases,
+      raw_repo_aliases: raw_repo_aliases,
+      multi_aliases: multi_aliases,
+      mailglass_config_alias_owners: mailglass_config_alias_owners,
       tainted_var_owners:
         collect_schema_pattern_var_owners(head, schema_owners, table_source_owners),
       prefix_contract_var_owners: %{},
@@ -329,80 +318,89 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
           state ->
             args = [lhs | List.wrap(rhs_args)]
             state = push_scope_if_needed(state, node)
+            state = update_state_for_alias(state, node)
+
+            state =
+              update_state_for_match(
+                state,
+                node,
+                state.schema_owners,
+                table_source_owners,
+                verified_prefix_helpers,
+                state.mailglass_repo_aliases,
+                state.mailglass_config_alias_owners
+              )
 
             {node,
              maybe_collect_call(
-               update_state_for_match(
-                 state,
-                 node,
-                 schema_owners,
-                 table_source_owners,
-                 verified_prefix_helpers,
-                 mailglass_repo_aliases,
-                 mailglass_config_alias_owners
-               ),
+               state,
                meta,
                module_ast,
                function_name,
                args,
                issue_meta,
-               schema_owners,
+               state.schema_owners,
                table_source_owners,
                repo_functions,
                multi_functions,
                projection_steps,
                verified_prefix_helpers,
-               mailglass_repo_aliases,
-               facade_repo_aliases,
-               raw_repo_aliases,
-               multi_aliases,
-               mailglass_config_alias_owners
+               state.mailglass_repo_aliases,
+               state.facade_repo_aliases,
+               state.raw_repo_aliases,
+               state.multi_aliases,
+               state.mailglass_config_alias_owners
              )}
 
           {{:., _, [module_ast, function_name]}, meta, args} = node, state ->
             state = push_scope_if_needed(state, node)
+            state = update_state_for_alias(state, node)
+
+            state =
+              update_state_for_match(
+                state,
+                node,
+                state.schema_owners,
+                table_source_owners,
+                verified_prefix_helpers,
+                state.mailglass_repo_aliases,
+                state.mailglass_config_alias_owners
+              )
 
             {node,
              maybe_collect_call(
-               update_state_for_match(
-                 state,
-                 node,
-                 schema_owners,
-                 table_source_owners,
-                 verified_prefix_helpers,
-                 mailglass_repo_aliases,
-                 mailglass_config_alias_owners
-               ),
+               state,
                meta,
                module_ast,
                function_name,
                List.wrap(args),
                issue_meta,
-               schema_owners,
+               state.schema_owners,
                table_source_owners,
                repo_functions,
                multi_functions,
                projection_steps,
                verified_prefix_helpers,
-               mailglass_repo_aliases,
-               facade_repo_aliases,
-               raw_repo_aliases,
-               multi_aliases,
-               mailglass_config_alias_owners
+               state.mailglass_repo_aliases,
+               state.facade_repo_aliases,
+               state.raw_repo_aliases,
+               state.multi_aliases,
+               state.mailglass_config_alias_owners
              )}
 
           node, state ->
             state = push_scope_if_needed(state, node)
+            state = update_state_for_alias(state, node)
 
             {node,
              update_state_for_match(
                state,
                node,
-               schema_owners,
+               state.schema_owners,
                table_source_owners,
                verified_prefix_helpers,
-               mailglass_repo_aliases,
-               mailglass_config_alias_owners
+               state.mailglass_repo_aliases,
+               state.mailglass_config_alias_owners
              )}
         end,
         fn node, state ->
@@ -633,6 +631,12 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp push_scope_if_needed(state, node) do
     if scoped_node?(node) do
       snapshot = %{
+        schema_owners: state.schema_owners,
+        mailglass_repo_aliases: state.mailglass_repo_aliases,
+        facade_repo_aliases: state.facade_repo_aliases,
+        raw_repo_aliases: state.raw_repo_aliases,
+        multi_aliases: state.multi_aliases,
+        mailglass_config_alias_owners: state.mailglass_config_alias_owners,
         tainted_var_owners: state.tainted_var_owners,
         prefix_contract_var_owners: state.prefix_contract_var_owners
       }
@@ -649,7 +653,13 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
       %{
         state
-        | tainted_var_owners: snapshot.tainted_var_owners,
+        | schema_owners: snapshot.schema_owners,
+          mailglass_repo_aliases: snapshot.mailglass_repo_aliases,
+          facade_repo_aliases: snapshot.facade_repo_aliases,
+          raw_repo_aliases: snapshot.raw_repo_aliases,
+          multi_aliases: snapshot.multi_aliases,
+          mailglass_config_alias_owners: snapshot.mailglass_config_alias_owners,
+          tainted_var_owners: snapshot.tainted_var_owners,
           prefix_contract_var_owners: snapshot.prefix_contract_var_owners,
           scope_stack: scope_stack
       }
@@ -669,6 +679,33 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp scoped_node?({:try, _meta, _args}), do: true
   defp scoped_node?({:receive, _meta, _args}), do: true
   defp scoped_node?(_node), do: false
+
+  defp update_state_for_alias(state, {:alias, _meta, args}) do
+    alias_names = alias_names(args)
+
+    state = %{
+      state
+      | mailglass_repo_aliases: drop_aliases(state.mailglass_repo_aliases, alias_names),
+        facade_repo_aliases: drop_aliases(state.facade_repo_aliases, alias_names),
+        raw_repo_aliases: drop_aliases(state.raw_repo_aliases, alias_names),
+        multi_aliases: drop_aliases(state.multi_aliases, alias_names),
+        mailglass_config_alias_owners:
+          drop_alias_owner_keys(state.mailglass_config_alias_owners, alias_names)
+    }
+
+    %{
+      state
+      | schema_owners: apply_schema_alias(args, state.schema_owners),
+        mailglass_repo_aliases: collect_mailglass_repo_alias(args, state.mailglass_repo_aliases),
+        facade_repo_aliases: collect_facade_repo_alias(args, state.facade_repo_aliases),
+        raw_repo_aliases: collect_raw_repo_alias(args, state.raw_repo_aliases),
+        multi_aliases: collect_multi_alias(args, state.multi_aliases),
+        mailglass_config_alias_owners:
+          collect_mailglass_config_alias_owner(args, state.mailglass_config_alias_owners)
+    }
+  end
+
+  defp update_state_for_alias(state, _node), do: state
 
   defp update_tainted_var_owners(state, left, right, schema_owners, table_source_owners) do
     tainted_var_owners =
@@ -1309,7 +1346,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
     schema_owners =
       schema_owners
-      |> Map.delete(alias_name)
+      |> drop_schema_alias_keys(alias_name)
       |> put_registry_owners(alias_name, source_owners)
 
     schema_owners
@@ -1326,6 +1363,16 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
       _entry, aliases ->
         aliases
+    end)
+  end
+
+  defp drop_schema_alias_keys(schema_owners, alias_name) do
+    Map.reject(schema_owners, fn
+      {schema_name, _owners} when is_binary(schema_name) ->
+        schema_name == alias_name or String.starts_with?(schema_name, alias_name <> ".")
+
+      _entry ->
+        false
     end)
   end
 
@@ -1867,6 +1914,31 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp alias_as_name(name) when is_atom(name), do: Atom.to_string(name)
   defp alias_as_name(_name), do: nil
+
+  defp alias_names([alias_ast, opts]) when is_list(opts) do
+    case Keyword.fetch(opts, :as) do
+      {:ok, as} ->
+        case alias_as_name(as) do
+          as_name when is_binary(as_name) -> [as_name]
+          _other -> []
+        end
+
+      :error ->
+        alias_names([alias_ast])
+    end
+  end
+
+  defp alias_names([alias_ast]) do
+    Enum.map(alias_entries(alias_ast), fn {_source_name, alias_name} -> alias_name end)
+  end
+
+  defp alias_names(_args), do: []
+
+  defp drop_aliases(aliases, alias_names) do
+    Enum.reduce(alias_names, aliases, fn alias_name, acc -> MapSet.delete(acc, alias_name) end)
+  end
+
+  defp drop_alias_owner_keys(alias_owners, alias_names), do: Map.drop(alias_owners, alias_names)
 
   defp alias_entries({:__aliases__, _, parts}) when is_list(parts) do
     alias_name = parts |> List.last() |> Atom.to_string()

@@ -116,7 +116,9 @@ jobs:
         # `mix verify.schema_prefix` is a root alias but delegates one focused
         # contract test into mailglass_inbound, whose deps are managed separately.
         working-directory: mailglass_inbound
-        run: mix deps.get
+        run: |
+          mix deps.get
+          mix ecto.create -r MailglassInbound.TestRepo --quiet
       - name: Run focused schema-prefix proof
         env:
           MAILGLASS_SCHEMA: ${{ matrix.schema }}

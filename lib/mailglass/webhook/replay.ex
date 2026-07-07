@@ -104,16 +104,18 @@ defmodule Mailglass.Webhook.Replay do
               webhook_event_id != "" and is_map(actor) do
     actor = normalize_actor(actor)
 
-    if Map.has_key?(actor, :subject_id) do
-      {:ok,
-       %{
-         tenant_id: tenant_id,
-         webhook_event_id: webhook_event_id,
-         actor: actor,
-         delivery_id: Map.get(attrs, :delivery_id) || Map.get(attrs, "delivery_id")
-       }}
-    else
-      {:error, :invalid_params}
+    case valid_subject_id(Map.get(actor, :subject_id)) do
+      {:ok, subject_id} ->
+        {:ok,
+         %{
+           tenant_id: tenant_id,
+           webhook_event_id: webhook_event_id,
+           actor: Map.put(actor, :subject_id, subject_id),
+           delivery_id: Map.get(attrs, :delivery_id) || Map.get(attrs, "delivery_id")
+         }}
+
+      :error ->
+        {:error, :invalid_params}
     end
   end
 
@@ -125,6 +127,16 @@ defmodule Mailglass.Webhook.Replay do
       {"tenant_id", value} -> {:tenant_id, value}
       pair -> pair
     end)
+  end
+
+  defp valid_subject_id(value) when value in [nil, ""], do: :error
+
+  defp valid_subject_id(value) do
+    if String.Chars.impl_for(value) && to_string(value) != "" do
+      {:ok, value}
+    else
+      :error
+    end
   end
 
   defp fetch_target(tenant_id, webhook_event_id) do

@@ -97,6 +97,37 @@ defmodule Mailglass.Webhook.ReplayTest do
       assert succeeded.metadata["actor_id"] == "operator-string-key"
     end
 
+    test "rejects missing and malformed actor subject IDs before audit work begins" do
+      webhook_event =
+        insert_webhook_event!(
+          provider_event_id: "postmark-webhook-invalid-actor",
+          raw_payload: %{
+            "RecordType" => "Delivery",
+            "MessageID" => "msg-replay-invalid-actor",
+            "ID" => 103
+          }
+        )
+
+      invalid_actors = [
+        %{},
+        %{subject_id: nil},
+        %{"subject_id" => ""},
+        %{subject_id: %{}}
+      ]
+
+      for actor <- invalid_actors do
+        assert {:error, :invalid_params} =
+                 Replay.execute(%{
+                   tenant_id: "test-tenant",
+                   webhook_event_id: webhook_event.id,
+                   actor: actor
+                 })
+      end
+
+      assert replay_events_for(webhook_event.id, :webhook_replay_requested) == []
+      assert replay_events_for(webhook_event.id, :webhook_replay_failed) == []
+    end
+
     test "returns a noop outcome when replay converges on existing ledger rows" do
       delivery = insert_delivery!(provider_message_id: "msg-replay-noop")
       raw_body = ~s({"RecordType":"Delivery","MessageID":"msg-replay-noop","ID":202})
