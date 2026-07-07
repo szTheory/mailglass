@@ -459,6 +459,162 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert run_check(source, "lib/mailglass/webhook/good_opts_alias.ex") == []
   end
 
+  test "flags earlier schema query before later non-schema rebind" do
+    source = """
+    defmodule Mailglass.Webhook.BadQueryRebindAfterCall do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch(repo) do
+        query = from(event in Event, limit: 1)
+        repo.one(query)
+        query = from(other in Other.Schema, limit: 1)
+        query
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_query_rebind_after_call.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags earlier unsafe opts before later trusted opts rebind" do
+    source = """
+    defmodule Mailglass.Webhook.BadOptsTrustedAfterCall do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Repo
+
+      def fetch(repo) do
+        query = from(event in Event, limit: 1)
+        opts = []
+        repo.one(query, opts)
+        opts = Repo.multi_opts()
+        opts
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_opts_trusted_after_call.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "rejects inbound config prefix for core schema reads" do
+    source = """
+    defmodule Mailglass.Webhook.BadInboundPrefixForCoreRead do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch(repo) do
+        repo.one(from(event in Event, limit: 1), prefix: MailglassInbound.Config.schema())
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_inbound_prefix_for_core_read.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "rejects core config prefix for inbound schema reads" do
+    source = """
+    defmodule MailglassInbound.Internal.BadCorePrefixForInboundRead do
+      import Ecto.Query
+      alias MailglassInbound.InboundRecords.InboundRecord
+
+      def fetch(repo) do
+        repo.one(from(record in InboundRecord, limit: 1), prefix: Mailglass.Config.schema())
+      end
+    end
+    """
+
+    issues =
+      run_check(
+        source,
+        "mailglass_inbound/lib/mailglass_inbound/internal/bad_core_prefix_for_inbound_read.ex"
+      )
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags string table query source without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadStringSourceRead do
+      import Ecto.Query
+
+      def fetch(repo) do
+        repo.one(from(event in "mailglass_events", limit: 1))
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_string_source_read.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags raw insert_all string table source without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadStringSourceInsertAll do
+      def insert(repo, rows) do
+        repo.insert_all("mailglass_events", rows)
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_string_source_insert_all.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.insert_all"
+  end
+
+  test "flags Multi insert_all string table source without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadStringSourceMultiInsertAll do
+      def build(rows) do
+        Ecto.Multi.new()
+        |> Ecto.Multi.insert_all(:events, "mailglass_events", rows)
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_string_source_multi_insert_all.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "Ecto.Multi.insert_all"
+  end
+
+  test "allows string table sources with matching prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.GoodStringSources do
+      import Ecto.Query
+      alias Mailglass.Repo
+
+      def fetch(repo) do
+        repo.one(from(event in "mailglass_events", limit: 1), prefix: Mailglass.Config.schema())
+      end
+
+      def insert(repo, rows) do
+        repo.insert_all("mailglass_events", rows, Repo.multi_opts())
+      end
+
+      def build(rows) do
+        Ecto.Multi.new()
+        |> Ecto.Multi.insert_all(:events, "mailglass_events", rows, Repo.multi_opts())
+      end
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/good_string_sources.ex") == []
+  end
+
   test "allows Repo.multi_opts from grouped Mailglass alias" do
     source = """
     defmodule Mailglass.Webhook.GoodGroupedAliasOpts do

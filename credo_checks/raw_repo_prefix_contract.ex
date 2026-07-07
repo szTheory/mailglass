@@ -13,6 +13,19 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
         MailglassInbound.InboundRecords.InboundEvidence,
         MailglassInbound.InboundRecords.ExecutionRun
       ],
+      table_sources: [
+        core: [
+          "mailglass_deliveries",
+          "mailglass_events",
+          "mailglass_suppressions",
+          "mailglass_webhook_events"
+        ],
+        inbound: [
+          "mailglass_inbound_records",
+          "mailglass_inbound_evidence",
+          "mailglass_inbound_replay_runs"
+        ]
+      ],
       repo_functions: [
         :one,
         :one!,
@@ -46,6 +59,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
       params: [
         included_path_prefixes: "Only production files under these prefixes are linted.",
         schema_modules: "Mailglass schemas treated as schema-prefix-sensitive.",
+        table_sources: "String table sources treated as schema-prefix-sensitive.",
         repo_functions: "Lowercase raw repo functions treated as table access.",
         multi_functions: "Ecto.Multi functions that can update projections.",
         projection_steps: "Multi step names known to update mailglass projections.",
@@ -59,7 +73,11 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
     if included_path?(source_file, included_path_prefixes) do
       issue_meta = IssueMeta.for(source_file, params)
-      schema_tail_names = params |> Params.get(:schema_modules, __MODULE__) |> schema_tail_names()
+      schema_owners = params |> Params.get(:schema_modules, __MODULE__) |> schema_owners()
+
+      table_source_owners =
+        params |> Params.get(:table_sources, __MODULE__) |> table_source_owners()
+
       repo_functions = params |> Params.get(:repo_functions, __MODULE__) |> MapSet.new()
       multi_functions = params |> Params.get(:multi_functions, __MODULE__) |> MapSet.new()
       projection_steps = params |> Params.get(:projection_steps, __MODULE__) |> MapSet.new()
@@ -71,7 +89,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
       |> SourceFile.ast()
       |> collect_issues(
         issue_meta,
-        schema_tail_names,
+        schema_owners,
+        table_source_owners,
         repo_functions,
         multi_functions,
         projection_steps,
@@ -86,21 +105,22 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp collect_issues(
          ast,
          issue_meta,
-         schema_tail_names,
+         schema_owners,
+         table_source_owners,
          repo_functions,
          multi_functions,
          projection_steps,
          prefix_helper_functions
        ) do
     mailglass_repo_aliases = collect_mailglass_repo_aliases(ast)
-    mailglass_config_aliases = collect_mailglass_config_aliases(ast)
+    mailglass_config_alias_owners = collect_mailglass_config_alias_owners(ast)
 
     verified_prefix_helpers =
       collect_verified_prefix_helpers(
         ast,
         prefix_helper_functions,
         mailglass_repo_aliases,
-        mailglass_config_aliases
+        mailglass_config_alias_owners
       )
 
     {_ast, issues} =
@@ -114,13 +134,14 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
               head,
               body,
               issue_meta,
-              schema_tail_names,
+              schema_owners,
+              table_source_owners,
               repo_functions,
               multi_functions,
               projection_steps,
               verified_prefix_helpers,
               mailglass_repo_aliases,
-              mailglass_config_aliases
+              mailglass_config_alias_owners
             )
 
           {node, Enum.reverse(function_issues) ++ issues}
@@ -136,7 +157,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          _head,
          nil,
          _issue_meta,
-         _schema_tail_names,
+         _schema_owners,
+         _table_source_owners,
          _repo_functions,
          _multi_functions,
          _projection_steps,
@@ -150,244 +172,265 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          head,
          body,
          issue_meta,
-         schema_tail_names,
+         schema_owners,
+         table_source_owners,
          repo_functions,
          multi_functions,
          projection_steps,
          verified_prefix_helpers,
          mailglass_repo_aliases,
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        ) do
-    tainted_vars =
-      head
-      |> collect_schema_pattern_vars(schema_tail_names)
-      |> then(&collect_tainted_vars(body, schema_tail_names, &1))
+    initial_state = %{
+      tainted_var_owners:
+        collect_schema_pattern_var_owners(head, schema_owners, table_source_owners),
+      prefix_contract_var_owners: %{},
+      issues: []
+    }
 
-    prefix_contract_vars =
-      collect_prefix_contract_vars(
-        body,
-        verified_prefix_helpers,
-        mailglass_repo_aliases,
-        mailglass_config_aliases
-      )
-
-    {_ast, issues} =
-      Macro.prewalk(body, [], fn
+    {_ast, state} =
+      Macro.prewalk(body, initial_state, fn
         {:|>, _pipe_meta, [lhs, {{:., _, [module_ast, function_name]}, meta, rhs_args}]} = node,
-        issues ->
+        state ->
           args = [lhs | List.wrap(rhs_args)]
 
           {node,
            maybe_collect_call(
-             issues,
+             update_state_for_match(
+               state,
+               node,
+               schema_owners,
+               table_source_owners,
+               verified_prefix_helpers,
+               mailglass_repo_aliases,
+               mailglass_config_alias_owners
+             ),
              meta,
              module_ast,
              function_name,
              args,
              issue_meta,
-             schema_tail_names,
+             schema_owners,
+             table_source_owners,
              repo_functions,
              multi_functions,
              projection_steps,
-             tainted_vars,
-             prefix_contract_vars,
              verified_prefix_helpers,
              mailglass_repo_aliases,
-             mailglass_config_aliases
+             mailglass_config_alias_owners
            )}
 
-        {{:., _, [module_ast, function_name]}, meta, args} = node, issues ->
+        {{:., _, [module_ast, function_name]}, meta, args} = node, state ->
           {node,
            maybe_collect_call(
-             issues,
+             update_state_for_match(
+               state,
+               node,
+               schema_owners,
+               table_source_owners,
+               verified_prefix_helpers,
+               mailglass_repo_aliases,
+               mailglass_config_alias_owners
+             ),
              meta,
              module_ast,
              function_name,
              List.wrap(args),
              issue_meta,
-             schema_tail_names,
+             schema_owners,
+             table_source_owners,
              repo_functions,
              multi_functions,
              projection_steps,
-             tainted_vars,
-             prefix_contract_vars,
              verified_prefix_helpers,
              mailglass_repo_aliases,
-             mailglass_config_aliases
+             mailglass_config_alias_owners
            )}
 
-        node, issues ->
-          {node, issues}
+        node, state ->
+          {node,
+           update_state_for_match(
+             state,
+             node,
+             schema_owners,
+             table_source_owners,
+             verified_prefix_helpers,
+             mailglass_repo_aliases,
+             mailglass_config_alias_owners
+           )}
       end)
 
-    Enum.uniq_by(issues, fn issue -> {issue.line_no, issue.column, issue.trigger} end)
+    Enum.uniq_by(state.issues, fn issue -> {issue.line_no, issue.column, issue.trigger} end)
   end
 
   defp maybe_collect_call(
-         issues,
+         state,
          meta,
          module_ast,
          function_name,
          args,
          issue_meta,
-         schema_tail_names,
+         schema_owners,
+         table_source_owners,
          repo_functions,
          multi_functions,
          projection_steps,
-         tainted_vars,
-         prefix_contract_vars,
          verified_prefix_helpers,
          mailglass_repo_aliases,
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        )
        when is_atom(function_name) and is_list(args) do
     cond do
       raw_repo_ast?(module_ast) and MapSet.member?(repo_functions, function_name) ->
         maybe_collect_raw_repo_call(
-          issues,
+          state,
           meta,
           module_ast,
           function_name,
           args,
           issue_meta,
-          schema_tail_names,
-          tainted_vars,
-          prefix_contract_vars,
+          schema_owners,
+          table_source_owners,
           verified_prefix_helpers,
           mailglass_repo_aliases,
-          mailglass_config_aliases
+          mailglass_config_alias_owners
         )
 
       multi_ast?(module_ast) and MapSet.member?(multi_functions, function_name) ->
         maybe_collect_multi_call(
-          issues,
+          state,
           meta,
           module_ast,
           function_name,
           args,
           issue_meta,
-          schema_tail_names,
+          schema_owners,
+          table_source_owners,
           projection_steps,
-          tainted_vars,
-          prefix_contract_vars,
           verified_prefix_helpers,
           mailglass_repo_aliases,
-          mailglass_config_aliases
+          mailglass_config_alias_owners
         )
 
       true ->
-        issues
+        state
     end
   end
 
   defp maybe_collect_call(
-         issues,
+         state,
          _meta,
          _module_ast,
          _function_name,
          _args,
          _issue_meta,
-         _schema_tail_names,
+         _schema_owners,
+         _table_source_owners,
          _repo_functions,
          _multi_functions,
          _projection_steps,
-         _tainted_vars,
-         _prefix_contract_vars,
          _verified_prefix_helpers,
          _mailglass_repo_aliases,
-         _mailglass_config_aliases
+         _mailglass_config_alias_owners
        ),
-       do: issues
+       do: state
 
   defp maybe_collect_raw_repo_call(
-         issues,
+         state,
          meta,
          module_ast,
          function_name,
          args,
          issue_meta,
-         schema_tail_names,
-         tainted_vars,
-         prefix_contract_vars,
+         schema_owners,
+         table_source_owners,
          verified_prefix_helpers,
          mailglass_repo_aliases,
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        ) do
-    if raw_repo_call_targets_schema?(function_name, args, schema_tail_names, tainted_vars) and
+    target_owners =
+      raw_repo_call_target_owners(
+        function_name,
+        args,
+        schema_owners,
+        table_source_owners,
+        state.tainted_var_owners
+      )
+
+    if not MapSet.equal?(target_owners, MapSet.new()) and
          not call_has_prefix_contract?(
            function_name,
            args,
-           prefix_contract_vars,
+           target_owners,
+           state.prefix_contract_var_owners,
            verified_prefix_helpers,
            mailglass_repo_aliases,
-           mailglass_config_aliases
+           mailglass_config_alias_owners
          ) do
-      [
-        issue_for(
-          issue_meta,
-          meta[:line],
-          meta[:column],
-          raw_repo_trigger(module_ast, function_name)
-        )
-        | issues
-      ]
+      prepend_issue(
+        state,
+        issue_meta,
+        meta,
+        raw_repo_trigger(module_ast, function_name)
+      )
     else
-      issues
+      state
     end
   end
 
   defp maybe_collect_multi_call(
-         issues,
+         state,
          meta,
          module_ast,
          function_name,
          args,
          issue_meta,
-         schema_tail_names,
+         schema_owners,
+         table_source_owners,
          projection_steps,
-         tainted_vars,
-         prefix_contract_vars,
          verified_prefix_helpers,
          mailglass_repo_aliases,
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        ) do
-    if multi_call_targets_projection?(
-         function_name,
-         args,
-         schema_tail_names,
-         projection_steps,
-         tainted_vars
-       ) and
+    target_owners =
+      multi_call_target_owners(
+        function_name,
+        args,
+        schema_owners,
+        table_source_owners,
+        projection_steps,
+        state.tainted_var_owners
+      )
+
+    if not MapSet.equal?(target_owners, MapSet.new()) and
          not multi_call_has_prefix_contract?(
            function_name,
            args,
-           prefix_contract_vars,
+           target_owners,
+           state.prefix_contract_var_owners,
            verified_prefix_helpers,
            mailglass_repo_aliases,
-           mailglass_config_aliases
+           mailglass_config_alias_owners
          ) do
-      [
-        issue_for(
-          issue_meta,
-          meta[:line],
-          meta[:column],
-          "#{multi_trigger(module_ast)}.#{function_name}"
-        )
-        | issues
-      ]
+      prepend_issue(
+        state,
+        issue_meta,
+        meta,
+        "#{multi_trigger(module_ast)}.#{function_name}"
+      )
     else
-      issues
+      state
     end
   end
 
-  defp collect_schema_pattern_vars(head, schema_tail_names) do
-    {_ast, vars} =
-      Macro.prewalk(head, MapSet.new(), fn
+  defp collect_schema_pattern_var_owners(head, schema_owners, table_source_owners) do
+    {_ast, var_owners} =
+      Macro.prewalk(head, %{}, fn
         {:=, _meta, [left, right]} = node, vars ->
           vars =
             vars
-            |> add_schema_pattern_vars(left, right, schema_tail_names)
-            |> add_schema_pattern_vars(right, left, schema_tail_names)
+            |> add_schema_pattern_var_owners(left, right, schema_owners, table_source_owners)
+            |> add_schema_pattern_var_owners(right, left, schema_owners, table_source_owners)
 
           {node, vars}
 
@@ -395,174 +438,340 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
           {node, vars}
       end)
 
-    vars
+    var_owners
   end
 
-  defp collect_tainted_vars(body, schema_tail_names, initial_vars) do
-    {_ast, vars} =
-      Macro.prewalk(body, initial_vars, fn
-        {op, _meta, [left, right]} = node, vars when op in [:=, :<-] ->
-          vars =
-            vars
-            |> add_schema_pattern_vars(left, right, schema_tail_names)
-            |> add_schema_pattern_vars(right, left, schema_tail_names)
-            |> update_tainted_assignment(left, right, schema_tail_names)
-
-          {node, vars}
-
-        node, vars ->
-          {node, vars}
-      end)
-
-    vars
-  end
-
-  defp collect_prefix_contract_vars(
-         body,
+  defp update_state_for_match(
+         state,
+         {op, _meta, [left, right]},
+         schema_owners,
+         table_source_owners,
          verified_prefix_helpers,
          mailglass_repo_aliases,
-         mailglass_config_aliases
-       ) do
-    {_ast, vars} =
-      Macro.prewalk(body, MapSet.new(), fn
-        {:=, _meta, [var_ast, rhs]} = node, vars ->
-          case variable_name(var_ast) do
-            nil ->
-              {node, vars}
-
-            name ->
-              if prefix_contract_opts?(
-                   rhs,
-                   vars,
-                   verified_prefix_helpers,
-                   mailglass_repo_aliases,
-                   mailglass_config_aliases
-                 ) do
-                {node, MapSet.put(vars, name)}
-              else
-                {node, MapSet.delete(vars, name)}
-              end
-          end
-
-        node, vars ->
-          {node, vars}
-      end)
-
-    vars
-  end
-
-  defp raw_repo_call_targets_schema?(function_name, args, schema_tail_names, tainted_vars) do
-    args
-    |> Enum.take(raw_repo_min_args(function_name))
-    |> Enum.any?(
-      &(ast_touches_mailglass_schema?(&1, schema_tail_names) or tainted_variable?(&1, tainted_vars))
+         mailglass_config_alias_owners
+       )
+       when op in [:=, :<-] do
+    state
+    |> update_tainted_var_owners(left, right, schema_owners, table_source_owners)
+    |> update_prefix_contract_var_owners(
+      left,
+      right,
+      verified_prefix_helpers,
+      mailglass_repo_aliases,
+      mailglass_config_alias_owners
     )
   end
 
-  defp multi_call_targets_projection?(
+  defp update_state_for_match(
+         state,
+         _node,
+         _schema_owners,
+         _table_source_owners,
+         _verified_prefix_helpers,
+         _mailglass_repo_aliases,
+         _mailglass_config_alias_owners
+       ),
+       do: state
+
+  defp update_tainted_var_owners(state, left, right, schema_owners, table_source_owners) do
+    tainted_var_owners =
+      state.tainted_var_owners
+      |> add_schema_pattern_var_owners(left, right, schema_owners, table_source_owners)
+      |> add_schema_pattern_var_owners(right, left, schema_owners, table_source_owners)
+      |> update_tainted_assignment_owners(left, right, schema_owners, table_source_owners)
+
+    %{state | tainted_var_owners: tainted_var_owners}
+  end
+
+  defp update_prefix_contract_var_owners(
+         state,
+         left,
+         right,
+         verified_prefix_helpers,
+         mailglass_repo_aliases,
+         mailglass_config_alias_owners
+       ) do
+    case variable_name(left) do
+      nil ->
+        state
+
+      name ->
+        owners =
+          prefix_contract_owners(
+            right,
+            state.prefix_contract_var_owners,
+            verified_prefix_helpers,
+            mailglass_repo_aliases,
+            mailglass_config_alias_owners
+          )
+
+        prefix_contract_var_owners =
+          if MapSet.equal?(owners, MapSet.new()) do
+            Map.delete(state.prefix_contract_var_owners, name)
+          else
+            Map.put(state.prefix_contract_var_owners, name, owners)
+          end
+
+        %{state | prefix_contract_var_owners: prefix_contract_var_owners}
+    end
+  end
+
+  defp raw_repo_call_target_owners(
+         function_name,
+         args,
+         schema_owners,
+         table_source_owners,
+         tainted_var_owners
+       ) do
+    args
+    |> Enum.take(raw_repo_min_args(function_name))
+    |> Enum.reduce(MapSet.new(), fn ast, owners ->
+      MapSet.union(
+        owners,
+        owners_for_ast(ast, schema_owners, table_source_owners, tainted_var_owners)
+      )
+    end)
+  end
+
+  defp prepend_issue(state, issue_meta, meta, trigger) do
+    issue =
+      issue_for(
+        issue_meta,
+        meta[:line],
+        meta[:column],
+        trigger
+      )
+
+    %{state | issues: [issue | state.issues]}
+  end
+
+  defp prefix_contract_covers?(contract_owners, target_owners) do
+    MapSet.subset?(target_owners, contract_owners)
+  end
+
+  defp empty_owners?(owners), do: MapSet.equal?(owners, MapSet.new())
+
+  defp merge_owners(left, right), do: MapSet.union(left, right)
+
+  defp union_owners(asts, schema_owners, table_source_owners, tainted_var_owners) do
+    Enum.reduce(asts, MapSet.new(), fn ast, owners ->
+      merge_owners(
+        owners,
+        owners_for_ast(ast, schema_owners, table_source_owners, tainted_var_owners)
+      )
+    end)
+  end
+
+  defp owner_set(owner), do: MapSet.new([owner])
+
+  defp put_var_owners(var_owners, names, owners) do
+    Enum.reduce(names, var_owners, fn name, acc ->
+      Map.update(acc, name, owners, &merge_owners(&1, owners))
+    end)
+  end
+
+  defp add_schema_pattern_var_owners(
+         var_owners,
+         schema_pattern,
+         bound_ast,
+         schema_owners,
+         table_source_owners
+       ) do
+    owners = owners_for_ast(schema_pattern, schema_owners, table_source_owners, var_owners)
+
+    if empty_owners?(owners) do
+      var_owners
+    else
+      names =
+        schema_pattern
+        |> variable_names()
+        |> MapSet.union(variable_names(bound_ast))
+
+      put_var_owners(var_owners, names, owners)
+    end
+  end
+
+  defp update_tainted_assignment_owners(
+         var_owners,
+         left,
+         right,
+         schema_owners,
+         table_source_owners
+       ) do
+    case variable_name(left) do
+      nil ->
+        var_owners
+
+      name ->
+        owners = owners_for_ast(right, schema_owners, table_source_owners, var_owners)
+
+        if empty_owners?(owners) do
+          Map.delete(var_owners, name)
+        else
+          Map.put(var_owners, name, owners)
+        end
+    end
+  end
+
+  defp owners_for_ast(nil, _schema_owners, _table_source_owners, _tainted_var_owners),
+    do: MapSet.new()
+
+  defp owners_for_ast(ast, schema_owners, table_source_owners, tainted_var_owners) do
+    {_ast, owners} =
+      Macro.prewalk(ast, MapSet.new(), fn
+        {:__aliases__, _, parts} = node, owners when is_list(parts) ->
+          tail = parts |> List.last() |> Atom.to_string()
+          {node, merge_owners(owners, Map.get(schema_owners, tail, MapSet.new()))}
+
+        table, owners when is_binary(table) ->
+          {table, merge_owners(owners, Map.get(table_source_owners, table, MapSet.new()))}
+
+        {{:., _, [module_ast, :update_projections]}, _, args} = node, owners when is_list(args) ->
+          owners =
+            if module_tail_from_ast(module_ast) == "Projector" do
+              MapSet.put(owners, :core)
+            else
+              owners
+            end
+
+          {node, owners}
+
+        node, owners ->
+          case variable_name(node) do
+            nil ->
+              {node, owners}
+
+            name ->
+              {node, merge_owners(owners, Map.get(tainted_var_owners, name, MapSet.new()))}
+          end
+      end)
+
+    owners
+  end
+
+  defp multi_call_target_owners(
          :update_all,
          args,
-         schema_tail_names,
+         schema_owners,
+         table_source_owners,
          projection_steps,
-         tainted_vars
+         tainted_var_owners
        ) do
     offset = multi_step_offset(args)
     step_name = Enum.at(args, offset)
     query = Enum.at(args, offset + 1)
     updates = Enum.at(args, offset + 2)
 
-    projection_step?(step_name, projection_steps) or
-      schema_ast_or_var?(query, schema_tail_names, tainted_vars) or
-      schema_ast_or_var?(updates, schema_tail_names, tainted_vars)
+    step_name
+    |> projection_step_owners(projection_steps)
+    |> merge_owners(
+      union_owners([query, updates], schema_owners, table_source_owners, tainted_var_owners)
+    )
   end
 
-  defp multi_call_targets_projection?(
+  defp multi_call_target_owners(
          function_name,
          args,
-         schema_tail_names,
+         schema_owners,
+         table_source_owners,
          projection_steps,
-         tainted_vars
+         tainted_var_owners
        )
        when function_name in [:insert, :update, :delete] do
     offset = multi_step_offset(args)
     step_name = Enum.at(args, offset)
     target = Enum.at(args, offset + 1)
 
-    projection_step?(step_name, projection_steps) or
-      schema_ast_or_var?(target, schema_tail_names, tainted_vars)
+    step_name
+    |> projection_step_owners(projection_steps)
+    |> merge_owners(union_owners([target], schema_owners, table_source_owners, tainted_var_owners))
   end
 
-  defp multi_call_targets_projection?(
+  defp multi_call_target_owners(
          :insert_all,
          args,
-         schema_tail_names,
+         schema_owners,
+         table_source_owners,
          projection_steps,
-         tainted_vars
+         tainted_var_owners
        ) do
     offset = multi_step_offset(args)
     step_name = Enum.at(args, offset)
     schema_or_source = Enum.at(args, offset + 1)
     entries = Enum.at(args, offset + 2)
 
-    projection_step?(step_name, projection_steps) or
-      schema_ast_or_var?(schema_or_source, schema_tail_names, tainted_vars) or
-      schema_ast_or_var?(entries, schema_tail_names, tainted_vars)
+    step_name
+    |> projection_step_owners(projection_steps)
+    |> merge_owners(
+      union_owners(
+        [schema_or_source, entries],
+        schema_owners,
+        table_source_owners,
+        tainted_var_owners
+      )
+    )
   end
 
-  defp multi_call_targets_projection?(
+  defp multi_call_target_owners(
          :delete_all,
          args,
-         schema_tail_names,
+         schema_owners,
+         table_source_owners,
          projection_steps,
-         tainted_vars
+         tainted_var_owners
        ) do
     offset = multi_step_offset(args)
     step_name = Enum.at(args, offset)
     query = Enum.at(args, offset + 1)
 
-    projection_step?(step_name, projection_steps) or
-      schema_ast_or_var?(query, schema_tail_names, tainted_vars)
+    step_name
+    |> projection_step_owners(projection_steps)
+    |> merge_owners(union_owners([query], schema_owners, table_source_owners, tainted_var_owners))
   end
 
-  defp multi_call_targets_projection?(
+  defp multi_call_target_owners(
          _function_name,
          _args,
-         _schema_tail_names,
+         _schema_owners,
+         _table_source_owners,
          _projection_steps,
-         _tainted_vars
+         _tainted_var_owners
        ),
-       do: false
+       do: MapSet.new()
 
   defp call_has_prefix_contract?(
          function_name,
          args,
-         prefix_contract_vars,
+         target_owners,
+         prefix_contract_var_owners,
          verified_prefix_helpers,
          mailglass_repo_aliases,
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        ) do
     case final_opts_arg(args, raw_repo_min_args(function_name)) do
       nil ->
         false
 
       opts ->
-        prefix_contract_opts?(
-          opts,
-          prefix_contract_vars,
+        opts
+        |> prefix_contract_owners(
+          prefix_contract_var_owners,
           verified_prefix_helpers,
           mailglass_repo_aliases,
-          mailglass_config_aliases
+          mailglass_config_alias_owners
         )
+        |> prefix_contract_covers?(target_owners)
     end
   end
 
   defp multi_call_has_prefix_contract?(
          function_name,
          args,
-         prefix_contract_vars,
+         target_owners,
+         prefix_contract_var_owners,
          verified_prefix_helpers,
          mailglass_repo_aliases,
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        )
        when function_name in [:insert, :insert_all, :update, :update_all, :delete, :delete_all] do
     case final_opts_arg(args, multi_min_args(function_name, args)) do
@@ -570,23 +779,25 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
         false
 
       opts ->
-        prefix_contract_opts?(
-          opts,
-          prefix_contract_vars,
+        opts
+        |> prefix_contract_owners(
+          prefix_contract_var_owners,
           verified_prefix_helpers,
           mailglass_repo_aliases,
-          mailglass_config_aliases
+          mailglass_config_alias_owners
         )
+        |> prefix_contract_covers?(target_owners)
     end
   end
 
   defp multi_call_has_prefix_contract?(
          _function_name,
          _args,
-         _prefix_contract_vars,
+         _target_owners,
+         _prefix_contract_var_owners,
          _verified_prefix_helpers,
          _mailglass_repo_aliases,
-         _mailglass_config_aliases
+         _mailglass_config_alias_owners
        ),
        do: false
 
@@ -596,93 +807,58 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp final_opts_arg(_args, _minimum_non_opts_args), do: nil
 
-  defp prefix_contract_opts?(
+  defp prefix_contract_owners(
          opts,
-         _prefix_contract_vars,
+         _prefix_contract_var_owners,
          _verified_prefix_helpers,
          _mailglass_repo_aliases,
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        )
        when is_list(opts) do
-    returned_expression_has_configured_prefix?(opts, mailglass_config_aliases)
+    returned_expression_prefix_owners(opts, mailglass_config_alias_owners)
   end
 
-  defp prefix_contract_opts?(
+  defp prefix_contract_owners(
          {helper_name, _meta, args},
-         _prefix_contract_vars,
+         _prefix_contract_var_owners,
          verified_prefix_helpers,
          _mailglass_repo_aliases,
-         _mailglass_config_aliases
+         _mailglass_config_alias_owners
        )
        when is_atom(helper_name) and is_list(args) do
-    MapSet.member?(verified_prefix_helpers, {helper_name, length(args)})
+    Map.get(verified_prefix_helpers, {helper_name, length(args)}, MapSet.new())
   end
 
-  defp prefix_contract_opts?(
+  defp prefix_contract_owners(
          {{:., _, [module_ast, :multi_opts]}, _meta, args},
-         _prefix_contract_vars,
+         _prefix_contract_var_owners,
          _verified_prefix_helpers,
          mailglass_repo_aliases,
-         _mailglass_config_aliases
+         _mailglass_config_alias_owners
        )
        when is_list(args) do
-    mailglass_repo_ast?(module_ast, mailglass_repo_aliases)
+    if mailglass_repo_ast?(module_ast, mailglass_repo_aliases) do
+      owner_set(:core)
+    else
+      MapSet.new()
+    end
   end
 
-  defp prefix_contract_opts?(
+  defp prefix_contract_owners(
          opts,
-         prefix_contract_vars,
+         prefix_contract_var_owners,
          _verified_prefix_helpers,
          _mailglass_repo_aliases,
-         _mailglass_config_aliases
+         _mailglass_config_alias_owners
        ) do
-    tainted_variable?(opts, prefix_contract_vars)
-  end
-
-  defp schema_ast_or_var?(ast, schema_tail_names, tainted_vars) do
-    ast_touches_mailglass_schema?(ast, schema_tail_names) or tainted_variable?(ast, tainted_vars)
-  end
-
-  defp add_schema_pattern_vars(vars, schema_pattern, bound_ast, schema_tail_names) do
-    if ast_touches_mailglass_schema?(schema_pattern, schema_tail_names) do
-      vars
-      |> MapSet.union(variable_names(schema_pattern))
-      |> MapSet.union(variable_names(bound_ast))
-    else
-      vars
+    case variable_name(opts) do
+      nil -> MapSet.new()
+      name -> Map.get(prefix_contract_var_owners, name, MapSet.new())
     end
   end
 
-  defp update_tainted_assignment(vars, left, right, schema_tail_names) do
-    case variable_name(left) do
-      nil ->
-        vars
-
-      name ->
-        if ast_touches_mailglass_schema?(right, schema_tail_names) or tainted_variable?(right, vars) do
-          MapSet.put(vars, name)
-        else
-          MapSet.delete(vars, name)
-        end
-    end
-  end
-
-  defp ast_touches_mailglass_schema?(ast, schema_tail_names) do
-    {_ast, found?} =
-      Macro.prewalk(ast, false, fn
-        {:__aliases__, _, parts} = node, false when is_list(parts) ->
-          tail = parts |> List.last() |> Atom.to_string()
-
-          if MapSet.member?(schema_tail_names, tail), do: {node, true}, else: {node, false}
-
-        {{:., _, [module_ast, :update_projections]}, _, args} = node, false when is_list(args) ->
-          if module_tail_from_ast(module_ast) == "Projector", do: {node, true}, else: {node, false}
-
-        node, found? ->
-          {node, found?}
-      end)
-
-    found?
+  defp projection_step_owners(step_name, projection_steps) do
+    if projection_step?(step_name, projection_steps), do: owner_set(:core), else: MapSet.new()
   end
 
   defp projection_step?(step_name, projection_steps) when is_atom(step_name) do
@@ -707,13 +883,6 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp multi_step_offset([step_name | _args]) when is_atom(step_name), do: 0
   defp multi_step_offset(_args), do: 1
-
-  defp tainted_variable?(ast, tainted_vars) do
-    case variable_name(ast) do
-      nil -> false
-      name -> MapSet.member?(tainted_vars, name)
-    end
-  end
 
   defp variable_name({name, _meta, context})
        when is_atom(name) and (is_atom(context) or is_nil(context)),
@@ -742,7 +911,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          ast,
          prefix_helper_functions,
          mailglass_repo_aliases,
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        ) do
     {_ast, helper_counts} =
       Macro.prewalk(ast, %{}, fn
@@ -752,20 +921,27 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
           body = Keyword.get(body_kw, :do)
 
           if helper_key && MapSet.member?(prefix_helper_functions, elem(helper_key, 0)) do
-            {total, prefixed} = Map.get(helper_counts, helper_key, {0, 0})
+            {total, prefixed, owners} =
+              Map.get(helper_counts, helper_key, {0, 0, MapSet.new()})
+
+            helper_owners =
+              prefix_contract_owners(
+                returned_expression(body),
+                %{},
+                %{},
+                mailglass_repo_aliases,
+                mailglass_config_alias_owners
+              )
 
             prefixed =
-              if prefix_contract_opts?(
-                   returned_expression(body),
-                   MapSet.new(),
-                   MapSet.new(),
-                   mailglass_repo_aliases,
-                   mailglass_config_aliases
-                 ),
-                 do: prefixed + 1,
-                 else: prefixed
+              if empty_owners?(helper_owners), do: prefixed, else: prefixed + 1
 
-            {node, Map.put(helper_counts, helper_key, {total + 1, prefixed})}
+            {node,
+             Map.put(
+               helper_counts,
+               helper_key,
+               {total + 1, prefixed, merge_owners(owners, helper_owners)}
+             )}
           else
             {node, helper_counts}
           end
@@ -775,9 +951,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
       end)
 
     helper_counts
-    |> Enum.reduce(MapSet.new(), fn
-      {helper_key, {total, prefixed}}, verified when total > 0 and total == prefixed ->
-        MapSet.put(verified, helper_key)
+    |> Enum.reduce(%{}, fn
+      {helper_key, {total, prefixed, owners}}, verified when total > 0 and total == prefixed ->
+        Map.put(verified, helper_key, owners)
 
       _entry, verified ->
         verified
@@ -825,66 +1001,73 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp returned_expression(expression), do: expression
 
-  defp returned_expression_has_configured_prefix?(ast, mailglass_config_aliases) do
+  defp returned_expression_prefix_owners(ast, mailglass_config_alias_owners) do
     ast
     |> returned_expression()
-    |> do_returned_expression_has_configured_prefix?(mailglass_config_aliases)
+    |> do_returned_expression_prefix_owners(mailglass_config_alias_owners)
   end
 
-  defp do_returned_expression_has_configured_prefix?(opts, mailglass_config_aliases)
+  defp do_returned_expression_prefix_owners(opts, mailglass_config_alias_owners)
        when is_list(opts) do
-    Keyword.keyword?(opts) and
-      configured_prefix_ast?(Keyword.get(opts, :prefix), mailglass_config_aliases)
+    if Keyword.keyword?(opts) do
+      configured_prefix_owners(Keyword.get(opts, :prefix), mailglass_config_alias_owners)
+    else
+      MapSet.new()
+    end
   end
 
-  defp do_returned_expression_has_configured_prefix?(
+  defp do_returned_expression_prefix_owners(
          {{:., _, [{:__aliases__, _, [:Keyword]}, function_name]}, _meta,
           [_opts, :prefix, prefix_ast]},
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        )
        when function_name in [:put, :put_new] do
-    configured_prefix_ast?(prefix_ast, mailglass_config_aliases)
+    configured_prefix_owners(prefix_ast, mailglass_config_alias_owners)
   end
 
-  defp do_returned_expression_has_configured_prefix?(
+  defp do_returned_expression_prefix_owners(
          {:|>, _meta,
           [
             _opts,
             {{:., _, [{:__aliases__, _, [:Keyword]}, function_name]}, _call_meta,
              [:prefix, prefix_ast]}
           ]},
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        )
        when function_name in [:put, :put_new] do
-    configured_prefix_ast?(prefix_ast, mailglass_config_aliases)
+    configured_prefix_owners(prefix_ast, mailglass_config_alias_owners)
   end
 
-  defp do_returned_expression_has_configured_prefix?(_expression, _mailglass_config_aliases),
-    do: false
+  defp do_returned_expression_prefix_owners(_expression, _mailglass_config_alias_owners),
+    do: MapSet.new()
 
-  defp configured_prefix_ast?(
+  defp configured_prefix_owners(
          {{:., _, [{:__aliases__, _, [:Mailglass, :Config]}, :schema]}, _meta, args},
-         _mailglass_config_aliases
+         _mailglass_config_alias_owners
        )
        when is_list(args),
-       do: args == []
+       do: if(args == [], do: owner_set(:core), else: MapSet.new())
 
-  defp configured_prefix_ast?(
+  defp configured_prefix_owners(
          {{:., _, [{:__aliases__, _, [:MailglassInbound, :Config]}, :schema]}, _meta, args},
-         _mailglass_config_aliases
+         _mailglass_config_alias_owners
        )
        when is_list(args),
-       do: args == []
+       do: if(args == [], do: owner_set(:inbound), else: MapSet.new())
 
-  defp configured_prefix_ast?(
+  defp configured_prefix_owners(
          {{:., _, [{:__aliases__, _, parts}, :schema]}, _meta, args},
-         mailglass_config_aliases
+         mailglass_config_alias_owners
        )
        when is_list(parts) and is_list(args) do
-    args == [] and MapSet.member?(mailglass_config_aliases, Enum.join(parts, "."))
+    if args == [] do
+      Map.get(mailglass_config_alias_owners, Enum.join(parts, "."), MapSet.new())
+    else
+      MapSet.new()
+    end
   end
 
-  defp configured_prefix_ast?(_ast, _mailglass_config_aliases), do: false
+  defp configured_prefix_owners(_ast, _mailglass_config_alias_owners), do: MapSet.new()
 
   defp collect_mailglass_repo_aliases(ast) do
     {_ast, aliases} =
@@ -929,53 +1112,62 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp collect_mailglass_repo_alias(_args, aliases), do: aliases
 
-  defp collect_mailglass_config_aliases(ast) do
-    {_ast, aliases} =
-      Macro.prewalk(ast, MapSet.new(), fn
-        {:alias, _meta, args} = node, aliases ->
-          {node, collect_mailglass_config_alias(args, aliases)}
+  defp collect_mailglass_config_alias_owners(ast) do
+    {_ast, alias_owners} =
+      Macro.prewalk(ast, %{}, fn
+        {:alias, _meta, args} = node, alias_owners ->
+          {node, collect_mailglass_config_alias_owner(args, alias_owners)}
 
-        node, aliases ->
-          {node, aliases}
+        node, alias_owners ->
+          {node, alias_owners}
       end)
 
-    aliases
+    alias_owners
   end
 
-  defp collect_mailglass_config_alias([alias_ast], aliases) do
+  defp collect_mailglass_config_alias_owner([alias_ast], alias_owners) do
     alias_string = Macro.to_string(alias_ast)
 
     cond do
-      alias_string == "Mailglass.Config" or alias_string == "MailglassInbound.Config" ->
-        MapSet.put(aliases, "Config")
+      alias_string == "Mailglass.Config" ->
+        put_config_alias_owner(alias_owners, "Config", :core)
+
+      alias_string == "MailglassInbound.Config" ->
+        put_config_alias_owner(alias_owners, "Config", :inbound)
 
       String.starts_with?(alias_string, "Mailglass.{") and
           Regex.match?(~r/(^|[{\s,])Config([}\s,]|$)/, alias_string) ->
-        MapSet.put(aliases, "Config")
+        put_config_alias_owner(alias_owners, "Config", :core)
 
       String.starts_with?(alias_string, "MailglassInbound.{") and
           Regex.match?(~r/(^|[{\s,])Config([}\s,]|$)/, alias_string) ->
-        MapSet.put(aliases, "Config")
+        put_config_alias_owner(alias_owners, "Config", :inbound)
 
       true ->
-        aliases
+        alias_owners
     end
   end
 
-  defp collect_mailglass_config_alias([alias_ast, opts], aliases) when is_list(opts) do
+  defp collect_mailglass_config_alias_owner([alias_ast, opts], alias_owners) when is_list(opts) do
     alias_string = Macro.to_string(alias_ast)
 
     case Keyword.get(opts, :as) do
-      as_name
-      when alias_string in ["Mailglass.Config", "MailglassInbound.Config"] and is_atom(as_name) ->
-        MapSet.put(aliases, Atom.to_string(as_name))
+      as_name when alias_string == "Mailglass.Config" and is_atom(as_name) ->
+        put_config_alias_owner(alias_owners, Atom.to_string(as_name), :core)
+
+      as_name when alias_string == "MailglassInbound.Config" and is_atom(as_name) ->
+        put_config_alias_owner(alias_owners, Atom.to_string(as_name), :inbound)
 
       _other ->
-        collect_mailglass_config_alias([alias_ast], aliases)
+        collect_mailglass_config_alias_owner([alias_ast], alias_owners)
     end
   end
 
-  defp collect_mailglass_config_alias(_args, aliases), do: aliases
+  defp collect_mailglass_config_alias_owner(_args, alias_owners), do: alias_owners
+
+  defp put_config_alias_owner(alias_owners, alias_name, owner) do
+    Map.update(alias_owners, alias_name, owner_set(owner), &MapSet.put(&1, owner))
+  end
 
   defp mailglass_repo_ast?({:__aliases__, _, [:Mailglass, :Repo]}, _mailglass_repo_aliases),
     do: true
@@ -999,10 +1191,30 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     )
   end
 
-  defp schema_tail_names(schemas) when is_list(schemas) do
-    schemas
-    |> Enum.map(&module_tail_name/1)
-    |> MapSet.new()
+  defp schema_owners(schemas) when is_list(schemas) do
+    Enum.reduce(schemas, %{}, fn schema, owners ->
+      case module_tail_name(schema) do
+        nil ->
+          owners
+
+        tail ->
+          Map.update(owners, tail, owner_set(schema_owner(schema)), fn existing ->
+            MapSet.put(existing, schema_owner(schema))
+          end)
+      end
+    end)
+  end
+
+  defp table_source_owners(table_sources) when is_list(table_sources) do
+    Enum.reduce(table_sources, %{}, fn
+      {owner, tables}, owners when owner in [:core, :inbound] and is_list(tables) ->
+        Enum.reduce(tables, owners, fn table, acc ->
+          Map.update(acc, table, owner_set(owner), &MapSet.put(&1, owner))
+        end)
+
+      _entry, owners ->
+        owners
+    end)
   end
 
   defp module_tail_name(module) when is_atom(module) do
@@ -1015,6 +1227,16 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp module_tail_name(other) when is_binary(other), do: other
   defp module_tail_name(_other), do: nil
+
+  defp schema_owner(schema) when is_atom(schema) do
+    schema
+    |> Atom.to_string()
+    |> String.trim_leading("Elixir.")
+    |> schema_owner()
+  end
+
+  defp schema_owner("MailglassInbound." <> _rest), do: :inbound
+  defp schema_owner(_schema), do: :core
 
   defp module_tail_from_ast({:__aliases__, _, parts}) when is_list(parts) do
     parts |> List.last() |> Atom.to_string()
