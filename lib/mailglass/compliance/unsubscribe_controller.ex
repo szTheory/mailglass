@@ -118,7 +118,7 @@ defmodule Mailglass.Compliance.UnsubscribeController do
   defp canonical_event(_repo, %Event{inserted_at: %DateTime{}} = event, _delivery), do: event
 
   defp canonical_event(repo, %Event{inserted_at: nil}, %Delivery{} = delivery) do
-    repo.one!(
+    query =
       from(event in Event,
         where:
           event.delivery_id == ^delivery.id and
@@ -126,7 +126,8 @@ defmodule Mailglass.Compliance.UnsubscribeController do
             event.idempotency_key == ^unsubscribe_idempotency_key(delivery),
         limit: 1
       )
-    )
+
+    repo.one!(query, Repo.multi_opts())
   end
 
   defp respond_to_unsubscribe({:ok, %{unsubscribe_event_record: event}}, conn, delivery) do
