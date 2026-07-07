@@ -4,7 +4,7 @@ milestone: v2.1
 milestone_name: Postgres + Admin URL Hardening)
 status: executing
 stopped_at: Completed 138-03-PLAN.md
-last_updated: "2026-07-07T14:03:41.506Z"
+last_updated: "2026-07-07T14:03:55.364Z"
 last_activity: 2026-07-07
 progress:
   total_phases: 3
@@ -258,6 +258,8 @@ release debug campaign.
 - [Phase 138]: Source-contract assertions accompany hostile runtime schema-prefix tests — The replay runtime proof can pass through Ecto-loaded prefix metadata before explicit raw callback opts are present, so source-contract assertions keep the focused lane fail-closed.
 - [Phase 138]: Keep MailglassInbound.Repo as the default facade for inbound replay extension points; supplied raw repos receive explicit local schema opts.
 - [Phase 138]: Inbound raw-repo prefix contract tests use capture repos and avoid subject/body/header/raw MIME diagnostics.
+- [Phase 138]: Projection Multi writes in the fake adapter and webhook reconciler are schema-prefix-sensitive and must pass per-operation prefix opts. — Ecto.Multi operation opts do not inherit from the transaction executor; explicit Repo.multi_opts() keeps these writes independent of connection search_path.
+- [Phase 138]: RawRepoPrefixContract is production-path scoped and treats Repo.multi_opts(), schema_opts(), prefix:, and configured local prefix opts helpers as compliant. — The guard must catch recurrence without creating noisy false positives in tests, migrations, or existing facade-owned prefix helpers.
 
 ## Quick Tasks Completed
 
