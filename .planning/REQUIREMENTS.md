@@ -15,10 +15,10 @@
 
 ### SCHEMA - No-search-path schema-prefix hardening
 
-- [ ] **SCHEMA-01**: A focused runtime proof shows `Mailglass.Webhook.Replay` updates projections in the
+- [x] **SCHEMA-01**: A focused runtime proof shows `Mailglass.Webhook.Replay` updates projections in the
   configured schema when the DB connection `search_path` does not include that schema.
 
-- [ ] **SCHEMA-02**: A focused runtime proof shows unsubscribe replay/idempotency conflict lookups read from
+- [x] **SCHEMA-02**: A focused runtime proof shows unsubscribe replay/idempotency conflict lookups read from
   the configured schema when the DB connection `search_path` does not include that schema.
 
 - [ ] **SCHEMA-03**: Raw repo calls and transaction callbacks that touch mailglass tables use an explicit
@@ -71,11 +71,14 @@
 - Admin redesign, brand refresh, token changes, component changes, layout changes, or motion work.
 - Public router macro API changes unless a phase proves the existing mount-aware path cannot satisfy the
   asset requirements.
+
 - CDN/host asset pipeline changes, duplicate asset routes, `<base>` tags, or redirects as the primary
   asset fix.
+
 - Screenshot/pixel-diff visual gating. Browser proof is network + computed-style based.
 - Whole-suite no-search-path fixture migration as a first step. v2.1 creates the focused hostile lane and
   recurrence guard; broader fixture cleanup remains future work unless needed for honesty.
+
 - SEED-003 ecosystem integrations, Cloudflare routing, synthetic inbound dev UI, `gen_smtp`, or additional
   provider work.
 
@@ -83,6 +86,7 @@
 
 - Broader UI verification discipline after v2.1, including any full admin visual/a11y sweep the maintainer
   chooses to run.
+
 - A whole-suite no-search-path fixture cleanup if the focused lane exposes broader systemic drift.
 - Ecosystem integrations only with real adopter pull.
 
@@ -92,8 +96,8 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| SCHEMA-01 | Phase 138 | Pending |
-| SCHEMA-02 | Phase 138 | Pending |
+| SCHEMA-01 | Phase 138 | Complete |
+| SCHEMA-02 | Phase 138 | Complete |
 | SCHEMA-03 | Phase 138 | Pending |
 | SCHEMA-04 | Phase 138 | Pending |
 | GATE-01 | Phase 138 | Pending |

@@ -71,12 +71,12 @@ per-phase planning should inspect only the relevant code edges before implementa
 the DB connection `search_path` does not include that schema.
 **Depends on:** Nothing in v2.1; builds directly on v2.0's schema-isolation foundation.
 **Requirements:** SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, GATE-01, GATE-02
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 138-01-PLAN.md - Core hostile runtime proofs for `Webhook.Replay` and unsubscribe conflict lookup
+- [x] 138-01-PLAN.md - Core hostile runtime proofs for `Webhook.Replay` and unsubscribe conflict lookup
 - [ ] 138-02-PLAN.md - Inbound raw-repo extension-point prefix contract
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -93,8 +93,10 @@ Plans:
 2. Unsubscribe replay/idempotency conflict lookups are fixed/proven under hostile `search_path`.
 3. Raw repo calls and transaction callbacks touching mailglass tables are either explicitly prefixed,
    routed through the facade, or allowlisted as schema-agnostic.
+
 4. Inbound repo-option extension points keep the facade as the default and make any raw-repo prefix
    contract explicit and tested where applicable.
+
 5. A focused verification lane runs the runtime proofs and static guard.
 6. The broad dual-schema advisory matrix remains a canary, not the only proof.
 
@@ -113,10 +115,12 @@ deep links and alternate mount roots, without redesigning the admin UI or adding
 1. Generated stylesheet hrefs are rooted at the effective mount path for `/dev/mail`, preview scenario
    routes, preview error routes, `/dev/mail/gallery`, `/ops/mail`, `/ops/mail/inbound`, and query deep
    links.
+
 2. Direct hard loads do not request CSS/fonts relative to nested LiveView paths.
 3. The same proof passes when the admin is mounted at an arbitrary alternate path.
 4. Browser verification fails on CSS/font 404s and asserts token-backed computed styling after direct
    `page.goto` loads.
+
 5. The implementation preserves the existing `MountPathHook`/`MountPath`/layout approach unless a phase
    proves it cannot satisfy the requirement.
 
@@ -136,8 +140,10 @@ scope explicit, and prepare v2.1 for audit/archive.
 1. Focused schema-prefix and admin asset verification lanes pass.
 2. Stale docs/backlog entries no longer claim the admin relative-asset hard-refresh issue remains open once
    the proof exists.
+
 3. ROADMAP/REQUIREMENTS/PROJECT/STATE keep broader UI verification discipline and ecosystem integrations
    deferred.
+
 4. Milestone closeout can run with no unresolved v2.1 requirement drift.
 
 **UI hint:** light - docs and verification only.

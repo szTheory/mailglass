@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
 milestone: v2.1
-milestone_name: Postgres + Admin URL Hardening
+milestone_name: Postgres + Admin URL Hardening)
 current_phase: 138
-current_phase_name: Schema-prefix no-search-path hardening
-status: ready_to_execute
-stopped_at: Phase 138 planned
-last_updated: "2026-07-07T13:16:23.659Z"
+current_phase_name: schema-prefix-no-search-path-hardening
+status: executing
+stopped_at: Completed 138-01-PLAN.md
+last_updated: "2026-07-07T13:36:06.683Z"
 last_activity: 2026-07-07
-last_activity_desc: Phase 138 planned with 4 plans
+last_activity_desc: Phase 138 execution started
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-07 - after opening v2.1)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** v2.1 Postgres + Admin URL Hardening - tight post-v2.0 maintenance work on schema-prefix fail-closed proof and admin first-load asset URL robustness.
+**Current focus:** Phase 138 — schema-prefix-no-search-path-hardening
 
 ## Current Position
 
-Phase: 138 - Schema-prefix no-search-path hardening
-Plan: 4 plans ready
+Phase: 138 (schema-prefix-no-search-path-hardening) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-07-07 — Phase 138 planned
+Last activity: 2026-07-07 — Phase 138 execution started
 
 ## v2.1 Milestone Intent
 
@@ -57,10 +57,13 @@ Last activity: 2026-07-07 — Phase 138 planned
 - **No product expansion.** No new providers, transports, routes, or release cut.
 - **No admin redesign.** No token, component, motion, layout, or brand refresh work beyond computed-style
   proof that existing styles load.
+
 - **No public router macro option change** unless a phase proves the current mount-aware path cannot
   satisfy the requirement; document the tradeoff before widening scope.
+
 - **No full no-search-path suite migration.** Create the focused fail-closed lane and static guard first;
   broader fixture cleanup stays future work unless it becomes necessary to make the focused proof honest.
+
 - **Phase numbers continue at 138.** v2.0's 132-137 artifacts are shipped history.
 
 ## Roadmap Snapshot
@@ -254,6 +257,8 @@ release debug campaign.
 - [Phase ?]: [134-01] Non-public-prefix down full round-trip + citext/trigger qualification deferred to 134-02; 134-01 proves DROP SCHEMA RESTRICT via the exact emitted DDL to avoid corrupting shared public.citext mid-suite.
 - [Phase ?]: 137-01: 2.0 reference-baseline lock regen deferred to Plan 02 post-publish; mix.exs pins landed now
 - [Phase ?]: 137-01: reference baseline adopts mailglass default schema (no :schema public pin) per D-07
+- [Phase 138]: Explicit per-operation Ecto prefix opts on raw callback repo calls — Repo.multi_opts() is the correctness mechanism for raw Ecto.Multi callback reads/writes; connection search_path remains only test/host convenience.
+- [Phase 138]: Source-contract assertions accompany hostile runtime schema-prefix tests — The replay runtime proof can pass through Ecto-loaded prefix metadata before explicit raw callback opts are present, so source-contract assertions keep the focused lane fail-closed.
 
 ## Quick Tasks Completed
 
@@ -401,6 +406,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 134 P01 | ~13 min | 3 tasks | 3 files |
 | Phase 134 P02 | ~18 min | 3 tasks | 3 files |
 | Phase 134 P03 | 55min | 3 tasks | 10 files |
+| Phase 138 P01 | 9 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -428,9 +434,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-03T15:57:41.745Z
-**Stopped at:** Phase 137 context gathered (assumptions mode)
-**Resume file:** .planning/phases/137-linked-2-0-release-ceremony-milestone-closeout/137-CONTEXT.md
+**Last session:** 2026-07-07T13:35:54.011Z
+**Stopped at:** Completed 138-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
