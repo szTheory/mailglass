@@ -6,6 +6,7 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
   @moduletag :schema_prefix
 
   alias Mailglass.Clock
+  alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Outbound.Delivery
   alias Mailglass.Repo
   alias Mailglass.TestRepo
@@ -13,8 +14,41 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
   alias Mailglass.Webhook.Replay
   alias Mailglass.Webhook.WebhookEvent
 
+  @endpoint Mailglass.SchemaPrefixHardeningTest.TestEndpoint
   @prefix "mailglass"
   @tenant_id "schema-prefix-hardening-tenant"
+
+  defmodule TestRouter do
+    use Phoenix.Router
+
+    pipeline :browser do
+      plug(:accepts, ["html"])
+      plug(:fetch_session)
+      plug(:put_secure_browser_headers)
+    end
+
+    scope "/" do
+      pipe_through(:browser)
+
+      post(
+        "/mailglass/unsubscribe/:token",
+        Mailglass.Compliance.UnsubscribeController,
+        :unsubscribe
+      )
+    end
+  end
+
+  defmodule TestEndpoint do
+    use Phoenix.Endpoint, otp_app: :mailglass
+
+    plug(Plug.Session,
+      store: :cookie,
+      key: "_mailglass_schema_prefix_unsubscribe_test",
+      signing_salt: "schema-prefix-unsubscribe-test"
+    )
+
+    plug(TestRouter)
+  end
 
   defmodule PrefixedWrapperMigration do
     use Ecto.Migration
@@ -30,10 +64,25 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     end
   end
 
+  import Phoenix.ConnTest
+
+  setup_all do
+    {:ok, _} = Application.ensure_all_started(:phoenix)
+
+    Application.put_env(:mailglass, TestEndpoint, endpoint_config())
+
+    case TestEndpoint.start_link() do
+      {:ok, _pid} -> :ok
+      {:error, {:already_started, _pid}} -> :ok
+    end
+  end
+
   setup do
     prior_mailglass_env = Application.get_all_env(:mailglass)
 
     Application.put_env(:mailglass, :schema, @prefix)
+    Application.put_env(:mailglass, TestEndpoint, endpoint_config())
+    Application.put_env(:mailglass, :compliance, compliance_config())
     :persistent_term.erase({Mailglass.Config, :schema})
 
     Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
@@ -106,6 +155,28 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
 
     assert source =~ "changeset = Projector.update_projections(delivery, inserted_event)"
     assert source =~ "repo.update(changeset, Repo.multi_opts())"
+  end
+
+  test "unsubscribe replay conflict lookup targets configured schema without search_path help" do
+    delivery = insert_delivery!(provider_message_id: "msg-unsubscribe-schema-prefix")
+    token = Unsubscribe.sign_token(delivery.id)
+
+    force_public_search_path!()
+
+    first = post(build_conn(), "/mailglass/unsubscribe/#{token}", %{})
+    second = post(build_conn(), "/mailglass/unsubscribe/#{token}", %{})
+
+    assert response(first, 200) == ""
+    assert response(second, 200) == ""
+
+    assert_configured_unsubscribe_event_count!(delivery.id, 1)
+    assert_public_unsubscribe_event_count!(delivery.id, 0)
+  end
+
+  test "unsubscribe raw conflict lookup passes explicit configured-schema opts" do
+    source = File.read!("lib/mailglass/compliance/unsubscribe_controller.ex")
+
+    assert source =~ "repo.one!(query, Repo.multi_opts())"
   end
 
   defp insert_delivery!(attrs) do
@@ -184,6 +255,54 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
       )
 
     assert count == 0
+  end
+
+  defp assert_configured_unsubscribe_event_count!(delivery_id, expected_count) do
+    assert unsubscribe_event_count(@prefix, delivery_id) == expected_count
+  end
+
+  defp assert_public_unsubscribe_event_count!(delivery_id, expected_count) do
+    assert unsubscribe_event_count("public", delivery_id) == expected_count
+  end
+
+  defp unsubscribe_event_count(schema, delivery_id) when schema in [@prefix, "public"] do
+    %{rows: [[count]]} =
+      TestRepo.query!(
+        """
+        SELECT COUNT(*)
+        FROM #{schema}.mailglass_events
+        WHERE delivery_id = $1
+          AND type = 'unsubscribed'
+          AND idempotency_key = $2
+        """,
+        [Ecto.UUID.dump!(delivery_id), "unsubscribe:#{delivery_id}"]
+      )
+
+    count
+  end
+
+  defp endpoint_config do
+    [
+      http: [ip: {127, 0, 0, 1}, port: 0],
+      secret_key_base: String.duplicate("abcdef0123456789", 4),
+      server: false,
+      render_errors: [formats: [html: Mailglass.TestUnsubscribeErrors], layout: false],
+      pubsub_server: Mailglass.PubSub,
+      live_view: [signing_salt: "schema-prefix-live"]
+    ]
+  end
+
+  defp compliance_config do
+    [
+      endpoint: TestEndpoint,
+      host: "unsubscribe.example.com",
+      scheme: "https",
+      mount_path: "/mailglass/unsubscribe",
+      previous_secrets: [],
+      redirect: nil,
+      max_age: 60,
+      lifecycle: Mailglass.Lifecycle.Noop
+    ]
   end
 
   defp restore_suite_baseline_schema do
