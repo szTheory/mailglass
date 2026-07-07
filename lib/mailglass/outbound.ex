@@ -562,11 +562,16 @@ defmodule Mailglass.Outbound do
 
     result =
       Ecto.Multi.new()
-      |> Ecto.Multi.insert_all(:deliveries, Delivery, rows,
-        on_conflict: :nothing,
-        conflict_target: {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-        returning: true,
-        prefix: Config.schema()
+      |> Ecto.Multi.insert_all(
+        :deliveries,
+        Delivery,
+        rows,
+        Repo.multi_opts(
+          on_conflict: :nothing,
+          conflict_target:
+            {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
+          returning: true
+        )
       )
       |> Ecto.Multi.run(:events, fn repo, %{deliveries: {_count, inserted}} ->
         event_rows =
@@ -586,12 +591,15 @@ defmodule Mailglass.Outbound do
           end)
 
         {n, _} =
-          repo.insert_all(Mailglass.Events.Event, event_rows,
-            on_conflict: :nothing,
-            conflict_target:
-              {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
-            returning: false,
-            prefix: Config.schema()
+          repo.insert_all(
+            Mailglass.Events.Event,
+            event_rows,
+            Repo.multi_opts(
+              on_conflict: :nothing,
+              conflict_target:
+                {:unsafe_fragment, "(idempotency_key) WHERE idempotency_key IS NOT NULL"},
+              returning: false
+            )
           )
 
         {:ok, n}

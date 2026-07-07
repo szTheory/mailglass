@@ -305,6 +305,25 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
              []
   end
 
+  test "allows helper that returns Repo.multi_opts" do
+    source = """
+    defmodule Mailglass.Webhook.GoodRepoMultiOptsHelper do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Repo
+
+      def fetch(repo) do
+        query = from(event in Event, limit: 1)
+        repo.one(query, schema_opts())
+      end
+
+      defp schema_opts, do: Repo.multi_opts()
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/good_repo_multi_opts_helper.ex") == []
+  end
+
   test "allows prefixed zero arity helper when another arity is unprefixed" do
     source = """
     defmodule MailglassInbound.Internal.GoodReplayReadWithOverload do
@@ -342,6 +361,43 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "repo.delete"
   end
 
+  test "flags schema values introduced by body pattern matches" do
+    source = """
+    defmodule Mailglass.Webhook.BadBodyPatternTaint do
+      alias Mailglass.Events.Event
+
+      def delete(repo, raw) do
+        %Event{} = event = raw
+        repo.delete(event)
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_body_pattern_taint.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.delete"
+  end
+
+  test "flags schema values introduced by with pattern matches" do
+    source = """
+    defmodule Mailglass.Webhook.BadWithPatternTaint do
+      alias Mailglass.Events.Event
+
+      def delete(repo, fetcher) do
+        with %Event{} = event <- fetcher.() do
+          repo.delete(event)
+        end
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_with_pattern_taint.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.delete"
+  end
+
   test "propagates taint through assigned aliases" do
     source = """
     defmodule Mailglass.Webhook.BadAliasTaint do
@@ -360,6 +416,150 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
 
     assert length(issues) == 1
     assert hd(issues).trigger == "repo.one"
+  end
+
+  test "deletes prefix option trust after unsafe rebinding" do
+    source = """
+    defmodule Mailglass.Webhook.BadOptsRebind do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Repo
+
+      def fetch(repo) do
+        query = from(event in Event, limit: 1)
+        opts = Repo.multi_opts()
+        opts = []
+        repo.one(query, opts)
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_opts_rebind.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "propagates trusted prefix option variables" do
+    source = """
+    defmodule Mailglass.Webhook.GoodOptsAlias do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Repo
+
+      def fetch(repo) do
+        query = from(event in Event, limit: 1)
+        opts = Repo.multi_opts()
+        alias_opts = opts
+        repo.one(query, alias_opts)
+      end
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/good_opts_alias.ex") == []
+  end
+
+  test "allows Repo.multi_opts from grouped Mailglass alias" do
+    source = """
+    defmodule Mailglass.Webhook.GoodGroupedAliasOpts do
+      import Ecto.Query
+      alias Mailglass.{Events, Repo}
+
+      def fetch(repo) do
+        query = from(event in Events.Event, limit: 1)
+        repo.one(query, Repo.multi_opts())
+      end
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/good_grouped_alias_opts.ex") == []
+  end
+
+  test "allows piped Multi insert_all with grouped alias Repo.multi_opts" do
+    source = """
+    defmodule Mailglass.Webhook.GoodGroupedAliasMultiInsertAll do
+      alias Mailglass.{Events, Repo}
+
+      def build(rows) do
+        Ecto.Multi.new()
+        |> Ecto.Multi.insert_all(:events, Events.Event, rows, Repo.multi_opts(on_conflict: :nothing))
+      end
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/good_grouped_alias_multi_insert_all.ex") == []
+  end
+
+  test "allows piped Multi insert_all with multiline grouped Mailglass alias" do
+    source = """
+    defmodule Mailglass.Outbound.GoodMultilineGroupedAliasMultiInsertAll do
+      alias Mailglass.{
+        Config,
+        Events,
+        Repo
+      }
+
+      alias Mailglass.Outbound.Delivery
+
+      def build(rows) do
+        Ecto.Multi.new()
+        |> Ecto.Multi.insert_all(
+          :deliveries,
+          Delivery,
+          rows,
+          Repo.multi_opts(
+            on_conflict: :nothing,
+            returning: true
+          )
+        )
+      end
+    end
+    """
+
+    assert run_check(
+             source,
+             "lib/mailglass/outbound/good_multiline_grouped_alias_multi_insert_all.ex"
+           ) == []
+  end
+
+  test "allows piped Multi insert_all when later function body queries same schema" do
+    source = """
+    defmodule Mailglass.Outbound.GoodMultiInsertAllWithLaterQuery do
+      import Ecto.Query
+
+      alias Mailglass.{
+        Message,
+        Repo
+      }
+
+      alias Mailglass.Outbound.Delivery
+
+      def build(messages_with_refs) do
+        rows =
+          Enum.map(messages_with_refs, fn {%Message{} = message, adapter_ref} ->
+            %{id: adapter_ref, message: message}
+          end)
+
+        result =
+          Ecto.Multi.new()
+          |> Ecto.Multi.insert_all(
+            :deliveries,
+            Delivery,
+            rows,
+            Repo.multi_opts(on_conflict: :nothing, returning: true)
+          )
+
+        case result do
+          {:ok, _} ->
+            query = from(delivery in Delivery, where: delivery.id in ^Enum.map(rows, & &1.id))
+            Repo.all(query)
+        end
+      end
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/outbound/good_multi_insert_all_with_later_query.ex") ==
+             []
   end
 
   test "allows facade-routed repo calls" do
