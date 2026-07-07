@@ -21,16 +21,16 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-07 - after opening v2.1)
+See: .planning/PROJECT.md (updated 2026-07-07 - after Phase 138 completion)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 138 — schema-prefix-no-search-path-hardening
+**Current focus:** Phase 139 — Admin asset first-load/deep-link proof
 
 ## Current Position
 
 Phase: 139 — Admin asset first-load/deep-link proof
 Plan: Not started
-Status: Phase complete — ready for verification
+Status: Phase 139 ready for discussion/planning
 Last activity: 2026-07-07 — Phase 138 complete, transitioned to Phase 139
 
 ## v2.1 Milestone Intent
