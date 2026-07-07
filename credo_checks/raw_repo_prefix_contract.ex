@@ -13,8 +13,27 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
         MailglassInbound.InboundRecords.InboundEvidence,
         MailglassInbound.InboundRecords.ExecutionRun
       ],
-      repo_functions: [:one, :one!, :get, :get!, :all, :update, :insert, :delete_all],
-      multi_functions: [:update, :update_all],
+      repo_functions: [
+        :one,
+        :one!,
+        :get,
+        :get!,
+        :get_by,
+        :get_by!,
+        :all,
+        :aggregate,
+        :exists?,
+        :insert,
+        :insert!,
+        :insert_all,
+        :update,
+        :update!,
+        :update_all,
+        :delete,
+        :delete!,
+        :delete_all
+      ],
+      multi_functions: [:insert, :insert_all, :update, :update_all, :delete, :delete_all],
       projection_steps: [:delivery, :projection],
       prefix_helper_functions: [:schema_opts, :insert_opts]
     ],
@@ -73,6 +92,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          projection_steps,
          prefix_helper_functions
        ) do
+    verified_prefix_helpers = collect_verified_prefix_helpers(ast, prefix_helper_functions)
+    mailglass_repo_aliases = collect_mailglass_repo_aliases(ast)
+
     {_ast, issues} =
       Macro.prewalk(ast, [], fn
         {def_type, _meta, [_head, body_kw]} = node, issues
@@ -87,7 +109,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
               repo_functions,
               multi_functions,
               projection_steps,
-              prefix_helper_functions
+              verified_prefix_helpers,
+              mailglass_repo_aliases
             )
 
           {node, Enum.reverse(function_issues) ++ issues}
@@ -106,7 +129,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          _repo_functions,
          _multi_functions,
          _projection_steps,
-         _prefix_helper_functions
+         _verified_prefix_helpers,
+         _mailglass_repo_aliases
        ),
        do: []
 
@@ -117,10 +141,13 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          repo_functions,
          multi_functions,
          projection_steps,
-         prefix_helper_functions
+         verified_prefix_helpers,
+         mailglass_repo_aliases
        ) do
     tainted_vars = collect_tainted_vars(body, schema_tail_names)
-    prefix_contract_vars = collect_prefix_contract_vars(body, prefix_helper_functions)
+
+    prefix_contract_vars =
+      collect_prefix_contract_vars(body, verified_prefix_helpers, mailglass_repo_aliases)
 
     {_ast, issues} =
       Macro.prewalk(body, [], fn
@@ -142,7 +169,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
              projection_steps,
              tainted_vars,
              prefix_contract_vars,
-             prefix_helper_functions
+             verified_prefix_helpers,
+             mailglass_repo_aliases
            )}
 
         {{:., _, [module_ast, function_name]}, meta, args} = node, issues ->
@@ -160,7 +188,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
              projection_steps,
              tainted_vars,
              prefix_contract_vars,
-             prefix_helper_functions
+             verified_prefix_helpers,
+             mailglass_repo_aliases
            )}
 
         node, issues ->
@@ -183,7 +212,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          projection_steps,
          tainted_vars,
          prefix_contract_vars,
-         prefix_helper_functions
+         verified_prefix_helpers,
+         mailglass_repo_aliases
        )
        when is_atom(function_name) and is_list(args) do
     cond do
@@ -198,7 +228,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
           schema_tail_names,
           tainted_vars,
           prefix_contract_vars,
-          prefix_helper_functions
+          verified_prefix_helpers,
+          mailglass_repo_aliases
         )
 
       multi_ast?(module_ast) and MapSet.member?(multi_functions, function_name) ->
@@ -211,8 +242,10 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
           issue_meta,
           schema_tail_names,
           projection_steps,
+          tainted_vars,
           prefix_contract_vars,
-          prefix_helper_functions
+          verified_prefix_helpers,
+          mailglass_repo_aliases
         )
 
       true ->
@@ -233,7 +266,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          _projection_steps,
          _tainted_vars,
          _prefix_contract_vars,
-         _prefix_helper_functions
+         _verified_prefix_helpers,
+         _mailglass_repo_aliases
        ),
        do: issues
 
@@ -247,14 +281,16 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          schema_tail_names,
          tainted_vars,
          prefix_contract_vars,
-         prefix_helper_functions
+         verified_prefix_helpers,
+         mailglass_repo_aliases
        ) do
     if raw_repo_call_targets_schema?(function_name, args, schema_tail_names, tainted_vars) and
          not call_has_prefix_contract?(
            function_name,
            args,
            prefix_contract_vars,
-           prefix_helper_functions
+           verified_prefix_helpers,
+           mailglass_repo_aliases
          ) do
       [
         issue_for(
@@ -279,15 +315,24 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          issue_meta,
          schema_tail_names,
          projection_steps,
+         tainted_vars,
          prefix_contract_vars,
-         prefix_helper_functions
+         verified_prefix_helpers,
+         mailglass_repo_aliases
        ) do
-    if multi_call_targets_projection?(function_name, args, schema_tail_names, projection_steps) and
+    if multi_call_targets_projection?(
+         function_name,
+         args,
+         schema_tail_names,
+         projection_steps,
+         tainted_vars
+       ) and
          not multi_call_has_prefix_contract?(
            function_name,
            args,
            prefix_contract_vars,
-           prefix_helper_functions
+           verified_prefix_helpers,
+           mailglass_repo_aliases
          ) do
       [
         issue_for(
@@ -326,7 +371,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     vars
   end
 
-  defp collect_prefix_contract_vars(body, prefix_helper_functions) do
+  defp collect_prefix_contract_vars(body, verified_prefix_helpers, mailglass_repo_aliases) do
     {_ast, vars} =
       Macro.prewalk(body, MapSet.new(), fn
         {:=, _meta, [var_ast, rhs]} = node, vars ->
@@ -335,7 +380,12 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
               {node, vars}
 
             name ->
-              if prefix_contract_opts?(rhs, MapSet.new(), prefix_helper_functions) do
+              if prefix_contract_opts?(
+                   rhs,
+                   MapSet.new(),
+                   verified_prefix_helpers,
+                   mailglass_repo_aliases
+                 ) do
                 {node, MapSet.put(vars, name)}
               else
                 {node, vars}
@@ -357,48 +407,116 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     )
   end
 
-  defp multi_call_targets_projection?(:update_all, args, schema_tail_names, projection_steps) do
+  defp multi_call_targets_projection?(
+         :update_all,
+         args,
+         schema_tail_names,
+         projection_steps,
+         tainted_vars
+       ) do
+    step_name = Enum.at(args, 1)
+    query = Enum.at(args, 2)
+    updates = Enum.at(args, 3)
+
+    projection_step?(step_name, projection_steps) or
+      schema_ast_or_var?(query, schema_tail_names, tainted_vars) or
+      schema_ast_or_var?(updates, schema_tail_names, tainted_vars)
+  end
+
+  defp multi_call_targets_projection?(
+         function_name,
+         args,
+         schema_tail_names,
+         projection_steps,
+         tainted_vars
+       )
+       when function_name in [:insert, :update, :delete] do
+    step_name = Enum.at(args, 1)
+    target = Enum.at(args, 2)
+
+    projection_step?(step_name, projection_steps) or
+      schema_ast_or_var?(target, schema_tail_names, tainted_vars)
+  end
+
+  defp multi_call_targets_projection?(
+         :insert_all,
+         args,
+         schema_tail_names,
+         projection_steps,
+         tainted_vars
+       ) do
+    step_name = Enum.at(args, 1)
+    schema_or_source = Enum.at(args, 2)
+    entries = Enum.at(args, 3)
+
+    projection_step?(step_name, projection_steps) or
+      schema_ast_or_var?(schema_or_source, schema_tail_names, tainted_vars) or
+      schema_ast_or_var?(entries, schema_tail_names, tainted_vars)
+  end
+
+  defp multi_call_targets_projection?(
+         :delete_all,
+         args,
+         schema_tail_names,
+         projection_steps,
+         tainted_vars
+       ) do
     step_name = Enum.at(args, 1)
     query = Enum.at(args, 2)
 
     projection_step?(step_name, projection_steps) or
-      ast_touches_mailglass_schema?(query, schema_tail_names)
+      schema_ast_or_var?(query, schema_tail_names, tainted_vars)
   end
 
-  defp multi_call_targets_projection?(:update, args, schema_tail_names, projection_steps) do
-    step_name = Enum.at(args, 1)
-    changeset_or_fun = Enum.at(args, 2)
+  defp multi_call_targets_projection?(
+         _function_name,
+         _args,
+         _schema_tail_names,
+         _projection_steps,
+         _tainted_vars
+       ),
+       do: false
 
-    projection_step?(step_name, projection_steps) or
-      ast_touches_mailglass_schema?(changeset_or_fun, schema_tail_names)
-  end
-
-  defp multi_call_targets_projection?(_function_name, _args, _schema_tail_names, _projection_steps),
-    do: false
-
-  defp call_has_prefix_contract?(function_name, args, prefix_contract_vars, prefix_helper_functions) do
+  defp call_has_prefix_contract?(
+         function_name,
+         args,
+         prefix_contract_vars,
+         verified_prefix_helpers,
+         mailglass_repo_aliases
+       ) do
     case final_opts_arg(args, raw_repo_min_args(function_name)) do
-      nil -> false
-      opts -> prefix_contract_opts?(opts, prefix_contract_vars, prefix_helper_functions)
+      nil ->
+        false
+
+      opts ->
+        prefix_contract_opts?(
+          opts,
+          prefix_contract_vars,
+          verified_prefix_helpers,
+          mailglass_repo_aliases
+        )
     end
   end
 
   defp multi_call_has_prefix_contract?(
-         :update_all,
+         function_name,
          args,
          prefix_contract_vars,
-         prefix_helper_functions
-       ) do
-    case final_opts_arg(args, 4) do
-      nil -> false
-      opts -> prefix_contract_opts?(opts, prefix_contract_vars, prefix_helper_functions)
-    end
-  end
+         verified_prefix_helpers,
+         mailglass_repo_aliases
+       )
+       when function_name in [:insert, :insert_all, :update, :update_all, :delete, :delete_all] do
+    case final_opts_arg(args, multi_min_args(function_name)) do
+      nil ->
+        false
 
-  defp multi_call_has_prefix_contract?(:update, args, prefix_contract_vars, prefix_helper_functions) do
-    case final_opts_arg(args, 3) do
-      nil -> false
-      opts -> prefix_contract_opts?(opts, prefix_contract_vars, prefix_helper_functions)
+      opts ->
+        prefix_contract_opts?(
+          opts,
+          prefix_contract_vars,
+          verified_prefix_helpers,
+          mailglass_repo_aliases
+        )
     end
   end
 
@@ -406,7 +524,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          _function_name,
          _args,
          _prefix_contract_vars,
-         _prefix_helper_functions
+         _verified_prefix_helpers,
+         _mailglass_repo_aliases
        ),
        do: false
 
@@ -416,7 +535,12 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp final_opts_arg(_args, _minimum_non_opts_args), do: nil
 
-  defp prefix_contract_opts?(opts, _prefix_contract_vars, _prefix_helper_functions)
+  defp prefix_contract_opts?(
+         opts,
+         _prefix_contract_vars,
+         _verified_prefix_helpers,
+         _mailglass_repo_aliases
+       )
        when is_list(opts) do
     Keyword.keyword?(opts) and Keyword.has_key?(opts, :prefix)
   end
@@ -424,23 +548,34 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp prefix_contract_opts?(
          {helper_name, _meta, args},
          _prefix_contract_vars,
-         prefix_helper_functions
+         verified_prefix_helpers,
+         _mailglass_repo_aliases
        )
        when is_atom(helper_name) and is_list(args) do
-    MapSet.member?(prefix_helper_functions, helper_name)
+    MapSet.member?(verified_prefix_helpers, helper_name)
   end
 
   defp prefix_contract_opts?(
          {{:., _, [module_ast, :multi_opts]}, _meta, args},
          _prefix_contract_vars,
-         _prefix_helper_functions
+         _verified_prefix_helpers,
+         mailglass_repo_aliases
        )
        when is_list(args) do
-    module_tail_from_ast(module_ast) == "Repo"
+    mailglass_repo_ast?(module_ast, mailglass_repo_aliases)
   end
 
-  defp prefix_contract_opts?(opts, prefix_contract_vars, _prefix_helper_functions) do
+  defp prefix_contract_opts?(
+         opts,
+         prefix_contract_vars,
+         _verified_prefix_helpers,
+         _mailglass_repo_aliases
+       ) do
     tainted_variable?(opts, prefix_contract_vars)
+  end
+
+  defp schema_ast_or_var?(ast, schema_tail_names, tainted_vars) do
+    ast_touches_mailglass_schema?(ast, schema_tail_names) or tainted_variable?(ast, tainted_vars)
   end
 
   defp ast_touches_mailglass_schema?(ast, schema_tail_names) do
@@ -468,7 +603,14 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp projection_step?(_step_name, _projection_steps), do: false
 
   defp raw_repo_min_args(function_name) when function_name in [:get, :get!], do: 2
+  defp raw_repo_min_args(function_name) when function_name in [:get_by, :get_by!], do: 2
+  defp raw_repo_min_args(:aggregate), do: 2
+  defp raw_repo_min_args(function_name) when function_name in [:insert_all, :update_all], do: 2
   defp raw_repo_min_args(_function_name), do: 1
+
+  defp multi_min_args(function_name) when function_name in [:insert, :update, :delete], do: 3
+  defp multi_min_args(function_name) when function_name in [:insert_all, :update_all], do: 4
+  defp multi_min_args(:delete_all), do: 3
 
   defp tainted_variable?(ast, tainted_vars) do
     case variable_name(ast) do
@@ -485,7 +627,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp raw_repo_ast?({name, _meta, context})
        when is_atom(name) and (is_atom(context) or is_nil(context)) do
-    name == :repo
+    not (name |> Atom.to_string() |> String.starts_with?("_"))
   end
 
   defp raw_repo_ast?(_module_ast), do: false
@@ -499,6 +641,123 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp multi_trigger({:__aliases__, _, parts}), do: Enum.join(parts, ".")
   defp multi_trigger(_module_ast), do: "Multi"
+
+  defp collect_verified_prefix_helpers(ast, prefix_helper_functions) do
+    {_ast, helper_counts} =
+      Macro.prewalk(ast, %{}, fn
+        {def_type, _meta, [head, body_kw]} = node, helper_counts
+        when def_type in [:def, :defp] and is_list(body_kw) ->
+          helper_name = function_name_from_head(head)
+          body = Keyword.get(body_kw, :do)
+
+          if MapSet.member?(prefix_helper_functions, helper_name) do
+            {total, prefixed} = Map.get(helper_counts, helper_name, {0, 0})
+            prefixed = if ast_has_prefix_contract?(body), do: prefixed + 1, else: prefixed
+            {node, Map.put(helper_counts, helper_name, {total + 1, prefixed})}
+          else
+            {node, helper_counts}
+          end
+
+        node, helper_counts ->
+          {node, helper_counts}
+      end)
+
+    helper_counts
+    |> Enum.reduce(MapSet.new(), fn
+      {helper_name, {total, prefixed}}, verified when total > 0 and total == prefixed ->
+        MapSet.put(verified, helper_name)
+
+      _entry, verified ->
+        verified
+    end)
+  end
+
+  defp function_name_from_head({:when, _meta, [head | _guards]}),
+    do: function_name_from_head(head)
+
+  defp function_name_from_head({name, _meta, args}) when is_atom(name) and is_list(args),
+    do: name
+
+  defp function_name_from_head({name, _meta, context})
+       when is_atom(name) and (is_atom(context) or is_nil(context)),
+       do: name
+
+  defp function_name_from_head(_head), do: nil
+
+  defp ast_has_prefix_contract?(ast) do
+    {_ast, found?} =
+      Macro.prewalk(ast, false, fn
+        node, true ->
+          {node, true}
+
+        list, false when is_list(list) ->
+          {list, Keyword.keyword?(list) and Keyword.has_key?(list, :prefix)}
+
+        {{:., _, [{:__aliases__, _, [:Keyword]}, function_name]}, _, [_opts, :prefix | _]} = node,
+        false
+        when function_name in [:put, :put_new] ->
+          {node, true}
+
+        node, false ->
+          {node, false}
+      end)
+
+    found?
+  end
+
+  defp collect_mailglass_repo_aliases(ast) do
+    {_ast, aliases} =
+      Macro.prewalk(ast, MapSet.new(), fn
+        {:alias, _meta, args} = node, aliases ->
+          {node, collect_mailglass_repo_alias(args, aliases)}
+
+        node, aliases ->
+          {node, aliases}
+      end)
+
+    aliases
+  end
+
+  defp collect_mailglass_repo_alias([alias_ast], aliases) do
+    alias_string = Macro.to_string(alias_ast)
+
+    cond do
+      alias_string == "Mailglass.Repo" ->
+        MapSet.put(aliases, "Repo")
+
+      String.starts_with?(alias_string, "Mailglass.{") and
+          Regex.match?(~r/(^|[{\s,])Repo([}\s,]|$)/, alias_string) ->
+        MapSet.put(aliases, "Repo")
+
+      true ->
+        aliases
+    end
+  end
+
+  defp collect_mailglass_repo_alias([alias_ast, opts], aliases) when is_list(opts) do
+    alias_string = Macro.to_string(alias_ast)
+
+    case Keyword.get(opts, :as) do
+      as_name when alias_string == "Mailglass.Repo" and is_atom(as_name) ->
+        MapSet.put(aliases, Atom.to_string(as_name))
+
+      _other ->
+        collect_mailglass_repo_alias([alias_ast], aliases)
+    end
+  end
+
+  defp collect_mailglass_repo_alias(_args, aliases), do: aliases
+
+  defp mailglass_repo_ast?({:__aliases__, _, [:Mailglass, :Repo]}, _mailglass_repo_aliases),
+    do: true
+
+  defp mailglass_repo_ast?({:__aliases__, _, parts}, mailglass_repo_aliases) when is_list(parts) do
+    parts
+    |> Enum.join(".")
+    |> then(&MapSet.member?(mailglass_repo_aliases, &1))
+  end
+
+  defp mailglass_repo_ast?(_module_ast, _mailglass_repo_aliases), do: false
 
   defp issue_for(issue_meta, line_no, column, trigger) do
     format_issue(
