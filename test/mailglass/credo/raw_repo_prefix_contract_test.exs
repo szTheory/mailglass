@@ -162,6 +162,37 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert run_check(source, "lib/mailglass/webhook/good_projection_fully_qualified.ex") == []
   end
 
+  test "rejects literal prefix opts that are not configured schema prefixes" do
+    source = """
+    defmodule Mailglass.Webhook.BadLiteralPrefixRead do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def nil_prefix(repo), do: repo.one(from(event in Event), prefix: nil)
+      def public_prefix(repo), do: repo.one(from(event in Event), prefix: "public")
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_literal_prefix_read.ex")
+
+    assert length(issues) == 2
+    assert Enum.map(issues, & &1.trigger) == ["repo.one", "repo.one"]
+  end
+
+  test "allows configured prefix through Mailglass.Config alias" do
+    source = """
+    defmodule Mailglass.Webhook.GoodConfigAliasPrefixRead do
+      import Ecto.Query
+      alias Mailglass.Config
+      alias Mailglass.Events.Event
+
+      def fetch(repo), do: repo.one(from(event in Event), prefix: Config.schema())
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/good_config_alias_prefix_read.ex") == []
+  end
+
   test "rejects prefix helper names that do not return prefix opts" do
     source = """
     defmodule MailglassInbound.Internal.BadReplayRead do
@@ -179,6 +210,34 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
 
     issues =
       run_check(source, "mailglass_inbound/lib/mailglass_inbound/internal/bad_replay_read.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "rejects helpers that discard configured prefix before returning opts" do
+    source = """
+    defmodule MailglassInbound.Internal.BadDiscardedPrefixHelper do
+      import Ecto.Query
+      alias MailglassInbound.InboundRecords.InboundRecord
+
+      def load(repo, id) do
+        query = from(record in InboundRecord, where: record.id == ^id, limit: 1)
+        repo.one(query, schema_opts())
+      end
+
+      defp schema_opts do
+        _ = [prefix: MailglassInbound.Config.schema()]
+        []
+      end
+    end
+    """
+
+    issues =
+      run_check(
+        source,
+        "mailglass_inbound/lib/mailglass_inbound/internal/bad_discarded_prefix_helper.ex"
+      )
 
     assert length(issues) == 1
     assert hd(issues).trigger == "repo.one"
@@ -244,6 +303,63 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
 
     assert run_check(source, "mailglass_inbound/lib/mailglass_inbound/internal/good_replay_read.ex") ==
              []
+  end
+
+  test "allows prefixed zero arity helper when another arity is unprefixed" do
+    source = """
+    defmodule MailglassInbound.Internal.GoodReplayReadWithOverload do
+      import Ecto.Query
+      alias MailglassInbound.InboundRecords.InboundRecord
+
+      def load(repo, id) do
+        query = from(record in InboundRecord, where: record.id == ^id, limit: 1)
+        repo.one(query, schema_opts())
+      end
+
+      defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]
+      defp schema_opts(:raw), do: []
+    end
+    """
+
+    assert run_check(
+             source,
+             "mailglass_inbound/lib/mailglass_inbound/internal/good_replay_read_with_overload.ex"
+           ) == []
+  end
+
+  test "flags schema values introduced by function head patterns" do
+    source = """
+    defmodule Mailglass.Webhook.BadHeadTaint do
+      alias Mailglass.Events.Event
+
+      def delete(repo, %Event{} = event), do: repo.delete(event)
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_head_taint.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.delete"
+  end
+
+  test "propagates taint through assigned aliases" do
+    source = """
+    defmodule Mailglass.Webhook.BadAliasTaint do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch(repo) do
+        query = from(event in Event, limit: 1)
+        alias_query = query
+        repo.one(alias_query)
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_alias_taint.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
   end
 
   test "allows facade-routed repo calls" do
