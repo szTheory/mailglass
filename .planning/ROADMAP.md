@@ -108,7 +108,16 @@ Plans:
 deep links and alternate mount roots, without redesigning the admin UI or adding public router options.
 **Depends on:** Phase 138 only for milestone sequencing; code surface is independent.
 **Requirements:** AAU-01, AAU-02, AAU-03, AAU-04, GATE-03
-**Plans:** TBD by `/gsd-plan-phase 139`
+**Plans:** 2 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 139-01-PLAN.md - Fast first-HTML stylesheet href proof and alternate macro mounts
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 139-02-PLAN.md - Serialized browser hard-load CSS/font and computed-style proof
 
 **Success Criteria** (what must be TRUE):
 
