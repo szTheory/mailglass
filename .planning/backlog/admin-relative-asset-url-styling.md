@@ -1,5 +1,12 @@
 # Backlog seed: admin relative-asset-URL styling robustness
 
+> **Promoted 2026-07-07.** This seed is now active in v2.1 Phase 139
+> (`AAU-01..04`, `GATE-03`) as "Admin asset first-load/deep-link proof." The
+> selected direction is approach A, root-relative URLs computed from the effective
+> mount path via the existing `MountPathHook`/`MountPath`/layout `css_url`
+> mechanism. Approaches B-D remain rejected as primary fixes unless Phase 139
+> proves the narrower mechanism cannot satisfy the requirements.
+>
 > **Origin.** Surfaced during the `ui/design-system-polish` pass (2026-06-02)
 > while visually auditing the operator + inbound surfaces. Pre-existing — the
 > asset-URL strategy long predates this work — but the new shared operator shell
@@ -34,13 +41,13 @@ Make the admin dashboard render styled at **every** canonical URL form (with or
 without trailing slash, root or `/inbound`, on refresh and deep link), without
 giving up adopter mount-path portability.
 
-## Candidate approaches (evaluate, don't pre-commit)
+## Candidate approaches
 
-- [ ] **A — Root-relative anchored asset URL.** Compute the asset path from the
+- [x] **A — Root-relative anchored asset URL.** Compute the asset path from the
   request/mount path at render time (the LiveViews already derive `base_path`
   in `handle_params`) and emit a non-trailing-slash-sensitive href. Risk: the
   dead-render layout helper (`MailglassAdmin.Layouts.css_url/0`) currently has no
-  mount context.
+  mount context. **Selected for v2.1 Phase 139.**
 - [ ] **B — Emit asset routes at the `/inbound` sub-scope too**, so relative
   resolution lands for the child route regardless. Smaller blast radius; only
   fixes the child-route axis, not the trailing-slash axis.
