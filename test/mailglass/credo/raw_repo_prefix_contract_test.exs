@@ -384,7 +384,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
 
   test "flags Repo.multi_opts before later same-function facade repo alias rebind" do
     source = """
-    defmodule Mailglass.Webhook.BadLaterRepoAliasRebind do
+     defmodule Mailglass.Webhook.BadLaterRepoAliasRebind do
       import Ecto.Query
       alias Mailglass.Events.Event
 
@@ -399,6 +399,47 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     """
 
     issues = run_check(source, "lib/mailglass/webhook/bad_later_repo_alias_rebind.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags module-level schema alias uses before later module-level rebind" do
+    source = """
+    defmodule Mailglass.Webhook.BadLaterModuleSchemaAliasRebind do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch(repo) do
+        repo.one(from(event in Event, limit: 1))
+      end
+
+      alias Other.Event
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_later_module_schema_alias_rebind.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags module-level Repo.multi_opts before later facade repo alias rebind" do
+    source = """
+    defmodule Mailglass.Webhook.BadLaterModuleRepoAliasRebind do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Other.Repo
+
+      def fetch(repo) do
+        repo.one(from(event in Event, limit: 1), Repo.multi_opts())
+      end
+
+      alias Mailglass.Repo
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_later_module_repo_alias_rebind.ex")
 
     assert length(issues) == 1
     assert hd(issues).trigger == "repo.one"
