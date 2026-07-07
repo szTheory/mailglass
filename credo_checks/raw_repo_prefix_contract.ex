@@ -113,6 +113,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          prefix_helper_functions
        ) do
     mailglass_repo_aliases = collect_mailglass_repo_aliases(ast)
+    facade_repo_aliases = collect_facade_repo_aliases(ast)
+    raw_repo_aliases = collect_raw_repo_aliases(ast)
+    multi_aliases = collect_multi_aliases(ast)
     mailglass_config_alias_owners = collect_mailglass_config_alias_owners(ast)
 
     verified_prefix_helpers =
@@ -141,6 +144,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
               projection_steps,
               verified_prefix_helpers,
               mailglass_repo_aliases,
+              facade_repo_aliases,
+              raw_repo_aliases,
+              multi_aliases,
               mailglass_config_alias_owners
             )
 
@@ -164,6 +170,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          _projection_steps,
          _verified_prefix_helpers,
          _mailglass_repo_aliases,
+         _facade_repo_aliases,
+         _raw_repo_aliases,
+         _multi_aliases,
          _mailglass_config_aliases
        ),
        do: []
@@ -179,6 +188,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          projection_steps,
          verified_prefix_helpers,
          mailglass_repo_aliases,
+         facade_repo_aliases,
+         raw_repo_aliases,
+         multi_aliases,
          mailglass_config_alias_owners
        ) do
     initial_state = %{
@@ -222,6 +234,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
                projection_steps,
                verified_prefix_helpers,
                mailglass_repo_aliases,
+               facade_repo_aliases,
+               raw_repo_aliases,
+               multi_aliases,
                mailglass_config_alias_owners
              )}
 
@@ -251,6 +266,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
                projection_steps,
                verified_prefix_helpers,
                mailglass_repo_aliases,
+               facade_repo_aliases,
+               raw_repo_aliases,
+               multi_aliases,
                mailglass_config_alias_owners
              )}
 
@@ -290,26 +308,14 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          projection_steps,
          verified_prefix_helpers,
          mailglass_repo_aliases,
+         facade_repo_aliases,
+         raw_repo_aliases,
+         multi_aliases,
          mailglass_config_alias_owners
        )
        when is_atom(function_name) and is_list(args) do
     cond do
-      raw_repo_ast?(module_ast) and MapSet.member?(repo_functions, function_name) ->
-        maybe_collect_raw_repo_call(
-          state,
-          meta,
-          module_ast,
-          function_name,
-          args,
-          issue_meta,
-          schema_owners,
-          table_source_owners,
-          verified_prefix_helpers,
-          mailglass_repo_aliases,
-          mailglass_config_alias_owners
-        )
-
-      multi_ast?(module_ast) and MapSet.member?(multi_functions, function_name) ->
+      multi_ast?(module_ast, multi_aliases) and MapSet.member?(multi_functions, function_name) ->
         maybe_collect_multi_call(
           state,
           meta,
@@ -320,6 +326,22 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
           schema_owners,
           table_source_owners,
           projection_steps,
+          verified_prefix_helpers,
+          mailglass_repo_aliases,
+          mailglass_config_alias_owners
+        )
+
+      raw_repo_ast?(module_ast, facade_repo_aliases, raw_repo_aliases) and
+          MapSet.member?(repo_functions, function_name) ->
+        maybe_collect_raw_repo_call(
+          state,
+          meta,
+          module_ast,
+          function_name,
+          args,
+          issue_meta,
+          schema_owners,
+          table_source_owners,
           verified_prefix_helpers,
           mailglass_repo_aliases,
           mailglass_config_alias_owners
@@ -344,6 +366,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          _projection_steps,
          _verified_prefix_helpers,
          _mailglass_repo_aliases,
+         _facade_repo_aliases,
+         _raw_repo_aliases,
+         _multi_aliases,
          _mailglass_config_alias_owners
        ),
        do: state
@@ -988,18 +1013,39 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp variable_name(_ast), do: nil
 
-  defp raw_repo_ast?({name, _meta, context})
+  defp raw_repo_ast?({name, _meta, context}, _facade_repo_aliases, _raw_repo_aliases)
        when is_atom(name) and (is_atom(context) or is_nil(context)) do
     not (name |> Atom.to_string() |> String.starts_with?("_"))
   end
 
-  defp raw_repo_ast?(_module_ast), do: false
+  defp raw_repo_ast?({:__aliases__, _, parts} = module_ast, facade_repo_aliases, raw_repo_aliases)
+       when is_list(parts) do
+    repo_receiver? =
+      List.last(parts) == :Repo or
+        parts |> Enum.join(".") |> then(&MapSet.member?(raw_repo_aliases, &1))
 
-  defp multi_ast?({:__aliases__, _, [:Multi]}), do: true
-  defp multi_ast?({:__aliases__, _, [:Ecto, :Multi]}), do: true
-  defp multi_ast?(_module_ast), do: false
+    repo_receiver? and not facade_repo_ast?(module_ast, facade_repo_aliases)
+  end
 
-  defp raw_repo_trigger({name, _meta, _context}, function_name), do: "#{name}.#{function_name}"
+  defp raw_repo_ast?(_module_ast, _facade_repo_aliases, _raw_repo_aliases), do: false
+
+  defp multi_ast?({:__aliases__, _, [:Ecto, :Multi]}, _multi_aliases), do: true
+
+  defp multi_ast?({:__aliases__, _, parts}, multi_aliases) when is_list(parts) do
+    parts
+    |> Enum.join(".")
+    |> then(&MapSet.member?(multi_aliases, &1))
+  end
+
+  defp multi_ast?(_module_ast, _multi_aliases), do: false
+
+  defp raw_repo_trigger({:__aliases__, _, parts}, function_name),
+    do: "#{Enum.join(parts, ".")}.#{function_name}"
+
+  defp raw_repo_trigger({name, _meta, context}, function_name)
+       when is_atom(name) and (is_atom(context) or is_nil(context)),
+       do: "#{name}.#{function_name}"
+
   defp raw_repo_trigger(_module_ast, function_name), do: "repo.#{function_name}"
 
   defp multi_trigger({:__aliases__, _, parts}), do: Enum.join(parts, ".")
@@ -1199,9 +1245,9 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp collect_mailglass_repo_alias([alias_ast, opts], aliases) when is_list(opts) do
     alias_string = Macro.to_string(alias_ast)
 
-    case Keyword.get(opts, :as) do
-      as_name when alias_string == "Mailglass.Repo" and is_atom(as_name) ->
-        MapSet.put(aliases, Atom.to_string(as_name))
+    case alias_as_name(Keyword.get(opts, :as)) do
+      as_name when alias_string == "Mailglass.Repo" and is_binary(as_name) ->
+        MapSet.put(aliases, as_name)
 
       _other ->
         collect_mailglass_repo_alias([alias_ast], aliases)
@@ -1209,6 +1255,139 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   end
 
   defp collect_mailglass_repo_alias(_args, aliases), do: aliases
+
+  defp collect_facade_repo_aliases(ast) do
+    {_ast, aliases} =
+      Macro.prewalk(ast, MapSet.new(), fn
+        {:alias, _meta, args} = node, aliases ->
+          {node, collect_facade_repo_alias(args, aliases)}
+
+        node, aliases ->
+          {node, aliases}
+      end)
+
+    aliases
+  end
+
+  defp collect_facade_repo_alias([alias_ast], aliases) do
+    alias_string = Macro.to_string(alias_ast)
+
+    cond do
+      alias_string in ["Mailglass.Repo", "MailglassInbound.Repo"] ->
+        MapSet.put(aliases, "Repo")
+
+      String.starts_with?(alias_string, "Mailglass.{") and
+          Regex.match?(~r/(^|[{\s,])Repo([}\s,]|$)/, alias_string) ->
+        MapSet.put(aliases, "Repo")
+
+      String.starts_with?(alias_string, "MailglassInbound.{") and
+          Regex.match?(~r/(^|[{\s,])Repo([}\s,]|$)/, alias_string) ->
+        MapSet.put(aliases, "Repo")
+
+      true ->
+        aliases
+    end
+  end
+
+  defp collect_facade_repo_alias([alias_ast, opts], aliases) when is_list(opts) do
+    alias_string = Macro.to_string(alias_ast)
+
+    case alias_as_name(Keyword.get(opts, :as)) do
+      as_name
+      when alias_string in ["Mailglass.Repo", "MailglassInbound.Repo"] and is_binary(as_name) ->
+        MapSet.put(aliases, as_name)
+
+      _other ->
+        collect_facade_repo_alias([alias_ast], aliases)
+    end
+  end
+
+  defp collect_facade_repo_alias(_args, aliases), do: aliases
+
+  defp collect_raw_repo_aliases(ast) do
+    {_ast, aliases} =
+      Macro.prewalk(ast, MapSet.new(), fn
+        {:alias, _meta, args} = node, aliases ->
+          {node, collect_raw_repo_alias(args, aliases)}
+
+        node, aliases ->
+          {node, aliases}
+      end)
+
+    aliases
+  end
+
+  defp collect_raw_repo_alias([alias_ast], aliases) do
+    alias_string = Macro.to_string(alias_ast)
+
+    cond do
+      alias_string in ["Mailglass.Repo", "MailglassInbound.Repo"] ->
+        aliases
+
+      Regex.match?(~r/(^|[.\s{,])Repo([}\s,]|$)/, alias_string) ->
+        MapSet.put(aliases, "Repo")
+
+      true ->
+        aliases
+    end
+  end
+
+  defp collect_raw_repo_alias([alias_ast, opts], aliases) when is_list(opts) do
+    alias_string = Macro.to_string(alias_ast)
+
+    case alias_as_name(Keyword.get(opts, :as)) do
+      as_name
+      when alias_string not in ["Mailglass.Repo", "MailglassInbound.Repo"] and
+             is_binary(as_name) ->
+        if String.ends_with?(alias_string, ".Repo") do
+          MapSet.put(aliases, as_name)
+        else
+          collect_raw_repo_alias([alias_ast], aliases)
+        end
+
+      _other ->
+        collect_raw_repo_alias([alias_ast], aliases)
+    end
+  end
+
+  defp collect_raw_repo_alias(_args, aliases), do: aliases
+
+  defp collect_multi_aliases(ast) do
+    {_ast, aliases} =
+      Macro.prewalk(ast, MapSet.new(["Multi"]), fn
+        {:alias, _meta, args} = node, aliases ->
+          {node, collect_multi_alias(args, aliases)}
+
+        node, aliases ->
+          {node, aliases}
+      end)
+
+    aliases
+  end
+
+  defp collect_multi_alias([alias_ast], aliases) do
+    alias_string = Macro.to_string(alias_ast)
+
+    if alias_string == "Ecto.Multi" do
+      MapSet.put(aliases, "Multi")
+    else
+      aliases
+    end
+  end
+
+  defp collect_multi_alias([alias_ast, opts], aliases) when is_list(opts) do
+    alias_string = Macro.to_string(alias_ast)
+
+    case alias_as_name(Keyword.get(opts, :as)) do
+      as_name when alias_string == "Ecto.Multi" and is_binary(as_name) ->
+        MapSet.put(aliases, as_name)
+
+      _other ->
+        collect_multi_alias([alias_ast], aliases)
+    end
+  end
+
+  defp collect_multi_alias(_args, aliases), do: aliases
 
   defp collect_mailglass_config_alias_owners(ast) do
     {_ast, alias_owners} =
@@ -1249,12 +1428,12 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp collect_mailglass_config_alias_owner([alias_ast, opts], alias_owners) when is_list(opts) do
     alias_string = Macro.to_string(alias_ast)
 
-    case Keyword.get(opts, :as) do
-      as_name when alias_string == "Mailglass.Config" and is_atom(as_name) ->
-        put_config_alias_owner(alias_owners, Atom.to_string(as_name), :core)
+    case alias_as_name(Keyword.get(opts, :as)) do
+      as_name when alias_string == "Mailglass.Config" and is_binary(as_name) ->
+        put_config_alias_owner(alias_owners, as_name, :core)
 
-      as_name when alias_string == "MailglassInbound.Config" and is_atom(as_name) ->
-        put_config_alias_owner(alias_owners, Atom.to_string(as_name), :inbound)
+      as_name when alias_string == "MailglassInbound.Config" and is_binary(as_name) ->
+        put_config_alias_owner(alias_owners, as_name, :inbound)
 
       _other ->
         collect_mailglass_config_alias_owner([alias_ast], alias_owners)
@@ -1266,6 +1445,32 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp put_config_alias_owner(alias_owners, alias_name, owner) do
     Map.update(alias_owners, alias_name, owner_set(owner), &MapSet.put(&1, owner))
   end
+
+  defp alias_as_name({:__aliases__, _, parts}) when is_list(parts),
+    do: Enum.join(parts, ".")
+
+  defp alias_as_name(name) when is_atom(name), do: Atom.to_string(name)
+  defp alias_as_name(_name), do: nil
+
+  defp facade_repo_ast?(
+         {:__aliases__, _, [:Mailglass, :Repo]},
+         _facade_repo_aliases
+       ),
+       do: true
+
+  defp facade_repo_ast?(
+         {:__aliases__, _, [:MailglassInbound, :Repo]},
+         _facade_repo_aliases
+       ),
+       do: true
+
+  defp facade_repo_ast?({:__aliases__, _, parts}, facade_repo_aliases) when is_list(parts) do
+    parts
+    |> Enum.join(".")
+    |> then(&MapSet.member?(facade_repo_aliases, &1))
+  end
+
+  defp facade_repo_ast?(_module_ast, _facade_repo_aliases), do: false
 
   defp mailglass_repo_ast?({:__aliases__, _, [:Mailglass, :Repo]}, _mailglass_repo_aliases),
     do: true

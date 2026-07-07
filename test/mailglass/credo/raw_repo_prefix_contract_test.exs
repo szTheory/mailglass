@@ -64,6 +64,25 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "db.update"
   end
 
+  test "flags raw repo alias touching a mailglass schema without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadRepoAliasRead do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias MyApp.Repo
+
+      def fetch do
+        Repo.one(from(event in Event, limit: 1))
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_repo_alias_read.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "Repo.one"
+  end
+
   test "flags projection Multi update without prefix opts" do
     source = """
     defmodule Mailglass.Webhook.BadMultiProjection do
@@ -131,6 +150,27 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "Multi.insert"
   end
 
+  test "flags aliased Multi insert without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadMultiAliasInsert do
+      alias Ecto.Multi, as: EMulti
+      alias Mailglass.Events.Event
+
+      def build(attrs) do
+        changeset = Event.changeset(%Event{}, attrs)
+
+        EMulti.new()
+        |> EMulti.insert(:event, changeset)
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_multi_alias_insert.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "EMulti.insert"
+  end
+
   test "allows raw callback update with Repo.multi_opts" do
     source = """
     defmodule Mailglass.Webhook.GoodProjection do
@@ -191,6 +231,41 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     """
 
     assert run_check(source, "lib/mailglass/webhook/good_config_alias_prefix_read.ex") == []
+  end
+
+  test "allows Mailglass.Repo facade alias reads" do
+    source = """
+    defmodule Mailglass.Webhook.GoodFacadeAliasRead do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Repo
+
+      def fetch do
+        Repo.one(from(event in Event, limit: 1))
+      end
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/good_facade_alias_read.ex") == []
+  end
+
+  test "allows MailglassInbound.Repo facade alias reads" do
+    source = """
+    defmodule MailglassInbound.Internal.GoodInboundFacadeAliasRead do
+      import Ecto.Query
+      alias MailglassInbound.InboundRecords.InboundRecord
+      alias MailglassInbound.Repo
+
+      def fetch do
+        Repo.one(from(record in InboundRecord, limit: 1))
+      end
+    end
+    """
+
+    assert run_check(
+             source,
+             "mailglass_inbound/lib/mailglass_inbound/internal/good_inbound_facade_alias_read.ex"
+           ) == []
   end
 
   test "rejects prefix helper names that do not return prefix opts" do
