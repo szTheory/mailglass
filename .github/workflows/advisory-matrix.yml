@@ -101,6 +101,14 @@ jobs:
         # to override `config :mailglass, :schema`, so the whole suite runs under
         # the matrix schema (public or mailglass). The `--exclude requires_workspace`
         # flag is preserved unchanged.
+        #
+        # Phase 138 GATE-02: this dual-schema full-suite job is a broad canary,
+        # not the fail-closed proof for schema-prefix correctness. The test
+        # harness aligns Config.schema/0 with MAILGLASS_SCHEMA and also puts the
+        # matrix schema on the connection search_path, so search_path-dependent
+        # runtime calls can still pass here. The focused no-search-path proof is
+        # `mix verify.schema_prefix`, which runs hostile runtime tests plus the
+        # raw-repo prefix guard and strict Credo.
         env:
           MAILGLASS_SCHEMA: ${{ matrix.schema }}
         run: mix test --warnings-as-errors --exclude requires_workspace
@@ -189,6 +197,10 @@ jobs:
         # MAILGLASS_SCHEMA (D-06): runs the full suite under the matrix schema
         # (public or mailglass) via config/runtime.exs. `--exclude requires_workspace`
         # preserved unchanged.
+        #
+        # Phase 138 GATE-02: broad canary only. Because this lane aligns
+        # Config.schema/0 and the connection search_path to the matrix schema,
+        # use `mix verify.schema_prefix` for the focused no-search-path proof.
         env:
           MAILGLASS_SCHEMA: ${{ matrix.schema }}
         run: mix test --warnings-as-errors --exclude requires_workspace
@@ -316,6 +328,13 @@ jobs:
         # to align BOTH Migration.up(prefix:) AND Config.schema/0 to the matrix
         # schema, then sets search_path on the TestRepo connections so unqualified
         # raw SQL in tests also targets the configured schema.
+        #
+        # Phase 138 GATE-02: this inbound matrix is broad canary coverage, not
+        # the milestone's fail-closed proof. It intentionally aligns the inbound
+        # Config.schema/0 value and connection search_path, so search_path-masked
+        # raw repo calls can pass here. The focused no-search-path proof is
+        # `mix verify.schema_prefix`, which delegates to the inbound schema prefix
+        # contract test after hostile core runtime tests and the raw-repo guard.
         # `--seed 0` pins the test ordering to dodge the phase-45 property-test
         # pool flake (tcp recv: closed) deterministically (D-13 anti-flake).
         env:
