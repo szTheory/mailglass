@@ -84,6 +84,19 @@ extra_checks = [
   # precedence (decision 6). This check fails the build on any such attribute
   # under lib/mailglass/.
   {Mailglass.Credo.NoSchemaPrefixAttribute, []},
+  {Mailglass.Credo.RawRepoPrefixContract,
+   [
+     schema_modules: [
+       Mailglass.Outbound.Delivery,
+       Mailglass.Events.Event,
+       Mailglass.Suppression.Entry,
+       Mailglass.Webhook.WebhookEvent,
+       MailglassInbound.InboundRecords.InboundRecord,
+       MailglassInbound.InboundRecords.InboundEvidence,
+       MailglassInbound.InboundRecords.ExecutionRun
+     ],
+     included_path_prefixes: ["lib/mailglass/", "mailglass_inbound/lib/"]
+   ]},
   {Mailglass.Credo.NoOtherAppEnvReads, [allowed_apps: [:mailglass]]},
   {Mailglass.Credo.TelemetryEventConvention,
    [required_root: [:mailglass, :mailglass_inbound], min_segments: 4]},
