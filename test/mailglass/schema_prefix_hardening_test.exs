@@ -1,0 +1,205 @@
+defmodule Mailglass.SchemaPrefixHardeningTest do
+  # async: false because this module drops/recreates the configured schema and
+  # switches the SQL Sandbox to :auto for migration setup.
+  use ExUnit.Case, async: false
+
+  @moduletag :schema_prefix
+
+  alias Mailglass.Clock
+  alias Mailglass.Outbound.Delivery
+  alias Mailglass.Repo
+  alias Mailglass.TestRepo
+  alias Mailglass.Tenancy
+  alias Mailglass.Webhook.Replay
+  alias Mailglass.Webhook.WebhookEvent
+
+  @prefix "mailglass"
+  @tenant_id "schema-prefix-hardening-tenant"
+
+  defmodule PrefixedWrapperMigration do
+    use Ecto.Migration
+
+    @prefix "mailglass"
+
+    def up do
+      Mailglass.Migration.up(prefix: @prefix, repo: Mailglass.TestRepo)
+    end
+
+    def down do
+      Mailglass.Migration.down(prefix: @prefix, repo: Mailglass.TestRepo)
+    end
+  end
+
+  setup do
+    prior_mailglass_env = Application.get_all_env(:mailglass)
+
+    Application.put_env(:mailglass, :schema, @prefix)
+    :persistent_term.erase({Mailglass.Config, :schema})
+
+    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
+
+    {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
+
+    version = System.unique_integer([:positive, :monotonic]) + 90_000_000_000_000
+
+    {:ok, _, _} =
+      Ecto.Migrator.with_repo(TestRepo, fn repo ->
+        Ecto.Migrator.up(repo, version, PrefixedWrapperMigration, log: false)
+      end)
+
+    Tenancy.put_current(@tenant_id)
+
+    on_exit(fn ->
+      _ = TestRepo.query("RESET search_path")
+      {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
+      {:ok, _} = TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
+      {:ok, _} = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext")
+
+      Application.put_all_env(mailglass: prior_mailglass_env)
+      :persistent_term.erase({Mailglass.Config, :schema})
+      restore_suite_baseline_schema()
+      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
+    end)
+
+    :ok
+  end
+
+  test "Webhook.Replay projection update targets configured schema without search_path help" do
+    provider_message_id = "msg-schema-prefix-#{System.unique_integer([:positive])}"
+
+    delivery =
+      insert_delivery!(
+        provider_message_id: provider_message_id,
+        last_event_at: DateTime.add(Clock.utc_now(), -60, :second)
+      )
+
+    webhook_event =
+      insert_webhook_event!(
+        provider_event_id: "postmark-schema-prefix-#{System.unique_integer([:positive])}",
+        raw_payload: %{
+          "RecordType" => "Delivery",
+          "MessageID" => provider_message_id,
+          "ID" => System.unique_integer([:positive])
+        }
+      )
+
+    force_public_search_path!()
+
+    assert {:ok, result} =
+             Replay.execute(%{
+               tenant_id: @tenant_id,
+               webhook_event_id: webhook_event.id,
+               delivery_id: delivery.id,
+               actor: %{subject_id: "schema-prefix-proof"}
+             })
+
+    assert result.status == :replayed
+    assert result.delivery_id == delivery.id
+    assert result.new_event_count == 1
+
+    assert_configured_delivery_projected!(delivery.id)
+    assert_public_delivery_absent!(delivery.id)
+  end
+
+  test "Webhook.Replay raw projector callback passes explicit configured-schema opts" do
+    source = File.read!("lib/mailglass/webhook/replay.ex")
+
+    assert source =~ "changeset = Projector.update_projections(delivery, inserted_event)"
+    assert source =~ "repo.update(changeset, Repo.multi_opts())"
+  end
+
+  defp insert_delivery!(attrs) do
+    defaults = %{
+      tenant_id: @tenant_id,
+      mailable: "Mailglass.SchemaPrefixHardeningMailer",
+      stream: :transactional,
+      recipient: "schema-prefix@example.com",
+      provider: "postmark",
+      provider_message_id: "msg-#{System.unique_integer([:positive])}",
+      last_event_type: :sent,
+      last_event_at: Clock.utc_now(),
+      status: :sent,
+      metadata: %{}
+    }
+
+    {:ok, delivery} =
+      defaults
+      |> Map.merge(Map.new(attrs))
+      |> Delivery.changeset()
+      |> Repo.insert()
+
+    delivery
+  end
+
+  defp insert_webhook_event!(attrs) do
+    defaults = %{
+      tenant_id: @tenant_id,
+      provider: "postmark",
+      provider_event_id: "webhook-#{System.unique_integer([:positive])}",
+      event_type_raw: "Delivery",
+      event_type_normalized: "delivered",
+      status: :succeeded,
+      raw_payload: %{"RecordType" => "Delivery"},
+      received_at: Clock.utc_now(),
+      processed_at: Clock.utc_now()
+    }
+
+    {:ok, webhook_event} =
+      defaults
+      |> Map.merge(Map.new(attrs))
+      |> WebhookEvent.changeset()
+      |> Repo.insert()
+
+    webhook_event
+  end
+
+  defp force_public_search_path! do
+    _ = TestRepo.query!("SET search_path TO public", [])
+    :ok
+  end
+
+  defp assert_configured_delivery_projected!(delivery_id) do
+    %{rows: rows} =
+      TestRepo.query!(
+        """
+        SELECT last_event_type::text, delivered_at IS NOT NULL, terminal
+        FROM #{@prefix}.mailglass_deliveries
+        WHERE id = $1
+        """,
+        [Ecto.UUID.dump!(delivery_id)]
+      )
+
+    assert rows == [["delivered", true, true]]
+  end
+
+  defp assert_public_delivery_absent!(delivery_id) do
+    %{rows: [[count]]} =
+      TestRepo.query!(
+        """
+        SELECT COUNT(*)
+        FROM public.mailglass_deliveries
+        WHERE id = $1
+        """,
+        [Ecto.UUID.dump!(delivery_id)]
+      )
+
+    assert count == 0
+  end
+
+  defp restore_suite_baseline_schema do
+    if System.get_env("MAILGLASS_SCHEMA") in [nil, "", "public"] do
+      :ok
+    else
+      {:ok, _} = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
+
+      migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
+
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+        end)
+
+      :ok
+    end
+  end
+end
