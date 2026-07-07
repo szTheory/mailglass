@@ -74,9 +74,17 @@ the DB connection `search_path` does not include that schema.
 **Plans:** 4 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 138-01-PLAN.md - Core hostile runtime proofs for `Webhook.Replay` and unsubscribe conflict lookup
 - [ ] 138-02-PLAN.md - Inbound raw-repo extension-point prefix contract
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 138-03-PLAN.md - Remaining raw callback projection fixes and static Credo guard
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 138-04-PLAN.md - Focused verification alias and advisory canary documentation
 
 **Success Criteria** (what must be TRUE):
