@@ -318,12 +318,13 @@ source
 |---|-------|---------|---------------|
 | A1 | The static guard can be implemented as a new custom Credo check rather than a shell script. [ASSUMED] | Recommended Project Structure | If the AST shape is more complex than expected, the planner should fall back to a narrower ExUnit source-scanner guard for Phase 138. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should fake adapter and webhook reconciler projection updates be included in Phase 138?**
+1. **RESOLVED: Should fake adapter and webhook reconciler projection updates be included in Phase 138?**
    - What we know: They are production Multi update steps touching `mailglass_deliveries` without explicit opts, found at `lib/mailglass/adapters/fake.ex:177` and `lib/mailglass/webhook/reconciler.ex:177/349`. [VERIFIED: codebase grep]
    - What's unclear: The named success criteria call out `Webhook.Replay` and unsubscribe, but SCHEMA-03 covers raw callbacks touching mailglass tables generally. [VERIFIED: .planning/ROADMAP.md] [VERIFIED: .planning/REQUIREMENTS.md]
    - Recommendation: Include them in the SCHEMA-03 audit/fix unless a planner-level task explicitly proves they are safe under hostile `search_path` and documents the allowlist. [ASSUMED]
+   - Resolution: Plan `138-03` includes `lib/mailglass/adapters/fake.ex` and `lib/mailglass/webhook/reconciler.ex` projection updates under SCHEMA-03, plus a static guard so future raw callback table operations are prefixed, facade-routed, or explicitly allowlisted.
 
 ## Environment Availability
 
