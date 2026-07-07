@@ -45,10 +45,10 @@
 
 ### GATE - Verification lanes
 
-- [ ] **GATE-01**: A focused schema-prefix verification lane, exposed as `mix verify.schema_prefix` or an
+- [x] **GATE-01**: A focused schema-prefix verification lane, exposed as `mix verify.schema_prefix` or an
   equivalent existing alias, runs the hostile no-search-path DB proof and the static prefix guard.
 
-- [ ] **GATE-02**: The existing dual-schema advisory matrix remains a broad canary, while docs and comments
+- [x] **GATE-02**: The existing dual-schema advisory matrix remains a broad canary, while docs and comments
   clearly identify the focused no-search-path lane as the fail-closed proof for this milestone.
 
 - [ ] **GATE-03**: Admin URL robustness has both fast LiveView/Conn-level assertions for generated hrefs and
@@ -100,8 +100,8 @@
 | SCHEMA-02 | Phase 138 | Complete |
 | SCHEMA-03 | Phase 138 | Complete |
 | SCHEMA-04 | Phase 138 | Complete |
-| GATE-01 | Phase 138 | Pending |
-| GATE-02 | Phase 138 | Pending |
+| GATE-01 | Phase 138 | Complete |
+| GATE-02 | Phase 138 | Complete |
 | AAU-01 | Phase 139 | Pending |
 | AAU-02 | Phase 139 | Pending |
 | AAU-03 | Phase 139 | Pending |

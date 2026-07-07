@@ -2,16 +2,18 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Postgres + Admin URL Hardening)
-status: executing
-stopped_at: Completed 138-03-PLAN.md
-last_updated: "2026-07-07T14:03:55.364Z"
+current_phase: 138
+current_phase_name: schema-prefix-no-search-path-hardening
+status: verifying
+stopped_at: Completed 138-04-PLAN.md
+last_updated: "2026-07-07T14:12:01.976Z"
 last_activity: 2026-07-07
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 0
+  completed_plans: 4
+  percent: 33
 ---
 
 # Project State
@@ -27,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-07 - after opening v2.1)
 
 Phase: 138 (schema-prefix-no-search-path-hardening) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-07
 
 ## v2.1 Milestone Intent
@@ -260,6 +262,9 @@ release debug campaign.
 - [Phase 138]: Inbound raw-repo prefix contract tests use capture repos and avoid subject/body/header/raw MIME diagnostics.
 - [Phase 138]: Projection Multi writes in the fake adapter and webhook reconciler are schema-prefix-sensitive and must pass per-operation prefix opts. — Ecto.Multi operation opts do not inherit from the transaction executor; explicit Repo.multi_opts() keeps these writes independent of connection search_path.
 - [Phase 138]: RawRepoPrefixContract is production-path scoped and treats Repo.multi_opts(), schema_opts(), prefix:, and configured local prefix opts helpers as compliant. — The guard must catch recurrence without creating noisy false positives in tests, migrations, or existing facade-owned prefix helpers.
+- [Phase 138-04]: Expose Phase 138 proof as mix verify.schema_prefix, a focused lane rather than a full dual-schema matrix or full-suite alias.
+- [Phase 138-04]: Document the dual-schema advisory matrix as broad canary coverage because its harness aligns Config.schema/0 and connection search_path.
+- [Phase 138-04]: Use cmd mix test for the second root ExUnit file in verify.schema_prefix so Mix task deduplication cannot skip the RawRepoPrefixContract test.
 
 ## Quick Tasks Completed
 
@@ -410,6 +415,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 138 P01 | 9 min | 2 tasks | 3 files |
 | Phase 138 P02 | 5 min | 2 tasks | 4 files |
 | Phase 138 P03 | 10 min | 2 tasks | 7 files |
+| Phase 138 P04 | 3 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -437,8 +443,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-07T14:03:41.502Z
-**Stopped at:** Completed 138-03-PLAN.md
+**Last session:** 2026-07-07T14:12:01.971Z
+**Stopped at:** Completed 138-04-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

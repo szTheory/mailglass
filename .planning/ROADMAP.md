@@ -36,7 +36,7 @@ runtime correctness must not depend on connection `search_path`, and admin style
 on hard refreshes/deep links across mount paths. Broader UI verification discipline and ecosystem
 integrations are explicitly deferred.
 
-- [ ] **Phase 138: Schema-prefix no-search-path hardening** - Fix concrete missing-prefix risks found after
+- [x] **Phase 138: Schema-prefix no-search-path hardening** - Fix concrete missing-prefix risks found after (completed 2026-07-07)
   v2.0, add hostile runtime proof where `search_path` does not include the configured schema, and add a
   static recurrence guard. **Requirements:** SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, GATE-01,
   GATE-02. **Success:** `Webhook.Replay` projection updates, unsubscribe replay/idempotency lookup, and
@@ -71,7 +71,7 @@ per-phase planning should inspect only the relevant code edges before implementa
 the DB connection `search_path` does not include that schema.
 **Depends on:** Nothing in v2.1; builds directly on v2.0's schema-isolation foundation.
 **Requirements:** SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, GATE-01, GATE-02
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 **Wave 1**
@@ -85,7 +85,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 138-04-PLAN.md - Focused verification alias and advisory canary documentation
+- [x] 138-04-PLAN.md - Focused verification alias and advisory canary documentation
 
 **Success Criteria** (what must be TRUE):
 
