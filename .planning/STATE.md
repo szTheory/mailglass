@@ -1,96 +1,85 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Postgres Schema Isolation)
-current_phase: 137
-current_phase_name: linked-2-0-release-ceremony-milestone-closeout
-status: complete
-stopped_at: v2.0 shipped + milestone closed out (2.0.0/2.0.0/2.0.0 on Hex)
-last_updated: "2026-07-04T18:45:00.000Z"
-last_activity: 2026-07-04
-last_activity_desc: v2.0 Postgres Schema Isolation shipped — mailglass/admin/inbound 2.0.0 live on Hex; milestone closed out
+milestone: v2.1
+milestone_name: Postgres + Admin URL Hardening
+status: planning
+last_updated: "2026-07-07T12:06:21.374Z"
+last_activity: 2026-07-07
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 15
-  completed_plans: 15
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-18 — after opening v1.13)
+See: .planning/PROJECT.md (updated 2026-07-07 - after opening v2.1)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** none — v2.0 milestone SHIPPED + closed out. Posture: quiet maintenance / adopter-pull until the next milestone (`/gsd-new-milestone`).
+**Current focus:** v2.1 Postgres + Admin URL Hardening - tight post-v2.0 maintenance work on schema-prefix fail-closed proof and admin first-load asset URL robustness.
 
 ## Current Position
 
-Milestone: v2.0 Postgres Schema Isolation (6 phases, 132-137) — ✅ SHIPPED 2026-07-04 (mailglass 2.0.0 / mailglass_admin 2.0.0 / mailglass_inbound 2.0.0 live on Hex; consumer smoke green; reference baseline advanced to ~> 2.0)
-Phase: 137 (linked-2-0-release-ceremony-milestone-closeout) — COMPLETE
-Plan: 3 of 3 complete
-Status: Milestone complete — no active phase. Audit `status: passed` (see `milestones/v2.0-MILESTONE-AUDIT.md`). Next: `/gsd-new-milestone` or quiet maintenance.
-Last activity: 2026-07-04 — v2.0 shipped + closed out
-Tracked follow-up (non-blocking): bucket-(b) ~48-file test-fixture `search_path` sweep — Core Full Suite Advisory stays the known persistent flake until then.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-07-07 — Milestone v2.1 started
 
-## v2.0 Milestone Intent
+## v2.1 Milestone Intent
 
-- **Hygiene + one deliberate breaking improvement (NOT feature growth).** The 2026-07-01 quality/CI/PG-schema
-  audit found DB/data-model hygiene is the one genuinely weak dimension (it surfaced the 1.10.2
-  shipped-migration bug), and flagged that mailglass's domain tables land in the host app's `public`
-  schema — sprawling into the adopter's namespace and leaving the append-only events immutability
-  trigger/function hard-bound to `public`. D-23 convergence still holds; the library is feature-complete.
+- **Maintenance/hardening only (NOT feature growth).** v2.0 shipped the dedicated `mailglass` Postgres
+  schema, but its release debug campaign proved a real class of missing-`prefix:` bugs can be masked when
+  tests patch the DB `search_path`. Admin asset URL handling also has a partial mount-aware fix, but lacks
+  broad first-load/deep-link proof across preview/operator/inbound/gallery/error paths and arbitrary mount
+  roots.
 
-- **Goal.** Default all mailglass domain tables into a dedicated `"mailglass"` Postgres SCHEMA instead of
-  `public`, with an explicit one-line `config :mailglass, :schema, "public"` opt-out and a first-class
-  codemod upgrade path. Breaking → `mailglass` 2.0 (+ linked admin 2.0, paired inbound bump).
+- **Goal.** Make schema-isolated runtime paths and admin first-load asset URLs fail closed with focused
+  gates, while avoiding product capability growth, UI redesign, router API churn, or a full no-search-path
+  suite migration.
 
-- **Locked decisions (research, 2026-06-30 — dossier §1):** (1) default schema `"mailglass"`, `"public"`
-  the explicit breaking opt-out; (2) runtime facade-injected `prefix:`, NOT `@schema_prefix` (Oban
-  precedent — a compile-time attr can't honor `runtime.exs`); (3) explicit per-query/per-DDL
-  qualification, NEVER `SET search_path` (PgBouncer transaction-mode leak, CVE-2018-1058, plan-cache
-  invalidation); (4) `citext` stays in `public` (keep it resolvable or comparisons silently go
-  case-sensitive); (5) `Ecto.Multi` prefix threaded per-builder, not per-executor; (6) NO `@schema_prefix`
-  anywhere (grep/Credo guard against the read-vs-write precedence inversion).
+- **Locked decisions (research, 2026-07-07):** (1) explicit Ecto `prefix:` remains the correctness
+  mechanism; `search_path` may be test/host convenience only; (2) start with surgical fixes, hostile
+  runtime tests, and a static guard instead of hand-editing every fixture; (3) preserve root-relative
+  computed admin asset URLs through `MountPathHook`/`MountPath`/layout `css_url`; (4) browser proof uses
+  CSS/font network assertions and computed styles, not screenshots or pixel diffs; (5) broader UI
+  verification discipline and SEED-003 ecosystem integrations remain deferred.
 
-## v2.0 Scope Locks
+## v2.1 Scope Locks
 
-- **Schema isolation + its upgrade path only.** No new product capability/providers/transports/routes
-  (D-23). The one adopter-visible change is the default table schema (breaking).
-
-- **Postgres-only** (unchanged). No MySQL/SQLite.
-- **Not per-tenant schemas.** `:schema` is one fixed library schema; multi-tenant *data* isolation stays
-  `tenant_id` scoping (orthogonal, composes with the prefix).
-
-- **No `search_path` mutation.** Rejected on principle. `citext` stays in `public`.
-- **Zero-Node stays adopter-facing.** No product-behavior change beyond the schema location.
-- **Dogfood the hardened v1.15 pipeline** — real linked 2.0/2.0/2.x release using the loosened `~>`
-  sibling pins and tiered `mix ci` surface now in play.
+- **No product expansion.** No new providers, transports, routes, or release cut.
+- **No admin redesign.** No token, component, motion, layout, or brand refresh work beyond computed-style
+  proof that existing styles load.
+- **No public router macro option change** unless a phase proves the current mount-aware path cannot
+  satisfy the requirement; document the tradeoff before widening scope.
+- **No full no-search-path suite migration.** Create the focused fail-closed lane and static guard first;
+  broader fixture cleanup stays future work unless it becomes necessary to make the focused proof honest.
+- **Phase numbers continue at 138.** v2.0's 132-137 artifacts are shipped history.
 
 ## Roadmap Snapshot
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 132 | Config + `Mailglass.Identifier` foundation (Design Phase A) | `config :mailglass, :schema` (default `"mailglass"`); boot-validated `:persistent_term`-cached `Config.schema/0`; shared `Mailglass.Identifier` validator; mirror on `config :mailglass_inbound, :schema`. Pure additive (SCHEMA-01..04) |
-| 133 | Repo-facade prefix injection + Multi threading (Design Phase B) | `put_prefix/1` (`Keyword.put_new`) through every `Mailglass.Repo` call + `multi_opts/1` per-step into Events/Outbound/Escalation Multi builders; admin zero-change; full core suite green under both `public` and `mailglass` (new CI axis) (FACADE-01..04) |
-| 134 | Migration entrypoint + raw-DDL/trigger qualification (Design Phase C) | Inject prefix at `Mailglass.Migration`; `maybe_create_schema/1` (`create_schema:false`) + `maybe_drop_schema/1` (`RESTRICT`); schema-qualify v01 trigger+function (`SET search_path=''`) + v01/v03 CHECKs + all `down/0` drops; `citext` stays in `public`. **Load-bearing:** SQLSTATE 45A01 regression under `mailglass` with no `search_path` pin (MIGR-01..06) |
-| 135 | Inbound package schema isolation (Design Phase D) | `config :mailglass_inbound, :schema` accessor + `MailglassInbound.Repo` facade threading; convert loose `change/0` migrations to the prefix-aware version-dispatcher pattern with `CREATE SCHEMA`; inbound suite green under both prefixes (INB-01..03) |
-| 136 | Upgrade codemod + docs + api_stability (Design Phase E) | `mix mailglass.upgrade.v2_schema` Route B move migration (`ALTER TABLE … SET SCHEMA` + `lock_timeout` + trigger recreation + `down/0`); `guides/upgrading-to-v2_0.md`; `:schema` config contract in `api_stability.md`; codemod run green vs `reference/host_app` (UPG-01..04) |
-| 137 | Linked 2.0 release ceremony + milestone closeout (Design Phase F) | Linked core+admin 2.0 + paired inbound bump (`~>` sibling-pin drag) through the v1.15-hardened pipeline; coordinated 5-file reference-baseline update; consumer + post-publish smoke; audit + archive (REL-01..03) |
+| 138 | Schema-prefix no-search-path hardening | Fix concrete missing-prefix runtime risks, add hostile no-search-path DB proof, and add a static guard for raw repo/Multi callback prefix omissions (SCHEMA-01..04, GATE-01..02) |
+| 139 | Admin asset first-load/deep-link proof | Harden and prove mount-aware stylesheet URLs across preview/operator/inbound/gallery/scenario/error/query routes and arbitrary alternate mount roots (AAU-01..04, GATE-03) |
+| 140 | Verification, docs reconciliation, and closeout | Run focused verification lanes, update stale docs/backlog that describe resolved asset limitations, preserve deferred scope, and prepare milestone closeout (DOC-01..02, all gates) |
 
-**Execution order:** 132 → 133 → 134 → 135 → 136 → 137 (strictly sequential, dependency-ordered per the
-dossier's A→B→C→D→E→F build order). 133 depends on 132 (config accessor); 134 depends on 133's facade +
-132's identifier; 135 mirrors A–C for inbound; 136 depends on the fresh-install shape from 134; 137
-depends on all prior and dogfoods the v1.15-hardened release pipeline. **134's `citext` +
-immutability-trigger regression (MIGR-05) is the load-bearing correctness proof.**
+**Execution order:** 138 -> 139 -> 140. Phase 138 closes the data-correctness follow-up first; Phase 139
+then handles the admin first-load surface; Phase 140 reconciles docs/backlog and confirms the milestone can
+close without dragging in the deferred UI-verification or ecosystem milestones.
 
-**Research flags:** none blocking — the LOCKED dossier
-(`.planning/research/milestone-schema-isolation/SCHEMA-ISOLATION-DESIGN.md`) is decision-ready. Run only
-light per-phase `/gsd-plan-phase` research where a phase touches an unfamiliar Ecto/Postgres edge
-(candidates: Phase 134's raw-DDL trigger/function `SET search_path=''` interaction with the SQL Sandbox;
-Phase 136's `ALTER TABLE … SET SCHEMA` `ACCESS EXCLUSIVE` locking posture).
+**Research flags:** none blocking. Per-phase planning may inspect unfamiliar Ecto/Phoenix edges, but the
+milestone-level decisions above are settled.
+
+## v2.0 Shipped Snapshot
+
+v2.0 Postgres Schema Isolation shipped 2026-07-04: mailglass 2.0.0 / mailglass_admin 2.0.0 /
+mailglass_inbound 2.0.0 are live on Hex. All six phases (132-137) completed and the audit passed. The
+closeout follow-up feeding v2.1 is the test/runtime `search_path` masking risk discovered during the
+release debug campaign.
 
 ## Decisions
 
