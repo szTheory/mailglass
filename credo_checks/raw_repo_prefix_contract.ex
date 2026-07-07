@@ -118,6 +118,20 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     multi_aliases = collect_multi_aliases(ast)
     mailglass_config_alias_owners = collect_mailglass_config_alias_owners(ast)
 
+    schema_owners =
+      schema_owners
+      |> merge_owner_maps(collect_schema_alias_owners(ast, schema_owners))
+
+    schema_owners =
+      schema_owners
+      |> merge_owner_maps(collect_schema_attribute_owners(ast, schema_owners, table_source_owners))
+
+    schema_owners =
+      schema_owners
+      |> merge_owner_maps(
+        collect_local_query_helper_owners(ast, schema_owners, table_source_owners)
+      )
+
     verified_prefix_helpers =
       collect_verified_prefix_helpers(
         ast,
@@ -631,6 +645,20 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp merge_owners(left, right), do: MapSet.union(left, right)
 
+  defp merge_owner_maps(left, right) do
+    Enum.reduce(right, left, fn {key, owners}, merged ->
+      Map.update(merged, key, owners, &merge_owners(&1, owners))
+    end)
+  end
+
+  defp put_registry_owners(registry, key, owners) do
+    if empty_owners?(owners) do
+      registry
+    else
+      Map.update(registry, key, owners, &merge_owners(&1, owners))
+    end
+  end
+
   defp union_owners(asts, schema_owners, table_source_owners, tainted_var_owners) do
     Enum.reduce(asts, MapSet.new(), fn ast, owners ->
       merge_owners(
@@ -697,12 +725,35 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp owners_for_ast(ast, schema_owners, table_source_owners, tainted_var_owners) do
     {_ast, owners} =
       Macro.prewalk(ast, MapSet.new(), fn
+        {:@, _, [{attr_name, _, _args}]} = node, owners when is_atom(attr_name) ->
+          attr_owners =
+            Map.get(schema_owners, module_attribute_owner_key(attr_name), MapSet.new())
+
+          {node, merge_owners(owners, attr_owners)}
+
         {:__aliases__, _, parts} = node, owners when is_list(parts) ->
+          alias_string = Enum.join(parts, ".")
           tail = parts |> List.last() |> Atom.to_string()
-          {node, merge_owners(owners, Map.get(schema_owners, tail, MapSet.new()))}
+
+          owners =
+            owners
+            |> merge_owners(Map.get(schema_owners, alias_string, MapSet.new()))
+            |> merge_owners(Map.get(schema_owners, tail, MapSet.new()))
+
+          {node, owners}
 
         table, owners when is_binary(table) ->
           {table, merge_owners(owners, Map.get(table_source_owners, table, MapSet.new()))}
+
+        {function_name, _meta, args} = node, owners when is_atom(function_name) and is_list(args) ->
+          helper_owners =
+            Map.get(
+              schema_owners,
+              local_helper_owner_key(function_name, length(args)),
+              MapSet.new()
+            )
+
+          {node, merge_owners(owners, helper_owners)}
 
         {{:., _, [module_ast, :update_projections]}, _, args} = node, owners when is_list(args) ->
           owners =
@@ -1104,6 +1155,127 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     end)
   end
 
+  defp collect_schema_alias_owners(ast, schema_owners) do
+    {_ast, alias_owners} =
+      Macro.prewalk(ast, %{}, fn
+        {:alias, _meta, args} = node, alias_owners ->
+          {node, collect_schema_alias_owner(args, alias_owners, schema_owners)}
+
+        node, alias_owners ->
+          {node, alias_owners}
+      end)
+
+    alias_owners
+  end
+
+  defp collect_schema_alias_owner([alias_ast, opts], alias_owners, schema_owners)
+       when is_list(opts) do
+    as_name = alias_as_name(Keyword.get(opts, :as))
+    owners = owners_for_ast(alias_ast, schema_owners, %{}, %{})
+
+    if is_binary(as_name) do
+      put_registry_owners(alias_owners, as_name, owners)
+    else
+      alias_owners
+    end
+  end
+
+  defp collect_schema_alias_owner(_args, alias_owners, _schema_owners), do: alias_owners
+
+  defp collect_schema_attribute_owners(ast, schema_owners, table_source_owners) do
+    {_ast, attribute_owners} =
+      Macro.prewalk(ast, %{}, fn
+        {:@, _meta, [{attr_name, _attr_meta, [value_ast]}]} = node, attribute_owners
+        when is_atom(attr_name) ->
+          owners = owners_for_ast(value_ast, schema_owners, table_source_owners, %{})
+
+          {node,
+           put_registry_owners(attribute_owners, module_attribute_owner_key(attr_name), owners)}
+
+        node, attribute_owners ->
+          {node, attribute_owners}
+      end)
+
+    attribute_owners
+  end
+
+  defp collect_local_query_helper_owners(ast, schema_owners, table_source_owners) do
+    helper_returns = collect_local_helper_returns(ast)
+    max_iterations = map_size(helper_returns) + 1
+
+    expand_local_query_helper_owners(
+      helper_returns,
+      schema_owners,
+      table_source_owners,
+      %{},
+      max_iterations
+    )
+  end
+
+  defp collect_local_helper_returns(ast) do
+    {_ast, helper_returns} =
+      Macro.prewalk(ast, %{}, fn
+        {def_type, _meta, [head, body_kw]} = node, helper_returns
+        when def_type in [:def, :defp] and is_list(body_kw) ->
+          case function_key_from_head(head) do
+            nil ->
+              {node, helper_returns}
+
+            helper_key ->
+              body = Keyword.get(body_kw, :do)
+              expression = returned_expression(body)
+
+              {node,
+               Map.update(helper_returns, helper_key, [expression], fn expressions ->
+                 [expression | expressions]
+               end)}
+          end
+
+        node, helper_returns ->
+          {node, helper_returns}
+      end)
+
+    helper_returns
+  end
+
+  defp expand_local_query_helper_owners(
+         _helper_returns,
+         _schema_owners,
+         _table_source_owners,
+         helper_owners,
+         0
+       ),
+       do: helper_owners
+
+  defp expand_local_query_helper_owners(
+         helper_returns,
+         schema_owners,
+         table_source_owners,
+         helper_owners,
+         iterations_remaining
+       ) do
+    owner_registry = merge_owner_maps(schema_owners, helper_owners)
+
+    next_helper_owners =
+      Enum.reduce(helper_returns, %{}, fn {{function_name, arity}, expressions}, collected ->
+        owners = union_owners(expressions, owner_registry, table_source_owners, %{})
+
+        put_registry_owners(collected, local_helper_owner_key(function_name, arity), owners)
+      end)
+
+    if next_helper_owners == helper_owners do
+      helper_owners
+    else
+      expand_local_query_helper_owners(
+        helper_returns,
+        schema_owners,
+        table_source_owners,
+        next_helper_owners,
+        iterations_remaining - 1
+      )
+    end
+  end
+
   defp function_key_from_head({:when, _meta, [head | _guards]}),
     do: function_key_from_head(head)
 
@@ -1115,6 +1287,10 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
        do: {name, 0}
 
   defp function_key_from_head(_head), do: nil
+
+  defp local_helper_owner_key(function_name, arity), do: {:local_helper, function_name, arity}
+
+  defp module_attribute_owner_key(attribute_name), do: {:module_attribute, attribute_name}
 
   defp variable_names(ast) do
     {_ast, names} =
@@ -1496,14 +1672,16 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp schema_owners(schemas) when is_list(schemas) do
     Enum.reduce(schemas, %{}, fn schema, owners ->
-      case module_tail_name(schema) do
+      case module_name(schema) do
         nil ->
           owners
 
-        tail ->
-          Map.update(owners, tail, owner_set(schema_owner(schema)), fn existing ->
-            MapSet.put(existing, schema_owner(schema))
-          end)
+        module_name ->
+          owner = schema_owner(schema)
+
+          owners
+          |> put_registry_owners(module_name, owner_set(owner))
+          |> put_registry_owners(module_tail_name(module_name), owner_set(owner))
       end
     end)
   end
@@ -1520,15 +1698,27 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     end)
   end
 
-  defp module_tail_name(module) when is_atom(module) do
+  defp module_name(module) when is_atom(module) do
     module
     |> Atom.to_string()
     |> String.trim_leading("Elixir.")
+  end
+
+  defp module_name(other) when is_binary(other), do: other
+  defp module_name(_other), do: nil
+
+  defp module_tail_name(module) when is_atom(module) do
+    module
+    |> module_name()
+    |> module_tail_name()
+  end
+
+  defp module_tail_name(module) when is_binary(module) do
+    module
     |> String.split(".")
     |> List.last()
   end
 
-  defp module_tail_name(other) when is_binary(other), do: other
   defp module_tail_name(_other), do: nil
 
   defp schema_owner(schema) when is_atom(schema) do

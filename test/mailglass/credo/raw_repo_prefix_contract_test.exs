@@ -83,6 +83,98 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "Repo.one"
   end
 
+  test "flags raw repo read through local query helper return without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadQueryFunctionReturn do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch(repo), do: repo.one(event_query())
+
+      defp event_query, do: from(event in Event, limit: 1)
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_query_function_return.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags assigned local query helper return without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadAssignedQueryFunctionReturn do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch(repo) do
+        query = event_query()
+        repo.one(query)
+      end
+
+      defp event_query, do: from(event in Event, limit: 1)
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_assigned_query_function_return.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags renamed core schema alias without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadAliasAsRead do
+      import Ecto.Query
+      alias Mailglass.Events.Event, as: MailEvent
+
+      def fetch(repo), do: repo.one(from(event in MailEvent, limit: 1))
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_alias_as_read.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags renamed inbound schema alias without prefix opts" do
+    source = """
+    defmodule MailglassInbound.Internal.BadInboundAliasAsRead do
+      import Ecto.Query
+      alias MailglassInbound.InboundRecords.InboundRecord, as: Record
+
+      def fetch(repo), do: repo.one(from(record in Record, limit: 1))
+    end
+    """
+
+    issues =
+      run_check(
+        source,
+        "mailglass_inbound/lib/mailglass_inbound/internal/bad_inbound_alias_as_read.ex"
+      )
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags module attribute schema without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadModuleAttributeSchemaRead do
+      import Ecto.Query
+
+      @event_schema Mailglass.Events.Event
+
+      def fetch(repo), do: repo.one(from(event in @event_schema, limit: 1))
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_module_attribute_schema_read.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
   test "flags projection Multi update without prefix opts" do
     source = """
     defmodule Mailglass.Webhook.BadMultiProjection do
