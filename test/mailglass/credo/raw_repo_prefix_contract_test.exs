@@ -122,6 +122,24 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "repo.one"
   end
 
+  test "flags same-module remote query helper return without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadRemoteModuleHelperReturn do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch(repo), do: repo.one(__MODULE__.event_query())
+
+      def event_query, do: from(event in Event, limit: 1)
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_remote_module_helper_return.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
   test "flags renamed core schema alias without prefix opts" do
     source = """
     defmodule Mailglass.Webhook.BadAliasAsRead do

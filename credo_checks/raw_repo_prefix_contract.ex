@@ -746,12 +746,13 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
           {table, merge_owners(owners, Map.get(table_source_owners, table, MapSet.new()))}
 
         {function_name, _meta, args} = node, owners when is_atom(function_name) and is_list(args) ->
-          helper_owners =
-            Map.get(
-              schema_owners,
-              local_helper_owner_key(function_name, length(args)),
-              MapSet.new()
-            )
+          helper_owners = local_helper_owners(schema_owners, function_name, length(args))
+
+          {node, merge_owners(owners, helper_owners)}
+
+        {{:., _, [{:__MODULE__, _, _context}, function_name]}, _meta, args} = node, owners
+        when is_atom(function_name) and is_list(args) ->
+          helper_owners = local_helper_owners(schema_owners, function_name, length(args))
 
           {node, merge_owners(owners, helper_owners)}
 
@@ -1289,6 +1290,10 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp function_key_from_head(_head), do: nil
 
   defp local_helper_owner_key(function_name, arity), do: {:local_helper, function_name, arity}
+
+  defp local_helper_owners(schema_owners, function_name, arity) do
+    Map.get(schema_owners, local_helper_owner_key(function_name, arity), MapSet.new())
+  end
 
   defp module_attribute_owner_key(attribute_name), do: {:module_attribute, attribute_name}
 
