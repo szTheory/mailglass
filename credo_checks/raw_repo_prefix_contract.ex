@@ -112,37 +112,109 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          projection_steps,
          prefix_helper_functions
        ) do
-    mailglass_repo_aliases = collect_mailglass_repo_aliases(ast)
-    facade_repo_aliases = collect_facade_repo_aliases(ast)
-    raw_repo_aliases = collect_raw_repo_aliases(ast)
-    multi_aliases = collect_multi_aliases(ast)
-    mailglass_config_alias_owners = collect_mailglass_config_alias_owners(ast)
+    {_ast, {issues, module_count}} =
+      Macro.prewalk(ast, {[], 0}, fn
+        {:defmodule, _meta, [module_ast, body_kw]} = node, {issues, module_count}
+        when is_list(body_kw) ->
+          body = Keyword.get(body_kw, :do)
+
+          module_issues =
+            module_issues(
+              module_ast,
+              body,
+              issue_meta,
+              schema_owners,
+              table_source_owners,
+              repo_functions,
+              multi_functions,
+              projection_steps,
+              prefix_helper_functions
+            )
+
+          {node, {module_issues ++ issues, module_count + 1}}
+
+        node, state ->
+          {node, state}
+      end)
+
+    if module_count > 0 do
+      issues
+    else
+      module_issues(
+        nil,
+        ast,
+        issue_meta,
+        schema_owners,
+        table_source_owners,
+        repo_functions,
+        multi_functions,
+        projection_steps,
+        prefix_helper_functions
+      )
+    end
+  end
+
+  defp module_issues(
+         _module_ast,
+         nil,
+         _issue_meta,
+         _base_schema_owners,
+         _table_source_owners,
+         _repo_functions,
+         _multi_functions,
+         _projection_steps,
+         _prefix_helper_functions
+       ),
+       do: []
+
+  defp module_issues(
+         module_ast,
+         body,
+         issue_meta,
+         base_schema_owners,
+         table_source_owners,
+         repo_functions,
+         multi_functions,
+         projection_steps,
+         prefix_helper_functions
+       ) do
+    module_body = prune_nested_modules(body)
+    mailglass_repo_aliases = collect_mailglass_repo_aliases(module_body)
+    facade_repo_aliases = collect_facade_repo_aliases(module_body)
+    raw_repo_aliases = collect_raw_repo_aliases(module_body)
+    multi_aliases = collect_multi_aliases(module_body)
+    mailglass_config_alias_owners = collect_mailglass_config_alias_owners(module_body)
 
     schema_owners =
-      schema_owners
-      |> merge_owner_maps(collect_schema_alias_owners(ast, schema_owners))
-      |> put_registry_owners(local_module_aliases_key(), collect_local_module_aliases(ast))
-
-    schema_owners =
-      schema_owners
-      |> merge_owner_maps(collect_schema_attribute_owners(ast, schema_owners, table_source_owners))
+      base_schema_owners
+      |> merge_owner_maps(collect_schema_alias_owners(module_body, base_schema_owners))
+      |> put_registry_owners(
+        local_module_aliases_key(),
+        collect_local_module_aliases(module_ast, module_body)
+      )
 
     schema_owners =
       schema_owners
       |> merge_owner_maps(
-        collect_local_query_helper_owners(ast, schema_owners, table_source_owners)
+        collect_schema_attribute_owners(module_body, schema_owners, table_source_owners)
+      )
+
+    schema_owners =
+      schema_owners
+      |> merge_owner_maps(
+        collect_local_query_helper_owners(module_body, schema_owners, table_source_owners)
       )
 
     verified_prefix_helpers =
       collect_verified_prefix_helpers(
-        ast,
+        module_body,
         prefix_helper_functions,
         mailglass_repo_aliases,
         mailglass_config_alias_owners
       )
 
     {_ast, issues} =
-      Macro.prewalk(ast, [], fn
+      Macro.prewalk(module_body, [], fn
         {def_type, _meta, [head, body_kw]} = node, issues
         when def_type in [:def, :defp] and is_list(body_kw) ->
           body = Keyword.get(body_kw, :do)
@@ -172,6 +244,13 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
       end)
 
     issues
+  end
+
+  defp prune_nested_modules(ast) do
+    Macro.prewalk(ast, fn
+      {:defmodule, _meta, _args} -> nil
+      node -> node
+    end)
   end
 
   defp function_issues(
@@ -1215,14 +1294,18 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     end)
   end
 
-  defp collect_local_module_aliases(ast) do
-    defined_modules = collect_defined_module_names(ast)
-    base_aliases = MapSet.put(defined_modules, "__MODULE__")
+  defp collect_local_module_aliases(module_ast, ast) do
+    module_name = alias_ast_name(module_ast)
+
+    base_aliases =
+      ["__MODULE__", module_name]
+      |> Enum.reject(&is_nil/1)
+      |> MapSet.new()
 
     {_ast, aliases} =
       Macro.prewalk(ast, base_aliases, fn
         {:alias, _meta, args} = node, aliases ->
-          {node, collect_local_module_alias(args, aliases, defined_modules)}
+          {node, collect_local_module_alias(args, aliases, module_name)}
 
         node, aliases ->
           {node, aliases}
@@ -1231,27 +1314,11 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     aliases
   end
 
-  defp collect_defined_module_names(ast) do
-    {_ast, module_names} =
-      Macro.prewalk(ast, MapSet.new(), fn
-        {:defmodule, _meta, [module_ast, body_kw]} = node, module_names when is_list(body_kw) ->
-          case alias_ast_name(module_ast) do
-            nil -> {node, module_names}
-            module_name -> {node, MapSet.put(module_names, module_name)}
-          end
-
-        node, module_names ->
-          {node, module_names}
-      end)
-
-    module_names
-  end
-
-  defp collect_local_module_alias([alias_ast], aliases, defined_modules) do
+  defp collect_local_module_alias([alias_ast], aliases, module_name) do
     alias_ast
     |> alias_entries()
     |> Enum.reduce(aliases, fn {source_name, alias_name}, acc ->
-      if MapSet.member?(defined_modules, source_name) do
+      if source_name == module_name do
         MapSet.put(acc, alias_name)
       else
         acc
@@ -1259,20 +1326,20 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     end)
   end
 
-  defp collect_local_module_alias([alias_ast, opts], aliases, defined_modules)
+  defp collect_local_module_alias([alias_ast, opts], aliases, module_name)
        when is_list(opts) do
     as_name = alias_as_name(Keyword.get(opts, :as))
 
     with true <- is_binary(as_name),
          [{source_name, _default_alias_name}] <- alias_entries(alias_ast),
-         true <- MapSet.member?(defined_modules, source_name) do
+         true <- source_name == module_name do
       MapSet.put(aliases, as_name)
     else
       _other -> aliases
     end
   end
 
-  defp collect_local_module_alias(_args, aliases, _defined_modules), do: aliases
+  defp collect_local_module_alias(_args, aliases, _module_name), do: aliases
 
   defp collect_schema_attribute_owners(ast, schema_owners, table_source_owners) do
     {_ast, attribute_owners} =

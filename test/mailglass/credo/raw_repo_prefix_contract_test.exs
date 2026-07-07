@@ -208,6 +208,53 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert run_check(source, "lib/mailglass/webhook/unrelated_event_read.ex") == []
   end
 
+  test "flags wrong prefix helper when another same-file module has matching helper name" do
+    source = """
+    defmodule MailglassInbound.Internal.GoodInboundPrefixHelper do
+      defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]
+    end
+
+    defmodule MailglassInbound.Internal.BadWrongPrefixHelper do
+      import Ecto.Query
+      alias MailglassInbound.InboundRecords.InboundRecord
+
+      def fetch(repo) do
+        repo.one(from(record in InboundRecord, limit: 1), schema_opts())
+      end
+
+      defp schema_opts, do: [prefix: Mailglass.Config.schema()]
+    end
+    """
+
+    issues =
+      run_check(
+        source,
+        "mailglass_inbound/lib/mailglass_inbound/internal/bad_wrong_prefix_helper.ex"
+      )
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "does not leak schema aliases between same-file modules" do
+    source = """
+    defmodule Mailglass.Webhook.MailglassEventAliasHolder do
+      alias Mailglass.Events.Event
+
+      def unused, do: Event
+    end
+
+    defmodule Mailglass.Webhook.UnrelatedEventSameFileRead do
+      import Ecto.Query
+      alias Other.Event
+
+      def fetch(repo), do: repo.one(from(event in Event, limit: 1))
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/unrelated_event_same_file_read.ex") == []
+  end
+
   test "flags renamed inbound schema alias without prefix opts" do
     source = """
     defmodule MailglassInbound.Internal.BadInboundAliasAsRead do
