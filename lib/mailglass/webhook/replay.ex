@@ -305,7 +305,9 @@ defmodule Mailglass.Webhook.Replay do
       |> Multi.run({:projector_apply, idx}, fn repo, changes ->
         case Map.get(changes, {:projector_categorize, idx}) do
           {:matched, delivery, inserted_event} ->
-            case repo.update(Projector.update_projections(delivery, inserted_event)) do
+            changeset = Projector.update_projections(delivery, inserted_event)
+
+            case repo.update(changeset, Repo.multi_opts()) do
               {:ok, _delivery} -> {:ok, {:matched, delivery, inserted_event}}
               {:error, reason} -> {:error, reason}
             end
