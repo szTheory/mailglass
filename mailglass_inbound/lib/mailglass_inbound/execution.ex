@@ -1,6 +1,9 @@
 defmodule MailglassInbound.Execution do
   @moduledoc false
 
+  import Ecto.Query, only: [from: 2]
+
+  alias Mailglass.Tenancy
   alias MailglassInbound.InboundMessage
   alias MailglassInbound.InboundRecords
   alias MailglassInbound.InboundRecords.InboundEvidence
@@ -70,18 +73,19 @@ defmodule MailglassInbound.Execution do
         %{
           "inbound_record_id" => inbound_record_id,
           "inbound_evidence_id" => inbound_evidence_id,
-          "route_status" => route_status
+          "route_status" => route_status,
+          "mailglass_tenant_id" => tenant_id
         } = job_args,
         opts
       )
       when is_binary(inbound_record_id) and is_binary(inbound_evidence_id) and
-             is_binary(route_status) and
+             is_binary(route_status) and is_binary(tenant_id) and tenant_id != "" and
              is_list(opts) do
     repo = Keyword.get(opts, :repo, Repo)
 
-    with %InboundRecord{} = record <- repo.get(InboundRecord, inbound_record_id, schema_opts()),
+    with %InboundRecord{} = record <- load_record(repo, inbound_record_id, tenant_id),
          %InboundEvidence{} = evidence <-
-           repo.get(InboundEvidence, inbound_evidence_id, schema_opts()),
+           load_evidence(repo, inbound_evidence_id, inbound_record_id, tenant_id),
          {:ok, route} <- decode_route(route_status, Map.get(job_args, "mailbox")) do
       {:ok,
        %{
@@ -98,6 +102,27 @@ defmodule MailglassInbound.Execution do
   end
 
   def load(_job_args, _opts), do: {:error, :invalid_job_args}
+
+  defp load_record(repo, inbound_record_id, tenant_id) do
+    from(record in InboundRecord,
+      where: record.id == ^inbound_record_id and record.tenant_id == ^tenant_id,
+      limit: 1
+    )
+    |> Tenancy.scope(tenant_id)
+    |> repo.one(schema_opts())
+  end
+
+  defp load_evidence(repo, inbound_evidence_id, inbound_record_id, tenant_id) do
+    from(evidence in InboundEvidence,
+      where:
+        evidence.id == ^inbound_evidence_id and
+          evidence.inbound_record_id == ^inbound_record_id and
+          evidence.tenant_id == ^tenant_id,
+      limit: 1
+    )
+    |> Tenancy.scope(tenant_id)
+    |> repo.one(schema_opts())
+  end
 
   @spec message_from_record(InboundRecord.t()) :: InboundMessage.t()
   def message_from_record(record) do

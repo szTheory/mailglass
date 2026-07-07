@@ -15,7 +15,8 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
 
     def one(queryable), do: one(queryable, [])
 
-    def one(_queryable, opts) do
+    def one(queryable, opts) do
+      capture_queryable(queryable)
       capture(:one, opts)
       pop_result(:capture_repo_one_results, nil)
     end
@@ -37,6 +38,11 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
     defp capture(function, opts) do
       calls = Process.get(:capture_repo_calls, [])
       Process.put(:capture_repo_calls, calls ++ [{function, opts}])
+    end
+
+    defp capture_queryable(queryable) do
+      queryables = Process.get(:capture_repo_queryables, [])
+      Process.put(:capture_repo_queryables, queryables ++ [queryable])
     end
 
     defp pop_result(key, default) do
@@ -111,11 +117,11 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
     assert_prefixed_calls([:one, :one, :one])
   end
 
-  test "Execution.load/2 passes schema prefix opts to both raw repo get calls" do
+  test "Execution.load/2 tenant-scopes both raw repo loads" do
     record_id = Ecto.UUID.generate()
     evidence_id = Ecto.UUID.generate()
 
-    queue_get_results([
+    queue_one_results([
       inbound_record(record_id),
       inbound_evidence(evidence_id, record_id)
     ])
@@ -126,12 +132,14 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
                  "inbound_record_id" => record_id,
                  "inbound_evidence_id" => evidence_id,
                  "route_status" => "matched",
+                 "mailglass_tenant_id" => "tenant-a",
                  "mailbox" => Atom.to_string(TestMailbox)
                },
                repo: CaptureRepo
              )
 
-    assert_prefixed_calls([:get, :get])
+    assert_prefixed_calls([:one, :one])
+    assert_tenant_scoped_execution_load_queries()
   end
 
   test "Execution.load/2 rejects unknown mailbox strings without creating atoms" do
@@ -141,7 +149,7 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
 
     refute existing_atom?("Elixir." <> mailbox)
 
-    queue_get_results([
+    queue_one_results([
       inbound_record(record_id),
       inbound_evidence(evidence_id, record_id)
     ])
@@ -152,13 +160,14 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
                  "inbound_record_id" => record_id,
                  "inbound_evidence_id" => evidence_id,
                  "route_status" => "matched",
+                 "mailglass_tenant_id" => "tenant-a",
                  "mailbox" => mailbox
                },
                repo: CaptureRepo
              )
 
     refute existing_atom?("Elixir." <> mailbox)
-    assert_prefixed_calls([:get, :get])
+    assert_prefixed_calls([:one, :one])
   end
 
   test "Internal.Replay.replay/2 rejects unknown mailbox strings without creating atoms" do
@@ -230,7 +239,6 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
   end
 
   defp queue_one_results(results), do: Process.put(:capture_repo_one_results, results)
-  defp queue_get_results(results), do: Process.put(:capture_repo_get_results, results)
   defp queue_all_result(result), do: Process.put(:capture_repo_all_results, [result])
 
   defp assert_prefixed_calls(expected_functions) do
@@ -243,8 +251,37 @@ defmodule MailglassInbound.SchemaPrefixContractTest do
     end
   end
 
+  defp assert_tenant_scoped_execution_load_queries do
+    [record_query, evidence_query] = Process.get(:capture_repo_queryables, [])
+
+    assert MapSet.subset?(MapSet.new([:id, :tenant_id]), query_field_names(record_query))
+
+    assert MapSet.subset?(
+             MapSet.new([:id, :tenant_id, :inbound_record_id]),
+             query_field_names(evidence_query)
+           )
+  end
+
+  defp query_field_names(queryable) do
+    queryable
+    |> Map.fetch!(:wheres)
+    |> Enum.reduce(MapSet.new(), fn %{expr: expr}, fields ->
+      {_expr, expr_fields} =
+        Macro.prewalk(expr, MapSet.new(), fn
+          {{:., _, [{:&, _, [0]}, field]}, _, []} = node, fields when is_atom(field) ->
+            {node, MapSet.put(fields, field)}
+
+          node, fields ->
+            {node, fields}
+        end)
+
+      MapSet.union(fields, expr_fields)
+    end)
+  end
+
   defp reset_capture_repo do
     Process.delete(:capture_repo_calls)
+    Process.delete(:capture_repo_queryables)
     Process.delete(:capture_repo_one_results)
     Process.delete(:capture_repo_get_results)
     Process.delete(:capture_repo_all_results)
