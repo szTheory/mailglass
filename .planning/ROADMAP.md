@@ -71,7 +71,7 @@ per-phase planning should inspect only the relevant code edges before implementa
 the DB connection `search_path` does not include that schema.
 **Depends on:** Nothing in v2.1; builds directly on v2.0's schema-isolation foundation.
 **Requirements:** SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, GATE-01, GATE-02
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 **Wave 1**
@@ -81,7 +81,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 138-03-PLAN.md - Remaining raw callback projection fixes and static Credo guard
+- [x] 138-03-PLAN.md - Remaining raw callback projection fixes and static Credo guard
 
 **Wave 3** *(blocked on Wave 2 completion)*
 

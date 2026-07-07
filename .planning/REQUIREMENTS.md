@@ -21,7 +21,7 @@
 - [x] **SCHEMA-02**: A focused runtime proof shows unsubscribe replay/idempotency conflict lookups read from
   the configured schema when the DB connection `search_path` does not include that schema.
 
-- [ ] **SCHEMA-03**: Raw repo calls and transaction callbacks that touch mailglass tables use an explicit
+- [x] **SCHEMA-03**: Raw repo calls and transaction callbacks that touch mailglass tables use an explicit
   `prefix:`, the mailglass repo facade, or an allowlisted schema-agnostic query; recurrence is blocked by a
   static regression guard.
 
@@ -98,7 +98,7 @@
 |--------|-------|--------|
 | SCHEMA-01 | Phase 138 | Complete |
 | SCHEMA-02 | Phase 138 | Complete |
-| SCHEMA-03 | Phase 138 | Pending |
+| SCHEMA-03 | Phase 138 | Complete |
 | SCHEMA-04 | Phase 138 | Complete |
 | GATE-01 | Phase 138 | Pending |
 | GATE-02 | Phase 138 | Pending |
