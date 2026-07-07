@@ -179,6 +179,26 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "repo.one"
   end
 
+  test "flags transitive same-module alias query helper return without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadTransitiveModuleAliasHelperReturn do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Webhook.BadTransitiveModuleAliasHelperReturn, as: ThisModule
+      alias ThisModule, as: Here
+
+      def fetch(repo), do: repo.one(Here.event_query())
+
+      def event_query, do: from(event in Event, limit: 1)
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_transitive_module_alias_helper_return.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
   test "flags renamed core schema alias without prefix opts" do
     source = """
     defmodule Mailglass.Webhook.BadAliasAsRead do
@@ -190,6 +210,23 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     """
 
     issues = run_check(source, "lib/mailglass/webhook/bad_alias_as_read.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags schema alias defined through prior alias without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadAliasViaAliasRead do
+      import Ecto.Query
+      alias Mailglass.Events
+      alias Events.Event, as: Ev
+
+      def fetch(repo), do: repo.one(from(event in Ev, limit: 1))
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_alias_via_alias_read.ex")
 
     assert length(issues) == 1
     assert hd(issues).trigger == "repo.one"
@@ -230,6 +267,31 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
       run_check(
         source,
         "mailglass_inbound/lib/mailglass_inbound/internal/bad_wrong_prefix_helper.ex"
+      )
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags variant prefix helper clause that returns the wrong owner" do
+    source = """
+    defmodule MailglassInbound.Internal.BadLiteralHelperArgBypass do
+      import Ecto.Query
+      alias MailglassInbound.InboundRecords.InboundRecord
+
+      def fetch(repo) do
+        repo.one(from(record in InboundRecord, limit: 1), schema_opts(:core))
+      end
+
+      defp schema_opts(:core), do: [prefix: Mailglass.Config.schema()]
+      defp schema_opts(:inbound), do: [prefix: MailglassInbound.Config.schema()]
+    end
+    """
+
+    issues =
+      run_check(
+        source,
+        "mailglass_inbound/lib/mailglass_inbound/internal/bad_literal_helper_arg_bypass.ex"
       )
 
     assert length(issues) == 1

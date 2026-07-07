@@ -1198,7 +1198,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
           body = Keyword.get(body_kw, :do)
 
           if helper_key && MapSet.member?(prefix_helper_functions, elem(helper_key, 0)) do
-            {total, prefixed, owners} =
+            {total, prefixed, owner_sets} =
               Map.get(helper_counts, helper_key, {0, 0, MapSet.new()})
 
             helper_owners =
@@ -1210,14 +1210,18 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
                 mailglass_config_alias_owners
               )
 
-            prefixed =
-              if empty_owners?(helper_owners), do: prefixed, else: prefixed + 1
+            {prefixed, owner_sets} =
+              if empty_owners?(helper_owners) do
+                {prefixed, owner_sets}
+              else
+                {prefixed + 1, MapSet.put(owner_sets, helper_owners)}
+              end
 
             {node,
              Map.put(
                helper_counts,
                helper_key,
-               {total + 1, prefixed, merge_owners(owners, helper_owners)}
+               {total + 1, prefixed, owner_sets}
              )}
           else
             {node, helper_counts}
@@ -1229,8 +1233,12 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
     helper_counts
     |> Enum.reduce(%{}, fn
-      {helper_key, {total, prefixed, owners}}, verified when total > 0 and total == prefixed ->
-        Map.put(verified, helper_key, owners)
+      {helper_key, {total, prefixed, owner_sets}}, verified
+      when total > 0 and total == prefixed ->
+        case MapSet.to_list(owner_sets) do
+          [owners] -> Map.put(verified, helper_key, owners)
+          _other -> verified
+        end
 
       _entry, verified ->
         verified
@@ -1241,7 +1249,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     {_ast, alias_owners} =
       Macro.prewalk(ast, %{}, fn
         {:alias, _meta, args} = node, alias_owners ->
-          {node, collect_schema_alias_owner(args, alias_owners, schema_owners)}
+          current_schema_owners = merge_owner_maps(schema_owners, alias_owners)
+          {node, collect_schema_alias_owner(args, alias_owners, current_schema_owners)}
 
         node, alias_owners ->
           {node, alias_owners}
@@ -1318,7 +1327,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     alias_ast
     |> alias_entries()
     |> Enum.reduce(aliases, fn {source_name, alias_name}, acc ->
-      if source_name == module_name do
+      if local_module_alias_name?(source_name, module_name, acc) do
         MapSet.put(acc, alias_name)
       else
         acc
@@ -1332,7 +1341,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
     with true <- is_binary(as_name),
          [{source_name, _default_alias_name}] <- alias_entries(alias_ast),
-         true <- source_name == module_name do
+         true <- local_module_alias_name?(source_name, module_name, aliases) do
       MapSet.put(aliases, as_name)
     else
       _other -> aliases
@@ -1340,6 +1349,10 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   end
 
   defp collect_local_module_alias(_args, aliases, _module_name), do: aliases
+
+  defp local_module_alias_name?(source_name, module_name, aliases) do
+    source_name == module_name or MapSet.member?(aliases, source_name)
+  end
 
   defp collect_schema_attribute_owners(ast, schema_owners, table_source_owners) do
     {_ast, attribute_owners} =
