@@ -11,6 +11,8 @@ defmodule MailglassInbound.Execution do
 
   @compile {:no_warn_undefined, [MailglassInbound.Execution.Worker]}
 
+  defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]
+
   @spec dispatch(map(), keyword()) :: {:ok, map()} | {:error, term()}
   def dispatch(persisted, opts \\ [])
 
@@ -72,12 +74,14 @@ defmodule MailglassInbound.Execution do
         } = job_args,
         opts
       )
-      when is_binary(inbound_record_id) and is_binary(inbound_evidence_id) and is_binary(route_status) and
+      when is_binary(inbound_record_id) and is_binary(inbound_evidence_id) and
+             is_binary(route_status) and
              is_list(opts) do
     repo = Keyword.get(opts, :repo, Repo)
 
-    with %InboundRecord{} = record <- repo.get(InboundRecord, inbound_record_id),
-         %InboundEvidence{} = evidence <- repo.get(InboundEvidence, inbound_evidence_id),
+    with %InboundRecord{} = record <- repo.get(InboundRecord, inbound_record_id, schema_opts()),
+         %InboundEvidence{} = evidence <-
+           repo.get(InboundEvidence, inbound_evidence_id, schema_opts()),
          {:ok, route} <- decode_route(route_status, Map.get(job_args, "mailbox")) do
       {:ok,
        %{
@@ -172,12 +176,15 @@ defmodule MailglassInbound.Execution do
   defp maybe_put(opts, _key, nil), do: opts
   defp maybe_put(opts, key, value), do: Keyword.put(opts, key, value)
 
-  defp execution_attrs(%{
-         route: %{status: :no_match},
-         message: %InboundMessage{} = message,
-         inbound_record: inbound_record,
-         inbound_evidence: inbound_evidence
-       }, source) do
+  defp execution_attrs(
+         %{
+           route: %{status: :no_match},
+           message: %InboundMessage{} = message,
+           inbound_record: inbound_record,
+           inbound_evidence: inbound_evidence
+         },
+         source
+       ) do
     %{
       tenant_id: message.tenant_id || inbound_record.tenant_id,
       inbound_record_id: inbound_record.id,
@@ -188,12 +195,15 @@ defmodule MailglassInbound.Execution do
     }
   end
 
-  defp execution_attrs(%{
-         route: %{status: :matched, mailbox: mailbox},
-         message: %InboundMessage{} = message,
-         inbound_record: inbound_record,
-         inbound_evidence: inbound_evidence
-       }, source) do
+  defp execution_attrs(
+         %{
+           route: %{status: :matched, mailbox: mailbox},
+           message: %InboundMessage{} = message,
+           inbound_record: inbound_record,
+           inbound_evidence: inbound_evidence
+         },
+         source
+       ) do
     mailbox_name = Atom.to_string(mailbox)
 
     %{

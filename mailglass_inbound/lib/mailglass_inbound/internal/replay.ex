@@ -11,6 +11,8 @@ defmodule MailglassInbound.Internal.Replay do
 
   @matched_outcomes [:accept, :ignore, :reject, :bounce]
 
+  defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]
+
   # T-49-17 cross-tenant replay guard. Every load (record, evidence, execution
   # runs) is scoped by tenant via an explicit `tenant_id` where-clause AND
   # `Mailglass.Tenancy.scope/2` — the same defence-in-depth pattern as
@@ -55,7 +57,7 @@ defmodule MailglassInbound.Internal.Replay do
       limit: 1
     )
     |> Tenancy.scope(tenant_id)
-    |> repo.one()
+    |> repo.one(schema_opts())
   end
 
   defp load_evidence(repo, inbound_record_id, tenant_id) do
@@ -66,7 +68,7 @@ defmodule MailglassInbound.Internal.Replay do
       limit: 1
     )
     |> Tenancy.scope(tenant_id)
-    |> repo.one()
+    |> repo.one(schema_opts())
   end
 
   defp resolve_mailbox(repo, inbound_record_id, tenant_id) do
@@ -100,7 +102,7 @@ defmodule MailglassInbound.Internal.Replay do
       limit: 1
     )
     |> Tenancy.scope(tenant_id)
-    |> repo.one()
+    |> repo.one(schema_opts())
   end
 
   defp latest_fresh_run(repo, inbound_record_id, tenant_id) do
@@ -113,7 +115,7 @@ defmodule MailglassInbound.Internal.Replay do
       limit: 1
     )
     |> Tenancy.scope(tenant_id)
-    |> repo.one()
+    |> repo.one(schema_opts())
   end
 
   defp replay_payload(record, evidence, mailbox) do

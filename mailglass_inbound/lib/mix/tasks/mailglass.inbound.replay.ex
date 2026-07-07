@@ -135,13 +135,15 @@ defmodule Mix.Tasks.Mailglass.Inbound.Replay do
 
   # Build a parameterized query from the AND-combined selectors. Selectors are
   # never string-interpolated (T-49-11).
+  defp schema_opts, do: [prefix: MailglassInbound.Config.schema()]
+
   defp resolve_ids(repo, selectors) do
     InboundRecord
     |> filter_record_id(selectors.record_id)
     |> filter_tenant(selectors.tenant)
     |> filter_since(selectors.since)
     |> select([r], r.id)
-    |> repo.all()
+    |> repo.all(schema_opts())
   end
 
   defp filter_record_id(query, nil), do: query
