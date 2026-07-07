@@ -497,6 +497,33 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "repo.one"
   end
 
+  test "flags ReplayRun raw repo calls without prefix opts" do
+    source = """
+    defmodule MailglassInbound.Internal.BadReplayRunRead do
+      alias MailglassInbound.InboundRecords.ReplayRun
+
+      def load(repo, id) do
+        repo.get(ReplayRun, id)
+      end
+    end
+    """
+
+    issues =
+      run_check(
+        source,
+        "mailglass_inbound/lib/mailglass_inbound/internal/bad_replay_run_read.ex"
+      )
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.get"
+  end
+
+  test "production Credo config registers ReplayRun as a protected schema" do
+    assert ".credo.exs"
+           |> File.read!()
+           |> String.contains?("MailglassInbound.InboundRecords.ReplayRun")
+  end
+
   test "flags module attribute schema without prefix opts" do
     source = """
     defmodule Mailglass.Webhook.BadModuleAttributeSchemaRead do
@@ -809,6 +836,31 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
 
     assert run_check(source, "mailglass_inbound/lib/mailglass_inbound/internal/good_replay_read.ex") ==
              []
+  end
+
+  test "allows inbound schema_opts with function-local Config alias" do
+    source = """
+    defmodule MailglassInbound.Internal.GoodReplayReadWithLocalConfigAlias do
+      import Ecto.Query
+      alias MailglassInbound.InboundRecords.InboundRecord
+
+      def load(repo, id) do
+        query = from(record in InboundRecord, where: record.id == ^id, limit: 1)
+        repo.one(query, schema_opts())
+      end
+
+      defp schema_opts do
+        alias MailglassInbound.Config
+
+        [prefix: Config.schema()]
+      end
+    end
+    """
+
+    assert run_check(
+             source,
+             "mailglass_inbound/lib/mailglass_inbound/internal/good_replay_read_with_local_config_alias.ex"
+           ) == []
   end
 
   test "allows helper that returns Repo.multi_opts" do

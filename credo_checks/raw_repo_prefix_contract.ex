@@ -11,7 +11,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
         Mailglass.Webhook.WebhookEvent,
         MailglassInbound.InboundRecords.InboundRecord,
         MailglassInbound.InboundRecords.InboundEvidence,
-        MailglassInbound.InboundRecords.ExecutionRun
+        MailglassInbound.InboundRecords.ExecutionRun,
+        MailglassInbound.InboundRecords.ReplayRun
       ],
       table_sources: [
         core: [
@@ -1269,10 +1270,10 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
       when def_type in [:def, :defp] and is_list(body_kw) ->
         helper_key = function_key_from_head(head)
         body = Keyword.get(body_kw, :do)
-        expression = returned_expression(body)
+        {expression, helper_state} = returned_expression_context(body, state, table_source_owners)
 
         helper_returns =
-          collect_helper_return(helper_returns, helper_key, expression, state.schema_owners)
+          collect_helper_return(helper_returns, helper_key, expression, helper_state.schema_owners)
 
         prefix_helper_counts =
           collect_prefix_helper_count(
@@ -1280,8 +1281,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
             helper_key,
             expression,
             prefix_helper_functions,
-            state.mailglass_repo_aliases,
-            state.mailglass_config_alias_owners
+            helper_state.mailglass_repo_aliases,
+            helper_state.mailglass_config_alias_owners
           )
 
         {state, helper_returns, prefix_helper_counts}
@@ -1614,6 +1615,21 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
       end)
 
     names
+  end
+
+  defp returned_expression_context(body, state, table_source_owners) do
+    case Enum.split(top_level_expressions(body), -1) do
+      {leading_expressions, [last_expression]} ->
+        helper_state =
+          Enum.reduce(leading_expressions, state, fn expression, state ->
+            update_module_state(state, expression, table_source_owners)
+          end)
+
+        {returned_expression(last_expression), helper_state}
+
+      {_leading_expressions, []} ->
+        {nil, state}
+    end
   end
 
   defp returned_expression({:__block__, _meta, expressions}) when is_list(expressions) do

@@ -93,7 +93,8 @@ extra_checks = [
        Mailglass.Webhook.WebhookEvent,
        MailglassInbound.InboundRecords.InboundRecord,
        MailglassInbound.InboundRecords.InboundEvidence,
-       MailglassInbound.InboundRecords.ExecutionRun
+       MailglassInbound.InboundRecords.ExecutionRun,
+       MailglassInbound.InboundRecords.ReplayRun
      ],
      included_path_prefixes: ["lib/mailglass/", "mailglass_inbound/lib/"]
    ]},
