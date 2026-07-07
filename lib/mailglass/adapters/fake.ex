@@ -174,16 +174,21 @@ defmodule Mailglass.Adapters.Fake do
       result =
         Ecto.Multi.new()
         |> Mailglass.Events.append_multi(:event, attrs)
-        |> Ecto.Multi.update(
-          :delivery,
-          fn %{event: event} ->
-            Projector.update_projections(delivery, event)
-          end,
-          Mailglass.Repo.multi_opts()
-        )
+        |> Ecto.Multi.run(:delivery, fn repo, %{event: event} ->
+          if is_nil(event.inserted_at) do
+            {:ok, :duplicate_event}
+          else
+            delivery
+            |> Projector.update_projections(event)
+            |> repo.update(Mailglass.Repo.multi_opts())
+          end
+        end)
         |> Mailglass.Repo.multi()
 
       case result do
+        {:ok, %{event: %Mailglass.Events.Event{inserted_at: nil} = event}} ->
+          {:ok, event}
+
         {:ok, %{event: event, delivery: updated}} ->
           Projector.broadcast_delivery_updated(updated, type, %{
             tenant_id: updated.tenant_id,

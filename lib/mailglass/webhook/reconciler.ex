@@ -56,6 +56,7 @@ if Code.ensure_loaded?(Oban.Worker) do
 
     alias Ecto.Multi
     alias Mailglass.{Clock, Events, Repo}
+    alias Mailglass.Events.Event
     alias Mailglass.Events.Reconciler, as: EventsReconciler
     alias Mailglass.Outbound.Projector
     alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
@@ -174,13 +175,9 @@ if Code.ensure_loaded?(Oban.Worker) do
           multi =
             Multi.new()
             |> Events.append_multi(:reconciled_event, reconciled_attrs)
-            |> Multi.update(
-              :projection,
-              fn _changes ->
-                Projector.update_projections(delivery, orphan)
-              end,
-              Repo.multi_opts()
-            )
+            |> Multi.run(:projection, fn repo, %{reconciled_event: event} ->
+              project_reconciled_event(repo, delivery, orphan, event)
+            end)
 
           case Repo.transact(fn -> Repo.multi(multi) end) do
             {:ok, {:ok, changes}} ->
@@ -209,9 +206,19 @@ if Code.ensure_loaded?(Oban.Worker) do
       end
     end
 
-    defp maybe_broadcast(_delivery, nil, _orphan), do: :ok
+    defp project_reconciled_event(_repo, _delivery, _orphan, %Event{inserted_at: nil}),
+      do: {:ok, :replay_noop}
 
-    defp maybe_broadcast(delivery, reconciled_event, orphan) do
+    defp project_reconciled_event(repo, delivery, orphan, %Event{}) do
+      delivery
+      |> Projector.update_projections(orphan)
+      |> repo.update(Repo.multi_opts())
+    end
+
+    defp maybe_broadcast(_delivery, nil, _orphan), do: :ok
+    defp maybe_broadcast(_delivery, %Event{inserted_at: nil}, _orphan), do: :ok
+
+    defp maybe_broadcast(delivery, %Event{inserted_at: %DateTime{}} = reconciled_event, orphan) do
       Projector.broadcast_delivery_updated(delivery, :reconciled, %{
         event_id: reconciled_event.id,
         reconciled_from_event_id: orphan.id
@@ -249,6 +256,7 @@ else
 
     alias Ecto.Multi
     alias Mailglass.{Clock, Events, Repo}
+    alias Mailglass.Events.Event
     alias Mailglass.Events.Reconciler, as: EventsReconciler
     alias Mailglass.Outbound.Projector
     alias Mailglass.Webhook.Telemetry, as: WebhookTelemetry
@@ -350,13 +358,9 @@ else
           multi =
             Multi.new()
             |> Events.append_multi(:reconciled_event, reconciled_attrs)
-            |> Multi.update(
-              :projection,
-              fn _changes ->
-                Projector.update_projections(delivery, orphan)
-              end,
-              Repo.multi_opts()
-            )
+            |> Multi.run(:projection, fn repo, %{reconciled_event: event} ->
+              project_reconciled_event(repo, delivery, orphan, event)
+            end)
 
           case Repo.transact(fn -> Repo.multi(multi) end) do
             {:ok, {:ok, changes}} ->
@@ -385,9 +389,19 @@ else
       end
     end
 
-    defp maybe_broadcast(_delivery, nil, _orphan), do: :ok
+    defp project_reconciled_event(_repo, _delivery, _orphan, %Event{inserted_at: nil}),
+      do: {:ok, :replay_noop}
 
-    defp maybe_broadcast(delivery, reconciled_event, orphan) do
+    defp project_reconciled_event(repo, delivery, orphan, %Event{}) do
+      delivery
+      |> Projector.update_projections(orphan)
+      |> repo.update(Repo.multi_opts())
+    end
+
+    defp maybe_broadcast(_delivery, nil, _orphan), do: :ok
+    defp maybe_broadcast(_delivery, %Event{inserted_at: nil}, _orphan), do: :ok
+
+    defp maybe_broadcast(delivery, %Event{inserted_at: %DateTime{}} = reconciled_event, orphan) do
       Projector.broadcast_delivery_updated(delivery, :reconciled, %{
         event_id: reconciled_event.id,
         reconciled_from_event_id: orphan.id

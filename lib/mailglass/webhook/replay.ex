@@ -302,6 +302,9 @@ defmodule Mailglass.Webhook.Replay do
           is_nil(inserted_event) ->
             {:ok, :no_event_row}
 
+          is_nil(inserted_event.inserted_at) ->
+            {:ok, :no_event_row}
+
           is_nil(inserted_event.delivery_id) ->
             {:ok, :orphan_skipped}
 

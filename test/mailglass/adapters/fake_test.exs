@@ -6,6 +6,9 @@ defmodule Mailglass.Adapters.FakeTest do
   alias Mailglass.Adapters.Fake
   alias Mailglass.Clock
   alias Mailglass.FakeFixtures.TestMailer
+  alias Mailglass.Outbound.Delivery
+
+  import Ecto.Query
 
   setup do
     :ok = Fake.checkout()
@@ -19,7 +22,7 @@ defmodule Mailglass.Adapters.FakeTest do
       source = File.read!("lib/mailglass/adapters/fake.ex")
 
       assert source =~
-               ~r/Ecto\.Multi\.update\([\s\S]*:delivery[\s\S]*Mailglass\.Repo\.multi_opts\(\)[\s\S]*\)/
+               ~r/Ecto\.Multi\.run\(:delivery[\s\S]*repo\.update\(Mailglass\.Repo\.multi_opts\(\)\)/
     end
   end
 
@@ -328,6 +331,38 @@ defmodule Mailglass.Adapters.FakeTest do
       assert updated_delivery.last_event_type == :bounced
     end
 
+    test "duplicate trigger_event/3 skips projection updates and broadcasts", %{delivery: delivery} do
+      Phoenix.PubSub.subscribe(
+        Mailglass.PubSub,
+        Mailglass.PubSub.Topics.events(delivery.tenant_id, delivery.id)
+      )
+
+      delivery_id = delivery.id
+
+      {:ok, first_event} = Fake.trigger_event(delivery.provider_message_id, :bounced, [])
+      projection_after_first = projection_snapshot(delivery.id)
+
+      assert %DateTime{} = first_event.inserted_at
+      assert_receive {:delivery_updated, ^delivery_id, :bounced, _meta}, 500
+      drain_delivery_updates(delivery_id, :bounced)
+
+      {:ok, duplicate_event} = Fake.trigger_event(delivery.provider_message_id, :bounced, [])
+
+      assert is_nil(duplicate_event.inserted_at)
+      assert projection_snapshot(delivery.id) == projection_after_first
+      refute_receive {:delivery_updated, ^delivery_id, :bounced, _meta}, 100
+
+      event_count =
+        TestRepo.aggregate(
+          from(event in Mailglass.Events.Event,
+            where: event.idempotency_key == ^first_event.idempotency_key
+          ),
+          :count
+        )
+
+      assert event_count == 1
+    end
+
     test "Test 12: trigger_event/3 returns {:error, :not_found} for unknown provider_message_id" do
       result = Fake.trigger_event("nonexistent-pmid", :bounced, [])
       assert result == {:error, :not_found}
@@ -378,5 +413,29 @@ defmodule Mailglass.Adapters.FakeTest do
 
     cs = Mailglass.Outbound.Delivery.changeset(attrs)
     TestRepo.insert(cs)
+  end
+
+  defp projection_snapshot(delivery_id) do
+    delivery = TestRepo.get!(Delivery, delivery_id)
+
+    Map.take(delivery, [
+      :last_event_type,
+      :last_event_at,
+      :delivered_at,
+      :bounced_at,
+      :complained_at,
+      :suppressed_at,
+      :terminal,
+      :lock_version
+    ])
+  end
+
+  defp drain_delivery_updates(delivery_id, event_type) do
+    receive do
+      {:delivery_updated, ^delivery_id, ^event_type, _meta} ->
+        drain_delivery_updates(delivery_id, event_type)
+    after
+      25 -> :ok
+    end
   end
 end

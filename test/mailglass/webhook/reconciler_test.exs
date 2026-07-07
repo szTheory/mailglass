@@ -48,13 +48,20 @@ defmodule Mailglass.Webhook.ReconcilerTest do
     test "both projection updates carry explicit Multi prefix opts" do
       source = File.read!("lib/mailglass/webhook/reconciler.ex")
 
-      projection_updates =
+      projection_runs =
         Regex.scan(
-          ~r/Multi\.update\([\s\S]*?:projection[\s\S]*?Repo\.multi_opts\(\)[\s\S]*?\)/,
+          ~r/Multi\.run\(:projection[\s\S]*?project_reconciled_event/,
           source
         )
 
-      assert length(projection_updates) == 2
+      repo_updates =
+        Regex.scan(
+          ~r/repo\.update\(Repo\.multi_opts\(\)\)/,
+          source
+        )
+
+      assert length(projection_runs) == 2
+      assert length(repo_updates) == 2
     end
   end
 
@@ -104,15 +111,30 @@ defmodule Mailglass.Webhook.ReconcilerTest do
       two_minutes_ago = DateTime.add(Clock.utc_now(), -120, :second)
       {:ok, orphan} = insert_orphan_event("msg_idem", two_minutes_ago)
 
-      insert_delivery!(
-        provider: "postmark",
-        provider_message_id: "msg_idem"
-      )
+      delivery =
+        insert_delivery!(
+          provider: "postmark",
+          provider_message_id: "msg_idem"
+        )
 
       # Run twice — the second run's :reconciled insert should be a no-op
       # via the idempotency_key partial UNIQUE index.
+      Phoenix.PubSub.subscribe(
+        Mailglass.PubSub,
+        Mailglass.PubSub.Topics.events(delivery.tenant_id, delivery.id)
+      )
+
+      delivery_id = delivery.id
+
       {:ok, _} = Reconciler.reconcile("test-tenant", 100)
+      projection_after_first = projection_snapshot(delivery.id)
+
+      assert_receive {:delivery_updated, ^delivery_id, :reconciled, _meta}, 500
+      drain_delivery_updates(delivery_id, :reconciled)
+
       {:ok, _} = Reconciler.reconcile("test-tenant", 100)
+      assert projection_snapshot(delivery.id) == projection_after_first
+      refute_receive {:delivery_updated, ^delivery_id, :reconciled, _meta}, 100
 
       # Exactly ONE :reconciled event, even after two sweeps.
       reconciled_count =
@@ -298,5 +320,29 @@ defmodule Mailglass.Webhook.ReconcilerTest do
     |> Enum.into(defaults)
     |> Delivery.changeset()
     |> TestRepo.insert!()
+  end
+
+  defp projection_snapshot(delivery_id) do
+    delivery = TestRepo.get!(Delivery, delivery_id)
+
+    Map.take(delivery, [
+      :last_event_type,
+      :last_event_at,
+      :delivered_at,
+      :bounced_at,
+      :complained_at,
+      :suppressed_at,
+      :terminal,
+      :lock_version
+    ])
+  end
+
+  defp drain_delivery_updates(delivery_id, event_type) do
+    receive do
+      {:delivery_updated, ^delivery_id, ^event_type, _meta} ->
+        drain_delivery_updates(delivery_id, event_type)
+    after
+      25 -> :ok
+    end
   end
 end

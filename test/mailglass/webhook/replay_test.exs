@@ -134,6 +134,7 @@ defmodule Mailglass.Webhook.ReplayTest do
 
       assert {:ok, normalized_events} = {:ok, Postmark.normalize(raw_body, [])}
       assert {:ok, ingest_result} = Ingest.ingest_multi(:postmark, raw_body, normalized_events)
+      projection_after_ingest = projection_snapshot(delivery.id)
 
       assert {:ok, result} =
                Replay.execute(%{
@@ -146,6 +147,7 @@ defmodule Mailglass.Webhook.ReplayTest do
       assert result.status == :noop
       assert result.new_event_count == 0
       assert result.replayed_event_count == 1
+      assert projection_snapshot(delivery.id) == projection_after_ingest
 
       assert 1 ==
                TestRepo.aggregate(
@@ -273,5 +275,20 @@ defmodule Mailglass.Webhook.ReplayTest do
         order_by: [asc: event.occurred_at, asc: event.inserted_at, asc: event.id]
       )
     )
+  end
+
+  defp projection_snapshot(delivery_id) do
+    delivery = TestRepo.get!(Delivery, delivery_id)
+
+    Map.take(delivery, [
+      :last_event_type,
+      :last_event_at,
+      :delivered_at,
+      :bounced_at,
+      :complained_at,
+      :suppressed_at,
+      :terminal,
+      :lock_version
+    ])
   end
 end
