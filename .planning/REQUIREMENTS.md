@@ -25,7 +25,7 @@
   `prefix:`, the mailglass repo facade, or an allowlisted schema-agnostic query; recurrence is blocked by a
   static regression guard.
 
-- [ ] **SCHEMA-04**: Inbound extension points that accept a repo option either route through the inbound
+- [x] **SCHEMA-04**: Inbound extension points that accept a repo option either route through the inbound
   facade by default or document and prove the explicit-prefix contract when a raw repo is supplied.
 
 ### AAU - Admin asset URL robustness
@@ -99,7 +99,7 @@
 | SCHEMA-01 | Phase 138 | Complete |
 | SCHEMA-02 | Phase 138 | Complete |
 | SCHEMA-03 | Phase 138 | Pending |
-| SCHEMA-04 | Phase 138 | Pending |
+| SCHEMA-04 | Phase 138 | Complete |
 | GATE-01 | Phase 138 | Pending |
 | GATE-02 | Phase 138 | Pending |
 | AAU-01 | Phase 139 | Pending |

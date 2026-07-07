@@ -71,13 +71,13 @@ per-phase planning should inspect only the relevant code edges before implementa
 the DB connection `search_path` does not include that schema.
 **Depends on:** Nothing in v2.1; builds directly on v2.0's schema-isolation foundation.
 **Requirements:** SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, GATE-01, GATE-02
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 **Wave 1**
 
 - [x] 138-01-PLAN.md - Core hostile runtime proofs for `Webhook.Replay` and unsubscribe conflict lookup
-- [ ] 138-02-PLAN.md - Inbound raw-repo extension-point prefix contract
+- [x] 138-02-PLAN.md - Inbound raw-repo extension-point prefix contract
 
 **Wave 2** *(blocked on Wave 1 completion)*
 

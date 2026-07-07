@@ -5,15 +5,15 @@ milestone_name: Postgres + Admin URL Hardening)
 current_phase: 138
 current_phase_name: schema-prefix-no-search-path-hardening
 status: executing
-stopped_at: Completed 138-01-PLAN.md
-last_updated: "2026-07-07T13:36:06.683Z"
+stopped_at: Completed 138-02-PLAN.md
+last_updated: "2026-07-07T13:46:59.723Z"
 last_activity: 2026-07-07
 last_activity_desc: Phase 138 execution started
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-07 - after opening v2.1)
 ## Current Position
 
 Phase: 138 (schema-prefix-no-search-path-hardening) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-07-07 — Phase 138 execution started
 
@@ -259,6 +259,8 @@ release debug campaign.
 - [Phase ?]: 137-01: reference baseline adopts mailglass default schema (no :schema public pin) per D-07
 - [Phase 138]: Explicit per-operation Ecto prefix opts on raw callback repo calls — Repo.multi_opts() is the correctness mechanism for raw Ecto.Multi callback reads/writes; connection search_path remains only test/host convenience.
 - [Phase 138]: Source-contract assertions accompany hostile runtime schema-prefix tests — The replay runtime proof can pass through Ecto-loaded prefix metadata before explicit raw callback opts are present, so source-contract assertions keep the focused lane fail-closed.
+- [Phase 138]: Keep MailglassInbound.Repo as the default facade for inbound replay extension points; supplied raw repos receive explicit local schema opts.
+- [Phase 138]: Inbound raw-repo prefix contract tests use capture repos and avoid subject/body/header/raw MIME diagnostics.
 
 ## Quick Tasks Completed
 
@@ -407,6 +409,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 134 P02 | ~18 min | 3 tasks | 3 files |
 | Phase 134 P03 | 55min | 3 tasks | 10 files |
 | Phase 138 P01 | 9 min | 2 tasks | 3 files |
+| Phase 138 P02 | 5 min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -434,8 +437,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-07T13:35:54.011Z
-**Stopped at:** Completed 138-01-PLAN.md
+**Last session:** 2026-07-07T13:46:59.716Z
+**Stopped at:** Completed 138-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
