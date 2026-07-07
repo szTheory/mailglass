@@ -79,7 +79,8 @@ defmodule Mailglass.MixProject do
         "verify.provider_compatibility": :test,
         "verify.docs.contract": :test,
         "verify.docs.contract.inbound": :test,
-        "verify.docs.migration": :test
+        "verify.docs.migration": :test,
+        "verify.schema_prefix": :test
       ]
     ]
   end
@@ -308,6 +309,12 @@ defmodule Mailglass.MixProject do
       ],
       "verify.docs.migration": [
         "test test/mailglass/docs_migration_smoke_test.exs test/mailglass/compatibility_contract_test.exs --warnings-as-errors"
+      ],
+      "verify.schema_prefix": [
+        "test test/mailglass/schema_prefix_hardening_test.exs --only schema_prefix --warnings-as-errors",
+        "cmd mix test test/mailglass/credo/raw_repo_prefix_contract_test.exs --warnings-as-errors",
+        "credo --strict",
+        "cmd --cd mailglass_inbound mix test test/mailglass_inbound/schema_prefix_contract_test.exs --warnings-as-errors"
       ],
       # Cold-start smoke — full suite from a fresh DB. Catches startup-order,
       # seed, and missing-migration issues that warm-state runs can mask.
