@@ -14,6 +14,15 @@ defmodule Mailglass.Adapters.FakeTest do
     :ok
   end
 
+  describe "schema prefix contract" do
+    test "trigger_event projection update carries explicit Multi prefix opts" do
+      source = File.read!("lib/mailglass/adapters/fake.ex")
+
+      assert source =~
+               ~r/Ecto\.Multi\.update\([\s\S]*:delivery[\s\S]*Mailglass\.Repo\.multi_opts\(\)[\s\S]*\)/
+    end
+  end
+
   defp make_message(opts \\ []) do
     tenant_id = Keyword.get(opts, :tenant_id, "test-tenant")
 

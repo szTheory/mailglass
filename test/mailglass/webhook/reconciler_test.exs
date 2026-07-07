@@ -44,6 +44,20 @@ defmodule Mailglass.Webhook.ReconcilerTest do
     :ok
   end
 
+  describe "schema prefix contract" do
+    test "both projection updates carry explicit Multi prefix opts" do
+      source = File.read!("lib/mailglass/webhook/reconciler.ex")
+
+      projection_updates =
+        Regex.scan(
+          ~r/Multi\.update\([\s\S]*?:projection[\s\S]*?Repo\.multi_opts\(\)[\s\S]*?\)/,
+          source
+        )
+
+      assert length(projection_updates) == 2
+    end
+  end
+
   describe "reconcile/2 happy path (matching Delivery commits AFTER orphan)" do
     test "APPENDS a new :reconciled event; orphan row is unchanged" do
       # SETUP: insert orphan event (no matching delivery yet). Must be past
