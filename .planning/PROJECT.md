@@ -137,10 +137,11 @@ pin change ships with a CHANGELOG line + documented **Hex retirement** as the ne
 
 ## Current State
 
-**v2.1 OPENED 2026-07-07 - Postgres + Admin URL Hardening.** Active maintenance milestone with three
-planned phases (138-140): focused no-search-path schema-prefix hardening, admin asset URL hard-refresh
-proof, then verification/docs closeout. It deliberately defers broader UI verification discipline and
-SEED-003 ecosystem integrations.
+**v2.1 IN PROGRESS 2026-07-07 - Postgres + Admin URL Hardening.** Phase 138 is complete and verified:
+focused no-search-path schema-prefix hardening now has hostile runtime proof, raw-repo/static guard
+coverage, and a green `mix verify.schema_prefix` lane. Phase 139 is next for admin asset URL hard-refresh
+proof, followed by Phase 140 verification/docs closeout. The milestone still deliberately defers broader
+UI verification discipline and SEED-003 ecosystem integrations.
 
 **v2.0 SHIPPED 2026-07-04 - mailglass 2.0.0 / mailglass_admin 2.0.0 / mailglass_inbound 2.0.0 live on
 Hex.** All 6 phases (132-137) complete, audit `status: passed`. Dedicated `mailglass` Postgres schema is
@@ -717,5 +718,5 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-07 - **v2.1 Postgres + Admin URL Hardening opened** (focused no-search-path schema-prefix proof + admin first-load/deep-link asset URL robustness; phases 138-140; broader UI verification discipline and ecosystem integrations deferred). Previous milestone **v2.0 Postgres Schema Isolation SHIPPED 2026-07-04** - live at **2.0.0 / 2.0.0 / 2.0.0** on Hex.*
+*Last updated: 2026-07-07 - **v2.1 Phase 138 complete** (focused no-search-path schema-prefix proof, raw-repo/static guard coverage, and `mix verify.schema_prefix` verified; Phase 139 admin first-load/deep-link asset URL proof next; broader UI verification discipline and ecosystem integrations deferred). Previous milestone **v2.0 Postgres Schema Isolation SHIPPED 2026-07-04** - live at **2.0.0 / 2.0.0 / 2.0.0** on Hex.*
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
