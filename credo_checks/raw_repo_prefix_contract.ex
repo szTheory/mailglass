@@ -185,17 +185,79 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
       tainted_var_owners:
         collect_schema_pattern_var_owners(head, schema_owners, table_source_owners),
       prefix_contract_var_owners: %{},
-      issues: []
+      issues: [],
+      scope_stack: []
     }
 
     {_ast, state} =
-      Macro.prewalk(body, initial_state, fn
-        {:|>, _pipe_meta, [lhs, {{:., _, [module_ast, function_name]}, meta, rhs_args}]} = node,
-        state ->
-          args = [lhs | List.wrap(rhs_args)]
+      Macro.traverse(
+        body,
+        initial_state,
+        fn
+          {:|>, _pipe_meta, [lhs, {{:., _, [module_ast, function_name]}, meta, rhs_args}]} = node,
+          state ->
+            args = [lhs | List.wrap(rhs_args)]
+            state = push_scope_if_needed(state, node)
 
-          {node,
-           maybe_collect_call(
+            {node,
+             maybe_collect_call(
+               update_state_for_match(
+                 state,
+                 node,
+                 schema_owners,
+                 table_source_owners,
+                 verified_prefix_helpers,
+                 mailglass_repo_aliases,
+                 mailglass_config_alias_owners
+               ),
+               meta,
+               module_ast,
+               function_name,
+               args,
+               issue_meta,
+               schema_owners,
+               table_source_owners,
+               repo_functions,
+               multi_functions,
+               projection_steps,
+               verified_prefix_helpers,
+               mailglass_repo_aliases,
+               mailglass_config_alias_owners
+             )}
+
+          {{:., _, [module_ast, function_name]}, meta, args} = node, state ->
+            state = push_scope_if_needed(state, node)
+
+            {node,
+             maybe_collect_call(
+               update_state_for_match(
+                 state,
+                 node,
+                 schema_owners,
+                 table_source_owners,
+                 verified_prefix_helpers,
+                 mailglass_repo_aliases,
+                 mailglass_config_alias_owners
+               ),
+               meta,
+               module_ast,
+               function_name,
+               List.wrap(args),
+               issue_meta,
+               schema_owners,
+               table_source_owners,
+               repo_functions,
+               multi_functions,
+               projection_steps,
+               verified_prefix_helpers,
+               mailglass_repo_aliases,
+               mailglass_config_alias_owners
+             )}
+
+          node, state ->
+            state = push_scope_if_needed(state, node)
+
+            {node,
              update_state_for_match(
                state,
                node,
@@ -204,61 +266,12 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
                verified_prefix_helpers,
                mailglass_repo_aliases,
                mailglass_config_alias_owners
-             ),
-             meta,
-             module_ast,
-             function_name,
-             args,
-             issue_meta,
-             schema_owners,
-             table_source_owners,
-             repo_functions,
-             multi_functions,
-             projection_steps,
-             verified_prefix_helpers,
-             mailglass_repo_aliases,
-             mailglass_config_alias_owners
-           )}
-
-        {{:., _, [module_ast, function_name]}, meta, args} = node, state ->
-          {node,
-           maybe_collect_call(
-             update_state_for_match(
-               state,
-               node,
-               schema_owners,
-               table_source_owners,
-               verified_prefix_helpers,
-               mailglass_repo_aliases,
-               mailglass_config_alias_owners
-             ),
-             meta,
-             module_ast,
-             function_name,
-             List.wrap(args),
-             issue_meta,
-             schema_owners,
-             table_source_owners,
-             repo_functions,
-             multi_functions,
-             projection_steps,
-             verified_prefix_helpers,
-             mailglass_repo_aliases,
-             mailglass_config_alias_owners
-           )}
-
-        node, state ->
-          {node,
-           update_state_for_match(
-             state,
-             node,
-             schema_owners,
-             table_source_owners,
-             verified_prefix_helpers,
-             mailglass_repo_aliases,
-             mailglass_config_alias_owners
-           )}
-      end)
+             )}
+        end,
+        fn node, state ->
+          {node, pop_scope_if_needed(state, node)}
+        end
+      )
 
     Enum.uniq_by(state.issues, fn issue -> {issue.line_no, issue.column, issue.trigger} end)
   end
@@ -472,6 +485,46 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          _mailglass_config_alias_owners
        ),
        do: state
+
+  defp push_scope_if_needed(state, node) do
+    if scoped_node?(node) do
+      snapshot = %{
+        tainted_var_owners: state.tainted_var_owners,
+        prefix_contract_var_owners: state.prefix_contract_var_owners
+      }
+
+      %{state | scope_stack: [snapshot | state.scope_stack]}
+    else
+      state
+    end
+  end
+
+  defp pop_scope_if_needed(state, node) do
+    if scoped_node?(node) do
+      [snapshot | scope_stack] = state.scope_stack
+
+      %{
+        state
+        | tainted_var_owners: snapshot.tainted_var_owners,
+          prefix_contract_var_owners: snapshot.prefix_contract_var_owners,
+          scope_stack: scope_stack
+      }
+    else
+      state
+    end
+  end
+
+  defp scoped_node?({:fn, _meta, _clauses}), do: true
+  defp scoped_node?({:->, _meta, _args}), do: true
+  defp scoped_node?({:case, _meta, _args}), do: true
+  defp scoped_node?({:cond, _meta, _args}), do: true
+  defp scoped_node?({:if, _meta, _args}), do: true
+  defp scoped_node?({:unless, _meta, _args}), do: true
+  defp scoped_node?({:with, _meta, _args}), do: true
+  defp scoped_node?({:for, _meta, _args}), do: true
+  defp scoped_node?({:try, _meta, _args}), do: true
+  defp scoped_node?({:receive, _meta, _args}), do: true
+  defp scoped_node?(_node), do: false
 
   defp update_tainted_var_owners(state, left, right, schema_owners, table_source_owners) do
     tainted_var_owners =
@@ -834,11 +887,11 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
          _prefix_contract_var_owners,
          _verified_prefix_helpers,
          mailglass_repo_aliases,
-         _mailglass_config_alias_owners
+         mailglass_config_alias_owners
        )
        when is_list(args) do
     if mailglass_repo_ast?(module_ast, mailglass_repo_aliases) do
-      owner_set(:core)
+      multi_opts_owners(args, mailglass_config_alias_owners)
     else
       MapSet.new()
     end
@@ -855,6 +908,51 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
       nil -> MapSet.new()
       name -> Map.get(prefix_contract_var_owners, name, MapSet.new())
     end
+  end
+
+  defp multi_opts_owners([], _mailglass_config_alias_owners), do: owner_set(:core)
+
+  defp multi_opts_owners([opts | _rest], mailglass_config_alias_owners) do
+    case explicit_prefix_override_owners(opts, mailglass_config_alias_owners) do
+      :absent -> owner_set(:core)
+      {:present, owners} -> owners
+    end
+  end
+
+  defp explicit_prefix_override_owners(opts, mailglass_config_alias_owners)
+       when is_list(opts) do
+    if Keyword.keyword?(opts) and Keyword.has_key?(opts, :prefix) do
+      {:present,
+       configured_prefix_owners(Keyword.get(opts, :prefix), mailglass_config_alias_owners)}
+    else
+      :absent
+    end
+  end
+
+  defp explicit_prefix_override_owners(
+         {{:., _, [{:__aliases__, _, [:Keyword]}, function_name]}, _meta,
+          [_opts, :prefix, prefix_ast]},
+         mailglass_config_alias_owners
+       )
+       when function_name in [:put, :put_new] do
+    {:present, configured_prefix_owners(prefix_ast, mailglass_config_alias_owners)}
+  end
+
+  defp explicit_prefix_override_owners(
+         {:|>, _meta,
+          [
+            _opts,
+            {{:., _, [{:__aliases__, _, [:Keyword]}, function_name]}, _call_meta,
+             [:prefix, prefix_ast]}
+          ]},
+         mailglass_config_alias_owners
+       )
+       when function_name in [:put, :put_new] do
+    {:present, configured_prefix_owners(prefix_ast, mailglass_config_alias_owners)}
+  end
+
+  defp explicit_prefix_override_owners(_opts, _mailglass_config_alias_owners) do
+    {:present, MapSet.new()}
   end
 
   defp projection_step_owners(step_name, projection_steps) do

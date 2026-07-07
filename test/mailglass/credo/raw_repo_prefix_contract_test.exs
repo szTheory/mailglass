@@ -521,6 +521,49 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "repo.one"
   end
 
+  test "rejects Repo.multi_opts with inbound prefix override for core schema reads" do
+    source = """
+    defmodule Mailglass.Webhook.BadInboundMultiOptsPrefixForCoreRead do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Repo
+
+      def fetch(repo) do
+        repo.one(
+          from(event in Event, limit: 1),
+          Repo.multi_opts(prefix: MailglassInbound.Config.schema())
+        )
+      end
+    end
+    """
+
+    issues =
+      run_check(source, "lib/mailglass/webhook/bad_inbound_multi_opts_prefix_for_core_read.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "rejects Repo.multi_opts with literal prefix override for core schema reads" do
+    source = """
+    defmodule Mailglass.Webhook.BadLiteralMultiOptsPrefixForCoreRead do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Repo
+
+      def fetch(repo) do
+        repo.one(from(event in Event, limit: 1), Repo.multi_opts(prefix: "public"))
+      end
+    end
+    """
+
+    issues =
+      run_check(source, "lib/mailglass/webhook/bad_literal_multi_opts_prefix_for_core_read.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
   test "rejects core config prefix for inbound schema reads" do
     source = """
     defmodule MailglassInbound.Internal.BadCorePrefixForInboundRead do
@@ -538,6 +581,60 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
         source,
         "mailglass_inbound/lib/mailglass_inbound/internal/bad_core_prefix_for_inbound_read.ex"
       )
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "rejects Repo.multi_opts with core prefix override for inbound schema reads" do
+    source = """
+    defmodule MailglassInbound.Internal.BadCoreMultiOptsPrefixForInboundRead do
+      import Ecto.Query
+      alias Mailglass.Repo
+      alias MailglassInbound.InboundRecords.InboundRecord
+
+      def fetch(repo) do
+        repo.one(
+          from(record in InboundRecord, limit: 1),
+          Repo.multi_opts(prefix: Mailglass.Config.schema())
+        )
+      end
+    end
+    """
+
+    issues =
+      run_check(
+        source,
+        "mailglass_inbound/lib/mailglass_inbound/internal/bad_core_multi_opts_prefix_for_inbound_read.ex"
+      )
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "does not leak trusted opts binding out of anonymous function scope" do
+    source = """
+    defmodule Mailglass.Webhook.BadFnScopeOptsLeak do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Repo
+
+      def fetch(repo) do
+        query = from(event in Event, limit: 1)
+        opts = []
+
+        _ =
+          fn ->
+            opts = Repo.multi_opts()
+            opts
+          end
+
+        repo.one(query, opts)
+      end
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_fn_scope_opts_leak.ex")
 
     assert length(issues) == 1
     assert hd(issues).trigger == "repo.one"

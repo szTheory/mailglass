@@ -112,6 +112,15 @@ jobs:
         env:
           MAILGLASS_SCHEMA: ${{ matrix.schema }}
         run: mix test --warnings-as-errors --exclude requires_workspace
+      - name: Install inbound deps for focused schema-prefix proof
+        # `mix verify.schema_prefix` is a root alias but delegates one focused
+        # contract test into mailglass_inbound, whose deps are managed separately.
+        working-directory: mailglass_inbound
+        run: mix deps.get
+      - name: Run focused schema-prefix proof
+        env:
+          MAILGLASS_SCHEMA: ${{ matrix.schema }}
+        run: mix verify.schema_prefix
 
   # LD-13 floor-coincidence invariant:
   # This row tests the LATEST Elixir/OTP line (advisory, non-blocking, push+cron only).
