@@ -140,6 +140,45 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
     assert hd(issues).trigger == "repo.one"
   end
 
+  test "flags literal same-module query helper return without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadLiteralModuleHelperReturn do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+
+      def fetch(repo) do
+        repo.one(Mailglass.Webhook.BadLiteralModuleHelperReturn.event_query())
+      end
+
+      def event_query, do: from(event in Event, limit: 1)
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_literal_module_helper_return.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
+  test "flags same-module alias query helper return without prefix opts" do
+    source = """
+    defmodule Mailglass.Webhook.BadAliasModuleHelperReturn do
+      import Ecto.Query
+      alias Mailglass.Events.Event
+      alias Mailglass.Webhook.BadAliasModuleHelperReturn, as: ThisModule
+
+      def fetch(repo), do: repo.one(ThisModule.event_query())
+
+      def event_query, do: from(event in Event, limit: 1)
+    end
+    """
+
+    issues = run_check(source, "lib/mailglass/webhook/bad_alias_module_helper_return.ex")
+
+    assert length(issues) == 1
+    assert hd(issues).trigger == "repo.one"
+  end
+
   test "flags renamed core schema alias without prefix opts" do
     source = """
     defmodule Mailglass.Webhook.BadAliasAsRead do
@@ -154,6 +193,19 @@ defmodule Mailglass.Credo.RawRepoPrefixContractTest do
 
     assert length(issues) == 1
     assert hd(issues).trigger == "repo.one"
+  end
+
+  test "allows unrelated schema with same tail alias" do
+    source = """
+    defmodule Mailglass.Webhook.UnrelatedEventRead do
+      import Ecto.Query
+      alias Other.Event
+
+      def fetch(repo), do: repo.one(from(event in Event, limit: 1))
+    end
+    """
+
+    assert run_check(source, "lib/mailglass/webhook/unrelated_event_read.ex") == []
   end
 
   test "flags renamed inbound schema alias without prefix opts" do

@@ -121,6 +121,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     schema_owners =
       schema_owners
       |> merge_owner_maps(collect_schema_alias_owners(ast, schema_owners))
+      |> put_registry_owners(local_module_aliases_key(), collect_local_module_aliases(ast))
 
     schema_owners =
       schema_owners
@@ -733,14 +734,8 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
         {:__aliases__, _, parts} = node, owners when is_list(parts) ->
           alias_string = Enum.join(parts, ".")
-          tail = parts |> List.last() |> Atom.to_string()
 
-          owners =
-            owners
-            |> merge_owners(Map.get(schema_owners, alias_string, MapSet.new()))
-            |> merge_owners(Map.get(schema_owners, tail, MapSet.new()))
-
-          {node, owners}
+          {node, merge_owners(owners, Map.get(schema_owners, alias_string, MapSet.new()))}
 
         table, owners when is_binary(table) ->
           {table, merge_owners(owners, Map.get(table_source_owners, table, MapSet.new()))}
@@ -765,6 +760,13 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
             end
 
           {node, owners}
+
+        {{:., _, [module_ast, function_name]}, _meta, args} = node, owners
+        when is_atom(function_name) and is_list(args) ->
+          helper_owners =
+            remote_local_helper_owners(module_ast, function_name, length(args), schema_owners)
+
+          {node, merge_owners(owners, helper_owners)}
 
         node, owners ->
           case variable_name(node) do
@@ -1169,19 +1171,108 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
     alias_owners
   end
 
+  defp collect_schema_alias_owner([alias_ast], alias_owners, schema_owners) do
+    alias_ast
+    |> alias_entries()
+    |> Enum.reduce(alias_owners, fn {source_name, alias_name}, owners ->
+      put_schema_alias_entry(owners, source_name, alias_name, schema_owners)
+    end)
+  end
+
   defp collect_schema_alias_owner([alias_ast, opts], alias_owners, schema_owners)
        when is_list(opts) do
     as_name = alias_as_name(Keyword.get(opts, :as))
-    owners = owners_for_ast(alias_ast, schema_owners, %{}, %{})
 
-    if is_binary(as_name) do
-      put_registry_owners(alias_owners, as_name, owners)
+    with true <- is_binary(as_name),
+         [{source_name, _default_alias_name}] <- alias_entries(alias_ast) do
+      put_schema_alias_entry(alias_owners, source_name, as_name, schema_owners)
     else
-      alias_owners
+      _other -> alias_owners
     end
   end
 
   defp collect_schema_alias_owner(_args, alias_owners, _schema_owners), do: alias_owners
+
+  defp put_schema_alias_entry(alias_owners, source_name, alias_name, schema_owners) do
+    alias_owners =
+      alias_owners
+      |> put_registry_owners(alias_name, Map.get(schema_owners, source_name, MapSet.new()))
+
+    schema_owners
+    |> Enum.reduce(alias_owners, fn
+      {schema_name, owners}, aliases when is_binary(schema_name) ->
+        prefix = source_name <> "."
+
+        if String.starts_with?(schema_name, prefix) do
+          alias_suffix = String.replace_prefix(schema_name, prefix, "")
+          put_registry_owners(aliases, alias_name <> "." <> alias_suffix, owners)
+        else
+          aliases
+        end
+
+      _entry, aliases ->
+        aliases
+    end)
+  end
+
+  defp collect_local_module_aliases(ast) do
+    defined_modules = collect_defined_module_names(ast)
+    base_aliases = MapSet.put(defined_modules, "__MODULE__")
+
+    {_ast, aliases} =
+      Macro.prewalk(ast, base_aliases, fn
+        {:alias, _meta, args} = node, aliases ->
+          {node, collect_local_module_alias(args, aliases, defined_modules)}
+
+        node, aliases ->
+          {node, aliases}
+      end)
+
+    aliases
+  end
+
+  defp collect_defined_module_names(ast) do
+    {_ast, module_names} =
+      Macro.prewalk(ast, MapSet.new(), fn
+        {:defmodule, _meta, [module_ast, body_kw]} = node, module_names when is_list(body_kw) ->
+          case alias_ast_name(module_ast) do
+            nil -> {node, module_names}
+            module_name -> {node, MapSet.put(module_names, module_name)}
+          end
+
+        node, module_names ->
+          {node, module_names}
+      end)
+
+    module_names
+  end
+
+  defp collect_local_module_alias([alias_ast], aliases, defined_modules) do
+    alias_ast
+    |> alias_entries()
+    |> Enum.reduce(aliases, fn {source_name, alias_name}, acc ->
+      if MapSet.member?(defined_modules, source_name) do
+        MapSet.put(acc, alias_name)
+      else
+        acc
+      end
+    end)
+  end
+
+  defp collect_local_module_alias([alias_ast, opts], aliases, defined_modules)
+       when is_list(opts) do
+    as_name = alias_as_name(Keyword.get(opts, :as))
+
+    with true <- is_binary(as_name),
+         [{source_name, _default_alias_name}] <- alias_entries(alias_ast),
+         true <- MapSet.member?(defined_modules, source_name) do
+      MapSet.put(aliases, as_name)
+    else
+      _other -> aliases
+    end
+  end
+
+  defp collect_local_module_alias(_args, aliases, _defined_modules), do: aliases
 
   defp collect_schema_attribute_owners(ast, schema_owners, table_source_owners) do
     {_ast, attribute_owners} =
@@ -1294,6 +1385,30 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp local_helper_owners(schema_owners, function_name, arity) do
     Map.get(schema_owners, local_helper_owner_key(function_name, arity), MapSet.new())
   end
+
+  defp remote_local_helper_owners(module_ast, function_name, arity, schema_owners) do
+    if same_local_module_ast?(module_ast, schema_owners) do
+      local_helper_owners(schema_owners, function_name, arity)
+    else
+      MapSet.new()
+    end
+  end
+
+  defp same_local_module_ast?({:__MODULE__, _, _context}, _schema_owners), do: true
+
+  defp same_local_module_ast?(module_ast, schema_owners) do
+    case alias_ast_name(module_ast) do
+      nil ->
+        false
+
+      module_name ->
+        schema_owners
+        |> Map.get(local_module_aliases_key(), MapSet.new())
+        |> MapSet.member?(module_name)
+    end
+  end
+
+  defp local_module_aliases_key, do: :local_module_aliases
 
   defp module_attribute_owner_key(attribute_name), do: {:module_attribute, attribute_name}
 
@@ -1633,6 +1748,36 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
   defp alias_as_name(name) when is_atom(name), do: Atom.to_string(name)
   defp alias_as_name(_name), do: nil
 
+  defp alias_entries({:__aliases__, _, parts}) when is_list(parts) do
+    alias_name = parts |> List.last() |> Atom.to_string()
+
+    [{Enum.join(parts, "."), alias_name}]
+  end
+
+  defp alias_entries({{:., _, [base_ast, :{}]}, _meta, entries}) when is_list(entries) do
+    case alias_ast_name(base_ast) do
+      nil ->
+        []
+
+      base_name ->
+        Enum.flat_map(entries, fn entry ->
+          case alias_ast_name(entry) do
+            nil ->
+              []
+
+            entry_name ->
+              alias_name = entry_name |> String.split(".") |> List.last()
+              [{base_name <> "." <> entry_name, alias_name}]
+          end
+        end)
+    end
+  end
+
+  defp alias_entries(_alias_ast), do: []
+
+  defp alias_ast_name({:__aliases__, _, parts}) when is_list(parts), do: Enum.join(parts, ".")
+  defp alias_ast_name(_module_ast), do: nil
+
   defp facade_repo_ast?(
          {:__aliases__, _, [:Mailglass, :Repo]},
          _facade_repo_aliases
@@ -1684,9 +1829,7 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
         module_name ->
           owner = schema_owner(schema)
 
-          owners
-          |> put_registry_owners(module_name, owner_set(owner))
-          |> put_registry_owners(module_tail_name(module_name), owner_set(owner))
+          put_registry_owners(owners, module_name, owner_set(owner))
       end
     end)
   end
@@ -1711,20 +1854,6 @@ defmodule Mailglass.Credo.RawRepoPrefixContract do
 
   defp module_name(other) when is_binary(other), do: other
   defp module_name(_other), do: nil
-
-  defp module_tail_name(module) when is_atom(module) do
-    module
-    |> module_name()
-    |> module_tail_name()
-  end
-
-  defp module_tail_name(module) when is_binary(module) do
-    module
-    |> String.split(".")
-    |> List.last()
-  end
-
-  defp module_tail_name(_other), do: nil
 
   defp schema_owner(schema) when is_atom(schema) do
     schema
