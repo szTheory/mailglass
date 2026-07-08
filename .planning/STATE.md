@@ -5,10 +5,10 @@ milestone_name: Postgres + Admin URL Hardening)
 current_phase: 140
 current_phase_name: verification-docs-reconciliation-and-milestone-closeout
 status: executing
-stopped_at: Completed 140-02-PLAN.md
-last_updated: "2026-07-08T17:31:10.213Z"
+stopped_at: Executing 140-03-PLAN.md
+last_updated: "2026-07-08T17:40:00Z"
 last_activity: 2026-07-08
-last_activity_desc: Phase 140 execution started
+last_activity_desc: Phase 140 closeout artifacts in progress
 progress:
   total_phases: 3
   completed_phases: 2
@@ -30,16 +30,16 @@ See: .planning/PROJECT.md (updated 2026-07-07 - after Phase 138 completion)
 
 Phase: 140 (verification-docs-reconciliation-and-milestone-closeout) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
-Last activity: 2026-07-08 -- Phase 140 execution started
+Status: Closeout artifacts in progress; focused proof and docs truth ready for verification report
+Last activity: 2026-07-08 -- Phase 140 closeout artifacts in progress
 
 ## v2.1 Milestone Intent
 
 - **Maintenance/hardening only (NOT feature growth).** v2.0 shipped the dedicated `mailglass` Postgres
   schema, but its release debug campaign proved a real class of missing-`prefix:` bugs can be masked when
-  tests patch the DB `search_path`. Admin asset URL handling also has a partial mount-aware fix, but lacks
-  broad first-load/deep-link proof across preview/operator/inbound/gallery/error paths and arbitrary mount
-  roots.
+  tests patch the DB `search_path`. Phase 138 now proves runtime schema-prefix behavior under hostile
+  no-search-path conditions, and Phase 139 now proves admin asset first-load/deep-link styling across
+  preview/operator/inbound/gallery/error paths and arbitrary mount roots.
 
 - **Goal.** Make schema-isolated runtime paths and admin first-load asset URLs fail closed with focused
   gates, while avoiding product capability growth, UI redesign, router API churn, or a full no-search-path
@@ -63,6 +63,10 @@ Last activity: 2026-07-08 -- Phase 140 execution started
 
 - **No full no-search-path suite migration.** Create the focused fail-closed lane and static guard first;
   broader fixture cleanup stays future work unless it becomes necessary to make the focused proof honest.
+
+- **Deferred outside v2.1 closeout.** Broader UI verification discipline, SEED-003 ecosystem integrations,
+  whole-suite no-search-path fixture cleanup, release ceremony, and trigger-based cowlib advisory allowlist
+  cleanup remain future or maintenance work, not Phase 140 implementation scope.
 
 - **Phase numbers continue at 138.** v2.0's 132-137 artifacts are shipped history.
 
@@ -275,6 +279,7 @@ release debug campaign.
 - [Phase 140]: Use the existing Phase 139 ExUnit/token/bundle lanes and serialized Playwright `admin asset hard load` grep as admin asset proof. — This keeps Phase 140 on the focused network and computed-style proof boundary without adding screenshot, pixel-diff, route, CSS, or API work.
 - [Phase 140]: Public demo docs use observable regression guidance and avoid mount-path implementation names. — Plan 140-02 reconciled DOC-01 without exposing maintainer internals in user-facing troubleshooting copy.
 - [Phase 140]: DOC-01 is guarded by a narrow ExUnit docs-contract assertion over the three target files. — The guard reads guides/run-the-demo.md, mailglass_admin/docs/design-system.md, and the backlog seed directly instead of adding broad prose parsing.
+- [Phase 140]: DOC-02 is satisfied by keeping active planning artifacts narrow and explicit. — Broader UI verification discipline, SEED-003 ecosystem integrations, whole-suite no-search-path fixture cleanup, release ceremony, and the cowlib advisory allowlist cleanup remain deferred outside Phase 140.
 
 ## Quick Tasks Completed
 

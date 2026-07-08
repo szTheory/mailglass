@@ -33,8 +33,9 @@
 
 **Milestone goal:** Close two bounded post-v2.0 hardening gaps without product growth: schema-prefix
 runtime correctness must not depend on connection `search_path`, and admin stylesheet URLs must be proven
-on hard refreshes/deep links across mount paths. Broader UI verification discipline and ecosystem
-integrations are explicitly deferred.
+on hard refreshes/deep links across mount paths. Broader UI verification discipline, SEED-003 ecosystem
+integrations, whole-suite no-search-path fixture cleanup, and release ceremony remain deferred outside
+v2.1 closeout.
 
 - [x] **Phase 138: Schema-prefix no-search-path hardening** - Fix concrete missing-prefix risks found after (completed 2026-07-07)
   v2.0, add hostile runtime proof where `search_path` does not include the configured schema, and add a
@@ -163,8 +164,8 @@ Plans:
 2. Stale docs/backlog entries no longer claim the admin relative-asset hard-refresh issue remains open once
    the proof exists.
 
-3. ROADMAP/REQUIREMENTS/PROJECT/STATE keep broader UI verification discipline and ecosystem integrations
-   deferred.
+3. ROADMAP/REQUIREMENTS/PROJECT/STATE keep broader UI verification discipline, SEED-003 ecosystem
+   integrations, whole-suite no-search-path fixture cleanup, and release ceremony deferred.
 
 4. Milestone closeout can run with no unresolved v2.1 requirement drift.
 

@@ -60,7 +60,7 @@
   relative-asset backlog item no longer claim hard-refresh/deep-link styling remains unresolved after the
   proof passes.
 
-- [ ] **DOC-02**: Active planning artifacts keep broader UI verification discipline and ecosystem
+- [x] **DOC-02**: Active planning artifacts keep broader UI verification discipline and ecosystem
   integrations explicitly deferred so v2.1 stays a narrow hardening milestone.
 
 ---
@@ -82,6 +82,8 @@
 - SEED-003 ecosystem integrations, Cloudflare routing, synthetic inbound dev UI, `gen_smtp`, or additional
   provider work.
 
+- Trigger-based dependency/security maintenance such as the cowlib advisory allowlist cleanup.
+
 ## Future Requirements (deferred, not this milestone)
 
 - Broader UI verification discipline after v2.1, including any full admin visual/a11y sweep the maintainer
@@ -89,6 +91,7 @@
 
 - A whole-suite no-search-path fixture cleanup if the focused lane exposes broader systemic drift.
 - Ecosystem integrations only with real adopter pull.
+- Release ceremony and milestone archive work through `/gsd-complete-milestone`, not Phase 140 execution.
 
 ---
 
@@ -108,8 +111,8 @@
 | AAU-04 | Phase 139 | Complete |
 | GATE-03 | Phase 139 | Complete |
 | DOC-01 | Phase 140 | Complete |
-| DOC-02 | Phase 140 | Pending |
+| DOC-02 | Phase 140 | Complete |
 
 ---
 
-*Last updated: 2026-07-07 - v2.1 requirements defined.*
+*Last updated: 2026-07-08 - DOC-01/DOC-02 reconciled for v2.1 closeout.*
