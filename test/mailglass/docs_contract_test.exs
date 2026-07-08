@@ -185,7 +185,9 @@ defmodule Mailglass.DocsContractTest do
 
       for phrase <- stale_phrases do
         refute demo =~ phrase, "run-the-demo.md still contains stale asset wording: #{phrase}"
-        refute design_system =~ phrase, "design-system.md still contains stale asset wording: #{phrase}"
+
+        refute design_system =~ phrase,
+               "design-system.md still contains stale asset wording: #{phrase}"
 
         refute backlog =~ phrase,
                "admin-relative-asset-url-styling.md still contains stale asset wording: #{phrase}"
