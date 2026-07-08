@@ -142,7 +142,12 @@ baseline work.
 scope explicit, and prepare v2.1 for audit/archive.
 **Depends on:** Phases 138 and 139.
 **Requirements:** DOC-01, DOC-02, all gate requirements
-**Plans:** TBD by `/gsd-plan-phase 140`
+**Plans:** 3 plans
+
+Plans:
+- [ ] 140-01-PLAN.md — Rerun and record focused schema-prefix/admin asset gate evidence.
+- [ ] 140-02-PLAN.md — Reconcile admin asset docs/backlog and add a docs guard.
+- [ ] 140-03-PLAN.md — Update active planning artifacts and create the closeout verification report.
 
 **Success Criteria** (what must be TRUE):
 
