@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Postgres + Admin URL Hardening)
 status: planning
-stopped_at: Phase 140 context gathered (assumptions mode)
-last_updated: "2026-07-08T14:10:06.891Z"
+stopped_at: Phase 140 UI-SPEC approved
+last_updated: "2026-07-08T15:51:00.302Z"
 last_activity: 2026-07-08
 progress:
   total_phases: 3
@@ -448,9 +448,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-08T14:10:06.885Z
-**Stopped at:** Phase 140 context gathered (assumptions mode)
-**Resume file:** .planning/phases/140-verification-docs-reconciliation-and-milestone-closeout/140-CONTEXT.md
+**Last session:** 2026-07-08T15:51:00.283Z
+**Stopped at:** Phase 140 UI-SPEC approved
+**Resume file:** .planning/phases/140-verification-docs-reconciliation-and-milestone-closeout/140-UI-SPEC.md
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
