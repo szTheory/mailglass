@@ -475,17 +475,17 @@ expect(styles.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
 | A1 | The planner can choose exact test filenames such as `admin_asset_url_test.exs` and `admin-assets.spec.js`. [ASSUMED] | Architecture Patterns | Low; CONTEXT grants file placement discretion, but existing naming conventions may prefer extending existing files. |
 | A2 | `fontFamily` containing `Inter` is a stable enough computed-style signal for all target surfaces after fonts load. [ASSUMED] | Code Examples | Medium; if browser reports fallback stack before webfont activation, use color/background token checks or `document.fonts.ready` instead. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should the browser asset proof live in a new focused spec or an existing spec?**
+1. **Should the browser asset proof live in a new focused spec or an existing spec? (RESOLVED)**
    - What we know: CONTEXT allows either placement. [VERIFIED: `.planning/phases/139-admin-asset-first-load-deep-link-proof/139-CONTEXT.md`]
    - What's unclear: Existing browser files are large, and a focused `admin-assets.spec.js` may be easier to grep and run. [VERIFIED: `npx playwright test --list`]
-   - Recommendation: Use a new focused spec to keep GATE-03 legible and runnable with `--grep "admin asset"`. [ASSUMED]
+   - Resolution: Use a new focused `mailglass_admin/e2e/admin-assets.spec.js` so GATE-03 remains legible and runnable with `--grep "admin asset hard load"`. [RESOLVED: 2026-07-08 plan revision]
 
-2. **Which exact computed style should be the canonical token-backed assertion?**
+2. **Which exact computed style should be the canonical token-backed assertion? (RESOLVED)**
    - What we know: existing specs already assert font weight, contrast, colors, and theme state through `getComputedStyle`. [VERIFIED: `mailglass_admin/e2e/structural.spec.js`]
    - What's unclear: Font loading can be asynchronous, so a font-family-only assertion may need `await page.evaluate(() => document.fonts.ready)`. [ASSUMED]
-   - Recommendation: Assert at least one font-family signal and one color/background token signal; wait for `document.fonts.ready` before font assertions. [ASSUMED]
+   - Resolution: Wait for `document.fonts.ready`, assert `document.fonts.check()` and body `fontFamily` for Inter, assert a route-specific visible anchor, assert a heading typography value, and assert a token-backed semantic color or surface value; dark-theme cases also assert `data-theme="mailglass-dark"` before dark token checks. [RESOLVED: 2026-07-08 plan revision]
 
 ## Environment Availability
 

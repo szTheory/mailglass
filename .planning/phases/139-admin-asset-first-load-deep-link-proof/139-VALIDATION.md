@@ -22,7 +22,7 @@ created: 2026-07-07
 | **Quick run command** | `cd mailglass_admin && MIX_ENV=test mix test test/mailglass_admin/admin_asset_url_test.exs --warnings-as-errors` |
 | **Browser focused command** | `cd mailglass_admin && npm run test:operator-browser -- --grep "admin asset"` |
 | **Full suite command** | `cd mailglass_admin && mix verify.preview && npm run test:operator-browser` |
-| **Estimated runtime** | ~30-90 seconds for focused commands; full browser gate depends on local browser startup |
+| **Estimated runtime** | Fast ExUnit first gate should stay under the 30-second feedback target; focused Playwright remains ~30-90 seconds and is reserved for browser tasks and final gate |
 
 ---
 
@@ -30,9 +30,9 @@ created: 2026-07-07
 
 - **After every task commit:** Run the focused ExUnit asset URL test once it exists.
 - **After browser-proof task commits:** Run the focused Playwright `admin asset` grep.
-- **After every plan wave:** Run `cd mailglass_admin && mix verify.preview` plus the focused Playwright proof.
+- **After every plan wave:** Run the fast ExUnit asset URL matrix first; run the focused Playwright proof only for browser-proof waves and final gate.
 - **Before `/gsd:verify-work`:** Run `cd mailglass_admin && mix verify.preview && npm run test:operator-browser`.
-- **Max feedback latency:** 120 seconds for focused gates.
+- **Max feedback latency:** under 30 seconds for the fast ExUnit first gate; browser-proof tasks may take 30-90 seconds because they launch the serialized Playwright gate.
 
 ---
 
