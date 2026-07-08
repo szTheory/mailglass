@@ -92,11 +92,12 @@ defmodule MailglassAdmin.TokenParityTest do
 
   @tag :token_parity
   test "no raw hex in any --color-* line inside daisyUI theme selectors (TOKEN-01)", %{css: css} do
-    # Extract each [data-theme=mailglass-*] { ... } block then scan for raw hex.
-    # A line matching `--color-[a-z-]+: #[0-9a-fA-F]` is a TOKEN-01 violation.
-    refute css =~ ~r/\[data-theme=mailglass-[^\]]+\]\{[^}]*--color-[a-z-]+:\s*#[0-9a-fA-F]/s,
-           "TOKEN-01 violation: raw hex literal on a --color-* line inside a daisyUI theme block. " <>
-             "All --color-* values must reference var(--mg-*). Run mix mailglass_admin.assets.build."
+    for theme <- ["mailglass-light", "mailglass-dark"],
+        block <- theme_blocks_matching(css, ["[data-theme=#{theme}]"]) do
+      refute block =~ ~r/--color-[a-z0-9-]+:\s*#[0-9a-fA-F]/,
+             "TOKEN-01 violation: raw hex literal on a --color-* line inside #{theme}. " <>
+               "All --color-* values must reference var(--mg-*). Run mix mailglass_admin.assets.build."
+    end
   end
 
   @tag :token_parity
@@ -104,12 +105,11 @@ defmodule MailglassAdmin.TokenParityTest do
        %{css: css, tokens: tokens} do
     mismatches =
       Enum.reduce(@mapping, [], fn {{theme, slot}, {mg_token, tier}}, acc ->
-        # Check that the slot references var(--mg-*)
-        slot_pattern = slot <> ": var(" <> mg_token <> ")"
-        slot_pattern_nospace = slot <> ":var(" <> mg_token <> ")"
+        theme_block = theme_blocks_matching(css, ["[data-theme=#{theme}]"]) |> Enum.join(";")
+        slot_pattern = ~r/(^|;)#{Regex.escape(slot)}:\s*var\(#{Regex.escape(mg_token)}\)/
 
-        unless css =~ slot_pattern or css =~ slot_pattern_nospace do
-          actual = extract_slot_value(css, theme, slot)
+        unless Regex.match?(slot_pattern, theme_block) do
+          actual = extract_slot_value(theme_block, slot)
 
           [
             "#{theme} #{slot} must reference var(#{mg_token}); " <>
@@ -119,29 +119,38 @@ defmodule MailglassAdmin.TokenParityTest do
         else
           # Check oracle value: resolve mg_token from the tokens.json oracle for this tier
           token_key = String.replace_prefix(mg_token, "--mg-color-", "")
-          oracle_hex = resolve_oracle(tokens, token_key, tier)
 
-          # Extract the actual inlined value from the compiled CSS for this tier
-          actual_inlined = extract_mg_token_value(css, mg_token, tier)
+          case resolve_oracle(tokens, token_key, tier) do
+            {:ok, oracle_hex} ->
+              # Extract the actual inlined value from the compiled CSS for this tier
+              actual_inlined = extract_mg_token_value(css, mg_token, tier)
 
-          if oracle_hex != nil and actual_inlined != nil and
-               not hex_equal?(oracle_hex, actual_inlined) do
-            [
-              "#{theme} #{slot}: #{mg_token} inlined as #{actual_inlined} " <>
-                "but oracle (tokens.json #{tier}) says #{oracle_hex}. " <>
-                "Run mix mailglass_admin.assets.build after syncing brandbook/tokens.json."
-              | acc
-            ]
-          else
-            if oracle_hex != nil and actual_inlined == nil do
+              cond do
+                is_nil(actual_inlined) ->
+                  [
+                    "#{theme} #{slot}: #{mg_token} not found as inlined declaration in compiled CSS. " <>
+                      "Run mix mailglass_admin.assets.build."
+                    | acc
+                  ]
+
+                not hex_equal?(oracle_hex, actual_inlined) ->
+                  [
+                    "#{theme} #{slot}: #{mg_token} inlined as #{actual_inlined} " <>
+                      "but oracle (tokens.json #{tier}) says #{oracle_hex}. " <>
+                      "Run mix mailglass_admin.assets.build after syncing brandbook/tokens.json."
+                    | acc
+                  ]
+
+                true ->
+                  acc
+              end
+
+            {:error, reason} ->
               [
-                "#{theme} #{slot}: #{mg_token} not found as inlined declaration in compiled CSS. " <>
-                  "Run mix mailglass_admin.assets.build."
+                "#{theme} #{slot}: #{mg_token} has no token oracle (#{reason}). " <>
+                  "Update brandbook/tokens.json or the parity mapping."
                 | acc
               ]
-            else
-              acc
-            end
           end
         end
       end)
@@ -159,14 +168,18 @@ defmodule MailglassAdmin.TokenParityTest do
 
     case raw do
       nil ->
-        nil
+        {:error, "missing color.#{tier_str}.#{token_key}"}
 
       "{palette." <> rest ->
         palette_key = String.replace_suffix(rest, "}", "")
-        get_in(tokens, ["palette", palette_key, "$value"])
+
+        case get_in(tokens, ["palette", palette_key, "$value"]) do
+          nil -> {:error, "missing palette.#{palette_key}"}
+          hex -> {:ok, hex}
+        end
 
       hex ->
-        hex
+        {:ok, hex}
     end
   end
 
@@ -221,12 +234,12 @@ defmodule MailglassAdmin.TokenParityTest do
 
   defp normalize_hex(hex), do: hex
 
-  # Extract the value of a slot from the compiled CSS theme block.
-  defp extract_slot_value(css, theme, slot) do
-    pattern = ~r/\[data-theme=#{Regex.escape(theme)}\]\{[^}]*#{Regex.escape(slot)}:\s*([^;,}]+)/s
+  # Extract the value of a slot from an already selected compiled CSS theme block.
+  defp extract_slot_value(theme_block, slot) do
+    pattern = ~r/(^|;)#{Regex.escape(slot)}:\s*([^;,}]+)/
 
-    case Regex.run(pattern, css, capture: :all_but_first) do
-      [value | _] -> String.trim(value)
+    case Regex.run(pattern, theme_block, capture: :all_but_first) do
+      [_prefix, value | _] -> String.trim(value)
       nil -> "(slot not found in theme block)"
     end
   end
