@@ -145,8 +145,16 @@ scope explicit, and prepare v2.1 for audit/archive.
 **Plans:** 3 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 140-01-PLAN.md — Rerun and record focused schema-prefix/admin asset gate evidence.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 140-02-PLAN.md — Reconcile admin asset docs/backlog and add a docs guard.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 140-03-PLAN.md — Update active planning artifacts and create the closeout verification report.
 
 **Success Criteria** (what must be TRUE):
