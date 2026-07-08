@@ -5,12 +5,30 @@ const baseURL =
   process.env.OPERATOR_BASE_URL ||
   `http://127.0.0.1:${process.env.BROWSER_SERVER_PORT || "4101"}`;
 
+const tokenBackgrounds = {
+  light: new Set([
+    "rgb(248, 251, 253)",
+    "rgb(255, 255, 255)",
+    "rgb(234, 246, 251)",
+    "rgb(221, 242, 247)"
+  ]),
+  dark: new Set([
+    "rgb(13, 27, 42)",
+    "rgb(21, 37, 56)",
+    "rgb(31, 48, 73)",
+    "rgb(10, 21, 33)",
+    "rgb(27, 62, 85)"
+  ])
+};
+
 const routeCases = [
   {
     name: "preview index",
     path: "/dev/mail",
     mountRoot: "/dev/mail",
     access: "public",
+    colorTheme: "light",
+    anchor: page => page.getByTestId("preview-shell"),
     ready: async page => {
       await expect(page.getByTestId("preview-shell")).toBeVisible();
     }
@@ -20,6 +38,9 @@ const routeCases = [
     path: "/dev/mail?theme=dark",
     mountRoot: "/dev/mail",
     access: "public",
+    colorTheme: "dark",
+    expectedRootTheme: "mailglass-dark",
+    anchor: page => page.getByTestId("preview-shell"),
     ready: async page => {
       await expect(page.getByTestId("preview-shell")).toBeVisible();
     }
@@ -29,6 +50,9 @@ const routeCases = [
     path: "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=375&theme=dark",
     mountRoot: "/dev/mail",
     access: "public",
+    colorTheme: "dark",
+    expectedRootTheme: "mailglass-dark",
+    anchor: page => page.getByTestId("preview-shell"),
     ready: async page => {
       await expect(page.getByTestId("preview-shell")).toBeVisible();
       await expect(page.getByTestId("preview-header-controls")).toBeVisible();
@@ -39,6 +63,8 @@ const routeCases = [
     path: "/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__?theme=light",
     mountRoot: "/dev/mail",
     access: "public",
+    colorTheme: "light",
+    anchor: page => page.getByTestId("preview-render-error"),
     ready: async page => {
       await expect(page.getByTestId("preview-shell")).toBeVisible();
       await expect(page.getByTestId("preview-render-error")).toBeVisible();
@@ -49,6 +75,8 @@ const routeCases = [
     path: "/dev/mail/gallery",
     mountRoot: "/dev/mail",
     access: "public",
+    colorTheme: "light",
+    anchor: page => page.getByRole("heading", { name: "Component Gallery", level: 1 }),
     ready: async page => {
       await expect(page.getByRole("heading", { name: "Component Gallery", level: 1 })).toBeVisible();
     }
@@ -58,6 +86,8 @@ const routeCases = [
     path: "/ops/mail",
     mountRoot: "/ops/mail",
     access: "operator",
+    colorTheme: "light",
+    anchor: page => page.getByRole("heading", { name: "Operator overview", exact: true }),
     ready: async page => {
       await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
     }
@@ -67,6 +97,8 @@ const routeCases = [
     path: `/ops/mail?tenant_id=${tenantId}&view=deliveries&status=failed`,
     mountRoot: "/ops/mail",
     access: "operator",
+    colorTheme: "light",
+    anchor: page => page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 }),
     ready: async page => {
       await expect(
         page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
@@ -78,6 +110,8 @@ const routeCases = [
     path: "/ops/mail/inbound",
     mountRoot: "/ops/mail",
     access: "operator",
+    colorTheme: "light",
+    anchor: page => page.getByRole("heading", { name: "Inbound records", level: 1 }),
     ready: async page => {
       await expect(page.getByRole("heading", { name: "Inbound records", level: 1 })).toBeVisible();
     }
@@ -87,6 +121,8 @@ const routeCases = [
     path: `/ops/mail/inbound?tenant_id=${tenantId}&provider=ses`,
     mountRoot: "/ops/mail",
     access: "operator",
+    colorTheme: "light",
+    anchor: page => page.getByRole("heading", { name: "Inbound records", level: 1 }),
     ready: async page => {
       await expect(page.getByRole("heading", { name: "Inbound records", level: 1 })).toBeVisible();
     }
@@ -96,6 +132,9 @@ const routeCases = [
     path: "/alt/dev/console/MailglassAdmin.Fixtures.HappyMailer/welcome_default?theme=dark",
     mountRoot: "/alt/dev/console",
     access: "public",
+    colorTheme: "dark",
+    expectedRootTheme: "mailglass-dark",
+    anchor: page => page.getByTestId("preview-shell"),
     ready: async page => {
       await expect(page.getByTestId("preview-shell")).toBeVisible();
       await expect(page.getByTestId("preview-header-controls")).toBeVisible();
@@ -106,6 +145,8 @@ const routeCases = [
     path: `/secure/console?tenant_id=${tenantId}&view=deliveries`,
     mountRoot: "/secure/console",
     access: "operator",
+    colorTheme: "light",
+    anchor: page => page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 }),
     ready: async page => {
       await expect(
         page.getByRole("heading", { name: "Deliveries", exact: true, level: 1 })
@@ -117,6 +158,8 @@ const routeCases = [
     path: `/secure/console/inbound?tenant_id=${tenantId}&provider=ses`,
     mountRoot: "/secure/console",
     access: "operator",
+    colorTheme: "light",
+    anchor: page => page.getByRole("heading", { name: "Inbound records", level: 1 }),
     ready: async page => {
       await expect(page.getByRole("heading", { name: "Inbound records", level: 1 })).toBeVisible();
     }
@@ -239,6 +282,62 @@ function collectAssetResponses(page, expectedMountRoot) {
   };
 }
 
+async function assertTokenBackedStyles(page, routeCase) {
+  await page.evaluate(() => document.fonts.ready.then(() => true));
+
+  const fontChecks = await page.evaluate(() => ({
+    interBody: document.fonts.check("400 14px Inter"),
+    interHeading: document.fonts.check("700 20px 'Inter Tight'")
+  }));
+
+  expect(fontChecks.interBody, `${routeCase.name} Inter body font is available`).toBeTruthy();
+  expect(fontChecks.interHeading, `${routeCase.name} Inter Tight heading font is available`).toBeTruthy();
+
+  if (routeCase.expectedRootTheme === "mailglass-dark") {
+    await expect(
+      page.locator("html"),
+      `${routeCase.name} dark query sets root theme before color checks`
+    ).toHaveAttribute("data-theme", "mailglass-dark");
+  }
+
+  await expect(routeCase.anchor(page), `${routeCase.name} visible style anchor`).toBeVisible();
+
+  const bodyStyle = await page.locator("body").evaluate(el => {
+    const style = getComputedStyle(el);
+    return {
+      fontFamily: style.fontFamily,
+      fontWeight: style.fontWeight
+    };
+  });
+
+  expect(bodyStyle.fontFamily, `${routeCase.name} body font family`).toContain("Inter");
+  expect(bodyStyle.fontWeight, `${routeCase.name} body font weight`).toBe("400");
+
+  const headingStyle = await page.getByRole("heading").first().evaluate(el => {
+    const style = getComputedStyle(el);
+    return {
+      fontFamily: style.fontFamily,
+      fontWeight: style.fontWeight
+    };
+  });
+
+  expect(headingStyle.fontFamily, `${routeCase.name} heading font family`).toContain("Inter Tight");
+  expect(headingStyle.fontWeight, `${routeCase.name} heading font weight`).toBe("700");
+
+  const rootBackgroundColor = await page.locator("html").evaluate(el => {
+    return getComputedStyle(el).backgroundColor;
+  });
+  const expectedBackgrounds = tokenBackgrounds[routeCase.colorTheme || "light"];
+
+  expect(
+    expectedBackgrounds.has(rootBackgroundColor),
+    `${routeCase.name} root background ${rootBackgroundColor} must match ${routeCase.colorTheme} token-backed values`
+  ).toBeTruthy();
+  expect(rootBackgroundColor, `${routeCase.name} root background is not browser default`).not.toBe(
+    "rgba(0, 0, 0, 0)"
+  );
+}
+
 async function assertDirectAssetLoad(page, routeCase) {
   if (routeCase.access === "operator") {
     await loginOperatorForAssetRoute(page, routeCase.path);
@@ -253,6 +352,7 @@ async function assertDirectAssetLoad(page, routeCase) {
     await routeCase.ready(page);
     await page.evaluate(() => document.fonts.ready.then(() => true));
     await assets.assert(routeCase);
+    await assertTokenBackedStyles(page, routeCase);
   } finally {
     assets.dispose();
   }
