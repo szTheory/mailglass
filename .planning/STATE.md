@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Postgres + Admin URL Hardening)
-status: executing
-stopped_at: Completed 139-01-PLAN.md
-last_updated: "2026-07-08T13:15:49.452Z"
+status: verifying
+stopped_at: Completed 139-02-PLAN.md
+last_updated: "2026-07-08T13:28:16.213Z"
 last_activity: 2026-07-08
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
-  percent: 33
+  completed_plans: 6
+  percent: 67
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-07-07 - after Phase 138 completion)
 
 Phase: 139 (admin-asset-first-load-deep-link-proof) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-08
 
 ## v2.1 Milestone Intent
@@ -265,6 +265,9 @@ release debug campaign.
 - [Phase 138-04]: Use cmd mix test for the second root ExUnit file in verify.schema_prefix so Mix task deduplication cannot skip the RawRepoPrefixContract test.
 - [Phase 139]: 139-01 preserved the existing admin asset mount-path strategy — The first-HTML route matrix passed without production changes, so MountPathHook -> MountPath.base/1 -> Layouts.css_url/1 remains the source of stylesheet href generation.
 - [Phase 139]: 139-01 alternate admin roots use test-only macro reuse — The alternate roots are mounted through mailglass_admin_routes/2 and mailglass_operator_routes/2 with unique live_session_name values, preserving the public router API and macro-scoped asset routes.
+- [Phase 139-02]: Kept browser asset robustness proof in a focused Playwright spec under the existing serialized operator browser gate.
+- [Phase 139-02]: Operator/inbound asset cases authenticate through existing browser support routes, then attach network listeners before direct page.goto(targetPath).
+- [Phase 139-02]: Production asset routing, CSS, tokens, HEEx markup, package versions, and router macro APIs stayed unchanged; proof only.
 
 ## Quick Tasks Completed
 
@@ -417,6 +420,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 138 P03 | 10 min | 2 tasks | 7 files |
 | Phase 138 P04 | 3 min | 2 tasks | 2 files |
 | Phase 139 P01 | 5 min | 2 tasks | 2 files |
+| Phase 139 P02 | 6 min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -444,8 +448,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-08T13:15:25.717Z
-**Stopped at:** Completed 139-01-PLAN.md
+**Last session:** 2026-07-08T13:27:34.401Z
+**Stopped at:** Completed 139-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

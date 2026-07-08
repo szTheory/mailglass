@@ -34,13 +34,13 @@
   query deep-link routes emits a stylesheet `href` rooted at the current admin mount path, never a bare
   relative path.
 
-- [ ] **AAU-02**: Hard refreshes and direct deep links for those routes load CSS and font assets with 200
+- [x] **AAU-02**: Hard refreshes and direct deep links for those routes load CSS and font assets with 200
   responses and expected content types; nested routes do not request assets relative to their own path.
 
 - [x] **AAU-03**: The same asset proof passes for an arbitrary alternate mount path without adding public
   router macro options.
 
-- [ ] **AAU-04**: A browser gate fails on CSS/font 404s and asserts token-backed computed styling after
+- [x] **AAU-04**: A browser gate fails on CSS/font 404s and asserts token-backed computed styling after
   direct `page.goto` loads, proving the page is styled rather than merely rendering HTML.
 
 ### GATE - Verification lanes
@@ -103,9 +103,9 @@
 | GATE-01 | Phase 138 | Complete |
 | GATE-02 | Phase 138 | Complete |
 | AAU-01 | Phase 139 | Complete |
-| AAU-02 | Phase 139 | Pending |
+| AAU-02 | Phase 139 | Complete |
 | AAU-03 | Phase 139 | Complete |
-| AAU-04 | Phase 139 | Pending |
+| AAU-04 | Phase 139 | Complete |
 | GATE-03 | Phase 139 | Complete |
 | DOC-01 | Phase 140 | Pending |
 | DOC-02 | Phase 140 | Pending |

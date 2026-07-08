@@ -43,7 +43,7 @@ integrations are explicitly deferred.
   inbound raw-repo extension seams behave correctly under hostile `search_path`; raw callback/repo prefix
   omissions are guarded; focused verification lane is wired.
 
-- [ ] **Phase 139: Admin asset first-load/deep-link proof** - Preserve and harden the current
+- [x] **Phase 139: Admin asset first-load/deep-link proof** - Preserve and harden the current (completed 2026-07-08)
   root-relative computed mount URL approach in `MountPathHook`/`MountPath`/layout `css_url`, then prove
   stylesheets and fonts load from the correct mount root across preview, scenario, error, gallery,
   operator, inbound, query deep-link, and arbitrary alternate mount paths. **Requirements:** AAU-01,
@@ -108,7 +108,7 @@ Plans:
 deep links and alternate mount roots, without redesigning the admin UI or adding public router options.
 **Depends on:** Phase 138 only for milestone sequencing; code surface is independent.
 **Requirements:** AAU-01, AAU-02, AAU-03, AAU-04, GATE-03
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 **Wave 1**
@@ -117,7 +117,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 139-02-PLAN.md - Serialized browser hard-load CSS/font and computed-style proof
+- [x] 139-02-PLAN.md - Serialized browser hard-load CSS/font and computed-style proof
 
 **Success Criteria** (what must be TRUE):
 
