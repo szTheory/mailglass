@@ -52,6 +52,19 @@ defmodule MailglassAdmin.TestAdopter.Router do
     )
   end
 
+  scope "/alt/dev" do
+    pipe_through(:browser)
+
+    mailglass_admin_routes("/console",
+      live_session_name: :mailglass_admin_preview_alt,
+      mailables: [
+        :"Elixir.MailglassAdmin.Fixtures.HappyMailer",
+        :"Elixir.MailglassAdmin.Fixtures.StubMailer",
+        :"Elixir.MailglassAdmin.Fixtures.BrokenMailer"
+      ]
+    )
+  end
+
   scope "/ops" do
     pipe_through(:browser)
 
@@ -66,6 +79,26 @@ defmodule MailglassAdmin.TestAdopter.Router do
     )
 
     mailglass_operator_routes("/mail",
+      auth: MailglassAdmin.TestOperatorAuth,
+      session: [
+        subject_id: "current_user_id",
+        tenant_id: "tenant_id",
+        auth_method: "auth_method",
+        recent_auth_at: "recent_auth_at"
+      ],
+      on_mount: [{MailglassAdmin.TestOperatorHook, :audit}],
+      unauthorized_path: "/login",
+      # CONTEXT D-48-07: thread the synthetic inbound router so Wave 2's
+      # routing-trace card has declared inbound routes to reflect.
+      inbound_router: MailglassAdmin.TestSupport.InboundTestRouter
+    )
+  end
+
+  scope "/secure" do
+    pipe_through(:browser)
+
+    mailglass_operator_routes("/console",
+      live_session_name: :mailglass_admin_operator_alt,
       auth: MailglassAdmin.TestOperatorAuth,
       session: [
         subject_id: "current_user_id",
