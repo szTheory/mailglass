@@ -51,11 +51,11 @@ v2.1 closeout.
   AAU-02, AAU-03, AAU-04, GATE-03. **Success:** HTML-level href assertions pass, direct hard loads have no
   CSS/font 404s, and browser computed-style assertions prove the admin is styled.
 
-- [ ] **Phase 140: Verification, docs reconciliation, and milestone closeout** - Run the focused gates,
+- [x] **Phase 140: Verification, docs reconciliation, and milestone closeout** - Run the focused gates,
   reconcile stale docs/backlog text, verify deferrals remain explicit, and prepare the milestone for audit
   and archive. **Requirements:** DOC-01, DOC-02, plus all open gate requirements. **Success:** docs no
   longer describe the admin asset issue as unresolved after proof, v2.1 artifacts stay narrow, and the
-  milestone is ready for `/gsd-complete-milestone`.
+  milestone is ready for `/gsd-complete-milestone`. (completed 2026-07-08)
 
 **Execution order:** 138 -> 139 -> 140. Phase 138 closes the data-correctness follow-up first because it
 can expose hidden runtime bugs. Phase 139 then proves the admin first-load surface. Phase 140 handles
@@ -143,7 +143,7 @@ baseline work.
 scope explicit, and prepare v2.1 for audit/archive.
 **Depends on:** Phases 138 and 139.
 **Requirements:** DOC-01, DOC-02, all gate requirements
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
@@ -156,7 +156,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 140-03-PLAN.md — Update active planning artifacts and create the closeout verification report.
+- [x] 140-03-PLAN.md — Update active planning artifacts and create the closeout verification report.
 
 **Success Criteria** (what must be TRUE):
 
