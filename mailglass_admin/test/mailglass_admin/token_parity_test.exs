@@ -172,7 +172,9 @@ defmodule MailglassAdmin.TokenParityTest do
 
   # Extract the CSS value of an inlined --mg-* custom property from compiled CSS.
   # For light tier: uses the first occurrence (from :root/[data-theme=light] block).
-  # For dark tier: uses the occurrence inside [data-theme=dark]{...} block.
+  # For dark tier: uses the occurrence inside the dark token block. The compiled
+  # selector may include the admin-prefixed alias:
+  # [data-theme=dark],[data-theme=mailglass-dark]{...}.
   # Returns the hex string (e.g. "#fff" or "#f8fbfd") or nil.
   defp extract_mg_token_value(css, mg_token, tier) do
     pattern = ~r/#{Regex.escape(mg_token)}:\s*(#[0-9a-fA-F]+)/
@@ -186,20 +188,24 @@ defmodule MailglassAdmin.TokenParityTest do
         end
 
       :dark ->
-        # Find [data-theme=dark]{...} block, then extract from it
-        dark_block_pattern = ~r/\[data-theme=dark\]\{([^}]+)\}/
-
-        case Regex.run(dark_block_pattern, css, capture: :all_but_first) do
-          [block | _] ->
-            case Regex.run(pattern, block, capture: :all_but_first) do
-              [value | _] -> String.downcase(value)
-              nil -> nil
-            end
-
-          nil ->
-            nil
-        end
+        css
+        |> theme_blocks_matching(["[data-theme=dark]", "[data-theme=mailglass-dark]"])
+        |> Enum.find_value(fn block ->
+          case Regex.run(pattern, block, capture: :all_but_first) do
+            [value | _] -> String.downcase(value)
+            nil -> nil
+          end
+        end)
     end
+  end
+
+  defp theme_blocks_matching(css, selectors) do
+    ~r/([^{}]+)\{([^{}]+)\}/
+    |> Regex.scan(css, capture: :all_but_first)
+    |> Enum.filter(fn [selector, _block] ->
+      Enum.any?(selectors, &String.contains?(selector, &1))
+    end)
+    |> Enum.map(fn [_selector, block] -> block end)
   end
 
   # Compare two hex color values for equality, normalizing shorthand (#fff → #ffffff).
