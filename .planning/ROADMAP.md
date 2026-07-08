@@ -108,12 +108,12 @@ Plans:
 deep links and alternate mount roots, without redesigning the admin UI or adding public router options.
 **Depends on:** Phase 138 only for milestone sequencing; code surface is independent.
 **Requirements:** AAU-01, AAU-02, AAU-03, AAU-04, GATE-03
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 139-01-PLAN.md - Fast first-HTML stylesheet href proof and alternate macro mounts
+- [x] 139-01-PLAN.md - Fast first-HTML stylesheet href proof and alternate macro mounts
 
 **Wave 2** *(blocked on Wave 1 completion)*
 

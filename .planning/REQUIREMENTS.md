@@ -30,14 +30,14 @@
 
 ### AAU - Admin asset URL robustness
 
-- [ ] **AAU-01**: First HTML for preview, preview scenario, preview error, gallery, operator, inbound, and
+- [x] **AAU-01**: First HTML for preview, preview scenario, preview error, gallery, operator, inbound, and
   query deep-link routes emits a stylesheet `href` rooted at the current admin mount path, never a bare
   relative path.
 
 - [ ] **AAU-02**: Hard refreshes and direct deep links for those routes load CSS and font assets with 200
   responses and expected content types; nested routes do not request assets relative to their own path.
 
-- [ ] **AAU-03**: The same asset proof passes for an arbitrary alternate mount path without adding public
+- [x] **AAU-03**: The same asset proof passes for an arbitrary alternate mount path without adding public
   router macro options.
 
 - [ ] **AAU-04**: A browser gate fails on CSS/font 404s and asserts token-backed computed styling after
@@ -51,7 +51,7 @@
 - [x] **GATE-02**: The existing dual-schema advisory matrix remains a broad canary, while docs and comments
   clearly identify the focused no-search-path lane as the fail-closed proof for this milestone.
 
-- [ ] **GATE-03**: Admin URL robustness has both fast LiveView/Conn-level assertions for generated hrefs and
+- [x] **GATE-03**: Admin URL robustness has both fast LiveView/Conn-level assertions for generated hrefs and
   a serialized browser proof for network/computed-style behavior.
 
 ### DOC - Documentation and planning reconciliation
@@ -102,11 +102,11 @@
 | SCHEMA-04 | Phase 138 | Complete |
 | GATE-01 | Phase 138 | Complete |
 | GATE-02 | Phase 138 | Complete |
-| AAU-01 | Phase 139 | Pending |
+| AAU-01 | Phase 139 | Complete |
 | AAU-02 | Phase 139 | Pending |
-| AAU-03 | Phase 139 | Pending |
+| AAU-03 | Phase 139 | Complete |
 | AAU-04 | Phase 139 | Pending |
-| GATE-03 | Phase 139 | Pending |
+| GATE-03 | Phase 139 | Complete |
 | DOC-01 | Phase 140 | Pending |
 | DOC-02 | Phase 140 | Pending |
 

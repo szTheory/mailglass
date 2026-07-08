@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Postgres + Admin URL Hardening)
-status: planning
-stopped_at: Phase 139 UI-SPEC approved
-last_updated: "2026-07-07T22:51:22.343Z"
-last_activity: 2026-07-07 — Phase 138 complete, transitioned to Phase 139
+status: executing
+stopped_at: Completed 139-01-PLAN.md
+last_updated: "2026-07-08T13:15:49.452Z"
+last_activity: 2026-07-08
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 6
+  completed_plans: 5
   percent: 33
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-07 - after Phase 138 completion)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 139 — Admin asset first-load/deep-link proof
+**Current focus:** Phase 139 — admin-asset-first-load-deep-link-proof
 
 ## Current Position
 
-Phase: 139 — Admin asset first-load/deep-link proof
-Plan: Not started
-Status: Phase 139 ready for discussion/planning
-Last activity: 2026-07-07 — Phase 138 complete, transitioned to Phase 139
+Phase: 139 (admin-asset-first-load-deep-link-proof) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-07-08
 
 ## v2.1 Milestone Intent
 
@@ -263,6 +263,8 @@ release debug campaign.
 - [Phase 138-04]: Expose Phase 138 proof as mix verify.schema_prefix, a focused lane rather than a full dual-schema matrix or full-suite alias.
 - [Phase 138-04]: Document the dual-schema advisory matrix as broad canary coverage because its harness aligns Config.schema/0 and connection search_path.
 - [Phase 138-04]: Use cmd mix test for the second root ExUnit file in verify.schema_prefix so Mix task deduplication cannot skip the RawRepoPrefixContract test.
+- [Phase 139]: 139-01 preserved the existing admin asset mount-path strategy — The first-HTML route matrix passed without production changes, so MountPathHook -> MountPath.base/1 -> Layouts.css_url/1 remains the source of stylesheet href generation.
+- [Phase 139]: 139-01 alternate admin roots use test-only macro reuse — The alternate roots are mounted through mailglass_admin_routes/2 and mailglass_operator_routes/2 with unique live_session_name values, preserving the public router API and macro-scoped asset routes.
 
 ## Quick Tasks Completed
 
@@ -414,6 +416,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 138 P02 | 5 min | 2 tasks | 4 files |
 | Phase 138 P03 | 10 min | 2 tasks | 7 files |
 | Phase 138 P04 | 3 min | 2 tasks | 2 files |
+| Phase 139 P01 | 5 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -441,9 +444,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-07T22:51:22.340Z
-**Stopped at:** Phase 139 UI-SPEC approved
-**Resume file:** .planning/phases/139-admin-asset-first-load-deep-link-proof/139-UI-SPEC.md
+**Last session:** 2026-07-08T13:15:25.717Z
+**Stopped at:** Completed 139-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
