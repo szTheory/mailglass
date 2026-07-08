@@ -155,6 +155,43 @@ defmodule Mailglass.DocsContractTest do
              "getting-started.md Troubleshooting must describe the Mix.raise fail-closed behavior"
     end
 
+    test "admin asset docs no longer present deep-link styling as unresolved" do
+      demo = File.read!("guides/run-the-demo.md")
+      design_system = File.read!("mailglass_admin/docs/design-system.md")
+      backlog = File.read!(".planning/backlog/admin-relative-asset-url-styling.md")
+
+      assert demo =~
+               "Hard refreshes and direct deep links should stay styled. If they do not, run the admin asset browser proof and treat it as a regression."
+
+      assert design_system =~ "resolved and proven in v2.1 Phase 139"
+      assert design_system =~ "stylesheet responses, font responses"
+      assert design_system =~ "token-backed computed styling"
+      assert design_system =~ "admin asset hard load"
+
+      assert backlog =~ "Resolved in v2.1 Phase 139"
+      assert backlog =~ "Phase 139/GATE-03 evidence"
+
+      for id <- ~w(AAU-01 AAU-02 AAU-03 AAU-04 AAU-05) do
+        assert backlog =~ "- [x] **#{id}**",
+               "admin-relative-asset-url-styling.md must mark #{id} complete"
+      end
+
+      stale_phrases = [
+        "Navigate from the dashboard",
+        "Tracked as GAP-22",
+        "hard refresh on a deep URL can load unstyled",
+        "direct loads unstyled"
+      ]
+
+      for phrase <- stale_phrases do
+        refute demo =~ phrase, "run-the-demo.md still contains stale asset wording: #{phrase}"
+        refute design_system =~ phrase, "design-system.md still contains stale asset wording: #{phrase}"
+
+        refute backlog =~ phrase,
+               "admin-relative-asset-url-styling.md still contains stale asset wording: #{phrase}"
+      end
+    end
+
     test "learning-path is registered in both mix.exs docs lists" do
       mix_exs = File.read!("mix.exs")
       matches = Regex.scan(~r/"guides\/learning-path\.md"/, mix_exs)
