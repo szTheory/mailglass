@@ -142,7 +142,7 @@ baseline work.
 scope explicit, and prepare v2.1 for audit/archive.
 **Depends on:** Phases 138 and 139.
 **Requirements:** DOC-01, DOC-02, all gate requirements
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -151,7 +151,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 140-02-PLAN.md — Reconcile admin asset docs/backlog and add a docs guard.
+- [x] 140-02-PLAN.md — Reconcile admin asset docs/backlog and add a docs guard.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 

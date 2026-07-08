@@ -56,7 +56,7 @@
 
 ### DOC - Documentation and planning reconciliation
 
-- [ ] **DOC-01**: `mailglass_admin/docs/design-system.md`, `guides/run-the-demo.md`, and the admin
+- [x] **DOC-01**: `mailglass_admin/docs/design-system.md`, `guides/run-the-demo.md`, and the admin
   relative-asset backlog item no longer claim hard-refresh/deep-link styling remains unresolved after the
   proof passes.
 
@@ -107,7 +107,7 @@
 | AAU-03 | Phase 139 | Complete |
 | AAU-04 | Phase 139 | Complete |
 | GATE-03 | Phase 139 | Complete |
-| DOC-01 | Phase 140 | Pending |
+| DOC-01 | Phase 140 | Complete |
 | DOC-02 | Phase 140 | Pending |
 
 ---
