@@ -1,37 +1,37 @@
 ---
 gsd_state_version: 1.0
 milestone: v2.1
-milestone_name: Postgres + Admin URL Hardening)
-current_phase: 140
-current_phase_name: verification-docs-reconciliation-and-milestone-closeout
-status: milestone_complete
-stopped_at: Milestone complete (Phase 140 was final phase)
-last_updated: 2026-07-08T17:50:48.423Z
+milestone_name: Postgres + Admin URL Hardening
+current_phase: null
+status: Awaiting next milestone
+stopped_at: v2.1 milestone archived; awaiting next milestone
+last_updated: "2026-07-08T18:04:18.204Z"
 last_activity: 2026-07-08
-last_activity_desc: Phase 140 complete; v2.1 milestone ready for closeout archive
+last_activity_desc: Milestone v2.1 completed and archived
 progress:
   total_phases: 3
   completed_phases: 3
   total_plans: 9
   completed_plans: 9
   percent: 100
+current_phase_name: none
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-07 - after Phase 138 completion)
+See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Milestone complete
+**Current focus:** Awaiting next milestone
 
 ## Current Position
 
-Phase: 140
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-07-08
+Phase: Milestone v2.1 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-07-08 — Milestone v2.1 completed and archived
 
 ## v2.1 Milestone Intent
 
@@ -306,6 +306,12 @@ release debug campaign.
 - v1.4 phases completed: 4 (63-66), 12 plans, 22 tasks
 
 ## Deferred Items
+
+Items acknowledged and deferred at the v2.1 milestone close on 2026-07-08:
+
+| Category | Item | Status |
+|----------|------|--------|
+| todo | 2026-06-30-remove-cowlib-advisory-allowlist-when-upstream-fixes.md | pending external upstream cowlib fix |
 
 Items acknowledged and deferred at the v1.7 milestone close on 2026-06-05:
 
@@ -583,24 +589,4 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Operator Next Steps
 
-- **Active milestone: v1.14 Operator IA & Lived-Experience Redesign** (opened 2026-06-26).
-  Roadmap created (Phases 118-124, 14 REQ-IDs, 100% coverage). This is an adopter-visible *quality*
-  milestone under D-23 convergence (the method-inverting top-down/JTBD-led redesign) — NOT
-  product-capability growth. **Next: `/gsd-plan-phase 118`** (or `/gsd-discuss-phase 118` first).
-  Phase 118 is the hard precondition (persona-critic harness + defect register) for the keystone shell
-  redesign in 119. Surface order 119 → 120 → 121 → 122, then coherence/ratchet (123), then Hex release
-  (124). The post-v1.12 "quiet maintenance" posture is superseded for the duration of v1.14.
-
-- **Maintenance thread `release-pipeline-maintenance.md` — ✅ FULLY CLOSED (2026-06-18).** All items done:
-  ✅ (1) `gate-ci-green` advisory-classifier fix (`1e0e60b1`).
-  ✅ (4) held dep PRs #76 premailex 1.0.0 + #75 swoosh 1.26.1 merged (quick `260617-syd`; `9c3bbfea`/`50b49206`).
-  ✅ (5) `Core Full Suite Advisory` lane fixed → green (quick `260617-tgw`; `abadbb32`).
-  ✅ (2) trust-lane baseline de-hardcoded + refreshed to 1.7.0 → dep/version bumps are now **zero-touch**
-  (quick `260618-1qj`; `7cbef50b`). No remaining maintenance work; release pipeline is clean + low-maintenance.
-
-- **Before any *feature-discovery* pass** (only if reconsidering expansion): refresh
-  `.planning/research/JTBD-COVERAGE.md` (now 6 milestones stale) — its conclusion still holds, only
-  its status tables are stale. Not needed for maintenance work.
-
-- Expansion candidates remain pull-gated (watchlist `transport-expansion-watchlist.md`): SEED-003,
-  Cloudflare Email Routing, synthetic inbound dev UI, `gen_smtp` listener, more providers.
+- Start the next milestone with /gsd-new-milestone

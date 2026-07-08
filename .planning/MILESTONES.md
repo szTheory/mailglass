@@ -1,5 +1,29 @@
 # Milestones
 
+## v2.1 Postgres + Admin URL Hardening (Shipped: 2026-07-08)
+
+**Delivered:** Focused schema-prefix no-search-path hardening plus admin asset hard-refresh/deep-link proof, with no product expansion.
+
+**Phases completed:** 3 phases, 9 plans, 18 tasks
+
+**Known deferred items at close:** 1 (see `STATE.md` Deferred Items)
+
+**Key accomplishments:**
+
+- Webhook replay and unsubscribe replay now prove configured-schema behavior under hostile search_path and use explicit raw callback prefix opts.
+- Inbound replay raw-repo extension points now preserve facade defaults and pass explicit schema prefix opts when a raw repo is supplied.
+- Fake adapter and webhook reconciler projection writes now pass explicit schema prefix opts, with a registered Credo guard blocking raw repo recurrence.
+- `mix verify.schema_prefix` now runs the fail-closed schema-prefix proof, while the dual-schema advisory matrix is documented as broad canary coverage.
+- Mount-rooted admin stylesheet href proof across preview, gallery, operator, inbound, query, render-error, and alternate macro-mounted first HTML routes.
+- Playwright hard-load proof that admin CSS/fonts resolve from default and alternate mount roots with applied Inter typography and token-backed computed styles.
+- Focused schema-prefix and admin asset proof evidence for v2.1 closeout claims
+- DOC-01 now matches the Phase 139 admin asset proof, with a narrow docs-contract guard against stale limitation wording
+- Active v2.1 planning truth reconciled with a passed Phase 140 verification report and explicit `/gsd-complete-milestone 140` handoff.
+
+**Archives:** `milestones/v2.1-ROADMAP.md`, `milestones/v2.1-REQUIREMENTS.md`, `milestones/v2.1-MILESTONE-AUDIT.md`
+
+---
+
 ## ✅ v2.0 Postgres Schema Isolation (Shipped: 2026-07-04)
 
 **Phases completed:** 6 phases (132–137), ~20 reqs — **mailglass 2.0.0 / mailglass_admin 2.0.0 / mailglass_inbound 2.0.0 live on Hex** (see `milestones/v2.0-MILESTONE-AUDIT.md`)

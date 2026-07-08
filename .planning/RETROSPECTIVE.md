@@ -4,6 +4,43 @@
 
 ---
 
+## Milestone: v2.1 — Postgres + Admin URL Hardening
+
+**Shipped 2026-07-08** — 3 phases (138–140), 13 requirements, audit `status: passed`.
+
+### What Was Built
+
+- Focused no-search-path schema-prefix proof for `Webhook.Replay`, unsubscribe idempotency conflict lookup, raw repo/Multi callback recurrence, and inbound raw-repo extension seams.
+- `mix verify.schema_prefix` now runs the hostile runtime proof, raw repo prefix contract tests, strict Credo guard, and inbound contract tests.
+- Admin first-HTML and browser hard-load proof now covers preview, scenario, error, gallery, operator, inbound, query deep links, and alternate mount roots.
+- Docs/backlog truth now describes the admin asset issue as resolved and guards against stale hard-refresh limitation wording.
+
+### What Worked
+
+- The milestone stayed intentionally narrow: schema-prefix correctness plus admin asset URL proof, no product growth and no admin redesign.
+- Focused fail-closed gates beat broad advisory signals. The dual-schema matrix remains useful as a canary, but the trusted proof is the hostile no-search-path lane.
+- Browser proof used network and computed-style assertions, which gave strong confidence without introducing screenshots or pixel-diff churn.
+
+### What Was Inefficient
+
+- Validation artifacts had stale draft/pending status even after phase verification had passed. The milestone audit had to repair `VALIDATION.md` maps to match executed evidence.
+- The closeout command argument used the phase number (`140`) while the archived milestone is v2.1; the audit now documents that mapping explicitly.
+
+### Patterns Established
+
+- Closeout audits should cross-check requirements from `REQUIREMENTS.md`, phase `VERIFICATION.md`, and summary frontmatter before archiving.
+- Open artifact audit decisions should be recorded in `STATE.md` at close, even when the item is intentionally trigger-based maintenance.
+
+### Key Lessons
+
+- A test harness that sets `search_path` can create false green schema-isolation confidence; hostile-path tests need to be first-class.
+- Public docs should describe observable behavior and recovery guidance, while maintainer docs carry implementation guardrails and rejected alternatives.
+
+### Cost Observations
+
+- Small maintenance milestone: 3 phases, 9 plans, 18 tasks.
+- No new release cut; the value was gate trust and artifact truth, not package ceremony.
+
 ## Milestone: v1.15 — Release-Pipeline Efficiency & Contributor DX
 
 **Shipped 2026-07-02** — 7 phases (125–131), 26 requirements, audit `status: passed`.

@@ -8,24 +8,23 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
-## Current Milestone: v2.1 Postgres + Admin URL Hardening (OPENED 2026-07-07)
+## Archived: v2.1 Postgres + Admin URL Hardening (SHIPPED 2026-07-08)
 
-**Opened 2026-07-07.** Tight post-v2.0 hardening milestone. v2.0 shipped the dedicated
+**Opened 2026-07-07, shipped 2026-07-08.** Tight post-v2.0 hardening milestone. v2.0 shipped the dedicated
 `mailglass` Postgres schema on 2026-07-04, and its closeout left two bounded correctness gaps worth
-closing before a broader UI verification or ecosystem pass: schema-prefix tests/runtime paths can still
-hide missing `prefix:` bugs when test helpers set `search_path`, and admin stylesheet URLs are partially
-mount-aware but not yet proven across hard refreshes, deep links, preview/gallery/error paths, and
-alternate mount roots.
+closing before a broader UI verification or ecosystem pass: schema-prefix tests/runtime paths could hide
+missing `prefix:` bugs when test helpers set `search_path`, and admin stylesheet URLs needed hard-refresh
+and deep-link proof across preview/gallery/error paths and alternate mount roots.
 
-**Goal:** Make schema-isolated runtime paths and admin first-load asset URLs fail closed and prove them
-with focused gates, without adding product capability or redesigning the admin UI.
+**Shipped:** Schema-isolated runtime paths and admin first-load asset URLs now fail closed through focused
+gates, without adding product capability or redesigning the admin UI.
 
 Research base (decision-ready, 2026-07-07):
 in-thread repository research with focused subagent reads, plus official Ecto prefix guidance and Phoenix
 LiveView/router asset behavior. Active brand source remains `brandbook/brand-book.md`; prompt-era brand
 research is provenance only.
 
-**Target features (dependency-ordered, smallest safe surface first):**
+**Delivered features (dependency-ordered, smallest safe surface first):**
 - **Schema-prefix no-search-path hardening (Phase 138)** - fix concrete missing-prefix risks found after
   v2.0 (`Webhook.Replay` projection update, unsubscribe replay/idempotency conflict lookup, and inbound
   raw-repo extension footguns if reachable), then prove them with a hostile runtime lane where the DB
@@ -34,8 +33,8 @@ research is provenance only.
   mount URL approach in `MountPathHook`/`MountPath`/layout `css_url`, then harden and prove it across
   preview, gallery, scenario, error, operator, inbound, query deep-link, and arbitrary alternate mount
   paths.
-- **Verification, docs, and backlog reconciliation (Phase 140)** - wire focused gates, keep the broad
-  dual-schema advisory matrix as a canary, update stale docs/backlog that still describe the admin
+- **Verification, docs, and backlog reconciliation (Phase 140)** - wired focused gates, kept the broad
+  dual-schema advisory matrix as a canary, updated stale docs/backlog that still described the admin
   deep-link asset issue as unresolved, and close the milestone.
 
 **Locked decisions (research, 2026-07-07):** (1) Explicit Ecto `prefix:` remains the correctness
@@ -137,13 +136,17 @@ pin change ships with a CHANGELOG line + documented **Hex retirement** as the ne
 
 ## Current State
 
-**v2.1 IN PROGRESS 2026-07-07 - Postgres + Admin URL Hardening.** Phase 138 is complete and verified:
-focused no-search-path schema-prefix hardening has hostile runtime proof, raw-repo/static guard coverage,
-and a green `mix verify.schema_prefix` lane. Phase 139 admin asset proof passed for first HTML,
-hard-refresh, direct deep-link, and alternate-mount styling. Phase 140 reconciles docs and verification
-for closeout, then hands off to `/gsd-complete-milestone`. Broader UI verification discipline, SEED-003
-ecosystem integrations, whole-suite no-search-path fixture cleanup, and release ceremony remain deferred
-outside v2.1 closeout.
+**v2.1 SHIPPED 2026-07-08 - Postgres + Admin URL Hardening.** All 3 phases (138-140) complete, audit
+`status: passed` (13/13 requirements). Focused no-search-path schema-prefix hardening has hostile
+runtime proof, raw-repo/static guard coverage, and a green `mix verify.schema_prefix` lane. Admin asset
+proof passed for first HTML, hard refresh, direct deep links, alternate mounts, CSS/font network
+responses, and token-backed computed styling. Docs/backlog truth was reconciled, and active artifacts
+preserve deferred scope. See `milestones/v2.1-MILESTONE-AUDIT.md`.
+
+**Next milestone:** not opened. Start with `/gsd-new-milestone` to define fresh requirements and roadmap.
+Broader UI verification discipline, SEED-003 ecosystem integrations, whole-suite no-search-path fixture
+cleanup, release ceremony, and trigger-based cowlib advisory allowlist cleanup remain deferred outside
+v2.1.
 
 **v2.0 SHIPPED 2026-07-04 - mailglass 2.0.0 / mailglass_admin 2.0.0 / mailglass_inbound 2.0.0 live on
 Hex.** All 6 phases (132-137) complete, audit `status: passed`. Dedicated `mailglass` Postgres schema is
@@ -720,5 +723,5 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-08 - **v2.1 closeout in progress** (Phase 138 focused no-search-path schema-prefix proof passed via `mix verify.schema_prefix`; Phase 139 admin first-load/deep-link asset URL proof passed; Phase 140 reconciles docs/verification for `/gsd-complete-milestone`; broader UI verification discipline, SEED-003 ecosystem integrations, whole-suite no-search-path fixture cleanup, and release ceremony deferred). Previous milestone **v2.0 Postgres Schema Isolation SHIPPED 2026-07-04** - live at **2.0.0 / 2.0.0 / 2.0.0** on Hex.*
+*Last updated: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened.*
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
