@@ -3,16 +3,17 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Postgres + Admin URL Hardening)
 current_phase: 140
+current_phase_name: verification-docs-reconciliation-and-milestone-closeout
 status: executing
-stopped_at: Phase 140 UI-SPEC approved
-last_updated: "2026-07-08T16:15:26.085Z"
+stopped_at: Completed 140-01-PLAN.md
+last_updated: "2026-07-08T17:22:06.285Z"
 last_activity: 2026-07-08
-last_activity_desc: Phase 140 planning complete
+last_activity_desc: Phase 140 execution started
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 9
+  completed_plans: 7
   percent: 67
 ---
 
@@ -23,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-07 - after Phase 138 completion)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 140 — verification, docs reconciliation, and milestone closeout
+**Current focus:** Phase 140 — verification-docs-reconciliation-and-milestone-closeout
 
 ## Current Position
 
-Phase: 140
-Plan: Not started
+Phase: 140 (verification-docs-reconciliation-and-milestone-closeout) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-07-08 — Phase 140 planning complete
+Last activity: 2026-07-08 -- Phase 140 execution started
 
 ## v2.1 Milestone Intent
 
@@ -270,6 +271,8 @@ release debug campaign.
 - [Phase 139-02]: Kept browser asset robustness proof in a focused Playwright spec under the existing serialized operator browser gate.
 - [Phase 139-02]: Operator/inbound asset cases authenticate through existing browser support routes, then attach network listeners before direct page.goto(targetPath).
 - [Phase 139-02]: Production asset routing, CSS, tokens, HEEx markup, package versions, and router macro APIs stayed unchanged; proof only.
+- [Phase 140]: Use `mix verify.schema_prefix` as the fail-closed schema-prefix proof; keep the dual-schema advisory matrix as a broad canary. — This preserves D-02 and records why broad dual-schema status is not the pass/fail definition for v2.1 schema-prefix correctness.
+- [Phase 140]: Use the existing Phase 139 ExUnit/token/bundle lanes and serialized Playwright `admin asset hard load` grep as admin asset proof. — This keeps Phase 140 on the focused network and computed-style proof boundary without adding screenshot, pixel-diff, route, CSS, or API work.
 
 ## Quick Tasks Completed
 
@@ -423,6 +426,7 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 | Phase 138 P04 | 3 min | 2 tasks | 2 files |
 | Phase 139 P01 | 5 min | 2 tasks | 2 files |
 | Phase 139 P02 | 6 min | 2 tasks | 1 files |
+| Phase 140 P01 | 3 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -450,9 +454,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-08T15:51:00.283Z
-**Stopped at:** Phase 140 UI-SPEC approved
-**Resume file:** .planning/phases/140-verification-docs-reconciliation-and-milestone-closeout/140-UI-SPEC.md
+**Last session:** 2026-07-08T17:22:06.278Z
+**Stopped at:** Completed 140-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in

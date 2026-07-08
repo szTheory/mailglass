@@ -142,12 +142,12 @@ baseline work.
 scope explicit, and prepare v2.1 for audit/archive.
 **Depends on:** Phases 138 and 139.
 **Requirements:** DOC-01, DOC-02, all gate requirements
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 140-01-PLAN.md — Rerun and record focused schema-prefix/admin asset gate evidence.
+- [x] 140-01-PLAN.md — Rerun and record focused schema-prefix/admin asset gate evidence.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
