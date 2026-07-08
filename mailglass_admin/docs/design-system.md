@@ -150,29 +150,36 @@ Matrix: **screen × theme (light/dark) × viewport (390/768/1440) × state
     Deliveries list. A reviewer comparing deliveries-at-landing screenshots
     should expect a different page — this is intentional, not a regression.
 - **CI regression net (Playwright):** `e2e/operator.spec.js` is the committed
-  gate. Because relative asset URLs leave direct loads unstyled (see below), the
-  e2e asserts structure/order/`data-testid`/text — not pixels.
+  structural gate. The v2.1 Phase 139 admin asset gate separately proves hard
+  refresh and deep-link styling, so this e2e still asserts
+  structure/order/`data-testid`/text — not pixels.
 
 State is URL-driven on every screen, so any state is reproducible by URL
 (`?tenant_id=…&delivery_id=…&theme=dark`) — the audit script relies on this
 rather than on driving clicks.
 
-## Known limitations
+## Asset URL robustness
 
-- **Relative asset URLs + trailing slash.** The CSS/font URLs are *relative* so
-  the bundle resolves under any adopter mount path. The consequence: a page is
-  only styled when the relative `css-<md5>` resolves to the operator mount root
-  where the asset route lives. In practice the dashboard is entered at its mount
-  root and navigated in-app (live navigation keeps the stylesheet loaded), so
-  this is invisible in normal use — but a **hard refresh on a deep URL can load
-  unstyled**. This is the asset-serving strategy (a stable seam), independent of
-  the design system; fixing it robustly is a separate change.
+- **Admin asset hard-refresh proof.** The relative-asset hard-refresh issue was
+  resolved and proven in v2.1 Phase 139. The current asset strategy keeps
+  adopter mount-path portability by emitting mount-rooted stylesheet hrefs while
+  preserving CSS-relative font URLs inside the committed bundle.
 
-  **GAP-22 disposition (Phase 75 / IA-04):** The deep-link-unstyled-CSS behavior
-  described above is tracked as GAP-22 and deferred to Phase 79 (VERIF-04). A
-  robust fix touches the stable asset-serving seam (the relative `css-<md5>` URL
-  resolves against the deep path on hard refresh, not the mount root). This seam
-  is out of churn scope for v1.7. The bug affects only hard refreshes on deep
-  URLs; normal in-app live navigation is unaffected because live navigation keeps
-  the stylesheet loaded. GAP-22 is held at severity 3 — it does not block Phase
-  79 closeout before the decision is reconfirmed there.
+  Phase 139 verified first HTML, stylesheet responses, font responses, and
+  token-backed computed styling across the route matrix: preview index,
+  preview scenario routes, preview error routes, gallery, operator, inbound,
+  query deep links, and alternate admin mount roots. If a future hard refresh or
+  direct deep link loses styling, treat it as a regression and run the focused
+  browser proof:
+
+  ```bash
+  cd mailglass_admin && npm run test:operator-browser -- --grep "admin asset hard load"
+  ```
+
+  **Guardrails:** keep the selected mount-aware strategy
+  (`MountPathHook` → `MountPath.base/1` → `Layouts.css_url/1`) unless new
+  evidence proves it cannot satisfy the route matrix. Approaches B-D from the
+  backlog remain rejected as primary fixes: duplicate nested asset routes,
+  `<base>` tags, URL canonicalization redirects, CDN/host asset rewrites, and
+  public router macro options add churn without being needed for the verified
+  behavior.

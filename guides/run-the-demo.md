@@ -126,9 +126,7 @@ first build legitimately takes a couple of minutes while dependencies download;
 after that, a stall usually means Postgres didn't come up — `make demo-clean`
 then `make demo` for a fresh start.
 
-**Styles look unstyled after a hard refresh on a deep link** — a known
-limitation (admin asset URLs resolve relative to the mount root). Navigate from
-the dashboard rather than reloading a deep URL. Tracked as GAP-22.
+**Styles look unstyled after a hard refresh on a deep link** — Hard refreshes and direct deep links should stay styled. If they do not, run the admin asset browser proof and treat it as a regression.
 
 **`/dev/storybook` returns a 500 (`PhoenixStorybook.Router is not available`)**
 — the dev-only component storybook is a live route added with the

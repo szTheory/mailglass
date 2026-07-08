@@ -1,44 +1,38 @@
 # Backlog seed: admin relative-asset-URL styling robustness
 
-> **Promoted 2026-07-07.** This seed is now active in v2.1 Phase 139
-> (`AAU-01..04`, `GATE-03`) as "Admin asset first-load/deep-link proof." The
-> selected direction is approach A, root-relative URLs computed from the effective
-> mount path via the existing `MountPathHook`/`MountPath`/layout `css_url`
-> mechanism. Approaches B-D remain rejected as primary fixes unless Phase 139
-> proves the narrower mechanism cannot satisfy the requirements.
+> **Resolved in v2.1 Phase 139.** This seed was promoted on 2026-07-07 and
+> closed by the Phase 139 admin asset first-load/deep-link proof (`AAU-01..04`,
+> `GATE-03`). Approach A remains the selected strategy: root-relative asset URLs
+> computed from the effective mount path via the existing
+> `MountPathHook`/`MountPath`/layout `css_url` mechanism. Approaches B-D remain
+> rejected as primary fixes because Phase 139 proved the narrower mechanism
+> satisfies the route matrix.
 >
 > **Origin.** Surfaced during the `ui/design-system-polish` pass (2026-06-02)
 > while visually auditing the operator + inbound surfaces. Pre-existing — the
 > asset-URL strategy long predates this work — but the new shared operator shell
 > makes `/inbound` a first-class, linkable destination, which raises the
 > visibility of the failure mode. Documented in
-> `mailglass_admin/docs/design-system.md` ("Known limitations") so adopters and
-> future work both see it.
+> `mailglass_admin/docs/design-system.md` so adopters and future work both see
+> the resolved behavior and the regression gate.
 
 ## Problem
 
-`mailglass_admin` serves its CSS/fonts via **relative** URLs (e.g.
-`<link href="css-<md5>">`) so the bundle resolves under any adopter-chosen mount
-path without the library knowing that path. The consequence is that a page is
-only styled when the relative `css-<md5>` happens to resolve to the operator
-mount root where the asset route is emitted (`<mount>/css-:md5`). Whether it
-does depends on the **document URL's trailing slash + depth**:
+`mailglass_admin` used to depend on relative stylesheet href resolution for its
+CSS/fonts, which made styling sensitive to document URL depth and trailing slash
+shape. v2.1 Phase 139 closed that gap by proving mount-rooted stylesheet hrefs
+and CSS-relative font responses under the effective admin mount path.
 
-- `/ops/mail/` (trailing slash) → resolves to `/ops/mail/css-…` ✓ styled
-- `/ops/mail` (no slash) → resolves to `/ops/css-…` ✗ unstyled
-- `/ops/mail/inbound` (no slash) → resolves to `/ops/mail/css-…` ✓ styled
-- `/ops/mail/inbound/` (trailing slash) → `/ops/mail/inbound/css-…` ✗ unstyled
-
-In normal use this is invisible: operators enter at the mount root and navigate
-in-app (LiveView live navigation keeps the stylesheet loaded across screens). It
-bites on a **hard refresh / deep link / bookmark** of the "wrong" URL form,
-which renders **unstyled**. The admin Playwright gate doesn't catch it because it
-asserts structure/order/`data-testid`/text, not pixels.
+The resolved behavior is now: hard refreshes and direct deep links stay styled
+across preview, scenario, error, gallery, operator, inbound, query deep-link,
+and alternate mount routes. The focused Phase 139 browser proof checks network
+responses and token-backed computed styles so a styling regression fails the
+gate instead of passing as a DOM-only structure assertion.
 
 ## Goal
 
-Make the admin dashboard render styled at **every** canonical URL form (with or
-without trailing slash, root or `/inbound`, on refresh and deep link), without
+Keep the admin dashboard styled at **every** verified canonical URL form (root,
+nested, query, alternate mount, hard refresh, and direct deep link), without
 giving up adopter mount-path portability.
 
 ## Candidate approaches
@@ -47,7 +41,7 @@ giving up adopter mount-path portability.
   request/mount path at render time (the LiveViews already derive `base_path`
   in `handle_params`) and emit a non-trailing-slash-sensitive href. Risk: the
   dead-render layout helper (`MailglassAdmin.Layouts.css_url/0`) currently has no
-  mount context. **Selected for v2.1 Phase 139.**
+  mount context. **Selected and proven in v2.1 Phase 139.**
 - [ ] **B — Emit asset routes at the `/inbound` sub-scope too**, so relative
   resolution lands for the child route regardless. Smaller blast radius; only
   fixes the child-route axis, not the trailing-slash axis.
@@ -59,17 +53,17 @@ giving up adopter mount-path portability.
 
 ## Acceptance
 
-- [ ] **AAU-01** — Loading the operator dashboard at its canonical adopter URL
+- [x] **AAU-01** — Loading the operator dashboard at its canonical adopter URL
   (no trailing slash) renders fully styled on first paint.
-- [ ] **AAU-02** — Hard refresh on `/inbound` (and on a deep delivery/record
+- [x] **AAU-02** — Hard refresh on `/inbound` (and on a deep delivery/record
   URL) renders fully styled.
-- [ ] **AAU-03** — Works under an arbitrary adopter mount path (not just the demo
+- [x] **AAU-03** — Works under an arbitrary adopter mount path (not just the demo
   app's `/ops/mail`), preserving the no-Node / committed-bundle / relative-font
   strategy.
-- [ ] **AAU-04** — A browser-evidence assertion (agent-browser or Playwright)
+- [x] **AAU-04** — A browser-evidence assertion (agent-browser or Playwright)
   proves styling loaded (e.g. a computed-style check), so the gate catches
   regressions that bounding-box assertions miss.
-- [ ] **AAU-05** — Asset-URL behavior documented in
+- [x] **AAU-05** — Asset-URL behavior documented in
   `mailglass_admin/docs/design-system.md` is updated once the fix lands.
 
 ## Notes
@@ -80,3 +74,7 @@ giving up adopter mount-path portability.
 - The frozen router contract (`mailglass_admin_routes/2`,
   `mailglass_operator_routes/2`) should not need new adopter-facing options; the
   fix should live behind the existing macros / internal layout + asset routes.
+- Phase 139/GATE-03 evidence: first-HTML href assertions passed for the route
+  matrix, and the serialized `admin asset hard load` Playwright proof passed
+  CSS/font network and computed-style checks across default and alternate mount
+  roots.
