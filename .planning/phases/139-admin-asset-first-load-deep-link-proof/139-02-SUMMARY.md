@@ -23,7 +23,9 @@ tech-stack:
 key-files:
   created:
     - mailglass_admin/e2e/admin-assets.spec.js
-  modified: []
+  modified:
+    - mailglass_admin/priv/static/app.css
+    - mailglass_admin/test/mailglass_admin/token_parity_test.exs
 
 key-decisions:
   - "Kept the browser proof in a focused Playwright spec under the existing serialized operator browser gate."
@@ -93,8 +95,8 @@ None - plan executed exactly as written.
 
 ## Issues Encountered
 
-- The existing `npm run test:operator-browser` script rebuilds `mailglass_admin/priv/static/app.css`. Because this plan did not change CSS source, tokens, or HEEx classes, the generated bundle side effect was restored after verification and not committed.
-- Verification continues to emit the pre-existing Phoenix component warning at `mailglass_admin/lib/mailglass_admin/operator_live.ex:505`; the focused commands exit 0 and the warning is outside this plan's touched files.
+- The orchestrator reran `npm run test:operator-browser -- --grep "admin asset hard load"` after plan completion, which rebuilt `mailglass_admin/priv/static/app.css` and exposed that the committed bundle was stale for existing admin classes (`collapse*`, `inline-block`, `items-end`). The regenerated bundle also exposed a narrow `token_parity_test` parser assumption: the compiled dark token selector may be `[data-theme=dark],[data-theme=mailglass-dark]`. Post-wave commit `89558212` keeps the bundle current and updates the parser to recognize both dark selectors.
+- Verification continues to emit the pre-existing Phoenix component warning at `mailglass_admin/lib/mailglass_admin/operator_live.ex:505`; the focused commands exit 0 and the warning is outside this plan's functional changes.
 
 ## Known Stubs
 
@@ -114,6 +116,7 @@ Ready for Phase 140: the fast first-HTML proof from 139-01 and the serialized br
 - Created Playwright spec exists at `mailglass_admin/e2e/admin-assets.spec.js`.
 - Task commit `cefa3434` exists.
 - Task commit `341aa265` exists.
+- Post-wave bundle-clean commit `89558212` exists.
 
 ---
 *Phase: 139-admin-asset-first-load-deep-link-proof*
