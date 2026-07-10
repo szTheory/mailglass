@@ -13,26 +13,26 @@ defmodule MailglassAdmin.AdminAssetUrlTest do
 
   @route_cases [
     %{
-      name: "preview index",
-      path: "/dev/mail",
+      name: "preview canonical scenario",
+      path: "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default",
       mount_root: "/dev/mail",
       access: :public
     },
     %{
-      name: "preview query deep link",
-      path: "/dev/mail?theme=dark",
+      name: "preview canonical scenario query",
+      path: "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=768",
       mount_root: "/dev/mail",
       access: :public
     },
     %{
       name: "preview scenario deep link",
-      path: "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=375&theme=dark",
+      path: "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=375",
       mount_root: "/dev/mail",
       access: :public
     },
     %{
       name: "preview render-error deep link",
-      path: "/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__?theme=light",
+      path: "/dev/mail/MailglassAdmin.Fixtures.BrokenMailer/__error__",
       mount_root: "/dev/mail",
       access: :public
     },
@@ -74,8 +74,7 @@ defmodule MailglassAdmin.AdminAssetUrlTest do
     },
     %{
       name: "alternate preview scenario deep link",
-      path:
-        "/alt/dev/console/MailglassAdmin.Fixtures.HappyMailer/welcome_default?theme=dark",
+      path: "/alt/dev/console/MailglassAdmin.Fixtures.HappyMailer/welcome_default?width=768",
       mount_root: "/alt/dev/console",
       access: :public
     },

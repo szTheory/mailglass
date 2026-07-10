@@ -50,6 +50,12 @@ defmodule MailglassDemoWeb.Router do
         MailglassDemoWeb.Mailers.AccountMailer,
         MailglassDemoWeb.Mailers.BillingMailer,
         MailglassDemoWeb.Mailers.OperationsMailer
+      ],
+      navigation: [
+        overview_path: "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar",
+        deliveries_path:
+          "/demo/login?return_to=%2Fops%2Fmail%3Ftenant_id%3Dnorthstar%26view%3Ddeliveries",
+        inbound_path: "/demo/login?return_to=%2Fops%2Fmail%2Finbound%3Ftenant_id%3Dnorthstar"
       ]
     )
 
@@ -71,6 +77,9 @@ defmodule MailglassDemoWeb.Router do
         tenant_id: "demo_tenant_id",
         auth_method: "demo_auth_method",
         recent_auth_at: "demo_recent_auth_at"
+      ],
+      navigation: [
+        preview_path: "/dev/mail"
       ],
       unauthorized_path: "/"
     )

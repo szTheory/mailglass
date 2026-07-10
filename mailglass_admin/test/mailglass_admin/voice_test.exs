@@ -30,7 +30,10 @@ defmodule MailglassAdmin.VoiceTest do
   describe "banned exclamations (05-UI-SPEC §Copywriting Contract)" do
     test "are absent from rendered UI", %{conn: conn} do
       conn = Plug.Test.init_test_session(conn, %{"mailables" => [HappyMailer]})
-      {:ok, _view, html} = live(conn, "/dev/mail")
+
+      {:ok, _view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+
       # Strip inlined <script>…</script> blocks before checking brand voice.
       # Phoenix inlines phoenix.mjs which contains "noops" (a logger no-op utility).
       # Checking the full HTML produces a false positive on that dep-JS token.
@@ -46,19 +49,25 @@ defmodule MailglassAdmin.VoiceTest do
   end
 
   describe "canonical brand copy (05-UI-SPEC Copywriting Contract)" do
-    test "sidebar + empty state strings appear verbatim", %{conn: conn} do
+    test "preview shell and picker strings appear verbatim", %{conn: conn} do
       conn =
         Plug.Test.init_test_session(conn, %{
           "mailables" => [HappyMailer, StubMailer, BrokenMailer]
         })
 
-      {:ok, _view, html} = live(conn, "/dev/mail")
+      {:ok, _view, html} =
+        live(conn, "/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
 
-      # Sidebar heading
-      assert html =~ "Mailables"
+      # Shared shell page header
+      assert html =~ "Preview"
 
-      # Start page shown when nothing is selected (mailables present)
-      assert html =~ "Render a real Message before you send it"
+      assert html =~
+               "Render an email exactly as your app would send it, then inspect HTML, text, raw source, headers, and assigns."
+
+      # Compact preview picker label
+      assert html =~ "Email preview"
+      refute html =~ "2 emails"
+      refute html =~ "3 mailers"
 
       # Stub-mailable empty-state copy
       assert html =~ "No previews defined"
@@ -160,7 +169,8 @@ defmodule MailglassAdmin.VoiceTest do
       # :inbound copy, D-08). HEEx HTML-escapes the apostrophe in "didn't" as &#39;.
       strip_html = render_component(&Shell.orientation_strip/1, surface: :inbound)
 
-      assert strip_html =~ "InboundMessage didn&#39;t route as expected? Inspect the routing trace.",
+      assert strip_html =~
+               "InboundMessage didn&#39;t route as expected? Inspect the routing trace.",
              "LD-12: orientation tip must use InboundMessage domain noun"
 
       # LD-16: rendered-pane select prompt (inbound-empty-detail div, always rendered
@@ -265,7 +275,10 @@ defmodule MailglassAdmin.VoiceTest do
       html =
         render_component(&Shell.tenant_selector/1,
           state: :select_required,
-          tenant_options: [%{id: "tenant-a", label: "tenant-a"}, %{id: "tenant-b", label: "tenant-b"}],
+          tenant_options: [
+            %{id: "tenant-a", label: "tenant-a"},
+            %{id: "tenant-b", label: "tenant-b"}
+          ],
           current_uri: "/ops/mail"
         )
 

@@ -23,6 +23,15 @@ defmodule MailglassAdmin.BundleTest do
       assert size > 0, "app.css must not be empty"
       assert size < 150_000, "app.css is #{size} bytes; PREV-06 budget is <150KB"
     end
+
+    test "contains generated Heroicon rules for shared surface navigation" do
+      css = File.read!(@css_path)
+
+      for icon <- ~w(hero-check-circle hero-eye hero-paper-airplane hero-inbox-arrow-down) do
+        assert css =~ icon,
+               "app.css is missing #{icon}; run mix mailglass_admin.assets.build after nav icon changes"
+      end
+    end
   end
 
   describe "priv/static/fonts/" do

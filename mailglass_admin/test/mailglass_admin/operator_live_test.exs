@@ -18,6 +18,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
   @tenant_id "test-tenant"
   @base_path "/ops/mail"
+  @theme_cookie MailglassAdmin.Theme.cookie_name()
 
   describe "operator surface" do
     test "renders the default detail prompt when no delivery is selected", %{conn: conn} do
@@ -1003,17 +1004,32 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ "/ops/mail/inbound?tenant_id=#{@tenant_id}"
+      assert html =~ "/ops/mail?tenant_id=#{@tenant_id}&amp;view=deliveries"
+      assert html =~ ~s(href="/dev/mail")
     end
   end
 
   describe "root layout theme (MountPathHook)" do
-    test "?theme=dark themes the operator ROOT <html>, not just the shell", %{conn: conn} do
-      conn = operator_conn(conn)
+    test "theme cookie themes the operator ROOT <html>, not just the shell", %{conn: conn} do
+      conn =
+        conn
+        |> operator_conn()
+        |> Plug.Conn.put_req_header("cookie", "#{@theme_cookie}=dark")
 
       {:ok, _view, html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "theme" => "dark"}))
+        live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
+    end
+
+    test "legacy theme query redirects through persistence", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      assert {:error,
+              {:redirect,
+               %{
+                 to: "/ops/mail/theme/dark?return_to=%2Fops%2Fmail%3Ftenant_id%3Dtest-tenant"
+               }}} = live(conn, operator_path(%{"tenant_id" => @tenant_id, "theme" => "dark"}))
     end
 
     test "no theme param leaves the operator root <html> un-themed", %{conn: conn} do
@@ -1380,21 +1396,21 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end)
   end
 
-  describe "Operator Overview branch" do
+  describe "Operator Health branch" do
     test "bare /ops/mail/ with no accessible tenants renders no-tenant shell state", %{
       conn: conn
     } do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, @base_path)
 
-      assert html =~ "Operator overview"
+      assert html =~ "Email health"
       assert html =~ ~s(data-testid="tenant-selector")
       assert html =~ "No tenants available"
       refute html =~ ~s(data-testid="operator-master-detail")
       refute html =~ ~s(data-testid="operator-deliveries-list")
     end
 
-    test "no-tenant Overview suppresses health row", %{conn: conn} do
+    test "no-tenant Health suppresses health row", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, @base_path)
 
@@ -1403,12 +1419,18 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ ~s(data-testid="operator-overview-health")
     end
 
-    test "with-tenant Overview renders 4 health-count cards", %{conn: conn} do
+    test "with-tenant Health renders 4 health-count cards", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="operator-overview")
       assert html =~ ~s(data-testid="operator-overview-health")
+
+      refute html
+             |> Floki.parse_document!()
+             |> Floki.find(~s([data-testid="operator-overview-health"] h2))
+             |> Enum.any?(fn h2 -> Floki.text(h2) == "Health" end)
+
       assert html =~ "Recent failures"
       assert html =~ "Orphan backlog"
       assert html =~ "Active suppressions"
@@ -1417,7 +1439,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
     test "suppression count degradation renders em-dash in text-secondary when count errors", %{
       conn: conn
     } do
-      # When suppression_count is nil (e.g., module error), the Overview renders "—"
+      # When suppression_count is nil (e.g., module error), the Health view renders "—"
       # We test this by mounting with a tenant and checking that a suppression count
       # is rendered (either as number or em-dash — both are valid render outputs).
       conn = operator_conn(conn)
@@ -1430,7 +1452,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "Active suppressions"
     end
 
-    test "?view=deliveries param shows Deliveries list not Overview", %{conn: conn} do
+    test "?view=deliveries param shows Deliveries list not Health", %{conn: conn} do
       conn = operator_conn(conn)
       _delivery = insert_delivery!(recipient: "view-test@example.com")
 
@@ -1443,7 +1465,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end
 
     # SHELL-02: operator-overview-nav block deleted (D-04/D-NAV-DUP)
-    test "Overview does NOT render the redundant Navigate block (operator-overview-nav deleted)", %{
+    test "Health does NOT render the redundant Navigate block (operator-overview-nav deleted)", %{
       conn: conn
     } do
       conn = operator_conn(conn)
@@ -1497,7 +1519,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
         |> Floki.find(~s([data-testid="operator-overview-health-suppressions-link"]))
         |> List.first()
 
-      assert suppressions_link != nil, "expected operator-overview-health-suppressions-link element"
+      assert suppressions_link != nil,
+             "expected operator-overview-health-suppressions-link element"
 
       href = suppressions_link |> Floki.attribute("href") |> List.first() || ""
 
@@ -1513,7 +1536,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
     # all-zeros for an empty tenant. With no failures/orphans/suppressions, the gate evaluates
     # all_clear? == true and suppression_count == 0 → orientation strip IS shown (all-clear state).
     # This tests both that the render does not crash AND that the all-clear path shows the strip.
-    test "all-clear tenant Overview renders orientation strip (empty-pane-only gate active)", %{
+    test "all-clear tenant Health renders orientation strip (empty-pane-only gate active)", %{
       conn: conn
     } do
       # Fresh test DB for this tenant has no failures or orphans → all_clear? == true
@@ -1589,7 +1612,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           deliveries: [delivery],
           selected_delivery: nil,
           filters_active?: false,
-          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       assert html =~ ~s(data-testid="operator-deliveries-table")
@@ -1613,7 +1642,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           deliveries: [delivery],
           selected_delivery: nil,
           filters_active?: false,
-          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       assert html =~ "<table"
@@ -1639,7 +1674,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           deliveries: [delivery],
           selected_delivery: delivery,
           filters_active?: false,
-          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       assert html =~ ~s(phx-click="select_delivery")
@@ -1665,7 +1706,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           deliveries: [delivery],
           selected_delivery: nil,
           filters_active?: false,
-          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       refute html =~ "masktest@example.com"
@@ -1689,7 +1736,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           deliveries: [delivery],
           selected_delivery: nil,
           filters_active?: false,
-          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       assert html =~ ~s(title="title-delivery-id-005")
@@ -1714,7 +1767,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           deliveries: [delivery, delivery],
           selected_delivery: nil,
           filters_active?: false,
-          page_meta: %{total_count: 1, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 1,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       assert html =~ "1 result"
@@ -1730,7 +1789,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           selected_delivery: nil,
           filters_active?: false,
           data_state: :empty,
-          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       assert html =~ ~s(data-testid="data-state-empty")
@@ -1744,7 +1809,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           selected_delivery: nil,
           filters_active?: false,
           data_state: :error,
-          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       assert html =~ ~s(data-testid="data-state-error")
@@ -1759,7 +1830,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           selected_delivery: nil,
           filters_active?: false,
           data_state: :permission_denied,
-          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       assert html =~ ~s(data-testid="data-state-permission-denied")
@@ -1774,7 +1851,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           selected_delivery: nil,
           filters_active?: false,
           data_state: :stale,
-          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       assert html =~ ~s(data-testid="data-state-stale")
@@ -1788,7 +1871,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           selected_delivery: nil,
           filters_active?: false,
           data_state: :empty,
-          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       error_html =
@@ -1797,7 +1886,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           selected_delivery: nil,
           filters_active?: false,
           data_state: :error,
-          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       permission_html =
@@ -1806,7 +1901,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           selected_delivery: nil,
           filters_active?: false,
           data_state: :permission_denied,
-          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       stale_html =
@@ -1815,7 +1916,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
           selected_delivery: nil,
           filters_active?: false,
           data_state: :stale,
-          page_meta: %{total_count: 0, page: 1, total_pages: 1, has_previous?: false, has_next?: false}
+          page_meta: %{
+            total_count: 0,
+            page: 1,
+            total_pages: 1,
+            has_previous?: false,
+            has_next?: false
+          }
         )
 
       # :empty and :error must have different testids
@@ -1834,24 +1941,24 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
   describe "SHELL-03: triage subtitle + all-clear calm copy" do
     # SHELL-03: subtitle is a state-driven triage line, never banned phrases
-    test "all-clear state subtitle is 'Your delivery system is healthy.'", %{conn: conn} do
+    test "all-clear state subtitle is 'Email delivery is healthy.'", %{conn: conn} do
       # Fresh test DB: no failed_ingest webhook events → all_clear? == true
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "Your delivery system is healthy.",
-             "all-clear subtitle must be 'Your delivery system is healthy.'"
+      assert html =~ "Email delivery is healthy.",
+             "all-clear subtitle must be 'Email delivery is healthy.'"
     end
 
-    test "attention state subtitle is 'Your delivery system needs attention.'", %{conn: conn} do
+    test "attention state subtitle is 'Email delivery needs attention.'", %{conn: conn} do
       conn = operator_conn(conn)
       # Insert a failed webhook_event to force attention state
       insert_webhook_event!(status: :failed)
 
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "Your delivery system needs attention.",
-             "attention subtitle must be 'Your delivery system needs attention.'"
+      assert html =~ "Email delivery needs attention.",
+             "attention subtitle must be 'Email delivery needs attention.'"
     end
 
     test "subtitle never contains 'Oops' or 'Navigate to'", %{conn: conn} do
@@ -1883,7 +1990,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~
-               "Your delivery system is healthy — nothing needs your attention right now.",
+               "Email delivery is healthy — nothing needs your attention right now.",
              "all-clear state must render the calm paragraph"
     end
 
@@ -1894,7 +2001,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       refute html =~
-               "Your delivery system is healthy — nothing needs your attention right now.",
+               "Email delivery is healthy — nothing needs your attention right now.",
              "attention state must not render the all-clear calm paragraph"
     end
   end
@@ -1926,7 +2033,6 @@ defmodule MailglassAdmin.OperatorLiveTest do
              "all-clear tile must not render a bare dash"
     end
   end
-
 end
 
 # FACADE-03: zero-admin-code-change proof — admin dashboard renders a written

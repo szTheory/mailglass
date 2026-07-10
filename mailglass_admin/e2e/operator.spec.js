@@ -20,7 +20,7 @@ async function openOperator(page) {
 
   const returnTo = encodeURIComponent(`/ops/mail?tenant_id=${tenantId}`);
   await page.goto(`/ops/browser-login?tenant_id=${tenantId}&return_to=${returnTo}`);
-  await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
   // Navigate to Deliveries view before delivery-centric assertions.
   // Target the page h1 (level 1) explicitly. The orientation strip is now
   // empty-pane-only (Phase 120 / D-08): on a POPULATED Deliveries view the strip
@@ -360,7 +360,7 @@ test.describe("operator browser gate", () => {
 
     // Navigate back to the Overview landing (openOperator navigates to Deliveries view)
     await page.goto(`/ops/mail?tenant_id=${tenantId}`);
-    await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
 
     // Overview container
     await expect(page.getByTestId("operator-overview")).toBeVisible();
@@ -391,7 +391,7 @@ test.describe("operator browser gate", () => {
 
     // Navigate to Overview (openOperator lands on Deliveries)
     await page.goto(`/ops/mail?tenant_id=${tenantId}`);
-    await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
 
     // In the browser-tenant with seed data present, the Overview is in attention state.
     // The orientation strip should be absent (suppressed — health needs attention).

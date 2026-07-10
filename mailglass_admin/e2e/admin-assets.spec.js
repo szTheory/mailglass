@@ -87,9 +87,9 @@ const routeCases = [
     mountRoot: "/ops/mail",
     access: "operator",
     colorTheme: "light",
-    anchor: page => page.getByRole("heading", { name: "Operator overview", exact: true }),
+    anchor: page => page.getByRole("heading", { name: "Email health", exact: true }),
     ready: async page => {
-      await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
     }
   },
   {

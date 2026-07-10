@@ -45,6 +45,8 @@ defmodule MailglassAdmin.Router do
       * `:live_session_name` — Name of the preview `live_session`
         (default `:mailglass_admin_preview`). Rename to resolve collisions
         with an adopter `live_session` of the same name.
+      * `:navigation` — Optional sibling admin surface paths rendered in the
+        shared nav: `:overview_path`, `:deliveries_path`, and `:inbound_path`.
       * `:as` — Route helper prefix (default `:mailglass_admin`).
 
     * `mailglass_operator_routes/2`
@@ -56,6 +58,8 @@ defmodule MailglassAdmin.Router do
       * `:live_session_name` — Name of the operator `live_session`
         (default `:mailglass_admin_operator`)
       * `:unauthorized_path` — redirect target when operator access is denied
+      * `:navigation` — Optional sibling admin surface paths rendered in the
+        shared nav: `:preview_path`.
       * `:as` — Route helper prefix (default `:mailglass_admin`)
 
   Every documented opt is part of the stable router contract once shipped; the
@@ -97,6 +101,29 @@ defmodule MailglassAdmin.Router do
             ]}
 
   @on_mount_hook_type {:or, [:atom, {:tuple, [:atom, :atom]}]}
+  @navigation_opts_schema [
+    preview_path: [
+      type: {:or, [:string, nil]},
+      default: nil,
+      doc: "Optional path to the preview surface."
+    ],
+    overview_path: [
+      type: {:or, [:string, nil]},
+      default: nil,
+      doc: "Optional path to the operator overview surface."
+    ],
+    deliveries_path: [
+      type: {:or, [:string, nil]},
+      default: nil,
+      doc: "Optional path to the operator deliveries surface."
+    ],
+    inbound_path: [
+      type: {:or, [:string, nil]},
+      default: nil,
+      doc: "Optional path to the inbound operator surface."
+    ]
+  ]
+
   @preview_opts_schema [
     mailables: [
       type: {:or, [{:in, [:auto_scan]}, {:list, :atom}]},
@@ -112,6 +139,12 @@ defmodule MailglassAdmin.Router do
       type: :atom,
       default: :mailglass_admin_preview,
       doc: "Name of the library-owned live_session. Rename to resolve collisions."
+    ],
+    navigation: [
+      type: :keyword_list,
+      default: [],
+      keys: @navigation_opts_schema,
+      doc: "Optional sibling admin surface paths for the shared nav."
     ],
     as: [
       type: :atom,
@@ -180,6 +213,12 @@ defmodule MailglassAdmin.Router do
           "`nil` (the default) disables the inbound surface — the dashboard renders " <>
           "without the routing-trace card."
     ],
+    navigation: [
+      type: :keyword_list,
+      default: [],
+      keys: @navigation_opts_schema,
+      doc: "Optional sibling admin surface paths for the shared nav."
+    ],
     as: [
       type: :atom,
       default: :mailglass_admin,
@@ -224,9 +263,9 @@ defmodule MailglassAdmin.Router do
           session: {MailglassAdmin.Router, :__preview_session__, [opts]},
           on_mount: on_mount_hooks,
           root_layout: {MailglassAdmin.Layouts, :root} do
-          live "/", MailglassAdmin.PreviewLive, :index
-          live "/:mailable/:scenario", MailglassAdmin.PreviewLive, :show
-          live "/gallery", MailglassAdmin.GalleryLive, :index
+          live("/", MailglassAdmin.PreviewLive, :index)
+          live("/:mailable/:scenario", MailglassAdmin.PreviewLive, :show)
+          live("/gallery", MailglassAdmin.GalleryLive, :index)
         end
       end
     end
@@ -266,7 +305,7 @@ defmodule MailglassAdmin.Router do
           session: {MailglassAdmin.Router, :__operator_session__, [opts]},
           on_mount: on_mount_hooks,
           root_layout: {MailglassAdmin.Layouts, :root} do
-          live "/", MailglassAdmin.OperatorLive, :index
+          live("/", MailglassAdmin.OperatorLive, :index)
 
           # CONTEXT the design contract/the design contract: the inbound surface mounts in the SAME operator
           # live_session (Operator.Mount + Auth gate), NOT the dev-preview session —
@@ -275,7 +314,7 @@ defmodule MailglassAdmin.Router do
           # Code.ensure_loaded?/1), so an admin without inbound no-ops the route + nav.
           if Code.ensure_loaded?(MailglassAdmin.OptionalDeps.MailglassInbound) and
                MailglassAdmin.OptionalDeps.MailglassInbound.available?() do
-            live "/inbound", MailglassAdmin.InboundLive, :index
+            live("/inbound", MailglassAdmin.InboundLive, :index)
           end
         end
       end
@@ -285,17 +324,17 @@ defmodule MailglassAdmin.Router do
   @doc false
   defmacro __asset_routes__ do
     quote do
-      get "/css-:md5", MailglassAdmin.Controllers.Assets, :css
-      get "/js-:md5", MailglassAdmin.Controllers.Assets, :js
-      get "/fonts/:name", MailglassAdmin.Controllers.Assets, :font
-      get "/logo.svg", MailglassAdmin.Controllers.Assets, :logo
+      get("/css-:md5", MailglassAdmin.Controllers.Assets, :css)
+      get("/js-:md5", MailglassAdmin.Controllers.Assets, :js)
+      get("/fonts/:name", MailglassAdmin.Controllers.Assets, :font)
+      get("/logo.svg", MailglassAdmin.Controllers.Assets, :logo)
     end
   end
 
   @doc false
   defmacro __theme_routes__ do
     quote do
-      get "/theme/:theme", MailglassAdmin.Controllers.ThemeController, :set
+      get("/theme/:theme", MailglassAdmin.Controllers.ThemeController, :set)
     end
   end
 
@@ -319,7 +358,8 @@ defmodule MailglassAdmin.Router do
     %{
       "mailables" => mailables,
       "live_session_name" => opts[:live_session_name],
-      "admin_chrome_theme_cookie" => __theme_cookie_value__(conn)
+      "admin_chrome_theme_cookie" => __theme_cookie_value__(conn),
+      "navigation" => navigation_opts(opts)
       # Add keys here ONLY when intentionally surfacing them to PreviewLive.
       # NEVER pass conn.private.plug_session through wholesale.
     }
@@ -336,6 +376,7 @@ defmodule MailglassAdmin.Router do
       "recent_auth_at" => get_optional_session(conn, session_opts[:recent_auth_at]),
       "live_session_name" => opts[:live_session_name],
       "admin_chrome_theme_cookie" => __theme_cookie_value__(conn),
+      "navigation" => navigation_opts(opts),
       # CONTEXT the design contract: the inbound router module is a compile-time opt, not a
       # session value — surfaced here (as an atom, never cookie-sourced) so the
       # operator LiveView can reflect declared inbound routes for the
@@ -347,12 +388,22 @@ defmodule MailglassAdmin.Router do
   defp get_optional_session(_conn, nil), do: nil
   defp get_optional_session(conn, key), do: Plug.Conn.get_session(conn, key)
 
+  defp navigation_opts(opts) do
+    opts
+    |> Keyword.get(:navigation, [])
+    |> Enum.reject(fn {_key, value} -> value in [nil, ""] end)
+    |> Map.new()
+  end
+
   @doc false
   def __theme_cookie_value__(conn) do
-    conn
-    |> Plug.Conn.fetch_cookies()
-    |> Map.get(:req_cookies, %{})
-    |> Map.get(MailglassAdmin.Controllers.ThemeController.cookie_name())
+    cookies =
+      conn
+      |> Plug.Conn.fetch_cookies()
+      |> Map.get(:req_cookies, %{})
+
+    Map.get(cookies, MailglassAdmin.Theme.cookie_name()) ||
+      Map.get(cookies, MailglassAdmin.Theme.legacy_cookie_name())
   end
 
   defp expand_opt_aliases(opts, env) do

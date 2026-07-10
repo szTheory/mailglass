@@ -35,12 +35,12 @@ defmodule MailglassDemoWeb.PageController do
             background-size: 28px 28px;
             font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           }
-          main { max-width: 1120px; margin: 0 auto; padding: 56px 24px 72px; }
-          .mast { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr); align-items: end; }
+          main { max-width: 1120px; margin: 0 auto; padding: 64px 24px 72px; }
+          .mast { max-width: 820px; }
           h1 { margin: 0; max-width: 760px; font-size: clamp(2.4rem, 5vw, 5.4rem); line-height: .94; letter-spacing: 0; }
           .sub { margin: 0; color: var(--slate); font-size: 1.02rem; line-height: 1.6; }
-          .panel { border: 1px solid var(--line); background: rgba(248,251,253,.86); border-radius: 8px; padding: 18px; box-shadow: 0 20px 60px rgba(13,27,42,.08); }
-          .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 34px 0; }
+          .intro-copy { display: grid; gap: 8px; max-width: 780px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+          .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 38px 0 34px; }
           .stat { border: 1px solid var(--line); border-radius: 8px; background: var(--mist); padding: 16px; }
           .num { display: block; font-size: 2rem; font-weight: 800; }
           .label { color: var(--slate); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
@@ -64,7 +64,7 @@ defmodule MailglassDemoWeb.PageController do
           .card p { margin: 0; color: var(--slate); line-height: 1.5; }
           form { margin: 0; }
           @media (max-width: 820px) {
-            .mast, .grid { grid-template-columns: 1fr; }
+            .grid { grid-template-columns: 1fr; }
             .stats { grid-template-columns: repeat(2, 1fr); }
           }
         </style>
@@ -73,44 +73,44 @@ defmodule MailglassDemoWeb.PageController do
         <main>
           <section class="mast">
             <div>
-              <p class="kicker">Northstar Ops · B2B SaaS demo</p>
-              <h1>Northstar Ops</h1>
+              <p class="kicker">Mailglass demo · sample Phoenix app</p>
+              <h1>Explore Mailglass in a working app</h1>
             </div>
-            <div class="panel">
-              <p class="sub">Tenant <strong>northstar</strong> contains deterministic preview, delivery, suppression, inbound record, routing trace, and replay evidence.</p>
-              <p class="sub">What to inspect: invite and sign-in, receipt and payment failure, usage alert and suppression, support reply, refund request, spam reject, no-match routing, and stored-truth replay.</p>
+            <div class="intro-copy" data-testid="dashboard-intro">
+              <p class="sub"><strong>AtlasDesk</strong> is a realistic support/workspace SaaS with Mailglass already wired in. Use it to see how templates, delivery history, webhook events, suppressions, and inbound mail fit together.</p>
+              <p class="sub">Start with Preview to inspect the emails, then open Outbound to trace sent messages and Inbound to follow received mail through routing and replay.</p>
             </div>
           </section>
 
           <section class="stats" aria-label="Seeded demo data">
-            <div class="stat"><span class="num">#{summary.deliveries}</span><span class="label">Deliveries</span></div>
-            <div class="stat"><span class="num">#{summary.events}</span><span class="label">Ledger Events</span></div>
-            <div class="stat"><span class="num">#{summary.inbound}</span><span class="label">Inbound Records</span></div>
-            <div class="stat"><span class="num">#{summary.suppressions}</span><span class="label">Suppressions</span></div>
+            <div class="stat"><span class="num">#{summary.deliveries}</span><span class="label">Email deliveries</span></div>
+            <div class="stat"><span class="num">#{summary.events}</span><span class="label">Email events</span></div>
+            <div class="stat"><span class="num">#{summary.inbound}</span><span class="label">Received emails</span></div>
+            <div class="stat"><span class="num">#{summary.suppressions}</span><span class="label">Suppressed addresses</span></div>
           </section>
 
           <section class="grid">
             <a class="card" href="/dev/mail">
               <span class="kicker">Preview</span>
-              <h2>Preview mailables</h2>
-              <p>Invite, magic link, receipt, payment failure, usage alert, and incident scenarios.</p>
+              <h2>Preview emails</h2>
+              <p>See the templates exactly as an app team would review them before sending.</p>
             </a>
             <a class="card" href="/demo/login?return_to=/ops/mail?tenant_id=#{summary.tenant_id}">
-              <span class="kicker">Outbound</span>
-              <h2>Outbound operator</h2>
-              <p>Delivery detail, timeline, suppression state, and exact webhook replay evidence.</p>
+              <span class="kicker">Sent mail</span>
+              <h2>Trace a sent email</h2>
+              <p>Open delivery history, status changes, provider events, and suppressions for outbound mail.</p>
             </a>
             <a class="card" href="/demo/login?return_to=/ops/mail/inbound?tenant_id=#{summary.tenant_id}">
-              <span class="kicker">Inbound</span>
-              <h2>Inbound operator</h2>
-              <p>Stored source evidence, routing trace, fresh execution, and replay lineage.</p>
+              <span class="kicker">Received mail</span>
+              <h2>Follow an inbound message</h2>
+              <p>Inspect the stored source, routing decision, mailbox outcome, and replay path.</p>
             </a>
             <form method="post" action="/demo/reset">
               <input type="hidden" name="_csrf_token" value="#{Plug.CSRFProtection.get_csrf_token()}">
               <button class="card" type="submit">
                 <span class="kicker">Reset</span>
                 <h2>Reset seed data</h2>
-                <p>Destructive: truncates and reseeds deterministic demo evidence tables for tenant northstar.</p>
+                <p>Destructive: restores the AtlasDesk demo evidence for the internal northstar tenant.</p>
               </button>
             </form>
           </section>

@@ -38,7 +38,7 @@ async function loginOperator(page, returnTo, subjectId = "operator-1", sessionTe
 
   const loginURL = new URL(`/ops/browser-login?${loginParams.toString()}`, baseURL).toString();
   await page.goto(loginURL);
-  await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`tenant_id=${sessionTenantId}`));
 }
 
@@ -65,6 +65,9 @@ async function openPreviewIndex(page, query = "") {
   await page.context().clearCookies();
   await page.goto(`/dev/mail/${query ? "?" + query : ""}`);
   await expect(page.getByTestId("preview-shell")).toBeVisible();
+  await expect(page).toHaveURL(/\/dev\/mail\/MailglassAdmin\.Fixtures\.HappyMailer\/welcome_default/);
+  await expect(page.getByTestId("preview-header-controls")).toBeVisible();
+  await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
 }
 
 async function openPreviewScenario(page, query = "theme=light") {
@@ -417,6 +420,12 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertSingleH1(page, "preview happy");
     await assertNoRootOverflow(page, "preview happy");
     await assertNoElementHorizontalOverflow(page.getByTestId("preview-shell"), "preview happy shell");
+    await expect(page.getByTestId("preview-mailables-picker")).toHaveAttribute("data-picker-variant", "menu");
+    await expect(page.getByTestId("preview-email-menu-trigger")).toBeVisible();
+    const scenarioLayoutDisplay = await page
+      .getByTestId("preview-scenario-layout")
+      .evaluate(el => getComputedStyle(el).display);
+    expect(scenarioLayoutDisplay).not.toBe("grid");
 
     // The single obvious top action for Preview: the render CTA inside the
     // assigns form. Live copy is "Render preview" (btn-primary); the planner's
@@ -432,6 +441,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
   test("Preview error: BrokenMailer -> render error", async ({ page }) => {
     await openPreviewError(page, "");
     await expect(page.getByTestId("preview-render-error")).toBeVisible();
+    await expect(page.getByTestId("preview-mailables-picker")).toHaveAttribute("data-picker-variant", "menu");
     await assertSingleH1(page, "preview error");
     await assertNoRootOverflow(page, "preview error");
     await assertNoElementHorizontalOverflow(page.getByTestId("preview-shell"), "preview error shell");
@@ -445,17 +455,19 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoElementHorizontalOverflow(page.getByTestId("preview-shell"), "preview boundary shell");
   });
 
-  test("Preview edge: index with many scenarios in details navigation at 320", async ({ page }) => {
+  test("Preview edge: index redirects into the unified scenario layout at 320", async ({ page }) => {
     await openPreviewIndex(page, "");
-    // D-11c: the start branch (mailables present, no scenario selected) renders
-    // preview-start and MUST expose exactly one <h1>.
-    await expect(page.getByTestId("preview-start")).toBeVisible();
-    await assertSingleH1(page, "preview start branch");
+    await expect(page.getByTestId("preview-start")).toHaveCount(0);
+    await expect(page.getByTestId("admin-shell-page-header")).toBeVisible();
+    await assertSingleH1(page, "preview redirected scenario");
     await assertNoRootOverflow(page, "preview edge");
     await assertNoElementHorizontalOverflow(page.getByTestId("preview-shell"), "preview edge shell");
-    // Mobile mailables navigation reaches a real scenario link at 320.
-    const mobileMailables = page.getByTestId("preview-mobile-mailables");
-    await expect(mobileMailables).toBeVisible();
+    // The compact email menu exposes real scenario links without a second nav column.
+    const mailablesPicker = page.getByTestId("preview-mailables-picker");
+    await expect(mailablesPicker).toBeVisible();
+    await expect(mailablesPicker).toHaveAttribute("data-picker-variant", "menu");
+    await page.getByTestId("preview-email-menu-trigger").click();
+    await expect(mailablesPicker.getByRole("link", { name: "welcome_default", exact: true })).toBeVisible();
   });
 
   test("Preview advanced: frame theme differs from admin theme without overflow at 320", async ({ page }) => {
@@ -473,10 +485,11 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
   test("Preview a11y: admin theme_picker is tri-state (system reachable)", async ({ page }) => {
     await openPreviewScenario(page, "theme=light");
     // The bespoke binary App button is gone; the canonical theme_picker renders
-    // three theme radios (system/light/dark) within the header controls.
-    const controls = page.getByTestId("preview-header-controls");
+    // three theme radios (system/light/dark) in the global preview chrome.
+    const controls = page.getByTestId("preview-global-controls");
     const radios = controls.locator('input[type="radio"][name="preview_admin_theme"]');
     await expect(radios).toHaveCount(3);
+    await expect(page.getByTestId("preview-header-controls").locator('input[name="preview_admin_theme"]')).toHaveCount(0);
     // The :system option is reachable (the third tri-state choice the old binary
     // button could never express).
     await expect(controls.locator('input[type="radio"][name="preview_admin_theme"][value="system"]')).toHaveCount(1);
@@ -488,16 +501,22 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await openPreviewScenario(page, "theme=light");
     const backdrop = page.getByTestId("preview-frame-theme-toggle");
     const status = page.getByTestId("preview-backdrop-status");
+    const pane = page.getByTestId("preview-pane");
+    const beforeBg = await pane.evaluate(el => getComputedStyle(el).backgroundColor);
     // Pre-click: backdrop off (light), aria-pressed=false, announce says light.
     await expect(backdrop).toHaveAttribute("aria-pressed", "false");
     await expect(status).toHaveAttribute("role", "status");
     await expect(status).toHaveAttribute("aria-live", "polite");
-    await expect(status).toHaveText("Email backdrop: light");
+    await expect(status).toHaveText("Preview backdrop: light");
+    await expect(pane).toHaveAttribute("data-theme", "mailglass-light");
     // Toggle: aria-pressed flips true and the aria-live region announces dark.
     await backdrop.click();
     await expect(backdrop).toHaveAttribute("aria-pressed", "true");
-    await expect(status).toHaveText("Email backdrop: dark");
-    await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
+    await expect(status).toHaveText("Preview backdrop: dark");
+    await expect(pane).toHaveAttribute("data-preview-frame-theme", "dark");
+    await expect(pane).toHaveAttribute("data-theme", "mailglass-dark");
+    const afterBg = await pane.evaluate(el => getComputedStyle(el).backgroundColor);
+    expect(afterBg).not.toBe(beforeBg);
   });
 
 });
@@ -627,8 +646,8 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
     await openOperator(page);
     const root = page.locator(".mg-admin-root").first();
 
-    // Default (system): shell stamps the light theme; system radio is selected.
-    await expect(root).toHaveAttribute("data-theme", "mailglass-light");
+    // Default (system): shell inherits prefers-color-scheme; system radio is selected.
+    await expect(root).not.toHaveAttribute("data-theme", /mailglass-/);
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
 
     await page.getByRole("radio", { name: "Dark", exact: true }).click();
@@ -640,8 +659,61 @@ test.describe("flows: operator theme picker applies the theme on click (FLOW-03)
     await expect(page.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
 
     await page.getByRole("radio", { name: "System", exact: true }).click();
-    await expect(root, "System click returns to the default light stamp").toHaveAttribute("data-theme", "mailglass-light");
+    await expect(root, "System click returns to inherited theme").not.toHaveAttribute("data-theme", /mailglass-/);
     await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
+  });
+
+  test("theme preference persists across sections without theme query params", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries`);
+
+    await page.getByRole("radio", { name: "Dark", exact: true }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page).not.toHaveURL(/[?&]theme=/);
+
+    await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Preview", exact: true }).click();
+    await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page).not.toHaveURL(/[?&]theme=/);
+
+    await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Health", exact: true }).click();
+    await expect(page.getByTestId("operator-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page).not.toHaveURL(/[?&]theme=/);
+
+    await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Inbound", exact: true }).click();
+    await expect(page.getByTestId("operator-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+    await expect(page).not.toHaveURL(/[?&]theme=/);
+  });
+
+  test("System preference beats stale legacy per-page cookies", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries`);
+
+    await page.context().addCookies([
+      {
+        name: "mailglass_admin_theme",
+        value: "dark",
+        domain: "127.0.0.1",
+        path: "/ops/mail"
+      },
+      {
+        name: "mailglass_admin_theme",
+        value: "light",
+        domain: "127.0.0.1",
+        path: "/dev/mail"
+      }
+    ]);
+
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+    await expect(page.getByTestId("operator-shell")).toHaveAttribute("data-theme", "mailglass-dark");
+
+    await page.getByRole("radio", { name: "System", exact: true }).click();
+    await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
+    await expect(page.getByTestId("operator-shell")).not.toHaveAttribute("data-theme", /mailglass-/);
+
+    await page.getByTestId("surface-nav-sidebar").getByRole("link", { name: "Preview", exact: true }).click();
+    await expect(page.getByRole("radio", { name: "System", exact: true })).toBeChecked();
+    await expect(page.getByTestId("preview-shell")).not.toHaveAttribute("data-theme", /mailglass-/);
+    await expect(page).not.toHaveURL(/[?&]theme=/);
   });
 
 });

@@ -8,6 +8,19 @@ defmodule MailglassAdmin.TestSupport.InboundTestMailbox do
   def process(_message), do: :accept
 end
 
+defmodule MyApp.Mailboxes.SupportMailbox do
+  @moduledoc false
+  use Boundary, top_level?: true, check: [in: false, out: false]
+
+  # Matches the mailbox identity used by InboundFixtures. Replay resolves the
+  # stored mailbox string back to a loaded module, so this fixture mailbox must
+  # exist even though the route-reflection tests use InboundTestMailbox below.
+  @behaviour MailglassInbound.Mailbox
+
+  @impl true
+  def process(_message), do: :accept
+end
+
 defmodule MailglassAdmin.TestSupport.InboundTestRouter do
   @moduledoc false
   # Synthetic adopter inbound router threaded into the operator dashboard via the
@@ -19,7 +32,7 @@ defmodule MailglassAdmin.TestSupport.InboundTestRouter do
 
   alias MailglassAdmin.TestSupport.InboundTestMailbox
 
-  route InboundTestMailbox, recipient: "support@example.com"
-  route InboundTestMailbox, subject: ~r/^\[billing\]/
-  route InboundTestMailbox, headers: [{"x-priority", "high"}]
+  route(InboundTestMailbox, recipient: "support@example.com")
+  route(InboundTestMailbox, subject: ~r/^\[billing\]/)
+  route(InboundTestMailbox, headers: [{"x-priority", "high"}])
 end

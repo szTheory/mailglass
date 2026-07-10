@@ -43,7 +43,7 @@
 // contrast defects. Targeted state cells where a persona NATURALLY produces them
 // (helios-void => empty/zero; northstar => error/high-count; fjordline-aps =>
 // long-ID/non-ASCII/null) are inherent in the persona routing. Spot-checks: the
-// system theme + 320 + 768 are added on the #1/#2 surfaces only (App-shell+Overview,
+// system theme + 320 + 768 are added on the #1/#2 surfaces only (App-shell+Health,
 // Deliveries). The register cites the exact cell per finding, so coverage is auditable.
 
 const { test } = require("@playwright/test");

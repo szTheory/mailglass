@@ -2,20 +2,21 @@ defmodule MailglassDemoWeb.Mailers.BillingMailer do
   use Mailglass.Mailable, stream: :operational
 
   alias Mailglass.Message
+  alias MailglassDemoWeb.Mailers.AtlasDeskEmail
 
   def preview_props do
     [
       receipt_paid: %{
-        recipient: "billing@northstar-ops.example",
-        workspace: "Northstar Ops",
+        recipient: AtlasDeskEmail.address("billing"),
+        workspace: AtlasDeskEmail.brand(),
         invoice_id: "INV-2026-0601",
         total: "$248.00",
         billing_period: "May 2026",
         plan: "Scale"
       },
       payment_failed: %{
-        recipient: "billing@northstar-ops.example",
-        workspace: "Northstar Ops",
+        recipient: AtlasDeskEmail.address("billing"),
+        workspace: AtlasDeskEmail.brand(),
         amount_due: "$248.00",
         card_last4: "4242",
         retry_at: "2026-06-02 09:00 ET"
@@ -25,14 +26,27 @@ defmodule MailglassDemoWeb.Mailers.BillingMailer do
 
   def receipt_paid(assigns) do
     new()
-    |> Message.from({"Northstar Billing", "billing@demo.mailglass.local"})
+    |> Message.from({"AtlasDesk Billing", "billing@atlasdesk.example"})
     |> Message.to(assigns.recipient)
-    |> Message.subject("Receipt INV-2026-0601 for Northstar Ops")
-    |> Message.html_body("""
-    <h1>Receipt #{assigns.invoice_id}</h1>
-    <p>#{assigns.workspace} paid #{assigns.total} for #{assigns.billing_period} on the #{assigns.plan} plan.</p>
-    <p>The invoice and audit trail are attached in your billing workspace.</p>
-    """)
+    |> Message.subject("Receipt #{assigns.invoice_id} for #{assigns.workspace}")
+    |> Message.html_body(
+      AtlasDeskEmail.html(%{
+        eyebrow: "Receipt",
+        preheader: "#{assigns.workspace} paid #{assigns.total} for #{assigns.billing_period}.",
+        title: "Receipt #{assigns.invoice_id}",
+        paragraphs: [
+          "#{assigns.workspace} paid #{assigns.total} for #{assigns.billing_period} on the #{assigns.plan} plan.",
+          "The invoice and audit trail are available in your billing workspace."
+        ],
+        metrics: [
+          {"Invoice", assigns.invoice_id},
+          {"Billing period", assigns.billing_period},
+          {"Plan", assigns.plan},
+          {"Total", assigns.total}
+        ],
+        cta: {"Open billing", "https://app.atlasdesk.example/billing"}
+      })
+    )
     |> Message.text_body(
       "#{assigns.workspace} paid #{assigns.total} for #{assigns.invoice_id} during #{assigns.billing_period} on the #{assigns.plan} plan."
     )
@@ -41,14 +55,28 @@ defmodule MailglassDemoWeb.Mailers.BillingMailer do
 
   def payment_failed(assigns) do
     new()
-    |> Message.from({"Northstar Billing", "billing@demo.mailglass.local"})
+    |> Message.from({"AtlasDesk Billing", "billing@atlasdesk.example"})
     |> Message.to(assigns.recipient)
-    |> Message.subject("Payment action needed for Northstar Ops")
-    |> Message.html_body("""
-    <h1>Payment action needed</h1>
-    <p>Amount due: #{assigns.amount_due} (card ending #{assigns.card_last4}).</p>
-    <p>The next automatic retry runs #{assigns.retry_at}. Update billing details to keep transactional email flowing.</p>
-    """)
+    |> Message.subject("Payment action needed for #{assigns.workspace}")
+    |> Message.html_body(
+      AtlasDeskEmail.html(%{
+        eyebrow: "Billing action needed",
+        preheader: "Update billing to keep AtlasDesk transactional email flowing.",
+        title: "Payment action needed",
+        paragraphs: [
+          "We could not process the latest AtlasDesk payment.",
+          "Update the billing details before the next retry to keep transactional email flowing."
+        ],
+        metrics: [
+          {"Amount due", assigns.amount_due},
+          {"Card", "Ending #{assigns.card_last4}"},
+          {"Next retry", assigns.retry_at}
+        ],
+        cta: {"Update billing", "https://app.atlasdesk.example/billing/payment-methods"},
+        note:
+          "Your workspace remains active during the retry window. Some outbound notifications may pause if the balance remains unpaid."
+      })
+    )
     |> Message.text_body(
       "Payment action needed. Amount due: #{assigns.amount_due} (card ending #{assigns.card_last4}). The next automatic retry runs #{assigns.retry_at}."
     )

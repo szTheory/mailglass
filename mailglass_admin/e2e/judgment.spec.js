@@ -48,14 +48,14 @@ async function openOverview(page) {
   // The Overview landing renders this h1; reaching it confirms we are authenticated
   // and on the Overview route, not the Deliveries view.
   await expect(
-    page.getByRole("heading", { name: "Operator overview", exact: true })
+    page.getByRole("heading", { name: "Email health", exact: true })
   ).toBeVisible();
   // Stay on / return to the Overview route (no view=deliveries query).
   await page.goto(
     new URL(`/ops/mail?tenant_id=${tenantId}`, baseURL).toString()
   );
   await expect(
-    page.getByRole("heading", { name: "Operator overview", exact: true })
+    page.getByRole("heading", { name: "Email health", exact: true })
   ).toBeVisible();
   await expect(page.getByTestId("operator-overview")).toBeVisible();
 }

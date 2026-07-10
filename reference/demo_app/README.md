@@ -18,7 +18,7 @@ once, configurable ports, troubleshooting — is in
 Everyday commands:
 
 ```bash
-make demo-reset   # reseed the deterministic northstar data
+make demo-reset   # reseed the deterministic AtlasDesk demo data
 make demo-e2e     # run browser evidence against the running demo
 make demo-down    # stop the demo
 ```
@@ -31,10 +31,11 @@ Future artifact label: `demo_browser_evidence.v1`.
 
 ## Persona and JTBD
 
-Northstar Ops is the B2B SaaS operations team persona for this demo. The job to
-be done is to inspect preview mailables, confirm deliveries and suppressions,
+AtlasDesk is the fictional support/workspace SaaS for this demo. The job to be
+done is to inspect preview mailables, confirm deliveries and suppressions,
 review inbound records and routing trace evidence, and replay stored truth
-without guessing.
+without guessing. The deterministic tenant id remains `northstar` so deep links
+and test fixtures stay stable.
 
 ## Seeded data
 

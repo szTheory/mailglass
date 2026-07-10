@@ -427,6 +427,14 @@ defmodule MailglassAdmin.ComponentsTest do
       html = render_component(&Components.theme_picker/1, selected: :system)
 
       assert_all(html, ["<fieldset", "<legend", "Theme", "System", "Light", "Dark"])
+      assert_all(html, ["hero-window", "hero-sun", "hero-moon"])
+
+      assert_all(html, [
+        ~s(aria-label="System"),
+        ~s(aria-label="Light"),
+        ~s(aria-label="Dark")
+      ])
+
       assert radio_count(html) == 3
       assert html =~ ~r/value="system"[^>]*checked/
     end
@@ -455,7 +463,10 @@ defmodule MailglassAdmin.ComponentsTest do
       html = render_component(&Components.theme_picker/1, selected: :system)
 
       assert_all(html, [
-        "hover:bg-base-100",
+        "rounded-box",
+        "mg-state-layer",
+        "pointer-events-none",
+        "hover:bg-base-100/70",
         "hover:text-base-content",
         "mg-focus-ring",
         "min-h-11",

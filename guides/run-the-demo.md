@@ -35,9 +35,10 @@ Open the Dashboard URL and click around. When you're done, `make demo-down`.
 
 ## What you're looking at
 
-The demo plays the role of **Northstar Ops** — a B2B SaaS operations team using
-mailglass in production. The data is seeded and deterministic, so every screen
-has something real to inspect.
+The demo plays the role of **AtlasDesk** - a fictional support/workspace SaaS
+using mailglass in production. The data is seeded and deterministic, so every
+screen has something real to inspect. The internal tenant id remains
+`northstar`, which is why the operator URLs include `tenant_id=northstar`.
 
 | Open | To see |
 |---|---|
@@ -88,7 +89,7 @@ to — `make demo` works with no `.env` at all.
 make            # list every demo command (same as: make help)
 make demo       # build, start, and print the URLs
 make demo-down  # stop the demo (keeps cached deps for a fast restart)
-make demo-reset # reseed the deterministic northstar data
+make demo-reset # reseed the deterministic AtlasDesk demo data
 make demo-e2e   # run the Playwright browser-evidence suite
 make demo-logs  # follow the app logs
 make demo-clean # stop and remove all volumes (full reset)

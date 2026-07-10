@@ -51,7 +51,7 @@ demo-down: ## Stop the demo (keeps cached deps/build volumes for a fast restart)
 demo-clean: ## Stop and remove all volumes (the reset after an Elixir/base-image bump)
 	@$(COMPOSE) down -v --remove-orphans
 
-demo-reset: ## Reseed the deterministic northstar demo data
+demo-reset: ## Reseed the deterministic AtlasDesk demo data
 	@$(COMPOSE) exec demo mix demo.reset
 
 demo-e2e: ## Run the Playwright browser-evidence suite against the demo

@@ -43,36 +43,38 @@ defmodule MailglassAdmin.Operator.ShellTest do
     test "carries tenant_id across surfaces so nav preserves scope" do
       paths = Shell.surface_paths("/ops/mail", :deliveries, false, "northstar")
 
-      assert paths.deliveries == "/ops/mail?tenant_id=northstar"
+      assert paths.overview == "/ops/mail?tenant_id=northstar"
+      assert paths.deliveries == "/ops/mail?tenant_id=northstar&view=deliveries"
       assert paths.inbound == "/ops/mail/inbound?tenant_id=northstar"
     end
 
-    test "carries tenant_id AND theme together (tenant first, deterministic)" do
+    test "does not carry theme in cross-surface navigation" do
       paths = Shell.surface_paths("/ops/mail/inbound", :inbound, true, "northstar")
 
-      assert paths.deliveries == "/ops/mail?tenant_id=northstar&theme=dark"
-      assert paths.inbound == "/ops/mail/inbound?tenant_id=northstar&theme=dark"
+      assert paths.deliveries == "/ops/mail?tenant_id=northstar&view=deliveries"
+      assert paths.inbound == "/ops/mail/inbound?tenant_id=northstar"
     end
 
-    test "omits tenant_id when blank, keeping theme-only behavior" do
+    test "omits tenant_id when blank" do
       assert Shell.surface_paths("/ops/mail", :deliveries, true, nil).deliveries ==
-               "/ops/mail?theme=dark"
+               "/ops/mail?view=deliveries"
 
       assert Shell.surface_paths("/ops/mail", :deliveries, true, "").deliveries ==
-               "/ops/mail?theme=dark"
+               "/ops/mail?view=deliveries"
     end
 
     test "no query when neither tenant nor dark theme is set" do
       paths = Shell.surface_paths("/ops/mail", :deliveries, false, nil)
 
-      assert paths.deliveries == "/ops/mail"
+      assert paths.overview == "/ops/mail"
+      assert paths.deliveries == "/ops/mail?view=deliveries"
       assert paths.inbound == "/ops/mail/inbound"
     end
 
     test "recovers the operator root from the inbound base_path" do
       paths = Shell.surface_paths("/ops/mail/inbound", :inbound, false, "northstar")
 
-      assert paths.deliveries == "/ops/mail?tenant_id=northstar"
+      assert paths.deliveries == "/ops/mail?tenant_id=northstar&view=deliveries"
     end
   end
 
@@ -81,7 +83,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
       assert Shell.tenant_switch_path(
                "/ops/mail?tenant_id=alpha&delivery_id=old-id&provider=postmark&theme=dark",
                "beta"
-             ) == "/ops/mail?tenant_id=beta&provider=postmark&theme=dark"
+             ) == "/ops/mail?tenant_id=beta&provider=postmark"
     end
 
     test "keeps the inbound surface and drops selected inbound ids when switching tenants" do
@@ -93,19 +95,20 @@ defmodule MailglassAdmin.Operator.ShellTest do
   end
 
   describe "theme_choice/1" do
-    test "maps explicit dark values to :dark" do
-      assert Shell.theme_choice(%{"theme" => "dark"}) == :dark
-      assert Shell.theme_choice(%{"theme" => "mailglass-dark"}) == :dark
+    test "maps explicit dark cookie values to :dark" do
+      assert Shell.theme_choice(%{}, "dark") == :dark
+      assert Shell.theme_choice(%{}, "mailglass-dark") == :dark
     end
 
-    test "maps explicit light values to :light" do
-      assert Shell.theme_choice(%{"theme" => "light"}) == :light
-      assert Shell.theme_choice(%{"theme" => "mailglass-light"}) == :light
+    test "maps explicit light cookie values to :light" do
+      assert Shell.theme_choice(%{}, "light") == :light
+      assert Shell.theme_choice(%{}, "mailglass-light") == :light
     end
 
-    test "defaults absent or unknown values to :system" do
+    test "defaults absent, query-only, or unknown values to :system" do
       assert Shell.theme_choice(%{}) == :system
-      assert Shell.theme_choice(%{"theme" => "sepia"}) == :system
+      assert Shell.theme_choice(%{"theme" => "dark"}) == :system
+      assert Shell.theme_choice(%{}, "sepia") == :system
     end
   end
 
@@ -129,6 +132,69 @@ defmodule MailglassAdmin.Operator.ShellTest do
     test "derives the persistence route from mounted operator path" do
       assert Shell.set_theme_path("/custom/admin/mail/inbound?tenant_id=acme", "dark") ==
                "/custom/admin/mail/theme/dark?return_to=%2Fcustom%2Fadmin%2Fmail%2Finbound%3Ftenant_id%3Dacme"
+    end
+  end
+
+  describe "shell/1 header chrome" do
+    test "renders theme control without the passive tenant context chip" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <Shell.shell
+          active={:inbound}
+          preview_path="/dev/mail"
+          overview_path="/ops/mail?tenant_id=northstar"
+          deliveries_path="/ops/mail?tenant_id=northstar&view=deliveries"
+          inbound_path="/ops/mail/inbound?tenant_id=northstar"
+          inbound_available?={true}
+          title="Inbound records"
+        >
+          body
+        </Shell.shell>
+        """)
+
+      assert html =~ ~s(data-testid="admin-shell-topbar")
+      assert html =~ ~s(data-testid="admin-shell-sidebar")
+      assert html =~ ~s(data-testid="admin-shell-mobile-nav")
+      assert html =~ ~s(name="theme")
+      assert html =~ ~s(aria-label="Dark")
+      assert html =~ "hero-moon"
+      refute html =~ "Tenant currently in view"
+      refute html =~ "No tenant selected"
+      refute html =~ "hero-building-office-2"
+      assert html =~ ~s(href="/dev/mail")
+      assert html =~ "Health"
+      assert html =~ "Preview"
+    end
+
+    test "orders shared surface nav with Health first and Preview second" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <Shell.shell
+          active={:overview}
+          preview_path="/dev/mail"
+          overview_path="/ops/mail?tenant_id=northstar"
+          deliveries_path="/ops/mail?tenant_id=northstar&view=deliveries"
+          inbound_path="/ops/mail/inbound?tenant_id=northstar"
+          inbound_available?={true}
+          title="Email health"
+        >
+          body
+        </Shell.shell>
+        """)
+
+      {:ok, doc} = Floki.parse_fragment(html)
+
+      labels =
+        doc
+        |> Floki.find(~s([data-testid="surface-nav-sidebar"] a))
+        |> Enum.map(&Floki.text/1)
+        |> Enum.map(&String.trim/1)
+
+      assert labels == ["Health", "Preview", "Deliveries", "Inbound"]
     end
   end
 
@@ -244,11 +310,11 @@ defmodule MailglassAdmin.Operator.ShellTest do
       refute Enum.any?(current, &(&1 =~ "Deliveries")),
              "Deliveries must never carry aria-current when active is :inbound, got: #{inspect(current)}"
 
-      refute Enum.any?(current, &(&1 =~ "Overview")),
-             "Overview must never carry aria-current when active is :inbound, got: #{inspect(current)}"
+      refute Enum.any?(current, &(&1 =~ "Health")),
+             "Health must never carry aria-current when active is :inbound, got: #{inspect(current)}"
     end
 
-    test "active={:overview} marks only Overview nav items aria-current=page" do
+    test "active={:overview} marks only Health nav items aria-current=page" do
       assigns = %{}
 
       html =
@@ -259,7 +325,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
           deliveries_path="/operator?view=deliveries"
           inbound_path="/operator/inbound"
           inbound_available?={true}
-          title="Operator overview"
+          title="Email health"
         >
           body
         </Shell.shell>
@@ -269,8 +335,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
 
       assert current != [], "expected at least one aria-current=page nav item"
 
-      assert Enum.all?(current, &(&1 =~ "Overview")),
-             "expected every aria-current nav item to be Overview, got: #{inspect(current)}"
+      assert Enum.all?(current, &(&1 =~ "Health")),
+             "expected every aria-current nav item to be Health, got: #{inspect(current)}"
 
       refute Enum.any?(current, &(&1 =~ "Deliveries")),
              "Deliveries must never carry aria-current when active is :overview, got: #{inspect(current)}"
@@ -279,7 +345,7 @@ defmodule MailglassAdmin.Operator.ShellTest do
              "Inbound must never carry aria-current when active is :overview, got: #{inspect(current)}"
     end
 
-    test "Overview nav_link and nav_pill are always rendered (no :if gate), href equals overview_path" do
+    test "Health nav_link and nav_pill are always rendered (no :if gate), href equals overview_path" do
       assigns = %{}
 
       html =
@@ -298,20 +364,20 @@ defmodule MailglassAdmin.Operator.ShellTest do
 
       {:ok, doc} = Floki.parse_fragment(html)
 
-      # Overview nav items must be present even when inbound_available?=false (always-shown, no gate)
-      overview_links =
+      # Health nav items must be present even when inbound_available?=false (always-shown, no gate)
+      health_links =
         doc
         |> Floki.find("a")
-        |> Enum.filter(fn node -> Floki.text(node) |> String.trim() =~ "Overview" end)
+        |> Enum.filter(fn node -> Floki.text(node) |> String.trim() =~ "Health" end)
 
-      assert length(overview_links) >= 2,
-             "expected at least 2 Overview nav items (sidebar + mobile), got: #{length(overview_links)}"
+      assert length(health_links) >= 2,
+             "expected at least 2 Health nav items (sidebar + mobile), got: #{length(health_links)}"
 
-      Enum.each(overview_links, fn link ->
+      Enum.each(health_links, fn link ->
         href = link |> Floki.attribute("href") |> List.first()
 
         assert href == "/operator",
-               "expected Overview nav item href to be /operator (bare root), got: #{inspect(href)}"
+               "expected Health nav item href to be /operator (bare root), got: #{inspect(href)}"
       end)
     end
 
@@ -351,6 +417,11 @@ defmodule MailglassAdmin.Operator.ShellTest do
       assert html =~ "System"
       assert html =~ "Light"
       assert html =~ "Dark"
+      assert html =~ "hero-window"
+      assert html =~ "hero-sun"
+      assert html =~ "hero-moon"
+      assert html =~ ~s(data-testid="admin-shell-actions")
+      assert html =~ "ml-auto"
       assert html =~ ~s(phx-click="set_theme")
       assert html =~ ~s(phx-value-theme="system")
       assert html =~ ~s(phx-value-theme="light")

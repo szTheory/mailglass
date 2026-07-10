@@ -19,8 +19,10 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
       message = AccountMailer.invite_admin(AccountMailer.preview_props()[:invite_admin])
 
       assert message.mailable_function == :invite_admin
-      assert message.swoosh_email.subject == "Sam Rivera invited you to Northstar Ops"
-      assert message.swoosh_email.html_body =~ "Northstar Ops"
+      assert message.swoosh_email.from == {"AtlasDesk", "notify@atlasdesk.example"}
+      assert message.swoosh_email.subject == "Sam Rivera invited you to AtlasDesk"
+      assert_real_atlasdesk_email(message)
+      assert message.swoosh_email.html_body =~ "Workspace invite"
       assert message.swoosh_email.text_body =~ "Sam Rivera"
     end
 
@@ -28,7 +30,9 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
       message = AccountMailer.magic_link(AccountMailer.preview_props()[:magic_link])
 
       assert message.mailable_function == :magic_link
-      assert message.swoosh_email.subject == "Your Northstar Ops sign-in link"
+      assert message.swoosh_email.from == {"AtlasDesk", "security@atlasdesk.example"}
+      assert message.swoosh_email.subject == "Your AtlasDesk sign-in link"
+      assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "Chrome on macOS"
       assert message.swoosh_email.html_body =~ "2026-06-01 14:48 UTC"
       assert message.swoosh_email.text_body =~ "Chrome on macOS"
@@ -53,7 +57,9 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
       message = BillingMailer.receipt_paid(BillingMailer.preview_props()[:receipt_paid])
 
       assert message.mailable_function == :receipt_paid
-      assert message.swoosh_email.subject == "Receipt INV-2026-0601 for Northstar Ops"
+      assert message.swoosh_email.from == {"AtlasDesk Billing", "billing@atlasdesk.example"}
+      assert message.swoosh_email.subject == "Receipt INV-2026-0601 for AtlasDesk"
+      assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "May 2026"
       assert message.swoosh_email.html_body =~ "Scale"
       assert message.swoosh_email.text_body =~ "May 2026"
@@ -64,7 +70,9 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
       message = BillingMailer.payment_failed(BillingMailer.preview_props()[:payment_failed])
 
       assert message.mailable_function == :payment_failed
-      assert message.swoosh_email.subject == "Payment action needed for Northstar Ops"
+      assert message.swoosh_email.from == {"AtlasDesk Billing", "billing@atlasdesk.example"}
+      assert message.swoosh_email.subject == "Payment action needed for AtlasDesk"
+      assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "$248.00"
       assert message.swoosh_email.html_body =~ "4242"
       assert message.swoosh_email.text_body =~ "$248.00"
@@ -87,20 +95,39 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
       message = OperationsMailer.usage_alert(OperationsMailer.preview_props()[:usage_alert])
 
       assert message.mailable_function == :usage_alert
-      assert message.swoosh_email.subject == "Northstar Ops email usage reached 85%"
+      assert message.swoosh_email.from == {"AtlasDesk", "ops@atlasdesk.example"}
+      assert message.swoosh_email.subject == "AtlasDesk email usage reached 85%"
+      assert_real_atlasdesk_email(message)
+      assert message.swoosh_email.html_body =~ "Usage threshold reached"
       assert message.swoosh_email.html_body =~ "$38.00"
+      refute message.swoosh_email.html_body =~ "Usage threshold reachedAtlasDesk"
       assert message.swoosh_email.text_body =~ "$38.00"
+      assert message.swoosh_email.text_body =~ "AtlasDesk used 85%"
     end
 
     test "incident_update builds expected public message fields" do
       message = OperationsMailer.incident_update(OperationsMailer.preview_props()[:incident_update])
 
       assert message.mailable_function == :incident_update
+      assert message.swoosh_email.from == {"AtlasDesk Status", "status@atlasdesk.example"}
       assert message.swoosh_email.subject == "INC-4421 is monitoring"
+      assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "Inbound routing trace"
       assert message.swoosh_email.html_body =~ "15 minutes"
       assert message.swoosh_email.text_body =~ "Inbound routing trace"
       assert message.swoosh_email.text_body =~ "15 minutes"
     end
+  end
+
+  defp assert_real_atlasdesk_email(message) do
+    html = message.swoosh_email.html_body
+
+    assert html =~ ~s(data-brand="AtlasDesk")
+    refute html =~ "data-demo-brand"
+    refute html =~ "Mailglass"
+    refute html =~ "demo"
+    refute html =~ "fictional"
+    refute html =~ "seeded"
+    refute html =~ "replay evidence"
   end
 end

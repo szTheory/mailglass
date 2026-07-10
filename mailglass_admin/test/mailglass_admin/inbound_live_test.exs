@@ -22,6 +22,7 @@ defmodule MailglassAdmin.InboundLiveTest do
   @other_tenant "other-tenant"
   @base_path "/ops/mail/inbound"
   @banned ["Oops", "Whoops", "Uh oh", "Something went wrong"]
+  @theme_cookie MailglassAdmin.Theme.cookie_name()
 
   describe "inbound surface" do
     test "bare inbound URL with exactly one accessible tenant canonicalizes to tenant_id", %{
@@ -951,7 +952,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id,
+         %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)
@@ -990,9 +992,10 @@ defmodule MailglassAdmin.InboundLiveTest do
   end
 
   describe "dual table+card presentation (DATA-01, Task 1)" do
-    test "records present: both inbound-records-table and inbound-records-cards testids appear", %{
-      conn: conn
-    } do
+    test "records present: both inbound-records-table and inbound-records-cards testids appear",
+         %{
+           conn: conn
+         } do
       conn = operator_conn(conn)
       InboundFixtures.seed_matched!(@tenant_id, recipient: "table@example.com")
 
@@ -1033,14 +1036,30 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~ ~s(<th scope="col")
-      # Column order within the table header: Outcome first, then Mailbox, Tenant, Provider, Received
-      thead_html = html |> String.split("<thead>") |> List.last() |> String.split("</thead>") |> List.first()
 
-      outcome_pos = String.length(thead_html) - (thead_html |> String.split("Outcome") |> List.last() |> String.length())
-      mailbox_pos = String.length(thead_html) - (thead_html |> String.split("Mailbox") |> List.last() |> String.length())
-      tenant_pos = String.length(thead_html) - (thead_html |> String.split("Tenant") |> List.last() |> String.length())
-      provider_pos = String.length(thead_html) - (thead_html |> String.split("Provider") |> List.last() |> String.length())
-      received_pos = String.length(thead_html) - (thead_html |> String.split("Received") |> List.last() |> String.length())
+      # Column order within the table header: Outcome first, then Mailbox, Tenant, Provider, Received
+      thead_html =
+        html |> String.split("<thead>") |> List.last() |> String.split("</thead>") |> List.first()
+
+      outcome_pos =
+        String.length(thead_html) -
+          (thead_html |> String.split("Outcome") |> List.last() |> String.length())
+
+      mailbox_pos =
+        String.length(thead_html) -
+          (thead_html |> String.split("Mailbox") |> List.last() |> String.length())
+
+      tenant_pos =
+        String.length(thead_html) -
+          (thead_html |> String.split("Tenant") |> List.last() |> String.length())
+
+      provider_pos =
+        String.length(thead_html) -
+          (thead_html |> String.split("Provider") |> List.last() |> String.length())
+
+      received_pos =
+        String.length(thead_html) -
+          (thead_html |> String.split("Received") |> List.last() |> String.length())
 
       assert outcome_pos < mailbox_pos
       assert mailbox_pos < tenant_pos
@@ -1065,7 +1084,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(phx-click="select_inbound")
       assert html =~ ~s(phx-value-id="#{record.id}")
-      assert (html |> String.split(~s(aria-selected="true")) |> length()) >= 2
+      assert html |> String.split(~s(aria-selected="true")) |> length() >= 2
     end
 
     test "inbound-record-row testid remains reachable and outcome badges carry inbound-outcome- testids",
@@ -1092,7 +1111,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       # "example" has 7 chars: e + 6 stars = "e******"
       masked = "m*********@e******.com"
       assert html =~ masked
-      assert (html |> String.split(masked) |> length()) >= 3
+      assert html |> String.split(masked) |> length() >= 3
       # Raw recipient never appears
       refute html =~ "maskinboth@example.com"
     end
@@ -1495,7 +1514,9 @@ defmodule MailglassAdmin.InboundLiveTest do
                "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
     end
 
-    test "reveal emits a PII-free [:reveal_raw, :stop] with outcome=:granted (D-12)", %{conn: conn} do
+    test "reveal emits a PII-free [:reveal_raw, :stop] with outcome=:granted (D-12)", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
 
       %{record: record} =
@@ -1553,7 +1574,8 @@ defmodule MailglassAdmin.InboundLiveTest do
         receive do
           {^ref, metadata} -> metadata
         after
-          1_000 -> flunk("expected [:mailglass_admin, :inbound, :reveal_raw, :stop] telemetry event")
+          1_000 ->
+            flunk("expected [:mailglass_admin, :inbound, :reveal_raw, :stop] telemetry event")
         end
       after
         :telemetry.detach(handler_id)
@@ -1575,13 +1597,27 @@ defmodule MailglassAdmin.InboundLiveTest do
   end
 
   describe "root layout theme (MountPathHook)" do
-    test "?theme=dark themes the inbound ROOT <html>, not just the shell", %{conn: conn} do
-      conn = operator_conn(conn)
+    test "theme cookie themes the inbound ROOT <html>, not just the shell", %{conn: conn} do
+      conn =
+        conn
+        |> operator_conn()
+        |> Plug.Conn.put_req_header("cookie", "#{@theme_cookie}=dark")
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "theme" => "dark"}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s|<html lang="en" data-theme="mailglass-dark">|
+    end
+
+    test "legacy theme query redirects through persistence", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      assert {:error,
+              {:redirect,
+               %{
+                 to:
+                   "/ops/mail/theme/dark?return_to=%2Fops%2Fmail%2Finbound%3Ftenant_id%3Dtest-tenant"
+               }}} = live(conn, inbound_path(%{"tenant_id" => @tenant_id, "theme" => "dark"}))
     end
 
     test "no theme param leaves the inbound root <html> un-themed", %{conn: conn} do

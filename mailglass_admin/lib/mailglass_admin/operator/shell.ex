@@ -1,24 +1,22 @@
 defmodule MailglassAdmin.Operator.Shell do
   @moduledoc """
-  Shared application shell for the operator surface — the chrome wrapping both
-  `MailglassAdmin.OperatorLive` (deliveries) and `MailglassAdmin.InboundLive`
-  (inbound records). The two screens mount in the SAME operator `live_session`
-  (one `Operator.Mount` + Auth gate), so a shared shell is a within-surface
-  concern, not a cross-mount one — it never reaches the dev-preview surface.
+  Shared application shell for operator surfaces — the chrome wrapping both
+  `MailglassAdmin.OperatorLive` (overview/deliveries) and `MailglassAdmin.InboundLive`
+  (inbound records). The operator screens mount in the SAME operator `live_session`
+  (one `Operator.Mount` + Auth gate). Preview can appear as a configured sibling
+  nav link, but it remains a separate route/live-session boundary.
 
   Provides:
 
-    * a persistent left sidebar that navigates BETWEEN surfaces (Deliveries /
-      Inbound) — navigation, not filtering. The Inbound item is conditionally
+    * a shared topbar plus persistent sidebar that navigates BETWEEN surfaces
+      (Health / Preview / Deliveries / Inbound) — navigation, not filtering.
+      The Inbound item is conditionally
       omitted via `inbound_available?` (the same `OptionalDeps.MailglassInbound`
       gate the router uses to decide whether to emit the `/inbound` route), so an
       operator without the inbound package never sees a dead link.
-    * a read-only tenant-context chip (forensic trust: always show whose data is
-      on screen).
-    * a shell-owned theme toggle (the dark theme is fully built but was
-      previously unreachable from the operator UI). Theme is carried in the URL
-      `?theme=` param so it survives both Deliveries↔Inbound navigation and
-      refresh — mirroring the preview surface's pattern.
+    * a shell-owned theme picker. Theme persists as an admin preference cookie,
+      so Deliveries↔Inbound navigation and refreshes keep the same chrome
+      without adding app preference state to URLs.
 
   Nav links reset to each surface's base path (no `delivery_id`/`inbound_id`,
   no stale filters): switching surfaces is a fresh question, and inheriting a
@@ -29,7 +27,10 @@ defmodule MailglassAdmin.Operator.Shell do
 
   use Phoenix.Component
 
+  alias MailglassAdmin.AdminShell
   alias MailglassAdmin.Components
+  alias MailglassAdmin.SurfaceNav
+  alias MailglassAdmin.Theme
 
   @doc """
   Whether the inbound surface is present — the SAME gate the router uses to
@@ -43,23 +44,21 @@ defmodule MailglassAdmin.Operator.Shell do
 
   @doc """
   Derives the `{deliveries, inbound}` nav paths from a screen's `base_path`,
-  carrying the `?tenant_id=` and `?theme=` params so the tenant scope AND the
-  active theme survive cross-surface navigation. `active` tells us which surface
-  we're on so we can recover the operator root (the inbound screen's `base_path`
-  has a trailing `/inbound` to strip).
+  carrying only the shared `?tenant_id=` scope across surfaces. `active` tells
+  us which surface we're on so we can recover the operator root (the inbound
+  screen's `base_path` has a trailing `/inbound` to strip).
 
   Only `tenant_id` is carried across surfaces — it is the shared scoping
   dimension. Surface-specific filters (delivery vs inbound status sets) are
   intentionally left behind, since they don't translate between surfaces.
   """
-  def surface_paths(base_path, active, dark_chrome, tenant_id \\ nil) do
+  def surface_paths(base_path, active, _dark_chrome, tenant_id \\ nil) do
     root = operator_root(base_path, active)
-    query = build_query(tenant_id, dark_chrome)
 
     %{
-      overview: root <> query,
-      deliveries: root <> query,
-      inbound: path_join(root, "inbound") <> query
+      overview: root <> build_query(tenant_id),
+      deliveries: root <> build_query(tenant_id, [{"view", "deliveries"}]),
+      inbound: path_join(root, "inbound") <> build_query(tenant_id)
     }
   end
 
@@ -68,30 +67,14 @@ defmodule MailglassAdmin.Operator.Shell do
     do: theme_choice(params, cookie) == :dark
 
   @doc """
-  Resolves the shell's three-choice picker state from the URL theme param,
-  falling back to the persisted theme cookie.
-
-  An explicit `?theme=` query value wins (a per-link override, matching the
-  root layout's precedence); otherwise the persisted cookie decides; absent
-  both, `:system`. The operator/inbound theme picker persists via cookie + a
-  param-stripping redirect (`set_theme_path/2` → ThemeController), so the
-  cookie — not the URL — is the source of truth across navigations.
+  Resolves the shell's three-choice picker state from the persisted preference
+  cookie. URL `?theme=` is legacy input and is normalized before rendering.
   """
   def theme_choice(params, cookie \\ nil)
 
-  def theme_choice(params, cookie) when is_map(params) do
-    case Map.get(params, "theme") do
-      value when value in ["dark", "mailglass-dark"] -> :dark
-      value when value in ["light", "mailglass-light"] -> :light
-      _value -> cookie_theme_choice(cookie)
-    end
-  end
+  def theme_choice(params, cookie) when is_map(params), do: Theme.cookie_choice(cookie)
 
-  def theme_choice(_params, cookie), do: cookie_theme_choice(cookie)
-
-  defp cookie_theme_choice(value) when value in ["dark", "mailglass-dark"], do: :dark
-  defp cookie_theme_choice(value) when value in ["light", "mailglass-light"], do: :light
-  defp cookie_theme_choice(_value), do: :system
+  def theme_choice(_params, cookie), do: Theme.cookie_choice(cookie)
 
   @doc """
   Builds the target for setting the theme picker value through the HTTP
@@ -100,13 +83,7 @@ defmodule MailglassAdmin.Operator.Shell do
   The `system` choice removes the explicit `theme` query key.
   """
   def set_theme_path(uri, theme) when is_binary(uri) and is_binary(theme) do
-    parsed = URI.parse(uri)
-    path = parsed.path || "/"
-    return_to = return_to_without_theme(path, parsed.query || "")
-    root = operator_root(path, surface_from_path(path))
-
-    path_join(root, "theme/" <> normalized_theme_segment(theme)) <>
-      "?" <> URI.encode_query([{"return_to", return_to}])
+    Theme.persistence_path(uri, theme)
   end
 
   @doc """
@@ -137,26 +114,6 @@ defmodule MailglassAdmin.Operator.Shell do
     end
   end
 
-  defp return_to_without_theme(path, query) do
-    query =
-      query
-      |> URI.query_decoder()
-      |> Enum.reject(fn {key, _value} -> key == "theme" end)
-      |> URI.encode_query()
-
-    case query do
-      "" -> path
-      query -> path <> "?" <> query
-    end
-  end
-
-  defp normalized_theme_segment(theme) when theme in ["light", "dark"], do: theme
-  defp normalized_theme_segment(_theme), do: "system"
-
-  defp surface_from_path(path) do
-    if String.ends_with?(path, "/inbound"), do: :inbound, else: :deliveries
-  end
-
   defp operator_root(base_path, :inbound), do: trim_inbound(base_path)
   defp operator_root(base_path, :deliveries), do: base_path
 
@@ -171,13 +128,14 @@ defmodule MailglassAdmin.Operator.Shell do
   defp path_join(root, segment), do: String.trim_trailing(root, "/") <> "/" <> segment
 
   # Builds the shared query string for cross-surface nav. Order is fixed
-  # (tenant_id then theme) so paths are deterministic for tests.
-  defp build_query(tenant_id, dark_chrome) do
+  # (tenant_id, surface view) so paths are deterministic for tests.
+  defp build_query(tenant_id, extra_pairs \\ []) do
     pairs =
       [
         {"tenant_id", blank_to_nil(tenant_id)},
-        {"theme", if(dark_chrome, do: "dark", else: nil)}
+        extra_pairs
       ]
+      |> List.flatten()
       |> Enum.reject(fn {_key, value} -> is_nil(value) end)
 
     case pairs do
@@ -189,7 +147,7 @@ defmodule MailglassAdmin.Operator.Shell do
   defp blank_to_nil(value) when value in [nil, ""], do: nil
   defp blank_to_nil(value), do: value
 
-  @switch_query_keys ~w(provider status event outcome window_hours search theme support_focus support_event_id support_webhook_event_id view)
+  @switch_query_keys ~w(provider status event outcome window_hours search support_focus support_event_id support_webhook_event_id view)
 
   defp preserved_switch_query(query) do
     query
@@ -200,13 +158,13 @@ defmodule MailglassAdmin.Operator.Shell do
   end
 
   attr(:active, :atom, values: [:overview, :deliveries, :inbound], required: true)
+  attr(:preview_path, :string, default: nil)
   attr(:overview_path, :string, required: true)
   attr(:deliveries_path, :string, required: true)
   attr(:inbound_path, :string, required: true)
   attr(:inbound_available?, :boolean, default: false)
   attr(:dark_chrome, :boolean, default: false)
   attr(:theme_choice, :atom, values: [:system, :light, :dark], default: :system)
-  attr(:tenant, :string, default: nil)
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
   attr(:flash, :map, default: %{})
@@ -217,86 +175,45 @@ defmodule MailglassAdmin.Operator.Shell do
   """
   def shell(assigns) do
     ~H"""
-    <div
-      data-theme={if @dark_chrome, do: "mailglass-dark", else: "mailglass-light"}
-      class="mg-admin-root flex min-h-screen bg-base-100 text-base-content"
+    <AdminShell.shell
+      testid="operator-shell"
+      theme_attr={Theme.data_theme(@theme_choice)}
+      sidebar_width_class="md:grid-cols-[15rem_1fr]"
+      main_max_width_class="max-w-7xl"
     >
-      <aside class="hidden w-60 shrink-0 flex-col border-r border-base-300 bg-base-200 md:flex">
-        <div class="flex items-center gap-sm border-b border-base-300 px-md py-md">
-          <Components.logo class="h-6 w-auto" />
-          <span class="text-label font-bold uppercase text-secondary">
-            Operator
-          </span>
-        </div>
+      <:actions>
+        <Components.theme_picker selected={@theme_choice} event="set_theme" />
+      </:actions>
+      <:sidebar>
+        <SurfaceNav.nav
+          active={@active}
+          preview_path={@preview_path}
+          overview_path={@overview_path}
+          deliveries_path={@deliveries_path}
+          inbound_path={@inbound_path}
+          inbound_available?={@inbound_available?}
+        />
+      </:sidebar>
+      <:mobile_nav>
+        <SurfaceNav.nav
+          active={@active}
+          layout={:mobile}
+          preview_path={@preview_path}
+          overview_path={@overview_path}
+          deliveries_path={@deliveries_path}
+          inbound_path={@inbound_path}
+          inbound_available?={@inbound_available?}
+        />
+      </:mobile_nav>
+      <:page_header>
+        <h1 class="text-heading font-bold tracking-tight text-base-content">{@title}</h1>
+        <p :if={@subtitle} class="text-body text-secondary">{@subtitle}</p>
+      </:page_header>
 
-        <nav class="flex flex-col gap-xs p-sm" aria-label="Operator sections">
-          <Components.nav_link
-            label="Overview"
-            icon="hero-chart-bar"
-            href={@overview_path}
-            active={@active == :overview}
-          />
-          <Components.nav_link
-            label="Deliveries"
-            icon="hero-paper-airplane"
-            href={@deliveries_path}
-            active={@active == :deliveries}
-          />
-          <Components.nav_link
-            :if={@inbound_available?}
-            label="Inbound"
-            icon="hero-inbox-arrow-down"
-            href={@inbound_path}
-            active={@active == :inbound}
-          />
-        </nav>
-      </aside>
+      <.flash_region flash={@flash} />
 
-      <div class="flex min-w-0 flex-1 flex-col">
-        <header class="flex flex-wrap items-center justify-between gap-sm border-b border-base-300 bg-base-200 px-md py-sm md:bg-base-100">
-          <div class="flex items-center gap-sm md:hidden">
-            <Components.logo class="h-6 w-auto" />
-          </div>
-
-          <nav class="flex items-center gap-xs md:hidden" aria-label="Operator sections">
-            <Components.nav_pill
-              label="Overview"
-              href={@overview_path}
-              active={@active == :overview}
-            />
-            <Components.nav_pill
-              label="Deliveries"
-              href={@deliveries_path}
-              active={@active == :deliveries}
-            />
-            <Components.nav_pill
-              :if={@inbound_available?}
-              label="Inbound"
-              href={@inbound_path}
-              active={@active == :inbound}
-            />
-          </nav>
-
-          <div class="flex min-w-0 flex-wrap items-center justify-end gap-sm">
-            <Components.tenant_chip tenant={@tenant} />
-            <Components.theme_picker selected={@theme_choice} event="set_theme" />
-          </div>
-        </header>
-
-        <main class="min-w-0 flex-1 px-md py-lg md:px-lg md:py-xl">
-          <div class="mx-auto max-w-7xl">
-            <div class="mb-lg flex flex-col gap-xs">
-              <h1 class="text-heading font-bold tracking-tight text-base-content">{@title}</h1>
-              <p :if={@subtitle} class="text-body text-secondary">{@subtitle}</p>
-            </div>
-
-            <.flash_region flash={@flash} />
-
-            {render_slot(@inner_block)}
-          </div>
-        </main>
-      </div>
-    </div>
+      {render_slot(@inner_block)}
+    </AdminShell.shell>
     """
   end
 

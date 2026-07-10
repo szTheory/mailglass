@@ -32,8 +32,8 @@ defmodule MailglassAdmin.Components do
 
   use Phoenix.Component
 
-  attr :name, :string, required: true
-  attr :class, :any, default: nil
+  attr(:name, :string, required: true)
+  attr(:class, :any, default: nil)
 
   @doc """
   Renders a Heroicon via the vendored `heroicons.js` Tailwind plugin.
@@ -48,7 +48,7 @@ defmodule MailglassAdmin.Components do
     """
   end
 
-  attr :class, :any, default: nil
+  attr(:class, :any, default: nil)
 
   @doc """
   Renders the sealed-flap mailglass lockup inline for theme-aware color.
@@ -139,8 +139,8 @@ defmodule MailglassAdmin.Components do
     """
   end
 
-  attr :kind, :atom, values: [:info, :success, :warning, :error], default: :info
-  attr :message, :string, required: true
+  attr(:kind, :atom, values: [:info, :success, :warning, :error], default: :info)
+  attr(:message, :string, required: true)
 
   @doc """
   Renders a brand-voice flash message in a daisyUI toast wrapper.
@@ -166,7 +166,7 @@ defmodule MailglassAdmin.Components do
   defp alert_class(:warning), do: "alert-warning"
   defp alert_class(:error), do: "alert-error"
 
-  attr :variant, :atom, values: [:warning, :stub], required: true
+  attr(:variant, :atom, values: [:warning, :stub], required: true)
 
   @doc """
   Sidebar status badge. Two variants:
@@ -191,12 +191,13 @@ defmodule MailglassAdmin.Components do
     """
   end
 
-  attr :label, :string, required: true
-  attr :icon, :string, required: true
-  attr :href, :string, required: true
-  attr :active, :boolean, default: false
-  attr :disabled, :boolean, default: false
-  attr :rest, :global, default: %{}
+  attr(:label, :string, required: true)
+  attr(:icon, :string, required: true)
+  attr(:href, :string, required: true)
+  attr(:active, :boolean, default: false)
+  attr(:disabled, :boolean, default: false)
+  attr(:navigate, :boolean, default: true)
+  attr(:rest, :global, default: %{})
 
   @doc """
   Renders the desktop operator navigation link primitive.
@@ -223,6 +224,24 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  def nav_link(%{navigate: false} = assigns) do
+    ~H"""
+    <.link
+      href={@href}
+      aria-current={@active && "page"}
+      class={[
+        "mg-focus-ring flex min-h-11 items-center gap-sm rounded-field border-l-2 px-sm text-body transition-colors ease-out",
+        "duration-(--duration-fast)",
+        nav_link_class(@active)
+      ]}
+      {@rest}
+    >
+      <.icon name={@icon} class="h-5 w-5 shrink-0" />
+      <span class="truncate" title={@label}>{@label}</span>
+    </.link>
+    """
+  end
+
   def nav_link(assigns) do
     ~H"""
     <.link
@@ -241,11 +260,12 @@ defmodule MailglassAdmin.Components do
     """
   end
 
-  attr :label, :string, required: true
-  attr :href, :string, required: true
-  attr :active, :boolean, default: false
-  attr :disabled, :boolean, default: false
-  attr :rest, :global, default: %{}
+  attr(:label, :string, required: true)
+  attr(:href, :string, required: true)
+  attr(:active, :boolean, default: false)
+  attr(:disabled, :boolean, default: false)
+  attr(:navigate, :boolean, default: true)
+  attr(:rest, :global, default: %{})
 
   @doc """
   Renders the compact operator navigation pill primitive.
@@ -268,6 +288,22 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  def nav_pill(%{navigate: false} = assigns) do
+    ~H"""
+    <.link
+      href={@href}
+      aria-current={@active && "page"}
+      class={[
+        "mg-focus-ring flex min-h-11 items-center rounded-field border-b-2 px-sm text-body transition-colors ease-out duration-(--duration-fast)",
+        nav_pill_class(@active)
+      ]}
+      {@rest}
+    >
+      <span class="truncate" title={@label}>{@label}</span>
+    </.link>
+    """
+  end
+
   def nav_pill(assigns) do
     ~H"""
     <.link
@@ -284,8 +320,8 @@ defmodule MailglassAdmin.Components do
     """
   end
 
-  attr :tenant, :string, default: nil
-  attr :rest, :global, default: %{}
+  attr(:tenant, :string, default: nil)
+  attr(:rest, :global, default: %{})
 
   @doc """
   Renders the read-only tenant context chip.
@@ -308,12 +344,12 @@ defmodule MailglassAdmin.Components do
     """
   end
 
-  attr :selected, :atom, values: [:system, :light, :dark], default: :system
-  attr :name, :string, default: "theme"
-  attr :disabled, :boolean, default: false
-  attr :event, :string, default: nil
-  attr :target, :any, default: nil
-  attr :rest, :global, default: %{}
+  attr(:selected, :atom, values: [:system, :light, :dark], default: :system)
+  attr(:name, :string, default: "theme")
+  attr(:disabled, :boolean, default: false)
+  attr(:event, :string, default: nil)
+  attr(:target, :any, default: nil)
+  attr(:rest, :global, default: %{})
 
   @doc """
   Renders the three-choice theme picker primitive.
@@ -326,15 +362,16 @@ defmodule MailglassAdmin.Components do
   def theme_picker(assigns) do
     ~H"""
     <fieldset
-      class="inline-flex min-h-11 items-stretch gap-xs rounded-field border border-base-300 bg-base-200 p-xs text-body"
+      class="inline-flex min-h-11 items-center gap-xs rounded-box border border-base-300 bg-base-200 p-xs text-label"
       disabled={@disabled}
       {@rest}
     >
       <legend class="sr-only">Theme</legend>
       <label
         :for={option <- theme_options()}
+        title={option.label}
         class={[
-          "mg-focus-ring-within relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-field px-sm",
+          "mg-focus-ring-within mg-state-layer relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-field px-sm",
           theme_option_class(@selected == option.theme, @disabled)
         ]}
       >
@@ -348,27 +385,29 @@ defmodule MailglassAdmin.Components do
           value={option.value}
           checked={@selected == option.theme}
           disabled={@disabled}
+          aria-label={option.label}
           phx-click={@event}
           phx-target={@target}
           phx-value-theme={if @event, do: option.value}
           class="absolute inset-0 m-0 cursor-pointer appearance-none rounded-field opacity-0 disabled:cursor-default"
         />
-        <span class="whitespace-nowrap">{option.label}</span>
+        <.icon name={option.icon} class="pointer-events-none h-5 w-5" />
+        <span class="sr-only">{option.label}</span>
       </label>
     </fieldset>
     """
   end
 
-  attr :id, :string, default: nil
-  attr :label, :string, required: true
-  attr :value, :any, default: nil
-  attr :severity, :atom, values: [:neutral, :info, :success, :warning, :error], default: :neutral
-  attr :severity_label, :string, default: nil
-  attr :state, :atom, values: [:ready, :empty, :loading, :unavailable], default: :ready
-  attr :empty_text, :string, default: "No data yet"
-  attr :loading_text, :string, default: "Resolving"
-  attr :unavailable_text, :string, default: "Unavailable"
-  attr :rest, :global, default: %{}
+  attr(:id, :string, default: nil)
+  attr(:label, :string, required: true)
+  attr(:value, :any, default: nil)
+  attr(:severity, :atom, values: [:neutral, :info, :success, :warning, :error], default: :neutral)
+  attr(:severity_label, :string, default: nil)
+  attr(:state, :atom, values: [:ready, :empty, :loading, :unavailable], default: :ready)
+  attr(:empty_text, :string, default: "No data yet")
+  attr(:loading_text, :string, default: "Resolving")
+  attr(:unavailable_text, :string, default: "Unavailable")
+  attr(:rest, :global, default: %{})
 
   @doc """
   Renders a canonical stat card with label, no-wrap value, and severity.
@@ -411,11 +450,11 @@ defmodule MailglassAdmin.Components do
     """
   end
 
-  attr :kind, :atom, values: [:empty, :error, :permission_denied, :stale], required: true
-  attr :title, :string, required: true
-  attr :body, :string, required: true
-  attr :icon, :string, default: nil
-  attr :rest, :global, default: %{}
+  attr(:kind, :atom, values: [:empty, :error, :permission_denied, :stale], required: true)
+  attr(:title, :string, required: true)
+  attr(:body, :string, required: true)
+  attr(:icon, :string, default: nil)
+  attr(:rest, :global, default: %{})
 
   @doc """
   Renders one of four distinct data-state templates.
@@ -467,9 +506,9 @@ defmodule MailglassAdmin.Components do
   defp data_state_icon_class(:permission_denied), do: "text-warning"
   defp data_state_icon_class(:stale), do: "text-secondary"
 
-  attr :padding, :atom, values: [:md, :lg], default: :md
-  attr :rest, :global, default: %{}
-  slot :inner_block, required: true
+  attr(:padding, :atom, values: [:md, :lg], default: :md)
+  attr(:rest, :global, default: %{})
+  slot(:inner_block, required: true)
 
   @doc """
   Renders the thin group-surface shell: border, radius, surface tone, and outer
@@ -505,25 +544,26 @@ defmodule MailglassAdmin.Components do
 
   defp theme_options do
     [
-      %{theme: :system, value: "system", label: "System"},
-      %{theme: :light, value: "light", label: "Light"},
-      %{theme: :dark, value: "dark", label: "Dark"}
+      %{theme: :system, value: "system", label: "System", icon: "hero-window"},
+      %{theme: :light, value: "light", label: "Light", icon: "hero-sun"},
+      %{theme: :dark, value: "dark", label: "Dark", icon: "hero-moon"}
     ]
   end
 
-  defp theme_option_class(_selected, true), do: "text-secondary opacity-100"
+  defp theme_option_class(_selected, true),
+    do: "border border-transparent text-secondary opacity-60"
 
   defp theme_option_class(true, false),
-    do: "border border-primary bg-base-100 font-bold text-base-content"
+    do: "border border-primary bg-base-100 text-base-content"
 
   defp theme_option_class(false, false),
-    do: "border border-transparent text-secondary hover:bg-base-100 hover:text-base-content"
+    do: "border border-transparent text-secondary hover:bg-base-100/70 hover:text-base-content"
 
-  attr :title, :string, required: true
-  attr :description, :string, default: nil
-  attr :rest, :global, default: %{}
+  attr(:title, :string, required: true)
+  attr(:description, :string, default: nil)
+  attr(:rest, :global, default: %{})
 
-  slot :inner_block, required: true
+  slot(:inner_block, required: true)
 
   @doc """
   Renders a visible filter control group.
@@ -544,24 +584,25 @@ defmodule MailglassAdmin.Components do
     """
   end
 
-  attr :field, :any, default: nil
-  attr :id, :string, default: nil
-  attr :name, :string, default: nil
-  attr :value, :any, default: nil
-  attr :type, :atom, values: [:text, :number, :select, :textarea, :checkbox], default: :text
-  attr :label, :string, required: true
-  attr :help, :string, default: nil
-  attr :error, :any, default: nil
-  attr :options, :list, default: []
-  attr :prompt, :string, default: nil
-  attr :disabled, :boolean, default: false
-  attr :readonly, :boolean, default: false
-  attr :display_value, :string, default: nil
-  attr :submit_readonly, :boolean, default: true
+  attr(:field, :any, default: nil)
+  attr(:id, :string, default: nil)
+  attr(:name, :string, default: nil)
+  attr(:value, :any, default: nil)
+  attr(:type, :atom, values: [:text, :number, :select, :textarea, :checkbox], default: :text)
+  attr(:label, :string, required: true)
+  attr(:help, :string, default: nil)
+  attr(:error, :any, default: nil)
+  attr(:options, :list, default: [])
+  attr(:prompt, :string, default: nil)
+  attr(:disabled, :boolean, default: false)
+  attr(:readonly, :boolean, default: false)
+  attr(:display_value, :string, default: nil)
+  attr(:submit_readonly, :boolean, default: true)
 
-  attr :rest, :global,
+  attr(:rest, :global,
     default: %{},
     include: ~w(autocomplete inputmode max min pattern placeholder step)
+  )
 
   @doc """
   Renders one explicit, labelled filter control.
@@ -664,7 +705,10 @@ defmodule MailglassAdmin.Components do
       </div>
 
       <input
-        :if={@display_readonly? and @submit_readonly and @control_name && filter_string_value(@control_value) != ""}
+        :if={
+          (@display_readonly? and @submit_readonly and @control_name) &&
+            filter_string_value(@control_value) != ""
+        }
         type="hidden"
         name={@control_name}
         value={@control_value}
@@ -769,10 +813,17 @@ defmodule MailglassAdmin.Components do
 
   defp normalize_filter_options(options) do
     Enum.map(options, fn
-      {label, value} -> %{label: to_string(label), value: filter_string_value(value)}
-      %{label: label, value: value} -> %{label: to_string(label), value: filter_string_value(value)}
-      %{label: label, key: value} -> %{label: to_string(label), value: filter_string_value(value)}
-      value -> %{label: filter_option_label(value), value: filter_string_value(value)}
+      {label, value} ->
+        %{label: to_string(label), value: filter_string_value(value)}
+
+      %{label: label, value: value} ->
+        %{label: to_string(label), value: filter_string_value(value)}
+
+      %{label: label, key: value} ->
+        %{label: to_string(label), value: filter_string_value(value)}
+
+      value ->
+        %{label: filter_option_label(value), value: filter_string_value(value)}
     end)
   end
 
@@ -884,7 +935,7 @@ defmodule MailglassAdmin.Components do
   def normalize_inbound_outcome(:bounce), do: :bounced
   def normalize_inbound_outcome(atom), do: atom
 
-  attr :status, :atom,
+  attr(:status, :atom,
     values: [
       :dispatched,
       :queued,
@@ -911,8 +962,9 @@ defmodule MailglassAdmin.Components do
       :suppressed
     ],
     required: true
+  )
 
-  attr :size, :atom, values: [:sm, :md], default: :sm
+  attr(:size, :atom, values: [:sm, :md], default: :sm)
 
   @doc """
   Unified delivery, inbound, and timeline status badge. Renders an outline Heroicon

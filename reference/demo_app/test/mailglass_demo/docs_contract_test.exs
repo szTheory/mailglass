@@ -11,6 +11,8 @@ defmodule MailglassDemo.DocsContractTest do
     assert readme =~ "## Seeded data"
     assert readme =~ "## What to click"
     assert readme =~ "## Dependency Mode"
+    assert readme =~ "AtlasDesk is the fictional support/workspace SaaS for this demo."
+    assert readme =~ "The deterministic tenant id remains `northstar`"
 
     assert readme =~
              "DEMO_EVIDENCE_RESET_TOKEN=$(openssl rand -hex 24) docker compose -f compose.demo.yml up demo"

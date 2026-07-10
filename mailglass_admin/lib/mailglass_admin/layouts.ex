@@ -59,28 +59,23 @@ defmodule MailglassAdmin.Layouts do
     end
   end
 
-  # Prefer the LiveView's parsed theme socket assign; fall back to request
-  # query/cookie data for the disconnected first HTTP response.
+  # Prefer the LiveView's parsed theme socket assign; fall back to cookie data
+  # for the disconnected first HTTP response. Theme is a preference, not URL
+  # state; legacy `?theme=` inputs are normalized by the LiveViews/controller.
   defp root_theme(%{admin_chrome_theme: theme}) when theme in [:dark, :light],
-    do: explicit_theme_attr(Atom.to_string(theme))
+    do: MailglassAdmin.Theme.data_theme(theme)
 
   defp root_theme(%{conn: %Plug.Conn{} = conn}) do
-    params = URI.decode_query(conn.query_string || "")
-
-    if Map.has_key?(params, "theme") do
-      explicit_theme_attr(params["theme"])
-    else
+    cookies =
       conn
       |> Plug.Conn.fetch_cookies()
       |> Map.get(:req_cookies, %{})
-      |> Map.get(MailglassAdmin.Controllers.ThemeController.cookie_name())
-      |> explicit_theme_attr()
-    end
+
+    (Map.get(cookies, MailglassAdmin.Theme.cookie_name()) ||
+       Map.get(cookies, MailglassAdmin.Theme.legacy_cookie_name()))
+    |> MailglassAdmin.Theme.cookie_choice()
+    |> MailglassAdmin.Theme.data_theme()
   end
 
   defp root_theme(_assigns), do: nil
-
-  defp explicit_theme_attr(theme) when theme in ["dark", "mailglass-dark"], do: "mailglass-dark"
-  defp explicit_theme_attr(theme) when theme in ["light", "mailglass-light"], do: "mailglass-light"
-  defp explicit_theme_attr(_theme), do: nil
 end

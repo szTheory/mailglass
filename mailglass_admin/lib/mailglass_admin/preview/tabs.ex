@@ -50,7 +50,10 @@ defmodule MailglassAdmin.Preview.Tabs do
           id="tab-btn-html"
           aria-selected={to_string(@active_tab == :html)}
           aria-controls="tab-panel-html"
-          class={["mg-focus-ring-inset px-4 py-2 min-h-11 text-body transition-colors", tab_classes(@active_tab == :html)]}
+          class={[
+            "mg-focus-ring-inset px-4 py-2 min-h-11 text-body transition-colors",
+            tab_classes(@active_tab == :html)
+          ]}
         >
           HTML
         </button>
@@ -62,7 +65,10 @@ defmodule MailglassAdmin.Preview.Tabs do
           id="tab-btn-text"
           aria-selected={to_string(@active_tab == :text)}
           aria-controls="tab-panel-text"
-          class={["mg-focus-ring-inset px-4 py-2 min-h-11 text-body transition-colors", tab_classes(@active_tab == :text)]}
+          class={[
+            "mg-focus-ring-inset px-4 py-2 min-h-11 text-body transition-colors",
+            tab_classes(@active_tab == :text)
+          ]}
         >
           Text
         </button>
@@ -74,7 +80,10 @@ defmodule MailglassAdmin.Preview.Tabs do
           id="tab-btn-raw"
           aria-selected={to_string(@active_tab == :raw)}
           aria-controls="tab-panel-raw"
-          class={["mg-focus-ring-inset px-4 py-2 min-h-11 text-body transition-colors", tab_classes(@active_tab == :raw)]}
+          class={[
+            "mg-focus-ring-inset px-4 py-2 min-h-11 text-body transition-colors",
+            tab_classes(@active_tab == :raw)
+          ]}
         >
           Raw
         </button>
@@ -98,6 +107,7 @@ defmodule MailglassAdmin.Preview.Tabs do
       <div
         id={"tab-panel-" <> Atom.to_string(@active_tab)}
         data-preview-frame-theme={if @preview_frame_dark_chrome, do: "dark", else: "light"}
+        data-theme={preview_frame_theme_attr(@preview_frame_dark_chrome)}
         data-testid="preview-pane"
         role="tabpanel"
         aria-labelledby={"tab-btn-" <> Atom.to_string(@active_tab)}
@@ -188,4 +198,7 @@ defmodule MailglassAdmin.Preview.Tabs do
 
   defp tab_classes(false),
     do: "text-secondary hover:bg-base-200"
+
+  defp preview_frame_theme_attr(true), do: "mailglass-dark"
+  defp preview_frame_theme_attr(_), do: "mailglass-light"
 end

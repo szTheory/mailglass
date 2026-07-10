@@ -87,7 +87,7 @@ async function loginOperator(page, returnTo) {
     `/ops/browser-login?tenant_id=${tenantId}&return_to=${returnEncoded}`
   );
   await expect(
-    page.getByRole("heading", { name: "Operator overview", exact: true })
+    page.getByRole("heading", { name: "Email health", exact: true })
   ).toBeVisible();
 }
 

@@ -12,25 +12,36 @@ test.describe("mailglass demo evidence", () => {
 
   test("dashboard links to preview and operator surfaces", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Northstar Ops", exact: true })).toBeVisible();
-    await expect(page.getByText("Deliveries", { exact: true })).toBeVisible();
-
-    await page.getByRole("link", { name: /preview mailables/i }).click();
-    await expect(page).toHaveURL(/\/dev\/mail/);
-    // The responsive preview renders the mailable list in both a desktop sidebar
-    // and a mobile list (both in the DOM), so a bare getByText is a strict-mode
-    // violation. Scope to the desktop sidebar — the visible container at the
-    // default Playwright viewport (1280px).
     await expect(
-      page.getByTestId("preview-sidebar-desktop").getByText("AccountMailer"),
+      page.getByRole("heading", { name: "Explore Mailglass in a working app", exact: true }),
     ).toBeVisible();
+    await expect(page.getByText("AtlasDesk", { exact: false }).first()).toBeVisible();
+    await expect(page.getByText("Email deliveries", { exact: true })).toBeVisible();
+
+    const headingBox = await page
+      .getByRole("heading", { name: "Explore Mailglass in a working app", exact: true })
+      .boundingBox();
+    const introBox = await page.getByTestId("dashboard-intro").boundingBox();
+    const statsBox = await page.locator('[aria-label="Seeded demo data"]').boundingBox();
+
+    expect(headingBox).not.toBeNull();
+    expect(introBox).not.toBeNull();
+    expect(statsBox).not.toBeNull();
+    expect(introBox.y).toBeGreaterThan(headingBox.y + headingBox.height - 1);
+    expect(statsBox.y).toBeGreaterThan(introBox.y + introBox.height - 1);
+
+    await page.getByRole("link", { name: /preview emails/i }).click();
+    await expect(page).toHaveURL(/\/dev\/mail\/MailglassDemoWeb\.Mailers\.AccountMailer\/invite_admin/);
+    await expect(page.getByTestId("admin-shell-page-header")).toBeVisible();
+    await expect(page.getByTestId("preview-email-menu-trigger")).toBeVisible();
+    await expect(page.getByTestId("preview-email-menu-trigger")).toContainText("AccountMailer");
   });
 
   test("outbound operator opens with seeded delivery evidence", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: /outbound operator/i }).click();
+    await page.getByRole("link", { name: /trace a sent email/i }).click();
     await expect(page).toHaveURL(/\/ops\/mail\?tenant_id=northstar/);
-    await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
     // Navigate to Deliveries view to assert the list
     await page.goto("/ops/mail?tenant_id=northstar&view=deliveries");
     // Phase 113 (DATA-01) made operator-deliveries-list the mobile-only (md:hidden)
@@ -46,7 +57,7 @@ test.describe("mailglass demo evidence", () => {
 
   test("inbound operator opens with seeded support mailbox evidence", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: /inbound operator/i }).click();
+    await page.getByRole("link", { name: /follow an inbound message/i }).click();
     await expect(page).toHaveURL(/\/ops\/mail\/inbound\?tenant_id=northstar/);
     await expect(page.getByRole("heading", { name: "Inbound records", exact: true })).toBeVisible();
     // Phase 113 (DATA-01): inbound-records-list is the mobile-only <ul>; assert the

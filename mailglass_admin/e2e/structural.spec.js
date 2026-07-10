@@ -69,7 +69,7 @@ async function loginOperator(page, returnTo, subjectId = "operator-1", sessionTe
   const loginPath = `/ops/browser-login?${loginParams.toString()}`;
   const loginURL = new URL(loginPath, baseURL).toString();
   await page.goto(loginURL);
-  await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`tenant_id=${sessionTenantId}`));
 }
 
@@ -92,19 +92,23 @@ async function openPreviewEmpty(page) {
   await expect(page.getByTestId("preview-orientation")).toBeVisible();
   await expect(page.getByTestId("preview-shell")).toBeVisible();
   await expect(page.getByTestId("preview-empty-mailables")).toBeVisible();
-  // D-09: onboarding leads with the brandbook Empty string verbatim (the h1 carries
-  // the generator name as an inline <code> chip, so match on the leading prose).
+  await expect(page.getByRole("heading", { level: 1, name: "Preview", exact: true })).toBeVisible();
+  // D-09: onboarding leads with the brandbook Empty string verbatim.
   await expect(
-    page.getByRole("heading", { level: 1, name: /No mailables discovered yet\./ })
+    page.getByRole("heading", { level: 2, name: /No mailables discovered yet\./ })
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Read preview setup", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Preview the first Mailable", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Preview the first email", exact: true })).toHaveCount(0);
 }
 
 async function openPreviewIndex(page, query = "") {
   await page.context().clearCookies();
   await page.goto(`/dev/mail/${query ? "?" + query : ""}`);
   await expect(page.getByTestId("preview-shell")).toBeVisible();
+  await expect(page).toHaveURL(/\/dev\/mail\/MailglassAdmin\.Fixtures\.HappyMailer\/welcome_default/);
+  await expect(page.getByTestId("preview-header-controls")).toBeVisible();
+  await expect(page.getByTestId("preview-assigns-form")).toBeVisible();
+  await expect(page.getByTestId("preview-pane")).toBeVisible();
 }
 
 async function openPreviewScenario(page, query = "theme=light") {
@@ -497,7 +501,22 @@ async function assertThemePickerSemantics(wrapper, selectedValue, label) {
   await expect(radios, `${label} radio count`).toHaveCount(3);
 
   for (const text of ["System", "Light", "Dark"]) {
-    await expect(wrapper.getByText(text, { exact: true }), `${label} ${text} label`).toBeVisible();
+    await expect(wrapper.getByRole("radio", { name: text, exact: true }), `${label} ${text} radio`).toHaveCount(1);
+  }
+
+  for (const [icon, name] of [
+    ["hero-window", "system"],
+    ["hero-sun", "light"],
+    ["hero-moon", "dark"]
+  ]) {
+    const iconNode = wrapper.locator(`[class*="${icon}"]`);
+    await expect(iconNode, `${label} ${name} icon`).toHaveCount(1);
+
+    const maskImage = await iconNode.first().evaluate(el => {
+      const style = getComputedStyle(el);
+      return style.webkitMaskImage || style.maskImage;
+    });
+    expect(maskImage, `${label} ${name} icon mask`).not.toBe("none");
   }
 
   await expect(wrapper.locator(`input[type="radio"][value="${selectedValue}"]`), `${label} checked option`).toBeChecked();
@@ -908,15 +927,17 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.setViewportSize({ width: 390, height: 844 });
       await openPreviewScenario(page, "theme=light");
       // Admin chrome theming is the canonical theme_picker; each radio segment
-      // (label) carries the min-h-11/min-w-11 touch floor.
+      // (label) carries the min-h-11/min-w-11 touch floor in global chrome.
       await assertTouchTarget(
-        page.getByTestId("preview-header-controls").locator('label:has(input[name="preview_admin_theme"][value="dark"])'),
+        page.getByTestId("preview-global-controls").locator('label:has(input[name="preview_admin_theme"][value="dark"])'),
         "preview admin theme control"
       );
       await assertTouchTarget(page.getByTestId("preview-frame-theme-toggle"), "preview frame theme control");
+      await assertTouchTarget(page.getByTestId("preview-email-menu-trigger"), "preview email menu trigger");
+      await page.getByTestId("preview-email-menu-trigger").click();
       await assertTouchTarget(
-        page.getByTestId("preview-mobile-mailables").locator("summary").first(),
-        "preview sidebar summary control"
+        page.getByTestId("preview-mailables-picker").getByRole("link", { name: "welcome_default", exact: true }),
+        "preview picker scenario link"
       );
     });
 
@@ -1364,23 +1385,78 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       }
     });
 
-    test("Preview: 390px mobile Mailables navigation reaches a real scenario link", async ({ page }) => {
+    test("Preview: 390px mobile email picker reaches a real scenario link", async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await openPreviewIndex(page, "theme=dark");
 
-      const mobileMailables = page.getByTestId("preview-mobile-mailables");
-      await expect(mobileMailables).toBeVisible();
-      await expect(mobileMailables.getByText("Mailables", { exact: true })).toBeVisible();
+      const mailablesPicker = page.getByTestId("preview-mailables-picker");
+      const menuTrigger = page.getByTestId("preview-email-menu-trigger");
+      await expect(mailablesPicker).toBeVisible();
+      await expect(mailablesPicker).toHaveAttribute("data-picker-variant", "menu");
+      await expect(menuTrigger).toBeVisible();
+      await expect(menuTrigger).toContainText("HappyMailer");
+      await expect(menuTrigger).toContainText("welcome_default");
+      await expect(menuTrigger).not.toContainText("MailglassAdmin.Fixtures");
+      await expect(menuTrigger).not.toContainText("2 emails");
+      await expect(menuTrigger.locator(".hero-envelope")).toHaveCount(0);
+      await expect(menuTrigger.locator(".hero-chevron-down")).toHaveCount(0);
+      const affordance = page.getByTestId("preview-email-menu-affordance");
+      await expect(affordance).toBeVisible();
+      await expect(affordance).not.toHaveClass(/border-base-300/);
+      await expect(affordance).not.toHaveClass(/bg-base-200/);
+      await expect(affordance).not.toHaveClass(/rounded-field/);
+      await expect(affordance.locator("span")).toBeVisible();
+      await page.getByTestId("preview-email-menu-trigger").click();
+      await expect(mailablesPicker.getByText("Email previews", { exact: true })).toHaveCount(0);
+      const menuPanel = page.getByTestId("preview-email-menu-panel");
+      await expect(menuPanel).toBeVisible();
+      await expect(page.getByTestId("preview-email-menu-count-row")).toHaveCount(0);
+      await expect(page.getByTestId("preview-email-menu-count")).toHaveCount(0);
+      await expect(mailablesPicker.getByText("2 emails", { exact: true })).toHaveCount(0);
+      await expect(menuPanel.getByText("MailglassAdmin.Fixtures", { exact: false })).toHaveCount(0);
+      const operationsGroupLabel = menuPanel
+        .getByTestId("preview-email-menu-group-label")
+        .filter({ hasText: "HappyMailer" });
+      await expect(operationsGroupLabel).toBeVisible();
+      await expect(operationsGroupLabel).toHaveClass(/text-label/);
+      await expect(operationsGroupLabel).toHaveClass(/uppercase/);
+      await expect(operationsGroupLabel).toHaveClass(/text-secondary/);
+      await expect(operationsGroupLabel).not.toHaveClass(/text-body/);
+      await expect(operationsGroupLabel).not.toHaveClass(/text-base-content/);
+      const activeOption = page.getByTestId("preview-email-menu-active-option");
+      await expect(activeOption).toBeVisible();
+      const activeScenarioList = menuPanel
+        .locator('[data-testid="preview-email-menu-scenario-list"]')
+        .filter({ has: activeOption });
+      await expect(activeScenarioList).toHaveClass(/pl-sm/);
+      await expect(activeOption).toHaveAttribute("aria-current", "page");
+      await expect(activeOption).toHaveClass(/bg-primary\/5/);
+      await expect(activeOption).toHaveClass(/text-base-content/);
+      await expect(activeOption).not.toHaveClass(/font-bold/);
+      await expect(activeOption).not.toHaveClass(/border-l-2/);
+      await expect(activeOption.locator(".hero-check")).toBeVisible();
+      const groupLabelBox = await operationsGroupLabel.boundingBox();
+      const activeOptionBox = await activeOption.boundingBox();
+      expect(groupLabelBox, "preview email group label box").not.toBeNull();
+      expect(activeOptionBox, "preview email active option box").not.toBeNull();
+      expect(
+        activeOptionBox.x - groupLabelBox.x,
+        "preview email subitem is visually indented under its mailer"
+      ).toBeGreaterThanOrEqual(8);
+      const railCount = await menuPanel.locator("a").evaluateAll(links =>
+        links.filter(link => link.className.includes("border-l-2")).length
+      );
+      expect(railCount, "compact preview dropdown uses no sidebar left rails").toBe(0);
       await expect(
-        mobileMailables.locator("a[href*='MailglassAdmin.Fixtures.HappyMailer/welcome_default']")
-      ).toHaveAttribute("href", /theme=dark/);
+        mailablesPicker.locator("a[href*='MailglassAdmin.Fixtures.HappyMailer/welcome_default']")
+      ).not.toHaveAttribute("href", /theme=/);
     });
 
     test("Preview: no-Mailables empty branch exposes setup action only", async ({ page }) => {
       await openPreviewEmpty(page);
       await expect(page.getByTestId("preview-empty-mailables")).toBeVisible();
       await expect(page.getByRole("link", { name: "Read preview setup", exact: true })).toBeVisible();
-      await expect(page.getByRole("link", { name: "Preview the first Mailable", exact: true })).toHaveCount(0);
+      await expect(page.getByRole("link", { name: "Preview the first email", exact: true })).toHaveCount(0);
     });
 
     test("Preview: BrokenMailer render-error branch names recovery target", async ({ page }) => {
@@ -1389,7 +1465,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(page.getByText("Something went wrong")).toHaveCount(0);
     });
 
-    test("Preview: start, empty, scenario, and render-error branches expose exactly one h1", async ({ page }) => {
+    test("Preview: index redirect, empty, scenario, and render-error branches expose exactly one h1", async ({ page }) => {
       await openPreviewIndex(page, "theme=light");
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
 
@@ -1405,23 +1481,28 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
     test("Preview: admin chrome and preview frame toggles are independent", async ({ page }) => {
       await openPreviewScenario(page, "theme=light");
+      await expect(page.getByTestId("preview-mailables-picker")).toHaveAttribute("data-picker-variant", "menu");
+      await expect(page.getByTestId("preview-email-menu-trigger")).toBeVisible();
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "light");
+      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-theme", "mailglass-light");
 
       await page.getByTestId("preview-frame-theme-toggle").click();
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-light");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
+      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-theme", "mailglass-dark");
 
       // Admin chrome theming is now the canonical tri-state theme_picker — pick
       // the "dark" radio segment. Phase 112 moved admin-chrome theming to the
       // mount-path-aware ThemeController: the choice persists via the
-      // `mailglass_admin_theme` cookie and redirects to a theme-stripped
-      // return_to that carries frame=dark (D-05), so the email backdrop survives
+      // `mailglass_admin_theme_v2` preference cookie and redirects to a theme-stripped
+      // return_to that carries frame=dark (D-05), so the preview backdrop survives
       // the chrome remount. The applied theme is asserted via the shell's
       // data-theme attribute below, which is the authoritative signal.
-      await page.getByTestId("preview-header-controls").locator('input[name="preview_admin_theme"][value="dark"]').click();
+      await page.getByTestId("preview-global-controls").locator('input[name="preview_admin_theme"][value="dark"]').click();
       await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", "mailglass-dark");
       await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-preview-frame-theme", "dark");
+      await expect(page.getByTestId("preview-pane")).toHaveAttribute("data-theme", "mailglass-dark");
     });
 
     test("Preview: WCAG AA contrast matrix covers light/dark themes at 390/768/1440", async ({ page }) => {
@@ -1442,12 +1523,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await expect(page.getByTestId("preview-shell")).toHaveAttribute("data-theme", theme.expectedTheme);
           await assertTextContrastAA(page.getByTestId("preview-shell"), `${theme.name} ${viewport.width} preview-shell`);
 
-          const nav =
-            viewport.width < 768
-              ? page.getByTestId("preview-mobile-mailables")
-              : page.getByTestId("preview-sidebar-desktop");
-
-          await assertTextContrastAA(nav, `${theme.name} ${viewport.width} preview-mailables`);
+          await assertTextContrastAA(page.getByTestId("preview-mailables-picker"), `${theme.name} ${viewport.width} preview-mailables`);
+          await assertTextContrastAA(page.getByTestId("preview-global-controls"), `${theme.name} ${viewport.width} preview-global-controls`);
           await assertTextContrastAA(page.getByTestId("preview-header-controls"), `${theme.name} ${viewport.width} preview-header-controls`);
           await assertTextContrastAA(page.getByTestId("preview-assigns-form"), `${theme.name} ${viewport.width} preview-assigns-form`);
           await assertTextContrastAA(page.getByTestId("preview-tab-strip"), `${theme.name} ${viewport.width} preview-tab-strip`);
@@ -1555,7 +1632,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // measure the indicator on its label wrapper (the helper's documented
       // indicatorLocator contract) — the input itself only carries the UA 1px outline.
       const adminThemeRadio = page
-        .getByTestId("preview-header-controls")
+        .getByTestId("preview-global-controls")
         .locator('input[name="preview_admin_theme"][value="dark"]');
       await assertFocusAppearanceAndNotObscured(
         page,
@@ -1933,7 +2010,29 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
   // =========================================================================
   test.describe("app shell structural proof — Phase 112", () => {
 
-    test("sole tenant canonicalizes, explicit theme paints root, active nav has structural cues, and pagination boundaries are honest", async ({
+    test("Preview Operator and Inbound use the shared admin topbar", async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 900 });
+
+      await openPreviewScenario(page, "theme=dark");
+      await expect(page.getByTestId("admin-shell-topbar")).toBeVisible();
+      await expect(page.getByTestId("admin-shell-topbar").getByText("Preview", { exact: true })).toHaveCount(0);
+      await expect(page.getByRole("heading", { name: "Preview", exact: true })).toBeVisible();
+      await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
+
+      await openOperator(page);
+      await expect(page.getByTestId("admin-shell-topbar")).toBeVisible();
+      await expect(page.getByTestId("admin-shell-topbar").getByText("Operator", { exact: true })).toHaveCount(0);
+      await expect(page.getByRole("heading", { name: "Deliveries", exact: true })).toBeVisible();
+      await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
+
+      await openInbound(page, `tenant_id=${tenantId}`);
+      await expect(page.getByTestId("admin-shell-topbar")).toBeVisible();
+      await expect(page.getByTestId("admin-shell-topbar").getByText("Operator", { exact: true })).toHaveCount(0);
+      await expect(page.getByRole("heading", { name: "Inbound records", exact: true })).toBeVisible();
+      await expect(page.getByRole("img", { name: "mailglass" })).toHaveCount(1);
+    });
+
+    test("sole tenant canonicalizes, theme preference paints root, active nav has structural cues, and pagination boundaries are honest", async ({
       page
     }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
@@ -1944,7 +2043,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.goto(
         `/ops/browser-login?tenant_id=${tenantId}&return_to=${encodeURIComponent("/ops/mail")}`
       );
-      await expect(page.getByRole("heading", { name: "Operator overview", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Email health", exact: true })).toBeVisible();
 
       await expect(page).toHaveURL(/\/ops\/mail\?/);
       await expect(page).toHaveURL(new RegExp(`tenant_id=${tenantId}`));
@@ -1952,10 +2051,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       await page.context().addCookies([
         {
-          name: "mailglass_admin_theme",
+          name: "mailglass_admin_theme_v2",
           value: "dark",
           domain: "127.0.0.1",
-          path: "/ops/mail"
+          path: "/"
         }
       ]);
 

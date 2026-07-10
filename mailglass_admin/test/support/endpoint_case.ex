@@ -48,6 +48,11 @@ defmodule MailglassAdmin.TestAdopter.Router do
         :"Elixir.MailglassAdmin.Fixtures.HappyMailer",
         :"Elixir.MailglassAdmin.Fixtures.StubMailer",
         :"Elixir.MailglassAdmin.Fixtures.BrokenMailer"
+      ],
+      navigation: [
+        overview_path: "/ops/mail?tenant_id=browser-tenant",
+        deliveries_path: "/ops/mail?tenant_id=browser-tenant&view=deliveries",
+        inbound_path: "/ops/mail/inbound?tenant_id=browser-tenant"
       ]
     )
   end
@@ -90,7 +95,10 @@ defmodule MailglassAdmin.TestAdopter.Router do
       unauthorized_path: "/login",
       # CONTEXT D-48-07: thread the synthetic inbound router so Wave 2's
       # routing-trace card has declared inbound routes to reflect.
-      inbound_router: MailglassAdmin.TestSupport.InboundTestRouter
+      inbound_router: MailglassAdmin.TestSupport.InboundTestRouter,
+      navigation: [
+        preview_path: "/dev/mail"
+      ]
     )
   end
 

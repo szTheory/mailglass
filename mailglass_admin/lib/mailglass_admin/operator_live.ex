@@ -71,6 +71,7 @@ defmodule MailglassAdmin.OperatorLive do
       |> assign(:dark_chrome, false)
       |> assign(:theme_choice, :system)
       |> assign(:theme_cookie, theme_cookie_value(session))
+      |> assign(:preview_path, navigation_path(session, :preview_path))
       |> assign(:tenant_options, [])
       |> assign(:tenant_state, :none)
       |> assign(:selected_tenant_id, nil)
@@ -93,54 +94,65 @@ defmodule MailglassAdmin.OperatorLive do
 
   defp theme_cookie_value(_session), do: nil
 
+  defp navigation_path(%{"navigation" => navigation}, key) when is_map(navigation) do
+    blank_to_nil(Map.get(navigation, key) || Map.get(navigation, Atom.to_string(key)))
+  end
+
+  defp navigation_path(_session, _key), do: nil
+
   @impl true
   def handle_params(params, uri, socket) do
-    {filter_params, filter_errors} = normalize_filter_params_with_errors(params)
-    support_state = normalize_support_state(params)
-    view = params["view"]
-    delivery_id = blank_to_nil(params["delivery_id"])
-    tenant_options = TenantSelector.list_tenants(socket.assigns.operator_actor, [])
-    selected_tenant_id = blank_to_nil(filter_params["tenant_id"])
+    if redirect_path = MailglassAdmin.Theme.legacy_query_redirect_path(params, uri) do
+      {:noreply, redirect(socket, to: redirect_path)}
+    else
+      {filter_params, filter_errors} = normalize_filter_params_with_errors(params)
+      support_state = normalize_support_state(params)
+      view = params["view"]
+      delivery_id = blank_to_nil(params["delivery_id"])
+      tenant_options = TenantSelector.list_tenants(socket.assigns.operator_actor, [])
+      selected_tenant_id = blank_to_nil(filter_params["tenant_id"])
+      theme_choice = MailglassAdmin.Operator.Shell.theme_choice(%{}, socket.assigns.theme_cookie)
 
-    tenant_state =
-      tenant_state(selected_tenant_id, tenant_options, Map.has_key?(params, "tenant_id"))
+      tenant_state =
+        tenant_state(selected_tenant_id, tenant_options, Map.has_key?(params, "tenant_id"))
 
-    socket =
-      socket
-      |> assign(:base_path, URI.parse(uri).path || "/operator")
-      |> assign(:page_uri, uri)
-      |> assign(:dark_chrome, MailglassAdmin.Operator.Shell.dark_chrome?(params, socket.assigns.theme_cookie))
-      |> assign(:theme_choice, MailglassAdmin.Operator.Shell.theme_choice(params, socket.assigns.theme_cookie))
-      |> assign(:filter_params, filter_params)
-      |> assign(:filter_form, to_form(filter_params, as: :filters))
-      |> assign(:filter_errors, filter_errors)
-      |> assign(:support_state, support_state)
-      |> assign(:tenant_options, tenant_options)
-      |> assign(:tenant_state, tenant_state)
-      |> assign(:selected_tenant_id, selected_tenant_id)
+      socket =
+        socket
+        |> assign(:base_path, URI.parse(uri).path || "/operator")
+        |> assign(:page_uri, uri)
+        |> assign(:dark_chrome, theme_choice == :dark)
+        |> assign(:theme_choice, theme_choice)
+        |> assign(:filter_params, filter_params)
+        |> assign(:filter_form, to_form(filter_params, as: :filters))
+        |> assign(:filter_errors, filter_errors)
+        |> assign(:support_state, support_state)
+        |> assign(:tenant_options, tenant_options)
+        |> assign(:tenant_state, tenant_state)
+        |> assign(:selected_tenant_id, selected_tenant_id)
 
-    if connected?(socket) and tenant_state == :auto_select do
-      send(self(), :canonicalize_tenant)
-    end
+      if connected?(socket) and tenant_state == :auto_select do
+        send(self(), :canonicalize_tenant)
+      end
 
-    cond do
-      tenant_state == :auto_select ->
-        {:noreply, clear_surface_state(socket) |> close_replay_modal()}
+      cond do
+        tenant_state == :auto_select ->
+          {:noreply, clear_surface_state(socket) |> close_replay_modal()}
 
-      tenant_state in [:select_required, :none] ->
-        {:noreply, clear_surface_state(socket) |> close_replay_modal()}
+        tenant_state in [:select_required, :none] ->
+          {:noreply, clear_surface_state(socket) |> close_replay_modal()}
 
-      view == "deliveries" or not is_nil(delivery_id) ->
-        {:noreply,
-         socket
-         |> assign_delivery_state(filter_params, delivery_id)
-         |> close_replay_modal()}
+        view == "deliveries" or not is_nil(delivery_id) ->
+          {:noreply,
+           socket
+           |> assign_delivery_state(filter_params, delivery_id)
+           |> close_replay_modal()}
 
-      true ->
-        {:noreply,
-         socket
-         |> assign_overview_state(filter_params)
-         |> close_replay_modal()}
+        true ->
+          {:noreply,
+           socket
+           |> assign_overview_state(filter_params)
+           |> close_replay_modal()}
+      end
     end
   end
 
@@ -183,7 +195,7 @@ defmodule MailglassAdmin.OperatorLive do
        to:
          MailglassAdmin.Operator.Shell.toggle_theme_path(
            socket.assigns.page_uri,
-           socket.assigns.dark_chrome
+           socket.assigns.theme_choice == :dark
          )
      )}
   end
@@ -311,7 +323,8 @@ defmodule MailglassAdmin.OperatorLive do
         {:noreply, put_flash(socket, :error, "Replay is unavailable for this delivery.")}
 
       {:error, :target_required} ->
-        {:noreply, put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
+        {:noreply,
+         put_flash(socket, :error, "Choose one webhook target before confirming replay.")}
 
       {:error, {:auth, message}} ->
         {:noreply, put_flash(socket, :error, message)}
@@ -339,6 +352,7 @@ defmodule MailglassAdmin.OperatorLive do
 
     assigns =
       assign(assigns,
+        preview_path: assigns.preview_path,
         overview_path: paths.overview,
         deliveries_path: paths.deliveries,
         inbound_path: Map.get(assigns, :inbound_path, paths.inbound),
@@ -348,24 +362,24 @@ defmodule MailglassAdmin.OperatorLive do
     ~H"""
     <MailglassAdmin.Operator.Shell.shell
       active={@view}
+      preview_path={@preview_path}
       overview_path={@overview_path}
       deliveries_path={@deliveries_path}
       inbound_path={@inbound_path}
       inbound_available?={@inbound_available?}
       dark_chrome={@dark_chrome}
       theme_choice={@theme_choice}
-      tenant={blank_to_nil(@filter_params["tenant_id"])}
-      title={if @view == :overview, do: "Operator overview", else: "Deliveries"}
+      title={if @view == :overview, do: "Email health", else: "Deliveries"}
       subtitle={
         cond do
           @view != :overview ->
             "Prove what happened to a message — inspect its event timeline, suppression state, and replay history."
 
           @support_summary && all_clear?(@support_summary) && @suppression_count in [0, nil] ->
-            "Your delivery system is healthy."
+            "Email delivery is healthy."
 
           true ->
-            "Your delivery system needs attention."
+            "Email delivery needs attention."
         end
       }
       flash={@flash}
@@ -377,295 +391,306 @@ defmodule MailglassAdmin.OperatorLive do
           current_uri={@page_uri}
         />
       <% else %>
-      <%= if @view == :overview do %>
-        <div data-testid="operator-overview" class="grid gap-lg">
-          <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
-            <div data-testid="operator-overview-health" class="grid gap-md">
-              <h2 class="text-heading font-bold text-base-content">Health</h2>
-              <div class="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
-                <.link
-                  patch={
-                    build_path(
-                      @base_path,
-                      @filter_params |> Map.put("view", "deliveries") |> Map.put("status", "failed"),
-                      nil,
-                      @dark_chrome
-                    )
-                  }
-                  class="block mg-focus-ring rounded-box hover:border-primary transition-colors ease-out duration-(--duration-fast)"
-                  aria-label="View recent failures in Deliveries"
-                  data-testid="operator-overview-health-failures-link"
-                >
+        <%= if @view == :overview do %>
+          <div data-testid="operator-overview" class="grid gap-lg">
+            <%= if blank_to_nil(@filter_params["tenant_id"]) do %>
+              <div data-testid="operator-overview-health" class="grid gap-md">
+                <div class="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
+                  <.link
+                    patch={
+                      build_path(
+                        @base_path,
+                        @filter_params
+                        |> Map.put("view", "deliveries")
+                        |> Map.put("status", "failed"),
+                        nil,
+                        @dark_chrome
+                      )
+                    }
+                    class="block mg-focus-ring rounded-box hover:border-primary transition-colors ease-out duration-(--duration-fast)"
+                    aria-label="View recent failures in Deliveries"
+                    data-testid="operator-overview-health-failures-link"
+                  >
+                    <Components.stat_card
+                      label="Recent failures"
+                      value={support_metric_count(@support_summary, :failed_ingest)}
+                      state={support_metric_state(@support_summary, :failed_ingest)}
+                      severity={support_metric_severity(@support_summary, :failed_ingest, :error)}
+                      severity_label={support_metric_severity_label(@support_summary, :failed_ingest)}
+                      data-testid="operator-overview-health-failures"
+                    />
+                  </.link>
                   <Components.stat_card
-                    label="Recent failures"
-                    value={support_metric_count(@support_summary, :failed_ingest)}
-                    state={support_metric_state(@support_summary, :failed_ingest)}
-                    severity={support_metric_severity(@support_summary, :failed_ingest, :error)}
-                    severity_label={support_metric_severity_label(@support_summary, :failed_ingest)}
-                    data-testid="operator-overview-health-failures"
+                    label="Orphan backlog"
+                    value={support_metric_count(@support_summary, :orphan_backlog)}
+                    state={support_metric_state(@support_summary, :orphan_backlog)}
+                    severity={support_metric_severity(@support_summary, :orphan_backlog, :warning)}
+                    severity_label={support_metric_severity_label(@support_summary, :orphan_backlog)}
+                    data-testid="operator-overview-health-orphans"
                   />
-                </.link>
-                <Components.stat_card
-                  label="Orphan backlog"
-                  value={support_metric_count(@support_summary, :orphan_backlog)}
-                  state={support_metric_state(@support_summary, :orphan_backlog)}
-                  severity={support_metric_severity(@support_summary, :orphan_backlog, :warning)}
-                  severity_label={support_metric_severity_label(@support_summary, :orphan_backlog)}
-                  data-testid="operator-overview-health-orphans"
-                />
-                <.link
-                  patch={
-                    build_path(
-                      @base_path,
-                      @filter_params
-                      |> Map.put("view", "deliveries")
-                      |> Map.put("status", "suppressed"),
-                      nil,
-                      @dark_chrome
-                    )
-                  }
-                  class="block mg-focus-ring rounded-box hover:border-primary transition-colors ease-out duration-(--duration-fast)"
-                  aria-label="View active suppressions in Deliveries"
-                  data-testid="operator-overview-health-suppressions-link"
-                >
+                  <.link
+                    patch={
+                      build_path(
+                        @base_path,
+                        @filter_params
+                        |> Map.put("view", "deliveries")
+                        |> Map.put("status", "suppressed"),
+                        nil,
+                        @dark_chrome
+                      )
+                    }
+                    class="block mg-focus-ring rounded-box hover:border-primary transition-colors ease-out duration-(--duration-fast)"
+                    aria-label="View active suppressions in Deliveries"
+                    data-testid="operator-overview-health-suppressions-link"
+                  >
+                    <Components.stat_card
+                      label="Active suppressions"
+                      value={@suppression_count}
+                      state={count_state(@suppression_count)}
+                      severity={suppression_severity(@suppression_count)}
+                      severity_label={suppression_severity_label(@suppression_count)}
+                      data-testid="operator-overview-health-suppressions"
+                    />
+                  </.link>
                   <Components.stat_card
-                    label="Active suppressions"
-                    value={@suppression_count}
-                    state={count_state(@suppression_count)}
-                    severity={suppression_severity(@suppression_count)}
-                    severity_label={suppression_severity_label(@suppression_count)}
-                    data-testid="operator-overview-health-suppressions"
+                    label="Overall status"
+                    value={all_clear_value(@support_summary)}
+                    state={all_clear_state(@support_summary)}
+                    severity={all_clear_severity(@support_summary)}
+                    severity_label={all_clear_label(@support_summary)}
+                    data-testid="operator-overview-health-allclear"
                   />
-                </.link>
-                <Components.stat_card
-                  label="Overall status"
-                  value={all_clear_value(@support_summary)}
-                  state={all_clear_state(@support_summary)}
-                  severity={all_clear_severity(@support_summary)}
-                  severity_label={all_clear_label(@support_summary)}
-                  data-testid="operator-overview-health-allclear"
-                />
+                </div>
               </div>
-            </div>
 
-            <p
-              :if={
-                @support_summary && all_clear?(@support_summary) &&
-                  @suppression_count in [0, nil]
-              }
-              class="text-body text-secondary"
-            >
-              Your delivery system is healthy — nothing needs your attention right now.
-            </p>
+              <p
+                :if={
+                  @support_summary && all_clear?(@support_summary) &&
+                    @suppression_count in [0, nil]
+                }
+                class="text-body text-secondary"
+              >
+                Email delivery is healthy — nothing needs your attention right now.
+              </p>
 
-            <div
-              :if={
-                @support_summary && all_clear?(@support_summary) &&
-                  @suppression_count in [0, nil]
-              }
-              data-testid="operator-overview-orientation"
-            >
-              <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
-            </div>
-          <% else %>
-            <div
-              data-testid="operator-overview-no-tenant"
-              class="card bg-base-200 border border-base-300 rounded-box p-md flex flex-col gap-sm"
-            >
-              <div class="text-body font-bold text-base-content">Select a tenant to begin</div>
-              <div class="text-body text-secondary">
-                Choose a tenant to inspect its Deliveries and inbound routing. Tenant scope stays
-                in the URL so refreshes and shared links keep the same view.
+              <div
+                :if={
+                  @support_summary && all_clear?(@support_summary) &&
+                    @suppression_count in [0, nil]
+                }
+                data-testid="operator-overview-orientation"
+              >
+                <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
               </div>
-              <div>
-                <.link navigate={@deliveries_path} class="btn btn-primary btn-sm min-h-11">
-                  Go to Deliveries
-                </.link>
+            <% else %>
+              <div
+                data-testid="operator-overview-no-tenant"
+                class="card bg-base-200 border border-base-300 rounded-box p-md flex flex-col gap-sm"
+              >
+                <div class="text-body font-bold text-base-content">Select a tenant to begin</div>
+                <div class="text-body text-secondary">
+                  Choose a tenant to inspect its Deliveries and inbound routing. Tenant scope stays
+                  in the URL so refreshes and shared links keep the same view.
+                </div>
+                <div>
+                  <.link navigate={@deliveries_path} class="btn btn-primary btn-sm min-h-11">
+                    Go to Deliveries
+                  </.link>
+                </div>
               </div>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <%= cond do %>
-          <% @deliveries == [] and not filters_active?(@filter_params) and @filter_errors == %{} -> %>
-            <%!-- Genuine no-data: a single calm pane only — operator-empty-truly + orientation strip.
+            <% end %>
+          </div>
+        <% else %>
+          <%= cond do %>
+            <% @deliveries == [] and not filters_active?(@filter_params) and @filter_errors == %{} -> %>
+              <%!-- Genuine no-data: a single calm pane only — operator-empty-truly + orientation strip.
                   The filters toolbar, the Open-delivery CTA, and the entire master-detail grid (and
                   therefore the "Select a delivery…" helper nested inside it) are all withheld.
                   An in-progress invalid filter submission (@filter_errors non-empty) is NOT genuine
                   no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters. --%>
-            <section
-              data-testid="operator-deliveries-empty-pane"
-              class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
-            >
-              <DeliveriesList.deliveries_list
-                deliveries={[]}
-                page_meta={@deliveries_page_meta}
-                previous_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :previous)}
-                next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
-                selected_delivery={nil}
-                filters_active?={false}
-              />
-            </section>
-            <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
-          <% true -> %>
-            <section
-              data-testid="operator-filters"
-              class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
-            >
-          <button
-            type="button"
-            phx-click={JS.toggle(to: "#operator-filter-panel")}
-            data-testid="operator-filters-toggle"
-            class="btn btn-ghost !h-11 min-h-11 md:hidden"
-          >
-            Filters <span aria-hidden="true">v</span>
-          </button>
-
-          <div id="operator-filter-panel" class="hidden md:block">
-            <.form
-              for={@filter_form}
-              id="operator-filters"
-              phx-change="validate_filters"
-              phx-submit="apply_filters"
-              class="mt-4 grid gap-md md:mt-0"
-            >
-              <FiltersForm.fields
-                form={@filter_form}
-                status_values={@status_values}
-                event_values={@event_values}
-                window_options={@window_options}
-                errors={@filter_errors}
-              />
-
-              <div class="flex flex-wrap gap-2">
-                <button type="submit" class="btn btn-primary min-h-11 px-5">Open delivery</button>
-                <button type="button" phx-click="clear_filters" class="btn btn-ghost min-h-11 px-5">
-                  Clear filters
-                </button>
-              </div>
-            </.form>
-          </div>
-        </section>
-
-        <section
-          data-testid="operator-master-detail"
-          class={[
-            "mt-6 grid gap-lg",
-            if(@selected_delivery,
-              do: "md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]",
-              else: "grid-cols-1"
-            )
-          ]}
-        >
-          <aside
-            data-testid="operator-deliveries-list-card"
-            class={[
-              "card min-w-0 rounded-box border border-base-300 bg-base-200 p-0 md:block",
-              @selected_delivery && "max-md:hidden"
-            ]}
-          >
-            <div class="border-b border-base-300 px-4 py-3">
-              <h2 class="text-label uppercase font-bold text-secondary">
-                Recent deliveries
-              </h2>
-            </div>
-            <DeliveriesList.deliveries_list
-              deliveries={@deliveries}
-              page_meta={@deliveries_page_meta}
-              previous_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :previous)}
-              next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
-              selected_delivery={@selected_delivery}
-              filters_active?={filters_active?(@filter_params)}
-            />
-          </aside>
-
-          <section
-            data-testid="operator-detail-column"
-            class={[
-              "min-w-0 space-y-4",
-              is_nil(@selected_delivery) && "order-first md:order-none"
-            ]}
-          >
-            <%= cond do %>
-              <% @detail_error -> %>
-                <div
-                  data-testid="operator-detail-error"
-                  class="card rounded-box border border-error bg-base-100 p-6"
+              <section
+                data-testid="operator-deliveries-empty-pane"
+                class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+              >
+                <DeliveriesList.deliveries_list
+                  deliveries={[]}
+                  page_meta={@deliveries_page_meta}
+                  previous_page_path={
+                    pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
+                  }
+                  next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
+                  filters_active?={false}
+                />
+              </section>
+              <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
+            <% true -> %>
+              <section
+                data-testid="operator-filters"
+                class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
+              >
+                <button
+                  type="button"
+                  phx-click={JS.toggle(to: "#operator-filter-panel")}
+                  data-testid="operator-filters-toggle"
+                  class="btn btn-ghost !h-11 min-h-11 md:hidden"
                 >
-                  <div class="flex items-center gap-2">
-                    <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
-                    <h2 class="text-body font-bold text-base-content">
-                      Delivery data could not be loaded. Refresh the page or adjust the filters, then try again.
+                  Filters <span aria-hidden="true">v</span>
+                </button>
+
+                <div id="operator-filter-panel" class="hidden md:block">
+                  <.form
+                    for={@filter_form}
+                    id="operator-filters"
+                    phx-change="validate_filters"
+                    phx-submit="apply_filters"
+                    class="mt-4 grid gap-md md:mt-0"
+                  >
+                    <FiltersForm.fields
+                      form={@filter_form}
+                      status_values={@status_values}
+                      event_values={@event_values}
+                      window_options={@window_options}
+                      errors={@filter_errors}
+                    />
+
+                    <div class="flex flex-wrap gap-2">
+                      <button type="submit" class="btn btn-primary min-h-11 px-5">
+                        Open delivery
+                      </button>
+                      <button
+                        type="button"
+                        phx-click="clear_filters"
+                        class="btn btn-ghost min-h-11 px-5"
+                      >
+                        Clear filters
+                      </button>
+                    </div>
+                  </.form>
+                </div>
+              </section>
+
+              <section
+                data-testid="operator-master-detail"
+                class={[
+                  "mt-6 grid gap-lg",
+                  if(@selected_delivery,
+                    do: "md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]",
+                    else: "grid-cols-1"
+                  )
+                ]}
+              >
+                <aside
+                  data-testid="operator-deliveries-list-card"
+                  class={[
+                    "card min-w-0 rounded-box border border-base-300 bg-base-200 p-0 md:block",
+                    @selected_delivery && "max-md:hidden"
+                  ]}
+                >
+                  <div class="border-b border-base-300 px-4 py-3">
+                    <h2 class="text-label uppercase font-bold text-secondary">
+                      Recent deliveries
                     </h2>
                   </div>
-                </div>
-              <% is_nil(@selected_delivery) -> %>
-                <div
-                  data-testid="operator-empty-detail"
-                  class="card hidden rounded-box border border-base-300 bg-base-200 p-6 md:block"
-                >
-                  <h2 class="text-body font-bold text-base-content">
-                    Select a delivery to inspect its event timeline and suppression state.
-                  </h2>
-                  <p class="mt-2 text-body text-secondary">
-                    The timeline shows provider lifecycle facts (dispatched, delivered, bounced).
-                    Replay history is recorded separately — replaying a webhook does not create
-                    new provider truth.
-                  </p>
-                </div>
-              <% true -> %>
-                <div
-                  id={"delivery-detail-#{@selected_delivery.id}"}
-                  data-region
-                  class="motion-reveal space-y-4"
-                  phx-remove={
-                    JS.hide(
-                      time: 150,
-                      transition: {"ease-out duration-150", "opacity-100", "opacity-0 translate-y-1"}
-                    )
-                  }
-                >
-                  <.link
-                    patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
-                    data-testid="operator-detail-back"
-                    class="mg-focus-ring btn btn-ghost !h-11 min-h-11 md:hidden"
-                  >
-                    Back to deliveries
-                  </.link>
-                  <DetailHeader.detail_header
-                    delivery={@selected_delivery}
-                    replay_targets={@replay_targets}
-                    latest_replay={latest_replay(@replay_history)}
+                  <DeliveriesList.deliveries_list
+                    deliveries={@deliveries}
+                    page_meta={@deliveries_page_meta}
+                    previous_page_path={
+                      pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
+                    }
+                    next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
+                    selected_delivery={@selected_delivery}
+                    filters_active?={filters_active?(@filter_params)}
                   />
-                  <SupportCards.support_cards
-                    support_summary={@support_summary}
-                    support_state={@support_state}
-                    suppression_count={@suppression_count}
-                  />
-                  <OperatorTimeline.timeline
-                    timeline_events={@timeline_events}
-                    highlight_event_id={@support_state.event_id}
-                  />
-                  <SuppressionCard.suppression_card suppression_state={@suppression_state} />
-                </div>
-            <% end %>
-          </section>
-        </section>
+                </aside>
 
-        <%!-- Focus trap: phx-mounted moves focus into the modal on open; phx-remove returns focus to trigger on close --%>
-        <span
-          :if={@replay_modal_open?}
-          phx-mounted={JS.focus_first(to: "#operator-replay-modal")}
-          phx-remove={JS.focus(to: "#replay-open-btn")}
-        />
-        <ReplayModal.replay_modal
-          open?={@replay_modal_open?}
-          delivery={@selected_delivery}
-          replay_targets={@replay_targets}
-          selected_target_id={@replay_selected_target_id}
-        />
+                <section
+                  data-testid="operator-detail-column"
+                  class={[
+                    "min-w-0 space-y-4",
+                    is_nil(@selected_delivery) && "order-first md:order-none"
+                  ]}
+                >
+                  <%= cond do %>
+                    <% @detail_error -> %>
+                      <div
+                        data-testid="operator-detail-error"
+                        class="card rounded-box border border-error bg-base-100 p-6"
+                      >
+                        <div class="flex items-center gap-2">
+                          <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
+                          <h2 class="text-body font-bold text-base-content">
+                            Delivery data could not be loaded. Refresh the page or adjust the filters, then try again.
+                          </h2>
+                        </div>
+                      </div>
+                    <% is_nil(@selected_delivery) -> %>
+                      <div
+                        data-testid="operator-empty-detail"
+                        class="card hidden rounded-box border border-base-300 bg-base-200 p-6 md:block"
+                      >
+                        <h2 class="text-body font-bold text-base-content">
+                          Select a delivery to inspect its event timeline and suppression state.
+                        </h2>
+                        <p class="mt-2 text-body text-secondary">
+                          The timeline shows provider lifecycle facts (dispatched, delivered, bounced).
+                          Replay history is recorded separately — replaying a webhook does not create
+                          new provider truth.
+                        </p>
+                      </div>
+                    <% true -> %>
+                      <div
+                        id={"delivery-detail-#{@selected_delivery.id}"}
+                        data-region
+                        class="motion-reveal space-y-4"
+                        phx-remove={
+                          JS.hide(
+                            time: 150,
+                            transition:
+                              {"ease-out duration-150", "opacity-100", "opacity-0 translate-y-1"}
+                          )
+                        }
+                      >
+                        <.link
+                          patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
+                          data-testid="operator-detail-back"
+                          class="mg-focus-ring btn btn-ghost !h-11 min-h-11 md:hidden"
+                        >
+                          Back to deliveries
+                        </.link>
+                        <DetailHeader.detail_header
+                          delivery={@selected_delivery}
+                          replay_targets={@replay_targets}
+                          latest_replay={latest_replay(@replay_history)}
+                        />
+                        <SupportCards.support_cards
+                          support_summary={@support_summary}
+                          support_state={@support_state}
+                          suppression_count={@suppression_count}
+                        />
+                        <OperatorTimeline.timeline
+                          timeline_events={@timeline_events}
+                          highlight_event_id={@support_state.event_id}
+                        />
+                        <SuppressionCard.suppression_card suppression_state={@suppression_state} />
+                      </div>
+                  <% end %>
+                </section>
+              </section>
+
+              <%!-- Focus trap: phx-mounted moves focus into the modal on open; phx-remove returns focus to trigger on close --%>
+              <span
+                :if={@replay_modal_open?}
+                phx-mounted={JS.focus_first(to: "#operator-replay-modal")}
+                phx-remove={JS.focus(to: "#replay-open-btn")}
+              />
+              <ReplayModal.replay_modal
+                open?={@replay_modal_open?}
+                delivery={@selected_delivery}
+                replay_targets={@replay_targets}
+                selected_target_id={@replay_selected_target_id}
+              />
+          <% end %>
         <% end %>
-      <% end %>
       <% end %>
     </MailglassAdmin.Operator.Shell.shell>
     """
@@ -943,14 +968,13 @@ defmodule MailglassAdmin.OperatorLive do
          base_path,
          filter_params,
          delivery_id,
-         dark_chrome,
+         _dark_chrome,
          support_state \\ default_support_state()
        ) do
     params =
       filter_params
       |> Map.merge(%{"delivery_id" => delivery_id})
       |> Map.merge(support_state_to_params(support_state))
-      |> maybe_put_theme(dark_chrome)
       |> Enum.reject(fn
         {"page", "1"} -> true
         {_key, value} -> is_nil(blank_to_nil(value))
@@ -963,12 +987,12 @@ defmodule MailglassAdmin.OperatorLive do
     end
   end
 
-  defp build_path_with_view(base_path, filter_params, dark_chrome) do
+  defp build_path_with_view(base_path, filter_params, _dark_chrome) do
     filter_params_with_view = Map.put(filter_params, "view", "deliveries")
-    build_path(base_path, filter_params_with_view, nil, dark_chrome)
+    build_path(base_path, filter_params_with_view, nil, false)
   end
 
-  defp pagination_path(base_path, filter_params, dark_chrome, direction) do
+  defp pagination_path(base_path, filter_params, _dark_chrome, direction) do
     page = parse_positive_integer(filter_params["page"]) || 1
 
     next_page =
@@ -982,11 +1006,8 @@ defmodule MailglassAdmin.OperatorLive do
       |> Map.put("page", Integer.to_string(next_page))
       |> Map.put("view", "deliveries")
 
-    build_path(base_path, filter_params, nil, dark_chrome)
+    build_path(base_path, filter_params, nil, false)
   end
-
-  defp maybe_put_theme(params, true), do: Map.put(params, "theme", "dark")
-  defp maybe_put_theme(params, false), do: params
 
   defp cast_enum("", _allowed), do: nil
 
@@ -1119,7 +1140,8 @@ defmodule MailglassAdmin.OperatorLive do
     apply(support_summary_module(), :summarize_tenant, [
       %{
         tenant_id: filter_params["tenant_id"],
-        window_hours: parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+        window_hours:
+          parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
       }
     ])
   end

@@ -5,13 +5,12 @@ defmodule MailglassAdmin.PreviewLive do
   Mounted by `MailglassAdmin.Router.mailglass_admin_routes/2`. Two live
   actions:
 
-    * `:index` at `/` — no scenario selected. Renders the start page: a
-      value statement, a "Preview the first Mailable" deep link, and a legend of
-      the tool's affordances. When auto-scan finds zero mailables, renders the
-      brandbook-canonical "No mailables discovered yet…" onboarding state instead,
-      leading with `mix mailglass.gen.mailable` as the primary next step.
+    * `:index` at `/` — redirects to the first previewable scenario so Preview
+      has one streamlined layout. When auto-scan finds zero mailables, renders
+      the brandbook-canonical "No mailables discovered yet…" onboarding state
+      instead, leading with `mix mailglass.gen.mailable` as the primary next step.
     * `:show` at `/:mailable/:scenario` — renders the full preview:
-      sidebar, main pane header, device + dark toggles, assigns form,
+      compact email picker, main pane header, device + dark toggles, assigns form,
       HTML/Text/Raw/Headers tab strip.
 
   ## PubSub + LiveReload
@@ -47,6 +46,7 @@ defmodule MailglassAdmin.PreviewLive do
 
   use Phoenix.LiveView
 
+  alias MailglassAdmin.AdminShell
   alias MailglassAdmin.Components
   alias MailglassAdmin.Preview.AssignsForm
   alias MailglassAdmin.Preview.DeviceFrame
@@ -54,9 +54,10 @@ defmodule MailglassAdmin.PreviewLive do
   alias MailglassAdmin.Preview.Sidebar
   alias MailglassAdmin.Preview.Tabs
   alias MailglassAdmin.PubSub.Topics
+  alias MailglassAdmin.SurfaceNav
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     if connected?(socket) and live_reload_available?() do
       pubsub = socket.endpoint.config(:pubsub_server)
       if pubsub, do: Phoenix.PubSub.subscribe(pubsub, Topics.admin_reload())
@@ -71,6 +72,7 @@ defmodule MailglassAdmin.PreviewLive do
       |> assign(:device_width, 768)
       |> assign(:admin_chrome_theme, nil)
       |> assign(:preview_frame_dark_chrome, false)
+      |> assign(:admin_navigation, session_navigation(session))
       |> assign(:base_path, nil)
       |> assign(:mount_path, nil)
       |> assign(:page_uri, nil)
@@ -86,84 +88,102 @@ defmodule MailglassAdmin.PreviewLive do
     {:ok, socket}
   end
 
-  # Precedence contract for :admin_chrome_theme (see code review IN-03):
-  # `MailglassAdmin.MountPathHook` attaches a `:handle_params` hook that runs
-  # BEFORE this function and seeds :admin_chrome_theme from `?theme=` (else the
-  # cookie). PreviewLive then re-derives the same value here from the same
-  # `?theme=` param via `normalize_capture_url_state/2`. The two derivations are
-  # intentionally kept in agreement: both key off `?theme=`, and PreviewLive's
-  # no-param fallback (`normalize_capture_url_state`) reads back the value the
-  # hook just set. PreviewLive is the authoritative writer for the rendered
-  # frame; the hook only provides the seed. If either parser changes, update
-  # both so they cannot silently diverge.
+  # Theme contract: app chrome theme is a persisted preference, not preview URL
+  # state. Legacy `?theme=` inputs are redirected through the ThemeController and
+  # stripped before rendering. Preview keeps only preview-specific URL state:
+  # `width=` for shareable viewport and `frame=dark` as a temporary bridge during
+  # the controller remount.
   @impl true
   def handle_params(%{"mailable" => mod_str, "scenario" => name_str} = params, uri, socket) do
-    {device_width, admin_chrome_theme} = normalize_capture_url_state(params, socket)
-    base_path = uri_path(uri)
+    params = params_with_query(params, uri)
 
-    with {:ok, mailable} <- safe_mailable_atom(mod_str),
-         {:ok, scenario} <- safe_scenario_atom(name_str),
-         {:ok, defaults} <-
-           lookup_scenario_defaults(socket.assigns.mailables, mailable, scenario) do
-      current_assigns =
-        if socket.assigns.current_mailable == mailable and
-             socket.assigns.current_scenario == scenario do
-          socket.assigns.current_assigns
-        else
-          defaults
-        end
-
-      socket =
-        socket
-        |> assign(:current_mailable, mailable)
-        |> assign(:current_scenario, scenario)
-        |> assign(:current_assigns, current_assigns)
-        |> assign(:device_width, device_width)
-        |> assign(:admin_chrome_theme, admin_chrome_theme)
-        |> assign(:preview_frame_dark_chrome, frame_from_params(params, socket))
-        |> assign(:base_path, base_path)
-        |> assign(:page_uri, uri)
-        |> assign(:page_title, "mailglass — " <> to_string(scenario))
-        |> rerender()
-
-      {:noreply, socket}
+    if redirect_path = MailglassAdmin.Theme.legacy_query_redirect_path(params, uri) do
+      {:noreply, redirect(socket, to: redirect_path)}
     else
-      {:error, {:preview_props_raised, msg}} ->
-        mailable = mailable_from_str(mod_str)
+      {device_width, admin_chrome_theme} = normalize_capture_url_state(params, socket)
+      base_path = uri_path(uri)
 
-        {:noreply,
-         socket
-         |> assign(:current_mailable, mailable)
-         |> assign(:current_scenario, :__error__)
-         |> assign(:device_width, device_width)
-         |> assign(:admin_chrome_theme, admin_chrome_theme)
-         |> assign(:base_path, base_path)
-         |> assign(:page_uri, uri)
-         |> assign(:render_error, msg)
-         |> assign(:page_title, "mailglass — error")}
+      with {:ok, mailable} <- safe_mailable_atom(mod_str),
+           {:ok, scenario} <- safe_scenario_atom(name_str),
+           {:ok, defaults} <-
+             lookup_scenario_defaults(socket.assigns.mailables, mailable, scenario) do
+        current_assigns =
+          if socket.assigns.current_mailable == mailable and
+               socket.assigns.current_scenario == scenario do
+            socket.assigns.current_assigns
+          else
+            defaults
+          end
 
-      _ ->
-        {:noreply,
-         socket
-         |> assign(:current_mailable, nil)
-         |> assign(:current_scenario, nil)
-         |> assign(:base_path, nil)
-         |> assign(:page_uri, uri)
-         |> put_flash(:error, "Scenario not found")}
+        socket =
+          socket
+          |> assign(:current_mailable, mailable)
+          |> assign(:current_scenario, scenario)
+          |> assign(:current_assigns, current_assigns)
+          |> assign(:device_width, device_width)
+          |> assign(:admin_chrome_theme, admin_chrome_theme)
+          |> assign(:preview_frame_dark_chrome, frame_from_params(params, socket))
+          |> assign(:base_path, base_path)
+          |> assign(:page_uri, uri)
+          |> assign(:page_title, "mailglass — " <> to_string(scenario))
+          |> rerender()
+
+        {:noreply, socket}
+      else
+        {:error, {:preview_props_raised, msg}} ->
+          mailable = mailable_from_str(mod_str)
+
+          {:noreply,
+           socket
+           |> assign(:current_mailable, mailable)
+           |> assign(:current_scenario, :__error__)
+           |> assign(:device_width, device_width)
+           |> assign(:admin_chrome_theme, admin_chrome_theme)
+           |> assign(:base_path, base_path)
+           |> assign(:page_uri, uri)
+           |> assign(:render_error, msg)
+           |> assign(:page_title, "mailglass — error")}
+
+        _ ->
+          {:noreply,
+           socket
+           |> assign(:current_mailable, nil)
+           |> assign(:current_scenario, nil)
+           |> assign(:base_path, nil)
+           |> assign(:page_uri, uri)
+           |> put_flash(:error, "Scenario not found")}
+      end
     end
   end
 
   def handle_params(params, uri, socket) do
-    {:noreply,
-     socket
-     |> assign(:current_mailable, nil)
-     |> assign(:current_scenario, nil)
-     |> assign(:base_path, nil)
-     # See IN-03 precedence note above: re-derived from the same `?theme=` param
-     # the MountPathHook already seeded, kept deliberately in agreement.
-     |> assign(:admin_chrome_theme, parse_admin_chrome_theme(params["theme"]))
-     |> assign(:page_uri, uri)
-     |> assign(:page_title, "mailglass — Preview")}
+    params = params_with_query(params, uri)
+
+    if redirect_path = MailglassAdmin.Theme.legacy_query_redirect_path(params, uri) do
+      {:noreply, redirect(socket, to: redirect_path)}
+    else
+      {device_width, admin_chrome_theme} = normalize_capture_url_state(params, socket)
+      base_path = uri_path(uri)
+
+      socket =
+        socket
+        |> assign(:current_mailable, nil)
+        |> assign(:current_scenario, nil)
+        |> assign(:base_path, nil)
+        |> assign(:device_width, device_width)
+        |> assign(:admin_chrome_theme, admin_chrome_theme)
+        |> assign(:page_uri, uri)
+        |> assign(:page_title, "mailglass — Preview")
+
+      case first_scenario_path(
+             socket.assigns.mount_path || MailglassAdmin.MountPath.base(base_path),
+             socket.assigns.mailables,
+             device_width
+           ) do
+        "#" -> {:noreply, socket}
+        path -> {:noreply, redirect(socket, to: path)}
+      end
+    end
   end
 
   @impl true
@@ -253,67 +273,88 @@ defmodule MailglassAdmin.PreviewLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :surface_paths, preview_surface_paths(assigns))
+
     ~H"""
-    <div
-      data-testid="preview-shell"
-      data-theme={admin_theme_attr(@admin_chrome_theme)}
-      class="mg-admin-root min-h-screen bg-base-100 text-base-content px-md py-lg md:px-lg md:py-xl"
+    <AdminShell.shell
+      testid="preview-shell"
+      theme_attr={admin_theme_attr(@admin_chrome_theme)}
+      sidebar_width_class="md:grid-cols-[15rem_1fr]"
+      main_max_width_class="max-w-none"
     >
-      <header class="mb-lg flex items-center gap-sm border-b border-base-300 pb-md">
-        <Components.logo class="h-6 w-auto" />
-        <span class="text-label font-bold uppercase text-secondary">Preview</span>
-      </header>
-
-      <div class="grid gap-lg md:grid-cols-[20rem_1fr]">
-        <aside
-          data-testid="preview-sidebar-desktop"
-          class="hidden md:block rounded-box border border-base-300 bg-base-200 p-md"
-        >
-          <Sidebar.sidebar
-            mailables={@mailables}
-            current_mailable={@current_mailable}
-            current_scenario={@current_scenario}
-            device_width={@device_width}
-            admin_chrome_theme={@admin_chrome_theme}
-            mount_path={@mount_path}
+      <:actions>
+        <div data-testid="preview-global-controls" class="ml-auto flex items-center gap-sm">
+          <Components.theme_picker
+            name="preview_admin_theme"
+            selected={admin_chrome_selected(@admin_chrome_theme)}
+            event="set_theme"
           />
-        </aside>
+        </div>
+      </:actions>
+      <:sidebar>
+        <SurfaceNav.nav
+          active={:preview}
+          preview_path={@surface_paths.preview}
+          overview_path={@surface_paths.overview}
+          deliveries_path={@surface_paths.deliveries}
+          inbound_path={@surface_paths.inbound}
+          inbound_available?={not is_nil(@surface_paths.inbound)}
+        />
+      </:sidebar>
+      <:mobile_nav>
+        <SurfaceNav.nav
+          active={:preview}
+          layout={:mobile}
+          preview_path={@surface_paths.preview}
+          overview_path={@surface_paths.overview}
+          deliveries_path={@surface_paths.deliveries}
+          inbound_path={@surface_paths.inbound}
+          inbound_available?={not is_nil(@surface_paths.inbound)}
+        />
+      </:mobile_nav>
+      <:page_header>
+        <h1 class="text-heading font-bold tracking-tight text-base-content">Preview</h1>
+        <p class="text-body text-secondary">
+          Render an email exactly as your app would send it, then inspect HTML, text, raw source, headers, and assigns.
+        </p>
+      </:page_header>
 
-        <main class="min-w-0 space-y-lg">
-          <section
-            data-testid="preview-mobile-mailables"
-            class="md:hidden rounded-box border border-base-300 bg-base-200 p-md"
-          >
-            <Sidebar.sidebar
-              mailables={@mailables}
-              current_mailable={@current_mailable}
-              current_scenario={@current_scenario}
-              device_width={@device_width}
-              admin_chrome_theme={@admin_chrome_theme}
-              mount_path={@mount_path}
-            />
-          </section>
+      <div class="space-y-lg">
+        <%= cond do %>
+          <% @render_error -> %>
+            <div
+              data-testid="preview-scenario-layout"
+              class="space-y-lg"
+            >
+              <div class="relative z-20 flex flex-wrap items-start gap-sm">
+                <Sidebar.menu
+                  mailables={@mailables}
+                  current_mailable={@current_mailable}
+                  current_scenario={@current_scenario}
+                  device_width={@device_width}
+                  admin_chrome_theme={@admin_chrome_theme}
+                  mount_path={@mount_path}
+                />
+              </div>
 
-          <%= cond do %>
-            <% @render_error -> %>
               <div
                 data-testid="preview-render-error"
                 role="alert"
                 class="motion-reveal rounded-box border border-error bg-base-200 p-lg"
               >
                 <%!-- Announce the error transition once, concisely. Scoping the
-                      live region to this sr-only span (mirroring evidence_card.ex
-                      and the backdrop status region below) keeps assistive tech
-                      from reading the full stacktrace <pre> aloud. The existing
-                      tests assert a role="status" node is present in the card. --%>
+                        live region to this sr-only span (mirroring evidence_card.ex
+                        and the backdrop status region below) keeps assistive tech
+                        from reading the full stacktrace <pre> aloud. The existing
+                        tests assert a role="status" node is present in the card. --%>
                 <span role="status" aria-live="polite" class="sr-only">
                   This Mailable raised while rendering the {@current_scenario} scenario.
                 </span>
                 <div class="flex items-center gap-sm mb-md">
                   <Components.icon name="hero-exclamation-circle" class="w-5 h-5 text-error" />
-                  <h1 class="text-heading font-bold text-base-content">
+                  <h2 class="text-heading font-bold text-base-content">
                     This Mailable raised while rendering
-                  </h1>
+                  </h2>
                 </div>
                 <p class="text-body text-secondary">
                   <code class="font-mono text-label">{inspect(@current_mailable)}</code>
@@ -325,179 +366,144 @@ defmodule MailglassAdmin.PreviewLive do
                 </p>
                 <pre class="mt-md font-mono text-label text-error whitespace-pre-wrap overflow-auto max-h-80 bg-base-100 p-md rounded-box border border-base-300"><code>{@render_error}</code></pre>
               </div>
-            <% @current_scenario -> %>
-              <header class="flex items-start justify-between gap-md flex-wrap">
-                <h1 class="min-w-0 break-words text-heading font-bold text-base-content">
-                  {inspect(@current_mailable)}
-                  <span class="text-secondary font-normal">· {@current_scenario}</span>
-                </h1>
-                <div data-testid="preview-header-controls" class="flex flex-wrap gap-sm items-center">
-                  <DeviceFrame.device_frame device_width={@device_width} />
-                  <div class="flex flex-col gap-xs">
-                    <span class="text-label text-secondary">App theme</span>
-                    <Components.theme_picker
-                      name="preview_admin_theme"
-                      selected={admin_chrome_selected(@admin_chrome_theme)}
-                      event="set_theme"
-                    />
+            </div>
+          <% @current_scenario -> %>
+            <div
+              data-testid="preview-scenario-layout"
+              class="space-y-lg"
+            >
+              <div class="min-w-0 space-y-lg">
+                <header class="relative z-20 flex flex-col gap-sm lg:flex-row lg:items-start lg:justify-between">
+                  <Sidebar.menu
+                    mailables={@mailables}
+                    current_mailable={@current_mailable}
+                    current_scenario={@current_scenario}
+                    device_width={@device_width}
+                    admin_chrome_theme={@admin_chrome_theme}
+                    mount_path={@mount_path}
+                  />
+                  <div
+                    data-testid="preview-header-controls"
+                    class="flex flex-wrap items-center justify-end gap-sm"
+                  >
+                    <DeviceFrame.device_frame device_width={@device_width} />
+                    <button
+                      type="button"
+                      data-testid="preview-frame-theme-toggle"
+                      phx-click="toggle_preview_frame_theme"
+                      aria-pressed={if @preview_frame_dark_chrome, do: "true", else: "false"}
+                      aria-label={
+                        if @preview_frame_dark_chrome,
+                          do: "Switch the preview backdrop to light",
+                          else: "Switch the preview backdrop to dark"
+                      }
+                      class="mg-focus-ring btn btn-ghost btn-sm min-h-11 gap-xs px-sm"
+                    >
+                      <Components.icon
+                        name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
+                        class="w-5 h-5"
+                      />
+                      <span class="text-label font-bold">Preview backdrop</span>
+                    </button>
+                    <%!-- Backdrop state is announced in TEXT, never the backdrop color
+                            alone (WCAG 1.4.1). The region is always present so the flip is
+                            perceived in both directions (mirrors evidence_card.ex). --%>
+                    <span
+                      data-testid="preview-backdrop-status"
+                      role="status"
+                      aria-live="polite"
+                      class="sr-only"
+                    >
+                      {backdrop_status_text(@preview_frame_dark_chrome)}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    data-testid="preview-frame-theme-toggle"
-                    phx-click="toggle_preview_frame_theme"
-                    aria-pressed={if @preview_frame_dark_chrome, do: "true", else: "false"}
-                    aria-label={
-                      if @preview_frame_dark_chrome,
-                        do: "Switch the email preview backdrop to light",
-                        else: "Switch the email preview backdrop to dark"
-                    }
-                    class="mg-focus-ring btn btn-ghost btn-sm min-h-11 gap-xs px-sm"
-                  >
-                    <Components.icon
-                      name={if @preview_frame_dark_chrome, do: "hero-sun", else: "hero-moon"}
-                      class="w-5 h-5"
-                    />
-                    <span class="text-label font-bold">Email backdrop</span>
-                  </button>
-                  <%!-- Backdrop state is announced in TEXT, never the backdrop color
-                        alone (WCAG 1.4.1). The region is always present so the flip is
-                        perceived in both directions (mirrors evidence_card.ex). --%>
-                  <span
-                    data-testid="preview-backdrop-status"
-                    role="status"
-                    aria-live="polite"
-                    class="sr-only"
-                  >
-                    {backdrop_status_text(@preview_frame_dark_chrome)}
-                  </span>
-                </div>
-              </header>
+                </header>
 
-              <AssignsForm.assigns_form scenario_assigns={@current_assigns} />
+                <Tabs.tabs
+                  active_tab={@active_tab}
+                  html_body={@html_body}
+                  text_body={@text_body}
+                  raw_envelope={@raw_envelope}
+                  headers={@headers}
+                  device_width={@device_width}
+                  render_nonce={@render_nonce}
+                  preview_frame_dark_chrome={@preview_frame_dark_chrome}
+                />
 
-              <Tabs.tabs
-                active_tab={@active_tab}
-                html_body={@html_body}
-                text_body={@text_body}
-                raw_envelope={@raw_envelope}
-                headers={@headers}
-                device_width={@device_width}
-                render_nonce={@render_nonce}
-                preview_frame_dark_chrome={@preview_frame_dark_chrome}
-              />
-            <% @mailables == [] -> %>
-              <MailglassAdmin.Operator.Shell.orientation_strip surface={:preview} />
-              <div
-                data-testid="preview-empty-mailables"
-                class="motion-reveal mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-lg"
-              >
-                <Components.icon name="hero-magnifying-glass" class="mb-md h-10 w-10 text-secondary" />
-                <%!-- Empty-state copy is the brandbook-canonical Mailable Empty string
+                <AssignsForm.assigns_form scenario_assigns={@current_assigns} />
+              </div>
+            </div>
+          <% @mailables == [] -> %>
+            <MailglassAdmin.Operator.Shell.orientation_strip surface={:preview} />
+            <div
+              data-testid="preview-empty-mailables"
+              class="motion-reveal mx-auto max-w-prose rounded-box border border-base-300 bg-base-200 p-lg"
+            >
+              <Components.icon name="hero-magnifying-glass" class="mb-md h-10 w-10 text-secondary" />
+              <%!-- Empty-state copy is the brandbook-canonical Mailable Empty string
                       (brandbook/copy/microcopy.md:17), kept VERBATIM with literal
                       backticks so voice_test.exs greps it byte-for-byte
                       (D-09 / Pitfall-2 green-only-forward). The generator chip below is
                       the PRIMARY next step; the two discovery checks are a secondary
                       recovery checklist. --%>
-                <h1 class="mb-sm text-heading font-bold text-base-content">
-                  No mailables discovered yet. Define one with `mix mailglass.gen.mailable` and it will appear here, ready to preview.
-                </h1>
-                <p class="mt-md text-label font-bold text-secondary">Generate your first Mailable</p>
-                <code class="font-mono text-primary mt-sm inline-block overflow-auto whitespace-pre-wrap text-label">mix mailglass.gen.mailable</code>
-                <p class="mt-sm text-body text-secondary">
-                  Then reload — Preview discovers it automatically.
-                </p>
-                <p class="mt-md text-label font-bold text-secondary">Still not showing up?</p>
-                <ul class="mt-sm grid gap-sm text-body text-secondary">
-                  <li class="flex items-start gap-sm">
-                    <Components.icon
-                      name="hero-check-circle"
-                      class="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                    />
-                    <span>
-                      Confirm the module calls
-                      <code class="font-mono text-label">use Mailglass.Mailable</code>
-                      and is compiled and loaded.
-                    </span>
-                  </li>
-                  <li class="flex items-start gap-sm">
-                    <Components.icon
-                      name="hero-check-circle"
-                      class="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                    />
-                    <span>
-                      Or pass an explicit list to the router: <code class="font-mono text-label overflow-auto whitespace-pre-wrap">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
-                    </span>
-                  </li>
-                </ul>
-                <a
-                  href="https://hexdocs.pm/mailglass_admin/MailglassAdmin.Router.html"
-                  class="mg-focus-ring btn btn-ghost mt-md min-h-11"
-                >
-                  Read preview setup
-                </a>
-              </div>
-            <% true -> %>
-              <div
-                data-testid="preview-start"
-                class="mx-auto max-w-prose space-y-lg"
+              <h2 class="mb-sm text-heading font-bold text-base-content">
+                No mailables discovered yet. Define one with `mix mailglass.gen.mailable` and it will appear here, ready to preview.
+              </h2>
+              <p class="mt-md text-label font-bold text-secondary">Generate your first Mailable</p>
+              <code class="font-mono text-primary mt-sm inline-block overflow-auto whitespace-pre-wrap text-label">
+                mix mailglass.gen.mailable
+              </code>
+              <p class="mt-sm text-body text-secondary">
+                Then reload — Preview discovers it automatically.
+              </p>
+              <p class="mt-md text-label font-bold text-secondary">Still not showing up?</p>
+              <ul class="mt-sm grid gap-sm text-body text-secondary">
+                <li class="flex items-start gap-sm">
+                  <Components.icon
+                    name="hero-check-circle"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                  />
+                  <span>
+                    Confirm the module calls
+                    <code class="font-mono text-label">use Mailglass.Mailable</code>
+                    and is compiled and loaded.
+                  </span>
+                </li>
+                <li class="flex items-start gap-sm">
+                  <Components.icon
+                    name="hero-check-circle"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                  />
+                  <span>
+                    Or pass an explicit list to the router: <code class="font-mono text-label overflow-auto whitespace-pre-wrap">mailglass_admin_routes "/mail", mailables: [MyApp.UserMailer]</code>.
+                  </span>
+                </li>
+              </ul>
+              <a
+                href="https://hexdocs.pm/mailglass_admin/MailglassAdmin.Router.html"
+                class="mg-focus-ring btn btn-ghost mt-md min-h-11"
               >
-                <div class="rounded-box border border-base-300 bg-base-200 p-lg">
-                  <Components.icon name="hero-envelope-open" class="mb-md h-10 w-10 text-primary" />
-                  <h1 class="mb-sm text-heading font-bold text-base-content">
-                    Render a real Message before you send it
-                  </h1>
-                  <p class="text-body text-secondary">
-                    Pick a Mailable from the sidebar to render it through the same pipeline your production sends use.
-                  </p>
-                  <.link
-                    :if={first_previewable(@mailables)}
-                    patch={first_scenario_path(@mount_path, @mailables, @admin_chrome_theme)}
-                    class="motion-reveal mg-focus-ring btn btn-primary mt-md min-h-11"
-                  >
-                    Preview the first Mailable
-                  </.link>
-                </div>
-
-                <dl class="grid gap-sm sm:grid-cols-2">
-                  <.legend_item icon="hero-window" title="HTML, Text, Raw & Headers">
-                    Switch tabs to inspect each part of the rendered Message.
-                  </.legend_item>
-                  <.legend_item icon="hero-device-phone-mobile" title="Device widths">
-                    Check mobile, tablet, and desktop rendering at 375 / 768 / 1024px.
-                  </.legend_item>
-                  <.legend_item icon="hero-moon" title="Light & dark">
-                    Toggle the app chrome and the email backdrop independently.
-                  </.legend_item>
-                  <.legend_item icon="hero-pencil-square" title="Editable assigns">
-                    Edit the scenario's assigns inline and re-render instantly.
-                  </.legend_item>
-                </dl>
-              </div>
-          <% end %>
-        </main>
+                Read preview setup
+              </a>
+            </div>
+          <% true -> %>
+            <div
+              data-testid="preview-no-previewable-mailables"
+              role="status"
+              class="motion-reveal rounded-box border border-base-300 bg-base-200 p-lg"
+            >
+              <h2 class="text-heading font-bold text-base-content">No previewable emails yet</h2>
+              <p class="mt-sm text-body text-secondary">
+                Add a preview scenario to one of your Mailables and it will open here.
+              </p>
+            </div>
+        <% end %>
       </div>
 
       <%= if Phoenix.Flash.get(@flash, :info) do %>
         <Components.flash kind={:success} message={Phoenix.Flash.get(@flash, :info)} />
       <% end %>
-    </div>
-    """
-  end
-
-  attr :icon, :string, required: true
-  attr :title, :string, required: true
-  slot :inner_block, required: true
-
-  # Start-page legend tile: one affordance of the preview tool, explained.
-  defp legend_item(assigns) do
-    ~H"""
-    <div class="flex items-start gap-sm rounded-box border border-base-300 bg-base-100 p-4">
-      <Components.icon name={@icon} class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-      <div class="min-w-0">
-        <dt class="text-body font-bold text-base-content">{@title}</dt>
-        <dd class="mt-1 text-body text-secondary">{render_slot(@inner_block)}</dd>
-      </div>
-    </div>
+    </AdminShell.shell>
     """
   end
 
@@ -506,8 +512,8 @@ defmodule MailglassAdmin.PreviewLive do
   # ---------------------------------------------------------------------------
 
   # First mailable that exposes at least one previewable scenario (healthy
-  # reflection = keyword list of {scenario, defaults}). Used to fast-path the
-  # start page's "Preview the first Mailable" deep link.
+  # reflection = keyword list of {scenario, defaults}). Used to canonicalize the
+  # preview root to the first real scenario.
   defp first_previewable(mailables) do
     Enum.find_value(mailables, fn
       {mod, [{scenario, _defaults} | _]} -> {mod, scenario}
@@ -519,16 +525,13 @@ defmodule MailglassAdmin.PreviewLive do
   # known mount path (`/dev/mail`, `/admin/preview`, …) rather than a relative
   # `./` reference — the mount path has no trailing slash, so a relative URL
   # would resolve against the parent and drop the final segment.
-  defp first_scenario_path(mount_path, mailables, admin_chrome_theme) do
+  defp first_scenario_path(mount_path, mailables, device_width) do
     case first_previewable(mailables) do
       {mod, scenario} ->
         path =
           MailglassAdmin.Preview.Sidebar.scenario_base_path(mount_path, mod, scenario)
 
-        case theme_query_param(admin_chrome_theme) do
-          nil -> path
-          theme -> path <> "?theme=" <> theme
-        end
+        build_capture_url(path, Integer.to_string(device_width))
 
       nil ->
         "#"
@@ -569,15 +572,7 @@ defmodule MailglassAdmin.PreviewLive do
 
   defp parse_device_width_param(_), do: 768
 
-  defp parse_admin_chrome_theme("dark"), do: :dark
-  defp parse_admin_chrome_theme("mailglass-dark"), do: :dark
-  defp parse_admin_chrome_theme("light"), do: :light
-  defp parse_admin_chrome_theme("mailglass-light"), do: :light
-  defp parse_admin_chrome_theme(_), do: nil
-
-  defp admin_theme_attr(:dark), do: "mailglass-dark"
-  defp admin_theme_attr(:light), do: "mailglass-light"
-  defp admin_theme_attr(_theme), do: nil
+  defp admin_theme_attr(theme), do: MailglassAdmin.Theme.data_theme(theme)
 
   # Map the persisted chrome theme (:dark | :light | nil) onto the theme_picker's
   # closed :system | :light | :dark selection. nil means no explicit override,
@@ -586,10 +581,36 @@ defmodule MailglassAdmin.PreviewLive do
   defp admin_chrome_selected(:light), do: :light
   defp admin_chrome_selected(_theme), do: :system
 
+  defp session_navigation(%{"navigation" => navigation}) when is_map(navigation),
+    do: navigation
+
+  defp session_navigation(_session), do: %{}
+
+  defp preview_surface_paths(assigns) do
+    navigation = assigns[:admin_navigation] || %{}
+
+    %{
+      preview: current_preview_path(assigns),
+      overview: navigation_path(navigation, :overview_path),
+      deliveries: navigation_path(navigation, :deliveries_path),
+      inbound: navigation_path(navigation, :inbound_path)
+    }
+  end
+
+  defp current_preview_path(assigns) do
+    assigns[:mount_path] ||
+      (assigns[:page_uri] && MailglassAdmin.MountPath.base(uri_path(assigns[:page_uri]))) ||
+      "/"
+  end
+
+  defp navigation_path(navigation, key) do
+    blank_to_nil(Map.get(navigation, key) || Map.get(navigation, Atom.to_string(key)))
+  end
+
   # Text announced through the aria-live status region (WCAG 1.4.1). The backdrop
   # state change is perceivable in TEXT, never the backdrop color alone.
-  defp backdrop_status_text(true), do: "Email backdrop: dark"
-  defp backdrop_status_text(_), do: "Email backdrop: light"
+  defp backdrop_status_text(true), do: "Preview backdrop: dark"
+  defp backdrop_status_text(_), do: "Preview backdrop: light"
 
   defp normalize_capture_url_state(params, socket) do
     width =
@@ -598,13 +619,7 @@ defmodule MailglassAdmin.PreviewLive do
         :error -> socket.assigns.device_width
       end
 
-    admin_chrome_theme =
-      case Map.fetch(params, "theme") do
-        {:ok, theme_param} -> parse_admin_chrome_theme(theme_param)
-        :error -> socket.assigns.admin_chrome_theme
-      end
-
-    {width, admin_chrome_theme}
+    {width, socket.assigns.admin_chrome_theme}
   end
 
   defp sync_patch_capture_url_state(socket) do
@@ -618,8 +633,7 @@ defmodule MailglassAdmin.PreviewLive do
         to:
           build_capture_url(
             socket.assigns.base_path,
-            Integer.to_string(socket.assigns.device_width),
-            theme_query_param(socket.assigns.admin_chrome_theme)
+            Integer.to_string(socket.assigns.device_width)
           )
       )
     else
@@ -627,17 +641,14 @@ defmodule MailglassAdmin.PreviewLive do
     end
   end
 
-  defp build_capture_url(base_path, width, nil), do: base_path <> "?width=" <> width
-
-  defp build_capture_url(base_path, width, theme),
-    do: base_path <> "?width=" <> width <> "&theme=" <> theme
+  defp build_capture_url(base_path, width), do: base_path <> "?width=" <> width
 
   # Frame-aware chrome-theme redirect builder (D-05). The `theme` segment is the
   # closed tri-state set the theme_picker emits ("system"|"light"|"dark"); it is
   # the only theme-derived value interpolated into the path. The full controller
   # redirect through /theme/<segment> remounts this LiveView and drops the
   # in-memory preview_frame_dark_chrome — `frame=dark` in return_to is what keeps
-  # the email backdrop alive across the remount, so the put_frame_query call MUST
+  # the preview backdrop alive across the remount, so the put_frame_query call MUST
   # stay verbatim.
   defp preview_theme_path(socket, theme) when is_binary(theme) do
     parsed = URI.parse(socket.assigns.page_uri || "")
@@ -655,24 +666,18 @@ defmodule MailglassAdmin.PreviewLive do
       |> append_query_without_theme(parsed.query || "")
       |> put_frame_query(socket.assigns.preview_frame_dark_chrome)
 
-    segment = theme_segment(theme)
+    segment = MailglassAdmin.Theme.segment(theme)
 
     String.trim_trailing(mount_base, "/") <>
       "/theme/" <> segment <> "?" <> URI.encode_query([{"return_to", return_to}])
   end
 
-  # Closed-set guard: only the three theme_picker values are accepted; anything
-  # else collapses to "system" so a stray param can never reach the /theme route.
-  defp theme_segment("dark"), do: "dark"
-  defp theme_segment("light"), do: "light"
-  defp theme_segment(_other), do: "system"
-
   # The admin-chrome theme toggle performs a full controller redirect (cookie +
-  # return_to), which remounts this LiveView and would otherwise drop the
-  # in-memory preview-frame theme. Carry the live frame state through return_to so
-  # the two toggles stay independent (handle_params restores it on remount). Strip
-  # any prior `frame` first so a stale value never duplicates or overrides the
-  # current assign.
+  # return_to), which remounts this LiveView and would otherwise drop the preview
+  # backdrop state. Carry the live frame state through return_to so the two
+  # toggles stay independent (handle_params restores it on remount). Strip any
+  # prior `frame` first so a stale value never duplicates or overrides the current
+  # assign.
   defp append_query_without_theme(path, query) do
     query =
       query
@@ -700,10 +705,6 @@ defmodule MailglassAdmin.PreviewLive do
   defp frame_from_params(%{"frame" => "light"}, _socket), do: false
   defp frame_from_params(_params, socket), do: socket.assigns.preview_frame_dark_chrome
 
-  defp theme_query_param(:dark), do: "dark"
-  defp theme_query_param(:light), do: "light"
-  defp theme_query_param(_theme), do: nil
-
   defp uri_path(uri) when is_binary(uri) do
     case URI.parse(uri) do
       %URI{path: path} when is_binary(path) -> path
@@ -713,11 +714,24 @@ defmodule MailglassAdmin.PreviewLive do
 
   defp uri_path(_), do: nil
 
+  defp params_with_query(params, uri) do
+    query_params =
+      case URI.parse(uri || "") do
+        %URI{query: query} when is_binary(query) -> URI.decode_query(query)
+        _ -> %{}
+      end
+
+    Map.merge(query_params, params)
+  end
+
   defp mailable_from_str(str) do
     String.to_existing_atom("Elixir." <> str)
   rescue
     ArgumentError -> nil
   end
+
+  defp blank_to_nil(value) when value in [nil, ""], do: nil
+  defp blank_to_nil(value), do: value
 
   # Flag the preview_props-raised branch separately from the generic
   # not-found branch so handle_params/3 can route to the error card.

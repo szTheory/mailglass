@@ -76,7 +76,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
         stream: :transactional,
-        recipient: "mira.chen@northstar-ops.example",
+        recipient: "mira.chen@atlasdesk.example",
         provider: "postmark",
         provider_message_id: "pm-demo-invite-001",
         status: :sent,
@@ -96,7 +96,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.magic_link",
         stream: :transactional,
-        recipient: "alex.rivera@northstar-ops.example",
+        recipient: "alex.rivera@atlasdesk.example",
         provider: "postmark",
         provider_message_id: "pm-demo-magic-link-001",
         status: :sent,
@@ -120,7 +120,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.BillingMailer.receipt_paid",
         stream: :operational,
-        recipient: "billing@northstar-ops.example",
+        recipient: "billing@atlasdesk.example",
         provider: "postmark",
         provider_message_id: "pm-demo-receipt-001",
         status: :sent,
@@ -141,7 +141,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.BillingMailer.payment_failed",
         stream: :operational,
-        recipient: "billing@northstar-ops.example",
+        recipient: "billing@atlasdesk.example",
         provider: "postmark",
         provider_message_id: "pm-demo-payment-failed-001",
         status: :failed,
@@ -165,7 +165,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert",
         stream: :operational,
-        recipient: "ops@northstar-ops.example",
+        recipient: "ops@atlasdesk.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-usage-001",
         status: :failed,
@@ -207,7 +207,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.OperationsMailer.incident_update",
         stream: :operational,
-        recipient: "ops@northstar-ops.example",
+        recipient: "ops@atlasdesk.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-incident-001",
         status: :suppressed,
@@ -239,7 +239,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
         stream: :transactional,
-        recipient: "queued@northstar-ops.example",
+        recipient: "queued@atlasdesk.example",
         provider: "postmark",
         provider_message_id: "pm-demo-badge-queued-001",
         status: :sent,
@@ -254,7 +254,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
         stream: :transactional,
-        recipient: "rejected@northstar-ops.example",
+        recipient: "rejected@atlasdesk.example",
         provider: "postmark",
         provider_message_id: "pm-demo-badge-rejected-001",
         status: :failed,
@@ -274,7 +274,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
         stream: :transactional,
-        recipient: "autoresponded@northstar-ops.example",
+        recipient: "autoresponded@atlasdesk.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-badge-autoresponded-001",
         status: :sent,
@@ -294,7 +294,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.BillingMailer.receipt_paid",
         stream: :operational,
-        recipient: "opened@northstar-ops.example",
+        recipient: "opened@atlasdesk.example",
         provider: "postmark",
         provider_message_id: "pm-demo-badge-opened-001",
         status: :sent,
@@ -303,7 +303,10 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_opened"}
       })
 
-    event!(opened_d, :delivered, minutes_ago(139), %{"provider" => "postmark", "source" => "webhook"})
+    event!(opened_d, :delivered, minutes_ago(139), %{
+      "provider" => "postmark",
+      "source" => "webhook"
+    })
 
     event!(opened_d, :opened, minutes_ago(138), %{
       "provider" => "postmark",
@@ -314,7 +317,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.BillingMailer.receipt_paid",
         stream: :operational,
-        recipient: "clicked@northstar-ops.example",
+        recipient: "clicked@atlasdesk.example",
         provider: "postmark",
         provider_message_id: "pm-demo-badge-clicked-001",
         status: :sent,
@@ -323,7 +326,10 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_clicked"}
       })
 
-    event!(clicked_d, :delivered, minutes_ago(141), %{"provider" => "postmark", "source" => "webhook"})
+    event!(clicked_d, :delivered, minutes_ago(141), %{
+      "provider" => "postmark",
+      "source" => "webhook"
+    })
 
     event!(clicked_d, :clicked, minutes_ago(140), %{
       "provider" => "postmark",
@@ -334,7 +340,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert",
         stream: :operational,
-        recipient: "complained@northstar-ops.example",
+        recipient: "complained@atlasdesk.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-badge-complained-001",
         status: :failed,
@@ -343,7 +349,10 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_complained"}
       })
 
-    event!(complained_d, :delivered, minutes_ago(143), %{"provider" => "sendgrid", "source" => "webhook"})
+    event!(complained_d, :delivered, minutes_ago(143), %{
+      "provider" => "sendgrid",
+      "source" => "webhook"
+    })
 
     event!(complained_d, :complained, minutes_ago(142), %{
       "provider" => "sendgrid",
@@ -354,7 +363,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.OperationsMailer.usage_alert",
         stream: :operational,
-        recipient: "unsubscribed@northstar-ops.example",
+        recipient: "unsubscribed@atlasdesk.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-badge-unsubscribed-001",
         status: :sent,
@@ -363,7 +372,10 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_unsubscribed"}
       })
 
-    event!(unsubscribed_d, :delivered, minutes_ago(145), %{"provider" => "sendgrid", "source" => "webhook"})
+    event!(unsubscribed_d, :delivered, minutes_ago(145), %{
+      "provider" => "sendgrid",
+      "source" => "webhook"
+    })
 
     event!(unsubscribed_d, :unsubscribed, minutes_ago(144), %{
       "provider" => "sendgrid",
@@ -374,7 +386,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
         stream: :transactional,
-        recipient: "subscribed@northstar-ops.example",
+        recipient: "subscribed@atlasdesk.example",
         provider: "sendgrid",
         provider_message_id: "sg-demo-badge-subscribed-001",
         status: :sent,
@@ -392,7 +404,7 @@ defmodule MailglassDemo.DemoData do
       delivery!(%{
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
         stream: :transactional,
-        recipient: "unknown@northstar-ops.example",
+        recipient: "unknown@atlasdesk.example",
         provider: "postmark",
         provider_message_id: "pm-demo-badge-unknown-001",
         status: :sent,
@@ -413,7 +425,7 @@ defmodule MailglassDemo.DemoData do
         mailable: "MailglassDemoWeb.Mailers.AccountMailer.invite_admin",
         stream: :transactional,
         recipient:
-          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@northstar-stress.example",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@atlasdesk-stress.example",
         provider: "postmark",
         provider_message_id: "pm-demo-truncation-stress-001",
         status: :sent,
@@ -529,7 +541,7 @@ defmodule MailglassDemo.DemoData do
         provider: "mailgun",
         provider_message_id: "mg-demo-support-001",
         envelope_recipient: "support@demo.mailglass.local",
-        from: [%{"name" => "Mira Chen", "address" => "mira.chen@northstar-ops.example"}],
+        from: [%{"name" => "Mira Chen", "address" => "mira.chen@atlasdesk.example"}],
         to: [%{"address" => "support@demo.mailglass.local"}],
         subject: "[support] Invite email did not arrive",
         text_body: "Can you confirm whether the invite bounced or was suppressed?",
@@ -546,7 +558,7 @@ defmodule MailglassDemo.DemoData do
         provider: "mailgun",
         provider_message_id: "mg-demo-refund-001",
         envelope_recipient: "billing@demo.mailglass.local",
-        from: [%{"name" => "Andre Mills", "address" => "andre.mills@northstar-ops.example"}],
+        from: [%{"name" => "Andre Mills", "address" => "andre.mills@atlasdesk.example"}],
         to: [%{"address" => "billing@demo.mailglass.local"}],
         subject: "[billing] Refund request for INV-2026-0602",
         text_body: "Please process a refund because the card was charged twice.",

@@ -4,16 +4,16 @@ defmodule MailglassAdmin.Controllers.ThemeController do
   use Phoenix.Controller, formats: [:html]
 
   alias MailglassAdmin.MountPath
+  alias MailglassAdmin.Theme
 
-  @cookie_name "mailglass_admin_theme"
-  @max_age 60 * 60 * 24 * 365
-
-  def cookie_name, do: @cookie_name
+  def cookie_name, do: Theme.cookie_name()
 
   def set(conn, %{"theme" => theme} = params) do
     conn = fetch_query_params(conn)
     mount_path = mount_path(conn.request_path)
-    return_to = sanitized_return_to(params["return_to"] || conn.query_params["return_to"], mount_path)
+
+    return_to =
+      sanitized_return_to(params["return_to"] || conn.query_params["return_to"], mount_path)
 
     conn
     |> persist_theme(theme, mount_path)
@@ -21,20 +21,23 @@ defmodule MailglassAdmin.Controllers.ThemeController do
   end
 
   defp persist_theme(conn, theme, mount_path) when theme in ["light", "dark"] do
-    put_resp_cookie(conn, @cookie_name, theme, cookie_opts(mount_path))
+    conn
+    |> put_resp_cookie(Theme.cookie_name(), theme, Theme.cookie_opts())
+    |> delete_legacy_theme_cookies(mount_path)
   end
 
-  defp persist_theme(conn, _theme, mount_path) do
-    delete_resp_cookie(conn, @cookie_name, cookie_opts(mount_path))
+  defp persist_theme(conn, "system", mount_path) do
+    conn
+    |> put_resp_cookie(Theme.cookie_name(), Theme.cookie_value(:system), Theme.cookie_opts())
+    |> delete_legacy_theme_cookies(mount_path)
   end
 
-  defp cookie_opts(path) do
-    [
-      path: path,
-      max_age: @max_age,
-      http_only: true,
-      same_site: "Lax"
-    ]
+  defp persist_theme(conn, _theme, mount_path), do: persist_theme(conn, "system", mount_path)
+
+  defp delete_legacy_theme_cookies(conn, mount_path) do
+    conn
+    |> delete_resp_cookie(Theme.legacy_cookie_name(), Theme.cookie_opts())
+    |> delete_resp_cookie(Theme.legacy_cookie_name(), Theme.legacy_cookie_opts(mount_path))
   end
 
   defp mount_path(request_path) do
@@ -53,7 +56,7 @@ defmodule MailglassAdmin.Controllers.ThemeController do
       parsed.scheme || parsed.host -> mount_path
       String.starts_with?(return_to, "//") -> mount_path
       not String.starts_with?(parsed.path || "", mount_path) -> mount_path
-      true -> return_to
+      true -> Theme.strip_theme_query(return_to)
     end
   end
 end
