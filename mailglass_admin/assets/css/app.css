@@ -275,6 +275,44 @@
   transition: outline-color var(--duration-instant) var(--ease-out);
 }
 
+.mg-stat-card-hint {
+  position: relative;
+}
+
+.mg-stat-card-tooltip {
+  position: absolute;
+  inset-block-start: calc(100% - var(--spacing-xs));
+  inset-inline-start: var(--spacing-md);
+  z-index: var(--z-dropdown);
+  max-width: min(20rem, calc(100vw - 2rem));
+  width: max-content;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-field);
+  background: var(--color-base-100);
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-base-content);
+  font-size: var(--text-label);
+  font-weight: 400;
+  line-height: 1.45;
+  opacity: 0;
+  padding: var(--spacing-sm);
+  pointer-events: none;
+  text-align: left;
+  text-transform: none;
+  text-wrap: pretty;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.mg-stat-card-hint:hover .mg-stat-card-tooltip,
+.mg-stat-card-hint:focus-within .mg-stat-card-tooltip,
+a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .mg-admin-root {
   isolation: isolate;
   position: relative;

@@ -20,14 +20,14 @@ defmodule MailglassAdmin.Preview.Tabs do
 
   use Phoenix.Component
 
-  attr :active_tab, :atom, values: [:html, :text, :raw, :headers], default: :html
-  attr :html_body, :string, default: ""
-  attr :text_body, :string, default: ""
-  attr :raw_envelope, :string, default: ""
-  attr :headers, :list, default: []
-  attr :device_width, :integer, default: 768
-  attr :render_nonce, :integer, required: true
-  attr :preview_frame_dark_chrome, :boolean, default: false
+  attr(:active_tab, :atom, values: [:html, :text, :raw, :headers], default: :html)
+  attr(:html_body, :string, default: "")
+  attr(:text_body, :string, default: "")
+  attr(:raw_envelope, :string, default: "")
+  attr(:headers, :list, default: [])
+  attr(:device_width, :integer, default: 768)
+  attr(:render_nonce, :integer, required: true)
+  attr(:preview_frame_dark_chrome, :boolean, default: false)
 
   @doc """
   Renders the tab strip + the active tab's content pane.
@@ -106,8 +106,10 @@ defmodule MailglassAdmin.Preview.Tabs do
 
       <div
         id={"tab-panel-" <> Atom.to_string(@active_tab)}
-        data-preview-frame-theme={if @preview_frame_dark_chrome, do: "dark", else: "light"}
-        data-theme={preview_frame_theme_attr(@preview_frame_dark_chrome)}
+        data-preview-frame-theme={
+          preview_frame_theme_attr(@active_tab, @preview_frame_dark_chrome)
+        }
+        data-theme={preview_frame_data_theme_attr(@active_tab, @preview_frame_dark_chrome)}
         data-testid="preview-pane"
         role="tabpanel"
         aria-labelledby={"tab-btn-" <> Atom.to_string(@active_tab)}
@@ -127,13 +129,13 @@ defmodule MailglassAdmin.Preview.Tabs do
     """
   end
 
-  attr :active_tab, :atom, required: true
-  attr :html_body, :string, default: ""
-  attr :text_body, :string, default: ""
-  attr :raw_envelope, :string, default: ""
-  attr :headers, :list, default: []
-  attr :device_width, :integer, required: true
-  attr :render_nonce, :integer, required: true
+  attr(:active_tab, :atom, required: true)
+  attr(:html_body, :string, default: "")
+  attr(:text_body, :string, default: "")
+  attr(:raw_envelope, :string, default: "")
+  attr(:headers, :list, default: [])
+  attr(:device_width, :integer, required: true)
+  attr(:render_nonce, :integer, required: true)
 
   def tab_content(%{active_tab: :html} = assigns) do
     ~H"""
@@ -199,6 +201,13 @@ defmodule MailglassAdmin.Preview.Tabs do
   defp tab_classes(false),
     do: "text-secondary hover:bg-base-200"
 
-  defp preview_frame_theme_attr(true), do: "mailglass-dark"
-  defp preview_frame_theme_attr(_), do: "mailglass-light"
+  defp preview_frame_theme_attr(tab, dark_chrome) when tab in [:html, :text],
+    do: if(dark_chrome, do: "dark", else: "light")
+
+  defp preview_frame_theme_attr(_tab, _dark_chrome), do: nil
+
+  defp preview_frame_data_theme_attr(tab, dark_chrome) when tab in [:html, :text],
+    do: if(dark_chrome, do: "mailglass-dark", else: "mailglass-light")
+
+  defp preview_frame_data_theme_attr(_tab, _dark_chrome), do: nil
 end

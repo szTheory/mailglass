@@ -14,6 +14,23 @@ function deliveryRow(page, index) {
   return page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(index);
 }
 
+// Two-tier inspection: a row click opens the condensed Quick view (peek); the full
+// record (header, timeline, suppression, replay) lives one tier deeper behind
+// "Open full detail" (&full=1). These helpers drive a row straight to Full detail.
+async function openDeliveryFull(page, row) {
+  await row.click();
+  await expect(page.getByTestId("operator-quick-view")).toBeVisible();
+  await page.getByTestId("operator-quick-view-full").click();
+  await expect(page).toHaveURL(/full=1/);
+}
+
+async function openInboundFull(page, row) {
+  await row.click();
+  await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
+  await page.getByTestId("inbound-quick-view-full").click();
+  await expect(page).toHaveURL(/full=1/);
+}
+
 async function openOperator(page) {
   const resetResponse = await page.request.get("/ops/browser-reset");
   expect(resetResponse.ok()).toBeTruthy();
@@ -43,33 +60,39 @@ async function openOperator(page) {
 }
 
 test.describe("operator browser gate", () => {
-  test("desktop keeps list/detail in two panes and preserves read-only selection flow", async ({
+  test("desktop: a row opens the Quick view over the list; Open full detail shows the full record", async ({
     page
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
     const deliveriesCard = page.getByTestId("operator-deliveries-list-card");
-    const detailColumn = page.getByTestId("operator-detail-column");
-    const emptyDetail = page.getByTestId("operator-empty-detail");
+    await expect(deliveriesCard).toBeVisible();
 
-    await expect(emptyDetail).toBeVisible();
-
-    const deliveriesBox = await deliveriesCard.boundingBox();
-    const detailBox = await detailColumn.boundingBox();
-
-    expect(deliveriesBox).not.toBeNull();
-    expect(detailBox).not.toBeNull();
-    expect(deliveriesBox.y).toBeLessThanOrEqual(detailBox.y);
+    // No selection → no overlay and no full detail; the list stands alone (full width).
+    await expect(page.getByTestId("operator-quick-view")).toHaveCount(0);
+    await expect(page.getByTestId("operator-detail-header")).toHaveCount(0);
 
     const selectedRow = deliveryRow(page, 0);
-
     await selectedRow.click();
 
+    // Quick view (peek) slides in; the list stays in the DOM behind it, row highlighted.
+    const quickView = page.getByTestId("operator-quick-view");
+    await expect(quickView).toBeVisible();
+    await expect(deliveriesCard).toBeVisible();
     await expect(selectedRow).toHaveAttribute("aria-selected", "true");
     await expect(selectedRow).toHaveAttribute("data-selected", "true");
     await expect(page).toHaveURL(/\/ops\/mail\?/);
     await expect(page).toHaveURL(/delivery_id=/);
+    await expect(page).not.toHaveURL(/full=1/);
+    // The peek is condensed: the full timeline / suppression / replay are deferred.
+    await expect(page.getByTestId("operator-timeline")).toHaveCount(0);
+    await expect(page.getByTestId("operator-replay-open")).toHaveCount(0);
+
+    // Open full detail → the complete record, full width, list replaced.
+    await page.getByTestId("operator-quick-view-full").click();
+    await expect(page).toHaveURL(/full=1/);
+    await expect(page.getByTestId("operator-quick-view")).toHaveCount(0);
 
     await expect(page.getByTestId("operator-detail-header")).toBeVisible();
     await expect(page.getByTestId("operator-detail-header")).toContainText(selectedRecipient);
@@ -81,26 +104,34 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-suppression-card")).toContainText("ops:review");
     await expect(page.getByTestId("operator-replay-open")).toBeVisible();
     await expect(page.getByRole("button", { name: /remove suppression/i })).toHaveCount(0);
+
+    // Full detail leads with the event timeline (above suppression).
+    const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
+    const suppressionBox = await page.getByTestId("operator-suppression-card").boundingBox();
+    expect(timelineBox.y).toBeLessThan(suppressionBox.y);
   });
 
-  test("mobile keeps orientation strip off a populated list and preserves detail section order", async ({ page }) => {
+  test("mobile: row opens the Quick view bottom sheet; full detail preserves section order", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openOperator(page);
 
     // Phase 120 / D-08: the orientation strip is empty-pane-only. On a POPULATED
-    // Deliveries view it is NOT rendered, so the old "orientation strip renders
-    // above the list" ordering assertion is converted to a strip-ABSENCE assertion.
-    // The strip-presence proof now lives in the genuine-no-data judgment gate below.
+    // Deliveries view it is NOT rendered.
     const deliveriesCard = page.getByTestId("operator-deliveries-list-card");
     await expect(deliveriesCard).toBeVisible();
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
 
     await deliveryRow(page, 0).click();
 
-    await expect(deliveriesCard).toBeHidden();
+    // The Quick view opens as a bottom sheet; the list stays mounted behind it.
+    await expect(page.getByTestId("operator-quick-view")).toBeVisible();
+
+    // Open full detail → full-screen record with a Back control.
+    await page.getByTestId("operator-quick-view-full").click();
+    await expect(page).toHaveURL(/full=1/);
     await expect(page.getByTestId("operator-detail-back")).toBeVisible();
 
-    // Detail-section order is independent of the strip and remains a valid contract.
+    // Detail-section order (header → timeline → suppression) is a stable contract.
     const headerBox = await page.getByTestId("operator-detail-header").boundingBox();
     const timelineBox = await page.getByTestId("operator-timeline").boundingBox();
     const suppressionBox = await page.getByTestId("operator-suppression-card").boundingBox();
@@ -111,8 +142,7 @@ test.describe("operator browser gate", () => {
     expect(headerBox.y).toBeLessThan(timelineBox.y);
     expect(timelineBox.y).toBeLessThan(suppressionBox.y);
 
-    // Re-confirm strip absence on the populated &view=deliveries route at 390px
-    // (the inverse of the former GAP-07 visible-strip check — the strip moved to no-data only).
+    // Re-confirm strip absence on the populated &view=deliveries route at 390px.
     await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
@@ -125,7 +155,7 @@ test.describe("operator browser gate", () => {
     const failedRow = deliveryRow(page, 4);
 
     await expect(failedRow).toContainText("Failed");
-    await failedRow.click();
+    await openDeliveryFull(page, failedRow);
 
     const detailHeader = page.getByTestId("operator-detail-header");
     await expect(detailHeader).toContainText("browser-other@example.com");
@@ -140,7 +170,7 @@ test.describe("operator browser gate", () => {
 
     const exactRow = deliveryRow(page, 3);
 
-    await exactRow.click();
+    await openDeliveryFull(page, exactRow);
     await expect(page.getByTestId("operator-detail-header")).toContainText(exactRecipient);
     await expect(page.getByTestId("operator-detail-header")).toContainText("Replay is ready.");
 
@@ -172,7 +202,7 @@ test.describe("operator browser gate", () => {
 
     const ambiguousRow = deliveryRow(page, 2);
 
-    await ambiguousRow.click();
+    await openDeliveryFull(page, ambiguousRow);
     await expect(page.getByTestId("operator-detail-header")).toContainText(ambiguousRecipient);
     await expect(page.getByTestId("operator-detail-header")).toContainText(
       "Replay is choice required."
@@ -203,7 +233,7 @@ test.describe("operator browser gate", () => {
 
     const noopRow = deliveryRow(page, 1);
 
-    await noopRow.click();
+    await openDeliveryFull(page, noopRow);
     await expect(page.getByTestId("operator-detail-header")).toContainText(noopRecipient);
     await expect(page.getByTestId("operator-detail-header")).toContainText("Replay is ready.");
 
@@ -228,29 +258,26 @@ test.describe("operator browser gate", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    // Click the first delivery row and read the delivery_id from the URL.
-    // LiveView pushes the delivery_id param asynchronously, so wait for the
-    // URL to settle before reading it (mirrors the existing selection tests).
-    await deliveryRow(page, 0).click();
-    await expect(page).toHaveURL(/delivery_id=/);
+    // The record-keyed id (#delivery-detail-<uuid>) now lives in Full detail.
+    await openDeliveryFull(page, deliveryRow(page, 0));
     const deliveryId = new URL(page.url()).searchParams.get("delivery_id");
     expect(deliveryId).toBeTruthy();
-
-    // The detail pane must carry the record-keyed id
     await expect(page.locator(`#delivery-detail-${deliveryId}`)).toBeVisible();
 
-    // Switch to a second delivery and verify the id changes (element replaced, not patched).
-    // Wait until the delivery_id param actually changes — toHaveURL(/delivery_id=/) is
-    // already true from the first selection and would not gate the transition.
-    await deliveryRow(page, 1).click();
+    // Flip to the next record via the Quick view (all push_patch, no full reload) and
+    // re-enter Full detail — the id must change (element replaced, not patched in place).
+    await page.getByTestId("operator-detail-back").click();
+    await expect(page.getByTestId("operator-quick-view")).toBeVisible();
+    await page.getByTestId("operator-quick-view-next").click();
     await page.waitForURL((url) => {
       const id = new URL(url).searchParams.get("delivery_id");
       return Boolean(id) && id !== deliveryId;
     });
+    await page.getByTestId("operator-quick-view-full").click();
+    await expect(page).toHaveURL(/full=1/);
     const deliveryId2 = new URL(page.url()).searchParams.get("delivery_id");
     expect(deliveryId2).not.toEqual(deliveryId);
 
-    // New id visible; old id absent — confirms LiveView performed element replace
     await expect(page.locator(`#delivery-detail-${deliveryId2}`)).toBeVisible();
     await expect(page.locator(`#delivery-detail-${deliveryId}`)).toHaveCount(0);
   });
@@ -266,8 +293,7 @@ test.describe("operator browser gate", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOperator(page);
 
-    await deliveryRow(page, 0).click();
-    await expect(page).toHaveURL(/delivery_id=/);
+    await openDeliveryFull(page, deliveryRow(page, 0));
     const deliveryId = new URL(page.url()).searchParams.get("delivery_id");
     expect(deliveryId).toBeTruthy();
 
@@ -285,11 +311,8 @@ test.describe("operator browser gate", () => {
     await openOperator(page);
     await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
 
-    // Click the first inbound row — testid matches DOM: data-testid="inbound-record-row"
-    await page.getByTestId("inbound-record-row").nth(0).click();
-
-    // LiveView pushes inbound_id param; wait for URL to settle
-    await expect(page).toHaveURL(/inbound_id=/);
+    // The record-keyed id (#inbound-detail-<uuid>) now lives in Full detail.
+    await openInboundFull(page, page.getByTestId("inbound-record-row").nth(0));
     const inboundId = new URL(page.url()).searchParams.get("inbound_id");
     expect(inboundId).toBeTruthy();
 
@@ -314,9 +337,8 @@ test.describe("operator browser gate", () => {
       .first();
 
     await expect(noMatchRow).toContainText("No match");
-    await noMatchRow.click();
+    await openInboundFull(page, noMatchRow);
 
-    await expect(page).toHaveURL(/inbound_id=/);
     await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
     await expect(page.getByTestId("inbound-trace-clause")).not.toHaveCount(0);
     await expect(page.getByTestId("inbound-evidence-card")).toBeVisible();
@@ -341,13 +363,16 @@ test.describe("operator browser gate", () => {
       .first()
       .click();
 
+    // Row click opens the Quick view bottom sheet; the list stays mounted behind it.
     await expect(page).toHaveURL(/inbound_id=/);
-    await expect(recordsCard).toBeHidden();
+    await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
     await expect(page.getByTestId("inbound-detail-back")).toBeVisible();
 
+    // The ✕ dismisses the overlay back to the records list.
     await page.getByTestId("inbound-detail-back").click();
-    await expect(recordsCard).toBeVisible();
     await expect(page).not.toHaveURL(/inbound_id=/);
+    await expect(recordsCard).toBeVisible();
+    await expect(page.getByTestId("inbound-quick-view")).toHaveCount(0);
   });
 
   // VERIF-02: structural coverage for Operator Overview landing (D-05 / GAP-register sev-4 closeout)
@@ -368,15 +393,15 @@ test.describe("operator browser gate", () => {
     // Health-count cards container (all four sub-cards always render; colors vary by seed state)
     await expect(page.getByTestId("operator-overview-health")).toBeVisible();
 
-    // SHELL-02: failures stat card is wrapped in a drill-through link to status=failed Deliveries
+    // SHELL-02: failures stat card is wrapped in a drill-through link to failed Deliveries
     const failuresLink = page.getByTestId("operator-overview-health-failures-link");
     await expect(failuresLink).toBeVisible();
-    await expect(failuresLink).toHaveAttribute("href", /status=failed/);
+    await expect(failuresLink).toHaveAttribute("href", /event=failed/);
 
-    // SHELL-02: suppressions stat card is wrapped in a drill-through link to status=suppressed Deliveries
+    // SHELL-02: suppressions stat card is wrapped in a drill-through link to suppressed Deliveries
     const suppressionsLink = page.getByTestId("operator-overview-health-suppressions-link");
     await expect(suppressionsLink).toBeVisible();
-    await expect(suppressionsLink).toHaveAttribute("href", /status=suppressed/);
+    await expect(suppressionsLink).toHaveAttribute("href", /event=suppressed/);
   });
 
   // SHELL-02: orientation strip is empty-pane-only — present on all-clear, absent when attention needed.
@@ -426,6 +451,10 @@ test.describe("operator browser gate", () => {
     // Strip absent on populated; toolbar present.
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
     await expect(page.getByTestId("operator-filters")).toBeVisible();
+    // The Status column reflects the message's real lifecycle state: a delivered
+    // message (status :sent + last_event :delivered in the seed) now badges "Delivered",
+    // not a perpetual "Sent".
+    await expect(page.getByTestId("operator-deliveries-list-card")).toContainText("Delivered");
 
     // --- GENUINE NO-DATA Deliveries view ---
     // Log in to a tenant with zero seeded deliveries (only browser-tenant is seeded by
@@ -447,10 +476,10 @@ test.describe("operator browser gate", () => {
     await expect(page.getByTestId("operator-master-detail")).toHaveCount(0);
 
     // --- NO-MATCH Deliveries view ---
-    // Active filter that matches zero browser-tenant rows: status=queued is a valid
-    // status (@status_values) with no seeded queued delivery → @deliveries == [] AND
-    // filters_active?/1 true → no-match (toolbar kept, strip absent).
-    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&status=queued`);
+    // Active filter that matches zero browser-tenant rows: event=queued is a valid
+    // lifecycle status with no seeded delivery whose latest event is :queued →
+    // @deliveries == [] AND filters_active?/1 true → no-match (toolbar kept, strip absent).
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&event=queued`);
     await expect(page.getByTestId("operator-filters")).toBeVisible();
     await expect(page.getByTestId("deliveries-orientation")).toHaveCount(0);
   });
@@ -524,5 +553,56 @@ test.describe("operator browser gate", () => {
     // mailables so a direct goto would show the landing card instead of the strip.
     await page.goto("/ops/browser-preview-empty");
     await expect(page.getByTestId("preview-orientation")).toBeVisible();
+  });
+
+  // Timestamps render server-side as UTC, then the local-time script rewrites the
+  // visible text to the viewer's timezone (keeping UTC in the title) and copies UTC
+  // on click. Node/Chromium here runs in UTC, so the localized text still reads UTC-
+  // equivalent — assert the mechanism (machine-readable <time>, title, clipboard),
+  // not a specific offset.
+  test("Deliveries timestamps are <time> elements localized client-side and copy UTC on click", async ({
+    page,
+    context
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await openOperator(page);
+
+    const ts = page.locator("time[data-local-time]").first();
+    await expect(ts).toBeVisible();
+
+    // Machine-readable ISO8601 (Z) drives the client conversion; UTC stays in the tooltip.
+    await expect(ts).toHaveAttribute("datetime", /Z$/);
+    await expect(ts).toHaveAttribute("title", /UTC$/);
+    await expect(ts).toHaveAttribute("data-utc", /UTC$/);
+
+    // The script marks nodes it has localized.
+    await expect(ts).toHaveAttribute("data-localized", "1");
+
+    // js-enabled marker is set (scopes the skeleton), and the skeleton CSS is delivered:
+    // an unlocalized <time data-local-time> paints a muted bar with transparent text.
+    const skeleton = await page.evaluate(() => {
+      const hasJs = document.documentElement.classList.contains("mg-js");
+      const t = document.createElement("time");
+      t.setAttribute("data-local-time", "true");
+      document.body.appendChild(t);
+      const cs = getComputedStyle(t);
+      const out = { hasJs, color: cs.color, background: cs.backgroundColor };
+      t.remove();
+      return out;
+    });
+    expect(skeleton.hasJs).toBe(true);
+    expect(skeleton.color).toBe("rgba(0, 0, 0, 0)"); // transparent text
+    expect(skeleton.background).not.toBe("rgba(0, 0, 0, 0)"); // muted bar present
+
+    // Clicking copies the canonical UTC string to the clipboard...
+    const utc = await ts.getAttribute("data-utc");
+    await ts.click();
+    const clip = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clip).toBe(utc);
+    expect(clip).toContain("UTC");
+
+    // ...and does NOT navigate: the click must not bubble to the row's select_delivery
+    // phx-click (the bug this guards).
+    await expect(page).not.toHaveURL(/delivery_id=/);
   });
 });

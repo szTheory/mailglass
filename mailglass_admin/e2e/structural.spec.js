@@ -642,13 +642,31 @@ function noMatchRow(page) {
     .first();
 }
 
+// Two-tier inspection: a row click opens the condensed Quick view (peek); the full
+// record (detail-column, replay, timeline) lives behind "Open full detail" (&full=1).
+async function selectDeliveryFull(page, row) {
+  await row.click();
+  await expect(page.getByTestId("operator-quick-view")).toBeVisible();
+  await page.getByTestId("operator-quick-view-full").click();
+  await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+}
+
+async function selectInboundFull(page, row) {
+  await row.click();
+  await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
+  await page.getByTestId("inbound-quick-view-full").click();
+  await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
+}
+
 async function openOperatorReplayModal(page) {
   await openOperator(page);
   // operator-delivery-row exists in both the desktop <table> and mobile card <ul>
   // (Phase 113 DATA-01). Filter to the visible presentation so the click targets
   // the rendered row at the current viewport instead of the hidden one.
-  await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
-  await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+  await selectDeliveryFull(
+    page,
+    page.getByTestId("operator-delivery-row").filter({ visible: true }).first()
+  );
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
@@ -658,12 +676,18 @@ async function openOperatorReplayModal(page) {
 async function openAmbiguousOperatorReplayModal(page) {
   await openOperator(page);
 
-  const rows = page.getByTestId("operator-delivery-row");
-  const count = await rows.count();
+  const count = await page
+    .getByTestId("operator-delivery-row")
+    .filter({ visible: true })
+    .count();
 
   for (let index = 0; index < count; index += 1) {
-    await rows.nth(index).click();
-    await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+    // Return to the list each iteration (Full detail replaces it), then drill row N.
+    await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
+    await selectDeliveryFull(
+      page,
+      page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(index)
+    );
     await page.getByTestId("operator-replay-open").click();
 
     const modal = page.getByTestId("operator-replay-modal");
@@ -687,8 +711,7 @@ async function openInboundReplayModal(page) {
     .filter({ visible: true })
     .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
     .first();
-  await replayableRow.click();
-  await page.waitForURL(/inbound_id=/);
+  await selectInboundFull(page, replayableRow);
   await page.getByTestId("inbound-replay-open").click();
 
   const modal = page.getByTestId("inbound-replay-modal");
@@ -743,8 +766,7 @@ async function openOperatorReplayModalThemed(page, theme) {
   ).toBeVisible();
   await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
-  await page.getByTestId("operator-delivery-row").first().click();
-  await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+  await selectDeliveryFull(page, page.getByTestId("operator-delivery-row").first());
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
@@ -762,8 +784,7 @@ async function openInboundReplayModalThemed(page, theme) {
     .filter({ visible: true })
     .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
     .first();
-  await replayableRow.click();
-  await page.waitForURL(/inbound_id=/);
+  await selectInboundFull(page, replayableRow);
   await page.getByTestId("inbound-replay-open").click();
 
   const modal = page.getByTestId("inbound-replay-modal");
@@ -1038,7 +1059,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
       await expect(page.getByTestId("operator-detail-error")).toBeVisible();
 
-      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&status=queued`);
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&event=queued`);
       // Phase 113: filtered-empty now renders via data_state/1; hidden stub preserves testid for URL probes.
       // Assert the visible data-state-empty section (scoped to list-card to avoid strict-mode violation).
       const filteredEmpty = page.getByTestId("operator-deliveries-list-card").getByTestId("data-state-empty");
@@ -1053,48 +1074,36 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(trulyEmpty).toBeVisible();
       await expect(page.getByTestId("operator-empty-reset")).toHaveCount(0);
 
-      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&status=suppressed`);
+      await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&event=suppressed`);
       const suppressedRow = page.getByTestId("operator-delivery-row").first();
-      await expect(suppressedRow).toContainText("Unknown");
-      await expect(suppressedRow.locator(".badge-outline")).toContainText("Unknown");
+      await expect(suppressedRow).toContainText("Suppressed");
+      await expect(suppressedRow.locator(".badge-warning")).toContainText("Suppressed");
     });
 
-    test("Operator: master-detail grid follows 320/768/1440 responsive contract", async ({ page }) => {
+    test("Operator: list is full-width single-column at 320/768/1440; selecting opens the Quick view overlay", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 900 });
       await openOperator(page);
 
-      // The master-detail split is a SELECTED-state contract: with nothing
-      // selected the list spans full width (single column) so the table has
-      // room. Assert the full-width default, then open a delivery to assert the
-      // 40/60 (768) and 33/67 (1440) split governs the detail view.
-      let columns = parseGridColumns(
-        await page.getByTestId("operator-master-detail").evaluate(
-          el => getComputedStyle(el).getPropertyValue("grid-template-columns")
-        )
-      );
-      expect(columns.length).toBe(1);
+      // The two-tier model retires the 40/60 split: the list is always a single
+      // full-width column; the detail is a Quick view OVERLAY over it (not a grid
+      // column). Assert the grid stays single-column before and after selection.
+      const columnsAt = async () =>
+        parseGridColumns(
+          await page.getByTestId("operator-master-detail").evaluate(
+            el => getComputedStyle(el).getPropertyValue("grid-template-columns")
+          )
+        );
+
+      expect((await columnsAt()).length).toBe(1);
 
       await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
-      await expect(page.getByTestId("operator-detail-header")).toBeVisible();
-
-      columns = parseGridColumns(
-        await page.getByTestId("operator-master-detail").evaluate(
-          el => getComputedStyle(el).getPropertyValue("grid-template-columns")
-        )
-      );
-      expectRatio(columns, 0.4);
+      await expect(page.getByTestId("operator-quick-view")).toBeVisible();
+      expect((await columnsAt()).length).toBe(1);
 
       await page.setViewportSize({ width: 1440, height: 900 });
-      columns = parseGridColumns(
-        await page.getByTestId("operator-master-detail").evaluate(
-          el => getComputedStyle(el).getPropertyValue("grid-template-columns")
-        )
-      );
-      expectRatio(columns, 0.33);
+      expect((await columnsAt()).length).toBe(1);
 
-      // Phase 115 FLOW-02: the mobile cell floor is lowered 390 -> 320 in this
-      // touched test (D-04: lower the floor + patch overflow, do NOT promote the
-      // 320 cell into the permanent ratchet baseline — Phase 116 owns that).
+      // 320 floor: the list is full-width and fits without horizontal overflow.
       await page.setViewportSize({ width: 320, height: 844 });
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
       const gridBox = await page.getByTestId("operator-master-detail").boundingBox();
@@ -1103,13 +1112,13 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       expect(listBox).not.toBeNull();
       expect(listBox.width / gridBox.width).toBeGreaterThan(0.95);
 
-      // 320 overflow patch: master-detail and list-card fit the 320 floor.
       await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator master-detail @320");
       await assertNoElementHorizontalOverflow(page.getByTestId("operator-deliveries-list-card"), "operator list-card @320");
 
-      // At 320px the table is hidden; click from the card presentation (operator-deliveries-cards).
+      // At 320px the table is hidden; selecting from the card presentation opens the
+      // Quick view bottom sheet.
       await page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first().click();
-      await expect(page.getByTestId("operator-deliveries-list-card")).toBeHidden();
+      await expect(page.getByTestId("operator-quick-view")).toBeVisible();
       await expect(page.getByTestId("operator-detail-back")).toBeVisible();
     });
 
@@ -1136,26 +1145,26 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       );
       expect(columns.length).toBe(1);
 
+      // Two-tier model: the records list stays single-column at every width; the
+      // detail is a Quick view OVERLAY, not a grid column.
       await page.getByTestId("inbound-record-row").filter({ visible: true }).first().click();
-      await expect(page.getByTestId("inbound-detail-header")).toBeVisible();
-
+      await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
       columns = parseGridColumns(
         await page.getByTestId("inbound-master-detail").evaluate(
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
         )
       );
-      expectRatio(columns, 0.4);
+      expect(columns.length).toBe(1);
 
       await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
       columns = parseGridColumns(
         await page.getByTestId("inbound-master-detail").evaluate(
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
         )
       );
-      expectRatio(columns, 0.33);
+      expect(columns.length).toBe(1);
 
-      // Phase 115 FLOW-02: lower the mobile cell floor 390 -> 320 in this touched
-      // test (D-04: lower + patch overflow, NOT a ratchet rebaseline).
       await page.setViewportSize({ width: 320, height: 844 });
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
       const gridBox = await page.getByTestId("inbound-master-detail").boundingBox();
@@ -1168,14 +1177,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await assertNoElementHorizontalOverflow(page.getByTestId("inbound-master-detail"), "inbound master-detail @320");
       await assertNoElementHorizontalOverflow(page.getByTestId("inbound-records-list-card"), "inbound list-card @320");
 
-      // At 320px the table is hidden; click from the card presentation (inbound-records-cards).
+      // At 320px the table is hidden; selecting from the card presentation opens the
+      // Quick view bottom sheet.
       const mobileNoMatchRow = page
         .getByTestId("inbound-records-cards")
         .getByTestId("inbound-record-row")
         .filter({ has: page.locator(".badge-warning", { hasText: "No match" }) })
         .first();
       await mobileNoMatchRow.click();
-      await expect(page.getByTestId("inbound-records-list-card")).toBeHidden();
+      await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
       await expect(page.getByTestId("inbound-detail-back")).toBeVisible();
 
       const filterToggleBox = await page.getByTestId("inbound-filters-toggle").boundingBox();
@@ -1194,8 +1204,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       page
     }) => {
       await openInbound(page, "");
-      // Phase 113: no-tenant state now renders via data_state/1 with title "Select a tenant" (h3)
-      await expect(page.getByRole("heading", { name: "Select a tenant" })).toBeVisible();
+      // No account selected: render the shared account chooser.
+      await expect(page.getByRole("heading", { name: "Choose an account" })).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=browser-empty`);
       // Phase 121 (D-07): truly-empty body uses the InboundMessage noun
@@ -1294,8 +1304,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           }
 
           await openInbound(page, theme.query, "operator-1");
-          // Phase 113: no-tenant heading is now "Select a tenant" (from data_state/1 h3 title)
-          await assertTextContrastAA(page.getByRole("heading", { name: "Select a tenant" }), `${theme.name} ${viewport.width} no-tenant`);
+          // No account selected: render the shared account chooser.
+          await assertTextContrastAA(page.getByRole("heading", { name: "Choose an account" }), `${theme.name} ${viewport.width} no-tenant`);
           await openInbound(page, `tenant_id=browser-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           // Phase 121 (D-07): truly-empty body uses the InboundMessage noun; filtered-empty unchanged
           await assertTextContrastAA(page.getByText("No InboundMessages have been recorded yet."), `${theme.name} ${viewport.width} truly-empty`);
@@ -2111,11 +2121,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(activeMobile).toHaveClass(/border-b-2/);
       await expect(activeMobile).toHaveClass(/border-primary/);
 
-      await expect(page.getByTestId("inbound-result-count")).toContainText("9 results");
-      await expect(page.getByTestId("inbound-pagination")).toBeVisible();
-      await expect(page.getByTestId("inbound-pagination-prev-disabled")).toHaveAttribute("aria-disabled", "true");
-      await expect(page.getByTestId("inbound-pagination-next")).toHaveAttribute("href", /tenant_id=browser-tenant/);
-      await expect(page.getByTestId("inbound-pagination-next")).toHaveAttribute("href", /page=2/);
+      await expect(page.getByTestId("inbound-result-count")).toContainText("9 messages");
+      // With per_page 20 (parity with Deliveries) the 9-record demo dataset fits on one
+      // page, so no pagination chrome renders — the honest single-page state. The
+      // multi-page prev/next path is covered by the inbound_live unit test (21-record fixture).
+      await expect(page.getByTestId("inbound-pagination")).toHaveCount(0);
     });
 
   });

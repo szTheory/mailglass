@@ -297,7 +297,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
   });
 
   test("Operator boundary: filtered-empty -> empty + reset", async ({ page }) => {
-    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&status=queued`);
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&event=queued`);
     const filteredEmpty = page.getByTestId("operator-deliveries-list-card").getByTestId("data-state-empty");
     await expect(filteredEmpty).toBeVisible();
     await expect(page.getByTestId("operator-empty-reset")).toBeVisible();
@@ -310,7 +310,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     // Edge path: a long/non-ASCII tenant id stresses the mono ID cells. The
     // suppressed-status seeded view exposes the truncating ID cells; assert no
     // overflow at the 320 floor on root and master-detail.
-    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&status=suppressed`);
+    await openOperator(page, `tenant_id=${tenantId}&view=deliveries&event=suppressed`);
     await assertSingleH1(page, "operator edge");
     await assertNoRootOverflow(page, "operator edge");
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator edge master-detail");

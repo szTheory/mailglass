@@ -341,7 +341,6 @@ defmodule MailglassAdmin.GalleryLive do
     ~H"""
     <FiltersForm.fields
       form={@assigns_map[:form]}
-      status_values={@assigns_map[:status_values]}
       event_values={@assigns_map[:event_values]}
       window_options={@assigns_map[:window_options]}
       errors={@assigns_map[:errors] || %{}}
@@ -543,16 +542,18 @@ defmodule MailglassAdmin.GalleryLive do
         latest_replay={@latest_replay}
       />
       <SupportCards.support_cards
-        support_summary={%{
-          failed_ingest: %{count: 0, latest: nil},
-          orphan_backlog: %{count: 0, oldest: nil},
-          replay_outcomes: %{counts: %{failed: 0, noop: 0, replayed: 0}, latest: nil},
-          reconcile_facts: %{
-            reconciled_count: 0,
-            still_unmatched_count: 0,
-            latest_reconciled: nil
+        support_summary={
+          %{
+            failed_ingest: %{count: 0, latest: nil},
+            orphan_backlog: %{count: 0, oldest: nil},
+            replay_outcomes: %{counts: %{failed: 0, noop: 0, replayed: 0}, latest: nil},
+            reconcile_facts: %{
+              reconciled_count: 0,
+              still_unmatched_count: 0,
+              latest_reconciled: nil
+            }
           }
-        }}
+        }
         support_state={%{focused_card: nil, drilldown_banner: nil}}
         suppression_count={0}
       />
@@ -667,7 +668,7 @@ defmodule MailglassAdmin.GalleryLive do
      %{label: "Analytics unavailable", icon: "hero-chart-bar", href: "#", disabled: true}},
     {:nav_link, "long-label",
      %{
-       label: "Deliveries needing operator review before the tenant handoff",
+       label: "Deliveries needing operator review before the account handoff",
        icon: "hero-paper-airplane",
        href: "#",
        active: false
@@ -903,7 +904,8 @@ defmodule MailglassAdmin.GalleryLive do
      %{
        title: "Filters",
        description: "Group related controls under one legend.",
-       body: "The legend stays visible, and the grouped fields below inherit the shared form contract."
+       body:
+         "The legend stays visible, and the grouped fields below inherit the shared form contract."
      }},
 
     # STATE-LD-13: filters_form — empty and filled (static assigns, no phx-submit)
@@ -1184,11 +1186,25 @@ defmodule MailglassAdmin.GalleryLive do
     {:data_state, "empty",
      %{kind: :empty, title: "No deliveries", body: "No deliveries have been recorded yet."}},
     {:data_state, "error",
-     %{kind: :error, title: "Delivery data unavailable", body: "Delivery data could not be loaded. Refresh the page or adjust the filters, then try again."}},
+     %{
+       kind: :error,
+       title: "Delivery data unavailable",
+       body:
+         "Delivery data could not be loaded. Refresh the page or adjust the filters, then try again."
+     }},
     {:data_state, "permission-denied",
-     %{kind: :permission_denied, title: "Access restricted", body: "You do not have access to this tenant's mail operations. Ask an administrator to grant access."}},
+     %{
+       kind: :permission_denied,
+       title: "Access restricted",
+       body:
+         "You do not have access to this account's mail operations. Ask an administrator to grant access."
+     }},
     {:data_state, "stale",
-     %{kind: :stale, title: "Data may be out of date", body: "Showing Deliveries as of 14:32. Refresh to load the latest."}},
+     %{
+       kind: :stale,
+       title: "Data may be out of date",
+       body: "Showing Deliveries as of 14:32. Refresh to load the latest."
+     }},
 
     # Phase 113: deliveries_list — table/cards populated state (DATA-01)
     {:deliveries_list, "table-populated",

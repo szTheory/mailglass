@@ -10,7 +10,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   refactor). Rows render the masked envelope recipient via the one promoted
   `MailglassAdmin.Components.mask_recipient/1` definition, the record id in mono,
   an outcome badge via `Components.status_badge/1` (normalized through
-  `normalize_inbound_outcome/1`), and a meta line mailbox · tenant · provider · received_at.
+  `normalize_inbound_outcome/1`), and a meta line mailbox · account · provider · received_at.
 
   Data-state branches render four distinct `Components.data_state/1` kinds when
   there is no row data to show. The four branches are:
@@ -24,8 +24,13 @@ defmodule MailglassAdmin.Inbound.RecordsList do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.Accounts
 
   attr(:records, :list, required: true)
+  attr(:account_labels, :map, default: %{})
+  # Single-account operator surface: the Account column repeats a constant, so callers
+  # pass `false` to reclaim that width for the record data.
+  attr(:show_account?, :boolean, default: true)
 
   attr(:page_meta, :map,
     default: %{total_count: 0, total_pages: 0, has_previous?: false, has_next?: false}
@@ -63,7 +68,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         <Components.data_state
           kind={:permission_denied}
           title="Access restricted"
-          body="You do not have access to this tenant's inbound routing. Ask an administrator to grant access."
+          body="You do not have access to this account's inbound routing. Ask an administrator to grant access."
         />
       <% @data_state == :stale -> %>
         <Components.data_state
@@ -76,8 +81,8 @@ defmodule MailglassAdmin.Inbound.RecordsList do
         <%= if @empty_state == :no_tenant do %>
           <Components.data_state
             kind={:empty}
-            title="Select a tenant"
-            body="Choose a tenant to inspect its Deliveries and inbound routing. Tenant scope stays in the URL so refreshes and shared links keep the same view."
+            title="Choose an account"
+            body="Pick the customer account whose Deliveries and inbound routing you want to inspect. Mailglass keeps that account boundary in the URL as tenant_id."
           />
           <div data-testid="inbound-empty-no-tenant" style="display:none" />
         <% else %>
@@ -106,12 +111,26 @@ defmodule MailglassAdmin.Inbound.RecordsList do
           <table class="table w-full table-fixed">
             <thead>
               <tr>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Outcome</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary">Recipient</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">
+                  Outcome
+                </th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-64">
+                  Recipient
+                </th>
                 <th scope="col" class="text-label font-bold uppercase text-secondary">Mailbox</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Tenant</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Provider</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-52">Received</th>
+                <th
+                  :if={@show_account?}
+                  scope="col"
+                  class="text-label font-bold uppercase text-secondary w-40"
+                >
+                  Account
+                </th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">
+                  Provider
+                </th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-52">
+                  Received
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -152,9 +171,12 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                     {matched_mailbox_label(record)}
                   </span>
                 </td>
-                <td class="min-w-0 text-body text-base-content">
-                  <span class="min-w-0 truncate block" title={Map.get(record, :tenant_id, "")}>
-                    {Map.get(record, :tenant_id, "")}
+                <td :if={@show_account?} class="min-w-0 text-body text-base-content">
+                  <span
+                    class="min-w-0 truncate block"
+                    title={Accounts.title(Map.get(record, :tenant_id, ""), @account_labels)}
+                  >
+                    {Accounts.label(Map.get(record, :tenant_id, ""), @account_labels)}
                   </span>
                 </td>
                 <td class="text-body text-base-content">
@@ -166,12 +188,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   </span>
                 </td>
                 <td class="text-label text-secondary">
-                  <span
-                    class="mono whitespace-nowrap"
-                    title={format_datetime(Map.get(record, :received_at))}
-                  >
-                    {format_datetime(Map.get(record, :received_at))}
-                  </span>
+                  <Components.timestamp at={Map.get(record, :received_at)} class="whitespace-nowrap" />
                 </td>
               </tr>
             </tbody>
@@ -242,11 +259,14 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                     </p>
                   </div>
 
-                  <%!-- Tenant --%>
-                  <div class="min-w-0">
-                    <span class="font-bold uppercase">Tenant</span>
-                    <p class="min-w-0 truncate" title={Map.get(record, :tenant_id, "")}>
-                      {Map.get(record, :tenant_id, "")}
+                  <%!-- Account --%>
+                  <div :if={@show_account?} class="min-w-0">
+                    <span class="font-bold uppercase">Account</span>
+                    <p
+                      class="min-w-0 truncate"
+                      title={Accounts.title(Map.get(record, :tenant_id, ""), @account_labels)}
+                    >
+                      {Accounts.label(Map.get(record, :tenant_id, ""), @account_labels)}
                     </p>
                   </div>
 
@@ -264,12 +284,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   <%!-- Received timestamp --%>
                   <div>
                     <span class="font-bold uppercase">Received</span>
-                    <p
-                      class="mono whitespace-nowrap"
-                      title={format_datetime(Map.get(record, :received_at))}
-                    >
-                      {format_datetime(Map.get(record, :received_at))}
-                    </p>
+                    <p><Components.timestamp at={Map.get(record, :received_at)} class="whitespace-nowrap" /></p>
                   </div>
                 </div>
               </button>
@@ -346,20 +361,20 @@ defmodule MailglassAdmin.Inbound.RecordsList do
     """
   end
 
-  defp result_count_label(%{total_count: 1}), do: "1 result"
+  defp result_count_label(%{total_count: 1}), do: "1 message"
 
   defp result_count_label(%{total_count: count}) when is_integer(count),
-    do: "#{count} results"
+    do: "#{count} messages"
 
-  defp result_count_label(_page_meta), do: "0 results"
+  defp result_count_label(_page_meta), do: "0 messages"
 
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_record, _record), do: false
 
   defp empty_body(:no_tenant),
     do:
-      "Choose a tenant to inspect its Deliveries and inbound routing. Tenant scope stays " <>
-        "in the URL so refreshes and shared links keep the same view."
+      "Pick the customer account whose Deliveries and inbound routing you want to inspect. " <>
+        "Mailglass keeps that account boundary in the URL as tenant_id."
 
   defp empty_body(:truly_empty),
     do: "No InboundMessages have been recorded yet."
@@ -382,9 +397,4 @@ defmodule MailglassAdmin.Inbound.RecordsList do
       _ -> "no match"
     end
   end
-
-  defp format_datetime(nil), do: "Pending"
-
-  defp format_datetime(%DateTime{} = datetime),
-    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
 end

@@ -199,7 +199,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
           </p>
           <p class="mono text-label text-secondary">{@candidate.webhook_event_id}</p>
         </div>
-        <p class="mono text-label text-secondary">{format_datetime(@candidate.webhook_timestamp)}</p>
+        <p class="text-label text-secondary"><Components.timestamp at={@candidate.webhook_timestamp} /></p>
       </div>
 
       <dl class="mt-4 grid gap-sm text-body text-secondary sm:grid-cols-2">
@@ -256,9 +256,4 @@ defmodule MailglassAdmin.Operator.ReplayModal do
       "Webhook event #{present(candidate.webhook_event_id)}. " <>
       "Delivery linkage #{present(candidate.delivery_provider_message_id)}."
   end
-
-  defp format_datetime(nil), do: "Pending"
-
-  defp format_datetime(%DateTime{} = datetime),
-    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
 end

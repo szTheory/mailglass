@@ -41,6 +41,24 @@ defmodule MailglassAdmin.Operator.TenantsTest do
                %{id: "tenant-a", label: "tenant-a"}
              ]
     end
+
+    test "uses configured account labels while preserving tenant ids" do
+      insert_delivery!("tenant-b")
+      insert_delivery!("tenant-a")
+
+      assert Tenants.list_tenants(%{subject_id: "operator-1"},
+               inbound_gateway: InboundGateway,
+               account_labels: %{
+                 "tenant-a" => "Acme Support",
+                 "tenant-b" => "Beacon Retail",
+                 "tenant-c" => "Cobalt Labs"
+               }
+             ) == [
+               %{id: "tenant-a", label: "Acme Support"},
+               %{id: "tenant-b", label: "Beacon Retail"},
+               %{id: "tenant-c", label: "Cobalt Labs"}
+             ]
+    end
   end
 
   defp insert_delivery!(tenant_id) do

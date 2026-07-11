@@ -16,8 +16,10 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.Accounts
 
   attr :detail, :map, required: true
+  attr :account_labels, :map, default: %{}
 
   def detail_header(assigns) do
     assigns =
@@ -51,8 +53,13 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
 
         <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
           <div>
-            <dt class="text-label font-bold uppercase">Tenant</dt>
-            <dd class="mt-xs text-base-content">{@record.tenant_id}</dd>
+            <dt class="text-label font-bold uppercase">Account</dt>
+            <dd
+              class="mt-xs text-base-content"
+              title={Accounts.title(@record.tenant_id, @account_labels)}
+            >
+              {Accounts.label(@record.tenant_id, @account_labels)}
+            </dd>
           </div>
           <div>
             <dt class="text-label font-bold uppercase">Provider</dt>
@@ -68,7 +75,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
           </div>
           <div>
             <dt class="text-label font-bold uppercase">Received</dt>
-            <dd class="mono mt-xs text-base-content">{format_datetime(@record.received_at)}</dd>
+            <dd class="mt-xs text-base-content"><Components.timestamp at={@record.received_at} /></dd>
           </div>
           <div>
             <dt class="text-label font-bold uppercase">Matched mailbox</dt>
@@ -137,11 +144,6 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
 
   defp matched_mailbox(mailbox) when is_binary(mailbox) and mailbox != "", do: mailbox
   defp matched_mailbox(_mailbox), do: "No match"
-
-  defp format_datetime(nil), do: "Pending"
-
-  defp format_datetime(%DateTime{} = datetime),
-    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
 
   defp present(value) when value in [nil, ""], do: "—"
   defp present(value), do: value

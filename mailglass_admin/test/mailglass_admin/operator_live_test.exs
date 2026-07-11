@@ -21,7 +21,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
   @theme_cookie MailglassAdmin.Theme.cookie_name()
 
   describe "operator surface" do
-    test "renders the default detail prompt when no delivery is selected", %{conn: conn} do
+    test "renders the full-width list and no overlay when no delivery is selected", %{conn: conn} do
       delivery = insert_delivery!(recipient: "selected@example.com")
       conn = operator_conn(conn)
 
@@ -32,9 +32,10 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-master-detail")
       assert html =~ "s*******@e******.com"
       refute html =~ delivery.recipient
-      # Positive D-06 proof: the populated-but-unselected detail column still renders
-      # the "Select a delivery…" master-detail helper.
-      assert html =~ "Select a delivery to inspect its event timeline and suppression state."
+      # No selection → the list stands alone; the Quick view overlay and the full
+      # detail are both absent until a record is focused.
+      refute html =~ ~s(data-testid="operator-quick-view")
+      refute html =~ ~s(data-testid="operator-detail-header")
       refute html =~ "Event timeline"
       # Orientation strip is empty-pane-only: absent on a populated view,
       # present only in genuine no-data.
@@ -87,12 +88,20 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, _html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
+      html = render(view)
+      assert html =~ ~s(<option value="">Any provider</option>)
+      assert html =~ ~s(<option value="postmark")
+      assert html =~ "Postmark"
+      assert html =~ ~s(<option value="sendgrid")
+      assert html =~ "SendGrid"
+      assert html =~ "Apply filters"
+      refute html =~ "Open delivery"
+
       view
       |> form("#operator-filters",
         filters: %{
           "tenant_id" => @tenant_id,
           "provider" => "postmark",
-          "status" => "sent",
           "event" => "delivered",
           "window_hours" => "168"
         }
@@ -104,7 +113,6 @@ defmodule MailglassAdmin.OperatorLiveTest do
         operator_path(%{
           "tenant_id" => @tenant_id,
           "provider" => "postmark",
-          "status" => "sent",
           "event" => "delivered",
           "window_hours" => "168",
           "view" => "deliveries"
@@ -116,8 +124,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "m****@e******.com"
       refute html =~ matching.recipient
       refute html =~ "skip@example.com"
-      assert html =~ ~s(value="postmark")
-      assert html =~ ~s(<option value="sent" selected)
+      assert selected_filter_value(html, "#filters_provider") == "postmark"
       assert html =~ ~s(<option value="delivered" selected)
     end
 
@@ -125,7 +132,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
          %{conn: conn} do
       conn = operator_conn(conn)
 
-      # A sent delivery exists, but the active status filter (failed) matches nothing →
+      # A delivered delivery exists, but the active status filter (bounced) matches nothing →
       # @deliveries == [] AND filters_active?/1 is true (the no-match state, not no-data).
       insert_delivery!(
         recipient: "only-sent@example.com",
@@ -140,7 +147,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{
             "tenant_id" => @tenant_id,
             "view" => "deliveries",
-            "status" => "failed"
+            "event" => "bounced"
           })
         )
 
@@ -149,6 +156,30 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(data-testid="operator-empty-filtered")
       # Orientation strip is genuine-no-data only → absent in no-match.
       refute html =~ ~s(data-testid="deliveries-orientation")
+    end
+
+    test "provider select preserves unknown deep-link provider values", %{conn: conn} do
+      conn = operator_conn(conn)
+
+      insert_delivery!(
+        recipient: "known-provider@example.com",
+        provider: "postmark",
+        status: :sent,
+        last_event_type: :delivered
+      )
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "provider" => "resend"
+          })
+        )
+
+      assert selected_filter_value(html, "#filters_provider") == "resend"
+      assert html =~ "Resend"
     end
 
     test "invalid URL-backed filters render recovery copy without narrowing tenant reads", %{
@@ -169,14 +200,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
           operator_path(%{
             "tenant_id" => @tenant_id,
             "view" => "deliveries",
-            "status" => "not-listed",
             "event" => "not-real",
             "window_hours" => "0"
           })
         )
 
       assert html =~ "Status was not applied. Choose a listed status."
-      assert html =~ "Event was not applied. Choose a listed event."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
       assert html =~ "m****@e******.com"
       assert html =~ ~s(value="168" selected)
@@ -197,14 +226,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
           "filters" => %{
             "tenant_id" => @tenant_id,
             "provider" => "",
-            "status" => "not-listed",
             "event" => "not-real",
             "window_hours" => "-5"
           }
         })
 
       assert html =~ "Status was not applied. Choose a listed status."
-      assert html =~ "Event was not applied. Choose a listed event."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
 
       assert_raise ArgumentError, fn ->
@@ -249,6 +276,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, _html} =
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
+      # Clicking a row opens the Quick view (peek) over the still-mounted list —
+      # the row is highlighted behind the overlay; the heavy evidence is not loaded yet.
       view
       |> element("button[phx-value-id='#{delivery.id}']")
       |> render_click()
@@ -259,6 +288,27 @@ defmodule MailglassAdmin.OperatorLiveTest do
           "tenant_id" => @tenant_id,
           "delivery_id" => delivery.id,
           "window_hours" => "168"
+        })
+      )
+
+      quick_html = render(view)
+      assert quick_html =~ ~s(data-testid="operator-quick-view")
+      assert quick_html =~ ~s(aria-selected="true")
+      # Quick view is condensed: the full event timeline is deferred to Full detail.
+      refute quick_html =~ "Event timeline"
+
+      # "Open full detail" drills into the complete record (full width, list hidden).
+      view
+      |> element(~s([data-testid="operator-quick-view-full"]))
+      |> render_click()
+
+      assert_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "delivery_id" => delivery.id,
+          "window_hours" => "168",
+          "full" => "1"
         })
       )
 
@@ -278,7 +328,6 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~
                "This Suppression is reversible. Remove via the suppressions API or contact support."
 
-      assert html =~ ~s(aria-selected="true")
       assert html =~ "Sent"
       assert html =~ "Delivered"
       assert html =~ "Webhook replay"
@@ -302,28 +351,30 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, _html} =
         live(
           conn,
-          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id})
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "delivery_id" => selected_delivery.id,
+            "full" => "1"
+          })
         )
 
       html = render(view)
-      list_html = view |> element("[data-testid='operator-deliveries-list']") |> render()
       detail_html = view |> element("[data-testid='operator-detail-header']") |> render()
 
       assert html =~ ~s(data-testid="operator-support-cards")
       assert html =~ "Recent failures"
-      assert html =~ "Orphan backlog"
+      assert html =~ "Unmatched webhooks"
       assert html =~ "Replay outcomes"
       assert html =~ "Reconciled:"
-      assert html =~ "Tenant-scoped facts from the current support window."
+      assert html =~ "Account-scoped facts from the current support window."
       assert html =~ "Replay succeeded"
       assert html =~ "Reconciled"
       assert html =~ replay_event.id
       assert html =~ reconcile_event.id
       refute html =~ "real-time"
 
-      assert list_html =~ "s*******@e******.com"
-      refute list_html =~ selected_delivery.recipient
-
+      # In Full detail the list is replaced by the record; the detail header shows the
+      # unmasked recipient (list masking is covered by the no-selection list test).
       assert detail_html =~ selected_delivery.recipient
     end
 
@@ -342,7 +393,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, _html} =
         live(
           conn,
-          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id})
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id, "full" => "1"})
         )
 
       detail_html = view |> element("#delivery-detail-#{selected_delivery.id}") |> render()
@@ -373,7 +424,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, view, _html} =
         live(
           conn,
-          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id})
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => selected_delivery.id, "full" => "1"})
         )
 
       view
@@ -439,7 +490,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       })
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
 
       html = render(view)
 
@@ -471,8 +522,16 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       refute html =~ "Replay webhook"
 
+      # A row click opens the Quick view (peek) — the Replay CTA lives one tier deeper.
       view
       |> element("button[phx-value-id='#{delivery.id}']")
+      |> render_click()
+
+      refute render(view) =~ "Replay webhook"
+
+      # Open full detail → the Replay CTA appears.
+      view
+      |> element(~s([data-testid="operator-quick-view-full"]))
       |> render_click()
 
       assert render(view) =~ "Replay webhook"
@@ -483,7 +542,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {delivery, webhook_event} = insert_exact_replay_fixture!("msg-exact-ui", 401)
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -519,7 +578,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       insert_linked_event!(delivery, second, "seed-many-2")
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -561,7 +620,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       })
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -586,7 +645,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {delivery, webhook_event} = insert_exact_replay_fixture!("msg-stale-ui", 601)
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -607,7 +666,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {delivery, _webhook_event} = insert_exact_replay_fixture!("msg-success-ui", 701)
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -646,7 +705,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       })
 
       {:ok, view, _html} =
-        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"}))
 
       view
       |> element("[data-testid='operator-replay-open']")
@@ -673,12 +732,13 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "No active Suppression for this Delivery."
     end
 
-    test "suppressed status badge uses the neutral fallback without warnings" do
+    test "suppressed status badge renders a real Suppressed badge" do
       html = render_component(&Components.status_badge/1, status: :suppressed, size: :sm)
 
-      assert html =~ "badge-outline"
-      assert html =~ "Unknown"
-      refute html =~ "status_class(:suppressed)"
+      assert html =~ "badge-warning"
+      assert html =~ "Suppressed"
+      assert html =~ "hero-minus-circle"
+      refute html =~ "Unknown"
     end
 
     test "support exemplar event tolerates missing selected delivery", %{conn: conn} do
@@ -721,7 +781,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           page_meta: %{
             total_count: 7,
             page: 1,
-            per_page: 5,
+            per_page: 20,
             total_pages: 2,
             has_previous?: false,
             has_next?: true
@@ -731,7 +791,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         )
 
       assert html =~ ~s(data-testid="operator-result-count")
-      assert html =~ "7 results"
+      assert html =~ "7 deliveries"
       assert html =~ ~s(data-testid="operator-pagination")
       assert html =~ ~s(data-testid="operator-pagination-prev-disabled")
       assert html =~ ~s(aria-disabled="true")
@@ -748,14 +808,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
           page_meta: %{
             total_count: 1,
             page: 1,
-            per_page: 5,
+            per_page: 20,
             total_pages: 1,
             has_previous?: false,
             has_next?: false
           }
         )
 
-      assert html =~ "1 result"
+      assert html =~ "1 delivery"
       refute html =~ ~s(data-testid="operator-pagination")
     end
 
@@ -792,7 +852,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
     test "delivery page links preserve tenant scope and expose honest boundaries", %{conn: conn} do
       conn = operator_conn(conn)
 
-      for index <- 1..7 do
+      for index <- 1..21 do
         insert_delivery!(
           recipient: "page-#{index}@example.com",
           provider_message_id: "pm-page-#{index}",
@@ -804,7 +864,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
         live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
 
       assert html =~ ~s(data-testid="operator-result-count")
-      assert html =~ "7 results"
+      assert html =~ "21 deliveries"
       assert html =~ ~s(data-testid="operator-pagination")
       assert html =~ ~s(data-testid="operator-pagination-prev-disabled")
       assert html =~ "tenant_id=#{@tenant_id}"
@@ -951,9 +1011,12 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       {:ok, _view, html} = live(conn, @base_path)
 
-      assert html =~ "Select a tenant"
-      assert html =~ "Choose a tenant to inspect its Deliveries and inbound routing"
-      assert html =~ "Select tenant"
+      assert html =~ "Choose an account"
+
+      assert html =~
+               "Pick the customer account whose Deliveries and inbound routing you want to inspect."
+
+      assert html =~ "Open account"
       assert html =~ "alpha-tenant"
       assert html =~ "beta-tenant"
       refute html =~ "add <code"
@@ -963,6 +1026,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
     test "clear filters preserves the selected tenant on deliveries", %{conn: conn} do
       conn = operator_conn(conn)
       insert_delivery!(provider: "postmark")
+      insert_delivery!(tenant_id: "fjordline-aps", provider: "sendgrid")
 
       {:ok, view, _html} =
         live(
@@ -976,10 +1040,11 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       render_hook(view, "clear_filters", %{})
 
-      assert_patch(view, operator_path(%{"tenant_id" => @tenant_id}))
+      assert_patch(view, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
     end
 
-    test "delivery detail back preserves tenant and drops delivery id", %{conn: conn} do
+    test "quick view ✕ closes to the deliveries list (not the overview), dropping delivery id",
+         %{conn: conn} do
       conn = operator_conn(conn)
       delivery = insert_delivery!(recipient: "back@example.com")
 
@@ -990,12 +1055,111 @@ defmodule MailglassAdmin.OperatorLiveTest do
       |> element(~s(a[data-testid="operator-detail-back"]))
       |> render_click()
 
+      # Regression: closing returns to the deliveries LIST (view=deliveries), never the
+      # overview — the ✕ dropped delivery_id but kept the surface.
       assert_patch(
         view,
         operator_path(%{
           "tenant_id" => @tenant_id,
+          "view" => "deliveries",
           "window_hours" => "168"
         })
+      )
+
+      refute render(view) =~ ~s(data-testid="operator-quick-view")
+    end
+
+    test "clicking the dimmed scrim closes the Quick view back to the deliveries list",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+      delivery = insert_delivery!(recipient: "scrim@example.com")
+
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id}))
+
+      assert render(view) =~ ~s(data-testid="operator-quick-view")
+
+      # Regression: the scrim is a patch link covering the dimmed area; clicking it
+      # dismisses the overlay and lands on the list, never the overview.
+      view
+      |> element(~s(a[data-testid="operator-quick-view-scrim"]))
+      |> render_click()
+
+      assert_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "view" => "deliveries",
+          "window_hours" => "168"
+        })
+      )
+
+      refute render(view) =~ ~s(data-testid="operator-quick-view")
+    end
+
+    test "quick view keyboard: arrows flip records, Enter opens full detail, Escape closes",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+      insert_delivery!(recipient: "kb-a@example.com", provider_message_id: "pm-kb-a")
+      insert_delivery!(recipient: "kb-b@example.com", provider_message_id: "pm-kb-b")
+
+      {:ok, view, _html} =
+        live(conn, operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries"}))
+
+      # Read the list order straight from the DOM so prev/next assertions are
+      # deterministic regardless of insertion/order defaults.
+      [first_id, second_id | _] =
+        ~r/phx-value-id="([^"]+)"/
+        |> Regex.scan(render(view))
+        |> Enum.map(fn [_, id] -> id end)
+        |> Enum.uniq()
+
+      view |> element("button[phx-value-id='#{first_id}']") |> render_click()
+      assert render(view) =~ ~s(data-testid="operator-quick-view")
+
+      # ArrowDown/j/ArrowRight = next; ArrowUp/k/ArrowLeft = prev (all reach detail_key
+      # now that the Escape-only phx-key filter is gone).
+      render_hook(view, "detail_key", %{"key" => "ArrowDown"})
+
+      assert_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "delivery_id" => second_id,
+          "window_hours" => "168"
+        })
+      )
+
+      render_hook(view, "detail_key", %{"key" => "ArrowLeft"})
+
+      assert_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "delivery_id" => first_id,
+          "window_hours" => "168"
+        })
+      )
+
+      # Enter → Full detail.
+      render_hook(view, "detail_key", %{"key" => "Enter"})
+
+      assert_patch(
+        view,
+        operator_path(%{
+          "tenant_id" => @tenant_id,
+          "delivery_id" => first_id,
+          "window_hours" => "168",
+          "full" => "1"
+        })
+      )
+
+      # Escape → close to the deliveries list.
+      render_hook(view, "detail_key", %{"key" => "Escape"})
+
+      assert_patch(
+        view,
+        operator_path(%{"tenant_id" => @tenant_id, "view" => "deliveries", "window_hours" => "168"})
       )
     end
 
@@ -1042,6 +1206,17 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
   defp operator_path(params) do
     @base_path <> "?" <> URI.encode_query(params)
+  end
+
+  defp selected_filter_value(html, selector) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find("#{selector} option")
+    |> Enum.find_value(fn option ->
+      if option |> Floki.attribute("selected") |> Enum.any?() do
+        option |> Floki.attribute("value") |> List.first()
+      end
+    end)
   end
 
   defp operator_conn(conn, session \\ %{}) do
@@ -1405,7 +1580,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Email health"
       assert html =~ ~s(data-testid="tenant-selector")
-      assert html =~ "No tenants available"
+      assert html =~ "No accounts with mail activity"
       refute html =~ ~s(data-testid="operator-master-detail")
       refute html =~ ~s(data-testid="operator-deliveries-list")
     end
@@ -1414,12 +1589,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, @base_path)
 
-      assert html =~ "No tenants available"
+      assert html =~ "No accounts with mail activity"
       assert html =~ ~s(data-testid="tenant-selector")
       refute html =~ ~s(data-testid="operator-overview-health")
     end
 
-    test "with-tenant Health renders 4 health-count cards", %{conn: conn} do
+    test "with-tenant Health renders actionable metric cards without a synthetic summary card", %{
+      conn: conn
+    } do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
@@ -1432,8 +1609,92 @@ defmodule MailglassAdmin.OperatorLiveTest do
              |> Enum.any?(fn h2 -> Floki.text(h2) == "Health" end)
 
       assert html =~ "Recent failures"
-      assert html =~ "Orphan backlog"
+      assert html =~ "Unmatched webhooks"
       assert html =~ "Active suppressions"
+      refute html =~ "Overall status"
+      refute html =~ "Orphan backlog"
+      refute html =~ ~s(data-testid="operator-overview-health-allclear")
+
+      assert_in_order(html, [
+        "Recent failures",
+        "Unmatched webhooks",
+        "Active suppressions"
+      ])
+
+      {:ok, doc} = Floki.parse_document(html)
+
+      assert doc
+             |> Floki.find(~s([data-testid="operator-overview-health-failures-link"]))
+             |> Enum.any?()
+
+      assert doc
+             |> Floki.find(~s([data-testid="operator-overview-health-orphans-link"]))
+             |> Enum.any?()
+
+      assert doc
+             |> Floki.find(~s([data-testid="operator-overview-health-suppressions-link"]))
+             |> Enum.any?()
+
+      health =
+        doc
+        |> Floki.find(~s([data-testid="operator-overview-health"]))
+        |> List.first()
+
+      assert health != nil, "expected operator-overview-health element"
+
+      refute health
+             |> Floki.find(".hero-arrow-up-right")
+             |> Enum.any?()
+
+      refute health
+             |> Floki.find("span")
+             |> Enum.any?(fn span -> String.trim(Floki.text(span)) == "Open" end)
+    end
+
+    test "with-tenant Health renders actionable metric hints", %{conn: conn} do
+      conn = operator_conn(conn)
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      assert html =~
+               "Mailglass could not process these provider events in the last 24 hours. Open Deliveries to find the affected message and retry or replay from evidence."
+
+      assert html =~
+               "Provider webhooks Mailglass received but has not linked to a delivery. Check whether the webhook arrived before the send was recorded, or whether provider IDs changed."
+
+      assert html =~
+               "Recipients currently blocked from sends. Open suppressed Deliveries to confirm the reason before removing a suppression."
+    end
+
+    test "with-tenant Health attention cards use one warning treatment", %{conn: conn} do
+      conn = operator_conn(conn)
+      insert_support_summary_fixture!()
+
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+      {:ok, doc} = Floki.parse_document(html)
+
+      health =
+        doc
+        |> Floki.find(~s([data-testid="operator-overview-health"]))
+        |> List.first()
+
+      assert health != nil, "expected operator-overview-health element"
+      assert Floki.text(health) =~ "Needs attention"
+
+      assert health
+             |> Floki.find(".hero-exclamation-triangle")
+             |> Enum.any?()
+
+      assert health
+             |> Floki.find(".text-warning")
+             |> Enum.any?()
+
+      refute health
+             |> Floki.find(".hero-x-circle")
+             |> Enum.any?()
+
+      refute health
+             |> Floki.find(".text-error")
+             |> Enum.any?()
     end
 
     test "suppression count degradation renders em-dash in text-secondary when count errors", %{
@@ -1475,8 +1736,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
              "operator-overview-nav block must be deleted (D-04)"
     end
 
-    # SHELL-02: failures stat card wrapped in drill-through link (status=failed, tenant-scoped)
-    test "failures stat card is wrapped in a drill-through link to status=failed Deliveries", %{
+    # SHELL-02: failures stat card wrapped in drill-through link (event=failed, tenant-scoped)
+    test "failures stat card is wrapped in a drill-through link to failed Deliveries", %{
       conn: conn
     } do
       conn = operator_conn(conn)
@@ -1496,15 +1757,15 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       href = failures_link |> Floki.attribute("href") |> List.first() || ""
 
-      assert href =~ "status=failed",
-             "failures drill-through link href must contain status=failed, got: #{inspect(href)}"
+      assert href =~ "event=failed",
+             "failures drill-through link href must contain event=failed, got: #{inspect(href)}"
 
       assert href =~ "tenant_id=#{@tenant_id}",
              "failures drill-through link must preserve tenant_id, got: #{inspect(href)}"
     end
 
-    # SHELL-02: suppressions stat card wrapped in drill-through link (status=suppressed, tenant-scoped)
-    test "suppressions stat card is wrapped in a drill-through link to status=suppressed Deliveries",
+    # SHELL-02: suppressions stat card wrapped in drill-through link (event=suppressed, tenant-scoped)
+    test "suppressions stat card is wrapped in a drill-through link to suppressed Deliveries",
          %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
@@ -1524,11 +1785,69 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       href = suppressions_link |> Floki.attribute("href") |> List.first() || ""
 
-      assert href =~ "status=suppressed",
-             "suppressions drill-through link href must contain status=suppressed, got: #{inspect(href)}"
+      assert href =~ "event=suppressed",
+             "suppressions drill-through link href must contain event=suppressed, got: #{inspect(href)}"
 
       assert href =~ "tenant_id=#{@tenant_id}",
              "suppressions drill-through link must preserve tenant_id, got: #{inspect(href)}"
+    end
+
+    test "unmatched webhooks stat card links to support-focused Deliveries evidence", %{
+      conn: conn
+    } do
+      conn = operator_conn(conn)
+      %{orphan_event: orphan_event} = insert_support_summary_fixture!()
+
+      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
+
+      {:ok, doc} = Floki.parse_document(html)
+
+      unmatched_link =
+        doc
+        |> Floki.find(~s([data-testid="operator-overview-health-orphans-link"]))
+        |> List.first()
+
+      assert unmatched_link != nil,
+             "expected operator-overview-health-orphans-link element"
+
+      href = unmatched_link |> Floki.attribute("href") |> List.first() || ""
+
+      assert href =~ "view=deliveries",
+             "unmatched-webhooks drill-through href must open Deliveries, got: #{inspect(href)}"
+
+      assert href =~ "support_focus=orphan_backlog",
+             "unmatched-webhooks drill-through href must focus orphan_backlog support evidence, got: #{inspect(href)}"
+
+      assert href =~ "support_event_id=#{orphan_event.id}",
+             "unmatched-webhooks drill-through href must preserve the oldest unmatched webhook id, got: #{inspect(href)}"
+
+      refute href =~ "status=",
+             "unmatched-webhooks drill-through must not pretend unmatched provider webhooks are a delivery status filter"
+    end
+
+    test "support-focused Deliveries route renders unmatched evidence without selected delivery",
+         %{
+           conn: conn
+         } do
+      conn = operator_conn(conn)
+      %{orphan_event: orphan_event} = insert_support_summary_fixture!()
+
+      {:ok, _view, html} =
+        live(
+          conn,
+          operator_path(%{
+            "tenant_id" => @tenant_id,
+            "view" => "deliveries",
+            "support_focus" => "orphan_backlog",
+            "support_event_id" => orphan_event.id
+          })
+        )
+
+      assert html =~ ~s(data-testid="operator-support-focus-detail")
+      assert html =~ "Unmatched webhook evidence"
+      assert html =~ "Oldest unmatched webhook: orphan-open"
+      assert html =~ "Showing unmatched webhook evidence"
+      refute html =~ "Select a delivery to inspect its event timeline and suppression state."
     end
 
     # SHELL-02: orientation strip empty-pane-only, null-safe gate
@@ -1585,7 +1904,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       {:ok, _view, html} =
         live(
           conn,
-          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id})
+          operator_path(%{"tenant_id" => @tenant_id, "delivery_id" => delivery.id, "full" => "1"})
         )
 
       assert html =~ ~s(id="delivery-detail-#{delivery.id}")
@@ -1593,6 +1912,19 @@ defmodule MailglassAdmin.OperatorLiveTest do
   end
 
   defp minutes_ago(minutes), do: DateTime.add(DateTime.utc_now(), -minutes, :minute)
+
+  defp assert_in_order(html, phrases) do
+    offsets =
+      Enum.map(phrases, fn phrase ->
+        case :binary.match(html, phrase) do
+          {offset, _length} -> offset
+          :nomatch -> flunk("expected #{inspect(phrase)} to appear in rendered HTML")
+        end
+      end)
+
+    assert offsets == Enum.sort(offsets),
+           "expected phrases to appear in order: #{inspect(phrases)}"
+  end
 
   describe "dual table+card presentation (DATA-01, Plan 02 Task 1)" do
     test "both operator-deliveries-table and operator-deliveries-cards testids are rendered when deliveries are present" do
@@ -1750,7 +2082,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ "mono"
     end
 
-    test "result count reads from page_meta.total_count — 1 result for total_count 1 regardless of list length" do
+    test "result count reads from page_meta.total_count — 1 delivery for total_count 1 regardless of list length" do
       delivery = %{
         id: "count-delivery-id-006",
         tenant_id: "t1",
@@ -1776,8 +2108,8 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         )
 
-      assert html =~ "1 result"
-      refute html =~ "2 result"
+      assert html =~ "1 delivery"
+      refute html =~ "2 deliveries"
     end
   end
 
@@ -1939,29 +2271,37 @@ defmodule MailglassAdmin.OperatorLiveTest do
     end
   end
 
-  describe "SHELL-03: triage subtitle + all-clear calm copy" do
-    # SHELL-03: subtitle is a state-driven triage line, never banned phrases
-    test "all-clear state subtitle is 'Email delivery is healthy.'", %{conn: conn} do
-      # Fresh test DB: no failed_ingest webhook events → all_clear? == true
+  describe "SHELL-03: health subtitle + all-clear calm copy" do
+    test "Health subtitle explains the page in all-clear state", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "Email delivery is healthy.",
-             "all-clear subtitle must be 'Email delivery is healthy.'"
+      assert html =~
+               "Check recent failures, unmatched webhooks, and active suppressions for this account.",
+             "Health subtitle must orient the page rather than duplicate stat-card status"
     end
 
-    test "attention state subtitle is 'Email delivery needs attention.'", %{conn: conn} do
+    test "Health subtitle stays explanatory while attention status stays in cards", %{conn: conn} do
       conn = operator_conn(conn)
       # Insert a failed webhook_event to force attention state
       insert_webhook_event!(status: :failed)
 
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
-      assert html =~ "Email delivery needs attention.",
-             "attention subtitle must be 'Email delivery needs attention.'"
+      assert html =~ ~s(data-testid="operator-overview-health-failures")
+
+      assert html =~ "Needs attention",
+             "attention state must still be visible in the stat-card context"
+
+      refute html =~ "Email delivery needs attention.",
+             "Health header must not render the old unexplained status sentence"
+
+      assert html =~
+               "Check recent failures, unmatched webhooks, and active suppressions for this account.",
+             "Health subtitle must remain explanatory even in attention state"
     end
 
-    test "subtitle never contains 'Oops' or 'Navigate to'", %{conn: conn} do
+    test "Health subtitle never contains 'Oops' or 'Navigate to'", %{conn: conn} do
       conn = operator_conn(conn)
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
@@ -2007,30 +2347,14 @@ defmodule MailglassAdmin.OperatorLiveTest do
   end
 
   describe "operator KPI stat_card call sites — DATA-02 certification (Plan 02 Task 3)" do
-    test "all four operator KPI testids render through the stat_card primitive" do
+    test "the three operator Health KPI testids render through the stat_card primitive" do
       conn = operator_conn(build_conn())
       {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="operator-overview-health-failures")
       assert html =~ ~s(data-testid="operator-overview-health-orphans")
       assert html =~ ~s(data-testid="operator-overview-health-suppressions")
-      assert html =~ ~s(data-testid="operator-overview-health-allclear")
-    end
-
-    test "all-clear tile renders a real readable value — not a bare dash" do
-      conn = operator_conn(build_conn())
-      {:ok, _view, html} = live(conn, operator_path(%{"tenant_id" => @tenant_id}))
-
-      # The all-clear tile should render one of these real readable values, never "—"
-      allclear_present =
-        html =~ "All clear" or html =~ "Needs attention" or html =~ "Unavailable"
-
-      assert allclear_present,
-             "all-clear tile must render a real readable value (All clear / Needs attention / Unavailable)"
-
-      # Should NOT render a bare dash as the value
-      refute html =~ ~s(data-testid="operator-overview-health-allclear">—</),
-             "all-clear tile must not render a bare dash"
+      refute html =~ ~s(data-testid="operator-overview-health-allclear")
     end
   end
 end

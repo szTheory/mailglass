@@ -61,7 +61,7 @@ defmodule MailglassAdmin.Operator.Timeline do
                       Reason: {label(event.reject_reason)}
                     </p>
                   </div>
-                  <p class="mono text-label text-secondary">{format_datetime(event.occurred_at)}</p>
+                  <p class="text-label text-secondary"><Components.timestamp at={event.occurred_at} /></p>
                 </div>
               </div>
             </li>
@@ -141,11 +141,6 @@ defmodule MailglassAdmin.Operator.Timeline do
         "requested"
     end
   end
-
-  defp format_datetime(nil), do: "Pending"
-
-  defp format_datetime(%DateTime{} = datetime),
-    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
 
   defp event_dot_class(:webhook_replay_failed), do: "bg-error"
 
