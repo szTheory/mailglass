@@ -67,8 +67,12 @@ defmodule MailglassAdmin.Operator.DetailHeader do
       </div>
 
       <div class="mt-lg flex flex-wrap items-start justify-between gap-md border-t border-base-300 pt-md">
-        <div class="space-y-xs">
+        <div class="max-w-prose space-y-xs">
           <h3 class="text-body font-bold uppercase text-secondary">Webhook replay</h3>
+          <p class="text-label text-secondary">
+            Re-runs the provider's original webhook through mailglass to re-derive this
+            delivery's status — for when an event was mis-processed.
+          </p>
           <p class="text-body text-base-content">{RepairState.availability_hint(@replay_targets)}</p>
           <p :if={@latest_replay} class="text-label text-secondary">
             Last replay: {RepairState.latest_replay_summary(@latest_replay)} at <Components.timestamp at={@latest_replay.occurred_at} />
@@ -80,7 +84,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           type="button"
           phx-click="open_replay"
           data-testid="operator-replay-open"
-          class="btn btn-error min-h-11 px-md"
+          class={["btn min-h-11 px-md", replay_cta_class(@replay_targets)]}
         >
           Replay webhook
         </button>
@@ -88,6 +92,15 @@ defmodule MailglassAdmin.Operator.DetailHeader do
     </Components.card>
     """
   end
+
+  # Replay is a benign recovery action, never destructive — so the CTA is never
+  # error-red. It leads with primary emphasis when a webhook target is ready and
+  # steps back to a quiet ghost when replay is unavailable (the button still opens
+  # the modal, which explains why).
+  defp replay_cta_class(%{status: status}) when status in [:exact, :ambiguous],
+    do: "btn-primary"
+
+  defp replay_cta_class(_replay_targets), do: "btn-ghost"
 
   defp label(nil), do: "Unknown"
 

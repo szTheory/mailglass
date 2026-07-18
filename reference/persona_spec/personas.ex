@@ -233,7 +233,10 @@ defmodule MailglassDemo.Personas do
       |> repo.insert!()
 
     # One event: a :delivered with reject_reason: nil (the legitimate null
-    # branch, distinct from a populated :rejected reject_reason).
+    # branch, distinct from a populated :rejected reject_reason). No `"source"`
+    # key: this single-delivery edge fixture keeps no stored webhook, so the
+    # timeline renders just "postmark" rather than claiming a "webhook" source
+    # it can't replay (which would contradict Replay showing unavailable).
     %{
       tenant_id: @fjordline,
       delivery_id: delivery.id,
@@ -242,7 +245,7 @@ defmodule MailglassDemo.Personas do
       reject_reason: payload.reject_reason,
       idempotency_key:
         "demo-event-#{payload.long_delivery_id}-#{payload.event_type}-#{DateTime.to_unix(occurred_at)}",
-      metadata: %{"provider" => "postmark", "source" => "webhook"},
+      metadata: %{"provider" => "postmark"},
       normalized_payload: %{"recipient" => delivery.recipient}
     }
     |> Event.changeset()

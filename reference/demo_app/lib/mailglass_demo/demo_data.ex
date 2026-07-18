@@ -90,7 +90,7 @@ defmodule MailglassDemo.DemoData do
       })
 
     event!(invite, :sent, minutes_ago(25), %{"provider" => "postmark", "source" => "api"})
-    event!(invite, :delivered, minutes_ago(18), %{"provider" => "postmark", "source" => "webhook"})
+    delivered_via_webhook!(invite, "postmark", "demo-invite-delivery", 7301, minutes_ago(18))
 
     magic_link =
       delivery!(%{
@@ -110,11 +110,7 @@ defmodule MailglassDemo.DemoData do
       })
 
     event!(magic_link, :sent, minutes_ago(22), %{"provider" => "postmark", "source" => "api"})
-
-    event!(magic_link, :delivered, minutes_ago(16), %{
-      "provider" => "postmark",
-      "source" => "webhook"
-    })
+    delivered_via_webhook!(magic_link, "postmark", "demo-magic-link-delivery", 7302, minutes_ago(16))
 
     receipt =
       delivery!(%{
@@ -303,10 +299,7 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_opened"}
       })
 
-    event!(opened_d, :delivered, minutes_ago(139), %{
-      "provider" => "postmark",
-      "source" => "webhook"
-    })
+    delivered_via_webhook!(opened_d, "postmark", "demo-opened-delivery", 7303, minutes_ago(139))
 
     event!(opened_d, :opened, minutes_ago(138), %{
       "provider" => "postmark",
@@ -326,10 +319,7 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_clicked"}
       })
 
-    event!(clicked_d, :delivered, minutes_ago(141), %{
-      "provider" => "postmark",
-      "source" => "webhook"
-    })
+    delivered_via_webhook!(clicked_d, "postmark", "demo-clicked-delivery", 7304, minutes_ago(141))
 
     event!(clicked_d, :clicked, minutes_ago(140), %{
       "provider" => "postmark",
@@ -349,10 +339,7 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_complained"}
       })
 
-    event!(complained_d, :delivered, minutes_ago(143), %{
-      "provider" => "sendgrid",
-      "source" => "webhook"
-    })
+    delivered_via_webhook!(complained_d, "sendgrid", "demo-complained-delivery", 7305, minutes_ago(143))
 
     event!(complained_d, :complained, minutes_ago(142), %{
       "provider" => "sendgrid",
@@ -372,10 +359,7 @@ defmodule MailglassDemo.DemoData do
         metadata: %{"scenario" => "badge_unsubscribed"}
       })
 
-    event!(unsubscribed_d, :delivered, minutes_ago(145), %{
-      "provider" => "sendgrid",
-      "source" => "webhook"
-    })
+    delivered_via_webhook!(unsubscribed_d, "sendgrid", "demo-unsubscribed-delivery", 7306, minutes_ago(145))
 
     event!(unsubscribed_d, :unsubscribed, minutes_ago(144), %{
       "provider" => "sendgrid",
@@ -435,11 +419,7 @@ defmodule MailglassDemo.DemoData do
       })
 
     event!(stress_d, :sent, minutes_ago(151), %{"provider" => "postmark", "source" => "api"})
-
-    event!(stress_d, :delivered, minutes_ago(150), %{
-      "provider" => "postmark",
-      "source" => "webhook"
-    })
+    delivered_via_webhook!(stress_d, "postmark", "demo-stress-delivery", 7307, minutes_ago(150))
 
     # --- Replay-outcome events: all 3 branches (D-05 / GAP-13) ---
 
@@ -749,6 +729,24 @@ defmodule MailglassDemo.DemoData do
     }
     |> WebhookEvent.changeset()
     |> Repo.insert!()
+  end
+
+  # A provider webhook that CONFIRMED delivery: inserts the stored webhook row AND
+  # the linked `:delivered` event, so the delivery is genuinely replayable while
+  # its timeline still reads "provider · webhook". The event carries
+  # `webhook_provider_event_id` (not `webhook_event_id`) so it stays a plain
+  # delivered fact — `MailglassAdmin.Operator.Timeline` renders the source line,
+  # and `Mailglass.Operator.ReplayTargets` resolves the stored webhook by
+  # provider + provider_event_id. This keeps "delivered via webhook" honest: a
+  # webhook-sourced status is one an operator can actually re-run.
+  defp delivered_via_webhook!(delivery, provider, provider_event_id, event_seed, occurred_at) do
+    webhook!(provider, delivery.provider_message_id, provider_event_id, event_seed)
+
+    event!(delivery, :delivered, occurred_at, %{
+      "provider" => provider,
+      "source" => "webhook",
+      "webhook_provider_event_id" => provider_event_id
+    })
   end
 
   defp suppression!(address, reason, source, metadata) do

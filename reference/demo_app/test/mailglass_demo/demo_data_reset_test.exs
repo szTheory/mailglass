@@ -47,13 +47,27 @@ defmodule MailglassDemo.DemoDataResetTest do
            ]
 
     assert rerun.webhook_provider_event_ids == [
+             "demo-clicked-delivery",
+             "demo-complained-delivery",
+             "demo-invite-delivery",
+             "demo-magic-link-delivery",
+             "demo-opened-delivery",
              "demo-receipt-delivery",
+             "demo-stress-delivery",
+             "demo-unsubscribed-delivery",
              "demo-usage-bounce",
              "sg-demo-failed-ingest-001"
            ]
 
     assert rerun.webhook_provider_matrix == [
+             {"demo-clicked-delivery", "postmark"},
+             {"demo-complained-delivery", "sendgrid"},
+             {"demo-invite-delivery", "postmark"},
+             {"demo-magic-link-delivery", "postmark"},
+             {"demo-opened-delivery", "postmark"},
              {"demo-receipt-delivery", "postmark"},
+             {"demo-stress-delivery", "postmark"},
+             {"demo-unsubscribed-delivery", "sendgrid"},
              {"demo-usage-bounce", "sendgrid"},
              {"sg-demo-failed-ingest-001", "sendgrid"}
            ]

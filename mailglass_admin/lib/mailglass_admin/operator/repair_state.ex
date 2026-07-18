@@ -124,16 +124,19 @@ defmodule MailglassAdmin.Operator.RepairState do
 
   @spec unavailable_reason_copy(atom() | nil) :: String.t()
   def unavailable_reason_copy(:historical_sendgrid_batch),
-    do: "Historical rows still lack one exact webhook identity."
+    do:
+      "This delivery came from a historical SendGrid batch with no single webhook to point at, " <>
+        "so there is nothing exact to re-run."
 
   def unavailable_reason_copy(:missing_replay_linkage),
-    do: "Historical rows without exact webhook linkage cannot be replayed safely."
+    do:
+      "Replay only re-runs a provider webhook mailglass captured, and this delivery has none on file."
 
   def unavailable_reason_copy(:no_delivery_events),
-    do: "This delivery does not yet have any linked webhook events to replay."
+    do: "This delivery has no webhook events yet, so there is nothing to replay."
 
   def unavailable_reason_copy(_reason),
-    do: "Replay target resolution is unavailable for this delivery."
+    do: "Replay targets could not be resolved for this delivery."
 
   defp replay_summary_parts(replay) do
     [outcome_label(replay), effect_label(replay)]

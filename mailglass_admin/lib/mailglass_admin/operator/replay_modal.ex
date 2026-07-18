@@ -114,7 +114,7 @@ defmodule MailglassAdmin.Operator.ReplayModal do
               phx-click="confirm_replay"
               phx-disable-with="Replaying…"
               data-testid="operator-replay-confirm"
-              class="btn btn-error min-h-11 px-5"
+              class="btn btn-primary min-h-11 px-5"
             >
               Confirm replay
             </button>
