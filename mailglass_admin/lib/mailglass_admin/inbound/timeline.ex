@@ -32,31 +32,52 @@ defmodule MailglassAdmin.Inbound.Timeline do
           No execution runs have been recorded for this message yet.
         </p>
       <% else %>
-        <ol class="motion-timeline space-y-lg">
+        <% last_index = length(@runs) - 1 %>
+        <ol class="motion-timeline -mb-lg">
           <%= for {run, index} <- Enum.with_index(@runs) do %>
             <li
               data-testid="inbound-timeline-run"
               data-run-id={run.id}
-              class="flex gap-sm"
             >
-              <div class="mt-xs flex flex-col items-center">
-                <span class={["h-3 w-3 rounded-full", outcome_dot_class(run.outcome)]}></span>
-                <span :if={index < length(@runs) - 1} class="mt-sm h-full w-px bg-base-300"></span>
-              </div>
-              <div class="min-w-0 flex-1 rounded-box border border-base-300 bg-base-100 p-md">
-                <div class="flex flex-wrap items-start justify-between gap-sm">
-                  <div class="space-y-xs">
-                    <div class="flex flex-wrap items-center gap-sm">
-                      <p class="text-body font-bold text-base-content">{outcome_label(run.outcome)}</p>
-                      <span class="badge badge-outline">{source_label(run.source)}</span>
+              <div class="relative pb-lg">
+                <%!-- Continuous rail (see MailglassAdmin.Operator.Timeline): the
+                      connector spans this padding-inclusive box so h-full reaches
+                      the next dot. Omitted on the last (most recent) run. --%>
+                <span
+                  :if={index < last_index}
+                  aria-hidden="true"
+                  class="absolute left-1.5 top-4 -ml-px h-full w-px bg-base-300"
+                >
+                </span>
+                <div class="relative flex gap-md">
+                  <span class={[
+                    "z-10 mt-1.5 h-3 w-3 shrink-0 rounded-full border-2 border-base-100",
+                    outcome_dot_class(run.outcome),
+                    latest_ring_class(run.outcome, index == last_index)
+                  ]}>
+                  </span>
+                  <div class="min-w-0 flex-1 rounded-box border border-base-300 bg-base-100 p-md">
+                    <div class="flex flex-wrap items-start justify-between gap-sm">
+                      <div class="space-y-xs">
+                        <div class="flex flex-wrap items-center gap-sm">
+                          <p class="text-body font-bold text-base-content">{outcome_label(run.outcome)}</p>
+                          <span class="badge badge-outline">{source_label(run.source)}</span>
+                          <span
+                            :if={index == last_index}
+                            class="text-label font-bold uppercase text-secondary"
+                          >
+                            Latest
+                          </span>
+                        </div>
+                        <p :if={present?(run.mailbox)} class="text-label text-secondary">{run.mailbox}</p>
+                        <p :if={present?(run.outcome_reason)} class="text-body text-secondary">
+                          Reason: {run.outcome_reason}
+                        </p>
+                        <p class="mono text-label text-secondary">{run.id}</p>
+                      </div>
+                      <p class="text-label text-secondary"><.timestamp at={run.executed_at} /></p>
                     </div>
-                    <p :if={present?(run.mailbox)} class="text-label text-secondary">{run.mailbox}</p>
-                    <p :if={present?(run.outcome_reason)} class="text-body text-secondary">
-                      Reason: {run.outcome_reason}
-                    </p>
-                    <p class="mono text-label text-secondary">{run.id}</p>
                   </div>
-                  <p class="text-label text-secondary"><.timestamp at={run.executed_at} /></p>
                 </div>
               </div>
             </li>
@@ -75,6 +96,16 @@ defmodule MailglassAdmin.Inbound.Timeline do
   defp outcome_dot_class(outcome) when outcome in [:reject, :bounce, :failed], do: "bg-error"
   defp outcome_dot_class(:ignore), do: "bg-secondary"
   defp outcome_dot_class(_outcome), do: "bg-secondary"
+
+  # The most recent run carries a tone-matched halo (mirrors the operator timeline).
+  defp latest_ring_class(_outcome, false), do: nil
+  defp latest_ring_class(:accept, true), do: "ring-2 ring-success/40"
+  defp latest_ring_class(:no_match, true), do: "ring-2 ring-warning/40"
+
+  defp latest_ring_class(outcome, true) when outcome in [:reject, :bounce, :failed],
+    do: "ring-2 ring-error/40"
+
+  defp latest_ring_class(_outcome, true), do: "ring-2 ring-secondary/40"
 
   defp outcome_label(nil), do: "Unknown"
 

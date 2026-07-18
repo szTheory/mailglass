@@ -38,7 +38,7 @@ defmodule MailglassAdmin.GalleryLive do
   - filters_form (empty, filled, invalid) — static assigns, no phx-submit
   - support_cards (tier1-shown, tier1-hidden)
   - suppression_card (present, absent)
-  - timeline (populated, highlighted-event, empty)
+  - timeline (populated, highlighted-event, empty, single, mixed-tones, many)
   - replay_modal (closed) — open states require live event
   - routing_trace (empty, all-passing, first-failing)
   - evidence_card (no-evidence, redacted, revealed, denied)
@@ -1064,6 +1064,62 @@ defmodule MailglassAdmin.GalleryLive do
        highlight_event_id: "evt_01JXDEF"
      }},
     {:timeline, "empty", %{timeline_events: [], highlight_event_id: nil}},
+
+    # State coverage for the redesigned rail (1 / 3+ / many, mixed tones): a lone
+    # event reads as the intentional "Latest", mixed tones prove dot↔badge accord,
+    # and a long run exercises the continuous connector + stagger cap.
+    {:timeline, "single",
+     %{
+       timeline_events: [
+         %{
+           id: "evt_01JXSOLO",
+           type: :delivered,
+           occurred_at: ~U[2026-06-14 12:00:00Z],
+           metadata: %{"provider" => "postmark", "source" => "webhook"},
+           reject_reason: nil
+         }
+       ],
+       highlight_event_id: nil
+     }},
+    {:timeline, "mixed-tones",
+     %{
+       timeline_events: [
+         %{
+           id: "evt_01JXT01",
+           type: :sent,
+           occurred_at: ~U[2026-06-14 11:58:00Z],
+           metadata: %{"provider" => "postmark", "source" => "api"},
+           reject_reason: nil
+         },
+         %{
+           id: "evt_01JXT02",
+           type: :deferred,
+           occurred_at: ~U[2026-06-14 11:59:00Z],
+           metadata: %{"provider" => "postmark", "source" => "webhook"},
+           reject_reason: nil
+         },
+         %{
+           id: "evt_01JXT03",
+           type: :bounced,
+           occurred_at: ~U[2026-06-14 12:00:00Z],
+           metadata: %{"provider" => "postmark", "source" => "webhook"},
+           reject_reason: :blocked
+         }
+       ],
+       highlight_event_id: nil
+     }},
+    {:timeline, "many",
+     %{
+       timeline_events: [
+         %{id: "evt_01JXN01", type: :queued, occurred_at: ~U[2026-06-14 11:55:00Z], metadata: %{"provider" => "postmark", "source" => "api"}, reject_reason: nil},
+         %{id: "evt_01JXN02", type: :sent, occurred_at: ~U[2026-06-14 11:56:00Z], metadata: %{"provider" => "postmark", "source" => "api"}, reject_reason: nil},
+         %{id: "evt_01JXN03", type: :dispatched, occurred_at: ~U[2026-06-14 11:57:00Z], metadata: %{"provider" => "postmark", "source" => "webhook"}, reject_reason: nil},
+         %{id: "evt_01JXN04", type: :delivered, occurred_at: ~U[2026-06-14 11:58:00Z], metadata: %{"provider" => "postmark", "source" => "webhook"}, reject_reason: nil},
+         %{id: "evt_01JXN05", type: :opened, occurred_at: ~U[2026-06-14 11:59:00Z], metadata: %{"provider" => "postmark", "source" => "webhook"}, reject_reason: nil},
+         %{id: "evt_01JXN06", type: :clicked, occurred_at: ~U[2026-06-14 12:00:00Z], metadata: %{"provider" => "postmark", "source" => "webhook"}, reject_reason: nil}
+       ],
+       highlight_event_id: nil
+     }},
 
     # STATE-LD-17: replay_modal — closed (open states require live event)
     {:replay_modal, "closed",

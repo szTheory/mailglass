@@ -28,7 +28,8 @@ defmodule MailglassAdmin.Operator.Timeline do
           No delivery events have been recorded for this item yet.
         </p>
       <% else %>
-        <ol class="motion-timeline space-y-lg">
+        <% last_index = length(@timeline_events) - 1 %>
+        <ol class="motion-timeline -mb-lg">
           <%= for {event, index} <- Enum.with_index(@timeline_events) do %>
             <li
               data-testid="operator-timeline-event"
@@ -36,32 +37,51 @@ defmodule MailglassAdmin.Operator.Timeline do
               data-highlighted={
                 if highlighted?(@highlight_event_id, event.id), do: "true", else: "false"
               }
-              class="flex gap-sm"
             >
-              <div class="mt-xs flex flex-col items-center">
-                <span class={["h-3 w-3 rounded-full", event_dot_class(event.type)]}></span>
-                <span :if={index < length(@timeline_events) - 1} class="mt-sm h-full w-px bg-base-300">
+              <div class="relative pb-lg">
+                <%!-- Continuous rail: the connector lives in this padding-inclusive
+                      box so h-full spans the gap down to the next dot. Omitted on
+                      the last (most recent) event. --%>
+                <span
+                  :if={index < last_index}
+                  aria-hidden="true"
+                  class="absolute left-1.5 top-4 -ml-px h-full w-px bg-base-300"
+                >
                 </span>
-              </div>
-              <div class={[
-                "min-w-0 flex-1 rounded-box border bg-base-100 p-md",
-                event_container_class(@highlight_event_id, event.id)
-              ]}>
-                <div class="flex flex-wrap items-start justify-between gap-sm">
-                  <div class="space-y-xs">
-                    <div class="flex flex-wrap items-center gap-sm">
-                      <p class="text-body font-bold text-base-content">{event_label(event.type)}</p>
-                      <Components.status_badge :if={event_badge(event.type)} status={event.type} size={:sm} />
+                <div class="relative flex gap-md">
+                  <span class={[
+                    "z-10 mt-1.5 h-3 w-3 shrink-0 rounded-full border-2 border-base-100",
+                    dot_class(event.type),
+                    latest_ring_class(event.type, index == last_index)
+                  ]}>
+                  </span>
+                  <div class={[
+                    "min-w-0 flex-1 rounded-box border bg-base-100 p-md",
+                    event_container_class(@highlight_event_id, event.id)
+                  ]}>
+                    <div class="flex flex-wrap items-start justify-between gap-sm">
+                      <div class="space-y-xs">
+                        <div class="flex flex-wrap items-center gap-sm">
+                          <p class="text-body font-bold text-base-content">{event_label(event.type)}</p>
+                          <Components.status_badge :if={event_badge(event.type)} status={event.type} size={:sm} />
+                          <span
+                            :if={index == last_index}
+                            class="text-label font-bold uppercase text-secondary"
+                          >
+                            Latest
+                          </span>
+                        </div>
+                        <p class="text-label text-secondary">
+                          {metadata_summary(event.type, event.metadata)}
+                        </p>
+                        <p class="mono text-label text-secondary">{event.id}</p>
+                        <p :if={event.reject_reason} class="text-body text-secondary">
+                          Reason: {label(event.reject_reason)}
+                        </p>
+                      </div>
+                      <p class="text-label text-secondary"><Components.timestamp at={event.occurred_at} /></p>
                     </div>
-                    <p class="text-label text-secondary">
-                      {metadata_summary(event.type, event.metadata)}
-                    </p>
-                    <p class="mono text-label text-secondary">{event.id}</p>
-                    <p :if={event.reject_reason} class="text-body text-secondary">
-                      Reason: {label(event.reject_reason)}
-                    </p>
                   </div>
-                  <p class="text-label text-secondary"><Components.timestamp at={event.occurred_at} /></p>
                 </div>
               </div>
             </li>
@@ -142,11 +162,29 @@ defmodule MailglassAdmin.Operator.Timeline do
     end
   end
 
-  defp event_dot_class(:webhook_replay_failed), do: "bg-error"
+  # Dot color derives from the SAME classification as the status badge
+  # (`Components.status_tone/1`), so the dot and the badge on a row always agree.
+  defp dot_class(type) do
+    case Components.status_tone(type) do
+      :success -> "bg-success"
+      :error -> "bg-error"
+      :warning -> "bg-warning"
+      :accent -> "bg-primary"
+      :neutral -> "bg-secondary"
+    end
+  end
 
-  defp event_dot_class(type) when type in [:webhook_replay_requested, :webhook_replay_succeeded],
-    do: "bg-warning"
+  # The most recent event carries a tone-matched halo so "where things stand now"
+  # reads at a glance (and a single-event timeline reads as intentional, not orphaned).
+  defp latest_ring_class(_type, false), do: nil
 
-  defp event_dot_class(:reconciled), do: "bg-accent"
-  defp event_dot_class(_type), do: "bg-primary"
+  defp latest_ring_class(type, true) do
+    case Components.status_tone(type) do
+      :success -> "ring-2 ring-success/40"
+      :error -> "ring-2 ring-error/40"
+      :warning -> "ring-2 ring-warning/40"
+      :accent -> "ring-2 ring-primary/40"
+      :neutral -> "ring-2 ring-secondary/40"
+    end
+  end
 end
