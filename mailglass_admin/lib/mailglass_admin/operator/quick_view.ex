@@ -94,7 +94,7 @@ defmodule MailglassAdmin.Operator.QuickView do
             <div class="mt-md space-y-md">
               <div class="flex flex-wrap items-center gap-sm">
                 <h3 class="text-heading font-bold text-base-content">
-                  {Components.mask_recipient(@delivery.recipient)}
+                  {Components.recipient_display(@delivery.recipient)}
                 </h3>
                 <Components.status_badge status={Components.delivery_display_status(@delivery)} />
               </div>

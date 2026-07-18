@@ -15,7 +15,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     * `:stale` — data may be out of date
 
   Status is always rendered via `Components.status_badge/1`. Recipients are always
-  masked via `Components.mask_recipient/1`. Long values use per-field classes from
+  shown in full via `Components.recipient_display/1`. Long values use per-field classes from
   the deliveries table (truncate+title for IDs, whitespace-nowrap for timestamps).
   """
 
@@ -150,9 +150,9 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                 <td class="min-w-0 text-body text-base-content">
                   <span
                     class="min-w-0 truncate block"
-                    title={Components.mask_recipient(delivery.recipient)}
+                    title={Components.recipient_display(delivery.recipient)}
                   >
-                    {Components.mask_recipient(delivery.recipient)}
+                    {Components.recipient_display(delivery.recipient)}
                   </span>
                 </td>
                 <td :if={@show_account?} class="min-w-0 text-body text-base-content">
@@ -209,9 +209,9 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                   <span class="text-label font-bold uppercase text-secondary">Recipient</span>
                   <p
                     class="min-w-0 truncate text-body text-base-content"
-                    title={Components.mask_recipient(delivery.recipient)}
+                    title={Components.recipient_display(delivery.recipient)}
                   >
-                    {Components.mask_recipient(delivery.recipient)}
+                    {Components.recipient_display(delivery.recipient)}
                   </p>
                 </div>
 

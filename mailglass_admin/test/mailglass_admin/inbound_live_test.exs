@@ -2,8 +2,8 @@ defmodule MailglassAdmin.InboundLiveTest do
   @moduledoc """
   InboundLive shell behaviour (Wave 1, plan 48-02).
 
-  Covers V1 (tenant-required-or-empty + no cross-tenant leak), V5 masking-half
-  (recipient masked by default), record selection (push_patch with inbound_id,
+  Covers V1 (tenant-required-or-empty + no cross-tenant leak), recipient display
+  (recipient shown in full), record selection (push_patch with inbound_id,
   in-place detail render), URL-as-state filters, and the no-selection copy. The
   route mounts in the operator `live_session` (same Operator.Mount + Auth gate as
   OperatorLive), so unauthenticated access is rejected by the existing seam.
@@ -54,7 +54,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute html =~ "add a tenant_id to the URL"
     end
 
-    test "renders the no-selection prompt and masks recipients by default (V5)", %{conn: conn} do
+    test "renders the no-selection prompt and shows recipients in full", %{conn: conn} do
       conn = operator_conn(conn)
 
       %{record: record} =
@@ -64,9 +64,8 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ "Recent InboundMessages"
       assert html =~ ~s(data-testid="inbound-master-detail")
-      # V5 masking half: masked by default, raw recipient never rendered.
-      assert html =~ "a****@e******.com"
-      refute html =~ "alice@example.com"
+      # Recipient shown in full.
+      assert html =~ "alice@example.com"
       # No selection → the list stands alone; the Quick view overlay and Full detail
       # are both absent until a record is focused.
       refute html =~ ~s(data-testid="inbound-quick-view")
@@ -186,7 +185,10 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-overview")
       assert html =~ "InboundMessages"
       assert html =~ "101"
-      refute html =~ "accepted-101@example.com"
+      # The list is paginated (20/page, newest first) while the overview counts all
+      # 101 records — proving the summary is not derived from the capped list. The
+      # oldest record ("accepted-1") is therefore off the first page and absent.
+      refute html =~ "accepted-1@example.com"
     end
 
     test "gateway-unavailable runtime path renders the calm no-data pane without leaking", %{
@@ -306,8 +308,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       quick_html = render(view)
       assert quick_html =~ ~s(data-testid="inbound-quick-view")
       assert quick_html =~ ~s(aria-selected="true")
-      assert quick_html =~ "s*******@e******.com"
-      refute quick_html =~ "selected@example.com"
+      assert quick_html =~ "selected@example.com"
       refute quick_html =~ "Execution timeline"
 
       # Open full detail → the complete record (header + timeline).
@@ -336,9 +337,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       # Fresh + replay source badges both appear (V matched seed).
       assert html =~ "Fresh"
       assert html =~ "Replay"
-      # Detail still masks the recipient.
-      assert html =~ "s*******@e******.com"
-      refute html =~ "selected@example.com"
+      # Detail shows the recipient in full.
+      assert html =~ "selected@example.com"
 
       # Back from Full detail returns to the Quick view (id kept, full dropped).
       view
@@ -870,9 +870,8 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "~r/"
       # Wildcard clauses (nil matchers, e.g. the subject on route 1) render "any".
       assert html =~ ~r/>\s*any\s*</
-      # The recipient ACTUAL is masked, never raw.
-      assert html =~ "n******@e******.com"
-      refute html =~ "nomatch@example.com"
+      # The recipient ACTUAL is shown in full.
+      assert html =~ "nomatch@example.com"
       # First failing clause has the error left-border emphasis.
       assert html =~ "border-l-4 border-error"
     end
@@ -1164,7 +1163,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "inbound-outcome-"
     end
 
-    test "envelope recipient renders via mask_recipient in both table and card presentations", %{
+    test "envelope recipient renders in full in both table and card presentations", %{
       conn: conn
     } do
       conn = operator_conn(conn)
@@ -1172,14 +1171,10 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      # Masked recipient appears (at least twice — once for table, once for cards)
-      # "maskinboth" has 10 chars: m + 9 stars = "m*********"
-      # "example" has 7 chars: e + 6 stars = "e******"
-      masked = "m*********@e******.com"
-      assert html =~ masked
-      assert html |> String.split(masked) |> length() >= 3
-      # Raw recipient never appears
-      refute html =~ "maskinboth@example.com"
+      # Recipient appears in full (at least twice — once for table, once for cards).
+      raw = "maskinboth@example.com"
+      assert html =~ raw
+      assert html |> String.split(raw) |> length() >= 3
     end
 
     test "record id renders with title attribute and mono truncate; result count reads from page_meta",
@@ -1492,28 +1487,25 @@ defmodule MailglassAdmin.InboundLiveTest do
       refute_banned(html)
     end
 
-    test "recipient is masked across list, detail header, and routing-trace actual (V5 full)", %{
+    test "recipient renders in full across list, detail header, and routing-trace actual", %{
       conn: conn
     } do
       conn = operator_conn(conn)
 
       raw = "fulltrace@example.com"
-      masked = "f********@e******.com"
 
       %{record: record} = InboundFixtures.seed_no_match!(@tenant_id, recipient: raw)
 
       # List surface.
       {:ok, _view, list_html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
-      assert list_html =~ masked
-      refute list_html =~ raw
+      assert list_html =~ raw
 
       # Detail + routing-trace surfaces (selected).
       {:ok, _view2, detail_html} =
         live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
-      # Masked in the detail header AND the routing-trace recipient "actual".
-      assert detail_html =~ masked
-      refute detail_html =~ raw
+      # Shown in full in the detail header AND the routing-trace recipient "actual".
+      assert detail_html =~ raw
       assert detail_html =~ ~s(data-testid="inbound-routing-trace")
     end
 

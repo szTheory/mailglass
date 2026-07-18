@@ -48,7 +48,7 @@ defmodule MailglassAdmin.Inbound.ReplayModal do
           <div class="flex items-start justify-between gap-md">
             <div class="space-y-1">
               <h2 id="inbound-replay-modal-title" class="text-heading font-bold text-base-content">
-                Replay inbound for {Components.mask_recipient(@record.envelope_recipient)}
+                Replay inbound for {Components.recipient_display(@record.envelope_recipient)}
               </h2>
               <p class="text-body text-secondary">
                 Re-runs Mailbox routing against the stored InboundMessage and records a new replay run in the append-only ledger. Confirm to replay.

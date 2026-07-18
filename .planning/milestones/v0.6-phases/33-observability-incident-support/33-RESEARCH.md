@@ -60,6 +60,24 @@
 - **D-33-18:** Any masking/reveal posture introduced here is presentation-layer minimization, not a substitute for route auth, mount auth, action-time auth, tenant scoping, or data redaction at log/inspect boundaries.
 - **D-33-19:** Future search, exports, summaries, notes, or AI-assisted support features must be treated as new PII leak paths and held to the same privacy posture. Do not solve only the header/list surface and leave secondary leak paths open.
 
+> **SUPERSEDED 2026-07-18 (D-33-17 / D-33-18 UI-display posture only):** The
+> operator/inbound admin UI now shows the **full** recipient and sender email
+> address on every surface (list, Quick view, detail header, routing trace) —
+> the `Components.mask_recipient/1` masking helper was retired in favor of
+> `Components.recipient_display/1` (raw value; only `nil` softens to
+> "Unavailable"). Rationale (maintainer ruling): an authenticated,
+> tenant-scoped operator inside this UI is **already privileged** to see the
+> address they are supporting; presentation-layer masking against
+> over-the-shoulder / shared-screen exposure is over-the-top for this audience
+> and adds friction to real support work (searching, filtering, reading a
+> delivery). This narrows D-33-17's "mask overview surfaces" clause and moots
+> the header/list distinction; D-33-19 (search/export are new leak paths) is
+> **no longer a masking concern** since the value is shown regardless.
+> **UNCHANGED:** D-33-15 (the hard no-PII rule for telemetry, logs, and docs)
+> and D-33-18's core point that display posture is never a substitute for route
+> / mount / action-time auth and tenant scoping. This is a UI-display reversal,
+> not a security-boundary change.
+
 ### Support model and telemetry contract
 - **D-33-20:** Phase 33 should stay delivery-centric. Support flows should start from a selected delivery where possible and use telemetry / backlog signals to explain what happened around that delivery, rather than introducing a separate generic observability product surface.
 - **D-33-21:** Preserve exactness:

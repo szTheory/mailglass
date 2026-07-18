@@ -30,8 +30,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Recent deliveries"
       assert html =~ ~s(data-testid="operator-master-detail")
-      assert html =~ "s*******@e******.com"
-      refute html =~ delivery.recipient
+      assert html =~ delivery.recipient
       # No selection → the list stands alone; the Quick view overlay and the full
       # detail are both absent until a record is focused.
       refute html =~ ~s(data-testid="operator-quick-view")
@@ -121,8 +120,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       html = render(view)
 
-      assert html =~ "m****@e******.com"
-      refute html =~ matching.recipient
+      assert html =~ matching.recipient
       refute html =~ "skip@example.com"
       assert selected_filter_value(html, "#filters_provider") == "postmark"
       assert html =~ ~s(<option value="delivered" selected)
@@ -207,7 +205,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Status was not applied. Choose a listed status."
       assert html =~ "Time window was not applied. Choose a positive listed time window."
-      assert html =~ "m****@e******.com"
+      assert html =~ "match@example.com"
       assert html =~ ~s(value="168" selected)
       refute html =~ "not-listed"
       refute html =~ "not-real"
@@ -337,7 +335,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "recent auth"
     end
 
-    test "renders support cards, masks overview recipients, and distinguishes replay audit from reconcile facts",
+    test "renders support cards, shows overview recipients in full, and distinguishes replay audit from reconcile facts",
          %{conn: conn} do
       conn = operator_conn(conn)
 
@@ -374,7 +372,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       refute html =~ "real-time"
 
       # In Full detail the list is replaced by the record; the detail header shows the
-      # unmasked recipient (list masking is covered by the no-selection list test).
+      # recipient in full (the list display is covered by the no-selection list test).
       assert detail_html =~ selected_delivery.recipient
     end
 
@@ -630,7 +628,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
 
       assert html =~ "Replay unavailable"
       assert html =~ "Replay is unavailable."
-      assert html =~ "Historical rows without exact webhook linkage"
+      assert html =~ "this delivery has none on file"
       refute html =~ ~s(data-testid="operator-replay-confirm")
     end
 
@@ -2021,7 +2019,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
       assert html =~ ~s(aria-selected="true")
     end
 
-    test "recipients render via mask_recipient in both table and card presentations — no raw recipient string" do
+    test "recipients render in full in both table and card presentations" do
       delivery = %{
         id: "mask-delivery-id-004",
         tenant_id: "t1",
@@ -2047,8 +2045,7 @@ defmodule MailglassAdmin.OperatorLiveTest do
           }
         )
 
-      refute html =~ "masktest@example.com"
-      assert html =~ "m*******@e******.com"
+      assert html =~ delivery.recipient
     end
 
     test "delivery id renders with a title attribute equal to the id and a truncate/mono class in both presentations" do
@@ -2573,10 +2570,10 @@ defmodule MailglassAdmin.OperatorLive.Facade03SchemaIsolationTest do
             URI.encode_query(%{"tenant_id" => @schema_tenant, "view" => "deliveries"})
         )
 
-      # The masked recipient (mask_recipient/1 applies) or delivery ID must
+      # The recipient or delivery ID must
       # appear in the deliveries list, proving the facade read from mailglass.*.
       # A facade-bypassing write (in public) would yield an empty dashboard here.
-      assert html =~ delivery.id or html =~ "facade03" or html =~ "f***3@e******.com",
+      assert html =~ delivery.id or html =~ "facade03" or html =~ delivery.recipient,
              "admin dashboard must render the delivery from #{@schema_prefix}.mailglass_deliveries; " <>
                "a hidden facade-bypassing write (in public) would yield an empty dashboard"
 

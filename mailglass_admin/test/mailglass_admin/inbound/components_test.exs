@@ -33,7 +33,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Clear filters"
     end
 
-    test "masks the recipient and renders the record id + meta line" do
+    test "renders the recipient in full and the record id + meta line" do
       record = %{
         id: "rec-1",
         tenant_id: "tenant-a",
@@ -47,8 +47,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       html =
         render_component(&RecordsList.records_list/1, records: [record], selected_record: nil)
 
-      refute html =~ "alice@example.com"
-      assert html =~ "a****@e******.com"
+      assert html =~ "alice@example.com"
       assert html =~ "rec-1"
       assert html =~ "MAILGUN"
       assert html =~ "no match"
@@ -184,7 +183,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       refute html =~ ~r/data-testid="inbound-replay-open"[^>]*disabled/
     end
 
-    test "the From cell shows the masked SENDER from `from`, not the recipient (WR-02)" do
+    test "the From cell shows the SENDER from `from`, not the recipient (WR-02)" do
       detail = %{
         record: %{
           id: "rec-1",
@@ -203,11 +202,10 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      # Sender masked + present; raw sender never leaks.
-      assert html =~ "b**@s*****.test"
-      refute html =~ "bob@sender.test"
-      # The recipient is masked in the title, but the From cell is the sender.
-      assert html =~ "a****@e******.com"
+      # Sender shown in full.
+      assert html =~ "bob@sender.test"
+      # The recipient is shown in the title, but the From cell is the sender.
+      assert html =~ "alice@example.com"
     end
 
     test "the From cell reads STRING-keyed `from` maps (DB JSONB round-trip)" do
@@ -229,8 +227,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
 
       html = render_component(&DetailHeader.detail_header/1, detail: detail)
 
-      assert html =~ "c****@v*****.test"
-      refute html =~ "carol@vendor.test"
+      assert html =~ "carol@vendor.test"
     end
 
     test "the From cell degrades to 'Unavailable' on an empty `from`" do
@@ -320,7 +317,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
   end
 
   describe "RoutingTrace.routing_trace/1" do
-    test "renders a responsive clause grid with masked recipient actuals" do
+    test "renders a responsive clause grid with recipient actuals" do
       trace = [
         %{
           mailbox: "MyApp.SupportMailbox",
@@ -343,8 +340,7 @@ defmodule MailglassAdmin.Inbound.ComponentsTest do
       assert html =~ "Dimension"
       assert html =~ "Expected"
       assert html =~ "Actual"
-      refute html =~ "nomatch@example.com"
-      assert html =~ "n******@e******.com"
+      assert html =~ "nomatch@example.com"
     end
   end
 

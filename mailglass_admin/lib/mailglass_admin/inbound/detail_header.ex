@@ -37,7 +37,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
         <div class="min-w-0 space-y-sm">
           <div class="flex flex-wrap items-center gap-sm">
             <h2 class="min-w-0 break-words text-heading font-bold text-base-content">
-              {Components.mask_recipient(@record.envelope_recipient)}
+              {Components.recipient_display(@record.envelope_recipient)}
             </h2>
             <Components.status_badge status={Components.normalize_inbound_outcome(@outcome)} />
           </div>
@@ -108,13 +108,13 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
   # Pitfall 2 — defensive read; the field does not exist until this milestone phase.
   defp suppression_flagged?(record), do: Map.get(record, :suppression_flagged, false)
 
-  # The masked SENDER for the "From" cell (WR-02). `InboundRecord.from` is an
-  # `{:array, :map}` of parsed address maps — the sender is PII, so each address is
-  # masked through the one audited `Components.mask_recipient/1` definition (same
-  # treatment recipients get). Address maps round-trip through JSONB as STRING keys
-  # ("address"), but freshly built structs carry ATOM keys (:address); both are
-  # read. An empty or malformed `from` (no usable address) degrades to the neutral
-  # "Unavailable" placeholder rather than crashing or rendering a falsehood.
+  # The SENDER for the "From" cell (WR-02). `InboundRecord.from` is an
+  # `{:array, :map}` of parsed address maps, shown in full through the one audited
+  # `Components.recipient_display/1` definition (same treatment recipients get).
+  # Address maps round-trip through JSONB as STRING keys ("address"), but freshly
+  # built structs carry ATOM keys (:address); both are read. An empty or malformed
+  # `from` (no usable address) degrades to the neutral "Unavailable" placeholder
+  # rather than crashing or rendering a falsehood.
   defp sender_display(record) do
     record
     |> Map.get(:from, [])
@@ -123,7 +123,7 @@ defmodule MailglassAdmin.Inbound.DetailHeader do
     |> Enum.reject(&(&1 in [nil, ""]))
     |> case do
       [] -> "Unavailable"
-      addresses -> addresses |> Enum.map(&Components.mask_recipient/1) |> Enum.join(", ")
+      addresses -> addresses |> Enum.map(&Components.recipient_display/1) |> Enum.join(", ")
     end
   end
 

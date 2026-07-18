@@ -8,7 +8,7 @@ defmodule MailglassAdmin.Inbound.RecordsList do
 
   Sibling of `MailglassAdmin.Operator.DeliveriesList` (clone, not a
   refactor). Rows render the masked envelope recipient via the one promoted
-  `MailglassAdmin.Components.mask_recipient/1` definition, the record id in mono,
+  `MailglassAdmin.Components.recipient_display/1` definition, the record id in mono,
   an outcome badge via `Components.status_badge/1` (normalized through
   `normalize_inbound_outcome/1`), and a meta line mailbox · account · provider · received_at.
 
@@ -158,9 +158,9 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                 <td class="min-w-0 text-body text-base-content">
                   <span
                     class="min-w-0 truncate block"
-                    title={Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                    title={Components.recipient_display(Map.get(record, :envelope_recipient))}
                   >
-                    {Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                    {Components.recipient_display(Map.get(record, :envelope_recipient))}
                   </span>
                 </td>
                 <td class="min-w-0 text-body text-base-content">
@@ -230,9 +230,9 @@ defmodule MailglassAdmin.Inbound.RecordsList do
                   <span class="text-label font-bold uppercase text-secondary">Recipient</span>
                   <p
                     class="min-w-0 truncate text-body text-base-content"
-                    title={Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                    title={Components.recipient_display(Map.get(record, :envelope_recipient))}
                   >
-                    {Components.mask_recipient(Map.get(record, :envelope_recipient))}
+                    {Components.recipient_display(Map.get(record, :envelope_recipient))}
                   </p>
                 </div>
 

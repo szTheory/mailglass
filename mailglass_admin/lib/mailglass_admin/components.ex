@@ -1080,32 +1080,47 @@ defmodule MailglassAdmin.Components do
   defp size_class(:sm), do: "badge-sm"
   defp size_class(:md), do: "badge-md"
 
-  defp status_class(:dispatched), do: "badge-primary"
-  defp status_class(:queued), do: "badge-primary"
-  defp status_class(:sent), do: "badge-primary"
-  defp status_class(:delivered), do: "badge-success"
-  defp status_class(:deferred), do: "badge-warning"
-  defp status_class(:bounced), do: "badge-error"
-  defp status_class(:failed), do: "badge-error"
-  defp status_class(:rejected), do: "badge-error"
-  defp status_class(:complained), do: "badge-error"
-  defp status_class(:unsubscribed), do: "badge-warning"
-  defp status_class(:opened), do: "badge-success"
-  defp status_class(:clicked), do: "badge-success"
-  defp status_class(:autoresponded), do: "badge-outline"
-  defp status_class(:unknown), do: "badge-outline"
-  defp status_class(:accepted), do: "badge-success"
-  defp status_class(:no_match), do: "badge-warning"
-  defp status_class(:ignore), do: "badge-outline"
-  defp status_class(:failed_ingest), do: "badge-error"
-  defp status_class(:webhook_replay_requested), do: "badge-outline"
-  defp status_class(:webhook_replay_succeeded), do: "badge-success"
-  defp status_class(:webhook_replay_failed), do: "badge-error"
-  defp status_class(:reconciled), do: "badge-warning"
-  defp status_class(:suppressed), do: "badge-warning"
+  @doc """
+  Classifies an event/delivery status into a semantic tone.
 
-  # Fallback for unrecognized atoms and nil — render neutral outline per UI-SPEC Conflict 1
-  defp status_class(_status), do: "badge-outline"
+  The single source of truth for status color across the admin package: the
+  status badge (`status_class/1` below) and the operator/inbound timeline dots
+  both derive from this, so a "Delivered" badge and its timeline dot can never
+  disagree on which events read as success / error / warning / accent / neutral.
+  """
+  @spec status_tone(atom()) :: :success | :error | :warning | :accent | :neutral
+  def status_tone(status)
+      when status in [:delivered, :opened, :clicked, :accepted, :webhook_replay_succeeded],
+      do: :success
+
+  def status_tone(status)
+      when status in [
+             :bounced,
+             :failed,
+             :rejected,
+             :complained,
+             :failed_ingest,
+             :webhook_replay_failed
+           ],
+      do: :error
+
+  def status_tone(status)
+      when status in [:deferred, :unsubscribed, :no_match, :reconciled, :suppressed],
+      do: :warning
+
+  def status_tone(status) when status in [:dispatched, :queued, :sent], do: :accent
+
+  # Neutral: autoresponded, unknown, ignore, webhook_replay_requested, and any
+  # unrecognized atom or nil (per UI-SPEC Conflict 1).
+  def status_tone(_status), do: :neutral
+
+  defp status_class(status), do: tone_badge_class(status_tone(status))
+
+  defp tone_badge_class(:success), do: "badge-success"
+  defp tone_badge_class(:error), do: "badge-error"
+  defp tone_badge_class(:warning), do: "badge-warning"
+  defp tone_badge_class(:accent), do: "badge-primary"
+  defp tone_badge_class(:neutral), do: "badge-outline"
 
   defp status_icon(:dispatched), do: "hero-paper-airplane"
   defp status_icon(:queued), do: "hero-arrow-path"
@@ -1162,52 +1177,20 @@ defmodule MailglassAdmin.Components do
   defp status_label(_status), do: "Unknown"
 
   @doc """
-  Masks a recipient email for operator display (PII minimization).
+  Renders a recipient (or sender) email for operator display.
 
-  The ONE audited masking definition in the admin package: both
-  `MailglassAdmin.Operator.DeliveriesList` (outbound) and the inbound
-  components call this so there is never a second, drifting copy. Keeps the first
-  grapheme of each segment and stars the rest, preserving the email shape:
+  The ONE audited recipient-display definition in the admin package: every
+  outbound and inbound surface calls this so rendering can never drift into a
+  second copy. The authenticated, tenant-scoped operator is privileged to see the
+  full address, so it is shown verbatim — presentation-layer masking was retired
+  2026-07-18 (reverses the phase-33 UI posture D-33-17/18; the telemetry/log PII
+  rules D-33-15 are UNCHANGED). Only `nil` is softened, to a neutral placeholder
+  so an absent address renders as a fact rather than a crash:
 
-      mask_recipient("alice@example.com") #=> "a****@e******.com"
-      mask_recipient(nil)                 #=> "Unavailable"
+      recipient_display("alice@example.com") #=> "alice@example.com"
+      recipient_display(nil)                 #=> "Unavailable"
   """
-  @doc since: "0.2.0"
-  @spec mask_recipient(String.t() | nil) :: String.t()
-  def mask_recipient(nil), do: "Unavailable"
-
-  def mask_recipient(recipient) when is_binary(recipient) do
-    case String.split(recipient, "@", parts: 2) do
-      [local, domain] -> mask_email(local, domain)
-      _ -> mask_value(recipient)
-    end
-  end
-
-  @doc """
-  Masks the `local`/`domain` halves of an already-split email address. Public so
-  the inbound components can mask address-shaped values that are pre-split.
-  """
-  @doc since: "0.2.0"
-  @spec mask_email(String.t(), String.t()) :: String.t()
-  def mask_email(local, domain) do
-    case String.split(domain, ".", parts: 2) do
-      [label, suffix] -> mask_value(local) <> "@" <> mask_value(label) <> "." <> suffix
-      _ -> mask_value(local) <> "@" <> mask_value(domain)
-    end
-  end
-
-  @doc """
-  Masks a single value: keeps the first grapheme, stars the rest. Public so other
-  admin surfaces reuse the one masking primitive rather than reinventing it.
-  """
-  @doc since: "0.2.0"
-  @spec mask_value(String.t()) :: String.t()
-  def mask_value(value) do
-    value
-    |> String.graphemes()
-    |> case do
-      [] -> ""
-      [first | rest] -> first <> String.duplicate("*", length(rest))
-    end
-  end
+  @spec recipient_display(String.t() | nil) :: String.t()
+  def recipient_display(nil), do: "Unavailable"
+  def recipient_display(recipient) when is_binary(recipient), do: recipient
 end

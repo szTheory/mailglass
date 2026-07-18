@@ -17,8 +17,9 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     - `{:subject, matcher, actual, pass?}`
     - `{:header, name, matcher, actual_list, pass?}`
 
-  Recipient actuals are masked via `Components.mask_recipient/1` (PII discipline,
-  T-48-13). A `nil` matcher renders the literal `any` (wildcard); a `%Regex{}`
+  Recipient actuals are shown in full via `Components.recipient_display/1` (the
+  authenticated operator is privileged; masking retired 2026-07-18). A `nil`
+  matcher renders the literal `any` (wildcard); a `%Regex{}`
   renders `~r/.../`; an exact string renders verbatim — all in `.mono`.
   """
 
@@ -157,7 +158,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
     base
     |> Map.put(:dimension, "Recipient")
     |> Map.put(:expected, render_matcher(matcher))
-    |> Map.put(:actual, Components.mask_recipient(actual))
+    |> Map.put(:actual, Components.recipient_display(actual))
     |> Map.put(:reason, recipient_reason(matcher, actual))
   end
 
@@ -201,7 +202,7 @@ defmodule MailglassAdmin.Inbound.RoutingTrace do
 
   # Composed, specific failing-clause reasons (UI-SPEC Copywriting Contract).
   defp recipient_reason(matcher, actual) do
-    "Recipient did not match: expected #{render_matcher(matcher)}, message envelope was #{Components.mask_recipient(actual)}."
+    "Recipient did not match: expected #{render_matcher(matcher)}, message envelope was #{Components.recipient_display(actual)}."
   end
 
   defp subject_reason(matcher, actual) do
