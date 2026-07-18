@@ -49,7 +49,9 @@ test.describe("mailglass demo evidence", () => {
     await expect(page.getByTestId("operator-deliveries-list-card")).toBeVisible();
 
     const deliveryId = await page.getByTestId("operator-delivery-row").first().getAttribute("phx-value-id");
-    await page.goto(`/demo/login?return_to=/ops/mail?tenant_id=northstar%26delivery_id=${deliveryId}`);
+    // Full detail (`full=1`) is where the detail header + timeline render; a bare
+    // `delivery_id=` opens the Quick view peek (two-tier redesign, PR #128).
+    await page.goto(`/demo/login?return_to=/ops/mail?tenant_id=northstar%26delivery_id=${deliveryId}%26full=1`);
 
     await expect(page.getByTestId("operator-detail-header")).toBeVisible();
     await expect(page.getByTestId("operator-timeline")).toBeVisible();
@@ -65,7 +67,9 @@ test.describe("mailglass demo evidence", () => {
     await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 
     const inboundId = await page.getByTestId("inbound-record-row").first().getAttribute("phx-value-id");
-    await page.goto(`/demo/login?return_to=/ops/mail/inbound?tenant_id=northstar%26inbound_id=${inboundId}`);
+    // full=1 opens Full detail (where the detail header renders); a bare
+    // inbound_id opens the Quick view peek (two-tier redesign, PR #128).
+    await page.goto(`/demo/login?return_to=/ops/mail/inbound?tenant_id=northstar%26inbound_id=${inboundId}%26full=1`);
     await expect(page.getByTestId("inbound-detail-header")).toBeVisible();
   });
 });
