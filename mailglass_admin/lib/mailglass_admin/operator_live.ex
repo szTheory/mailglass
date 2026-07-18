@@ -609,21 +609,23 @@ defmodule MailglassAdmin.OperatorLive do
                   therefore the "Select a delivery…" helper nested inside it) are all withheld.
                   An in-progress invalid filter submission (@filter_errors non-empty) is NOT genuine
                   no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters. --%>
-              <section
-                data-testid="operator-deliveries-empty-pane"
-                class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
-              >
-                <DeliveriesList.deliveries_list
-                  deliveries={[]}
-                  page_meta={@deliveries_page_meta}
-                  previous_page_path={
-                    pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
-                  }
-                  next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
-                  filters_active?={false}
-                />
-              </section>
-              <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
+              <div class="space-y-lg">
+                <section
+                  data-testid="operator-deliveries-empty-pane"
+                  class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+                >
+                  <DeliveriesList.deliveries_list
+                    deliveries={[]}
+                    page_meta={@deliveries_page_meta}
+                    previous_page_path={
+                      pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
+                    }
+                    next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
+                    filters_active?={false}
+                  />
+                </section>
+                <MailglassAdmin.Operator.Shell.orientation_strip surface={:deliveries} />
+              </div>
             <% true -> %>
               <%= if @full_detail? and (@selected_delivery || @detail_error) do %>
                 <%!-- FULL DETAIL: the complete record on its own, full width (list hidden).

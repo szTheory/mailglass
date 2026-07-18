@@ -508,21 +508,23 @@ defmodule MailglassAdmin.InboundLive do
                   inside it) are all withheld (D-02/D-05 — the filters toolbar is the only scope-widening
                   vector). An in-flight invalid filter submission (@filter_errors non-empty) is NOT genuine
                   no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters. --%>
-            <section
-              data-testid="inbound-deliveries-empty-pane"
-              class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
-            >
-              <RecordsList.records_list
-                records={[]}
-                page_meta={@records_page_meta}
-                previous_page_path={
-                  pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
-                }
-                next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
-                empty_state={:truly_empty}
-              />
-            </section>
-            <MailglassAdmin.Operator.Shell.orientation_strip surface={:inbound} />
+            <div class="space-y-lg">
+              <section
+                data-testid="inbound-deliveries-empty-pane"
+                class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
+              >
+                <RecordsList.records_list
+                  records={[]}
+                  page_meta={@records_page_meta}
+                  previous_page_path={
+                    pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
+                  }
+                  next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
+                  empty_state={:truly_empty}
+                />
+              </section>
+              <MailglassAdmin.Operator.Shell.orientation_strip surface={:inbound} />
+            </div>
           <% true -> %>
             <%= if @full_detail? and (@selected_record || @detail_error) do %>
               <%!-- FULL DETAIL: the complete InboundMessage on its own, full width
