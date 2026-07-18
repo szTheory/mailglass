@@ -3,7 +3,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
   Read-only tenant-scoped support cues for the selected delivery context.
 
   Two-tier hierarchy per 74-UI-SPEC.md Support-Card Primary/Secondary Hierarchy Layout:
-  - Tier 1: full card containers for non-zero/actionable counts (failed ingest, orphan backlog)
+  - Tier 1: full card containers for non-zero/actionable counts (failed ingest, unmatched webhooks)
   - Tier 2: compact horizontal row for zero-state items and the always-informational suppression count
   """
 
@@ -29,7 +29,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
         <div class="space-y-xs">
           <h3 class="text-body font-bold text-base-content">Support cards</h3>
           <p class="text-label text-secondary">
-            Tenant-scoped facts from the current support window.
+            Account-scoped facts from the current support window.
           </p>
         </div>
         <span class="badge badge-outline">Read-only</span>
@@ -91,11 +91,11 @@ defmodule MailglassAdmin.Operator.SupportCards do
           <div class="text-display font-bold text-warning">
             {@support_summary.orphan_backlog.count}
           </div>
-          <p class="text-body text-secondary">Orphan backlog</p>
+          <p class="text-body text-secondary">Unmatched webhooks</p>
 
           <div :if={@support_summary.orphan_backlog.oldest} class="mt-sm space-y-sm">
             <p class="text-label text-secondary">
-              Oldest unmatched fact: {@support_summary.orphan_backlog.oldest.provider_event_id}
+              Oldest unmatched webhook: {@support_summary.orphan_backlog.oldest.provider_event_id}
             </p>
             <button
               type="button"
@@ -105,7 +105,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
               data-testid="support-card-orphan-backlog-drilldown"
               class="btn btn-primary px-md mt-sm min-h-11"
             >
-              View backlog
+              View evidence
             </button>
 
             <dl
@@ -143,7 +143,9 @@ defmodule MailglassAdmin.Operator.SupportCards do
 
           <div :if={@support_summary.replay_outcomes.latest} class="mt-sm space-y-sm">
             <p class="text-label text-secondary">
-              Exemplar replay audit: {RepairState.effect_label(@support_summary.replay_outcomes.latest.outcome) ||
+              Exemplar replay audit: {RepairState.effect_label(
+                @support_summary.replay_outcomes.latest.outcome
+              ) ||
                 @support_summary.replay_outcomes.latest.outcome}
             </p>
             <button
@@ -170,11 +172,16 @@ defmodule MailglassAdmin.Operator.SupportCards do
           No failures
         </span>
         <span
-          :if={not (@support_summary && @support_summary.failed_ingest.count > 0) and not (@support_summary && @support_summary.orphan_backlog.count > 0)}
+          :if={
+            not (@support_summary && @support_summary.failed_ingest.count > 0) and
+              not (@support_summary && @support_summary.orphan_backlog.count > 0)
+          }
           aria-hidden="true"
-        >·</span>
+        >
+          ·
+        </span>
         <span :if={not (@support_summary && @support_summary.orphan_backlog.count > 0)}>
-          No orphan backlog
+          No unmatched webhooks
         </span>
         <span aria-hidden="true">·</span>
         <span data-testid="support-card-suppression-count">
@@ -183,14 +190,18 @@ defmodule MailglassAdmin.Operator.SupportCards do
         <span
           :if={@support_summary && @support_summary.reconcile_facts.reconciled_count > 0}
           aria-hidden="true"
-        >·</span>
+        >
+          ·
+        </span>
         <span :if={@support_summary && @support_summary.reconcile_facts.reconciled_count > 0}>
           Reconciled: {@support_summary.reconcile_facts.reconciled_count}
         </span>
         <span
           :if={@support_summary && @support_summary.reconcile_facts.still_unmatched_count > 0}
           aria-hidden="true"
-        >·</span>
+        >
+          ·
+        </span>
         <button
           :if={@support_summary && @support_summary.reconcile_facts.still_unmatched_count > 0}
           type="button"
@@ -207,7 +218,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
           data-testid="support-card-reconcile-facts-drilldown"
           class="btn btn-ghost px-sm min-h-11"
         >
-          Unmatched pressure: {@support_summary.reconcile_facts.still_unmatched_count}
+          Still unmatched webhooks: {@support_summary.reconcile_facts.still_unmatched_count}
         </button>
       </div>
 
@@ -231,7 +242,7 @@ defmodule MailglassAdmin.Operator.SupportCards do
   end
 
   defp drilldown_banner(%{focus: :failed_ingest}), do: "Showing failed ingest webhook row"
-  defp drilldown_banner(%{focus: :orphan_backlog}), do: "Showing unmatched reconcile fact"
+  defp drilldown_banner(%{focus: :orphan_backlog}), do: "Showing unmatched webhook evidence"
   defp drilldown_banner(%{focus: :replay_outcomes}), do: "Showing replay audit fact"
   defp drilldown_banner(%{focus: :reconcile_facts}), do: "Showing reconcile fact"
   defp drilldown_banner(_support_state), do: nil

@@ -13,6 +13,8 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
   alias MailglassAdmin.Components
 
   attr :form, Phoenix.HTML.Form, required: true
+  attr :account_options, :list, default: []
+  attr :provider_options, :list, default: []
   attr :outcome_values, :list, required: true
   attr :window_options, :list, required: true
   attr :errors, :map, default: %{}
@@ -21,22 +23,26 @@ defmodule MailglassAdmin.Inbound.FiltersForm do
     ~H"""
     <Components.filter_section
       title="Filters"
-      description="Narrow InboundMessages without widening the tenant scope."
+      description="Show received mail for one account, then narrow by provider, outcome, time, or search."
     >
       <Components.filter_field
         field={@form[:tenant_id]}
-        label="Tenant"
-        help="Filter to one tenant id."
+        type={:select}
+        label="Account"
+        help="Account maps to tenant_id in code and URLs."
         error={field_error(@errors, "tenant_id")}
-        placeholder="tenant-123"
+        prompt="Choose account"
+        options={@account_options}
       />
 
       <Components.filter_field
         field={@form[:provider]}
+        type={:select}
         label="Provider"
-        help="Filter by inbound provider key, for example mailgun."
+        help="Filter by the inbound provider recorded for this account."
         error={field_error(@errors, "provider")}
-        placeholder="mailgun"
+        prompt="Any provider"
+        options={@provider_options}
       />
 
       <Components.filter_field

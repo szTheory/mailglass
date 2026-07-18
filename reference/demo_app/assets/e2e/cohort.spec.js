@@ -3,10 +3,10 @@
 // Extends the existing demo evidence harness (demo.spec.js): the same
 // beforeEach POST /demo/evidence/reset (x-mailglass-demo-reset-token) re-runs
 // DemoData.reset! -> MailglassDemo.Personas.seed!, so this suite runs against
-// the rich multi-tenant persona cohort (northstar / fjordline-aps / helios-void).
+// the rich multi-account persona cohort (northstar / fjordline-aps / helios-void).
 // No new harness, OperatorBrowserServer is NOT bent (D-10).
 //
-// This is the RATCHET-04 demo-data run: structural assertions (tenant picker
+// This is the RATCHET-04 demo-data run: structural assertions (account picker
 // visibility, edge-value render, empty-state), NOT an axe baseline (axe stays
 // admin-only per RESEARCH). Kept serial via the shared playwright.config.cjs
 // (the destructive /demo/evidence/reset races a shared DB across parallel
@@ -55,10 +55,10 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     expect(response.ok()).toBeTruthy();
   });
 
-  test("tenant picker lists the two deliveries-bearing personas; helios-void absent", async ({
+  test("account picker lists the two deliveries-bearing personas; helios-void absent", async ({
     page,
   }) => {
-    // No tenant_id => operator surface renders the >=2-tenant picker
+    // No tenant_id => operator surface renders the >=2-account picker
     // (tenant_state :select_required). safe_return_to allows "/ops/mail".
     await page.goto("/demo/login?return_to=/ops/mail");
     await expect(page).toHaveURL(/\/ops\/mail$/);
@@ -66,17 +66,17 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
     const picker = page.getByTestId("tenant-selector");
     await expect(picker).toBeVisible();
 
-    // northstar + fjordline-aps both bear deliveries -> both selectable
-    // (the picker renders one <.link> per tenant, label = tenant id).
+    // northstar + fjordline-aps both bear deliveries -> both selectable.
+    // The picker shows account labels while URLs still carry tenant_id.
     await expect(
-      picker.getByRole("link", { name: /northstar/ })
+      picker.getByRole("link", { name: /Northstar Logistics/ })
     ).toBeVisible();
     await expect(
-      picker.getByRole("link", { name: /fjordline-aps/ })
+      picker.getByRole("link", { name: /Fjordline A\/S/ })
     ).toBeVisible();
 
     // helios-void is realized by ABSENCE (zero Delivery rows) -> NOT selectable.
-    await expect(picker.getByText("helios-void", { exact: true })).toHaveCount(0);
+    await expect(picker.getByText("Helios Trial", { exact: true })).toHaveCount(0);
   });
 
   test("fjordline-aps edge values render: long-ID + long-mailable truncated, recipient verbatim, nil reject_reason no reason line", async ({
@@ -141,14 +141,13 @@ test.describe("persona cohort — RATCHET-04 rich demo_app run", () => {
 
   test("helios-void direct URL renders the empty state, not a crash", async ({ page }) => {
     await page.goto("/demo/login?return_to=/ops/mail?tenant_id=helios-void");
-    // Direct navigation to the zero-delivery tenant renders the scoped surface.
+    // Direct navigation to the zero-delivery account renders the scoped surface.
     await page.goto("/ops/mail?tenant_id=helios-void&view=deliveries");
 
     // A crash would surface a Phoenix/Plug error page, not the operator shell.
-    // Assert the tenant scope echoes helios-void (shell intact, scoped to it).
-    await expect(page.locator("body")).toContainText("helios-void");
+    await expect(page.getByTestId("admin-shell-sidebar")).toContainText("Deliveries");
 
-    // The deliveries surface for a zero-delivery tenant shows the empty state
+    // The deliveries surface for a zero-delivery account shows the empty state
     // ("No deliveries" heading), never another tenant's rows.
     await expect(
       page.getByRole("heading", { name: "No deliveries", exact: true })

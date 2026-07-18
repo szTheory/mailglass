@@ -160,8 +160,8 @@ defmodule MailglassAdmin.Operator.ShellTest do
       assert html =~ ~s(name="theme")
       assert html =~ ~s(aria-label="Dark")
       assert html =~ "hero-moon"
-      refute html =~ "Tenant currently in view"
-      refute html =~ "No tenant selected"
+      refute html =~ "Account currently in view"
+      refute html =~ "No account selected"
       refute html =~ "hero-building-office-2"
       assert html =~ ~s(href="/dev/mail")
       assert html =~ "Health"

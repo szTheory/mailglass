@@ -7,51 +7,46 @@ defmodule MailglassAdmin.Operator.FiltersForm do
 
   alias MailglassAdmin.Components
 
-  attr :form, Phoenix.HTML.Form, required: true
-  attr :status_values, :list, required: true
-  attr :event_values, :list, required: true
-  attr :window_options, :list, required: true
-  attr :errors, :map, default: %{}
+  attr(:form, Phoenix.HTML.Form, required: true)
+  attr(:account_options, :list, default: [])
+  attr(:provider_options, :list, default: [])
+  attr(:event_values, :list, required: true)
+  attr(:window_options, :list, required: true)
+  attr(:errors, :map, default: %{})
 
   def fields(assigns) do
     ~H"""
     <Components.filter_section
       title="Filters"
-      description="Narrow Deliveries without widening the tenant scope."
+      description="Show email activity for one account, then narrow by provider, status, or time."
     >
       <Components.filter_field
         field={@form[:tenant_id]}
-        label="Tenant"
-        help="Filter to one tenant id."
+        type={:select}
+        label="Account"
+        help="Account maps to tenant_id in code and URLs."
         error={field_error(@errors, "tenant_id")}
-        placeholder="tenant-123"
+        prompt="Choose account"
+        options={@account_options}
       />
 
       <Components.filter_field
         field={@form[:provider]}
-        label="Provider"
-        help="Filter by provider key, for example postmark."
-        error={field_error(@errors, "provider")}
-        placeholder="postmark"
-      />
-
-      <Components.filter_field
-        field={@form[:status]}
         type={:select}
-        label="Status"
-        help="Filter by delivery status."
-        error={field_error(@errors, "status")}
-        prompt="Any status"
-        options={enum_options(@status_values)}
+        label="Provider"
+        help="Filter by the sending provider recorded for this account."
+        error={field_error(@errors, "provider")}
+        prompt="Any provider"
+        options={@provider_options}
       />
 
       <Components.filter_field
         field={@form[:event]}
         type={:select}
-        label="Event"
-        help="Filter by latest delivery event."
+        label="Status"
+        help="Filter by the message's latest delivery status."
         error={field_error(@errors, "event")}
-        prompt="Any event"
+        prompt="Any status"
         options={enum_options(@event_values)}
       />
 

@@ -11,7 +11,7 @@ defmodule MailglassAdmin.Inbound.Timeline do
 
   use Phoenix.Component
 
-  import MailglassAdmin.Components, only: [card: 1]
+  import MailglassAdmin.Components, only: [card: 1, timestamp: 1]
 
   attr :runs, :list, required: true
 
@@ -56,7 +56,7 @@ defmodule MailglassAdmin.Inbound.Timeline do
                     </p>
                     <p class="mono text-label text-secondary">{run.id}</p>
                   </div>
-                  <p class="mono text-label text-secondary">{format_datetime(run.executed_at)}</p>
+                  <p class="text-label text-secondary"><.timestamp at={run.executed_at} /></p>
                 </div>
               </div>
             </li>
@@ -86,9 +86,4 @@ defmodule MailglassAdmin.Inbound.Timeline do
   end
 
   defp present?(value), do: is_binary(value) and value != ""
-
-  defp format_datetime(nil), do: "Pending"
-
-  defp format_datetime(%DateTime{} = datetime),
-    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
 end

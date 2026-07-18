@@ -173,11 +173,11 @@ defmodule MailglassAdmin.VoiceTest do
                "InboundMessage didn&#39;t route as expected? Inspect the routing trace.",
              "LD-12: orientation tip must use InboundMessage domain noun"
 
-      # LD-16: rendered-pane select prompt (inbound-empty-detail div, always rendered
-      # when no record is selected).
-      assert html =~
-               "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence.",
-             "LD-16: no-selection prompt must use InboundMessage and Mailbox domain nouns"
+      # LD-16: the no-selection surface leads with the InboundMessage domain noun (the
+      # former select prompt is now a no-selection put_flash, asserted at source in the
+      # flash-guards describe; the initial render shows the full-width list).
+      assert html =~ "Recent InboundMessages",
+             "LD-16: no-selection surface must lead with the InboundMessage domain noun"
 
       # LD-03: filtered empty-state body — Phase 113 UI-SPEC updated to "No records match
       # the current filters." (data_state/1 routes through title "No records" + this body).
@@ -204,13 +204,13 @@ defmodule MailglassAdmin.VoiceTest do
           kind: :permission_denied,
           title: "Access restricted",
           body:
-            "You do not have access to this tenant's mail operations. " <>
+            "You do not have access to this account's mail operations. " <>
               "Ask an administrator to grant access."
         )
 
       refute_banned_words(html, "deliveries permission_denied")
       assert html =~ "Access restricted"
-      assert html =~ "You do not have access to this tenant&#39;s mail operations."
+      assert html =~ "You do not have access to this account&#39;s mail operations."
       # No existence leak: copy never names a tenant id or the missing permission.
       refute html =~ "tenant_id"
     end
@@ -221,13 +221,13 @@ defmodule MailglassAdmin.VoiceTest do
           kind: :permission_denied,
           title: "Access restricted",
           body:
-            "You do not have access to this tenant's inbound routing. " <>
+            "You do not have access to this account's inbound routing. " <>
               "Ask an administrator to grant access."
         )
 
       refute_banned_words(html, "inbound permission_denied")
       assert html =~ "Access restricted"
-      assert html =~ "You do not have access to this tenant&#39;s inbound routing."
+      assert html =~ "You do not have access to this account&#39;s inbound routing."
     end
 
     test "deliveries stale: banned-free + locked verbatim present" do
@@ -257,8 +257,8 @@ defmodule MailglassAdmin.VoiceTest do
     end
   end
 
-  describe "tenant failure modes (FLOW-02 D-06 — 0 / 1 / >=2)" do
-    test "no tenants exist (0): banned-free + locked verbatim present" do
+  describe "account selection failure modes (FLOW-02 D-06 — 0 / 1 / >=2)" do
+    test "no accounts exist (0): banned-free + locked verbatim present" do
       html =
         render_component(&Shell.tenant_selector/1,
           state: :none,
@@ -266,27 +266,35 @@ defmodule MailglassAdmin.VoiceTest do
           current_uri: "/ops/mail"
         )
 
-      refute_banned_words(html, "tenant state :none")
-      assert html =~ "No tenants available"
-      assert html =~ "Send a Message with a tenant_id"
+      refute_banned_words(html, "account state :none")
+      assert html =~ "No accounts with mail activity"
+      assert html =~ "Send a Message from your app"
+      assert html =~ "tenant_id"
     end
 
-    test "tenant switcher (>=2): banned-free + locked verbatim + per-tenant link" do
+    test "account switcher (>=2): banned-free + locked verbatim + per-account link" do
       html =
         render_component(&Shell.tenant_selector/1,
           state: :select_required,
           tenant_options: [
-            %{id: "tenant-a", label: "tenant-a"},
-            %{id: "tenant-b", label: "tenant-b"}
+            %{id: "tenant-a", label: "Acme Support"},
+            %{id: "tenant-b", label: "Beacon Retail"}
           ],
           current_uri: "/ops/mail"
         )
 
-      refute_banned_words(html, "tenant state :select_required")
-      assert html =~ "Select a tenant"
-      assert html =~ "inspect its Deliveries and inbound routing"
+      refute_banned_words(html, "account state :select_required")
+      assert html =~ "Choose an account"
+
+      assert html =~
+               "Pick the customer account whose Deliveries and inbound routing you want to inspect."
+
+      assert html =~ "Account maps to"
+      assert html =~ "tenant_id"
       # Domain nouns enforced as POSITIVE assertions only (D-12) — never a ban grep.
-      assert html =~ "Select tenant", "per-tenant link label must be present"
+      assert html =~ "Open account", "per-account link label must be present"
+      assert html =~ "Acme Support"
+      assert html =~ "Beacon Retail"
     end
 
     test "sole tenant (1): picker testid is ABSENT (auto-select proven, D-06)", %{conn: conn} do

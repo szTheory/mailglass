@@ -11,17 +11,16 @@ defmodule MailglassDemo.DocsContractTest do
     assert readme =~ "## Seeded data"
     assert readme =~ "## What to click"
     assert readme =~ "## Dependency Mode"
-    assert readme =~ "AtlasDesk is the fictional support/workspace SaaS for this demo."
-    assert readme =~ "The deterministic tenant id remains `northstar`"
+    assert readme =~ "AtlasDesk is the fictional support SaaS for this demo."
+    assert readme =~ "Northstar Logistics is"
+    assert readme =~ "the seeded customer account."
+    assert readme =~ "The UI calls"
+    assert readme =~ "this an Account"
+    assert readme =~ "the deterministic Mailglass `tenant_id` remains `northstar`"
 
-    assert readme =~
-             "DEMO_EVIDENCE_RESET_TOKEN=$(openssl rand -hex 24) docker compose -f compose.demo.yml up demo"
-
-    assert readme =~
-             "DEMO_EVIDENCE_RESET_TOKEN=<same-token> docker compose -f compose.demo.yml exec demo mix demo.reset"
-
-    assert readme =~
-             "DEMO_EVIDENCE_RESET_TOKEN=<same-token> docker compose -f compose.demo.yml run --rm demo_e2e"
+    assert readme =~ "make demo"
+    assert readme =~ "make demo-reset"
+    assert readme =~ "make demo-e2e"
 
     assert readme =~ "http://localhost:4015"
     assert readme =~ "http://localhost:4015/dev/mail"
@@ -53,7 +52,7 @@ defmodule MailglassDemo.DocsContractTest do
           "no-match route",
           "stored-truth replay",
           "Future artifact label: `demo_browser_evidence.v1`.",
-          "Destructive note: this reset truncates seeded demo tables before reseeding preview, delivery, suppression, inbound record, evidence, routing trace, and replay data for tenant `northstar`.",
+          "Destructive note: this reset truncates seeded demo tables before reseeding preview, delivery, suppression, inbound record, evidence, routing trace, and replay data for the Northstar Logistics account (`tenant_id=northstar`).",
           "This demo app is richer click-around evidence for maintainer and adopter validation. It does not define stable Mailglass API guarantees, and demo DOM, selectors, routes, and copy are not stable public API."
         ] do
       assert readme =~ token

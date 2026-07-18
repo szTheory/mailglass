@@ -35,10 +35,11 @@ Open the Dashboard URL and click around. When you're done, `make demo-down`.
 
 ## What you're looking at
 
-The demo plays the role of **AtlasDesk** - a fictional support/workspace SaaS
-using mailglass in production. The data is seeded and deterministic, so every
-screen has something real to inspect. The internal tenant id remains
-`northstar`, which is why the operator URLs include `tenant_id=northstar`.
+The demo plays the role of **AtlasDesk** - a fictional support SaaS using
+mailglass in production. **Northstar Logistics** is the seeded customer account,
+so every screen has something real to inspect. The UI calls this an Account; in
+code and URLs the Mailglass `tenant_id` remains `northstar`, which is why the
+operator URLs include `tenant_id=northstar`.
 
 | Open | To see |
 |---|---|
@@ -97,8 +98,9 @@ make demo-clean # stop and remove all volumes (full reset)
 
 > **`make demo-reset` is destructive.** It truncates the seeded demo tables
 > before reseeding preview, delivery, suppression, inbound record, evidence,
-> routing trace, and replay data for tenant `northstar`. That's exactly what you
-> want to return the demo to a known baseline — just know it clears your clicks.
+> routing trace, and replay data for the Northstar Logistics account
+> (`tenant_id=northstar`). That's exactly what you want to return the demo to a
+> known baseline — just know it clears your clicks.
 
 ---
 

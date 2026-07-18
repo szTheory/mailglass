@@ -269,6 +269,7 @@ defmodule MailglassAdmin.RouterTest do
                "live_session_name" => :mailglass_admin_operator,
                "admin_chrome_theme_cookie" => nil,
                "navigation" => %{},
+               "account_labels" => %{},
                # D-48-07: compile-time opt (an atom, never cookie-sourced) surfaced
                # so the operator LiveView can reflect declared inbound routes for the
                # routing-trace card. nil here because no `inbound_router` opt is passed.
@@ -331,6 +332,37 @@ defmodule MailglassAdmin.RouterTest do
         )
 
       assert session["navigation"] == %{preview_path: "/dev/mail"}
+    end
+
+    test "operator session exposes configured account labels for UI copy", %{conn: conn} do
+      conn =
+        conn
+        |> Plug.Test.init_test_session(%{
+          "current_user_id" => "operator-4"
+        })
+
+      session =
+        MailglassAdmin.Router.__operator_session__(conn,
+          auth: MailglassAdmin.TestOperatorAuth,
+          session: [
+            subject_id: "current_user_id",
+            tenant_id: nil,
+            auth_method: nil,
+            recent_auth_at: nil
+          ],
+          live_session_name: :mailglass_admin_operator,
+          unauthorized_path: "/login",
+          on_mount: [],
+          account_labels: %{
+            :northstar => "Northstar Logistics",
+            "fjordline-aps" => "Fjordline A/S"
+          }
+        )
+
+      assert session["account_labels"] == %{
+               "northstar" => "Northstar Logistics",
+               "fjordline-aps" => "Fjordline A/S"
+             }
     end
   end
 

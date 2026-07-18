@@ -59,6 +59,28 @@ defmodule MailglassInbound.Internal.Operator.RecordsTest do
     end
   end
 
+  describe "Records.list_providers/2" do
+    test "blank tenant returns []" do
+      assert Records.list_providers(%{tenant_id: ""}, []) == []
+      assert Records.list_providers(%{}, []) == []
+    end
+
+    test "returns distinct providers for one tenant within the window" do
+      now = DateTime.utc_now()
+
+      {:ok, _} = insert_record("tenant-prov", provider: "mailgun", received_at: DateTime.add(now, -1, :hour))
+      {:ok, _} = insert_record("tenant-prov", provider: "mailgun", received_at: DateTime.add(now, -2, :hour))
+      {:ok, _} = insert_record("tenant-prov", provider: "ses", received_at: DateTime.add(now, -3, :hour))
+      # Outside a 24h window — excluded.
+      {:ok, _} = insert_record("tenant-prov", provider: "postmark", received_at: DateTime.add(now, -48, :hour))
+      # Another tenant — never leaks.
+      {:ok, _} = insert_record("tenant-other", provider: "sparkpost", received_at: DateTime.add(now, -1, :hour))
+
+      assert Records.list_providers(%{tenant_id: "tenant-prov", window_hours: 24}, []) ==
+               ["mailgun", "ses"]
+    end
+  end
+
   describe "Records.list_records_page/2" do
     test "returns honest total and first-page boundaries from tenant and filter scoped count" do
       now = DateTime.utc_now()

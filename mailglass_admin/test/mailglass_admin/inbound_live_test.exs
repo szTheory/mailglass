@@ -43,9 +43,12 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, @base_path)
 
-      assert html =~ "Select a tenant"
-      assert html =~ "Choose a tenant to inspect its Deliveries and inbound routing"
-      assert html =~ "Select tenant"
+      assert html =~ "Choose an account"
+
+      assert html =~
+               "Pick the customer account whose Deliveries and inbound routing you want to inspect."
+
+      assert html =~ "Open account"
       assert html =~ "alpha-inbound"
       assert html =~ "beta-inbound"
       refute html =~ "add a tenant_id to the URL"
@@ -64,19 +67,16 @@ defmodule MailglassAdmin.InboundLiveTest do
       # V5 masking half: masked by default, raw recipient never rendered.
       assert html =~ "a****@e******.com"
       refute html =~ "alice@example.com"
-      # No-selection copy verbatim.
-      assert html =~
-               "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."
-
+      # No selection → the list stands alone; the Quick view overlay and Full detail
+      # are both absent until a record is focused.
+      refute html =~ ~s(data-testid="inbound-quick-view")
+      refute html =~ ~s(data-testid="inbound-detail-column")
       refute html =~ "Execution timeline"
       # Record id IS rendered (it is not PII) so selection works.
       assert html =~ record.id
       # Orientation strip is empty-pane-only now (D-04): on a POPULATED but
-      # unselected view it MUST be absent — the strip no longer tripled labels
-      # below a populated table. The inbound-empty-detail column-fill helper
-      # (asserted positively above via its Select-an-InboundMessage copy) stays.
+      # unselected view it MUST be absent.
       refute html =~ ~s(data-testid="inbound-orientation")
-      assert html =~ ~s(data-testid="inbound-empty-detail")
     end
 
     test "blank tenant renders the empty state and leaks no other-tenant id or recipient (V1)", %{
@@ -90,8 +90,11 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => ""}))
 
-      assert html =~ "Select a tenant"
-      assert html =~ "Choose a tenant to inspect its Deliveries and inbound routing"
+      assert html =~ "Choose an account"
+
+      assert html =~
+               "Pick the customer account whose Deliveries and inbound routing you want to inspect."
+
       assert html =~ "other-tenant"
       assert clear_filters_count(html) == 0
 
@@ -160,6 +163,12 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "1"
       assert html =~ "50.0%"
       refute html =~ "foreign@example.com"
+
+      assert_in_order(html, [
+        ~s(data-testid="inbound-overview"),
+        ~s(data-testid="inbound-filters"),
+        ~s(data-testid="inbound-master-detail")
+      ])
     end
 
     test "overview summary is not derived from the capped records list", %{conn: conn} do
@@ -230,7 +239,7 @@ defmodule MailglassAdmin.InboundLiveTest do
     test "inbound page links preserve tenant scope and expose honest boundaries", %{conn: conn} do
       conn = operator_conn(conn)
 
-      for index <- 1..9 do
+      for index <- 1..21 do
         InboundFixtures.seed_matched!(@tenant_id,
           recipient: "page-#{index}@example.com",
           provider_message_id: "inbound-page-#{index}"
@@ -240,7 +249,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       {:ok, _view, html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert html =~ ~s(data-testid="inbound-result-count")
-      assert html =~ "9 results"
+      assert html =~ "21 messages"
       assert html =~ ~s(data-testid="inbound-pagination")
       assert html =~ ~s(data-testid="inbound-pagination-prev-disabled")
       assert html =~ "tenant_id=#{@tenant_id}"
@@ -280,6 +289,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       {:ok, view, _html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
+      # Row click → Quick view (peek) over the still-mounted list.
       view
       |> element("button[phx-value-id='#{record.id}']")
       |> render_click()
@@ -293,26 +303,58 @@ defmodule MailglassAdmin.InboundLiveTest do
         })
       )
 
+      quick_html = render(view)
+      assert quick_html =~ ~s(data-testid="inbound-quick-view")
+      assert quick_html =~ ~s(aria-selected="true")
+      assert quick_html =~ "s*******@e******.com"
+      refute quick_html =~ "selected@example.com"
+      refute quick_html =~ "Execution timeline"
+
+      # Open full detail → the complete record (header + timeline).
+      view
+      |> element(~s([data-testid="inbound-quick-view-full"]))
+      |> render_click()
+
+      assert_patch(
+        view,
+        inbound_path(%{
+          "tenant_id" => @tenant_id,
+          "inbound_id" => record.id,
+          "window_hours" => "168",
+          "full" => "1"
+        })
+      )
+
       html = render(view)
 
       assert html =~ ~s(data-testid="inbound-detail-header")
       assert html =~ ~s(data-testid="inbound-detail-back")
       assert html =~ "Back to inbound records"
-      assert html =~ "max-md:hidden"
-      # With a record selected, the master-detail percentage grid is active.
-      assert html =~ "md:grid-cols-[40%_60%]"
-      assert html =~ "min-[1440px]:!grid-cols-[33%_67%]"
       assert html =~ ~s(data-testid="inbound-timeline")
       assert html =~ "Execution timeline"
       assert html =~ "MyApp.Mailboxes.SupportMailbox"
       # Fresh + replay source badges both appear (V matched seed).
       assert html =~ "Fresh"
       assert html =~ "Replay"
-      assert html =~ ~s(aria-selected="true")
       # Detail still masks the recipient.
       assert html =~ "s*******@e******.com"
       refute html =~ "selected@example.com"
 
+      # Back from Full detail returns to the Quick view (id kept, full dropped).
+      view
+      |> element(~s(a[data-testid="inbound-detail-back"]))
+      |> render_click()
+
+      assert_patch(
+        view,
+        inbound_path(%{
+          "tenant_id" => @tenant_id,
+          "inbound_id" => record.id,
+          "window_hours" => "168"
+        })
+      )
+
+      # Closing the Quick view returns to the full-width list.
       view
       |> element(~s(a[data-testid="inbound-detail-back"]))
       |> render_click()
@@ -368,7 +410,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       html = render(view)
 
       assert html =~ matching.record.id
-      assert html =~ ~s(value="mailgun")
+      assert html =~ ~s(<option value="mailgun" selected)
       assert html =~ ~s(<option value="accept" selected)
 
       # Re-mount from the URL: filters survive.
@@ -383,7 +425,7 @@ defmodule MailglassAdmin.InboundLiveTest do
           })
         )
 
-      assert html2 =~ ~s(value="mailgun")
+      assert html2 =~ ~s(<option value="mailgun" selected)
       assert html2 =~ ~s(<option value="accept" selected)
     end
 
@@ -425,6 +467,28 @@ defmodule MailglassAdmin.InboundLiveTest do
           "window_hours" => "168"
         })
       )
+    end
+
+    test "clicking the dimmed scrim closes the inbound Quick view back to the list",
+         %{conn: conn} do
+      conn = operator_conn(conn)
+
+      %{record: record} =
+        InboundFixtures.seed_matched!(@tenant_id, recipient: "scrim@example.com")
+
+      {:ok, view, _html} =
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+
+      assert render(view) =~ ~s(data-testid="inbound-quick-view")
+
+      # Regression: the scrim is a patch link; clicking the dimmed area dismisses the
+      # overlay and returns to the records list.
+      view
+      |> element(~s(a[data-testid="inbound-quick-view-scrim"]))
+      |> render_click()
+
+      assert_patch(view, inbound_path(%{"tenant_id" => @tenant_id, "window_hours" => "168"}))
+      refute render(view) =~ ~s(data-testid="inbound-quick-view")
     end
 
     test "invalid URL-backed filters render recovery copy without widening tenant reads", %{
@@ -501,12 +565,12 @@ defmodule MailglassAdmin.InboundLiveTest do
       InboundFixtures.seed_matched!(@tenant_id, recipient: "local@example.com")
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id, "full" => "1"}))
 
       assert html =~ ~s(data-testid="inbound-detail-error")
 
       assert html =~
-               "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
+               "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
     end
 
     test "a selected record outside active filters surfaces the detail-error band", %{conn: conn} do
@@ -534,12 +598,14 @@ defmodule MailglassAdmin.InboundLiveTest do
           })
         )
 
+      # Quick view: the filtered-out record is not on the page, so it surfaces the
+      # no-leak error band while the visible (ses) row stays in the list behind it.
       assert html =~ ses_record.id
       refute html =~ mailgun_record.id
-      assert html =~ ~s(data-testid="inbound-detail-error")
+      assert html =~ ~s(data-testid="inbound-quick-view-error")
 
       assert html =~
-               "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
+               "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
     end
 
     test "a valid selected record outside the capped recent list still loads detail", %{
@@ -570,7 +636,8 @@ defmodule MailglassAdmin.InboundLiveTest do
           inbound_path(%{
             "tenant_id" => @tenant_id,
             "provider" => "mailgun",
-            "inbound_id" => selected.id
+            "inbound_id" => selected.id,
+            "full" => "1"
           })
         )
 
@@ -757,7 +824,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       assert html =~ ~s(data-testid="inbound-routing-trace")
       assert html =~ "Routing trace"
@@ -795,7 +862,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       # Exact recipient matcher verbatim (route 1: recipient "support@example.com").
       assert html =~ "support@example.com"
@@ -827,7 +894,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       assert html =~ ~s(data-testid="inbound-evidence-card")
       assert html =~ "Raw provider source"
@@ -854,7 +921,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       before_count = run_count(record.id)
 
       {:ok, view, _html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       view |> element("button[phx-click='open_replay']") |> render_click()
 
@@ -884,7 +951,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       before_count = run_count(record.id)
 
       {:ok, view, _html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       # The confirm path is defensively mapped even though the button is disabled
       # in the header (render→click race) — drive the event directly.
@@ -924,7 +991,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       before_count = run_count(record.id)
 
       {:ok, view, _html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       html = render_click(view, "confirm_replay", %{})
 
@@ -952,16 +1019,15 @@ defmodule MailglassAdmin.InboundLiveTest do
       Phoenix.PubSub.broadcast(
         Mailglass.PubSub,
         Topics.inbound_record_inserted(@tenant_id),
-        {:inbound_record_inserted, fresh.id,
-         %{provider: "mailgun", record_type: "inbound_record"}}
+        {:inbound_record_inserted, fresh.id, %{provider: "mailgun", record_type: "inbound_record"}}
       )
 
       html = render(view)
 
-      # The new record appears in the list.
+      # The new record appears in the list (rendered behind the Quick view overlay).
       assert html =~ fresh.id
-      # The current selection is preserved (detail header still rendered for it).
-      assert html =~ ~s(data-testid="inbound-detail-header")
+      # The current selection is preserved (the Quick view for it stays open).
+      assert html =~ ~s(data-testid="inbound-quick-view")
       assert html =~ selected.id
     end
 
@@ -1005,7 +1071,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ ~s(data-testid="inbound-records-cards")
     end
 
-    test "desktop table uses semantic th scope=col elements in order Outcome Mailbox Tenant Provider Received" do
+    test "desktop table uses semantic th scope=col elements in order Outcome Mailbox Account Provider Received" do
       # Use render_component to get just the records_list HTML, isolating the table markup
       # so we can assert column header order without interference from page nav text
       %{record: record} = InboundFixtures.seed_matched!(@tenant_id, recipient: "th@example.com")
@@ -1037,7 +1103,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       assert html =~ ~s(<th scope="col")
 
-      # Column order within the table header: Outcome first, then Mailbox, Tenant, Provider, Received
+      # Column order within the table header: Outcome first, then Mailbox, Account, Provider, Received
       thead_html =
         html |> String.split("<thead>") |> List.last() |> String.split("</thead>") |> List.first()
 
@@ -1049,9 +1115,9 @@ defmodule MailglassAdmin.InboundLiveTest do
         String.length(thead_html) -
           (thead_html |> String.split("Mailbox") |> List.last() |> String.length())
 
-      tenant_pos =
+      account_pos =
         String.length(thead_html) -
-          (thead_html |> String.split("Tenant") |> List.last() |> String.length())
+          (thead_html |> String.split("Account") |> List.last() |> String.length())
 
       provider_pos =
         String.length(thead_html) -
@@ -1062,8 +1128,8 @@ defmodule MailglassAdmin.InboundLiveTest do
           (thead_html |> String.split("Received") |> List.last() |> String.length())
 
       assert outcome_pos < mailbox_pos
-      assert mailbox_pos < tenant_pos
-      assert tenant_pos < provider_pos
+      assert mailbox_pos < account_pos
+      assert account_pos < provider_pos
       assert provider_pos < received_pos
     end
 
@@ -1128,7 +1194,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       assert html =~ "truncate"
       # result count from page_meta, not faked
       assert html =~ ~s(data-testid="inbound-result-count")
-      assert html =~ "1 result"
+      assert html =~ "1 message"
     end
   end
 
@@ -1260,7 +1326,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       assert html =~ ~s(data-testid="inbound-result-count")
-      assert html =~ "9 results"
+      assert html =~ "9 messages"
       assert html =~ ~s(data-testid="inbound-pagination")
       assert html =~ ~s(data-testid="inbound-pagination-prev-disabled")
       assert html =~ ~s(aria-disabled="true")
@@ -1284,7 +1350,7 @@ defmodule MailglassAdmin.InboundLiveTest do
           }
         )
 
-      assert html =~ "1 result"
+      assert html =~ "1 message"
       refute html =~ ~s(data-testid="inbound-pagination")
     end
   end
@@ -1296,20 +1362,18 @@ defmodule MailglassAdmin.InboundLiveTest do
       conn = operator_conn(conn)
 
       # Genuine no-data: the calm pane carries the truly-empty copy (D-07 noun).
-      # The no-selection prompt lives in the master-detail grid, which no-data
-      # withholds (D-02) — assert it on a populated-but-unselected mount instead.
       {:ok, _view, empty_html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
       assert empty_html =~ "No records"
       assert empty_html =~ "No InboundMessages have been recorded yet."
       refute_banned(empty_html)
 
+      # No-selection now shows the full-width list with no overlay; brand voice clean.
       InboundFixtures.seed_matched!(@tenant_id, recipient: "present@example.com")
       {:ok, _view, populated_html} = live(conn, inbound_path(%{"tenant_id" => @tenant_id}))
 
-      assert populated_html =~
-               "Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence."
-
+      assert populated_html =~ "Recent InboundMessages"
+      refute populated_html =~ ~s(data-testid="inbound-quick-view")
       refute_banned(populated_html)
     end
 
@@ -1325,7 +1389,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => foreign.id}))
 
       assert html =~
-               "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
+               "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
 
       refute_banned(html)
     end
@@ -1338,7 +1402,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       _evidence = InboundFixtures.insert_evidence!(@tenant_id, record.id)
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       assert html =~ "No execution runs have been recorded for this message yet."
       refute_banned(html)
@@ -1351,7 +1415,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       %{record: matched} = InboundFixtures.seed_matched!(@tenant_id, recipient: "ok@example.com")
 
       {:ok, view1, _html} =
-        live(conn1, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => matched.id}))
+        live(conn1, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => matched.id, "full" => "1"}))
 
       success_html = render_click(view1, "confirm_replay", %{})
 
@@ -1365,7 +1429,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       %{record: nomatch} = InboundFixtures.seed_no_match!(@tenant_id, recipient: "nm@example.com")
 
       {:ok, view2, _html} =
-        live(conn2, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => nomatch.id}))
+        live(conn2, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => nomatch.id, "full" => "1"}))
 
       block_html = render_click(view2, "confirm_replay", %{})
       assert block_html =~ "Replay blocked: mailbox module not found."
@@ -1376,7 +1440,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       %{record: denied} = InboundFixtures.seed_matched!(@tenant_id, recipient: "no@example.com")
 
       {:ok, view3, _html} =
-        live(conn3, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => denied.id}))
+        live(conn3, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => denied.id, "full" => "1"}))
 
       denied_html = render_click(view3, "confirm_replay", %{})
 
@@ -1396,7 +1460,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       assert html =~
                "Raw source redacted. Revealing the raw provider payload requires the reveal_raw capability."
@@ -1417,7 +1481,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         InboundFixtures.seed_no_match!(@tenant_id, recipient: "trace@example.com")
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       assert html =~ "Routing trace"
       assert html =~ "Why this message did not match"
@@ -1445,7 +1509,7 @@ defmodule MailglassAdmin.InboundLiveTest do
 
       # Detail + routing-trace surfaces (selected).
       {:ok, _view2, detail_html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       # Masked in the detail header AND the routing-trace recipient "actual".
       assert detail_html =~ masked
@@ -1466,7 +1530,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, _view, redacted_html} =
-        live(conn1, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn1, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       refute redacted_html =~ secret
 
@@ -1474,7 +1538,7 @@ defmodule MailglassAdmin.InboundLiveTest do
       conn2 = operator_conn(conn)
 
       {:ok, view2, _html} =
-        live(conn2, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn2, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       revealed_html = render_click(view2, "reveal_raw", %{})
       assert revealed_html =~ secret
@@ -1498,7 +1562,10 @@ defmodule MailglassAdmin.InboundLiveTest do
         )
 
       {:ok, view, _html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(
+          conn,
+          inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"})
+        )
 
       # Grant first so we have something to collapse.
       revealed_html = render_click(view, "reveal_raw", %{})
@@ -1642,6 +1709,19 @@ defmodule MailglassAdmin.InboundLiveTest do
     |> Kernel.-(1)
   end
 
+  defp assert_in_order(html, phrases) do
+    offsets =
+      Enum.map(phrases, fn phrase ->
+        case :binary.match(html, phrase) do
+          {offset, _length} -> offset
+          :nomatch -> flunk("expected #{inspect(phrase)} to appear in rendered HTML")
+        end
+      end)
+
+    assert offsets == Enum.sort(offsets),
+           "expected phrases to appear in order: #{inspect(phrases)}"
+  end
+
   # HEEx HTML-escapes text nodes, so verbatim UI-SPEC copy with an apostrophe
   # renders as `&#39;`. Decode the handful of entities Phoenix emits so copy
   # assertions can use the exact UI-SPEC string.
@@ -1702,7 +1782,7 @@ defmodule MailglassAdmin.InboundLiveTest do
         InboundFixtures.seed_matched!(@tenant_id, recipient: "motion@example.com")
 
       {:ok, _view, html} =
-        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id}))
+        live(conn, inbound_path(%{"tenant_id" => @tenant_id, "inbound_id" => record.id, "full" => "1"}))
 
       assert html =~ ~s(id="inbound-detail-#{record.id}")
     end

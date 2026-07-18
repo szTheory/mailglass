@@ -68,6 +68,13 @@ if Code.ensure_loaded?(MailglassInbound) do
       apply(MailglassInbound.Internal.Operator.Records, :list_records_page, [filters, opts])
     end
 
+    @doc "Distinct provider keys for a tenant/window — routes to the inbound read-model."
+    @doc since: "0.2.0"
+    @spec list_providers(map() | keyword(), keyword()) :: [String.t()]
+    def list_providers(filters, opts \\ []) do
+      apply(MailglassInbound.Internal.Operator.Records, :list_providers, [filters, opts])
+    end
+
     @doc "Tenant selector rows from inbound activity — routes to the inbound read-model."
     @doc since: "0.2.0"
     @spec list_tenants(term(), keyword()) :: [%{id: String.t(), label: String.t()}]

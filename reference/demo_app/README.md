@@ -25,17 +25,18 @@ make demo-down    # stop the demo
 
 Destructive note: `make demo-reset` truncates seeded demo tables before reseeding
 preview, delivery, suppression, inbound record, evidence, routing trace, and
-replay data for tenant `northstar`.
+replay data for the Northstar Logistics account (`tenant_id=northstar`).
 
 Future artifact label: `demo_browser_evidence.v1`.
 
 ## Persona and JTBD
 
-AtlasDesk is the fictional support/workspace SaaS for this demo. The job to be
-done is to inspect preview mailables, confirm deliveries and suppressions,
-review inbound records and routing trace evidence, and replay stored truth
-without guessing. The deterministic tenant id remains `northstar` so deep links
-and test fixtures stay stable.
+AtlasDesk is the fictional support SaaS for this demo. Northstar Logistics is
+the seeded customer account. The job to be done is to inspect preview
+mailables, confirm deliveries and suppressions, review inbound records and
+routing trace evidence, and replay stored truth without guessing. The UI calls
+this an Account; the deterministic Mailglass `tenant_id` remains `northstar` so
+deep links and test fixtures stay stable.
 
 ## Seeded data
 
@@ -71,7 +72,7 @@ Deterministic inbound operator stories:
 4. Open `http://localhost:4015/demo/login?return_to=/ops/mail/inbound?tenant_id=northstar`.
 5. Use `mix demo.reset` or the dashboard reset button to restore the deterministic baseline.
 
-Destructive note: this reset truncates seeded demo tables before reseeding preview, delivery, suppression, inbound record, evidence, routing trace, and replay data for tenant `northstar`.
+Destructive note: this reset truncates seeded demo tables before reseeding preview, delivery, suppression, inbound record, evidence, routing trace, and replay data for the Northstar Logistics account (`tenant_id=northstar`).
 
 ## Dependency Mode
 

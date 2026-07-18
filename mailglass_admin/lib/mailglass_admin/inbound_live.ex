@@ -29,10 +29,12 @@ defmodule MailglassAdmin.InboundLive do
   alias MailglassAdmin.Inbound.EvidenceCard
   alias MailglassAdmin.Inbound.FiltersForm
   alias MailglassAdmin.Inbound.Overview
+  alias MailglassAdmin.Inbound.QuickView
   alias MailglassAdmin.Inbound.RecordsList
   alias MailglassAdmin.Inbound.ReplayModal
   alias MailglassAdmin.Inbound.RoutingTrace
   alias MailglassAdmin.Inbound.Timeline
+  alias MailglassAdmin.Operator.Accounts
   alias MailglassAdmin.Operator.Tenants, as: TenantSelector
   alias Phoenix.LiveView.JS
 
@@ -43,6 +45,7 @@ defmodule MailglassAdmin.InboundLive do
   # to MailglassInbound — keeping the --no-optional-deps lane clean.
   @outcome_values [:no_match, :accept, :ignore, :reject, :bounce, :failed]
   @default_window_hours 168
+  @inbound_records_per_page 20
   @outcome_filter_error "Mailbox outcome was not applied. Choose a listed outcome."
   @window_filter_error "Time window was not applied. Choose a positive listed time window."
   @window_options [
@@ -93,6 +96,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:records_page_meta, empty_page_meta())
      |> assign(:inbound_summary, @zero_summary)
      |> assign(:empty_state, :no_tenant)
+     |> assign(:full_detail?, false)
      |> assign(:selected_record, nil)
      |> assign(:detail, nil)
      |> assign(:runs, [])
@@ -109,6 +113,7 @@ defmodule MailglassAdmin.InboundLive do
      |> assign(:theme_choice, :system)
      |> assign(:theme_cookie, session_theme_cookie(session))
      |> assign(:preview_path, session_navigation_path(session, :preview_path))
+     |> assign(:account_labels, session_account_labels(session))
      |> assign(:tenant_options, [])
      |> assign(:tenant_state, :none)
      |> assign(:selected_tenant_id, nil)
@@ -141,13 +146,23 @@ defmodule MailglassAdmin.InboundLive do
 
   defp session_navigation_path(_session, _key), do: nil
 
+  defp session_account_labels(session) when is_map(session),
+    do: Accounts.normalize_labels(Map.get(session, "account_labels"))
+
+  defp session_account_labels(_session), do: %{}
+
   @impl true
   def handle_params(params, uri, socket) do
     if redirect_path = MailglassAdmin.Theme.legacy_query_redirect_path(params, uri) do
       {:noreply, redirect(socket, to: redirect_path)}
     else
       {filter_params, filter_errors} = normalize_filter_params_with_errors(params)
-      tenant_options = TenantSelector.list_tenants(socket.assigns.operator_actor, [])
+
+      tenant_options =
+        TenantSelector.list_tenants(socket.assigns.operator_actor,
+          account_labels: socket.assigns.account_labels
+        )
+
       selected_tenant_id = blank_to_nil(filter_params["tenant_id"])
       theme_choice = MailglassAdmin.Operator.Shell.theme_choice(%{}, socket.assigns.theme_cookie)
 
@@ -166,6 +181,7 @@ defmodule MailglassAdmin.InboundLive do
         |> assign(:tenant_options, tenant_options)
         |> assign(:tenant_state, tenant_state)
         |> assign(:selected_tenant_id, selected_tenant_id)
+        |> assign(:provider_options, load_provider_options(filter_params))
 
       if connected?(socket) and tenant_state == :auto_select do
         send(self(), :canonicalize_tenant)
@@ -181,7 +197,11 @@ defmodule MailglassAdmin.InboundLive do
         true ->
           {:noreply,
            socket
-           |> assign_inbound_state(filter_params, blank_to_nil(params["inbound_id"]))
+           |> assign_inbound_state(
+             filter_params,
+             blank_to_nil(params["inbound_id"]),
+             params["full"] == "1" and not is_nil(blank_to_nil(params["inbound_id"]))
+           )
            |> close_replay_modal()}
       end
     end
@@ -192,10 +212,15 @@ defmodule MailglassAdmin.InboundLive do
     {normalized, filter_errors} = normalize_filter_params_with_errors(filters)
 
     if map_size(filter_errors) == 0 do
-      {:noreply,
-       push_patch(socket,
-         to: build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
-       )}
+      path = build_path(socket.assigns.base_path, normalized, nil, socket.assigns.dark_chrome)
+
+      # No-op when the filters don't change the location — avoids a needless re-render
+      # (and timestamp re-localization flicker) on Apply.
+      if same_location?(socket.assigns.page_uri, path) do
+        {:noreply, socket}
+      else
+        {:noreply, push_patch(socket, to: path)}
+      end
     else
       {:noreply,
        socket
@@ -228,7 +253,8 @@ defmodule MailglassAdmin.InboundLive do
     {:noreply,
      socket
      |> assign(:filter_form, to_form(normalized, as: :filters))
-     |> assign(:filter_errors, filter_errors)}
+     |> assign(:filter_errors, filter_errors)
+     |> assign(:provider_options, load_provider_options(normalized))}
   end
 
   def handle_event("select_inbound", %{"id" => inbound_id}, socket) do
@@ -242,6 +268,65 @@ defmodule MailglassAdmin.InboundLive do
            socket.assigns.dark_chrome
          )
      )}
+  end
+
+  # Close the Quick view / Full detail — drop inbound_id (+ full), returning to the
+  # full-width list. Used by ✕, scrim click, and Escape.
+  def handle_event("close_detail", _params, socket) do
+    {:noreply,
+     push_patch(socket,
+       to: build_path(socket.assigns.base_path, socket.assigns.filter_params, nil, socket.assigns.dark_chrome)
+     )}
+  end
+
+  def handle_event("nav_record", %{"dir" => dir}, socket) do
+    navigate_record(socket, dir)
+  end
+
+  # Keyboard mirror of the `‹ ›` buttons + Enter/Escape, bound only while the Quick
+  # view is open. Unknown keys are no-ops.
+  def handle_event("detail_key", %{"key" => key}, socket) do
+    case key do
+      k when k in ["ArrowUp", "ArrowLeft", "k"] ->
+        navigate_record(socket, "prev")
+
+      k when k in ["ArrowDown", "ArrowRight", "j"] ->
+        navigate_record(socket, "next")
+
+      "Enter" ->
+        case socket.assigns.selected_record do
+          %{id: id} ->
+            {:noreply,
+             push_patch(socket,
+               to:
+                 detail_path(
+                   socket.assigns.base_path,
+                   socket.assigns.filter_params,
+                   id,
+                   socket.assigns.dark_chrome,
+                   true
+                 )
+             )}
+
+          _ ->
+            {:noreply, socket}
+        end
+
+      "Escape" ->
+        {:noreply,
+         push_patch(socket,
+           to:
+             build_path(
+               socket.assigns.base_path,
+               socket.assigns.filter_params,
+               nil,
+               socket.assigns.dark_chrome
+             )
+         )}
+
+      _ ->
+        {:noreply, socket}
+    end
   end
 
   def handle_event("clear_filters", _params, socket) do
@@ -317,7 +402,7 @@ defmodule MailglassAdmin.InboundLive do
          {:ok, _result} <- replay_record(record) do
       {:noreply,
        socket
-       |> assign_inbound_state(socket.assigns.filter_params, record.id)
+       |> assign_inbound_state(socket.assigns.filter_params, record.id, true)
        |> close_replay_modal()
        |> put_flash(
          :info,
@@ -423,97 +508,138 @@ defmodule MailglassAdmin.InboundLive do
                   inside it) are all withheld (D-02/D-05 — the filters toolbar is the only scope-widening
                   vector). An in-flight invalid filter submission (@filter_errors non-empty) is NOT genuine
                   no-data — the toolbar stays so the operator sees the recovery copy and Clear-filters. --%>
-            <section
-              data-testid="inbound-deliveries-empty-pane"
-              class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
-            >
-              <RecordsList.records_list
-                records={[]}
-                page_meta={@records_page_meta}
-                previous_page_path={
-                  pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
-                }
-                next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
-                empty_state={:truly_empty}
-              />
-            </section>
-            <MailglassAdmin.Operator.Shell.orientation_strip surface={:inbound} />
-          <% true -> %>
-            <section
-              data-testid="inbound-filters"
-              class="card rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
-            >
-              <button
-                type="button"
-                phx-click={JS.toggle(to: "#inbound-filter-panel")}
-                data-testid="inbound-filters-toggle"
-                class="btn btn-ghost !h-11 min-h-11 md:hidden"
+            <div class="space-y-lg">
+              <section
+                data-testid="inbound-deliveries-empty-pane"
+                class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
               >
-                Filters <span aria-hidden="true">v</span>
-              </button>
-
-              <div id="inbound-filter-panel" class="hidden md:block">
-                <.form
-                  for={@filter_form}
-                  id="inbound-filters"
-                  phx-change="validate_filters"
-                  phx-submit="apply_filters"
-                  class="mt-4 grid gap-md md:mt-0"
-                >
-                  <FiltersForm.fields
-                    form={@filter_form}
-                    outcome_values={@outcome_values}
-                    window_options={@window_options}
-                    errors={@filter_errors}
-                  />
-
-                  <div class="flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary min-h-11 px-5">Open record</button>
-                    <button
-                      type="button"
-                      phx-click="clear_filters"
-                      class="btn btn-ghost min-h-11 px-5"
-                    >
-                      Clear filters
-                    </button>
-                  </div>
-                </.form>
-              </div>
-            </section>
-
-            <%!-- Health strip lives full-width above the master-detail so it never
-            clips inside the 40% list column when a record is open. Hidden on
-            mobile once a record is selected (the detail takes the screen). --%>
-            <div class={["mt-6", @selected_record && "max-md:hidden"]}>
-              <Overview.overview summary={@inbound_summary} />
+                <RecordsList.records_list
+                  records={[]}
+                  page_meta={@records_page_meta}
+                  previous_page_path={
+                    pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
+                  }
+                  next_page_path={pagination_path(@base_path, @filter_params, @dark_chrome, :next)}
+                  empty_state={:truly_empty}
+                />
+              </section>
+              <MailglassAdmin.Operator.Shell.orientation_strip surface={:inbound} />
             </div>
+          <% true -> %>
+            <%= if @full_detail? and (@selected_record || @detail_error) do %>
+              <%!-- FULL DETAIL: the complete InboundMessage on its own, full width
+                  (list hidden). Reached from Quick view's "Open full detail" or &full=1. --%>
+              <div data-testid="inbound-detail-column" class="space-y-4">
+                <.link
+                  patch={
+                    build_path(
+                      @base_path,
+                      @filter_params,
+                      @selected_record && @selected_record.id,
+                      @dark_chrome
+                    )
+                  }
+                  data-testid="inbound-detail-back"
+                  class="mg-focus-ring btn btn-ghost !h-11 min-h-11"
+                >
+                  <span aria-hidden="true" class="mr-xs">←</span> Back to inbound records
+                </.link>
 
-            <section
-              data-testid="inbound-master-detail"
-              class={[
-                "mt-6 grid gap-lg",
-                if(@selected_record,
-                  do: "md:grid-cols-[40%_60%] min-[1440px]:!grid-cols-[33%_67%]",
-                  else: "grid-cols-1"
-                )
-              ]}
-            >
-              <div class={["min-w-0 space-y-4", @selected_record && "max-md:hidden"]}>
+                <%= if @detail do %>
+                  <div id={"inbound-detail-#{@detail.record.id}"} data-region class="motion-reveal space-y-4">
+                    <DetailHeader.detail_header detail={@detail} account_labels={@account_labels} />
+                    <Timeline.timeline runs={@runs} />
+                    <RoutingTrace.routing_trace
+                      :if={@detail[:outcome] == :no_match}
+                      trace={@routing_trace}
+                    />
+                    <EvidenceCard.evidence_card
+                      evidence={@detail[:evidence]}
+                      reveal_state={@reveal_state}
+                    />
+                  </div>
+                <% else %>
+                  <div
+                    data-testid="inbound-detail-error"
+                    class="card rounded-box border border-error bg-base-100 p-6"
+                  >
+                    <div class="flex items-center gap-2">
+                      <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
+                      <h2 class="text-body font-bold text-base-content">
+                        InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again.
+                      </h2>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <%!-- LIST PAGE: account health strip + filters + full-width records list.
+                  The Quick view overlay (below) sits on top when a record is focused. --%>
+              <Overview.overview summary={@inbound_summary} />
+
+              <section
+                data-testid="inbound-filters"
+                class="card mt-6 rounded-box border border-base-300 bg-base-200 p-4 md:p-5"
+              >
+                <button
+                  type="button"
+                  phx-click={JS.toggle(to: "#inbound-filter-panel")}
+                  data-testid="inbound-filters-toggle"
+                  class="btn btn-ghost !h-11 min-h-11 md:hidden"
+                >
+                  Filters <span aria-hidden="true">v</span>
+                </button>
+
+                <div id="inbound-filter-panel" class="hidden md:block">
+                  <.form
+                    for={@filter_form}
+                    id="inbound-filters"
+                    phx-change="validate_filters"
+                    phx-submit="apply_filters"
+                    class="mt-4 grid gap-md md:mt-0"
+                  >
+                    <FiltersForm.fields
+                      form={@filter_form}
+                      account_options={
+                        Accounts.field_options(
+                          @tenant_options,
+                          @filter_params["tenant_id"],
+                          @account_labels
+                        )
+                      }
+                      provider_options={@provider_options}
+                      outcome_values={@outcome_values}
+                      window_options={@window_options}
+                      errors={@filter_errors}
+                    />
+
+                    <div class="flex flex-wrap gap-2">
+                      <button type="submit" class="btn btn-primary min-h-11 px-5">Apply filters</button>
+                      <button
+                        type="button"
+                        phx-click="clear_filters"
+                        class="btn btn-ghost min-h-11 px-5"
+                      >
+                        Clear filters
+                      </button>
+                    </div>
+                  </.form>
+                </div>
+              </section>
+
+              <section data-testid="inbound-master-detail" class="mt-6">
                 <aside
                   data-testid="inbound-records-list-card"
-                  class={[
-                    "card min-w-0 rounded-box border border-base-300 bg-base-200 p-0 md:block",
-                    @selected_record && "max-md:hidden"
-                  ]}
+                  class="card min-w-0 rounded-box border border-base-300 bg-base-200 p-0"
                 >
                   <div class="border-b border-base-300 px-4 py-3">
-                    <h2 class="text-label uppercase font-bold text-secondary">
-                      Recent InboundMessages
-                    </h2>
+                    <h2 class="text-label uppercase font-bold text-secondary">Recent InboundMessages</h2>
                   </div>
                   <RecordsList.records_list
                     records={@records}
                     page_meta={@records_page_meta}
+                    account_labels={@account_labels}
+                    show_account?={false}
                     previous_page_path={
                       pagination_path(@base_path, @filter_params, @dark_chrome, :previous)
                     }
@@ -523,71 +649,34 @@ defmodule MailglassAdmin.InboundLive do
                     data_state={@data_state}
                   />
                 </aside>
-              </div>
-
-              <section
-                data-testid="inbound-detail-column"
-                class={[
-                  "min-w-0 space-y-4",
-                  is_nil(@selected_record) && "order-first md:order-none"
-                ]}
-              >
-                <%= cond do %>
-                  <% @detail_error -> %>
-                    <div
-                      data-testid="inbound-detail-error"
-                      class="card rounded-box border border-error bg-base-100 p-6"
-                    >
-                      <div class="flex items-center gap-2">
-                        <Components.icon name="hero-exclamation-circle" class="h-5 w-5 text-error" />
-                        <h2 class="text-body font-bold text-base-content">
-                          InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again.
-                        </h2>
-                      </div>
-                    </div>
-                  <% is_nil(@detail) -> %>
-                    <div
-                      data-testid="inbound-empty-detail"
-                      class="card rounded-box border border-base-300 bg-base-200 p-6"
-                    >
-                      <h2 class="text-body font-bold text-base-content">
-                        Select an InboundMessage to inspect its Mailbox routing, execution timeline, and raw evidence.
-                      </h2>
-                    </div>
-                  <% true -> %>
-                    <div
-                      id={"inbound-detail-#{@detail.record.id}"}
-                      data-region
-                      class="motion-reveal space-y-4"
-                      phx-remove={
-                        JS.hide(
-                          time: 150,
-                          transition:
-                            {"ease-out duration-150", "opacity-100", "opacity-0 translate-y-1"}
-                        )
-                      }
-                    >
-                      <.link
-                        patch={build_path(@base_path, @filter_params, nil, @dark_chrome)}
-                        data-testid="inbound-detail-back"
-                        class="mg-focus-ring btn btn-ghost !h-11 min-h-11 md:hidden"
-                      >
-                        Back to inbound records
-                      </.link>
-                      <DetailHeader.detail_header detail={@detail} />
-                      <Timeline.timeline runs={@runs} />
-                      <RoutingTrace.routing_trace
-                        :if={@detail[:outcome] == :no_match}
-                        trace={@routing_trace}
-                      />
-                      <EvidenceCard.evidence_card
-                        evidence={@detail[:evidence]}
-                        reveal_state={@reveal_state}
-                      />
-                    </div>
-                <% end %>
               </section>
-            </section>
+            <% end %>
+
+            <%!-- Quick view (peek) overlay: a record is focused and we are NOT in Full detail. --%>
+            <QuickView.quick_view
+              :if={not @full_detail? and (@selected_record != nil or @detail_error != nil)}
+              record={@selected_record}
+              detail_error={@detail_error}
+              account_labels={@account_labels}
+              full_path={
+                detail_path(
+                  @base_path,
+                  @filter_params,
+                  @selected_record && @selected_record.id,
+                  @dark_chrome,
+                  true
+                )
+              }
+              close_path={build_path(@base_path, @filter_params, nil, @dark_chrome)}
+              previous_path={
+                neighbor_path("prev", @records, @selected_record, @base_path, @filter_params, @dark_chrome, false)
+              }
+              next_path={
+                neighbor_path("next", @records, @selected_record, @base_path, @filter_params, @dark_chrome, false)
+              }
+              position={record_position(@records, @selected_record, @records_page_meta)}
+              keyboard?={not @replay_modal_open?}
+            />
 
             <%!-- Focus-management parity with the operator modal: phx-mounted moves focus into the modal on open; phx-remove returns focus to the trigger on close. Not a focus trap — pure LiveView JS. --%>
             <span
@@ -616,37 +705,62 @@ defmodule MailglassAdmin.InboundLive do
   # through the runtime gateway (apply/3). No bare optional-inbound reference.
   # ---------------------------------------------------------------------------
 
-  defp assign_inbound_state(socket, filter_params, selected_inbound_id) do
+  # Two-tier load (mirror of OperatorLive): the Quick view renders from the list-row
+  # projection already in `records` — no gateway `detail`/timeline/routing/evidence
+  # load — so flipping records fires no extra queries. Full detail (`full?`) loads the
+  # gateway detail and its lineage. In the Quick view, an id that isn't on the current
+  # page surfaces `:not_found` without a gateway round-trip.
+  #
+  # Selecting (or re-selecting) a record collapses the evidence card back to redacted —
+  # reveal is a per-view capability action, never sticky across selections.
+  defp assign_inbound_state(socket, filter_params, selected_inbound_id, full?) do
     records_page = load_inbound_records_page(filter_params)
     records = records_page.entries
-    detail = load_selected_detail(filter_params, selected_inbound_id)
-    runs = load_selected_timeline(filter_params, selected_inbound_id, detail)
-    {detail, runs} = filter_selected_detail(detail, runs, filter_params)
 
-    selected_record =
-      find_selected_record(records, selected_inbound_id) || list_projection_from_detail(detail)
+    socket =
+      socket
+      |> assign(:full_detail?, full?)
+      |> assign(:records, records)
+      |> assign(:records_page_meta, page_meta_without_entries(records_page))
+      |> assign(:inbound_summary, load_inbound_summary(filter_params))
+      |> assign(:empty_state, empty_state_for(filter_params, records))
+      |> assign(:reveal_state, :redacted)
+      |> assign(:focus_reveal_after_redact, false)
 
-    socket
-    |> assign(:records, records)
-    |> assign(:records_page_meta, page_meta_without_entries(records_page))
-    |> assign(:inbound_summary, load_inbound_summary(filter_params))
-    |> assign(:empty_state, empty_state_for(filter_params, records))
-    |> assign(:selected_record, selected_record)
-    |> assign(:detail, detail)
-    |> assign(:runs, runs)
-    |> assign(:routing_trace, routing_trace_for(socket.assigns.inbound_router, detail))
-    # Selecting (or re-selecting) a record collapses the evidence card back to
-    # redacted — reveal is a per-view capability action, never sticky across
-    # selections.
-    |> assign(:reveal_state, :redacted)
-    |> assign(:focus_reveal_after_redact, false)
-    |> assign(:detail_error, detail_error_for(selected_inbound_id, detail))
-    # Route a load/authorization failure into the dormant RecordsList data_state
-    # (D-09) — reuse the existing detail_error signal rather than a new query.
-    # Only escalate when there is NO record to show (records == []); when the
-    # list loaded rows it must always render them, so data_state stays nil and
-    # the bad selection is surfaced by the detail-error band instead.
-    |> assign(:data_state, data_state_for(records, detail_error_for(selected_inbound_id, detail)))
+    if full? do
+      detail = load_selected_detail(filter_params, selected_inbound_id)
+      runs = load_selected_timeline(filter_params, selected_inbound_id, detail)
+      {detail, runs} = filter_selected_detail(detail, runs, filter_params)
+
+      selected_record =
+        find_selected_record(records, selected_inbound_id) || list_projection_from_detail(detail)
+
+      detail_error = detail_error_for(selected_inbound_id, detail)
+
+      socket
+      |> assign(:selected_record, selected_record)
+      |> assign(:detail, detail)
+      |> assign(:runs, runs)
+      |> assign(:routing_trace, routing_trace_for(socket.assigns.inbound_router, detail))
+      |> assign(:detail_error, detail_error)
+      # Route a load/authorization failure into the dormant RecordsList data_state
+      # (D-09) — only when there is NO record to show; otherwise the bad selection is
+      # surfaced by the detail-error band.
+      |> assign(:data_state, data_state_for(records, detail_error))
+    else
+      selected_record = find_selected_record(records, selected_inbound_id)
+
+      detail_error =
+        if not is_nil(selected_inbound_id) and is_nil(selected_record), do: :not_found, else: nil
+
+      socket
+      |> assign(:selected_record, selected_record)
+      |> assign(:detail, nil)
+      |> assign(:runs, [])
+      |> assign(:routing_trace, [])
+      |> assign(:detail_error, detail_error)
+      |> assign(:data_state, data_state_for(records, detail_error))
+    end
   end
 
   defp tenant_state(nil, [], _tenant_param_present?), do: :none
@@ -656,6 +770,7 @@ defmodule MailglassAdmin.InboundLive do
 
   defp clear_surface_state(socket) do
     socket
+    |> assign(:full_detail?, false)
     |> assign(:records, [])
     |> assign(:records_page_meta, empty_page_meta())
     |> assign(:inbound_summary, @zero_summary)
@@ -732,14 +847,14 @@ defmodule MailglassAdmin.InboundLive do
 
   defp replay_error_copy(:not_found),
     do:
-      "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
+      "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
 
   defp replay_error_copy(:unavailable),
     do: "Replay blocked: the inbound package is not available."
 
   defp replay_error_copy(_reason),
     do:
-      "InboundMessage not loaded: selected record is outside the current tenant or active filters. Refresh the page or adjust the filters, then try again."
+      "InboundMessage not loaded: selected record is outside the selected account or active filters. Refresh the page or adjust the filters, then try again."
 
   defp empty_state_for(%{"tenant_id" => tenant_id}, _records) when tenant_id in [nil, ""],
     do: :no_tenant
@@ -829,6 +944,59 @@ defmodule MailglassAdmin.InboundLive do
     |> Map.fetch!(:entries)
   end
 
+  # Provider filter options (mirrors Operator.load_provider_options/1): distinct
+  # providers seen for the selected account within the window, plus the currently
+  # selected provider so a chosen-but-unseen value never silently drops from the
+  # select. Empty when there is no tenant or the inbound gateway is unavailable.
+  defp load_provider_options(filter_params) do
+    selected_provider = blank_to_nil(filter_params["provider"])
+
+    case blank_to_nil(filter_params["tenant_id"]) do
+      nil ->
+        []
+
+      tenant_id ->
+        providers =
+          if gateway_available?() do
+            apply(@gateway, :list_providers, [
+              %{
+                tenant_id: tenant_id,
+                window_hours:
+                  parse_positive_integer(filter_params["window_hours"]) || @default_window_hours
+              },
+              []
+            ])
+          else
+            []
+          end
+
+        providers =
+          if selected_provider && selected_provider not in providers do
+            [selected_provider | providers]
+          else
+            providers
+          end
+
+        providers
+        |> Enum.reject(&is_nil/1)
+        |> Enum.uniq()
+        |> Enum.sort_by(&String.downcase/1)
+        |> Enum.map(&{provider_label(&1), &1})
+    end
+  end
+
+  defp provider_label("sendgrid"), do: "SendGrid"
+  defp provider_label("postmark"), do: "Postmark"
+  defp provider_label("mailgun"), do: "Mailgun"
+  defp provider_label("ses"), do: "SES"
+
+  defp provider_label(provider) when is_binary(provider) do
+    provider
+    |> String.replace(["_", "-"], " ")
+    |> String.split(" ", trim: true)
+    |> Enum.map_join(" ", &String.capitalize/1)
+  end
+
   defp load_inbound_records_page(%{"tenant_id" => ""}), do: empty_page_meta()
 
   defp load_inbound_records_page(filter_params) do
@@ -842,7 +1010,7 @@ defmodule MailglassAdmin.InboundLive do
             parse_positive_integer(filter_params["window_hours"]) || @default_window_hours,
           search: blank_to_nil(filter_params["search"]),
           page: parse_positive_integer(filter_params["page"]) || 1,
-          per_page: 5
+          per_page: @inbound_records_per_page
         },
         []
       ])
@@ -1119,6 +1287,95 @@ defmodule MailglassAdmin.InboundLive do
 
   defp close_replay_modal(socket), do: assign(socket, :replay_modal_open?, false)
 
+  # Full-detail path = the record's URL plus `full=1`, merged into the params map (not
+  # appended) so it sorts with the other keys. build_path drops a nil id (and page=1);
+  # we only add `full` when there is an id to attach it to.
+  defp detail_path(base_path, filter_params, inbound_id, dark_chrome, full?) do
+    filter_params =
+      if full? and not is_nil(inbound_id),
+        do: Map.put(filter_params, "full", "1"),
+        else: filter_params
+
+    build_path(base_path, filter_params, inbound_id, dark_chrome)
+  end
+
+  # Prev/next id within the loaded page, relative to the current selection. Returns nil
+  # at the page edges (no wrap) and when there is no selection.
+  defp neighbor_id(records, %{id: id}, dir) do
+    count = length(records)
+
+    case Enum.find_index(records, &(&1.id == id)) do
+      nil ->
+        nil
+
+      index ->
+        case neighbor_index(index, dir, count) do
+          nil -> nil
+          neighbor -> records |> Enum.at(neighbor) |> record_id()
+        end
+    end
+  end
+
+  defp neighbor_id(_records, _selected, _dir), do: nil
+
+  defp neighbor_index(index, "prev", _count) when index > 0, do: index - 1
+  defp neighbor_index(index, "next", count) when index < count - 1, do: index + 1
+  defp neighbor_index(_index, _dir, _count), do: nil
+
+  defp record_id(%{id: id}), do: id
+  defp record_id(_record), do: nil
+
+  defp neighbor_path(dir, records, selected_record, base_path, filter_params, dark_chrome, full?) do
+    case neighbor_id(records, selected_record, dir) do
+      nil -> nil
+      id -> detail_path(base_path, filter_params, id, dark_chrome, full?)
+    end
+  end
+
+  # "N of M" position across the whole result set (page offset + local index).
+  defp record_position(records, %{id: id}, page_meta) do
+    with index when is_integer(index) <- Enum.find_index(records, &(&1.id == id)),
+         total when is_integer(total) <- Map.get(page_meta, :total_count) do
+      page = Map.get(page_meta, :page, 1)
+      per_page = Map.get(page_meta, :per_page, @inbound_records_per_page)
+      %{index: (page - 1) * per_page + index + 1, total: total}
+    else
+      _ -> nil
+    end
+  end
+
+  defp record_position(_records, _selected, _page_meta), do: nil
+
+  defp navigate_record(socket, dir) do
+    case neighbor_id(socket.assigns.records, socket.assigns.selected_record, dir) do
+      nil ->
+        {:noreply, socket}
+
+      id ->
+        {:noreply,
+         push_patch(socket,
+           to:
+             detail_path(
+               socket.assigns.base_path,
+               socket.assigns.filter_params,
+               id,
+               socket.assigns.dark_chrome,
+               socket.assigns.full_detail?
+             )
+         )}
+    end
+  end
+
+  # True when a target path points at the same location as the current URL — same path
+  # and same query params (order-independent). Used to skip needless re-renders.
+  defp same_location?(current_uri, target_path) do
+    current = URI.parse(current_uri)
+    target = URI.parse(target_path)
+
+    (current.path || "/") == (target.path || "/") and
+      URI.decode_query(current.query || "") == URI.decode_query(target.query || "")
+  end
+
   defp build_path(base_path, filter_params, inbound_id, _dark_chrome) do
     params =
       filter_params
@@ -1187,7 +1444,7 @@ defmodule MailglassAdmin.InboundLive do
       entries: [],
       total_count: 0,
       page: 1,
-      per_page: 5,
+      per_page: @inbound_records_per_page,
       total_pages: 0,
       has_previous?: false,
       has_next?: false

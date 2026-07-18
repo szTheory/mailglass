@@ -60,6 +60,9 @@ defmodule MailglassAdmin.Router do
       * `:unauthorized_path` — redirect target when operator access is denied
       * `:navigation` — Optional sibling admin surface paths rendered in the
         shared nav: `:preview_path`.
+      * `:account_labels` — Optional `%{tenant_id => display_name}` map used
+        by the operator UI. The stored/URL value remains `tenant_id`; only
+        visible labels change.
       * `:as` — Route helper prefix (default `:mailglass_admin`)
 
   Every documented opt is part of the stable router contract once shipped; the
@@ -219,6 +222,13 @@ defmodule MailglassAdmin.Router do
       keys: @navigation_opts_schema,
       doc: "Optional sibling admin surface paths for the shared nav."
     ],
+    account_labels: [
+      type: {:map, {:or, [:atom, :string]}, :string},
+      default: %{},
+      doc:
+        "Optional map from tenant_id to the account label shown in the operator UI. " <>
+          "The tenant_id remains the stored and URL value."
+    ],
     as: [
       type: :atom,
       default: :mailglass_admin,
@@ -249,9 +259,10 @@ defmodule MailglassAdmin.Router do
   @doc since: "0.1.0"
   defmacro mailglass_admin_routes(path, opts \\ []) do
     opts = opts |> expand_opt_aliases(__CALLER__) |> validate_preview_opts!()
+    escaped_opts = Macro.escape(opts)
     session_name = opts[:live_session_name]
 
-    quote bind_quoted: [path: path, opts: opts, session_name: session_name] do
+    quote bind_quoted: [path: path, opts: escaped_opts, session_name: session_name] do
       scope path, alias: false, as: false do
         MailglassAdmin.Router.__asset_routes__()
         MailglassAdmin.Router.__theme_routes__()
@@ -290,9 +301,10 @@ defmodule MailglassAdmin.Router do
   @doc since: "0.1.0"
   defmacro mailglass_operator_routes(path, opts \\ []) do
     opts = opts |> expand_opt_aliases(__CALLER__) |> validate_operator_opts!()
+    escaped_opts = Macro.escape(opts)
     session_name = opts[:live_session_name]
 
-    quote bind_quoted: [path: path, opts: opts, session_name: session_name] do
+    quote bind_quoted: [path: path, opts: escaped_opts, session_name: session_name] do
       scope path, alias: false, as: false do
         MailglassAdmin.Router.__asset_routes__()
         MailglassAdmin.Router.__theme_routes__()
@@ -377,6 +389,8 @@ defmodule MailglassAdmin.Router do
       "live_session_name" => opts[:live_session_name],
       "admin_chrome_theme_cookie" => __theme_cookie_value__(conn),
       "navigation" => navigation_opts(opts),
+      "account_labels" =>
+        MailglassAdmin.Operator.Accounts.normalize_labels(opts[:account_labels]),
       # CONTEXT the design contract: the inbound router module is a compile-time opt, not a
       # session value — surfaced here (as an atom, never cookie-sourced) so the
       # operator LiveView can reflect declared inbound routes for the
@@ -407,8 +421,38 @@ defmodule MailglassAdmin.Router do
   end
 
   defp expand_opt_aliases(opts, env) do
-    Macro.prewalk(opts, fn node -> Macro.expand(node, env) end)
+    opts
+    |> Macro.prewalk(fn node -> Macro.expand(node, env) end)
+    |> expand_account_labels_literal()
   end
+
+  defp expand_account_labels_literal(opts) when is_list(opts) do
+    if Keyword.has_key?(opts, :account_labels) do
+      Keyword.update!(opts, :account_labels, &literal_map/1)
+    else
+      opts
+    end
+  end
+
+  defp expand_account_labels_literal(opts), do: opts
+
+  defp literal_map(map) when is_map(map), do: map
+
+  defp literal_map({:%{}, _meta, pairs}) do
+    Map.new(pairs, fn
+      {key, value} -> {literal_value(key), literal_value(value)}
+      {key, _meta, value} when is_atom(key) -> {key, literal_value(value)}
+    end)
+  end
+
+  defp literal_map(value), do: value
+
+  defp literal_value(value)
+       when is_binary(value) or is_atom(value) or is_integer(value) or is_float(value) or
+              is_boolean(value) or is_nil(value),
+       do: value
+
+  defp literal_value(value), do: value
 
   defp validate_preview_opts!(opts) do
     case NimbleOptions.validate(opts, @preview_opts_schema) do

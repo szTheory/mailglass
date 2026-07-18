@@ -136,7 +136,7 @@ defmodule MailglassAdmin.BucketACoverageTest do
 
     # --- A19: weird pagination when nothing to paginate ---------------------
     %{id: "A19", desc: "Honest pagination boundaries (only when total_pages > 1)", guard_kind: :playwright_title,
-      locator: "sole tenant canonicalizes, explicit theme paints root, active nav has structural cues, and pagination boundaries are honest", status: :live},
+      locator: "sole tenant canonicalizes, theme preference paints root, active nav has structural cues, and pagination boundaries are honest", status: :live},
 
     # --- A20: icons that don't semantically read ----------------------------
     %{id: "A20", desc: "Every hero-* used in lib/ has a vendored SVG", guard_kind: :grep_gate,

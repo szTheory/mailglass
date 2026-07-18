@@ -324,7 +324,7 @@ defmodule MailglassAdmin.Components do
   attr(:rest, :global, default: %{})
 
   @doc """
-  Renders the read-only tenant context chip.
+  Renders the read-only account context chip.
 
   The chip intentionally does not expose switching, loading, or navigation
   behavior.
@@ -339,7 +339,7 @@ defmodule MailglassAdmin.Components do
     >
       <.icon name="hero-building-office-2" class="h-4 w-4 shrink-0" />
       <span :if={@tenant} class="mono min-w-0 truncate font-bold text-base-content">{@tenant}</span>
-      <span :if={!@tenant}>No tenant selected</span>
+      <span :if={!@tenant}>No account selected</span>
     </span>
     """
   end
@@ -407,6 +407,7 @@ defmodule MailglassAdmin.Components do
   attr(:empty_text, :string, default: "No data yet")
   attr(:loading_text, :string, default: "Resolving")
   attr(:unavailable_text, :string, default: "Unavailable")
+  attr(:hint, :string, default: nil)
   attr(:rest, :global, default: %{})
 
   @doc """
@@ -428,11 +429,29 @@ defmodule MailglassAdmin.Components do
     ~H"""
     <article
       id={@id}
-      class="min-w-0 rounded-box border border-base-300 bg-base-200 p-md"
+      class={[
+        "min-w-0 rounded-box border border-base-300 bg-base-200 p-md",
+        present?(@hint) && "mg-stat-card-hint"
+      ]}
       aria-busy={if @state == :loading, do: "true"}
       {@rest}
     >
-      <p class="truncate text-label font-bold uppercase text-secondary" title={@label}>{@label}</p>
+      <div class="flex min-w-0 items-start justify-between gap-sm">
+        <p class="flex min-w-0 items-center gap-xs text-label font-bold uppercase text-secondary">
+          <span class="truncate" title={@label}>{@label}</span>
+          <span
+            :if={present?(@hint)}
+            class="inline-flex shrink-0 text-secondary"
+            aria-hidden="true"
+          >
+            <.icon name="hero-information-circle" class="h-3.5 w-3.5" />
+          </span>
+        </p>
+      </div>
+      <p :if={present?(@hint)} class="sr-only">{@hint}</p>
+      <p :if={present?(@hint)} class="mg-stat-card-tooltip" aria-hidden="true">
+        {@hint}
+      </p>
       <p
         class="mono mt-xs truncate text-display font-bold tabular-nums whitespace-nowrap text-base-content"
         title={@display_value}
@@ -539,8 +558,8 @@ defmodule MailglassAdmin.Components do
   defp nav_pill_class(true), do: "border-primary bg-primary/10 font-bold text-base-content"
   defp nav_pill_class(false), do: "border-transparent text-secondary hover:text-base-content"
 
-  defp tenant_chip_title(nil), do: "Tenant currently in view"
-  defp tenant_chip_title(tenant), do: "Tenant currently in view: " <> tenant
+  defp tenant_chip_title(nil), do: "Account currently in view"
+  defp tenant_chip_title(tenant), do: "Account currently in view: " <> tenant
 
   defp theme_options do
     [
@@ -574,11 +593,15 @@ defmodule MailglassAdmin.Components do
   @doc since: "1.8.0"
   def filter_section(assigns) do
     ~H"""
-    <fieldset class="grid gap-md" {@rest}>
+    <fieldset class="min-w-0 w-full" {@rest}>
       <legend class="text-label font-bold uppercase text-secondary">{@title}</legend>
-      <p :if={@description} class="text-body text-secondary">{@description}</p>
-      <div class="grid gap-sm grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
-        {render_slot(@inner_block)}
+      <div class="grid min-w-0 gap-md">
+        <p :if={@description} class="max-w-prose text-pretty text-body text-secondary">
+          {@description}
+        </p>
+        <div class="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {render_slot(@inner_block)}
+        </div>
       </div>
     </fieldset>
     """
@@ -620,7 +643,7 @@ defmodule MailglassAdmin.Components do
       |> assign(:display_readonly?, display_readonly?(assigns.type, assigns.readonly))
 
     ~H"""
-    <div class="grid gap-xs">
+    <div class="grid min-w-0 content-start gap-xs">
       <label for={@control_id} class="text-label font-bold text-base-content">{@label}</label>
 
       <input
@@ -983,6 +1006,77 @@ defmodule MailglassAdmin.Components do
     """
   end
 
+  # Downstream outcome events that supersede the dispatch snapshot — when one of these
+  # is the delivery's latest event, it IS the status the operator should see.
+  @downstream_outcomes [
+    :delivered,
+    :opened,
+    :clicked,
+    :bounced,
+    :complained,
+    :rejected,
+    :deferred,
+    :unsubscribed
+  ]
+
+  @doc """
+  The lifecycle state the operator Deliveries badge should display for a delivery.
+
+  The core `Delivery.status` is a stable adopter snapshot that stops at `:sent`
+  (handed off to the provider) and never advances. For the operator view we surface
+  the message's *furthest-known* state instead: a downstream event
+  (delivered/opened/clicked/bounced/…) supersedes the dispatch snapshot, so the badge
+  reflects what actually happened. The in-flight, handed-off-but-unconfirmed state
+  renders as `:dispatched` ("Dispatched"). This is presentation only — it never
+  mutates `Delivery.status`.
+  """
+  @doc since: "1.7.0"
+  def delivery_display_status(%{last_event_type: event}) when event in @downstream_outcomes,
+    do: event
+
+  def delivery_display_status(%{status: :failed}), do: :failed
+  def delivery_display_status(%{status: :suppressed}), do: :suppressed
+  def delivery_display_status(%{last_event_type: :suppressed}), do: :suppressed
+
+  def delivery_display_status(%{status: :queued, last_event_type: event})
+      when event in [:queued, nil],
+      do: :queued
+
+  # In-flight: status :sent / handed-off with no downstream outcome yet.
+  def delivery_display_status(_delivery), do: :dispatched
+
+  attr(:at, :any, required: true, doc: "a UTC %DateTime{} or nil")
+  attr(:class, :string, default: "", doc: "extra classes for the <time> element")
+
+  @doc """
+  Renders a UTC `%DateTime{}` as a `<time>` element the admin's local-time script
+  progressively enhances: the server-rendered text is the canonical UTC string
+  (`"YYYY-MM-DD HH:MM:SS UTC"`), and on the client the script rewrites the text to the
+  viewer's local timezone, keeps the UTC in the `title` tooltip, and copies the UTC to
+  the clipboard on click. With JS off (or before hydration) the UTC string stands on its
+  own. `nil` renders the plain `"Pending"` sentinel (no `<time>`).
+  """
+  @doc since: "1.7.0"
+  def timestamp(%{at: nil} = assigns) do
+    ~H"""
+    Pending
+    """
+  end
+
+  def timestamp(assigns) do
+    ~H"""
+    <time
+      datetime={DateTime.to_iso8601(@at)}
+      data-local-time="true"
+      data-utc={utc_string(@at)}
+      title={utc_string(@at)}
+      class={["mono cursor-pointer", @class]}
+    >{utc_string(@at)}</time>
+    """
+  end
+
+  defp utc_string(%DateTime{} = at), do: Calendar.strftime(at, "%Y-%m-%d %H:%M:%S UTC")
+
   defp size_class(:sm), do: "badge-sm"
   defp size_class(:md), do: "badge-md"
 
@@ -1008,8 +1102,9 @@ defmodule MailglassAdmin.Components do
   defp status_class(:webhook_replay_succeeded), do: "badge-success"
   defp status_class(:webhook_replay_failed), do: "badge-error"
   defp status_class(:reconciled), do: "badge-warning"
+  defp status_class(:suppressed), do: "badge-warning"
 
-  # Fallback for phantom atoms (e.g. :suppressed) and nil — render neutral outline per UI-SPEC Conflict 1
+  # Fallback for unrecognized atoms and nil — render neutral outline per UI-SPEC Conflict 1
   defp status_class(_status), do: "badge-outline"
 
   defp status_icon(:dispatched), do: "hero-paper-airplane"
@@ -1034,8 +1129,9 @@ defmodule MailglassAdmin.Components do
   defp status_icon(:webhook_replay_succeeded), do: "hero-check-circle"
   defp status_icon(:webhook_replay_failed), do: "hero-x-circle"
   defp status_icon(:reconciled), do: "hero-exclamation-triangle"
+  defp status_icon(:suppressed), do: "hero-minus-circle"
 
-  # Fallback for phantom atoms (e.g. :suppressed) and nil — render question mark per UI-SPEC Conflict 1
+  # Fallback for unrecognized atoms and nil — render question mark per UI-SPEC Conflict 1
   defp status_icon(_status), do: "hero-question-mark-circle"
 
   defp status_label(:dispatched), do: "Dispatched"
@@ -1060,8 +1156,9 @@ defmodule MailglassAdmin.Components do
   defp status_label(:webhook_replay_succeeded), do: "Replay succeeded"
   defp status_label(:webhook_replay_failed), do: "Replay failed"
   defp status_label(:reconciled), do: "Reconciled"
+  defp status_label(:suppressed), do: "Suppressed"
 
-  # Fallback for phantom atoms (e.g. :suppressed) and nil — render "Unknown" per UI-SPEC Conflict 1
+  # Fallback for unrecognized atoms and nil — render "Unknown" per UI-SPEC Conflict 1
   defp status_label(_status), do: "Unknown"
 
   @doc """

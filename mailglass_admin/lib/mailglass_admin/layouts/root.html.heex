@@ -8,6 +8,45 @@
       <%= assigns[:page_title] || "Preview" %>
     </.live_title>
     <link rel="stylesheet" href={css_url(assigns)} />
+    <style>
+      /* Until the local-time script marks a <time> localized, show a static, muted
+         placeholder bar instead of the raw UTC fallback text — no shimmer (house style).
+         Scoped to .mg-js so it only applies when JS is present to localize it. Brand
+         tokens auto-adapt light/dark. */
+      .mg-js time[data-local-time]:not([data-localized]) {
+        display: inline-block;
+        color: transparent;
+        user-select: none;
+        border-radius: var(--radius-field);
+        background-color: var(--color-base-300);
+      }
+
+      /* Record inspection overlay (Quick view). One URL-driven overlay whose shape
+         adapts by breakpoint: a bottom sheet on mobile, a right slide-over on desktop.
+         Positioning only — dim/z-layer/motion come from the reused mg-layer-overlay-*
+         and motion-* classes. Kept here (not app.css) so token_parity_test, which reads
+         only priv/static/app.css, is untouched. */
+      .mg-detail-panel {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      @media (min-width: 768px) {
+        .mg-detail-panel {
+          left: auto;
+          top: 0;
+          bottom: 0;
+          height: 100%;
+          max-height: none;
+          width: 100%;
+          max-width: 42rem;
+        }
+      }
+    </style>
     <script><%= Phoenix.HTML.raw(js_inline()) %></script>
   </head>
   <body>

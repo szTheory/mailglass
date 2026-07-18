@@ -1,3 +1,37 @@
+defmodule MailglassDemoWeb.StorybookRoutes do
+  @moduledoc false
+
+  defmacro maybe_storybook_assets do
+    if Code.ensure_loaded?(PhoenixStorybook.Router) do
+      quote do
+        import PhoenixStorybook.Router
+
+        scope "/" do
+          storybook_assets()
+        end
+      end
+    else
+      quote(do: nil)
+    end
+  end
+
+  defmacro maybe_live_storybook do
+    if Code.ensure_loaded?(PhoenixStorybook.Router) do
+      quote do
+        import PhoenixStorybook.Router
+
+        scope "/dev" do
+          pipe_through(:browser)
+
+          live_storybook("/storybook", backend_module: MailglassDemoWeb.Storybook)
+        end
+      end
+    else
+      quote(do: nil)
+    end
+  end
+end
+
 defmodule MailglassDemoWeb.Router do
   use Phoenix.Router
 
@@ -5,7 +39,7 @@ defmodule MailglassDemoWeb.Router do
   import Phoenix.LiveView.Router
   import Plug.Conn
   import MailglassAdmin.Router
-  import PhoenixStorybook.Router
+  require MailglassDemoWeb.StorybookRoutes
 
   pipeline :browser do
     plug(:accepts, ["html"])
@@ -36,11 +70,9 @@ defmodule MailglassDemoWeb.Router do
   end
 
   # Serves phoenix_storybook's OWN prebuilt explorer assets (shipped in the hex
-  # package). Dev-only because the dep is `only: :dev` — absent from the compiled
-  # prod build entirely (T-118-01 mitigation).
-  scope "/" do
-    storybook_assets()
-  end
+  # package). Dev-only because the dep is `only: :dev` — absent from test/prod
+  # builds (T-118-01 mitigation).
+  MailglassDemoWeb.StorybookRoutes.maybe_storybook_assets()
 
   scope "/dev" do
     pipe_through(:browser)
@@ -58,13 +90,13 @@ defmodule MailglassDemoWeb.Router do
         inbound_path: "/demo/login?return_to=%2Fops%2Fmail%2Finbound%3Ftenant_id%3Dnorthstar"
       ]
     )
-
-    # Dev-only interactive component review surface (PROJECT D-06). Mounted strictly
-    # inside this dev-only /dev scope so it is never prod-reachable (V4 access-control
-    # mitigation T-118-01). Its sandbox CSS is the committed admin bundle served by
-    # mailglass_admin_routes/2 above at /dev/mail/css-<md5>.
-    live_storybook("/storybook", backend_module: MailglassDemoWeb.Storybook)
   end
+
+  # Dev-only interactive component review surface (PROJECT D-06). Mounted strictly
+  # inside this dev-only /dev scope so it is never prod-reachable (V4 access-control
+  # mitigation T-118-01). Its sandbox CSS is the committed admin bundle served by
+  # mailglass_admin_routes/2 above at /dev/mail/css-<md5>.
+  MailglassDemoWeb.StorybookRoutes.maybe_live_storybook()
 
   scope "/ops" do
     pipe_through(:browser)
@@ -81,6 +113,11 @@ defmodule MailglassDemoWeb.Router do
       navigation: [
         preview_path: "/dev/mail"
       ],
+      account_labels: %{
+        "northstar" => "Northstar Logistics",
+        "fjordline-aps" => "Fjordline A/S",
+        "helios-void" => "Helios Trial"
+      },
       unauthorized_path: "/"
     )
   end

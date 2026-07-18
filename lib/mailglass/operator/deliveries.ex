@@ -21,6 +21,22 @@ defmodule Mailglass.Operator.Deliveries do
     |> Map.fetch!(:entries)
   end
 
+  @spec list_providers(filters(), keyword()) :: [String.t()]
+  def list_providers(filters, _opts \\ []) do
+    normalized = normalize_filters(filters)
+    tenant_id = fetch_tenant_id!(normalized)
+
+    Delivery
+    |> where([delivery], delivery.tenant_id == ^tenant_id)
+    |> where([delivery], not is_nil(delivery.provider) and delivery.provider != "")
+    |> maybe_filter_window(normalized[:window_hours] || normalized[:recent_window_hours])
+    |> Tenancy.scope(tenant_id)
+    |> group_by([delivery], delivery.provider)
+    |> order_by([delivery], asc: delivery.provider)
+    |> select([delivery], delivery.provider)
+    |> Repo.all()
+  end
+
   @spec list_recent_deliveries_page(filters(), keyword()) :: map()
   def list_recent_deliveries_page(filters, opts \\ []) do
     normalized = normalize_filters(filters)

@@ -78,7 +78,7 @@ test.describe("judgment gates (armed in Phase 119)", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openOverview(page);
 
-    const sidebar = page.getByRole("navigation", { name: "Operator sections" }).first();
+    const sidebar = page.getByRole("navigation", { name: "Mailglass sections" }).first();
 
     // Deliveries must NOT be the active (aria-current=page) item on the Overview route.
     // nav_link emits aria-current={@active && "page"}: when inactive, Phoenix OMITS the
@@ -86,8 +86,9 @@ test.describe("judgment gates (armed in Phase 119)", () => {
     const deliveriesLink = sidebar.getByRole("link", { name: "Deliveries", exact: true });
     await expect(deliveriesLink).not.toHaveAttribute("aria-current", "page");
 
-    // An Overview nav item must exist and BE the active (aria-current=page) item.
-    const overviewLink = sidebar.getByRole("link", { name: "Overview", exact: true });
+    // The Overview surface's own nav item (labeled "Health") must exist and BE the
+    // active (aria-current=page) item on the Overview route.
+    const overviewLink = sidebar.getByRole("link", { name: "Health", exact: true });
     await expect(overviewLink).toHaveAttribute("aria-current", "page");
   });
 
