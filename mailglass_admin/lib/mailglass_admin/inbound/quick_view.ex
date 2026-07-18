@@ -70,7 +70,7 @@ defmodule MailglassAdmin.Inbound.QuickView do
               patch={@close_path}
               data-testid="inbound-detail-back"
               aria-label="Close quick view"
-              class="mg-focus-ring btn btn-ghost btn-sm ml-xs"
+              class="mg-focus-ring btn btn-ghost min-h-11 min-w-11 ml-xs"
             >
               <Components.icon name="hero-x-circle" class="h-5 w-5" />
             </.link>

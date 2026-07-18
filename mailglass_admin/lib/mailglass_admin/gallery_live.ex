@@ -962,7 +962,7 @@ defmodule MailglassAdmin.GalleryLive do
        status_values: [:delivered, :bounced, :deferred],
        event_values: [:delivered, :bounced],
        window_options: [{"Last 24 hours", "24"}, {"Last 7 days", "168"}],
-       errors: %{"status" => "Status was not applied. Choose a listed status."}
+       errors: %{"event" => "Status was not applied. Choose a listed status."}
      }},
 
     # STATE-LD-14: support_cards — tier1-shown and tier1-hidden
