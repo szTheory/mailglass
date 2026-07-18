@@ -111,7 +111,11 @@ async function openDeliveries(page, theme) {
   // any failure throws and fails the producer rather than silently scanning the
   // surface overlay-free and under-counting violations (WR-04).
   return openOverlay(page, "deliveries", async () => {
+    // Two-tier inspection: a row click opens the condensed Quick view; the
+    // replay control lives behind "Open full detail" (&full=1).
     await page.getByTestId("operator-delivery-row").first().click();
+    await expect(page.getByTestId("operator-quick-view")).toBeVisible();
+    await page.getByTestId("operator-quick-view-full").click();
     await expect(page.getByTestId("operator-detail-column")).toBeVisible();
     await page.getByTestId("operator-replay-open").click();
     const modal = page.getByTestId("operator-replay-modal");
@@ -136,6 +140,9 @@ async function openInbound(page, theme) {
       .first();
     await replayableRow.click();
     await page.waitForURL(/inbound_id=/);
+    await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
+    await page.getByTestId("inbound-quick-view-full").click();
+    await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
     await page.getByTestId("inbound-replay-open").click();
     const modal = page.getByTestId("inbound-replay-modal");
     await expect(modal).toBeVisible();

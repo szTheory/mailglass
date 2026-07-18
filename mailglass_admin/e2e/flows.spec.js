@@ -93,6 +93,23 @@ function noMatchRow(page) {
     .first();
 }
 
+// Two-tier inspection (mirror structural.spec.js): a row click opens the
+// condensed Quick view; the full record (detail-column, replay, timeline,
+// routing trace, evidence) lives behind "Open full detail" (&full=1).
+async function selectDeliveryFull(page, row) {
+  await row.click();
+  await expect(page.getByTestId("operator-quick-view")).toBeVisible();
+  await page.getByTestId("operator-quick-view-full").click();
+  await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+}
+
+async function selectInboundFull(page, row) {
+  await row.click();
+  await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
+  await page.getByTestId("inbound-quick-view-full").click();
+  await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
+}
+
 async function openOperatorReplayModal(page) {
   await openOperator(page);
   // The Confirm control only renders when replay is :exact (or :ambiguous with a
@@ -102,8 +119,10 @@ async function openOperatorReplayModal(page) {
   // delivery seed ordering) so #operator-replay-confirm is present for the
   // focus-trap / double-submit assertions.
   // visible() resolves the card row at <768px and the table row at >=768px.
-  await page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3).click();
-  await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+  await selectDeliveryFull(
+    page,
+    page.getByTestId("operator-delivery-row").filter({ visible: true }).nth(3)
+  );
   await page.getByTestId("operator-replay-open").click();
   const modal = page.getByTestId("operator-replay-modal");
   await expect(modal).toBeVisible();
@@ -117,8 +136,7 @@ async function openInboundReplayModal(page) {
     .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
     .filter({ visible: true })
     .first();
-  await replayableRow.click();
-  await page.waitForURL(/inbound_id=/);
+  await selectInboundFull(page, replayableRow);
   await page.getByTestId("inbound-replay-open").click();
   const modal = page.getByTestId("inbound-replay-modal");
   await expect(modal).toBeVisible();
@@ -272,8 +290,10 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator happy master-detail");
 
     // At 320 the table is hidden — select from the card presentation.
-    await page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first().click();
-    await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+    await selectDeliveryFull(
+      page,
+      page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first()
+    );
 
     // The single obvious top action for Operator: the replay CTA (the one
     // destructive/dominant action in the detail header). It must be visible and
@@ -289,8 +309,10 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
   });
 
   test("Operator error: delivery_id=does-not-exist -> detail error", async ({ page }) => {
+    // A bare delivery_id deep-link opens the Quick view; an off-page id surfaces
+    // the error inside it (operator-quick-view-error), the list still behind it.
     await openOperator(page, `tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
-    await expect(page.getByTestId("operator-detail-error")).toBeVisible();
+    await expect(page.getByTestId("operator-quick-view-error")).toBeVisible();
     await assertSingleH1(page, "operator error");
     await assertNoRootOverflow(page, "operator error");
     await assertNoElementHorizontalOverflow(page.getByTestId("operator-master-detail"), "operator error master-detail");
@@ -339,15 +361,14 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
 
     // Happy path per taxonomy: select a no-match row -> routing trace renders
     // (the routing trace explains why no Mailbox matched).
-    await noMatchRow(page).click();
-    await page.waitForURL(/inbound_id=/);
+    await selectInboundFull(page, noMatchRow(page));
     await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
     await assertSingleH1(page, "inbound happy after no-match select");
     await assertNoRootOverflow(page, "inbound happy trace");
 
-    // At 320 the list-card is hidden once a record is selected — return to the
-    // list via detail-back before selecting a replayable row.
-    await page.getByTestId("inbound-detail-back").click();
+    // Full detail's "← Back" lands on the Quick view (id retained); navigate to the
+    // bare list to clear the overlay before selecting a replayable row.
+    await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
     await expect(page.getByTestId("inbound-records-list-card")).toBeVisible();
 
     // The single dominant top action (Replay inbound) is present on a replayable
@@ -359,8 +380,7 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
       .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
       .filter({ visible: true })
       .first();
-    await replayableRow.click();
-    await page.waitForURL(/inbound_id=/);
+    await selectInboundFull(page, replayableRow);
     const replayCta = page.getByTestId("inbound-replay-open");
     await expect(replayCta).toBeVisible();
     const box = await replayCta.boundingBox();
@@ -370,8 +390,10 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
   });
 
   test("Inbound error: inbound_id=does-not-exist -> detail error", async ({ page }) => {
+    // A bare inbound_id deep-link opens the Quick view; an off-page id surfaces
+    // the error inside it (inbound-quick-view-error), the list still behind it.
     await openInbound(page, `tenant_id=${tenantId}&inbound_id=does-not-exist`);
-    await expect(page.getByTestId("inbound-detail-error")).toBeVisible();
+    await expect(page.getByTestId("inbound-quick-view-error")).toBeVisible();
     await assertSingleH1(page, "inbound error");
     await assertNoRootOverflow(page, "inbound error");
     await assertNoElementHorizontalOverflow(page.getByTestId("inbound-master-detail"), "inbound error master-detail");
@@ -394,12 +416,13 @@ test.describe("flows: full walk — 5 paths x 3 surfaces at 320/system (FLOW-01/
       "inbound edge list-card"
     );
 
-    await noMatchRow(page).click();
-    await page.waitForURL(/inbound_id=/);
+    await selectInboundFull(page, noMatchRow(page));
     await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
     await assertSingleH1(page, "inbound edge");
     await assertNoRootOverflow(page, "inbound edge");
-    await assertNoElementHorizontalOverflow(page.getByTestId("inbound-master-detail"), "inbound edge master-detail");
+    // Full detail replaces the list; assert the detail column (not the now-hidden
+    // list grid) has no horizontal overflow at the 320 floor.
+    await assertNoElementHorizontalOverflow(page.getByTestId("inbound-detail-column"), "inbound edge detail-column");
   });
 
   test("Inbound advanced: replay modal parity -> panel above scrim, Escape closes", async ({ page }) => {
@@ -614,8 +637,10 @@ test.describe("flows: theme-parity contrast spot-check at 320 (FLOW-02)", () => 
         expect(await page.locator("html").getAttribute("data-theme"), "system root has no data-theme").toBeNull();
       }
 
-      await page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first().click();
-      await expect(page.getByTestId("operator-detail-column")).toBeVisible();
+      await selectDeliveryFull(
+        page,
+        page.getByTestId("operator-deliveries-cards").getByTestId("operator-delivery-row").first()
+      );
       await page.getByTestId("operator-replay-open").click();
       const modal = page.getByTestId("operator-replay-modal");
       await expect(modal).toBeVisible();
@@ -742,8 +767,7 @@ test.describe("flows: a11y deltas — reveal disclosure + replay focus-trap + do
     await openInbound(page);
 
     // Select a no-match row to reach the EvidenceCard in its redacted-by-default state.
-    await noMatchRow(page).click();
-    await page.waitForURL(/inbound_id=/);
+    await selectInboundFull(page, noMatchRow(page));
     await expect(page.getByTestId("inbound-evidence-card")).toBeVisible();
 
     const reveal = page.getByTestId("inbound-evidence-reveal");

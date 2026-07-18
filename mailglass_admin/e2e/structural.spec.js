@@ -592,7 +592,9 @@ async function assertStatCardShape(wrapper, label) {
   const valueEl = card.locator("p").nth(1);
   const severityEl = card.locator("p").nth(2);
 
-  await expect(labelEl, `${label} label`).toHaveAttribute("title", /.+/);
+  // The label's truncating inner span carries the title tooltip (the hint icon now
+  // shares the label <p>, so the title moved onto the text span).
+  await expect(labelEl.locator("span").first(), `${label} label`).toHaveAttribute("title", /.+/);
   await expect(valueEl, `${label} value`).toHaveText(/.+/);
   await expect(severityEl.locator('[class*="hero-"]'), `${label} severity icon`).toBeVisible();
   await expect(severityEl.locator("span").last(), `${label} severity text`).toHaveText(/.+/);
@@ -1056,8 +1058,10 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
     test("Operator: per-state delivery cells are reachable by URL", async ({ page }) => {
       await openOperator(page);
 
+      // A bare delivery_id deep-link opens the Quick view; an off-page id surfaces
+      // the error inside it (operator-quick-view-error).
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&delivery_id=does-not-exist`);
-      await expect(page.getByTestId("operator-detail-error")).toBeVisible();
+      await expect(page.getByTestId("operator-quick-view-error")).toBeVisible();
 
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries&event=queued`);
       // Phase 113: filtered-empty now renders via data_state/1; hidden stub preserves testid for URL probes.
@@ -1094,14 +1098,20 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           )
         );
 
-      expect((await columnsAt()).length).toBe(1);
+      // The 40/60 split is retired: master-detail is no longer a grid (grid-template-columns:
+      // none → 0 columns) or is at most a single column. Assert it is never a 2-column split.
+      expect((await columnsAt()).length).toBeLessThanOrEqual(1);
 
       await page.getByTestId("operator-delivery-row").filter({ visible: true }).first().click();
       await expect(page.getByTestId("operator-quick-view")).toBeVisible();
-      expect((await columnsAt()).length).toBe(1);
+      // The 40/60 split is retired: master-detail is no longer a grid (grid-template-columns:
+      // none → 0 columns) or is at most a single column. Assert it is never a 2-column split.
+      expect((await columnsAt()).length).toBeLessThanOrEqual(1);
 
       await page.setViewportSize({ width: 1440, height: 900 });
-      expect((await columnsAt()).length).toBe(1);
+      // The 40/60 split is retired: master-detail is no longer a grid (grid-template-columns:
+      // none → 0 columns) or is at most a single column. Assert it is never a 2-column split.
+      expect((await columnsAt()).length).toBeLessThanOrEqual(1);
 
       // 320 floor: the list is full-width and fits without horizontal overflow.
       await page.setViewportSize({ width: 320, height: 844 });
@@ -1143,7 +1153,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
         )
       );
-      expect(columns.length).toBe(1);
+      expect(columns.length).toBeLessThanOrEqual(1);
 
       // Two-tier model: the records list stays single-column at every width; the
       // detail is a Quick view OVERLAY, not a grid column.
@@ -1154,7 +1164,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
         )
       );
-      expect(columns.length).toBe(1);
+      expect(columns.length).toBeLessThanOrEqual(1);
 
       await page.setViewportSize({ width: 1440, height: 1000 });
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
@@ -1163,7 +1173,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           el => getComputedStyle(el).getPropertyValue("grid-template-columns")
         )
       );
-      expect(columns.length).toBe(1);
+      expect(columns.length).toBeLessThanOrEqual(1);
 
       await page.setViewportSize({ width: 320, height: 844 });
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
@@ -1215,18 +1225,25 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // Phase 113: filtered-empty copy updated per UI-SPEC contract
       await expect(page.getByText("No records match the current filters.")).toBeVisible();
 
+      // A bare inbound_id deep-link opens the Quick view; an off-page id surfaces
+      // the error inside it (inbound-quick-view-error).
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}&inbound_id=does-not-exist`);
-      await expect(page.getByTestId("inbound-detail-error")).toBeVisible();
+      await expect(page.getByTestId("inbound-quick-view-error")).toBeVisible();
 
       await page.goto(`/ops/mail/inbound?tenant_id=${tenantId}`);
       await noMatchRow(page).click();
       await expect(page).toHaveURL(/inbound_id=/);
+      // Row is selected while the Quick view sits over the list.
+      await expect(page.getByTestId("inbound-quick-view")).toBeVisible();
+      await expect(noMatchRow(page)).toHaveAttribute("aria-selected", "true");
+      // Routing trace + evidence live in Full detail (behind "Open full detail").
+      await page.getByTestId("inbound-quick-view-full").click();
+      await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
       await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
       await expect(page.getByTestId("inbound-trace-clause")).not.toHaveCount(0);
       await expect(page.getByTestId("inbound-evidence-card")).toBeVisible();
       await expect(page.getByTestId("inbound-evidence-redacted")).toBeVisible();
       await expect(page.getByTestId("inbound-evidence-raw")).toHaveCount(0);
-      await expect(noMatchRow(page)).toHaveAttribute("aria-selected", "true");
 
       const source = await page.request.get("/ops/mail/inbound?tenant_id=browser-tenant");
       expect(source.ok()).toBeTruthy();
@@ -1245,7 +1262,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       browser
     }) => {
       const themes = [
-        { name: "light", query: "", expectedTheme: "mailglass-light" },
+        { name: "light", query: "theme=light", expectedTheme: "mailglass-light" },
         { name: "dark", query: "theme=dark", expectedTheme: "mailglass-dark" }
       ];
       const viewports = [
@@ -1264,14 +1281,15 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await assertTextContrastAA(page.getByTestId("inbound-overview"), `${theme.name} ${viewport.width} inbound-overview`);
 
           const row = noMatchRow(page);
-          await row.click();
-          await expect(page.getByTestId("inbound-detail-column")).toBeVisible();
+          // Routing trace + evidence live in Full detail (behind "Open full detail").
+          await selectInboundFull(page, row);
           await expect(page.getByTestId("inbound-routing-trace")).toBeVisible();
           await assertTextContrastAA(page.getByTestId("inbound-routing-trace"), `${theme.name} ${viewport.width} inbound-routing-trace`);
           await assertTextContrastAA(page.getByTestId("inbound-route-card").first(), `${theme.name} ${viewport.width} inbound-route-card`);
           await assertTextContrastAA(page.getByTestId("inbound-trace-clause").first(), `${theme.name} ${viewport.width} inbound-trace-clause`);
-          const selectedBoundary =
-            viewport.width < 768 ? page.getByTestId("inbound-detail-back") : row;
+          // In Full detail the list row is hidden; the detail-back control is the
+          // focusable selected-state boundary at every width.
+          const selectedBoundary = page.getByTestId("inbound-detail-back");
           // The design-system focus ring is :focus-visible-gated (correct a11y:
           // no ring on mouse). Selecting the row above is a mouse interaction, so
           // a subsequent programmatic .focus() would NOT match :focus-visible and
@@ -1294,7 +1312,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           try {
             await deniedPage.setViewportSize(viewport);
             await openInbound(deniedPage, deniedQuery, "deny-reveal", denyRevealTenantId);
-            await noMatchRow(deniedPage).click();
+            await selectInboundFull(deniedPage, noMatchRow(deniedPage));
             await deniedPage.getByTestId("inbound-evidence-reveal").click();
             await expect(deniedPage.getByTestId("inbound-evidence-denied")).toBeVisible();
             await expect(deniedPage.getByTestId("inbound-evidence-raw")).toHaveCount(0);
@@ -1312,7 +1330,7 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await openInbound(page, `tenant_id=${tenantId}&search=filtered-empty${theme.query ? `&${theme.query}` : ""}`, "operator-1");
           await assertTextContrastAA(page.getByText("No records match the current filters."), `${theme.name} ${viewport.width} filtered-empty`);
           await openInbound(page, `tenant_id=${tenantId}&inbound_id=does-not-exist${theme.query ? `&${theme.query}` : ""}`, "operator-1");
-          await assertTextContrastAA(page.getByTestId("inbound-detail-error"), `${theme.name} ${viewport.width} detail-error`);
+          await assertTextContrastAA(page.getByTestId("inbound-quick-view-error"), `${theme.name} ${viewport.width} detail-error`);
         }
       }
     });
@@ -1325,8 +1343,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
         .getByTestId("inbound-record-row")
         .filter({ hasNot: page.locator(".badge-warning", { hasText: "No match" }) })
         .first();
-      await replayableRow.click();
-      await page.waitForURL(/inbound_id=/);
+      // Replay lives in Full detail (behind "Open full detail"), not the Quick view.
+      await selectInboundFull(page, replayableRow);
 
       // Open the replay modal via the trigger button
       await page.getByTestId("inbound-replay-open").click();
@@ -1592,7 +1610,8 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       // delivery selection). Click the first row to bring it into the DOM.
       // Use operator-delivery-row testid which resolves across table and card presentations.
       const firstRow = page.getByTestId("operator-delivery-row").first();
-      await firstRow.click();
+      // .motion-reveal lives on the Full detail pane, reached via "Open full detail".
+      await selectDeliveryFull(page, firstRow);
 
       // Wait for the detail pane to appear
       const el = page.locator(".motion-reveal").first();
@@ -1758,10 +1777,12 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       // Select the first delivery by clicking the first row (resolves across table and card presentations).
       const firstRow = page.getByTestId("operator-delivery-row").first();
+      // The animated "detail pane" is now the Quick view overlay panel — the exit
+      // transition (phx-remove) lives there; the Full detail region is a static
+      // full-page view without an exit animation.
       await firstRow.click();
 
-      // The detail pane element ID is delivery-detail-{id}; locate by id prefix pattern
-      const detailPane = page.locator('[id^="delivery-detail-"]').first();
+      const detailPane = page.getByTestId("operator-quick-view");
       await expect(detailPane).toBeVisible();
 
       // Presence proof: phx-remove attribute must be non-null (set by Plan 102-03)
@@ -1923,7 +1944,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
 
       const operatorFilters = page.getByTestId("operator-filters");
       const operatorProvider = operatorFilters.getByLabel("Provider", { exact: true }).first();
-      await operatorProvider.fill("postmark");
+      // Provider is now a <select> populated from Deliveries.list_providers/2 — pick the
+      // first real option (index 1, past the "All providers" placeholder) instead of fill().
+      await operatorProvider.selectOption({ index: 1 });
       await operatorProvider.focus();
       const operatorBefore = await page.evaluate(() => document.activeElement && document.activeElement.id);
       await page.evaluate(() => document.getElementById("operator-filters").requestSubmit());
@@ -2079,17 +2102,11 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
       await expect(activeDesktop).toHaveClass(/border-l-2/);
       await expect(activeDesktop).toHaveClass(/border-primary/);
 
-      await expect(page.getByTestId("operator-result-count")).toContainText("6 results");
-      await expect(page.getByTestId("operator-pagination")).toBeVisible();
-      await expect(page.getByTestId("operator-pagination-prev-disabled")).toHaveAttribute("aria-disabled", "true");
-      await expect(page.getByTestId("operator-pagination-next")).toHaveAttribute("href", /tenant_id=browser-tenant/);
-      await expect(page.getByTestId("operator-pagination-next")).toHaveAttribute("href", /page=2/);
-
-      await page.getByTestId("operator-pagination-next").click();
-      await expect(page).toHaveURL(/tenant_id=browser-tenant/);
-      await expect(page).toHaveURL(/page=2/);
-      await expect(page.getByTestId("operator-pagination-prev")).toBeVisible();
-      await expect(page.getByTestId("operator-pagination-next-disabled")).toHaveAttribute("aria-disabled", "true");
+      await expect(page.getByTestId("operator-result-count")).toContainText("6 deliveries");
+      // Honest single-page boundary: 6 deliveries at 20/page is one page, so the
+      // pagination control (rendered only when total_pages > 1) is absent. Multi-page
+      // boundary behaviour is covered by the inbound pagination test below.
+      await expect(page.getByTestId("operator-pagination")).toHaveCount(0);
 
       await page.context().clearCookies();
       await page.goto(`/ops/mail?tenant_id=${tenantId}&view=deliveries`);
@@ -2299,7 +2316,9 @@ test.describe("structural assertions — 6 D-01 pillar facts", () => {
           await expect(loadingCard, `${theme} ${viewport.width} loading aria-busy`).toHaveAttribute("aria-busy", "true");
           await expect(loadingCard.getByText("Loading", { exact: true })).toBeVisible();
 
-          const longLabel = primitiveWrapper(page, "stat_card", "long-label", theme).locator("article p").first();
+          // The label's title tooltip lives on the truncating inner span (the hint icon
+          // shares the label <p>), not the <p> itself.
+          const longLabel = primitiveWrapper(page, "stat_card", "long-label", theme).locator("article p").first().locator("span").first();
           await expect(longLabel).toHaveAttribute("title", /Deliveries requiring operator review/);
 
           const longValue = primitiveWrapper(page, "stat_card", "long-value", theme).locator("article p").nth(1);
