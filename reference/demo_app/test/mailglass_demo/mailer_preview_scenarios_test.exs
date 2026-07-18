@@ -20,7 +20,8 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
 
       assert message.mailable_function == :invite_admin
       assert message.swoosh_email.from == {"AtlasDesk", "notify@atlasdesk.example"}
-      assert message.swoosh_email.subject == "Sam Rivera invited you to AtlasDesk"
+      assert_recipient(message, "mira.chen@northstar.example")
+      assert message.swoosh_email.subject == "Sam Rivera invited you to Northstar Logistics"
       assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "Workspace invite"
       assert message.swoosh_email.text_body =~ "Sam Rivera"
@@ -31,7 +32,8 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
 
       assert message.mailable_function == :magic_link
       assert message.swoosh_email.from == {"AtlasDesk", "security@atlasdesk.example"}
-      assert message.swoosh_email.subject == "Your AtlasDesk sign-in link"
+      assert_recipient(message, "mira.chen@northstar.example")
+      assert message.swoosh_email.subject == "Your Northstar Logistics sign-in link"
       assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "Chrome on macOS"
       assert message.swoosh_email.html_body =~ "2026-06-01 14:48 UTC"
@@ -58,7 +60,8 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
 
       assert message.mailable_function == :receipt_paid
       assert message.swoosh_email.from == {"AtlasDesk Billing", "billing@atlasdesk.example"}
-      assert message.swoosh_email.subject == "Receipt INV-2026-0601 for AtlasDesk"
+      assert_recipient(message, "billing@northstar.example")
+      assert message.swoosh_email.subject == "Receipt INV-2026-0601 for Northstar Logistics"
       assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "May 2026"
       assert message.swoosh_email.html_body =~ "Scale"
@@ -71,7 +74,8 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
 
       assert message.mailable_function == :payment_failed
       assert message.swoosh_email.from == {"AtlasDesk Billing", "billing@atlasdesk.example"}
-      assert message.swoosh_email.subject == "Payment action needed for AtlasDesk"
+      assert_recipient(message, "billing@northstar.example")
+      assert message.swoosh_email.subject == "Payment action needed for Northstar Logistics"
       assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "$248.00"
       assert message.swoosh_email.html_body =~ "4242"
@@ -96,13 +100,14 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
 
       assert message.mailable_function == :usage_alert
       assert message.swoosh_email.from == {"AtlasDesk", "ops@atlasdesk.example"}
-      assert message.swoosh_email.subject == "AtlasDesk email usage reached 85%"
+      assert_recipient(message, "ops@northstar.example")
+      assert message.swoosh_email.subject == "Northstar Logistics email usage reached 85%"
       assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "Usage threshold reached"
       assert message.swoosh_email.html_body =~ "$38.00"
-      refute message.swoosh_email.html_body =~ "Usage threshold reachedAtlasDesk"
+      refute message.swoosh_email.html_body =~ "Usage threshold reachedNorthstar"
       assert message.swoosh_email.text_body =~ "$38.00"
-      assert message.swoosh_email.text_body =~ "AtlasDesk used 85%"
+      assert message.swoosh_email.text_body =~ "Northstar Logistics used 85%"
     end
 
     test "incident_update builds expected public message fields" do
@@ -110,6 +115,7 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
 
       assert message.mailable_function == :incident_update
       assert message.swoosh_email.from == {"AtlasDesk Status", "status@atlasdesk.example"}
+      assert_recipient(message, "ops@northstar.example")
       assert message.swoosh_email.subject == "INC-4421 is monitoring"
       assert_real_atlasdesk_email(message)
       assert message.swoosh_email.html_body =~ "Inbound routing trace"
@@ -117,6 +123,13 @@ defmodule MailglassDemo.MailerPreviewScenariosTest do
       assert message.swoosh_email.text_body =~ "Inbound routing trace"
       assert message.swoosh_email.text_body =~ "15 minutes"
     end
+  end
+
+  defp assert_recipient(message, expected) do
+    assert Enum.any?(List.wrap(message.swoosh_email.to), fn
+             {_name, address} -> address == expected
+             address when is_binary(address) -> address == expected
+           end)
   end
 
   defp assert_real_atlasdesk_email(message) do

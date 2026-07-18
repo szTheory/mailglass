@@ -7,14 +7,14 @@ defmodule MailglassDemoWeb.Mailers.AccountMailer do
   def preview_props do
     [
       invite_admin: %{
-        recipient: AtlasDeskEmail.address("mira.chen"),
+        recipient: AtlasDeskEmail.account_address("mira.chen"),
         inviter: "Sam Rivera",
-        workspace: AtlasDeskEmail.brand(),
+        workspace: AtlasDeskEmail.demo_account(),
         role: "Admin"
       },
       magic_link: %{
-        recipient: AtlasDeskEmail.address("mira.chen"),
-        workspace: AtlasDeskEmail.brand(),
+        recipient: AtlasDeskEmail.account_address("mira.chen"),
+        workspace: AtlasDeskEmail.demo_account(),
         expires_in: "15 minutes",
         requested_by: "Chrome on macOS",
         requested_at: "2026-06-01 14:48 UTC"
@@ -34,7 +34,7 @@ defmodule MailglassDemoWeb.Mailers.AccountMailer do
         title: "Join #{assigns.workspace}",
         paragraphs: [
           "#{assigns.inviter} invited you as #{assigns.role}.",
-          "Accept the invite to review team conversations, customer replies, billing notices, and delivery health from one workspace."
+          "Accept the invite to review customer conversations, billing notices, and delivery health for this account."
         ],
         metrics: [{"Role", assigns.role}, {"Invited by", assigns.inviter}],
         cta: {"Accept invite", "https://app.atlasdesk.example/invitations/team-invite"}

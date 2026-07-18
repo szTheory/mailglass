@@ -7,16 +7,16 @@ defmodule MailglassDemoWeb.Mailers.BillingMailer do
   def preview_props do
     [
       receipt_paid: %{
-        recipient: AtlasDeskEmail.address("billing"),
-        workspace: AtlasDeskEmail.brand(),
+        recipient: AtlasDeskEmail.account_address("billing"),
+        workspace: AtlasDeskEmail.demo_account(),
         invoice_id: "INV-2026-0601",
         total: "$248.00",
         billing_period: "May 2026",
         plan: "Scale"
       },
       payment_failed: %{
-        recipient: AtlasDeskEmail.address("billing"),
-        workspace: AtlasDeskEmail.brand(),
+        recipient: AtlasDeskEmail.account_address("billing"),
+        workspace: AtlasDeskEmail.demo_account(),
         amount_due: "$248.00",
         card_last4: "4242",
         retry_at: "2026-06-02 09:00 ET"
@@ -61,10 +61,10 @@ defmodule MailglassDemoWeb.Mailers.BillingMailer do
     |> Message.html_body(
       AtlasDeskEmail.html(%{
         eyebrow: "Billing action needed",
-        preheader: "Update billing to keep AtlasDesk transactional email flowing.",
+        preheader: "Update billing to keep #{assigns.workspace} transactional email flowing.",
         title: "Payment action needed",
         paragraphs: [
-          "We could not process the latest AtlasDesk payment.",
+          "We could not process the latest payment for #{assigns.workspace}.",
           "Update the billing details before the next retry to keep transactional email flowing."
         ],
         metrics: [

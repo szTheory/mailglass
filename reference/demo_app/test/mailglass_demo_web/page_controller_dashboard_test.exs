@@ -21,6 +21,6 @@ defmodule MailglassDemoWeb.PageControllerDashboardTest do
     assert html =~ ~s(href="/demo/login?return_to=/ops/mail/inbound?tenant_id=northstar")
 
     assert html =~
-             "Destructive: restores the AtlasDesk demo evidence for the internal northstar tenant."
+             "Destructive: restores the AtlasDesk demo evidence for the Northstar Logistics account."
   end
 end
