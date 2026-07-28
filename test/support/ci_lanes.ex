@@ -207,5 +207,7 @@ defmodule Mailglass.CILanes do
   """
   @spec all_classified_lanes() :: [String.t()]
   def all_classified_lanes,
-    do: required_lanes() ++ advisory_classified_lanes() ++ publish_gating_lanes() ++ structural_lanes()
+    do:
+      required_lanes() ++
+        advisory_classified_lanes() ++ publish_gating_lanes() ++ structural_lanes()
 end
