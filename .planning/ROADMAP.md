@@ -33,6 +33,16 @@
 
 No active milestone. Start the next milestone with `/gsd-new-milestone`.
 
+## Planted Seeds
+
+Dormant candidate milestones. Each seed states its own `trigger_when`; promote with
+`/gsd-new-milestone` when that condition is met.
+
+- 🌱 **[SEED-006 CI/CD Efficiency & Contributor Feedback Latency Audit](seeds/SEED-006-ci-cd-efficiency-audit.md)** (large) - full pipeline performance/DX audit: baseline metrics, test-value classification, ExUnit concurrency & partitioning, cache/matrix policy, trigger topology, release/security polish. **Deliberately sequenced *after* v2.2** - optimizing a pipeline whose greens are lying just makes it lie faster.
+- 🌱 **[SEED-005 Native HEEx Assigns Through the Rendering Pipeline](seeds/SEED-005-native-heex-assigns-rendering.md)** (medium) - close the seam between `Message.assigns` and the HEEx engine so the native authoring story matches the architectural promise.
+- 🌱 **[SEED-004 Sent Email Snapshot Retention](seeds/SEED-004-sent-email-snapshot-retention.md)** - retention policy for rendered outbound snapshots.
+- 🌱 **[SEED-003 Ecosystem Integrations](seeds/SEED-003-ecosystem-integrations.md)** - dormant since v1.2; explicitly deferred to a future milestone rather than treated as partial scope.
+
 ---
 
-*Last updated: 2026-07-08 - v2.1 shipped and archived.*
+*Last updated: 2026-07-28 - seed index added (SEED-006 CI/CD efficiency planted); v2.2 CI Signal Integrity being scoped.*
