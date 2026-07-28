@@ -5,15 +5,15 @@ milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 current_phase: 141
 current_phase_name: lane-truth-foundation
 status: executing
-stopped_at: Completed 141-04-PLAN.md
-last_updated: "2026-07-28T21:42:14.839Z"
+stopped_at: Completed 141-05-PLAN.md
+last_updated: "2026-07-28T21:52:40.529Z"
 last_activity: 2026-07-28
 last_activity_desc: Phase 141 execution started
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 141 (lane-truth-foundation) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-07-28 -- Phase 141 execution started
 
-Progress: [███████░░░] 67%
+Progress: [████████░░] 83%
 
 ## v2.2 Milestone Intent
 
@@ -324,6 +324,8 @@ release debug campaign.
 - [Phase ?]: [141-03] Display name Design System Conformance (shell gates) chosen over Elixir/OTP suffix — job is BEAM-free; credo_strict display name preserved to collapse D-11 rename sites from six to three; SEED-006 cost input corrected to ~20-40s (was 2-3min).
 - [Phase ?]: [141-04] all_classified_lanes/0 composes via public accessor calls (required_lanes() ++ advisory_classified_lanes() ++ publish_gating_lanes() ++ structural_lanes()) rather than raw @attributes, to satisfy the plan's literal grep-count acceptance criteria (each attribute referenced exactly twice: definition + own accessor) with identical runtime output.
 - [Phase ?]: [141-04] gate-ci-green keeps two distinct core.setFailed branches (blockingFailures for publish-gating/structural, unclassifiedFailures for the new unclassified-red case) so the pre-existing 'non-advisory failures' message stays byte-identical while unclassified-red gets a TRUTH-09-naming message; unclassified-green only warns (posture preserved byte-for-byte per D-02).
+- [Phase ?]: [141-05] Synthetic-matrix-suffix exactly-one-bucket probe scoped to the 19 non-required lanes; required_lanes/0 uses exact equality by design and can never legitimately carry a runtime matrix suffix (guarded separately by the matrix-exact-match-safety test)
+- [Phase ?]: [141-05] Task 1 and Task 2 committed as two separate atomic commits on the same file, reconstructed in sequence so each commit's diff maps 1:1 to its task
 
 ## Quick Tasks Completed
 
@@ -355,6 +357,7 @@ release debug campaign.
 | Phase 141 P02 | ~15min | 3 tasks | 3 files |
 | Phase 141 P03 | 4min | 2 tasks | 2 files |
 | Phase 141 P04 | 6min | 3 tasks | 3 files |
+| Phase 141 P05 | 8min | 2 tasks | 1 files |
 
 ## Deferred Items
 
@@ -522,8 +525,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-28T21:42:14.831Z
-**Stopped at:** Completed 141-04-PLAN.md
+**Last session:** 2026-07-28T21:52:40.519Z
+**Stopped at:** Completed 141-05-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
