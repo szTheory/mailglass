@@ -169,6 +169,33 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 
 ## Traceability
 
+**Roadmap note:** phase assignment is regrouped by dependency, not by requirement-category prefix — see
+`ROADMAP.md` and `STATE.md` "v2.2 Milestone Intent" for the rationale (VULN-05→VULN-03 precondition;
+CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and sequenced early).
+
 | Requirement | Phase | Status |
 |---|---|---|
-| *(filled by roadmap)* | | |
+| TRUTH-09 | Phase 141 | Pending |
+| TRUTH-07 | Phase 141 | Pending |
+| TRUTH-05 | Phase 141 | Pending |
+| CONFORM-04 | Phase 141 | Pending |
+| HIST-01 | Phase 141 | Pending |
+| VULN-05 | Phase 142 | Pending |
+| VULN-03 | Phase 142 | Pending |
+| VULN-06 | Phase 142 | Pending |
+| VULN-02 | Phase 142 | Pending |
+| VULN-04 | Phase 142 | Pending |
+| HARNESS-01 | Phase 143 | Pending |
+| HARNESS-02 | Phase 143 | Pending |
+| HARNESS-03 | Phase 143 | Pending |
+| HARNESS-04 | Phase 143 | Pending |
+| CONFORM-02 | Phase 144 | Pending |
+| TRUTH-02 | Phase 144 | Pending |
+| TRUTH-03 | Phase 144 | Pending |
+| TRUTH-04 | Phase 144 | Pending |
+| TRUTH-06 | Phase 144 | Pending |
+| TRUTH-08 | Phase 144 | Pending |
+
+**Coverage: 20/20 requirements mapped (100%).** No orphans, no duplicates. (Note: the roadmapping brief
+referenced "21 requirements"; a direct scan of this file's checklist found 20 unique REQ-IDs across
+VULN/HARNESS/CONFORM/TRUTH/HIST — all 20 are mapped above.)

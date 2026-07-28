@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 status: planning
-last_updated: "2026-07-28T18:10:07.086Z"
+last_updated: "2026-07-28T19:30:00.000Z"
 last_activity: 2026-07-28
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -24,62 +24,89 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-07-28 — Milestone v2.2 started
+Phase: 141 of 144 (Lane Truth Foundation)
+Plan: — (not yet planned)
+Status: Roadmap created — ready to plan Phase 141
+Last activity: 2026-07-28 — v2.2 roadmap created (Phases 141-144, 20/20 requirements mapped, 100% coverage)
 
-## v2.1 Milestone Intent
+Progress: [░░░░░░░░░░] 0%
 
-- **Maintenance/hardening only (NOT feature growth).** v2.0 shipped the dedicated `mailglass` Postgres
-  schema, but its release debug campaign proved a real class of missing-`prefix:` bugs can be masked when
-  tests patch the DB `search_path`. Phase 138 now proves runtime schema-prefix behavior under hostile
-  no-search-path conditions, and Phase 139 now proves admin asset first-load/deep-link styling across
-  preview/operator/inbound/gallery/error paths and arbitrary mount roots.
+## v2.2 Milestone Intent
 
-- **Goal.** Make schema-isolated runtime paths and admin first-load asset URLs fail closed with focused
-  gates, while avoiding product capability growth, UI redesign, router API churn, or a full no-search-path
-  suite migration.
+- **Maintenance / trust-restoration only (NOT feature growth, NOT a CI topology rewrite, NOT a release
+  cut).** A job-`id`-vs-display-`name` typo in branch protection silently blocked 22 PRs and 4 unpatched
+  HIGH CVEs for 24 days, while the guard built to catch exactly that drift (`branch-protection-drift.yml`)
+  itself reported SUCCESS the whole time (skipped its comparison behind `if: pat_present == 'true'` with no
+  failure path). The unifying defect: several signals were not telling the truth — and research found the
+  milestone's own scope doc had reproduced the same failure mode in miniature (three corrected claims; see
+  `.planning/research/v2.2/SUMMARY.md`).
 
-- **Locked decisions (research, 2026-07-07):** (1) explicit Ecto `prefix:` remains the correctness
-  mechanism; `search_path` may be test/host convenience only; (2) start with surgical fixes, hostile
-  runtime tests, and a static guard instead of hand-editing every fixture; (3) preserve root-relative
-  computed admin asset URLs through `MountPathHook`/`MountPath`/layout `css_url`; (4) browser proof uses
-  CSS/font network assertions and computed styles, not screenshots or pixel diffs; (5) broader UI
-  verification discipline and SEED-003 ecosystem integrations remain deferred.
+- **Goal.** Make every green check mean what it says, and close the supply-chain gap that let four
+  HIGH-severity advisories accumulate unpatched.
 
-## v2.1 Scope Locks
+- **Load-bearing finding.** A hidden third gating tier: 9+ `ci.yml` jobs sit in neither `ci_green.needs`
+  (merge-gating) nor `gate-ci-green`'s advisory recognition, so they silently block Hex publish while never
+  blocking a PR merge — the verified mechanism behind the 2.1.1 gate failure, and the reason "Credo Strict"
+  is de-facto release-gating today despite being declared advisory.
 
-- **No product expansion.** No new providers, transports, routes, or release cut.
-- **No admin redesign.** No token, component, motion, layout, or brand refresh work beyond computed-style
-  proof that existing styles load.
+- **Roadmap deviates from the original 141/VULN-142/HARNESS-143/CONFORM-144/TRUTH phase-number split.**
+  Research surfaced hard sequencing constraints (VULN-05 before VULN-03; CONFORM-04 must land with
+  TRUTH-07/TRUTH-09, not before; TRUTH-07/09 are load-bearing for VULN-03, CONFORM-04, and TRUTH-05 and
+  should land EARLY) that argue for regrouping by dependency rather than by requirement-category label. The
+  roadmap front-loads the lane-truth reconciliation (formerly late-144 TRUTH-07/09/05 plus CONFORM-04) into
+  Phase 141, then sequences supply-chain gating (142), test-harness truth (143), and the remaining
+  signal/drift hardening (144) after it. Phase numbers 141-144 are preserved; requirement-to-phase content
+  is regrouped, not the original scope-doc proposal.
 
-- **No public router macro option change** unless a phase proves the current mount-aware path cannot
-  satisfy the requirement; document the tradeoff before widening scope.
+## v2.2 Scope Locks
 
-- **No full no-search-path suite migration.** Create the focused fail-closed lane and static guard first;
-  broader fixture cleanup stays future work unless it becomes necessary to make the focused proof honest.
-
-- **Deferred outside v2.1 closeout.** Broader UI verification discipline, SEED-003 ecosystem integrations,
-  whole-suite no-search-path fixture cleanup, release ceremony, and trigger-based cowlib advisory allowlist
-  cleanup remain future or maintenance work, not Phase 140 implementation scope.
-
-- **Phase numbers continue at 138.** v2.0's 132-137 artifacts are shipped history.
+- **No product features, no new adopter-facing surface.** This is maintenance.
+- **No admin UI redesign.** No token, component, motion, layout, or brand work.
+- **No CI topology rewrite.** The lane structure is sound; only the honesty of its signals changes.
+  Splitting, merging, or restructuring workflows beyond what a named requirement demands is excluded — the
+  one narrow, explicitly-flagged exception is CONFORM-04's possible `credo_strict` job-boundary split
+  (Credo vs. conformance), which Phase 141 treats as a decision point, not an assumption.
+- **No release cut.** v2.2 ships no Hex release; 2.1.3 / 2.1.3 / 2.1.1 stand.
+- **Do not re-plan the 2026-07-28 remediation** — branch protection correction, the nine advisory patches,
+  the seven conformance gates, Dialyzer, the admin publish allowlist, the honest citext probe, and the
+  migration baseline restoration are shipped history.
+- **Do not rebuild `ICON-EXISTS-GATE`.** It exists (`mailglass_admin/scripts/check-conformance.sh:148-179`,
+  PR #136); CONFORM-02 verifies its coverage of dynamic call sites, it does not reinvent the mechanism.
+- **SEED-006 (CI/CD efficiency audit) stays sequenced after this milestone.** Optimizing a pipeline whose
+  greens are not trustworthy just makes it lie faster.
+- **Phases continue at 141.** v2.1's 138-140 phase history is archived.
 
 ## Roadmap Snapshot
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| 138 | Schema-prefix no-search-path hardening | Fix concrete missing-prefix runtime risks, add hostile no-search-path DB proof, and add a static guard for raw repo/Multi callback prefix omissions (SCHEMA-01..04, GATE-01..02) |
-| 139 | Admin asset first-load/deep-link proof | Harden and prove mount-aware stylesheet URLs across preview/operator/inbound/gallery/scenario/error/query routes and arbitrary alternate mount roots (AAU-01..04, GATE-03) |
-| 140 | Verification, docs reconciliation, and closeout | Run focused verification lanes, update stale docs/backlog that describe resolved asset limitations, preserve deferred scope, and prepare milestone closeout (DOC-01..02, all gates) |
+| 141 | Lane Truth Foundation | Reconcile the three disagreeing "advisory" registries into one, classify the hidden third gating tier, rename the misleading "Credo Strict" lane with an explicit required/advisory/neither decision, record every lane's disposition, and restore the deleted v2.0 phase archives (TRUTH-09, TRUTH-07, TRUTH-05, CONFORM-04, HIST-01) |
+| 142 | Supply-Chain Remediation & Gating | Wire the accepted-advisory allowlist into the CI-side audit lane FIRST, then promote Hex Audit + Deps Audit to merge-gating with a time-boxed exception mechanism, disposition the dependabot backlog, and document a triage cadence that covers transitive dependencies (VULN-05, VULN-03, VULN-06, VULN-02, VULN-04) |
+| 143 | Test-Harness Truth | Empirically confirm the Ecto Sandbox ownership-leak mechanism before fixing it, prove Core Full Suite green across all four matrix legs with anti-vacuity evidence, and record a decision on release-gating (HARNESS-01, HARNESS-02, HARNESS-03, HARNESS-04) |
+| 144 | Signal & Drift Integrity | Verify the icon-existence gate covers dynamically-constructed names, make every "cannot check" guard report a visibly non-green result instead of silent success, add a scheduled branch-protection regression guard, fix the self-racing publish fan-out, and fix-or-formally-accept the release-trigger anti-recursion gap (CONFORM-02, TRUTH-02, TRUTH-03, TRUTH-04, TRUTH-06, TRUTH-08) |
 
-**Execution order:** 138 -> 139 -> 140. Phase 138 closes the data-correctness follow-up first; Phase 139
-then handles the admin first-load surface; Phase 140 reconciles docs/backlog and confirms the milestone can
-close without dragging in the deferred UI-verification or ecosystem milestones.
+**Execution order:** 141 -> 142 -> 143 -> 144. Phase 141 must land first — VULN-03's gate-ci-green edit and
+CONFORM-04's rename both depend on its reconciled lane classification, and phases 143/144 reuse the
+meta-test seam it establishes. Within Phase 142, VULN-05 (allowlist wiring) must land before VULN-03 (gate
+promotion) or the promotion immediately red-blocks every PR on the already-accepted cowlib advisories.
+Within Phase 143, HARNESS-01 (confirm the mechanism) -> HARNESS-02 (green x4 legs) -> HARNESS-03 (prove not
+manufactured) -> HARNESS-04 (gating decision) is a hard internal chain.
 
-**Research flags:** none blocking. Per-phase planning may inspect unfamiliar Ecto/Phoenix edges, but the
-milestone-level decisions above are settled.
+**Research flags:** Phase 143 (HARNESS-01) — the sandbox-leak mechanism is a hypothesis (extended-timeout
+shared owner colliding with `:auto`-mode sibling files in `test/mailglass/properties/`), not confirmed;
+instrument and confirm before writing the fix. Phase 143 (HARNESS-04) — the release-gating mechanism choice
+(move into `ci.yml` vs. teach `gate-ci-green` to also inspect `advisory-matrix.yml` vs. formally accept the
+gap) is a real decision point; research recommends the second option but it is not a mandate. Phase 141
+(CONFORM-04) — whether to split `credo_strict` into two jobs or rename in place is an explicit decision
+point, the one narrow structural exception to the no-topology-rewrite lock.
+
+## v2.1 Shipped Snapshot
+
+v2.1 Postgres + Admin URL Hardening shipped 2026-07-08: focused schema-prefix no-search-path hardening
+(Phase 138) plus admin asset first-load/deep-link proof across preview/operator/inbound/gallery/error paths
+and alternate mount roots (Phase 139), reconciled with docs/backlog truth at closeout (Phase 140). All 3
+phases complete, audit `status: passed` (13/13 requirements). No product/API/schema change. See
+`milestones/v2.1-MILESTONE-AUDIT.md`.
 
 ## v2.0 Shipped Snapshot
 
@@ -278,6 +305,10 @@ release debug campaign.
 - [Phase 140]: DOC-02 is satisfied by keeping active planning artifacts narrow and explicit. — Broader UI verification discipline, SEED-003 ecosystem integrations, whole-suite no-search-path fixture cleanup, release ceremony, and the cowlib advisory allowlist cleanup remain deferred outside Phase 140.
 - [Phase ?]: [140-03] DOC-02 complete: active planning artifacts preserve deferred UI verification, SEED-003 ecosystem, whole-suite no-search-path, release ceremony, and cowlib maintenance boundaries.
 - [Phase ?]: [140-03] Phase 140 hands off to /gsd-complete-milestone 140; archive, version bump, publish, and release ceremony work stay outside this plan.
+
+- [v2.2 roadmap] Phase 141 front-loads TRUTH-07 (reconcile 3 advisory registries) + TRUTH-09 (classify the hidden third gating tier) + TRUTH-05 (disposition) + CONFORM-04 (lane rename) together, ahead of VULN/HARNESS — this deviates from the original 141/VULN-142/HARNESS-143/CONFORM-144/TRUTH scope-doc numbering because CONFORM-04's rename and VULN-03's gate-promotion both need the reconciled classification to exist first (research: ARCHITECTURE.md, PITFALLS.md Pitfall 7/9). HIST-01 attached to Phase 141 (too small for its own phase).
+- [v2.2 roadmap] Phase 142 (VULN) sequences VULN-05 (wire the shared allowlist into the CI-side hex_audit lane) strictly before VULN-03 (promote Hex Audit + Deps Audit to gating) within the same phase — promoting first would red-block every PR on the already-accepted cowlib advisories (PITFALLS.md Pitfall 3).
+- [v2.2 roadmap] Phase 143 (HARNESS) frames HARNESS-01 as investigate-then-fix: the sandbox-ownership-leak mechanism (10-minute shared owner in webhook_idempotency_convergence_test.exs colliding with :auto-mode property-test siblings) is a hypothesis per research, not a confirmed root cause, and must be empirically confirmed before any fix lands (SEED-007, ARCHITECTURE.md).
 
 ## Quick Tasks Completed
 
