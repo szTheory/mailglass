@@ -214,6 +214,93 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   end
 
   # ---------------------------------------------------------------------------
+  # Task 1 (141-05): every ci.yml job is classified — TRUTH-09 / ROADMAP
+  # criterion 2 becomes a build failure, not a policy.
+  # ---------------------------------------------------------------------------
+
+  test "every ci.yml job display name is classified in Mailglass.CILanes.all_classified_lanes/0 (TRUTH-09)" do
+    ci_source = File.read!(@ci_yml_path)
+    job_display_names = MapSet.new(Map.values(Mailglass.CIYaml.job_names(ci_source)))
+    classified = MapSet.new(Mailglass.CILanes.all_classified_lanes())
+
+    {only_in_ci_yml, only_in_registry} = drift(job_display_names, classified)
+
+    assert MapSet.size(only_in_ci_yml) == 0 and MapSet.size(only_in_registry) == 0,
+           "ci.yml and Mailglass.CILanes.all_classified_lanes/0 have drifted — an " <>
+             "unclassified job can be merged, which recreates the hidden third gating " <>
+             "tier this phase eliminates:\n" <>
+             "  In ci.yml but not classified in CILanes (add to Mailglass.CILanes AND to " <>
+             "publish-hex.yml's classification arrays): " <>
+             "#{inspect(MapSet.to_list(only_in_ci_yml))}\n" <>
+             "  Classified in CILanes but not present in ci.yml (stale entry — remove from " <>
+             "Mailglass.CILanes and publish-hex.yml): #{inspect(MapSet.to_list(only_in_registry))}"
+  end
+
+  test "ci.yml parses to exactly 24 jobs and all_classified_lanes/0 returns exactly 24 distinct names" do
+    ci_source = File.read!(@ci_yml_path)
+    job_names = Mailglass.CIYaml.job_names(ci_source)
+    classified = Mailglass.CILanes.all_classified_lanes()
+
+    assert map_size(job_names) == 24,
+           "expected exactly 24 ci.yml jobs (23 pre-existing + the conformance_gates job " <>
+             "added in Phase 141 plan 03) — got #{map_size(job_names)}. A future legitimate " <>
+             "job addition must update this count deliberately, not delete the guard."
+
+    assert length(classified) == 24,
+           "expected Mailglass.CILanes.all_classified_lanes/0 to return exactly 24 entries " <>
+             "(5 required + 4 advisory + 13 publish-gating + 2 structural) — got " <>
+             "#{length(classified)}"
+
+    assert MapSet.size(MapSet.new(classified)) == 24,
+           "all_classified_lanes/0 returned 24 entries but fewer than 24 distinct strings — " <>
+             "a lane sits in two buckets, which classify/1 must never allow"
+  end
+
+  test "publish-hex.yml still contains the required-lane presence loop (posture guard)" do
+    js_source = File.read!(@publish_hex_path)
+
+    assert String.contains?(js_source, "(missing)"),
+           "publish-hex.yml no longer contains the '(missing)' marker — the required-lane " <>
+             "presence loop may have been refactored away or folded into classify/1, which " <>
+             "would make a zero-job API response fall through to success instead of blocking"
+
+    assert String.contains?(
+             js_source,
+             "Delivery blocked: required CI lane(s) did not pass on SHA"
+           ),
+           "publish-hex.yml no longer contains the required-lane failure message — a run " <>
+             "reporting zero jobs must still block publish rather than pass silently"
+  end
+
+  test "negative control: removing 'Detect Non-Doc Changes' from the parsed ci.yml job map " <>
+         "makes the drift comparison report it (structural jobs are not vacuously exempt)" do
+    ci_source = File.read!(@ci_yml_path)
+    job_display_names = MapSet.new(Map.values(Mailglass.CIYaml.job_names(ci_source)))
+    classified = MapSet.new(Mailglass.CILanes.all_classified_lanes())
+
+    assert drift(job_display_names, classified) == {MapSet.new(), MapSet.new()},
+           "sanity check failed: ci.yml job names and all_classified_lanes/0 should agree " <>
+             "before the injected-removal assertion runs"
+
+    removed_entry = "Detect Non-Doc Changes"
+    assert removed_entry in MapSet.to_list(job_display_names)
+
+    broken_job_names = MapSet.delete(job_display_names, removed_entry)
+
+    {only_in_broken_ci_yml, only_in_registry} = drift(broken_job_names, classified)
+
+    assert only_in_registry == MapSet.new([removed_entry]),
+           "removing '#{removed_entry}' — a structural job that is easy to overlook because " <>
+             "it is a path filter, not a check lane — from the parsed ci.yml job map must " <>
+             "make drift/2 report it, and only it, in the 'classified but not present in " <>
+             "ci.yml' direction; got #{inspect(MapSet.to_list(only_in_registry))}"
+
+    assert MapSet.size(only_in_broken_ci_yml) == 0,
+           "unexpected reverse-direction drift after removing only '#{removed_entry}': " <>
+             "#{inspect(MapSet.to_list(only_in_broken_ci_yml))}"
+  end
+
+  # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
 
