@@ -12,11 +12,11 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   that isn't reflected in the alias fails this test.
 
   Anti-vacuity guards (Phase 126 precedent): the test fails if the flattened alias
-  step-set is empty, if the `Mailglass.CILanes` source is empty, or if the
-  lane->matcher table is not a bijection with the ci_lanes set — so it cannot pass by
-  parsing nothing or by silently ignoring a newly-added lane. A negative-control
-  assertion proves the coverage function reports "uncovered" when a required step is
-  removed, so the fail-loud property is itself tested.
+  step-set is empty, if `Mailglass.CILanes.required_lanes/0` does not have exactly 5
+  entries, or if the lane->matcher table is not a bijection with the ci_lanes set — so
+  it cannot pass by parsing nothing or by silently ignoring a newly-added lane. A
+  negative-control assertion proves the coverage function reports "uncovered" when a
+  required step is removed, so the fail-loud property is itself tested.
 
   Durable determinism guard (Phase 127 consume, DET-02): a committed assertion refutes
   any seed-pinning token in the flattened root `ci` alias step-set, so a future edit
@@ -157,9 +157,6 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
            "flattened mix ci ∪ ci.browser step-set is empty — alias parse returned nothing"
 
     lanes = all_lanes()
-
-    assert lanes != [],
-           "Mailglass.CILanes required + advisory lanes parsed empty — ci_lanes source changed"
 
     assert length(Mailglass.CILanes.required_lanes()) == 5,
            "expected exactly 5 required lanes from Mailglass.CILanes"

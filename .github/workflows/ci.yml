@@ -282,6 +282,14 @@ jobs:
         # silently escape CI — closes the drift gap that left the Phase-47
         # inbound generators advisory-only. See the verify.mix_tasks alias note.
         run: mix verify.mix_tasks
+      - name: Run CI lane-contract meta-tests
+        # This job is chosen because it is publish-gating rather than
+        # merge-gating (TRUTH-07, Phase 141): registry drift between
+        # publish-hex.yml's REQUIRED_LANES and Mailglass.CILanes.required_lanes/0
+        # should block a Hex publish, not a PR merge. The job already provisions
+        # Postgres and creates the test DB above, which test/test_helper.exs
+        # requires even though these meta-tests never touch the database.
+        run: mix verify.ci_lane_contract
 
   inbound_test:
     name: Inbound Test (Elixir 1.18 / OTP 27)

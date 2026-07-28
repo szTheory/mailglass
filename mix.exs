@@ -66,6 +66,7 @@ defmodule Mailglass.MixProject do
         "verify.webhooks": :test,
         "verify.installer": :test,
         "verify.mix_tasks": :test,
+        "verify.ci_lane_contract": :test,
         "verify.reference_host.journey": :test,
         "verify.demo_browser_evidence": :test,
         "verify.phase69": :test,
@@ -285,6 +286,15 @@ defmodule Mailglass.MixProject do
       # CI job that runs this still needs the test DB created.
       "verify.mix_tasks": [
         "test test/mix/tasks/ --warnings-as-errors"
+      ],
+      # CI lane-contract truth seam (TRUTH-07, Phase 141). Directory-scoped ON
+      # PURPOSE: the glob auto-includes every future test/scripts/*_test.exs, and
+      # until this phase no `ci.yml` lane executed this directory at all
+      # (RESEARCH.md F2) — a meta-test dropped in test/scripts/ without this alias
+      # (and the ci.yml step that runs it) would satisfy the letter of a drift-proof
+      # test while enforcing nothing.
+      "verify.ci_lane_contract": [
+        "test test/scripts/ --warnings-as-errors"
       ],
       "verify.support_contract.core": [
         "test test/mailglass/docs_contract_test.exs test/mailglass/docs/testing_guide_test.exs test/mailglass/stability_contract_test.exs test/mailglass/compatibility_contract_test.exs test/mailglass/docs_migration_smoke_test.exs test/mailglass/docs/operator_incident_support_guide_test.exs test/mailglass/operator/support_summary_test.exs test/mailglass/webhook/telemetry_test.exs test/mailglass/telemetry_test.exs test/mailglass/webhook/replay_test.exs test/mailglass/webhook/reconciler_test.exs --warnings-as-errors"
