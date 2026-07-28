@@ -26,6 +26,28 @@ defmodule Mailglass.CILanes do
   from it. Collapsing all four into one file is impossible across the YAML/shell/Elixir
   language boundary; the meta-test is the seam that keeps them coherent.
 
+  ## Two independent axes
+
+  This module answers two different questions, and conflating them is the defect
+  Phase 141 fixed:
+
+    * **Parity** (`advisory_lanes/0`, `advisory_lanes_ci/0`, `advisory_lanes_browser/0`) —
+      "does `mix ci` reproduce this lane locally?" Consumed by `ci_parity_drift_test.exs`
+      (MIXCI-03).
+    * **Classification** (`required_lanes/0`, `advisory_classified_lanes/0`,
+      `publish_gating_lanes/0`, `structural_lanes/0`) — "what does this lane block?"
+      Consumed by the drift meta-test (`test/scripts/lane_classification_drift_test.exs`)
+      and mirrored in `publish-hex.yml`'s `gate-ci-green` and `MAINTAINING.md`.
+
+  A lane is routinely in both (`Dialyzer` is locally reproduced *and* publish-gating).
+  Do not partition one axis to build the other.
+
+  The name-space seam (RESEARCH F1): the strings in this module are YAML `name:`
+  values; `gate-ci-green` sees runtime job names, which for a matrix lane carry an
+  appended ` (<matrix values>)` suffix (e.g. `Dialyzer (Elixir 1.18 / OTP 27)` reports
+  live as `Dialyzer (Elixir 1.18 / OTP 27) (1.18, 27)`). That is why classification
+  matching downstream is prefix-based for every bucket except required.
+
   ## Intentional exclusions from the parity claim
 
   `mix ci` deliberately does NOT reproduce the following CI lanes, so they are absent
@@ -82,6 +104,46 @@ defmodule Mailglass.CILanes do
     "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)"
   ]
 
+  # Lanes that block NEITHER a merge NOR a publish. This is the *classification*
+  # axis. Distinct from @advisory_lanes_ci / @advisory_lanes_browser, which answer
+  # a different question: "what does `mix ci` reproduce locally?" (MIXCI-03). A
+  # lane can be locally reproduced AND publish-gating (Dialyzer is).
+  @advisory_classified_lanes [
+    "Deps Audit Advisory (Elixir 1.18 / OTP 27)",
+    "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)",
+    "Demo Browser Evidence (Docker Compose / Chromium)",
+    "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)"
+  ]
+
+  # Lanes that block a Hex publish when red but do NOT block a PR merge.
+  # `gate-ci-green` (publish-hex.yml) enumerates these; `ci_green.needs` does not.
+  @publish_gating_lanes [
+    "Format Check (Elixir 1.18 / OTP 27)",
+    "Compile Warnings as Errors (Elixir 1.18 / OTP 27)",
+    "Mix Task Tests (Elixir 1.18 / OTP 27)",
+    "Inbound Test (Elixir 1.18 / OTP 27)",
+    "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)",
+    "Credo Strict (Elixir 1.18 / OTP 27)",
+    "Design System Conformance (shell gates)",
+    "Dialyzer (Elixir 1.18 / OTP 27)",
+    "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
+    "Hex Audit (Elixir 1.18 / OTP 27)",
+    "Installer Golden Gate (Elixir 1.18 / OTP 27)",
+    "Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)",
+    "Branch Protection Advisory"
+  ]
+
+  # Structural jobs — not check lanes (a path filter and an aggregator).
+  # Classified so no `ci.yml` job sits unrecorded (TRUTH-09); their blocking
+  # behavior in `gate-ci-green` is identical to the publish-gating lanes above.
+  # `CI Green` is itself one of the two branch-protection contexts and must
+  # therefore NEVER appear in `REQUIRED_LANES` — that would be a self-referential
+  # gate.
+  @structural_lanes [
+    "Detect Non-Doc Changes",
+    "CI Green"
+  ]
+
   @doc """
   The five required branch-protection leaf display names, VERBATIM as they appear as
   `name:` in `.github/workflows/ci.yml`.
@@ -110,4 +172,40 @@ defmodule Mailglass.CILanes do
   """
   @spec advisory_lanes_browser() :: [String.t()]
   def advisory_lanes_browser, do: @advisory_lanes_browser
+
+  @doc """
+  The advisory *classification* lane display names — lanes that block NEITHER a
+  merge NOR a publish. Distinct from the parity accessors above, which answer
+  "does `mix ci` reproduce this lane locally?" A lane can appear in both this and
+  `advisory_lanes/0` (e.g. `Operator Browser Gate`), or in only one (see the
+  moduledoc's independent-axes section).
+  """
+  @spec advisory_classified_lanes() :: [String.t()]
+  def advisory_classified_lanes, do: @advisory_classified_lanes
+
+  @doc """
+  Lane display names that block a Hex publish when red but do NOT block a PR
+  merge. `gate-ci-green` (`publish-hex.yml`) enumerates these; `ci_green.needs`
+  (`ci.yml`) does not.
+  """
+  @spec publish_gating_lanes() :: [String.t()]
+  def publish_gating_lanes, do: @publish_gating_lanes
+
+  @doc """
+  Structural job display names — not check lanes (a path filter and an
+  aggregator). Classified so no `ci.yml` job sits unrecorded (TRUTH-09); their
+  blocking behavior in `gate-ci-green` is identical to `publish_gating_lanes/0`.
+  """
+  @spec structural_lanes() :: [String.t()]
+  def structural_lanes, do: @structural_lanes
+
+  @doc """
+  Every `ci.yml` job display name, across all four classification buckets. The
+  drift meta-test (`test/scripts/lane_classification_drift_test.exs`) asserts
+  this set-equals the job names parsed from `ci.yml`, so no job can sit
+  unclassified (TRUTH-09).
+  """
+  @spec all_classified_lanes() :: [String.t()]
+  def all_classified_lanes,
+    do: required_lanes() ++ advisory_classified_lanes() ++ publish_gating_lanes() ++ structural_lanes()
 end
