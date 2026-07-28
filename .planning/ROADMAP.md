@@ -60,12 +60,12 @@
   4. Every lane in the reconciled set carries a written disposition (promote / keep-with-reason / retire) in a durable, findable place — none sits red or unclassified with no recorded decision.
   5. `.planning/milestones/v2.0-phases/` contains the restored 132-137 phase artifacts, and the `gsd-tools query phases.clear` defect that deleted them (twice — v2.0's, and mid-milestone, v2.1's own 138-140) is written down somewhere a future run of the same command would be recognized as a repeat, not rediscovered blind.
 
-**Plans**: 6 plans
+**Plans**: 1/6 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 141-01-PLAN.md — Tracer: end-to-end lane-contract seam (`Mailglass.CIYaml` parser + drift meta-test + `verify.ci_lane_contract` alias wired into `ci.yml`'s `mix_task_tests`), proven to fail loud on drift [wave 1]
+- [x] 141-01-PLAN.md — Tracer: end-to-end lane-contract seam (`Mailglass.CIYaml` parser + drift meta-test + `verify.ci_lane_contract` alias wired into `ci.yml`'s `mix_task_tests`), proven to fail loud on drift [wave 1]
 - [ ] 141-02-PLAN.md — Docs-only truth records: `.planning/TOOLING-DEFECTS.md` (TOOL-01), the TRUTH-09 requirement amendment, and the `CONTRIBUTING.md` branch-protection correction [wave 1]
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -134,7 +134,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 141. Lane Truth Foundation | 0/6 | Planned | - |
+| 141. Lane Truth Foundation | 1/6 | In Progress|  |
 | 142. Supply-Chain Remediation & Gating | 0/TBD | Not started | - |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |

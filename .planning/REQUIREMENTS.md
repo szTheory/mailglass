@@ -101,7 +101,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   Docs Warnings as Errors, Mix Task Tests, Inbound Test, Inbound Compile No Optional Deps, Installer Golden
   Gate, Trust Lane Clean Baseline) each receive a recorded decision.
 
-- [ ] **TRUTH-07**: The three disagreeing advisory registries are reconciled to **one** authoritative source,
+- [x] **TRUTH-07**: The three disagreeing advisory registries are reconciled to **one** authoritative source,
   with the others generated from or verified against it by a test that fails on drift. `MAINTAINING.md` is
   refreshed as part of this — it is stale, and reconciliation that leaves it stale is incomplete.
 
@@ -145,6 +145,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 - **CI/CD efficiency and contributor feedback latency** — wall-clock, runner cost, matrix breadth, and
   caching. Tracked as `SEED-006`, deliberately sequenced **after** v2.2. Optimizing a pipeline whose greens
   are not trustworthy just makes it lie faster.
+
 - **Ecosystem integrations** — `SEED-003`, dormant.
 - **Whole-suite no-search-path fixture cleanup** — carried from v2.1.
 - **`remove-cowlib-advisory-allowlist-when-upstream-fixes`** — pending an external upstream fix; VULN-06's
@@ -156,10 +157,12 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 - **Admin UI redesign** — no token, component, motion, layout, or brand work.
 - **A CI topology rewrite.** The lane structure is sound; only the honesty of its signals changes. Splitting,
   merging, or restructuring workflows beyond what a named requirement demands is excluded.
+
 - **A release cut.** v2.2 ships no Hex release; 2.1.3 / 2.1.3 / 2.1.1 stand.
 - **Re-planning the 2026-07-28 remediation** — branch protection correction, the nine advisory patches, the
   seven conformance gates, Dialyzer, the admin publish allowlist, the honest citext probe, and the migration
   baseline restoration are shipped history.
+
 - **Rebuilding `ICON-EXISTS-GATE`** — it exists; CONFORM-02 verifies it.
 - **Making Core Full Suite merge-gating** by moving it into `ci.yml` — rejected in favor of HARNESS-04's
   publish-gating approach, because adding four matrix legs to every PR is precisely the wall-clock cost
@@ -176,7 +179,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | Requirement | Phase | Status |
 |---|---|---|
 | TRUTH-09 | Phase 141 | Pending |
-| TRUTH-07 | Phase 141 | Pending |
+| TRUTH-07 | Phase 141 | Complete |
 | TRUTH-05 | Phase 141 | Pending |
 | CONFORM-04 | Phase 141 | Pending |
 | HIST-01 | Phase 141 | Pending |

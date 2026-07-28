@@ -154,6 +154,10 @@ None - no external service configuration required.
 - `ci_green.needs` (merge-gating) is untouched; nothing about what blocks a PR merge changed in this plan, consistent with the phase's scope lock.
 - No blockers for 141-02 through 141-06.
 
+## Self-Check: PASSED
+
+All created/modified files confirmed present on disk; all three commit hashes (`aa004dd7`, `abe92a3d`, `058e6d6b`) confirmed in `git log --oneline --all`.
+
 ---
 *Phase: 141-lane-truth-foundation*
 *Completed: 2026-07-28*

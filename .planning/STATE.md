@@ -2,16 +2,18 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-status: planning
-stopped_at: Phase 141 planned (6 plans, 5 waves) — ready to execute
-last_updated: "2026-07-28T23:58:00.000Z"
-last_activity: 2026-07-28 — Phase 141 planning complete (6 plans, 15 tasks, 5 waves)
+current_phase: 141
+current_phase_name: lane-truth-foundation
+status: executing
+stopped_at: Completed 141-01-PLAN.md
+last_updated: "2026-07-28T21:19:31.605Z"
+last_activity: 2026-07-28
+last_activity_desc: Phase 141 execution started
 progress:
-  total_phases: 4
+  total_phases: 1
   completed_phases: 0
   total_plans: 6
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Awaiting next milestone
+**Current focus:** Phase 141 — lane-truth-foundation
 
 ## Current Position
 
-Phase: 141 of 144 (Lane Truth Foundation)
-Plan: 0 of 6 complete
+Phase: 141 (lane-truth-foundation) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-07-28 — Phase 141 planning complete
+Last activity: 2026-07-28 -- Phase 141 execution started
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 17%
 
 ## v2.2 Milestone Intent
 
@@ -314,6 +316,8 @@ release debug campaign.
 - [v2.2 roadmap] Phase 141 front-loads TRUTH-07 (reconcile 3 advisory registries) + TRUTH-09 (classify the hidden third gating tier) + TRUTH-05 (disposition) + CONFORM-04 (lane rename) together, ahead of VULN/HARNESS — this deviates from the original 141/VULN-142/HARNESS-143/CONFORM-144/TRUTH scope-doc numbering because CONFORM-04's rename and VULN-03's gate-promotion both need the reconciled classification to exist first (research: ARCHITECTURE.md, PITFALLS.md Pitfall 7/9). HIST-01 attached to Phase 141 (too small for its own phase).
 - [v2.2 roadmap] Phase 142 (VULN) sequences VULN-05 (wire the shared allowlist into the CI-side hex_audit lane) strictly before VULN-03 (promote Hex Audit + Deps Audit to gating) within the same phase — promoting first would red-block every PR on the already-accepted cowlib advisories (PITFALLS.md Pitfall 3).
 - [v2.2 roadmap] Phase 143 (HARNESS) frames HARNESS-01 as investigate-then-fix: the sandbox-ownership-leak mechanism (10-minute shared owner in webhook_idempotency_convergence_test.exs colliding with :auto-mode property-test siblings) is a hypothesis per research, not a confirmed root cause, and must be empirically confirmed before any fix lands (SEED-007, ARCHITECTURE.md).
+- [Phase ?]: [141-01] Drift meta-test wired into mix_task_tests (publish-gating), not support_contract_core (merge-gating) — registry drift blocks a Hex publish, not a PR merge, per Phase 141's scope lock
+- [Phase ?]: [141-01] required_checks_test.exs's five defp parsers were NOT refactored to delegate to the new Mailglass.CIYaml — GATE-03 is load-bearing for this phase's own correctness; ~20-line duplication accepted as debt
 
 ## Quick Tasks Completed
 
@@ -336,6 +340,12 @@ release debug campaign.
 - v1.6 phases completed: 3 (71-73), 6 plans, 5 tasks
 - v1.5 phases completed: 4 (67-70), 8 plans, 14 tasks
 - v1.4 phases completed: 4 (63-66), 12 plans, 22 tasks
+
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 141 P01 | 25min | 2 tasks | 5 files |
 
 ## Deferred Items
 
@@ -503,9 +513,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-28T19:11:34.983Z
-**Stopped at:** Phase 141 context gathered (assumptions mode)
-**Resume file:** .planning/phases/141-lane-truth-foundation/141-CONTEXT.md
+**Last session:** 2026-07-28T21:19:31.597Z
+**Stopped at:** Completed 141-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
