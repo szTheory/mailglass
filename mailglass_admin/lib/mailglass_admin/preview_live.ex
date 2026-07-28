@@ -326,7 +326,7 @@ defmodule MailglassAdmin.PreviewLive do
               data-testid="preview-scenario-layout"
               class="space-y-lg"
             >
-              <div class="relative z-20 flex flex-wrap items-start gap-sm">
+              <div class="relative mg-layer-dropdown flex flex-wrap items-start gap-sm">
                 <Sidebar.menu
                   mailables={@mailables}
                   current_mailable={@current_mailable}
@@ -373,7 +373,7 @@ defmodule MailglassAdmin.PreviewLive do
               class="space-y-lg"
             >
               <div class="min-w-0 space-y-lg">
-                <header class="relative z-20 flex flex-col gap-sm lg:flex-row lg:items-start lg:justify-between">
+                <header class="relative mg-layer-dropdown flex flex-col gap-sm lg:flex-row lg:items-start lg:justify-between">
                   <Sidebar.menu
                     mailables={@mailables}
                     current_mailable={@current_mailable}
