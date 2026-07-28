@@ -3,6 +3,7 @@ created: 2026-06-30T05:10:00.000Z
 title: Remove the cowlib advisory allowlist when upstream ships a fix
 area: tooling
 trigger: cowlib publishes a release that fixes EEF-CVE-2026-43966 and/or EEF-CVE-2026-43969
+resolves_phase: 142
 files:
   - lib/mix/tasks/mailglass.publish.check.ex
   - test/mailglass/publish/audit_allowlist_test.exs
