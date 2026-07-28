@@ -2,8 +2,8 @@
 id: SEED-007
 status: dormant
 planted: 2026-07-28
-planted_during: v2.2 (CI Signal Integrity) scoping; blocking the 2.1.x Hex publish
-trigger_when: immediately — this is the single remaining blocker on Core Full Suite, and Core Full Suite is release-blocking in gate-ci-green
+planted_during: v2.2 (CI Signal Integrity) scoping
+trigger_when: when core-suite signal matters — the lane is fully red today, so 1401 tests provide no regression signal. NOT release-blocking (corrected 2026-07-28)
 scope: medium
 ---
 
@@ -16,19 +16,26 @@ scope: medium
 race and not schema teardown.** It is the last thing standing between `main` and
 a publishable Hex release.
 
-## Why This Is Urgent, Not Dormant
+## Why This Matters
 
-`gate-ci-green` in `publish-hex.yml` hardcodes its own advisory list:
+**Correction (2026-07-28):** this seed originally claimed the leak blocks Hex
+releases. **That was wrong.** `Core Full Suite Advisory` is defined only in
+`advisory-matrix.yml`, and `gate-ci-green` inspects **`ci.yml` runs only** — so a
+Core Full Suite failure cannot block a publish. The evidence was visible in the
+2.1.1 gate failure, which named `Credo Strict` and `Dialyzer` (both `ci.yml`
+lanes) and never mentioned Core Full Suite. The original claim was an inference
+from the gate's hardcoded `ADVISORY_LANES` list, which omits Core Full Suite —
+but that list only ever applies to jobs within `ci.yml`.
 
-```js
-const ADVISORY_LANES = ['Operator Browser Gate', 'Demo Browser Evidence'];
-```
+The real cost is signal loss, and it is still serious:
 
-`Core Full Suite Advisory` is **not** in it, so a Core Full Suite failure
-**blocks every Hex publish** — despite `test/support/ci_lanes.ex` classifying it
-as advisory. The lane is intermittent (it passed on the `mailglass-v2.1.0`
-tagged SHA, failed on the PR #136 and #139 runs), so releases currently succeed
-or fail on a coin flip.
+The lane runs the **entire 1401-test core suite** and is **fully red**, so it
+provides *zero* regression signal. Any genuine breakage in core would be
+invisible, indistinguishable from the 194 ambient sandbox failures. That is the
+same "a green light that isn't telling the truth" failure mode as the rest of
+v2.2 — inverted into a red light nobody can read.
+
+It is high-value work. It is not an emergency.
 
 ## Evidence (2026-07-28)
 
@@ -101,9 +108,11 @@ Do not re-investigate these — each was tested empirically on 2026-07-28:
    × `public` and `mailglass` schema axes), repeatedly, across seeds.
 3. Ownership hygiene is enforced so it cannot silently recur — e.g. an assertion
    that the sandbox is back in `:manual` at the end of each mode-switching file.
-4. A decision is recorded on whether `Core Full Suite` belongs in
-   `gate-ci-green`'s `ADVISORY_LANES`, since today it silently gates every release
-   while being documented as advisory.
+4. A decision is recorded on whether `Core Full Suite` should become
+   release-gating. Today it is not (it lives outside `ci.yml`, which is the only
+   workflow `gate-ci-green` inspects). Once the lane is genuinely green, gating on
+   it would be worth considering — a full-suite regression currently cannot block
+   a publish.
 
 ## Related
 
