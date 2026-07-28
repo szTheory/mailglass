@@ -3,8 +3,9 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 status: planning
-last_updated: "2026-07-28T19:30:00.000Z"
-last_activity: 2026-07-28
+stopped_at: Phase 141 context gathered (assumptions mode)
+last_updated: "2026-07-28T19:11:34.987Z"
+last_activity: 2026-07-28 — v2.2 roadmap created (Phases 141-144, 20/20 requirements mapped, 100% coverage)
 progress:
   total_phases: 4
   completed_phases: 0
@@ -66,14 +67,18 @@ Progress: [░░░░░░░░░░] 0%
   Splitting, merging, or restructuring workflows beyond what a named requirement demands is excluded — the
   one narrow, explicitly-flagged exception is CONFORM-04's possible `credo_strict` job-boundary split
   (Credo vs. conformance), which Phase 141 treats as a decision point, not an assumption.
+
 - **No release cut.** v2.2 ships no Hex release; 2.1.3 / 2.1.3 / 2.1.1 stand.
 - **Do not re-plan the 2026-07-28 remediation** — branch protection correction, the nine advisory patches,
   the seven conformance gates, Dialyzer, the admin publish allowlist, the honest citext probe, and the
   migration baseline restoration are shipped history.
+
 - **Do not rebuild `ICON-EXISTS-GATE`.** It exists (`mailglass_admin/scripts/check-conformance.sh:148-179`,
   PR #136); CONFORM-02 verifies its coverage of dynamic call sites, it does not reinvent the mechanism.
+
 - **SEED-006 (CI/CD efficiency audit) stays sequenced after this milestone.** Optimizing a pipeline whose
   greens are not trustworthy just makes it lie faster.
+
 - **Phases continue at 141.** v2.1's 138-140 phase history is archived.
 
 ## Roadmap Snapshot
@@ -498,9 +503,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-08T17:50:48.423Z
-**Stopped at:** Phase 140 complete; v2.1 milestone ready for closeout archive
-**Resume file:** None
+**Last session:** 2026-07-28T19:11:34.983Z
+**Stopped at:** Phase 141 context gathered (assumptions mode)
+**Resume file:** .planning/phases/141-lane-truth-foundation/141-CONTEXT.md
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
