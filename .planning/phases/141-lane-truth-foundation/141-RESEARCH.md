@@ -58,7 +58,7 @@
 |----|-------------|------------------|
 | **TRUTH-09** | `REQUIREMENTS.md:98-102` — hidden third gating tier eliminated; every `ci.yml` job explicitly classified. | §Lane Classification Ledger gives all 24 jobs with literal display names; §`gate-ci-green` Rewrite gives the classification logic including a loud `unclassified` branch. D-03 amendment text drafted in §TRUTH-09 Amendment. |
 | **TRUTH-07** | `REQUIREMENTS.md:104-106` — three (really five) disagreeing registries reconciled to one authoritative source, others verified against it by a drift test. | §Registry Reconciliation Map; §Meta-Test Design (parsers, anti-vacuity, exact hazards); **F2** (the test must be wired into a lane or it never runs). |
-| **TRUTH-05** | `REQUIREMENTS.md:126-128` — every lane carries a recorded disposition. | §Lane Classification Ledger's `disposition` + `reason` columns are literal and ready to paste into `MAINTAINING.md`. |
+| **TRUTH-05** | `REQUIREMENTS.md:126-128` — every lane carries a recorded disposition. | §Lane Classification Ledger's `disposition` + `reason` columns are literal — transcribe into `MAINTAINING.md` per 141-06 Task 1's action rules (not a verbatim paste). |
 | **CONFORM-04** | `REQUIREMENTS.md:90-94` — "Credo Strict" renamed to reflect what it runs; lands with TRUTH-07/09. | §The `credo_strict` Split gives the exact step lists for both jobs and proves the split is a safe pure-copy (**F4**). |
 | **HIST-01** | `REQUIREMENTS.md:136-139` — v2.0's 132-137 restored; the `phases.clear` defect recorded. | **F7** — both restorations re-verified byte-exact with git; zero restoration work remains. §TOOLING-DEFECTS.md Content gives the record, including **F6** (D-19's primary mitigation is refuted by evidence). |
 </phase_requirements>
@@ -387,7 +387,7 @@ Plus one D-11 omits: `ci_lanes.ex`'s **intentional-exclusions module doc** (`:31
 
 ## Lane Classification Ledger
 
-The literal, paste-ready classification of all 24 jobs (23 existing + `conformance_gates`). Display names are verbatim `ci.yml` `name:` values, cross-checked against the live API job list from run `30384054278`.
+The literal classification of all 24 jobs (23 existing + `conformance_gates`). **Not paste-ready** — transcribe per 141-06 Task 1's five action rules (bare disposition word, `matching` column dropped, no `**bold**`/`**(new)**` annotations, em dashes in `reason` cells rewritten as hyphens). Display names are verbatim `ci.yml` `name:` values, cross-checked against the live API job list from run `30384054278`.
 
 ### Required (5) — in `ci_green.needs`, merge-gating and publish-gating. Exact-match safe (no matrix).
 
