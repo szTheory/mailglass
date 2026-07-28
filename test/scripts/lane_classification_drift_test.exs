@@ -448,7 +448,7 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   test "MAINTAINING.md's disposition table parses to exactly 24 non-empty rows (anti-vacuity)" do
     rows = parse_disposition_table(File.read!(@maintaining_path))
 
-    assert length(rows) > 0,
+    assert rows != [],
            "parsed zero rows from MAINTAINING.md's disposition table — the table's " <>
              "format changed or the '## Required Checks' section was not found"
 
