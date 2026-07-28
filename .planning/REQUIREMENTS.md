@@ -87,7 +87,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   `name={option.icon}`, `name={stat_severity_icon(@severity)}`) is either proven or explicitly documented as
   a bounded, accepted gap with its reasoning. Rebuilding the gate is out of scope — it already ships.
 
-- [ ] **CONFORM-04**: The lane called "Credo Strict" is renamed to reflect what it actually runs (Credo plus
+- [x] **CONFORM-04**: The lane called "Credo Strict" is renamed to reflect what it actually runs (Credo plus
   the admin design-system conformance shell gates). **Lands together with TRUTH-07 and TRUTH-09**, never
   before: `gate-ci-green` matches lanes **by name**, and this lane sits in the hidden third tier, so a
   rename in isolation either preserves the accidental-gating bug under a new name or silently demotes a
@@ -189,7 +189,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | TRUTH-09 | Phase 141 | Complete |
 | TRUTH-07 | Phase 141 | Complete |
 | TRUTH-05 | Phase 141 | Pending |
-| CONFORM-04 | Phase 141 | Pending |
+| CONFORM-04 | Phase 141 | Complete |
 | HIST-01 | Phase 141 | Complete |
 | VULN-05 | Phase 142 | Pending |
 | VULN-03 | Phase 142 | Pending |

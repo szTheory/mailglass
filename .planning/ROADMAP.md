@@ -60,7 +60,7 @@
   4. Every lane in the reconciled set carries a written disposition (promote / keep-with-reason / retire) in a durable, findable place — none sits red or unclassified with no recorded decision.
   5. `.planning/milestones/v2.0-phases/` contains the restored 132-137 phase artifacts, and the `gsd-tools query phases.clear` defect that deleted them (twice — v2.0's, and mid-milestone, v2.1's own 138-140) is written down somewhere a future run of the same command would be recognized as a repeat, not rediscovered blind.
 
-**Plans**: 2/6 plans executed
+**Plans**: 3/6 plans executed
 
 Plans:
 **Wave 1**
@@ -70,7 +70,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 141-03-PLAN.md — Split `credo_strict` into `credo_strict` + `conformance_gates` (`Design System Conformance (shell gates)`); record the new lane's parity exclusion [wave 2]
+- [x] 141-03-PLAN.md — Split `credo_strict` into `credo_strict` + `conformance_gates` (`Design System Conformance (shell gates)`); record the new lane's parity exclusion [wave 2]
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -134,7 +134,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 141. Lane Truth Foundation | 2/6 | In Progress|  |
+| 141. Lane Truth Foundation | 3/6 | In Progress|  |
 | 142. Supply-Chain Remediation & Gating | 0/TBD | Not started | - |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
