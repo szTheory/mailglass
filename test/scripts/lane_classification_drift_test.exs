@@ -89,6 +89,47 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
              "format changed (ci.yml has at least one strategy: job today)"
   end
 
+  # A vacuously-passing drift meta-test is this milestone's originating failure
+  # mode (CLAUDE.md: branch-protection-drift.yml reported SUCCESS while its own
+  # comparison was skipped for 24 days). This test mechanically proves the
+  # fail-loud property instead of trusting it by inspection — it exercises the
+  # SAME drift/2 helper the real assertion above uses, not a re-implementation, so
+  # a future edit that weakens drift/2 breaks this negative control too.
+  test "negative control: removing one entry from the parsed REQUIRED_LANES set " <>
+         "makes the drift comparison report it (fail-loud property is tested)" do
+    js_source = File.read!(@publish_hex_path)
+    required_from_js = parse_js_array(js_source, "REQUIRED_LANES")
+
+    # Sanity: today the two sides agree — drift/2 reports two empty sets.
+    assert drift(required_from_js, @required_lanes) == {MapSet.new(), MapSet.new()},
+           "sanity check failed: REQUIRED_LANES and Mailglass.CILanes.required_lanes/0 " <>
+             "should agree before the injected-breakage assertion runs"
+
+    # "Installer Host Smoke" is the one required lane with no "(Elixir ... )"
+    # suffix, so removing it is unambiguous (no other entry could be mistaken for
+    # it in the reported diff).
+    removed_entry = "Installer Host Smoke"
+    assert removed_entry in MapSet.to_list(required_from_js)
+
+    broken_js_set = MapSet.delete(required_from_js, removed_entry)
+
+    # drift(a, b) returns {a \ b, b \ a}: the first element is what's only in the
+    # broken JS set (empty — we only removed, never added), the second is what's
+    # only in the registry — i.e. what the JS array is now missing.
+    {only_in_broken_js_not_registry, only_in_registry_not_broken_js} =
+      drift(broken_js_set, @required_lanes)
+
+    assert only_in_registry_not_broken_js == MapSet.new([removed_entry]),
+           "a vacuous pass is exactly the failure mode this test excludes: removing " <>
+             "'#{removed_entry}' from the parsed set must make drift/2 report it, and " <>
+             "only it, in the 'missing from the JS array' direction — got " <>
+             "#{inspect(MapSet.to_list(only_in_registry_not_broken_js))}"
+
+    assert MapSet.size(only_in_broken_js_not_registry) == 0,
+           "unexpected reverse-direction drift after removing only '#{removed_entry}': " <>
+             "#{inspect(MapSet.to_list(only_in_broken_js_not_registry))}"
+  end
+
   # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
