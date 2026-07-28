@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.1.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.0.0...mailglass_admin-v2.1.0) (2026-07-28)
+
+
+### Features
+
+* operator Quick view + Full detail record inspection ([#128](https://github.com/szTheory/mailglass/issues/128)) ([7a68501](https://github.com/szTheory/mailglass/commit/7a6850146f606c3e82bcb50bc7c146c830caf0e1))
+
 ## [2.0.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.11.0...mailglass_admin-v2.0.0) (2026-07-04)
 
 

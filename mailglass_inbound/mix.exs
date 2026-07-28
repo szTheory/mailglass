@@ -1,7 +1,7 @@
 defmodule MailglassInbound.MixProject do
   use Mix.Project
 
-  @version "2.0.0"
+  @version "2.1.0"
   @source_url "https://github.com/szTheory/mailglass"
   @description "Inbound routing contract package for mailglass"
   # Release-As path anchor (137-02, D-04): this mailglass_inbound/ subtree touch
