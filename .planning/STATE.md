@@ -4,16 +4,16 @@ milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 current_phase: 141
 current_phase_name: lane-truth-foundation
-status: executing
-stopped_at: Completed 141-05-PLAN.md
-last_updated: "2026-07-28T21:52:40.529Z"
+status: verifying
+stopped_at: Completed 141-06-PLAN.md — Phase 141 all 6 plans done
+last_updated: "2026-07-28T23:52:40.821Z"
 last_activity: 2026-07-28
 last_activity_desc: Phase 141 execution started
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 Phase: 141 (lane-truth-foundation) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-28 -- Phase 141 execution started
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## v2.2 Milestone Intent
 
@@ -326,6 +326,10 @@ release debug campaign.
 - [Phase ?]: [141-04] gate-ci-green keeps two distinct core.setFailed branches (blockingFailures for publish-gating/structural, unclassifiedFailures for the new unclassified-red case) so the pre-existing 'non-advisory failures' message stays byte-identical while unclassified-red gets a TRUTH-09-naming message; unclassified-green only warns (posture preserved byte-for-byte per D-02).
 - [Phase ?]: [141-05] Synthetic-matrix-suffix exactly-one-bucket probe scoped to the 19 non-required lanes; required_lanes/0 uses exact equality by design and can never legitimately carry a runtime matrix suffix (guarded separately by the matrix-exact-match-safety test)
 - [Phase ?]: [141-05] Task 1 and Task 2 committed as two separate atomic commits on the same file, reconstructed in sequence so each commit's diff maps 1:1 to its task
+- [Phase ?]: [141-06] MAINTAINING.md § Required Checks rewritten as one 24-row job|display-name|classification|disposition|reason table, resolving D-15's three-list self-contradiction; branch-protection truth restated as exactly two contexts (CI Green, Guard Release Trigger) distinct from the five ci_green.needs merge-gating leaves.
+- [Phase ?]: [141-06] parse_disposition_table/1 + trim_bt/1 in lane_classification_drift_test.exs bind the table to Mailglass.CILanes with 7 new tests (pair-set-equality, exact-count anti-vacuity, adjacency, closed-vocabulary disposition, no-pipe cells, order-independence, negative control); three deliberate-drift probes run and reverted.
+- [Phase ?]: [141-06] Two coordinator-applied fixes during the Task 3 checkpoint pause: b787d9a0 changed a Credo-flagged length(rows)>0 assert to rows != []; 7a603e34 restored Core Full Suite Advisory / Provider Compatibility Advisory / Inbound Full Suite Advisory as prose (not table rows) after docs_contract_test.exs:304 caught their removal.
+- [Phase ?]: [141-06] Live CI run 30408642505 (forced via workflow_dispatch to guarantee code lanes executed, not a docs-only skip) confirmed all 24 runtime job names classify correctly, branch protection is exactly [CI Green, Guard Release Trigger], and v2.0/v2.1 phase archives are exactly 48/39 files. mix ci Group 5 not achieved locally (sandbox/network gap); remote CI run recorded as the stronger substitute evidence.
 
 ## Quick Tasks Completed
 
@@ -358,6 +362,7 @@ release debug campaign.
 | Phase 141 P03 | 4min | 2 tasks | 2 files |
 | Phase 141 P04 | 6min | 3 tasks | 3 files |
 | Phase 141 P05 | 8min | 2 tasks | 1 files |
+| Phase 141 P06 | 55min | 3 tasks | 2 files |
 
 ## Deferred Items
 
@@ -525,8 +530,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-28T21:52:40.519Z
-**Stopped at:** Completed 141-05-PLAN.md
+**Last session:** 2026-07-28T23:52:40.803Z
+**Stopped at:** Completed 141-06-PLAN.md — Phase 141 all 6 plans done
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

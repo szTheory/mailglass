@@ -131,7 +131,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   plugin fires two releases on two different tags, so the runs never serialize. `post-publish-smoke.yml`
   carries the identical pattern and is fixed alongside it. A successful release must not report failure.
 
-- [ ] **TRUTH-05**: Every lane carries a recorded disposition — promote, keep-with-reason, or retire. No lane
+- [x] **TRUTH-05**: Every lane carries a recorded disposition — promote, keep-with-reason, or retire. No lane
   sits red or unclassified indefinitely. *(Follows TRUTH-09/07: dispositions are recorded against the
   reconciled set, not the ambiguous one.)*
 
@@ -188,7 +188,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 |---|---|---|
 | TRUTH-09 | Phase 141 | Complete |
 | TRUTH-07 | Phase 141 | Complete |
-| TRUTH-05 | Phase 141 | Pending |
+| TRUTH-05 | Phase 141 | Complete |
 | CONFORM-04 | Phase 141 | Complete |
 | HIST-01 | Phase 141 | Complete |
 | VULN-05 | Phase 142 | Pending |

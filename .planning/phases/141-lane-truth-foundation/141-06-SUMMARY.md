@@ -213,3 +213,7 @@ Phase 141 (Lane Truth Foundation) is complete: TRUTH-07, TRUTH-09, TRUTH-05, and
 ---
 *Phase: 141-lane-truth-foundation*
 *Completed: 2026-07-28*
+
+## Self-Check: PASSED
+
+All referenced files (`MAINTAINING.md`, `test/scripts/lane_classification_drift_test.exs`, this SUMMARY) confirmed present on disk. All referenced commit hashes (`920f853c`, `e560431d`, `b787d9a0`, `7a603e34`, `4f84208c`) confirmed present in `git log --oneline --all`.
