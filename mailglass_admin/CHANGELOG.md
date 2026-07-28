@@ -4,6 +4,14 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.1.1...mailglass_admin-v2.1.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* **admin:** clear the design-system and Dialyzer lanes blocking release ([#136](https://github.com/szTheory/mailglass/issues/136)) ([31588bb](https://github.com/szTheory/mailglass/commit/31588bb40343fc67200ca8bf4da7ffb3351248fa))
+* **test:** make the citext probe honest and restore the suite baseline ([#137](https://github.com/szTheory/mailglass/issues/137)) ([579ad37](https://github.com/szTheory/mailglass/commit/579ad379bc979a78870f2f56ce865c19f44f6a20))
+
 ## [2.1.1](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.1.0...mailglass_admin-v2.1.1) (2026-07-28)
 
 

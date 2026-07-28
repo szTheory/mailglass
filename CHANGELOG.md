@@ -14,6 +14,14 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass-v2.1.1...mailglass-v2.1.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* **admin:** clear the design-system and Dialyzer lanes blocking release ([#136](https://github.com/szTheory/mailglass/issues/136)) ([31588bb](https://github.com/szTheory/mailglass/commit/31588bb40343fc67200ca8bf4da7ffb3351248fa))
+* **test:** make the citext probe honest and restore the suite baseline ([#137](https://github.com/szTheory/mailglass/issues/137)) ([579ad37](https://github.com/szTheory/mailglass/commit/579ad379bc979a78870f2f56ce865c19f44f6a20))
+
 ## [2.1.1](https://github.com/szTheory/mailglass/compare/mailglass-v2.1.0...mailglass-v2.1.1) (2026-07-28)
 
 
