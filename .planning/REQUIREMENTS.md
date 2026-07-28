@@ -96,10 +96,18 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 ### TRUTH — Lane truth & drift-proofing
 
 - [ ] **TRUTH-09**: The hidden third gating tier is eliminated. Every `ci.yml` job is explicitly classified
-  as merge-gating or advisory — no job may sit in neither and thereby block publish by accident. The 9+
-  currently-unclassified jobs (Credo Strict, Dialyzer, Hex Audit, Format Check, Compile Warnings as Errors,
-  Docs Warnings as Errors, Mix Task Tests, Inbound Test, Inbound Compile No Optional Deps, Installer Golden
-  Gate, Trust Lane Clean Baseline) each receive a recorded decision.
+  into exactly one named bucket — **merge-gating (required)**, **publish-gating**, or **advisory** for
+  check lanes, plus a **structural** bucket for the two jobs that are not check lanes (`changes` /
+  `Detect Non-Doc Changes` and `ci_green` / `CI Green`) — and no job may sit in none of them and thereby
+  block publish by accident. The publish-gating bucket now carries Credo Strict, Dialyzer, Hex Audit,
+  Format Check, Compile Warnings as Errors, Docs Warnings as Errors, Mix Task Tests, Inbound Test, Inbound
+  Compile No Optional Deps, Installer Golden Gate, Trust Lane Clean Baseline, Branch Protection Advisory,
+  and the new Design System Conformance lane, each with a recorded disposition. *(Amended from the
+  original two-bucket wording — the original text read "merge-gating or advisory" for every job. A
+  two-bucket model would either let a Hex publish proceed on red Dialyzer / red trust-evidence lanes or
+  promote them to merge-gating, contradicting D-04 for `Trust Lane Clean Baseline` and lengthening every
+  PR's critical path. The named publish-gating bucket preserves today's effective publish posture
+  byte-for-byte. See `.planning/phases/141-lane-truth-foundation/141-CONTEXT.md` D-02/D-03.)*
 
 - [x] **TRUTH-07**: The three disagreeing advisory registries are reconciled to **one** authoritative source,
   with the others generated from or verified against it by a test that fails on drift. `MAINTAINING.md` is
