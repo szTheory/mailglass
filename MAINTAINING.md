@@ -131,16 +131,6 @@ the public guide.
 
 ## Required Checks
 
-Before merging any PR, ensure:
-- `mix verify.stability_contract`
-- `scripts/verify_support_contract.sh`
-- `Support Contract Core`
-- `Support Contract Admin`
-- `Compile No Optional Deps`
-- `mix credo --strict`
-- `mix dialyzer`
-- `mix docs --warnings-as-errors`
-
 The honest repo-root entrypoint is `mix verify.stability_contract` or
 `scripts/verify_support_contract.sh`. They run the three required
 branch-protection buckets plus the inbound sibling-package docs lane in sequence:
@@ -149,13 +139,15 @@ branch-protection buckets plus the inbound sibling-package docs lane in sequence
 - `mailglass_inbound` docs contract (`mailglass_inbound/test/mailglass_inbound/docs_contract_test.exs`)
 - `Compile No Optional Deps`
 
-Branch protection truth is narrower than "everything we like to run in CI".
-The exact required contexts are:
-- `Support Contract Core (Elixir 1.18 / OTP 27)`
-- `Support Contract Admin (Elixir 1.18 / OTP 27)`
-- `Compile No Optional Deps (Elixir 1.18 / OTP 27)`
-- `Trust Lane Repo Head (Elixir 1.18 / OTP 27)`
-- `Installer Host Smoke` (shift-left consumer-install smoke; promoted from advisory)
+Branch protection requires exactly **two** contexts: `CI Green` and
+`Guard Release Trigger` (`scripts/setup_branch_protection.sh`, asserted by
+GATE-01 in `test/scripts/required_checks_test.exs`). The five merge-gating
+lanes below (`compile_no_optional_deps`, `installer_host_smoke`,
+`support_contract_core`, `support_contract_admin`, `trust_lane_repo_head`) are
+the members of `ci_green.needs` — they gate a merge through the `CI Green`
+aggregator, they are **not** required contexts in their own right. Confusing a
+`ci_green.needs` member with a required context is the job-`id`-vs-display-`name`
+mismatch that opened this milestone.
 
 Release trust claims also require green trust evidence beyond the required
 branch-protection contexts: the clean-baseline and published-version trust
@@ -174,21 +166,55 @@ Read-only branch-protection verification:
 When those checks pass, they prove the current compatibility contract described
 in [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md):
 runtime floors, matched sibling-package docs wiring for `mailglass_inbound`,
-matched `mailglass_admin` release truth, and the required-vs-advisory split
-below. Do not claim broader support than those repo artifacts prove.
+matched `mailglass_admin` release truth, and the classification/disposition
+table below. Do not claim broader support than those repo artifacts prove.
 
-The following checks are advisory signal, not branch-protection truth:
-- `Format Check`
-- `Compile Warnings as Errors`
-- `Mix Task Tests`
-- `Inbound Test`
-- `Inbound Compile No Optional Deps`
-- `Operator Browser Gate`
-- `Preview Capture Advisory`
-- `Core Full Suite Advisory`
-- `Provider Compatibility Advisory`
-- `Branch Protection Advisory`
-- `Provider Live Advisory`
+This table is the single classification statement for the section. It answers
+two questions a table cell cannot hold on its own:
+
+1. **Two axes.** This table is the *classification* axis — "what does this
+   lane block?" `Mailglass.CILanes.advisory_lanes/0` answers a different
+   question — "does `mix ci` reproduce this lane locally?" A lane is routinely
+   in both (`Dialyzer` is locally reproduced *and* publish-gating).
+2. **Never promote a matrix lane into the exact-equality required set.**
+   GitHub appends matrix values to a matrix job's explicit `name:` at runtime,
+   so `gate-ci-green` would report a promoted matrix lane `(missing)` and block
+   every publish. `dialyzer`, `operator_browser_gate` and
+   `preview_capture_advisory` are the three matrix lanes today.
+
+`classification` is one of `required`, `advisory`, `publish-gating`,
+`structural`. `disposition` is one of `promote`, `keep-with-reason`, `retire`.
+`promote` records a recommendation only — it does not mean the lane has been
+executed into that state; see each `promote` row's `reason` cell.
+
+| job id | display name | classification | disposition | reason |
+|---|---|---|---|---|
+| `compile_no_optional_deps` | `Compile No Optional Deps (Elixir 1.18 / OTP 27)` | required | keep-with-reason | Optional-deps gateway is a locked engineering-DNA guarantee. |
+| `installer_host_smoke` | `Installer Host Smoke` | required | keep-with-reason | Shift-left consumer-install proof; promoted from advisory. |
+| `support_contract_core` | `Support Contract Core (Elixir 1.18 / OTP 27)` | required | keep-with-reason | Stability/API contract. |
+| `support_contract_admin` | `Support Contract Admin (Elixir 1.18 / OTP 27)` | required | keep-with-reason | Sibling-package release truth. |
+| `trust_lane_repo_head` | `Trust Lane Repo Head (Elixir 1.18 / OTP 27)` | required | keep-with-reason | Repo-head trust journey. |
+| `deps_audit_advisory` | `Deps Audit Advisory (Elixir 1.18 / OTP 27)` | advisory | promote | Recorded recommendation only; Phase 142/VULN-03 executes the promotion to merge-gating, not this phase (D-07). |
+| `operator_browser_gate` | `Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)` | advisory | keep-with-reason | Node/Playwright; zero-Node is an adopter guarantee, so this stays advisory. One of the three matrix lanes - never promote to the exact-equality required set. |
+| `demo_browser_evidence` | `Demo Browser Evidence (Docker Compose / Chromium)` | advisory | keep-with-reason | Docker-compose demo evidence; slow, environment-fragile. |
+| `preview_capture_advisory` | `Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)` | advisory | keep-with-reason | Node/Playwright preview capture. One of the three matrix lanes - never promote to the exact-equality required set. |
+| `format_check` | `Format Check (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Cheap hygiene; reproduced by `mix ci.fast`. |
+| `compile_warnings` | `Compile Warnings as Errors (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Reproduced by `mix ci.fast`. |
+| `mix_task_tests` | `Mix Task Tests (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Generator/CLI surface; directory-scoped anti-drift. |
+| `inbound_test` | `Inbound Test (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Sibling package on its own version line. |
+| `inbound_compile_no_optional_deps` | `Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Sibling optional-deps gateway. |
+| `credo_strict` | `Credo Strict (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Custom Credo checks enforce domain rules at lint time. |
+| `conformance_gates` | `Design System Conformance (shell gates)` | publish-gating | keep-with-reason | Split from `credo_strict` per CONFORM-04; publish-gating per D-09. |
+| `dialyzer` | `Dialyzer (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Slow; publish-gating is the right cost/benefit. One of the three matrix lanes - never promote to the exact-equality required set. |
+| `docs_warnings_as_errors` | `Docs Warnings as Errors (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | HexDocs quality gate; a broken docs build ships to hex.pm. |
+| `hex_audit` | `Hex Audit (Elixir 1.18 / OTP 27)` | publish-gating | promote | Recorded recommendation only; Phase 142/VULN-03 executes the promotion to merge-gating, not this phase (D-07). |
+| `installer_golden_gate` | `Installer Golden Gate (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Golden-file installer output; no local-parity step. |
+| `trust_lane_clean_baseline` | `Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)` | publish-gating | keep-with-reason | Required for release trust claims above; GATE-01 (D-04) forbids making it a required context. Publish-gating is the only classification satisfying both. |
+| `branch_protection_advisory` | `Branch Protection Advisory` | publish-gating | keep-with-reason | Classification goes live when Phase 144/TRUTH-02 makes it failable - today its only substantive step is `continue-on-error: true`, so the job never fails. Its name says "advisory" but its behavior is publish-gating (D-04). |
+| `changes` | `Detect Non-Doc Changes` | structural | keep-with-reason | Path filter; every other lane's `if:` reads `needs.changes.outputs.code`. Not a check. |
+| `ci_green` | `CI Green` | structural | keep-with-reason | Aggregator; it is one of the two branch-protection contexts - required at the context level, not as a leaf. Must never appear in `REQUIRED_LANES` - that would be a self-referential gate. |
+
+This table is verified against `Mailglass.CILanes` (`test/support/ci_lanes.ex`) by `test/scripts/lane_classification_drift_test.exs` — editing one without the other fails CI.
 
 Required inbound release proof is deterministic repo/package/workflow evidence:
 source and manifest parity, `mix mailglass.publish.check --package mailglass_inbound`,
