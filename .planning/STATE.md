@@ -5,15 +5,15 @@ milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 current_phase: 141
 current_phase_name: lane-truth-foundation
 status: executing
-stopped_at: Completed 141-01-PLAN.md
-last_updated: "2026-07-28T21:19:31.605Z"
+stopped_at: Completed 141-02-PLAN.md
+last_updated: "2026-07-28T21:25:18.733Z"
 last_activity: 2026-07-28
 last_activity_desc: Phase 141 execution started
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 6
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 141 (lane-truth-foundation) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-07-28 -- Phase 141 execution started
 
-Progress: [██░░░░░░░░] 17%
+Progress: [███░░░░░░░] 33%
 
 ## v2.2 Milestone Intent
 
@@ -318,6 +318,9 @@ release debug campaign.
 - [v2.2 roadmap] Phase 143 (HARNESS) frames HARNESS-01 as investigate-then-fix: the sandbox-ownership-leak mechanism (10-minute shared owner in webhook_idempotency_convergence_test.exs colliding with :auto-mode property-test siblings) is a hypothesis per research, not a confirmed root cause, and must be empirically confirmed before any fix lands (SEED-007, ARCHITECTURE.md).
 - [Phase ?]: [141-01] Drift meta-test wired into mix_task_tests (publish-gating), not support_contract_core (merge-gating) — registry drift blocks a Hex publish, not a PR merge, per Phase 141's scope lock
 - [Phase ?]: [141-01] required_checks_test.exs's five defp parsers were NOT refactored to delegate to the new Mailglass.CIYaml — GATE-03 is load-bearing for this phase's own correctness; ~20-line duplication accepted as debt
+- [Phase ?]: TOOL-01: --archive-version demoted to necessary-but-insufficient for phases.clear archive omission (70099869 evidence); post-condition file-count check is the sole primary mitigation.
+- [Phase ?]: TRUTH-09 amended to the three-bucket (merge-gating/publish-gating/advisory) + structural classification model, replacing the stale two-bucket wording (141-CONTEXT.md D-02/D-03).
+- [Phase ?]: CONTRIBUTING.md's branch-protection claim corrected to the true two required contexts (CI Green, Guard Release Trigger); pointer to MAINTAINING.md by section name, not line range.
 
 ## Quick Tasks Completed
 
@@ -346,6 +349,7 @@ release debug campaign.
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 141 P01 | 25min | 2 tasks | 5 files |
+| Phase 141 P02 | ~15min | 3 tasks | 3 files |
 
 ## Deferred Items
 
@@ -513,8 +517,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-28T21:19:31.597Z
-**Stopped at:** Completed 141-01-PLAN.md
+**Last session:** 2026-07-28T21:25:18.726Z
+**Stopped at:** Completed 141-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

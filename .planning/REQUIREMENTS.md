@@ -95,7 +95,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 
 ### TRUTH — Lane truth & drift-proofing
 
-- [ ] **TRUTH-09**: The hidden third gating tier is eliminated. Every `ci.yml` job is explicitly classified
+- [x] **TRUTH-09**: The hidden third gating tier is eliminated. Every `ci.yml` job is explicitly classified
   into exactly one named bucket — **merge-gating (required)**, **publish-gating**, or **advisory** for
   check lanes, plus a **structural** bucket for the two jobs that are not check lanes (`changes` /
   `Detect Non-Doc Changes` and `ci_green` / `CI Green`) — and no job may sit in none of them and thereby
@@ -141,7 +141,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 
 ### HIST — Planning-history integrity
 
-- [ ] **HIST-01**: v2.0's phase artifacts (132-137) are restored to `.planning/milestones/v2.0-phases/`, and
+- [x] **HIST-01**: v2.0's phase artifacts (132-137) are restored to `.planning/milestones/v2.0-phases/`, and
   the `gsd-tools query phases.clear` defect that deleted them without writing an archive is recorded. The
   same defect deleted v2.1's phases 138-140 during this milestone's own opening; those were caught and
   restored in commit `70099869`.
@@ -186,11 +186,11 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 
 | Requirement | Phase | Status |
 |---|---|---|
-| TRUTH-09 | Phase 141 | Pending |
+| TRUTH-09 | Phase 141 | Complete |
 | TRUTH-07 | Phase 141 | Complete |
 | TRUTH-05 | Phase 141 | Pending |
 | CONFORM-04 | Phase 141 | Pending |
-| HIST-01 | Phase 141 | Pending |
+| HIST-01 | Phase 141 | Complete |
 | VULN-05 | Phase 142 | Pending |
 | VULN-03 | Phase 142 | Pending |
 | VULN-06 | Phase 142 | Pending |
