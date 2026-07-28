@@ -223,6 +223,14 @@ Hex/HexDocs/smoke evidence when that publish phase runs.
 Provider-live checks and ecosystem canaries remain advisory unless a specific
 release claim explicitly depends on them.
 
+The 24-row table above covers `ci.yml` only. The separate `advisory-matrix.yml`
+workflow carries additional lanes — `Core Full Suite Advisory`,
+`Provider Compatibility Advisory`, and `Inbound Full Suite Advisory` — which run
+on push to `main`, pull requests to `main`, a nightly cron, and
+`workflow_dispatch`. None of them is a member of `ci_green.needs`, so none gates
+a merge. All are matrix lanes whose display names carry runtime matrix suffixes,
+so the never-promote rule above applies to them too.
+
 `Provider Live Advisory` remains a cron and `workflow_dispatch` canary. It is not a merge blocker.
 
 ## Bus Factor & Continuity
