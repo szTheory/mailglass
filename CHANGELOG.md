@@ -14,6 +14,13 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.1.3](https://github.com/szTheory/mailglass/compare/mailglass-v2.1.2...mailglass-v2.1.3) (2026-07-28)
+
+
+### Miscellaneous Chores
+
+* **mailglass:** Synchronize mailglass-sibling-group versions
+
 ## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass-v2.1.1...mailglass-v2.1.2) (2026-07-28)
 
 
