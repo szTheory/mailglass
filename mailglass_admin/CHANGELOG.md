@@ -4,6 +4,13 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.1.3](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.1.2...mailglass_admin-v2.1.3) (2026-07-28)
+
+
+### Bug Fixes
+
+* **deps:** patch new cowboy/cowlib advisories blocking the 2.1.2 publish ([#139](https://github.com/szTheory/mailglass/issues/139)) ([3c80ca8](https://github.com/szTheory/mailglass/commit/3c80ca805e6eedf8232817d3aa6e5786e364a669))
+
 ## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.1.1...mailglass_admin-v2.1.2) (2026-07-28)
 
 
