@@ -2,31 +2,32 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   use ExUnit.Case, async: true
 
   @moduledoc """
-  Lane-contract truth seam (TRUTH-07). Wired into a real CI job via the
+  Lane-contract truth seam (TRUTH-07/TRUTH-09). Wired into a real CI job via the
   `verify.ci_lane_contract` alias (`mix_task_tests`, `.github/workflows/ci.yml`) —
   per RESEARCH.md **F2**, a drift meta-test that runs nowhere in `ci.yml` enforces
   nothing, no matter how correct its assertions are.
 
-  Asserts, by identity — not a whole-file substring match — that
-  `publish-hex.yml`'s `REQUIRED_LANES` JS array set-equals
-  `Mailglass.CILanes.required_lanes/0`. This is the one registry pairing that
-  already agrees today; later plans in this phase load the fuller
-  publish-gating/advisory/structural classification into the same seam this test
-  proves works.
+  Asserts, by identity — not a whole-file substring match — that all four of
+  `publish-hex.yml`'s classification arrays (`REQUIRED_LANES`, `ADVISORY_LANES`,
+  `PUBLISH_GATING_LANES`, `STRUCTURAL_LANES`) each set-equal their counterpart
+  accessor on `Mailglass.CILanes` (`required_lanes/0`, `advisory_classified_lanes/0`,
+  `publish_gating_lanes/0`, `structural_lanes/0`). The four lane lists are read
+  from `Mailglass.CILanes` — they are NOT duplicated as literals in this file.
 
   Anti-vacuity guards (the `required_checks_test.exs:30-34` idiom): every parser
   used here fails loud with a named message rather than silently returning nothing
-  and letting a difference-of-empty-sets pass vacuously. The lane list is read from
-  `Mailglass.CILanes` — it is NOT duplicated here.
+  and letting a difference-of-empty-sets pass vacuously.
 
   ## The two name spaces (RESEARCH F1)
 
   `REQUIRED_LANES` is matched with exact `===` equality by `gate-ci-green`, and
   GitHub appends matrix values to a matrix job's declared `name:` at runtime — so a
   matrix lane placed in `REQUIRED_LANES` would report `(missing)` at every publish
-  attempt (the declared name never matches the suffixed runtime name). The matrix
-  exact-match safety test below makes this a machine-enforced invariant instead of a
-  comment someone can delete.
+  attempt (the declared name never matches the suffixed runtime name). The other
+  three arrays are matched by prefix instead, precisely because they may contain a
+  matrix lane (`Dialyzer`, `Operator Browser Gate`, `Preview Capture Advisory`). The
+  matrix exact-match safety test below makes the `REQUIRED_LANES` half of this a
+  machine-enforced invariant instead of a comment someone can delete.
   """
 
   @repo_root Path.expand("../..", __DIR__)
@@ -34,6 +35,9 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   @ci_yml_path Path.join(@repo_root, ".github/workflows/ci.yml")
 
   @required_lanes MapSet.new(Mailglass.CILanes.required_lanes())
+  @advisory_classified_lanes MapSet.new(Mailglass.CILanes.advisory_classified_lanes())
+  @publish_gating_lanes MapSet.new(Mailglass.CILanes.publish_gating_lanes())
+  @structural_lanes MapSet.new(Mailglass.CILanes.structural_lanes())
 
   # ---------------------------------------------------------------------------
   # Tests
@@ -47,6 +51,57 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
 
     assert MapSet.size(only_in_js) == 0 and MapSet.size(only_in_registry) == 0,
            "publish-hex.yml's REQUIRED_LANES and Mailglass.CILanes.required_lanes/0 " <>
+             "have drifted:\n" <>
+             "  In the JS array but missing from CILanes: #{inspect(MapSet.to_list(only_in_js))}\n" <>
+             "  In CILanes but missing from the JS array: #{inspect(MapSet.to_list(only_in_registry))}"
+  end
+
+  test "ADVISORY_LANES (publish-hex.yml) set-equals Mailglass.CILanes.advisory_classified_lanes/0" do
+    js_source = File.read!(@publish_hex_path)
+    advisory_from_js = parse_js_array(js_source, "ADVISORY_LANES")
+
+    assert MapSet.size(advisory_from_js) == 4,
+           "expected exactly 4 entries parsed from publish-hex.yml's ADVISORY_LANES " <>
+             "array — parser or file format changed"
+
+    {only_in_js, only_in_registry} = drift(advisory_from_js, @advisory_classified_lanes)
+
+    assert MapSet.size(only_in_js) == 0 and MapSet.size(only_in_registry) == 0,
+           "publish-hex.yml's ADVISORY_LANES and " <>
+             "Mailglass.CILanes.advisory_classified_lanes/0 have drifted:\n" <>
+             "  In the JS array but missing from CILanes: #{inspect(MapSet.to_list(only_in_js))}\n" <>
+             "  In CILanes but missing from the JS array: #{inspect(MapSet.to_list(only_in_registry))}"
+  end
+
+  test "PUBLISH_GATING_LANES (publish-hex.yml) set-equals Mailglass.CILanes.publish_gating_lanes/0" do
+    js_source = File.read!(@publish_hex_path)
+    publish_gating_from_js = parse_js_array(js_source, "PUBLISH_GATING_LANES")
+
+    assert MapSet.size(publish_gating_from_js) == 13,
+           "expected exactly 13 entries parsed from publish-hex.yml's " <>
+             "PUBLISH_GATING_LANES array — parser or file format changed"
+
+    {only_in_js, only_in_registry} = drift(publish_gating_from_js, @publish_gating_lanes)
+
+    assert MapSet.size(only_in_js) == 0 and MapSet.size(only_in_registry) == 0,
+           "publish-hex.yml's PUBLISH_GATING_LANES and " <>
+             "Mailglass.CILanes.publish_gating_lanes/0 have drifted:\n" <>
+             "  In the JS array but missing from CILanes: #{inspect(MapSet.to_list(only_in_js))}\n" <>
+             "  In CILanes but missing from the JS array: #{inspect(MapSet.to_list(only_in_registry))}"
+  end
+
+  test "STRUCTURAL_LANES (publish-hex.yml) set-equals Mailglass.CILanes.structural_lanes/0" do
+    js_source = File.read!(@publish_hex_path)
+    structural_from_js = parse_js_array(js_source, "STRUCTURAL_LANES")
+
+    assert MapSet.size(structural_from_js) == 2,
+           "expected exactly 2 entries parsed from publish-hex.yml's STRUCTURAL_LANES " <>
+             "array — parser or file format changed"
+
+    {only_in_js, only_in_registry} = drift(structural_from_js, @structural_lanes)
+
+    assert MapSet.size(only_in_js) == 0 and MapSet.size(only_in_registry) == 0,
+           "publish-hex.yml's STRUCTURAL_LANES and Mailglass.CILanes.structural_lanes/0 " <>
              "have drifted:\n" <>
              "  In the JS array but missing from CILanes: #{inspect(MapSet.to_list(only_in_js))}\n" <>
              "  In CILanes but missing from the JS array: #{inspect(MapSet.to_list(only_in_registry))}"
@@ -128,6 +183,34 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
     assert MapSet.size(only_in_broken_js_not_registry) == 0,
            "unexpected reverse-direction drift after removing only '#{removed_entry}': " <>
              "#{inspect(MapSet.to_list(only_in_broken_js_not_registry))}"
+
+    # Extended negative control: PUBLISH_GATING_LANES, using the lane this phase
+    # adds ("Design System Conformance (shell gates)") as the removed entry — the
+    # one most likely to be forgotten in a future edit, so it is the one whose
+    # fail-loud property matters most.
+    publish_gating_from_js = parse_js_array(js_source, "PUBLISH_GATING_LANES")
+
+    assert drift(publish_gating_from_js, @publish_gating_lanes) == {MapSet.new(), MapSet.new()},
+           "sanity check failed: PUBLISH_GATING_LANES and " <>
+             "Mailglass.CILanes.publish_gating_lanes/0 should agree before the " <>
+             "injected-breakage assertion runs"
+
+    pg_removed_entry = "Design System Conformance (shell gates)"
+    assert pg_removed_entry in MapSet.to_list(publish_gating_from_js)
+
+    broken_publish_gating_set = MapSet.delete(publish_gating_from_js, pg_removed_entry)
+
+    {pg_only_in_broken_js, pg_only_in_registry} =
+      drift(broken_publish_gating_set, @publish_gating_lanes)
+
+    assert pg_only_in_registry == MapSet.new([pg_removed_entry]),
+           "removing '#{pg_removed_entry}' from the parsed PUBLISH_GATING_LANES set " <>
+             "must make drift/2 report it, and only it, in the 'missing from the JS " <>
+             "array' direction — got #{inspect(MapSet.to_list(pg_only_in_registry))}"
+
+    assert MapSet.size(pg_only_in_broken_js) == 0,
+           "unexpected reverse-direction drift after removing only " <>
+             "'#{pg_removed_entry}': #{inspect(MapSet.to_list(pg_only_in_broken_js))}"
   end
 
   # ---------------------------------------------------------------------------
