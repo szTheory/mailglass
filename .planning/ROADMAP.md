@@ -57,7 +57,15 @@
   3. The lane historically named "Credo Strict" reports under a name that describes what it runs, and a maintainer reading a failed run's job list can tell from the name alone whether it's the credo check or the design-system conformance shell gate that failed — with its required/advisory/neither status an explicit decision, not an inherited accident.
   4. Every lane in the reconciled set carries a written disposition (promote / keep-with-reason / retire) in a durable, findable place — none sits red or unclassified with no recorded decision.
   5. `.planning/milestones/v2.0-phases/` contains the restored 132-137 phase artifacts, and the `gsd-tools query phases.clear` defect that deleted them (twice — v2.0's, and mid-milestone, v2.1's own 138-140) is written down somewhere a future run of the same command would be recognized as a repeat, not rediscovered blind.
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 141-01-PLAN.md — Tracer: end-to-end lane-contract seam (`Mailglass.CIYaml` parser + drift meta-test + `verify.ci_lane_contract` alias wired into `ci.yml`'s `mix_task_tests`), proven to fail loud on drift [wave 1]
+- [ ] 141-02-PLAN.md — Docs-only truth records: `.planning/TOOLING-DEFECTS.md` (TOOL-01), the TRUTH-09 requirement amendment, and the `CONTRIBUTING.md` branch-protection correction [wave 1]
+- [ ] 141-03-PLAN.md — Split `credo_strict` into `credo_strict` + `conformance_gates` (`Design System Conformance (shell gates)`); record the new lane's parity exclusion [wave 2]
+- [ ] 141-04-PLAN.md — Three-bucket classification axis on `Mailglass.CILanes` + `gate-ci-green` rewrite (four enumerated arrays, no naming convention) + four set-equality assertions [wave 3]
+- [ ] 141-05-PLAN.md — Machine-enforce "nothing unclassified": registry ↔ `ci.yml` set-equality, matrix name-space seam, prefix safety, byte-exact comparability [wave 4]
+- [ ] 141-06-PLAN.md — `MAINTAINING.md` § "Required Checks" as one 24-row disposition table, its drift assertions, and the live-verification checkpoint [wave 5]
 
 ### Phase 142: Supply-Chain Remediation & Gating
 **Goal**: Every dependency advisory this repository can detect — direct or transitive — either blocks a merge or carries a recorded, time-boxed exception; nothing accumulates silently the way `hpax` and the 13-PR dependabot backlog did.
@@ -100,7 +108,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 141. Lane Truth Foundation | 0/TBD | Not started | - |
+| 141. Lane Truth Foundation | 0/6 | Planned | - |
 | 142. Supply-Chain Remediation & Gating | 0/TBD | Not started | - |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
