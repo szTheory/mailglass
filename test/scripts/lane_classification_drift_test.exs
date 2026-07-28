@@ -301,6 +301,114 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   end
 
   # ---------------------------------------------------------------------------
+  # Task 2 (141-05): the matrix name-space seam, prefix safety, and
+  # byte-exact-comparability hazards a comment cannot hold.
+  # ---------------------------------------------------------------------------
+
+  test "no classified display name is a prefix of another (adjacency safety, RESEARCH F1)" do
+    names = Mailglass.CILanes.all_classified_lanes()
+
+    for a <- names, b <- names, a != b do
+      refute String.starts_with?(b, a),
+             "prefix collision: '#{b}' starts with '#{a}' — gate-ci-green's ordered " <>
+               "prefix checks could assign a runtime job name carrying this prefix to the " <>
+               "wrong bucket"
+    end
+  end
+
+  test "each classified name — bare and with a synthetic matrix suffix — matches exactly one bucket" do
+    names = Mailglass.CILanes.all_classified_lanes()
+
+    for name <- names do
+      buckets = classify_lane_buckets(name)
+
+      assert length(buckets) == 1,
+             "'#{name}' matched #{length(buckets)} classification buckets " <>
+               "(#{inspect(buckets)}) — classify/1's ordered exact/prefix rule must assign " <>
+               "exactly one bucket to every classified name"
+    end
+
+    # The synthetic-suffix probe is scoped to the 19 non-required (prefix-matched)
+    # names deliberately: required_lanes/0 is matched by EXACT equality (RESEARCH
+    # F1), and the separate matrix-exact-match-safety test below guards the
+    # invariant that no required lane ever declares a `strategy:` block — so a
+    # required lane can never legitimately carry a runtime matrix suffix. Probing
+    # a required name with a synthetic suffix would assert a property that must
+    # be FALSE (zero buckets, not one) and would contradict that guarantee rather
+    # than model a genuine F1 hazard for those 5 lanes.
+    non_required_names = names -- Mailglass.CILanes.required_lanes()
+
+    suffixed =
+      for name <- non_required_names, suffix <- [" (1.18, 27)", " (22)"], do: name <> suffix
+
+    for name <- suffixed do
+      buckets = classify_lane_buckets(name)
+
+      assert length(buckets) == 1,
+             "'#{name}' (synthetic matrix-suffixed form) matched #{length(buckets)} " <>
+               "classification buckets (#{inspect(buckets)}) — this is exactly the " <>
+               "F1-class misclassification hazard: a matrix lane's runtime name must " <>
+               "still resolve to exactly one bucket"
+    end
+  end
+
+  test "matrix_job_names/1 lanes are absent from required_lanes/0 and land in exactly one prefix bucket" do
+    ci_source = File.read!(@ci_yml_path)
+    matrix_names = Mailglass.CIYaml.matrix_job_names(ci_source)
+
+    assert MapSet.size(matrix_names) >= 3,
+           "expected at least 3 matrix-strategy ci.yml jobs (dialyzer, operator_browser_gate, " <>
+             "preview_capture_advisory) — matrix_job_names/1 parsed fewer than 3"
+
+    required_set = @required_lanes
+
+    for name <- MapSet.to_list(matrix_names) do
+      refute MapSet.member?(required_set, name),
+             "matrix-strategy job '#{name}' must never appear in required_lanes/0 — GitHub " <>
+               "appends matrix values to its runtime name, so exact-equality matching would " <>
+               "report it '(missing)' and block every publish (RESEARCH F1 consequence 4)"
+
+      buckets = classify_lane_buckets(name)
+
+      assert length(buckets) == 1,
+             "matrix job '#{name}' must be matched by exactly one of the three " <>
+               "prefix-matched buckets (advisory/publish_gating/structural); got " <>
+               "#{inspect(buckets)}"
+    end
+  end
+
+  test "every classified display name is printable ASCII with no ' or | characters (byte-exact comparability)" do
+    names = Mailglass.CILanes.all_classified_lanes()
+
+    for name <- names do
+      assert Regex.match?(~r/\A[ -~]+\z/, name),
+             "'#{name}' contains a non-printable-ASCII character — comparison across " <>
+               "ci.yml, ci_lanes.ex, publish-hex.yml, and MAINTAINING.md is byte-exact and " <>
+               "would break"
+
+      refute String.contains?(name, "'"),
+             "'#{name}' contains a single quote, which would break publish-hex.yml's " <>
+               "single-quoted JS array parser"
+
+      refute String.contains?(name, "|"),
+             "'#{name}' contains a pipe character, which would break MAINTAINING.md's " <>
+               "markdown disposition-table parser (plan 141-06)"
+    end
+  end
+
+  test "drift/2 is order-independent — reversing a registry list yields an identical verdict" do
+    names = Mailglass.CILanes.all_classified_lanes()
+    forward = MapSet.new(names)
+    reversed = MapSet.new(Enum.reverse(names))
+
+    assert drift(forward, reversed) == {MapSet.new(), MapSet.new()},
+           "drift/2 must be order-independent: reversing the registry list before " <>
+             "building a MapSet must not change the verdict. A future refactor from " <>
+             "MapSet.difference/2 to list equality would fail this and turn a harmless " <>
+             "reordering into a false failure."
+  end
+
+  # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
 
@@ -328,4 +436,25 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   # real assertion above and the negative-control test (Task 2), so a future edit
   # that weakens this helper breaks the negative control too.
   defp drift(a, b), do: {MapSet.difference(a, b), MapSet.difference(b, a)}
+
+  # Mirrors `gate-ci-green`'s `classify/1` (publish-hex.yml) so the "exactly one
+  # bucket" and matrix-safety assertions above test the SAME rule the JavaScript
+  # runs, not a re-implementation with different semantics: exact equality for
+  # required, `String.starts_with?` prefix matching for the other three. This
+  # deliberately mirrors JavaScript that cannot be executed from ExUnit — changing
+  # one without the other is the drift this file exists to catch. Returns every
+  # bucket that matches (not first-match-wins), so callers can assert the count is
+  # exactly one.
+  defp classify_lane_buckets(name) do
+    []
+    |> maybe_add(:required, name in @required_lanes)
+    |> maybe_add(:advisory, prefix_match?(name, @advisory_classified_lanes))
+    |> maybe_add(:publish_gating, prefix_match?(name, @publish_gating_lanes))
+    |> maybe_add(:structural, prefix_match?(name, @structural_lanes))
+  end
+
+  defp maybe_add(acc, _bucket, false), do: acc
+  defp maybe_add(acc, bucket, true), do: [bucket | acc]
+
+  defp prefix_match?(name, lanes), do: Enum.any?(lanes, &String.starts_with?(name, &1))
 end
