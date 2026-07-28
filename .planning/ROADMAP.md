@@ -40,7 +40,7 @@
 > (TRUTH-09, TRUTH-07, TRUTH-05, CONFORM-04) that the other three phases build on top of. Phase numbers 141-144 are preserved; requirement-to-phase assignment is not the original proposal. Full rationale in
 > STATE.md "v2.2 Milestone Intent".
 
-- [ ] **Phase 141: Lane Truth Foundation** - Reconcile the three disagreeing "advisory" registries into one, classify the hidden third gating tier, rename the misleading "Credo Strict" lane with an explicit required/advisory/neither decision, record every lane's disposition, and restore the deleted v2.0 phase archives
+- [x] **Phase 141: Lane Truth Foundation** - Reconcile the three disagreeing "advisory" registries into one, classify the hidden third gating tier, rename the misleading "Credo Strict" lane with an explicit required/advisory/neither decision, record every lane's disposition, and restore the deleted v2.0 phase archives (completed 2026-07-28)
 - [ ] **Phase 142: Supply-Chain Remediation & Gating** - Wire the accepted-advisory allowlist into the CI-side audit lane first, then promote Hex Audit + Deps Audit to merge-gating, disposition the dependabot backlog, and document a triage cadence covering transitive dependencies
 - [ ] **Phase 143: Test-Harness Truth** - Empirically confirm the Ecto Sandbox ownership-leak mechanism before fixing it, prove Core Full Suite green across all four matrix legs with anti-vacuity evidence, and record a release-gating decision
 - [ ] **Phase 144: Signal & Drift Integrity** - Verify the icon-existence gate covers dynamically-constructed names, make every "cannot check" guard report a visibly non-green result, add a scheduled branch-protection regression guard, and fix the self-racing publish fan-out
@@ -134,7 +134,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 141. Lane Truth Foundation | 6/6 | In Progress|  |
+| 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 0/TBD | Not started | - |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
