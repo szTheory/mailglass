@@ -13,7 +13,7 @@ defmodule Mailglass.CILanes do
       advisory lane by identity, failing loudly on drift.
 
   All names here are VERBATIM the `name:` fields in `.github/workflows/ci.yml`. The
-  authoritative required-vs-advisory split lives in `MAINTAINING.md` (lines 152-191);
+  authoritative required-vs-advisory split lives in `MAINTAINING.md` § "Required Checks";
   the parity-contract intent is in `.planning/research/milestone-cicd/DX-MIX-CI.md`.
 
   ## Why the YAML/script copies are NOT hoisted away
@@ -43,6 +43,13 @@ defmodule Mailglass.CILanes do
       lanes with no local-parity step in `mix ci`.
     * `Trust Lane Clean Baseline (...)` — the published-baseline trust journey (D-04);
       `mix ci` reproduces only the repo-head trust lane.
+    * `Design System Conformance (shell gates)` — `mix ci` and `mix ci.fast` run
+      `mix credo --strict` but none of `scripts/check_motion_conformance.sh`,
+      `mailglass_admin/scripts/check-conformance.sh`, or
+      `mailglass_admin/scripts/check-conformance-advisory.sh`, so this lane has no
+      local-parity step. It must NOT be added to `@advisory_lanes_ci` — doing so would
+      make `ci_parity_drift_test.exs` (MIXCI-03) claim a local-parity guarantee `mix ci`
+      does not provide.
 
   The browser-tier advisory lane `Operator Browser Gate (...)` IS covered — by
   `mix ci.browser`, not `mix ci` (footgun #4 keeps it out of the default command).
