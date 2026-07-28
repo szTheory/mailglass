@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.1
-milestone_name: Postgres + Admin URL Hardening
-current_phase: null
-status: Awaiting next milestone
-stopped_at: v2.1 milestone archived; awaiting next milestone
-last_updated: "2026-07-08T18:04:18.204Z"
-last_activity: 2026-07-08
-last_activity_desc: Milestone v2.1 completed and archived
+milestone: v2.2
+milestone_name: CI Signal Integrity & Supply-Chain Hygiene
+status: planning
+last_updated: "2026-07-28T18:10:07.086Z"
+last_activity: 2026-07-28
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
-current_phase_name: none
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 ## Current Position
 
-Phase: Milestone v2.1 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-07-08 — Milestone v2.1 completed and archived
+Status: Defining requirements
+Last activity: 2026-07-28 — Milestone v2.2 started
 
 ## v2.1 Milestone Intent
 

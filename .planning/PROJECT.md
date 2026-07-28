@@ -8,6 +8,74 @@
 
 It is shipped as three sibling Hex packages: `mailglass` (core), `mailglass_admin` (mountable LiveView dashboard), and `mailglass_inbound` (Action Mailbox equivalent — post-`v1.0`).
 
+## Current Milestone: v2.2 CI Signal Integrity & Supply-Chain Hygiene
+
+**Opened 2026-07-28.** Maintenance and trust-restoration only — explicitly not product expansion, not a
+redesign, not a release-cut milestone, and not a CI topology rewrite. The lane structure is sound; the
+signals were not.
+
+**Goal:** Make every green check mean what it says, and close the supply-chain gap that let four HIGH-severity
+advisories sit unpatched.
+
+**Why now.** On 2026-07-28 a single character-class typo in branch protection was found to have silently
+held the repository for 24 days: live protection required the status context `guard-release-trigger` (the
+job **id**) while the workflow reports `Guard Release Trigger` (the job **display name**). GitHub matches
+on the reported name, so the required context was never reported by anything and every PR sat permanently
+`BLOCKED`. Consequences, none visible from the repo's own green checks: 22 PRs blocked including a release
+PR with auto-merge enabled since 2026-07-04; four HIGH CVEs unpatched because the dependabot PRs carrying
+the fixes could not merge; and `branch-protection-drift.yml` reporting SUCCESS the entire time, because it
+guards its own comparison behind `if: pat_present == 'true'` and so skips the check while still posting
+green. The unifying defect is that several signals were not telling the truth, and the check built to catch
+exactly this was itself blind.
+
+**Already delivered 2026-07-28 — released as 2.1.3 / 2.1.3 / 2.1.1. Do NOT re-plan:**
+- Branch protection corrected to `{CI Green, Guard Release Trigger}` via the repo's own
+  `scripts/setup_branch_protection.sh`; zero drift against `--print-expected-json`.
+- Nine advisories patched, four HIGH: phoenix, hpax, plug, postgrex, swoosh (PR #134) and cowboy, cowlib
+  (PR #139). `hpax` was transitive — **dependabot never files those**, which is why it accumulated.
+- All 7 admin design-system conformance gates green (PR #136), including two heroicons (`hero-check`,
+  `hero-information-circle`) rendering invisible with nothing catching it.
+- Dialyzer clean — `Operator.Deliveries.list_providers/2` (PR #136).
+- Stale `mailglass_admin` publish allowlist fixed (PR #134) — the actual cause of the 2.1.0 publish failure.
+- Citext probe made honest (PR #137) — it rescued every `Postgrex.Error`, retried, and reported "citext
+  probe exhausted" for unrelated faults; now only the poisoned-OID surface retries.
+- `migration_test.exs` baseline restoration fixed (PR #137) — restoration was gated on a recorded migration
+  version, so a dropped-but-still-recorded schema skipped restore entirely.
+
+**Target features (remaining scope, phases 141-144):**
+- **Supply-chain remediation (VULN)** — disposition the dependabot backlog left with auto-merge enabled;
+  promote the Hex Audit lane from advisory to gating so a new HIGH blocks merge instead of accumulating; a
+  documented triage cadence that covers **transitive** dependencies.
+- **Test-harness truth (HARNESS)** — fix the Ecto Sandbox ownership leak (194 of 242 core-suite failures are
+  `{:badmatch, :already_shared}` from `Sandbox.start_owner!/2`); Core Full Suite green across all four
+  matrix legs; confirm recovered tests genuinely execute and assert rather than being skipped or tagged away
+  to manufacture green; decide whether Core Full Suite should become release-gating. Full evidence,
+  call-site map, and ruled-out list in `SEED-007`.
+- **Design-system conformance (CONFORM)** — fail the build when a `<.icon name="hero-X">` has no vendored
+  SVG, closing the invisible-icon class permanently rather than the two known instances; rename the lane
+  called "Credo Strict" that actually dies in `mailglass_admin/scripts/check-conformance.sh` — the
+  misleading name is why nobody looked at it for weeks.
+- **Lane truth & drift-proofing (TRUTH)** — a skipped drift check must report neutral or failure, never
+  green; verify live protection against `--print-expected-json` on a schedule with a regression guard;
+  fix or formally accept the release-trigger anti-recursion gap (bot-auto-merged release PRs do not fire
+  release-please's `push` trigger, so tagging waits on an hourly cron — this cost ~30 minutes three separate
+  times on 2026-07-28); every advisory lane gets a recorded disposition; `repo-hygiene` must distinguish
+  "genuinely blocked" from "cannot check"; reconcile the two definitions of "advisory" (`ci_lanes.ex` lists
+  ten, `gate-ci-green` hardcodes two, and the cited authority `MAINTAINING.md` has never existed); fix the
+  self-racing publish fan-out that makes a successful release report failure.
+
+**Scope locks:**
+- **Maintenance only.** No product features, no new adopter-facing surface, no redesign, no release cut.
+- **No CI topology rewrite.** Lane structure stays; only the honesty of its signals changes.
+- **Do not re-plan delivered work.** The 2026-07-28 remediation above is shipped history.
+- **Phases continue at 141.** v2.1's 138-140 phase history is archived.
+- **SEED-006 (CI/CD efficiency audit) stays sequenced after this milestone.** Optimizing a pipeline whose
+  greens are not trustworthy just makes it lie faster.
+
+Scope source: `.planning/research/v2.2/MILESTONE-SCOPE.md`.
+
+---
+
 ## Archived: v2.1 Postgres + Admin URL Hardening (SHIPPED 2026-07-08)
 
 **Opened 2026-07-07, shipped 2026-07-08.** Tight post-v2.0 hardening milestone. v2.0 shipped the dedicated
@@ -723,5 +791,6 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened.*
+*Last updated: 2026-07-28 — v2.2 CI Signal Integrity & Supply-Chain Hygiene opened (phases 141-144), with the 2026-07-28 remediation already shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered so it is not re-planned.*
+<!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
