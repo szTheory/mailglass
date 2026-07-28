@@ -83,6 +83,13 @@ version line per [`guides/compatibility-and-deprecations.md`](guides/compatibili
 
 ## [Unreleased]
 
+### Added
+
+* Add a HexDocs architecture guide with visual tours of outbound delivery,
+  webhook evidence, persistence, suppressions, and the sibling packages.
+* Add a core code walkthrough that traces representative implementation and
+  tests from Mailable construction through outbound delivery and webhook ingest.
+
 ### Changed
 
 * The sibling packages (`mailglass_inbound`, `mailglass_admin`) now depend on

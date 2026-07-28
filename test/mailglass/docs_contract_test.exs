@@ -206,6 +206,230 @@ defmodule Mailglass.DocsContractTest do
              "guides/learning-path.md does not exist on disk"
     end
 
+    test "architecture guide is published, visual, and discoverable" do
+      guide = File.read!("guides/architecture.md")
+      readme = File.read!("README.md")
+      learning_path = File.read!("guides/learning-path.md")
+      docs = Mix.Project.config()[:docs]
+
+      assert "guides/architecture.md" in docs[:extras]
+      assert "guides/architecture.md" in Keyword.fetch!(docs, :groups_for_extras)[:Guides]
+      assert readme =~ "guides/architecture.md"
+      assert learning_path =~ "architecture.md"
+
+      headings = [
+        "## Mailglass in one picture",
+        "## Vocabulary for the trip",
+        "## Journey 1: an outbound message",
+        "## Journey 2: the email service reports back",
+        "## The data model is the architecture",
+        "## Module atlas",
+        "## Code-reading routes",
+        "## Changing it safely"
+      ]
+
+      positions =
+        for heading <- headings do
+          assert guide =~ heading
+          {position, _length} = :binary.match(guide, heading)
+          position
+        end
+
+      assert positions == Enum.sort(positions), "architecture guide headings are out of order"
+
+      [opening, _journey] = String.split(guide, "## Journey 1: an outbound message", parts: 2)
+
+      assert length(String.split(opening)) <= 700,
+             "architecture guide takes more than 700 words to reach the first journey"
+
+      assert length(Regex.scan(~r/^```mermaid$/m, guide)) == 4
+      assert length(Regex.scan(~r/^```elixir$/m, guide)) == 7
+      assert guide =~ "Mailglass turns an email from a one-way send call into a lifecycle"
+      assert guide =~ "Describe<br/>Mailable + Message"
+      assert guide =~ "Check and compile<br/>policy gates + Renderer"
+      assert guide =~ "Remember<br/>Delivery + queued Event"
+      assert guide =~ "Carry<br/>Swoosh adapter"
+      assert guide =~ "Deliver and report<br/>transactional email service"
+      assert guide =~ "Learn<br/>webhook → Events"
+      assert guide =~ "Learn -. \"next send\" .-> Compile"
+      assert guide =~ "Application<br/>deliver_later(message)"
+      assert guide =~ "Oban worker<br/>restore tenant + load rendered snapshot"
+      refute Regex.match?(~r/\["\d+ · /, guide)
+      assert guide =~ "Delivery + queued Event + Oban job"
+      assert guide =~ "Transport outside a DB transaction"
+      assert guide =~ "out of band"
+      assert guide =~ "Dispatched is not delivered"
+      assert guide =~ "the conventional\nterm **provider**"
+      assert guide =~ "Mailglass owns the lifecycle; Swoosh carries the email"
+      assert guide =~ "calls the configured `Swoosh.Adapter` directly"
+      assert guide =~ "It does not render content, write records"
+      assert guide =~ "{:ok, %Mailglass.Outbound.Delivery{status: :queued}}"
+      assert guide =~ "{:ok, rendered} = Mailglass.Renderer.render(message)"
+      assert guide =~ "swoosh_adapter:"
+      assert guide =~ "\"delivery_id\" => delivery.id"
+      assert guide =~ "\"mailglass_tenant_id\" => delivery.tenant_id"
+      assert guide =~ "# A later webhook advanced the projection"
+      assert guide =~ "%Mailglass.Webhook.WebhookEvent{"
+      assert guide =~ "%Mailglass.Events.Event{"
+      assert guide =~ "Temporary receipt containing the provider payload and ingest status"
+      assert guide =~ "WebhookEvent<br/>temporary webhook receipt"
+      assert guide =~ "Rendering compiles content into an email artifact"
+      assert guide =~ "A mailable is a reusable recipe for one kind of email"
+      assert guide =~ "defmodule MyApp.AccountMailer do"
+      assert guide =~ "Declare that policy once on the recipe"
+      assert guide =~ "five policy gates"
+      assert guide =~ "dynamic assign binding are also still adopter-owned"
+      assert guide =~ "`component_fn.(%{})`"
+      assert guide =~ "workers never rerun adopter template logic"
+      assert guide =~ "preview has crossed a boundary it is designed not to cross"
+      assert guide =~ "Never call an email provider inside a database transaction"
+      assert guide =~ "provider-defined signed material"
+      assert guide =~ "does not currently populate a durable webhook DLQ"
+      assert guide =~ "Synthetic result whose `last_error`"
+      assert guide =~ "Do not infer stability from reachability"
+      assert guide =~ "This is a reading map, not a new compatibility promise"
+      refute guide =~ "lib/mailglass"
+      refute guide =~ "## Domain language in five minutes"
+      refute guide =~ "prunable envelope"
+      refute guide =~ "raw and prunable"
+      refute guide =~ "compile-time policy such as the message stream"
+      refute guide =~ "alt synchronous deliver"
+      refute guide =~ "else TaskSupervisor fallback"
+    end
+
+    test "ExDoc renders Mermaid diagrams with a pinned, failure-safe hook" do
+      docs = Mix.Project.config()[:docs]
+      body_hook = Keyword.fetch!(docs, :before_closing_body_tag)
+      html = Map.fetch!(body_hook, :html)
+
+      assert html =~ "mermaid@10.2.3"
+      assert html =~ ~s(window.addEventListener("exdoc:loaded")
+      assert html =~ "securityLevel: \"strict\""
+      assert html =~ ~s|document.querySelectorAll("pre code.mermaid")|
+      assert html =~ "preEl.remove()"
+      assert html =~ ".catch((error)"
+      assert Map.fetch!(body_hook, :epub) == ""
+    end
+
+    test "code walkthrough is published, parseable, and grounded in current source" do
+      path = "guides/code-walkthrough.md"
+      guide = File.read!(path)
+      readme = File.read!("README.md")
+      learning_path = File.read!("guides/learning-path.md")
+      architecture = File.read!("guides/architecture.md")
+      changelog = File.read!("CHANGELOG.md")
+      docs_check = File.read!("lib/mix/tasks/mailglass.docs.check.ex")
+      docs = Mix.Project.config()[:docs]
+
+      assert path in docs[:extras]
+      assert path in Keyword.fetch!(docs, :groups_for_extras)[:Guides]
+      assert readme =~ path
+      assert learning_path =~ "code-walkthrough.md"
+      assert architecture =~ "[Code walkthrough](code-walkthrough.md)"
+      assert changelog =~ "core code walkthrough"
+      assert docs_check =~ path
+
+      headings = [
+        "## Keep one route in your head",
+        "## A mailable manufactures the value",
+        "## Rendering collapses intent into bytes",
+        "## Outbound is the decision center",
+        "## The worker receives identity, not behavior",
+        "## Swoosh owns the final transport hop",
+        "## Events are history; Delivery is the view",
+        "## Webhooks bring provider facts home",
+        "## Context rides every asynchronous and database boundary",
+        "## Tests expose the intended design",
+        "## Your next source-reading session"
+      ]
+
+      positions =
+        for heading <- headings do
+          assert guide =~ heading
+          {position, _length} = :binary.match(guide, heading)
+          position
+        end
+
+      assert positions == Enum.sort(positions), "code walkthrough headings are out of order"
+
+      blocks = extract_code_blocks(path)
+      assert length(blocks) == 16
+
+      for {block, index} <- Enum.with_index(blocks, 1) do
+        assert {:ok, _quoted} = Code.string_to_quoted(block),
+               "code walkthrough block #{index} does not parse"
+      end
+
+      source_anchors = [
+        {"lib/mailglass/mailable.ex",
+         [
+           "defmacro __using__(opts) do",
+           "Mailglass.Message.new_from_use(__MODULE__, @mailglass_opts)"
+         ]},
+        {"lib/mailglass/message.ex",
+         ["def update_swoosh(%__MODULE__{swoosh_email: email} = msg, fun)"]},
+        {"lib/mailglass/renderer.ex",
+         [
+           "plaintext = to_plaintext(html_binary)",
+           "final_html = strip_mg_attributes(inlined_html)"
+         ]},
+        {"lib/mailglass/outbound.ex",
+         [
+           "defp do_deliver_later(%Message{} = msg, opts) do",
+           "|> Mailglass.OptionalDeps.Oban.insert(:job, fn %{delivery: d} ->",
+           "base_delivery_attrs(rendered, ik, adapter_ref)",
+           "def dispatch_by_id(delivery_id) when is_binary(delivery_id) do"
+         ]},
+        {"lib/mailglass/outbound/worker.ex",
+         [
+           ~s|def perform(%Oban.Job{args: %{"delivery_id" => id}} = job) when is_binary(id) do|
+         ]},
+        {"lib/mailglass/adapters/swoosh.ex", ["case mod.deliver(email, config) do"]},
+        {"lib/mailglass/outbound/projector.ex",
+         [
+           "|> maybe_advance_last_event(event)",
+           "|> Ecto.Changeset.optimistic_lock(:lock_version)"
+         ]},
+        {"lib/mailglass/webhook/plug.ex",
+         [
+           "case verify_with_telemetry!(provider, raw_body, headers, config) do",
+           "tenant_id = resolve_tenant!(provider, conn, raw_body, headers)"
+         ]},
+        {"lib/mailglass/webhook/providers/postmark.ex",
+         [~s|defp map_record_type(%{"RecordType" => "Delivery"})|]},
+        {"lib/mailglass/webhook/ingest.ex",
+         [
+           "|> append_events_for_each(events, provider, tenant_id)",
+           "apply(@auto_suppress_module, :apply"
+         ]},
+        {"lib/mailglass/tenancy.ex",
+         [
+           "def with_tenant(tenant_id, fun) when is_binary(tenant_id) and is_function(fun, 0) do"
+         ]},
+        {"lib/mailglass/repo.ex", ["Keyword.put_new(opts, :prefix, Mailglass.Config.schema())"]},
+        {"test/mailglass/core_send_integration_test.exs",
+         ["assert_mail_sent(to: \"uat-c2-oban@example.com\")"]},
+        {"test/mailglass/outbound/projector_test.exs",
+         ["terminal never flips back: :opened after :bounced leaves terminal=true"]}
+      ]
+
+      for {source_path, anchors} <- source_anchors do
+        source = File.read!(source_path)
+
+        for anchor <- anchors do
+          assert guide =~ anchor, "walkthrough is missing source anchor #{inspect(anchor)}"
+          assert source =~ anchor, "source moved or removed walkthrough anchor #{inspect(anchor)}"
+        end
+      end
+
+      assert guide =~ "A `# ...` marks a deliberate cut"
+      assert guide =~ "Reading is not an API promise"
+      assert guide =~ "View Source"
+      refute guide =~ "lib/mailglass"
+      refute Regex.match?(~r|https://github\.com/.+/blob/|, guide)
+      refute Regex.match?(~r/#L\d+/, guide)
+    end
+
     test "migration-from-swoosh opens with the value-prop pitch before subordinate framing" do
       migration = File.read!("guides/migration-from-swoosh.md")
 

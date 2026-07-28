@@ -424,6 +424,57 @@ defmodule Mailglass.MixProject do
       source_ref: "v#{@version}",
       logo: "brandbook/assets/logo-mark.svg",
       favicon: "brandbook/assets/favicon.svg",
+      before_closing_body_tag: %{
+        html: """
+        <script defer src="https://cdn.jsdelivr.net/npm/mermaid@10.2.3/dist/mermaid.min.js"></script>
+        <script>
+          window.mailglassMermaidState ||= {initialized: false, graphId: 0};
+
+          window.addEventListener("exdoc:loaded", () => {
+            if (typeof mermaid === "undefined") return;
+
+            const state = window.mailglassMermaidState;
+
+            if (!state.initialized) {
+              mermaid.initialize({
+                startOnLoad: false,
+                securityLevel: "strict",
+                theme: document.body.className.includes("dark") ? "dark" : "default"
+              });
+              state.initialized = true;
+            }
+
+            for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+              if (codeEl.dataset.mermaidRendering === "true") continue;
+
+              codeEl.dataset.mermaidRendering = "true";
+
+              const preEl = codeEl.parentElement;
+              const graphDefinition = codeEl.textContent;
+              const graphEl = document.createElement("div");
+              const graphId = "mailglass-mermaid-" + state.graphId++;
+
+              graphEl.className = "mermaid-graph";
+              graphEl.setAttribute("role", "img");
+              graphEl.setAttribute("aria-label", "Mailglass architecture diagram");
+
+              mermaid.render(graphId, graphDefinition)
+                .then(({svg, bindFunctions}) => {
+                  graphEl.innerHTML = svg;
+                  bindFunctions?.(graphEl);
+                  preEl.insertAdjacentElement("afterend", graphEl);
+                  preEl.remove();
+                })
+                .catch((error) => {
+                  delete codeEl.dataset.mermaidRendering;
+                  console.log("Failed to render Mermaid diagram: " + error);
+                });
+            }
+          });
+        </script>
+        """,
+        epub: ""
+      },
       skip_undefined_reference_warnings_on: [
         "README.md",
         "CONTRIBUTING.md",
@@ -452,6 +503,8 @@ defmodule Mailglass.MixProject do
         "guides/upgrading-to-v2_0.md",
         "guides/getting-started.md",
         "guides/learning-path.md",
+        "guides/architecture.md",
+        "guides/code-walkthrough.md",
         "guides/jobs.md",
         "guides/authoring-mailables.md",
         "guides/components.md",
@@ -483,6 +536,8 @@ defmodule Mailglass.MixProject do
           "guides/upgrading-to-v2_0.md",
           "guides/getting-started.md",
           "guides/learning-path.md",
+          "guides/architecture.md",
+          "guides/code-walkthrough.md",
           "guides/jobs.md",
           "guides/authoring-mailables.md",
           "guides/components.md",

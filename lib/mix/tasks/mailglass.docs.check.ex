@@ -34,6 +34,8 @@ defmodule Mix.Tasks.Mailglass.Docs.Check do
     "guides/compatibility-and-deprecations.md",
     "guides/upgrading-to-v1_0.md",
     "guides/getting-started.md",
+    "guides/architecture.md",
+    "guides/code-walkthrough.md",
     "guides/upgrading-from-v0_1.md",
     "guides/migration-from-swoosh.md",
     "guides/authoring-mailables.md",

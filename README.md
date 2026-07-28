@@ -265,6 +265,10 @@ Full trajectory in [`.planning/ROADMAP.md`](.planning/ROADMAP.md) and
   route mounting, and first delivery
 - [`guides/learning-path.md`](guides/learning-path.md) — first-week
   learning arc: ordered sequence from install to production
+- [`guides/architecture.md`](guides/architecture.md) — how mailglass turns
+  message intent into durable evidence, projections, and future-send policy
+- [`guides/code-walkthrough.md`](guides/code-walkthrough.md) — a guided trace
+  through the core modules, representative functions, and executable invariants
 - [`guides/run-the-demo.md`](guides/run-the-demo.md) — see mailglass
   working locally in one command (`make demo`)
 - [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)

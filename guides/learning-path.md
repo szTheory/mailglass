@@ -13,6 +13,14 @@ your integration matures.
   is built to handle, from auth sends to suppression management. Read this once to see the full
   scope, then return when a specific job comes up.
 
+- **[How mailglass works](architecture.md)** — Build the system-level mental model: follow an
+  outbound message and its provider evidence through rendering, persistence, webhooks,
+  projections, and suppressions, then learn where to start reading the code.
+
+- **[Mailglass code walkthrough](code-walkthrough.md)** — Put real functions behind that
+  architecture: trace a Message through rendering, durable dispatch, Swoosh transport,
+  projection, webhook ingest, and the tests that expose the design.
+
 - **[Authoring mailables](authoring-mailables.md)** — Define message builders using
   `Mailglass.Mailable`. Covers the builder API, HTML and text bodies, subject lines, from/to
   setters, and how to attach metadata for event correlation.
