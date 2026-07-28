@@ -425,6 +425,17 @@ jobs:
         # Fails CI if any {Credo.Check..., false} entry is missing
         # a `# Reason:` + `# Tracking:` comment block (D-08-18/D-08-19).
         run: bash scripts/check_credo_suppressions.sh
+      - name: Run Credo strict
+        run: mix credo --strict
+
+  conformance_gates:
+    name: Design System Conformance (shell gates)
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - name: Verify motion conformance (shell gate)
         # Fails CI if any banned layout-thrashing or easing token appears
         # in lib/ or app.css per UI-SPEC Motion Rules (Phase 74 FROZEN contract, GAP-19 sev 3).
@@ -437,8 +448,6 @@ jobs:
       - name: Verify design-system conformance (advisory arms — TYPE-lg/xl + TRACK)
         # Phase 99 hard-fail gate for large type-scale and arbitrary tracking regressions.
         run: bash mailglass_admin/scripts/check-conformance-advisory.sh
-      - name: Run Credo strict
-        run: mix credo --strict
 
 
   dialyzer:
