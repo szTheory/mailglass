@@ -104,7 +104,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
     <details
       data-testid={@testid}
       data-picker-variant="menu"
-      class="group relative z-30 min-w-0 w-full sm:w-[28rem]"
+      class="group relative mg-layer-dropdown min-w-0 w-full sm:max-w-md"
     >
       <summary
         data-testid="preview-email-menu-trigger"
@@ -133,7 +133,7 @@ defmodule MailglassAdmin.Preview.Sidebar do
 
       <div
         data-testid="preview-email-menu-panel"
-        class="absolute left-0 mt-1 max-h-[min(70vh,36rem)] w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-xs shadow-xl"
+        class="absolute left-0 mt-1 max-h-[70vh] w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-xs shadow-overlay"
       >
         <ul class="grid gap-xs">
           <%= for {mod, reflection} <- @mailables do %>

@@ -319,6 +319,14 @@ a:focus-visible .mg-stat-card-hint .mg-stat-card-tooltip {
   z-index: var(--z-base);
 }
 
+/* Admin shell body height: viewport minus the 5rem sticky header. There is no
+   4px-grid token for "viewport minus header", and SIZE-GATE only exempts bare
+   viewport units, so the calc lives here as a named utility rather than as an
+   arbitrary `min-h-[calc(...)]` bracket at the call site. */
+.mg-shell-min-h {
+  min-height: calc(100vh - 5rem);
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }

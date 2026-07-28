@@ -50,7 +50,7 @@ defmodule MailglassAdmin.AdminShell do
         </div>
       </header>
 
-      <div class={["grid min-h-[calc(100vh-5rem)]", @sidebar != [] && @sidebar_width_class]}>
+      <div class={["grid mg-shell-min-h", @sidebar != [] && @sidebar_width_class]}>
         <aside
           :if={@sidebar != []}
           data-testid="admin-shell-sidebar"
