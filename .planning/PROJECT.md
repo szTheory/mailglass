@@ -44,25 +44,36 @@ exactly this was itself blind.
 
 **Target features (remaining scope, phases 141-144):**
 - **Supply-chain remediation (VULN)** — disposition the dependabot backlog left with auto-merge enabled;
-  promote the Hex Audit lane from advisory to gating so a new HIGH blocks merge instead of accumulating; a
-  documented triage cadence that covers **transitive** dependencies.
+  promote the audit lane from advisory to gating so a new HIGH blocks merge instead of accumulating —
+  **wiring allowlist logic into the CI-side lane first**, since `ci.yml`'s `hex_audit` runs bare
+  `mix hex.audit` with no allowlist and would red-block every PR on the already-accepted cowlib advisories;
+  a documented triage cadence that covers **transitive** dependencies (Dependabot cannot auto-PR a Hex
+  transitive fix that needs a parent bump — this is documented behavior, not a bug, and `mix_audit` already
+  detects them).
 - **Test-harness truth (HARNESS)** — fix the Ecto Sandbox ownership leak (194 of 242 core-suite failures are
   `{:badmatch, :already_shared}` from `Sandbox.start_owner!/2`); Core Full Suite green across all four
   matrix legs; confirm recovered tests genuinely execute and assert rather than being skipped or tagged away
   to manufacture green; decide whether Core Full Suite should become release-gating. Full evidence,
   call-site map, and ruled-out list in `SEED-007`.
-- **Design-system conformance (CONFORM)** — fail the build when a `<.icon name="hero-X">` has no vendored
-  SVG, closing the invisible-icon class permanently rather than the two known instances; rename the lane
-  called "Credo Strict" that actually dies in `mailglass_admin/scripts/check-conformance.sh` — the
-  misleading name is why nobody looked at it for weeks.
+- **Design-system conformance (CONFORM)** — **verify**, don't rebuild, the icon-existence gate: research
+  found `ICON-EXISTS-GATE` already ships at `check-conformance.sh:148-179` from PR #136, so the remaining
+  work is confirming it covers the dynamic call sites (`name={@icon}`, `name={stat_severity_icon(...)}`) a
+  literal grep cannot see. Rename the lane called "Credo Strict" that actually dies in
+  `mailglass_admin/scripts/check-conformance.sh` — the misleading name is why nobody looked at it for weeks.
+  **The rename is coupled to TRUTH-07/09 and must land with them**: `gate-ci-green` matches lanes by name.
 - **Lane truth & drift-proofing (TRUTH)** — a skipped drift check must report neutral or failure, never
-  green; verify live protection against `--print-expected-json` on a schedule with a regression guard;
-  fix or formally accept the release-trigger anti-recursion gap (bot-auto-merged release PRs do not fire
-  release-please's `push` trigger, so tagging waits on an hourly cron — this cost ~30 minutes three separate
-  times on 2026-07-28); every advisory lane gets a recorded disposition; `repo-hygiene` must distinguish
-  "genuinely blocked" from "cannot check"; reconcile the two definitions of "advisory" (`ci_lanes.ex` lists
-  ten, `gate-ci-green` hardcodes two, and the cited authority `MAINTAINING.md` has never existed); fix the
-  self-racing publish fan-out that makes a successful release report failure.
+  green (this shape appears **twice**: `branch-protection-drift.yml`'s `reassert-protection` and `ci.yml`'s
+  "Branch Protection Advisory"); verify live protection against `--print-expected-json` on a schedule with a
+  regression guard; fix or formally accept the release-trigger anti-recursion gap (bot-auto-merged release
+  PRs do not fire release-please's `push` trigger, so tagging waits on an hourly cron — this cost ~30
+  minutes three separate times on 2026-07-28); every advisory lane gets a recorded disposition;
+  `repo-hygiene` must distinguish "genuinely blocked" from "cannot check"; reconcile the **three**
+  definitions of "advisory" (`ci_lanes.ex` lists ten, `gate-ci-green` hardcodes two plus a regex, and
+  `MAINTAINING.md:152-191` lists eleven — that file **does** exist and is cited accurately; it is stale,
+  not phantom); classify the **hidden third gating tier** of 9+ `ci.yml` jobs that are neither merge-gating
+  nor advisory-recognized and so silently block Hex publish while never blocking a PR merge — the verified
+  mechanism behind the 2.1.1 gate failure; fix the self-racing publish fan-out that makes a successful
+  release report failure (`concurrency.group` is ref-scoped while linked releases fire on two tags).
 
 **Scope locks:**
 - **Maintenance only.** No product features, no new adopter-facing surface, no redesign, no release cut.
