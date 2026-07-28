@@ -23,13 +23,20 @@ defmodule Mailglass.MigrationTest do
     Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
 
     on_exit(fn ->
-      # Reapply migrations idempotently so subsequent test files see schema.
-      # Under the schema-isolation axis this also clears stale schema_migrations
-      # rows so a dropped baseline schema is genuinely re-created (see
-      # restore_suite_baseline_schema/0), not skipped as :already_up.
-      case safe_migrated_version() do
-        0 -> _ = safe_migrate_up()
-        _ -> :ok
+      # Restore on ground truth — do the baseline tables actually exist? — not on
+      # the recorded migration version.
+      #
+      # The teardown test drops the tables without necessarily clearing
+      # `schema_migrations`. A version-based check then reports "already
+      # migrated" for a database that has no tables at all, so restoration was
+      # skipped and every later test in the run failed with
+      # `relation "…mailglass_suppressions" does not exist`. Those failures were
+      # in turn swallowed by the citext probe's retry loop and reported as
+      # "citext probe exhausted", which pointed diagnosis at the citext type
+      # instead of at this teardown. On the `public` axis it was worse still,
+      # because the stale-version cleanup was skipped there entirely.
+      unless baseline_tables_present?() do
+        _ = restore_suite_baseline_schema()
       end
 
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
@@ -434,24 +441,6 @@ defmodule Mailglass.MigrationTest do
     rows != []
   end
 
-  # Variants used in on_exit where the sandbox checkout has been released
-  # and we don't want to raise if the TestRepo has already gone down.
-  defp safe_migrated_version do
-    Migration.migrated_version()
-  rescue
-    _ -> 0
-  end
-
-  defp safe_migrate_up do
-    maybe_clear_stale_baseline_versions()
-
-    Ecto.Migrator.with_repo(TestRepo, fn repo ->
-      Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
-    end)
-  rescue
-    _ -> :ok
-  end
-
   # Re-migrate the suite baseline schema after a teardown dropped it. Under the
   # CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass) the baseline IS
   # `mailglass`; a bare `:up all` would be a no-op because schema_migrations
@@ -468,11 +457,37 @@ defmodule Mailglass.MigrationTest do
     :ok
   end
 
+  # Only reached from a restore path, i.e. the baseline tables are known to be
+  # absent. In that state the recorded baseline versions are stale on EVERY
+  # axis, not just the schema-isolation one: leaving them behind makes
+  # `Ecto.Migrator.run(:up)` a no-op and the schema is never re-created. The
+  # previous `public`-axis carve-out is what made this reproduce specifically on
+  # the `schema public` CI leg.
   defp maybe_clear_stale_baseline_versions do
-    if System.get_env("MAILGLASS_SCHEMA") not in [nil, "", "public"] do
-      _ = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
-    end
-
+    _ = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
     :ok
+  rescue
+    _ -> :ok
+  end
+
+  # Ground-truth check for the suite baseline: does the core suppressions table
+  # exist in the configured prefix? `to_regclass/1` returns NULL rather than
+  # raising when the relation is absent, so this is safe to call on a torn-down
+  # database.
+  defp baseline_tables_present? do
+    prefix =
+      case Mailglass.Config.schema() do
+        nil -> "public"
+        "" -> "public"
+        schema -> schema
+      end
+
+    case TestRepo.query("SELECT to_regclass($1)", ["#{prefix}.mailglass_suppressions"]) do
+      {:ok, %{rows: [[nil]]}} -> false
+      {:ok, %{rows: [[_oid]]}} -> true
+      _other -> false
+    end
+  rescue
+    _ -> false
   end
 end

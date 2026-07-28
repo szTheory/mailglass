@@ -14,6 +14,61 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.1.3](https://github.com/szTheory/mailglass/compare/mailglass-v2.1.2...mailglass-v2.1.3) (2026-07-28)
+
+
+### Miscellaneous Chores
+
+* **mailglass:** Synchronize mailglass-sibling-group versions
+
+## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass-v2.1.1...mailglass-v2.1.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* **admin:** clear the design-system and Dialyzer lanes blocking release ([#136](https://github.com/szTheory/mailglass/issues/136)) ([31588bb](https://github.com/szTheory/mailglass/commit/31588bb40343fc67200ca8bf4da7ffb3351248fa))
+* **test:** make the citext probe honest and restore the suite baseline ([#137](https://github.com/szTheory/mailglass/issues/137)) ([579ad37](https://github.com/szTheory/mailglass/commit/579ad379bc979a78870f2f56ce865c19f44f6a20))
+
+## [2.1.1](https://github.com/szTheory/mailglass/compare/mailglass-v2.1.0...mailglass-v2.1.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* unblock the 2.1.0 publish — admin allowlist + 7 security advisories ([#134](https://github.com/szTheory/mailglass/issues/134)) ([eda8d00](https://github.com/szTheory/mailglass/commit/eda8d0032bf1976477c9f1bac18c4e1488ed57d7))
+
+## [2.1.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.0.0...mailglass-v2.1.0) (2026-07-28)
+
+
+### Features
+
+* **138-01:** prefix unsubscribe conflict lookup ([a9dcd9a](https://github.com/szTheory/mailglass/commit/a9dcd9a9dca99f1a8edfb930228cc0574c400bbe))
+* **138-01:** prefix webhook replay projection update ([e3bcb67](https://github.com/szTheory/mailglass/commit/e3bcb67f472525dd3fe077e1a41b87c24c5ef6da))
+* **138-03:** add raw repo prefix Credo guard ([8e8ae96](https://github.com/szTheory/mailglass/commit/8e8ae96fa6d8585b19a69a3d962eedb83a24c8a9))
+* **138-03:** prefix projection Multi updates ([0e38af5](https://github.com/szTheory/mailglass/commit/0e38af52e37b7526bca5f0fb21327731d6ab4c73))
+* **138-04:** add schema prefix verification alias ([bf76db9](https://github.com/szTheory/mailglass/commit/bf76db91de33f2030d43931f1e75a525f861c1bb))
+* operator Quick view + Full detail record inspection ([#128](https://github.com/szTheory/mailglass/issues/128)) ([7a68501](https://github.com/szTheory/mailglass/commit/7a6850146f606c3e82bcb50bc7c146c830caf0e1))
+
+
+### Bug Fixes
+
+* **138:** close raw guard and replay review gaps ([68f820c](https://github.com/szTheory/mailglass/commit/68f820c8493fa69be753e95440cd8fb6c2a0ee5f))
+* **138:** close raw repo guard owner gaps ([7563b7f](https://github.com/szTheory/mailglass/commit/7563b7f186c2082f8afd0cdbd91d27de83e510a5))
+* **138:** close raw repo prefix guard review gaps ([b034c07](https://github.com/szTheory/mailglass/commit/b034c070a18541f2c31d99e1e52785796a9a7f72))
+* **138:** close remaining schema prefix review gaps ([d707e0a](https://github.com/szTheory/mailglass/commit/d707e0a321025f4c2e215731470545926e0f05f6))
+* **138:** close review alias and actor gaps ([50ecab5](https://github.com/szTheory/mailglass/commit/50ecab5daff4fbd1588621d90ff23007632d42ac))
+* **138:** cover helper and schema alias guard bypasses ([632ef1c](https://github.com/szTheory/mailglass/commit/632ef1c9ca6f142640c0c1f4ba6cf4b558efe36d))
+* **138:** cover replay run raw guard gaps ([c028967](https://github.com/szTheory/mailglass/commit/c028967721aca953d57b6d383f40e4ba6f16a848))
+* **138:** cover repo and multi alias guard bypasses ([0f3edbc](https://github.com/szTheory/mailglass/commit/0f3edbc4fa71218334161eaea0aaf36a06e671f4))
+* **138:** cover same-module query helper guard bypass ([f6aaca1](https://github.com/szTheory/mailglass/commit/f6aaca1473cf725a342750fe005b099e37bcab85))
+* **138:** harden raw repo guard alias and helper trust ([e4200a3](https://github.com/szTheory/mailglass/commit/e4200a3bb7843a59a394df7a069b331d88c4608e))
+* **138:** harden raw repo guard pipe handling ([e45ca0e](https://github.com/szTheory/mailglass/commit/e45ca0e6862cd7895f8c74f2b17176dfe32cc460))
+* **138:** harden raw repo prefix guard edge cases ([544a8e9](https://github.com/szTheory/mailglass/commit/544a8e946e701619d013bab541bb9deb1c5b649a))
+* **138:** isolate raw repo guard module context ([7d0e2dd](https://github.com/szTheory/mailglass/commit/7d0e2ddf446f482e8377caa6f2167b96e9ee8f87))
+* **138:** respect module alias order in raw guard ([786d277](https://github.com/szTheory/mailglass/commit/786d2772f29a034521d7186be026ce867af012a1))
+* **138:** scope schema aliases in raw repo guard ([f33d433](https://github.com/szTheory/mailglass/commit/f33d433c20739604156ebcb557f8f7b711593c28))
+* **138:** skip no-op event projections ([4aa0a1d](https://github.com/szTheory/mailglass/commit/4aa0a1dbaa859b2d882e7d8db44c630262c251d7))
+* format docs contract after wave 2 ([dde7225](https://github.com/szTheory/mailglass/commit/dde7225e00c8e4a73d252a5153ef99d6c65cff57))
+
 ## [2.0.0](https://github.com/szTheory/mailglass/compare/mailglass-v1.11.0...mailglass-v2.0.0) (2026-07-04)
 
 
