@@ -868,19 +868,22 @@ No new third-party GitHub Actions are introduced either; `conformance_gates` reu
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should the drift meta-test block a merge or only a publish?**
+1. **RESOLVED: Should the drift meta-test block a merge or only a publish?**
    - What we know: `mix_task_tests` (publish-gating) and `support_contract_core` (merge-gating) are both one-line wiring targets. The phase boundary forbids changing what blocks a merge.
    - What's unclear: whether "fails the build" in criterion 1 means the PR build or the release build.
    - Recommendation: wire to `mix_task_tests` (publish-gating) as the in-scope default; state the choice and its consequence explicitly in the plan so it is not made by omission. Escalate to the maintainer only if they want merge-gating, which is a boundary change.
+   - **RESOLVED:** `141-01-PLAN.md` § "Decisions recorded here" #1 — wired to `mix_task_tests`; drift blocks a release, not a PR, because merge-gating would change what blocks a merge (out of scope per CONTEXT.md `<domain>`). [RESOLVED: 2026-07-28]
 
-2. **Does `gate-ci-green` fail or warn on unclassified-but-green lanes?**
+2. **RESOLVED: Does `gate-ci-green` fail or warn on unclassified-but-green lanes?**
    - What we know: today it passes silently. Failing is stronger; warning preserves posture byte-for-byte per D-02.
    - Recommendation: warn in the gate, hard-fail in the meta-test. Documented in §`gate-ci-green` Rewrite Shape. **Must be stated explicitly** per CONTEXT.md `<specifics>`.
+   - **RESOLVED:** `141-04-PLAN.md` § "Decisions recorded here" #3 and `141-05-PLAN.md` § "Decisions recorded here" — the gate warns on unclassified-but-green and `core.setFailed`s on unclassified-but-red; the hard failure lives in the meta-test, which runs on the PR that adds the lane. [RESOLVED: 2026-07-28]
 
-3. **`Design System Conformance (shell gates)` vs `(Elixir 1.18 / OTP 27)`?**
+3. **RESOLVED: `Design System Conformance (shell gates)` vs `(Elixir 1.18 / OTP 27)`?**
    - Recommendation: `(shell gates)` — the job runs no Elixir (F4), and criterion 3 asks for a name that tells a maintainer what failed. Planner's call under D-08's discretion.
+   - **RESOLVED:** `141-03-PLAN.md` § "Decisions recorded here" #1 — `Design System Conformance (shell gates)` adopted; being a non-matrix job it takes no runtime suffix, so this exact string is what `gate-ci-green` sees and what every registry carries byte-for-byte. [RESOLVED: 2026-07-28]
 
 ---
 
