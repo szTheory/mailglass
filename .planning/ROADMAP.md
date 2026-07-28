@@ -60,7 +60,7 @@
   4. Every lane in the reconciled set carries a written disposition (promote / keep-with-reason / retire) in a durable, findable place — none sits red or unclassified with no recorded decision.
   5. `.planning/milestones/v2.0-phases/` contains the restored 132-137 phase artifacts, and the `gsd-tools query phases.clear` defect that deleted them (twice — v2.0's, and mid-milestone, v2.1's own 138-140) is written down somewhere a future run of the same command would be recognized as a repeat, not rediscovered blind.
 
-**Plans**: 3/6 plans executed
+**Plans**: 4/6 plans executed
 
 Plans:
 **Wave 1**
@@ -74,7 +74,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 141-04-PLAN.md — Three-bucket classification axis on `Mailglass.CILanes` + `gate-ci-green` rewrite (four enumerated arrays, no naming convention) + four set-equality assertions [wave 3]
+- [x] 141-04-PLAN.md — Three-bucket classification axis on `Mailglass.CILanes` + `gate-ci-green` rewrite (four enumerated arrays, no naming convention) + four set-equality assertions [wave 3]
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -134,7 +134,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 141. Lane Truth Foundation | 3/6 | In Progress|  |
+| 141. Lane Truth Foundation | 4/6 | In Progress|  |
 | 142. Supply-Chain Remediation & Gating | 0/TBD | Not started | - |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
