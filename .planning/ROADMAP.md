@@ -48,58 +48,84 @@
 ## Phase Details
 
 ### Phase 141: Lane Truth Foundation
+
 **Goal**: Every CI lane in this repository has exactly one recorded, machine-verified classification (required, advisory, or retired) instead of three disagreeing registries and an undocumented default bucket, and the planning artifacts a tooling defect deleted mid-milestone are restored.
 **Depends on**: Nothing (first phase of v2.2; continues after Phase 140)
 **Requirements**: TRUTH-09, TRUTH-07, TRUTH-05, CONFORM-04, HIST-01
 **Success Criteria** (what must be TRUE):
+
   1. `test/support/ci_lanes.ex`, `publish-hex.yml`'s `gate-ci-green` step, and `MAINTAINING.md` agree on every lane's required/advisory status, and a new meta-test fails the build if any of the three ever drift from the others again.
   2. No `ci.yml` job can silently sit in neither `ci_green.needs` nor `gate-ci-green`'s recognized-advisory set — each of the 9+ previously-hidden jobs (Format Check, Compile Warnings as Errors, the renamed conformance lane, Dialyzer, Docs Warnings as Errors, Hex Audit, Mix Task Tests, Inbound Test, Inbound Compile No Optional Deps, Installer Golden Gate, Trust Lane Clean Baseline) carries an explicit, recorded classification.
   3. The lane historically named "Credo Strict" reports under a name that describes what it runs, and a maintainer reading a failed run's job list can tell from the name alone whether it's the credo check or the design-system conformance shell gate that failed — with its required/advisory/neither status an explicit decision, not an inherited accident.
   4. Every lane in the reconciled set carries a written disposition (promote / keep-with-reason / retire) in a durable, findable place — none sits red or unclassified with no recorded decision.
   5. `.planning/milestones/v2.0-phases/` contains the restored 132-137 phase artifacts, and the `gsd-tools query phases.clear` defect that deleted them (twice — v2.0's, and mid-milestone, v2.1's own 138-140) is written down somewhere a future run of the same command would be recognized as a repeat, not rediscovered blind.
+
 **Plans**: 6 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 141-01-PLAN.md — Tracer: end-to-end lane-contract seam (`Mailglass.CIYaml` parser + drift meta-test + `verify.ci_lane_contract` alias wired into `ci.yml`'s `mix_task_tests`), proven to fail loud on drift [wave 1]
 - [ ] 141-02-PLAN.md — Docs-only truth records: `.planning/TOOLING-DEFECTS.md` (TOOL-01), the TRUTH-09 requirement amendment, and the `CONTRIBUTING.md` branch-protection correction [wave 1]
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 141-03-PLAN.md — Split `credo_strict` into `credo_strict` + `conformance_gates` (`Design System Conformance (shell gates)`); record the new lane's parity exclusion [wave 2]
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 141-04-PLAN.md — Three-bucket classification axis on `Mailglass.CILanes` + `gate-ci-green` rewrite (four enumerated arrays, no naming convention) + four set-equality assertions [wave 3]
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 141-05-PLAN.md — Machine-enforce "nothing unclassified": registry ↔ `ci.yml` set-equality, matrix name-space seam, prefix safety, byte-exact comparability [wave 4]
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
 - [ ] 141-06-PLAN.md — `MAINTAINING.md` § "Required Checks" as one 24-row disposition table, its drift assertions, and the live-verification checkpoint [wave 5]
 
 ### Phase 142: Supply-Chain Remediation & Gating
+
 **Goal**: Every dependency advisory this repository can detect — direct or transitive — either blocks a merge or carries a recorded, time-boxed exception; nothing accumulates silently the way `hpax` and the 13-PR dependabot backlog did.
 **Depends on**: Phase 141 (VULN-03's `gate-ci-green` edit and required-lane promotion land against the reconciled classification and disposition table Phase 141 produces, so the two phases don't contradict each other mid-milestone)
 **Requirements**: VULN-05, VULN-03, VULN-06, VULN-02, VULN-04
 **Success Criteria** (what must be TRUE):
+
   1. The CI-side `hex_audit` lane honors the same `@accepted_advisories` allowlist `publish.check` uses, read from one source — landed and green BEFORE the next criterion, not after (VULN-05 is a hard precondition for VULN-03).
   2. Both the Hex Audit and Deps Audit lanes are merge-gating (in `ci_green.needs` and `Mailglass.CILanes.required_lanes()`), and a PR that introduces a new HIGH-severity advisory with an available fix cannot merge — while a PR touching only the already-accepted cowlib advisories merges cleanly.
   3. Every allowlisted advisory carries a recorded reason and a re-check/expiry date, and the lane visibly flags any entry whose upstream fix has since landed rather than letting the exception age out silently.
   4. Every dependabot PR left with auto-merge enabled as of 2026-07-28 is confirmed merged or closed with a recorded reason — none remain in an indeterminate state.
   5. A written triage cadence names who reads raw `mix hex.audit` output (not just the dependabot PR queue) for transitive-dependency advisories, how often, and the response expectation by severity.
+
 **Plans**: TBD
 
 ### Phase 143: Test-Harness Truth
+
 **Goal**: The Ecto Sandbox ownership-leak mechanism is understood and fixed — not masked, not tagged away, not silenced by serialization — Core Full Suite is genuinely green across the full toolchain/schema matrix, and there is a recorded, evidence-backed answer to whether it should gate a release.
 **Depends on**: Phase 141 (soft — HARNESS-04's `gate-ci-green` edit reuses the meta-test seam Phase 141 establishes for the publish-hex-vs-CILanes pairing; HARNESS-01..03 have no structural dependency on Phase 141 or 142 and could start investigation earlier if desired)
 **Requirements**: HARNESS-01, HARNESS-02, HARNESS-03, HARNESS-04
 **Success Criteria** (what must be TRUE):
+
   1. A written mechanism account explains why `{:badmatch, :already_shared}` occurred (194 of 242 pre-fix failures), backed by empirical confirmation of the actual root cause — not just the leading hypothesis (the extended-timeout shared owner in `webhook_idempotency_convergence_test.exs` colliding with `:auto`-mode sibling files) — before any fix is written.
   2. Core Full Suite passes across all four matrix legs (Elixir 1.18/OTP 27 and 1.19/OTP 28, each x `public`/`mailglass` schema), and stays green across repeated runs and seeds, not one lucky run.
   3. The suite's executed test count has not silently dropped below its pre-fix floor, the `:already_shared` failure signature is exactly zero (not just "fewer failures"), and a deliberate-failure probe against `Core Full Suite Advisory` (mirroring the existing `gate-self-test.yml` pattern) confirms the lane still catches a real, deliberately-injected regression.
   4. A recorded decision states whether Core Full Suite is now release-gating and, if so, `gate-ci-green` demonstrably blocks a Hex publish (not merely a PR merge) when that lane is red.
+
 **Plans**: TBD
 
 ### Phase 144: Signal & Drift Integrity
+
 **Goal**: Every remaining automated check in this pipeline reports a status a maintainer can trust without reading its logs — a check that cannot do its job never reports success, the icon-existence gate covers the class of bug it claims to prevent (not just the two historical instances), and the publish/release machinery cannot report a false failure on a release that actually shipped.
 **Depends on**: Phase 141 (shares the "a check that can't verify must not report green" pattern established there). Phases 142/143 landing first is not structurally required — these items are largely Wave-1-independent per research and are sequenced last as the closeout hardening pass over the milestone's remaining signal-honesty gaps.
 **Requirements**: CONFORM-02, TRUTH-02, TRUTH-03, TRUTH-04, TRUTH-06, TRUTH-08
 **Success Criteria** (what must be TRUE):
+
   1. A forced-missing-precondition run of `branch-protection-drift.yml`'s reassertion job, `ci.yml`'s Branch Protection Advisory job, and `repo-hygiene`'s `branch_protection` sub-check each report a distinct, visibly non-green result — never silent SUCCESS, and "cannot verify" is never reported as "verified, no drift."
   2. A scheduled job compares live branch protection against `scripts/setup_branch_protection.sh --print-expected-json` on a recurring cadence, and a regression test proves it would have caught the job-`id`-vs-display-`name` mismatch that caused this milestone.
   3. A deliberately dynamic icon name (e.g. a `hero-` name built via string interpolation or a lookup map) fails `ICON-EXISTS-GATE` in a throwaway fixture, proving the gate covers the dynamic-construction class and not only the two historically-fixed instances — then the fixture is removed.
   4. Two tag events from one linked-version release train no longer race: `publish-hex.yml`'s `concurrency.group` serializes the runs so a redundant, already-published run reports success ("nothing to do"), never failure — and the identical pattern in `post-publish-smoke.yml` is fixed in the same change or explicitly, deliberately deferred, not independently rediscovered as a surprise.
   5. The release-trigger anti-recursion gap (bot-merged release PRs not firing release-please's `push` trigger) is either fixed with a visible, idempotent self-heal that can't double-fire alongside the hourly cron, or formally accepted with its ~30-minute-per-event cost durably documented somewhere a future maintainer will find it.
+
 **Plans**: TBD
 
 ## Progress
