@@ -14,6 +14,13 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   `publish_gating_lanes/0`, `structural_lanes/0`). The four lane lists are read
   from `Mailglass.CILanes` — they are NOT duplicated as literals in this file.
 
+  As of Phase 141 plan 06, this file proves **three-way agreement** (D-05/D-06):
+  `Mailglass.CILanes`, `publish-hex.yml`'s four classification arrays, and
+  `MAINTAINING.md` § "Required Checks"'s 24-row disposition table all set-equal
+  each other on `(display name, classification)`, plus completeness against
+  `ci.yml`'s live job set — so none of the three can silently drift from the
+  others without failing CI.
+
   Anti-vacuity guards (the `required_checks_test.exs:30-34` idiom): every parser
   used here fails loud with a named message rather than silently returning nothing
   and letting a difference-of-empty-sets pass vacuously.
@@ -33,6 +40,7 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   @repo_root Path.expand("../..", __DIR__)
   @publish_hex_path Path.join(@repo_root, ".github/workflows/publish-hex.yml")
   @ci_yml_path Path.join(@repo_root, ".github/workflows/ci.yml")
+  @maintaining_path Path.join(@repo_root, "MAINTAINING.md")
 
   @required_lanes MapSet.new(Mailglass.CILanes.required_lanes())
   @advisory_classified_lanes MapSet.new(Mailglass.CILanes.advisory_classified_lanes())
@@ -409,6 +417,132 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   end
 
   # ---------------------------------------------------------------------------
+  # Plan 141-06: bind MAINTAINING.md's disposition table to the same registry,
+  # closing the third leg of the three-way agreement (D-05/D-06/TRUTH-05).
+  # ---------------------------------------------------------------------------
+
+  test "MAINTAINING.md's disposition table (display name, classification) pairs " <>
+         "set-equal Mailglass.CILanes's four classification buckets" do
+    md = File.read!(@maintaining_path)
+
+    section = find_required_checks_section(md)
+
+    assert section != nil,
+           "could not find MAINTAINING.md's '## Required Checks' section — the heading " <>
+             "was renamed or removed, which moves the disposition-table parser's bound"
+
+    rows = parse_disposition_table(md)
+    table_pairs = disposition_table_pairs(rows)
+    registry_pairs = cilanes_classification_pairs()
+
+    {only_in_table, only_in_registry} = drift(table_pairs, registry_pairs)
+
+    assert MapSet.size(only_in_table) == 0 and MapSet.size(only_in_registry) == 0,
+           "MAINTAINING.md's disposition table and Mailglass.CILanes have drifted:\n" <>
+             "  In MAINTAINING.md but missing from CILanes: " <>
+             "#{inspect(MapSet.to_list(only_in_table))}\n" <>
+             "  In CILanes but missing from MAINTAINING.md: " <>
+             "#{inspect(MapSet.to_list(only_in_registry))}"
+  end
+
+  test "MAINTAINING.md's disposition table parses to exactly 24 non-empty rows (anti-vacuity)" do
+    rows = parse_disposition_table(File.read!(@maintaining_path))
+
+    assert length(rows) > 0,
+           "parsed zero rows from MAINTAINING.md's disposition table — the table's " <>
+             "format changed or the '## Required Checks' section was not found"
+
+    assert length(rows) == 24,
+           "expected exactly 24 rows in MAINTAINING.md's disposition table — got " <>
+             "#{length(rows)}. A '|' inside a free-text reason cell silently drops that " <>
+             "row under the cell-count reject, which is the vacuity risk this exact " <>
+             "count guards against — the document that exists to prevent a vacuous " <>
+             "pass must not itself pass vacuously."
+  end
+
+  test "MAINTAINING.md's 24 job id cells are distinct and its 24 display name cells are distinct" do
+    rows = parse_disposition_table(File.read!(@maintaining_path))
+
+    ids = Enum.map(rows, fn {id, _name, _cls, _disp, _reason} -> id end)
+    names = Enum.map(rows, fn {_id, name, _cls, _disp, _reason} -> name end)
+
+    assert length(ids) == length(Enum.uniq(ids)),
+           "MAINTAINING.md's disposition table has duplicate job id cells " <>
+             "(two rows merged): #{inspect(ids -- Enum.uniq(ids))}"
+
+    assert length(names) == length(Enum.uniq(names)),
+           "MAINTAINING.md's disposition table has duplicate display name cells " <>
+             "(two rows merged): #{inspect(names -- Enum.uniq(names))}"
+  end
+
+  test "every row's disposition in MAINTAINING.md's table is a member of the closed vocabulary" do
+    rows = parse_disposition_table(File.read!(@maintaining_path))
+
+    for {id, _name, _cls, disp, _reason} <- rows do
+      assert disp in ~w(promote keep-with-reason retire),
+             "MAINTAINING.md row '#{id}' has disposition '#{disp}', which is not a " <>
+               "member of the closed vocabulary ~w(promote keep-with-reason retire) — " <>
+               "an empty or misspelled cell must fail here, naming the row"
+    end
+  end
+
+  test "no display name or job id cell in MAINTAINING.md's disposition table contains a '|' character" do
+    rows = parse_disposition_table(File.read!(@maintaining_path))
+
+    for {id, name, _cls, _disp, _reason} <- rows do
+      refute String.contains?(id, "|"),
+             "MAINTAINING.md job id cell '#{id}' contains a pipe character, which would " <>
+               "break the row-cell-count parser"
+
+      refute String.contains?(name, "|"),
+             "MAINTAINING.md display name cell '#{name}' contains a pipe character, " <>
+               "which would break the row-cell-count parser"
+    end
+  end
+
+  test "reversing MAINTAINING.md's parsed row list before set construction yields an identical verdict" do
+    rows = parse_disposition_table(File.read!(@maintaining_path))
+
+    forward = disposition_table_pairs(rows)
+    reversed = disposition_table_pairs(Enum.reverse(rows))
+
+    assert drift(forward, reversed) == {MapSet.new(), MapSet.new()},
+           "row order in MAINTAINING.md's disposition table must not be load-bearing: " <>
+             "reversing the parsed row list before building a MapSet changed the verdict"
+  end
+
+  test "negative control: dropping one row from MAINTAINING.md's parsed disposition " <>
+         "table makes the comparison report only that lane, in the 'in CILanes but " <>
+         "missing from MAINTAINING.md' direction" do
+    rows = parse_disposition_table(File.read!(@maintaining_path))
+    table_pairs = disposition_table_pairs(rows)
+    registry_pairs = cilanes_classification_pairs()
+
+    assert drift(table_pairs, registry_pairs) == {MapSet.new(), MapSet.new()},
+           "sanity check failed: MAINTAINING.md's disposition table and " <>
+             "Mailglass.CILanes should agree before the injected-removal assertion runs"
+
+    # "Installer Host Smoke" — same stable choice as the REQUIRED_LANES negative
+    # control above: the one required lane with no "(Elixir ... )" suffix, so
+    # removing it is unambiguous in the reported diff.
+    removed_pair = {"Installer Host Smoke", "required"}
+    assert removed_pair in MapSet.to_list(table_pairs)
+
+    broken_table_pairs = MapSet.delete(table_pairs, removed_pair)
+
+    {only_in_broken_table, only_in_registry} = drift(broken_table_pairs, registry_pairs)
+
+    assert only_in_registry == MapSet.new([removed_pair]),
+           "dropping '#{inspect(removed_pair)}' from the parsed disposition table must " <>
+             "make drift/2 report it, and only it, in the 'missing from MAINTAINING.md' " <>
+             "direction — got #{inspect(MapSet.to_list(only_in_registry))}"
+
+    assert MapSet.size(only_in_broken_table) == 0,
+           "unexpected reverse-direction drift after dropping only " <>
+             "'#{inspect(removed_pair)}': #{inspect(MapSet.to_list(only_in_broken_table))}"
+  end
+
+  # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
 
@@ -457,4 +591,60 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   defp maybe_add(acc, bucket, true), do: [bucket | acc]
 
   defp prefix_match?(name, lanes), do: Enum.any?(lanes, &String.starts_with?(name, &1))
+
+  # Bounds MAINTAINING.md's "## Required Checks" section by splitting on the
+  # unique "\n## " heading token, same technique as the JS-array splitter
+  # above. Returns nil (not a crash) on a renamed/removed heading, so callers
+  # can assert non-nil with a message naming the cause instead of getting an
+  # opaque FunctionClauseError.
+  defp find_required_checks_section(md) do
+    md
+    |> String.split("\n## ")
+    |> Enum.find(&String.starts_with?(&1, "Required Checks"))
+  end
+
+  # Parses MAINTAINING.md's "| job id | display name | classification |
+  # disposition | reason |" table into {id, name, classification, disposition,
+  # reason} tuples. Rejects the separator row, the header row, and any row
+  # whose cell count isn't 7 (leading "" + 5 data cells + trailing "") — a `|`
+  # inside a free-text reason cell would otherwise drop that row SILENTLY,
+  # which is exactly the vacuity risk the caller's `length(rows) == 24`
+  # assertion exists to catch loudly instead.
+  defp parse_disposition_table(md) do
+    md
+    |> find_required_checks_section()
+    |> Kernel.||("")
+    |> String.split("\n")
+    |> Enum.filter(&String.starts_with?(String.trim(&1), "|"))
+    |> Enum.reject(&String.contains?(&1, "---"))
+    |> Enum.map(&String.split(&1, "|"))
+    |> Enum.reject(&(length(&1) != 7))
+    |> Enum.map(fn [_, id, name, cls, disp, reason, _] ->
+      {trim_bt(id), trim_bt(name), trim_bt(cls), trim_bt(disp), String.trim(reason)}
+    end)
+    |> Enum.reject(fn {id, _name, _cls, _disp, _reason} -> id == "job id" end)
+  end
+
+  defp trim_bt(s), do: s |> String.trim() |> String.trim("`")
+
+  # {display name, classification} pairs from MAINTAINING.md's parsed rows —
+  # shared by every table-vs-registry comparison so a future edit to the pair
+  # shape only needs to change one place.
+  defp disposition_table_pairs(rows) do
+    rows
+    |> Enum.map(fn {_id, name, cls, _disp, _reason} -> {name, cls} end)
+    |> MapSet.new()
+  end
+
+  # {display name, classification} pairs derived from Mailglass.CILanes's four
+  # classification accessors — read the lane names from CILanes, never
+  # duplicate them as literals in this file.
+  defp cilanes_classification_pairs do
+    required = Enum.map(Mailglass.CILanes.required_lanes(), &{&1, "required"})
+    advisory = Enum.map(Mailglass.CILanes.advisory_classified_lanes(), &{&1, "advisory"})
+    publish_gating = Enum.map(Mailglass.CILanes.publish_gating_lanes(), &{&1, "publish-gating"})
+    structural = Enum.map(Mailglass.CILanes.structural_lanes(), &{&1, "structural"})
+
+    MapSet.new(required ++ advisory ++ publish_gating ++ structural)
+  end
 end
