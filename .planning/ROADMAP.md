@@ -38,8 +38,9 @@ No active milestone. Start the next milestone with `/gsd-new-milestone`.
 Candidate future work. Each seed states its own `trigger_when`; promote with
 `/gsd-new-milestone` when that condition is met. 🌱 = dormant, 🔴 = live blocker
 (trigger condition already met — act now, do not wait for a milestone boundary).
+No live blockers at present.
 
-- 🔴 **[SEED-007 Ecto Sandbox Ownership Leak in the Core Suite](seeds/SEED-007-sandbox-ownership-leak.md)** (medium) - **NOT DORMANT — actively blocking Hex releases.** 194 of 242 core-suite failures are `{:badmatch, :already_shared}` from `Sandbox.start_owner!/2`. Core Full Suite is release-blocking in `gate-ci-green` despite being documented as advisory, so this leak gates every publish on a coin flip. Includes a ruled-out list so the dead ends aren't re-walked.
+- 🌱 **[SEED-007 Ecto Sandbox Ownership Leak in the Core Suite](seeds/SEED-007-sandbox-ownership-leak.md)** (medium) - **high value, not urgent.** 194 of 242 core-suite failures are `{:badmatch, :already_shared}` from `Sandbox.start_owner!/2`. The lane is fully red, so 1401 core tests provide zero regression signal. NOT release-blocking (corrected — Core Full Suite lives in `advisory-matrix.yml`, and `gate-ci-green` only inspects `ci.yml`). Includes a ruled-out list so the dead ends aren't re-walked.
 - 🌱 **[SEED-006 CI/CD Efficiency & Contributor Feedback Latency Audit](seeds/SEED-006-ci-cd-efficiency-audit.md)** (large) - full pipeline performance/DX audit: baseline metrics, test-value classification, ExUnit concurrency & partitioning, cache/matrix policy, trigger topology, release/security polish. **Deliberately sequenced *after* v2.2** - optimizing a pipeline whose greens are lying just makes it lie faster.
 - 🌱 **[SEED-005 Native HEEx Assigns Through the Rendering Pipeline](seeds/SEED-005-native-heex-assigns-rendering.md)** (medium) - close the seam between `Message.assigns` and the HEEx engine so the native authoring story matches the architectural promise.
 - 🌱 **[SEED-004 Sent Email Snapshot Retention](seeds/SEED-004-sent-email-snapshot-retention.md)** - retention policy for rendered outbound snapshots.
@@ -47,4 +48,4 @@ Candidate future work. Each seed states its own `trigger_when`; promote with
 
 ---
 
-*Last updated: 2026-07-28 - SEED-007 planted (sandbox ownership leak, actively blocking releases); seed index covers SEED-003..007; v2.2 CI Signal Integrity being scoped.*
+*Last updated: 2026-07-28 - SEED-007 planted (sandbox ownership leak); its release-blocking claim corrected — it degrades core-suite signal but does not gate publishes. Seed index covers SEED-003..007; v2.2 CI Signal Integrity being scoped.*
