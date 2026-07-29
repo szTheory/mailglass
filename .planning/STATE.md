@@ -2,18 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 141
-current_phase_name: lane-truth-foundation
-status: ready_to_plan
-stopped_at: Phase 141 complete (6/6) — ready to discuss Phase 142
-last_updated: 2026-07-28T23:59:12.920Z
+status: planning
+stopped_at: Phase 142 context gathered (assumptions mode)
+last_updated: "2026-07-29T00:38:00.879Z"
 last_activity: 2026-07-28
-last_activity_desc: Phase 141 execution started
 progress:
-  total_phases: 1
+  total_phases: 4
   completed_phases: 1
   total_plans: 6
-  completed_plans: 12
+  completed_plans: 6
+  percent: 25
 ---
 
 # Project State
@@ -530,9 +528,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-28T23:52:40.803Z
-**Stopped at:** Completed 141-06-PLAN.md — Phase 141 all 6 plans done
-**Resume file:** None
+**Last session:** 2026-07-29T00:38:00.874Z
+**Stopped at:** Phase 142 context gathered (assumptions mode)
+**Resume file:** .planning/phases/142-supply-chain-remediation-gating/142-CONTEXT.md
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in
