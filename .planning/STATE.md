@@ -2,18 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 143
 status: executing
-stopped_at: Phase 142 complete (5/5) — ready to discuss Phase 143
-last_updated: "2026-07-29T18:17:21.175Z"
+stopped_at: Completed 143-01-PLAN.md
+last_updated: "2026-07-29T18:54:04.915Z"
 last_activity: 2026-07-29
-last_activity_desc: Phase 143 planning complete
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 2
   total_plans: 25
-  completed_plans: 17
-current_phase_name: supply-chain-remediation-gating
+  completed_plans: 12
+  percent: 48
 ---
 
 # Project State
@@ -23,16 +21,16 @@ current_phase_name: supply-chain-remediation-gating
 See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 143 — test harness truth
+**Current focus:** Phase 143 — test-harness-truth
 
 ## Current Position
 
-Phase: 143
-Plan: Not started
+Phase: 143 (test-harness-truth) — EXECUTING
+Plan: 2 of 14
 Status: Ready to execute
-Last activity: 2026-07-29 — Phase 143 planning complete
+Last activity: 2026-07-29
 
-Progress: [██████████] 100%
+Progress: [█████░░░░░] 48%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -354,6 +352,9 @@ release debug campaign.
 - [Phase ?]: [142-04] Atomic promotion (D-04): Hex Audit + Deps Audit (renamed from Deps Audit Advisory) moved from publish-gating/advisory to merge-gating in one commit (34702fde) — ci_green.needs, Mailglass.CILanes.required_lanes/0, and publish-hex.yml's classification arrays all changed together; continue-on-error deleted (D-07) so the promotion actually blocks PR merges, not just publish.
 - [Phase ?]: [142-04] Two rename-consistency fixes beyond the plan's nine literal sites landed in the same commit as Rule 1 bug fixes: ci_parity_drift_test.exs's matcher_for key + matcher_lanes stale-reference entry (both named in CONTEXT.md's D-06 blast radius) and MAINTAINING.md's reason text reworded to avoid the literal retired string 'Deps Audit Advisory', which the plan's own acceptance criteria required be absent.
 - [Phase ?]: 142-05: Split the raw-audit-command mentions across two lines in MAINTAINING.md's new Dependency Advisory Triage section to satisfy the plan's own acceptance-criteria grep, which counts matching lines not occurrences
+- [Phase ?]: [143-01] probe/1 reads Sandbox pool ownership mode via :sys.get_state/1 on the DBConnection.Ownership.Manager process rather than calling Sandbox.mode/2 (which always heals+replies :ok and made {:leaked, term} unreachable) — coordinator-caught Rule 1 bug, fixed and verified against a real leak.
+- [Phase ?]: [143-01] baseline_tables_present?/1 runs its information_schema.tables query through Sandbox.unboxed_run/2 so the formatter's own GenServer process (no Sandbox checkout of its own) can run it without an ownership error; never mutates pool mode.
+- [Phase ?]: [143-01] Detection and healing are fully separated for this plan — no heal mechanism exists yet; an explicit, off-by-default heal step is deferred to Wave 2's SandboxOwnership.checkout!/1.
 
 ## Quick Tasks Completed
 
@@ -392,6 +393,7 @@ release debug campaign.
 | Phase 142 P03 | 4min | 1 tasks | 1 files |
 | Phase 142 P04 | 22min | 1 tasks | 6 files |
 | Phase 142 P05 | 12min | 1 tasks | 1 files |
+| Phase 143 P01 | 55min | 2 tasks | 5 files |
 
 ## Deferred Items
 
@@ -559,8 +561,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-29T04:44:12.600Z
-**Stopped at:** Completed 142-05-PLAN.md
+**Last session:** 2026-07-29T18:54:04.909Z
+**Stopped at:** Completed 143-01-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
