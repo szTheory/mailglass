@@ -129,7 +129,23 @@ Plans:
   3. The suite's executed test count has not silently dropped below its pre-fix floor, the `:already_shared` failure signature is exactly zero (not just "fewer failures"), and a deliberate-failure probe against `Core Full Suite Advisory` (mirroring the existing `gate-self-test.yml` pattern) confirms the lane still catches a real, deliberately-injected regression.
   4. A recorded decision states whether Core Full Suite is now release-gating and, if so, `gate-ci-green` demonstrably blocks a Hex publish (not merely a PR merge) when that lane is red.
 
-**Plans**: TBD
+**Plans**: 14 plans
+
+Plans:
+- [ ] 143-01-PLAN.md — Tracer: suite-wide pool-hygiene observation, widened to all three leak classes
+- [ ] 143-02-PLAN.md — Probe inputs (`required_only`, `deadline_minutes`) + record the D-18a vacuity finding
+- [ ] 143-03-PLAN.md — Instrumented ledger, the written mechanism account, and the D-31 upstream amendments
+- [ ] 143-04-PLAN.md — The sanctioned ownership door and its mechanism-level regression test
+- [ ] 143-05-PLAN.md — Route both case templates and the confirmed leak site through the door; delete the four no-ops
+- [ ] 143-06-PLAN.md — Migrate the nine `:auto`-mode files to `unsandboxed_module/1`
+- [ ] 143-07-PLAN.md — Close Class A (baseline teardown) and Class B (`Config.schema()` drift)
+- [ ] 143-08-PLAN.md — `NoRawSandboxOwnership` Credo check, after proving `credo --strict` reaches `test/`
+- [ ] 143-09-PLAN.md — `SuiteFloor`, the signature classifier, and the negative controls
+- [ ] 143-10-PLAN.md — Pin floors from green CI runs and turn enforcement on in the lane
+- [ ] 143-11-PLAN.md — Lane renames, `expanded_matrix_job_names/1`, third registry axis, MAINTAINING section
+- [ ] 143-12-PLAN.md — Deliberate-failure probe against the renamed lane + the five-condition promotion checkpoint
+- [ ] 143-13-PLAN.md — The gating decision checkpoint, dual-workflow self-heal, and `gate-ci-green` wiring
+- [ ] 143-14-PLAN.md — Publish-path rehearsal pair and the recorded gating decision
 
 ### Phase 144: Signal & Drift Integrity
 
@@ -154,7 +170,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 5/5 | Complete    | 2026-07-29 |
-| 143. Test-Harness Truth | 0/TBD | Not started | - |
+| 143. Test-Harness Truth | 0/14 | Planned | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
 ## Planted Seeds
