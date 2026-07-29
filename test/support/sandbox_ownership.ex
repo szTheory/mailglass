@@ -353,14 +353,42 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   Accepts an injectable `:probe_fun` (default `&probe/1`), mirroring
   `Mailglass.TestSupport.CitextProbe`'s `probe_fun:` idiom, so the raise path
   is testable without manufacturing a real leak.
+
+  **Bounded settle window (`:attempts`/`:interval_ms`), confirmed empirically
+  against the real pool:** `stop_owner/1`'s heal is NOT synchronous with its
+  own return. `GenServer.stop/1` confirms the owner Agent itself has
+  terminated, but the ownership manager's `unshare/2` (`manager.ex:242`) only
+  runs after its own monitor on the checkout proxy fires — one more
+  message-passing hop AFTER the agent is confirmed dead. Calling
+  `assert_manual!/3` in the same breath as `stop_owner/1` returning (exactly
+  what `checkout!/1`'s `on_exit` does) can observe a transient, already-
+  releasing `{:shared, pid}` that clears within single-digit milliseconds.
+  Retrying briefly (default 30 attempts, 5ms apart — ~150ms bound, comfortably
+  above the ~50ms observed live) absorbs that benign propagation delay
+  without masking a genuine leak: a mode that has NOT healed within the bound
+  still raises exactly as before. This is verification, not tolerance — the
+  bound is a ceiling, not a retry-until-green loop.
   """
   @spec assert_manual!(module(), term(), keyword()) :: :ok
   def assert_manual!(repo \\ Mailglass.TestRepo, caller, opts \\ []) do
     probe_fun = Keyword.get(opts, :probe_fun, &probe/1)
+    attempts = Keyword.get(opts, :attempts, 30)
+    interval_ms = Keyword.get(opts, :interval_ms, 5)
 
+    do_assert_manual!(repo, caller, probe_fun, attempts, interval_ms)
+  end
+
+  defp do_assert_manual!(repo, caller, probe_fun, attempts, interval_ms) do
     case probe_fun.(repo) do
-      :ok -> :ok
-      {:leaked, mode} -> raise LeakError, caller: caller, mode: mode
+      :ok ->
+        :ok
+
+      {:leaked, _mode} when attempts > 1 ->
+        Process.sleep(interval_ms)
+        do_assert_manual!(repo, caller, probe_fun, attempts - 1, interval_ms)
+
+      {:leaked, mode} ->
+        raise LeakError, caller: caller, mode: mode
     end
   end
 
