@@ -139,7 +139,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 143-03-PLAN.md — Instrumented ledger, the written mechanism account, and the D-31 upstream amendments
+- [x] 143-03-PLAN.md — Instrumented ledger, the written mechanism account, and the D-31 upstream amendments
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -202,7 +202,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 5/5 | Complete    | 2026-07-29 |
-| 143. Test-Harness Truth | 2/14 | In Progress|  |
+| 143. Test-Harness Truth | 3/14 | In Progress|  |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
 ## Planted Seeds
