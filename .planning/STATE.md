@@ -2,16 +2,17 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
+current_phase: 143
+current_phase_name: test-harness-truth
 status: executing
-stopped_at: Completed 143-03-PLAN.md
-last_updated: "2026-07-29T19:39:54.558Z"
+stopped_at: Completed 143-04-PLAN.md
+last_updated: "2026-07-29T23:33:08.503Z"
 last_activity: 2026-07-29
 progress:
-  total_phases: 4
+  total_phases: 3
   completed_phases: 2
   total_plans: 25
-  completed_plans: 14
-  percent: 50
+  completed_plans: 15
 ---
 
 # Project State
@@ -26,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 4 of 14
+Plan: 5 of 14
 Status: Ready to execute
 Last activity: 2026-07-29
 
-Progress: [██████░░░░] 56%
+Progress: [██████░░░░] 60%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -360,6 +361,9 @@ release debug campaign.
 - [Phase ?]: [143-03] HARNESS-01 mechanism confirmed: :auto-mode sibling files heal a leaked owner (manager.ex:169-172) rather than colliding with it; Mailglass.DataCase exonerated as the victim, not the culprit.
 - [Phase ?]: [143-03] Both local instrumented pre-fix ledgers recorded zero SuiteTruthFormatter violations despite genuine live Class A/B/C failures — confirmed boundary-only (:module_finished-only) blind spot, not evidence of no leak.
 - [Phase ?]: [143-03] Class A refuted for migration_test.exs (zero failures both local runs); Class B narrowed from six :schema_isolation candidates to three confirmed schema-flipping files plus schema_prefix_hardening_test.exs. Neither class resolves to one file — the ledger's per-module granularity cannot see per-test drift-and-restore cycles.
+- [Phase ?]: [143-04] checkout!/1 detects the calling test module's async status via Process.get(:"$process_label") + __ex_unit__(:config).async? — a deliberate, version-pinned ExUnit-internals coupling; fails open (not closed) when unresolvable, since the Credo check in plan 143-08 is the fail-closed enforcement layer.
+- [Phase ?]: [143-04] assert_manual!/3 retries up to 30x/5ms (~150ms bound) before raising LeakError, absorbing stop_owner/1's benign manager-propagation delay (empirically reproduced 5/5 without the fix) without masking a genuine, persistent leak.
+- [Phase ?]: [143-04] test/mailglass/test_support/sandbox_ownership_test.exs keeps async: false (unchanged from 143-01) per D-11/D-31, resolving a tension in the plan's own action text (async: true vs. cannot run concurrently with pool-sharing tests).
 
 ## Quick Tasks Completed
 
@@ -401,6 +405,7 @@ release debug campaign.
 | Phase 143 P01 | 55min | 2 tasks | 5 files |
 | Phase 143 P02 | 20min | 2 tasks | 3 files |
 | Phase 143 P03 | 25min | 3 tasks | 7 files |
+| Phase 143 P04 | ~40min | 2 tasks | 2 files |
 
 ## Deferred Items
 
@@ -568,8 +573,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-29T19:39:54.553Z
-**Stopped at:** Completed 143-03-PLAN.md
+**Last session:** 2026-07-29T23:33:08.493Z
+**Stopped at:** Completed 143-04-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

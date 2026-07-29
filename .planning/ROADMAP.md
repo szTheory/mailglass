@@ -129,7 +129,7 @@ Plans:
   3. The suite's executed test count has not silently dropped below its pre-fix floor, the `:already_shared` failure signature is exactly zero (not just "fewer failures"), and a deliberate-failure probe against `Core Full Suite Advisory` (mirroring the existing `gate-self-test.yml` pattern) confirms the lane still catches a real, deliberately-injected regression.
   4. A recorded decision states whether Core Full Suite is now release-gating and, if so, `gate-ci-green` demonstrably blocks a Hex publish (not merely a PR merge) when that lane is red.
 
-**Plans**: 14 plans
+**Plans**: 4/14 plans executed
 
 Plans:
 **Wave 1**
@@ -143,7 +143,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 143-04-PLAN.md — The sanctioned ownership door and its mechanism-level regression test
+- [x] 143-04-PLAN.md — The sanctioned ownership door and its mechanism-level regression test
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -202,7 +202,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 5/5 | Complete    | 2026-07-29 |
-| 143. Test-Harness Truth | 3/14 | In Progress|  |
+| 143. Test-Harness Truth | 4/14 | In Progress|  |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
 ## Planted Seeds

@@ -60,7 +60,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 
 ### HARNESS — Test-harness truth
 
-- [ ] **HARNESS-01**: The Ecto Sandbox ownership leak is fixed, with the **mechanism empirically confirmed
+- [x] **HARNESS-01**: The Ecto Sandbox ownership leak is fixed, with the **mechanism empirically confirmed
   before the fix is written** rather than inferred. 194 of 242 core-suite failures are
   `{:badmatch, :already_shared}` from `Sandbox.start_owner!/2`. Leading candidates, all to be verified:
   `Mailglass.DataCase` (the dominant shared-mode acquisition site, 35 files), `mailer_case.ex:158` and
@@ -230,7 +230,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | VULN-06 | Phase 142 | Complete |
 | VULN-02 | Phase 142 | Complete |
 | VULN-04 | Phase 142 | Complete |
-| HARNESS-01 | Phase 143 | In Progress (2 of 7 contributing plans landed: 143-01, 143-03; remaining: 143-04, 05, 06, 07, 08) |
+| HARNESS-01 | Phase 143 | In Progress (3 of 7 contributing plans landed: 143-01, 143-03, 143-04; remaining: 05, 06, 07, 08) |
 | HARNESS-02 | Phase 143 | Pending |
 | HARNESS-03 | Phase 143 | Complete |
 | HARNESS-04 | Phase 143 | Pending |
