@@ -97,7 +97,25 @@ Plans:
   4. Every dependabot PR left with auto-merge enabled as of 2026-07-28 is confirmed merged or closed with a recorded reason — none remain in an indeterminate state.
   5. A written triage cadence names who reads raw `mix hex.audit` output (not just the dependabot PR queue) for transitive-dependency advisories, how often, and the response expectation by severity.
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 142-01-PLAN.md — Tracer: `Mailglass.SupplyChain.AcceptedAdvisories` + `mix mailglass.audit --kind hex|deps` wired into `hex_audit`/`deps_audit_advisory`, thin-delegated from `mailglass.publish.check.ex`, F1/F2 fixes, folded todo closed [wave 1]
+- [ ] 142-02-PLAN.md — Disposition all 13 dependabot PRs individually (merge or close + reason); parallel with 142-01, zero file overlap [wave 1]
+
+**Wave 2** *(blocked on 142-01)*
+
+- [ ] 142-03-PLAN.md — D-14 blocking checkpoint: confirm Hex Audit is green with cowlib genuinely detected-and-suppressed on a real CI run, plus the negative-control proof, before the promotion starts [wave 2]
+
+**Wave 3** *(blocked on 142-03)*
+
+- [ ] 142-04-PLAN.md — The atomic promotion: Hex Audit + Deps Audit (renamed) become merge-gating in one commit across all nine D-05 sites [wave 3]
+
+**Wave 4** *(blocked on 142-04)*
+
+- [ ] 142-05-PLAN.md — `MAINTAINING.md` § "Dependency Advisory Triage" cadence doc (VULN-04) [wave 4]
 
 ### Phase 143: Test-Harness Truth
 
@@ -135,7 +153,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
-| 142. Supply-Chain Remediation & Gating | 0/TBD | Not started | - |
+| 142. Supply-Chain Remediation & Gating | 0/5 | Planned | - |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
