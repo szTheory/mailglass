@@ -58,6 +58,7 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
 
       # In `Mailglass.TestSupport.SuiteTruthFormatter`'s `:module_finished` handler:
       Mailglass.TestSupport.SandboxOwnership.probe(Mailglass.TestRepo)
+      Mailglass.TestSupport.SandboxOwnership.baseline_tables_present?(Mailglass.TestRepo)
   """
 
   @doc """
@@ -92,5 +93,66 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     # `:sys.get_state/1` raises if the manager pid is gone (e.g. the repo was
     # stopped between checkout and probe). Report it, never report green.
     _ -> :cannot_verify
+  end
+
+  @baseline_relations ~w(mailglass_deliveries mailglass_suppressions mailglass_webhook_events)
+
+  @doc """
+  Checks whether the three CI-log-named baseline relations
+  (`mailglass_deliveries`, `mailglass_suppressions`, `mailglass_webhook_events`)
+  exist in the schema `Mailglass.Config.schema()` currently resolves to —
+  Class A (D-31): the migration baseline was torn down and not restored.
+
+  Read-only. Queries Postgres' `information_schema.tables` catalog — never
+  `CREATE TABLE`, never a migration, never anything that could make an
+  absent relation "found" as a side effect of looking. Runs through
+  `Ecto.Adapters.SQL.Sandbox.unboxed_run/2` so a caller with no `Sandbox`
+  checkout of its own (the formatter's own `GenServer` process, which
+  belongs to no test) can run the query at all — confirmed live to leave
+  the pool's ownership mode unchanged before and after, and it never
+  commits, rolls back, or restores anything in the sandboxed test
+  transaction itself.
+
+  Returns:
+
+    * `true` — all three relations are present in the current schema.
+    * `{false, missing}` — `missing` is the subset of `@baseline_relations`
+      not found. Never merely `false`, so the formatter can name exactly
+      what's absent without a second query.
+    * `{:cannot_verify, sqlstate_or_term}` — the query itself failed. A
+      probe that cannot observe its subject must never report `true`.
+  """
+  @spec baseline_tables_present?(module()) ::
+          true | {false, [String.t()]} | {:cannot_verify, term()}
+  def baseline_tables_present?(repo \\ Mailglass.TestRepo) do
+    schema = Mailglass.Config.schema()
+
+    Ecto.Adapters.SQL.Sandbox.unboxed_run(repo, fn ->
+      Ecto.Adapters.SQL.query(
+        repo,
+        "SELECT table_name FROM information_schema.tables " <>
+          "WHERE table_schema = $1 AND table_name = ANY($2::text[])",
+        [schema, @baseline_relations],
+        []
+      )
+    end)
+    |> classify_baseline_result()
+  rescue
+    error -> {:cannot_verify, error}
+  end
+
+  defp classify_baseline_result({:ok, %{rows: rows}}) do
+    present = rows |> List.flatten() |> MapSet.new()
+    missing = Enum.reject(@baseline_relations, &MapSet.member?(present, &1))
+
+    if missing == [], do: true, else: {false, missing}
+  end
+
+  defp classify_baseline_result({:error, %Postgrex.Error{postgres: %{pg_code: pg_code}}}) do
+    {:cannot_verify, pg_code}
+  end
+
+  defp classify_baseline_result({:error, error}) do
+    {:cannot_verify, error}
   end
 end

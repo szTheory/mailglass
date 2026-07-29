@@ -13,9 +13,24 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
   cleanup callback is still observed the day it is written.
 
   This formatter delegates every pool judgment to
-  `Mailglass.TestSupport.SandboxOwnership.probe/1` rather than
-  re-implementing it (D-09), so the negative-control tests in
-  `suite_truth_formatter_test.exs` exercise the real code path.
+  `Mailglass.TestSupport.SandboxOwnership.probe/1` and
+  `SandboxOwnership.baseline_tables_present?/1` rather than re-implementing
+  them (D-09), so the negative-control tests in `suite_truth_formatter_test.exs`
+  exercise the real code path.
+
+  At every `async: false` module boundary this formatter inventories all
+  three leak classes named in D-31 (`143-CONTEXT.md`):
+
+  - **Class C — `:pool_mode_leaked`.** The Sandbox pool's ownership mode is
+    not `:manual` (`SandboxOwnership.probe/1`).
+  - **Class B — `:config_schema_drift`.** `Mailglass.Config.schema()` no
+    longer equals the value captured at `:suite_started`.
+  - **Class A — `:baseline_missing`.** One or more of the three baseline
+    relations the CI logs name are absent from the current schema
+    (`SandboxOwnership.baseline_tables_present?/1`).
+
+  Every class also has a `:cannot_verify` outcome for when the check itself
+  could not run — never silently treated as a pass.
 
   ## State
 
@@ -29,6 +44,15 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
     `&SandboxOwnership.probe/1`. Overridable via `new_state/1` so tests can
     drive the leaked path without a real Sandbox leak — the same seam
     `Mailglass.TestSupport.CitextProbe` exposes as `probe_fun:`.
+  - `:schema_fun` — `(-> String.t())`, defaults to `&Mailglass.Config.schema/0`.
+    Called BOTH at `:suite_started` (to capture `:boot_schema`) and at every
+    `:module_finished` boundary (to detect drift) — a single seam so tests
+    can inject a synthetic schema sequence without touching real Application
+    env or `:persistent_term`.
+  - `:baseline_fun` — `(module() -> true | {false, [String.t()]} |
+    {:cannot_verify, term()})`, defaults to
+    `&SandboxOwnership.baseline_tables_present?/1`. Overridable so tests can
+    drive the missing/`:cannot_verify` paths without a real Postgres query.
 
   ## Divergences from `ExUnit.CLIFormatter`
 
@@ -68,7 +92,9 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
       violations: [],
       boot_schema: nil,
       trace?: trace_enabled?(),
-      probe_fun: &SandboxOwnership.probe/1
+      probe_fun: &SandboxOwnership.probe/1,
+      schema_fun: &Mailglass.Config.schema/0,
+      baseline_fun: &SandboxOwnership.baseline_tables_present?/1
     }
     |> Map.merge(Map.new(overrides))
   end
@@ -84,12 +110,18 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
 
   @impl true
   def handle_cast({:suite_started, _opts}, state) do
-    {:noreply, %{state | boot_schema: Mailglass.Config.schema()}}
+    {:noreply, %{state | boot_schema: state.schema_fun.()}}
   end
 
   def handle_cast({:module_finished, %ExUnit.TestModule{} = test_module}, state) do
     if async_false?(test_module) do
-      {:noreply, probe_module_boundary(test_module, state)}
+      state =
+        state
+        |> probe_pool_mode(test_module)
+        |> probe_config_schema_drift(test_module)
+        |> probe_baseline_tables(test_module)
+
+      {:noreply, state}
     else
       {:noreply, state}
     end
@@ -137,15 +169,66 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
   # a call must never run while an async module's connection is still checked
   # out. This probe does not heal, so that constraint is not yet exercised by
   # this module — record it here so it isn't lost when healing is added.
-  defp probe_module_boundary(%ExUnit.TestModule{name: name}, state) do
+  defp probe_pool_mode(state, %ExUnit.TestModule{name: name}) do
     case state.probe_fun.(Mailglass.TestRepo) do
-      :ok ->
+      :ok -> state
+      {:leaked, result} -> add_violation(state, name, :pool_mode_leaked, result)
+    end
+  end
+
+  # Class B (D-31). `schema_fun` is a pure read
+  # (`Mailglass.Config.schema/0`'s `:persistent_term` getter, or its
+  # test-injected replacement) — this check never mutates the cache, never
+  # calls `Application.put_env/3`, and never re-derives/re-validates
+  # anything. Widening to "just re-read and warm the cache to make it agree"
+  # would be the exact same detect-and-heal collapse `probe/1` was fixed for
+  # in Class C, in a new class.
+  #
+  # `nil` `:boot_schema` means `:suite_started` never fired on this state
+  # (only possible when a test drives `handle_cast/2` directly without it) —
+  # skip rather than manufacture a drift violation against an unset baseline.
+  defp probe_config_schema_drift(%{boot_schema: nil} = state, _test_module), do: state
+
+  defp probe_config_schema_drift(state, %ExUnit.TestModule{name: name}) do
+    observed = state.schema_fun.()
+
+    if observed == state.boot_schema do
+      state
+    else
+      add_violation(state, name, :config_schema_drift, %{
+        boot: state.boot_schema,
+        observed: observed
+      })
+    end
+  end
+
+  # Class A (D-31). Order matters: this runs AFTER `probe_config_schema_drift/2`
+  # above. A drifted `Config.schema()` (Class B) would make THIS query look
+  # for the baseline relations in the wrong schema — reporting a false
+  # `:baseline_missing` for a schema that was simply never the one holding
+  # them, misattributing a Class B bug as a Class A one. Checking B first
+  # means a genuine Class A finding is only ever reported once the schema
+  # itself is confirmed unchanged since boot.
+  #
+  # `baseline_fun` (`SandboxOwnership.baseline_tables_present?/1` by default)
+  # is read-only — never `CREATE TABLE`, never a migration. See that
+  # function's moduledoc for why it never mutates the pool either.
+  defp probe_baseline_tables(state, %ExUnit.TestModule{name: name}) do
+    case state.baseline_fun.(Mailglass.TestRepo) do
+      true ->
         state
 
-      {:leaked, result} ->
-        violation = %{module: name, class: :pool_mode_leaked, result: result}
-        %{state | violations: [violation | state.violations]}
+      {false, missing} ->
+        add_violation(state, name, :baseline_missing, missing)
+
+      {:cannot_verify, sqlstate_or_term} ->
+        add_violation(state, name, :cannot_verify, sqlstate_or_term)
     end
+  end
+
+  defp add_violation(state, module, class, result) do
+    violation = %{module: module, class: class, result: result}
+    %{state | violations: [violation | state.violations]}
   end
 
   defp print_ledger(violations) do

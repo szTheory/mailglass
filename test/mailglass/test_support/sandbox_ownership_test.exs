@@ -44,4 +44,25 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
 
     Sandbox.stop_owner(owner)
   end
+
+  # Real-DB proof (Task 2 / Class A): the synthetic-payload coverage in
+  # suite_truth_formatter_test.exs drives the formatter's reaction to
+  # baseline_fun's three outcomes, but never actually runs the SQL. This
+  # confirms `baseline_tables_present?/1`'s query and parameter binding work
+  # against the real migrated schema — no synthetic substitute for "does the
+  # query itself execute correctly."
+  test "reports true for the real, migrated Mailglass.TestRepo schema" do
+    assert SandboxOwnership.baseline_tables_present?(Mailglass.TestRepo) == true
+  end
+
+  # Confirms the query runs cleanly from a process with no Sandbox checkout
+  # of its own (the shape `SuiteTruthFormatter`'s GenServer process is in) —
+  # `unboxed_run/2` must make this callable without an ownership error, and
+  # must not leave any owner registered afterward.
+  test "baseline_tables_present?/1 is callable from a process with no prior checkout, and leaves pool mode unchanged" do
+    task = Task.async(fn -> SandboxOwnership.baseline_tables_present?(Mailglass.TestRepo) end)
+
+    assert Task.await(task) == true
+    assert SandboxOwnership.probe(Mailglass.TestRepo) == :ok
+  end
 end
