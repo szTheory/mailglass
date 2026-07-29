@@ -10,6 +10,33 @@ files:
   - mailglass_admin/mix.lock
 ---
 
+## Resolution
+
+Closed 2026-07-29 by Phase 142/VULN-05, VULN-06 — but NOT via this todo's
+literal trigger. `mix hex.audit` still reports both `EEF-CVE-2026-43966` and
+`EEF-CVE-2026-43969` live in `mailglass_admin` as of 2026-07-28/29 (verified:
+`mix mailglass.audit --kind hex` names both as accepted-allowlist findings,
+not silence) — cowlib 2.19.0 has NOT shipped an upstream fix. Neither entry
+is removed.
+
+The todo is closed anyway because its underlying need — "a human must
+remember to revisit this allowlist" — is now automated instead of manual.
+`Mailglass.SupplyChain.AcceptedAdvisories.expired_entries/1` (recheck_by
+staleness, `~D[2026-10-26]` for both entries) and `.unused_entries/1`
+(matched-finding staleness) run on every `mix mailglass.audit --kind hex`
+invocation, superseding the "watch for an upstream release" manual trigger
+this todo originally proposed. The allowlist itself moved from
+`@accepted_advisories` in `mailglass.publish.check.ex` to the single shared
+`lib/mailglass/supply_chain/accepted_advisories.ex` module both
+`mailglass.publish.check` and `mailglass.audit` now read.
+
+When cowlib does ship a fix, this todo's original `## Action` steps 1-4 still
+apply in spirit — bump the dep, then remove the matching entry/entries from
+`Mailglass.SupplyChain.AcceptedAdvisories`'s `@entries` list (not
+`@accepted_advisories`, which no longer exists) — but `expired_entries/1`
+will independently start blocking on `2026-10-27` regardless, so the fix is
+no longer solely dependent on a maintainer remembering to check.
+
 ## Problem
 
 During the v1.14 release (2026-06-30), the `publish.check` Step-13 `hex.audit`
