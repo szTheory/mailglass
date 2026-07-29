@@ -59,7 +59,7 @@ defmodule MailglassDemo.DemoDataResetTest do
            ]
 
     assert rerun.suppression_tuples == [
-             {"ops@atlasdesk.example", "manual", "support-case:1842", "incident_update"}
+             {"ops@northstar.example", "manual", "support-case:1842", "incident_update"}
            ]
 
     assert rerun.inbound_provider_message_ids == [

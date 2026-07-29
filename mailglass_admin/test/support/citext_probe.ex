@@ -30,21 +30,61 @@ defmodule MailglassAdmin.TestSupport.CitextProbe do
   end
 
   defp do_probe(repo, 0, attempted, _probe_fun) do
-    raise "citext probe exhausted for #{inspect(repo)} after #{attempted} attempts"
+    raise exhausted_message(repo, attempted, nil)
   end
 
+  # Only the poisoned-OID surface is retried. Every other `Postgrex.Error` is
+  # re-raised with its original message and stacktrace: retrying a permanent
+  # fault (a missing relation, a bad credential, a syntax error) can only ever
+  # end in the exhaustion message, which then reports "citext probe exhausted"
+  # for a database that has nothing wrong with its citext type.
   defp do_probe(repo, remaining, attempted, probe_fun) do
-    try do
-      probe_fun.(repo)
-      :ok
-    rescue
-      Postgrex.Error ->
+    case attempt_probe(repo, probe_fun) do
+      :ok ->
+        :ok
+
+      {:reraise, error, stacktrace} ->
+        reraise(error, stacktrace)
+
+      {:retry, error} ->
         if remaining == 1 do
-          raise "citext probe exhausted for #{inspect(repo)} after #{attempted} attempts"
+          raise exhausted_message(repo, attempted, error)
         else
           do_probe(repo, remaining - 1, attempted, probe_fun)
         end
     end
+  end
+
+  defp attempt_probe(repo, probe_fun) do
+    probe_fun.(repo)
+    :ok
+  rescue
+    error in Postgrex.Error ->
+      if poisoned_oid?(error) do
+        {:retry, error}
+      else
+        {:reraise, error, __STACKTRACE__}
+      end
+  end
+
+  # The stale-OID signal: after a drop/create or migration round-trip Postgres
+  # assigns citext a new OID while pooled connections still hold the old one,
+  # reported as `XX000 (internal_error) cache lookup failed for type NNNNNN`.
+  defp poisoned_oid?(%Postgrex.Error{postgres: %{code: :internal_error}}), do: true
+
+  defp poisoned_oid?(%Postgrex.Error{} = error) do
+    error
+    |> Exception.message()
+    |> String.contains?("cache lookup failed")
+  end
+
+  defp exhausted_message(repo, attempted, nil) do
+    "citext probe exhausted for #{inspect(repo)} after #{attempted} attempts"
+  end
+
+  defp exhausted_message(repo, attempted, error) do
+    exhausted_message(repo, attempted, nil) <>
+      "; last error: " <> Exception.message(error)
   end
 
   defp default_probe(repo) do

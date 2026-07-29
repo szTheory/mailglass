@@ -6,20 +6,26 @@ defmodule MailglassAdmin.Operator.DetailHeader do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.Accounts
   alias MailglassAdmin.Operator.RepairState
 
   attr(:delivery, :map, required: true)
   attr(:replay_targets, :map, default: nil)
   attr(:latest_replay, :map, default: nil)
+  attr(:account_labels, :map, default: %{})
 
   def detail_header(assigns) do
     ~H"""
-    <Components.card padding={:lg} data-testid="operator-detail-header" data-group-card="operator-detail-header">
+    <Components.card
+      padding={:lg}
+      data-testid="operator-detail-header"
+      data-group-card="operator-detail-header"
+    >
       <div class="flex flex-wrap items-start justify-between gap-md">
         <div class="space-y-sm">
           <div class="flex flex-wrap items-center gap-sm">
             <h2 class="text-heading font-bold text-base-content">{@delivery.recipient}</h2>
-            <Components.status_badge status={@delivery.status} />
+            <Components.status_badge status={Components.delivery_display_status(@delivery)} />
           </div>
           <p class="mono text-label text-secondary">{@delivery.id}</p>
           <p :if={present?(@delivery.mailable)} class="text-body text-secondary">
@@ -29,8 +35,13 @@ defmodule MailglassAdmin.Operator.DetailHeader do
 
         <dl class="grid gap-sm text-body text-secondary sm:grid-cols-2">
           <div>
-            <dt class="text-label font-bold uppercase">Tenant</dt>
-            <dd class="mt-xs text-base-content">{@delivery.tenant_id}</dd>
+            <dt class="text-label font-bold uppercase">Account</dt>
+            <dd
+              class="mt-xs text-base-content"
+              title={Accounts.title(@delivery.tenant_id, @account_labels)}
+            >
+              {Accounts.label(@delivery.tenant_id, @account_labels)}
+            </dd>
           </div>
           <div>
             <dt class="text-label font-bold uppercase">Provider</dt>
@@ -46,7 +57,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           </div>
           <div>
             <dt class="text-label font-bold uppercase">Updated</dt>
-            <dd class="mono mt-xs text-base-content">{format_datetime(@delivery.last_event_at)}</dd>
+            <dd class="mt-xs text-base-content"><Components.timestamp at={@delivery.last_event_at} /></dd>
           </div>
           <div :if={present?(@delivery.provider_message_id)}>
             <dt class="text-label font-bold uppercase">Provider message</dt>
@@ -60,7 +71,7 @@ defmodule MailglassAdmin.Operator.DetailHeader do
           <h3 class="text-body font-bold uppercase text-secondary">Webhook replay</h3>
           <p class="text-body text-base-content">{RepairState.availability_hint(@replay_targets)}</p>
           <p :if={@latest_replay} class="text-label text-secondary">
-            Last replay: {RepairState.latest_replay_summary(@latest_replay)} at {format_datetime(@latest_replay.occurred_at)}
+            Last replay: {RepairState.latest_replay_summary(@latest_replay)} at <Components.timestamp at={@latest_replay.occurred_at} />
           </p>
         </div>
 
@@ -86,11 +97,6 @@ defmodule MailglassAdmin.Operator.DetailHeader do
     |> String.replace("_", " ")
     |> String.capitalize()
   end
-
-  defp format_datetime(nil), do: "Pending"
-
-  defp format_datetime(%DateTime{} = datetime),
-    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
 
   defp present?(value), do: value not in [nil, ""]
 end

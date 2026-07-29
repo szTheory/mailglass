@@ -259,15 +259,25 @@ defmodule MailglassAdmin.Operator.Shell do
         <Components.icon name="hero-building-office-2" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <div class="min-w-0 flex-1">
           <%= if @state == :none do %>
-            <h2 class="text-heading font-bold text-base-content">No tenants available</h2>
+            <h2 class="text-heading font-bold text-base-content">No accounts with mail activity</h2>
             <p class="mt-sm text-body text-secondary">
-              This operator does not have a tenant with mail activity yet. Send a Message with a tenant_id, or check the host tenant scope.
+              This operator does not have an account with mail activity yet. Send a Message from your app, or check how your app sets <code class="mono">tenant_id</code>.
             </p>
           <% else %>
-            <p class="text-label font-bold uppercase text-secondary">Tenant</p>
-            <h2 class="mt-xs text-heading font-bold text-base-content">Select a tenant</h2>
+            <p class="text-label font-bold uppercase text-secondary">Account</p>
+            <h2 class="mt-xs text-heading font-bold text-base-content">Choose an account</h2>
             <p class="mt-sm text-body text-secondary">
-              Choose a tenant to inspect its Deliveries and inbound routing. Tenant scope stays in the URL so refreshes and shared links keep the same view.
+              Pick the customer account whose Deliveries and inbound routing you want to inspect.
+            </p>
+            <p class="mt-sm flex items-start gap-xs text-label text-secondary">
+              <Components.icon
+                name="hero-information-circle"
+                class="mt-0.5 h-4 w-4 shrink-0 text-primary"
+              />
+              <span>
+                Account maps to <code class="mono">tenant_id</code>
+                in code and URLs. Mailglass uses it to keep email records isolated.
+              </span>
             </p>
             <div class="mt-md grid gap-sm">
               <.link
@@ -275,10 +285,13 @@ defmodule MailglassAdmin.Operator.Shell do
                 patch={tenant_switch_path(@current_uri, tenant.id)}
                 class="mg-focus-ring flex min-h-11 items-center justify-between gap-md rounded-field border border-base-300 bg-base-100 px-md py-sm text-body hover:border-primary"
               >
-                <span class="mono min-w-0 truncate font-bold text-base-content" title={tenant.label}>
+                <span
+                  class="mono min-w-0 truncate font-bold text-base-content"
+                  title={account_title(tenant)}
+                >
                   {tenant.label}
                 </span>
-                <span class="shrink-0 text-label font-bold text-primary">Select tenant</span>
+                <span class="shrink-0 text-label font-bold text-primary">Open account</span>
               </.link>
             </div>
           <% end %>
@@ -287,6 +300,12 @@ defmodule MailglassAdmin.Operator.Shell do
     </section>
     """
   end
+
+  defp account_title(%{id: id, label: label}) when is_binary(id) and is_binary(label) do
+    if id == label, do: label, else: "#{label} (tenant_id: #{id})"
+  end
+
+  defp account_title(%{label: label}), do: to_string(label)
 
   @doc """
   Renders the orientation strip for an operator surface — a persistent, symptom-first

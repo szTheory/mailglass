@@ -21,6 +21,30 @@ defmodule Mailglass.Operator.Deliveries do
     |> Map.fetch!(:entries)
   end
 
+  # Dialyzer infers this returns `[struct()]` because `Ecto.Repo.all/2` is spec'd
+  # `[Ecto.Schema.t()]` regardless of the query's `select`. This query selects a
+  # single string column (`delivery.provider`), so the real return is
+  # `[String.t()]` and the spec below is correct — the imprecision is upstream in
+  # Ecto's spec, not here. Suppressed at the definition site (matching
+  # `Mix.Tasks.Mailglass.Doctor`) rather than in `.dialyzer_ignore.exs`, which is
+  # at its documented hard cap and reserved for file-level ignores.
+  @dialyzer {:nowarn_function, list_providers: 2}
+  @spec list_providers(filters(), keyword()) :: [String.t()]
+  def list_providers(filters, _opts \\ []) do
+    normalized = normalize_filters(filters)
+    tenant_id = fetch_tenant_id!(normalized)
+
+    Delivery
+    |> where([delivery], delivery.tenant_id == ^tenant_id)
+    |> where([delivery], not is_nil(delivery.provider) and delivery.provider != "")
+    |> maybe_filter_window(normalized[:window_hours] || normalized[:recent_window_hours])
+    |> Tenancy.scope(tenant_id)
+    |> group_by([delivery], delivery.provider)
+    |> order_by([delivery], asc: delivery.provider)
+    |> select([delivery], delivery.provider)
+    |> Repo.all()
+  end
+
   @spec list_recent_deliveries_page(filters(), keyword()) :: map()
   def list_recent_deliveries_page(filters, opts \\ []) do
     normalized = normalize_filters(filters)

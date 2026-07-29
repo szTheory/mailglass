@@ -30,6 +30,7 @@ defmodule MailglassDemo.MixProject do
   # `reference/persona_spec/personas.ex`.
   @persona_spec_dir Path.expand("../persona_spec", __DIR__)
   defp elixirc_paths(:test), do: ["lib", "test/support", @persona_spec_dir]
+  defp elixirc_paths(:dev), do: ["lib", "dev", @persona_spec_dir]
   defp elixirc_paths(_), do: ["lib", @persona_spec_dir]
 
   defp deps do

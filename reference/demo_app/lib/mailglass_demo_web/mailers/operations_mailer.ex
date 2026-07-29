@@ -7,14 +7,15 @@ defmodule MailglassDemoWeb.Mailers.OperationsMailer do
   def preview_props do
     [
       usage_alert: %{
-        recipient: AtlasDeskEmail.address("ops"),
-        workspace: AtlasDeskEmail.brand(),
+        recipient: AtlasDeskEmail.account_address("ops"),
+        workspace: AtlasDeskEmail.demo_account(),
         threshold: "85%",
         period: "June",
         projected_overage: "$38.00"
       },
       incident_update: %{
-        recipient: AtlasDeskEmail.address("ops"),
+        recipient: AtlasDeskEmail.account_address("ops"),
+        workspace: AtlasDeskEmail.demo_account(),
         incident_id: "INC-4421",
         status: "monitoring",
         impacted_feature: "Inbound routing trace",
@@ -35,7 +36,7 @@ defmodule MailglassDemoWeb.Mailers.OperationsMailer do
         title: "Usage threshold reached",
         paragraphs: [
           "#{assigns.workspace} has used #{assigns.threshold} of its #{assigns.period} transactional email allowance.",
-          "Review the current pace before the workspace crosses its included email volume."
+          "Review the current pace before the account crosses its included email volume."
         ],
         metrics: [
           {"Allowance used", assigns.threshold},
@@ -64,11 +65,12 @@ defmodule MailglassDemoWeb.Mailers.OperationsMailer do
         preheader: "#{assigns.incident_id} is now #{assigns.status}.",
         title: "Incident #{assigns.status}",
         paragraphs: [
-          "#{assigns.incident_id} is now #{assigns.status}. Delivery monitoring remains active.",
+          "#{assigns.incident_id} is now #{assigns.status} for #{assigns.workspace}. Delivery monitoring remains active.",
           "Our team is watching #{assigns.impacted_feature} and will post another update in #{assigns.next_update}."
         ],
         metrics: [
           {"Incident", assigns.incident_id},
+          {"Account", assigns.workspace},
           {"Status", assigns.status},
           {"Impacted feature", assigns.impacted_feature},
           {"Next update", assigns.next_update}
@@ -78,7 +80,7 @@ defmodule MailglassDemoWeb.Mailers.OperationsMailer do
       })
     )
     |> Message.text_body(
-      "#{assigns.incident_id} is now #{assigns.status}. Impacted feature: #{assigns.impacted_feature}. Next update in #{assigns.next_update}."
+      "#{assigns.incident_id} is now #{assigns.status} for #{assigns.workspace}. Impacted feature: #{assigns.impacted_feature}. Next update in #{assigns.next_update}."
     )
     |> Message.put_function(:incident_update)
   end

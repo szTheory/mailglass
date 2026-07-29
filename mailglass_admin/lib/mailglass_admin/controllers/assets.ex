@@ -59,6 +59,11 @@ defmodule MailglassAdmin.Controllers.Assets do
   @external_resource @phoenix_js
   @external_resource @phoenix_live_view_js
   @live_socket_bootstrap """
+  // js-enabled marker (set synchronously in <head>, before <body> paints): the
+  // timestamp skeleton CSS is scoped to `.mg-js` so it only applies when JS will
+  // localize. With JS off the class is absent and the server-rendered UTC shows.
+  document.documentElement.classList.add("mg-js")
+
   ;(() => {
     const csrfToken = document
       .querySelector("meta[name='csrf-token']")
@@ -74,6 +79,94 @@ defmodule MailglassAdmin.Controllers.Assets do
       document.addEventListener("DOMContentLoaded", () => liveSocket.connect(), { once: true })
     } else {
       liveSocket.connect()
+    }
+  })();
+
+  // Local-time progressive enhancement: the server renders every timestamp as a
+  // <time data-local-time datetime="…Z" data-utc="… UTC">… UTC</time>. Here we rewrite
+  // the visible text to the viewer's local timezone (with a short tz label), keep the
+  // UTC in the title tooltip, and copy the UTC string to the clipboard on click. With
+  // JS off the server-rendered UTC stands on its own. No phx-hook: a MutationObserver
+  // re-localizes nodes LiveView patches back to UTC (morphdom drops our data-localized
+  // marker on re-render), and click handling is delegated so it survives patches.
+  ;(() => {
+    const FMT = {
+      year: "numeric", month: "short", day: "numeric",
+      hour: "numeric", minute: "2-digit", second: "2-digit",
+      timeZoneName: "short"
+    }
+
+    function localize(el) {
+      const iso = el.getAttribute("datetime")
+      if (!iso) return
+      const d = new Date(iso)
+      if (isNaN(d.getTime())) return
+      try {
+        el.textContent = d.toLocaleString(undefined, FMT)
+      } catch (_e) {
+        return
+      }
+      el.dataset.localized = "1"
+    }
+
+    function localizeAll() {
+      document
+        .querySelectorAll("time[data-local-time]:not([data-localized])")
+        .forEach(localize)
+    }
+
+    let scheduled = false
+    function schedule() {
+      if (scheduled) return
+      scheduled = true
+      requestAnimationFrame(() => { scheduled = false; localizeAll() })
+    }
+
+    // Capture phase: this runs during the top-down capture pass, before the event
+    // reaches LiveView's window-bubble click handler — so stopPropagation() prevents
+    // the surrounding row's phx-click (e.g. select_delivery) from also firing.
+    document.addEventListener("click", (e) => {
+      const el = e.target.closest && e.target.closest("time[data-local-time]")
+      if (!el) return
+      e.stopPropagation()
+      e.preventDefault()
+      const utc = el.getAttribute("data-utc") || el.getAttribute("datetime")
+      if (!utc || !navigator.clipboard) return
+      navigator.clipboard.writeText(utc).then(() => {
+        el.textContent = "Copied ✓"
+        setTimeout(() => { delete el.dataset.localized; localize(el) }, 1200)
+      }).catch(() => {})
+    }, true)
+
+    // While the Quick view overlay is open, its arrow keys drive prev/next record
+    // navigation (LiveView phx-window-keydown). Cancel the browser's DEFAULT arrow
+    // action so the keypress does not ALSO scroll the list/table underneath. This only
+    // prevents the default scroll — LiveView's own keydown handler still fires, so
+    // navigation is unaffected. Scoped to when `.mg-detail-panel` (the overlay) exists.
+    document.addEventListener("keydown", (e) => {
+      if (!e.key || e.key.indexOf("Arrow") !== 0) return
+      if (document.querySelector(".mg-detail-panel")) e.preventDefault()
+    })
+
+    function start() {
+      localizeAll()
+      // Watch attributes + characterData too: when LiveView/morphdom patches a <time>
+      // in place on connect it resets the text to UTC and strips data-localized — both
+      // are attribute/characterData mutations (not childList), so a childList-only
+      // observer would never re-localize and the cell would stay stuck at UTC.
+      new MutationObserver(schedule).observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["data-localized", "datetime"],
+        characterData: true
+      })
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", start, { once: true })
+    } else {
+      start()
     }
   })();
   """

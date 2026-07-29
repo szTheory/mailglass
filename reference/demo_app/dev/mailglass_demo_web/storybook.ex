@@ -30,6 +30,7 @@ defmodule MailglassDemoWeb.Storybook do
   tarball them to adopters and break their compile, since `phoenix_storybook` is a
   dev-only dep absent from the shipped package.
   """
+
   use PhoenixStorybook,
     otp_app: :mailglass_demo,
     content_path: Path.expand("../../storybook", __DIR__),

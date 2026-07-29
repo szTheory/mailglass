@@ -114,6 +114,52 @@ defmodule Mailglass.Operator.DeliveriesTest do
     end
   end
 
+  describe "list_providers/2" do
+    test "returns distinct providers for one tenant and time window" do
+      now = DateTime.utc_now()
+
+      Generators.delivery_fixture(
+        tenant_id: "tenant-providers",
+        recipient: "postmark-a@example.com",
+        provider: "postmark",
+        last_event_at: DateTime.add(now, -1, :hour)
+      )
+
+      Generators.delivery_fixture(
+        tenant_id: "tenant-providers",
+        recipient: "postmark-b@example.com",
+        provider: "postmark",
+        last_event_at: DateTime.add(now, -2, :hour)
+      )
+
+      Generators.delivery_fixture(
+        tenant_id: "tenant-providers",
+        recipient: "sendgrid@example.com",
+        provider: "sendgrid",
+        last_event_at: DateTime.add(now, -3, :hour)
+      )
+
+      Generators.delivery_fixture(
+        tenant_id: "tenant-providers",
+        recipient: "old@example.com",
+        provider: "resend",
+        last_event_at: DateTime.add(now, -48, :hour)
+      )
+
+      Generators.delivery_fixture(
+        tenant_id: "foreign-providers",
+        recipient: "foreign@example.com",
+        provider: "mailgun",
+        last_event_at: DateTime.add(now, -1, :hour)
+      )
+
+      assert Deliveries.list_providers(
+               %{tenant_id: "tenant-providers", window_hours: 24},
+               []
+             ) == ["postmark", "sendgrid"]
+    end
+  end
+
   describe "list_recent_deliveries_page/2" do
     test "returns honest total and first-page boundaries from a tenant-scoped count" do
       recent = DateTime.add(DateTime.utc_now(), -10, :second)

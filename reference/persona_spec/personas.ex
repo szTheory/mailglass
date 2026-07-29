@@ -60,6 +60,10 @@ defmodule MailglassDemo.Personas do
   @fjordline "fjordline-aps"
   @helios_void "helios-void"
 
+  @northstar_label "Northstar Logistics"
+  @fjordline_label "Fjordline A/S"
+  @helios_void_label "Helios Trial"
+
   # --- Shared stress-specimen literals (D-08 / 116-UI-SPEC) -------------------
   #
   # These EXACT values are mirrored by the admin gallery specimens. The
@@ -79,6 +83,21 @@ defmodule MailglassDemo.Personas do
 
   @doc "Canonical persona name: the zero-delivery (no-data) tenant."
   def helios_void, do: @helios_void
+
+  @doc """
+  Friendly account labels used by the demo operator UI.
+
+  The map keys remain the canonical `tenant_id` values used in URLs, storage,
+  and read models. The values are human-facing account names.
+  """
+  @spec account_labels() :: %{String.t() => String.t()}
+  def account_labels do
+    %{
+      @northstar => @northstar_label,
+      @fjordline => @fjordline_label,
+      @helios_void => @helios_void_label
+    }
+  end
 
   @doc """
   Shared stress-specimen literals (D-08 / 116-UI-SPEC \"Gallery Stress Specimen
@@ -123,11 +142,13 @@ defmodule MailglassDemo.Personas do
     [
       %{
         name: @northstar,
+        label: @northstar_label,
         edge_cases: MapSet.new([:many, :high_count, :error]),
         payload: %{kind: :lifecycle}
       },
       %{
         name: @fjordline,
+        label: @fjordline_label,
         edge_cases: MapSet.new([:one, :long_id, :non_ascii, :null]),
         payload: %{
           kind: :single_delivery,
@@ -145,6 +166,7 @@ defmodule MailglassDemo.Personas do
       },
       %{
         name: @helios_void,
+        label: @helios_void_label,
         edge_cases: MapSet.new([:no_data]),
         payload: %{kind: :no_deliveries}
       }
@@ -180,7 +202,11 @@ defmodule MailglassDemo.Personas do
   # helios-void is realized by ABSENCE — zero Delivery rows (D-08).
   defp materialize!(_repo, %{name: @helios_void}, _occurred_at), do: :ok
 
-  defp materialize!(repo, %{name: @fjordline, payload: %{kind: :single_delivery} = payload}, occurred_at) do
+  defp materialize!(
+         repo,
+         %{name: @fjordline, payload: %{kind: :single_delivery} = payload},
+         occurred_at
+       ) do
     delivery =
       %{
         tenant_id: @fjordline,

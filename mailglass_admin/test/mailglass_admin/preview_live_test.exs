@@ -47,6 +47,18 @@ defmodule MailglassAdmin.PreviewLiveTest do
     Discovery.discover(@fixture_mailables)
   end
 
+  defp preview_pane_attrs(html) do
+    [pane] =
+      html
+      |> Floki.parse_document!()
+      |> Floki.find(~s([data-testid="preview-pane"]))
+
+    %{
+      frame_theme: Floki.attribute(pane, "data-preview-frame-theme"),
+      data_theme: Floki.attribute(pane, "data-theme")
+    }
+  end
+
   describe "mailables picker" do
     @tag :sidebar
     test "directory variant renders discovered mailables with scenarios, no-previews, and error states" do
@@ -503,6 +515,35 @@ defmodule MailglassAdmin.PreviewLiveTest do
       assert after_toggle =~ ~s|data-theme="mailglass-dark"|
       assert after_toggle =~ ~s|data-preview-frame-theme="dark"|
       assert after_toggle =~ ~r/data-preview-frame-theme="dark"[^>]+data-theme="mailglass-dark"/
+    end
+
+    @tag :dark_toggle
+    test "preview backdrop only changes HTML and text preview panes",
+         %{conn: conn} do
+      {:ok, view, html} =
+        conn
+        |> Plug.Conn.put_req_header("cookie", "#{@theme_cookie}=dark")
+        |> live("/dev/mail/MailglassAdmin.Fixtures.HappyMailer/welcome_default")
+
+      assert preview_pane_attrs(html) == %{
+               frame_theme: ["light"],
+               data_theme: ["mailglass-light"]
+             }
+
+      render_click(view, "toggle_preview_frame_theme", %{})
+
+      text_html = render_click(view, "set_tab", %{"tab" => "text"})
+
+      assert preview_pane_attrs(text_html) == %{
+               frame_theme: ["dark"],
+               data_theme: ["mailglass-dark"]
+             }
+
+      raw_html = render_click(view, "set_tab", %{"tab" => "raw"})
+      assert preview_pane_attrs(raw_html) == %{frame_theme: [], data_theme: []}
+
+      headers_html = render_click(view, "set_tab", %{"tab" => "headers"})
+      assert preview_pane_attrs(headers_html) == %{frame_theme: [], data_theme: []}
     end
 
     @tag :dark_toggle

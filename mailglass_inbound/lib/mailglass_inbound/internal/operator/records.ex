@@ -51,6 +51,31 @@ defmodule MailglassInbound.Internal.Operator.Records do
     |> Map.fetch!(:entries)
   end
 
+  # Distinct provider keys seen for a tenant within the window — powers the admin
+  # Provider filter select. Mirrors `Mailglass.Operator.Deliveries.list_providers/2`,
+  # but honors inbound's tenant-required-or-empty contract: a blank/missing tenant
+  # yields `[]` rather than raising (the admin gateway must not crash on an unset tenant).
+  @spec list_providers(filters(), keyword()) :: [String.t()]
+  def list_providers(filters, _opts \\ []) do
+    normalized = normalize_filters(filters)
+
+    case fetch_tenant_id(normalized) do
+      {:ok, tenant_id} ->
+        from(record in InboundRecord, as: :rec)
+        |> where([rec: record], record.tenant_id == ^tenant_id)
+        |> where([rec: record], not is_nil(record.provider) and record.provider != "")
+        |> maybe_filter_window(normalized[:window_hours] || normalized[:recent_window_hours])
+        |> Tenancy.scope(tenant_id)
+        |> group_by([rec: record], record.provider)
+        |> order_by([rec: record], asc: record.provider)
+        |> select([rec: record], record.provider)
+        |> Repo.all()
+
+      :blank ->
+        []
+    end
+  end
+
   @spec list_records_page(filters(), keyword()) :: map()
   def list_records_page(filters, opts \\ []) do
     normalized = normalize_filters(filters)

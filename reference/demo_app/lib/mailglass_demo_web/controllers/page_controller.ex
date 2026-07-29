@@ -77,8 +77,8 @@ defmodule MailglassDemoWeb.PageController do
               <h1>Explore Mailglass in a working app</h1>
             </div>
             <div class="intro-copy" data-testid="dashboard-intro">
-              <p class="sub"><strong>AtlasDesk</strong> is a realistic support/workspace SaaS with Mailglass already wired in. Use it to see how templates, delivery history, webhook events, suppressions, and inbound mail fit together.</p>
-              <p class="sub">Start with Preview to inspect the emails, then open Outbound to trace sent messages and Inbound to follow received mail through routing and replay.</p>
+              <p class="sub"><strong>AtlasDesk</strong> is a realistic support SaaS with Mailglass already wired in. The seeded account is <strong>Northstar Logistics</strong>, so you can see templates, delivery history, webhook events, suppressions, and inbound mail in one customer context.</p>
+              <p class="sub">Start with Preview to inspect the emails, then open Outbound to trace sent messages and Inbound to follow received mail through routing and replay. In code and URLs, the account is the Mailglass <code>tenant_id</code>.</p>
             </div>
           </section>
 
@@ -110,7 +110,7 @@ defmodule MailglassDemoWeb.PageController do
               <button class="card" type="submit">
                 <span class="kicker">Reset</span>
                 <h2>Reset seed data</h2>
-                <p>Destructive: restores the AtlasDesk demo evidence for the internal northstar tenant.</p>
+                <p>Destructive: restores the AtlasDesk demo evidence for the Northstar Logistics account.</p>
               </button>
             </form>
           </section>

@@ -3,10 +3,14 @@ defmodule MailglassDemoWeb.Mailers.AtlasDeskEmail do
 
   @brand "AtlasDesk"
   @domain "atlasdesk.example"
+  @demo_account "Northstar Logistics"
+  @demo_account_domain "northstar.example"
 
   def brand, do: @brand
+  def demo_account, do: @demo_account
 
   def address(local_part), do: local_part <> "@" <> @domain
+  def account_address(local_part), do: local_part <> "@" <> @demo_account_domain
 
   def html(assigns) when is_map(assigns) do
     assigns =

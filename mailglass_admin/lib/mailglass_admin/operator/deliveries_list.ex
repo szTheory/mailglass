@@ -22,8 +22,10 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   use Phoenix.Component
 
   alias MailglassAdmin.Components
+  alias MailglassAdmin.Operator.Accounts
 
   attr(:deliveries, :list, required: true)
+  attr(:account_labels, :map, default: %{})
 
   attr(:page_meta, :map,
     default: %{total_count: 0, total_pages: 0, has_previous?: false, has_next?: false}
@@ -33,6 +35,9 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
   attr(:next_page_path, :string, default: nil)
   attr(:selected_delivery, :map, default: nil)
   attr(:filters_active?, :boolean, default: false)
+  # The operator list is always scoped to one account, so the Account column repeats
+  # a constant value — callers pass `false` to reclaim that width for the record data.
+  attr(:show_account?, :boolean, default: true)
 
   # :empty | :error | :permission_denied | :stale | nil
   # nil means "normal flow": render deliveries or the legacy empty branches
@@ -57,7 +62,7 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
         <Components.data_state
           kind={:permission_denied}
           title="Access restricted"
-          body="You do not have access to this tenant's mail operations. Ask an administrator to grant access."
+          body="You do not have access to this account's mail operations. Ask an administrator to grant access."
         />
       <% @data_state == :stale -> %>
         <Components.data_state
@@ -104,11 +109,22 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
             <thead>
               <tr>
                 <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Status</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary">Recipient</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Tenant</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">Provider</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-28">Event</th>
-                <th scope="col" class="text-label font-bold uppercase text-secondary w-52">Last event</th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-64">
+                  Recipient
+                </th>
+                <th
+                  :if={@show_account?}
+                  scope="col"
+                  class="text-label font-bold uppercase text-secondary w-40"
+                >
+                  Account
+                </th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary w-32">
+                  Provider
+                </th>
+                <th scope="col" class="text-label font-bold uppercase text-secondary">
+                  Updated
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -126,7 +142,10 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                 ]}
               >
                 <td class="text-body text-base-content">
-                  <Components.status_badge status={delivery.status} size={:sm} />
+                  <Components.status_badge
+                    status={Components.delivery_display_status(delivery)}
+                    size={:sm}
+                  />
                 </td>
                 <td class="min-w-0 text-body text-base-content">
                   <span
@@ -136,9 +155,12 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     {Components.mask_recipient(delivery.recipient)}
                   </span>
                 </td>
-                <td class="min-w-0 text-body text-base-content">
-                  <span class="min-w-0 truncate block" title={delivery.tenant_id}>
-                    {delivery.tenant_id}
+                <td :if={@show_account?} class="min-w-0 text-body text-base-content">
+                  <span
+                    class="min-w-0 truncate block"
+                    title={Accounts.title(delivery.tenant_id, @account_labels)}
+                  >
+                    {Accounts.label(delivery.tenant_id, @account_labels)}
                   </span>
                 </td>
                 <td class="text-body text-base-content">
@@ -146,16 +168,8 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
                     {String.upcase(delivery.provider || "unknown")}
                   </span>
                 </td>
-                <td class="text-body text-base-content">
-                  {label(delivery.last_event_type)}
-                </td>
                 <td class="text-label text-secondary">
-                  <span
-                    class="mono whitespace-nowrap"
-                    title={format_datetime(delivery.last_event_at)}
-                  >
-                    {format_datetime(delivery.last_event_at)}
-                  </span>
+                  <Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" />
                 </td>
               </tr>
             </tbody>
@@ -164,88 +178,83 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
         <%!-- Mobile cards (<768px) — operator-deliveries-list kept for legacy consumers; Plan 04 migrates --%>
         <div data-testid="operator-deliveries-cards" class="md:hidden">
-        <ul
-          data-testid="operator-deliveries-list"
-          class="divide-y divide-base-300"
-        >
-          <li :for={delivery <- @deliveries}>
-            <button
-              data-testid="operator-delivery-row"
-              data-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
-              type="button"
-              phx-click="select_delivery"
-              phx-value-id={delivery.id}
-              aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
-              aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
-              class={[
-                "mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
-                row_classes(@selected_delivery, delivery)
-              ]}
-            >
-              <%!-- Status badge first/prominent --%>
-              <div>
-                <Components.status_badge status={delivery.status} size={:sm} />
-              </div>
+          <ul
+            data-testid="operator-deliveries-list"
+            class="divide-y divide-base-300"
+          >
+            <li :for={delivery <- @deliveries}>
+              <button
+                data-testid="operator-delivery-row"
+                data-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
+                type="button"
+                phx-click="select_delivery"
+                phx-value-id={delivery.id}
+                aria-current={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
+                aria-selected={if selected?(@selected_delivery, delivery), do: "true", else: "false"}
+                class={[
+                  "mg-focus-ring-inset flex min-h-11 w-full flex-col gap-sm px-4 py-4 text-left transition-colors",
+                  row_classes(@selected_delivery, delivery)
+                ]}
+              >
+                <%!-- Status badge first/prominent --%>
+                <div>
+                  <Components.status_badge
+                    status={Components.delivery_display_status(delivery)}
+                    size={:sm}
+                  />
+                </div>
 
-              <%!-- Recipient (masked) --%>
-              <div class="min-w-0">
-                <span class="text-label font-bold uppercase text-secondary">Recipient</span>
-                <p
-                  class="min-w-0 truncate text-body text-base-content"
-                  title={Components.mask_recipient(delivery.recipient)}
-                >
-                  {Components.mask_recipient(delivery.recipient)}
-                </p>
-              </div>
-
-              <%!-- Delivery ID with truncate+title --%>
-              <div class="min-w-0">
-                <span class="text-label font-bold uppercase text-secondary">ID</span>
-                <p
-                  class="mono min-w-0 truncate text-label text-secondary"
-                  title={delivery.id}
-                >
-                  {delivery.id}
-                </p>
-              </div>
-
-              <div class="flex flex-wrap items-start gap-md text-label text-secondary">
-                <%!-- Tenant --%>
+                <%!-- Recipient (masked) --%>
                 <div class="min-w-0">
-                  <span class="font-bold uppercase">Tenant</span>
-                  <p class="min-w-0 truncate" title={delivery.tenant_id}>
-                    {delivery.tenant_id}
-                  </p>
-                </div>
-
-                <%!-- Provider --%>
-                <div>
-                  <span class="font-bold uppercase">Provider</span>
-                  <p class="mono min-w-0 truncate" title={delivery.provider}>
-                    {String.upcase(delivery.provider || "unknown")}
-                  </p>
-                </div>
-
-                <%!-- Event --%>
-                <div>
-                  <span class="font-bold uppercase">Event</span>
-                  <p>{label(delivery.last_event_type)}</p>
-                </div>
-
-                <%!-- Timestamp --%>
-                <div>
-                  <span class="font-bold uppercase">Last event</span>
+                  <span class="text-label font-bold uppercase text-secondary">Recipient</span>
                   <p
-                    class="mono whitespace-nowrap"
-                    title={format_datetime(delivery.last_event_at)}
+                    class="min-w-0 truncate text-body text-base-content"
+                    title={Components.mask_recipient(delivery.recipient)}
                   >
-                    {format_datetime(delivery.last_event_at)}
+                    {Components.mask_recipient(delivery.recipient)}
                   </p>
                 </div>
-              </div>
-            </button>
-          </li>
-        </ul>
+
+                <%!-- Delivery ID with truncate+title --%>
+                <div class="min-w-0">
+                  <span class="text-label font-bold uppercase text-secondary">ID</span>
+                  <p
+                    class="mono min-w-0 truncate text-label text-secondary"
+                    title={delivery.id}
+                  >
+                    {delivery.id}
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap items-start gap-md text-label text-secondary">
+                  <%!-- Account --%>
+                  <div :if={@show_account?} class="min-w-0">
+                    <span class="font-bold uppercase">Account</span>
+                    <p
+                      class="min-w-0 truncate"
+                      title={Accounts.title(delivery.tenant_id, @account_labels)}
+                    >
+                      {Accounts.label(delivery.tenant_id, @account_labels)}
+                    </p>
+                  </div>
+
+                  <%!-- Provider --%>
+                  <div>
+                    <span class="font-bold uppercase">Provider</span>
+                    <p class="mono min-w-0 truncate" title={delivery.provider}>
+                      {String.upcase(delivery.provider || "unknown")}
+                    </p>
+                  </div>
+
+                  <%!-- Timestamp --%>
+                  <div>
+                    <span class="font-bold uppercase">Updated</span>
+                    <p><Components.timestamp at={delivery.last_event_at} class="whitespace-nowrap" /></p>
+                  </div>
+                </div>
+              </button>
+            </li>
+          </ul>
         </div>
     <% end %>
     <.pagination_controls
@@ -317,12 +326,12 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
     """
   end
 
-  defp result_count_label(%{total_count: 1}), do: "1 result"
+  defp result_count_label(%{total_count: 1}), do: "1 delivery"
 
   defp result_count_label(%{total_count: count}) when is_integer(count),
-    do: "#{count} results"
+    do: "#{count} deliveries"
 
-  defp result_count_label(_page_meta), do: "0 results"
+  defp result_count_label(_page_meta), do: "0 deliveries"
 
   defp selected?(%{id: id}, %{id: id}), do: true
   defp selected?(_selected_delivery, _delivery), do: false
@@ -332,18 +341,4 @@ defmodule MailglassAdmin.Operator.DeliveriesList do
 
   defp row_classes(_selected_delivery, _delivery),
     do: "border-l-4 border-transparent bg-base-200 text-base-content hover:bg-base-100"
-
-  defp label(nil), do: "Unknown"
-
-  defp label(value) do
-    value
-    |> Atom.to_string()
-    |> String.replace("_", " ")
-    |> String.capitalize()
-  end
-
-  defp format_datetime(nil), do: "Pending"
-
-  defp format_datetime(%DateTime{} = datetime),
-    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S UTC")
 end
