@@ -58,9 +58,20 @@ defmodule Mailglass.CILanes do
       command (footgun #4: folding it in smuggles a Docker/Node requirement into the
       default path and muddies the zero-Node message).
     * `Preview Capture Advisory (...)` — Node/Playwright preview capture; same footgun #4.
-    * `Core Full Suite Advisory`, `Provider Compatibility Advisory`,
-      `Provider Live Advisory` — cron-only / live-provider canaries. "CI-parity for
-      what a PR must pass," not "every canary" (DX-MIX-CI.md).
+    * `Core Full Suite Advisory`, `Provider Compatibility Advisory` — the
+      `advisory-matrix.yml` full-suite/toolchain matrix. *(Corrected per Plan 143-03's
+      D-31 amendment: this is NOT a schedule-triggered-only canary — `advisory-matrix.yml`
+      triggers on `push`, `pull_request`, `schedule`, and `workflow_dispatch`
+      (`advisory-matrix.yml:3-10`), and Core Full Suite is about to become
+      publish-gating on its two floor legs (HARNESS-04). It is excluded from the parity
+      claim for a narrower reason: "CI-parity for what a PR must pass locally," not
+      "every lane a PR's CI run executes" — `mix ci` does not reproduce the full
+      four-leg toolchain/schema matrix locally, which is a wall-clock decision
+      (SEED-006), not a claim about when the lane runs.)* `Provider Live Advisory` —
+      genuinely triggered ONLY on a recurring schedule plus manual dispatch, a true
+      live-provider canary: its own `provider-live.yml` workflow's `on:` block contains
+      only `schedule` (`cron: "33 6 * * *"`) and `workflow_dispatch`, never `push` or
+      `pull_request`.
     * `Installer Golden Gate (...)`, `Branch Protection Advisory` — advisory CI-only
       lanes with no local-parity step in `mix ci`.
     * `Trust Lane Clean Baseline (...)` — the published-baseline trust journey (D-04);

@@ -68,8 +68,34 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   whose `on_exit` never reverts to `:manual`), and
   `properties/webhook_idempotency_convergence_test.exs`.
 
+  *(Amended per Plan 143-03's mechanism account, `.planning/phases/143-test-harness-truth/143-MECHANISM.md`
+  — empirically confirmed against CI run `30464215272` / job `90617762038` and independently reproduced in
+  this plan's own local instrumented capture. `Mailglass.DataCase` is EXONERATED as a candidate: its
+  `on_exit(stop_owner)` is registered on the line immediately following acquisition (`data_case.ex:35-36`),
+  Ecto's own documented idiom — it is the observed victim, never the culprit. The confirmed sites are
+  `properties/webhook_idempotency_convergence_test.exs`'s acquire/release gap (CI evidence) and
+  `test/support/mailer_case.ex`'s 92-line equivalent gap (independently reproduced locally, in
+  `Mailglass.Webhook.PlugSESTest`). The `mailer_case.ex:158` / `:248` entry is correct that those calls do
+  nothing, but for a different reason than originally stated: they are provable no-ops that run AFTER the
+  pool is already shared, discarding an `:already_shared` return value that changes nothing — they are
+  redundant, not broken, and deleting them is behaviour-preserving (D-07).
+  <br><br>
+  The phase closed **three** global-state leak classes, not one: **Class A** (migration-baseline teardown —
+  a genuine, reproduced symptom, but REFUTED for `migration_test.exs` specifically, whose own restoration
+  succeeded in both of this plan's local captures; the historically-blamed file is not implicated by this
+  evidence, and SEED-007's "already ruled out" entry for `migration_test.exs` teardown is RE-OPENED because
+  it was measured locally against a restored baseline and does not hold under CI's cold database), **Class
+  B** (`Mailglass.Config.schema()` drift — narrowed from six `:schema_isolation`-tagged candidates to three
+  confirmed schema-flipping files, plus a fourth structural candidate outside the original tag set), and
+  **Class C** (the ownership leak, above). Per-leg evidence: `143-MECHANISM.md` §4.)*
+
 - [ ] **HARNESS-02**: Core Full Suite passes across all four matrix legs (Elixir 1.18/OTP 27 and 1.19/OTP 28,
   each × `public` and `mailglass` schema).
+
+  *(Scope split from HARNESS-04, recorded per Plan 143-03's D-31 amendments: HARNESS-02 is judged on lane
+  **content** — all FOUR legs green in the evidence. HARNESS-04's gating scope is deliberately narrower —
+  only the TWO Elixir 1.18 / OTP 27 legs are publish-gating. A future reader must not mistake HARNESS-04's
+  narrower gate for a failure to meet HARNESS-02's four-leg bar.)*
 
 - [x] **HARNESS-03**: The recovered tests are proven to genuinely execute and assert — not skipped, excluded,
   or tagged away to manufacture green. Proof is mechanical, not narrative: a test-count floor that fails if
@@ -79,6 +105,14 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 - [ ] **HARNESS-04**: `gate-ci-green` inspects `advisory-matrix.yml` in addition to `ci.yml`, so a Core Full
   Suite regression blocks a Hex publish. *(Sequenced strictly after HARNESS-01..03 — gating a red lane
   deadlocks releases.)*
+
+  *(HARNESS-02 versus HARNESS-04 scope split, recorded per Plan 143-03's D-31 amendments: HARNESS-04's
+  gating scope is deliberately narrower than HARNESS-02's four-leg green bar — only the Elixir 1.18 / OTP 27
+  pair (the declared `~> 1.18` floor) is publish-gating. The Elixir 1.19 / OTP 28 legs, Provider
+  Compatibility, and Inbound Full Suite stay advisory. This is a deliberate design choice (D-19: keep
+  required matrices small — an established anti-pattern is using one gigantic matrix as required status),
+  not a failure to meet HARNESS-02's broader four-leg green requirement. State this plainly so a future
+  reader does not conflate the two.)*
 
 ### CONFORM — Design-system conformance
 
