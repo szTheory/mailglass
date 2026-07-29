@@ -2,17 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 142
 status: executing
-stopped_at: Phase 142 context gathered (assumptions mode)
-last_updated: "2026-07-29T01:35:41.079Z"
-last_activity: 2026-07-28
-last_activity_desc: Phase 142 planning complete
+stopped_at: Completed 142-01-PLAN.md
+last_updated: "2026-07-29T01:58:52.243Z"
+last_activity: 2026-07-29
 progress:
-  total_phases: 2
+  total_phases: 4
   completed_phases: 1
   total_plans: 11
-  completed_plans: 6
+  completed_plans: 7
   percent: 25
 ---
 
@@ -23,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 142 — supply chain remediation & gating
+**Current focus:** Phase 142 — supply-chain-remediation-gating
 
 ## Current Position
 
-Phase: 142
-Plan: Not started
+Phase: 142 (supply-chain-remediation-gating) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-07-28 — Phase 142 planning complete
+Last activity: 2026-07-29
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 64%
 
 ## v2.2 Milestone Intent
 
@@ -330,6 +328,9 @@ release debug campaign.
 - [Phase ?]: [141-06] parse_disposition_table/1 + trim_bt/1 in lane_classification_drift_test.exs bind the table to Mailglass.CILanes with 7 new tests (pair-set-equality, exact-count anti-vacuity, adjacency, closed-vocabulary disposition, no-pipe cells, order-independence, negative control); three deliberate-drift probes run and reverted.
 - [Phase ?]: [141-06] Two coordinator-applied fixes during the Task 3 checkpoint pause: b787d9a0 changed a Credo-flagged length(rows)>0 assert to rows != []; 7a603e34 restored Core Full Suite Advisory / Provider Compatibility Advisory / Inbound Full Suite Advisory as prose (not table rows) after docs_contract_test.exs:304 caught their removal.
 - [Phase ?]: [141-06] Live CI run 30408642505 (forced via workflow_dispatch to guarantee code lanes executed, not a docs-only skip) confirmed all 24 runtime job names classify correctly, branch protection is exactly [CI Green, Guard Release Trigger], and v2.0/v2.1 phase archives are exactly 48/39 files. mix ci Group 5 not achieved locally (sandbox/network gap); remote CI run recorded as the stronger substitute evidence.
+- [Phase ?]: 142-01: Dropped Boundary classify_to from the new lib/ module — reserved for Mix tasks/protocol impls only; correct on the dev/ task
+- [Phase ?]: 142-01: Both --kind hex and --kind deps implemented fully in Task 1; Task 2 wired CI/mix.exs only
+- [Phase ?]: 142-01: D-10 expired_entries/unused_entries scoped to --kind hex only (Decision 2) — mix deps.audit doesn't natively detect the two live entries
 
 ## Quick Tasks Completed
 
@@ -363,6 +364,7 @@ release debug campaign.
 | Phase 141 P04 | 6min | 3 tasks | 3 files |
 | Phase 141 P05 | 8min | 2 tasks | 1 files |
 | Phase 141 P06 | 55min | 3 tasks | 2 files |
+| Phase 142 P01 | 16min | 3 tasks | 11 files |
 
 ## Deferred Items
 
@@ -530,9 +532,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-29T00:38:00.874Z
-**Stopped at:** Phase 142 context gathered (assumptions mode)
-**Resume file:** .planning/phases/142-supply-chain-remediation-gating/142-CONTEXT.md
+**Last session:** 2026-07-29T01:58:52.237Z
+**Stopped at:** Completed 142-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in

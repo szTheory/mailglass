@@ -225,6 +225,11 @@ None - no external service configuration required.
 - `deps_audit_advisory` still keeps `continue-on-error: true` — no gating change landed in this plan (D-13 Wave 1 constraint honored), leaving Plan 02/04's promotion work fully unblocked.
 - Precondition for Plan 02 (VULN-02 triage) and Plan 04 (VULN-03 gate promotion): the shared allowlist is now the thing both CI lanes AND the publish gate read, so promoting `hex_audit`/`deps_audit_advisory` to merge-gating will not immediately red-block every PR on the two already-accepted cowlib advisories.
 
+## Self-Check: PASSED
+
+All 11 files-created/modified paths verified present on disk. All 4 commit hashes
+(`3875bfe8`, `b0e88564`, `5dc25556`, `7963eeac`) verified present in `git log --oneline --all`.
+
 ---
 *Phase: 142-supply-chain-remediation-gating*
 *Completed: 2026-07-29*

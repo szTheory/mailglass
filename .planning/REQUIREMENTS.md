@@ -40,7 +40,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 - [ ] **VULN-02**: Every dependency PR left with auto-merge enabled on 2026-07-28 is confirmed either merged
   or closed with a recorded reason. No PR is left in an indeterminate state.
 
-- [ ] **VULN-05**: The CI-side audit lanes honor the same accepted-advisory allowlist that
+- [x] **VULN-05**: The CI-side audit lanes honor the same accepted-advisory allowlist that
   `publish.check`'s `@accepted_advisories` uses, read from **one** source rather than duplicated. Today
   `ci.yml`'s `hex_audit` runs bare `mix hex.audit` with zero allowlist logic. *(Hard precondition for
   VULN-03 — promoting the lane without this reds every PR on the already-accepted cowlib advisories.)*
@@ -50,7 +50,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   newly-published HIGH advisory blocks merge instead of accumulating. *(Deps Audit / `mix_audit` is the lane
   that covers transitive dependencies, i.e. the `hpax` case; Hex Audit alone would not close it.)*
 
-- [ ] **VULN-06**: Each allowlisted advisory carries a recorded reason and a re-check date, and the lane
+- [x] **VULN-06**: Each allowlisted advisory carries a recorded reason and a re-check date, and the lane
   surfaces an entry whose upstream fix has landed, so an exception cannot silently become permanent.
 
 - [ ] **VULN-04**: A documented triage cadence exists that explicitly covers **transitive** dependencies,
@@ -191,9 +191,9 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | TRUTH-05 | Phase 141 | Complete |
 | CONFORM-04 | Phase 141 | Complete |
 | HIST-01 | Phase 141 | Complete |
-| VULN-05 | Phase 142 | Pending |
+| VULN-05 | Phase 142 | Complete |
 | VULN-03 | Phase 142 | Pending |
-| VULN-06 | Phase 142 | Pending |
+| VULN-06 | Phase 142 | Complete |
 | VULN-02 | Phase 142 | Pending |
 | VULN-04 | Phase 142 | Pending |
 | HARNESS-01 | Phase 143 | Pending |
