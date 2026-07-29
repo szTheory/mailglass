@@ -42,6 +42,12 @@ test_repo_config = Application.get_env(:mailglass, Mailglass.TestRepo)
 # 3F000 under the isolated search_path).
 schema = Mailglass.Config.schema()
 
+# HARNESS-01 (D-09): register the pool-hygiene ledger formatter alongside the
+# default CLI formatter. Deliberately NOT the `--formatter` CLI flag, which
+# *replaces* ExUnit's default formatter list — that would silently drop
+# `ExUnit.CLIFormatter`'s normal test/failure output.
+ExUnit.configure(formatters: [ExUnit.CLIFormatter, Mailglass.TestSupport.SuiteTruthFormatter])
+
 # On any non-public schema axis, exclude `:public_only` tests. These are
 # generic, ambient-schema round-trip tests (e.g. migration_test.exs's `down/0`
 # describe) whose isolation-path coverage is provided separately by
