@@ -206,21 +206,69 @@ jobs:
               'Support Contract Admin (Elixir 1.18 / OTP 27)',
               'Compile No Optional Deps (Elixir 1.18 / OTP 27)',
               'Trust Lane Repo Head (Elixir 1.18 / OTP 27)',
-              'Installer Host Smoke'
+              'Installer Host Smoke',
+              'Hex Audit (Elixir 1.18 / OTP 27)',
+              'Deps Audit (Elixir 1.18 / OTP 27)'
             ];
 
-            // Advisory lanes are non-blocking for publish — they are NOT
-            // branch-protection required checks. "Operator Browser Gate" and
-            // "Demo Browser Evidence" predate the naming convention and are
-            // listed explicitly; every other advisory lane follows the
-            // "<name> Advisory (...)" convention and is matched by isAdvisory()
-            // below — so a red advisory lane never blocks a release.
-            // Rule of thumb: if a lane is not required by branch protection,
-            // it is advisory here too.
+            // Classification mirrors Mailglass.CILanes (test/support/ci_lanes.ex),
+            // the authoritative registry (TRUTH-07/D-01). The drift meta-test
+            // test/scripts/lane_classification_drift_test.exs asserts these four
+            // arrays set-equal the Elixir registry, so editing one without the
+            // other fails CI.
+            //
+            // MATCHING RULE — do not "simplify" to === for any array below
+            // except REQUIRED_LANES: GitHub appends matrix values to a matrix
+            // job's declared name: at runtime — e.g. `Dialyzer (Elixir 1.18 /
+            // OTP 27)` reports live as `Dialyzer (Elixir 1.18 / OTP 27) (1.18,
+            // 27)`, and Operator Browser Gate / Preview Capture Advisory gain a
+            // similar matrix-value suffix. Prefix matching is REQUIRED for any
+            // array that may contain a matrix lane. REQUIRED_LANES correctly
+            // keeps exact equality because none of its seven lanes declares a
+            // matrix, and a required lane must be PRESENT, so the stricter test
+            // is right there.
             const ADVISORY_LANES = [
-              'Operator Browser Gate',
-              'Demo Browser Evidence'
+              'Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)',
+              'Demo Browser Evidence (Docker Compose / Chromium)',
+              'Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)'
             ];
+
+            // Lanes that block a Hex publish when red but do NOT block a PR
+            // merge. gate-ci-green enumerates these; ci_green.needs (ci.yml)
+            // does not.
+            const PUBLISH_GATING_LANES = [
+              'Format Check (Elixir 1.18 / OTP 27)',
+              'Compile Warnings as Errors (Elixir 1.18 / OTP 27)',
+              'Mix Task Tests (Elixir 1.18 / OTP 27)',
+              'Inbound Test (Elixir 1.18 / OTP 27)',
+              'Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)',
+              'Credo Strict (Elixir 1.18 / OTP 27)',
+              'Design System Conformance (shell gates)',
+              'Dialyzer (Elixir 1.18 / OTP 27)',
+              'Docs Warnings as Errors (Elixir 1.18 / OTP 27)',
+              'Installer Golden Gate (Elixir 1.18 / OTP 27)',
+              'Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)',
+              'Branch Protection Advisory'
+            ];
+
+            // Structural jobs — not check lanes (a path filter and an
+            // aggregator). Classified so no ci.yml job sits unrecorded
+            // (TRUTH-09); their blocking behavior below is identical to
+            // PUBLISH_GATING_LANES.
+            const STRUCTURAL_LANES = [
+              'Detect Non-Doc Changes',
+              'CI Green'
+            ];
+
+            const startsWithAny = (name, lanes) => lanes.some(l => name.startsWith(l));
+
+            const classify = (name) => {
+              if (REQUIRED_LANES.includes(name))              return 'required';
+              if (startsWithAny(name, ADVISORY_LANES))        return 'advisory';
+              if (startsWithAny(name, PUBLISH_GATING_LANES))  return 'publish-gating';
+              if (startsWithAny(name, STRUCTURAL_LANES))      return 'structural';
+              return 'unclassified';
+            };
 
             const sha = '${{ steps.resolve-sha.outputs.sha }}';
             const {data} = await github.rest.actions.listWorkflowRuns({
@@ -264,16 +312,14 @@ jobs:
               return;
             }
 
-            const isAdvisory = (jobName) =>
-              ADVISORY_LANES.some(lane => jobName.startsWith(lane)) ||
-              / Advisory \(/.test(jobName);
+            const notGreen = jobs.filter(j => j.conclusion !== 'success' && j.conclusion !== 'skipped');
 
-            // Non-required, non-advisory failures still block (e.g. unexpected
-            // new lanes that are neither in REQUIRED_LANES nor advisory).
-            const blockingFailures = jobs
-              .filter(j => j.conclusion !== 'success' && j.conclusion !== 'skipped')
-              .filter(j => !isAdvisory(j.name))
-              .filter(j => !REQUIRED_LANES.includes(j.name));
+            // Publish-gating + structural red => block. Identical in effect to
+            // today's fall-through blocking behavior for every existing lane.
+            const blockingFailures = notGreen.filter(j => {
+              const c = classify(j.name);
+              return c === 'publish-gating' || c === 'structural';
+            });
 
             if (blockingFailures.length > 0) {
               const detail = blockingFailures.map(j => `  - ${j.name} (${j.conclusion})`).join('\n');
@@ -281,9 +327,33 @@ jobs:
               return;
             }
 
-            const advisoryFailures = jobs
-              .filter(j => j.conclusion !== 'success' && j.conclusion !== 'skipped')
-              .filter(j => isAdvisory(j.name));
+            // Unclassified red => also block. Today this case blocked silently
+            // through the same generic fall-through message; the message now
+            // names the fix (TRUTH-09).
+            const unclassifiedFailures = notGreen.filter(j => classify(j.name) === 'unclassified');
+
+            if (unclassifiedFailures.length > 0) {
+              const detail = unclassifiedFailures.map(j => `  - ${j.name} (${j.conclusion})`).join('\n');
+              core.setFailed(`Delivery blocked: ci.yml on SHA ${sha} has unclassified lane failure(s). Add the lane to Mailglass.CILanes and to this step's arrays (TRUTH-09):\n${detail}\nRun: ${latest.html_url}`);
+              return;
+            }
+
+            // Unclassified green => WARN only, never setFailed. Failing here
+            // would change the publish posture D-02 requires preserved
+            // byte-for-byte (today, green-but-unrecognized passes silently).
+            // The hard failure for this case lives in the meta-test
+            // (test/scripts/lane_classification_drift_test.exs), which runs on
+            // the PR that adds the lane — the correct place and time.
+            const unclassifiedGreen = jobs.filter(
+              j => j.conclusion === 'success' && classify(j.name) === 'unclassified'
+            );
+
+            if (unclassifiedGreen.length > 0) {
+              const detail = unclassifiedGreen.map(j => `  - ${j.name}`).join('\n');
+              core.warning(`ci.yml on SHA ${sha} has job(s) with no recorded classification. Add them to Mailglass.CILanes and to this step's arrays (TRUTH-09):\n${detail}\nRun: ${latest.html_url}`);
+            }
+
+            const advisoryFailures = notGreen.filter(j => classify(j.name) === 'advisory');
 
             if (advisoryFailures.length > 0) {
               const detail = advisoryFailures.map(j => `  - ${j.name} (${j.conclusion})`).join('\n');

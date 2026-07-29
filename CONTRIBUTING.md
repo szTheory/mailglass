@@ -113,10 +113,12 @@ equivalent fallback — `release: published` is the canonical publish trigger.
 
 ## One-time setup: branch protection automation
 
-`main` is protected with required status checks (`Tests`, `Credo Strict`,
-`Dialyzer`, `actionlint`, `PR title (semantic)`). This protection is
-configured idempotently by `scripts/setup_branch_protection.sh` and
-re-asserted daily by `.github/workflows/branch-protection-drift.yml`.
+`main` is protected with exactly two required status checks (`CI Green`,
+`Guard Release Trigger`). Individual `ci.yml` leaf lanes are deliberately
+**not** required contexts — see `MAINTAINING.md` § "Required Checks" for
+every lane's classification and disposition. This protection is configured
+idempotently by `scripts/setup_branch_protection.sh` and re-asserted daily
+by `.github/workflows/branch-protection-drift.yml`.
 
 To enable the drift-detection workflow, add a repo secret
 `BRANCH_PROTECTION_PAT`:

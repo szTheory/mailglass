@@ -12,11 +12,11 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
   that isn't reflected in the alias fails this test.
 
   Anti-vacuity guards (Phase 126 precedent): the test fails if the flattened alias
-  step-set is empty, if the `Mailglass.CILanes` source is empty, or if the
-  lane->matcher table is not a bijection with the ci_lanes set — so it cannot pass by
-  parsing nothing or by silently ignoring a newly-added lane. A negative-control
-  assertion proves the coverage function reports "uncovered" when a required step is
-  removed, so the fail-loud property is itself tested.
+  step-set is empty, if `Mailglass.CILanes.required_lanes/0` does not have exactly 7
+  entries, or if the lane->matcher table is not a bijection with the ci_lanes set — so
+  it cannot pass by parsing nothing or by silently ignoring a newly-added lane. A
+  negative-control assertion proves the coverage function reports "uncovered" when a
+  required step is removed, so the fail-loud property is itself tested.
 
   Durable determinism guard (Phase 127 consume, DET-02): a committed assertion refutes
   any seed-pinning token in the flattened root `ci` alias step-set, so a future edit
@@ -110,8 +110,8 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
       "Dialyzer (Elixir 1.18 / OTP 27)" => &any_step?(&1, "dialyzer"),
       "Docs Warnings as Errors (Elixir 1.18 / OTP 27)" =>
         &any_step?(&1, "docs --warnings-as-errors"),
-      "Hex Audit (Elixir 1.18 / OTP 27)" => &any_step?(&1, "hex.audit"),
-      "Deps Audit Advisory (Elixir 1.18 / OTP 27)" => &any_step?(&1, "deps.audit"),
+      "Hex Audit (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass.audit --kind hex"),
+      "Deps Audit (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass.audit --kind deps"),
       "Mix Task Tests (Elixir 1.18 / OTP 27)" =>
         &any_step?(&1, "test --warnings-as-errors --exclude flaky"),
       "Inbound Test (Elixir 1.18 / OTP 27)" => &any_step?(&1, "mailglass_inbound mix test"),
@@ -158,11 +158,8 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
 
     lanes = all_lanes()
 
-    assert lanes != [],
-           "Mailglass.CILanes required + advisory lanes parsed empty — ci_lanes source changed"
-
-    assert length(Mailglass.CILanes.required_lanes()) == 5,
-           "expected exactly 5 required lanes from Mailglass.CILanes"
+    assert length(Mailglass.CILanes.required_lanes()) == 7,
+           "expected exactly 7 required lanes from Mailglass.CILanes"
 
     # Every ci_lanes lane must have a matcher (no lane silently ignored)...
     lanes_without_matcher =
@@ -188,7 +185,7 @@ defmodule Mailglass.Scripts.CIParityDriftTest do
         "Dialyzer (Elixir 1.18 / OTP 27)",
         "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
         "Hex Audit (Elixir 1.18 / OTP 27)",
-        "Deps Audit Advisory (Elixir 1.18 / OTP 27)",
+        "Deps Audit (Elixir 1.18 / OTP 27)",
         "Mix Task Tests (Elixir 1.18 / OTP 27)",
         "Inbound Test (Elixir 1.18 / OTP 27)",
         "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)",

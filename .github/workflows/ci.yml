@@ -282,6 +282,14 @@ jobs:
         # silently escape CI — closes the drift gap that left the Phase-47
         # inbound generators advisory-only. See the verify.mix_tasks alias note.
         run: mix verify.mix_tasks
+      - name: Run CI lane-contract meta-tests
+        # This job is chosen because it is publish-gating rather than
+        # merge-gating (TRUTH-07, Phase 141): registry drift between
+        # publish-hex.yml's REQUIRED_LANES and Mailglass.CILanes.required_lanes/0
+        # should block a Hex publish, not a PR merge. The job already provisions
+        # Postgres and creates the test DB above, which test/test_helper.exs
+        # requires even though these meta-tests never touch the database.
+        run: mix verify.ci_lane_contract
 
   inbound_test:
     name: Inbound Test (Elixir 1.18 / OTP 27)
@@ -417,6 +425,17 @@ jobs:
         # Fails CI if any {Credo.Check..., false} entry is missing
         # a `# Reason:` + `# Tracking:` comment block (D-08-18/D-08-19).
         run: bash scripts/check_credo_suppressions.sh
+      - name: Run Credo strict
+        run: mix credo --strict
+
+  conformance_gates:
+    name: Design System Conformance (shell gates)
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - name: Verify motion conformance (shell gate)
         # Fails CI if any banned layout-thrashing or easing token appears
         # in lib/ or app.css per UI-SPEC Motion Rules (Phase 74 FROZEN contract, GAP-19 sev 3).
@@ -429,8 +448,6 @@ jobs:
       - name: Verify design-system conformance (advisory arms — TYPE-lg/xl + TRACK)
         # Phase 99 hard-fail gate for large type-scale and arbitrary tracking regressions.
         run: bash mailglass_admin/scripts/check-conformance-advisory.sh
-      - name: Run Credo strict
-        run: mix credo --strict
 
 
   dialyzer:
@@ -548,20 +565,15 @@ jobs:
       - name: Install deps
         run: mix deps.get
       - name: Run Hex audit
-        run: mix hex.audit
+        run: mix mailglass.audit --kind hex
 
   deps_audit_advisory:
-    name: Deps Audit Advisory (Elixir 1.18 / OTP 27)
+    name: Deps Audit (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
-    # Advisory-only: mix deps.audit surfaces transitive-dep advisories from the
-    # elixir-security-advisories DB. Under an unfixable CVE wave it will red, so
-    # continue-on-error keeps it non-blocking on PRs. The publish gate
-    # (mailglass.publish.check Step 14) is where a non-allowlisted advisory
-    # actually hard-blocks delivery. The "Advisory (" naming convention is what
-    # publish-hex.yml gate-ci-green's isAdvisory() matches to skip it (SUPPLY-01).
-    continue-on-error: true
+    # Promoted to merge-gating (Phase 142/VULN-03); disposition recorded in
+    # MAINTAINING.md § "Required Checks".
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -580,7 +592,7 @@ jobs:
       - name: Install deps
         run: mix deps.get
       - name: Run deps audit
-        run: mix deps.audit
+        run: mix mailglass.audit --kind deps
 
   installer_golden_gate:
     name: Installer Golden Gate (Elixir 1.18 / OTP 27)
@@ -1136,6 +1148,8 @@ jobs:
       - support_contract_core
       - support_contract_admin
       - trust_lane_repo_head
+      - hex_audit
+      - deps_audit_advisory
     steps:
       - name: Evaluate required lane results
         run: |
@@ -1145,7 +1159,9 @@ jobs:
             "installer_host_smoke=${{ needs.installer_host_smoke.result }}" \
             "support_contract_core=${{ needs.support_contract_core.result }}" \
             "support_contract_admin=${{ needs.support_contract_admin.result }}" \
-            "trust_lane_repo_head=${{ needs.trust_lane_repo_head.result }}"
+            "trust_lane_repo_head=${{ needs.trust_lane_repo_head.result }}" \
+            "hex_audit=${{ needs.hex_audit.result }}" \
+            "deps_audit_advisory=${{ needs.deps_audit_advisory.result }}"
           do
             lane="${job_result%%=*}"
             result="${job_result##*=}"
