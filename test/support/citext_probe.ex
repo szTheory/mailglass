@@ -44,23 +44,30 @@ defmodule Mailglass.TestSupport.CitextProbe do
   end
 
   defp do_probe(repo, 0, attempted, _probe_fun) do
-    raise "citext probe exhausted for #{inspect(repo)} after #{attempted} attempts"
+    raise exhausted_message(repo, attempted, nil)
   end
 
-  # The rescue here is intentionally non-reraising: the `Postgrex.Error` surface
-  # (`XX000 cache lookup failed for type NNNNNN`) is the *expected* poisoned-OID
-  # signal we want to retry away. Reraising would defeat the probe loop. The
-  # exhaustion path returns `:exhausted`; the caller then raises a bespoke
-  # message *outside* the rescue block so Credo's `RaiseInsideRescue` warning is
-  # not triggered while the user-facing diagnostics stay informative.
+  # Only the poisoned-OID surface is retried. Every other `Postgrex.Error` is
+  # re-raised with its original message and stacktrace: retrying a permanent
+  # fault (a missing relation, a bad credential, a syntax error) can only ever
+  # end in the exhaustion message, which then reports "citext probe exhausted"
+  # for a database that has nothing wrong with its citext type. That misdirection
+  # is expensive — it hides the real fault behind a retry loop and a stack that
+  # points at this module instead of the actual failure.
+  #
+  # Reraise happens *outside* the rescue block so Credo's `RaiseInsideRescue`
+  # check stays satisfied while diagnostics stay honest.
   defp do_probe(repo, remaining, attempted, probe_fun) do
     case attempt_probe(repo, probe_fun) do
       :ok ->
         :ok
 
-      :rescued ->
+      {:reraise, error, stacktrace} ->
+        reraise(error, stacktrace)
+
+      {:retry, error} ->
         if remaining == 1 do
-          raise "citext probe exhausted for #{inspect(repo)} after #{attempted} attempts"
+          raise exhausted_message(repo, attempted, error)
         else
           do_probe(repo, remaining - 1, attempted, probe_fun)
         end
@@ -71,7 +78,33 @@ defmodule Mailglass.TestSupport.CitextProbe do
     probe_fun.(repo)
     :ok
   rescue
-    Postgrex.Error -> :rescued
+    error in Postgrex.Error ->
+      if poisoned_oid?(error) do
+        {:retry, error}
+      else
+        {:reraise, error, __STACKTRACE__}
+      end
+  end
+
+  # The stale-OID signal. After `ecto.drop && ecto.create` (or a migration
+  # down/up round-trip) Postgres assigns citext a new OID while pooled
+  # connections and the shared TypeServer still hold the old one. Postgres
+  # reports that as `XX000 (internal_error) cache lookup failed for type NNNNNN`.
+  defp poisoned_oid?(%Postgrex.Error{postgres: %{code: :internal_error}}), do: true
+
+  defp poisoned_oid?(%Postgrex.Error{} = error) do
+    error
+    |> Exception.message()
+    |> String.contains?("cache lookup failed")
+  end
+
+  defp exhausted_message(repo, attempted, nil) do
+    "citext probe exhausted for #{inspect(repo)} after #{attempted} attempts"
+  end
+
+  defp exhausted_message(repo, attempted, error) do
+    exhausted_message(repo, attempted, nil) <>
+      "; last error: " <> Exception.message(error)
   end
 
   defp default_probe(repo) do

@@ -4,6 +4,35 @@ All notable changes to `mailglass_admin` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning coordinated with `mailglass` core via Release Please linked-versions.
 
+## [2.1.3](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.1.2...mailglass_admin-v2.1.3) (2026-07-28)
+
+
+### Bug Fixes
+
+* **deps:** patch new cowboy/cowlib advisories blocking the 2.1.2 publish ([#139](https://github.com/szTheory/mailglass/issues/139)) ([3c80ca8](https://github.com/szTheory/mailglass/commit/3c80ca805e6eedf8232817d3aa6e5786e364a669))
+
+## [2.1.2](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.1.1...mailglass_admin-v2.1.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* **admin:** clear the design-system and Dialyzer lanes blocking release ([#136](https://github.com/szTheory/mailglass/issues/136)) ([31588bb](https://github.com/szTheory/mailglass/commit/31588bb40343fc67200ca8bf4da7ffb3351248fa))
+* **test:** make the citext probe honest and restore the suite baseline ([#137](https://github.com/szTheory/mailglass/issues/137)) ([579ad37](https://github.com/szTheory/mailglass/commit/579ad379bc979a78870f2f56ce865c19f44f6a20))
+
+## [2.1.1](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.1.0...mailglass_admin-v2.1.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* unblock the 2.1.0 publish — admin allowlist + 7 security advisories ([#134](https://github.com/szTheory/mailglass/issues/134)) ([eda8d00](https://github.com/szTheory/mailglass/commit/eda8d0032bf1976477c9f1bac18c4e1488ed57d7))
+
+## [2.1.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v2.0.0...mailglass_admin-v2.1.0) (2026-07-28)
+
+
+### Features
+
+* operator Quick view + Full detail record inspection ([#128](https://github.com/szTheory/mailglass/issues/128)) ([7a68501](https://github.com/szTheory/mailglass/commit/7a6850146f606c3e82bcb50bc7c146c830caf0e1))
+
 ## [2.0.0](https://github.com/szTheory/mailglass/compare/mailglass_admin-v1.11.0...mailglass_admin-v2.0.0) (2026-07-04)
 
 
