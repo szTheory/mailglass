@@ -1,0 +1,85 @@
+143-LEDGER-mailglass.txt — HARNESS-01 instrumented pre-fix ledger, mailglass schema axis
+===========================================================================================
+
+Header
+------
+Command (verbatim):
+  MAILGLASS_SANDBOX_TRACE=1 MAILGLASS_SCHEMA=mailglass mix test --warnings-as-errors --exclude requires_workspace --seed 0
+
+Elixir / OTP:
+  Elixir 1.19.5 (compiled with Erlang/OTP 28)
+  Erlang/OTP 28 [erts-16.3]
+
+Resolved Mailglass.Config.schema() boot value: "mailglass"
+ExUnit seed: 0
+
+--seed 0 note: this pin is a STABILIZER FOR ARTIFACT REPRODUCIBILITY ONLY, not a
+diagnostic — see 143-LEDGER-public.txt's header for the full reasoning (D-05); it
+applies identically here.
+
+ExUnit counts, as printed by the run's own summary line:
+  properties: 23
+  total tests: 1453
+  failures: 18
+  excluded: 14
+  skipped: 7
+
+Wall-clock duration: 86.1 seconds (1.6s async, 84.5s sync)
+
+The `excluded` count here (14) exceeds the public-axis ledger's `excluded` count (13) by
+exactly 1 — the `:public_only` delta `test_helper.exs` applies
+(`ExUnit.configure(exclude: [:public_only])`) whenever `schema != "public"`, confirming
+the axis genuinely switched for this run.
+
+This run was captured against a database freshly reset via `mix ecto.drop -r
+Mailglass.TestRepo --quiet && mix ecto.create -r Mailglass.TestRepo --quiet` immediately
+beforehand (following the public-axis capture and its own DB reset).
+
+
+SuiteTruthFormatter ledger records, in execution order
+-------------------------------------------------------
+0 record(s).
+
+As with the public-axis ledger, this is the real, single production-formatter print at
+`:suite_finished` (a second, unrelated "0 record(s)" string also appears earlier in this
+run's raw combined output for the same reason documented in 143-LEDGER-public.txt: it is
+`suite_truth_formatter_test.exs`'s own unit test exercising `handle_cast/2` directly
+against a synthetic empty accumulator, not suite evidence).
+
+This run's raw ExUnit failure output shows a different mix than the public axis:
+
+  - 0 occurrences of the `already_shared` signature — Class C did NOT reproduce in this
+    particular run. D-04 does not require every run to reproduce every class; this is
+    recorded plainly rather than manufactured.
+  - 10 occurrences of `relation "…" does not exist` (`42P01`) across five relation-name
+    shapes: unqualified `mailglass_webhook_events` ×4, unqualified `mailglass_deliveries`
+    ×3, unqualified `mailglass_events` ×1, `public.mailglass_events` ×1,
+    `public.mailglass_deliveries` ×1. The unqualified misses under a "mailglass"-booted
+    run are Class A (baseline genuinely absent from the schema this run is supposed to be
+    using); the two `public.`-qualified misses are Class B INVERTED — `Config.schema()`
+    drifted back to "public" partway through a run booted at "mailglass". This is the
+    same "Class A + Class B (inverted)" shape RESEARCH.md's "Current Four-Leg State"
+    table records for the mailglass-axis legs of the real CI run (30464215272), now
+    reproduced locally.
+
+Same boundary-only blind-spot explanation as 143-LEDGER-public.txt applies here without
+modification: the three schema-manipulating modules
+(`schema_isolation_integration_test.exs`, `schema_isolation_immutability_test.exs`,
+`schema_prefix_hardening_test.exs`) drift-and-restore `Mailglass.Config.schema()` on a
+PER-TEST cycle inside their own `setup`/`on_exit`, invisible to a probe that only checks
+once per module at `:module_finished`. This zero-record ledger must not be read as "no
+leak occurred" on this axis either.
+
+
+Per-class tally (from the SuiteTruthFormatter ledger only)
+------------------------------------------------------------
+  pool_mode_leaked:    0
+  config_schema_drift: 0
+  baseline_missing:    0
+  cannot_verify:       0
+
+
+Negative control
+------------------
+The `--max-cases 1` negative control is recorded ONCE, on the public axis only, per the
+plan's action text. See 143-LEDGER-public.txt for that record. It is not repeated here.
