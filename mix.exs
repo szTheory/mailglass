@@ -392,8 +392,16 @@ defmodule Mailglass.MixProject do
         "cmd --cd mailglass_inbound mix test --exclude property",
         "docs --warnings-as-errors",
         "mailglass.docs.check",
-        "hex.audit",
-        "deps.audit",
+        # F1: widened from the two bare hex-audit/deps-audit mix tasks so
+        # `mix ci` reproduces the same shared-allowlist, three-directory scan
+        # both ci.yml audit lanes now run (Phase 142/VULN-05). Leaving this
+        # unwidened would keep ci_parity_drift_test.exs green while the
+        # local<->CI parity claim silently narrowed to a root-only,
+        # allowlist-unaware scan. Costs `mix ci` two extra deps.get/audit
+        # passes (mailglass_admin, mailglass_inbound); noted as a SEED-006
+        # input, not optimized here.
+        "mailglass.audit --kind hex",
+        "mailglass.audit --kind deps",
         "dialyzer",
         "cmd --cd reference/host_app mix deps.get",
         "cmd --cd reference/host_app env MIX_ENV=dev mix compile",

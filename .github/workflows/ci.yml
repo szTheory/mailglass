@@ -597,7 +597,7 @@ jobs:
       - name: Install deps
         run: mix deps.get
       - name: Run deps audit
-        run: mix deps.audit
+        run: mix mailglass.audit --kind deps
 
   installer_golden_gate:
     name: Installer Golden Gate (Elixir 1.18 / OTP 27)
