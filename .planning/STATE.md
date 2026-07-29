@@ -2,17 +2,18 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 142
-current_phase_name: supply-chain-remediation-gating
-status: ready_to_plan
+current_phase: 143
+status: executing
 stopped_at: Phase 142 complete (5/5) — ready to discuss Phase 143
-last_updated: 2026-07-29T04:55:18.094Z
+last_updated: "2026-07-29T18:17:21.175Z"
 last_activity: 2026-07-29
+last_activity_desc: Phase 143 planning complete
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 2
-  total_plans: 11
+  total_plans: 25
   completed_plans: 17
+current_phase_name: supply-chain-remediation-gating
 ---
 
 # Project State
@@ -28,10 +29,25 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 Phase: 143
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-07-29
+Status: Ready to execute
+Last activity: 2026-07-29 — Phase 143 planning complete
 
 Progress: [██████████] 100%
+
+### Plan-phase gate override (2026-07-29)
+
+The **decision-coverage gate** was overridden at plan time. It returned
+`passed: false, reason: "could-not-parse", uncovered: []` — a *parser* failure, not a coverage gap.
+`parseDecisions` (`gsd-core/bin/lib/decisions.cjs:35-56`) forbids `:` and `*` inside a decision's
+bold title, and D-04, D-12, and D-17 carry `` `:auto` ``, `` `:already_shared` ``, and
+`*mechanism-level*` in theirs. 30 of 33 decisions parse; the 3 that don't were verified by hand to be
+cited by ID in plans (D-04 → 01/03/04/11, D-12 → 01/06, D-17 → 01/04/09), and the plan-checker
+independently confirmed D-00..D-31 are each cited in at least one plan.
+
+Content-preserving repair already applied: 12 wrapped bullets were unwrapped so their bold run closes
+on one line (22 → 30 parsed). The remaining 3 would require rewording binding decision statements to
+satisfy the parser, which was deliberately NOT done. **verify-phase should re-surface this**; the
+underlying issue is a GSD parser limitation, not a planning defect.
 
 ## v2.2 Milestone Intent
 

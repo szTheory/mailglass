@@ -132,19 +132,51 @@ Plans:
 **Plans**: 14 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 143-01-PLAN.md — Tracer: suite-wide pool-hygiene observation, widened to all three leak classes
 - [ ] 143-02-PLAN.md — Probe inputs (`required_only`, `deadline_minutes`) + record the D-18a vacuity finding
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 143-03-PLAN.md — Instrumented ledger, the written mechanism account, and the D-31 upstream amendments
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 143-04-PLAN.md — The sanctioned ownership door and its mechanism-level regression test
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 143-05-PLAN.md — Route both case templates and the confirmed leak site through the door; delete the four no-ops
 - [ ] 143-06-PLAN.md — Migrate the nine `:auto`-mode files to `unsandboxed_module/1`
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
 - [ ] 143-07-PLAN.md — Close Class A (baseline teardown) and Class B (`Config.schema()` drift)
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
 - [ ] 143-08-PLAN.md — `NoRawSandboxOwnership` Credo check, after proving `credo --strict` reaches `test/`
 - [ ] 143-09-PLAN.md — `SuiteFloor`, the signature classifier, and the negative controls
+
+**Wave 7** *(blocked on Wave 6 completion)*
+
 - [ ] 143-10-PLAN.md — Pin floors from green CI runs and turn enforcement on in the lane
+
+**Wave 8** *(blocked on Wave 7 completion)*
+
 - [ ] 143-11-PLAN.md — Lane renames, `expanded_matrix_job_names/1`, third registry axis, MAINTAINING section
+
+**Wave 9** *(blocked on Wave 8 completion)*
+
 - [ ] 143-12-PLAN.md — Deliberate-failure probe against the renamed lane + the five-condition promotion checkpoint
+
+**Wave 10** *(blocked on Wave 9 completion)*
+
 - [ ] 143-13-PLAN.md — The gating decision checkpoint, dual-workflow self-heal, and `gate-ci-green` wiring
+
+**Wave 11** *(blocked on Wave 10 completion)*
+
 - [ ] 143-14-PLAN.md — Publish-path rehearsal pair and the recorded gating decision
 
 ### Phase 144: Signal & Drift Integrity

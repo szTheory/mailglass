@@ -94,9 +94,7 @@ Citations are `file:line` in this worktree unless marked otherwise.
   met only when the instrumented run names the culprit. Wave 1 still runs, and it may refute D-01/D-02.
   — **Reversibility:** reversible.
 
-- **D-04: The evidence bar is artifact class (b+): a written mechanism account, backed by a committed
-  ledger dump from an instrumented full-suite run, plus a deterministic *mechanism-level* regression
-  test.** Do **not** promise a deterministic *full-suite* reproduction — SEED-007 establishes that no
+- **D-04: The evidence bar is artifact class (b+): a written mechanism account, backed by a committed ledger dump from an instrumented full-suite run, plus a deterministic *mechanism-level* regression test.** Do **not** promise a deterministic *full-suite* reproduction — SEED-007 establishes that no
   single file reproduces it, and the healing behavior (D-01.1) makes even a fixed file-pair unstable
   across seeds. Promising it would set the phase up to either fail or fake it.
 
@@ -134,8 +132,7 @@ Citations are `file:line` in this worktree unless marked otherwise.
   whitelist, and already hosts `Mailglass.TestSupport.CitextProbe` — so the namespace is established.
   — **Reversibility:** costly — undo touches 13 test files plus the Credo check's allowlist.
 
-- **D-07: Second confirmed defect (S2) — four raw `Sandbox.mode(repo, {:shared, self()})` calls are
-  provable no-ops whose discarded return value is telling them so.** Verified at `mailer_case.ex:158`,
+- **D-07: Second confirmed defect (S2) — four raw `Sandbox.mode(repo, {:shared, self()})` calls are provable no-ops whose discarded return value is telling them so.** Verified at `mailer_case.ex:158`,
   `mailer_case.ex:248`, `deliver_many_test.exs:17`, `deliver_later_test.exs:37`. All four run *after*
   `start_owner!(shared: true)` has already put the pool in `{:shared, agent_pid}`; the test process is
   not the registered owner and the agent is alive, so `manager.ex:154` returns `:already_shared` and
@@ -180,16 +177,14 @@ Citations are `file:line` in this worktree unless marked otherwise.
   which *replaces* the default list.
   — **Reversibility:** reversible.
 
-- **D-10: The healing call is safe only because sync modules run strictly after, and strictly serially
-  to, async modules** (`ExUnit.Runner.async_loop/4` waits for `map_size(running) == 0` before spawning
+- **D-10: The healing call is safe only because sync modules run strictly after, and strictly serially to, async modules** (`ExUnit.Runner.async_loop/4` waits for `map_size(running) == 0` before spawning
   any sync module). Healing via `Sandbox.mode(repo, :manual)` checks in **all** connections, so running
   it while async modules were live would be catastrophic. The reliance must be commented at the call
   site; it is exercised on both the 1.18/OTP27 and 1.19/OTP28 legs, so a future Elixir change surfaces
   as a matrix divergence rather than silent corruption.
   — **Reversibility:** reversible.
 
-- **D-11: Async policy — a test earns `async: false` only by mutating state global to the pool or the
-  VM.** Exactly three sanctioned reasons: (1) pool-mode mutation (`shared: true` or
+- **D-11: Async policy — a test earns `async: false` only by mutating state global to the pool or the VM.** Exactly three sanctioned reasons: (1) pool-mode mutation (`shared: true` or
   `unsandboxed_module/1`), (2) `Application.put_env/3` on a key the code under test reads (Oban.Testing
   mode, `:async_adapter`, `:adapter`), (3) committed non-transactional DB state (DDL, TRUNCATE,
   migrations). **Cross-process delivery is NOT a reason** — `Sandbox.allow/3` covers it. Reasons 1 and 3
@@ -202,8 +197,7 @@ Citations are `file:line` in this worktree unless marked otherwise.
   byte-identical before and after.
   — **Reversibility:** reversible.
 
-- **D-12: `Sandbox.unboxed_run/2` becomes the documented idiom for new tests needing committed writes,
-  but migrating the existing nine `:auto` files to it is DEFERRED.** Six of them genuinely need pool-wide
+- **D-12: `Sandbox.unboxed_run/2` becomes the documented idiom for new tests needing committed writes, but migrating the existing nine `:auto` files to it is DEFERRED.** Six of them genuinely need pool-wide
   `:auto` because `Ecto.Migrator.with_repo/2` spawns a process `unboxed_run` cannot cover
   (`migration_test.exs:19-22` documents this). The three property files could migrate, but that is a
   test redesign mid-milestone, and Phase 143's job is signal restoration. Ship `unsandboxed/2` as the
@@ -232,8 +226,7 @@ Citations are `file:line` in this worktree unless marked otherwise.
   allowed not to run," and it is the stronger guarantee.
   — **Reversibility:** reversible.
 
-- **D-15: Policy lives in `Mailglass.TestSupport.SuiteFloor` (`test/support/suite_floor.ex`) — hardcoded
-  constants, deliberately.** A direct sibling in spirit to `Mailglass.CILanes`: hardcoded values, a
+- **D-15: Policy lives in `Mailglass.TestSupport.SuiteFloor` (`test/support/suite_floor.ex`) — hardcoded constants, deliberately.** A direct sibling in spirit to `Mailglass.CILanes`: hardcoded values, a
   drift meta-test, a negative control. Committed baseline JSON/text files are **rejected** — a threshold
   a machine rewrites is an artifact, not a decision (the SimpleCov `.last_run.json` failure mode:
   ratchets on flakes, awkward under parallel CI). Enforcement is opt-in via `MAILGLASS_SUITE_FLOOR=1`,
@@ -253,8 +246,7 @@ Citations are `file:line` in this worktree unless marked otherwise.
   already exist. Pin a measured *ceiling* instead.
   — **Reversibility:** reversible.
 
-- **D-17: The `:already_shared` count becomes a first-class named signature, not a grep and not an
-  inference.** ROADMAP criterion 3 wants "exactly zero, not fewer." "Implied by `failures == 0`" is true
+- **D-17: The `:already_shared` count becomes a first-class named signature, not a grep and not an inference.** ROADMAP criterion 3 wants "exactly zero, not fewer." "Implied by `failures == 0`" is true
   today and worthless tomorrow: the moment the lane goes red for three unrelated reasons plus forty
   leaked owners, it reads as "43 failures" and the regression identity is lost — **precisely the SEED-007
   pain**, where every one of these was reported as "citext probe exhausted" and the lane looked like a
@@ -284,8 +276,7 @@ Citations are `file:line` in this worktree unless marked otherwise.
      rather than passing by timeout.
   — **Reversibility:** reversible.
 
-- **D-18a: FINDING — the existing `gate-self-test.yml` is vacuous against `CI Green`, and Phase 143 is
-  the first honest use of it.** Verified: the only two `mix test` invocations in `ci.yml` (`:355`,
+- **D-18a: FINDING — the existing `gate-self-test.yml` is vacuous against `CI Green`, and Phase 143 is the first honest use of it.** Verified: the only two `mix test` invocations in `ci.yml` (`:355`,
   `:362`) are both `working-directory: mailglass_inbound`; every root-project lane runs an explicit file
   list (`verify.support_contract.core`) or a directory glob (`verify.ci_lane_contract` →
   `test test/scripts/`). **No `ci.yml` lane runs the root `mix test` over `test/`**, so the injected
@@ -366,8 +357,7 @@ Citations are `file:line` in this worktree unless marked otherwise.
   — **Reversibility:** costly — display-name changes ripple to `MAINTAINING.md`, drift tests, and
   maintainer muscle memory.
 
-- **D-22: `gate-ci-green` must SELF-HEAL `advisory-matrix.yml` by dispatch — this is the default path,
-  not an edge case.** Verified against the live API:
+- **D-22: `gate-ci-green` must SELF-HEAL `advisory-matrix.yml` by dispatch — this is the default path, not an edge case.** Verified against the live API:
   | SHA | commit | `ci.yml` runs | `advisory-matrix.yml` runs |
   |---|---|---|---|
   | `25c74ca0` | `chore: release main (#149)` — **bot-merged** | 1 (`workflow_dispatch`, the existing self-heal) | **0** |
@@ -450,8 +440,7 @@ Citations are `file:line` in this worktree unless marked otherwise.
   declared-name collision so the drift tests can be honest) and safe without any gate change.
   — **Reversibility:** reversible.
 
-- **D-28: A D-14-style blocking checkpoint gates Wave 4 — "observed green in the shape the gate will
-  actually read it," not "merged."** All five must hold and be pasted into the phase artifact:
+- **D-28: A D-14-style blocking checkpoint gates Wave 4 — "observed green in the shape the gate will actually read it," not "merged."** All five must hold and be pasted into the phase artifact:
   1. Both gating legs green on **three consecutive completed runs across three distinct `main` SHAs**
      (ROADMAP criterion 2's "repeated runs and seeds").
   2. At least one of those is a **`schedule` (cron)** run — plain `main` SHA, cold cache, no PR context.
@@ -462,8 +451,7 @@ Citations are `file:line` in this worktree unless marked otherwise.
   5. The executed-test-count floor is merged and green — otherwise the gate would enforce a vacuum.
   — **Reversibility:** reversible.
 
-- **D-29: The gate gets exercised despite "no release cut" — a rehearsal PAIR, both recorded as
-  criterion-4 evidence.**
+- **D-29: The gate gets exercised despite "no release cut" — a rehearsal PAIR, both recorded as criterion-4 evidence.**
   - **Positive:** after the commit lands on `main`, create a throwaway annotated tag on `main`, dispatch
     `publish-hex.yml` with `dry_run: true`. `publish-core`'s "Skip if version already on Hex" guard
     (`publish-hex.yml:394-401`) resolves the existing version as published and skips, so there is no
