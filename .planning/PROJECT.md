@@ -215,6 +215,17 @@ pin change ships with a CHANGELOG line + documented **Hex retirement** as the ne
 
 ## Current State
 
+**v2.2 IN PROGRESS - CI Signal Integrity & Supply-Chain Hygiene (phases 141-144).** Phase 141 (Lane Truth
+Foundation) complete 2026-07-28, verifier `status: passed` (5/5 must-haves; TRUTH-09, TRUTH-07, TRUTH-05,
+CONFORM-04, HIST-01). Every one of `ci.yml`'s 24 jobs now carries exactly one machine-verified
+classification in `Mailglass.CILanes`, replacing three disagreeing advisory registries and the
+undocumented default bucket that let 9+ lanes silently gate Hex publish while never blocking a merge.
+`gate-ci-green` classifies by registry instead of a name-convention regex; `credo_strict` was split so
+its name matches what it runs (`Credo Strict` + `Design System Conformance (shell gates)`, both green
+live); `MAINTAINING.md` carries a 24-row disposition table bound to the registry by a drift test that
+fails loud and cannot pass vacuously. Validated live on CI run 30408642505. Next: Phase 142
+(Supply-Chain Remediation & Gating).
+
 **v2.1 SHIPPED 2026-07-08 - Postgres + Admin URL Hardening.** All 3 phases (138-140) complete, audit
 `status: passed` (13/13 requirements). Focused no-search-path schema-prefix hardening has hostile
 runtime proof, raw-repo/static guard coverage, and a green `mix verify.schema_prefix` lane. Admin asset
@@ -222,10 +233,10 @@ proof passed for first HTML, hard refresh, direct deep links, alternate mounts, 
 responses, and token-backed computed styling. Docs/backlog truth was reconciled, and active artifacts
 preserve deferred scope. See `milestones/v2.1-MILESTONE-AUDIT.md`.
 
-**Next milestone:** not opened. Start with `/gsd-new-milestone` to define fresh requirements and roadmap.
-Broader UI verification discipline, SEED-003 ecosystem integrations, whole-suite no-search-path fixture
-cleanup, release ceremony, and trigger-based cowlib advisory allowlist cleanup remain deferred outside
-v2.1.
+**Superseded by v2.2** (opened 2026-07-28, see above). Broader UI verification discipline, SEED-003
+ecosystem integrations, whole-suite no-search-path fixture cleanup, release ceremony, and trigger-based
+cowlib advisory allowlist cleanup remain deferred outside v2.1 — the cowlib allowlist cleanup is now
+tracked against Phase 142.
 
 **v2.0 SHIPPED 2026-07-04 - mailglass 2.0.0 / mailglass_admin 2.0.0 / mailglass_inbound 2.0.0 live on
 Hex.** All 6 phases (132-137) complete, audit `status: passed`. Dedicated `mailglass` Postgres schema is
@@ -802,6 +813,7 @@ This document evolves at phase transitions and milestone boundaries.
 **Release-cadence rule (added 2026-05-06 — see ROADMAP.md):** Each milestone closes with a release ceremony to Hex.pm before the next milestone implementation starts. Convention: a `Phase X.5` numbered between the last feature phase of milestone N and the first feature phase of milestone N+1 (e.g. Phase 44.5 between v1.1 and v1.2). The 4-milestone-deep gap that accumulated between `v0.3.2` and `1.0.0` (v0.5 + v0.6 + v1.0 + v1.1 all unreleased on Hex while milestone planning labels marched forward) is the failure mode this rule prevents. Milestone "shipped" status now requires both planning-archive completion AND Hex publish — not just one.
 
 ---
-*Last updated: 2026-07-28 — v2.2 CI Signal Integrity & Supply-Chain Hygiene opened (phases 141-144), with the 2026-07-28 remediation already shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered so it is not re-planned.*
+*Last updated: 2026-07-28 — v2.2 Phase 141 (Lane Truth Foundation) complete, verifier `status: passed` (5/5). All 24 `ci.yml` jobs carry exactly one machine-verified classification; the hidden third gating tier is closed. Next: Phase 142.*
+<!-- prior footer: 2026-07-28 — v2.2 opened (phases 141-144), 2026-07-28 remediation shipped as 2.1.3 / 2.1.3 / 2.1.1 and marked delivered. -->
 <!-- prior footer: 2026-07-08 after v2.1 milestone archive. v2.1 Postgres + Admin URL Hardening shipped with audit `status: passed`; next milestone not opened. -->
 <!-- prior footer: 2026-06-28 — v1.14 Phase 122 (Preview surface redesign) complete, verifier `passed` (PREV-01). v1.14 Operator IA & Lived-Experience Redesign in progress (the 4th admin-UI quality pass; top-down JTBD/IA-led + adversarial persona-critic method; adopts phoenix_storybook dev-only; ships to Hex). Previous milestone **v1.13 Admin Design-System Stress Test & UX Uplift (v3)** SHIPPED 2026-06-21 — live at **1.8.0 / 1.8.0 / 1.5.0**, audit `status: passed` (41/41, 9 phases), now fully archived (phase dirs in `milestones/v1.13-phases/`).* -->
