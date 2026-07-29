@@ -37,7 +37,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 
 ### VULN — Supply-chain remediation
 
-- [ ] **VULN-02**: Every dependency PR left with auto-merge enabled on 2026-07-28 is confirmed either merged
+- [x] **VULN-02**: Every dependency PR left with auto-merge enabled on 2026-07-28 is confirmed either merged
   or closed with a recorded reason. No PR is left in an indeterminate state.
 
 - [x] **VULN-05**: The CI-side audit lanes honor the same accepted-advisory allowlist that
@@ -194,7 +194,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | VULN-05 | Phase 142 | Complete |
 | VULN-03 | Phase 142 | Pending |
 | VULN-06 | Phase 142 | Complete |
-| VULN-02 | Phase 142 | Pending |
+| VULN-02 | Phase 142 | Complete |
 | VULN-04 | Phase 142 | Pending |
 | HARNESS-01 | Phase 143 | Pending |
 | HARNESS-02 | Phase 143 | Pending |

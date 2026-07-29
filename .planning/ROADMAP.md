@@ -103,7 +103,7 @@ Plans:
 **Wave 1**
 
 - [x] 142-01-PLAN.md — Tracer: `Mailglass.SupplyChain.AcceptedAdvisories` + `mix mailglass.audit --kind hex|deps` wired into `hex_audit`/`deps_audit_advisory`, thin-delegated from `mailglass.publish.check.ex`, F1/F2 fixes, folded todo closed [wave 1]
-- [ ] 142-02-PLAN.md — Disposition all 13 dependabot PRs individually (merge or close + reason); parallel with 142-01, zero file overlap [wave 1]
+- [x] 142-02-PLAN.md — Disposition all 13 dependabot PRs individually (merge or close + reason); parallel with 142-01, zero file overlap [wave 1]
 
 **Wave 2** *(blocked on 142-01)*
 
@@ -153,7 +153,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
-| 142. Supply-Chain Remediation & Gating | 1/5 | In Progress|  |
+| 142. Supply-Chain Remediation & Gating | 2/5 | In Progress|  |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
