@@ -107,7 +107,7 @@ Plans:
 
 **Wave 2** *(blocked on 142-01)*
 
-- [ ] 142-03-PLAN.md — D-14 blocking checkpoint: confirm Hex Audit is green with cowlib genuinely detected-and-suppressed on a real CI run, plus the negative-control proof, before the promotion starts [wave 2]
+- [x] 142-03-PLAN.md — D-14 blocking checkpoint: confirm Hex Audit is green with cowlib genuinely detected-and-suppressed on a real CI run, plus the negative-control proof, before the promotion starts [wave 2]
 
 **Wave 3** *(blocked on 142-03)*
 
@@ -153,7 +153,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
-| 142. Supply-Chain Remediation & Gating | 2/5 | In Progress|  |
+| 142. Supply-Chain Remediation & Gating | 3/5 | In Progress|  |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 

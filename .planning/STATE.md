@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 status: executing
-stopped_at: Completed 142-02-PLAN.md
-last_updated: "2026-07-29T03:55:04.722Z"
+stopped_at: Completed 142-03-PLAN.md
+last_updated: "2026-07-29T04:30:44.913Z"
 last_activity: 2026-07-29
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
+  completed_plans: 9
   percent: 25
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 142 (supply-chain-remediation-gating) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-07-29
 
-Progress: [███████░░░] 73%
+Progress: [████████░░] 82%
 
 ## v2.2 Milestone Intent
 
@@ -333,6 +333,7 @@ release debug campaign.
 - [Phase ?]: 142-01: D-10 expired_entries/unused_entries scoped to --kind hex only (Decision 2) — mix deps.audit doesn't natively detect the two live entries
 - [Phase ?]: 142-02: Maintainer overrode planning-time lean, merged #114 (mailglass_admin credo bump) as a genuine outstanding bump on an independent lockfile, not a duplicate of merged #78 (root-only).
 - [Phase ?]: 142-02: #96 (igniter bump) closed with recorded genuine-merge-conflict reason rather than rebased — real 3-way lockfile conflict on transitive deps, auto-rebase disabled after 30 days open.
+- [Phase ?]: [142-03] D-14 checkpoint satisfied: live PR #144 CI run (job 90481258959, SHA e0289746) shows Hex Audit green because the allowlist detected-and-suppressed EEF-CVE-2026-43966/43969, plus a local negative control proving the allowlist fails closed — 142-04's gate promotion is cleared to proceed.
 
 ## Quick Tasks Completed
 
@@ -368,6 +369,7 @@ release debug campaign.
 | Phase 141 P06 | 55min | 3 tasks | 2 files |
 | Phase 142 P01 | 16min | 3 tasks | 11 files |
 | Phase 142 P02 | 40min | 2 tasks | 0 files |
+| Phase 142 P03 | 4min | 1 tasks | 1 files |
 
 ## Deferred Items
 
@@ -535,8 +537,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-29T03:55:04.717Z
-**Stopped at:** Completed 142-02-PLAN.md
+**Last session:** 2026-07-29T04:30:19.248Z
+**Stopped at:** Completed 142-03-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
