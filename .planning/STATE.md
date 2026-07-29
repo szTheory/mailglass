@@ -2,16 +2,17 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-status: executing
-stopped_at: Completed 142-04-PLAN.md
-last_updated: "2026-07-29T04:38:48.851Z"
+current_phase: 142
+current_phase_name: supply-chain-remediation-gating
+status: verifying
+stopped_at: Completed 142-05-PLAN.md
+last_updated: "2026-07-29T04:44:12.615Z"
 last_activity: 2026-07-29
 progress:
-  total_phases: 4
-  completed_phases: 1
+  total_phases: 2
+  completed_phases: 2
   total_plans: 11
-  completed_plans: 10
-  percent: 25
+  completed_plans: 11
 ---
 
 # Project State
@@ -27,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 Phase: 142 (supply-chain-remediation-gating) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-29
 
-Progress: [█████████░] 91%
+Progress: [██████████] 100%
 
 ## v2.2 Milestone Intent
 
@@ -336,6 +337,7 @@ release debug campaign.
 - [Phase ?]: [142-03] D-14 checkpoint satisfied: live PR #144 CI run (job 90481258959, SHA e0289746) shows Hex Audit green because the allowlist detected-and-suppressed EEF-CVE-2026-43966/43969, plus a local negative control proving the allowlist fails closed — 142-04's gate promotion is cleared to proceed.
 - [Phase ?]: [142-04] Atomic promotion (D-04): Hex Audit + Deps Audit (renamed from Deps Audit Advisory) moved from publish-gating/advisory to merge-gating in one commit (34702fde) — ci_green.needs, Mailglass.CILanes.required_lanes/0, and publish-hex.yml's classification arrays all changed together; continue-on-error deleted (D-07) so the promotion actually blocks PR merges, not just publish.
 - [Phase ?]: [142-04] Two rename-consistency fixes beyond the plan's nine literal sites landed in the same commit as Rule 1 bug fixes: ci_parity_drift_test.exs's matcher_for key + matcher_lanes stale-reference entry (both named in CONTEXT.md's D-06 blast radius) and MAINTAINING.md's reason text reworded to avoid the literal retired string 'Deps Audit Advisory', which the plan's own acceptance criteria required be absent.
+- [Phase ?]: 142-05: Split the raw-audit-command mentions across two lines in MAINTAINING.md's new Dependency Advisory Triage section to satisfy the plan's own acceptance-criteria grep, which counts matching lines not occurrences
 
 ## Quick Tasks Completed
 
@@ -373,6 +375,7 @@ release debug campaign.
 | Phase 142 P02 | 40min | 2 tasks | 0 files |
 | Phase 142 P03 | 4min | 1 tasks | 1 files |
 | Phase 142 P04 | 22min | 1 tasks | 6 files |
+| Phase 142 P05 | 12min | 1 tasks | 1 files |
 
 ## Deferred Items
 
@@ -540,8 +543,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-29T04:38:48.847Z
-**Stopped at:** Completed 142-04-PLAN.md
+**Last session:** 2026-07-29T04:44:12.600Z
+**Stopped at:** Completed 142-05-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

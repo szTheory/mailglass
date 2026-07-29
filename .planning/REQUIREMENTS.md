@@ -53,7 +53,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 - [x] **VULN-06**: Each allowlisted advisory carries a recorded reason and a re-check date, and the lane
   surfaces an entry whose upstream fix has landed, so an exception cannot silently become permanent.
 
-- [ ] **VULN-04**: A documented triage cadence exists that explicitly covers **transitive** dependencies,
+- [x] **VULN-04**: A documented triage cadence exists that explicitly covers **transitive** dependencies,
   naming who checks what, how often, and the response expectation by severity. It states plainly that
   Dependabot cannot auto-file a Hex transitive fix requiring a parent bump — documented upstream behavior,
   not a repo defect — and that reading audit output directly is therefore the only path for that class.
@@ -195,7 +195,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | VULN-03 | Phase 142 | Complete |
 | VULN-06 | Phase 142 | Complete |
 | VULN-02 | Phase 142 | Complete |
-| VULN-04 | Phase 142 | Pending |
+| VULN-04 | Phase 142 | Complete |
 | HARNESS-01 | Phase 143 | Pending |
 | HARNESS-02 | Phase 143 | Pending |
 | HARNESS-03 | Phase 143 | Pending |

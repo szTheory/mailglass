@@ -97,7 +97,7 @@ Plans:
   4. Every dependabot PR left with auto-merge enabled as of 2026-07-28 is confirmed merged or closed with a recorded reason — none remain in an indeterminate state.
   5. A written triage cadence names who reads raw `mix hex.audit` output (not just the dependabot PR queue) for transitive-dependency advisories, how often, and the response expectation by severity.
 
-**Plans**: 5 plans
+**Plans**: 5/5 plans executed
 
 Plans:
 **Wave 1**
@@ -115,7 +115,7 @@ Plans:
 
 **Wave 4** *(blocked on 142-04)*
 
-- [ ] 142-05-PLAN.md — `MAINTAINING.md` § "Dependency Advisory Triage" cadence doc (VULN-04) [wave 4]
+- [x] 142-05-PLAN.md — `MAINTAINING.md` § "Dependency Advisory Triage" cadence doc (VULN-04) [wave 4]
 
 ### Phase 143: Test-Harness Truth
 
@@ -153,7 +153,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
-| 142. Supply-Chain Remediation & Gating | 4/5 | In Progress|  |
+| 142. Supply-Chain Remediation & Gating | 5/5 | In Progress|  |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
