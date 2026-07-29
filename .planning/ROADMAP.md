@@ -111,7 +111,7 @@ Plans:
 
 **Wave 3** *(blocked on 142-03)*
 
-- [ ] 142-04-PLAN.md — The atomic promotion: Hex Audit + Deps Audit (renamed) become merge-gating in one commit across all nine D-05 sites [wave 3]
+- [x] 142-04-PLAN.md — The atomic promotion: Hex Audit + Deps Audit (renamed) become merge-gating in one commit across all nine D-05 sites [wave 3]
 
 **Wave 4** *(blocked on 142-04)*
 
@@ -153,7 +153,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
-| 142. Supply-Chain Remediation & Gating | 3/5 | In Progress|  |
+| 142. Supply-Chain Remediation & Gating | 4/5 | In Progress|  |
 | 143. Test-Harness Truth | 0/TBD | Not started | - |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 

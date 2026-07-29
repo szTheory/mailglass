@@ -45,7 +45,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   `ci.yml`'s `hex_audit` runs bare `mix hex.audit` with zero allowlist logic. *(Hard precondition for
   VULN-03 — promoting the lane without this reds every PR on the already-accepted cowlib advisories.)*
 
-- [ ] **VULN-03**: **Both** the Hex Audit and Deps Audit lanes are merge-gating — present in
+- [x] **VULN-03**: **Both** the Hex Audit and Deps Audit lanes are merge-gating — present in
   `ci_green.needs` and in `Mailglass.CILanes.required_lanes()`, with the parity-drift test updated — so a
   newly-published HIGH advisory blocks merge instead of accumulating. *(Deps Audit / `mix_audit` is the lane
   that covers transitive dependencies, i.e. the `hpax` case; Hex Audit alone would not close it.)*
@@ -192,7 +192,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | CONFORM-04 | Phase 141 | Complete |
 | HIST-01 | Phase 141 | Complete |
 | VULN-05 | Phase 142 | Complete |
-| VULN-03 | Phase 142 | Pending |
+| VULN-03 | Phase 142 | Complete |
 | VULN-06 | Phase 142 | Complete |
 | VULN-02 | Phase 142 | Complete |
 | VULN-04 | Phase 142 | Pending |
