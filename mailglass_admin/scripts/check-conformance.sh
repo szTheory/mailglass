@@ -294,19 +294,35 @@ fi
 # The operator shell and preview shell are mountable inside host apps; each
 # root must own an isolated stacking context so host CSS/z-index values cannot
 # accidentally interleave with admin overlays.
-if ! grep -q 'mg-admin-root' "${LIB}/mailglass_admin/operator/shell.ex" 2>/dev/null; then
-  echo "FAIL: SCOPE-GATE — operator shell root missing mg-admin-root isolation" >&2
+#
+# Both shells render their root through `AdminShell.shell`, which is what
+# actually carries `mg-admin-root`. Asserting the literal class string inside
+# each shell file therefore tested the wrong thing: it failed even though the
+# isolation was correctly present via the shared component, and it would have
+# passed on a shell that merely mentioned the class in a comment. Verify the
+# real invariant instead — the shared root owns the class, and each mountable
+# shell renders through that root.
+if ! grep -q 'mg-admin-root' "${LIB}/mailglass_admin/admin_shell.ex" 2>/dev/null; then
+  echo "FAIL: SCOPE-GATE — AdminShell root missing mg-admin-root isolation" >&2
   errors=$((errors + 1))
 fi
-if ! grep -q 'mg-admin-root' "${LIB}/mailglass_admin/preview_live.ex" 2>/dev/null; then
-  echo "FAIL: SCOPE-GATE — preview shell root missing mg-admin-root isolation" >&2
-  errors=$((errors + 1))
-fi
+for shell_file in operator/shell.ex preview_live.ex; do
+  if ! grep -qE '<AdminShell\.shell|mg-admin-root' "${LIB}/mailglass_admin/${shell_file}" 2>/dev/null; then
+    echo "FAIL: SCOPE-GATE — ${shell_file} root is not isolated (render via AdminShell.shell or carry mg-admin-root)" >&2
+    errors=$((errors + 1))
+  fi
+done
 
 # TOKEN-SCOPE-GATE: Phase 109 must not pull forward later theme-picker work.
 # System theme remains CSS/root-layer behavior only: no JS storage, client hook,
 # theme-controller input, matchMedia script, or explicit "system" data-theme.
-if grep -rEn 'phx-hook=.*theme|localStorage|sessionStorage|document\.documentElement|window\.matchMedia|theme-controller|data-theme="system"|data-theme=\{[^}]*system|system[/-]light[/-]dark|light[/-]dark[/-]system' "$LIB" --include="*.ex" 2>/dev/null; then
+#
+# `document.documentElement` is matched only when it is used to read or write a
+# theme/colour-scheme value. A bare `documentElement` touch is not theme-picker
+# creep: the js-enabled marker (`classList.add("mg-js")`, which scopes the
+# timestamp skeleton CSS) legitimately needs it and has nothing to do with
+# theming. Matching the bare property made the gate fire on unrelated code.
+if grep -rEn 'phx-hook=.*theme|localStorage|sessionStorage|document\.documentElement[^\n]*(theme|colorScheme|color-scheme)|window\.matchMedia|theme-controller|data-theme="system"|data-theme=\{[^}]*system|system[/-]light[/-]dark|light[/-]dark[/-]system' "$LIB" --include="*.ex" 2>/dev/null; then
   echo "FAIL: TOKEN-SCOPE-GATE — theme hook/storage/system picker creep found" >&2
   errors=$((errors + 1))
 fi
