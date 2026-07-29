@@ -293,6 +293,51 @@ never silently reach inbound adopters because the inbound `== X.Y.Z` constraint
 would hold them on the prior version until a deliberate paired inbound release.
 `mix hex.retire` is the explicit replacement for that structural guarantee.
 
+## Dependency Advisory Triage
+
+Not every advisory arrives as a dependabot pull request. Dependabot can only
+ever propose a fix for a *direct* dependency it controls the version
+constraint for — it cannot auto-file a fix for a Hex transitive dependency
+whose advisory can only be closed by bumping a *parent* package's version
+constraint. That is documented upstream Dependabot behavior, not a repo
+defect. The `hpax` advisory this milestone opened on is the literal case: no
+PR was ever possible for it, and the finding sat unactioned until someone read
+`mix hex.audit` and `mix deps.audit` output directly. Reading raw audit output
+by hand is therefore the only path for that class of advisory, not a fallback
+for when the PR queue is running behind.
+
+**Who:** `szTheory`, the sole maintainer (see "Bus Factor & Continuity" above).
+
+**What:** run `mix mailglass.audit --kind hex` (which wraps `mix hex.audit`)
+and `mix mailglass.audit --kind deps` (which wraps `mix deps.audit`) locally,
+or read the `Hex Audit` / `Deps Audit` CI job logs on `main` (both cover all
+three Mix projects — root, `mailglass_admin`, `mailglass_inbound`). This is a
+different activity from clearing the open dependabot PR queue: the PR queue
+only ever proposes a fix for a direct dependency, so a clean queue proves
+nothing about a transitive finding with no PR attached to it.
+
+**How often:** weekly, aligned with `.github/dependabot.yml`'s existing weekly
+schedule, plus immediately whenever `Hex Audit` or `Deps Audit` goes red on
+`main` — both lanes are merge-gating as of Phase 142/VULN-03, so a red state is
+visible the moment it happens instead of waiting for the next scheduled pass.
+
+**Response expectation, by severity** — bounded to what one unpaid maintainer
+can sustainably keep, matching the Security Response SLA numbers below:
+written to be kept, not aspired to.
+
+- **HIGH / CRITICAL:** within 14 days — a patch, or a dated allowlist
+  exception recorded with a reason and a `recheck_by` date. Mirrors the
+  "Mitigation or workaround for critical issues" number below.
+- **MEDIUM:** within 30 days.
+- **LOW:** at the next scheduled weekly triage — no forced timeline.
+
+A missed cycle does not lose signal: the next `mix hex.audit`/`mix deps.audit`
+run re-surfaces every outstanding advisory from scratch, so nothing is
+silently dropped, only delayed. Mailglass is single-maintainer (see "Bus
+Factor & Continuity" above), so concurrent-maintainer triage races are out of
+scope for this cadence — that is an already-documented posture, not a new gap
+this section invents.
+
 ## Security Response SLA
 
 Single-maintainer numbers, written to be kept rather than aspired to.
