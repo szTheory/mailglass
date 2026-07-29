@@ -118,16 +118,25 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
 
   defp async_false?(%ExUnit.TestModule{tags: tags}), do: tags[:async] == false
 
-  # D-10: this healing call is safe ONLY because `ExUnit.Runner.async_loop/4`
-  # waits for `map_size(running) == 0` before spawning any `async: false`
-  # module — sync modules run strictly after, and strictly serially to,
-  # async modules. `SandboxOwnership.probe/1` calls
-  # `Sandbox.mode(repo, :manual)`, which checks in EVERY live connection; were
-  # this called while an async module's connection was still checked out, it
-  # would rip that connection out from under a running test. The reliance is
-  # exercised on both the 1.18/OTP 27 and 1.19/OTP 28 legs (see the advisory
-  # matrix), so a future Elixir scheduling change surfaces as a matrix
-  # divergence rather than silent corruption.
+  # `SandboxOwnership.probe/1` is a pure read (`:sys.get_state/1` on the
+  # ownership manager) — it never mutates the pool, so calling it here has no
+  # effect on which connections are checked out or on the run's pass/fail
+  # status. This is deliberate: an earlier version of `probe/1` called
+  # `Sandbox.mode(repo, :manual)` directly, which both detects AND heals in
+  # one call (it checks in every live connection unconditionally) — that
+  # collapsed detection into healing, made `{:leaked, term}` unreachable (the
+  # underlying call always replies `:ok`), and would have silently masked
+  # every leak this phase exists to expose. See `sandbox_ownership.ex`'s
+  # moduledoc for the full account.
+  #
+  # D-10 (carried forward for whoever adds a heal step later, e.g. Wave 2's
+  # `SandboxOwnership.checkout!/1`): any FUTURE call that heals by resetting
+  # pool mode is safe ONLY because `ExUnit.Runner.async_loop/4` waits for
+  # `map_size(running) == 0` before spawning any `async: false` module — sync
+  # modules run strictly after, and strictly serially to, async modules. Such
+  # a call must never run while an async module's connection is still checked
+  # out. This probe does not heal, so that constraint is not yet exercised by
+  # this module — record it here so it isn't lost when healing is added.
   defp probe_module_boundary(%ExUnit.TestModule{name: name}, state) do
     case state.probe_fun.(Mailglass.TestRepo) do
       :ok ->
