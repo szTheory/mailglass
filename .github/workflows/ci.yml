@@ -568,17 +568,12 @@ jobs:
         run: mix mailglass.audit --kind hex
 
   deps_audit_advisory:
-    name: Deps Audit Advisory (Elixir 1.18 / OTP 27)
+    name: Deps Audit (Elixir 1.18 / OTP 27)
     runs-on: ubuntu-latest
     needs: [changes]
     if: needs.changes.outputs.code == 'true'
-    # Advisory-only: mix deps.audit surfaces transitive-dep advisories from the
-    # elixir-security-advisories DB. Under an unfixable CVE wave it will red, so
-    # continue-on-error keeps it non-blocking on PRs. The publish gate
-    # (mailglass.publish.check Step 14) is where a non-allowlisted advisory
-    # actually hard-blocks delivery. The "Advisory (" naming convention is what
-    # publish-hex.yml gate-ci-green's isAdvisory() matches to skip it (SUPPLY-01).
-    continue-on-error: true
+    # Promoted to merge-gating (Phase 142/VULN-03); disposition recorded in
+    # MAINTAINING.md § "Required Checks".
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -1153,6 +1148,8 @@ jobs:
       - support_contract_core
       - support_contract_admin
       - trust_lane_repo_head
+      - hex_audit
+      - deps_audit_advisory
     steps:
       - name: Evaluate required lane results
         run: |
@@ -1162,7 +1159,9 @@ jobs:
             "installer_host_smoke=${{ needs.installer_host_smoke.result }}" \
             "support_contract_core=${{ needs.support_contract_core.result }}" \
             "support_contract_admin=${{ needs.support_contract_admin.result }}" \
-            "trust_lane_repo_head=${{ needs.trust_lane_repo_head.result }}"
+            "trust_lane_repo_head=${{ needs.trust_lane_repo_head.result }}" \
+            "hex_audit=${{ needs.hex_audit.result }}" \
+            "deps_audit_advisory=${{ needs.deps_audit_advisory.result }}"
           do
             lane="${job_result%%=*}"
             result="${job_result##*=}"

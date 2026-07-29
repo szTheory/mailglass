@@ -82,7 +82,9 @@ defmodule Mailglass.CILanes do
     "Support Contract Admin (Elixir 1.18 / OTP 27)",
     "Compile No Optional Deps (Elixir 1.18 / OTP 27)",
     "Trust Lane Repo Head (Elixir 1.18 / OTP 27)",
-    "Installer Host Smoke"
+    "Installer Host Smoke",
+    "Hex Audit (Elixir 1.18 / OTP 27)",
+    "Deps Audit (Elixir 1.18 / OTP 27)"
   ]
 
   # Hygiene lanes `mix ci` reproduces (verbatim ci.yml name:).
@@ -92,8 +94,6 @@ defmodule Mailglass.CILanes do
     "Credo Strict (Elixir 1.18 / OTP 27)",
     "Dialyzer (Elixir 1.18 / OTP 27)",
     "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
-    "Hex Audit (Elixir 1.18 / OTP 27)",
-    "Deps Audit Advisory (Elixir 1.18 / OTP 27)",
     "Mix Task Tests (Elixir 1.18 / OTP 27)",
     "Inbound Test (Elixir 1.18 / OTP 27)",
     "Inbound Compile No Optional Deps (Elixir 1.18 / OTP 27)"
@@ -109,7 +109,6 @@ defmodule Mailglass.CILanes do
   # a different question: "what does `mix ci` reproduce locally?" (MIXCI-03). A
   # lane can be locally reproduced AND publish-gating (Dialyzer is).
   @advisory_classified_lanes [
-    "Deps Audit Advisory (Elixir 1.18 / OTP 27)",
     "Operator Browser Gate (Elixir 1.18 / OTP 27 / Node 22)",
     "Demo Browser Evidence (Docker Compose / Chromium)",
     "Preview Capture Advisory (Elixir 1.18 / OTP 27 / Node 22)"
@@ -127,7 +126,6 @@ defmodule Mailglass.CILanes do
     "Design System Conformance (shell gates)",
     "Dialyzer (Elixir 1.18 / OTP 27)",
     "Docs Warnings as Errors (Elixir 1.18 / OTP 27)",
-    "Hex Audit (Elixir 1.18 / OTP 27)",
     "Installer Golden Gate (Elixir 1.18 / OTP 27)",
     "Trust Lane Clean Baseline (Elixir 1.18 / OTP 27)",
     "Branch Protection Advisory"
@@ -145,7 +143,7 @@ defmodule Mailglass.CILanes do
   ]
 
   @doc """
-  The five required branch-protection leaf display names, VERBATIM as they appear as
+  The seven required branch-protection leaf display names, VERBATIM as they appear as
   `name:` in `.github/workflows/ci.yml`.
   """
   @spec required_lanes() :: [String.t()]
