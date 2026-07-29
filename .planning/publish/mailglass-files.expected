@@ -124,6 +124,7 @@ lib/mailglass/repo.ex
 lib/mailglass/router.ex
 lib/mailglass/schema.ex
 lib/mailglass/stream.ex
+lib/mailglass/supply_chain/accepted_advisories.ex
 lib/mailglass/suppression.ex
 lib/mailglass/suppression/auto_suppress.ex
 lib/mailglass/suppression/entry.ex
