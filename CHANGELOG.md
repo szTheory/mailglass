@@ -14,6 +14,13 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.2.0](https://github.com/szTheory/mailglass/compare/mailglass-v2.1.3...mailglass-v2.2.0) (2026-07-29)
+
+
+### Features
+
+* **142:** supply-chain remediation — allowlist wiring + promote audit lanes to merge-gating ([#144](https://github.com/szTheory/mailglass/issues/144)) ([4659846](https://github.com/szTheory/mailglass/commit/46598461143b9413d57b5746acec3b84e9735614))
+
 ## [2.1.3](https://github.com/szTheory/mailglass/compare/mailglass-v2.1.2...mailglass-v2.1.3) (2026-07-28)
 
 

@@ -70,7 +70,7 @@ Inbound setup is manual in this phase. There is no generated setup path for
 defp deps do
   [
     {:mailglass_inbound, "~> 2.1"},
-    {:mailglass, "~> 2.1"},
+    {:mailglass, "~> 2.2"},
     {:oban, "~> 2.21"}
   ]
 end
