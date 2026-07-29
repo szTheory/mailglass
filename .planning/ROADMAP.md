@@ -135,7 +135,7 @@ Plans:
 **Wave 1**
 
 - [x] 143-01-PLAN.md — Tracer: suite-wide pool-hygiene observation, widened to all three leak classes
-- [ ] 143-02-PLAN.md — Probe inputs (`required_only`, `deadline_minutes`) + record the D-18a vacuity finding
+- [x] 143-02-PLAN.md — Probe inputs (`required_only`, `deadline_minutes`) + record the D-18a vacuity finding
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -202,7 +202,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 5/5 | Complete    | 2026-07-29 |
-| 143. Test-Harness Truth | 1/14 | In Progress|  |
+| 143. Test-Harness Truth | 2/14 | In Progress|  |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
 ## Planted Seeds

@@ -71,7 +71,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 - [ ] **HARNESS-02**: Core Full Suite passes across all four matrix legs (Elixir 1.18/OTP 27 and 1.19/OTP 28,
   each × `public` and `mailglass` schema).
 
-- [ ] **HARNESS-03**: The recovered tests are proven to genuinely execute and assert — not skipped, excluded,
+- [x] **HARNESS-03**: The recovered tests are proven to genuinely execute and assert — not skipped, excluded,
   or tagged away to manufacture green. Proof is mechanical, not narrative: a test-count floor that fails if
   the executed count drops, plus a deliberate-failure probe following the existing `gate-self-test.yml`
   pattern pointed at Core Full Suite.
@@ -198,7 +198,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | VULN-04 | Phase 142 | Complete |
 | HARNESS-01 | Phase 143 | In Progress (143-01 of 7 contributing plans landed: 143-01, 03, 04, 05, 06, 07, 08) |
 | HARNESS-02 | Phase 143 | Pending |
-| HARNESS-03 | Phase 143 | Pending |
+| HARNESS-03 | Phase 143 | Complete |
 | HARNESS-04 | Phase 143 | Pending |
 | CONFORM-02 | Phase 144 | Pending |
 | TRUTH-02 | Phase 144 | Pending |

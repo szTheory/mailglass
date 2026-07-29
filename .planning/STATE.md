@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 status: executing
-stopped_at: Completed 143-01-PLAN.md
-last_updated: "2026-07-29T18:54:04.915Z"
+stopped_at: Completed 143-02-PLAN.md
+last_updated: "2026-07-29T19:13:31.633Z"
 last_activity: 2026-07-29
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 25
-  completed_plans: 12
-  percent: 48
+  completed_plans: 13
+  percent: 50
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 2 of 14
+Plan: 3 of 14
 Status: Ready to execute
 Last activity: 2026-07-29
 
-Progress: [█████░░░░░] 48%
+Progress: [█████░░░░░] 52%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -355,6 +355,8 @@ release debug campaign.
 - [Phase ?]: [143-01] probe/1 reads Sandbox pool ownership mode via :sys.get_state/1 on the DBConnection.Ownership.Manager process rather than calling Sandbox.mode/2 (which always heals+replies :ok and made {:leaked, term} unreachable) — coordinator-caught Rule 1 bug, fixed and verified against a real leak.
 - [Phase ?]: [143-01] baseline_tables_present?/1 runs its information_schema.tables query through Sandbox.unboxed_run/2 so the formatter's own GenServer process (no Sandbox checkout of its own) can run it without an ownership error; never mutates pool mode.
 - [Phase ?]: [143-01] Detection and healing are fully separated for this plan — no heal mechanism exists yet; an explicit, off-by-default heal step is deferred to Wave 2's SandboxOwnership.checkout!/1.
+- [Phase ?]: [143-02] Kept ci.yml untouched; routed the CI Green test-suite-blindness fix to Phase 144 as TOOLING-DEFECTS.md TOOL-02, backed by a live gate-self-test.yml dispatch (run 30482341388/30482357828) rather than static inference alone.
+- [Phase ?]: [143-02] Corrected the probe's own 'gate does not enforce halt-on-failure' framing to the precise mechanism: CI Green's seven needs (ci.yml:1141-1171) contain no root-suite test lane, so the gate is structurally blind to test regressions, not failing to enforce a rule it never had.
 
 ## Quick Tasks Completed
 
@@ -394,6 +396,7 @@ release debug campaign.
 | Phase 142 P04 | 22min | 1 tasks | 6 files |
 | Phase 142 P05 | 12min | 1 tasks | 1 files |
 | Phase 143 P01 | 55min | 2 tasks | 5 files |
+| Phase 143 P02 | 20min | 2 tasks | 3 files |
 
 ## Deferred Items
 
@@ -561,8 +564,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-29T18:54:04.909Z
-**Stopped at:** Completed 143-01-PLAN.md
+**Last session:** 2026-07-29T19:13:31.629Z
+**Stopped at:** Completed 143-02-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
