@@ -54,11 +54,11 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
   #     Title: <title>
   #     ...
   #
-  # The advisory id (GHSA-*) does NOT match the @accepted_advisories keys
-  # (EEF-CVE-*), so a deps.audit finding is NEVER auto-suppressed by the hex.audit
-  # allowlist — it always surfaces. That is the intended asymmetry: the cowlib
-  # advisories the hex.audit allowlist accepts are NOT in the mix_audit DB, so
-  # deps.audit stays clean for them today. See the SUMMARY (A4) for the format
+  # unaccepted_deps_audit_findings/1 now matches by :id OR any :aliases entry
+  # (Mailglass.SupplyChain.AcceptedAdvisories, Phase 142/VULN-05), so a
+  # deps.audit finding IS suppressed when its GHSA id is a registered alias
+  # (e.g. GHSA-g2wm-735q-3f56 for EEF-CVE-2026-43969's cowlib entry); a GHSA id
+  # with no matching alias still surfaces. See the SUMMARY (A4) for the format
   # provenance.
   describe "unaccepted_deps_audit_findings/1" do
     test "a non-allowlisted GHSA finding in deps.audit human format returns a non-empty list" do
@@ -105,12 +105,11 @@ defmodule Mailglass.Publish.AuditAllowlistTest do
       assert Check.unaccepted_deps_audit_findings("No vulnerabilities found.") == []
     end
 
-    test "suppresses a finding whose GHSA id is in the accepted allowlist" do
-      # Defensive: if a future accepted advisory is keyed by its GHSA id, a
-      # matching deps.audit block must be suppressed (mirrors hex.audit semantics).
-      # Uses the real accepted EEF-CVE id, which is NOT a GHSA id, so this block
-      # is NOT suppressed today — proving the allowlist filter is wired without a
-      # false positive.
+    test "a non-aliased GHSA id is still correctly NOT suppressed (negative control)" do
+      # This GHSA id is NOT a registered alias of either accepted cowlib entry,
+      # so it must still surface. The real positive alias-suppression proof
+      # (a GHSA id that IS a registered alias, e.g. GHSA-g2wm-735q-3f56) lives
+      # in test/mailglass/supply_chain/accepted_advisories_test.exs (F2).
       output = """
       Name: cowlib
       Version: 2.17.1

@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Mailglass.Audit do
   def evaluate(:hex, dir_outputs) do
     {blocking, accepted, matched_ids} =
       Enum.reduce(dir_outputs, {[], [], MapSet.new()}, fn {dir, output, status},
-                                                            {blocking, accepted, matched} ->
+                                                          {blocking, accepted, matched} ->
         dir_matched = AcceptedAdvisories.matched_hex_audit_ids(output)
 
         blocking =

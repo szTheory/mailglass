@@ -45,27 +45,6 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
 
   use Mix.Task
 
-  # Accepted hex.audit advisories — advisory IDs we deliberately allow past the
-  # Step-13 gate because NO patched version exists in ANY release of the affected
-  # package (OSV reports the advisory as "introduced <ver>" with no `fixed` event)
-  # AND the dep is a transitive ecosystem fixture we cannot drop. Every OTHER
-  # advisory (anything with an available fix) still hard-blocks delivery. Keyed by
-  # the primary EEF-CVE id reported on the hex.audit finding line; revisit and
-  # remove each entry the moment upstream ships a fix.
-  #
-  # cowlib (transitive via cowboy/plug_cowboy/phoenix; unavoidable for any web
-  # server) — both introduced in 2.9.0, unfixed through the latest 2.17.1:
-  #   * EEF-CVE-2026-43966 (MEDIUM) — HTTP Response Splitting via non-VCHAR bytes
-  #   * EEF-CVE-2026-43969 (LOW)    — Cookie Request Header Injection
-  # Accepted 2026-06-30 for the v1.14 release; see
-  # .planning/threads/v1.14-release-paused-dep-security-wave.md.
-  @accepted_advisories %{
-    "EEF-CVE-2026-43966" =>
-      "cowlib HTTP Response Splitting (MEDIUM) — no upstream fix as of 2.17.1",
-    "EEF-CVE-2026-43969" =>
-      "cowlib Cookie Request Header Injection (LOW) — no upstream fix as of 2.17.1"
-  }
-
   @impl Mix.Task
   def run(argv) do
     {opts, rest, invalid} = OptionParser.parse(argv, strict: [package: :string, keep: :boolean])
@@ -1079,9 +1058,13 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     if status != 0 do
       case unaccepted_audit_findings(output) do
         [] ->
-          # hex.audit exited non-zero, but every finding is in @accepted_advisories
-          # (unfixable, no upstream patch). Allow delivery; record the acceptance.
-          accepted = @accepted_advisories |> Map.values() |> Enum.join("; ")
+          # hex.audit exited non-zero, but every finding is in the shared
+          # Mailglass.SupplyChain.AcceptedAdvisories allowlist (unfixable, no upstream patch). Allow
+          # delivery; record the acceptance.
+          accepted =
+            Mailglass.SupplyChain.AcceptedAdvisories.entries()
+            |> Enum.map(& &1.reason)
+            |> Enum.join("; ")
 
           Map.put(
             ctx,
@@ -1103,37 +1086,14 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     end
   end
 
-  # Parse `mix hex.audit` output and return the list of findings that are NOT in
-  # @accepted_advisories. Retired packages are NEVER accepted (a retired package
-  # must be replaced), so their presence always yields a non-empty result.
-  # Advisory finding lines look like: `  <pkg> <version> - <ADVISORY_ID> (<SEV>)`.
-  # Public (with @doc false) only so the security-critical allowlist behaviour is
-  # unit-testable; not part of the task's user-facing contract.
+  # Thin delegation (Pattern 1) — the allowlist and its parsers now live in
+  # Mailglass.SupplyChain.AcceptedAdvisories, the single source of truth also
+  # read by `mix mailglass.audit` (Phase 142/VULN-05). Signature unchanged so
+  # every existing call site (including audit_allowlist_test.exs) keeps
+  # working with zero edits.
   @doc false
-  def unaccepted_audit_findings(output) do
-    lines = String.split(output, "\n")
-
-    retired =
-      if Enum.any?(lines, &(&1 =~ ~r/retired/i)) and
-           not Enum.any?(lines, &(&1 =~ ~r/No retired packages found/i)) do
-        ["retired package(s) present"]
-      else
-        []
-      end
-
-    advisories =
-      lines
-      |> Enum.flat_map(fn line ->
-        case Regex.run(~r/^\s+(\S+)\s+\S+\s+-\s+(\S+)\s+\(/, line) do
-          [_, pkg, id] -> [{pkg, id}]
-          _ -> []
-        end
-      end)
-      |> Enum.reject(fn {_pkg, id} -> Map.has_key?(@accepted_advisories, id) end)
-      |> Enum.map(fn {pkg, id} -> "#{pkg} #{id}" end)
-
-    retired ++ advisories
-  end
+  def unaccepted_audit_findings(output),
+    do: Mailglass.SupplyChain.AcceptedAdvisories.unaccepted_audit_findings(output)
 
   # SUPPLY-01: Step 14 — the `mix deps.audit` gate. `mix deps.audit` (mix_audit)
   # scans mix.lock against the mirego/elixir-security-advisories DB. On PR the lane
@@ -1153,7 +1113,10 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     if status != 0 do
       case unaccepted_deps_audit_findings(output) do
         [] ->
-          accepted = @accepted_advisories |> Map.values() |> Enum.join("; ")
+          accepted =
+            Mailglass.SupplyChain.AcceptedAdvisories.entries()
+            |> Enum.map(& &1.reason)
+            |> Enum.join("; ")
 
           Map.put(
             ctx,
@@ -1175,40 +1138,15 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
     end
   end
 
-  # Parse `mix deps.audit` human-formatter output and return the list of findings
-  # NOT in @accepted_advisories. mix_audit 2.1.5 emits a multi-line block per
-  # vulnerability; the advisory id is the trailing GHSA-* segment of the `URL:`
-  # line (`https://github.com/advisories/GHSA-xxxx-yyyy-zzzz`), paired with the
-  # `Name:` line for the package. The @accepted_advisories keys are EEF-CVE ids,
-  # so a GHSA finding is never auto-suppressed today — that asymmetry is intended
-  # (the accepted cowlib advisories are not present in the mix_audit DB). The
-  # allowlist filter is still applied so a future GHSA-keyed acceptance works.
-  # Public (with @doc false) only so this security-critical parser is unit-testable.
+  # Thin delegation (Pattern 1). unaccepted_deps_audit_findings/1 now matches
+  # by :id OR any :aliases entry, so a deps.audit finding IS suppressed when
+  # its GHSA id is a registered alias (e.g. GHSA-g2wm-735q-3f56 for
+  # EEF-CVE-2026-43969); an id with no matching alias still surfaces (F2 —
+  # this corrects the prior stale claim that a GHSA finding was never
+  # auto-suppressed).
   @doc false
-  def unaccepted_deps_audit_findings(output) do
-    lines = String.split(output, "\n")
-
-    {findings, _pkg} =
-      Enum.reduce(lines, {[], nil}, fn line, {acc, current_pkg} ->
-        cond do
-          match = Regex.run(~r/^\s*Name:\s+(\S+)/, line) ->
-            [_, pkg] = match
-            {acc, pkg}
-
-          match = Regex.run(~r/^\s*URL:.*\/(GHSA-\S+)/, line) ->
-            [_, id] = match
-            {[{current_pkg, id} | acc], current_pkg}
-
-          true ->
-            {acc, current_pkg}
-        end
-      end)
-
-    findings
-    |> Enum.reverse()
-    |> Enum.reject(fn {_pkg, id} -> Map.has_key?(@accepted_advisories, id) end)
-    |> Enum.map(fn {pkg, id} -> "#{pkg} #{id}" end)
-  end
+  def unaccepted_deps_audit_findings(output),
+    do: Mailglass.SupplyChain.AcceptedAdvisories.unaccepted_deps_audit_findings(output)
 
   # SUPPLY-03: OSV-staleness forcing function. Every accepted-advisory entry is
   # checked against OSV.dev on every publish run so an allowlist entry cannot
@@ -1216,7 +1154,9 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
   # must be removed and the dep bumped). Returns a list of per-id classifications;
   # this call NEVER blocks — the block decision lives in verify_osv_freshness/1.
   defp check_osv_advisory_staleness do
-    Enum.map(Map.keys(@accepted_advisories), fn id ->
+    ids = Mailglass.SupplyChain.AcceptedAdvisories.entries() |> Enum.map(& &1.id)
+
+    Enum.map(ids, fn id ->
       case osv_get("https://api.osv.dev/v1/vulns/#{id}") do
         {:ok, body} -> classify_osv_response(id, body)
         {:error, reason} -> {:error, id, reason}
@@ -1274,7 +1214,8 @@ defmodule Mix.Tasks.Mailglass.Publish.Check do
         fail_step(
           "verify osv advisory freshness",
           "Delivery blocked: accepted advisory #{id} has been withdrawn upstream " <>
-            "(fixed as of #{date}). Remove it from @accepted_advisories and bump the dep."
+            "(fixed as of #{date}). Remove it from Mailglass.SupplyChain.AcceptedAdvisories " <>
+            "and bump the dep."
         )
 
       {:error, id, reason} ->

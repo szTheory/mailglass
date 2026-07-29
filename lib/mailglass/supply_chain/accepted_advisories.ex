@@ -12,16 +12,16 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
   yet. Both `mix mailglass.publish.check` (publish gate) and
   `mix mailglass.audit` (CI gate, `dev/mix/tasks/mailglass.audit.ex`) read this
   module exclusively — there is no second copy of the allowlist anywhere in
-  the repo (Phase 142/VULN-05).
+  the repo.
 
   Each entry carries `:id` (the primary EEF-CVE id reported by `hex.audit`),
   `:aliases` (any GHSA ids the same advisory is known by in the
   mirego/elixir-security-advisories DB that `mix deps.audit` reads),
   `:package`, `:severity`, `:reason`, `:accepted_on`, and `:recheck_by`.
   Matching against a finding is exact `:id`-or-`:aliases`-member equality
-  against ONE entry — never fuzzy, prefix, or cross-package (T-142-06).
+  against ONE entry — never fuzzy, prefix, or cross-package.
 
-  ## Expiry and staleness (D-10, VULN-06)
+  ## Expiry and staleness
 
   `expired_entries/1` flags any entry whose `:recheck_by` date has passed
   (strictly after — an entry due today does not yet block). `unused_entries/1`
