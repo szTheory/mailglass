@@ -560,9 +560,14 @@ No retired or security advisory packages found   (exit 0)
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should the new task expose one command with `--kind` or two separate Mix tasks?**
+> Both questions were resolved at planning time and the resolutions are implemented in the plans.
+> **#1 → single `mix mailglass.audit --kind hex|deps` task** (142-01, Decision 1).
+> **#2 → widen `mix.exs`'s `:ci` alias** (142-02 Task 2d), with the added local cost recorded as a
+> SEED-006 input rather than a second open question.
+
+1. **RESOLVED — Should the new task expose one command with `--kind` or two separate Mix tasks?**
    - What we know: both satisfy D-01's `lib/`-data / `dev/`-task split; the two `ci.yml` jobs (`hex_audit`, `deps_audit_advisory`) are separate jobs today and can each invoke a distinctly-named command either way.
    - What's unclear: naming ergonomics only — no functional difference.
    - Recommendation: single task, `--kind` flag (mirrors `mailglass.publish.check`'s own `--package` flag convention at `mailglass.publish.check.ex:12`), but this is explicitly Claude's Discretion — the planner should pick and record the choice explicitly rather than let it emerge implicitly across tasks.

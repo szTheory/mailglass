@@ -23,13 +23,13 @@ created: 2026-07-28
 | **Framework** | ExUnit (Elixir 1.18.4 / OTP 27.3.4.13, per `.tool-versions`) |
 | **Config file** | `test/test_helper.exs` — boots `Mailglass.TestRepo`; **not needed** by this phase's own new tests (audit parsing/orchestration touches no DB) |
 | **`elixirc_paths(:test)`** | `["lib", "credo_checks", "test/support", "dev"]` (`mix.exs:114-116`) — the `dev/`-hosted task compiles in `:test`, which is what makes D-01's split testable |
-| **Quick run command** | `MIX_ENV=test mix test test/mailglass/supply_chain/ test/mix/tasks/mailglass_audit_test.exs test/mailglass/publish/audit_allowlist_test.exs --no-start --warnings-as-errors` |
+| **Quick run command** | `MIX_ENV=test mix test test/mailglass/supply_chain/ test/mix/tasks/mailglass.audit_test.exs test/mailglass/publish/audit_allowlist_test.exs --no-start --warnings-as-errors` |
 | **Full suite command** | `mix ci` (requires Postgres + network for unrelated lanes; this phase's own tests need neither) |
 | **Estimated runtime** | ~3-6 s quick · ~6-9 min full |
 
 **Already-wired, no new CI step needed (F-research):** `verify.mix_tasks` (`mix.exs:287`, run by the
 `mix_task_tests` job at `ci.yml:230`) is the directory glob `"test test/mix/tasks/ --warnings-as-errors"`.
-A new `test/mix/tasks/mailglass_audit_test.exs` is picked up automatically. This is the opposite of
+A new `test/mix/tasks/mailglass.audit_test.exs` is picked up automatically. This is the opposite of
 Phase 141's F2, where the enforcement lane had to be built first.
 
 **Blocking precondition (F1):** `test/scripts/ci_parity_drift_test.exs`'s matchers (`:113-114`,
@@ -44,7 +44,7 @@ and record the narrowed claim explicitly.
 
 ## Sampling Rate
 
-- **After every task commit:** `MIX_ENV=test mix test test/mailglass/supply_chain/ test/mix/tasks/mailglass_audit_test.exs --warnings-as-errors`
+- **After every task commit:** `MIX_ENV=test mix test test/mailglass/supply_chain/ test/mix/tasks/mailglass.audit_test.exs --warnings-as-errors`
 - **After every plan wave:** `mix ci.fast` (compile + credo must stay green; Waves 1 and 2 both touch
   `mix.exs` and `test/support/ci_lanes.ex`) **plus** `mix verify.ci_lane_contract`
 - **Before `/gsd-verify-work`:** full `mix ci` green, **plus** criteria 1b, 2d and 4 executed once by a
@@ -61,13 +61,13 @@ this table against the final PLAN.md files.*
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | TBD | TBD | 1 | VULN-05 | — | Allowlist is one source; both lanes read it | unit | `MIX_ENV=test mix test test/mailglass/supply_chain/accepted_advisories_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 1 | VULN-05 | — | Per-directory audit sees `mailglass_admin`'s cowlib findings | unit | `MIX_ENV=test mix test test/mix/tasks/mailglass_audit_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
+| TBD | TBD | 1 | VULN-05 | — | Per-directory audit sees `mailglass_admin`'s cowlib findings | unit | `MIX_ENV=test mix test test/mix/tasks/mailglass.audit_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
 | TBD | TBD | 1 | VULN-05 | — | Extraction does not regress the publish gate | unit | `MIX_ENV=test mix test test/mailglass/publish/audit_allowlist_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
 | TBD | TBD | 1 | VULN-05 | — | Local `mix ci` parity not silently narrowed (F1) | unit | `MIX_ENV=test mix test test/scripts/ci_parity_drift_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
 | TBD | TBD | 1 | VULN-06 | T-142-01 | Expired `recheck_by` hard-fails, naming the entry | unit | `MIX_ENV=test mix test test/mailglass/supply_chain/accepted_advisories_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
 | TBD | TBD | 1 | VULN-06 | T-142-01 | Unused allowlist entry hard-fails, naming the entry | unit | `MIX_ENV=test mix test test/mailglass/supply_chain/accepted_advisories_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
 | TBD | TBD | 1 | VULN-02 | T-142-03 | Each dependabot PR dispositioned individually, never blanket | manual | `gh pr list --repo szTheory/mailglass --state open --json number,author,autoMergeRequest` | ✅ | ⬜ pending |
-| TBD | TBD | 2 | VULN-03 | — | New HIGH-with-fix exits non-zero; cowlib-only exits zero | unit | `MIX_ENV=test mix test test/mix/tasks/mailglass_audit_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
+| TBD | TBD | 2 | VULN-03 | — | New HIGH-with-fix exits non-zero; cowlib-only exits zero | unit | `MIX_ENV=test mix test test/mix/tasks/mailglass.audit_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
 | TBD | TBD | 2 | VULN-03 | — | 24-job classification totality holds post-promotion | integration | `mix verify.ci_lane_contract` | ✅ | ⬜ pending |
 | TBD | TBD | 2 | VULN-03 | — | `continue-on-error: true` absent from the promoted lane | static | `MIX_ENV=test mix test test/scripts/conformance_advisory_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
 | TBD | TBD | 3 | VULN-04 | T-142-02 | Triage cadence documented outside the 24-row table's bounds | static | `MIX_ENV=test mix test test/scripts/lane_classification_drift_test.exs --warnings-as-errors` | ✅ | ⬜ pending |
@@ -103,7 +103,7 @@ this table against the final PLAN.md files.*
       `test/mailglass/stability_contract_test.exs:43-50`, which runs in the **required** Support Contract
       Core lane — red lane if missed (D-01)
 - [ ] `test/mailglass/supply_chain/accepted_advisories_test.exs` — new (VULN-06 expiry + unused-entry checks)
-- [ ] `test/mix/tasks/mailglass_audit_test.exs` — new; **auto-included** by the existing `verify.mix_tasks`
+- [ ] `test/mix/tasks/mailglass.audit_test.exs` — new; **auto-included** by the existing `verify.mix_tasks`
       directory glob, no `ci.yml` / `mix.exs` wiring needed
 - [ ] `test/mailglass/publish/audit_allowlist_test.exs` — modify per **F2**: add the missing **positive**
       alias-suppression test (only a negative control exists today) and correct the now-stale docstrings at
