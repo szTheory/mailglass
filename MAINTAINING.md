@@ -74,6 +74,39 @@ Do not gitignore these files: `test/mailglass/stability_contract_test.exs`
 reads the inbound summary directly as part of the sibling-package release
 contract.
 
+## Tarball Allowlist Protocol
+
+Adding a file under a published package's `lib/` changes what ships to Hex, and
+`mix mailglass.publish.check` blocks the release until the new file is recorded:
+
+```
+Delivery blocked: package files diff. Files added since last allowlist
+update: ["lib/mailglass/<new_file>.ex"]
+```
+
+This fires in `publish-hex`'s `prepublish-summary` job — *before* `gate-ci-green`
+— so the publish fan-out stops with every publish job skipped. Nothing reaches
+Hex. That is the gate working: a new file entered a published tarball and it
+refused to ship it unreviewed.
+
+Update the allowlist in the same PR that adds the file:
+
+1. Run `mix mailglass.publish.check --package <pkg> --keep`.
+2. Copy `_publish_check/<pkg>-files.actual` over
+   `.planning/publish/<pkg>-files.expected`. Do not hand-edit — the ordering
+   is generated.
+3. Re-run without `--keep` and confirm `conflict=0`.
+
+If the file should *not* ship, exclude it in `mix.exs` under `:package :files`
+instead. Dev-only Mix tasks belong in `dev/`, which is on `elixirc_paths` for
+`:dev`/`:test` only and never enters the tarball.
+
+Note that `.planning/` is in release-please's `exclude-paths`, so an
+allowlist-only commit is **not** release-triggering. If a tag has already been
+cut without the allowlist update, the fix cannot reach that tag by merging to
+`main` — the publish workflow checks out the tag ref, not `main`. Either retag
+or cut a new patch version.
+
 ## JTBD Docs Refresh Protocol
 
 The JTBD docs are a two-file system:
