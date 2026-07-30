@@ -95,6 +95,31 @@ Application.put_env(
       Ecto.Adapters.SQL.query!(repo, ~s(CREATE SCHEMA IF NOT EXISTS "#{schema}"))
     end
 
+    # citext MUST live in `public`, explicitly. v01 issues a deliberately
+    # UNqualified `CREATE EXTENSION IF NOT EXISTS citext` (postgres/v01.ex:18,
+    # "citext installs into public so a second install in another schema can
+    # share it"), and `CREATE EXTENSION` with no `SCHEMA` clause installs into
+    # the FIRST schema of the connection's search_path — which, on a non-public
+    # axis with the `"<schema>, public"` patch above, is the isolated schema, not
+    # `public`. On a freshly created database that is the very first statement to
+    # create citext, so the extension landed in `<schema>` and the comment above
+    # ("the citext extension type (installed in public) stays resolvable") was
+    # simply false on the schema-isolation axis.
+    #
+    # That silently held together only while every prefixed-schema test used the
+    # literal `"mailglass"` as its own scratch prefix, so their
+    # `search_path = "mailglass, public"` pins happened to include the schema
+    # citext had landed in. The moment those tests moved to scratch prefixes of
+    # their own (143 gap closure), `add(:address, :citext)` under
+    # `search_path = "<scratch>, public"` could no longer resolve the type and
+    # raised `42704 (undefined_object) type "citext" does not exist`.
+    #
+    # Pinning the extension to `public` here makes the harness match its own
+    # documented invariant on BOTH axes. Idempotent: `IF NOT EXISTS` is a no-op
+    # when citext already exists (it does not relocate an existing extension), so
+    # this only decides the location on a fresh database.
+    Ecto.Adapters.SQL.query!(repo, "CREATE EXTENSION IF NOT EXISTS citext SCHEMA public")
+
     Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
   end)
 
