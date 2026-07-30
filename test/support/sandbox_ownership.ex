@@ -421,21 +421,62 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     owner
   end
 
+  # FAIL-CLOSED (D-31). Every branch that cannot establish the calling module's
+  # async-ness raises instead of falling through to `:ok`. The previous shape
+  # had two silent-pass holes, both of the "a check that cannot observe its
+  # subject reported success" class this milestone exists to remove:
+  #
+  #   1. `calling_test_module/0` returns nil whenever no `{module, test_name}`
+  #      process label is set. `ExUnit.Runner` sets that label in
+  #      `spawn_test_monitor/4` ONLY for the per-test process (verified by
+  #      decompiling `ExUnit.Runner` on 1.19.5: exactly one `Process.set_label`
+  #      call site in the whole module). A `setup_all` process, an
+  #      `on_exit` runner process, and any `Task`/`GenServer` therefore carry
+  #      no label — so a `checkout!(shared: true)` from a `setup_all` block
+  #      used to skip the guard entirely and report success.
+  #   2. A module that does not export `__ex_unit__/1` made `async_module?/1`
+  #      return false, which is indistinguishable from a genuine `async: false`.
+  #
+  # Neither hole has a live call site today (audited: every `checkout!(shared:
+  # true)` in this repo runs from a labelled test process — `mailer_case.ex:93`,
+  # `data_case.ex:35`, `webhook_idempotency_convergence_test.exs:60`,
+  # `sandbox_ownership_test.exs`). That is exactly when a hole is cheapest to
+  # close, and the injectable `:calling_module_fun` is the sanctioned door for
+  # any future caller that legitimately runs outside a labelled test process.
   defp guard_shared_checkout_from_async!(calling_module_fun) do
-    case calling_module_fun.() do
-      module when is_atom(module) and not is_nil(module) ->
-        if async_module?(module) do
-          raise """
-          Mailglass.TestSupport.SandboxOwnership: `checkout!(shared: true)` MUST NOT \
-          be called from an async: true module (#{inspect(module)}). Shared mode is \
-          process-global pool state — concurrent async tests sharing it would stomp \
-          each other. Pass `shared: false` instead (or, for cross-process delivery, \
-          use `Ecto.Adapters.SQL.Sandbox.allow/3` from an owned, non-shared checkout).
-          """
-        end
+    module = calling_module_fun.()
 
-      _ ->
+    case async_classification(module) do
+      :sync ->
         :ok
+
+      :async ->
+        raise """
+        Mailglass.TestSupport.SandboxOwnership: `checkout!(shared: true)` MUST NOT \
+        be called from an async: true module (#{inspect(module)}). Shared mode is \
+        process-global pool state — concurrent async tests sharing it would stomp \
+        each other. Pass `shared: false` instead (or, for cross-process delivery, \
+        use `Ecto.Adapters.SQL.Sandbox.allow/3` from an owned, non-shared checkout).
+        """
+
+      :unknown ->
+        raise """
+        Mailglass.TestSupport.SandboxOwnership: `checkout!(shared: true)` could not \
+        determine whether its caller is an async: true module — the calling module \
+        resolved to #{inspect(module)}, which carries no ExUnit async configuration. \
+        Shared mode is process-global pool state, so acquiring it without that check \
+        would put the pool into shared mode on the word of a guard that never ran. \
+        A guard that cannot observe its subject must not report success, so this \
+        raises rather than proceeding.
+
+        The usual cause is calling `checkout!(shared: true)` from a process ExUnit \
+        did not label with `{module, test_name}` — a `setup_all` block, an `on_exit` \
+        callback, or a spawned Task. Prefer moving the call into a per-test `setup`. \
+        If the caller genuinely belongs outside a labelled test process, name the \
+        module explicitly:
+
+            checkout!(shared: true, calling_module_fun: fn -> __MODULE__ end)
+        """
     end
   end
 
@@ -446,10 +487,21 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     end
   end
 
-  defp async_module?(module) do
-    function_exported?(module, :__ex_unit__, 1) and
-      match?(%{async?: true}, module.__ex_unit__(:config))
+  # Three-way on purpose: `:unknown` is a distinct outcome from `:sync`, so an
+  # unanswerable question can never be silently answered "no".
+  defp async_classification(module) when is_atom(module) and not is_nil(module) do
+    if Code.ensure_loaded?(module) and function_exported?(module, :__ex_unit__, 1) do
+      case module.__ex_unit__(:config) do
+        %{async?: true} -> :async
+        %{async?: false} -> :sync
+        _ -> :unknown
+      end
+    else
+      :unknown
+    end
   end
+
+  defp async_classification(_unresolved), do: :unknown
 
   @doc """
   `setup` callback that switches `repo`'s pool to pool-wide `:auto` mode for
@@ -490,7 +542,14 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     :ok = Ecto.Adapters.SQL.Sandbox.mode(repo, :auto)
 
     ExUnit.Callbacks.on_exit(fn ->
-      Ecto.Adapters.SQL.Sandbox.mode(repo, :manual)
+      # Routed through `mode_manual!/2` rather than calling
+      # `Ecto.Adapters.SQL.Sandbox.mode/2` raw: this revert used to discard its
+      # return value, so a refusal would have left the pool in `:auto` for
+      # every later module while this callback reported nothing — the same
+      # discarded-signal defect `mode_manual!/2` was just hardened against.
+      # The acquire on the line above already matches `:ok`; the release now
+      # does too.
+      mode_manual!(repo, caller: Map.get(context, :module, __MODULE__))
     end)
 
     :ok
@@ -864,6 +923,45 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   without masking a genuine leak: a mode that has NOT healed within the bound
   still raises exactly as before. This is verification, not tolerance — the
   bound is a ceiling, not a retry-until-green loop.
+
+  **Exhausting the bound is classified, not assumed (CI run `30555218236`,
+  job `90913824954`, seed 79310).** That advisory leg failed with exactly one
+  failure — this function raising `LeakError` from inside `checkout!/1`'s own
+  `on_exit`, reporting `{:shared, #PID<0.6430.0>}` after the bound ran out.
+  The bound alone cannot tell the two states it was conflating apart, and only
+  one of them is HARNESS-01's leak:
+
+    * **Holder ALIVE** — the pool is genuinely blocked. `manager.ex:153-154`
+      replies `:already_shared` to the next `start_owner!(shared: true)`, which
+      badmatches at `sandbox.ex:458`. This is the leak, and it raises.
+    * **Holder DEAD** — `manager.ex:156-157` transparently replaces a dead
+      shared owner (`share_and_reply/3`), so the next shared acquisition
+      SUCCEEDS. The manager simply has not processed the proxy's `:DOWN` yet;
+      `handle_info({:DOWN, ...})` (`manager.ex:241-243`) runs `owner_down/2`
+      and `unshare/2` together, so this state is transient and self-clearing
+      by construction. It cannot block anything.
+
+  `checkout!/1`'s `on_exit` calls `stop_owner/1` — a synchronous
+  `GenServer.stop/1` — immediately before calling this function, so its own
+  owner is *guaranteed dead* by the time this runs. On a fast box the manager
+  catches up inside 150ms and the pool reads `:manual`; on a loaded 2-core CI
+  runner, after a module that pushed ~800 statements through the shared
+  connection (`webhook_signature_failure_test.exs` runs 200 property
+  iterations × 4 statements), it does not. Whether the assertion passed was
+  therefore decided by runner load, not by whether anything leaked.
+
+  So the exhausted-bound branch now reads the holder's liveness — the same
+  discriminator `manager.ex:153` itself uses, and the same mode-then-liveness
+  read `live_holder/1` already performs. This is a **narrowing** of what counts
+  as success, expressed exactly: the predicate verified is the one this
+  function exists to protect — *"the next `start_owner!(shared: true)` will not
+  collide"* — rather than the strictly-stronger-but-partly-irrelevant proxy
+  *"the mode field currently reads `:manual`"*. It can never green-light a live
+  holder, which is the only state that blocks anything. It is deliberately NOT
+  a widened timeout: widening the bound would have made the same flake rarer
+  while leaving the verdict decided by load, and would have edged toward the
+  120s `ownership_timeout` at which a genuine leak self-heals — masking the
+  real class. The bound is unchanged at ~150ms.
   """
   @spec assert_manual!(module(), term(), keyword()) :: :ok
   def assert_manual!(repo \\ Mailglass.TestRepo, caller, opts \\ []) do
@@ -879,10 +977,29 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
       :ok ->
         :ok
 
+      # The full bound is always spent first — a clean `:manual` reading is
+      # preferred, and the liveness proof below is only ever the fallback.
       {:leaked, _mode} when attempts > 1 ->
         Process.sleep(interval_ms)
         do_assert_manual!(repo, caller, probe_fun, attempts - 1, interval_ms)
 
+      # Bound exhausted on a shared mode: classify instead of guessing. A DEAD
+      # holder is provably not the collision class — `manager.ex:156-157`
+      # replaces it and the next `start_owner!(shared: true)` succeeds — so
+      # this is a verified pass, not a silent one. A LIVE holder falls through
+      # to the raise below. See this function's @doc for the CI evidence
+      # (run 30555218236) and why this is a narrowing rather than a widened
+      # timeout.
+      {:leaked, {:shared, holder}} when is_pid(holder) ->
+        if Process.alive?(holder) do
+          raise LeakError, caller: caller, mode: {:shared, holder}
+        else
+          :ok
+        end
+
+      # Every other unhealed mode (`:auto`, `:cannot_verify`, anything a future
+      # db_connection adds) still raises. Non-observation must never read as
+      # success.
       {:leaked, mode} ->
         raise LeakError, caller: caller, mode: mode
     end

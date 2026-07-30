@@ -212,6 +212,54 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
     assert error.message =~ "Pass `shared: false` instead"
   end
 
+  # 6b. The async guard is FAIL-CLOSED when it cannot observe its subject.
+  #
+  # `ExUnit.Runner` labels only the per-test process (one `Process.set_label`
+  # call site in the whole module, in `spawn_test_monitor/4`), so a
+  # `checkout!(shared: true)` from a `setup_all` block, an `on_exit` callback
+  # or a spawned Task resolves to no module at all. That used to fall through
+  # to `:ok` -- the pool went into process-global shared mode on the word of a
+  # guard that never ran.
+  test "checkout!(shared: true) raises when the calling module cannot be resolved" do
+    for unresolved <- [nil, :"not-a-module", "Elixir.NotAModule"] do
+      error =
+        assert_raise(RuntimeError, fn ->
+          SandboxOwnership.checkout!(shared: true, calling_module_fun: fn -> unresolved end)
+        end)
+
+      assert error.message =~ "could not determine whether its caller is an async: true module"
+      assert error.message =~ "calling_module_fun: fn -> __MODULE__ end"
+    end
+
+    # The guard fires before `start_owner!/2`, so the real pool is untouched.
+    assert SandboxOwnership.probe(Mailglass.TestRepo) == :ok
+  end
+
+  test "checkout!(shared: true) raises when the calling module carries no ExUnit async config" do
+    # A loaded module that is not an ExUnit case: `async_module?/1` used to
+    # report `false` here, which is indistinguishable from a genuine
+    # `async: false` -- an unanswerable question silently answered "no".
+    assert_raise(RuntimeError, ~r/could not determine whether its caller is an async: true/, fn ->
+      SandboxOwnership.checkout!(shared: true, calling_module_fun: fn -> Enum end)
+    end)
+
+    assert SandboxOwnership.probe(Mailglass.TestRepo) == :ok
+  end
+
+  test "checkout!(shared: true) is permitted when the calling module resolves to async: false" do
+    # The positive control for the two fail-closed tests above: a module that
+    # DOES answer the question with `false` still gets through. Without this,
+    # a guard that raised unconditionally would pass both tests above.
+    owner =
+      SandboxOwnership.checkout!(
+        shared: true,
+        calling_module_fun: fn -> Mailglass.TestSupport.SandboxOwnershipTest.FakeSyncModule end
+      )
+
+    assert is_pid(owner)
+    assert {:leaked, {:shared, ^owner}} = SandboxOwnership.probe(Mailglass.TestRepo)
+  end
+
   test "unsandboxed_module/1 raises when the setup context's :async is true" do
     error =
       assert_raise(
@@ -310,6 +358,94 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
 
     assert Mailglass.TestSupport.SuiteTruthFormatter.signature({:error, error, []}) ==
              :already_shared
+  end
+
+  # 7c. Exhausted-bound classification (CI run 30555218236, job 90913824954,
+  # seed 79310 -- the single failure on that advisory leg).
+  #
+  # `checkout!/1`'s on_exit calls `stop_owner/1` (a synchronous
+  # `GenServer.stop/1`) and then `assert_manual!/3`, so its own owner is
+  # guaranteed DEAD by the time the assertion runs. Whether the ownership
+  # manager had also processed the proxy's :DOWN within the ~150ms bound was
+  # decided by CI runner load, not by whether anything leaked -- so the same
+  # code raised on a loaded 2-core runner and passed locally. These tests pin
+  # the discriminator that replaced the coin flip.
+  test "assert_manual!/3 raises when the bound is exhausted and the shared holder is ALIVE" do
+    # The HARNESS-01 class: manager.ex:153-154 replies :already_shared to the
+    # next start_owner!(shared: true), which badmatches at sandbox.ex:458.
+    # This MUST still raise -- it is the whole point of the guard.
+    live = spawn(fn -> Process.sleep(:infinity) end)
+    on_exit(fn -> Process.exit(live, :kill) end)
+
+    error =
+      assert_raise(SandboxOwnership.LeakError, fn ->
+        SandboxOwnership.assert_manual!(Mailglass.TestRepo, __MODULE__,
+          probe_fun: fn _repo -> {:leaked, {:shared, live}} end,
+          attempts: 2,
+          interval_ms: 1
+        )
+      end)
+
+    assert error.mode == {:shared, live}
+  end
+
+  test "assert_manual!/3 passes when the bound is exhausted and the shared holder is DEAD" do
+    # Provably NOT the collision class: manager.ex:156-157 (`share_and_reply/3`)
+    # transparently replaces a dead shared owner, so the next shared
+    # acquisition succeeds. The manager has merely not processed the proxy's
+    # :DOWN yet, and manager.ex:241-243 runs owner_down/2 and unshare/2
+    # together -- the state is transient and self-clearing by construction.
+    dead = spawn(fn -> :ok end)
+    ref = Process.monitor(dead)
+    assert_receive {:DOWN, ^ref, :process, ^dead, _}
+    refute Process.alive?(dead)
+
+    assert SandboxOwnership.assert_manual!(Mailglass.TestRepo, __MODULE__,
+             probe_fun: fn _repo -> {:leaked, {:shared, dead}} end,
+             attempts: 2,
+             interval_ms: 1
+           ) == :ok
+  end
+
+  test "assert_manual!/3 still raises for every non-shared unhealed mode" do
+    # The dead-holder carve-out is scoped to {:shared, pid} ONLY. `:auto` and
+    # `:cannot_verify` have no liveness to appeal to, so non-observation still
+    # routes to a visible failure rather than to green.
+    for mode <- [:auto, :cannot_verify] do
+      assert_raise(SandboxOwnership.LeakError, fn ->
+        SandboxOwnership.assert_manual!(Mailglass.TestRepo, __MODULE__,
+          probe_fun: fn _repo -> {:leaked, mode} end,
+          attempts: 2,
+          interval_ms: 1
+        )
+      end)
+    end
+  end
+
+  test "assert_manual!/3 spends its full bound before accepting the dead-holder proof" do
+    # A clean `:manual` reading is preferred; the liveness proof is only ever
+    # the fallback. Without this, a future edit could take the carve-out on the
+    # first probe and stop giving the manager any chance to settle.
+    dead = spawn(fn -> :ok end)
+    ref = Process.monitor(dead)
+    assert_receive {:DOWN, ^ref, :process, ^dead, _}
+
+    {:ok, counter} = Agent.start_link(fn -> 0 end)
+    on_exit(fn -> if Process.alive?(counter), do: Agent.stop(counter) end)
+
+    assert SandboxOwnership.assert_manual!(Mailglass.TestRepo, __MODULE__,
+             probe_fun: fn _repo ->
+               Agent.update(counter, &(&1 + 1))
+               {:leaked, {:shared, dead}}
+             end,
+             attempts: 5,
+             interval_ms: 1
+           ) == :ok
+
+    assert Agent.get(counter, & &1) == 5,
+           "assert_manual!/3 must exhaust all 5 attempts before accepting the dead-holder " <>
+             "proof — a carve-out taken on the first probe would stop absorbing the benign " <>
+             "propagation delay it exists to absorb."
   end
 
   # 8. live_holder/0.
