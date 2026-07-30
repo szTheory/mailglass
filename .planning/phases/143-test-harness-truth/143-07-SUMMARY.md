@@ -254,3 +254,171 @@ None — this plan introduces no new network endpoints, auth paths, file access 
 `.planning/phases/143-test-harness-truth/143-07-SUMMARY.md` confirmed present on disk.
 All 5 commit hashes (`a7be5f27`, `be7017b7`, `41d301cd`, `3c79d72c`, `9ec801e4`) confirmed
 present in `git log --oneline --all`.
+
+---
+
+## Orchestrator-directed gap closure (post-completion, 2026-07-30)
+
+**Context:** plans 143-05/06/07 under-scoped the `mailglass`-schema-axis test
+failures and deferred four of them to `deferred-items.md`/`WINDOWS.md`, but
+HARNESS-02's four-leg green bar requires all four `Core Full Suite Advisory`
+legs green, and 143-10/143-12 both require observed-green CI evidence — so
+these could not stay deferred out of the phase. This section documents
+orchestrator-directed gap-closure work performed against HEAD `d459ea7e`,
+outside any numbered plan.
+
+### Starting state (measured at HEAD `d459ea7e`)
+
+- **Public axis: GREEN.** `MIX_ENV=test mix test --warnings-as-errors
+  --exclude requires_workspace --seed 0` → 1478 tests, 0 failures, 7 skipped,
+  13 excluded.
+- **Mailglass axis: 5-6 failures, run-to-run variable** (a signal of
+  order/state-dependence on its own): `MAILGLASS_SCHEMA=mailglass MIX_ENV=test
+  mix test --warnings-as-errors --exclude requires_workspace --seed 0` →
+  1477 tests, 5-6 failures — `persistence_integration_test.exs`'s
+  `migrated_version/0` gap (1), `schema_isolation_immutability_test.exs`'s
+  down-test (1), and `shipped_migration_divergence_test.exs`'s 4-failure
+  cascade (only in full-suite runs, not standalone).
+
+### Fixed: `Mailglass.Migration.migrated_version/1`'s missing schema-prefix default (lib-level bug)
+
+**Root cause:** `migrated_version/1` (`lib/mailglass/migration.ex`) was the
+one function in that module that did NOT thread `Mailglass.Config.schema()`
+through as the query `:prefix` default — `up/1` and `down/1` already do this
+(MIGR-01). A caller on a non-default schema calling `migrated_version()` with
+no args silently queried `public.mailglass_events`'s pg_class comment instead
+of the configured schema's — an adopter-facing correctness bug (a library
+function that silently reports "no migrations applied" when migrations ARE
+applied), not a test artifact, confirmed reproducing standalone.
+
+**Fix:** `opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())`
+added to `migrated_version/1`, mirroring the existing `up/1`/`down/1`
+pattern exactly. An explicit caller `:prefix` still wins via
+`Keyword.put_new` — `migration_test.exs`'s existing explicit-prefix call
+sites are unaffected (verified: 12/12 unchanged).
+
+**Unexpected additional effect:** this ALSO closed
+`shipped_migration_divergence_test.exs`'s 4-failure full-suite-only cascade.
+That cascade did not reproduce in either of two clean post-fix full
+mailglass-axis runs (1477 tests / 1 failure both times — see below),
+confirming the coordinator's own hypothesis that it was a downstream
+consequence of the `migrated_version` bug rather than an independent defect.
+
+**Verification:**
+- `persistence_integration_test.exs`: 9/9 on both axes.
+- `migration_test.exs`: 12/12 unchanged.
+- Full mailglass-axis suite, run twice consecutively post-fix:
+  `1477 tests, 1 failure` both times (the one remaining failure is the
+  `schema_isolation_immutability_test.exs` down-test below).
+- Full public-axis suite, run twice: `1478 tests, 0 failures` (one run in
+  between showed a transient, pre-existing `SandboxOwnership.LeakError` in
+  `webhook_signature_failure_test.exs` — already tracked as WINDOWS id 6,
+  Class C/D-17 territory unrelated to this fix; confirmed NOT a regression
+  by an immediate clean re-run: 1478/0).
+
+**Commit:** `bf099ee3` (fix)
+
+### Investigated and disproven: `schema_isolation_immutability_test.exs`'s down-test "fix"
+
+The deferred item's own suggested fix — thread `prefix: Mailglass.Config.schema()`
+("mailglass") through both the setup's `Ecto.Migrator.up/4` call and the
+test's `down/4` call — was implemented and empirically shown to be **worse
+than the status quo, not a fix**.
+
+**What happened:** passing an explicit `prefix: "mailglass"` (after
+pre-creating the schema to sidestep the chicken-and-egg
+`ensure_schema_migrations_table!` problem) does avoid the previously-known
+`Ecto.MigrationError` mismatch — but it makes Ecto's OWN `schema_migrations`
+bookkeeping table live INSIDE the very `"mailglass"` schema this migration's
+`down/0` callback drops via `DROP SCHEMA "mailglass" RESTRICT`.
+`Ecto.Migrator.async_migrate_maybe_in_transaction/6`'s own ordering runs the
+migration body (the DROP) BEFORE the bookkeeping DELETE that would empty the
+schema first, so `RESTRICT` can never see an empty schema at the moment it
+checks. Reproduced live, twice, as a genuine ~20-60s Postgres lock deadlock
+inside `Ecto.Adapters.Postgres.do_lock_for_migrations` — confirmed via
+`pg_stat_activity`: one connection sat "idle in transaction" holding the
+migration lock table while a second connection blocked waiting on it to
+execute the `DROP SCHEMA`. This is not merely a failed assertion; it is a
+genuine hang, strictly worse than the original clean, single-assertion
+failure.
+
+**Why no `:prefix` value works here:** `prefix: "public"` was already ruled
+out (raises `Ecto.MigrationError` — `PrefixedWrapperMigration`'s own `create
+table(prefix: "mailglass")` DSL calls mismatch the outer runner prefix, per
+`Ecto.Migration.__prefix__/1`). `prefix: "mailglass"` is now also ruled out
+(deadlocks, per above). Confirmed by reading
+`Ecto.Migration.SchemaMigration.ensure_schema_migrations_table!/3` and
+`Ecto.Migration.__prefix__/1` directly: Ecto's public API conflates
+"bookkeeping table location" and "DSL validation target" into the SAME
+`:prefix` option, so there is no way to decouple them via `Ecto.Migrator.up/4`/
+`down/4`'s documented interface. This also explains, independently, WHY
+`test_helper.exs` already excludes `migration_test.exs`'s own `:public_only`
+down block entirely on the mailglass axis (see that file's own comment,
+lines 55-58) — the identical root mechanism (ambient/explicit `mailglass`
+prefix colliding with a `DROP SCHEMA mailglass` inside the same migration
+run) is a known, pre-existing class on this axis, not unique to this file.
+
+**Action taken:** reverted `schema_isolation_immutability_test.exs` back to
+its original code (no explicit outer `:prefix` — the clean, non-hanging,
+single documented assertion failure), with the investigation trail recorded
+inline in the file so this dead end is not re-attempted without re-reading
+the evidence. Governing rule honored: the check was not weakened, tagged
+away, or silenced — the failure remains visible and now has a precise,
+evidence-backed explanation plus two concrete (but out-of-scope) paths
+forward: (a) bypass `Ecto.Migrator.up/4`/`down/4`'s public API and drive the
+private, `@moduledoc false` `Ecto.Migration.Runner.run/8` directly (a real
+but riskier internals coupling, in the same spirit as
+`SandboxOwnership.probe/1`'s existing `:sys.get_state/1` precedent), or
+(b) a Rule-4 architectural change to how `Mailglass.Migrations.Postgres`'s
+`Vxx` modules thread `:prefix` through `create table(...)` DSL calls — this
+would touch the real shipped adopter migration path and is out of scope for
+a test-harness fix.
+
+**Commit:** `01b1f289` (docs — no functional change)
+
+### Confirmed already-fixed, ledger corrected: Igniter/Rewrite `Rewrite.Error` failures
+
+Commit `d459ea7e` ("fix(143-07): assert on the composed igniter, not the
+applied one"), already present on this branch before the gap-closure session
+started, had already fixed the 6 `Rewrite.Error: no source found` failures
+in `test/mailglass/upgrade/v0_2_test.exs` and
+`test/mix/tasks/mailglass.gen.mailable_test.exs` — but `deferred-items.md`
+and `.planning/WINDOWS.md` (id 5) were never updated to reflect it, so the
+ledger reported this as still "open". Re-confirmed this session:
+`mix test test/mailglass/upgrade/v0_2_test.exs
+test/mix/tasks/mailglass.gen.mailable_test.exs --warnings-as-errors --seed 0`
+→ 6 tests, 0 failures. Marked fixed in `.planning/WINDOWS.md` (no code
+change required).
+
+### Final state
+
+| Metric | Public axis | Mailglass axis |
+|---|---|---|
+| Tests | 1478 | 1477 |
+| Failures | 0 (confirmed on 2/2 clean runs; one interleaved run showed the pre-existing, unrelated, already-tracked WINDOWS id 6 transient flake) | 1 (`schema_isolation_immutability_test.exs`'s down-test — genuinely unfixable within test-only scope, see above) |
+| Skipped | 7 | 7 |
+| Excluded | 13 | 14 |
+
+**HARNESS-02's four-leg green bar is NOT fully reachable within this
+session's scope** — the mailglass axis carries one remaining, thoroughly
+investigated, evidence-backed failure that requires either an undocumented
+Ecto internals dependency or a Rule-4 architectural change to close, neither
+of which is a test-harness-only fix. Three of the four originally-deferred
+items are now closed (2 fixed, 1 already-fixed-and-relabeled); the fourth
+(`schema_isolation_immutability_test.exs`) remains open with its diagnosis
+corrected and its dead-end fix path documented so it is not re-attempted
+blind.
+
+**Broken Windows Ledger changes:** id 4 (`persistence_integration_test.exs`)
+marked `fixed`; id 5 (Igniter `Rewrite.Error`) marked `fixed`; id 7 added
+(supersedes id 3's stale suggested-fix text with the disproven-deadlock
+evidence); id 3 and id 6 remain `open` (both correctly — id 3's underlying
+test still fails, id 6 is pre-existing unrelated flakiness). `open_count`
+went from 4 to 3.
+
+**Files modified this session:** `lib/mailglass/migration.ex`,
+`test/mailglass/schema_isolation_immutability_test.exs` (comments only, no
+functional change), `.planning/phases/143-test-harness-truth/deferred-items.md`,
+`.planning/WINDOWS.md`.
+
+**Commits this session:** `bf099ee3` (fix), `01b1f289` (docs).
