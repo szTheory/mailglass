@@ -356,11 +356,16 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   Accepts an optional `:repo` (default `Mailglass.TestRepo`), reserved for a
   future per-repo schema seam; the override itself always targets the single
   process-global `:mailglass, :schema` Application env key regardless of
-  `:repo`.
+  `:repo`. Also accepts an injectable `:schema_fun` (default
+  `&Mailglass.Config.schema/0`), mirroring `assert_manual!/3`'s `probe_fun:`
+  idiom, used ONLY for the post-override verification read — so the "did not
+  take effect" raise path is testable with a synthetic mismatch rather than
+  by manufacturing a real Application-env race.
   """
   @spec with_schema!(String.t(), keyword()) :: :ok
   def with_schema!(schema, opts \\ []) when is_binary(schema) do
-    original = Mailglass.Config.schema()
+    schema_fun = Keyword.get(opts, :schema_fun, &Mailglass.Config.schema/0)
+    original = schema_fun.()
 
     # INVARIANT (D-31 Class B): this on_exit registration is the very next
     # statement after capturing the original value — before the override
@@ -378,7 +383,7 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     Application.put_env(:mailglass, :schema, schema)
     :persistent_term.erase({Mailglass.Config, :schema})
 
-    applied = Mailglass.Config.schema()
+    applied = schema_fun.()
 
     unless applied == schema do
       raise """

@@ -266,4 +266,91 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
     assert SandboxOwnership.assert_manual!(Mailglass.TestRepo, __MODULE__) == :ok
     assert SandboxOwnership.live_holder(Mailglass.TestRepo) == nil
   end
+
+  # ── with_schema!/2 (143-07, D-31 Class B) ───────────────────────────────
+
+  # 9. Restore-first: a raise registered AFTER with_schema!/2's own restore
+  # still runs — with_schema!/2's restore, registered first, still executes.
+  # The exact shape both confirmed Class B candidates got wrong: override,
+  # then work that can raise, then a trailing restore that gets skipped.
+  test "with_schema!/2 restores the captured schema even when work after it raises" do
+    # The boot schema is axis-dependent ("public" on the default suite,
+    # "mailglass" under the CI schema-isolation axis) — capture it live
+    # rather than hardcoding either value, so this test passes on both.
+    original = Mailglass.Config.schema()
+
+    assert_raise RuntimeError,
+                 "deliberate: simulates work that raises after the override",
+                 fn ->
+                   SandboxOwnership.with_schema!("with_schema_bang_raise_test_schema")
+                   raise "deliberate: simulates work that raises after the override"
+                 end
+
+    # `with_schema!/2` already took effect before the raise above — confirm
+    # the override was genuinely applied, not skipped.
+    # (Read via the same seam `with_schema!/2` itself uses.)
+    assert Mailglass.Config.schema() == "with_schema_bang_raise_test_schema"
+
+    # Force the on_exit chain to run NOW, same technique test 5 (above) uses
+    # to observe checkout!/1's release synchronously from inside one test.
+    result = ExUnit.OnExitHandler.run(self(), 5_000)
+    ExUnit.OnExitHandler.register(self())
+
+    assert result == :ok
+
+    # And yet — the restore DID run, despite the raise happening AFTER
+    # with_schema!/2 returned. The restore was registered BEFORE the raise
+    # ever ran, so it survives regardless.
+    assert Mailglass.Config.schema() == original
+  end
+
+  # 10. The composed "did not take effect" raise, driven through the
+  # injectable :schema_fun seam rather than a real Application-env race.
+  #
+  # `:schema_fun` also stands in for `with_schema!/2`'s OWN capture read (the
+  # same seam serves both), so this test's cleanup restores the real
+  # Application env directly rather than relying on `with_schema!/2`'s own
+  # on_exit — that on_exit captured the synthetic mismatched value below, not
+  # the true boot schema, by construction of this test.
+  test "with_schema!/2 raises a composed message when the override does not take effect" do
+    original = Mailglass.Config.schema()
+
+    on_exit(fn ->
+      Application.put_env(:mailglass, :schema, original)
+      :persistent_term.erase({Mailglass.Config, :schema})
+    end)
+
+    error =
+      assert_raise(
+        RuntimeError,
+        ~r/^Mailglass\.TestSupport\.SandboxOwnership: with_schema!\("mismatch-target"\) did not/,
+        fn ->
+          SandboxOwnership.with_schema!("mismatch-target",
+            schema_fun: fn -> "wrong-value-a-real-race-would-never-guarantee" end
+          )
+        end
+      )
+
+    assert error.message =~ "Config.schema/0 still returns"
+    assert error.message =~ "wrong-value-a-real-race-would-never-guarantee"
+  end
+
+  # ── baseline_tables_present?/1's missing-relation paths, driven through
+  # the with_schema!/2 seam rather than by actually dropping real tables
+  # (143-07, D-31 Class A) ─────────────────────────────────────────────────
+
+  # 11. `{false, missing}` — pointed at a schema that genuinely has none of
+  # the three baseline relations, without touching the real migrated schema
+  # at all. This is the exact mechanism migration_test.exs's,
+  # upgrade_v2_schema_migration_test.exs's, and
+  # schema_prefix_hardening_test.exs's own restore-verification on_exit
+  # blocks depend on.
+  test "baseline_tables_present?/1 reports {false, missing} for a schema with none of the three baseline relations" do
+    SandboxOwnership.with_schema!("with_schema_bang_baseline_missing_test_schema")
+
+    assert {false, missing} = SandboxOwnership.baseline_tables_present?(Mailglass.TestRepo)
+
+    assert Enum.sort(missing) ==
+             Enum.sort(~w(mailglass_deliveries mailglass_suppressions mailglass_webhook_events))
+  end
 end

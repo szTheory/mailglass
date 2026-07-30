@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 3
+open_count: 4
 waived_count: 0
 fixed_count: 2
-total_count: 5
-last_updated: 2026-07-30T02:20:05.006Z
+total_count: 6
+last_updated: 2026-07-30T02:31:56.233Z
 ---
 
 # Broken Windows Ledger
@@ -20,6 +20,7 @@ last_updated: 2026-07-30T02:20:05.006Z
 | 3 | 143 | deviation | test/mailglass/schema_isolation_immutability_test.exs | 213 | Pre-existing 'migrating down against prefix mailglass succeeds' failure on the mailglass axis — same Ecto.Migrator.down/4 bookkeeping-ambiguity root cause as the upgrade_v2_schema_migration_test.exs down-test fixed in 143-07, but the prefix:"public" fix does not transfer here (PrefixedWrapperMigration's create table(prefix:"mailglass") DSL macros raise Ecto.MigrationError when the outer migrator prefix differs); needs prefix: Mailglass.Config.schema() instead, deferred to a follow-up | open |  | 2026-07-30T01:49:09.727Z |  |
 | 4 | 143 | deviation | test/mailglass/persistence_integration_test.exs | 228 | migrated_version() == 0 on the mailglass axis (reproduces standalone) — Mailglass.Migrations.Postgres.migrated_version/1 hardcodes @default_prefix "public" (lib/mailglass/migrations/postgres.ex:8), a lib-level default unrelated to Sandbox-ownership Class A/B/C; needs prefix: Mailglass.Config.schema() threaded through, out of this plan's test-only files_modified scope | open |  | 2026-07-30T02:20:04.900Z |  |
 | 5 | 143 | deviation | test/mailglass/upgrade/v0_2_test.exs |  | Pre-existing Rewrite.Error: no source found failures (Igniter/Rewrite generator test-fixture subsystem, unrelated to Sandbox ownership) — reproduces standalone, last touched at commits b3acce29/750e5eda long before Phase 143; also affects test/mix/tasks/mailglass.gen.mailable_test.exs | open |  | 2026-07-30T02:20:05.006Z |  |
+| 6 | 143 | deviation | test/mailglass/properties/webhook_signature_failure_test.exs | 75 | Transient SandboxOwnership.LeakError on the mailglass-axis full-suite run only (not reproducible standalone, 2/2 clean isolated runs) — same benign settle-delay-under-heavy-pool-churn class 143-05 fixed for webhook_idempotency_convergence_test.exs via widened settle_attempts/interval_ms; this property may need the same widened window if it recurs. Class C/D-17 territory (143-04/05/08), not this plan's Class A/B scope | open |  | 2026-07-30T02:31:56.233Z |  |
 
 ````json
 [
@@ -81,6 +82,18 @@ last_updated: 2026-07-30T02:20:05.006Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-07-30T02:20:05.006Z",
+    "resolved_at": null
+  },
+  {
+    "id": 6,
+    "kind": "deviation",
+    "phase": "143",
+    "file": "test/mailglass/properties/webhook_signature_failure_test.exs",
+    "line": 75,
+    "description": "Transient SandboxOwnership.LeakError on the mailglass-axis full-suite run only (not reproducible standalone, 2/2 clean isolated runs) — same benign settle-delay-under-heavy-pool-churn class 143-05 fixed for webhook_idempotency_convergence_test.exs via widened settle_attempts/interval_ms; this property may need the same widened window if it recurs. Class C/D-17 territory (143-04/05/08), not this plan's Class A/B scope",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-30T02:31:56.233Z",
     "resolved_at": null
   }
 ]
