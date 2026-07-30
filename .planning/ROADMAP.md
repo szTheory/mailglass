@@ -156,7 +156,7 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 143-08-PLAN.md — `NoRawSandboxOwnership` Credo check, after proving `credo --strict` reaches `test/`
+- [x] 143-08-PLAN.md — `NoRawSandboxOwnership` Credo check, after proving `credo --strict` reaches `test/`
 - [ ] 143-09-PLAN.md — `SuiteFloor`, the signature classifier, and the negative controls
 
 **Wave 7** *(blocked on Wave 6 completion)*
@@ -202,7 +202,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 5/5 | Complete    | 2026-07-29 |
-| 143. Test-Harness Truth | 7/14 | In Progress|  |
+| 143. Test-Harness Truth | 8/14 | In Progress|  |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
 ## Planted Seeds

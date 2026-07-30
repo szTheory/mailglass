@@ -2,17 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 143
-current_phase_name: test-harness-truth
 status: executing
-stopped_at: Completed 143-07-PLAN.md
-last_updated: "2026-07-30T02:55:47.152Z"
-last_activity: 2026-07-29
+stopped_at: Completed 143-08-PLAN.md
+last_updated: "2026-07-30T04:10:47.026Z"
+last_activity: 2026-07-30
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 2
   total_plans: 25
-  completed_plans: 18
+  completed_plans: 19
+  percent: 50
 ---
 
 # Project State
@@ -27,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 8 of 14
+Plan: 9 of 14
 Status: Ready to execute
-Last activity: 2026-07-29
+Last activity: 2026-07-30
 
-Progress: [███████░░░] 72%
+Progress: [████████░░] 76%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -370,6 +369,9 @@ release debug campaign.
 - [Phase ?]: [143-06] Neither Task 3 file (migration_test.exs, upgrade_v2_schema_migration_test.exs) migrated to unboxed_run/2 -- both drive Ecto.Migrator.with_repo/2, which spawns a process unboxed_run cannot cover
 - [Phase ?]: [143-07] The ledger, not the research candidates, drove final scope — repo_test.exs (Application.delete_env/2 leaving :schema absent) and two schema_prefix_hardening_test.exs assertion helpers were fixed because the required full-suite run named them as live Class A/B sources, outside the plan's original files_modified
 - [Phase ?]: [143-07] Ecto.Migrator's schema_migrations bookkeeping resolves via ambient current_schema (not Mailglass.Config.schema()) absent an explicit :prefix — pin prefix: "public" on any up/4+down/4 pair whose content is raw execute/1 SQL; create table(prefix: ...) DSL migrations cannot use this fix (Ecto validates and rejects a mismatch)
+- [Phase ?]: 143-08: NoRawSandboxOwnership check deliberately does not copy the Swoosh analog's bare-tail-only over-match fallback — a bare Sandbox tail is only flagged via an explicit resolving alias
+- [Phase ?]: 143-08: test_helper.exs and the two deliver_*_test.exs healing calls migrated to a new SandboxOwnership.mode_manual!/1 rather than allowlisted or path-exempted, keeping the check's allowlist at exactly two modules
+- [Phase ?]: 143-08: mix credo --strict finding zero issues over the whole tree is the authoritative confirmation of full migration — the plan's literal acceptance-grep over-matches on the check's own test fixtures and is documented as an imprecise proxy
 
 ## Quick Tasks Completed
 
@@ -415,6 +417,7 @@ release debug campaign.
 | Phase 143 P05 | ~55min | 3 tasks | 8 files |
 | Phase 143 P06 | ~2h | 3 tasks | 9 files |
 | Phase 143 P07 | 130min | 3 tasks | 10 files |
+| Phase 143 P08 | 70min | 3 tasks | 8 files |
 
 ## Deferred Items
 
@@ -582,8 +585,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-30T02:55:47.140Z
-**Stopped at:** Completed 143-07-PLAN.md
+**Last session:** 2026-07-30T04:10:47.021Z
+**Stopped at:** Completed 143-08-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
