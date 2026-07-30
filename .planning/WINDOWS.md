@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 1
+open_count: 2
 waived_count: 0
 fixed_count: 6
-total_count: 7
-last_updated: 2026-07-30T05:09:01.520Z
+total_count: 8
+last_updated: 2026-07-30T18:46:50.738Z
 ---
 
 # Broken Windows Ledger
@@ -22,6 +22,7 @@ last_updated: 2026-07-30T05:09:01.520Z
 | 5 | 143 | deviation | test/mailglass/upgrade/v0_2_test.exs |  | Pre-existing Rewrite.Error: no source found failures (Igniter/Rewrite generator test-fixture subsystem, unrelated to Sandbox ownership) — reproduces standalone, last touched at commits b3acce29/750e5eda long before Phase 143; also affects test/mix/tasks/mailglass.gen.mailable_test.exs | fixed |  | 2026-07-30T02:20:05.006Z | 2026-07-30T03:36:44.079Z |
 | 6 | 143 | deviation | test/mailglass/properties/webhook_signature_failure_test.exs | 75 | Transient SandboxOwnership.LeakError on the mailglass-axis full-suite run only (not reproducible standalone, 2/2 clean isolated runs) — same benign settle-delay-under-heavy-pool-churn class 143-05 fixed for webhook_idempotency_convergence_test.exs via widened settle_attempts/interval_ms; this property may need the same widened window if it recurs. Class C/D-17 territory (143-04/05/08), not this plan's Class A/B scope | open |  | 2026-07-30T02:31:56.233Z |  |
 | 7 | 143 | deviation | test/mailglass/schema_isolation_immutability_test.exs | 217 | SUPERSEDES id 3's suggested fix: prefix: Mailglass.Config.schema() ("mailglass") for the outer Ecto.Migrator up/4+down/4 calls was implemented and empirically reproduces a genuine ~20s+ Postgres lock deadlock in do_lock_for_migrations (not just a failed assertion) — Ecto's own schema_migrations bookkeeping table then lives inside the very 'mailglass' schema this test's down/0 drops via DROP SCHEMA...RESTRICT, and the migration body's DROP runs before Migrator's own bookkeeping DELETE, so RESTRICT never sees an empty schema. Reverted to original code (clean, non-hanging failure). Real fix needs either bypassing Ecto.Migrator's public API (call the private Ecto.Migration.Runner.run/8 directly) or a Rule-4 architectural change to how the shipped Vxx migration modules thread :prefix through create table(...) DSL calls — both out of test-only scope. See 143-07-SUMMARY.md Orchestrator-directed gap closure section for full evidence. | fixed |  | 2026-07-30T03:37:03.181Z | 2026-07-30T05:09:01.453Z |
+| 8 | 143 | unrun-verify | .github/workflows/advisory-matrix.yml |  | 143-10: no post-change advisory-matrix.yml dispatch with MAILGLASS_SUITE_FLOOR live (process constraints forbid dispatch); the 1.19/OTP 28 legs now enforce floors measured on the 1.18 legs and have never executed on this branch | open |  | 2026-07-30T18:46:50.738Z |  |
 
 ````json
 [
@@ -108,6 +109,18 @@ last_updated: 2026-07-30T05:09:01.520Z
     "reason": "",
     "recorded_at": "2026-07-30T03:37:03.181Z",
     "resolved_at": "2026-07-30T05:09:01.453Z"
+  },
+  {
+    "id": 8,
+    "kind": "unrun-verify",
+    "phase": "143",
+    "file": ".github/workflows/advisory-matrix.yml",
+    "line": null,
+    "description": "143-10: no post-change advisory-matrix.yml dispatch with MAILGLASS_SUITE_FLOOR live (process constraints forbid dispatch); the 1.19/OTP 28 legs now enforce floors measured on the 1.18 legs and have never executed on this branch",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-30T18:46:50.738Z",
+    "resolved_at": null
   }
 ]
 ````
