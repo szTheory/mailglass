@@ -25,6 +25,99 @@ defmodule Mailglass.TestSupport.SandboxOwnership.LeakError do
   end
 end
 
+defmodule Mailglass.TestSupport.SandboxOwnership.ScratchSchemaError do
+  @moduledoc """
+  Raised by `Mailglass.TestSupport.SandboxOwnership.scratch_schema!/2` when a
+  module declares a *scratch* schema prefix that is not actually scratch — it
+  names either the live schema `Mailglass.Config.schema/0` currently resolves
+  to, or the shared `public` schema.
+
+  **Why this exception exists (D-31 Class A).** Five `async: false` modules
+  hardcoded `@prefix "mailglass"` as their scratch prefix and ran
+  `DROP SCHEMA IF EXISTS mailglass CASCADE` in setup and again in `on_exit`.
+  On the default `public` axis that scratch schema is disjoint from the
+  baseline, so the drop is harmless. Under
+  `MAILGLASS_SCHEMA=mailglass` the scratch prefix IS the live baseline schema,
+  so those modules CASCADE-dropped the migration baseline out from under the
+  rest of the run. The suite then failed with
+  `(Postgrex.Error) ERROR 42P01 (undefined_table)` in six or seven wholly
+  unrelated victim modules hundreds of tests later — a misattribution that
+  cost two full diagnosis cycles.
+
+  This exception ends that class of misattribution by name: it fires at the
+  module that would corrupt the baseline, before a single DDL statement runs,
+  and it names both that module and the live schema it was about to destroy.
+  """
+  defexception [:caller, :requested, :live_schema, :reason]
+
+  @impl true
+  def message(%__MODULE__{
+        caller: caller,
+        requested: requested,
+        live_schema: live_schema,
+        reason: reason
+      }) do
+    "Mailglass.TestSupport.SandboxOwnership: #{inspect(caller)} declared " <>
+      "#{inspect(requested)} as a SCRATCH schema, but #{scratch_violation(reason, live_schema)} " <>
+      "A scratch schema is one this module may CREATE, migrate into, and " <>
+      "DROP ... CASCADE without consequence for any other module in the run. " <>
+      "Pick a name unique to this module and disjoint from both \"public\" and " <>
+      "the live schema — the naming precedent is " <>
+      "`mailglass_shipped_path_test` in " <>
+      "test/mailglass/shipped_migration_divergence_test.exs. Refusing to " <>
+      "proceed: the DROP SCHEMA below would have destroyed the migration " <>
+      "baseline and surfaced as a 42P01 cascade in unrelated modules."
+  end
+
+  defp scratch_violation(:live_schema, live_schema) do
+    "that is the LIVE schema Mailglass.Config.schema/0 currently resolves to " <>
+      "(#{inspect(live_schema)}) — the schema holding this run's migration baseline."
+  end
+
+  defp scratch_violation(:public, _live_schema) do
+    "\"public\" is the shared ambient schema (it holds the citext extension and, " <>
+      "on the default axis, the migration baseline itself) — never scratch."
+  end
+end
+
+defmodule Mailglass.TestSupport.SandboxOwnership.BaselineError do
+  @moduledoc """
+  Raised by `Mailglass.TestSupport.SandboxOwnership.assert_baseline_intact!/2`
+  when the migration baseline relations are absent from the schema
+  `Mailglass.Config.schema/0` resolves to, or when their presence could not be
+  observed at all (D-31 Class A).
+
+  Attribution is the whole point: this raises at the boundary of the module
+  that broke (or failed to restore) the baseline, naming that module and the
+  missing relations, instead of letting an unrelated module hundreds of tests
+  later fail with `42P01 (undefined_table)`.
+
+  A `:cannot_verify` result raises just as loudly as a `{false, missing}` one —
+  a check that cannot observe its subject must never report success.
+  """
+  defexception [:caller, :schema, :missing, :reason]
+
+  @impl true
+  def message(%__MODULE__{caller: caller, schema: schema, missing: missing, reason: nil}) do
+    "Mailglass.TestSupport.SandboxOwnership: #{inspect(caller)} left the migration " <>
+      "baseline incomplete — #{inspect(missing)} absent from schema #{inspect(schema)}. " <>
+      "The next module to query these relations would have failed with 42P01 for a " <>
+      "reason that had nothing to do with it; failing here instead, at the module that " <>
+      "actually broke the baseline. Rebuild a clean local baseline with " <>
+      "`MIX_ENV=test mix ecto.drop -r Mailglass.TestRepo && MIX_ENV=test mix ecto.create " <>
+      "-r Mailglass.TestRepo`, or investigate why the migrator considered these " <>
+      "relations already applied."
+  end
+
+  @impl true
+  def message(%__MODULE__{caller: caller, schema: schema, reason: reason}) do
+    "Mailglass.TestSupport.SandboxOwnership: #{inspect(caller)} could not verify the " <>
+      "migration baseline in schema #{inspect(schema)} — the verification probe itself " <>
+      "failed (#{inspect(reason)}). A check that cannot observe its subject must never " <>
+      "report success, so this is a failure, not a pass."
+  end
+end
+
 defmodule Mailglass.TestSupport.SandboxOwnership do
   @moduledoc """
   The one sanctioned door for Ecto Sandbox ownership acquisition and release
@@ -59,6 +152,11 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     pool-wide `:auto` mode, with the revert registered first.
   - `with_schema!/2` — overrides `Mailglass.Config.schema/0`, with the restore
     registered before the override is even applied (D-31 Class B).
+  - `scratch_schema!/2` — the sanctioned declaration of a throwaway schema
+    prefix, raising `ScratchSchemaError` when the requested name is the live
+    schema or `public` (D-31 Class A).
+  - `assert_baseline_intact!/2` — read-only baseline verification that raises
+    `BaselineError`, naming the calling module (D-31 Class A).
   - `unsandboxed/2` — the preferred forward idiom for a single committed write.
   - `mode_manual!/1` — the raw `Sandbox.mode(repo, :manual)` write, for the
     two narrow callers (suite boot; a pre-release healing revert) that need
@@ -67,6 +165,9 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   - `assert_manual!/3` — raises `LeakError` when the pool is not `:manual`.
   - `live_holder/0` — the current shared-owner pid, or `nil`.
   - `baseline_tables_present?/1` — read-only baseline-relation check (Class A).
+    Prefer `assert_baseline_intact!/2` at a test call site; the predicate form
+    exists for `Mailglass.TestSupport.SuiteTruthFormatter`, which records a
+    violation rather than raising.
   - `reloading_flat_migrations/1` — scopes `ignore_module_conflict` around a
     flat-`priv/repo/migrations/` reload (HARNESS-02's redefining-module
     blocker), restored in an `after` block.
@@ -175,15 +276,23 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
       # A file that genuinely needs pool-wide :auto (migrations, schema drop/recreate):
       setup :unsandboxed_module
 
-      # A file that overrides `config :mailglass, :schema` for its own tests:
-      Mailglass.TestSupport.SandboxOwnership.with_schema!("mailglass")
+      # A file that stands up a throwaway schema of its own, and overrides
+      # `config :mailglass, :schema` to point at it. scratch_schema!/2 comes
+      # FIRST — see its own docs for why the ordering is load-bearing:
+      prefix = Mailglass.TestSupport.SandboxOwnership.scratch_schema!(@prefix, caller: __MODULE__)
+      Mailglass.TestSupport.SandboxOwnership.with_schema!(prefix)
+
+      # In that same file's `on_exit`, after tearing the scratch schema down:
+      Mailglass.TestSupport.SandboxOwnership.assert_baseline_intact!(__MODULE__)
 
       # In `Mailglass.TestSupport.SuiteTruthFormatter`'s `:module_finished` handler:
       Mailglass.TestSupport.SandboxOwnership.probe(Mailglass.TestRepo)
       Mailglass.TestSupport.SandboxOwnership.baseline_tables_present?(Mailglass.TestRepo)
   """
 
+  alias Mailglass.TestSupport.SandboxOwnership.BaselineError
   alias Mailglass.TestSupport.SandboxOwnership.LeakError
+  alias Mailglass.TestSupport.SandboxOwnership.ScratchSchemaError
 
   @doc """
   Checks out the Sandbox pool for the calling test, registering the release
@@ -328,6 +437,65 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     end)
 
     :ok
+  end
+
+  @doc """
+  Returns `name` unchanged after asserting it is genuinely a **scratch**
+  schema — one the calling module may `CREATE SCHEMA`, migrate into, and
+  `DROP SCHEMA ... CASCADE` without consequence for any other module in the
+  run — and raises `ScratchSchemaError` otherwise (D-31 Class A).
+
+  Two names are refused:
+
+    * the live schema `Mailglass.Config.schema/0` currently resolves to —
+      the schema holding this run's migration baseline; and
+    * `"public"` — the shared ambient schema (it owns the `citext` extension,
+      and on the default axis the baseline itself), which is never scratch
+      even on an axis where it is not the live schema.
+
+  **Why this is a raise and not a rename-and-continue.** Silently substituting
+  a safe name would make the guard invisible: the module would keep asserting
+  against a prefix it did not declare, and the next person to hardcode
+  `"mailglass"` would get a passing suite with no signal. A raise attributes
+  the fault to the module that would have caused it, before any DDL runs.
+
+  **Ordering is load-bearing: call this BEFORE `with_schema!/2`, never after.**
+  `with_schema!/2` makes `Mailglass.Config.schema/0` return the scratch name
+  for the rest of the test, at which point the scratch name IS the resolved
+  schema and this function would refuse it. That is deliberate fail-closed
+  behavior, not a false positive to work around — the invariant this function
+  protects is "the schema the REST OF THE SUITE needs", and the only moment a
+  caller can observe that value is before its own override lands. Placing this
+  call as the first statement of `setup` satisfies the ordering naturally.
+
+  Accepts `:caller` (default: the calling test's module, resolved the same way
+  `checkout!/1` resolves it — see "Async guards" in the moduledoc) so the raise
+  names the module at fault, and `:schema_fun` (default
+  `&Mailglass.Config.schema/0`), mirroring `with_schema!/2`'s own injectable
+  seam so both raise paths are testable without manufacturing a real axis.
+  """
+  @spec scratch_schema!(String.t(), keyword()) :: String.t()
+  def scratch_schema!(name, opts \\ []) when is_binary(name) do
+    schema_fun = Keyword.get(opts, :schema_fun, &Mailglass.Config.schema/0)
+    caller = Keyword.get(opts, :caller) || calling_test_module() || __MODULE__
+    live_schema = schema_fun.()
+
+    reason =
+      cond do
+        name == live_schema -> :live_schema
+        name == "public" -> :public
+        true -> nil
+      end
+
+    if reason do
+      raise ScratchSchemaError,
+        caller: caller,
+        requested: name,
+        live_schema: live_schema,
+        reason: reason
+    end
+
+    name
   end
 
   @doc """
@@ -557,13 +725,40 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     end
   end
 
-  @baseline_relations ~w(mailglass_deliveries mailglass_suppressions mailglass_webhook_events)
+  # ENUMERATED FROM THE SHIPPED INSTALL MIGRATION, not from a CI log excerpt.
+  # `Mailglass.Migration.up/1` dispatches v01..v05
+  # (`lib/mailglass/migrations/postgres/`), and exactly four `create table`
+  # calls exist across all five steps:
+  #
+  #   v01.ex:21  create table(:mailglass_deliveries, prefix: prefix)
+  #   v01.ex:77  create table(:mailglass_events, prefix: prefix)
+  #   v01.ex:163 create table(:mailglass_suppressions, prefix: prefix)
+  #   v02.ex:28  create table(:mailglass_webhook_events, prefix: prefix)
+  #
+  # v03/v04/v05 add columns, indexes and constraints only — no further tables.
+  # Re-derive this list with:
+  #   grep -rn 'create table' lib/mailglass/migrations/
+  #
+  # `mailglass_events` was ABSENT from this list until the 143 gap-closure pass,
+  # which is why every `baseline_tables_present?/1` call site reported a restore
+  # it had not actually verified: the append-only ledger — the first relation CI
+  # named as missing — was the one relation the probe could not observe. A check
+  # that cannot observe its subject must not report success, and an incomplete
+  # subject list is exactly that failure wearing a `true`.
+  @baseline_relations ~w(mailglass_deliveries mailglass_events mailglass_suppressions mailglass_webhook_events)
 
   @doc """
-  Checks whether the three CI-log-named baseline relations
-  (`mailglass_deliveries`, `mailglass_suppressions`, `mailglass_webhook_events`)
-  exist in the schema `Mailglass.Config.schema()` currently resolves to —
-  Class A (D-31): the migration baseline was torn down and not restored.
+  Checks whether all four baseline relations the shipped install migration
+  creates (`mailglass_deliveries`, `mailglass_events`, `mailglass_suppressions`,
+  `mailglass_webhook_events`) exist in the schema `Mailglass.Config.schema()`
+  currently resolves to — Class A (D-31): the migration baseline was torn down
+  and not restored.
+
+  Prefer `assert_baseline_intact!/2` from a test call site: it raises, naming
+  the calling module and the absent relations, rather than returning a value a
+  caller can forget to inspect. This predicate form exists for
+  `Mailglass.TestSupport.SuiteTruthFormatter`, which records a violation
+  instead of raising.
 
   Read-only. Queries Postgres' `information_schema.tables` catalog — never
   `CREATE TABLE`, never a migration, never anything that could make an
@@ -577,7 +772,7 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
 
   Returns:
 
-    * `true` — all three relations are present in the current schema.
+    * `true` — all four relations are present in the current schema.
     * `{false, missing}` — `missing` is the subset of `@baseline_relations`
       not found. Never merely `false`, so the formatter can name exactly
       what's absent without a second query.
@@ -616,6 +811,48 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
 
   defp classify_baseline_result({:error, error}) do
     {:cannot_verify, error}
+  end
+
+  @doc """
+  Asserts every baseline relation is present in the schema
+  `Mailglass.Config.schema/0` resolves to, raising `BaselineError` (naming
+  `caller`) when any is absent OR when their presence could not be observed.
+  Returns `:ok` otherwise.
+
+  This is the raising counterpart to `baseline_tables_present?/1`, and the form
+  every test call site should use. Four modules previously hand-rolled the same
+  three-clause `case` around the predicate, each with its own message wording;
+  one of the four also wrapped it in an axis guard that skipped the check
+  entirely on the axis where it mattered most. Collapsing them onto one
+  function makes the "cannot verify" branch impossible to omit by accident.
+
+  Read-only, deliberately: it observes and reports, it never restores. Healing
+  a baseline as a side effect of looking at it is the exact behavior D-31
+  forbids, because it turns a reproducible corruption into an invisible one.
+  A caller that genuinely needs to restore the baseline (because it tore the
+  baseline itself down by design) restores first, then calls this to verify the
+  restore actually landed.
+
+  Accepts an injectable `:baseline_fun` (default `&baseline_tables_present?/1`)
+  and `:schema_fun` (default `&Mailglass.Config.schema/0`), mirroring
+  `assert_manual!/3`'s `probe_fun:` idiom, so both raise paths are testable
+  without dropping real tables.
+  """
+  @spec assert_baseline_intact!(module(), term(), keyword()) :: :ok
+  def assert_baseline_intact!(repo \\ Mailglass.TestRepo, caller, opts \\ []) do
+    baseline_fun = Keyword.get(opts, :baseline_fun, &baseline_tables_present?/1)
+    schema_fun = Keyword.get(opts, :schema_fun, &Mailglass.Config.schema/0)
+
+    case baseline_fun.(repo) do
+      true ->
+        :ok
+
+      {false, missing} ->
+        raise BaselineError, caller: caller, schema: schema_fun.(), missing: missing
+
+      {:cannot_verify, reason} ->
+        raise BaselineError, caller: caller, schema: schema_fun.(), reason: reason
+    end
   end
 
   @doc """

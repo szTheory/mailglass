@@ -345,12 +345,179 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
   # upgrade_v2_schema_migration_test.exs's, and
   # schema_prefix_hardening_test.exs's own restore-verification on_exit
   # blocks depend on.
-  test "baseline_tables_present?/1 reports {false, missing} for a schema with none of the three baseline relations" do
+  test "baseline_tables_present?/1 reports {false, missing} for a schema with none of the four baseline relations" do
     SandboxOwnership.with_schema!("with_schema_bang_baseline_missing_test_schema")
 
     assert {false, missing} = SandboxOwnership.baseline_tables_present?(Mailglass.TestRepo)
 
     assert Enum.sort(missing) ==
-             Enum.sort(~w(mailglass_deliveries mailglass_suppressions mailglass_webhook_events))
+             Enum.sort(
+               ~w(mailglass_deliveries mailglass_events mailglass_suppressions mailglass_webhook_events)
+             )
+  end
+
+  # 12. THE INSTRUMENT GAP, pinned. `@baseline_relations` omitted
+  # `mailglass_events` — the append-only ledger, and the very first relation the
+  # CI logs named as missing. Every `baseline_tables_present?/1` call site
+  # therefore reported a restore it had not verified: a schema holding the other
+  # three relations but NOT the ledger read back as `true`.
+  #
+  # This test builds exactly that schema and asserts the probe now SEES the gap.
+  # Deleting `mailglass_events` from `@baseline_relations` makes this test fail
+  # (it is the mutation check for that fix, expressed as a permanent test rather
+  # than a one-off experiment).
+  test "baseline_tables_present?/1 names mailglass_events when it is the ONLY absent relation" do
+    schema = "baseline_relations_ledger_gap_test_schema"
+
+    on_exit(fn ->
+      SandboxOwnership.unsandboxed(fn ->
+        Ecto.Adapters.SQL.query!(Mailglass.TestRepo, ~s(DROP SCHEMA IF EXISTS "#{schema}" CASCADE))
+      end)
+    end)
+
+    SandboxOwnership.unsandboxed(fn ->
+      Ecto.Adapters.SQL.query!(Mailglass.TestRepo, ~s(CREATE SCHEMA IF NOT EXISTS "#{schema}"))
+
+      # Every baseline relation EXCEPT mailglass_events. A probe blind to the
+      # ledger reports `true` here; a complete one reports the ledger missing.
+      for table <- ~w(mailglass_deliveries mailglass_suppressions mailglass_webhook_events) do
+        Ecto.Adapters.SQL.query!(
+          Mailglass.TestRepo,
+          ~s|CREATE TABLE IF NOT EXISTS "#{schema}"."#{table}" (id uuid PRIMARY KEY)|
+        )
+      end
+    end)
+
+    SandboxOwnership.with_schema!(schema)
+
+    assert SandboxOwnership.baseline_tables_present?(Mailglass.TestRepo) ==
+             {false, ["mailglass_events"]}
+  end
+
+  # ── scratch_schema!/2 (143 gap closure, D-31 Class A) ────────────────────
+
+  # 13. The live schema is refused, and the raise NAMES the module at fault and
+  # the schema it was about to destroy — the whole point of the guard is that the
+  # failure lands here rather than as a 42P01 in an innocent module later.
+  test "scratch_schema!/2 raises when the requested prefix IS the live schema" do
+    error =
+      assert_raise(SandboxOwnership.ScratchSchemaError, fn ->
+        SandboxOwnership.scratch_schema!("mailglass",
+          caller: Mailglass.SomePretendSchemaIsolationTest,
+          schema_fun: fn -> "mailglass" end
+        )
+      end)
+
+    assert error.caller == Mailglass.SomePretendSchemaIsolationTest
+    assert error.requested == "mailglass"
+    assert error.live_schema == "mailglass"
+    assert error.reason == :live_schema
+
+    message = Exception.message(error)
+    assert message =~ "Mailglass.SomePretendSchemaIsolationTest"
+    assert message =~ "LIVE schema"
+    assert message =~ "mailglass_shipped_path_test"
+  end
+
+  # 14. "public" is refused even on an axis where it is NOT the live schema —
+  # it holds the citext extension the whole suite depends on.
+  test "scratch_schema!/2 raises for \"public\" even when the live schema is something else" do
+    error =
+      assert_raise(SandboxOwnership.ScratchSchemaError, fn ->
+        SandboxOwnership.scratch_schema!("public",
+          caller: Mailglass.SomePretendSchemaIsolationTest,
+          schema_fun: fn -> "mailglass" end
+        )
+      end)
+
+    assert error.reason == :public
+    assert Exception.message(error) =~ "shared ambient schema"
+  end
+
+  # 15. The pass-through path: a genuinely scratch name is returned unchanged so
+  # it can be used pipe-first / bound in `setup`.
+  test "scratch_schema!/2 returns a genuinely scratch name unchanged" do
+    assert SandboxOwnership.scratch_schema!("mailglass_some_scratch_test",
+             caller: __MODULE__,
+             schema_fun: fn -> "mailglass" end
+           ) == "mailglass_some_scratch_test"
+  end
+
+  # 16. NON-VACUITY for the five migrated modules: every one of the five
+  # scratch-schema modules must declare a prefix this guard actually accepts on
+  # BOTH axes. Reading the literals out of the sources means a future edit that
+  # re-types "mailglass" (or "public") into any of them fails HERE, at a named
+  # assertion, rather than only on the axis where it happens to be destructive.
+  test "all five scratch-schema modules declare a prefix that is scratch on both axes" do
+    sources = [
+      "test/mailglass/schema_prefix_hardening_test.exs",
+      "test/mailglass/schema_isolation_immutability_test.exs",
+      "test/mailglass/schema_isolation_integration_test.exs",
+      "test/mailglass/upgrade_v2_schema_migration_test.exs",
+      "test/mailglass/migration_test.exs"
+    ]
+
+    for source <- sources do
+      declared =
+        source
+        |> File.read!()
+        |> then(&Regex.scan(~r/@(?:prefix|scratch_schema)\s+"([^"]+)"/, &1))
+        |> Enum.map(fn [_, name] -> name end)
+        |> Enum.uniq()
+
+      assert declared != [],
+             "#{source} declares no @prefix/@scratch_schema — the regex above must be " <>
+               "updated if the declaration shape changed"
+
+      for name <- declared do
+        # Both axes, driven through the real guard rather than re-implemented.
+        for live <- ~w(public mailglass) do
+          assert SandboxOwnership.scratch_schema!(name,
+                   caller: source,
+                   schema_fun: fn -> live end
+                 ) == name
+        end
+      end
+    end
+  end
+
+  # ── assert_baseline_intact!/3 (143 gap closure, D-31 Class A) ────────────
+
+  # 17. The real, migrated schema passes.
+  test "assert_baseline_intact!/3 returns :ok against the real migrated schema" do
+    assert SandboxOwnership.assert_baseline_intact!(Mailglass.TestRepo, __MODULE__) == :ok
+  end
+
+  # 18. A missing relation raises, naming the caller and the relation.
+  test "assert_baseline_intact!/3 raises BaselineError naming the caller and the missing relations" do
+    error =
+      assert_raise(SandboxOwnership.BaselineError, fn ->
+        SandboxOwnership.assert_baseline_intact!(Mailglass.TestRepo, Mailglass.SomePretendTest,
+          baseline_fun: fn _repo -> {false, ["mailglass_events"]} end,
+          schema_fun: fn -> "mailglass" end
+        )
+      end)
+
+    message = Exception.message(error)
+    assert message =~ "Mailglass.SomePretendTest"
+    assert message =~ "mailglass_events"
+    assert message =~ ~s("mailglass")
+  end
+
+  # 19. `:cannot_verify` raises just as loudly — a check that cannot observe its
+  # subject must never report success.
+  test "assert_baseline_intact!/3 raises BaselineError on :cannot_verify, never :ok" do
+    error =
+      assert_raise(SandboxOwnership.BaselineError, fn ->
+        SandboxOwnership.assert_baseline_intact!(Mailglass.TestRepo, Mailglass.SomePretendTest,
+          baseline_fun: fn _repo -> {:cannot_verify, "42P01"} end,
+          schema_fun: fn -> "mailglass" end
+        )
+      end)
+
+    message = Exception.message(error)
+    assert message =~ "could not verify"
+    assert message =~ "42P01"
+    assert message =~ "must never"
   end
 end
