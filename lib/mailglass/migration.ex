@@ -53,6 +53,13 @@ defmodule Mailglass.Migration do
   @doc since: "0.1.0"
   @spec migrated_version(keyword()) :: non_neg_integer()
   def migrated_version(opts \\ []) when is_list(opts) do
+    # Inject the configured schema as the query prefix (same MIGR-01 default
+    # `up/1`/`down/1` already apply above) — an explicit caller `:prefix`
+    # still wins via `Keyword.put_new`. Without this, a caller on a non-
+    # default schema (e.g. the `mailglass` schema-isolation axis) silently
+    # queried `public.mailglass_events`'s pg_class comment instead of the
+    # configured schema's, always reporting 0 even when fully migrated.
+    opts = Keyword.put_new(opts, :prefix, Mailglass.Config.schema())
     # Inject the configured Repo so the dispatcher can run the version
     # query without needing an active `use Ecto.Migration` runner.
     opts = Keyword.put_new(opts, :repo, resolve_repo())
