@@ -202,6 +202,11 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     pool-wide `:auto` mode, with the revert registered first.
   - `with_schema!/2` — overrides `Mailglass.Config.schema/0`, with the restore
     registered before the override is even applied (D-31 Class B).
+  - `with_app_env!/2` — the ONLY sanctioned Application-env save/restore:
+    re-puts every captured key AND deletes every key the test added, then
+    verifies (D-31 Class D). `Mailglass.Credo.NoRawAppEnvRestore` fails the
+    build on any `Application.put_all_env/1` under `test/` outside this door,
+    because that function merges and can never remove an added key.
   - `with_search_path!/3` — the ONLY sanctioned `search_path` override: pins one
     pooled connection, restores it, and verifies the restore landed (D-31
     Class A). `Mailglass.Credo.NoRawSearchPathMutation` fails the build on any
@@ -783,6 +788,212 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     _ = Keyword.get(opts, :repo, Mailglass.TestRepo)
 
     :ok
+  end
+
+  @doc """
+  Guarantees the calling test restores `app`'s Application env EXACTLY —
+  key-for-key, including REMOVING keys the test adds — when it exits
+  (D-31 Class D).
+
+  ## The bug this replaces, stated precisely
+
+  Seven `test/` modules hand-rolled the same "snapshot and put it back"
+  restore:
+
+      prior = Application.get_all_env(:mailglass)
+      on_exit(fn -> Application.put_all_env(mailglass: prior) end)
+
+  `Application.put_all_env/1` **merges**. It writes every key in the snapshot
+  and touches nothing else, so it is structurally incapable of removing a key
+  the test ADDED — a key absent from the snapshot is absent from the write
+  set, and the test's value survives into every later module in the run. The
+  idiom reads like a restore and is one only for keys that already existed.
+
+  Every one of those seven modules writes `config :mailglass, :compliance`,
+  which is in no `config/*.exs` and therefore absent at boot — so all seven
+  leaked it on every run. Two of them also install a `@behaviour
+  Mailglass.Tenancy` resolver whose `scope/2` applies `as: :scoped`, and
+  `Mailglass.Operator.SupportSummary.orphan_backlog_summary/2` builds a query
+  already aliased `as: :orphan` — so a leaked resolver turns every later
+  caller of that function into
+  `** (Ecto.Query.CompileError) can't apply alias :scoped, binding in from is
+  already aliased to :orphan`, hundreds of tests away from the module that
+  leaked. Observed in CI run `30571989203` (mailglass gating leg, seed
+  `590679`) on a DOCS-ONLY commit, green two commits later with `lib/`
+  byte-identical.
+
+  **The compositional trap, which is why one hand-rolled `delete_env` is not
+  a fix.** `:tenancy` IS pinned at boot (`config/test.exs:19`,
+  `Mailglass.Tenancy.SingleTenant`), so `put_all_env/1` does restore it — on
+  a run where nothing deleted it first. `unsubscribe_property_test.exs`'s
+  `on_exit` deleted it, as its own hand-rolled hardening. Any module whose
+  snapshot is taken AFTER that deletion has no `:tenancy` key to write back,
+  so its own `put_all_env/1` restore can no longer remove the resolver it
+  installs. One file's local fix is what arms the other file's leak, and
+  which of the two runs first is not a property either file can see.
+
+  ## What this function does instead
+
+  Captures `Application.get_all_env(app)` and, on the statement immediately
+  following capture — the same D-11 ordering invariant `with_schema!/2`
+  carries — registers an `on_exit` that:
+
+    1. `Application.put_env/3`s every captured key back, AND
+    2. `Application.delete_env/2`s every key present at exit that was NOT
+       present at capture, and
+    3. VERIFIES the result equals the capture, raising if it does not.
+
+  Step 2 is the one `put_all_env/1` cannot express. Step 3 exists because a
+  restore that cannot confirm it landed is a check reporting success without
+  observing its subject.
+
+  Registering the restore BEFORE any of the caller's own writes means a raise
+  anywhere in the test still restores — the same inversion `checkout!/1` and
+  `with_schema!/2` apply to their own resources.
+
+  `Mailglass.Credo.NoRawAppEnvRestore` fails the build on any
+  `Application.put_all_env/1` under `test/` outside this door, so the merging
+  idiom cannot be re-typed. That check is deliberately narrow — it catches the
+  one idiom that is NEVER a correct restore. The general case (a
+  `get_env`/`put_env` pair whose captured value was `nil` because the key was
+  absent) is not statically decidable, and is covered at runtime instead by
+  `SuiteTruthFormatter`'s Class D `:app_env_drift` probe, which compares the
+  whole env against boot at every `async: false` module boundary regardless of
+  which idiom produced the drift.
+
+  ## Only from `async: false` modules
+
+  This restores the WHOLE app env, so it claims every key, not just the ones
+  its caller wrote. That is exactly what makes it a correct restore — and it
+  is only safe when no other module can be writing that env concurrently. The
+  repo's own async policy already requires `async: false` for any module that
+  mutates env the code under test reads (see this module's "Async policy"
+  section, reason 2), so this is not a new constraint on correctly-tagged
+  code.
+
+  Two `async: true` modules do mutate `:mailglass` env today —
+  `compliance_test.exs` (`:tracking`, `:compliance`) and `clock_test.exs`
+  (`:clock`) — and Phase 143 changes no file's `async:` value (D-11/D-31).
+  They therefore use PER-KEY presence-aware restores instead:
+
+      prior = Application.fetch_env(:mailglass, :some_key)
+      on_exit(fn ->
+        case prior do
+          :error -> Application.delete_env(:mailglass, :some_key)
+          {:ok, value} -> Application.put_env(:mailglass, :some_key, value)
+        end
+      end)
+
+  `fetch_env/2`'s `:error` is what distinguishes "absent" from "present and
+  `nil`" — the distinction `get_env/2` cannot make and the reason the
+  `put_env(app, key, prior)` idiom creates a `nil`-valued key rather than
+  removing it. Same semantics as this function for the keys the caller owns,
+  no claim over any key it does not.
+
+  ## `Mailglass.Config`'s `:persistent_term` cache
+
+  When the restore actually changes `config :mailglass, :schema`, this also
+  erases `{Mailglass.Config, :schema}` — the same cache-invalidation
+  `with_schema!/2` performs, through the same documented boundary, so
+  `Mailglass.Config.schema/0` re-reads and re-validates on its next call.
+  Erasing only on a real change keeps this from quietly warming the cache on
+  every test that changed nothing.
+
+  ## Options
+
+    * `:on_exit_fun` — the registration function, default
+      `&ExUnit.Callbacks.on_exit/1`. Injected ONLY so
+      `sandbox_ownership_test.exs` can drive the restore body directly and
+      assert the removal and verification paths, mirroring
+      `with_schema!/2`'s `:schema_fun` seam.
+  """
+  @spec with_app_env!(atom(), keyword()) :: :ok
+  def with_app_env!(app, opts \\ []) when is_atom(app) do
+    captured = Application.get_all_env(app)
+
+    # INVARIANT (D-11, D-31 Class D): this registration is the very next
+    # statement after the capture, before the caller performs any write of its
+    # own. Every `Application.put_env/3` the caller makes sits below it, so a
+    # raise anywhere below still restores.
+    on_exit_fun = Keyword.get(opts, :on_exit_fun, &ExUnit.Callbacks.on_exit/1)
+    on_exit_fun.(fn -> restore_app_env!(app, captured) end)
+
+    :ok
+  end
+
+  @doc """
+  The restore body `with_app_env!/2` registers. Public so
+  `sandbox_ownership_test.exs` exercises the real code path rather than a
+  re-implementation (D-09).
+
+  Writes every captured key, deletes every key that appeared since the
+  capture, erases `Mailglass.Config`'s schema cache when the restore actually
+  moved `:schema`, then verifies the resulting env equals `captured` — raising
+  when it does not, because a restore that cannot confirm it landed must not
+  report success.
+
+  ## Options
+
+    * `:read_fun` — `(atom() -> keyword())`, default
+      `&Application.get_all_env/1`, used ONLY for the post-write verification
+      read. This is the seam the "did not land" raise is tested through, and
+      it exists because the failure is otherwise UNREACHABLE from a test:
+      `with_app_env!/2` always passes a capture taken from the live env, and
+      writing that capture back always satisfies the comparison. The only
+      real-world trigger is a concurrent writer, which cannot be staged
+      deterministically. Mirrors `with_schema!/2`'s `:schema_fun` seam and
+      `assert_manual!/3`'s `:probe_fun`.
+
+      Passing a capture that is NOT a live snapshot — e.g. a one-key list —
+      does not exercise the raise; it makes the restore succeed at deleting
+      every other key, which is what the function is documented to do. Do not
+      test the raise that way.
+  """
+  @spec restore_app_env!(atom(), keyword(), keyword()) :: :ok
+  def restore_app_env!(app, captured, opts \\ []) when is_atom(app) and is_list(captured) do
+    schema_before = Application.get_env(:mailglass, :schema)
+
+    captured_keys = captured |> Keyword.keys() |> MapSet.new()
+
+    Enum.each(captured, fn {key, value} -> Application.put_env(app, key, value) end)
+
+    # The step `Application.put_all_env/1` cannot express: a key the test ADDED
+    # is, by construction, absent from the capture and therefore absent from
+    # the write set above.
+    app
+    |> Application.get_all_env()
+    |> Keyword.keys()
+    |> Enum.reject(&MapSet.member?(captured_keys, &1))
+    |> Enum.each(&Application.delete_env(app, &1))
+
+    if app == :mailglass and Application.get_env(:mailglass, :schema) != schema_before do
+      :persistent_term.erase({Mailglass.Config, :schema})
+    end
+
+    read_fun = Keyword.get(opts, :read_fun, &Application.get_all_env/1)
+    verify_app_env_restored!(app, captured, read_fun)
+  end
+
+  defp verify_app_env_restored!(app, captured, read_fun) do
+    observed = read_fun.(app)
+
+    if Enum.sort(observed) == Enum.sort(captured) do
+      :ok
+    else
+      captured_keys = captured |> Keyword.keys() |> MapSet.new()
+      observed_keys = observed |> Keyword.keys() |> MapSet.new()
+
+      raise """
+      Mailglass.TestSupport.SandboxOwnership: restore_app_env!(#{inspect(app)}, …) did not \
+      land. Keys still present that were not captured: \
+      #{inspect(observed_keys |> MapSet.difference(captured_keys) |> MapSet.to_list())}. \
+      Keys captured that are now missing: \
+      #{inspect(captured_keys |> MapSet.difference(observed_keys) |> MapSet.to_list())}. \
+      Values are deliberately not printed (T-143-01). Something wrote #{inspect(app)}'s \
+      Application env concurrently with this restore, or a key holds a value that does not \
+      compare equal to the captured one.
+      """
+    end
   end
 
   @doc """

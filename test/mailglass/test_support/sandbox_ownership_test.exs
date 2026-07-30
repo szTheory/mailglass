@@ -30,12 +30,32 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
   alias Ecto.Adapters.SQL.Sandbox
   alias Mailglass.TestSupport.SandboxOwnership
 
+  # `Ecto.Query.from/2` is a macro — required (not imported) so the one call
+  # site below stays visibly qualified and no bare `from/2` enters this file's
+  # namespace alongside its many non-query helpers.
+  require Ecto.Query
+
   # A synthetic ExUnit context is all the async guards read, so the guard's
   # real logic is driven with a plain map. No fake `__ex_unit__/1` module is
   # needed (and none exists any more): the guard no longer resolves a module
   # and interrogates it — it reads `:async` out of the context it is handed.
   @async_context %{async: true, module: Mailglass.SomePretendAsyncTest}
   @sync_context %{async: false, module: Mailglass.SomePretendSyncTest}
+
+  # D-31 Class D fixture. A faithful copy of the shape the two `unsubscribe`
+  # test modules install — the ONLY thing that matters is that `scope/2` binds
+  # `as: :scoped`, because `Mailglass.Operator.SupportSummary` already binds
+  # `as: :orphan` on the same query. Kept here, in the mechanism test, so the
+  # end-to-end reproduction below does not depend on either of those modules
+  # continuing to define such a resolver.
+  defmodule ScopedAliasTenancy do
+    @behaviour Mailglass.Tenancy
+
+    import Ecto.Query
+
+    @impl true
+    def scope(queryable, _context), do: from(row in queryable, as: :scoped)
+  end
 
   setup_all context do
     # `ExUnit.Runner` merges `%{module: module, async: async?}` into the
@@ -571,6 +591,194 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
     # with_schema!/2 returned. The restore was registered BEFORE the raise
     # ever ran, so it survives regardless.
     assert Mailglass.Config.schema() == original
+  end
+
+  # ────────────────────────────────────────────────────────────────
+  # D-31 Class D — with_app_env!/2, the Application-env restore seam
+  #
+  # `@leaked_key` is deliberately a name no `config/*.exs` declares and no
+  # library code reads, so these tests can add and remove it without any
+  # effect on the rest of the suite. That absence at boot is also the exact
+  # precondition the defect needs — see the non-vacuity test below.
+  # ────────────────────────────────────────────────────────────────
+
+  @leaked_key :with_app_env_bang_test_key
+
+  # NON-VACUITY, by mutation, in one test: the banned idiom is reinstated
+  # verbatim and shown to LEAK, then the seam is shown to remove the same key
+  # under the same conditions. If `with_app_env!/2` ever silently degrades into
+  # a merge, the second half fails while the first half keeps passing — so this
+  # test cannot pass for the wrong reason.
+  test "put_all_env/1 CANNOT remove an added key; with_app_env!/2 can (the D-31 Class D mutation)" do
+    refute Keyword.has_key?(Application.get_all_env(:mailglass), @leaked_key),
+           "precondition: #{inspect(@leaked_key)} must be absent at boot for this mechanism to exist"
+
+    # ── Half 1: the idiom this seam replaces, spelled out exactly as the seven
+    # migrated modules spelled it. This is the bug, reproduced.
+    captured = Application.get_all_env(:mailglass)
+    Application.put_env(:mailglass, @leaked_key, LeakedByPutAllEnv)
+    Application.put_all_env(mailglass: captured)
+
+    assert Application.get_env(:mailglass, @leaked_key) == LeakedByPutAllEnv,
+           "put_all_env/1 is documented to MERGE; if this assertion ever fails, Elixir's " <>
+             "semantics changed and the seam's rationale must be re-read, not deleted"
+
+    Application.delete_env(:mailglass, @leaked_key)
+
+    # ── Half 2: the same sequence through the seam.
+    SandboxOwnership.with_app_env!(:mailglass)
+    Application.put_env(:mailglass, @leaked_key, LeakedByPutAllEnv)
+
+    assert Application.get_env(:mailglass, @leaked_key) == LeakedByPutAllEnv
+
+    # Force this test's on_exit chain to run NOW, the same technique the
+    # `checkout!/1` and `with_schema!/2` tests above use to observe a
+    # registered restore synchronously from inside the test that registered it.
+    assert ExUnit.OnExitHandler.run(self(), 5_000) == :ok
+    ExUnit.OnExitHandler.register(self())
+
+    refute Keyword.has_key?(Application.get_all_env(:mailglass), @leaked_key),
+           "with_app_env!/2 must DELETE a key that was absent at capture, not merely overwrite it"
+  end
+
+  test "with_app_env!/2 restores a key the test DELETED, closing the compositional trap" do
+    # This is the half that makes the defect a composition rather than a local
+    # slip. `unsubscribe_property_test.exs` deleted `:tenancy` in its own
+    # `on_exit` as local hardening; that left a HOLE, and any module whose
+    # snapshot was taken afterwards then had no `:tenancy` key to write back —
+    # so its own merging restore could no longer remove the resolver it
+    # installed. Restoring exactly means no sibling ever inherits the hole.
+    # Driven on `@leaked_key` rather than on the real `:tenancy`, deliberately.
+    # An earlier draft asserted `Application.get_env(:mailglass, :tenancy) !=
+    # nil` as its precondition, on the reasoning that `config/test.exs:19` pins
+    # it — and that assertion FAILED in the full suite, because some other
+    # module leaves `:tenancy` holding `nil` before this file runs (recorded as
+    # an open residual finding). A mechanism test whose result depends on which
+    # modules ran before it is not a mechanism test. This version establishes
+    # its own precondition and is order-independent.
+    SandboxOwnership.with_app_env!(:mailglass)
+
+    Application.put_env(:mailglass, @leaked_key, :present_before_capture)
+    captured = Application.get_all_env(:mailglass)
+
+    Application.delete_env(:mailglass, @leaked_key)
+    refute Keyword.has_key?(Application.get_all_env(:mailglass), @leaked_key)
+
+    SandboxOwnership.restore_app_env!(:mailglass, captured)
+
+    assert Application.get_env(:mailglass, @leaked_key) == :present_before_capture
+
+    # And the outer `with_app_env!/2` still removes it, since it was absent at
+    # THAT capture — the two restores compose without either one clobbering
+    # the other's subject.
+    assert ExUnit.OnExitHandler.run(self(), 5_000) == :ok
+    ExUnit.OnExitHandler.register(self())
+
+    refute Keyword.has_key?(Application.get_all_env(:mailglass), @leaked_key)
+  end
+
+  test "with_app_env!/2's restore runs even when work after it raises" do
+    SandboxOwnership.with_app_env!(:mailglass)
+
+    assert_raise RuntimeError, "deliberate: simulates work that raises after the capture", fn ->
+      Application.put_env(:mailglass, @leaked_key, LeakedByRaise)
+      raise "deliberate: simulates work that raises after the capture"
+    end
+
+    assert Application.get_env(:mailglass, @leaked_key) == LeakedByRaise
+
+    assert ExUnit.OnExitHandler.run(self(), 5_000) == :ok
+    ExUnit.OnExitHandler.register(self())
+
+    refute Keyword.has_key?(Application.get_all_env(:mailglass), @leaked_key)
+  end
+
+  # The verification half. A restore that cannot confirm it landed must not
+  # report success. Driven through the injectable `:read_fun` seam rather than
+  # by staging a real concurrent write — see that option's @doc for why the
+  # raise is otherwise unreachable, and why passing a one-key "unsatisfiable"
+  # capture does NOT reach it (that path succeeds, and nukes the env).
+  test "restore_app_env!/3 raises, naming the drifted keys, when the restore cannot be confirmed" do
+    live = Application.get_all_env(:mailglass)
+
+    error =
+      assert_raise RuntimeError, ~r/did not land/, fn ->
+        SandboxOwnership.restore_app_env!(:mailglass, live,
+          read_fun: fn _app -> [{@leaked_key, :written_by_a_concurrent_process}] end
+        )
+      end
+
+    # Named in both directions, and by KEY only — values must never reach this
+    # message (T-143-01); it is printed into CI logs and `:compliance`'s test
+    # fixtures are secret-shaped.
+    assert Exception.message(error) =~ inspect(@leaked_key)
+    refute Exception.message(error) =~ "written_by_a_concurrent_process"
+
+    # The real env was never touched: the seam replaces only the verification
+    # READ, so a failing verification here cannot corrupt the suite.
+    assert Enum.sort(Application.get_all_env(:mailglass)) == Enum.sort(live)
+  end
+
+  # END-TO-END: the failure CI actually reported, reproduced at the exact line
+  # that raises it. `Tenancy.scope/2` resolves its implementation through
+  # `Application.get_env(:mailglass, :tenancy)` — global state — and
+  # `Mailglass.Operator.SupportSummary` binds `as: :orphan` on the query it
+  # then hands to `Tenancy.scope/2`. A leaked resolver that binds `as: :scoped`
+  # therefore raises `Ecto.Query.CompileError` for every LATER module in the
+  # run, not for the module that leaked.
+  #
+  # Driven through `Tenancy.scope/2` on a query with the same `as: :orphan`
+  # binding rather than through `SupportSummary.summarize_tenant/1`: the alias
+  # conflict is raised while BUILDING the query, before any database access, so
+  # this reproduces the real mechanism without needing a Sandbox checkout this
+  # module deliberately does not take. The companion test below pins the
+  # `as: :orphan` binding in the real module, so this fixture cannot drift away
+  # from the code it stands in for.
+  test "a leaked :scoped tenancy resolver raises the CI CompileError; with_app_env!/2 prevents it" do
+    boot_tenancy = Application.get_env(:mailglass, :tenancy)
+    orphan_query = Ecto.Query.from(event in Mailglass.Events.Event, as: :orphan)
+
+    SandboxOwnership.with_app_env!(:mailglass)
+
+    # Direction 1 — the defect is real, and this is its verbatim shape.
+    Application.put_env(:mailglass, :tenancy, ScopedAliasTenancy)
+
+    error =
+      assert_raise Ecto.Query.CompileError, fn ->
+        Mailglass.Tenancy.scope(orphan_query, "leak-probe-tenant")
+      end
+
+    # The STRUCT is the match that matters (CLAUDE.md) and `assert_raise` above
+    # already made it. These two message assertions only distinguish WHICH
+    # alias collision fired — `Ecto.Query.CompileError` carries no structured
+    # field naming the two bindings, so there is no struct-level way to tell
+    # this collision from any other. Backticks included deliberately: Ecto's
+    # real message is "can't apply alias `:scoped`, binding in `from` is
+    # already aliased to `:orphan`". The CI quote recorded in
+    # `143-12-SUMMARY.md` and `deferred-items.md` drops them; asserting the
+    # unbackticked form silently never matches.
+    assert Exception.message(error) =~ "alias `:scoped`"
+    assert Exception.message(error) =~ "already aliased to `:orphan`"
+
+    # Direction 2 — the seam removes it. Same call, no raise.
+    assert ExUnit.OnExitHandler.run(self(), 5_000) == :ok
+    ExUnit.OnExitHandler.register(self())
+
+    assert Application.get_env(:mailglass, :tenancy) == boot_tenancy
+    assert %Ecto.Query{} = Mailglass.Tenancy.scope(orphan_query, "leak-probe-tenant")
+  end
+
+  # Pins the fixture above to the real code. If `SupportSummary` ever stops
+  # binding `as: :orphan`, the reproduction above becomes a story about a
+  # binding nothing uses — still a true statement about `Tenancy.scope/2`, but
+  # no longer the CI failure it claims to reproduce. Same source-reading
+  # contract idiom `schema_isolation_integration_test.exs` already uses.
+  test "SupportSummary still binds as: :orphan — the other half of the CI collision" do
+    source = File.read!("lib/mailglass/operator/support_summary.ex")
+
+    assert source =~ "as: :orphan",
+           "the leaked-resolver reproduction above is keyed on SupportSummary binding " <>
+             "`as: :orphan` on the query it passes to Tenancy.scope/2"
   end
 
   # 10. The composed "did not take effect" raise, driven through the
