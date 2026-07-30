@@ -26,7 +26,9 @@ defmodule Mailglass.Credo.NoRawAppEnvRestore do
       restore, and all seven set `config :mailglass, :compliance`, which is in
       no `config/*.exs` — so all seven leaked it on every run. Two also install
       a `@behaviour Mailglass.Tenancy` resolver whose `scope/2` applies
-      `as: :scoped`, and `Mailglass.Operator.SupportSummary.orphan_backlog_summary/2`
+      `as: :scoped`, and Mailglass.Operator.SupportSummary's private
+      orphan_backlog_summary/2 (not backticked: ExDoc auto-links a `Mod.fun/arity`
+      reference and `--warnings-as-errors` then fails on the private target)
       builds a query already aliased `as: :orphan`, so a leaked resolver turns
       every later caller into `** (Ecto.Query.CompileError) can't apply alias
       :scoped, binding in from is already aliased to :orphan`. Observed in CI
