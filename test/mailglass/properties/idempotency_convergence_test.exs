@@ -33,24 +33,28 @@ defmodule Mailglass.Properties.IdempotencyConvergenceTest do
   use ExUnitProperties
 
   import Ecto.Query
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
 
-  alias Ecto.Adapters.SQL.Sandbox
   alias Mailglass.Events
   alias Mailglass.Events.Event
   alias Mailglass.TestRepo
 
-  setup do
-    Sandbox.mode(TestRepo, :auto)
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1). Its revert to :manual is
+  # registered FIRST (this setup runs before the one below), so it runs LAST
+  # — the file's own TRUNCATE-and-restore on_exit (registered second, below)
+  # still executes while :auto is in effect.
+  setup :unsandboxed_module
 
+  setup do
     # Wipe any residue from other tests so this property starts clean.
     TestRepo.query!("TRUNCATE TABLE mailglass_events", [])
 
     on_exit(fn ->
-      # Leave the events table empty for the next test run and restore
-      # :manual mode so DataCase-using tests in the same suite remain
-      # isolated under the sandbox pattern.
+      # Leave the events table empty for the next test run. Restoring pool
+      # mode to :manual is SandboxOwnership.unsandboxed_module/1's job (its
+      # revert runs after this callback, per reverse on_exit ordering).
       TestRepo.query!("TRUNCATE TABLE mailglass_events", [])
-      Sandbox.mode(TestRepo, :manual)
     end)
 
     :ok
