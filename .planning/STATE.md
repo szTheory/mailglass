@@ -2,16 +2,17 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
+current_phase: 143
+current_phase_name: test-harness-truth
 status: executing
-stopped_at: Completed 143-08-PLAN.md
-last_updated: "2026-07-30T04:10:47.026Z"
+stopped_at: Completed 143-09-PLAN.md
+last_updated: "2026-07-30T04:45:41.762Z"
 last_activity: 2026-07-30
 progress:
-  total_phases: 4
+  total_phases: 3
   completed_phases: 2
   total_plans: 25
-  completed_plans: 19
-  percent: 50
+  completed_plans: 20
 ---
 
 # Project State
@@ -26,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 9 of 14
+Plan: 10 of 14
 Status: Ready to execute
 Last activity: 2026-07-30
 
-Progress: [████████░░] 76%
+Progress: [████████░░] 80%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -372,6 +373,8 @@ release debug campaign.
 - [Phase ?]: 143-08: NoRawSandboxOwnership check deliberately does not copy the Swoosh analog's bare-tail-only over-match fallback — a bare Sandbox tail is only flagged via an explicit resolving alias
 - [Phase ?]: 143-08: test_helper.exs and the two deliver_*_test.exs healing calls migrated to a new SandboxOwnership.mode_manual!/1 rather than allowlisted or path-exempted, keeping the check's allowlist at exactly two modules
 - [Phase ?]: 143-08: mix credo --strict finding zero issues over the whole tree is the authoritative confirmation of full migration — the plan's literal acceptance-grep over-matches on the check's own test fixtures and is documented as an imprecise proxy
+- [Phase ?]: SuiteFloor's D-14 allowlist 'missing' direction narrowed to only :public_only after a live false-positive on a real narrow lane; :requires_workspace protected via the 'unknown' direction only
+- [Phase ?]: SuiteTruthFormatter's cross-process read to SuiteFloor.check/1 uses a :persistent_term snapshot written at :suite_finished, not a live :sys.get_state/1 -- ExUnit.EventManager.stop/1 terminates every formatter before after_suite callbacks run (confirmed by decompiling ExUnit.Runner)
 
 ## Quick Tasks Completed
 
@@ -418,6 +421,7 @@ release debug campaign.
 | Phase 143 P06 | ~2h | 3 tasks | 9 files |
 | Phase 143 P07 | 130min | 3 tasks | 10 files |
 | Phase 143 P08 | 70min | 3 tasks | 8 files |
+| Phase 143 P09 | 35min | 3 tasks | 4 files |
 
 ## Deferred Items
 
@@ -585,8 +589,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-30T04:10:47.021Z
-**Stopped at:** Completed 143-08-PLAN.md
+**Last session:** 2026-07-30T04:45:41.750Z
+**Stopped at:** Completed 143-09-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
