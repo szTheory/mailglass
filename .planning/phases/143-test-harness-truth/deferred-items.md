@@ -414,3 +414,41 @@ number never collides with the flat baseline migrations' own bookkeeping).
 - **Blocking impact:** recorded as **Finding B** in `143-PROMOTION-CHECKPOINT.md`. A
   lane that flips red on a docs-only commit is not stable enough to hold publish-veto
   power under the approved blocking decision.
+
+- **RESOLVED (orchestrator-directed gap closure) — and Finding B's stated MECHANISM was
+  WRONG, though its OBSERVATION was right.** Finding B asserts "`:tenancy` is in no
+  `config/*.exs`, so it is never in the saved env." That is false and was verified false
+  before anything was changed: `config/test.exs:19` has pinned
+  `config :mailglass, tenancy: Mailglass.Tenancy.SingleTenant` since 2026-04-22
+  (`git blame` → `b058da75d`), and a live boot read confirms
+  `Application.get_env(:mailglass, :tenancy) == Mailglass.Tenancy.SingleTenant`,
+  `Keyword.has_key?(get_all_env(:mailglass), :tenancy) == true`. Finding B's `elixir -e`
+  demo is a correct proof of `put_all_env/1`'s merge semantics on a synthetic app where
+  the key really is absent; it was mis-applied to `:tenancy`, where the key is present
+  and therefore IS restored.
+
+  **The real mechanism is compositional, and the "sibling already carries the fix" claim
+  is backwards — that sibling's fix is what ARMS the leak.**
+  `unsubscribe_property_test.exs`'s `on_exit` ran `put_all_env` and then
+  `Application.delete_env(:mailglass, :tenancy)`, leaving the key ABSENT. Any module
+  whose snapshot is taken after that has no `:tenancy` key to write back, so its own
+  merging restore can no longer remove the resolver IT installs — and
+  `unsubscribe_test.exs`'s resolver is the one binding `as: :scoped`. Proven live:
+  after running `unsubscribe_property_test.exs` alone, a suite-end probe reports
+  `tenancy_present=false`; at boot it reports
+  `tenancy_present=true tenancy_value=Mailglass.Tenancy.SingleTenant`. Which of the two
+  files runs first is not a property either file can see, which is the nondeterminism.
+
+  **The leak that fires on EVERY run, and that Finding B missed entirely, is
+  `:compliance`** — genuinely in no `config/*.exs`, and written by all seven
+  `put_all_env` modules. Same for `:feedback_id`, `:unsubscribe_test_pid` and three
+  `TestEndpoint` module keys.
+
+  **Fixed via a seam, not seven copies of a `delete_env`:**
+  `Mailglass.TestSupport.SandboxOwnership.with_app_env!/2` re-puts every captured key
+  AND deletes every key added since capture, then verifies.
+  `Mailglass.Credo.NoRawAppEnvRestore` fails the build on `Application.put_all_env/1`
+  anywhere under `test/` or `mailglass_inbound/test/`. See
+  `143-gap-closure-app-env-restore-SUMMARY.md` for the audit (75 sites, 11 affected),
+  the mutation evidence, and five newly-recorded residual findings — including that
+  `SuiteTruthFormatter`'s four module-boundary probes have never executed.
