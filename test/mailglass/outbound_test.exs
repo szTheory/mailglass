@@ -16,12 +16,21 @@ defmodule Mailglass.OutboundTest do
   alias Mailglass.Outbound.Delivery
   alias Mailglass.Adapters.Fake
   alias Mailglass.{Message, TestRepo}
+  alias Mailglass.TestSupport.SandboxOwnership
 
   setup do
     Fake.checkout()
     Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
 
-    prior_compliance = Application.get_env(:mailglass, :compliance)
+    # `:compliance` is in no `config/*.exs`, so the `on_exit` below used to
+    # restore it with `put_env(:mailglass, :compliance, nil)` — CREATING the
+    # key holding `nil` instead of removing it, which makes every later
+    # `Application.get_env(:mailglass, :compliance, default)` in the run
+    # resolve to `nil` rather than its default. `with_app_env!/2` deletes keys
+    # that were absent at capture; the narrower per-key restores below are kept
+    # for the boot-present keys they name.
+    SandboxOwnership.with_app_env!(:mailglass)
+
     prior_adapter = Application.get_env(:mailglass, :adapter)
     prior_adapters = Application.get_env(:mailglass, :adapters)
     prior_tenancy = Application.get_env(:mailglass, :tenancy)
@@ -37,7 +46,6 @@ defmodule Mailglass.OutboundTest do
     )
 
     on_exit(fn ->
-      Application.put_env(:mailglass, :compliance, prior_compliance)
       Application.put_env(:mailglass, :adapter, prior_adapter)
 
       if is_nil(prior_adapters) do

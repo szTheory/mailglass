@@ -103,7 +103,15 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
   setup :unsandboxed_module
 
   setup do
-    prior_mailglass_env = Application.get_all_env(:mailglass)
+    # Registered FIRST, so it runs LAST (`on_exit` is reverse-registration
+    # order) — the whole-env restore must land after `with_schema!/1`'s own
+    # narrower `:schema` restore, not before it, or it would put back the env
+    # this module captured and then be overwritten. It restores exactly,
+    # including REMOVING `:compliance` and this module's `TestEndpoint` key,
+    # neither of which appears in any `config/*.exs`; the previous
+    # `Application.put_all_env/1` merged and so left both behind. See
+    # `SandboxOwnership.with_app_env!/2`.
+    SandboxOwnership.with_app_env!(:mailglass)
 
     # FIRST, before `with_schema!/1` below: assert @prefix is genuinely scratch.
     # Ordering is load-bearing — `with_schema!/1` makes Config.schema/0 return
@@ -155,7 +163,6 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
       {:ok, _} = TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
       {:ok, _} = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext SCHEMA public")
 
-      Application.put_all_env(mailglass: prior_mailglass_env)
       :persistent_term.erase({Mailglass.Config, :schema})
 
       # No baseline restoration happens here, and none is needed: the DROP above

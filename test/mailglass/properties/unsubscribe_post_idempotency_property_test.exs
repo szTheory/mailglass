@@ -3,7 +3,7 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
   use ExUnitProperties
 
   import Ecto.Query
-  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1, with_app_env!: 1]
   require Phoenix.ConnTest
 
   alias Mailglass.Compliance.Unsubscribe
@@ -71,7 +71,11 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
   setup :unsandboxed_module
 
   setup do
-    prior_mailglass = Application.get_all_env(:mailglass)
+    # Restores exactly, including REMOVING `:compliance` and this module's own
+    # `TestEndpoint` module key — neither is in any `config/*.exs`, so the
+    # previous `Application.put_all_env/1` restore (which merges) left both
+    # behind for the rest of the run. See `SandboxOwnership.with_app_env!/2`.
+    with_app_env!(:mailglass)
 
     TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
     TestRepo.query!("TRUNCATE TABLE mailglass_deliveries CASCADE", [])
@@ -105,7 +109,6 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
     on_exit(fn ->
       TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
       TestRepo.query!("TRUNCATE TABLE mailglass_deliveries CASCADE", [])
-      Application.put_all_env(mailglass: prior_mailglass)
     end)
 
     :ok

@@ -6,6 +6,7 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   alias Mailglass.Generators
   alias Mailglass.PubSub.Topics
   alias Mailglass.TestRepo
+  alias Mailglass.TestSupport.SandboxOwnership
 
   import Ecto.Query
   import Plug.Conn
@@ -84,7 +85,12 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
   end
 
   setup do
-    prior_mailglass = Application.get_all_env(:mailglass)
+    # Restores exactly, including REMOVING the three keys this module ADDS and
+    # no `config/*.exs` declares — `:compliance`, `:unsubscribe_test_pid`, and
+    # the `TestEndpoint` module key. `Application.put_all_env/1` (the previous
+    # restore) merges, so all three survived into every later module in the
+    # run. See `SandboxOwnership.with_app_env!/2`.
+    SandboxOwnership.with_app_env!(:mailglass)
 
     Application.put_env(:mailglass, TestEndpoint,
       http: [ip: {127, 0, 0, 1}, port: 0],
@@ -111,10 +117,6 @@ defmodule Mailglass.Compliance.UnsubscribeControllerTest do
       max_age: 60,
       lifecycle: Mailglass.Lifecycle.Noop
     )
-
-    on_exit(fn ->
-      Application.put_all_env(mailglass: prior_mailglass)
-    end)
 
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end

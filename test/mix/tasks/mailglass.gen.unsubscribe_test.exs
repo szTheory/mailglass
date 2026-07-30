@@ -3,8 +3,14 @@ defmodule Mix.Tasks.Mailglass.Gen.UnsubscribeTest do
 
   import ExUnit.CaptureIO
 
+  alias Mailglass.TestSupport.SandboxOwnership
+
   setup do
-    prior_mailglass = Application.get_all_env(:mailglass)
+    # Restores exactly, including REMOVING `:compliance` — which is in no
+    # `config/*.exs`, so the previous `Application.put_all_env/1` restore could
+    # never take it back out (that function merges). See
+    # `SandboxOwnership.with_app_env!/2`.
+    SandboxOwnership.with_app_env!(:mailglass)
 
     Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint-secret-123")
 
@@ -17,10 +23,6 @@ defmodule Mix.Tasks.Mailglass.Gen.UnsubscribeTest do
       redirect: nil,
       max_age: 60
     )
-
-    on_exit(fn ->
-      Application.put_all_env(mailglass: prior_mailglass)
-    end)
 
     :ok
   end

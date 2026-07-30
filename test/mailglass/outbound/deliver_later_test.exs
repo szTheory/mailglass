@@ -11,7 +11,12 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     # async: false guarantees no other test owns the shared bucket during this test.
     Mailglass.Adapters.Fake.checkout()
     Mailglass.Adapters.Fake.set_shared(self())
-    prior_compliance = Application.get_env(:mailglass, :compliance)
+    # `:compliance` is in no `config/*.exs`, so the `on_exit` below used to
+    # restore it with `put_env(:mailglass, :compliance, nil)` — CREATING the
+    # key holding `nil` instead of removing it. `with_app_env!/2` deletes keys
+    # that were absent at capture. See its @doc.
+    Mailglass.TestSupport.SandboxOwnership.with_app_env!(:mailglass)
+
     prior_adapter = Application.get_env(:mailglass, :adapter)
     prior_adapters = Application.get_env(:mailglass, :adapters)
     prior_tenancy = Application.get_env(:mailglass, :tenancy)
@@ -43,7 +48,6 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       # before the sandbox is torn down (avoids Postgrex disconnect noise).
       Process.sleep(50)
       Application.put_env(:mailglass, :async_adapter, :oban)
-      Application.put_env(:mailglass, :compliance, prior_compliance)
       Application.put_env(:mailglass, :adapter, prior_adapter)
 
       if is_nil(prior_adapters) do
