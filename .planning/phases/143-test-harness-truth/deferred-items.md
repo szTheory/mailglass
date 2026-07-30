@@ -378,3 +378,39 @@ number never collides with the flat baseline migrations' own bookkeeping).
   `mix test test/mailglass/upgrade/v0_2_test.exs
   test/mix/tasks/mailglass.gen.mailable_test.exs --warnings-as-errors --seed 0`
   → 6 tests, 0 failures.
+
+### `:tenancy` application-env leak from `unsubscribe_test.exs` — OPEN (found by plan 143-12, deliberately not fixed here)
+
+- **Found during:** plan `143-12`'s promotion checkpoint, while establishing whether
+  the Core Full Suite lane is stable enough to be given publish-veto power.
+- **Symptom:** nondeterministic `** (Ecto.Query.CompileError) can't apply alias
+  `:scoped`, binding in `from` is already aliased to `:orphan`` raised from
+  `Mailglass.Operator.SupportSummary.orphan_backlog_summary/2`, failing
+  `test/mailglass/schema_isolation_integration_test.exs:180` and `:290`.
+  Observed live in CI run `30571989203` (mailglass gating leg, full-suite seed
+  `590679`) on a **docs-only commit** (`71fcd8f5`, one file, `.planning/WINDOWS.md`),
+  and green two commits later at `6bacf2ff` with `lib/` byte-identical and `main`
+  unmoved.
+- **Mechanism:** `Mailglass.Tenancy.scope/2` resolves via
+  `Application.get_env(:mailglass, :tenancy)` — global state.
+  `test/mailglass/compliance/unsubscribe_test.exs` installs a resolver whose
+  `scope/2` applies `as: :scoped` (line 22), sets it at lines 103/216, and restores
+  in `on_exit` with `Application.put_all_env/1` — which **merges** and therefore
+  cannot remove a key absent from the saved env. `:tenancy` is in no `config/*.exs`,
+  so it is never in the saved env. Any raise between the put and the in-test
+  `delete_env` leaks the resolver for the rest of the suite.
+- **Corroboration:** the sibling `test/mailglass/properties/unsubscribe_property_test.exs`
+  already carries the fix — an explicit `Application.delete_env(:mailglass, :tenancy)`
+  after `put_all_env` in `on_exit` (line 52), plus a defensive delete in `setup`
+  (line 34). `unsubscribe_test.exs` has neither.
+- **Why not fixed here:** out of plan `143-12`'s scope (`files_modified` is two
+  planning artifacts) and not introduced by this plan's changes. It also warrants the
+  same mutation proof every other guard in this phase received, which is a plan of its
+  own. **Not masked, skipped, tagged away, serialized around, or weakened.**
+- **Recommended fix:** add `Application.delete_env(:mailglass, :tenancy)` to
+  `unsubscribe_test.exs`'s `on_exit`, then sweep the suite for the same
+  `put_all_env`-restore anti-pattern — it is silent by construction and this is the
+  second file known to need the explicit delete.
+- **Blocking impact:** recorded as **Finding B** in `143-PROMOTION-CHECKPOINT.md`. A
+  lane that flips red on a docs-only commit is not stable enough to hold publish-veto
+  power under the approved blocking decision.

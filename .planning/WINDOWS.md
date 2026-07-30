@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 3
+open_count: 5
 waived_count: 0
 fixed_count: 6
-total_count: 9
-last_updated: 2026-07-30T19:20:38.246Z
+total_count: 11
+last_updated: 2026-07-30T19:58:41.893Z
 ---
 
 # Broken Windows Ledger
@@ -24,6 +24,8 @@ last_updated: 2026-07-30T19:20:38.246Z
 | 7 | 143 | deviation | test/mailglass/schema_isolation_immutability_test.exs | 217 | SUPERSEDES id 3's suggested fix: prefix: Mailglass.Config.schema() ("mailglass") for the outer Ecto.Migrator up/4+down/4 calls was implemented and empirically reproduces a genuine ~20s+ Postgres lock deadlock in do_lock_for_migrations (not just a failed assertion) — Ecto's own schema_migrations bookkeeping table then lives inside the very 'mailglass' schema this test's down/0 drops via DROP SCHEMA...RESTRICT, and the migration body's DROP runs before Migrator's own bookkeeping DELETE, so RESTRICT never sees an empty schema. Reverted to original code (clean, non-hanging failure). Real fix needs either bypassing Ecto.Migrator's public API (call the private Ecto.Migration.Runner.run/8 directly) or a Rule-4 architectural change to how the shipped Vxx migration modules thread :prefix through create table(...) DSL calls — both out of test-only scope. See 143-07-SUMMARY.md Orchestrator-directed gap closure section for full evidence. | fixed |  | 2026-07-30T03:37:03.181Z | 2026-07-30T05:09:01.453Z |
 | 8 | 143 | unrun-verify | .github/workflows/advisory-matrix.yml |  | 143-10: no post-change advisory-matrix.yml dispatch with MAILGLASS_SUITE_FLOOR live (process constraints forbid dispatch); the 1.19/OTP 28 legs now enforce floors measured on the 1.18 legs and have never executed on this branch | open |  | 2026-07-30T18:46:50.738Z |  |
 | 9 | 143 | unrun-verify | .github/workflows/advisory-matrix.yml |  | 143-11: no push/dispatch run confirming the post-rename runtime job names (research assumption A5); process constraints forbid dispatch. Owned by 143-12's promotion checkpoint. | open |  | 2026-07-30T19:20:38.246Z |  |
+| 10 | 143 | unmet-truth | test/mailglass/compliance/unsubscribe_test.exs | 29 | 143-12 Finding B: setup on_exit restores via Application.put_all_env, which CANNOT remove the :tenancy key the test adds (lines 103/216) — leaking a tenancy resolver whose scope/2 applies as: :scoped globally. Causes nondeterministic Ecto.Query.CompileError in SupportSummary/schema_isolation tests (observed CI run 30571989203, seed 590679, mailglass leg). Sibling unsubscribe_property_test.exs:52 already carries the explicit delete_env fix. Blocks HARNESS-04 promotion: the lane proposed for publish-veto fails nondeterministically. | open |  | 2026-07-30T19:58:33.370Z |  |
+| 11 | 143 | unrun-verify | .planning/phases/143-test-harness-truth/143-PROMOTION-CHECKPOINT.md |  | 143-12 conditions 3 and 4 NOT RUN: no tag-shaped-ref workflow_dispatch of advisory-matrix.yml and no gate-self-test.yml deliberate-failure probe against the renamed Core Full Suite lane. Process constraints forbid pushing and triggering Actions. Verbatim dispatch commands recorded in 143-PROBE-EVIDENCE.md and the checkpoint. | open |  | 2026-07-30T19:58:41.893Z |  |
 
 ````json
 [
@@ -133,6 +135,30 @@ last_updated: 2026-07-30T19:20:38.246Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-07-30T19:20:38.246Z",
+    "resolved_at": null
+  },
+  {
+    "id": 10,
+    "kind": "unmet-truth",
+    "phase": "143",
+    "file": "test/mailglass/compliance/unsubscribe_test.exs",
+    "line": 29,
+    "description": "143-12 Finding B: setup on_exit restores via Application.put_all_env, which CANNOT remove the :tenancy key the test adds (lines 103/216) — leaking a tenancy resolver whose scope/2 applies as: :scoped globally. Causes nondeterministic Ecto.Query.CompileError in SupportSummary/schema_isolation tests (observed CI run 30571989203, seed 590679, mailglass leg). Sibling unsubscribe_property_test.exs:52 already carries the explicit delete_env fix. Blocks HARNESS-04 promotion: the lane proposed for publish-veto fails nondeterministically.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-30T19:58:33.370Z",
+    "resolved_at": null
+  },
+  {
+    "id": 11,
+    "kind": "unrun-verify",
+    "phase": "143",
+    "file": ".planning/phases/143-test-harness-truth/143-PROMOTION-CHECKPOINT.md",
+    "line": null,
+    "description": "143-12 conditions 3 and 4 NOT RUN: no tag-shaped-ref workflow_dispatch of advisory-matrix.yml and no gate-self-test.yml deliberate-failure probe against the renamed Core Full Suite lane. Process constraints forbid pushing and triggering Actions. Verbatim dispatch commands recorded in 143-PROBE-EVIDENCE.md and the checkpoint.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-30T19:58:41.893Z",
     "resolved_at": null
   }
 ]

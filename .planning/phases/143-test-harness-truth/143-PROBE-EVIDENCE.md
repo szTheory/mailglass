@@ -156,3 +156,87 @@ per this phase's own coordinating principle, a probe that cannot observe its sub
 read as a quiet pass.
 
 *(Fill in below: dispatch command, run URL, `result` value, observed check conclusion, and reading.)*
+
+### STATUS AS OF PLAN 143-12: **NOT RUN — no dispatch was made, no run URL exists**
+
+Plan `143-12` Task 1 could not be executed. Its process constraints state, verbatim, **"Do NOT push. Do
+NOT trigger GitHub Actions runs (real CI minutes on a public repo)."** `gate-self-test.yml` cannot be
+exercised without doing both: it pushes a synthetic-failure branch and opens a real pull request, which
+triggers `ci.yml`, `advisory-matrix.yml` and `guard-release-trigger.yml`.
+
+There is therefore **no `result` value, no run URL, and no observed lane conclusion for the renamed lane.**
+Nothing in this section may be read as evidence that the probe passed, and the expected value stated above
+remains an *expectation*, not an observation. This is the same class of omission recorded by plans `143-10`
+(Task 3's post-change dispatch) and `143-11` (the post-rename push run) — recorded openly rather than
+claimed.
+
+**Condition 4 of the D-28 promotion checkpoint is consequently NOT MET.** See
+`143-PROMOTION-CHECKPOINT.md`.
+
+### The plan's own automated verification for this task is vacuous — recorded so it is not trusted
+
+`143-12-PLAN.md` Task 1 verifies with:
+
+```
+grep -q 'result=blocked' .planning/phases/143-test-harness-truth/143-PROBE-EVIDENCE.md
+```
+
+That command **already exited 0 against this file before plan 143-12 began**, because the "Expected value,
+stated up front" paragraph above legitimately contains the string ``**`result=blocked`**`` at line 150 as a
+statement of what the probe *should* report. Verified:
+
+```
+$ grep -q 'result=blocked' .planning/phases/143-test-harness-truth/143-PROBE-EVIDENCE.md && echo PASSES
+PASSES
+$ grep -n 'result=blocked' .planning/phases/143-test-harness-truth/143-PROBE-EVIDENCE.md
+150:required_only=false` against a synthetic-failure PR is expected to report **`result=blocked`** — i.e.
+```
+
+The check cannot distinguish "the probe ran and the lane blocked" from "the probe never ran and this file
+merely predicts that it would." It is precisely the failure mode this phase exists to eliminate — a check
+that reports success without observing its subject — appearing inside the phase's own plan. **Do not treat a
+green Task 1 verification as evidence.** The evidence is a run URL plus a recorded `result` line from the
+probe's own poll step, and neither exists yet.
+
+A non-vacuous replacement would assert the run URL and the outcome together, e.g.
+`grep -Eq '^\*\*Result output:\*\* `result=blocked`' ...` combined with a
+`https://github.com/szTheory/mailglass/actions/runs/[0-9]+` match in the same section.
+
+### The dispatch to run, verbatim, when CI minutes are authorised
+
+```
+gh workflow run gate-self-test.yml \
+  --ref gsd/phase-143-test-harness-truth \
+  -f check_name="Core Full Suite (" \
+  -f required_only=false \
+  -f deadline_minutes=40
+```
+
+Each input, and why it is what it is:
+
+| Input | Value | Why |
+|---|---|---|
+| `--ref` | `gsd/phase-143-test-harness-truth` | **Not `main`.** The D-21 rename is unmerged. `main`'s `advisory-matrix.yml` still names the lane `Core Full Suite Advisory (`, which does **not** `startswith("Core Full Suite (")`, so a dispatch from `main` would poll for a name that cannot exist and report `never-appeared`. The branch also carries the `required_only` / `deadline_minutes` inputs themselves, which `main` does not have (see Run 1's dispatch note above). |
+| `check_name` | `Core Full Suite (` | The renamed gating job's display name up to and including its opening parenthesis. The trailing `(` is load-bearing: without it the prefix would also match `Core Full Suite Next Toolchain Advisory (…)`, and `jq … | head -1` would poll whichever GitHub returned first. |
+| `required_only` | `false` | Branch protection's required set is exactly `{CI Green, Guard Release Trigger}` — two entries, asserted by `test/scripts/required_checks_test.exs` ("REQUIRED_CHECKS contains exactly {CI Green, Guard Release Trigger} (GATE-01)"). An advisory-matrix lane never appears in a `gh pr checks --required` query, so leaving this `true` guarantees `never-appeared`. |
+| `deadline_minutes` | `40` | The lane's own cold-cache full-suite leg ran **258.2 s** of `mix test` alone in run `30574508370`, and the job additionally does `deps.get`, `compile --warnings-as-errors`, a Postgres wait, the inbound `deps.get` / `ecto.create`, and `mix verify.schema_prefix`. The probe also waits for branch creation, PR opening and job scheduling. The 25-minute default is tight; 40 leaves headroom without risking the workflow's own `timeout-minutes: 30` — **note that job-level cap and raise it too if a longer deadline is wanted.** |
+
+**Known blocker that will otherwise consume the whole deadline and report a misleading `timeout`:** Run 1
+recorded that PRs opened by the probe are attributed to `github-actions[bot]`, and this repository holds
+such runs in `action_required` until a maintainer approves them. Approve promptly with
+`gh api -X POST repos/szTheory/mailglass/actions/runs/{id}/approve` for each pending run, or the probe will
+poll a check that never starts. `gate-self-test.yml` still has no mechanism to detect or self-heal this
+state.
+
+**Expected outcome remains as stated above:** the renamed lane goes red on the injected failing test and the
+probe reports a blocked result. Any other outcome — `leaked`, `timeout`, or `never-appeared` — is a finding
+requiring investigation, not an inconclusive-but-fine pass.
+
+### One caution specific to running this probe today
+
+`main` is currently red on this very lane for reasons unrelated to any injected failure (see
+`143-PROMOTION-CHECKPOINT.md`, condition 1). The probe injects a failing test and asserts the lane goes red,
+so it would report a blocked result **even if the lane were red for a pre-existing reason** — the probe
+cannot distinguish "red because of my injection" from "red anyway." To keep the result meaningful, dispatch
+it from a ref whose lane is *green* without the injection. The phase branch at `6bacf2ff` is such a ref
+(run `30574508370`, both gating legs green); `main` is not.
