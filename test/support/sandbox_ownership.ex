@@ -579,9 +579,17 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   `ExUnit`'s `on_exit` callbacks run in reverse registration order. Because
   the revert here is registered FIRST — before any `on_exit` the calling
   module's own `setup` chain registers afterward — it runs LAST. This
-  preserves today's semantics for the nine `:auto`-mode files exactly: each
-  file's own baseline-restore `on_exit` (registered later) still runs while
-  `:auto` is in effect, because this revert has not run yet.
+  preserves today's semantics for the remaining `:auto`-mode files exactly:
+  each file's own baseline-restore `on_exit` (registered later) still runs
+  while `:auto` is in effect, because this revert has not run yet.
+
+  There are eight, all of them migration/DDL files (`migration_test.exs` and
+  its five schema-isolation siblings, plus two convergence properties). Plan
+  `143-06` migrated nine; `idempotency_convergence_test.exs` left the group
+  afterwards for a shared, non-transactional `checkout!/1` — see that file's
+  moduledoc for why pool-wide `:auto` offers no per-module
+  `:ownership_timeout` seam. Re-derive the list with:
+  `grep -rln unsandboxed_module test/`.
 
   Raises when the calling module's `async` tag is `true` — pool-wide `:auto`
   mode checks in every live connection

@@ -142,9 +142,12 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
     assert {:leaked, {:shared, ^owner}} = SandboxOwnership.probe(Mailglass.TestRepo)
 
     # This is exactly why seed bisection converges on the wrong pair
-    # (143-MECHANISM.md §1): the nine :auto-mode files HEAL a leak rather
-    # than colliding with it, so the leaker and its victim are never
-    # adjacent in the failure log.
+    # (143-MECHANISM.md §1): the :auto-mode files HEAL a leak rather than
+    # colliding with it, so the leaker and its victim are never adjacent in
+    # the failure log. (MECHANISM counted nine of them; there are eight now —
+    # idempotency_convergence_test.exs moved to a shared, non-transactional
+    # checkout!/1. The healing property is a property of the mode, not of the
+    # count, so this test is unaffected.)
     Sandbox.mode(Mailglass.TestRepo, :auto)
     Sandbox.mode(Mailglass.TestRepo, :manual)
 
