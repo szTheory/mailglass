@@ -5,14 +5,14 @@ milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 current_phase: 143
 current_phase_name: test-harness-truth
 status: executing
-stopped_at: Completed 143-09-PLAN.md
-last_updated: "2026-07-30T04:45:41.762Z"
+stopped_at: Completed 143-10-PLAN.md
+last_updated: "2026-07-30T18:46:22.982Z"
 last_activity: 2026-07-30
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 25
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # Project State
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 10 of 14
+Plan: 11 of 14
 Status: Ready to execute
 Last activity: 2026-07-30
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 84%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -375,6 +375,8 @@ release debug campaign.
 - [Phase ?]: 143-08: mix credo --strict finding zero issues over the whole tree is the authoritative confirmation of full migration — the plan's literal acceptance-grep over-matches on the check's own test fixtures and is documented as an imprecise proxy
 - [Phase ?]: SuiteFloor's D-14 allowlist 'missing' direction narrowed to only :public_only after a live false-positive on a real narrow lane; :requires_workspace protected via the 'unknown' direction only
 - [Phase ?]: SuiteTruthFormatter's cross-process read to SuiteFloor.check/1 uses a :persistent_term snapshot written at :suite_finished, not a live :sys.get_state/1 -- ExUnit.EventManager.stop/1 terminates every formatter before after_suite callbacks run (confirmed by decompiling ExUnit.Runner)
+- [Phase ?]: 143-10: pinned SuiteFloor's executed floors per-schema (public 1576 / mailglass 1575) and the skipped ceiling (7) from green Advisory Matrix run 30568802513's two Elixir 1.18.4/OTP 27 legs — no margin, >= comparison, D-27 (never from a local 1.19.5 run)
+- [Phase ?]: 143-10: SuiteFloor's executed floor, growth nudge and skipped ceiling evaluate only on a run that declares itself a complete suite via MAILGLASS_SUITE_FLOOR; :test is discounted from the unknown-exclusion-tag set only when paired with a non-empty include set (--only's mechanism). Both distinguish deliberate scoping from silent coverage loss.
 
 ## Quick Tasks Completed
 
@@ -422,6 +424,7 @@ release debug campaign.
 | Phase 143 P07 | 130min | 3 tasks | 10 files |
 | Phase 143 P08 | 70min | 3 tasks | 8 files |
 | Phase 143 P09 | 35min | 3 tasks | 4 files |
+| Phase 143 P10 | ~2h | 3 tasks | 4 files |
 
 ## Deferred Items
 
@@ -589,8 +592,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-30T04:45:41.750Z
-**Stopped at:** Completed 143-09-PLAN.md
+**Last session:** 2026-07-30T18:46:22.972Z
+**Stopped at:** Completed 143-10-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
