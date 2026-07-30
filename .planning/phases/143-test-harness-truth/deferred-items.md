@@ -79,3 +79,104 @@ else here instead of fixing it).
   this plan's migration — same failure, same test, same count (6 tests, 1
   failure) both times, which is the "same test counts as parent commit" bar
   this plan's acceptance criteria hold to.
+
+## From Plan 143-07
+
+Both items above (`@emitted_body` dead attribute, `redefining module
+Mailglass.TestRepo.Migrations.*` warnings) are RESOLVED by this plan — see
+`test/mailglass/upgrade_v2_schema_migration_test.exs` (dead attribute
+removed) and `Mailglass.TestSupport.SandboxOwnership.reloading_flat_migrations/1`
+(scopes `Code.put_compiler_option(:ignore_module_conflict, true)` around
+every flat-`priv/repo/migrations/`-reloading `Ecto.Migrator.run/4` call site
+in `migration_test.exs`, `upgrade_v2_schema_migration_test.exs`,
+`schema_prefix_hardening_test.exs`, `schema_isolation_integration_test.exs`,
+`schema_isolation_immutability_test.exs`, restored in an `after` block so a
+genuine redefinition warning elsewhere still surfaces). The "down reverses
+the move" pre-existing failure is also RESOLVED — root-caused to
+`Ecto.Migrator.up/4`'s and `down/4`'s own schema_migrations bookkeeping
+being ambient-current-schema-dependent absent an explicit `:prefix`; both
+calls now pin `prefix: "public"` (safe: `public` always exists and is never
+dropped by any file in this suite, and the wrapper's run-unique version
+number never collides with the flat baseline migrations' own bookkeeping).
+
+### NEW: `schema_isolation_immutability_test.exs`'s "migrating down against prefix mailglass succeeds" test — pre-existing failure on the mailglass axis, same bookkeeping-ambiguity ROOT CAUSE, NOT fixable by the same technique
+
+- **Found during:** Plan 143-07, investigating whether the same
+  `Ecto.Migrator.down/4` bookkeeping-ambiguity root cause (fixed in
+  `upgrade_v2_schema_migration_test.exs` via `prefix: "public"`) also affects
+  this file's structurally identical `PrefixedWrapperMigration` down/4 call.
+- **Symptom:** `test "migrating down against prefix mailglass succeeds and
+  the schema is gone"` fails on the mailglass axis (confirmed reproducible on
+  the parent commit, before any 143-07 change touched this file) —
+  `Ecto.Migrator.down/4`'s "is this version applied?" check misses the
+  version `up/4` recorded (the identical shape to the "down reverses the
+  move" bug), leaving the `mailglass` schema behind (`schema_count == 1`
+  instead of `0`).
+- **Why the `upgrade_v2_schema_migration_test.exs` fix does NOT transfer
+  here:** `PrefixedWrapperMigration.up/0` calls
+  `Mailglass.Migration.up(prefix: "mailglass", repo: ...)`, which internally
+  uses `Ecto.Migration`'s `create table(prefix: ...)` DSL macros — and Ecto
+  explicitly VALIDATES that a migration's own `create table(prefix: ...)`
+  matches the outer `Ecto.Migrator.up/4`/`down/4` call's `:prefix` option,
+  raising `Ecto.MigrationError: the :prefix option "mailglass" does not
+  match the migrator prefix "public"` the moment `prefix: "public"` is
+  applied outside. `upgrade_v2_schema_migration_test.exs`'s
+  `MoveWrapperMigration` avoided this entirely because its content is raw
+  `execute/1` SQL strings (no `create table(prefix: ...)` macro use), so no
+  such validation applies there — confirmed by reproducing the
+  `Ecto.MigrationError` live when the same `prefix: "public"` fix was applied
+  here, then reverting it.
+- **Why deferred, not fixed:** `schema_isolation_immutability_test.exs` is
+  not named as a Class A candidate in `143-MECHANISM.md`'s three-class
+  inventory (only `migration_test.exs`, `upgrade_v2_schema_migration_test.exs`,
+  and `schema_prefix_hardening_test.exs` are), and a correct fix here needs a
+  DIFFERENT mechanism than the one this plan validated elsewhere (e.g.
+  threading `prefix: "mailglass"` through consistently on both up/4 and
+  down/4 instead of "public", which needs its own from-scratch verification
+  this plan's time budget does not cover safely). Confirmed reproducible
+  identically on the parent commit (public axis: 6/6 pass; mailglass axis: 1
+  pre-existing failure, same test, same shape) before and after this plan's
+  Class B `with_schema!/2` migration and the `reloading_flat_migrations/1`
+  warning fix, neither of which touch this defect.
+- **Impact on this plan's acceptance criteria:** none of this plan's Task 1
+  or Task 2 acceptance criteria name this file's down-test; Task 3's
+  full-suite `:baseline_missing`/`:config_schema_drift` tallies are the
+  binding bar and are evaluated against the full suite, not this isolated
+  file.
+- **Suggested fix (not applied here):** thread `prefix: Mailglass.Config.schema()`
+  (here always `"mailglass"`, since this test never overrides `:schema`)
+  through BOTH the `up/4` and `down/4` calls consistently instead of
+  `"public"` — the schema already exists by the time each call runs (created
+  by the `up/4` call's own `Mailglass.Migration.up/1` before this test even
+  starts), so the chicken-and-egg risk that ruled out this approach for
+  `upgrade_v2_schema_migration_test.exs` (schema not yet existing when
+  `ensure_schema_migrations_table!` runs) does not apply the same way here —
+  worth a dedicated follow-up plan/verification pass.
+
+### Isolated 5-file mailglass-axis run artifact — NOT independently investigated further
+
+- **Found during:** Plan 143-07, running
+  `MAILGLASS_SCHEMA=mailglass mix test test/mailglass/schema_prefix_hardening_test.exs
+  test/mailglass/schema_isolation_integration_test.exs
+  test/mailglass/schema_isolation_immutability_test.exs
+  test/mailglass/shipped_migration_divergence_test.exs
+  test/mailglass/upgrade_v2_schema_migration_test.exs` (Task 1's own literal
+  verify command, extended to the mailglass axis as extra diligence) against
+  a genuinely fresh database (`mix ecto.drop && mix ecto.create` immediately
+  before).
+- **Symptom:** `shipped_migration_divergence_test.exs` shows 4 failures
+  (`schema_migrations_pkey` unique-constraint violations) not reproduced when
+  the full suite runs (143-MECHANISM.md's own mailglass-axis capture records
+  only 10 total `42P01` hits across the ENTIRE 200+-file suite, far fewer
+  than this 5-file isolated run's own failure count).
+- **Why deferred, not fixed:** `shipped_migration_divergence_test.exs` is not
+  named as a Class A/B candidate in `143-MECHANISM.md` and is not in this
+  plan's `files_modified`. Confirmed reproducible identically on the parent
+  commit under the same isolated-5-file, fresh-DB condition (not a
+  regression). Isolated-file-subset runs are known to differ from the full
+  suite (other files establish/restore state a subset run does not see) —
+  Task 3's actual full-suite run on both axes is the binding measurement,
+  not this isolated combination.
+- **Impact on this plan's acceptance criteria:** none directly — Task 1's own
+  `<verify>` block only requires the PUBLIC axis for this exact file
+  combination (confirmed 24/24 tests passing there, unchanged from parent).

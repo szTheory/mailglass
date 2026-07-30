@@ -16,6 +16,7 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
   import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1, with_schema!: 1]
 
   alias Mailglass.TestRepo
+  alias Mailglass.TestSupport.SandboxOwnership
 
   @prefix "mailglass"
   @tenant_id "schema-isolation-immutability-tenant"
@@ -264,8 +265,10 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
       migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
 
       {:ok, _, _} =
-        Ecto.Migrator.with_repo(TestRepo, fn repo ->
-          Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+        SandboxOwnership.reloading_flat_migrations(fn ->
+          Ecto.Migrator.with_repo(TestRepo, fn repo ->
+            Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+          end)
         end)
 
       :ok

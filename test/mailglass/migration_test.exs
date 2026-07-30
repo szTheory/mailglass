@@ -105,8 +105,10 @@ defmodule Mailglass.MigrationTest do
       # no-op because Ecto's schema_migrations tracking skips applied files.
       # Shared-mode sandbox lets the migrator subprocess reuse our connection.
       {:ok, _, _} =
-        Ecto.Migrator.with_repo(TestRepo, fn repo ->
-          Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
+        SandboxOwnership.reloading_flat_migrations(fn ->
+          Ecto.Migrator.with_repo(TestRepo, fn repo ->
+            Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
+          end)
         end)
 
       assert Migration.migrated_version(prefix: Mailglass.Config.schema(), repo: TestRepo) ==
@@ -182,8 +184,10 @@ defmodule Mailglass.MigrationTest do
       # state (version 0). Shared-mode sandbox lets the migrator subprocess
       # reuse our owned connection.
       {:ok, _, _} =
-        Ecto.Migrator.with_repo(TestRepo, fn repo ->
-          Ecto.Migrator.run(repo, @migrations_path, :down, all: true, log: false)
+        SandboxOwnership.reloading_flat_migrations(fn ->
+          Ecto.Migrator.with_repo(TestRepo, fn repo ->
+            Ecto.Migrator.run(repo, @migrations_path, :down, all: true, log: false)
+          end)
         end)
 
       refute table_exists?("mailglass_deliveries")
@@ -214,8 +218,10 @@ defmodule Mailglass.MigrationTest do
       # Reapply so subsequent tests / files in the same run have the schema
       # back. Uses Ecto.Migrator again — same path as test_helper.exs.
       {:ok, _, _} =
-        Ecto.Migrator.with_repo(TestRepo, fn repo ->
-          Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
+        SandboxOwnership.reloading_flat_migrations(fn ->
+          Ecto.Migrator.with_repo(TestRepo, fn repo ->
+            Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
+          end)
         end)
 
       # Version advances through every V-step the dispatcher currently
@@ -465,8 +471,10 @@ defmodule Mailglass.MigrationTest do
     maybe_clear_stale_baseline_versions()
 
     _ =
-      Ecto.Migrator.with_repo(TestRepo, fn repo ->
-        Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
+      SandboxOwnership.reloading_flat_migrations(fn ->
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.run(repo, @migrations_path, :up, all: true, log: false)
+        end)
       end)
 
     :ok

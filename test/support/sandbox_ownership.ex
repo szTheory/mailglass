@@ -64,6 +64,9 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   - `assert_manual!/3` — raises `LeakError` when the pool is not `:manual`.
   - `live_holder/0` — the current shared-owner pid, or `nil`.
   - `baseline_tables_present?/1` — read-only baseline-relation check (Class A).
+  - `reloading_flat_migrations/1` — scopes `ignore_module_conflict` around a
+    flat-`priv/repo/migrations/` reload (HARNESS-02's redefining-module
+    blocker), restored in an `after` block.
 
   ## Why `probe/1` reads `:sys.get_state/1` instead of calling `Sandbox.mode/2`
 
@@ -567,5 +570,38 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
 
   defp classify_baseline_result({:error, error}) do
     {:cannot_verify, error}
+  end
+
+  @doc """
+  Runs `fun` with `Code.put_compiler_option(:ignore_module_conflict, true)`
+  scoped to the call, restoring the prior value in an `after` block —
+  HARNESS-02's `redefining module Mailglass.TestRepo.Migrations.*` blocker.
+
+  Every migration-restore call site that re-scans the FLAT
+  `priv/repo/migrations/` directory via `Ecto.Migrator.run/4` (as opposed to
+  an inline, in-test `Ecto.Migration` module defined once) reloads
+  already-compiled modules the very first `mix compile` or `test_helper.exs`
+  boot already loaded into memory. BEAM warns on redefining an
+  already-loaded module every time this happens, and
+  `--warnings-as-errors` aborts the run AFTER a fully successful execution
+  — `mix test test/mailglass/upgrade_v2_schema_migration_test.exs
+  --warnings-as-errors` reports "6 tests, 0 failures" and then aborts on
+  exactly this warning class.
+
+  Scoped, not global: the option is set immediately before `fun.()` runs and
+  restored to whatever it was before in an `after` block, so a genuine
+  redefinition warning anywhere else in the same test run (a real bug this
+  milestone exists to catch) is still reported normally.
+  """
+  @spec reloading_flat_migrations((-> result)) :: result when result: var
+  def reloading_flat_migrations(fun) when is_function(fun, 0) do
+    prior = Code.get_compiler_option(:ignore_module_conflict)
+    Code.put_compiler_option(:ignore_module_conflict, true)
+
+    try do
+      fun.()
+    after
+      Code.put_compiler_option(:ignore_module_conflict, prior)
+    end
   end
 end

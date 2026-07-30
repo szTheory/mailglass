@@ -21,11 +21,6 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
   @prefix "mailglass"
   @tenant_id "upgrade-v2-schema-migration-tenant"
 
-  # The emitted move-migration bytes, evaluated as an anonymous module. Evaluating
-  # the emitted body (rather than hand-copying it) proves the EMITTED bytes
-  # execute — the emitter is the tested surface.
-  @emitted_body Mix.Tasks.Mailglass.Upgrade.V2Schema.migration_body("UpgradeV2SchemaMigrationTest")
-
   # Two-step wrapper migration:
   #   up/0   → seed public (1.x state) then run the emitted move up/0
   #   down/0 → run the emitted move down/0 then tear down public (1.x state)
@@ -287,8 +282,10 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
     migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
 
     {:ok, _, _} =
-      Ecto.Migrator.with_repo(TestRepo, fn repo ->
-        Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+      SandboxOwnership.reloading_flat_migrations(fn ->
+        Ecto.Migrator.with_repo(TestRepo, fn repo ->
+          Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+        end)
       end)
 
     :ok
