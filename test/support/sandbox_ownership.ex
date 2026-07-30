@@ -60,6 +60,9 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   - `with_schema!/2` — overrides `Mailglass.Config.schema/0`, with the restore
     registered before the override is even applied (D-31 Class B).
   - `unsandboxed/2` — the preferred forward idiom for a single committed write.
+  - `mode_manual!/1` — the raw `Sandbox.mode(repo, :manual)` write, for the
+    two narrow callers (suite boot; a pre-release healing revert) that need
+    it directly rather than through an acquire/release pairing.
   - `probe/1` — read-only pool-mode observation (never mutates).
   - `assert_manual!/3` — raises `LeakError` when the pool is not `:manual`.
   - `live_holder/0` — the current shared-owner pid, or `nil`.
@@ -398,6 +401,44 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     _ = Keyword.get(opts, :repo, Mailglass.TestRepo)
 
     :ok
+  end
+
+  @doc """
+  Directly sets `repo`'s Sandbox pool to `:manual` mode via
+  `Ecto.Adapters.SQL.Sandbox.mode/2`.
+
+  This is the one raw write `Mailglass.Credo.NoRawSandboxOwnership` (plan
+  `143-08`) allows to happen only from behind this door. It has exactly two
+  legitimate callers, both migrated to route through it rather than call
+  `Ecto.Adapters.SQL.Sandbox.mode/2` directly:
+
+    * `test/test_helper.exs`'s suite-wide boot: the pool starts in Sandbox's
+      own default mode, and `Sandbox.checkout/checkin` need `:manual` set
+      before any test can check out an owner at all. This is not a release —
+      no owner exists yet at this point in boot.
+    * A pre-release healing call in `deliver_many_test.exs` and
+      `deliver_later_test.exs`: both `use Mailglass.DataCase, async: false`
+      and rely on `DataCase`'s own `checkout!(shared: true)` for the actual
+      acquire/release pairing. ExUnit runs `on_exit` callbacks in reverse
+      registration order, and each of these files' own `setup` block
+      registers its `on_exit` AFTER `DataCase`'s composed setup already
+      registered `checkout!/1`'s release — so this call runs BEFORE that
+      release, reverting the pool to `:manual` a moment early so
+      `Task.Supervisor` background work has already settled.
+      `checkout!/1`'s own release (which runs immediately after this, and
+      DOES verify via `assert_manual!/3`) is still the operation that owns
+      the acquire/release invariant for these two files; this call is a
+      convenience revert, not a second release path.
+
+  Neither caller acquires or releases an owner through this function — it
+  performs no `start_owner!`/`stop_owner` pairing of its own, so it does not
+  reintroduce the ordering bug `checkout!/1` exists to prevent. New test code
+  needing pool-mode mutation almost certainly wants `checkout!/1` instead;
+  this function exists only for the two caller shapes documented above.
+  """
+  @spec mode_manual!(module()) :: :ok
+  def mode_manual!(repo \\ Mailglass.TestRepo) do
+    Ecto.Adapters.SQL.Sandbox.mode(repo, :manual)
   end
 
   @doc """

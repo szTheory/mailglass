@@ -280,6 +280,25 @@ defmodule Mailglass.Credo.IntegrationTest do
         end
       end
       """
+    },
+    %{
+      id: "HARNESS-01",
+      check: Mailglass.Credo.NoRawSandboxOwnership,
+      filename: "test/mailglass/no_raw_sandbox_ownership_bad_test.exs",
+      bad_source: """
+      defmodule Mailglass.SomeBadTest do
+        def run do
+          Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
+        end
+      end
+      """,
+      clean_source: """
+      defmodule Mailglass.SomeGoodTest do
+        def run do
+          Mailglass.TestSupport.SandboxOwnership.checkout!(shared: false)
+        end
+      end
+      """
     }
   ]
 

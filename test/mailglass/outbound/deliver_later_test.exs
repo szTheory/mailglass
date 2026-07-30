@@ -55,12 +55,12 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       Application.put_env(:mailglass, :tenancy, prior_tenancy)
 
       # Healing call, not a leak site: reverts the shared mode DataCase's own
-      # checkout put the pool in. Left as-is for plan 143-05 (its reverse
-      # on_exit placement runs before DataCase's own release, so it cannot
-      # strand the owner). Plan 143-08's Credo check allowlists nothing — if
-      # it flags this raw call, migrate it to SandboxOwnership there,
-      # alongside the rest of the :auto-mode inventory.
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
+      # checkout put the pool in. Its reverse on_exit placement runs before
+      # DataCase's own release, so it cannot strand the owner. Migrated to
+      # the sanctioned door per plan 143-08's Mailglass.Credo.NoRawSandboxOwnership
+      # (see Mailglass.TestSupport.SandboxOwnership.mode_manual!/1's moduledoc
+      # for why this exact caller shape is one of its two legitimate uses).
+      Mailglass.TestSupport.SandboxOwnership.mode_manual!(TestRepo)
     end)
 
     :ok

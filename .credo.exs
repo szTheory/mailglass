@@ -160,7 +160,12 @@ extra_checks = [
   # injection). Those are intentional bad-config shapes, so linting test files
   # would be a false positive that breaks `mix credo --strict` (exit 16).
   {Mailglass.Credo.StreamPolicyConsistent,
-   [included_path_prefixes: ["lib/mailglass/", "mailglass_inbound/lib/"]]}
+   [included_path_prefixes: ["lib/mailglass/", "mailglass_inbound/lib/"]]},
+  # HARNESS-01 (plan 143-08): the prevention half of the two-layer recurrence
+  # guard for the Sandbox ownership acquire/release leak. Forbids raw
+  # Ecto.Adapters.SQL.Sandbox ownership calls under test/, outside the two
+  # allowlisted modules (the sanctioned door and its own mechanism test).
+  {Mailglass.Credo.NoRawSandboxOwnership, []}
 ]
 
 %{

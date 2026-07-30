@@ -132,4 +132,4 @@ Mailglass.ObanHelpers.maybe_create_oban_jobs()
 # clean before the test runs.
 Mailglass.TestSupport.CitextProbe.run([])
 
-Ecto.Adapters.SQL.Sandbox.mode(Mailglass.TestRepo, :manual)
+Mailglass.TestSupport.SandboxOwnership.mode_manual!(Mailglass.TestRepo)
