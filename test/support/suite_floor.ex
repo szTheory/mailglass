@@ -122,14 +122,30 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   (including a widened `--exclude requires_workspace,foo`) is caught there,
   regardless of lane.
 
-  ## The signature tally (D-17) — landed in plan `143-09` Task 2
+  ## The signature tally, and why it crosses a process boundary (D-17, D-09)
 
   `already_shared` (raw badmatch AND the composed `SandboxOwnership.LeakError`
-  combined) and the formatter's own hygiene-violation count join the pipeline
-  once `Mailglass.TestSupport.SuiteTruthFormatter`'s classifier and
-  cross-process read path exist (this same plan's Task 2). See that module's
-  moduledoc for the other half of that read path.
+  combined) and `formatter_violations` (the formatter's own module-boundary
+  hygiene-violation count) are read from
+  `Mailglass.TestSupport.SuiteTruthFormatter.current_state/0`. `check/1` runs
+  in a different process (the `mix test` runner, via `ExUnit.after_suite/1`)
+  than the formatter GenServer — and, confirmed by decompiling
+  `ExUnit.Runner`, `ExUnit.EventManager.stop/1` already terminated that
+  GenServer by the time `after_suite` callbacks run, so a live `:sys.get_state/1`
+  read is not merely undesirable here, it is impossible. `current_state/0`
+  instead reads the final snapshot the formatter persists to `:persistent_term`
+  at `:suite_finished` (its last guaranteed-alive event) — a single source of
+  truth (the formatter is still the only place classification/tallying
+  happens), not a second/duplicate store this module maintains
+  independently. See `SuiteTruthFormatter`'s own moduledoc ("Cross-process
+  read path") for the full account, including why the naive name-registered
+  `:sys.get_state/1` approach (mirroring `SandboxOwnership.probe/1`) was
+  tried first and empirically found not to work. When no snapshot exists
+  yet, that is reported as an unverifiable violation, never silently treated
+  as zero — a check that cannot observe its subject must not report green.
   """
+
+  alias Mailglass.TestSupport.SuiteTruthFormatter
 
   # ──────────────────────────────────────────────────────────────
   # Constants
@@ -170,14 +186,15 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   # The complete, closed vocabulary of violation/warning `:name` atoms
   # `violations/3` can produce. Exists so the contract test's anti-vacuity
   # guard can assert this set is non-empty without hardcoding a second copy
-  # that could silently drift from the pipeline below. Task 2 (this same
-  # plan) appends `:already_shared` and `:formatter_violations`.
+  # that could silently drift from the pipeline below.
   @violation_classes [
     :exclusion_allowlist_unknown_tag,
     :exclusion_allowlist_dead_entry,
     :executed_floor,
     :executed_nudge,
-    :skipped_ceiling
+    :skipped_ceiling,
+    :already_shared,
+    :formatter_violations
   ]
 
   @type violation :: %{kind: :violation | :warning, name: atom(), message: String.t()}
@@ -199,11 +216,13 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   @doc """
   `ExUnit.after_suite/1` callback (D-13). Reads the four ExUnit-native counts
   from `results` with `Map.fetch!/2` (never a summary-line parse), the
-  effective merged exclusion set from `ExUnit.configuration()`, and the
-  current schema from `Mailglass.Config.schema()`. Always prints the counts
-  and any computed violations. Enforces (non-zero exit via `System.halt/1`)
-  only when `MAILGLASS_SUITE_FLOOR` is `"1"` AND at least one `kind:
-  :violation` entry was produced — warnings never enforce.
+  effective merged exclusion set from `ExUnit.configuration()`, the current
+  schema from `Mailglass.Config.schema()`, and the signature tally from
+  `SuiteTruthFormatter.current_state/0` (D-17, D-09). Always prints the
+  counts, the signature tally, and any computed violations. Enforces
+  (non-zero exit via `System.halt/1`) only when `MAILGLASS_SUITE_FLOOR` is
+  `"1"` AND at least one `kind: :violation` entry was produced — warnings
+  never enforce.
   """
   @spec check(map()) :: :ok
   def check(results) when is_map(results) do
@@ -215,11 +234,15 @@ defmodule Mailglass.TestSupport.SuiteFloor do
     skipped = Map.fetch!(results, :skipped)
     failures = Map.fetch!(results, :failures)
 
+    {already_shared, formatter_violations} = read_formatter_tally()
+
     augmented = %{
       total: total,
       excluded: excluded,
       skipped: skipped,
-      failures: failures
+      failures: failures,
+      already_shared: already_shared,
+      formatter_violations: formatter_violations
     }
 
     found = violations(augmented, effective_exclusion, schema)
@@ -235,10 +258,11 @@ defmodule Mailglass.TestSupport.SuiteFloor do
 
   @doc """
   PURE. Takes the augmented results map (the four `ExUnit.after_suite/1`
-  counts), the effective merged exclusion set, and the current schema.
-  Returns a list of violation maps (`%{kind:, name:, message:}`) — `kind:
-  :warning` entries (the nudge) are advisory and MUST NOT be treated as a
-  build failure by any caller.
+  counts plus `:already_shared` and `:formatter_violations`, D-17), the
+  effective merged exclusion set, and the current schema. Returns a list of
+  violation maps (`%{kind:, name:, message:}`) — `kind: :warning` entries
+  (the nudge) are advisory and MUST NOT be treated as a build failure by any
+  caller.
 
   Driven directly by `test/scripts/suite_floor_contract_test.exs`'s synthetic
   reports — the negative controls there exercise this SAME function, never a
@@ -252,6 +276,8 @@ defmodule Mailglass.TestSupport.SuiteFloor do
     excluded = Map.fetch!(results, :excluded)
     skipped = Map.fetch!(results, :skipped)
     _failures = Map.fetch!(results, :failures)
+    already_shared = Map.fetch!(results, :already_shared)
+    formatter_violations = Map.fetch!(results, :formatter_violations)
 
     executed = total - excluded - skipped
 
@@ -260,6 +286,8 @@ defmodule Mailglass.TestSupport.SuiteFloor do
     |> floor_violation(executed, schema)
     |> nudge_warning(executed, schema)
     |> ceiling_violation(skipped)
+    |> already_shared_violation(already_shared)
+    |> formatter_violation(formatter_violations)
   end
 
   @doc """
@@ -410,9 +438,80 @@ defmodule Mailglass.TestSupport.SuiteFloor do
     end
   end
 
+  # D-17. Combined raw badmatch + composed LeakError count — see
+  # `SuiteTruthFormatter.signature/1`'s @doc for why both are counted as one.
+  defp already_shared_violation(acc, :cannot_verify) do
+    [
+      violation(
+        :violation,
+        :already_shared,
+        "SuiteTruthFormatter's signature tally could not be read — the formatter process was " <>
+          "not found. A check that cannot observe its subject must not report green; this is " <>
+          "reported as unverifiable rather than as zero."
+      )
+      | acc
+    ]
+  end
+
+  defp already_shared_violation(acc, 0), do: acc
+
+  defp already_shared_violation(acc, count) when is_integer(count) and count > 0 do
+    [
+      violation(
+        :violation,
+        :already_shared,
+        "Sandbox ownership leaked #{count} time(s) this run (:already_shared, raw badmatch and " <>
+          "the composed SandboxOwnership.LeakError combined) — exactly zero is required (D-17)."
+      )
+      | acc
+    ]
+  end
+
+  defp formatter_violation(acc, :cannot_verify) do
+    [
+      violation(
+        :violation,
+        :formatter_violations,
+        "SuiteTruthFormatter's own hygiene-violation count could not be read — the formatter " <>
+          "process was not found. Reported as unverifiable rather than as zero."
+      )
+      | acc
+    ]
+  end
+
+  defp formatter_violation(acc, 0), do: acc
+
+  defp formatter_violation(acc, count) when is_integer(count) and count > 0 do
+    [
+      violation(
+        :violation,
+        :formatter_violations,
+        "SuiteTruthFormatter recorded #{count} module-boundary hygiene violation(s) this run " <>
+          "(pool_mode_leaked / config_schema_drift / baseline_missing / cannot_verify) — see the " <>
+          "trace output (MAILGLASS_SANDBOX_TRACE=1) for which module and class."
+      )
+      | acc
+    ]
+  end
+
   defp violation(kind, name, message), do: %{kind: kind, name: name, message: message}
 
   defp enforce?, do: System.get_env("MAILGLASS_SUITE_FLOOR") == "1"
+
+  # ──────────────────────────────────────────────────────────────
+  # Internal — reading the formatter's state across the process boundary
+  # ──────────────────────────────────────────────────────────────
+
+  defp read_formatter_tally do
+    case SuiteTruthFormatter.current_state() do
+      %{signature_tally: tally, violations: hygiene_violations} ->
+        already_shared = Map.get(tally, :already_shared, 0)
+        {already_shared, length(hygiene_violations)}
+
+      :unavailable ->
+        {:cannot_verify, :cannot_verify}
+    end
+  end
 
   # ──────────────────────────────────────────────────────────────
   # Internal — reporting (always runs; never gated on enforce?/0)
@@ -436,6 +535,11 @@ defmodule Mailglass.TestSupport.SuiteFloor do
       ", failures: ",
       Integer.to_string(augmented.failures)
     ])
+
+    IO.puts(
+      "  signature tally: already_shared=#{inspect(augmented.already_shared)}, " <>
+        "formatter_violations=#{inspect(augmented.formatter_violations)}"
+    )
 
     case found do
       [] ->

@@ -32,6 +32,14 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
   Every class also has a `:cannot_verify` outcome for when the check itself
   could not run — never silently treated as a pass.
 
+  At every `:test_finished` event this formatter ALSO classifies each
+  failure into the closed D-17 signature set (`signature/1`) and tallies it —
+  the `:already_shared` count (raw badmatch AND the composed
+  `SandboxOwnership.LeakError`, combined) is the count HARNESS-01's
+  regression guard asserts is exactly zero. See `signature/1`'s own docs for
+  the closed atom set and why every clause matches structurally, never by
+  message string (CLAUDE.md).
+
   ## State
 
   - `:violations` — list of violation records, newest first. Each record is
@@ -53,6 +61,48 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
     {:cannot_verify, term()})`, defaults to
     `&SandboxOwnership.baseline_tables_present?/1`. Overridable so tests can
     drive the missing/`:cannot_verify` paths without a real Postgres query.
+  - `:signature_tally` — `%{atom() => pos_integer()}`, one of `signature/1`'s
+    closed atom set per key, incremented at every `:test_finished` failure.
+    Absent keys mean zero, never a stored zero.
+
+  ## Cross-process read path (D-17, D-09) — how `SuiteFloor.check/1` reads this state
+
+  `SuiteFloor.check/1` runs in a different process (the `mix test` runner,
+  via `ExUnit.after_suite/1`) than this GenServer, and needs
+  `:signature_tally`/`:violations` to build the counts it asserts on.
+
+  **A name-registered `:sys.get_state/1` read (mirroring
+  `SandboxOwnership.probe/1`'s idiom for the ownership manager) does NOT
+  work here — confirmed empirically, not merely reasoned about, by
+  decompiling `ExUnit.Runner`'s abstract code.** `ExUnit.Runner.run/2` calls
+  `ExUnit.EventManager.stop/1` — which `DynamicSupervisor.stop/1`s the
+  supervisor every formatter (including this one) was started under —
+  BEFORE it invokes the configured `:after_suite` callbacks. By the time
+  `SuiteFloor.check/1` runs, this GenServer is already terminated; a
+  name-registered pid lookup always returns `nil`, every time, not merely
+  under contention. A first draft of this module registered a name and
+  called `:sys.get_state/1` from `SuiteFloor.check/1`, ran it against a real
+  suite, and observed `current_state/0` return `:unavailable` on every run —
+  the dead-process read is not a hypothetical, it is what actually happens.
+
+  Instead, `handle_cast({:suite_finished, ...})` — the LAST event this
+  formatter receives while still alive — persists a final snapshot
+  (`%{signature_tally:, violations:}`) to `:persistent_term`, an idiom
+  already established in this codebase (`SandboxOwnership.with_schema!/2`).
+  `:persistent_term` outlives any individual process, including this one
+  once `EventManager.stop/1` terminates it. This remains a SINGLE source of
+  truth, not a duplicate one: this formatter is still the only place
+  classification/tallying happens: only the READ boundary changed, from a
+  live-process peek (impossible given the ordering above) to a
+  process-independent snapshot written at the one point in this GenServer's
+  own lifecycle guaranteed to be final. `current_state/0` is the documented
+  read accessor; `SuiteFloor.check/1` is its one documented caller. Ordering
+  safety: `:suite_finished` is ExUnit's LAST event, firing only after every
+  test in every module (including this formatter's own unit tests in
+  `suite_truth_formatter_test.exs`, which call `handle_cast/2` directly with
+  synthetic state) has completed — so the real, live formatter's write is
+  always the final write this key receives before `check/1` reads it,
+  regardless of what any unit test wrote earlier in the same run.
 
   ## Divergences from `ExUnit.CLIFormatter`
 
@@ -72,6 +122,8 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
   use GenServer
 
   alias Mailglass.TestSupport.SandboxOwnership
+
+  @persistent_term_key {__MODULE__, :final_state}
 
   # ──────────────────────────────────────────────────────────────
   # Public API
@@ -94,9 +146,26 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
       trace?: trace_enabled?(),
       probe_fun: &SandboxOwnership.probe/1,
       schema_fun: &Mailglass.Config.schema/0,
-      baseline_fun: &SandboxOwnership.baseline_tables_present?/1
+      baseline_fun: &SandboxOwnership.baseline_tables_present?/1,
+      signature_tally: %{}
     }
     |> Map.merge(Map.new(overrides))
+  end
+
+  @doc """
+  Reads the final snapshot this formatter persisted at `:suite_finished` —
+  see the moduledoc's "Cross-process read path" section for why this reads
+  `:persistent_term` rather than a live process (`:suite_finished` is the
+  last point this GenServer is guaranteed alive; `SuiteFloor.check/1` always
+  runs after `ExUnit.EventManager.stop/1` has already terminated it).
+  Returns `:unavailable` (never a default empty state) when no run has
+  reached `:suite_finished` yet, so a caller that cannot observe this
+  formatter's tally reports "unverifiable," never a silent zero.
+  `SuiteFloor.check/1` is this function's one documented caller.
+  """
+  @spec current_state() :: map() | :unavailable
+  def current_state do
+    :persistent_term.get(@persistent_term_key, :unavailable)
   end
 
   defp trace_enabled?, do: System.get_env("MAILGLASS_SANDBOX_TRACE") == "1"
@@ -127,12 +196,31 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
     end
   end
 
+  # D-17: classify every failure this test carried and tally it. Must sit
+  # BEFORE the catch-all %ExUnit.Test{} clause below (first-match-wins).
+  def handle_cast({:test_finished, %ExUnit.Test{state: {:failed, failures}}}, state) do
+    updated_tally =
+      Enum.reduce(failures, state.signature_tally, fn failure, tally ->
+        Map.update(tally, signature(failure), 1, &(&1 + 1))
+      end)
+
+    {:noreply, %{state | signature_tally: updated_tally}}
+  end
+
   def handle_cast({:test_finished, %ExUnit.Test{}}, state) do
-    # Signature tally lands in plan 143-09; nothing to do here yet.
     {:noreply, state}
   end
 
   def handle_cast({:suite_finished, _times_us}, state) do
+    # D-17/D-09: the last point this GenServer is guaranteed alive — see the
+    # moduledoc's "Cross-process read path" section. `SuiteFloor.check/1`
+    # runs after this process is already terminated, so the final tally must
+    # cross the boundary here, not be peeked at from a later, dead process.
+    :persistent_term.put(@persistent_term_key, %{
+      signature_tally: state.signature_tally,
+      violations: state.violations
+    })
+
     if state.trace? do
       print_ledger(state.violations)
     end
@@ -230,6 +318,109 @@ defmodule Mailglass.TestSupport.SuiteTruthFormatter do
     violation = %{module: module, class: class, result: result}
     %{state | violations: [violation | state.violations]}
   end
+
+  # ──────────────────────────────────────────────────────────────
+  # D-17: the failure-signature classifier
+  # ──────────────────────────────────────────────────────────────
+
+  @doc """
+  Classifies a single ExUnit failure entry — the `{kind, reason, stacktrace}`
+  shape carried by `%ExUnit.Test{}.state`'s `{:failed, failures}` list — into
+  one of a closed atom set: `:already_shared`, `:undefined_table`,
+  `:config_schema_drift`, `:sandbox_ownership`, `:citext_probe`, `:other`.
+
+  Every clause matches STRUCTURALLY (struct type, stacktrace frame identity)
+  — no clause inspects an exception's own rendered display text or does
+  substring/regex matching against it (CLAUDE.md: "Don't pattern-match
+  errors by message string. Match the struct.").
+
+  ## The `:already_shared` pair (D-17's highest-risk vacuity)
+
+  Two clauses return `:already_shared`, commented as a pair so neither can be
+  deleted without the reader seeing the other:
+
+    1. The VERBATIM nested term captured from CI run `30464215272`, job
+       `90617762038` (`143-MECHANISM.md` § "The exact failure term"): an
+       outer `MatchError` whose `:term` is `{:error, {{:badmatch,
+       :already_shared}, _stack}}`. A clause matching `{:badmatch,
+       :already_shared}` at the TOP LEVEL matches nothing — the unlinked
+       `Agent.start/1` in `ecto_sql/lib/ecto/adapters/sql/sandbox.ex:452`
+       wraps it one level deeper, and the outer `{:ok, pid} =` at `:451` is
+       what actually raises.
+    2. The composed `SandboxOwnership.LeakError` — `checkout!/1` (plan
+       `143-04`) replaces the raw badmatch term with this struct at the
+       confirmed leak sites. Counting only clause 1 would make this tally
+       read zero the moment `checkout!/1` is adopted, while the leak keeps
+       happening under a name nothing is watching — ROADMAP criterion 3
+       ("`:already_shared` count is exactly zero") would pass vacuously.
+  """
+  @spec signature({atom(), term(), term()}) ::
+          :already_shared
+          | :undefined_table
+          | :config_schema_drift
+          | :sandbox_ownership
+          | :citext_probe
+          | :other
+  def signature({:error, %MatchError{term: {:error, {{:badmatch, :already_shared}, _stack}}}, _}),
+    do: :already_shared
+
+  # Pair with the clause above — see this function's @doc.
+  def signature({:error, %SandboxOwnership.LeakError{}, _stacktrace}),
+    do: :already_shared
+
+  # Splits `:undefined_table` from `:config_schema_drift` so Class B (D-31)
+  # is legible instead of hiding inside a generic "table missing" count —
+  # the same argument D-17 makes for `:already_shared` vs. "43 failures."
+  # Postgres exposes the missing relation's name only in the free-text
+  # `postgres.message` field (no structured `table`/`schema` field exists for
+  # `undefined_table`); `schema_qualified_foreign_prefix?/1` reads that raw
+  # driver field directly, never the exception's own composed display text
+  # (a longer, differently-shaped string).
+  def signature({:error, %Postgrex.Error{postgres: %{code: :undefined_table}} = error, _}) do
+    if schema_qualified_foreign_prefix?(error), do: :config_schema_drift, else: :undefined_table
+  end
+
+  def signature({:error, %DBConnection.OwnershipError{}, _stacktrace}),
+    do: :sandbox_ownership
+
+  # The CitextProbe permanent-fault error (`test/support/citext_probe.ex`'s
+  # `do_probe/4` exhaustion raise) has no dedicated exception struct — it is
+  # a plain `raise "string"`, i.e. `%RuntimeError{}`. To classify it without
+  # a message-string match, check for a stacktrace frame naming
+  # `Mailglass.TestSupport.CitextProbe` (structural: code identity, not
+  # message content) rather than the exception's message text. An arbitrary
+  # RuntimeError with no such frame falls through to `:other`, exactly as it
+  # should — see `citext_probe_frame?/1`.
+  def signature({:error, %RuntimeError{}, stacktrace}) do
+    if citext_probe_frame?(stacktrace), do: :citext_probe, else: :other
+  end
+
+  def signature(_), do: :other
+
+  defp schema_qualified_foreign_prefix?(%Postgrex.Error{postgres: %{message: message}})
+       when is_binary(message) do
+    case Regex.run(~r/^relation "([^"]+)"/, message) do
+      [_, qualified] ->
+        case String.split(qualified, ".", parts: 2) do
+          [prefix, _table] -> prefix != Mailglass.Config.schema()
+          _ -> false
+        end
+
+      nil ->
+        false
+    end
+  end
+
+  defp schema_qualified_foreign_prefix?(_error), do: false
+
+  defp citext_probe_frame?(stacktrace) when is_list(stacktrace) do
+    Enum.any?(stacktrace, fn
+      {Mailglass.TestSupport.CitextProbe, _fun, _arity, _location} -> true
+      _ -> false
+    end)
+  end
+
+  defp citext_probe_frame?(_stacktrace), do: false
 
   defp print_ledger(violations) do
     ordered = Enum.reverse(violations)
