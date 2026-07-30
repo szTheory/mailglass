@@ -55,6 +55,58 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
              "pass trivially."
   end
 
+  test "the pinned thresholds are the values measured from green CI run 30568802513 (D-27)" do
+    # Pinned here as well as in `SuiteFloor` so that changing a threshold is a
+    # two-file, deliberate act with this message in front of the person doing
+    # it — the `lane_classification_drift_test.exs:247-265` idiom. These are
+    # NOT a second source of truth: they are a tripwire on the first.
+    #
+    # Source: GitHub Actions run 30568802513, `Advisory Matrix`, head SHA
+    # 369577b0, 2026-07-30. Both `Core Full Suite Advisory` legs `success`, both
+    # Elixir 1.18.4 / OTP 27 (the gating toolchain):
+    #
+    #   job 90959947929, schema public,    seed 478127: 1596 - 13 - 7 = 1576
+    #   job 90959948064, schema mailglass, seed 43820:  1596 - 14 - 7 = 1575
+    assert SuiteFloor.executed_floor("public") == 1576,
+           "the public executed floor drifted from the value measured on green run " <>
+             "30568802513 (job 90959947929: total 1596 - excluded 13 - skipped 7). A " <>
+             "legitimate re-pin must update this number DELIBERATELY, from a fresh green CI " <>
+             "run on the 1.18/OTP 27 gating toolchain — never from a local run (D-27), never " <>
+             "from a red run, and never by shaving it down to accommodate a regression."
+
+    assert SuiteFloor.executed_floor("mailglass") == 1575,
+           "the mailglass executed floor drifted from the value measured on green run " <>
+             "30568802513 (job 90959948064: total 1596 - excluded 14 - skipped 7). Re-pin " <>
+             "deliberately from a fresh green CI run, or do not change it."
+
+    assert SuiteFloor.skipped_ceiling() == 7,
+           "the skipped ceiling drifted from the 7 measured on BOTH legs of green run " <>
+             "30568802513. A grep of test/ finds more skip declarations than this because " <>
+             "some sit in modules the lane excludes wholesale — do not raise this constant " <>
+             "to match the grep."
+
+    assert MapSet.new(SuiteFloor.pinned_schemas()) == MapSet.new(["public", "mailglass"]),
+           "the pinned schema axes drifted from the two D-06 axes the advisory matrix runs. " <>
+             "A new axis must pin its own floor from a green CI run; removing one silently " <>
+             "stops floor-checking that leg."
+  end
+
+  test "anti-vacuity: the floors are large enough that a collapsed suite cannot satisfy them" do
+    # Without this, a future edit that reset the floors to 0 (their pre-143-10
+    # placeholder value) would leave every boundary test above still passing —
+    # they are all written relative to `executed_floor/1`, so they follow the
+    # constant wherever it goes, including to zero.
+    for schema <- SuiteFloor.pinned_schemas() do
+      floor = SuiteFloor.executed_floor(schema)
+
+      assert floor > 1000,
+             "SuiteFloor.executed_floor(#{inspect(schema)}) is #{floor}, which a badly " <>
+               "broken suite could satisfy. Every floor boundary test in this file is " <>
+               "written relative to this constant, so a floor near zero makes all of them " <>
+               "pass vacuously while enforcing nothing."
+    end
+  end
+
   test "SuiteFloor's known exclusion-tag allowlist is pinned to exactly the two current " <>
          "sources (D-14)" do
     assert MapSet.new(SuiteFloor.known_exclusion_tags()) ==
@@ -237,6 +289,189 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
       assert [violation] = Enum.filter(violations, &(&1.name == :exclusion_allowlist_dead_entry))
       assert violation.kind == :violation
       assert violation.message =~ "public_only"
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # `--only`'s `:test` marker — deliberate scoping, not lost coverage
+  # ---------------------------------------------------------------------------
+
+  describe "`:test` is --only's mechanism, not an exclusion decision" do
+    test "the --only pairing (exclude :test WITH a non-empty include set) produces no " <>
+           "unknown-tag violation" do
+      # The exact shape both legs of green run 30568802513 printed while running
+      # `mix verify.schema_prefix` (`mix test ... --only schema_prefix`):
+      #   Excluding tags: [:test]
+      #   Including tags: [:schema_prefix]
+      floor = SuiteFloor.executed_floor("public")
+
+      violations =
+        SuiteFloor.violations(
+          report(total: floor),
+          MapSet.new([:test]),
+          "public",
+          %{full_suite?: false, inclusion: MapSet.new([:schema_prefix])}
+        )
+
+      assert Enum.filter(violations, &(&1.name == :exclusion_allowlist_unknown_tag)) == [],
+             "`mix test --only <tag>` is implemented by ExUnit as exclude: [:test] + " <>
+               "include: [<tag>]. Flagging that pair trains people to ignore VIOLATION " <>
+               "lines on nearly every focused run — got #{inspect(violations)}"
+    end
+
+    test "a BARE `--exclude test` with no include set still produces the unknown-tag " <>
+           "violation (the discount is narrow, not a blanket exemption)" do
+      floor = SuiteFloor.executed_floor("public")
+
+      violations =
+        SuiteFloor.violations(
+          report(total: floor),
+          MapSet.new([:test]),
+          "public",
+          %{full_suite?: true, inclusion: MapSet.new()}
+        )
+
+      assert [violation] =
+               Enum.filter(violations, &(&1.name == :exclusion_allowlist_unknown_tag))
+
+      assert violation.kind == :violation
+
+      assert violation.message =~ "test",
+             "excluding :test with nothing re-included excludes the entire suite — that is " <>
+               "never a deliberate coverage decision and must not be discounted"
+    end
+
+    test "the discount removes ONLY :test — another unknown tag alongside it still violates" do
+      floor = SuiteFloor.executed_floor("public")
+
+      violations =
+        SuiteFloor.violations(
+          report(total: floor),
+          MapSet.new([:test, :flaky]),
+          "public",
+          %{full_suite?: false, inclusion: MapSet.new([:schema_prefix])}
+        )
+
+      assert [violation] =
+               Enum.filter(violations, &(&1.name == :exclusion_allowlist_unknown_tag))
+
+      assert violation.message =~ "flaky",
+             "the --only discount must not launder an unrelated unpinned exclusion tag " <>
+               "that happens to travel with it — got #{inspect(violations)}"
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Run scope — the floor/nudge/ceiling describe a COMPLETE suite
+  # ---------------------------------------------------------------------------
+
+  describe "full-suite-scoped checks (D-15)" do
+    test "a scoped run does not produce a floor violation for its small executed count" do
+      violations =
+        SuiteFloor.violations(
+          report(total: 4),
+          MapSet.new([]),
+          "public",
+          %{full_suite?: false, inclusion: MapSet.new()}
+        )
+
+      assert violations == [],
+             "`mix test path/to/one_test.exs` executes four tests on purpose. Reporting " <>
+               "'below the pinned floor of 1576' there is a false alarm on nearly every " <>
+               "developer invocation — got #{inspect(violations)}"
+    end
+
+    test "the SAME four-test report on a run that DECLARED itself a full suite does " <>
+           "violate (the scope gate is not a way to switch the floor off)" do
+      violations =
+        SuiteFloor.violations(
+          report(total: 4),
+          MapSet.new([]),
+          "public",
+          %{full_suite?: true, inclusion: MapSet.new()}
+        )
+
+      assert [violation] = Enum.filter(violations, &(&1.name == :executed_floor))
+      assert violation.kind == :violation
+      assert violation.message =~ "4"
+      assert violation.message =~ Integer.to_string(SuiteFloor.executed_floor("public"))
+    end
+
+    test "a scoped run still runs the every-run checks — the gate narrows scope, it does " <>
+           "not disable the module" do
+      violations =
+        SuiteFloor.violations(
+          report(total: 4, already_shared: 2),
+          MapSet.new([:flaky]),
+          "public",
+          %{full_suite?: false, inclusion: MapSet.new()}
+        )
+
+      names = MapSet.new(violations, & &1.name)
+
+      assert MapSet.member?(names, :already_shared),
+             "the :already_shared assertion is meaningful on any run and must survive the " <>
+               "scope gate — got #{inspect(violations)}"
+
+      assert MapSet.member?(names, :exclusion_allowlist_unknown_tag),
+             "the exclusion allowlist is meaningful on any run and must survive the scope " <>
+               "gate — got #{inspect(violations)}"
+    end
+
+    test "omitting the scope argument entirely evaluates the full-suite checks (the " <>
+           "default is the STRICT reading)" do
+      violations = SuiteFloor.violations(report(total: 4), MapSet.new([]), "public")
+
+      assert Enum.any?(violations, &(&1.name == :executed_floor)),
+             "violations/3's default scope must be 'complete suite, no --only', so a call " <>
+               "site that forgets the argument over-reports rather than passing vacuously — " <>
+               "got #{inspect(violations)}"
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # An unmeasured schema axis must not pass vacuously
+  # ---------------------------------------------------------------------------
+
+  describe "unpinned schema axes (D-16/D-27)" do
+    test "a schema with no pinned floor produces a violation naming the pinned axes, " <>
+           "rather than being floored at zero" do
+      refute "warehouse" in SuiteFloor.pinned_schemas(),
+             "sanity check: this test needs a schema name that is genuinely unpinned"
+
+      violations =
+        SuiteFloor.violations(
+          report(total: 1_000_000),
+          MapSet.new([:public_only]),
+          "warehouse",
+          %{full_suite?: true, inclusion: MapSet.new()}
+        )
+
+      assert [violation] = Enum.filter(violations, &(&1.name == :executed_floor))
+      assert violation.kind == :violation
+
+      assert violation.message =~ "No executed floor is pinned",
+             "`executed_floor/1` answers 0 for an unknown schema and `executed >= 0` always " <>
+               "holds, so a new D-06 axis added without pinning its floor would pass while " <>
+               "measuring nothing — got #{inspect(violation.message)}"
+
+      assert violation.message =~ "public",
+             "the violation must name the axes that ARE pinned so the reader knows what to " <>
+               "add — got #{inspect(violation.message)}"
+    end
+
+    test "an unpinned schema produces no growth nudge (the floor violation is the signal)" do
+      violations =
+        SuiteFloor.violations(
+          report(total: 1_000_000),
+          MapSet.new([:public_only]),
+          "warehouse",
+          %{full_suite?: true, inclusion: MapSet.new()}
+        )
+
+      refute Enum.any?(violations, &(&1.name == :executed_nudge)),
+             "nudging '1000000 above the pinned floor of 0' for an axis with no pinned " <>
+               "floor is noise on top of the real violation — got #{inspect(violations)}"
     end
   end
 
