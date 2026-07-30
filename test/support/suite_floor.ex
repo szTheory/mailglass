@@ -59,7 +59,9 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   Every threshold below was measured from **GitHub Actions run
   `30568802513`** (workflow `Advisory Matrix`, branch
   `gsd/phase-143-test-harness-truth`, head SHA `369577b0`, 2026-07-30), whose
-  two `Core Full Suite Advisory` legs both concluded `success`:
+  two Core Full Suite legs both concluded `success` (that pre-rename run reported
+  them as `Core Full Suite Advisory (...)`; the job is now `core_full_suite` and the
+  lane is `Core Full Suite (...)` — Phase 143 / D-21):
 
   | Job | Leg | Seed | `after_suite` counts | executed |
   |---|---|---|---|---|
@@ -84,7 +86,7 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   `Map.get/3` with a default) so a future shape change fails loudly.
 
   **The 1.19/OTP 28 legs have no green evidence and nothing here is pinned
-  from them.** `core_latest_elixir_advisory` carries
+  from them.** `core_full_suite_next_toolchain_advisory` carries
   `if: github.event_name != 'pull_request'`, and every Advisory Matrix run on
   this branch has been a `pull_request` event, so those two legs have been
   `skipped` on all of them. The floors are therefore keyed on schema alone
@@ -247,7 +249,7 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   # anything (D-18b).
   #
   # MEASURED, not estimated, from GitHub Actions run 30568802513 on
-  # 2026-07-30 — the two `Core Full Suite Advisory` legs, both `success`, both
+  # 2026-07-30 — the two Core Full Suite legs, both `success`, both
   # Elixir 1.18.4 / OTP 27 (the gating toolchain):
   #
   #   job 90959947929, schema public,    seed 478127: 1596 - 13 - 7 = 1576

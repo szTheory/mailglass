@@ -62,7 +62,7 @@ defmodule Mailglass.Scripts.SuiteFloorContractTest do
     # NOT a second source of truth: they are a tripwire on the first.
     #
     # Source: GitHub Actions run 30568802513, `Advisory Matrix`, head SHA
-    # 369577b0, 2026-07-30. Both `Core Full Suite Advisory` legs `success`, both
+    # 369577b0, 2026-07-30. Both Core Full Suite legs `success`, both
     # Elixir 1.18.4 / OTP 27 (the gating toolchain):
     #
     #   job 90959947929, schema public,    seed 478127: 1596 - 13 - 7 = 1576
