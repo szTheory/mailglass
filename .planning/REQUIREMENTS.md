@@ -230,7 +230,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | VULN-06 | Phase 142 | Complete |
 | VULN-02 | Phase 142 | Complete |
 | VULN-04 | Phase 142 | Complete |
-| HARNESS-01 | Phase 143 | In Progress (3 of 7 contributing plans landed: 143-01, 143-03, 143-04; remaining: 05, 06, 07, 08) |
+| HARNESS-01 | Phase 143 | In Progress (4 of 7 contributing plans landed: 143-01, 143-03, 143-04, 143-05; remaining: 06, 07, 08) |
 | HARNESS-02 | Phase 143 | Pending |
 | HARNESS-03 | Phase 143 | Complete |
 | HARNESS-04 | Phase 143 | Pending |

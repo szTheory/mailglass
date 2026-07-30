@@ -2,17 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 143
-current_phase_name: test-harness-truth
 status: executing
-stopped_at: Completed 143-04-PLAN.md
-last_updated: "2026-07-29T23:33:08.503Z"
-last_activity: 2026-07-29
+stopped_at: Completed 143-05-PLAN.md
+last_updated: "2026-07-30T00:15:50.047Z"
+last_activity: 2026-07-30
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 2
   total_plans: 25
-  completed_plans: 15
+  completed_plans: 16
+  percent: 50
 ---
 
 # Project State
@@ -27,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 5 of 14
+Plan: 6 of 14
 Status: Ready to execute
-Last activity: 2026-07-29
+Last activity: 2026-07-30
 
-Progress: [██████░░░░] 60%
+Progress: [██████░░░░] 64%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -364,6 +363,8 @@ release debug campaign.
 - [Phase ?]: [143-04] checkout!/1 detects the calling test module's async status via Process.get(:"$process_label") + __ex_unit__(:config).async? — a deliberate, version-pinned ExUnit-internals coupling; fails open (not closed) when unresolvable, since the Credo check in plan 143-08 is the fail-closed enforcement layer.
 - [Phase ?]: [143-04] assert_manual!/3 retries up to 30x/5ms (~150ms bound) before raising LeakError, absorbing stop_owner/1's benign manager-propagation delay (empirically reproduced 5/5 without the fix) without masking a genuine, persistent leak.
 - [Phase ?]: [143-04] test/mailglass/test_support/sandbox_ownership_test.exs keeps async: false (unchanged from 143-01) per D-11/D-31, resolving a tension in the plan's own action text (async: true vs. cannot run concurrently with pool-sharing tests).
+- [Phase ?]: [143-05] schema_axis_boot_order_test.exs's bare Sandbox.checkout/1 migrated to checkout!/1, not allowlisted (RESEARCH.md Open Question 4 resolved)
+- [Phase ?]: [143-05] checkout!/1 gained optional :settle_attempts/:settle_interval_ms (default unchanged); only webhook_idempotency_convergence_test.exs opts into a wider bound after empirically hitting assert_manual!/3's default settle window under heavy pool churn
 
 ## Quick Tasks Completed
 
@@ -406,6 +407,7 @@ release debug campaign.
 | Phase 143 P02 | 20min | 2 tasks | 3 files |
 | Phase 143 P03 | 25min | 3 tasks | 7 files |
 | Phase 143 P04 | ~40min | 2 tasks | 2 files |
+| Phase 143 P05 | ~55min | 3 tasks | 8 files |
 
 ## Deferred Items
 
@@ -573,8 +575,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-29T23:33:08.493Z
-**Stopped at:** Completed 143-04-PLAN.md
+**Last session:** 2026-07-30T00:15:50.039Z
+**Stopped at:** Completed 143-05-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

@@ -147,7 +147,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 143-05-PLAN.md — Route both case templates and the confirmed leak site through the door; delete the four no-ops
+- [x] 143-05-PLAN.md — Route both case templates and the confirmed leak site through the door; delete the four no-ops
 - [ ] 143-06-PLAN.md — Migrate the nine `:auto`-mode files to `unsandboxed_module/1`
 
 **Wave 5** *(blocked on Wave 4 completion)*
@@ -202,7 +202,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 5/5 | Complete    | 2026-07-29 |
-| 143. Test-Harness Truth | 4/14 | In Progress|  |
+| 143. Test-Harness Truth | 5/14 | In Progress|  |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
 ## Planted Seeds
