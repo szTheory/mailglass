@@ -90,7 +90,17 @@ defmodule Mailglass.MailerCase do
       """
     end
 
-    _pid = Mailglass.TestSupport.SandboxOwnership.checkout!(shared: not async?)
+    # `context: tags` is what the shared-mode async guard reads. ExUnit merges
+    # `:async` (and `:module`) into every setup context on every supported
+    # Elixir — 1.18.4 `ExUnit.Runner` runner.ex:279/301, 1.19.5 :292/:317 —
+    # so the guard's subject is supplied by construction. It is deliberately
+    # NOT inferred from a process label: `ExUnit.Runner` only sets one from
+    # Elixir 1.19.0, and the gating CI lanes run 1.18.4.
+    _pid =
+      Mailglass.TestSupport.SandboxOwnership.checkout!(
+        shared: not async?,
+        context: tags
+      )
 
     # Probe the checked-out connection for a stale citext OID.
     # Same rationale and pattern as DataCase.setup — see that module for the

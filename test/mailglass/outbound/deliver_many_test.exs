@@ -42,7 +42,7 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       # the sanctioned door per plan 143-08's Mailglass.Credo.NoRawSandboxOwnership
       # (see Mailglass.TestSupport.SandboxOwnership.mode_manual!/1's moduledoc
       # for why this exact caller shape is one of its two legitimate uses).
-      Mailglass.TestSupport.SandboxOwnership.mode_manual!(TestRepo)
+      Mailglass.TestSupport.SandboxOwnership.mode_manual!(TestRepo, caller: __MODULE__)
     end)
 
     :ok

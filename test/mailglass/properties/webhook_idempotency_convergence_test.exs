@@ -47,7 +47,12 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
   @moduletag :property
   @moduletag timeout: :infinity
 
-  setup do
+  setup context do
+    # context: — the shared-mode async guard reads `:async` straight out of the
+    # ExUnit context (supplied by construction; never inferred from a process
+    # label, which `ExUnit.Runner` only sets from Elixir 1.19.0 while the
+    # gating CI lanes run 1.18.4).
+    #
     # settle_attempts/settle_interval_ms: 6s release-verification bound
     # (default is ~150ms). This property test runs up to 1000 iterations,
     # each doing real DB work through the shared pool — db_connection's
@@ -60,6 +65,7 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
       Mailglass.TestSupport.SandboxOwnership.checkout!(
         repo: TestRepo,
         shared: true,
+        context: context,
         ownership_timeout: 10 * 60_000,
         settle_attempts: 600,
         settle_interval_ms: 10

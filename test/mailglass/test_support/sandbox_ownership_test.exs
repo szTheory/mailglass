@@ -1,20 +1,3 @@
-defmodule Mailglass.TestSupport.SandboxOwnershipTest.FakeAsyncModule do
-  @moduledoc false
-  # A plain module (NOT `use ExUnit.Case`) that satisfies exactly the
-  # contract `SandboxOwnership`'s async guard checks —
-  # `function_exported?(module, :__ex_unit__, 1)` returning
-  # `%{async?: true}` — so the guard's real logic can be driven through the
-  # `:calling_module_fun` injectable seam without needing an actual
-  # `async: true` ExUnit.Case module (which would register empty tests with
-  # the live ExUnit.Server and pollute suite counts for no reason).
-  def __ex_unit__(:config), do: %{async?: true}
-end
-
-defmodule Mailglass.TestSupport.SandboxOwnershipTest.FakeSyncModule do
-  @moduledoc false
-  def __ex_unit__(:config), do: %{async?: false}
-end
-
 defmodule Mailglass.TestSupport.SandboxOwnershipTest do
   @moduledoc """
   Deterministic, mechanism-level regression test for HARNESS-01 / D-04.
@@ -46,7 +29,24 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
 
   alias Ecto.Adapters.SQL.Sandbox
   alias Mailglass.TestSupport.SandboxOwnership
-  alias Mailglass.TestSupport.SandboxOwnershipTest.FakeAsyncModule
+
+  # A synthetic ExUnit context is all the async guards read, so the guard's
+  # real logic is driven with a plain map. No fake `__ex_unit__/1` module is
+  # needed (and none exists any more): the guard no longer resolves a module
+  # and interrogates it — it reads `:async` out of the context it is handed.
+  @async_context %{async: true, module: Mailglass.SomePretendAsyncTest}
+  @sync_context %{async: false, module: Mailglass.SomePretendSyncTest}
+
+  setup_all context do
+    # `ExUnit.Runner` merges `%{module: module, async: async?}` into the
+    # setup_all context too — runner.ex:301 on Elixir v1.18.4, runner.ex:317
+    # on v1.19.5, the same expression in both. This is the one place the
+    # process-label mechanism could NEVER have reached on ANY version
+    # (`Process.set_label/1` is called only for the per-test process, and only
+    # from 1.19.0), so capturing it here is a direct pin on the new
+    # mechanism's strictly-wider coverage. Asserted in a test below.
+    %{setup_all_context: Map.take(context, [:async, :module])}
+  end
 
   setup do
     # This file obeys the invariant it is testing: the revert is registered
@@ -159,8 +159,9 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
   # 5. Release-first: a raise registered AFTER checkout!/1's own release
   # still runs — checkout!/1's release, registered first, still executes.
   @tag :release_first
-  test "checkout!/1's release still runs even when a later-registered on_exit raises first" do
-    owner = SandboxOwnership.checkout!(shared: true)
+  test "checkout!/1's release still runs even when a later-registered on_exit raises first",
+       context do
+    owner = SandboxOwnership.checkout!(shared: true, context: context)
     assert {:leaked, {:shared, ^owner}} = SandboxOwnership.probe(Mailglass.TestRepo)
 
     # Registered AFTER checkout!/1 returns, so ExUnit's on_exit LIFO
@@ -198,63 +199,63 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
     assert SandboxOwnership.assert_manual!(Mailglass.TestRepo, __MODULE__) == :ok
   end
 
-  # 6. Async guard raises.
-  test "checkout!(shared: true) raises when the calling module resolves to async: true" do
+  # 6. Async guard raises — the real violation, read straight off the context.
+  test "checkout!(shared: true) raises when the context's :async is true" do
     error =
       assert_raise(
         RuntimeError,
         ~r/^Mailglass\.TestSupport\.SandboxOwnership: `checkout!\(shared: true\)` MUST NOT/,
-        fn ->
-          SandboxOwnership.checkout!(shared: true, calling_module_fun: fn -> FakeAsyncModule end)
-        end
+        fn -> SandboxOwnership.checkout!(shared: true, context: @async_context) end
       )
 
     assert error.message =~ "Pass `shared: false` instead"
-  end
-
-  # 6b. The async guard is FAIL-CLOSED when it cannot observe its subject.
-  #
-  # `ExUnit.Runner` labels only the per-test process (one `Process.set_label`
-  # call site in the whole module, in `spawn_test_monitor/4`), so a
-  # `checkout!(shared: true)` from a `setup_all` block, an `on_exit` callback
-  # or a spawned Task resolves to no module at all. That used to fall through
-  # to `:ok` -- the pool went into process-global shared mode on the word of a
-  # guard that never ran.
-  test "checkout!(shared: true) raises when the calling module cannot be resolved" do
-    for unresolved <- [nil, :"not-a-module", "Elixir.NotAModule"] do
-      error =
-        assert_raise(RuntimeError, fn ->
-          SandboxOwnership.checkout!(shared: true, calling_module_fun: fn -> unresolved end)
-        end)
-
-      assert error.message =~ "could not determine whether its caller is an async: true module"
-      assert error.message =~ "calling_module_fun: fn -> __MODULE__ end"
-    end
+    # Names the module at fault, taken from the context's own `:module` key.
+    assert error.message =~ "Mailglass.SomePretendAsyncTest"
 
     # The guard fires before `start_owner!/2`, so the real pool is untouched.
     assert SandboxOwnership.probe(Mailglass.TestRepo) == :ok
   end
 
-  test "checkout!(shared: true) raises when the calling module carries no ExUnit async config" do
-    # A loaded module that is not an ExUnit case: `async_module?/1` used to
-    # report `false` here, which is indistinguishable from a genuine
-    # `async: false` -- an unanswerable question silently answered "no".
-    assert_raise(RuntimeError, ~r/could not determine whether its caller is an async: true/, fn ->
-      SandboxOwnership.checkout!(shared: true, calling_module_fun: fn -> Enum end)
+  # 6b. FAIL-CLOSED, but only against a MISUSE — never against a healthy caller.
+  #
+  # The subject is now supplied by construction: every `shared: true` call site
+  # passes the ExUnit context, and ExUnit puts `:async` in every setup /
+  # setup_all context on every supported Elixir. So this branch is reachable
+  # only by omitting `context:` entirely, or by passing something that is not
+  # an ExUnit context. It is NOT reachable by "the runtime declined to
+  # volunteer the caller", which is precisely the shape that took every gating
+  # CI lane down on 1.18.4 (see the module's "Async guards" docs).
+  test "checkout!(shared: true) raises when no context is supplied at all" do
+    for opts <- [
+          [shared: true],
+          [shared: true, context: nil],
+          [shared: true, context: :not_a_map],
+          [shared: true, context: %{}]
+        ] do
+      error = assert_raise(RuntimeError, fn -> SandboxOwnership.checkout!(opts) end)
+
+      assert error.message =~ "without an ExUnit context carrying a boolean `:async`"
+      assert error.message =~ "context: tags"
+    end
+
+    assert SandboxOwnership.probe(Mailglass.TestRepo) == :ok
+  end
+
+  test "checkout!(shared: true) raises when :async is present but not a boolean" do
+    # An unanswerable question must not be silently answered "no".
+    assert_raise(RuntimeError, ~r/without an ExUnit context carrying a boolean `:async`/, fn ->
+      SandboxOwnership.checkout!(shared: true, context: %{async: :maybe, module: __MODULE__})
     end)
 
     assert SandboxOwnership.probe(Mailglass.TestRepo) == :ok
   end
 
-  test "checkout!(shared: true) is permitted when the calling module resolves to async: false" do
-    # The positive control for the two fail-closed tests above: a module that
-    # DOES answer the question with `false` still gets through. Without this,
-    # a guard that raised unconditionally would pass both tests above.
-    owner =
-      SandboxOwnership.checkout!(
-        shared: true,
-        calling_module_fun: fn -> Mailglass.TestSupport.SandboxOwnershipTest.FakeSyncModule end
-      )
+  test "checkout!(shared: true) is permitted when the context's :async is false" do
+    # The positive control for the fail-closed tests above: a context that DOES
+    # answer the question with `false` still gets through. Without this, a
+    # guard that raised unconditionally would pass every test above — which is
+    # exactly what the 1.19-only process-label mechanism did on CI.
+    owner = SandboxOwnership.checkout!(shared: true, context: @sync_context)
 
     assert is_pid(owner)
     assert {:leaked, {:shared, ^owner}} = SandboxOwnership.probe(Mailglass.TestRepo)
@@ -271,6 +272,76 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
       )
 
     assert error.message =~ "async: false"
+  end
+
+  test "unsandboxed_module/1 raises when the context carries no boolean :async" do
+    # Previously `Map.get(context, :async, false)` — an absent key was silently
+    # answered "not async", indistinguishable from a genuine `async: false`.
+    # The pool would have gone to :auto on the word of a guard that never ran.
+    for absent <- [%{}, %{module: __MODULE__}, %{async: nil}, %{async: :maybe}] do
+      assert_raise(RuntimeError, ~r/no boolean `:async` key/, fn ->
+        SandboxOwnership.unsandboxed_module(absent)
+      end)
+    end
+
+    # Positive control: a real `async: false` context still switches the pool.
+    # (Reverted immediately — this file's own module-level `on_exit`, plus the
+    # revert `unsandboxed_module/1` itself registers, restore :manual.)
+    assert SandboxOwnership.unsandboxed_module(%{async: false, module: __MODULE__}) == :ok
+  end
+
+  # ── Caller resolution is version-independent (the 1.18.4 CI regression) ──
+  #
+  # Commits 8a11392/355e7eb resolved the guard's subject from
+  # `Process.get(:"$process_label")`. `ExUnit.Runner` only sets that label from
+  # **Elixir 1.19.0** (CHANGELOG "#### ExUnit — Set a process label for each
+  # test"; runner.ex:443 on v1.19.0; ZERO `set_label` occurrences anywhere in
+  # v1.18.4's runner.ex). Every gating CI lane runs 1.18.4/OTP 27, so the
+  # subject resolved to `nil` on 100% of gating runs and the fail-closed branch
+  # fired on every healthy shared checkout — dozens of unrelated modules.
+  #
+  # These two tests are the regression guard. They fail if caller resolution
+  # ever silently degrades to `nil` again, and they do it on BOTH toolchains:
+  # the first erases the process label so the test runs in the exact 1.18.4
+  # shape even on 1.19.x, and the second pins the ExUnit contract the new
+  # mechanism actually depends on.
+
+  test "the async guard classifies correctly with NO process label present at all" do
+    prior = Process.get(:"$process_label")
+    Process.delete(:"$process_label")
+
+    try do
+      # This process is now indistinguishable from a 1.18.4 test process.
+      assert Process.get(:"$process_label") == nil
+
+      # A real violation is still caught...
+      assert_raise(RuntimeError, ~r/MUST NOT/, fn ->
+        SandboxOwnership.checkout!(shared: true, context: @async_context)
+      end)
+
+      # ...and a healthy caller is still let through. THIS is the assertion
+      # that fails on the pre-fix code: with no label to read, the old guard
+      # classified `:unknown` and raised on a caller that had done nothing
+      # wrong. Nothing here consults the process dictionary any more.
+      owner = SandboxOwnership.checkout!(shared: true, context: @sync_context)
+      assert is_pid(owner)
+      assert {:leaked, {:shared, ^owner}} = SandboxOwnership.probe(Mailglass.TestRepo)
+    after
+      if prior, do: Process.put(:"$process_label", prior)
+    end
+  end
+
+  test "ExUnit supplies the guard's subject in every context, on every supported Elixir",
+       context do
+    # The per-test context (runner.ex:279 on v1.18.4, :292-293 on v1.19.5).
+    assert is_boolean(context.async)
+    assert is_atom(context.module)
+    assert context.async == false
+    assert context.module == __MODULE__
+
+    # The setup_all context (runner.ex:301 on v1.18.4, :317 on v1.19.5) — the
+    # one the process label never covered on ANY version.
+    assert context.setup_all_context == %{async: false, module: __MODULE__}
   end
 
   # 7. assert_manual!/2,3 raises LeakError.

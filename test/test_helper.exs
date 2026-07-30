@@ -165,4 +165,9 @@ Mailglass.ObanHelpers.maybe_create_oban_jobs()
 # clean before the test runs.
 Mailglass.TestSupport.CitextProbe.run([])
 
-Mailglass.TestSupport.SandboxOwnership.mode_manual!(Mailglass.TestRepo)
+# `caller:` is passed explicitly (there is no `__MODULE__` in a script, and it
+# is never inferred — see SandboxOwnership's "Caller attribution" moduledoc
+# section) so a refusal here names the suite boot rather than the helper.
+Mailglass.TestSupport.SandboxOwnership.mode_manual!(Mailglass.TestRepo,
+  caller: "test/test_helper.exs (suite boot)"
+)
