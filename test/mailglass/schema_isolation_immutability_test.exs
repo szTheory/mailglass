@@ -303,7 +303,33 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
           end)
         end)
 
-      :ok
+      # A restore that cannot be OBSERVED to have worked must not report
+      # success (D-31). `Ecto.Migrator.run/4` returning `{:ok, _, _}` proves
+      # only that the migrator ran — not that the baseline relations came back
+      # in the schema the rest of the suite will look in. Without this check a
+      # failed restore is silent here and surfaces as a `42P01` cascade in
+      # whichever unrelated `async: false` module happens to run next, which is
+      # exactly the Class A misattribution this phase exists to end.
+      case SandboxOwnership.baseline_tables_present?(TestRepo) do
+        true ->
+          :ok
+
+        {false, missing} ->
+          raise """
+          #{inspect(__MODULE__)}: suite baseline restore did not complete. \
+          Missing relation(s) in schema #{inspect(Mailglass.Config.schema())}: \
+          #{Enum.join(missing, ", ")}. The next async: false module would have \
+          failed with a 42P01 that had nothing to do with it — failing here \
+          instead, at the module that actually broke the baseline.
+          """
+
+        {:cannot_verify, reason} ->
+          raise """
+          #{inspect(__MODULE__)}: could not verify the suite baseline restore \
+          (#{inspect(reason)}). Refusing to report a restore that cannot be \
+          observed — see D-31.
+          """
+      end
     end
   end
 end
