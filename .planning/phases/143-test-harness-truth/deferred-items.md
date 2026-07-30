@@ -195,6 +195,53 @@ number never collides with the flat baseline migrations' own bookkeeping).
   test-harness fix). Logged as `.planning/WINDOWS.md` id 7 (supersedes id 3's
   stale suggested-fix text).
 
+- **RESOLVED (orchestrator-directed gap closure, second pass): path (a) above
+  was implemented and it closes the failure cleanly — no deadlock, no
+  weakened assertion.** `test/mailglass/schema_isolation_immutability_test.exs`'s
+  down-test now drives `Ecto.Migration.Runner.run/8` directly instead of
+  `Ecto.Migrator.down/4`, for the down call only (the setup's `up/4` call is
+  unchanged — it already worked). A throwaway probe script (not committed)
+  first confirmed the ACTUAL root cause precisely, correcting the deadlock
+  write-up above for the *unmodified* (no explicit `:prefix`) code path
+  specifically: `Ecto.Migrator.up/4`/`down/4` conflate two concerns behind
+  one `:prefix` option — the DDL validation target
+  (`Ecto.Migration.__prefix__/1`, checked against the migration's own
+  `create table(prefix: ...)` calls) and the `schema_migrations` bookkeeping
+  location (`Ecto.Migration.SchemaMigration.ensure_schema_migrations_table!/3`,
+  `versions/3`, both keyed on `opts[:prefix]` directly, with NO
+  runner-prefix fallback). With no explicit `:prefix` (this test's original,
+  reverted code), DDL validation is skipped entirely (fine), but bookkeeping
+  resolves via the AMBIENT `search_path` (`"mailglass, public"` on this
+  axis, per `test_helper.exs`). Confirmed live: at `up/4` time `mailglass`
+  does not exist yet (this test's own pre-clean just dropped it), so the
+  unqualified `CREATE TABLE IF NOT EXISTS schema_migrations` lands in
+  `public` — the version row goes there. At `down/4` time `mailglass` now
+  DOES exist (created by `up/4`'s own `maybe_create_schema/1`), and
+  Postgres's `IF NOT EXISTS` existence check is scoped to the RESOLVED
+  TARGET schema only (not search-path-wide) — so `ensure_schema_migrations_
+  table!/3` silently creates a SECOND, empty `schema_migrations` table
+  INSIDE `mailglass` (now first in the ambient search path), the version
+  lookup against it comes back empty, and `Ecto.Migrator.down/4` concludes
+  `:already_down` and never even attempts the `DROP SCHEMA` — no deadlock,
+  no raised error, just a silently skipped rollback (confirmed via probe:
+  `down/4` returned `{:ok, :already_down, []}` and `mailglass` schema count
+  was still 1 afterward). This is a DIFFERENT failure mode from the
+  deadlock the earlier attempt hit (that attempt forced `prefix: "mailglass"`
+  explicitly on both calls, which pins bookkeeping inside `mailglass` from
+  the start and hits the self-referential-drop race described above) — both
+  are symptoms of the same underlying conflation, not evidence the
+  conflation is unfixable. `Ecto.Migration.Runner.run/8` (the function
+  `Ecto.Migrator.up/4`/`down/4` call internally; `@moduledoc false` but not
+  `defp`) drives the migration module's `down/0` directly without EVER
+  invoking `SchemaMigration`/`lock_for_migrations` — no bookkeeping table of
+  any kind is created, queried, or orphaned inside `mailglass`, so neither
+  failure mode (silent skip or deadlock) has anywhere to arise. Verified: 3
+  consecutive isolated file runs green on the mailglass axis (fresh DB), 3
+  consecutive full-suite runs green across both axes (public 1514/0
+  ×3 including this file; mailglass 1513/0 ×2), `mix format --check-formatted`
+  clean, `mix credo --strict` clean, `mix compile --warnings-as-errors`
+  clean. `.planning/WINDOWS.md` ids 3 and 7 both marked `fixed`.
+
 ### Isolated 5-file mailglass-axis run artifact — NOT independently investigated further
 
 - **Found during:** Plan 143-07, running

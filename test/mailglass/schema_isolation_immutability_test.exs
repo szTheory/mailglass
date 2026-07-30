@@ -62,18 +62,18 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
     # EXISTS` (Plan 134-01 maybe_create_schema/1) to stand the schema up, rather
     # than a manual CREATE SCHEMA here. A DROP ... CASCADE gives a clean slate.
     #
-    # NO explicit `:prefix` is passed to `Ecto.Migrator.up/4`/`down/4` below —
-    # confirmed NOT viable (143-gap-closure investigation, see the down-test's
-    # own comment): `prefix: "public"` raises `Ecto.MigrationError` (mismatch
+    # NO explicit `:prefix` is passed to `Ecto.Migrator.up/4` below — still
+    # correct for `up/4` specifically: at this point `mailglass` does not yet
+    # exist (just dropped above), so Ecto's ambient-search_path-resolved
+    # `schema_migrations` bookkeeping table lands in `public` (confirmed
+    # live), not inside the schema this migration creates. An explicit
+    # `prefix: "public"` here would raise `Ecto.MigrationError` (mismatch
     # against `PrefixedWrapperMigration`'s own `create table(prefix:
-    # "mailglass")` DSL calls); `prefix: "mailglass"` reproduces a genuine
-    # Postgres lock deadlock (`do_lock_for_migrations` never returns) because
-    # it makes Ecto's OWN `schema_migrations` bookkeeping table live INSIDE
-    # the very schema this migration's `down/0` drops via `DROP SCHEMA ...
-    # RESTRICT` — the migration body's DROP runs BEFORE Migrator's own
-    # bookkeeping DELETE (see `Ecto.Migrator.async_migrate_maybe_in_transaction/6`'s
-    # `fun_with_status` ordering), so the schema is never actually empty at
-    # RESTRICT-check time regardless of locking. Both were reproduced live.
+    # "mailglass")` DSL calls); `prefix: "mailglass"` was also tried and
+    # ruled out (see the down-test's own comment for the full mechanism and
+    # empirical trail — the down side of this same ambiguity is what
+    # actually needed fixing, and now does not use `Ecto.Migrator.down/4` at
+    # all).
     {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
 
     # Unique migration version per run — Ecto.Migrator records it in
@@ -221,28 +221,67 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
       # Mailglass.Migration.down(prefix: "mailglass"), which drops all tables +
       # the schema (DROP SCHEMA ... RESTRICT once empty). No search_path pin.
       #
-      # KNOWN PRE-EXISTING FAILURE on the mailglass axis (143-gap-closure
-      # investigation, both public and mailglass axes; see setup's own
-      # comment above for the two ruled-out `:prefix` fixes and why each
-      # fails): under `MAILGLASS_SCHEMA=mailglass`, the whole suite's pool
-      # is booted with `parameters: [search_path: "mailglass, public"]`
-      # (test_helper.exs) — with no explicit `:prefix` passed here, Ecto's
-      # OWN `schema_migrations` bookkeeping resolves via that AMBIENT
-      # search_path too, landing it inside the very "mailglass" schema this
-      # migration's `down/0` drops. Its own `DROP SCHEMA ... RESTRICT` then
-      # fails to see the schema as empty (or deadlocks on the migration lock,
-      # depending on exactly where in Migrator's async task ordering the
-      # collision lands) because Ecto's own bookkeeping row/table is still
-      # inside it at that point — see `Ecto.Migrator.async_migrate_maybe_in_
-      # transaction/6`'s `fun_with_status`, which runs the migration body
-      # BEFORE the bookkeeping DELETE. This mirrors test_helper.exs's own
-      # documented reason `migration_test.exs`'s `:public_only` down block is
-      # excluded entirely on this axis. Genuinely not fixable via any
-      # `Ecto.Migrator.up/4`/`down/4` `:prefix` value — see WINDOWS id 3.
-      {:ok, _, _} =
-        Ecto.Migrator.with_repo(TestRepo, fn repo ->
-          Ecto.Migrator.down(repo, version, PrefixedWrapperMigration, log: false)
-        end)
+      # RESOLVED (orchestrator-directed gap closure, superseding the
+      # deferred-items.md / WINDOWS id 7 write-up naming this unfixable):
+      # this drives `Ecto.Migration.Runner.run/8` DIRECTLY instead of going
+      # through `Ecto.Migrator.down/4`'s public API. Root cause, confirmed
+      # empirically (probe script against a live connection, see
+      # 143-07-SUMMARY.md's "Orchestrator-directed gap closure" section for
+      # the full trail): `Ecto.Migrator.up/4`/`down/4` conflate two concerns
+      # into one `:prefix` option — the DDL validation target (checked by
+      # `Ecto.Migration.__prefix__/1` against the migration's own `create
+      # table(prefix: ...)` calls) and the `schema_migrations` bookkeeping
+      # table location (`Ecto.Migration.SchemaMigration.ensure_schema_
+      # migrations_table!/3`, `versions/3`) — with NO way to set them
+      # independently via the public API. Leaving `:prefix` unset (this
+      # test's original code) lets the DSL's own explicit `prefix:
+      # "mailglass"` through unchallenged, but leaves bookkeeping resolution
+      # to the ambient `search_path` (`"mailglass, public"` on this axis,
+      # per test_helper.exs). At `up/4` time `mailglass` does not exist yet
+      # (this test's own pre-clean drops it), so the unqualified `CREATE
+      # TABLE IF NOT EXISTS schema_migrations` targets the next schema that
+      # DOES exist — `public` — and the version row lands there. At `down/4`
+      # time `mailglass` now DOES exist (created by `up/4`'s own
+      # `maybe_create_schema/1`), and Postgres's `IF NOT EXISTS` existence
+      # check is scoped to the RESOLVED TARGET schema only, not search-path-
+      # wide — so `ensure_schema_migrations_table!/3` silently creates a
+      # SECOND, empty `schema_migrations` table INSIDE `mailglass` (now first
+      # in the ambient search path), and the version lookup against it comes
+      # back empty. `Ecto.Migrator.down/4` concludes `:already_down` and
+      # never even attempts the DROP — confirmed live via a throwaway probe:
+      # `down/4` returned `{:ok, :already_down, []}` and `mailglass` was
+      # still there afterward, no schema-level error, no deadlock, just a
+      # silently-skipped rollback. (A DIFFERENT prior attempt that forced
+      # `prefix: "mailglass"` explicitly on both calls hit a genuine ~20-60s
+      # Postgres lock deadlock instead, per WINDOWS id 7 — a different
+      # symptom of the same underlying conflation, not evidence this path is
+      # unfixable.)
+      #
+      # `Ecto.Migration.Runner.run/8` (the function `Ecto.Migrator.up/4`/
+      # `down/4` themselves call internally, `@moduledoc false` but not
+      # `defp`) drives the migration module's `up/0`/`down/0` directly
+      # without EVER touching `SchemaMigration`/`lock_for_migrations` — no
+      # bookkeeping table is created, queried, or orphaned inside `mailglass`
+      # at all, so the self-referential-drop conflict has no way to arise.
+      # This is the same class of deliberate, version-pinned internals
+      # coupling `Mailglass.TestSupport.SandboxOwnership.probe/1` already
+      # uses for `:sys.get_state/1` (see that module's moduledoc) — used here
+      # only because the documented public API has no seam that keeps this
+      # proof's own load-bearing property (a real prefixed schema, no
+      # search_path pin) while also avoiding the conflation above.
+      config = TestRepo.config()
+
+      :ok =
+        Ecto.Migration.Runner.run(
+          TestRepo,
+          config,
+          version,
+          PrefixedWrapperMigration,
+          :forward,
+          :down,
+          :down,
+          log: false
+        )
 
       {:ok, %{rows: [[schema_count]]}} =
         TestRepo.query(

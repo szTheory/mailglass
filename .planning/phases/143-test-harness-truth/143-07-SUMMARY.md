@@ -422,3 +422,126 @@ functional change), `.planning/phases/143-test-harness-truth/deferred-items.md`,
 `.planning/WINDOWS.md`.
 
 **Commits this session:** `bf099ee3` (fix), `01b1f289` (docs).
+
+---
+
+### Second pass (HEAD `736e1aae`): the down-test itself closed — `Ecto.Migration.Runner.run/8`, not `Ecto.Migrator.down/4`
+
+**Context:** the orchestrator directed a second gap-closure session against
+the same `schema_isolation_immutability_test.exs` down-test — this was the
+sole remaining `mailglass`-schema-axis failure blocking HARNESS-02's
+four-leg green bar (measured at HEAD `736e1aae`: public axis `1514 tests, 0
+failures`; mailglass axis `1513 tests, 1 failure` — the down-test above,
+`already_shared=0` and `formatter_violations=0` on both). The prior session
+(above) had investigated and disproven the one obvious fix
+(`prefix: Mailglass.Config.schema()` on both `Ecto.Migrator` calls — a genuine
+Postgres lock deadlock, not a failed assertion), correctly identifying that
+the public API conflates two concerns under one `:prefix` option, and named
+two remaining out-of-scope paths: bypass `Ecto.Migrator`'s public API and
+drive `Ecto.Migration.Runner.run/8` directly, or a Rule-4 architectural
+change to the shipped `Vxx` migration modules.
+
+**What was found, empirically, via a throwaway (uncommitted) probe test
+against a live connection before touching the real test file:** the
+*unmodified* code path (no explicit outer `:prefix` — the code the prior
+session reverted to) does NOT deadlock. It fails silently and cleanly, via a
+different, more precise mechanism than either prior write-up fully spelled
+out:
+
+- `Ecto.Migrator.up/4`/`down/4`'s `schema_migrations` bookkeeping
+  (`Ecto.Migration.SchemaMigration.ensure_schema_migrations_table!/3`,
+  `versions/3`) is keyed directly on `opts[:prefix]` — the SAME keyword list
+  passed to the outer `Ecto.Migrator.up/4`/`down/4` call, with no fallback to
+  the migration's own DSL-level prefix. DDL validation
+  (`Ecto.Migration.__prefix__/1`) reads a DIFFERENT value — `Runner.prefix()`,
+  also sourced from that same outer `opts[:prefix]` — and only raises when
+  BOTH the outer value and the migration's own explicit `create table(prefix:
+  ...)` value are non-nil AND differ. Leaving the outer `:prefix` unset (as
+  the current code does) satisfies the DDL check for free (`is_nil(runner_
+  prefix)` short-circuits it) but leaves bookkeeping resolution to whatever
+  the connection's ambient `search_path` happens to be — `"mailglass, public"`
+  on this axis, set at the connection-parameter level by `test_helper.exs`.
+- At the setup's `up/4` call, `mailglass` does not exist yet (this test's own
+  pre-clean just ran `DROP SCHEMA IF EXISTS mailglass CASCADE`), so the
+  unqualified `CREATE TABLE IF NOT EXISTS schema_migrations` targets the next
+  schema that DOES exist in the search path — `public` — confirmed live via
+  `information_schema.tables`: the version row lands in
+  `public.schema_migrations`.
+- At the down-test's `down/4` call, `mailglass` now exists (created moments
+  earlier by `up/4`'s own `maybe_create_schema/1`). Postgres's `CREATE TABLE
+  IF NOT EXISTS` existence check is scoped to the resolved TARGET schema
+  only — NOT search-path-wide — so `ensure_schema_migrations_table!/3`
+  silently creates a SECOND, empty `schema_migrations` table INSIDE
+  `mailglass` (now first in the ambient search path). The subsequent version
+  lookup against that empty table finds nothing, and `Ecto.Migrator.down/4`
+  concludes `:already_down` — it never even attempts the `DROP SCHEMA`.
+  Confirmed live: the probe's `down/4` call returned `{:ok, :already_down,
+  []}`, and the `mailglass` schema was still present afterward. This is a
+  clean, non-hanging failure mode — a *different* symptom from the deadlock
+  the prior session hit by forcing `prefix: "mailglass"` explicitly (which
+  pins bookkeeping inside `mailglass` from the very first call instead of
+  letting it drift there only for `down/4`), but the same underlying root
+  cause: the public API gives no way to point DDL validation and bookkeeping
+  location at different schemas.
+
+**Fix applied:** the down-test alone (the setup's `up/4` call is untouched —
+it already worked and still works) now drives
+`Ecto.Migration.Runner.run(TestRepo, TestRepo.config(), version,
+PrefixedWrapperMigration, :forward, :down, :down, log: false)` directly,
+bypassing `Ecto.Migrator.down/4`'s public wrapper (`lock_for_migrations`,
+`SchemaMigration.*`) entirely. `Runner.run/8` is the function `Ecto.Migrator`
+itself calls internally to execute a migration module's `up/0`/`down/0` — it
+starts a migration runner process, threads the (here, absent) `:prefix`
+through for DDL-validation purposes only, calls the module's `down/0`, and
+flushes the queued DDL commands. It never touches `SchemaMigration` at all,
+so no bookkeeping table is created, queried, or orphaned inside `mailglass`
+— the mechanism above has nowhere to arise. This is the same class of
+deliberate, version-pinned internals coupling
+`Mailglass.TestSupport.SandboxOwnership.probe/1` already uses for
+`:sys.get_state/1` (see that module's own moduledoc) — used here because the
+documented public API genuinely has no seam that both keeps this test's
+load-bearing property (a real prefixed schema stood up with no search_path
+pin) and avoids the conflation described above.
+
+**No change to the load-bearing property.** The test still stands up
+`mailglass` with zero runtime `search_path` pin (verified: the in-module
+self-check test asserting the forbidden `SET search_path` needle is absent
+from the source still passes), the assertion is unchanged (`schema_count ==
+0`), and it is not tagged, skipped, or excluded.
+
+**Verification (all against a freshly reset DB — `mix ecto.drop`/`mix
+ecto.create` before every measurement, per the coordinator's own caveat
+about local axis-alternation corruption):**
+
+| Run | Scope | Result |
+|---|---|---|
+| 1-3 | `schema_isolation_immutability_test.exs` alone, mailglass axis, 3 consecutive fresh-DB runs | 6 tests, 0 failures, all 3 |
+| 1-2 | `schema_isolation_immutability_test.exs` alone, public axis, 2 consecutive fresh-DB runs | 6 tests, 0 failures, both |
+| 1 | Full suite, public axis, fresh DB, `--warnings-as-errors --exclude requires_workspace --seed 0` | **1514 tests, 0 failures**, ledger `0 record(s)`, `already_shared=0` |
+| 2 | Full suite, mailglass axis, fresh DB, same flags | **1513 tests, 0 failures**, ledger `0 record(s)`, `already_shared=0` |
+| 3 (repeat) | Full suite, mailglass axis, fresh DB (repeat run) | 1513 tests, 0 failures, ledger `0 record(s)` — stable, not a one-off |
+| 4 (repeat) | Full suite, public axis, fresh DB (repeat run) | 1514 tests, 0 failures, ledger `0 record(s)` — stable |
+
+Both axes now match the coordinator's definition of done
+(`>= 1514`/`>= 1513` tests, `0` failures, `already_shared=0`,
+`formatter_violations=0`) — HARNESS-02's four-leg green bar is reachable.
+`mix format --check-formatted` clean, `mix credo --strict` clean (0 issues
+across 493 files), `mix compile --warnings-as-errors --force` clean.
+
+**Broken Windows Ledger changes:** id 7 marked `fixed` (its own disproven-fix
+text is retained verbatim as the historical record of the deadlock path that
+did NOT work); id 3 also marked `fixed` (superseded by id 7, now genuinely
+resolved rather than merely re-diagnosed). `open_count` went from 3 to 1
+(only id 6, the unrelated pre-existing transient flake, remains open).
+
+**Files modified this session:**
+`test/mailglass/schema_isolation_immutability_test.exs` (the down-test's
+invocation mechanism, plus updated in-source comments explaining both the
+now-corrected root-cause mechanism and the fix),
+`.planning/phases/143-test-harness-truth/deferred-items.md`,
+`.planning/WINDOWS.md`, this file.
+
+**No lib/ changes this session** — the fix is entirely test-harness-side
+(the invocation mechanism the test uses to drive the migration), consistent
+with the coordinator's framing of this as gap-closure work on the test
+harness, not the shipped adopter migration path.
