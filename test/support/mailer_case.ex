@@ -4,7 +4,7 @@ defmodule Mailglass.MailerCase do
 
   ## Default setup
 
-  - `Ecto.Adapters.SQL.Sandbox.start_owner!` with `shared: not tags[:async]`
+  - `Mailglass.TestSupport.SandboxOwnership.checkout!/1` with `shared: not tags[:async]`
   - `Mailglass.Adapters.Fake.checkout()`
   - `Mailglass.Tenancy.put_current("test-tenant")` (unless `@tag tenant: :unset`)
   - `Phoenix.PubSub.subscribe(Mailglass.PubSub, Topics.events(tenant_id))`
@@ -90,7 +90,7 @@ defmodule Mailglass.MailerCase do
       """
     end
 
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Mailglass.TestRepo, shared: not async?)
+    _pid = Mailglass.TestSupport.SandboxOwnership.checkout!(shared: not async?)
 
     # Probe the checked-out connection for a stale citext OID.
     # Same rationale and pattern as DataCase.setup — see that module for the
@@ -150,13 +150,13 @@ defmodule Mailglass.MailerCase do
         oban_mode = Map.fetch!(tags, :oban)
         repo = Application.get_env(:mailglass, :repo, Mailglass.TestRepo)
 
-        # Switch sandbox to shared mode so Oban's DB processes can check out
-        # connections from the test process's pool. :manual mode was already
-        # set by start_owner! (shared: true for async: false), but explicitly
-        # setting {:shared, self()} makes this contract clear and ensures Oban
-        # internal processes (which don't inherit $callers) can access the DB.
-        Ecto.Adapters.SQL.Sandbox.mode(repo, {:shared, self()})
-
+        # Oban's internal processes (which don't inherit $callers) reach the
+        # database because the pool is genuinely in shared mode already —
+        # SandboxOwnership.checkout!(shared: true) (above, for the non-async
+        # case) put it there. A raw Sandbox mode call switching to shared
+        # self-owned mode here would be a no-op: the pool is already shared
+        # with a live agent owner, so db_connection's ownership manager
+        # (manager.ex:148-159) replies :already_shared and changes nothing.
         ExUnit.Callbacks.start_supervised!(
           {Oban, testing: oban_mode, repo: repo, queues: [mailglass_outbound: 10]}
         )
@@ -202,8 +202,6 @@ defmodule Mailglass.MailerCase do
       else
         Application.delete_env(:mailglass, :async_adapter_impl)
       end
-
-      Ecto.Adapters.SQL.Sandbox.stop_owner(pid)
     end)
 
     :ok
@@ -231,8 +229,6 @@ defmodule Mailglass.MailerCase do
               "set `use Mailglass.MailerCase, async: false` at the module level"
     end
 
-    repo = Application.get_env(:mailglass, :repo, Mailglass.TestRepo)
-
     # Snapshot + flip :async_adapter_impl to TaskSupervisor for this test.
     # The setup block already set it to Inline; global mode uses the real
     # Task.Supervisor path + shared sandbox so all spawned processes can
@@ -245,7 +241,13 @@ defmodule Mailglass.MailerCase do
       Mailglass.Outbound.AsyncAdapter.TaskSupervisor
     )
 
-    Ecto.Adapters.SQL.Sandbox.mode(repo, {:shared, self()})
+    # No raw Sandbox mode call switching to shared self-owned mode here: this
+    # setup's own checkout!(shared: not async?) already put the pool in shared
+    # mode with a live agent owner (set_mailglass_global/0 requires non-async,
+    # guarded above), so such a call would return :already_shared
+    # (manager.ex:148-159) and change nothing. The pool is genuinely shared
+    # already; this comment used to assert a guarantee the deleted call did
+    # not provide.
     Mailglass.Adapters.Fake.set_shared(self())
 
     on_exit(fn ->

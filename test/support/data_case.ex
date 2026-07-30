@@ -2,7 +2,7 @@ defmodule Mailglass.DataCase do
   @moduledoc """
   ExUnit case template for mailglass tests that touch the database.
 
-  Sets up an `Ecto.Adapters.SQL.Sandbox` checkout per test, stamps a
+  Sets up a sanctioned Sandbox ownership checkout per test, stamps a
   default tenant for the process (`"test-tenant"` — overridable via
   `@tag tenant: "..."` or `with_tenant/2`), and imports `Ecto.Query`
   + `Ecto.Changeset` for convenience.
@@ -32,8 +32,7 @@ defmodule Mailglass.DataCase do
   end
 
   setup tags do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Mailglass.TestRepo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+    _pid = Mailglass.TestSupport.SandboxOwnership.checkout!(shared: not tags[:async])
 
     # Probe the checked-out connection for a stale citext OID.
     #
