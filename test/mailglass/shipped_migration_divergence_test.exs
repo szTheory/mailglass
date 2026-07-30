@@ -6,6 +6,8 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
 
   @moduletag :shipped_migration_divergence
 
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+
   alias Mailglass.TestRepo
 
   # A dedicated, non-`public` schema so the run is isolated from the
@@ -41,12 +43,14 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
     end
   end
 
-  setup do
-    # Switch the sandbox to :auto so DDL/schema creation can run outside the
-    # transactional wrapper (mirrors migration_test.exs). on_exit reverts to
-    # :manual so DataCase tests in the same run stay isolated.
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1). Its revert to :manual is
+  # registered FIRST (this setup runs before the one below), so it runs LAST
+  # — the file's own restore on_exit (registered second, below) still
+  # executes while :auto is in effect.
+  setup :unsandboxed_module
 
+  setup do
     # Clean slate — drop, then re-create the isolated test schema before
     # running the shipped dispatcher. (The dispatcher threads `prefix:` through
     # every V-step DDL but does not itself issue `CREATE SCHEMA`; the adopter's
@@ -77,8 +81,6 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
 
       {:ok, _} =
         TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
-
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
     :ok

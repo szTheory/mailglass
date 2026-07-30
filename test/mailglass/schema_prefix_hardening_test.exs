@@ -5,6 +5,8 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
 
   @moduletag :schema_prefix
 
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+
   alias Mailglass.Clock
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Outbound.Delivery
@@ -77,6 +79,13 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     end
   end
 
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1). Its revert to :manual is
+  # registered FIRST (this setup runs before the one below), so it runs LAST
+  # — the file's own restore on_exit (registered second, below) still
+  # executes while :auto is in effect.
+  setup :unsandboxed_module
+
   setup do
     prior_mailglass_env = Application.get_all_env(:mailglass)
 
@@ -85,8 +94,11 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     Application.put_env(:mailglass, :compliance, compliance_config())
     :persistent_term.erase({Mailglass.Config, :schema})
 
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
-
+    # 143-MECHANISM.md § "The three-class inventory" names this file as a
+    # candidate for BOTH Class B (config_schema_drift — flips Config.schema()
+    # per-test) and Class A (baseline_missing — drops/restores public.
+    # mailglass_* tables). The drift/restore defect is left deliberately
+    # unchanged here; closing it is plan 143-07's job.
     {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
 
     version = System.unique_integer([:positive, :monotonic]) + 90_000_000_000_000
@@ -107,7 +119,6 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
       Application.put_all_env(mailglass: prior_mailglass_env)
       :persistent_term.erase({Mailglass.Config, :schema})
       restore_suite_baseline_schema()
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
     :ok

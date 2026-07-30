@@ -7,6 +7,8 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
 
   @moduletag :schema_isolation
 
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+
   alias Mailglass.Events
   alias Mailglass.Operator.Deliveries
   alias Mailglass.Operator.SupportSummary
@@ -43,17 +45,25 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
     end
   end
 
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1). Its revert to :manual is
+  # registered FIRST (this setup runs before the one below), so it runs LAST
+  # — the file's own restore on_exit (registered second, below) still
+  # executes while :auto is in effect.
+  setup :unsandboxed_module
+
   setup do
     # Override the schema to "mailglass" for this test so Config.schema/0
     # returns "mailglass" and the facade injects prefix: "mailglass".
     # The rest of the suite pins :schema to "public" via config/test.exs.
+    #
+    # 143-MECHANISM.md § "The three-class inventory" names this file as a
+    # Class B (config_schema_drift) candidate: it flips Config.schema()
+    # per-test. The drift/restore defect is left deliberately unchanged
+    # here; closing it is plan 143-07's job.
     original_schema = Application.get_env(:mailglass, :schema)
     Application.put_env(:mailglass, :schema, @prefix)
     :persistent_term.erase({Mailglass.Config, :schema})
-
-    # Switch to :auto so DDL/schema creation can run outside the
-    # transactional wrapper (mirrors shipped_migration_divergence_test.exs).
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
 
     # Clean slate — drop then re-create the isolated schema before migrating.
     # (footgun 13: schema must exist BEFORE the Sandbox owner starts.)
@@ -95,8 +105,6 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
       # "public" suite (env unset) `mailglass` was never the baseline, so nothing
       # to restore.
       restore_suite_baseline_schema()
-
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
     :ok

@@ -13,6 +13,8 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
 
   @moduletag :schema_isolation
 
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+
   alias Mailglass.TestRepo
 
   @prefix "mailglass"
@@ -37,16 +39,24 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
     end
   end
 
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1). Its revert to :manual is
+  # registered FIRST (this setup runs before the one below), so it runs LAST
+  # — the file's own restore on_exit (registered second, below) still
+  # executes while :auto is in effect.
+  setup :unsandboxed_module
+
   setup do
     # Override the schema to "mailglass" for this test so Config.schema/0
     # returns "mailglass". The rest of the suite pins :schema to "public".
+    #
+    # 143-MECHANISM.md § "The three-class inventory" names this file as a
+    # Class B (config_schema_drift) candidate: it flips Config.schema()
+    # per-test. The drift/restore defect is left deliberately unchanged
+    # here; closing it is plan 143-07's job.
     original_schema = Application.get_env(:mailglass, :schema)
     Application.put_env(:mailglass, :schema, @prefix)
     :persistent_term.erase({Mailglass.Config, :schema})
-
-    # Switch to :auto so DDL/schema creation can run outside the transactional
-    # wrapper (mirrors the sibling integration test).
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
 
     # Pre-clean only — we rely on the migration's OWN `CREATE SCHEMA IF NOT
     # EXISTS` (Plan 134-01 maybe_create_schema/1) to stand the schema up, rather
@@ -86,8 +96,6 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
       # dropped it, so re-migrate the baseline before the next test file runs.
       # No-op on the default "public" suite.
       restore_suite_baseline_schema()
-
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
     {:ok, version: version}
