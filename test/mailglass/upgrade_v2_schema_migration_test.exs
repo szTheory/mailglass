@@ -13,6 +13,8 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
 
   @moduletag :schema_isolation
 
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+
   alias Mailglass.TestRepo
 
   @prefix "mailglass"
@@ -52,13 +54,18 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
     end
   end
 
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1). Its revert to :manual is
+  # registered FIRST (this setup runs before the one below), so it runs LAST
+  # — the file's own restore on_exit (registered second, below) still
+  # executes while :auto is in effect.
+  setup :unsandboxed_module
+
   setup do
     original_schema = Application.get_env(:mailglass, :schema)
     # The move migration hard-codes @schema "mailglass" in the emitted body; the
     # public seed is driven explicitly via prefix: "public". Config stays "public"
     # for the seed path — do not override :schema here.
-
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
 
     # Clean slate: drop the target schema, and drop any leftover public mailglass
     # objects so the 1.x seed installs fresh.
@@ -90,8 +97,6 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
       :persistent_term.erase({Mailglass.Config, :schema})
 
       restore_suite_baseline_schema()
-
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
     {:ok, version: version}

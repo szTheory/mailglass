@@ -4,24 +4,37 @@ defmodule Mailglass.MigrationTest do
 
   @moduletag :phase_02_uat
 
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+
   alias Mailglass.Migration
   alias Mailglass.TestRepo
 
   @migrations_path Path.join(:code.priv_dir(:mailglass), "repo/migrations")
 
-  setup do
-    # These tests don't use `Mailglass.DataCase` because they exercise the
-    # Migration API itself (which issues DDL — CREATE TABLE / DROP TABLE /
-    # COMMENT ON TABLE — that cannot be rolled back by a Sandbox transactional
-    # wrapper). The "down" test tears the schema down entirely.
-    #
-    # Switching the sandbox to :auto mode disables ownership tracking entirely
-    # for the duration of these tests — every process (including the ephemeral
-    # one `Ecto.Migrator.with_repo/2` spawns) checks out on demand, no owner
-    # is required. The on_exit reverts to :manual so DataCase tests in the
-    # same run remain isolated.
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
+  # These tests don't use `Mailglass.DataCase` because they exercise the
+  # Migration API itself (which issues DDL — CREATE TABLE / DROP TABLE /
+  # COMMENT ON TABLE — that cannot be rolled back by a Sandbox transactional
+  # wrapper). The "down" test tears the schema down entirely.
+  #
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1) — every process (including the
+  # ephemeral one `Ecto.Migrator.with_repo/2` spawns) checks out on demand, no
+  # owner is required. Its revert to :manual is registered FIRST (this setup
+  # runs before the one below), so it runs LAST — the file's own conditional
+  # restoration on_exit (registered second, below) still executes while :auto
+  # is in effect.
+  #
+  # 143-MECHANISM.md § "The three-class inventory" narrows Class A
+  # (baseline_missing) toward this file's siblings, but ALSO documents that
+  # `Mailglass.MigrationTest` itself had ZERO failures in both local
+  # captures — Assumption A3 ("Class A is migration_test.exs's incomplete
+  # restoration") is REFUTED for this file specifically, by that run's own
+  # evidence. The conditional restoration logic below is left deliberately
+  # unchanged; closing the (re-opened, not closed) Class A defect elsewhere is
+  # plan 143-07's job.
+  setup :unsandboxed_module
 
+  setup do
     on_exit(fn ->
       # Restore on ground truth — do the baseline tables actually exist? — not on
       # the recorded migration version.
@@ -38,8 +51,6 @@ defmodule Mailglass.MigrationTest do
       unless baseline_tables_present?() do
         _ = restore_suite_baseline_schema()
       end
-
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
     :ok
