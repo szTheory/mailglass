@@ -282,18 +282,47 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     assert rows == [["delivered", true, true]]
   end
 
+  # Rule 1 fix (143-07): under the CI schema-isolation axis
+  # (MAILGLASS_SCHEMA=mailglass), `public.mailglass_deliveries` does not
+  # exist at all when this test runs before anything else has transiently
+  # created it — a stronger form of "the row is not in public" than an
+  # empty table, not a failure. A raw `TestRepo.query!` against a missing
+  # relation raises 42P01 instead of asserting anything; check existence
+  # first, matching `schema_isolation_integration_test.exs`'s
+  # `public_table_exists?/1` pattern.
   defp assert_public_delivery_absent!(delivery_id) do
-    %{rows: [[count]]} =
-      TestRepo.query!(
+    assert public_delivery_count(delivery_id) == 0
+  end
+
+  defp public_delivery_count(delivery_id) do
+    if public_table_exists?("mailglass_deliveries") do
+      %{rows: [[count]]} =
+        TestRepo.query!(
+          """
+          SELECT COUNT(*)
+          FROM public.mailglass_deliveries
+          WHERE id = $1
+          """,
+          [Ecto.UUID.dump!(delivery_id)]
+        )
+
+      count
+    else
+      0
+    end
+  end
+
+  defp public_table_exists?(table) do
+    {:ok, %{rows: rows}} =
+      TestRepo.query(
         """
-        SELECT COUNT(*)
-        FROM public.mailglass_deliveries
-        WHERE id = $1
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = $1
         """,
-        [Ecto.UUID.dump!(delivery_id)]
+        [table]
       )
 
-    assert count == 0
+    rows != []
   end
 
   defp assert_configured_unsubscribe_event_count!(delivery_id, expected_count) do
@@ -304,20 +333,28 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     assert unsubscribe_event_count("public", delivery_id) == expected_count
   end
 
+  # Rule 1 fix (143-07): same "table may not exist under the mailglass axis"
+  # reasoning as `assert_public_delivery_absent!/1` above — only applies to
+  # the "public" branch, since `@prefix` (the configured schema) always
+  # exists by the time these tests run.
   defp unsubscribe_event_count(schema, delivery_id) when schema in [@prefix, "public"] do
-    %{rows: [[count]]} =
-      TestRepo.query!(
-        """
-        SELECT COUNT(*)
-        FROM #{schema}.mailglass_events
-        WHERE delivery_id = $1
-          AND type = 'unsubscribed'
-          AND idempotency_key = $2
-        """,
-        [Ecto.UUID.dump!(delivery_id), "unsubscribe:#{delivery_id}"]
-      )
+    if schema == "public" and not public_table_exists?("mailglass_events") do
+      0
+    else
+      %{rows: [[count]]} =
+        TestRepo.query!(
+          """
+          SELECT COUNT(*)
+          FROM #{schema}.mailglass_events
+          WHERE delivery_id = $1
+            AND type = 'unsubscribed'
+            AND idempotency_key = $2
+          """,
+          [Ecto.UUID.dump!(delivery_id), "unsubscribe:#{delivery_id}"]
+        )
 
-    count
+      count
+    end
   end
 
   defp endpoint_config do

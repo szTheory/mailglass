@@ -180,3 +180,108 @@ number never collides with the flat baseline migrations' own bookkeeping).
 - **Impact on this plan's acceptance criteria:** none directly — Task 1's own
   `<verify>` block only requires the PUBLIC axis for this exact file
   combination (confirmed 24/24 tests passing there, unchanged from parent).
+
+## From Plan 143-07 Task 3 (post-fix full-suite verification)
+
+### `Mailglass.RepoTest` — LIVE Class B `config_schema_drift` bug found and FIXED (not deferred)
+
+- **Found during:** Task 3's own required post-fix full-suite run
+  (`MAILGLASS_SANDBOX_TRACE=1 mix test --warnings-as-errors --exclude
+  requires_workspace --seed 0`, public axis) — 104 failures, almost all
+  `relation "mailglass.mailglass_suppressions" does not exist` starting at
+  `Mailglass.Compliance.UnsubscribeControllerTest`, the sync module
+  immediately following `Mailglass.RepoTest` in `--seed 0`'s (unshuffled)
+  execution order.
+- **Root cause:** `test/mailglass/repo_test.exs`'s two schema-overriding
+  `setup` blocks restored via `Application.delete_env(:mailglass, :schema)`
+  instead of `Application.put_env(:mailglass, :schema, "public")`. Deleting
+  the key does not restore config/test.exs's `"public"` boot pin — the very
+  next `Mailglass.Config.schema/0` call (here, `SuiteTruthFormatter`'s own
+  drift probe, or any later DataCase-based test) re-warms `:persistent_term`
+  via `Mailglass.Config.warm_schema/0`'s own `Application.get_env(:mailglass,
+  :schema, "mailglass")` — whose *default* is `"mailglass"`, not `"public"`.
+  Confirmed directly: `Application.delete_env/2` then
+  `Application.get_env(key, "mailglass")` returns `"mailglass"`.
+- **Why fixed here despite not being in `files_modified` or named in
+  `143-MECHANISM.md`'s inventory:** the coordinator's own instruction is
+  explicit — "The ledger names the culprits, not the research candidates...
+  If 143-MECHANISM.md's inventory disagrees ... the ledger wins." This
+  plan's Task 3 must-have is a hard "ZERO `:config_schema_drift` violations
+  suite-wide" bar; leaving a live, evidence-confirmed Class B source unfixed
+  would make that bar unreachable regardless of what else this plan does.
+- **Fix:** both setups now call `SandboxOwnership.with_schema!/2` (the same
+  restore-first seam Task 1 built), which captures via `Config.schema/0`
+  and restores via `Application.put_env/3` — never `delete_env/2`.
+- **Verified:** post-fix full-suite public-axis run: 104 failures -> 6 (the
+  6 remaining are unrelated pre-existing `Rewrite.Error`s, logged below).
+
+### `SchemaPrefixHardeningTest`'s `assert_public_delivery_absent!/1` and `unsubscribe_event_count/2` — Rule 1 fix (not deferred)
+
+- **Found during:** Task 3's mailglass-axis full-suite run — 2 failures,
+  `relation "public.mailglass_deliveries"/"public.mailglass_events" does not
+  exist` (`42P01`), NOT a drift symptom: `public.mailglass_*` genuinely does
+  not exist at all under a clean mailglass-axis run until some OTHER file
+  transiently creates it, which is a STRONGER form of "the row/event is not
+  in public" than an empty table — the correct assertion outcome, not a
+  test failure.
+- **Root cause:** both helpers used `TestRepo.query!` (raises on a missing
+  relation) instead of checking existence first, unlike the sibling
+  `public_row_count/2` pattern already established in
+  `schema_isolation_integration_test.exs`.
+- **Fix:** added `public_table_exists?/1` (same `information_schema.tables`
+  check as the sibling file) and route both helpers through it, treating "no
+  such table" as count 0 rather than raising.
+- **Verified:** both axes pass in isolation on a genuinely fresh DB
+  (previously only reproducible on the exact "nothing has created
+  `public.mailglass_*` yet" mailglass-axis ordering the full suite exercises).
+
+### `Mailglass.PersistenceIntegrationTest`'s `migrated_version/0 == 0` on the mailglass axis — deferred, lib-level, out of test-harness scope
+
+- **Found during:** Task 3's mailglass-axis full-suite run.
+- **Symptom:** `assert Mailglass.Migration.migrated_version() ==
+  Mailglass.Migrations.Postgres.current_version()` — `left: 0, right: 5`.
+  Reproduces standalone (`mix test test/mailglass/persistence_integration_test.exs`
+  on a fresh mailglass-axis DB, nothing else in the suite involved) — NOT an
+  ordering/leak artifact.
+- **Root cause:** `Mailglass.Migrations.Postgres.migrated_version/1`'s
+  `with_defaults/2` hardcodes `@default_prefix "public"`
+  (`lib/mailglass/migrations/postgres.ex:8,134`) — the test calls
+  `Mailglass.Migration.migrated_version()` with NO args, so the query always
+  targets `public.mailglass_events`'s pg_class comment, which genuinely
+  carries no comment on the mailglass axis (the real marker lives under
+  `mailglass.mailglass_events`). The test needed to pass
+  `prefix: Mailglass.Config.schema()` explicitly and does not.
+- **Why deferred, not fixed:** the fix lives in a LIBRARY default
+  (`lib/mailglass/migrations/postgres.ex`) or requires threading an explicit
+  `:prefix` through this specific test call site — `lib/` is out of this
+  plan's `files_modified` scope entirely, and this is a general
+  schema-isolation-axis test coverage gap (D-06/Success Criterion 7's
+  territory from Phase 134), not a Sandbox-ownership leak (Class A/B/C) —
+  HARNESS-01/02's actual target. `persistence_integration_test.exs` is not
+  named in `143-MECHANISM.md`'s three-class inventory.
+- **Suggested fix (not applied here):** either change the test call site to
+  `Mailglass.Migration.migrated_version(prefix: Mailglass.Config.schema())`,
+  or (a larger, Phase-134-adjacent change) make
+  `Mailglass.Migrations.Postgres`'s own default prefix resolve through
+  `Mailglass.Config.schema()` rather than a hardcoded `"public"` literal.
+
+### Pre-existing `Rewrite.Error: no source found` failures (Igniter generator tests) — unrelated subsystem, deferred
+
+- **Found during:** Task 3's full-suite runs, both axes (6 failures on
+  public, matching subset on mailglass): `test/mailglass/upgrade/v0_2_test.exs`
+  and `test/mix/tasks/mailglass.gen.mailable_test.exs`.
+- **Symptom:** `** (Rewrite.Error) no source found for "lib/..."` inside
+  `assert_file_content/3`, an Igniter/Rewrite test-fixture helper.
+- **Why deferred, not fixed:** reproduces identically in isolation
+  (`mix test test/mailglass/upgrade/v0_2_test.exs
+  test/mix/tasks/mailglass.gen.mailable_test.exs`), unrelated to any file
+  this plan touches (both files last modified at commits `b3acce29` /
+  `750e5eda`, long before Phase 143). This is an Igniter/Rewrite dependency
+  version or test-fixture issue in the code-generation subsystem —
+  completely unrelated to Sandbox ownership (Class A/B/C), which is
+  HARNESS-01/02's actual target. Not named in `143-MECHANISM.md`.
+- **Impact on this plan's acceptance criteria:** none of Task 3's tracked
+  classes (`:pool_mode_leaked`, `:config_schema_drift`, `:baseline_missing`,
+  `:cannot_verify`) are implicated — these are ordinary `ExUnit` test
+  failures in an unrelated subsystem, counted in `total`/failures like any
+  other pre-existing red, not masked or excluded.

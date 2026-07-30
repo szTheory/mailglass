@@ -1,6 +1,8 @@
 defmodule Mailglass.RepoTest do
   use ExUnit.Case, async: false
 
+  alias Mailglass.TestSupport.SandboxOwnership
+
   # CORE-04: `Mailglass.Repo.transact/1` delegates to the adopter-configured
   # Ecto.Repo resolved via `Application.get_env(:mailglass, :repo)`. Phase 1
   # lands only the facade (`transact/1` + `repo/0` resolver); the
@@ -136,15 +138,18 @@ defmodule Mailglass.RepoTest do
       Application.put_env(:mailglass, :repo, CapturingFakeRepo)
       on_exit(fn -> Application.put_env(:mailglass, :repo, original) end)
 
-      # Reset the persistent_term cache so Config.schema/0 re-reads from env
-      :persistent_term.erase({Mailglass.Config, :schema})
-      # Set schema to "mailglass" for these tests
-      Application.put_env(:mailglass, :schema, "mailglass")
-
-      on_exit(fn ->
-        Application.delete_env(:mailglass, :schema)
-        :persistent_term.erase({Mailglass.Config, :schema})
-      end)
+      # `with_schema!/2` captures the CURRENT Mailglass.Config.schema() value
+      # and restores it via Application.put_env/3 (never delete_env/2) — a
+      # 143-07 fix. The prior `Application.delete_env(:mailglass, :schema)`
+      # here left the key ABSENT rather than restored to "public"
+      # (config/test.exs's boot pin), and Mailglass.Config.warm_schema/0's own
+      # `Application.get_env(:mailglass, :schema, "mailglass")` default then
+      # silently re-cached "mailglass" for the rest of the suite the moment
+      # anything (including SuiteTruthFormatter's own drift probe) next called
+      # Mailglass.Config.schema/0 — a real, live Class B config_schema_drift
+      # bug confirmed reaching Mailglass.RepoTest's very next sync module in a
+      # full-suite run.
+      SandboxOwnership.with_schema!("mailglass")
 
       :ok
     end
@@ -274,13 +279,10 @@ defmodule Mailglass.RepoTest do
 
   describe "multi_opts/1 — per-step prefix injector for Multi builders" do
     setup do
-      :persistent_term.erase({Mailglass.Config, :schema})
-      Application.put_env(:mailglass, :schema, "mailglass")
-
-      on_exit(fn ->
-        Application.delete_env(:mailglass, :schema)
-        :persistent_term.erase({Mailglass.Config, :schema})
-      end)
+      # See the "put_prefix injection" describe's setup above for why this
+      # goes through with_schema!/2 rather than a raw put_env/delete_env
+      # pair (143-07 Class B fix).
+      SandboxOwnership.with_schema!("mailglass")
 
       :ok
     end
