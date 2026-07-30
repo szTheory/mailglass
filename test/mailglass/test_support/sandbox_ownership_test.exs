@@ -520,4 +520,82 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
     assert message =~ "42P01"
     assert message =~ "must never"
   end
+
+  # ── with_search_path!/3 — the sanctioned `search_path` seam (D-31 Class A, the
+  # confirmed root cause). This file is one of the three modules
+  # `Mailglass.Credo.NoRawSearchPathMutation` allowlists, because proving the
+  # seam requires driving the raw statements it exists to replace. ────────────
+
+  # 20. The override is genuinely in effect inside the block.
+  test "with_search_path!/3 applies the override for the duration of the block" do
+    auto_mode!()
+
+    observed =
+      SandboxOwnership.with_search_path!(
+        "public",
+        fn ->
+          %{rows: [[value]]} = Mailglass.TestRepo.query!("SHOW search_path", [])
+          value
+        end,
+        caller: __MODULE__
+      )
+
+    assert observed == "public"
+  end
+
+  # 21. THE regression: the pool must not be left poisoned. A session-level
+  # `SET` persists on the physical connection for its lifetime, so the failure
+  # this pins is a LATER, unrelated test drawing that connection and raising
+  # 42P01 on an unqualified relation name. Reading the value back on a fresh
+  # checkout is the observation that would have caught the original defect.
+  test "with_search_path!/3 leaves no poisoned connection behind, even when the block raises" do
+    auto_mode!()
+    before = live_search_path()
+
+    assert_raise RuntimeError, "boom", fn ->
+      SandboxOwnership.with_search_path!("public", fn -> raise "boom" end, caller: __MODULE__)
+    end
+
+    assert live_search_path() == before
+
+    for _ <- 1..20, do: assert(live_search_path() == before)
+  end
+
+  # 22. A restore that cannot be observed to have landed must NOT be reported as
+  # success. Driven through the injectable verification read so the raise path is
+  # provable without genuinely poisoning the suite's pool.
+  test "with_search_path!/3 raises SearchPathError when the restore does not land" do
+    auto_mode!()
+
+    error =
+      assert_raise(SandboxOwnership.SearchPathError, fn ->
+        SandboxOwnership.with_search_path!("public", fn -> :ok end,
+          caller: Mailglass.SomePretendTest,
+          search_path_fun: fn _repo -> "public" end
+        )
+      end)
+
+    message = Exception.message(error)
+    assert message =~ "Mailglass.SomePretendTest"
+    assert message =~ "search_path"
+    assert message =~ "42P01"
+  end
+
+  # The three tests above run under pool-wide `:auto` deliberately, not as a
+  # convenience: `:auto` is the ONLY mode the poisoning defect exists in. Every
+  # query checks a connection out of the 10-slot pool and hands it straight
+  # back, which is what let a session-level `SET` escape into the pool and fail
+  # an unrelated test later. Pinning these tests to `:manual` would test a mode
+  # in which the bug cannot occur. The revert to `:manual` is already registered
+  # by this file's own `setup` on_exit (which runs after every test), matching
+  # the ordering discipline the module under test enforces.
+  defp auto_mode!, do: :ok = Sandbox.mode(Mailglass.TestRepo, :auto)
+
+  # Reads the search_path on a FRESH pool checkout — deliberately not the pinned
+  # one `with_search_path!/3` used, since the whole defect was that the poisoned
+  # connection went back into the pool for someone else to draw.
+  defp live_search_path do
+    %{rows: [[value]]} = Mailglass.TestRepo.query!("SHOW search_path", [])
+    value
+  end
 end

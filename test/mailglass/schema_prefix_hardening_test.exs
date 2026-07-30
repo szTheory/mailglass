@@ -142,13 +142,15 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     Tenancy.put_current(@tenant_id)
 
     on_exit(fn ->
-      # NOT the search_path guarantee — kept only as a harmless belt-and-braces.
-      # This is its own pool checkout and may well land on a DIFFERENT connection
-      # than any that `with_public_search_path!/1` touched, so it can neither be
-      # relied on nor read as evidence that no connection is poisoned. The actual
-      # guarantee is `with_public_search_path!/1`'s same-connection, verified
-      # restore; see that function's comment for the full mechanism.
-      _ = TestRepo.query("RESET search_path")
+      # The `RESET` this block used to issue is GONE, not merely moved. It was
+      # documented as harmless belt-and-braces, but it was its own pool checkout
+      # landing on an arbitrary connection — it could neither be relied on nor
+      # read as evidence that no connection was poisoned, which is precisely the
+      # "reads as a guarantee, is not one" shape this phase exists to remove.
+      # The actual guarantee is `SandboxOwnership.with_search_path!/3`'s
+      # same-connection, verified restore. Its removal was confirmed
+      # non-load-bearing empirically: both CI seeds stay green on both axes
+      # without it.
       {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
       {:ok, _} = TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
       {:ok, _} = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext SCHEMA public")
@@ -287,66 +289,16 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     webhook_event
   end
 
-  # Runs `fun` with this test's DB connection's `search_path` forced to `public`,
-  # then restores the prior value ON THAT SAME CONNECTION, and VERIFIES the
-  # restore landed. Returns `fun`'s value.
-  #
-  # This replaces a bare `TestRepo.query!("SET search_path TO public")` with no
-  # scoping, which was the true root cause of the D-31 Class A 42P01 cascade on
-  # the `MAILGLASS_SCHEMA=mailglass` axis — NOT the baseline drop this module was
-  # also (separately, and correctly) fixed for. Three facts combine:
-  #
-  #   1. `SET` (without `LOCAL`) is a SESSION-level write. It persists on the
-  #      physical Postgres connection for that connection's whole lifetime.
-  #   2. This module runs in Sandbox `:auto` mode, where every `TestRepo.query`
-  #      checks a connection out of the 10-slot pool and returns it. So the
-  #      poisoned connection goes straight back into the pool, and the
-  #      `RESET search_path` this module used to issue from `on_exit` was a
-  #      SEPARATE checkout that could — and under any concurrency did — land on a
-  #      DIFFERENT connection than the one that had been poisoned.
-  #   3. `config/test.exs` + `test_helper.exs` give pool connections a startup
-  #      `search_path` of `"<schema>, public"`, and the whole rest of the suite
-  #      relies on it to resolve unqualified relation names. A connection stuck at
-  #      `search_path = public` therefore raises
-  #      `42P01 (undefined_table) relation "mailglass_deliveries" does not exist`
-  #      for whatever unrelated test later drew it from the pool — the exact
-  #      misattributed cascade this phase exists to end. Confirmed live with a
-  #      throwaway probe: after ONE `SET search_path TO public`, 40 subsequent
-  #      pool checkouts all observed `"public"`.
-  #
-  # `TestRepo.checkout/1` pins ONE connection for the whole block, so the SET,
-  # the runtime code under test, and the restore all ride the same connection.
-  # `after` guarantees the restore even if `fun` raises, and the post-restore
-  # read makes it VERIFIED rather than assumed — a restore that cannot be
-  # observed to have worked must not be reported as success (D-31).
+  # Routes this file's ONE legitimate `search_path` override through the
+  # sanctioned seam rather than issuing the SQL here. The seam pins one pooled
+  # connection for the whole block, restores the prior value on that same
+  # connection, and re-reads it to verify the restore landed — see
+  # `SandboxOwnership.with_search_path!/3`'s own docs for the full mechanism
+  # (session-level `SET` poisons a pooled connection; the next unrelated test to
+  # draw it fails with 42P01). `Mailglass.Credo.NoRawSearchPathMutation` fails
+  # the build if this is ever re-typed as raw SQL here.
   defp with_public_search_path!(fun) when is_function(fun, 0) do
-    TestRepo.checkout(fn ->
-      prior = current_search_path()
-
-      try do
-        _ = TestRepo.query!("SET search_path TO public", [])
-        fun.()
-      after
-        _ = TestRepo.query!("SET search_path TO #{prior}", [])
-
-        restored = current_search_path()
-
-        unless restored == prior do
-          raise """
-          Mailglass.SchemaPrefixHardeningTest: failed to restore this connection's \
-          search_path — expected #{inspect(prior)}, got #{inspect(restored)}. This \
-          connection is about to go back into the pool poisoned, and the next \
-          unrelated test to draw it will fail with a 42P01 that has nothing to do \
-          with it. Failing here instead, at the module that broke it.
-          """
-        end
-      end
-    end)
-  end
-
-  defp current_search_path do
-    %{rows: [[value]]} = TestRepo.query!("SHOW search_path", [])
-    value
+    SandboxOwnership.with_search_path!("public", fun, repo: TestRepo, caller: __MODULE__)
   end
 
   defp assert_configured_delivery_projected!(delivery_id) do

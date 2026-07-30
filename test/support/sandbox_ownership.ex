@@ -118,6 +118,37 @@ defmodule Mailglass.TestSupport.SandboxOwnership.BaselineError do
   end
 end
 
+defmodule Mailglass.TestSupport.SandboxOwnership.SearchPathError do
+  @moduledoc """
+  Raised by `Mailglass.TestSupport.SandboxOwnership.with_search_path!/3` when
+  the temporary `search_path` override could not be restored on the connection
+  it was applied to (D-31 Class A, the confirmed root cause).
+
+  A `SET search_path` statement without `LOCAL` is a SESSION-level write: it
+  persists on the physical Postgres connection for that connection's whole
+  lifetime. Under Sandbox `:auto` mode every query checks a connection out of
+  the 10-slot pool and hands it straight back, so an unrestored override
+  returns to the pool poisoned, and the next unrelated test to draw that
+  connection raises `42P01 (undefined_table)` on an unqualified relation name.
+  Seven such victim modules, none of them at fault, cost two full diagnosis
+  cycles before the real culprit was found.
+
+  This exception ends that misattribution by name: it fires at the module that
+  owns the override, at the moment the restore is observed to have failed,
+  rather than letting an innocent module fail later.
+  """
+  defexception [:caller, :expected, :actual]
+
+  @impl true
+  def message(%__MODULE__{caller: caller, expected: expected, actual: actual}) do
+    "Mailglass.TestSupport.SandboxOwnership: #{inspect(caller)} failed to restore this " <>
+      "connection's search_path — expected #{inspect(expected)}, got #{inspect(actual)}. " <>
+      "This connection is about to go back into the pool poisoned, and the next unrelated " <>
+      "test to draw it will fail with a 42P01 that has nothing to do with it. Failing here " <>
+      "instead, at the module that broke it."
+  end
+end
+
 defmodule Mailglass.TestSupport.SandboxOwnership do
   @moduledoc """
   The one sanctioned door for Ecto Sandbox ownership acquisition and release
@@ -152,6 +183,10 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     pool-wide `:auto` mode, with the revert registered first.
   - `with_schema!/2` — overrides `Mailglass.Config.schema/0`, with the restore
     registered before the override is even applied (D-31 Class B).
+  - `with_search_path!/3` — the ONLY sanctioned `search_path` override: pins one
+    pooled connection, restores it, and verifies the restore landed (D-31
+    Class A). `Mailglass.Credo.NoRawSearchPathMutation` fails the build on any
+    raw `search_path` write under `test/` outside this door.
   - `scratch_schema!/2` — the sanctioned declaration of a throwaway schema
     prefix, raising `ScratchSchemaError` when the requested name is the live
     schema or `public` (D-31 Class A).
@@ -293,6 +328,7 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   alias Mailglass.TestSupport.SandboxOwnership.BaselineError
   alias Mailglass.TestSupport.SandboxOwnership.LeakError
   alias Mailglass.TestSupport.SandboxOwnership.ScratchSchemaError
+  alias Mailglass.TestSupport.SandboxOwnership.SearchPathError
 
   @doc """
   Checks out the Sandbox pool for the calling test, registering the release
@@ -569,6 +605,92 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     _ = Keyword.get(opts, :repo, Mailglass.TestRepo)
 
     :ok
+  end
+
+  @doc """
+  Runs `fun` with `repo`'s connection `search_path` overridden to
+  `search_path`, restores the prior value ON THAT SAME CONNECTION, and
+  VERIFIES the restore landed. Returns `fun`'s value.
+
+  This is the one sanctioned door for a `search_path` override in test code.
+  `Mailglass.Credo.NoRawSearchPathMutation` fails the build on any raw
+  `search_path` write under `test/` outside this module — the prevention half
+  of the two-layer guard whose absence let this defect class recur.
+
+  **The failure mode this replaces (D-31 Class A, confirmed root cause).** A
+  bare `TestRepo.query!("SET search_path TO public")` with no scoping was the
+  true cause of the 42P01 cascade on the `MAILGLASS_SCHEMA=mailglass` axis —
+  NOT the baseline drop that was fixed alongside it. Three facts combine:
+
+    1. A `SET` without `LOCAL` is a SESSION-level write. It persists on the
+       physical Postgres connection for that connection's whole lifetime.
+    2. In Sandbox `:auto` mode every `repo.query` checks a connection out of
+       the 10-slot pool and returns it, so the poisoned connection goes
+       straight back into the pool. A trailing `RESET` issued from `on_exit`
+       is a SEPARATE checkout that could — and under any concurrency did —
+       land on a DIFFERENT connection than the poisoned one.
+    3. `config/test.exs` + `test/test_helper.exs` give pool connections a
+       startup `search_path` of `"<schema>, public"`, and the whole rest of
+       the suite relies on it to resolve unqualified relation names. A
+       connection stuck at `search_path = public` therefore raises
+       `42P01 (undefined_table) relation "mailglass_deliveries" does not
+       exist` for whatever unrelated test later drew it — a failure attributed
+       to an innocent module hundreds of tests away. Confirmed live with a
+       throwaway probe: after ONE unscoped `SET`, all 40 subsequent pool
+       checkouts observed `"public"`.
+
+  `Ecto.Repo.checkout/2` pins ONE connection for the whole block, so the
+  override, the code under test, and the restore all ride the same connection.
+  The `after` clause guarantees the restore even when `fun` raises, and the
+  post-restore read makes it VERIFIED rather than assumed — a restore that
+  cannot be observed to have worked must not be reported as success (D-31).
+
+  **Why not `SET LOCAL`?** It is transaction-scoped rather than session-scoped,
+  so it cannot poison the pool — but it is not the safe form either. `SET
+  LOCAL` persists for the remainder of the transaction, and `Ecto.Migrator`
+  inserts its `schema_migrations` version row inside that same transaction
+  AFTER the migration body, so a `LOCAL` pin inside a migration redirects
+  Ecto's own bookkeeping INSERT to a path holding no `schema_migrations`
+  table. That is a second, separately-observed 42P01 class (four failures in
+  `shipped_migration_divergence_test.exs` on the mailglass axis), which is why
+  the Credo check bans both spellings and points here instead.
+
+  Options: `:repo` (default `Mailglass.TestRepo`) and `:caller` (default: the
+  calling test's module, resolved the same way `checkout!/1` resolves it) so
+  the raise names the module at fault. Also accepts an injectable
+  `:search_path_fun` (default `&SHOW search_path` against `repo`) used ONLY for
+  the post-restore verification read, mirroring `with_schema!/2`'s `:schema_fun`
+  idiom — so the "restore did not land" raise path is testable with a synthetic
+  mismatch rather than by genuinely poisoning the suite's connection pool.
+  """
+  @spec with_search_path!(String.t(), (-> result), keyword()) :: result when result: var
+  def with_search_path!(search_path, fun, opts \\ [])
+      when is_binary(search_path) and is_function(fun, 0) do
+    repo = Keyword.get(opts, :repo, Mailglass.TestRepo)
+    caller = Keyword.get(opts, :caller) || calling_test_module() || __MODULE__
+    search_path_fun = Keyword.get(opts, :search_path_fun, &current_search_path/1)
+
+    repo.checkout(fn ->
+      prior = current_search_path(repo)
+
+      try do
+        _ = repo.query!("SET search_path TO #{search_path}", [])
+        fun.()
+      after
+        _ = repo.query!("SET search_path TO #{prior}", [])
+
+        restored = search_path_fun.(repo)
+
+        unless restored == prior do
+          raise SearchPathError, caller: caller, expected: prior, actual: restored
+        end
+      end
+    end)
+  end
+
+  defp current_search_path(repo) do
+    %{rows: [[value]]} = repo.query!("SHOW search_path", [])
+    value
   end
 
   @doc """
