@@ -48,6 +48,14 @@ schema = Mailglass.Config.schema()
 # `ExUnit.CLIFormatter`'s normal test/failure output.
 ExUnit.configure(formatters: [ExUnit.CLIFormatter, Mailglass.TestSupport.SuiteTruthFormatter])
 
+# HARNESS-03 (D-13, D-15): register the anti-vacuity policy check. Placed
+# here (after `schema` above, alongside the formatter it reads via
+# `SuiteTruthFormatter.current_state/0`) so the report it prints at
+# `ExUnit.after_suite/1` already has both inputs available. Reporting always
+# runs; enforcement is opt-in behind `MAILGLASS_SUITE_FLOOR` — see
+# `Mailglass.TestSupport.SuiteFloor`'s moduledoc.
+Mailglass.TestSupport.SuiteFloor.install()
+
 # On any non-public schema axis, exclude `:public_only` tests. These are
 # generic, ambient-schema round-trip tests (e.g. migration_test.exs's `down/0`
 # describe) whose isolation-path coverage is provided separately by
