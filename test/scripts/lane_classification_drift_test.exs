@@ -50,8 +50,8 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   @suite_floor_env_entry ~s(MAILGLASS_SUITE_FLOOR: "1")
 
   # One per `advisory-matrix.yml` full-suite step: the 1.18/OTP 27 job
-  # (`core_full_suite_advisory`) and the 1.19/OTP 28 job
-  # (`core_latest_elixir_advisory`).
+  # (`core_full_suite`) and the 1.19/OTP 28 job
+  # (`core_full_suite_next_toolchain_advisory`).
   @suite_floor_env_occurrences 2
 
   # Every RUNTIME lane name advisory-matrix.yml produces: 2 Core Full Suite legs +
@@ -60,10 +60,29 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   # thing it is counting cannot fail.
   @advisory_matrix_runtime_lane_count 7
 
+  # The MAINTAINING.md top-level heading bounding the advisory-matrix table. Its own
+  # heading, never rows inside "Required Checks": that section's parser is bounded by
+  # the same "\n## " split and its row count is asserted at exactly 24, so a row filed
+  # under the wrong heading shows up as a 31-row failure rather than as new coverage.
+  @advisory_matrix_heading "Advisory Matrix Lanes"
+
+  # Bucket sizes for the third (advisory-matrix) classification axis. Hardcoded for
+  # the same reason every other count in this file is: a size derived from the list
+  # it describes cannot fail.
+  @advisory_matrix_gating_count 2
+  @advisory_matrix_advisory_count 5
+
   @required_lanes MapSet.new(Mailglass.CILanes.required_lanes())
   @advisory_classified_lanes MapSet.new(Mailglass.CILanes.advisory_classified_lanes())
   @publish_gating_lanes MapSet.new(Mailglass.CILanes.publish_gating_lanes())
   @structural_lanes MapSet.new(Mailglass.CILanes.structural_lanes())
+
+  @advisory_matrix_gating_lanes MapSet.new(Mailglass.CILanes.advisory_matrix_gating_lanes())
+  @advisory_matrix_advisory_lanes MapSet.new(Mailglass.CILanes.advisory_matrix_advisory_lanes())
+  @advisory_matrix_all_lanes MapSet.union(
+                               @advisory_matrix_gating_lanes,
+                               @advisory_matrix_advisory_lanes
+                             )
 
   # ---------------------------------------------------------------------------
   # Tests
@@ -577,7 +596,7 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
       assert occurrences == @suite_floor_env_occurrences,
              "expected exactly #{@suite_floor_env_occurrences} `#{@suite_floor_env_entry}` " <>
                "entries in advisory-matrix.yml — one on each full-suite step " <>
-               "(core_full_suite_advisory's and core_latest_elixir_advisory's) — got " <>
+               "(core_full_suite's and core_full_suite_next_toolchain_advisory's) — got " <>
                "#{occurrences}.\n\n" <>
                "Removing one silently disables, on that leg, the per-schema executed-count " <>
                "floor, the skipped ceiling, and the `:already_shared == 0` sandbox-ownership " <>
@@ -719,6 +738,256 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   end
 
   # ---------------------------------------------------------------------------
+  # D-24 / D-25: the third classification axis — advisory-matrix.yml's seven
+  # runtime lanes, bound three ways (workflow ↔ registry ↔ MAINTAINING.md), the
+  # same three-way agreement Phase 141 built for ci.yml.
+  # ---------------------------------------------------------------------------
+
+  describe "advisory-matrix.yml lane classification (third axis, D-24/D-25)" do
+    test "the two buckets hold #{@advisory_matrix_gating_count} and " <>
+           "#{@advisory_matrix_advisory_count} lanes and are disjoint" do
+      assert MapSet.size(@advisory_matrix_gating_lanes) == @advisory_matrix_gating_count,
+             "expected exactly #{@advisory_matrix_gating_count} entries in " <>
+               "Mailglass.CILanes.advisory_matrix_gating_lanes/0 — the Elixir 1.18 / OTP 27 " <>
+               "floor pair, one per schema axis — got " <>
+               "#{MapSet.size(@advisory_matrix_gating_lanes)}. Widening the gated set is a " <>
+               "deliberate act (D-19 confines gating to the declared `~> 1.18` floor); " <>
+               "update this count on purpose, do not delete the guard."
+
+      assert MapSet.size(@advisory_matrix_advisory_lanes) == @advisory_matrix_advisory_count,
+             "expected exactly #{@advisory_matrix_advisory_count} entries in " <>
+               "Mailglass.CILanes.advisory_matrix_advisory_lanes/0 — got " <>
+               "#{MapSet.size(@advisory_matrix_advisory_lanes)}"
+    end
+
+    # Its own test, not a third assertion in the one above: ExUnit stops at the first
+    # failing assert, so a count change would mask the disjointness check and the
+    # disjointness check could never be shown to fire on its own.
+    test "the two buckets are disjoint" do
+      overlap =
+        MapSet.intersection(@advisory_matrix_gating_lanes, @advisory_matrix_advisory_lanes)
+
+      assert MapSet.size(overlap) == 0,
+             "these lanes are in BOTH advisory-matrix buckets: " <>
+               "#{inspect(MapSet.to_list(overlap))}. A lane cannot both gate a publish and " <>
+               "be classified as blocking nothing — the two buckets are disjoint by " <>
+               "construction and every consumer relies on it."
+    end
+
+    test "expanded_matrix_job_names/1 over advisory-matrix.yml set-equals the union of the " <>
+           "two buckets" do
+      runtime = Mailglass.CIYaml.expanded_matrix_job_names(File.read!(@advisory_matrix_path))
+
+      assert MapSet.size(runtime) > 0,
+             "Mailglass.CIYaml.expanded_matrix_job_names/1 parsed no runtime job names — " <>
+               "the comparison below would be an empty-set-versus-empty-set vacuous pass"
+
+      {only_in_yaml, only_in_registry} = drift(runtime, @advisory_matrix_all_lanes)
+
+      assert MapSet.size(only_in_yaml) == 0 and MapSet.size(only_in_registry) == 0,
+             "advisory-matrix.yml and Mailglass.CILanes's advisory-matrix buckets have " <>
+               "drifted — an unclassified advisory-matrix lane is exactly the hidden tier " <>
+               "this milestone eliminates:\n" <>
+               "  In advisory-matrix.yml but not classified (add to " <>
+               "advisory_matrix_gating_lanes/0 or advisory_matrix_advisory_lanes/0 AND to " <>
+               "MAINTAINING.md § \"#{@advisory_matrix_heading}\"): " <>
+               "#{inspect(MapSet.to_list(only_in_yaml))}\n" <>
+               "  Classified but not present in advisory-matrix.yml (stale entry): " <>
+               "#{inspect(MapSet.to_list(only_in_registry))}"
+    end
+
+    test "negative control: removing one lane from the parsed runtime set makes the " <>
+           "registry comparison report it, and only it" do
+      runtime = Mailglass.CIYaml.expanded_matrix_job_names(File.read!(@advisory_matrix_path))
+
+      assert drift(runtime, @advisory_matrix_all_lanes) == {MapSet.new(), MapSet.new()},
+             "sanity check failed: advisory-matrix.yml's runtime names and the registry's " <>
+               "two advisory-matrix buckets should agree before the injected-removal " <>
+               "assertion runs"
+
+      # A gating leg deliberately: it is the entry whose silent loss would matter
+      # most, since it is the half of the axis that is meant to block a publish.
+      removed_entry = "Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)"
+      assert removed_entry in MapSet.to_list(runtime)
+
+      {only_in_broken_yaml, only_in_registry} =
+        drift(MapSet.delete(runtime, removed_entry), @advisory_matrix_all_lanes)
+
+      assert only_in_registry == MapSet.new([removed_entry]),
+             "removing '#{removed_entry}' from the parsed runtime set must make drift/2 " <>
+               "report it, and only it, in the 'classified but missing from the workflow' " <>
+               "direction — got #{inspect(MapSet.to_list(only_in_registry))}"
+
+      assert MapSet.size(only_in_broken_yaml) == 0,
+             "unexpected reverse-direction drift after removing only '#{removed_entry}': " <>
+               "#{inspect(MapSet.to_list(only_in_broken_yaml))}"
+    end
+
+    test "neither advisory-matrix bucket leaks into all_classified_lanes/0" do
+      classified = MapSet.new(Mailglass.CILanes.all_classified_lanes())
+
+      leaked = MapSet.intersection(classified, @advisory_matrix_all_lanes)
+
+      assert MapSet.size(leaked) == 0,
+             "these advisory-matrix lanes have been folded into " <>
+               "Mailglass.CILanes.all_classified_lanes/0: #{inspect(MapSet.to_list(leaked))}. " <>
+               "That accessor is bound by set equality to ci.yml's 24 jobs — folding breaks " <>
+               "the three 24-count assertions in this file, both publish-hex.yml " <>
+               "set-equality tests, and the MAINTAINING.md disposition-table comparison, all " <>
+               "at once. The advisory-matrix axis is additive and must stay separate."
+    end
+
+    test "the two gating lane names are not prefixes of one another, in either direction" do
+      [first, second] = Enum.sort(Mailglass.CILanes.advisory_matrix_gating_lanes())
+
+      refute String.starts_with?(first, second),
+             "prefix collision between the two gating lanes: '#{first}' starts with " <>
+               "'#{second}'. gate-ci-green classifies by ordered prefix match for every " <>
+               "non-required bucket, so one gating leg's runtime name matching the other's " <>
+               "prefix would let a single green leg satisfy both and let a red one hide."
+
+      refute String.starts_with?(second, first),
+             "prefix collision between the two gating lanes: '#{second}' starts with " <>
+               "'#{first}' — same misclassification hazard, other direction."
+    end
+
+    test "no advisory-matrix lane name is a prefix of another, and none carries a " <>
+           "table-breaking or uninterpolated character" do
+      names = MapSet.to_list(@advisory_matrix_all_lanes)
+
+      for a <- names, b <- names, a != b do
+        refute String.starts_with?(b, a),
+               "prefix collision: '#{b}' starts with '#{a}' — the gating half of this axis " <>
+                 "is matched by exact equality, but the advisory half is prefix-matched, so " <>
+                 "a prefix relation across the two would misclassify a lane"
+      end
+
+      for name <- names do
+        refute String.contains?(name, "|"),
+               "'#{name}' contains a pipe character, which would break MAINTAINING.md's " <>
+                 "§ \"#{@advisory_matrix_heading}\" table parser"
+
+        refute String.contains?(name, "${{"),
+               "'#{name}' is a declared `name:` TEMPLATE, not a runtime name — the registry " <>
+                 "must hold the strings GitHub reports live, or every comparison against a " <>
+                 "real run reports the lane missing"
+      end
+    end
+
+    test "MAINTAINING.md's \"#{@advisory_matrix_heading}\" table parses to exactly " <>
+           "#{@advisory_matrix_gating_count + @advisory_matrix_advisory_count} rows " <>
+           "(anti-vacuity)" do
+      md = File.read!(@maintaining_path)
+
+      assert find_section(md, @advisory_matrix_heading) != nil,
+             "could not find MAINTAINING.md's '## #{@advisory_matrix_heading}' section — the " <>
+               "heading was renamed or removed, which unbinds the table parser below and " <>
+               "would otherwise leave it comparing an empty row list against the registry"
+
+      rows = parse_advisory_matrix_table(md)
+
+      expected = @advisory_matrix_gating_count + @advisory_matrix_advisory_count
+
+      assert length(rows) == expected,
+             "expected exactly #{expected} rows in MAINTAINING.md's " <>
+               "'#{@advisory_matrix_heading}' table — got #{length(rows)}. A '|' inside a " <>
+               "free-text reason cell silently drops that row under the cell-count reject, " <>
+               "which is the vacuity risk this exact count guards against."
+
+      assert length(rows) == length(Enum.uniq(rows)),
+             "duplicate rows in MAINTAINING.md's '#{@advisory_matrix_heading}' table"
+    end
+
+    test "MAINTAINING.md's advisory-matrix table display names set-equal the union of the " <>
+           "two buckets" do
+      table_names =
+        @maintaining_path
+        |> File.read!()
+        |> parse_advisory_matrix_table()
+        |> Enum.map(fn {_id, name, _cls, _disp, _reason} -> name end)
+        |> MapSet.new()
+
+      assert MapSet.size(table_names) > 0,
+             "parsed zero display names from MAINTAINING.md's " <>
+               "'#{@advisory_matrix_heading}' table — the comparison below would be vacuous"
+
+      {only_in_md, only_in_registry} = drift(table_names, @advisory_matrix_all_lanes)
+
+      assert MapSet.size(only_in_md) == 0 and MapSet.size(only_in_registry) == 0,
+             "MAINTAINING.md's '#{@advisory_matrix_heading}' table and Mailglass.CILanes's " <>
+               "advisory-matrix buckets have drifted:\n" <>
+               "  In MAINTAINING.md but missing from CILanes: " <>
+               "#{inspect(MapSet.to_list(only_in_md))}\n" <>
+               "  In CILanes but missing from MAINTAINING.md: " <>
+               "#{inspect(MapSet.to_list(only_in_registry))}"
+    end
+
+    test "negative control: dropping one row from the parsed advisory-matrix table makes " <>
+           "the comparison report only that lane" do
+      table_names =
+        @maintaining_path
+        |> File.read!()
+        |> parse_advisory_matrix_table()
+        |> Enum.map(fn {_id, name, _cls, _disp, _reason} -> name end)
+        |> MapSet.new()
+
+      assert drift(table_names, @advisory_matrix_all_lanes) == {MapSet.new(), MapSet.new()},
+             "sanity check failed: MAINTAINING.md's '#{@advisory_matrix_heading}' table and " <>
+               "the registry's advisory-matrix buckets should agree before the " <>
+               "injected-removal assertion runs"
+
+      # The advisory half this time — the gating half is covered by the workflow-side
+      # negative control above, and an advisory row is the one a maintainer is most
+      # likely to forget when adding a lane.
+      removed_entry = "Inbound Full Suite Advisory (schema public)"
+      assert removed_entry in MapSet.to_list(table_names)
+
+      {only_in_broken_md, only_in_registry} =
+        drift(MapSet.delete(table_names, removed_entry), @advisory_matrix_all_lanes)
+
+      assert only_in_registry == MapSet.new([removed_entry]),
+             "dropping '#{removed_entry}' from the parsed table must make drift/2 report " <>
+               "it, and only it, in the 'missing from MAINTAINING.md' direction — got " <>
+               "#{inspect(MapSet.to_list(only_in_registry))}"
+
+      assert MapSet.size(only_in_broken_md) == 0,
+             "unexpected reverse-direction drift after dropping only '#{removed_entry}': " <>
+               "#{inspect(MapSet.to_list(only_in_broken_md))}"
+    end
+
+    test "every advisory-matrix row's classification and disposition are drawn from the " <>
+           "closed vocabularies, and disposition tracks the bucket" do
+      rows = parse_advisory_matrix_table(File.read!(@maintaining_path))
+
+      assert rows != [], "parsed zero advisory-matrix rows — see the row-count test above"
+
+      for {id, name, cls, disp, _reason} <- rows do
+        assert cls in ~w(required advisory publish-gating structural),
+               "MAINTAINING.md advisory-matrix row '#{id}' / '#{name}' has classification " <>
+                 "'#{cls}', which is not a member of the closed vocabulary"
+
+        assert disp in ~w(promote keep-with-reason retire),
+               "MAINTAINING.md advisory-matrix row '#{id}' / '#{name}' has disposition " <>
+                 "'#{disp}', which is not a member of the closed vocabulary"
+
+        expected_disposition =
+          if MapSet.member?(@advisory_matrix_gating_lanes, name),
+            do: "promote",
+            else: "keep-with-reason"
+
+        assert disp == expected_disposition,
+               "'#{name}' sits in " <>
+                 "#{if expected_disposition == "promote", do: "advisory_matrix_gating_lanes/0", else: "advisory_matrix_advisory_lanes/0"} " <>
+                 "but MAINTAINING.md records disposition '#{disp}' rather than " <>
+                 "'#{expected_disposition}'. The gating pair is recorded as `promote` " <>
+                 "because gate-ci-green does not read advisory-matrix.yml yet — when plan " <>
+                 "143-13 wires the gate up, that row moves to publish-gating / " <>
+                 "keep-with-reason and this expectation moves with it."
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
 
@@ -780,10 +1049,16 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   # above. Returns nil (not a crash) on a renamed/removed heading, so callers
   # can assert non-nil with a message naming the cause instead of getting an
   # opaque FunctionClauseError.
-  defp find_required_checks_section(md) do
+  defp find_required_checks_section(md), do: find_section(md, "Required Checks")
+
+  # Generalised from find_required_checks_section/1 (plan 143-11) so the
+  # advisory-matrix table can be bounded by its OWN top-level heading. The bound is
+  # what keeps the two tables' row counts independent: rows filed under the wrong
+  # heading are counted against the wrong assertion and fail loudly.
+  defp find_section(md, heading) do
     md
     |> String.split("\n## ")
-    |> Enum.find(&String.starts_with?(&1, "Required Checks"))
+    |> Enum.find(&String.starts_with?(&1, heading))
   end
 
   # Parses MAINTAINING.md's "| job id | display name | classification |
@@ -796,6 +1071,22 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   defp parse_disposition_table(md) do
     md
     |> find_required_checks_section()
+    |> parse_pipe_table()
+  end
+
+  # The advisory-matrix table (plan 143-11 / D-25) uses the identical 5-column shape
+  # and is parsed by the identical rules, bounded by its own top-level heading. Note
+  # its `job id` cells REPEAT across rows — one job expands to one runtime lane per
+  # matrix row — so the "distinct job ids" assertion that applies to the required-checks
+  # table deliberately does not apply here.
+  defp parse_advisory_matrix_table(md) do
+    md
+    |> find_section(@advisory_matrix_heading)
+    |> parse_pipe_table()
+  end
+
+  defp parse_pipe_table(section) do
+    section
     |> Kernel.||("")
     |> String.split("\n")
     |> Enum.filter(&String.starts_with?(String.trim(&1), "|"))

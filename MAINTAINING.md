@@ -209,11 +209,23 @@ two questions a table cell cannot hold on its own:
    lane block?" `Mailglass.CILanes.advisory_lanes/0` answers a different
    question — "does `mix ci` reproduce this lane locally?" A lane is routinely
    in both (`Dialyzer` is locally reproduced *and* publish-gating).
-2. **Never promote a matrix lane into the exact-equality required set.**
-   GitHub appends matrix values to a matrix job's explicit `name:` at runtime,
-   so `gate-ci-green` would report a promoted matrix lane `(missing)` and block
-   every publish. `dialyzer`, `operator_browser_gate` and
-   `preview_capture_advisory` are the three matrix lanes today.
+2. **Never promote a *statically-named* matrix lane into the exact-equality
+   required set.** GitHub appends matrix values to a matrix job's `name:` at
+   runtime **only when that `name:` contains no matrix expression**, so
+   `gate-ci-green` would report a promoted statically-named matrix lane
+   `(missing)` and block every publish. `dialyzer`, `operator_browser_gate` and
+   `preview_capture_advisory` are the three `ci.yml` matrix lanes today, and all
+   three are statically named — the rule applies to them in full.
+
+   The carve-out: a matrix job that interpolates **every** matrix axis into its
+   own `name:` gets no appended suffix, because there is nothing left to
+   disambiguate. `advisory-matrix.yml`'s jobs are all of this shape, which is why
+   exact-equality matching is safe for them and why the § "Advisory Matrix Lanes"
+   table below names them leg-by-leg. Verified against live API responses for
+   both shapes; see `.planning/phases/143-test-harness-truth/143-RESEARCH.md`
+   § "Runtime vs Declared Job Names". The distinction is machine-checked by
+   `Mailglass.CIYaml.expanded_matrix_job_names/1`, which refuses to expand a
+   statically-named matrix job rather than guessing its suffix.
 
 `classification` is one of `required`, `advisory`, `publish-gating`,
 `structural`. `disposition` is one of `promote`, `keep-with-reason`, `retire`.
@@ -257,14 +269,66 @@ Provider-live checks and ecosystem canaries remain advisory unless a specific
 release claim explicitly depends on them.
 
 The 24-row table above covers `ci.yml` only. The separate `advisory-matrix.yml`
-workflow carries additional lanes — `Core Full Suite Advisory`,
-`Provider Compatibility Advisory`, and `Inbound Full Suite Advisory` — which run
-on push to `main`, pull requests to `main`, a nightly cron, and
-`workflow_dispatch`. None of them is a member of `ci_green.needs`, so none gates
-a merge. All are matrix lanes whose display names carry runtime matrix suffixes,
-so the never-promote rule above applies to them too.
+workflow carries seven more lanes, enumerated leg-by-leg in the next section.
+None of them is a member of `ci_green.needs`, so **none gates a merge** — but
+"gates nothing at all" is no longer the whole story: two of the seven are the
+declared publish-gating pair for HARNESS-04. None of the seven carries a runtime
+matrix suffix, because each interpolates every matrix axis into its own `name:`;
+the carve-out in point 2 above explains why, and why exact-equality matching is
+safe for them.
 
 `Provider Live Advisory` remains a cron and `workflow_dispatch` canary. It is not a merge blocker.
+
+## Advisory Matrix Lanes
+
+`.github/workflows/advisory-matrix.yml` runs on push to `main`, pull requests to
+`main`, a nightly cron (`21 4 * * *`), and `workflow_dispatch`. Its four jobs
+expand to **seven runtime lanes**, one per `strategy.matrix.include:` row. This
+table is the classification statement for those seven; the § "Required Checks"
+table above covers `ci.yml` and nothing else. Keeping them under separate
+headings is structural, not stylistic — `lane_classification_drift_test.exs`
+bounds each table's parser by its own top-level heading and asserts an exact row
+count for each, so a row filed under the wrong heading fails CI.
+
+**Names here are runtime names.** Every job in this workflow interpolates each
+matrix axis into its `name:`, so GitHub reports them fully substituted with no
+appended ` (<matrix values>)` suffix — unlike `ci.yml`'s statically-named matrix
+jobs. `Mailglass.CIYaml.expanded_matrix_job_names/1` computes exactly this set
+from the workflow source, and the drift test asserts it set-equals
+`Mailglass.CILanes.advisory_matrix_gating_lanes/0` ∪
+`advisory_matrix_advisory_lanes/0`.
+
+**None of these seven gates anything today.** `gate-ci-green` does not yet read
+`advisory-matrix.yml`; wiring it up is plan 143-12/143-13's work. So every row's
+`classification` cell reads `advisory`, which is the honest current state, and
+the two floor legs carry disposition `promote` — a recorded recommendation, in
+the same sense the § "Required Checks" table uses that word. When the gate lands,
+those two rows move to `publish-gating` / `keep-with-reason` in the same commit
+that adds the gate.
+
+**Gating the two floor legs is wider than the lane name reads.** They are steps
+of the `core_full_suite` job, which also runs `mix deps.get` and
+`mix ecto.create -r MailglassInbound.TestRepo` inside `mailglass_inbound`, and
+then `mix verify.schema_prefix`. Gating the lane gates those three steps too. The
+next-toolchain legs run none of them.
+
+| job id | display name | classification | disposition | reason |
+|---|---|---|---|---|
+| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema public)` | advisory | promote | The declared HARNESS-04 publish-gating pair. Elixir 1.18 / OTP 27 is the `~> 1.18` floor `mix.exs` states, so gating it preserves LD-13's floor-coincidence invariant. Also gates the inbound `deps.get`, the inbound `ecto.create`, and `mix verify.schema_prefix`. Renamed from `core_full_suite_advisory` (D-21): a lane that gates a publish must not call itself advisory. |
+| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)` | advisory | promote | Second schema axis of the same job (D-06). The isolated `mailglass` schema exercises the Phase 134 migration entrypoint end-to-end; its executed-count floor is pinned separately from `public`'s because `test_helper.exs` excludes `:public_only` here. |
+| `core_full_suite_next_toolchain_advisory` | `Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema public)` | advisory | keep-with-reason | Forward-compatibility canary on the next Elixir/OTP line; renamed from job key `core_latest_elixir_advisory` (D-21), since *latest* implies preferred while *next* reads as the canary it is. Carries `if: github.event_name != 'pull_request'`, so its absence on a PR run is a designed outcome, not a missing lane. Never gate the next line — that is LD-13's invariant read backwards. |
+| `core_full_suite_next_toolchain_advisory` | `Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema mailglass)` | advisory | keep-with-reason | Second schema axis of the canary. Enforces the suite floors measured on the 1.18 legs, with a `>=` comparison, so a real divergence reds an advisory job visibly instead of passing silently. |
+| `provider_compatibility_advisory` | `Provider Compatibility Advisory (Elixir 1.18 / OTP 27)` | advisory | keep-with-reason | `mix verify.provider_compatibility`. Advisory by the fake-adapter-is-the-gate DNA: real-provider surface checks inform, they do not block. |
+| `mailglass_inbound_dual_schema_advisory` | `Inbound Full Suite Advisory (schema public)` | advisory | keep-with-reason | Not gated despite being green (D-20): it pins `--seed 0` specifically to dodge the known phase-45 property-test pool flake, and a lane whose green depends on a seed chosen to avoid a known nondeterminism is not trustworthy enough to gate a publish. Revisit when the pin is removed. |
+| `mailglass_inbound_dual_schema_advisory` | `Inbound Full Suite Advisory (schema mailglass)` | advisory | keep-with-reason | Second schema axis of the inbound suite (D-13 / INB-03). Same `--seed 0` reasoning as the row above. |
+
+Note that `job id` repeats across rows here and display names do not: one job
+expands to one runtime lane per matrix row. That is the opposite of the
+§ "Required Checks" table, where each row is a distinct job.
+
+This table is verified against `Mailglass.CILanes` and against
+`advisory-matrix.yml` itself by `test/scripts/lane_classification_drift_test.exs` —
+editing any one of the three without the others fails CI.
 
 ## Bus Factor & Continuity
 

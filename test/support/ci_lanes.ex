@@ -26,9 +26,9 @@ defmodule Mailglass.CILanes do
   from it. Collapsing all four into one file is impossible across the YAML/shell/Elixir
   language boundary; the meta-test is the seam that keeps them coherent.
 
-  ## Two independent axes
+  ## Three independent axes
 
-  This module answers two different questions, and conflating them is the defect
+  This module answers three different questions, and conflating them is the defect
   Phase 141 fixed:
 
     * **Parity** (`advisory_lanes/0`, `advisory_lanes_ci/0`, `advisory_lanes_browser/0`) —
@@ -38,9 +38,14 @@ defmodule Mailglass.CILanes do
       `publish_gating_lanes/0`, `structural_lanes/0`) — "what does this lane block?"
       Consumed by the drift meta-test (`test/scripts/lane_classification_drift_test.exs`)
       and mirrored in `publish-hex.yml`'s `gate-ci-green` and `MAINTAINING.md`.
+    * **Advisory-matrix classification** (`advisory_matrix_gating_lanes/0`,
+      `advisory_matrix_advisory_lanes/0`, Phase 143 / D-24) — "what does this
+      `advisory-matrix.yml` lane block?" A *separate* question from the bucket above,
+      because those four buckets classify `.github/workflows/ci.yml` jobs and these
+      classify a different workflow's. See the "do not fold" note on the buckets.
 
-  A lane is routinely in both (`Dialyzer` is locally reproduced *and* publish-gating).
-  Do not partition one axis to build the other.
+  A lane is routinely in both of the first two (`Dialyzer` is locally reproduced *and*
+  publish-gating). Do not partition one axis to build another.
 
   The name-space seam (RESEARCH F1): the strings in this module are YAML `name:`
   values; `gate-ci-green` sees runtime job names, which for a matrix lane carry an
@@ -58,7 +63,7 @@ defmodule Mailglass.CILanes do
       command (footgun #4: folding it in smuggles a Docker/Node requirement into the
       default path and muddies the zero-Node message).
     * `Preview Capture Advisory (...)` — Node/Playwright preview capture; same footgun #4.
-    * `Core Full Suite Advisory`, `Provider Compatibility Advisory` — the
+    * `Core Full Suite`, `Provider Compatibility Advisory` — the
       `advisory-matrix.yml` full-suite/toolchain matrix. *(Corrected per Plan 143-03's
       D-31 amendment: this is NOT a schedule-triggered-only canary — `advisory-matrix.yml`
       triggers on `push`, `pull_request`, `schedule`, and `workflow_dispatch`
@@ -153,6 +158,64 @@ defmodule Mailglass.CILanes do
     "CI Green"
   ]
 
+  # ---------------------------------------------------------------------------
+  # THIRD AXIS (Phase 143 / D-24): `.github/workflows/advisory-matrix.yml`.
+  #
+  # These two buckets answer "what does this ADVISORY-MATRIX lane block?" — a
+  # different question from the four buckets above, which answer it for `ci.yml`.
+  # The strings are RUNTIME names: `advisory-matrix.yml`'s jobs interpolate every
+  # matrix axis into their `name:`, so GitHub reports them fully substituted with no
+  # appended suffix, one per `strategy.matrix.include:` row.
+  # `Mailglass.CIYaml.expanded_matrix_job_names/1` reproduces exactly these seven.
+  #
+  # DO NOT fold either bucket into `all_classified_lanes/0`. That accessor is bound
+  # by set equality to `ci.yml`'s 24 jobs, and three assertions in
+  # `lane_classification_drift_test.exs` pin the count at 24 — folding breaks those,
+  # both set-equality tests against `publish-hex.yml`, and the `MAINTAINING.md`
+  # disposition-table comparison, all at once. This axis is additive: none of the
+  # existing hardcoded counts changes because of it.
+  # ---------------------------------------------------------------------------
+
+  # The two `advisory-matrix.yml` legs HARNESS-04 gates a Hex publish on: the
+  # Elixir 1.18 / OTP 27 floor pair, one per schema axis. They are the declared
+  # `~> 1.18` floor `mix.exs` states, which keeps LD-13's floor-coincidence
+  # invariant intact, and they are the ONLY advisory-matrix legs that gate —
+  # `prompts/elixir-oss-lib-ci-cd-best-practices-deep-research.md:329` lists "use
+  # one gigantic matrix as required status" under anti-patterns.
+  #
+  # Blast radius is wider than the lane name reads: gating these two also gates the
+  # inbound `mix deps.get`, the inbound `mix ecto.create`, and `mix verify.schema_prefix`,
+  # which are steps of the same job and which the next-toolchain legs do not run.
+  #
+  # NOT YET LIVE: `gate-ci-green` does not read `advisory-matrix.yml` today. This
+  # bucket is the declared target that plans 143-12/143-13 wire up; until then these
+  # two legs block nothing, which is why `MAINTAINING.md` records them as `advisory`
+  # with disposition `promote` rather than claiming a gate that does not exist.
+  @advisory_matrix_gating_lanes [
+    "Core Full Suite (Elixir 1.18 / OTP 27 / schema public)",
+    "Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)"
+  ]
+
+  # Every other `advisory-matrix.yml` lane: classified, enumerated, warned on, never
+  # blocking.
+  #
+  # `Core Full Suite Next Toolchain Advisory` is the forward-compatibility canary. It
+  # carries `if: github.event_name != 'pull_request'`, so it is absent by design on
+  # every PR run — absence there is a designed outcome, not a missing lane.
+  #
+  # `Inbound Full Suite Advisory` is deliberately NOT gated despite being green today
+  # (D-20). It pins `--seed 0` specifically to dodge the known phase-45 property-test
+  # pool flake, and a lane whose green depends on a hardcoded seed chosen to avoid a
+  # known nondeterminism is not trustworthy enough to gate a publish: it would be
+  # gating on the absence of a bug nobody fixed. Revisit when that pin is removed.
+  @advisory_matrix_advisory_lanes [
+    "Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema public)",
+    "Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema mailglass)",
+    "Provider Compatibility Advisory (Elixir 1.18 / OTP 27)",
+    "Inbound Full Suite Advisory (schema public)",
+    "Inbound Full Suite Advisory (schema mailglass)"
+  ]
+
   @doc """
   The seven required branch-protection leaf display names, VERBATIM as they appear as
   `name:` in `.github/workflows/ci.yml`.
@@ -219,4 +282,24 @@ defmodule Mailglass.CILanes do
     do:
       required_lanes() ++
         advisory_classified_lanes() ++ publish_gating_lanes() ++ structural_lanes()
+
+  @doc """
+  The `advisory-matrix.yml` RUNTIME lane names HARNESS-04 gates a Hex publish on —
+  the two Elixir 1.18 / OTP 27 Core Full Suite legs, one per schema axis.
+
+  Deliberately absent from `all_classified_lanes/0`: that accessor is bound by set
+  equality to `ci.yml`'s 24 jobs (see the buckets' comment for what folding breaks).
+  """
+  @spec advisory_matrix_gating_lanes() :: [String.t()]
+  def advisory_matrix_gating_lanes, do: @advisory_matrix_gating_lanes
+
+  @doc """
+  Every other `advisory-matrix.yml` RUNTIME lane name — classified, enumerated,
+  warned on, never blocking. Disjoint from `advisory_matrix_gating_lanes/0` by
+  construction, asserted in `lane_classification_drift_test.exs`.
+
+  Deliberately absent from `all_classified_lanes/0`, same reason as above.
+  """
+  @spec advisory_matrix_advisory_lanes() :: [String.t()]
+  def advisory_matrix_advisory_lanes, do: @advisory_matrix_advisory_lanes
 end
