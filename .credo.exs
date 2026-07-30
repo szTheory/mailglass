@@ -203,7 +203,33 @@ extra_checks = [
   # because a compared literal is never an executed statement. That positional
   # carve-out is why `upgrade_v2_schema_generation_test.exs` needed no migration
   # and no exemption.
-  {Mailglass.Credo.NoRawSearchPathMutation, []}
+  {Mailglass.Credo.NoRawSearchPathMutation, []},
+  # D-31 Class D (143 gap closure): the prevention half of the recurrence guard
+  # for the Application-env restore defect. `Application.put_all_env/1` MERGES,
+  # so it can never remove a key a test ADDED — seven test modules used it as
+  # their "restore" and all seven leaked `config :mailglass, :compliance` (in no
+  # `config/*.exs`) into every later module, plus, on the runs where the key
+  # ordering lined up, a tenancy resolver whose `scope/2` applies `as: :scoped`.
+  # That leak failed the mailglass gating leg of CI run 30571989203 on a
+  # DOCS-ONLY commit and was green two commits later with `lib/` byte-identical.
+  #
+  # ALLOWLIST — two entries, both structural, neither an inconvenience
+  # exemption, and the same pair (and the same reasoning) as
+  # NoRawSandboxOwnership's:
+  #   * Mailglass.TestSupport.SandboxOwnership — the sanctioned seam. It is
+  #     allowlisted for its @doc, which must quote the banned idiom verbatim to
+  #     explain what it replaces; the seam's own restore uses `put_env/3` +
+  #     `delete_env/2` and never calls `put_all_env/1` at all.
+  #   * Mailglass.TestSupport.SandboxOwnershipTest — the seam's mechanism test.
+  #     Its non-vacuity proof reinstates the real merging idiom and asserts the
+  #     leak reappears; a mechanism test that cannot contain its own mechanism
+  #     proves nothing.
+  #
+  # Scope covers `mailglass_inbound/test/` too, even though that tree has ZERO
+  # instances today (its restores already use the presence-aware
+  # `fetch_env` / `nil -> delete_env` idiom, audited site by site). Linting a
+  # clean tree costs nothing and stops the idiom arriving there by copy-paste.
+  {Mailglass.Credo.NoRawAppEnvRestore, []}
 ]
 
 %{
