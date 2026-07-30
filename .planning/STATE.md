@@ -2,16 +2,17 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
+current_phase: 143
+current_phase_name: test-harness-truth
 status: executing
-stopped_at: Completed 143-05-PLAN.md
-last_updated: "2026-07-30T00:15:50.047Z"
-last_activity: 2026-07-30
+stopped_at: Completed 143-06-PLAN.md
+last_updated: "2026-07-30T01:01:40.122Z"
+last_activity: 2026-07-29
 progress:
-  total_phases: 4
+  total_phases: 3
   completed_phases: 2
   total_plans: 25
-  completed_plans: 16
-  percent: 50
+  completed_plans: 17
 ---
 
 # Project State
@@ -26,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 6 of 14
+Plan: 7 of 14
 Status: Ready to execute
-Last activity: 2026-07-30
+Last activity: 2026-07-29
 
-Progress: [██████░░░░] 64%
+Progress: [███████░░░] 68%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -365,6 +366,8 @@ release debug campaign.
 - [Phase ?]: [143-04] test/mailglass/test_support/sandbox_ownership_test.exs keeps async: false (unchanged from 143-01) per D-11/D-31, resolving a tension in the plan's own action text (async: true vs. cannot run concurrently with pool-sharing tests).
 - [Phase ?]: [143-05] schema_axis_boot_order_test.exs's bare Sandbox.checkout/1 migrated to checkout!/1, not allowlisted (RESEARCH.md Open Question 4 resolved)
 - [Phase ?]: [143-05] checkout!/1 gained optional :settle_attempts/:settle_interval_ms (default unchanged); only webhook_idempotency_convergence_test.exs opts into a wider bound after empirically hitting assert_manual!/3's default settle window under heavy pool churn
+- [Phase ?]: [143-06] Task 2's four schema-isolation/divergence files carry hand-off comments naming Class A/B candidacy from 143-MECHANISM.md without touching the drift/restoration defect (deferred to 143-07)
+- [Phase ?]: [143-06] Neither Task 3 file (migration_test.exs, upgrade_v2_schema_migration_test.exs) migrated to unboxed_run/2 -- both drive Ecto.Migrator.with_repo/2, which spawns a process unboxed_run cannot cover
 
 ## Quick Tasks Completed
 
@@ -408,6 +411,7 @@ release debug campaign.
 | Phase 143 P03 | 25min | 3 tasks | 7 files |
 | Phase 143 P04 | ~40min | 2 tasks | 2 files |
 | Phase 143 P05 | ~55min | 3 tasks | 8 files |
+| Phase 143 P06 | ~2h | 3 tasks | 9 files |
 
 ## Deferred Items
 
@@ -575,8 +579,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-30T00:15:50.039Z
-**Stopped at:** Completed 143-05-PLAN.md
+**Last session:** 2026-07-30T01:01:40.111Z
+**Stopped at:** Completed 143-06-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
