@@ -28,9 +28,9 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
 
     * `use ExUnit.Case, async: false` — not `DataCase` (the transaction
       wrapper deadlocks on 1000 iterations that TRUNCATE between runs).
-    * `Sandbox.start_owner!/2` in setup with an extended ownership
-      timeout; stop the owner on exit so long property runs do not lose
-      the checked-out connection mid-iteration.
+    * `Mailglass.TestSupport.SandboxOwnership.checkout!/1` in setup with an
+      extended ownership timeout; its release is registered immediately, so
+      long property runs do not lose the checked-out connection mid-iteration.
     * `TRUNCATE ... CASCADE` between iterations (trigger blocks
       UPDATE/DELETE; TRUNCATE is the only bulk-wipe path).
   """
@@ -40,7 +40,6 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
 
   import Ecto.Query
 
-  alias Ecto.Adapters.SQL.Sandbox
   alias Mailglass.{Tenancy, TestRepo}
   alias Mailglass.Events.Event
   alias Mailglass.Webhook.{Ingest, WebhookEvent}
@@ -49,8 +48,9 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
   @moduletag timeout: :infinity
 
   setup do
-    owner =
-      Sandbox.start_owner!(TestRepo,
+    _owner =
+      Mailglass.TestSupport.SandboxOwnership.checkout!(
+        repo: TestRepo,
         shared: true,
         ownership_timeout: 10 * 60_000
       )
@@ -65,7 +65,6 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
       TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
       TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
       Tenancy.clear()
-      Sandbox.stop_owner(owner)
     end)
 
     :ok

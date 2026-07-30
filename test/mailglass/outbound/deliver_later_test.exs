@@ -30,11 +30,13 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       max_age: 60
     )
 
-    # The Task.Supervisor spawns a background process that accesses the DB.
-    # Use shared mode so background tasks share the test process's connection
-    # rather than getting their own checkout — avoids stale OID cache errors
-    # when running alongside :manual-mode tests in the full suite.
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
+    # No raw Sandbox mode call switching to shared self-owned mode here: this
+    # module `use`s Mailglass.DataCase with async disabled, so DataCase's own setup
+    # (ExUnit.CaseTemplate composes the module's setup after the template's)
+    # already ran checkout!(shared: true) and put the pool in shared mode with
+    # a live agent owner — a call here would return :already_shared
+    # (manager.ex:148-159) and change nothing. The Task.Supervisor background
+    # process reaches the DB because the pool is genuinely shared already.
 
     on_exit(fn ->
       # Brief pause so any in-flight Task.Supervisor tasks finish their DB work
@@ -51,6 +53,13 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       end
 
       Application.put_env(:mailglass, :tenancy, prior_tenancy)
+
+      # Healing call, not a leak site: reverts the shared mode DataCase's own
+      # checkout put the pool in. Left as-is for plan 143-05 (its reverse
+      # on_exit placement runs before DataCase's own release, so it cannot
+      # strand the owner). Plan 143-08's Credo check allowlists nothing — if
+      # it flags this raw call, migrate it to SandboxOwnership there,
+      # alongside the rest of the :auto-mode inventory.
       Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 

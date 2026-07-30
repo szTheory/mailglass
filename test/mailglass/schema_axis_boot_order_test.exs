@@ -23,8 +23,11 @@ defmodule Mailglass.SchemaAxisBootOrderTest do
   setup do
     # Read-only metadata probe against information_schema — check out a sandbox
     # connection so the query has a connection owner (the suite runs the pool in
-    # :manual ownership mode).
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(TestRepo)
+    # :manual ownership mode). Routed through the sanctioned door: the release
+    # is now registered and deterministic (SandboxOwnership.checkout!/1's
+    # on_exit), rather than relying on Ecto auto-releasing when the owner
+    # process (this test process) dies.
+    _pid = Mailglass.TestSupport.SandboxOwnership.checkout!(repo: TestRepo)
     :ok
   end
 
