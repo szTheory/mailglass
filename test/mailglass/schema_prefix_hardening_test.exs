@@ -7,6 +7,7 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
 
   import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1, with_schema!: 1]
 
+  alias Mailglass.TestSupport.SandboxOwnership
   alias Mailglass.Clock
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Outbound.Delivery
@@ -119,7 +120,33 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
 
       Application.put_all_env(mailglass: prior_mailglass_env)
       :persistent_term.erase({Mailglass.Config, :schema})
+
+      # Runs unconditionally — no presence/axis guard decides whether to
+      # restore (D-31 Class A). VERIFIED, not assumed: a restore that could
+      # not complete raises naming the relations it could not find.
       restore_suite_baseline_schema()
+
+      case SandboxOwnership.baseline_tables_present?(TestRepo) do
+        true ->
+          :ok
+
+        {false, missing} ->
+          raise """
+          Mailglass.SchemaPrefixHardeningTest: baseline restoration did not complete \
+          — #{inspect(missing)} still absent from schema \
+          #{inspect(Mailglass.Config.schema())} after restore_suite_baseline_schema/0 \
+          ran. Rebuild a clean local baseline with `mix ecto.drop -r Mailglass.TestRepo \
+          && mix ecto.create -r Mailglass.TestRepo`, or investigate why the migrator \
+          considered these relations already applied.
+          """
+
+        {:cannot_verify, reason} ->
+          raise """
+          Mailglass.SchemaPrefixHardeningTest: could not verify baseline restoration — \
+          the verification probe itself failed (#{inspect(reason)}). A check that \
+          cannot observe its subject must never report success.
+          """
+      end
     end)
 
     :ok
@@ -317,20 +344,25 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     ]
   end
 
+  # Unconditional (D-31 Class A) — no longer gated on the axis env var. A
+  # guard that skips the restore because "public never needs it" is exactly
+  # the "cannot verify, reports green" shape this milestone exists to kill:
+  # this file's own DROP SCHEMA above only ever touches the `mailglass`
+  # prefix schema, but a PRIOR file's incomplete restoration can leave the
+  # `public` baseline itself missing regardless of axis, and a caller-facing
+  # guard here previously masked that by no-op'ing on exactly the axis where
+  # it would matter most. Idempotent to run on every axis: when the flat
+  # baseline migrations are already applied, this is a safe no-op.
   defp restore_suite_baseline_schema do
-    if System.get_env("MAILGLASS_SCHEMA") in [nil, "", "public"] do
-      :ok
-    else
-      {:ok, _} = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
+    {:ok, _} = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
 
-      migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
+    migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
 
-      {:ok, _, _} =
-        Ecto.Migrator.with_repo(TestRepo, fn repo ->
-          Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
-        end)
+    {:ok, _, _} =
+      Ecto.Migrator.with_repo(TestRepo, fn repo ->
+        Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
+      end)
 
-      :ok
-    end
+    :ok
   end
 end

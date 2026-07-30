@@ -8,6 +8,7 @@ defmodule Mailglass.MigrationTest do
 
   alias Mailglass.Migration
   alias Mailglass.TestRepo
+  alias Mailglass.TestSupport.SandboxOwnership
 
   @migrations_path Path.join(:code.priv_dir(:mailglass), "repo/migrations")
 
@@ -25,32 +26,34 @@ defmodule Mailglass.MigrationTest do
   # is in effect.
   #
   # 143-MECHANISM.md § "The three-class inventory" narrows Class A
-  # (baseline_missing) toward this file's siblings, but ALSO documents that
-  # `Mailglass.MigrationTest` itself had ZERO failures in both local
-  # captures — Assumption A3 ("Class A is migration_test.exs's incomplete
-  # restoration") is REFUTED for this file specifically, by that run's own
-  # evidence. The conditional restoration logic below is left deliberately
-  # unchanged; closing the (re-opened, not closed) Class A defect elsewhere is
-  # plan 143-07's job.
+  # (baseline_missing) toward this file's siblings (`Mailglass.MigrationTest`
+  # itself had ZERO failures in both local captures — Assumption A3 is
+  # REFUTED for this file specifically). The restoration below is still made
+  # unconditional and verified (143-07): a presence-guard that decides "the
+  # baseline looks fine, skip the restore" is exactly the "cannot verify,
+  # reports green" shape D-31 exists to kill, wherever it lives.
   setup :unsandboxed_module
 
   setup do
     on_exit(fn ->
-      # Restore on ground truth — do the baseline tables actually exist? — not on
-      # the recorded migration version.
-      #
-      # The teardown test drops the tables without necessarily clearing
-      # `schema_migrations`. A version-based check then reports "already
-      # migrated" for a database that has no tables at all, so restoration was
-      # skipped and every later test in the run failed with
-      # `relation "…mailglass_suppressions" does not exist`. Those failures were
-      # in turn swallowed by the citext probe's retry loop and reported as
-      # "citext probe exhausted", which pointed diagnosis at the citext type
-      # instead of at this teardown. On the `public` axis it was worse still,
-      # because the stale-version cleanup was skipped there entirely.
-      unless baseline_tables_present?() do
-        _ = restore_suite_baseline_schema()
-      end
+      # Restore UNCONDITIONALLY — not gated on ground truth, not on the
+      # recorded migration version. A guard here (either shape) can be wrong
+      # in the same way: the teardown test drops tables without necessarily
+      # clearing `schema_migrations`, so a version-based check reports
+      # "already migrated" for a database that has no tables at all, and a
+      # presence-based check can itself be wrong under conditions this module
+      # cannot fully enumerate. Skipping the restore either way left every
+      # later test in the run failing with
+      # `relation "…mailglass_suppressions" does not exist`, in turn swallowed
+      # by the citext probe's retry loop and reported as "citext probe
+      # exhausted" — pointing diagnosis at the citext type instead of at this
+      # teardown.
+      _ = restore_suite_baseline_schema()
+
+      # VERIFIED, not assumed: reuse the formatter's own probe rather than
+      # re-implementing the check. A restore that could not complete raises
+      # naming the relations it could not find — it never returns quietly.
+      verify_baseline_restored!()
     end)
 
     :ok
@@ -309,6 +312,7 @@ defmodule Mailglass.MigrationTest do
         # above just destroyed it, so re-migrate the baseline before the next
         # test observes a missing schema. No-op on the default "public" suite.
         restore_suite_baseline_schema()
+        verify_baseline_restored!()
       end)
 
       {:ok, version: version}
@@ -481,24 +485,32 @@ defmodule Mailglass.MigrationTest do
     _ -> :ok
   end
 
-  # Ground-truth check for the suite baseline: does the core suppressions table
-  # exist in the configured prefix? `to_regclass/1` returns NULL rather than
-  # raising when the relation is absent, so this is safe to call on a torn-down
-  # database.
-  defp baseline_tables_present? do
-    prefix =
-      case Mailglass.Config.schema() do
-        nil -> "public"
-        "" -> "public"
-        schema -> schema
-      end
+  # VERIFIED, not assumed (143-07 / D-31 Class A): reuses
+  # `SandboxOwnership.baseline_tables_present?/1` — the same probe the
+  # formatter uses — rather than re-implementing the check. A restore that
+  # could not complete raises naming the relations it could not find; it
+  # never returns quietly.
+  defp verify_baseline_restored! do
+    case SandboxOwnership.baseline_tables_present?(TestRepo) do
+      true ->
+        :ok
 
-    case TestRepo.query("SELECT to_regclass($1)", ["#{prefix}.mailglass_suppressions"]) do
-      {:ok, %{rows: [[nil]]}} -> false
-      {:ok, %{rows: [[_oid]]}} -> true
-      _other -> false
+      {false, missing} ->
+        raise """
+        Mailglass.MigrationTest: baseline restoration did not complete — \
+        #{inspect(missing)} still absent from schema \
+        #{inspect(Mailglass.Config.schema())} after restore_suite_baseline_schema/0 ran. \
+        Rebuild a clean local baseline with `mix ecto.drop -r Mailglass.TestRepo && \
+        mix ecto.create -r Mailglass.TestRepo`, or investigate why the migrator \
+        considered these relations already applied.
+        """
+
+      {:cannot_verify, reason} ->
+        raise """
+        Mailglass.MigrationTest: could not verify baseline restoration — the \
+        verification probe itself failed (#{inspect(reason)}). A check that cannot \
+        observe its subject must never report success.
+        """
     end
-  rescue
-    _ -> false
   end
 end

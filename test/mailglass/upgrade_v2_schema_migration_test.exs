@@ -16,6 +16,7 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
   import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
 
   alias Mailglass.TestRepo
+  alias Mailglass.TestSupport.SandboxOwnership
 
   @prefix "mailglass"
   @tenant_id "upgrade-v2-schema-migration-tenant"
@@ -75,9 +76,19 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
 
     version = System.unique_integer([:positive, :monotonic]) + 90_000_000_000_000
 
+    # `prefix: "public"` pins THIS wrapper migration's OWN schema_migrations
+    # bookkeeping to a schema that always exists and is never dropped by this
+    # (or any other) file — never the axis-configured schema, which this
+    # setup itself just dropped (`DROP SCHEMA IF EXISTS #{@prefix} CASCADE`
+    # above) and which `MoveWrapperMigration.up/0`'s own emitted body only
+    # recreates AFTER Ecto.Migrator's bookkeeping-table creation would already
+    # need it to exist. `version` is a huge, run-unique integer that never
+    # collides with the flat baseline migrations' own 1..N versions, so this
+    # is a self-contained ledger entry, safe regardless of where the flat
+    # baseline's own bookkeeping happens to live for the current axis.
     {:ok, _, _} =
       Ecto.Migrator.with_repo(TestRepo, fn repo ->
-        Ecto.Migrator.up(repo, version, MoveWrapperMigration, log: false)
+        Ecto.Migrator.up(repo, version, MoveWrapperMigration, log: false, prefix: "public")
       end)
 
     on_exit(fn ->
@@ -89,7 +100,32 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
 
       {:ok, _} = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext")
 
+      # Runs unconditionally — no presence guard decides whether to restore
+      # (D-31 Class A). VERIFIED, not assumed: a restore that could not
+      # complete raises naming the relations it could not find.
       restore_suite_baseline_schema()
+
+      case SandboxOwnership.baseline_tables_present?(TestRepo) do
+        true ->
+          :ok
+
+        {false, missing} ->
+          raise """
+          Mailglass.UpgradeV2SchemaMigrationTest: baseline restoration did not \
+          complete — #{inspect(missing)} still absent from schema \
+          #{inspect(Mailglass.Config.schema())} after restore_suite_baseline_schema/0 \
+          ran. Rebuild a clean local baseline with `mix ecto.drop -r Mailglass.TestRepo \
+          && mix ecto.create -r Mailglass.TestRepo`, or investigate why the migrator \
+          considered these relations already applied.
+          """
+
+        {:cannot_verify, reason} ->
+          raise """
+          Mailglass.UpgradeV2SchemaMigrationTest: could not verify baseline restoration \
+          — the verification probe itself failed (#{inspect(reason)}). A check that \
+          cannot observe its subject must never report success.
+          """
+      end
     end)
 
     {:ok, version: version}
@@ -207,9 +243,15 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
     test "down reverses the move: all four tables are back in public and the schema is gone", %{
       version: version
     } do
+      # `prefix: "public"` must match the bookkeeping prefix the `up` call in
+      # `setup` used above — otherwise Ecto.Migrator's own "is this version
+      # applied?" check (an unqualified, ambient-current-schema-dependent
+      # lookup without it) can miss the version the `up` call recorded,
+      # silently no-op the whole `down` as `:already_down`, and leave the four
+      # tables stranded under `mailglass` with no error raised.
       {:ok, _, _} =
         Ecto.Migrator.with_repo(TestRepo, fn repo ->
-          Ecto.Migrator.down(repo, version, MoveWrapperMigration, log: false)
+          Ecto.Migrator.down(repo, version, MoveWrapperMigration, log: false, prefix: "public")
         end)
 
       assert table_count("public") == 4,
