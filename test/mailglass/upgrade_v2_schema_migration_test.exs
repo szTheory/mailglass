@@ -62,10 +62,11 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
   setup :unsandboxed_module
 
   setup do
-    original_schema = Application.get_env(:mailglass, :schema)
     # The move migration hard-codes @schema "mailglass" in the emitted body; the
-    # public seed is driven explicitly via prefix: "public". Config stays "public"
-    # for the seed path — do not override :schema here.
+    # public seed is driven explicitly via prefix: "public". This file never
+    # overrides `config :mailglass, :schema` itself (143-MECHANISM.md names it
+    # only as a Class A — baseline_missing — candidate, not Class B), so there
+    # is no override here for the `with_schema!/2` seam to close.
 
     # Clean slate: drop the target schema, and drop any leftover public mailglass
     # objects so the 1.x seed installs fresh.
@@ -87,14 +88,6 @@ defmodule Mailglass.UpgradeV2SchemaMigrationTest do
         TestRepo.query("DELETE FROM public.schema_migrations WHERE version = $1", [version])
 
       {:ok, _} = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext")
-
-      if original_schema do
-        Application.put_env(:mailglass, :schema, original_schema)
-      else
-        Application.delete_env(:mailglass, :schema)
-      end
-
-      :persistent_term.erase({Mailglass.Config, :schema})
 
       restore_suite_baseline_schema()
     end)

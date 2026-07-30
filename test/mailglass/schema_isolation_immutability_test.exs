@@ -13,7 +13,7 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
 
   @moduletag :schema_isolation
 
-  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1, with_schema!: 1]
 
   alias Mailglass.TestRepo
 
@@ -52,11 +52,10 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
     #
     # 143-MECHANISM.md § "The three-class inventory" names this file as a
     # Class B (config_schema_drift) candidate: it flips Config.schema()
-    # per-test. The drift/restore defect is left deliberately unchanged
-    # here; closing it is plan 143-07's job.
-    original_schema = Application.get_env(:mailglass, :schema)
-    Application.put_env(:mailglass, :schema, @prefix)
-    :persistent_term.erase({Mailglass.Config, :schema})
+    # per-test. Closed here via the restore-first `with_schema!/2` seam
+    # (143-07) — the restore is registered before any statement below (the
+    # schema drop/migrate) that can raise.
+    with_schema!(@prefix)
 
     # Pre-clean only — we rely on the migration's OWN `CREATE SCHEMA IF NOT
     # EXISTS` (Plan 134-01 maybe_create_schema/1) to stand the schema up, rather
@@ -82,14 +81,9 @@ defmodule Mailglass.SchemaIsolationImmutabilityTest do
       # touch :citext columns are unaffected (belt-and-suspenders).
       {:ok, _} = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext")
 
-      # Restore config/sandbox state so DataCase tests are unaffected.
-      if original_schema do
-        Application.put_env(:mailglass, :schema, original_schema)
-      else
-        Application.delete_env(:mailglass, :schema)
-      end
-
-      :persistent_term.erase({Mailglass.Config, :schema})
+      # `with_schema!/2`'s own on_exit (registered before this one, so it runs
+      # after — reverse on_exit order) restores `config :mailglass, :schema`
+      # to the captured boot value. Nothing to do here for that key.
 
       # Under the CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass) the suite
       # baseline schema IS `mailglass` (migrated at boot). This test's teardown

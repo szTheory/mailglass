@@ -7,7 +7,7 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
 
   @moduletag :schema_isolation
 
-  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1, with_schema!: 1]
 
   alias Mailglass.Events
   alias Mailglass.Operator.Deliveries
@@ -59,11 +59,10 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
     #
     # 143-MECHANISM.md § "The three-class inventory" names this file as a
     # Class B (config_schema_drift) candidate: it flips Config.schema()
-    # per-test. The drift/restore defect is left deliberately unchanged
-    # here; closing it is plan 143-07's job.
-    original_schema = Application.get_env(:mailglass, :schema)
-    Application.put_env(:mailglass, :schema, @prefix)
-    :persistent_term.erase({Mailglass.Config, :schema})
+    # per-test. Closed here via the restore-first `with_schema!/2` seam
+    # (143-07) — the restore is registered before any statement below (the
+    # schema drop/migrate) that can raise.
+    with_schema!(@prefix)
 
     # Clean slate — drop then re-create the isolated schema before migrating.
     # (footgun 13: schema must exist BEFORE the Sandbox owner starts.)
@@ -88,14 +87,9 @@ defmodule Mailglass.SchemaIsolationIntegrationTest do
       {:ok, _} =
         TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
 
-      # Restore config/sandbox state so DataCase tests are unaffected.
-      if original_schema do
-        Application.put_env(:mailglass, :schema, original_schema)
-      else
-        Application.delete_env(:mailglass, :schema)
-      end
-
-      :persistent_term.erase({Mailglass.Config, :schema})
+      # `with_schema!/2`'s own on_exit (registered before this one, so it runs
+      # after — reverse on_exit order) restores `config :mailglass, :schema`
+      # to the captured boot value. Nothing to do here for that key.
 
       # Under the CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass) the SUITE
       # baseline schema IS `mailglass`, migrated once at boot by test_helper.exs.

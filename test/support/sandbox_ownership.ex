@@ -57,6 +57,8 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   - `checkout!/1` — the sanctioned acquire, with the release registered first.
   - `unsandboxed_module/1` — a `setup` callback switching the whole module to
     pool-wide `:auto` mode, with the revert registered first.
+  - `with_schema!/2` — overrides `Mailglass.Config.schema/0`, with the restore
+    registered before the override is even applied (D-31 Class B).
   - `unsandboxed/2` — the preferred forward idiom for a single committed write.
   - `probe/1` — read-only pool-mode observation (never mutates).
   - `assert_manual!/3` — raises `LeakError` when the pool is not `:manual`.
@@ -107,7 +109,8 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   1. **Pool-mode mutation** — `checkout!(shared: true)` or
      `unsandboxed_module/1`.
   2. **`Application.put_env/3` on a key the code under test reads** — Oban.Testing
-     mode, `:async_adapter`/`:async_adapter_impl`, the adapter. This stays
+     mode, `:async_adapter`/`:async_adapter_impl`, the adapter, and
+     `config :mailglass, :schema` (via `with_schema!/2`). This stays
      convention plus the existing I-12 guard (`mailer_case.ex:84-91`); nothing
      here makes it mechanical.
   3. **Committed non-transactional DB state** — DDL, `TRUNCATE`, migrations.
@@ -165,6 +168,9 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
 
       # A file that genuinely needs pool-wide :auto (migrations, schema drop/recreate):
       setup :unsandboxed_module
+
+      # A file that overrides `config :mailglass, :schema` for its own tests:
+      Mailglass.TestSupport.SandboxOwnership.with_schema!("mailglass")
 
       # In `Mailglass.TestSupport.SuiteTruthFormatter`'s `:module_finished` handler:
       Mailglass.TestSupport.SandboxOwnership.probe(Mailglass.TestRepo)
@@ -314,6 +320,74 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     ExUnit.Callbacks.on_exit(fn ->
       Ecto.Adapters.SQL.Sandbox.mode(repo, :manual)
     end)
+
+    :ok
+  end
+
+  @doc """
+  Overrides `Mailglass.Config.schema/0` to `schema` for the calling test,
+  registering the restore to the CAPTURED boot value on the statement
+  immediately following capture — before the override is even applied
+  (D-11's sanctioned reason two; D-31 Class B).
+
+  **The non-negotiable invariant (D-31 Class B):** every confirmed Class B
+  candidate got the ordering backwards — override first, then work that can
+  raise (DROP SCHEMA, migrate), then a TRAILING `on_exit` restore that a
+  mid-setup raise skips entirely, leaving `Mailglass.Config.schema/0` drifted
+  for every later module in the run. This function inverts that ordering:
+  capture, register the restore, THEN override. A raise anywhere after this
+  function returns still restores the boot schema, because the restore was
+  already registered before the raising statement ever ran.
+
+  The restore goes through the exact write path the override uses —
+  `Application.put_env/3` plus a `:persistent_term` cache erase — so
+  `Mailglass.Config.schema/0` re-reads and re-validates through its
+  documented cache-write boundary (`warm_schema/0`) the next time it is
+  called. This module never writes `Mailglass.Config`'s cache directly.
+
+  After applying the override, asserts it took effect —
+  `Mailglass.Config.schema/0` must equal `schema` — and raises a composed
+  message naming the mismatch if it does not. A setup that cannot establish
+  its own precondition must not proceed.
+
+  Accepts an optional `:repo` (default `Mailglass.TestRepo`), reserved for a
+  future per-repo schema seam; the override itself always targets the single
+  process-global `:mailglass, :schema` Application env key regardless of
+  `:repo`.
+  """
+  @spec with_schema!(String.t(), keyword()) :: :ok
+  def with_schema!(schema, opts \\ []) when is_binary(schema) do
+    original = Mailglass.Config.schema()
+
+    # INVARIANT (D-31 Class B): this on_exit registration is the very next
+    # statement after capturing the original value — before the override
+    # below is even applied. Every statement after this point (including the
+    # override itself, and every statement the caller performs afterward)
+    # sits below it, so a raise anywhere below still restores the boot
+    # schema. This is the exact ordering the confirmed Class B candidates
+    # got wrong (override, then work that can raise, then a trailing restore
+    # that's skipped).
+    ExUnit.Callbacks.on_exit(fn ->
+      Application.put_env(:mailglass, :schema, original)
+      :persistent_term.erase({Mailglass.Config, :schema})
+    end)
+
+    Application.put_env(:mailglass, :schema, schema)
+    :persistent_term.erase({Mailglass.Config, :schema})
+
+    applied = Mailglass.Config.schema()
+
+    unless applied == schema do
+      raise """
+      Mailglass.TestSupport.SandboxOwnership: with_schema!(#{inspect(schema)}) did not \
+      take effect — Mailglass.Config.schema/0 still returns #{inspect(applied)}. The \
+      Application env override or the persistent_term cache invalidation did not reach \
+      Config.schema/0's cache-write boundary; investigate whatever else touches \
+      `config :mailglass, :schema` around this call.
+      """
+    end
+
+    _ = Keyword.get(opts, :repo, Mailglass.TestRepo)
 
     :ok
   end

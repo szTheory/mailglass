@@ -5,7 +5,7 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
 
   @moduletag :schema_prefix
 
-  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1, with_schema!: 1]
 
   alias Mailglass.Clock
   alias Mailglass.Compliance.Unsubscribe
@@ -89,16 +89,17 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
   setup do
     prior_mailglass_env = Application.get_all_env(:mailglass)
 
-    Application.put_env(:mailglass, :schema, @prefix)
-    Application.put_env(:mailglass, TestEndpoint, endpoint_config())
-    Application.put_env(:mailglass, :compliance, compliance_config())
-    :persistent_term.erase({Mailglass.Config, :schema})
-
     # 143-MECHANISM.md § "The three-class inventory" names this file as a
     # candidate for BOTH Class B (config_schema_drift — flips Config.schema()
     # per-test) and Class A (baseline_missing — drops/restores public.
-    # mailglass_* tables). The drift/restore defect is left deliberately
-    # unchanged here; closing it is plan 143-07's job.
+    # mailglass_* tables). Class B is closed here via the restore-first
+    # `with_schema!/2` seam (143-07); Class A's restoration is made
+    # unconditional and verified below.
+    with_schema!(@prefix)
+
+    Application.put_env(:mailglass, TestEndpoint, endpoint_config())
+    Application.put_env(:mailglass, :compliance, compliance_config())
+
     {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
 
     version = System.unique_integer([:positive, :monotonic]) + 90_000_000_000_000
