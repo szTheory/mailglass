@@ -54,6 +54,12 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   # (`core_latest_elixir_advisory`).
   @suite_floor_env_occurrences 2
 
+  # Every RUNTIME lane name advisory-matrix.yml produces: 2 Core Full Suite legs +
+  # 2 next-toolchain legs + 1 Provider Compatibility leg + 2 Inbound Full Suite legs.
+  # Deliberately NOT derived from the parser under test — a count computed from the
+  # thing it is counting cannot fail.
+  @advisory_matrix_runtime_lane_count 7
+
   @required_lanes MapSet.new(Mailglass.CILanes.required_lanes())
   @advisory_classified_lanes MapSet.new(Mailglass.CILanes.advisory_classified_lanes())
   @publish_gating_lanes MapSet.new(Mailglass.CILanes.publish_gating_lanes())
@@ -610,6 +616,105 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
              "removing one occurrence must be observable by the same counting function the " <>
                "assertion above uses — otherwise that assertion could pass on a workflow " <>
                "with the opt-in stripped out"
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # D-24: the RUNTIME name space for advisory-matrix.yml.
+  #
+  # `job_names/1` returns DECLARED names and collapses advisory-matrix.yml's two
+  # byte-identical Core Full Suite `name:` templates into one entry — so a
+  # registry-versus-YAML set-equality test built on it would claim four-leg
+  # coverage while proving two. `expanded_matrix_job_names/1` expands
+  # `strategy.matrix.include:` rows into the template and returns what GitHub
+  # actually reports. These assertions pin that distinction so a future refactor
+  # cannot quietly collapse the two spaces back together.
+  # ---------------------------------------------------------------------------
+
+  describe "expanded_matrix_job_names/1 (advisory-matrix.yml runtime names, D-24)" do
+    test "anti-vacuity: the parser returns a non-empty set" do
+      names = Mailglass.CIYaml.expanded_matrix_job_names(File.read!(@advisory_matrix_path))
+
+      assert MapSet.size(names) > 0,
+             "Mailglass.CIYaml.expanded_matrix_job_names/1 parsed no runtime job names from " <>
+               "advisory-matrix.yml — parser or file format changed (advisory-matrix.yml has " <>
+               "at least one strategy.matrix.include: job today). Without this guard the " <>
+               "set-equality assertions below would compare an empty set against an empty " <>
+               "registry and pass while proving nothing."
+    end
+
+    test "the parser returns exactly #{@advisory_matrix_runtime_lane_count} runtime lane names" do
+      names = Mailglass.CIYaml.expanded_matrix_job_names(File.read!(@advisory_matrix_path))
+
+      assert MapSet.size(names) == @advisory_matrix_runtime_lane_count,
+             "expected exactly #{@advisory_matrix_runtime_lane_count} runtime lane names from " <>
+               "advisory-matrix.yml (2 Core Full Suite legs + 2 next-toolchain legs + 1 " <>
+               "Provider Compatibility leg + 2 Inbound Full Suite legs) — got " <>
+               "#{MapSet.size(names)}: #{inspect(Enum.sort(names))}. A future legitimate " <>
+               "matrix row or job addition must update this count deliberately, not delete " <>
+               "the guard."
+    end
+
+    test "every returned name is fully substituted — no `${{` survives expansion" do
+      names = Mailglass.CIYaml.expanded_matrix_job_names(File.read!(@advisory_matrix_path))
+
+      for name <- names do
+        refute String.contains?(name, "${{"),
+               "runtime name '#{name}' still carries an uninterpolated matrix expression — " <>
+                 "the parser emitted a template rather than expanding it, which is the " <>
+                 "silent-vacuity shape this function exists to eliminate (a registry built " <>
+                 "from templates would never match a live job name)"
+      end
+    end
+
+    test "runtime names strictly outnumber declared names — the two spaces do not collapse" do
+      source = File.read!(@advisory_matrix_path)
+
+      runtime = Mailglass.CIYaml.expanded_matrix_job_names(source)
+      declared = MapSet.new(Map.values(Mailglass.CIYaml.job_names(source)))
+
+      assert MapSet.size(declared) > 0,
+             "Mailglass.CIYaml.job_names/1 parsed no advisory-matrix.yml jobs — the " <>
+               "comparison below would be vacuous"
+
+      assert MapSet.size(runtime) > MapSet.size(declared),
+             "expected advisory-matrix.yml to yield strictly more RUNTIME names " <>
+               "(#{MapSet.size(runtime)}) than DECLARED ones (#{MapSet.size(declared)}). " <>
+               "Declared names collapse every matrix leg of a job into one template — and, " <>
+               "before the D-21 rename, collapsed the two Core Full Suite jobs into each " <>
+               "other as well. A registry bound to declared names would claim per-leg " <>
+               "coverage it does not have; that is the exact vacuity this assertion pins."
+    end
+
+    test "negative control: removing one known runtime name makes the drift comparison " <>
+           "report it, and only it, in the correct direction" do
+      names = Mailglass.CIYaml.expanded_matrix_job_names(File.read!(@advisory_matrix_path))
+
+      # Chosen because it is stable across the D-21 Core Full Suite rename and is
+      # unambiguous in a reported diff (no other lane could be mistaken for it).
+      removed_entry = "Inbound Full Suite Advisory (schema mailglass)"
+
+      assert removed_entry in MapSet.to_list(names),
+             "sanity check failed: '#{removed_entry}' should already be one of the parsed " <>
+               "runtime names before the injected-removal assertion runs — got " <>
+               "#{inspect(Enum.sort(names))}"
+
+      broken = MapSet.delete(names, removed_entry)
+
+      # drift(a, b) returns {a \ b, b \ a}: nothing was added, so the first set must
+      # be empty and the second must name exactly the removed lane.
+      {only_in_broken, only_in_full} = drift(broken, names)
+
+      assert only_in_full == MapSet.new([removed_entry]),
+             "a vacuous pass is exactly the failure mode this test excludes: removing " <>
+               "'#{removed_entry}' from the parsed runtime set must make drift/2 — the same " <>
+               "helper the real set-equality assertions use — report it, and only it, in " <>
+               "the 'missing from the parsed set' direction; got " <>
+               "#{inspect(MapSet.to_list(only_in_full))}"
+
+      assert MapSet.size(only_in_broken) == 0,
+             "unexpected reverse-direction drift after removing only '#{removed_entry}': " <>
+               "#{inspect(MapSet.to_list(only_in_broken))}"
     end
   end
 
