@@ -5,14 +5,14 @@ milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 current_phase: 143
 current_phase_name: test-harness-truth
 status: executing
-stopped_at: Completed 143-06-PLAN.md
-last_updated: "2026-07-30T01:01:40.122Z"
+stopped_at: Completed 143-07-PLAN.md
+last_updated: "2026-07-30T02:55:47.152Z"
 last_activity: 2026-07-29
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 25
-  completed_plans: 17
+  completed_plans: 18
 ---
 
 # Project State
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 7 of 14
+Plan: 8 of 14
 Status: Ready to execute
 Last activity: 2026-07-29
 
-Progress: [███████░░░] 68%
+Progress: [███████░░░] 72%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -368,6 +368,8 @@ release debug campaign.
 - [Phase ?]: [143-05] checkout!/1 gained optional :settle_attempts/:settle_interval_ms (default unchanged); only webhook_idempotency_convergence_test.exs opts into a wider bound after empirically hitting assert_manual!/3's default settle window under heavy pool churn
 - [Phase ?]: [143-06] Task 2's four schema-isolation/divergence files carry hand-off comments naming Class A/B candidacy from 143-MECHANISM.md without touching the drift/restoration defect (deferred to 143-07)
 - [Phase ?]: [143-06] Neither Task 3 file (migration_test.exs, upgrade_v2_schema_migration_test.exs) migrated to unboxed_run/2 -- both drive Ecto.Migrator.with_repo/2, which spawns a process unboxed_run cannot cover
+- [Phase ?]: [143-07] The ledger, not the research candidates, drove final scope — repo_test.exs (Application.delete_env/2 leaving :schema absent) and two schema_prefix_hardening_test.exs assertion helpers were fixed because the required full-suite run named them as live Class A/B sources, outside the plan's original files_modified
+- [Phase ?]: [143-07] Ecto.Migrator's schema_migrations bookkeeping resolves via ambient current_schema (not Mailglass.Config.schema()) absent an explicit :prefix — pin prefix: "public" on any up/4+down/4 pair whose content is raw execute/1 SQL; create table(prefix: ...) DSL migrations cannot use this fix (Ecto validates and rejects a mismatch)
 
 ## Quick Tasks Completed
 
@@ -412,6 +414,7 @@ release debug campaign.
 | Phase 143 P04 | ~40min | 2 tasks | 2 files |
 | Phase 143 P05 | ~55min | 3 tasks | 8 files |
 | Phase 143 P06 | ~2h | 3 tasks | 9 files |
+| Phase 143 P07 | 130min | 3 tasks | 10 files |
 
 ## Deferred Items
 
@@ -579,8 +582,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-30T01:01:40.111Z
-**Stopped at:** Completed 143-06-PLAN.md
+**Last session:** 2026-07-30T02:55:47.140Z
+**Stopped at:** Completed 143-07-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
