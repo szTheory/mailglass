@@ -1,0 +1,77 @@
+# mailglass — run the core suite on the GATING toolchain (Elixir 1.18.4 / OTP 27).
+#
+# Entry point is the Makefile: `make toolchain`. See CONTRIBUTING.md
+# "Verifying on the gating toolchain".
+#
+# Isolation namespace is `mailglass-toolchain` (the Makefile exports
+# COMPOSE_PROJECT_NAME per target, because the root Makefile defaults it to
+# `mailglass-demo` for the demo stack). Containers, networks and volumes are
+# therefore disjoint from `make demo`.
+name: mailglass-toolchain
+
+services:
+  toolchain_db:
+    # Same image as the `postgres` service in .github/workflows/advisory-matrix.yml
+    # and ci.yml, with the same credentials, so a local failure and a CI failure
+    # are the same failure.
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      # Loopback-bound and env-overridable so this never collides with the demo
+      # stack (5415 by default), a sibling project's Postgres, or a host install.
+      - "127.0.0.1:${MAILGLASS_TOOLCHAIN_DB_PORT:-5416}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - mailglass_toolchain_pg:/var/lib/postgresql/data
+
+  toolchain:
+    build:
+      context: .
+      dockerfile: dev/toolchain/Dockerfile
+    working_dir: /workspace
+    # The GitHub-hosted `ubuntu-latest` runner is 2 vCPU / 4 GB
+    # (docs.github.com "Standard GitHub-hosted runners"). Matching that here is
+    # what makes a locally-measured duration a usable predictor of the CI clock
+    # — a bare `docker run` on an 18-core laptop is roughly 7x faster and will
+    # under-report every timing-sensitive bound. Override for a fast smoke run:
+    #   make toolchain MAILGLASS_TOOLCHAIN_CPUS=8
+    cpus: ${MAILGLASS_TOOLCHAIN_CPUS:-2}
+    mem_limit: ${MAILGLASS_TOOLCHAIN_MEM:-4g}
+    environment:
+      MIX_ENV: test
+      POSTGRES_HOST: toolchain_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # Both D-06 schema axes the advisory matrix runs. Default `public` matches
+      # the required lane; override with `make toolchain MAILGLASS_SCHEMA=mailglass`.
+      MAILGLASS_SCHEMA: ${MAILGLASS_SCHEMA:-public}
+      HEX_HOME: /cache/hex
+      MIX_HOME: /cache/mix
+    depends_on:
+      toolchain_db:
+        condition: service_healthy
+    volumes:
+      - .:/workspace
+      # deps/ and _build/ MUST be container-private named volumes. The host tree
+      # is compiled by whatever Elixir the maintainer runs (1.19/OTP 28 today);
+      # sharing either directory would make the two toolchains overwrite each
+      # other's artifacts on every switch, so each run would be a full rebuild
+      # AND the host's `mix test` would silently consume 1.18-built beams.
+      - mailglass_toolchain_deps:/workspace/deps
+      - mailglass_toolchain_build:/workspace/_build
+      - mailglass_toolchain_mix:/cache/mix
+      - mailglass_toolchain_hex:/cache/hex
+
+volumes:
+  mailglass_toolchain_pg:
+  mailglass_toolchain_deps:
+  mailglass_toolchain_build:
+  mailglass_toolchain_mix:
+  mailglass_toolchain_hex:
