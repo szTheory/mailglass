@@ -13,15 +13,34 @@ defmodule Mailglass.TestSupport.SandboxOwnership.LeakError do
   just reported under a name nothing is watching. The tally MUST count this
   exception alongside the raw term.
   """
-  defexception [:caller, :mode]
+  defexception [:caller, :mode, :refused_with]
 
+  # The release-verification shape: `assert_manual!/3` observed a non-`:manual`
+  # pool after a release should have restored it.
   @impl true
-  def message(%__MODULE__{caller: caller, mode: mode}) do
+  def message(%__MODULE__{caller: caller, mode: mode, refused_with: nil}) do
     "Mailglass.TestSupport.SandboxOwnership: #{inspect(caller)} released a Sandbox " <>
       "owner but the pool is still #{inspect(mode)}, not :manual. Either stop_owner/1 " <>
       "did not check the connection in, or another process re-shared the pool before " <>
       "the release could be observed. Find what re-acquired shared mode after " <>
       "#{inspect(caller)}'s release should have restored :manual."
+  end
+
+  # The refused-write shape: `mode_manual!/2`'s `Sandbox.mode(repo, :manual)`
+  # returned something other than `:ok`. Deliberately a separate clause rather
+  # than reusing the wording above — a refusal code (`:already_shared` /
+  # `:not_owner` / `:not_found`) is NOT a pool mode, and rendering it in the
+  # "the pool is still <mode>" sentence would report a fact nobody observed.
+  @impl true
+  def message(%__MODULE__{caller: caller, refused_with: refusal}) do
+    "Mailglass.TestSupport.SandboxOwnership: #{inspect(caller)} called " <>
+      "Sandbox.mode(repo, :manual) and the ownership manager refused with " <>
+      "#{inspect(refusal)} instead of :ok. Ecto documents this write as always " <>
+      "successful for :manual (sandbox.ex:501-503), and db_connection's manager " <>
+      "returns :ok on both of its :manual clauses (manager.ex:165-172), so this " <>
+      "return means the pool is in a state this harness does not model — the mode " <>
+      "was NOT established, and every later checkout is running against an unknown " <>
+      "pool. Refusing to report :ok for a write that did not take effect."
   end
 end
 
@@ -193,9 +212,11 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   - `assert_baseline_intact!/2` — read-only baseline verification that raises
     `BaselineError`, naming the calling module (D-31 Class A).
   - `unsandboxed/2` — the preferred forward idiom for a single committed write.
-  - `mode_manual!/1` — the raw `Sandbox.mode(repo, :manual)` write, for the
+  - `mode_manual!/2` — the raw `Sandbox.mode(repo, :manual)` write, for the
     two narrow callers (suite boot; a pre-release healing revert) that need
-    it directly rather than through an acquire/release pairing.
+    it directly rather than through an acquire/release pairing. Raises
+    `LeakError` when the ownership manager refuses the write, rather than
+    returning the refusal for its callers to discard.
   - `probe/1` — read-only pool-mode observation (never mutates).
   - `assert_manual!/3` — raises `LeakError` when the pool is not `:manual`.
   - `live_holder/0` — the current shared-owner pid, or `nil`.
@@ -725,10 +746,49 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   reintroduce the ordering bug `checkout!/1` exists to prevent. New test code
   needing pool-mode mutation almost certainly wants `checkout!/1` instead;
   this function exists only for the two caller shapes documented above.
+
+  **Why the `!` is real (D-17).** `Ecto.Adapters.SQL.Sandbox.mode/2` is spec'd
+  `:ok | :already_shared | :not_owner | :not_found`, and this function
+  previously returned that value verbatim while claiming `:ok` in its own
+  `@spec` — a `!`-suffixed function handing back a non-success as if it were a
+  result nobody has to look at. All three call sites discard the return, so a
+  refusal was being dropped on the floor: `test_helper.exs` would have booted
+  the whole suite against a pool whose mode was never established, and the two
+  `deliver_*` reverts would have reported a heal that did not happen. The
+  contract is now succeed-or-raise, and the `@spec` is true by construction
+  rather than by hope.
+
+  A non-raising variant is deliberately NOT provided: no call site in this repo
+  pattern-matches the result (verified across `test/test_helper.exs:168`,
+  `deliver_many_test.exs:45`, `deliver_later_test.exs:63`), and a silent
+  variant would immediately recreate the discarded-signal defect this change
+  removes. The refusal is raised as `LeakError` — not a bespoke exception —
+  so `SuiteTruthFormatter.signature/1` folds it into the same
+  `:already_shared` tally D-17 requires to be exactly zero. A refusal reported
+  under a name nothing is watching is the vacuity that error exists to prevent.
+
+  Both refusal paths are documented as unreachable on today's dependency
+  versions (Ecto: "this is always successful for `:auto` and `:manual` modes";
+  db_connection `manager.ex:165-172`: both `:manual` clauses reply `:ok`), which
+  is precisely why the check is cheap and why leaving it out was tempting. An
+  unreachable branch that would be catastrophic if reached is exactly the
+  branch worth spending three lines on.
+
+  Accepts an injectable `:mode_fun` (default
+  `&Ecto.Adapters.SQL.Sandbox.mode/2`) and `:caller`, mirroring
+  `assert_manual!/3`'s `probe_fun:` and `with_schema!/2`'s `schema_fun:`
+  idioms, so the raise path is provable from a synthetic refusal without
+  corrupting the live pool.
   """
-  @spec mode_manual!(module()) :: :ok
-  def mode_manual!(repo \\ Mailglass.TestRepo) do
-    Ecto.Adapters.SQL.Sandbox.mode(repo, :manual)
+  @spec mode_manual!(module(), keyword()) :: :ok
+  def mode_manual!(repo \\ Mailglass.TestRepo, opts \\ []) do
+    mode_fun = Keyword.get(opts, :mode_fun, &Ecto.Adapters.SQL.Sandbox.mode/2)
+    caller = Keyword.get(opts, :caller) || calling_test_module() || __MODULE__
+
+    case mode_fun.(repo, :manual) do
+      :ok -> :ok
+      refusal -> raise LeakError, caller: caller, refused_with: refusal
+    end
   end
 
   @doc """

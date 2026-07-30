@@ -197,7 +197,31 @@ defmodule Mailglass.TestSupport.SuiteFloor do
     :formatter_violations
   ]
 
-  @type violation :: %{kind: :violation | :warning, name: atom(), message: String.t()}
+  @typedoc """
+  The closed vocabulary of `:name` atoms `violations/3` can produce — the
+  type-level twin of `@violation_classes`, kept adjacent to it so the two
+  cannot drift silently (a new atom added to one and not the other fails
+  `mix dialyzer`, because `violation_classes/0`'s success typing is the
+  attribute's own contents).
+
+  Closed rather than `atom()` on purpose: CLAUDE.md's "errors as a public API
+  contract" DNA — consumers pattern-match these names, and a `name: atom()`
+  contract would let a typo'd class silently type-check at every call site.
+  """
+  @type violation_class ::
+          :exclusion_allowlist_unknown_tag
+          | :exclusion_allowlist_dead_entry
+          | :executed_floor
+          | :executed_nudge
+          | :skipped_ceiling
+          | :already_shared
+          | :formatter_violations
+
+  @type violation :: %{
+          kind: :violation | :warning,
+          name: violation_class(),
+          message: String.t()
+        }
 
   # ──────────────────────────────────────────────────────────────
   # Public API
@@ -323,26 +347,57 @@ defmodule Mailglass.TestSupport.SuiteFloor do
   @spec executed_floor(String.t()) :: non_neg_integer()
   def executed_floor(schema), do: Map.get(@executed_floors, schema, 0)
 
+  # ── Why the next two accessors carry no `@spec` (deliberate, not an omission)
+  #
+  # Both return a bare module attribute, so dialyzer's success typing for each
+  # is the LITERAL currently pinned there (`1_000_000_000`, `40`). Under this
+  # repo's `:underspecs` flag (mix.exs `defp dialyzer/0`) the honest contract
+  # `non_neg_integer()` is reported as `contract_supertype`, and
+  # `.dialyzer_ignore.exs` is at its hard 15-entry cap (D-08-07), so the
+  # warning cannot be filtered. That leaves exactly two options, and the
+  # literal spec is the worse one:
+  #
+  #   * `@spec skipped_ceiling() :: 1_000_000_000` would be a spec that LIES on
+  #     the next edit. `@skipped_ceiling` is an explicit D-27 placeholder that
+  #     plan `143-10` re-pins from a green 1.18/OTP 27 CI run, and `@nudge_margin`
+  #     is a tunable design constant. A spec pinned to today's literal turns
+  #     every future re-pin into a mechanical "edit the spec to match the
+  #     value" step — which teaches spec-rot as routine and makes the type
+  #     signature a second copy of the constant rather than a contract about it.
+  #   * No `@spec` states nothing false. Dialyzer still infers and checks the
+  #     exact value at every call site, so no checking is lost — only a
+  #     redundant restatement of it. The real contract ("a non-negative
+  #     integer; callers must NOT depend on the value") lives in the `@doc`
+  #     and in `test/scripts/suite_floor_contract_test.exs`, which reads both
+  #     accessors live and computes its fixtures from them rather than
+  #     hardcoding either number.
+  #
+  # Do NOT "fix" this by routing the constant through a `Map.get/3` or similar
+  # indirection to blind dialyzer (the shape `executed_floor/1` happens to
+  # have for its own reasons). Widening a contract to defeat an analyzer is
+  # the same class of move as a check that reports green without observing its
+  # subject — the exact failure this phase exists to eliminate.
+
   @doc """
-  The pinned maximum `skipped` count, across all legs. PLACEHOLDER (D-27) —
+  The pinned maximum `skipped` count, across all legs. Returns a non-negative
+  integer; callers must not depend on the specific value. PLACEHOLDER (D-27) —
   see the moduledoc.
   """
-  @spec skipped_ceiling() :: non_neg_integer()
   def skipped_ceiling, do: @skipped_ceiling
 
   @doc """
   The warn-only nudge margin (D-16): `executed > executed_floor(schema) +
   nudge_margin()` prints a `$GITHUB_STEP_SUMMARY`-bound warning, never a
-  build failure.
+  build failure. Returns a non-negative integer; callers must not depend on
+  the specific value.
   """
-  @spec nudge_margin() :: non_neg_integer()
   def nudge_margin, do: @nudge_margin
 
   @doc """
   The complete, closed vocabulary of `:name` atoms `violations/3` can
   produce. See the module attribute of the same name for the rationale.
   """
-  @spec violation_classes() :: [atom()]
+  @spec violation_classes() :: [violation_class(), ...]
   def violation_classes, do: @violation_classes
 
   # ──────────────────────────────────────────────────────────────

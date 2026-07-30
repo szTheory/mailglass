@@ -253,6 +253,65 @@ defmodule Mailglass.TestSupport.SandboxOwnershipTest do
     assert SandboxOwnership.probe(Mailglass.TestRepo) == :ok
   end
 
+  # 7b. mode_manual!/2 is succeed-or-raise, not succeed-or-hand-back.
+  #
+  # `Sandbox.mode/2` is spec'd `:ok | :already_shared | :not_owner |
+  # :not_found`, and all three of this repo's call sites discard the return
+  # value. Before this pair of tests existed, a refusal was silently dropped:
+  # the suite could boot against a pool whose mode was never established and
+  # report nothing. Both refusal branches are unreachable on today's
+  # dependency versions (Ecto documents :manual as always successful;
+  # db_connection's manager replies :ok on both :manual clauses), which is
+  # exactly why the guard needs a synthetic driver to be provable at all —
+  # and exactly why an unproven guard here would be indistinguishable from
+  # no guard.
+  test "mode_manual!/2 returns :ok against the real pool and leaves it :manual" do
+    assert SandboxOwnership.mode_manual!(Mailglass.TestRepo) == :ok
+    assert SandboxOwnership.probe(Mailglass.TestRepo) == :ok
+  end
+
+  test "mode_manual!/2 raises LeakError when the ownership manager refuses the write" do
+    for refusal <- [:already_shared, :not_owner, :not_found] do
+      error =
+        assert_raise(SandboxOwnership.LeakError, fn ->
+          SandboxOwnership.mode_manual!(Mailglass.TestRepo,
+            caller: __MODULE__,
+            mode_fun: fn _repo, :manual -> refusal end
+          )
+        end)
+
+      assert error.caller == __MODULE__
+      assert error.refused_with == refusal
+
+      # The message must name the refusal and must NOT render it in the
+      # "the pool is still <mode>" sentence — a refusal code is not a pool
+      # mode, and reporting it as one would state a fact nobody observed.
+      message = Exception.message(error)
+      assert message =~ "refused with #{inspect(refusal)}"
+      refute message =~ "the pool is still"
+    end
+
+    # The real pool was never touched — still :manual.
+    assert SandboxOwnership.probe(Mailglass.TestRepo) == :ok
+  end
+
+  test "mode_manual!/2's refusal raises the SAME LeakError the D-17 tally counts" do
+    # Load-bearing for ROADMAP criterion 3. If the refusal raised a bespoke
+    # exception instead, `SuiteTruthFormatter.signature/1` would classify it
+    # `:other`, the `:already_shared` tally would stay at zero, and the leak
+    # would be reported under a name nothing is watching.
+    error =
+      assert_raise(SandboxOwnership.LeakError, fn ->
+        SandboxOwnership.mode_manual!(Mailglass.TestRepo,
+          caller: __MODULE__,
+          mode_fun: fn _repo, :manual -> :already_shared end
+        )
+      end)
+
+    assert Mailglass.TestSupport.SuiteTruthFormatter.signature({:error, error, []}) ==
+             :already_shared
+  end
+
   # 8. live_holder/0.
   test "live_holder/0 returns the owner pid while shared and nil after a heal" do
     assert SandboxOwnership.live_holder(Mailglass.TestRepo) == nil
