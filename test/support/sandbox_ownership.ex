@@ -195,11 +195,28 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
   Raises `checkout!(shared: true)` from a module whose `async` tag is `true`
   (see "Async guards" in the moduledoc) — shared mode is process-global pool
   state, and concurrent async tests sharing it would stomp each other.
+
+  Accepts optional `:settle_attempts` / `:settle_interval_ms`, forwarded to
+  `assert_manual!/3`'s `:attempts` / `:interval_ms` (defaults: 30 / 5ms, the
+  same ~150ms bound `assert_manual!/3` itself defaults to). A caller whose
+  own workload does heavy pool churn before releasing (many transactions
+  through a shared connection, e.g. a 1000-run property test) can widen this:
+  empirically, `db_connection`'s ownership manager takes longer than ~150ms
+  to process the owner's `:DOWN` message when its own mailbox is backed up
+  from that churn — confirmed live against
+  `webhook_idempotency_convergence_test.exs`'s real workload, which converged
+  in 564ms-1131ms across repeated clean (uncontended) runs, consistently
+  exceeding the default bound. This is the same benign, bounded settle delay
+  `assert_manual!/3`'s moduledoc describes, not a persistent leak — a caller
+  that genuinely never converges still raises `LeakError` once ITS bound is
+  exhausted, exactly as before.
   """
   @spec checkout!(keyword()) :: pid()
   def checkout!(opts \\ []) do
     {repo, opts} = Keyword.pop(opts, :repo, Mailglass.TestRepo)
     {calling_module_fun, opts} = Keyword.pop(opts, :calling_module_fun, &calling_test_module/0)
+    {settle_attempts, opts} = Keyword.pop(opts, :settle_attempts, 30)
+    {settle_interval_ms, opts} = Keyword.pop(opts, :settle_interval_ms, 5)
     shared? = Keyword.get(opts, :shared, false)
 
     if shared?, do: guard_shared_checkout_from_async!(calling_module_fun)
@@ -214,7 +231,13 @@ defmodule Mailglass.TestSupport.SandboxOwnership do
     # 52->58) got wrong. Do not move work above this line.
     ExUnit.Callbacks.on_exit(fn ->
       :ok = Ecto.Adapters.SQL.Sandbox.stop_owner(owner)
-      if shared?, do: assert_manual!(repo, calling_module_fun.() || __MODULE__)
+
+      if shared? do
+        assert_manual!(repo, calling_module_fun.() || __MODULE__,
+          attempts: settle_attempts,
+          interval_ms: settle_interval_ms
+        )
+      end
     end)
 
     owner

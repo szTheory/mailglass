@@ -48,11 +48,21 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
   @moduletag timeout: :infinity
 
   setup do
+    # settle_attempts/settle_interval_ms: 6s release-verification bound
+    # (default is ~150ms). This property test runs up to 1000 iterations,
+    # each doing real DB work through the shared pool — db_connection's
+    # ownership manager takes longer than the ~150ms default to process the
+    # owner's :DOWN message once its own mailbox has that much churn behind
+    # it. Measured live across repeated clean (uncontended) runs: 564ms and
+    # 1131ms to converge — comfortably (~5x) inside this 6s bound, which
+    # still raises LeakError if a release genuinely never converges.
     _owner =
       Mailglass.TestSupport.SandboxOwnership.checkout!(
         repo: TestRepo,
         shared: true,
-        ownership_timeout: 10 * 60_000
+        ownership_timeout: 10 * 60_000,
+        settle_attempts: 600,
+        settle_interval_ms: 10
       )
 
     Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
