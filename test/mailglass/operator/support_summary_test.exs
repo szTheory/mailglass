@@ -14,12 +14,30 @@ defmodule Mailglass.Operator.SupportSummaryTest do
 
       summary = SupportSummary.summarize_tenant(%{tenant_id: "tenant-a", window_hours: 24})
 
-      assert Map.keys(summary) == [
-               :failed_ingest,
-               :orphan_backlog,
-               :replay_outcomes,
-               :reconcile_facts
-             ]
+      # The contract is the exact key SET — four buckets, no extras, no missing.
+      # It is deliberately NOT an ordered comparison: `SupportSummary
+      # .summarize_tenant/1` returns a plain map, and a map has no public order.
+      # `Map.keys/1` on a ≤32-key flatmap returns keys in ERTS' internal map-key
+      # order, which for atoms follows the atom TABLE index (creation order), not
+      # the atoms' names — so the order varies with which modules the run has
+      # loaded and in which sequence, i.e. with the ExUnit seed. Asserting on it
+      # made this test a latent flake that fires on some seeds and not others
+      # (observed live at `--seed 783091`: got
+      # `[:orphan_backlog, :failed_ingest, …]`).
+      #
+      # If the four-bucket ORDER ever becomes part of the contract, the
+      # PRODUCTION code must return something order-bearing (a keyword list, or
+      # an explicit `@bucket_order` the caller can read) and the assertion must
+      # target that. Ordering a map's keys is not a property the callee can
+      # promise, so a test asserting it is asserting something the code does not
+      # and cannot guarantee.
+      assert Enum.sort(Map.keys(summary)) ==
+               Enum.sort([
+                 :failed_ingest,
+                 :orphan_backlog,
+                 :replay_outcomes,
+                 :reconcile_facts
+               ])
 
       assert summary.failed_ingest.count == 2
       assert summary.failed_ingest.latest.webhook_event_id == failed.dead.id
