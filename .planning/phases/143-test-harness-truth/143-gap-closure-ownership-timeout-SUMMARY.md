@@ -188,7 +188,9 @@ Every suite run below was preceded by `mix ecto.drop -r Mailglass.TestRepo && mi
 |---|---|---|
 | `MAILGLASS_SCHEMA=mailglass` | 961019 | `23 properties, 1573 tests, 0 failures, 14 excluded, 7 skipped` — 177.1s |
 | `MAILGLASS_SCHEMA=public` | 783091 | `23 properties, 1573 tests, 0 failures, 13 excluded, 7 skipped` — 180.2s |
-| `MAILGLASS_SCHEMA=mailglass` | 374117 | see "Open" below |
+| `MAILGLASS_SCHEMA=mailglass` | 374117 | `23 properties, 1573 tests, 0 failures, 14 excluded, 7 skipped` — 162.2s |
+
+All three seed/axis combinations pass on **both** toolchains — six full-suite runs, 0 failures.
 
 The 1573-vs-1559 difference is a **formatting** difference between Elixir versions, not a coverage difference: 1.18 prints the total inclusive of exclusions (`1573 tests, ... 14 excluded`), 1.19 prints it exclusive (`1559 tests, ... (14 excluded)`). 1559 + 14 = 1573. The gating-toolchain line at seed 961019 is therefore **character-for-character the failing CI job's own count line, with `1 failure` replaced by `0 failures`.**
 
@@ -239,7 +241,6 @@ None. No network surface, auth path, or trust-boundary schema change. `scripts/a
 
 ## Still Open
 
-1. **`mailglass/374117` on the gating toolchain** was still running when this summary was written. It is fully covered on the host (0 failures), and both other seed/axis combinations pass on the toolchain; this is the last cell of the matrix, not a gap in coverage.
-2. **No full-clock reproduction of the original 120s timeout.** Reproduced at a scaled bound only — see "Honest limitation" above.
-3. **The toolchain harness is not wired into any CI lane.** It is a maintainer tool by design (it would be redundant in CI, which already *is* the gating toolchain). The drift guard is what keeps it honest between version bumps.
-4. **`SuiteFloor`'s `executed_nudge` warning fires on every run** (`1575 above the pinned floor of 0`). Pre-existing, advisory-only, and out of scope for this pass — the floor has never been pinned. Left alone rather than re-pinned as a side effect of an unrelated fix.
+1. **No full-clock reproduction of the original 120s timeout.** Reproduced at a scaled bound only — see "Honest limitation" above.
+2. **The toolchain harness is not wired into any CI lane.** It is a maintainer tool by design (it would be redundant in CI, which already *is* the gating toolchain). The drift guard is what keeps it honest between version bumps.
+3. **`SuiteFloor`'s `executed_nudge` warning fires on every run** (`1575 above the pinned floor of 0`). Pre-existing, advisory-only, and out of scope for this pass — the floor has never been pinned. Left alone rather than re-pinned as a side effect of an unrelated fix.
