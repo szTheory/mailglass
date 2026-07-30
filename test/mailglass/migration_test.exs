@@ -235,24 +235,45 @@ defmodule Mailglass.MigrationTest do
   describe "up/down against a non-public prefix (MIGR-01/02 regression)" do
     @describetag :schema_isolation
 
-    @prefix "mailglass"
+    # A SCRATCH schema name unique to this describe block — NEVER the live schema
+    # `Mailglass.Config.schema/0` resolves to, and never "public". Until the 143
+    # gap-closure pass this was the literal "mailglass", which is harmless on the
+    # default `public` axis (disjoint from the baseline) but IS the live baseline
+    # schema under `MAILGLASS_SCHEMA=mailglass` — so the DROP SCHEMA ... CASCADE
+    # statements in this block's setup, on_exit, and two of its tests dropped the
+    # migration baseline out from under the rest of the run, surfacing as 42P01 in
+    # unrelated victim modules hundreds of tests later. Naming precedent:
+    # `mailglass_shipped_path_test` in
+    # test/mailglass/shipped_migration_divergence_test.exs. The
+    # `SandboxOwnership.scratch_schema!/2` call in this block's setup enforces
+    # this structurally, so re-typing "mailglass" here raises at THIS module.
+    #
+    # MIGR-01/02 is unaffected by the rename: what this block proves is the
+    # CREATE SCHEMA / DROP SCHEMA RESTRICT lifecycle against a NON-public prefix,
+    # not against a prefix spelled "mailglass".
+    @prefix "mailglass_migration_prefix_test"
 
     # Inline wrapper migration. `Mailglass.Migration.up` issues `execute()` DDL
     # that requires an active `Ecto.Migration.Runner` process, so it must be
     # driven through `Ecto.Migrator` (the same path adopters hit via
     # `mix ecto.migrate`), not called bare.
     #
-    # The `SET LOCAL search_path` pin is REQUIRED at the 134-01 boundary and is
-    # a DELIBERATE, DOCUMENTED CRUTCH: v01's events-immutability trigger is still
-    # created with a bare, unqualified `CREATE TRIGGER … ON mailglass_events`
-    # (postgres/v01.ex:140) and function `mailglass_raise_immutability()`
-    # (v01.ex:126). Postgres has no `CREATE TRIGGER IF NOT EXISTS`, so without a
-    # search_path pin the unqualified trigger resolves against the already-
-    # migrated `public.mailglass_events` and raises 42710 duplicate_object.
-    # Schema-qualifying that raw DDL (and REMOVING this pin) is Plan 134-02's
-    # load-bearing task — this test proves ONLY the CREATE SCHEMA / DROP SCHEMA
-    # RESTRICT lifecycle that 134-01 delivers, mirroring the sibling
-    # schema_isolation_integration_test.exs crutch (D-06 defers the pin removal).
+    # NO ambient-path pin of any kind. These wrappers used to carry
+    # `SET LOCAL search_path TO mailglass, public`, a DOCUMENTED CRUTCH for
+    # v01's then-unqualified events-immutability trigger + function. Phase
+    # 134-02 schema-qualified that raw DDL (`postgres/v01.ex:138,154` now emit
+    # `#{q}.mailglass_raise_immutability` and `ON #{q}.mailglass_events`), so the
+    # crutch is obsolete — and `schema_isolation_immutability_test.exs` exists
+    # specifically to prove that, with an in-module self-check refusing any pin
+    # in its own source.
+    #
+    # It is removed here because it was not merely obsolete, it was actively
+    # harmful once this block moved to a scratch prefix: `SET LOCAL` persists for
+    # the remainder of the transaction, and `Ecto.Migrator` inserts its
+    # `schema_migrations` version row INSIDE that same transaction, AFTER the
+    # migration body runs. The pin therefore redirected Ecto's own bookkeeping
+    # INSERT to a search_path holding no `schema_migrations` table, raising
+    # `42P01 (undefined_table) relation "schema_migrations" does not exist`.
     #
     # The DOWN-side raw-DDL round-trip (v01's `DROP EXTENSION citext` +
     # unqualified trigger/function drops) is intentionally NOT driven through the
@@ -265,9 +286,14 @@ defmodule Mailglass.MigrationTest do
     defmodule PrefixUpMigration do
       use Ecto.Migration
 
+      # Must stay byte-identical to the enclosing describe block's @prefix.
+      # Elixir module attributes do not cross a nested `defmodule` boundary, so
+      # the literal is repeated here (the same shape the sibling prefixed-wrapper
+      # migrations in this suite use).
+      @scratch_schema "mailglass_migration_prefix_test"
+
       def up do
-        execute("SET LOCAL search_path TO mailglass, public")
-        Mailglass.Migration.up(prefix: "mailglass", repo: Mailglass.TestRepo)
+        Mailglass.Migration.up(prefix: @scratch_schema, repo: Mailglass.TestRepo)
       end
 
       # No-op down: the migrator requires a down/0, but 134-01's schema-teardown
@@ -279,11 +305,13 @@ defmodule Mailglass.MigrationTest do
     defmodule PrefixNoCreateUpMigration do
       use Ecto.Migration
 
-      def up do
-        execute("SET LOCAL search_path TO mailglass, public")
+      # Must stay byte-identical to the enclosing describe block's @prefix — see
+      # PrefixUpMigration above.
+      @scratch_schema "mailglass_migration_prefix_test"
 
+      def up do
         Mailglass.Migration.up(
-          prefix: "mailglass",
+          prefix: @scratch_schema,
           repo: Mailglass.TestRepo,
           create_schema: false
         )
@@ -293,6 +321,11 @@ defmodule Mailglass.MigrationTest do
     end
 
     setup do
+      # Assert @prefix is genuinely scratch before any DDL below touches it. This
+      # block never calls `with_schema!/1`, so there is no ordering constraint
+      # here beyond "before the DROP SCHEMA statements".
+      _prefix = SandboxOwnership.scratch_schema!(@prefix, caller: __MODULE__)
+
       # Unique migration version per run so Ecto.Migrator's schema_migrations
       # tracking treats each run as fresh; on_exit cleans the schema + the
       # schema_migrations row so the test is re-runnable and does not pollute
@@ -311,14 +344,20 @@ defmodule Mailglass.MigrationTest do
         # then, re-create it here so subsequent test files (and the next
         # test_helper citext probe) see a clean baseline. This is scoped to this
         # describe block only.
-        _ = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext")
+        _ = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext SCHEMA public")
 
-        # Under the CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass) the
-        # suite baseline schema IS `mailglass` (boot-migrated). The DROP SCHEMA
-        # above just destroyed it, so re-migrate the baseline before the next
-        # test observes a missing schema. No-op on the default "public" suite.
-        restore_suite_baseline_schema()
-        verify_baseline_restored!()
+        # No baseline restoration is registered here. The DROP SCHEMA above
+        # targets this block's own scratch schema, which no other module or axis
+        # ever uses — before the 143 gap-closure pass it dropped the literal
+        # "mailglass", the live baseline under MAILGLASS_SCHEMA=mailglass, and
+        # then tried to re-migrate it from here.
+        #
+        # The file-level `setup`'s own `on_exit` (registered earlier, so it runs
+        # AFTER this one) still restores unconditionally and verifies — it has to,
+        # because the `:public_only` `down/0` describe genuinely tears the
+        # configured schema down. This block only VERIFIES, so that a corruption
+        # originating here is named here.
+        SandboxOwnership.assert_baseline_intact!(TestRepo, __MODULE__)
       end)
 
       {:ok, version: version}
@@ -365,10 +404,10 @@ defmodule Mailglass.MigrationTest do
       # unqualified `DROP EXTENSION citext` — a 134-02-owned raw-DDL concern that
       # would corrupt the shared `public.citext` baseline mid-suite).
       #
-      # Clean slate: under the CI schema-isolation axis (MAILGLASS_SCHEMA=mailglass)
-      # the `mailglass` schema already exists as the boot baseline, so a bare
-      # CREATE SCHEMA would raise 42P06. Drop first (the file-level on_exit
-      # re-migrates the baseline afterward). No-op on the default "public" suite.
+      # Clean slate: the block's setup already stood @prefix up via
+      # PrefixUpMigration, so a bare CREATE SCHEMA would raise 42P06. Drop first.
+      # Safe on every axis because @prefix is a scratch name (see its declaration
+      # at the top of this describe block) — this DROP cannot reach the baseline.
       {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
       {:ok, _} = TestRepo.query("CREATE SCHEMA #{@prefix}")
       assert schema_exists?(@prefix)
@@ -400,9 +439,10 @@ defmodule Mailglass.MigrationTest do
       # create_schema: false against a MISSING schema would fail at CREATE TABLE,
       # which is the documented locked-down-prod contract (dossier §4.4).
       #
-      # Clean slate first (drop the boot baseline that exists under the
-      # MAILGLASS_SCHEMA=mailglass axis), then hand-create so this test controls
-      # the pre-existing-schema precondition. No-op on the default "public" suite.
+      # Clean slate first (the block's setup already stood @prefix up), then
+      # hand-create so this test controls the pre-existing-schema precondition.
+      # Safe on every axis because @prefix is a scratch name (see its declaration
+      # at the top of this describe block) — this DROP cannot reach the baseline.
       {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
       {:ok, _} = TestRepo.query("CREATE SCHEMA #{@prefix}")
 
@@ -493,32 +533,13 @@ defmodule Mailglass.MigrationTest do
     _ -> :ok
   end
 
-  # VERIFIED, not assumed (143-07 / D-31 Class A): reuses
-  # `SandboxOwnership.baseline_tables_present?/1` — the same probe the
-  # formatter uses — rather than re-implementing the check. A restore that
-  # could not complete raises naming the relations it could not find; it
-  # never returns quietly.
+  # VERIFIED, not assumed (143-07 / D-31 Class A): delegates to
+  # `SandboxOwnership.assert_baseline_intact!/2`, which raises naming THIS module
+  # and the relations it could not find, and treats `:cannot_verify` as a failure
+  # rather than a pass. Four modules used to hand-roll this same three-clause
+  # `case` around `baseline_tables_present?/1`, each with its own wording; the
+  # shared helper makes the "cannot verify" branch impossible to omit.
   defp verify_baseline_restored! do
-    case SandboxOwnership.baseline_tables_present?(TestRepo) do
-      true ->
-        :ok
-
-      {false, missing} ->
-        raise """
-        Mailglass.MigrationTest: baseline restoration did not complete — \
-        #{inspect(missing)} still absent from schema \
-        #{inspect(Mailglass.Config.schema())} after restore_suite_baseline_schema/0 ran. \
-        Rebuild a clean local baseline with `mix ecto.drop -r Mailglass.TestRepo && \
-        mix ecto.create -r Mailglass.TestRepo`, or investigate why the migrator \
-        considered these relations already applied.
-        """
-
-      {:cannot_verify, reason} ->
-        raise """
-        Mailglass.MigrationTest: could not verify baseline restoration — the \
-        verification probe itself failed (#{inspect(reason)}). A check that cannot \
-        observe its subject must never report success.
-        """
-    end
+    SandboxOwnership.assert_baseline_intact!(TestRepo, __MODULE__)
   end
 end

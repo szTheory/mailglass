@@ -18,7 +18,22 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
   alias Mailglass.Webhook.WebhookEvent
 
   @endpoint Mailglass.SchemaPrefixHardeningTest.TestEndpoint
-  @prefix "mailglass"
+  # A SCRATCH schema name unique to this module — NEVER the live schema
+  # `Mailglass.Config.schema/0` resolves to, and never "public". Until the 143
+  # gap-closure pass this was the literal "mailglass", which is harmless on the
+  # default `public` axis (disjoint from the baseline) but IS the live baseline
+  # schema under `MAILGLASS_SCHEMA=mailglass` — so the setup below CASCADE-
+  # dropped the migration baseline out from under the rest of the run, surfacing
+  # as 42P01 in unrelated victim modules hundreds of tests later. Naming
+  # precedent: `mailglass_shipped_path_test` in
+  # test/mailglass/shipped_migration_divergence_test.exs. The
+  # `SandboxOwnership.scratch_schema!/2` call in `setup` enforces this
+  # structurally, so re-typing "mailglass" here raises at THIS module.
+  #
+  # The proof this file carries is unaffected by the rename: it asserts that
+  # runtime writes land in the CONFIGURED schema (whatever it is spelled) and
+  # not in `public`, with the connection's search_path forced to `public`.
+  @prefix "mailglass_prefix_hardening_test"
   @tenant_id "schema-prefix-hardening-tenant"
 
   defmodule TestRouter do
@@ -56,7 +71,7 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
   defmodule PrefixedWrapperMigration do
     use Ecto.Migration
 
-    @prefix "mailglass"
+    @prefix "mailglass_prefix_hardening_test"
 
     def up do
       Mailglass.Migration.up(prefix: @prefix, repo: Mailglass.TestRepo)
@@ -90,13 +105,27 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
   setup do
     prior_mailglass_env = Application.get_all_env(:mailglass)
 
+    # FIRST, before `with_schema!/1` below: assert @prefix is genuinely scratch.
+    # Ordering is load-bearing — `with_schema!/1` makes Config.schema/0 return
+    # @prefix, after which this guard could no longer observe the schema the rest
+    # of the suite needs. See `SandboxOwnership.scratch_schema!/2`'s own docs.
+    prefix = SandboxOwnership.scratch_schema!(@prefix, caller: __MODULE__)
+
+    # Registered BEFORE `with_schema!/1` so it runs AFTER that restore
+    # (`on_exit` runs in reverse registration order) — the baseline must be
+    # verified against the BOOT schema, not against this module's own override.
+    # Read-only: it observes and names, it never restores (D-31).
+    on_exit(fn -> SandboxOwnership.assert_baseline_intact!(TestRepo, __MODULE__) end)
+
     # 143-MECHANISM.md § "The three-class inventory" names this file as a
     # candidate for BOTH Class B (config_schema_drift — flips Config.schema()
     # per-test) and Class A (baseline_missing — drops/restores public.
     # mailglass_* tables). Class B is closed here via the restore-first
-    # `with_schema!/2` seam (143-07); Class A's restoration is made
-    # unconditional and verified below.
-    with_schema!(@prefix)
+    # `with_schema!/2` seam (143-07); Class A is closed by the scratch-prefix
+    # rename above, which means this module no longer touches the baseline at
+    # all — verified on every test by the `assert_baseline_intact!/2` registered
+    # immediately above.
+    with_schema!(prefix)
 
     Application.put_env(:mailglass, TestEndpoint, endpoint_config())
     Application.put_env(:mailglass, :compliance, compliance_config())
@@ -113,40 +142,31 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     Tenancy.put_current(@tenant_id)
 
     on_exit(fn ->
+      # NOT the search_path guarantee — kept only as a harmless belt-and-braces.
+      # This is its own pool checkout and may well land on a DIFFERENT connection
+      # than any that `with_public_search_path!/1` touched, so it can neither be
+      # relied on nor read as evidence that no connection is poisoned. The actual
+      # guarantee is `with_public_search_path!/1`'s same-connection, verified
+      # restore; see that function's comment for the full mechanism.
       _ = TestRepo.query("RESET search_path")
       {:ok, _} = TestRepo.query("DROP SCHEMA IF EXISTS #{@prefix} CASCADE")
       {:ok, _} = TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
-      {:ok, _} = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext")
+      {:ok, _} = TestRepo.query("CREATE EXTENSION IF NOT EXISTS citext SCHEMA public")
 
       Application.put_all_env(mailglass: prior_mailglass_env)
       :persistent_term.erase({Mailglass.Config, :schema})
 
-      # Runs unconditionally — no presence/axis guard decides whether to
-      # restore (D-31 Class A). VERIFIED, not assumed: a restore that could
-      # not complete raises naming the relations it could not find.
-      restore_suite_baseline_schema()
-
-      case SandboxOwnership.baseline_tables_present?(TestRepo) do
-        true ->
-          :ok
-
-        {false, missing} ->
-          raise """
-          Mailglass.SchemaPrefixHardeningTest: baseline restoration did not complete \
-          — #{inspect(missing)} still absent from schema \
-          #{inspect(Mailglass.Config.schema())} after restore_suite_baseline_schema/0 \
-          ran. Rebuild a clean local baseline with `mix ecto.drop -r Mailglass.TestRepo \
-          && mix ecto.create -r Mailglass.TestRepo`, or investigate why the migrator \
-          considered these relations already applied.
-          """
-
-        {:cannot_verify, reason} ->
-          raise """
-          Mailglass.SchemaPrefixHardeningTest: could not verify baseline restoration — \
-          the verification probe itself failed (#{inspect(reason)}). A check that \
-          cannot observe its subject must never report success.
-          """
-      end
+      # No baseline restoration happens here, and none is needed: the DROP above
+      # targets this module's own scratch schema, which no other module or axis
+      # ever uses. The previous version of this file dropped the literal
+      # "mailglass" — the live baseline under MAILGLASS_SCHEMA=mailglass — and
+      # then re-migrated it from here. Not dropping the baseline in the first
+      # place removes the whole failure mode instead of trying to undo it, and
+      # it also removes this teardown's `DELETE FROM public.schema_migrations
+      # WHERE version < 100`, a global mutation every test in this file used to
+      # perform. The `assert_baseline_intact!/2` registered at the top of
+      # `setup` (so it runs LAST, after the Application-env restore above)
+      # verifies the baseline on every test.
     end)
 
     :ok
@@ -171,15 +191,18 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
         }
       )
 
-    force_public_search_path!()
+    result =
+      with_public_search_path!(fn ->
+        assert {:ok, result} =
+                 Replay.execute(%{
+                   tenant_id: @tenant_id,
+                   webhook_event_id: webhook_event.id,
+                   delivery_id: delivery.id,
+                   actor: %{subject_id: "schema-prefix-proof"}
+                 })
 
-    assert {:ok, result} =
-             Replay.execute(%{
-               tenant_id: @tenant_id,
-               webhook_event_id: webhook_event.id,
-               delivery_id: delivery.id,
-               actor: %{subject_id: "schema-prefix-proof"}
-             })
+        result
+      end)
 
     assert result.status == :replayed
     assert result.delivery_id == delivery.id
@@ -200,10 +223,11 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     delivery = insert_delivery!(provider_message_id: "msg-unsubscribe-schema-prefix")
     token = Unsubscribe.sign_token(delivery.id)
 
-    force_public_search_path!()
-
-    first = post(build_conn(), "/mailglass/unsubscribe/#{token}", %{})
-    second = post(build_conn(), "/mailglass/unsubscribe/#{token}", %{})
+    {first, second} =
+      with_public_search_path!(fn ->
+        {post(build_conn(), "/mailglass/unsubscribe/#{token}", %{}),
+         post(build_conn(), "/mailglass/unsubscribe/#{token}", %{})}
+      end)
 
     assert response(first, 200) == ""
     assert response(second, 200) == ""
@@ -263,9 +287,66 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
     webhook_event
   end
 
-  defp force_public_search_path! do
-    _ = TestRepo.query!("SET search_path TO public", [])
-    :ok
+  # Runs `fun` with this test's DB connection's `search_path` forced to `public`,
+  # then restores the prior value ON THAT SAME CONNECTION, and VERIFIES the
+  # restore landed. Returns `fun`'s value.
+  #
+  # This replaces a bare `TestRepo.query!("SET search_path TO public")` with no
+  # scoping, which was the true root cause of the D-31 Class A 42P01 cascade on
+  # the `MAILGLASS_SCHEMA=mailglass` axis — NOT the baseline drop this module was
+  # also (separately, and correctly) fixed for. Three facts combine:
+  #
+  #   1. `SET` (without `LOCAL`) is a SESSION-level write. It persists on the
+  #      physical Postgres connection for that connection's whole lifetime.
+  #   2. This module runs in Sandbox `:auto` mode, where every `TestRepo.query`
+  #      checks a connection out of the 10-slot pool and returns it. So the
+  #      poisoned connection goes straight back into the pool, and the
+  #      `RESET search_path` this module used to issue from `on_exit` was a
+  #      SEPARATE checkout that could — and under any concurrency did — land on a
+  #      DIFFERENT connection than the one that had been poisoned.
+  #   3. `config/test.exs` + `test_helper.exs` give pool connections a startup
+  #      `search_path` of `"<schema>, public"`, and the whole rest of the suite
+  #      relies on it to resolve unqualified relation names. A connection stuck at
+  #      `search_path = public` therefore raises
+  #      `42P01 (undefined_table) relation "mailglass_deliveries" does not exist`
+  #      for whatever unrelated test later drew it from the pool — the exact
+  #      misattributed cascade this phase exists to end. Confirmed live with a
+  #      throwaway probe: after ONE `SET search_path TO public`, 40 subsequent
+  #      pool checkouts all observed `"public"`.
+  #
+  # `TestRepo.checkout/1` pins ONE connection for the whole block, so the SET,
+  # the runtime code under test, and the restore all ride the same connection.
+  # `after` guarantees the restore even if `fun` raises, and the post-restore
+  # read makes it VERIFIED rather than assumed — a restore that cannot be
+  # observed to have worked must not be reported as success (D-31).
+  defp with_public_search_path!(fun) when is_function(fun, 0) do
+    TestRepo.checkout(fn ->
+      prior = current_search_path()
+
+      try do
+        _ = TestRepo.query!("SET search_path TO public", [])
+        fun.()
+      after
+        _ = TestRepo.query!("SET search_path TO #{prior}", [])
+
+        restored = current_search_path()
+
+        unless restored == prior do
+          raise """
+          Mailglass.SchemaPrefixHardeningTest: failed to restore this connection's \
+          search_path — expected #{inspect(prior)}, got #{inspect(restored)}. This \
+          connection is about to go back into the pool poisoned, and the next \
+          unrelated test to draw it will fail with a 42P01 that has nothing to do \
+          with it. Failing here instead, at the module that broke it.
+          """
+        end
+      end
+    end)
+  end
+
+  defp current_search_path do
+    %{rows: [[value]]} = TestRepo.query!("SHOW search_path", [])
+    value
   end
 
   defp assert_configured_delivery_projected!(delivery_id) do
@@ -379,29 +460,5 @@ defmodule Mailglass.SchemaPrefixHardeningTest do
       max_age: 60,
       lifecycle: Mailglass.Lifecycle.Noop
     ]
-  end
-
-  # Unconditional (D-31 Class A) — no longer gated on the axis env var. A
-  # guard that skips the restore because "public never needs it" is exactly
-  # the "cannot verify, reports green" shape this milestone exists to kill:
-  # this file's own DROP SCHEMA above only ever touches the `mailglass`
-  # prefix schema, but a PRIOR file's incomplete restoration can leave the
-  # `public` baseline itself missing regardless of axis, and a caller-facing
-  # guard here previously masked that by no-op'ing on exactly the axis where
-  # it would matter most. Idempotent to run on every axis: when the flat
-  # baseline migrations are already applied, this is a safe no-op.
-  defp restore_suite_baseline_schema do
-    {:ok, _} = TestRepo.query("DELETE FROM public.schema_migrations WHERE version < 100")
-
-    migrations_path = Path.join(:code.priv_dir(:mailglass), "repo/migrations")
-
-    {:ok, _, _} =
-      SandboxOwnership.reloading_flat_migrations(fn ->
-        Ecto.Migrator.with_repo(TestRepo, fn repo ->
-          Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
-        end)
-      end)
-
-    :ok
   end
 end
