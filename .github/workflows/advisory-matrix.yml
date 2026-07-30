@@ -109,8 +109,22 @@ jobs:
         # runtime calls can still pass here. The focused no-search-path proof is
         # `mix verify.schema_prefix`, which runs hostile runtime tests plus the
         # raw-repo prefix guard and strict Credo.
+        #
+        # Suite-floor enforcement (HARNESS-03): the second env entry below
+        # declares that this step runs the COMPLETE suite, which turns
+        # `Mailglass.TestSupport.SuiteFloor` from reporting into enforcing —
+        # the per-schema executed floor, the skipped ceiling and the
+        # `:already_shared == 0` assertion become a non-zero exit instead of a
+        # printed line. It is opt-in rather than always-on precisely because
+        # the thresholds describe a complete suite: a focused
+        # `mix test path/to/one_test.exs` or a `mix verify.*` alias runs a
+        # deliberate subset, and holding those to a full-suite floor would
+        # misfire on nearly every invocation. Deleting that one line silently
+        # converts the gate back into a report — which is why
+        # test/scripts/lane_classification_drift_test.exs asserts it is here.
         env:
           MAILGLASS_SCHEMA: ${{ matrix.schema }}
+          MAILGLASS_SUITE_FLOOR: "1"
         run: mix test --warnings-as-errors --exclude requires_workspace
       - name: Install inbound deps for focused schema-prefix proof
         # `mix verify.schema_prefix` is a root alias but delegates one focused
@@ -212,8 +226,24 @@ jobs:
         # Phase 138 GATE-02: broad canary only. Because this lane aligns
         # Config.schema/0 and the connection search_path to the matrix schema,
         # use `mix verify.schema_prefix` for the focused no-search-path proof.
+        #
+        # Suite-floor enforcement (HARNESS-03): as on the 1.18 job above — the
+        # second env entry below declares a COMPLETE suite run, which turns
+        # `Mailglass.TestSupport.SuiteFloor` from reporting into enforcing.
+        # Opt-in so focused local runs and the `mix verify.*` aliases, which
+        # run deliberate subsets, never misfire against a full-suite floor.
+        #
+        # This leg is ADVISORY and, per the job-level `if` above, has never run
+        # on a pull_request — so the floors it enforces were measured on the
+        # 1.18 legs, not on this one. The comparison is `>=`: a 1.19 leg that
+        # executes at least as many tests passes, and one that executes fewer
+        # reds this advisory job visibly instead of passing silently. That is
+        # the correct direction for a leg nobody has measured; re-key the floor
+        # on {schema, elixir_minor} (D-16) if a real divergence ever appears
+        # here, and do not lower the 1.18 number to accommodate it.
         env:
           MAILGLASS_SCHEMA: ${{ matrix.schema }}
+          MAILGLASS_SUITE_FLOOR: "1"
         run: mix test --warnings-as-errors --exclude requires_workspace
 
   provider_compatibility_advisory:

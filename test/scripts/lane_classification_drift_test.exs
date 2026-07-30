@@ -40,7 +40,19 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   @repo_root Path.expand("../..", __DIR__)
   @publish_hex_path Path.join(@repo_root, ".github/workflows/publish-hex.yml")
   @ci_yml_path Path.join(@repo_root, ".github/workflows/ci.yml")
+  @advisory_matrix_path Path.join(@repo_root, ".github/workflows/advisory-matrix.yml")
   @maintaining_path Path.join(@repo_root, "MAINTAINING.md")
+
+  # The literal env entry `Mailglass.TestSupport.SuiteFloor` enforcement hangs
+  # off (HARNESS-03). Written out here rather than assembled from parts so this
+  # file fails on a value change (`"0"`, `"true"`) and not merely on the key
+  # disappearing — the module compares against the string `"1"` exactly.
+  @suite_floor_env_entry ~s(MAILGLASS_SUITE_FLOOR: "1")
+
+  # One per `advisory-matrix.yml` full-suite step: the 1.18/OTP 27 job
+  # (`core_full_suite_advisory`) and the 1.19/OTP 28 job
+  # (`core_latest_elixir_advisory`).
+  @suite_floor_env_occurrences 2
 
   @required_lanes MapSet.new(Mailglass.CILanes.required_lanes())
   @advisory_classified_lanes MapSet.new(Mailglass.CILanes.advisory_classified_lanes())
@@ -543,8 +555,74 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
   end
 
   # ---------------------------------------------------------------------------
+  # HARNESS-03: the suite-floor opt-in on advisory-matrix.yml's full-suite steps
+  #
+  # Enforcement lives at the intersection of two things: the pinned constants in
+  # `Mailglass.TestSupport.SuiteFloor` and this env entry on the lane step.
+  # Either one disappearing silently disables the guard, and only one of the two
+  # is visible in an Elixir test — so the workflow half is asserted here.
+  # ---------------------------------------------------------------------------
+
+  describe "advisory-matrix.yml's suite-floor opt-in (HARNESS-03)" do
+    test "the full-suite steps carry the suite-floor env entry exactly twice, with the " <>
+           "literal value SuiteFloor compares against" do
+      occurrences = count_suite_floor_env_entries()
+
+      assert occurrences == @suite_floor_env_occurrences,
+             "expected exactly #{@suite_floor_env_occurrences} `#{@suite_floor_env_entry}` " <>
+               "entries in advisory-matrix.yml — one on each full-suite step " <>
+               "(core_full_suite_advisory's and core_latest_elixir_advisory's) — got " <>
+               "#{occurrences}.\n\n" <>
+               "Removing one silently disables, on that leg, the per-schema executed-count " <>
+               "floor, the skipped ceiling, and the `:already_shared == 0` sandbox-ownership " <>
+               "signature assertion: SuiteFloor keeps PRINTING its counts, so the log still " <>
+               "looks instrumented while nothing can fail. A future legitimate change (a " <>
+               "third full-suite step, or a job removed) must update this count " <>
+               "deliberately, not delete the guard."
+    end
+
+    test "anti-vacuity: the parser finds the workflow and the env entry it counts" do
+      source = File.read!(@advisory_matrix_path)
+
+      assert byte_size(source) > 0,
+             "advisory-matrix.yml parsed to an empty string — the count assertion above " <>
+               "would then compare 0 against 0 for a moved or deleted file rather than " <>
+               "failing on it"
+
+      assert String.contains?(source, @suite_floor_env_entry),
+             "advisory-matrix.yml contains no `#{@suite_floor_env_entry}` at all. If the " <>
+               "variable was renamed, this file's @suite_floor_env_entry and " <>
+               "Mailglass.TestSupport.SuiteFloor's `System.get_env/1` read must move " <>
+               "together — a rename in one place alone turns the gate off silently."
+    end
+
+    test "negative control: deleting one occurrence from the parsed source makes the count " <>
+           "assertion report it" do
+      source = File.read!(@advisory_matrix_path)
+
+      assert count_suite_floor_env_entries(source) == @suite_floor_env_occurrences,
+             "sanity check failed: the unmodified workflow should already carry both entries"
+
+      broken =
+        String.replace(source, @suite_floor_env_entry, "", global: false)
+
+      assert count_suite_floor_env_entries(broken) == @suite_floor_env_occurrences - 1,
+             "removing one occurrence must be observable by the same counting function the " <>
+               "assertion above uses — otherwise that assertion could pass on a workflow " <>
+               "with the opt-in stripped out"
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
+
+  defp count_suite_floor_env_entries(source \\ nil) do
+    (source || File.read!(@advisory_matrix_path))
+    |> String.split(@suite_floor_env_entry)
+    |> length()
+    |> Kernel.-(1)
+  end
 
   # Splits on the full unique token `const <name> = [` and scans single-quoted
   # entries up to the closing `];`. Unlike required_checks_test.exs:159-166 (which
