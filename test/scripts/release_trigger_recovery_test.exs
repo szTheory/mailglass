@@ -84,6 +84,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert preflight =~ "GH_REPO: ${{ github.repository }}"
     assert preflight =~ "gh api --include \"repos/${GH_REPO}/releases/tags/${tag}\""
     assert checkout_precedes_preflight?(source)
+    assert tag_checks_precede_pr_parsing?(preflight)
 
     with_fake_gh(:release_absent, fn temp_dir, env ->
       script = Path.join(temp_dir, "preflight.sh")
@@ -166,6 +167,36 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end)
   end
 
+  test "empty commit messages check all release states before permitting recovery" do
+    preflight = extract_step_block!(workflow_source(), "Detect already-tagged release PR")
+
+    with_fake_gh(:all_present, "", fn temp_dir, env ->
+      assert {_output, 0} = run_preflight(preflight, temp_dir, env)
+      assert File.read!(Path.join(temp_dir, "github-output")) =~ "should_run=false"
+      refute should_run?(temp_dir)
+    end)
+
+    with_fake_gh(:partial_release, "", fn temp_dir, env ->
+      assert {_output, status} = run_preflight(preflight, temp_dir, env)
+      assert status != 0
+      refute should_run?(temp_dir)
+    end)
+
+    for mode <- [:release_forbidden, :release_api_failure] do
+      with_fake_gh(mode, "", fn temp_dir, env ->
+        assert {_output, status} = run_preflight(preflight, temp_dir, env)
+        assert status != 0
+        refute should_run?(temp_dir)
+      end)
+    end
+
+    with_fake_gh(:release_absent, "", fn temp_dir, env ->
+      assert {output, 0} = run_preflight(preflight, temp_dir, env)
+      assert output =~ "after confirming all release tags are absent"
+      assert should_run?(temp_dir)
+    end)
+  end
+
   test "release action is mutually guarded by preflight output" do
     source = workflow_source()
     action = extract_action_block!(source, "release")
@@ -234,7 +265,10 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
   defp workflow_source, do: File.read!(@workflow_path)
 
-  defp with_fake_gh(mode, fun) do
+  defp with_fake_gh(mode, fun),
+    do: with_fake_gh(mode, "Merge pull request #42 from release-please--branches--main", fun)
+
+  defp with_fake_gh(mode, commit_message, fun) do
     temp_dir =
       Path.join(System.tmp_dir!(), "release-preflight-#{System.unique_integer([:positive])}")
 
@@ -248,6 +282,22 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     printf '%s %s\\n' "$GH_REPO" "$*" >> "$GH_LOG"
     case "$1:$FAKE_GH_MODE" in
       api:release_absent|api:pr_failure)
+        printf 'HTTP/2 404 Not Found\\n' >&2
+        exit 1
+        ;;
+      api:all_present)
+        printf 'HTTP/2 200 OK\\n'
+        exit 0
+        ;;
+      api:partial_release)
+        count=0
+        if [ -f "$FAKE_GH_COUNT" ]; then count=$(cat "$FAKE_GH_COUNT"); fi
+        count=$((count + 1))
+        printf '%s' "$count" > "$FAKE_GH_COUNT"
+        if [ "$count" -eq 1 ]; then
+          printf 'HTTP/2 200 OK\\n'
+          exit 0
+        fi
         printf 'HTTP/2 404 Not Found\\n' >&2
         exit 1
         ;;
@@ -279,9 +329,10 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       "PATH" => fake_bin <> ":" <> System.get_env("PATH"),
       "GH_REPO" => "test-owner/test-repo",
       "GH_LOG" => Path.join(temp_dir, "gh.log"),
+      "FAKE_GH_COUNT" => Path.join(temp_dir, "gh-count"),
       "FAKE_GH_MODE" => Atom.to_string(mode),
       "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output"),
-      "COMMIT_MESSAGE" => "Merge pull request #42 from release-please--branches--main"
+      "COMMIT_MESSAGE" => commit_message
     }
 
     try do
@@ -296,6 +347,17 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     File.exists?(output) and File.read!(output) =~ "should_run=true"
   end
 
+  defp run_preflight(preflight, temp_dir, env) do
+    script = Path.join(temp_dir, "preflight.sh")
+    File.write!(script, preflight_script(preflight))
+
+    System.cmd("bash", [script],
+      cd: @repo_root,
+      env: Map.to_list(env),
+      stderr_to_stdout: true
+    )
+  end
+
   defp checkout_precedes_preflight?(source) do
     case {
       :binary.match(source, "- name: Checkout triggering revision for release preflight"),
@@ -304,6 +366,14 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       {{checkout, _}, {preflight, _}} -> checkout < preflight
       _ -> false
     end
+  end
+
+  defp tag_checks_precede_pr_parsing?(preflight) do
+    {{manifest, _}, {pr_number, _}} =
+      {:binary.match(preflight, "manifest=.release-please-manifest.json"),
+       :binary.match(preflight, "pr_number=\"\"")}
+
+    manifest < pr_number
   end
 
   defp preflight_script(preflight) do
