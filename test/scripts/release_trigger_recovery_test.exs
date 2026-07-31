@@ -4,6 +4,22 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   @workflow_path Path.expand("../../.github/workflows/release-please.yml", __DIR__)
   @manifest_path Path.expand("../../.release-please-manifest.json", __DIR__)
   @contributing_path Path.expand("../../CONTRIBUTING.md", __DIR__)
+  @recovery_runbook_facts [
+    "GitHub-native auto-merge",
+    "GITHUB_TOKEN",
+    "minute 17",
+    "hourly",
+    "up to one hour",
+    "roughly 30 minutes",
+    "all expected tags",
+    "autorelease: tagged",
+    "partial linked-tag state",
+    "requires reconciliation",
+    "workflow_dispatch",
+    "Direct manual recovery",
+    "manually creating the missing GitHub releases",
+    "release: published"
+  ]
 
   test "release-please retains the complete recovery trigger set" do
     source = workflow_source()
@@ -108,20 +124,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   defp workflow_source, do: File.read!(@workflow_path)
 
   defp recovery_runbook?(section) do
-    section =~ "GitHub-native auto-merge" and
-      section =~ "GITHUB_TOKEN" and
-      section =~ "minute 17" and
-      section =~ "hourly" and
-      section =~ "up to one hour" and
-      section =~ "roughly 30 minutes" and
-      section =~ "all expected tags" and
-      section =~ "autorelease: tagged" and
-      section =~ "partial linked-tag state" and
-      section =~ "requires reconciliation" and
-      section =~ "workflow_dispatch" and
-      section =~ "Direct manual recovery" and
-      section =~ "manually creating the missing GitHub releases" and
-      section =~ "release: published"
+    Enum.all?(@recovery_runbook_facts, &String.contains?(section, &1))
   end
 
   defp full_tags_noop?(preflight) do
