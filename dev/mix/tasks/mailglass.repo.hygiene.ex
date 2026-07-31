@@ -120,23 +120,36 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
       end
 
     dirty? = String.trim(dirty_output) != ""
-    blocked? = dirty? || ahead > 0 || behind > 0
 
-    check(
-      :git_state,
-      if(blocked?, do: :blocked, else: :pass),
-      if(blocked?,
-        do: "Local git state is not release-clean.",
-        else: "Local git state is clean and aligned with upstream."
-      ),
-      %{
-        branch: branch,
-        dirty: dirty?,
-        ahead: ahead,
-        behind: behind,
-        upstream: upstream_status
-      }
-    )
+    details = %{
+      branch: branch,
+      dirty: dirty?,
+      ahead: ahead,
+      behind: behind,
+      upstream: upstream_status
+    }
+
+    case upstream_status do
+      :ok ->
+        blocked? = dirty? || ahead > 0 || behind > 0
+
+        check(
+          :git_state,
+          if(blocked?, do: :blocked, else: :pass),
+          if(blocked?,
+            do: "Local git state is not release-clean.",
+            else: "Local git state is clean and aligned with upstream."
+          ),
+          details
+        )
+
+      _ ->
+        unknown(
+          :git_state,
+          "Git upstream comparison could not be established; configure a resolvable upstream and retry.",
+          details
+        )
+    end
   end
 
   defp ci_state(repo) do

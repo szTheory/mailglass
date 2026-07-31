@@ -14,6 +14,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     )
 
     commit_all!(repo, "initial")
+    configure_upstream!(repo)
 
     result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
@@ -47,6 +48,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     )
 
     commit_all!(repo, "initial")
+    configure_upstream!(repo)
 
     result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
@@ -66,6 +68,24 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     assert result.status == :blocked
     assert check(result, :branch_protection).status == :unknown
     assert check(result, :branch_protection).message =~ "verifier is missing"
+  end
+
+  test "reports a missing git upstream as cannot-check and aggregate non-success" do
+    repo = git_repo!()
+    write_release_workflows!(repo)
+
+    write_branch_protection_verifier!(
+      repo,
+      "echo 'OK: branch protection matches expected rules.'\n"
+    )
+
+    commit_all!(repo, "initial")
+
+    result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
+
+    assert result.status == :blocked
+    assert check(result, :git_state).status == :unknown
+    assert check(result, :git_state).message =~ "upstream comparison"
   end
 
   test "reports missing gh as cannot-check with prerequisite recovery" do
@@ -171,7 +191,17 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     repo = git_repo!()
     write_release_workflows!(repo)
     commit_all!(repo, "initial")
+    configure_upstream!(repo)
     repo
+  end
+
+  defp configure_upstream!(repo) do
+    remote = repo <> "-origin"
+    File.rm_rf!(remote)
+    File.mkdir_p!(remote)
+    git!(remote, ["init", "--bare"])
+    git!(repo, ["remote", "add", "origin", remote])
+    git!(repo, ["push", "-u", "origin", "main"])
   end
 
   defp write_branch_protection_verifier!(repo, body) do
