@@ -33,10 +33,13 @@ created: 2026-07-31
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 144-01-01 | 01 | 1 | TRUTH-02, TRUTH-03, TRUTH-06 | T-144-01 | Missing credentials/tooling cannot yield green | workflow/task contract | `mix verify.ci_lane_contract` | ❌ W0 | ⬜ pending |
-| 144-02-01 | 02 | 1 | CONFORM-02 | — | N/A | shell integration fixture | `bash mailglass_admin/scripts/check-conformance.sh` via fixture harness | ❌ W0 | ⬜ pending |
-| 144-03-01 | 03 | 1 | TRUTH-08 | T-144-02 | Linked release events serialize without losing idempotent no-op behavior | workflow contract | `mix verify.ci_lane_contract` | ❌ W0 | ⬜ pending |
-| 144-04-01 | 04 | 1 | TRUTH-04 | T-144-03 | Recovery remains visible, idempotent, and partial state fails | workflow/docs contract | `mix verify.ci_lane_contract` | ❌ W0 | ⬜ pending |
+| 144-01-01 | 01 | 1 | TRUTH-02 | T-144-01, T-144-03 | Missing credentials/tooling cannot yield green while the advisory remains read-only | workflow contract | `mix test test/scripts/branch_protection_truth_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
+| 144-01-02 | 01 | 1 | TRUTH-02, TRUTH-03 | T-144-01, T-144-02, T-144-03 | Scheduled verification fails visibly and protected context uses the reported display name | workflow/identity contract | `mix test test/scripts/branch_protection_truth_test.exs test/scripts/required_checks_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
+| 144-02-01 | 02 | 2 | TRUTH-06 | T-144-04, T-144-05 | CLI distinguishes clean, drift, and cannot-check without aggregate false success | Mix-task contract | `mix test test/mix/tasks/mailglass.repo.hygiene_test.exs --warnings-as-errors` | ✅ existing | ⬜ pending |
+| 144-03-01 | 03 | 2 | CONFORM-02 | T-144-06, T-144-07 | Dynamic missing icons fail closed and fixtures are removed | shell integration fixture | `mix test test/scripts/icon_exists_gate_test.exs --warnings-as-errors && bash mailglass_admin/scripts/check-conformance.sh` | ❌ W0 | ⬜ pending |
+| 144-04-01 | 04 | 2 | TRUTH-08 | T-144-08, T-144-09, T-144-10 | Linked release events serialize without losing idempotent no-op behavior | workflow contract | `mix test test/scripts/linked_release_concurrency_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
+| 144-05-01 | 05 | 2 | TRUTH-04 | T-144-11, T-144-12, T-144-13 | Recovery remains idempotent and partial state fails | workflow contract | `mix test test/scripts/release_trigger_recovery_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
+| 144-05-02 | 05 | 2 | TRUTH-04 | T-144-11, T-144-12 | Maintainer docs state the bounded cadence, no-op branches, hard failure, and manual fallback | workflow/docs contract | `mix test test/scripts/release_trigger_recovery_test.exs --warnings-as-errors` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

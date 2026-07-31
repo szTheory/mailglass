@@ -361,6 +361,10 @@ The same pattern exists for `mailglass_admin` and `mailglass_inbound`. [VERIFIED
 
 The first two slices can be independent after current worktree changes are respected; the release slices touch different workflows/tests and can follow in either order. [VERIFIED: codebase grep]
 
+## Phase-Level Assumption Delta Decision
+
+**AD-144-01 — Primary noun: existing signal-integrity contract.** Decision: no-change. Phase 144 tightens the behavior and executable evidence of existing workflows, checks, release identities, and the vendored-icon inventory. It introduces no new domain model, entity, identity/key scheme, public API, external API integration, workflow topology, or generalized registry. Plans 01-05 must reference this decision; their bounded outcome vocabularies, retained `:unknown` status, fail-closed icon policy, release concurrency semantics, and recovery contract are refinements of existing private seams rather than new adopter-facing surfaces.
+
 ## Assumptions Log
 
 | # | Claim | Section | Risk if Wrong |
@@ -368,17 +372,15 @@ The first two slices can be independent after current worktree changes are respe
 | A1 | Any non-finite dynamic icon construction should fail rather than be excluded. | Architecture Pattern 3 | May be too strict for an intended runtime-controlled icon surface. |
 | A2 | Shared group semantics alone may not guarantee every queued linked run executes under bursty dispatch. | Pitfall 5 | A test may need to assert queue configuration or revise the release strategy. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Can the dynamic icon namespace be fully enumerated with the existing source forms?**
+1. **Can the dynamic icon namespace be fully enumerated with the existing source forms? — Resolved for planning.**
    - What we know: `components.ex` contains `@icon`, `option.icon`, helper-return, and lookup-map forms; the gate presently only extracts literal `hero-*` tokens. [VERIFIED: components.ex; check-conformance.sh]
-   - What's unclear: Whether any valid icon is assembled from unbounded runtime input elsewhere in the admin source tree. [ASSUMED]
-   - Recommendation: Begin implementation with a source inventory (`<.icon name={` call sites plus helper/map forms). If any unbounded input exists, fail closed with an explicit exception/additional fixture decision rather than silently under-covering it. [ASSUMED]
+   - Resolution: Plan 03 inventories and finitely resolves the bounded source forms named by D-05/D-06. Any expression that cannot be finitely resolved is treated fail-closed with a source/expression-class remediation; it is not silently excluded or treated as an existing icon. This resolves A1 without claiming that arbitrary runtime input is enumerable. [DECIDED: 144-03-PLAN.md]
 
-2. **Do two linked tag events ever produce more than one queued sibling run?**
+2. **Do two linked tag events ever produce more than one queued sibling run? — Resolved at the contract boundary.**
    - What we know: the phase requires serialization of both tag events and GitHub documents one pending run by default in a group. [VERIFIED: 144-CONTEXT.md; CITED: https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency]
-   - What's unclear: Whether the repository's actual release event timing can create a third competing run (for example a manual recovery). [ASSUMED]
-   - Recommendation: Make the contract explicit about desired behavior for manual dispatch while retaining idempotent no-op behavior; do not claim exact FIFO/execution guarantees without an observed GitHub run. [ASSUMED]
+   - Resolution: Plan 04 guarantees only equal-group serialization with cancellation disabled plus idempotent safety for redundant package work. It does not guarantee FIFO order or execution of every pending run, because GitHub's repository-level concurrency contract does not provide those guarantees. This resolves A2 without depending on an unobserved release-event timing claim. [DECIDED: 144-04-PLAN.md]
 
 ## Environment Availability
 
