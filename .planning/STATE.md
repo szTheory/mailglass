@@ -2,12 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 143
-current_phase_name: test-harness-truth
-status: verifying
+current_phase: 144
+current_phase_name: Signal & Drift Integrity
+status: planning
 stopped_at: Completed 143-14-PLAN.md
-last_updated: "2026-07-31T18:28:26.321Z"
+last_updated: "2026-07-31T18:54:39.649Z"
 last_activity: 2026-07-31
+last_activity_desc: Phase 143 complete, transitioned to Phase 144
 progress:
   total_phases: 3
   completed_phases: 3
@@ -26,22 +27,10 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 ## Current Position
 
-Phase: 143 (test-harness-truth) — READY FOR VERIFICATION
-Plan: 14 of 14 complete
-Status: Phase complete — ready for verification. The pre-rehearsal history below is superseded by run 30654293410: both floor legs failed, publish-core did not start, temporary refs were deleted, and HARNESS-04 is complete.
-  real `main` evidence (see 143-PROMOTION-CHECKPOINT.md and
-  143-MAIN-GREEN-EVIDENCE.md). 143-13 shipped: the two Elixir 1.18 / OTP 27
-  Core Full Suite legs now hold publish-veto power, and the gate has since run
-  against a REAL release (2.3.0) and passed — `gate-ci-green` = success in both
-  publish runs, having dispatched its own advisory-matrix run on the tag ref
-  because the release SHA had none.
-
-  REMAINING: 143-14's NEGATIVE rehearsal — prove a RED gating leg actually
-  blocks a publish. The positive half is already evidenced by the 2.3.0 release
-  above; only the negative half is outstanding, and it is what the phase goal's
-  "demonstrably blocks a Hex publish (not merely a PR merge)" asks for.
-  HARNESS-04 stays `[ ]` until it exists.
-Last activity: 2026-07-31
+Phase: 144 — Signal & Drift Integrity
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-07-31 — Phase 143 complete, transitioned to Phase 144
 
 Progress: [██████████] 100%
 
