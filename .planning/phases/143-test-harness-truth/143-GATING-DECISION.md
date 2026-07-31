@@ -1,169 +1,141 @@
 ---
 artifact: gating-decision
 phase: 143-test-harness-truth
-plan: 13
-task: 1
+plan: 14
 created: 2026-07-31
 verdict: gate-floor-legs
+rehearsal: run-rehearsal-pair
 ---
 
-# 143-GATING-DECISION — the one-way door, decided
+# 143-GATING-DECISION — the release gate, exercised
 
-## Verdict: **`gate-floor-legs`**
+## 1. Verdict
 
-The two Elixir 1.18 / OTP 27 `Core Full Suite` legs are given veto power over a Hex publish, as D-19
-designs it. `no-gate-record-why` is **not** taken.
-
-The two legs, by their exact runtime names:
+The decision is **`gate-floor-legs`**: Core Full Suite is release-gating, limited to exact runtime-name
+equality with these two Elixir 1.18 / OTP 27 floor legs:
 
 ```
 Core Full Suite (Elixir 1.18 / OTP 27 / schema public)
 Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)
 ```
 
-Nothing else on `advisory-matrix.yml` gates. The 1.19 / OTP 28 next-toolchain legs, `Provider
-Compatibility Advisory`, and both `Inbound Full Suite Advisory` legs stay advisory — classified,
-enumerated, warned on, never blocking.
+The Elixir 1.19 / OTP 28 next-toolchain legs, `Provider Compatibility Advisory`, and both `Inbound Full
+Suite Advisory` legs remain advisory. The authorised live-rehearsal option was **`run-rehearsal-pair`**.
+A red floor leg has now been observed blocking the real Hex workflow, not merely a merge.
 
----
+Before dispatch, all three safety preconditions were confirmed: `mailglass 2.3.0`, `mailglass_admin 2.3.0`,
+and `mailglass_inbound 2.1.1` were live on Hex; no Release Please PR was open or mid-merge; and gate commit
+`34008138` was an ancestor of `main` at `2ac5b278`. The tag was cut after that gate commit. The rehearsal
+used `dry_run=true`; no package version changed and no Hex release occurred. This checkpoint matters because
+a Hex release cannot be unpublished after sixty minutes.
 
-## The decision was already made; this record executes it, it does not re-open it
+## 2. Rationale
 
-`143-PROMOTION-CHECKPOINT.md` § "Decision of record" states it plainly: *"The maintainer has approved
-the **blocking** option for the fork about whether the Core Full Suite legs should be able to block a
-release. Plan `143-13` should execute on that basis and **must not re-ask**."* The maintainer
-re-confirmed it at the start of this plan's execution, with the promotion checkpoint closed.
+**Against gating:** comparable Elixir libraries generally publish on tag push without this test gate, and a
+wedged gate in a hands-free, auto-merging pipeline is an unattended stall discovered only when a release does
+not appear.
 
-What was genuinely open was not *whether* but *when* — the checkpoint was `BLOCKED, 0 of 5` when
-`143-12` wrote it, because the lane had never been observed green on `main`. That is now closed.
+**For gating:** the existing required lanes are narrow contract and file-list checks. Before this change, a
+total core regression could reach Hex without a red light; the 2.2.2 release demonstrated that the pipeline
+could publish while the release SHA's overall CI run was red in an advisory browser job.
 
----
+The asymmetry decides it. A blocked release costs the maintainer about thirty minutes and one dispatch. A
+published broken core costs every adopter and, after sixty minutes, cannot be unpublished from Hex. The
+override preserves release availability without pretending the gate is infallible.
 
-## The evidence this verdict rests on
+## 3. Why only the floor pair
 
-### C1 — three consecutive green `advisory-matrix.yml` runs, three DISTINCT `main` SHAs
+The repo's own CI research says to keep required matrices small and lists one gigantic required matrix as an
+anti-pattern. The gated legs are exactly the declared `~> 1.18` floor in `mix.exs`, preserving the
+floor-coincidence invariant. Gating is deliberately not widened merely because another lane happens to be
+green; a new gating leg needs the same observation and negative-control evidence.
 
-| # | Run | Event | Head SHA | Both gating legs |
-|---|---|---|---|---|
-| 1 | [`30595090072`](https://github.com/szTheory/mailglass/actions/runs/30595090072) | `push` | `d6e50388` | success / success |
-| 2 | [`30635221221`](https://github.com/szTheory/mailglass/actions/runs/30635221221) | `push` | `981b9343` | success / success |
-| 3 | [`30638980059`](https://github.com/szTheory/mailglass/actions/runs/30638980059) | `push` | `7649f96f` | success / success |
+## 4. Why inbound remains advisory
 
-Three distinct `main` SHAs, which is what the condition asks for and what
-`143-MAIN-GREEN-EVIDENCE.md` correctly refused to claim when the count stood at two. All four Core
-Full Suite legs are green in each — including the 1.19 / OTP 28 pair, which had never executed at all
-during the phase's branch life.
+The inbound suite pins seed `0` to avoid a known property-test pool flake. A lane whose green depends on a
+hardcoded seed selected to dodge known nondeterminism is not trustworthy enough to veto a publish. Revisit
+this only after the pool-mode leak is fixed and inbound is repeatedly green across unpinned, varied seeds.
 
-Before the merge, `main`'s Core Full Suite had been **red for 28 days**: 0 successes in the last 40
-runs, last green `28568190903` on 2026-07-02.
+`mailglass_inbound` depends on core with `{:mailglass, "~> 2.0"}`. It is a range, not an exact `==` pin, so
+the dependency does not force paired core/inbound releases and is not a reason to widen this gate.
 
-### C2 — one of them a `schedule` (cron) run
+## 5. Evidence
 
-[`30607136165`](https://github.com/szTheory/mailglass/actions/runs/30607136165), `schedule`, head SHA
-`d6e50388`, green on both gating legs. First green cron on `main` since 2026-07-02. This is the
-condition's substantive point: a plain `main` SHA, cold cache, no pull-request context, fully
-unattended.
+| Run | Ref / event | Evidence |
+|---|---|---|
+| [`30595090072`](https://github.com/szTheory/mailglass/actions/runs/30595090072) | `d6e50388`, push | All four matrix legs green; floor seeds public `716451`, mailglass `921264`. |
+| [`30635221221`](https://github.com/szTheory/mailglass/actions/runs/30635221221) | `981b9343`, push | Second distinct green `main` SHA; floor seeds public `860362`, mailglass `50081`. |
+| [`30638980059`](https://github.com/szTheory/mailglass/actions/runs/30638980059) | `7649f96f`, push | Third distinct green `main` SHA; floor seeds public `766167`, mailglass `749958`. |
+| [`30607136165`](https://github.com/szTheory/mailglass/actions/runs/30607136165) | `d6e50388`, schedule | Cold-cache unattended cron run green on all four legs. |
+| [`30595564984`](https://github.com/szTheory/mailglass/actions/runs/30595564984) | throwaway tag, dispatch | A tag-shaped ref expanded both exact gating names and passed; tag deleted. |
+| [`30599206217`](https://github.com/szTheory/mailglass/actions/runs/30599206217) | synthetic-failure branch | Both floor legs caught the deliberate regression ([public job `91058066866`](https://github.com/szTheory/mailglass/actions/runs/30599206217/job/91058066866), [mailglass job `91058066875`](https://github.com/szTheory/mailglass/actions/runs/30599206217/job/91058066875)). |
+| [`30645266725`](https://github.com/szTheory/mailglass/actions/runs/30645266725) | real `mailglass_admin-v2.3.0` release | Positive path: [`gate-ci-green`](https://github.com/szTheory/mailglass/actions/runs/30645266725/job/91207000226) passed, after self-healing both absent workflow runs by dispatch. |
+| [`30645265238`](https://github.com/szTheory/mailglass/actions/runs/30645265238) | real `mailglass-v2.3.0` release | The sibling [`gate-ci-green`](https://github.com/szTheory/mailglass/actions/runs/30645265238/job/91208030288) also passed. Its later core-publish failure was the known duplicate-publish race, not a gate failure; 2.3.0 is on Hex. |
+| [`30645896855`](https://github.com/szTheory/mailglass/actions/runs/30645896855) | `d0054bdc`, self-healed dispatch | The positive release gate's dispatched Advisory Matrix run passed both floor legs. The sibling gate reused it. |
+| [`30653681147`](https://github.com/szTheory/mailglass/actions/runs/30653681147) | `97e02b95`, dispatch | Negative precondition: every required `ci.yml` lane passed; only pre-existing `Demo Browser Evidence` was red. |
+| [`30653683660`](https://github.com/szTheory/mailglass/actions/runs/30653683660) | `97e02b95`, dispatch | Both real floor legs failed on the injected assertion. Raw output reported `1629 tests, 1 failure` in each schema (seeds varied); this isolates the negative control to Core Full Suite. |
+| [`30654293410`](https://github.com/szTheory/mailglass/actions/runs/30654293410) | negative tag, dry-run dispatch | [`prepublish-summary`](https://github.com/szTheory/mailglass/actions/runs/30654293410/job/91234781278) passed; [`gate-ci-green`](https://github.com/szTheory/mailglass/actions/runs/30654293410/job/91236237938) failed; [`publish-core`](https://github.com/szTheory/mailglass/actions/runs/30654293410/job/91236268528) was `completed/skipped` with zero steps, so it did not start. Admin and inbound publish jobs were likewise skipped with zero steps. |
 
-### C3 — a `workflow_dispatch` on a tag-shaped ref
+The negative rehearsal used branch
+`gate-rehearsal/143-14-negative-20260731T180337Z-2ac5b278`, annotated tag
+`gate-rehearsal-143-14-negative-20260731T180337Z-2ac5b278`, and synthetic commit
+`97e02b95739f5aef3f62284806ce037fa9b16cb7`. Its only diff was
+`test/gate_self_test/intentional_failure_test.exs`, containing:
 
-[`30595564984`](https://github.com/szTheory/mailglass/actions/runs/30595564984), dispatched on a
-throwaway tag cut from green `main`; both gating legs green; tag deleted afterwards, none orphaned.
+```elixir
+assert false, "intentional failure for gate-self-test"
+```
 
-This is the condition `143-PROMOTION-CHECKPOINT.md` calls *"the only proof of the exact code path the
-gate will use, and the one nobody would think to run."* It is not redundant, and it is now the
-load-bearing rehearsal for this plan's self-heal: the gate dispatches `advisory-matrix.yml` on the
-**release tag**, and this run is the evidence that a tag-shaped ref dispatch resolves, expands both
-matrix legs with fully-interpolated suffix-free names, and goes green.
+The dispatch command was:
 
-### C4 — the deliberate-failure probe went red against the renamed lane
+```sh
+gh workflow run publish-hex.yml \
+  --ref gate-rehearsal-143-14-negative-20260731T180337Z-2ac5b278 \
+  -f tag=gate-rehearsal-143-14-negative-20260731T180337Z-2ac5b278 \
+  -f package=mailglass -f dry_run=true \
+  -f skip_core_full_suite_gate=false \
+  -f core_full_suite_gate_skip_reason=n/a
+```
 
-[`30599206217`](https://github.com/szTheory/mailglass/actions/runs/30599206217): both gating legs
-returned **FAILURE** on a commit carrying `test/gate_self_test/intentional_failure_test.exs`
-verbatim, on a branch cut from the green `main` SHA. Probe PR
-[#156](https://github.com/szTheory/mailglass/pull/156), closed, branch deleted.
+The gate's verbatim blocking result was:
 
-- `Core Full Suite (Elixir 1.18 / OTP 27 / schema public)` → **FAILURE** ([job 91058066866](https://github.com/szTheory/mailglass/actions/runs/30599206217/job/91058066866))
-- `Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)` → **FAILURE** ([job 91058066875](https://github.com/szTheory/mailglass/actions/runs/30599206217/job/91058066875))
+```text
+Delivery blocked: Core Full Suite gating lane(s) did not pass on SHA 97e02b95739f5aef3f62284806ce037fa9b16cb7:
+  - Core Full Suite (Elixir 1.18 / OTP 27 / schema public) (failure)
+  - Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass) (failure)
+Run: https://github.com/szTheory/mailglass/actions/runs/30653683660
+```
 
-Recorded in `143-PROBE-EVIDENCE.md`. Condition 4's bar — *a lane never observed catching an injected
-regression must not be given veto power over a publish* — is met: the lane was observed catching one.
+After evidence capture, the remote and local branch and tag were deleted. `ls-remote` and local ref scans
+show no `gate-rehearsal` ref, and the synthetic test title is reachable from no remaining ref. Registry
+versions remain `mailglass 2.3.0`, `mailglass_admin 2.3.0`, and `mailglass_inbound 2.1.1`.
 
-**The residual gap is recorded honestly rather than elided.** The observation is not reproducible
-without a human (or an agent with a user token) in the loop, because `gate-self-test.yml`
-structurally cannot produce it: GitHub does not trigger workflows for events raised with
-`GITHUB_TOKEN`, so the PR the workflow opens receives zero checks. That is the same anti-recursion
-rule this plan's self-heal is built around. It does not weaken what was observed; it means the
-observation is a manual procedure today.
+## 6. Accepted gaps
 
-### C5 — the executed-test-count floor is merged and enforcing
+1. **Publish fan-out race.** Linked releases can dispatch two gate runs and race to publish core. The
+   settle/recheck reduces duplicate matrix work, but the real 2.3.0 release still showed the duplicate
+   publish race. Registry state, not overall run conclusion, remains authoritative.
+2. **Floating floor toolchain.** The gate resolves Elixir 1.18 loosely while artifact validation is stricter.
+   A new patch-level deprecation warning can block a release with no repo change. That remains deliberate:
+   adopters compile on their installed patch, and warning regressions are visible defects; the override is
+   the pressure valve.
+3. **Cold-cache wall-clock and external dependencies.** Every release may wait on a dispatched matrix run.
+   The gated job also depends on Hex/network access, Postgres, inbound dependency installation, and schema
+   verification, so infrastructure faults can block a clean tree.
+4. **Publish-only sandbox hygiene.** Core Full Suite is not merge-gating. A raw sandbox ownership call can
+   merge and only become blocking at publish time; the custom Credo check lowers but does not erase this gap.
+5. **A count floor is not semantic coverage.** It proves tests executed, not that their assertions are
+   useful; a tautology still counts.
+6. **SuiteTruthFormatter's module-boundary probes are currently non-observing.** They read
+   `%ExUnit.TestModule{}.tags[:async]`, which is always empty. The unshipped correction surfaces 103
+   violations, including two real pool-mode leaks, and needs its own phase. This record therefore uses raw
+   `mix test` output—not a green formatter ledger—as evidence.
+7. **Inbound still hides nondeterminism with seed `0`.** It remains advisory until the known pool flake is
+   fixed and unpinned multi-seed runs establish trust.
 
-`public: 1576`, `mailglass: 1575`, `skipped_ceiling: 7`, enforced on every leg — including the
-previously-unmeasured 1.19 / OTP 28 pair, whose log declares *"executed floor 1576, skipped ceiling 7
-enforced; a violation halts this run"* at `executed: 1623`.
+## 7. Override discipline
 
----
-
-## The trade, restated so the verdict is made against it rather than around it
-
-**Against gating.** The ecosystem norm is dramatically weaker: comparable Elixir libraries — Bandit,
-Phoenix, Ecto, Oban, Req, Broadway — publish on tag push with no test gating at all. And on a
-hands-free auto-merging pipeline a wedged gate is a silent unattended stall, discovered when a
-release does not happen rather than when something breaks.
-
-**For gating.** The seven required lanes are narrow contract and file lists. Today a total core
-regression can reach Hex without a single red light — and that is not hypothetical any more. On
-2026-07-31, mid-phase, the pipeline cut and published `mailglass` 2.2.2 / `mailglass_admin` 2.2.2
-with **no human approval and no test gate**, while the `CI` workflow run on the released SHA was
-itself **red** (`Demo Browser Evidence`, a job absent from `CI Green`'s `needs` list). `main` happened
-to be green, so the published artefact is the tested tree. The point is that nothing in the pipeline
-would have stopped a bad one. Recorded in `143-MAIN-GREEN-EVIDENCE.md`.
-
-**The asymmetry decides it.** A blocked release costs the maintainer thirty minutes and one dispatch.
-A published broken core costs every adopter and cannot be unpublished after sixty minutes on Hex.
-Gate — and pay for it with a documented override rather than by narrowing the gate until it stops
-being able to observe a regression.
-
-**Why the floor pair only.** This repo's own prior research settles the scope:
-`prompts/elixir-oss-lib-ci-cd-best-practices-deep-research.md:167` ("keep branch protection tied to a
-smaller required matrix") and `:329`, which lists *"use one gigantic matrix as required status"* under
-anti-patterns. Ecto and Oban both confine `--warnings-as-errors` to a single matrix row for the same
-reason. The gated legs are exactly the declared `~> 1.18` floor `mix.exs` states, so LD-13's
-floor-coincidence invariant is preserved.
-
----
-
-## The accepted costs, stated verbatim rather than discovered later
-
-1. **Added release wall-clock.** Every release now waits on a dispatched `advisory-matrix.yml` run on
-   the release tag, cold cache — roughly ten and a half minutes, and it is a *dispatched* run rather
-   than one that already exists, because a release-please bot-merged SHA structurally has none.
-
-2. **Floating-toolchain exposure.** A floating 1.18.x toolchain can red the gate with no repo change,
-   because the lane runs with `--warnings-as-errors`. A new warning introduced by a patch release of
-   Elixir 1.18 blocks a publish that has no regression in it.
-
-3. **Three extra steps inside the gated legs.** Gating `core_full_suite` gates more than a test
-   command. The job's steps 2 through 4 — the inbound `mix deps.get`, the inbound
-   `mix ecto.create -r MailglassInbound.TestRepo`, and `mix verify.schema_prefix` — are gated too, and
-   the next-toolchain legs run none of them. Two of those three are **network- and
-   service-dependent**: a Hex outage or a Postgres service hiccup in `mailglass_inbound` can block a
-   release with no core regression present.
-
-Cost 3 is precisely why the override is not optional garnish. `143-PROMOTION-CHECKPOINT.md` § sub-item
-C states the requirement it creates: *"the override path must be usable **without** a code change, or
-the maintainer's thirty minutes becomes a day."* Tasks 2 through 4 of this plan implement it as
-`skip_core_full_suite_gate` + a required `core_full_suite_gate_skip_reason`, dispatch-only and inert
-on the release event.
-
----
-
-## Two things this verdict does NOT license
-
-**It does not license widening.** Two legs gate. Adding a third is a deliberate act with its own
-evidence bar, and `lane_classification_drift_test.exs` pins the count at 2 so widening cannot happen
-by accident.
-
-**It does not license the override becoming the habit.** D-30 records that risk explicitly. The
-override is dispatch-only, inert on the automated release path, requires a written reason, echoes that
-reason to the run summary, and logs a warning naming itself as an exception. A gate whose override is
-reached for reflexively is a gate that has been removed without anyone recording that it was.
+`skip_core_full_suite_gate` is workflow-dispatch-only and inert for an automated release event. It requires
+the free-text `core_full_suite_gate_skip_reason`, renders that untrusted text as a code block in the run
+summary, and emits a warning naming the bypass as an exception. This is the release-availability half of the
+gating trade. It exists for a diagnosed false block or infrastructure outage; it must not become the habit.

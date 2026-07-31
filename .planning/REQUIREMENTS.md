@@ -123,7 +123,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   with a user token instead, making it a **manual** procedure. Automating it needs a stored PAT, which is
   an open maintainer decision, not a code gap.)*
 
-- [ ] **HARNESS-04**: `gate-ci-green` inspects `advisory-matrix.yml` in addition to `ci.yml`, so a Core Full
+- [x] **HARNESS-04**: `gate-ci-green` inspects `advisory-matrix.yml` in addition to `ci.yml`, so a Core Full
   Suite regression blocks a Hex publish. *(Sequenced strictly after HARNESS-01..03 — gating a red lane
   deadlocks releases.)*
 
@@ -134,6 +134,14 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   required matrices small — an established anti-pattern is using one gigantic matrix as required status),
   not a failure to meet HARNESS-02's broader four-leg green requirement. State this plainly so a future
   reader does not conflate the two.)*
+
+  *(Evidence, 2026-07-31: the real 2.3.0 release exercised the positive path—both publish runs' gate jobs
+  passed after the anti-recursion self-heal dispatched Advisory Matrix run
+  [`30645896855`](https://github.com/szTheory/mailglass/actions/runs/30645896855). The negative dry-run
+  rehearsal [`30654293410`](https://github.com/szTheory/mailglass/actions/runs/30654293410) read both
+  deliberately-red floor legs, failed `gate-ci-green`, and left `publish-core` completed/skipped with zero
+  steps: it did not start. Branch and tag were deleted and no package version changed. Full evidence,
+  rationale, and accepted gaps: `.planning/phases/143-test-harness-truth/143-GATING-DECISION.md`.)*
 
 ### CONFORM — Design-system conformance
 
@@ -254,7 +262,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | HARNESS-01 | Phase 143 | In Progress (5 of 7 contributing plans landed: 143-01, 143-03, 143-04, 143-05, 143-06; remaining: 07, 08) |
 | HARNESS-02 | Phase 143 | Complete |
 | HARNESS-03 | Phase 143 | Complete |
-| HARNESS-04 | Phase 143 | Pending |
+| HARNESS-04 | Phase 143 | Complete |
 | CONFORM-02 | Phase 144 | Pending |
 | TRUTH-02 | Phase 144 | Pending |
 | TRUTH-03 | Phase 144 | Pending |
