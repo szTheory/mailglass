@@ -79,6 +79,30 @@ defmodule Mailglass.Scripts.IconExistsGateTest do
     assert output =~ "unbounded.ex"
   end
 
+  test "the real gate fails closed for assign, map-field, and helper-call icon expressions" do
+    for {name, expression} <- [
+          {"assign", "@runtime_icon"},
+          {"map-field", "option.icon"},
+          {"helper-call", "icon_for(state)"}
+        ] do
+      source = """
+      defmodule Unresolved#{Macro.camelize(name)}Icon do
+        def render(assigns) do
+          ~H\"\"\"
+          <.icon name={#{expression}} class=\"h-4 w-4\" />
+          \"\"\"
+        end
+      end
+      """
+
+      {output, status} = run_fixture!(name, source)
+
+      assert status != 0, "expected #{name} fixture to fail, got:\n#{output}"
+      assert output =~ "FAIL: ICON-EXISTS-GATE — cannot statically resolve dynamic icon expression"
+      assert output =~ "#{name}.ex"
+    end
+  end
+
   test "a copied real gate passes a clean fixture and cleanup is registered before writes" do
     root = fixture_root!("clean")
     on_exit(fn -> File.rm_rf!(root) end)

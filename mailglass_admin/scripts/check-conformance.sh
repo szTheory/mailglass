@@ -177,7 +177,9 @@ extract_dynamic_icon_references() {
     expression="${tag#*name=\{}"
     expression="${expression%%\}*}"
 
-    if [[ "$expression" == *'<'*'>'* ]]; then
+    if [[ "$expression" =~ ^\"(hero-[a-z0-9-]+)\"[[:space:]]*$ ]]; then
+      printf '%s\n' "${BASH_REMATCH[1]}"
+    elif [[ "$expression" == *'<'*'>'* ]]; then
       if [[ "$expression" =~ ^\"([^\"]*)\"[[:space:]]*\<\>[[:space:]]*\"([^\"]*)\" ]]; then
         printf '%s%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
       else
@@ -185,9 +187,16 @@ extract_dynamic_icon_references() {
       fi
     elif [[ "$expression" == *'#{'* ]]; then
       printf '%s:%s: interpolation\n' "$file" "$line_number" >> "$unresolved_dynamic_icons"
+    else
+      printf '%s:%s: dynamic expression\n' "$file" "$line_number" >> "$unresolved_dynamic_icons"
     fi
   done < <(
     while IFS= read -r -d '' file; do
+      # Components.icon/1 and the generic primitives in components.ex relay
+      # caller-supplied names; their concrete hero-* values are scanned at the
+      # caller. Every feature-level <.icon name={...}> must resolve here.
+      [[ "$file" == "$LIB/mailglass_admin/components.ex" ]] && continue
+
       awk -v file="$file" '
         BEGIN { RS = "<\\.icon" }
         NR > 1 {
