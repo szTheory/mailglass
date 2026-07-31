@@ -129,7 +129,7 @@ Plans:
   3. The suite's executed test count has not silently dropped below its pre-fix floor, the `:already_shared` failure signature is exactly zero (not just "fewer failures"), and a deliberate-failure probe against `Core Full Suite Advisory` (mirroring the existing `gate-self-test.yml` pattern) confirms the lane still catches a real, deliberately-injected regression.
   4. A recorded decision states whether Core Full Suite is now release-gating and, if so, `gate-ci-green` demonstrably blocks a Hex publish (not merely a PR merge) when that lane is red.
 
-**Plans**: 10/14 plans executed
+**Plans**: 14/14 plans executed
 
 Plans:
 **Wave 1**
@@ -165,19 +165,19 @@ Plans:
 
 **Wave 8** *(blocked on Wave 7 completion)*
 
-- [ ] 143-11-PLAN.md — Lane renames, `expanded_matrix_job_names/1`, third registry axis, MAINTAINING section
+- [x] 143-11-PLAN.md — Lane renames, `expanded_matrix_job_names/1`, third registry axis, MAINTAINING section
 
 **Wave 9** *(blocked on Wave 8 completion)*
 
-- [ ] 143-12-PLAN.md — Deliberate-failure probe against the renamed lane + the five-condition promotion checkpoint
+- [x] 143-12-PLAN.md — Deliberate-failure probe against the renamed lane + the five-condition promotion checkpoint
 
 **Wave 10** *(blocked on Wave 9 completion)*
 
-- [ ] 143-13-PLAN.md — The gating decision checkpoint, dual-workflow self-heal, and `gate-ci-green` wiring
+- [x] 143-13-PLAN.md — The gating decision checkpoint, dual-workflow self-heal, and `gate-ci-green` wiring
 
 **Wave 11** *(blocked on Wave 10 completion)*
 
-- [ ] 143-14-PLAN.md — Publish-path rehearsal pair and the recorded gating decision
+- [x] 143-14-PLAN.md — Publish-path rehearsal pair and the recorded gating decision
 
 ### Phase 144: Signal & Drift Integrity
 
@@ -202,7 +202,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 5/5 | Complete    | 2026-07-29 |
-| 143. Test-Harness Truth | 10/14 | In Progress|  |
+| 143. Test-Harness Truth | 14/14 | In Progress|  |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
 ## Planted Seeds

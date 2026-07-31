@@ -68,8 +68,8 @@ created: 2026-07-29
 | HARNESS-04 | `expanded_matrix_job_names/1` is non-vacuous | unit + negative control | same file | ❌ W3 |
 | HARNESS-04 | The 24-row `ci.yml` counts are unchanged | drift meta-test | same file (`:442-465`) | ✅ exists — must stay green |
 | HARNESS-04 | Branch protection still exactly `{CI Green, Guard Release Trigger}` | unit | `mix test test/scripts/required_checks_test.exs` (`:45-58`) | ✅ exists |
-| HARNESS-04 | A red gating leg blocks a Hex publish | CI rehearsal (negative) | tag a branch with one deliberately failing core test; `gh workflow run publish-hex.yml -f tag=<tag> -f dry_run=true` → gate fails, `publish-core` never starts | ❌ W4 (D-29) |
-| HARNESS-04 | A green gating leg permits the publish path | CI rehearsal (positive) | throwaway tag on `main` created after merge; `-f dry_run=true` → gate passes, `publish-core` skips on the idempotency guard (`publish-hex.yml:394-401`) | ❌ W4 (D-29) |
+| HARNESS-04 | A red gating leg blocks a Hex publish | CI rehearsal (negative) | [`30654293410`](https://github.com/szTheory/mailglass/actions/runs/30654293410): gate fails on both floor legs; `publish-core` is skipped with zero steps and did not start | ✅ W4 (D-29) |
+| HARNESS-04 | A green gating leg permits the publish path | CI rehearsal (positive) | real 2.3.0 release runs [`30645265238`](https://github.com/szTheory/mailglass/actions/runs/30645265238) and [`30645266725`](https://github.com/szTheory/mailglass/actions/runs/30645266725): both gate jobs pass after self-healing [`30645896855`](https://github.com/szTheory/mailglass/actions/runs/30645896855) | ✅ W4 (D-29) |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

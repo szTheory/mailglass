@@ -2,7 +2,8 @@ defmodule Mailglass.Scripts.MechanismAccountContractTest do
   use ExUnit.Case, async: true
 
   @moduledoc """
-  Docs-contract guard for HARNESS-01's evidence artifact (`143-MECHANISM.md`).
+  Docs-contract guard for HARNESS-01's mechanism account (`143-MECHANISM.md`) and
+  HARNESS-04's release-gating decision (`143-GATING-DECISION.md`).
 
   Auto-collected by `verify.ci_lane_contract`'s `test test/scripts/` directory glob
   (`mix.exs:296-298`) into the REQUIRED `mix_task_tests` lane — no `mix.exs` change. A
@@ -16,11 +17,17 @@ defmodule Mailglass.Scripts.MechanismAccountContractTest do
   section headings, the confirming CI run/job IDs, the nested `MatchError` shape (plus
   the explicit top-level-match warning), a PASS/FAIL verdict for each of D-04's two
   falsifiable predictions, and a non-vacuous section-heading count so a formatting
-  change to the account cannot make this contract pass trivially.
+  change to the account cannot make this contract pass trivially. It also binds the
+  gating record's seven required sections, explicit verdict, positive release-path
+  evidence, and negative publish-block evidence with the same anti-vacuity rule.
   """
 
   @repo_root Path.expand("../..", __DIR__)
   @mechanism_path Path.join(@repo_root, ".planning/phases/143-test-harness-truth/143-MECHANISM.md")
+  @gating_decision_path Path.join(
+                          @repo_root,
+                          ".planning/phases/143-test-harness-truth/143-GATING-DECISION.md"
+                        )
   @ledger_public_path Path.join(
                         @repo_root,
                         ".planning/phases/143-test-harness-truth/143-LEDGER-public.txt"
@@ -38,6 +45,16 @@ defmodule Mailglass.Scripts.MechanismAccountContractTest do
     "## 5. D-04's falsifiable predictions",
     "## 6. Rejected diagnostics, recorded once",
     "## 7. What this account does NOT claim"
+  ]
+
+  @gating_required_section_headings [
+    "## 1. Verdict",
+    "## 2. Rationale",
+    "## 3. Why only the floor pair",
+    "## 4. Why inbound remains advisory",
+    "## 5. Evidence",
+    "## 6. Accepted gaps",
+    "## 7. Override discipline"
   ]
 
   test "143-MECHANISM.md and both ledger files exist and are non-empty" do
@@ -137,5 +154,43 @@ defmodule Mailglass.Scripts.MechanismAccountContractTest do
       refute ledger =~ ~r/subject:/i, "#{path} must not contain a subject: field"
       refute ledger =~ ~r/recipient/i, "#{path} must not contain the word 'recipient'"
     end
+  end
+
+  test "143-GATING-DECISION.md exists and is non-empty" do
+    assert File.exists?(@gating_decision_path),
+           "expected #{@gating_decision_path} to exist"
+
+    assert File.stat!(@gating_decision_path).size > 0,
+           "expected #{@gating_decision_path} to be non-empty"
+  end
+
+  test "the gating decision contains all seven required section headings" do
+    decision = File.read!(@gating_decision_path)
+
+    for heading <- @gating_required_section_headings do
+      assert decision =~ heading,
+             "143-GATING-DECISION.md is missing required section heading: #{inspect(heading)}"
+    end
+  end
+
+  test "anti-vacuity guard: the gating-decision heading parser finds at least one heading" do
+    decision = File.read!(@gating_decision_path)
+    found = Enum.count(@gating_required_section_headings, &(decision =~ &1))
+
+    assert found > 0,
+           "found 0 of #{length(@gating_required_section_headings)} required section headings in " <>
+             "143-GATING-DECISION.md — the literal-substring heading parser in this test " <>
+             "observed nothing and must not report success"
+  end
+
+  test "the gating decision records the verdict and both live publish-path outcomes" do
+    decision = File.read!(@gating_decision_path)
+
+    assert decision =~ "gate-floor-legs"
+    assert decision =~ "actions/runs/30645265238"
+    assert decision =~ "actions/runs/30645266725"
+    assert decision =~ "actions/runs/30645896855"
+    assert decision =~ "actions/runs/30654293410"
+    assert decision =~ "did not start"
   end
 end

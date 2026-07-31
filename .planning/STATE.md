@@ -4,15 +4,15 @@ milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 current_phase: 143
 current_phase_name: test-harness-truth
-status: executing
-stopped_at: Completed 143-11-PLAN.md
-last_updated: "2026-07-30T19:20:49.738Z"
-last_activity: 2026-07-30
+status: verifying
+stopped_at: Completed 143-14-PLAN.md
+last_updated: "2026-07-31T18:28:26.321Z"
+last_activity: 2026-07-31
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 25
-  completed_plans: 22
+  completed_plans: 25
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 ## Current Position
 
-Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 13 of 14 complete; 143-14 is the only plan left
-Status: The 143-12 promotion checkpoint is CLOSED — all five conditions met on
+Phase: 143 (test-harness-truth) — READY FOR VERIFICATION
+Plan: 14 of 14 complete
+Status: Phase complete — ready for verification. The pre-rehearsal history below is superseded by run 30654293410: both floor legs failed, publish-core did not start, temporary refs were deleted, and HARNESS-04 is complete.
   real `main` evidence (see 143-PROMOTION-CHECKPOINT.md and
   143-MAIN-GREEN-EVIDENCE.md). 143-13 shipped: the two Elixir 1.18 / OTP 27
   Core Full Suite legs now hold publish-veto power, and the gate has since run
@@ -43,7 +43,7 @@ Status: The 143-12 promotion checkpoint is CLOSED — all five conditions met on
   HARNESS-04 stays `[ ]` until it exists.
 Last activity: 2026-07-31
 
-Progress: [█████████░] 88%
+Progress: [██████████] 100%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -437,6 +437,7 @@ release debug campaign.
 | Phase 143 P08 | 70min | 3 tasks | 8 files |
 | Phase 143 P09 | 35min | 3 tasks | 4 files |
 | Phase 143 P10 | ~2h | 3 tasks | 4 files |
+| Phase 143 P14 | 22 min | 4 tasks | 4 files |
 
 ## Deferred Items
 
@@ -604,8 +605,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-30T19:20:49.727Z
-**Stopped at:** Completed 143-11-PLAN.md
+**Last session:** 2026-07-31T18:26:31.481Z
+**Stopped at:** Completed 143-14-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
