@@ -2,7 +2,7 @@ defmodule Mailglass.DataCase do
   @moduledoc """
   ExUnit case template for mailglass tests that touch the database.
 
-  Sets up an `Ecto.Adapters.SQL.Sandbox` checkout per test, stamps a
+  Sets up a sanctioned Sandbox ownership checkout per test, stamps a
   default tenant for the process (`"test-tenant"` — overridable via
   `@tag tenant: "..."` or `with_tenant/2`), and imports `Ecto.Query`
   + `Ecto.Changeset` for convenience.
@@ -32,8 +32,17 @@ defmodule Mailglass.DataCase do
   end
 
   setup tags do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Mailglass.TestRepo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+    # `context: tags` is what the shared-mode async guard reads. ExUnit merges
+    # `:async` (and `:module`) into every setup context on every supported
+    # Elixir — 1.18.4 `ExUnit.Runner` runner.ex:279/301, 1.19.5 :292/:317 —
+    # so the guard's subject is supplied by construction. It is deliberately
+    # NOT inferred from a process label: `ExUnit.Runner` only sets one from
+    # Elixir 1.19.0, and the gating CI lanes run 1.18.4.
+    _pid =
+      Mailglass.TestSupport.SandboxOwnership.checkout!(
+        shared: not tags[:async],
+        context: tags
+      )
 
     # Probe the checked-out connection for a stale citext OID.
     #

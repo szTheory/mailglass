@@ -124,12 +124,60 @@ Plans:
 **Requirements**: HARNESS-01, HARNESS-02, HARNESS-03, HARNESS-04
 **Success Criteria** (what must be TRUE):
 
-  1. A written mechanism account explains why `{:badmatch, :already_shared}` occurred (194 of 242 pre-fix failures), backed by empirical confirmation of the actual root cause — not just the leading hypothesis (the extended-timeout shared owner in `webhook_idempotency_convergence_test.exs` colliding with `:auto`-mode sibling files) — before any fix is written.
+  1. A written mechanism account explains why `{:badmatch, :already_shared}` occurred (194 of 242 pre-fix failures), backed by empirical confirmation of the actual root cause — not just the leading hypothesis (the extended-timeout shared owner in `webhook_idempotency_convergence_test.exs` colliding with `:auto`-mode sibling files) — before any fix is written. *(Corrected per Plan 143-03's mechanism account, `.planning/phases/143-test-harness-truth/143-MECHANISM.md`: the stated leading hypothesis was half backwards. The nine `:auto`-mode sibling files HEAL a leaked shared owner rather than colliding with it — `Sandbox.mode(repo, :auto)` reaches `manager.ex:169-172`'s explicit mode reset (via `unshare/2`, reached through `proxy_checkin/3` at `manager.ex:289`), which checks in the leaked connection and resets the pool to `:manual`. That healing is why the lane was 194-red rather than 668-red — partially, not wholly red — and why no single file reliably reproduces the bug: the leaker and its victim are separated by however many `:auto`-mode files run between them, and a subsequent heal can remove the collision before it repeats.)*
   2. Core Full Suite passes across all four matrix legs (Elixir 1.18/OTP 27 and 1.19/OTP 28, each x `public`/`mailglass` schema), and stays green across repeated runs and seeds, not one lucky run.
   3. The suite's executed test count has not silently dropped below its pre-fix floor, the `:already_shared` failure signature is exactly zero (not just "fewer failures"), and a deliberate-failure probe against `Core Full Suite Advisory` (mirroring the existing `gate-self-test.yml` pattern) confirms the lane still catches a real, deliberately-injected regression.
   4. A recorded decision states whether Core Full Suite is now release-gating and, if so, `gate-ci-green` demonstrably blocks a Hex publish (not merely a PR merge) when that lane is red.
 
-**Plans**: TBD
+**Plans**: 10/14 plans executed
+
+Plans:
+**Wave 1**
+
+- [x] 143-01-PLAN.md — Tracer: suite-wide pool-hygiene observation, widened to all three leak classes
+- [x] 143-02-PLAN.md — Probe inputs (`required_only`, `deadline_minutes`) + record the D-18a vacuity finding
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 143-03-PLAN.md — Instrumented ledger, the written mechanism account, and the D-31 upstream amendments
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 143-04-PLAN.md — The sanctioned ownership door and its mechanism-level regression test
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [x] 143-05-PLAN.md — Route both case templates and the confirmed leak site through the door; delete the four no-ops
+- [x] 143-06-PLAN.md — Migrate the nine `:auto`-mode files to `unsandboxed_module/1`
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [x] 143-07-PLAN.md — Close Class A (baseline teardown) and Class B (`Config.schema()` drift)
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [x] 143-08-PLAN.md — `NoRawSandboxOwnership` Credo check, after proving `credo --strict` reaches `test/`
+- [x] 143-09-PLAN.md — `SuiteFloor`, the signature classifier, and the negative controls
+
+**Wave 7** *(blocked on Wave 6 completion)*
+
+- [x] 143-10-PLAN.md — Pin floors from green CI runs and turn enforcement on in the lane
+
+**Wave 8** *(blocked on Wave 7 completion)*
+
+- [ ] 143-11-PLAN.md — Lane renames, `expanded_matrix_job_names/1`, third registry axis, MAINTAINING section
+
+**Wave 9** *(blocked on Wave 8 completion)*
+
+- [ ] 143-12-PLAN.md — Deliberate-failure probe against the renamed lane + the five-condition promotion checkpoint
+
+**Wave 10** *(blocked on Wave 9 completion)*
+
+- [ ] 143-13-PLAN.md — The gating decision checkpoint, dual-workflow self-heal, and `gate-ci-green` wiring
+
+**Wave 11** *(blocked on Wave 10 completion)*
+
+- [ ] 143-14-PLAN.md — Publish-path rehearsal pair and the recorded gating decision
 
 ### Phase 144: Signal & Drift Integrity
 
@@ -154,7 +202,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 5/5 | Complete    | 2026-07-29 |
-| 143. Test-Harness Truth | 0/TBD | Not started | - |
+| 143. Test-Harness Truth | 10/14 | In Progress|  |
 | 144. Signal & Drift Integrity | 0/TBD | Not started | - |
 
 ## Planted Seeds

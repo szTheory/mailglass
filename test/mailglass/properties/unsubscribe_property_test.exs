@@ -6,6 +6,7 @@ defmodule Mailglass.Properties.UnsubscribePropertyTest do
   alias Mailglass.ConfigError
   alias Mailglass.Message
   alias Mailglass.Tenancy
+  alias Mailglass.TestSupport.SandboxOwnership
 
   @moduletag :property
 
@@ -29,7 +30,18 @@ defmodule Mailglass.Properties.UnsubscribePropertyTest do
   end
 
   setup do
-    prior_mailglass = Application.get_all_env(:mailglass)
+    # Was: capture + `on_exit(put_all_env)` + a hand-rolled
+    # `Application.delete_env(:mailglass, :tenancy)` in BOTH `setup` and
+    # `on_exit`, added as local hardening because `put_all_env/1` merges and
+    # could not remove `UnsafeTenancy`. That local fix is what ARMED the leak
+    # in `compliance/unsubscribe_test.exs`: leaving `:tenancy` deleted meant
+    # any module whose snapshot was taken afterwards had no `:tenancy` key to
+    # write back, so its own merging restore could no longer remove the
+    # resolver IT installed. `with_app_env!/2` restores this module's env
+    # exactly — including putting `:tenancy` back to its `config/test.exs`
+    # value — so no sibling inherits a hole.
+    SandboxOwnership.with_app_env!(:mailglass)
+    on_exit(&Tenancy.clear/0)
 
     Application.delete_env(:mailglass, :tenancy)
     Tenancy.clear()
@@ -46,12 +58,6 @@ defmodule Mailglass.Properties.UnsubscribePropertyTest do
       max_age: 60,
       lifecycle: Mailglass.Lifecycle.Noop
     )
-
-    on_exit(fn ->
-      Application.put_all_env(mailglass: prior_mailglass)
-      Application.delete_env(:mailglass, :tenancy)
-      Tenancy.clear()
-    end)
 
     :ok
   end

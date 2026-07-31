@@ -55,6 +55,60 @@ If a step in `mix ci` fails, it names the failing check and stops there
 > Prefer `make`? `make ci`, `make ci-fast`, and `make ci-browser` are thin
 > wrappers around the Mix aliases above.
 
+## Verifying on the gating toolchain (Elixir 1.18.4 / OTP 27)
+
+`mix ci` runs on **whatever Elixir you have installed**. Every gating CI lane
+runs **Elixir 1.18.4 / OTP 27** (`.tool-versions`, and the `elixir: "1.18" /
+otp: "27"` matrix rows in `.github/workflows/ci.yml` and
+`advisory-matrix.yml`). Maintainers are routinely a version line ahead, and this
+repo has already shipped a change that was green on 1.19 and failed **every**
+gating lane — an ExUnit process label that only exists from Elixir 1.19.0 (see
+`test/support/sandbox_ownership.ex`, "Why the context, and not a process
+label"). If you touch anything version-sensitive — ExUnit internals, `:crypto`,
+stdlib edge behavior, or a timing bound — verify it here before you push:
+
+```bash
+make toolchain                                  # full core suite, schema public
+make toolchain MAILGLASS_SCHEMA=mailglass       # the second D-06 schema axis
+make toolchain CMD='mix test path/to/file.exs --seed 961019'
+make toolchain CMD='mix dialyzer'               # MIX_ENV=test, as CI runs it
+make toolchain-shell                            # poke around interactively
+make toolchain-version                          # prove the pin, ~2s
+make toolchain-clean                            # reset after a version bump
+```
+
+Everything runs in Docker (`compose.toolchain.yml` +
+`dev/toolchain/Dockerfile`); no `asdf install` and no second Erlang build on
+your machine. The stack is namespaced `mailglass-toolchain`, so it never
+collides with `make demo`.
+
+Two properties are load-bearing and worth knowing about:
+
+- **`deps/` and `_build/` are container-private named volumes.** Your host tree
+  is compiled by *your* Elixir; sharing either directory would let the two
+  toolchains overwrite each other's artifacts, so every switch would be a full
+  rebuild and your host `mix test` could silently run 1.18-built beams. The
+  cost is one cold compile the first time (a few minutes on 2 vCPU), cached
+  after that.
+- **The container is capped at 2 vCPU / 4 GB** — the GitHub-hosted
+  `ubuntu-latest` runner's size. That is what makes a duration measured here a
+  usable predictor of the CI clock; an unthrottled run on a modern laptop is
+  roughly 7x faster and will under-report any timing-sensitive bound. Override
+  with `MAILGLASS_TOOLCHAIN_CPUS=8` for a quick smoke run, but measure bounds at
+  the default.
+
+Every `make toolchain` invocation first runs
+`scripts/assert_gating_toolchain.sh`, which refuses to continue unless the
+container really is the Elixir/OTP pair `.tool-versions` declares — so a future
+version bump that leaves `dev/toolchain/Dockerfile` behind fails loudly instead
+of quietly reporting green for a toolchain nothing gates on. It then drops and
+recreates the test DB, because a suite that passes against a stale schema has
+not proven anything.
+
+When you bump `.tool-versions`, bump the `FROM` line in
+`dev/toolchain/Dockerfile` and `reference/demo_app/Dockerfile` (they share the
+pin) and run `make toolchain-clean`.
+
 ## Commit Guidelines
 
 Use Conventional Commits:

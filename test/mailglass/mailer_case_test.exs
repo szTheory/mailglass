@@ -2,7 +2,12 @@ defmodule Mailglass.MailerCaseTest do
   @moduledoc """
   Tests for Mailglass.MailerCase setup: default setup, tag overrides, Oban modes,
   set_mailglass_global, WebhookCase + AdminCase stubs.
-  Tests 1-10 per the plan spec.
+  Tests 1-10 per the plan spec, plus Tests 11-12 (143-05: prove the deleted raw
+  `Sandbox.mode(repo, {:shared, self()})` calls were genuine no-ops — the
+  pool stays observably shared, via `SandboxOwnership.live_holder/1`, both on
+  the Oban setup path and across `set_mailglass_global/0`) and Test 13
+  (143-05: a text tripwire asserting that pattern never reappears under
+  `test/support/`).
   """
   use Mailglass.MailerCase, async: true
 
@@ -73,6 +78,28 @@ defmodule Mailglass.MailerCaseTest do
     # Use assert_no_mail_sent (imported macro) to prove the import:
     assert_no_mail_sent()
   end
+
+  # Test 13 (143-05): tripwire ahead of the Credo check landing in plan
+  # 143-08 — asserts the deleted raw shared-mode call never reappears under
+  # test/support/. Scoped to test/support/ only so it does not duplicate the
+  # Credo check's job.
+  test "no raw Sandbox.mode(repo, {:shared, self()}) call remains under test/support/" do
+    support_files = Path.wildcard(Path.join([File.cwd!(), "test", "support", "**", "*.ex"]))
+    assert support_files != [], "expected to find files under test/support/"
+
+    pattern = ~r/Sandbox\.mode\(.*\{:shared,\s*self\(\)\}/
+
+    offenders =
+      for file <- support_files,
+          line <- String.split(File.read!(file), "\n"),
+          Regex.match?(pattern, line) do
+        file
+      end
+
+    assert offenders == [],
+           "Raw Sandbox.mode(repo, {:shared, self()}) call(s) reintroduced under " <>
+             "test/support/: #{inspect(Enum.uniq(offenders))}"
+  end
 end
 
 defmodule Mailglass.MailerCaseGlobalTest do
@@ -108,6 +135,56 @@ defmodule Mailglass.MailerCaseObanGuardTest do
     assert_raise RuntimeError, ~r/async: false/, fn ->
       Mailglass.MailerCase.__ex_unit__(:setup, tags)
     end
+  end
+end
+
+defmodule Mailglass.MailerCaseObanGlobalTest do
+  @moduledoc """
+  Tests 11-12 (143-05): proves the two raw `Sandbox.mode(repo, {:shared,
+  self()})` calls deleted from `mailer_case.ex` (the Oban setup path and
+  `set_mailglass_global/0`) were genuine no-ops, not silent behavior changes.
+
+  Asserts the *effect* those calls were supposed to provide — the pool is
+  observably shared (`SandboxOwnership.live_holder/1` returns a live pid, not
+  a re-assertion of `Sandbox.mode/2`) and a process other than the test
+  process can reach the database — both on the Oban setup path (where the
+  first raw call lived, Test 11) and again after calling
+  `set_mailglass_global/0` (where the second one lived, Test 12). If either
+  deletion had removed a real guarantee, one of these assertions would fail.
+  """
+  use Mailglass.MailerCase, async: false
+
+  alias Mailglass.TestSupport.SandboxOwnership
+
+  # Test 11: the Oban setup path's deleted raw mode call was a no-op —
+  # checkout!(shared: true) (this module is async: false) already shared
+  # the pool before the Oban `cond` branch ever ran.
+  @tag oban: :inline
+  test "pool is genuinely shared on the Oban setup path (deleted no-op proof)" do
+    holder = SandboxOwnership.live_holder(Mailglass.TestRepo)
+    assert is_pid(holder)
+    assert Process.alive?(holder)
+
+    # A process OTHER than the test process reaches the DB through the
+    # shared pool — the effect Oban's internal processes need.
+    assert %Postgrex.Result{} =
+             Task.async(fn -> Mailglass.TestRepo.query!("SELECT 1", []) end)
+             |> Task.await()
+  end
+
+  # Test 12: set_mailglass_global/0's own deleted raw mode call was a no-op
+  # for the identical reason — its setup (async: false, above) already
+  # shared the pool before set_mailglass_global/0 is ever called.
+  test "pool stays genuinely shared after set_mailglass_global/0 (deleted no-op proof)" do
+    :ok = Mailglass.MailerCase.set_mailglass_global(%{async: false})
+
+    holder = SandboxOwnership.live_holder(Mailglass.TestRepo)
+    assert is_pid(holder)
+    assert Process.alive?(holder)
+
+    assert %Postgrex.Result{} =
+             Task.async(fn -> Mailglass.TestRepo.query!("SELECT 1", []) end)
+             |> Task.await()
   end
 end
 

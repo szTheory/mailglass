@@ -13,6 +13,14 @@ defmodule Mailglass.Upgrade.V0_2Test do
     ]
   end
 
+  # NOTE: `igniter` must be the COMPOSED igniter, not the result of
+  # `apply_igniter!/1`. As of Igniter 0.8.0 `apply_igniter!/1` returns an
+  # igniter whose `rewrite` holds ZERO sources — applying materialises the
+  # sources and drops them from the struct — so `Rewrite.source!/2` on a
+  # post-apply igniter always raises `no source found`. Igniter's own
+  # `assert_content_equals/3` has the same constraint (verified against
+  # igniter 0.8.1). Assert on the composed igniter; call `apply_igniter!/1`
+  # separately to keep its "applies without issues" guarantee.
   defp assert_file_content(igniter, file_path, expected_content) do
     source = Rewrite.source!(igniter.rewrite, file_path)
     actual_content = Rewrite.Source.get(source, :content) |> String.trim()
@@ -34,7 +42,8 @@ defmodule Mailglass.Upgrade.V0_2Test do
       end
       """)
       |> Igniter.compose_task(Mix.Tasks.Mailglass.Upgrade.V0_2)
-      |> apply_igniter!()
+
+    apply_igniter!(igniter)
 
     assert_file_content(igniter, "lib/my_app/dummy.ex", """
     defmodule MyApp.Dummy do
@@ -53,7 +62,8 @@ defmodule Mailglass.Upgrade.V0_2Test do
         fixture!("v0_2_supported_before.ex")
       )
       |> Igniter.compose_task(Mix.Tasks.Mailglass.Upgrade.V0_2)
-      |> apply_igniter!()
+
+    apply_igniter!(igniter)
 
     assert_file_content(
       igniter,
@@ -78,7 +88,8 @@ defmodule Mailglass.Upgrade.V0_2Test do
       end
       """)
       |> Igniter.compose_task(Mix.Tasks.Mailglass.Upgrade.V0_2)
-      |> apply_igniter!()
+
+    apply_igniter!(igniter)
 
     assert_file_content(igniter, "lib/my_app/dummy.ex", """
     defmodule MyApp.Dummy do
@@ -93,23 +104,27 @@ defmodule Mailglass.Upgrade.V0_2Test do
   test "keeps ambiguous Swoosh usage in place and warns with migration-guide URL", %{
     igniter: igniter
   } do
-    warning_output =
-      capture_io(:stderr, fn ->
-        igniter =
-          igniter
-          |> Igniter.create_new_file(
-            "lib/fixture/ambiguous_before.ex",
-            fixture!("v0_2_ambiguous_before.ex")
-          )
-          |> Igniter.compose_task(Mix.Tasks.Mailglass.Upgrade.V0_2)
-          |> apply_igniter!()
-
-        assert_file_content(
-          igniter,
+    # `with_io/2` rather than `capture_io/2` so the composed igniter escapes the
+    # capture block: the warnings are emitted by `compose_task/2` (the task runs
+    # during composition), but the content assertions must run OUTSIDE the
+    # capture so a failure message is not swallowed by it.
+    {composed, warning_output} =
+      with_io(:stderr, fn ->
+        igniter
+        |> Igniter.create_new_file(
           "lib/fixture/ambiguous_before.ex",
-          fixture!("v0_2_ambiguous_after.ex")
+          fixture!("v0_2_ambiguous_before.ex")
         )
+        |> Igniter.compose_task(Mix.Tasks.Mailglass.Upgrade.V0_2)
       end)
+
+    apply_igniter!(composed)
+
+    assert_file_content(
+      composed,
+      "lib/fixture/ambiguous_before.ex",
+      fixture!("v0_2_ambiguous_after.ex")
+    )
 
     assert warning_output =~ "Skipping unknown Swoosh.Email function: put_provider_option/2"
     assert warning_output =~ @migration_guide_url

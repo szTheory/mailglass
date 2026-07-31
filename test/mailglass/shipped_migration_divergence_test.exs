@@ -6,6 +6,8 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
 
   @moduletag :shipped_migration_divergence
 
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+
   alias Mailglass.TestRepo
 
   # A dedicated, non-`public` schema so the run is isolated from the
@@ -19,34 +21,43 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
   # `Ecto.Migrator` is the genuine adopter path — it stands up the
   # `Ecto.Migration` runner process that `Mailglass.Migration.up/1` requires
   # (the dispatcher issues `create`/`execute` DDL through that runner).
+  #
+  # NO ambient-path pin. This wrapper used to carry
+  # `SET LOCAL search_path TO @prefix, public`, described as a crutch for v01's
+  # then-unqualified `ON mailglass_events` trigger DDL. Phase 134-02 qualified
+  # that DDL, and the pin turned out to be a latent, order-dependent bug of its
+  # own: `SET LOCAL` persists for the rest of the transaction, and
+  # `Ecto.Migrator` inserts its `schema_migrations` version row INSIDE that same
+  # transaction AFTER the migration body — so the pin redirected Ecto's own
+  # bookkeeping INSERT to a search_path holding no `schema_migrations` table.
+  # Under `MAILGLASS_SCHEMA=mailglass` the boot bookkeeping table lives in
+  # `mailglass`, not `public`, so this file failed 4/4 when run ALONE on that
+  # axis and passed in a full suite only because some earlier module happened to
+  # create `public.schema_migrations` first. Confirmed live before the fix
+  # (`MAILGLASS_SCHEMA=mailglass mix test <this file>` → 4 tests, 4 failures,
+  # all `42P01 … relation "schema_migrations" does not exist`).
   defmodule ShippedWrapperMigration do
     use Ecto.Migration
 
     @prefix "mailglass_shipped_path_test"
 
     def up do
-      # Pin the migration connection's search_path to the isolated test schema
-      # so the V01 events trigger (created with a bare, non-prefix-qualified
-      # `ON mailglass_events` — a pre-existing v01 quirk, out of scope here)
-      # binds to THIS schema's table rather than colliding with the
-      # already-migrated `public` one. The prefix-threaded table/index DDL
-      # still targets @prefix explicitly.
-      execute("SET LOCAL search_path TO #{@prefix}, public")
       Mailglass.Migration.up(prefix: @prefix, repo: Mailglass.TestRepo)
     end
 
     def down do
-      execute("SET LOCAL search_path TO #{@prefix}, public")
       Mailglass.Migration.down(prefix: @prefix, repo: Mailglass.TestRepo)
     end
   end
 
-  setup do
-    # Switch the sandbox to :auto so DDL/schema creation can run outside the
-    # transactional wrapper (mirrors migration_test.exs). on_exit reverts to
-    # :manual so DataCase tests in the same run stay isolated.
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :auto)
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1). Its revert to :manual is
+  # registered FIRST (this setup runs before the one below), so it runs LAST
+  # — the file's own restore on_exit (registered second, below) still
+  # executes while :auto is in effect.
+  setup :unsandboxed_module
 
+  setup do
     # Clean slate — drop, then re-create the isolated test schema before
     # running the shipped dispatcher. (The dispatcher threads `prefix:` through
     # every V-step DDL but does not itself issue `CREATE SCHEMA`; the adopter's
@@ -77,8 +88,6 @@ defmodule Mailglass.ShippedMigrationDivergenceTest do
 
       {:ok, _} =
         TestRepo.query("DELETE FROM schema_migrations WHERE version = $1", [version])
-
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
     end)
 
     :ok

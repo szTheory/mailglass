@@ -20,6 +20,14 @@ on:
         description: "Required-check name prefix to poll. Default is 'CI Green' (the aggregate required context). Use 'Trust Lane Repo Head (' to poll a specific leaf lane."
         type: string
         default: "CI Green"
+      required_only:
+        description: "Poll only branch-protection-required contexts (default, preserves today's behaviour). Set to false to observe an advisory-matrix lane — branch protection's required set is exactly {CI Green, Guard Release Trigger} (required_checks_test.exs:45-58), so a matrix lane like 'Core Full Suite (' will never appear when this stays true."
+        type: boolean
+        default: true
+      deadline_minutes:
+        description: "Poll deadline in minutes. Default 25. A cold-cache Core Full Suite leg runs roughly ten and a half minutes, so the default leaves headroom."
+        type: string
+        default: "25"
 
 permissions:
   contents: write
@@ -115,13 +123,35 @@ jobs:
           PR: ${{ steps.open-pr.outputs.pr }}
           BRANCH: ${{ steps.create-branch.outputs.branch }}
           CHECK_NAME: ${{ inputs.check_name }}
+          REQUIRED_ONLY: ${{ inputs.required_only }}
+          DEADLINE_MINUTES: ${{ inputs.deadline_minutes }}
         run: |
-          # Wait up to 25 minutes for the required check to finish on this PR.
-          DEADLINE=$((SECONDS + 1500))
+          # required_only=false is needed to observe an advisory-matrix lane (e.g.
+          # Core Full Suite): branch protection's required set is exactly
+          # {CI Green, Guard Release Trigger} (required_checks_test.exs:45-58), so
+          # a matrix lane never appears in a --required query and this probe would
+          # never see it. Build the flag conditionally rather than always passing it.
+          REQUIRED_FLAG=""
+          if [ "$REQUIRED_ONLY" = "true" ]; then
+            REQUIRED_FLAG="--required"
+          fi
+
+          SEEN=0
+          ALL_CHECKS="[]"
+          DEADLINE=$((SECONDS + DEADLINE_MINUTES * 60))
           while [ $SECONDS -lt $DEADLINE ]; do
-            STATUS=$(gh pr checks "$PR" --required --json name,state \
-              --jq '.[] | select(.name | startswith(env.CHECK_NAME)) | .state' \
-              | head -1)
+            # Capture the full observed check list once per iteration (honouring
+            # the same required flag) so a never-appeared outcome can print what
+            # the probe actually saw, and so SEEN can be set from a non-empty
+            # filtered result without a second API call.
+            ALL_CHECKS=$(gh pr checks "$PR" $REQUIRED_FLAG --json name,state)
+            STATUS=$(echo "$ALL_CHECKS" | jq -r --arg name "$CHECK_NAME" \
+              '.[] | select(.name | startswith($name)) | .state' | head -1)
+
+            if [ -n "$STATUS" ]; then
+              SEEN=1
+            fi
+
             case "$STATUS" in
               FAILURE|FAILED|CANCELLED|TIMED_OUT)
                 echo "${CHECK_NAME}check returned ${STATUS} — gate is enforcing halt-on-failure"
@@ -140,8 +170,17 @@ jobs:
                 ;;
             esac
           done
-          echo "ERROR: ${CHECK_NAME}check did not complete within 25 minutes"
-          echo "result=timeout" >> "$GITHUB_OUTPUT"
+
+          if [ "$SEEN" = "1" ]; then
+            echo "ERROR: ${CHECK_NAME}check did not complete within ${DEADLINE_MINUTES} minutes"
+            echo "result=timeout" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          echo "ERROR: ${CHECK_NAME}check never appeared within ${DEADLINE_MINUTES} minutes — the polled check was never observed on this PR at all (not pending, not failed, not passed)."
+          echo "Checks actually observed on this PR (last poll):"
+          echo "$ALL_CHECKS" | jq -r '.[] | "  - \(.name): \(.state)"'
+          echo "result=never-appeared" >> "$GITHUB_OUTPUT"
           exit 1
 
       - name: Close PR + delete branch
@@ -159,6 +198,8 @@ jobs:
         if: ${{ !inputs.cleanup_only }}
         env:
           CHECK_NAME: ${{ inputs.check_name }}
+          REQUIRED_ONLY: ${{ inputs.required_only }}
+          DEADLINE_MINUTES: ${{ inputs.deadline_minutes }}
         run: |
           {
             echo "## CI Green Gate Self-Test Result"
@@ -166,10 +207,18 @@ jobs:
             echo "- PR: #${{ steps.open-pr.outputs.pr }}"
             echo "- Branch: ${{ steps.create-branch.outputs.branch }}"
             echo "- Required check polled: ${CHECK_NAME}"
+            echo "- required_only: ${REQUIRED_ONLY}"
+            echo "- deadline_minutes: ${DEADLINE_MINUTES}"
             echo "- Result: ${{ steps.poll.outputs.result }}"
             echo ""
             if [ "${{ steps.poll.outputs.result }}" = "blocked" ]; then
               echo "CI Green gate enforces halt-on-failure (intended)."
+            elif [ "${{ steps.poll.outputs.result }}" = "never-appeared" ]; then
+              echo "Delivery blocked: the polled check '${CHECK_NAME}' never appeared on this PR — see the job log above for every check that was actually observed."
+              echo ""
+              echo "Recovery: if the check name is a non-required (advisory-matrix) lane, re-dispatch with:"
+              echo ""
+              echo "    gh workflow run gate-self-test.yml -f check_name=\"${CHECK_NAME}\" -f required_only=false -f deadline_minutes=${DEADLINE_MINUTES}"
             else
               echo "Delivery blocked: CI Green gate did NOT block the failing PR — the gate has regressed."
             fi

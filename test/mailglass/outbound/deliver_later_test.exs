@@ -11,7 +11,12 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
     # async: false guarantees no other test owns the shared bucket during this test.
     Mailglass.Adapters.Fake.checkout()
     Mailglass.Adapters.Fake.set_shared(self())
-    prior_compliance = Application.get_env(:mailglass, :compliance)
+    # `:compliance` is in no `config/*.exs`, so the `on_exit` below used to
+    # restore it with `put_env(:mailglass, :compliance, nil)` — CREATING the
+    # key holding `nil` instead of removing it. `with_app_env!/2` deletes keys
+    # that were absent at capture. See its @doc.
+    Mailglass.TestSupport.SandboxOwnership.with_app_env!(:mailglass)
+
     prior_adapter = Application.get_env(:mailglass, :adapter)
     prior_adapters = Application.get_env(:mailglass, :adapters)
     prior_tenancy = Application.get_env(:mailglass, :tenancy)
@@ -30,18 +35,19 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       max_age: 60
     )
 
-    # The Task.Supervisor spawns a background process that accesses the DB.
-    # Use shared mode so background tasks share the test process's connection
-    # rather than getting their own checkout — avoids stale OID cache errors
-    # when running alongside :manual-mode tests in the full suite.
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
+    # No raw Sandbox mode call switching to shared self-owned mode here: this
+    # module `use`s Mailglass.DataCase with async disabled, so DataCase's own setup
+    # (ExUnit.CaseTemplate composes the module's setup after the template's)
+    # already ran checkout!(shared: true) and put the pool in shared mode with
+    # a live agent owner — a call here would return :already_shared
+    # (manager.ex:148-159) and change nothing. The Task.Supervisor background
+    # process reaches the DB because the pool is genuinely shared already.
 
     on_exit(fn ->
       # Brief pause so any in-flight Task.Supervisor tasks finish their DB work
       # before the sandbox is torn down (avoids Postgrex disconnect noise).
       Process.sleep(50)
       Application.put_env(:mailglass, :async_adapter, :oban)
-      Application.put_env(:mailglass, :compliance, prior_compliance)
       Application.put_env(:mailglass, :adapter, prior_adapter)
 
       if is_nil(prior_adapters) do
@@ -51,7 +57,14 @@ defmodule Mailglass.Outbound.DeliverLaterTest do
       end
 
       Application.put_env(:mailglass, :tenancy, prior_tenancy)
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
+
+      # Healing call, not a leak site: reverts the shared mode DataCase's own
+      # checkout put the pool in. Its reverse on_exit placement runs before
+      # DataCase's own release, so it cannot strand the owner. Migrated to
+      # the sanctioned door per plan 143-08's Mailglass.Credo.NoRawSandboxOwnership
+      # (see Mailglass.TestSupport.SandboxOwnership.mode_manual!/1's moduledoc
+      # for why this exact caller shape is one of its two legitimate uses).
+      Mailglass.TestSupport.SandboxOwnership.mode_manual!(TestRepo, caller: __MODULE__)
     end)
 
     :ok

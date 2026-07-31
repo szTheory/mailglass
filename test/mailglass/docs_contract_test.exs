@@ -308,8 +308,17 @@ defmodule Mailglass.DocsContractTest do
       assert maintaining =~ "Support Contract Core"
       assert maintaining =~ "Support Contract Admin"
       assert maintaining =~ "Compile No Optional Deps"
-      assert maintaining =~ "Core Full Suite Advisory"
+      # The advisory-matrix lanes are pinned by their RUNTIME names, under their own
+      # top-level section (Phase 143 / D-25). The gating leg's name deliberately
+      # carries no "Advisory" suffix: a lane that gates a publish must not call
+      # itself advisory (D-21), and the refute below keeps the old name from
+      # creeping back in a future edit.
+      assert maintaining =~ "## Advisory Matrix Lanes"
+      assert maintaining =~ "Core Full Suite (Elixir 1.18 / OTP 27 / schema public)"
+      assert maintaining =~ "Core Full Suite Next Toolchain Advisory"
+      refute maintaining =~ "Core Full Suite Advisory ("
       assert maintaining =~ "Provider Compatibility Advisory"
+      assert maintaining =~ "Inbound Full Suite Advisory"
       assert maintaining =~ "Provider Live Advisory"
 
       assert maintaining =~

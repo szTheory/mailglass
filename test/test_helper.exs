@@ -42,6 +42,20 @@ test_repo_config = Application.get_env(:mailglass, Mailglass.TestRepo)
 # 3F000 under the isolated search_path).
 schema = Mailglass.Config.schema()
 
+# HARNESS-01 (D-09): register the pool-hygiene ledger formatter alongside the
+# default CLI formatter. Deliberately NOT the `--formatter` CLI flag, which
+# *replaces* ExUnit's default formatter list — that would silently drop
+# `ExUnit.CLIFormatter`'s normal test/failure output.
+ExUnit.configure(formatters: [ExUnit.CLIFormatter, Mailglass.TestSupport.SuiteTruthFormatter])
+
+# HARNESS-03 (D-13, D-15): register the anti-vacuity policy check. Placed
+# here (after `schema` above, alongside the formatter it reads via
+# `SuiteTruthFormatter.current_state/0`) so the report it prints at
+# `ExUnit.after_suite/1` already has both inputs available. Reporting always
+# runs; enforcement is opt-in behind `MAILGLASS_SUITE_FLOOR` — see
+# `Mailglass.TestSupport.SuiteFloor`'s moduledoc.
+Mailglass.TestSupport.SuiteFloor.install()
+
 # On any non-public schema axis, exclude `:public_only` tests. These are
 # generic, ambient-schema round-trip tests (e.g. migration_test.exs's `down/0`
 # describe) whose isolation-path coverage is provided separately by
@@ -80,6 +94,31 @@ Application.put_env(
     if schema != "public" do
       Ecto.Adapters.SQL.query!(repo, ~s(CREATE SCHEMA IF NOT EXISTS "#{schema}"))
     end
+
+    # citext MUST live in `public`, explicitly. v01 issues a deliberately
+    # UNqualified `CREATE EXTENSION IF NOT EXISTS citext` (postgres/v01.ex:18,
+    # "citext installs into public so a second install in another schema can
+    # share it"), and `CREATE EXTENSION` with no `SCHEMA` clause installs into
+    # the FIRST schema of the connection's search_path — which, on a non-public
+    # axis with the `"<schema>, public"` patch above, is the isolated schema, not
+    # `public`. On a freshly created database that is the very first statement to
+    # create citext, so the extension landed in `<schema>` and the comment above
+    # ("the citext extension type (installed in public) stays resolvable") was
+    # simply false on the schema-isolation axis.
+    #
+    # That silently held together only while every prefixed-schema test used the
+    # literal `"mailglass"` as its own scratch prefix, so their
+    # `search_path = "mailglass, public"` pins happened to include the schema
+    # citext had landed in. The moment those tests moved to scratch prefixes of
+    # their own (143 gap closure), `add(:address, :citext)` under
+    # `search_path = "<scratch>, public"` could no longer resolve the type and
+    # raised `42704 (undefined_object) type "citext" does not exist`.
+    #
+    # Pinning the extension to `public` here makes the harness match its own
+    # documented invariant on BOTH axes. Idempotent: `IF NOT EXISTS` is a no-op
+    # when citext already exists (it does not relocate an existing extension), so
+    # this only decides the location on a fresh database.
+    Ecto.Adapters.SQL.query!(repo, "CREATE EXTENSION IF NOT EXISTS citext SCHEMA public")
 
     Ecto.Migrator.run(repo, migrations_path, :up, all: true, log: false)
   end)
@@ -126,4 +165,9 @@ Mailglass.ObanHelpers.maybe_create_oban_jobs()
 # clean before the test runs.
 Mailglass.TestSupport.CitextProbe.run([])
 
-Ecto.Adapters.SQL.Sandbox.mode(Mailglass.TestRepo, :manual)
+# `caller:` is passed explicitly (there is no `__MODULE__` in a script, and it
+# is never inferred — see SandboxOwnership's "Caller attribution" moduledoc
+# section) so a refusal here names the suite boot rather than the helper.
+Mailglass.TestSupport.SandboxOwnership.mode_manual!(Mailglass.TestRepo,
+  caller: "test/test_helper.exs (suite boot)"
+)

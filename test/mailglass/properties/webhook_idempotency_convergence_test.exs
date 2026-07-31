@@ -28,9 +28,9 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
 
     * `use ExUnit.Case, async: false` — not `DataCase` (the transaction
       wrapper deadlocks on 1000 iterations that TRUNCATE between runs).
-    * `Sandbox.start_owner!/2` in setup with an extended ownership
-      timeout; stop the owner on exit so long property runs do not lose
-      the checked-out connection mid-iteration.
+    * `Mailglass.TestSupport.SandboxOwnership.checkout!/1` in setup with an
+      extended ownership timeout; its release is registered immediately, so
+      long property runs do not lose the checked-out connection mid-iteration.
     * `TRUNCATE ... CASCADE` between iterations (trigger blocks
       UPDATE/DELETE; TRUNCATE is the only bulk-wipe path).
   """
@@ -40,7 +40,6 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
 
   import Ecto.Query
 
-  alias Ecto.Adapters.SQL.Sandbox
   alias Mailglass.{Tenancy, TestRepo}
   alias Mailglass.Events.Event
   alias Mailglass.Webhook.{Ingest, WebhookEvent}
@@ -48,11 +47,28 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
   @moduletag :property
   @moduletag timeout: :infinity
 
-  setup do
-    owner =
-      Sandbox.start_owner!(TestRepo,
+  setup context do
+    # context: — the shared-mode async guard reads `:async` straight out of the
+    # ExUnit context (supplied by construction; never inferred from a process
+    # label, which `ExUnit.Runner` only sets from Elixir 1.19.0 while the
+    # gating CI lanes run 1.18.4).
+    #
+    # settle_attempts/settle_interval_ms: 6s release-verification bound
+    # (default is ~150ms). This property test runs up to 1000 iterations,
+    # each doing real DB work through the shared pool — db_connection's
+    # ownership manager takes longer than the ~150ms default to process the
+    # owner's :DOWN message once its own mailbox has that much churn behind
+    # it. Measured live across repeated clean (uncontended) runs: 564ms and
+    # 1131ms to converge — comfortably (~5x) inside this 6s bound, which
+    # still raises LeakError if a release genuinely never converges.
+    _owner =
+      Mailglass.TestSupport.SandboxOwnership.checkout!(
+        repo: TestRepo,
         shared: true,
-        ownership_timeout: 10 * 60_000
+        context: context,
+        ownership_timeout: 10 * 60_000,
+        settle_attempts: 600,
+        settle_interval_ms: 10
       )
 
     Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
@@ -65,7 +81,6 @@ defmodule Mailglass.Properties.WebhookIdempotencyConvergenceTest do
       TestRepo.query!("TRUNCATE TABLE mailglass_webhook_events CASCADE", [])
       TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
       Tenancy.clear()
-      Sandbox.stop_owner(owner)
     end)
 
     :ok

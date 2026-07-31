@@ -2,7 +2,8 @@ defmodule Mailglass.Properties.WebhookSuppressionConvergenceTest do
   use ExUnit.Case, async: false
   use ExUnitProperties
 
-  alias Ecto.Adapters.SQL.Sandbox
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1]
+
   alias Mailglass.{Clock, Tenancy, TestRepo}
   alias Mailglass.Events.Event
   alias Mailglass.Outbound.Delivery
@@ -12,8 +13,14 @@ defmodule Mailglass.Properties.WebhookSuppressionConvergenceTest do
   @moduletag :property
   @moduletag timeout: :infinity
 
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1). Its revert to :manual is
+  # registered FIRST (this setup runs before the one below), so it runs LAST
+  # — the file's own restore on_exit (registered second, below) still
+  # executes while :auto is in effect.
+  setup :unsandboxed_module
+
   setup do
-    Sandbox.mode(TestRepo, :auto)
     :ok = Tenancy.put_current("prop-test-tenant")
 
     reset_tables!()
@@ -21,7 +28,6 @@ defmodule Mailglass.Properties.WebhookSuppressionConvergenceTest do
     on_exit(fn ->
       reset_tables!()
       Tenancy.clear()
-      Sandbox.mode(TestRepo, :manual)
     end)
 
     :ok

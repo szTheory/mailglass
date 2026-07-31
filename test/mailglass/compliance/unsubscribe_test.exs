@@ -5,6 +5,7 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Lifecycle
   alias Mailglass.Tenancy
+  alias Mailglass.TestSupport.SandboxOwnership
 
   defmodule TestLifecycle do
     @behaviour Mailglass.Lifecycle
@@ -26,12 +27,16 @@ defmodule Mailglass.Compliance.UnsubscribeTest do
   end
 
   setup do
-    prior_mailglass = Application.get_all_env(:mailglass)
-
-    on_exit(fn ->
-      Application.put_all_env(mailglass: prior_mailglass)
-      Mailglass.Tenancy.clear()
-    end)
+    # `with_app_env!/2` replaces a hand-rolled
+    # `on_exit(fn -> Application.put_all_env(mailglass: prior) end)`. That
+    # idiom MERGES, so it could never remove `config :mailglass, :compliance`
+    # (absent from every `config/*.exs`, set by every test below) — and on any
+    # run where a sibling module had already deleted `:tenancy`, it could not
+    # remove `TenantWithComplianceHost` either, leaking a resolver whose
+    # `scope/2` applies `as: :scoped` into every later caller of
+    # `SupportSummary.orphan_backlog_summary/2`. See that function's @doc.
+    SandboxOwnership.with_app_env!(:mailglass)
+    on_exit(&Mailglass.Tenancy.clear/0)
 
     :ok
   end

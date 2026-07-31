@@ -8,6 +8,14 @@ defmodule Mix.Tasks.Mailglass.Gen.MailableTest do
     ]
   end
 
+  # NOTE: `igniter` must be the COMPOSED igniter, not the result of
+  # `apply_igniter!/1`. As of Igniter 0.8.0 `apply_igniter!/1` returns an
+  # igniter whose `rewrite` holds ZERO sources — applying materialises the
+  # sources and drops them from the struct — so `Rewrite.source!/2` on a
+  # post-apply igniter always raises `no source found`. Igniter's own
+  # `assert_content_equals/3` has the same constraint (verified against
+  # igniter 0.8.1). Assert on the composed igniter; call `apply_igniter!/1`
+  # separately to keep its "applies without issues" guarantee.
   defp assert_file_content(igniter, file_path, expected_content) do
     source = Rewrite.source!(igniter.rewrite, file_path)
     actual_content = Rewrite.Source.get(source, :content) |> String.trim()
@@ -18,7 +26,8 @@ defmodule Mix.Tasks.Mailglass.Gen.MailableTest do
     igniter =
       igniter
       |> Igniter.compose_task("mailglass.gen.mailable", ["Notification"])
-      |> apply_igniter!()
+
+    apply_igniter!(igniter)
 
     assert_file_content(igniter, "lib/test/mail/notification.ex", """
     defmodule Test.Mail.Notification do
@@ -45,7 +54,8 @@ defmodule Mix.Tasks.Mailglass.Gen.MailableTest do
     igniter =
       igniter
       |> Igniter.compose_task("mailglass.gen.mailable", ["MyApp.Mail.WelcomeEmail"])
-      |> apply_igniter!()
+
+    apply_igniter!(igniter)
 
     assert_file_content(igniter, "lib/my_app/mail/welcome_email.ex", """
     defmodule MyApp.Mail.WelcomeEmail do

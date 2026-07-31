@@ -160,7 +160,76 @@ extra_checks = [
   # injection). Those are intentional bad-config shapes, so linting test files
   # would be a false positive that breaks `mix credo --strict` (exit 16).
   {Mailglass.Credo.StreamPolicyConsistent,
-   [included_path_prefixes: ["lib/mailglass/", "mailglass_inbound/lib/"]]}
+   [included_path_prefixes: ["lib/mailglass/", "mailglass_inbound/lib/"]]},
+  # HARNESS-01 (plan 143-08): the prevention half of the two-layer recurrence
+  # guard for the Sandbox ownership acquire/release leak. Forbids raw
+  # Ecto.Adapters.SQL.Sandbox ownership calls under test/, outside the two
+  # allowlisted modules (the sanctioned door and its own mechanism test).
+  {Mailglass.Credo.NoRawSandboxOwnership, []},
+  # HARNESS-01 / D-31 Class A (143 gap closure): the prevention half of the
+  # two-layer recurrence guard for the `search_path` pool-poisoning defect. A
+  # session-level `SET search_path` issued under Sandbox `:auto` mode persists on
+  # the pooled Postgres connection for its whole lifetime, so the connection
+  # returns to the pool poisoned and some later, unrelated test fails with 42P01
+  # — the innocent-victim misattribution that cost two diagnosis cycles. The
+  # detection half (`SandboxOwnership.with_search_path!/3`'s verified restore)
+  # shipped without prevention, which is exactly how the class recurred.
+  #
+  # ALLOWLIST — three module entries, each structural, none a "this file is
+  # inconvenient" exemption. Every entry is safe because of WHAT the module is,
+  # not because of what it happens to contain today:
+  #   * Mailglass.TestSupport.SandboxOwnership — the sanctioned seam itself. It
+  #     is the only place that may issue the raw statement, because it is the
+  #     only place that pins ONE pooled connection for the whole block, restores
+  #     the prior value on that same connection, and RE-READS it to verify the
+  #     restore landed. Exempting it is what makes every other exemption
+  #     unnecessary: legitimate needs route through it instead of being
+  #     allowlisted.
+  #   * Mailglass.TestSupport.SandboxOwnershipTest — the seam's own mechanism
+  #     test. It must drive real `SET`/`SHOW search_path` statements against the
+  #     live pool to prove the restore-verification raise path actually fires;
+  #     a mechanism test that cannot contain its own mechanism proves nothing.
+  #     Same allowlist rationale (and same module) as NoRawSandboxOwnership.
+  #   * Mailglass.Credo.NoRawSearchPathMutationTest — this check's own fixture
+  #     corpus. Its positive cases must spell the banned statements verbatim
+  #     (including the multi-statement `...; SET search_path ...` evasion the
+  #     semicolon branch exists to catch), and there is no way to write that
+  #     fixture without a statement-initial literal. The alternative — splitting
+  #     the literal to dodge the check — is strictly worse: it teaches exactly
+  #     the evasion this guard exists to prevent. Zero risk: the module is a
+  #     pure `async: true` Credo unit test that opens no database connection.
+  # Assertion match targets (`body =~ "SET search_path = ''"`) need NO allowlist
+  # entry: the check exempts them positionally via :match_target_functions,
+  # because a compared literal is never an executed statement. That positional
+  # carve-out is why `upgrade_v2_schema_generation_test.exs` needed no migration
+  # and no exemption.
+  {Mailglass.Credo.NoRawSearchPathMutation, []},
+  # D-31 Class D (143 gap closure): the prevention half of the recurrence guard
+  # for the Application-env restore defect. `Application.put_all_env/1` MERGES,
+  # so it can never remove a key a test ADDED — seven test modules used it as
+  # their "restore" and all seven leaked `config :mailglass, :compliance` (in no
+  # `config/*.exs`) into every later module, plus, on the runs where the key
+  # ordering lined up, a tenancy resolver whose `scope/2` applies `as: :scoped`.
+  # That leak failed the mailglass gating leg of CI run 30571989203 on a
+  # DOCS-ONLY commit and was green two commits later with `lib/` byte-identical.
+  #
+  # ALLOWLIST — two entries, both structural, neither an inconvenience
+  # exemption, and the same pair (and the same reasoning) as
+  # NoRawSandboxOwnership's:
+  #   * Mailglass.TestSupport.SandboxOwnership — the sanctioned seam. It is
+  #     allowlisted for its @doc, which must quote the banned idiom verbatim to
+  #     explain what it replaces; the seam's own restore uses `put_env/3` +
+  #     `delete_env/2` and never calls `put_all_env/1` at all.
+  #   * Mailglass.TestSupport.SandboxOwnershipTest — the seam's mechanism test.
+  #     Its non-vacuity proof reinstates the real merging idiom and asserts the
+  #     leak reappears; a mechanism test that cannot contain its own mechanism
+  #     proves nothing.
+  #
+  # Scope covers `mailglass_inbound/test/` too, even though that tree has ZERO
+  # instances today (its restores already use the presence-aware
+  # `fetch_env` / `nil -> delete_env` idiom, audited site by site). Linting a
+  # clean tree costs nothing and stops the idiom arriving there by copy-paste.
+  {Mailglass.Credo.NoRawAppEnvRestore, []}
 ]
 
 %{

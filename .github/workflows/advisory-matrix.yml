@@ -12,13 +12,30 @@ on:
 permissions:
   contents: read
 
+# The group shape below is LOAD-BEARING, not incidental (D-30). It keys on
+# `github.ref`, so two runs of this workflow on the SAME ref supersede each other
+# and runs on different refs never interfere. Do not "deduplicate" it by keying on
+# the commit SHA: `gate-ci-green` self-heals a missing advisory-matrix run by
+# dispatching one, and a SHA-keyed group would make two concurrent publish
+# dispatches for the same SHA cancel each other — both gates would then read a
+# `cancelled` run and block the release, which is precisely the unattended stall
+# the gate's self-heal exists to avoid.
 concurrency:
   group: advisory-matrix-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  core_full_suite_advisory:
-    name: Core Full Suite Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})
+  # Renamed in Phase 143 / D-21 to drop an "Advisory" suffix it no longer earns; the
+  # old job key and display name are recorded in MAINTAINING.md § "Advisory Matrix
+  # Lanes". These two legs are the declared gating pair for HARNESS-04, and a lane
+  # that gates a publish while calling itself advisory is the signal-honesty defect
+  # this milestone exists to fix. The mechanical half of the reason: before the
+  # rename this job and `core_full_suite_next_toolchain_advisory` below interpolated
+  # a byte-identical `name:` template, so on a pull_request run the skipped 1.19 job
+  # reported a string identical to this job's declared name, and
+  # `CIYaml.job_names/1` collapsed the two into one entry.
+  core_full_suite:
+    name: Core Full Suite (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -109,8 +126,22 @@ jobs:
         # runtime calls can still pass here. The focused no-search-path proof is
         # `mix verify.schema_prefix`, which runs hostile runtime tests plus the
         # raw-repo prefix guard and strict Credo.
+        #
+        # Suite-floor enforcement (HARNESS-03): the second env entry below
+        # declares that this step runs the COMPLETE suite, which turns
+        # `Mailglass.TestSupport.SuiteFloor` from reporting into enforcing —
+        # the per-schema executed floor, the skipped ceiling and the
+        # `:already_shared == 0` assertion become a non-zero exit instead of a
+        # printed line. It is opt-in rather than always-on precisely because
+        # the thresholds describe a complete suite: a focused
+        # `mix test path/to/one_test.exs` or a `mix verify.*` alias runs a
+        # deliberate subset, and holding those to a full-suite floor would
+        # misfire on nearly every invocation. Deleting that one line silently
+        # converts the gate back into a report — which is why
+        # test/scripts/lane_classification_drift_test.exs asserts it is here.
         env:
           MAILGLASS_SCHEMA: ${{ matrix.schema }}
+          MAILGLASS_SUITE_FLOOR: "1"
         run: mix test --warnings-as-errors --exclude requires_workspace
       - name: Install inbound deps for focused schema-prefix proof
         # `mix verify.schema_prefix` is a root alias but delegates one focused
@@ -125,13 +156,20 @@ jobs:
         run: mix verify.schema_prefix
 
   # LD-13 floor-coincidence invariant:
-  # This row tests the LATEST Elixir/OTP line (advisory, non-blocking, push+cron only).
+  # This row tests the NEXT Elixir/OTP line (advisory, non-blocking, push+cron only).
   # INVARIANT: whenever the required pin advances past 1.18, either add a 1.18 floor
   # row to the required lane OR raise the declared `elixir:` floor in mix.exs —
   # never let the tested version outrun the declared `~> 1.18` floor.
   # See .planning/research/milestone-cicd/SYNTHESIS.md LD-13.
-  core_latest_elixir_advisory:
-    name: Core Full Suite Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})
+  #
+  # Renamed in Phase 143 / D-21; the old key is recorded in MAINTAINING.md
+  # § "Advisory Matrix Lanes". "Next" rather than
+  # "Latest" deliberately: *latest* implies preferred, while *next* reads as
+  # the forward-compatibility canary this job actually is. The display name now
+  # diverges from `core_full_suite`'s at index 16, so neither is a prefix of the
+  # other and no classifier can confuse the advisory leg for the gating one.
+  core_full_suite_next_toolchain_advisory:
+    name: Core Full Suite Next Toolchain Advisory (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }} / schema ${{ matrix.schema }})
     # Job-level if is the ONLY mechanism to exclude a matrix row from PR events —
     # GitHub Actions does not support per-matrix-row if conditions. This guarantees
     # the 1.19/OTP28 row NEVER runs on a PR, NEVER blocks a PR, and NEVER appears in
@@ -212,8 +250,24 @@ jobs:
         # Phase 138 GATE-02: broad canary only. Because this lane aligns
         # Config.schema/0 and the connection search_path to the matrix schema,
         # use `mix verify.schema_prefix` for the focused no-search-path proof.
+        #
+        # Suite-floor enforcement (HARNESS-03): as on the 1.18 job above — the
+        # second env entry below declares a COMPLETE suite run, which turns
+        # `Mailglass.TestSupport.SuiteFloor` from reporting into enforcing.
+        # Opt-in so focused local runs and the `mix verify.*` aliases, which
+        # run deliberate subsets, never misfire against a full-suite floor.
+        #
+        # This leg is ADVISORY and, per the job-level `if` above, has never run
+        # on a pull_request — so the floors it enforces were measured on the
+        # 1.18 legs, not on this one. The comparison is `>=`: a 1.19 leg that
+        # executes at least as many tests passes, and one that executes fewer
+        # reds this advisory job visibly instead of passing silently. That is
+        # the correct direction for a leg nobody has measured; re-key the floor
+        # on {schema, elixir_minor} (D-16) if a real divergence ever appears
+        # here, and do not lower the 1.18 number to accommodate it.
         env:
           MAILGLASS_SCHEMA: ${{ matrix.schema }}
+          MAILGLASS_SUITE_FLOOR: "1"
         run: mix test --warnings-as-errors --exclude requires_workspace
 
   provider_compatibility_advisory:
@@ -275,7 +329,7 @@ jobs:
     # D-13 / INB-03: runs the FULL inbound suite under BOTH the default
     # `public` schema and the isolated `mailglass` schema. Advisory / non-blocking
     # — this workflow is never a required PR check (fake-adapter-is-the-gate DNA).
-    # The `schema` matrix axis mirrors core_full_suite_advisory's D-06 axis.
+    # The `schema` matrix axis mirrors core_full_suite's D-06 axis.
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

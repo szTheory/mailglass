@@ -11,10 +11,13 @@ defmodule Mailglass.Outbound.DeliverManyTest do
 
     # Use task_supervisor so Oban is not required
     Application.put_env(:mailglass, :async_adapter, :task_supervisor)
-    # Use shared mode so Task.Supervisor background tasks can access the sandbox.
-    # This is safer than :auto — background tasks share the test process's connection
-    # rather than getting their own, avoiding stale OID cache errors in the full suite.
-    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
+    # No raw Sandbox mode call switching to shared self-owned mode here: this
+    # module `use`s Mailglass.DataCase with async disabled, so DataCase's own setup
+    # (ExUnit.CaseTemplate composes the module's setup after the template's)
+    # already ran checkout!(shared: true) and put the pool in shared mode with
+    # a live agent owner — a call here would return :already_shared
+    # (manager.ex:148-159) and change nothing. Task.Supervisor background
+    # tasks reach the DB because the pool is genuinely shared already.
     Mailglass.TestSupport.CitextProbe.run(repo: TestRepo)
     prior_adapter = Application.get_env(:mailglass, :adapter)
     prior_adapters = Application.get_env(:mailglass, :adapters)
@@ -32,7 +35,14 @@ defmodule Mailglass.Outbound.DeliverManyTest do
       end
 
       Application.put_env(:mailglass, :tenancy, prior_tenancy)
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
+
+      # Healing call, not a leak site: reverts the shared mode DataCase's own
+      # checkout put the pool in. Its reverse on_exit placement runs before
+      # DataCase's own release, so it cannot strand the owner. Migrated to
+      # the sanctioned door per plan 143-08's Mailglass.Credo.NoRawSandboxOwnership
+      # (see Mailglass.TestSupport.SandboxOwnership.mode_manual!/1's moduledoc
+      # for why this exact caller shape is one of its two legitimate uses).
+      Mailglass.TestSupport.SandboxOwnership.mode_manual!(TestRepo, caller: __MODULE__)
     end)
 
     :ok

@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-current_phase: 142
-current_phase_name: supply-chain-remediation-gating
-status: ready_to_plan
-stopped_at: Phase 142 complete (5/5) — ready to discuss Phase 143
-last_updated: 2026-07-29T04:55:18.094Z
-last_activity: 2026-07-29
+current_phase: 143
+current_phase_name: test-harness-truth
+status: executing
+stopped_at: Completed 143-11-PLAN.md
+last_updated: "2026-07-30T19:20:49.738Z"
+last_activity: 2026-07-30
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 17
+  total_plans: 25
+  completed_plans: 22
 ---
 
 # Project State
@@ -22,16 +22,31 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 143 — test harness truth
+**Current focus:** Phase 143 — test-harness-truth
 
 ## Current Position
 
-Phase: 143
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-07-29
+Phase: 143 (test-harness-truth) — EXECUTING
+Plan: 12 of 14
+Status: Ready to execute
+Last activity: 2026-07-30
 
-Progress: [██████████] 100%
+Progress: [█████████░] 88%
+
+### Plan-phase gate override (2026-07-29)
+
+The **decision-coverage gate** was overridden at plan time. It returned
+`passed: false, reason: "could-not-parse", uncovered: []` — a *parser* failure, not a coverage gap.
+`parseDecisions` (`gsd-core/bin/lib/decisions.cjs:35-56`) forbids `:` and `*` inside a decision's
+bold title, and D-04, D-12, and D-17 carry `` `:auto` ``, `` `:already_shared` ``, and
+`*mechanism-level*` in theirs. 30 of 33 decisions parse; the 3 that don't were verified by hand to be
+cited by ID in plans (D-04 → 01/03/04/11, D-12 → 01/06, D-17 → 01/04/09), and the plan-checker
+independently confirmed D-00..D-31 are each cited in at least one plan.
+
+Content-preserving repair already applied: 12 wrapped bullets were unwrapped so their bold run closes
+on one line (22 → 30 parsed). The remaining 3 would require rewording binding decision statements to
+satisfy the parser, which was deliberately NOT done. **verify-phase should re-surface this**; the
+underlying issue is a GSD parser limitation, not a planning defect.
 
 ## v2.2 Milestone Intent
 
@@ -338,6 +353,30 @@ release debug campaign.
 - [Phase ?]: [142-04] Atomic promotion (D-04): Hex Audit + Deps Audit (renamed from Deps Audit Advisory) moved from publish-gating/advisory to merge-gating in one commit (34702fde) — ci_green.needs, Mailglass.CILanes.required_lanes/0, and publish-hex.yml's classification arrays all changed together; continue-on-error deleted (D-07) so the promotion actually blocks PR merges, not just publish.
 - [Phase ?]: [142-04] Two rename-consistency fixes beyond the plan's nine literal sites landed in the same commit as Rule 1 bug fixes: ci_parity_drift_test.exs's matcher_for key + matcher_lanes stale-reference entry (both named in CONTEXT.md's D-06 blast radius) and MAINTAINING.md's reason text reworded to avoid the literal retired string 'Deps Audit Advisory', which the plan's own acceptance criteria required be absent.
 - [Phase ?]: 142-05: Split the raw-audit-command mentions across two lines in MAINTAINING.md's new Dependency Advisory Triage section to satisfy the plan's own acceptance-criteria grep, which counts matching lines not occurrences
+- [Phase ?]: [143-01] probe/1 reads Sandbox pool ownership mode via :sys.get_state/1 on the DBConnection.Ownership.Manager process rather than calling Sandbox.mode/2 (which always heals+replies :ok and made {:leaked, term} unreachable) — coordinator-caught Rule 1 bug, fixed and verified against a real leak.
+- [Phase ?]: [143-01] baseline_tables_present?/1 runs its information_schema.tables query through Sandbox.unboxed_run/2 so the formatter's own GenServer process (no Sandbox checkout of its own) can run it without an ownership error; never mutates pool mode.
+- [Phase ?]: [143-01] Detection and healing are fully separated for this plan — no heal mechanism exists yet; an explicit, off-by-default heal step is deferred to Wave 2's SandboxOwnership.checkout!/1.
+- [Phase ?]: [143-02] Kept ci.yml untouched; routed the CI Green test-suite-blindness fix to Phase 144 as TOOLING-DEFECTS.md TOOL-02, backed by a live gate-self-test.yml dispatch (run 30482341388/30482357828) rather than static inference alone.
+- [Phase ?]: [143-02] Corrected the probe's own 'gate does not enforce halt-on-failure' framing to the precise mechanism: CI Green's seven needs (ci.yml:1141-1171) contain no root-suite test lane, so the gate is structurally blind to test regressions, not failing to enforce a rule it never had.
+- [Phase ?]: [143-03] HARNESS-01 mechanism confirmed: :auto-mode sibling files heal a leaked owner (manager.ex:169-172) rather than colliding with it; Mailglass.DataCase exonerated as the victim, not the culprit.
+- [Phase ?]: [143-03] Both local instrumented pre-fix ledgers recorded zero SuiteTruthFormatter violations despite genuine live Class A/B/C failures — confirmed boundary-only (:module_finished-only) blind spot, not evidence of no leak.
+- [Phase ?]: [143-03] Class A refuted for migration_test.exs (zero failures both local runs); Class B narrowed from six :schema_isolation candidates to three confirmed schema-flipping files plus schema_prefix_hardening_test.exs. Neither class resolves to one file — the ledger's per-module granularity cannot see per-test drift-and-restore cycles.
+- [Phase ?]: [143-04] checkout!/1 detects the calling test module's async status via Process.get(:"$process_label") + __ex_unit__(:config).async? — a deliberate, version-pinned ExUnit-internals coupling; fails open (not closed) when unresolvable, since the Credo check in plan 143-08 is the fail-closed enforcement layer.
+- [Phase ?]: [143-04] assert_manual!/3 retries up to 30x/5ms (~150ms bound) before raising LeakError, absorbing stop_owner/1's benign manager-propagation delay (empirically reproduced 5/5 without the fix) without masking a genuine, persistent leak.
+- [Phase ?]: [143-04] test/mailglass/test_support/sandbox_ownership_test.exs keeps async: false (unchanged from 143-01) per D-11/D-31, resolving a tension in the plan's own action text (async: true vs. cannot run concurrently with pool-sharing tests).
+- [Phase ?]: [143-05] schema_axis_boot_order_test.exs's bare Sandbox.checkout/1 migrated to checkout!/1, not allowlisted (RESEARCH.md Open Question 4 resolved)
+- [Phase ?]: [143-05] checkout!/1 gained optional :settle_attempts/:settle_interval_ms (default unchanged); only webhook_idempotency_convergence_test.exs opts into a wider bound after empirically hitting assert_manual!/3's default settle window under heavy pool churn
+- [Phase ?]: [143-06] Task 2's four schema-isolation/divergence files carry hand-off comments naming Class A/B candidacy from 143-MECHANISM.md without touching the drift/restoration defect (deferred to 143-07)
+- [Phase ?]: [143-06] Neither Task 3 file (migration_test.exs, upgrade_v2_schema_migration_test.exs) migrated to unboxed_run/2 -- both drive Ecto.Migrator.with_repo/2, which spawns a process unboxed_run cannot cover
+- [Phase ?]: [143-07] The ledger, not the research candidates, drove final scope — repo_test.exs (Application.delete_env/2 leaving :schema absent) and two schema_prefix_hardening_test.exs assertion helpers were fixed because the required full-suite run named them as live Class A/B sources, outside the plan's original files_modified
+- [Phase ?]: [143-07] Ecto.Migrator's schema_migrations bookkeeping resolves via ambient current_schema (not Mailglass.Config.schema()) absent an explicit :prefix — pin prefix: "public" on any up/4+down/4 pair whose content is raw execute/1 SQL; create table(prefix: ...) DSL migrations cannot use this fix (Ecto validates and rejects a mismatch)
+- [Phase ?]: 143-08: NoRawSandboxOwnership check deliberately does not copy the Swoosh analog's bare-tail-only over-match fallback — a bare Sandbox tail is only flagged via an explicit resolving alias
+- [Phase ?]: 143-08: test_helper.exs and the two deliver_*_test.exs healing calls migrated to a new SandboxOwnership.mode_manual!/1 rather than allowlisted or path-exempted, keeping the check's allowlist at exactly two modules
+- [Phase ?]: 143-08: mix credo --strict finding zero issues over the whole tree is the authoritative confirmation of full migration — the plan's literal acceptance-grep over-matches on the check's own test fixtures and is documented as an imprecise proxy
+- [Phase ?]: SuiteFloor's D-14 allowlist 'missing' direction narrowed to only :public_only after a live false-positive on a real narrow lane; :requires_workspace protected via the 'unknown' direction only
+- [Phase ?]: SuiteTruthFormatter's cross-process read to SuiteFloor.check/1 uses a :persistent_term snapshot written at :suite_finished, not a live :sys.get_state/1 -- ExUnit.EventManager.stop/1 terminates every formatter before after_suite callbacks run (confirmed by decompiling ExUnit.Runner)
+- [Phase ?]: 143-10: pinned SuiteFloor's executed floors per-schema (public 1576 / mailglass 1575) and the skipped ceiling (7) from green Advisory Matrix run 30568802513's two Elixir 1.18.4/OTP 27 legs — no margin, >= comparison, D-27 (never from a local 1.19.5 run)
+- [Phase ?]: 143-10: SuiteFloor's executed floor, growth nudge and skipped ceiling evaluate only on a run that declares itself a complete suite via MAILGLASS_SUITE_FLOOR; :test is discounted from the unknown-exclusion-tag set only when paired with a non-empty include set (--only's mechanism). Both distinguish deliberate scoping from silent coverage loss.
 
 ## Quick Tasks Completed
 
@@ -376,6 +415,16 @@ release debug campaign.
 | Phase 142 P03 | 4min | 1 tasks | 1 files |
 | Phase 142 P04 | 22min | 1 tasks | 6 files |
 | Phase 142 P05 | 12min | 1 tasks | 1 files |
+| Phase 143 P01 | 55min | 2 tasks | 5 files |
+| Phase 143 P02 | 20min | 2 tasks | 3 files |
+| Phase 143 P03 | 25min | 3 tasks | 7 files |
+| Phase 143 P04 | ~40min | 2 tasks | 2 files |
+| Phase 143 P05 | ~55min | 3 tasks | 8 files |
+| Phase 143 P06 | ~2h | 3 tasks | 9 files |
+| Phase 143 P07 | 130min | 3 tasks | 10 files |
+| Phase 143 P08 | 70min | 3 tasks | 8 files |
+| Phase 143 P09 | 35min | 3 tasks | 4 files |
+| Phase 143 P10 | ~2h | 3 tasks | 4 files |
 
 ## Deferred Items
 
@@ -543,8 +592,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-29T04:44:12.600Z
-**Stopped at:** Completed 142-05-PLAN.md
+**Last session:** 2026-07-30T19:20:49.727Z
+**Stopped at:** Completed 143-11-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in

@@ -3,9 +3,9 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
   use ExUnitProperties
 
   import Ecto.Query
+  import Mailglass.TestSupport.SandboxOwnership, only: [unsandboxed_module: 1, with_app_env!: 1]
   require Phoenix.ConnTest
 
-  alias Ecto.Adapters.SQL.Sandbox
   alias Mailglass.Compliance.Unsubscribe
   alias Mailglass.Events.Event
   alias Mailglass.Generators
@@ -63,10 +63,20 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
     :ok
   end
 
-  setup do
-    prior_mailglass = Application.get_all_env(:mailglass)
+  # Pool-wide :auto is acquired through the sanctioned door
+  # (SandboxOwnership.unsandboxed_module/1). Its revert to :manual is
+  # registered FIRST (this setup runs before the one below), so it runs LAST
+  # — the file's own restore on_exit (registered second, below) still
+  # executes while :auto is in effect.
+  setup :unsandboxed_module
 
-    Sandbox.mode(TestRepo, :auto)
+  setup do
+    # Restores exactly, including REMOVING `:compliance` and this module's own
+    # `TestEndpoint` module key — neither is in any `config/*.exs`, so the
+    # previous `Application.put_all_env/1` restore (which merges) left both
+    # behind for the rest of the run. See `SandboxOwnership.with_app_env!/2`.
+    with_app_env!(:mailglass)
+
     TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
     TestRepo.query!("TRUNCATE TABLE mailglass_deliveries CASCADE", [])
 
@@ -99,8 +109,6 @@ defmodule Mailglass.Properties.UnsubscribePostIdempotencyPropertyTest do
     on_exit(fn ->
       TestRepo.query!("TRUNCATE TABLE mailglass_events CASCADE", [])
       TestRepo.query!("TRUNCATE TABLE mailglass_deliveries CASCADE", [])
-      Application.put_all_env(mailglass: prior_mailglass)
-      Sandbox.mode(TestRepo, :manual)
     end)
 
     :ok

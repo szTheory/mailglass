@@ -1,0 +1,134 @@
+143-LEDGER-public.txt — HARNESS-01 instrumented pre-fix ledger, public schema axis
+====================================================================================
+
+Header
+------
+Command (verbatim):
+  MAILGLASS_SANDBOX_TRACE=1 mix test --warnings-as-errors --exclude requires_workspace --seed 0
+
+Elixir / OTP:
+  Elixir 1.19.5 (compiled with Erlang/OTP 28)
+  Erlang/OTP 28 [erts-16.3]
+
+Resolved Mailglass.Config.schema() boot value: "public"
+ExUnit seed: 0
+
+--seed 0 note: this pin is a STABILIZER FOR ARTIFACT REPRODUCIBILITY ONLY, not a
+diagnostic. It is not evidence about the mechanism and must not be read as one — the
+mechanism does not depend on ordering (D-05).
+
+ExUnit counts, as printed by the run's own summary line:
+  properties: 23
+  total tests: 1454
+  failures: 180
+  excluded: 13
+  skipped: 7
+
+Wall-clock duration: 64.9 seconds (1.6s async, 63.2s sync)
+
+Prerequisite: this run was captured against a database freshly reset via
+`mix ecto.drop -r Mailglass.TestRepo --quiet && mix ecto.create -r Mailglass.TestRepo
+--quiet` immediately beforehand. A first attempt at this capture, before the reset, ran
+against a database left in a pre-existing broken state by an unrelated prior exploratory
+run (documented in 143-01-SUMMARY.md's Issues Encountered) and produced 198 failures with
+a ZERO-record ledger from the very first module — that capture was discarded as
+contaminated and is not reported here. The run recorded below started from a clean,
+freshly migrated database.
+
+
+SuiteTruthFormatter ledger records, in execution order
+-------------------------------------------------------
+0 record(s).
+
+This is the REAL, single production-formatter ledger for this run (registered once via
+`ExUnit.configure(formatters: [...])` in test_helper.exs, printed once at
+`:suite_finished`) — not to be confused with a second, unrelated "0 record(s)" string
+that also appears in this run's raw combined output, emitted mid-run by
+`suite_truth_formatter_test.exs`'s own unit test
+(":suite_finished on an empty accumulator returns {:noreply, state} without raising"),
+which calls `handle_cast({:suite_finished, %{}}, state)` directly against a synthetic
+empty accumulator to test the formatter's own code, and inherits `trace?: true` from
+this run's `MAILGLASS_SANDBOX_TRACE=1` env var. That print is a unit-test artifact of
+this ledger's own instrumentation being exercised, not suite evidence, and is excluded
+from the counts below.
+
+**This literal zero MUST NOT be read as "no leak occurred."** The raw ExUnit failure
+output from this SAME run — captured in the same combined log this ledger was extracted
+from — contains genuine, live evidence of all three D-31 leak classes:
+
+  - 145 occurrences of the raw `already_shared` signature in the combined log (SASL
+    crasher reports plus ExUnit failure terms) — Class C. At least one exact match to the
+    documented `{:error, {{:badmatch, :already_shared}, _stack}}` MatchError shape
+    (RESEARCH.md's "Mechanism Account" section), immediately following a test in
+    `Mailglass.Webhook.PlugSESTest` whose own setup raised `42P01 undefined_table` for
+    relation "mailglass.mailglass_suppressions" inside `Mailglass.MailerCase`'s setup
+    (the `CitextProbe.run/1` call between shared-mode acquisition and `on_exit`
+    registration) — the exact acquire/work-that-can-raise/register-release shape D-02
+    names for `test/support/mailer_case.ex`.
+  - 46 occurrences of `relation "…" does not exist` (`42P01`) across four distinct
+    relation-name shapes: 33 qualified `mailglass.mailglass_suppressions` (Class B —
+    `Mailglass.Config.schema()` resolving to "mailglass" during a run booted at
+    "public"), 9 unqualified `mailglass_deliveries`, 3 unqualified
+    `mailglass_webhook_events`, 1 unqualified `mailglass_events` (the unqualified misses
+    are genuine Class A — those relations were absent from `public`, this run's actual
+    connection search_path default).
+
+**Why the boundary-only ledger missed all of this — a genuine, live confirmation of the
+blind spot 143-01-SUMMARY flagged, not a defect introduced by this plan.**
+`Mailglass.TestSupport.SuiteTruthFormatter` probes pool mode, `Config.schema()` drift,
+and baseline-table presence ONLY at `:module_finished` of an `async: false` module — once
+per module, never mid-module. Three modules in this suite manipulate
+`Mailglass.Config.schema()` via `Application.put_env/3` +
+`:persistent_term.erase({Mailglass.Config, :schema})` inside a PER-TEST `setup`/`on_exit`
+pair, not a `setup_all` — `test/mailglass/schema_isolation_integration_test.exs`,
+`test/mailglass/schema_isolation_immutability_test.exs`, and
+`test/mailglass/schema_prefix_hardening_test.exs`. Each test in these modules drifts the
+schema and (in the normal case) restores it before the NEXT test in the SAME module
+starts. Because the probe fires only once, at the end of the WHOLE module, a corruption
+that occurs and self-heals between two tests inside the same module's own lifecycle is
+structurally invisible to it — exactly the class of miss 143-01-SUMMARY's "Next Phase
+Readiness" section named in advance for `Mailglass.SchemaPrefixHardeningTest`. This run
+reproduces that prediction live: real Class A/B/C symptoms occurred, and the boundary
+probe correctly reported that IT observed nothing wrong AT THE BOUNDARIES IT CHECKS —
+which is a true statement about a narrower claim than "no leak occurred."
+
+
+Per-class tally (from the SuiteTruthFormatter ledger only)
+------------------------------------------------------------
+  pool_mode_leaked:    0
+  config_schema_drift: 0
+  baseline_missing:    0
+  cannot_verify:       0
+
+
+Negative control — `--max-cases 1` (D-05)
+--------------------------------------------
+Command (verbatim):
+  MAILGLASS_SANDBOX_TRACE=1 mix test --warnings-as-errors --exclude requires_workspace --seed 0 --max-cases 1
+
+Run against a freshly reset database (`mix ecto.drop` + `mix ecto.create`), same seed.
+
+ExUnit counts, as printed by the run's own summary line:
+  properties: 23
+  total tests: 1454
+  failures: 163
+  excluded: 13
+  skipped: 7
+
+Wall-clock duration: 76.2 seconds (3.3s async, 72.8s sync)
+
+Combined-log signature counts for this negative-control run:
+  already_shared occurrences: 119   (unrestricted run: 145)
+  42P01 occurrences:          36    (unrestricted run: 46)
+
+SuiteTruthFormatter ledger: 0 record(s) (same as the unrestricted run).
+
+Observed result: the tally is MATERIALLY UNCHANGED — still triple-digit
+already_shared/42P01 signature counts, still zero ledger records, still the same four
+relation-name shapes (`mailglass.mailglass_suppressions` dominant, plus unqualified
+misses). This is the expected outcome per D-05:
+`ExUnit.Runner.async_loop/4` already runs `async: false` (sync) modules strictly AFTER
+ALL `async: true` modules have finished, one sync module at a time — there is no
+async/sync overlap for `--max-cases` to serialize away, so constraining `max_cases`
+changes nothing about this bug. `--max-cases 1` is not the diagnostic; it is confirmed
+here, once, as a rejected dead end, per D-05.

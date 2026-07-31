@@ -3,6 +3,13 @@ defmodule Mailglass.ComplianceTest do
 
   alias Mailglass.Message
 
+  # The presence-aware restore this module uses instead of the whole-env seam
+  # (see `setup`). `:error` means the key was ABSENT at capture, so the restore
+  # must DELETE it — writing `nil` back would leave the key present holding
+  # `nil`, which is the defect being fixed, not the fix.
+  defp restore_env(key, :error), do: Application.delete_env(:mailglass, key)
+  defp restore_env(key, {:ok, value}), do: Application.put_env(:mailglass, key, value)
+
   defmodule OperationalOptInMailer do
     def __mailglass_unsubscribe__ do
       [enabled: true]
@@ -13,8 +20,31 @@ defmodule Mailglass.ComplianceTest do
   end
 
   setup do
-    prior_tracking = Application.get_env(:mailglass, :tracking)
-    prior_compliance = Application.get_env(:mailglass, :compliance)
+    # D-31 Class D, per-key. `:compliance` is in no `config/*.exs`, so the
+    # previous restore — `Application.put_env(:mailglass, :compliance,
+    # prior_compliance)` with a `prior_compliance` of `nil` — CREATED the key
+    # holding `nil` rather than removing it, leaving every later
+    # `Application.get_env(:mailglass, :compliance, default)` in the run
+    # resolving to `nil` instead of its default. Same shape as the `:schema`
+    # restore bug that produced a 104-failure cascade in 143-07.
+    #
+    # This module deliberately does NOT use
+    # `SandboxOwnership.with_app_env!/2`, unlike the other ten sites migrated
+    # in this pass, and the reason is `async: true` on line 2. That seam
+    # restores the WHOLE app env, which is only safe when no other module can
+    # be writing it concurrently. `clock_test.exs` is also `async: true` and
+    # also writes `:mailglass` env (`:clock`), so a whole-env restore fired
+    # from here could delete a key `clock_test.exs` had live at that instant.
+    # Phase 143 changes no file's `async:` value (D-11/D-31), so the correct
+    # fix here is the presence-aware per-key restore below: same semantics for
+    # the two keys this module owns, no claim over any key it does not.
+    prior_tracking = Application.fetch_env(:mailglass, :tracking)
+    prior_compliance = Application.fetch_env(:mailglass, :compliance)
+
+    on_exit(fn ->
+      restore_env(:tracking, prior_tracking)
+      restore_env(:compliance, prior_compliance)
+    end)
 
     Application.put_env(:mailglass, :tracking, endpoint: "tracking-endpoint-secret-123")
 
@@ -27,11 +57,6 @@ defmodule Mailglass.ComplianceTest do
       redirect: nil,
       max_age: 60
     )
-
-    on_exit(fn ->
-      Application.put_env(:mailglass, :tracking, prior_tracking)
-      Application.put_env(:mailglass, :compliance, prior_compliance)
-    end)
 
     :ok
   end
@@ -128,8 +153,16 @@ defmodule Mailglass.ComplianceTest do
 
   describe "maybe_add_feedback_id/1" do
     setup do
-      original_config = Application.get_env(:mailglass, :feedback_id)
-      on_exit(fn -> Application.put_env(:mailglass, :feedback_id, original_config) end)
+      # `:feedback_id` is in no `config/*.exs`. The previous restore
+      # (`put_env(:mailglass, :feedback_id, original_config)` with
+      # `original_config == nil`) created the key holding `nil` instead of
+      # removing it. `Application.fetch_env/2`'s `:error` distinguishes
+      # "absent" from "present and nil" — which is the whole distinction the
+      # old code could not make. See the module `setup` above for why this
+      # module restores per-key rather than through
+      # `SandboxOwnership.with_app_env!/2`.
+      prior = Application.fetch_env(:mailglass, :feedback_id)
+      on_exit(fn -> restore_env(:feedback_id, prior) end)
       :ok
     end
 
