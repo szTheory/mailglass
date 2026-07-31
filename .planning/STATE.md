@@ -27,13 +27,20 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 143 (test-harness-truth) — EXECUTING
-Plan: 12 of 14
-Status: BLOCKED on the 143-12 promotion checkpoint — condition 1 (three green
-  advisory-matrix runs on three DISTINCT `main` SHAs) is at 2 of 3. Conditions
-  2, 3, 4 and 5 are met; see 143-PROMOTION-CHECKPOINT.md and
-  143-MAIN-GREEN-EVIDENCE.md. 143-13 is explicitly sequenced after this
-  checkpoint, and 143-14 after 143-13, so both are serially blocked. `main`
-  must advance once more before the gate can be wired.
+Plan: 13 of 14 complete; 143-14 is the only plan left
+Status: The 143-12 promotion checkpoint is CLOSED — all five conditions met on
+  real `main` evidence (see 143-PROMOTION-CHECKPOINT.md and
+  143-MAIN-GREEN-EVIDENCE.md). 143-13 shipped: the two Elixir 1.18 / OTP 27
+  Core Full Suite legs now hold publish-veto power, and the gate has since run
+  against a REAL release (2.3.0) and passed — `gate-ci-green` = success in both
+  publish runs, having dispatched its own advisory-matrix run on the tag ref
+  because the release SHA had none.
+
+  REMAINING: 143-14's NEGATIVE rehearsal — prove a RED gating leg actually
+  blocks a publish. The positive half is already evidenced by the 2.3.0 release
+  above; only the negative half is outstanding, and it is what the phase goal's
+  "demonstrably blocks a Hex publish (not merely a PR merge)" asks for.
+  HARNESS-04 stays `[ ]` until it exists.
 Last activity: 2026-07-31
 
 Progress: [█████████░] 88%
