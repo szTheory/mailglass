@@ -186,7 +186,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   --print-expected-json` on a schedule, and a regression guard specifically catches the job-`id`-vs-job-`name`
   context mismatch that caused this milestone.
 
-- [ ] **TRUTH-06**: `repo-hygiene` distinguishes "genuinely blocked" from "cannot check". Its
+- [x] **TRUTH-06**: `repo-hygiene` distinguishes "genuinely blocked" from "cannot check". Its
   `branch_protection` sub-check currently 403s and reports the failure as drift.
 
 - [ ] **TRUTH-08**: The publish fan-out no longer races itself. `publish-hex.yml`'s
@@ -267,7 +267,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | TRUTH-02 | Phase 144 | Complete |
 | TRUTH-03 | Phase 144 | Complete |
 | TRUTH-04 | Phase 144 | Pending |
-| TRUTH-06 | Phase 144 | Pending |
+| TRUTH-06 | Phase 144 | Complete |
 | TRUTH-08 | Phase 144 | Pending |
 
 **Coverage: 20/20 requirements mapped (100%).** No orphans, no duplicates. (Note: the roadmapping brief
