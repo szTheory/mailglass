@@ -92,6 +92,15 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 - [x] **HARNESS-02**: Core Full Suite passes across all four matrix legs (Elixir 1.18/OTP 27 and 1.19/OTP 28,
   each × `public` and `mailglass` schema).
 
+  *(Evidence, 2026-07-31: all four legs green on `main` in runs
+  [`30607136165`](https://github.com/szTheory/mailglass/actions/runs/30607136165) (`schedule`, `d6e50388`)
+  and [`30635221221`](https://github.com/szTheory/mailglass/actions/runs/30635221221) (`push`, `981b9343`) —
+  both Elixir 1.18/OTP 27 legs and both 1.19/OTP 28 legs, with the executed floor enforced on each. See
+  `.planning/phases/143-test-harness-truth/143-MAIN-GREEN-EVIDENCE.md`. Recorded plainly: this box was
+  ticked **before** that evidence existed — plan 143-10 found the four-leg bar unmet at the time, since
+  the 1.19/OTP 28 legs carry `if: github.event_name != 'pull_request'` and had never run once during the
+  phase's branch life. The claim is true now; it was not when it was first made.)*
+
   *(Scope split from HARNESS-04, recorded per Plan 143-03's D-31 amendments: HARNESS-02 is judged on lane
   **content** — all FOUR legs green in the evidence. HARNESS-04's gating scope is deliberately narrower —
   only the TWO Elixir 1.18 / OTP 27 legs are publish-gating. A future reader must not mistake HARNESS-04's
@@ -101,6 +110,18 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   or tagged away to manufacture green. Proof is mechanical, not narrative: a test-count floor that fails if
   the executed count drops, plus a deliberate-failure probe following the existing `gate-self-test.yml`
   pattern pointed at Core Full Suite.
+
+  *(Evidence, 2026-07-31 — both halves now exist. **Floor:** pinned from green CI evidence (public 1576,
+  mailglass 1575, skipped ceiling 7), enforced on every `main` leg including the previously-unmeasured
+  1.19/OTP 28 pair; anti-vacuity proven by mutation — removing a 33-test file drove executed to 1558 and
+  failed the build with `[VIOLATION] executed_floor` while ExUnit itself reported success. **Probe:** both
+  gating legs returned FAILURE on the verbatim synthetic-failure commit
+  ([run 30599206217](https://github.com/szTheory/mailglass/actions/runs/30599206217)); see
+  `143-PROBE-EVIDENCE.md`. Recorded plainly: this box was ticked before the probe half existed, and the
+  probe could not be produced by `gate-self-test.yml` at all — GitHub does not trigger workflows for
+  `GITHUB_TOKEN`-raised events, so the PR that workflow opens receives zero checks. The probe was opened
+  with a user token instead, making it a **manual** procedure. Automating it needs a stored PAT, which is
+  an open maintainer decision, not a code gap.)*
 
 - [ ] **HARNESS-04**: `gate-ci-green` inspects `advisory-matrix.yml` in addition to `ci.yml`, so a Core Full
   Suite regression blocks a Hex publish. *(Sequenced strictly after HARNESS-01..03 — gating a red lane
