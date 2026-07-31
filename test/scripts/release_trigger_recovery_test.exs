@@ -3,6 +3,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
   @workflow_path Path.expand("../../.github/workflows/release-please.yml", __DIR__)
   @manifest_path Path.expand("../../.release-please-manifest.json", __DIR__)
+  @contributing_path Path.expand("../../CONTRIBUTING.md", __DIR__)
 
   test "release-please retains the complete recovery trigger set" do
     source = workflow_source()
@@ -71,6 +72,29 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
   end
 
+  test "contributing documents the bounded hourly recovery and manual fallbacks" do
+    recovery_runbook =
+      extract_markdown_section!(
+        File.read!(@contributing_path),
+        "If a release publishes but the tags/publish never fire"
+      )
+
+    assert recovery_runbook?(recovery_runbook)
+    refute recovery_runbook =~ "runs only `on: push: main`"
+
+    refute recovery_runbook?(
+             String.replace(recovery_runbook, "minute 17", "minute 18", global: false)
+           )
+
+    refute recovery_runbook?(
+             String.replace(recovery_runbook, "up to one hour", "immediately", global: false)
+           )
+
+    refute recovery_runbook?(
+             String.replace(recovery_runbook, "workflow_dispatch", "manual dispatch", global: false)
+           )
+  end
+
   defp recovery_triggers?(source) do
     push = extract_trigger_block!(source, "push")
     manual = extract_trigger_block!(source, "workflow_dispatch")
@@ -82,6 +106,23 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   defp workflow_source, do: File.read!(@workflow_path)
+
+  defp recovery_runbook?(section) do
+    section =~ "GitHub-native auto-merge" and
+      section =~ "GITHUB_TOKEN" and
+      section =~ "minute 17" and
+      section =~ "hourly" and
+      section =~ "up to one hour" and
+      section =~ "roughly 30 minutes" and
+      section =~ "all expected tags" and
+      section =~ "autorelease: tagged" and
+      section =~ "partial linked-tag state" and
+      section =~ "requires reconciliation" and
+      section =~ "workflow_dispatch" and
+      section =~ "direct manual recovery" and
+      section =~ "manually creating the missing GitHub releases" and
+      section =~ "release: published"
+  end
 
   defp full_tags_noop?(preflight) do
     branch = extract_shell_branch(preflight, "if [ \"${#missing_tags[@]}\" -eq 0 ]; then")
@@ -172,5 +213,14 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       _ ->
         ""
     end
+  end
+
+  defp extract_markdown_section!(source, heading) do
+    header = "## #{heading}"
+    [_, after_header] = String.split(source, header, parts: 2)
+    [section | _] = String.split(after_header, ~r/\n## /, parts: 2)
+
+    assert String.trim(section) != "", "#{header} section must not be empty"
+    section
   end
 end
