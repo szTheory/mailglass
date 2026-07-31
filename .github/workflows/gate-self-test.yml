@@ -38,7 +38,12 @@ jobs:
   self-test:
     name: Verify CI Green gate blocks failing PRs
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Derived from the poll deadline, never a standalone constant. A fixed cap
+    # silently truncates any larger deadline_minutes: dispatching with 40
+    # against a hardcoded 30 cancelled run 30596060407 at the cap, so the poll
+    # loop produced no `result=` value and the probe reported nothing at all.
+    # +5 covers checkout, branch push, PR open and cleanup around the loop.
+    timeout-minutes: ${{ fromJSON(inputs.deadline_minutes || '25') + 5 }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
