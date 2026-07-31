@@ -151,7 +151,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     assert sync =~ "pull_request: synchronize"
     refute sync =~ "sync push uses `GITHUB_TOKEN`"
 
-    assert protection =~ "failed `cannot_check` outcome"
+    assert protection =~ ~r/failed\s+`cannot_check`\s+outcome/
     refute protection =~ "no-ops and posts a notice"
   end
 
@@ -201,11 +201,33 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   defp preflight_script(preflight) do
-    [_, script] = String.split(preflight, "        run: |\\n", parts: 2)
+    case String.split(preflight, ~r/^\s*run: \|\n/m, parts: 2) do
+      [metadata, script] when script != "" ->
+        if metadata =~ "GH_REPO: ${{ github.repository }}" and
+             script =~ "gh release view" and script =~ "gh pr view" do
+          """
+          # macOS's Bash 3 lacks mapfile; GitHub's runner has it. The test
+          # harness supplies the equivalent solely so it can execute the
+          # extracted workflow script against fake gh on both platforms.
+          mapfile() {
+            local option="$1" array_name="$2" line
+            eval "$array_name=()"
+            while IFS= read -r line; do
+              eval "$array_name+=(\"$line\")"
+            done
+          }
 
-    script
-    |> String.split("\\n")
-    |> Enum.map_join("\\n", &String.replace_prefix(&1, "          ", ""))
+          """ <>
+            (script
+             |> String.split("\n")
+             |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", "")))
+        else
+          raise ArgumentError, "release preflight is missing repository-bound gh commands"
+        end
+
+      _ ->
+        raise ArgumentError, "could not extract the release preflight shell script"
+    end
   end
 
   defp recovery_runbook?(section) do

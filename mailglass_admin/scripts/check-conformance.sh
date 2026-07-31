@@ -200,7 +200,7 @@ extract_dynamic_icon_references() {
             sub(/[[:space:]]>.*/, "", tag)
           }
           gsub(/[[:space:]]+/, " ", tag)
-          printf "%s\\t0\\t%s\\034", file, tag
+          printf "%s\t0\t%s\034", file, tag
         }
       ' "$file"
     done < <(find "$LIB" -type f -name '*.ex' -print0)
