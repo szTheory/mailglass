@@ -140,6 +140,28 @@ Cron runs on `main` exist and are on the right cadence, but none is green:
 The phase branch has produced **no** cron run and structurally cannot: the schedule trigger fires on `main`
 only. So this condition, like condition 1, is gated on the merge.
 
+### UPDATE 2026-07-31 — the substantive point is now evidenced; the literal count is not
+
+PR #151 merged as `d6e50388`, and the next scheduled run went green:
+
+| Run | Event | Head SHA | Created | Conclusion | Gating legs |
+|---|---|---|---|---|---|
+| [`30607136165`](https://github.com/szTheory/mailglass/actions/runs/30607136165) | `schedule` | `d6e50388` | 2026-07-31T05:33:38Z | **success** | both **success** |
+
+This is the first green cron on `main` since 2026-07-02. **The condition's substantive point is met:**
+a plain `main` SHA, cold cache, no pull-request context, fully unattended — green on both gating legs.
+
+**It does NOT complete condition 1**, and that distinction must not be blurred. Condition 1 asks for
+three *distinct* `main` SHAs. `d6e50388` has now produced two green runs (`push` 30595090072 and this
+`schedule` run), but that is one SHA observed twice, not two of the three. `main` must advance twice
+more before condition 1 can close.
+
+**Operational note for whoever waits on this next:** the cron is declared `21 4 * * *` but GitHub
+consistently delays it by roughly an hour — 05:33 today, 05:20 on 2026-07-30, 05:29 on 2026-07-29.
+Budget for ~05:20–05:35 UTC, not 04:21, and do not read a missing 04:30 run as a skipped schedule.
+
+---
+
 The condition's substantive point — a plain `main` SHA, cold cache, no pull-request context — remains
 entirely unevidenced for a *green* lane.
 
