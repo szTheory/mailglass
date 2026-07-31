@@ -160,17 +160,21 @@ trap 'rm -f "$used_icons" "$available_icons" "$missing_icons" "$unresolved_dynam
 # non-finite concatenation or interpolation is deliberately recorded for a
 # fail-closed diagnostic rather than silently treated as a valid icon reference.
 extract_dynamic_icon_references() {
-  local file line_number source expression
+  local file line_number tag expression
 
-  while IFS=: read -r file line_number source; do
-    [[ "$source" == *'name={'* ]] || continue
+  # A component's attributes frequently span lines in HEEx. Read each complete
+  # <.icon ...> tag before inspecting name={} so finite expressions are not
+  # formatting-dependent. The record separator is deliberately non-printing:
+  # flattened tags can contain ordinary newlines and spaces.
+  while IFS=$'\t' read -r -d $'\034' file line_number tag; do
+    [[ "$tag" == *'name={'* ]] || continue
 
-    if [[ "$source" =~ name=\{\"([^\"]*)#\{\"([^\"]*)\"\}\" ]]; then
+    if [[ "$tag" =~ name=\{[[:space:]]*\"([^\"]*)#\{[[:space:]]*\"([^\"]*)\"[[:space:]]*\}[[:space:]]*\"[[:space:]]*\} ]]; then
       printf '%s%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
       continue
     fi
 
-    expression="${source#*name=\{}"
+    expression="${tag#*name=\{}"
     expression="${expression%%\}*}"
 
     if [[ "$expression" == *'<'*'>'* ]]; then
@@ -182,7 +186,25 @@ extract_dynamic_icon_references() {
     elif [[ "$expression" == *'#{'* ]]; then
       printf '%s:%s: interpolation\n' "$file" "$line_number" >> "$unresolved_dynamic_icons"
     fi
-  done < <(grep -rEn '<\.icon[[:space:]]+name=\{' "$LIB" --include="*.ex" 2>/dev/null || true)
+  done < <(
+    while IFS= read -r -d '' file; do
+      awk -v file="$file" '
+        BEGIN { RS = "<\\.icon" }
+        NR > 1 {
+          tag = $0
+          # Prefer the self-closing component terminator. A bare `>` would
+          # truncate the valid Elixir literal-concatenation operator `<>`.
+          if (match(tag, /\/>/)) {
+            tag = substr(tag, 1, RSTART - 1)
+          } else {
+            sub(/[[:space:]]>.*/, "", tag)
+          }
+          gsub(/[[:space:]]+/, " ", tag)
+          printf "%s\\t0\\t%s\\034", file, tag
+        }
+      ' "$file"
+    done < <(find "$LIB" -type f -name '*.ex' -print0)
+  )
 }
 
 {

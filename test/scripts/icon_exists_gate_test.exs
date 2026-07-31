@@ -37,6 +37,30 @@ defmodule Mailglass.Scripts.IconExistsGateTest do
     assert output =~ "FAIL: ICON-EXISTS-GATE"
   end
 
+  test "the real gate accepts finite computed vendored icons across supported forms" do
+    source = """
+    defmodule ComputedVendoredIcons do
+      def render(assigns) do
+        ~H\"\"\"
+        <.icon name={\"hero-\" <> \"check\"} class=\"h-4 w-4\" />
+        <.icon
+          name={"hero-\#{"arrow-path"}"}
+          class=\"h-4 w-4\"
+        />
+        \"\"\"
+      end
+    end
+    """
+
+    refute source =~ "hero-check"
+    refute source =~ "hero-arrow-path"
+
+    {output, status} = run_fixture!("computed-vendored", source)
+
+    assert status == 0, output
+    assert output =~ "OK: design-system conformance clean."
+  end
+
   test "the real gate fails closed for a non-finite dynamic icon expression" do
     source = """
     defmodule UnboundedIcon do
