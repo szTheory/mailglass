@@ -1,6 +1,6 @@
 ---
 phase: 144-signal-drift-integrity
-reviewed: 2026-07-31T21:25:00Z
+reviewed: 2026-07-31T21:33:00Z
 depth: standard
 files_reviewed: 15
 files_reviewed_list:
@@ -20,8 +20,8 @@ files_reviewed_list:
   - test/scripts/release_trigger_recovery_test.exs
   - .github/workflows/release-please.yml
 findings:
-  critical: 1
-  warning: 1
+  critical: 2
+  warning: 0
   info: 0
   total: 2
 status: issues_found
@@ -29,41 +29,48 @@ status: issues_found
 
 # Phase 144: Code Review Report
 
-**Reviewed:** 2026-07-31T21:25:00Z
+**Reviewed:** 2026-07-31T21:33:00Z
 **Depth:** standard
 **Files Reviewed:** 15
 **Status:** issues_found
 
 ## Summary
 
-The prior review findings are resolved: the recovery preflight binds `gh` to the workflow repository; computed icons spanning lines are handled and have a valid positive fixture; and the contributor guidance matches the PAT-backed/fail-loud behavior. The focused contract suite passes (37 tests). Two defects remain: the icon gate is still fail-open for several unsupported runtime expressions, and repo hygiene reports a repository without an upstream as release-clean.
+The earlier review findings are resolved: unsupported dynamic icon expressions now fail closed, the icon test covers those forms, and repo hygiene treats an unresolved upstream as non-success while preserving an independently dirty state as blocked. The focused contract suite passes (39 tests), but the new release recovery preflight still cannot execute reliably in a real GitHub runner and also turns GitHub API failures into a release attempt. Both defects break the intended zero-human, fail-closed recovery path.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: Unsupported dynamic icon expressions bypass the fail-closed gate
+### CR-01: Release preflight reads the manifest without checking out the repository
 
 **Classification:** BLOCKER
 
-**File:** `mailglass_admin/scripts/check-conformance.sh:169-188`
-**Issue:** `extract_dynamic_icon_references` records an expression as unresolved only when it contains `<>` or `#{`. Direct runtime expressions such as `name={@runtime_icon}`, `name={option.icon}`, and `name={icon_for(state)}` match neither branch and emit nothing. The separate `hero-*` text scan cannot validate a runtime value that is not represented as a complete source literal, so a new invalid icon supplied through one of these expressions can ship while the gate reports clean. The existing negative test covers only `"hero-" <> @runtime_icon` (`test/scripts/icon_exists_gate_test.exs:64-80`), leaving the simpler fail-open forms untested.
+**File:** `.github/workflows/release-please.yml:40-70`
+**Issue:** The first job step is the preflight, but it runs `jq ... .release-please-manifest.json` at line 69 before any `actions/checkout` step. GitHub-hosted runners begin with an empty workspace, so this affects push, scheduled, and manually dispatched runs—not only the paths called out in the comment. Because `jq` is inside process substitution for `mapfile`, its failure is not propagated by `set -e`; `expected_tags` is empty and line 89 then records `should_run=false`. Consequently, the hourly/manual recovery silently no-ops instead of creating the releases it is supposed to restore. The purported no-checkout contract test masks the defect by manually copying the manifest into its temporary directory at `test/scripts/release_trigger_recovery_test.exs:82-84`.
 
-**Fix:** Treat every `name={...}` expression that is not an explicitly supported finite literal form as unresolved. For example, add a final `else` that writes `"$file:$line_number: dynamic expression"` to `unresolved_dynamic_icons`, then add fixtures for `@runtime_icon`, a map field, and a helper call that assert a non-zero result. If those forms are intentionally supported, resolve them from a bounded declaration instead of silently accepting arbitrary values.
+**Fix:** Check out the triggering ref before the preflight, then make manifest parsing explicitly fail if it cannot produce one or more tag names. For example:
 
-## Warnings
+```yaml
+- name: Checkout release configuration
+  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  with:
+    ref: ${{ github.sha }}
+```
 
-### WR-01: Repo hygiene accepts a repository with no upstream as clean
+Then read the manifest with a normal command whose exit status is checked (or validate `expected_tags` is nonempty). Replace the hermetic fixture's manual manifest copy with a test that asserts the workflow has a checkout before the preflight and a negative execution test for a missing manifest.
 
-**Classification:** WARNING
+### CR-02: GitHub API failures are treated as missing releases and permit release creation
 
-**File:** `dev/mix/tasks/mailglass.repo.hygiene.ex:107-123,367-369`
-**Issue:** When `git rev-list @{upstream}...HEAD` fails, `git_state/1` records `%{status: "unknown"}` in `upstream_status` but resets `ahead` and `behind` to zero. `blocked?` ignores `upstream_status`, so this check returns `:pass`; the aggregate can therefore return `:pass` even though it did not establish that the checked-out release branch is aligned with any upstream. The clean test intentionally uses a newly initialized repository with no remote/upstream (`test/mix/tasks/mailglass.repo.hygiene_test.exs:154-173`), so the suite currently locks in this false-green behavior.
+**Classification:** BLOCKER
 
-**Fix:** Return `unknown(:git_state, ...)` (or include `upstream_status != :ok` in `blocked?`) when the upstream comparison fails, and add a test that asserts a repository without `@{upstream}` makes the aggregate non-success. Keep the existing ahead/behind diagnostics only for a successfully resolved upstream.
+**File:** `.github/workflows/release-please.yml:74-103`
+**Issue:** Any non-zero result from `gh release view` is recorded as a missing tag (lines 75-79), and `gh pr view` errors are discarded with `|| true` (line 95). A timeout, permission failure, rate limit, or GitHub outage therefore produces an all-missing tag set and empty labels, after which the preflight emits `should_run=true` (line 103). This is fail-open automation: it invokes release-please precisely when the checks that establish current release state could not be performed.
+
+**Fix:** Distinguish an authenticated, authoritative not-found response from all other `gh` failures, and exit non-zero for the latter. A simpler robust approach is to fetch/validate the required release and PR data with `gh api`, preserving stderr/status, and only classify a confirmed 404 as absent. Add hermetic cases for API/authorization failure that assert the preflight exits non-zero and never writes `should_run=true`.
 
 ---
 
-_Reviewed: 2026-07-31T21:25:00Z_
+_Reviewed: 2026-07-31T21:33:00Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
