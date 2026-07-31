@@ -94,7 +94,9 @@ defmodule Mailglass.Scripts.LinkedReleaseConcurrencyTest do
     job =
       lines
       |> Enum.drop(start_index)
-      |> Enum.take_while(fn line -> line == "  #{job_name}:" or not Regex.match?(~r/^  [a-z][a-z0-9-]*:$/, line) end)
+      |> Enum.take_while(fn line ->
+        line == "  #{job_name}:" or not Regex.match?(~r/^  [a-z][a-z0-9-]*:$/, line)
+      end)
       |> Enum.join("\n")
 
     assert String.trim(job) != "", "#{job_name} job block must not be empty"
