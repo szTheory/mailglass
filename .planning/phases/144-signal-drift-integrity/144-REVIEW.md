@@ -1,6 +1,6 @@
 ---
 phase: 144-signal-drift-integrity
-reviewed: 2026-07-31T21:33:00Z
+reviewed: 2026-07-31T21:38:26Z
 depth: standard
 files_reviewed: 15
 files_reviewed_list:
@@ -20,57 +20,38 @@ files_reviewed_list:
   - test/scripts/release_trigger_recovery_test.exs
   - .github/workflows/release-please.yml
 findings:
-  critical: 2
+  critical: 1
   warning: 0
   info: 0
-  total: 2
+  total: 1
 status: issues_found
 ---
 
 # Phase 144: Code Review Report
 
-**Reviewed:** 2026-07-31T21:33:00Z
+**Reviewed:** 2026-07-31T21:38:26Z
 **Depth:** standard
 **Files Reviewed:** 15
 **Status:** issues_found
 
 ## Summary
 
-The earlier review findings are resolved: unsupported dynamic icon expressions now fail closed, the icon test covers those forms, and repo hygiene treats an unresolved upstream as non-success while preserving an independently dirty state as blocked. The focused contract suite passes (39 tests), but the new release recovery preflight still cannot execute reliably in a real GitHub runner and also turns GitHub API failures into a release attempt. Both defects break the intended zero-human, fail-closed recovery path.
+The final fix correctly checks out before reading the manifest, rejects absent or malformed manifests, binds `gh` to the workflow repository, and fails closed for non-404 release API failures. The scoped tests pass (42 tests). One release-recovery control-flow path still bypasses those protections and contradicts the documented idempotent schedule/manual recovery contract.
 
 ## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: Release preflight reads the manifest without checking out the repository
+### CR-01: BLOCKER — scheduled and manual recovery bypass the manifest/tag preflight
 
-**Classification:** BLOCKER
+**File:** `.github/workflows/release-please.yml:65`
 
-**File:** `.github/workflows/release-please.yml:40-70`
-**Issue:** The first job step is the preflight, but it runs `jq ... .release-please-manifest.json` at line 69 before any `actions/checkout` step. GitHub-hosted runners begin with an empty workspace, so this affects push, scheduled, and manually dispatched runs—not only the paths called out in the comment. Because `jq` is inside process substitution for `mapfile`, its failure is not propagated by `set -e`; `expected_tags` is empty and line 89 then records `should_run=false`. Consequently, the hourly/manual recovery silently no-ops instead of creating the releases it is supposed to restore. The purported no-checkout contract test masks the defect by manually copying the manifest into its temporary directory at `test/scripts/release_trigger_recovery_test.exs:82-84`.
+**Issue:** `schedule` and `workflow_dispatch` events do not provide `github.event.head_commit.message`. `COMMIT_MESSAGE` is therefore empty, `pr_number` remains empty, and this early branch writes `should_run=true` and exits before reading the manifest or querying any releases. Thus the hourly path never reaches the documented “all expected tags already exist” no-op and can rerun release-please after an already-published release—the exact stale rerun that the guard was intended to prevent. It also means the new manifest validation and 404-vs-API-error fail-closed logic are not applied to either recovery trigger. The tests only execute a fabricated merge-commit message, so they do not cover the normal scheduled/manual event shape.
 
-**Fix:** Check out the triggering ref before the preflight, then make manifest parsing explicitly fail if it cannot produce one or more tag names. For example:
-
-```yaml
-- name: Checkout release configuration
-  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-  with:
-    ref: ${{ github.sha }}
-```
-
-Then read the manifest with a normal command whose exit status is checked (or validate `expected_tags` is nonempty). Replace the hermetic fixture's manual manifest copy with a test that asserts the workflow has a checkout before the preflight and a negative execution test for a missing manifest.
-
-### CR-02: GitHub API failures are treated as missing releases and permit release creation
-
-**Classification:** BLOCKER
-
-**File:** `.github/workflows/release-please.yml:74-103`
-**Issue:** Any non-zero result from `gh release view` is recorded as a missing tag (lines 75-79), and `gh pr view` errors are discarded with `|| true` (line 95). A timeout, permission failure, rate limit, or GitHub outage therefore produces an all-missing tag set and empty labels, after which the preflight emits `should_run=true` (line 103). This is fail-open automation: it invokes release-please precisely when the checks that establish current release state could not be performed.
-
-**Fix:** Distinguish an authenticated, authoritative not-found response from all other `gh` failures, and exit non-zero for the latter. A simpler robust approach is to fetch/validate the required release and PR data with `gh api`, preserving stderr/status, and only classify a confirmed 404 as absent. Add hermetic cases for API/authorization failure that assert the preflight exits non-zero and never writes `should_run=true`.
+**Fix:** Derive the merged release PR (for example, from the commit/ref via GitHub API) without making tag validation conditional on it, or move manifest parsing and the all-present/partial-state decision before the `pr_number` early return. Only use the PR-label query when a PR number is available. Add executable fixtures with an empty `COMMIT_MESSAGE` that prove all-present tags produce `should_run=false`, partial tags fail, and 403/API failures fail without setting `should_run`.
 
 ---
 
-_Reviewed: 2026-07-31T21:33:00Z_
+_Reviewed: 2026-07-31T21:38:26Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
