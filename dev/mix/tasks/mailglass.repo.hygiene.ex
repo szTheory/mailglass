@@ -143,6 +143,9 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
           details
         )
 
+      _ when dirty? ->
+        check(:git_state, :blocked, "Local git state is not release-clean.", details)
+
       _ ->
         unknown(
           :git_state,

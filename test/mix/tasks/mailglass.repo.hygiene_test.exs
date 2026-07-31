@@ -147,6 +147,7 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     )
 
     commit_all!(repo, "add verifier")
+    push_upstream!(repo)
 
     result = with_hygiene_environment(repo, fn -> Hygiene.audit(repo) end)
 
@@ -203,6 +204,8 @@ defmodule Mix.Tasks.Mailglass.Repo.HygieneTest do
     git!(repo, ["remote", "add", "origin", remote])
     git!(repo, ["push", "-u", "origin", "main"])
   end
+
+  defp push_upstream!(repo), do: git!(repo, ["push", "origin", "main"])
 
   defp write_branch_protection_verifier!(repo, body) do
     scripts = Path.join(repo, "scripts")
