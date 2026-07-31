@@ -5,7 +5,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   @manifest_path Path.expand("../../.release-please-manifest.json", __DIR__)
 
   test "release-please retains the complete recovery trigger set" do
-    source = File.read!(@workflow_path)
+    source = workflow_source()
 
     assert extract_trigger_block!(source, "push") =~ "branches:\n      - main"
     assert extract_trigger_block!(source, "workflow_dispatch") =~ "workflow_dispatch: {}"
@@ -21,7 +21,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   test "preflight derives its expected tags from the manifest and converges every release state" do
-    source = File.read!(@workflow_path)
+    source = workflow_source()
     preflight = extract_step_block!(source, "Detect already-tagged release PR")
 
     assert File.exists?(@manifest_path)
@@ -58,7 +58,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   test "release action is mutually guarded by preflight output" do
-    source = File.read!(@workflow_path)
+    source = workflow_source()
     action = extract_action_block!(source, "release")
 
     assert action =~ "googleapis/release-please-action@"
@@ -80,6 +80,8 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       manual =~ "workflow_dispatch: {}" and
       schedule =~ "cron: \"17 * * * *\""
   end
+
+  defp workflow_source, do: File.read!(@workflow_path)
 
   defp full_tags_noop?(preflight) do
     branch = extract_shell_branch(preflight, "if [ \"${#missing_tags[@]}\" -eq 0 ]; then")
