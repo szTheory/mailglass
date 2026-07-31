@@ -1,24 +1,24 @@
 ---
 phase: 144
-fixed_at: 2026-07-31T21:29:36Z
+fixed_at: 2026-07-31T21:35:50Z
 review_path: /Users/jon/projects/mailglass/.planning/phases/144-signal-drift-integrity/144-REVIEW.md
-iteration: 2
-findings_in_scope: 6
-fixed: 6
+iteration: 3
+findings_in_scope: 8
+fixed: 8
 skipped: 0
 status: all_fixed
 ---
 
 # Phase 144: Code Review Fix Report
 
-**Fixed at:** 2026-07-31T21:29:36Z
+**Fixed at:** 2026-07-31T21:35:50Z
 **Source review:** /Users/jon/projects/mailglass/.planning/phases/144-signal-drift-integrity/144-REVIEW.md
-**Iteration:** 2
+**Iteration:** 3
 
 **Summary:**
 
-- Findings in scope: 6
-- Fixed: 6
+- Findings in scope: 8
+- Fixed: 8
 - Skipped: 0
 
 **Regression follow-up:** `9e4fe4f5` repaired the extracted-preflight test
@@ -28,6 +28,10 @@ passed 11 tests; `mix verify.ci_lane_contract` passed 136 tests.
 **Iteration 2 verification:** focused icon and repository-hygiene tests passed
 (16 tests); `mix verify.ci_lane_contract` passed 137 tests; and
 `mix verify.mix_tasks` passed 56 tests.
+
+**Iteration 3 verification:** focused release-recovery tests passed (9 tests);
+`mix verify.ci_lane_contract` passed 140 tests; and the release workflow YAML
+validated successfully.
 
 ## Fixed Issues
 
@@ -67,8 +71,20 @@ passed 11 tests; `mix verify.ci_lane_contract` passed 136 tests.
 **Commits:** 314cf5a8, bd7bf625
 **Applied fix:** Return an `unknown` git-state check when a clean repository has no resolvable upstream, while retaining a concrete blocked result for known dirty state. Clean fixtures now create and synchronize a real local upstream.
 
+### CR-01: Release preflight can read no manifest before checkout
+
+**Files modified:** `.github/workflows/release-please.yml`, `test/scripts/release_trigger_recovery_test.exs`
+**Commit:** 0ffee31f
+**Applied fix:** Added a pinned checkout before preflight, require a readable and valid non-empty manifest, and fail if it yields no expected tags. The execution harness now uses the checked-out repository manifest and proves a missing-manifest run fails without writing `should_run=true`.
+
+### CR-02: Release and PR lookup failures can be treated as missing state
+
+**Files modified:** `.github/workflows/release-please.yml`, `test/scripts/release_trigger_recovery_test.exs`
+**Commit:** 0ffee31f
+**Applied fix:** Query releases with `gh api --include`, treating only an explicit HTTP 404 as absent; 403, API, tool, and PR-label failures now stop the preflight without a run signal. Hermetic fake-`gh` cases cover each path.
+
 ---
 
-_Fixed: 2026-07-31T21:29:36Z_
+_Fixed: 2026-07-31T21:35:50Z_
 _Fixer: the agent (gsd-code-fixer)_
-_Iteration: 2_
+_Iteration: 3_
