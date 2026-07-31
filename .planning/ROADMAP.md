@@ -195,7 +195,12 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 144-01-PLAN.md — Make branch-protection workflow outcomes and required-context identity truthful
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 144-02-PLAN.md — Distinguish repo-hygiene drift from cannot-check
 - [ ] 144-03-PLAN.md — Prove bounded dynamic icon names against the real gate
 - [ ] 144-04-PLAN.md — Serialize linked-release publish and smoke fan-out

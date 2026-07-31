@@ -2,14 +2,17 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
-status: planning
+current_phase: 144
+current_phase_name: Signal & Drift Integrity
+status: executing
 stopped_at: Phase 144 context gathered (assumptions mode)
-last_updated: "2026-07-31T19:23:55.114Z"
-last_activity: 2026-07-31 — Phase 143 complete, transitioned to Phase 144
+last_updated: "2026-07-31T20:00:54.769Z"
+last_activity: 2026-07-31
+last_activity_desc: Phase 143 complete, transitioned to Phase 144
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 25
+  total_plans: 30
   completed_plans: 31
   percent: 75
 ---
@@ -27,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 Phase: 144 — Signal & Drift Integrity
 Plan: Not started
-Status: Ready to plan
+Status: Ready to execute
 Last activity: 2026-07-31 — Phase 143 complete, transitioned to Phase 144
 
 Progress: [██████████] 100%
