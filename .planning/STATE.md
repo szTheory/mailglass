@@ -3,18 +3,17 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 current_phase: 144
-current_phase_name: Signal & Drift Integrity
+current_phase_name: signal-drift-integrity
 status: executing
-stopped_at: Phase 144 context gathered (assumptions mode)
-last_updated: "2026-07-31T20:00:54.769Z"
+stopped_at: Completed 144-01-PLAN.md
+last_updated: "2026-07-31T20:50:13.629Z"
 last_activity: 2026-07-31
-last_activity_desc: Phase 143 complete, transitioned to Phase 144
+last_activity_desc: Phase 144 execution started
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 30
-  completed_plans: 31
-  percent: 75
+  completed_plans: 26
 ---
 
 # Project State
@@ -24,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 **Core value:** Email you can see, audit, and trust before it ships. Mailglass turns "did the email go out, render correctly, and reach the inbox?" from a guessing game into observable, replayable, debuggable infrastructure.
-**Current focus:** Phase 143 — test-harness-truth
+**Current focus:** Phase 144 — signal-drift-integrity
 
 ## Current Position
 
-Phase: 144 — Signal & Drift Integrity
-Plan: Not started
+Phase: 144 (signal-drift-integrity) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-07-31 — Phase 143 complete, transitioned to Phase 144
+Last activity: 2026-07-31 — Phase 144 execution started
 
-Progress: [██████████] 100%
+Progress: [█████████░] 87%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -379,6 +378,8 @@ release debug campaign.
 - [Phase ?]: SuiteTruthFormatter's cross-process read to SuiteFloor.check/1 uses a :persistent_term snapshot written at :suite_finished, not a live :sys.get_state/1 -- ExUnit.EventManager.stop/1 terminates every formatter before after_suite callbacks run (confirmed by decompiling ExUnit.Runner)
 - [Phase ?]: 143-10: pinned SuiteFloor's executed floors per-schema (public 1576 / mailglass 1575) and the skipped ceiling (7) from green Advisory Matrix run 30568802513's two Elixir 1.18.4/OTP 27 legs — no margin, >= comparison, D-27 (never from a local 1.19.5 run)
 - [Phase ?]: 143-10: SuiteFloor's executed floor, growth nudge and skipped ceiling evaluate only on a run that declares itself a complete suite via MAILGLASS_SUITE_FLOOR; :test is discounted from the unknown-exclusion-tag set only when paired with a non-empty include set (--only's mechanism). Both distinguish deliberate scoping from silent coverage loss.
+- [Phase ?]: Shared repository-internal branch-protection outcome seam makes only clean verification green.
+- [Phase ?]: Phase 144 replaces human branch-protection UAT with hermetic real-script integration evidence.
 
 ## Quick Tasks Completed
 
@@ -428,6 +429,7 @@ release debug campaign.
 | Phase 143 P09 | 35min | 3 tasks | 4 files |
 | Phase 143 P10 | ~2h | 3 tasks | 4 files |
 | Phase 143 P14 | 22 min | 4 tasks | 4 files |
+| Phase 144 P01 | 28 min | 2 tasks | 5 files |
 
 ## Deferred Items
 
@@ -595,9 +597,9 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-31T19:23:55.110Z
-**Stopped at:** Phase 144 context gathered (assumptions mode)
-**Resume file:** .planning/phases/144-signal-drift-integrity/144-CONTEXT.md
+**Last session:** 2026-07-31T20:50:13.621Z
+**Stopped at:** Completed 144-01-PLAN.md
+**Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
   `.planning/phases/111-forms/111-CONTEXT.md`; audit trail in

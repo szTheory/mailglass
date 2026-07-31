@@ -176,13 +176,13 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   with the others generated from or verified against it by a test that fails on drift. `MAINTAINING.md` is
   refreshed as part of this — it is stale, and reconciliation that leaves it stale is incomplete.
 
-- [ ] **TRUTH-02**: A check that cannot do its work never reports success. Both instances are fixed:
+- [x] **TRUTH-02**: A check that cannot do its work never reports success. Both instances are fixed:
   `branch-protection-drift.yml`'s `reassert-protection` job and `ci.yml`'s "Branch Protection Advisory", which
   share the identical `if: pat_present == 'true'`-skip-but-still-green shape. Since GitHub Actions has no
   native job-level neutral conclusion, the repo's own proven `if: always()` + explicit-failure idiom is the
   expected mechanism.
 
-- [ ] **TRUTH-03**: Live branch protection is verified against `scripts/setup_branch_protection.sh
+- [x] **TRUTH-03**: Live branch protection is verified against `scripts/setup_branch_protection.sh
   --print-expected-json` on a schedule, and a regression guard specifically catches the job-`id`-vs-job-`name`
   context mismatch that caused this milestone.
 
@@ -264,8 +264,8 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | HARNESS-03 | Phase 143 | Complete |
 | HARNESS-04 | Phase 143 | Complete |
 | CONFORM-02 | Phase 144 | Pending |
-| TRUTH-02 | Phase 144 | Pending |
-| TRUTH-03 | Phase 144 | Pending |
+| TRUTH-02 | Phase 144 | Complete |
+| TRUTH-03 | Phase 144 | Complete |
 | TRUTH-04 | Phase 144 | Pending |
 | TRUTH-06 | Phase 144 | Pending |
 | TRUTH-08 | Phase 144 | Pending |
