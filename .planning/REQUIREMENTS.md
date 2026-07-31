@@ -198,7 +198,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
   sits red or unclassified indefinitely. *(Follows TRUTH-09/07: dispositions are recorded against the
   reconciled set, not the ambiguous one.)*
 
-- [ ] **TRUTH-04**: The release-trigger anti-recursion gap is either fixed or formally accepted with its cost
+- [x] **TRUTH-04**: The release-trigger anti-recursion gap is either fixed or formally accepted with its cost
   recorded. Bot-auto-merged release PRs do not fire release-please's `push` trigger, so tagging waits on an
   hourly cron — this cost ~30 minutes on three separate occasions on 2026-07-28.
 
@@ -266,7 +266,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | CONFORM-02 | Phase 144 | Complete |
 | TRUTH-02 | Phase 144 | Complete |
 | TRUTH-03 | Phase 144 | Complete |
-| TRUTH-04 | Phase 144 | Pending |
+| TRUTH-04 | Phase 144 | Complete |
 | TRUTH-06 | Phase 144 | Complete |
 | TRUTH-08 | Phase 144 | Complete |
 
