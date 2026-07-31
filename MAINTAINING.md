@@ -505,7 +505,37 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    fan-out status in `38-03-RELEASE-RECORD.md`.
    - **Package order:** The workflow guarantees `mailglass` (core) publishes first, then `mailglass_inbound`, then `mailglass_admin`. Admin waits on inbound to avoid sibling-package Hex indexing races.
    - **Idempotency:** All three publish steps check `mix hex.info` first and skip the publish command if the version is already live, making the workflow safe to retry.
-   - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag for the package being recovered so the publish run is pinned to the exact commit Release Please tagged. For an inbound-only `mailglass_inbound-v1.0.0` publish or recovery, dispatch `package=mailglass_inbound` pinned to the `mailglass_inbound-v1.0.0` tag; the fan-out skips `publish-core` and does NOT trigger `publish-admin`, so no `mailglass`/`mailglass_admin` release is forced. The `publish-inbound`/`publish-admin` success/skipped gating is a security control — do not loosen it.
+   - **Core Full Suite is a publish gate (HARNESS-04).** `gate-ci-green` reads
+     `advisory-matrix.yml` as well as `ci.yml`. The two Elixir 1.18 / OTP 27
+     `Core Full Suite` legs block the publish when either is red, cancelled,
+     skipped, or absent. The other five advisory-matrix lanes only warn.
+     - **The gate DISPATCHES the run; it does not look one up.** A release-please
+       bot-merged release SHA has zero `advisory-matrix.yml` runs — GitHub raises
+       no workflow for a `GITHUB_TOKEN` event, and that workflow has no `release:`
+       trigger. So `gate-ci-green` dispatches it on the release tag and waits, under
+       one 30-minute deadline shared with the `ci.yml` self-heal. Expect roughly ten
+       extra minutes of cold-cache release wall-clock. A missing run is a stall, not
+       a pass: the gate blocks rather than reporting success it did not observe.
+     - **Override, for a block with no regression behind it.** The gated job also
+       runs the inbound `mix deps.get`, the inbound `mix ecto.create`, and
+       `mix verify.schema_prefix`, so a Hex outage or a Postgres hiccup can block a
+       release that has nothing wrong with it. Recover without a code change by
+       dispatching with the override:
+
+           gh workflow run publish-hex.yml \
+             -f tag=mailglass-v<version> -f package=all -f dry_run=false \
+             -f skip_core_full_suite_gate=true \
+             -f core_full_suite_gate_skip_reason="<why>"
+
+       It is **dispatch-only and inert on the `release` event** — the hands-free
+       path can never self-skip its own gate. The reason is required, is echoed to
+       the run summary, and the run logs a warning naming the override as an
+       exception. Prefer re-running the lane
+       (`gh workflow run advisory-matrix.yml --ref <tag>`) and re-dispatching the
+       publish; reach for the override when the lane cannot be made green for a
+       reason that is not about this release's code. An override reached for
+       reflexively is a gate that has been removed without anyone recording it.
+   - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all`, `dry_run=false`, and `core_full_suite_gate_skip_reason="n/a"` — that input is required on every dispatch, and `n/a` is the right answer when you are not overriding anything). **Do not dispatch from `main`**. Always use the reviewed release tag for the package being recovered so the publish run is pinned to the exact commit Release Please tagged. For an inbound-only `mailglass_inbound-v1.0.0` publish or recovery, dispatch `package=mailglass_inbound` pinned to the `mailglass_inbound-v1.0.0` tag; the fan-out skips `publish-core` and does NOT trigger `publish-admin`, so no `mailglass`/`mailglass_admin` release is forced. The `publish-inbound`/`publish-admin` success/skipped gating is a security control — do not loosen it.
 4. **Within 60 minutes of publish: smoke-install in a fresh Phoenix app.**
    Set a literal timer when approving the deployment.
    Run:

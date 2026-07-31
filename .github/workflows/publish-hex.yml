@@ -30,6 +30,28 @@ on:
           - mailglass_inbound
           - all
         default: all
+      # The Core Full Suite gate's pressure valve (Phase 143 / D-23). It exists
+      # because gating those two legs also gates three steps that are network- and
+      # service-dependent — the inbound `mix deps.get`, the inbound
+      # `mix ecto.create`, and `mix verify.schema_prefix` — so a Hex outage or a
+      # Postgres hiccup can block a release with no regression present. The
+      # override must be usable WITHOUT a code change, or the maintainer's thirty
+      # minutes becomes a day.
+      #
+      # It is deliberately awkward to reach: dispatch-only, INERT on the release
+      # event so the hands-free path can never self-skip, reason REQUIRED, reason
+      # echoed to the run summary, and a warning naming it an exception. An
+      # override reached for reflexively is a gate that has been removed without
+      # anyone recording that it was (D-30).
+      skip_core_full_suite_gate:
+        description: "EXCEPTION: publish without the Core Full Suite gate. Requires a written reason. Ignored on the automated release event."
+        required: false
+        type: boolean
+        default: false
+      core_full_suite_gate_skip_reason:
+        description: "Why the Core Full Suite gate is being skipped (write 'n/a' when not skipping). Echoed to the run summary."
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -127,6 +149,16 @@ jobs:
     permissions:
       contents: read
       actions: write
+    # Both override inputs are bound here as ENVIRONMENT VALUES and read as
+    # environment values. Neither is ever string-concatenated into a `run:` body or
+    # spliced into an inline expression inside one — the reason is free text a
+    # dispatcher supplies. The release-event inertness is NOT expressed here; it is
+    # enforced once, in each consuming script, as `context.eventName !== 'release'`,
+    # so there is exactly one readable place where "the hands-free path can never
+    # self-skip" is stated.
+    env:
+      SKIP_CORE_FULL_SUITE_GATE: ${{ inputs.skip_core_full_suite_gate }}
+      CORE_FULL_SUITE_GATE_SKIP_REASON: ${{ inputs.core_full_suite_gate_skip_reason }}
     steps:
       - name: Resolve tagged SHA
         id: resolve-sha
@@ -181,7 +213,23 @@ jobs:
             // ONE step, ONE shared deadline, both workflows polled in the SAME loop.
             // Not two serial waits: a second 30-minute deadline after the first turns
             // a 30-minute worst case into 60 on a pipeline nobody is watching.
-            const WORKFLOWS = ['ci.yml', 'advisory-matrix.yml'];
+            //
+            // The dispatch-only override (D-23) also lifts the WAIT, not just the
+            // verdict. Without that, an override could not rescue the case it most
+            // needs to: GitHub Actions itself unavailable, no advisory-matrix run
+            // obtainable, this step deadlining out 30 minutes later regardless of
+            // what the next step would have decided. INERT on the release event —
+            // the hands-free path can never self-skip.
+            const skipCoreFullSuiteGate =
+              process.env.SKIP_CORE_FULL_SUITE_GATE === 'true' && context.eventName !== 'release';
+
+            const WORKFLOWS = ['ci.yml'];
+            if (skipCoreFullSuiteGate) {
+              core.warning('Core Full Suite gate override is active: not waiting for an advisory-matrix.yml run on this SHA.');
+            } else {
+              WORKFLOWS.push('advisory-matrix.yml');
+            }
+
             const sha = process.env.RESOLVED_SHA;
             const ref = process.env.RESOLVED_REF;
             const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -504,6 +552,39 @@ jobs:
             // ===============================================================
             const ref = process.env.RESOLVED_REF;
 
+            // The dispatch-only override (D-23), inert on the release event so the
+            // hands-free path can never self-skip. It suspends ONLY the Core Full
+            // Suite verdict: every ci.yml lane verdict above already ran unchanged,
+            // and the unclassified-red rule below still blocks.
+            const skipCoreFullSuiteGate =
+              process.env.SKIP_CORE_FULL_SUITE_GATE === 'true' && context.eventName !== 'release';
+
+            if (skipCoreFullSuiteGate) {
+              const rawReason = (process.env.CORE_FULL_SUITE_GATE_SKIP_REASON || '').trim();
+
+              if (rawReason === '') {
+                core.setFailed('Delivery blocked: skip_core_full_suite_gate was set with no core_full_suite_gate_skip_reason. The reason is required — an override with no written reason is how an exception becomes a habit.');
+                return;
+              }
+
+              // Untrusted free text. Collapsed to one line and reduced to a
+              // conservative character set BEFORE it reaches the run summary, so it
+              // can carry no markdown or HTML construct: no backtick, angle bracket,
+              // ampersand, bracket, pipe, hash, asterisk or backslash survives.
+              const safeReason = rawReason
+                .replace(/[\r\n]+/g, ' ')
+                .replace(/[^A-Za-z0-9 .,:;!?()'\/@_-]/g, '?')
+                .slice(0, 300);
+
+              core.warning(`Core Full Suite publish gate SKIPPED by dispatch override. This is an EXCEPTION, not a workflow: these two legs are the only lanes that can observe a total core regression before it reaches Hex, and Hex cannot be unpublished after 60 minutes. Reason given: ${safeReason}`);
+
+              await core.summary
+                .addHeading('Core Full Suite publish gate: SKIPPED by dispatch override', 3)
+                .addRaw('This publish did not wait for, and was not gated on, the two Elixir 1.18 / OTP 27 Core Full Suite legs. The reason supplied by the dispatcher is untrusted free text and is rendered below as a code block, never as markdown:')
+                .addCodeBlock(safeReason)
+                .write();
+            }
+
             const amRunRecovery =
               `Recovery — re-run the lane, then re-dispatch this workflow:\n` +
               `  gh workflow run advisory-matrix.yml --ref ${ref}\n` +
@@ -521,7 +602,12 @@ jobs:
             // above does. A check that cannot observe its subject must not report
             // success.
             if (amRuns.data.total_count === 0) {
-              core.setFailed(`Delivery blocked: no advisory-matrix.yml runs found for SHA ${sha}. The self-heal step should have dispatched one — inspect its log before retrying.\n${amRunRecovery}`);
+              const msg = `Delivery blocked: no advisory-matrix.yml runs found for SHA ${sha}. The self-heal step should have dispatched one — inspect its log before retrying.\n${amRunRecovery}`;
+              if (skipCoreFullSuiteGate) {
+                core.warning(`Override active — publishing without this check. It would otherwise have blocked:\n${msg}`);
+                return;
+              }
+              core.setFailed(msg);
               return;
             }
 
@@ -533,7 +619,12 @@ jobs:
             const amCompleted = amRuns.data.workflow_runs.filter(r => r.status === 'completed');
 
             if (amCompleted.length === 0) {
-              core.setFailed(`Delivery blocked: advisory-matrix.yml has runs for SHA ${sha} but none has completed. A run still in progress is not a green run.\n${amRunRecovery}`);
+              const msg = `Delivery blocked: advisory-matrix.yml has runs for SHA ${sha} but none has completed. A run still in progress is not a green run.\n${amRunRecovery}`;
+              if (skipCoreFullSuiteGate) {
+                core.warning(`Override active — publishing without this check. It would otherwise have blocked:\n${msg}`);
+                return;
+              }
+              core.setFailed(msg);
               return;
             }
 
@@ -593,8 +684,17 @@ jobs:
 
             if (amGatingBlocking.length > 0) {
               const detail = amGatingBlocking.map(s => `  - ${s}`).join('\n');
-              core.setFailed(`Delivery blocked: Core Full Suite gating lane(s) did not pass on SHA ${sha}:\n${detail}\nRun: ${amLatest.html_url}\n${amRunRecovery}`);
-              return;
+              const overrideRecovery =
+                `Recovery — publish anyway (an EXCEPTION; the reason is required and is echoed to the run summary):\n` +
+                `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false \\\n` +
+                `    -f skip_core_full_suite_gate=true -f core_full_suite_gate_skip_reason="<why>"`;
+              const msg = `Delivery blocked: Core Full Suite gating lane(s) did not pass on SHA ${sha}:\n${detail}\nRun: ${amLatest.html_url}\n${amRunRecovery}\n${overrideRecovery}`;
+
+              if (!skipCoreFullSuiteGate) {
+                core.setFailed(msg);
+                return;
+              }
+              core.warning(`Override active — publishing without this check. It would otherwise have blocked:\n${msg}`);
             }
 
             // Rule 4, red half: an unclassified advisory-matrix lane that is red
