@@ -145,7 +145,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 
 ### CONFORM — Design-system conformance
 
-- [ ] **CONFORM-02**: The existing `ICON-EXISTS-GATE` is **verified** to cover the whole invisible-icon
+- [x] **CONFORM-02**: The existing `ICON-EXISTS-GATE` is **verified** to cover the whole invisible-icon
   class, not only literal-string call sites. Coverage of `components.ex`'s dynamic sites (`name={@icon}`,
   `name={option.icon}`, `name={stat_severity_icon(@severity)}`) is either proven or explicitly documented as
   a bounded, accepted gap with its reasoning. Rebuilding the gate is out of scope — it already ships.
@@ -263,7 +263,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | HARNESS-02 | Phase 143 | Complete |
 | HARNESS-03 | Phase 143 | Complete |
 | HARNESS-04 | Phase 143 | Complete |
-| CONFORM-02 | Phase 144 | Pending |
+| CONFORM-02 | Phase 144 | Complete |
 | TRUTH-02 | Phase 144 | Complete |
 | TRUTH-03 | Phase 144 | Complete |
 | TRUTH-04 | Phase 144 | Pending |

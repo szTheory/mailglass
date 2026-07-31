@@ -192,7 +192,7 @@ Plans:
   4. Two tag events from one linked-version release train no longer race: `publish-hex.yml`'s `concurrency.group` serializes the runs so a redundant, already-published run reports success ("nothing to do"), never failure — and the identical pattern in `post-publish-smoke.yml` is fixed in the same change or explicitly, deliberately deferred, not independently rediscovered as a surprise.
   5. The release-trigger anti-recursion gap (bot-merged release PRs not firing release-please's `push` trigger) is either fixed with a visible, idempotent self-heal that can't double-fire alongside the hourly cron, or formally accepted with its ~30-minute-per-event cost durably documented somewhere a future maintainer will find it.
 
-**Plans**: 2/5 plans executed
+**Plans**: 3/5 plans executed
 
 Plans:
 **Wave 1**
@@ -202,7 +202,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 144-02-PLAN.md — Distinguish repo-hygiene drift from cannot-check
-- [ ] 144-03-PLAN.md — Prove bounded dynamic icon names against the real gate
+- [x] 144-03-PLAN.md — Prove bounded dynamic icon names against the real gate
 - [ ] 144-04-PLAN.md — Serialize linked-release publish and smoke fan-out
 - [ ] 144-05-PLAN.md — Contract and document hourly release-trigger recovery
 
@@ -215,7 +215,7 @@ Plans:
 | 141. Lane Truth Foundation | 6/6 | Complete    | 2026-07-28 |
 | 142. Supply-Chain Remediation & Gating | 5/5 | Complete    | 2026-07-29 |
 | 143. Test-Harness Truth | 14/14 | Complete    | 2026-07-31 |
-| 144. Signal & Drift Integrity | 2/5 | In Progress|  |
+| 144. Signal & Drift Integrity | 3/5 | In Progress|  |
 
 ## Planted Seeds
 
