@@ -142,8 +142,12 @@ A core **patch** release requires no sibling change at all. A core **minor** (e.
 requires a deliberate `fix(inbound):` commit in `mailglass_inbound/mix.exs` updating the
 floor — asserting "verified against core 1.11" — before or alongside the release PR.
 
-**Recursion-safety guarantee:** the sync push uses `GITHUB_TOKEN`, which by
-GitHub's anti-recursion guarantee does NOT trigger further workflow runs.
+**CI-trigger guarantee:** the sync checkout and push use `RELEASE_PLEASE_PAT`.
+That non-`GITHUB_TOKEN` identity deliberately triggers
+`pull_request: synchronize`, so the release PR's required CI checks report on
+the synchronized head. (The GitHub-native auto-merge itself still uses
+`GITHUB_TOKEN`, whose anti-recursion behavior is why the recovery path below
+exists.)
 
 ## If a release publishes but the tags/publish never fire
 
@@ -190,7 +194,8 @@ To enable the drift-detection workflow, add a repo secret
    → Secrets and variables → Actions → New repository secret.)
 3. Run `Branch Protection Drift` once via the Actions tab to confirm.
 
-Without the secret, the drift workflow no-ops and posts a notice in its
+Without the secret, the drift workflow reports a visible failed
+`cannot_check` outcome (rather than a green no-op) and posts remediation in its
 workflow summary. Without it, you can still call the script directly:
 
 ```bash

@@ -136,6 +136,25 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
   end
 
+  test "contributing documents the PAT-backed CI trigger and fail-loud branch-protection outcome" do
+    source = File.read!(@contributing_path)
+
+    sync =
+      extract_markdown_section!(
+        source,
+        "How release-please syncs README install pins (and what it no longer does)"
+      )
+
+    protection = extract_markdown_section!(source, "One-time setup: branch protection automation")
+
+    assert sync =~ "RELEASE_PLEASE_PAT"
+    assert sync =~ "pull_request: synchronize"
+    refute sync =~ "sync push uses `GITHUB_TOKEN`"
+
+    assert protection =~ "failed `cannot_check` outcome"
+    refute protection =~ "no-ops and posts a notice"
+  end
+
   defp recovery_triggers?(source) do
     push = extract_trigger_block!(source, "push")
     manual = extract_trigger_block!(source, "workflow_dispatch")
