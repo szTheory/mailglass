@@ -6,8 +6,8 @@ name: Branch Protection Apply
 #
 # Requires the BRANCH_PROTECTION_PAT secret — a fine-grained PAT scoped
 # to this repo with "Administration: Read and write" permission.
-# If the secret is unset, the job no-ops and posts a notice in the
-# workflow summary.
+# A missing credential or unavailable verifier is a visibly failing outcome;
+# green means a canonical read-only comparison actually succeeded.
 
 on:
   schedule:
@@ -31,23 +31,23 @@ jobs:
             echo "pat_present=true" >> "$GITHUB_OUTPUT"
           else
             echo "pat_present=false" >> "$GITHUB_OUTPUT"
-            {
-              echo "## Branch Protection Apply — Skipped"
-              echo ""
-              echo "BRANCH_PROTECTION_PAT secret not set."
-              echo "Configure a fine-grained PAT with 'Administration: Read and write'"
-              echo "and add it as a repo secret to enable owner-applied re-assertion."
-            } >> "$GITHUB_STEP_SUMMARY"
+            echo "classification=cannot_check" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout
-        if: steps.check-pat.outputs.pat_present == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Re-assert branch protection
-        if: steps.check-pat.outputs.pat_present == 'true'
+      - name: Verify and re-assert branch protection
+        id: verify-protection
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_PAT }}
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: ./scripts/setup_branch_protection.sh main
+        run: |
+          classification=$(./scripts/branch-protection-outcome.sh probe --reassert main)
+          echo "classification=$classification" >> "$GITHUB_OUTPUT"
+
+      - name: Report branch protection outcome
+        if: always()
+        run: ./scripts/branch-protection-outcome.sh report "${{ steps.verify-protection.outputs.classification || steps.check-pat.outputs.classification || 'unknown' }}"

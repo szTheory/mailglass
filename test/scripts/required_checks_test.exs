@@ -3,6 +3,10 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
 
   @script_path Path.expand("../../scripts/setup_branch_protection.sh", __DIR__)
   @ci_yml_path Path.expand("../../.github/workflows/ci.yml", __DIR__)
+  @guard_release_trigger_path Path.expand(
+                                "../../.github/workflows/guard-release-trigger.yml",
+                                __DIR__
+                              )
 
   # Phase 27 stability-lock lanes (now behind CI Green, NOT in REQUIRED_CHECKS).
   @v1_0_lock_entries [
@@ -55,6 +59,21 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
            "REQUIRED_CHECKS must be exactly {CI Green, Guard Release Trigger}:\n" <>
              "  Extra in REQUIRED_CHECKS: #{inspect(MapSet.to_list(only_in_actual))}\n" <>
              "  Missing from REQUIRED_CHECKS: #{inspect(MapSet.to_list(only_in_expected))}"
+  end
+
+  test "required check identity derives from Guard Release Trigger's parsed display name" do
+    required_checks = parse_required_checks(File.read!(@script_path))
+    guard_job = extract_job_block(File.read!(@guard_release_trigger_path), "guard_release_trigger")
+    display_name = parse_job_display_name(guard_job)
+
+    assert guard_job != "", "guard_release_trigger job parser returned an empty block"
+    assert display_name != "", "guard-release-trigger display-name parser returned an empty result"
+    assert MapSet.member?(required_checks, display_name)
+
+    historical_id = String.replace(guard_job, "Guard Release Trigger", "guard-release-trigger")
+
+    refute MapSet.member?(required_checks, parse_job_display_name(historical_id)),
+           "historical YAML job id must not be treated as the protected display-name context"
   end
 
   test "Phase 27 stability-lock entries are in ci_green.needs (not REQUIRED_CHECKS)" do
@@ -163,6 +182,22 @@ defmodule Mailglass.Scripts.RequiredChecksTest do
     Regex.scan(~r/"([^"]+)"/, chunk)
     |> Enum.map(fn [_full, name] -> name end)
     |> MapSet.new()
+  end
+
+  defp extract_job_block(source, job_key) do
+    marker = "  #{job_key}:\n"
+
+    case String.split(source, marker, parts: 2) do
+      [_, rest] -> marker <> (rest |> String.split(~r/\n  [a-z_][a-z_-]*:\n/, parts: 2) |> hd())
+      _ -> ""
+    end
+  end
+
+  defp parse_job_display_name(job_block) do
+    case Regex.run(~r/^    name: (.+)$/m, job_block) do
+      [_, name] -> String.trim(name)
+      _ -> ""
+    end
   end
 
   defp parse_print_expected_bullets(source) do
