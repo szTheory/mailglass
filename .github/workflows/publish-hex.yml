@@ -57,7 +57,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: publish-hex-${{ github.ref }}
+  group: mailglass-linked-release-fanout
   cancel-in-progress: false
 
 jobs:
@@ -748,7 +748,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           if mix hex.info mailglass "${VERSION}" 2>/dev/null | grep -q "Released:"; then
-            echo "Version ${VERSION} of mailglass already on Hex — skipping publish (idempotency guard)."
+            echo "Nothing to do: version ${VERSION} of mailglass is already on Hex; skipping publish (idempotency guard)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Publish mailglass to Hex.pm
@@ -866,7 +866,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           if mix hex.info mailglass_admin "${VERSION}" 2>/dev/null | grep -q "Released:"; then
-            echo "Version ${VERSION} of mailglass_admin already on Hex — skipping publish (idempotency guard)."
+            echo "Nothing to do: version ${VERSION} of mailglass_admin is already on Hex; skipping publish (idempotency guard)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Publish mailglass_admin to Hex.pm
@@ -968,7 +968,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           if mix hex.info mailglass_inbound "${VERSION}" 2>/dev/null | grep -q "Released:"; then
-            echo "Version ${VERSION} of mailglass_inbound already on Hex — skipping publish (idempotency guard)."
+            echo "Nothing to do: version ${VERSION} of mailglass_inbound is already on Hex; skipping publish (idempotency guard)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Publish mailglass_inbound to Hex.pm
