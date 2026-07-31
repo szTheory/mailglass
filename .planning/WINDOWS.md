@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 6
+open_count: 8
 waived_count: 0
 fixed_count: 10
-total_count: 16
-last_updated: 2026-07-31T14:05:00.000Z
+total_count: 18
+last_updated: 2026-07-31T15:09:13.698Z
 ---
 
 # Broken Windows Ledger
@@ -31,6 +31,8 @@ last_updated: 2026-07-31T14:05:00.000Z
 | 14 | 143 | unmet-truth | test/mailglass/webhook/providers/ses/cert_cache_test.exs |  | Two REAL Class C sandbox-ownership leaks are live and invisible today, surfaced only by locally fixing SuiteTruthFormatter's dead async gate (see the async_false?/1 entry): Mailglass.Webhook.Providers.SES.CertCacheTest leaves the pool in {:shared, pid} at its module boundary, and Mailglass.UpgradeV2SchemaGenerationTest does too (Mailglass.Outbound.DeliverManyTest was separately observed leaving it in :auto). HARNESS-01's ':already_shared count is exactly zero' passes vacuously alongside these because the tally counts raised failures, not leaked pool modes, and the probe that would have named them never ran. | open |  | 2026-07-30T21:11:45.979Z |  |
 | 15 | 143 | unmet-truth | test/support/data_case.ex |  | Application env is mutated concurrently by async: true modules, so no whole-env restore can be installed in the shared case templates today. Adding SandboxOwnership.with_app_env!(:mailglass) to DataCase/MailerCase/WebhookCase was tried and reverted: its verification raised for Mailglass.ComplianceTest and Mailglass.Operator.TimelineTest with NO key added or removed (a VALUE differed), i.e. a concurrent writer moved the env between one module's restore and its verify. Root cause is the pre-existing policy violation, not the seam: compliance_test.exs (:tracking, :compliance) and clock_test.exs (:clock) are async: true while mutating env the code under test reads, which this repo's own async policy (D-11 reason 2) already forbids. Phase 143 may not change any file's async: value, so both use per-key fetch_env/delete_env restores instead and the case templates remain unguarded. | open |  | 2026-07-30T21:11:46.041Z |  |
 | 16 | 143 | unmet-truth | config/test.exs | 19 | config :mailglass, tenancy: is pinned to Mailglass.Tenancy.SingleTenant at boot, but mid-suite the key holds nil. Found when a mechanism-test precondition asserting get_env(:mailglass, :tenancy) != nil failed inside the full suite while passing standalone. Origin is the presence-blind restore chain: once any module leaves :tenancy absent or nil, every later 'prior_tenancy = get_env(...); put_env(..., prior_tenancy)' site propagates the nil forward. Benign today only because Mailglass.Tenancy.resolver/0 maps nil back to SingleTenant; it is still undetected global-state drift on a key config/test.exs pins, and it is what makes any get_env-with-default read of :tenancy resolve to nil instead of its default. | open |  | 2026-07-30T21:11:46.106Z |  |
+| 17 | 143 | unrun-verify | .github/workflows/publish-hex.yml |  | gate-ci-green's advisory-matrix dispatch-and-poll has never executed on a real release SHA; only a live release (or plan 143-14's rehearsal) can confirm the tag-ref dispatch, the shared 30-minute deadline, and the fan-out settle behave as designed | open |  | 2026-07-31T15:09:13.616Z |  |
+| 18 | 143 | lint-warning | test/support/suite_floor.ex |  | SuiteFloor executed_nudge fires on the gating toolchain: 1630 executed vs pinned floor 1575 on the mailglass axis, 55 above the 40-test nudge margin. Advisory only, halts nothing. Already over margin on main before this plan (run 30635221221 showed 1623 vs 1576). Re-pinning must be measured from a real CI run per 143-10's protocol, not locally | open |  | 2026-07-31T15:09:13.698Z |  |
 
 ````json
 [
@@ -138,7 +140,7 @@ last_updated: 2026-07-31T14:05:00.000Z
     "line": null,
     "description": "143-11: no push/dispatch run confirming the post-rename runtime job names (research assumption A5); process constraints forbid dispatch. Owned by 143-12's promotion checkpoint.",
     "status": "fixed",
-    "reason": "Closed 2026-07-31: post-rename runtime job names confirmed on main runs 30607136165 (schedule) and 30635221221 (push) \u2014 'Core Full Suite (...)' and 'Core Full Suite Next Toolchain Advisory (...)' both reported as expected. A5 confirmed.",
+    "reason": "Closed 2026-07-31: post-rename runtime job names confirmed on main runs 30607136165 (schedule) and 30635221221 (push) — 'Core Full Suite (...)' and 'Core Full Suite Next Toolchain Advisory (...)' both reported as expected. A5 confirmed.",
     "recorded_at": "2026-07-30T19:20:38.246Z",
     "resolved_at": "2026-07-31T14:05:00.000Z"
   },
@@ -224,6 +226,30 @@ last_updated: 2026-07-31T14:05:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-07-30T21:11:46.106Z",
+    "resolved_at": null
+  },
+  {
+    "id": 17,
+    "kind": "unrun-verify",
+    "phase": "143",
+    "file": ".github/workflows/publish-hex.yml",
+    "line": null,
+    "description": "gate-ci-green's advisory-matrix dispatch-and-poll has never executed on a real release SHA; only a live release (or plan 143-14's rehearsal) can confirm the tag-ref dispatch, the shared 30-minute deadline, and the fan-out settle behave as designed",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-31T15:09:13.616Z",
+    "resolved_at": null
+  },
+  {
+    "id": 18,
+    "kind": "lint-warning",
+    "phase": "143",
+    "file": "test/support/suite_floor.ex",
+    "line": null,
+    "description": "SuiteFloor executed_nudge fires on the gating toolchain: 1630 executed vs pinned floor 1575 on the mailglass axis, 55 above the 40-test nudge margin. Advisory only, halts nothing. Already over margin on main before this plan (run 30635221221 showed 1623 vs 1576). Re-pinning must be measured from a real CI run per 143-10's protocol, not locally",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-31T15:09:13.698Z",
     "resolved_at": null
   }
 ]
