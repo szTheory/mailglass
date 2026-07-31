@@ -157,6 +157,53 @@ read as a quiet pass.
 
 *(Fill in below: dispatch command, run URL, `result` value, observed check conclusion, and reading.)*
 
+### RESULT: **the lane blocks.** Both gating legs went red on the injected regression.
+
+Observed 2026-07-31 on post-merge `main` (PR #151 merged as `d6e50388`, so the D-21 rename is live).
+
+| Leg | Conclusion | Job |
+|---|---|---|
+| `Core Full Suite (Elixir 1.18 / OTP 27 / schema public)` | **FAILURE** | https://github.com/szTheory/mailglass/actions/runs/30599206217/job/91058066866 |
+| `Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)` | **FAILURE** | https://github.com/szTheory/mailglass/actions/runs/30599206217/job/91058066875 |
+
+Probe PR: https://github.com/szTheory/mailglass/pull/156 (closed, branch deleted). Injected commit
+carried `test/gate_self_test/intentional_failure_test.exs` **verbatim** as `gate-self-test.yml` writes
+it, on a branch cut from the green `main` SHA.
+
+This is the `result=blocked` outcome the expected-value paragraph above predicted, and it is the
+evidence condition 4 asks for: the renamed lane demonstrably catches an injected regression, unlike
+`CI Green`, whose structural blindness is recorded earlier in this file.
+
+### Why it was NOT produced by a `gate-self-test.yml` dispatch
+
+**`gate-self-test.yml` structurally cannot produce this evidence, and three dispatches proved it.**
+GitHub does not trigger workflows for events raised with `GITHUB_TOKEN`, so the PR the workflow opens
+itself receives **zero checks**. Run 30597469482 polled for 35 minutes and its own diagnostic printed
+an empty observed-check list. This is the same anti-recursion rule already documented for
+release-please bot-merged SHAs (CLAUDE.md).
+
+The probe above was therefore opened with a real user token so CI would actually run. It is
+equivalent in every other respect — same synthetic commit, same base, same lane names, same
+`FAILURE`-vs-`SUCCESS` reading — but it is a **manual** procedure, not an automated one, and that
+distinction must not be lost:
+
+- **Reproducing it requires a human** (or an agent with a user token) to open the PR. It is not a
+  push-button dispatch today.
+- **Making `gate-self-test.yml` self-sufficient requires a stored PAT** so the PR it opens triggers
+  workflows. That is an unresolved maintainer decision, not a code gap.
+
+Three real defects in `gate-self-test.yml` were found by running it and are fixed separately (PR #155):
+the poll loop could not survive the window before checks register (run 30595556100 produced no
+`result=` at all); a hardcoded `timeout-minutes: 30` silently truncated a larger `deadline_minutes`
+and cancelled run 30596060407 mid-poll; and an absent check was logged as `status=pending`, making an
+unobserved lane read as an observed one.
+
+**Reading for HARNESS-04 / D-28.** Condition 4's substantive bar — *a lane never observed catching an
+injected regression must not be given veto power over a publish* — is now **met**: the lane was
+observed catching one. The residual gap is that the observation is not yet reproducible without a
+human in the loop, which is a decision for the gating checkpoint to weigh rather than a blocker on
+the lane's demonstrated behaviour.
+
 ### STATUS AS OF PLAN 143-12: **NOT RUN — no dispatch was made, no run URL exists**
 
 Plan `143-12` Task 1 could not be executed. Its process constraints state, verbatim, **"Do NOT push. Do
