@@ -189,7 +189,7 @@ OSV-staleness gate, a 3-directory `dependabot.yml`, the `ci_green` fan-in, `Mail
 - [x] **TRUTH-06**: `repo-hygiene` distinguishes "genuinely blocked" from "cannot check". Its
   `branch_protection` sub-check currently 403s and reports the failure as drift.
 
-- [ ] **TRUTH-08**: The publish fan-out no longer races itself. `publish-hex.yml`'s
+- [x] **TRUTH-08**: The publish fan-out no longer races itself. `publish-hex.yml`'s
   `concurrency.group` is ref-scoped (`publish-hex-${{ github.ref }}`) while release-please's linked-versions
   plugin fires two releases on two different tags, so the runs never serialize. `post-publish-smoke.yml`
   carries the identical pattern and is fixed alongside it. A successful release must not report failure.
@@ -268,7 +268,7 @@ CONFORM-04 must land with TRUTH-07/TRUTH-09; TRUTH-07/09/05 are load-bearing and
 | TRUTH-03 | Phase 144 | Complete |
 | TRUTH-04 | Phase 144 | Pending |
 | TRUTH-06 | Phase 144 | Complete |
-| TRUTH-08 | Phase 144 | Pending |
+| TRUTH-08 | Phase 144 | Complete |
 
 **Coverage: 20/20 requirements mapped (100%).** No orphans, no duplicates. (Note: the roadmapping brief
 referenced "21 requirements"; a direct scan of this file's checklist found 20 unique REQ-IDs across

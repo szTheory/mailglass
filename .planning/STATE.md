@@ -5,15 +5,15 @@ milestone_name: CI Signal Integrity & Supply-Chain Hygiene
 current_phase: 144
 current_phase_name: signal-drift-integrity
 status: executing
-stopped_at: Completed 144-03-PLAN.md
-last_updated: "2026-07-31T21:00:14.170Z"
+stopped_at: Completed 144-04-PLAN.md
+last_updated: "2026-07-31T21:03:10.962Z"
 last_activity: 2026-07-31
 last_activity_desc: Phase 144 execution started
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 30
-  completed_plans: 28
+  completed_plans: 29
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 ## Current Position
 
 Phase: 144 (signal-drift-integrity) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-07-31 — Phase 144 execution started
 
-Progress: [█████████░] 93%
+Progress: [██████████] 97%
 
 ### Plan-phase gate override (2026-07-29)
 
@@ -382,6 +382,8 @@ release debug campaign.
 - [Phase ?]: Phase 144 replaces human branch-protection UAT with hermetic real-script integration evidence.
 - [Phase ?]: [144-02] Only canonical DRIFT: verifier output is classified as branch-protection drift; all other unavailable verification remains :unknown and blocks aggregate success.
 - [Phase ?]: CONFORM-02 resolves finite dynamic Heroicon construction against the vendored inventory and fails closed for non-finite expressions.
+- [Phase ?]: [144-04] Linked publish and smoke workflows share static mailglass-linked-release-fanout concurrency with cancellation disabled.
+- [Phase ?]: [144-04] Already-published core, admin, and inbound packages remain explicit successful nothing-to-do no-ops.
 
 ## Quick Tasks Completed
 
@@ -434,6 +436,7 @@ release debug campaign.
 | Phase 144 P01 | 28 min | 2 tasks | 5 files |
 | Phase 144-signal-drift-integrity P02 | 4m | 1 tasks | 2 files |
 | Phase 144 P03 | 3min | 1 tasks | 2 files |
+| Phase 144-signal-drift-integrity P04 | 6min | 1 tasks | 3 files |
 
 ## Deferred Items
 
@@ -601,8 +604,8 @@ Items acknowledged and deferred at the v1.10 milestone close on 2026-06-13:
 
 ## Session Continuity
 
-**Last session:** 2026-07-31T21:00:14.160Z
-**Stopped at:** Completed 144-03-PLAN.md
+**Last session:** 2026-07-31T21:03:10.953Z
+**Stopped at:** Completed 144-04-PLAN.md
 **Resume file:** None
 
 - 2026-06-19: **Phase 111 context gathered in assumptions mode.** Decisions captured in
