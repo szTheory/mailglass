@@ -1,6 +1,7 @@
 defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   use ExUnit.Case, async: true
 
+  @repo_root Path.expand("../..", __DIR__)
   @workflow_path Path.expand("../../.github/workflows/release-please.yml", __DIR__)
   @manifest_path Path.expand("../../.release-please-manifest.json", __DIR__)
   @contributing_path Path.expand("../../CONTRIBUTING.md", __DIR__)
@@ -43,6 +44,8 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
     assert File.exists?(@manifest_path)
     assert preflight =~ ".release-please-manifest.json"
+    assert preflight =~ "release manifest is missing or unreadable"
+    assert preflight =~ "release manifest yielded no expected release tags"
     assert preflight =~ "to_entries[]"
     assert preflight =~ "mailglass-v\\($version)"
     assert preflight =~ "${#present_tags[@]}"
@@ -74,18 +77,21 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
   end
 
-  test "preflight binds gh to the workflow repository without a checkout" do
-    preflight = extract_step_block!(workflow_source(), "Detect already-tagged release PR")
+  test "checkout precedes preflight and gh queries use the workflow repository" do
+    source = workflow_source()
+    preflight = extract_step_block!(source, "Detect already-tagged release PR")
 
     assert preflight =~ "GH_REPO: ${{ github.repository }}"
+    assert preflight =~ "gh api --include \"repos/${GH_REPO}/releases/tags/${tag}\""
+    assert checkout_precedes_preflight?(source)
 
-    with_fake_gh(fn temp_dir, env ->
-      File.cp!(@manifest_path, Path.join(temp_dir, ".release-please-manifest.json"))
-      File.write!(Path.join(temp_dir, "preflight.sh"), preflight_script(preflight))
+    with_fake_gh(:release_absent, fn temp_dir, env ->
+      script = Path.join(temp_dir, "preflight.sh")
+      File.write!(script, preflight_script(preflight))
 
       assert {output, 0} =
-               System.cmd("bash", ["preflight.sh"],
-                 cd: temp_dir,
+               System.cmd("bash", [script],
+                 cd: @repo_root,
                  env: Map.to_list(env),
                  stderr_to_stdout: true
                )
@@ -94,8 +100,69 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       assert File.read!(Path.join(temp_dir, "github-output")) =~ "should_run=true"
 
       calls = File.read!(Path.join(temp_dir, "gh.log"))
-      assert calls =~ "test-owner/test-repo release view"
+      assert calls =~ "test-owner/test-repo api --include repos/test-owner/test-repo/releases/tags/"
       assert calls =~ "test-owner/test-repo pr view"
+    end)
+  end
+
+  test "preflight fails when checkout did not provide a readable manifest" do
+    preflight = extract_step_block!(workflow_source(), "Detect already-tagged release PR")
+
+    with_fake_gh(:release_absent, fn temp_dir, env ->
+      script = Path.join(temp_dir, "preflight.sh")
+      File.write!(script, preflight_script(preflight))
+
+      assert {output, status} =
+               System.cmd("bash", [script],
+                 cd: temp_dir,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      assert status != 0
+      assert output =~ "release manifest is missing or unreadable"
+      refute should_run?(temp_dir)
+    end)
+  end
+
+  test "preflight treats only a confirmed 404 as an absent release" do
+    preflight = extract_step_block!(workflow_source(), "Detect already-tagged release PR")
+
+    for mode <- [:release_forbidden, :release_api_failure] do
+      with_fake_gh(mode, fn temp_dir, env ->
+        script = Path.join(temp_dir, "preflight.sh")
+        File.write!(script, preflight_script(preflight))
+
+        assert {_output, status} =
+                 System.cmd("bash", [script],
+                   cd: @repo_root,
+                   env: Map.to_list(env),
+                   stderr_to_stdout: true
+                 )
+
+        assert status != 0
+        refute should_run?(temp_dir)
+      end)
+    end
+  end
+
+  test "preflight fails closed when release PR labels cannot be read" do
+    preflight = extract_step_block!(workflow_source(), "Detect already-tagged release PR")
+
+    with_fake_gh(:pr_failure, fn temp_dir, env ->
+      script = Path.join(temp_dir, "preflight.sh")
+      File.write!(script, preflight_script(preflight))
+
+      assert {output, status} =
+               System.cmd("bash", [script],
+                 cd: @repo_root,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      assert status != 0
+      assert output =~ "could not determine labels"
+      refute should_run?(temp_dir)
     end)
   end
 
@@ -167,7 +234,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
 
   defp workflow_source, do: File.read!(@workflow_path)
 
-  defp with_fake_gh(fun) do
+  defp with_fake_gh(mode, fun) do
     temp_dir =
       Path.join(System.tmp_dir!(), "release-preflight-#{System.unique_integer([:positive])}")
 
@@ -179,8 +246,31 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     set -euo pipefail
     : "${GH_REPO:?missing GH_REPO}"
     printf '%s %s\\n' "$GH_REPO" "$*" >> "$GH_LOG"
-    if [ "$1" = "release" ]; then exit 1; fi
-    printf 'autorelease: pending\\n'
+    case "$1:$FAKE_GH_MODE" in
+      api:release_absent|api:pr_failure)
+        printf 'HTTP/2 404 Not Found\\n' >&2
+        exit 1
+        ;;
+      api:release_forbidden)
+        printf 'HTTP/2 403 Forbidden\\n' >&2
+        exit 1
+        ;;
+      api:release_api_failure)
+        printf 'simulated GitHub API failure\\n' >&2
+        exit 1
+        ;;
+      pr:pr_failure)
+        printf 'simulated PR query failure\\n' >&2
+        exit 1
+        ;;
+      pr:*)
+        printf 'autorelease: pending\\n'
+        ;;
+      *)
+        printf 'unexpected gh invocation: %s\\n' "$*" >&2
+        exit 64
+        ;;
+    esac
     """)
 
     File.chmod!(Path.join(fake_bin, "gh"), 0o755)
@@ -189,6 +279,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       "PATH" => fake_bin <> ":" <> System.get_env("PATH"),
       "GH_REPO" => "test-owner/test-repo",
       "GH_LOG" => Path.join(temp_dir, "gh.log"),
+      "FAKE_GH_MODE" => Atom.to_string(mode),
       "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output"),
       "COMMIT_MESSAGE" => "Merge pull request #42 from release-please--branches--main"
     }
@@ -200,11 +291,26 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     end
   end
 
+  defp should_run?(temp_dir) do
+    output = Path.join(temp_dir, "github-output")
+    File.exists?(output) and File.read!(output) =~ "should_run=true"
+  end
+
+  defp checkout_precedes_preflight?(source) do
+    case {
+      :binary.match(source, "- name: Checkout triggering revision for release preflight"),
+      :binary.match(source, "- name: Detect already-tagged release PR")
+    } do
+      {{checkout, _}, {preflight, _}} -> checkout < preflight
+      _ -> false
+    end
+  end
+
   defp preflight_script(preflight) do
     case String.split(preflight, ~r/^\s*run: \|\n/m, parts: 2) do
       [metadata, script] when script != "" ->
         if metadata =~ "GH_REPO: ${{ github.repository }}" and
-             script =~ "gh release view" and script =~ "gh pr view" do
+             script =~ "gh api --include" and script =~ "gh pr view" do
           """
           # macOS's Bash 3 lacks mapfile; GitHub's runner has it. The test
           # harness supplies the equivalent solely so it can execute the

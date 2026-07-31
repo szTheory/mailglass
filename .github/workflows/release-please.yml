@@ -27,6 +27,14 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # Scheduled and manual recovery runs have no workspace by default. Check
+      # out the triggering revision before preflight reads the manifest; the
+      # action's default ref is the event SHA/ref for each trigger type.
+      - name: Checkout triggering revision for release preflight
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
+
       # release-please reruns on a merged release PR can be stale if the
       # release was already tagged/published by an earlier run. That is the
       # current failure mode for PR #34: the PR has already been labeled
@@ -60,23 +68,47 @@ jobs:
             exit 0
           fi
 
-          mapfile -t expected_tags < <(
-            jq -r '
-              to_entries[]
+          manifest=.release-please-manifest.json
+          if [ ! -r "$manifest" ]; then
+            echo "ERROR: release manifest is missing or unreadable: $manifest" >&2
+            exit 1
+          fi
+
+          if ! expected_tags_text=$(jq -er '
+              if type != "object" or length == 0 or any(.[]; type != "string" or length == 0) then
+                error("release manifest must be a non-empty object of version strings")
+              else
+                to_entries[]
               | .key as $package
               | .value as $version
               | if $package == "." then "mailglass-v\($version)" else "\($package)-v\($version)" end
-            ' .release-please-manifest.json
-          )
+              end
+            ' "$manifest"); then
+            echo "ERROR: release manifest is invalid: $manifest" >&2
+            exit 1
+          fi
+
+          mapfile -t expected_tags <<<"$expected_tags_text"
+          if [ "${#expected_tags[@]}" -eq 0 ] || [ -z "${expected_tags[0]:-}" ]; then
+            echo "ERROR: release manifest yielded no expected release tags" >&2
+            exit 1
+          fi
 
           missing_tags=()
           present_tags=()
           for tag in "${expected_tags[@]}"; do
-            if gh release view "$tag" >/dev/null 2>&1; then
+            release_response=$(mktemp)
+            if gh api --include "repos/${GH_REPO}/releases/tags/${tag}" >"$release_response" 2>&1; then
               present_tags+=("$tag")
-            else
+            elif grep -qE '^HTTP/[0-9.]+ 404 ' "$release_response"; then
               missing_tags+=("$tag")
+            else
+              echo "ERROR: could not determine release state for tag $tag" >&2
+              cat "$release_response" >&2
+              rm -f "$release_response"
+              exit 1
             fi
+            rm -f "$release_response"
           done
 
           if [ "${#present_tags[@]}" -gt 0 ] && [ "${#missing_tags[@]}" -gt 0 ]; then
@@ -92,7 +124,10 @@ jobs:
             exit 0
           fi
 
-          labels=$(gh pr view "$pr_number" --json labels --jq '.labels[].name' 2>/dev/null || true)
+          if ! labels=$(gh pr view "$pr_number" --json labels --jq '.labels[].name'); then
+            echo "ERROR: could not determine labels for release PR #$pr_number" >&2
+            exit 1
+          fi
           if grep -qx 'autorelease: tagged' <<<"$labels"; then
             echo "Release PR #$pr_number is already tagged; skipping release-please rerun."
             echo "should_run=false" >>"$GITHUB_OUTPUT"
