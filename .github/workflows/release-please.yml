@@ -41,6 +41,10 @@ jobs:
         id: release-preflight
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The scheduled/manual paths have no checkout, so gh cannot infer a
+          # remote. Pin it to this workflow's repository for every preflight
+          # query rather than treating failed lookups as absent releases.
+          GH_REPO: ${{ github.repository }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail

@@ -74,6 +74,31 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
   end
 
+  test "preflight binds gh to the workflow repository without a checkout" do
+    preflight = extract_step_block!(workflow_source(), "Detect already-tagged release PR")
+
+    assert preflight =~ "GH_REPO: ${{ github.repository }}"
+
+    with_fake_gh(fn temp_dir, env ->
+      File.cp!(@manifest_path, Path.join(temp_dir, ".release-please-manifest.json"))
+      File.write!(Path.join(temp_dir, "preflight.sh"), preflight_script(preflight))
+
+      assert {output, 0} =
+               System.cmd("bash", ["preflight.sh"],
+                 cd: temp_dir,
+                 env: Map.to_list(env),
+                 stderr_to_stdout: true
+               )
+
+      assert output =~ "running release-please"
+      assert File.read!(Path.join(temp_dir, "github-output")) =~ "should_run=true"
+
+      calls = File.read!(Path.join(temp_dir, "gh.log"))
+      assert calls =~ "test-owner/test-repo release view"
+      assert calls =~ "test-owner/test-repo pr view"
+    end)
+  end
+
   test "release action is mutually guarded by preflight output" do
     source = workflow_source()
     action = extract_action_block!(source, "release")
@@ -122,6 +147,47 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
   end
 
   defp workflow_source, do: File.read!(@workflow_path)
+
+  defp with_fake_gh(fun) do
+    temp_dir =
+      Path.join(System.tmp_dir!(), "release-preflight-#{System.unique_integer([:positive])}")
+
+    fake_bin = Path.join(temp_dir, "bin")
+    File.mkdir_p!(fake_bin)
+
+    File.write!(Path.join(fake_bin, "gh"), """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${GH_REPO:?missing GH_REPO}"
+    printf '%s %s\\n' "$GH_REPO" "$*" >> "$GH_LOG"
+    if [ "$1" = "release" ]; then exit 1; fi
+    printf 'autorelease: pending\\n'
+    """)
+
+    File.chmod!(Path.join(fake_bin, "gh"), 0o755)
+
+    env = %{
+      "PATH" => fake_bin <> ":" <> System.get_env("PATH"),
+      "GH_REPO" => "test-owner/test-repo",
+      "GH_LOG" => Path.join(temp_dir, "gh.log"),
+      "GITHUB_OUTPUT" => Path.join(temp_dir, "github-output"),
+      "COMMIT_MESSAGE" => "Merge pull request #42 from release-please--branches--main"
+    }
+
+    try do
+      fun.(temp_dir, env)
+    after
+      File.rm_rf!(temp_dir)
+    end
+  end
+
+  defp preflight_script(preflight) do
+    [_, script] = String.split(preflight, "        run: |\\n", parts: 2)
+
+    script
+    |> String.split("\\n")
+    |> Enum.map_join("\\n", &String.replace_prefix(&1, "          ", ""))
+  end
 
   defp recovery_runbook?(section) do
     Enum.all?(@recovery_runbook_facts, &String.contains?(section, &1))
