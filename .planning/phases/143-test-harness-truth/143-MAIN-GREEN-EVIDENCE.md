@@ -88,3 +88,64 @@ Do not read "three green runs" in the table above as satisfying condition 1. It 
 
 GitHub delays scheduled workflows under load and gives no guarantee of promptness. Budget for
 ~05:20–05:35 UTC. **A missing run at 04:30 is not a skipped schedule** — it has simply not fired yet.
+
+---
+
+## A live Hex publish happened mid-phase, ungated — evidence for HARNESS-04
+
+On 2026-07-31 the hands-free pipeline cut and published a release while this phase was still open. It
+is recorded here because it is the exact scenario HARNESS-04 exists to constrain, observed for real
+rather than argued hypothetically.
+
+| Step | Detail |
+|---|---|
+| Trigger | PR #151 / #157 merged with `fix(...)` titles → release-please opened #158 |
+| Release PR | `chore: release main` (#158), **auto-merged** at 2026-07-31T13:43:25Z as `e88daa15` |
+| Version | `mailglass` 2.2.2, `mailglass_admin` 2.2.2 |
+| Published | `mailglass` at 14:23:27Z, `mailglass_admin` at 14:26:03Z — both live on Hex |
+| Human approval | **none** — the `hex-publish` environment has no required reviewers by design |
+
+### Three findings
+
+**1. The publish was gated on nothing that runs the test suite.** `gate-ci-green` inspects `ci.yml`,
+whose registered aggregate `CI Green` is composed of seven lanes, none of which runs the root suite.
+The `CI` workflow run on `981b9343` was itself **red** (`Demo Browser Evidence`), and the publish
+proceeded regardless, because that job is not in `CI Green`'s `needs` list. A release therefore went
+out while a workflow named `CI` was failing. This is precisely the structural blindness HARNESS-04
+closes, and it is now documented from a real release rather than from a static read.
+
+**Mitigating fact, stated so this is not read as a near-miss:** `main` was genuinely green at the time
+— all four Core Full Suite legs passed on `981b9343` with floors enforced. The published artefact is
+the tested tree. The point is not that a bad release escaped; it is that **nothing in the pipeline
+would have stopped one**.
+
+**2. The release commit gets no `advisory-matrix.yml` run.** `e88daa15` has no Advisory Matrix run at
+all — GitHub does not trigger workflows for events raised with `GITHUB_TOKEN`, and release-please
+bot-merges the release PR. This is the same anti-recursion rule already documented for `ci.yml` in
+CLAUDE.md, and the same one that defeated `gate-self-test.yml` (see `143-PROBE-EVIDENCE.md`).
+
+Consequences for the checkpoint and for 143-13:
+- **`e88daa15` cannot count toward condition 1.** Condition 1 needs a *green advisory-matrix run* on a
+  distinct SHA, and this SHA has none. The count stays at 2 (`d6e50388`, `981b9343`).
+- **143-13's self-heal must handle this.** If `gate-ci-green` is taught to require an
+  `advisory-matrix.yml` run for the publish SHA, every future release will block on a SHA that
+  structurally cannot have one, wedging the hands-free pipeline. The plan's "dual-workflow self-heal"
+  has to dispatch the run on the release ref, not merely look one up.
+
+**3. One publish job failed benignly; do not read it as a fault.** Run `30636721738` (the
+`mailglass_admin-v2.2.2` tag) shows `publish-core` → `failure` with:
+
+```
+Validation error(s)
+  inserted_at: must include the --replace flag to update an existing release
+```
+
+Both tags dispatch a fan-out that includes `publish-core`, so the second one to run attempts to
+republish a version Hex already has. Verified from the registry rather than inferred: `mailglass`
+2.2.2 and `mailglass_admin` 2.2.2 are both live. It is a duplicate-publish race between two
+tag-triggered runs, not a failed release — though it does mean a genuine core-publish failure would be
+easy to miss in the noise.
+
+**Note on `mailglass_inbound`:** unaffected at 2.1.1. It declares `{:mailglass, "~> 2.0"}`, a range —
+**not** the exact `== <core>` pin CLAUDE.md still describes. That pin-drag note is stale (it was true
+for the 1.x line) and no longer forces a paired inbound release on every core bump.
