@@ -43,7 +43,7 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
 
     emit(result, format)
 
-    if result.status == :blocked do
+    if result.status != :pass do
       exit({:shutdown, 1})
     end
   end
@@ -192,10 +192,17 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
       !File.exists?(script) ->
         unknown(:branch_protection, "Branch-protection verifier is missing.", %{})
 
-      System.find_executable("gh") == nil || is_nil(System.get_env("GH_TOKEN")) ->
+      System.find_executable("gh") == nil ->
         unknown(
           :branch_protection,
-          "GH_TOKEN and gh are required for branch-protection truth.",
+          "GitHub CLI is not installed; install gh before verifying branch protection.",
+          %{}
+        )
+
+      System.get_env("GH_TOKEN") in [nil, ""] ->
+        unknown(
+          :branch_protection,
+          "GH_TOKEN is missing; set a token with branch-protection read access before verifying.",
           %{}
         )
 
@@ -207,9 +214,24 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
             })
 
           {output, _} ->
-            check(:branch_protection, :blocked, "Branch protection differs from expected rules.", %{
-              output: String.trim(output)
-            })
+            trimmed_output = String.trim(output)
+
+            if String.starts_with?(trimmed_output, "DRIFT:") do
+              check(
+                :branch_protection,
+                :blocked,
+                "Branch protection differs from expected rules.",
+                %{
+                  output: trimmed_output
+                }
+              )
+            else
+              unknown(
+                :branch_protection,
+                "Branch protection could not be verified; check GitHub access and retry.",
+                %{output: trimmed_output}
+              )
+            end
         end
     end
   end
@@ -343,7 +365,7 @@ defmodule Mix.Tasks.Mailglass.Repo.Hygiene do
   defp blank_to_nil(value), do: value
 
   defp status(checks) do
-    if Enum.any?(checks, &(&1.status == :blocked)), do: :blocked, else: :pass
+    if Enum.all?(checks, &(&1.status == :pass)), do: :pass, else: :blocked
   end
 
   defp check(name, status, message, details) do
