@@ -298,13 +298,15 @@ from the workflow source, and the drift test asserts it set-equals
 `Mailglass.CILanes.advisory_matrix_gating_lanes/0` ∪
 `advisory_matrix_advisory_lanes/0`.
 
-**None of these seven gates anything today.** `gate-ci-green` does not yet read
-`advisory-matrix.yml`; wiring it up is plan 143-12/143-13's work. So every row's
-`classification` cell reads `advisory`, which is the honest current state, and
-the two floor legs carry disposition `promote` — a recorded recommendation, in
-the same sense the § "Required Checks" table uses that word. When the gate lands,
-those two rows move to `publish-gating` / `keep-with-reason` in the same commit
-that adds the gate.
+**Two of these seven gate a Hex publish; the other five gate nothing.** As of
+Phase 143 plan 13, `gate-ci-green` reads `advisory-matrix.yml` as well as
+`ci.yml`, and the two Elixir 1.18 / OTP 27 `Core Full Suite` legs block a
+publish when they are red, cancelled, skipped, or absent. Their rows therefore
+read `publish-gating` / `keep-with-reason`, which is the honest current state —
+they were `advisory` / `promote` while the promotion was only a recommendation.
+The verdict, its evidence, and its accepted costs are recorded in
+`.planning/phases/143-test-harness-truth/143-GATING-DECISION.md`. The remaining
+five rows stay `advisory`: classified, enumerated, warned on, never blocking.
 
 **Gating the two floor legs is wider than the lane name reads.** They are steps
 of the `core_full_suite` job, which also runs `mix deps.get` and
@@ -314,8 +316,8 @@ next-toolchain legs run none of them.
 
 | job id | display name | classification | disposition | reason |
 |---|---|---|---|---|
-| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema public)` | advisory | promote | The declared HARNESS-04 publish-gating pair. Elixir 1.18 / OTP 27 is the `~> 1.18` floor `mix.exs` states, so gating it preserves LD-13's floor-coincidence invariant. Also gates the inbound `deps.get`, the inbound `ecto.create`, and `mix verify.schema_prefix`. Renamed from `core_full_suite_advisory` (D-21): a lane that gates a publish must not call itself advisory. |
-| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)` | advisory | promote | Second schema axis of the same job (D-06). The isolated `mailglass` schema exercises the Phase 134 migration entrypoint end-to-end; its executed-count floor is pinned separately from `public`'s because `test_helper.exs` excludes `:public_only` here. |
+| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema public)` | publish-gating | keep-with-reason | The HARNESS-04 publish-gating pair, live since Phase 143 plan 13. Elixir 1.18 / OTP 27 is the `~> 1.18` floor `mix.exs` states, so gating it preserves LD-13's floor-coincidence invariant. Also gates the inbound `deps.get`, the inbound `ecto.create`, and `mix verify.schema_prefix`. Renamed from `core_full_suite_advisory` (D-21): a lane that gates a publish must not call itself advisory. |
+| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)` | publish-gating | keep-with-reason | Second schema axis of the same job (D-06). The isolated `mailglass` schema exercises the Phase 134 migration entrypoint end-to-end; its executed-count floor is pinned separately from `public`'s because `test_helper.exs` excludes `:public_only` here. |
 | `core_full_suite_next_toolchain_advisory` | `Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema public)` | advisory | keep-with-reason | Forward-compatibility canary on the next Elixir/OTP line; renamed from job key `core_latest_elixir_advisory` (D-21), since *latest* implies preferred while *next* reads as the canary it is. Carries `if: github.event_name != 'pull_request'`, so its absence on a PR run is a designed outcome, not a missing lane. Never gate the next line — that is LD-13's invariant read backwards. |
 | `core_full_suite_next_toolchain_advisory` | `Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema mailglass)` | advisory | keep-with-reason | Second schema axis of the canary. Enforces the suite floors measured on the 1.18 legs, with a `>=` comparison, so a real divergence reds an advisory job visibly instead of passing silently. |
 | `provider_compatibility_advisory` | `Provider Compatibility Advisory (Elixir 1.18 / OTP 27)` | advisory | keep-with-reason | `mix verify.provider_compatibility`. Advisory by the fake-adapter-is-the-gate DNA: real-provider surface checks inform, they do not block. |
@@ -503,7 +505,37 @@ usage, Hex/HexDocs checks, branch-protection result, and 60-minute outcome.
    fan-out status in `38-03-RELEASE-RECORD.md`.
    - **Package order:** The workflow guarantees `mailglass` (core) publishes first, then `mailglass_inbound`, then `mailglass_admin`. Admin waits on inbound to avoid sibling-package Hex indexing races.
    - **Idempotency:** All three publish steps check `mix hex.info` first and skip the publish command if the version is already live, making the workflow safe to retry.
-   - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all` and `dry_run=false`). **Do not dispatch from `main`**. Always use the reviewed release tag for the package being recovered so the publish run is pinned to the exact commit Release Please tagged. For an inbound-only `mailglass_inbound-v1.0.0` publish or recovery, dispatch `package=mailglass_inbound` pinned to the `mailglass_inbound-v1.0.0` tag; the fan-out skips `publish-core` and does NOT trigger `publish-admin`, so no `mailglass`/`mailglass_admin` release is forced. The `publish-inbound`/`publish-admin` success/skipped gating is a security control — do not loosen it.
+   - **Core Full Suite is a publish gate (HARNESS-04).** `gate-ci-green` reads
+     `advisory-matrix.yml` as well as `ci.yml`. The two Elixir 1.18 / OTP 27
+     `Core Full Suite` legs block the publish when either is red, cancelled,
+     skipped, or absent. The other five advisory-matrix lanes only warn.
+     - **The gate DISPATCHES the run; it does not look one up.** A release-please
+       bot-merged release SHA has zero `advisory-matrix.yml` runs — GitHub raises
+       no workflow for a `GITHUB_TOKEN` event, and that workflow has no `release:`
+       trigger. So `gate-ci-green` dispatches it on the release tag and waits, under
+       one 30-minute deadline shared with the `ci.yml` self-heal. Expect roughly ten
+       extra minutes of cold-cache release wall-clock. A missing run is a stall, not
+       a pass: the gate blocks rather than reporting success it did not observe.
+     - **Override, for a block with no regression behind it.** The gated job also
+       runs the inbound `mix deps.get`, the inbound `mix ecto.create`, and
+       `mix verify.schema_prefix`, so a Hex outage or a Postgres hiccup can block a
+       release that has nothing wrong with it. Recover without a code change by
+       dispatching with the override:
+
+           gh workflow run publish-hex.yml \
+             -f tag=mailglass-v<version> -f package=all -f dry_run=false \
+             -f skip_core_full_suite_gate=true \
+             -f core_full_suite_gate_skip_reason="<why>"
+
+       It is **dispatch-only and inert on the `release` event** — the hands-free
+       path can never self-skip its own gate. The reason is required, is echoed to
+       the run summary, and the run logs a warning naming the override as an
+       exception. Prefer re-running the lane
+       (`gh workflow run advisory-matrix.yml --ref <tag>`) and re-dispatching the
+       publish; reach for the override when the lane cannot be made green for a
+       reason that is not about this release's code. An override reached for
+       reflexively is a gate that has been removed without anyone recording it.
+   - **Fallback path:** If the Release Please tag/release exists but `publish-hex` did not fan out, dispatch `.github/workflows/publish-hex.yml` manually (with `package=all`, `dry_run=false`, and `core_full_suite_gate_skip_reason="n/a"` — that input is required on every dispatch, and `n/a` is the right answer when you are not overriding anything). **Do not dispatch from `main`**. Always use the reviewed release tag for the package being recovered so the publish run is pinned to the exact commit Release Please tagged. For an inbound-only `mailglass_inbound-v1.0.0` publish or recovery, dispatch `package=mailglass_inbound` pinned to the `mailglass_inbound-v1.0.0` tag; the fan-out skips `publish-core` and does NOT trigger `publish-admin`, so no `mailglass`/`mailglass_admin` release is forced. The `publish-inbound`/`publish-admin` success/skipped gating is a security control — do not loosen it.
 4. **Within 60 minutes of publish: smoke-install in a fresh Phoenix app.**
    Set a literal timer when approving the deployment.
    Run:

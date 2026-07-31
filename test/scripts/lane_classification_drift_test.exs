@@ -956,7 +956,7 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
     end
 
     test "every advisory-matrix row's classification and disposition are drawn from the " <>
-           "closed vocabularies, and disposition tracks the bucket" do
+           "closed vocabularies, and classification tracks the bucket" do
       rows = parse_advisory_matrix_table(File.read!(@maintaining_path))
 
       assert rows != [], "parsed zero advisory-matrix rows — see the row-count test above"
@@ -970,26 +970,285 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
                "MAINTAINING.md advisory-matrix row '#{id}' / '#{name}' has disposition " <>
                  "'#{disp}', which is not a member of the closed vocabulary"
 
-        expected_disposition =
+        # Plan 143-13 wired gate-ci-green to advisory-matrix.yml, so the gating pair
+        # is no longer a recommendation. Its rows moved from `advisory` / `promote` to
+        # `publish-gating` / `keep-with-reason` in that same commit, exactly as this
+        # assertion's previous message and MAINTAINING.md's own prose said they would.
+        # Classification is now the load-bearing half: it is what actually differs
+        # between the two buckets, so a gating leg silently downgraded to `advisory`
+        # in the docs fails here.
+        {expected_classification, expected_bucket} =
           if MapSet.member?(@advisory_matrix_gating_lanes, name),
-            do: "promote",
-            else: "keep-with-reason"
+            do: {"publish-gating", "advisory_matrix_gating_lanes/0"},
+            else: {"advisory", "advisory_matrix_advisory_lanes/0"}
 
-        assert disp == expected_disposition,
-               "'#{name}' sits in " <>
-                 "#{if expected_disposition == "promote", do: "advisory_matrix_gating_lanes/0", else: "advisory_matrix_advisory_lanes/0"} " <>
-                 "but MAINTAINING.md records disposition '#{disp}' rather than " <>
-                 "'#{expected_disposition}'. The gating pair is recorded as `promote` " <>
-                 "because gate-ci-green does not read advisory-matrix.yml yet — when plan " <>
-                 "143-13 wires the gate up, that row moves to publish-gating / " <>
-                 "keep-with-reason and this expectation moves with it."
+        assert cls == expected_classification,
+               "'#{name}' sits in #{expected_bucket} but MAINTAINING.md records " <>
+                 "classification '#{cls}' rather than '#{expected_classification}'. " <>
+                 "gate-ci-green reads advisory-matrix.yml as of plan 143-13: the two " <>
+                 "Core Full Suite floor legs block a Hex publish, and the other five " <>
+                 "block nothing. A doc that says otherwise is the signal-honesty defect " <>
+                 "this milestone exists to fix."
+
+        assert disp == "keep-with-reason",
+               "MAINTAINING.md advisory-matrix row '#{name}' records disposition " <>
+                 "'#{disp}'. Every row on this axis is now `keep-with-reason`: the " <>
+                 "gating pair was `promote` only while its promotion was still a " <>
+                 "recommendation, and plan 143-13 executed it."
       end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # HARNESS-04 / D-19, D-22, D-23: gate-ci-green's advisory-matrix arrays, and the
+  # dispatch-only override that makes gating affordable.
+  #
+  # These bind the THIRD axis to `publish-hex.yml` the same way the four ci.yml
+  # arrays above are bound. Without them the workflow could gate on a lane name
+  # the registry no longer holds — which reports `(missing)` and blocks every
+  # publish — or silently stop gating on one it does.
+  # ---------------------------------------------------------------------------
+
+  describe "publish-hex.yml's advisory-matrix arrays and override (HARNESS-04)" do
+    test "ADVISORY_MATRIX_GATING_LANES (publish-hex.yml) set-equals " <>
+           "Mailglass.CILanes.advisory_matrix_gating_lanes/0" do
+      gating_from_js = parse_js_array(File.read!(@publish_hex_path), "ADVISORY_MATRIX_GATING_LANES")
+
+      assert MapSet.size(gating_from_js) == @advisory_matrix_gating_count,
+             "expected exactly #{@advisory_matrix_gating_count} entries parsed from " <>
+               "publish-hex.yml's ADVISORY_MATRIX_GATING_LANES array — got " <>
+               "#{MapSet.size(gating_from_js)}. A zero here would make the set-equality " <>
+               "below compare an empty set and pass vacuously while the gate matched " <>
+               "nothing; the parser, the array name, or the file format changed."
+
+      {only_in_js, only_in_registry} = drift(gating_from_js, @advisory_matrix_gating_lanes)
+
+      assert MapSet.size(only_in_js) == 0 and MapSet.size(only_in_registry) == 0,
+             "publish-hex.yml's ADVISORY_MATRIX_GATING_LANES and " <>
+               "Mailglass.CILanes.advisory_matrix_gating_lanes/0 have drifted. The gate " <>
+               "matches these by EXACT equality, so a name in the workflow that the " <>
+               "registry no longer holds reports '(missing)' and blocks every publish:\n" <>
+               "  In the JS array but missing from CILanes: " <>
+               "#{inspect(MapSet.to_list(only_in_js))}\n" <>
+               "  In CILanes but missing from the JS array: " <>
+               "#{inspect(MapSet.to_list(only_in_registry))}"
+    end
+
+    test "ADVISORY_MATRIX_ADVISORY_LANES (publish-hex.yml) set-equals " <>
+           "Mailglass.CILanes.advisory_matrix_advisory_lanes/0" do
+      advisory_from_js =
+        parse_js_array(File.read!(@publish_hex_path), "ADVISORY_MATRIX_ADVISORY_LANES")
+
+      assert MapSet.size(advisory_from_js) == @advisory_matrix_advisory_count,
+             "expected exactly #{@advisory_matrix_advisory_count} entries parsed from " <>
+               "publish-hex.yml's ADVISORY_MATRIX_ADVISORY_LANES array — got " <>
+               "#{MapSet.size(advisory_from_js)}. Same vacuity risk as the gating array: " <>
+               "an empty parse would make the comparison below prove nothing."
+
+      {only_in_js, only_in_registry} = drift(advisory_from_js, @advisory_matrix_advisory_lanes)
+
+      assert MapSet.size(only_in_js) == 0 and MapSet.size(only_in_registry) == 0,
+             "publish-hex.yml's ADVISORY_MATRIX_ADVISORY_LANES and " <>
+               "Mailglass.CILanes.advisory_matrix_advisory_lanes/0 have drifted — an " <>
+               "advisory-matrix lane the workflow cannot classify blocks the publish when " <>
+               "it is red:\n" <>
+               "  In the JS array but missing from CILanes: " <>
+               "#{inspect(MapSet.to_list(only_in_js))}\n" <>
+               "  In CILanes but missing from the JS array: " <>
+               "#{inspect(MapSet.to_list(only_in_registry))}"
+    end
+
+    test "the two parsed advisory-matrix arrays are disjoint" do
+      source = File.read!(@publish_hex_path)
+      gating_from_js = parse_js_array(source, "ADVISORY_MATRIX_GATING_LANES")
+      advisory_from_js = parse_js_array(source, "ADVISORY_MATRIX_ADVISORY_LANES")
+
+      assert MapSet.size(gating_from_js) > 0 and MapSet.size(advisory_from_js) > 0,
+             "one of publish-hex.yml's two advisory-matrix arrays parsed empty — an " <>
+               "intersection with an empty set is empty, so this test would pass while " <>
+               "proving nothing"
+
+      overlap = MapSet.intersection(gating_from_js, advisory_from_js)
+
+      assert MapSet.size(overlap) == 0,
+             "these lanes appear in BOTH of publish-hex.yml's advisory-matrix arrays: " <>
+               "#{inspect(MapSet.to_list(overlap))}. classifyAdvisoryMatrix/1 returns the " <>
+               "FIRST matching bucket, so a duplicated lane would be silently treated as " <>
+               "gating and never warned on as advisory — or the reverse after a reorder."
+    end
+
+    test "negative control: removing one entry from the parsed ADVISORY_MATRIX_GATING_LANES " <>
+           "set makes the drift comparison report it, and only it" do
+      gating_from_js = parse_js_array(File.read!(@publish_hex_path), "ADVISORY_MATRIX_GATING_LANES")
+
+      assert drift(gating_from_js, @advisory_matrix_gating_lanes) == {MapSet.new(), MapSet.new()},
+             "sanity check failed: ADVISORY_MATRIX_GATING_LANES and " <>
+               "Mailglass.CILanes.advisory_matrix_gating_lanes/0 should agree before the " <>
+               "injected-breakage assertion runs"
+
+      # The mailglass-schema leg: the axis a reader skims past, and the one whose
+      # silent loss would leave the gate half-blind while still looking wired up.
+      removed_entry = "Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)"
+      assert removed_entry in MapSet.to_list(gating_from_js)
+
+      {only_in_broken_js, only_in_registry} =
+        drift(MapSet.delete(gating_from_js, removed_entry), @advisory_matrix_gating_lanes)
+
+      assert only_in_registry == MapSet.new([removed_entry]),
+             "removing '#{removed_entry}' from the parsed set must make drift/2 — the same " <>
+               "helper the real assertion uses — report it, and only it, in the 'missing " <>
+               "from the JS array' direction; got " <>
+               "#{inspect(MapSet.to_list(only_in_registry))}"
+
+      assert MapSet.size(only_in_broken_js) == 0,
+             "unexpected reverse-direction drift after removing only '#{removed_entry}': " <>
+               "#{inspect(MapSet.to_list(only_in_broken_js))}"
+    end
+
+    test "negative control: removing one entry from the parsed " <>
+           "ADVISORY_MATRIX_ADVISORY_LANES set makes the drift comparison report it, and " <>
+           "only it" do
+      advisory_from_js =
+        parse_js_array(File.read!(@publish_hex_path), "ADVISORY_MATRIX_ADVISORY_LANES")
+
+      assert drift(advisory_from_js, @advisory_matrix_advisory_lanes) ==
+               {MapSet.new(), MapSet.new()},
+             "sanity check failed: ADVISORY_MATRIX_ADVISORY_LANES and " <>
+               "Mailglass.CILanes.advisory_matrix_advisory_lanes/0 should agree before the " <>
+               "injected-breakage assertion runs"
+
+      # A next-toolchain leg: the one whose absence on a pull_request run is a
+      # designed outcome, so it is the entry most likely to be "cleaned up" by
+      # someone who reads its absence as staleness.
+      removed_entry =
+        "Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema public)"
+
+      assert removed_entry in MapSet.to_list(advisory_from_js)
+
+      {only_in_broken_js, only_in_registry} =
+        drift(MapSet.delete(advisory_from_js, removed_entry), @advisory_matrix_advisory_lanes)
+
+      assert only_in_registry == MapSet.new([removed_entry]),
+             "removing '#{removed_entry}' from the parsed set must make drift/2 report it, " <>
+               "and only it, in the 'missing from the JS array' direction; got " <>
+               "#{inspect(MapSet.to_list(only_in_registry))}"
+
+      assert MapSet.size(only_in_broken_js) == 0,
+             "unexpected reverse-direction drift after removing only '#{removed_entry}': " <>
+               "#{inspect(MapSet.to_list(only_in_broken_js))}"
+    end
+
+    test "the Core Full Suite gate blocks by its own named message, and its verdict is " <>
+           "reached by a presence loop rather than a filter (posture guard)" do
+      source = File.read!(@publish_hex_path)
+
+      assert String.contains?(
+               source,
+               "Delivery blocked: Core Full Suite gating lane(s) did not pass on SHA"
+             ),
+             "publish-hex.yml no longer contains the Core Full Suite gating failure " <>
+               "message. HARNESS-04's whole content is that these two legs can veto a " <>
+               "publish; if this message is gone, either the gate was removed or its " <>
+               "verdict now shares the ci.yml message and cannot be told apart in a log."
+
+      assert String.contains?(source, "for (const lane of ADVISORY_MATRIX_GATING_LANES)"),
+             "publish-hex.yml no longer iterates ADVISORY_MATRIX_GATING_LANES as a " <>
+               "presence loop. A filter over the jobs the API returned cannot observe a " <>
+               "lane that is ABSENT — and a gating leg that is absent is not green. This " <>
+               "is the same guarantee the required-lane presence loop provides, and it " <>
+               "must not be refactored into a filter."
+    end
+
+    test "both override inputs are declared, the reason is required, and the override is " <>
+           "inert on the release event" do
+      source = File.read!(@publish_hex_path)
+
+      skip_block = workflow_dispatch_input_block(source, "skip_core_full_suite_gate")
+      reason_block = workflow_dispatch_input_block(source, "core_full_suite_gate_skip_reason")
+
+      assert skip_block != nil,
+             "publish-hex.yml declares no `skip_core_full_suite_gate` workflow_dispatch " <>
+               "input — the documented override the gating trade depends on is gone, which " <>
+               "makes a blocked release unaffordable (its gated steps include a " <>
+               "network-dependent inbound deps.get)"
+
+      assert reason_block != nil,
+             "publish-hex.yml declares no `core_full_suite_gate_skip_reason` " <>
+               "workflow_dispatch input — the override would become reason-free"
+
+      assert String.contains?(reason_block, "required: true"),
+             "publish-hex.yml's `core_full_suite_gate_skip_reason` input is not marked " <>
+               "`required: true`. An override with an optional reason is an override with " <>
+               "no reason, and D-30 records exactly that decay as the risk this input " <>
+               "exists to hold off. Parsed block was:\n#{reason_block}"
+
+      assert String.contains?(
+               source,
+               "process.env.SKIP_CORE_FULL_SUITE_GATE === 'true' && context.eventName !== 'release'"
+             ),
+             "publish-hex.yml no longer guards the override on the triggering event. " <>
+               "Without `context.eventName !== 'release'` the hands-free release path " <>
+               "could self-skip its own publish gate (T-143-46), which is the one thing " <>
+               "the override must never be able to do."
+    end
+
+    test "negative control: stripping `required: true` from the parsed reason-input block " <>
+           "makes the required-marker assertion report it" do
+      source = File.read!(@publish_hex_path)
+
+      assert source
+             |> workflow_dispatch_input_block("core_full_suite_gate_skip_reason")
+             |> String.contains?("required: true"),
+             "sanity check failed: the unmodified workflow should already mark the reason " <>
+               "input required before the injected-breakage assertion runs"
+
+      # Strips the marker from THIS input only. Anchored on the input key rather
+      # than replaced globally: the pre-existing `tag:` input carries a
+      # byte-identical `required: true` / `type: string` pair, so a global replace
+      # would mutate that one as well and the control would stop being about the
+      # override's reason. Exercises the SAME extractor the real assertion uses, so
+      # a future edit loosening that extractor into a whole-file search breaks this
+      # control too — a whole-file search would keep passing on `tag:`'s marker.
+      key = "\n      core_full_suite_gate_skip_reason:\n"
+      [before_key, after_key] = String.split(source, key, parts: 2)
+
+      broken =
+        before_key <>
+          key <> String.replace(after_key, "        required: true\n", "", global: false)
+
+      refute broken
+             |> workflow_dispatch_input_block("core_full_suite_gate_skip_reason")
+             |> String.contains?("required: true"),
+             "removing `required: true` from the reason input must be observable by the " <>
+               "same extractor the assertion above uses — otherwise that assertion could " <>
+               "pass on a workflow whose override reason had become optional"
     end
   end
 
   # ---------------------------------------------------------------------------
   # Parsers
   # ---------------------------------------------------------------------------
+
+  # Extracts one `workflow_dispatch` input's own indented block from a workflow
+  # source, bounded by the next line at or above the input-key indent. Bounding is
+  # the whole point: a whole-file `String.contains?(source, "required: true")` would
+  # pass on the pre-existing `tag:` input's marker and prove nothing about this one.
+  # Returns nil (not a crash) when the input is absent, so the caller's assertion
+  # names the cause.
+  defp workflow_dispatch_input_block(source, input_name) do
+    case String.split(source, "\n      #{input_name}:\n", parts: 2) do
+      [_before, rest] ->
+        rest
+        |> String.split("\n")
+        |> Enum.take_while(fn line ->
+          String.trim(line) == "" or String.starts_with?(line, "        ")
+        end)
+        |> Enum.join("\n")
+
+      _ ->
+        nil
+    end
+  end
 
   defp count_suite_floor_env_entries(source \\ nil) do
     (source || File.read!(@advisory_matrix_path))
