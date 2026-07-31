@@ -83,7 +83,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
     refute recovery_runbook =~ "runs only `on: push: main`"
 
     refute recovery_runbook?(
-             String.replace(recovery_runbook, "minute 17", "minute 18", global: false)
+             String.replace(recovery_runbook, "minute 17", "minute 18", global: true)
            )
 
     refute recovery_runbook?(
@@ -91,7 +91,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
            )
 
     refute recovery_runbook?(
-             String.replace(recovery_runbook, "workflow_dispatch", "manual dispatch", global: false)
+             String.replace(recovery_runbook, "workflow_dispatch", "manual dispatch", global: true)
            )
   end
 
@@ -119,7 +119,7 @@ defmodule Mailglass.Scripts.ReleaseTriggerRecoveryTest do
       section =~ "partial linked-tag state" and
       section =~ "requires reconciliation" and
       section =~ "workflow_dispatch" and
-      section =~ "direct manual recovery" and
+      section =~ "Direct manual recovery" and
       section =~ "manually creating the missing GitHub releases" and
       section =~ "release: published"
   end
