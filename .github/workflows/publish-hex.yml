@@ -264,6 +264,10 @@ jobs:
             }
       - name: Verify CI is green on tagged SHA
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        env:
+          # Read as an environment value by the advisory-matrix recovery messages
+          # below. A tag name must never be spliced into the script body.
+          RESOLVED_REF: ${{ steps.resolve-sha.outputs.ref }}
         with:
           script: |
             // Required lanes: each must be present in the run's jobs AND have
@@ -335,6 +339,39 @@ jobs:
               'CI Green'
             ];
 
+            // ---------------------------------------------------------------
+            // THIRD AXIS — .github/workflows/advisory-matrix.yml (Phase 143,
+            // D-19/D-23/D-24, HARNESS-04). A DIFFERENT workflow from the four
+            // arrays above, which classify ci.yml and nothing else. Mirrors
+            // Mailglass.CILanes.advisory_matrix_gating_lanes/0 and
+            // .advisory_matrix_advisory_lanes/0; lane_classification_drift_test.exs
+            // asserts both by set equality, so editing one without the other
+            // fails CI.
+            //
+            // MATCHING RULE — these two arrays are matched by EXACT equality, not
+            // by prefix, and that is deliberate. Unlike ci.yml's statically-named
+            // matrix jobs, every advisory-matrix.yml job interpolates each matrix
+            // axis into its own `name:`, so GitHub reports the name fully
+            // substituted with NO appended ` (<matrix values>)` suffix. This gate
+            // only ever reads a release, tag, or push run, where that
+            // interpolation has happened — the uninterpolated-template collapse
+            // (D-21) occurs on pull_request runs, which this gate never reads.
+            // Exact equality is therefore both safe and stricter, which is what a
+            // presence check wants.
+            const ADVISORY_MATRIX_GATING_LANES = [
+              'Core Full Suite (Elixir 1.18 / OTP 27 / schema public)',
+              'Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)'
+            ];
+
+            // Classified, enumerated, warned on, never blocking.
+            const ADVISORY_MATRIX_ADVISORY_LANES = [
+              'Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema public)',
+              'Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema mailglass)',
+              'Provider Compatibility Advisory (Elixir 1.18 / OTP 27)',
+              'Inbound Full Suite Advisory (schema public)',
+              'Inbound Full Suite Advisory (schema mailglass)'
+            ];
+
             const startsWithAny = (name, lanes) => lanes.some(l => name.startsWith(l));
 
             const classify = (name) => {
@@ -342,6 +379,15 @@ jobs:
               if (startsWithAny(name, ADVISORY_LANES))        return 'advisory';
               if (startsWithAny(name, PUBLISH_GATING_LANES))  return 'publish-gating';
               if (startsWithAny(name, STRUCTURAL_LANES))      return 'structural';
+              return 'unclassified';
+            };
+
+            // Third-axis classifier. Exact equality on both buckets — see the
+            // MATCHING RULE note above the two arrays for why that is safe here
+            // and why prefix matching is not needed.
+            const classifyAdvisoryMatrix = (name) => {
+              if (ADVISORY_MATRIX_GATING_LANES.includes(name))   return 'gating';
+              if (ADVISORY_MATRIX_ADVISORY_LANES.includes(name)) return 'advisory';
               return 'unclassified';
             };
 
@@ -434,6 +480,137 @@ jobs:
               const detail = advisoryFailures.map(j => `  - ${j.name} (${j.conclusion})`).join('\n');
               core.warning(`ci.yml on SHA ${sha} passed all required lanes; advisory lanes still red:\n${detail}\nRun: ${latest.html_url}`);
             }
+
+            // ===============================================================
+            // advisory-matrix.yml verdict (Phase 143 / HARNESS-04, D-19/D-23).
+            //
+            // Everything ABOVE this line is the pre-existing ci.yml verdict and is
+            // unchanged. Everything below is additive and reads a SECOND workflow.
+            // The previous step has already guaranteed a COMPLETED run exists on
+            // this SHA, dispatching one if the anti-recursion gap left none.
+            //
+            // The decision table, stated once:
+            //   1. A gating leg that is ABSENT is not green. Missing, cancelled and
+            //      skipped block with the same weight as failure.
+            //   2. Absent is never PERMANENTLY blocking — the previous step
+            //      self-heals by dispatch, its deadline is bounded, and every
+            //      message below names the exact recovery command.
+            //   3. An advisory leg's absence is WARNED, not blocked, and the message
+            //      says why.
+            //   4. An unclassified advisory-matrix lane that is RED blocks; green
+            //      only warns — mirroring the ci.yml posture above. The hard failure
+            //      for an unclassified lane belongs in the drift meta-test on the
+            //      pull request that adds the lane, not here.
+            // ===============================================================
+            const ref = process.env.RESOLVED_REF;
+
+            const amRunRecovery =
+              `Recovery — re-run the lane, then re-dispatch this workflow:\n` +
+              `  gh workflow run advisory-matrix.yml --ref ${ref}\n` +
+              `  gh workflow run publish-hex.yml -f tag=${ref} -f package=all -f dry_run=false`;
+
+            const amRuns = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'advisory-matrix.yml',
+              head_sha: sha,
+              per_page: 10
+            });
+
+            // Fail closed on a zero-run API response, exactly as the ci.yml lookup
+            // above does. A check that cannot observe its subject must not report
+            // success.
+            if (amRuns.data.total_count === 0) {
+              core.setFailed(`Delivery blocked: no advisory-matrix.yml runs found for SHA ${sha}. The self-heal step should have dispatched one — inspect its log before retrying.\n${amRunRecovery}`);
+              return;
+            }
+
+            // Prefer the newest COMPLETED run rather than the newest run outright:
+            // the fan-out can leave a second, still-running dispatch on the same
+            // SHA, and reading its null conclusions would block a release for a
+            // reason that is about timing, not about the tree. Every run on this
+            // SHA tests the same tree, so any completed one is a legitimate reading.
+            const amCompleted = amRuns.data.workflow_runs.filter(r => r.status === 'completed');
+
+            if (amCompleted.length === 0) {
+              core.setFailed(`Delivery blocked: advisory-matrix.yml has runs for SHA ${sha} but none has completed. A run still in progress is not a green run.\n${amRunRecovery}`);
+              return;
+            }
+
+            const amLatest = amCompleted[0];
+
+            const amJobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              { owner: context.repo.owner, repo: context.repo.repo, run_id: amLatest.id, per_page: 100 }
+            );
+
+            // Rule 3, first half: an advisory leg's ABSENCE is warned, never blocked,
+            // and the message says WHY so nobody is left to wonder.
+            const amAdvisoryMissing = ADVISORY_MATRIX_ADVISORY_LANES.filter(
+              lane => !amJobs.some(j => j.name === lane)
+            );
+
+            if (amAdvisoryMissing.length > 0) {
+              const detail = amAdvisoryMissing.map(l => `  - ${l} (missing)`).join('\n');
+              core.warning(`advisory-matrix.yml run ${amLatest.id} on SHA ${sha} is missing advisory lane(s). Warned, not blocked — their recorded classification says they gate nothing:\n${detail}\nIf the run was triggered by a pull_request event this is a DESIGNED outcome, not a fault: the Core Full Suite Next Toolchain Advisory job carries a job-level "if: github.event_name != 'pull_request'", so it never runs on a PR.\nRun: ${amLatest.html_url}`);
+            }
+
+            // Rule 3, second half: a red advisory leg warns.
+            const amAdvisoryNotGreen = amJobs.filter(
+              j => classifyAdvisoryMatrix(j.name) === 'advisory' && j.conclusion !== 'success' && j.conclusion !== 'skipped'
+            );
+
+            if (amAdvisoryNotGreen.length > 0) {
+              const detail = amAdvisoryNotGreen.map(j => `  - ${j.name} (${j.conclusion})`).join('\n');
+              core.warning(`advisory-matrix.yml on SHA ${sha} has red advisory lane(s). These never block a publish:\n${detail}\nRun: ${amLatest.html_url}`);
+            }
+
+            // Rule 4, green half: an unclassified lane that is green warns only,
+            // mirroring the ci.yml posture above.
+            const amUnclassifiedGreen = amJobs.filter(
+              j => j.conclusion === 'success' && classifyAdvisoryMatrix(j.name) === 'unclassified'
+            );
+
+            if (amUnclassifiedGreen.length > 0) {
+              const detail = amUnclassifiedGreen.map(j => `  - ${j.name}`).join('\n');
+              core.warning(`advisory-matrix.yml on SHA ${sha} has job(s) with no recorded classification. Add them to Mailglass.CILanes and to this step's advisory-matrix arrays (TRUTH-09):\n${detail}\nRun: ${amLatest.html_url}`);
+            }
+
+            // Rule 1: presence loop over the gating legs, mirroring the required-lane
+            // loop above. A missing job, a cancelled conclusion and a skipped
+            // conclusion all land here with the same weight as a failure — that is
+            // the whole point, and it is why this is a loop over the DECLARED lanes
+            // rather than a filter over the jobs the API happened to return.
+            const amGatingBlocking = [];
+            for (const lane of ADVISORY_MATRIX_GATING_LANES) {
+              const job = amJobs.find(j => j.name === lane);
+              if (!job) {
+                amGatingBlocking.push(`${lane} (missing)`);
+              } else if (job.conclusion !== 'success') {
+                amGatingBlocking.push(`${lane} (${job.conclusion})`);
+              }
+            }
+
+            if (amGatingBlocking.length > 0) {
+              const detail = amGatingBlocking.map(s => `  - ${s}`).join('\n');
+              core.setFailed(`Delivery blocked: Core Full Suite gating lane(s) did not pass on SHA ${sha}:\n${detail}\nRun: ${amLatest.html_url}\n${amRunRecovery}`);
+              return;
+            }
+
+            // Rule 4, red half: an unclassified advisory-matrix lane that is red
+            // blocks. It is not part of the Core Full Suite gate, so it is checked
+            // after it and reported on its own terms.
+            const amUnclassifiedRed = amJobs.filter(
+              j => j.conclusion !== 'success' && j.conclusion !== 'skipped' && classifyAdvisoryMatrix(j.name) === 'unclassified'
+            );
+
+            if (amUnclassifiedRed.length > 0) {
+              const detail = amUnclassifiedRed.map(j => `  - ${j.name} (${j.conclusion})`).join('\n');
+              core.setFailed(`Delivery blocked: advisory-matrix.yml on SHA ${sha} has unclassified lane failure(s). Add the lane to Mailglass.CILanes and to this step's advisory-matrix arrays (TRUTH-09):\n${detail}\nRun: ${amLatest.html_url}`);
+              return;
+            }
+
+            core.info(`advisory-matrix.yml run ${amLatest.id} on ${sha}: both Core Full Suite gating legs green.`);
 
   publish-core:
     runs-on: ubuntu-latest

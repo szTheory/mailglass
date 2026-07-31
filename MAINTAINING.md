@@ -298,13 +298,15 @@ from the workflow source, and the drift test asserts it set-equals
 `Mailglass.CILanes.advisory_matrix_gating_lanes/0` ∪
 `advisory_matrix_advisory_lanes/0`.
 
-**None of these seven gates anything today.** `gate-ci-green` does not yet read
-`advisory-matrix.yml`; wiring it up is plan 143-12/143-13's work. So every row's
-`classification` cell reads `advisory`, which is the honest current state, and
-the two floor legs carry disposition `promote` — a recorded recommendation, in
-the same sense the § "Required Checks" table uses that word. When the gate lands,
-those two rows move to `publish-gating` / `keep-with-reason` in the same commit
-that adds the gate.
+**Two of these seven gate a Hex publish; the other five gate nothing.** As of
+Phase 143 plan 13, `gate-ci-green` reads `advisory-matrix.yml` as well as
+`ci.yml`, and the two Elixir 1.18 / OTP 27 `Core Full Suite` legs block a
+publish when they are red, cancelled, skipped, or absent. Their rows therefore
+read `publish-gating` / `keep-with-reason`, which is the honest current state —
+they were `advisory` / `promote` while the promotion was only a recommendation.
+The verdict, its evidence, and its accepted costs are recorded in
+`.planning/phases/143-test-harness-truth/143-GATING-DECISION.md`. The remaining
+five rows stay `advisory`: classified, enumerated, warned on, never blocking.
 
 **Gating the two floor legs is wider than the lane name reads.** They are steps
 of the `core_full_suite` job, which also runs `mix deps.get` and
@@ -314,8 +316,8 @@ next-toolchain legs run none of them.
 
 | job id | display name | classification | disposition | reason |
 |---|---|---|---|---|
-| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema public)` | advisory | promote | The declared HARNESS-04 publish-gating pair. Elixir 1.18 / OTP 27 is the `~> 1.18` floor `mix.exs` states, so gating it preserves LD-13's floor-coincidence invariant. Also gates the inbound `deps.get`, the inbound `ecto.create`, and `mix verify.schema_prefix`. Renamed from `core_full_suite_advisory` (D-21): a lane that gates a publish must not call itself advisory. |
-| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)` | advisory | promote | Second schema axis of the same job (D-06). The isolated `mailglass` schema exercises the Phase 134 migration entrypoint end-to-end; its executed-count floor is pinned separately from `public`'s because `test_helper.exs` excludes `:public_only` here. |
+| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema public)` | publish-gating | keep-with-reason | The HARNESS-04 publish-gating pair, live since Phase 143 plan 13. Elixir 1.18 / OTP 27 is the `~> 1.18` floor `mix.exs` states, so gating it preserves LD-13's floor-coincidence invariant. Also gates the inbound `deps.get`, the inbound `ecto.create`, and `mix verify.schema_prefix`. Renamed from `core_full_suite_advisory` (D-21): a lane that gates a publish must not call itself advisory. |
+| `core_full_suite` | `Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)` | publish-gating | keep-with-reason | Second schema axis of the same job (D-06). The isolated `mailglass` schema exercises the Phase 134 migration entrypoint end-to-end; its executed-count floor is pinned separately from `public`'s because `test_helper.exs` excludes `:public_only` here. |
 | `core_full_suite_next_toolchain_advisory` | `Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema public)` | advisory | keep-with-reason | Forward-compatibility canary on the next Elixir/OTP line; renamed from job key `core_latest_elixir_advisory` (D-21), since *latest* implies preferred while *next* reads as the canary it is. Carries `if: github.event_name != 'pull_request'`, so its absence on a PR run is a designed outcome, not a missing lane. Never gate the next line — that is LD-13's invariant read backwards. |
 | `core_full_suite_next_toolchain_advisory` | `Core Full Suite Next Toolchain Advisory (Elixir 1.19 / OTP 28 / schema mailglass)` | advisory | keep-with-reason | Second schema axis of the canary. Enforces the suite floors measured on the 1.18 legs, with a `>=` comparison, so a real divergence reds an advisory job visibly instead of passing silently. |
 | `provider_compatibility_advisory` | `Provider Compatibility Advisory (Elixir 1.18 / OTP 27)` | advisory | keep-with-reason | `mix verify.provider_compatibility`. Advisory by the fake-adapter-is-the-gate DNA: real-provider surface checks inform, they do not block. |

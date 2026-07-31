@@ -187,10 +187,17 @@ defmodule Mailglass.CILanes do
   # inbound `mix deps.get`, the inbound `mix ecto.create`, and `mix verify.schema_prefix`,
   # which are steps of the same job and which the next-toolchain legs do not run.
   #
-  # NOT YET LIVE: `gate-ci-green` does not read `advisory-matrix.yml` today. This
-  # bucket is the declared target that plans 143-12/143-13 wire up; until then these
-  # two legs block nothing, which is why `MAINTAINING.md` records them as `advisory`
-  # with disposition `promote` rather than claiming a gate that does not exist.
+  # LIVE as of Phase 143 plan 13: `gate-ci-green` (`publish-hex.yml`) reads
+  # `advisory-matrix.yml` and blocks a Hex publish when either of these two legs is
+  # red, cancelled, skipped, or absent. `MAINTAINING.md` records them as
+  # `publish-gating` / `keep-with-reason` to match. The verdict, the evidence it
+  # rests on, and its accepted costs are in
+  # `.planning/phases/143-test-harness-truth/143-GATING-DECISION.md`.
+  #
+  # The gate reaches the run by DISPATCHING `advisory-matrix.yml` on the release
+  # ref, not by looking a run up: a release-please bot-merged SHA has zero runs of
+  # it (GitHub raises no workflow for a GITHUB_TOKEN event, and this workflow has
+  # no `release:` trigger), so a lookup-only gate would deadlock every release.
   @advisory_matrix_gating_lanes [
     "Core Full Suite (Elixir 1.18 / OTP 27 / schema public)",
     "Core Full Suite (Elixir 1.18 / OTP 27 / schema mailglass)"

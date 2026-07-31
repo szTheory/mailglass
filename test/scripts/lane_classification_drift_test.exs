@@ -956,7 +956,7 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
     end
 
     test "every advisory-matrix row's classification and disposition are drawn from the " <>
-           "closed vocabularies, and disposition tracks the bucket" do
+           "closed vocabularies, and classification tracks the bucket" do
       rows = parse_advisory_matrix_table(File.read!(@maintaining_path))
 
       assert rows != [], "parsed zero advisory-matrix rows — see the row-count test above"
@@ -970,19 +970,31 @@ defmodule Mailglass.Scripts.LaneClassificationDriftTest do
                "MAINTAINING.md advisory-matrix row '#{id}' / '#{name}' has disposition " <>
                  "'#{disp}', which is not a member of the closed vocabulary"
 
-        expected_disposition =
+        # Plan 143-13 wired gate-ci-green to advisory-matrix.yml, so the gating pair
+        # is no longer a recommendation. Its rows moved from `advisory` / `promote` to
+        # `publish-gating` / `keep-with-reason` in that same commit, exactly as this
+        # assertion's previous message and MAINTAINING.md's own prose said they would.
+        # Classification is now the load-bearing half: it is what actually differs
+        # between the two buckets, so a gating leg silently downgraded to `advisory`
+        # in the docs fails here.
+        {expected_classification, expected_bucket} =
           if MapSet.member?(@advisory_matrix_gating_lanes, name),
-            do: "promote",
-            else: "keep-with-reason"
+            do: {"publish-gating", "advisory_matrix_gating_lanes/0"},
+            else: {"advisory", "advisory_matrix_advisory_lanes/0"}
 
-        assert disp == expected_disposition,
-               "'#{name}' sits in " <>
-                 "#{if expected_disposition == "promote", do: "advisory_matrix_gating_lanes/0", else: "advisory_matrix_advisory_lanes/0"} " <>
-                 "but MAINTAINING.md records disposition '#{disp}' rather than " <>
-                 "'#{expected_disposition}'. The gating pair is recorded as `promote` " <>
-                 "because gate-ci-green does not read advisory-matrix.yml yet — when plan " <>
-                 "143-13 wires the gate up, that row moves to publish-gating / " <>
-                 "keep-with-reason and this expectation moves with it."
+        assert cls == expected_classification,
+               "'#{name}' sits in #{expected_bucket} but MAINTAINING.md records " <>
+                 "classification '#{cls}' rather than '#{expected_classification}'. " <>
+                 "gate-ci-green reads advisory-matrix.yml as of plan 143-13: the two " <>
+                 "Core Full Suite floor legs block a Hex publish, and the other five " <>
+                 "block nothing. A doc that says otherwise is the signal-honesty defect " <>
+                 "this milestone exists to fix."
+
+        assert disp == "keep-with-reason",
+               "MAINTAINING.md advisory-matrix row '#{name}' records disposition " <>
+                 "'#{disp}'. Every row on this axis is now `keep-with-reason`: the " <>
+                 "gating pair was `promote` only while its promotion was still a " <>
+                 "recommendation, and plan 143-13 executed it."
       end
     end
   end
