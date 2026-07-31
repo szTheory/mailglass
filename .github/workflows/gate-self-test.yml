@@ -144,7 +144,16 @@ jobs:
             # the same required flag) so a never-appeared outcome can print what
             # the probe actually saw, and so SEEN can be set from a non-empty
             # filtered result without a second API call.
-            ALL_CHECKS=$(gh pr checks "$PR" $REQUIRED_FLAG --json name,state)
+            # `gh pr checks` exits non-zero with "no checks reported on the
+            # '<branch>' branch" during the window between opening the PR and
+            # the first check registering. The default shell is `bash -e`, so an
+            # untolerated failure here aborts the step before the loop can poll
+            # even once — observed live on run 30595556100, which produced no
+            # `result=` value at all. Tolerating it is NOT a weakening: the
+            # deadline still bounds the loop, and an outcome that never resolves
+            # still exits non-zero as `never-appeared` below. A probe that
+            # cannot observe its subject must fail visibly, and it still does.
+            ALL_CHECKS=$(gh pr checks "$PR" $REQUIRED_FLAG --json name,state 2>/dev/null) || ALL_CHECKS="[]"
             STATUS=$(echo "$ALL_CHECKS" | jq -r --arg name "$CHECK_NAME" \
               '.[] | select(.name | startswith($name)) | .state' | head -1)
 
