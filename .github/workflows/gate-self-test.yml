@@ -38,8 +38,40 @@ jobs:
   self-test:
     name: Verify CI Green gate blocks failing PRs
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Must stay >= deadline_minutes + headroom for checkout/PR-open/cleanup.
+    # GitHub expressions have no arithmetic, so this cannot be derived from the
+    # input; the "Validate poll deadline" step below enforces the relationship
+    # instead. A cap that silently truncates the deadline is not a slow probe,
+    # it is a silent one: dispatching deadline_minutes=40 against the previous
+    # hardcoded 30 cancelled run 30596060407 mid-poll, so it produced no
+    # `result=` value at all.
+    timeout-minutes: 45
     steps:
+      # Runs BEFORE any branch or PR is created, so a rejected deadline leaves
+      # nothing to clean up. Fails closed: a deadline the job timeout cannot
+      # honour is refused loudly here rather than silently truncated mid-poll.
+      - name: Validate poll deadline against the job timeout
+        env:
+          DEADLINE_MINUTES: ${{ inputs.deadline_minutes }}
+        run: |
+          JOB_TIMEOUT=45
+          HEADROOM=5
+          MAX=$((JOB_TIMEOUT - HEADROOM))
+          case "$DEADLINE_MINUTES" in
+            ''|*[!0-9]*)
+              echo "ERROR: deadline_minutes must be a positive integer, got '${DEADLINE_MINUTES}'."
+              exit 1
+              ;;
+          esac
+          if [ "$DEADLINE_MINUTES" -gt "$MAX" ]; then
+            echo "ERROR: deadline_minutes=${DEADLINE_MINUTES} exceeds ${MAX}, the largest value this job's"
+            echo "timeout-minutes: ${JOB_TIMEOUT} can honour with ${HEADROOM}m of setup/cleanup headroom."
+            echo "The job would be cancelled mid-poll and the probe would report no result at all."
+            echo "Either lower deadline_minutes or raise timeout-minutes and this constant together."
+            exit 1
+          fi
+          echo "deadline_minutes=${DEADLINE_MINUTES} fits within timeout-minutes: ${JOB_TIMEOUT}."
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
