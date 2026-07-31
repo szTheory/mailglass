@@ -1101,13 +1101,7 @@ jobs:
             echo "pat_present=true" >> "$GITHUB_OUTPUT"
           else
             echo "pat_present=false" >> "$GITHUB_OUTPUT"
-            {
-              echo "## Branch Protection Advisory"
-              echo ""
-              echo "Skipped live verification because BRANCH_PROTECTION_PAT is not set."
-              echo "Run \`scripts/verify-branch-protection.sh --print-expected\` locally"
-              echo "to inspect the expected ruleset."
-            } >> "$GITHUB_STEP_SUMMARY"
+            echo "classification=cannot_check" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout
@@ -1122,21 +1116,52 @@ jobs:
           GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_PAT }}
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: ./scripts/verify-branch-protection.sh main
-
-      - name: Write advisory summary
-        if: steps.check-pat.outputs.pat_present == 'true'
         run: |
+          if ! command -v gh >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
+            echo "classification=cannot_check" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          set +e
+          output=$(./scripts/verify-branch-protection.sh main 2>&1)
+          status=$?
+          set -e
+          printf '%s\n' "$output"
+
+          if [ "$status" -eq 0 ]; then
+            echo "classification=clean" >> "$GITHUB_OUTPUT"
+          elif printf '%s\n' "$output" | grep -q '^DRIFT:'; then
+            echo "classification=drift" >> "$GITHUB_OUTPUT"
+          else
+            echo "classification=cannot_check" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report branch protection outcome
+        if: always()
+        run: |
+          classification="${{ steps.verify-protection.outputs.classification || steps.check-pat.outputs.classification }}"
           {
             echo "## Branch Protection Advisory"
             echo ""
-            if [ "${{ steps.verify-protection.outcome }}" = "success" ]; then
+            if [ "$classification" = "clean" ]; then
               echo "Live branch protection matches the expected read-only ruleset."
-            else
+            elif [ "$classification" = "drift" ]; then
               echo "Live branch protection drifted from the expected ruleset."
-              echo "Review the verifier step log and re-apply with ./scripts/setup_branch_protection.sh main."
+              echo "Re-apply the owner-controlled ruleset with \`./scripts/setup_branch_protection.sh main\`."
+            elif [ "$classification" = "cannot_check" ]; then
+              echo "Could not verify live branch protection (missing credential, tooling, or API access)."
+              echo "Configure \`BRANCH_PROTECTION_PAT\` and ensure \`gh\` and \`jq\` can reach GitHub, then rerun verification."
+            else
+              echo "Could not classify the branch-protection verification result."
+              echo "Rerun the verifier after checking workflow logs and credentials."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$classification" = "clean" ]; then
+            exit 0
+          fi
+
+          exit 1
 
   ci_green:
     name: CI Green
