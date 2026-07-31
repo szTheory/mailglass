@@ -135,28 +135,24 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
   # unit-testable.
   @doc false
   def unaccepted_deps_audit_findings(output) do
-    lines = String.split(output, "\n")
-
-    {findings, _pkg} =
-      Enum.reduce(lines, {[], nil}, fn line, {acc, current_pkg} ->
-        cond do
-          match = Regex.run(~r/^\s*Name:\s+(\S+)/, line) ->
-            [_, pkg] = match
-            {acc, pkg}
-
-          match = Regex.run(~r/^\s*URL:.*\/(GHSA-\S+)/, line) ->
-            [_, id] = match
-            {[{current_pkg, id} | acc], current_pkg}
-
-          true ->
-            {acc, current_pkg}
-        end
-      end)
-
-    findings
-    |> Enum.reverse()
+    output
+    |> deps_audit_findings()
     |> Enum.reject(fn {_pkg, id} -> matches_any_entry?(id) end)
     |> Enum.map(fn {pkg, id} -> "#{pkg} #{id}" end)
+  end
+
+  @doc false
+  @spec matched_deps_audit_ids(String.t()) :: MapSet.t(String.t())
+  def matched_deps_audit_ids(output) do
+    output
+    |> deps_audit_findings()
+    |> Enum.flat_map(fn {_pkg, id} ->
+      case matching_entry(id) do
+        nil -> []
+        entry -> [entry.id]
+      end
+    end)
+    |> MapSet.new()
   end
 
   # Same line-scanning shape as unaccepted_audit_findings/1's advisory
@@ -207,6 +203,28 @@ defmodule Mailglass.SupplyChain.AcceptedAdvisories do
   end
 
   defp matches_any_entry?(id), do: matching_entry(id) != nil
+
+  defp deps_audit_findings(output) do
+    {findings, _pkg} =
+      output
+      |> String.split("\n")
+      |> Enum.reduce({[], nil}, fn line, {acc, current_pkg} ->
+        cond do
+          match = Regex.run(~r/^\s*Name:\s+(\S+)/, line) ->
+            [_, pkg] = match
+            {acc, pkg}
+
+          match = Regex.run(~r/^\s*URL:.*\/(GHSA-\S+)/, line) ->
+            [_, id] = match
+            {[{current_pkg, id} | acc], current_pkg}
+
+          true ->
+            {acc, current_pkg}
+        end
+      end)
+
+    Enum.reverse(findings)
+  end
 
   defp matching_entry(id) do
     Enum.find(@entries, fn entry -> entry.id == id or id in entry.aliases end)

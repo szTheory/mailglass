@@ -113,9 +113,15 @@ defmodule Mix.Tasks.Mailglass.Audit do
 
         blocking =
           if status != 0 do
-            case AcceptedAdvisories.unaccepted_audit_findings(output) do
-              [] -> blocking
-              unaccepted -> blocking ++ Enum.map(unaccepted, &"#{directory_label(dir)}#{&1}")
+            case {AcceptedAdvisories.unaccepted_audit_findings(output), MapSet.size(dir_matched)} do
+              {[], 0} ->
+                blocking ++ [unclassified_failure(dir, :hex, status)]
+
+              {[], _accepted_count} ->
+                blocking
+
+              {unaccepted, _accepted_count} ->
+                blocking ++ Enum.map(unaccepted, &"#{directory_label(dir)}#{&1}")
             end
           else
             blocking
@@ -152,9 +158,17 @@ defmodule Mix.Tasks.Mailglass.Audit do
     blocking =
       Enum.reduce(dir_outputs, [], fn {dir, output, status}, blocking ->
         if status != 0 do
-          case AcceptedAdvisories.unaccepted_deps_audit_findings(output) do
-            [] -> blocking
-            unaccepted -> blocking ++ Enum.map(unaccepted, &"#{directory_label(dir)}#{&1}")
+          matched = AcceptedAdvisories.matched_deps_audit_ids(output)
+
+          case {AcceptedAdvisories.unaccepted_deps_audit_findings(output), MapSet.size(matched)} do
+            {[], 0} ->
+              blocking ++ [unclassified_failure(dir, :deps, status)]
+
+            {[], _accepted_count} ->
+              blocking
+
+            {unaccepted, _accepted_count} ->
+              blocking ++ Enum.map(unaccepted, &"#{directory_label(dir)}#{&1}")
           end
         else
           blocking
@@ -167,4 +181,9 @@ defmodule Mix.Tasks.Mailglass.Audit do
   defp directory_label(dir, prefix \\ "Delivery blocked")
   defp directory_label("", prefix), do: "#{prefix}: "
   defp directory_label(dir, prefix), do: "#{prefix} (#{dir}): "
+
+  defp unclassified_failure(dir, kind, status) do
+    "#{directory_label(dir)}#{kind} audit command failed with status #{status} and no " <>
+      "recognized advisory; audit did not complete successfully."
+  end
 end

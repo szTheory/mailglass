@@ -72,6 +72,26 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
       assert {:error, reasons} = Audit.evaluate(:hex, dir_outputs)
       assert Enum.any?(reasons, &(&1 =~ "matches no current finding"))
     end
+
+    test "a nonzero unparseable result blocks even when another project has accepted findings" do
+      dir_outputs = [
+        {"",
+         """
+         Advisories:
+           cowlib 2.19.0 - EEF-CVE-2026-43966 (MEDIUM)
+           cowlib 2.19.0 - EEF-CVE-2026-43969 (LOW)
+         """, 1},
+        {"mailglass_admin", "registry unavailable", 1},
+        {"mailglass_inbound", "No retired packages found", 0}
+      ]
+
+      assert {:error, reasons} = Audit.evaluate(:hex, dir_outputs)
+
+      assert Enum.any?(reasons, fn reason ->
+               reason =~ "mailglass_admin" and reason =~ "status 1" and
+                 reason =~ "no recognized advisory"
+             end)
+    end
   end
 
   describe "evaluate/2 (:deps)" do
@@ -124,6 +144,21 @@ defmodule Mix.Tasks.Mailglass.AuditTest do
       ]
 
       assert {:ok, []} = Audit.evaluate(:deps, dir_outputs)
+    end
+
+    test "a nonzero unparseable result blocks instead of reporting a clean finding set" do
+      dir_outputs = [
+        {"", "No vulnerabilities found.", 0},
+        {"mailglass_admin", "network unavailable", 1},
+        {"mailglass_inbound", "No vulnerabilities found.", 0}
+      ]
+
+      assert {:error, reasons} = Audit.evaluate(:deps, dir_outputs)
+
+      assert Enum.any?(reasons, fn reason ->
+               reason =~ "mailglass_admin" and reason =~ "status 1" and
+                 reason =~ "no recognized advisory"
+             end)
     end
   end
 end
