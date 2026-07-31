@@ -28,8 +28,13 @@ See: .planning/PROJECT.md (updated 2026-07-08 - after v2.1 milestone archive)
 
 Phase: 143 (test-harness-truth) — EXECUTING
 Plan: 12 of 14
-Status: Ready to execute
-Last activity: 2026-07-30
+Status: BLOCKED on the 143-12 promotion checkpoint — condition 1 (three green
+  advisory-matrix runs on three DISTINCT `main` SHAs) is at 2 of 3. Conditions
+  2, 3, 4 and 5 are met; see 143-PROMOTION-CHECKPOINT.md and
+  143-MAIN-GREEN-EVIDENCE.md. 143-13 is explicitly sequenced after this
+  checkpoint, and 143-14 after 143-13, so both are serially blocked. `main`
+  must advance once more before the gate can be wired.
+Last activity: 2026-07-31
 
 Progress: [█████████░] 88%
 
