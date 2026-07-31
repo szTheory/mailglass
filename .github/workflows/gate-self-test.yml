@@ -206,7 +206,12 @@ jobs:
                 exit 1
                 ;;
               *)
-                echo "${CHECK_NAME}check still running (status=${STATUS:-pending})..."
+                # Do NOT default an empty STATUS to a word that reads like an
+                # observed state. An absent check and a genuinely pending one
+                # are different facts, and printing "status=pending" for both
+                # made run 30597469482 look like it was watching the lane tick
+                # over when it had never seen it at all.
+                echo "${CHECK_NAME}check not yet resolved (status=${STATUS:-<check absent from this PR>})..."
                 sleep 30
                 ;;
             esac
