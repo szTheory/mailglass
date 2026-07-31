@@ -1,29 +1,33 @@
 ---
 phase: 144
-fixed_at: 2026-07-31T21:24:00Z
+fixed_at: 2026-07-31T21:29:36Z
 review_path: /Users/jon/projects/mailglass/.planning/phases/144-signal-drift-integrity/144-REVIEW.md
-iteration: 1
-findings_in_scope: 4
-fixed: 4
+iteration: 2
+findings_in_scope: 6
+fixed: 6
 skipped: 0
 status: all_fixed
 ---
 
 # Phase 144: Code Review Fix Report
 
-**Fixed at:** 2026-07-31T21:24:00Z
+**Fixed at:** 2026-07-31T21:29:36Z
 **Source review:** /Users/jon/projects/mailglass/.planning/phases/144-signal-drift-integrity/144-REVIEW.md
-**Iteration:** 1
+**Iteration:** 2
 
 **Summary:**
 
-- Findings in scope: 4
-- Fixed: 4
+- Findings in scope: 6
+- Fixed: 6
 - Skipped: 0
 
 **Regression follow-up:** `9e4fe4f5` repaired the extracted-preflight test
 harness and the dynamic-icon record separator. The direct focused ExUnit run
 passed 11 tests; `mix verify.ci_lane_contract` passed 136 tests.
+
+**Iteration 2 verification:** focused icon and repository-hygiene tests passed
+(16 tests); `mix verify.ci_lane_contract` passed 137 tests; and
+`mix verify.mix_tasks` passed 56 tests.
 
 ## Fixed Issues
 
@@ -51,8 +55,20 @@ passed 11 tests; `mix verify.ci_lane_contract` passed 136 tests.
 **Commit:** 44ea8bdc
 **Applied fix:** Documented `RELEASE_PLEASE_PAT`-backed synchronization and `pull_request: synchronize`, plus the failed `cannot_check` branch-protection behavior, with contract assertions.
 
+### BL-01: Dynamic icon expressions can bypass fail-closed validation
+
+**Files modified:** `mailglass_admin/scripts/check-conformance.sh`, `test/scripts/icon_exists_gate_test.exs`
+**Commits:** 57d4cc10, bd7bf625
+**Applied fix:** Marked every feature-level `name={...}` expression that is not a supported finite literal, concatenation, or interpolation as unresolved. Added real-gate fixtures for assign, map-field, and helper-call expressions while preserving finite multiline fixtures. Generic component relays are scanned at their call sites.
+
+### WR-04: Missing git upstream is incorrectly treated as clean
+
+**Files modified:** `dev/mix/tasks/mailglass.repo.hygiene.ex`, `test/mix/tasks/mailglass.repo.hygiene_test.exs`
+**Commits:** 314cf5a8, bd7bf625
+**Applied fix:** Return an `unknown` git-state check when a clean repository has no resolvable upstream, while retaining a concrete blocked result for known dirty state. Clean fixtures now create and synchronize a real local upstream.
+
 ---
 
-_Fixed: 2026-07-31T21:24:00Z_
+_Fixed: 2026-07-31T21:29:36Z_
 _Fixer: the agent (gsd-code-fixer)_
-_Iteration: 1_
+_Iteration: 2_
