@@ -14,6 +14,13 @@ canonical migration steps. Sibling packages: `mailglass_admin` 1.0.0 (linked
 release) and `mailglass_inbound` 0.1.0 (first Hex publish; separate 0.x
 version line per [`guides/compatibility-and-deprecations.md`](guides/compatibility-and-deprecations.md)).
 
+## [2.2.2](https://github.com/szTheory/mailglass/compare/mailglass-v2.2.1...mailglass-v2.2.2) (2026-07-31)
+
+
+### Bug Fixes
+
+* **143:** make the gate-self-test probe report what it actually observed ([#157](https://github.com/szTheory/mailglass/issues/157)) ([981b934](https://github.com/szTheory/mailglass/commit/981b9343a8fec7eb82d0d7df3f3e06467b04f90a))
+
 ## [2.2.1](https://github.com/szTheory/mailglass/compare/mailglass-v2.2.0...mailglass-v2.2.1) (2026-07-29)
 
 
