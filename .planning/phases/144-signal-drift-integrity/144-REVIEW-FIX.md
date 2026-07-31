@@ -1,24 +1,24 @@
 ---
 phase: 144
-fixed_at: 2026-07-31T21:35:50Z
+fixed_at: 2026-07-31T21:41:25Z
 review_path: /Users/jon/projects/mailglass/.planning/phases/144-signal-drift-integrity/144-REVIEW.md
-iteration: 3
-findings_in_scope: 8
-fixed: 8
+iteration: 4
+findings_in_scope: 9
+fixed: 9
 skipped: 0
 status: all_fixed
 ---
 
 # Phase 144: Code Review Fix Report
 
-**Fixed at:** 2026-07-31T21:35:50Z
+**Fixed at:** 2026-07-31T21:41:25Z
 **Source review:** /Users/jon/projects/mailglass/.planning/phases/144-signal-drift-integrity/144-REVIEW.md
-**Iteration:** 3
+**Iteration:** 4
 
 **Summary:**
 
-- Findings in scope: 8
-- Fixed: 8
+- Findings in scope: 9
+- Fixed: 9
 - Skipped: 0
 
 **Regression follow-up:** `9e4fe4f5` repaired the extracted-preflight test
@@ -32,6 +32,9 @@ passed 11 tests; `mix verify.ci_lane_contract` passed 136 tests.
 **Iteration 3 verification:** focused release-recovery tests passed (9 tests);
 `mix verify.ci_lane_contract` passed 140 tests; and the release workflow YAML
 validated successfully.
+
+**Iteration 4 verification:** focused release-recovery tests passed (10 tests)
+and `mix verify.ci_lane_contract` passed 141 tests.
 
 ## Fixed Issues
 
@@ -83,8 +86,14 @@ validated successfully.
 **Commit:** 0ffee31f
 **Applied fix:** Query releases with `gh api --include`, treating only an explicit HTTP 404 as absent; 403, API, tool, and PR-label failures now stop the preflight without a run signal. Hermetic fake-`gh` cases cover each path.
 
+### CR-03: Scheduled/manual recovery bypasses release-state validation
+
+**Files modified:** `.github/workflows/release-please.yml`, `test/scripts/release_trigger_recovery_test.exs`
+**Commit:** 4a18eddd
+**Applied fix:** Reordered preflight so manifest and every expected release are checked before PR parsing. Empty commit messages now no-op for all-present tags, fail for partial or inaccessible state, and run only after all tags are confirmed absent.
+
 ---
 
-_Fixed: 2026-07-31T21:35:50Z_
+_Fixed: 2026-07-31T21:41:25Z_
 _Fixer: the agent (gsd-code-fixer)_
-_Iteration: 3_
+_Iteration: 4_
